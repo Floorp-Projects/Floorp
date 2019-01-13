@@ -227,7 +227,7 @@ void ScrollAnchorContainer::InvalidateAnchor() {
   mAnchorNode = nullptr;
   mAnchorNodeIsDirty = true;
   mLastAnchorPos = nsPoint();
-  Frame()->PresShell()->PostDirtyScrollAnchorContainer(ScrollableFrame());
+  Frame()->PresShell()->PostPendingScrollAnchorSelection(this);
 }
 
 void ScrollAnchorContainer::Destroy() {

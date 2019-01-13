@@ -1311,7 +1311,8 @@ void PresShell::Destroy() {
   }
 
   mFramesToDirty.Clear();
-  mDirtyScrollAnchorContainers.Clear();
+  mPendingScrollAnchorSelection.Clear();
+  mPendingScrollAnchorAdjustment.Clear();
 
   if (mViewManager) {
     // Clear the view manager's weak pointer back to |this| in case it
@@ -2151,7 +2152,8 @@ void PresShell::NotifyDestroyingFrame(nsIFrame* aFrame) {
 
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(aFrame);
     if (scrollableFrame) {
-      mDirtyScrollAnchorContainers.RemoveEntry(scrollableFrame);
+      mPendingScrollAnchorSelection.RemoveEntry(scrollableFrame);
+      mPendingScrollAnchorAdjustment.RemoveEntry(scrollableFrame);
     }
   }
 }
@@ -2574,17 +2576,32 @@ void PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
 }
 #endif
 
-void PresShell::PostDirtyScrollAnchorContainer(nsIScrollableFrame* aFrame) {
-  mDirtyScrollAnchorContainers.PutEntry(aFrame);
+void PresShell::PostPendingScrollAnchorSelection(
+    mozilla::layout::ScrollAnchorContainer* aContainer) {
+  mPendingScrollAnchorSelection.PutEntry(aContainer->ScrollableFrame());
 }
 
-void PresShell::FlushDirtyScrollAnchorContainers() {
-  for (auto iter = mDirtyScrollAnchorContainers.Iter(); !iter.Done();
+void PresShell::FlushPendingScrollAnchorSelections() {
+  for (auto iter = mPendingScrollAnchorSelection.Iter(); !iter.Done();
        iter.Next()) {
     nsIScrollableFrame* scroll = iter.Get()->GetKey();
     scroll->GetAnchor()->SelectAnchor();
   }
-  mDirtyScrollAnchorContainers.Clear();
+  mPendingScrollAnchorSelection.Clear();
+}
+
+void PresShell::PostPendingScrollAnchorAdjustment(
+    ScrollAnchorContainer* aContainer) {
+  mPendingScrollAnchorAdjustment.PutEntry(aContainer->ScrollableFrame());
+}
+
+void PresShell::FlushPendingScrollAnchorAdjustments() {
+  for (auto iter = mPendingScrollAnchorAdjustment.Iter(); !iter.Done();
+       iter.Next()) {
+    nsIScrollableFrame* scroll = iter.Get()->GetKey();
+    scroll->GetAnchor()->ApplyAdjustments();
+  }
+  mPendingScrollAnchorAdjustment.Clear();
 }
 
 void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
@@ -4174,13 +4191,17 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
       didLayoutFlush = true;
       mFrameConstructor->RecalcQuotesAndCounters();
       viewManager->FlushDelayedResize(true);
-      if (ProcessReflowCommands(flushType < FlushType::Layout) &&
-          mContentToScrollTo) {
-        // We didn't get interrupted.  Go ahead and scroll to our content
-        DoScrollContentIntoView();
+      if (ProcessReflowCommands(flushType < FlushType::Layout)) {
+        // We didn't get interrupted. Go ahead and perform scroll anchor
+        // adjustments and scroll content into view
+        FlushPendingScrollAnchorAdjustments();
+
         if (mContentToScrollTo) {
-          mContentToScrollTo->DeleteProperty(nsGkAtoms::scrolling);
-          mContentToScrollTo = nullptr;
+          DoScrollContentIntoView();
+          if (mContentToScrollTo) {
+            mContentToScrollTo->DeleteProperty(nsGkAtoms::scrolling);
+            mContentToScrollTo = nullptr;
+          }
         }
       }
     }
@@ -8498,7 +8519,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   mReflowCause = nullptr;
 #endif
 
-  FlushDirtyScrollAnchorContainers();
+  FlushPendingScrollAnchorSelections();
 
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();
@@ -8621,7 +8642,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   target->DidReflow(mPresContext, nullptr);
   if (target->IsInScrollAnchorChain()) {
     ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(target);
-    container->ApplyAdjustments();
+    PostPendingScrollAnchorAdjustment(container);
   }
   if (isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
     mPresContext->SetVisibleArea(boundsRelativeToTarget);
@@ -10034,7 +10055,8 @@ void PresShell::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const {
   aSizes.mLayoutPresShellSize +=
       mApproximatelyVisibleFrames.ShallowSizeOfExcludingThis(mallocSizeOf) +
       mFramesToDirty.ShallowSizeOfExcludingThis(mallocSizeOf) +
-      mDirtyScrollAnchorContainers.ShallowSizeOfExcludingThis(mallocSizeOf);
+      mPendingScrollAnchorSelection.ShallowSizeOfExcludingThis(mallocSizeOf) +
+      mPendingScrollAnchorAdjustment.ShallowSizeOfExcludingThis(mallocSizeOf);
 
   StyleSet()->AddSizeOfIncludingThis(aSizes);
 
