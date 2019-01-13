@@ -3,6 +3,23 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <svg height="0" xmlns="http://www.w3.org/2000/svg">
+  <!-- DevTools icon filter: Photon Blue 60 (light theme checked) -->
+  <filter id="icon-checked-light">
+    <feColorMatrix in="SourceGraphic" type="matrix"
+      values="0 0 0 0 0
+              0 0 0 0 0.122
+              0 0 0 0 0.74
+              0 0 0 1 0"/>
+  </filter>
+  <!-- DevTools icon filter: syntax blue #75BFFF (dark theme checked) -->
+  <filter id="icon-checked-dark">
+    <feColorMatrix in="SourceGraphic" type="matrix"
+      values="0 0 0 0.18 0
+              0 0 0 0.52 0
+              0 0 0 1 0
+              0 0 0 1 0"/>
+  </filter>
+
   <!-- Web Audio Gradients -->
   <linearGradient id="bypass-light" x1="8%" y1="10%" x2="16%" y2="16%" spreadMethod="repeat">
     <stop offset="0%" stop-color="#dde1e4a0"/> <!-- theme-splitter-color (0.5 opacity) -->

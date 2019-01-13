@@ -395,7 +395,7 @@ TextPropertyEditor.prototype = {
       flexClass: "ruleview-flex",
       gridClass: "ruleview-grid",
       shapeClass: "ruleview-shape",
-      shapeSwatchClass: SHAPE_SWATCH_CLASS,
+      shapeSwatchClass: SHARED_SWATCH_CLASS + " " + SHAPE_SWATCH_CLASS,
       // Only ask the parser to convert colors to the default color type specified by the
       // user if the property hasn't been changed yet.
       defaultColorType: !propDirty,

@@ -295,8 +295,6 @@ checkbox:-moz-focusring {
   height: 16px;
   margin: 0 3px;
   transition: opacity 0.05s ease-in-out;
-  -moz-context-properties: fill;
-  fill: currentColor;
   color: var(--theme-toolbar-icon-color);
   direction: ltr;
   font-size: 11px;
@@ -309,8 +307,6 @@ checkbox:-moz-focusring {
   vertical-align: middle;
 }
 
-.devtools-toolbarbutton:not([label])[checked=true] > .toolbarbutton-icon,
-.devtools-toolbarbutton:not([label])[open=true] > .toolbarbutton-icon,
 .devtools-button.checked:empty::before {
   color: var(--theme-toolbar-checked-color);
 }
@@ -345,6 +341,12 @@ checkbox:-moz-focusring {
 .devtools-button:disabled,
 .devtools-toolbarbutton[disabled] {
   opacity: 0.5 !important;
+}
+
+.devtools-button.checked::before,
+.devtools-toolbarbutton:not([label])[checked=true] > image,
+.devtools-toolbarbutton:not([label])[open=true] > image {
+  fill: var(--theme-toolbar-checked-color);
 }
 
 /* Button states */
