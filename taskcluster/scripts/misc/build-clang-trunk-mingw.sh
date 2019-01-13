@@ -41,8 +41,8 @@ binutils_ext=bz2
 binutils_sha=369737ce51587f92466041a97ab7d2358c6d9e1b6490b3940eb09fb0a9a6ac88
 
 # This is default value of _WIN32_WINNT. Gecko configure script explicitly sets this,
-# so this is not used to build Gecko itself. We default to 0x600, which is Windows Vista.
-default_win32_winnt=0x600
+# so this is not used to build Gecko itself. We default to 0x601, which is Windows 7.
+default_win32_winnt=0x601
 
 cd $HOME_DIR/src
 
