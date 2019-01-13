@@ -15,31 +15,33 @@ use core::ops::{Add, Sub, Neg, Mul, Div};
 use core::marker::PhantomData;
 use core::fmt;
 
-define_matrix! {
-    /// A 2d transformation from a space to another that can only express translations.
-    ///
-    /// The main benefit of this type over a TypedVector2D is the ability to cast
-    /// between a source and a destination spaces.
-    ///
-    /// Example:
-    ///
-    /// ```
-    /// use euclid::{TypedTranslation2D, TypedPoint2D, point2};
-    /// struct ParentSpace;
-    /// struct ChildSpace;
-    /// type ScrollOffset = TypedTranslation2D<i32, ParentSpace, ChildSpace>;
-    /// type ParentPoint = TypedPoint2D<i32, ParentSpace>;
-    /// type ChildPoint = TypedPoint2D<i32, ChildSpace>;
-    ///
-    /// let scrolling = ScrollOffset::new(0, 100);
-    /// let p1: ParentPoint = point2(0, 0);
-    /// let p2: ChildPoint = scrolling.transform_point(&p1);
-    /// ```
-    ///
-    pub struct TypedTranslation2D<T, Src, Dst> {
-        pub x: T,
-        pub y: T,
-    }
+/// A 2d transformation from a space to another that can only express translations.
+///
+/// The main benefit of this type over a TypedVector2D is the ability to cast
+/// between a source and a destination spaces.
+///
+/// Example:
+///
+/// ```
+/// use euclid::{TypedTranslation2D, TypedPoint2D, point2};
+/// struct ParentSpace;
+/// struct ChildSpace;
+/// type ScrollOffset = TypedTranslation2D<i32, ParentSpace, ChildSpace>;
+/// type ParentPoint = TypedPoint2D<i32, ParentSpace>;
+/// type ChildPoint = TypedPoint2D<i32, ChildSpace>;
+///
+/// let scrolling = ScrollOffset::new(0, 100);
+/// let p1: ParentPoint = point2(0, 0);
+/// let p2: ChildPoint = scrolling.transform_point(&p1);
+/// ```
+///
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedTranslation2D<T, Src, Dst> {
+    pub x: T,
+    pub y: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<(Src, Dst)>,
 }
 
 impl<T, Src, Dst> TypedTranslation2D<T, Src, Dst> {
@@ -228,16 +230,18 @@ where T: Copy + fmt::Debug {
 
 
 
-define_matrix! {
-    /// A 3d transformation from a space to another that can only express translations.
-    ///
-    /// The main benefit of this type over a TypedVector3D is the ability to cast
-    /// between a source and a destination spaces.
-    pub struct TypedTranslation3D<T, Src, Dst> {
-        pub x: T,
-        pub y: T,
-        pub z: T,
-    }
+/// A 3d transformation from a space to another that can only express translations.
+///
+/// The main benefit of this type over a TypedVector3D is the ability to cast
+/// between a source and a destination spaces.
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedTranslation3D<T, Src, Dst> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<(Src, Dst)>,
 }
 
 impl<T, Src, Dst> TypedTranslation3D<T, Src, Dst> {
