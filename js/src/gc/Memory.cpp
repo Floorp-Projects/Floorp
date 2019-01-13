@@ -7,6 +7,8 @@
 #include "gc/Memory.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/MathAlgorithms.h"
+#include "mozilla/RandomNum.h"
 #include "mozilla/TaggedAnonymousMemory.h"
 
 #include "js/HeapAPI.h"
@@ -41,6 +43,11 @@ static size_t pageSize = 0;
 /* The OS allocation granularity may not match the page size. */
 static size_t allocGranularity = 0;
 
+#if defined(JS_64BIT)
+static size_t minValidAddress = 0;
+static size_t maxValidAddress = 0;
+#endif
+
 /*
  * System allocation functions may hand out regions of memory in increasing or
  * decreasing order. This ordering is used as a hint during chunk alignment to
@@ -52,10 +59,7 @@ static size_t allocGranularity = 0;
  * would make its application failure prone and complex. Tests indicate that
  * VirtualAlloc always hands out regions of memory in increasing order.
  */
-#if defined(XP_DARWIN) ||                                               \
-    (!defined(XP_WIN) && (defined(__ia64__) || defined(__aarch64__) ||  \
-                          (defined(__sparc__) && defined(__arch64__) && \
-                           (defined(__NetBSD__) || defined(__linux__)))))
+#if defined(XP_DARWIN)
 static mozilla::Atomic<int, mozilla::Relaxed,
                        mozilla::recordreplay::Behavior::DontPreserve>
     growthDirection(1);
@@ -90,6 +94,7 @@ enum class PageAccess : int {
 };
 #endif
 
+#if !defined(JS_64BIT)
 /*
  * Data from OOM crashes shows there may be up to 24 chunk-sized but unusable
  * chunks available in low memory situations. These chunks may all need to be
@@ -97,11 +102,22 @@ enum class PageAccess : int {
  * so we use a generous limit of 32 unusable chunks to ensure we reach them.
  */
 static const int MaxLastDitchAttempts = 32;
+#endif
 
-static void TryToAlignChunk(void** aRegion, void** aRetainedRegion,
+template <bool AlwaysGetNew = true>
+static bool TryToAlignChunk(void** aRegion, void** aRetainedRegion,
                             size_t length, size_t alignment);
+
+#if defined(JS_64BIT)
+static void* MapAlignedPagesRandom(size_t length, size_t alignment);
+void* TestMapAlignedPagesLastDitch(size_t, size_t) { return nullptr; }
+#else
 static void* MapAlignedPagesSlow(size_t length, size_t alignment);
 static void* MapAlignedPagesLastDitch(size_t length, size_t alignment);
+void* TestMapAlignedPagesLastDitch(size_t length, size_t alignment) {
+  return MapAlignedPagesLastDitch(length, alignment);
+}
+#endif
 
 size_t SystemPageSize() { return pageSize; }
 
@@ -116,39 +132,22 @@ static inline size_t OffsetFromAligned(void* region, size_t alignment) {
   return uintptr_t(region) % alignment;
 }
 
-void* TestMapAlignedPagesLastDitch(size_t length, size_t alignment) {
-  return MapAlignedPagesLastDitch(length, alignment);
-}
-
-void InitMemorySubsystem() {
-  if (pageSize == 0) {
-#if defined(XP_WIN)
-    SYSTEM_INFO sysinfo;
-    GetSystemInfo(&sysinfo);
-    pageSize = sysinfo.dwPageSize;
-    allocGranularity = sysinfo.dwAllocationGranularity;
-#else
-    pageSize = size_t(sysconf(_SC_PAGESIZE));
-    allocGranularity = pageSize;
-#endif
-  }
-}
-
 template <Commit commit, PageAccess prot>
 static inline void* MapInternal(void* desired, size_t length) {
+  void* region = nullptr;
 #if defined(XP_WIN)
   DWORD flags =
       (commit == Commit::Yes ? MEM_RESERVE | MEM_COMMIT : MEM_RESERVE);
-  return VirtualAlloc(desired, length, flags, DWORD(prot));
+  region = VirtualAlloc(desired, length, flags, DWORD(prot));
 #else
   int flags = MAP_PRIVATE | MAP_ANON;
-  void* region = MozTaggedAnonymousMmap(desired, length, int(prot), flags, -1,
-                                        0, "js-gc-heap");
+  region = MozTaggedAnonymousMmap(desired, length, int(prot), flags, -1, 0,
+                                  "js-gc-heap");
   if (region == MAP_FAILED) {
     return nullptr;
   }
-  return region;
 #endif
+  return region;
 }
 
 static inline void UnmapInternal(void* region, size_t length) {
@@ -164,75 +163,27 @@ static inline void UnmapInternal(void* region, size_t length) {
 #endif
 }
 
-/* The JS engine uses 47-bit pointers; all higher bits must be clear. */
-static inline bool IsInvalidRegion(void* region, size_t length) {
-  const uint64_t invalidPointerMask = UINT64_C(0xffff800000000000);
-  return (uintptr_t(region) + length - 1) & invalidPointerMask;
-}
-
 template <Commit commit = Commit::Yes, PageAccess prot = PageAccess::ReadWrite>
 static inline void* MapMemory(size_t length) {
   MOZ_ASSERT(length > 0);
 
-#if defined(XP_WIN)
   return MapInternal<commit, prot>(nullptr, length);
-#elif defined(__ia64__) || \
-    (defined(__sparc__) && defined(__arch64__) && defined(__NetBSD__))
-  // These platforms allow addresses with more than 47 bits. However, their
-  // mmap treats the first parameter as a hint of what address to allocate.
-  // If the region starting at the exact address passed is not available, the
-  // closest available region above it will be returned. Thus we supply a base
-  // address of 0x0000070000000000, 121 TiB below our 47-bit limit.
-  const uintptr_t hint = UINT64_C(0x0000070000000000);
-  void* region =
-      MapInternal<commit, prot>(reinterpret_cast<void*>(hint), length);
+}
 
-  // If we're given a region that ends above the 47-bit limit,
-  // treat it as running out of memory.
-  if (IsInvalidRegion(region, length)) {
-    UnmapInternal(region, length);
-    return nullptr;
-  }
-  return region;
-#elif defined(__aarch64__) || \
-    (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
-  // These platforms allow addresses with more than 47 bits. Unlike above,
-  // their mmap does not treat its first parameter as a hint, so we're forced
-  // to loop through valid regions manually. The following logic is far from
-  // ideal and may cause allocation to take a long time on these platforms.
-  const uintptr_t start = UINT64_C(0x0000070000000000);
-  const uintptr_t end = UINT64_C(0x0000800000000000);
-  const uintptr_t step = ChunkSize;
-  uintptr_t desired;
-  void* region = nullptr;
-  for (desired = start; !region && desired + length <= end; desired += step) {
-    region =
-        MapInternal<commit, prot>(reinterpret_cast<void*>(desired), length);
-    // If mmap on this platform *does* treat the supplied address as a hint,
-    // this platform should be using the logic above!
-    if (region) {
-      MOZ_RELEASE_ASSERT(uintptr_t(region) == desired);
-    }
-  }
-  return region;
-#else
-  return MapInternal<commit, prot>(nullptr, length);
-#endif
+template <Commit commit = Commit::Yes, PageAccess prot = PageAccess::ReadWrite>
+static inline void* MapMemoryAtFuzzy(void* desired, size_t length) {
+  MOZ_ASSERT(desired && OffsetFromAligned(desired, allocGranularity) == 0);
+  MOZ_ASSERT(length > 0);
+
+  // Note that some platforms treat the requested address as a hint, so the
+  // returned address might not match the requested address.
+  return MapInternal<commit, prot>(desired, length);
 }
 
 template <Commit commit = Commit::Yes, PageAccess prot = PageAccess::ReadWrite>
 static inline void* MapMemoryAt(void* desired, size_t length) {
   MOZ_ASSERT(desired && OffsetFromAligned(desired, allocGranularity) == 0);
   MOZ_ASSERT(length > 0);
-
-#if defined(XP_WIN)
-  return MapInternal<commit, prot>(desired, length);
-#else
-#if defined(__ia64__) || defined(__aarch64__) ||  \
-    (defined(__sparc__) && defined(__arch64__) && \
-     (defined(__NetBSD__) || defined(__linux__)))
-  MOZ_RELEASE_ASSERT(!IsInvalidRegion(desired, length));
-#endif
 
   void* region = MapInternal<commit, prot>(desired, length);
   if (!region) {
@@ -246,8 +197,150 @@ static inline void* MapMemoryAt(void* desired, size_t length) {
     return nullptr;
   }
   return region;
-#endif
 }
+
+#if defined(JS_64BIT)
+
+/* Returns a random number in the given range. */
+static inline uint64_t GetNumberInRange(uint64_t minNum, uint64_t maxNum) {
+  const uint64_t MaxRand = UINT64_C(0xffffffffffffffff);
+  maxNum -= minNum;
+  uint64_t binSize = 1 + (MaxRand - maxNum) / (maxNum + 1);
+
+  uint64_t rndNum;
+  do {
+    mozilla::Maybe<uint64_t> result;
+    do {
+      result = mozilla::RandomUint64();
+    } while (!result);
+    rndNum = result.value() / binSize;
+  } while (rndNum > maxNum);
+
+  return minNum + rndNum;
+}
+
+#if !defined(XP_WIN)
+/*
+ * The address range available to applications depends on both hardware and
+ * kernel configuration. For example, AArch64 on Linux uses addresses with
+ * 39 significant bits by default, but can be configured to use addresses with
+ * 48 significant bits by enabling a 4th translation table. Unfortunately,
+ * there appears to be no standard way to query the limit at runtime
+ * (Windows exposes this via GetSystemInfo()).
+ *
+ * This function tries to find the address limit by performing a binary search
+ * on the index of the most significant set bit in the addresses it attempts to
+ * allocate. As the requested address is often treated as a hint by the
+ * operating system, we use the actual returned addresses to narrow the range.
+ */
+static uint64_t FindAddressLimit() {
+  const size_t length = allocGranularity;  // Used as both length and alignment.
+
+  void* address;
+  uint64_t startRaw, endRaw, start, end, desired, actual;
+
+  // Use 32 bits as a lower bound in case we keep getting nullptr.
+  size_t low = 31;
+  uint64_t highestSeen = (UINT64_C(1) << 32) - length - 1;
+
+  // Start with addresses that have bit 46 set.
+  size_t high = 46;
+  startRaw = UINT64_C(1) << high;
+  endRaw = 2 * startRaw - length - 1;
+  start = (startRaw + length - 1) / length;
+  end = (endRaw - (length - 1)) / length;
+
+  for (size_t tries = 0; tries < 4; ++tries) {
+    desired = length * GetNumberInRange(start, end);
+    address = MapMemoryAtFuzzy(reinterpret_cast<void*>(desired), length);
+    actual = uint64_t(address);
+    if (address) {
+      UnmapInternal(address, length);
+    }
+    if (actual >= startRaw) {
+      return endRaw;  // Return early and skip the binary search.
+    }
+    if (actual > highestSeen) {
+      highestSeen = actual;
+      low = mozilla::FloorLog2(highestSeen);
+    }
+  }
+
+  // Those didn't work, so perform a binary search.
+  while (high - 1 > low) {
+    size_t middle = low + (high - low) / 2;
+    startRaw = UINT64_C(1) << middle;
+    endRaw = 2 * startRaw - length - 1;
+    start = (startRaw + length - 1) / length;
+    end = (endRaw - (length - 1)) / length;
+
+    for (size_t tries = 0; tries < 4; ++tries) {
+      desired = length * GetNumberInRange(start, end);
+      address = MapMemoryAtFuzzy(reinterpret_cast<void*>(desired), length);
+      actual = uint64_t(address);
+      if (address) {
+        UnmapInternal(address, length);
+      }
+      if (actual > highestSeen) {
+        highestSeen = actual;
+        low = mozilla::FloorLog2(highestSeen);
+      }
+      if (actual >= startRaw) {
+        break;
+      }
+    }
+
+    // Low was already updated above, so just check if we need to update high.
+    if (actual < startRaw) {
+      high = middle;
+    }
+  }
+
+  // High was excluded, so use low (but sanity check it).
+  startRaw = UINT64_C(1) << std::min(low, size_t(46));
+  endRaw = 2 * startRaw - length - 1;
+  return endRaw;
+}
+#endif  // !defined(XP_WIN)
+
+#endif  // defined(JS_64BIT)
+
+void InitMemorySubsystem() {
+  if (pageSize == 0) {
+#if defined(XP_WIN)
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    pageSize = sysinfo.dwPageSize;
+    allocGranularity = sysinfo.dwAllocationGranularity;
+#else
+    pageSize = size_t(sysconf(_SC_PAGESIZE));
+    allocGranularity = pageSize;
+#endif
+#if defined(JS_64BIT)
+#if defined(XP_WIN)
+    minValidAddress = size_t(sysinfo.lpMinimumApplicationAddress);
+    maxValidAddress = size_t(sysinfo.lpMaximumApplicationAddress);
+#else
+    // No standard way to determine these, so fall back to FindAddressLimit().
+    minValidAddress = allocGranularity;
+    maxValidAddress = FindAddressLimit() - allocGranularity;
+#endif
+    // Sanity check the address to ensure we don't use more than 47 bits.
+    uint64_t maxJSAddress = UINT64_C(0x00007fffffffffff) - allocGranularity;
+    if (maxValidAddress > maxJSAddress) {
+      maxValidAddress = maxJSAddress;
+    }
+#endif
+  }
+}
+
+/* The JS engine uses 47-bit pointers; all higher bits must be clear. */
+#if defined(JS_64BIT)
+static inline bool IsInvalidRegion(void* region, size_t length) {
+  const uint64_t invalidPointerMask = UINT64_C(0xffff800000000000);
+  return (uintptr_t(region) + length - 1) & invalidPointerMask;
+}
+#endif
 
 void* MapAlignedPages(size_t length, size_t alignment) {
   MOZ_RELEASE_ASSERT(length > 0 && alignment > 0);
@@ -256,6 +349,16 @@ void* MapAlignedPages(size_t length, size_t alignment) {
                          std::min(alignment, allocGranularity) ==
                      0);
 
+  // Smaller alignments aren't supported by the allocation functions.
+  if (alignment < allocGranularity) {
+    alignment = allocGranularity;
+  }
+
+#if defined(JS_64BIT)
+  void* region = MapAlignedPagesRandom(length, alignment);
+
+  MOZ_RELEASE_ASSERT(!IsInvalidRegion(region, length));
+#else
   void* region = MapMemory(length);
   if (OffsetFromAligned(region, alignment) == 0) {
     return region;
@@ -275,12 +378,57 @@ void* MapAlignedPages(size_t length, size_t alignment) {
 
   region = MapAlignedPagesSlow(length, alignment);
   if (!region) {
-    return MapAlignedPagesLastDitch(length, alignment);
+    region = MapAlignedPagesLastDitch(length, alignment);
   }
+#endif
 
   MOZ_ASSERT(OffsetFromAligned(region, alignment) == 0);
   return region;
 }
+
+#if defined(JS_64BIT)
+
+static void* MapAlignedPagesRandom(size_t length, size_t alignment) {
+  uint64_t minNum = (minValidAddress + alignment - 1) / alignment;
+  uint64_t maxNum = (maxValidAddress - (length - 1)) / alignment;
+
+  // Try to allocate in random aligned locations.
+  void* region = nullptr;
+  for (size_t i = 1; i <= 1024; ++i) {
+    if (i & 0xf) {
+      uint64_t desired = alignment * GetNumberInRange(minNum, maxNum);
+      region = MapMemoryAtFuzzy(reinterpret_cast<void*>(desired), length);
+      if (!region) {
+        continue;
+      }
+    } else {
+      // Check for OOM.
+      region = MapMemory(length);
+      if (!region) {
+        return nullptr;
+      }
+    }
+    if (IsInvalidRegion(region, length)) {
+      UnmapInternal(region, length);
+      continue;
+    }
+    if (OffsetFromAligned(region, alignment) == 0) {
+      return region;
+    }
+    void* retainedRegion = nullptr;
+    if (TryToAlignChunk<false>(&region, &retainedRegion, length, alignment)) {
+      MOZ_ASSERT(!retainedRegion);
+      return region;
+    }
+    MOZ_ASSERT(region && !retainedRegion);
+    UnmapInternal(region, length);
+  }
+
+  MOZ_CRASH("Couldn't allocate even after 1000 tries!");
+  return nullptr;
+}
+
+#else  // !defined(JS_64BIT)
 
 static void* MapAlignedPagesSlow(size_t length, size_t alignment) {
   void* alignedRegion = nullptr;
@@ -337,15 +485,12 @@ static void* MapAlignedPagesLastDitch(size_t length, size_t alignment) {
     return region;
   }
   for (; attempt < MaxLastDitchAttempts; ++attempt) {
-    TryToAlignChunk(&region, tempMaps + attempt, length, alignment);
-    if (OffsetFromAligned(region, alignment) == 0) {
-      if (tempMaps[attempt]) {
-        UnmapInternal(tempMaps[attempt], length);
-      }
-      break;
+    if (TryToAlignChunk(&region, tempMaps + attempt, length, alignment)) {
+      MOZ_ASSERT(!tempMaps[attempt]);
+      break;  // Success!
     }
-    if (!tempMaps[attempt]) {
-      break;  // Bail if TryToAlignChunk failed.
+    if (!region || !tempMaps[attempt]) {
+      break;  // We ran out of memory, so give up.
     }
   }
   if (OffsetFromAligned(region, alignment)) {
@@ -358,6 +503,8 @@ static void* MapAlignedPagesLastDitch(size_t length, size_t alignment) {
   return region;
 }
 
+#endif  // defined(JS_64BIT)
+
 #if defined(XP_WIN)
 
 /*
@@ -365,11 +512,13 @@ static void* MapAlignedPagesLastDitch(size_t length, size_t alignment) {
  * unaligned chunk, then reallocate the unaligned part to block off the
  * old address and force the allocator to give us a new one.
  */
-static void TryToAlignChunk(void** aRegion, void** aRetainedRegion,
+template <bool>
+static bool TryToAlignChunk(void** aRegion, void** aRetainedRegion,
                             size_t length, size_t alignment) {
   void* region = *aRegion;
   MOZ_ASSERT(region && OffsetFromAligned(region, alignment) != 0);
 
+  size_t retainedLength = 0;
   void* retainedRegion = nullptr;
   do {
     size_t offset = OffsetFromAligned(region, alignment);
@@ -378,14 +527,22 @@ static void TryToAlignChunk(void** aRegion, void** aRetainedRegion,
       break;
     }
     UnmapInternal(region, length);
-    size_t retainedLength = alignment - offset;
+    retainedLength = alignment - offset;
     retainedRegion = MapMemoryAt<Commit::No>(region, retainedLength);
     region = MapMemory(length);
 
     // If retainedRegion is null here, we raced with another thread.
   } while (!retainedRegion);
+
+  bool result = OffsetFromAligned(region, alignment) == 0;
+  if (result && retainedRegion) {
+    UnmapInternal(retainedRegion, retainedLength);
+    retainedRegion = nullptr;
+  }
+
   *aRegion = region;
   *aRetainedRegion = retainedRegion;
+  return region && result;
 }
 
 #else  // !defined(XP_WIN)
@@ -396,7 +553,8 @@ static void TryToAlignChunk(void** aRegion, void** aRetainedRegion,
  * are handed out in increasing or decreasing order, we have to try both
  * directions (depending on the environment, one will always fail).
  */
-static void TryToAlignChunk(void** aRegion, void** aRetainedRegion,
+template <bool AlwaysGetNew>
+static bool TryToAlignChunk(void** aRegion, void** aRetainedRegion,
                             size_t length, size_t alignment) {
   void* regionStart = *aRegion;
   MOZ_ASSERT(regionStart && OffsetFromAligned(regionStart, alignment) != 0);
@@ -438,14 +596,18 @@ static void TryToAlignChunk(void** aRegion, void** aRetainedRegion,
     }
     addressesGrowUpward = !addressesGrowUpward;
   }
-  // If our current chunk cannot be aligned, just get a new one.
+
   void* retainedRegion = nullptr;
-  if (OffsetFromAligned(regionStart, alignment) != 0) {
+  bool result = OffsetFromAligned(regionStart, alignment) == 0;
+  if (AlwaysGetNew && !result) {
+    // If our current chunk cannot be aligned, just get a new one.
     retainedRegion = regionStart;
     regionStart = MapMemory(length);
   }
+
   *aRegion = regionStart;
   *aRetainedRegion = retainedRegion;
+  return regionStart && result;
 }
 
 #endif
@@ -587,7 +749,7 @@ void* AllocateMappedContent(int fd, size_t offset, size_t length,
   MOZ_RELEASE_ASSERT(map != MAP_FAILED);
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG)
   // Zero out data before and after the desired mapping to catch errors early.
   if (offset != alignedOffset) {
     memset(map, 0, offset - alignedOffset);
