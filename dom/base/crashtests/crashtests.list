@@ -51,7 +51,7 @@ load 386794-1.html
 load 387460-1.html
 load 395469-1.xhtml
 load 395469-2.xhtml
-skip load 399712-1.html # sporadically times out (bug 473680)
+load 399712-1.html
 load 400763-1.html
 load 401993-1.html
 load 404869-1.xul
@@ -69,7 +69,7 @@ load 443538-1.svg
 load 448615-1.html
 load 450383-1.html
 load 450385-1.html
-skip load 458637-1.html # sporadically times out (bug 473680)
+skip-if(Android||isDebugBuild) load 458637-1.html # bug 1519651
 load 462947.html
 load 467392.html
 load 472593-1.html
@@ -202,24 +202,22 @@ load 1251361.html
 load 1281715.html
 load 1281745.html
 load 1304437.html
-pref(dom.IntersectionObserver.enabled,true) load 1324209.html
+load 1324209.html
+load 1324463.html
 load 1324500.html
-pref(dom.IntersectionObserver.enabled,true) load 1326194-1.html
-pref(dom.IntersectionObserver.enabled,true) load 1326194-2.html
-pref(dom.IntersectionObserver.enabled,true) load 1332939.html
+load 1326194-1.html
+load 1326194-2.html
+load 1332939.html
 load 1341693.html
 load 1352453.html
-pref(dom.IntersectionObserver.enabled,true) load 1353529.xul
+load 1353529.xul
 load 1368327.html
-pref(dom.IntersectionObserver.enabled,true) load 1369363.xul
+load 1369363.xul
 load 1370072.html
 pref(clipboard.autocopy,true) load 1370737.html
-pref(dom.IntersectionObserver.enabled,true) load 1370968.html
+load 1370968.html
 load 1373750.html
 load 1377826.html
-load structured_clone_container_throws.html
-load xhr_empty_datauri.html
-load xhr_html_nullresponse.html
 load 1383478.html
 load 1383780.html
 pref(clipboard.autocopy,true) load 1385272-1.html
@@ -230,21 +228,24 @@ load 1400701.html
 load 1403377.html
 load 1405771.html
 load 1406109-1.html
-load 1324463.html
-load 1413815.html
 load 1411473.html
+load 1413815.html
 load 1419799.html
 skip-if(!browserIsRemote) pref(dom.disable_open_during_load,false) load 1419902.html # skip on non e10s loads, Bug 1419902
 load 1422883.html
 load 1428053.html
 load 1441029.html
-load 1449601.html
 load 1445670.html
+load 1449601.html
 load 1458016.html
 load 1459688.html
 load 1460794.html
-load 1505875.html
+load 1462548.html
 load 1505811.html
+load 1505875.html
 load 1508845.html
-load 1516560.html
 load 1516289.html
+load 1516560.html
+load structured_clone_container_throws.html
+load xhr_empty_datauri.html
+load xhr_html_nullresponse.html
