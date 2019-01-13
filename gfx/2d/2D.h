@@ -60,6 +60,7 @@ typedef int FT_Error;
 struct ID3D11Texture2D;
 struct ID3D11Device;
 struct ID2D1Device;
+struct ID2D1DeviceContext;
 struct IDWriteFactory;
 struct IDWriteRenderingParams;
 struct IDWriteFontFace;
@@ -1793,6 +1794,7 @@ class GFX2D_API Factory {
   static bool SupportsD2D1();
   static RefPtr<IDWriteFontCollection> GetDWriteSystemFonts(
       bool aUpdate = false);
+  static RefPtr<ID2D1DeviceContext> GetD2DDeviceContext();
 
   static uint64_t GetD2DVRAMUsageDrawTarget();
   static uint64_t GetD2DVRAMUsageSourceSurface();
@@ -1812,6 +1814,8 @@ class GFX2D_API Factory {
   static StaticRefPtr<IDWriteFactory> mDWriteFactory;
   static bool mDWriteFactoryInitialized;
   static StaticRefPtr<IDWriteFontCollection> mDWriteSystemFonts;
+  static StaticRefPtr<ID2D1DeviceContext> mMTDC;
+  static StaticRefPtr<ID2D1DeviceContext> mOffMTDC;
 
  protected:
   // This guards access to the singleton devices above, as well as the

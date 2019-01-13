@@ -174,6 +174,7 @@ class DrawTargetD2D1 : public DrawTarget {
   friend class SourceSurfaceD2D1;
 
   void FlushInternal(bool aHasDependencyMutex = false);
+  bool EnsureInitialized();
 
   typedef std::unordered_set<DrawTargetD2D1 *> TargetSet;
 
@@ -311,6 +312,9 @@ class DrawTargetD2D1 : public DrawTarget {
   // List of effects we use
   bool EnsureLuminanceEffect();
   RefPtr<ID2D1Effect> mLuminanceEffect;
+
+  bool mIsInitialized;
+  RefPtr<IDXGISurface> mSurface;
 };
 
 }  // namespace gfx
