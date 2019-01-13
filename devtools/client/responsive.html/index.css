@@ -146,13 +146,9 @@ body,
   background-image: url("chrome://devtools/skin/images/close.svg");
 }
 
-/* Briefly animate screenshot button when clicked */
 #screenshot-button:disabled {
+  filter: var(--theme-icon-checked-filter);
   opacity: 1 !important;
-}
-
-#screenshot-button:disabled::before {
-  fill: var(--theme-toolbar-checked-color);
 }
 
 #device-selector {
