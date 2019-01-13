@@ -776,7 +776,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
 
     if (aFrame->IsInScrollAnchorChain()) {
       ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(aFrame);
-      container->ApplyAdjustments();
+      aFrame->PresShell()->PostPendingScrollAnchorAdjustment(container);
     }
     return true;
   }
@@ -885,7 +885,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
 
     if (aFrame->IsInScrollAnchorChain()) {
       ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(aFrame);
-      container->ApplyAdjustments();
+      aFrame->PresShell()->PostPendingScrollAnchorAdjustment(container);
     }
     return true;
   }
@@ -2972,7 +2972,7 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   // Select scroll anchors for frames that have been scrolled. Do this
   // before restyling so that anchor nodes are correctly marked for
   // scroll anchor update suppressions.
-  presContext->PresShell()->FlushDirtyScrollAnchorContainers();
+  presContext->PresShell()->FlushPendingScrollAnchorSelections();
 
   // Create a AnimationsWithDestroyedFrame during restyling process to
   // stop animations and transitions on elements that have no frame at the end

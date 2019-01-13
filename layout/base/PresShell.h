@@ -113,8 +113,12 @@ class PresShell final : public nsIPresShell,
   nsIPageSequenceFrame* GetPageSequenceFrame() const override;
   nsCanvasFrame* GetCanvasFrame() const override;
 
-  void PostDirtyScrollAnchorContainer(nsIScrollableFrame* aFrame) override;
-  void FlushDirtyScrollAnchorContainers() override;
+  void PostPendingScrollAnchorSelection(
+      mozilla::layout::ScrollAnchorContainer* aContainer) override;
+  void FlushPendingScrollAnchorSelections() override;
+  void PostPendingScrollAnchorAdjustment(
+      mozilla::layout::ScrollAnchorContainer* aContainer) override;
+  void FlushPendingScrollAnchorAdjustments();
 
   void FrameNeedsReflow(
       nsIFrame* aFrame, IntrinsicDirty aIntrinsicDirty, nsFrameState aBitToAdd,
@@ -747,7 +751,8 @@ class PresShell final : public nsIPresShell,
   // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
   // we finish reflowing mCurrentReflowRoot.
   nsTHashtable<nsPtrHashKey<nsIFrame>> mFramesToDirty;
-  nsTHashtable<nsPtrHashKey<nsIScrollableFrame>> mDirtyScrollAnchorContainers;
+  nsTHashtable<nsPtrHashKey<nsIScrollableFrame>> mPendingScrollAnchorSelection;
+  nsTHashtable<nsPtrHashKey<nsIScrollableFrame>> mPendingScrollAnchorAdjustment;
 
   nsTArray<UniquePtr<DelayedEvent>> mDelayedEvents;
 
