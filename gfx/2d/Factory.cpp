@@ -203,6 +203,8 @@ static uint32_t mDeviceSeq = 0;
 StaticRefPtr<ID3D11Device> Factory::mD3D11Device;
 StaticRefPtr<ID2D1Device> Factory::mD2D1Device;
 StaticRefPtr<IDWriteFactory> Factory::mDWriteFactory;
+StaticRefPtr<ID2D1DeviceContext> Factory::mMTDC;
+StaticRefPtr<ID2D1DeviceContext> Factory::mOffMTDC;
 bool Factory::mDWriteFactoryInitialized = false;
 StaticRefPtr<IDWriteFontCollection> Factory::mDWriteSystemFonts;
 StaticMutex Factory::mDeviceLock;
@@ -755,6 +757,8 @@ bool Factory::SetDirect3D11Device(ID3D11Device* aDevice) {
 
   if (mD2D1Device) {
     mD2D1Device = nullptr;
+    mMTDC = nullptr;
+    mOffMTDC = nullptr;
   }
 
   if (!aDevice) {
@@ -851,6 +855,34 @@ RefPtr<IDWriteFontCollection> Factory::GetDWriteSystemFonts(bool aUpdate) {
   mDWriteSystemFonts = systemFonts;
 
   return mDWriteSystemFonts;
+}
+
+RefPtr<ID2D1DeviceContext> Factory::GetD2DDeviceContext() {
+  StaticRefPtr<ID2D1DeviceContext>* ptr;
+
+  if (NS_IsMainThread()) {
+    ptr = &mMTDC;
+  } else {
+    ptr = &mOffMTDC;
+  }
+
+  if (*ptr) {
+    return *ptr;
+  }
+
+  RefPtr<ID2D1DeviceContext> dc;
+  HRESULT hr = mD2D1Device->CreateDeviceContext(
+      D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS,
+      getter_AddRefs(dc));
+
+  if (FAILED(hr)) {
+    gfxCriticalError() << "Failed to create global device context";
+    return nullptr;
+  }
+
+  *ptr = dc;
+
+  return *ptr;
 }
 
 bool Factory::SupportsD2D1() { return !!D2DFactory(); }
