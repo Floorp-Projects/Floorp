@@ -26,16 +26,14 @@
     const OFFSET_SCREEN_PX = 50;
     const OFFSET_CSS_PX = OFFSET_SCREEN_PX / RESOLUTION;
 
-    // Measure scrollbar widths before zooming.
-    const verticalScrollbarWidth = window.innerWidth - document.scrollingElement.clientWidth;
-    const horizontalScrollbarWidth = window.innerHeight - document.scrollingElement.clientHeight;
-
-    function computeDelta(visual, scrollbarWidth) {
+    function computeDelta(visual) {
       // Compute the distance from the right/bottom edge of the visual
       // viewport to the same edge of the layout viewport and add the desired
       // offset to that.
-      const layout = (visual + scrollbarWidth);
-      return layout - (visual / RESOLUTION) + OFFSET_CSS_PX;
+      // We can ignore scrollbar width here since the scrollbar is layouted at
+      // the right/bottom edge of this content, not of this window in the case
+      // of containerful scrolling.
+      return visual - (visual / RESOLUTION) + OFFSET_CSS_PX;
     }
 
     function* test(testDriver) {
@@ -43,7 +41,7 @@
         {
           x: 0,
           y: 0,
-          dx: (width) => -computeDelta(width, verticalScrollbarWidth),
+          dx: (width) => -computeDelta(width),
           dy: (height) => 0,
           expected: {
             x: [OFFSET_CSS_PX, "x-offset was adjusted"],
@@ -54,7 +52,7 @@
           x: OFFSET_CSS_PX,
           y: 0,
           dx: (width) => 0,
-          dy: (height) => -computeDelta(height, horizontalScrollbarWidth),
+          dy: (height) => -computeDelta(height),
           expected: {
             x: [OFFSET_CSS_PX, "x-offset was not affected"],
             y: [OFFSET_CSS_PX, "y-offset was adjusted"],

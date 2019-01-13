@@ -9023,6 +9023,11 @@ static void MaybeReflowForInflationScreenSizeChange(
     bool isRootContent = presContext->IsRootContentDocument();
 
     nsRect viewport(aBuilder->ToReferenceFrame(frame), frame->GetSize());
+    if (isRootContent && rootScrollFrame) {
+      nsIScrollableFrame* scrollableFrame =
+          rootScrollFrame->GetScrollTargetFrame();
+      viewport.SizeTo(scrollableFrame->GetScrollPortRect().Size());
+    }
     return Some(nsLayoutUtils::ComputeScrollMetadata(
         frame, rootScrollFrame, content, aBuilder->FindReferenceFrameFor(frame),
         aLayerManager, ScrollableLayerGuid::NULL_SCROLL_ID, viewport, Nothing(),
