@@ -87,9 +87,6 @@
   --theme-graphs-full-red: #f00;
   --theme-graphs-full-blue: #00f;
 
-  /* Icon filters */
-  --theme-icon-checked-filter: url(chrome://devtools/skin/images/filters.svg#icon-checked-light);
-
   /* Common popup styles(used by HTMLTooltip and autocomplete) */
   --theme-popup-background: -moz-field;
   --theme-popup-color: -moz-fieldText;
@@ -179,9 +176,6 @@
   --theme-graphs-grey: #757873;
   --theme-graphs-full-red: #f00;
   --theme-graphs-full-blue: #00f;
-
-  /* Icon filters */
-  --theme-icon-checked-filter: url(chrome://devtools/skin/images/filters.svg#icon-checked-dark);
 
   /* Common popup styles(used by HTMLTooltip and autocomplete) */
   --theme-popup-background: var(--grey-60);
