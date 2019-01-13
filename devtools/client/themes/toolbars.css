@@ -181,13 +181,7 @@
 /*
  * Apply the default fill color to toolbar icons
  */
-.devtools-toolbarbutton > image,
-.devtools-button::before,
-.scrollbutton-up > .toolbarbutton-icon,
-.scrollbutton-down > .toolbarbutton-icon,
-#black-boxed-message-button .button-icon,
 #canvas-debugging-empty-notice-button .button-icon,
-#toggle-breakpoints[checked] > image,
 .event-tooltip-debugger-icon {
   -moz-context-properties: fill;
   fill: var(--theme-toolbar-icon-color);
