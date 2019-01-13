@@ -610,12 +610,27 @@ function check_space_escaping()
   uri = gIoService.newURI("http://example.com/test%20path#test%20path");
 }
 
+function check_schemeIsNull()
+{
+  let uri = gIoService.newURI("data:text/plain,aaa");
+  Assert.ok(!uri.schemeIs(null));
+  uri = gIoService.newURI("http://example.com");
+  Assert.ok(!uri.schemeIs(null));
+  uri = gIoService.newURI("dummyscheme://example.com");
+  Assert.ok(!uri.schemeIs(null));
+  uri = gIoService.newURI("jar:resource://gre/chrome.toolkit.jar!/");
+  Assert.ok(!uri.schemeIs(null));
+  uri = gIoService.newURI("moz-icon://.unknown?size=32");
+  Assert.ok(!uri.schemeIs(null));
+}
+
 // TEST MAIN FUNCTION
 // ------------------
 function run_test()
 {
   check_nested_mutations();
   check_space_escaping();
+  check_schemeIsNull();
 
   // UTF-8 check - From bug 622981
   // ASCII
