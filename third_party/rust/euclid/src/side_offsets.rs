@@ -19,13 +19,15 @@ use core::marker::PhantomData;
 
 /// A group of side offsets, which correspond to top/left/bottom/right for borders, padding,
 /// and margins in CSS, optionally tagged with a unit.
-define_matrix! {
-    pub struct TypedSideOffsets2D<T, U> {
-        pub top: T,
-        pub right: T,
-        pub bottom: T,
-        pub left: T,
-    }
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedSideOffsets2D<T, U> {
+    pub top: T,
+    pub right: T,
+    pub bottom: T,
+    pub left: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<U>,
 }
 
 impl<T: fmt::Debug, U> fmt::Debug for TypedSideOffsets2D<T, U> {

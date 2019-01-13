@@ -17,14 +17,16 @@ use core::marker::PhantomData;
 use core::ops::Div;
 
 
-define_matrix! {
-    /// Homogeneous vector in 3D space.
-    pub struct HomogeneousVector<T, U> {
-        pub x: T,
-        pub y: T,
-        pub z: T,
-        pub w: T,
-    }
+/// Homogeneous vector in 3D space.
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct HomogeneousVector<T, U> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
+    pub w: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<U>,
 }
 
 
