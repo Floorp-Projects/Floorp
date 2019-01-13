@@ -529,6 +529,7 @@ struct MemoryReport {
   uintptr_t swap_chain;
 };
 
+/// A 2d size tagged with a unit.
 template<typename T, typename U>
 struct TypedSize2D {
   T width;
@@ -744,6 +745,8 @@ struct TypedVector2D {
 
 using LayoutVector2D = TypedVector2D<float, LayoutPixel>;
 
+/// A group of side offsets, which correspond to top/left/bottom/right for borders, padding,
+/// and margins in CSS, optionally tagged with a unit.
 template<typename T, typename U>
 struct TypedSideOffsets2D {
   T top;

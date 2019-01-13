@@ -24,7 +24,7 @@ use core::borrow::Borrow;
 use core::cmp::PartialOrd;
 use core::fmt;
 use core::hash::{Hash, Hasher};
-use core::ops::{Add, Div, Mul, Sub};
+use core::ops::{Add, Div, Mul, Sub, Range};
 
 
 /// A 2d Rectangle optionally tagged with a unit.
@@ -166,6 +166,16 @@ where
     #[inline]
     pub fn min_y_typed(&self) -> Length<T, U> {
         Length::new(self.min_y())
+    }
+
+    #[inline]
+    pub fn x_range(&self) -> Range<T> {
+        self.min_x()..self.max_x()
+    }
+
+    #[inline]
+    pub fn y_range(&self) -> Range<T> {
+        self.min_y()..self.max_y()
     }
 
     #[inline]
