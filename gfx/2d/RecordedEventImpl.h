@@ -2635,6 +2635,9 @@ inline bool RecordedPathCreation::PlayEvent(Translator *aTranslator) const {
       case PathOp::OP_QUADRATICBEZIERTO:
         builder->QuadraticBezierTo(op.mP1, op.mP2);
         break;
+      case PathOp::OP_ARC:
+        MOZ_ASSERT_UNREACHABLE("Recordings should not contain arc operations");
+        break;
       case PathOp::OP_CLOSE:
         builder->Close();
         break;

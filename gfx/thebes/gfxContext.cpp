@@ -188,7 +188,8 @@ void gfxContext::SetPath(Path* path) {
   MOZ_ASSERT(path->GetBackendType() == mDT->GetBackendType() ||
              path->GetBackendType() == BackendType::RECORDING ||
              (mDT->GetBackendType() == BackendType::DIRECT2D1_1 &&
-              path->GetBackendType() == BackendType::DIRECT2D));
+              path->GetBackendType() == BackendType::DIRECT2D) ||
+             path->GetBackendType() == BackendType::CAPTURE);
   mPath = path;
   mPathBuilder = nullptr;
   mPathIsRect = false;

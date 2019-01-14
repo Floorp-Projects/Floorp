@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_PATHRECORDING_H_
-#define MOZILLA_GFX_PATHRECORDING_H_
+#ifndef MOZILLA_GFX_PATHCAPTURE_H_
+#define MOZILLA_GFX_PATHCAPTURE_H_
 
 #include "2D.h"
 #include <vector>
@@ -16,15 +16,14 @@
 namespace mozilla {
 namespace gfx {
 
-class PathRecording;
-class DrawEventRecorderPrivate;
+class PathCapture;
 
-class PathBuilderRecording : public PathBuilder {
+class PathBuilderCapture : public PathBuilder {
  public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilderRecording, override)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilderCapture, override)
 
-  PathBuilderRecording(PathBuilder *aBuilder, FillRule aFillRule)
-      : mPathBuilder(aBuilder), mFillRule(aFillRule) {}
+  PathBuilderCapture(FillRule aFillRule, DrawTarget *aDT)
+      : mFillRule(aFillRule), mDT(aDT) {}
 
   /* Move the current point in the path, any figure currently being drawn will
    * be considered closed during fill operations, however when stroking the
@@ -38,17 +37,13 @@ class PathBuilderRecording : public PathBuilder {
                         const Point &aCP3) override;
   /* Add a quadratic bezier curve to the current figure */
   virtual void QuadraticBezierTo(const Point &aCP1, const Point &aCP2) override;
+  /* Add an arc to the current figure */
+  virtual void Arc(const Point &aOrigin, float aRadius, float aStartAngle,
+                   float aEndAngle, bool aAntiClockwise) override;
   /* Close the current figure, this will essentially generate a line segment
    * from the current point to the starting point for the current figure
    */
   virtual void Close() override;
-
-  /* Add an arc to the current figure */
-  virtual void Arc(const Point &aOrigin, float aRadius, float aStartAngle,
-                   float aEndAngle, bool aAntiClockwise) override {
-    ArcToBezier(this, aOrigin, Size(aRadius, aRadius), aStartAngle, aEndAngle,
-                aAntiClockwise);
-  }
 
   /* Point the current subpath is at - or where the next subpath will start
    * if there is no active subpath.
@@ -58,76 +53,65 @@ class PathBuilderRecording : public PathBuilder {
   virtual already_AddRefed<Path> Finish() override;
 
   virtual BackendType GetBackendType() const override {
-    return BackendType::RECORDING;
+    return BackendType::CAPTURE;
   }
 
  private:
-  friend class PathRecording;
+  friend class PathCapture;
 
-  RefPtr<PathBuilder> mPathBuilder;
   FillRule mFillRule;
   std::vector<PathOp> mPathOps;
+  Point mCurrentPoint;
+  RefPtr<DrawTarget> mDT;
 };
 
-class PathRecording : public Path {
+class PathCapture : public Path {
  public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathRecording, override)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathCapture, override)
 
-  PathRecording(Path *aPath, const std::vector<PathOp> aOps, FillRule aFillRule)
-      : mPath(aPath), mPathOps(aOps), mFillRule(aFillRule) {}
-
-  ~PathRecording();
+  PathCapture(const std::vector<PathOp> aOps, FillRule aFillRule,
+              DrawTarget *aDT, const Point &aCurrentPoint)
+      : mPathOps(aOps),
+        mFillRule(aFillRule),
+        mDT(aDT),
+        mCurrentPoint(aCurrentPoint) {}
 
   virtual BackendType GetBackendType() const override {
-    return BackendType::RECORDING;
+    return BackendType::CAPTURE;
   }
   virtual already_AddRefed<PathBuilder> CopyToBuilder(
       FillRule aFillRule) const override;
   virtual already_AddRefed<PathBuilder> TransformedCopyToBuilder(
       const Matrix &aTransform, FillRule aFillRule) const override;
   virtual bool ContainsPoint(const Point &aPoint,
-                             const Matrix &aTransform) const override {
-    return mPath->ContainsPoint(aPoint, aTransform);
-  }
+                             const Matrix &aTransform) const override;
   virtual bool StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
                                    const Point &aPoint,
-                                   const Matrix &aTransform) const override {
-    return mPath->StrokeContainsPoint(aStrokeOptions, aPoint, aTransform);
-  }
+                                   const Matrix &aTransform) const override;
 
-  virtual Rect GetBounds(const Matrix &aTransform = Matrix()) const override {
-    return mPath->GetBounds(aTransform);
-  }
+  virtual Rect GetBounds(const Matrix &aTransform = Matrix()) const override;
 
   virtual Rect GetStrokedBounds(
       const StrokeOptions &aStrokeOptions,
-      const Matrix &aTransform = Matrix()) const override {
-    return mPath->GetStrokedBounds(aStrokeOptions, aTransform);
-  }
+      const Matrix &aTransform = Matrix()) const override;
 
-  virtual void StreamToSink(PathSink *aSink) const override {
-    mPath->StreamToSink(aSink);
-  }
+  virtual void StreamToSink(PathSink *aSink) const override;
 
   virtual FillRule GetFillRule() const override { return mFillRule; }
 
-  void StorePath(std::ostream &aStream) const;
-  static void ReadPathToBuilder(std::istream &aStream, PathBuilder *aBuilder);
+  Path *GetRealizedPath() const;
 
  private:
-  friend class DrawTargetWrapAndRecord;
-  friend class DrawTargetRecording;
-  friend class RecordedPathCreation;
+  bool EnsureRealizedPath() const;
 
-  RefPtr<Path> mPath;
+  mutable RefPtr<Path> mRealizedPath;
   std::vector<PathOp> mPathOps;
   FillRule mFillRule;
-
-  // Event recorders that have this path in their event stream.
-  std::vector<RefPtr<DrawEventRecorderPrivate>> mStoredRecorders;
+  RefPtr<DrawTarget> mDT;
+  Point mCurrentPoint;
 };
 
 }  // namespace gfx
 }  // namespace mozilla
 
-#endif /* MOZILLA_GFX_PATHRECORDING_H_ */
+#endif /* MOZILLA_GFX_PATHCAPTURE_H_ */
