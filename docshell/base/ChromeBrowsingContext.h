@@ -51,6 +51,11 @@ class ChromeBrowsingContext final : public BrowsingContext {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  // This function would set its user gesture activation flag and then notify
+  // other browsing contexts which are not the one related with the current
+  // window global to set the flag. (the corresponding browsing context of the
+  // current global window has been set before calling this function)
+  void NotifyUserGestureActivationFromIPC();
  protected:
   void Traverse(nsCycleCollectionTraversalCallback& cb);
   void Unlink();
