@@ -93,6 +93,7 @@ This is a bitfield indicating whether various attributes apply to the module.
 * ``0x80`` if the module is an internally-recognized JIT module
 * ``0x100`` if the module is located in the Windows Side-by-side directory (introduced in Firefox 66)
 * ``0x200`` if the module is the XPCOM module, xul.dll (introduced in Firefox 66)
+* ``0x400`` if the module is located in the SysWOW64 directory (introduced in Firefox 66)
 
 payload.combinedStacks
 ----------------------
@@ -137,3 +138,4 @@ Version History
 
    - Added Windows Side-by-side directory trust flag (`bug 1514694 <https://bugzilla.mozilla.org/show_bug.cgi?id=1514694>`_).
    - Added module load times (``xulLoadDurationMS``, ``loadDurationMS``) and xul.dll trust flag (`bug 1518490 <https://bugzilla.mozilla.org/show_bug.cgi?id=1518490>`_).
+   - Added SysWOW64 trust flag (`bug 1518798 <https://bugzilla.mozilla.org/show_bug.cgi?id=1518798>`_).

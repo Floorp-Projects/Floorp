@@ -31,6 +31,7 @@ enum class ModuleTrustFlags : uint32_t {
   JitPI = 0x80,
   WinSxSDirectory = 0x100,
   Xul = 0x200,
+  SysWOW64Directory = 0x400,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ModuleTrustFlags);
@@ -98,6 +99,9 @@ class ModuleEvaluator {
   nsString mExeDirectory;
   nsString mSysDirectory;
   nsString mWinSxSDirectory;
+#ifdef _M_IX86
+  nsString mSysWOW64Directory;
+#endif  // _M_IX86
   Vector<nsString, 0, InfallibleAllocPolicy> mKeyboardLayoutDlls;
 
  public:
