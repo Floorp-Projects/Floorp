@@ -91,7 +91,7 @@ static bool NumberFormat(JSContext* cx, const CallArgs& args, bool construct) {
 
   // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Null, &proto)) {
     return false;
   }
 

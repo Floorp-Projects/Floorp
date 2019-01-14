@@ -3804,7 +3804,7 @@ static inline bool ArrayConstructorImpl(JSContext* cx, CallArgs& args,
                                         bool isConstructor) {
   RootedObject proto(cx);
   if (isConstructor) {
-    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Array, &proto)) {
       return false;
     }
   } else {

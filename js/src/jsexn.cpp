@@ -388,13 +388,23 @@ JS_PUBLIC_API uint64_t JS::ExceptionTimeWarpTarget(JS::HandleValue value) {
 bool Error(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
+  // ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
+  // called as functions, without operator new.  But as we do not give
+  // each constructor a distinct JSClass, we must get the exception type
+  // ourselves.
+  JSExnType exnType =
+      JSExnType(args.callee().as<JSFunction>().getExtendedSlot(0).toInt32());
+
+  JSProtoKey protoKey =
+      JSCLASS_CACHED_PROTO_KEY(&ErrorObject::classes[exnType]);
+
   // ES6 19.5.1.1 mandates the .prototype lookup happens before the toString
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, protoKey, &proto)) {
     return false;
   }
 
-  /* Compute the error message, if any. */
+  // Compute the error message, if any.
   RootedString message(cx, nullptr);
   if (args.hasDefined(0)) {
     message = ToString<CanGC>(cx, args[0]);
@@ -403,10 +413,9 @@ bool Error(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  /* Find the scripted caller, but only ones we're allowed to know about. */
+  // Find the scripted caller, but only ones we're allowed to know about.
   NonBuiltinFrameIter iter(cx, cx->realm()->principals());
 
-  /* Set the 'fileName' property. */
   RootedString fileName(cx);
   if (args.length() > 1) {
     fileName = ToString<CanGC>(cx, args[1]);
@@ -422,7 +431,6 @@ bool Error(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  /* Set the 'lineNumber' property. */
   uint32_t lineNumber, columnNumber = 0;
   if (args.length() > 2) {
     if (!ToUint32(cx, args[2], &lineNumber)) {
@@ -437,15 +445,6 @@ bool Error(JSContext* cx, unsigned argc, Value* vp) {
   if (!CaptureStack(cx, &stack)) {
     return false;
   }
-
-  /*
-   * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
-   * called as functions, without operator new.  But as we do not give
-   * each constructor a distinct JSClass, we must get the exception type
-   * ourselves.
-   */
-  JSExnType exnType =
-      JSExnType(args.callee().as<JSFunction>().getExtendedSlot(0).toInt32());
 
   RootedObject obj(cx,
                    ErrorObject::create(cx, exnType, stack, fileName, lineNumber,

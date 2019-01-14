@@ -551,7 +551,8 @@ bool ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp) {
   //     OrdinaryCreateFromConstructor(NewTarget, ...).
   // Step 1: Perform ! InitializeReadableStream(this).
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_ReadableStream,
+                                          &proto)) {
     return false;
   }
   Rooted<ReadableStream*> stream(cx, ReadableStream::create(cx, proto));
@@ -1792,7 +1793,7 @@ bool ReadableStreamDefaultReader::constructor(JSContext* cx, unsigned argc,
 
   // Implicit in the spec: Find the prototype object to use.
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Null, &proto)) {
     return false;
   }
 
@@ -3935,7 +3936,8 @@ bool js::ByteLengthQueuingStrategy::constructor(JSContext* cx, unsigned argc,
 
   // Implicit in the spec: Create the new strategy object.
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(
+          cx, args, JSProto_ByteLengthQueuingStrategy, &proto)) {
     return false;
   }
   RootedObject strategy(
@@ -3994,7 +3996,8 @@ bool js::CountQueuingStrategy::constructor(JSContext* cx, unsigned argc,
 
   // Implicit in the spec: Create the new strategy object.
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(
+          cx, args, JSProto_CountQueuingStrategy, &proto)) {
     return false;
   }
   Rooted<CountQueuingStrategy*> strategy(
