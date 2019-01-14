@@ -5507,9 +5507,8 @@ nsDocShell::GetAllowMixedContentAndConnectionData(
 
     // For things with system principal (e.g. scratchpad) there is no uri
     // aRootHasSecureConnection should be false.
-    nsCOMPtr<nsIURI> rootUri;
+    nsCOMPtr<nsIURI> rootUri = rootPrincipal->GetURI();
     if (nsContentUtils::IsSystemPrincipal(rootPrincipal) ||
-        NS_FAILED(rootPrincipal->GetURI(getter_AddRefs(rootUri))) ||
         !rootUri || !SchemeIsHTTPS(rootUri)) {
       *aRootHasSecureConnection = false;
     }
@@ -9590,9 +9589,7 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
     return false;
   }
 
-  nsCOMPtr<nsIURI> resultURI;
-  nsresult rv = aResultPrincipal->GetURI(getter_AddRefs(resultURI));
-  NS_ENSURE_SUCCESS(rv, false);
+  nsCOMPtr<nsIURI> resultURI = aResultPrincipal->GetURI();
 
   // We know this is a codebase principal, and codebase principals require valid
   // URIs, so we shouldn't need to check non-null here.
@@ -9600,6 +9597,7 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
     return false;
   }
 
+  nsresult rv;
   nsAutoCString tmpResultSpec;
   rv = resultURI->GetSpec(tmpResultSpec);
   NS_ENSURE_SUCCESS(rv, false);
