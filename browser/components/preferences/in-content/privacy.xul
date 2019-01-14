@@ -215,6 +215,9 @@
         <label id="siteDataLearnMoreLink"
           class="learnMore text-link" data-l10n-id="sitedata-learn-more"/>
       </description>
+      <hbox flex="1" id="deleteOnCloseNote" class="info-panel">
+        <description flex="1" data-l10n-id="sitedata-delete-on-close-private-browsing" />
+      </hbox>
       <hbox id="keepRow"
             align="center">
         <checkbox id="deleteOnClose"
