@@ -2716,9 +2716,10 @@ TabParent::GetContentBlockingLog(Promise** aPromise) {
 
   auto cblPromise = SendGetContentBlockingLog();
   cblPromise->Then(GetMainThreadSerialEventTarget(), __func__,
-                   [jsPromise](Tuple<nsString, bool>&& aResult) {
+                   [jsPromise](Tuple<nsCString, bool>&& aResult) {
                      if (Get<1>(aResult)) {
-                       jsPromise->MaybeResolve(std::move(Get<0>(aResult)));
+                       NS_ConvertUTF8toUTF16 utf16(Get<0>(aResult));
+                       jsPromise->MaybeResolve(std::move(utf16));
                      } else {
                        jsPromise->MaybeRejectWithUndefined();
                      }

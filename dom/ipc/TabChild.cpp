@@ -3082,14 +3082,14 @@ mozilla::ipc::IPCResult TabChild::RecvSetWidgetNativeData(
 mozilla::ipc::IPCResult TabChild::RecvGetContentBlockingLog(
     GetContentBlockingLogResolver&& aResolve) {
   bool success = false;
-  nsAutoString result;
+  nsAutoCString result;
 
   if (nsCOMPtr<Document> doc = GetDocument()) {
     result = doc->GetContentBlockingLog()->Stringify();
     success = true;
   }
 
-  aResolve(Tuple<const nsString&, const bool&>(result, success));
+  aResolve(Tuple<const nsCString&, const bool&>(result, success));
   return IPC_OK();
 }
 

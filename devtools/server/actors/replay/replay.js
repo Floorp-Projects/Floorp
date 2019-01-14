@@ -519,6 +519,7 @@ function getScriptData(id) {
     sourceLength: script.sourceLength,
     displayName: script.displayName,
     url: script.url,
+    format: script.format,
   };
 }
 
@@ -738,6 +739,7 @@ const gRequestHandlers = {
   getOffsetLocation: forwardToScript("getOffsetLocation"),
   getSuccessorOffsets: forwardToScript("getSuccessorOffsets"),
   getPredecessorOffsets: forwardToScript("getPredecessorOffsets"),
+  getAllColumnOffsets: forwardToScript("getAllColumnOffsets"),
 
   frameEvaluate(request) {
     if (!RecordReplayControl.maybeDivergeFromRecording()) {

@@ -322,9 +322,9 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     ]
 
     consts = GENERATED_FILES['ServoStyleConsts.h']
-    consts.script = 'GenerateServoStyleConsts.py:generate'
+    consts.script = 'RunCbindgen.py:generate'
     consts.inputs = [
-        '/servo/components/style/cbindgen.toml',
+        '/servo/components/style',
     ]
 
     CONFIGURE_SUBST_FILES += [
