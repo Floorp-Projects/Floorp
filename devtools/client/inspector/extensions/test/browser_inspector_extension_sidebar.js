@@ -261,8 +261,6 @@ add_task(async function teardownExtensionSidebar() {
   Assert.deepEqual(inspectorStoreState.extensionsSidebar, {},
                    "The extensions sidebar Redux store data has been cleared");
 
-  await toolbox.destroy();
-
   await extension.unload();
 
   toolbox = null;
