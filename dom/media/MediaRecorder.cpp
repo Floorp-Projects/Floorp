@@ -324,6 +324,32 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     RefPtr<Session> mSession;
   };
 
+  // Fire a named event, run in main thread task.
+  class DispatchEventRunnable : public Runnable {
+   public:
+    explicit DispatchEventRunnable(Session* aSession,
+                                   const nsAString& aEventName)
+        : Runnable("dom::MediaRecorder::Session::DispatchEventRunnable"),
+          mSession(aSession),
+          mEventName(aEventName) {}
+
+    NS_IMETHOD Run() override {
+      LOG(LogLevel::Debug,
+          ("Session.DispatchEventRunnable s=(%p) e=(%s)", mSession.get(),
+           NS_ConvertUTF16toUTF8(mEventName).get()));
+      MOZ_ASSERT(NS_IsMainThread());
+
+      NS_ENSURE_TRUE(mSession->mRecorder, NS_OK);
+      mSession->mRecorder->DispatchSimpleEvent(mEventName);
+
+      return NS_OK;
+    }
+
+   private:
+    RefPtr<Session> mSession;
+    nsString mEventName;
+  };
+
   // Fire start event and set mimeType, run in main thread task.
   class DispatchStartEventRunnable : public Runnable {
    public:
