@@ -6,29 +6,30 @@ async function openContextMenuInOptionsPage(optionsBrowser) {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
 
-  await BrowserTestUtils.waitForCondition(async () => {
-    BrowserTestUtils.synthesizeMouseAtCenter("a", {type: "contextmenu"}, optionsBrowser);
+  info("Trigger context menu in the extension options page");
 
-    // It looks that syntesizeMouseAtCenter is sometimes able to trigger the mouse event on the
-    // HTML document instead of triggering it on the expected document element while running this
-    // test in --verify mode, and we are going to send the mouse event again if it didn't
-    // triggered the context menu yet.
-    return Promise.race([
-      popupShownPromise.then(() => true),
-      delay(500).then(() => false),
-    ]);
-  }, "Waiting the context menu to be shown");
+  // Instead of BrowserTestUtils.synthesizeMouseAtCenter, we are dispatching a contextmenu
+  // event directly on the target element to prevent intermittent failures on debug builds
+  // (especially linux32-debug), see Bug 1519808 for a rationale.
+  ContentTask.spawn(optionsBrowser, null, () => {
+    let el = content.document.querySelector("a");
+    el.dispatchEvent(new content.MouseEvent("contextmenu", {
+      bubbles: true,
+      cancelable: true,
+      view: el.ownerGlobal,
+    }));
+  });
+
+  info("Wait the context menu to be shown");
+  await popupShownPromise;
 
   return contentAreaContextMenu;
 }
 
-function contextMenuClosed(contextMenu) {
-  // Close the context menu and ensure that it is gone, otherwise there
-  // may be intermittent failures related to shutdown leaks.
-  return BrowserTestUtils.waitForCondition(async () => {
-    await closeContextMenu(contextMenu);
-    return contextMenu.state === "closed";
-  }, "Wait context menu popup to be closed");
+async function contextMenuClosed(contextMenu) {
+  info("Wait context menu popup to be closed");
+  await closeContextMenu(contextMenu);
+  is(contextMenu.state, "closed", "The context menu popup has been closed");
 }
 
 add_task(async function test_tab_options_popups() {
