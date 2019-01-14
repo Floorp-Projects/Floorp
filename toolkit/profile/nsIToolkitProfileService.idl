@@ -10,7 +10,7 @@ interface nsIFile;
 interface nsIToolkitProfile;
 interface nsIProfileLock;
 
-[scriptable, uuid(1947899b-f369-48fa-89da-f7c37bb1e6bc)]
+[scriptable, builtinclass, uuid(1947899b-f369-48fa-89da-f7c37bb1e6bc)]
 interface nsIToolkitProfileService : nsISupports
 {
     attribute boolean startWithLastProfile;
@@ -36,6 +36,28 @@ interface nsIToolkitProfileService : nsISupports
      * other build of Firefox.
      */
     attribute nsIToolkitProfile defaultProfile;
+
+    /**
+     * Selects or creates a profile to use based on the profiles database, any
+     * environment variables and any command line arguments. Will not create
+     * a profile if aIsResetting is true. The profile is selected based on this
+     * order of preference:
+     * * Environment variables (set when restarting the application).
+     * * --profile command line argument.
+     * * --createprofile command line argument (this also causes the app to exit).
+     * * -p command line argument.
+     * * A new profile created if this is the first run of the application.
+     * * The default profile.
+     * aRootDir and aLocalDir are set to the data and local directories for the
+     * profile data. If a profile from the database was selected it will be
+     * returned in aProfile.
+     * This returns true if a new profile was created.
+     * This method is primarily for testing. It can be called only once.
+     */
+    bool selectStartupProfile(in Array<ACString> aArgv,
+                              in boolean aIsResetting,
+                              out nsIFile aRootDir, out nsIFile aLocalDir,
+                              out nsIToolkitProfile aProfile);
 
     /**
      * Get a profile by name. This is mainly for use by the -P
