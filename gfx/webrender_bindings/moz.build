@@ -18,7 +18,6 @@ EXPORTS.mozilla.webrender += [
     'RenderTextureHostWrapper.h',
     'RenderThread.h',
     'webrender_ffi.h',
-    'webrender_ffi_generated.h',
     'WebRenderAPI.h',
     'WebRenderTypes.h',
 ]
@@ -70,6 +69,24 @@ if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk3'):
     CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
+
+if CONFIG['COMPILE_ENVIRONMENT']:
+    GENERATED_FILES += [
+        'webrender_ffi_generated.h',
+    ]
+
+    EXPORTS.mozilla.webrender += [
+        '!webrender_ffi_generated.h',
+    ]
+
+    ffi_generated = GENERATED_FILES['webrender_ffi_generated.h']
+    ffi_generated.script = '/layout/style/RunCbindgen.py:generate'
+    ffi_generated.inputs = [
+        '/gfx/webrender_bindings',
+        '/gfx/wr/webrender',
+        '/gfx/wr/webrender_api',
+    ]
+
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
