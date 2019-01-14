@@ -195,8 +195,9 @@ void Zone::sweepWeakMaps() {
   WeakMapBase::sweepZone(this);
 }
 
-void Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode,
-                          bool releaseTypes) {
+void Zone::discardJitCode(FreeOp* fop,
+                          ShouldDiscardBaselineCode discardBaselineCode,
+                          ShouldReleaseTypes releaseTypes) {
   if (!jitZone()) {
     return;
   }

@@ -4226,8 +4226,8 @@ static void DiscardJITCodeForGC(JSRuntime* rt) {
     gcstats::AutoPhase ap(rt->gc.stats(),
                           gcstats::PhaseKind::MARK_DISCARD_CODE);
     zone->discardJitCode(rt->defaultFreeOp(),
-                         /* discardBaselineCode = */ true,
-                         /* releaseTypes = */ true);
+                         Zone::DiscardBaselineCode,
+                         Zone::ReleaseTypes);
   }
 }
 
