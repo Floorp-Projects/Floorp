@@ -103,6 +103,9 @@ exports.rule = {
     keyframesName: PropTypes.string,
   }),
 
+  // The pseudo-element keyword used in the rule.
+  pseudoElement: PropTypes.string,
+
   // An object containing information about the CSS rule's selector.
   selector: PropTypes.shape(selector),
 
