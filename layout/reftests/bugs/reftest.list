@@ -1913,11 +1913,11 @@ skip-if(!Android) == 1133905-1.html 1133905-ref.html
 skip-if(!Android) == 1133905-2.html 1133905-ref.html
 skip-if(!Android) == 1133905-3.html 1133905-ref.html
 skip-if(!Android) == 1133905-4.html 1133905-ref.html
-skip-if(!Android) == 1133905-5.html 1133905-ref.html
-skip-if(!Android) == 1133905-6.html 1133905-ref.html
-skip-if(!Android) fails-if(Android) == 1133905-1-v.html 1133905-ref-v.html
-skip-if(!Android) fails-if(Android) == 1133905-2-v.html 1133905-ref-v.html
-skip-if(!Android) fails-if(Android) == 1133905-3-v.html 1133905-ref-v.html
+skip-if(!Android) fails-if(Android) == 1133905-5.html 1133905-ref.html
+skip-if(!Android) fails-if(Android) == 1133905-6.html 1133905-ref.html
+skip-if(!Android) == 1133905-1-v.html 1133905-ref-v.html
+skip-if(!Android) == 1133905-2-v.html 1133905-ref-v.html
+skip-if(!Android) == 1133905-3-v.html 1133905-ref-v.html
 skip-if(!Android) == 1133905-4-v.html 1133905-ref-v.html
 skip-if(!Android) fails-if(Android) == 1133905-5-v.html 1133905-ref-v.html
 skip-if(!Android) fails-if(Android) == 1133905-6-v.html 1133905-ref-v.html
@@ -1925,11 +1925,11 @@ skip-if(!Android) == 1133905-1-h.html 1133905-ref-h.html
 skip-if(!Android) == 1133905-2-h.html 1133905-ref-h.html
 skip-if(!Android) == 1133905-3-h.html 1133905-ref-h.html
 skip-if(!Android) == 1133905-4-h.html 1133905-ref-h.html
-skip-if(!Android) == 1133905-5-h.html 1133905-ref-h.html
-skip-if(!Android) == 1133905-6-h.html 1133905-ref-h.html
-skip-if(!Android) fails-if(Android) == 1133905-1-vh.html 1133905-ref-vh.html
-skip-if(!Android) fails-if(Android) == 1133905-2-vh.html 1133905-ref-vh.html
-skip-if(!Android) fails-if(Android) == 1133905-3-vh.html 1133905-ref-vh.html
+skip-if(!Android) fails-if(Android) == 1133905-5-h.html 1133905-ref-h.html
+skip-if(!Android) fails-if(Android) == 1133905-6-h.html 1133905-ref-h.html
+skip-if(!Android) == 1133905-1-vh.html 1133905-ref-vh.html
+skip-if(!Android) == 1133905-2-vh.html 1133905-ref-vh.html
+skip-if(!Android) == 1133905-3-vh.html 1133905-ref-vh.html
 skip-if(!Android) == 1133905-4-vh.html 1133905-ref-vh.html
 skip-if(!Android) fails-if(Android) == 1133905-5-vh.html 1133905-ref-vh.html
 skip-if(!Android) fails-if(Android) == 1133905-6-vh.html 1133905-ref-vh.html
@@ -1937,11 +1937,11 @@ skip-if(!Android) == 1133905-1-rtl.html 1133905-ref-rtl.html
 skip-if(!Android) == 1133905-2-rtl.html 1133905-ref-rtl.html
 skip-if(!Android) == 1133905-3-rtl.html 1133905-ref-rtl.html
 skip-if(!Android) == 1133905-4-rtl.html 1133905-ref-rtl.html
-skip-if(!Android) == 1133905-5-rtl.html 1133905-ref-rtl.html
-skip-if(!Android) == 1133905-6-rtl.html 1133905-ref-rtl.html
-skip-if(!Android) fails-if(Android) == 1133905-1-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!Android) fails-if(Android) == 1133905-2-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!Android) fails-if(Android) == 1133905-3-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-5-rtl.html 1133905-ref-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-6-rtl.html 1133905-ref-rtl.html
+skip-if(!Android) == 1133905-1-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!Android) == 1133905-2-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!Android) == 1133905-3-v-rtl.html 1133905-ref-v-rtl.html
 skip-if(!Android) == 1133905-4-v-rtl.html 1133905-ref-v-rtl.html
 skip-if(!Android) fails-if(Android) == 1133905-5-v-rtl.html 1133905-ref-v-rtl.html
 skip-if(!Android) fails-if(Android) == 1133905-6-v-rtl.html 1133905-ref-v-rtl.html
@@ -1949,11 +1949,11 @@ skip-if(!Android) == 1133905-1-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!Android) == 1133905-2-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!Android) == 1133905-3-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!Android) == 1133905-4-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!Android) == 1133905-5-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!Android) == 1133905-6-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!Android) fails-if(Android) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!Android) fails-if(Android) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!Android) fails-if(Android) == 1133905-3-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-5-h-rtl.html 1133905-ref-h-rtl.html
+skip-if(!Android) fails-if(Android) == 1133905-6-h-rtl.html 1133905-ref-h-rtl.html
+skip-if(!Android) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!Android) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!Android) == 1133905-3-vh-rtl.html 1133905-ref-vh-rtl.html
 skip-if(!Android) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html
 skip-if(!Android) fails-if(Android) == 1133905-5-vh-rtl.html 1133905-ref-vh-rtl.html
 skip-if(!Android) fails-if(Android) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html
@@ -1993,7 +1993,8 @@ random-if(gtkWidget) != 1238243-1.html 1238243-1-notref.html # may fail on Linux
 == 1238243-2.html 1238243-2-ref.html
 fuzzy(0-100,0-2000) == 1239564.html 1239564-ref.html
 == 1242172-1.html 1242172-1-ref.html
-fuzzy-if(webrender,0-2,0-2601) == 1242172-2.html 1242172-2-ref.html
+# Bug 1308702 is tracking this Android failure case.
+fuzzy-if(webrender,0-2,0-2601) fails-if(Android) == 1242172-2.html 1242172-2-ref.html
 == 1242781.html 1242781-ref.html
 == 1263845.html 1263845-ref.html
 == 1260543-1.html 1260543-1-ref.html
