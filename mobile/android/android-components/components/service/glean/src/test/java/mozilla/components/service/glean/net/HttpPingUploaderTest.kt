@@ -25,8 +25,12 @@ import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 import java.io.OutputStream
+import java.net.CookieHandler
+import java.net.CookieManager
+import java.net.HttpCookie
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
+import java.net.URI
 
 @RunWith(RobolectricTestRunner::class)
 class HttpPingUploaderTest {
@@ -166,6 +170,68 @@ class HttpPingUploaderTest {
         assertEquals(testPing, request.body.readUtf8())
         assertEquals("Telemetry/42.23", request.getHeader("User-Agent"))
         assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"))
+
+        server.shutdown()
+    }
+
+    @Test
+    fun `removeCookies() must not throw for malformed URLs`() {
+        val client = HttpPingUploader(testDefaultConfig)
+        CookieHandler.setDefault(CookieManager())
+        client.removeCookies("lolprotocol://definitely-not-valid,")
+    }
+
+    @Test
+    fun `upload() must not transmit any cookie`() {
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setBody("OK"))
+
+        val testConfig = testDefaultConfig.copy(
+            userAgent = "Telemetry/42.23",
+            serverEndpoint = "http://localhost:" + server.port
+        )
+
+        // Set the default cookie manager/handler to be used for the http upload.
+        val cookieManager = CookieManager()
+        CookieHandler.setDefault(cookieManager)
+
+        // Store a sample cookie.
+        val cookie = HttpCookie("cookie-time", "yes")
+        cookie.domain = testConfig.serverEndpoint
+        cookie.path = testPath
+        cookie.version = 0
+        cookieManager.cookieStore.add(URI(testConfig.serverEndpoint), cookie)
+
+        // Store a cookie for a subdomain of the same domain's as the server endpoint,
+        // to make sure we don't accidentally remove it.
+        val cookie2 = HttpCookie("cookie-time2", "yes")
+        cookie2.domain = "sub.localhost"
+        cookie2.path = testPath
+        cookie2.version = 0
+        cookieManager.cookieStore.add(URI("http://sub.localhost:${server.port}/test"), cookie2)
+
+        // Add another cookie for the same domain. This one should be removed as well.
+        val cookie3 = HttpCookie("cookie-time3", "yes")
+        cookie3.domain = "localhost"
+        cookie3.path = testPath
+        cookie3.version = 0
+        cookieManager.cookieStore.add(URI("http://localhost:${server.port}/test"), cookie3)
+
+        // Trigger the connection.
+        val client = HttpPingUploader(testConfig)
+        assertTrue(client.upload(testPath, testPing))
+
+        val request = server.takeRequest()
+        assertEquals(testPath, request.path)
+        assertEquals("POST", request.method)
+        assertEquals(testPing, request.body.readUtf8())
+        assertEquals("Telemetry/42.23", request.getHeader("User-Agent"))
+        assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"))
+        assertTrue(request.headers.values("Cookie").isEmpty())
+
+        // Check that we still have a cookie.
+        assertEquals(1, cookieManager.cookieStore.cookies.size)
+        assertEquals("cookie-time2", cookieManager.cookieStore.cookies[0].name)
 
         server.shutdown()
     }

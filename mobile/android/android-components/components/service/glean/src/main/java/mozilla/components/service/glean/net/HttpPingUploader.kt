@@ -9,6 +9,8 @@ import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.support.base.log.logger.Logger
 import java.io.IOException
+import java.net.CookieHandler
+import java.net.CookieManager
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
@@ -79,6 +81,12 @@ class HttpPingUploader(configuration: Configuration) : PingUploader {
             connection.setRequestProperty("X-Client-Type", "Glean")
             connection.setRequestProperty("X-Client-Version", BuildConfig.LIBRARY_VERSION)
 
+            // Make sure we are not sending cookies. Unfortunately, HttpURLConnection doesn't
+            // offer a better API to do that, so we nuke all cookies going to our telemetry
+            // endpoint.
+            removeCookies(config.serverEndpoint)
+
+            // Finally upload.
             val responseCode = doUpload(connection, data)
 
             logger.debug("Ping upload: $responseCode")
@@ -127,6 +135,29 @@ class HttpPingUploader(configuration: Configuration) : PingUploader {
             return false
         } finally {
             connection?.disconnect()
+        }
+    }
+
+    /**
+     * Remove all the cookies related to the server endpoint, so
+     * that nothing other than ping data travels to the endpoint.
+     *
+     * @param serverEndpoint the server address
+     */
+    internal fun removeCookies(serverEndpoint: String) {
+        (CookieHandler.getDefault() as? CookieManager)?.let { cookieManager ->
+            val submissionUrl = try {
+                URL(serverEndpoint)
+            } catch (e: MalformedURLException) {
+                null
+            }
+
+            submissionUrl?.let {
+                val uri = it.toURI()
+                for (cookie in cookieManager.cookieStore.get(uri)) {
+                    cookieManager.cookieStore.remove(uri, cookie)
+                }
+            }
         }
     }
 
