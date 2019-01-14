@@ -171,7 +171,7 @@ html|*.numberbox-input::-moz-number-spin-down {
   min-height: 32px;
   /* !important overrides button.css for disabled and default XUL buttons: */
   color: inherit !important;
-  border: none;
+  border: 1px solid transparent; /* needed for high-contrast mode, where it'll show up */
   border-radius: 2px;
   background-color: var(--in-content-button-background);
   font-weight: 400;
@@ -194,9 +194,13 @@ html|button {
 }
 
 *|button:-moz-focusring {
-  box-shadow: 0 0 0 1px var(--in-content-border-active) inset,
-    0 0 0 1px var(--in-content-border-active),
-    0 0 0 4px var(--in-content-border-active-shadow);
+  outline: 2px solid var(--in-content-border-active);
+  /* offset outline to align with 1px border-width set for buttons/menulists above. */
+  outline-offset: -1px;
+  /* Make outline-radius slightly bigger than the border-radius set above,
+   * to make the thicker outline corners look smooth */
+  -moz-outline-radius: 3px;
+  box-shadow: 0 0 0 4px var(--in-content-border-active-shadow);
 }
 
 html|select:not([size]):not([multiple]) {
