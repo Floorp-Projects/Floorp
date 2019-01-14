@@ -66,6 +66,8 @@ function getRuleState(rule) {
     isUserAgentStyle: rule.isSystem,
     // An object containing information about the CSS keyframes rules.
     keyframesRule: rule.keyframesRule,
+    // The pseudo-element keyword used in the rule.
+    pseudoElement: rule.pseudoElement,
     // An object containing information about the CSS rule's selector.
     selector: rule.selector,
     // An object containing information about the CSS rule's stylesheet source.

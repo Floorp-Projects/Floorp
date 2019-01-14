@@ -454,7 +454,12 @@ nsThreadManager::NewNamedThread(const nsACString& aName, uint32_t aStackSize,
 NS_IMETHODIMP
 nsThreadManager::GetMainThread(nsIThread** aResult) {
   // Keep this functioning during Shutdown
-  if (NS_WARN_IF(!mMainThread)) {
+  if (!mMainThread) {
+    if (!NS_IsMainThread()) {
+      NS_WARNING(
+          "Called GetMainThread but there isn't a main thread and "
+          "we're not the main thread.");
+    }
     return NS_ERROR_NOT_INITIALIZED;
   }
   NS_ADDREF(*aResult = mMainThread);
