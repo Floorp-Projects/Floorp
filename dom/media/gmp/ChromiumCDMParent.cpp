@@ -264,15 +264,23 @@ bool ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer,
       MOZ_ASSERT_UNREACHABLE("Should not have unrecognized encryption type");
       break;
   }
+
+  const nsTArray<uint8_t>& iv =
+      encryptionScheme != GMPEncryptionScheme::kGMPEncryptionCbcs
+          ? crypto.mIV
+          : crypto.mConstantIV;
   aBuffer = gmp::CDMInputBuffer(
-      shmem, crypto.mKeyId, crypto.mIV, aSample->mTime.ToMicroseconds(),
+      shmem, crypto.mKeyId, iv, aSample->mTime.ToMicroseconds(),
       aSample->mDuration.ToMicroseconds(), crypto.mPlainSizes,
-      crypto.mEncryptedSizes, encryptionScheme);
+      crypto.mEncryptedSizes, crypto.mCryptByteBlock, crypto.mSkipByteBlock,
+      encryptionScheme);
   MOZ_ASSERT(
       aBuffer.mEncryptionScheme() == GMPEncryptionScheme::kGMPEncryptionNone ||
           aBuffer.mEncryptionScheme() ==
-              GMPEncryptionScheme::kGMPEncryptionCenc,
-      "aBuffer should use either no encryption or cenc, other kinds are not "
+              GMPEncryptionScheme::kGMPEncryptionCenc ||
+          aBuffer.mEncryptionScheme() ==
+              GMPEncryptionScheme::kGMPEncryptionCbcs,
+      "aBuffer should use no encryption, cenc, or cbcs, other kinds are not "
       "yet supported");
   return true;
 }
