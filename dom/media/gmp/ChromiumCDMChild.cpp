@@ -575,10 +575,10 @@ static void InitInputBuffer(const CDMInputBuffer& aBuffer,
   aInputBuffer.data_size = aBuffer.mData().Size<uint8_t>();
 
   if (aBuffer.mEncryptionScheme() > GMPEncryptionScheme::kGMPEncryptionNone) {
-    // Cbcs is not yet supported, so we expect only cenc if the buffer us
-    // encrypted
     MOZ_ASSERT(aBuffer.mEncryptionScheme() ==
-               GMPEncryptionScheme::kGMPEncryptionCenc);
+                   GMPEncryptionScheme::kGMPEncryptionCenc ||
+               aBuffer.mEncryptionScheme() ==
+                   GMPEncryptionScheme::kGMPEncryptionCbcs);
     aInputBuffer.key_id = aBuffer.mKeyId().Elements();
     aInputBuffer.key_id_size = aBuffer.mKeyId().Length();
 
@@ -595,6 +595,8 @@ static void InitInputBuffer(const CDMInputBuffer& aBuffer,
     aInputBuffer.encryption_scheme =
         ConvertToCdmEncryptionScheme(aBuffer.mEncryptionScheme());
   }
+  aInputBuffer.pattern.crypt_byte_block = aBuffer.mCryptByteBlock();
+  aInputBuffer.pattern.skip_byte_block = aBuffer.mSkipByteBlock();
   aInputBuffer.timestamp = aBuffer.mTimestamp();
 }
 
