@@ -281,41 +281,34 @@ window._gBrowser = {
     // Bug 1485961 covers making this more sane.
     let userContextId = window.arguments && window.arguments[6];
 
-    let tabArgument = gBrowserInit.getTabToAdopt();
+    // We default to a remote content browser, except if:
+    // - e10s is disabled.
+    // - there's a parent process opener (e.g. parent process about: page) for
+    //   the content tab.
+    let remoteType;
+    if (gMultiProcessBrowser && !window.hasOpenerForInitialContentBrowser) {
+      remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
+    } else {
+      remoteType = E10SUtils.NOT_REMOTE;
+    }
 
     // We only need sameProcessAsFrameLoader in the case where we're passed a tab
     let sameProcessAsFrameLoader;
-    // If we have a tab argument with browser, we use its remoteType. Otherwise,
-    // if e10s is disabled or there's a parent process opener (e.g. parent
-    // process about: page) for the content tab, we use a parent
-    // process remoteType. Otherwise, we check the URI to determine
-    // what to do - if there isn't one, we default to the default remote type.
-    let remoteType;
-    if (tabArgument && tabArgument.linkedBrowser) {
-      remoteType = tabArgument.linkedBrowser.remoteType;
-      sameProcessAsFrameLoader = tabArgument.linkedBrowser.frameLoader;
-    } else if (!gMultiProcessBrowser || window.hasOpenerForInitialContentBrowser) {
-      remoteType = E10SUtils.NOT_REMOTE;
-    } else {
-      let uriToLoad = gBrowserInit.uriToLoadPromise;
-      if (uriToLoad && typeof uriToLoad == "string") {
-        remoteType = E10SUtils.getRemoteTypeForURI(
-          uriToLoad,
-          gMultiProcessBrowser,
-          E10SUtils.DEFAULT_REMOTE_TYPE
-        );
-      } else {
-        remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
-      }
-    }
-
-    if (tabArgument && tabArgument.hasAttribute("usercontextid")) {
+    let tabArgument = gBrowserInit.getTabToAdopt();
+    if (tabArgument) {
       // The window's first argument is a tab if and only if we are swapping tabs.
       // We must set the browser's usercontextid so that the newly created remote
       // tab child has the correct usercontextid.
-      userContextId = parseInt(tabArgument.getAttribute("usercontextid"), 10);
-    }
+      if (tabArgument.hasAttribute("usercontextid")) {
+        userContextId = parseInt(tabArgument.getAttribute("usercontextid"), 10);
+      }
 
+      let linkedBrowser = tabArgument.linkedBrowser;
+      if (linkedBrowser) {
+        remoteType = linkedBrowser.remoteType;
+        sameProcessAsFrameLoader = linkedBrowser.frameLoader;
+      }
+    }
     let createOptions = {
       uriIsAboutBlank: false,
       userContextId,
