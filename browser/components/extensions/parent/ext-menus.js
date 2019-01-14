@@ -879,7 +879,10 @@ const menuTracker = {
   unregister() {
     Services.obs.removeObserver(this, "on-build-contextmenu");
     for (const window of windowTracker.browserWindows()) {
-      this.cleanupWindow(window);
+      for (const id of this.menuIds) {
+        const menu = window.document.getElementById(id);
+        menu.removeEventListener("popupshowing", this);
+      }
     }
     windowTracker.removeOpenListener(this.onWindowOpen);
   },
@@ -894,44 +897,10 @@ const menuTracker = {
       const menu = window.document.getElementById(id);
       menu.addEventListener("popupshowing", menuTracker);
     }
-
-    const sidebarHeader = window.document.getElementById("sidebar-switcher-target");
-    sidebarHeader.addEventListener("SidebarShown", menuTracker.onSidebarShown);
-    if (window.SidebarUI.currentID === "viewBookmarksSidebar") {
-      menuTracker.onSidebarShown({currentTarget: window.SidebarUI.browser});
-    }
-  },
-
-  cleanupWindow(window) {
-    for (const id of this.menuIds) {
-      const menu = window.document.getElementById(id);
-      menu.removeEventListener("popupshowing", this);
-    }
-
-    const sidebarHeader = window.document.getElementById("sidebar-switcher-target");
-    sidebarHeader.removeEventListener("SidebarShown", this.onSidebarShown);
-
-    if (window.SidebarUI.currentID === "viewBookmarksSidebar") {
-      const menu = window.SidebarUI.browser.contentDocument
-                         .getElementById("placesContext");
-      menu.removeEventListener("popupshowing", this.onBookmarksContextMenu);
-    }
-  },
-
-  onSidebarShown(event) {
-    // The listener is on the sidebar <browser>, so window is the regular
-    // browser window that contains the sidebar.
-    const window = event.currentTarget.ownerGlobal;
-    if (window.SidebarUI.currentID === "viewBookmarksSidebar") {
-      const menu = window.SidebarUI.browser.contentDocument
-                         .getElementById("placesContext");
-      menu.addEventListener("popupshowing", menuTracker.onBookmarksContextMenu);
-    }
   },
 
   handleEvent(event) {
     const menu = event.target;
-
     if (menu.id === "placesContext") {
       const trigger = menu.triggerNode;
       if (!trigger._placesNode) {
@@ -955,19 +924,6 @@ const menuTracker = {
       const pageUrl = tab.linkedBrowser.currentURI.spec;
       gMenuBuilder.build({menu, tab, pageUrl, onTab: true});
     }
-  },
-
-  onBookmarksContextMenu(event) {
-    const menu = event.target;
-    const tree = menu.triggerNode.parentElement;
-    const cell = tree.boxObject.getCellAt(event.x, event.y);
-    const node = tree.view.nodeForTreeIndex(cell.row);
-
-    gMenuBuilder.build({
-      menu,
-      bookmarkId: node.bookmarkGuid,
-      onBookmark: true,
-    });
   },
 };
 
