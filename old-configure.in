@@ -3742,16 +3742,32 @@ if ! test -e js; then
 fi
 
 ac_configure_args="$ac_configure_args JS_STANDALONE="
-AC_OUTPUT_SUBDIRS(js/src,$cache_file)
+_CONFIG_SHELL=${CONFIG_SHELL-/bin/sh}
+
+dumpenv="true | "
+case "$host" in
+*-mingw*)
+  _CONFIG_SHELL=$(cd $(dirname $_CONFIG_SHELL); pwd -W)/$(basename $_CONFIG_SHELL)
+  if test ! -e "$_CONFIG_SHELL" -a -e "${_CONFIG_SHELL}.exe"; then
+      _CONFIG_SHELL="${_CONFIG_SHELL}.exe"
+  fi
+  dnl Yes, this is horrible. But since msys doesn't preserve environment
+  dnl variables and command line arguments as they are when transitioning
+  dnl from msys (this script) to python (below), we have to resort to hacks,
+  dnl storing the environment and command line arguments from a msys process
+  dnl (perl), and reading it from python.
+  dumpenv="$PERL $_topsrcdir/build/win32/dumpenv4python.pl $ac_configure_args | "
+  ;;
+esac
+
+eval $dumpenv $PYTHON $_topsrcdir/build/subconfigure.py --prepare "$srcdir" js/src "$_CONFIG_SHELL" $ac_configure_args --cache-file="$cache_file"
+
+trap '' EXIT
+if ! $PYTHON $_topsrcdir/build/subconfigure.py js/src; then
+  exit 1
+fi
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
 fi # COMPILE_ENVIRONMENT
-
-dnl we need to run config.status after js/src subconfigure because we're
-dnl traversing its moz.build and we need its config.status for that.
-dnl However, writing our own config.status needs to happen before
-dnl subconfigures because the setup surrounding subconfigures alters
-dnl many AC_SUBSTed variables.
-MOZ_RUN_ALL_SUBCONFIGURES()
 
 rm -fr confdefs* $ac_clean_files
