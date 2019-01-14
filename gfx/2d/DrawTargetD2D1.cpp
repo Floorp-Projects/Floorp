@@ -12,6 +12,7 @@
 #include "SourceSurfaceD2D1.h"
 #include "SourceSurfaceDual.h"
 #include "RadialGradientEffectD2D1.h"
+#include "PathCapture.h"
 
 #include "HelpersD2D.h"
 #include "FilterNodeD2D1.h"
@@ -588,11 +589,16 @@ void DrawTargetD2D1::StrokeLine(const Point &aStart, const Point &aEnd,
 void DrawTargetD2D1::Stroke(const Path *aPath, const Pattern &aPattern,
                             const StrokeOptions &aStrokeOptions,
                             const DrawOptions &aOptions) {
-  if (aPath->GetBackendType() != BackendType::DIRECT2D1_1) {
+  const Path *path = aPath;
+  if (aPath->GetBackendType() == BackendType::CAPTURE) {
+    path = static_cast<const PathCapture *>(aPath)->GetRealizedPath();
+  }
+
+  if (path->GetBackendType() != BackendType::DIRECT2D1_1) {
     gfxDebug() << *this << ": Ignoring drawing call for incompatible path.";
     return;
   }
-  const PathD2D *d2dPath = static_cast<const PathD2D *>(aPath);
+  const PathD2D *d2dPath = static_cast<const PathD2D *>(path);
 
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
 
@@ -610,11 +616,16 @@ void DrawTargetD2D1::Stroke(const Path *aPath, const Pattern &aPattern,
 
 void DrawTargetD2D1::Fill(const Path *aPath, const Pattern &aPattern,
                           const DrawOptions &aOptions) {
-  if (!aPath || aPath->GetBackendType() != BackendType::DIRECT2D1_1) {
+  const Path *path = aPath;
+  if (aPath && aPath->GetBackendType() == BackendType::CAPTURE) {
+    path = static_cast<const PathCapture *>(aPath)->GetRealizedPath();
+  }
+
+  if (!path || path->GetBackendType() != BackendType::DIRECT2D1_1) {
     gfxDebug() << *this << ": Ignoring drawing call for incompatible path.";
     return;
   }
-  const PathD2D *d2dPath = static_cast<const PathD2D *>(aPath);
+  const PathD2D *d2dPath = static_cast<const PathD2D *>(path);
 
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
 
@@ -804,7 +815,12 @@ void DrawTargetD2D1::PushClipGeometry(ID2D1Geometry *aGeometry,
 }
 
 void DrawTargetD2D1::PushClip(const Path *aPath) {
-  if (aPath->GetBackendType() != BackendType::DIRECT2D1_1) {
+  const Path *path = aPath;
+  if (aPath->GetBackendType() == BackendType::CAPTURE) {
+    path = static_cast<const PathCapture *>(aPath)->GetRealizedPath();
+  }
+
+  if (path->GetBackendType() != BackendType::DIRECT2D1_1) {
     gfxDebug() << *this << ": Ignoring clipping call for incompatible path.";
     return;
   }
@@ -812,7 +828,7 @@ void DrawTargetD2D1::PushClip(const Path *aPath) {
     return;
   }
 
-  RefPtr<PathD2D> pathD2D = static_cast<PathD2D *>(const_cast<Path *>(aPath));
+  RefPtr<PathD2D> pathD2D = static_cast<PathD2D *>(const_cast<Path *>(path));
 
   PushClipGeometry(pathD2D->GetGeometry(), D2DMatrix(mTransform));
 }

@@ -507,6 +507,7 @@ bool Factory::DoesBackendSupportDataDrawtarget(BackendType aType) {
     case BackendType::DIRECT2D:
     case BackendType::DIRECT2D1_1:
     case BackendType::RECORDING:
+    case BackendType::CAPTURE:
     case BackendType::NONE:
     case BackendType::BACKEND_LAST:
     case BackendType::WEBRENDER_TEXT:

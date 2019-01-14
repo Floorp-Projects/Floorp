@@ -11,6 +11,7 @@
 #include "Logging.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "HelpersD2D.h"
 
 #include "dwrite_3.h"
 
@@ -191,6 +192,12 @@ void ScaledFontDWrite::CopyGlyphsToBuilder(const GlyphBuffer& aBuffer,
                                            PathBuilder* aBuilder,
                                            const Matrix* aTransformHint) {
   BackendType backendType = aBuilder->GetBackendType();
+  if (backendType == BackendType::CAPTURE) {
+    StreamingGeometrySink sink(aBuilder);
+    CopyGlyphsToSink(aBuffer, &sink);
+    return;
+  }
+
   if (backendType != BackendType::DIRECT2D &&
       backendType != BackendType::DIRECT2D1_1) {
     ScaledFontBase::CopyGlyphsToBuilder(aBuffer, aBuilder, aTransformHint);
@@ -236,7 +243,7 @@ void ScaledFontDWrite::GetGlyphDesignMetrics(const uint16_t* aGlyphs,
 }
 
 void ScaledFontDWrite::CopyGlyphsToSink(const GlyphBuffer& aBuffer,
-                                        ID2D1GeometrySink* aSink) {
+                                        ID2D1SimplifiedGeometrySink* aSink) {
   std::vector<UINT16> indices;
   std::vector<FLOAT> advances;
   std::vector<DWRITE_GLYPH_OFFSET> offsets;

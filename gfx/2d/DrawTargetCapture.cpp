@@ -10,6 +10,7 @@
 #include "gfxPlatform.h"
 #include "SourceSurfaceCapture.h"
 #include "FilterNodeCapture.h"
+#include "PathCapture.h"
 
 namespace mozilla {
 namespace gfx {
@@ -330,6 +331,15 @@ RefPtr<DrawTarget> DrawTargetCaptureImpl::CreateSimilarRasterTarget(
     const IntSize& aSize, SurfaceFormat aFormat) const {
   MOZ_ASSERT(!mRefDT->IsCaptureDT());
   return mRefDT->CreateSimilarDrawTarget(aSize, aFormat);
+}
+
+already_AddRefed<PathBuilder> DrawTargetCaptureImpl::CreatePathBuilder(
+    FillRule aFillRule) const {
+  if (mRefDT->GetBackendType() == BackendType::DIRECT2D1_1) {
+    return MakeRefPtr<PathBuilderCapture>(aFillRule, mRefDT).forget();
+  }
+
+  return mRefDT->CreatePathBuilder(aFillRule);
 }
 
 already_AddRefed<FilterNode> DrawTargetCaptureImpl::CreateFilter(

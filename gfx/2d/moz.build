@@ -187,6 +187,7 @@ UNIFIED_SOURCES += [
     'Matrix.cpp',
     'Path.cpp',
     'PathCairo.cpp',
+    'PathCapture.cpp',
     'PathHelpers.cpp',
     'PathRecording.cpp',
     'Quaternion.cpp',

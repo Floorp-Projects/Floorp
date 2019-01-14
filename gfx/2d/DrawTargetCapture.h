@@ -121,9 +121,7 @@ class DrawTargetCaptureImpl : public DrawTargetCapture {
       const IntSize &aSize, SurfaceFormat aFormat) const override;
 
   virtual already_AddRefed<PathBuilder> CreatePathBuilder(
-      FillRule aFillRule = FillRule::FILL_WINDING) const override {
-    return mRefDT->CreatePathBuilder(aFillRule);
-  }
+      FillRule aFillRule = FillRule::FILL_WINDING) const override;
 
   virtual already_AddRefed<GradientStops> CreateGradientStops(
       GradientStop *aStops, uint32_t aNumStops,
