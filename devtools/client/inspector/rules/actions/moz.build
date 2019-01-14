@@ -4,5 +4,6 @@
 
 DevToolsModules(
     'index.js',
+    'pseudo-classes.js',
     'rules.js',
 )
