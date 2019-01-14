@@ -1343,8 +1343,11 @@ static MOZ_MUST_USE JSObject* ReadableStreamAddReadOrReadIntoRequest(
   if (!unwrappedReader) {
     return nullptr;
   }
+  MOZ_ASSERT(unwrappedReader->is<ReadableStreamDefaultReader>());
 
+  // Step 2 of 3.4.1: Assert: stream.[[state]] is "readable" or "closed".
   // Step 2 of 3.4.2: Assert: stream.[[state]] is "readable".
+  MOZ_ASSERT(unwrappedStream->readable() || unwrappedStream->closed());
   MOZ_ASSERT_IF(unwrappedReader->is<ReadableStreamDefaultReader>(),
                 unwrappedStream->readable());
 
@@ -2124,8 +2127,7 @@ static MOZ_MUST_USE bool ReadableStreamReaderGenericRelease(
   //         reader.[[closedPromise]] with a TypeError exception.
   Rooted<PromiseObject*> unwrappedClosedPromise(cx);
   if (unwrappedStream->readable()) {
-    unwrappedClosedPromise = 
-      UnwrapInternalSlot<PromiseObject>(
+    unwrappedClosedPromise = UnwrapInternalSlot<PromiseObject>(
         cx, unwrappedReader, ReadableStreamReader::Slot_ClosedPromise);
     if (!unwrappedClosedPromise) {
       return false;
@@ -4292,20 +4294,23 @@ inline static MOZ_MUST_USE bool InvokeOrNoop(JSContext* cx, HandleValue O,
                                              MutableHandleValue rval) {
   cx->check(O, P, arg);
 
-  // Step 1: Assert: P is a valid property key (omitted).
-  // Step 2: If args was not passed, let args be a new empty List (omitted).
-  // Step 3: Let method be ? GetV(O, P).
+  // Step 1: Assert: O is not undefined.
+  MOZ_ASSERT(!O.isUndefined());
+
+  // Step 2: Assert: ! IsPropertyKey(P) is true (implicit).
+  // Step 3: Assert: args is a List (implicit).
+  // Step 4: Let method be ? GetV(O, P).
   RootedValue method(cx);
   if (!GetProperty(cx, O, P, &method)) {
     return false;
   }
 
-  // Step 4: If method is undefined, return.
+  // Step 5: If method is undefined, return.
   if (method.isUndefined()) {
     return true;
   }
 
-  // Step 5: Return ? Call(method, O, args).
+  // Step 6: Return ? Call(method, O, args).
   return Call(cx, method, O, arg, rval);
 }
 
