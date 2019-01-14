@@ -30,6 +30,13 @@
         assert_equals(event.type, "stop", "the event type should be stop");
         assert_true(event.isTrusted, "isTrusted should be true when the event is created by C++");
         assert_equals(recorder.state, "inactive", "MediaRecorder is inactive after stop event");
+
+        recorder.stop();
+        await Promise.race([
+            new Promise((_, reject) => recorder.onstop =
+                _ => reject(new Error("stop() is idempotent"))),
+            new Promise(r => t.step_timeout(r, 0))
+        ]);
     }, "MediaRecorder will stop recording and fire a stop event when all tracks are ended");
 
     promise_test(async t => {
@@ -45,6 +52,13 @@
         assert_equals(event.type, "stop", "the event type should be stop");
         assert_true(event.isTrusted, "isTrusted should be true when the event is created by C++");
         assert_equals(recorder.state, "inactive", "MediaRecorder is inactive after stop event");
+
+        recorder.stop();
+        await Promise.race([
+            new Promise((_, reject) => recorder.onstop =
+                _ => reject(new Error("stop() is idempotent"))),
+            new Promise(r => t.step_timeout(r, 0))
+        ]);
     }, "MediaRecorder will stop recording and fire a stop event when stop() is called");
 </script>
 </body>
