@@ -32,6 +32,11 @@
 #include <ctype.h>
 #include <stdint.h>
 
+#ifndef NS_NO_XPCOM
+#include "nsIFile.h"
+#include "mozilla/AlreadyAddRefed.h"
+#endif
+
 // Undo X11/X.h's definition of None
 #undef None
 
@@ -123,7 +128,8 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CheckArgFlag)
  */
 template <typename CharT>
 inline ArgResult CheckArg(int& aArgc, CharT** aArgv, const CharT* aArg,
-                          const CharT** aParam, CheckArgFlag aFlags) {
+                          const CharT** aParam = nullptr,
+                          CheckArgFlag aFlags = CheckArgFlag::RemoveArg) {
   MOZ_ASSERT(aArgv && aArg);
 
   CharT** curarg = aArgv + 1;  // skip argv[0]
@@ -427,6 +433,10 @@ inline bool EnvHasValue(const char* aVarName) {
 #error "Not implemented for this configuration"
 #endif
 }
+
+#ifndef NS_NO_XPCOM
+already_AddRefed<nsIFile> GetFileFromEnv(const char* name);
+#endif
 
 }  // namespace mozilla
 
