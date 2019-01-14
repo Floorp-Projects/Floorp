@@ -7,24 +7,6 @@
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Performance Monitoring')
 
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
-
-XPIDL_MODULE = 'toolkit_perfmonitoring'
-
-EXTRA_JS_MODULES += [
-    'PerformanceStats-content.js',
-    'PerformanceStats.jsm',
-    'PerformanceWatcher-content.js',
-    'PerformanceWatcher.jsm',
-]
-
-XPIDL_SOURCES += [
-    'nsIPerformanceStats.idl',
-]
-
-UNIFIED_SOURCES += [
-    'nsPerformanceStats.cpp'
-]
 
 UNIFIED_SOURCES += [
     'PerformanceMetricsCollector.cpp',
@@ -37,13 +19,8 @@ EXPORTS.mozilla += [
     'PerformanceUtils.h'
 ]
 
-EXPORTS += [
-    'nsPerformanceStats.h'
-]
-
 LOCAL_INCLUDES += [
-    '/dom/base',
-    '/dom/media',
+    '/dom/base'
 ]
 
 FINAL_LIBRARY = 'xul'

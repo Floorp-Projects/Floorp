@@ -12,7 +12,6 @@
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
 #include "xpcprivate.h"
-#include "CPOWTimer.h"
 #include "WrapperFactory.h"
 
 #include "nsIDocShellTreeItem.h"
@@ -149,7 +148,6 @@ const CPOWProxyHandler CPOWProxyHandler::singleton;
     return failRetVal;                                                  \
   }                                                                     \
   {                                                                     \
-    CPOWTimer timer(cx);                                                \
     return owner->call args;                                            \
   }
 

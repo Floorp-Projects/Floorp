@@ -409,8 +409,6 @@ class JS::Realm : public JS::shadow::Realm {
   js::ArraySpeciesLookup arraySpeciesLookup;
   js::PromiseLookup promiseLookup;
 
-  js::PerformanceGroupHolder performanceMonitoring;
-
   js::UniquePtr<js::ScriptCountsMap> scriptCountsMap;
   js::UniquePtr<js::ScriptNameMap> scriptNameMap;
   js::UniquePtr<js::DebugScriptMap> debugScriptMap;
@@ -641,18 +639,6 @@ class JS::Realm : public JS::shadow::Realm {
    */
   JSPrincipals* principals() { return principals_; }
   void setPrincipals(JSPrincipals* principals) {
-    if (principals_ == principals) {
-      return;
-    }
-
-    // If we change principals, we need to unlink immediately this
-    // realm from its PerformanceGroup. For one thing, the performance data
-    // we collect should not be improperly associated with a group to which
-    // we do not belong anymore. For another thing, we use `principals()` as
-    // part of the key to map realms to a `PerformanceGroup`, so if we do
-    // not unlink now, this will be too late once we have updated
-    // `principals_`.
-    performanceMonitoring.unlink();
     principals_ = principals;
   }
 
