@@ -42,10 +42,6 @@ push_apk_description_schema = Schema({
 })
 
 
-REQUIRED_ARCHITECTURES = {
-    'android-x86-nightly',
-    'android-api-16-nightly',
-}
 PLATFORM_REGEX = re.compile(r'build-signing-android-(\S+)-nightly')
 
 transforms = TransformSequence()
@@ -53,22 +49,36 @@ transforms.add_validate(push_apk_description_schema)
 
 
 @transforms.add
-def validate_dependent_tasks(_, jobs):
+def validate_dependent_tasks(config, jobs):
     for job in jobs:
-        check_every_architecture_is_present_in_dependent_tasks(job['dependent-tasks'])
+        check_every_architecture_is_present_in_dependent_tasks(
+            config.params['project'], job['dependent-tasks']
+        )
         yield job
 
 
-def check_every_architecture_is_present_in_dependent_tasks(dependent_tasks):
+def check_every_architecture_is_present_in_dependent_tasks(project, dependent_tasks):
     dep_platforms = set(t.attributes.get('build_platform') for t in dependent_tasks)
-    missed_architectures = REQUIRED_ARCHITECTURES - dep_platforms
+    required_architectures = _get_required_architectures(project)
+    missed_architectures = required_architectures - dep_platforms
     if missed_architectures:
         raise Exception('''One or many required architectures are missing.
 
 Required architectures: {}.
 Given dependencies: {}.
-'''.format(REQUIRED_ARCHITECTURES, dependent_tasks)
+'''.format(required_architectures, dependent_tasks)
         )
+
+
+def _get_required_architectures(project):
+    architectures = {
+        'android-api-16-nightly',
+        'android-x86-nightly',
+    }
+    if project == 'mozilla-central':
+        architectures.add('android-aarch64-nightly')
+
+    return architectures
 
 
 @transforms.add
