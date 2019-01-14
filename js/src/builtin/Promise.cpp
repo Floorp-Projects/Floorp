@@ -2100,7 +2100,8 @@ static bool PromiseConstructor(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
   } else {
-    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Promise,
+                                            &proto)) {
       return false;
     }
   }

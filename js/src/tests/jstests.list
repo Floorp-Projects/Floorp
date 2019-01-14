@@ -266,11 +266,11 @@ skip script test262/built-ins/Promise/resolve-function-name.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=944846
 skip script test262/built-ins/Number/prototype/toExponential/return-values.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1288457
-skip script test262/built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1225839
 skip script test262/built-ins/Function/internals/Call/class-ctor-realm.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1288457
+skip script test262/built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1297179
 skip script test262/built-ins/Proxy/apply/arguments-realm.js
@@ -298,51 +298,15 @@ skip script test262/built-ins/Proxy/preventExtensions/trap-is-not-callable-realm
 skip script test262/built-ins/Proxy/set/trap-is-not-callable-realm.js
 skip script test262/built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js
 
-# Erros thrown from wrong realm, similar to 1225839, 1288457, and 1297179.
+# Errors thrown from wrong realm, similar to 1225839, 1288457, and 1297179.
 skip script test262/built-ins/Array/length/define-own-prop-length-overflow-realm.js
 skip script test262/built-ins/Function/internals/Construct/derived-return-val-realm.js
 skip script test262/built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317416
 skip script test262/language/expressions/super/realm.js
-skip script test262/built-ins/Array/proto-from-ctor-realm.js
-skip script test262/built-ins/ArrayBuffer/proto-from-ctor-realm.js
-skip script test262/built-ins/Boolean/proto-from-ctor-realm.js
-skip script test262/built-ins/DataView/proto-from-ctor-realm.js
-skip script test262/built-ins/DataView/proto-from-ctor-realm-sab.js
-skip script test262/built-ins/Date/proto-from-ctor-realm-one.js
-skip script test262/built-ins/Date/proto-from-ctor-realm-two.js
-skip script test262/built-ins/Date/proto-from-ctor-realm-zero.js
-skip script test262/built-ins/Error/proto-from-ctor-realm.js
-skip script test262/built-ins/Function/prototype/bind/proto-from-ctor-realm.js
-skip script test262/built-ins/Function/proto-from-ctor-realm.js
 skip script test262/built-ins/GeneratorFunction/proto-from-ctor-realm.js
-skip script test262/built-ins/Map/proto-from-ctor-realm.js
-skip script test262/built-ins/Number/proto-from-ctor-realm.js
-skip script test262/built-ins/Object/proto-from-ctor.js
-skip script test262/built-ins/Promise/proto-from-ctor-realm.js
-skip script test262/built-ins/RegExp/proto-from-ctor-realm.js
-skip script test262/built-ins/Set/proto-from-ctor-realm.js
-skip script test262/built-ins/SharedArrayBuffer/proto-from-ctor-realm.js
-skip script test262/built-ins/String/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm-sab.js
-skip script test262/built-ins/TypedArrayConstructors/ctors-bigint/length-arg/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors-bigint/no-args/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors-bigint/object-arg/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/other-ctor-buffer-ctor-custom-species-proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/same-ctor-buffer-ctor-species-custom-proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm-sab.js
-skip script test262/built-ins/TypedArrayConstructors/ctors/length-arg/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors/no-args/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors/object-arg/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors/typedarray-arg/other-ctor-buffer-ctor-custom-species-proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors/typedarray-arg/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrayConstructors/ctors/typedarray-arg/same-ctor-buffer-ctor-species-custom-proto-from-ctor-realm.js
-skip script test262/built-ins/WeakMap/proto-from-ctor-realm.js
-skip script test262/built-ins/WeakSet/proto-from-ctor-realm.js
+skip script test262/built-ins/Function/prototype/bind/proto-from-ctor-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317395
 skip script test262/built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js
