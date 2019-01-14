@@ -1,0 +1,24 @@
+.ds-card {
+  img {
+    width: 100%;
+    border: 0.5px solid $black-10;
+    box-sizing: border-box;
+    border-radius: 4px;
+  }
+
+  .meta {
+    padding: 16px;
+  }
+
+  header {
+    line-height: 24px;
+    font-size: 17px;
+    color: $grey-90;
+  }
+
+  p {
+    font-size: 13px;
+    line-height: 20px;
+    color: $grey-50;
+  }
+}

@@ -39,8 +39,43 @@ class DiscoveryStreamAdmin extends React.PureComponent {
     this.setConfigValue("enabled", event.target.checked);
   }
 
+  renderComponent(width, component) {
+    return (
+      <table><tbody>
+        <Row>
+          <td className="min">Type</td>
+          <td>{component.type}</td>
+        </Row>
+        <Row>
+          <td className="min">Width</td>
+          <td>{width}</td>
+        </Row>
+        {component.feed && this.renderFeed(component.feed)}
+      </tbody></table>
+    );
+  }
+
+  renderFeed(feed) {
+    const {feeds} = this.props.state;
+    if (!feed.url) {
+      return null;
+    }
+    return (
+      <React.Fragment>
+        <Row>
+          <td className="min">Feed url</td>
+          <td>{feed.url}</td>
+        </Row>
+        <Row>
+          <td className="min">Data last fetched</td>
+          <td>{relativeTime(feeds[feed.url].lastUpdated) || "(no data)"}</td>
+        </Row>
+      </React.Fragment>
+    );
+  }
+
   render() {
-    const {config, lastUpdated} = this.props.state;
+    const {config, lastUpdated, layout} = this.props.state;
     return (<div>
       <div className="dsEnabled"><input type="checkbox" checked={config.enabled} onChange={this.onEnableToggle} /> enabled</div>
 
@@ -48,6 +83,18 @@ class DiscoveryStreamAdmin extends React.PureComponent {
         <Row><td className="min">Data last fetched</td><td>{relativeTime(lastUpdated) || "(no data)"}</td></Row>
         <Row><td className="min">Endpoint</td><td>{config.layout_endpoint || "(empty)"}</td></Row>
       </tbody></table>
+
+      <h3>Layout</h3>
+
+      {layout.map((row, rowIndex) => (
+        <div key={`row-${rowIndex}`}>
+          {row.components.map((component, componentIndex) => (
+            <div key={`component-${componentIndex}`} className="ds-component">
+              {this.renderComponent(row.width, component)}
+            </div>
+          ))}
+        </div>
+      ))}
     </div>);
   }
 }
@@ -496,7 +543,7 @@ export class ASRouterAdminInner extends React.PureComponent {
         return (<React.Fragment>
           <h2>Discovery Stream</h2>
           <DiscoveryStreamAdmin state={this.props.DiscoveryStream} dispatch={this.props.dispatch} />
-          </React.Fragment>);
+        </React.Fragment>);
       default:
         return (<React.Fragment>
           <h2>Message Providers <button title="Restore all provider settings that ship with Firefox" className="button" onClick={this.resetPref}>Restore default prefs</button></h2>

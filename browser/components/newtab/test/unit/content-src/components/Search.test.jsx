@@ -83,7 +83,7 @@ describe("<Search>", () => {
     it("should hand-off search when button is clicked with mouse", () => {
       const dispatch = sinon.spy();
       const wrapper = shallowWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
-      wrapper.instance().onSearchHandoffClick({clientX: 101, clientY: 102});
+      wrapper.find(".search-handoff-button").simulate("click", {clientX: 101, clientY: 102});
       assert.calledWith(dispatch, {
         data: {hiddenFocus: true},
         meta: {from: "ActivityStream:Content", skipLocal: true, to: "ActivityStream:Main"},
@@ -94,13 +94,57 @@ describe("<Search>", () => {
     it("should hand-off search when button is clicked with keyboard", () => {
       const dispatch = sinon.spy();
       const wrapper = shallowWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
-      wrapper.instance().onSearchHandoffClick({clientX: 0, clientY: 0});
+      wrapper.find(".search-handoff-button").simulate("click", {clientX: 0, clientY: 0});
       assert.calledWith(dispatch, {
         data: {hiddenFocus: false},
         meta: {from: "ActivityStream:Content", skipLocal: true, to: "ActivityStream:Main"},
         type: "HANDOFF_SEARCH_TO_AWESOMEBAR",
       });
       assert.calledWith(dispatch, {type: "FOCUS_SEARCH"});
+    });
+    it("should hand-off search when user types", () => {
+      const dispatch = sinon.spy();
+      const wrapper = shallowWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
+      wrapper.find(".search-handoff-button").simulate("keydown", {key: "f"});
+      assert.calledWith(dispatch, {
+        data: {text: "f"},
+        meta: {from: "ActivityStream:Content", skipLocal: true, to: "ActivityStream:Main"},
+        type: "HANDOFF_SEARCH_TO_AWESOMEBAR",
+      });
+    });
+    it("should NOT hand-off search when user types with with ctrl pressed", () => {
+      const dispatch = sinon.spy();
+      const wrapper = shallowWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
+      wrapper.find(".search-handoff-button").simulate("keydown", {key: "f", ctrlKey: true});
+      assert.notCalled(dispatch);
+    });
+    it("should NOT hand-off search when user types with with alt pressed", () => {
+      const dispatch = sinon.spy();
+      const wrapper = shallowWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
+      wrapper.find(".search-handoff-button").simulate("keydown", {key: "f", altKey: true});
+      assert.notCalled(dispatch);
+    });
+    it("should NOT hand-off search when user types with with meta pressed", () => {
+      const dispatch = sinon.spy();
+      const wrapper = shallowWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
+      wrapper.find(".search-handoff-button").simulate("keydown", {key: "f", metaKey: true});
+      assert.notCalled(dispatch);
+    });
+    it("should hand-off search on paste", () => {
+      const dispatch = sinon.spy();
+      const wrapper = mountWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
+      wrapper.instance()._searchHandoffButton = {contains: () => true};
+      wrapper.instance().onSearchHandoffPaste({
+        clipboardData: {
+          getData: () => "some copied text",
+        },
+        preventDefault: () => {},
+      });
+      assert.calledWith(dispatch, {
+        data: {text: "some copied text"},
+        meta: {from: "ActivityStream:Content", skipLocal: true, to: "ActivityStream:Main"},
+        type: "HANDOFF_SEARCH_TO_AWESOMEBAR",
+      });
     });
   });
 });
