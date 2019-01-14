@@ -305,7 +305,6 @@ UNIFIED_SOURCES += [
     'vm/SharedArrayObject.cpp',
     'vm/SharedImmutableStringsCache.cpp',
     'vm/Stack.cpp',
-    'vm/Stopwatch.cpp',
     'vm/StringType.cpp',
     'vm/SymbolType.cpp',
     'vm/TaggedProto.cpp',

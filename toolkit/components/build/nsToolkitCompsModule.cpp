@@ -53,12 +53,6 @@
 #include "nsTerminator.h"
 #endif
 
-#define MOZ_HAS_PERFSTATS
-
-#if defined(MOZ_HAS_PERFSTATS)
-#include "nsPerformanceStats.h"
-#endif  // defined (MOZ_HAS_PERFSTATS)
-
 #if defined(ENABLE_TESTS)
 #include "geckoview/TelemetryGeckoViewTesting.h"
 #endif
@@ -68,10 +62,6 @@ using namespace mozilla;
 /////////////////////////////////////////////////////////////////////////////
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
-
-#if defined(MOZ_HAS_PERFSTATS)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPerformanceStatsService, Init)
-#endif  // defined (MOZ_HAS_PERFSTATS)
 
 #if defined(MOZ_HAS_TERMINATOR)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTerminator)
@@ -138,10 +128,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(TelemetryGeckoViewTestingImpl)
 #endif
 
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
-#if defined(MOZ_HAS_PERFSTATS)
-NS_DEFINE_NAMED_CID(NS_TOOLKIT_PERFORMANCESTATSSERVICE_CID);
-#endif  // defined (MOZ_HAS_PERFSTATS)
-
 #if defined(MOZ_HAS_TERMINATOR)
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_TERMINATOR_CID);
 #endif
@@ -180,10 +166,6 @@ static const Module::CIDEntry kToolkitCIDs[] = {
 #if defined(MOZ_HAS_TERMINATOR)
     {&kNS_TOOLKIT_TERMINATOR_CID, false, nullptr, nsTerminatorConstructor},
 #endif
-#if defined(MOZ_HAS_PERFSTATS)
-    {&kNS_TOOLKIT_PERFORMANCESTATSSERVICE_CID, false, nullptr,
-     nsPerformanceStatsServiceConstructor},
-#endif  // defined (MOZ_HAS_PERFSTATS)
     {&kNS_USERINFO_CID, false, nullptr, nsUserInfoConstructor},
     {&kALERT_NOTIFICATION_CID, false, nullptr, AlertNotificationConstructor},
     {&kNS_ALERTSSERVICE_CID, false, nullptr, nsAlertsServiceConstructor},
@@ -236,10 +218,6 @@ static const Module::ContractIDEntry kToolkitContracts[] = {
 #if defined(MOZ_HAS_TERMINATOR)
     {NS_TOOLKIT_TERMINATOR_CONTRACTID, &kNS_TOOLKIT_TERMINATOR_CID},
 #endif
-#if defined(MOZ_HAS_PERFSTATS)
-    {NS_TOOLKIT_PERFORMANCESTATSSERVICE_CONTRACTID,
-     &kNS_TOOLKIT_PERFORMANCESTATSSERVICE_CID},
-#endif  // defined (MOZ_HAS_PERFSTATS)
     {NS_USERINFO_CONTRACTID, &kNS_USERINFO_CID},
     {ALERT_NOTIFICATION_CONTRACTID, &kALERT_NOTIFICATION_CID},
     {NS_ALERTSERVICE_CONTRACTID, &kNS_ALERTSSERVICE_CID},

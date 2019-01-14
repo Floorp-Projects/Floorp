@@ -154,9 +154,6 @@ var whitelist = [
   {file: "resource://gre/modules/PerfMeasurement.jsm"},
   // Bug 1356045
   {file: "chrome://global/content/test-ipc.xul"},
-  // Bug 1356036
-  {file: "resource://gre/modules/PerformanceWatcher-content.js"},
-  {file: "resource://gre/modules/PerformanceWatcher.jsm"},
   // Bug 1378173 (warning: still used by devtools)
   {file: "resource://gre/modules/Promise.jsm"},
   // Still used by WebIDE, which is going away but not entirely gone.
