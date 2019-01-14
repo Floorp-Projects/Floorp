@@ -7,8 +7,6 @@
   --rule-highlight-background-color: var(--theme-highlight-yellow);
   --rule-overridden-item-border-color: var(--theme-content-color3);
   --rule-header-background-color: var(--theme-toolbar-background);
-  --rule-flex-toggle-color: var(--grey-90);
-  --rule-shape-toggle-color: var(--grey-90);
   --rule-target-button-color: var(--grey-40);
   --rule-target-button-hover-color: var(--grey-50);
   --rule-target-button-active-color: var(--blue-50);
@@ -18,8 +16,6 @@
   --rule-highlight-background-color: #521C76;
   --rule-overridden-item-border-color: var(--theme-content-color1);
   --rule-header-background-color: #222225;
-  --rule-flex-toggle-color: var(--grey-10);
-  --rule-shape-toggle-color: var(--grey-10);
   --rule-target-button-color: var(--grey-45);
   --rule-target-button-hover-color: var(--grey-30);
   --rule-target-button-active-color: var(--blue-30);
@@ -416,11 +412,13 @@
   margin-left: 0;
 }
 
+/* All swatches */
+
 .ruleview-flex,
 .ruleview-grid,
+.ruleview-shapeswatch,
 .ruleview-swatch {
   cursor: pointer;
-  border-radius: 50%;
   width: 1em;
   height: 1em;
   vertical-align: middle;
@@ -431,19 +429,31 @@
   position: relative;
 }
 
+/* Icon swatches not using the .ruleview-swatch class (flex, grid, shape) */
+
+.ruleview-flex,
+.ruleview-grid,
+.ruleview-shapeswatch {
+  -moz-context-properties: stroke;
+  stroke: var(--theme-toolbar-icon-color);
+}
+
+.ruleview-flex.active,
+.ruleview-grid.active,
+.ruleview-shapeswatch.active {
+  stroke: var(--theme-toolbar-checked-color);
+  filter: brightness(0.9);
+}
+
 .ruleview-flex {
   background-image: url("chrome://devtools/skin/images/flexbox-swatch.svg");
   background-size: 13px 11px;
-  -moz-context-properties: stroke;
-  stroke: var(--rule-flex-toggle-color);
   width: 13px;
   height: 11px;
-  border-radius: 0;
 }
 
 .ruleview-grid {
-  background: url("chrome://devtools/skin/images/grid.svg");
-  border-radius: 0;
+  background-image: url("chrome://devtools/skin/images/grid.svg");
 }
 
 .ruleview-grid[disabled] {
@@ -451,9 +461,23 @@
   opacity: 0.5;
 }
 
+.ruleview-shapeswatch {
+  background-image: url("chrome://devtools/skin/images/shape-swatch.svg");
+  background-size: 110%;
+  width: 1.45em;
+  height: 1.45em;
+}
+
 .ruleview-shape-point.active,
 .ruleview-shapeswatch.active + .ruleview-shape > .ruleview-shape-point:hover {
   background-color: var(--rule-highlight-background-color);
+}
+
+/* Round swatches using the .ruleview-swatch class (color, bezier, filter and angle) */
+
+.ruleview-swatch {
+  background-size: 1em;
+  border-radius: 50%;
 }
 
 .ruleview-colorswatch::before {
@@ -473,29 +497,15 @@
 }
 
 .ruleview-bezierswatch {
-  background: url("chrome://devtools/skin/images/cubic-bezier-swatch.svg");
-  background-size: 1em;
+  background-image: url("chrome://devtools/skin/images/cubic-bezier-swatch.svg");
 }
 
 .ruleview-filterswatch {
-  background: url("chrome://devtools/skin/images/filter-swatch.svg");
-  background-size: 1em;
+  background-image: url("chrome://devtools/skin/images/filter-swatch.svg");
 }
 
 .ruleview-angleswatch {
-  background: url("chrome://devtools/skin/images/angle-swatch.svg");
-  background-size: 1em;
-}
-
-.ruleview-shapeswatch {
-  background: url("chrome://devtools/skin/images/shape-swatch.svg");
-  -moz-context-properties: stroke;
-  stroke: var(--rule-shape-toggle-color);
-  border-radius: 0;
-  background-size: 110% 110%;
-  box-shadow: none;
-  width: 1.45em;
-  height: 1.45em;
+  background-image: url("chrome://devtools/skin/images/angle-swatch.svg");
 }
 
 .ruleview-overridden {
@@ -509,6 +519,7 @@
  */
 .ruleview-overridden .ruleview-flex,
 .ruleview-overridden .ruleview-grid,
+.ruleview-overridden .ruleview-shapeswatch,
 .ruleview-overridden .ruleview-swatch {
   display: none;
 }
@@ -603,12 +614,6 @@
 .ruleview-selectorhighlighter:active,
 .ruleview-selectorhighlighter.highlighted {
   fill: var(--rule-target-button-active-color);
-}
-
-.ruleview-flex.active,
-.ruleview-grid.active,
-.ruleview-shapeswatch.active {
-  filter: var(--theme-icon-checked-filter) brightness(0.9);
 }
 
 #ruleview-add-rule-button::before {

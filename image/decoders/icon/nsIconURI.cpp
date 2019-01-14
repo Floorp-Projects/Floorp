@@ -418,8 +418,11 @@ nsMozIconURI::EqualsExceptRef(nsIURI* other, bool* result) {
 
 NS_IMETHODIMP
 nsMozIconURI::SchemeIs(const char* aScheme, bool* aEquals) {
-  MOZ_ASSERT(aScheme);
   MOZ_ASSERT(aEquals, "null pointer");
+  if (!aScheme) {
+    *aEquals = false;
+    return NS_OK;
+  }
 
   *aEquals = PL_strcasecmp("moz-icon", aScheme) ? false : true;
   return NS_OK;
