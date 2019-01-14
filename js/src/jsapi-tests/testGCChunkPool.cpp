@@ -7,6 +7,7 @@
 
 #include "mozilla/Move.h"
 
+#include "gc/GCLock.h"
 #include "gc/GCRuntime.h"
 #include "gc/Heap.h"
 
