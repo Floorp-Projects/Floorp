@@ -46,7 +46,7 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
-  describe("#loadCachedData", () => {
+  describe("#loadLayout", () => {
     it("should fetch data and populate the cache if it is empty", async () => {
       const resp = {layout: ["foo", "bar"]};
       const fakeCache = {};
@@ -55,7 +55,7 @@ describe("DiscoveryStreamFeed", () => {
 
       fetchStub.resolves({ok: true, json: () => Promise.resolve(resp)});
 
-      await feed.loadCachedData();
+      await feed.loadLayout();
 
       assert.calledOnce(fetchStub);
       assert.calledWith(feed.cache.set, "layout", resp);
@@ -70,7 +70,7 @@ describe("DiscoveryStreamFeed", () => {
       fetchStub.resolves({ok: true, json: () => Promise.resolve(resp)});
 
       clock.tick(THIRTY_MINUTES + 1);
-      await feed.loadCachedData();
+      await feed.loadLayout();
 
       assert.calledOnce(fetchStub);
       assert.calledWith(feed.cache.set, "layout", resp);
@@ -82,21 +82,95 @@ describe("DiscoveryStreamFeed", () => {
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
 
       clock.tick(THIRTY_MINUTES - 1);
-      await feed.loadCachedData();
+      await feed.loadLayout();
 
       assert.notCalled(fetchStub);
       assert.notCalled(feed.cache.set);
     });
   });
 
+  describe("#loadComponentFeeds", () => {
+    it("should populate feeds cache", async () => {
+      const fakeComponents = {components: [{feed: {url: "foo.com"}}]};
+      const fakeLayout = [fakeComponents, {components: [{}]}, {}];
+      const fakeDiscoveryStream = {DiscoveryStream: {layout: fakeLayout}};
+      sandbox.stub(feed.store, "getState").returns(fakeDiscoveryStream);
+      sandbox.stub(feed.cache, "set").returns(Promise.resolve());
+      const fakeCache = {feeds: {"foo.com": {"lastUpdated": Date.now(), "data": "data"}}};
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+
+      await feed.loadComponentFeeds();
+
+      assert.calledWith(feed.cache.set, "feeds", {"foo.com": {"data": "data", "lastUpdated": 0}});
+    });
+  });
+
+  describe("#getComponentFeed", () => {
+    it("should fetch fresh data if cache is empty", async () => {
+      const fakeCache = {};
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      sandbox.stub(feed, "fetchComponentFeed").returns(Promise.resolve("data"));
+
+      const feedResp = await feed.getComponentFeed("foo.com");
+
+      assert.deepEqual(feedResp.data, "data");
+    });
+    it("should fetch fresh data if cache is old", async () => {
+      const fakeCache = {feeds: {"foo.com": {lastUpdated: Date.now()}}};
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      sandbox.stub(feed, "fetchComponentFeed").returns(Promise.resolve("data"));
+      clock.tick(THIRTY_MINUTES + 1);
+
+      const feedResp = await feed.getComponentFeed("foo.com");
+
+      assert.equal(feedResp.data, "data");
+    });
+    it("should return data from cache if it is fresh", async () => {
+      const fakeCache = {feeds: {"foo.com": {lastUpdated: Date.now(), data: "data"}}};
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      sandbox.stub(feed, "fetchComponentFeed").returns(Promise.resolve("old data"));
+      clock.tick(THIRTY_MINUTES - 1);
+
+      const feedResp = await feed.getComponentFeed("foo.com");
+
+      assert.equal(feedResp.data, "data");
+    });
+  });
+
+  describe("#fetchComponentFeed", () => {
+    it("should return old feed if fetch failed", async () => {
+      fetchStub.resolves({ok: false, json: () => Promise.resolve({})});
+      const fakeCache = {feeds: {"foo.com": {lastUpdated: Date.now(), data: "old data"}}};
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      clock.tick(THIRTY_MINUTES + 1);
+
+      const feedResp = await feed.getComponentFeed("foo.com");
+
+      assert.equal(feedResp.data, "old data");
+    });
+    it("should return new feed if fetch succeeds", async () => {
+      fetchStub.resolves({ok: true, json: () => Promise.resolve("data")});
+      const fakeCache = {feeds: {"foo.com": {lastUpdated: Date.now(), data: "old data"}}};
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      clock.tick(THIRTY_MINUTES + 1);
+
+      const feedResp = await feed.getComponentFeed("foo.com");
+
+      assert.equal(feedResp.data, "data");
+    });
+  });
+
   describe("#clearCache", () => {
-    it("should set .layout to {}", async () => {
+    it("should set .layout and .feeds to {}", async () => {
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
 
       await feed.clearCache();
 
-      assert.calledOnce(feed.cache.set);
-      assert.calledWith(feed.cache.set, "layout", {});
+      assert.calledTwice(feed.cache.set);
+      const {firstCall} = feed.cache.set;
+      const {secondCall} = feed.cache.set;
+      assert.deepEqual(firstCall.args, ["layout", {}]);
+      assert.deepEqual(secondCall.args, ["feeds", {}]);
     });
   });
 
@@ -105,13 +179,14 @@ describe("DiscoveryStreamFeed", () => {
       assert.isFalse(feed.loaded);
     });
     it("should load data, add pref observer, and set .loaded=true if config.enabled is true", async () => {
+      sandbox.stub(feed.cache, "set").returns(Promise.resolve());
       configPrefStub.returns(JSON.stringify({enabled: true}));
-      sandbox.stub(feed, "loadCachedData").returns(Promise.resolve());
+      sandbox.stub(feed, "loadLayout").returns(Promise.resolve());
       sandbox.stub(global.Services.prefs, "addObserver");
 
       await feed.onAction({type: at.INIT});
 
-      assert.calledOnce(feed.loadCachedData);
+      assert.calledOnce(feed.loadLayout);
       assert.calledWith(global.Services.prefs.addObserver, CONFIG_PREF_NAME, feed);
       assert.isTrue(feed.loaded);
     });
@@ -129,7 +204,7 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#onAction: DISCOVERY_STREAM_CONFIG_CHANGE", () => {
-    it("should call this.loadCachedData if config.enabled changes to true ", async () => {
+    it("should call this.loadLayout if config.enabled changes to true ", async () => {
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
       // First initialize
       await feed.onAction({type: at.INIT});
@@ -140,14 +215,15 @@ describe("DiscoveryStreamFeed", () => {
       configPrefStub.returns(JSON.stringify({enabled: true}));
 
       sandbox.stub(feed, "clearCache").returns(Promise.resolve());
-      sandbox.stub(feed, "loadCachedData").returns(Promise.resolve());
+      sandbox.stub(feed, "loadLayout").returns(Promise.resolve());
       await feed.onAction({type: at.DISCOVERY_STREAM_CONFIG_CHANGE});
 
-      assert.calledOnce(feed.loadCachedData);
+      assert.calledOnce(feed.loadLayout);
       assert.calledOnce(feed.clearCache);
       assert.isTrue(feed.loaded);
     });
     it("should clear the cache if a config change happens and config.enabled is true", async () => {
+      sandbox.stub(feed.cache, "set").returns(Promise.resolve());
       // force clear cached pref value
       feed._prefCache = {};
       configPrefStub.returns(JSON.stringify({enabled: true}));
@@ -157,7 +233,7 @@ describe("DiscoveryStreamFeed", () => {
 
       assert.calledOnce(feed.clearCache);
     });
-    it("should not call this.loadCachedData if config.enabled changes to false", async () => {
+    it("should not call this.loadLayout if config.enabled changes to false", async () => {
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
       // force clear cached pref value
       feed._prefCache = {};
@@ -169,10 +245,10 @@ describe("DiscoveryStreamFeed", () => {
       feed._prefCache = {};
       configPrefStub.returns(JSON.stringify({enabled: false}));
       sandbox.stub(feed, "clearCache").returns(Promise.resolve());
-      sandbox.stub(feed, "loadCachedData").returns(Promise.resolve());
+      sandbox.stub(feed, "loadLayout").returns(Promise.resolve());
       await feed.onAction({type: at.DISCOVERY_STREAM_CONFIG_CHANGE});
 
-      assert.notCalled(feed.loadCachedData);
+      assert.notCalled(feed.loadLayout);
       assert.calledOnce(feed.clearCache);
       assert.isFalse(feed.loaded);
     });

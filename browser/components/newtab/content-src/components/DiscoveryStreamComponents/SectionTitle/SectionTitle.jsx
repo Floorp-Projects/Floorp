@@ -11,7 +11,7 @@ export class SectionTitle extends React.PureComponent {
   render() {
     const {topics} = this.props;
     return (
-      <span className="section-title">
+      <span className="ds-section-title">
         <ul>
           {topics && topics.map(t => <Topic key={t.name} url={t.url} name={t.name} />)}
           <li><a className="ds-more-recommendations">More Recommendations</a></li>

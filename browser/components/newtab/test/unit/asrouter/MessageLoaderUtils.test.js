@@ -36,6 +36,14 @@ describe("MessageLoaderUtils", () => {
       assert.propertyVal(message, "id", "foo");
       assert.propertyVal(message, "provider", "provider123");
     });
+    it("should filter out local messages listed in the `exclude` field", async () => {
+      const sourceMessage = {id: "foo"};
+      const provider = {id: "provider123", type: "local", messages: [sourceMessage], exclude: ["foo"]};
+
+      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+
+      assert.lengthOf(result.messages, 0);
+    });
     it("should return messages for remote provider", async () => {
       const sourceMessage = {id: "foo"};
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve({messages: [sourceMessage]}), headers: FAKE_RESPONSE_HEADERS});
@@ -225,6 +233,45 @@ describe("MessageLoaderUtils", () => {
     });
   });
 
+  describe("#_loadAddonIconInURLBar", () => {
+    let sandbox;
+    let notificationContainerEl;
+    let browser;
+    let getContainerStub;
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      notificationContainerEl = {style: {}};
+      browser = {ownerDocument: {getElementById() { return {}; }}};
+      getContainerStub = sandbox.stub(browser.ownerDocument, "getElementById");
+    });
+    afterEach(() => {
+      sandbox.restore();
+    });
+    it("should return for empty args", () => {
+      MessageLoaderUtils._loadAddonIconInURLBar();
+      assert.notCalled(getContainerStub);
+    });
+    it("should return if notification popup box not found", () => {
+      getContainerStub.returns(null);
+      MessageLoaderUtils._loadAddonIconInURLBar(browser);
+      assert.calledOnce(getContainerStub);
+    });
+    it("should unhide notification popup box with display style as none", () => {
+      getContainerStub.returns(notificationContainerEl);
+      notificationContainerEl.style.display = "none";
+      MessageLoaderUtils._loadAddonIconInURLBar(browser);
+      assert.calledWith(browser.ownerDocument.getElementById, "notification-popup-box");
+      assert.equal(notificationContainerEl.style.display, "block");
+    });
+    it("should unhide notification popup box with display style empty", () => {
+      getContainerStub.returns(notificationContainerEl);
+      notificationContainerEl.style.display = "";
+      MessageLoaderUtils._loadAddonIconInURLBar(browser);
+      assert.calledWith(browser.ownerDocument.getElementById, "notification-popup-box");
+      assert.equal(notificationContainerEl.style.display, "block");
+    });
+  });
+
   describe("#installAddonFromURL", () => {
     let globals;
     let sandbox;
@@ -235,6 +282,7 @@ describe("MessageLoaderUtils", () => {
       sandbox = sinon.createSandbox();
       getInstallStub = sandbox.stub();
       installAddonStub = sandbox.stub();
+      sandbox.stub(MessageLoaderUtils, "_loadAddonIconInURLBar").returns(null);
       globals.set("AddonManager", {
         getInstallForURL: getInstallStub,
         installAddonFromWebpage: installAddonStub,
