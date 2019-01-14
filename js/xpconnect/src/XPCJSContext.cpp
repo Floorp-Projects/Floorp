@@ -1234,11 +1234,6 @@ void XPCJSContext::BeforeProcessTask(bool aMightBlock) {
   mSlowScriptSecondHalf = false;
   mSlowScriptActualWait = mozilla::TimeDuration();
   mTimeoutAccumulated = false;
-
-  // As we may be entering a nested event loop, we need to
-  // cancel any ongoing performance measurement.
-  js::ResetPerformanceMonitoring(Context());
-
   CycleCollectedJSContext::BeforeProcessTask(aMightBlock);
 }
 
@@ -1250,13 +1245,7 @@ void XPCJSContext::AfterProcessTask(uint32_t aNewRecursionDepth) {
   // Call cycle collector occasionally.
   MOZ_ASSERT(NS_IsMainThread());
   nsJSContext::MaybePokeCC();
-
   CycleCollectedJSContext::AfterProcessTask(aNewRecursionDepth);
-
-  // Now that we are certain that the event is complete,
-  // we can flush any ongoing performance measurement.
-  js::FlushPerformanceMonitoring(Context());
-
   mozilla::jsipc::AfterProcessTask();
 }
 

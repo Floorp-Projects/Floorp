@@ -51,7 +51,6 @@
 #include "vm/Opcodes.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
-#include "vm/Stopwatch.h"
 #include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 
@@ -397,10 +396,6 @@ bool js::RunScript(JSContext* cx, RunState& state) {
   if (!Debugger::checkNoExecute(cx, state.script())) {
     return false;
   }
-
-#if defined(MOZ_HAVE_RDTSC)
-  js::AutoStopwatch stopwatch(cx);
-#endif  // defined(MOZ_HAVE_RDTSC)
 
   GeckoProfilerEntryMarker marker(cx, state.script());
 

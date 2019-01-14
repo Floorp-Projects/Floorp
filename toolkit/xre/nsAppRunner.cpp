@@ -80,7 +80,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIToolkitChromeRegistry.h"
 #include "nsIToolkitProfile.h"
-#include "nsIToolkitProfileService.h"
+#include "nsToolkitProfileService.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIWindowCreator.h"
@@ -338,43 +338,6 @@ static void SaveFileToEnv(const char* name, nsIFile* file) {
   file->GetNativePath(path);
   SaveWordToEnv(name, path);
 #endif
-}
-
-// Load the path of a file saved with SaveFileToEnv
-#ifndef MOZ_ASAN_REPORTER
-static
-#endif
-    already_AddRefed<nsIFile>
-    GetFileFromEnv(const char* name) {
-  nsresult rv;
-  nsCOMPtr<nsIFile> file;
-
-#ifdef XP_WIN
-  WCHAR path[_MAX_PATH];
-  if (!GetEnvironmentVariableW(NS_ConvertASCIItoUTF16(name).get(), path,
-                               _MAX_PATH))
-    return nullptr;
-
-  rv = NS_NewLocalFile(nsDependentString(path), true, getter_AddRefs(file));
-  if (NS_FAILED(rv)) return nullptr;
-
-  return file.forget();
-#else
-  const char* arg = PR_GetEnv(name);
-  if (!arg || !*arg) return nullptr;
-
-  rv = NS_NewNativeLocalFile(nsDependentCString(arg), true,
-                             getter_AddRefs(file));
-  if (NS_FAILED(rv)) return nullptr;
-
-  return file.forget();
-#endif
-}
-
-// Save the path of the given word to the specified environment variable
-// provided the environment variable does not have a value.
-static void SaveWordToEnvIfUnset(const char* name, const nsACString& word) {
-  if (!EnvHasValue(name)) SaveWordToEnv(name, word);
 }
 
 // Save the path of the given file to the specified environment variable
@@ -2022,7 +1985,6 @@ static ReturnAbortOnError ShowProfileManager(
 
   SaveFileToEnv("XRE_PROFILE_PATH", profD);
   SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", profLD);
-  SaveWordToEnv("XRE_PROFILE_NAME", profileName);
 
   if (offline) {
     SaveToEnv("XRE_START_OFFLINE=1");
@@ -2077,7 +2039,7 @@ static nsresult GetCurrentProfile(nsIToolkitProfileService* aProfileSvc,
 
 static bool gDoMigration = false;
 static bool gDoProfileReset = false;
-static nsAutoCString gResetOldProfileName;
+static nsCOMPtr<nsIToolkitProfile> gResetOldProfile;
 
 // Pick a profile. We need to end up with a profile lock.
 //
@@ -2095,7 +2057,6 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
 
   nsresult rv;
   ArgResult ar;
-  const char* arg;
   *aResult = nullptr;
   *aStartOffline = false;
 
@@ -2149,349 +2110,111 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
     gDoMigration = true;
   }
 
-  nsCOMPtr<nsIFile> lf = GetFileFromEnv("XRE_PROFILE_PATH");
-  if (lf) {
-    nsCOMPtr<nsIFile> localDir = GetFileFromEnv("XRE_PROFILE_LOCAL_PATH");
-    if (!localDir) {
-      localDir = lf;
-    }
+  nsCOMPtr<nsIFile> rootDir;
+  nsCOMPtr<nsIFile> localDir;
+  nsCOMPtr<nsIToolkitProfile> profile;
+  // Ask the profile manager to select the profile directories to use.
+  nsToolkitProfileService* service =
+      static_cast<nsToolkitProfileService*>(aProfileSvc);
+  bool didCreate = false;
+  rv = service->SelectStartupProfile(
+      &gArgc, gArgv, gDoProfileReset, getter_AddRefs(rootDir),
+      getter_AddRefs(localDir), getter_AddRefs(profile), &didCreate);
 
-    arg = PR_GetEnv("XRE_PROFILE_NAME");
-    if (arg && *arg && aProfileName) {
-      aProfileName->Assign(nsDependentCString(arg));
-      if (gDoProfileReset) {
-        gResetOldProfileName.Assign(*aProfileName);
-      }
-    }
-
-    // Clear out flags that we handled (or should have handled!) last startup.
-    const char* dummy;
-    CheckArg("p", &dummy);
-    CheckArg("profile", &dummy);
-    CheckArg("profilemanager");
-
-    if (gDoProfileReset) {
-      // If we're resetting a profile, create a new one and use it to startup.
-      nsCOMPtr<nsIToolkitProfile> newProfile;
-      rv = CreateResetProfile(aProfileSvc, gResetOldProfileName,
-                              getter_AddRefs(newProfile));
-      if (NS_SUCCEEDED(rv)) {
-        rv = newProfile->GetRootDir(getter_AddRefs(lf));
-        NS_ENSURE_SUCCESS(rv, rv);
-        SaveFileToEnv("XRE_PROFILE_PATH", lf);
-
-        rv = newProfile->GetLocalDir(getter_AddRefs(localDir));
-        NS_ENSURE_SUCCESS(rv, rv);
-        SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", localDir);
-
-        rv = newProfile->GetName(*aProfileName);
-        if (NS_FAILED(rv)) aProfileName->Truncate(0);
-        SaveWordToEnv("XRE_PROFILE_NAME", *aProfileName);
-      } else {
-        NS_WARNING("Profile reset failed.");
-        gDoProfileReset = false;
-      }
-    }
-
-    return NS_LockProfilePath(lf, localDir, nullptr, aResult);
+  if (rv == NS_ERROR_SHOW_PROFILE_MANAGER) {
+    return ShowProfileManager(aProfileSvc, aNative);
   }
 
-  ar = CheckArg("profile", &arg,
-                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR, "Error: argument --profile requires a path\n");
-    return NS_ERROR_FAILURE;
-  }
-  if (ar) {
-    if (gDoProfileReset) {
-      NS_WARNING(
-          "Profile reset is not supported in conjunction with --profile.");
-      gDoProfileReset = false;
-    }
-
-    nsCOMPtr<nsIFile> lf;
-    rv = XRE_GetFileFromPath(arg, getter_AddRefs(lf));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIProfileUnlocker> unlocker;
-
-    // Check if the profile path exists and it's a directory.
-    bool exists;
-    lf->Exists(&exists);
-    if (!exists) {
-      rv = lf->Create(nsIFile::DIRECTORY_TYPE, 0700);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // If a profile path is specified directory on the command line, then
-    // assume that the temp directory is the same as the given directory.
-    rv = NS_LockProfilePath(lf, lf, getter_AddRefs(unlocker), aResult);
-    if (NS_SUCCEEDED(rv)) return rv;
-
-    return ProfileLockedDialog(lf, lf, unlocker, aNative, aResult);
-  }
-
-  ar = CheckArg("createprofile", &arg,
-                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR,
-               "Error: argument --createprofile requires a profile name\n");
-    return NS_ERROR_FAILURE;
-  }
-  if (ar) {
-    nsCOMPtr<nsIToolkitProfile> profile;
-
-    const char* delim = strchr(arg, ' ');
-    if (delim) {
-      nsCOMPtr<nsIFile> lf;
-      rv = NS_NewNativeLocalFile(nsDependentCString(delim + 1), true,
-                                 getter_AddRefs(lf));
-      if (NS_FAILED(rv)) {
-        PR_fprintf(PR_STDERR, "Error: profile path not valid.\n");
-        return rv;
-      }
-
-      // As with --profile, assume that the given path will be used for the
-      // main profile directory.
-      rv = aProfileSvc->CreateProfile(lf, nsDependentCSubstring(arg, delim),
-                                      getter_AddRefs(profile));
-    } else {
-      rv = aProfileSvc->CreateProfile(nullptr, nsDependentCString(arg),
-                                      getter_AddRefs(profile));
-    }
-    // Some pathological arguments can make it this far
-    if (NS_FAILED(rv)) {
-      PR_fprintf(PR_STDERR, "Error creating profile.\n");
-      return rv;
-    }
-    rv = NS_ERROR_ABORT;
-    aProfileSvc->Flush();
-
-    // XXXben need to ensure prefs.js exists here so the tinderboxes will
-    //        not go orange.
-    nsCOMPtr<nsIFile> prefsJSFile;
-    profile->GetRootDir(getter_AddRefs(prefsJSFile));
-    prefsJSFile->AppendNative(NS_LITERAL_CSTRING("prefs.js"));
-    PR_fprintf(PR_STDERR, "Success: created profile '%s' at '%s'\n", arg,
-               prefsJSFile->HumanReadablePath().get());
-    bool exists;
-    prefsJSFile->Exists(&exists);
-    if (!exists) {
-      // Ignore any errors; we're about to return NS_ERROR_ABORT anyway.
-      Unused << prefsJSFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
-    }
-    // XXXdarin perhaps 0600 would be better?
-
-    return rv;
-  }
-
-  uint32_t count;
-  rv = aProfileSvc->GetProfileCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  ar = CheckArg("p", &arg);
-  if (ar == ARG_BAD) {
-    ar = CheckArg("osint");
-    if (ar == ARG_FOUND) {
-      PR_fprintf(
-          PR_STDERR,
-          "Error: argument -p is invalid when argument --osint is specified\n");
-      return NS_ERROR_FAILURE;
-    }
-
-    return ShowProfileManager(aProfileSvc, aNative);
-  }
-  if (ar) {
-    ar = CheckArg("osint");
-    if (ar == ARG_FOUND) {
-      PR_fprintf(
-          PR_STDERR,
-          "Error: argument -p is invalid when argument --osint is specified\n");
-      return NS_ERROR_FAILURE;
-    }
-    nsCOMPtr<nsIToolkitProfile> profile;
-    rv = aProfileSvc->GetProfileByName(nsDependentCString(arg),
-                                       getter_AddRefs(profile));
-    if (NS_SUCCEEDED(rv)) {
-      if (gDoProfileReset) {
-        {
-          // Check that the source profile is not in use by temporarily
-          // acquiring its lock.
-          nsIProfileLock* tempProfileLock;
-          nsCOMPtr<nsIProfileUnlocker> unlocker;
-          rv = profile->Lock(getter_AddRefs(unlocker), &tempProfileLock);
-          if (NS_FAILED(rv))
-            return ProfileLockedDialog(profile, unlocker, aNative,
-                                       &tempProfileLock);
-        }
-
-        nsresult gotName = profile->GetName(gResetOldProfileName);
-        if (NS_SUCCEEDED(gotName)) {
-          nsCOMPtr<nsIToolkitProfile> newProfile;
-          rv = CreateResetProfile(aProfileSvc, gResetOldProfileName,
-                                  getter_AddRefs(newProfile));
-          if (NS_FAILED(rv)) {
-            NS_WARNING("Failed to create a profile to reset to.");
-            gDoProfileReset = false;
-          } else {
-            profile = newProfile;
-          }
-        } else {
-          NS_WARNING(
-              "Failed to get the name of the profile we're resetting, so "
-              "aborting reset.");
-          gResetOldProfileName.Truncate(0);
-          gDoProfileReset = false;
-        }
-      }
-
-      nsCOMPtr<nsIProfileUnlocker> unlocker;
-      rv = profile->Lock(getter_AddRefs(unlocker), aResult);
-      if (NS_SUCCEEDED(rv)) {
-        if (aProfileName) aProfileName->Assign(nsDependentCString(arg));
-        return NS_OK;
-      }
-
-      return ProfileLockedDialog(profile, unlocker, aNative, aResult);
-    }
-
-    return ShowProfileManager(aProfileSvc, aNative);
-  }
-
-  ar = CheckArg("profilemanager", nullptr,
-                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR,
-               "Error: argument --profilemanager is invalid when argument "
-               "--osint is specified\n");
-    return NS_ERROR_FAILURE;
-  }
-  if (ar == ARG_FOUND) {
-    return ShowProfileManager(aProfileSvc, aNative);
-  }
-
-#ifndef MOZ_DEV_EDITION
-  // If the only existing profile is the dev-edition-profile and this is not
-  // Developer Edition, then no valid profiles were found.
-  if (count == 1) {
-    nsCOMPtr<nsIToolkitProfile> deProfile;
-    // GetSelectedProfile will auto-select the only profile if there's just one
-    aProfileSvc->GetSelectedProfile(getter_AddRefs(deProfile));
-    nsAutoCString profileName;
-    deProfile->GetName(profileName);
-    if (profileName.EqualsLiteral("dev-edition-default")) {
-      count = 0;
-    }
-  }
-#endif
-
-  if (!count) {
+  if (didCreate) {
     // For a fresh install, we would like to let users decide
     // to do profile migration on their own later after using.
-    gDoMigration = false;
     gDoProfileReset = false;
+    gDoMigration = false;
+  }
 
-    // create a default profile
-    nsCOMPtr<nsIToolkitProfile> profile;
-    nsresult rv =
-        aProfileSvc->CreateProfile(nullptr,  // choose a default dir for us
-#ifdef MOZ_DEV_EDITION
-                                   NS_LITERAL_CSTRING("dev-edition-default"),
-#else
-                                   NS_LITERAL_CSTRING("default"),
-#endif
-                                   getter_AddRefs(profile));
-    if (NS_SUCCEEDED(rv)) {
-#ifndef MOZ_DEV_EDITION
-      aProfileSvc->SetDefaultProfile(profile);
-#endif
-      aProfileSvc->Flush();
-      rv = profile->Lock(nullptr, aResult);
-      if (NS_SUCCEEDED(rv)) {
-        if (aProfileName)
-#ifdef MOZ_DEV_EDITION
-          aProfileName->AssignLiteral("dev-edition-default");
-#else
-          aProfileName->AssignLiteral("default");
-#endif
-        return NS_OK;
-      }
+  if (gDoProfileReset) {
+    if (!profile) {
+      NS_WARNING("Profile reset is only supported for named profiles.");
+      return NS_ERROR_ABORT;
     }
-  }
 
-  bool useDefault = true;
-  if (count > 1) {
-    aProfileSvc->GetStartWithLastProfile(&useDefault);
-  }
-
-  if (useDefault) {
-    nsCOMPtr<nsIToolkitProfile> profile;
-    // GetSelectedProfile will auto-select the only profile if there's just one
-    aProfileSvc->GetSelectedProfile(getter_AddRefs(profile));
-    if (profile) {
-      // If we're resetting a profile, create a new one and use it to startup.
-      if (gDoProfileReset) {
-        {
-          // Check that the source profile is not in use by temporarily
-          // acquiring its lock.
-          nsIProfileLock* tempProfileLock;
-          nsCOMPtr<nsIProfileUnlocker> unlocker;
-          rv = profile->Lock(getter_AddRefs(unlocker), &tempProfileLock);
-          if (NS_FAILED(rv))
-            return ProfileLockedDialog(profile, unlocker, aNative,
-                                       &tempProfileLock);
-        }
-
-        nsresult gotName = profile->GetName(gResetOldProfileName);
-        if (NS_SUCCEEDED(gotName)) {
-          nsCOMPtr<nsIToolkitProfile> newProfile;
-          rv = CreateResetProfile(aProfileSvc, gResetOldProfileName,
-                                  getter_AddRefs(newProfile));
-          if (NS_FAILED(rv)) {
-            NS_WARNING("Failed to create a profile to reset to.");
-            gDoProfileReset = false;
-          } else {
-            profile = newProfile;
-          }
-        } else {
-          NS_WARNING(
-              "Failed to get the name of the profile we're resetting, so "
-              "aborting reset.");
-          gResetOldProfileName.Truncate(0);
-          gDoProfileReset = false;
-        }
-      }
-
-      // If you close Firefox and very quickly reopen it, the old Firefox may
-      // still be closing down. Rather than immediately showing the
-      // "Firefox is running but is not responding" message, we spend a few
-      // seconds retrying first.
-
-      static const int kLockRetrySeconds = 5;
-      static const int kLockRetrySleepMS = 100;
-
+    {
+      // Check that the source profile is not in use by temporarily
+      // acquiring its lock.
+      nsIProfileLock* tempProfileLock;
       nsCOMPtr<nsIProfileUnlocker> unlocker;
-      const TimeStamp start = TimeStamp::Now();
-      do {
-        rv = profile->Lock(getter_AddRefs(unlocker), aResult);
-        if (NS_SUCCEEDED(rv)) {
-          StartupTimeline::Record(StartupTimeline::AFTER_PROFILE_LOCKED);
-          // Try to grab the profile name.
-          if (aProfileName) {
-            rv = profile->GetName(*aProfileName);
-            if (NS_FAILED(rv)) aProfileName->Truncate(0);
-          }
-          return NS_OK;
-        }
-        PR_Sleep(kLockRetrySleepMS);
-      } while (TimeStamp::Now() - start <
-               TimeDuration::FromSeconds(kLockRetrySeconds));
+      rv = profile->Lock(getter_AddRefs(unlocker), &tempProfileLock);
+      if (NS_FAILED(rv)) {
+        return ProfileLockedDialog(profile, unlocker, aNative,
+                                   &tempProfileLock);
+      }
+    }
 
-      return ProfileLockedDialog(profile, unlocker, aNative, aResult);
+    // If we're resetting a profile, create a new one and use it to startup.
+    gResetOldProfile = profile;
+    rv = CreateResetProfile(aProfileSvc, gResetOldProfile,
+                            getter_AddRefs(profile));
+    if (NS_SUCCEEDED(rv)) {
+      rv = profile->GetRootDir(getter_AddRefs(rootDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+      SaveFileToEnv("XRE_PROFILE_PATH", rootDir);
+
+      rv = profile->GetLocalDir(getter_AddRefs(localDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+      SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", localDir);
+
+      rv = profile->GetName(*aProfileName);
+      if (NS_FAILED(rv)) {
+        aProfileName->Truncate(0);
+      }
+    } else {
+      NS_WARNING("Profile reset failed.");
+      return NS_ERROR_ABORT;
     }
   }
 
-  return ShowProfileManager(aProfileSvc, aNative);
+  // No profile could be found. This generally shouldn't happen, a new profile
+  // should be created in all cases except for profile reset which is covered
+  // above, but just in case...
+  if (!rootDir) {
+    return NS_ERROR_ABORT;
+  }
+
+  // If you close Firefox and very quickly reopen it, the old Firefox may
+  // still be closing down. Rather than immediately showing the
+  // "Firefox is running but is not responding" message, we spend a few
+  // seconds retrying first.
+
+  static const int kLockRetrySeconds = 5;
+  static const int kLockRetrySleepMS = 100;
+
+  nsCOMPtr<nsIProfileUnlocker> unlocker;
+  const TimeStamp start = TimeStamp::Now();
+  do {
+    if (profile) {
+      rv = profile->Lock(getter_AddRefs(unlocker), aResult);
+    } else {
+      rv = NS_LockProfilePath(rootDir, localDir, getter_AddRefs(unlocker),
+                              aResult);
+    }
+    if (NS_SUCCEEDED(rv)) {
+      StartupTimeline::Record(StartupTimeline::AFTER_PROFILE_LOCKED);
+      // Try to grab the profile name.
+      if (aProfileName && profile) {
+        rv = profile->GetName(*aProfileName);
+        if (NS_FAILED(rv)) {
+          aProfileName->Truncate(0);
+        }
+      }
+      return NS_OK;
+    }
+    PR_Sleep(kLockRetrySleepMS);
+  } while (TimeStamp::Now() - start <
+           TimeDuration::FromSeconds(kLockRetrySeconds));
+
+  return ProfileLockedDialog(rootDir, localDir, unlocker, aNative, aResult);
 }
 
 /**
@@ -4356,28 +4079,15 @@ nsresult XREMain::XRE_mainRun() {
   }
 
   {
-    nsCOMPtr<nsIToolkitProfile> profileBeingReset;
     bool profileWasSelected = false;
     if (gDoProfileReset) {
-      if (gResetOldProfileName.IsEmpty()) {
-        NS_WARNING("Not resetting profile as the profile has no name.");
-        gDoProfileReset = false;
-      } else {
-        rv = mProfileSvc->GetProfileByName(gResetOldProfileName,
-                                           getter_AddRefs(profileBeingReset));
-        if (NS_FAILED(rv)) {
-          gDoProfileReset = false;
-          return NS_ERROR_FAILURE;
-        }
-
-        nsCOMPtr<nsIToolkitProfile> defaultProfile;
-        // This can fail if there is no default profile.
-        // That shouldn't stop reset from proceeding.
-        nsresult gotSelected =
-            mProfileSvc->GetSelectedProfile(getter_AddRefs(defaultProfile));
-        if (NS_SUCCEEDED(gotSelected)) {
-          profileWasSelected = defaultProfile == profileBeingReset;
-        }
+      nsCOMPtr<nsIToolkitProfile> defaultProfile;
+      // This can fail if there is no default profile.
+      // That shouldn't stop reset from proceeding.
+      nsresult gotSelected =
+          mProfileSvc->GetSelectedProfile(getter_AddRefs(defaultProfile));
+      if (NS_SUCCEEDED(gotSelected)) {
+        profileWasSelected = defaultProfile == gResetOldProfile;
       }
     }
 
@@ -4388,25 +4098,29 @@ nsresult XREMain::XRE_mainRun() {
           do_CreateInstance(NS_PROFILEMIGRATOR_CONTRACTID));
       if (pm) {
         nsAutoCString aKey;
+        nsAutoCString aName;
         if (gDoProfileReset) {
           // Automatically migrate from the current application if we just
           // reset the profile.
           aKey = MOZ_APP_NAME;
+          gResetOldProfile->GetName(aName);
         }
-        pm->Migrate(&mDirProvider, aKey, gResetOldProfileName);
+        pm->Migrate(&mDirProvider, aKey, aName);
       }
     }
 
     if (gDoProfileReset) {
-      nsresult backupCreated = ProfileResetCleanup(profileBeingReset);
+      nsresult backupCreated = ProfileResetCleanup(gResetOldProfile);
       if (NS_FAILED(backupCreated))
         NS_WARNING("Could not cleanup the profile that was reset");
 
       nsCOMPtr<nsIToolkitProfile> newProfile;
       rv = GetCurrentProfile(mProfileSvc, mProfD, getter_AddRefs(newProfile));
       if (NS_SUCCEEDED(rv)) {
-        newProfile->SetName(gResetOldProfileName);
-        mProfileName.Assign(gResetOldProfileName);
+        nsAutoCString name;
+        gResetOldProfile->GetName(name);
+        newProfile->SetName(name);
+        mProfileName.Assign(name);
         // Set the new profile as the default after we're done cleaning up the
         // old profile, iff that profile was already the default
         if (profileWasSelected) {
@@ -4505,7 +4219,6 @@ nsresult XREMain::XRE_mainRun() {
   // during the relaunch process now that we know we won't be relaunching.
   SaveToEnv("XRE_PROFILE_PATH=");
   SaveToEnv("XRE_PROFILE_LOCAL_PATH=");
-  SaveToEnv("XRE_PROFILE_NAME=");
   SaveToEnv("XRE_START_OFFLINE=");
   SaveToEnv("XUL_APP_FILE=");
   SaveToEnv("XRE_BINARY_PATH=");
@@ -4800,7 +4513,6 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
       // Ensure that these environment variables are set:
       SaveFileToEnvIfUnset("XRE_PROFILE_PATH", mProfD);
       SaveFileToEnvIfUnset("XRE_PROFILE_LOCAL_PATH", mProfLD);
-      SaveWordToEnvIfUnset("XRE_PROFILE_NAME", mProfileName);
     }
 
 #ifdef MOZ_WIDGET_GTK

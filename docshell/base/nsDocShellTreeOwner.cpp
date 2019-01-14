@@ -1166,9 +1166,8 @@ ChromeTooltipListener::ShowTooltip(int32_t aInXCoords, int32_t aInYCoords,
   nsCOMPtr<nsITooltipListener> tooltipListener(
       do_QueryInterface(mWebBrowserChrome));
   if (tooltipListener) {
-    rv = tooltipListener->OnShowTooltip(aInXCoords, aInYCoords,
-                                        PromiseFlatString(aInTipText).get(),
-                                        PromiseFlatString(aTipDir).get());
+    rv = tooltipListener->OnShowTooltip(aInXCoords, aInYCoords, aInTipText,
+                                        aTipDir);
     if (NS_SUCCEEDED(rv)) {
       mShowingTooltip = true;
     }

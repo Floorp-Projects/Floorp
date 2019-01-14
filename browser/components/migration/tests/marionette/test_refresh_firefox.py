@@ -541,7 +541,6 @@ class TestFirefoxRefresh(MarionetteTestCase):
           env.set("MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS", JSON.stringify(prefObj));
           env.set("MOZ_RESET_PROFILE_RESTART", "1");
           env.set("XRE_PROFILE_PATH", arguments[0]);
-          env.set("XRE_PROFILE_NAME", profileName);
         """, script_args=(self.marionette.instance.profile.profile, profileName,))
 
         profileLeafName = os.path.basename(os.path.normpath(

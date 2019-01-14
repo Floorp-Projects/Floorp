@@ -259,17 +259,7 @@ function flushJarCache(jarPath) {
   Services.obs.notifyObservers(null, "flush-cache-entry", jarPath);
 }
 
-const chromeModifierKeyMap = {
-  "Alt": "alt",
-  "Command": "accel",
-  "Ctrl": "accel",
-  "MacCtrl": "control",
-  "Shift": "shift",
-};
-
-
 var ExtensionUtils = {
-  chromeModifierKeyMap,
   flushJarCache,
   getInnerWindowID,
   getMessageManager,

@@ -10,12 +10,14 @@
 #include <string>
 #include "mozilla/Attributes.h"
 
-class FakeDecryptor : public cdm::ContentDecryptionModule_9 {
+class FakeDecryptor : public cdm::ContentDecryptionModule_10 {
  public:
-  explicit FakeDecryptor(cdm::Host_9* aHost);
+  explicit FakeDecryptor(cdm::Host_10* aHost);
 
-  void Initialize(bool aAllowDistinctiveIdentifier,
-                  bool aAllowPersistentState) override {}
+  void Initialize(bool aAllowDistinctiveIdentifier, bool aAllowPersistentState,
+                  bool aUseHardwareSecureCodecs) override {
+    mHost->OnInitialized(true);
+  }
 
   void GetStatusForPolicy(uint32_t aPromiseId,
                           const cdm::Policy& aPolicy) override {}
@@ -45,18 +47,18 @@ class FakeDecryptor : public cdm::ContentDecryptionModule_9 {
 
   void TimerExpired(void* aContext) override {}
 
-  cdm::Status Decrypt(const cdm::InputBuffer_1& aEncryptedBuffer,
+  cdm::Status Decrypt(const cdm::InputBuffer_2& aEncryptedBuffer,
                       cdm::DecryptedBlock* aDecryptedBuffer) override {
     return cdm::Status::kDecodeError;
   }
 
   cdm::Status InitializeAudioDecoder(
-      const cdm::AudioDecoderConfig_1& aAudioDecoderConfig) override {
+      const cdm::AudioDecoderConfig_2& aAudioDecoderConfig) override {
     return cdm::Status::kDecodeError;
   }
 
   cdm::Status InitializeVideoDecoder(
-      const cdm::VideoDecoderConfig_1& aVideoDecoderConfig) override {
+      const cdm::VideoDecoderConfig_2& aVideoDecoderConfig) override {
     return cdm::Status::kDecodeError;
   }
 
@@ -64,13 +66,13 @@ class FakeDecryptor : public cdm::ContentDecryptionModule_9 {
 
   void ResetDecoder(cdm::StreamType aDecoderType) override {}
 
-  cdm::Status DecryptAndDecodeFrame(const cdm::InputBuffer_1& aEncryptedBuffer,
+  cdm::Status DecryptAndDecodeFrame(const cdm::InputBuffer_2& aEncryptedBuffer,
                                     cdm::VideoFrame* aVideoFrame) override {
     return cdm::Status::kDecodeError;
   }
 
   cdm::Status DecryptAndDecodeSamples(
-      const cdm::InputBuffer_1& aEncryptedBuffer,
+      const cdm::InputBuffer_2& aEncryptedBuffer,
       cdm::AudioFrames* aAudioFrame) override {
     return cdm::Status::kDecodeError;
   }
@@ -92,7 +94,7 @@ class FakeDecryptor : public cdm::ContentDecryptionModule_9 {
 
   static void Message(const std::string& aMessage);
 
-  cdm::Host_9* mHost;
+  cdm::Host_10* mHost;
 
   static FakeDecryptor* sInstance;
 
