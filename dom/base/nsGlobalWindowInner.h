@@ -1255,6 +1255,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void CallDocumentFlushedResolvers();
   void CancelDocumentFlushedResolvers();
 
+  // Return true if we need to notify browsing context to reset its user gesture
+  // activation flag.
+  bool ShouldResetBrowsingContextUserGestureActivation();
+
  public:
   // Dispatch a runnable related to the global.
   virtual nsresult Dispatch(mozilla::TaskCategory aCategory,

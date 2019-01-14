@@ -339,6 +339,23 @@ void BrowsingContext::NotifyUserGestureActivation() {
   cc->SendSetUserGestureActivation(BrowsingContextId(topLevelBC->Id()), true);
 }
 
+void BrowsingContext::NotifyResetUserGestureActivation() {
+  // We would reset the user gesture activation flag on the top level browsing
+  // context, which would automatically be sync to other top level browsing
+  // contexts which are in the different process.
+  RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
+  USER_ACTIVATION_LOG("Get top level browsing context 0x%08" PRIx64,
+                      topLevelBC->Id());
+  topLevelBC->ResetUserGestureActivation();
+
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+  auto cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+  cc->SendSetUserGestureActivation(BrowsingContextId(topLevelBC->Id()), false);
+}
+
 void BrowsingContext::SetUserGestureActivation() {
   MOZ_ASSERT(!mParent, "Set user activation flag on non top-level context!");
   USER_ACTIVATION_LOG(
@@ -349,6 +366,13 @@ void BrowsingContext::SetUserGestureActivation() {
 bool BrowsingContext::GetUserGestureActivation() {
   RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
   return topLevelBC->mIsActivatedByUserGesture;
+}
+
+void BrowsingContext::ResetUserGestureActivation() {
+  MOZ_ASSERT(!mParent, "Clear user activation flag on non top-level context!");
+  USER_ACTIVATION_LOG(
+      "Reset user gesture activation for browsing context 0x%08" PRIx64, Id());
+  mIsActivatedByUserGesture = false;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
