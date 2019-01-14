@@ -14,7 +14,11 @@ permalink: /changelog/
   * Android (SDK: 28, Support Libraries: 28.0.0)
   * Kotlin (Stdlib: 1.3.10, Coroutines: 1.0.1)
   * GeckoView (Nightly: **66.0.20190107093040** 🔺, Beta: 65.0.20181211223337, Release: 64.0.20181214004633)
-  * Mozilla App Services (FxA: 0.13.2, Sync Logins: 0.13.2, Places: 0.13.2)
+  * Mozilla App Services (FxA: **0.13.3** 🔺, Sync Logins: **0.13.3** 🔺, Places: **0.13.3** 🔺)
+    * [0.13.0 release notes](https://github.com/mozilla/application-services/releases/tag/v0.13.0)
+    * [0.13.1 release notes](https://github.com/mozilla/application-services/releases/tag/v0.13.1)
+    * [0.13.2 release notes](https://github.com/mozilla/application-services/releases/tag/v0.13.2)
+    * [0.13.3 release notes](https://github.com/mozilla/application-services/releases/tag/v0.13.3)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
 * **browser-engine-system**
