@@ -18,6 +18,13 @@
 #include "server.h"
 #include "util.h"
 
+/* In `PrioTotalShare_final`, we need to be able to store
+ * an `mp_digit` in an `unsigned long long`.
+ */
+#if (MP_DIGIT_MAX > ULLONG_MAX)
+#error "Unsigned long long is not long enough to hold an MP digit"
+#endif
+
 PrioServer
 PrioServer_new(const_PrioConfig cfg, PrioServerId server_idx,
                PrivateKey server_priv, const PrioPRGSeed seed)
@@ -112,7 +119,7 @@ PrioTotalShare_set_data(PrioTotalShare t, const_PrioServer s)
 }
 
 SECStatus
-PrioTotalShare_final(const_PrioConfig cfg, unsigned long* output,
+PrioTotalShare_final(const_PrioConfig cfg, unsigned long long* output,
                      const_PrioTotalShare tA, const_PrioTotalShare tB)
 {
   if (tA->data_shares->len != cfg->num_data_fields)
@@ -132,7 +139,10 @@ PrioTotalShare_final(const_PrioConfig cfg, unsigned long* output,
     MP_CHECKC(mp_addmod(&tA->data_shares->data[i], &tB->data_shares->data[i],
                         &cfg->modulus, &tmp));
 
-    output[i] = tmp.dp[0];
+    if (MP_USED(&tmp) > 1) {
+      P_CHECKCB(false);
+    }
+    output[i] = MP_DIGIT(&tmp, 0);
   }
 
 cleanup:
@@ -178,19 +188,25 @@ compute_shares(PrioVerifier v, const_PrioPacketClient p)
   const int n = v->s->cfg->num_data_fields + 1;
   const int N = next_power_of_two(n);
   mp_int eval_at;
+  mp_int lower;
   MP_DIGITS(&eval_at) = NULL;
+  MP_DIGITS(&lower) = NULL;
 
   MPArray points_f = NULL;
   MPArray points_g = NULL;
   MPArray points_h = NULL;
 
   MP_CHECKC(mp_init(&eval_at));
+  MP_CHECKC(mp_init(&lower));
   P_CHECKA(points_f = MPArray_new(N));
   P_CHECKA(points_g = MPArray_new(N));
   P_CHECKA(points_h = MPArray_new(2 * N));
 
-  // Use PRG to generate random point
-  MP_CHECKC(PRG_get_int(v->s->prg, &eval_at, &v->s->cfg->modulus));
+  // Use PRG to generate random point. Per Appendix D.2 of full version of
+  // Prio paper, this value must be in the range
+  //      [n+1, modulus).
+  mp_set(&lower, n + 1);
+  P_CHECKC(PRG_get_int_range(v->s->prg, &eval_at, &lower, &v->s->cfg->modulus));
 
   // Reduce value into the field we're using. This
   // doesn't yield exactly a uniformly random point,
@@ -233,6 +249,7 @@ cleanup:
   MPArray_clear(points_g);
   MPArray_clear(points_h);
   mp_clear(&eval_at);
+  mp_clear(&lower);
   return rv;
 }
 
