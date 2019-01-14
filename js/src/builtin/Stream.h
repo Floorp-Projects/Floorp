@@ -316,13 +316,6 @@ class ReadableStreamController : public StreamController {
     setUnderlyingSource(JS::PrivateValue(underlyingSource));
     addFlags(Flag_ExternalSource);
   }
-  void clearUnderlyingSource() {
-    if (hasExternalSource()) {
-      externalSource()->finalize();
-      setFlags(flags() & ~Flag_ExternalSource);
-    }
-    setUnderlyingSource(JS::UndefinedHandleValue);
-  }
   double strategyHWM() const {
     return getFixedSlot(Slot_StrategyHWM).toNumber();
   }
