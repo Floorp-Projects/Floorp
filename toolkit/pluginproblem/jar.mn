@@ -6,4 +6,3 @@ toolkit.jar:
 % content pluginproblem %pluginproblem/ contentaccessible=yes
   pluginproblem/pluginProblem.xml                 (content/pluginProblem.xml)
   pluginproblem/pluginProblemContent.css          (content/pluginProblemContent.css)
-  pluginproblem/pluginProblemBinding.css          (content/pluginProblemBinding.css)
