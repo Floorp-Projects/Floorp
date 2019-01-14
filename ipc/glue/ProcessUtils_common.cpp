@@ -139,16 +139,15 @@ bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
   Preferences::InitSnapshot(mPrefMapHandle.ref(), *mPrefMapSize);
 
   // Set up early prefs from the shared memory.
-  base::SharedMemory shm;
-  if (!shm.SetHandle(*mPrefsHandle, /* read_only */ true)) {
+  if (!mShmem.SetHandle(*mPrefsHandle, /* read_only */ true)) {
     NS_ERROR("failed to open shared memory in the child");
     return false;
   }
-  if (!shm.Map(*mPrefsLen)) {
+  if (!mShmem.Map(*mPrefsLen)) {
     NS_ERROR("failed to map shared memory in the child");
     return false;
   }
-  Preferences::DeserializePreferences(static_cast<char*>(shm.memory()),
+  Preferences::DeserializePreferences(static_cast<char*>(mShmem.memory()),
                                       *mPrefsLen);
 
   return true;
