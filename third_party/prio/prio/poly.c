@@ -74,8 +74,8 @@ fft_interpolate_raw(mp_int* out, const mp_int* ys, int nPoints,
   mp_int n_inverse;
   MP_DIGITS(&n_inverse) = NULL;
 
-  MP_CHECK(fft_recurse(out, mod, nPoints, roots, ys, tmp->data, ySub->data,
-                       rootsSub->data));
+  MP_CHECKC(fft_recurse(out, mod, nPoints, roots, ys, tmp->data, ySub->data,
+                        rootsSub->data));
 
   if (invert) {
     MP_CHECKC(mp_init(&n_inverse));
