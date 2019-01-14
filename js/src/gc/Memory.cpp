@@ -14,7 +14,7 @@
 #include "js/HeapAPI.h"
 #include "vm/Runtime.h"
 
-#if defined(XP_WIN)
+#ifdef XP_WIN
 
 #include "util/Windows.h"
 #include <psapi.h>
@@ -43,10 +43,8 @@ static size_t pageSize = 0;
 /* The OS allocation granularity may not match the page size. */
 static size_t allocGranularity = 0;
 
-#if defined(JS_64BIT)
-static size_t minValidAddress = 0;
-static size_t maxValidAddress = 0;
-#endif
+/* The number of bits used by addresses on this platform. */
+static size_t numAddressBits = 0;
 
 /*
  * System allocation functions may hand out regions of memory in increasing or
@@ -69,12 +67,69 @@ static mozilla::Atomic<int, mozilla::Relaxed,
     growthDirection(0);
 #endif
 
+/*
+ * Data from OOM crashes shows there may be up to 24 chunk-sized but unusable
+ * chunks available in low memory situations. These chunks may all need to be
+ * used up before we gain access to remaining *alignable* chunk-sized regions,
+ * so we use a generous limit of 32 unusable chunks to ensure we reach them.
+ */
+static const int MaxLastDitchAttempts = 32;
+
+#ifdef JS_64BIT
+/*
+ * On some 64-bit platforms we can use a random, scattershot allocator that
+ * tries addresses from the available range at random. If the address range
+ * is large enough this will have a high chance of success and additionally
+ * makes the memory layout of our process less predictable.
+ *
+ * However, not all 64-bit platforms have a very large address range. For
+ * example, AArch64 on Linux defaults to using 39-bit addresses to limit the
+ * number of translation tables used. On such configurations the scattershot
+ * approach to allocation creates a conflict with our desire to reserve large
+ * regions of memory for applications like WebAssembly: Small allocations may
+ * inadvertently block off all available 4-6GiB regions, and conversely
+ * reserving such regions may lower the success rate for smaller allocations to
+ * unacceptable levels.
+ *
+ * So we make a compromise: Instead of using the scattershot on all 64-bit
+ * platforms, we only use it on platforms that meet a minimum requirement for
+ * the available address range. In addition we split the address range,
+ * reserving the upper half for huge allocations and the lower half for smaller
+ * allocations. We use a limit of 43 bits so that at least 42 bits are available
+ * for huge allocations - this matches the 8TiB per process address space limit
+ * that we're already subject to on Windows.
+ */
+static const size_t MinAddressBitsForRandomAlloc = 43;
+
+/* The lower limit for huge allocations. This is fairly arbitrary. */
+static const size_t HugeAllocationSize = 1024 * 1024 * 1024;
+
+/* The minimum and maximum valid addresses that can be allocated into. */
+static size_t minValidAddress = 0;
+static size_t maxValidAddress = 0;
+
+/* The upper limit for smaller allocations and the lower limit for huge ones. */
+static size_t hugeSplit = 0;
+#endif
+
+size_t SystemPageSize() { return pageSize; }
+
+size_t SystemAddressBits() { return numAddressBits; }
+
+bool UsingScattershotAllocator() {
+#ifdef JS_64BIT
+  return numAddressBits >= MinAddressBitsForRandomAlloc;
+#else
+  return false;
+#endif
+}
+
 enum class Commit : bool {
   No = false,
   Yes = true,
 };
 
-#if defined(XP_WIN)
+#ifdef XP_WIN
 enum class PageAccess : DWORD {
   None = PAGE_NOACCESS,
   Read = PAGE_READONLY,
@@ -94,32 +149,21 @@ enum class PageAccess : int {
 };
 #endif
 
-#if !defined(JS_64BIT)
-/*
- * Data from OOM crashes shows there may be up to 24 chunk-sized but unusable
- * chunks available in low memory situations. These chunks may all need to be
- * used up before we gain access to remaining *alignable* chunk-sized regions,
- * so we use a generous limit of 32 unusable chunks to ensure we reach them.
- */
-static const int MaxLastDitchAttempts = 32;
-#endif
-
 template <bool AlwaysGetNew = true>
 static bool TryToAlignChunk(void** aRegion, void** aRetainedRegion,
                             size_t length, size_t alignment);
 
-#if defined(JS_64BIT)
+static void* MapAlignedPagesSlow(size_t length, size_t alignment);
+static void* MapAlignedPagesLastDitch(size_t length, size_t alignment);
+
+#ifdef JS_64BIT
 static void* MapAlignedPagesRandom(size_t length, size_t alignment);
 void* TestMapAlignedPagesLastDitch(size_t, size_t) { return nullptr; }
 #else
-static void* MapAlignedPagesSlow(size_t length, size_t alignment);
-static void* MapAlignedPagesLastDitch(size_t length, size_t alignment);
 void* TestMapAlignedPagesLastDitch(size_t length, size_t alignment) {
   return MapAlignedPagesLastDitch(length, alignment);
 }
 #endif
-
-size_t SystemPageSize() { return pageSize; }
 
 /*
  * We can only decommit unused pages if the hardcoded Arena
@@ -135,7 +179,7 @@ static inline size_t OffsetFromAligned(void* region, size_t alignment) {
 template <Commit commit, PageAccess prot>
 static inline void* MapInternal(void* desired, size_t length) {
   void* region = nullptr;
-#if defined(XP_WIN)
+#ifdef XP_WIN
   DWORD flags =
       (commit == Commit::Yes ? MEM_RESERVE | MEM_COMMIT : MEM_RESERVE);
   region = VirtualAlloc(desired, length, flags, DWORD(prot));
@@ -154,7 +198,7 @@ static inline void UnmapInternal(void* region, size_t length) {
   MOZ_ASSERT(region && OffsetFromAligned(region, allocGranularity) == 0);
   MOZ_ASSERT(length > 0 && length % pageSize == 0);
 
-#if defined(XP_WIN)
+#ifdef XP_WIN
   MOZ_RELEASE_ASSERT(VirtualFree(region, 0, MEM_RELEASE) != 0);
 #else
   if (munmap(region, length)) {
@@ -170,6 +214,10 @@ static inline void* MapMemory(size_t length) {
   return MapInternal<commit, prot>(nullptr, length);
 }
 
+/*
+ * Attempts to map memory at the given address, but allows the system
+ * to return a different address that may still be suitable.
+ */
 template <Commit commit = Commit::Yes, PageAccess prot = PageAccess::ReadWrite>
 static inline void* MapMemoryAtFuzzy(void* desired, size_t length) {
   MOZ_ASSERT(desired && OffsetFromAligned(desired, allocGranularity) == 0);
@@ -180,6 +228,10 @@ static inline void* MapMemoryAtFuzzy(void* desired, size_t length) {
   return MapInternal<commit, prot>(desired, length);
 }
 
+/*
+ * Attempts to map memory at the given address, returning nullptr if
+ * the system returns any address other than the requested one.
+ */
 template <Commit commit = Commit::Yes, PageAccess prot = PageAccess::ReadWrite>
 static inline void* MapMemoryAt(void* desired, size_t length) {
   MOZ_ASSERT(desired && OffsetFromAligned(desired, allocGranularity) == 0);
@@ -199,7 +251,7 @@ static inline void* MapMemoryAt(void* desired, size_t length) {
   return region;
 }
 
-#if defined(JS_64BIT)
+#ifdef JS_64BIT
 
 /* Returns a random number in the given range. */
 static inline uint64_t GetNumberInRange(uint64_t minNum, uint64_t maxNum) {
@@ -219,7 +271,7 @@ static inline uint64_t GetNumberInRange(uint64_t minNum, uint64_t maxNum) {
   return minNum + rndNum;
 }
 
-#if !defined(XP_WIN)
+#ifndef XP_WIN
 /*
  * The address range available to applications depends on both hardware and
  * kernel configuration. For example, AArch64 on Linux uses addresses with
@@ -232,8 +284,9 @@ static inline uint64_t GetNumberInRange(uint64_t minNum, uint64_t maxNum) {
  * on the index of the most significant set bit in the addresses it attempts to
  * allocate. As the requested address is often treated as a hint by the
  * operating system, we use the actual returned addresses to narrow the range.
+ * We return the number of bits of an address that may be set.
  */
-static uint64_t FindAddressLimit() {
+static size_t FindAddressLimit() {
   const size_t length = allocGranularity;  // Used as both length and alignment.
 
   void* address;
@@ -243,8 +296,8 @@ static uint64_t FindAddressLimit() {
   size_t low = 31;
   uint64_t highestSeen = (UINT64_C(1) << 32) - length - 1;
 
-  // Start with addresses that have bit 46 set.
-  size_t high = 46;
+  // Start with addresses that have bit 47 set.
+  size_t high = 47;
   startRaw = UINT64_C(1) << high;
   endRaw = 2 * startRaw - length - 1;
   start = (startRaw + length - 1) / length;
@@ -258,7 +311,7 @@ static uint64_t FindAddressLimit() {
       UnmapInternal(address, length);
     }
     if (actual >= startRaw) {
-      return endRaw;  // Return early and skip the binary search.
+      return high + 1;  // Return early and skip the binary search.
     }
     if (actual > highestSeen) {
       highestSeen = actual;
@@ -297,9 +350,7 @@ static uint64_t FindAddressLimit() {
   }
 
   // High was excluded, so use low (but sanity check it).
-  startRaw = UINT64_C(1) << std::min(low, size_t(46));
-  endRaw = 2 * startRaw - length - 1;
-  return endRaw;
+  return std::min(low + 1, size_t(47));
 }
 #endif  // !defined(XP_WIN)
 
@@ -307,7 +358,7 @@ static uint64_t FindAddressLimit() {
 
 void InitMemorySubsystem() {
   if (pageSize == 0) {
-#if defined(XP_WIN)
+#ifdef XP_WIN
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
     pageSize = sysinfo.dwPageSize;
@@ -316,26 +367,33 @@ void InitMemorySubsystem() {
     pageSize = size_t(sysconf(_SC_PAGESIZE));
     allocGranularity = pageSize;
 #endif
-#if defined(JS_64BIT)
-#if defined(XP_WIN)
+#ifdef JS_64BIT
+#ifdef XP_WIN
     minValidAddress = size_t(sysinfo.lpMinimumApplicationAddress);
     maxValidAddress = size_t(sysinfo.lpMaximumApplicationAddress);
+    numAddressBits = mozilla::FloorLog2(maxValidAddress) + 1;
 #else
     // No standard way to determine these, so fall back to FindAddressLimit().
+    numAddressBits = FindAddressLimit();
     minValidAddress = allocGranularity;
-    maxValidAddress = FindAddressLimit() - allocGranularity;
+    maxValidAddress = (UINT64_C(1) << numAddressBits) - 1 - allocGranularity;
 #endif
     // Sanity check the address to ensure we don't use more than 47 bits.
     uint64_t maxJSAddress = UINT64_C(0x00007fffffffffff) - allocGranularity;
     if (maxValidAddress > maxJSAddress) {
       maxValidAddress = maxJSAddress;
+      hugeSplit = UINT64_C(0x00003fffffffffff) - allocGranularity;
+    } else {
+      hugeSplit = (UINT64_C(1) << (numAddressBits - 1)) - 1 - allocGranularity;
     }
+#else  // !defined(JS_64BIT)
+    numAddressBits = 32;
 #endif
   }
 }
 
+#ifdef JS_64BIT
 /* The JS engine uses 47-bit pointers; all higher bits must be clear. */
-#if defined(JS_64BIT)
 static inline bool IsInvalidRegion(void* region, size_t length) {
   const uint64_t invalidPointerMask = UINT64_C(0xffff800000000000);
   return (uintptr_t(region) + length - 1) & invalidPointerMask;
@@ -354,11 +412,18 @@ void* MapAlignedPages(size_t length, size_t alignment) {
     alignment = allocGranularity;
   }
 
-#if defined(JS_64BIT)
-  void* region = MapAlignedPagesRandom(length, alignment);
+#ifdef JS_64BIT
+  // Use the scattershot allocator if the address range is large enough.
+  if (UsingScattershotAllocator()) {
+    void* region = MapAlignedPagesRandom(length, alignment);
 
-  MOZ_RELEASE_ASSERT(!IsInvalidRegion(region, length));
-#else
+    MOZ_RELEASE_ASSERT(!IsInvalidRegion(region, length));
+    MOZ_ASSERT(OffsetFromAligned(region, alignment) == 0);
+
+    return region;
+  }
+#endif
+
   void* region = MapMemory(length);
   if (OffsetFromAligned(region, alignment) == 0) {
     return region;
@@ -380,17 +445,44 @@ void* MapAlignedPages(size_t length, size_t alignment) {
   if (!region) {
     region = MapAlignedPagesLastDitch(length, alignment);
   }
-#endif
 
   MOZ_ASSERT(OffsetFromAligned(region, alignment) == 0);
   return region;
 }
 
-#if defined(JS_64BIT)
+#ifdef JS_64BIT
 
+/*
+ * This allocator takes advantage of the large address range on some 64-bit
+ * platforms to allocate in a scattershot manner, choosing addresses at random
+ * from the range. By controlling the range we can avoid returning addresses
+ * that have more than 47 significant bits (as required by SpiderMonkey).
+ * This approach also has some other advantages over the methods employed by
+ * the other allocation functions in this file:
+ * 1) Allocations are extremely likely to succeed on the first try.
+ * 2) The randomness makes our memory layout becomes harder to predict.
+ * 3) The low probability of reusing regions guards against use-after-free.
+ *
+ * The main downside is that detecting physical OOM situations becomes more
+ * difficult; to guard against this, we occasionally try a regular allocation.
+ * In addition, sprinkling small allocations throughout the full address range
+ * might get in the way of large address space reservations such as those
+ * employed by WebAssembly. To avoid this (or the opposite problem of such
+ * reservations reducing the chance of success for smaller allocations) we
+ * split the address range in half, with one half reserved for huge allocations
+ * and the other for regular (usually chunk sized) allocations.
+ */
 static void* MapAlignedPagesRandom(size_t length, size_t alignment) {
-  uint64_t minNum = (minValidAddress + alignment - 1) / alignment;
-  uint64_t maxNum = (maxValidAddress - (length - 1)) / alignment;
+  uint64_t minNum, maxNum;
+  if (length < HugeAllocationSize) {
+    // Use the lower half of the range.
+    minNum = (minValidAddress + alignment - 1) / alignment;
+    maxNum = (hugeSplit - (length - 1)) / alignment;
+  } else {
+    // Use the upper half of the range.
+    minNum = (hugeSplit + 1 + alignment - 1) / alignment;
+    maxNum = (maxValidAddress - (length - 1)) / alignment;
+  }
 
   // Try to allocate in random aligned locations.
   void* region = nullptr;
@@ -424,17 +516,28 @@ static void* MapAlignedPagesRandom(size_t length, size_t alignment) {
     UnmapInternal(region, length);
   }
 
-  MOZ_CRASH("Couldn't allocate even after 1000 tries!");
+  if (numAddressBits < 48) {
+    // Try the reliable fallback of overallocating.
+    // Note: This will not respect the address space split.
+    region = MapAlignedPagesSlow(length, alignment);
+    if (region) {
+      return region;
+    }
+  }
+  if (length < HugeAllocationSize) {
+    MOZ_CRASH("Couldn't allocate even after 1000 tries!");
+  }
+
   return nullptr;
 }
 
-#else  // !defined(JS_64BIT)
+#endif  // defined(JS_64BIT)
 
 static void* MapAlignedPagesSlow(size_t length, size_t alignment) {
   void* alignedRegion = nullptr;
   do {
     size_t reserveLength = length + alignment - pageSize;
-#if defined(XP_WIN)
+#ifdef XP_WIN
     // Don't commit the requested pages as we won't use the region directly.
     void* region = MapMemory<Commit::No>(reserveLength);
 #else
@@ -445,7 +548,7 @@ static void* MapAlignedPagesSlow(size_t length, size_t alignment) {
     }
     alignedRegion =
         reinterpret_cast<void*>(AlignBytes(uintptr_t(region), alignment));
-#if defined(XP_WIN)
+#ifdef XP_WIN
     // Windows requires that map and unmap calls be matched, so deallocate
     // and immediately reallocate at the desired (aligned) address.
     UnmapInternal(region, reserveLength);
@@ -503,9 +606,7 @@ static void* MapAlignedPagesLastDitch(size_t length, size_t alignment) {
   return region;
 }
 
-#endif  // defined(JS_64BIT)
-
-#if defined(XP_WIN)
+#ifdef XP_WIN
 
 /*
  * On Windows, map and unmap calls must be matched, so we deallocate the
@@ -654,7 +755,7 @@ size_t GetPageFaultCount() {
   if (mozilla::recordreplay::IsRecordingOrReplaying()) {
     return 0;
   }
-#if defined(XP_WIN)
+#ifdef XP_WIN
   PROCESS_MEMORY_COUNTERS pmc;
   if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)) == 0) {
     return 0;
@@ -689,7 +790,7 @@ void* AllocateMappedContent(int fd, size_t offset, size_t length,
     mappedLength += pageSize - alignedLength % pageSize;
   }
 
-#if defined(XP_WIN)
+#ifdef XP_WIN
   HANDLE hFile = reinterpret_cast<HANDLE>(intptr_t(fd));
 
   // This call will fail if the file does not exist.
@@ -728,7 +829,7 @@ void* AllocateMappedContent(int fd, size_t offset, size_t length,
   if (!map) {
     return nullptr;
   }
-#else
+#else  // !defined(XP_WIN)
   // Sanity check the offset and length, as mmap does not do this for us.
   struct stat st;
   if (fstat(fd, &st) || offset >= uint64_t(st.st_size) ||
@@ -749,7 +850,7 @@ void* AllocateMappedContent(int fd, size_t offset, size_t length,
   MOZ_RELEASE_ASSERT(map != MAP_FAILED);
 #endif
 
-#if defined(DEBUG)
+#ifdef DEBUG
   // Zero out data before and after the desired mapping to catch errors early.
   if (offset != alignedOffset) {
     memset(map, 0, offset - alignedOffset);
@@ -775,7 +876,7 @@ void DeallocateMappedContent(void* region, size_t length) {
   // that might be offset from the mapping, as the beginning of a
   // mapping must be aligned with the allocation granularity.
   uintptr_t map = uintptr_t(region) - (uintptr_t(region) % allocGranularity);
-#if defined(XP_WIN)
+#ifdef XP_WIN
   MOZ_RELEASE_ASSERT(UnmapViewOfFile(reinterpret_cast<void*>(map)) != 0);
 #else
   size_t alignedLength = length + (uintptr_t(region) % allocGranularity);
@@ -788,7 +889,7 @@ void DeallocateMappedContent(void* region, size_t length) {
 static inline void ProtectMemory(void* region, size_t length, PageAccess prot) {
   MOZ_RELEASE_ASSERT(region && OffsetFromAligned(region, pageSize) == 0);
   MOZ_RELEASE_ASSERT(length > 0 && length % pageSize == 0);
-#if defined(XP_WIN)
+#ifdef XP_WIN
   DWORD oldProtect;
   MOZ_RELEASE_ASSERT(VirtualProtect(region, length, DWORD(prot), &oldProtect) !=
                      0);

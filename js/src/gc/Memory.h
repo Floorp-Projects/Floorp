@@ -16,7 +16,16 @@ namespace gc {
 // running instance and initialize any runtime data needed for allocation.
 void InitMemorySubsystem();
 
+// The page size as reported by the operating system.
 size_t SystemPageSize();
+
+// The number of bits that may be set in a valid address, as
+// reported by the operating system or measured at startup.
+size_t SystemAddressBits();
+
+// The scattershot allocator is used on platforms that have a large address
+// range. On these platforms we allocate at random addresses.
+bool UsingScattershotAllocator();
 
 // Allocate or deallocate pages from the system with the given alignment.
 void* MapAlignedPages(size_t size, size_t alignment);
