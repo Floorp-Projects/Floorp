@@ -1345,6 +1345,10 @@ void MediaRecorder::Pause(ErrorResult& aResult) {
     return;
   }
 
+  if (mState == RecordingState::Paused) {
+    return;
+  }
+
   MOZ_ASSERT(mSessions.Length() > 0);
   nsresult rv = mSessions.LastElement()->Pause();
   if (NS_FAILED(rv)) {
@@ -1359,6 +1363,10 @@ void MediaRecorder::Resume(ErrorResult& aResult) {
   LOG(LogLevel::Debug, ("MediaRecorder.Resume %p", this));
   if (mState == RecordingState::Inactive) {
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  if (mState == RecordingState::Recording) {
     return;
   }
 
