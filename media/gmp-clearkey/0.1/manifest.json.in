@@ -3,8 +3,8 @@
     "description": "ClearKey Gecko Media Plugin",
     "version": "1",
     "x-cdm-module-versions": "4",
-    "x-cdm-interface-versions": "9",
-    "x-cdm-host-versions": "9",
+    "x-cdm-interface-versions": "10",
+    "x-cdm-host-versions": "10",
 #ifdef ENABLE_WMF
     "x-cdm-codecs": "avc1"
 #else
