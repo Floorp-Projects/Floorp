@@ -7,6 +7,7 @@
 #ifndef gc_Allocator_h
 #define gc_Allocator_h
 
+#include "gc/GCLock.h"
 #include "gc/Heap.h"
 #include "js/RootingAPI.h"
 

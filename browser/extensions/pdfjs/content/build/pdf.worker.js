@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.1.176';
-var pdfjsBuild = 'e4d2a160';
+var pdfjsVersion = '2.1.189';
+var pdfjsBuild = '5cb00b79';
 
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -375,7 +375,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.1.176';
+    let workerVersion = '2.1.189';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -8240,7 +8240,7 @@ var XRef = function XRefClosure() {
 
       var objRegExp = /^(\d+)\s+(\d+)\s+obj\b/;
       const endobjRegExp = /\bendobj[\b\s]$/;
-      const nestedObjRegExp = /\s+(\d+\s+\d+\s+obj[\b\s])$/;
+      const nestedObjRegExp = /\s+(\d+\s+\d+\s+obj[\b\s<])$/;
       const CHECK_CONTENT_LENGTH = 25;
       var trailerBytes = new Uint8Array([116, 114, 97, 105, 108, 101, 114]);
       var startxrefBytes = new Uint8Array([115, 116, 97, 114, 116, 120, 114, 101, 102]);
@@ -9569,7 +9569,16 @@ var Parser = function ParserClosure() {
         }
       }
 
-      return stream.pos - 4 - startPos;
+      let endOffset = 4;
+      stream.skip(-endOffset);
+      ch = stream.peekByte();
+      stream.skip(endOffset);
+
+      if (!(0, _util.isSpace)(ch)) {
+        endOffset--;
+      }
+
+      return stream.pos - endOffset - startPos;
     },
 
     findDCTDecodeInlineStreamEnd: function Parser_findDCTDecodeInlineStreamEnd(stream) {

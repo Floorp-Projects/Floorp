@@ -7,6 +7,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "gc/GCInternals.h"
+#include "gc/GCLock.h"
 #include "js/HashTable.h"
 #include "vm/Realm.h"
 #include "vm/Runtime.h"
