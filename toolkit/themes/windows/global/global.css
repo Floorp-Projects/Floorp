@@ -143,19 +143,6 @@ html|*#print-preview-pageNumber {
   text-shadow: 1px 1px 1.5px black;
 }
 
-.inset {
-  border: 1px solid ThreeDShadow;
-  border-right-color: ThreeDHighlight;
-  border-bottom-color: ThreeDHighlight;
-  margin: 0 5px 5px;
-}
-
-.outset {
-  border: 1px solid ThreeDShadow;
-  border-left-color: ThreeDHighlight;
-  border-top-color: ThreeDHighlight;
-}
-
 /* separators */
 separator:not([orient="vertical"]) {
   height: 1.5em;
