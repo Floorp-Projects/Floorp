@@ -16,7 +16,7 @@ var manager = new MediaTestManager;
 var operationTests = [
   {
     operations: ['stop'],
-    isValid: false
+    isValid: true
   },
   {
     operations: ['requestData'],
@@ -70,7 +70,7 @@ var operationTests = [
   },
   {
     operations: ['stop', 'start'],
-    isValid: false
+    isValid: true
   },
   {
     operations: ['start', 'stop'],
@@ -156,7 +156,7 @@ var operationTests = [
   },
   {
     operations: ['start', 'stop', 'stop'],
-    isValid: false
+    isValid: true
   },
   {
     operations: ['start', 'pause', 'resume', 'resume'],
