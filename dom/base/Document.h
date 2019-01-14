@@ -3302,6 +3302,8 @@ class Document : public nsINode,
   // document in the document tree.
   bool HasBeenUserGestureActivated();
 
+  BrowsingContext* GetBrowsingContext() const;
+
   // This document is a WebExtension page, it might be a background page, a
   // popup, a visible tab, a visible iframe ...e.t.c.
   bool IsExtensionPage() const;
