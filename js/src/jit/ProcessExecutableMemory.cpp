@@ -44,8 +44,7 @@ using namespace js;
 using namespace js::jit;
 
 #ifdef XP_WIN
-// TODO: implement the necessary support for AArch64.
-#if defined(HAVE_64BIT_BUILD) && defined(_M_X64)
+#if defined(HAVE_64BIT_BUILD)
 #define NEED_JIT_UNWIND_HANDLING
 #endif
 
@@ -83,6 +82,28 @@ JS_FRIEND_API void js::SetJitExceptionHandler(JitExceptionHandler handler) {
   sJitExceptionHandler = handler;
 }
 
+#if defined(_M_ARM64)
+// See the ".xdata records" section of
+// https://docs.microsoft.com/en-us/cpp/build/arm64-exception-handling
+// These records can have various fields present or absent depending on the
+// bits set in the header. We'll be using a mostly-zero dummy structure with
+// no slots for epilogs or unwind codes. But when epilogCount and codeWords are
+// both zero, the interpretation is that there is an additional word containing
+// extended epilog count and code words (which in our case will also be zero).
+struct UnwindInfo {
+  uint32_t functionLength : 18;
+  uint32_t version : 2;
+  uint32_t hasExceptionHandler : 1;
+  uint32_t packedEpilog : 1;
+  uint32_t epilogCount : 5;
+  uint32_t codeWords : 5;
+  uint16_t extEpilogCount;
+  uint8_t extCodeWords;
+  uint8_t reserved;
+  uint32_t exceptionHandler;
+};
+static const unsigned ThunkLength = 20;
+#else
 // From documentation for UNWIND_INFO on
 // http://msdn.microsoft.com/en-us/library/ddssxxy8.aspx
 struct UnwindInfo {
@@ -94,8 +115,8 @@ struct UnwindInfo {
   uint8_t frameOffset : 4;
   ULONG exceptionHandler;
 };
-
 static const unsigned ThunkLength = 12;
+#endif
 
 struct ExceptionHandlerRecord {
   RUNTIME_FUNCTION runtimeFunction;
@@ -114,6 +135,8 @@ static DWORD ExceptionHandler(PEXCEPTION_RECORD exceptionRecord,
   return sJitExceptionHandler(exceptionRecord, context);
 }
 
+PRUNTIME_FUNCTION RuntimeFunctionCallback(DWORD64 ControlPc, PVOID Context);
+
 // For an explanation of the problem being solved here, see
 // SetJitExceptionFilter in jsfriendapi.h.
 static bool RegisterExecutableMemory(void* p, size_t bytes, size_t pageSize) {
@@ -122,6 +145,14 @@ static bool RegisterExecutableMemory(void* p, size_t bytes, size_t pageSize) {
   }
 
   ExceptionHandlerRecord* r = reinterpret_cast<ExceptionHandlerRecord*>(p);
+  void* handler = JS_FUNC_TO_DATA_PTR(void*, ExceptionHandler);
+
+  // Because the .xdata format on ARM64 can only encode sizes up to 1M (much
+  // too small for our JIT code regions), we register a function table callback
+  // to provide RUNTIME_FUNCTIONs at runtime. Windows doesn't seem to care about
+  // the size fields on RUNTIME_FUNCTIONs that are created in this way, so the
+  // same RUNTIME_FUNCTION can work for any address in the region. We'll set up
+  // a generic one now and the callback can just return a pointer to it.
 
   // All these fields are specified to be offsets from the base of the
   // executable code (which is 'p'), even if they have 'Address' in their
@@ -131,6 +162,30 @@ static bool RegisterExecutableMemory(void* p, size_t bytes, size_t pageSize) {
   // record. The record is put on its own page so that we can take away write
   // access to protect against accidental clobbering.
 
+#if defined(_M_ARM64)
+  r->runtimeFunction.BeginAddress = pageSize;
+  r->runtimeFunction.UnwindData = offsetof(ExceptionHandlerRecord, unwindInfo);
+  static_assert(offsetof(ExceptionHandlerRecord, unwindInfo) % 4 == 0,
+                "The ARM64 .pdata format requires that exception information "
+                "RVAs be 4-byte aligned.");
+
+  memset(&r->unwindInfo, 0, sizeof(r->unwindInfo));
+  r->unwindInfo.hasExceptionHandler = true;
+  r->unwindInfo.exceptionHandler = offsetof(ExceptionHandlerRecord, thunk);
+
+  uint32_t* thunk = (uint32_t*)r->thunk;
+  uint16_t* addr = (uint16_t*)&handler;
+
+  // xip0/r16 should be safe to clobber: Windows just used it to call our thunk.
+  const uint8_t reg = 16;
+
+  // Say `handler` is 0x4444333322221111, then:
+  thunk[0] = 0xd2800000 | addr[0] << 5 | reg;  // mov  xip0, 1111
+  thunk[1] = 0xf2a00000 | addr[1] << 5 | reg;  // movk xip0, 2222 lsl #0x10
+  thunk[2] = 0xf2c00000 | addr[2] << 5 | reg;  // movk xip0, 3333 lsl #0x20
+  thunk[3] = 0xf2e00000 | addr[3] << 5 | reg;  // movk xip0, 4444 lsl #0x30
+  thunk[4] = 0xd61f0000 | reg << 5;            // br xip0
+#else
   r->runtimeFunction.BeginAddress = pageSize;
   r->runtimeFunction.EndAddress = (DWORD)bytes;
   r->runtimeFunction.UnwindData = offsetof(ExceptionHandlerRecord, unwindInfo);
@@ -146,12 +201,12 @@ static bool RegisterExecutableMemory(void* p, size_t bytes, size_t pageSize) {
   // mov imm64, rax
   r->thunk[0] = 0x48;
   r->thunk[1] = 0xb8;
-  void* handler = JS_FUNC_TO_DATA_PTR(void*, ExceptionHandler);
   memcpy(&r->thunk[2], &handler, 8);
 
   // jmp rax
   r->thunk[10] = 0xff;
   r->thunk[11] = 0xe0;
+#endif
 
   DWORD oldProtect;
   if (!VirtualProtect(p, pageSize, PAGE_EXECUTE_READ, &oldProtect)) {
@@ -162,18 +217,13 @@ static bool RegisterExecutableMemory(void* p, size_t bytes, size_t pageSize) {
   // thread. If that ever becomes untrue, the profiler must be updated
   // immediately.
   AutoSuppressStackWalking suppress;
-  return RtlAddFunctionTable(&r->runtimeFunction, 1,
-                             reinterpret_cast<DWORD64>(p));
+  return RtlInstallFunctionTableCallback((DWORD64)p | 0x3, (DWORD64)p, bytes,
+                                         RuntimeFunctionCallback, NULL, NULL);
 }
 
 static void UnregisterExecutableMemory(void* p, size_t bytes, size_t pageSize) {
-  ExceptionHandlerRecord* r = reinterpret_cast<ExceptionHandlerRecord*>(p);
-
-  // XXX NB: The profiler believes this function is only called from the main
-  // thread. If that ever becomes untrue, the profiler must be updated
-  // immediately.
-  AutoSuppressStackWalking suppress;
-  RtlDeleteFunctionTable(&r->runtimeFunction);
+  // There's no such thing as RtlUninstallFunctionTableCallback, so there's
+  // nothing to do here.
 }
 #endif
 
@@ -474,6 +524,8 @@ class ProcessExecutableMemory {
     return true;
   }
 
+  uint8_t* base() const { return base_; }
+
   bool initialized() const { return base_ != nullptr; }
 
   size_t bytesAllocated() const {
@@ -685,3 +737,18 @@ bool js::jit::ReprotectRegion(void* start, size_t size,
   execMemory.assertValidAddress(pageStart, size);
   return true;
 }
+
+#if defined(XP_WIN) && defined(NEED_JIT_UNWIND_HANDLING)
+static PRUNTIME_FUNCTION RuntimeFunctionCallback(DWORD64 ControlPc,
+                                                 PVOID Context) {
+  MOZ_ASSERT(sJitExceptionHandler);
+
+  // RegisterExecutableMemory already set up the runtime function in the
+  // exception-data page preceding the allocation.
+  uint8_t* p = execMemory.base();
+  if (!p) {
+    return nullptr;
+  }
+  return (PRUNTIME_FUNCTION)(p - gc::SystemPageSize());
+}
+#endif
