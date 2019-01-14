@@ -911,18 +911,18 @@ Inspector.prototype = {
         title: INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
       },
       {
-        id: "animationinspector",
-        title: INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle"),
-      },
-      {
         id: "fontinspector",
         title: INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle"),
+      },
+      {
+        id: "animationinspector",
+        title: INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle"),
       },
     ];
 
     if (this._supportsChangesPanel()) {
       // Insert Changes as third tab, right after Computed.
-      // TODO: move this inline to `sidebarPanels` above when addressing Bug 1491887.
+      // TODO: move this inline to `sidebarPanels` above when addressing Bug 1511877.
       sidebarPanels.splice(2, 0, {
         id: "changesview",
         title: INSPECTOR_L10N.getStr("inspector.sidebar.changesViewTitle"),
