@@ -18,6 +18,7 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.log import FATAL
 from mozharness.base.script import BaseScript, PreScriptAction
+from mozharness.mozilla.automation import TBPL_RETRY
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.testing.android import AndroidMixin
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
@@ -402,7 +403,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                               "Not all tests were executed.<br/>")
                     # Signal per-test time exceeded, to break out of suites and
                     # suite categories loops also.
-                    return False
+                    return
 
                 final_cmd = copy.copy(cmd)
                 if len(per_test_args) > 0:
@@ -431,6 +432,9 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 if len(per_test_args) > 0:
                     self.record_status(tbpl_status, level=log_level)
                     self.log_per_test_status(per_test_args[-1], tbpl_status, log_level)
+                    if tbpl_status == TBPL_RETRY:
+                        self.info("Per-test run abandoned due to RETRY status")
+                        return
                 else:
                     self.record_status(tbpl_status, level=log_level)
                     self.log("The %s suite: %s ran with return status: %s" %
