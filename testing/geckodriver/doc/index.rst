@@ -47,7 +47,7 @@ For developers
 Communication
 =============
 
-The mailing list for Marionette discussion is
+The mailing list for geckodriver discussion is
 tools-marionette@lists.mozilla.org (`subscribe`_, `archive`_).
 
 If you prefer real-time chat, there is often someone in the #ateam IRC
