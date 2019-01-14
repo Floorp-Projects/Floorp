@@ -4,7 +4,7 @@
 
 use api::{BorderRadius, ClipMode, ColorF, PictureRect, ColorU, LayoutVector2D};
 use api::{DeviceIntRect, DevicePixelScale, DeviceRect};
-use api::{FilterOp, ImageRendering, TileOffset, RepeatMode};
+use api::{FilterOp, ImageRendering, TileOffset, RepeatMode, WorldPoint, WorldSize};
 use api::{LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize};
 use api::{PremultipliedColorF, PropertyBinding, Shadow};
 use api::{WorldPixel, BoxShadowClipMode, WorldRect, LayoutToWorldScale};
@@ -398,8 +398,28 @@ impl From<RectangleKey> for LayoutRect {
     }
 }
 
+impl From<RectangleKey> for WorldRect {
+    fn from(key: RectangleKey) -> WorldRect {
+        WorldRect {
+            origin: WorldPoint::new(key.x, key.y),
+            size: WorldSize::new(key.w, key.h),
+        }
+    }
+}
+
 impl From<LayoutRect> for RectangleKey {
     fn from(rect: LayoutRect) -> RectangleKey {
+        RectangleKey {
+            x: rect.origin.x,
+            y: rect.origin.y,
+            w: rect.size.width,
+            h: rect.size.height,
+        }
+    }
+}
+
+impl From<WorldRect> for RectangleKey {
+    fn from(rect: WorldRect) -> RectangleKey {
         RectangleKey {
             x: rect.origin.x,
             y: rect.origin.y,
