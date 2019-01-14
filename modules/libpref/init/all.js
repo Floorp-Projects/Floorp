@@ -5334,7 +5334,11 @@ pref("dom.vr.autoactivate.enabled", false);
 // The threshold value of trigger inputs for VR controllers
 pref("dom.vr.controller_trigger_threshold", "0.1");
 // Enable external XR API integrations
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+pref("dom.vr.external.enabled", true);
+#else
 pref("dom.vr.external.enabled", false);
+#endif
 // Minimum number of milliseconds the browser will wait before attempting
 // to re-start the VR service after an enumeration returned no devices.
 pref("dom.vr.external.notdetected.timeout", 60000);
@@ -5423,8 +5427,8 @@ pref("dom.vr.poseprediction.enabled", true);
 // tests or in a headless kiosk system.
 pref("dom.vr.require-gesture", true);
 // Enable a separate process for VR module.
-#if defined(XP_WIN)
-pref("dom.vr.process.enabled", false);
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+pref("dom.vr.process.enabled", true);
 #endif
 // Puppet device, used for simulating VR hardware within tests and dev tools
 pref("dom.vr.puppet.enabled", false);
