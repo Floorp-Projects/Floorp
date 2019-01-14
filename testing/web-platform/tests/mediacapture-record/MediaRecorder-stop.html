@@ -16,9 +16,19 @@
         return canvas.captureStream();
     }
 
+    function recordEvents(target, events) {
+        let arr = [];
+        for (let ev of events) {
+            target.addEventListener(ev, _ => arr.push(ev));
+        }
+        return arr;
+    }
+
     promise_test(async t => {
         let video = createVideoStream();
         let recorder = new MediaRecorder(video);
+        let events = recordEvents(recorder,
+            ["start", "stop", "dataavailable", "pause", "resume", "error"]);
         assert_equals(video.getVideoTracks().length, 1, "video mediastream starts with one track");
         recorder.start();
         assert_equals(recorder.state, "recording", "MediaRecorder has been started successfully");
@@ -31,6 +41,9 @@
         assert_true(event.isTrusted, "isTrusted should be true when the event is created by C++");
         assert_equals(recorder.state, "inactive", "MediaRecorder is inactive after stop event");
 
+        assert_array_equals(events, ["start", "dataavailable", "stop"],
+            "Should have gotten expected events");
+
         recorder.stop();
         await Promise.race([
             new Promise((_, reject) => recorder.onstop =
@@ -42,6 +55,8 @@
     promise_test(async t => {
         let video = createVideoStream();
         let recorder = new MediaRecorder(video);
+        let events = recordEvents(recorder,
+            ["start", "stop", "dataavailable", "pause", "resume", "error"]);
         recorder.start();
         assert_equals(recorder.state, "recording", "MediaRecorder has been started successfully");
 
@@ -52,6 +67,9 @@
         assert_equals(event.type, "stop", "the event type should be stop");
         assert_true(event.isTrusted, "isTrusted should be true when the event is created by C++");
         assert_equals(recorder.state, "inactive", "MediaRecorder is inactive after stop event");
+
+        assert_array_equals(events, ["start", "dataavailable", "stop"],
+            "Should have gotten expected events");
 
         recorder.stop();
         await Promise.race([
