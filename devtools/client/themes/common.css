@@ -812,8 +812,6 @@ checkbox:-moz-focusring {
   width: 2em;
   height: 1em;
   border-radius: 1em;
-  border: 1px solid transparent;
-  box-sizing: content-box;
   /* Animate the thumb position between states of the checkbox. */
   transition: background-color .1s ease-out;
 }
@@ -824,12 +822,12 @@ html[dir="rtl"] .devtools-checkbox-toggle {
 }
 
 .devtools-checkbox-toggle:focus {
-  border-color: var(--blue-55);
+  box-shadow: 0 0 0 1px var(--blue-55);
 }
 
 .devtools-checkbox-toggle:checked:focus {
   background-color: var(--blue-40);
-  border-color: none;
+  box-shadow: none;
 }
 
 .devtools-checkbox-toggle:checked {
