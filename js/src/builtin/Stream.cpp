@@ -677,10 +677,24 @@ CreateReadableStreamDefaultReader(
     HandleObject proto = nullptr);
 
 /**
- * Streams spec, 3.2.5.3. getReader()
+ * Streams spec, 3.2.5.3. getReader({ mode } = {})
  */
 static bool ReadableStream_getReader(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Implicit in the spec: Argument defaults and destructuring.
+  RootedValue optionsVal(cx, args.get(0));
+  if (optionsVal.isUndefined()) {
+    JSObject* emptyObj = NewBuiltinClassInstance<PlainObject>(cx);
+    if (!emptyObj) {
+      return false;
+    }
+    optionsVal.setObject(*emptyObj);
+  }
+  RootedValue modeVal(cx);
+  if (!GetProperty(cx, optionsVal, cx->names().mode, &modeVal)) {
+    return false;
+  }
 
   // Step 1: If ! IsReadableStream(this) is false, throw a TypeError exception.
   Rooted<ReadableStream*> unwrappedStream(
@@ -689,18 +703,9 @@ static bool ReadableStream_getReader(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject reader(cx);
-
   // Step 2: If mode is undefined, return
   //         ? AcquireReadableStreamDefaultReader(this).
-  RootedValue modeVal(cx);
-  HandleValue optionsVal = args.get(0);
-  if (!optionsVal.isUndefined()) {
-    if (!GetProperty(cx, optionsVal, cx->names().mode, &modeVal)) {
-      return false;
-    }
-  }
-
+  RootedObject reader(cx);
   if (modeVal.isUndefined()) {
     reader = CreateReadableStreamDefaultReader(cx, unwrappedStream,
                                                ForAuthorCodeBool::Yes);
