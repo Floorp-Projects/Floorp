@@ -29,11 +29,11 @@
 
 class VideoDecoder : public RefCounted {
  public:
-  explicit VideoDecoder(cdm::Host_9* aHost);
+  explicit VideoDecoder(cdm::Host_10* aHost);
 
-  cdm::Status InitDecode(const cdm::VideoDecoderConfig_1& aConfig);
+  cdm::Status InitDecode(const cdm::VideoDecoderConfig_2& aConfig);
 
-  cdm::Status Decode(const cdm::InputBuffer_1& aEncryptedBuffer,
+  cdm::Status Decode(const cdm::InputBuffer_2& aEncryptedBuffer,
                      cdm::VideoFrame* aVideoFrame);
 
   void Reset();
@@ -60,7 +60,7 @@ class VideoDecoder : public RefCounted {
                              int32_t aFrameHeight,
                              cdm::VideoFrame* aVideoFrame);
 
-  cdm::Host_9* mHost;
+  cdm::Host_10* mHost;
   wmf::AutoPtr<wmf::WMFH264Decoder> mDecoder;
 
   std::queue<wmf::CComPtr<IMFSample>> mOutputQueue;

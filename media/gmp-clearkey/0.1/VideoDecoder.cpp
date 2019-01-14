@@ -27,7 +27,7 @@
 using namespace wmf;
 using namespace cdm;
 
-VideoDecoder::VideoDecoder(Host_9* aHost) : mHost(aHost), mHasShutdown(false) {
+VideoDecoder::VideoDecoder(Host_10* aHost) : mHost(aHost), mHasShutdown(false) {
   CK_LOGD("VideoDecoder created");
 
   // We drop the ref in DecodingComplete().
@@ -42,7 +42,7 @@ VideoDecoder::VideoDecoder(Host_9* aHost) : mHost(aHost), mHasShutdown(false) {
 
 VideoDecoder::~VideoDecoder() { CK_LOGD("VideoDecoder destroyed"); }
 
-Status VideoDecoder::InitDecode(const VideoDecoderConfig_1& aConfig) {
+Status VideoDecoder::InitDecode(const VideoDecoderConfig_2& aConfig) {
   CK_LOGD("VideoDecoder::InitDecode");
 
   if (!mDecoder) {
@@ -54,7 +54,7 @@ Status VideoDecoder::InitDecode(const VideoDecoderConfig_1& aConfig) {
   return Status::kSuccess;
 }
 
-Status VideoDecoder::Decode(const InputBuffer_1& aInputBuffer,
+Status VideoDecoder::Decode(const InputBuffer_2& aInputBuffer,
                             VideoFrame* aVideoFrame) {
   CK_LOGD("VideoDecoder::Decode");
   // If the input buffer we have been passed has a null buffer, it means we
