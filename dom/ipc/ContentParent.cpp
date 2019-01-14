@@ -5732,10 +5732,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetUserGestureActivation(
     return IPC_OK();
   }
 
-  if (aNewValue) {
-    context->NotifyUserGestureActivationFromIPC();
-  }
-
+  context->NotifySetUserGestureActivationFromIPC(aNewValue);
   return IPC_OK();
 }
 

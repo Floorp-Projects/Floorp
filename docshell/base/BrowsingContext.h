@@ -145,9 +145,14 @@ class BrowsingContext : public nsWrapperCache,
   // context.
   void NotifyUserGestureActivation();
 
-  // This function would only be called in the top level browsing context. It
-  // would set the user gesture activation flag.
+  // This function would be called when we want to reset the user gesture
+  // activation flag of the top level browsing context.
+  void NotifyResetUserGestureActivation();
+
+  // These functions would only be called in the top level browsing context.
+  // They would set/reset the user gesture activation flag.
   void SetUserGestureActivation();
+  void ResetUserGestureActivation();
 
   // Return true if it corresponding document is activated by user gesture.
   bool GetUserGestureActivation();

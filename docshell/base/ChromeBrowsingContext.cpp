@@ -100,15 +100,21 @@ JSObject* ChromeBrowsingContext::WrapObject(JSContext* aCx,
   return ChromeBrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void ChromeBrowsingContext::NotifyUserGestureActivationFromIPC() {
+void ChromeBrowsingContext::NotifySetUserGestureActivationFromIPC(
+    bool aIsUserGestureActivation) {
   if (!mCurrentWindowGlobal) {
     return;
   }
 
-  SetUserGestureActivation();
+  if (aIsUserGestureActivation) {
+    SetUserGestureActivation();
+  } else {
+    ResetUserGestureActivation();
+  }
+
   USER_ACTIVATION_LOG("Chrome browsing context 0x%08" PRIx64
-                      " would notify other browsing contexts for setting "
-                      "user gesture activation.",
+                      " would notify other browsing contexts for updating "
+                      "user gesture activation flag.",
                       Id());
   // XXX(alwu) : we need to sync the flag to other browsing contexts which are
   // not in the same child process where the flag was set. Will implement that
