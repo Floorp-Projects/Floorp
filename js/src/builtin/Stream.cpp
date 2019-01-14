@@ -468,24 +468,7 @@ const Class TeeState::class_ = {"TeeState",
 
 /*** 3.2. Class ReadableStream **********************************************/
 
-/**
- * Characterizes the family of algorithms, (startAlgorithm, pullAlgorithm,
- * cancelAlgorithm), associated with a readable stream.
- *
- * See the comment on SetUpReadableStreamDefaultController().
- */
-enum class SourceAlgorithms {
-  Script,
-  Tee,
-};
-
-static MOZ_MUST_USE bool SetUpReadableStreamDefaultController(
-    JSContext* cx, Handle<ReadableStream*> stream, SourceAlgorithms algorithms,
-    HandleValue underlyingSource, HandleValue pullMethod,
-    HandleValue cancelMethod, double highWaterMark, HandleValue size);
-
-static MOZ_MUST_USE ReadableByteStreamController*
-CreateExternalReadableByteStreamController(
+static MOZ_MUST_USE bool SetUpExternalReadableByteStreamController(
     JSContext* cx, Handle<ReadableStream*> stream,
     JS::ReadableStreamUnderlyingSource* source);
 
@@ -497,13 +480,10 @@ ReadableStream* ReadableStream::createExternalSourceStream(
     return nullptr;
   }
 
-  Rooted<ReadableStreamController*> controller(cx);
-  controller = CreateExternalReadableByteStreamController(cx, stream, source);
-  if (!controller) {
+  if (!SetUpExternalReadableByteStreamController(cx, stream, source)) {
     return nullptr;
   }
 
-  stream->setController(controller);
   return stream;
 }
 
@@ -821,6 +801,22 @@ CLASS_SPEC(ReadableStream, 0, SlotCount, 0, 0, JS_NULL_CLASS_OPS);
 
 // Streams spec, 3.3.2. AcquireReadableStreamDefaultReader ( stream )
 // Always inlined. See CreateReadableStreamDefaultReader.
+
+/**
+ * Characterizes the family of algorithms, (startAlgorithm, pullAlgorithm,
+ * cancelAlgorithm), associated with a readable stream.
+ *
+ * See the comment on SetUpReadableStreamDefaultController().
+ */
+enum class SourceAlgorithms {
+  Script,
+  Tee,
+};
+
+static MOZ_MUST_USE bool SetUpReadableStreamDefaultController(
+    JSContext* cx, Handle<ReadableStream*> stream, SourceAlgorithms algorithms,
+    HandleValue underlyingSource, HandleValue pullMethod,
+    HandleValue cancelMethod, double highWaterMark, HandleValue size);
 
 /**
  * Streams spec, 3.3.3. CreateReadableStream (
@@ -3427,79 +3423,92 @@ bool ReadableByteStreamController::constructor(JSContext* cx, unsigned argc,
  * Version of the ReadableByteStreamConstructor that's specialized for
  * handling external, embedding-provided, underlying sources.
  */
-static MOZ_MUST_USE ReadableByteStreamController*
-CreateExternalReadableByteStreamController(
+static MOZ_MUST_USE bool SetUpExternalReadableByteStreamController(
     JSContext* cx, Handle<ReadableStream*> stream,
     JS::ReadableStreamUnderlyingSource* source) {
+  // Done elsewhere in the standard: Create the controller object.
   Rooted<ReadableByteStreamController*> controller(
       cx, NewBuiltinClassInstance<ReadableByteStreamController>(cx));
   if (!controller) {
-    return nullptr;
+    return false;
   }
 
-  // Step 3: Set this.[[controlledReadableStream]] to stream.
+  // Step 1: Assert: stream.[[readableStreamController]] is undefined.
+  MOZ_ASSERT(!stream->hasController());
+
+  // Step 2: If autoAllocateChunkSize is not undefined, [...]
+  // (It's treated as undefined.)
+
+  // Step 3: Set controller.[[controlledReadableByteStream]] to stream.
   controller->setStream(stream);
 
-  // Step 4: Set this.[[underlyingByteSource]] to underlyingByteSource.
-  controller->setExternalSource(source);
-
-  // Step 5: Set this.[[pullAgain]] and this.[[pulling]] to false (implicit).
+  // Step 4: Set controller.[[pullAgain]] and controller.[[pulling]] to false.
+  controller->setFlags(0);
   MOZ_ASSERT(!controller->pullAgain());
   MOZ_ASSERT(!controller->pulling());
 
-  // Step 6: Perform ! ReadableByteStreamControllerClearPendingPullIntos(this).
-  // Omitted.
+  // Step 5: Perform
+  //         ! ReadableByteStreamControllerClearPendingPullIntos(controller).
+  // Omitted. This step is apparently redundant; see
+  // <https://github.com/whatwg/streams/issues/975>.
 
-  // Step 7: Perform ! ResetQueue(this).
+  // Step 6: Perform ! ResetQueue(this).
   controller->setQueueTotalSize(0);
 
-  // Step 8: Set this.[[started]] and this.[[closeRequested]] to false.
-  // Step 9: Set this.[[strategyHWM]] to
+  // Step 7: Set controller.[[closeRequested]] and controller.[[started]] to
+  //         false (implicit).
+  MOZ_ASSERT(!controller->closeRequested());
+  MOZ_ASSERT(!controller->started());
+
+  // Step 8: Set controller.[[strategyHWM]] to
   //         ? ValidateAndNormalizeHighWaterMark(highWaterMark).
   controller->setStrategyHWM(0);
 
-  // Step 10: Let autoAllocateChunkSize be
-  //          ? GetV(underlyingByteSource, "autoAllocateChunkSize").
-  // Step 11: If autoAllocateChunkSize is not undefined,
-  // Step 12: Set this.[[autoAllocateChunkSize]] to autoAllocateChunkSize.
-  // Omitted.
+  // Step 9: Set controller.[[pullAlgorithm]] to pullAlgorithm.
+  // Step 10: Set controller.[[cancelAlgorithm]] to cancelAlgorithm.
+  // (These algorithms are given by source's virtual methods.)
+  controller->setExternalSource(source);
 
-  // Step 13: Set this.[[pendingPullIntos]] to a new empty List.
+  // Step 11: Set controller.[[autoAllocateChunkSize]] to
+  //          autoAllocateChunkSize (implicit).
+  MOZ_ASSERT(controller->autoAllocateChunkSize().isUndefined());
+
+  // Step 12: Set this.[[pendingPullIntos]] to a new empty List.
   if (!SetNewList(cx, controller,
                   ReadableByteStreamController::Slot_PendingPullIntos)) {
-    return nullptr;
+    return false;
   }
 
-  // Step 14: Let controller be this (implicit).
-  // Step 15: Let startResult be
-  //          ? InvokeOrNoop(underlyingSource, "start", « this »).
-  // Omitted.
+  // Step 13: Set stream.[[readableStreamController]] to controller.
+  stream->setController(controller);
 
-  // Step 16: Let startPromise be a promise resolved with startResult:
+  // Step 14: Let startResult be the result of performing startAlgorithm.
+  // (For external sources, this algorithm does nothing and returns undefined.)
+  // Step 15: Let startPromise be a promise resolved with startResult.
   RootedObject startPromise(
       cx, PromiseObject::unforgeableResolve(cx, UndefinedHandleValue));
   if (!startPromise) {
-    return nullptr;
+    return false;
   }
 
+  // Step 16: Upon fulfillment of startPromise, [...]
+  // Step 17: Upon rejection of startPromise with reason r, [...]
   RootedObject onStartFulfilled(
       cx, NewHandler(cx, ControllerStartHandler, controller));
   if (!onStartFulfilled) {
-    return nullptr;
+    return false;
   }
-
   RootedObject onStartRejected(
       cx, NewHandler(cx, ControllerStartFailedHandler, controller));
   if (!onStartRejected) {
-    return nullptr;
+    return false;
   }
-
   if (!JS::AddPromiseReactions(cx, startPromise, onStartFulfilled,
                                onStartRejected)) {
-    return nullptr;
+    return false;
   }
 
-  return controller;
+  return true;
 }
 
 static const JSPropertySpec ReadableByteStreamController_properties[] = {
