@@ -367,6 +367,7 @@ var Logins = {
       { label: gStringBundle.GetStringFromName("loginsMenu.copyUsername") },
       { label: gStringBundle.GetStringFromName("loginsMenu.editLogin") },
       { label: gStringBundle.GetStringFromName("loginsMenu.delete") },
+      { label: gStringBundle.GetStringFromName("loginsMenu.deleteAll") },
     ];
 
     prompt.setSingleChoiceItems(menuItems);
@@ -388,14 +389,14 @@ var Logins = {
           history.pushState({ id: login.guid }, document.title);
           break;
         case 4:
-          let confirmPrompt = new Prompt({
+          let deleteLoginConfirmPrompt = new Prompt({
             window: window,
             message: gStringBundle.GetStringFromName("loginsDialog.confirmDelete"),
             buttons: [
               gStringBundle.GetStringFromName("loginsDialog.confirm"),
               gStringBundle.GetStringFromName("loginsDialog.cancel") ],
           });
-          confirmPrompt.show((data) => {
+          deleteLoginConfirmPrompt.show((data) => {
             switch (data.button) {
               case 0:
                 // Corresponds to "confirm" button.
@@ -403,6 +404,25 @@ var Logins = {
 
                 // Show a snackbar to notify the login record has been deleted.
                 Snackbars.show(gStringBundle.GetStringFromName("loginsDetails.deleted"), Snackbars.LENGTH_LONG);
+            }
+          });
+          break;
+        case 5:
+          let deleteAllLoginsConfirmPrompt = new Prompt({
+            window: window,
+            message: gStringBundle.GetStringFromName("loginsDialog.confirmDeleteAll"),
+            buttons: [
+              gStringBundle.GetStringFromName("loginsDialog.confirm"),
+              gStringBundle.GetStringFromName("loginsDialog.cancel") ],
+          });
+          deleteAllLoginsConfirmPrompt.show((data) => {
+            switch (data.button) {
+              case 0:
+                // Corresponds to "confirm" button.
+                Services.logins.removeAllLogins();
+
+                // Show a snackbar to notify that all logins records have been deleted.
+                Snackbars.show(gStringBundle.GetStringFromName("loginsDetails.deletedAll"), Snackbars.LENGTH_LONG);
             }
           });
       }

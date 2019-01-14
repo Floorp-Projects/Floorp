@@ -1,0 +1,82 @@
+.body {
+  margin-inline-start: 28px;
+}
+
+.shortcut.card {
+  /* Preferences content is 664px and the cards have 16px of left/right padding. */
+  width: 632px;
+  margin-bottom: 16px;
+}
+
+.shortcut.card:first-of-type {
+  margin-top: 8px;
+}
+
+.shortcut.card:hover {
+  box-shadow: var(--card-shadow);
+}
+
+.card-heading-icon {
+  width: 24px;
+  height: 24px;
+  margin-inline-end: 16px;
+}
+
+.card-heading {
+  display: flex;
+  font-weight: 600;
+}
+
+.shortcuts-empty-label {
+  margin-top: 16px;
+}
+
+.shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.shortcut-input {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.extension-heading {
+  display: flex;
+}
+
+.error-message {
+  --error-background: var(--red-60);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  visibility: hidden;
+}
+
+.error-message-icon {
+  margin-left: 10px;
+  width: 14px;
+  height: 8px;
+  fill: var(--error-background);
+  stroke: var(--error-background);
+  -moz-context-properties: fill, stroke;
+}
+
+.error-message-label {
+  background-color: var(--error-background);
+  border-radius: 2px;
+  margin: 0;
+  padding: 5px 10px;
+}
+
+.error-message-arrow {
+  background-color: var(--error-background);
+  content: "";
+  max-height: 8px;
+  width: 8px;
+  transform: translate(4px, -6px) rotate(45deg);
+  position: absolute;
+}

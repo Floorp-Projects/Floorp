@@ -168,14 +168,14 @@ add_task(async function test_update_defined_command() {
   }
 
   // Check that the <key> is set for the original shortcut.
-  checkKey(extension.id, "I", "accel shift");
+  checkKey(extension.id, "I", "accel,shift");
 
   await extension.awaitMessage("ready");
   extension.sendMessage("run");
   await extension.awaitFinish("commands");
 
   // Check that the <keycode> has been updated.
-  checkNumericKey(extension.id, "9", "alt shift");
+  checkNumericKey(extension.id, "9", "alt,shift");
 
   // Check that the updated command is stored in ExtensionSettingsStore.
   let storedCommands = ExtensionSettingsStore.getAllForExtension(
@@ -188,7 +188,7 @@ add_task(async function test_update_defined_command() {
   // Check that the key is updated immediately.
   extension.sendMessage("update", {name: "foo", shortcut: "Ctrl+Shift+M"});
   await extension.awaitMessage("updateDone");
-  checkKey(extension.id, "M", "accel shift");
+  checkKey(extension.id, "M", "accel,shift");
 
   // Ensure all successive updates are stored.
   // Force the command to only have a description saved.
@@ -206,7 +206,7 @@ add_task(async function test_update_defined_command() {
   extension.sendMessage("reset", "foo");
   await extension.awaitMessage("resetDone");
 
-  checkKey(extension.id, "I", "accel shift");
+  checkKey(extension.id, "I", "accel,shift");
 
   // Check that enable/disable removes the keyset and reloads the saved command.
   let addon = await AddonManager.getAddonByID(extension.id);
@@ -224,7 +224,7 @@ add_task(async function test_update_defined_command() {
   // Wait for the keyset to appear (it's async on enable).
   await TestUtils.waitForCondition(() => extensionKeyset(extension.id));
   // The keyset is back with the value from ExtensionSettingsStore.
-  checkNumericKey(extension.id, "9", "alt shift");
+  checkNumericKey(extension.id, "9", "alt,shift");
 
   // Check that an update to a shortcut in the manifest is mapped correctly.
   updatedExtension = ExtensionTestUtils.loadExtension({
@@ -246,7 +246,7 @@ add_task(async function test_update_defined_command() {
 
   await TestUtils.waitForCondition(() => extensionKeyset(extension.id));
   // Shortcut is unchanged since it was previously updated.
-  checkNumericKey(extension.id, "9", "alt shift");
+  checkNumericKey(extension.id, "9", "alt,shift");
 });
 
 add_task(async function updateSidebarCommand() {

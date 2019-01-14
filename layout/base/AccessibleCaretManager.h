@@ -181,6 +181,7 @@ class AccessibleCaretManager {
   // then re-focus the window.
   void ChangeFocusToOrClearOldFocus(nsIFrame* aFrame) const;
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult SelectWord(nsIFrame* aFrame, const nsPoint& aPoint) const;
   void SetSelectionDragState(bool aState) const;
 
@@ -189,9 +190,11 @@ class AccessibleCaretManager {
 
   // Extend the current selection forwards and backwards if it's already a
   // phone number.
+  MOZ_CAN_RUN_SCRIPT
   void SelectMoreIfPhoneNumber() const;
 
   // Extend the current phone number selection in the requested direction.
+  MOZ_CAN_RUN_SCRIPT
   void ExtendPhoneNumberSelection(const nsAString& aDirection) const;
 
   void SetSelectionDirection(nsDirection aDir) const;
@@ -226,6 +229,8 @@ class AccessibleCaretManager {
   dom::Element* GetEditingHostForFrame(nsIFrame* aFrame) const;
   dom::Selection* GetSelection() const;
   already_AddRefed<nsFrameSelection> GetFrameSelection() const;
+
+  MOZ_CAN_RUN_SCRIPT
   nsAutoString StringifiedSelection() const;
 
   // Get the union of all the child frame scrollable overflow rects for aFrame,

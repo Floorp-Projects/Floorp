@@ -618,8 +618,22 @@ static void LogPrincipal(nsIPrincipal* aPrincipal,
       return;
     }
     if (aPrincipal->GetIsExpandedPrincipal()) {
+      nsCOMPtr<nsIExpandedPrincipal> expanded(do_QueryInterface(aPrincipal));
+      const nsTArray<nsCOMPtr<nsIPrincipal>>& allowList = expanded->AllowList();
       nsAutoCString origin;
-      aPrincipal->GetOrigin(origin);
+      origin.AssignLiteral("[Expanded Principal [");
+      for (size_t i = 0; i < allowList.Length(); ++i) {
+        if (i != 0) {
+          origin.AppendLiteral(", ");
+        }
+
+        nsAutoCString subOrigin;
+        DebugOnly<nsresult> rv = allowList.ElementAt(i)->GetOrigin(subOrigin);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+        origin.Append(subOrigin);
+      }
+      origin.AppendLiteral("]]");
+
       MOZ_LOG(sCSMLog, LogLevel::Debug,
               ("  %s: %s\n", NS_ConvertUTF16toUTF8(aPrincipalName).get(),
                origin.get()));

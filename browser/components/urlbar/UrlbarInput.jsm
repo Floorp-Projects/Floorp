@@ -214,6 +214,16 @@ class UrlbarInput {
     //   return;
     // }
 
+    // Use the selected result if we have one; this should always be the case
+    // when the view is open.
+    let result = this.view.selectedResult;
+    if (result) {
+      this.pickResult(event, result);
+      return;
+    }
+
+    // Use the current value if we don't have a UrlbarMatch e.g. because the
+    // view is closed.
     let url = this.value;
     if (!url) {
       return;
@@ -267,6 +277,8 @@ class UrlbarInput {
    */
   pickResult(event, result) {
     this.setValueFromResult(result);
+
+    this.view.close();
 
     // TODO: Work out how we get the user selection behavior, probably via passing
     // it in, since we don't have the old autocomplete controller to work with.

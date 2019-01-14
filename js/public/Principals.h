@@ -18,10 +18,6 @@
 struct JSStructuredCloneReader;
 struct JSStructuredCloneWriter;
 
-namespace js {
-struct JS_PUBLIC_API PerformanceGroup;
-}  // namespace js
-
 struct JSPrincipals {
   /* Don't call "destroy"; use reference counting macros below. */
   mozilla::Atomic<int32_t, mozilla::SequentiallyConsistent,

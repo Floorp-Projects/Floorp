@@ -280,9 +280,14 @@ function isDiscoverEnabled() {
 
 function setSearchLabel(type) {
   let searchLabel = document.getElementById("search-label");
-  if (type == "extension" || type == "theme") {
+  let keyMap = {
+    extension: "extension",
+    shortcuts: "extension",
+    theme: "theme",
+  };
+  if (type in keyMap) {
     searchLabel
-      .textContent = gStrings.ext.GetStringFromName(`searchLabel.${type}`);
+      .textContent = gStrings.ext.GetStringFromName(`searchLabel.${keyMap[type]}`);
     searchLabel.hidden = false;
   } else {
     searchLabel.textContent = "";
@@ -692,6 +697,7 @@ var gViewController = {
     this.viewObjects.legacy = gLegacyView;
     this.viewObjects.detail = gDetailView;
     this.viewObjects.updates = gUpdatesView;
+    this.viewObjects.shortcuts = gShortcutsView;
 
     for (let type in this.viewObjects) {
       let view = this.viewObjects[type];
@@ -1381,6 +1387,15 @@ var gViewController = {
       },
       doCommand() {
         gViewController.loadView("addons://list/extension");
+      },
+    },
+
+    cmd_showShortcuts: {
+      isEnabled() {
+        return true;
+      },
+      doCommand() {
+        gViewController.loadView("addons://shortcuts/shortcuts");
       },
     },
   },
@@ -2448,6 +2463,9 @@ var gListView = {
         }
       }
 
+      // Only show the manage shortcuts button for extensions.
+      document.getElementById("manage-shortcuts").hidden = this._type != "extension";
+
       this.filterDisabledUnsigned(showOnlyDisabledUnsigned);
       let legacyNotice = document.getElementById("legacy-extensions-notice");
       if (showLegacyInfo) {
@@ -2474,6 +2492,7 @@ var gListView = {
   hide() {
     gEventManager.unregisterInstallListener(this);
     doPendingUninstalls(this._listBox);
+    document.getElementById("manage-shortcuts").hidden = true;
   },
 
   filterDisabledUnsigned(aFilter = true) {
@@ -3468,6 +3487,39 @@ var gUpdatesView = {
   onPropertyChanged(aAddon, aProperties) {
     if (aProperties.includes("applyBackgroundUpdates"))
       this.updateAvailableCount();
+  },
+};
+
+var gShortcutsView = {
+  node: null,
+  loaded: null,
+
+  initialize() {
+    this.node = document.getElementById("shortcuts-view");
+    this.node.loadURI("chrome://mozapps/content/extensions/shortcuts.html", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+    // Store a Promise for when the contentWindow will exist.
+    this.loaded = new Promise(resolve => this.node.addEventListener("load", resolve, {once: true}));
+  },
+
+  async show() {
+    // Ensure the Extensions category is selected in case of refresh/restart.
+    gCategories.select("addons://list/extension");
+
+    await this.loaded;
+    await this.node.contentWindow.render();
+    gViewController.notifyViewChanged();
+  },
+
+  refresh() {
+    return this.show();
+  },
+
+  hide() {},
+
+  getSelectedAddon() {
+    return null;
   },
 };
 
