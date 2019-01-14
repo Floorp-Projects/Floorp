@@ -51,6 +51,13 @@ initialize_roots(MPArray arr, const char values[], bool inverted)
   return SECSuccess;
 }
 
+int
+PrioConfig_maxDataFields(void)
+{
+  const int n_roots = 1 << Generator2Order;
+  return (n_roots >> 1) - 1;
+}
+
 PrioConfig
 PrioConfig_new(int n_fields, PublicKey server_a, PublicKey server_b,
                const unsigned char* batch_id, unsigned int batch_id_len)
@@ -71,10 +78,8 @@ PrioConfig_new(int n_fields, PublicKey server_a, PublicKey server_b,
   cfg->roots = NULL;
   cfg->rootsInv = NULL;
 
-  if (cfg->num_data_fields >= cfg->n_roots) {
-    rv = SECFailure;
-    goto cleanup;
-  }
+  P_CHECKCB(cfg->n_roots > 1);
+  P_CHECKCB(cfg->num_data_fields <= PrioConfig_maxDataFields());
 
   P_CHECKA(cfg->batch_id = malloc(batch_id_len));
   strncpy((char*)cfg->batch_id, (char*)batch_id, batch_id_len);

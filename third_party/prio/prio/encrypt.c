@@ -26,7 +26,10 @@
 #define PRIO_TAG "PrioPacket"
 #define AAD_LEN (strlen(PRIO_TAG) + CURVE25519_KEY_LEN + GCM_IV_LEN_BYTES)
 
-// The all-zeros curve25519 public key, as DER-encoded SKPI blob.
+// For an example of NSS curve25519 import/export code, see:
+// https://searchfox.org/nss/rev/cfd5fcba7efbfe116e2c08848075240ec3a92718/gtests/pk11_gtest/pk11_curve25519_unittest.cc#66
+
+// The all-zeros curve25519 public key, as DER-encoded SPKI blob.
 static const uint8_t curve25519_spki_zeros[] = {
   0x30, 0x39, 0x30, 0x14, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02,
   0x01, 0x06, 0x09, 0x2b, 0x06, 0x01, 0x04, 0x01, 0xda, 0x47, 0x0f, 0x01,
@@ -34,6 +37,35 @@ static const uint8_t curve25519_spki_zeros[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
+
+// The all-zeros curve25519 private key, as a PKCS#8 blob.
+static const uint8_t curve25519_priv_zeros[] = {
+  0x30, 0x67, 0x02, 0x01, 0x00, 0x30, 0x14, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce,
+  0x3d, 0x02, 0x01, 0x06, 0x09, 0x2b, 0x06, 0x01, 0x04, 0x01, 0xda, 0x47, 0x0f,
+  0x01, 0x04, 0x4c, 0x30, 0x4a, 0x02, 0x01, 0x01, 0x04, 0x20,
+
+  /* Byte index 36:  32 bytes of curve25519 private key. */
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+  /* misc type fields */
+  0xa1, 0x23, 0x03, 0x21,
+
+  /* Byte index 73:  32 bytes of curve25519 public key. */
+  0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+// Index into `curve25519_priv_zeros` at which the private key begins.
+static const size_t curve25519_priv_sk_offset = 36;
+// Index into `curve25519_priv_zeros` at which the public key begins.
+static const size_t curve25519_priv_pk_offset = 73;
+
+static SECStatus key_from_hex(
+  unsigned char key_out[CURVE25519_KEY_LEN],
+  const unsigned char hex_in[CURVE25519_KEY_LEN_HEX]);
 
 // Note that we do not use isxdigit because it is locale-dependent
 // See: https://github.com/mozilla/libprio/issues/20
@@ -106,6 +138,7 @@ PublicKey_import(PublicKey* pk, const unsigned char* data, unsigned int dataLen)
 
   const int spki_len = sizeof(curve25519_spki_zeros);
   P_CHECKA(spki_data = calloc(spki_len, sizeof(uint8_t)));
+
   memcpy(spki_data, curve25519_spki_zeros, spki_len);
   SECItem spki_item = { siBuffer, spki_data, spki_len };
 
@@ -131,59 +164,205 @@ cleanup:
 }
 
 SECStatus
-PublicKey_import_hex(PublicKey* pk, const unsigned char* hex_data,
+PrivateKey_import(PrivateKey* sk, const unsigned char* sk_data,
+                  unsigned int sk_data_len, const unsigned char* pk_data,
+                  unsigned int pk_data_len)
+{
+  if (sk_data_len != CURVE25519_KEY_LEN || !sk_data) {
+    return SECFailure;
+  }
+
+  if (pk_data_len != CURVE25519_KEY_LEN || !pk_data) {
+    return SECFailure;
+  }
+
+  SECStatus rv = SECSuccess;
+  PK11SlotInfo* slot = NULL;
+  uint8_t* zero_priv_data = NULL;
+  *sk = NULL;
+  const int zero_priv_len = sizeof(curve25519_priv_zeros);
+
+  P_CHECKA(slot = PK11_GetInternalSlot());
+
+  P_CHECKA(zero_priv_data = calloc(zero_priv_len, sizeof(uint8_t)));
+  SECItem zero_priv_item = { siBuffer, zero_priv_data, zero_priv_len };
+
+  // Copy the PKCS#8-encoded keypair into writable buffer.
+  memcpy(zero_priv_data, curve25519_priv_zeros, zero_priv_len);
+  // Copy private key into bytes beginning at index `curve25519_priv_sk_offset`.
+  memcpy(zero_priv_data + curve25519_priv_sk_offset, sk_data, sk_data_len);
+  // Copy private key into bytes beginning at index `curve25519_priv_pk_offset`.
+  memcpy(zero_priv_data + curve25519_priv_pk_offset, pk_data, pk_data_len);
+
+  P_CHECKC(PK11_ImportDERPrivateKeyInfoAndReturnKey(
+    slot, &zero_priv_item, NULL, NULL, PR_FALSE, PR_FALSE, KU_ALL, sk, NULL));
+
+cleanup:
+  if (slot) {
+    PK11_FreeSlot(slot);
+  }
+  if (zero_priv_data) {
+    free(zero_priv_data);
+  }
+  if (rv != SECSuccess) {
+    PrivateKey_clear(*sk);
+  }
+  return rv;
+}
+
+SECStatus
+PublicKey_import_hex(PublicKey* pk, const unsigned char* hexData,
                      unsigned int dataLen)
 {
   unsigned char raw_bytes[CURVE25519_KEY_LEN];
 
-  if (dataLen != CURVE25519_KEY_LEN_HEX)
+  if (dataLen != CURVE25519_KEY_LEN_HEX || !hexData) {
     return SECFailure;
-
-  for (unsigned int i = 0; i < dataLen; i++) {
-    if (!is_hex_digit(hex_data[i]))
-      return SECFailure;
   }
 
-  const unsigned char* p = hex_data;
-  for (unsigned int i = 0; i < CURVE25519_KEY_LEN; i++) {
-    uint8_t d0 = hex_to_int(p[0]);
-    uint8_t d1 = hex_to_int(p[1]);
-    raw_bytes[i] = (d0 << 4) | d1;
-    p += 2;
+  if (key_from_hex(raw_bytes, hexData) != SECSuccess) {
+    return SECFailure;
   }
 
   return PublicKey_import(pk, raw_bytes, CURVE25519_KEY_LEN);
 }
 
 SECStatus
-PublicKey_export(const_PublicKey pk, unsigned char data[CURVE25519_KEY_LEN])
+PrivateKey_import_hex(PrivateKey* sk, const unsigned char* privHexData,
+                      unsigned int privDataLen, const unsigned char* pubHexData,
+                      unsigned int pubDataLen)
 {
-  if (pk == NULL)
-    return SECFailure;
+  SECStatus rv = SECSuccess;
+  unsigned char raw_priv[CURVE25519_KEY_LEN];
+  unsigned char raw_pub[CURVE25519_KEY_LEN];
 
-  memcpy(data, pk->u.ec.publicValue.data, CURVE25519_KEY_LEN);
+  if (privDataLen != CURVE25519_KEY_LEN_HEX ||
+      pubDataLen != CURVE25519_KEY_LEN_HEX) {
+    return SECFailure;
+  }
+
+  if (!privHexData || !pubHexData) {
+    return SECFailure;
+  }
+
+  P_CHECK(key_from_hex(raw_priv, privHexData));
+  P_CHECK(key_from_hex(raw_pub, pubHexData));
+
+  return PrivateKey_import(sk, raw_priv, CURVE25519_KEY_LEN, raw_pub,
+                           CURVE25519_KEY_LEN);
+}
+
+SECStatus
+PublicKey_export(const_PublicKey pk, unsigned char* data, unsigned int dataLen)
+{
+  if (pk == NULL || dataLen != CURVE25519_KEY_LEN) {
+    return SECFailure;
+  }
+
+  const SECItem* key = &pk->u.ec.publicValue;
+  if (key->len != CURVE25519_KEY_LEN) {
+    return SECFailure;
+  }
+
+  memcpy(data, key->data, key->len);
+  return SECSuccess;
+}
+
+SECStatus
+PrivateKey_export(PrivateKey sk, unsigned char* data, unsigned int dataLen)
+{
+  if (sk == NULL || dataLen != CURVE25519_KEY_LEN) {
+    return SECFailure;
+  }
+
+  SECStatus rv = SECSuccess;
+  SECItem item = { siBuffer, NULL, 0 };
+
+  P_CHECKC(PK11_ReadRawAttribute(PK11_TypePrivKey, sk, CKA_VALUE, &item));
+
+  // If the leading bytes of the key are '\0', then this string can be
+  // shorter than `CURVE25519_KEY_LEN` bytes.
+  memset(data, 0, CURVE25519_KEY_LEN);
+  P_CHECKCB(item.len <= CURVE25519_KEY_LEN);
+
+  // Copy into the low-order bytes of the output.
+  const size_t leading_zeros = CURVE25519_KEY_LEN - item.len;
+  memcpy(data + leading_zeros, item.data, item.len);
+
+cleanup:
+  if (item.data != NULL) {
+    SECITEM_ZfreeItem(&item, PR_FALSE);
+  }
+
+  return rv;
+}
+
+static void
+key_to_hex(const unsigned char key_in[CURVE25519_KEY_LEN],
+           unsigned char hex_out[(2 * CURVE25519_KEY_LEN) + 1])
+{
+  const unsigned char* p = key_in;
+  for (unsigned int i = 0; i < CURVE25519_KEY_LEN; i++) {
+    unsigned char bytel = p[0] & 0x0f;
+    unsigned char byteu = (p[0] & 0xf0) >> 4;
+    hex_out[2 * i] = int_to_hex(byteu);
+    hex_out[2 * i + 1] = int_to_hex(bytel);
+    p++;
+  }
+
+  hex_out[2 * CURVE25519_KEY_LEN] = '\0';
+}
+
+static SECStatus
+key_from_hex(unsigned char key_out[CURVE25519_KEY_LEN],
+             const unsigned char hex_in[CURVE25519_KEY_LEN_HEX])
+{
+  for (unsigned int i = 0; i < CURVE25519_KEY_LEN_HEX; i++) {
+    if (!is_hex_digit(hex_in[i]))
+      return SECFailure;
+  }
+
+  const unsigned char* p = hex_in;
+  for (unsigned int i = 0; i < CURVE25519_KEY_LEN; i++) {
+    uint8_t d0 = hex_to_int(p[0]);
+    uint8_t d1 = hex_to_int(p[1]);
+    key_out[i] = (d0 << 4) | d1;
+    p += 2;
+  }
 
   return SECSuccess;
 }
 
 SECStatus
-PublicKey_export_hex(const_PublicKey pk,
-                     unsigned char data[(2 * CURVE25519_KEY_LEN) + 1])
+PublicKey_export_hex(const_PublicKey pk, unsigned char* data,
+                     unsigned int dataLen)
 {
-  unsigned char raw_data[CURVE25519_KEY_LEN];
-  if (PublicKey_export(pk, raw_data) != SECSuccess)
+  if (dataLen != CURVE25519_KEY_LEN_HEX + 1) {
     return SECFailure;
-
-  const unsigned char* p = raw_data;
-  for (unsigned int i = 0; i < CURVE25519_KEY_LEN; i++) {
-    unsigned char bytel = p[0] & 0x0f;
-    unsigned char byteu = (p[0] & 0xf0) >> 4;
-    data[2 * i] = int_to_hex(byteu);
-    data[2 * i + 1] = int_to_hex(bytel);
-    p++;
   }
 
-  data[2 * CURVE25519_KEY_LEN] = '\0';
+  unsigned char raw_data[CURVE25519_KEY_LEN];
+  if (PublicKey_export(pk, raw_data, sizeof(raw_data)) != SECSuccess) {
+    return SECFailure;
+  }
+
+  key_to_hex(raw_data, data);
+  return SECSuccess;
+}
+
+SECStatus
+PrivateKey_export_hex(PrivateKey sk, unsigned char* data, unsigned int dataLen)
+{
+  if (dataLen != CURVE25519_KEY_LEN_HEX + 1) {
+    return SECFailure;
+  }
+
+  unsigned char raw_data[CURVE25519_KEY_LEN];
+  if (PrivateKey_export(sk, raw_data, sizeof(raw_data)) != SECSuccess) {
+    return SECFailure;
+  }
+
+  key_to_hex(raw_data, data);
   return SECSuccess;
 }
 
@@ -220,11 +399,13 @@ Keypair_new(PrivateKey* pvtkey, PublicKey* pubkey)
   P_CHECKA(*pvtkey = PK11_GenerateKeyPair(slot, CKM_EC_KEY_PAIR_GEN, &ecp,
                                           (SECKEYPublicKey**)pubkey, PR_FALSE,
                                           PR_FALSE, NULL));
-  PK11_FreeSlot(slot);
-
 cleanup:
-  if (ecp.data)
+  if (slot) {
+    PK11_FreeSlot(slot);
+  }
+  if (ecp.data) {
     free(ecp.data);
+  }
   if (rv != SECSuccess) {
     PublicKey_clear(*pubkey);
     PrivateKey_clear(*pvtkey);

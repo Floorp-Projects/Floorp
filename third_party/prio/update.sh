@@ -5,7 +5,7 @@
 
 MY_TEMP_DIR=`mktemp -d -t libprio_update.XXXXXX` || exit 1
 
-COMMIT="02a81fb652d385d0f4f10989d051317097ab55fb"
+COMMIT="a95cfdd5eaf7104582709c54ef23395d24d7f7fd"
 
 git clone -n https://github.com/mozilla/libprio ${MY_TEMP_DIR}/libprio
 git -C ${MY_TEMP_DIR}/libprio checkout ${COMMIT}

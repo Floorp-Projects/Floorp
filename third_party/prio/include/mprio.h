@@ -77,6 +77,9 @@ void Prio_clear();
  *    (2) the modulus we use for modular arithmetic.
  * The default configuration uses an 87-bit modulus.
  *
+ * The value `nFields` must be in the range `0 < nFields <= max`, where `max`
+ * is the value returned by the function `PrioConfig_maxDataFields()` below.
+ *
  * The `batch_id` field specifies which "batch" of aggregate statistics we are
  * computing. For example, if the aggregate statistics are computed every 24
  * hours, the `batch_id` might be set to an encoding of the date. The clients
@@ -87,18 +90,23 @@ void Prio_clear();
  * caller passes in, so you may free the `batch_id` string as soon as
  * `PrioConfig_new` returns.
  */
-PrioConfig PrioConfig_new(int n_fields, PublicKey server_a, PublicKey server_b,
-                          const unsigned char* batch_id,
-                          unsigned int batch_id_len);
+PrioConfig PrioConfig_new(int nFields, PublicKey serverA, PublicKey serverB,
+                          const unsigned char* batchId,
+                          unsigned int batchIdLen);
 void PrioConfig_clear(PrioConfig cfg);
 int PrioConfig_numDataFields(const_PrioConfig cfg);
+
+/*
+ * Return the maximum number of data fields that the implementation supports.
+ */
+int PrioConfig_maxDataFields(void);
 
 /*
  * Create a PrioConfig object with no encryption keys.  This routine is
  * useful for testing, but PrioClient_encode() will always fail when used with
  * this config.
  */
-PrioConfig PrioConfig_newTest(int n_fields);
+PrioConfig PrioConfig_newTest(int nFields);
 
 /*
  * We use the PublicKey and PrivateKey objects for public-key encryption. Each
@@ -108,34 +116,57 @@ PrioConfig PrioConfig_newTest(int n_fields);
 SECStatus Keypair_new(PrivateKey* pvtkey, PublicKey* pubkey);
 
 /*
- * Import a new curve25519 public key from the raw bytes given. The key passed
- * in
- * as `data` should be of length `CURVE25519_KEY_LEN`. This function allocates
- * a new PublicKey object, which the caller must free using `PublicKey_clear`.
+ * Import a new curve25519 public/private key from the raw bytes given.  When
+ * importing a private key, you must pass in the corresponding public key as
+ * well. The byte arrays given as input should be of length
+ * `CURVE25519_KEY_LEN`.
+ *
+ * These functions will allocate a new `PublicKey`/`PrivateKey` object, which
+ * the caller must free using `PublicKey_clear`/`PrivateKey_clear`.
  */
 SECStatus PublicKey_import(PublicKey* pk, const unsigned char* data,
                            unsigned int dataLen);
+SECStatus PrivateKey_import(PrivateKey* sk, const unsigned char* privData,
+                            unsigned int privDataLen,
+                            const unsigned char* pubData,
+                            unsigned int pubDataLen);
 
 /*
- * Import a new curve25519 public key from a hex string that contains only the
- * characters 0-9a-fA-F. The hex string passed in as `hex_data` should be of
- * length `CURVE25519_KEY_LEN_HEX`. This function allocates a new PublicKey
- * object, which the caller must free using `PublicKey_clear`.
+ * Import a new curve25519 public/private key from a hex string that contains
+ * only the characters 0-9a-fA-F.
+ *
+ * The hex strings passed in must each be of length `CURVE25519_KEY_LEN_HEX`.
+ * These functions will allocate a new `PublicKey`/`PrivateKey` object, which
+ * the caller must free using `PublicKey_clear`/`PrivateKey_clear`.
  */
-SECStatus PublicKey_import_hex(PublicKey* pk, const unsigned char* hex_data,
+SECStatus PublicKey_import_hex(PublicKey* pk, const unsigned char* hexData,
                                unsigned int dataLen);
+SECStatus PrivateKey_import_hex(PrivateKey* sk,
+                                const unsigned char* privHexData,
+                                unsigned int privDataLen,
+                                const unsigned char* pubHexData,
+                                unsigned int pubDataLen);
 
 /*
- * Export a curve25519 public key as a raw byte-array.
+ * Export a curve25519 key as a raw byte-array.
+ *
+ * The output buffer `data` must have length exactly `CURVE25519_KEY_LEN`.
  */
-SECStatus PublicKey_export(const_PublicKey pk,
-                           unsigned char data[CURVE25519_KEY_LEN]);
+SECStatus PublicKey_export(const_PublicKey pk, unsigned char* data,
+                           unsigned int dataLen);
+SECStatus PrivateKey_export(PrivateKey sk, unsigned char* data,
+                            unsigned int dataLen);
 
 /*
- * Export a curve25519 public key as a NULL-terminated hex string.
+ * Export a curve25519 key as a NULL-terminated hex string.
+ *
+ * The output buffer `data` must have length exactly `CURVE25519_KEY_LEN_HEX +
+ * 1`.
  */
-SECStatus PublicKey_export_hex(const_PublicKey pk,
-                               unsigned char data[CURVE25519_KEY_LEN_HEX + 1]);
+SECStatus PublicKey_export_hex(const_PublicKey pk, unsigned char* data,
+                               unsigned int dataLen);
+SECStatus PrivateKey_export_hex(PrivateKey sk, unsigned char* data,
+                                unsigned int dataLen);
 
 void PublicKey_clear(PublicKey pubkey);
 void PrivateKey_clear(PrivateKey pvtkey);
@@ -152,8 +183,8 @@ void PrivateKey_clear(PrivateKey pvtkey);
  * `for_server_b` to avoid memory leaks.
  */
 SECStatus PrioClient_encode(const_PrioConfig cfg, const bool* data_in,
-                            unsigned char** for_server_a, unsigned int* aLen,
-                            unsigned char** for_server_b, unsigned int* bLen);
+                            unsigned char** forServerA, unsigned int* aLen,
+                            unsigned char** forServerB, unsigned int* bLen);
 
 /*
  * Generate a new PRG seed using the NSS global randomness source.
@@ -167,9 +198,9 @@ SECStatus PrioPRGSeed_randomize(PrioPRGSeed* seed);
  * Pass in the _same_ secret PRGSeed when initializing the two servers.
  * The PRGSeed must remain secret to the two servers.
  */
-PrioServer PrioServer_new(const_PrioConfig cfg, PrioServerId server_idx,
-                          PrivateKey server_priv,
-                          const PrioPRGSeed server_shared_secret);
+PrioServer PrioServer_new(const_PrioConfig cfg, PrioServerId serverIdx,
+                          PrivateKey serverPriv,
+                          const PrioPRGSeed serverSharedSecret);
 void PrioServer_clear(PrioServer s);
 
 /*
@@ -255,11 +286,14 @@ SECStatus PrioTotalShare_read(PrioTotalShare t, msgpack_unpacker* upk,
 
 /*
  * Read the output data into an array of unsigned longs. You should
- * be sure that each data value can fit into a single long and that
- * the pointer `output` points to a buffer large enough to store
- * one long per data field.
+ * be sure that each data value can fit into a single `unsigned long`
+ * and that the pointer `output` points to a buffer large enough to
+ * store one long per data field.
+ *
+ * This function returns failure if some final data value is too
+ * long to fit in an `unsigned long`.
  */
-SECStatus PrioTotalShare_final(const_PrioConfig cfg, unsigned long* output,
+SECStatus PrioTotalShare_final(const_PrioConfig cfg, unsigned long long* output,
                                const_PrioTotalShare tA,
                                const_PrioTotalShare tB);
 
