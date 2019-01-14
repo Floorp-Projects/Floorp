@@ -2947,10 +2947,12 @@ static bool ReadableStreamControllerShouldCallPull(
 static void ReadableStreamControllerClearAlgorithms(
     ReadableStreamController* controller) {
   // Step 1: Set controller.[[pullAlgorithm]] to undefined.
-  controller->setPullMethod(UndefinedHandleValue);
-
   // Step 2: Set controller.[[cancelAlgorithm]] to undefined.
+  // (In this implementation, the UnderlyingSource slot is part of the
+  // representation of these algorithms.)
+  controller->setPullMethod(UndefinedHandleValue);
   controller->setCancelMethod(UndefinedHandleValue);
+  controller->clearUnderlyingSource();
 
   // Step 3 (of 3.9.4 only) : Set controller.[[strategySizeAlgorithm]] to
   // undefined.
