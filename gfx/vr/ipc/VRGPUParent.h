@@ -17,19 +17,19 @@ class VRGPUParent final : public PVRGPUParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRGPUParent)
 
  public:
-  explicit VRGPUParent(ProcessId aChildProcessId);
-
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   static RefPtr<VRGPUParent> CreateForGPU(Endpoint<PVRGPUParent>&& aEndpoint);
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  protected:
-  ~VRGPUParent() = default;
 
   void Bind(Endpoint<PVRGPUParent>&& aEndpoint);
   virtual mozilla::ipc::IPCResult RecvStartVRService() override;
   virtual mozilla::ipc::IPCResult RecvStopVRService() override;
 
  private:
+  explicit VRGPUParent(ProcessId aChildProcessId);
+  ~VRGPUParent();
+
   void DeferredDestroy();
 
   RefPtr<VRGPUParent> mSelfRef;
