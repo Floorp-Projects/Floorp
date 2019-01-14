@@ -37,7 +37,6 @@ def GeckoBinary(linkage='dependent', mozglue=None):
         error('`linkage` must be "dependent", "standalone" or None')
 
     if mozglue:
-        LDFLAGS += CONFIG['MOZ_GLUE_WRAP_LDFLAGS']
         if mozglue == 'program':
             USE_LIBS += ['mozglue']
             DEFINES['MOZ_HAS_MOZGLUE'] = True

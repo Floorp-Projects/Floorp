@@ -1377,7 +1377,6 @@ if test "$MOZ_MEMORY"; then
   esac
 fi
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
-AC_SUBST_LIST(MOZ_GLUE_WRAP_LDFLAGS)
 
 dnl ========================================================
 dnl instruments
