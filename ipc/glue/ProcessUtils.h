@@ -63,6 +63,7 @@ class SharedPreferenceDeserializer final {
   Maybe<FileDescriptor> mPrefMapHandle;
   Maybe<size_t> mPrefsLen;
   Maybe<size_t> mPrefMapSize;
+  base::SharedMemory mShmem;
 };
 
 #ifdef ANDROID
