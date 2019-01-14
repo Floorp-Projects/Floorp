@@ -7768,6 +7768,19 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "padding-block": {
+    "isInherited": false,
+    "subproperties": [
+      "padding-block-start",
+      "padding-block-end"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
   "padding-block-end": {
     "isInherited": false,
     "subproperties": [
@@ -7796,6 +7809,19 @@ exports.CSS_PROPERTIES = {
     "isInherited": false,
     "subproperties": [
       "padding-bottom"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "padding-inline": {
+    "isInherited": false,
+    "subproperties": [
+      "padding-inline-start",
+      "padding-inline-end"
     ],
     "supports": [],
     "values": [
