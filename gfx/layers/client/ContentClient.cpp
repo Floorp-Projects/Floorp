@@ -641,9 +641,7 @@ RefPtr<RotatedBuffer> ContentClientRemoteBuffer::CreateBufferInternal(
     const gfx::IntRect& aRect, gfx::SurfaceFormat aFormat,
     TextureFlags aFlags) {
   TextureAllocationFlags textureAllocFlags =
-      (aFlags & TextureFlags::COMPONENT_ALPHA)
-          ? TextureAllocationFlags::ALLOC_CLEAR_BUFFER_BLACK
-          : TextureAllocationFlags::ALLOC_CLEAR_BUFFER;
+      TextureAllocationFlags::ALLOC_DEFAULT;
 
   RefPtr<TextureClient> textureClient = CreateTextureClientForDrawing(
       aFormat, aRect.Size(), BackendSelector::Content,
@@ -656,7 +654,7 @@ RefPtr<RotatedBuffer> ContentClientRemoteBuffer::CreateBufferInternal(
 
   RefPtr<TextureClient> textureClientOnWhite;
   if (aFlags & TextureFlags::COMPONENT_ALPHA) {
-    TextureAllocationFlags allocFlags = ALLOC_CLEAR_BUFFER_WHITE;
+    TextureAllocationFlags allocFlags = TextureAllocationFlags::ALLOC_DEFAULT;
     if (mForwarder->SupportsTextureDirectMapping()) {
       allocFlags =
           TextureAllocationFlags(allocFlags | ALLOC_ALLOW_DIRECT_MAPPING);
