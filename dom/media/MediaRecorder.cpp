@@ -1340,7 +1340,7 @@ void MediaRecorder::Stop(ErrorResult& aResult) {
 }
 
 void MediaRecorder::Pause(ErrorResult& aResult) {
-  LOG(LogLevel::Debug, ("MediaRecorder.Pause"));
+  LOG(LogLevel::Debug, ("MediaRecorder.Pause %p", this));
   if (mState == RecordingState::Inactive) {
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -1357,7 +1357,7 @@ void MediaRecorder::Pause(ErrorResult& aResult) {
 }
 
 void MediaRecorder::Resume(ErrorResult& aResult) {
-  LOG(LogLevel::Debug, ("MediaRecorder.Resume"));
+  LOG(LogLevel::Debug, ("MediaRecorder.Resume %p", this));
   if (mState == RecordingState::Inactive) {
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
