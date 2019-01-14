@@ -17,12 +17,22 @@
   --tab-line-selected-color: var(--blue-50);
   --toggle-thumb-color: white;
   --toggle-track-color: var(--grey-30);
+
+  --searchbox-background-color: var(--theme-highlight-yellow);
+  --searchbox-border-color: #ffbf00;
+  --searchbox-no-match-background-color: #ffe5e5;
+  --searchbox-no-match-stroke-color: var(--red-60);
 }
 
 :root.theme-dark {
   --tab-line-hover-color: rgba(255,255,255,.2);
   --toggle-thumb-color: var(--grey-40);
   --toggle-track-color: var(--grey-60);
+
+  --searchbox-background-color: #4d4222;
+  --searchbox-border-color: #d99f2b;
+  --searchbox-no-match-background-color: #402325;
+  --searchbox-no-match-stroke-color: var(--red-50);
 }
 
 :root[platform="mac"] {
@@ -485,7 +495,7 @@ checkbox:-moz-focusring {
 }
 
 .devtools-filterinput {
-  background-image: url(chrome://devtools/skin/images/filter.svg#filterinput);
+  background-image: url(chrome://devtools/skin/images/filter.svg);
 }
 
 .devtools-searchinput:-moz-locale-dir(rtl),
@@ -593,8 +603,8 @@ checkbox:-moz-focusring {
 }
 
 .devtools-style-searchbox-no-match {
-  background-color: var(--searcbox-no-match-background-color) !important;
-  border-color: var(--searcbox-no-match-border-color) !important;
+  background-color: var(--searchbox-no-match-background-color) !important;
+  border-color: var(--searchbox-no-match-stroke-color) !important;
 }
 
 .devtools-searchinput-clear {
@@ -605,25 +615,19 @@ checkbox:-moz-focusring {
   border: 0;
   width: 16px;
   height: 16px;
-  background-position: 0 0;
-  background-repeat: no-repeat;
   background-color: transparent;
-}
-
-.theme-dark .devtools-searchinput-clear {
-  background-image: url("chrome://devtools/skin/images/search-clear-dark.svg");
-}
-
-.theme-light .devtools-searchinput-clear {
-  background-image: url("chrome://devtools/skin/images/search-clear-light.svg");
+  background-image: url("chrome://devtools/skin/images/search-clear.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--theme-toolbar-icon-color);
+  fill-opacity: 0.8;
 }
 
 .devtools-style-searchbox-no-match + .devtools-searchinput-clear {
-  background-image: url("chrome://devtools/skin/images/search-clear-failed.svg") !important;
+  fill: var(--searchbox-no-match-stroke-color);
 }
 
 .devtools-searchinput-clear:hover {
-  background-position: -16px 0;
+  fill-opacity: 1;
 }
 
 /* Twisty and checkbox controls */
