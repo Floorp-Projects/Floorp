@@ -379,13 +379,11 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
     if (this.isRemoteBrowser) {
       let { frameLoader } = this;
       if (frameLoader && frameLoader.tabParent) {
-        return frameLoader.tabParent.docShellIsActive = val;
+        frameLoader.tabParent.docShellIsActive = val;
       }
-      return false;
+    } else if (this.docShell) {
+      this.docShell.isActive = val;
     }
-    if (this.docShell)
-      return this.docShell.isActive = val;
-    return false;
   }
 
   get docShellIsActive() {
@@ -403,11 +401,11 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
     if (this.isRemoteBrowser) {
       let { frameLoader } = this;
       if (frameLoader && frameLoader.tabParent) {
-        return frameLoader.tabParent.renderLayers = val;
+        frameLoader.tabParent.renderLayers = val;
       }
-      return false;
+    } else {
+      this.docShellIsActive = val;
     }
-    return this.docShellIsActive = val;
   }
 
   get renderLayers() {
@@ -734,7 +732,6 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
   set userTypedValue(val) {
     this.urlbarChangeTracker.userTyped();
     this._userTypedValue = val;
-    return val;
   }
 
   get userTypedValue() {
