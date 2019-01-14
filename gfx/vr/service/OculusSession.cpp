@@ -206,6 +206,10 @@ OculusSession::OculusSession()
 OculusSession::~OculusSession() { Shutdown(); }
 
 bool OculusSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
+  if (!gfxPrefs::VREnabled() || !gfxPrefs::VROculusEnabled()) {
+    return false;
+  }
+
   if (!CreateD3DObjects()) {
     return false;
   }
@@ -530,14 +534,18 @@ bool OculusSession::LoadOvrLib() {
   nsString libName;
   nsString searchPath;
 
-  static const char dirSep = '\\';
-  static const int pathLen = 260;
-  searchPath.SetCapacity(pathLen);
-  int realLen =
-      ::GetSystemDirectoryW(char16ptr_t(searchPath.BeginWriting()), pathLen);
-  if (realLen != 0 && realLen < pathLen) {
-    searchPath.SetLength(realLen);
-    libSearchPaths.AppendElement(searchPath);
+  for (;;) {
+    UINT requiredLength = ::GetSystemDirectoryW(
+        char16ptr_t(searchPath.BeginWriting()), searchPath.Length());
+    if (!requiredLength) {
+      break;
+    }
+    if (requiredLength < searchPath.Length()) {
+      searchPath.Truncate(requiredLength);
+      libSearchPaths.AppendElement(searchPath);
+      break;
+    }
+    searchPath.SetLength(requiredLength);
   }
   libName.AppendPrintf("LibOVRRT%d_%d.dll", BUILD_BITS, OVR_PRODUCT_VERSION);
 
@@ -554,13 +562,17 @@ bool OculusSession::LoadOvrLib() {
     libName = _wgetenv(L"OVR_LIB_NAME");
   }
 
+  if (libName.IsEmpty()) {
+    return false;
+  }
+
   for (uint32_t i = 0; i < libSearchPaths.Length(); ++i) {
     nsString& libPath = libSearchPaths[i];
     nsString fullName;
     if (libPath.Length() == 0) {
       fullName.Assign(libName);
     } else {
-      fullName.AppendPrintf("%s%c%s", libPath.get(), dirSep, libName.get());
+      fullName.Assign(libPath + NS_LITERAL_STRING(u"\\") + libName);
     }
 
     mOvrLib = LoadLibraryWithFlags(fullName.get());
