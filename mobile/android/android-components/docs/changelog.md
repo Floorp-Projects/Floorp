@@ -4,7 +4,7 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.38.0-SNAPSHOT (In Development)
+# 0.38.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.38.0...master),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/40?closed=1),
@@ -13,7 +13,7 @@ permalink: /changelog/
 * Compiled against:
   * Android (SDK: 28, Support Libraries: 28.0.0)
   * Kotlin (Stdlib: 1.3.10, Coroutines: 1.0.1)
-  * GeckoView (Nightly: **66.0.20190107093040** 🔺, Beta: 65.0.20181211223337, Release: 64.0.20181214004633)
+  * GeckoView (Nightly: **66.0.20190111093148** 🔺, Beta: 65.0.20181211223337, Release: 64.0.20181214004633)
   * Mozilla App Services (FxA: **0.13.3** 🔺, Sync Logins: **0.13.3** 🔺, Places: **0.13.3** 🔺)
     * [0.13.0 release notes](https://github.com/mozilla/application-services/releases/tag/v0.13.0)
     * [0.13.1 release notes](https://github.com/mozilla/application-services/releases/tag/v0.13.1)
@@ -21,13 +21,20 @@ permalink: /changelog/
     * [0.13.3 release notes](https://github.com/mozilla/application-services/releases/tag/v0.13.3)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
+* **support-utils**
+  * [Improve URL toolbar autocompletion matching](https://github.com/mozilla-mobile/android-components/commit/ff25ec3e6646736e2b4ba3ee1d9fdd9a8412ce8c).
+
+* **browser-session**
+  * [Improving tab selection algorithm, when removing the selected tab.](https://github.com/mozilla-mobile/android-components/issues/1518).
+
 * **browser-engine-system**
   * Added support for JavaScript alerts on SystemEngineView.
-  * Added support for [datetime-local](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local) and [time](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/time) pickers.
+  * [Improving use of internal Webview](https://github.com/mozilla-mobile/android-components/commit/59240f7a71a9f63fc51c1ff65e604f6735196a0e).
 
 * **feature-prompts**, **browser-engine-gecko***
   * Added support for Authentication dialogs.
   * Added support for [input type color fields](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/color).
+  * Added support for [datetime-local](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local) and [time](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/time) pickers.
 
 * **service-sync-logins**, **service-firefox-accounts**, **concept-storage**
   * Updated underlying library from 0.12.1 to 0.13.3, see the [release notes for 0.13.0](https://github.com/mozilla/application-services/blob/master/CHANGELOG.md#0130-2019-01-09) for futher details on the most substantial changes. ([#1690](https://github.com/mozilla-mobile/android-components/issues/1690))
