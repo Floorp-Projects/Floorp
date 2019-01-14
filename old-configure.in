@@ -2784,9 +2784,6 @@ else
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 
-AC_SUBST_LIST(MOZ_GLUE_WRAP_LDFLAGS)
-export MOZ_GLUE_WRAP_LDFLAGS
-
 dnl ========================================================
 dnl = Enable using the clang plugin to build
 dnl ========================================================
