@@ -310,25 +310,10 @@ def run(objdir):
 
 def subconfigure(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--list', type=str,
-                        help='File containing a list of subconfigures to run')
-    parser.add_argument('subconfigures', type=str, nargs='*',
-                        help='Subconfigures to run if no list file is given')
+    parser.add_argument('subconfigure', type=str,
+                        help='Subconfigure to run')
     args, others = parser.parse_known_args(args)
-    subconfigures = args.subconfigures
-    if args.list:
-        subconfigures.extend(open(args.list, 'rb').read().splitlines())
-
-    if not subconfigures:
-        return 0
-
-    ret = 0
-    for subconfigure in subconfigures:
-        returncode = run(subconfigure)
-        ret = max(returncode, ret)
-        if ret:
-            break
-    return ret
+    return run(args.subconfigure)
 
 
 def main(args):
