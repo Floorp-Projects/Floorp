@@ -1639,7 +1639,7 @@ var gBrowserInit = {
       }
     });
     // Delay removing the attribute using requestAnimationFrame to avoid
-    // invalidating styles multiple times in a row if uriToLoadPromise
+    // invalidating styles multiple times in a row if _uriToLoadPromise
     // resolves before first paint.
     if (shouldRemoveFocusedAttribute) {
       window.requestAnimationFrame(() => {
@@ -1818,9 +1818,9 @@ var gBrowserInit = {
 
   // Returns the URI(s) to load at startup if it is immediately known, or a
   // promise resolving to the URI to load.
-  get uriToLoadPromise() {
-    delete this.uriToLoadPromise;
-    return this.uriToLoadPromise = function() {
+  get _uriToLoadPromise() {
+    delete this._uriToLoadPromise;
+    return this._uriToLoadPromise = function() {
       // window.arguments[0]: URI to load (string), or an nsIArray of
       //                      nsISupportsStrings to load, or a xul:tab of
       //                      a tabbrowser, which will be replaced by this
@@ -1852,14 +1852,13 @@ var gBrowserInit = {
   },
 
   // Calls the given callback with the URI to load at startup.
-  // Synchronously if possible, or after uriToLoadPromise resolves otherwise.
+  // Synchronously if possible, or after _uriToLoadPromise resolves otherwise.
   _callWithURIToLoad(callback) {
-    let uriToLoad = this.uriToLoadPromise;
-    if (uriToLoad && uriToLoad.then) {
-      uriToLoad.then(callback);
-    } else {
+    let uriToLoad = this._uriToLoadPromise;
+    if (!uriToLoad || !uriToLoad.then)
       callback(uriToLoad);
-    }
+    else
+      uriToLoad.then(callback);
   },
 
   onUnload() {
