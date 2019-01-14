@@ -186,8 +186,19 @@ class Zone : public JS::shadow::Zone,
 
   void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 
-  void discardJitCode(js::FreeOp* fop, bool discardBaselineCode = true,
-                      bool releaseTypes = false);
+  enum ShouldDiscardBaselineCode : bool {
+    KeepBaselineCode = false,
+    DiscardBaselineCode
+  };
+
+  enum ShouldReleaseTypes : bool {
+    KeepTypes = false,
+    ReleaseTypes
+  };
+
+  void discardJitCode(js::FreeOp* fop,
+                      ShouldDiscardBaselineCode discardBaselineCode = DiscardBaselineCode,
+                      ShouldReleaseTypes releaseTypes = KeepTypes);
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               size_t* typePool, size_t* regexpZone,
