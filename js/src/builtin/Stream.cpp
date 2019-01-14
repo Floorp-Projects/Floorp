@@ -566,11 +566,11 @@ bool ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 6: If typeString is "bytes",
-  int32_t cmp;
-  if (!CompareStrings(cx, typeString, cx->names().bytes, &cmp)) {
+  bool equal;
+  if (!EqualStrings(cx, typeString, cx->names().bytes, &equal)) {
     return false;
   }
-  if (cmp == 0) {
+  if (equal) {
     // The rest of step 6 is unimplemented, since we don't support
     // user-defined byte streams yet.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -718,19 +718,21 @@ static bool ReadableStream_getReader(JSContext* cx, unsigned argc, Value* vp) {
 
     // Step 4: If mode is "byob",
     //         return ? AcquireReadableStreamBYOBReader(this).
-    int32_t notByob;
-    if (!CompareStrings(cx, mode, cx->names().byob, &notByob)) {
+    bool equal;
+    if (!EqualStrings(cx, mode, cx->names().byob, &equal)) {
       return false;
     }
-    if (notByob) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_READABLESTREAM_INVALID_READER_MODE);
-      // Step 5: Throw a RangeError exception.
+    if (equal) {
+      JS_ReportErrorNumberASCII(
+          cx, GetErrorMessage, nullptr,
+          JSMSG_READABLESTREAM_BYTES_TYPE_NOT_IMPLEMENTED);
       return false;
     }
 
+    // Step 5: Throw a RangeError exception.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAM_BYTES_TYPE_NOT_IMPLEMENTED);
+                              JSMSG_READABLESTREAM_INVALID_READER_MODE);
+    return false;
   }
 
   // Reordered second part of steps 2 and 4.
