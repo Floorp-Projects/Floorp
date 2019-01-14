@@ -2029,23 +2029,29 @@ static MOZ_MUST_USE bool ReadableStreamReaderGenericInitialize(
     // Step a: Set reader.[[closedPromise]] to a new promise.
     promise = PromiseObject::createSkippingExecutor(cx);
   } else if (unwrappedStream->closed()) {
-    // Step 4: Otherwise
-    // Step a: If stream.[[state]] is "closed",
-    // Step i: Set reader.[[closedPromise]] to a new promise resolved with
+    // Step 4: Otherwise, if stream.[[state]] is "closed",
+    // Step a: Set reader.[[closedPromise]] to a new promise resolved with
     //         undefined.
     promise = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
   } else {
-    // Step b: Otherwise,
-    // Step i: Assert: stream.[[state]] is "errored".
+    // Step 5: Otherwise,
+    // Step a: Assert: stream.[[state]] is "errored".
     MOZ_ASSERT(unwrappedStream->errored());
 
-    // Step ii: Set reader.[[closedPromise]] to a new promise rejected with
-    //          stream.[[storedError]].
+    // Step b: Set reader.[[closedPromise]] to a promise rejected with
+    //         stream.[[storedError]].
     RootedValue storedError(cx, unwrappedStream->storedError());
     if (!cx->compartment()->wrap(cx, &storedError)) {
       return false;
     }
     promise = PromiseObject::unforgeableReject(cx, storedError);
+    if (!promise) {
+      return false;
+    }
+
+    // Step c. Set reader.[[closedPromise]].[[PromiseIsHandled]] to true.
+    promise->as<PromiseObject>().setHandled();
+    cx->runtime()->removeUnhandledRejectedPromise(cx, promise);
   }
 
   if (!promise) {
