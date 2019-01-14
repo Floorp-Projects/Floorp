@@ -2557,7 +2557,6 @@ static void WrapSeparatorTransform(nsDisplayListBuilder* aBuilder,
   nsDisplayTransform* item = MakeDisplayItem<nsDisplayTransform>(
       aBuilder, aFrame, aNonParticipants, aBuilder->GetVisibleRect(),
       Matrix4x4(), aIndex);
-  item->SetNoExtendContext();
 
   if (*aSeparator == nullptr) {
     *aSeparator = item;
