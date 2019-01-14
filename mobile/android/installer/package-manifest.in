@@ -167,7 +167,6 @@
 @BINPATH@/components/nsUpdateTimerManager.manifest
 @BINPATH@/components/nsUpdateTimerManager.js
 
-@BINPATH@/components/pluginGlue.manifest
 @BINPATH@/components/ProcessSingleton.manifest
 @BINPATH@/components/MainProcessSingleton.js
 @BINPATH@/components/ContentProcessSingleton.js
