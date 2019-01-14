@@ -350,30 +350,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     nsString mEventName;
   };
 
-  // Fire start event and set mimeType, run in main thread task.
-  class DispatchStartEventRunnable : public Runnable {
-   public:
-    explicit DispatchStartEventRunnable(Session* aSession)
-        : Runnable("dom::MediaRecorder::Session::DispatchStartEventRunnable"),
-          mSession(aSession) {}
-
-    NS_IMETHOD Run() override {
-      LOG(LogLevel::Debug,
-          ("Session.DispatchStartEventRunnable s=(%p)", mSession.get()));
-      MOZ_ASSERT(NS_IsMainThread());
-
-      NS_ENSURE_TRUE(mSession->mRecorder, NS_OK);
-      RefPtr<MediaRecorder> recorder = mSession->mRecorder;
-
-      recorder->DispatchSimpleEvent(NS_LITERAL_STRING("start"));
-
-      return NS_OK;
-    }
-
-   private:
-    RefPtr<Session> mSession;
-  };
-
   // Main thread task.
   // To delete RecordingSession object.
   class DestroyRunnable : public Runnable {
@@ -1009,7 +985,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     if (mRunningState.isOk() &&
         (mRunningState.unwrap() == RunningState::Idling ||
          mRunningState.unwrap() == RunningState::Starting)) {
-      NS_DispatchToMainThread(new DispatchStartEventRunnable(this));
+      NS_DispatchToMainThread(
+          new DispatchEventRunnable(this, NS_LITERAL_STRING("start")));
     }
 
     if (rv == NS_OK) {
@@ -1076,7 +1053,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
           }
           self->mMimeType = mime;
           self->mRecorder->SetMimeType(self->mMimeType);
-          auto startEvent = MakeRefPtr<DispatchStartEventRunnable>(self);
+          auto startEvent = MakeRefPtr<DispatchEventRunnable>(
+              self, NS_LITERAL_STRING("start"));
           startEvent->Run();
         }
       }
