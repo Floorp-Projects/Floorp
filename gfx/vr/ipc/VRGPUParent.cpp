@@ -20,6 +20,10 @@ VRGPUParent::VRGPUParent(ProcessId aChildProcessId) {
   SetOtherProcessId(aChildProcessId);
 }
 
+VRGPUParent::~VRGPUParent() {
+  MOZ_COUNT_DTOR(VRGPUParent);
+}
+
 void VRGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
 #if !defined(MOZ_WIDGET_ANDROID)
   if (mVRService) {
