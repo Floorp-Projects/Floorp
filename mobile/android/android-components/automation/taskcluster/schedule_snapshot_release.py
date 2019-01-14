@@ -53,7 +53,7 @@ def make_decision_task(params):
         'as_slugid': as_slugid,
         'event': {
             'repository': {
-                'html_url': params['repository_github_html_url']
+                'html_url': params['html_url']
             },
             'release': {
                 'tag_name': params['head_rev'],
@@ -77,9 +77,9 @@ def make_decision_task(params):
 def schedule():
     queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
 
-    repository_github_html_url, branch, head_rev = calculate_git_references(ROOT)
+    html_url, branch, head_rev = calculate_git_references(ROOT)
     params = {
-        'repository_github_html_url': repository_github_html_url,
+        'html_url': html_url,
         'head_rev': head_rev,
         'branch': branch,
         'cron_task_id': os.environ.get('CRON_TASK_ID', '<cron_task_id>')
