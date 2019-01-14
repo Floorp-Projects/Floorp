@@ -55,6 +55,19 @@ class UrlbarView {
   }
 
   /**
+   * @returns {UrlbarMatch}
+   *   The currently selected result.
+   */
+  get selectedResult() {
+    if (!this.isOpen) {
+      return null;
+    }
+
+    let resultIndex = this._selected.getAttribute("resultIndex");
+    return this._queryContext.results[resultIndex];
+  }
+
+  /**
    * Selects the next or previous view item. An item could be an autocomplete
    * result or a one-off search button.
    *
@@ -303,7 +316,6 @@ class UrlbarView {
     if (result) {
       this.input.pickResult(event, result);
     }
-    this.close();
   }
 
   _on_overflow(event) {
