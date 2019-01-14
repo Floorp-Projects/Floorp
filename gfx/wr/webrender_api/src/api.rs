@@ -147,7 +147,6 @@ impl Transaction {
     ///
     /// Arguments:
     ///
-    /// * `document_id`: Target Document ID.
     /// * `epoch`: The unique Frame ID, monotonically increasing.
     /// * `background`: The background color of this pipeline.
     /// * `viewport_size`: The size of the viewport for this frame.
