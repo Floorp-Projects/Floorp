@@ -1631,12 +1631,6 @@ BrowserGlue.prototype = {
       });
     }
 
-    if (AppConstants.MOZ_DEV_EDITION) {
-      Services.tm.idleDispatchToMainThread(() => {
-        this._createExtraDefaultProfile();
-      });
-    }
-
     Services.tm.idleDispatchToMainThread(() => {
       this._checkForDefaultBrowser();
     });
@@ -1715,40 +1709,6 @@ BrowserGlue.prototype = {
     Services.tm.idleDispatchToMainThread(() => {
       RemoteSettings.init();
     });
-  },
-
-  _createExtraDefaultProfile() {
-    if (!AppConstants.MOZ_DEV_EDITION) {
-      return;
-    }
-    // If Developer Edition is the only installed Firefox version and no other
-    // profiles are present, create a second one for use by other versions.
-    // This helps Firefox versions earlier than 35 avoid accidentally using the
-    // unsuitable Developer Edition profile.
-    let profileService = Cc["@mozilla.org/toolkit/profile-service;1"]
-                         .getService(Ci.nsIToolkitProfileService);
-    let profileCount = profileService.profileCount;
-    if (profileCount == 1 && profileService.selectedProfile.name != "default") {
-      let newProfile;
-      try {
-        newProfile = profileService.createProfile(null, "default");
-        profileService.defaultProfile = newProfile;
-        profileService.flush();
-      } catch (e) {
-        Cu.reportError("Could not create profile 'default': " + e);
-      }
-      if (newProfile) {
-        // We don't want a default profile with Developer Edition settings, an
-        // empty profile directory will do. The profile service of the other
-        // Firefox will populate it with its own stuff.
-        let newProfilePath = newProfile.rootDir.path;
-        OS.File.removeDir(newProfilePath).then(() => {
-          return OS.File.makeDir(newProfilePath);
-        }).catch(e => {
-          Cu.reportError("Could not empty profile 'default': " + e);
-        });
-      }
-    }
   },
 
   _onQuitRequest: function BG__onQuitRequest(aCancelQuit, aQuitType) {

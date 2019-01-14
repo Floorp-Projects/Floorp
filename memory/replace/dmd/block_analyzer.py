@@ -51,6 +51,7 @@ allocatorFns = [
     'pod_calloc',
     'pod_realloc',
     'nsTArrayInfallibleAllocator::Malloc',
+    'Allocator<ReplaceMallocBase>::malloc(',
     # This one necessary to fully filter some sequences of allocation functions
     # that happen in practice. Note that ??? entries that follow non-allocation
     # functions won't be stripped, as explained above.
@@ -123,7 +124,7 @@ def print_trace_segment(args, stacks, block):
 
     for l in traceTable[block.alloc_stack]:
         # The 5: is to remove the bogus leading "#00: " from the stack frame.
-        print(' ', frameTable[l][5:args.max_stack_frame_length])
+        print('  ' + frameTable[l][5:args.max_stack_frame_length])
 
 
 def show_referrers(args, blocks, stacks, block):
@@ -248,7 +249,7 @@ def analyzeLogs():
     block = int(options.block, 16)
 
     if block not in blocks:
-        print('Object', block, 'not found in traces.')
+        print('Object ' + block + ' not found in traces.')
         print('It could still be the target of some nodes.')
         return
 

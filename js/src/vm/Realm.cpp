@@ -53,8 +53,7 @@ Realm::Realm(Compartment* comp, const JS::RealmOptions& options)
       global_(nullptr),
       objects_(zone_),
       randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
-      wasm(runtime_),
-      performanceMonitoring(runtime_) {
+      wasm(runtime_) {
   MOZ_ASSERT_IF(creationOptions_.mergeable(),
                 creationOptions_.invisibleToDebugger());
 

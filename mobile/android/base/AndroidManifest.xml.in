@@ -30,6 +30,7 @@
                  android:hardwareAccelerated="true"
                  android:supportsRtl="true"
                  android:allowBackup="false"
+                 android:usesCleartextTraffic="true"
                  >
 
         <meta-data android:name="com.sec.android.support.multiwindow" android:value="true"/>

@@ -52,7 +52,6 @@
 #include "vm/Scope.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Stack.h"
-#include "vm/Stopwatch.h"
 #include "vm/SymbolType.h"
 #include "wasm/WasmTypes.h"
 
@@ -920,14 +919,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
 
   /* Last time at which an animation was played for this runtime. */
   js::MainThreadData<mozilla::TimeStamp> lastAnimationTime;
-
- private:
-  js::MainThreadData<js::PerformanceMonitoring> performanceMonitoring_;
-
- public:
-  js::PerformanceMonitoring& performanceMonitoring() {
-    return performanceMonitoring_.ref();
-  }
 
  private:
   /* The stack format for the current runtime.  Only valid on non-child

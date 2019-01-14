@@ -105,6 +105,7 @@
     <command id="cmd_resetAddonAutoUpdate"/>
     <command id="cmd_showUnsignedExtensions"/>
     <command id="cmd_showAllExtensions"/>
+    <command id="cmd_showShortcuts"/>
   </commandset>
 
   <!-- view commands - these act on the selected addon -->
@@ -251,6 +252,8 @@
                         command="cmd_restartApp"/>
               </hbox>
 
+              <button id="manage-shortcuts" data-l10n-id="shortcuts-manage" command="cmd_showShortcuts" hidden="true"/>
+
               <toolbarbutton id="header-utils-btn" type="menu"
                         data-l10n-id="tools-menu">
                 <menupopup id="utils-menu">
@@ -356,6 +359,9 @@
               </vbox>
               <richlistbox id="addon-list" class="list" flex="1"/>
             </vbox>
+
+            <!-- extension shortcuts view -->
+            <browser id="shortcuts-view" type="content" flex="1" disablehistory="true"/>
 
             <!-- legacy extensions view -->
             <vbox id="legacy-view" flex="1" class="view-pane" align="stretch" tabindex="0">

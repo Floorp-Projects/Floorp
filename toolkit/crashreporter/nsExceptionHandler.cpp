@@ -357,7 +357,7 @@ static LPTOP_LEVEL_EXCEPTION_FILTER WINAPI patched_SetUnhandledExceptionFilter(
   return nullptr;
 }
 
-#if defined(HAVE_64BIT_BUILD) && defined(_M_X64)
+#if defined(HAVE_64BIT_BUILD)
 static LPTOP_LEVEL_EXCEPTION_FILTER sUnhandledExceptionFilter = nullptr;
 
 static long JitExceptionHandler(void* exceptionRecord, void* context) {
@@ -1560,7 +1560,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   // Initially set sIncludeContextHeap to true for debugging startup crashes
   // even if the controlling pref value is false.
   SetIncludeContextHeap(true);
-#if defined(HAVE_64BIT_BUILD) && defined(_M_X64)
+#if defined(HAVE_64BIT_BUILD)
   // Tell JS about the new filter before we disable SetUnhandledExceptionFilter
   SetJitExceptionHandler();
 #endif
@@ -3255,7 +3255,7 @@ bool SetRemoteExceptionHandler(const nsACString& crashPipe,
       NS_ConvertASCIItoUTF16(crashPipe).get(), nullptr);
   gExceptionHandler->set_handle_debug_exceptions(true);
 
-#if defined(HAVE_64BIT_BUILD) && defined(_M_X64)
+#if defined(HAVE_64BIT_BUILD)
   SetJitExceptionHandler();
 #endif
 
