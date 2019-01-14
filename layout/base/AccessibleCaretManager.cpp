@@ -719,9 +719,11 @@ already_AddRefed<nsFrameSelection> AccessibleCaretManager::GetFrameSelection()
 
 nsAutoString AccessibleCaretManager::StringifiedSelection() const {
   nsAutoString str;
-  Selection* selection = GetSelection();
+  RefPtr<Selection> selection = GetSelection();
   if (selection) {
-    selection->Stringify(str);
+    selection->Stringify(str, mAllowFlushingLayout
+                                  ? Selection::FlushFrames::Yes
+                                  : Selection::FlushFrames::No);
   }
   return str;
 }
@@ -1337,7 +1339,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
       mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible();
   init.mCaretVisuallyVisible =
       mFirstCaret->IsVisuallyVisible() || mSecondCaret->IsVisuallyVisible();
-  sel->Stringify(init.mSelectedTextContent);
+  init.mSelectedTextContent = StringifiedSelection();
 
   RefPtr<CaretStateChangedEvent> event = CaretStateChangedEvent::Constructor(
       doc, NS_LITERAL_STRING("mozcaretstatechanged"), init);
