@@ -9,7 +9,7 @@ use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, ImageFormat, ImageDe
 #[cfg(feature = "debug_renderer")]
 use api::{DebugFlags, DeviceVector2D};
 use box_shadow::{BLUR_SAMPLE_SCALE};
-use clip::{ClipNodeCollector, ClipStore, ClipChainId, ClipChainNode, ClipItem};
+use clip::{ClipStore, ClipChainId, ClipChainNode, ClipItem};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, CoordinateSystemId};
 #[cfg(feature = "debug_renderer")]
 use debug_colors;
@@ -1665,7 +1665,7 @@ impl PicturePrimitive {
         }
     }
 
-    fn is_visible(&self) -> bool {
+    pub fn is_visible(&self) -> bool {
         match self.requested_composite_mode {
             Some(PictureCompositeMode::Filter(ref filter)) => {
                 filter.is_visible()
@@ -1802,10 +1802,6 @@ impl PicturePrimitive {
             }
         };
 
-        if self.raster_config.as_ref().map_or(false, |c| c.establishes_raster_root) {
-            frame_state.clip_store.push_raster_root(surface_spatial_node_index);
-        }
-
         let map_pic_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             surface_spatial_node_index,
@@ -1891,16 +1887,9 @@ impl PicturePrimitive {
         prim_list: PrimitiveList,
         context: PictureContext,
         state: PictureState,
-        frame_state: &mut FrameBuildingState,
-    ) -> Option<ClipNodeCollector> {
+    ) {
         self.prim_list = prim_list;
         self.state = Some((state, context));
-
-        if self.raster_config.as_ref().map_or(false, |c| c.establishes_raster_root) {
-            Some(frame_state.clip_store.pop_raster_root())
-        } else {
-            None
-        }
     }
 
     pub fn take_state_and_context(&mut self) -> (PictureState, PictureContext) {
@@ -1915,6 +1904,7 @@ impl PicturePrimitive {
         transforms: &TransformPalette,
         prim_instance: &PrimitiveInstance,
         original_local_rect: LayoutRect,
+        combined_local_clip_rect: &LayoutRect,
         world_rect: WorldRect,
         plane_split_anchor: usize,
     ) -> bool {
@@ -1929,7 +1919,7 @@ impl PicturePrimitive {
         // since we determine the UVs by doing a bilerp with a factor
         // from the original local rect.
         let local_rect = match original_local_rect
-            .intersection(&prim_instance.combined_local_clip_rect)
+            .intersection(combined_local_clip_rect)
         {
             Some(rect) => rect.cast(),
             None => return false,
@@ -2287,7 +2277,6 @@ impl PicturePrimitive {
         &mut self,
         pic_index: PictureIndex,
         prim_instance: &PrimitiveInstance,
-        prim_local_rect: &LayoutRect,
         clipped_prim_bounding_rect: WorldRect,
         surface_index: SurfaceIndex,
         frame_context: &FrameBuildingContext,
@@ -2323,7 +2312,7 @@ impl PicturePrimitive {
             frame_context.clip_scroll_tree,
         );
 
-        let pic_rect = PictureRect::from_untyped(&prim_local_rect.to_untyped());
+        let pic_rect = PictureRect::from_untyped(&self.local_rect.to_untyped());
 
         let (clipped, unclipped) = match get_raster_rects(
             pic_rect,
@@ -2553,14 +2542,14 @@ impl PicturePrimitive {
                     // Basic brush primitive header is (see end of prepare_prim_for_render_inner in prim_store.rs)
                     //  [brush specific data]
                     //  [segment_rect, segment data]
-                    let shadow_rect = prim_local_rect.translate(&offset);
+                    let shadow_rect = self.local_rect.translate(&offset);
 
                     // ImageBrush colors
                     request.push(color.premultiplied());
                     request.push(PremultipliedColorF::WHITE);
                     request.push([
-                        prim_local_rect.size.width,
-                        prim_local_rect.size.height,
+                        self.local_rect.size.width,
+                        self.local_rect.size.height,
                         0.0,
                         0.0,
                     ]);
