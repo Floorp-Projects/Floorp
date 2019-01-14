@@ -4,9 +4,6 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Bookmarks",
-                               "resource://gre/modules/Bookmarks.jsm");
-
 var {
   DefaultMap,
   ExtensionError,
@@ -866,72 +863,6 @@ MenuItem.prototype = {
   },
 };
 
-// windowTracker only looks as browser windows, but we're also interested in
-// the Library window.  Helper for menuTracker below.
-const libraryTracker = {
-  libraryWindowType: "Places:Organizer",
-
-  isLibraryWindow(window) {
-    let winType = window.document.documentElement.getAttribute("windowtype");
-    return winType === this.libraryWindowType;
-  },
-
-  init(listener) {
-    this._listener = listener;
-    Services.ww.registerNotification(this);
-
-    // See WindowTrackerBase#*browserWindows in ext-tabs-base.js for why we
-    // can't use the enumerator's windowtype filter.
-    for (let window of Services.wm.getEnumerator("")) {
-      if (window.document.readyState === "complete") {
-        if (this.isLibraryWindow(window)) {
-          this.notify(window);
-        }
-      } else {
-        window.addEventListener("load", this, {once: true});
-      }
-    }
-  },
-
-  // cleanupWindow is called on any library window that's open.
-  uninit(cleanupWindow) {
-    Services.ww.unregisterNotification(this);
-
-    for (let window of Services.wm.getEnumerator(this.libraryWindowType)) {
-      try {
-        window.removeEventListener("load", this);
-        cleanupWindow(window);
-      } catch (e) {
-        Cu.reportError(e);
-      }
-    }
-  },
-
-  // Gets notifications from Services.ww.registerNotification.
-  // Defer actually doing anything until the window's loaded, though.
-  observe(window, topic) {
-    if (topic === "domwindowopened") {
-      window.addEventListener("load", this, {once: true});
-    }
-  },
-
-  // Gets the load event for new windows(registered in observe()).
-  handleEvent(event) {
-    let window = event.target.defaultView;
-    if (this.isLibraryWindow(window)) {
-      this.notify(window);
-    }
-  },
-
-  notify(window) {
-    try {
-      this._listener.call(null, window);
-    } catch (e) {
-      Cu.reportError(e);
-    }
-  },
-};
-
 // While any extensions are active, this Tracker registers to observe/listen
 // for menu events from both Tools and context menus, both content and chrome.
 const menuTracker = {
@@ -943,7 +874,6 @@ const menuTracker = {
       this.onWindowOpen(window);
     }
     windowTracker.addOpenListener(this.onWindowOpen);
-    libraryTracker.init(this.onLibraryOpen);
   },
 
   unregister() {
@@ -952,7 +882,6 @@ const menuTracker = {
       this.cleanupWindow(window);
     }
     windowTracker.removeOpenListener(this.onWindowOpen);
-    libraryTracker.uninit(this.cleanupLibrary);
   },
 
   observe(subject, topic, data) {
@@ -1000,16 +929,6 @@ const menuTracker = {
     }
   },
 
-  onLibraryOpen(window) {
-    const menu = window.document.getElementById("placesContext");
-    menu.addEventListener("popupshowing", menuTracker.onBookmarksContextMenu);
-  },
-
-  cleanupLibrary(window) {
-    const menu = window.document.getElementById("placesContext");
-    menu.removeEventListener("popupshowing", menuTracker.onBookmarksContextMenu);
-  },
-
   handleEvent(event) {
     const menu = event.target;
 
@@ -1043,10 +962,6 @@ const menuTracker = {
     const tree = menu.triggerNode.parentElement;
     const cell = tree.boxObject.getCellAt(event.x, event.y);
     const node = tree.view.nodeForTreeIndex(cell.row);
-
-    if (!node.bookmarkGuid || Bookmarks.isVirtualRootItem(node.bookmarkGuid)) {
-      return;
-    }
 
     gMenuBuilder.build({
       menu,
