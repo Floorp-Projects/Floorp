@@ -38,6 +38,9 @@ VideoDecoder::VideoDecoder(Host_10* aHost) : mHost(aHost), mHasShutdown(false) {
   uint32_t cores = std::max(1u, std::thread::hardware_concurrency());
 
   HRESULT hr = mDecoder->Init(cores);
+  if (FAILED(hr)) {
+    CK_LOGE("Failed to initialize mDecoder!");
+  }
 }
 
 VideoDecoder::~VideoDecoder() { CK_LOGD("VideoDecoder destroyed"); }
