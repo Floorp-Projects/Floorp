@@ -266,6 +266,7 @@ enum class BackendType : int8_t {
   RECORDING,
   DIRECT2D1_1,
   WEBRENDER_TEXT,
+  CAPTURE,  // Used for paths
 
   // Add new entries above this line.
   BACKEND_LAST

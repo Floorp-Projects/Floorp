@@ -861,6 +861,93 @@ class DCCommandSink : public ID2D1CommandSink {
   ID2D1DeviceContext *mCtx;
 };
 
+class MOZ_STACK_CLASS AutoRestoreFP {
+ public:
+  AutoRestoreFP() {
+    // save the current floating point control word
+    _controlfp_s(&savedFPSetting, 0, 0);
+    UINT unused;
+    // set the floating point control word to its default value
+    _controlfp_s(&unused, _CW_DEFAULT, MCW_PC);
+  }
+  ~AutoRestoreFP() {
+    UINT unused;
+    // restore the saved floating point control word
+    _controlfp_s(&unused, savedFPSetting, MCW_PC);
+  }
+
+ private:
+  UINT savedFPSetting;
+};
+
+// Note that overrides of ID2D1SimplifiedGeometrySink methods in this class may
+// get called from D2D with nonstandard floating point settings (see comments in
+// bug 1134549) - use AutoRestoreFP to reset the floating point control word to
+// what we expect
+class StreamingGeometrySink : public ID2D1SimplifiedGeometrySink {
+ public:
+  explicit StreamingGeometrySink(PathSink *aSink) : mSink(aSink) {}
+
+  HRESULT STDMETHODCALLTYPE QueryInterface(const IID &aIID, void **aPtr) {
+    if (!aPtr) {
+      return E_POINTER;
+    }
+
+    if (aIID == IID_IUnknown) {
+      *aPtr = static_cast<IUnknown *>(this);
+      return S_OK;
+    } else if (aIID == IID_ID2D1SimplifiedGeometrySink) {
+      *aPtr = static_cast<ID2D1SimplifiedGeometrySink *>(this);
+      return S_OK;
+    }
+
+    return E_NOINTERFACE;
+  }
+
+  ULONG STDMETHODCALLTYPE AddRef() { return 1; }
+
+  ULONG STDMETHODCALLTYPE Release() { return 1; }
+
+  // We ignore SetFillMode, this depends on the destination sink.
+  STDMETHOD_(void, SetFillMode)(D2D1_FILL_MODE aMode) { return; }
+  STDMETHOD_(void, BeginFigure)
+  (D2D1_POINT_2F aPoint, D2D1_FIGURE_BEGIN aBegin) {
+    AutoRestoreFP resetFloatingPoint;
+    mSink->MoveTo(ToPoint(aPoint));
+  }
+  STDMETHOD_(void, AddLines)(const D2D1_POINT_2F *aLines, UINT aCount) {
+    AutoRestoreFP resetFloatingPoint;
+    for (UINT i = 0; i < aCount; i++) {
+      mSink->LineTo(ToPoint(aLines[i]));
+    }
+  }
+  STDMETHOD_(void, AddBeziers)
+  (const D2D1_BEZIER_SEGMENT *aSegments, UINT aCount) {
+    AutoRestoreFP resetFloatingPoint;
+    for (UINT i = 0; i < aCount; i++) {
+      mSink->BezierTo(ToPoint(aSegments[i].point1),
+                      ToPoint(aSegments[i].point2),
+                      ToPoint(aSegments[i].point3));
+    }
+  }
+  STDMETHOD(Close)() { /* Should never be called! */
+    return S_OK;
+  }
+  STDMETHOD_(void, SetSegmentFlags)
+  (D2D1_PATH_SEGMENT aFlags) { /* Should never be called! */
+  }
+
+  STDMETHOD_(void, EndFigure)(D2D1_FIGURE_END aEnd) {
+    AutoRestoreFP resetFloatingPoint;
+    if (aEnd == D2D1_FIGURE_END_CLOSED) {
+      return mSink->Close();
+    }
+  }
+
+ private:
+  PathSink *mSink;
+};
+
 }  // namespace gfx
 }  // namespace mozilla
 
