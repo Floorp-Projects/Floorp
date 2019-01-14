@@ -593,6 +593,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
 
     mEncoder->Suspend(TimeStamp::Now());
+    NS_DispatchToMainThread(
+        new DispatchEventRunnable(this, NS_LITERAL_STRING("pause")));
     return NS_OK;
   }
 
@@ -605,6 +607,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
 
     mEncoder->Resume(TimeStamp::Now());
+    NS_DispatchToMainThread(
+        new DispatchEventRunnable(this, NS_LITERAL_STRING("resume")));
     return NS_OK;
   }
 
@@ -1350,7 +1354,6 @@ void MediaRecorder::Pause(ErrorResult& aResult) {
   }
 
   mState = RecordingState::Paused;
-  DispatchSimpleEvent(NS_LITERAL_STRING("pause"));
 }
 
 void MediaRecorder::Resume(ErrorResult& aResult) {
@@ -1368,7 +1371,6 @@ void MediaRecorder::Resume(ErrorResult& aResult) {
   }
 
   mState = RecordingState::Recording;
-  DispatchSimpleEvent(NS_LITERAL_STRING("resume"));
 }
 
 void MediaRecorder::RequestData(ErrorResult& aResult) {
