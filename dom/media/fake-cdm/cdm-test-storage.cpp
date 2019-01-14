@@ -35,7 +35,7 @@ class WriteRecordClient : public FileIOClient {
 
   void OnWriteComplete(Status aStatus) override { Done(aStatus); }
 
-  void Do(const string& aName, Host_9* aHost) {
+  void Do(const string& aName, Host_10* aHost) {
     // Initialize the FileIO.
     mFileIO = aHost->CreateFileIO(this);
     mFileIO->Open(aName.c_str(), aName.size());
@@ -68,7 +68,7 @@ class WriteRecordClient : public FileIOClient {
   std::vector<uint8_t> mData;
 };
 
-void WriteRecord(Host_9* aHost, const std::string& aRecordName,
+void WriteRecord(Host_10* aHost, const std::string& aRecordName,
                  const uint8_t* aData, uint32_t aNumBytes,
                  function<void()>&& aOnSuccess, function<void()>&& aOnFailure) {
   // client will be delete in WriteRecordClient::Done
@@ -77,7 +77,7 @@ void WriteRecord(Host_9* aHost, const std::string& aRecordName,
   client->Do(aRecordName, aHost);
 }
 
-void WriteRecord(Host_9* aHost, const std::string& aRecordName,
+void WriteRecord(Host_10* aHost, const std::string& aRecordName,
                  const std::string& aData, function<void()>&& aOnSuccess,
                  function<void()>&& aOnFailure) {
   return WriteRecord(aHost, aRecordName, (const uint8_t*)aData.c_str(),
@@ -106,7 +106,7 @@ class ReadRecordClient : public FileIOClient {
 
   void OnWriteComplete(Status aStatus) override {}
 
-  void Do(const string& aName, Host_9* aHost) {
+  void Do(const string& aName, Host_10* aHost) {
     mFileIO = aHost->CreateFileIO(this);
     mFileIO->Open(aName.c_str(), aName.size());
   }
@@ -138,7 +138,7 @@ class ReadRecordClient : public FileIOClient {
 };
 
 void ReadRecord(
-    Host_9* aHost, const std::string& aRecordName,
+    Host_10* aHost, const std::string& aRecordName,
     function<void(bool, const uint8_t*, uint32_t)>&& aOnReadComplete) {
   // client will be delete in ReadRecordClient::Done
   ReadRecordClient* client = new ReadRecordClient(move(aOnReadComplete));
@@ -157,7 +157,7 @@ class OpenRecordClient : public FileIOClient {
 
   void OnWriteComplete(Status aStatus) override {}
 
-  void Do(const string& aName, Host_9* aHost) {
+  void Do(const string& aName, Host_10* aHost) {
     // Initialize the FileIO.
     mFileIO = aHost->CreateFileIO(this);
     mFileIO->Open(aName.c_str(), aName.size());
@@ -189,7 +189,7 @@ class OpenRecordClient : public FileIOClient {
   ;
 };
 
-void OpenRecord(Host_9* aHost, const std::string& aRecordName,
+void OpenRecord(Host_10* aHost, const std::string& aRecordName,
                 function<void(bool)>&& aOpenComplete) {
   // client will be delete in OpenRecordClient::Done
   OpenRecordClient* client = new OpenRecordClient(move(aOpenComplete));
