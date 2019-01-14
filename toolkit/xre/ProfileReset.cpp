@@ -35,16 +35,19 @@ static const char kProfileProperties[] =
  * Creates a new profile with a timestamp in the name to use for profile reset.
  */
 nsresult CreateResetProfile(nsIToolkitProfileService* aProfileSvc,
-                            const nsACString& aOldProfileName,
+                            nsIToolkitProfile* aOldProfile,
                             nsIToolkitProfile** aNewProfile) {
   MOZ_ASSERT(aProfileSvc, "NULL profile service");
+
+  nsAutoCString oldProfileName;
+  aOldProfile->GetName(oldProfileName);
 
   nsCOMPtr<nsIToolkitProfile> newProfile;
   // Make the new profile the old profile (or "default-") + the time in seconds
   // since epoch for uniqueness.
   nsAutoCString newProfileName;
-  if (!aOldProfileName.IsEmpty()) {
-    newProfileName.Assign(aOldProfileName);
+  if (!oldProfileName.IsEmpty()) {
+    newProfileName.Assign(oldProfileName);
     newProfileName.Append("-");
   } else {
     newProfileName.AssignLiteral("default-");

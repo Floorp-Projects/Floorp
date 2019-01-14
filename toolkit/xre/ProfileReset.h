@@ -12,7 +12,7 @@ static const char kResetProgressURL[] =
     "chrome://global/content/resetProfileProgress.xul";
 
 nsresult CreateResetProfile(nsIToolkitProfileService* aProfileSvc,
-                            const nsACString& aOldProfileName,
+                            nsIToolkitProfile* aOldProfile,
                             nsIToolkitProfile** aNewProfile);
 
 nsresult ProfileResetCleanup(nsIToolkitProfile* aOldProfile);

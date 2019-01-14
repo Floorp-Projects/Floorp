@@ -106,6 +106,7 @@ UNIFIED_SOURCES += [
     '/toolkit/mozapps/update/common/commonupdatedir.cpp',
     'AutoSQLiteLifetime.cpp',
     'Bootstrap.cpp',
+    'CmdLineAndEnvUtils.cpp',
     'CreateAppData.cpp',
     'nsAppStartupNotifier.cpp',
     'nsConsoleWriter.cpp',

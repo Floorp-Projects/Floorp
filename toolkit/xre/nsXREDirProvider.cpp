@@ -19,6 +19,7 @@
 #include "nsIToolkitChromeRegistry.h"
 #include "nsIToolkitProfileService.h"
 #include "nsIXULRuntime.h"
+#include "commonupdatedir.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
@@ -47,7 +48,6 @@
 #ifdef XP_WIN
 #include <windows.h>
 #include <shlobj.h>
-#include "commonupdatedir.h"
 #endif
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
@@ -98,19 +98,14 @@ nsIFile* gDataDirHome = nullptr;
 
 // These are required to allow nsXREDirProvider to be usable in xpcshell tests.
 // where gAppData is null.
-static const char* GetAppProfile() {
-  if (gAppData) {
-    return gAppData->profile;
-  }
-  return nullptr;
-}
-
+#if defined(XP_MACOSX) || defined(XP_WIN)
 static const char* GetAppName() {
   if (gAppData) {
     return gAppData->name;
   }
   return nullptr;
 }
+#endif
 
 static const char* GetAppVendor() {
   if (gAppData) {
@@ -1608,14 +1603,21 @@ nsresult nsXREDirProvider::AppendSysUserExtensionsDevPath(nsIFile* aFile) {
 nsresult nsXREDirProvider::AppendProfilePath(nsIFile* aFile, bool aLocal) {
   NS_ASSERTION(aFile, "Null pointer!");
 
+  // If there is no XREAppData then there is no information to use to build
+  // the profile path so just do nothing. This should only happen in xpcshell
+  // tests.
+  if (!gAppData) {
+    return NS_OK;
+  }
+
   nsAutoCString profile;
   nsAutoCString appName;
   nsAutoCString vendor;
-  if (GetAppProfile()) {
-    profile = GetAppProfile();
+  if (gAppData->profile) {
+    profile = gAppData->profile;
   } else {
-    appName = GetAppName();
-    vendor = GetAppVendor();
+    appName = gAppData->name;
+    vendor = gAppData->vendor;
   }
 
   nsresult rv;
