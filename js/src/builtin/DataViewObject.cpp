@@ -137,7 +137,7 @@ bool DataViewObject::constructSameCompartment(JSContext* cx,
   }
 
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_DataView, &proto)) {
     return false;
   }
 
@@ -186,7 +186,7 @@ bool DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj,
   // Make sure to get the [[Prototype]] for the created view from this
   // compartment.
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_DataView, &proto)) {
     return false;
   }
 

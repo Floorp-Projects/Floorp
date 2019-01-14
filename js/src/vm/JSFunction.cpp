@@ -1999,6 +1999,7 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
     return false;
   }
 
+  JSProtoKey protoKey = JSProto_Null;
   if (isAsync) {
     if (isGenerator) {
       if (!CompileStandaloneAsyncGenerator(cx, &fun, options, srcBuf,
@@ -2022,12 +2023,13 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
                                      parameterListEnd)) {
         return false;
       }
+      protoKey = JSProto_Function;
     }
   }
 
   // Steps 6, 29.
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, protoKey, &proto)) {
     return false;
   }
 

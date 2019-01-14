@@ -121,38 +121,47 @@ struct TypeIDOfType;
 template <>
 struct TypeIDOfType<int8_t> {
   static const Scalar::Type id = Scalar::Int8;
+  static const JSProtoKey protoKey = JSProto_Int8Array;
 };
 template <>
 struct TypeIDOfType<uint8_t> {
   static const Scalar::Type id = Scalar::Uint8;
+  static const JSProtoKey protoKey = JSProto_Uint8Array;
 };
 template <>
 struct TypeIDOfType<int16_t> {
   static const Scalar::Type id = Scalar::Int16;
+  static const JSProtoKey protoKey = JSProto_Int16Array;
 };
 template <>
 struct TypeIDOfType<uint16_t> {
   static const Scalar::Type id = Scalar::Uint16;
+  static const JSProtoKey protoKey = JSProto_Uint16Array;
 };
 template <>
 struct TypeIDOfType<int32_t> {
   static const Scalar::Type id = Scalar::Int32;
+  static const JSProtoKey protoKey = JSProto_Int32Array;
 };
 template <>
 struct TypeIDOfType<uint32_t> {
   static const Scalar::Type id = Scalar::Uint32;
+  static const JSProtoKey protoKey = JSProto_Uint32Array;
 };
 template <>
 struct TypeIDOfType<float> {
   static const Scalar::Type id = Scalar::Float32;
+  static const JSProtoKey protoKey = JSProto_Float32Array;
 };
 template <>
 struct TypeIDOfType<double> {
   static const Scalar::Type id = Scalar::Float64;
+  static const JSProtoKey protoKey = JSProto_Float64Array;
 };
 template <>
 struct TypeIDOfType<uint8_clamped> {
   static const Scalar::Type id = Scalar::Uint8Clamped;
+  static const JSProtoKey protoKey = JSProto_Uint8ClampedArray;
 };
 
 class SharedOps {

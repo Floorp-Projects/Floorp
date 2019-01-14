@@ -172,7 +172,7 @@ bool WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_WeakSet, &proto)) {
     return false;
   }
 
