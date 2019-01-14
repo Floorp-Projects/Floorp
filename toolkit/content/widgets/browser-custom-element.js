@@ -424,7 +424,7 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
   get hasLayers() {
     if (this.isRemoteBrowser) {
       let { frameLoader } = this;
-      if (frameLoader.tabParent) {
+      if (frameLoader && frameLoader.tabParent) {
         return frameLoader.tabParent.hasLayers;
       }
       return false;
