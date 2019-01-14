@@ -938,7 +938,6 @@ nsresult nsDiskCacheDevice::OpenDiskCache() {
 
   // if we don't have a cache directory, create one and open it
   if (!exists) {
-    nsCacheService::MarkStartingFresh();
     rv = mCacheDirectory->Create(nsIFile::DIRECTORY_TYPE, 0777);
     CACHE_LOG_PATH(LogLevel::Info, "\ncreate cache directory: %s\n",
                    mCacheDirectory);
