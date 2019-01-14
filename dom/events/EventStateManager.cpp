@@ -2820,6 +2820,9 @@ void EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
 #ifdef XP_MACOSX
 static bool NodeAllowsClickThrough(nsINode* aNode) {
   while (aNode) {
+    if (aNode->IsXULElement(nsGkAtoms::browser)) {
+      return false;
+    }
     if (aNode->IsXULElement()) {
       mozilla::dom::Element* element = aNode->AsElement();
       static Element::AttrValuesArray strings[] = {nsGkAtoms::always,
