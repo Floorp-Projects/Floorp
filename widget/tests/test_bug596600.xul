@@ -23,7 +23,7 @@
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const NSMouseMoved = 5;
 
-var gLeftWindow, gRightWindow, gIFrame;
+var gLeftWindow, gRightWindow, gBrowserElement;
 var gExpectedEvents = [];
 
 function moveMouseTo(x, y, andThen) {
@@ -36,24 +36,21 @@ function openWindows() {
   gLeftWindow = open('empty_window.xul', '_blank', 'chrome,screenX=50,screenY=50,width=200,height=200');
   SimpleTest.waitForFocus(function () {
     gRightWindow = open('empty_window.xul', '', 'chrome,screenX=300,screenY=50,width=200,height=200');
-    SimpleTest.waitForFocus(attachIFrameToRightWindow, gRightWindow);
+    SimpleTest.waitForFocus(attachBrowserToLeftWindow, gRightWindow);
   }, gLeftWindow);
 }
 
-function attachIFrameToRightWindow() {
-  gIFrame = gLeftWindow.document.createElementNS(XUL_NS, "iframe");
-  gIFrame.setAttribute("type", "content");
-  gIFrame.setAttribute("clickthrough", "never");
-  gIFrame.setAttribute("src", "file_bug596600.html");
-  gIFrame.style.width = "100px";
-  gIFrame.style.height = "100px";
-  gIFrame.style.margin = "50px";
-  gLeftWindow.document.documentElement.appendChild(gIFrame);
-  gIFrame.addEventListener("load", function (e) {
-    gIFrame.removeEventListener("load", arguments.callee, true);
+function attachBrowserToLeftWindow() {
+  gBrowserElement = gLeftWindow.document.createXULElement("browser");
+  gBrowserElement.setAttribute("type", "content");
+  gBrowserElement.setAttribute("src", "file_bug596600.html");
+  gBrowserElement.style.width = "100px";
+  gBrowserElement.style.height = "100px";
+  gBrowserElement.style.margin = "50px";
+  gLeftWindow.document.documentElement.appendChild(gBrowserElement);
+  gBrowserElement.addEventListener("load", function (e) {
     test1();
-  }, true);
-
+  }, { capture: true, once: true });
 }
 
 function test1() {
@@ -76,7 +73,7 @@ function test1() {
     moveMouseTo(80, 80, function () {
       ok(!expectMouseOver, "Should have got mouseover event");
 
-      // Move over the iframe, which has clickthrough="never".
+      // Move over the browser
       expectMouseOut = true;
       moveMouseTo(150, 150, function () {
         ok (!expectMouseOut, "Should have got mouseout event");
@@ -89,12 +86,12 @@ function test1() {
 }
 
 function test2() {
-  // Make the iframe cover the whole window.
-  gIFrame.style.margin = "0";
-  gIFrame.style.width = gIFrame.style.height = "200px";
+  // Make the browser cover the whole window.
+  gBrowserElement.style.margin = "0";
+  gBrowserElement.style.width = gBrowserElement.style.height = "200px";
 
-  // Add a box to the iframe at the left edge.
-  var doc = gIFrame.contentDocument;
+  // Add a box to the browser at the left edge.
+  var doc = gBrowserElement.contentDocument;
   var box = doc.createElement("div");
   box.setAttribute("id", "box");
   box.style.position = "absolute";
@@ -105,7 +102,7 @@ function test2() {
   box.style.backgroundColor = "green";
   doc.body.appendChild(box);
 
-  ok(!box.matches(":hover"), "Box shouldn't be hovered (since the mouse isn't over it and since it's in a non-clickthrough iframe in a background window)");
+  ok(!box.matches(":hover"), "Box shouldn't be hovered (since the mouse isn't over it and since it's in a non-clickthrough browser in a background window)");
 
   // A function to waitForFocus and then wait for synthetic mouse
   // events to happen.  Note that those happen off the refresh driver,
@@ -134,22 +131,22 @@ function test2() {
 
   // Move the mouse over the box.
   moveMouseTo(100, 150, function () {
-    ok(!box.matches(":hover"), "Box shouldn't be hovered (since it's in a non-clickthrough iframe in a background window)");
+    ok(!box.matches(":hover"), "Box shouldn't be hovered (since it's in a non-clickthrough browser in a background window)");
     // Activate the left window.
     changeFocusAndAwaitSyntheticMouse(function () {
-      ok(gIFrame.matches(":hover"), "iframe should be hovered");
+      ok(gBrowserElement.matches(":hover"), "browser should be hovered");
       ok(box.matches(":hover"), "Box should be hovered");
       // De-activate the window (by activating the right window).
       changeFocusAndAwaitSyntheticMouse(function () {
-        ok(!gIFrame.matches(":hover"), "iframe shouldn't be hovered");
+        ok(!gBrowserElement.matches(":hover"), "browser shouldn't be hovered");
         ok(!box.matches(":hover"), "Box shouldn't be hovered");
         // Re-activate it.
         changeFocusAndAwaitSyntheticMouse(function () {
-          ok(gIFrame.matches(":hover"), "iframe should be hovered");
+          ok(gBrowserElement.matches(":hover"), "browser should be hovered");
           ok(box.matches(":hover"), "Box should be hovered");
-          // Unhover box and iframe by moving the mouse outside the window.
+          // Unhover box and browser by moving the mouse outside the window.
           moveMouseTo(0, 150, function () {
-            ok(!gIFrame.matches(":hover"), "iframe shouldn't be hovered");
+            ok(!gBrowserElement.matches(":hover"), "browser shouldn't be hovered");
             ok(!box.matches(":hover"), "box shouldn't be hovered");
             finalize();
           });
