@@ -56,8 +56,6 @@
   background-color: rgb(0, 100, 0);
 }
 
-.textLayer ::-moz-selection { background: rgb(0,0,255); }
-
 .textLayer ::selection { background: rgb(0,0,255); }
 
 .textLayer .endOfContent {
@@ -366,11 +364,6 @@
   margin-right: auto;
 }
 
-.pdfPresentationMode:-moz-full-screen .pdfViewer .page {
-  margin-bottom: 100%;
-  border: 0;
-}
-
 .pdfPresentationMode:fullscreen .pdfViewer .page {
   margin-bottom: 100%;
   border: 0;
@@ -414,18 +407,6 @@ select {
   display: none !important;
 }
 
-#viewerContainer.pdfPresentationMode:-moz-full-screen {
-  top: 0px;
-  border-top: 2px solid transparent;
-  background-color: #000;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  cursor: none;
-  -moz-user-select: none;
-       user-select: none;
-}
-
 #viewerContainer.pdfPresentationMode:fullscreen {
   top: 0px;
   border-top: 2px solid transparent;
@@ -438,16 +419,8 @@ select {
        user-select: none;
 }
 
-.pdfPresentationMode:-moz-full-screen a:not(.internalLink) {
-  display: none;
-}
-
 .pdfPresentationMode:fullscreen a:not(.internalLink) {
   display: none;
-}
-
-.pdfPresentationMode:-moz-full-screen .textLayer > span {
-  cursor: none;
 }
 
 .pdfPresentationMode:fullscreen .textLayer > span {
@@ -1677,7 +1650,6 @@ html[dir='rtl'] .outlineItemToggler::before {
 /* TODO: file FF bug to support ::-moz-selection:window-inactive
    so we can override the opaque grey background when the window is inactive;
    see https://bugzilla.mozilla.org/show_bug.cgi?id=706209 */
-::-moz-selection { background: rgba(0,0,255,0.3); }
 ::selection { background: rgba(0,0,255,0.3); }
 
 #errorWrapper {
