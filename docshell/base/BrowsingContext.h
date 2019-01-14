@@ -140,6 +140,18 @@ class BrowsingContext : public nsWrapperCache,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  // This function would be called when its corresponding document is activated
+  // by user gesture, and we would set the flag in the top level browsing
+  // context.
+  void NotifyUserGestureActivation();
+
+  // This function would only be called in the top level browsing context. It
+  // would set the user gesture activation flag.
+  void SetUserGestureActivation();
+
+  // Return true if it corresponding document is activated by user gesture.
+  bool GetUserGestureActivation();
+
   // Return the window proxy object that corresponds to this browsing context.
   inline JSObject* GetWindowProxy() const { return mWindowProxy; }
   // Set the window proxy object that corresponds to this browsing context.
@@ -204,6 +216,8 @@ class BrowsingContext : public nsWrapperCache,
   // reach its browsing context anymore.
   void ClearWindowProxy() { mWindowProxy = nullptr; }
 
+  BrowsingContext* TopLevelBrowsingContext();
+
   // Type of BrowsingContent
   const Type mType;
 
@@ -222,6 +236,10 @@ class BrowsingContext : public nsWrapperCache,
   // objectMoved hook and clear it from its finalize hook.
   JS::Heap<JSObject*> mWindowProxy;
   bool mClosed;
+
+  // This flag is only valid in the top level browsing context, it indicates
+  // whether the corresponding document has been activated by user gesture.
+  bool mIsActivatedByUserGesture;
 };
 
 /**
