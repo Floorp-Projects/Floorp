@@ -13,6 +13,7 @@
 #endif
 
 #include "gc/GCInternals.h"
+#include "gc/GCLock.h"
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
 #include "gc/Zone.h"
