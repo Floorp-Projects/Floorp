@@ -246,19 +246,26 @@ class MozRadiogroup extends MozElements.BaseControl {
     event.initEvent("select", false, true);
     this.dispatchEvent(event);
 
-    if (!alreadySelected && focused) {
-      // Only report if actual change
-      var myEvent;
-      if (val) {
-        myEvent = document.createEvent("Events");
-        myEvent.initEvent("RadioStateChange", true, true);
-        val.dispatchEvent(myEvent);
-      }
+    if (focused) {
+      if (alreadySelected) {
+        // Notify accessibility that this item got focus.
+        event = document.createEvent("Events");
+        event.initEvent("DOMMenuItemActive", true, true);
+        val.dispatchEvent(event);
+      } else {
+        // Only report if actual change
+        if (val) {
+          // Accessibility will fire focus for this.
+          event = document.createEvent("Events");
+          event.initEvent("RadioStateChange", true, true);
+          val.dispatchEvent(event);
+        }
 
-      if (previousItem) {
-        myEvent = document.createEvent("Events");
-        myEvent.initEvent("RadioStateChange", true, true);
-        previousItem.dispatchEvent(myEvent);
+        if (previousItem) {
+          event = document.createEvent("Events");
+          event.initEvent("RadioStateChange", true, true);
+          previousItem.dispatchEvent(event);
+        }
       }
     }
 
@@ -275,7 +282,13 @@ class MozRadiogroup extends MozElements.BaseControl {
   }
 
   set focusedItem(val) {
-    if (val) val.setAttribute("focused", "true");
+    if (val) {
+      val.setAttribute("focused", "true");
+      // Notify accessibility that this item got focus.
+      let event = document.createEvent("Events");
+      event.initEvent("DOMMenuItemActive", true, true);
+      val.dispatchEvent(event);
+    }
 
     // unfocus all other group nodes
     var children = this._getRadioChildren();
@@ -375,7 +388,10 @@ class MozRadiogroup extends MozElements.BaseControl {
   }
 }
 
-MozXULElement.implementCustomInterface(MozRadiogroup, [Ci.nsIDOMXULSelectControlElement]);
+MozXULElement.implementCustomInterface(MozRadiogroup, [
+  Ci.nsIDOMXULSelectControlElement,
+  Ci.nsIDOMXULRadioGroupElement,
+]);
 
 customElements.define("radiogroup", MozRadiogroup);
 

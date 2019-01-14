@@ -18,6 +18,7 @@
 
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULMenuListElement.h"
+#include "nsIDOMXULRadioGroupElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIEditor.h"
 #include "nsIFrame.h"
@@ -305,6 +306,41 @@ bool XULRadioGroupAccessible::IsActiveWidget() const {
 }
 
 bool XULRadioGroupAccessible::AreItemsOperable() const { return true; }
+
+Accessible* XULRadioGroupAccessible::CurrentItem() const {
+  if (!mSelectControl) {
+    return nullptr;
+  }
+
+  RefPtr<Element> currentItemElm;
+  nsCOMPtr<nsIDOMXULRadioGroupElement> group =
+      mSelectControl->AsXULRadioGroup();
+  if (group) {
+    group->GetFocusedItem(getter_AddRefs(currentItemElm));
+  }
+
+  if (currentItemElm) {
+    DocAccessible* document = Document();
+    if (document) {
+      return document->GetAccessible(currentItemElm);
+    }
+  }
+
+  return nullptr;
+}
+
+void XULRadioGroupAccessible::SetCurrentItem(const Accessible* aItem) {
+  if (!mSelectControl) {
+    return;
+  }
+
+  nsCOMPtr<Element> itemElm = aItem->Elm();
+  nsCOMPtr<nsIDOMXULRadioGroupElement> group =
+      mSelectControl->AsXULRadioGroup();
+  if (group) {
+    group->SetFocusedItem(itemElm);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULStatusBarAccessible
