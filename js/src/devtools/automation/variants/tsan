@@ -5,8 +5,8 @@
     "compiler": "clang",
     "env": {
         "LLVM_SYMBOLIZER": "{TOOLTOOL_CHECKOUT}/clang/bin/llvm-symbolizer",
-        "JITTEST_EXTRA_ARGS": "--jitflags=tsan --ignore-timeouts={DIR}/cgc-jittest-timeouts.txt --unusable-error-status --exclude-from={DIR}/tsan-slow.txt",
-        "JSTESTS_EXTRA_ARGS": "--exclude-file={DIR}/cgc-jstests-slow.txt"
+        "JITTEST_EXTRA_ARGS": "--jitflags=tsan --ignore-timeouts={DIR}/cgc-jittest-timeouts.txt --unusable-error-status --exclude-from={DIR}/tsan-slow.txt -j2",
+        "JSTESTS_EXTRA_ARGS": "--exclude-file={DIR}/cgc-jstests-slow.txt -j2"
     },
     "use_minidump": false
 }
