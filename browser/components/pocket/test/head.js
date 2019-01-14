@@ -43,9 +43,9 @@ function promisePocketReset() {
   return promisePocketDisabled();
 }
 
-function checkElements(expectPresent, l) {
+function checkElements(expectPresent, l, win = window) {
   for (let id of l) {
-    let el = document.getElementById(id) || gNavToolbox.palette.querySelector("#" + id);
+    let el = win.document.getElementById(id) || win.gNavToolbox.palette.querySelector("#" + id);
     is(!!el && !el.hidden, expectPresent, "element " + id + (expectPresent ? " is" : " is not") + " present");
   }
 }
