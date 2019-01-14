@@ -8543,8 +8543,6 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     if (!script) {
       return false;
     }
-
-    script->setActiveEval();
   } else {
     // Do not consider executeInGlobal{WithBindings} as an eval, but instead
     // as executing a series of statements at the global level. This is to

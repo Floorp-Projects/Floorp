@@ -1691,6 +1691,9 @@ class JSScript : public js::gc::TenuredCell {
 
     // See comments below.
     ArgsHasVarBinding = 1 << 21,
+
+    // Script came from eval().
+    IsForEval = 1 << 22,
   };
   // Note: don't make this a bitfield! It makes it hard to read these flags
   // from JIT code.
@@ -1709,11 +1712,7 @@ class JSScript : public js::gc::TenuredCell {
     // Script has been reused for a clone.
     HasBeenCloned = 1 << 2,
 
-    // Script came from eval(), and is still active.
-    IsActiveEval = 1 << 3,
-
-    // Script came from eval(), and is in eval cache.
-    IsCachedEval = 1 << 4,
+    // (1 << 3) and (1 << 4) are unused.
 
     // Script has an entry in Realm::scriptCountsMap.
     HasScriptCounts = 1 << 5,
@@ -2038,28 +2037,13 @@ class JSScript : public js::gc::TenuredCell {
   void setHasRunOnce() { setFlag(MutableFlags::HasRunOnce); }
   void setHasBeenCloned() { setFlag(MutableFlags::HasBeenCloned); }
 
-  bool isActiveEval() const { return hasFlag(MutableFlags::IsActiveEval); }
-  bool isCachedEval() const { return hasFlag(MutableFlags::IsCachedEval); }
-
   void cacheForEval() {
-    MOZ_ASSERT(isActiveEval());
-    MOZ_ASSERT(!isCachedEval());
-    clearFlag(MutableFlags::IsActiveEval);
-    setFlag(MutableFlags::IsCachedEval);
+    MOZ_ASSERT(isForEval());
     // IsEvalCacheCandidate will make sure that there's nothing in this
     // script that would prevent reexecution even if isRunOnce is
     // true.  So just pretend like we never ran this script.
     clearFlag(MutableFlags::HasRunOnce);
   }
-
-  void uncacheForEval() {
-    MOZ_ASSERT(isCachedEval());
-    MOZ_ASSERT(!isActiveEval());
-    clearFlag(MutableFlags::IsCachedEval);
-    setFlag(MutableFlags::IsActiveEval);
-  }
-
-  void setActiveEval() { setFlag(MutableFlags::IsActiveEval); }
 
   bool isLikelyConstructorWrapper() const {
     return hasFlag(ImmutableFlags::IsLikelyConstructorWrapper);
@@ -2368,9 +2352,9 @@ class JSScript : public js::gc::TenuredCell {
  public:
   /* Return whether this script was compiled for 'eval' */
   bool isForEval() const {
-    MOZ_ASSERT_IF(isCachedEval() || isActiveEval(),
-                  bodyScope()->is<js::EvalScope>());
-    return isCachedEval() || isActiveEval();
+    bool forEval = hasFlag(ImmutableFlags::IsForEval);
+    MOZ_ASSERT_IF(forEval, bodyScope()->is<js::EvalScope>());
+    return forEval;
   }
 
   /* Return whether this is a 'direct eval' script in a function scope. */
