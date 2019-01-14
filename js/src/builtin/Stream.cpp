@@ -1192,7 +1192,7 @@ static MOZ_MUST_USE bool ReadableStreamControllerError(
  * Streams spec, 3.3.9. step 18:
  * Upon rejection of reader.[[closedPromise]] with reason r,
  */
-static bool TeeReaderClosedHandler(JSContext* cx, unsigned argc, Value* vp) {
+static bool TeeReaderErroredHandler(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   Rooted<TeeState*> teeState(cx, TargetFromHandler<TeeState>(args));
   HandleValue reason = args.get(0);
@@ -1303,7 +1303,8 @@ static MOZ_MUST_USE bool ReadableStreamTee(
   // Step 18: Upon rejection of reader.[[closedPromise]] with reason r, [...]
   RootedObject closedPromise(cx, reader->closedPromise());
 
-  RootedObject onRejected(cx, NewHandler(cx, TeeReaderClosedHandler, teeState));
+  RootedObject onRejected(cx,
+                          NewHandler(cx, TeeReaderErroredHandler, teeState));
   if (!onRejected) {
     return false;
   }
