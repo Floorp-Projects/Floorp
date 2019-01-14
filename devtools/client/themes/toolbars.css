@@ -10,18 +10,10 @@
 }
 
 .theme-light {
-  --searchbox-background-color: var(--theme-highlight-yellow);
-  --searchbox-border-color: #ffbf00;
-  --searcbox-no-match-background-color: #ffe5e5;
-  --searcbox-no-match-border-color: #e52e2e;
   --separator-border-color: rgba(0,0,0,.1);
 }
 
 .theme-dark {
-  --searchbox-background-color: #4d4222;
-  --searchbox-border-color: #d99f2b;
-  --searcbox-no-match-background-color: #402325;
-  --searcbox-no-match-border-color: #cc3d3d;
   --separator-border-color: rgba(100%,100%,100%,.2);
 }
 
