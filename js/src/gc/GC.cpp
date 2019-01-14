@@ -216,6 +216,7 @@
 #include "gc/FindSCCs.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
+#include "gc/GCLock.h"
 #include "gc/GCTrace.h"
 #include "gc/Memory.h"
 #include "gc/Policy.h"
