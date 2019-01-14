@@ -1,16 +1,21 @@
-.discovery-stream.layout {
+.discovery-stream.ds-layout {
   $columns: 12;
   display: grid;
   grid-template-columns: repeat($columns, 1fr);
-  grid-column-gap: 10px;
+  grid-column-gap: 48px;
   grid-row-gap: 10px;
 
   @while $columns > 0 {
-    .column-#{$columns} {
+    .ds-column-#{$columns} {
       grid-column-start: auto;
       grid-column-end: span $columns;
     }
 
     $columns: $columns - 1;
+  }
+
+  .ds-column {
+    display: grid;
+    grid-row-gap: 10px;
   }
 }

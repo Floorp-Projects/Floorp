@@ -107,6 +107,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "プライバシーに関する通知",
   "firstrun_continue_to_login": "続ける",
   "firstrun_skip_login": "この手順をスキップ",
-  "context_menu_title": "メニューを開きます",
-  "pocket_learn_more": "詳細"
+  "context_menu_title": "メニューを開きます"
 };

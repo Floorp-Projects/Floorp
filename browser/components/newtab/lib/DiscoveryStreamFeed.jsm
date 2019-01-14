@@ -12,6 +12,7 @@ const {PersistentCache} = ChromeUtils.import("resource://activity-stream/lib/Per
 
 const CACHE_KEY = "discovery_stream";
 const LAYOUT_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
+const COMPONENT_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const CONFIG_PREF_NAME = "browser.newtabpage.activity-stream.discoverystream.config";
 
 this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
@@ -69,7 +70,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       const response = await fetch(endpoint, {credentials: "omit"});
       if (!response.ok) {
         // istanbul ignore next
-        throw new Error(`Stories endpoint returned unexpected status: ${response.status}`);
+        throw new Error(`Layout endpoint returned unexpected status: ${response.status}`);
       }
       return response.json();
     } catch (error) {
@@ -80,7 +81,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return null;
   }
 
-  async loadCachedData() {
+  async loadLayout() {
     const cachedData = await this.cache.get() || {};
     let {layout: layoutResponse} = cachedData;
     if (!layoutResponse || !(Date.now() - layoutResponse._timestamp < LAYOUT_UPDATE_TIME)) {
@@ -104,8 +105,65 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
+  async loadComponentFeeds() {
+    const {DiscoveryStream} = this.store.getState();
+    const newFeeds = {};
+    if (DiscoveryStream && DiscoveryStream.layout) {
+      for (let row of DiscoveryStream.layout) {
+        if (!row || !row.components) {
+          continue;
+        }
+        for (let component of row.components) {
+          if (component && component.feed) {
+            const {url} = component.feed;
+            newFeeds[url] = await this.getComponentFeed(url);
+          }
+        }
+      }
+
+      await this.cache.set("feeds", newFeeds);
+      this.store.dispatch(ac.BroadcastToContent({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: newFeeds}));
+    }
+  }
+
+  async getComponentFeed(feedUrl) {
+    const cachedData = await this.cache.get() || {};
+    const {feeds} = cachedData;
+    let feed = feeds && feeds[feedUrl];
+    if (!feed || !(Date.now() - feed.lastUpdated < COMPONENT_FEEDS_UPDATE_TIME)) {
+      const feedResponse = await this.fetchComponentFeed(feedUrl);
+      if (feedResponse) {
+        feed = {
+          lastUpdated: Date.now(),
+          data: feedResponse,
+        };
+      } else {
+        Cu.reportError("No response for feed");
+      }
+    }
+
+    return feed;
+  }
+
+  async fetchComponentFeed(feedUrl) {
+    try {
+      const response = await fetch(feedUrl, {credentials: "omit"});
+      if (!response.ok) {
+        // istanbul ignore next
+        throw new Error(`Component feed endpoint returned unexpected status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      // istanbul ignore next
+      Cu.reportError(`Failed to fetch Component feed: ${error.message}`);
+    }
+    // istanbul ignore next
+    return null;
+  }
+
   async enable() {
-    await this.loadCachedData();
+    await this.loadLayout();
+    await this.loadComponentFeeds();
     this.loaded = true;
   }
 
@@ -118,6 +176,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
   async clearCache() {
     await this.cache.set("layout", {});
+    await this.cache.set("feeds", {});
   }
 
   async onPrefChange() {
