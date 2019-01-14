@@ -16,42 +16,6 @@ import pickle
 import mozpack.path as mozpath
 
 
-class File(object):
-    def __init__(self, path):
-        self._path = path
-        self._content = open(path, 'rb').read()
-        stat = os.stat(path)
-        self._times = (stat.st_atime, stat.st_mtime)
-
-    @property
-    def path(self):
-        return self._path
-
-    @property
-    def mtime(self):
-        return self._times[1]
-
-    @property
-    def modified(self):
-        '''Returns whether the file was modified since the instance was
-        created. Result is memoized.'''
-        if hasattr(self, '_modified'):
-            return self._modified
-
-        modified = True
-        if os.path.exists(self._path):
-            if open(self._path, 'rb').read() == self._content:
-                modified = False
-        self._modified = modified
-        return modified
-
-    def update_time(self):
-        '''If the file hasn't changed since the instance was created,
-           restore its old modification time.'''
-        if not self.modified:
-            os.utime(self._path, self._times)
-
-
 # As defined in the various sub-configures in the tree
 PRECIOUS_VARS = set([
     'build_alias',
@@ -229,16 +193,15 @@ def run(data):
     skip_configure = True
     if not os.path.exists(config_status_path):
         skip_configure = False
-        config_status = None
     else:
-        config_status = File(config_status_path)
         config_status_deps = mozpath.join(objdir, 'config_status_deps.in')
         if not os.path.exists(config_status_deps):
             skip_configure = False
         else:
             with open(config_status_deps, 'r') as fh:
                 dep_files = fh.read().splitlines() + [configure]
-            if (any(not os.path.exists(f) or (config_status.mtime < os.path.getmtime(f))
+            if (any(not os.path.exists(f) or
+                    (os.path.getmtime(config_status_path) < os.path.getmtime(f))
                     for f in dep_files) or
                 data.get('previous-args', data['args']) != data['args'] or
                 cleared_cache):
