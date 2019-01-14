@@ -950,16 +950,15 @@ static bool TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp) {
   RootedObject result(cx, &resultVal.toObject());
 
   // Step ii: Let value be ? Get(result, "value").
+  // (This can fail only if `result` was nuked.)
   RootedValue value(cx);
-  if (!GetPropertyPure(cx, result, NameToId(cx->names().value),
-                       value.address())) {
+  if (!GetProperty(cx, result, result, cx->names().value, &value)) {
     return false;
   }
 
   // Step iii: Let done be ? Get(result, "done").
   RootedValue doneVal(cx);
-  if (!GetPropertyPure(cx, result, NameToId(cx->names().done),
-                       doneVal.address())) {
+  if (!GetProperty(cx, result, result, cx->names().done, &doneVal)) {
     return false;
   }
 
