@@ -411,6 +411,8 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvScrollingEvent(
 #if defined(ANDROID)
   ProxyScrollingEvent(target, aType, aScrollX, aScrollY, aMaxScrollX,
                       aMaxScrollY);
+#else
+  ProxyEvent(target, aType);
 #endif
 
   if (!nsCoreUtils::AccEventObserversExist()) {
