@@ -7249,9 +7249,12 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
   if (mallocCounter.shouldTriggerGC(tunables) == NonIncrementalTrigger) {
     budget.makeUnlimited();
     stats().nonincremental(AbortReason::MallocBytesTrigger);
+    if (isIncrementalGCInProgress() && state() > State::Sweep) {
+      return resetIncrementalGC(AbortReason::MallocBytesTrigger);
+    }
   }
 
-  bool reset = false;
+  AbortReason resetReason = AbortReason::None;
   for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
     if (!zone->canCollect()) {
       continue;
@@ -7261,23 +7264,29 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
       CheckZoneIsScheduled(zone, reason, "GC bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::GCBytesTrigger);
+      if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
+        resetReason = AbortReason::GCBytesTrigger;
+      }
     }
 
     if (zone->shouldTriggerGCForTooMuchMalloc() == NonIncrementalTrigger) {
       CheckZoneIsScheduled(zone, reason, "malloc bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::MallocBytesTrigger);
+      if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
+        resetReason = AbortReason::MallocBytesTrigger;
+      }
     }
 
     if (isIncrementalGCInProgress() &&
         zone->isGCScheduled() != zone->wasGCStarted()) {
-      reset = true;
+      budget.makeUnlimited();
+      resetReason = AbortReason::ZoneChange;
     }
   }
 
-  if (reset) {
-    budget.makeUnlimited();
-    return resetIncrementalGC(AbortReason::ZoneChange);
+  if (resetReason != AbortReason::None) {
+    return resetIncrementalGC(resetReason);
   }
 
   return IncrementalResult::Ok;
@@ -7630,6 +7639,15 @@ void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
       }
     }
   } while (repeat);
+
+#ifdef DEBUG
+  if (!isIncrementalGCInProgress()) {
+    for (ZonesIter zone(rt, WithAtoms); zone.done(); zone.next()) {
+      MOZ_ASSERT(!zone->gcMallocCounter.triggered());
+      MOZ_ASSERT(!zone->jitCodeCounter.triggered());
+    }
+  }
+#endif
 
   if (reason == JS::gcreason::COMPARTMENT_REVIVED) {
     maybeDoCycleCollection();
