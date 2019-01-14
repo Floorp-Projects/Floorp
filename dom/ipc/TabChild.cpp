@@ -2974,7 +2974,7 @@ void TabChild::ReinitRenderingForDeviceReset() {
 
 NS_IMETHODIMP
 TabChild::OnShowTooltip(int32_t aXCoords, int32_t aYCoords,
-                        const char16_t* aTipText, const char16_t* aTipDir) {
+                        const nsAString& aTipText, const nsAString& aTipDir) {
   nsString str(aTipText);
   nsString dir(aTipDir);
   SendShowTooltip(aXCoords, aYCoords, str, dir);
