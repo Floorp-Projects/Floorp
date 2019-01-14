@@ -3,7 +3,7 @@
     "description": "Fake CDM Plugin",
     "version": "1",
     "x-cdm-module-versions": "4",
-    "x-cdm-interface-versions": "9",
-    "x-cdm-host-versions": "9",
+    "x-cdm-interface-versions": "10",
+    "x-cdm-host-versions": "10",
     "x-cdm-codecs": ""
 }

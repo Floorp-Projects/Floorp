@@ -47,11 +47,11 @@ CDM_API
 void* CreateCdmInstance(int cdm_interface_version, const char* key_system,
                         uint32_t key_system_size,
                         GetCdmHostFunc get_cdm_host_func, void* user_data) {
-  if (cdm_interface_version != cdm::ContentDecryptionModule_9::kVersion) {
-    // Only support CDM version 9 currently.
+  if (cdm_interface_version != cdm::ContentDecryptionModule_10::kVersion) {
+    // Only support CDM version 10 currently.
     return nullptr;
   }
-  cdm::Host_9* host = static_cast<cdm::Host_9*>(
+  cdm::Host_10* host = static_cast<cdm::Host_10*>(
       get_cdm_host_func(cdm_interface_version, user_data));
   return new FakeDecryptor(host);
 }
