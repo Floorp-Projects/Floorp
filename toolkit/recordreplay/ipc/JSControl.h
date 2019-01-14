@@ -13,9 +13,14 @@
 #include "ProcessRewind.h"
 
 #include "mozilla/DefineEnum.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace recordreplay {
+
+struct Message;
+struct HitExecutionPointMessage;
+
 namespace js {
 
 // This file manages interactions between the record/replay infrastructure and
@@ -135,6 +140,7 @@ struct BreakpointPosition {
 
   JSObject* Encode(JSContext* aCx) const;
   bool Decode(JSContext* aCx, JS::HandleObject aObject);
+  void ToString(nsCString& aStr) const;
 };
 
 // Identification for a point in the execution of a child process where it may
@@ -182,22 +188,29 @@ struct ExecutionPoint {
 
   JSObject* Encode(JSContext* aCx) const;
   bool Decode(JSContext* aCx, JS::HandleObject aObject);
+  void ToString(nsCString& aStr) const;
 };
 
 // Buffer type used for encoding object data.
 typedef InfallibleVector<char16_t> CharBuffer;
 
-// Called in the middleman when the child has hit a checkpoint or breakpoint.
-// The return value is whether there is a ReplayDebugger available which the
-// notification was sent to.
-bool DebuggerOnPause();
-
-// Called in the middleman when the child has changed.
-void DebuggerOnSwitchChild();
-
 // Set up the JS sandbox in the current recording/replaying process and load
 // its target script.
 void SetupDevtoolsSandbox();
+
+// The following hooks are used in the middleman process to call methods defined
+// by the middleman control logic.
+
+// Setup the middleman control state.
+void SetupMiddlemanControl(const Maybe<size_t>& aRecordingChildId);
+
+// Handle an incoming message from a child process.
+void ForwardHitExecutionPointMessage(size_t aId,
+                                     const HitExecutionPointMessage& aMsg);
+
+// Prepare the child processes so that the recording file can be safely copied.
+void BeforeSaveRecording();
+void AfterSaveRecording();
 
 // The following hooks are used in the recording/replaying process to
 // call methods defined by the JS sandbox.
@@ -220,6 +233,9 @@ void ClearPausedState();
 // Given an execution position inside a script, get an execution position for
 // the entry point of that script, otherwise return nothing.
 Maybe<BreakpointPosition> GetEntryPosition(const BreakpointPosition& aPosition);
+
+// Called after receiving a DebuggerResponse from a child.
+void OnDebuggerResponse(const Message& aMsg);
 
 }  // namespace js
 }  // namespace recordreplay
