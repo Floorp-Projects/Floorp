@@ -152,7 +152,7 @@ class AuthenticationDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onConfirmAuthentication("sessionId", "username", "password")
+        verify(mockFeature).onConfirm("sessionId", "username" to "password")
     }
 
     @Test

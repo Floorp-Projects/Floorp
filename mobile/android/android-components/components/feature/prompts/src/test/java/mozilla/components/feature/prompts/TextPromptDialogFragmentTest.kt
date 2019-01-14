@@ -108,7 +108,7 @@ class TextPromptDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onConfirmTextPrompt("sessionId", false, "defaultValue")
+        verify(mockFeature).onConfirm("sessionId", false to "defaultValue")
     }
 
     @Test
@@ -134,7 +134,7 @@ class TextPromptDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onConfirmTextPrompt("sessionId", true, "defaultValue")
+        verify(mockFeature).onConfirm("sessionId", true to "defaultValue")
     }
 
     @Test

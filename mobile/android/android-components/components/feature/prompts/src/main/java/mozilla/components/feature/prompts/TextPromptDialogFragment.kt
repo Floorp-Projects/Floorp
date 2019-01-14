@@ -74,12 +74,11 @@ internal class TextPromptDialogFragment : PromptDialogFragment(), TextWatcher {
     }
 
     override fun onCancel(dialog: DialogInterface?) {
-        super.onCancel(dialog)
         feature?.onCancel(sessionId)
     }
 
     private fun onPositiveClickAction() {
-        feature?.onConfirmTextPrompt(sessionId, userSelectionNoMoreDialogs, userSelectionEditText)
+        feature?.onConfirm(sessionId, userSelectionNoMoreDialogs to userSelectionEditText)
     }
 
     @SuppressLint("InflateParams")

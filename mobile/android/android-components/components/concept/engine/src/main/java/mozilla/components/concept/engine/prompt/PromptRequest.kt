@@ -15,23 +15,23 @@ sealed class PromptRequest {
     /**
      * Value type that represents a request for a single choice prompt.
      * @property choices All the possible options.
-     * @property onSelect A callback indicating which option was selected.
+     * @property onConfirm A callback indicating which option was selected.
      */
-    data class SingleChoice(val choices: Array<Choice>, val onSelect: (Choice) -> Unit) : PromptRequest()
+    data class SingleChoice(val choices: Array<Choice>, val onConfirm: (Choice) -> Unit) : PromptRequest()
 
     /**
      * Value type that represents a request for a multiple choice prompt.
      * @property choices All the possible options.
-     * @property onSelect A callback indicating witch options has been selected.
+     * @property onConfirm A callback indicating witch options has been selected.
      */
-    data class MultipleChoice(val choices: Array<Choice>, val onSelect: (Array<Choice>) -> Unit) : PromptRequest()
+    data class MultipleChoice(val choices: Array<Choice>, val onConfirm: (Array<Choice>) -> Unit) : PromptRequest()
 
     /**
      * Value type that represents a request for a menu choice prompt.
      * @property choices All the possible options.
-     * @property onSelect A callback indicating which option was selected.
+     * @property onConfirm A callback indicating which option was selected.
      */
-    data class MenuChoice(val choices: Array<Choice>, val onSelect: (Choice) -> Unit) : PromptRequest()
+    data class MenuChoice(val choices: Array<Choice>, val onConfirm: (Choice) -> Unit) : PromptRequest()
 
     /**
      * Value type that represents a request for an alert prompt.
@@ -39,19 +39,19 @@ sealed class PromptRequest {
      * @property message the body of the dialog.
      * @property hasShownManyDialogs tells if this page has shown multiple prompts within a short period of time.
      * @property onDismiss callback to let the page know the user dismissed the dialog.
-     * @property onShouldShowNoMoreDialogs tells the web page if it should continue showing alerts or not.
+     * @property onConfirm tells the web page if it should continue showing alerts or not.
      */
     data class Alert(
         val title: String,
         val message: String,
         val hasShownManyDialogs: Boolean = false,
         val onDismiss: () -> Unit,
-        val onShouldShowNoMoreDialogs: (Boolean) -> Unit
+        val onConfirm: (Boolean) -> Unit
     ) : PromptRequest()
 
     /**
      * Value type that represents a request for an alert prompt to enter a message.
-     * @property title of the dialog.
+     * @property title title of the dialog.
      * @property inputLabel the label of the field the user should fill.
      * @property inputValue the default value of the field.
      * @property hasShownManyDialogs tells if this page has shown multiple prompts within a short period of time.
@@ -74,7 +74,7 @@ sealed class PromptRequest {
      * @property minimumDate date allow to be selected.
      * @property maximumDate date allow to be selected.
      * @property type indicate which [Type] of selection de user wants.
-     * @property onSelect callback that is called when the date is selected.
+     * @property onConfirm callback that is called when the date is selected.
      * @property onClear callback that is called when the user requests the picker to be clear up.
      */
     class TimeSelection(
@@ -83,7 +83,7 @@ sealed class PromptRequest {
         val minimumDate: java.util.Date?,
         val maximumDate: java.util.Date?,
         val type: Type = Type.DATE,
-        val onSelect: (java.util.Date) -> Unit,
+        val onConfirm: (java.util.Date) -> Unit,
         val onClear: () -> Unit
     ) : PromptRequest() {
         enum class Type {

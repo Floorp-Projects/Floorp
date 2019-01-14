@@ -263,7 +263,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
     }
 
-
     override fun onTextPrompt(
         session: GeckoSession,
         title: String?,

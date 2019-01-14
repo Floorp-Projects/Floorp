@@ -95,7 +95,7 @@ class GeckoPromptDelegateTest {
         assertTrue(promptRequestSingleChoice is SingleChoice)
         val request = promptRequestSingleChoice as SingleChoice
 
-        request.onSelect(request.choices.first())
+        request.onConfirm(request.choices.first())
         assertTrue(confirmWasCalled)
     }
 
@@ -141,7 +141,7 @@ class GeckoPromptDelegateTest {
 
         assertTrue(promptRequestSingleChoice is MultipleChoice)
 
-        (promptRequestSingleChoice as MultipleChoice).onSelect(arrayOf())
+        (promptRequestSingleChoice as MultipleChoice).onConfirm(arrayOf())
         assertTrue(confirmWasCalled)
     }
 
@@ -185,7 +185,7 @@ class GeckoPromptDelegateTest {
         assertTrue(promptRequestSingleChoice is PromptRequest.MenuChoice)
         val request = promptRequestSingleChoice as PromptRequest.MenuChoice
 
-        request.onSelect(request.choices.first())
+        request.onConfirm(request.choices.first())
         assertTrue(confirmWasCalled)
     }
 
@@ -226,7 +226,7 @@ class GeckoPromptDelegateTest {
         (alertRequest as PromptRequest.Alert).onDismiss()
         assertTrue(dismissWasCalled)
 
-        (alertRequest as PromptRequest.Alert).onShouldShowNoMoreDialogs(true)
+        (alertRequest as PromptRequest.Alert).onConfirm(true)
         assertTrue(setCheckboxValueWasCalled)
 
         assertEquals((alertRequest as PromptRequest.Alert).title, "title")
@@ -288,7 +288,7 @@ class GeckoPromptDelegateTest {
         })
         promptDelegate.onDateTimePrompt(mock(), "title", DATETIME_TYPE_DATE, "", "", "", callback)
         assertTrue(dateRequest is PromptRequest.TimeSelection)
-        (dateRequest as PromptRequest.TimeSelection).onSelect(Date())
+        (dateRequest as PromptRequest.TimeSelection).onConfirm(Date())
         assertTrue(confirmCalled)
         assertEquals((dateRequest as PromptRequest.TimeSelection).title, "title")
 
@@ -333,7 +333,7 @@ class GeckoPromptDelegateTest {
             assertEquals(maximumDate, "2019-11-30".toDate("yyyy-MM-dd"))
         }
         val selectedDate = "2019-11-28".toDate("yyyy-MM-dd")
-        (timeSelectionRequest as PromptRequest.TimeSelection).onSelect(selectedDate)
+        (timeSelectionRequest as PromptRequest.TimeSelection).onConfirm(selectedDate)
         assertNotNull(geckoDate?.toDate("yyyy-MM-dd")?.equals(selectedDate))
         assertEquals((timeSelectionRequest as PromptRequest.TimeSelection).title, "title")
     }
@@ -361,7 +361,7 @@ class GeckoPromptDelegateTest {
         })
         promptDelegate.onDateTimePrompt(mock(), "title", DATETIME_TYPE_MONTH, "", "", "", callback)
         assertTrue(dateRequest is PromptRequest.TimeSelection)
-        (dateRequest as PromptRequest.TimeSelection).onSelect(Date())
+        (dateRequest as PromptRequest.TimeSelection).onConfirm(Date())
         assertTrue(confirmCalled)
         assertEquals((dateRequest as PromptRequest.TimeSelection).title, "title")
     }
@@ -403,7 +403,7 @@ class GeckoPromptDelegateTest {
             assertEquals(maximumDate, "2019-11".toDate("yyyy-MM"))
         }
         val selectedDate = "2019-11".toDate("yyyy-MM")
-        (timeSelectionRequest as PromptRequest.TimeSelection).onSelect(selectedDate)
+        (timeSelectionRequest as PromptRequest.TimeSelection).onConfirm(selectedDate)
         assertNotNull(geckoDate?.toDate("yyyy-MM")?.equals(selectedDate))
         assertEquals((timeSelectionRequest as PromptRequest.TimeSelection).title, "title")
     }
@@ -431,7 +431,7 @@ class GeckoPromptDelegateTest {
         })
         promptDelegate.onDateTimePrompt(mock(), "title", DATETIME_TYPE_WEEK, "", "", "", callback)
         assertTrue(dateRequest is PromptRequest.TimeSelection)
-        (dateRequest as PromptRequest.TimeSelection).onSelect(Date())
+        (dateRequest as PromptRequest.TimeSelection).onConfirm(Date())
         assertTrue(confirmCalled)
         assertEquals((dateRequest as PromptRequest.TimeSelection).title, "title")
     }
@@ -473,7 +473,7 @@ class GeckoPromptDelegateTest {
             assertEquals(maximumDate, "2018-W26".toDate("yyyy-'W'ww"))
         }
         val selectedDate = "2018-W26".toDate("yyyy-'W'ww")
-        (timeSelectionRequest as PromptRequest.TimeSelection).onSelect(selectedDate)
+        (timeSelectionRequest as PromptRequest.TimeSelection).onConfirm(selectedDate)
         assertNotNull(geckoDate?.toDate("yyyy-'W'ww")?.equals(selectedDate))
         assertEquals((timeSelectionRequest as PromptRequest.TimeSelection).title, "title")
     }
@@ -502,7 +502,7 @@ class GeckoPromptDelegateTest {
         })
         promptDelegate.onDateTimePrompt(mock(), "title", DATETIME_TYPE_TIME, "", "", "", callback)
         assertTrue(dateRequest is PromptRequest.TimeSelection)
-        (dateRequest as PromptRequest.TimeSelection).onSelect(Date())
+        (dateRequest as PromptRequest.TimeSelection).onConfirm(Date())
         assertTrue(confirmCalled)
         assertEquals((dateRequest as PromptRequest.TimeSelection).title, "title")
     }
@@ -544,7 +544,7 @@ class GeckoPromptDelegateTest {
             assertEquals(maximumDate, "18:00".toDate("HH:mm"))
         }
         val selectedDate = "17:00".toDate("HH:mm")
-        (timeSelectionRequest as PromptRequest.TimeSelection).onSelect(selectedDate)
+        (timeSelectionRequest as PromptRequest.TimeSelection).onConfirm(selectedDate)
         assertNotNull(geckoDate?.toDate("HH:mm")?.equals(selectedDate))
         assertEquals((timeSelectionRequest as PromptRequest.TimeSelection).title, "title")
     }
@@ -576,7 +576,7 @@ class GeckoPromptDelegateTest {
             GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL, "", "", "", callback
         )
         assertTrue(dateRequest is PromptRequest.TimeSelection)
-        (dateRequest as PromptRequest.TimeSelection).onSelect(Date())
+        (dateRequest as PromptRequest.TimeSelection).onConfirm(Date())
         assertTrue(confirmCalled)
         assertEquals((dateRequest as PromptRequest.TimeSelection).title, "title")
     }
@@ -618,7 +618,7 @@ class GeckoPromptDelegateTest {
             assertEquals(maximumDate, "2018-06-14T00:00".toDate("yyyy-MM-dd'T'HH:mm"))
         }
         val selectedDate = "2018-06-12T19:30".toDate("yyyy-MM-dd'T'HH:mm")
-        (timeSelectionRequest as PromptRequest.TimeSelection).onSelect(selectedDate)
+        (timeSelectionRequest as PromptRequest.TimeSelection).onConfirm(selectedDate)
         assertNotNull(geckoDate?.toDate("yyyy-MM-dd'T'HH:mm")?.equals(selectedDate))
         assertEquals((timeSelectionRequest as PromptRequest.TimeSelection).title, "title")
     }

@@ -80,7 +80,7 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
     }
 
     fun onSelect(selectedChoice: Choice) {
-        feature?.onSingleChoiceSelect(sessionId, selectedChoice)
+        feature?.onConfirm(sessionId, selectedChoice)
         dismiss()
     }
 
@@ -106,7 +106,7 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
                 feature?.onCancel(sessionId)
             }
             .setPositiveButton(R.string.mozac_feature_prompts_ok) { _, _ ->
-                feature?.onMultipleChoiceSelect(sessionId, mapSelectChoice.keys.toTypedArray())
+                feature?.onConfirm(sessionId, mapSelectChoice.keys.toTypedArray())
             }.setOnDismissListener {
                 feature?.onCancel(sessionId)
             }.create()

@@ -20,6 +20,9 @@ permalink: /changelog/
 * **feature-awesomebar**
   * Added `ClipboardSuggestionProvider` - An `AwesomeBar.SuggestionProvider` implementation that returns a suggestions for an URL in the clipboard (if there's any).
 
+* **feature-prompts**, **browser-engine-gecko***
+  * Added support for [Window.prompt](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt).
+
 # 0.38.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.37.0...v0.38.0),
@@ -50,8 +53,8 @@ permalink: /changelog/
 
 * **feature-prompts**, **browser-engine-gecko***
   * Added support for Authentication dialogs.
-  * Added support for [input type color fields](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/color).
   * Added support for [datetime-local](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local) and [time](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/time) pickers.
+  * Added support for [input type color fields](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/color).
 
 * **browser-menu**
   * `BrowserMenuItemToolbar` now allows overriding the `visible` lambda.
@@ -486,7 +489,7 @@ permalink: /changelog/
 * **ui-autocomplete**
   * Fixed problem handling backspaces as described in [Issue 1489](https://github.com/mozilla-mobile/android-components/issues/1489)
 
-* **browser-search**  
+* **browser-search**
   * Updated search codes (see [Issue 1563](https://github.com/mozilla-mobile/android-components/issues/1563) for details)
 
 # 0.32.1

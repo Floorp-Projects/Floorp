@@ -23,15 +23,15 @@ class PromptRequestTest {
     fun `Create prompt requests`() {
 
         val single = SingleChoice(emptyArray()) {}
-        single.onSelect(Choice(id = "", label = ""))
+        single.onConfirm(Choice(id = "", label = ""))
         assertNotNull(single.choices)
 
         val multiple = MultipleChoice(emptyArray()) {}
-        multiple.onSelect(arrayOf(Choice(id = "", label = "")))
+        multiple.onConfirm(arrayOf(Choice(id = "", label = "")))
         assertNotNull(multiple.choices)
 
         val menu = MenuChoice(emptyArray()) {}
-        menu.onSelect(Choice(id = "", label = ""))
+        menu.onConfirm(Choice(id = "", label = ""))
         assertNotNull(menu.choices)
 
         val alert = Alert("title", "message", true, {}) {}
@@ -39,13 +39,13 @@ class PromptRequestTest {
         assertEquals(alert.message, "message")
         assertEquals(alert.hasShownManyDialogs, true)
         alert.onDismiss()
-        alert.onShouldShowNoMoreDialogs(true)
+        alert.onConfirm(true)
 
         assertEquals(alert.title, "title")
         assertEquals(alert.message, "message")
         assertEquals(alert.hasShownManyDialogs, true)
         alert.onDismiss()
-        alert.onShouldShowNoMoreDialogs(true)
+        alert.onConfirm(true)
 
         val textPrompt = PromptRequest.TextPrompt(
             "title",
@@ -73,7 +73,7 @@ class PromptRequestTest {
         assertNotNull(dateRequest.initialDate)
         assertNotNull(dateRequest.minimumDate)
         assertNotNull(dateRequest.maximumDate)
-        dateRequest.onSelect(Date())
+        dateRequest.onConfirm(Date())
         dateRequest.onClear()
 
         val filePickerRequest = PromptRequest.File(emptyArray(), true, { _, _ -> }, { _, _ -> }) {}

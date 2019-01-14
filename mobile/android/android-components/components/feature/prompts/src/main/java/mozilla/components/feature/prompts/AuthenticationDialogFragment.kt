@@ -64,7 +64,7 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
     }
 
     private fun onPositiveClickAction() {
-        feature?.onConfirmAuthentication(sessionId, username, password)
+        feature?.onConfirm(sessionId, username to password)
     }
 
     @SuppressLint("InflateParams")

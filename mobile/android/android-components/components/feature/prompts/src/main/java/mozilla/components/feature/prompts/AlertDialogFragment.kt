@@ -56,7 +56,7 @@ internal class AlertDialogFragment : PromptDialogFragment() {
         if (!userSelectionNoMoreDialogs) {
             feature?.onCancel(sessionId)
         } else {
-            feature?.onShouldMoreDialogsChecked(sessionId, userSelectionNoMoreDialogs)
+            feature?.onConfirm(sessionId, userSelectionNoMoreDialogs)
         }
     }
 

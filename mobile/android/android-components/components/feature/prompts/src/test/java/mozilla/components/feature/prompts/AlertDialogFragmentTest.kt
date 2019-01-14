@@ -123,7 +123,7 @@ class AlertDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onShouldMoreDialogsChecked("sessionId", true)
+        verify(mockFeature).onConfirm("sessionId", true)
     }
 
     @Test

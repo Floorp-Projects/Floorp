@@ -24,6 +24,7 @@ import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.Color
@@ -180,7 +181,7 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(singleChoiceRequest)
 
-        promptFeature.onSingleChoiceSelect(session.id, mock())
+        promptFeature.onConfirm(session.id, mock<Choice>())
 
         assertTrue(session.promptRequest.isConsumed())
     }
@@ -194,11 +195,11 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(singleChoiceRequest)
 
-        promptFeature.onSingleChoiceSelect("unknown_session", mock())
+        promptFeature.onConfirm("unknown_session", mock())
 
         assertFalse(session.promptRequest.isConsumed())
 
-        promptFeature.onMultipleChoiceSelect("unknown_session", arrayOf())
+        promptFeature.onConfirm("unknown_session", arrayOf<Choice>())
 
         assertFalse(session.promptRequest.isConsumed())
 
@@ -216,13 +217,13 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(menuChoiceRequest)
 
-        promptFeature.onSingleChoiceSelect(session.id, mock())
+        promptFeature.onConfirm(session.id, mock<Choice>())
 
         assertTrue(session.promptRequest.isConsumed())
     }
 
     @Test
-    fun `Selecting items o multiple choice dialog will consume promptRequest`() {
+    fun `Selecting items on multiple choice dialog will consume promptRequest`() {
         val session = getSelectedSession()
         val multipleChoiceRequest = MultipleChoice(arrayOf()) {}
 
@@ -230,7 +231,7 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(multipleChoiceRequest)
 
-        promptFeature.onMultipleChoiceSelect(session.id, arrayOf())
+        promptFeature.onConfirm(session.id, arrayOf<Choice>())
 
         assertTrue(session.promptRequest.isConsumed())
     }
@@ -250,7 +251,7 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(promptRequest)
 
-        promptFeature.onShouldMoreDialogsChecked(session.id, false)
+        promptFeature.onConfirm(session.id, false)
 
         assertTrue(session.promptRequest.isConsumed())
         assertTrue(onShowNoMoreAlertsWasCalled)
@@ -276,7 +277,7 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(promptRequest)
 
-        promptFeature.onShouldMoreDialogsChecked("unknown_session_id", false)
+        promptFeature.onConfirm("unknown_session_id", false)
 
         assertFalse(session.promptRequest.isConsumed())
         assertFalse(onShowNoMoreAlertsWasCalled)
@@ -324,7 +325,7 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(promptRequest)
 
-        promptFeature.onConfirmTextPrompt("unknown_session_id", false, "")
+        promptFeature.onConfirm("unknown_session_id", false to "")
 
         assertFalse(session.promptRequest.isConsumed())
         assertFalse(onConfirmWasCalled)
@@ -355,7 +356,7 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(promptRequest)
 
-        promptFeature.onConfirmTextPrompt(session.id, false, "")
+        promptFeature.onConfirm(session.id, false to "")
 
         assertTrue(session.promptRequest.isConsumed())
         assertTrue(onConfirmWasCalled)
@@ -436,7 +437,7 @@ class PromptFeatureTest {
             PromptRequest.TimeSelection.Type.TIME
         )
 
-        timeSelectionTypes.forEach { timeType ->
+        timeSelectionTypes.forEach { _ ->
 
             val session = getSelectedSession()
             var onClearWasCalled = false
@@ -753,7 +754,7 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(promptRequest)
 
-        promptFeature.onConfirmAuthentication(session.id, "", "")
+        promptFeature.onConfirm(session.id, "" to "")
 
         assertTrue(session.promptRequest.isConsumed())
         assertTrue(onConfirmWasCalled)
@@ -789,7 +790,7 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(promptRequest)
 
-        promptFeature.onConfirmAuthentication("unknown_session_id", "", "")
+        promptFeature.onConfirm("unknown_session_id", "" to "")
 
         assertFalse(session.promptRequest.isConsumed())
         assertFalse(onConfirmWasCalled)

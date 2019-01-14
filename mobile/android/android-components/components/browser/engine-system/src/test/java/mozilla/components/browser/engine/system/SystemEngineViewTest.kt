@@ -1060,14 +1060,14 @@ class SystemEngineViewTest {
         assertEquals(alertRequest.hasShownManyDialogs, false)
         assertEquals(alertRequest.message, "message")
 
-        alertRequest.onShouldShowNoMoreDialogs(true)
+        alertRequest.onConfirm(true)
         verify(mockJSResult).confirm()
         assertEquals(engineView.jsAlertCount, 1)
 
         alertRequest.onDismiss()
         verify(mockJSResult).cancel()
 
-        alertRequest.onShouldShowNoMoreDialogs(true)
+        alertRequest.onConfirm(true)
         assertEquals(engineView.shouldShowMoreDialogs, false)
 
         engineView.lastDialogShownAt = engineView.lastDialogShownAt.add(YEAR, -1)

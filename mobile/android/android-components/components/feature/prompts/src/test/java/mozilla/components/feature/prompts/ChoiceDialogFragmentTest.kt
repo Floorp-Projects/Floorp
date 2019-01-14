@@ -283,7 +283,7 @@ class ChoiceDialogFragmentTest {
 
         holder.itemView.performClick()
 
-        verify(mockFeature).onSingleChoiceSelect("sessionId", choices.first())
+        verify(mockFeature).onConfirm("sessionId", choices.first())
         dialog.dismiss()
         verify(mockFeature).onCancel("sessionId")
     }
@@ -313,7 +313,7 @@ class ChoiceDialogFragmentTest {
 
         holder.itemView.performClick()
 
-        verify(mockFeature).onSingleChoiceSelect("sessionId", choices.first())
+        verify(mockFeature).onConfirm("sessionId", choices.first())
         dialog.dismiss()
         verify(mockFeature).onCancel("sessionId")
     }
@@ -346,7 +346,7 @@ class ChoiceDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onMultipleChoiceSelect("sessionId", fragment.mapSelectChoice.keys.toTypedArray())
+        verify(mockFeature).onConfirm("sessionId", fragment.mapSelectChoice.keys.toTypedArray())
 
         val negativeButton = dialog.getButton(BUTTON_NEGATIVE)
         negativeButton.performClick()
@@ -385,7 +385,7 @@ class ChoiceDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onMultipleChoiceSelect("sessionId", fragment.mapSelectChoice.keys.toTypedArray())
+        verify(mockFeature).onConfirm("sessionId", fragment.mapSelectChoice.keys.toTypedArray())
     }
 
     @Test

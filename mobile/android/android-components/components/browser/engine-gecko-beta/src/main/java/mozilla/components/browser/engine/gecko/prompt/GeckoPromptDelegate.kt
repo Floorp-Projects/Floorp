@@ -300,7 +300,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         callback: ButtonCallback?
     ) = Unit
 
-
     override fun onPopupRequest(session: GeckoSession?, targetUri: String?): GeckoResult<AllowOrDeny> {
         return GeckoResult()
     } // Related issue: https://github.com/mozilla-mobile/android-components/issues/1473

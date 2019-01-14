@@ -79,8 +79,10 @@ class PromptFeature(
 
     init {
         if (activity == null && fragment == null) {
-            throw IllegalStateException("activity and fragment references " +
-                "must not be both null, at least one must be initialized.")
+            throw IllegalStateException(
+                "activity and fragment references " +
+                    "must not be both null, at least one must be initialized."
+            )
         }
     }
 
@@ -241,37 +243,6 @@ class PromptFeature(
     }
 
     /**
-     * Event that is triggered when a single choice or menu item is selected in a dialog.
-     * @param sessionId this is the id of the session which requested the prompt.
-     * @param choice the selection from the dialog.
-     */
-    internal fun onSingleChoiceSelect(sessionId: String, choice: Choice) {
-        val session = sessionManager.findSessionById(sessionId) ?: return
-
-        session.promptRequest.consume { request ->
-            when (request) {
-                is SingleChoice -> request.onSelect(choice)
-                is MenuChoice -> request.onSelect(choice)
-            }
-            true
-        }
-    }
-
-    /**
-     * Event that is triggered when a multiple choice items are selected in a dialog.
-     * @param sessionId this is the id of the session which requested the prompt.
-     * @param choices the selected items from the dialog.
-     */
-    internal fun onMultipleChoiceSelect(sessionId: String, choices: Array<Choice>) {
-        val session = sessionManager.findSessionById(sessionId) ?: return
-
-        session.promptRequest.consume {
-            (it as MultipleChoice).onSelect(choices)
-            true
-        }
-    }
-
-    /**
      * Event that is called when a dialog is dismissed.
      * This consumes the [PromptFeature] value from the [Session] indicated by [sessionId].
      * @param sessionId this is the id of the session which requested the prompt.
@@ -290,51 +261,35 @@ class PromptFeature(
     }
 
     /**
-     * Invoked when the user requested no more dialogs to be shown from this [sessionId].
-     * This consumes the [PromptFeature] value from the [Session] indicated by [sessionId].
-     * @param sessionId the id of the session that requested the dialog.
-     * @param isChecked tells if the user want to show more dialogs from this [sessionId].
-     */
-    internal fun onShouldMoreDialogsChecked(sessionId: String, isChecked: Boolean) {
-        val session = sessionManager.findSessionById(sessionId) ?: return
-        session.promptRequest.consume {
-            when (it) {
-                is Alert -> it.onShouldShowNoMoreDialogs(isChecked)
-            }
-            true
-        }
-    }
-
-    /**
-     * Invoked when the user requested to start the authentication flow.
-     * This consumes the [PromptFeature] value from the [Session] indicated by [sessionId].
-     * @param sessionId the id for which session the user doesn't want to show more dialogs.
-     * @param username the value provided by the user.
-     * @param password the value provided by the user.
-     */
-    internal fun onConfirmAuthentication(sessionId: String, username: String, password: String) {
-        val session = sessionManager.findSessionById(sessionId) ?: return
-        session.promptRequest.consume {
-            when (it) {
-                is Authentication -> it.onConfirm(username, password)
-            }
-            true
-        }
-    }
-
-    /**
      * Event that is called when the user confirm the action on the dialog.
      * This consumes the [PromptFeature] value from the [Session] indicated by [sessionId].
      * @param sessionId that requested to show the dialog.
      * @param value an optional value provided by the dialog as a result of confirming the action.
      */
-    internal fun onConfirm(sessionId: String, value: Any? = null) {
+    @Suppress("UNCHECKED_CAST")
+    internal fun onConfirm(sessionId: String, value: Any) {
         val session = sessionManager.findSessionById(sessionId) ?: return
         session.promptRequest.consume {
             when (it) {
-                is PromptRequest.TimeSelection -> it.onSelect(value as Date)
-                is PromptRequest.Color -> it.onConfirm(value as String)
-                is TextPrompt -> it.onConfirm(noShowMoreDialogs, inputValue)
+                is TimeSelection -> it.onConfirm(value as Date)
+                is Color -> it.onConfirm(value as String)
+                is Alert -> it.onConfirm(value as Boolean)
+                is SingleChoice -> it.onConfirm(value as Choice)
+                is MenuChoice -> it.onConfirm(value as Choice)
+
+                is MultipleChoice -> {
+                    it.onConfirm(value as Array<Choice>)
+                }
+
+                is Authentication -> {
+                    val pair = value as Pair<String, String>
+                    it.onConfirm(pair.first, pair.second)
+                }
+
+                is TextPrompt -> {
+                    val pair = value as Pair<Boolean, String>
+                    it.onConfirm(pair.first, pair.second)
+                }
             }
             true
         }
