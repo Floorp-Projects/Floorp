@@ -120,52 +120,6 @@ def maybe_clear_cache(data):
     return False
 
 
-def split_template(s):
-    """Given a "file:template" string, returns "file", "template". If the string
-    is of the form "file" (without a template), returns "file", "file.in"."""
-    if ':' in s:
-        return s.split(':', 1)
-    return s, '%s.in' % s
-
-
-def get_config_files(data):
-    # config.status in js/src never contains the output we try to scan here.
-    if data['relobjdir'] == 'js/src':
-        return [], []
-
-    config_status = mozpath.join(data['objdir'], 'config.status')
-    if not os.path.exists(config_status):
-        return [], []
-
-    config_files = []
-    command_files = []
-
-    # Scan the config.status output for information about configuration files
-    # it generates.
-    config_status_output = subprocess.check_output(
-        [data['shell'], '-c', '%s --help' % config_status],
-        stderr=subprocess.STDOUT).splitlines()
-    state = None
-    for line in config_status_output:
-        if line.startswith('Configuration') and line.endswith(':'):
-            if line.endswith('commands:'):
-                state = 'commands'
-            else:
-                state = 'config'
-        elif not line.strip():
-            state = None
-        elif state:
-            for f, t in (split_template(couple) for couple in line.split()):
-                f = mozpath.join(data['objdir'], f)
-                t = mozpath.join(data['srcdir'], t)
-                if state == 'commands':
-                    command_files.append(f)
-                else:
-                    config_files.append((f, t))
-
-    return config_files, command_files
-
-
 def prepare(srcdir, objdir, shell, args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--target', type=str)
@@ -268,19 +222,6 @@ def run(objdir):
     if os.path.exists(cache_file):
         cleared_cache = maybe_clear_cache(data)
 
-    config_files, command_files = get_config_files(data)
-    contents = []
-    for f, t in config_files:
-        contents.append(File(f))
-
-    # AC_CONFIG_COMMANDS actually only registers tags, not file names
-    # but most commands are tagged with the file name they create.
-    # However, a few don't, or are tagged with a directory name (and their
-    # command is just to create that directory)
-    for f in command_files:
-        if os.path.isfile(f):
-            contents.append(File(f))
-
     # Only run configure if one of the following is true:
     # - config.status doesn't exist
     # - config.status is older than an input to configure
@@ -356,14 +297,6 @@ def run(objdir):
         # an autoconf configure), skip it.
         if os.path.exists(config_status_path):
             skip_config_status = False
-    else:
-        # config.status changed or was created, so we need to update the
-        # list of config and command files.
-        config_files, command_files = get_config_files(data)
-        for f, t in config_files:
-            if not os.path.exists(t) or \
-                    os.path.getmtime(f) < os.path.getmtime(t):
-                skip_config_status = False
 
     if not skip_config_status:
         if skip_configure:
@@ -371,9 +304,6 @@ def run(objdir):
             sys.stdout.flush()
         ret = execute_and_prefix([data['shell'], '-c', './config.status'],
                                  cwd=objdir, env=data['env'], prefix=relobjdir)
-
-        for f in contents:
-            f.update_time()
 
     return ret
 
