@@ -36,7 +36,7 @@ class WriteRecordClient : public FileIOClient {
    * This function will take the memory ownership of the parameters and
    * delete them when done.
    */
-  static void Write(Host_9* aHost, string& aRecordName,
+  static void Write(Host_10* aHost, string& aRecordName,
                     const vector<uint8_t>& aData, function<void()>&& aOnSuccess,
                     function<void()>&& aOnFailure) {
     WriteRecordClient* client =
@@ -71,7 +71,7 @@ class WriteRecordClient : public FileIOClient {
         mOnFailure(move(aOnFailure)),
         mData(aData) {}
 
-  void Do(const string& aName, Host_9* aHost) {
+  void Do(const string& aName, Host_10* aHost) {
     // Initialize the FileIO.
     mFileIO = aHost->CreateFileIO(this);
     mFileIO->Open(aName.c_str(), aName.size());
@@ -104,8 +104,9 @@ class WriteRecordClient : public FileIOClient {
   const vector<uint8_t> mData;
 };
 
-void WriteData(Host_9* aHost, string& aRecordName, const vector<uint8_t>& aData,
-               function<void()>&& aOnSuccess, function<void()>&& aOnFailure) {
+void WriteData(Host_10* aHost, string& aRecordName,
+               const vector<uint8_t>& aData, function<void()>&& aOnSuccess,
+               function<void()>&& aOnFailure) {
   WriteRecordClient::Write(aHost, aRecordName, aData, move(aOnSuccess),
                            move(aOnFailure));
 }
@@ -116,7 +117,7 @@ class ReadRecordClient : public FileIOClient {
    * This function will take the memory ownership of the parameters and
    * delete them when done.
    */
-  static void Read(Host_9* aHost, string& aRecordName,
+  static void Read(Host_10* aHost, string& aRecordName,
                    function<void(const uint8_t*, uint32_t)>&& aOnSuccess,
                    function<void()>&& aOnFailure) {
     (new ReadRecordClient(move(aOnSuccess), move(aOnFailure)))
@@ -150,7 +151,7 @@ class ReadRecordClient : public FileIOClient {
         mOnSuccess(move(aOnSuccess)),
         mOnFailure(move(aOnFailure)) {}
 
-  void Do(const string& aName, Host_9* aHost) {
+  void Do(const string& aName, Host_10* aHost) {
     mFileIO = aHost->CreateFileIO(this);
     mFileIO->Open(aName.c_str(), aName.size());
   }
@@ -181,9 +182,9 @@ class ReadRecordClient : public FileIOClient {
   function<void()> mOnFailure;
 };
 
-void ReadData(Host_9* mHost, string& aRecordName,
+void ReadData(Host_10* aHost, string& aRecordName,
               function<void(const uint8_t*, uint32_t)>&& aOnSuccess,
               function<void()>&& aOnFailure) {
-  ReadRecordClient::Read(mHost, aRecordName, move(aOnSuccess),
+  ReadRecordClient::Read(aHost, aRecordName, move(aOnSuccess),
                          move(aOnFailure));
 }

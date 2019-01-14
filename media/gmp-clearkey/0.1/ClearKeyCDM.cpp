@@ -4,14 +4,17 @@
 
 using namespace cdm;
 
-ClearKeyCDM::ClearKeyCDM(Host_9* aHost) {
+ClearKeyCDM::ClearKeyCDM(Host_10* aHost) {
   mHost = aHost;
   mSessionManager = new ClearKeySessionManager(mHost);
 }
 
 void ClearKeyCDM::Initialize(bool aAllowDistinctiveIdentifier,
-                             bool aAllowPersistentState) {
+                             bool aAllowPersistentState,
+                             bool aUseHardwareSecureCodecs) {
   mSessionManager->Init(aAllowDistinctiveIdentifier, aAllowPersistentState);
+  // We call mHost->OnInitialized() in the session manager once it has
+  // initialized.
 }
 
 void ClearKeyCDM::GetStatusForPolicy(uint32_t aPromiseId,
@@ -66,13 +69,13 @@ void ClearKeyCDM::TimerExpired(void* aContext) {
   assert(false);
 }
 
-Status ClearKeyCDM::Decrypt(const InputBuffer_1& aEncryptedBuffer,
+Status ClearKeyCDM::Decrypt(const InputBuffer_2& aEncryptedBuffer,
                             DecryptedBlock* aDecryptedBuffer) {
   return mSessionManager->Decrypt(aEncryptedBuffer, aDecryptedBuffer);
 }
 
 Status ClearKeyCDM::InitializeAudioDecoder(
-    const AudioDecoderConfig_1& aAudioDecoderConfig) {
+    const AudioDecoderConfig_2& aAudioDecoderConfig) {
   // Audio decoding is not supported by Clearkey because Widevine doesn't
   // support it and Clearkey's raison d'etre is to provide test coverage
   // for paths that Widevine will exercise in the wild.
@@ -80,7 +83,7 @@ Status ClearKeyCDM::InitializeAudioDecoder(
 }
 
 Status ClearKeyCDM::InitializeVideoDecoder(
-    const VideoDecoderConfig_1& aVideoDecoderConfig) {
+    const VideoDecoderConfig_2& aVideoDecoderConfig) {
 #ifdef ENABLE_WMF
   mVideoDecoder = new VideoDecoder(mHost);
   return mVideoDecoder->InitDecode(aVideoDecoderConfig);
@@ -106,7 +109,7 @@ void ClearKeyCDM::ResetDecoder(StreamType aDecoderType) {
 #endif
 }
 
-Status ClearKeyCDM::DecryptAndDecodeFrame(const InputBuffer_1& aEncryptedBuffer,
+Status ClearKeyCDM::DecryptAndDecodeFrame(const InputBuffer_2& aEncryptedBuffer,
                                           VideoFrame* aVideoFrame) {
 #ifdef ENABLE_WMF
   return mVideoDecoder->Decode(aEncryptedBuffer, aVideoFrame);
@@ -116,7 +119,7 @@ Status ClearKeyCDM::DecryptAndDecodeFrame(const InputBuffer_1& aEncryptedBuffer,
 }
 
 Status ClearKeyCDM::DecryptAndDecodeSamples(
-    const InputBuffer_1& aEncryptedBuffer, AudioFrames* aAudioFrame) {
+    const InputBuffer_2& aEncryptedBuffer, AudioFrames* aAudioFrame) {
   // Audio decoding is not supported by Clearkey because Widevine doesn't
   // support it and Clearkey's raison d'etre is to provide test coverage
   // for paths that Widevine will exercise in the wild.

@@ -89,7 +89,9 @@ void ClearKeyPersistence::WriteIndex() {
   WriteData(mHost, filename, data, move(onIndexSuccess), move(onIndexFail));
 }
 
-ClearKeyPersistence::ClearKeyPersistence(Host_9* aHost) { this->mHost = aHost; }
+ClearKeyPersistence::ClearKeyPersistence(Host_10* aHost) {
+  this->mHost = aHost;
+}
 
 void ClearKeyPersistence::EnsureInitialized(bool aPersistentStateAllowed,
                                             function<void()>&& aOnInitialized) {
