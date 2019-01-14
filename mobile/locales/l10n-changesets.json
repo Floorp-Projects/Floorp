@@ -75,7 +75,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "749e8a301f86"
+        "revision": "3bd3d9938de2"
     },
     "cs": {
         "platforms": [
@@ -357,7 +357,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "50e669cf7e57"
+        "revision": "da8508490cac"
     },
     "mr": {
         "platforms": [
@@ -519,60 +519,60 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "4134b75da247"
+        "revision": "a73bd0fa9499"
     },
     "uk": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "ebc69127ae04"
+        "revision": "de7742fa098e"
     },
     "ur": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "b90824896706"
+        "revision": "f3bfe0211b0d"
     },
     "uz": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "291ee10b1f67"
+        "revision": "6c42381becf7"
     },
     "vi": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "802f93a02fd4"
+        "revision": "18fe987ca77d"
     },
     "wo": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "d33a4bb1ab24"
+        "revision": "eaabeed6eb6c"
     },
     "xh": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "04a8e29d8261"
+        "revision": "1fe19625ce80"
     },
     "zam": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "4b38196551cd"
+        "revision": "5b7a669c784f"
     },
     "zh-CN": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "c5f4f5a24073"
+        "revision": "2ff77a53b21c"
     },
     "zh-TW": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "78442a016ff1"
+        "revision": "574f9f4100d8"
     }
 }
