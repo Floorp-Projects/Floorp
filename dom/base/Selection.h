@@ -303,7 +303,12 @@ class Selection final : public nsSupportsWeakReference,
    */
   nsresult RemoveAllRangesTemporarily();
 
-  void Stringify(nsAString& aResult);
+  /**
+   * Whether Stringify should flush layout or not.
+   */
+  enum class FlushFrames { No, Yes };
+  MOZ_CAN_RUN_SCRIPT
+  void Stringify(nsAString& aResult, FlushFrames = FlushFrames::Yes);
 
   /**
    * Indicates whether the node is part of the selection. If partlyContained
