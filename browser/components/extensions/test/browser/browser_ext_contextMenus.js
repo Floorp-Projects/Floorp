@@ -563,7 +563,8 @@ function bookmarkContextMenuExtension() {
 add_task(async function test_bookmark_contextmenu() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
-  await toggleBookmarksToolbar(true);
+  const bookmarksToolbar = document.getElementById("PersonalToolbar");
+  setToolbarVisibility(bookmarksToolbar, true);
 
   const extension = bookmarkContextMenuExtension();
 
@@ -578,7 +579,7 @@ add_task(async function test_bookmark_contextmenu() {
 
   await extension.awaitMessage("test-finish");
   await extension.unload();
-  await toggleBookmarksToolbar(false);
+  setToolbarVisibility(bookmarksToolbar, false);
 
   BrowserTestUtils.removeTab(tab);
 });
@@ -672,7 +673,8 @@ add_task(async function test_organizer_contextmenu() {
 });
 
 add_task(async function test_bookmark_context_requires_permission() {
-  await toggleBookmarksToolbar(true);
+  const bookmarksToolbar = document.getElementById("PersonalToolbar");
+  setToolbarVisibility(bookmarksToolbar, true);
 
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -699,5 +701,5 @@ add_task(async function test_bookmark_context_requires_permission() {
   closeChromeContextMenu("placesContext");
 
   await extension.unload();
-  await toggleBookmarksToolbar(false);
+  setToolbarVisibility(bookmarksToolbar, false);
 });
