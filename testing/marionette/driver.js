@@ -1468,27 +1468,14 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
       break;
   }
 
-  if (height != null && width != null) {
+  if (width != null && height != null) {
     assert.positiveInteger(height);
     assert.positiveInteger(width);
 
-    let debounce = new DebounceCallback(() => {
-      win.dispatchEvent(new win.CustomEvent("resizeEnd"));
-    });
-
-    await new TimedPromise(async resolve => {
-      if (win.outerWidth == width && win.outerHeight == height) {
-        resolve();
-        return;
-      }
-
-      win.addEventListener("resize", debounce);
-      win.addEventListener("resizeEnd", resolve, {once: true});
+    if (win.outerWidth != width || win.outerHeight != height) {
       win.resizeTo(width, height);
       await new IdlePromise(win);
-    }, {timeout: 5000});
-
-    win.removeEventListener("resize", debounce);
+    }
   }
 
   if (x != null && y != null) {
