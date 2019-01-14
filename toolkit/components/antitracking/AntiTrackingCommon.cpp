@@ -494,15 +494,15 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
-  nsAutoString origin;
-  nsresult rv = nsContentUtils::GetUTFOrigin(uri, origin);
+  nsAutoCString origin;
+  nsresult rv = nsContentUtils::GetASCIIOrigin(uri, origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Can't get the origin from the URI"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
   LOG(("Adding a first-party storage exception for %s...",
-       NS_ConvertUTF16toUTF8(origin).get()));
+       PromiseFlatCString(origin).get()));
 
   if (StaticPrefs::network_cookie_cookieBehavior() !=
       nsICookieService::BEHAVIOR_REJECT_TRACKER) {
@@ -536,7 +536,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
 
   // We are a first party resource.
   if (outerParentWindow->IsTopLevelWindow()) {
-    CopyUTF16toUTF8(origin, trackingOrigin);
+    trackingOrigin = origin;
     trackingPrincipal = aPrincipal;
     rv = trackingPrincipal->GetURI(getter_AddRefs(trackingURI));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -611,10 +611,8 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
       [pwin, parentWindow, origin, trackingOrigin, trackingPrincipal,
        trackingURI, topInnerWindow, topLevelStoragePrincipal,
        aReason](int aAllowMode) -> RefPtr<StorageAccessGrantPromise> {
-    NS_ConvertUTF16toUTF8 grantedOrigin(origin);
-
     nsAutoCString permissionKey;
-    CreatePermissionKey(trackingOrigin, grantedOrigin, permissionKey);
+    CreatePermissionKey(trackingOrigin, origin, permissionKey);
 
     // Let's store the permission in the current parent window.
     topInnerWindow->SaveStorageAccessGranted(permissionKey);
@@ -628,15 +626,15 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     pwin->NotifyContentBlockingState(blockReason, channel, false, trackingURI);
 
     ReportUnblockingConsole(parentWindow, NS_ConvertUTF8toUTF16(trackingOrigin),
-                            origin, aReason);
+                            NS_ConvertUTF8toUTF16(origin), aReason);
 
     if (XRE_IsParentProcess()) {
       LOG(("Saving the permission: trackingOrigin=%s, grantedOrigin=%s",
-           trackingOrigin.get(), grantedOrigin.get()));
+           trackingOrigin.get(), origin.get()));
 
       return SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
                  topLevelStoragePrincipal, trackingPrincipal, trackingOrigin,
-                 grantedOrigin, aAllowMode)
+                 origin, aAllowMode)
           ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                  [](FirstPartyStorageAccessGrantPromise::ResolveOrRejectValue&&
                         aValue) {
@@ -657,14 +655,14 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     LOG(
         ("Asking the parent process to save the permission for us: "
          "trackingOrigin=%s, grantedOrigin=%s",
-         trackingOrigin.get(), grantedOrigin.get()));
+         trackingOrigin.get(), origin.get()));
 
     // This is not really secure, because here we have the content process
     // sending the request of storing a permission.
     return cc
         ->SendFirstPartyStorageAccessGrantedForOrigin(
             IPC::Principal(topLevelStoragePrincipal),
-            IPC::Principal(trackingPrincipal), trackingOrigin, grantedOrigin,
+            IPC::Principal(trackingPrincipal), trackingOrigin, origin,
             aAllowMode)
         ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                [](const ContentChild::
@@ -954,14 +952,12 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
   Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
 
-  nsAutoString origin;
-  nsresult rv = nsContentUtils::GetUTFOrigin(aURI, origin);
+  nsAutoCString grantedOrigin;
+  nsresult rv = nsContentUtils::GetASCIIOrigin(aURI, grantedOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG_SPEC(("Failed to compute the origin from %s", _spec), aURI);
     return false;
   }
-
-  NS_ConvertUTF16toUTF8 grantedOrigin(origin);
 
   nsGlobalWindowOuter* outerWindow =
       nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
@@ -1221,23 +1217,22 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return true;
   }
 
-  nsAutoString trackingOrigin;
-  rv = nsContentUtils::GetUTFOrigin(trackingURI, trackingOrigin);
+  nsAutoCString trackingOrigin;
+  rv = nsContentUtils::GetASCIIOrigin(trackingURI, trackingOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG_SPEC(("Failed to compute the origin from %s", _spec), trackingURI);
     return false;
   }
 
-  nsAutoString origin;
-  rv = nsContentUtils::GetUTFOrigin(aURI, origin);
+  nsAutoCString origin;
+  rv = nsContentUtils::GetASCIIOrigin(aURI, origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG_SPEC(("Failed to compute the origin from %s", _spec), aURI);
     return false;
   }
 
   nsAutoCString type;
-  CreatePermissionKey(NS_ConvertUTF16toUTF8(trackingOrigin),
-                      NS_ConvertUTF16toUTF8(origin), type);
+  CreatePermissionKey(trackingOrigin, origin, type);
 
   nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
   if (NS_WARN_IF(!pm)) {
@@ -1324,17 +1319,15 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return access != nsICookiePermission::ACCESS_DENY;
   }
 
-  nsAutoString origin;
-  nsresult rv = nsContentUtils::GetUTFOrigin(aURI, origin);
+  nsAutoCString origin;
+  nsresult rv = nsContentUtils::GetASCIIOrigin(aURI, origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG_SPEC(("Failed to compute the origin from %s", _spec), aURI);
     return false;
   }
 
-  NS_ConvertUTF16toUTF8 utf8Origin(origin);
-
   nsAutoCString type;
-  CreatePermissionKey(utf8Origin, utf8Origin, type);
+  CreatePermissionKey(origin, origin, type);
 
   nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
   if (NS_WARN_IF(!pm)) {
