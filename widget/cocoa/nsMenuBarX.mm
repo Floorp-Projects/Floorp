@@ -597,6 +597,12 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
     return nil;
   }
 
+  // Check collapsed rather than hidden since the app menu items are always
+  // hidden in AquifyMenuBar.
+  if (menuItem->AttrValueIs(kNameSpaceID_None, nsGkAtoms::collapsed, nsGkAtoms::_true, eCaseMatters)) {
+    return nil;
+  }
+
   // Get information from the gecko menu item
   nsAutoString label;
   nsAutoString modifiers;
