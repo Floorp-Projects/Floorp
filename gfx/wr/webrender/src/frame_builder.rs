@@ -70,6 +70,20 @@ pub struct FrameBuilder {
     pub config: FrameBuilderConfig,
 }
 
+pub struct FrameVisibilityContext<'a> {
+    pub clip_scroll_tree: &'a ClipScrollTree,
+    pub screen_world_rect: WorldRect,
+    pub device_pixel_scale: DevicePixelScale,
+    pub surfaces: &'a [SurfaceInfo],
+}
+
+pub struct FrameVisibilityState<'a> {
+    pub clip_store: &'a mut ClipStore,
+    pub resource_cache: &'a mut ResourceCache,
+    pub gpu_cache: &'a mut GpuCache,
+    pub scratch: &'a mut PrimitiveScratchBuffer,
+}
+
 pub struct FrameBuildingContext<'a> {
     pub device_pixel_scale: DevicePixelScale,
     pub scene_properties: &'a SceneProperties,
@@ -305,6 +319,30 @@ impl FrameBuilder {
             scratch,
         );
 
+        {
+            let visibility_context = FrameVisibilityContext {
+                device_pixel_scale,
+                clip_scroll_tree,
+                screen_world_rect,
+                surfaces: pic_update_state.surfaces,
+            };
+
+            let mut visibility_state = FrameVisibilityState {
+                resource_cache,
+                gpu_cache,
+                clip_store: &mut self.clip_store,
+                scratch,
+            };
+
+            self.prim_store.update_visibility(
+                self.root_pic_index,
+                ROOT_SURFACE_INDEX,
+                &visibility_context,
+                &mut visibility_state,
+                resources,
+            );
+        }
+
         let mut frame_state = FrameBuildingState {
             render_tasks,
             profile_counters,
@@ -346,7 +384,6 @@ impl FrameBuilder {
             prim_list,
             pic_context,
             pic_state,
-            &mut frame_state,
         );
 
         let child_tasks = frame_state
