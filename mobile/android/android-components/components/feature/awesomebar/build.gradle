@@ -35,11 +35,14 @@ dependencies {
     implementation project(':feature-search')
 
     implementation project(':support-ktx')
+    implementation project(':support-utils')
 
     implementation Dependencies.kotlin_stdlib
 
     testImplementation project(':support-test')
     testImplementation project(':browser-storage-memory')
+
+    testImplementation Dependencies.androidx_test_core
 
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric

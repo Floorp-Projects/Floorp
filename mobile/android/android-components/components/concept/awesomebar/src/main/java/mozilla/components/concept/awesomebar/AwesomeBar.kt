@@ -94,7 +94,8 @@ interface AwesomeBar {
          */
         enum class Flag {
             BOOKMARK,
-            OPEN_TAB
+            OPEN_TAB,
+            CLIPBOARD
         }
 
         /**

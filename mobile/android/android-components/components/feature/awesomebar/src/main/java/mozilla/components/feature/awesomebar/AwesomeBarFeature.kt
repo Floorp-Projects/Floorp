@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar
 
+import android.content.Context
 import android.view.View
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.SessionManager
@@ -11,6 +12,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
@@ -69,6 +71,14 @@ class AwesomeBarFeature(
         loadUrlUseCase: SessionUseCases.LoadUrlUseCase
     ): AwesomeBarFeature {
         awesomeBar.addProviders(HistoryStorageSuggestionProvider(historyStorage, loadUrlUseCase))
+        return this
+    }
+
+    fun addClipboardProvider(
+        context: Context,
+        loadUrlUseCase: SessionUseCases.LoadUrlUseCase
+    ): AwesomeBarFeature {
+        awesomeBar.addProviders(ClipboardSuggestionProvider(context, loadUrlUseCase))
         return this
     }
 

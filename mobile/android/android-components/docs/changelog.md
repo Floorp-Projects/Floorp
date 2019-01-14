@@ -17,6 +17,9 @@ permalink: /changelog/
   * Mozilla App Services (FxA: 0.13.3, Sync Logins: 0.13.3, Places: 0.13.3)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
+* **feature-awesomebar**
+  * Added `ClipboardSuggestionProvider` - An `AwesomeBar.SuggestionProvider` implementation that returns a suggestions for an URL in the clipboard (if there's any).
+
 # 0.38.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.37.0...v0.38.0),

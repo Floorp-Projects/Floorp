@@ -7,7 +7,9 @@ object Versions {
     const val kotlin = "1.3.10"
     const val coroutines = "1.0.1"
 
-    const val androidx_test = "1.0.0"
+    const val androidx_test = "1.1.0"
+    const val androidx_runner = "1.1.0"
+
     const val junit = "4.12"
     const val robolectric = "4.0.2"
     const val mockito = "2.23.0"
@@ -40,11 +42,12 @@ object Dependencies {
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutines}"
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}"
 
-    const val testing_androidx = "androidx.test:core:${Versions.androidx_test}"
     const val testing_junit = "junit:junit:${Versions.junit}"
     const val testing_robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     const val testing_mockito = "org.mockito:mockito-core:${Versions.mockito}"
     const val testing_mockwebserver = "com.squareup.okhttp3:mockwebserver:${Versions.mockwebserver}"
+
+    const val androidx_test_core = "androidx.test:core-ktx:${Versions.androidx_test}"
 
     const val support_annotations = "com.android.support:support-annotations:${Versions.support_libraries}"
     const val support_cardview = "com.android.support:cardview-v7:${Versions.support_libraries}"

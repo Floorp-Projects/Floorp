@@ -110,4 +110,17 @@ class AwesomeBarFeatureTest {
 
         verify(awesomeBar).addProviders(any())
     }
+
+    @Test
+    fun `addClipboardProvider adds provider`() {
+        val awesomeBar: AwesomeBar = mock()
+
+        val feature = AwesomeBarFeature(awesomeBar, mock())
+
+        verify(awesomeBar, never()).addProviders(any())
+
+        feature.addClipboardProvider(RuntimeEnvironment.application, mock())
+
+        verify(awesomeBar).addProviders(any())
+    }
 }
