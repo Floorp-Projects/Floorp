@@ -1582,15 +1582,12 @@ void MediaRecorder::DispatchSimpleEvent(const nsAString& aStr) {
     return;
   }
 
-  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
-  event->InitEvent(aStr, false, false);
-  event->SetTrusted(true);
-
-  IgnoredErrorResult res;
-  DispatchEvent(*event, res);
-  if (res.Failed()) {
+  rv = DOMEventTargetHelper::DispatchTrustedEvent(aStr);
+  if (NS_FAILED(rv)) {
+    LOG(LogLevel::Error,
+        ("MediaRecorder.DispatchSimpleEvent: DispatchTrustedEvent failed  %p",
+         this));
     NS_ERROR("Failed to dispatch the event!!!");
-    return;
   }
 }
 
