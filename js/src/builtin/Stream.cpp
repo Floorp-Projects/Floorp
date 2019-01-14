@@ -2343,22 +2343,34 @@ static MOZ_MUST_USE bool ReadableStreamDefaultControllerClose(
  * Unified implementation of step 2 of 3.8.4.2 and 3.8.4.3,
  * and steps 2-3 of 3.10.4.3.
  */
-static MOZ_MUST_USE bool VerifyControllerStateForClosing(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedController) {
-  // Step 2: If this.[[closeRequested]] is true, throw a TypeError exception.
+static MOZ_MUST_USE bool CheckReadableStreamControllerCanCloseOrEnqueue(
+    JSContext* cx, Handle<ReadableStreamController*> unwrappedController,
+    const char* action) {
+  // 3.8.4.2. close(), step 2, and
+  // 3.8.4.3. enqueue(chunk), step 2:
+  //      If ! ReadableStreamDefaultControllerCanCloseOrEnqueue(this) is false,
+  //      throw a TypeError exception.
+  // RSDCCanCloseOrEnqueue returns false in two cases: (1)
+  // controller.[[closeRequested]] is true; (2) the stream is not readable,
+  // i.e. already closed or errored. This amounts to exactly the same thing as
+  // 3.10.4.3 steps 2-3 below, and we want different error messages for the two
+  // cases anyway.
+
+  // 3.10.4.3. Step 2: If this.[[closeRequested]] is true, throw a TypeError
+  //                   exception.
   if (unwrappedController->closeRequested()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAMCONTROLLER_CLOSED, "close");
+                              JSMSG_READABLESTREAMCONTROLLER_CLOSED, action);
     return false;
   }
 
-  // Step 3: If this.[[controlledReadableStream]].[[state]] is not "readable",
-  //         throw a TypeError exception.
+  // 3.10.4.3. Step 3: If this.[[controlledReadableByteStream]].[[state]] is
+  //                   not "readable", throw a TypeError exception.
   ReadableStream* unwrappedStream = unwrappedController->stream();
   if (!unwrappedStream->readable()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE,
-                              "close");
+                              action);
     return false;
   }
 
@@ -2380,8 +2392,10 @@ static bool ReadableStreamDefaultController_close(JSContext* cx, unsigned argc,
     return false;
   }
 
-  // Steps 2-3.
-  if (!VerifyControllerStateForClosing(cx, unwrappedController)) {
+  // Step 2: If ! ReadableStreamDefaultControllerCanCloseOrEnqueue(this) is
+  //         false, throw a TypeError exception.
+  if (!CheckReadableStreamControllerCanCloseOrEnqueue(cx, unwrappedController,
+                                                      "close")) {
     return false;
   }
 
@@ -2409,23 +2423,14 @@ static bool ReadableStreamDefaultController_enqueue(JSContext* cx,
     return false;
   }
 
-  // Step 2: If this.[[closeRequested]] is true, throw a TypeError exception.
-  if (unwrappedController->closeRequested()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAMCONTROLLER_CLOSED, "enqueue");
+  // Step 2: If ! ReadableStreamDefaultControllerCanCloseOrEnqueue(this) is
+  //         false, throw a TypeError exception.
+  if (!CheckReadableStreamControllerCanCloseOrEnqueue(cx, unwrappedController,
+                                                      "enqueue")) {
     return false;
   }
 
-  // Step 3: If this.[[controlledReadableStream]].[[state]] is not "readable",
-  //         throw a TypeError exception.
-  if (!unwrappedController->stream()->readable()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE,
-                              "enqueue");
-    return false;
-  }
-
-  // Step 4: Return ! ReadableStreamDefaultControllerEnqueue(this, chunk).
+  // Step 3: Return ! ReadableStreamDefaultControllerEnqueue(this, chunk).
   if (!ReadableStreamDefaultControllerEnqueue(cx, unwrappedController,
                                               args.get(0))) {
     return false;
@@ -2993,8 +2998,11 @@ static MOZ_MUST_USE bool ReadableStreamDefaultControllerEnqueue(
   // Step 1: Let stream be controller.[[controlledReadableStream]].
   Rooted<ReadableStream*> unwrappedStream(cx, unwrappedController->stream());
 
-  // Step 2: Assert: controller.[[closeRequested]] is false.
+  // Step 2: Assert:
+  //      ! ReadableStreamDefaultControllerCanCloseOrEnqueue(controller) is
+  //      true.
   MOZ_ASSERT(!unwrappedController->closeRequested());
+  MOZ_ASSERT(unwrappedStream->readable());
 
   // Step 3: If ! IsReadableStreamLocked(stream) is true and
   //         ! ReadableStreamGetNumReadRequests(stream) > 0, perform
@@ -4775,7 +4783,8 @@ JS_PUBLIC_API bool JS::ReadableStreamClose(JSContext* cx,
 
   Rooted<ReadableStreamController*> unwrappedControllerObj(
       cx, unwrappedStream->controller());
-  if (!VerifyControllerStateForClosing(cx, unwrappedControllerObj)) {
+  if (!CheckReadableStreamControllerCanCloseOrEnqueue(
+          cx, unwrappedControllerObj, "close")) {
     return false;
   }
 
