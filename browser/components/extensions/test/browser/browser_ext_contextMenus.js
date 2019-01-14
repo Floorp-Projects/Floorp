@@ -5,7 +5,9 @@
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/components/places/tests/browser/head.js",
   this);
-/* globals withSidebarTree, synthesizeClickOnSelectedTreeCell */
+/* globals withSidebarTree, synthesizeClickOnSelectedTreeCell,
+ * promiseLibrary, promiseLibraryClosed
+ */
 
 const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 
@@ -604,6 +606,70 @@ add_task(async function test_bookmark_sidebar_contextmenu() {
 
     BrowserTestUtils.removeTab(tab);
   });
+});
+
+function bookmarkFolderContextMenuExtension() {
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["contextMenus", "bookmarks"],
+    },
+    async background() {
+      const title = "Example";
+      let newBookmark = await browser.bookmarks.create({
+        title,
+        parentId: "toolbar_____",
+      });
+      await new Promise(resolve =>
+        browser.contextMenus.create({
+          title: "Get bookmark",
+          contexts: ["bookmark"],
+        }, resolve));
+      browser.contextMenus.onClicked.addListener(async (info) => {
+        browser.test.assertEq(newBookmark.id, info.bookmarkId, "Bookmark ID matches");
+
+        let [bookmark] = await browser.bookmarks.get(info.bookmarkId);
+        browser.test.assertEq(title, bookmark.title, "Bookmark title matches");
+        browser.test.assertFalse(info.hasOwnProperty("pageUrl"), "Context menu does not expose pageUrl");
+        await browser.bookmarks.remove(info.bookmarkId);
+        browser.test.sendMessage("test-finish");
+      });
+      browser.test.sendMessage("bookmark-created", newBookmark.id);
+    },
+  });
+}
+
+add_task(async function test_organizer_contextmenu() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+  let library = await promiseLibrary("BookmarksToolbar");
+
+  let menu = library.document.getElementById("placesContext");
+  let mainTree = library.document.getElementById("placeContent");
+  let leftTree = library.document.getElementById("placesList");
+
+  let tests = [
+    [mainTree, bookmarkContextMenuExtension],
+    [mainTree, bookmarkFolderContextMenuExtension],
+    [leftTree, bookmarkFolderContextMenuExtension],
+  ];
+
+  for (let [tree, makeExtension] of tests) {
+    let extension = makeExtension();
+    await extension.startup();
+    let bookmarkGuid = await extension.awaitMessage("bookmark-created");
+
+    tree.selectItems([bookmarkGuid]);
+    let shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+    synthesizeClickOnSelectedTreeCell(tree, {type: "contextmenu"});
+    await shown;
+
+    let menuItem = menu.getElementsByAttribute("label", "Get bookmark")[0];
+    closeChromeContextMenu("placesContext", menuItem, library);
+    await extension.awaitMessage("test-finish");
+    await extension.unload();
+  }
+
+  await promiseLibraryClosed(library);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_bookmark_context_requires_permission() {
