@@ -377,8 +377,11 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
 
   set docShellIsActive(val) {
     if (this.isRemoteBrowser) {
-      this.frameLoader.tabParent.docShellIsActive = val;
-      return val;
+      let { frameLoader } = this;
+      if (frameLoader && frameLoader.tabParent) {
+        return frameLoader.tabParent.docShellIsActive = val;
+      }
+      return false;
     }
     if (this.docShell)
       return this.docShell.isActive = val;
@@ -387,7 +390,11 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
 
   get docShellIsActive() {
     if (this.isRemoteBrowser) {
-      return this.frameLoader.tabParent.docShellIsActive;
+      let { frameLoader } = this;
+      if (frameLoader && frameLoader.tabParent) {
+        return frameLoader.tabParent.docShellIsActive;
+      }
+      return false;
     }
     return this.docShell && this.docShell.isActive;
   }
