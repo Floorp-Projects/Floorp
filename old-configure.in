@@ -3760,10 +3760,9 @@ case "$host" in
   ;;
 esac
 
-eval $dumpenv $PYTHON $_topsrcdir/build/subconfigure.py --prepare "$srcdir" js/src "$_CONFIG_SHELL" $ac_configure_args --cache-file="$cache_file"
-
 trap '' EXIT
-if ! $PYTHON $_topsrcdir/build/subconfigure.py js/src; then
+eval $dumpenv $PYTHON $_topsrcdir/build/subconfigure.py "$srcdir" js/src "$_CONFIG_SHELL" $ac_configure_args --cache-file="$cache_file"
+if test $? -ne 0; then
   exit 1
 fi
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"

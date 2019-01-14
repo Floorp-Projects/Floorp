@@ -168,6 +168,7 @@ def prepare(srcdir, objdir, shell, args):
         'args': others,
         'shell': shell,
         'srcdir': srcdir,
+        'objdir': objdir,
         'env': environ,
     }
 
@@ -189,6 +190,8 @@ def prepare(srcdir, objdir, shell, args):
     with open(data_file, 'wb') as f:
         pickle.dump(data, f)
 
+    return data
+
 
 def prefix_lines(text, prefix):
     return ''.join('%s> %s' % (prefix, line) for line in text.splitlines(True))
@@ -208,13 +211,10 @@ def execute_and_prefix(*args, **kwargs):
     return proc.wait()
 
 
-def run(objdir):
+def run(data):
     ret = 0
 
-    with open(os.path.join(objdir, CONFIGURE_DATA), 'rb') as f:
-        data = pickle.load(f)
-
-    data['objdir'] = objdir
+    objdir = data['objdir']
     relobjdir = data['relobjdir'] = os.path.relpath(objdir, os.getcwd())
 
     cache_file = data['cache-file']
@@ -308,20 +308,9 @@ def run(objdir):
     return ret
 
 
-def subconfigure(args):
-    parser = argparse.ArgumentParser()
-    parser.add_argument('subconfigure', type=str,
-                        help='Subconfigure to run')
-    args, others = parser.parse_known_args(args)
-    return run(args.subconfigure)
-
-
 def main(args):
-    if args[0] != '--prepare':
-        return subconfigure(args)
-
-    topsrcdir = os.path.abspath(args[1])
-    subdir = args[2]
+    topsrcdir = os.path.abspath(args[0])
+    subdir = args[1]
     # subdir can be of the form srcdir:objdir
     if ':' in subdir:
         srcdir, subdir = subdir.split(':', 1)
@@ -330,7 +319,8 @@ def main(args):
     srcdir = os.path.join(topsrcdir, srcdir)
     objdir = os.path.abspath(subdir)
 
-    return prepare(srcdir, objdir, args[3], args[4:])
+    data = prepare(srcdir, objdir, args[2], args[3:])
+    return run(data)
 
 
 if __name__ == '__main__':
