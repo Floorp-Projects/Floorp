@@ -2625,7 +2625,7 @@ extern JS_FRIEND_API JSObject* GetJSMEnvironmentOfScriptedCaller(JSContext* cx);
 extern JS_FRIEND_API bool IsJSMEnvironment(JSObject* obj);
 
 // Matches the condition in js/src/jit/ProcessExecutableMemory.cpp
-#if defined(XP_WIN) && defined(HAVE_64BIT_BUILD) && defined(_M_X64)
+#if defined(XP_WIN) && defined(HAVE_64BIT_BUILD)
 // Parameters use void* types to avoid #including windows.h. The return value of
 // this function is returned from the exception handler.
 typedef long (*JitExceptionHandler)(void* exceptionRecord,  // PEXECTION_RECORD
