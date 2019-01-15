@@ -23,6 +23,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     GetPageSource,
     GetWindowHandle,
     GetWindowHandles,
+    NewWindow(NewWindowParameters),
     CloseWindow,
     GetWindowRect,
     SetWindowRect(WindowRectParameters),
@@ -120,6 +121,7 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
             Route::GetPageSource => WebDriverCommand::GetPageSource,
             Route::GetWindowHandle => WebDriverCommand::GetWindowHandle,
             Route::GetWindowHandles => WebDriverCommand::GetWindowHandles,
+            Route::NewWindow => WebDriverCommand::NewWindow(serde_json::from_str(raw_body)?),
             Route::CloseWindow => WebDriverCommand::CloseWindow,
             Route::GetTimeouts => WebDriverCommand::GetTimeouts,
             Route::SetTimeouts => WebDriverCommand::SetTimeouts(serde_json::from_str(raw_body)?),
@@ -467,6 +469,12 @@ impl CapabilitiesMatching for NewSessionParameters {
             NewSessionParameters::Legacy(x) => x.match_browser(browser_capabilities),
         }
     }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct NewWindowParameters {
+    #[serde(rename = "type")]
+    pub type_hint: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -937,6 +945,45 @@ mod tests {
         });
 
         check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_new_window_parameters_without_type() {
+        let json = r#"{}"#;
+        let data = NewWindowParameters { type_hint: None };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_new_window_parameters_with_optional_null_type() {
+        let json = r#"{"type":null}"#;
+        let data = NewWindowParameters { type_hint: None };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_new_window_parameters_with_supported_type() {
+        let json = r#"{"type":"tab"}"#;
+        let data = NewWindowParameters { type_hint: Some("tab".into()) };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_new_window_parameters_with_unknown_type() {
+        let json = r#"{"type":"foo"}"#;
+        let data = NewWindowParameters { type_hint: Some("foo".into()) };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_new_window_parameters_with_invalid_type() {
+        let json = r#"{"type":3}"#;
+
+        assert!(serde_json::from_str::<NewWindowParameters>(&json).is_err());
     }
 
     #[test]

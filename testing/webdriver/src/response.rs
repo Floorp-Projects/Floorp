@@ -5,6 +5,7 @@ use serde_json::Value;
 #[derive(Debug, PartialEq, Serialize)]
 #[serde(untagged, remote = "Self")]
 pub enum WebDriverResponse {
+    NewWindow(NewWindowResponse),
     CloseWindow(CloseWindowResponse),
     Cookie(CookieResponse),
     Cookies(CookiesResponse),
@@ -30,6 +31,13 @@ impl Serialize for WebDriverResponse {
 
         Wrapper { value: self }.serialize(serializer)
     }
+}
+
+#[derive(Debug, PartialEq, Serialize)]
+pub struct NewWindowResponse {
+    pub handle: String,
+    #[serde(rename = "type")]
+    pub typ: String,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -132,6 +140,17 @@ mod tests {
     use crate::common::Date;
     use crate::test::check_serialize;
     use serde_json;
+
+    #[test]
+    fn test_json_new_window_response() {
+        let json = r#"{"value":{"handle":"42","type":"window"}}"#;
+        let data = WebDriverResponse::NewWindow(NewWindowResponse {
+            handle: "42".into(),
+            typ: "window".into(),
+        });
+
+        check_serialize(&json, &data);
+    }
 
     #[test]
     fn test_json_close_window_response() {
