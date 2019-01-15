@@ -13,7 +13,7 @@ use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerat
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap, PlaneSplitter};
 use picture::{PictureSurface, PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
-use picture::{TileCacheUpdateState, RetainedTiles};
+use picture::{RetainedTiles, TileCache};
 use prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
 #[cfg(feature = "replay")]
 use prim_store::{PrimitiveStoreStats};
@@ -75,6 +75,8 @@ pub struct FrameVisibilityContext<'a> {
     pub screen_world_rect: WorldRect,
     pub device_pixel_scale: DevicePixelScale,
     pub surfaces: &'a [SurfaceInfo],
+    pub debug_flags: DebugFlags,
+    pub scene_properties: &'a SceneProperties,
 }
 
 pub struct FrameVisibilityState<'a> {
@@ -82,6 +84,9 @@ pub struct FrameVisibilityState<'a> {
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
     pub scratch: &'a mut PrimitiveScratchBuffer,
+    pub tile_cache: Option<TileCache>,
+    pub retained_tiles: &'a mut RetainedTiles,
+    pub resources: &'a mut FrameResources,
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -208,9 +213,11 @@ impl FrameBuilder {
     pub fn destroy(
         self,
         retained_tiles: &mut RetainedTiles,
+        clip_scroll_tree: &ClipScrollTree,
     ) {
         self.prim_store.destroy(
             retained_tiles,
+            clip_scroll_tree,
         );
 
         // In general, the pending retained tiles are consumed by the frame
@@ -221,7 +228,7 @@ impl FrameBuilder {
         // be lost, causing a full invalidation of the entire screen. To
         // avoid this, if there are still pending tiles, include them in
         // the retained tiles passed to the next frame builder.
-        retained_tiles.tiles.extend(self.pending_retained_tiles.tiles);
+        retained_tiles.merge(self.pending_retained_tiles);
     }
 
     /// Compute the contribution (bounding rectangles, and resources) of layers and their
@@ -302,29 +309,14 @@ impl FrameBuilder {
             &self.clip_store,
         );
 
-        // Update the state of any picture tile caches. This is a no-op on most
-        // frames (it only does work the first time a new scene is built, or if
-        // the tile-relative transform dependencies have changed).
-        let mut tile_cache_state = TileCacheUpdateState::new();
-        self.prim_store.update_tile_cache(
-            self.root_pic_index,
-            &mut tile_cache_state,
-            &frame_context,
-            resource_cache,
-            resources,
-            &self.clip_store,
-            &pic_update_state.surfaces,
-            gpu_cache,
-            &mut retained_tiles,
-            scratch,
-        );
-
         {
             let visibility_context = FrameVisibilityContext {
                 device_pixel_scale,
                 clip_scroll_tree,
                 screen_world_rect,
                 surfaces: pic_update_state.surfaces,
+                debug_flags,
+                scene_properties,
             };
 
             let mut visibility_state = FrameVisibilityState {
@@ -332,6 +324,9 @@ impl FrameBuilder {
                 gpu_cache,
                 clip_store: &mut self.clip_store,
                 scratch,
+                tile_cache: None,
+                retained_tiles: &mut retained_tiles,
+                resources,
             };
 
             self.prim_store.update_visibility(
@@ -339,7 +334,6 @@ impl FrameBuilder {
                 ROOT_SURFACE_INDEX,
                 &visibility_context,
                 &mut visibility_state,
-                resources,
             );
         }
 
