@@ -148,6 +148,25 @@ void nsDOMNavigationTiming::NotifyLoadEventEnd() {
                             mDocShell);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
+#ifdef MOZ_GECKO_PROFILER
+    if (profiler_is_active() || PAGELOAD_LOG_ENABLED()) {
+      TimeDuration elapsed = mLoadEventEnd - mNavigationStart;
+      TimeDuration duration = mLoadEventEnd - mLoadEventStart;
+      nsAutoCString spec;
+      if (mLoadedURI) {
+        mLoadedURI->GetSpec(spec);
+      }
+      nsPrintfCString marker(
+          "Document %s loaded after %dms, load event duration %dms", spec.get(),
+          int(elapsed.ToMilliseconds()), int(duration.ToMilliseconds()));
+      DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
+      PAGELOAD_LOG(("%s", marker.get()));
+      profiler_add_marker(
+          "DocumentLoad",
+          MakeUnique<TextMarkerPayload>(marker, mNavigationStart, mLoadEventEnd,
+                                        docShellId, docShellHistoryId));
+    }
+#endif
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_END_MS,
                                    mNavigationStart);
   }
