@@ -82,14 +82,12 @@ var setupScript = runInParent(function setup() {
   }
 
   addMessageListener("addLogin", loginVariableName => {
-    // eslint-disable-next-line no-eval
-    let login = eval(loginVariableName);
+    let login = this[loginVariableName];
     assert.ok(!!login, "Login to add is defined: " + loginVariableName);
     Services.logins.addLogin(login);
   });
   addMessageListener("removeLogin", loginVariableName => {
-    // eslint-disable-next-line no-eval
-    let login = eval(loginVariableName);
+    let login = this[loginVariableName];
     assert.ok(!!login, "Login to delete is defined: " + loginVariableName);
     Services.logins.removeLogin(login);
   });
