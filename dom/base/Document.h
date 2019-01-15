@@ -136,6 +136,7 @@ class FullscreenRequest;
 class PendingAnimationTracker;
 class ServoStyleSet;
 class SMILAnimationController;
+enum class StyleCursorKind : uint8_t;
 template <typename>
 class OwningNonNull;
 struct URLExtraData;
@@ -445,7 +446,8 @@ class Document : public nsINode,
   Document& operator=(const Document&) = delete;
 
  public:
-  typedef mozilla::dom::ExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
+  typedef mozilla::dom::ExternalResourceMap::ExternalResourceLoad
+      ExternalResourceLoad;
   typedef net::ReferrerPolicy ReferrerPolicyEnum;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
@@ -1820,8 +1822,8 @@ class Document : public nsINode,
    */
   static bool HandlePendingFullscreenRequests(Document* aDocument);
 
-  void RequestPointerLock(Element* aElement, mozilla::dom::CallerType);
-  bool SetPointerLock(Element* aElement, int aCursorStyle);
+  void RequestPointerLock(Element* aElement, CallerType);
+  bool SetPointerLock(Element* aElement, StyleCursorKind);
 
   static void UnlockPointer(Document* aDoc = nullptr);
 
@@ -3096,7 +3098,9 @@ class Document : public nsINode,
 
 #ifdef MOZILLA_INTERNAL_API
   bool Hidden() const { return mVisibilityState != VisibilityState::Visible; }
-  mozilla::dom::VisibilityState VisibilityState() const { return mVisibilityState; }
+  mozilla::dom::VisibilityState VisibilityState() const {
+    return mVisibilityState;
+  }
 #endif
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   void SetSelectedStyleSheetSet(const nsAString& aSheetSet);
