@@ -551,6 +551,7 @@ class nsWindow final : public nsWindowBase {
   bool mMousePresent;
   bool mDestroyCalled;
   bool mOpeningAnimationSuppressed;
+  bool mAlwaysOnTop;
   bool mIsEarlyBlankWindow;
   uint32_t mBlurSuppressLevel;
   DWORD_PTR mOldStyle;
