@@ -30,6 +30,7 @@ enum class ModuleTrustFlags : uint32_t {
   KeyboardLayout = 0x40,
   JitPI = 0x80,
   WinSxSDirectory = 0x100,
+  Xul = 0x200,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ModuleTrustFlags);
