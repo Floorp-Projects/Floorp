@@ -357,7 +357,7 @@ class MOZ_STACK_CLASS TryNoteIter {
         } while (!(pcInRange() && tn_->kind == JSTRY_FOR_OF));
 
         // Advance to trynote following the enclosing for-of.
-        ++tn_;
+        continue;
       }
 
       /*

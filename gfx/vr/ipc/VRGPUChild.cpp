@@ -42,7 +42,18 @@ static StaticRefPtr<VRGPUChild> sVRGPUChildSingleton;
 
 /*static*/ void VRGPUChild::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
+  if (sVRGPUChildSingleton && !sVRGPUChildSingleton->IsClosed()) {
+    sVRGPUChildSingleton->Close();
+  }
   sVRGPUChildSingleton = nullptr;
+}
+
+void VRGPUChild::ActorDestroy(ActorDestroyReason aWhy) {
+  mClosed = true;
+}
+
+bool VRGPUChild::IsClosed() {
+  return mClosed;
 }
 
 }  // namespace gfx

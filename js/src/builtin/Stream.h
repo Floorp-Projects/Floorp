@@ -313,9 +313,8 @@ class ReadableStreamController : public StreamController {
         underlyingSource().toPrivate());
   }
   void setExternalSource(JS::ReadableStreamUnderlyingSource* underlyingSource) {
-    MOZ_ASSERT(getFixedSlot(Slot_Flags).isUndefined());
     setUnderlyingSource(JS::PrivateValue(underlyingSource));
-    setFlags(Flag_ExternalSource);
+    addFlags(Flag_ExternalSource);
   }
   double strategyHWM() const {
     return getFixedSlot(Slot_StrategyHWM).toNumber();

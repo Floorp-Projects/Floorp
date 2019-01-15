@@ -462,6 +462,21 @@ pub struct ClipChainInstance {
     pub pic_clip_rect: PictureRect,
 }
 
+impl ClipChainInstance {
+    pub fn empty() -> Self {
+        ClipChainInstance {
+            clips_range: ClipNodeRange {
+                first: 0,
+                count: 0,
+            },
+            local_clip_rect: LayoutRect::zero(),
+            has_non_local_clips: false,
+            needs_mask: false,
+            pic_clip_rect: PictureRect::zero(),
+        }
+    }
+}
+
 impl ClipStore {
     pub fn new() -> Self {
         ClipStore {

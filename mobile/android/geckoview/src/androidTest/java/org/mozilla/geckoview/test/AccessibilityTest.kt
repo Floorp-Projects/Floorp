@@ -93,6 +93,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     private interface EventDelegate {
         fun onAccessibilityFocused(event: AccessibilityEvent) { }
+        fun onAccessibilityFocusCleared(event: AccessibilityEvent) { }
         fun onClicked(event: AccessibilityEvent) { }
         fun onFocused(event: AccessibilityEvent) { }
         fun onSelected(event: AccessibilityEvent) { }
@@ -125,6 +126,7 @@ class AccessibilityTest : BaseSessionTest() {
                     AccessibilityEvent.TYPE_VIEW_FOCUSED -> newDelegate.onFocused(event)
                     AccessibilityEvent.TYPE_VIEW_CLICKED -> newDelegate.onClicked(event)
                     AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED -> newDelegate.onAccessibilityFocused(event)
+                    AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED -> newDelegate.onAccessibilityFocusCleared(event)
                     AccessibilityEvent.TYPE_VIEW_SELECTED -> newDelegate.onSelected(event)
                     AccessibilityEvent.TYPE_VIEW_SCROLLED -> newDelegate.onScrolled(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED -> newDelegate.onTextSelectionChanged(event)
@@ -192,6 +194,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat("Label accessibility focused", node.className.toString(),
                         equalTo("android.view.View"))
                 assertThat("Text node should not be focusable", node.isFocusable, equalTo(false))
+                assertThat("Text node should be a11y focused", node.isAccessibilityFocused, equalTo(true))
                 assertThat("Text node should not be clickable", node.isClickable, equalTo(false))
             }
         })
@@ -207,7 +210,20 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat("Editbox accessibility focused", node.className.toString(),
                         equalTo("android.widget.EditText"))
                 assertThat("Entry node should be focusable", node.isFocusable, equalTo(true))
+                assertThat("Entry node should be a11y focused", node.isAccessibilityFocused, equalTo(true))
                 assertThat("Entry node should be clickable", node.isClickable, equalTo(true))
+            }
+        })
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS, null)
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocusCleared(event: AccessibilityEvent) {
+                assertThat("Accessibility focused node is now cleared", getSourceId(event), equalTo(nodeId))
+                val node = createNodeInfo(nodeId)
+                assertThat("Entry node should node be a11y focused", node.isAccessibilityFocused, equalTo(false))
             }
         })
     }

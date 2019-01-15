@@ -378,7 +378,7 @@ class gfxPrefs final {
   DECL_GFX_PREF(Once, "dom.vr.enabled",                        VREnabled, bool, false);
   DECL_GFX_PREF(Live, "dom.vr.autoactivate.enabled",           VRAutoActivateEnabled, bool, false);
   DECL_GFX_PREF(Live, "dom.vr.controller_trigger_threshold",   VRControllerTriggerThreshold, float, 0.1f);
-  DECL_GFX_PREF(Once, "dom.vr.external.enabled",               VRExternalEnabled, bool, true);
+  DECL_GFX_PREF(Once, "dom.vr.external.enabled",               VRExternalEnabled, bool, false);
   DECL_GFX_PREF(Live, "dom.vr.external.notdetected.timeout",   VRExternalNotDetectedTimeout, int32_t, 60000);
   DECL_GFX_PREF(Live, "dom.vr.external.quit.timeout",          VRExternalQuitTimeout, int32_t, 10000);
   DECL_GFX_PREF(Live, "dom.vr.navigation.timeout",             VRNavigationTimeout, int32_t, 1000);

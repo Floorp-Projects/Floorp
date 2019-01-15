@@ -1026,7 +1026,8 @@ bool js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj) {
 JSObject* js::CreateThis(JSContext* cx, const Class* newclasp,
                          HandleObject callee) {
   RootedObject proto(cx);
-  if (!GetPrototypeFromConstructor(cx, callee, &proto)) {
+  if (!GetPrototypeFromConstructor(
+          cx, callee, JSCLASS_CACHED_PROTO_KEY(newclasp), &proto)) {
     return nullptr;
   }
   gc::AllocKind kind = NewObjectGCKind(newclasp);
@@ -1158,12 +1159,45 @@ JSObject* js::CreateThisForFunctionWithProto(
 }
 
 bool js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget,
+                                     JSProtoKey intrinsicDefaultProto,
                                      MutableHandleObject proto) {
   RootedValue protov(cx);
   if (!GetProperty(cx, newTarget, newTarget, cx->names().prototype, &protov)) {
     return false;
   }
-  proto.set(protov.isObject() ? &protov.toObject() : nullptr);
+  if (protov.isObject()) {
+    proto.set(&protov.toObject());
+  } else if (newTarget->is<JSFunction>() &&
+             newTarget->as<JSFunction>().realm() == cx->realm()) {
+    // Steps 4.a-b fetch the builtin prototype of the current realm, which we
+    // represent as nullptr.
+    proto.set(nullptr);
+  } else if (intrinsicDefaultProto == JSProto_Null) {
+    // Bug 1317416. The caller did not pass a reasonable JSProtoKey, so let the
+    // caller select a prototype object. Most likely they will choose one from
+    // the wrong realm.
+    proto.set(nullptr);
+  } else {
+    // Step 4.a: Let realm be ? GetFunctionRealm(constructor);
+    JSObject* unwrappedConstructor = CheckedUnwrap(newTarget);
+    if (!unwrappedConstructor) {
+      ReportAccessDenied(cx);
+      return false;
+    }
+
+    // Step 4.b: Set proto to realm's intrinsic object named
+    //           intrinsicDefaultProto.
+    {
+      AutoRealm ar(cx, unwrappedConstructor);
+      proto.set(GlobalObject::getOrCreatePrototype(cx, intrinsicDefaultProto));
+    }
+    if (!proto) {
+      return false;
+    }
+    if (!cx->compartment()->wrap(cx, proto)) {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -1171,7 +1205,7 @@ JSObject* js::CreateThisForFunction(JSContext* cx, HandleObject callee,
                                     HandleObject newTarget,
                                     NewObjectKind newKind) {
   RootedObject proto(cx);
-  if (!GetPrototypeFromConstructor(cx, newTarget, &proto)) {
+  if (!GetPrototypeFromConstructor(cx, newTarget, JSProto_Null, &proto)) {
     return nullptr;
   }
 
@@ -3677,6 +3711,10 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
   }
 
   out.printf(")\n");
+}
+
+bool JSObject::hasSameRealmAs(JSContext* cx) const {
+  return nonCCWRealm() == cx->realm();
 }
 
 bool JSObject::uninlinedIsProxy() const { return is<ProxyObject>(); }

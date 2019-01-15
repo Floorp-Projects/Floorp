@@ -3136,7 +3136,7 @@ static bool NewDateObject(JSContext* cx, const CallArgs& args, ClippedTime t) {
   MOZ_ASSERT(args.isConstructing());
 
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Date, &proto)) {
     return false;
   }
 

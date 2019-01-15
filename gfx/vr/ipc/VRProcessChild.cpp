@@ -26,8 +26,6 @@ VRProcessChild::~VRProcessChild() { sVRParent = nullptr; }
 }
 
 bool VRProcessChild::Init(int aArgc, char* aArgv[]) {
-  BackgroundHangMonitor::Startup();
-
   char* parentBuildID = nullptr;
   for (int i = 1; i < aArgc; i++) {
     if (!aArgv[i]) {

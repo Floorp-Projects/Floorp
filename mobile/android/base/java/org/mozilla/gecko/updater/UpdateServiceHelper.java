@@ -201,6 +201,8 @@ public class UpdateServiceHelper {
             .replace("%DISTRIBUTION_VERSION%", "default")
             .replace("%MOZ_VERSION%", AppConstants.MOZILLA_VERSION);
 
+        Log.i(LOGTAG, "AUS Url is: " + url);
+
         try {
             return new URI(url);
         } catch (java.net.URISyntaxException e) {
