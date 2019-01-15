@@ -756,6 +756,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   mIsRTL = aInitData->mRTL;
   mOpeningAnimationSuppressed = aInitData->mIsAnimationSuppressed;
+  mAlwaysOnTop = aInitData->mAlwaysOnTop;
 
   DWORD style = WindowStyle();
   DWORD extendedStyle = WindowExStyle();
@@ -833,6 +834,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   if (mOpeningAnimationSuppressed) {
     SuppressAnimation(true);
+  }
+
+  if (mAlwaysOnTop) {
+    ::SetWindowPos(mWnd, HWND_TOPMOST, 0, 0, 0, 0,
+                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
   }
 
   if (!IsPlugin() && mWindowType != eWindowType_invisible &&

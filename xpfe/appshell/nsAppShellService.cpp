@@ -590,6 +590,9 @@ nsresult nsAppShellService::JustCreateTopWindow(
   if (aChromeMask & nsIWebBrowserChrome::CHROME_SUPPRESS_ANIMATION)
     widgetInitData.mIsAnimationSuppressed = true;
 
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_ALWAYS_ON_TOP)
+    widgetInitData.mAlwaysOnTop = true;
+
 #ifdef XP_MACOSX
   // Mac OS X sheet support
   // Adding CHROME_OPENAS_CHROME to sheetMask makes modal windows opened from

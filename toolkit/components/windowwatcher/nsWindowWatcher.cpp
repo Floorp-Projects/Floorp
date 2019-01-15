@@ -1774,7 +1774,9 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
   chromeFlags |= WinHasOption(aFeatures, "suppressanimation", 0, nullptr)
                      ? nsIWebBrowserChrome::CHROME_SUPPRESS_ANIMATION
                      : 0;
-
+  chromeFlags |= WinHasOption(aFeatures, "alwaysontop", 0, nullptr)
+                     ? nsIWebBrowserChrome::CHROME_ALWAYS_ON_TOP
+                     : 0;
   chromeFlags |= WinHasOption(aFeatures, "chrome", 0, nullptr)
                      ? nsIWebBrowserChrome::CHROME_OPENAS_CHROME
                      : 0;
