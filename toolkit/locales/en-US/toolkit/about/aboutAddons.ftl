@@ -281,8 +281,7 @@ extensions-updates-update-selected =
 shortcuts-manage =
   .label = Keyboard Shortcuts
 shortcuts-empty-message = There are no shortcuts for this extension.
-# TODO: Confirm this copy.
-shortcuts-no-addons = You don't have any active add-ons.
+shortcuts-no-addons = You don’t have any extensions enabled.
 shortcuts-input =
   .placeholder = Type a shortcut
 
