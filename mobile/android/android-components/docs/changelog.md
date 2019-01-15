@@ -38,7 +38,7 @@ permalink: /changelog/
   * [Improve URL toolbar autocompletion matching](https://github.com/mozilla-mobile/android-components/commit/ff25ec3e6646736e2b4ba3ee1d9fdd9a8412ce8c).
 
 * **browser-session**
-  * [Improving tab selection algorithm, when removing the selected tab.](https://github.com/mozilla-mobile/android-components/issues/1518).
+  * [Improving tab selection algorithm, when removing the selected tab.](https://github.com/mozilla-mobile/android-components/issues/1518)
   * [Saving the state when the app goes to the background no longer blocks the UI thread.](https://github.com/mozilla-mobile/android-components/commit/ea811e089cd40c6d1fc9ec688fa5db3e7b023331)
 
 * **browser-engine-system**
@@ -51,7 +51,7 @@ permalink: /changelog/
   * Added support for [datetime-local](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local) and [time](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/time) pickers.
 
 * **browser-menu**
-  * [](https://github.com/mozilla-mobile/android-components/commit/ca697d86d1c70d1e3e159480b45f87b9b75515c8)
+  * `BrowserMenuItemToolbar` now allows overriding the `visible` lambda.
 
 * **service-sync-logins**, **service-firefox-accounts**, **concept-storage**
   * Updated underlying library from 0.12.1 to 0.13.3, see the [release notes for 0.13.0](https://github.com/mozilla/application-services/blob/master/CHANGELOG.md#0130-2019-01-09) for futher details on the most substantial changes. ([#1690](https://github.com/mozilla-mobile/android-components/issues/1690))
