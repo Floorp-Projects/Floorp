@@ -13,8 +13,6 @@
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
-#include "mozilla/LauncherRegistryInfo.h"
-#include "mozilla/LauncherResult.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SafeMode.h"
 #include "mozilla/Sprintf.h"  // For printf_stderr
@@ -28,6 +26,7 @@
 
 #include "DllBlocklistWin.h"
 #include "ErrorHandler.h"
+#include "LauncherResult.h"
 #include "LaunchUnelevated.h"
 #include "ProcThreadAttributes.h"
 
@@ -39,7 +38,7 @@
  * At this point the child process has been created in a suspended state. Any
  * additional startup work (eg, blocklist setup) should go here.
  *
- * @return Ok if browser startup should proceed
+ * @return true if browser startup should proceed, otherwise false.
  */
 static mozilla::LauncherVoidResult PostCreationSetup(HANDLE aChildProcess,
                                                      HANDLE aChildMainThread,
@@ -145,14 +144,16 @@ static void MaybeBreakForBrowserDebugging() {
   ::Sleep(pauseLenMs);
 }
 
-static bool DoLauncherProcessChecks(int& argc, wchar_t** argv) {
+namespace mozilla {
+
+bool RunAsLauncherProcess(int& argc, wchar_t** argv) {
   // NB: We run all tests in this function instead of returning early in order
   // to ensure that all side effects take place, such as clearing environment
   // variables.
   bool result = false;
 
 #if defined(MOZ_LAUNCHER_PROCESS)
-  mozilla::LauncherResult<bool> isSame = mozilla::IsSameBinaryAsParentProcess();
+  LauncherResult<bool> isSame = IsSameBinaryAsParentProcess();
   if (isSame.isOk()) {
     result = !isSame.unwrap();
   } else {
@@ -165,47 +166,17 @@ static bool DoLauncherProcessChecks(int& argc, wchar_t** argv) {
     result = true;
   }
 
-  result |= mozilla::CheckArg(
-                argc, argv, L"launcher", static_cast<const wchar_t**>(nullptr),
-                mozilla::CheckArgFlag::RemoveArg) == mozilla::ARG_FOUND;
+  result |=
+      CheckArg(argc, argv, L"launcher", static_cast<const wchar_t**>(nullptr),
+               CheckArgFlag::RemoveArg) == ARG_FOUND;
 
-  return result;
-}
-
-namespace mozilla {
-
-bool RunAsLauncherProcess(int& argc, wchar_t** argv) {
-  LauncherRegistryInfo::ProcessType desiredType =
-      DoLauncherProcessChecks(argc, argv)
-          ? LauncherRegistryInfo::ProcessType::Launcher
-          : LauncherRegistryInfo::ProcessType::Browser;
-
-  // If we're looking at browser, return fast when we're a child process.
-  if (desiredType == LauncherRegistryInfo::ProcessType::Browser &&
-      mozilla::CheckArg(argc, argv, L"contentproc",
-                        static_cast<const wchar_t**>(nullptr),
-                        mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND) {
-    return false;
-  }
-
-  LauncherRegistryInfo regInfo;
-  LauncherResult<LauncherRegistryInfo::ProcessType> runAsType =
-      regInfo.Check(desiredType);
-
-  if (runAsType.isErr()) {
-    HandleLauncherError(runAsType);
-    // If there is an error, we should always fall back to returning false
-    // for safety's sake.
-    return false;
-  }
-
-  if (runAsType.unwrap() == LauncherRegistryInfo::ProcessType::Browser) {
+  if (!result) {
     // In this case, we will be proceeding to run as the browser.
     // We should check MOZ_DEBUG_BROWSER_* env vars.
     MaybeBreakForBrowserDebugging();
   }
 
-  return runAsType.unwrap() == LauncherRegistryInfo::ProcessType::Launcher;
+  return result;
 }
 
 int LauncherMain(int argc, wchar_t* argv[]) {

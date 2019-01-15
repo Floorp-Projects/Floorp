@@ -7,6 +7,11 @@
 #ifndef mozilla_NativeNt_h
 #define mozilla_NativeNt_h
 
+#if defined(MOZILLA_INTERNAL_API)
+#error \
+    "This header is for initial process initialization. You don't want to be including this here."
+#endif  // defined(MOZILLA_INTERNAL_API)
+
 #include <stdint.h>
 #include <windows.h>
 #include <winnt.h>
@@ -14,12 +19,8 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/LauncherResult.h"
 
-// The declarations within this #if block are intended to be used for initial
-// process initialization ONLY. You probably don't want to be using these in
-// normal Gecko code!
-#if !defined(MOZILLA_INTERNAL_API)
+#include "LauncherResult.h"
 
 extern "C" {
 
@@ -79,12 +80,8 @@ VOID NTAPI RtlReleaseSRWLockExclusive(PSRWLOCK aLock);
 
 }  // extern "C"
 
-#endif  // !defined(MOZILLA_INTERNAL_API)
-
 namespace mozilla {
 namespace nt {
-
-#if !defined(MOZILLA_INTERNAL_API)
 
 struct MemorySectionNameBuf : public _MEMORY_SECTION_NAME {
   MemorySectionNameBuf() {
@@ -204,8 +201,6 @@ inline void GetLeafName(PUNICODE_STRING aDestString,
   aDestString->Length = (end - aDestString->Buffer + 1) * sizeof(WCHAR);
   aDestString->MaximumLength = aDestString->Length;
 }
-
-#endif  // !defined(MOZILLA_INTERNAL_API)
 
 inline char EnsureLowerCaseASCII(char aChar) {
   if (aChar >= 'A' && aChar <= 'Z') {
