@@ -172,6 +172,30 @@ class nsStyleCoord {
     return mUnit == eStyleUnit_Percent || (IsCalcUnit() && CalcHasPercent());
   }
 
+  static bool ConvertsToPercent(const nsStyleUnit aUnit,
+                                const nsStyleUnion aValue) {
+
+    if (aUnit == eStyleUnit_Percent) {
+      return true;
+    }
+    if (!IsCalcUnit(aUnit)) {
+      return false;
+    }
+    auto* calc = AsCalcValue(aValue);
+    return calc->mLength == 0 && calc->mHasPercent;
+  }
+
+  bool ConvertsToPercent() const { return ConvertsToPercent(mUnit, mValue); }
+
+  float ToPercent() const {
+    MOZ_ASSERT(ConvertsToPercent());
+    if (IsCalcUnit()) {
+      MOZ_ASSERT(CalcHasPercent() && GetCalcValue()->mLength == 0);
+      return GetCalcValue()->mPercent;
+    }
+    return mValue.mFloat;
+  }
+
   static bool ConvertsToLength(const nsStyleUnit aUnit,
                                const nsStyleUnion aValue) {
     return aUnit == eStyleUnit_Coord ||
