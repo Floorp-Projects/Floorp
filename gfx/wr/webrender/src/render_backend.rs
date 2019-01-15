@@ -605,6 +605,7 @@ impl Document {
         if let Some(frame_builder) = self.frame_builder.take() {
             frame_builder.destroy(
                 &mut retained_tiles,
+                &self.clip_scroll_tree,
             );
         }
 
