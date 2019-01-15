@@ -242,6 +242,14 @@ public class GeckoView extends FrameLayout {
         }
     }
 
+    /**
+     * Unsets the current session from this instance and returns it, if any. You must call
+     * this before {@link #setSession(GeckoSession)} if there is already an open session
+     * set for this instance.
+     *
+     * @return The {@link GeckoSession} that was set for this instance. May be null.
+     */
+    @UiThread
     public @Nullable GeckoSession releaseSession() {
         ThreadUtils.assertOnUiThread();
 
@@ -279,10 +287,14 @@ public class GeckoView extends FrameLayout {
 
     /**
      * Attach a session to this view. The session should be opened before
-     * attaching.
+     * attaching. If this instance already has an open session, you must use
+     * {@link #releaseSession()} first, otherwise {@link IllegalStateException}
+     * will be thrown. This is to avoid potentially leaking the currently opened session.
      *
      * @param session The session to be attached.
+     * @throws IllegalArgumentException if an existing open session is already set.
      */
+    @UiThread
     public void setSession(@NonNull final GeckoSession session) {
         ThreadUtils.assertOnUiThread();
 
@@ -296,10 +308,15 @@ public class GeckoView extends FrameLayout {
     /**
      * Attach a session to this view. The session should be opened before
      * attaching or a runtime needs to be provided for automatic opening.
+     * If this instance already has an open session, you must use
+     * {@link #releaseSession()} first, otherwise {@link IllegalStateException}
+     * will be thrown. This is to avoid potentially leaking the currently opened session.
      *
      * @param session The session to be attached.
      * @param runtime The runtime to be used for opening the session.
+     * @throws IllegalArgumentException if an existing open session is already set.
      */
+    @UiThread
     public void setSession(@NonNull final GeckoSession session,
                            @Nullable final GeckoRuntime runtime) {
         ThreadUtils.assertOnUiThread();
