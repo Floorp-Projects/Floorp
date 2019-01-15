@@ -2,6 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/components/places/tests/browser/head.js",
+  this);
+/* globals withSidebarTree, synthesizeClickOnSelectedTreeCell */
+
 const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 
 add_task(async function() {
@@ -514,13 +519,8 @@ add_task(async function testRemoveAllWithTwoExtensions() {
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function test_bookmark_contextmenu() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
-
-  const bookmarksToolbar = document.getElementById("PersonalToolbar");
-  setToolbarVisibility(bookmarksToolbar, true);
-
-  const extension = ExtensionTestUtils.loadExtension({
+function bookmarkContextMenuExtension() {
+  return ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["contextMenus", "bookmarks", "activeTab"],
     },
@@ -552,10 +552,20 @@ add_task(async function test_bookmark_contextmenu() {
         title: "Get bookmark",
         contexts: ["bookmark"],
       }, () => {
-        browser.test.sendMessage("bookmark-created");
+        browser.test.sendMessage("bookmark-created", newBookmark.id);
       });
     },
   });
+}
+
+add_task(async function test_bookmark_contextmenu() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+
+  const bookmarksToolbar = document.getElementById("PersonalToolbar");
+  setToolbarVisibility(bookmarksToolbar, true);
+
+  const extension = bookmarkContextMenuExtension();
+
   await extension.startup();
   await extension.awaitMessage("bookmark-created");
   let menu = await openChromeContextMenu(
@@ -570,6 +580,30 @@ add_task(async function test_bookmark_contextmenu() {
   setToolbarVisibility(bookmarksToolbar, false);
 
   BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_bookmark_sidebar_contextmenu() {
+  await withSidebarTree("bookmarks", async (tree) => {
+    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+
+    let extension = bookmarkContextMenuExtension();
+    await extension.startup();
+    let bookmarkGuid = await extension.awaitMessage("bookmark-created");
+
+    let sidebar = window.SidebarUI.browser;
+    let menu = sidebar.contentDocument.getElementById("placesContext");
+    tree.selectItems([bookmarkGuid]);
+    let shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+    synthesizeClickOnSelectedTreeCell(tree, {type: "contextmenu"});
+    await shown;
+
+    let menuItem = menu.getElementsByAttribute("label", "Get bookmark")[0];
+    closeChromeContextMenu("placesContext", menuItem, sidebar.contentWindow);
+    await extension.awaitMessage("test-finish");
+    await extension.unload();
+
+    BrowserTestUtils.removeTab(tab);
+  });
 });
 
 add_task(async function test_bookmark_context_requires_permission() {
