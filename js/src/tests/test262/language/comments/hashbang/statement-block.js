@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- hashbang is not supported
+// |reftest| error:SyntaxError
 /*---
 esid: pending
 description: >

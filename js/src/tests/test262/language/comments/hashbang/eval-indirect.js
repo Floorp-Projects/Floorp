@@ -1,4 +1,3 @@
-// |reftest| skip -- hashbang is not supported
 /*---
 esid: pending
 description: >
