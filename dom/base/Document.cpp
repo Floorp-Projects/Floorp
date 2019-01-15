@@ -284,6 +284,7 @@
 
 #include "mozilla/MediaManager.h"
 
+#include "AutoplayPolicy.h"
 #include "nsIURIMutator.h"
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/PendingFullscreenEvent.h"
@@ -11729,6 +11730,10 @@ void Document::SetDocTreeHadPlayRevoked() {
   if (topLevelDoc) {
     topLevelDoc->mDocTreeHadPlayRevoked = true;
   }
+}
+
+DocumentAutoplayPolicy Document::AutoplayPolicy() const {
+  return AutoplayPolicy::IsAllowedToPlay(*this);
 }
 
 void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
