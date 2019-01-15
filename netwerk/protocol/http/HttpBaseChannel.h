@@ -793,7 +793,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpBaseChannel, HTTP_BASE_CHANNEL_IID)
 template <class T>
 class HttpAsyncAborter {
  public:
-  explicit HttpAsyncAborter(T *derived) : mThis(derived), mCallOnResume(0) {}
+  explicit HttpAsyncAborter(T *derived)
+      : mThis(derived), mCallOnResume(nullptr) {}
 
   // Aborts channel: calls OnStart/Stop with provided status, removes channel
   // from loadGroup.
@@ -813,7 +814,7 @@ class HttpAsyncAborter {
 
  protected:
   // Function to be called at resume time
-  void (T::*mCallOnResume)(void);
+  std::function<nsresult(T *)> mCallOnResume;
 };
 
 template <class T>
@@ -838,7 +839,10 @@ inline void HttpAsyncAborter<T>::HandleAsyncAbort() {
     MOZ_LOG(
         gHttpLog, LogLevel::Debug,
         ("Waiting until resume to do async notification [this=%p]\n", mThis));
-    mCallOnResume = &T::HandleAsyncAbort;
+    mCallOnResume = [](T *self) {
+      self->HandleAsyncAbort();
+      return NS_OK;
+    };
     return;
   }
 
