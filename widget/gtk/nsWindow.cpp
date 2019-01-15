@@ -3364,14 +3364,6 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
   bool needsAlphaVisual =
       (mWindowType == eWindowType_popup && aInitData->mSupportTranslucency);
 
-  // Some Gtk+ themes use non-rectangular toplevel windows. To fully support
-  // such themes we need to make toplevel window transparent with ARGB visual.
-  // It may cause performanance issue so make it configurable
-  // and enable it by default for selected window managers.
-  if (mWindowType == eWindowType_toplevel) {
-    needsAlphaVisual = TopLevelWindowUseARGBVisual();
-  }
-
   if (aParent) {
     parentnsWindow = static_cast<nsWindow *>(aParent);
     parentGdkWindow = parentnsWindow->mGdkWindow;
@@ -3418,8 +3410,6 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
       }
       mShell = gtk_window_new(type);
 
-      bool isSetVisual = false;
-#ifdef MOZ_X11
       // Ensure gfxPlatform is initialized, since that is what initializes
       // gfxVars, used below.
       Unused << gfxPlatform::GetPlatform();
@@ -3430,6 +3420,18 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
       bool shouldAccelerate = ComputeShouldAccelerate();
       MOZ_ASSERT(shouldAccelerate | !useWebRender);
 
+      // Some Gtk+ themes use non-rectangular toplevel windows. To fully support
+      // such themes we need to make toplevel window transparent with ARGB visual.
+      // It may cause performanance issue so make it configurable
+      // and enable it by default for selected window managers.
+      // Also disable it for X11 SW rendering (Bug 1516224) by default.
+      if (mWindowType == eWindowType_toplevel &&
+          (shouldAccelerate || !mIsX11Display ||
+            Preferences::HasUserValue("mozilla.widget.use-argb-visuals"))) {
+          needsAlphaVisual = TopLevelWindowUseARGBVisual();
+      }
+
+      bool isSetVisual = false;
       // If using WebRender on X11, we need to select a visual with a depth
       // buffer, as well as an alpha channel if transparency is requested. This
       // must be done before the widget is realized.
@@ -3453,7 +3455,6 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
           NS_WARNING("We're missing X11 Visual!");
         }
       }
-#endif  // MOZ_X11
 
       if (!isSetVisual && needsAlphaVisual) {
         GdkScreen *screen = gtk_widget_get_screen(mShell);
