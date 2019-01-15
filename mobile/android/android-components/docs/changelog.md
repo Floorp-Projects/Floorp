@@ -472,6 +472,37 @@ permalink: /changelog/
 * **engine-gecko,engine-gecko-beta and engine-gecko-nightly**
   * Fixing bug [#1333](https://github.com/mozilla-mobile/android-components/issues/1333). This issue didn't allow to use a `GeckoEngineSession` after sending a crash report.
 
+# 0.32.2
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.32.1...v0.32.2),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.32.0/index)
+
+* Compiled against:
+  * Android (SDK: **28** 🔺, Support Libraries: **28.0.0** 🔺)
+  * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
+  * GeckoView (Nightly: **65.0.20181116100120** 🔺, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
+  * Mozilla App Services (FxA: **0.10.0** 🔺, Sync Logins: **0.10.0** 🔺, Places: **0.10.0** 🔺)
+
+* **ui-autocomplete**
+  * Fixed problem handling backspaces as described in [Issue 1489](https://github.com/mozilla-mobile/android-components/issues/1489)
+
+* **browser-search**  
+  * Updated search codes (see [Issue 1563](https://github.com/mozilla-mobile/android-components/issues/1563) for details)
+
+# 0.32.1
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.32.0...v0.32.1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.32.0/index)
+
+* Compiled against:
+  * Android (SDK: **28** 🔺, Support Libraries: **28.0.0** 🔺)
+  * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
+  * GeckoView (Nightly: **65.0.20181116100120** 🔺, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
+  * Mozilla App Services (FxA: **0.10.0** 🔺, Sync Logins: **0.10.0** 🔺, Places: **0.10.0** 🔺)
+
+* **browser-session**
+  * Fixed concurrency problem and related crash described in [Issue 1624](https://github.com/mozilla-mobile/android-components/issues/1624)
+
 # 0.32.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.31.0...v0.32.0),
