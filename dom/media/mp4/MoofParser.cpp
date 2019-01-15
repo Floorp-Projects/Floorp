@@ -227,11 +227,11 @@ void MoofParser::ParseTrak(Box& aBox) {
     if (box.IsType("tkhd")) {
       tkhd = Tkhd(box);
     } else if (box.IsType("mdia")) {
-      if (mIsMultitrackParser || tkhd.mTrackId == mTrex.mTrackId) {
+      if (!mTrex.mTrackId || tkhd.mTrackId == mTrex.mTrackId) {
         ParseMdia(box, tkhd);
       }
     } else if (box.IsType("edts") &&
-               (mIsMultitrackParser || tkhd.mTrackId == mTrex.mTrackId)) {
+               (!mTrex.mTrackId || tkhd.mTrackId == mTrex.mTrackId)) {
       mEdts = Edts(box);
     }
   }
@@ -251,8 +251,12 @@ void MoofParser::ParseMvex(Box& aBox) {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("trex")) {
       Trex trex = Trex(box);
-      if (mIsMultitrackParser || trex.mTrackId == mTrex.mTrackId) {
+      if (!mTrex.mTrackId || trex.mTrackId == mTrex.mTrackId) {
+        auto trackId = mTrex.mTrackId;
         mTrex = trex;
+        // Keep the original trackId, as should it be 0 we want to continue
+        // parsing all tracks.
+        mTrex.mTrackId = trackId;
       }
     }
   }
@@ -295,8 +299,8 @@ void MoofParser::ParseStbl(Box& aBox) {
 }
 
 void MoofParser::ParseStsd(Box& aBox) {
-  if (mIsMultitrackParser) {
-    // If mIsMultitrackParser, then the parser is being used to read multiple
+  if (mTrex.mTrackId == 0) {
+    // If mTrex.mTrackId is 0, then the parser is being used to read multiple
     // tracks metadata, and it is not a sane operation to try and map multiple
     // sample description boxes, from different tracks, onto the parser, which
     // is modeled around storing metadata for a single track.
