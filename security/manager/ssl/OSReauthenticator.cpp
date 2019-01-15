@@ -84,7 +84,8 @@ static nsresult ReauthenticateUserWindows(const nsACString& aPrompt,
   credui.cbSize = sizeof(credui);
   // TODO: maybe set parent (Firefox) here.
   credui.hwndParent = nullptr;
-  const nsString& prompt = PromiseFlatString(NS_ConvertUTF8toUTF16(aPrompt));
+  const nsString& tmpPrompt = NS_ConvertUTF8toUTF16(aPrompt);
+  const nsString& prompt = PromiseFlatString(tmpPrompt);
   credui.pszMessageText = prompt.get();
   credui.pszCaptionText = nullptr;
   credui.hbmBanner = nullptr;  // ignored
