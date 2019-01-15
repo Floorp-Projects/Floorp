@@ -209,5 +209,19 @@ static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
   return IsAudioContextAllowedToPlay(aContext);
 }
 
+/* static */ DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
+    const Document& aDocument) {
+  if (DefaultAutoplayBehaviour() == nsIAutoplay::ALLOWED ||
+      IsWindowAllowedToPlay(aDocument.GetInnerWindow())) {
+    return DocumentAutoplayPolicy::Allowed;
+  }
+
+  if (StaticPrefs::MediaAutoplayAllowMuted()) {
+    return DocumentAutoplayPolicy::Allowed_muted;
+  }
+
+  return DocumentAutoplayPolicy::Disallowed;
+}
+
 }  // namespace dom
 }  // namespace mozilla
