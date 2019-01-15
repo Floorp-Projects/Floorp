@@ -2613,6 +2613,7 @@ var gDetailView = {
 
   initialize() {
     this.node = document.getElementById("detail-view");
+    this.headingImage = this.node.querySelector(".card-heading-image");
 
     this._autoUpdate = document.getElementById("detail-autoUpdate");
 
@@ -2636,8 +2637,10 @@ var gDetailView = {
     if (aAddon.type == "theme") {
       let previewURL = aAddon.screenshots && aAddon.screenshots[0] && aAddon.screenshots[0].url;
       if (previewURL) {
-        this.node.querySelector(".card-heading-image").src = previewURL;
+        this.headingImage.src = previewURL;
       }
+    } else {
+      this.headingImage.src = "";
     }
 
     AddonManager.addManagerListener(this);
