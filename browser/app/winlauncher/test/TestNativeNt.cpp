@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/NativeNt.h"
+#include "NativeNt.h"
 #include "mozilla/UniquePtr.h"
 
 #include <stdio.h>
@@ -38,7 +38,7 @@ const char kFailFmt[] =
 using namespace mozilla;
 using namespace mozilla::nt;
 
-int main(int argc, char* argv[]) {
+extern "C" int wmain(int argc, wchar_t* argv[]) {
   UNICODE_STRING normal;
   ::RtlInitUnicodeString(&normal, kNormal);
 
