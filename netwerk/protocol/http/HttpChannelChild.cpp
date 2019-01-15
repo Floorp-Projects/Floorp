@@ -2347,9 +2347,17 @@ HttpChannelChild::Resume() {
       SendResume();
     }
     if (mCallOnResume) {
-      rv = AsyncCall(mCallOnResume);
-      NS_ENSURE_SUCCESS(rv, rv);
-      mCallOnResume = nullptr;
+      nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+      MOZ_ASSERT(neckoTarget);
+
+      RefPtr<HttpChannelChild> self = this;
+      std::function<nsresult(HttpChannelChild*)> callOnResume = nullptr;
+      std::swap(callOnResume, mCallOnResume);
+      rv = neckoTarget->Dispatch(
+          NS_NewRunnableFunction(
+              "net::HttpChannelChild::mCallOnResume",
+              [callOnResume, self{std::move(self)}]() { callOnResume(self); }),
+          NS_DISPATCH_NORMAL);
     }
   }
   if (mSynthesizedResponsePump) {
@@ -3813,7 +3821,7 @@ HttpChannelChild::LogMimeTypeMismatch(const nsACString& aMessageName,
 
   nsAutoString url(aURL);
   nsAutoString contentType(aContentType);
-  const char16_t* params[] = { url.get(), contentType.get() };
+  const char16_t* params[] = {url.get(), contentType.get()};
   nsContentUtils::ReportToConsole(
       aWarning ? nsIScriptError::warningFlag : nsIScriptError::errorFlag,
       NS_LITERAL_CSTRING("MIMEMISMATCH"), doc,
