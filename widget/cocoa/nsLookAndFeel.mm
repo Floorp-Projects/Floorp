@@ -780,7 +780,9 @@ nsLookAndFeel::EnsureInit()
   mColorWindowText = GetColorFromNSColor([NSColor windowFrameTextColor]);
   mColorActiveCaption = GetColorFromNSColor([NSColor gridColor]);
   mColorActiveBorder = GetColorFromNSColor([NSColor keyboardFocusIndicatorColor]);
-  mColorGrayText = GetColorFromNSColor([NSColor disabledControlTextColor]);
+  NSColor* disabledColor = [NSColor disabledControlTextColor];
+  mColorGrayText = GetColorFromNSColorWithAlpha(disabledColor,
+                                                [disabledColor alphaComponent]);
   mColorInactiveBorder = GetColorFromNSColor([NSColor controlBackgroundColor]);
   mColorInactiveCaption = GetColorFromNSColor([NSColor controlBackgroundColor]);
   mColorScrollbar = GetColorFromNSColor([NSColor scrollBarColor]);
