@@ -54,13 +54,6 @@ using mozilla::LogLevel;
 - (NSArray*)extensionsForMIMEType:(NSString*)aString;
 @end
 
-nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
-{
-  mode_t mask = umask(0777);
-  umask(mask);
-  mPermissions = 0666 & ~mask;
-}
-
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
 
