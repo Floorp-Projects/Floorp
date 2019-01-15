@@ -518,6 +518,11 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   bool IsRootScrollFrameOfDocument() const { return mIsRoot; }
 
+  // Update minimum-scale size.  The minimum-scale size will be set/used only
+  // if there is overflow-x:hidden region.
+  void UpdateMinimumScaleSize(const nsRect& aScrollableOverflow,
+                              const nsSize& aICBSize);
+
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<mozilla::dom::Element> mHScrollbarContent;
   nsCOMPtr<mozilla::dom::Element> mVScrollbarContent;
@@ -543,7 +548,11 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsAtom* mLastSmoothScrollOrigin;
   Maybe<nsPoint> mApzSmoothScrollDestination;
   uint32_t mScrollGeneration;
+  // NOTE: On mobile this value might be factoring into overflow:hidden region
+  // in the case of the top level document.
   nsRect mScrollPort;
+  nsSize mMinimumScaleSize;
+
   // Where we're currently scrolling to, if we're scrolling asynchronously.
   // If we're not in the middle of an asynchronous scroll then this is
   // just the current scroll position. ScrollBy will choose its
@@ -669,6 +678,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   // True if we don't want the scrollbar to repaint itself right now.
   bool mSuppressScrollbarRepaints : 1;
+
+  // True if we are using the minimum scale size instead of ICB for scroll port.
+  bool mIsUsingMinimumScaleSize : 1;
 
   mozilla::layout::ScrollVelocityQueue mVelocityQueue;
 

@@ -43,13 +43,18 @@ nsTArray<RefPtr<PerformanceInfoPromise>> CollectPerformanceInfo() {
 
   // if GetTabGroupList() returns null, we don't have any tab group
   if (tabGroups) {
+    // Per Bug 1519038, we want to collect DocGroup objects
+    // and use them outside the iterator, to avoid a read-write conflict.
+    nsTArray<RefPtr<DocGroup>> docGroups;
     for (TabGroup* tabGroup = tabGroups->getFirst(); tabGroup;
          tabGroup =
              static_cast<LinkedListElement<TabGroup>*>(tabGroup)->getNext()) {
       for (auto iter = tabGroup->Iter(); !iter.Done(); iter.Next()) {
-        DocGroup* docGroup = iter.Get()->mDocGroup;
-        promises.AppendElement(docGroup->ReportPerformanceInfo());
+        docGroups.AppendElement(iter.Get()->mDocGroup);
       }
+    }
+    for (DocGroup* docGroup : docGroups) {
+      promises.AppendElement(docGroup->ReportPerformanceInfo());
     }
   }
   return promises;

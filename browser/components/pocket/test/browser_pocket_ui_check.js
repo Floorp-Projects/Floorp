@@ -57,5 +57,14 @@ add_task(async function() {
   buttonBox = document.getElementById("pocket-button-box");
   is(buttonBox.hidden, true, "Button should have been hidden");
 
+  let newWin = await BrowserTestUtils.openNewBrowserWindow();
+  checkElements(false, ["appMenu-library-pocket-button",
+                        "context-pocket", "context-savelinktopocket"],
+                newWin);
+  buttonBox = newWin.document.getElementById("pocket-button-box");
+  is(buttonBox.hidden, true, "Button should have been hidden");
+
+  await BrowserTestUtils.closeWindow(newWin);
+
   await promisePocketReset();
 });

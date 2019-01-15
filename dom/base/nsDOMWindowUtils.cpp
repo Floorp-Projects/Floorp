@@ -1406,8 +1406,12 @@ nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY) {
   // This should only be called on the root content document.
   NS_ENSURE_TRUE(presContext->IsRootContentDocument(), NS_ERROR_INVALID_ARG);
 
-  presContext->PresShell()->SetPendingVisualViewportOffset(
-      Some(CSSPoint::ToAppUnits(CSSPoint(aOffsetX, aOffsetY))));
+  // Use |eRestore| as the priority for now, as it's the conservative choice.
+  // If a JS call site needs higher priority, we can expose the update type
+  // as a parameter.
+  presContext->PresShell()->SetPendingVisualScrollUpdate(
+      CSSPoint::ToAppUnits(CSSPoint(aOffsetX, aOffsetY)),
+      FrameMetrics::eRestore);
 
   return NS_OK;
 }

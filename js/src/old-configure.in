@@ -1377,7 +1377,6 @@ if test "$MOZ_MEMORY"; then
   esac
 fi
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
-AC_SUBST_LIST(MOZ_GLUE_WRAP_LDFLAGS)
 
 dnl ========================================================
 dnl instruments
@@ -1738,9 +1737,5 @@ AC_DEFINE(NO_NSPR_10_SUPPORT)
 dnl Spit out some output
 dnl ========================================================
 MOZ_CREATE_CONFIG_STATUS()
-
-if test "$JS_STANDALONE"; then
-  MOZ_RUN_ALL_SUBCONFIGURES()
-fi
 
 rm -fr confdefs* $ac_clean_files

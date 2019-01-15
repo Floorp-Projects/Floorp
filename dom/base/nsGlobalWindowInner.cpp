@@ -1599,6 +1599,14 @@ void nsGlobalWindowInner::TraceGlobalJSObject(JSTracer* aTrc) {
   TraceWrapper(aTrc, "active window global");
 }
 
+bool nsGlobalWindowInner::ShouldResetBrowsingContextUserGestureActivation() {
+  // Reset user gesture activation flag only when the top level document changes
+  // and its corresponding browsing context has been activated by user gesture.
+  return mWindowGlobalChild && GetOuterWindowInternal() &&
+         GetOuterWindowInternal()->IsTopLevelWindow() && Window() &&
+         Window()->GetUserGestureActivation();
+}
+
 nsresult nsGlobalWindowInner::SetNewDocument(Document* aDocument,
                                              nsISupports* aState,
                                              bool aForceReuseInnerWindow) {
@@ -1650,6 +1658,10 @@ void nsGlobalWindowInner::InnerSetNewDocument(JSContext* aCx,
                         "Shouldn't have created WindowGlobalChild yet!");
   if (XRE_IsParentProcess() || mTabChild) {
     mWindowGlobalChild = WindowGlobalChild::Create(this);
+  }
+
+  if (ShouldResetBrowsingContextUserGestureActivation()) {
+    Window()->NotifyResetUserGestureActivation();
   }
 
 #ifdef DEBUG

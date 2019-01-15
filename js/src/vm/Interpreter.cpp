@@ -4621,8 +4621,8 @@ bool js::DefFunOperation(JSContext* cx, HandleScript script,
    * ECMA requires functions defined when entering Eval code to be
    * impermanent.
    */
-  unsigned attrs = script->isActiveEval() ? JSPROP_ENUMERATE
-                                          : JSPROP_ENUMERATE | JSPROP_PERMANENT;
+  unsigned attrs = script->isForEval() ? JSPROP_ENUMERATE
+                                       : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
   /* Steps 5d, 5f. */
   if (!prop || pobj != parent) {

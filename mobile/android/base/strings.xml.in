@@ -268,7 +268,6 @@
   <string name="pref_private_data_searchHistory">&pref_private_data_searchHistory;</string>
   <string name="pref_private_data_formdata2">&pref_private_data_formdata2;</string>
   <string name="pref_private_data_cookies2">&pref_private_data_cookies2;</string>
-  <string name="pref_private_data_passwords">&pref_private_data_passwords2;</string>
   <string name="pref_private_data_cache">&pref_private_data_cache;</string>
   <string name="pref_private_data_offlineApps">&pref_private_data_offlineApps;</string>
   <string name="pref_private_data_siteSettings">&pref_private_data_siteSettings2;</string>

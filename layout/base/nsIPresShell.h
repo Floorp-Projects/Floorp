@@ -18,6 +18,7 @@
 #include "mozilla/StyleSheet.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
+#include "FrameMetrics.h"
 #include "GeckoProfiler.h"
 #include "gfxPoint.h"
 #include "nsTHashtable.h"
@@ -176,6 +177,7 @@ class nsIPresShell : public nsStubDocumentObserver {
 
  protected:
   typedef mozilla::dom::Document Document;
+  typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::gfx::SourceSurface SourceSurface;
 
@@ -1656,22 +1658,41 @@ class nsIPresShell : public nsStubDocumentObserver {
   bool SetVisualViewportOffset(const nsPoint& aScrollOffset,
                                const nsPoint& aPrevLayoutScrollPos);
 
-  nsPoint GetVisualViewportOffset() const { return mVisualViewportOffset; }
+  nsPoint GetVisualViewportOffset() const {
+    return mVisualViewportOffset.valueOr(nsPoint());
+  }
+  bool IsVisualViewportOffsetSet() const {
+    return mVisualViewportOffset.isSome();
+  }
 
   nsPoint GetVisualViewportOffsetRelativeToLayoutViewport() const;
 
-  // Ask APZ in the next transaction to scroll to the given visual viewport 
+  // Represents an update to the visual scroll offset that will be sent to APZ.
+  // The update type is used to determine priority compared to other scroll
+  // updates.
+  struct VisualScrollUpdate {
+    nsPoint mVisualScrollOffset;
+    FrameMetrics::ScrollOffsetUpdateType mUpdateType;
+  };
+
+  // Ask APZ in the next transaction to scroll to the given visual viewport
   // offset (relative to the document).
   // Use this sparingly, as it will clobber JS-driven scrolling that happens
   // in the same frame. This is mostly intended to be used in special
   // situations like "first paint" or session restore.
   // Please request APZ review if adding a new call site.
-  void SetPendingVisualViewportOffset(
-      const mozilla::Maybe<nsPoint>& aPendingVisualViewportOffset) {
-    mPendingVisualViewportOffset = aPendingVisualViewportOffset;
+  void SetPendingVisualScrollUpdate(
+      const nsPoint& aVisualViewportOffset,
+      FrameMetrics::ScrollOffsetUpdateType aUpdateType) {
+    mPendingVisualScrollUpdate =
+        mozilla::Some(VisualScrollUpdate{aVisualViewportOffset, aUpdateType});
   }
-  const mozilla::Maybe<nsPoint>& GetPendingVisualViewportOffset() const {
-    return mPendingVisualViewportOffset;
+  void ClearPendingVisualScrollUpdate() {
+    mPendingVisualScrollUpdate = mozilla::Nothing();
+  }
+  const mozilla::Maybe<VisualScrollUpdate>& GetPendingVisualScrollUpdate()
+      const {
+    return mPendingVisualScrollUpdate;
   }
 
   nsPoint GetLayoutViewportOffset() const;
@@ -1753,12 +1774,12 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   nsSize mVisualViewportSize;
 
-  nsPoint mVisualViewportOffset;
+  mozilla::Maybe<nsPoint> mVisualViewportOffset;
 
-  // A pending visual viewport offset that we will ask APZ to scroll to
+  // A pending visual scroll offset that we will ask APZ to scroll to
   // during the next transaction. Cleared when we send the transaction.
   // Only applicable to the RCD pres shell.
-  mozilla::Maybe<nsPoint> mPendingVisualViewportOffset;
+  mozilla::Maybe<VisualScrollUpdate> mPendingVisualScrollUpdate;
 
   // A list of stack weak frames. This is a pointer to the last item in the
   // list.

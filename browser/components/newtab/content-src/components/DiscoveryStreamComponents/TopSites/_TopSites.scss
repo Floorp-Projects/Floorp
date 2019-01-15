@@ -1,0 +1,14 @@
+// ds topsites wraps the original topsites, with a few css changes.
+.ds-top-sites {
+
+  // This is the override layer.
+  .top-sites {
+    // Slightly different alignment with the other DS components than AS has.
+    padding: 0;
+
+    // We hide this and don't support it in ds.
+    .section-top-bar {
+      display: none;
+    }
+  }
+}

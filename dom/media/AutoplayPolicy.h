@@ -30,6 +30,9 @@ class Document;
  */
 class AutoplayPolicy {
  public:
+  // Returns a DocumentAutoplayPolicy for given document.
+  static DocumentAutoplayPolicy IsAllowedToPlay(const Document& aDocument);
+
   // Returns whether a given media element is allowed to play.
   static bool IsAllowedToPlay(const HTMLMediaElement& aElement);
 

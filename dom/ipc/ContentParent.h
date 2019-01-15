@@ -646,6 +646,9 @@ class ContentParent final : public PContentParent,
       const BrowsingContextId& aContextId, const ClonedMessageData& aMessage,
       const PostMessageData& aData) override;
 
+  virtual mozilla::ipc::IPCResult RecvSetUserGestureActivation(
+      const BrowsingContextId& aContextId, const bool& aNewValue) override;
+
  protected:
   void OnChannelConnected(int32_t pid) override;
 

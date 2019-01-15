@@ -606,7 +606,7 @@ describe("Reducers", () => {
       assert.propertyVal(state, "version", data.version);
     });
     it("should reset to the initial state on a SNIPPETS_RESET action", () => {
-      const state = Snippets({initalized: true, foo: "bar"}, {type: at.SNIPPETS_RESET});
+      const state = Snippets({initialized: true, foo: "bar"}, {type: at.SNIPPETS_RESET});
       assert.equal(state, INITIAL_STATE.Snippets);
     });
     it("should set the new blocklist on SNIPPET_BLOCKED", () => {

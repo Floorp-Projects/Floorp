@@ -2182,6 +2182,9 @@ UniqueChars ExpressionDecompiler::getOutput() {
 static bool DecompileAtPCForStackDump(
     JSContext* cx, HandleScript script,
     const OffsetAndDefIndex& offsetAndDefIndex, Sprinter* sp) {
+  // The expression decompiler asserts the script is in the current realm.
+  AutoRealm ar(cx, script);
+
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   BytecodeParser parser(cx, allocScope.alloc(), script);
   parser.setStackDump();

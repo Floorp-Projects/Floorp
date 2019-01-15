@@ -207,10 +207,22 @@ var SaveToPocket = {
     if (this.prefEnabled) {
       PocketOverlay.startup();
     } else {
+      // We avoid calling onPrefChange or similar here, because we don't want to
+      // shut down things that haven't started up, or broadcast unnecessary messages.
       this.updateElements(false);
+      Services.obs.addObserver(this, "browser-delayed-startup-finished");
     }
     Services.mm.addMessageListener("Reader:OnSetup", this);
     Services.mm.addMessageListener("Reader:Clicked-pocket-button", this);
+  },
+
+  observe(subject, topic, data) {
+    if (topic == "browser-delayed-startup-finished") {
+      subject.QueryInterface(Ci.nsIDOMWindow);
+      // We only get here if pocket is disabled; the observer is removed when
+      // we're enabled.
+      this.updateElementsInWindow(subject, false);
+    }
   },
 
   _readerButtonData: {
@@ -224,7 +236,9 @@ var SaveToPocket = {
     if (!newValue) {
       Services.mm.broadcastAsyncMessage("Reader:RemoveButton", { id: "pocket-button" });
       PocketOverlay.shutdown();
+      Services.obs.addObserver(this, "browser-delayed-startup-finished");
     } else {
+      Services.obs.removeObserver(this, "browser-delayed-startup-finished");
       PocketOverlay.startup();
       // The title for the button is extracted from browser.xul where it comes from a DTD.
       // If we don't have this, there's also no possibility of there being a reader
@@ -238,15 +252,19 @@ var SaveToPocket = {
 
   updateElements(enabled) {
     // loop through windows and show/hide all our elements.
+    for (let win of browserWindows()) {
+      this.updateElementsInWindow(win, enabled);
+    }
+  },
+
+  updateElementsInWindow(win, enabled) {
     let elementIds = [
       "context-pocket", "context-savelinktopocket",
       "appMenu-library-pocket-button",
     ];
-    for (let win of browserWindows()) {
-      let document = win.document;
-      for (let id of elementIds) {
-        document.getElementById(id).hidden = !enabled;
-      }
+    let document = win.document;
+    for (let id of elementIds) {
+      document.getElementById(id).hidden = !enabled;
     }
   },
 
