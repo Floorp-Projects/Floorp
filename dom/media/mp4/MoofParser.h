@@ -267,18 +267,14 @@ DDLoggedTypeDeclName(MoofParser);
 
 class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
  public:
-  MoofParser(ByteStream* aSource, uint32_t aTrackId, bool aIsAudio,
-             bool aIsMultitrackParser = false)
+  MoofParser(ByteStream* aSource, uint32_t aTrackId, bool aIsAudio)
       : mSource(aSource),
         mOffset(0),
         mTrex(aTrackId),
         mIsAudio(aIsAudio),
-        mLastDecodeTime(0),
-        mIsMultitrackParser(aIsMultitrackParser) {
-    // Setting mIsMultitrackParser is a nasty work around for calculating
-    // the composition range for MSE that causes the parser to parse multiple
-    // tracks. Ideally we'd store an array of tracks with different metadata
-    // for each.
+        mLastDecodeTime(0) {
+    // Setting the mTrex.mTrackId to 0 is a nasty work around for calculating
+    // the composition range for MSE. We need an array of tracks.
     DDLINKCHILD("source", aSource);
   }
   bool RebuildFragmentedIndex(const mozilla::MediaByteRangeSet& aByteRanges);
@@ -330,7 +326,6 @@ class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
   nsTArray<MediaByteRange> mMediaRanges;
   bool mIsAudio;
   uint64_t mLastDecodeTime;
-  bool mIsMultitrackParser;
 };
 }  // namespace mozilla
 
