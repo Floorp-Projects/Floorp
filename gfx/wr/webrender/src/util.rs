@@ -6,10 +6,13 @@ use api::{BorderRadius, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixe
 use api::{LayoutPixel, DeviceRect, WorldPixel, RasterRect};
 use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, Vector2D};
 use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D, TypedScale};
+use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 use num_traits::Zero;
 use plane_split::{Clipper, Polygon};
 use std::{i32, f32, fmt, ptr};
 use std::borrow::Cow;
+use std::os::raw::c_void;
+use std::sync::Arc;
 
 
 // Matches the definition of SK_ScalarNearlyZero in Skia.
@@ -975,5 +978,50 @@ impl<T> ComparableVec<T> where T: PartialEq + Clone + fmt::Debug {
     /// Return true if the contents of the vec are the same as the previous time.
     pub fn is_valid(&self) -> bool {
         self.is_same && self.prev_len == self.current_index
+    }
+}
+
+/// Arc wrapper to support measurement via MallocSizeOf.
+///
+/// Memory reporting for Arcs is tricky because of the risk of double-counting.
+/// One way to measure them is to keep a table of pointers that have already been
+/// traversed. The other way is to use knowledge of the program structure to
+/// identify which Arc instances should be measured and which should be skipped to
+/// avoid double-counting.
+///
+/// This struct implements the second approach. It identifies the "main" pointer
+/// to the Arc-ed resource, and measures the buffer as if it were an owned pointer.
+/// The programmer should ensure that there is at most one PrimaryArc for a given
+/// underlying ArcInner.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+pub struct PrimaryArc<T>(pub Arc<T>);
+
+impl<T> ::std::ops::Deref for PrimaryArc<T> {
+    type Target = Arc<T>;
+
+    #[inline]
+    fn deref(&self) -> &Arc<T> {
+        &self.0
+    }
+}
+
+impl<T> MallocShallowSizeOf for PrimaryArc<T> {
+    fn shallow_size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+        unsafe {
+            // This is a bit sketchy, but std::sync::Arc doesn't expose the
+            // base pointer.
+            let raw_arc_ptr: *const Arc<T> = &self.0;
+            let raw_ptr_ptr: *const *const c_void = raw_arc_ptr as _;
+            let raw_ptr = *raw_ptr_ptr;
+            (ops.size_of_op)(raw_ptr)
+        }
+    }
+}
+
+impl<T: MallocSizeOf> MallocSizeOf for PrimaryArc<T> {
+    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+        self.shallow_size_of(ops) + (**self).size_of(ops)
     }
 }
