@@ -12417,10 +12417,6 @@ void CodeGenerator::emitIsCallableOrConstructor(Register object,
   Label notFunction, hasCOps, done;
   masm.loadObjClassUnsafe(object, output);
 
-  // Just skim proxies off. Their notion of isCallable()/isConstructor() is
-  // more complicated.
-  masm.branchTestClassIsProxy(true, output, failure);
-
   // An object is callable iff:
   //   is<JSFunction>() || (getClass()->cOps && getClass()->cOps->call).
   // An object is constructor iff:
@@ -12441,6 +12437,11 @@ void CodeGenerator::emitIsCallableOrConstructor(Register object,
   masm.jump(&done);
 
   masm.bind(&notFunction);
+
+  // Just skim proxies off. Their notion of isCallable()/isConstructor() is
+  // more complicated.
+  masm.branchTestClassIsProxy(true, output, failure);
+
   masm.branchPtr(Assembler::NonZero, Address(output, offsetof(js::Class, cOps)),
                  ImmPtr(nullptr), &hasCOps);
   masm.move32(Imm32(0), output);
