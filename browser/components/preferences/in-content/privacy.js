@@ -130,9 +130,6 @@ if (AppConstants.MOZ_DATA_REPORTING) {
 }
 
 // Data Choices tab
-if (AppConstants.NIGHTLY_BUILD) {
-  Preferences.add({ id: "browser.chrome.errorReporter.enabled", type: "bool" });
-}
 if (AppConstants.MOZ_CRASHREPORTER) {
   Preferences.add({ id: "browser.crashReports.unsubmittedCheck.autoSubmit2", type: "bool" });
 }
@@ -406,9 +403,6 @@ var gPrivacyPane = {
 
     if (AppConstants.MOZ_DATA_REPORTING) {
       this.initDataCollection();
-      if (AppConstants.NIGHTLY_BUILD) {
-        this.initCollectBrowserErrors();
-      }
       if (AppConstants.MOZ_CRASHREPORTER) {
         this.initSubmitCrashes();
       }
@@ -1483,11 +1477,6 @@ var gPrivacyPane = {
   initDataCollection() {
     this._setupLearnMoreLink("toolkit.datacollection.infoURL",
       "dataCollectionPrivacyNotice");
-  },
-
-  initCollectBrowserErrors() {
-    this._setupLearnMoreLink("browser.chrome.errorReporter.infoURL",
-      "collectBrowserErrorsLearnMore");
   },
 
   initSubmitCrashes() {
