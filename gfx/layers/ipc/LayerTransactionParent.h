@@ -71,24 +71,13 @@ class LayerTransactionParent final : public PLayerTransactionParent,
 
   bool IsSameProcess() const override;
 
-  const TransactionId& GetPendingTransactionId() { return mPendingTransaction; }
   void SetPendingTransactionId(TransactionId aId, const VsyncId& aVsyncId,
                                const TimeStamp& aVsyncStartTime,
                                const TimeStamp& aRefreshStartTime,
                                const TimeStamp& aTxnStartTime,
                                const TimeStamp& aTxnEndTime, bool aContainsSVG,
                                const nsCString& aURL,
-                               const TimeStamp& aFwdTime) {
-    mPendingTransaction = aId;
-    mTxnVsyncId = aVsyncId;
-    mVsyncStartTime = aVsyncStartTime;
-    mRefreshStartTime = aRefreshStartTime;
-    mTxnStartTime = aTxnStartTime;
-    mTxnEndTime = aTxnEndTime;
-    mContainsSVG = aContainsSVG;
-    mTxnURL = aURL;
-    mFwdTime = aFwdTime;
-  }
+                               const TimeStamp& aFwdTime);
   TransactionId FlushTransactionId(const VsyncId& aId,
                                    TimeStamp& aCompositeEnd);
 
@@ -208,15 +197,18 @@ class LayerTransactionParent final : public PLayerTransactionParent,
 
   TimeDuration mVsyncRate;
 
-  TransactionId mPendingTransaction;
-  VsyncId mTxnVsyncId;
-  TimeStamp mVsyncStartTime;
-  TimeStamp mRefreshStartTime;
-  TimeStamp mTxnStartTime;
-  TimeStamp mTxnEndTime;
-  TimeStamp mFwdTime;
-  nsCString mTxnURL;
-  bool mContainsSVG;
+  struct PendingTransaction {
+    TransactionId mId;
+    VsyncId mTxnVsyncId;
+    TimeStamp mVsyncStartTime;
+    TimeStamp mRefreshStartTime;
+    TimeStamp mTxnStartTime;
+    TimeStamp mTxnEndTime;
+    TimeStamp mFwdTime;
+    nsCString mTxnURL;
+    bool mContainsSVG;
+  };
+  AutoTArray<PendingTransaction, 2> mPendingTransactions;
 
   // When the widget/frame/browser stuff in this process begins its
   // destruction process, we need to Disconnect() all the currently
