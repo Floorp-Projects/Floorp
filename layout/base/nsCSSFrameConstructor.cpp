@@ -7488,10 +7488,9 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
     // StyleChildrenIterator handles that properly, so it's not an issue.
     StyleChildrenIterator iter(aChild);
     for (nsIContent* c = iter.GetNextChild(); c; c = iter.GetNextChild()) {
-      if (c->GetPrimaryFrame() || CouldHaveBeenDisplayContents(aChild)) {
+      if (c->GetPrimaryFrame() || CouldHaveBeenDisplayContents(c)) {
         LAYOUT_PHASE_TEMP_EXIT();
-        bool didReconstruct =
-            ContentRemoved(c, nullptr, REMOVE_FOR_RECONSTRUCTION);
+        bool didReconstruct = ContentRemoved(c, nullptr, aFlags);
         LAYOUT_PHASE_TEMP_REENTER();
         if (didReconstruct) {
           return true;
