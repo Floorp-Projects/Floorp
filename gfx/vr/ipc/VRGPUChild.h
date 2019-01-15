@@ -21,12 +21,17 @@ class VRGPUChild final : public PVRGPUChild {
   static bool IsCreated();
   static void Shutdown();
 
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  bool IsClosed();
+
  protected:
-  explicit VRGPUChild() {}
-  ~VRGPUChild() {}
+  explicit VRGPUChild() : mClosed(false) {}
+  ~VRGPUChild() = default;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(VRGPUChild);
+
+  bool mClosed;
 };
 
 }  // namespace gfx

@@ -492,7 +492,7 @@ window._gBrowser = {
   },
 
   set userTypedValue(val) {
-    return this.selectedBrowser.userTypedValue = val;
+    this.selectedBrowser.userTypedValue = val;
   },
 
   get userTypedValue() {

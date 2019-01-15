@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* This test records which services, JS components, process scripts, and JS
- * modules are loaded when creating a new content process.
+/* This test records which services, JS components, frame scripts, process
+ * scripts, and JS modules are loaded when creating a new content process.
  *
  * If you made changes that cause this test to fail, it's likely because you
  * are loading more JS code during content process startup.
@@ -68,6 +68,23 @@ const whitelist = {
     "resource://gre/modules/ExtensionUtils.jsm",
     "resource://gre/modules/MessageChannel.jsm",
   ]),
+  frameScripts: new Set([
+    // Test related
+    "resource://specialpowers/MozillaLogger.js",
+    "resource://specialpowers/specialpowersFrameScript.js",
+    "chrome://mochikit/content/shutdown-leaks-collector.js",
+    "chrome://mochikit/content/tests/SimpleTest/AsyncUtilsContent.js",
+    "chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js",
+
+    // Browser front-end
+    "chrome://global/content/browser-content.js",
+
+    // Forms
+    "chrome://formautofill/content/FormAutofillFrameScript.js",
+
+    // Extensions
+    "resource://gre/modules/addons/Content.js",
+  ]),
   processScripts: new Set([
     "chrome://global/content/process-content.js",
     "resource:///modules/ContentObservers.js",
@@ -89,6 +106,7 @@ const intermittently_loaded_whitelist = {
   modules: new Set([
     "resource://gre/modules/sessionstore/Utils.jsm",
   ]),
+  frameScripts: new Set([]),
   processScripts: new Set([]),
 };
 
@@ -139,6 +157,12 @@ add_task(async function() {
   } + ")()", false);
 
   let loadedInfo = await promise;
+
+  // Gather loaded frame scripts.
+  loadedInfo.frameScripts = {};
+  for (let [uri] of Services.mm.getDelayedFrameScripts()) {
+    loadedInfo.frameScripts[uri] = "";
+  }
 
   // Gather loaded process scripts.
   loadedInfo.processScripts = {};

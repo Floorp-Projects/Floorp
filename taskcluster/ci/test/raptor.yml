@@ -299,6 +299,30 @@ raptor-tp6-8-chrome:
             - --test=raptor-tp6-8
             - --app=chrome
 
+raptor-tp6-9-firefox:
+    description: "Raptor tp6-9 on Firefox"
+    try-name: raptor-tp6-9-firefox
+    treeherder-symbol: Rap(tp6-9)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-9
+
+raptor-tp6-9-chrome:
+    description: "Raptor tp6-9 on Chrome"
+    try-name: raptor-tp6-9-chrome
+    treeherder-symbol: Rap-C(tp6-9)
+    run-on-projects: ['try', 'mozilla-central']
+    tier:
+        by-test-platform:
+            linux64.*: 3
+            default: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-9
+            - --app=chrome
+
 raptor-tp6-10-firefox:
     description: "Raptor tp6-10 on Firefox"
     try-name: raptor-tp6-10-firefox

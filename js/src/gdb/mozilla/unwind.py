@@ -120,15 +120,14 @@ class UnwinderTypeCache(object):
             class_type = gdb.lookup_type('js::jit::' + SizeOfFramePrefix[name])
             self.frame_class_types[enumval] = class_type.pointer()
 
-# gdb doesn't have a direct way to tell us if a given address is
-# claimed by some shared library or the executable.  See
-# https://sourceware.org/bugzilla/show_bug.cgi?id=19288
-# In the interest of not requiring a patched gdb, instead we read
-# /proc/.../maps.  This only works locally, but maybe could work
-# remotely using "remote get".  FIXME.
-
 
 def parse_proc_maps():
+    # gdb doesn't have a direct way to tell us if a given address is
+    # claimed by some shared library or the executable.  See
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=19288
+    # In the interest of not requiring a patched gdb, instead we read
+    # /proc/.../maps.  This only works locally, but maybe could work
+    # remotely using "remote get".  FIXME.
     mapfile = '/proc/' + str(gdb.selected_inferior().pid) + '/maps'
     # Note we only examine executable mappings here.
     matcher = re.compile("^([a-fA-F0-9]+)-([a-fA-F0-9]+)\s+..x.\s+\S+\s+\S+\s+\S*(.*)$")
@@ -148,10 +147,10 @@ def parse_proc_maps():
             mappings.append((long(start, 16), long(end, 16)))
     return mappings
 
-# A symbol/value pair as expected from gdb frame decorators.
-
 
 class FrameSymbol(object):
+    "A symbol/value pair as expected from gdb frame decorators."
+
     def __init__(self, sym, val):
         self.sym = sym
         self.val = val
@@ -162,12 +161,12 @@ class FrameSymbol(object):
     def value(self):
         return self.val
 
-# This represents a single JIT frame for the purposes of display.
-# That is, the frame filter creates instances of this when it sees a
-# JIT frame in the stack.
-
 
 class JitFrameDecorator(FrameDecorator):
+    """This represents a single JIT frame for the purposes of display.
+    That is, the frame filter creates instances of this when it sees a
+    JIT frame in the stack."""
+
     def __init__(self, base, info, cache):
         super(JitFrameDecorator, self).__init__(base)
         self.info = info
@@ -258,10 +257,10 @@ class JitFrameDecorator(FrameDecorator):
             result.append(FrameSymbol(name, args_ptr[i]))
         return result
 
-# A frame filter for SpiderMonkey.
-
 
 class SpiderMonkeyFrameFilter(object):
+    "A frame filter for SpiderMonkey."
+
     # |state_holder| is either None, or an instance of
     # SpiderMonkeyUnwinder.  If the latter, then this class will
     # reference the |unwinder_state| attribute to find the current
@@ -285,31 +284,31 @@ class SpiderMonkeyFrameFilter(object):
     def filter(self, frame_iter):
         return imap(self.maybe_wrap_frame, frame_iter)
 
-# A frame id class, as specified by the gdb unwinder API.
-
 
 class SpiderMonkeyFrameId(object):
+    "A frame id class, as specified by the gdb unwinder API."
+
     def __init__(self, sp, pc):
         self.sp = sp
         self.pc = pc
 
-# This holds all the state needed during a given unwind.  Each time a
-# new unwind is done, a new instance of this class is created.  It
-# keeps track of all the state needed to unwind JIT frames.  Note that
-# this class is not directly instantiated.
-#
-# This is a base class, and must be specialized for each target
-# architecture, both because we need to use arch-specific register
-# names, and because entry frame unwinding is arch-specific.
-# See https://sourceware.org/bugzilla/show_bug.cgi?id=19286 for info
-# about the register name issue.
-#
-# Each subclass must define SP_REGISTER, PC_REGISTER, and
-# SENTINEL_REGISTER (see x64UnwinderState for info); and implement
-# unwind_entry_frame_registers.
-
 
 class UnwinderState(object):
+    """This holds all the state needed during a given unwind.  Each time a
+    new unwind is done, a new instance of this class is created.  It
+    keeps track of all the state needed to unwind JIT frames.  Note that
+    this class is not directly instantiated.
+
+    This is a base class, and must be specialized for each target
+    architecture, both because we need to use arch-specific register
+    names, and because entry frame unwinding is arch-specific.
+    See https://sourceware.org/bugzilla/show_bug.cgi?id=19286 for info
+    about the register name issue.
+
+    Each subclass must define SP_REGISTER, PC_REGISTER, and
+    SENTINEL_REGISTER (see x64UnwinderState for info); and implement
+    unwind_entry_frame_registers."""
+
     def __init__(self, typecache):
         self.next_sp = None
         self.next_type = None
@@ -505,10 +504,10 @@ class UnwinderState(object):
         # the time being.
         return self.unwind_exit_frame(pc, pending_frame)
 
-# The UnwinderState subclass for x86-64.
-
 
 class x64UnwinderState(UnwinderState):
+    "The UnwinderState subclass for x86-64."
+
     SP_REGISTER = 'rsp'
     PC_REGISTER = 'rip'
 
@@ -534,12 +533,12 @@ class x64UnwinderState(UnwinderState):
             if reg is "rbp":
                 unwind_info.add_saved_register(self.SP_REGISTER, sp)
 
-# The unwinder object.  This provides the "user interface" to the JIT
-# unwinder, and also handles constructing or destroying UnwinderState
-# objects as needed.
-
 
 class SpiderMonkeyUnwinder(Unwinder):
+    """The unwinder object.  This provides the "user interface" to the JIT
+    unwinder, and also handles constructing or destroying UnwinderState
+    objects as needed."""
+
     # A list of all the possible unwinders.  See |self.make_unwinder|.
     UNWINDERS = [x64UnwinderState]
 
@@ -601,11 +600,11 @@ class SpiderMonkeyUnwinder(Unwinder):
     def invalidate_unwinder_state(self, *args, **kwargs):
         self.unwinder_state = None
 
-# Register the unwinder and frame filter with |objfile|.  If |objfile|
-# is None, register them globally.
-
 
 def register_unwinder(objfile):
+    """Register the unwinder and frame filter with |objfile|.  If |objfile|
+    is None, register them globally."""
+
     type_cache = UnwinderTypeCache()
     unwinder = None
     # This currently only works on Linux, due to parse_proc_maps.

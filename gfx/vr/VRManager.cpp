@@ -78,7 +78,7 @@ VRManager::VRManager()
 #if !defined(MOZ_WIDGET_ANDROID)
   // The VR Service accesses all hardware from a separate process
   // and replaces the other VRSystemManager when enabled.
-  if (!gfxPrefs::VRProcessEnabled()) {
+  if (!gfxPrefs::VRProcessEnabled() || !XRE_IsGPUProcess()) {
     VRServiceManager::Get().CreateService();
   }
   if (VRServiceManager::Get().IsServiceValid()) {
@@ -127,6 +127,7 @@ void VRManager::Destroy() {
     VRServiceManager::Get().Shutdown();
   }
 #endif
+  Shutdown();
   mInitialized = false;
 }
 
@@ -140,7 +141,9 @@ void VRManager::Shutdown() {
   if (VRServiceManager::Get().IsServiceValid()) {
     VRServiceManager::Get().Stop();
   }
-  if (gfxPrefs::VRProcessEnabled() && mVRServiceStarted) {
+  // XRE_IsGPUProcess() is helping us to check some platforms like
+  // Win 7 try which are not using GPU process but VR process is enabled.
+  if (XRE_IsGPUProcess() && gfxPrefs::VRProcessEnabled() && mVRServiceStarted) {
     RefPtr<Runnable> task = NS_NewRunnableFunction(
         "VRServiceManager::ShutdownVRProcess",
         []() -> void { VRServiceManager::Get().ShutdownVRProcess(); });
@@ -435,13 +438,15 @@ void VRManager::EnumerateVRDisplays() {
    * is in progress
    */
 #if !defined(MOZ_WIDGET_ANDROID)
-  if (gfxPrefs::VRProcessEnabled() && !mVRServiceStarted) {
-    VRServiceManager::Get().CreateVRProcess();
-    mVRServiceStarted = true;
-  } else if (!gfxPrefs::VRProcessEnabled()) {
-    if (VRServiceManager::Get().IsServiceValid()) {
-      VRServiceManager::Get().Start();
+  if (!mVRServiceStarted) {
+    if (XRE_IsGPUProcess() && gfxPrefs::VRProcessEnabled()) {
+      VRServiceManager::Get().CreateVRProcess();
       mVRServiceStarted = true;
+    } else {
+      if (VRServiceManager::Get().IsServiceValid()) {
+        VRServiceManager::Get().Start();
+        mVRServiceStarted = true;
+      }
     }
   }
 #endif

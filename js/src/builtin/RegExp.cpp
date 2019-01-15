@@ -483,7 +483,7 @@ bool js::regexp_construct(JSContext* cx, unsigned argc, Value* vp) {
 
     // Step 7.
     RootedObject proto(cx);
-    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_RegExp, &proto)) {
       return false;
     }
 
@@ -559,7 +559,7 @@ bool js::regexp_construct(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 7.
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_RegExp, &proto)) {
     return false;
   }
 

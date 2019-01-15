@@ -118,10 +118,6 @@ public class SessionAccessibility {
             if (mAttached) {
                 node = mSession.getSettings().getFullAccessibilityTree() ?
                         getNodeFromGecko(virtualDescendantId) : getNodeFromCache(virtualDescendantId);
-                if (node != null) {
-                    node.setAccessibilityFocused(mAccessibilityFocusedNode == virtualDescendantId);
-                    node.setFocused(mFocusedNode == virtualDescendantId);
-                }
             }
 
             if (node == null) {
@@ -143,6 +139,9 @@ public class SessionAccessibility {
             final GeckoBundle data;
 
             switch (action) {
+            case AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS:
+                sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED, virtualViewId, CLASSNAME_VIEW, null);
+                return true;
             case AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS:
                     if (virtualViewId == View.NO_ID) {
                         sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, View.NO_ID, CLASSNAME_WEBVIEW, null);
@@ -296,7 +295,8 @@ public class SessionAccessibility {
                 return;
             }
 
-            boolean isRoot = nodeInfo.getInt("id") == View.NO_ID;
+            final int id = nodeInfo.getInt("id");
+            boolean isRoot = id == View.NO_ID;
             if (isRoot) {
                 if (Build.VERSION.SDK_INT < 17 || mView.getDisplay() != null) {
                     // When running junit tests we don't have a display
@@ -321,8 +321,6 @@ public class SessionAccessibility {
             // Add actions
             node.addAction(AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT);
             node.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT);
-            node.addAction(AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS);
-            node.addAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS);
             node.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
             node.addAction(AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
             node.setMovementGranularities(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER |
@@ -347,6 +345,14 @@ public class SessionAccessibility {
             node.setVisibleToUser((flags & FLAG_VISIBLE_TO_USER) != 0);
             // Other boolean properties to consider later:
             // setHeading, setImportantForAccessibility, setScreenReaderFocusable, setShowingHintText, setDismissable
+
+            if (mAccessibilityFocusedNode == id) {
+                node.addAction(AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS);
+                node.setAccessibilityFocused(true);
+            } else {
+                node.addAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS);
+            }
+            node.setFocused(mFocusedNode == id);
 
             // Bounds
             int[] b = nodeInfo.getIntArray("bounds");
@@ -712,6 +718,11 @@ public class SessionAccessibility {
                     } else {
                         cachedBundle.putInt("flags", cachedBundle.getInt("flags") & ~FLAG_SELECTED);
                     }
+                }
+                break;
+            case AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED:
+                if (mAccessibilityFocusedNode == sourceId) {
+                    mAccessibilityFocusedNode = 0;
                 }
                 break;
             case AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED:

@@ -121,12 +121,12 @@ class GlobalObject : public NativeObject {
                 "global object slot counts are inconsistent");
 
   static unsigned constructorSlot(JSProtoKey key) {
-    MOZ_ASSERT(key <= JSProto_LIMIT);
+    MOZ_ASSERT(key < JSProto_LIMIT);
     return APPLICATION_SLOTS + key;
   }
 
   static unsigned prototypeSlot(JSProtoKey key) {
-    MOZ_ASSERT(key <= JSProto_LIMIT);
+    MOZ_ASSERT(key < JSProto_LIMIT);
     return APPLICATION_SLOTS + JSProto_LIMIT + key;
   }
 

@@ -100,6 +100,9 @@ class PromiseObject : public NativeObject {
   static JSObject* unforgeableReject(JSContext* cx, HandleValue value);
 
   int32_t flags() { return getFixedSlot(PromiseSlot_Flags).toInt32(); }
+  void setHandled() {
+    setFixedSlot(PromiseSlot_Flags, Int32Value(flags() | PROMISE_FLAG_HANDLED));
+  }
   JS::PromiseState state() {
     int32_t flags = this->flags();
     if (!(flags & PROMISE_FLAG_RESOLVED)) {

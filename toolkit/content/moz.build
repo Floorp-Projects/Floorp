@@ -48,6 +48,9 @@ with Files('gmp-sources/*'):
 with Files('tests/browser/browser_audio*'):
     BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
 
+with Files('tests/browser/browser_autoplay*'):
+    BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
+
 with Files('tests/browser/*block*'):
     BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
 

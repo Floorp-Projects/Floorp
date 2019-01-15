@@ -63,6 +63,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
@@ -71,6 +72,7 @@ import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.SparseArray;
 import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
 import android.view.KeyEvent;
@@ -136,6 +138,7 @@ public abstract class GeckoApp extends GeckoActivity
 
     public static final String INTENT_REGISTER_STUMBLER_LISTENER = "org.mozilla.gecko.STUMBLER_REGISTER_LOCAL_LISTENER";
 
+    private static final String GECKOVIEW_STATE_BUNDLE     = "geckoViewState";
     public static final String EXTRA_STATE_BUNDLE          = "stateBundle";
 
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
@@ -658,6 +661,16 @@ public abstract class GeckoApp extends GeckoActivity
         }
 
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
+
+        // There are situations where the saved instance state will be cleared (e.g. user swipes
+        // away activity in the task switcher), but Gecko will actually remain alive (because
+        // another activity or service of ours is still running in this process). The saved state is
+        // the only way we can reconnect to our previous GeckoView session and all the user's open
+        // tabs, so we need to keep a copy of the state ourselves.
+        SparseArray<Parcelable> geckoViewState = new SparseArray<>();
+        mLayerView.saveHierarchyState(geckoViewState);
+        outState.putSparseParcelableArray(GECKOVIEW_STATE_BUNDLE, geckoViewState);
+        getGeckoApplication().setSavedState(geckoViewState);
     }
 
     public void addTab(int flags) { }
@@ -696,7 +709,7 @@ public abstract class GeckoApp extends GeckoActivity
               rec.recordGeckoStartupTime(mGeckoReadyStartupTimer.getElapsed());
             }
 
-            ((GeckoApplication) getApplicationContext()).onDelayedStartup();
+            getGeckoApplication().onDelayedStartup();
 
             // Reset the crash loop counter if we remain alive for at least half a minute.
             ThreadUtils.postDelayedToBackgroundThread(new Runnable() {
@@ -976,6 +989,11 @@ public abstract class GeckoApp extends GeckoActivity
      **/
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Within onCreate(), we might inject a different savedInstanceState for testing, but this
+        // won't influence what the OS will do with regards to calling onSaveInstanceState().
+        // Therefore, record whether we were passed some data or not.
+        final boolean receivedSavedInstanceState = (savedInstanceState != null);
+
         // Enable Android Strict Mode for developers' local builds (the "default" channel).
         if ("default".equals(AppConstants.MOZ_UPDATE_CHANNEL)) {
             enableStrictMode();
@@ -1106,6 +1124,9 @@ public abstract class GeckoApp extends GeckoActivity
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (GeckoView) findViewById(R.id.layer_view);
+        // Disable automatic state staving - we require some special handling that we need to do
+        // ourselves.
+        mLayerView.setSaveFromParentEnabled(false);
 
         final GeckoSession session = new GeckoSession(
                 new GeckoSessionSettings.Builder()
@@ -1119,6 +1140,9 @@ public abstract class GeckoApp extends GeckoActivity
         }
         mLayerView.setSession(session, GeckoApplication.getRuntime());
         mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        if (mIsRestoringActivity && !receivedSavedInstanceState) {
+            restoreGeckoViewState(getGeckoApplication().getSavedState());
+        }
 
         getAppEventDispatcher().registerGeckoThreadListener(this,
             "Locale:Set",
@@ -1311,6 +1335,26 @@ public abstract class GeckoApp extends GeckoActivity
         }
 
         mWasFirstTabShownAfterActivityUnhidden = false; // onStart indicates we were hidden.
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        final SparseArray<Parcelable> stateToRestore =
+                savedInstanceState.getSparseParcelableArray(GECKOVIEW_STATE_BUNDLE);
+        restoreGeckoViewState(stateToRestore);
+    }
+
+    /**
+     * Restores the given state into our GeckoView and clears any state we might have kept locally
+     * within our process, as it has now become obsolete.
+     */
+    private void restoreGeckoViewState(final SparseArray<Parcelable> state) {
+        if (state != null) {
+            mLayerView.restoreHierarchyState(state);
+        }
+        getGeckoApplication().setSavedState(null);
     }
 
     @Override
@@ -2532,6 +2576,10 @@ public abstract class GeckoApp extends GeckoActivity
 
     public GeckoView getGeckoView() {
         return mLayerView;
+    }
+
+    protected GeckoApplication getGeckoApplication() {
+        return (GeckoApplication) getApplicationContext();
     }
 
     @Override
