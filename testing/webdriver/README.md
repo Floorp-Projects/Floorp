@@ -41,7 +41,7 @@ The mailing list for webdriver discussion is
 tools-marionette@lists.mozilla.org ([subscribe], [archive]).
 
 There is also an IRC channel to talk about using and developing
-webdriver in #ateam on irc.mozilla.org.
+webdriver in #interop on irc.mozilla.org.
 
 [subscribe]: https://lists.mozilla.org/listinfo/tools-marionette
 [archive]: https://lists.mozilla.org/pipermail/tools-marionette/
