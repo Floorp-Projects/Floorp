@@ -3400,6 +3400,10 @@ bool js::IsPrototypeOf(JSContext* cx, HandleObject protoObj, JSObject* obj,
                        bool* result) {
   RootedObject obj2(cx, obj);
   for (;;) {
+    // The [[Prototype]] chain might be cyclic.
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
     if (!GetPrototype(cx, obj2, &obj2)) {
       return false;
     }
