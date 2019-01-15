@@ -244,7 +244,11 @@ class SingletonDispatcher extends Dispatcher {
 
   handleActorEvent(actor, event) {
     if (event.target.ownerGlobal == this.window) {
-      this.getActor(actor).handleEvent(event);
+      const inst = this.getActor(actor);
+      if (typeof inst.handleEvent != "function") {
+        throw new Error(`Unhandled event for ${actor}: ${event.type}: missing handleEvent`);
+      }
+      inst.handleEvent(event);
     }
   }
 
