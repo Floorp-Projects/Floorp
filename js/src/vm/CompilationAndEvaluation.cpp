@@ -574,24 +574,6 @@ extern JS_PUBLIC_API bool JS::EvaluateUtf8(
                     rval);
 }
 
-extern JS_PUBLIC_API bool JS::EvaluateLatin1(
-    JSContext* cx, const ReadOnlyCompileOptions& options, const char* bytes,
-    size_t length, MutableHandle<Value> rval) {
-  auto chars = UniqueTwoByteChars(InflateString(cx, bytes, length));
-  if (!chars) {
-    return false;
-  }
-
-  SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, std::move(chars), length)) {
-    return false;
-  }
-
-  RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
-  return ::Evaluate(cx, ScopeKind::Global, globalLexical, options, srcBuf,
-                    rval);
-}
-
 JS_PUBLIC_API bool JS::Evaluate(JSContext* cx,
                                 const ReadOnlyCompileOptions& optionsArg,
                                 SourceText<char16_t>& srcBuf,
