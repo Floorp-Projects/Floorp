@@ -709,18 +709,43 @@ class GeckoEngineSessionTest {
     fun enableTrackingProtection() {
         val runtime = mock(GeckoRuntime::class.java)
         `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
-        val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+        val session = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+        val privSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider, privateMode = true)
 
-        var trackerBlockingEnabledObserved = false
-        engineSession.register(object : EngineSession.Observer {
+        var trackerBlockingObserved = false
+        session.register(object : EngineSession.Observer {
             override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
-                trackerBlockingEnabledObserved = enabled
+                trackerBlockingObserved = enabled
+            }
+        })
+        var privateTrackerBlockingObserved = false
+        privSession.register(object : EngineSession.Observer {
+            override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
+                privateTrackerBlockingObserved = enabled
             }
         })
 
-        engineSession.enableTrackingProtection(TrackingProtectionPolicy.select(
-                TrackingProtectionPolicy.ANALYTICS, TrackingProtectionPolicy.AD))
-        assertTrue(trackerBlockingEnabledObserved)
+        val allPolicy = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD)
+        val regularOnlyPolicy = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD).forRegularSessionsOnly()
+        val privateOnlyPolicy = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD).forPrivateSessionsOnly()
+
+        session.enableTrackingProtection(allPolicy)
+        assertTrue(trackerBlockingObserved)
+
+        session.enableTrackingProtection(privateOnlyPolicy)
+        assertFalse(trackerBlockingObserved)
+
+        session.enableTrackingProtection(regularOnlyPolicy)
+        assertTrue(trackerBlockingObserved)
+
+        privSession.enableTrackingProtection(allPolicy)
+        assertTrue(privateTrackerBlockingObserved)
+
+        privSession.enableTrackingProtection(regularOnlyPolicy)
+        assertFalse(privateTrackerBlockingObserved)
+
+        privSession.enableTrackingProtection(privateOnlyPolicy)
+        assertTrue(privateTrackerBlockingObserved)
     }
 
     @Test

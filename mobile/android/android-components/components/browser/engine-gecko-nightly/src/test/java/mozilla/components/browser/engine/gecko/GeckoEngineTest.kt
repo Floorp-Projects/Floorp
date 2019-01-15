@@ -48,13 +48,14 @@ class GeckoEngineTest {
 
     @Test
     fun settings() {
+        val defaultSettings = DefaultSettings()
         val runtime = mock(GeckoRuntime::class.java)
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
         `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtimeSettings.trackingProtectionCategories).thenReturn(TrackingProtectionPolicy.none().categories)
         `when`(runtime.settings).thenReturn(runtimeSettings)
-        val engine = GeckoEngine(context, runtime = runtime, defaultSettings = DefaultSettings())
+        val engine = GeckoEngine(context, runtime = runtime, defaultSettings = defaultSettings)
 
         assertTrue(engine.settings.javascriptEnabled)
         engine.settings.javascriptEnabled = false
@@ -79,6 +80,7 @@ class GeckoEngineTest {
         assertEquals(TrackingProtectionPolicy.none(), engine.settings.trackingProtectionPolicy)
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.all()
         verify(runtimeSettings).trackingProtectionCategories = TrackingProtectionPolicy.all().categories
+        assertEquals(defaultSettings.trackingProtectionPolicy, TrackingProtectionPolicy.all())
 
         try {
             engine.settings.domStorageEnabled

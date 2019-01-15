@@ -71,6 +71,7 @@ class GeckoEngine(
             set(value) {
                 value?.let {
                     runtime.settings.trackingProtectionCategories = it.categories
+                    defaultSettings?.trackingProtectionPolicy = value
                 }
             }
 

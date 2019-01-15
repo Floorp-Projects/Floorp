@@ -64,10 +64,16 @@ abstract class EngineSession(
     abstract val settings: Settings
 
     /**
-     * Represents a tracking protection policy which is a combination of
-     * tracker categories that should be blocked.
+     * Represents a tracking protection policy, which is a combination of
+     * tracker categories that should be blocked. Unless otherwise specified,
+     * a [TrackingProtectionPolicy] is applicable to all session types (see
+     * [TrackingProtectionPolicyForSessionTypes]).
      */
-    class TrackingProtectionPolicy(val categories: Int) {
+    open class TrackingProtectionPolicy internal constructor(
+        val categories: Int,
+        var useForPrivateSessions: Boolean = true,
+        var useForRegularSessions: Boolean = true
+    ) {
         companion object {
             internal const val NONE: Int = 0
             const val AD: Int = 1 shl 0
@@ -79,9 +85,8 @@ abstract class EngineSession(
             internal const val ALL: Int = (1 shl 5) - 1
 
             fun none(): TrackingProtectionPolicy = TrackingProtectionPolicy(NONE)
-            fun all(): TrackingProtectionPolicy = TrackingProtectionPolicy(ALL)
-            fun select(vararg categories: Int): TrackingProtectionPolicy =
-                TrackingProtectionPolicy(categories.sum())
+            fun all() = TrackingProtectionPolicyForSessionTypes(ALL)
+            fun select(vararg categories: Int) = TrackingProtectionPolicyForSessionTypes(categories.sum())
         }
 
         fun contains(category: Int) = (categories and category) != 0
@@ -90,11 +95,39 @@ abstract class EngineSession(
             if (this === other) return true
             if (other !is TrackingProtectionPolicy) return false
             if (categories != other.categories) return false
+            if (useForPrivateSessions != other.useForPrivateSessions) return false
+            if (useForRegularSessions != other.useForRegularSessions) return false
             return true
         }
 
         override fun hashCode(): Int {
             return categories
+        }
+    }
+
+    /**
+     * Subtype of [TrackingProtectionPolicy] to control the type of session this policy
+     * should be applied to. By default, a policy will be applied to all sessions.
+     */
+    class TrackingProtectionPolicyForSessionTypes internal constructor(
+        categories: Int
+    ) : TrackingProtectionPolicy(categories) {
+        /**
+         * Marks this policy to be used for private sessions only.
+         */
+        fun forPrivateSessionsOnly(): TrackingProtectionPolicy {
+            useForPrivateSessions = true
+            useForRegularSessions = false
+            return this
+        }
+
+        /**
+         * Marks this policy to be used for regular (non-private) sessions only.
+         */
+        fun forRegularSessionsOnly(): TrackingProtectionPolicy {
+            useForRegularSessions = true
+            useForPrivateSessions = false
+            return this
         }
     }
 

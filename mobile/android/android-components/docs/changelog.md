@@ -26,6 +26,14 @@ permalink: /changelog/
 * **browser-menu**
   * Added [docs](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/README.md#browsermenu) for customizing `BrowserMenu`.
 
+* **concept-engine**, **browser-engine-gecko-***
+  * Added support for enabling tracking protection for specific session type:
+  ```kotlin
+  val engine = GeckoEngine(runtime, DefaultSettings(
+    trackingProtectionPolicy = TrackingProtectionPolicy.all().forPrivateSessionsOnly())
+  )
+  ```
+
 # 0.38.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.37.0...v0.38.0),

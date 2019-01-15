@@ -504,7 +504,7 @@ class EngineSessionTest {
     }
 
     @Test
-    fun `tracking policies have correct categories`() {
+    fun `tracking protection policies have correct categories`() {
         assertEquals(TrackingProtectionPolicy.ALL, TrackingProtectionPolicy.all().categories)
         assertEquals(TrackingProtectionPolicy.NONE, TrackingProtectionPolicy.none().categories)
         assertEquals(TrackingProtectionPolicy.ALL, TrackingProtectionPolicy.select(
@@ -520,6 +520,26 @@ class EngineSessionTest {
         assertFalse(policy.contains(TrackingProtectionPolicy.SOCIAL))
         assertFalse(policy.contains(TrackingProtectionPolicy.CONTENT))
         assertFalse(policy.contains(TrackingProtectionPolicy.TEST))
+    }
+
+    @Test
+    fun `tracking protection policies can be specified for session type`() {
+        val all = TrackingProtectionPolicy.all()
+        val selected = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD)
+
+        // Tracking protection policies should be applied to all sessions by default
+        assertTrue(all.useForPrivateSessions)
+        assertTrue(all.useForRegularSessions)
+        assertTrue(selected.useForPrivateSessions)
+        assertTrue(selected.useForRegularSessions)
+
+        val allForPrivate = TrackingProtectionPolicy.all().forPrivateSessionsOnly()
+        assertTrue(allForPrivate.useForPrivateSessions)
+        assertFalse(allForPrivate.useForRegularSessions)
+
+        val selectedForRegular = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD).forRegularSessionsOnly()
+        assertTrue(selectedForRegular.useForRegularSessions)
+        assertFalse(selectedForRegular.useForPrivateSessions)
     }
 
     @Test

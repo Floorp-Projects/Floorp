@@ -139,6 +139,9 @@ class SystemEngineSession(
             SystemEngineView.getOrCreateUrlMatcher(context, policy)
         }
 
+        // TODO check if policy should be applied for this session type
+        // (regular|private) once we support private browsing in system engine:
+        // https://github.com/mozilla-mobile/android-components/issues/649
         trackingProtectionPolicy = policy
         notifyObservers { onTrackerBlockingEnabledChange(true) }
     }

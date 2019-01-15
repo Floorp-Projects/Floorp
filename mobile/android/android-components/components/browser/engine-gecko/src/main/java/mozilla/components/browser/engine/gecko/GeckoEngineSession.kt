@@ -152,8 +152,13 @@ class GeckoEngineSession(
      * See [EngineSession.enableTrackingProtection]
      */
     override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
-        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, true)
-        notifyObservers { onTrackerBlockingEnabledChange(true) }
+        val enabled = if (privateMode) {
+            policy.useForPrivateSessions
+        } else {
+            policy.useForRegularSessions
+        }
+        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, enabled)
+        notifyObservers { onTrackerBlockingEnabledChange(enabled) }
     }
 
     /**
