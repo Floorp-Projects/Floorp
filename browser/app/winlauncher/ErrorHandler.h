@@ -8,8 +8,7 @@
 #define mozilla_ErrorHandler_h
 
 #include "mozilla/Assertions.h"
-
-#include "LauncherResult.h"
+#include "mozilla/LauncherResult.h"
 
 namespace mozilla {
 
