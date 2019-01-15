@@ -55,7 +55,12 @@ XPIDL_MODULE = 'pipnss'
 # ship them with the browser.
 TESTING_JS_MODULES.psm += [
     'DER.jsm',
+    'RemoteSecuritySettings.jsm',
     'X509.jsm',
+]
+
+# These are JS Modules that are to be used in production.
+EXTRA_JS_MODULES.psm += [
 ]
 
 EXPORTS += [
