@@ -359,7 +359,11 @@ inline UniquePtr<wchar_t[]> MakeCommandLine(int argc, wchar_t** argv,
   return s;
 }
 
-inline UniquePtr<wchar_t[]> GetFullBinaryPath() {
+inline bool SetArgv0ToFullBinaryPath(wchar_t* aArgv[]) {
+  if (!aArgv) {
+    return false;
+  }
+
   DWORD bufLen = MAX_PATH;
   mozilla::UniquePtr<wchar_t[]> buf;
   DWORD retLen;
@@ -368,7 +372,7 @@ inline UniquePtr<wchar_t[]> GetFullBinaryPath() {
     buf = mozilla::MakeUnique<wchar_t[]>(bufLen);
     retLen = ::GetModuleFileNameW(nullptr, buf.get(), bufLen);
     if (!retLen) {
-      return nullptr;
+      return false;
     }
 
     if (retLen == bufLen && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
@@ -384,21 +388,8 @@ inline UniquePtr<wchar_t[]> GetFullBinaryPath() {
 
   // Since we're likely to have a bunch of unused space in buf, let's reallocate
   // a string to the actual size of the file name.
-  auto result = mozilla::MakeUnique<wchar_t[]>(retLen);
-  if (wcscpy_s(result.get(), retLen, buf.get())) {
-    return nullptr;
-  }
-
-  return result;
-}
-
-inline bool SetArgv0ToFullBinaryPath(wchar_t* aArgv[]) {
-  if (!aArgv) {
-    return false;
-  }
-
-  UniquePtr<wchar_t[]> newArgv_0(GetFullBinaryPath());
-  if (!newArgv_0) {
+  auto newArgv_0 = mozilla::MakeUnique<wchar_t[]>(retLen);
+  if (wcscpy_s(newArgv_0.get(), retLen, buf.get())) {
     return false;
   }
 

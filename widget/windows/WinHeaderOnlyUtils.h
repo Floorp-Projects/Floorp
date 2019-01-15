@@ -149,14 +149,6 @@ class WindowsError final {
     return Nothing();
   }
 
-  bool operator==(const WindowsError& aOther) const {
-    return mHResult == aOther.mHResult;
-  }
-
-  bool operator!=(const WindowsError& aOther) const {
-    return mHResult != aOther.mHResult;
-  }
-
   static DWORD NtStatusToWin32Error(NTSTATUS aNtStatus) {
     static const DynamicallyLinkedFunctionPtr<decltype(&RtlNtStatusToDosError)>
         pRtlNtStatusToDosError(L"ntdll.dll", "RtlNtStatusToDosError");

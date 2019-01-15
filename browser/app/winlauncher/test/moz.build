@@ -8,6 +8,7 @@ DisableStlWrapping()
 
 GeckoCppUnitTests(
     [
+        'TestNativeNt',
         'TestSameBinary',
     ],
     linkage=None

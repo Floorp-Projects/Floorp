@@ -12,13 +12,6 @@
 
 namespace mozilla {
 
-#if defined(MOZILLA_INTERNAL_API)
-
-template <typename T>
-using LauncherResult = WindowsErrorResult<T>;
-
-#else
-
 struct LauncherError {
   LauncherError(const char* aFile, int aLine, WindowsError aWin32Error)
       : mFile(aFile), mLine(aLine), mError(aWin32Error) {}
@@ -26,47 +19,14 @@ struct LauncherError {
   const char* mFile;
   int mLine;
   WindowsError mError;
-
-  bool operator==(const LauncherError& aOther) const {
-    return mError == aOther.mError;
-  }
-
-  bool operator!=(const LauncherError& aOther) const {
-    return mError != aOther.mError;
-  }
-
-  bool operator==(const WindowsError& aOther) const { return mError == aOther; }
-
-  bool operator!=(const WindowsError& aOther) const { return mError != aOther; }
 };
 
 template <typename T>
 using LauncherResult = Result<T, LauncherError>;
 
-#endif  // defined(MOZILLA_INTERNAL_API)
-
-using LauncherVoidResult = LauncherResult<Ok>;
+using LauncherVoidResult = Result<Ok, LauncherError>;
 
 }  // namespace mozilla
-
-#if defined(MOZILLA_INTERNAL_API)
-
-#define LAUNCHER_ERROR_GENERIC() \
-  ::mozilla::Err(::mozilla::WindowsError::CreateGeneric())
-
-#define LAUNCHER_ERROR_FROM_WIN32(err) \
-  ::mozilla::Err(::mozilla::WindowsError::FromWin32Error(err))
-
-#define LAUNCHER_ERROR_FROM_LAST() \
-  ::mozilla::Err(::mozilla::WindowsError::FromLastError())
-
-#define LAUNCHER_ERROR_FROM_NTSTATUS(ntstatus) \
-  ::mozilla::Err(::mozilla::WindowsError::FromNtStatus(ntstatus))
-
-#define LAUNCHER_ERROR_FROM_HRESULT(hresult) \
-  ::mozilla::Err(::mozilla::WindowsError::FromHResult(hresult))
-
-#else
 
 #define LAUNCHER_ERROR_GENERIC()           \
   ::mozilla::Err(::mozilla::LauncherError( \
@@ -78,7 +38,8 @@ using LauncherVoidResult = LauncherResult<Ok>;
 
 #define LAUNCHER_ERROR_FROM_LAST()         \
   ::mozilla::Err(::mozilla::LauncherError( \
-      __FILE__, __LINE__, ::mozilla::WindowsError::FromLastError()))
+      __FILE__, __LINE__,                  \
+      ::mozilla::WindowsError::FromWin32Error(::GetLastError())))
 
 #define LAUNCHER_ERROR_FROM_NTSTATUS(ntstatus) \
   ::mozilla::Err(::mozilla::LauncherError(     \
@@ -88,14 +49,12 @@ using LauncherVoidResult = LauncherResult<Ok>;
   ::mozilla::Err(::mozilla::LauncherError(   \
       __FILE__, __LINE__, ::mozilla::WindowsError::FromHResult(hresult)))
 
-// This macro wraps the supplied WindowsError with a LauncherError
-#define LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(err) \
-  ::mozilla::Err(::mozilla::LauncherError(__FILE__, __LINE__, err))
-
-#endif  // defined(MOZILLA_INTERNAL_API)
-
 // This macro enables moving of a mozilla::LauncherError from a
 // mozilla::LauncherResult<Foo> into a mozilla::LauncherResult<Bar>
 #define LAUNCHER_ERROR_FROM_RESULT(result) ::mozilla::Err(result.unwrapErr())
+
+// This macro wraps the supplied WindowsError with a LauncherError
+#define LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(err) \
+  ::mozilla::Err(::mozilla::LauncherError(__FILE__, __LINE__, err))
 
 #endif  // mozilla_LauncherResult_h
