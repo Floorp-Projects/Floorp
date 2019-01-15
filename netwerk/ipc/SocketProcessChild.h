@@ -42,6 +42,7 @@ class SocketProcessChild final : public PSocketProcessChild {
       Endpoint<mozilla::net::PSocketProcessBridgeParent>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvInitProfiler(
       Endpoint<mozilla::PProfilerChild>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvSocketProcessTelemetryPing() override;
 
   void CleanUp();
   void DestroySocketProcessBridgeParent(ProcessId aId);

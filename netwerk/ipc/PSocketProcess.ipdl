@@ -43,6 +43,8 @@ child:
   async SetOffline(bool offline);
   async InitSocketProcessBridgeParent(ProcessId processId, Endpoint<PSocketProcessBridgeParent> endpoint);
   async InitProfiler(Endpoint<PProfilerChild> aEndpoint);
+  // test-only
+  async SocketProcessTelemetryPing();
 };
 
 } // namespace net
