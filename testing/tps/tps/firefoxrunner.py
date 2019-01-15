@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import copy
 import httplib2
 import os
 
@@ -34,7 +33,7 @@ class TPSFirefoxRunner(object):
     def download_url(self, url, dest=None):
         h = httplib2.Http()
         resp, content = h.request(url, 'GET')
-        if dest == None:
+        if dest is None:
             dest = os.path.basename(url)
 
         local = open(dest, 'wb')

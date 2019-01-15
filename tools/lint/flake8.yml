@@ -50,6 +50,7 @@ flake8:
         - testing/remotecppunittests.py
         - testing/runcppunittests.py
         - testing/talos/
+        - testing/tps/
         - testing/xpcshell
         - toolkit/components/telemetry
         - toolkit/crashreporter/tools/upload_symbols.py
