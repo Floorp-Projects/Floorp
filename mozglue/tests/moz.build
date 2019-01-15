@@ -15,7 +15,14 @@ CppUnitTests([
 ])
 
 if CONFIG['OS_ARCH'] == 'WINNT':
+    GeckoCppUnitTests([
+        'TestNativeNt',
+    ], linkage=None)
     TEST_DIRS += [
         'interceptor',
         'gtest',
+    ]
+    OS_LIBS += [
+        'mincore',
+        'ntdll',
     ]
