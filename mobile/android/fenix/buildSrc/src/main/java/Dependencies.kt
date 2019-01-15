@@ -15,6 +15,9 @@ private object Versions {
     const val junit = "4.12"
     const val test_tools = "1.0.2"
     const val espresso_core = "2.2.2"
+
+    const val androidx_legacy = "1.0.0"
+    const val android_arch_navigation = "1.0.0-alpha09"
 }
 
 @Suppress("unused")
@@ -35,4 +38,7 @@ object Deps {
     const val junit = "junit:junit:${Versions.junit}"
     const val tools_test_runner = "com.android.support.test:runner:${Versions.test_tools}"
     const val tools_espresso_core = "com.android.support.test.espresso:espresso-core:${Versions.espresso_core}"
+
+    const val androidx_legacy = "androidx.legacy:legacy-support-v4:${Versions.androidx_legacy}"
+    const val android_arch_navigation = "android.arch.navigation:navigation-fragment:${Versions.android_arch_navigation}"
 }

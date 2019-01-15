@@ -2,79 +2,84 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.constraintlayout.motion.widget.MotionLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/homeLayout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layoutDescription="@xml/home_scene"
-        tools:context=".home.HomeFragment"
-        android:clipToPadding="false">
+<androidx.constraintlayout.motion.widget.MotionLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/homeLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    app:layoutDescription="@xml/home_scene"
+    tools:context=".home.HomeFragment">
 
 
     <ImageButton
-            android:id="@+id/menuButton"
-            android:src="@drawable/ic_menu"
-            android:layout_width="@dimen/glyph_button_height"
-            android:layout_height="@dimen/glyph_button_height"
-            android:layout_marginTop="16dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        android:id="@+id/menuButton"
+        android:layout_width="@dimen/glyph_button_height"
+        android:layout_height="@dimen/glyph_button_height"
+        android:layout_marginTop="16dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_menu"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
-            android:id="@+id/privateBrowsingButton"
-            android:src="@drawable/ic_private_browsing"
-            android:layout_width="@dimen/glyph_button_height"
-            android:layout_height="@dimen/glyph_button_height"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            app:layout_constraintEnd_toStartOf="@id/menuButton"
-            app:layout_constraintTop_toTopOf="@id/menuButton" />
+        android:id="@+id/privateBrowsingButton"
+        android:layout_width="@dimen/glyph_button_height"
+        android:layout_height="@dimen/glyph_button_height"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_private_browsing"
+        app:layout_constraintEnd_toStartOf="@id/menuButton"
+        app:layout_constraintTop_toTopOf="@id/menuButton" />
 
     <ImageView
-            android:id="@+id/wordmark"
-            android:src="@drawable/ic_logo_wordmark"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_marginTop="42dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/menuButton" />
+        android:id="@+id/wordmark"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="42dp"
+        android:src="@drawable/ic_logo_wordmark"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/menuButton" />
 
     <FrameLayout
-            android:id="@+id/toolbar_wrapper"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="64dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:background="@drawable/home_search_background"
-            app:layout_constraintTop_toBottomOf="@id/wordmark"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:outlineProvider="paddedBounds"
-            android:clipToPadding="false"
-            android:elevation="5dp">
+        android:id="@+id/toolbar_wrapper"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="64dp"
+        android:layout_marginRight="16dp"
+        android:background="@drawable/home_search_background"
+        android:clipToPadding="false"
+        android:elevation="5dp"
+        android:outlineProvider="paddedBounds"
+        android:transitionName="firstTransitionName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/wordmark">
 
-        <mozilla.components.browser.toolbar.BrowserToolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_margin="8dp"
-                android:background="@android:color/white" />
-
+        <TextView
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_margin="8dp"
+            android:background="@android:color/white"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:text="@string/search_hint"
+            android:textColor="@color/searchText"
+            android:textSize="14sp" />
     </FrameLayout>
 
     <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/session_list"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="16dp"
-            app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+        android:id="@+id/session_list"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper" />
 
 </androidx.constraintlayout.motion.widget.MotionLayout>

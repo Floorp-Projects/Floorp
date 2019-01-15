@@ -5,23 +5,24 @@
 package org.mozilla.fenix.home
 
 import android.content.Context
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.transition.TransitionInflater
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.fragment.app.Fragment
+import androidx.navigation.Navigation
+import androidx.navigation.fragment.FragmentNavigator
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_home.*
-
 import org.mozilla.fenix.R
-import android.widget.RelativeLayout
-import android.graphics.Color
-import androidx.recyclerview.widget.LinearLayoutManager
-
 
 class HomeFragment : Fragment() {
     override fun onCreateView(
@@ -39,11 +40,11 @@ class HomeFragment : Fragment() {
         sessionsAdapter = SessionsAdapter(requireContext())
 
         toolbar_wrapper.clipToOutline = false
-        toolbar.apply {
-            textColor = ContextCompat.getColor(context, R.color.searchText)
-            textSize = 14f
-            hint = context.getString(R.string.search_hint)
-            hintColor = ContextCompat.getColor(context, R.color.searchText)
+        toolbar.setOnClickListener { it ->
+            val extras = FragmentNavigator.Extras.Builder().addSharedElement(
+                toolbar_wrapper, ViewCompat.getTransitionName(toolbar_wrapper)!!
+            ).build()
+            Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_searchFragment, null, null, extras)
         }
 
         session_list.apply {
@@ -53,9 +54,10 @@ class HomeFragment : Fragment() {
         }
     }
 
-
-    companion object {
-        fun create() = HomeFragment()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.fade)
+        exitTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.fade)
     }
 }
 

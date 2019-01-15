@@ -6,16 +6,10 @@ package org.mozilla.fenix
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import org.mozilla.fenix.home.HomeFragment
 
 class HomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
-
-        supportFragmentManager?.beginTransaction()?.apply {
-            replace(R.id.container, HomeFragment.create())
-            commit()
-        }
     }
 }

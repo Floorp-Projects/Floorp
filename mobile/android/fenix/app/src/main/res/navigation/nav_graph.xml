@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools" xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/nav_graph"
+            app:startDestination="@id/homeFragment">
+
+    <fragment android:id="@+id/homeFragment" android:name="org.mozilla.fenix.home.HomeFragment"
+              android:label="fragment_home" tools:layout="@layout/fragment_home">
+        <action android:id="@+id/action_homeFragment_to_searchFragment" app:destination="@id/searchFragment"
+        />
+        <action android:id="@+id/action_homeFragment_to_browserFragment" app:destination="@id/browserFragment"/>
+    </fragment>
+    <fragment android:id="@+id/searchFragment" android:name="org.mozilla.fenix.search.SearchFragment"
+              android:label="fragment_search" tools:layout="@layout/fragment_search">
+        <action android:id="@+id/action_searchFragment_to_browserFragment" app:destination="@id/browserFragment"/>
+    </fragment>
+    <fragment android:id="@+id/browserFragment" android:name="org.mozilla.fenix.browser.BrowserFragment"
+              android:label="fragment_browser" tools:layout="@layout/fragment_browser"/>
+</navigation>
