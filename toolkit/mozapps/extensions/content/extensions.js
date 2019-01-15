@@ -2615,13 +2615,12 @@ var gDetailView = {
     setSearchLabel(aAddon.type);
 
     // Set the preview image for themes, if available.
+    this.headingImage.src = "";
     if (aAddon.type == "theme") {
       let previewURL = aAddon.screenshots && aAddon.screenshots[0] && aAddon.screenshots[0].url;
       if (previewURL) {
         this.headingImage.src = previewURL;
       }
-    } else {
-      this.headingImage.src = "";
     }
 
     AddonManager.addManagerListener(this);
