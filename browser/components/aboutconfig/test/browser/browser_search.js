@@ -59,3 +59,31 @@ add_task(async function test_search() {
     Assert.equal(this.rows.length, 3);
   });
 });
+
+add_task(async function test_search_delayed() {
+  await AboutConfigTest.withNewTab(async function() {
+    let prefs = this.document.getElementById("prefs");
+
+    // Prepare the table and the search field for the test.
+    this.search("test.aboutconfig.a");
+    Assert.equal(this.rows.length, 2);
+
+    // The table is updated in a single microtask, so we don't need to wait for
+    // specific mutations, we can just continue when the children are updated.
+    let prefsTableChanged = new Promise(resolve => {
+      let observer = new MutationObserver(() => {
+        observer.disconnect();
+        resolve();
+      });
+      observer.observe(prefs, { childList: true });
+    });
+
+    // Add a character and test that the table is not updated immediately.
+    EventUtils.synthesizeKey("b");
+    Assert.equal(this.rows.length, 2);
+
+    // The table will eventually be updated after a delay.
+    await prefsTableChanged;
+    Assert.equal(this.rows.length, 1);
+  });
+});
