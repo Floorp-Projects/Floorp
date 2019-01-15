@@ -15,7 +15,6 @@
 #include "nsIContentViewer.h"
 #include "nsPresContext.h"
 #include "nsView.h"
-#include "nsViewportInfo.h"
 #include "nsIScrollable.h"
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
@@ -373,14 +372,9 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
       std::max(aKidMetrics->Height(), vScrollbarMinHeight);
   aState->mInsideBorderSize =
       ComputeInsideBorderSize(aState, desiredInsideBorderSize);
-
-  nsSize layoutSize = mHelper.mIsUsingMinimumScaleSize
-                          ? mHelper.mMinimumScaleSize
-                          : aState->mInsideBorderSize;
-
-  nsSize scrollPortSize =
-      nsSize(std::max(0, layoutSize.width - vScrollbarDesiredWidth),
-             std::max(0, layoutSize.height - hScrollbarDesiredHeight));
+  nsSize scrollPortSize = nsSize(
+      std::max(0, aState->mInsideBorderSize.width - vScrollbarDesiredWidth),
+      std::max(0, aState->mInsideBorderSize.height - hScrollbarDesiredHeight));
 
   nsSize visualViewportSize = scrollPortSize;
   nsIPresShell* presShell = PresShell();
@@ -453,7 +447,8 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
   nsPoint scrollPortOrigin(aState->mComputedBorder.left,
                            aState->mComputedBorder.top);
   if (!IsScrollbarOnRight()) {
-    nscoord vScrollbarActualWidth = layoutSize.width - scrollPortSize.width;
+    nscoord vScrollbarActualWidth =
+        aState->mInsideBorderSize.width - scrollPortSize.width;
     scrollPortOrigin.x += vScrollbarActualWidth;
   }
   mHelper.mScrollPort = nsRect(scrollPortOrigin, scrollPortSize);
@@ -720,12 +715,6 @@ void nsHTMLScrollFrame::ReflowContents(ScrollReflowInput* aState,
       kidDesiredSize.mOverflowAreas.Clear();
       ReflowScrolledFrame(aState, false, false, &kidDesiredSize);
     }
-  }
-
-  if (IsRootScrollFrameOfDocument()) {
-    mHelper.UpdateMinimumScaleSize(
-        aState->mContentsOverflowAreas.ScrollableOverflow(),
-        kidDesiredSize.PhysicalSize());
   }
 
   // Try vertical scrollbar settings that leave the vertical scrollbar
@@ -1059,11 +1048,10 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
 
   ReflowContents(&state, aDesiredSize);
 
-  nsSize layoutSize = mHelper.mIsUsingMinimumScaleSize
-                          ? mHelper.mMinimumScaleSize
-                          : state.mInsideBorderSize;
-  aDesiredSize.Width() = layoutSize.width + state.mComputedBorder.LeftRight();
-  aDesiredSize.Height() = layoutSize.height + state.mComputedBorder.TopBottom();
+  aDesiredSize.Width() =
+      state.mInsideBorderSize.width + state.mComputedBorder.LeftRight();
+  aDesiredSize.Height() =
+      state.mInsideBorderSize.height + state.mComputedBorder.TopBottom();
 
   // Set the size of the frame now since computing the perspective-correct
   // overflow (within PlaceScrollArea) can rely on it.
@@ -1103,7 +1091,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
       // place and reflow scrollbars
       nsRect insideBorderArea =
           nsRect(nsPoint(state.mComputedBorder.left, state.mComputedBorder.top),
-                 layoutSize);
+                 state.mInsideBorderSize);
       mHelper.LayoutScrollbars(state.mBoxState, insideBorderArea,
                                oldScrollAreaBounds);
     } else {
@@ -2010,7 +1998,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mZoomableByAPZ(false),
       mHasOutOfFlowContentInsideFilter(false),
       mSuppressScrollbarRepaints(false),
-      mIsUsingMinimumScaleSize(false),
       mVelocityQueue(aOuter->PresContext()) {
   if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
     mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(aOuter));
@@ -5456,65 +5443,6 @@ void ScrollFrameHelper::FinishReflowForScrollbar(Element* aElement,
   SetCoordAttribute(aElement, nsGkAtoms::maxpos, aMaxXY - aMinXY);
   SetCoordAttribute(aElement, nsGkAtoms::pageincrement, aPageIncrement);
   SetCoordAttribute(aElement, nsGkAtoms::increment, aIncrement);
-}
-
-void ScrollFrameHelper::UpdateMinimumScaleSize(
-    const nsRect& aScrollableOverflow, const nsSize& aICBSize) {
-  MOZ_ASSERT(mIsRoot);
-
-  mIsUsingMinimumScaleSize = false;
-
-  if (!mOuter->PresShell()->GetIsViewportOverridden()) {
-    return;
-  }
-
-  nsPresContext* pc = mOuter->PresContext();
-  MOZ_ASSERT(pc->IsRootContentDocument(),
-             "The pres context should be for the root content document");
-
-  const ScrollStyles& styles = pc->GetViewportScrollStylesOverride();
-  // FIXME: Bug 1520077 - Drop this check. We should use the minimum-scale size
-  // even if no overflow:hidden is specified.
-  if (styles.mHorizontal != StyleOverflow::Hidden) {
-    return;
-  }
-
-  RefPtr<MobileViewportManager> manager =
-      mOuter->PresShell()->GetMobileViewportManager();
-  MOZ_ASSERT(manager);
-
-  ScreenIntSize displaySize = ViewAs<ScreenPixel>(
-      manager->DisplaySize(),
-      PixelCastJustification::LayoutDeviceIsScreenForBounds);
-  if (displaySize.width == 0 || displaySize.height == 0) {
-    return;
-  }
-
-  Document* doc = pc->Document();
-  MOZ_ASSERT(doc, "The document should be valid");
-  nsViewportInfo viewportInfo = doc->GetViewportInfo(displaySize);
-  // FIXME: Bug 1520081 - Drop this check. We should use the minimum-scale size
-  // even if the minimum-scale size is greater than 1.0.
-  if (viewportInfo.GetMinZoom() >=
-      pc->CSSToDevPixelScale() * LayoutDeviceToScreenScale(1.0f)) {
-    return;
-  }
-
-  nsSize maximumPossibleSize =
-      CSSSize::ToAppUnits(ScreenSize(displaySize) / viewportInfo.GetMinZoom());
-
-  mMinimumScaleSize =
-      Min(maximumPossibleSize,
-          nsSize(aScrollableOverflow.XMost(), aScrollableOverflow.YMost()));
-  mMinimumScaleSize = Max(aICBSize, mMinimumScaleSize);
-
-  // Chrome doesn't allow overflow-y:hidden region reachable if there is no
-  // overflow-x:hidden region.
-  // TODO: Bug 1508177: We can drop this condition once after we shrink the
-  // content even if no content area gets visible.
-  if (mMinimumScaleSize.width != aICBSize.width) {
-    mIsUsingMinimumScaleSize = true;
-  }
 }
 
 bool ScrollFrameHelper::ReflowFinished() {

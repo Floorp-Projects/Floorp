@@ -6454,16 +6454,12 @@ UniquePtr<ScrollMetadata> nsDisplaySubDocument::ComputeScrollMetadata(
   nsRect viewport = mFrame->GetRect() - mFrame->GetPosition() +
                     mFrame->GetOffsetToCrossDoc(ReferenceFrame());
 
-  nsIScrollableFrame* scrollableFrame = rootScrollFrame->GetScrollTargetFrame();
-  if (isRootContentDocument) {
-    viewport.SizeTo(scrollableFrame->GetScrollPortRect().Size());
-  }
-
   UniquePtr<ScrollMetadata> metadata =
       MakeUnique<ScrollMetadata>(nsLayoutUtils::ComputeScrollMetadata(
           mFrame, rootScrollFrame, rootScrollFrame->GetContent(),
           ReferenceFrame(), aLayerManager, mScrollParentId, viewport, Nothing(),
           isRootContentDocument, Some(params)));
+  nsIScrollableFrame* scrollableFrame = rootScrollFrame->GetScrollTargetFrame();
   if (scrollableFrame) {
     scrollableFrame->NotifyApzTransaction();
   }
