@@ -59,6 +59,9 @@ class jsjitExecutableAllocator(object):
         def __iter__(self):
             return self
 
+        def next(self):
+            return self.__next__()
+
         def __next__(self):
             cur = self.index
             if cur >= self.max:
