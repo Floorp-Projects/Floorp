@@ -1462,3 +1462,75 @@ async function editExpression(dbg, input) {
   pressKey(dbg, "Enter");
   await evaluated;
 }
+
+async function waitUntilPredicate(predicate) {
+  let result;
+  await waitUntil(() => {
+    result = predicate();
+    return result;
+  })
+
+  return result;
+}
+
+// Return a promise with a reference to jsterm, opening the split
+// console if necessary.  This cleans up the split console pref so
+// it won't pollute other tests.
+async function getDebuggerSplitConsole(dbg) {
+  const { toolbox, win } = dbg;
+
+  if (!win) {
+    win = toolbox.win;
+  }
+
+  if (!toolbox.splitConsole) {
+    pressKey(dbg, "Escape");
+  }
+
+  await toolbox.openSplitConsole();
+  return toolbox.getPanel("webconsole");
+}
+
+async function openConsoleContextMenu(hud, element) {
+  const onConsoleMenuOpened = hud.ui.consoleOutput.once("menu-open");
+  synthesizeContextMenuEvent(element);
+  await onConsoleMenuOpened;
+  const doc = hud.ui.consoleOutput.owner.chromeWindow.document;
+  return doc.getElementById("webconsole-menu");
+}
+
+function hideConsoleContextMenu(hud) {
+  const doc = hud.ui.consoleOutput.owner.chromeWindow.document;
+  const popup = doc.getElementById("webconsole-menu");
+  if (!popup) {
+    return Promise.resolve();
+  }
+
+  const onPopupHidden = once(popup, "popuphidden");
+  popup.hidePopup();
+  return onPopupHidden;
+}
+
+// Return a promise that resolves with the result of a thread evaluating a
+// string in the topmost frame.
+async function evaluateInTopFrame(threadClient, text) {
+  const {frames} = await threadClient.getFrames(0, 1);
+  ok(frames.length == 1, "Got one frame");
+  const response = await threadClient.eval(frames[0].actor, text);
+  ok(response.type == "resumed", "Got resume response from eval");
+  let rval;
+  await threadClient.addOneTimeListener("paused", function(event, packet) {
+    ok(packet.type == "paused" &&
+       packet.why.type == "clientEvaluated" &&
+       "return" in packet.why.frameFinished, "Eval returned a value");
+    rval = packet.why.frameFinished.return;
+  });
+  return (rval.type == "undefined") ? undefined : rval;
+}
+
+// Return a promise that resolves when a thread evaluates a string in the
+// topmost frame, ensuring the result matches the expected value.
+async function checkEvaluateInTopFrame(threadClient, text, expected) {
+  const rval = await evaluateInTopFrame(threadClient, text);
+  ok(rval == expected, "Eval returned " + expected);
+}

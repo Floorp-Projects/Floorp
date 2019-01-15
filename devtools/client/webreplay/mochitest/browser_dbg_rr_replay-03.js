@@ -2,25 +2,30 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-undef */
 
-// Test for saving a recording and then replaying it in a new tab, with rewinding disabled.
-async function test() {
-  waitForExplicitFinish();
+"use strict";
 
+// To disable all Web Replay tests, see browser.ini
+
+// Test for saving a recording and then replaying it in a new tab,
+// with rewinding disabled.
+add_task(async function() {
   await pushPref("devtools.recordreplay.enableRewinding", false);
 
-  let recordingFile = newRecordingFile();
-  let recordingTab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
+  const recordingFile = newRecordingFile();
+  const recordingTab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
   gBrowser.selectedTab = recordingTab;
   openTrustedLinkIn(EXAMPLE_URL + "doc_rr_basic.html", "current");
   await once(Services.ppmm, "RecordingFinished");
 
-  let tabParent = recordingTab.linkedBrowser.frameLoader.tabParent;
+  const tabParent = recordingTab.linkedBrowser.frameLoader.tabParent;
   ok(tabParent, "Found recording tab parent");
   ok(tabParent.saveRecording(recordingFile), "Saved recording");
   await once(Services.ppmm, "SaveRecordingFinished");
 
-  let replayingTab = BrowserTestUtils.addTab(gBrowser, null, { replayExecution: recordingFile });
+  const replayingTab = BrowserTestUtils.addTab(gBrowser, null,
+                                               { replayExecution: recordingFile });
   gBrowser.selectedTab = replayingTab;
   await once(Services.ppmm, "HitRecordingEndpoint");
 
@@ -28,5 +33,4 @@ async function test() {
 
   await gBrowser.removeTab(recordingTab);
   await gBrowser.removeTab(replayingTab);
-  finish();
-}
+});
