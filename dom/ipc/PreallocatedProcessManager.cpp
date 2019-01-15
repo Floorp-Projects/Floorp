@@ -24,7 +24,6 @@ using namespace mozilla::hal;
 using namespace mozilla::dom;
 
 namespace mozilla {
-
 /**
  * This singleton class implements the static methods on
  * PreallocatedProcessManager.
@@ -44,6 +43,7 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
 
  private:
   static mozilla::StaticRefPtr<PreallocatedProcessManagerImpl> sSingleton;
+  static uint32_t sPrelaunchDelayMS;
 
   PreallocatedProcessManagerImpl();
   ~PreallocatedProcessManagerImpl();
@@ -74,6 +74,8 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
 
 /* static */ StaticRefPtr<PreallocatedProcessManagerImpl>
     PreallocatedProcessManagerImpl::sSingleton;
+/* static */ uint32_t
+    PreallocatedProcessManagerImpl::sPrelaunchDelayMS = 0;
 
 /* static */ PreallocatedProcessManagerImpl*
 PreallocatedProcessManagerImpl::Singleton() {
@@ -99,6 +101,10 @@ PreallocatedProcessManagerImpl::~PreallocatedProcessManagerImpl() {
 }
 
 void PreallocatedProcessManagerImpl::Init() {
+  Preferences::AddUintVarCache(
+    &sPrelaunchDelayMS,
+    "dom.ipc.processPrelaunch.delayMs",
+    DEFAULT_ALLOCATE_DELAY);
   Preferences::AddStrongObserver(this, "dom.ipc.processPrelaunch.enabled");
   // We have to respect processCount at all time. This is especially important
   // for testing.
@@ -233,8 +239,7 @@ void PreallocatedProcessManagerImpl::AllocateAfterDelay() {
   NS_DelayedDispatchToCurrentThread(
       NewRunnableMethod("PreallocatedProcessManagerImpl::AllocateOnIdle", this,
                         &PreallocatedProcessManagerImpl::AllocateOnIdle),
-      Preferences::GetUint("dom.ipc.processPrelaunch.delayMs",
-                           DEFAULT_ALLOCATE_DELAY));
+      sPrelaunchDelayMS);
 }
 
 void PreallocatedProcessManagerImpl::AllocateOnIdle() {
