@@ -61,7 +61,7 @@ function* test(testDriver) {
   // Flush state just to be sure.
   yield waitForApzFlushedRepaints(testDriver);
 
-  todo_is(window.visualViewport.pageLeft, visualX, "visual viewport remains unchanged");
+  is(window.visualViewport.pageLeft, visualX, "visual viewport remains unchanged");
 }
 
 waitUntilApzStable()
