@@ -5,8 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import concurrent.futures as futures
-import requests
-import requests.adapters
 import json
 import os
 import sys
@@ -25,7 +23,6 @@ testing = False
 
 def create_tasks(taskgraph, label_to_taskid, params, decision_task_id=None):
     taskid_to_label = {t: l for l, t in label_to_taskid.iteritems()}
-
 
     decision_task_id = decision_task_id or os.environ.get('TASK_ID')
 
