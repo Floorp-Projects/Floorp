@@ -13,6 +13,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
 });
 
+const FALLBACK_ICON = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+
 let templatesLoaded = false;
 const templates = {};
 
@@ -266,7 +268,7 @@ async function renderAddons(addons) {
       templates.card.content, true).firstElementChild;
     let icon = AddonManager.getPreferredIconURL(addon, 24, window);
     card.setAttribute("addon-id", addon.id);
-    card.querySelector(".addon-icon").src = icon;
+    card.querySelector(".addon-icon").src = icon || FALLBACK_ICON;
     card.querySelector(".addon-name").textContent = addon.name;
 
     if (extension.shortcuts) {
