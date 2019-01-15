@@ -489,6 +489,21 @@ partial interface Window {
    * Promise resolution handlers will all be invoked later on during the
    * next microtask checkpoint.
    *
+   * Using window.top.promiseDocumentFlushed in combination with a callback
+   * that is querying items in a window that might be swapped out via
+   * nsFrameLoader::SwapWithOtherLoader is highly discouraged. For example:
+   *
+   *   let result = await window.top.promiseDocumentFlushed(() => {
+   *     return window.document.body.getBoundingClientRect();
+   *   });
+   *
+   *   If "window" might get swapped out via nsFrameLoader::SwapWithOtherLoader
+   *   at any time, then the callback might get called when the new host window
+   *   will still incur layout flushes, since it's only the original host window
+   *   that's being monitored via window.top.promiseDocumentFlushed.
+   *
+   *   See bug 1519407 for further details.
+   *
    * promiseDocumentFlushed does not support re-entrancy - so calling it from
    * within a promiseDocumentFlushed callback will result in the inner call
    * throwing an NS_ERROR_FAILURE exception, and the outer Promise rejecting
