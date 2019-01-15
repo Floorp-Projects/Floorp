@@ -82,8 +82,8 @@ function init()
 {
   var tree = document.getElementById("tree-view");
   tree.view = view;
-  tree.treeBoxObject.ensureRowIsVisible(0);
-  is(tree.treeBoxObject.getFirstVisibleRow(), 0, "first visible after ensureRowIsVisible on load");
+  tree.ensureRowIsVisible(0);
+  is(tree.getFirstVisibleRow(), 0, "first visible after ensureRowIsVisible on load");
   tree.setAttribute("rows", "4");
 
   setTimeout(testtag_tree, 0, "tree-view", "treechildren-view", "multiple", "simple", "tree view");

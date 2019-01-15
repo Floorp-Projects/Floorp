@@ -6843,6 +6843,20 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "margin-block": {
+    "isInherited": false,
+    "subproperties": [
+      "margin-block-start",
+      "margin-block-end"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
   "margin-block-end": {
     "isInherited": false,
     "subproperties": [
@@ -6873,6 +6887,20 @@ exports.CSS_PROPERTIES = {
     "isInherited": false,
     "subproperties": [
       "margin-bottom"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "margin-inline": {
+    "isInherited": false,
+    "subproperties": [
+      "margin-inline-start",
+      "margin-inline-end"
     ],
     "supports": [],
     "values": [

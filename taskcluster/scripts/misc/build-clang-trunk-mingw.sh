@@ -32,7 +32,7 @@ SRC_DIR=$TOOLCHAIN_DIR/src
 
 make_flags="-j$(nproc)"
 
-mingw_version=d66350ea60d043a8992ada752040fc4ea48537c3
+mingw_version=a3b01285793fe405ce6eae883cd5ebacdfd819ae
 libunwind_version=1f89d78bb488bc71cfdee8281fc0834e9fbe5dce
 llvm_mingw_version=53db1c3a4c9c81972b70556a5ba5cd6ccd8e6e7d
 
@@ -41,8 +41,8 @@ binutils_ext=bz2
 binutils_sha=369737ce51587f92466041a97ab7d2358c6d9e1b6490b3940eb09fb0a9a6ac88
 
 # This is default value of _WIN32_WINNT. Gecko configure script explicitly sets this,
-# so this is not used to build Gecko itself. We default to 0x600, which is Windows Vista.
-default_win32_winnt=0x600
+# so this is not used to build Gecko itself. We default to 0x601, which is Windows 7.
+default_win32_winnt=0x601
 
 cd $HOME_DIR/src
 

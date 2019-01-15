@@ -60,6 +60,7 @@
 #include "mozilla/dom/XULMenuElementBinding.h"
 #include "mozilla/dom/XULPopupElementBinding.h"
 #include "mozilla/dom/XULTextElementBinding.h"
+#include "mozilla/dom/XULTreeElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -3620,6 +3621,8 @@ bool HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
       cb = XULMenuElement_Binding::GetConstructorObject;
     } else if (definition->mLocalName == nsGkAtoms::scrollbox) {
       cb = XULScrollElement_Binding::GetConstructorObject;
+    } else if (definition->mLocalName == nsGkAtoms::tree) {
+      cb = XULTreeElement_Binding::GetConstructorObject;
     } else {
       cb = XULElement_Binding::GetConstructorObject;
     }

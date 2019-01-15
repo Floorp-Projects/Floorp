@@ -165,6 +165,7 @@ class nsCSSProps {
 
   static nsCSSPropertyID Physicalize(nsCSSPropertyID aProperty,
                                      const mozilla::ComputedStyle& aStyle) {
+    MOZ_ASSERT(!IsShorthand(aProperty));
     if (PropHasFlags(aProperty, Flags::IsLogical)) {
       return Servo_ResolveLogicalProperty(aProperty, &aStyle);
     }
