@@ -503,10 +503,9 @@ nscoord nsTableRowFrame::CalcBSize(const ReflowInput& aReflowInput) {
   const nsStyleCoord& bsizeStyleCoord = position->BSize(wm);
   if (bsizeStyleCoord.ConvertsToLength()) {
     SetFixedBSize(bsizeStyleCoord.ComputeCoordPercentCalc(0));
-  } else if (eStyleUnit_Percent == bsizeStyleCoord.GetUnit()) {
-    SetPctBSize(bsizeStyleCoord.GetPercentValue());
+  } else if (bsizeStyleCoord.ConvertsToPercent()) {
+    SetPctBSize(bsizeStyleCoord.ToPercent());
   }
-  // calc() with percentages is treated like 'auto' on table rows.
 
   for (nsIFrame* kidFrame : mFrames) {
     nsTableCellFrame* cellFrame = do_QueryFrame(kidFrame);
@@ -569,44 +568,26 @@ nsresult nsTableRowFrame::CalculateCellActualBSize(nsTableCellFrame* aCellFrame,
   int32_t rowSpan = GetTableFrame()->GetEffectiveRowSpan(*aCellFrame);
 
   const nsStyleCoord& bsizeStyleCoord = position->BSize(aWM);
-  switch (bsizeStyleCoord.GetUnit()) {
-    case eStyleUnit_Calc: {
-      if (bsizeStyleCoord.CalcHasPercent()) {
-        // Treat this like "auto"
-        break;
-      }
-      // Fall through to the coord case
-      MOZ_FALLTHROUGH;
+  if (bsizeStyleCoord.ConvertsToLength()) {
+    // In quirks mode, table cell isize should be content-box, but bsize
+    // should be border-box.
+    // Because of this historic anomaly, we do not use quirk.css
+    // (since we can't specify one value of box-sizing for isize and another
+    // for bsize)
+    specifiedBSize = bsizeStyleCoord.ToLength();
+    if (PresContext()->CompatibilityMode() != eCompatibility_NavQuirks &&
+        position->mBoxSizing == StyleBoxSizing::Content) {
+      specifiedBSize +=
+          aCellFrame->GetLogicalUsedBorderAndPadding(aWM).BStartEnd(aWM);
     }
-    case eStyleUnit_Coord: {
-      // In quirks mode, table cell isize should be content-box, but bsize
-      // should be border-box.
-      // Because of this historic anomaly, we do not use quirk.css
-      // (since we can't specify one value of box-sizing for isize and another
-      // for bsize)
-      specifiedBSize = bsizeStyleCoord.ComputeCoordPercentCalc(0);
-      if (PresContext()->CompatibilityMode() != eCompatibility_NavQuirks &&
-          position->mBoxSizing == StyleBoxSizing::Content) {
-        specifiedBSize +=
-            aCellFrame->GetLogicalUsedBorderAndPadding(aWM).BStartEnd(aWM);
-      }
 
-      if (1 == rowSpan) {
-        SetFixedBSize(specifiedBSize);
-      }
-      break;
+    if (1 == rowSpan) {
+      SetFixedBSize(specifiedBSize);
     }
-    case eStyleUnit_Percent: {
-      if (1 == rowSpan) {
-        SetPctBSize(bsizeStyleCoord.GetPercentValue());
-      }
-      // pct bsizes are handled when all of the cells are finished,
-      // so don't set specifiedBSize
-      break;
+  } else if (bsizeStyleCoord.ConvertsToPercent()) {
+    if (1 == rowSpan) {
+      SetPctBSize(bsizeStyleCoord.ToPercent());
     }
-    case eStyleUnit_Auto:
-    default:
-      break;
   }
 
   // If the specified bsize is greater than the desired bsize,
@@ -1357,8 +1338,8 @@ void nsTableRowFrame::InitHasCellWithStyleBSize(nsTableFrame* aTableFrame) {
     const nsStyleCoord& cellBSize = cellFrame->StylePosition()->BSize(wm);
     if (aTableFrame->GetEffectiveRowSpan(*cellFrame) == 1 &&
         cellBSize.GetUnit() != eStyleUnit_Auto &&
-        /* calc() with percentages treated like 'auto' */
-        (!cellBSize.IsCalcUnit() || !cellBSize.HasPercent())) {
+        /* calc() with both percentages and lengths treated like 'auto' */
+        (cellBSize.ConvertsToLength() || cellBSize.ConvertsToPercent())) {
       AddStateBits(NS_ROW_HAS_CELL_WITH_STYLE_BSIZE);
       return;
     }
