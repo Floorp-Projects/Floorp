@@ -386,15 +386,10 @@ parent:
      * Set the native cursor.
      * @param value
      *   The widget cursor to set.
-     * @param force
-     *   Invalidate any locally cached cursor settings and force an
-     *   update.
-     */
-    async SetCursor(nsCursor value, bool force);
-
-    /**
-     * Set the native cursor using a custom image.
-     * @param cursorData
+     * @param hasCustomCursor
+     *   Whether there's any custom cursor represented by cursorData and
+     *   company.
+     * @param customCursorData
      *   Serialized image data.
      * @param width
      *   Width of the image.
@@ -412,9 +407,12 @@ parent:
      *   Invalidate any locally cached cursor settings and force an
      *   update.
      */
-    async SetCustomCursor(nsCString cursorData, uint32_t width, uint32_t height,
-                          uint32_t stride, SurfaceFormat format,
-                          uint32_t hotspotX, uint32_t hotspotY, bool force);
+    async SetCursor(nsCursor value,
+                    bool hasCustomCursor,
+                    nsCString customCursorData,
+                    uint32_t width, uint32_t height,
+                    uint32_t stride, SurfaceFormat format,
+                    uint32_t hotspotX, uint32_t hotspotY, bool force);
 
     /**
      * Used to set the current text of the status tooltip.

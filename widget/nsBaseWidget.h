@@ -168,9 +168,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   virtual bool IsFullyOccluded() const override { return mIsFullyOccluded; }
 
-  virtual void SetCursor(nsCursor aCursor) override;
-  virtual nsresult SetCursor(imgIContainer* aCursor, uint32_t aHotspotX,
-                             uint32_t aHotspotY) override;
+  virtual void SetCursor(nsCursor aDefaultCursor, imgIContainer* aCursor,
+                         uint32_t aHotspotX, uint32_t aHotspotY) override;
   virtual void ClearCachedCursor() override { mUpdateCursor = true; }
   virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
   virtual nsTransparencyMode GetTransparencyMode() override;
