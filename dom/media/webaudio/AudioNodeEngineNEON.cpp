@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioNodeEngineNEON.h"
-#if defined(_MSC_VER) && defined(_M_ARM64)
+#if defined(_MSC_VER) && defined(_M_ARM64) && !defined(__clang__)
 #include <arm64_neon.h>
 #else
 #include <arm_neon.h>
