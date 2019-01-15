@@ -76,7 +76,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
                                const TimeStamp& aVsyncStartTime,
                                const TimeStamp& aRefreshStartTime,
                                const TimeStamp& aTxnStartTime,
-                               const TimeStamp& aTxnEndTime,
+                               const TimeStamp& aTxnEndTime, bool aContainsSVG,
                                const nsCString& aURL,
                                const TimeStamp& aFwdTime) {
     mPendingTransaction = aId;
@@ -85,6 +85,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
     mRefreshStartTime = aRefreshStartTime;
     mTxnStartTime = aTxnStartTime;
     mTxnEndTime = aTxnEndTime;
+    mContainsSVG = aContainsSVG;
     mTxnURL = aURL;
     mFwdTime = aFwdTime;
   }
@@ -215,6 +216,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   TimeStamp mTxnEndTime;
   TimeStamp mFwdTime;
   nsCString mTxnURL;
+  bool mContainsSVG;
 
   // When the widget/frame/browser stuff in this process begins its
   // destruction process, we need to Disconnect() all the currently

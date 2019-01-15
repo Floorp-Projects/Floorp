@@ -1661,6 +1661,14 @@ class FLBDisplayItemIterator : protected FlattenedDisplayItemIterator {
     }
 
     const DisplayItemType type = mNext->GetType();
+
+    if (type == DisplayItemType::TYPE_SVG_WRAPPER) {
+      // We mark SetContainsSVG for the CONTENT_FRAME_TIME_WITH_SVG metric
+      if (RefPtr<LayerManager> lm = mBuilder->GetWidgetLayerManager()) {
+        lm->SetContainsSVG(true);
+      }
+    }
+
     if (type != DisplayItemType::TYPE_OPACITY &&
         type != DisplayItemType::TYPE_TRANSFORM) {
       return true;

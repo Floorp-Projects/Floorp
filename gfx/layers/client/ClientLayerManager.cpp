@@ -696,7 +696,7 @@ void ClientLayerManager::ForwardTransaction(bool aScheduleComposite) {
       mPaintSequenceNumber, mIsRepeatTransaction,
       mTransactionIdAllocator->GetVsyncId(),
       mTransactionIdAllocator->GetVsyncStart(), refreshStart, mTransactionStart,
-      mURL, &sent, mPayload);
+      mContainsSVG, mURL, &sent, mPayload);
 
   if (ok) {
     if (sent) {

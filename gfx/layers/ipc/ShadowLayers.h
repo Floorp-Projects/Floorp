@@ -256,7 +256,7 @@ class ShadowLayerForwarder final : public LayersIPCActor,
                       const mozilla::TimeStamp& aVsyncTime,
                       const mozilla::TimeStamp& aRefreshStart,
                       const mozilla::TimeStamp& aTransactionStart,
-                      const nsCString& aURL, bool* aSent,
+                      bool aContainsSVG, const nsCString& aURL, bool* aSent,
                       const InfallibleTArray<CompositionPayload>& aPayload =
                           InfallibleTArray<CompositionPayload>());
 
