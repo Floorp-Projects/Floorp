@@ -152,3 +152,10 @@ pref("security.pki.mitm_canary_issuer.enabled", true);
 // here the root is trusted but not a built-in, whereas for
 // security.pki.mitm_canary_issuer.enabled, the root is not trusted.
 pref("security.pki.mitm_detected", false);
+
+// Intermediate CA Preloading settings
+pref("security.remote_settings.intermediates.enabled", false);
+pref("security.remote_settings.intermediates.bucket", "security-state");
+pref("security.remote_settings.intermediates.collection", "intermediates");
+pref("security.remote_settings.intermediates.checked", 0);
+pref("security.remote_settings.intermediates.signer", "onecrl.content-signature.mozilla.org");
