@@ -384,7 +384,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Blocklist: "resource://gre/modules/Blocklist.jsm",
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.jsm",
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.jsm",
-  BrowserErrorReporter: "resource:///modules/BrowserErrorReporter.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ContentClick: "resource:///modules/ContentClick.jsm",
@@ -656,16 +655,6 @@ BrowserGlue.prototype = {
       value: new PingCentre({ topic: MAIN_TOPIC_ID }),
     });
     return this.pingCentre;
-  },
-
-  /**
-   * Lazily initialize BrowserErrorReporter
-   */
-  get browserErrorReporter() {
-    Object.defineProperty(this, "browserErrorReporter", {
-      value: new BrowserErrorReporter(),
-    });
-    return this.browserErrorReporter;
   },
 
   _sendMainPingCentrePing() {
@@ -1455,12 +1444,6 @@ BrowserGlue.prototype = {
     AutoCompletePopup.uninit();
     DateTimePickerParent.uninit();
 
-    // Browser errors are only collected on Nightly, but telemetry for
-    // them is collected on all channels.
-    if (AppConstants.MOZ_DATA_REPORTING) {
-      this.browserErrorReporter.uninit();
-    }
-
     Normandy.uninit();
   },
 
@@ -1502,12 +1485,6 @@ BrowserGlue.prototype = {
       return;
     }
     this._windowsWereRestored = true;
-
-    // Browser errors are only collected on Nightly, but telemetry for
-    // them is collected on all channels.
-    if (AppConstants.MOZ_DATA_REPORTING) {
-      this.browserErrorReporter.init();
-    }
 
     BrowserUsageTelemetry.init();
     SearchTelemetry.init();
