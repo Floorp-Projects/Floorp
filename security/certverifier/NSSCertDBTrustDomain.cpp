@@ -85,79 +85,67 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mSCTListFromCertificate(),
       mSCTListFromOCSPStapling() {}
 
-// If useRoots is true, we only use root certificates in the candidate list.
-// If useRoots is false, we only use non-root certificates in the list.
-static Result FindIssuerInner(const UniqueCERTCertList& candidates,
-                              bool useRoots, Input encodedIssuerName,
-                              TrustDomain::IssuerChecker& checker,
-                              /*out*/ bool& keepGoing) {
-  keepGoing = true;
+Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
+                                        IssuerChecker& checker, Time) {
+  // NSS seems not to differentiate between "no potential issuers found" and
+  // "there was an error trying to retrieve the potential issuers." We assume
+  // there was no error.
+  SECItem encodedIssuerNameItem = UnsafeMapInputToSECItem(encodedIssuerName);
+  UniqueCERTCertList candidates(CERT_CreateSubjectCertList(
+      nullptr, CERT_GetDefaultCertDB(), &encodedIssuerNameItem, 0, false));
+  if (!candidates) {
+    return Success;
+  }
+
+  Vector<Input> rootCandidates;
+  Vector<Input> intermediateCandidates;
   for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
        !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
-    bool candidateIsRoot = !!n->cert->isRoot;
-    if (candidateIsRoot != useRoots) {
-      continue;
-    }
     Input certDER;
     Result rv = certDER.Init(n->cert->derCert.data, n->cert->derCert.len);
     if (rv != Success) {
       continue;  // probably too big
     }
-
-    const SECItem encodedIssuerNameItem = {
-        siBuffer, const_cast<unsigned char*>(encodedIssuerName.UnsafeGetData()),
-        encodedIssuerName.GetLength()};
-    ScopedAutoSECItem nameConstraints;
-    SECStatus srv = CERT_GetImposedNameConstraints(&encodedIssuerNameItem,
-                                                   &nameConstraints);
-    if (srv != SECSuccess) {
-      if (PR_GetError() != SEC_ERROR_EXTENSION_NOT_FOUND) {
-        return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    if (n->cert->isRoot) {
+      if (!rootCandidates.append(certDER)) {
+        return Result::FATAL_ERROR_NO_MEMORY;
       }
-
-      // If no imposed name constraints were found, continue without them
-      rv = checker.Check(certDER, nullptr, keepGoing);
     } else {
-      // Otherwise apply the constraints
-      Input nameConstraintsInput;
-      if (nameConstraintsInput.Init(nameConstraints.data,
-                                    nameConstraints.len) != Success) {
-        return Result::FATAL_ERROR_LIBRARY_FAILURE;
+      if (!intermediateCandidates.append(certDER)) {
+        return Result::FATAL_ERROR_NO_MEMORY;
       }
-      rv = checker.Check(certDER, &nameConstraintsInput, keepGoing);
     }
+  }
+
+  // Handle imposed name constraints, if any.
+  ScopedAutoSECItem nameConstraints;
+  Input nameConstraintsInput;
+  Input* nameConstraintsInputPtr = nullptr;
+  SECStatus srv =
+      CERT_GetImposedNameConstraints(&encodedIssuerNameItem, &nameConstraints);
+  if (srv == SECSuccess) {
+    if (nameConstraintsInput.Init(nameConstraints.data, nameConstraints.len) !=
+        Success) {
+      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    }
+    nameConstraintsInputPtr = &nameConstraintsInput;
+  } else if (PR_GetError() != SEC_ERROR_EXTENSION_NOT_FOUND) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  // Try all root certs first and then all (presumably) intermediates.
+  if (!rootCandidates.appendAll(intermediateCandidates)) {
+    return Result::FATAL_ERROR_NO_MEMORY;
+  }
+
+  for (Input candidate : rootCandidates) {
+    bool keepGoing;
+    Result rv = checker.Check(candidate, nameConstraintsInputPtr, keepGoing);
     if (rv != Success) {
       return rv;
     }
     if (!keepGoing) {
-      break;
-    }
-  }
-
-  return Success;
-}
-
-Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
-                                        IssuerChecker& checker, Time) {
-  // TODO: NSS seems to be ambiguous between "no potential issuers found" and
-  // "there was an error trying to retrieve the potential issuers."
-  SECItem encodedIssuerNameItem = UnsafeMapInputToSECItem(encodedIssuerName);
-  UniqueCERTCertList candidates(CERT_CreateSubjectCertList(
-      nullptr, CERT_GetDefaultCertDB(), &encodedIssuerNameItem, 0, false));
-  if (candidates) {
-    // First, try all the root certs; then try all the non-root certs.
-    bool keepGoing;
-    Result rv = FindIssuerInner(candidates, true, encodedIssuerName, checker,
-                                keepGoing);
-    if (rv != Success) {
-      return rv;
-    }
-    if (keepGoing) {
-      rv = FindIssuerInner(candidates, false, encodedIssuerName, checker,
-                           keepGoing);
-      if (rv != Success) {
-        return rv;
-      }
+      return Success;
     }
   }
 
