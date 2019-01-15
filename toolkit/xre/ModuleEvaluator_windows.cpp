@@ -264,6 +264,13 @@ Maybe<bool> ModuleEvaluator::IsModuleTrusted(
         score += 50;
         aDllInfo.mTrustFlags |= ModuleTrustFlags::FirefoxDirectory;
 
+        if (dllLeafLower.EqualsLiteral("xul.dll")) {
+          // The caller wants to know if this DLL is xul.dll, but this flag
+          // doesn't need to affect trust score. Xul will be considered trusted
+          // by other measures.
+          aDllInfo.mTrustFlags |= ModuleTrustFlags::Xul;
+        }
+
         // If it's in the Firefox directory, does it also share the Firefox
         // version info? We only care about this inside the app directory.
         if (mExeVersion.isSome() &&
