@@ -78,3 +78,10 @@ function testTypedArrayLazyBuffer(global) {
 }
 testTypedArrayLazyBuffer(newGlobal());
 testTypedArrayLazyBuffer(newGlobal({sameCompartmentAs: this}));
+
+function testEvalcx() {
+    var g = newGlobal();
+    evalcx("this.x = 7", g);
+    assertEq(g.x, 7);
+}
+testEvalcx();
