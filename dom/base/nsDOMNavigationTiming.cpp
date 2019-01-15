@@ -29,6 +29,7 @@ namespace mozilla {
 
 LazyLogModule gPageLoadLog("PageLoad");
 #define PAGELOAD_LOG(args) MOZ_LOG(gPageLoadLog, LogLevel::Debug, args)
+#define PAGELOAD_LOG_ENABLED() MOZ_LOG_TEST(gPageLoadLog, LogLevel::Error)
 
 }  // namespace mozilla
 
@@ -322,7 +323,7 @@ void nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer) {
   mTTITimer = nullptr;
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
+  if (profiler_is_active() || PAGELOAD_LOG_ENABLED()) {
     TimeDuration elapsed = mTTFI - mNavigationStart;
     MOZ_ASSERT(elapsed.ToMilliseconds() > 0);
     TimeDuration elapsedLongTask =
@@ -355,7 +356,7 @@ void nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument() {
   mNonBlankPaint = TimeStamp::Now();
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled() || PAGELOAD_LOG_ENABLED()) {
     TimeDuration elapsed = mNonBlankPaint - mNavigationStart;
     nsAutoCString spec;
     if (mLoadedURI) {
@@ -368,7 +369,12 @@ void nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument() {
             ? "foreground tab"
             : "this tab was inactive some of the time between navigation start "
               "and first non-blank paint");
-    profiler_add_marker(marker.get());
+    PAGELOAD_LOG(("%s", marker.get()));
+    DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
+    profiler_add_marker(
+        "FirstNonBlankPaint",
+        MakeUnique<TextMarkerPayload>(marker, mNavigationStart, mNonBlankPaint,
+                                      docShellId, docShellHistoryId));
   }
 #endif
 
@@ -399,7 +405,7 @@ void nsDOMNavigationTiming::NotifyContentfulPaintForRootContentDocument() {
   mContentfulPaint = TimeStamp::Now();
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
+  if (profiler_is_active() || PAGELOAD_LOG_ENABLED()) {
     TimeDuration elapsed = mContentfulPaint - mNavigationStart;
     nsAutoCString spec;
     if (mLoadedURI) {
@@ -412,7 +418,12 @@ void nsDOMNavigationTiming::NotifyContentfulPaintForRootContentDocument() {
             ? "foreground tab"
             : "this tab was inactive some of the time between navigation start "
               "and first non-blank paint");
-    profiler_add_marker(marker.get());
+    DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
+    PAGELOAD_LOG(("%s", marker.get()));
+    profiler_add_marker("FirstContentfulPaint",
+                        MakeUnique<TextMarkerPayload>(
+                            marker, mNavigationStart, mContentfulPaint,
+                            docShellId, docShellHistoryId));
   }
 #endif
 
@@ -439,7 +450,7 @@ void nsDOMNavigationTiming::NotifyDOMContentFlushedForRootContentDocument() {
   mDOMContentFlushed = TimeStamp::Now();
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled() || PAGELOAD_LOG_ENABLED()) {
     TimeDuration elapsed = mDOMContentFlushed - mNavigationStart;
     nsAutoCString spec;
     if (mLoadedURI) {
@@ -452,7 +463,12 @@ void nsDOMNavigationTiming::NotifyDOMContentFlushedForRootContentDocument() {
             ? "foreground tab"
             : "this tab was inactive some of the time between navigation start "
               "and DOMContentFlushed");
-    profiler_add_marker(marker.get());
+    DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
+    PAGELOAD_LOG(("%s", marker.get()));
+    profiler_add_marker("DOMContentFlushed",
+                        MakeUnique<TextMarkerPayload>(
+                            marker, mNavigationStart, mDOMContentFlushed,
+                            docShellId, docShellHistoryId));
   }
 #endif
 }
