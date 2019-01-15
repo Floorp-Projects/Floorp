@@ -413,7 +413,6 @@ void CompilerEnvironment::computeParameters(Decoder& d,
                    gcFeatureOptIn == HasGcTypes::True;
   bool argBaselineEnabled = args_->baselineEnabled || gcEnabled;
   bool argIonEnabled = args_->ionEnabled && !gcEnabled;
-  bool argTestTiering = args_->testTiering && !gcEnabled;
   bool argDebugEnabled = args_->debugEnabled;
 
   uint32_t codeSectionSize = 0;
@@ -424,11 +423,9 @@ void CompilerEnvironment::computeParameters(Decoder& d,
   }
 
   // Attempt to default to ion if baseline is disabled.
-  bool baselineEnabled =
-      BaselineCanCompile() && (argBaselineEnabled || argTestTiering);
+  bool baselineEnabled = BaselineCanCompile() && argBaselineEnabled;
   bool debugEnabled = BaselineCanCompile() && argDebugEnabled;
-  bool ionEnabled =
-      IonCanCompile() && (argIonEnabled || !baselineEnabled || argTestTiering);
+  bool ionEnabled = IonCanCompile() && (argIonEnabled || !baselineEnabled);
 #ifdef ENABLE_WASM_CRANELIFT
   bool forceCranelift = args_->forceCranelift;
 #endif
@@ -437,7 +434,7 @@ void CompilerEnvironment::computeParameters(Decoder& d,
   MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled);
 
   if (baselineEnabled && ionEnabled && !debugEnabled && CanUseExtraThreads() &&
-      (TieringBeneficial(codeSectionSize) || argTestTiering)) {
+      (TieringBeneficial(codeSectionSize) || args_->testTiering)) {
     mode_ = CompileMode::Tier1;
     tier_ = Tier::Baseline;
   } else {
