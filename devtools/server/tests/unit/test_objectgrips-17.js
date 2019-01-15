@@ -4,6 +4,12 @@
 
 "use strict";
 
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 async function testPrincipal(options, globalPrincipal, debuggeeHasXrays) {
   const { debuggee } = options;
   let global, subsumes, isOpaque, globalIsInvisible;
