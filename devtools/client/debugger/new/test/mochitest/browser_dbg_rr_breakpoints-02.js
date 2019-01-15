@@ -2,16 +2,12 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
-/* eslint-disable no-undef */
-
-"use strict";
-
-// To disable all Web Replay tests, see browser.ini
 
 // Test unhandled divergence while evaluating at a breakpoint with Web Replay.
-add_task(async function() {
-  const dbg = await attachRecordingDebugger("doc_rr_basic.html",
-                                            { waitForRecording: true });
+async function test() {
+  waitForExplicitFinish();
+
+  const dbg = await attachRecordingDebugger("doc_rr_basic.html", { waitForRecording: true });
   const {threadClient, tab, toolbox} = dbg;
 
   await setBreakpoint(threadClient, "doc_rr_basic.html", 21);
@@ -25,4 +21,5 @@ add_task(async function() {
 
   await toolbox.destroy();
   await gBrowser.removeTab(tab);
-});
+  finish();
+}
