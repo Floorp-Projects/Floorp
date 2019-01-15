@@ -45,6 +45,7 @@ skip-if(!asyncPan) == position-fixed-inside-sticky-1.html position-fixed-inside-
 skip-if(!asyncPan) == position-fixed-inside-sticky-2.html position-fixed-inside-sticky-2-ref.html
 skip-if(!asyncPan) == position-fixed-inside-sticky-3.html position-fixed-inside-sticky-3-ref.html
 skip-if(!asyncPan) == sticky-inside-fixed-1.html sticky-inside-fixed-1-ref.html
+skip-if(!asyncPan) fails-if(!webrender) == sticky-inside-transform-1.html sticky-inside-transform-1-ref.html
 fuzzy(0-1,0-60000) skip-if(!asyncPan) == group-opacity-surface-size-1.html group-opacity-surface-size-1-ref.html
 fuzzy-if(Android,0-1,0-197) skip-if(!asyncPan) == position-sticky-transformed.html position-sticky-transformed-ref.html
 skip-if(!asyncPan) == offscreen-prerendered-active-opacity.html offscreen-prerendered-active-opacity-ref.html
