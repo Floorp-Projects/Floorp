@@ -6,6 +6,7 @@
 
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const SearchBox = createFactory(require("./SearchBox"));
 
@@ -20,7 +21,9 @@ const { getStr } = require("../utils/l10n");
 
 class Toolbar extends PureComponent {
   static get propTypes() {
-    return {};
+    return {
+      onTogglePseudoClass: PropTypes.func.isRequired,
+    };
   }
 
   constructor(props) {
@@ -108,7 +111,9 @@ class Toolbar extends PureComponent {
           :
           null,
         isPseudoClassPanelExpanded ?
-          PseudoClassPanel({})
+          PseudoClassPanel({
+            onTogglePseudoClass: this.props.onTogglePseudoClass,
+          })
           :
           null
       )
