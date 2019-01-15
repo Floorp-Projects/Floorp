@@ -2,14 +2,11 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
-/* eslint-disable no-undef */
-
-"use strict";
-
-// To disable all Web Replay tests, see browser.ini
 
 // Test basic breakpoint functionality in web replay.
-add_task(async function() {
+async function test() {
+  waitForExplicitFinish();
+
   const dbg = await attachRecordingDebugger(
     "doc_rr_basic.html",
     { waitForRecording: true }
@@ -41,4 +38,5 @@ add_task(async function() {
 
   await toolbox.closeToolbox();
   await gBrowser.removeTab(tab);
-});
+  finish();
+}

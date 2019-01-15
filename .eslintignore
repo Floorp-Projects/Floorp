@@ -106,7 +106,6 @@ devtools/client/shared/webpack/shims/test/test_clipboard.html
 devtools/shared/qrcode/tests/mochitest/test_decode.html
 devtools/shared/tests/mochitest/*.html
 devtools/shared/webconsole/test/test_*.html
-devtools/client/webreplay/mochitest/examples/*.html
 
 # Soon to be removed, the new/ directory is explicitly excluded below due to
 # also being an imported repository.
