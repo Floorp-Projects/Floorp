@@ -13252,7 +13252,7 @@
     "expires_in_version": "73",
     "kind": "categorical",
     "description": "The reason that CONTENT_FRAME_TIME recorded a slow (>200) result, if any.",
-    "labels": ["OnTime", "NoVsync", "MissedComposite", "SlowComposite", "MissedCompositeMid", "MissedCompositeLong", "MissedCompositeLow"]
+    "labels": ["OnTime", "NoVsync", "MissedComposite", "SlowComposite", "MissedCompositeMid", "MissedCompositeLong", "MissedCompositeLow", "NoVsyncNoId"]
   },
   "CONTENT_LARGE_PAINT_PHASE_WEIGHT": {
     "record_in_processes": ["main", "content"],
