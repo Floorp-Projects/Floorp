@@ -3054,9 +3054,7 @@ class Repackage(MachCommandBase):
         help='Name of the package being rebuilt')
     @CommandArgument('--sfx-stub', type=str, required=True,
         help='Path to the self-extraction stub.')
-    @CommandArgument('--use-upx', required=False, action='store_true',
-        help='Run UPX on the self-extraction stub.')
-    def repackage_installer(self, tag, setupexe, package, output, package_name, sfx_stub, use_upx):
+    def repackage_installer(self, tag, setupexe, package, output, package_name, sfx_stub):
         from mozbuild.repackaging.installer import repackage_installer
         repackage_installer(
             topsrcdir=self.topsrcdir,
@@ -3066,7 +3064,6 @@ class Repackage(MachCommandBase):
             output=output,
             package_name=package_name,
             sfx_stub=sfx_stub,
-            use_upx=use_upx,
         )
 
     @SubCommand('repackage', 'msi',
