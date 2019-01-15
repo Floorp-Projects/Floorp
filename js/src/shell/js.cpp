@@ -9963,10 +9963,8 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       JS::CompileOptions opts(cx);
       opts.setFileAndLine("-e", 1);
 
-      // This might be upgradable to UTF-8, but for now keep assuming the
-      // worst.
       RootedValue rval(cx);
-      if (!JS::EvaluateLatin1(cx, opts, code, strlen(code), &rval)) {
+      if (!JS::EvaluateUtf8(cx, opts, code, strlen(code), &rval)) {
         return false;
       }
 
