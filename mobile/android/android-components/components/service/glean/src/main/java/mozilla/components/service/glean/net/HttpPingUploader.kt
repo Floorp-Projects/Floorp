@@ -37,8 +37,8 @@ class HttpPingUploader(configuration: Configuration) : PingUploader {
                 var json = JSONObject(data)
                 json.toString(2)
             } catch (e: JSONException) {
-                logger.debug("Exception parsing ping as JSON: $e")
-                null
+                logger.debug("Exception parsing ping as JSON: $e") // $COVERAGE-IGNORE$
+                null // $COVERAGE-IGNORE$
             }
             indented?.let {
                 logger.debug("Glean ping to URL: ${path}\n$it")
