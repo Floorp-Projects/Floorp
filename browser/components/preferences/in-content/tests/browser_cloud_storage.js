@@ -5,15 +5,12 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(this, "CloudStorage",
+                               "resource://gre/modules/CloudStorage.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
 
 const DROPBOX_DOWNLOAD_FOLDER = "Dropbox";
-const DROPBOX_CONFIG_FOLDER = (AppConstants.platform === "win") ? "Dropbox" :
-                                                                  ".dropbox";
-const DROPBOX_KEY = "Dropbox";
 const CLOUD_SERVICES_PREF = "cloud.services.";
 
 function create_subdir(dir, subdirname) {
@@ -60,17 +57,6 @@ function registerFakePath(key, folderName) {
 }
 
 async function mock_dropbox() {
-  let discoveryFile = null;
-  if (AppConstants.platform === "win") {
-    discoveryFile = FileUtils.getFile("LocalAppData", [DROPBOX_CONFIG_FOLDER]);
-  } else {
-    discoveryFile = FileUtils.getFile("Home", [DROPBOX_CONFIG_FOLDER]);
-  }
-  discoveryFile.append("info.json");
-  if (!discoveryFile.exists()) {
-    discoveryFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  }
-  console.log(discoveryFile.path);
   // Mock Dropbox Download folder in Home directory
   let downloadFolder = FileUtils.getFile("Home", [DROPBOX_DOWNLOAD_FOLDER, "Downloads"]);
   if (!downloadFolder.exists()) {
@@ -79,41 +65,36 @@ async function mock_dropbox() {
   console.log(downloadFolder.path);
 
   registerCleanupFunction(() => {
-    if (discoveryFile.exists()) {
-      discoveryFile.remove(true);
-    }
     if (downloadFolder.exists()) {
       downloadFolder.remove(true);
     }
   });
-
-  let data = '{"personal": {"path": "Test"}}';
-  let ostream = FileUtils.openSafeFileOutputStream(discoveryFile);
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                  createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-  let istream = converter.convertToInputStream(data);
-  return new Promise(resolve => {
-    NetUtil.asyncCopy(istream, ostream, resolve);
-  });
 }
 
 add_task(async function setup() {
-  // Create mock Dropbox discovery and download folder for cloudstorage API
-  // to detect dropbox provider app
+  // Create mock Dropbox download folder for cloudstorage API
   // Set prefs required to display second radio option
   // 'Save to Dropbox' under Downloads
+  let folderName = "CloudStorage";
+  registerFakePath("Home", folderName);
+  await mock_dropbox();
   await SpecialPowers.pushPrefEnv({set: [
     [CLOUD_SERVICES_PREF + "api.enabled", true],
     [CLOUD_SERVICES_PREF + "storage.key", "Dropbox"],
   ]});
+});
 
-  let folderName = "CloudStorage";
-  registerFakePath("Home", folderName);
-  registerFakePath("LocalAppData", folderName);
-  let status = await mock_dropbox();
-  ok(Components.isSuccessCode(status),
-    "Cloud Storage: dropbox mockup should be created successfully. status: " + status);
+add_task(async function test_initProvider() {
+  // Get preferred provider key
+  let preferredProvider = await CloudStorage.getPreferredProvider();
+  is(preferredProvider, "Dropbox", "Cloud Storage preferred provider key");
+
+  let isInitialized = await CloudStorage.init();
+  is(isInitialized, true, "Providers Metadata successfully initialized");
+
+  // Get preferred provider in use display name
+  let providerDisplayName = await CloudStorage.getProviderIfInUse();
+  is(providerDisplayName, "Dropbox", "Cloud Storage preferred provider display name");
 });
 
 add_task(async function() {
