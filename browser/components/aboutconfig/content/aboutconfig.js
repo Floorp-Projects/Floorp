@@ -27,6 +27,7 @@ let gPrefInEdit = null;
 class PrefRow {
   constructor(name) {
     this.name = name;
+    this.value = true;
     this.refreshValue();
 
     this.editing = false;
@@ -36,10 +37,14 @@ class PrefRow {
   }
 
   refreshValue() {
+    this.hasDefaultValue = prefHasDefaultValue(this.name);
     this.hasUserValue = Services.prefs.prefHasUserValue(this.name);
-    this.hasDefaultValue = this.hasUserValue ? prefHasDefaultValue(this.name)
-                                             : true;
     this.isLocked = Services.prefs.prefIsLocked(this.name);
+
+    // If this preference has been deleted, we keep its last known value.
+    if (!this.exists) {
+      return;
+    }
 
     try {
       // This can throw for locked preferences without a default value.
@@ -55,6 +60,14 @@ class PrefRow {
     } catch (ex) {
       this.value = "";
     }
+  }
+
+  get type() {
+    return this.value.constructor.name;
+  }
+
+  get exists() {
+    return this.hasDefaultValue || this.hasUserValue;
   }
 
   _setupElement() {
@@ -88,9 +101,10 @@ class PrefRow {
   refreshElement() {
     this.element.classList.toggle("has-user-value", !!this.hasUserValue);
     this.element.classList.toggle("locked", !!this.isLocked);
-    if (!this.editing) {
+    this.element.classList.toggle("deleted", !this.exists);
+    if (this.exists && !this.editing) {
       this.valueCell.textContent = this.value;
-      if (this.value.constructor.name == "Boolean") {
+      if (this.type == "Boolean") {
         document.l10n.setAttributes(this.editButton, "about-config-pref-toggle");
         this.editButton.className = "button-toggle";
       } else {
@@ -106,20 +120,52 @@ class PrefRow {
       let form = document.createElement("form");
       form.addEventListener("submit", event => event.preventDefault());
       form.id = "form-edit";
-      this.inputField = document.createElement("input");
-      this.inputField.value = this.value;
-      if (this.value.constructor.name == "Number") {
-        this.inputField.type = "number";
-        this.inputField.required = true;
-        this.inputField.min = -2147483648;
-        this.inputField.max = 2147483647;
+      if (this.editing) {
+        this.inputField = document.createElement("input");
+        this.inputField.value = this.value;
+        if (this.type == "Number") {
+          this.inputField.type = "number";
+          this.inputField.required = true;
+          this.inputField.min = -2147483648;
+          this.inputField.max = 2147483647;
+        } else {
+          this.inputField.type = "text";
+        }
+        form.appendChild(this.inputField);
+        document.l10n.setAttributes(this.editButton, "about-config-pref-save");
+        this.editButton.className = "primary button-save";
       } else {
-        this.inputField.type = "text";
+        delete this.inputField;
+        for (let type of ["Boolean", "Number", "String"]) {
+          let radio = document.createElement("input");
+          radio.type = "radio";
+          radio.name = "type";
+          radio.value = type;
+          radio.checked = this.type == type;
+          form.appendChild(radio);
+          let radioLabel = document.createElement("span");
+          radioLabel.textContent = type;
+          form.appendChild(radioLabel);
+        }
+        form.addEventListener("click", event => {
+          if (event.target.name != "type") {
+            return;
+          }
+          let type = event.target.value;
+          if (this.type != type) {
+            if (type == "Boolean") {
+              this.value = true;
+            } else if (type == "Number") {
+              this.value = 0;
+            } else {
+              this.value = "";
+            }
+          }
+        });
+        document.l10n.setAttributes(this.editButton, "about-config-pref-add");
+        this.editButton.className = "button-add";
       }
-      form.appendChild(this.inputField);
       this.valueCell.appendChild(form);
-      document.l10n.setAttributes(this.editButton, "about-config-pref-save");
-      this.editButton.className = "primary button-save";
       this.editButton.setAttribute("form", "form-edit");
     }
     this.editButton.disabled = this.isLocked;
@@ -154,7 +200,7 @@ class PrefRow {
   }
 
   save() {
-    if (this.value.constructor.name == "Number") {
+    if (this.type == "Number") {
       if (!this.inputField.reportValidity()) {
         return;
       }
@@ -219,14 +265,13 @@ function loadPrefs() {
       pref.refreshValue();
       pref.refreshElement();
       pref.editButton.focus();
-    } else if (button.classList.contains("add-true")) {
-      addNewPref(prefRow.firstChild.innerHTML, true);
-    } else if (button.classList.contains("add-false")) {
-      addNewPref(prefRow.firstChild.innerHTML, false);
-    } else if (button.classList.contains("add-Number") ||
-      button.classList.contains("add-String")) {
-      addNewPref(prefRow.firstChild.innerHTML,
-        button.classList.contains("add-Number") ? 0 : "").edit();
+    } else if (button.classList.contains("button-add")) {
+      Preferences.set(pref.name, pref.value);
+      pref.refreshValue();
+      pref.refreshElement();
+      if (pref.type != "Boolean") {
+        pref.edit();
+      }
     } else if (button.classList.contains("button-toggle")) {
       Services.prefs.setBoolPref(pref.name, !pref.value);
       pref.refreshValue();
@@ -236,9 +281,11 @@ function loadPrefs() {
     } else if (button.classList.contains("button-save")) {
       pref.save();
     } else {
+      pref.editing = false;
       Services.prefs.clearUserPref(pref.name);
       gExistingPrefs.delete(pref.name);
-      prefRow.remove();
+      pref.refreshValue();
+      pref.refreshElement();
     }
   });
 
@@ -251,58 +298,21 @@ function filterPrefs() {
   }
 
   let substring = document.getElementById("search").value.trim();
-  document.getElementById("prefs").textContent = "";
   let prefArray = [...gExistingPrefs.values()];
   if (substring) {
     prefArray = prefArray.filter(pref => pref.name.includes(substring));
   }
   prefArray.sort((a, b) => a.name > b.name);
-  if (substring && !gExistingPrefs.has(substring)) {
-    document.getElementById("prefs").appendChild(createNewPrefFragment(substring));
-  }
-  let fragment = createPrefsFragment(prefArray);
-  document.getElementById("prefs").appendChild(fragment);
-}
-
-function createPrefsFragment(prefArray) {
+  let prefsElement = document.getElementById("prefs");
   let fragment = document.createDocumentFragment();
   for (let pref of prefArray) {
     fragment.appendChild(pref.element);
   }
-  return fragment;
-}
-
-function createNewPrefFragment(name) {
-  let fragment = document.createDocumentFragment();
-  let row = document.createElement("tr");
-  row.classList.add("has-user-value");
-  row.setAttribute("aria-label", name);
-  let nameCell = document.createElement("td");
-  nameCell.className = "cell-name";
-  nameCell.append(name);
-  row.appendChild(nameCell);
-
-  let valueCell = document.createElement("td");
-  valueCell.classList.add("cell-value");
-  let guideText = document.createElement("span");
-  document.l10n.setAttributes(guideText, "about-config-pref-add");
-  valueCell.appendChild(guideText);
-  for (let item of ["true", "false", "Number", "String"]) {
-    let optionBtn = document.createElement("button");
-    optionBtn.textContent = item;
-    optionBtn.classList.add("add-" + item);
-    valueCell.appendChild(optionBtn);
+  if (substring && !gExistingPrefs.has(substring)) {
+    fragment.appendChild((new PrefRow(substring)).element);
   }
-  row.appendChild(valueCell);
-
-  let editCell = document.createElement("td");
-  row.appendChild(editCell);
-
-  let buttonCell = document.createElement("td");
-  row.appendChild(buttonCell);
-
-  fragment.appendChild(row);
-  return fragment;
+  prefsElement.textContent = "";
+  prefsElement.appendChild(fragment);
 }
 
 function prefHasDefaultValue(name) {
@@ -320,12 +330,4 @@ function prefHasDefaultValue(name) {
     }
   } catch (ex) {}
   return false;
-}
-
-function addNewPref(name, value) {
-  Preferences.set(name, value);
-  let pref = new PrefRow(name);
-  gExistingPrefs.set(name, pref);
-  filterPrefs();
-  return pref;
 }

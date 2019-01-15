@@ -63,11 +63,17 @@
   padding-inline-start: 30px;
 }
 
+#prefs > tr.deleted > td.cell-name {
+  font-weight: bold;
+  opacity: 0.4;
+}
+
 .cell-value {
   word-break: break-all;
 }
 
-td.cell-value > form > input {
+td.cell-value > form > input[type="text"],
+td.cell-value > form > input[type="number"] {
   -moz-appearance: textfield;
   width: 100%;
   box-sizing: border-box;
