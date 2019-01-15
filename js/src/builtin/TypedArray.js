@@ -102,7 +102,7 @@ function TypedArraySpeciesConstructor(obj) {
 
 // ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
 // 22.2.3.5.1 Runtime Semantics: ValidateTypedArray ( O )
-function ValidateTypedArray(obj, error) {
+function ValidateTypedArray(obj) {
     if (IsObject(obj)) {
         /* Steps 3-5 (non-wrapped typed arrays). */
         if (IsTypedArray(obj)) {
@@ -120,7 +120,7 @@ function ValidateTypedArray(obj, error) {
     }
 
     /* Steps 1-2. */
-    ThrowTypeError(error);
+    ThrowTypeError(JSMSG_NON_TYPED_ARRAY_RETURNED);
 }
 
 // ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
@@ -130,7 +130,7 @@ function TypedArrayCreateWithLength(constructor, length) {
     var newTypedArray = new constructor(length);
 
     // Step 2.
-    var isTypedArray = ValidateTypedArray(newTypedArray, JSMSG_NON_TYPED_ARRAY_RETURNED);
+    var isTypedArray = ValidateTypedArray(newTypedArray);
 
     // Step 3.
     var len;
@@ -155,7 +155,7 @@ function TypedArrayCreateWithBuffer(constructor, buffer, byteOffset, length) {
     var newTypedArray = new constructor(buffer, byteOffset, length);
 
     // Step 2.
-    ValidateTypedArray(newTypedArray, JSMSG_NON_TYPED_ARRAY_RETURNED);
+    ValidateTypedArray(newTypedArray);
 
     // Step 3 (not applicable).
 
