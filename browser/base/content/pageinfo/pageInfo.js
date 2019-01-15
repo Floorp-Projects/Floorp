@@ -582,10 +582,11 @@ function onBeginLinkDrag(event, urlField, descField) {
     return;
 
   var tree = event.target;
-  if (!("treeBoxObject" in tree))
+  if (tree.localName != "tree") {
     tree = tree.parentNode;
+  }
 
-  var row = tree.treeBoxObject.getRowAt(event.clientX, event.clientY);
+  var row = tree.getRowAt(event.clientX, event.clientY);
   if (row == -1)
     return;
 
@@ -993,7 +994,7 @@ function doCopy() {
 
   var elem = document.commandDispatcher.focusedElement;
 
-  if (elem && "treeBoxObject" in elem) {
+  if (elem && elem.localName == "tree") {
     var view = elem.view;
     var selection = view.selection;
     var text = [], tmp = "";
@@ -1027,8 +1028,9 @@ function doSelectAllMedia() {
 function doSelectAll() {
   var elem = document.commandDispatcher.focusedElement;
 
-  if (elem && "treeBoxObject" in elem)
+  if (elem && elem.localName == "tree") {
     elem.view.selection.selectAll();
+  }
 }
 
 function selectImage() {
@@ -1045,7 +1047,7 @@ function selectImage() {
         gImageElement.height == image.height &&
         gImageElement.imageText == image.imageText) {
       tree.view.selection.select(i);
-      tree.treeBoxObject.ensureRowIsVisible(i);
+      tree.ensureRowIsVisible(i);
       tree.focus();
       return;
     }

@@ -48,7 +48,7 @@
       tree.place = `place:type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_LEFT_PANE_QUERY}&excludeItems=1&expandQueries=0`;
 
       // The query-property is set on the title column for each row.
-      let titleColumn = tree.treeBoxObject.columns.getColumnAt(0);
+      let titleColumn = tree.columns.getColumnAt(0);
 
       // Open All Bookmarks
       tree.selectItems([PlacesUtils.virtualAllBookmarksGuid]);

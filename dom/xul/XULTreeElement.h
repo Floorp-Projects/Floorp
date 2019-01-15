@@ -4,12 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_TreeBoxObject_h
-#define mozilla_dom_TreeBoxObject_h
+#ifndef XULTreeElement_h__
+#define XULTreeElement_h__
 
-#include "mozilla/dom/BoxObject.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsWrapperCache.h"
+#include "nsString.h"
+#include "nsXULElement.h"
 #include "nsITreeView.h"
-#include "nsITreeBoxObject.h"
 
 class nsTreeBodyFrame;
 class nsTreeColumn;
@@ -22,28 +26,27 @@ struct TreeCellInfo;
 class DOMRect;
 enum class CallerType : uint32_t;
 
-class TreeBoxObject final : public BoxObject, public nsITreeBoxObject {
+class XULTreeElement final : public nsXULElement {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TreeBoxObject, BoxObject)
-  NS_DECL_NSITREEBOXOBJECT
+  explicit XULTreeElement(already_AddRefed<mozilla::dom::NodeInfo> &&aNodeInfo)
+      : nsXULElement(std::move(aNodeInfo)),
+        mCachedFirstVisibleRow(0),
+        mTreeBody(nullptr) {}
 
-  TreeBoxObject();
+  NS_IMPL_FROMNODE_WITH_TAG(XULTreeElement, kNameSpaceID_XUL, tree)
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULTreeElement, nsXULElement)
 
   nsTreeBodyFrame* GetTreeBodyFrame(bool aFlushLayout = false);
   nsTreeBodyFrame* GetCachedTreeBodyFrame() { return mTreeBody; }
 
-  // NS_PIBOXOBJECT interfaces
-  virtual void Clear() override;
-  virtual void ClearCachedValues() override;
-
-  // WebIDL
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
-
   already_AddRefed<nsTreeColumns> GetColumns();
 
-  already_AddRefed<nsITreeView> GetView(CallerType /* unused */);
+  already_AddRefed<nsITreeView> GetView(CallerType /* unused */) {
+    return GetView();
+  }
+  already_AddRefed<nsITreeView> GetView();
 
   void SetView(nsITreeView* arg, CallerType aCallerType, ErrorResult& aRv);
 
@@ -75,6 +78,8 @@ class TreeBoxObject final : public BoxObject, public nsITreeBoxObject {
 
   void GetCellAt(int32_t x, int32_t y, TreeCellInfo& aRetVal, ErrorResult& aRv);
 
+  nsIntRect GetCoordsForCellItem(int32_t aRow, nsTreeColumn* aCol,
+                                 const nsAString& aElement, nsresult& rv);
   already_AddRefed<DOMRect> GetCoordsForCellItem(int32_t row, nsTreeColumn& col,
                                                  const nsAString& element,
                                                  ErrorResult& aRv);
@@ -83,37 +88,38 @@ class TreeBoxObject final : public BoxObject, public nsITreeBoxObject {
 
   void RemoveImageCacheEntry(int32_t row, nsTreeColumn& col, ErrorResult& aRv);
 
-  // Deprecated APIs from old IDL
-  void GetCellAt(JSContext* cx, int32_t x, int32_t y,
-                 JS::Handle<JSObject*> rowOut, JS::Handle<JSObject*> colOut,
-                 JS::Handle<JSObject*> childEltOut, ErrorResult& aRv);
+  void SetFocused(bool aFocused);
+  void EnsureRowIsVisible(int32_t index);
+  void Invalidate(void);
+  void InvalidateColumn(nsTreeColumn* col);
+  void InvalidateRow(int32_t index);
+  void InvalidateCell(int32_t row, nsTreeColumn* col);
+  void InvalidateRange(int32_t startIndex, int32_t endIndex);
+  void RowCountChanged(int32_t index, int32_t count);
+  void BeginUpdateBatch(void);
+  void EndUpdateBatch(void);
+  void ClearStyleAndImageCaches(void);
 
-  void GetCoordsForCellItem(JSContext* cx, int32_t row, nsTreeColumn& col,
-                            const nsAString& element,
-                            JS::Handle<JSObject*> xOut,
-                            JS::Handle<JSObject*> yOut,
-                            JS::Handle<JSObject*> widthOut,
-                            JS::Handle<JSObject*> heightOut, ErrorResult& aRv);
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
+  virtual void DestroyContent() override;
 
-  // Same signature (except for nsresult return type) as the XPIDL impls
-  // void Invalidate();
-  // void BeginUpdateBatch();
-  // void EndUpdateBatch();
-  // void ClearStyleAndImageCaches();
-  // void SetFocused(bool arg);
-  // void EnsureRowIsVisible(int32_t index);
-  // void InvalidateColumn(nsTreeColumn* col);
-  // void InvalidateRow(int32_t index);
-  // void InvalidateCell(int32_t row, nsTreeColumn* col);
-  // void InvalidateRange(int32_t startIndex, int32_t endIndex);
-  // void RowCountChanged(int32_t index, int32_t count);
+  void BodyDestroyed(int32_t aFirstVisibleRow) {
+    mTreeBody = nullptr;
+    mCachedFirstVisibleRow = aFirstVisibleRow;
+  }
+
+  int32_t GetCachedTopVisibleRow() { return mCachedFirstVisibleRow; }
 
  protected:
+  int32_t mCachedFirstVisibleRow;
+
   nsTreeBodyFrame* mTreeBody;
   nsCOMPtr<nsITreeView> mView;
 
- private:
-  ~TreeBoxObject();
+  virtual ~XULTreeElement() {}
+
+  JSObject *WrapNode(JSContext *aCx,
+                     JS::Handle<JSObject *> aGivenProto) override;
 };
 
 }  // namespace dom

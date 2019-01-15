@@ -83,11 +83,11 @@ add_task(async function test_open_folder_in_tabs() {
 function mouseEventOnCell(aTree, aRowIndex, aColumnIndex, aEventDetails) {
   var selection = aTree.view.selection;
   selection.select(aRowIndex);
-  aTree.treeBoxObject.ensureRowIsVisible(aRowIndex);
+  aTree.ensureRowIsVisible(aRowIndex);
   var column = aTree.columns[aColumnIndex];
 
   // get cell coordinates
-  var rect = aTree.treeBoxObject.getCoordsForCellItem(aRowIndex, column, "text");
+  var rect = aTree.getCoordsForCellItem(aRowIndex, column, "text");
 
   EventUtils.synthesizeMouse(aTree.body, rect.x, rect.y,
                              aEventDetails, gLibrary);

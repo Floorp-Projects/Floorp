@@ -937,8 +937,7 @@ var PlacesUIUtils = {
       return;
 
     let tree = event.target.parentNode;
-    let tbo = tree.treeBoxObject;
-    let cell = tbo.getCellAt(event.clientX, event.clientY);
+    let cell = tree.getCellAt(event.clientX, event.clientY);
     if (cell.row == -1 || cell.childElt == "twisty")
       return;
 
@@ -948,7 +947,7 @@ var PlacesUIUtils = {
     // before the tree item icon (that is, to the left or right of it in
     // LTR and RTL modes, respectively) from the click target area.
     let win = tree.ownerGlobal;
-    let rect = tbo.getCoordsForCellItem(cell.row, cell.col, "image");
+    let rect = tree.getCoordsForCellItem(cell.row, cell.col, "image");
     let isRTL = win.getComputedStyle(tree).direction == "rtl";
     let mouseInGutter = isRTL ? event.clientX > rect.x
                               : event.clientX < rect.x;
@@ -956,23 +955,23 @@ var PlacesUIUtils = {
     let metaKey = AppConstants.platform === "macosx" ? event.metaKey
                                                      : event.ctrlKey;
     let modifKey = metaKey || event.shiftKey;
-    let isContainer = tbo.view.isContainer(cell.row);
+    let isContainer = tree.view.isContainer(cell.row);
     let openInTabs = isContainer &&
                      (event.button == 1 || (event.button == 0 && modifKey)) &&
                      PlacesUtils.hasChildURIs(tree.view.nodeForTreeIndex(cell.row));
 
     if (event.button == 0 && isContainer && !openInTabs) {
-      tbo.view.toggleOpenState(cell.row);
+      tree.view.toggleOpenState(cell.row);
     } else if (!mouseInGutter && openInTabs &&
                event.originalTarget.localName == "treechildren") {
-      tbo.view.selection.select(cell.row);
+      tree.view.selection.select(cell.row);
       this.openMultipleLinksInTabs(tree.selectedNode, event, tree);
     } else if (!mouseInGutter && !isContainer &&
                event.originalTarget.localName == "treechildren") {
       // Clear all other selection since we're loading a link now. We must
       // do this *before* attempting to load the link since openURL uses
       // selection as an indication of which link to load.
-      tbo.view.selection.select(cell.row);
+      tree.view.selection.select(cell.row);
       this.openNodeWithEvent(tree.selectedNode, event);
     }
   },
@@ -995,7 +994,7 @@ var PlacesUIUtils = {
       return;
 
     let tree = treechildren.parentNode;
-    let cell = tree.treeBoxObject.getCellAt(event.clientX, event.clientY);
+    let cell = tree.getCellAt(event.clientX, event.clientY);
 
     // cell.row is -1 when the mouse is hovering an empty area within the tree.
     // To avoid showing a URL from a previously hovered node for a currently
