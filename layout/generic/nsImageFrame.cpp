@@ -1618,8 +1618,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
                   size);
 
       const int32_t factor = PresContext()->AppUnitsPerDevPixel();
-      LayoutDeviceRect destRect(
-          LayoutDeviceRect::FromAppUnits(dest, factor));
+      LayoutDeviceRect destRect(LayoutDeviceRect::FromAppUnits(dest, factor));
       destRect.Round();
 
       Maybe<SVGImageContext> svgContext;
@@ -1627,8 +1626,9 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
           nsLayoutUtils::ComputeImageContainerDrawingParameters(
               imgCon, this, destRect, aSc, aFlags, svgContext);
       RefPtr<ImageContainer> container;
-      result = imgCon->GetImageContainerAtSize(
-          aManager->LayerManager(), decodeSize, svgContext, aFlags, getter_AddRefs(container));
+      result = imgCon->GetImageContainerAtSize(aManager->LayerManager(),
+                                               decodeSize, svgContext, aFlags,
+                                               getter_AddRefs(container));
       if (container) {
         bool wrResult = aManager->CommandBuilder().PushImage(
             aItem, container, aBuilder, aResources, aSc, destRect, bounds);
@@ -2311,8 +2311,8 @@ nsresult nsImageFrame::GetCursor(const nsPoint& aPoint,
           PresShell()->StyleSet()->ResolveStyleFor(area->AsElement(),
                                                    LazyComputeBehavior::Allow);
       FillCursorInformationFromStyle(areaStyle->StyleUI(), aCursor);
-      if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
-        aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
+      if (StyleCursorKind::Auto == aCursor.mCursor) {
+        aCursor.mCursor = StyleCursorKind::Default;
       }
       return NS_OK;
     }

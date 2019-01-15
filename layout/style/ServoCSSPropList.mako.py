@@ -82,6 +82,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "Content",
     "CounterIncrement",
     "CounterReset",
+    "Cursor",
     "FillRule",
     "Float",
     "FontFamily",

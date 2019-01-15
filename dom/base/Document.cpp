@@ -8706,8 +8706,8 @@ void Document::ScrollToRef() {
       // document's charset.
       if (NS_FAILED(rv)) {
         const Encoding* encoding = GetDocumentCharacterSet();
-        rv = encoding->DecodeWithoutBOMHandling(
-            unescaped ? buff : mScrollToRef, ref);
+        rv = encoding->DecodeWithoutBOMHandling(unescaped ? buff : mScrollToRef,
+                                                ref);
         if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
           rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
         }
@@ -10699,7 +10699,7 @@ PointerLockRequest::Run() {
   if (!error && !mUserInputOrChromeCaller && !doc->GetFullscreenElement()) {
     error = "PointerLockDeniedNotInputDriven";
   }
-  if (!error && !doc->SetPointerLock(e, NS_STYLE_CURSOR_NONE)) {
+  if (!error && !doc->SetPointerLock(e, StyleCursorKind::None)) {
     error = "PointerLockDeniedFailedToLock";
   }
   if (error) {
@@ -10737,7 +10737,7 @@ void Document::RequestPointerLock(Element* aElement, CallerType aCallerType) {
   Dispatch(TaskCategory::Other, request.forget());
 }
 
-bool Document::SetPointerLock(Element* aElement, int aCursorStyle) {
+bool Document::SetPointerLock(Element* aElement, StyleCursorKind aCursorStyle) {
   MOZ_ASSERT(!aElement || aElement->OwnerDoc() == this,
              "We should be either unlocking pointer (aElement is nullptr), "
              "or locking pointer to an element in this document");
@@ -10797,7 +10797,7 @@ void Document::UnlockPointer(Document* aDoc) {
   if (!pointerLockedDoc || (aDoc && aDoc != pointerLockedDoc)) {
     return;
   }
-  if (!pointerLockedDoc->SetPointerLock(nullptr, NS_STYLE_CURSOR_AUTO)) {
+  if (!pointerLockedDoc->SetPointerLock(nullptr, StyleCursorKind::Auto)) {
     return;
   }
 
@@ -11696,7 +11696,7 @@ void Document::ClearUserGestureActivation() {
   Document* doc = this;
   while (doc) {
     MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug,
-          ("Reset user activation flag for document %p.", this));
+            ("Reset user activation flag for document %p.", this));
     doc->mUserGestureActivated = false;
     doc = doc->GetSameTypeParentDocument();
   }

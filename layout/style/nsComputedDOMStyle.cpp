@@ -2261,38 +2261,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetCaretColor() {
   return val.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetCursor() {
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
-
-  const nsStyleUI* ui = StyleUI();
-
-  for (const nsCursorImage& item : ui->mCursorImages) {
-    RefPtr<nsDOMCSSValueList> itemList = GetROCSSValueList(false);
-
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    SetValueToURLValue(item.mImage->GetImageValue(), val);
-    itemList->AppendCSSValue(val.forget());
-
-    if (item.mHaveHotspot) {
-      RefPtr<nsROCSSPrimitiveValue> valX = new nsROCSSPrimitiveValue;
-      RefPtr<nsROCSSPrimitiveValue> valY = new nsROCSSPrimitiveValue;
-
-      valX->SetNumber(item.mHotspotX);
-      valY->SetNumber(item.mHotspotY);
-
-      itemList->AppendCSSValue(valX.forget());
-      itemList->AppendCSSValue(valY.forget());
-    }
-    valueList->AppendCSSValue(itemList.forget());
-  }
-
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(ui->mCursor, nsCSSProps::kCursorKTable));
-  valueList->AppendCSSValue(val.forget());
-  return valueList.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBoxFlex() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetNumber(StyleXUL()->mBoxFlex);
