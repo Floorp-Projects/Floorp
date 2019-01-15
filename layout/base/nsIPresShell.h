@@ -1658,7 +1658,12 @@ class nsIPresShell : public nsStubDocumentObserver {
   bool SetVisualViewportOffset(const nsPoint& aScrollOffset,
                                const nsPoint& aPrevLayoutScrollPos);
 
-  nsPoint GetVisualViewportOffset() const { return mVisualViewportOffset; }
+  nsPoint GetVisualViewportOffset() const {
+    return mVisualViewportOffset.valueOr(nsPoint());
+  }
+  bool IsVisualViewportOffsetSet() const {
+    return mVisualViewportOffset.isSome();
+  }
 
   nsPoint GetVisualViewportOffsetRelativeToLayoutViewport() const;
 
@@ -1769,7 +1774,7 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   nsSize mVisualViewportSize;
 
-  nsPoint mVisualViewportOffset;
+  mozilla::Maybe<nsPoint> mVisualViewportOffset;
 
   // A pending visual scroll offset that we will ask APZ to scroll to
   // during the next transaction. Cleared when we send the transaction.
