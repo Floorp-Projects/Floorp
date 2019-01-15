@@ -63,7 +63,6 @@ TextRun fetch_text_run(int address) {
 
 VertexInfo write_text_vertex(RectWithSize local_clip_rect,
                              float z,
-                             bool should_snap,
                              Transform transform,
                              PictureTask task,
                              vec2 text_offset,
@@ -74,8 +73,13 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
     vec2 snap_offset = vec2(0.0);
     mat2 local_transform;
 
+#ifdef WR_FEATURE_GLYPH_TRANSFORM
+    bool remove_subpx_offset = true;
+#else
+    bool remove_subpx_offset = transform.is_axis_aligned;
+#endif
     // Compute the snapping offset only if the scroll node transform is axis-aligned.
-    if (should_snap) {
+    if (remove_subpx_offset) {
         // Transform from local space to device space.
         float device_scale = task.common_data.device_pixel_scale / transform.m[3].w;
         mat2 device_transform = mat2(transform.m) * device_scale;
@@ -174,8 +178,6 @@ void main(void) {
     RectWithSize glyph_rect = RectWithSize(res.offset + glyph_transform * (text.offset + glyph.offset),
                                            res.uv_rect.zw - res.uv_rect.xy);
 
-    // Since the glyph is pre-transformed, snapping is both forced and does not depend on the transform.
-    bool should_snap = true;
 #else
     // Scale from glyph space to local space.
     float scale = res.scale / task.common_data.device_pixel_scale;
@@ -183,9 +185,6 @@ void main(void) {
     // Compute the glyph rect in local space.
     RectWithSize glyph_rect = RectWithSize(scale * res.offset + text.offset + glyph.offset,
                                            scale * (res.uv_rect.zw - res.uv_rect.xy));
-
-    // Check if the primitive is actually safe to snap.
-    bool should_snap = ph.user_data.x != 0;
 #endif
 
     vec2 snap_bias;
@@ -215,7 +214,6 @@ void main(void) {
 
     VertexInfo vi = write_text_vertex(ph.local_clip_rect,
                                       ph.z,
-                                      should_snap,
                                       transform,
                                       task,
                                       text.offset,
