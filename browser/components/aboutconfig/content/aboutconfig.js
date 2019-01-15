@@ -257,15 +257,19 @@ let gPrefObserver = {
   },
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  if (!Preferences.get("browser.aboutConfig.showWarning")) {
-    loadPrefs();
-  }
-}, { once: true });
+if (!Preferences.get("browser.aboutConfig.showWarning")) {
+  // When showing the filtered preferences directly, remove the warning elements
+  // immediately to prevent flickering, but wait to filter the preferences until
+  // the value of the textbox has been restored from previous sessions.
+  document.addEventListener("DOMContentLoaded", loadPrefs, { once: true });
+  window.addEventListener("load", filterPrefs, { once: true });
+}
 
-function alterWarningState() {
+function onWarningButtonClick() {
   Services.prefs.setBoolPref("browser.aboutConfig.showWarning",
     document.getElementById("showWarningNextTime").checked);
+  loadPrefs();
+  filterPrefs();
 }
 
 function loadPrefs() {
@@ -315,8 +319,6 @@ function loadPrefs() {
       pref.editButton.focus();
     }
   });
-
-  filterPrefs();
 
   Services.prefs.addObserver("", gPrefObserver);
   window.addEventListener("unload", () => {
