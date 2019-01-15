@@ -1456,7 +1456,7 @@ void CodeGenerator::visitBitAndAndBranch(LBitAndAndBranch* baab) {
   } else {
     masm.Tst(toWRegister(baab->left()), toWRegister(baab->right()));
   }
-  emitBranch(Assembler::NonZero, baab->ifTrue(), baab->ifFalse());
+  emitBranch(baab->cond(), baab->ifTrue(), baab->ifFalse());
 }
 
 void CodeGenerator::visitWasmUint32ToDouble(LWasmUint32ToDouble* lir) {
