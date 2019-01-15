@@ -7,4 +7,7 @@
     <dimen name="mozac_browser_menu_elevation">4dp</dimen>
     <dimen name="mozac_browser_menu_width">250dp</dimen>
     <dimen name="mozac_browser_menu_padding_vertical">8dp</dimen>
+
+    <!--Item Divider -->
+    <dimen name="mozac_browser_menu_item_divider_height">1dp</dimen>
 </resources>

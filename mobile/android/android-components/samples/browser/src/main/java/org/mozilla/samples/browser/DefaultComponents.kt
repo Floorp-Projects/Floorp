@@ -14,6 +14,7 @@ import mozilla.components.browser.engine.system.SystemEngine
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuCheckbox
+import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
@@ -97,6 +98,9 @@ open class DefaultComponents(private val applicationContext: Context) {
                 SimpleBrowserMenuItem("Settings") {
                     Toast.makeText(applicationContext, "Settings", Toast.LENGTH_SHORT).show()
                 },
+
+                BrowserMenuDivider(),
+
                 SimpleBrowserMenuItem("Clear Data") {
                     sessionUseCases.clearData.invoke()
                 },
