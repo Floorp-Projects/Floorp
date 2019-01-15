@@ -88,6 +88,10 @@ const DISALLOWED = {
     flag: Ci.nsIWebBrowserChrome.CHROME_WINDOW_RAISED,
     defaults_to: false,
   },
+  "alwaysOnTop": {
+    flag: Ci.nsIWebBrowserChrome.CHROME_ALWAYS_ON_TOP,
+    defaults_to: false,
+  },
   "suppressanimation": {
     flag: Ci.nsIWebBrowserChrome.CHROME_SUPPRESS_ANIMATION,
     defaults_to: false,
