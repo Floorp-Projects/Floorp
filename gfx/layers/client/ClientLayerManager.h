@@ -134,6 +134,9 @@ class ClientLayerManager final : public LayerManager,
   }
 
   virtual void SetIsFirstPaint() override;
+  virtual bool GetIsFirstPaint() const override {
+    return mForwarder->GetIsFirstPaint();
+  }
 
   virtual void SetFocusTarget(const FocusTarget& aFocusTarget) override;
 
