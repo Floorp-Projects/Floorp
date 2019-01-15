@@ -15,7 +15,6 @@ import logging
 import taskcluster_urls as liburls
 from mozbuild.util import memoize
 from requests.packages.urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
 from taskgraph.task import Task
 
 logger = logging.getLogger(__name__)
