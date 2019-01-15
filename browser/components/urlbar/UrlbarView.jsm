@@ -133,6 +133,41 @@ class UrlbarView {
     this._openPanel();
   }
 
+  /**
+   * Handles removing a result from the view when it is removed from the query,
+   * and attempts to select the new result on the same row.
+   *
+   * This assumes that the result rows are in index order.
+   *
+   * @param {number} index The index of the result that has been removed.
+   */
+  onQueryResultRemoved(index) {
+    // Change the index for any rows above the removed index.
+    for (let i = index + 1; i < this._rows.children.length; i++) {
+      let child = this._rows.children[i];
+      child.setAttribute("resultIndex", child.getAttribute("resultIndex") - 1);
+    }
+
+    let rowToRemove = this._rows.children[index];
+    rowToRemove.remove();
+
+    if (rowToRemove != this._selected) {
+      return;
+    }
+
+    // Select the row at the same index, if possible.
+    let newSelectionIndex = index;
+    if (index >= this._queryContext.results.length) {
+      newSelectionIndex = this._queryContext.results.length - 1;
+    }
+    if (newSelectionIndex >= 0) {
+      this._selected = this._rows.children[newSelectionIndex];
+      this._selected.setAttribute("selected", true);
+    }
+
+    this.input.setValueFromResult(this._queryContext.results[newSelectionIndex]);
+  }
+
   // Private methods below.
 
   _getBoundsWithoutFlushing(element) {
