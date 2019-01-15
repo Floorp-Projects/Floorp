@@ -24,7 +24,7 @@ Accounts, communication
   2. For a direct communication with us it will be beneficial to setup [IRC].
      Make sure to also register your nickname as described in the linked document.
 
-  3. Join our #ateam channel, and introduce yourself to the team. :ato,
+  3. Join our #interop channel, and introduce yourself to the team. :ato,
      :AutomatedTester, :maja_zf, and :whimboo are all familiar with Marionette.
      We're nice, I promise, but we might not answer right away due to different
      time zones, time off, etc. So please be patient.

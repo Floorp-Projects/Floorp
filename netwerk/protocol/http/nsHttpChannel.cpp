@@ -439,7 +439,10 @@ nsresult nsHttpChannel::PrepareToConnect() {
     // We abandon the connection here if there was one.
     LOG(("Waiting until resume OnBeforeConnect [this=%p]\n", this));
     MOZ_ASSERT(!mCallOnResume);
-    mCallOnResume = &nsHttpChannel::HandleOnBeforeConnect;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->HandleOnBeforeConnect();
+      return NS_OK;
+    };
     return NS_OK;
   }
 
@@ -454,7 +457,10 @@ void nsHttpChannel::HandleContinueCancelledByTrackingProtection() {
         ("Waiting until resume HandleContinueCancelledByTrackingProtection "
          "[this=%p]\n",
          this));
-    mCallOnResume = &nsHttpChannel::HandleContinueCancelledByTrackingProtection;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->HandleContinueCancelledByTrackingProtection();
+      return NS_OK;
+    };
     return;
   }
 
@@ -469,7 +475,10 @@ void nsHttpChannel::HandleOnBeforeConnect() {
 
   if (mSuspendCount) {
     LOG(("Waiting until resume OnBeforeConnect [this=%p]\n", this));
-    mCallOnResume = &nsHttpChannel::HandleOnBeforeConnect;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->HandleOnBeforeConnect();
+      return NS_OK;
+    };
     return;
   }
 
@@ -593,7 +602,10 @@ nsresult nsHttpChannel::OnBeforeConnect() {
     // We abandon the connection here if there was one.
     LOG(("Waiting until resume OnBeforeConnect [this=%p]\n", this));
     MOZ_ASSERT(!mCallOnResume);
-    mCallOnResume = &nsHttpChannel::OnBeforeConnectContinue;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->OnBeforeConnectContinue();
+      return NS_OK;
+    };
     return NS_OK;
   }
 
@@ -606,7 +618,10 @@ void nsHttpChannel::OnBeforeConnectContinue() {
 
   if (mSuspendCount) {
     LOG(("Waiting until resume OnBeforeConnect [this=%p]\n", this));
-    mCallOnResume = &nsHttpChannel::OnBeforeConnectContinue;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->OnBeforeConnectContinue();
+      return NS_OK;
+    };
     return;
   }
 
@@ -774,14 +789,31 @@ nsresult nsHttpChannel::ContinueConnect() {
   }
 
   // hit the net...
+  return DoConnect();
+}
+
+nsresult nsHttpChannel::DoConnect(nsAHttpConnection *aConn) {
+  LOG(("nsHttpChannel::DoConnect [this=%p]\n", this));
+
   nsresult rv = SetupTransaction();
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // transfer ownership of connection to transaction
+  if (aConn) {
+    mTransaction->SetConnection(aConn);
+  }
 
   rv = gHttpHandler->InitiateTransaction(mTransaction, mPriority);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   rv = mTransactionPump->AsyncRead(this, nullptr);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   uint32_t suspendCount = mSuspendCount;
   if (mAsyncResumePending) {
@@ -852,7 +884,10 @@ void nsHttpChannel::HandleAsyncRedirect() {
 
   if (mSuspendCount) {
     LOG(("Waiting until resume to do async redirect [this=%p]\n", this));
-    mCallOnResume = &nsHttpChannel::HandleAsyncRedirect;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->HandleAsyncRedirect();
+      return NS_OK;
+    };
     return;
   }
 
@@ -918,7 +953,10 @@ void nsHttpChannel::HandleAsyncNotModified() {
 
   if (mSuspendCount) {
     LOG(("Waiting until resume to do async not-modified [this=%p]\n", this));
-    mCallOnResume = &nsHttpChannel::HandleAsyncNotModified;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->HandleAsyncNotModified();
+      return NS_OK;
+    };
     return;
   }
 
@@ -938,7 +976,10 @@ void nsHttpChannel::HandleAsyncFallback() {
 
   if (mSuspendCount) {
     LOG(("Waiting until resume to do async fallback [this=%p]\n", this));
-    mCallOnResume = &nsHttpChannel::HandleAsyncFallback;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->HandleAsyncFallback();
+      return NS_OK;
+    };
     return;
   }
 
@@ -2322,7 +2363,10 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
   if (mSuspendCount) {
     LOG(("Waiting until resume to finish processing response [this=%p]\n",
          this));
-    mCallOnResume = &nsHttpChannel::AsyncContinueProcessResponse;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->AsyncContinueProcessResponse();
+      return NS_OK;
+    };
     return NS_OK;
   }
 
@@ -2416,9 +2460,6 @@ nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
 
   uint32_t httpStatus = mResponseHead->Status();
 
-  bool successfulReval = false;
-  bool partialContentUsed = false;
-
   // handle different server response categories.  Note that we handle
   // caching or not caching of error pages in
   // nsHttpResponseHead::MustValidate; if you change this switch, update that
@@ -2442,10 +2483,16 @@ nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
       break;
     case 206:
       if (mCachedContentIsPartial) {  // an internal byte range request...
-        rv = ProcessPartialContent();
-        if (NS_SUCCEEDED(rv)) {
-          partialContentUsed = true;
+        auto func = [](auto *self, nsresult aRv) {
+          return self->ContinueProcessResponseAfterPartialContent(aRv);
+        };
+        rv = ProcessPartialContent(func);
+        // Directly call ContinueProcessResponseAfterPartialContent if channel
+        // is not suspended or ProcessPartialContent throws.
+        if (!mSuspendCount || NS_FAILED(rv)) {
+          return ContinueProcessResponseAfterPartialContent(rv);
         }
+        return NS_OK;
       } else {
         mCacheInputStream.CloseAndRelease();
         rv = ProcessNormal();
@@ -2480,29 +2527,16 @@ nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
       break;
     case 304:
       if (!ShouldBypassProcessNotModified()) {
-        rv = ProcessNotModified();
-        if (NS_SUCCEEDED(rv)) {
-          successfulReval = true;
-          break;
+        auto func = [](auto *self, nsresult aRv) {
+          return self->ContinueProcessResponseAfterNotModified(aRv);
+        };
+        rv = ProcessNotModified(func);
+        // Directly call ContinueProcessResponseAfterNotModified if channel
+        // is not suspended or ProcessNotModified throws.
+        if (!mSuspendCount || NS_FAILED(rv)) {
+          return ContinueProcessResponseAfterNotModified(rv);
         }
-
-        LOG(("ProcessNotModified failed [rv=%" PRIx32 "]\n",
-             static_cast<uint32_t>(rv)));
-
-        // We cannot read from the cache entry, it might be in an
-        // incosistent state.  Doom it and redirect the channel
-        // to the same URI to reload from the network.
-        mCacheInputStream.CloseAndRelease();
-        if (mCacheEntry) {
-          mCacheEntry->AsyncDoom(nullptr);
-          mCacheEntry = nullptr;
-        }
-
-        rv = StartRedirectChannelToURI(mURI,
-                                       nsIChannelEventSink::REDIRECT_INTERNAL);
-        if (NS_SUCCEEDED(rv)) {
-          return NS_OK;
-        }
+        return NS_OK;
       }
 
       // Don't cache uninformative 304
@@ -2573,9 +2607,69 @@ nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
       break;
   }
 
+  UpdateCacheDisposition(false, false);
+  return rv;
+}
+
+nsresult nsHttpChannel::ContinueProcessResponseAfterPartialContent(
+    nsresult aRv) {
+  LOG(
+      ("nsHttpChannel::ContinueProcessResponseAfterPartialContent "
+       "[this=%p, rv=%" PRIx32 "]",
+       this, static_cast<uint32_t>(aRv)));
+
+  UpdateCacheDisposition(false, NS_SUCCEEDED(aRv));
+  return aRv;
+}
+
+nsresult nsHttpChannel::ContinueProcessResponseAfterNotModified(nsresult aRv) {
+  LOG(
+      ("nsHttpChannel::ContinueProcessResponseAfterNotModified "
+       "[this=%p, rv=%" PRIx32 "]",
+       this, static_cast<uint32_t>(aRv)));
+
+  if (NS_SUCCEEDED(aRv)) {
+    mTransactionReplaced = true;
+    UpdateCacheDisposition(true, false);
+    return NS_OK;
+  }
+
+  LOG(("ProcessNotModified failed [rv=%" PRIx32 "]\n",
+       static_cast<uint32_t>(aRv)));
+
+  // We cannot read from the cache entry, it might be in an
+  // incosistent state.  Doom it and redirect the channel
+  // to the same URI to reload from the network.
+  mCacheInputStream.CloseAndRelease();
+  if (mCacheEntry) {
+    mCacheEntry->AsyncDoom(nullptr);
+    mCacheEntry = nullptr;
+  }
+
+  nsresult rv =
+      StartRedirectChannelToURI(mURI, nsIChannelEventSink::REDIRECT_INTERNAL);
+  if (NS_SUCCEEDED(rv)) {
+    return NS_OK;
+  }
+
+  // Don't cache uninformative 304
+  if (mCustomConditionalRequest) {
+    CloseCacheEntry(false);
+  }
+
+  if (ShouldBypassProcessNotModified() || NS_FAILED(rv)) {
+    rv = ProcessNormal();
+  }
+
+  UpdateCacheDisposition(false, false);
+  return rv;
+}
+
+void nsHttpChannel::UpdateCacheDisposition(bool aSuccessfulReval,
+                                           bool aPartialContentUsed) {
   if (mRaceDelay && !mRaceCacheWithNetwork &&
       (mCachedContentIsPartial || mDidReval)) {
-    if (successfulReval || partialContentUsed) {
+    if (aSuccessfulReval || aPartialContentUsed) {
       AccumulateCategorical(
           Telemetry::LABELS_NETWORK_RACE_CACHE_VALIDATION::CachedContentUsed);
     } else {
@@ -2588,7 +2682,7 @@ nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
     CacheDisposition cacheDisposition;
     if (!mDidReval) {
       cacheDisposition = kCacheMissed;
-    } else if (successfulReval) {
+    } else if (aSuccessfulReval) {
       cacheDisposition = kCacheHitViaReval;
     } else {
       cacheDisposition = kCacheMissedViaReval;
@@ -2612,7 +2706,6 @@ nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
       Telemetry::Accumulate(Telemetry::HTTP_09_INFO, v09Info);
     }
   }
-  return rv;
 }
 
 nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
@@ -2817,7 +2910,10 @@ void nsHttpChannel::HandleAsyncRedirectChannelToHttps() {
   if (mSuspendCount) {
     LOG(("Waiting until resume to do async redirect to https [this=%p]\n",
          this));
-    mCallOnResume = &nsHttpChannel::HandleAsyncRedirectChannelToHttps;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->HandleAsyncRedirectChannelToHttps();
+      return NS_OK;
+    };
     return;
   }
 
@@ -2849,7 +2945,10 @@ void nsHttpChannel::HandleAsyncAPIRedirect() {
 
   if (mSuspendCount) {
     LOG(("Waiting until resume to do async API redirect [this=%p]\n", this));
-    mCallOnResume = &nsHttpChannel::HandleAsyncAPIRedirect;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->HandleAsyncAPIRedirect();
+      return NS_OK;
+    };
     return;
   }
 
@@ -3217,7 +3316,9 @@ void nsHttpChannel::UntieByteRangeRequest() {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-nsresult nsHttpChannel::ProcessPartialContent() {
+nsresult nsHttpChannel::ProcessPartialContent(
+    const std::function<nsresult(nsHttpChannel *, nsresult)>
+        &aContinueProcessResponseFunc) {
   // ok, we've just received a 206
   //
   // we need to stream whatever data is in the cache out first, and then
@@ -3317,15 +3418,16 @@ nsresult nsHttpChannel::ProcessPartialContent() {
     // to prevent duplicate OnStartRequest call on the target listener
     // in case this channel is canceled before it gets its OnStartRequest
     // from the http transaction.
-
-    // Now we continue reading the network response.
-  } else {
-    // the cached content is valid, although incomplete.
-    mCachedContentIsValid = true;
-    rv = ReadFromCache(false);
+    return rv;
   }
 
-  return rv;
+  // Now we continue reading the network response.
+  // the cached content is valid, although incomplete.
+  mCachedContentIsValid = true;
+  return CallOrWaitForResume([aContinueProcessResponseFunc](auto *self) {
+    nsresult rv = self->ReadFromCache(false);
+    return aContinueProcessResponseFunc(self, rv);
+  });
 }
 
 nsresult nsHttpChannel::OnDoneReadingPartialCacheEntry(bool *streamDone) {
@@ -3391,7 +3493,9 @@ bool nsHttpChannel::ShouldBypassProcessNotModified() {
   return false;
 }
 
-nsresult nsHttpChannel::ProcessNotModified() {
+nsresult nsHttpChannel::ProcessNotModified(
+    const std::function<nsresult(nsHttpChannel *, nsresult)>
+        &aContinueProcessResponseFunc) {
   nsresult rv;
 
   LOG(("nsHttpChannel::ProcessNotModified [this=%p]\n", this));
@@ -3461,11 +3565,10 @@ nsresult nsHttpChannel::ProcessNotModified() {
   rv = mCacheEntry->SetValid();
   if (NS_FAILED(rv)) return rv;
 
-  rv = ReadFromCache(false);
-  if (NS_FAILED(rv)) return rv;
-
-  mTransactionReplaced = true;
-  return NS_OK;
+  return CallOrWaitForResume([aContinueProcessResponseFunc](auto *self) {
+    nsresult rv = self->ReadFromCache(false);
+    return aContinueProcessResponseFunc(self, rv);
+  });
 }
 
 nsresult nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback) {
@@ -5915,7 +6018,10 @@ nsHttpChannel::CancelForTrackingProtection() {
     LOG(("Waiting until resume in Cancel [this=%p]\n", this));
     MOZ_ASSERT(!mCallOnResume);
     mTrackingProtectionCancellationPending = 1;
-    mCallOnResume = &nsHttpChannel::HandleContinueCancelledByTrackingProtection;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->HandleContinueCancelledByTrackingProtection();
+      return NS_OK;
+    };
     return NS_OK;
   }
 
@@ -6498,12 +6604,6 @@ nsresult nsHttpChannel::BeginConnectActual() {
         ("Waiting for tracking protection cancellation in BeginConnectActual "
          "[this=%p]\n",
          this));
-    MOZ_ASSERT(
-        !mCallOnResume ||
-            mCallOnResume ==
-                &nsHttpChannel::HandleContinueCancelledByTrackingProtection,
-        "We should be paused waiting for cancellation from tracking "
-        "protection");
     return NS_OK;
   }
 
@@ -6645,7 +6745,10 @@ nsresult nsHttpChannel::ContinueBeginConnectWithResult() {
 
   if (mSuspendCount) {
     LOG(("Waiting until resume to do async connect [this=%p]\n", this));
-    mCallOnResume = &nsHttpChannel::ContinueBeginConnect;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->ContinueBeginConnect();
+      return NS_OK;
+    };
     rv = NS_OK;
   } else if (mCanceled) {
     // We may have been cancelled already, by nsChannelClassifier in that
@@ -7414,55 +7517,92 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     // handle auth retry...
     if (authRetry) {
       mAuthRetryPending = false;
-      status = DoAuthRetry(conn);
-      if (NS_SUCCEEDED(status)) return NS_OK;
-    }
-
-    // If DoAuthRetry failed, or if we have been cancelled since showing
-    // the auth. dialog, then we need to send OnStartRequest now
-    if (authRetry || (mAuthRetryPending && NS_FAILED(status))) {
-      MOZ_ASSERT(NS_FAILED(status), "should have a failure code here");
-      // NOTE: since we have a failure status, we can ignore the return
-      // value from onStartRequest.
-      LOG(("  calling mListener->OnStartRequest [this=%p, listener=%p]\n", this,
-           mListener.get()));
-      if (mListener) {
-        MOZ_ASSERT(!mOnStartRequestCalled,
-                   "We should not call OnStartRequest twice.");
-        mListener->OnStartRequest(this, mListenerContext);
-        mOnStartRequestCalled = true;
-      } else {
-        NS_WARNING("OnStartRequest skipped because of null listener");
+      auto continueOSR = [authRetry, isFromNet, contentComplete,
+                          stickyConn{std::move(stickyConn)}](auto *self,
+                                                             nsresult aStatus) {
+        return self->ContinueOnStopRequestAfterAuthRetry(
+            aStatus, authRetry, isFromNet, contentComplete, stickyConn);
+      };
+      status = DoAuthRetry(conn, continueOSR);
+      if (NS_SUCCEEDED(status)) {
+        return NS_OK;
       }
     }
+    return ContinueOnStopRequestAfterAuthRetry(status, authRetry, isFromNet,
+                                               contentComplete, stickyConn);
+  }
 
-    // if this transaction has been replaced, then bail.
-    if (mTransactionReplaced) {
-      LOG(("Transaction replaced\n"));
-      // This was just the network check for a 304 response.
-      mFirstResponseSource = RESPONSE_PENDING;
-      return NS_OK;
-    }
+  return ContinueOnStopRequest(status, isFromNet, contentComplete);
+}
 
-    bool upgradeWebsocket = mUpgradeProtocolCallback && stickyConn &&
-                            mResponseHead &&
-                            ((mResponseHead->Status() == 101 &&
-                              mResponseHead->Version() == HttpVersion::v1_1) ||
-                             (mResponseHead->Status() == 200 &&
-                              mResponseHead->Version() == HttpVersion::v2_0));
+nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
+    nsresult aStatus, bool aAuthRetry, bool aIsFromNet, bool aContentComplete,
+    nsAHttpConnection *aStickyConn) {
+  LOG(
+      ("nsHttpChannel::ContinueOnStopRequestAfterAuthRetry "
+       "[this=%p, aStatus=%" PRIx32
+       " aAuthRetry=%d, aIsFromNet=%d, aStickyConn=%p]\n",
+       this, static_cast<uint32_t>(aStatus), aAuthRetry, aIsFromNet,
+       aStickyConn));
 
-    bool upgradeConnect = mUpgradeProtocolCallback && stickyConn &&
-                          (mCaps & NS_HTTP_CONNECT_ONLY) && mResponseHead &&
-                          mResponseHead->Status() == 200;
+  if (aAuthRetry && NS_SUCCEEDED(aStatus)) {
+    return NS_OK;
+  }
 
-    if (upgradeWebsocket || upgradeConnect) {
-      nsresult rv = gHttpHandler->ConnMgr()->CompleteUpgrade(
-          stickyConn, mUpgradeProtocolCallback);
-      if (NS_FAILED(rv)) {
-        LOG(("  CompleteUpgrade failed with %08x", static_cast<uint32_t>(rv)));
-      }
+  // If DoAuthRetry failed, or if we have been cancelled since showing
+  // the auth. dialog, then we need to send OnStartRequest now
+  if (aAuthRetry || (mAuthRetryPending && NS_FAILED(aStatus))) {
+    MOZ_ASSERT(NS_FAILED(aStatus), "should have a failure code here");
+    // NOTE: since we have a failure status, we can ignore the return
+    // value from onStartRequest.
+    LOG(("  calling mListener->OnStartRequest [this=%p, listener=%p]\n", this,
+         mListener.get()));
+    if (mListener) {
+      MOZ_ASSERT(!mOnStartRequestCalled,
+                 "We should not call OnStartRequest twice.");
+      mListener->OnStartRequest(this, mListenerContext);
+      mOnStartRequestCalled = true;
+    } else {
+      NS_WARNING("OnStartRequest skipped because of null listener");
     }
   }
+
+  // if this transaction has been replaced, then bail.
+  if (mTransactionReplaced) {
+    LOG(("Transaction replaced\n"));
+    // This was just the network check for a 304 response.
+    mFirstResponseSource = RESPONSE_PENDING;
+    return NS_OK;
+  }
+
+  bool upgradeWebsocket = mUpgradeProtocolCallback && aStickyConn &&
+                          mResponseHead &&
+                          ((mResponseHead->Status() == 101 &&
+                            mResponseHead->Version() == HttpVersion::v1_1) ||
+                           (mResponseHead->Status() == 200 &&
+                            mResponseHead->Version() == HttpVersion::v2_0));
+
+  bool upgradeConnect = mUpgradeProtocolCallback && aStickyConn &&
+                        (mCaps & NS_HTTP_CONNECT_ONLY) && mResponseHead &&
+                        mResponseHead->Status() == 200;
+
+  if (upgradeWebsocket || upgradeConnect) {
+    nsresult rv = gHttpHandler->ConnMgr()->CompleteUpgrade(
+        aStickyConn, mUpgradeProtocolCallback);
+    if (NS_FAILED(rv)) {
+      LOG(("  CompleteUpgrade failed with %08x", static_cast<uint32_t>(rv)));
+    }
+  }
+
+  return ContinueOnStopRequest(aStatus, aIsFromNet, aContentComplete);
+}
+
+nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
+                                              bool aContentComplete) {
+  LOG(
+      ("nsHttpChannel::ContinueOnStopRequest "
+       "[this=%p aStatus=%" PRIx32 ", aIsFromNet=%d]\n",
+       this, static_cast<uint32_t>(aStatus), aIsFromNet));
 
   // HTTP_CHANNEL_DISPOSITION TELEMETRY
   enum ChannelDisposition {
@@ -7492,7 +7632,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     chanDisposition = kHttpDisk;
     upgradeChanDisposition =
         Telemetry::LABELS_HTTP_CHANNEL_DISPOSITION_UPGRADE::disk;
-  } else if (NS_SUCCEEDED(status) && mResponseHead &&
+  } else if (NS_SUCCEEDED(aStatus) && mResponseHead &&
              mResponseHead->Version() != HttpVersion::v0_9) {
     chanDisposition = kHttpNetOK;
     upgradeChanDisposition =
@@ -7540,7 +7680,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_DISPOSITION, chanDisposition);
 
   // if needed, check cache entry has all data we expect
-  if (mCacheEntry && mCachePump && mConcurrentCacheAccess && contentComplete) {
+  if (mCacheEntry && mCachePump && mConcurrentCacheAccess && aContentComplete) {
     int64_t size, contentLength;
     nsresult rv = CheckPartial(mCacheEntry, &size, &contentLength);
     if (NS_SUCCEEDED(rv)) {
@@ -7571,7 +7711,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
           }
           LOG(("  but range request perform failed 0x%08" PRIx32,
                static_cast<uint32_t>(rv)));
-          status = NS_ERROR_NET_INTERRUPT;
+          aStatus = NS_ERROR_NET_INTERRUPT;
         } else {
           LOG(("  but range request setup failed rv=0x%08" PRIx32
                ", failing load",
@@ -7582,7 +7722,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   }
 
   mIsPending = false;
-  mStatus = status;
+  mStatus = aStatus;
 
   // perform any final cache operations before we close the cache entry.
   if (mCacheEntry && mRequestTimeInitialized) {
@@ -7598,7 +7738,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     }
   }
 
-  ReportRcwnStats(isFromNet);
+  ReportRcwnStats(aIsFromNet);
 
   // Register entry to the PerformanceStorage resource timing
   MaybeReportTimingData();
@@ -7608,7 +7748,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     MOZ_ASSERT(mOnStartRequestCalled,
                "OnStartRequest should be called before OnStopRequest");
     MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
-    mListener->OnStopRequest(this, mListenerContext, status);
+    mListener->OnStopRequest(this, mListenerContext, aStatus);
     mOnStopRequestCalled = true;
   }
 
@@ -7625,11 +7765,13 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     mAltDataCacheEntry = mCacheEntry;
   }
 
-  CloseCacheEntry(!contentComplete);
+  CloseCacheEntry(!aContentComplete);
 
   if (mOfflineCacheEntry) CloseOfflineCacheEntry();
 
-  if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, status);
+  if (mLoadGroup) {
+    mLoadGroup->RemoveRequest(this, nullptr, aStatus);
+  }
 
   // We don't need this info anymore
   CleanRedirectCacheChainIfNecessary();
@@ -8195,15 +8337,19 @@ nsHttpChannel::ResumeAt(uint64_t aStartPos, const nsACString &aEntityID) {
   return NS_OK;
 }
 
-nsresult nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn) {
+nsresult nsHttpChannel::DoAuthRetry(
+    nsAHttpConnection *conn,
+    const std::function<nsresult(nsHttpChannel *, nsresult)>
+        &aContinueOnStopRequestFunc) {
   LOG(("nsHttpChannel::DoAuthRetry [this=%p]\n", this));
 
   MOZ_ASSERT(!mTransaction, "should not have a transaction");
-  nsresult rv;
 
-  // toggle mIsPending to allow nsIObserver implementations to modify
-  // the request headers (bug 95044).
-  mIsPending = false;
+  // Note that we don't have to toggle |mIsPending| anymore. See the reasons
+  // below.
+  // 1. We can't suspend the channel during "http-on-modify-request"
+  // when |mIsPending| is false.
+  // 2. We don't check |mIsPending| in SetRequestHeader now.
 
   // Reset mRequestObserversCalled because we've probably called the request
   // observers once already.
@@ -8218,6 +8364,19 @@ nsresult nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn) {
   // notify "http-on-modify-request" observers
   CallOnModifyRequestObservers();
 
+  RefPtr<nsAHttpConnection> connRef(conn);
+  return CallOrWaitForResume(
+      [conn{std::move(connRef)}, aContinueOnStopRequestFunc](auto *self) {
+        return self->ContinueDoAuthRetry(conn, aContinueOnStopRequestFunc);
+      });
+}
+
+nsresult nsHttpChannel::ContinueDoAuthRetry(
+    nsAHttpConnection *aConn,
+    const std::function<nsresult(nsHttpChannel *, nsresult)>
+        &aContinueOnStopRequestFunc) {
+  LOG(("nsHttpChannel::ContinueDoAuthRetry [this=%p]\n", this));
+
   mIsPending = true;
 
   // get rid of the old response headers
@@ -8226,7 +8385,9 @@ nsresult nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn) {
   // rewind the upload stream
   if (mUploadStream) {
     nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
-    if (seekable) seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+    if (seekable) {
+      seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+    }
   }
 
   // always set sticky connection flag
@@ -8241,32 +8402,15 @@ nsresult nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn) {
     mCaps &= ~NS_HTTP_CONNECTION_RESTARTABLE;
   }
 
-  // and create a new one...
-  rv = SetupTransaction();
-  if (NS_FAILED(rv)) return rv;
+  // notify "http-on-before-connect" observers
+  gHttpHandler->OnBeforeConnect(this);
 
-  // transfer ownership of connection to transaction
-  if (conn) mTransaction->SetConnection(conn);
-
-  rv = gHttpHandler->InitiateTransaction(mTransaction, mPriority);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = mTransactionPump->AsyncRead(this, nullptr);
-  if (NS_FAILED(rv)) return rv;
-
-  uint32_t suspendCount = mSuspendCount;
-  if (mAsyncResumePending) {
-    LOG(
-        ("  Suspend()'ing transaction pump once because of async resume pending"
-         ", sc=%u, pump=%p, this=%p",
-         suspendCount, mTransactionPump.get(), this));
-    ++suspendCount;
-  }
-  while (suspendCount--) {
-    mTransactionPump->Suspend();
-  }
-
-  return NS_OK;
+  RefPtr<nsAHttpConnection> connRef(aConn);
+  return CallOrWaitForResume(
+      [conn{std::move(connRef)}, aContinueOnStopRequestFunc](auto *self) {
+        nsresult rv = self->DoConnect(conn);
+        return aContinueOnStopRequestFunc(self, rv);
+      });
 }
 
 //-----------------------------------------------------------------------------
@@ -8809,6 +8953,23 @@ nsHttpChannel::SuspendInternal() {
   return NS_FAILED(rvTransaction) ? rvTransaction : rvCache;
 }
 
+nsresult nsHttpChannel::CallOrWaitForResume(
+    const std::function<nsresult(nsHttpChannel *)> &aFunc) {
+  if (mCanceled) {
+    MOZ_ASSERT(NS_FAILED(mStatus));
+    return mStatus;
+  }
+
+  if (mSuspendCount) {
+    LOG(("Waiting until resume [this=%p]\n", this));
+    MOZ_ASSERT(!mCallOnResume);
+    mCallOnResume = aFunc;
+    return NS_OK;
+  }
+
+  return aFunc(this);
+}
+
 NS_IMETHODIMP
 nsHttpChannel::ResumeInternal() {
   NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
@@ -8828,8 +8989,8 @@ nsHttpChannel::ResumeInternal() {
       MOZ_ASSERT(!mAsyncResumePending);
       mAsyncResumePending = 1;
 
-      auto const callOnResume = mCallOnResume;
-      mCallOnResume = nullptr;
+      std::function<nsresult(nsHttpChannel *)> callOnResume = nullptr;
+      std::swap(callOnResume, mCallOnResume);
 
       RefPtr<nsHttpChannel> self(this);
       RefPtr<nsInputStreamPump> transactionPump = mTransactionPump;
@@ -8837,11 +8998,15 @@ nsHttpChannel::ResumeInternal() {
 
       nsresult rv = NS_DispatchToCurrentThread(NS_NewRunnableFunction(
           "nsHttpChannel::CallOnResume",
-          [callOnResume, self{std::move(self)},
+          [callOnResume{std::move(callOnResume)}, self{std::move(self)},
            transactionPump{std::move(transactionPump)},
            cachePump{std::move(cachePump)}]() {
             MOZ_ASSERT(self->mAsyncResumePending);
-            (self->*callOnResume)();
+            nsresult rv = self->CallOrWaitForResume(callOnResume);
+            if (NS_FAILED(rv)) {
+              self->CloseCacheEntry(false);
+              Unused << self->AsyncAbort(rv);
+            }
             MOZ_ASSERT(self->mAsyncResumePending);
 
             self->mAsyncResumePending = 0;

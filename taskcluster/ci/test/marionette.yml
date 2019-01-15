@@ -30,10 +30,6 @@ marionette:
         by-test-platform:
             android-em.*: xlarge
             default: default
-    tier:
-        by-test-platform:
-            android-em.*: 2
-            default: default
     chunks:
         by-test-platform:
             android-em.*: 10
