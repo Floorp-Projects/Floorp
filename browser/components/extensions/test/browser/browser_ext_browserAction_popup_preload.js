@@ -211,3 +211,61 @@ add_task(async function testBrowserActionTabPopulation() {
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function testClosePopupDuringPreload() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "browser_action": {
+        "default_popup": "popup.html",
+        "browser_style": true,
+      },
+    },
+
+    files: {
+      "popup.html": scriptPage("popup.js"),
+      "popup.js": function() {
+        browser.test.sendMessage("popup_loaded");
+        window.close();
+      },
+    },
+  });
+
+  // Make sure the mouse isn't hovering over the browserAction widget.
+  EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "mouseover"}, window);
+
+  await extension.startup();
+
+  const {GlobalManager, Management: {global: {browserActionFor}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+
+  let ext = GlobalManager.extensionMap.get(extension.id);
+  let browserAction = browserActionFor(ext);
+
+  let widget = getBrowserActionWidget(extension).forWindow(window);
+
+  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, window);
+
+  isnot(browserAction.pendingPopup, null, "Have pending popup");
+  is(browserAction.pendingPopup.window, window, "Have pending popup for the correct window");
+
+  await extension.awaitMessage("popup_loaded");
+  try {
+    await browserAction.pendingPopup.browserLoaded;
+  } catch (e) {
+    is(e.message, "Popup destroyed", "Popup content should have been destroyed");
+  }
+
+  let promiseViewShowing =
+    BrowserTestUtils.waitForEvent(document, "ViewShowing", false,
+                                  ev => ev.target.id === browserAction.viewId);
+  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mouseup", button: 0}, window);
+
+  // The popup panel may become visible after the ViewShowing event. Wait a bit
+  // to ensure that the popup is not shown when window.close() was used.
+  await promiseViewShowing;
+  await new Promise(resolve => setTimeout(resolve, 50));
+
+  let panel = getBrowserActionPopup(extension);
+  is(panel, null, "Popup panel should have been closed");
+
+  await extension.unload();
+});
