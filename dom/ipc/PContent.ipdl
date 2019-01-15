@@ -1234,6 +1234,12 @@ parent:
     async SetOpenerBrowsingContext(BrowsingContextId aContextId,
                                    BrowsingContextId aOpenerContextId);
 
+    /**
+     * Notify parent to update user gesture activation flag.
+     */
+    async SetUserGestureActivation(BrowsingContextId aContextId,
+                                   bool aNewValue);
+
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);

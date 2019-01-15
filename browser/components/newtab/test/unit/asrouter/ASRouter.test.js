@@ -130,14 +130,6 @@ describe("ASRouter", () => {
 
       assert.deepEqual(Router.state.messageBlockList, ["foo"]);
     });
-    it("should set state.messageBlockList to the block list in ASRouterPreferences", async () => {
-      setMessageProviderPref([{id: "onboarding", type: "local", exclude: ["RTAMO"]}]);
-      messageBlockList = ["foo"];
-      Router = new _ASRouter();
-      await Router.init(channel, createFakeStorage(), dispatchStub);
-
-      assert.deepEqual(Router.state.messageBlockList, ["foo", "RTAMO"]);
-    });
     it("should set state.messageImpressions to the messageImpressions object in persistent storage", async () => {
       // Note that messageImpressions are only kept if a message exists in router and has a .frequency property,
       // otherwise they will be cleaned up by .cleanupImpressions()

@@ -29,6 +29,11 @@
 namespace mozilla {
 namespace dom {
 
+extern mozilla::LazyLogModule gUserInteractionPRLog;
+
+#define USER_ACTIVATION_LOG(msg, ...) \
+  MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+
 static LazyLogModule gBrowsingContextLog("BrowsingContext");
 
 static StaticAutoPtr<BrowsingContext::Children> sRootBrowsingContexts;
@@ -62,6 +67,14 @@ static void Sync(BrowsingContext* aBrowsingContext) {
                                 BrowsingContextId(opener ? opener->Id() : 0),
                                 BrowsingContextId(aBrowsingContext->Id()),
                                 aBrowsingContext->Name());
+}
+
+BrowsingContext* BrowsingContext::TopLevelBrowsingContext() {
+  BrowsingContext* bc = this;
+  while (bc->mParent) {
+    bc = bc->mParent;
+  }
+  return bc;
 }
 
 /* static */ void BrowsingContext::Init() {
@@ -156,7 +169,8 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
       mParent(aParent),
       mOpener(aOpener),
       mName(aName),
-      mClosed(false) {
+      mClosed(false),
+      mIsActivatedByUserGesture(false) {
   if (mParent) {
     mBrowsingContextGroup = mParent->mBrowsingContextGroup;
   } else if (mOpener) {
@@ -306,6 +320,59 @@ nsISupports* BrowsingContext::GetParentObject() const {
 JSObject* BrowsingContext::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
   return BrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void BrowsingContext::NotifyUserGestureActivation() {
+  // We would set the user gesture activation flag on the top level browsing
+  // context, which would automatically be sync to other top level browsing
+  // contexts which are in the different process.
+  RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
+  USER_ACTIVATION_LOG("Get top level browsing context 0x%08" PRIx64,
+                      topLevelBC->Id());
+  topLevelBC->SetUserGestureActivation();
+
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+  auto cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+  cc->SendSetUserGestureActivation(BrowsingContextId(topLevelBC->Id()), true);
+}
+
+void BrowsingContext::NotifyResetUserGestureActivation() {
+  // We would reset the user gesture activation flag on the top level browsing
+  // context, which would automatically be sync to other top level browsing
+  // contexts which are in the different process.
+  RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
+  USER_ACTIVATION_LOG("Get top level browsing context 0x%08" PRIx64,
+                      topLevelBC->Id());
+  topLevelBC->ResetUserGestureActivation();
+
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+  auto cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+  cc->SendSetUserGestureActivation(BrowsingContextId(topLevelBC->Id()), false);
+}
+
+void BrowsingContext::SetUserGestureActivation() {
+  MOZ_ASSERT(!mParent, "Set user activation flag on non top-level context!");
+  USER_ACTIVATION_LOG(
+      "Set user gesture activation for browsing context 0x%08" PRIx64, Id());
+  mIsActivatedByUserGesture = true;
+}
+
+bool BrowsingContext::GetUserGestureActivation() {
+  RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
+  return topLevelBC->mIsActivatedByUserGesture;
+}
+
+void BrowsingContext::ResetUserGestureActivation() {
+  MOZ_ASSERT(!mParent, "Clear user activation flag on non top-level context!");
+  USER_ACTIVATION_LOG(
+      "Reset user gesture activation for browsing context 0x%08" PRIx64, Id());
+  mIsActivatedByUserGesture = false;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)

@@ -4,7 +4,6 @@ dnl The contents of this file are under the Public Domain.
 dnl
 
 builtin(include, build/autoconf/hotfixes.m4)dnl
-builtin(include, build/autoconf/acwinpaths.m4)dnl
 builtin(include, build/autoconf/hooks.m4)dnl
 builtin(include, build/autoconf/config.status.m4)dnl
 builtin(include, build/autoconf/toolchain.m4)dnl

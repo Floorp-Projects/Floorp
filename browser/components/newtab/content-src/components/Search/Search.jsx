@@ -12,7 +12,10 @@ export class _Search extends React.PureComponent {
     super(props);
     this.onSearchClick = this.onSearchClick.bind(this);
     this.onSearchHandoffClick = this.onSearchHandoffClick.bind(this);
+    this.onSearchHandoffKeyDown = this.onSearchHandoffKeyDown.bind(this);
+    this.onSearchHandoffPaste = this.onSearchHandoffPaste.bind(this);
     this.onInputMount = this.onInputMount.bind(this);
+    this.onSearchHandoffButtonMount = this.onSearchHandoffButtonMount.bind(this);
   }
 
   handleEvent(event) {
@@ -42,7 +45,43 @@ export class _Search extends React.PureComponent {
     // TODO: Send a telemetry ping. BUG 1514732
   }
 
+  onSearchHandoffKeyDown(event) {
+    if (event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      // We only care about key strokes that will produce a character.
+      const text = event.key;
+      this.props.dispatch(ac.OnlyToMain({type: at.HANDOFF_SEARCH_TO_AWESOMEBAR, data: {text}}));
+
+      // TODO: Send a telemetry ping. BUG 1514732
+    }
+  }
+
+  onSearchHandoffPaste(event) {
+    if (!this._searchHandoffButton ||
+        !this._searchHandoffButton.contains(global.document.activeElement)) {
+      // Don't handle every paste on the document. Filter out those that are
+      // not on the Search Hand-off button.
+      return;
+    }
+    event.preventDefault();
+    const text = event.clipboardData.getData("Text");
+    this.props.dispatch(ac.OnlyToMain({type: at.HANDOFF_SEARCH_TO_AWESOMEBAR, data: {text}}));
+
+    // TODO: Send a telemetry ping. BUG 1514732
+  }
+
+  componentWillMount() {
+    if (global.document) {
+      // We need to listen to paste events that bubble up from the Search Hand-off
+      // button. Adding the paste listener to the button itself or it's parent
+      // doesn't work consistently until the page is clicked on.
+      global.document.addEventListener("paste", this.onSearchHandoffPaste);
+    }
+  }
+
   componentWillUnmount() {
+    if (global.document) {
+      global.document.removeEventListener("paste", this.onDocumentPaste);
+    }
     delete window.gContentSearchController;
   }
 
@@ -72,6 +111,11 @@ export class _Search extends React.PureComponent {
       window.gContentSearchController = null;
       removeEventListener("ContentSearchClient", this);
     }
+  }
+
+  onSearchHandoffButtonMount(button) {
+    // Keep a reference to the button for use during "paste" event handling.
+    this._searchHandoffButton = button;
   }
 
   /*
@@ -118,9 +162,12 @@ export class _Search extends React.PureComponent {
         <div className="search-inner-wrapper">
           <button
             className="search-handoff-button"
+            ref={this.onSearchHandoffButtonMount}
             onClick={this.onSearchHandoffClick}
+            onKeyDown={this.onSearchHandoffKeyDown}
             title={this.props.intl.formatMessage({id: "search_web_placeholder"})}>
             <div className="fake-textbox">{this.props.intl.formatMessage({id: "search_web_placeholder"})}</div>
+            <div className="fake-editable" tabIndex="-1" aria-hidden="true" contentEditable="" />
             <div className="fake-caret" />
           </button>
           {/*

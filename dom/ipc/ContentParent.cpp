@@ -5720,6 +5720,22 @@ mozilla::ipc::IPCResult ContentParent::RecvSetOpenerBrowsingContext(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvSetUserGestureActivation(
+    const BrowsingContextId& aContextId, const bool& aNewValue) {
+  RefPtr<ChromeBrowsingContext> context =
+      ChromeBrowsingContext::Get(aContextId);
+
+  if (!context) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to activate wrong context 0x%08" PRIx64,
+             (uint64_t)aContextId));
+    return IPC_OK();
+  }
+
+  context->NotifySetUserGestureActivationFromIPC(aNewValue);
+  return IPC_OK();
+}
+
 void ContentParent::RegisterRemoteWorkerActor() { ++mRemoteWorkerActors; }
 
 void ContentParent::UnregisterRemoveWorkerActor() {

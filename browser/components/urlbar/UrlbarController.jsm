@@ -10,8 +10,10 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   // BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
@@ -28,6 +30,7 @@ const TELEMETRY_6_FIRST_RESULTS = "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS";
  * - onQueryResults(queryContext)
  * - onQueryCancelled(queryContext)
  * - onQueryFinished(queryContext)
+ * - onQueryResultRemoved(index)
  */
 class UrlbarController {
   /**
@@ -175,8 +178,9 @@ class UrlbarController {
    *   The DOM KeyboardEvent.
    */
   handleKeyNavigation(event) {
+    const isMac = AppConstants.platform == "macosx";
     // Handle readline/emacs-style navigation bindings on Mac.
-    if (AppConstants.platform == "macosx" &&
+    if (isMac &&
         this.view.isOpen &&
         event.ctrlKey &&
         (event.key == "n" || event.key == "p")) {
@@ -191,7 +195,7 @@ class UrlbarController {
         event.preventDefault();
         break;
       case KeyEvent.DOM_VK_RETURN:
-        if (AppConstants.platform == "macosx" &&
+        if (isMac &&
             event.metaKey) {
           // Prevent beep on Mac.
           event.preventDefault();
@@ -219,7 +223,52 @@ class UrlbarController {
           event.preventDefault();
         }
         break;
+      case KeyEvent.DOM_VK_DELETE:
+        if (isMac && !event.shiftKey) {
+          break;
+        }
+        if (this._handleDeleteEntry()) {
+          event.preventDefault();
+        }
+        break;
+      case KeyEvent.DOM_VK_BACK_SPACE:
+        if (isMac && event.shiftKey &&
+            this._handleDeleteEntry()) {
+          event.preventDefault();
+        }
+        break;
     }
+  }
+
+  /**
+   * Internal function handling deletion of entries. We only support removing
+   * of history entries - other result sources will be ignored.
+   *
+   * @returns {boolean} Returns true if the deletion was acted upon.
+   */
+  _handleDeleteEntry() {
+    if (!this._lastQueryContext) {
+      Cu.reportError("Cannot delete - the latest query is not present");
+      return false;
+    }
+
+    const selectedResult = this.input.view.selectedResult;
+    if (!selectedResult ||
+        selectedResult.source != UrlbarUtils.MATCH_SOURCE.HISTORY) {
+      return false;
+    }
+
+    let index = this._lastQueryContext.results.indexOf(selectedResult);
+    if (!index) {
+      Cu.reportError("Failed to find the selected result in the results");
+      return false;
+    }
+
+    this._lastQueryContext.results.splice(index, 1);
+    this._notify("onQueryResultRemoved", index);
+
+    PlacesUtils.history.remove(selectedResult.payload.url).catch(Cu.reportError);
+    return true;
   }
 
   /**

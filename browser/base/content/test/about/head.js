@@ -1,5 +1,9 @@
 /* eslint-env mozilla/frame-script */
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  FormHistory: "resource://gre/modules/FormHistory.jsm",
+});
+
 function injectErrorPageFrame(tab, src) {
   return ContentTask.spawn(tab.linkedBrowser, {frameSrc: src}, async function({frameSrc}) {
     let loaded = ContentTaskUtils.waitForEvent(content.wrappedJSObject, "DOMFrameContentLoaded");

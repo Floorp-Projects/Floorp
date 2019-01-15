@@ -71,6 +71,10 @@ class MobileViewportManager final : public nsIDOMEventListener,
    * presShell is initialized. */
   void SetInitialViewport();
 
+  const mozilla::LayoutDeviceIntSize& DisplaySize() const {
+    return mDisplaySize;
+  };
+
  private:
   ~MobileViewportManager();
 
