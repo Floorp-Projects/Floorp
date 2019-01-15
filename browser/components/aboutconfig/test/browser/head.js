@@ -42,8 +42,8 @@ class AboutConfigRowTest {
   }
 
   /**
-   * This is normally "edit" or "toggle" based on the preference type, or "save"
-   * when the row is in edit mode.
+   * This is normally "edit" or "toggle" based on the preference type, "save"
+   * when the row is in edit mode, or "add" when the preference does not exist.
    */
   get editColumnButton() {
     return this.querySelector("td.cell-edit > button");

@@ -18,36 +18,74 @@ add_task(async function setup() {
 });
 
 add_task(async function test_add_user_pref() {
-  await AboutConfigTest.withNewTab(async function() {
-    Assert.ok(!Services.prefs.getChildList("").find(pref => pref == "testPref"));
+  const PREF_NEW = "test.aboutconfig.new";
+  Assert.equal(Services.prefs.getPrefType(PREF_NEW),
+               Ci.nsIPrefBranch.PREF_INVALID);
 
-    for (let [buttonSelector, expectedValue] of [
-      [".add-true", true],
-      [".add-false", false],
-      [".add-Number", 0],
-      [".add-String", ""],
+  await AboutConfigTest.withNewTab(async function() {
+    // The row for a new preference appears when searching for its name.
+    Assert.ok(!this.getRow(PREF_NEW));
+    this.search(PREF_NEW);
+    let row = this.getRow(PREF_NEW);
+    Assert.ok(row.hasClass("deleted"));
+
+    for (let [radioIndex, expectedValue, expectedEditingMode] of [
+      [0, true, false],
+      [1, 0, true],
+      [2, "", true],
     ]) {
-      this.search("testPref");
-      this.document.querySelector("#prefs button" + buttonSelector).click();
-      Assert.ok(Services.prefs.getChildList("").find(pref => pref == "testPref"));
-      Assert.ok(Preferences.get("testPref") === expectedValue);
-      this.document.querySelector("#prefs button[data-l10n-id='about-config-pref-delete']").click();
+      // Adding the preference should set the default for the data type.
+      row.element.querySelectorAll("input")[radioIndex].click();
+      row.editColumnButton.click();
+      Assert.ok(!row.hasClass("deleted"));
+      Assert.ok(Preferences.get(PREF_NEW) === expectedValue);
+
+      // Number and String preferences should be in edit mode.
+      Assert.equal(!!row.valueInput, expectedEditingMode);
+
+      // Repeat the search to verify that the preference remains.
+      this.search(PREF_NEW);
+      row = this.getRow(PREF_NEW);
+      Assert.ok(!row.hasClass("deleted"));
+      Assert.ok(!row.valueInput);
+
+      // Reset the preference, then continue by adding a different type.
+      row.resetColumnButton.click();
+      Assert.equal(Services.prefs.getPrefType(PREF_NEW),
+                   Ci.nsIPrefBranch.PREF_INVALID);
     }
   });
 });
 
 add_task(async function test_delete_user_pref() {
-  Services.prefs.setBoolPref("userAddedPref", true);
-  await AboutConfigTest.withNewTab(async function() {
-    let row = this.getRow("userAddedPref");
-    row.resetColumnButton.click();
-    Assert.ok(!this.getRow("userAddedPref"));
-    Assert.ok(!Services.prefs.getChildList("").includes("userAddedPref"));
+  const PREF_NEW = "test.aboutconfig.new";
 
-    // Search for nothing to test gPrefArray
-    this.search();
-    Assert.ok(!this.getRow("userAddedPref"));
-  });
+  for (let [radioIndex, testValue] of [
+    [0, false],
+    [1, -1],
+    [2, "value"],
+  ]) {
+    Preferences.set(PREF_NEW, testValue);
+    await AboutConfigTest.withNewTab(async function() {
+      // Deleting the preference should keep the row.
+      let row = this.getRow(PREF_NEW);
+      row.resetColumnButton.click();
+      Assert.ok(row.hasClass("deleted"));
+      Assert.equal(Services.prefs.getPrefType(PREF_NEW),
+                   Ci.nsIPrefBranch.PREF_INVALID);
+
+      // Re-adding the preference should keep the same value.
+      Assert.ok(row.element.querySelectorAll("input")[radioIndex].checked);
+      row.editColumnButton.click();
+      Assert.ok(!row.hasClass("deleted"));
+      Assert.ok(Preferences.get(PREF_NEW) === testValue);
+
+      // Searching again after deleting should remove the row.
+      row.resetColumnButton.click();
+      this.search();
+      Assert.ok(!this.getRow(PREF_NEW));
+    });
+  }
 });
 
 add_task(async function test_reset_user_pref() {
@@ -148,11 +186,8 @@ add_task(async function test_modify() {
       row.editColumnButton.click();
       Assert.equal(row.valueInput.value, Preferences.get(prefName));
       row.resetColumnButton.click();
-      if (willDelete) {
-        Assert.ok(!this.getRow(prefName));
-      } else {
-        Assert.ok(!row.hasClass("has-user-value"));
-      }
+      Assert.ok(!row.hasClass("has-user-value"));
+      Assert.equal(row.hasClass("deleted"), willDelete);
     }
   });
 });
