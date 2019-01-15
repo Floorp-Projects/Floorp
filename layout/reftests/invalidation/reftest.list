@@ -44,8 +44,8 @@ pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == t
 == filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-boundingBox filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-userSpace-at100 filter-userspace-offset.svg
 
-fails-if(!Android) != scroll-inactive-layers.html about:blank   # bug 1494110 for the fails-if(!Android) (Android is a false pass, no doubt)
-fails-if(!Android) != scroll-inactive-layers-2.html about:blank # bug 1494110 for the fails-if(!Android) (Android is a false pass, no doubt)
+fails-if(webrender) != scroll-inactive-layers.html about:blank
+fails-if(webrender) != scroll-inactive-layers-2.html about:blank
 != inactive-layertree-visible-region-1.html about:blank
 != inactive-layertree-visible-region-2.html about:blank
 != transform-floating-point-invalidation.html about:blank
