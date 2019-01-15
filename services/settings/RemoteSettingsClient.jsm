@@ -333,55 +333,20 @@ class RemoteSettingsClient extends EventEmitter {
         }
       } catch (e) {
         if (e.message.includes(INVALID_SIGNATURE)) {
-          // Signature verification failed during synchronzation.
+          // Signature verification failed during synchronization.
           reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
-          // if sync fails with a signature error, it's likely that our
+          // If sync fails with a signature error, it's likely that our
           // local data has been modified in some way.
           // We will attempt to fix this by retrieving the whole
           // remote collection.
-          const payload = await fetchRemoteRecords(collection.bucket, collection.name, expectedTimestamp);
           try {
-            await this._validateCollectionSignature(payload.data,
-                                                    payload.last_modified,
-                                                    collection,
-                                                    { expectedTimestamp, ignoreLocal: true });
+            syncResult = await this._retrySyncFromScratch(collection, expectedTimestamp);
           } catch (e) {
+            // If the signature fails again, or if an error occured during wiping out the
+            // local data, then we report it as a *signature retry* error.
             reportStatus = UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR;
             throw e;
           }
-
-          // The signature is good (we haven't thrown).
-          // Now we will Inspect what we had locally.
-          const { data: oldData } = await collection.list({ order: "" }); // no need to sort.
-
-          // We build a sync result as if a diff-based sync was performed.
-          syncResult = { created: [], updated: [], deleted: [] };
-
-          // If the remote last_modified is newer than the local last_modified,
-          // replace the local data
-          const localLastModified = await collection.db.getLastModified();
-          if (payload.last_modified >= localLastModified) {
-            const { data: newData } = payload;
-            await collection.clear();
-            await collection.loadDump(newData);
-
-            // Compare local and remote to populate the sync result
-            const oldById = new Map(oldData.map(e => [e.id, e]));
-            for (const r of newData) {
-              const old = oldById.get(r.id);
-              if (old) {
-                if (old.last_modified != r.last_modified) {
-                  syncResult.updated.push({ old, new: r });
-                }
-                oldById.delete(r.id);
-              } else {
-                syncResult.created.push(r);
-              }
-            }
-            // Records that remain in our map now are those missing from remote
-            syncResult.deleted = Array.from(oldById.values());
-          }
-
         } else {
           // The sync has thrown, it can be related to metadata, network or a general error.
           if (e.message == MISSING_SIGNATURE) {
@@ -398,24 +363,11 @@ class RemoteSettingsClient extends EventEmitter {
         }
       }
 
-      // Handle the obtained records (ie. apply locally through events).
-      // Build the event data list. It should be filtered (ie. by application target)
-      const { created: allCreated, updated: allUpdated, deleted: allDeleted } = syncResult;
-      const [created, deleted, updatedFiltered] = await Promise.all(
-          [allCreated, allDeleted, allUpdated.map(e => e.new)].map(this._filterEntries.bind(this))
-        );
-      // For updates, keep entries whose updated form matches the target.
-      const updatedFilteredIds = new Set(updatedFiltered.map(e => e.id));
-      const updated = allUpdated.filter(({ new: { id } }) => updatedFilteredIds.has(id));
-
+      const filteredSyncResult = await this._filterSyncResult(collection, syncResult);
       // If every changed entry is filtered, we don't even fire the event.
-      if (created.length || updated.length || deleted.length) {
-        // Read local collection of records (also filtered).
-        const { data: allData } = await collection.list({ order: "" }); // no need to sort.
-        const current = await this._filterEntries(allData);
-        const payload = { data: { current, created, updated, deleted } };
+      if (filteredSyncResult) {
         try {
-          await this.emit("sync", payload);
+          await this.emit("sync", { data: filteredSyncResult });
         } catch (e) {
           reportStatus = UptakeTelemetry.STATUS.APPLY_ERROR;
           throw e;
@@ -444,7 +396,7 @@ class RemoteSettingsClient extends EventEmitter {
    *
    * @param {Array<Object>} remoteRecords   The list of changes to apply to the local database.
    * @param {int} timestamp                 The timestamp associated with the list of remote records.
-   * @param {Collection} collection         Kinto.js Collection instance.
+   * @param {Collection} kintoCollection    Kinto.js Collection instance.
    * @param {Object} options
    * @param {int} options.expectedTimestamp Cache busting of collection metadata
    * @param {Boolean} options.ignoreLocal   When the signature verification is retried, since we refetch
@@ -476,6 +428,90 @@ class RemoteSettingsClient extends EventEmitter {
                                          this.signerName)) {
       throw new Error(INVALID_SIGNATURE + ` (${bucket}/${collection})`);
     }
+  }
+
+  /**
+   * Fetch the whole list of records from the server, verify the signature again
+   * and then compute a synchronization result as if the diff-based sync happened.
+   * And eventually, wipe out the local data.
+   *
+   * @param {Collection} kintoCollection    Kinto.js Collection instance.
+   * @param {int}        expectedTimestamp  Cache busting of collection metadata
+   *
+   * @returns {Promise<Object>} the computed sync result.
+   */
+  async _retrySyncFromScratch(kintoCollection, expectedTimestamp) {
+    const payload = await fetchRemoteRecords(kintoCollection.bucket, kintoCollection.name, expectedTimestamp);
+    await this._validateCollectionSignature(payload.data,
+      payload.last_modified,
+      kintoCollection,
+      { expectedTimestamp, ignoreLocal: true });
+
+    // The signature is good (we haven't thrown).
+    // Now we will Inspect what we had locally.
+    const { data: oldData } = await kintoCollection.list({ order: "" }); // no need to sort.
+
+    // We build a sync result as if a diff-based sync was performed.
+    const syncResult = { created: [], updated: [], deleted: [] };
+
+    // If the remote last_modified is newer than the local last_modified,
+    // replace the local data
+    const localLastModified = await kintoCollection.db.getLastModified();
+    if (payload.last_modified >= localLastModified) {
+      const { data: newData } = payload;
+      await kintoCollection.clear();
+      await kintoCollection.loadDump(newData);
+
+      // Compare local and remote to populate the sync result
+      const oldById = new Map(oldData.map(e => [e.id, e]));
+      for (const r of newData) {
+        const old = oldById.get(r.id);
+        if (old) {
+          if (old.last_modified != r.last_modified) {
+            syncResult.updated.push({ old, new: r });
+          }
+          oldById.delete(r.id);
+        } else {
+          syncResult.created.push(r);
+        }
+      }
+      // Records that remain in our map now are those missing from remote
+      syncResult.deleted = Array.from(oldById.values());
+    }
+    return syncResult;
+  }
+
+  /**
+   * Use the filter func to filter the lists of changes obtained from synchronization,
+   * and return them along with the filtered list of local records.
+   *
+   * If the filtered lists of changes are all empty, we return null (and thus don't
+   * bother listing local DB).
+   *
+   * @param {Collection} kintoCollection  Kinto.js Collection instance.
+   * @param {Object}     syncResult       Synchronization result without filtering.
+   *
+   * @returns {Promise<Object>} the filtered list of local records, plus the filtered
+   *                            list of created, updated and deleted records.
+   */
+  async _filterSyncResult(kintoCollection, syncResult) {
+    // Handle the obtained records (ie. apply locally through events).
+    // Build the event data list. It should be filtered (ie. by application target)
+    const { created: allCreated, updated: allUpdated, deleted: allDeleted } = syncResult;
+    const [created, deleted, updatedFiltered] = await Promise.all(
+      [allCreated, allDeleted, allUpdated.map(e => e.new)].map(this._filterEntries.bind(this))
+    );
+    // For updates, keep entries whose updated form matches the target.
+    const updatedFilteredIds = new Set(updatedFiltered.map(e => e.id));
+    const updated = allUpdated.filter(({ new: { id } }) => updatedFilteredIds.has(id));
+
+    if (!created.length && !updated.length && !deleted.length) {
+      return null;
+    }
+    // Read local collection of records (also filtered).
+    const { data: allData } = await kintoCollection.list({ order: "" }); // no need to sort.
+    const current = await this._filterEntries(allData);
+    return { created, updated, deleted, current };
   }
 
   /**
