@@ -1911,6 +1911,7 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
  protected:
   using CharsBase::addLineOfContext;
   using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
+  using CharsBase::matchCodeUnit;
   using CharsBase::matchLineTerminator;
   using TokenStreamCharsShared::drainCharBufferIntoAtom;
   using TokenStreamCharsShared::isAsciiCodePoint;
@@ -2096,6 +2097,13 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
   }
 
  public:
+  /**
+   * Consume any hashbang comment at the start of a Script or Module, if one is
+   * present.  Stops consuming just before any terminating LineTerminator or
+   * before an encoding error is encountered.
+   */
+  void consumeOptionalHashbangComment();
+
   JSAtom* getRawTemplateStringAtom() {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
 
