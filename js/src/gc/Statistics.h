@@ -360,8 +360,8 @@ struct Statistics {
     uint32_t tenured;
   } allocsSinceMinorGC;
 
-  /* Allocated space before the GC started. */
-  size_t preBytes;
+  /* Heap size before the GC started. */
+  size_t preHeapSize;
 
   /* If the GC was triggered by exceeding some threshold, record the
    * threshold and the value that exceeded it. */
