@@ -309,3 +309,19 @@ def win64_cargo_linker_config(linker, env):
 
 
 set_config('WIN64_CARGO_LINKER_CONFIG', win64_cargo_linker_config)
+
+
+@depends(target, c_compiler, rustc)
+@imports('os')
+def rustc_natvis_ldflags(target, compiler_info, rustc):
+    if target.kernel == 'WINNT' and compiler_info.type in ('msvc', 'clang-cl'):
+        sysroot = check_cmd_output(rustc, '--print', 'sysroot').strip()
+        etc = os.path.join(sysroot, 'lib/rustlib/etc')
+        ldflags = []
+        for f in os.listdir(etc):
+            if f.endswith('.natvis'):
+                ldflags.append('-NATVIS:' + normsep(os.path.join(etc, f)))
+        return ldflags
+
+
+set_config('RUSTC_NATVIS_LDFLAGS', rustc_natvis_ldflags)
