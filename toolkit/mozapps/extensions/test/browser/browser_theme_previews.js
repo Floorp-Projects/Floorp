@@ -48,16 +48,16 @@ add_task(async function testThemePreviewShown() {
   await init("theme");
 
   await AddonTestUtils.promiseInstallXPI(getThemeData());
-  let addon = await AddonManager.getAddonByID(id);
+  let theme = await AddonManager.getAddonByID(id);
 
-  ok(addon.screenshots[0].url, "The add-on has a preview URL");
-  let previewURL = addon.screenshots[0].url;
+  ok(theme.screenshots[0].url, "The add-on has a preview URL");
+  let previewURL = theme.screenshots[0].url;
 
   let doc = gManagerWindow.document;
   let item = doc.querySelector(`richlistitem[value="${id}"]`);
 
   await BrowserTestUtils.waitForCondition(
-    () => item.getAttribute("status") == "installed",
+    () => item.getAttribute("status") == "installed" && item.getAttribute("previewURL"),
     "Wait for the item to update to installed");
 
   is(item.getAttribute("previewURL"), previewURL, "The previewURL is set on the item");
@@ -70,8 +70,37 @@ add_task(async function testThemePreviewShown() {
   image = doc.querySelector(".theme-screenshot");
   is(image.src, previewURL, "The previewURL is set on the detail image src");
 
+  // Now check that an add-on doesn't have a preview (bug 1519616).
+  let extensionId = "extension@mochi.test";
+  await AddonTestUtils.promiseInstallXPI({
+    "manifest.json": {
+      applications: {
+        gecko: {id: extensionId},
+      },
+      manifest_version: 2,
+      name: "anextension",
+      description: "wow. such extension.",
+      author: "Woof",
+      version: "1",
+    },
+  });
+
+  await gCategoryUtilities.openType("extension");
+
+  // Go to the detail page.
+  item = doc.querySelector(`richlistitem[value="${extensionId}"]`);
+  item.click();
+  await wait_for_view_load(gManagerWindow);
+
+  // Check that the image has no src attribute.
+  image = doc.querySelector(".theme-screenshot");
+  ok(!image.src, "There is no preview for extensions");
+
   await close_manager(gManagerWindow);
-  await addon.uninstall();
+  await theme.uninstall();
+
+  let extension = await AddonManager.getAddonByID(extensionId);
+  await extension.uninstall();
 });
 
 add_task(async function testThemeOrdering() {
