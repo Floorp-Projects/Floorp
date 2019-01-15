@@ -8708,11 +8708,12 @@ static void MaybeReflowForInflationScreenSizeChange(
     metrics.SetBaseScrollOffset(apzScrollPosition);
 
     if (aIsRootContent) {
-      if (const Maybe<nsPoint>& visualOffset =
-              presShell->GetPendingVisualViewportOffset()) {
-        metrics.SetVisualViewportOffset(CSSPoint::FromAppUnits(*visualOffset));
-        metrics.SetVisualScrollUpdateType(FrameMetrics::eMainThread);
-        presShell->SetPendingVisualViewportOffset(Nothing());
+      if (const Maybe<nsIPresShell::VisualScrollUpdate>& visualUpdate =
+              presShell->GetPendingVisualScrollUpdate()) {
+        metrics.SetVisualViewportOffset(
+            CSSPoint::FromAppUnits(visualUpdate->mVisualScrollOffset));
+        metrics.SetVisualScrollUpdateType(visualUpdate->mUpdateType);
+        presShell->ClearPendingVisualScrollUpdate();
       }
     }
 
