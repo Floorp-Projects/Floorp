@@ -847,7 +847,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "978ce15c0a35"
+        "revision": "e900b40750d8"
     },
     "it": {
         "platforms": [
