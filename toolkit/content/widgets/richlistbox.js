@@ -10,6 +10,16 @@ MozElements.RichListBox = class RichListBox extends MozElements.BaseControl {
   constructor() {
     super();
 
+    this.selectedItems = new ChromeNodeList();
+    this._currentIndex = null;
+    this._lastKeyTime = 0;
+    this._incrementalString = "";
+    this._suppressOnSelect = false;
+    this._userSelecting = false;
+    this._selectTimeout = null;
+    this._currentItem = null;
+    this._selectionStart = null;
+
     this.addEventListener("keypress", event => {
       if (event.altKey || event.metaKey) {
         return;
@@ -135,17 +145,6 @@ MozElements.RichListBox = class RichListBox extends MozElements.BaseControl {
     }
 
     this.setAttribute("allowevents", "true");
-
-    this.selectedItems = new ChromeNodeList();
-    this._currentIndex = null;
-    this._lastKeyTime = 0;
-    this._incrementalString = "";
-    this._suppressOnSelect = false;
-    this._userSelecting = false;
-    this._selectTimeout = null;
-    this._currentItem = null;
-    this._selectionStart = null;
-
     this._refreshSelection();
   }
 
