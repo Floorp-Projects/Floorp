@@ -57,7 +57,6 @@ LayerTransactionParent::LayerTransactionParent(
       mChildEpoch{0},
       mParentEpoch{0},
       mVsyncRate(aVsyncRate),
-      mPendingTransaction{0},
       mDestroyed(false),
       mIPCOpen(false),
       mUpdateHitTestingTree(false) {
@@ -884,39 +883,52 @@ bool LayerTransactionParent::IsSameProcess() const {
   return OtherPid() == base::GetCurrentProcId();
 }
 
+void LayerTransactionParent::SetPendingTransactionId(
+    TransactionId aId, const VsyncId& aVsyncId,
+    const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
+    const TimeStamp& aTxnStartTime, const TimeStamp& aTxnEndTime, bool aContainsSVG,
+    const nsCString& aURL, const TimeStamp& aFwdTime) {
+  mPendingTransactions.AppendElement(
+      PendingTransaction{aId, aVsyncId, aVsyncStartTime, aRefreshStartTime,
+                         aTxnStartTime, aTxnEndTime, aFwdTime, aURL, aContainsSVG});
+}
+
 TransactionId LayerTransactionParent::FlushTransactionId(
-    const VsyncId& aId, TimeStamp& aCompositeEnd) {
-  if (mId.IsValid() && mPendingTransaction.IsValid() && !mVsyncRate.IsZero()) {
-    RecordContentFrameTime(mTxnVsyncId, mVsyncStartTime, mTxnStartTime, aId,
-                           aCompositeEnd, mTxnEndTime - mTxnStartTime,
-                           mVsyncRate, mContainsSVG, false);
-  }
+    const VsyncId& aCompositeId, TimeStamp& aCompositeEnd) {
+  TransactionId id;
+  for (auto& transaction : mPendingTransactions) {
+    id = transaction.mId;
+    if (mId.IsValid() && transaction.mId.IsValid() && !mVsyncRate.IsZero()) {
+      RecordContentFrameTime(
+          transaction.mTxnVsyncId, transaction.mVsyncStartTime,
+          transaction.mTxnStartTime, aCompositeId, aCompositeEnd,
+          transaction.mTxnEndTime - transaction.mTxnStartTime, mVsyncRate,
+          transaction.mContainsSVG, false);
+    }
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)
-  if (mPendingTransaction.IsValid()) {
-    if (mRefreshStartTime) {
-      int32_t latencyMs =
-          lround((aCompositeEnd - mRefreshStartTime).ToMilliseconds());
-      printf_stderr(
-          "From transaction start to end of generate frame latencyMs %d this "
-          "%p\n",
-          latencyMs, this);
+    if (transaction.mId.IsValid()) {
+      if (transaction.mRefreshStartTime) {
+        int32_t latencyMs = lround(
+            (aCompositeEnd - transaction.mRefreshStartTime).ToMilliseconds());
+        printf_stderr(
+            "From transaction start to end of generate frame latencyMs %d this "
+            "%p\n",
+            latencyMs, this);
+      }
+      if (transaction.mFwdTime) {
+        int32_t latencyMs =
+            lround((aCompositeEnd - transaction.mFwdTime).ToMilliseconds());
+        printf_stderr(
+            "From forwarding transaction to end of generate frame latencyMs %d "
+            "this %p\n",
+            latencyMs, this);
+      }
     }
-    if (mFwdTime) {
-      int32_t latencyMs = lround((aCompositeEnd - mFwdTime).ToMilliseconds());
-      printf_stderr(
-          "From forwarding transaction to end of generate frame latencyMs %d "
-          "this %p\n",
-          latencyMs, this);
-    }
-  }
 #endif
+  }
 
-  mRefreshStartTime = TimeStamp();
-  mTxnStartTime = TimeStamp();
-  mFwdTime = TimeStamp();
-  TransactionId id = mPendingTransaction;
-  mPendingTransaction = TransactionId{0};
+  mPendingTransactions.Clear();
   return id;
 }
 
