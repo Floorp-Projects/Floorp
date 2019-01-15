@@ -9,3 +9,12 @@ default-preferences pref(dom.meta-viewport.enabled,true) pref(apz.allow_zooming,
 == initial-scale-1.html no-zoom-ref.html
 == minimum-scale.html no-zoom-ref.html
 == clamped-by-default-minimum-scale.html initial-scale-0_25-ref.html
+
+# Skip below tests on Windows (bug 1516322) on Webrender (bug 1520096)
+skip-if(winWidget||webrender) == overflow-region.html overflow-region-ref.html
+skip-if(winWidget||webrender) == overflow-hidden-region.html overflow-region-ref.html
+skip-if(winWidget||webrender) == overflow-hidden-region-with-negative-left-positioned-element.html overflow-region-ref.html
+skip-if(winWidget||webrender) fails == horizontal-overflow-hidden-region.html horizontal-overflow-hidden-region-ref.html # bug 1508177
+skip-if(winWidget||webrender) == vertical-overflow-hidden-region.html about:blank
+skip-if(winWidget||webrender) == scroll-to-unreachable-area.html scroll-to-unreachable-area-ref.html
+skip-if(winWidget||webrender) == wrapped-text-at-icb.html wrapped-text-at-icb-ref.html
