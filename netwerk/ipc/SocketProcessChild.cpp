@@ -151,6 +151,13 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInitProfiler(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult SocketProcessChild::RecvSocketProcessTelemetryPing() {
+  const uint32_t kExpectedUintValue = 42;
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_SOCKET_ONLY_UINT,
+      kExpectedUintValue);
+  return IPC_OK();
+}
+
 void SocketProcessChild::DestroySocketProcessBridgeParent(ProcessId aId) {
   MOZ_ASSERT(NS_IsMainThread());
 

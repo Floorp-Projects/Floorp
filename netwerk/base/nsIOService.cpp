@@ -507,6 +507,15 @@ RefPtr<MemoryReportingProcess> nsIOService::GetSocketProcessMemoryReporter() {
   return new SocketProcessMemoryReporter();
 }
 
+NS_IMETHODIMP
+nsIOService::SocketProcessTelemetryPing() {
+  CallOrWaitForSocketProcess([]() {
+    Unused << gIOService->mSocketProcess->GetActor()
+                  ->SendSocketProcessTelemetryPing();
+  });
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(nsIOService, nsIIOService, nsINetUtil, nsISpeculativeConnect,
                   nsIObserver, nsIIOServiceInternal, nsISupportsWeakReference)
 
