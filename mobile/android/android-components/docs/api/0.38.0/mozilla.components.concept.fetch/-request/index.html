@@ -1,0 +1,132 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Request - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.fetch</a>&nbsp;/&nbsp;<a href="./index.html">Request</a><br/>
+<br/>
+<h1>Request</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Request</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L31">(source)</a>
+<p>The <a href="./index.html">Request</a> data class represents a resource request to be send by a <a href="../-client/index.html">Client</a>.</p>
+<p>It's API is inspired by the Request interface of the Web Fetch API:
+https://developer.mozilla.org/en-US/docs/Web/API/Request</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-body/index.html">Body</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">Body</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Closeable.html"><span class="identifier">Closeable</span></a></code>
+<p>A <a href="-body/index.html">Body</a> to be send with the <a href="./index.html">Request</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-method/index.html">Method</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">Method</span></code>
+<p>Request methods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-redirect/index.html">Redirect</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">Redirect</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Request</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Request$<init>(kotlin.String, mozilla.components.concept.fetch.Request.Method, mozilla.components.concept.fetch.MutableHeaders, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), mozilla.components.concept.fetch.Request.Body, mozilla.components.concept.fetch.Request.Redirect)/url">url</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Request$<init>(kotlin.String, mozilla.components.concept.fetch.Request.Method, mozilla.components.concept.fetch.MutableHeaders, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), mozilla.components.concept.fetch.Request.Body, mozilla.components.concept.fetch.Request.Redirect)/method">method</span><span class="symbol">:</span>&nbsp;<a href="-method/index.html"><span class="identifier">Method</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Method.GET<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Request$<init>(kotlin.String, mozilla.components.concept.fetch.Request.Method, mozilla.components.concept.fetch.MutableHeaders, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), mozilla.components.concept.fetch.Request.Body, mozilla.components.concept.fetch.Request.Redirect)/headers">headers</span><span class="symbol">:</span>&nbsp;<a href="../-mutable-headers/index.html"><span class="identifier">MutableHeaders</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;MutableHeaders()<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Request$<init>(kotlin.String, mozilla.components.concept.fetch.Request.Method, mozilla.components.concept.fetch.MutableHeaders, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), mozilla.components.concept.fetch.Request.Body, mozilla.components.concept.fetch.Request.Redirect)/connectTimeout">connectTimeout</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">,</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/TimeUnit.html"><span class="identifier">TimeUnit</span></a><span class="symbol">&gt;</span><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Request$<init>(kotlin.String, mozilla.components.concept.fetch.Request.Method, mozilla.components.concept.fetch.MutableHeaders, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), mozilla.components.concept.fetch.Request.Body, mozilla.components.concept.fetch.Request.Redirect)/readTimeout">readTimeout</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">,</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/TimeUnit.html"><span class="identifier">TimeUnit</span></a><span class="symbol">&gt;</span><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Request$<init>(kotlin.String, mozilla.components.concept.fetch.Request.Method, mozilla.components.concept.fetch.MutableHeaders, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), mozilla.components.concept.fetch.Request.Body, mozilla.components.concept.fetch.Request.Redirect)/body">body</span><span class="symbol">:</span>&nbsp;<a href="-body/index.html"><span class="identifier">Body</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Request$<init>(kotlin.String, mozilla.components.concept.fetch.Request.Method, mozilla.components.concept.fetch.MutableHeaders, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)), mozilla.components.concept.fetch.Request.Body, mozilla.components.concept.fetch.Request.Redirect)/redirect">redirect</span><span class="symbol">:</span>&nbsp;<a href="-redirect/index.html"><span class="identifier">Redirect</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Redirect.FOLLOW<span class="symbol">)</span></code>
+<p>The <a href="./index.html">Request</a> data class represents a resource request to be send by a <a href="../-client/index.html">Client</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="body.html">body</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">body</span><span class="symbol">: </span><a href="-body/index.html"><span class="identifier">Body</span></a><span class="symbol">?</span></code>
+<p>An optional body to be send with the request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="connect-timeout.html">connectTimeout</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">connectTimeout</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">,</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/TimeUnit.html"><span class="identifier">TimeUnit</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code>
+<p>A timeout to be used when connecting to the resource.  If the timeout expires before the
+connection can be established, a java.net.SocketTimeoutException is raised. A timeout of zero is interpreted as an
+infinite timeout.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="headers.html">headers</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">headers</span><span class="symbol">: </span><a href="../-mutable-headers/index.html"><span class="identifier">MutableHeaders</span></a><span class="symbol">?</span></code>
+<p>Optional HTTP headers to be send with the request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="method.html">method</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">method</span><span class="symbol">: </span><a href="-method/index.html"><span class="identifier">Method</span></a></code>
+<p>The request method (GET, POST, ..)</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="read-timeout.html">readTimeout</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">readTimeout</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">,</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/TimeUnit.html"><span class="identifier">TimeUnit</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code>
+<p>A timeout to be used when reading from the resource. If the timeout expires before there is
+data available for read, a java.net.SocketTimeoutException is raised. A timeout of zero is interpreted as an infinite
+timeout.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="redirect.html">redirect</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">redirect</span><span class="symbol">: </span><a href="-redirect/index.html"><span class="identifier">Redirect</span></a></code>
+<p>Whether the <a href="../-client/index.html">Client</a> should follow redirects (HTTP 3xx) for this request or not.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="url.html">url</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">url</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>The URL of the request.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

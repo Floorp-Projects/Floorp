@@ -1,0 +1,94 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ServoEngine - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.servo</a>&nbsp;/&nbsp;<a href="./index.html">ServoEngine</a><br/>
+<br/>
+<h1>ServoEngine</h1>
+<code><span class="keyword">class </span><span class="identifier">ServoEngine</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine/-engine/index.html"><span class="identifier">Engine</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-servo/src/main/java/mozilla/components/browser/engine/servo/ServoEngine.kt#L21">(source)</a>
+<p>Servo-based implementation of the Engine interface.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">ServoEngine</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.servo.ServoEngine$<init>(mozilla.components.concept.engine.DefaultSettings)/defaultSettings">defaultSettings</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine/-default-settings/index.html"><span class="identifier">DefaultSettings</span></a>&nbsp;<span class="symbol">=</span>&nbsp;DefaultSettings()<span class="symbol">)</span></code>
+<p>Servo-based implementation of the Engine interface.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="settings.html">settings</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">settings</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine/-settings/index.html"><span class="identifier">Settings</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine/settings.html">Engine.settings</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="create-session.html">createSession</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createSession</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.servo.ServoEngine$createSession(kotlin.Boolean)/private">private</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine/-engine-session/index.html"><span class="identifier">EngineSession</span></a></code>
+<p>Creates a new engine session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="create-session-state.html">createSessionState</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createSessionState</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.servo.ServoEngine$createSessionState(org.json.JSONObject)/json">json</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/org/json/JSONObject.html"><span class="identifier">JSONObject</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine/-engine-session-state/index.html"><span class="identifier">EngineSessionState</span></a></code>
+<p>Create a new <a href="../../mozilla.components.concept.engine/-engine-session-state/index.html">EngineSessionState</a> instance from the serialized JSON representation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="create-view.html">createView</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createView</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.servo.ServoEngine$createView(android.content.Context, android.util.AttributeSet)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.servo.ServoEngine$createView(android.content.Context, android.util.AttributeSet)/attrs">attrs</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/util/AttributeSet.html"><span class="identifier">AttributeSet</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine/-engine-view/index.html"><span class="identifier">EngineView</span></a></code>
+<p>Creates a new view for rendering web content.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="name.html">name</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">name</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Returns the name of this engine. The returned string might be used
+in filenames and must therefore only contain valid filename
+characters.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="speculative-connect.html">speculativeConnect</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">speculativeConnect</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.servo.ServoEngine$speculativeConnect(kotlin.String)/url">url</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Opens a speculative connection to the host of <a href="speculative-connect.html#mozilla.components.browser.engine.servo.ServoEngine$speculativeConnect(kotlin.String)/url">url</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

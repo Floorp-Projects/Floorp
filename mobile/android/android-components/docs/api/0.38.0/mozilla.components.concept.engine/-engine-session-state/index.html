@@ -1,0 +1,58 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>EngineSessionState - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.engine</a>&nbsp;/&nbsp;<a href="./index.html">EngineSessionState</a><br/>
+<br/>
+<h1>EngineSessionState</h1>
+<code><span class="keyword">interface </span><span class="identifier">EngineSessionState</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSessionState.kt#L14">(source)</a>
+<p>The state of an <a href="../-engine-session/index.html">EngineSession</a>. An instance can be obtained from <a href="../-engine-session/save-state.html">EngineSession.saveState</a>. Creating a new
+<a href="../-engine-session/index.html">EngineSession</a> and calling <a href="../-engine-session/restore-state.html">EngineSession.restoreState</a> with the same state instance should restore the previous
+session.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="to-j-s-o-n.html">toJSON</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">toJSON</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/org/json/JSONObject.html"><span class="identifier">JSONObject</span></a></code>
+<p>Create a JSON representation of this state that can be saved to disk.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.browser.engine.gecko/-gecko-engine-session-state/index.html">GeckoEngineSessionState</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">GeckoEngineSessionState</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">EngineSessionState</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.browser.engine.servo/-servo-engine-session-state/index.html">ServoEngineSessionState</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ServoEngineSessionState</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">EngineSessionState</span></a></code>
+<p>No-op implementation of <a href="./index.html">EngineSessionState</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.browser.engine.system/-system-engine-session-state/index.html">SystemEngineSessionState</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SystemEngineSessionState</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">EngineSessionState</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

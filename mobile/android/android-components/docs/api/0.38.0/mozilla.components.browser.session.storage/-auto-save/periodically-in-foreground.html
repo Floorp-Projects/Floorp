@@ -1,0 +1,20 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AutoSave.periodicallyInForeground - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.session.storage</a>&nbsp;/&nbsp;<a href="index.html">AutoSave</a>&nbsp;/&nbsp;<a href="./periodically-in-foreground.html">periodicallyInForeground</a><br/>
+<br/>
+<h1>periodicallyInForeground</h1>
+<a name="mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, android.arch.lifecycle.Lifecycle)"></a>
+<code><span class="keyword">fun </span><span class="identifier">periodicallyInForeground</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, android.arch.lifecycle.Lifecycle)/interval">interval</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a>&nbsp;<span class="symbol">=</span>&nbsp;300<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, android.arch.lifecycle.Lifecycle)/unit">unit</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/TimeUnit.html"><span class="identifier">TimeUnit</span></a>&nbsp;<span class="symbol">=</span>&nbsp;TimeUnit.SECONDS<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, android.arch.lifecycle.Lifecycle)/scheduler">scheduler</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/ScheduledExecutorService.html"><span class="identifier">ScheduledExecutorService</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Executors.newSingleThreadScheduledExecutor()<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, android.arch.lifecycle.Lifecycle)/lifecycle">lifecycle</span><span class="symbol">:</span>&nbsp;<span class="identifier">Lifecycle</span>&nbsp;<span class="symbol">=</span>&nbsp;ProcessLifecycleOwner.get().lifecycle<span class="symbol">)</span><span class="symbol">: </span><a href="index.html"><span class="identifier">AutoSave</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/AutoSave.kt#L42">(source)</a>
+<p>Saves the state periodically when the app is in the foreground.</p>
+<h3>Parameters</h3>
+<p><a name="interval"></a>
+<code>interval</code> - The interval in which the state should be saved to disk.</p>
+<p><a name="unit"></a>
+<code>unit</code> - The time unit of the <a href="periodically-in-foreground.html#mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, android.arch.lifecycle.Lifecycle)/interval">interval</a> parameter.</p>
+</BODY>
+</HTML>
