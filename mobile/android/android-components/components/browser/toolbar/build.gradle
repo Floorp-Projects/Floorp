@@ -23,19 +23,20 @@ android {
 
 dependencies {
     api project(':concept-toolbar')
-
-    implementation project(':browser-menu')
-
     api project(':ui-autocomplete')
-    implementation project(':ui-icons')
-
-    implementation project(':support-ktx')
     api project(':support-base')
 
+    implementation project(':browser-menu')
+    implementation project(':ui-icons')
+    implementation project(':support-ktx')
+
     implementation Dependencies.support_appcompat
+    implementation Dependencies.support_design
     implementation Dependencies.kotlin_stdlib
 
     testImplementation project(':support-test')
+
+    testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito

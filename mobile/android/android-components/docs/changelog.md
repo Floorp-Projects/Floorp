@@ -34,6 +34,12 @@ permalink: /changelog/
   )
   ```
 
+* **browser-toolbar**
+  * Added `BrowserToolbarBottomBehavior` - a [CoordinatorLayout.Behavior](https://developer.android.com/reference/android/support/design/widget/CoordinatorLayout.Behavior) implementation to be used when placing `BrowserToolbar` at the bottom of the screen. This behavior will:
+    * Show/Hide the `BrowserToolbar` automatically when scrolling vertically.
+    * On showing a [Snackbar] position it above the `BrowserToolbar`.
+    * Snap the `BrowserToolbar` to be hidden or visible when the user stops scrolling.
+
 # 0.38.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.37.0...v0.38.0),
