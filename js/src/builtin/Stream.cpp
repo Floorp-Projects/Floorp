@@ -2481,7 +2481,7 @@ static MOZ_MUST_USE JSObject* PromiseCall(JSContext* cx, HandleValue F,
                                           HandleValue V, HandleValue arg);
 
 static void ReadableStreamControllerClearAlgorithms(
-    ReadableStreamController* controller);
+    Handle<ReadableStreamController*> controller);
 
 /**
  * Unified implementation of ReadableStream controllers' [[CancelSteps]]
@@ -2945,12 +2945,14 @@ static bool ReadableStreamControllerShouldCallPull(
  *      ReadableByteStreamControllerClearAlgorithms ( controller )
  */
 static void ReadableStreamControllerClearAlgorithms(
-    ReadableStreamController* controller) {
+    Handle<ReadableStreamController*> controller) {
   // Step 1: Set controller.[[pullAlgorithm]] to undefined.
-  controller->setPullMethod(UndefinedHandleValue);
-
   // Step 2: Set controller.[[cancelAlgorithm]] to undefined.
+  // (In this implementation, the UnderlyingSource slot is part of the
+  // representation of these algorithms.)
+  controller->setPullMethod(UndefinedHandleValue);
   controller->setCancelMethod(UndefinedHandleValue);
+  ReadableStreamController::clearUnderlyingSource(controller);
 
   // Step 3 (of 3.9.4 only) : Set controller.[[strategySizeAlgorithm]] to
   // undefined.
