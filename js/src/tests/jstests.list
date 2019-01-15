@@ -1253,15 +1253,9 @@ skip script test262/harness/detachArrayBuffer.js
 # if it is to appear.  (Same for the various fake hashbangs that aren't
 # *actually* hashbangs, if they are to test what they were intended to test.)
 #
-# So for now, these tests must be explicitly skipped.  When hashbang support
-# lands, tests from below that aren't negative tests (that would require a
-# // |reftest| comment) can be enabled.  And whenever we figure out a way to
-# import even the negative tests to run them without alteration, we can enable
-# the rest of these.
-#
-# Bug 1519097 will add hashbang support and trim this list.  No bug has yet been
-# filed to deal with figuring out how to sensibly import the remaining scripts
-# here that will continue to fail after that.
+# So for now -- until we can figure out a way to encode "this is a negative
+# test" in a way that doesn't require changing the raw source of the test --
+# these tests must be explicitly skipped.  See bug 1531202.
 skip script test262/language/comments/hashbang/escaped-hashbang.js
 skip script test262/language/comments/hashbang/preceding-hashbang.js
 skip script test262/language/comments/hashbang/escaped-hash-043.js
