@@ -29,19 +29,27 @@ class AboutConfigRowTest {
     return this.element.querySelector(selector);
   }
 
+  get nameCell() {
+    return this.querySelector("td");
+  }
+
   get name() {
-    return this.querySelector("td").textContent;
+    return this.nameCell.textContent;
+  }
+
+  get valueCell() {
+    return this.querySelector("td.cell-value");
   }
 
   get value() {
-    return this.querySelector("td.cell-value").textContent;
+    return this.valueCell.textContent;
   }
 
   /**
    * Text input field when the row is in edit mode.
    */
   get valueInput() {
-    return this.querySelector("td.cell-value input");
+    return this.valueCell.querySelector("input");
   }
 
   /**
@@ -77,7 +85,9 @@ class AboutConfigTest {
   }
 
   constructor(browser) {
+    this.browser = browser;
     this.document = browser.contentDocument;
+    this.window = browser.contentWindow;
   }
 
   async setupNewTab(options) {
