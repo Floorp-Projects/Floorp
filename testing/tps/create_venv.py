@@ -149,7 +149,7 @@ def main():
     (options, args) = parser.parse_args(args=None, values=None)
 
     if len(args) != 1:
-         parser.error('Path to the environment has to be specified')
+        parser.error('Path to the environment has to be specified')
     target = args[0]
     assert(target)
 
@@ -178,8 +178,8 @@ def main():
         update_configfile(os.path.join(here, 'config', 'config.json.in'),
                           os.path.join(target, 'config.json'),
                           replacements={
-                          '__TESTDIR__': testdir.replace('\\','/'),
-                          '__EXTENSIONDIR__': extdir.replace('\\','/'),
+                          '__TESTDIR__': testdir.replace('\\', '/'),
+                          '__EXTENSIONDIR__': extdir.replace('\\', '/'),
                           '__FX_ACCOUNT_USERNAME__': options.username,
                           '__FX_ACCOUNT_PASSWORD__': options.password,
                           '__SYNC_ACCOUNT_USERNAME__': options.sync_username,
@@ -194,6 +194,7 @@ def main():
     # Print the user instructions
     print usage_message.format(TARGET=target,
                                BIN_NAME=bin_name)
+
 
 if __name__ == "__main__":
     main()

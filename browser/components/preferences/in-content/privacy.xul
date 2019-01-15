@@ -687,18 +687,6 @@
     data-l10n-id="collection-health-report-disabled"/>
 #endif
 
-#ifdef NIGHTLY_BUILD
-    <hbox align="center">
-      <checkbox id="collectBrowserErrorsBox"
-                class="tail-with-learn-more"
-                preference="browser.chrome.errorReporter.enabled"
-                data-l10n-id="collection-browser-errors"
-                flex="1"/>
-      <label id="collectBrowserErrorsLearnMore"
-             class="learnMore text-link" data-l10n-id="collection-browser-errors-link"/>
-    </hbox>
-#endif
-
 #ifdef MOZ_CRASHREPORTER
     <hbox align="center">
       <checkbox id="automaticallySubmitCrashesBox"

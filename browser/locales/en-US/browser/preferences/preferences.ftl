@@ -950,11 +950,6 @@ addon-recommendations-link = Learn more
 # or builds with no Telemetry support available.
 collection-health-report-disabled = Data reporting is disabled for this build configuration
 
-collection-browser-errors =
-    .label = Allow { -brand-short-name } to send browser error reports (including error messages) to { -vendor-short-name }
-    .accesskey = b
-collection-browser-errors-link = Learn more
-
 collection-backlogged-crash-reports =
     .label = Allow { -brand-short-name } to send backlogged crash reports on your behalf
     .accesskey = c
