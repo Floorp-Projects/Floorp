@@ -377,6 +377,12 @@ static bool IsFrameForSVG(const nsIFrame* aFrame) {
          nsSVGUtils::IsInSVGTextSubtree(aFrame);
 }
 
+static bool IsLastContinuationForColumnContent(const nsIFrame* aFrame) {
+  MOZ_ASSERT(aFrame);
+  return aFrame->Style()->GetPseudo() == nsCSSAnonBoxes::columnContent() &&
+         !aFrame->GetNextContinuation();
+}
+
 /**
  * Returns true iff aFrame explicitly prevents its descendants from floating
  * (at least, down to the level of descendants which themselves are
@@ -5850,11 +5856,6 @@ static nsIFrame* GetInsertNextSibling(nsIFrame* aParentFrame,
   return aParentFrame->PrincipalChildList().FirstChild();
 }
 
-/**
- * This function is called by ContentAppended() and ContentInserted() when
- * appending flowed frames to a parent's principal child list. It handles the
- * case where the parent is the trailing inline of an {ib} split.
- */
 void nsCSSFrameConstructor::AppendFramesToParent(
     nsFrameConstructorState& aState, nsContainerFrame* aParentFrame,
     nsFrameItems& aFrameList, nsIFrame* aPrevSibling, bool aIsRecursiveCall) {
@@ -5864,6 +5865,11 @@ void nsCSSFrameConstructor::AppendFramesToParent(
       "aParentFrame has a ib-split sibling with kids?");
   MOZ_ASSERT(!aPrevSibling || aPrevSibling->GetParent() == aParentFrame,
              "Parent and prevsibling don't match");
+  MOZ_ASSERT(
+      !aParentFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR) ||
+          !IsFramePartOfIBSplit(aParentFrame),
+      "We should have wiped aParentFrame in WipeContainingBlock() "
+      "if it's part of an IB split!");
 
   nsIFrame* nextSibling = ::GetInsertNextSibling(aParentFrame, aPrevSibling);
 
@@ -5935,6 +5941,32 @@ void nsCSSFrameConstructor::AppendFramesToParent(
       return AppendFramesToParent(aState, aParentFrame->GetParent(), ibSiblings,
                                   aParentFrame, true);
     }
+    return;
+  }
+
+  // If we're appending a list of frames at the last continuations of a
+  // ::-moz-column-content, we may need to create column-span siblings for them.
+  if (!nextSibling && IsLastContinuationForColumnContent(aParentFrame)) {
+    // Extract any initial non-column-span kids, and append them to
+    // ::-moz-column-content's child list.
+    nsFrameList initialNonColumnSpanKids =
+        aFrameList.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
+    AppendFrames(aParentFrame, kPrincipalList, initialNonColumnSpanKids);
+
+    if (aFrameList.IsEmpty()) {
+      // No more kids to process (there weren't any column-span kids).
+      return;
+    }
+
+    nsFrameList columnSpanSiblings = CreateColumnSpanSiblings(
+        aState, aParentFrame, aFrameList,
+        aParentFrame->IsAbsPosContainingBlock() ? aParentFrame : nullptr);
+    FinishBuildingColumns(aState,
+                          GetMultiColumnContainingBlockFor(aParentFrame),
+                          aParentFrame, columnSpanSiblings);
+
+    MOZ_ASSERT(columnSpanSiblings.IsEmpty(),
+               "The column-span siblings should be moved to the proper place!");
     return;
   }
 
@@ -10593,7 +10625,7 @@ void nsCSSFrameConstructor::ConstructBlock(
   CreateBulletFrameForListItemIfNeeded(blockFrameToCreateBullet);
 
   if (childItems.IsEmpty()) {
-    // No more column-span kids need to be processed.
+    // No more kids to process (there weren't any column-span kids).
     return;
   }
 
