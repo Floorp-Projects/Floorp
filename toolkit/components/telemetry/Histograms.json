@@ -10830,21 +10830,16 @@
     "n_buckets": 50,
     "description": "Time spent to read the missing part of the metadata from the cache entry file."
   },
-  "NETWORK_CACHE_METADATA_FIRST_READ_SIZE": {
-    "record_in_processes": ["main", "content"],
+  "NETWORK_CACHE_METADATA_SIZE_2": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1133739, 1495336],
     "expires_in_version": "never",
     "kind": "linear",
-    "high": 5119,
-    "n_buckets": 256,
-    "description": "Guessed size of the metadata that we read from the cache file as the first part."
-  },
-  "NETWORK_CACHE_METADATA_SIZE": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 5119,
-    "n_buckets": 256,
-    "description": "Actual size of the metadata parsed from the disk."
+    "low": 1024,
+    "high": 66560,
+    "n_buckets": 66,
+    "description": "Size of the metadata in bytes parsed from the disk."
   },
   "NETWORK_CACHE_HASH_STATS": {
     "record_in_processes": ["main", "content"],

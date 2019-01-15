@@ -38,9 +38,8 @@
       hitTest(tree, treecols, treecol1);
 
       // tree rows and cells
-      var treeBoxObject = tree.treeBoxObject;
-      var treeBodyBoxObj = tree.treeBoxObject.treeBody.boxObject;
-      var rect = treeBoxObject.getCoordsForCellItem(1, tree.columns[0], "cell");
+      var treeBodyBoxObj = tree.treeBody.boxObject;
+      var rect = tree.getCoordsForCellItem(1, tree.columns[0], "cell");
 
       var treeAcc = getAccessible(tree, [nsIAccessibleTable]);
       var cellAcc = treeAcc.getCellAt(1, 0);

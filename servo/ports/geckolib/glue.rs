@@ -1050,7 +1050,7 @@ pub extern "C" fn Servo_ResolveLogicalProperty(
     style: ComputedStyleBorrowed,
 ) -> nsCSSPropertyID {
     let longhand = LonghandId::from_nscsspropertyid(property_id)
-        .expect("There are no logical shorthands (yet)");
+        .expect("We shouldn't need to care about shorthands");
 
     longhand
         .to_physical(style.writing_mode)
