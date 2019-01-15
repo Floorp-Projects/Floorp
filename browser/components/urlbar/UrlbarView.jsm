@@ -262,7 +262,12 @@ class UrlbarView {
 
     let favicon = this._createElement("img");
     favicon.className = "urlbarView-favicon";
-    favicon.src = result.payload.icon || "chrome://mozapps/skin/places/defaultFavicon.svg";
+    if (result.type == UrlbarUtils.MATCH_TYPE.SEARCH ||
+        result.type == UrlbarUtils.MATCH_TYPE.KEYWORD) {
+      favicon.src = "chrome://browser/skin/search-glass.svg";
+    } else {
+      favicon.src = result.payload.icon || "chrome://mozapps/skin/places/defaultFavicon.svg";
+    }
     content.appendChild(favicon);
 
     let title = this._createElement("span");
