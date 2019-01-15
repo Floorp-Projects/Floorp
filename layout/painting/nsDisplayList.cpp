@@ -2560,6 +2560,8 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   if (aFlags & PAINT_USE_WIDGET_LAYERS) {
     layerManager = aBuilder->GetWidgetLayerManager(&view);
     if (layerManager) {
+      layerManager->SetContainsSVG(false);
+
       doBeginTransaction = !(aFlags & PAINT_EXISTING_TRANSACTION);
       widgetTransaction = true;
     }
