@@ -377,17 +377,22 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
 
   set docShellIsActive(val) {
     if (this.isRemoteBrowser) {
-      this.frameLoader.tabParent.docShellIsActive = val;
-      return val;
+      let { frameLoader } = this;
+      if (frameLoader && frameLoader.tabParent) {
+        frameLoader.tabParent.docShellIsActive = val;
+      }
+    } else if (this.docShell) {
+      this.docShell.isActive = val;
     }
-    if (this.docShell)
-      return this.docShell.isActive = val;
-    return false;
   }
 
   get docShellIsActive() {
     if (this.isRemoteBrowser) {
-      return this.frameLoader.tabParent.docShellIsActive;
+      let { frameLoader } = this;
+      if (frameLoader && frameLoader.tabParent) {
+        return frameLoader.tabParent.docShellIsActive;
+      }
+      return false;
     }
     return this.docShell && this.docShell.isActive;
   }
@@ -396,11 +401,11 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
     if (this.isRemoteBrowser) {
       let { frameLoader } = this;
       if (frameLoader && frameLoader.tabParent) {
-        return frameLoader.tabParent.renderLayers = val;
+        frameLoader.tabParent.renderLayers = val;
       }
-      return false;
+    } else {
+      this.docShellIsActive = val;
     }
-    return this.docShellIsActive = val;
   }
 
   get renderLayers() {
@@ -417,7 +422,7 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
   get hasLayers() {
     if (this.isRemoteBrowser) {
       let { frameLoader } = this;
-      if (frameLoader.tabParent) {
+      if (frameLoader && frameLoader.tabParent) {
         return frameLoader.tabParent.hasLayers;
       }
       return false;
@@ -727,7 +732,6 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
   set userTypedValue(val) {
     this.urlbarChangeTracker.userTyped();
     this._userTypedValue = val;
-    return val;
   }
 
   get userTypedValue() {

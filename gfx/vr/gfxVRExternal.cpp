@@ -486,7 +486,8 @@ void VRSystemManagerExternal::OpenShmem() {
       mShmemFile =
           CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0,
                              sizeof(VRExternalShmem), kShmemName);
-      MOZ_ASSERT(GetLastError() == 0);
+      MOZ_ASSERT(GetLastError() == 0 || GetLastError() == ERROR_ALREADY_EXISTS);
+      MOZ_ASSERT(mShmemFile);
     } else {
       mShmemFile = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, kShmemName);
     }

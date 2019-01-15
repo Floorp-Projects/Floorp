@@ -10,6 +10,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "nsITimer.h"
 #include "mozilla/Preferences.h"
+#include "VRGPUChild.h"
 
 namespace mozilla {
 namespace gfx {
@@ -150,6 +151,9 @@ void GPUProcessHost::Shutdown() {
 
     // The channel might already be closed if we got here unexpectedly.
     if (!mChannelClosed) {
+      if (VRGPUChild::IsCreated()) {
+        VRGPUChild::Get()->Close();
+      }
       mGPUChild->SendShutdownVR();
       mGPUChild->Close();
     }

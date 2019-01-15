@@ -155,6 +155,12 @@ def parse_args():
                         help='Get tests from the given file.')
     input_og.add_option('-x', '--exclude-file', action='append',
                         help='Exclude tests from the given file.')
+    input_og.add_option('--wpt', dest='wpt',
+                        type='choice',
+                        choices=['enabled', 'disabled', 'if-running-everything'],
+                        default='if-running-everything',
+                        help="Enable or disable shell web-platform-tests "
+                        "(default: enable if no test paths are specified).")
     input_og.add_option('--include', action='append', dest='requested_paths', default=[],
                         help='Include the given test file or directory.')
     input_og.add_option('--exclude', action='append', dest='excluded_paths', default=[],
@@ -434,7 +440,11 @@ def load_tests(options, requested_paths, excluded_paths):
     test_gen = manifest.load_reftests(test_dir, path_options, xul_tester)
 
     # WPT tests are already run in the browser in their own harness.
-    if not options.make_manifests:
+    wpt_enabled = (options.wpt == 'enabled' or
+                   (options.wpt == 'if-running-everything' and
+                    len(requested_paths) == 0 and
+                    not options.make_manifests))
+    if wpt_enabled:
         wpt_tests = load_wpt_tests(xul_tester,
                                    requested_paths,
                                    excluded_paths)

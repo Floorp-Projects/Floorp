@@ -72,19 +72,34 @@ class BuiltinCommands(object):
                 args = args[i+1:]
                 break
 
+        # If no command is typed yet, just offer the commands.
         if not command:
             print("\n".join(all_commands))
             return
 
         handler = self.context.commands.command_handlers[command]
+        # If a subcommand was typed, update the handler.
         for arg in args:
             if arg in handler.subcommand_handlers:
                 handler = handler.subcommand_handlers[arg]
                 break
 
-        parser = handler.parser
         targets = sorted(handler.subcommand_handlers.keys())
-        if not is_help:
-            targets.append('help')
-            targets.extend(chain(*[action.option_strings for action in parser._actions]))
+        if is_help:
+            print("\n".join(targets))
+            return
+
+        targets.append('help')
+
+        # The 'option_strings' are of the form [('-f', '--foo'), ('-b', '--bar'), ...].
+        option_strings = [item[0] for item in handler.arguments]
+        # Filter out positional arguments (we don't want to complete their metavar).
+        option_strings = [opt for opt in option_strings if opt[0].startswith('-')]
+        targets.extend(chain(*option_strings))
+
+        # If the command uses its own ArgumentParser, extract options from there as well.
+        if handler.parser:
+            targets.extend(chain(*[action.option_strings
+                                   for action in handler.parser._actions]))
+
         print("\n".join(targets))

@@ -1,8 +1,9 @@
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, "200", "OK");
+  dump(`test_accept_header ${request.path}?${request.queryString}\n`);
 
   if (request.queryString == "worker") {
-    response.setHeader("Content-Type", "application/json", false);
+    response.setHeader("Content-Type", "text/javascript", false);
     response.write("postMessage(42)");
 
     setState("data", JSON.stringify({type: "worker", accept: request.getHeader("Accept") }));
@@ -39,7 +40,7 @@ function handleRequest(request, response) {
   }
 
   if (request.queryString == "get") {
-    response.setHeader("Content-Type", "text/javascript", false);
+    response.setHeader("Content-Type", "application/json", false);
     response.write(getState("data"));
 
     setState("data", "");

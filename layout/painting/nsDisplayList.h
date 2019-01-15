@@ -6710,10 +6710,6 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
 
   void WriteDebugInfo(std::stringstream& aStream) override;
 
-  // Force the layer created for this item not to extend 3D context.
-  // See nsIFrame::BuildDisplayListForStackingContext()
-  void SetNoExtendContext() { mNoExtendContext = true; }
-
   void DoUpdateBoundsPreserves3D(nsDisplayListBuilder* aBuilder) override {
     MOZ_ASSERT(mFrame->Combines3DTransformWithAncestors() ||
                IsTransformSeparator());
@@ -6794,15 +6790,13 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
   mutable nsRect mBounds;
   // True for mBounds is valid.
   mutable bool mHasBounds;
-  // Be forced not to extend 3D context.  Since we don't create a
-  // transform item, a container layer, for every frames in a
-  // preserves3d context, the transform items of a child preserves3d
-  // context may extend the parent context not intented if the root of
-  // the child preserves3d context doesn't create a transform item.
-  // With this flags, we force the item not extending 3D context.
-  bool mNoExtendContext;
   // This item is a separator between 3D rendering contexts, and
   // mTransform have been presetted by the constructor.
+  // This also forces us not to extend the 3D context.  Since we don't create a
+  // transform item, a container layer, for every frame in a preserves3d
+  // context, the transform items of a child preserves3d context may extend the
+  // parent context unintendedly if the root of the child preserves3d context
+  // doesn't create a transform item.
   bool mIsTransformSeparator;
   // True if mTransformPreserves3D have been initialized.
   bool mTransformPreserves3DInited;

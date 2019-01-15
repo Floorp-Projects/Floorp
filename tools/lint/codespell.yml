@@ -24,6 +24,7 @@ codespell:
         - mobile/locales/en-US/
         - netwerk/locales/en-US/
         - python/docs/
+        - python/mach/docs/
         - python/mozlint/
         - python/safety/
         - services/sync/locales/en-US/

@@ -44,20 +44,40 @@ following are valid:
 Auto Completion
 ---------------
 
-A `bash completion`_ script is bundled with mach. To enable it with ``bash``,
-add the following to your ``~/.bashrc``, ``~/.bash_profile`` or equivalent:
+A `bash completion`_ script is bundled with mach, it can be used with either ``bash`` or ``zsh``.
+
+Bash
+~~~~
+
+Add the following to your ``~/.bashrc``, ``~/.bash_profile`` or equivalent:
 
 .. code-block:: shell
 
     source <srcdir>/python/mach/bash-completion.sh
 
-This script can also be used with ``zsh``. Add this to your ``~/.zshrc`` or
-equivalent:
+.. tip::
+
+    Windows users using the default shell bundled with mozilla-build should source the completion
+    script from ``~/.bash_profile`` (it may need to be created first).
+
+Zsh
+~~~
+
+Add this to your ``~/.zshrc`` or equivalent:
 
 .. code-block:: shell
 
-    autoload bashcompinit
-    bashcompinit
+    autoload -U bashcompinit && bashcompinit
+    source <srcdir>/python/mach/bash-completion.sh
+
+The ``compinit`` function also needs to be loaded, but if using a framework (like ``oh-my-zsh``),
+this will often be done for you. So if you see ``command not found: compdef``, you'll need to modify
+the above instructions to:
+
+.. code-block:: shell
+
+    autoload -U compinit && compinit
+    autoload -U bashcompinit && bashcompinit
     source <srcdir>/python/mach/bash-completion.sh
 
 Don't forget to substitute ``<srcdir>`` with the path to your checkout.
