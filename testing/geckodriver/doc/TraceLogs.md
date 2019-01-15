@@ -140,7 +140,7 @@ As with C#, the log output is helpfully propagated to stdout.
 Python
 ------
 
-The Selenium [Python client] comes with an
+The Selenium [Python client] comes with a
 [`selenium.webdriver.firefox.options.Options`] helper that can
 be used programmatically to construct the [`moz:firefoxOptions`]
 capabilities object:
@@ -150,7 +150,7 @@ capabilities object:
 
 	opts = Options()
 	opts.log.level = "trace"
-	driver = Firefox(firefox_options=opts)
+	driver = Firefox(options=opts)
 
 The log output is stored in a file called _geckodriver.log_ in your
 script’s current working directory.
