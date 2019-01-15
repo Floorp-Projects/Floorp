@@ -8,7 +8,7 @@
 #define mozilla_LaunchUnelevated_h
 
 #include "LauncherProcessWin.h"
-#include "LauncherResult.h"
+#include "mozilla/LauncherResult.h"
 #include "mozilla/Maybe.h"
 #include "nsWindowsHelpers.h"
 

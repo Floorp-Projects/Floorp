@@ -7,8 +7,8 @@
 #ifndef mozilla_SameBinary_h
 #define mozilla_SameBinary_h
 
-#include "LauncherResult.h"
-#include "NativeNt.h"
+#include "mozilla/LauncherResult.h"
+#include "mozilla/NativeNt.h"
 #include "nsWindowsHelpers.h"
 
 namespace mozilla {
