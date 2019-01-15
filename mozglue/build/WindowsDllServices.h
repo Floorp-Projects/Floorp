@@ -48,6 +48,7 @@ class ModuleLoadEvent {
     uintptr_t mBase;
     UniquePtr<wchar_t[]> mLdrName;
     UniquePtr<wchar_t[]> mFullPath;
+    double mLoadDurationMS;
   };
 
   ModuleLoadEvent() = default;

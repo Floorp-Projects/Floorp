@@ -38,7 +38,7 @@ static bool GetDirectoryName(const nsCOMPtr<nsIFile> aFile,
 
 ModuleLoadEvent::ModuleInfo::ModuleInfo(
     const glue::ModuleLoadEvent::ModuleInfo& aOther)
-    : mBase(aOther.mBase) {
+    : mBase(aOther.mBase), mLoadDurationMS(Some(aOther.mLoadDurationMS)) {
   if (aOther.mLdrName) {
     mLdrName.Assign(aOther.mLdrName.get());
   }
