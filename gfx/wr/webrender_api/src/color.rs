@@ -21,12 +21,10 @@ pub struct PremultipliedColorF {
     pub a: f32,
 }
 
+#[allow(missing_docs)]
 impl PremultipliedColorF {
-    ///
     pub const BLACK: Self = PremultipliedColorF { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
-    ///
     pub const TRANSPARENT: Self = PremultipliedColorF { r: 0.0, g: 0.0, b: 0.0, a: 0.0 };
-    ///
     pub const WHITE: Self = PremultipliedColorF { r: 1.0, g: 1.0, b: 1.0, a: 1.0 };
 
     pub fn to_array(&self) -> [f32; 4] {
@@ -47,12 +45,10 @@ pub struct ColorF {
     pub a: f32,
 }
 
+#[allow(missing_docs)]
 impl ColorF {
-    ///
     pub const BLACK: Self = ColorF { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
-    ///
     pub const TRANSPARENT: Self = ColorF { r: 0.0, g: 0.0, b: 0.0, a: 0.0 };
-    ///
     pub const WHITE: Self = ColorF { r: 1.0, g: 1.0, b: 1.0, a: 1.0 };
 
     /// Constructs a new `ColorF` from its components.
