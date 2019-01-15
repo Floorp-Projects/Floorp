@@ -94,7 +94,7 @@ TEST(MP4Metadata, EmptyStream) {
 TEST(MoofParser, EmptyStream) {
   RefPtr<ByteStream> stream = new TestStream(nullptr, 0);
 
-  MoofParser parser(stream, 0, false, true);
+  MoofParser parser(stream, 0, false);
   EXPECT_EQ(0u, parser.mOffset);
   EXPECT_TRUE(parser.ReachedEnd());
 
@@ -404,7 +404,7 @@ TEST(MoofParser, test_case_mp4) {
     RefPtr<ByteStream> stream =
         new TestStream(buffer.Elements(), buffer.Length());
 
-    MoofParser parser(stream, 0, false, true);
+    MoofParser parser(stream, 0, false);
     EXPECT_EQ(0u, parser.mOffset) << tests[test].mFilename;
     EXPECT_FALSE(parser.ReachedEnd()) << tests[test].mFilename;
     EXPECT_TRUE(parser.mInitRange.IsEmpty()) << tests[test].mFilename;
