@@ -2,7 +2,12 @@
 
 let {ExtensionTestCommon} = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
 
-const bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+let bundle;
+if (AppConstants.MOZ_APP_NAME == "thunderbird") {
+  bundle = Services.strings.createBundle("chrome://messenger/locale/addons.properties");
+} else {
+  bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+}
 const DUMMY_APP_NAME = "Dummy brandName";
 
 async function getManifestPermissions(extensionData) {
