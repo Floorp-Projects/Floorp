@@ -120,12 +120,11 @@ def nightly(apks, track, commit, date_string):
     task_graph[sign_task_id] = {}
     task_graph[sign_task_id]['task'] = queue.task(sign_task_id)
 
-    # TODO enable once first apk uploaded to Google Play manually
-    # push_task_id, push_task = generate_push_task(sign_task_id, apks, commit, is_staging)
-    # lib.tasks.schedule_task(queue, push_task_id, push_task)
-    #
-    # task_graph[push_task_id] = {}
-    # task_graph[push_task_id]['task'] = queue.task(push_task_id)
+    push_task_id, push_task = generate_push_task(sign_task_id, apks, commit, is_staging)
+    lib.tasks.schedule_task(queue, push_task_id, push_task)
+
+    task_graph[push_task_id] = {}
+    task_graph[push_task_id]['task'] = queue.task(push_task_id)
 
     print(json.dumps(task_graph, indent=4, separators=(',', ': ')))
 

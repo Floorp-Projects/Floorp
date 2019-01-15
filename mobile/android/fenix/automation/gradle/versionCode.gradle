@@ -37,8 +37,7 @@ ext {
     // minute.
     def time = new SimpleDateFormat("HHmm").format(today)
 
-    // todo after first build is deployed to Google Play generatedVersionCode = (year + day + time) as int
-    generatedVersionCode = 1
+    generatedVersionCode = (year + day + time) as int
 
     println("Generated versionCode: $generatedVersionCode")
     println()
