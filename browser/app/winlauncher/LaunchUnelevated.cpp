@@ -8,11 +8,10 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/LauncherResult.h"
 #include "mozilla/mscom/COMApartmentRegion.h"
 #include "mozilla/RefPtr.h"
 #include "nsWindowsHelpers.h"
-
-#include "LauncherResult.h"
 
 // For _bstr_t and _variant_t
 #include <comdef.h>
