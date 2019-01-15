@@ -256,8 +256,8 @@ class WebrtcVideoConduit
   void UpdateVideoStatsTimer();
   bool GetVideoEncoderStats(double* framerateMean, double* framerateStdDev,
                             double* bitrateMean, double* bitrateStdDev,
-                            uint32_t* droppedFrames,
-                            uint32_t* framesEncoded) override;
+                            uint32_t* droppedFrames, uint32_t* framesEncoded,
+                            Maybe<uint64_t>* qpSum) override;
   bool GetVideoDecoderStats(double* framerateMean, double* framerateStdDev,
                             double* bitrateMean, double* bitrateStdDev,
                             uint32_t* discardedPackets,
@@ -360,6 +360,7 @@ class WebrtcVideoConduit
     uint32_t PacketsLost() const;
     uint64_t BytesReceived() const;
     uint32_t PacketsReceived() const;
+    Maybe<uint64_t> QpSum() const;
 
    private:
     uint32_t mDroppedFrames = 0;
@@ -371,6 +372,7 @@ class WebrtcVideoConduit
     uint32_t mPacketsLost = 0;
     uint64_t mBytesReceived = 0;
     uint32_t mPacketsReceived = 0;
+    Maybe<uint64_t> mQpSum;
   };
 
   /**

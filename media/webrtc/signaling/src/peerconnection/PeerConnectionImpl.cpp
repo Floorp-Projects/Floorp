@@ -2868,15 +2868,17 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
             double bitrateStdDev;
             uint32_t droppedFrames;
             uint32_t framesEncoded;
+            Maybe<uint64_t> qpSum;
             if (mp.Conduit()->GetVideoEncoderStats(
                     &framerateMean, &framerateStdDev, &bitrateMean,
-                    &bitrateStdDev, &droppedFrames, &framesEncoded)) {
+                    &bitrateStdDev, &droppedFrames, &framesEncoded, &qpSum)) {
               s.mFramerateMean.Construct(framerateMean);
               s.mFramerateStdDev.Construct(framerateStdDev);
               s.mBitrateMean.Construct(bitrateMean);
               s.mBitrateStdDev.Construct(bitrateStdDev);
               s.mDroppedFrames.Construct(droppedFrames);
               s.mFramesEncoded.Construct(framesEncoded);
+              qpSum.apply([&s](uint64_t aQp) { s.mQpSum.Construct(aQp); });
             }
           }
           query->report->mOutboundRTPStreamStats.Value().AppendElement(
