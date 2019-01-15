@@ -54,6 +54,7 @@ class ModuleLoadEvent {
     uintptr_t mBase;
     nsString mLdrName;
     nsCOMPtr<nsIFile> mFile;  // Path as reported by GetModuleFileName()
+    Maybe<double> mLoadDurationMS;
 
     // The following members are populated as we evaluate the module.
     nsString mFilePathClean;  // Path sanitized for telemetry reporting.

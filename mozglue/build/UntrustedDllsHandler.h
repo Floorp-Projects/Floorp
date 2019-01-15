@@ -52,7 +52,8 @@ class UntrustedDllsHandler {
    * This method may be called even outside of Init() / Shutdown().
    */
   static void OnAfterModuleLoad(uintptr_t aBaseAddr,
-                                PUNICODE_STRING aLdrModuleName);
+                                PUNICODE_STRING aLdrModuleName,
+                                double aLoadDurationMS);
 
   /**
    * Call TakePendingEvents to get any events that have been recorded since
