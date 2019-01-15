@@ -117,7 +117,12 @@ class PrefRow {
     this.element.classList.toggle("locked", !!this.isLocked);
     this.element.classList.toggle("deleted", !this.exists);
     if (this.exists && !this.editing) {
-      this.valueCell.textContent = this.value;
+      // We need to place the text inside a "span" element to ensure that the
+      // text copied to the clipboard includes all whitespace.
+      let span = document.createElement("span");
+      span.textContent = this.value;
+      this.valueCell.textContent = "";
+      this.valueCell.append(span);
       if (this.type == "Boolean") {
         document.l10n.setAttributes(this.editButton, "about-config-pref-toggle");
         this.editButton.className = "button-toggle";
