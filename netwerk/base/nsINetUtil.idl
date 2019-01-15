@@ -224,6 +224,11 @@ interface nsINetUtil : nsISupports
    */
   ACString getReferrerPolicyString(in unsigned long aPolicy);
 
+  /**
+   * This is test-only. Send an IPC message to let socket process send a
+   * telemetry.
+   */
+  void socketProcessTelemetryPing();
 
   /**
    * This is a void method that is C++ implemented and always
