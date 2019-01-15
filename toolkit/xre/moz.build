@@ -190,6 +190,7 @@ LOCAL_INCLUDES += [
     '../components/find',
     '../components/printingui/ipc',
     '../components/windowwatcher',
+    '../mozapps/update/common',
     '../profile',
     '/config',
     '/dom/base',
