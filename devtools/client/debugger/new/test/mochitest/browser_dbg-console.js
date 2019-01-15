@@ -5,7 +5,7 @@ add_task(async function() {
   await selectSource(dbg, "switching-01");
 
   // open the console
-  await getSplitConsole(dbg);
+  await getDebuggerSplitConsole(dbg);
   ok(dbg.toolbox.splitConsole, "Split console is shown.");
 
   // close the console
