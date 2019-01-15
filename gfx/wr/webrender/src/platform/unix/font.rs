@@ -86,7 +86,7 @@ macro_rules! ft_dyn_fn {
                 FT_Err_Unimplemented_Feature as FT_Error
             }
             lazy_static! {
-                static ref func: unsafe extern "C" fn($($arg_type),*) -> FT_Error = {
+                static ref FUNC: unsafe extern "C" fn($($arg_type),*) -> FT_Error = {
                     unsafe {
                         let cname = CString::new(stringify!($func_name)).unwrap();
                         let ptr = dlsym(RTLD_DEFAULT, cname.as_ptr());
@@ -94,7 +94,7 @@ macro_rules! ft_dyn_fn {
                     }
                 };
             }
-            (*func)($($arg_name),*)
+            (*FUNC)($($arg_name),*)
         }
     }
 }

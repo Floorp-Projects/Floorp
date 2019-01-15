@@ -131,7 +131,7 @@ impl SpatialNode {
             origin_in_parent_reference_frame,
             invertible: true,
         };
-        Self::new(pipeline_id, parent_index, SpatialNodeType:: ReferenceFrame(info))
+        Self::new(pipeline_id, parent_index, SpatialNodeType::ReferenceFrame(info))
     }
 
     pub fn new_sticky_frame(

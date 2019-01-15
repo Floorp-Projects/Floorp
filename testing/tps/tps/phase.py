@@ -5,6 +5,7 @@
 import re
 import os.path
 
+
 class TPSTestPhase(object):
 
     lineRe = re.compile(
@@ -14,7 +15,7 @@ class TPSTestPhase(object):
                  firefoxRunner, logfn, ignore_unused_engines=False):
         self.phase = phase
         self.profile = profile
-        self.testname = str(testname) # this might be passed in as unicode
+        self.testname = str(testname)  # this might be passed in as unicode
         self.testpath = testpath
         self.logfile = logfile
         self.env = env
@@ -38,7 +39,7 @@ class TPSTestPhase(object):
             "testing.tps.ignoreUnusedEngines": self.ignore_unused_engines
         }
 
-        self.profile.set_preferences(prefs);
+        self.profile.set_preferences(prefs)
 
         self.log('\nLaunching Firefox for phase %s with prefs %s\n' %
                  (self.phase, str(prefs)))

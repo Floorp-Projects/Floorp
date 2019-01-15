@@ -86,6 +86,17 @@ pub const TILE_SIZE_WIDTH: i32 = 1024;
 pub const TILE_SIZE_HEIGHT: i32 = 256;
 const FRAMES_BEFORE_CACHING: usize = 2;
 
+/// The maximum size per axis of texture cache item,
+///  in WorldPixel coordinates.
+// TODO(gw): This size is quite arbitrary - we should do some
+//           profiling / telemetry to see when it makes sense
+//           to cache a picture.
+const MAX_CACHE_SIZE: f32 = 2048.0;
+/// The maximum size per axis of a surface,
+///  in WorldPixel coordinates.
+const MAX_SURFACE_SIZE: f32 = 4096.0;
+
+
 #[derive(Debug)]
 pub struct GlobalTransformInfo {
     /// Current (quantized) value of the transform, that is
@@ -1278,6 +1289,11 @@ impl SurfaceInfo {
         }
     }
 
+    pub fn fits_surface_size_limits(&self) -> bool {
+        self.map_local_to_surface.bounds.size.width <= MAX_SURFACE_SIZE &&
+        self.map_local_to_surface.bounds.size.height <= MAX_SURFACE_SIZE
+    }
+
     /// Take the set of child render tasks for this surface. This is
     /// used when constructing the render task tree.
     pub fn take_render_tasks(&mut self) -> Vec<RenderTaskId> {
@@ -1821,6 +1837,7 @@ impl PicturePrimitive {
         };
 
         let state = PictureState {
+            //TODO: check for MAX_CACHE_SIZE here?
             is_cacheable: true,
             map_local_to_pic,
             map_pic_to_world,
@@ -2020,37 +2037,11 @@ impl PicturePrimitive {
             let parent_raster_spatial_node_index = state.current_surface().raster_spatial_node_index;
             let surface_spatial_node_index = self.spatial_node_index;
 
-            // Check if there is perspective, and thus whether a new
-            // rasterization root should be established.
-            let xf = frame_context.clip_scroll_tree.get_relative_transform(
-                parent_raster_spatial_node_index,
-                surface_spatial_node_index,
-            ).expect("BUG: unable to get relative transform");
-
-            // TODO(gw): A temporary hack here to revert behavior to
-            //           always raster in screen-space. This is not
-            //           a problem yet, since we're not taking advantage
-            //           of this for caching yet. This is a workaround
-            //           for some existing issues with handling scale
-            //           when rasterizing in local space mode. Once
-            //           the fixes for those are in-place, we can
-            //           remove this hack!
-            //let local_scale = raster_space.local_scale();
-            // let wants_raster_root = xf.has_perspective_component() ||
-            //                         local_scale.is_some();
-            let establishes_raster_root = xf.has_perspective_component();
-
             // TODO(gw): For now, we always raster in screen space. Soon,
             //           we will be able to respect the requested raster
             //           space, and/or override the requested raster root
             //           if it makes sense to.
             let raster_space = RasterSpace::Screen;
-
-            let raster_spatial_node_index = if establishes_raster_root {
-                surface_spatial_node_index
-            } else {
-                parent_raster_spatial_node_index
-            };
 
             let inflation_factor = match composite_mode {
                 PictureCompositeMode::Filter(FilterOp::Blur(blur_radius)) => {
@@ -2063,32 +2054,58 @@ impl PicturePrimitive {
                 }
             };
 
-            let surface_index = state.push_surface(
+            let mut surface = {
+                // Check if there is perspective, and thus whether a new
+                // rasterization root should be established.
+                let xf = frame_context.clip_scroll_tree.get_relative_transform(
+                    parent_raster_spatial_node_index,
+                    surface_spatial_node_index,
+                ).expect("BUG: unable to get relative transform");
+
+                let establishes_raster_root = xf.has_perspective_component();
+
                 SurfaceInfo::new(
                     surface_spatial_node_index,
-                    raster_spatial_node_index,
+                    if establishes_raster_root {
+                        surface_spatial_node_index
+                    } else {
+                        parent_raster_spatial_node_index
+                    },
                     inflation_factor,
                     frame_context.screen_world_rect,
                     &frame_context.clip_scroll_tree,
                 )
-            );
+            };
 
-            self.raster_config = Some(RasterConfig {
-                composite_mode,
-                surface_index,
-                establishes_raster_root,
-            });
+            if surface_spatial_node_index != parent_raster_spatial_node_index &&
+                !surface.fits_surface_size_limits()
+            {
+                // fall back to the parent raster root
+                surface = SurfaceInfo::new(
+                    surface_spatial_node_index,
+                    parent_raster_spatial_node_index,
+                    inflation_factor,
+                    frame_context.screen_world_rect,
+                    &frame_context.clip_scroll_tree,
+                );
+            };
 
             // If we have a cache key / descriptor for this surface,
             // update any transforms it cares about.
             if let Some(ref mut surface_desc) = self.surface_desc {
                 surface_desc.update(
                     surface_spatial_node_index,
-                    raster_spatial_node_index,
+                    surface.raster_spatial_node_index,
                     frame_context.clip_scroll_tree,
                     raster_space,
                 );
             }
+
+            self.raster_config = Some(RasterConfig {
+                composite_mode,
+                establishes_raster_root: surface_spatial_node_index == surface.raster_spatial_node_index,
+                surface_index: state.push_surface(surface),
+            });
         }
 
         Some(mem::replace(&mut self.prim_list.pictures, SmallVec::new()))
@@ -2154,7 +2171,7 @@ impl PicturePrimitive {
                 let map_local_to_containing_block: SpaceMapper<LayoutPixel, LayoutPixel> = SpaceMapper::new_with_target(
                     containing_block_index,
                     cluster.spatial_node_index,
-                    LayoutRect::zero(),     // bounds aren't going to be used for this mapping
+                    LayoutRect::zero(), // bounds aren't going to be used for this mapping
                     &frame_context.clip_scroll_tree,
                 );
 
@@ -2341,10 +2358,6 @@ impl PicturePrimitive {
                 // picture, and just draw a minimal portion of the picture
                 // (clipped to screen bounds) to a temporary target each frame.
 
-                // TODO(gw): This size is quite arbitrary - we should do some
-                //           profiling / telemetry to see when it makes sense
-                //           to cache a picture.
-                const MAX_CACHE_SIZE: f32 = 2048.0;
                 let too_big_to_cache = unclipped.size.width > MAX_CACHE_SIZE ||
                                        unclipped.size.height > MAX_CACHE_SIZE;
 

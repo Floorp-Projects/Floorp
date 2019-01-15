@@ -424,12 +424,7 @@ void BrowsingContext::Blur(ErrorResult& aError) {
 Nullable<WindowProxyHolder> BrowsingContext::GetTop(ErrorResult& aError) {
   // We never return null or throw an error, but the implementation in
   // nsGlobalWindow does and we need to use the same signature.
-  BrowsingContext* bc = this;
-  BrowsingContext* parent;
-  while ((parent = bc->mParent)) {
-    bc = parent;
-  }
-  return WindowProxyHolder(bc);
+  return WindowProxyHolder(TopLevelBrowsingContext());
 }
 
 void BrowsingContext::GetOpener(JSContext* aCx,
