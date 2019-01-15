@@ -762,28 +762,26 @@ nsresult nsChildView::SetFocus(bool aRaise) {
 }
 
 // Override to set the cursor on the mac
-void nsChildView::SetCursor(nsCursor aCursor) {
+void nsChildView::SetCursor(nsCursor aDefaultCursor, imgIContainer* aImageCursor,
+                            uint32_t aHotspotX, uint32_t aHotspotY) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if ([mView isDragInProgress]) return;  // Don't change the cursor during dragging.
 
-  nsBaseWidget::SetCursor(aCursor);
-  [[nsCursorManager sharedInstance] setCursor:aCursor];
+  if (aImageCursor) {
+    nsresult rv = [[nsCursorManager sharedInstance] setCursorWithImage:aImageCursor
+                                                              hotSpotX:aHotspotX
+                                                              hotSpotY:aHotspotY
+                                                           scaleFactor:BackingScaleFactor()];
+    if (NS_SUCCEEDED(rv)) {
+      return;
+    }
+  }
+
+  nsBaseWidget::SetCursor(aDefaultCursor, nullptr, 0, 0);
+  [[nsCursorManager sharedInstance] setCursor:aDefaultCursor];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// implement to fix "hidden virtual function" warning
-nsresult nsChildView::SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsBaseWidget::SetCursor(aCursor, aHotspotX, aHotspotY);
-  return [[nsCursorManager sharedInstance] setCursorWithImage:aCursor
-                                                     hotSpotX:aHotspotX
-                                                     hotSpotY:aHotspotY
-                                                  scaleFactor:BackingScaleFactor()];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 #pragma mark -

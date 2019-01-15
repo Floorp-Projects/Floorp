@@ -1629,16 +1629,10 @@ int32_t nsCocoaWindow::RoundsWidgetCoordinatesTo() {
   return 1;
 }
 
-void nsCocoaWindow::SetCursor(nsCursor aCursor) {
-  if (mPopupContentView) {
-    mPopupContentView->SetCursor(aCursor);
-  }
-}
-
-nsresult nsCocoaWindow::SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY) {
-  if (mPopupContentView) return mPopupContentView->SetCursor(aCursor, aHotspotX, aHotspotY);
-
-  return NS_OK;
+void nsCocoaWindow::SetCursor(nsCursor aDefaultCursor, imgIContainer* aCursorImage,
+                              uint32_t aHotspotX, uint32_t aHotspotY) {
+  if (mPopupContentView)
+    mPopupContentView->SetCursor(aDefaultCursor, aCursorImage, aHotspotX, aHotspotY);
 }
 
 nsresult nsCocoaWindow::SetTitle(const nsAString& aTitle) {
