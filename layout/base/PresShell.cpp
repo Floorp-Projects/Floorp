@@ -10094,9 +10094,9 @@ void nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
 bool nsIPresShell::SetVisualViewportOffset(
     const nsPoint& aScrollOffset, const nsPoint& aPrevLayoutScrollPos) {
   bool didChange = false;
-  if (mVisualViewportOffset != aScrollOffset) {
-    nsPoint prevOffset = mVisualViewportOffset;
-    mVisualViewportOffset = aScrollOffset;
+  if (GetVisualViewportOffset() != aScrollOffset) {
+    nsPoint prevOffset = GetVisualViewportOffset();
+    mVisualViewportOffset = Some(aScrollOffset);
     didChange = true;
 
     if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {

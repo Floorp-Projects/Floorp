@@ -97,7 +97,7 @@ Please set a repository url with --repo on either googlesource or github.''' % h
         if prefix in yaml:
             new_yaml = re.sub(prefix + ' [v\.a-f0-9]+.*$',
                                 prefix + ' %s (%s).' % (revision, timestamp),
-                                yaml)
+                                yaml, flags=re.MULTILINE)
         else:
             new_yaml = '%s\n\n%s %s.' % (yaml, prefix, revision)
 

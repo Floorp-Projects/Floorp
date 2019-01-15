@@ -1,7 +1,9 @@
+import {connect} from "react-redux";
 import React from "react";
 
-export class CardGrid extends React.PureComponent {
+export class _CardGrid extends React.PureComponent {
   render() {
+    // const feed = this.props.DiscoveryStream.feeds[this.props.feed.url];
     return (
       <div>
         Card Grid
@@ -9,3 +11,5 @@ export class CardGrid extends React.PureComponent {
     );
   }
 }
+
+export const CardGrid = connect(state => ({DiscoveryStream: state.DiscoveryStream}))(_CardGrid);

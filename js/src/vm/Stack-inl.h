@@ -924,7 +924,6 @@ InterpreterActivation::InterpreterActivation(RunState& state, JSContext* cx,
 {
   regs_.prepareToRun(*entryFrame, state.script());
   MOZ_ASSERT(regs_.pc == state.script()->code());
-  MOZ_ASSERT_IF(entryFrame_->isEvalFrame(), state.script()->isActiveEval());
 }
 
 InterpreterActivation::~InterpreterActivation() {

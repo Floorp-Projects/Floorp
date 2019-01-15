@@ -122,7 +122,7 @@ raptor-chrome:
     - raptor-tp6-6-chrome
     - raptor-tp6-7-chrome
     - raptor-tp6-8-chrome
-    - raptor-tp6-9-firefox
+    - raptor-tp6-9-chrome
     - raptor-tp6-10-chrome
     - raptor-speedometer-chrome
     - raptor-stylebench-chrome

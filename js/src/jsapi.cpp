@@ -3602,7 +3602,6 @@ JS_PUBLIC_API JSScript* JS::FinishOffThreadBinASTDecode(
 #endif
 
 JS_PUBLIC_API JSObject* JS_GetGlobalFromScript(JSScript* script) {
-  MOZ_ASSERT(!script->isCachedEval());
   return &script->global();
 }
 

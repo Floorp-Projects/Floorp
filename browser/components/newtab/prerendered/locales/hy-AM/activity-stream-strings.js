@@ -21,7 +21,7 @@ window.gActivityStreamStrings = {
   "menu_action_unpin": "Ապամրացնել",
   "confirm_history_delete_p1": "Վստահ եք, որ ցանկանում եք ջնջել այս էջի ամեն մի օրինակ ձեր պատմությունից?",
   "confirm_history_delete_notice_p2": "Այս գործողությունը չի կարող վերացվել.",
-  "menu_action_save_to_pocket": "Պահպանեք գրպանում",
+  "menu_action_save_to_pocket": "Save to Pocket",
   "menu_action_delete_pocket": "Delete from Pocket",
   "menu_action_archive_pocket": "Archive in Pocket",
   "menu_action_show_file_mac_os": "Show in Finder",

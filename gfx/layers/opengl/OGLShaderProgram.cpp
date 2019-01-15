@@ -894,9 +894,9 @@ GLint ShaderProgramOGL::CreateShader(GLenum aShaderType,
 #endif
   ) {
     nsAutoCString log;
-    log.SetCapacity(len);
-    mGL->fGetShaderInfoLog(sh, len, (GLint *)&len, (char *)log.BeginWriting());
     log.SetLength(len);
+    mGL->fGetShaderInfoLog(sh, len, (GLint *)&len, (char *)log.BeginWriting());
+    log.Truncate(len);
 
     if (!success) {
       printf_stderr("=== SHADER COMPILATION FAILED ===\n");

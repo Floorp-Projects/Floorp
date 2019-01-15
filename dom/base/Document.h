@@ -3287,6 +3287,10 @@ class Document : public nsINode,
   bool UserHasInteracted() { return mUserHasInteracted; }
   void ResetUserInteractionTimer();
 
+  // This method would return current autoplay policy, it would be "allowed"
+  // , "allowed-muted" or "disallowed".
+  mozilla::dom::DocumentAutoplayPolicy AutoplayPolicy() const;
+
   // This should be called when this document receives events which are likely
   // to be user interaction with the document, rather than the byproduct of
   // interaction with the browser (i.e. a keypress to scroll the view port,
@@ -3301,6 +3305,8 @@ class Document : public nsINode,
   // Return true if NotifyUserGestureActivation() has been called on any
   // document in the document tree.
   bool HasBeenUserGestureActivated();
+
+  BrowsingContext* GetBrowsingContext() const;
 
   // This document is a WebExtension page, it might be a background page, a
   // popup, a visible tab, a visible iframe ...e.t.c.

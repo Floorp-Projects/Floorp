@@ -164,11 +164,29 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   .search-active & {
     border: $input-border-active;
     box-shadow: var(--newtab-textbox-focus-boxshadow);
+
+    .fake-caret {
+      display: block;
+    }
   }
 
   .search-hidden & {
     opacity: 0;
     visibility: hidden;
+  }
+
+  .fake-editable:focus {
+    outline: none;
+    caret-color: transparent;
+  }
+
+  .fake-editable {
+    color: transparent;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
 
   .fake-textbox {
@@ -190,10 +208,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       to {
         visibility: hidden;
       }
-    }
-
-    .search-active & {
-      display: block;
     }
   }
 }

@@ -13,9 +13,7 @@ dnl Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 dnl MOZ_ARG_ENABLE_BOOL(           NAME, HELP, IF-YES [, IF-NO [, ELSE]])
 dnl MOZ_ARG_DISABLE_BOOL(          NAME, HELP, IF-NO [, IF-YES [, ELSE]])
 dnl MOZ_ARG_ENABLE_STRING(         NAME, HELP, IF-SET [, ELSE])
-dnl MOZ_ARG_ENABLE_BOOL_OR_STRING( NAME, HELP, IF-YES, IF-NO, IF-SET[, ELSE]]])
 dnl MOZ_ARG_WITH_BOOL(             NAME, HELP, IF-YES [, IF-NO [, ELSE])
-dnl MOZ_ARG_WITHOUT_BOOL(          NAME, HELP, IF-NO [, IF-YES [, ELSE])
 dnl MOZ_ARG_WITH_STRING(           NAME, HELP, IF-SET [, ELSE])
 dnl MOZ_ARG_HEADER(Comment)
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
@@ -58,26 +56,10 @@ dnl MOZ_ARG_ENABLE_STRING(NAME, HELP, IF-SET [, ELSE])
 AC_DEFUN([MOZ_ARG_ENABLE_STRING],
 [MOZ_AC_ARG_ENABLE([$1], [$2], [$3], [$4])])
 
-dnl MOZ_ARG_ENABLE_BOOL_OR_STRING(NAME, HELP, IF-YES, IF-NO, IF-SET[, ELSE]]])
-AC_DEFUN([MOZ_ARG_ENABLE_BOOL_OR_STRING],
-[ifelse([$5], , 
- [errprint([Option, $1, needs an "IF-SET" argument.
-])
-  m4exit(1)],
- [MOZ_AC_ARG_ENABLE([$1], [$2],
-  [MOZ_TWO_STRING_TEST([$1], [$enableval], yes, [$3], no, [$4], [$5])],
-  [$6])])])
-
 dnl MOZ_ARG_WITH_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE])
 AC_DEFUN([MOZ_ARG_WITH_BOOL],
 [MOZ_AC_ARG_WITH([$1], [$2],
  [MOZ_TWO_STRING_TEST([$1], [$withval], yes, [$3], no, [$4])],
- [$5])])
-
-dnl MOZ_ARG_WITHOUT_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE])
-AC_DEFUN([MOZ_ARG_WITHOUT_BOOL],
-[MOZ_AC_ARG_WITH([$1], [$2],
- [MOZ_TWO_STRING_TEST([$1], [$withval], no, [$3], yes, [$4])],
  [$5])])
 
 dnl MOZ_ARG_WITH_STRING(NAME, HELP, IF-SET [, ELSE])

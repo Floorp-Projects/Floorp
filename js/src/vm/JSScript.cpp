@@ -3430,6 +3430,7 @@ static void InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms) {
   script->setFlag(ImmutableFlags::BindingsAccessedDynamically,
                   bce->sc->bindingsAccessedDynamically());
   script->setFlag(ImmutableFlags::HasSingletons, bce->hasSingletons);
+  script->setFlag(ImmutableFlags::IsForEval, bce->sc->isEvalContext());
 
   script->nfixed_ = bce->maxFixedSlots;
   script->nslots_ = nslots;
