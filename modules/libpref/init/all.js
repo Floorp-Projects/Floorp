@@ -619,6 +619,11 @@ pref("media.allowed-to-play.enabled", true);
 pref("media.allowed-to-play.enabled", false);
 #endif
 
+// This pref is used to enable/disable the `document.autoplayPolicy` API which
+// returns a enum string which presents current autoplay policy and can change
+// overtime based on user session activity.
+pref("dom.media.autoplay.autoplay-policy-api", false);
+
 // The default number of decoded video frames that are enqueued in
 // MediaDecoderReader's mVideoQueue.
 pref("media.video-queue.default-size", 10);
