@@ -5042,17 +5042,17 @@ void nsIFrame::AssociateImage(const nsStyleImage& aImage,
 
 nsresult nsFrame::GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) {
   FillCursorInformationFromStyle(StyleUI(), aCursor);
-  if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
+  if (StyleCursorKind::Auto == aCursor.mCursor) {
     // If this is editable, I-beam cursor is better for most elements.
     aCursor.mCursor = (mContent && mContent->IsEditable())
-                          ? NS_STYLE_CURSOR_TEXT
-                          : NS_STYLE_CURSOR_DEFAULT;
+                          ? StyleCursorKind::Text
+                          : StyleCursorKind::Default;
   }
-  if (NS_STYLE_CURSOR_TEXT == aCursor.mCursor &&
+  if (StyleCursorKind::Text == aCursor.mCursor &&
       GetWritingMode().IsVertical()) {
     // Per CSS UI spec, UA may treat value 'text' as
     // 'vertical-text' for vertical text.
-    aCursor.mCursor = NS_STYLE_CURSOR_VERTICAL_TEXT;
+    aCursor.mCursor = StyleCursorKind::VerticalText;
   }
 
   return NS_OK;
