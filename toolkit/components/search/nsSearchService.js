@@ -440,13 +440,20 @@ var ensureKnownRegion = async function(ss) {
 // Store the result of the geoip request as well as any other values and
 // telemetry which depend on it.
 function storeRegion(region) {
-  Services.prefs.setCharPref("browser.search.region", region);
-  // and telemetry...
   let isTimezoneUS = isUSTimezone();
+  // If it's a US region, but not a US timezone, we don't store the value.
+  // This works because no region defaults to ZZ (unknown) in nsURLFormatter
+  if (region != "US" || isTimezoneUS) {
+    Services.prefs.setCharPref("browser.search.region", region);
+  }
+
+  // and telemetry...
   if (region == "US" && !isTimezoneUS) {
+    LOG("storeRegion mismatch - US Region, non-US timezone");
     Services.telemetry.getHistogramById("SEARCH_SERVICE_US_COUNTRY_MISMATCHED_TIMEZONE").add(1);
   }
   if (region != "US" && isTimezoneUS) {
+    LOG("storeRegion mismatch - non-US Region, US timezone");
     Services.telemetry.getHistogramById("SEARCH_SERVICE_US_TIMEZONE_MISMATCHED_COUNTRY").add(1);
   }
   // telemetry to compare our geoip response with platform-specific country data.
