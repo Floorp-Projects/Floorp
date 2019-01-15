@@ -3338,7 +3338,7 @@ pref("dom.ipc.plugins.asyncdrawing.enabled", true);
 pref("dom.ipc.plugins.forcedirect.enabled", true);
 
 // Enable multi by default.
-#if defined(NIGHTLY_BUILD) && !defined(MOZ_ASAN)
+#if !defined(MOZ_ASAN)
 pref("dom.ipc.processCount", 8);
 #else
 pref("dom.ipc.processCount", 4);
