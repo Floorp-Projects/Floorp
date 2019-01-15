@@ -92,6 +92,20 @@ const FEATURES = [
       return Services.prefs.getBoolPref("plugins.flashBlock.enabled");
     },
   },
+  { name: "fingerprinting",
+    list: ["urlclassifier.features.fingerprinting.blacklistTables",
+           "urlclassifier.features.fingerprinting.whitelistTables"],
+    enabled() {
+      return Services.prefs.getBoolPref("privacy.trackingprotection.fingerprinting.enabled", false);
+    },
+  },
+  { name: "cryptomining",
+    list: ["urlclassifier.features.cryptomining.blacklistTables",
+           "urlclassifier.features.cryptomining.whitelistTables"],
+    enabled() {
+      return Services.prefs.getBoolPref("privacy.trackingprotection.cryptomining.enabled", false);
+    },
+  },
 ];
 
 var SafeBrowsing = {
