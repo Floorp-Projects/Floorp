@@ -52,9 +52,9 @@ tasks:
         else: mobile-1-decision
 
       build_worker_type:
-        $if: 'is_repo_trusted && tasks_for in ["github-release", "cron"]'
-        then: gecko-focus
-        else: android-components-g
+        $if: 'is_repo_trusted'
+        then: mobile-3-b-andrcmp
+        else: mobile-1-b-andrcmp
 
       tasks_priority:
         $if: 'is_repo_trusted'
@@ -98,6 +98,7 @@ tasks:
               TASK_ID: ${decision_task_id}
               TASKS_PRIORITY: ${tasks_priority}
               SCHEDULER_ID: ${scheduler_id}
+              BUILD_WORKER_TYPE: ${build_worker_type}
               MOBILE_HEAD_REPOSITORY: ${repository}
               MOBILE_HEAD_BRANCH: ${head_branch}
               MOBILE_HEAD_REV: ${head_rev}

@@ -8,7 +8,7 @@ import taskcluster
 
 
 class TaskBuilder(object):
-    def __init__(self, task_id, repo_url, branch, commit, owner, source, scheduler_id, tasks_priority='lowest'):
+    def __init__(self, task_id, repo_url, branch, commit, owner, source, scheduler_id, build_worker_type, tasks_priority='lowest'):
         self.task_id = task_id
         self.repo_url = repo_url
         self.branch = branch
@@ -16,6 +16,7 @@ class TaskBuilder(object):
         self.owner = owner
         self.source = source
         self.scheduler_id = scheduler_id
+        self.build_worker_type = build_worker_type
         self.tasks_priority = tasks_priority
 
     def raw_task(self, name, description, command, dependencies=[],
@@ -61,8 +62,7 @@ class TaskBuilder(object):
         }
 
     def build_task(self, name, description, command, dependencies=[],
-                   artifacts={}, scopes=[], routes=[], features={},
-                   is_staging=False):
+                   artifacts={}, scopes=[], routes=[], features={}):
         created = datetime.datetime.now()
         expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
@@ -73,8 +73,7 @@ class TaskBuilder(object):
         })
 
         return {
-            # TODO: Use mobile-X-build workerType
-            "workerType": 'android-components-g' if is_staging else 'gecko-focus',
+            "workerType": self.build_worker_type,
             "taskGroupId": self.task_id,
             "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),

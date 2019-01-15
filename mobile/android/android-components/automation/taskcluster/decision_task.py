@@ -22,6 +22,7 @@ REPO_URL = os.environ.get('MOBILE_HEAD_REPOSITORY')
 BRANCH = os.environ.get('MOBILE_HEAD_BRANCH')
 COMMIT = os.environ.get('MOBILE_HEAD_REV')
 PR_TITLE = os.environ.get('GITHUB_PULL_TITLE', '')
+BUILD_WORKER_TYPE = os.environ.get('BUILD_WORKER_TYPE')
 
 # If we see this text inside a pull request title then we will not execute any tasks for this PR.
 SKIP_TASKS_TRIGGER = '[ci skip]'
@@ -40,7 +41,7 @@ def create_raw_task(name, description, full_command, scopes = []):
     deadline = taskcluster.fromNow('1 day')
 
     return {
-        "workerType": 'android-components-g',
+        "workerType": BUILD_WORKER_TYPE,
         "taskGroupId": TASK_ID,
         "expires": taskcluster.stringDate(expires),
         "retries": 5,

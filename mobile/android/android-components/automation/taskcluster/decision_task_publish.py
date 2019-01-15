@@ -30,6 +30,7 @@ BUILDER = lib.tasks.TaskBuilder(
     owner="skaspari@mozilla.com",
     source='{}/raw/{}/.taskcluster.yml'.format(REPO_URL, HEAD_REV),
     scheduler_id=os.environ.get('SCHEDULER_ID'),
+    build_worker_type=os.environ.get('BUILD_WORKER_TYPE'),
     tasks_priority=os.environ.get('TASKS_PRIORITY'),
 )
 
@@ -40,7 +41,7 @@ def _get_gradle_module_name(name):
     return ':{}'.format(name)
 
 
-def generate_build_task(version, artifact_info, is_snapshot, is_staging):
+def generate_build_task(version, artifact_info, is_snapshot):
     checkout = ("export TERM=dumb && git fetch {} {} --tags && "
                 "git config advice.detachedHead false && "
                 "git checkout {}".format(REPO_URL, BRANCH, HEAD_REV))
@@ -77,8 +78,7 @@ def generate_build_task(version, artifact_info, is_snapshot, is_staging):
             'chainOfTrust': True,
         },
         scopes=[],
-        artifacts=artifacts,
-        is_staging=is_staging
+        artifacts=artifacts
     )
 
 
@@ -185,7 +185,7 @@ def release(version, is_snapshot, is_staging):
     for artifact_info in artifacts_info:
         build_task_id = generate_and_append_task_to_task_graph(
             queue, task_graph, generate_build_task,
-            generate_args=(version, artifact_info, is_snapshot, is_staging)
+            generate_args=(version, artifact_info, is_snapshot)
         )
 
         generate_and_append_task_to_task_graph(
