@@ -153,9 +153,14 @@ inline bool nsINode::IsEditable() const {
     return true;
   }
 
-  Document* doc = GetUncomposedDoc();
+  // All editable anonymous content should be made explicitly editable via the
+  // NODE_IS_EDITABLE flag.
+  if (IsInNativeAnonymousSubtree()) {
+    return false;
+  }
 
   // Check if the node is in a document and the document is in designMode.
+  Document* doc = GetUncomposedDoc();
   return doc && doc->HasFlag(NODE_IS_EDITABLE);
 }
 
