@@ -2,10 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ChromeUtils.import("resource://gre/modules/DeferredTask.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
+const SEARCH_TIMEOUT_MS = 500;
+
 let gDefaultBranch = Services.prefs.getDefaultBranch("");
+let gFilterPrefsTask = new DeferredTask(() => filterPrefs(), SEARCH_TIMEOUT_MS);
 
 /**
  * Maps the name of each preference in the back-end to its PrefRow object,
@@ -289,10 +293,21 @@ function loadPrefs() {
     new PrefRow(name);
   }
 
-  search.addEventListener("keypress", e => {
-    if (e.key == "Enter") {
-      filterPrefs();
+  search.addEventListener("keypress", event => {
+    switch (event.key) {
+      case "Escape":
+        search.value = "";
+        // Fall through.
+      case "Enter":
+        gFilterPrefsTask.disarm();
+        filterPrefs();
     }
+  });
+
+  search.addEventListener("input", () => {
+    // We call "disarm" to restart the timer at every input.
+    gFilterPrefsTask.disarm();
+    gFilterPrefsTask.arm();
   });
 
   prefs.addEventListener("click", event => {
