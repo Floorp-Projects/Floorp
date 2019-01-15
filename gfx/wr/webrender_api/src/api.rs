@@ -1038,6 +1038,8 @@ bitflags! {
         /// Show picture caching debug overlay
         const PICTURE_CACHING_DBG   = 1 << 15;
         const TEXTURE_CACHE_DBG_DISABLE_SHRINK = 1 << 16;
+        /// Highlight all primitives with colors based on kind.
+        const PRIMITIVE_DBG = 1 << 17;
     }
 }
 

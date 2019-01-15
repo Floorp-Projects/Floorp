@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipMode, ColorF, PictureRect, ColorU, LayoutVector2D};
+use api::{BorderRadius, ClipMode, ColorF, DebugFlags, PictureRect, ColorU, LayoutVector2D};
 use api::{DeviceIntRect, DevicePixelScale, DeviceRect, WorldVector2D};
 use api::{FilterOp, ImageRendering, TileOffset, RepeatMode, WorldPoint, WorldSize};
 use api::{LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize};
@@ -17,6 +17,8 @@ use border::BorderSegmentCacheKey;
 use clip::{ClipStore};
 use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex, ROOT_SPATIAL_NODE_INDEX};
 use clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem};
+#[cfg(feature = "debug_renderer")]
+use debug_colors;
 #[cfg(feature = "debug_renderer")]
 use debug_render::DebugItem;
 use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
@@ -1997,6 +1999,29 @@ impl PrimitiveStore {
                         continue;
                     }
                 };
+
+                // When the debug display is enabled, paint a colored rectangle around each
+                // primitive.
+                #[cfg(feature = "debug_renderer")]
+                {
+                    if frame_context.debug_flags.contains(DebugFlags::PRIMITIVE_DBG) {
+                        let debug_color = match prim_instance.kind {
+                            PrimitiveInstanceKind::Picture { .. } => debug_colors::GREEN,
+                            PrimitiveInstanceKind::TextRun { .. } => debug_colors::RED,
+                            PrimitiveInstanceKind::LineDecoration { .. } => debug_colors::PURPLE,
+                            PrimitiveInstanceKind::NormalBorder { .. } |
+                            PrimitiveInstanceKind::ImageBorder { .. } => debug_colors::ORANGE,
+                            PrimitiveInstanceKind::Rectangle { .. } => ColorF { r: 0.8, g: 0.8, b: 0.8, a: 0.5 },
+                            PrimitiveInstanceKind::YuvImage { .. } => debug_colors::BLUE,
+                            PrimitiveInstanceKind::Image { .. } => debug_colors::BLUE,
+                            PrimitiveInstanceKind::LinearGradient { .. } => debug_colors::PINK,
+                            PrimitiveInstanceKind::RadialGradient { .. } => debug_colors::PINK,
+                            PrimitiveInstanceKind::Clear { .. } => debug_colors::CYAN,
+                        };
+                        let debug_rect = clipped_world_rect * frame_context.device_pixel_scale;
+                        frame_state.scratch.push_debug_rect(debug_rect, debug_color);
+                    }
+                }
 
                 let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.prim_info.len() as u32);
 
