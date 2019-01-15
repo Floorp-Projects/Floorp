@@ -21,8 +21,6 @@ layout: geckoview
 - Added GeckoRuntimeSetting for enabling desktop viewport. Desktop viewport is
   no longer set by `USER_AGENT_MODE_DESKTOP` and must be set separately.
 
-- Added `@UiThread` to `GeckoSession.releaseSession` and `GeckoSession.setSession`
-
 ## v65
 - Moved [`CompositorController`][65.1], [`DynamicToolbarAnimator`][65.2],
   [`OverscrollEdgeEffect`][65.3], [`PanZoomController`][65.4] from
