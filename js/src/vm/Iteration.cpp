@@ -542,6 +542,10 @@ static bool Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags,
       return false;
     }
 
+    // The [[Prototype]] chain might be cyclic.
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
   } while (pobj != nullptr);
 
 #ifdef JS_MORE_DETERMINISTIC
