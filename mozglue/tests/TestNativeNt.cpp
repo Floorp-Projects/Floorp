@@ -38,7 +38,7 @@ const char kFailFmt[] =
 using namespace mozilla;
 using namespace mozilla::nt;
 
-extern "C" int wmain(int argc, wchar_t* argv[]) {
+int main(int argc, char* argv[]) {
   UNICODE_STRING normal;
   ::RtlInitUnicodeString(&normal, kNormal);
 
