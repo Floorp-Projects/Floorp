@@ -6,52 +6,63 @@
 
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
+
+const Types = require("../types");
 
 class PseudoClassPanel extends PureComponent {
   static get propTypes() {
-    return {};
+    return {
+      onTogglePseudoClass: PropTypes.func.isRequired,
+      pseudoClasses: PropTypes.shape(Types.pseudoClasses).isRequired,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+    this.onInputChange = this.onInputChange.bind(this);
+  }
+
+  onInputChange(event) {
+    this.props.onTogglePseudoClass(event.target.value);
   }
 
   render() {
+    const { pseudoClasses } = this.props;
+
     return (
       dom.div(
         {
           id: "pseudo-class-panel",
           className: "ruleview-reveal-panel",
         },
-        dom.label({},
-          dom.input({
-            id: "pseudo-hover-toggle",
-            checked: false,
-            tabIndex: -1,
-            type: "checkbox",
-            value: ":hover",
-          }),
-          ":hover"
-        ),
-        dom.label({},
-          dom.input({
-            id: "pseudo-active-toggle",
-            checked: false,
-            tabIndex: -1,
-            type: "checkbox",
-            value: ":active",
-          }),
-          ":active"
-        ),
-        dom.label({},
-          dom.input({
-            id: "pseudo-focus-toggle",
-            checked: false,
-            tabIndex: -1,
-            type: "checkbox",
-            value: ":focus",
-          }),
-          ":focus"
-        )
+        Object.entries(pseudoClasses).map(([value, { isChecked, isDisabled }]) => {
+          return (
+            dom.label({},
+              dom.input({
+                key: value,
+                id: `pseudo-${value.slice(1)}-toggle`,
+                checked: isChecked,
+                disabled: isDisabled,
+                onChange: this.onInputChange,
+                tabIndex: 0,
+                type: "checkbox",
+                value,
+              }),
+              value
+            )
+          );
+        })
       )
     );
   }
 }
 
-module.exports = PseudoClassPanel;
+const mapStateToProps = state => {
+  return {
+    pseudoClasses: state.pseudoClasses,
+  };
+};
+
+module.exports = connect(mapStateToProps)(PseudoClassPanel);

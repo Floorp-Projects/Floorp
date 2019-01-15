@@ -45,6 +45,43 @@ const declaration = exports.declaration = {
 };
 
 /**
+ * The pseudo classes redux structure.
+ */
+exports.pseudoClasses = {
+  // An object containing the :active pseudo class toggle state.
+  ":active": PropTypes.shape({
+    // Whether or not the :active pseudo class is checked.
+    isChecked: PropTypes.bool,
+    // Whether or not the :active pseudo class is disabled.
+    isDisabled: PropTypes.bool,
+  }),
+
+  // An object containing the :focus pseudo class toggle state.
+  ":focus": PropTypes.shape({
+    // Whether or not the :focus pseudo class is checked
+    isChecked: PropTypes.bool,
+    // Whether or not the :focus pseudo class is disabled.
+    isDisabled: PropTypes.bool,
+  }),
+
+  // An object containing the :focus-within pseudo class toggle state.
+  ":focus-within": PropTypes.shape({
+    // Whether or not the :focus-within pseudo class is checked
+    isChecked: PropTypes.bool,
+    // Whether or not the :focus-within pseudo class is disabled.
+    isDisabled: PropTypes.bool,
+  }),
+
+  // An object containing the :hover pseudo class toggle state.
+  ":hover": PropTypes.shape({
+    // Whether or not the :hover pseudo class is checked.
+    isChecked: PropTypes.bool,
+    // Whether or not the :hover pseudo class is disabled.
+    isDisabled: PropTypes.bool,
+  }),
+};
+
+/**
  * A CSS selector.
  */
 const selector = exports.selector = {
