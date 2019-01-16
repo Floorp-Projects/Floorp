@@ -35,7 +35,7 @@ implementation "org.mozilla.components:service-glean:{latest-version}"
 In order for Glean to work, a Python environment must be accessible at build time. This is done
 automatically by the [`com.jetbrains.python.envs`](https://github.com/JetBrains/gradle-python-envs/)
 plugin. The plugin **must** be manually enabled by adding the following `plugins` block at the top
-of the main `build.gradle` file.
+of the `build.gradle` file for your app module.
 
 ```Groovy
 plugins {
@@ -82,13 +82,20 @@ and sending its [pings](docs/pings.md).
 
 ### Defining metrics
 
-The metrics that your application collects must be defined in a ``metrics.yaml``
-file. The format of that file is documented
-[here](https://mozilla.github.io/glean_parser/metrics-yaml.html).
+The metrics that your application collects must be defined in a `metrics.yaml`
+file. This file should be at the root of the application module (the same
+directory as the `build.gradle` file you updated). The format of that file is
+documented [here](https://mozilla.github.io/glean_parser/metrics-yaml.html).
 
 **Important**: as stated [here](#before-using-the-library), any new data collection requires
 documentation and data-review. This is also required for any new metric automatically collected
 by glean.
+
+### Providing UI to enable / disable metrics
+
+Every application must provide a way to disable and re-enable metrics. This is
+controlled with the `glean.setMetricsEnabled()` method. The application should
+provide some form of user interface to call this method.
 
 ## License
 
