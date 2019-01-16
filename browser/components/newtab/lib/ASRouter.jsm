@@ -430,7 +430,7 @@ class _ASRouter {
       const unseenListeners = new Set(ASRouterTriggerListeners.keys());
       for (const {trigger} of newState.messages) {
         if (trigger && ASRouterTriggerListeners.has(trigger.id)) {
-          ASRouterTriggerListeners.get(trigger.id).init(this._triggerHandler, trigger.params);
+          await ASRouterTriggerListeners.get(trigger.id).init(this._triggerHandler, trigger.params);
           unseenListeners.delete(trigger.id);
         }
       }
