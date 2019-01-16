@@ -9,7 +9,7 @@ use api::{FilterOp, FontInstanceKey, GlyphInstance, GlyphOptions, RasterSpace, G
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, LayoutPoint, ColorDepth};
 use api::{LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId};
-use api::{PropertyBinding, ReferenceFrame, ScrollFrameDisplayItem, ScrollSensitivity};
+use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpaceAndClipInfo, SpatialId, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect};
 use api::{ClipMode, TransformStyle, YuvColorSpace, YuvData};
 use app_units::Au;
@@ -598,7 +598,7 @@ impl<'a> DisplayListFlattener<'a> {
             pipeline_id,
             reference_frame.transform_style,
             reference_frame.transform,
-            reference_frame.perspective,
+            reference_frame.kind,
             reference_frame_relative_offset + origin.to_vector(),
         );
 
@@ -691,7 +691,7 @@ impl<'a> DisplayListFlattener<'a> {
             iframe_pipeline_id,
             TransformStyle::Flat,
             None,
-            None,
+            ReferenceFrameKind::Transform,
             origin,
         );
 
@@ -1585,14 +1585,14 @@ impl<'a> DisplayListFlattener<'a> {
         pipeline_id: PipelineId,
         transform_style: TransformStyle,
         source_transform: Option<PropertyBinding<LayoutTransform>>,
-        source_perspective: Option<LayoutTransform>,
+        kind: ReferenceFrameKind,
         origin_in_parent_reference_frame: LayoutVector2D,
     ) -> SpatialNodeIndex {
         let index = self.clip_scroll_tree.add_reference_frame(
             parent_index,
             transform_style,
             source_transform,
-            source_perspective,
+            kind,
             origin_in_parent_reference_frame,
             pipeline_id,
         );
@@ -1620,7 +1620,7 @@ impl<'a> DisplayListFlattener<'a> {
             pipeline_id,
             TransformStyle::Flat,
             None,
-            None,
+            ReferenceFrameKind::Transform,
             LayoutVector2D::zero(),
         );
 
