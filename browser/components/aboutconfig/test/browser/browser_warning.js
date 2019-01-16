@@ -22,7 +22,7 @@ add_task(async function test_showWarningNextTime() {
         if (test.disableShowWarningNextTime) {
           this.document.getElementById("showWarningNextTime").click();
         }
-        this.document.querySelector("button").click();
+        this.bypassWarningButton.click();
       }
 
       // No results are shown after the warning page is dismissed or bypassed.
