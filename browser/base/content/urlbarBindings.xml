@@ -699,8 +699,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             [url, postData] =
               this._parseAndRecordSearchEngineLoad(selectedOneOff.engine,
                                                    this.oneOffSearchQuery,
-                                                   event, where,
-                                                   openUILinkParams);
+                                                   event);
           } else if (action) {
             switch (action.type) {
               case "visiturl":
@@ -776,8 +775,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   action.params.engineName,
                   action.params.searchSuggestion || action.params.searchQuery,
                   event,
-                  where,
-                  openUILinkParams,
                   actionDetails
                 );
                 break;
@@ -904,8 +901,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="engineOrEngineName"/>
         <parameter name="query"/>
         <parameter name="event"/>
-        <parameter name="openUILinkWhere"/>
-        <parameter name="openUILinkParams"/>
         <parameter name="searchActionDetails"/>
         <body><![CDATA[
           let engine =
@@ -913,7 +908,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               Services.search.getEngineByName(engineOrEngineName) :
               engineOrEngineName;
           let isOneOff = this.popup.oneOffSearchButtons
-              .maybeRecordTelemetry(event, openUILinkWhere, openUILinkParams);
+              .maybeRecordTelemetry(event);
           // Infer the type of the event which triggered the search.
           let eventType = "unknown";
           if (event instanceof KeyboardEvent) {
