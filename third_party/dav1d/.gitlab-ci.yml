@@ -1,6 +1,17 @@
 stages:
+    - style
     - build
     - test
+
+style-check:
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
+    stage: style
+    tags:
+        - debian
+        - amd64
+    script:
+        - git grep -n -e $'\t' --or -e $'\r' -- . ':(exclude)*/compat/*' && exit 1
+        - /bin/true
 
 build-debian:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
@@ -21,6 +32,19 @@ build-debian-static:
         - amd64
     script:
         - meson build --buildtype release --default-library static --werror
+        - ninja -C build
+        - cd build && meson test -v
+
+build-debian32:
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20181218135732
+    stage: build
+    tags:
+        - debian
+        - amd64
+    script:
+        - meson build --buildtype release
+                      --werror
+                      --cross-file /opt/crossfiles/linux32.meson
         - ninja -C build
         - cd build && meson test -v
 
