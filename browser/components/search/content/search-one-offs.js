@@ -987,13 +987,9 @@ class SearchOneOffs {
    *
    * @param {Event} aEvent
    *        An event, like a click on a one-off button.
-   * @param {string} aOpenUILinkWhere
-   *        The "where" passed to openUILink.
-   * @param {object} aOpenUILinkParams
-   *        The "params" passed to openUILink.
    * @returns {boolean} True if telemetry was recorded and false if not.
    */
-  maybeRecordTelemetry(aEvent, aOpenUILinkWhere, aOpenUILinkParams) {
+  maybeRecordTelemetry(aEvent) {
     if (!aEvent) {
       return false;
     }
@@ -1029,11 +1025,7 @@ class SearchOneOffs {
       source += "-" + this.telemetryOrigin;
     }
 
-    let tabBackground = aOpenUILinkWhere == "tab" &&
-      aOpenUILinkParams &&
-      aOpenUILinkParams.inBackground;
-    let where = tabBackground ? "tab-background" : aOpenUILinkWhere;
-    BrowserSearch.recordOneoffSearchInTelemetry(engine, source, type, where);
+    BrowserSearch.recordOneoffSearchInTelemetry(engine, source, type);
     return true;
   }
 
