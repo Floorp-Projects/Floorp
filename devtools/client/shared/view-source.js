@@ -44,17 +44,18 @@ exports.viewSourceInStyleEditor = async function(toolbox, sourceURL,
  * @param {Toolbox} toolbox
  * @param {string} sourceURL
  * @param {number} sourceLine
+ * @param {string} sourceID
  * @param {string} [reason=unknown]
  *
  * @return {Promise<boolean>}
  */
-exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine,
+exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine, sourceId,
                                               reason = "unknown") {
   const dbg = await toolbox.loadTool("jsdebugger");
-  const source = dbg.getSource(sourceURL);
+  const source = sourceId ? dbg.getSourceById(sourceId) : dbg.getSourceByURL(sourceURL);
   if (source || await toolbox.sourceMapService.hasOriginalURL(sourceURL)) {
     await toolbox.selectTool("jsdebugger", reason);
-    dbg.selectSource(sourceURL, sourceLine);
+    dbg.selectSource(source.id, sourceLine);
     return true;
   }
 
