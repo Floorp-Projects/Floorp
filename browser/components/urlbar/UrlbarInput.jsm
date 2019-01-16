@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = ["UrlbarInput"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   QueryContext: "resource:///modules/UrlbarUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -293,6 +294,11 @@ class UrlbarInput {
 
     switch (result.type) {
       case UrlbarUtils.MATCH_TYPE.TAB_SWITCH: {
+        if (this._overrideDefaultAction(event)) {
+          where = "current";
+          break;
+        }
+
         this.handleRevert();
         let prevTab = this.window.gBrowser.selectedTab;
         let loadOpts = {
@@ -304,13 +310,6 @@ class UrlbarInput {
           this.window.gBrowser.removeTab(prevTab);
         }
         return;
-
-        // TODO: How to handle meta chars?
-        // Once we get here, we got a TAB_SWITCH match but the user
-        // bypassed it by pressing shift/meta/ctrl. Those modifiers
-        // might otherwise affect where we open - we always want to
-        // open in the current tab.
-        // where = "current";
       }
       case UrlbarUtils.MATCH_TYPE.SEARCH:
         // TODO: port _parseAndRecordSearchEngineLoad.
@@ -520,6 +519,13 @@ class UrlbarInput {
     }
 
     return selectedVal;
+  }
+
+  _overrideDefaultAction(event) {
+    return event.shiftKey ||
+           event.altKey ||
+           (AppConstants.platform == "macosx" ?
+              event.metaKey : event.ctrlKey);
   }
 
   /**
