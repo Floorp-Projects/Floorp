@@ -668,6 +668,27 @@ describe("Reducers", () => {
       const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_CONFIG_CHANGE, data: {enabled: true}});
       assert.deepEqual(state.config, {enabled: true});
     });
+    it("should set spoc_endpoint with DISCOVERY_STREAM_SPOCS_ENDPOINT", () => {
+      const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_SPOCS_ENDPOINT, data: "foo.com"});
+      assert.equal(state.spocs.spocs_endpoint, "foo.com");
+    });
+    it("should set spocs with DISCOVERY_STREAM_SPOCS_UPDATE", () => {
+      const data = {
+        lastUpdated: 123,
+        spocs: [1, 2, 3],
+      };
+      const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_SPOCS_UPDATE, data});
+      assert.deepEqual(state.spocs, {
+        spocs_endpoint: "",
+        data: [1, 2, 3],
+        lastUpdated: 123,
+      });
+    });
+    it("should handle no data from DISCOVERY_STREAM_SPOCS_UPDATE", () => {
+      const data = null;
+      const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_SPOCS_UPDATE, data});
+      assert.deepEqual(state.spocs, INITIAL_STATE.DiscoveryStream.spocs);
+    });
   });
   describe("Search", () => {
     it("should return INITIAL_STATE by default", () => {

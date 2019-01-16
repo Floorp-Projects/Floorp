@@ -2,14 +2,16 @@
 .asrouter-admin {
   $border-color: var(--newtab-border-secondary-color);
   $monospace: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace;
+  $sidebar-width: 240px;
   margin: 0 auto;
   font-size: 14px;
-
+  padding-left: $sidebar-width;
   display: flex;
 
   .sidebar {
+    inset-inline-start: 0;
     position: fixed;
-    width: 240px;
+    width: $sidebar-width;
     padding: 30px 20px;
 
     ul {

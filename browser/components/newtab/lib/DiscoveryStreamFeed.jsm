@@ -13,6 +13,7 @@ const {PersistentCache} = ChromeUtils.import("resource://activity-stream/lib/Per
 const CACHE_KEY = "discovery_stream";
 const LAYOUT_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const COMPONENT_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
+const SPOCS_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const CONFIG_PREF_NAME = "browser.newtabpage.activity-stream.discoverystream.config";
 
 this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
@@ -81,6 +82,28 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return null;
   }
 
+  async fetchSpocs() {
+    const {DiscoveryStream} = this.store.getState();
+    const endpoint = DiscoveryStream.spocs.spocs_endpoint;
+    if (!endpoint) {
+      Cu.reportError("No endpoint configured for pocket, so could not fetch spocs");
+      return null;
+    }
+    try {
+      const response = await fetch(endpoint, {credentials: "omit"});
+      if (!response.ok) {
+        // istanbul ignore next
+        throw new Error(`Spocs endpoint returned unexpected status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      // istanbul ignore next
+      Cu.reportError(`Failed to fetch spocs: ${error.message}`);
+    }
+    // istanbul ignore next
+    return null;
+  }
+
   async loadLayout() {
     const cachedData = await this.cache.get() || {};
     let {layout: layoutResponse} = cachedData;
@@ -103,6 +126,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         },
       }));
     }
+    if (layoutResponse && layoutResponse.spocs && layoutResponse.spocs.url) {
+      this.store.dispatch(ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_SPOCS_ENDPOINT,
+        data: layoutResponse.spocs.url,
+      }));
+    }
   }
 
   async loadComponentFeeds() {
@@ -123,6 +152,33 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
       await this.cache.set("feeds", newFeeds);
       this.store.dispatch(ac.BroadcastToContent({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: newFeeds}));
+    }
+  }
+
+  async loadSpocs() {
+    const cachedData = await this.cache.get() || {};
+    let {spocs} = cachedData;
+    if (!spocs || !(Date.now() - spocs.lastUpdated < SPOCS_FEEDS_UPDATE_TIME)) {
+      const spocsResponse = await this.fetchSpocs();
+      if (spocsResponse) {
+        spocs = {
+          lastUpdated: Date.now(),
+          data: spocsResponse,
+        };
+        await this.cache.set("spocs", spocs);
+      } else {
+        Cu.reportError("No response for spocs_endpoint prop");
+      }
+    }
+
+    if (spocs) {
+      this.store.dispatch(ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
+        data: {
+          lastUpdated: spocs.lastUpdated,
+          spocs: spocs.data,
+        },
+      }));
     }
   }
 
@@ -164,6 +220,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   async enable() {
     await this.loadLayout();
     await this.loadComponentFeeds();
+    await this.loadSpocs();
     this.loaded = true;
   }
 
@@ -177,6 +234,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   async clearCache() {
     await this.cache.set("layout", {});
     await this.cache.set("feeds", {});
+    await this.cache.set("spocs", {});
   }
 
   async onPrefChange() {
