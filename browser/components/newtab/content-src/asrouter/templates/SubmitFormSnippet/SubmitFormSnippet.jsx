@@ -70,6 +70,8 @@ export class SubmitFormSnippet extends React.PureComponent {
   }
 
   expandSnippet() {
+    this.props.sendUserActionTelemetry({event: "CLICK_BUTTON", value: "scene1-button-learn-more", id: this.props.UISurface});
+
     this.setState({
       expanded: true,
       signupSuccess: false,

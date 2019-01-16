@@ -5,6 +5,7 @@ export class SnippetBase extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onBlockClicked = this.onBlockClicked.bind(this);
+    this.onDismissClicked = this.onDismissClicked.bind(this);
   }
 
   onBlockClicked() {
@@ -15,6 +16,14 @@ export class SnippetBase extends React.PureComponent {
     this.props.onBlock();
   }
 
+  onDismissClicked() {
+    if (this.props.provider !== "preview") {
+      this.props.sendUserActionTelemetry({event: "DISMISS", id: this.props.UISurface});
+    }
+
+    this.props.onDismiss();
+  }
+
   renderDismissButton() {
     if (this.props.footerDismiss) {
       return (
@@ -22,7 +31,7 @@ export class SnippetBase extends React.PureComponent {
           <div className="footer-content">
             <button
               className="ASRouterButton secondary"
-              onClick={this.props.onDismiss}>
+              onClick={this.onDismissClicked}>
               {this.props.content.scene2_dismiss_button_text}
             </button>
           </div>
