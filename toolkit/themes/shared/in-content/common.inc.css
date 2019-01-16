@@ -70,6 +70,7 @@
   --yellow-90: #3e2800;
 
   --shadow-10: 0 1px 4px var(--grey-90-a10);
+  --card-padding: 16px;
   --card-shadow: var(--shadow-10);
   --card-outline-color: var(--grey-30);
   --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
@@ -880,10 +881,13 @@ xul|treechildren::-moz-tree-image(selected) {
 
 .card {
   background: var(--in-content-box-background);
+  /* Needed for high-contrast where the border will appear. */
+  border: 1px solid transparent;
   border-radius: 4px;
   box-shadow: var(--card-shadow);
   margin: 0 0 8px;
-  padding: 16px;
+  /* Remove the border from the overall padding. */
+  padding: calc(var(--card-padding) - 1px);
   transition: box-shadow 150ms;
 }
 
