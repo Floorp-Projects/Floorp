@@ -338,10 +338,10 @@ LauncherResult<bool> LauncherRegistryInfo::ClearStartTimestamp(
 }
 
 LauncherVoidResult LauncherRegistryInfo::ClearStartTimestamps() {
-  LauncherResult<uint64_t> lastBrowserTimestamp =
-      GetStartTimestamp(ProcessType::Browser);
-  if (lastBrowserTimestamp.isOk() && lastBrowserTimestamp.unwrap() == 0ULL) {
-    // Only proceed when the browser timestamp is non-zero
+  LauncherResult<EnabledState> enabled = IsEnabled();
+  if (enabled.isOk() && enabled.unwrap() == EnabledState::ForceDisabled) {
+    // We don't clear anything when we're force disabled - we need to maintain
+    // the current registry state in this case.
     return Ok();
   }
 
