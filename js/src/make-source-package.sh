@@ -183,8 +183,7 @@ case $cmd in
     ${MKDIR} -p ${tgtpath}/js/src
     cp -pPR \
         ${TOPSRCDIR}/js/app.mozbuild \
-        ${TOPSRCDIR}/js/ffi.configure \
-        ${TOPSRCDIR}/js/moz.configure \
+        ${TOPSRCDIR}/js/*.configure \
         ${tgtpath}/js/
     cp -pPR \
         ${TOPSRCDIR}/js/examples \

@@ -103,26 +103,6 @@ def prepare(srcdir, objdir, args):
             data = pickle.load(f)
             previous_args = data['args']
 
-    # Msys likes to break environment variables and command line arguments,
-    # so read those from stdin, as they are passed from the configure script
-    # when necessary (on windows).
-    input = sys.stdin.read()
-    if input:
-        data = {a: b for [a, b] in eval(input)}
-        environ = {a: b for a, b in data['env']}
-        # These environment variables as passed from old-configure may contain
-        # posix-style paths, which will not be meaningful to the js
-        # subconfigure, which runs as a native python process, so use their
-        # values from the environment. In the case of autoconf implemented
-        # subconfigures, Msys will re-convert them properly.
-        for var in ('HOME', 'TERM', 'PATH', 'TMPDIR', 'TMP',
-                    'TEMP', 'INCLUDE'):
-            if var in environ and var in os.environ:
-                environ[var] = os.environ[var]
-        args = data['args']
-    else:
-        environ = os.environ
-
     args, others = parser.parse_known_args(args)
 
     data = {
@@ -132,7 +112,7 @@ def prepare(srcdir, objdir, args):
         'args': others,
         'srcdir': srcdir,
         'objdir': objdir,
-        'env': environ,
+        'env': os.environ,
     }
 
     if args.cache_file:
