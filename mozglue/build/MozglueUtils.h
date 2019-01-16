@@ -9,18 +9,104 @@
 
 #include <windows.h>
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace glue {
 
-class MOZ_RAII AutoSharedLock final {
+#ifdef DEBUG
+
+class MOZ_STATIC_CLASS Win32SRWLock final {
  public:
-  explicit AutoSharedLock(SRWLOCK& aLock) : mLock(aLock) {
-    ::AcquireSRWLockShared(&aLock);
+  // Microsoft guarantees that '0' is never a valid thread id
+  // https://docs.microsoft.com/en-ca/windows/desktop/ProcThread/thread-handles-and-identifiers
+  static const DWORD kInvalidThreadId = 0;
+
+  constexpr Win32SRWLock()
+      : mExclusiveThreadId(kInvalidThreadId), mLock(SRWLOCK_INIT) {}
+
+  ~Win32SRWLock() { MOZ_ASSERT(mExclusiveThreadId == kInvalidThreadId); }
+
+  void LockShared() {
+    MOZ_ASSERT(
+        mExclusiveThreadId != GetCurrentThreadId(),
+        "Deadlock detected - A thread attempted to acquire a shared lock on "
+        "a SRWLOCK when it already owns the exclusive lock on it.");
+
+    ::AcquireSRWLockShared(&mLock);
   }
 
-  ~AutoSharedLock() { ::ReleaseSRWLockShared(&mLock); }
+  void UnlockShared() { ::ReleaseSRWLockShared(&mLock); }
+
+  void LockExclusive() {
+    MOZ_ASSERT(
+        mExclusiveThreadId != GetCurrentThreadId(),
+        "Deadlock detected - A thread attempted to acquire an exclusive lock "
+        "on a SRWLOCK when it already owns the exclusive lock on it.");
+
+    ::AcquireSRWLockExclusive(&mLock);
+    mExclusiveThreadId = GetCurrentThreadId();
+  }
+
+  void UnlockExclusive() {
+    MOZ_ASSERT(mExclusiveThreadId == GetCurrentThreadId());
+
+    mExclusiveThreadId = kInvalidThreadId;
+    ::ReleaseSRWLockExclusive(&mLock);
+  }
+
+  Win32SRWLock(const Win32SRWLock&) = delete;
+  Win32SRWLock(Win32SRWLock&&) = delete;
+  Win32SRWLock& operator=(const Win32SRWLock&) = delete;
+  Win32SRWLock& operator=(Win32SRWLock&&) = delete;
+
+ private:
+  // "Relaxed" memory ordering is fine. Threads will see other thread IDs
+  // appear here in some non-deterministic ordering (or not at all) and simply
+  // ignore them.
+  //
+  // But a thread will only read its own ID if it previously wrote it, and a
+  // single thread doesn't need a memory barrier to read its own write.
+
+  Atomic<DWORD, Relaxed> mExclusiveThreadId;
+  SRWLOCK mLock;
+};
+
+#else  // DEBUG
+
+class MOZ_STATIC_CLASS Win32SRWLock final {
+ public:
+  constexpr Win32SRWLock() : mLock(SRWLOCK_INIT) {}
+
+  void LockShared() { ::AcquireSRWLockShared(&mLock); }
+
+  void UnlockShared() { ::ReleaseSRWLockShared(&mLock); }
+
+  void LockExclusive() { ::AcquireSRWLockExclusive(&mLock); }
+
+  void UnlockExclusive() { ::ReleaseSRWLockExclusive(&mLock); }
+
+  ~Win32SRWLock() = default;
+
+  Win32SRWLock(const Win32SRWLock&) = delete;
+  Win32SRWLock(Win32SRWLock&&) = delete;
+  Win32SRWLock& operator=(const Win32SRWLock&) = delete;
+  Win32SRWLock& operator=(Win32SRWLock&&) = delete;
+
+ private:
+  SRWLOCK mLock;
+};
+
+#endif
+
+class MOZ_RAII AutoSharedLock final {
+ public:
+  explicit AutoSharedLock(Win32SRWLock& aLock) : mLock(aLock) {
+    mLock.LockShared();
+  }
+
+  ~AutoSharedLock() { mLock.UnlockShared(); }
 
   AutoSharedLock(const AutoSharedLock&) = delete;
   AutoSharedLock(AutoSharedLock&&) = delete;
@@ -28,16 +114,16 @@ class MOZ_RAII AutoSharedLock final {
   AutoSharedLock& operator=(AutoSharedLock&&) = delete;
 
  private:
-  SRWLOCK& mLock;
+  Win32SRWLock& mLock;
 };
 
 class MOZ_RAII AutoExclusiveLock final {
  public:
-  explicit AutoExclusiveLock(SRWLOCK& aLock) : mLock(aLock) {
-    ::AcquireSRWLockExclusive(&aLock);
+  explicit AutoExclusiveLock(Win32SRWLock& aLock) : mLock(aLock) {
+    mLock.LockExclusive();
   }
 
-  ~AutoExclusiveLock() { ::ReleaseSRWLockExclusive(&mLock); }
+  ~AutoExclusiveLock() { mLock.UnlockExclusive(); }
 
   AutoExclusiveLock(const AutoExclusiveLock&) = delete;
   AutoExclusiveLock(AutoExclusiveLock&&) = delete;
@@ -45,7 +131,7 @@ class MOZ_RAII AutoExclusiveLock final {
   AutoExclusiveLock& operator=(AutoExclusiveLock&&) = delete;
 
  private:
-  SRWLOCK& mLock;
+  Win32SRWLock& mLock;
 };
 
 }  // namespace glue
