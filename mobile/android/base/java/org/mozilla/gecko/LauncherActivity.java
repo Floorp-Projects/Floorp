@@ -16,8 +16,6 @@ import android.util.Log;
 
 import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.mma.MmaDelegate;
-import org.mozilla.gecko.switchboard.SwitchBoard;
-import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.webapps.WebAppActivity;
 import org.mozilla.gecko.webapps.WebAppIndexer;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
@@ -198,7 +196,7 @@ public class LauncherActivity extends Activity {
         }
         final String deepLink = intent.getData().getHost();
         final String uid = intent.getData().getQueryParameter("uid");
-        final String localUid = getSharedPreferences(BrowserApp.class.getName(), MODE_PRIVATE).getString(MmaDelegate.KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
+        final String localUid = MmaDelegate.getDeviceId(LauncherActivity.this);
         final boolean isMmaDeepLink = uid != null && localUid != null && uid.equals(localUid);
 
         if (!validateMmaDeepLink(deepLink, isMmaDeepLink)) {
