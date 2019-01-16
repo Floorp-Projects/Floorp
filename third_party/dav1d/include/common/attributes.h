@@ -38,15 +38,16 @@
 #define ATTR_ALIAS
 #endif
 
-#if ARCH_X86
+#if ARCH_X86_64
+/* x86-64 needs 32-byte alignment for AVX2. */
 #define ALIGN_32_VAL 32
 #define ALIGN_16_VAL 16
-#elif ARCH_ARM || ARCH_AARCH64
-// ARM doesn't benefit from anything more than 16 byte alignment.
+#elif ARCH_X86_32 || ARCH_ARM || ARCH_AARCH64
+/* ARM doesn't benefit from anything more than 16-byte alignment. */
 #define ALIGN_32_VAL 16
 #define ALIGN_16_VAL 16
 #else
-// No need for extra alignment on platforms without assembly.
+/* No need for extra alignment on platforms without assembly. */
 #define ALIGN_32_VAL 8
 #define ALIGN_16_VAL 8
 #endif
