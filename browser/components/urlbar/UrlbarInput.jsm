@@ -358,12 +358,13 @@ class UrlbarInput {
     lastKey = null,
   } = {}) {
     this.controller.startQuery(new QueryContext({
-      searchString,
+      enableAutofill: UrlbarPrefs.get("autoFill"),
+      isPrivate: this.isPrivate,
       lastKey,
       maxResults: UrlbarPrefs.get("maxRichResults"),
-      isPrivate: this.isPrivate,
-      providers: ["UnifiedComplete"],
       muxer: "UnifiedComplete",
+      providers: ["UnifiedComplete"],
+      searchString,
     }));
   }
 

@@ -55,14 +55,15 @@ It is augmented as it progresses through the system, with various information:
 .. code::
 
   QueryContext {
-    searchString; // {string} The user typed string.
+    enableAutofill; // {boolean} Whether or not to include autofill results.
+    isPrivate; // {boolean} Whether the search started in a private context.
     lastKey; // {string} The last key pressed by the user. This can affect the
              // behavior, for example by not autofilling again when the user
              // hit backspace.
     maxResults; // {integer} The maximum number of results requested. It is
                 // possible to request more results than the shown ones, and
                 // do additional filtering at the View level.
-    isPrivate; // {boolean} Whether the search started in a private context.
+    searchString; // {string} The user typed string.
     userContextId; // {integer} The user context ID (containers feature).
 
     // Optional properties.
@@ -74,11 +75,11 @@ It is augmented as it progresses through the system, with various information:
              // MATCH_SOURCE.*, that can be returned by the model.
 
     // Properties added by the Model.
+    autofill; // {boolean} whether the first match is an autofill match.
+    preselected; // {boolean} whether the first match should be preselected.
+    results; // {array} list of UrlbarMatch objects.
     tokens; // {array} tokens extracted from the searchString, each token is an
             // object in the form {type, value}.
-    results; // {array} list of UrlbarMatch objects.
-    preselected; // {boolean} whether the first match should be preselected.
-    autofill; // {boolean} whether the first match is an autofill match.
   }
 
 
