@@ -24,6 +24,7 @@ const {
   DOMQuad,
   DOMRect,
   HeapSnapshot,
+  NodeFilter,
   StructuredCloneHolder,
   TelemetryStopwatch,
 } = Cu.getGlobalForObject(jsmScope);
@@ -290,6 +291,7 @@ exports.globals = {
   DOMParser,
   DOMPoint,
   DOMQuad,
+  NodeFilter,
   DOMRect,
   Element,
   Event,
