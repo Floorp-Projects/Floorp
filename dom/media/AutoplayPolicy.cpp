@@ -108,6 +108,11 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
     return true;
   }
 
+  if (approver->MediaDocumentKind() == Document::MediaDocumentKind::Video) {
+    AUTOPLAY_LOG("Allow video document to autoplay.");
+    return true;
+  }
+
   return false;
 }
 
@@ -126,19 +131,6 @@ static bool IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement) {
       Preferences::GetBool("media.autoplay.allow-muted", true);
   if ((aElement.Volume() == 0.0 || aElement.Muted()) && isAllowedMuted) {
     AUTOPLAY_LOG("Allow muted media %p to autoplay.", &aElement);
-    return true;
-  }
-
-  if (IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow())) {
-    AUTOPLAY_LOG("Autoplay allowed as window is allowed to play, media %p.",
-                 &aElement);
-    return true;
-  }
-
-  Document* topDocument = ApproverDocOf(*aElement.OwnerDoc());
-  if (topDocument &&
-      topDocument->MediaDocumentKind() == Document::MediaDocumentKind::Video) {
-    AUTOPLAY_LOG("Allow video document %p to autoplay", &aElement);
     return true;
   }
 
@@ -167,7 +159,8 @@ static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
 
 /* static */ bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
     const HTMLMediaElement& aElement) {
-  return IsMediaElementAllowedToPlay(aElement);
+  return IsMediaElementAllowedToPlay(aElement) ||
+         IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
 }
 
 /* static */ bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
@@ -188,6 +181,12 @@ static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
   }
 
   if (IsMediaElementAllowedToPlay(aElement)) {
+    return true;
+  }
+
+  if (IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow())) {
+    AUTOPLAY_LOG("Autoplay allowed as window is allowed to play, media %p.",
+                 &aElement);
     return true;
   }
 
