@@ -2,6 +2,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+//! The interning module provides a generic data structure
+//! interning container. It is similar in concept to a
+//! traditional string interning container, but it is
+//! specialized to the WR thread model.
+//!
+//! There is an Interner structure, that lives in the
+//! scene builder thread, and a DataStore structure
+//! that lives in the frame builder thread.
+//!
+//! Hashing, interning and handle creation is done by
+//! the interner structure during scene building.
+//!
+//! Delta changes for the interner are pushed during
+//! a transaction to the frame builder. The frame builder
+//! is then able to access the content of the interned
+//! handles quickly, via array indexing.
+//!
+//! Epoch tracking ensures that the garbage collection
+//! step which the interner uses to remove items is
+//! only invoked on items that the frame builder thread
+//! is no longer referencing.
+//!
+//! Items in the data store are stored in a traditional
+//! free-list structure, for content access and memory
+//! usage efficiency.
+//!
+//! The epoch is incremented each time a scene is
+//! built. The most recently used scene epoch is
+//! stored inside each handle. This is then used for
+//! cache invalidation.
+
 use api::{LayoutPrimitiveInfo};
 use internal_types::FastHashMap;
 use malloc_size_of::MallocSizeOf;
@@ -13,55 +44,14 @@ use std::{mem, ops, u64};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use util::VecHelper;
 
-/*
-
- The interning module provides a generic data structure
- interning container. It is similar in concept to a
- traditional string interning container, but it is
- specialized to the WR thread model.
-
- There is an Interner structure, that lives in the
- scene builder thread, and a DataStore structure
- that lives in the frame builder thread.
-
- Hashing, interning and handle creation is done by
- the interner structure during scene building.
-
- Delta changes for the interner are pushed during
- a transaction to the frame builder. The frame builder
- is then able to access the content of the interned
- handles quickly, via array indexing.
-
- Epoch tracking ensures that the garbage collection
- step which the interner uses to remove items is
- only invoked on items that the frame builder thread
- is no longer referencing.
-
- Items in the data store are stored in a traditional
- free-list structure, for content access and memory
- usage efficiency.
-
- */
-
-/// The epoch is incremented each time a scene is
-/// built. The most recently used scene epoch is
-/// stored inside each item and handle. This is
-/// then used for cache invalidation (item) and
-/// correctness validation (handle).
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Copy, Clone, MallocSizeOf, PartialEq)]
 struct Epoch(u64);
 
-impl Epoch {
-    pub const INVALID: Self = Epoch(u64::MAX);
-}
-
 /// A list of updates to be applied to the data store,
 /// provided by the interning structure.
 pub struct UpdateList<S> {
-    /// The current epoch of the scene builder.
-    epoch: Epoch,
     /// The additions and removals to apply.
     updates: Vec<Update>,
     /// Actual new data to insert.
@@ -109,7 +99,6 @@ impl <M> Handle<M> where M: Copy {
 pub enum UpdateKind {
     Insert,
     Remove,
-    UpdateEpoch,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -118,16 +107,6 @@ pub enum UpdateKind {
 pub struct Update {
     index: usize,
     kind: UpdateKind,
-}
-
-/// The data item is stored with an epoch, for validating
-/// correct access patterns.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(MallocSizeOf)]
-struct Item<T: MallocSizeOf> {
-    epoch: Epoch,
-    data: T,
 }
 
 pub trait InternDebug {
@@ -140,7 +119,7 @@ pub trait InternDebug {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(MallocSizeOf)]
 pub struct DataStore<S, T: MallocSizeOf, M> {
-    items: Vec<Item<T>>,
+    items: Vec<Option<T>>,
     _source: PhantomData<S>,
     _marker: PhantomData<M>,
 }
@@ -177,16 +156,11 @@ where
         for update in update_list.updates {
             match update.kind {
                 UpdateKind::Insert => {
-                    self.items.entry(update.index).set(Item {
-                        data: T::from(data_iter.next().unwrap()),
-                        epoch: update_list.epoch,
-                    });
+                    self.items.entry(update.index).
+                        set(Some(T::from(data_iter.next().unwrap())));
                 }
                 UpdateKind::Remove => {
-                    self.items[update.index].epoch = Epoch::INVALID;
-                }
-                UpdateKind::UpdateEpoch => {
-                    self.items[update.index].epoch = update_list.epoch;
+                    self.items[update.index] = None;
                 }
             }
         }
@@ -207,9 +181,7 @@ where
 {
     type Output = T;
     fn index(&self, handle: Handle<M>) -> &T {
-        let item = &self.items[handle.index as usize];
-        assert_eq!(item.epoch, handle.epoch);
-        &item.data
+        self.items[handle.index as usize].as_ref().expect("Bad datastore lookup")
     }
 }
 
@@ -222,9 +194,7 @@ where
     M: Copy
 {
     fn index_mut(&mut self, handle: Handle<M>) -> &mut T {
-        let item = &mut self.items[handle.index as usize];
-        assert_eq!(item.epoch, handle.epoch);
-        &mut item.data
+        self.items[handle.index as usize].as_mut().expect("Bad datastore lookup")
     }
 }
 
@@ -254,7 +224,7 @@ where
     current_epoch: Epoch,
     /// The information associated with each interned
     /// item that can be accessed by the interner.
-    local_data: Vec<Item<D>>,
+    local_data: Vec<D>,
 }
 
 impl<S, D, M> ::std::default::Default for Interner<S, D, M>
@@ -297,17 +267,6 @@ where
         // cloning the (sometimes large) key in the common
         // case, where the data already exists in the interner.
         if let Some(handle) = self.map.get_mut(data) {
-            // Update the epoch in the data store. This
-            // is not strictly needed for correctness, but
-            // is used to ensure items are only accessed
-            // via valid handles.
-            if handle.epoch != self.current_epoch {
-                self.updates.push(Update {
-                    index: handle.index as usize,
-                    kind: UpdateKind::UpdateEpoch,
-                });
-                self.local_data[handle.index as usize].epoch = self.current_epoch;
-            }
             handle.epoch = self.current_epoch;
             return *handle;
         }
@@ -344,10 +303,7 @@ where
 
         // Create the local data for this item that is
         // being interned.
-        self.local_data.entry(index).set(Item {
-            epoch: self.current_epoch,
-            data: f(),
-        });
+        self.local_data.entry(index).set(f());
 
         handle
     }
@@ -389,7 +345,6 @@ where
         let updates = UpdateList {
             updates,
             data,
-            epoch: self.current_epoch,
         };
 
         // Begin the next epoch
@@ -408,9 +363,7 @@ where
 {
     type Output = D;
     fn index(&self, handle: Handle<M>) -> &D {
-        let item = &self.local_data[handle.index as usize];
-        assert_eq!(item.epoch, handle.epoch);
-        &item.data
+        &self.local_data[handle.index as usize]
     }
 }
 

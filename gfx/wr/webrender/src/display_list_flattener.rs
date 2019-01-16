@@ -39,6 +39,7 @@ use scene_builder::{DocumentResources, InternerMut};
 use spatial_node::{StickyFrameInfo, ScrollFrameKind, SpatialNodeType};
 use std::{f32, mem, usize};
 use std::collections::vec_deque::VecDeque;
+use std::sync::Arc;
 use tiling::{CompositeOps};
 use util::{MaxRect, VecHelper};
 
@@ -2363,7 +2364,7 @@ impl<'a> DisplayListFlattener<'a> {
                 .collect();
 
             TextRun {
-                glyphs,
+                glyphs: Arc::new(glyphs),
                 font,
                 offset,
                 shadow: false,

@@ -1540,6 +1540,9 @@ static MOZ_MUST_USE JSObject* ReadableStreamCreateReadResult(
           ? cx->realm()->getOrCreateIterResultTemplateObject(cx)
           : cx->realm()->getOrCreateIterResultWithoutPrototypeTemplateObject(
                 cx));
+  if (!templateObject) {
+    return nullptr;
+  }
 
   // Step 3: Assert: Type(done) is Boolean (implicit).
 

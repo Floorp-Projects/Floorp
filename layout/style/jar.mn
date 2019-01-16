@@ -10,6 +10,7 @@ toolkit.jar:
    res/noscript.css                          (res/noscript.css)
    res/noframes.css                          (res/noframes.css)
 *  res/forms.css                             (res/forms.css)
+   res/pluginproblem.css                     (res/pluginproblem.css)
    res/arrow.gif                             (res/arrow.gif)
    res/arrow-left.gif                        (res/arrow-left.gif)
    res/arrow-right.gif                       (res/arrow-right.gif)

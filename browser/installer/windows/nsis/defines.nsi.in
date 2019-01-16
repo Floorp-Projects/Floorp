@@ -79,6 +79,15 @@
 !define AccessibleHandlerCLSID "{4A195748-DCA2-45FB-9295-0A139E76A9E7}"
 !endif
 
+#ifdef MOZ_LAUNCHER_PROCESS
+!define MOZ_LAUNCHER_PROCESS
+!define MOZ_LAUNCHER_SUBKEY "Software\Mozilla\${AppName}\Launcher"
+#endif
+
+#ifdef RELEASE_OR_BETA
+!define RELEASE_OR_BETA
+#endif
+
 # Due to official and beta using the same branding this is needed to
 # differentiante between the url used by the stub for downloading.
 !if "@MOZ_UPDATE_CHANNEL@" == "beta"
