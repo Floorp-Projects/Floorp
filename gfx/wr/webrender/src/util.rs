@@ -876,16 +876,43 @@ where
     }
 }
 
-/// Clear a vector for re-use, while retaining the backing memory buffer. May shrink the buffer
-/// if it's currently much larger than was actually used.
-pub fn recycle_vec<T>(vec: &mut Vec<T>) {
-    if vec.capacity() > 2 * vec.len() {
-        // Reduce capacity of the buffer if it is a lot larger than it needs to be. This prevents
-        // a frame with exceptionally large allocations to cause subsequent frames to retain
-        // more memory than they need.
-        vec.shrink_to_fit();
+
+#[derive(Debug)]
+pub struct Recycler {
+    pub num_allocations: usize,
+}
+
+impl Recycler {
+    /// Maximum extra capacity that a recycled vector is allowed to have. If the actual capacity
+    /// is larger, we re-allocate the vector storage with lower capacity.
+    const MAX_EXTRA_CAPACITY_PERCENT: usize = 200;
+    /// Minimum extra capacity to keep when re-allocating the vector storage.
+    const MIN_EXTRA_CAPACITY_PERCENT: usize = 20;
+    /// Minimum sensible vector length to consider for re-allocation.
+    const MIN_VECTOR_LENGTH: usize = 16;
+
+    pub fn new() -> Self {
+        Recycler {
+            num_allocations: 0,
+        }
     }
-    vec.clear();
+
+    /// Clear a vector for re-use, while retaining the backing memory buffer. May shrink the buffer
+    /// if it's currently much larger than was actually used.
+    pub fn recycle_vec<T>(&mut self, vec: &mut Vec<T>) {
+        let extra_capacity = (vec.capacity() - vec.len()) * 100 / vec.len().max(Self::MIN_VECTOR_LENGTH);
+
+        if extra_capacity > Self::MAX_EXTRA_CAPACITY_PERCENT {
+            // Reduce capacity of the buffer if it is a lot larger than it needs to be. This prevents
+            // a frame with exceptionally large allocations to cause subsequent frames to retain
+            // more memory than they need.
+            //TODO: use `shrink_to` when it's stable
+            *vec = Vec::with_capacity(vec.len() + vec.len() * Self::MIN_EXTRA_CAPACITY_PERCENT / 100);
+            self.num_allocations += 1;
+        } else {
+            vec.clear();
+        }
+    }
 }
 
 /// A specialized array container for comparing equality between the current
