@@ -43,6 +43,7 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS.mozilla += [
+        'LauncherResult.h',
         'ModuleEvaluator_windows.h',
         'ModuleVersionInfo_windows.h',
         'PolicyChecks.h',
@@ -62,7 +63,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     if CONFIG['MOZ_LAUNCHER_PROCESS']:
         EXPORTS.mozilla += [
           'LauncherRegistryInfo.h',
-          'LauncherResult.h',
         ]
         UNIFIED_SOURCES += [
           'LauncherRegistryInfo.cpp',
