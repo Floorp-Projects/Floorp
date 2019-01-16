@@ -195,7 +195,9 @@ function convertResultToMatches(context, result, urls) {
     matches.push(match);
     // Manage autofill and preselected properties for the first match.
     if (i == 0) {
-      if (style.includes("autofill") && result.defaultIndex == 0) {
+      if (style.includes("autofill") &&
+          result.defaultIndex == 0 &&
+          context.enableAutofill) {
         context.autofill = true;
       }
       if (style.includes("heuristic")) {
