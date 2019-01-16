@@ -1299,6 +1299,16 @@ var gCSSProperties = {
     other_values: [ "url(foo.xml)" ],
     invalid_values: []
   },
+  "border-inline": {
+    domProp: "borderInline",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "border-inline-start-color", "border-inline-start-style", "border-inline-start-width",
+                     "border-inline-end-color", "border-inline-end-style", "border-inline-end-width" ],
+    initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+    other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+    invalid_values: [ "5%", "5", "5 solid green" ]
+  },
   "border-inline-end": {
     domProp: "borderInlineEnd",
     inherited: false,
@@ -6069,6 +6079,16 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [ "none" ],
+  },
+  "border-block": {
+    domProp: "borderBlock",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "border-block-start-color", "border-block-start-style", "border-block-start-width",
+                     "border-block-end-color", "border-block-end-style", "border-block-end-width" ],
+    initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+    other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+    invalid_values: [ "5%", "5", "5 solid green" ]
   },
   "border-block-end": {
     domProp: "borderBlockEnd",
