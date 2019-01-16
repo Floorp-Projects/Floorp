@@ -566,7 +566,7 @@ impl<'a> DisplayListFlattener<'a> {
         // This is useful when calculating scroll extents for the
         // SpatialNode::scroll(..) API as well as for properly setting sticky
         // positioning offsets.
-        let frame_rect = clip_region.main.translate(reference_frame_relative_offset);
+        let frame_rect = clip_region.main;
         let content_size = item.rect().size;
 
         self.add_clip_node(info.clip_id, item.space_and_clip_info(), clip_region);
