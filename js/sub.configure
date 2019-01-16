@@ -5,13 +5,40 @@
 @depends(check_build_environment, prepare_configure_options, prepare_mozconfig,
          old_configure, old_configure_assignments, '--cache-file')
 @imports('itertools')
+@imports('logging')
 @imports('os')
 @imports('subconfigure')
+@imports('subprocess')
 @imports('sys')
 @imports(_from='__builtin__', _import='open')
+@imports(_from='__builtin__', _import='object')
+@imports(_from='mozbuild.configure.util', _import='ConfigureOutputHandler')
 @imports(_from='mozbuild.util', _import='encode')
 def js_subconfigure(build_env, prepare_configure_options, mozconfig,
                     old_configure, old_configure_assignments, cache_file):
+
+    class PrefixOutput(object):
+        def __init__(self, prefix, fh):
+            self._fh = fh
+            self._begin_line = True
+            self._prefix = prefix
+
+        def write(self, content):
+            if self._begin_line:
+                self._fh.write(self._prefix)
+            self._fh.write(('\n' + self._prefix).join(content.splitlines()))
+            self._begin_line = content.endswith('\n')
+            if self._begin_line:
+                self._fh.write('\n')
+
+        def flush(self):
+            self._fh.flush()
+
+    logger = logging.getLogger('moz.configure')
+    for handler in logger.handlers:
+        if isinstance(handler, ConfigureOutputHandler):
+            handler._stdout = PrefixOutput('js/src> ', handler._stdout)
+
     substs = dict(old_configure['substs'])
     assignments = dict(old_configure_assignments)
     environ = dict(os.environ)
@@ -130,10 +157,17 @@ def js_subconfigure(build_env, prepare_configure_options, mozconfig,
         command += data['args']
         command += ['--cache-file=%s' % cache_file]
 
-        log.info(subconfigure.prefix_lines('configuring', 'js/src'))
-        log.info(subconfigure.prefix_lines('running %s' % ' '.join(command[:-1]), 'js/src'))
-        ret = subconfigure.execute_and_prefix(command, cwd=objdir, env=encode(environ),
-                                              prefix='js/src')
+        log.info('configuring')
+        log.info('running %s' % ' '.join(command[:-1]))
+        proc = subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            cwd=objdir, env=encode(environ))
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            log.info(line.rstrip())
+        ret = proc.wait()
         if ret:
             log.error('subconfigure failed')
             sys.exit(ret)
