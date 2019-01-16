@@ -440,6 +440,13 @@ HandlerProvider::GetEffectiveOutParamIid(REFIID aCallIid, ULONG aCallMethod) {
     return NEWEST_IA2_IID;
   }
 
+  // IAccessible::get_accSelection
+  if ((aCallIid == IID_IAccessible || aCallIid == IID_IAccessible2 ||
+       aCallIid == IID_IAccessible2_2 || aCallIid == IID_IAccessible2_3) &&
+      aCallMethod == 19) {
+    return IID_IEnumVARIANT;
+  }
+
   MOZ_ASSERT(false);
   return IID_IUnknown;
 }
