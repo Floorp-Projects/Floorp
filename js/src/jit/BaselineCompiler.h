@@ -312,6 +312,24 @@ class BaselineCodeGen {
   void pushArg(const T& t) {
     masm.Push(t);
   }
+
+  // Pushes the current script as argument for a VM function.
+  void pushScriptArg();
+
+  // Pushes the bytecode pc as argument for a VM function.
+  void pushBytecodePCArg();
+
+  // Pushes a name/object/scope associated with the current bytecode op (and
+  // stored in the script) as argument for a VM function.
+  enum class ScriptObjectType { RegExp, Function, ObjectLiteral };
+  void pushScriptObjectArg(ScriptObjectType type);
+  void pushScriptNameArg();
+  void pushScriptScopeArg();
+
+  // Pushes a bytecode operand as argument for a VM function.
+  void pushUint8BytecodeOperandArg();
+  void pushUint16BytecodeOperandArg();
+
   void prepareVMCall();
 
   enum CallVMPhase { POST_INITIALIZE, CHECK_OVER_RECURSED };

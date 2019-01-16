@@ -2609,6 +2609,8 @@ class JSScript : public js::gc::TenuredCell {
   }
 
   inline JSFunction* getFunction(size_t index);
+  inline JSFunction* getFunction(jsbytecode* pc);
+
   JSFunction* function() const {
     if (functionNonDelazifying()) {
       return functionNonDelazifying();
