@@ -243,6 +243,7 @@ class LayerManager : public FrameRecorder {
         mSnapEffectiveTransforms(true),
         mId(0),
         mInTransaction(false),
+        mContainsSVG(false),
         mPaintedPixelCount(0) {}
 
   /**
@@ -742,6 +743,8 @@ class LayerManager : public FrameRecorder {
   }
   void PayloadPresented();
 
+  void SetContainsSVG(bool aContainsSVG) { mContainsSVG = aContainsSVG; }
+
  protected:
   RefPtr<Layer> mRoot;
   gfx::UserData mUserData;
@@ -763,6 +766,9 @@ class LayerManager : public FrameRecorder {
 
   uint64_t mId;
   bool mInTransaction;
+
+  // Used for tracking CONTENT_FRAME_TIME_WITH_SVG
+  bool mContainsSVG;
   // The time when painting most recently finished. This is recorded so that
   // we can time any play-pending animations from this point.
   TimeStamp mAnimationReadyTime;

@@ -192,21 +192,28 @@ button > hbox > label {
   font-weight: 600;
 }
 
+.info-panel,
 .extension-controlled {
   margin-top: 18px !important;
   margin-bottom: 18px !important;
   background: var(--grey-20);
   border-radius: 5px;
-  -moz-padding-end: 10px;
+  padding-inline-end: 10px;
 }
 
+.info-panel > description,
 .extension-controlled > description {
   line-height: 16px;
   background: url(chrome://browser/skin/identity-icon.svg) 10px 14px no-repeat;
   padding: 10px;
-  -moz-padding-start: 30px;
+  padding-inline-start: 32px;
 }
 
+.info-panel > description {
+  line-height: unset;
+}
+
+.info-panel > description:-moz-locale-dir(rtl),
 .extension-controlled > description:-moz-locale-dir(rtl) {
   background-position-x: right 10px;
 }

@@ -244,3 +244,8 @@
   padding: 0.25em 0.75em;
   margin: 4px 8px;
 }
+
+#deleteOnCloseNote {
+  margin-bottom: 0 !important; /* Overrides .info-panel margin-bottom. */
+  margin-inline-end: 32px;
+}

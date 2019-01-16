@@ -393,7 +393,8 @@ void CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
 
   aLayerTree->SetPendingTransactionId(
       aInfo.id(), aInfo.vsyncId(), aInfo.vsyncStart(), aInfo.refreshStart(),
-      aInfo.transactionStart(), endTime, aInfo.url(), aInfo.fwdTime());
+      aInfo.transactionStart(), endTime, aInfo.containsSVG(), aInfo.url(),
+      aInfo.fwdTime());
 }
 
 void CrossProcessCompositorBridgeParent::DidCompositeLocked(

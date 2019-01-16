@@ -45,7 +45,6 @@ const statsExpectedByType = {
       "packetsDiscarded",
       "associateStatsId",
       "sliCount",
-      "qpSum",
       "packetsRepaired",
       "fractionLost",
       "burstPacketsLost",
@@ -53,6 +52,7 @@ const statsExpectedByType = {
       "burstDiscardCount",
       "gapDiscardRate",
       "gapLossRate",
+      "qpSum", // Not yet implemented for inbound media, see bug 1519590
     ],
     deprecated: [
       "mozRtt",
@@ -83,13 +83,13 @@ const statsExpectedByType = {
       "framesEncoded",
       "firCount",
       "pliCount",
+      "qpSum",
     ],
     unimplemented: [
       "mediaTrackId",
       "transportId",
       "codecId",
       "sliCount",
-      "qpSum",
       "targetBitrate",
     ],
     deprecated: [
@@ -121,7 +121,6 @@ const statsExpectedByType = {
       "packetsDiscarded",
       "associateStatsId",
       "sliCount",
-      "qpSum",
       "packetsRepaired",
       "fractionLost",
       "burstPacketsLost",
@@ -155,7 +154,6 @@ const statsExpectedByType = {
       "transportId",
       "codecId",
       "sliCount",
-      "qpSum",
       "targetBitrate",
     ],
     deprecated: [
@@ -510,6 +508,7 @@ var pedanticChecks = report => {
           //   stat.type + ".framerateStdDev is sane. value="
           //   + stat.framerateStdDev);
         }
+
       }
     } else if (stat.type == "remote-inbound-rtp") {
       // roundTripTime
@@ -618,6 +617,11 @@ var pedanticChecks = report => {
         ok(stat.framesEncoded >= 0 && stat.framesEncoded < 100000, stat.type
           + ".framesEncoded is a sane number for a short test. value="
           + stat.framesEncoded);
+
+        // qpSum
+        // techinically optional but should be supported for all of our codecs (on the encode side, see bug 1519590)
+        ok(stat.qpSum >= 0,
+          `${stat.type} qpSum is a sane number. value=${stat.qpSum}`);
       }
     } else if (stat.type == "remote-outbound-rtp") {
       //

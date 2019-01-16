@@ -450,11 +450,19 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                   CSSPseudoElementType aPseudoElement,
                                   FrameConstructionItemList& aItems);
 
-  // This method can change aFrameList: it can chop off the beginning and put
-  // it in aParentFrame while putting the remainder into a ib-split sibling of
-  // aParentFrame.  aPrevSibling must be the frame after which aFrameList is to
-  // be placed on aParentFrame's principal child list.  It may be null if
-  // aFrameList is being added at the beginning of the child list.
+  // This method is called by ContentAppended() and ContentRangeInserted() when
+  // appending flowed frames to a parent's principal child list. It handles the
+  // case where the parent is the trailing inline of an ib-split or is the last
+  // continuation of a ::-moz-column-content in an nsColumnSetFrame.
+  //
+  // This method can change aFrameList: it can chop off the beginning and put it
+  // in aParentFrame while either putting the remainder into an ib-split sibling
+  // of aParentFrame or creating aParentFrame's column-span siblings for the
+  // remainder.
+  //
+  // aPrevSibling must be the frame after which aFrameList is to be placed on
+  // aParentFrame's principal child list. It may be null if aFrameList is being
+  // added at the beginning of the child list.
   void AppendFramesToParent(nsFrameConstructorState& aState,
                             nsContainerFrame* aParentFrame,
                             nsFrameItems& aFrameList, nsIFrame* aPrevSibling,

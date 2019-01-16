@@ -2500,9 +2500,13 @@ int32_t RecordContentFrameTime(
       Telemetry::AccumulateCategorical(
           LABELS_CONTENT_FRAME_TIME_REASON::OnTime);
     } else {
-      if (aCompositeId == VsyncId() || aTxnId >= aCompositeId) {
-        // Vsync ids are nonsensical, possibly something got trigged from
+      if (aCompositeId == VsyncId()) {
+        // aCompositeId is 0, possibly something got trigged from
         // outside vsync?
+        Telemetry::AccumulateCategorical(
+            LABELS_CONTENT_FRAME_TIME_REASON::NoVsyncNoId);
+      } else if (aTxnId >= aCompositeId) {
+        // Vsync ids are nonsensical, maybe we're trying to catch up?
         Telemetry::AccumulateCategorical(
             LABELS_CONTENT_FRAME_TIME_REASON::NoVsync);
       } else if (aCompositeId - aTxnId > 1) {

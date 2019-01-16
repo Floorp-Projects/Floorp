@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, ColorF, PictureRect, ColorU, LayoutVector2D};
-use api::{DeviceIntRect, DevicePixelScale, DeviceRect};
+use api::{DeviceIntRect, DevicePixelScale, DeviceRect, WorldVector2D};
 use api::{FilterOp, ImageRendering, TileOffset, RepeatMode, WorldPoint, WorldSize};
 use api::{LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize};
 use api::{PremultipliedColorF, PropertyBinding, Shadow};
@@ -29,8 +29,8 @@ use gpu_types::BrushFlags;
 use image::{Repetition};
 use intern;
 use malloc_size_of::MallocSizeOf;
-use picture::{PictureCompositeMode, PicturePrimitive, PictureUpdateState, TileCacheUpdateState};
-use picture::{ClusterIndex, PrimitiveList, SurfaceIndex, SurfaceInfo, RetainedTiles, RasterConfig};
+use picture::{PictureCompositeMode, PicturePrimitive, PictureUpdateState};
+use picture::{ClusterIndex, PrimitiveList, SurfaceIndex, RetainedTiles, RasterConfig};
 use prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use prim_store::gradient::{LinearGradientDataHandle, RadialGradientDataHandle};
 use prim_store::image::{ImageDataHandle, ImageInstance, VisibleImageTile, YuvImageDataHandle};
@@ -43,14 +43,14 @@ use render_backend::FrameResources;
 use render_task::{RenderTask, RenderTaskCacheKey, to_cache_size};
 use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHandle};
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
-use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
+use resource_cache::{ImageProperties, ImageRequest};
 use scene::SceneProperties;
 use segment::SegmentBuilder;
 use std::{cmp, fmt, hash, ops, u32, usize, mem};
 #[cfg(debug_assertions)]
 use std::sync::atomic::{AtomicUsize, Ordering};
 use storage;
-use util::{ScaleOffset, MatrixHelpers, MaxRect, recycle_vec};
+use util::{ScaleOffset, MatrixHelpers, recycle_vec, MaxRect};
 use util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
 use smallvec::SmallVec;
 
@@ -351,7 +351,6 @@ impl GpuCacheAddress {
 #[derive(MallocSizeOf)]
 pub struct PrimitiveSceneData {
     pub prim_size: LayoutSize,
-    pub prim_relative_clip_rect: LayoutRect,
     pub is_backface_visible: bool,
 }
 
@@ -541,8 +540,23 @@ impl From<VectorKey> for LayoutVector2D {
     }
 }
 
+impl From<VectorKey> for WorldVector2D {
+    fn from(key: VectorKey) -> WorldVector2D {
+        WorldVector2D::new(key.x, key.y)
+    }
+}
+
 impl From<LayoutVector2D> for VectorKey {
     fn from(vec: LayoutVector2D) -> VectorKey {
+        VectorKey {
+            x: vec.x,
+            y: vec.y,
+        }
+    }
+}
+
+impl From<WorldVector2D> for VectorKey {
+    fn from(vec: WorldVector2D) -> VectorKey {
         VectorKey {
             x: vec.x,
             y: vec.y,
@@ -583,24 +597,30 @@ impl From<LayoutPoint> for PointKey {
     }
 }
 
+impl From<WorldPoint> for PointKey {
+    fn from(p: WorldPoint) -> PointKey {
+        PointKey {
+            x: p.x,
+            y: p.y,
+        }
+    }
+}
+
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
 pub struct PrimKeyCommonData {
     pub is_backface_visible: bool,
     pub prim_size: SizeKey,
-    pub prim_relative_clip_rect: RectangleKey,
 }
 
 impl PrimKeyCommonData {
     pub fn with_info(
         info: &LayoutPrimitiveInfo,
-        prim_relative_clip_rect: LayoutRect,
     ) -> Self {
         PrimKeyCommonData {
             is_backface_visible: info.is_backface_visible,
             prim_size: info.rect.size.into(),
-            prim_relative_clip_rect: prim_relative_clip_rect.into(),
         }
     }
 }
@@ -625,14 +645,12 @@ impl PrimitiveKey {
     pub fn new(
         is_backface_visible: bool,
         prim_size: LayoutSize,
-        prim_relative_clip_rect: LayoutRect,
         kind: PrimitiveKeyKind,
     ) -> Self {
         PrimitiveKey {
             common: PrimKeyCommonData {
                 is_backface_visible,
                 prim_size: prim_size.into(),
-                prim_relative_clip_rect: prim_relative_clip_rect.into(),
             },
             kind,
         }
@@ -702,7 +720,6 @@ impl PrimitiveKeyKind {
 pub struct PrimTemplateCommonData {
     pub is_backface_visible: bool,
     pub prim_size: LayoutSize,
-    pub prim_relative_clip_rect: LayoutRect,
     pub opacity: PrimitiveOpacity,
     /// The GPU cache handle for a primitive template. Since this structure
     /// is retained across display lists by interning, this GPU cache handle
@@ -716,7 +733,6 @@ impl PrimTemplateCommonData {
         PrimTemplateCommonData {
             is_backface_visible: common.is_backface_visible,
             prim_size: common.prim_size.into(),
-            prim_relative_clip_rect: common.prim_relative_clip_rect.into(),
             gpu_cache_handle: GpuCacheHandle::new(),
             opacity: PrimitiveOpacity::translucent(),
         }
@@ -818,12 +834,10 @@ impl intern::Internable for PrimitiveKeyKind {
     fn build_key(
         self,
         info: &LayoutPrimitiveInfo,
-        prim_relative_clip_rect: LayoutRect,
     ) -> PrimitiveKey {
         PrimitiveKey::new(
             info.is_backface_visible,
             info.rect.size,
-            prim_relative_clip_rect,
             self,
         )
     }
@@ -1393,6 +1407,9 @@ pub struct PrimitiveInstance {
     /// of the primitive is defined by the template.
     pub prim_origin: LayoutPoint,
 
+    /// Local space clip rect for this instance
+    pub local_clip_rect: LayoutRect,
+
     #[cfg(debug_assertions)]
     pub id: PrimitiveDebugId,
 
@@ -1420,12 +1437,14 @@ pub struct PrimitiveInstance {
 impl PrimitiveInstance {
     pub fn new(
         prim_origin: LayoutPoint,
+        local_clip_rect: LayoutRect,
         kind: PrimitiveInstanceKind,
         clip_chain_id: ClipChainId,
         spatial_node_index: SpatialNodeIndex,
     ) -> Self {
         PrimitiveInstance {
             prim_origin,
+            local_clip_rect,
             kind,
             #[cfg(debug_assertions)]
             prepared_frame_id: FrameId::INVALID,
@@ -1689,10 +1708,12 @@ impl PrimitiveStore {
     pub fn destroy(
         self,
         retained_tiles: &mut RetainedTiles,
+        clip_scroll_tree: &ClipScrollTree,
     ) {
         for pic in self.pictures {
             pic.destroy(
                 retained_tiles,
+                clip_scroll_tree,
             );
         }
     }
@@ -1749,7 +1770,6 @@ impl PrimitiveStore {
         parent_surface_index: SurfaceIndex,
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
-        resources: &mut FrameResources,
     ) {
         let (mut prim_list, surface_index, apply_local_clip_rect) = {
             let pic = &mut self.pictures[pic_index.0];
@@ -1759,6 +1779,22 @@ impl PrimitiveStore {
                 Some(ref raster_config) => raster_config.surface_index,
                 None => parent_surface_index,
             };
+
+            if let Some(mut tile_cache) = pic.tile_cache.take() {
+                debug_assert!(frame_state.tile_cache.is_none());
+
+                // If we have a tile cache for this picture, see if any of the
+                // relative transforms have changed, which means we need to
+                // re-map the dependencies of any child primitives.
+                tile_cache.pre_update(
+                    pic.local_rect,
+                    frame_context,
+                    frame_state.resource_cache,
+                    frame_state.retained_tiles,
+                );
+
+                frame_state.tile_cache = Some(tile_cache);
+            }
 
             (prim_list, surface_index, pic.apply_local_clip_rect)
         };
@@ -1807,7 +1843,7 @@ impl PrimitiveStore {
                 frame_context.clip_scroll_tree,
             );
 
-            let (is_passthrough, prim_local_rect, prim_local_clip_rect, clip_node_collector) = match prim_instance.kind {
+            let (is_passthrough, prim_local_rect, clip_node_collector) = match prim_instance.kind {
                 PrimitiveInstanceKind::Picture { pic_index, .. } => {
                     if !self.pictures[pic_index.0].is_visible() {
                         continue;
@@ -1825,7 +1861,6 @@ impl PrimitiveStore {
                         surface_index,
                         frame_context,
                         frame_state,
-                        resources,
                     );
 
                     let pic = &self.pictures[pic_index.0];
@@ -1838,20 +1873,17 @@ impl PrimitiveStore {
                         }
                     });
 
-                    (pic.raster_config.is_none(), pic.local_rect, LayoutRect::max_rect(), clip_node_collector)
+                    (pic.raster_config.is_none(), pic.local_rect, clip_node_collector)
                 }
                 _ => {
-                    let prim_data = &resources.as_common_data(&prim_instance);
+                    let prim_data = &frame_state.resources.as_common_data(&prim_instance);
 
                     let prim_rect = LayoutRect::new(
                         prim_instance.prim_origin,
                         prim_data.prim_size,
                     );
-                    let clip_rect = prim_data
-                        .prim_relative_clip_rect
-                        .translate(&LayoutVector2D::new(prim_instance.prim_origin.x, prim_instance.prim_origin.y));
 
-                    (false, prim_rect, clip_rect, None)
+                    (false, prim_rect, None)
                 }
             };
 
@@ -1860,7 +1892,7 @@ impl PrimitiveStore {
 
                 frame_state.scratch.prim_info.push(
                     PrimitiveVisibility {
-                        clipped_world_rect: WorldRect::zero(),
+                        clipped_world_rect: WorldRect::max_rect(),
                         clip_chain: ClipChainInstance::empty(),
                         clip_task_index: ClipTaskIndex::INVALID,
                         combined_local_clip_rect: LayoutRect::zero(),
@@ -1883,13 +1915,13 @@ impl PrimitiveStore {
                 let inflation_factor = surface.inflation_factor;
                 let local_rect = prim_local_rect
                     .inflate(inflation_factor, inflation_factor)
-                    .intersection(&prim_local_clip_rect);
+                    .intersection(&prim_instance.local_clip_rect);
                 let local_rect = match local_rect {
                     Some(local_rect) => local_rect,
                     None => {
                         if prim_instance.is_chased() {
                             println!("\tculled for being out of the local clip rectangle: {:?}",
-                                prim_local_clip_rect);
+                                prim_instance.local_clip_rect);
                         }
                         continue;
                     }
@@ -1900,7 +1932,7 @@ impl PrimitiveStore {
                     .build_clip_chain_instance(
                         prim_instance,
                         local_rect,
-                        prim_local_clip_rect,
+                        prim_instance.local_clip_rect,
                         prim_context.spatial_node_index,
                         &map_local_to_surface,
                         &map_surface_to_world,
@@ -1910,8 +1942,21 @@ impl PrimitiveStore {
                         frame_context.device_pixel_scale,
                         &frame_context.screen_world_rect,
                         clip_node_collector.as_ref(),
-                        &mut resources.clip_data_store,
+                        &mut frame_state.resources.clip_data_store,
                     );
+
+                if let Some(ref mut tile_cache) = frame_state.tile_cache {
+                    tile_cache.update_prim_dependencies(
+                        prim_instance,
+                        frame_context.clip_scroll_tree,
+                        frame_state.resources,
+                        &frame_state.clip_store.clip_chain_nodes,
+                        &self.pictures,
+                        frame_state.resource_cache,
+                        &self.opacity_bindings,
+                        &self.images,
+                    );
+                }
 
                 let clip_chain = match clip_chain {
                     Some(clip_chain) => clip_chain,
@@ -1934,7 +1979,7 @@ impl PrimitiveStore {
                 let combined_local_clip_rect = if apply_local_clip_rect {
                     clip_chain.local_clip_rect
                 } else {
-                    prim_local_clip_rect
+                    prim_instance.local_clip_rect
                 };
 
                 // Check if the clip bounding rect (in pic space) is visible on screen
@@ -1969,96 +2014,23 @@ impl PrimitiveStore {
 
         }
 
-        // frame_state.pop_picture();
-        self.pictures[pic_index.0].prim_list = prim_list;
-    }
-
-    /// Update any picture tile caches for a subset of the picture tree.
-    /// This is often a no-op that exits very quickly, unless a new scene
-    /// has arrived, or the relative transforms have changed.
-    pub fn update_tile_cache(
-        &mut self,
-        pic_index: PictureIndex,
-        state: &mut TileCacheUpdateState,
-        frame_context: &FrameBuildingContext,
-        resource_cache: &mut ResourceCache,
-        resources: &FrameResources,
-        clip_store: &ClipStore,
-        surfaces: &[SurfaceInfo],
-        gpu_cache: &mut GpuCache,
-        retained_tiles: &mut RetainedTiles,
-        scratch: &mut PrimitiveScratchBuffer,
-    ) {
-        let children = {
-            let pic = &mut self.pictures[pic_index.0];
-            // Only update the tile cache if we ended up selecting tile caching for the
-            // composite mode of this picture. In some cases, even if the requested
-            // composite mode was tile caching, WR may choose not to draw this picture
-            // with tile cache enabled. For now, this is only in the case of very large
-            // picture rects, but in future we may do it for performance reasons too.
-            if let Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) = pic.raster_config {
-                debug_assert!(state.tile_cache.is_none());
-                let mut tile_cache = pic.tile_cache.take().unwrap();
-
-                // If we have a tile cache for this picture, see if any of the
-                // relative transforms have changed, which means we need to
-                // re-map the dependencies of any child primitives.
-                tile_cache.pre_update(
-                    pic.local_rect,
-                    frame_context,
-                    resource_cache,
-                    retained_tiles,
-                );
-
-                state.tile_cache = Some(tile_cache);
-            }
-            mem::replace(&mut pic.prim_list.pictures, SmallVec::new())
-        };
-
-        if let Some(ref mut tile_cache) = state.tile_cache {
-            self.pictures[pic_index.0].update_prim_dependencies(
-                tile_cache,
-                frame_context,
-                resource_cache,
-                resources,
-                &self.pictures,
-                clip_store,
-                &self.opacity_bindings,
-                &self.images,
-            );
-        }
-
-        for child_pic_index in &children {
-            self.update_tile_cache(
-                *child_pic_index,
-                state,
-                frame_context,
-                resource_cache,
-                resources,
-                clip_store,
-                surfaces,
-                gpu_cache,
-                retained_tiles,
-                scratch,
-            );
-        }
-
         let pic = &mut self.pictures[pic_index.0];
+
         if let Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) = pic.raster_config {
-            let mut tile_cache = state.tile_cache.take().unwrap();
+            let mut tile_cache = frame_state.tile_cache.take().unwrap();
 
             // Build the dirty region(s) for this tile cache.
             pic.local_clip_rect = tile_cache.post_update(
-                resource_cache,
-                gpu_cache,
+                frame_state.resource_cache,
+                frame_state.gpu_cache,
                 frame_context,
-                scratch,
+                frame_state.scratch,
             );
 
             pic.tile_cache = Some(tile_cache);
         }
 
-        pic.prim_list.pictures = children;
+        pic.prim_list = prim_list;
     }
 
     pub fn get_opacity_binding(
@@ -2381,6 +2353,25 @@ impl PrimitiveStore {
         for (plane_split_anchor, prim_instance) in prim_list.prim_instances.iter_mut().enumerate() {
             if prim_instance.visibility_info == PrimitiveVisibilityIndex::INVALID {
                 continue;
+            }
+
+            // The original clipped world rect was calculated during the initial visibility pass.
+            // However, it's possible that the dirty rect has got smaller, if tiles were not
+            // dirty. Intersecting with the dirty rect here eliminates preparing any primitives
+            // outside the dirty rect, and reduces the size of any off-screen surface allocations
+            // for clip masks / render tasks that we make.
+            {
+                let visibility_info = &mut scratch.prim_info[prim_instance.visibility_info.0 as usize];
+
+                match visibility_info.clipped_world_rect.intersection(&pic_context.dirty_world_rect) {
+                    Some(rect) => {
+                        visibility_info.clipped_world_rect = rect;
+                    }
+                    None => {
+                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                        continue;
+                    }
+                }
             }
 
             let spatial_node = &frame_context
@@ -3083,7 +3074,6 @@ impl<'a> GpuDataRequest<'a> {
 impl PrimitiveInstance {
     fn build_segments_if_needed(
         &mut self,
-        prim_local_clip_rect: LayoutRect,
         prim_clip_chain: &ClipChainInstance,
         frame_state: &mut FrameBuildingState,
         prim_store: &mut PrimitiveStore,
@@ -3134,7 +3124,7 @@ impl PrimitiveInstance {
 
             if write_brush_segment_description(
                 prim_local_rect,
-                prim_local_clip_rect,
+                self.local_clip_rect,
                 prim_clip_chain,
                 &mut frame_state.segment_builder,
                 frame_state.clip_store,
@@ -3171,7 +3161,6 @@ impl PrimitiveInstance {
     fn update_clip_task_for_brush(
         &self,
         prim_info: &mut PrimitiveVisibility,
-        prim_local_clip_rect: LayoutRect,
         root_spatial_node_index: SpatialNodeIndex,
         prim_context: &PrimitiveContext,
         pic_context: &PictureContext,
@@ -3294,7 +3283,7 @@ impl PrimitiveInstance {
                             self.prim_origin.x,
                             self.prim_origin.y,
                         )),
-                        prim_local_clip_rect,
+                        self.local_clip_rect,
                         prim_context.spatial_node_index,
                         &pic_state.map_local_to_pic,
                         &pic_state.map_pic_to_world,
@@ -3342,13 +3331,7 @@ impl PrimitiveInstance {
             println!("\tupdating clip task with pic rect {:?}", prim_info.clip_chain.pic_clip_rect);
         }
 
-        let prim_clip_rect = resources
-            .as_common_data(self)
-            .prim_relative_clip_rect
-            .translate(&self.prim_origin.to_vector());
-
         self.build_segments_if_needed(
-            prim_clip_rect,
             &prim_info.clip_chain,
             frame_state,
             prim_store,
@@ -3360,7 +3343,6 @@ impl PrimitiveInstance {
         // First try to  render this primitive's mask using optimized brush rendering.
         if self.update_clip_task_for_brush(
             prim_info,
-            prim_clip_rect,
             root_spatial_node_index,
             prim_context,
             pic_context,
@@ -3517,10 +3499,10 @@ fn test_struct_sizes() {
     //     test expectations and move on.
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
-    assert_eq!(mem::size_of::<PrimitiveInstance>(), 80, "PrimitiveInstance size changed");
+    assert_eq!(mem::size_of::<PrimitiveInstance>(), 96, "PrimitiveInstance size changed");
     assert_eq!(mem::size_of::<PrimitiveInstanceKind>(), 40, "PrimitiveInstanceKind size changed");
-    assert_eq!(mem::size_of::<PrimitiveTemplate>(), 56, "PrimitiveTemplate size changed");
+    assert_eq!(mem::size_of::<PrimitiveTemplate>(), 40, "PrimitiveTemplate size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplateKind>(), 20, "PrimitiveTemplateKind size changed");
-    assert_eq!(mem::size_of::<PrimitiveKey>(), 36, "PrimitiveKey size changed");
+    assert_eq!(mem::size_of::<PrimitiveKey>(), 20, "PrimitiveKey size changed");
     assert_eq!(mem::size_of::<PrimitiveKeyKind>(), 5, "PrimitiveKeyKind size changed");
 }

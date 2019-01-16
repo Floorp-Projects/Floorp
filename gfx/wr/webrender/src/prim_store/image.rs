@@ -84,7 +84,6 @@ impl ImageKey {
     pub fn new(
         is_backface_visible: bool,
         prim_size: LayoutSize,
-        prim_relative_clip_rect: LayoutRect,
         image: Image,
     ) -> Self {
 
@@ -92,7 +91,6 @@ impl ImageKey {
             common: PrimKeyCommonData {
                 is_backface_visible,
                 prim_size: prim_size.into(),
-                prim_relative_clip_rect: prim_relative_clip_rect.into(),
             },
             kind: image,
         }
@@ -355,12 +353,10 @@ impl Internable for Image {
     fn build_key(
         self,
         info: &LayoutPrimitiveInfo,
-        prim_relative_clip_rect: LayoutRect,
     ) -> ImageKey {
         ImageKey::new(
             info.is_backface_visible,
             info.rect.size,
-            prim_relative_clip_rect,
             self
         )
     }
@@ -405,7 +401,6 @@ impl YuvImageKey {
     pub fn new(
         is_backface_visible: bool,
         prim_size: LayoutSize,
-        prim_relative_clip_rect: LayoutRect,
         yuv_image: YuvImage,
     ) -> Self {
 
@@ -413,7 +408,6 @@ impl YuvImageKey {
             common: PrimKeyCommonData {
                 is_backface_visible,
                 prim_size: prim_size.into(),
-                prim_relative_clip_rect: prim_relative_clip_rect.into(),
             },
             kind: yuv_image,
         }
@@ -533,12 +527,10 @@ impl Internable for YuvImage {
     fn build_key(
         self,
         info: &LayoutPrimitiveInfo,
-        prim_relative_clip_rect: LayoutRect,
     ) -> YuvImageKey {
         YuvImageKey::new(
             info.is_backface_visible,
             info.rect.size,
-            prim_relative_clip_rect,
             self
         )
     }
@@ -561,9 +553,9 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<Image>(), 56, "Image size changed");
-    assert_eq!(mem::size_of::<ImageTemplate>(), 124, "ImageTemplate size changed");
-    assert_eq!(mem::size_of::<ImageKey>(), 84, "ImageKey size changed");
+    assert_eq!(mem::size_of::<ImageTemplate>(), 108, "ImageTemplate size changed");
+    assert_eq!(mem::size_of::<ImageKey>(), 68, "ImageKey size changed");
     assert_eq!(mem::size_of::<YuvImage>(), 36, "YuvImage size changed");
-    assert_eq!(mem::size_of::<YuvImageTemplate>(), 72, "YuvImageTemplate size changed");
-    assert_eq!(mem::size_of::<YuvImageKey>(), 64, "YuvImageKey size changed");
+    assert_eq!(mem::size_of::<YuvImageTemplate>(), 56, "YuvImageTemplate size changed");
+    assert_eq!(mem::size_of::<YuvImageKey>(), 48, "YuvImageKey size changed");
 }

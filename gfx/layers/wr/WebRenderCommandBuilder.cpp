@@ -381,7 +381,6 @@ struct DIGroup {
     // otherwise we only want to invalidate the changed areas. If we do get an
     // invalid rect, then we want to add this on top of the change areas.
     nsRect invalid;
-    nsRegion combined;
     const DisplayItemClip& clip = aItem->GetClip();
 
     int32_t appUnitsPerDevPixel =
@@ -407,17 +406,16 @@ struct DIGroup {
       // area.
       UniquePtr<nsDisplayItemGeometry> geometry(
           aItem->AllocateGeometry(aBuilder));
-      combined = clip.ApplyNonRoundedIntersection(
+      nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
           geometry->ComputeInvalidationRegion());
       aData->mGeometry = std::move(geometry);
-      nsRect bounds = combined.GetBounds();
 
       IntRect transformedRect =
-          ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel,
+          ToDeviceSpace(clippedBounds, aMatrix, appUnitsPerDevPixel,
                         mLayerBounds.TopLeft());
       aData->mRect = transformedRect.Intersect(mImageBounds);
-      GP("CGC %s %d %d %d %d\n", aItem->Name(), bounds.x, bounds.y,
-         bounds.width, bounds.height);
+      GP("CGC %s %d %d %d %d\n", aItem->Name(), clippedBounds.x,
+         clippedBounds.y, clippedBounds.width, clippedBounds.height);
       GP("%d %d,  %f %f\n", mLayerBounds.TopLeft().x, mLayerBounds.TopLeft().y,
          aMatrix._11, aMatrix._22);
       GP("mRect %d %d %d %d\n", aData->mRect.x, aData->mRect.y,
@@ -430,18 +428,7 @@ struct DIGroup {
       MOZ_RELEASE_ASSERT(mLayerBounds.TopLeft() == aData->mGroupOffset);
       UniquePtr<nsDisplayItemGeometry> geometry(
           aItem->AllocateGeometry(aBuilder));
-      /* Instead of doing this dance, let's just invalidate the old rect and the
-       * new rect.
-      combined =
-        aData->mClip.ApplyNonRoundedIntersection(
-          aData->mGeometry->ComputeInvalidationRegion());
-      combined.MoveBy(shift);
-      combined.Or(combined,
-                  clip.ApplyNonRoundedIntersection(
-                    geometry->ComputeInvalidationRegion()));
-      aData->mGeometry = std::move(geometry);
-      */
-      combined = clip.ApplyNonRoundedIntersection(
+      nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
           geometry->ComputeInvalidationRegion());
       aData->mGeometry = std::move(geometry);
 
@@ -455,7 +442,7 @@ struct DIGroup {
       // XXX: TransformBounds is expensive. We should avoid doing it if we have
       // no transform
       IntRect transformedRect =
-          ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel,
+          ToDeviceSpace(clippedBounds, aMatrix, appUnitsPerDevPixel,
                         mLayerBounds.TopLeft());
       aData->mRect = transformedRect.Intersect(mImageBounds);
       InvalidateRect(aData->mRect);
@@ -465,6 +452,7 @@ struct DIGroup {
     } else {
       MOZ_RELEASE_ASSERT(mLayerBounds.TopLeft() == aData->mGroupOffset);
       GP("else invalidate: %s\n", aItem->Name());
+      nsRegion combined;
       // this includes situations like reflow changing the position
       aItem->ComputeInvalidationRegion(aBuilder, aData->mGeometry.get(),
                                        &combined);
@@ -480,10 +468,10 @@ struct DIGroup {
 
         aData->mGeometry = std::move(geometry);
 
-        combined = clip.ApplyNonRoundedIntersection(
+        nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
             aData->mGeometry->ComputeInvalidationRegion());
         IntRect transformedRect =
-            ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel,
+            ToDeviceSpace(clippedBounds, aMatrix, appUnitsPerDevPixel,
                           mLayerBounds.TopLeft());
         aData->mRect = transformedRect.Intersect(mImageBounds);
         InvalidateRect(aData->mRect);
@@ -511,10 +499,10 @@ struct DIGroup {
           } else {
             aData->mGeometry = std::move(geometry);
           }
-          combined = clip.ApplyNonRoundedIntersection(
+          nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
               aData->mGeometry->ComputeInvalidationRegion());
           IntRect transformedRect =
-              ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel,
+              ToDeviceSpace(clippedBounds, aMatrix, appUnitsPerDevPixel,
                             mLayerBounds.TopLeft());
           InvalidateRect(aData->mRect.Intersect(mImageBounds));
           aData->mRect = transformedRect.Intersect(mImageBounds);
@@ -541,10 +529,10 @@ struct DIGroup {
           } else {
             aData->mGeometry = std::move(geometry);
           }
-          combined = clip.ApplyNonRoundedIntersection(
+          nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
               aData->mGeometry->ComputeInvalidationRegion());
           IntRect transformedRect =
-              ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel,
+              ToDeviceSpace(clippedBounds, aMatrix, appUnitsPerDevPixel,
                             mLayerBounds.TopLeft());
           InvalidateRect(aData->mRect.Intersect(mImageBounds));
           aData->mRect = transformedRect.Intersect(mImageBounds);
@@ -559,11 +547,11 @@ struct DIGroup {
           // to have the correct bounds rects in the recording
           if (UpdateContainerLayerPropertiesAndDetectChange(aItem, aData,
                                                             *geometry)) {
-            combined = clip.ApplyNonRoundedIntersection(
+            nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
                 geometry->ComputeInvalidationRegion());
             aData->mGeometry = std::move(geometry);
             IntRect transformedRect =
-                ToDeviceSpace(combined.GetBounds(), aMatrix,
+                ToDeviceSpace(clippedBounds, aMatrix,
                               appUnitsPerDevPixel, mLayerBounds.TopLeft());
             InvalidateRect(aData->mRect.Intersect(mImageBounds));
             aData->mRect = transformedRect.Intersect(mImageBounds);
@@ -571,10 +559,10 @@ struct DIGroup {
             GP("UpdateContainerLayerPropertiesAndDetectChange change\n");
           } else if (!aData->mImageRect.IsEqualEdges(mImageBounds)) {
             // Make sure we update mRect for mImageBounds changes
-            combined = clip.ApplyNonRoundedIntersection(
+            nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
                 geometry->ComputeInvalidationRegion());
             IntRect transformedRect =
-                ToDeviceSpace(combined.GetBounds(), aMatrix,
+                ToDeviceSpace(clippedBounds, aMatrix,
                               appUnitsPerDevPixel, mLayerBounds.TopLeft());
             // The invalid rect should contain the old rect and the new rect
             // but may not because the parent may have been removed.
@@ -584,10 +572,10 @@ struct DIGroup {
             GP("ContainerLayer image rect bounds change\n");
           } else {
             // XXX: this code can eventually be deleted/made debug only
-            combined = clip.ApplyNonRoundedIntersection(
+            nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
                 geometry->ComputeInvalidationRegion());
             IntRect transformedRect =
-                ToDeviceSpace(combined.GetBounds(), aMatrix,
+                ToDeviceSpace(clippedBounds, aMatrix,
                               appUnitsPerDevPixel, mLayerBounds.TopLeft());
             auto rect = transformedRect.Intersect(mImageBounds);
             GP("Layer NoChange: %s %d %d %d %d\n", aItem->Name(),
@@ -599,10 +587,10 @@ struct DIGroup {
           // Make sure we update mRect for mImageBounds changes
           UniquePtr<nsDisplayItemGeometry> geometry(
               aItem->AllocateGeometry(aBuilder));
-          combined = clip.ApplyNonRoundedIntersection(
+          nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
               geometry->ComputeInvalidationRegion());
           IntRect transformedRect =
-              ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel,
+              ToDeviceSpace(clippedBounds, aMatrix, appUnitsPerDevPixel,
                             mLayerBounds.TopLeft());
           // The invalid rect should contain the old rect and the new rect
           // but may not because the parent may have been removed.
@@ -614,10 +602,10 @@ struct DIGroup {
           // XXX: this code can eventually be deleted/made debug only
           UniquePtr<nsDisplayItemGeometry> geometry(
               aItem->AllocateGeometry(aBuilder));
-          combined = clip.ApplyNonRoundedIntersection(
+          nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
               geometry->ComputeInvalidationRegion());
           IntRect transformedRect =
-              ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel,
+              ToDeviceSpace(clippedBounds, aMatrix, appUnitsPerDevPixel,
                             mLayerBounds.TopLeft());
           auto rect = transformedRect.Intersect(mImageBounds);
           GP("NoChange: %s %d %d %d %d\n", aItem->Name(), aData->mRect.x,

@@ -760,6 +760,8 @@ sitedata-delete-on-close =
     .label = Delete cookies and site data when { -brand-short-name } is closed
     .accesskey = c
 
+sitedata-delete-on-close-private-browsing = In permanent private browsing mode, cookies and site data will always be cleared when { -brand-short-name } is closed.
+
 sitedata-allow-cookies-option =
     .label = Accept cookies and site data
     .accesskey = A

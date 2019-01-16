@@ -32,23 +32,24 @@ dictionary RTCRtpStreamStats : RTCStats {
   unsigned long ssrc;
   DOMString mediaType;
   DOMString kind;
+  DOMString transportId;
+  DOMString codecId;
+  // Local only measurements, RTCP related but not communicated via RTCP. Not
+  // present in RTCP case. See Bug 1367562
+  unsigned long firCount;
+  unsigned long pliCount;
+  unsigned long nackCount;
+  unsigned long long qpSum;
+
   DOMString remoteId; // See Bug 1515716
   DOMString localId;  // See Bug 1515716
   DOMString mediaTrackId;
-  DOMString transportId;
-  DOMString codecId;
 
   // Video encoder/decoder measurements, not present in RTCP case
   double bitrateMean;
   double bitrateStdDev;
   double framerateMean;
   double framerateStdDev;
-
-  // Local only measurements, RTCP related but not communicated via RTCP. Not
-  // present in RTCP case.
-  unsigned long firCount;
-  unsigned long pliCount;
-  unsigned long nackCount;
 };
 
 dictionary RTCInboundRTPStreamStats : RTCRtpStreamStats {
