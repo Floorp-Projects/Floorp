@@ -26,10 +26,10 @@ class LauncherRegistryInfo final {
  public:
   enum class ProcessType { Launcher, Browser };
 
-  enum class EnabledState {
-    Enabled,
-    FailDisabled,
-    ForceDisabled,
+  enum class EnabledState : uint32_t {
+    Enabled = 0,
+    FailDisabled = 1,
+    ForceDisabled = 2,
   };
 
   LauncherRegistryInfo() : mBinPath(GetFullBinaryPath().get()) {}
