@@ -333,7 +333,15 @@ def old_configure(prepare_configure, prepare_configure_options):
 
     log_size = os.path.getsize('config.log')
 
-    ret = subprocess.call(cmd, env=encode(env))
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            env=encode(env))
+    while True:
+        line = proc.stdout.readline()
+        if not line:
+            break
+        log.info(line.rstrip())
+
+    ret = proc.wait()
     if ret:
         with log.queue_debug():
             with encoded_open('config.log', 'r') as fh:
