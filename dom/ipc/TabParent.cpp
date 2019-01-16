@@ -305,6 +305,11 @@ void TabParent::SetOwnerElement(Element* aElement) {
   }
 }
 
+NS_IMETHODIMP TabParent::GetOwnerElement(Element** aElement) {
+  *aElement = do_AddRef(GetOwnerElement()).take();
+  return NS_OK;
+}
+
 void TabParent::AddWindowListeners() {
   if (mFrameElement) {
     if (nsCOMPtr<nsPIDOMWindowOuter> window =
