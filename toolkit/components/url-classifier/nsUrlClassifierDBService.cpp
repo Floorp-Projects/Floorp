@@ -2168,22 +2168,18 @@ nsresult nsUrlClassifierDBService::LookupURI(
   if (forceLookup) {
     *didLookup = true;
   } else {
-    bool clean = false;
-
-    if (!clean) {
-      nsCOMPtr<nsIPermissionManager> permissionManager =
-          services::GetPermissionManager();
-
-      if (permissionManager) {
-        uint32_t perm;
-        rv = permissionManager->TestPermissionFromPrincipal(
-            aPrincipal, "safe-browsing", &perm);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        clean |= (perm == nsIPermissionManager::ALLOW_ACTION);
-      }
+    nsCOMPtr<nsIPermissionManager> permissionManager =
+        services::GetPermissionManager();
+    if (NS_WARN_IF(!permissionManager)) {
+      return NS_ERROR_FAILURE;
     }
 
+    uint32_t perm;
+    rv = permissionManager->TestPermissionFromPrincipal(
+        aPrincipal, "safe-browsing", &perm);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool clean = (perm == nsIPermissionManager::ALLOW_ACTION);
     *didLookup = !clean;
     if (clean) {
       return NS_OK;
