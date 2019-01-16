@@ -797,10 +797,13 @@ wr::WrSpaceAndClip DisplayListBuilder::DefineScrollLayer(
     return it->second;
   }
 
-  auto rootSpaceAndClip = wr::RootScrollNode();
   // We haven't defined aViewId before, so let's define it now.
+  wr::WrSpaceAndClip defaultParent = wr::RootScrollNode();
+  //Note: we are currently ignoring the clipId on the stack here
+  defaultParent.space = mCurrentSpaceAndClipChain.space;
+
   auto spaceAndClip = wr_dp_define_scroll_layer(
-      mWrState, aViewId, aParent ? aParent.ptr() : &rootSpaceAndClip,
+      mWrState, aViewId, aParent ? aParent.ptr() : &defaultParent,
       aContentRect, aClipRect);
 
   WRDL_LOG("DefineScrollLayer id=%" PRIu64 "/%zu p=%s co=%s cl=%s\n", mWrState,
