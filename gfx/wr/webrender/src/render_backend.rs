@@ -64,7 +64,7 @@ use std::u32;
 #[cfg(feature = "replay")]
 use tiling::Frame;
 use time::precise_time_ns;
-use util::drain_filter;
+use util::{Recycler, drain_filter};
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -593,6 +593,7 @@ impl Document {
     pub fn new_async_scene_ready(
         &mut self,
         mut built_scene: BuiltScene,
+        recycler: &mut Recycler,
     ) {
         self.scene = built_scene.scene;
         self.frame_is_valid = false;
@@ -615,7 +616,7 @@ impl Document {
 
         self.frame_builder = Some(built_scene.frame_builder);
 
-        self.scratch.recycle();
+        self.scratch.recycle(recycler);
 
         let old_scrolling_states = self.clip_scroll_tree.drain();
         self.clip_scroll_tree = built_scene.clip_scroll_tree;
@@ -677,6 +678,8 @@ pub struct RenderBackend {
     size_of_ops: Option<MallocSizeOfOps>,
     debug_flags: DebugFlags,
     namespace_alloc_by_client: bool,
+
+    recycler: Recycler,
 }
 
 impl RenderBackend {
@@ -716,6 +719,7 @@ impl RenderBackend {
             size_of_ops,
             debug_flags,
             namespace_alloc_by_client,
+            recycler: Recycler::new(),
         }
     }
 
@@ -849,6 +853,7 @@ impl RenderBackend {
                             if let Some(mut built_scene) = txn.built_scene.take() {
                                 doc.new_async_scene_ready(
                                     built_scene,
+                                    &mut self.recycler,
                                 );
                             }
 
@@ -1150,6 +1155,7 @@ impl RenderBackend {
                 self.notifier.wake_up();
             }
             ApiMsg::ShutDown => {
+                info!("Recycling stats: {:?}", self.recycler);
                 return false;
             }
             ApiMsg::UpdateDocument(document_id, transaction_msg) => {

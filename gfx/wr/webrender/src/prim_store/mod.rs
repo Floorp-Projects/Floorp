@@ -50,7 +50,7 @@ use std::{cmp, fmt, hash, ops, u32, usize, mem};
 #[cfg(debug_assertions)]
 use std::sync::atomic::{AtomicUsize, Ordering};
 use storage;
-use util::{ScaleOffset, MatrixHelpers, recycle_vec, MaxRect};
+use util::{ScaleOffset, MatrixHelpers, MaxRect, Recycler};
 use util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
 use smallvec::SmallVec;
 
@@ -1581,16 +1581,16 @@ impl PrimitiveScratchBuffer {
         }
     }
 
-    pub fn recycle(&mut self) {
-        recycle_vec(&mut self.clip_mask_instances);
-        recycle_vec(&mut self.prim_info);
-        self.glyph_keys.recycle();
-        self.border_cache_handles.recycle();
-        self.segments.recycle();
-        self.segment_instances.recycle();
-        self.gradient_tiles.recycle();
+    pub fn recycle(&mut self, recycler: &mut Recycler) {
+        recycler.recycle_vec(&mut self.clip_mask_instances);
+        recycler.recycle_vec(&mut self.prim_info);
+        self.glyph_keys.recycle(recycler);
+        self.border_cache_handles.recycle(recycler);
+        self.segments.recycle(recycler);
+        self.segment_instances.recycle(recycler);
+        self.gradient_tiles.recycle(recycler);
         #[cfg(feature = "debug_renderer")]
-        recycle_vec(&mut self.debug_items);
+        recycler.recycle_vec(&mut self.debug_items);
     }
 
     pub fn begin_frame(&mut self) {
