@@ -121,6 +121,13 @@ describe("SubmitFormSnippet", () => {
 
       assert.calledOnce(wrapper.props().onDismiss);
     });
+    it("should send a DISMISS event ping", () => {
+      wrapper.setState({expanded: true});
+
+      wrapper.find(".ASRouterButton.secondary").simulate("click");
+
+      assert.equal(wrapper.props().sendUserActionTelemetry.firstCall.args[0].event, "DISMISS");
+    });
     it("should render hidden inputs + email input", () => {
       wrapper.setState({expanded: true});
 
@@ -133,6 +140,13 @@ describe("SubmitFormSnippet", () => {
 
       assert.isTrue(wrapper.state().expanded);
       assert.isTrue(wrapper.find("form").exists());
+    });
+    it("should submit telemetry when the action button is clicked", () => {
+      assert.isFalse(wrapper.find("form").exists());
+
+      wrapper.find(".ASRouterButton").simulate("click");
+
+      assert.equal(wrapper.props().sendUserActionTelemetry.firstCall.args[0].value, "scene1-button-learn-more");
     });
     it("should submit form data when submitted", () => {
       sandbox.stub(window, "fetch").resolves(fetchOk);
