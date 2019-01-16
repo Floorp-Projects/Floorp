@@ -8,12 +8,11 @@ const {
   CONNECT_RUNTIME_SUCCESS,
   DISCONNECT_RUNTIME_SUCCESS,
   RUNTIMES,
-  UNWATCH_RUNTIME_SUCCESS,
   UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
   UPDATE_RUNTIME_MULTIE10S_SUCCESS,
   REMOTE_RUNTIMES_UPDATED,
+  SELECTED_RUNTIME_ID_UPDATED,
   THIS_FIREFOX_RUNTIME_CREATED,
-  WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
 const {
@@ -84,8 +83,9 @@ function runtimesReducer(state = RuntimesState(), action) {
       return _updateRuntimeById(id, { runtimeDetails: null }, state);
     }
 
-    case UNWATCH_RUNTIME_SUCCESS: {
-      return Object.assign({}, state, { selectedRuntimeId: null });
+    case SELECTED_RUNTIME_ID_UPDATED: {
+      const { runtimeId } = action;
+      return Object.assign({}, state, { selectedRuntimeId: runtimeId });
     }
 
     case UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS: {
@@ -119,11 +119,6 @@ function runtimesReducer(state = RuntimesState(), action) {
       return Object.assign({}, state, {
         thisFirefoxRuntimes: [runtime],
       });
-    }
-
-    case WATCH_RUNTIME_SUCCESS: {
-      const { id } = action.runtime;
-      return Object.assign({}, state, { selectedRuntimeId: id });
     }
 
     default:
