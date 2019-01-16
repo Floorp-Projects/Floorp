@@ -449,7 +449,8 @@ void nsIOService::NotifySocketProcessPrefsChanged(const char *aName) {
   dom::Pref pref(nsCString(aName), /* isLocked */ false, null_t(), null_t());
   Preferences::GetPreference(&pref);
   auto sendPrefUpdate = [pref]() {
-    Unused << gIOService->mSocketProcess->GetActor()->SendPreferenceUpdate(pref);
+    Unused << gIOService->mSocketProcess->GetActor()->SendPreferenceUpdate(
+        pref);
   };
   CallOrWaitForSocketProcess(sendPrefUpdate);
 }
@@ -469,13 +470,14 @@ void nsIOService::OnProcessLaunchComplete(SocketProcessHost *aHost,
   if (!mPendingEvents.IsEmpty()) {
     nsTArray<std::function<void()>> pendingEvents;
     mPendingEvents.SwapElements(pendingEvents);
-    for (auto& func : pendingEvents) {
+    for (auto &func : pendingEvents) {
       func();
     }
   }
 }
 
-void nsIOService::CallOrWaitForSocketProcess(const std::function<void()>& aFunc) {
+void nsIOService::CallOrWaitForSocketProcess(
+    const std::function<void()> &aFunc) {
   MOZ_ASSERT(NS_IsMainThread());
   if (IsSocketProcessLaunchComplete() && SocketProcessReady()) {
     aFunc();
@@ -499,9 +501,9 @@ void nsIOService::OnProcessUnexpectedShutdown(SocketProcessHost *aHost) {
 RefPtr<MemoryReportingProcess> nsIOService::GetSocketProcessMemoryReporter() {
   // Check the prefs here again, since we don't want to create
   // SocketProcessMemoryReporter for some tests.
-  if (!Preferences::GetBool("network.process.enabled") || !SocketProcessReady()) {
+  if (!Preferences::GetBool("network.process.enabled") ||
+      !SocketProcessReady()) {
     return nullptr;
-
   }
 
   return new SocketProcessMemoryReporter();

@@ -150,9 +150,7 @@ class PipeMap {
   }
 
  private:
-  explicit PipeMap(mozilla::StaticMutex& aMutex)
-    : lock_(aMutex)
-  {}
+  explicit PipeMap(mozilla::StaticMutex& aMutex) : lock_(aMutex) {}
   ~PipeMap() = default;
 
   mozilla::StaticMutex& lock_;

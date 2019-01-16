@@ -2301,9 +2301,8 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
 
   bool isScriptElement =
       !aRequest->IsModuleRequest() || aRequest->AsModuleRequest()->IsTopLevel();
-  aOptions->setIntroductionInfoToCaller(jsapi.cx(),
-                                        isScriptElement ? "scriptElement"
-                                                        : "importedModule");
+  aOptions->setIntroductionInfoToCaller(
+      jsapi.cx(), isScriptElement ? "scriptElement" : "importedModule");
   aOptions->setFileAndLine(aRequest->mURL.get(), aRequest->mLineNo);
   aOptions->setIsRunOnce(true);
   aOptions->setNoScriptRval(true);

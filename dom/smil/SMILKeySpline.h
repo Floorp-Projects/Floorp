@@ -27,10 +27,10 @@ class SMILKeySpline {
      * aX1, etc. are the x1, y1, x2, y2 cubic Bezier control points as defined
      * by SMILANIM 3.2.3. They must each be in the range 0.0 <= x <= 1.0
      */
-  SMILKeySpline(double aX1, double aY1, double aX2, double aY2)
-      : mX1(0), mY1(0), mX2(0), mY2(0) {
-    Init(aX1, aY1, aX2, aY2);
-  }
+    SMILKeySpline(double aX1, double aY1, double aX2, double aY2)
+        : mX1(0), mY1(0), mX2(0), mY2(0) {
+      Init(aX1, aY1, aX2, aY2);
+    }
 
     double X1() const { return mX1; }
     double Y1() const { return mY1; }

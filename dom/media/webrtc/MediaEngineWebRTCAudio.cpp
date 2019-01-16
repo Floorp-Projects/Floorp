@@ -605,20 +605,19 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop(
   }
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      media::NewRunnableFrom([that, stream = mStream]() {
-        if (stream->IsDestroyed()) {
-          return NS_OK;
-        }
+  NS_DispatchToMainThread(media::NewRunnableFrom([that, stream = mStream]() {
+    if (stream->IsDestroyed()) {
+      return NS_OK;
+    }
 
-        stream->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
-            that->mInputProcessing, StartStopMessage::Stop));
-        CubebUtils::AudioDeviceID deviceID = that->mDeviceInfo->DeviceID();
-        Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
-        stream->CloseAudioInput(id, that->mInputProcessing);
+    stream->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
+        that->mInputProcessing, StartStopMessage::Stop));
+    CubebUtils::AudioDeviceID deviceID = that->mDeviceInfo->DeviceID();
+    Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
+    stream->CloseAudioInput(id, that->mInputProcessing);
 
-        return NS_OK;
-      }));
+    return NS_OK;
+  }));
 
   MOZ_ASSERT(mState == kStarted, "Should be started when stopping");
   mState = kStopped;

@@ -8706,8 +8706,8 @@ void Document::ScrollToRef() {
       // document's charset.
       if (NS_FAILED(rv)) {
         const Encoding* encoding = GetDocumentCharacterSet();
-        rv = encoding->DecodeWithoutBOMHandling(
-            unescaped ? buff : mScrollToRef, ref);
+        rv = encoding->DecodeWithoutBOMHandling(unescaped ? buff : mScrollToRef,
+                                                ref);
         if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
           rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
         }
@@ -11696,7 +11696,7 @@ void Document::ClearUserGestureActivation() {
   Document* doc = this;
   while (doc) {
     MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug,
-          ("Reset user activation flag for document %p.", this));
+            ("Reset user activation flag for document %p.", this));
     doc->mUserGestureActivated = false;
     doc = doc->GetSameTypeParentDocument();
   }

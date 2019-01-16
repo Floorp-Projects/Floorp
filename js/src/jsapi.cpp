@@ -3557,8 +3557,8 @@ CompileOptions& CompileOptions::setIntroductionInfoToCaller(
   DescribeScriptedCallerForCompilation(cx, &maybeScript, &filename, &lineno,
                                        &pcOffset, &mutedErrors);
   if (filename) {
-    return setIntroductionInfo(filename, introductionType, lineno,
-                               maybeScript, pcOffset);
+    return setIntroductionInfo(filename, introductionType, lineno, maybeScript,
+                               pcOffset);
   } else {
     return setIntroductionType(introductionType);
   }

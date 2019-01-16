@@ -72,8 +72,7 @@ inline void js::NurseryChunk::poisonAndInit(JSRuntime* rt, size_t extent) {
   MOZ_ASSERT(extent <= ChunkSize);
   MOZ_MAKE_MEM_UNDEFINED(this, extent);
 
-  Poison(this, JS_FRESH_NURSERY_PATTERN, extent,
-         MemCheckKind::MakeUndefined);
+  Poison(this, JS_FRESH_NURSERY_PATTERN, extent, MemCheckKind::MakeUndefined);
 
   new (&trailer) gc::ChunkTrailer(rt, &rt->gc.storeBuffer());
 }
@@ -182,9 +181,7 @@ bool js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock) {
   return true;
 }
 
-js::Nursery::~Nursery() {
-  disable();
-}
+js::Nursery::~Nursery() { disable(); }
 
 void js::Nursery::enable() {
   MOZ_ASSERT(isEmpty());

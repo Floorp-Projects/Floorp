@@ -4213,9 +4213,9 @@ static T* findDebuggerInVector(Debugger* dbg,
 
 // a ReadBarriered version for findDebuggerInVector
 // TODO: Bug 1515934 - findDebuggerInVector<T> triggers read barriers.
-static ReadBarriered<Debugger*>*
-findDebuggerInVector(Debugger* dbg,
-                     Vector<ReadBarriered<Debugger*>, 0, js::SystemAllocPolicy>* vec) {
+static ReadBarriered<Debugger*>* findDebuggerInVector(
+    Debugger* dbg,
+    Vector<ReadBarriered<Debugger*>, 0, js::SystemAllocPolicy>* vec) {
   ReadBarriered<Debugger*>* p;
   for (p = vec->begin(); p != vec->end(); p++) {
     if (p->unbarrieredGet() == dbg) {
