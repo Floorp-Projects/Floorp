@@ -266,17 +266,21 @@ if (!Preferences.get("browser.aboutConfig.showWarning")) {
   // immediately to prevent flickering, but wait to filter the preferences until
   // the value of the textbox has been restored from previous sessions.
   document.addEventListener("DOMContentLoaded", loadPrefs, { once: true });
-  window.addEventListener("load", filterPrefs, { once: true });
+  window.addEventListener("load", () => {
+    if (document.getElementById("search").value) {
+      filterPrefs();
+    }
+  }, { once: true });
 }
 
 function onWarningButtonClick() {
   Services.prefs.setBoolPref("browser.aboutConfig.showWarning",
     document.getElementById("showWarningNextTime").checked);
   loadPrefs();
-  filterPrefs();
 }
 
 function loadPrefs() {
+  document.body.className = "config-background";
   [...document.styleSheets].find(s => s.title == "infop").disabled = true;
 
   document.body.textContent = "";
@@ -285,6 +289,8 @@ function loadPrefs() {
   search.id = "search";
   document.l10n.setAttributes(search, "about-config-search");
   document.body.appendChild(search);
+  search.focus();
+
   let prefs = document.createElement("table");
   prefs.id = "prefs";
   document.body.appendChild(prefs);
@@ -365,6 +371,9 @@ function filterPrefs() {
     fragment.appendChild(pref.element);
   }
   prefsElement.appendChild(fragment);
+
+  document.body.classList.toggle("config-warning",
+    location.href.split(":").every(l => gFilterString.includes(l)));
 }
 
 function prefHasDefaultValue(name) {

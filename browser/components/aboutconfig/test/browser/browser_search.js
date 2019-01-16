@@ -62,8 +62,6 @@ add_task(async function test_search() {
 
 add_task(async function test_search_delayed() {
   await AboutConfigTest.withNewTab(async function() {
-    let prefs = this.document.getElementById("prefs");
-
     // Prepare the table and the search field for the test.
     this.search("test.aboutconfig.a");
     Assert.equal(this.rows.length, 2);
@@ -75,7 +73,7 @@ add_task(async function test_search_delayed() {
         observer.disconnect();
         resolve();
       });
-      observer.observe(prefs, { childList: true });
+      observer.observe(this.prefsTable, { childList: true });
     });
 
     // Add a character and test that the table is not updated immediately.
