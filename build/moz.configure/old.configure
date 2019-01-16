@@ -269,6 +269,7 @@ def old_configure_options(*options):
 @imports('os')
 @imports('subprocess')
 @imports('sys')
+@imports('types')
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.shellutil', _import='split')
 @imports(_from='mozbuild.util', _import='encode')
@@ -353,6 +354,13 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
     # If the code execution above fails, we want to keep the file around for
     # debugging.
     os.remove('config.data')
+
+    for c in ('substs', 'defines'):
+        raw_config[c] = [
+            (k[1:-1], v[1:-1] if isinstance(v, types.StringTypes) else v)
+            for k, v in raw_config[c]
+        ]
+
     return raw_config
 
 
@@ -372,14 +380,12 @@ def set_old_configure_define(name, value):
 
 
 @depends(old_configure)
-@imports('types')
 def post_old_configure(raw_config):
     for k, v in raw_config['substs']:
-        set_old_configure_config(
-            k[1:-1], v[1:-1] if isinstance(v, types.StringTypes) else v)
+        set_old_configure_config(k, v)
 
     for k, v in dict(raw_config['defines']).iteritems():
-        set_old_configure_define(k[1:-1], v[1:-1])
+        set_old_configure_define(k, v)
 
     set_old_configure_config('non_global_defines',
                              raw_config['non_global_defines'])
