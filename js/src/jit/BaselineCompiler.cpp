@@ -1740,8 +1740,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_FUNCTIONTHIS() {
 
   frame.pushThis();
 
-  // In strict mode code or self-hosted functions, |this| is left alone.
-  if (script->strict() || (function() && function()->isSelfHostedBuiltin())) {
+  // In strict mode code, |this| is left alone.
+  if (script->strict()) {
     return true;
   }
 
