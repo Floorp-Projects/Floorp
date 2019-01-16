@@ -4672,22 +4672,6 @@ void BCMapCellIterator::PeekBEnd(BCMapCellInfo& aRefInfo, uint32_t aColIndex,
   aAjaInfo.SetInfo(nextRow, aColIndex, cellData, this, cellMap);
 }
 
-// Assign priorities to border styles. For example,
-// styleToPriority(StyleBorderStyle::Solid) will return the priority of
-// StyleBorderStyle::Solid.
-static uint8_t styleToPriority[13] = {0,   // StyleBorderStyle::None
-                                      2,   // StyleBorderStyle::Groove
-                                      4,   // StyleBorderStyle::Ridge
-                                      5,   // StyleBorderStyle::Dotted
-                                      6,   // StyleBorderStyle::Dashed
-                                      7,   // StyleBorderStyle::Solid
-                                      8,   // StyleBorderStyle::Double
-                                      1,   // StyleBorderStyle::Inset
-                                      3,   // StyleBorderStyle::Outset
-                                      9};  // StyleBorderStyle::Hidden
-// priority rules follow CSS 2.1 spec
-// 'hidden', 'double', 'solid', 'dashed', 'dotted', 'ridge', 'outset', 'groove',
-// and the lowest: 'inset'. none is even weaker
 #define CELL_CORNER true
 
 /** return the border style, border color and optionally the width in
@@ -4810,11 +4794,10 @@ static const BCCellBorder& CompareBorders(
   } else if (aBorder1.width < aBorder2.width) {
     firstDominates = false;
   } else if (aBorder1.width == aBorder2.width) {
-    if (styleToPriority[static_cast<uint8_t>(aBorder1.style)] <
-        styleToPriority[static_cast<uint8_t>(aBorder2.style)]) {
+    if (static_cast<uint8_t>(aBorder1.style) <
+        static_cast<uint8_t>(aBorder2.style)) {
       firstDominates = false;
-    } else if (styleToPriority[static_cast<uint8_t>(aBorder1.style)] ==
-               styleToPriority[static_cast<uint8_t>(aBorder2.style)]) {
+    } else if (aBorder1.style == aBorder2.style) {
       if (aBorder1.owner == aBorder2.owner) {
         firstDominates = !aSecondIsInlineDir;
       } else if (aBorder1.owner < aBorder2.owner) {
