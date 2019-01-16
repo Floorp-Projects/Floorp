@@ -1143,6 +1143,36 @@ bool Instance::memoryAccessInGuardRegion(uint8_t* addr,
          lastByteOffset < memoryMappedSize();
 }
 
+bool Instance::memoryAccessInBounds(uint8_t* addr,
+                                    unsigned numBytes) const {
+  MOZ_ASSERT(numBytes > 0 && numBytes <= sizeof(double));
+
+  if (!metadata().usesMemory()) {
+    return false;
+  }
+
+  uint8_t* base = memoryBase().unwrap(/* comparison */);
+  if (addr < base) {
+    return false;
+  }
+
+  uint32_t length = memory()->volatileMemoryLength();
+  if (addr >= base + length) {
+    return false;
+  }
+
+  // The pointer points into the memory.  Now check for partial OOB.
+  //
+  // This calculation can't wrap around because the access is small and there
+  // always is a guard page following the memory.
+  size_t lastByteOffset = addr - base + (numBytes - 1);
+  if (lastByteOffset >= length) {
+    return false;
+  }
+
+  return true;
+}
+
 void Instance::tracePrivate(JSTracer* trc) {
   // This method is only called from WasmInstanceObject so the only reason why
   // TraceEdge is called is so that the pointer can be updated during a moving

@@ -632,10 +632,10 @@ nsresult nsHTMLFramesetFrame::GetCursor(const nsPoint& aPoint,
                                         nsIFrame::Cursor& aCursor) {
   aCursor.mLoading = false;
   if (mDragger) {
-    aCursor.mCursor = (mDragger->mVertical) ? NS_STYLE_CURSOR_EW_RESIZE
-                                            : NS_STYLE_CURSOR_NS_RESIZE;
+    aCursor.mCursor = (mDragger->mVertical) ? StyleCursorKind::EwResize
+                                            : StyleCursorKind::NsResize;
   } else {
-    aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
+    aCursor.mCursor = StyleCursorKind::Default;
   }
   return NS_OK;
 }
@@ -1468,10 +1468,10 @@ nsresult nsHTMLFramesetBorderFrame::GetCursor(const nsPoint& aPoint,
                                               nsIFrame::Cursor& aCursor) {
   aCursor.mLoading = false;
   if (!mCanResize) {
-    aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
+    aCursor.mCursor = StyleCursorKind::Default;
   } else {
     aCursor.mCursor =
-        (mVertical) ? NS_STYLE_CURSOR_EW_RESIZE : NS_STYLE_CURSOR_NS_RESIZE;
+        (mVertical) ? StyleCursorKind::EwResize: StyleCursorKind::NsResize;
   }
   return NS_OK;
 }

@@ -213,6 +213,10 @@ using mozilla::DebugOnly;
 #error "Don't know how to read/write to the thread state via the mcontext_t."
 #endif
 
+#if defined(__linux__) && defined(__arm__)
+#include <sys/user.h>
+#endif
+
 #if defined(ANDROID)
 // Not all versions of the Android NDK define ucontext_t or mcontext_t.
 // Detect this and provide custom but compatible definitions. Note that these
@@ -437,7 +441,197 @@ struct AutoHandlingTrap {
   }
 };
 
+#if defined(__linux__) && defined(__arm__)
+
+// Code to handle SIGBUS for unaligned floating point accesses on 32-bit ARM.
+
+static uintptr_t ReadGPR(CONTEXT* context, uint32_t rn) {
+  switch (rn) {
+    case 0: return context->uc_mcontext.arm_r0;
+    case 1: return context->uc_mcontext.arm_r1;
+    case 2: return context->uc_mcontext.arm_r2;
+    case 3: return context->uc_mcontext.arm_r3;
+    case 4: return context->uc_mcontext.arm_r4;
+    case 5: return context->uc_mcontext.arm_r5;
+    case 6: return context->uc_mcontext.arm_r6;
+    case 7: return context->uc_mcontext.arm_r7;
+    case 8: return context->uc_mcontext.arm_r8;
+    case 9: return context->uc_mcontext.arm_r9;
+    case 10: return context->uc_mcontext.arm_r10;
+    case 11: return context->uc_mcontext.arm_fp;
+    case 12: return context->uc_mcontext.arm_ip;
+    case 13: return context->uc_mcontext.arm_sp;
+    case 14: return context->uc_mcontext.arm_lr;
+    case 15: return context->uc_mcontext.arm_pc;
+    default: MOZ_CRASH();
+  }
+}
+
+// Linux kernel data structures.
+//
+// The vfp_sigframe is a kernel type overlaid on the uc_regspace field of the
+// ucontext_t if the first word of the uc_regspace is VFP_MAGIC.  (user_vfp and
+// user_vfp_exc are defined in sys/user.h and are stable.)
+//
+// VFP_MAGIC appears to have been stable since a commit to Linux on 2010-04-11,
+// when it was changed from being 0x56465001 on ARMv6 and earlier and 0x56465002
+// on ARMv7 and later, to being 0x56465001 on all CPU versions.  This was in
+// Kernel 2.6.34-rc5.
+//
+// My best interpretation of the Android commit history is that Android has had
+// vfp_sigframe and VFP_MAGIC in this form since at least Android 3.4 / 2012;
+// Firefox requires Android 4.0 at least and we're probably safe here.
+
+struct vfp_sigframe
+{
+  unsigned long       magic;
+  unsigned long       size;
+  struct user_vfp     ufp;
+  struct user_vfp_exc ufp_exc;
+};
+
+#define VFP_MAGIC 0x56465001
+
+static vfp_sigframe* GetVFPFrame(CONTEXT* context) {
+  if (context->uc_regspace[0] != VFP_MAGIC) {
+    return nullptr;
+  }
+  return (vfp_sigframe*)&context->uc_regspace;
+}
+
+static bool ReadFPR64(CONTEXT* context, uint32_t vd, double* val) {
+  MOZ_ASSERT(vd < 32);
+  vfp_sigframe* frame = GetVFPFrame(context);
+  if (frame) {
+    *val = ((double*)frame->ufp.fpregs)[vd];
+    return true;
+  }
+  return false;
+}
+
+static bool WriteFPR64(CONTEXT* context, uint32_t vd, double val) {
+  MOZ_ASSERT(vd < 32);
+  vfp_sigframe* frame = GetVFPFrame(context);
+  if (frame) {
+    ((double*)frame->ufp.fpregs)[vd] = val;
+    return true;
+  }
+  return false;
+}
+
+static bool ReadFPR32(CONTEXT* context, uint32_t vd, float* val) {
+  MOZ_ASSERT(vd < 32);
+  vfp_sigframe* frame = GetVFPFrame(context);
+  if (frame) {
+    *val = ((float*)frame->ufp.fpregs)[vd];
+    return true;
+  }
+  return false;
+}
+
+static bool WriteFPR32(CONTEXT* context, uint32_t vd, float val) {
+  MOZ_ASSERT(vd < 32);
+  vfp_sigframe* frame = GetVFPFrame(context);
+  if (frame) {
+    ((float*)frame->ufp.fpregs)[vd] = val;
+    return true;
+  }
+  return false;
+}
+
+static bool HandleUnalignedTrap(CONTEXT* context, uint8_t* pc,
+                                Instance* instance) {
+  // ARM only, no Thumb.
+  MOZ_RELEASE_ASSERT(uintptr_t(pc) % 4 == 0);
+
+  // wasmLoadImpl() and wasmStoreImpl() in MacroAssembler-arm.cpp emit plain,
+  // unconditional VLDR and VSTR instructions that do not use the PC as the base
+  // register.
+  uint32_t instr = *(uint32_t*)pc;
+  uint32_t masked = instr & 0x0F300E00;
+  bool isVLDR = masked == 0x0D100A00;
+  bool isVSTR = masked == 0x0D000A00;
+
+  if (!isVLDR && !isVSTR) {
+    // Three obvious cases if we don't get our expected instructions:
+    // - masm is generating other FP access instructions than it should
+    // - we're encountering a device that traps on new kinds of accesses,
+    //   perhaps unaligned integer accesses
+    // - general code generation bugs that lead to SIGBUS
+#  ifdef ANDROID
+    __android_log_print(ANDROID_LOG_ERROR, "WASM", "Bad SIGBUS instr %08x", instr);
+#  endif
+#  ifdef DEBUG
+    MOZ_CRASH("Unexpected instruction");
+#  endif
+    return false;
+  }
+
+  bool isUnconditional = (instr >> 28) == 0xE;
+  bool isDouble = (instr & 0x00000100) != 0;
+  bool isAdd = (instr & 0x00800000) != 0;
+  uint32_t dBit = (instr >> 22) & 1;
+  uint32_t offs = (instr & 0xFF) << 2;
+  uint32_t rn = (instr >> 16) & 0xF;
+
+  MOZ_RELEASE_ASSERT(isUnconditional);
+  MOZ_RELEASE_ASSERT(rn != 15);
+
+  uint8_t* p = (uint8_t*)ReadGPR(context, rn) + (isAdd ? offs : -offs);
+
+  if (!instance->memoryAccessInBounds(p, isDouble ? sizeof(double)
+                                                  : sizeof(float))) {
+    return false;
+  }
+
+  if (isDouble) {
+    uint32_t vd = ((instr >> 12) & 0xF) | (dBit << 4);
+    double val;
+    if (isVLDR) {
+      memcpy(&val, p, sizeof(val));
+      if (WriteFPR64(context, vd, val)) {
+        SetContextPC(context, pc + 4);
+        return true;
+      }
+    } else {
+      if (ReadFPR64(context, vd, &val)) {
+        memcpy(p, &val, sizeof(val));
+        SetContextPC(context, pc + 4);
+        return true;
+      }
+    }
+  } else {
+    uint32_t vd = ((instr >> 11) & (0xF << 1)) | dBit;
+    float val;
+    if (isVLDR) {
+      memcpy(&val, p, sizeof(val));
+      if (WriteFPR32(context, vd, val)) {
+        SetContextPC(context, pc + 4);
+        return true;
+      }
+    } else {
+      if (ReadFPR32(context, vd, &val)) {
+        memcpy(p, &val, sizeof(val));
+        SetContextPC(context, pc + 4);
+        return true;
+      }
+    }
+  }
+
+#ifdef DEBUG
+  MOZ_CRASH("SIGBUS handler could not access FP register, incompatible kernel?");
+#endif
+  return false;
+}
+#else // __linux__ && __arm__
+static bool HandleUnalignedTrap(CONTEXT* context, uint8_t* pc,
+                                Instance* instance) {
+  return false;
+}
+#endif // __linux__ && __arm__
+
 static MOZ_MUST_USE bool HandleTrap(CONTEXT* context,
+                                    bool isUnalignedSignal = false,
                                     JSContext* assertCx = nullptr) {
   MOZ_ASSERT(sAlreadyHandlingTrap.get());
 
@@ -463,6 +657,16 @@ static MOZ_MUST_USE bool HandleTrap(CONTEXT* context,
   Instance* instance = ((Frame*)ContextToFP(context))->tls->instance;
   MOZ_RELEASE_ASSERT(&instance->code() == &segment.code() ||
                      trap == Trap::IndirectCallBadSig);
+
+  if (isUnalignedSignal) {
+    if (trap != Trap::OutOfBounds) {
+      return false;
+    }
+    if (HandleUnalignedTrap(context, pc, instance)) {
+      return true;
+    }
+  }
+
   JSContext* cx =
       instance->realm()->runtimeFromAnyThread()->mainContextFromAnyThread();
   MOZ_RELEASE_ASSERT(!assertCx || cx == assertCx);
@@ -503,7 +707,7 @@ static LONG WINAPI WasmTrapHandler(LPEXCEPTION_POINTERS exception) {
     return EXCEPTION_CONTINUE_SEARCH;
   }
 
-  if (!HandleTrap(exception->ContextRecord, TlsContext.get())) {
+  if (!HandleTrap(exception->ContextRecord, false, TlsContext.get())) {
     return EXCEPTION_CONTINUE_SEARCH;
   }
 
@@ -671,7 +875,7 @@ static void WasmTrapHandler(int signum, siginfo_t* info, void* context) {
     AutoHandlingTrap aht;
     MOZ_RELEASE_ASSERT(signum == SIGSEGV || signum == SIGBUS ||
                        signum == kWasmTrapSignal);
-    if (HandleTrap((CONTEXT*)context, TlsContext.get())) {
+    if (HandleTrap((CONTEXT*)context, signum == SIGBUS, TlsContext.get())) {
       return;
     }
   }
