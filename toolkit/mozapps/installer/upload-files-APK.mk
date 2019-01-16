@@ -12,12 +12,7 @@ DEBUG_JARSIGNER=$(PYTHON) $(abspath $(topsrcdir)/mobile/android/debug_sign_tool.
   --jarsigner=$(JARSIGNER) \
   $(NULL)
 
-# RELEASE_JARSIGNER release signs if possible.
-ifdef MOZ_SIGN_CMD
-RELEASE_JARSIGNER := $(MOZ_SIGN_CMD) -f jar
-else
 RELEASE_JARSIGNER := $(DEBUG_JARSIGNER)
-endif
 
 # $(1) is the full path to input:  foo-debug-unsigned-unaligned.apk.
 # $(2) is the full path to output: foo.apk.

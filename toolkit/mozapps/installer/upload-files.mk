@@ -244,34 +244,7 @@ ifeq ($(MOZ_PKG_FORMAT),DMG)
         )
 endif
 
-ifdef MOZ_INTERNAL_SIGNING_FORMAT
-  MOZ_SIGN_PREPARED_PACKAGE_CMD=$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_INTERNAL_SIGNING_FORMAT),-f $(f)) $(foreach i,$(SIGN_INCLUDES),-i $(i)) $(foreach x,$(SIGN_EXCLUDES),-x $(x))
-  ifeq (WINNT,$(OS_ARCH))
-    MOZ_SIGN_PREPARED_PACKAGE_CMD += --nsscmd '$(ABS_DIST)/bin/shlibsign$(BIN_SUFFIX) -v -i'
-  endif
-endif
-
-# For final GPG / authenticode signing / dmg signing if required
-ifdef MOZ_EXTERNAL_SIGNING_FORMAT
-  MOZ_SIGN_PACKAGE_CMD=$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),-f $(f))
-endif
-
-ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
-  ifeq (Darwin, $(OS_ARCH))
-    MAKE_PACKAGE    = cd ./$(PKG_DMG_SOURCE) && $(MOZ_SIGN_PREPARED_PACKAGE_CMD) '$(MOZ_MACBUNDLE_NAME)' \
-                      && cd $(PACKAGE_BASE_DIR) && $(INNER_MAKE_PACKAGE)
-  else
-    MAKE_PACKAGE    = $(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(MOZ_PKG_DIR) \
-                      && $(INNER_MAKE_PACKAGE)
-  endif #Darwin
-
-else
-  MAKE_PACKAGE    = $(INNER_MAKE_PACKAGE)
-endif
-
-ifdef MOZ_SIGN_PACKAGE_CMD
-  MAKE_PACKAGE    += && $(MOZ_SIGN_PACKAGE_CMD) '$(PACKAGE)'
-endif
+MAKE_PACKAGE = $(INNER_MAKE_PACKAGE)
 
 NO_PKG_FILES += \
 	core \
@@ -429,17 +402,6 @@ ifdef ENABLE_MOZSEARCH_PLUGIN
   UPLOAD_FILES += $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(MOZSEARCH_ARCHIVE_BASENAME).zip)
   UPLOAD_FILES += $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(MOZSEARCH_RUST_ANALYSIS_BASENAME).zip)
   UPLOAD_FILES += $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(MOZSEARCH_INCLUDEMAP_BASENAME).map)
-endif
-
-SIGN_CHECKSUM_CMD=
-ifdef MOZ_SIGN_CMD
-  # If we're signing with gpg, we'll have a bunch of extra detached signatures to
-  # upload. We also want to sign our checksums file
-  SIGN_CHECKSUM_CMD=$(MOZ_SIGN_CMD) -f gpg $(CHECKSUM_FILE)
-
-  CHECKSUM_FILES += $(CHECKSUM_FILE).asc
-  UPLOAD_FILES += $(call QUOTED_WILDCARD,$(INSTALLER_PACKAGE).asc)
-  UPLOAD_FILES += $(call QUOTED_WILDCARD,$(DIST)/$(PACKAGE).asc)
 endif
 
 ifdef MOZ_STUB_INSTALLER
