@@ -82,12 +82,11 @@ class ConfigureTestSandbox(ConfigureSandbox):
 
         paths = paths.keys()
 
-        environ = dict(environ)
+        environ = copy.copy(environ)
         if 'CONFIG_SHELL' not in environ:
             environ['CONFIG_SHELL'] = mozpath.abspath('/bin/sh')
             self._subprocess_paths[environ['CONFIG_SHELL']] = self.shell
             paths.append(environ['CONFIG_SHELL'])
-        self._environ = copy.copy(environ)
         self._subprocess_paths[mozpath.join(topsrcdir, 'build/win32/vswhere.exe')] = self.vswhere
 
         vfs = ConfigureTestVFS(paths)
@@ -133,9 +132,6 @@ class ConfigureTestSandbox(ConfigureSandbox):
 
         if what == 'os.path.isfile':
             return self.imported_os.path.isfile
-
-        if what == 'os.environ':
-            return self._environ
 
         if what == 'ctypes.wintypes':
             return ReadOnlyNamespace(
