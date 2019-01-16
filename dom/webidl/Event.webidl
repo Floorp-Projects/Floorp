@@ -36,7 +36,8 @@ interface Event {
   readonly attribute boolean bubbles;
   [Pure]
   readonly attribute boolean cancelable;
-  [NeedsCallerType]
+  [NeedsCallerType,
+   Func="mozilla::dom::DOMPrefs::dom_event_returnValue_enabled"]
   attribute boolean returnValue;
   [NeedsCallerType]
   void preventDefault();
