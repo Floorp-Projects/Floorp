@@ -450,110 +450,105 @@
 <groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true" data-subcategory="permissions">
   <label class="search-header" hidden="true"><html:h2 data-l10n-id="permissions-header"/></label>
 
-  <grid>
-    <columns>
-      <column flex="1"/>
-      <column/>
-    </columns>
-    <rows>
-      <row id="locationSettingsRow" align="center" role="group" aria-labelledby="locationPermissionsLabel">
-        <description flex="1">
-          <image class="geo-icon permission-icon" />
-          <separator orient="vertical" class="thin"/>
-          <label id="locationPermissionsLabel" data-l10n-id="permissions-location"/>
-        </description>
-        <hbox pack="end">
-          <button id="locationSettingsButton"
-                  class="accessory-button"
-                  data-l10n-id="permissions-location-settings"
-                  search-l10n-ids="
-                    permissions-remove.label,
-                    permissions-remove-all.label,
-                    permissions-button-cancel.label,
-                    permissions-button-ok.label,
-                    permissions-site-location-window.title,
-                    permissions-site-location-desc,
-                    permissions-site-location-disable-label,
-                    permissions-site-location-disable-desc,
-                  " />
-        </hbox>
-      </row>
+  <!-- The hbox around the buttons is to compute the search tooltip position properly -->
+  <vbox>
+    <hbox id="locationSettingsRow" align="center" role="group" aria-labelledby="locationPermissionsLabel">
+      <description flex="1">
+        <image class="geo-icon permission-icon" />
+        <separator orient="vertical" class="thin"/>
+        <label id="locationPermissionsLabel" data-l10n-id="permissions-location"/>
+      </description>
+      <hbox pack="end">
+        <button id="locationSettingsButton"
+                class="accessory-button"
+                data-l10n-id="permissions-location-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-button-cancel.label,
+                  permissions-button-ok.label,
+                  permissions-site-location-window.title,
+                  permissions-site-location-desc,
+                  permissions-site-location-disable-label,
+                  permissions-site-location-disable-desc,
+                " />
+      </hbox>
+    </hbox>
 
-      <row id="cameraSettingsRow" align="center" role="group" aria-labelledby="cameraPermissionsLabel">
-        <description flex="1">
-          <image class="camera-icon permission-icon" />
-          <separator orient="vertical" class="thin"/>
-          <label id="cameraPermissionsLabel" data-l10n-id="permissions-camera"/>
-        </description>
-        <hbox pack="end">
-          <button id="cameraSettingsButton"
-                  class="accessory-button"
-                  data-l10n-id="permissions-camera-settings"
-                  search-l10n-ids="
-                    permissions-remove.label,
-                    permissions-remove-all.label,
-                    permissions-button-cancel.label,
-                    permissions-button-ok.label,
-                    permissions-site-camera-window.title,
-                    permissions-site-camera-desc,
-                    permissions-site-camera-disable-label,
-                    permissions-site-camera-disable-desc,
-                  " />
-        </hbox>
-      </row>
+    <hbox id="cameraSettingsRow" align="center" role="group" aria-labelledby="cameraPermissionsLabel">
+      <description flex="1">
+        <image class="camera-icon permission-icon" />
+        <separator orient="vertical" class="thin"/>
+        <label id="cameraPermissionsLabel" data-l10n-id="permissions-camera"/>
+      </description>
+      <hbox pack="end">
+        <button id="cameraSettingsButton"
+                class="accessory-button"
+                data-l10n-id="permissions-camera-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-button-cancel.label,
+                  permissions-button-ok.label,
+                  permissions-site-camera-window.title,
+                  permissions-site-camera-desc,
+                  permissions-site-camera-disable-label,
+                  permissions-site-camera-disable-desc,
+                " />
+      </hbox>
+    </hbox>
 
-      <row id="microphoneSettingsRow" align="center" role="group" aria-labelledby="microphonePermissionsLabel">
-        <description flex="1">
-          <image class="microphone-icon permission-icon" />
-          <separator orient="vertical" class="thin"/>
-          <label id="microphonePermissionsLabel" data-l10n-id="permissions-microphone"/>
-        </description>
-        <hbox pack="end">
-          <button id="microphoneSettingsButton"
-                  class="accessory-button"
-                  data-l10n-id="permissions-microphone-settings"
-                  search-l10n-ids="
-                    permissions-remove.label,
-                    permissions-remove-all.label,
-                    permissions-button-cancel.label,
-                    permissions-button-ok.label,
-                    permissions-site-microphone-window.title,
-                    permissions-site-microphone-desc,
-                    permissions-site-microphone-disable-label,
-                    permissions-site-microphone-disable-desc,
-                  " />
-        </hbox>
-      </row>
+    <hbox id="microphoneSettingsRow" align="center" role="group" aria-labelledby="microphonePermissionsLabel">
+      <description flex="1">
+        <image class="microphone-icon permission-icon" />
+        <separator orient="vertical" class="thin"/>
+        <label id="microphonePermissionsLabel" data-l10n-id="permissions-microphone"/>
+      </description>
+      <hbox pack="end">
+        <button id="microphoneSettingsButton"
+                class="accessory-button"
+                data-l10n-id="permissions-microphone-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-button-cancel.label,
+                  permissions-button-ok.label,
+                  permissions-site-microphone-window.title,
+                  permissions-site-microphone-desc,
+                  permissions-site-microphone-disable-label,
+                  permissions-site-microphone-disable-desc,
+                " />
+      </hbox>
+    </hbox>
 
-      <row id="notificationSettingsRow" align="center" role="group" aria-labelledby="notificationPermissionsLabel">
-        <description flex="1">
-          <image class="desktop-notification-icon permission-icon" />
-          <separator orient="vertical" class="thin"/>
-          <label id="notificationPermissionsLabel"
-                 class="tail-with-learn-more"
-                 data-l10n-id="permissions-notification"/>
-          <label id="notificationPermissionsLearnMore"
-                 class="learnMore text-link"
-                 data-l10n-id="permissions-notification-link"/>
-        </description>
-        <hbox pack="end">
-          <button id="notificationSettingsButton"
-                  class="accessory-button"
-                  data-l10n-id="permissions-notification-settings"
-                  search-l10n-ids="
-                    permissions-remove.label,
-                    permissions-remove-all.label,
-                    permissions-button-cancel.label,
-                    permissions-button-ok.label,
-                    permissions-site-notification-window.title,
-                    permissions-site-notification-desc,
-                    permissions-site-notification-disable-label,
-                    permissions-site-notification-disable-desc,
-                  " />
-        </hbox>
-      </row>
-    </rows>
-  </grid>
+    <hbox id="notificationSettingsRow" align="center" role="group" aria-labelledby="notificationPermissionsLabel">
+      <description flex="1">
+        <image class="desktop-notification-icon permission-icon" />
+        <separator orient="vertical" class="thin"/>
+        <label id="notificationPermissionsLabel"
+               class="tail-with-learn-more"
+               data-l10n-id="permissions-notification"/>
+        <label id="notificationPermissionsLearnMore"
+               class="learnMore text-link"
+               data-l10n-id="permissions-notification-link"/>
+      </description>
+      <hbox pack="end">
+        <button id="notificationSettingsButton"
+                class="accessory-button"
+                data-l10n-id="permissions-notification-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-button-cancel.label,
+                  permissions-button-ok.label,
+                  permissions-site-notification-window.title,
+                  permissions-site-notification-desc,
+                  permissions-site-notification-disable-label,
+                  permissions-site-notification-disable-desc,
+                " />
+      </hbox>
+    </hbox>
+  </vbox>
 
   <vbox id="notificationsDoNotDisturbBox" hidden="true">
     <checkbox id="notificationsDoNotDisturb" class="indent"/>
