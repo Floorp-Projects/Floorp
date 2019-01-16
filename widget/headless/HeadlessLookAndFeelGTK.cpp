@@ -271,7 +271,6 @@ nsresult HeadlessLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       aResult = 1;
       break;
     case eIntID_GTKCSDAvailable:
-    case eIntID_GTKCSDHideTitlebarByDefault:
     case eIntID_GTKCSDTransparentBackground:
       aResult = 0;
       break;
