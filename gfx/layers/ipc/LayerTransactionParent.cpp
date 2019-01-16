@@ -889,7 +889,7 @@ TransactionId LayerTransactionParent::FlushTransactionId(
   if (mId.IsValid() && mPendingTransaction.IsValid() && !mVsyncRate.IsZero()) {
     RecordContentFrameTime(mTxnVsyncId, mVsyncStartTime, mTxnStartTime, aId,
                            aCompositeEnd, mTxnEndTime - mTxnStartTime,
-                           mVsyncRate, false, false);
+                           mVsyncRate, mContainsSVG, false);
   }
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)

@@ -4,7 +4,7 @@
 
 use api::{
     ColorF, ColorU,ExtendMode, GradientStop, LayoutPoint, LayoutSize,
-    LayoutPrimitiveInfo, LayoutRect, PremultipliedColorF
+    LayoutPrimitiveInfo, PremultipliedColorF
 };
 use display_list_flattener::{AsInstanceKind, IsVisible};
 use frame_builder::FrameBuildingState;
@@ -55,14 +55,12 @@ impl LinearGradientKey {
     pub fn new(
         is_backface_visible: bool,
         prim_size: LayoutSize,
-        prim_relative_clip_rect: LayoutRect,
         linear_grad: LinearGradient,
     ) -> Self {
         LinearGradientKey {
             common: PrimKeyCommonData {
                 is_backface_visible,
                 prim_size: prim_size.into(),
-                prim_relative_clip_rect: prim_relative_clip_rect.into(),
             },
             extend_mode: linear_grad.extend_mode,
             start_point: linear_grad.start_point,
@@ -258,12 +256,10 @@ impl Internable for LinearGradient {
     fn build_key(
         self,
         info: &LayoutPrimitiveInfo,
-        prim_relative_clip_rect: LayoutRect
     ) -> LinearGradientKey {
         LinearGradientKey::new(
             info.is_backface_visible,
             info.rect.size,
-            prim_relative_clip_rect,
             self
         )
     }
@@ -316,14 +312,12 @@ impl RadialGradientKey {
     pub fn new(
         is_backface_visible: bool,
         prim_size: LayoutSize,
-        prim_relative_clip_rect: LayoutRect,
         radial_grad: RadialGradient,
     ) -> Self {
         RadialGradientKey {
             common: PrimKeyCommonData {
                 is_backface_visible,
                 prim_size: prim_size.into(),
-                prim_relative_clip_rect: prim_relative_clip_rect.into(),
             },
             extend_mode: radial_grad.extend_mode,
             center: radial_grad.center,
@@ -488,12 +482,10 @@ impl Internable for RadialGradient {
     fn build_key(
         self,
         info: &LayoutPrimitiveInfo,
-        prim_relative_clip_rect: LayoutRect,
     ) -> RadialGradientKey {
         RadialGradientKey::new(
             info.is_backface_visible,
             info.rect.size,
-            prim_relative_clip_rect,
             self,
         )
     }
@@ -726,10 +718,10 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<LinearGradient>(), 72, "LinearGradient size changed");
-    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 128, "LinearGradientTemplate size changed");
-    assert_eq!(mem::size_of::<LinearGradientKey>(), 96, "LinearGradientKey size changed");
+    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 112, "LinearGradientTemplate size changed");
+    assert_eq!(mem::size_of::<LinearGradientKey>(), 80, "LinearGradientKey size changed");
 
     assert_eq!(mem::size_of::<RadialGradient>(), 72, "RadialGradient size changed");
-    assert_eq!(mem::size_of::<RadialGradientTemplate>(), 136, "RadialGradientTemplate size changed");
-    assert_eq!(mem::size_of::<RadialGradientKey>(), 104, "RadialGradientKey size changed");
+    assert_eq!(mem::size_of::<RadialGradientTemplate>(), 120, "RadialGradientTemplate size changed");
+    assert_eq!(mem::size_of::<RadialGradientKey>(), 88, "RadialGradientKey size changed");
 }

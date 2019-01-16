@@ -231,7 +231,8 @@ class MediaSessionConduit {
                                     double* framerateStdDev,
                                     double* bitrateMean, double* bitrateStdDev,
                                     uint32_t* droppedFrames,
-                                    uint32_t* framesEncoded) = 0;
+                                    uint32_t* framesEncoded,
+                                    Maybe<uint64_t>* qpSum) = 0;
   virtual bool GetVideoDecoderStats(double* framerateMean,
                                     double* framerateStdDev,
                                     double* bitrateMean, double* bitrateStdDev,

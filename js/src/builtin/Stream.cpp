@@ -2481,7 +2481,7 @@ static MOZ_MUST_USE JSObject* PromiseCall(JSContext* cx, HandleValue F,
                                           HandleValue V, HandleValue arg);
 
 static void ReadableStreamControllerClearAlgorithms(
-    ReadableStreamController* controller);
+    Handle<ReadableStreamController*> controller);
 
 /**
  * Unified implementation of ReadableStream controllers' [[CancelSteps]]
@@ -2635,9 +2635,12 @@ static JSObject* ReadableStreamDefaultControllerPullSteps(
     }
 
     // Step b: If this.[[closeRequested]] is true and this.[[queue]] is empty,
-    //         perform ! ReadableStreamClose(stream).
     if (unwrappedController->closeRequested() &&
         unwrappedQueue->length() == 0) {
+      // Step i: Perform ! ReadableStreamDefaultControllerClearAlgorithms(this).
+      ReadableStreamControllerClearAlgorithms(unwrappedController);
+
+      // Step ii: Perform ! ReadableStreamClose(stream).
       if (!ReadableStreamCloseInternal(cx, unwrappedStream)) {
         return nullptr;
       }
@@ -2942,12 +2945,14 @@ static bool ReadableStreamControllerShouldCallPull(
  *      ReadableByteStreamControllerClearAlgorithms ( controller )
  */
 static void ReadableStreamControllerClearAlgorithms(
-    ReadableStreamController* controller) {
+    Handle<ReadableStreamController*> controller) {
   // Step 1: Set controller.[[pullAlgorithm]] to undefined.
-  controller->setPullMethod(UndefinedHandleValue);
-
   // Step 2: Set controller.[[cancelAlgorithm]] to undefined.
+  // (In this implementation, the UnderlyingSource slot is part of the
+  // representation of these algorithms.)
+  controller->setPullMethod(UndefinedHandleValue);
   controller->setCancelMethod(UndefinedHandleValue);
+  ReadableStreamController::clearUnderlyingSource(controller);
 
   // Step 3 (of 3.9.4 only) : Set controller.[[strategySizeAlgorithm]] to
   // undefined.
@@ -2975,10 +2980,14 @@ static MOZ_MUST_USE bool ReadableStreamDefaultControllerClose(
   // Step 3: Set controller.[[closeRequested]] to true.
   unwrappedController->setCloseRequested();
 
-  // Step 5: If controller.[[queue]] is empty, perform
-  //         ! ReadableStreamClose(stream).
+  // Step 4: If controller.[[queue]] is empty,
   Rooted<ListObject*> unwrappedQueue(cx, unwrappedController->queue());
   if (unwrappedQueue->length() == 0) {
+    // Step a: Perform
+    //         ! ReadableStreamDefaultControllerClearAlgorithms(controller).
+    ReadableStreamControllerClearAlgorithms(unwrappedController);
+
+    // Step b: Perform ! ReadableStreamClose(stream).
     return ReadableStreamCloseInternal(cx, unwrappedStream);
   }
 
@@ -3108,7 +3117,12 @@ static MOZ_MUST_USE bool ReadableStreamControllerError(
     return false;
   }
 
-  // Step 4 (or 5): Perform ! ReadableStreamError(stream, e).
+  // Step 4 (or 5):
+  //      Perform ! ReadableStreamDefaultControllerClearAlgorithms(controller)
+  //      (or ReadableByteStreamControllerClearAlgorithms(controller)).
+  ReadableStreamControllerClearAlgorithms(unwrappedController);
+
+  // Step 5 (or 6): Perform ! ReadableStreamError(stream, e).
   return ReadableStreamErrorInternal(cx, unwrappedStream, e);
 }
 
@@ -3878,7 +3892,10 @@ static MOZ_MUST_USE bool ReadableByteStreamControllerClose(
     }
   }
 
-  // Step 6: Perform ! ReadableStreamClose(stream).
+  // Step 6: Perform ! ReadableByteStreamControllerClearAlgorithms(controller).
+  ReadableStreamControllerClearAlgorithms(unwrappedController);
+
+  // Step 7: Perform ! ReadableStreamClose(stream).
   return ReadableStreamCloseInternal(cx, unwrappedStream);
 }
 
@@ -3907,6 +3924,10 @@ static MOZ_MUST_USE bool ReadableByteStreamControllerHandleQueueDrain(
   if (unwrappedController->queueTotalSize() == 0 &&
       unwrappedController->closeRequested()) {
     // Step a: Perform
+    //         ! ReadableByteStreamControllerClearAlgorithms(controller).
+    ReadableStreamControllerClearAlgorithms(unwrappedController);
+
+    // Step b: Perform
     //         ! ReadableStreamClose(controller.[[controlledReadableStream]]).
     return ReadableStreamCloseInternal(cx, unwrappedStream);
   }

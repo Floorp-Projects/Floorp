@@ -526,12 +526,14 @@ Inspector.prototype = {
       return true;
     }
 
-    const { clientWidth } = this.panelDoc.getElementById("inspector-splitter-box");
+    const splitterBox = this.panelDoc.getElementById("inspector-splitter-box");
+    const { width } = window.windowUtils.getBoundsWithoutFlushing(splitterBox);
+
     return this.is3PaneModeEnabled &&
            (this.toolbox.hostType == Toolbox.HostType.LEFT ||
             this.toolbox.hostType == Toolbox.HostType.RIGHT) ?
-      clientWidth > SIDE_PORTAIT_MODE_WIDTH_THRESHOLD :
-      clientWidth > PORTRAIT_MODE_WIDTH_THRESHOLD;
+      width > SIDE_PORTAIT_MODE_WIDTH_THRESHOLD :
+      width > PORTRAIT_MODE_WIDTH_THRESHOLD;
   },
 
   /**
@@ -584,17 +586,7 @@ Inspector.prototype = {
       return;
     }
 
-    // Use window.top because promiseDocumentFlushed() in a subframe doesn't
-    // work, see https://bugzilla.mozilla.org/show_bug.cgi?id=1441173
-    const useLandscapeMode = await window.top.promiseDocumentFlushed(() => {
-      return this.useLandscapeMode();
-    });
-
-    if (window.closed) {
-      return;
-    }
-
-    this.splitBox.setState({ vert: useLandscapeMode });
+    this.splitBox.setState({ vert: this.useLandscapeMode() });
     this.emit("inspector-resize");
   },
 

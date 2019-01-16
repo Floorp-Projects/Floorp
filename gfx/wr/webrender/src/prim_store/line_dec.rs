@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    ColorF, ColorU, LayoutPrimitiveInfo, LayoutRect, LayoutSizeAu,
+    ColorF, ColorU, LayoutPrimitiveInfo, LayoutSizeAu,
     LineOrientation, LineStyle, PremultipliedColorF, Shadow,
 };
 use app_units::Au;
@@ -45,13 +45,11 @@ pub type LineDecorationKey = PrimKey<LineDecoration>;
 impl LineDecorationKey {
     pub fn new(
         info: &LayoutPrimitiveInfo,
-        prim_relative_clip_rect: LayoutRect,
         line_dec: LineDecoration,
     ) -> Self {
         LineDecorationKey {
             common: PrimKeyCommonData::with_info(
                 info,
-                prim_relative_clip_rect,
             ),
             kind: line_dec,
         }
@@ -155,11 +153,9 @@ impl intern::Internable for LineDecoration {
     fn build_key(
         self,
         info: &LayoutPrimitiveInfo,
-        prim_relative_clip_rect: LayoutRect,
     ) -> LineDecorationKey {
         LineDecorationKey::new(
             info,
-            prim_relative_clip_rect,
             self,
         )
     }
@@ -191,6 +187,6 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<LineDecoration>(), 20, "LineDecoration size changed");
-    assert_eq!(mem::size_of::<LineDecorationTemplate>(), 68, "LineDecorationTemplate size changed");
-    assert_eq!(mem::size_of::<LineDecorationKey>(), 48, "LineDecorationKey size changed");
+    assert_eq!(mem::size_of::<LineDecorationTemplate>(), 52, "LineDecorationTemplate size changed");
+    assert_eq!(mem::size_of::<LineDecorationKey>(), 32, "LineDecorationKey size changed");
 }

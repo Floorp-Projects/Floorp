@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="utf-8">
+  <title>
+    Loader to test frame construction for column span.
+  </title>
+  <link rel="author" title="Ting-Yu Lin" href="tlin@mozilla.com">
+  <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  function receiveMessage(event)
+  {
+    console.log(event);
+    if (event.data.done) {
+      window.removeEventListener("message", receiveMessage);
+      SimpleTest.finish();
+      return;
+    }
+
+    is(event.data.actualResult, event.data.expectedResult,
+       event.data.message);
+  }
+
+  function prepareTest() {
+    window.addEventListener("message", receiveMessage);
+
+    SpecialPowers.pushPrefEnv({
+      "set": [
+        ["layout.css.column-span.enabled", true]
+      ]
+    }, function () {
+      let iframe = document.getElementById("testFrame");
+      iframe.src = "bug1503420.html";
+    });
+  }
+  </script>
+
+  <body onload="prepareTest()">
+    <iframe id="testFrame" height="500" width="500"></iframe>
+  </body>
+</html>

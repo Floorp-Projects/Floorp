@@ -6,11 +6,18 @@
 
 #include "ErrorHandler.h"
 
+#include "mozilla/LauncherRegistryInfo.h"
+#include "mozilla/Unused.h"
+
 namespace mozilla {
 
 void HandleLauncherError(const LauncherError& aError) {
   // This is a placeholder error handler. We'll add telemetry and a fallback
   // error log in future revisions.
+
+  LauncherRegistryInfo regInfo;
+  Unused << regInfo.DisableDueToFailure();
+
   WindowsError::UniqueString msg = aError.mError.AsString();
   if (!msg) {
     return;

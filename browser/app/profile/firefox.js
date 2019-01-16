@@ -1295,13 +1295,7 @@ pref("browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", 
 
 // ASRouter provider configuration
 pref("browser.newtabpage.activity-stream.asrouter.providers.cfr", "{\"id\":\"cfr\",\"enabled\":true,\"type\":\"local\",\"localProvider\":\"CFRMessageProvider\",\"frequency\":{\"custom\":[{\"period\":\"daily\",\"cap\":1}]}}");
-
-#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":\"snippets\",\"enabled\":true,\"type\":\"remote\",\"url\":\"https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/\",\"updateCycleInMs\":14400000}");
-#else
-pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":\"snippets\",\"enabled\":false,\"type\":\"remote\",\"url\":\"https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/\",\"updateCycleInMs\":14400000}");
-#endif
-
 
 
 // Enable the DOM fullscreen API.
@@ -1800,3 +1794,8 @@ pref("browser.engagement.recent_visited_origins.expiry", 86400); // 24 * 60 * 60
 #ifdef NIGHTLY_BUILD
 pref("browser.aboutConfig.showWarning", true);
 #endif
+
+#if defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
+// Launcher process is disabled by default, will be selectively enabled via SHIELD
+pref("browser.launcherProcess.enabled", false);
+#endif // defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)

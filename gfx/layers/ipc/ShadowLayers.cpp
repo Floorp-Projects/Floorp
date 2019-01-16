@@ -531,8 +531,9 @@ bool ShadowLayerForwarder::EndTransaction(
     bool aIsRepeatTransaction, const mozilla::VsyncId& aVsyncId,
     const mozilla::TimeStamp& aVsyncStart,
     const mozilla::TimeStamp& aRefreshStart,
-    const mozilla::TimeStamp& aTransactionStart, const nsCString& aURL,
-    bool* aSent, const InfallibleTArray<CompositionPayload>& aPayload) {
+    const mozilla::TimeStamp& aTransactionStart, bool aContainsSVG,
+    const nsCString& aURL, bool* aSent,
+    const InfallibleTArray<CompositionPayload>& aPayload) {
   *aSent = false;
 
   TransactionInfo info;
@@ -677,6 +678,7 @@ bool ShadowLayerForwarder::EndTransaction(
   info.refreshStart() = aRefreshStart;
   info.transactionStart() = aTransactionStart;
   info.url() = aURL;
+  info.containsSVG() = aContainsSVG;
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   info.fwdTime() = TimeStamp::Now();
 #endif
