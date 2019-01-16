@@ -147,8 +147,8 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
         # mozconfig['make_extra'], which we don't pass automatically above.
         inject('export AUTOCONF=%s' % quote(autoconf))
 
-        for assignment in old_configure_assignments:
-            inject(assignment)
+        for k, v in old_configure_assignments:
+            inject('%s=%s' % (k, quote(v)))
 
     return cmd
 
