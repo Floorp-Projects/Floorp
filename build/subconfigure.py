@@ -21,11 +21,6 @@ CONFIGURE_DATA = 'configure.pkl'
 def prepare(srcdir, objdir, args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--cache-file', type=str)
-    # The --srcdir argument is simply ignored. It's a useless autoconf feature
-    # that we don't support well anyways. This makes it stripped from `others`
-    # and allows to skip setting it when calling the subconfigure (configure
-    # will take it from the configure path anyways).
-    parser.add_argument('--srcdir', type=str)
 
     data_file = os.path.join(objdir, CONFIGURE_DATA)
     previous_args = None
