@@ -1814,7 +1814,7 @@ nsresult nsMemoryReporterManager::StartGettingReports() {
     }
   }
 
-  if (net::gIOService) {
+  if (!mIsRegistrationBlocked && net::gIOService) {
     if (RefPtr<MemoryReportingProcess> proc =
             net::gIOService->GetSocketProcessMemoryReporter()) {
       s->mChildrenPending.AppendElement(proc.forget());
