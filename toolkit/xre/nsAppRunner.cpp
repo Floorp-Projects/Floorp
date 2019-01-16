@@ -945,6 +945,24 @@ nsXULAppInfo::GetRestartedByOS(bool* aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULAppInfo::GetLauncherProcessState(uint32_t* aResult) {
+#if defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
+  LauncherRegistryInfo launcherInfo;
+
+  LauncherResult<LauncherRegistryInfo::EnabledState> state =
+      launcherInfo.IsEnabled();
+  if (state.isErr()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  *aResult = static_cast<uint32_t>(state.unwrap());
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
 #ifdef XP_WIN
 // Matches the enum in WinNT.h for the Vista SDK but renamed so that we can
 // safely build with the Vista SDK and without it.
