@@ -1986,7 +1986,7 @@ class nsIFrame : public nsQueryFrame {
    */
   struct MOZ_STACK_CLASS Cursor {
     nsCOMPtr<imgIContainer> mContainer;
-    int32_t mCursor = NS_STYLE_CURSOR_AUTO;
+    mozilla::StyleCursorKind mCursor = mozilla::StyleCursorKind::Auto;
     bool mHaveHotspot = false;
     bool mLoading = false;
     float mHotspotX = 0.0f, mHotspotY = 0.0f;

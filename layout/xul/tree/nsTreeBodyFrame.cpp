@@ -2233,8 +2233,8 @@ nsresult nsTreeBodyFrame::GetCursor(const nsPoint& aPoint,
       ComputedStyle* childContext = GetPseudoComputedStyle(child);
 
       FillCursorInformationFromStyle(childContext->StyleUI(), aCursor);
-      if (aCursor.mCursor == NS_STYLE_CURSOR_AUTO)
-        aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
+      if (aCursor.mCursor == StyleCursorKind::Auto)
+        aCursor.mCursor = StyleCursorKind::Default;
 
       return NS_OK;
     }
