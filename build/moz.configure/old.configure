@@ -62,8 +62,22 @@ def autoconf(mozconfig, autoconf):
 set_config('AUTOCONF', autoconf)
 
 
-@depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
-         old_configure_assignments, build_project)
+@depends(mozconfig)
+def prepare_mozconfig(mozconfig):
+    if mozconfig['path']:
+        items = {}
+        for key, value in mozconfig['vars']['added'].items():
+            items[key] = (value, 'added')
+        for key, (old, value) in mozconfig['vars']['modified'].items():
+            items[key] = (value, 'modified')
+        for t in ('env', 'vars'):
+            for key in mozconfig[t]['removed'].keys():
+                items[key] = (None, 'removed ' + t)
+        return items
+
+
+@depends('OLD_CONFIGURE', prepare_mozconfig, autoconf, check_build_environment,
+         shell, old_configure_assignments, build_project)
 @imports(_from='__builtin__', _import='open')
 @imports(_from='__builtin__', _import='print')
 @imports(_from='__builtin__', _import='sorted')
@@ -126,20 +140,14 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
             print(command, file=out) # noqa Python 2vs3
             log.debug('| %s', command)
 
-        if mozconfig['path']:
+        if mozconfig:
             inject('# start of mozconfig values')
-            items = {}
-            for key, value in mozconfig['vars']['added'].items():
-                items[key] = (value, 'added')
-            for key, (old, value) in mozconfig['vars']['modified'].items():
-                items[key] = (value, 'modified')
-
-            for key, (value, action) in sorted(items.items()):
-                inject("%s=%s # %s" % (key, quote(value), action))
-
-            for t in ('env', 'vars'):
-                for key in sorted(mozconfig[t]['removed'].keys()):
-                    inject("unset %s # from %s" % (key, t))
+            for key, (value, action) in sorted(mozconfig.items()):
+                if action.startswith('removed '):
+                    inject("unset %s # from %s" % (
+                        key, action[len('removed '):]))
+                else:
+                    inject("%s=%s # %s" % (key, quote(value), action))
 
             inject('# end of mozconfig values')
 
@@ -162,8 +170,7 @@ def old_configure_options(*options):
     def all_options():
         return list(options)
 
-    return depends(prepare_configure, extra_old_configure_args, all_options,
-                   *options)
+    return depends(extra_old_configure_args, all_options, *options)
 
 
 @old_configure_options(
@@ -263,6 +270,34 @@ def old_configure_options(*options):
     '--x-includes',
     '--x-libraries',
 )
+def prepare_configure_options(extra_old_configure_args, all_options, *options):
+    # old-configure only supports the options listed in @old_configure_options
+    # so we don't need to pass it every single option we've been passed. Only
+    # the ones that are not supported by python configure need to.
+    options = [
+        value.format(name)
+        for name, value in zip(all_options, options)
+        if value.origin != 'default'
+    ]
+
+    extra_env = {}
+
+    # We also pass it the options from js/moz.configure so that it can pass
+    # them down to js/src/configure. Note this list is empty when running
+    # js/src/configure, in which case we don't need to pass those options
+    # to old-configure since old-configure doesn't handle them anyways.
+    if extra_old_configure_args:
+        for arg in extra_old_configure_args:
+            if arg.startswith('-'):
+                options.append(arg)
+            else:
+                k, v = arg.split('=', 1)
+                extra_env[k] = v
+
+    return namespace(options=options, extra_env=extra_env, all_options=all_options)
+
+
+@depends(prepare_configure, prepare_configure_options)
 @imports(_from='__builtin__', _import='compile')
 @imports(_from='__builtin__', _import='open')
 @imports('logging')
@@ -273,34 +308,11 @@ def old_configure_options(*options):
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.shellutil', _import='split')
 @imports(_from='mozbuild.util', _import='encode')
-def old_configure(prepare_configure, extra_old_configure_args, all_options,
-                  *options):
-    cmd = prepare_configure
-
-    # old-configure only supports the options listed in @old_configure_options
-    # so we don't need to pass it every single option we've been passed. Only
-    # the ones that are not supported by python configure need to.
-    cmd += [
-        value.format(name)
-        for name, value in zip(all_options, options)
-        if value.origin != 'default'
-    ]
+def old_configure(prepare_configure, prepare_configure_options):
+    cmd = prepare_configure + prepare_configure_options.options
+    extra_env = prepare_configure_options.extra_env
 
     env = dict(os.environ)
-    extra_env = {}
-
-    # We also pass it the options from js/moz.configure so that it can pass
-    # them down to js/src/configure. Note this list is empty when running
-    # js/src/configure, in which case we don't need to pass those options
-    # to old-configure since old-configure doesn't handle them anyways.
-    if extra_old_configure_args:
-        for arg in extra_old_configure_args:
-            if arg.startswith('-'):
-                cmd.append(arg)
-            else:
-                k, v = arg.split('=', 1)
-                extra_env[k] = v
-
     if extra_env:
         env.update(extra_env)
 
@@ -345,7 +357,7 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
 
     # Ensure all the flags known to old-configure appear in the
     # @old_configure_options above.
-    all_options = set(all_options)
+    all_options = set(prepare_configure_options.all_options)
     for flag in raw_config['flags']:
         if flag not in all_options:
             die('Missing option in `@old_configure_options` in %s: %s',
