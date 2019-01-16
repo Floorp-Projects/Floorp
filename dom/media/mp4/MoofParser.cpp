@@ -55,7 +55,7 @@ bool MoofParser::RebuildFragmentedIndex(BoxContext& aContext) {
       ParseMoov(box);
     } else if (box.IsType("moof")) {
       Moof moof(box, mTrex, mMvhd, mMdhd, mEdts, mSinf, &mLastDecodeTime,
-                mIsAudio);
+                mIsAudio, mIsMultitrackParser);
 
       if (!moof.IsValid() && !box.Next().IsAvailable()) {
         // Moof isn't valid abort search for now.
@@ -227,11 +227,11 @@ void MoofParser::ParseTrak(Box& aBox) {
     if (box.IsType("tkhd")) {
       tkhd = Tkhd(box);
     } else if (box.IsType("mdia")) {
-      if (!mTrex.mTrackId || tkhd.mTrackId == mTrex.mTrackId) {
+      if (mIsMultitrackParser || tkhd.mTrackId == mTrex.mTrackId) {
         ParseMdia(box, tkhd);
       }
     } else if (box.IsType("edts") &&
-               (!mTrex.mTrackId || tkhd.mTrackId == mTrex.mTrackId)) {
+               (mIsMultitrackParser || tkhd.mTrackId == mTrex.mTrackId)) {
       mEdts = Edts(box);
     }
   }
@@ -251,12 +251,8 @@ void MoofParser::ParseMvex(Box& aBox) {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("trex")) {
       Trex trex = Trex(box);
-      if (!mTrex.mTrackId || trex.mTrackId == mTrex.mTrackId) {
-        auto trackId = mTrex.mTrackId;
+      if (mIsMultitrackParser || trex.mTrackId == mTrex.mTrackId) {
         mTrex = trex;
-        // Keep the original trackId, as should it be 0 we want to continue
-        // parsing all tracks.
-        mTrex.mTrackId = trackId;
       }
     }
   }
@@ -299,8 +295,8 @@ void MoofParser::ParseStbl(Box& aBox) {
 }
 
 void MoofParser::ParseStsd(Box& aBox) {
-  if (mTrex.mTrackId == 0) {
-    // If mTrex.mTrackId is 0, then the parser is being used to read multiple
+  if (mIsMultitrackParser) {
+    // If mIsMultitrackParser, then the parser is being used to read multiple
     // tracks metadata, and it is not a sane operation to try and map multiple
     // sample description boxes, from different tracks, onto the parser, which
     // is modeled around storing metadata for a single track.
@@ -353,12 +349,14 @@ class CtsComparator {
 };
 
 Moof::Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts,
-           Sinf& aSinf, uint64_t* aDecodeTime, bool aIsAudio)
+           Sinf& aSinf, uint64_t* aDecodeTime, bool aIsAudio,
+           bool aIsMultitrackParser)
     : mRange(aBox.Range()), mTfhd(aTrex), mMaxRoundingError(35000) {
   nsTArray<Box> psshBoxes;
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("traf")) {
-      ParseTraf(box, aTrex, aMvhd, aMdhd, aEdts, aSinf, aDecodeTime, aIsAudio);
+      ParseTraf(box, aTrex, aMvhd, aMdhd, aEdts, aSinf, aDecodeTime, aIsAudio,
+                aIsMultitrackParser);
     }
     if (box.IsType("pssh")) {
       psshBoxes.AppendElement(box);
@@ -506,14 +504,14 @@ bool Moof::ProcessCencAuxInfo(AtomType aScheme) {
 
 void Moof::ParseTraf(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd,
                      Edts& aEdts, Sinf& aSinf, uint64_t* aDecodeTime,
-                     bool aIsAudio) {
+                     bool aIsAudio, bool aIsMultitrackParser) {
   MOZ_ASSERT(aDecodeTime);
   Tfdt tfdt;
 
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("tfhd")) {
       mTfhd = Tfhd(box, aTrex);
-    } else if (!aTrex.mTrackId || mTfhd.mTrackId == aTrex.mTrackId) {
+    } else if (aIsMultitrackParser || mTfhd.mTrackId == aTrex.mTrackId) {
       if (box.IsType("tfdt")) {
         tfdt = Tfdt(box);
       } else if (box.IsType("sgpd")) {
@@ -551,7 +549,7 @@ void Moof::ParseTraf(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd,
       }
     }
   }
-  if (aTrex.mTrackId && mTfhd.mTrackId != aTrex.mTrackId) {
+  if (!aIsMultitrackParser && mTfhd.mTrackId != aTrex.mTrackId) {
     return;
   }
   // Now search for TRUN boxes.
