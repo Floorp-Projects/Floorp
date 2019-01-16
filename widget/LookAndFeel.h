@@ -419,12 +419,6 @@ class LookAndFeel {
     eIntID_GTKCSDAvailable,
 
     /*
-     * A boolean value indicating whether GTK+ system titlebar should be
-     * disabled by default.
-     */
-    eIntID_GTKCSDHideTitlebarByDefault,
-
-    /*
      * A boolean value indicating whether client-side decorations should
      * have transparent background.
      */

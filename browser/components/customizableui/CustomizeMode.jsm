@@ -1582,8 +1582,7 @@ CustomizeMode.prototype = {
   },
 
   _updateTitlebarCheckbox() {
-    let drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref,
-      this.window.matchMedia("(-moz-gtk-csd-hide-titlebar-by-default)").matches);
+    let drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref, true);
     let checkbox = this.$("customization-titlebar-visibility-checkbox");
     // Drawing in the titlebar means 'hiding' the titlebar.
     // We use the attribute rather than a property because if we're not in
@@ -1597,8 +1596,7 @@ CustomizeMode.prototype = {
 
   _updateDragSpaceCheckbox() {
     let extraDragSpace = Services.prefs.getBoolPref(kExtraDragSpacePref);
-    let drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref,
-      this.window.matchMedia("(-moz-gtk-csd-hide-titlebar-by-default)").matches);
+    let drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref, true);
     let menuBar = this.$("toolbar-menubar");
     let menuBarEnabled = menuBar
       && AppConstants.platform != "macosx"

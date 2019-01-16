@@ -673,10 +673,6 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       EnsureInit();
       aResult = mCSDAvailable;
       break;
-    case eIntID_GTKCSDHideTitlebarByDefault:
-      EnsureInit();
-      aResult = mCSDHideTitlebarByDefault;
-      break;
     case eIntID_GTKCSDMaximizeButton:
       EnsureInit();
       aResult = mCSDMaximizeButton;
@@ -1111,7 +1107,6 @@ void nsLookAndFeel::EnsureInit() {
 
   mCSDAvailable =
       nsWindow::GetSystemCSDSupportLevel() != nsWindow::CSD_SUPPORT_NONE;
-  mCSDHideTitlebarByDefault = nsWindow::HideTitlebarByDefault();
 
   mCSDCloseButton = false;
   mCSDMinimizeButton = false;
