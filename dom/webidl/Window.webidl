@@ -467,8 +467,9 @@ partial interface Window {
 
   /**
    * Calls the given function as soon as a style or layout flush for the
-   * top-level document is not necessary, and returns a Promise which
-   * resolves to the callback's return value after it executes.
+   * top-level document (and all subframe descendants of it) are not
+   * necessary, and returns a Promise which resolves to the callback's
+   * return value after it executes.
    *
    * In the event that the window goes away before a flush can occur, the
    * callback will still be called and the Promise resolved as the window
