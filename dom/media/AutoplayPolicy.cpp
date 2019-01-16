@@ -168,8 +168,7 @@ static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
   return IsAudioContextAllowedToPlay(aContext);
 }
 
-/* static */ bool AutoplayPolicy::IsAllowedToPlay(
-    const HTMLMediaElement& aElement) {
+static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
   const uint32_t autoplayDefault = DefaultAutoplayBehaviour();
   // TODO : this old way would be removed when user-gestures-needed becomes
   // as a default option to block autoplay.
@@ -190,12 +189,15 @@ static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
     return true;
   }
 
-  const bool result = IsMediaElementAllowedToPlay(aElement) ||
-                      autoplayDefault == nsIAutoplay::ALLOWED;
+  return IsMediaElementAllowedToPlay(aElement) ||
+         autoplayDefault == nsIAutoplay::ALLOWED;
+}
 
+/* static */ bool AutoplayPolicy::IsAllowedToPlay(
+    const HTMLMediaElement& aElement) {
+  const bool result = IsAllowedToPlayInternal(aElement);
   AUTOPLAY_LOG("IsAllowedToPlay, mediaElement=%p, isAllowToPlay=%s", &aElement,
                result ? "allowed" : "blocked");
-
   return result;
 }
 
