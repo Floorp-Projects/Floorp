@@ -9,7 +9,7 @@ with Files('**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
 with Files('geckoview/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'GeckoView')
+    BUG_COMPONENT = ('GeckoView', 'General')
 
 DIRS += ['geckoview']
 
