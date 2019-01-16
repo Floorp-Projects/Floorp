@@ -9,12 +9,13 @@ const BLOCK = 0;
 const ALLOW = 1;
 const ALLOW_ON_ANY_SITE = 2;
 
-async function testDoorHanger(choice, showPrompt, topPage, maxConcurrent) {
+async function testDoorHanger(choice, showPrompt, useEscape, topPage, maxConcurrent) {
   info(`Running doorhanger test with choice #${choice}, showPrompt: ${showPrompt} and ` +
-       `topPage: ${topPage}, maxConcurrent: ${maxConcurrent}`);
+       `useEscape: ${useEscape}, topPage: ${topPage}, maxConcurrent: ${maxConcurrent}`);
 
   if (!showPrompt) {
     is(choice, ALLOW, "When not showing a prompt, we can only auto-grant");
+    ok(!useEscape, "When not showing a prompt, we should not be trying to use the Esc key");
   }
 
   await SpecialPowers.flushPrefEnv();
@@ -50,6 +51,7 @@ async function testDoorHanger(choice, showPrompt, topPage, maxConcurrent) {
       addEventListener("message", function onMessage(e) {
         if (e.data.startsWith("choice:")) {
           window.choice = e.data.split(":")[1];
+          window.useEscape = e.data.split(":")[3];
           removeEventListener("message", onMessage);
           resolve();
         }
@@ -131,7 +133,11 @@ async function testDoorHanger(choice, showPrompt, topPage, maxConcurrent) {
     Assert.ok(notification, "Should have gotten the notification");
 
     if (choice == BLOCK) {
-      await clickMainAction();
+      if (useEscape) {
+        EventUtils.synthesizeKey("KEY_Escape", {}, window);
+      } else {
+        await clickMainAction();
+      }
     } else if (choice == ALLOW) {
       await clickSecondaryAction(choice - 1);
     } else if (choice == ALLOW_ON_ANY_SITE) {
@@ -147,6 +153,7 @@ async function testDoorHanger(choice, showPrompt, topPage, maxConcurrent) {
                              { page: url,
                                callback: runChecks.toString(),
                                choice,
+                               useEscape,
                              },
                              async function(obj) {
     await new content.Promise(resolve => {
@@ -174,7 +181,8 @@ async function testDoorHanger(choice, showPrompt, topPage, maxConcurrent) {
         }
 
         if (event.data == "getchoice") {
-          ifr.contentWindow.postMessage("choice:" + obj.choice, "*");
+          ifr.contentWindow.postMessage("choice:" + obj.choice +
+                                        ":useEscape:" + obj.useEscape, "*");
           return;
         }
 
@@ -303,16 +311,19 @@ async function cleanUp() {
 async function runRound(topPage, showPrompt, maxConcurrent) {
   if (showPrompt) {
     await preparePermissionsFromOtherSites(topPage);
-    await testDoorHanger(BLOCK, showPrompt, topPage, maxConcurrent);
+    await testDoorHanger(BLOCK, showPrompt, true, topPage, maxConcurrent);
     await cleanUp();
     await preparePermissionsFromOtherSites(topPage);
-    await testDoorHanger(ALLOW, showPrompt, topPage, maxConcurrent);
+    await testDoorHanger(BLOCK, showPrompt, false, topPage, maxConcurrent);
     await cleanUp();
     await preparePermissionsFromOtherSites(topPage);
-    await testDoorHanger(ALLOW_ON_ANY_SITE, showPrompt, topPage, maxConcurrent);
+    await testDoorHanger(ALLOW, showPrompt, false, topPage, maxConcurrent);
+    await cleanUp();
+    await preparePermissionsFromOtherSites(topPage);
+    await testDoorHanger(ALLOW_ON_ANY_SITE, showPrompt, false, topPage, maxConcurrent);
   } else {
     await preparePermissionsFromOtherSites(topPage);
-    await testDoorHanger(ALLOW, showPrompt, topPage, maxConcurrent);
+    await testDoorHanger(ALLOW, showPrompt, false, topPage, maxConcurrent);
   }
   await cleanUp();
 }
