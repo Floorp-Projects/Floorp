@@ -332,6 +332,13 @@ function getContentSize(ui) {
   }));
 }
 
+function getViewportScroll(ui) {
+  return spawnViewportTask(ui, {}, () => ({
+    x: content.scrollX,
+    y: content.scrollY,
+  }));
+}
+
 async function waitForPageShow(browser) {
   const tab = gBrowser.getTabForBrowser(browser);
   const ui = ResponsiveUIManager.getResponsiveUIForTab(tab);
@@ -347,6 +354,10 @@ async function waitForPageShow(browser) {
 
 function waitForViewportLoad(ui) {
   return BrowserTestUtils.waitForContentEvent(ui.getViewportBrowser(), "load", true);
+}
+
+function waitForViewportScroll(ui) {
+  return BrowserTestUtils.waitForContentEvent(ui.getViewportBrowser(), "scroll", true);
 }
 
 function load(browser, url) {
