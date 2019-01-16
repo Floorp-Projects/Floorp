@@ -243,6 +243,7 @@ class PrefRow {
   }
 }
 
+let gPrefObserverRegistered = false;
 let gPrefObserver = {
   observe(subject, topic, data) {
     let pref = gExistingPrefs.get(data) || gDeletedPrefs.get(data);
@@ -340,11 +341,6 @@ function loadPrefs() {
       pref.editButton.focus();
     }
   });
-
-  Services.prefs.addObserver("", gPrefObserver);
-  window.addEventListener("unload", () => {
-    Services.prefs.removeObserver("", gPrefObserver);
-  }, { once: true });
 }
 
 function filterPrefs() {
@@ -371,6 +367,16 @@ function filterPrefs() {
     fragment.appendChild(pref.element);
   }
   prefsElement.appendChild(fragment);
+
+  // We only start observing preference changes after the first search is done,
+  // so that newly added preferences won't appear while the page is still empty.
+  if (!gPrefObserverRegistered) {
+    gPrefObserverRegistered = true;
+    Services.prefs.addObserver("", gPrefObserver);
+    window.addEventListener("unload", () => {
+      Services.prefs.removeObserver("", gPrefObserver);
+    }, { once: true });
+  }
 
   document.body.classList.toggle("config-warning",
     location.href.split(":").every(l => gFilterString.includes(l)));
