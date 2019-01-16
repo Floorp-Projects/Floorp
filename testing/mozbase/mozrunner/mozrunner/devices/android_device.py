@@ -12,6 +12,7 @@ import psutil
 import re
 import shutil
 import signal
+import subprocess
 import sys
 import telnetlib
 import time
@@ -175,7 +176,7 @@ def _maybe_update_host_utils(build_obj):
 
 
 def verify_android_device(build_obj, install=False, xre=False, debugger=False,
-                          verbose=False, app=None, device_serial=None):
+                          network=False, verbose=False, app=None, device_serial=None):
     """
        Determine if any Android device is connected via adb.
        If no device is found, prompt to start an emulator.
@@ -187,6 +188,8 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
        one up.
        If 'debugger' is specified, also check that JimDB is installed;
        if JimDB is not found, prompt to set up JimDB.
+       If 'network' is specified, also check that the device has basic
+       network connectivity.
        Returns True if the emulator was started or another device was
        already connected.
     """
@@ -304,6 +307,28 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
                 "Download and setup your host utilities? (Y/n) ").strip()
             if response.lower().startswith('y') or response == '':
                 _install_host_utils(build_obj)
+
+    if device_verified and network:
+        # Optionally check the network: If on a device that does not look like
+        # an emulator, verify that the device IP address can be obtained
+        # and check that this host can ping the device.
+        serial = device_serial or os.environ.get('DEVICE_SERIAL')
+        if not serial or ('emulator' not in serial):
+            device = _get_device(build_obj.substs, serial)
+            try:
+                addr = device.get_ip_address()
+                if not addr:
+                    _log_warning("unable to get Android device's IP address!")
+                    _log_warning("tests may fail without network connectivity to the device!")
+                else:
+                    _log_info("Android device's IP address: %s" % addr)
+                    response = subprocess.check_output(["ping", "-c", "1", addr])
+                    _log_debug(response)
+            except Exception as e:
+                _log_warning("unable to verify network connection to device: %s" % str(e))
+                _log_warning("tests may fail without network connectivity to the device!")
+        else:
+            _log_debug("network check skipped on emulator")
 
     if debugger:
         # Optionally set up JimDB. See https://wiki.mozilla.org/Mobile/Fennec/Android/GDB.
