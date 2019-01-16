@@ -52,7 +52,8 @@ class SdpMediaSection {
     kTcpTlsRtpSavp,      // TCP/TLS/RTP/SAVP [JSEP-TBD]
     kDccpTlsRtpSavp,     // DCCP/TLS/RTP/SAVP [RFC5764]
     kUdpTlsRtpSavpf,     // UDP/TLS/RTP/SAVPF [RFC5764]
-    kTcpTlsRtpSavpf,     // TCP/TLS/RTP/SAVPF [JSEP-TBD]
+    kTcpTlsRtpSavpf,     // TCP/TLS/RTP/SAVPF DON'T USE - NO RFC
+    kTcpDtlsRtpSavpf,    // TCP/DTLS/RTP/SAVPF [RFC7850]
     kDccpTlsRtpSavpf,    // DCCP/TLS/RTP/SAVPF [RFC5764]
     kUdpMbmsFecRtpAvp,   // UDP/MBMS-FEC/RTP/AVP [RFC6064]
     kUdpMbmsFecRtpSavp,  // UDP/MBMS-FEC/RTP/SAVP [RFC6064]
@@ -233,6 +234,8 @@ inline std::ostream& operator<<(std::ostream& os, SdpMediaSection::Protocol p) {
       return os << "UDP/TLS/RTP/SAVPF";
     case SdpMediaSection::kTcpTlsRtpSavpf:
       return os << "TCP/TLS/RTP/SAVPF";
+    case SdpMediaSection::kTcpDtlsRtpSavpf:
+      return os << "TCP/DTLS/RTP/SAVPF";
     case SdpMediaSection::kDccpTlsRtpSavpf:
       return os << "DCCP/TLS/RTP/SAVPF";
     case SdpMediaSection::kUdpMbmsFecRtpAvp:
