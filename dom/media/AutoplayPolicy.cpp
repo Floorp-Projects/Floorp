@@ -60,6 +60,18 @@ static bool IsActivelyCapturingOrHasAPermission(nsPIDOMWindowInner* aWindow) {
           nsContentUtils::IsExactSitePermAllow(principal, "screen"));
 }
 
+static bool IsSiteInAutoplayWhiteList(const Document* aDocument) {
+  return aDocument ? nsContentUtils::IsExactSitePermAllow(
+                         aDocument->NodePrincipal(), "autoplay-media")
+                   : false;
+}
+
+static bool IsSiteInAutoplayBlackList(const Document* aDocument) {
+  return aDocument ? nsContentUtils::IsExactSitePermDeny(
+                         aDocument->NodePrincipal(), "autoplay-media")
+                   : false;
+}
+
 static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
   if (!aWindow) {
     return false;
@@ -89,13 +101,6 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
   Document* approver = ApproverDocOf(*aWindow->GetExtantDoc());
   if (!approver) {
     return false;
-  }
-
-  if (nsContentUtils::IsExactSitePermAllow(approver->NodePrincipal(),
-                                           "autoplay-media")) {
-    AUTOPLAY_LOG(
-        "Allow autoplay as document has permanent autoplay permission.");
-    return true;
   }
 
   if (approver->HasBeenUserGestureActivated()) {
@@ -169,28 +174,40 @@ static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
 }
 
 static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
-  const uint32_t autoplayDefault = DefaultAutoplayBehaviour();
-  // TODO : this old way would be removed when user-gestures-needed becomes
-  // as a default option to block autoplay.
-  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed",
-                            false)) {
-    // If element is blessed, it would always be allowed to play().
-    return (autoplayDefault == nsIAutoplay::ALLOWED || aElement.IsBlessed() ||
-            EventStateManager::IsHandlingUserInput());
-  }
-
+  /**
+   * The autoplay checking has 4 different phases,
+   * 1. check whether media element itself meets the autoplay condition
+   * 2. check whethr the site is in the autoplay whitelist
+   * 3. check global autoplay setting and check wether the site is in the
+   *    autoplay blacklist.
+   * 4. check whether media is allowed under current blocking model
+   *    (click-to-play or user-gesture-activation)
+   */
   if (IsMediaElementAllowedToPlay(aElement)) {
     return true;
   }
 
-  if (IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow())) {
-    AUTOPLAY_LOG("Autoplay allowed as window is allowed to play, media %p.",
-                 &aElement);
+  Document* approver = ApproverDocOf(*aElement.OwnerDoc());
+  if (IsSiteInAutoplayWhiteList(approver)) {
+    AUTOPLAY_LOG(
+        "Allow autoplay as document has permanent autoplay permission.");
     return true;
   }
 
-  return IsMediaElementAllowedToPlay(aElement) ||
-         autoplayDefault == nsIAutoplay::ALLOWED;
+  if (DefaultAutoplayBehaviour() == nsIAutoplay::ALLOWED &&
+      !IsSiteInAutoplayBlackList(approver)) {
+    AUTOPLAY_LOG(
+        "Allow autoplay as global autoplay setting is allowing autoplay by "
+        "default.");
+    return true;
+  }
+
+  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed",
+                            false)) {
+    // If element is blessed, it would always be allowed to play().
+    return aElement.IsBlessed() || EventStateManager::IsHandlingUserInput();
+  }
+  return IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
 }
 
 /* static */ bool AutoplayPolicy::IsAllowedToPlay(
@@ -203,11 +220,40 @@ static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
 
 /* static */ bool AutoplayPolicy::IsAllowedToPlay(
     const AudioContext& aContext) {
-  if (!IsEnableBlockingWebAudioByUserGesturePolicy()) {
+  /**
+   * The autoplay checking has 4 different phases,
+   * 1. check whether audio context itself meets the autoplay condition
+   * 2. check whethr the site is in the autoplay whitelist
+   * 3. check global autoplay setting and check wether the site is in the
+   *    autoplay blacklist.
+   * 4. check whether media is allowed under current blocking model
+   *    (only support user-gesture-activation)
+   */
+  if (aContext.IsOffline()) {
     return true;
   }
 
-  return IsAudioContextAllowedToPlay(aContext);
+  nsPIDOMWindowInner* window = aContext.GetParentObject();
+  Document* approver = aContext.GetParentObject() ?
+      ApproverDocOf(*(window->GetExtantDoc())) : nullptr;
+  if (IsSiteInAutoplayWhiteList(approver)) {
+    AUTOPLAY_LOG(
+        "Allow autoplay as document has permanent autoplay permission.");
+    return true;
+  }
+
+  if (DefaultAutoplayBehaviour() == nsIAutoplay::ALLOWED &&
+      !IsSiteInAutoplayBlackList(approver)) {
+    AUTOPLAY_LOG(
+        "Allow autoplay as global autoplay setting is allowing autoplay by "
+        "default.");
+    return true;
+  }
+
+  if (!IsEnableBlockingWebAudioByUserGesturePolicy()) {
+    return true;
+  }
+  return IsWindowAllowedToPlay(window);
 }
 
 /* static */ DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
