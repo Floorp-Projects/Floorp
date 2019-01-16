@@ -150,6 +150,27 @@ And once done:
 #. Wait for Firefox to pick-up the changes for your settings key
 
 
+Global Notifications
+====================
+
+The polling for changes process sends two notifications that observers can register to:
+
+* ``remote-settings:changes-poll-start``: Polling for changes is starting. triggered either by the scheduled timer or a push broadcast.
+* ``remote-settings:changes-poll-end``: Polling for changes has ended
+
+.. code-block:: javascript
+
+    const observer = {
+      observe(aSubject, aTopic, aData) {
+        Services.obs.removeObserver(this, "remote-settings:changes-poll-start");
+
+        const { expectedTimestamp } = JSON.parse(aData);
+        console.log("Polling started", expectedTimestamp ? "from push broadcast" : "by scheduled trigger");
+      },
+    };
+    Services.obs.addObserver(observer, "remote-settings:changes-poll-start");
+
+
 Advanced Options
 ================
 
