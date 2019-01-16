@@ -7,12 +7,14 @@
 include('util.configure')
 include('checks.configure')
 
+# Make `toolkit` available when toolkit/moz.configure is not included.
+toolkit = dependable(None)
+
 option(env='DIST', nargs=1, help='DIST directory')
+
 
 # Do not allow objdir == srcdir builds.
 # ==============================================================
-
-
 @depends('--help', 'DIST')
 @imports(_from='__builtin__', _import='open')
 @imports(_from='os.path', _import='exists')
