@@ -12852,8 +12852,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_functionthis() {
   MOZ_ASSERT(info().funMaybeLazy());
   MOZ_ASSERT(!info().funMaybeLazy()->isArrow());
 
-  if (script()->strict() || info().funMaybeLazy()->isSelfHostedBuiltin()) {
-    // No need to wrap primitive |this| in strict mode or self-hosted code.
+  if (script()->strict()) {
+    // No need to wrap primitive |this| in strict mode.
     current->pushSlot(info().thisSlot());
     return Ok();
   }
