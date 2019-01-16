@@ -1318,15 +1318,6 @@ var gCSSProperties = {
     other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
     invalid_values: [ "5%", "5", "5 green none" ]
   },
-  "border-inline-color": {
-    domProp: "borderInlineColor",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [ "border-inline-start-color", "border-inline-end-color" ],
-    initial_values: [ "currentColor" ],
-    other_values: [ "green", "rgba(255,128,0,0.5) blue", "blue transparent" ],
-    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
-  },
   "border-inline-end-color": {
     domProp: "borderInlineEndColor",
     inherited: false,
@@ -1336,16 +1327,6 @@ var gCSSProperties = {
     initial_values: [ "currentColor" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
     invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
-  },
-  "border-inline-style": {
-    domProp: "borderInlineStyle",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [ "border-inline-start-style", "border-inline-end-style" ],
-    initial_values: [ "none" ],
-    other_values: [ "solid", "dashed solid", "solid dotted", "double double", "inset outset",
-                    "inset double", "none groove", "ridge none" ],
-    invalid_values: []
   },
   "border-inline-end-style": {
     domProp: "borderInlineEndStyle",
@@ -1357,22 +1338,6 @@ var gCSSProperties = {
     initial_values: [ "none" ],
     other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
     invalid_values: []
-  },
-  "border-inline-width": {
-    domProp: "borderInlineWidth",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [ "border-inline-start-width", "border-inline-end-width" ],
-    prerequisites: { "border-style": "solid" },
-    initial_values: [ "medium", "3px", "medium medium" ],
-    other_values: [ "thin", "thick", "1px", "2em",
-      "calc(2px)", "calc(2px) thin",
-      "calc(-2px)", "calc(-2px) thick",
-      "calc(0em)", "medium calc(0em)",
-      "calc(0px)", "1px calc(0px)",
-      "calc(5em)", "1em calc(5em)",
-    ],
-    invalid_values: [ "5%", "5", "5 thin", "thin 5%", "blue", "solid" ]
   },
   "border-inline-end-width": {
     domProp: "borderInlineEndWidth",
@@ -6059,6 +6024,15 @@ var gCSSProperties = {
     other_values: [ "upright", "sideways", "sideways-right" ], /* sideways-right alias for backward compatibility */
     invalid_values: [ "none", "3em", "sideways-left" ] /* sideways-left removed from CSS Writing Modes */
   },
+  "border-block-end": {
+    domProp: "borderBlockEnd",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "border-block-end-color", "border-block-end-style", "border-block-end-width" ],
+    initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+    other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+    invalid_values: [ "5%", "5", "5 solid green" ]
+  },
   "block-size": {
     domProp: "blockSize",
     inherited: false,
@@ -6090,24 +6064,6 @@ var gCSSProperties = {
     other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
     invalid_values: [ "5%", "5", "5 solid green" ]
   },
-  "border-block-end": {
-    domProp: "borderBlockEnd",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [ "border-block-end-color", "border-block-end-style", "border-block-end-width" ],
-    initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
-    other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
-    invalid_values: [ "5%", "5", "5 solid green" ]
-  },
-  "border-block-color": {
-    domProp: "borderBlockColor",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [ "border-block-start-color", "border-block-end-color" ],
-    initial_values: [ "currentColor" ],
-    other_values: [ "green", "rgba(255,128,0,0.5) blue", "blue transparent" ],
-    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
-  },
   "border-block-end-color": {
     domProp: "borderBlockEndColor",
     inherited: false,
@@ -6117,16 +6073,6 @@ var gCSSProperties = {
     initial_values: [ "currentColor" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
     invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
-  },
-  "border-block-style": {
-    domProp: "borderBlockStyle",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [ "border-block-start-style", "border-block-end-style" ],
-    initial_values: [ "none" ],
-    other_values: [ "solid", "dashed solid", "solid dotted", "double double", "inset outset",
-                    "inset double", "none groove", "ridge none" ],
-    invalid_values: []
   },
   "border-block-end-style": {
     domProp: "borderBlockEndStyle",
@@ -6138,22 +6084,6 @@ var gCSSProperties = {
     initial_values: [ "none" ],
     other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
     invalid_values: []
-  },
-  "border-block-width": {
-    domProp: "borderBlockWidth",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [ "border-block-start-width", "border-block-end-width" ],
-    prerequisites: { "border-style": "solid" },
-    initial_values: [ "medium", "3px", "medium medium" ],
-    other_values: [ "thin", "thick", "1px", "2em",
-      "calc(2px)", "calc(2px) thin",
-      "calc(-2px)", "calc(-2px) thick",
-      "calc(0em)", "medium calc(0em)",
-      "calc(0px)", "1px calc(0px)",
-      "calc(5em)", "1em calc(5em)",
-    ],
-    invalid_values: [ "5%", "5", "5 thin", "thin 5%", "blue", "solid" ]
   },
   "border-block-end-width": {
     domProp: "borderBlockEndWidth",
