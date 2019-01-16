@@ -15,7 +15,6 @@ import logging
 import taskcluster_urls as liburls
 from mozbuild.util import memoize
 from requests.packages.urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
 from taskgraph.task import Task
 
 logger = logging.getLogger(__name__)
@@ -26,6 +25,9 @@ testing = False
 # Default rootUrl to use if none is given in the environment; this should point
 # to the production Taskcluster deployment used for CI.
 PRODUCTION_TASKCLUSTER_ROOT_URL = 'https://taskcluster.net'
+
+# the maximum number of parallel Taskcluster API calls to make
+CONCURRENCY = 50
 
 
 @memoize
@@ -48,10 +50,20 @@ def get_root_url():
 @memoize
 def get_session():
     session = requests.Session()
+
     retry = Retry(total=5, backoff_factor=0.1,
                   status_forcelist=[500, 502, 503, 504])
-    session.mount('http://', HTTPAdapter(max_retries=retry))
-    session.mount('https://', HTTPAdapter(max_retries=retry))
+
+    # Default HTTPAdapter uses 10 connections. Mount custom adapter to increase
+    # that limit. Connections are established as needed, so using a large value
+    # should not negatively impact performance.
+    http_adapter = requests.adapters.HTTPAdapter(
+        pool_connections=CONCURRENCY,
+        pool_maxsize=CONCURRENCY,
+        max_retries=retry)
+    session.mount('https://', http_adapter)
+    session.mount('http://', http_adapter)
+
     return session
 
 
@@ -60,7 +72,7 @@ def _do_request(url, force_get=False, **kwargs):
     if kwargs and not force_get:
         response = session.post(url, **kwargs)
     else:
-        response = session.get(url, stream=True)
+        response = session.get(url, stream=True, **kwargs)
     if response.status_code >= 400:
         # Consume content before raise_for_status, so that the connection can be
         # reused.
@@ -268,8 +280,8 @@ def send_email(address, subject, content, link, use_proxy=False):
     })
 
 
-def list_task_group(task_group_id):
-    """Generate the tasks in a task group"""
+def list_task_group_incomplete_tasks(task_group_id):
+    """Generate the incomplete tasks in a task group"""
     params = {}
     while True:
         url = liburls.api(get_root_url(), 'queue', 'v1',
