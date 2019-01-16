@@ -155,9 +155,10 @@ pub unsafe extern "C" fn sdp_add_media_section(session: *mut SdpSession,
         20 => SdpProtocolValue::RtpSavpf,        // Protocol::kRtpSavpf
         24 => SdpProtocolValue::UdpTlsRtpSavpf,  // Protocol::kUdpTlsRtpSavpf
         25 => SdpProtocolValue::TcpTlsRtpSavpf,  // Protocol::kTcpTlsRtpSavpf
-        37 => SdpProtocolValue::DtlsSctp,        // Protocol::kDtlsSctp
-        38 => SdpProtocolValue::UdpDtlsSctp,     // Protocol::kUdpDtlsSctp
-        39 => SdpProtocolValue::TcpDtlsSctp,     // Protocol::kTcpDtlsSctp
+        26 => SdpProtocolValue::TcpDtlsRtpSavpf,  // Protocol::kTcpTlsRtpSavpf
+        38 => SdpProtocolValue::DtlsSctp,        // Protocol::kDtlsSctp
+        39 => SdpProtocolValue::UdpDtlsSctp,     // Protocol::kUdpDtlsSctp
+        40 => SdpProtocolValue::TcpDtlsSctp,     // Protocol::kTcpDtlsSctp
         _ => {
           return NS_ERROR_INVALID_ARG;
       }
