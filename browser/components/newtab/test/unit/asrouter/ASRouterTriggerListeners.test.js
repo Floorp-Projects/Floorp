@@ -20,7 +20,7 @@ describe("ASRouterTriggerListeners", () => {
     sandbox = sinon.createSandbox();
     registerWindowNotificationStub = sandbox.stub(global.Services.ww, "registerNotification");
     unregisterWindoNotificationStub = sandbox.stub(global.Services.ww, "unregisterNotification");
-    existingWindow = {gBrowser: {addTabsProgressListener: sandbox.stub(), removeTabsProgressListener: sandbox.stub()}};
+    existingWindow = {gBrowser: {addTabsProgressListener: sandbox.stub(), removeTabsProgressListener: sandbox.stub()}, gBrowserInit: {delayedStartupFinished: true}};
     windowEnumeratorStub = sandbox.stub(global.Services.wm, "getEnumerator");
     resetEnumeratorStub([existingWindow]);
     sandbox.spy(openURLListener, "init");
@@ -37,8 +37,8 @@ describe("ASRouterTriggerListeners", () => {
     });
 
     describe("#init", () => {
-      beforeEach(() => {
-        openURLListener.init(triggerHandler, hosts);
+      beforeEach(async () => {
+        await openURLListener.init(triggerHandler, hosts);
       });
       afterEach(() => {
         openURLListener.uninit();
@@ -77,8 +77,8 @@ describe("ASRouterTriggerListeners", () => {
     });
 
     describe("#uninit", () => {
-      beforeEach(() => {
-        openURLListener.init(triggerHandler, hosts);
+      beforeEach(async () => {
+        await openURLListener.init(triggerHandler, hosts);
         // Ensure that the window enumerator will return the existing window for uninit as well
         resetEnumeratorStub([existingWindow]);
         openURLListener.uninit();
@@ -113,9 +113,13 @@ describe("ASRouterTriggerListeners", () => {
     });
 
     describe("#onLocationChange", () => {
-      it("should call the ._triggerHandler with the right arguments", () => {
+      afterEach(() => {
+        openURLListener.uninit();
+      });
+
+      it("should call the ._triggerHandler with the right arguments", async () => {
         const newTriggerHandler = sinon.stub();
-        openURLListener.init(newTriggerHandler, hosts);
+        await openURLListener.init(newTriggerHandler, hosts);
 
         const browser = {};
         const webProgress = {isTopLevel: true};
@@ -123,6 +127,22 @@ describe("ASRouterTriggerListeners", () => {
         openURLListener.onLocationChange(browser, webProgress, undefined, {spec: location});
         assert.calledOnce(newTriggerHandler);
         assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: "www.mozilla.org"});
+      });
+    });
+
+    describe("delayed startup finished", () => {
+      beforeEach(() => {
+        existingWindow.gBrowserInit.delayedStartupFinished = false;
+        sandbox.stub(global.Services.obs, "addObserver").callsFake(fn => fn(existingWindow, "browser-delayed-startup-finished"));
+      });
+      afterEach(() => {
+        openURLListener.uninit();
+      });
+
+      it("should wait for startup and then add the tabs listener", async () => {
+        await openURLListener.init(triggerHandler, hosts);
+
+        assert.calledOnce(existingWindow.gBrowser.addTabsProgressListener);
       });
     });
   });

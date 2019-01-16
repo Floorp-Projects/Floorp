@@ -18,6 +18,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
         return (<CardGrid feed={component.feed} />);
       case "Hero":
         return (<Hero
+          title={component.header.title}
           feed={component.feed}
           style={component.properties.style}
           items={component.properties.items} />);
