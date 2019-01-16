@@ -408,14 +408,37 @@ bool nsMenuPopupFrame::IsLeafDynamic() const {
   }
 
   // menu popups generate their child frames lazily only when opened, so
-  // behave like a leaf frame. However, generate child frames normally if
-  // the parent menu has a sizetopopup attribute. In this case the size of
-  // the parent menu is dependent on the size of the popup, so the frames
-  // need to exist in order to calculate this size.
+  // behave like a leaf frame. However, generate child frames normally if the
+  // following is true:
+  //
+  // - If the parent menu is a <menulist> unless its sizetopopup is set to
+  // "none".
+  // - For other elements, if the parent menu has a sizetopopup attribute.
+  //
+  // In these cases the size of the parent menu is dependent on the size of
+  // the popup, so the frames need to exist in order to calculate this size.
   nsIContent* parentContent = mContent->GetParent();
-  return parentContent && (!parentContent->IsElement() ||
-                           !parentContent->AsElement()->HasAttr(
-                               kNameSpaceID_None, nsGkAtoms::sizetopopup));
+  if (!parentContent) {
+    return false;
+  }
+
+  if (parentContent->IsXULElement(nsGkAtoms::menulist)) {
+    Element* parent = parentContent->AsElement();
+    if (!parent->HasAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup)) {
+      // No prop set, generate child frames normally for the
+      // default value ("pref").
+      return false;
+    }
+
+    nsAutoString sizedToPopup;
+    parent->GetAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup, sizedToPopup);
+    // Don't generate child frame only if the property is set to none.
+    return sizedToPopup.EqualsLiteral("none");
+  }
+
+  return (!parentContent->IsElement() ||
+          !parentContent->AsElement()->HasAttr(kNameSpaceID_None,
+                                               nsGkAtoms::sizetopopup));
 }
 
 void nsMenuPopupFrame::UpdateWidgetProperties() {
