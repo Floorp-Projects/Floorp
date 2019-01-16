@@ -516,11 +516,6 @@ nsAsyncShutdownComponent:
     Holds the contents of the nsAsyncShutdown.js script
   type: string
 
-NumberOfProcessors:
-  description: >
-    Number of logical processors in the system.
-  type: integer
-
 OOMAllocationSize:
   description: >
     Size of the allocation that caused an out-of-memory condition.
