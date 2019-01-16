@@ -19,7 +19,6 @@
 
 class nsOSHelperAppService : public nsExternalHelperAppService {
  public:
-  nsOSHelperAppService();
   virtual ~nsOSHelperAppService();
 
   // override nsIExternalProtocolService methods
@@ -52,9 +51,6 @@ class nsOSHelperAppService : public nsExternalHelperAppService {
 
   MOZ_MUST_USE nsresult OSProtocolHandlerExists(const char* aScheme,
                                                 bool* aHandlerExists) override;
-
- private:
-  uint32_t mPermissions;
 };
 
 #endif  // nsOSHelperAppService_h__

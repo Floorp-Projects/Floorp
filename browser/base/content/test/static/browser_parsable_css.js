@@ -32,7 +32,7 @@ let whitelist = [
    errorMessage: /Expected media feature name but found \u2018-moz.*/i,
    isFromDevTools: false},
 
-  {sourceName: /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua)\.css$/i,
+  {sourceName: /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua|pluginproblem)\.css$/i,
    errorMessage: /Unknown pseudo-class.*-moz-/i,
    isFromDevTools: false},
   {sourceName: /\b(html|mathml|ua)\.css$/i,

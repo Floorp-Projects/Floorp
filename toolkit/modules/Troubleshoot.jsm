@@ -197,6 +197,10 @@ var dataProviders = {
       }
     }
 
+    try {
+      data.launcherProcessState = Services.appinfo.launcherProcessState;
+    } catch (e) {}
+
     data.remoteAutoStart = Services.appinfo.browserTabsRemoteAutostart;
 
     // Services.ppmm.childCount is a count of how many processes currently

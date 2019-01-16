@@ -163,6 +163,15 @@
             </td>
           </tr>
 
+#if defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
+          <tr>
+            <th class="column" data-l10n-id="app-basics-launcher-process-status"/>
+
+            <td id="launcher-process-box">
+            </td>
+          </tr>
+#endif
+
           <tr>
             <th class="column" data-l10n-id="app-basics-multi-process-support"/>
 
