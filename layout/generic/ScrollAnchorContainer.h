@@ -132,10 +132,11 @@ class ScrollAnchorContainer final {
   // scroll anchor
   nsIFrame* mAnchorNode;
 
-  // The last position of the scroll anchor node relative to the scrollable
-  // frame. This is used for calculating the distance to scroll to keep the
-  // anchor node in the same relative position
-  nsPoint mLastAnchorPos;
+  // The last offset of the scroll anchor node's scrollable overflow rect start
+  // edge relative to the scroll-port start edge, in the block axis of the
+  // scroll frame. This is used for calculating the distance to scroll to keep
+  // the anchor node in the same relative position
+  nscoord mLastAnchorOffset;
 
   // True if we should recalculate our anchor node at the next chance
   bool mAnchorNodeIsDirty : 1;
