@@ -610,6 +610,17 @@ class ScriptSource {
   // our syntax parse vs. full parse heuristics are correct.
   mozilla::TimeStamp parseEnded_;
 
+  // An id for this source that is unique across the process. This can be used
+  // to refer to this source from places that don't want to hold a strong
+  // reference on the source itself.
+  //
+  // This is a 32 bit ID and could overflow, in which case the ID will not be
+  // unique anymore.
+  uint32_t id_;
+
+  // How many ids have been handed out to sources.
+  static mozilla::Atomic<uint32_t> idCount_;
+
   // True if we can call JSRuntime::sourceHook to load the source on
   // demand. If sourceRetrievable_ and hasSourceText() are false, it is not
   // possible to get source at all.
@@ -654,6 +665,7 @@ class ScriptSource {
         introducerFilename_(nullptr),
         introductionType_(nullptr),
         xdrEncoder_(nullptr),
+        id_(++idCount_),
         sourceRetrievable_(false),
         hasIntroductionOffset_(false),
         containsAsmJS_(false) {}
@@ -1034,6 +1046,8 @@ class ScriptSource {
     return introductionType_;
   }
   const char* filename() const { return filename_.get(); }
+
+  uint32_t id() const { return id_; }
 
   // Display URLs
   MOZ_MUST_USE bool setDisplayURL(JSContext* cx, const char16_t* displayURL);
