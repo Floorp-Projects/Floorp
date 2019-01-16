@@ -717,14 +717,14 @@ NS_DEFINE_NAMED_CID(NETWORKINFOSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     // clang-format off
-    { &kNS_IOSERVICE_CID, false, nullptr, nsIOServiceConstructor },
+    { &kNS_IOSERVICE_CID, false, nullptr, nsIOServiceConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { &kNS_STREAMTRANSPORTSERVICE_CID, false, nullptr, nsStreamTransportServiceConstructor },
-    { &kNS_SOCKETTRANSPORTSERVICE_CID, false, nullptr, nsSocketTransportServiceConstructor },
+    { &kNS_SOCKETTRANSPORTSERVICE_CID, false, nullptr, nsSocketTransportServiceConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { &kNS_SERVERSOCKET_CID, false, nullptr, nsServerSocketConstructor },
     { &kNS_TLSSERVERSOCKET_CID, false, nullptr, TLSServerSocketConstructor },
     { &kNS_UDPSOCKET_CID, false, nullptr, nsUDPSocketConstructor },
-    { &kNS_DNSSERVICE_CID, false, nullptr, nsIDNSServiceConstructor },
-    { &kNS_IDNSERVICE_CID, false, nullptr, nsIDNServiceConstructor },
+    { &kNS_DNSSERVICE_CID, false, nullptr, nsIDNSServiceConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
+    { &kNS_IDNSERVICE_CID, false, nullptr, nsIDNServiceConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { &kNS_EFFECTIVETLDSERVICE_CID, false, nullptr, nsEffectiveTLDServiceConstructor },
     { &kNS_SIMPLEURI_CID, false, nullptr, nsSimpleURIMutatorConstructor }, // do_CreateInstance returns mutator
     { &kNS_SIMPLEURIMUTATOR_CID, false, nullptr, nsSimpleURIMutatorConstructor },
@@ -748,11 +748,11 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_ATOMICLOCALFILEOUTPUTSTREAM_CID, false, nullptr, nsAtomicFileOutputStreamConstructor },
     { &kNS_SAFELOCALFILEOUTPUTSTREAM_CID, false, nullptr, nsSafeFileOutputStreamConstructor },
     { &kNS_INCREMENTALDOWNLOAD_CID, false, nullptr, net_NewIncrementalDownload },
-    { &kNS_STDURLPARSER_CID, false, nullptr, nsStdURLParserConstructor },
-    { &kNS_NOAUTHURLPARSER_CID, false, nullptr, nsNoAuthURLParserConstructor },
-    { &kNS_AUTHURLPARSER_CID, false, nullptr, nsAuthURLParserConstructor },
-    { &kNS_STANDARDURL_CID, false, nullptr, nsStandardURLMutatorConstructor }, // do_CreateInstance returns mutator
-    { &kNS_STANDARDURLMUTATOR_CID, false, nullptr, nsStandardURLMutatorConstructor },
+    { &kNS_STDURLPARSER_CID, false, nullptr, nsStdURLParserConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
+    { &kNS_NOAUTHURLPARSER_CID, false, nullptr, nsNoAuthURLParserConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
+    { &kNS_AUTHURLPARSER_CID, false, nullptr, nsAuthURLParserConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
+    { &kNS_STANDARDURL_CID, false, nullptr, nsStandardURLMutatorConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS }, // do_CreateInstance returns mutator
+    { &kNS_STANDARDURLMUTATOR_CID, false, nullptr, nsStandardURLMutatorConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { &kNS_ARRAYBUFFERINPUTSTREAM_CID, false, nullptr, ArrayBufferInputStreamConstructor },
     { &kNS_BUFFEREDINPUTSTREAM_CID, false, nullptr, nsBufferedInputStream::Create },
     { &kNS_BUFFEREDOUTPUTSTREAM_CID, false, nullptr, nsBufferedOutputStream::Create },
@@ -826,15 +826,15 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
 
 static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     // clang-format off
-    { NS_IOSERVICE_CONTRACTID, &kNS_IOSERVICE_CID },
+    { NS_IOSERVICE_CONTRACTID, &kNS_IOSERVICE_CID, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { NS_NETUTIL_CONTRACTID, &kNS_IOSERVICE_CID },
     { NS_STREAMTRANSPORTSERVICE_CONTRACTID, &kNS_STREAMTRANSPORTSERVICE_CID },
-    { NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &kNS_SOCKETTRANSPORTSERVICE_CID },
+    { NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &kNS_SOCKETTRANSPORTSERVICE_CID, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { NS_SERVERSOCKET_CONTRACTID, &kNS_SERVERSOCKET_CID },
     { NS_TLSSERVERSOCKET_CONTRACTID, &kNS_TLSSERVERSOCKET_CID },
     { NS_UDPSOCKET_CONTRACTID, &kNS_UDPSOCKET_CID },
-    { NS_DNSSERVICE_CONTRACTID, &kNS_DNSSERVICE_CID },
-    { NS_IDNSERVICE_CONTRACTID, &kNS_IDNSERVICE_CID },
+    { NS_DNSSERVICE_CONTRACTID, &kNS_DNSSERVICE_CID, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
+    { NS_IDNSERVICE_CONTRACTID, &kNS_IDNSERVICE_CID, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { NS_EFFECTIVETLDSERVICE_CONTRACTID, &kNS_EFFECTIVETLDSERVICE_CID },
     { NS_SIMPLEURIMUTATOR_CONTRACTID, &kNS_SIMPLEURIMUTATOR_CID },
     { NS_ASYNCSTREAMCOPIER_CONTRACTID, &kNS_ASYNCSTREAMCOPIER_CID },
@@ -853,10 +853,10 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_ATOMICLOCALFILEOUTPUTSTREAM_CONTRACTID, &kNS_ATOMICLOCALFILEOUTPUTSTREAM_CID },
     { NS_SAFELOCALFILEOUTPUTSTREAM_CONTRACTID, &kNS_SAFELOCALFILEOUTPUTSTREAM_CID },
     { NS_INCREMENTALDOWNLOAD_CONTRACTID, &kNS_INCREMENTALDOWNLOAD_CID },
-    { NS_STDURLPARSER_CONTRACTID, &kNS_STDURLPARSER_CID },
-    { NS_NOAUTHURLPARSER_CONTRACTID, &kNS_NOAUTHURLPARSER_CID },
-    { NS_AUTHURLPARSER_CONTRACTID, &kNS_AUTHURLPARSER_CID },
-    { NS_STANDARDURLMUTATOR_CONTRACTID, &kNS_STANDARDURLMUTATOR_CID },
+    { NS_STDURLPARSER_CONTRACTID, &kNS_STDURLPARSER_CID, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
+    { NS_NOAUTHURLPARSER_CONTRACTID, &kNS_NOAUTHURLPARSER_CID, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
+    { NS_AUTHURLPARSER_CONTRACTID, &kNS_AUTHURLPARSER_CID, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
+    { NS_STANDARDURLMUTATOR_CONTRACTID, &kNS_STANDARDURLMUTATOR_CID, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { NS_ARRAYBUFFERINPUTSTREAM_CONTRACTID, &kNS_ARRAYBUFFERINPUTSTREAM_CID },
     { NS_BUFFEREDINPUTSTREAM_CONTRACTID, &kNS_BUFFEREDINPUTSTREAM_CID },
     { NS_BUFFEREDOUTPUTSTREAM_CONTRACTID, &kNS_BUFFEREDOUTPUTSTREAM_CID },
@@ -936,6 +936,7 @@ static const mozilla::Module kNeckoModule = {mozilla::Module::kVersion,
                                              kNeckoCategories,
                                              nullptr,
                                              nsNetStartup,
-                                             nsNetShutdown};
+                                             nsNetShutdown,
+                                             mozilla::Module::ALLOW_IN_SOCKET_PROCESS};
 
 NSMODULE_DEFN(necko) = &kNeckoModule;

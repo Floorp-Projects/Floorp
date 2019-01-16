@@ -81,10 +81,6 @@ bool SocketProcessImpl::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  if (NS_FAILED(NS_InitXPCOM2(nullptr, nullptr, nullptr))) {
-    return false;
-  }
-
   return mSocketProcessChild.Init(ParentPid(), parentBuildID,
                                   IOThreadChild::message_loop(),
                                   IOThreadChild::channel());

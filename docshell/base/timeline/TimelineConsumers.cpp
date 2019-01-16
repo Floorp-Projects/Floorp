@@ -36,8 +36,7 @@ already_AddRefed<TimelineConsumers> TimelineConsumers::Get() {
   // Remember, there will be different singletons available to each process.
 
   // TODO: we have to avoid calling this function in socket process.
-  MOZ_ASSERT(XRE_IsContentProcess() || XRE_IsParentProcess() ||
-             XRE_IsSocketProcess());
+  MOZ_ASSERT(XRE_IsContentProcess() || XRE_IsParentProcess());
 
   // If we are shutting down, don't bother doing anything. Note: we can only
   // know whether or not we're in shutdown if we're instantiated.
