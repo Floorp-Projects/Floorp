@@ -93,6 +93,13 @@ this.PrefsFeed = class PrefsFeed {
     values["improvesearch.topSiteSearchShortcuts"] = searchTopSiteExperimentPrefValue;
     this._prefMap.set("improvesearch.topSiteSearchShortcuts", searchTopSiteExperimentPrefValue);
 
+    // Read the pref for search hand-off from firefox.js and store it
+    // in our interal list of prefs to watch
+    let handoffToAwesomebarPrefValue = Services.prefs.getBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar");
+    values["improvesearch.handoffToAwesomebar"] = handoffToAwesomebarPrefValue;
+    this._prefMap.set("improvesearch.handoffToAwesomebar", handoffToAwesomebarPrefValue);
+
     // Set the initial state of all prefs in redux
     this.store.dispatch(ac.BroadcastToContent({type: at.PREFS_INITIAL_VALUES, data: values}));
 
