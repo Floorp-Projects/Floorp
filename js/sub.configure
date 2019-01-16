@@ -11,9 +11,11 @@
 @imports('pickle')
 @imports('subprocess')
 @imports('sys')
+@imports(_from='__main__', _import='config_status')
 @imports(_from='__builtin__', _import='OSError')
 @imports(_from='__builtin__', _import='open')
 @imports(_from='__builtin__', _import='object')
+@imports(_from='mozbuild.configure', _import='ConfigureSandbox')
 @imports(_from='mozbuild.configure.util', _import='ConfigureOutputHandler')
 @imports(_from='mozbuild.util', _import='encode')
 def js_subconfigure(build_env, prepare_configure_options, mozconfig,
@@ -37,7 +39,9 @@ def js_subconfigure(build_env, prepare_configure_options, mozconfig,
             self._fh.flush()
 
     logger = logging.getLogger('moz.configure')
+    formatter = logging.Formatter('js/src> %(levelname)s: %(message)s')
     for handler in logger.handlers:
+        handler.setFormatter(formatter)
         if isinstance(handler, ConfigureOutputHandler):
             handler._stdout = PrefixOutput('js/src> ', handler._stdout)
 
@@ -153,16 +157,11 @@ def js_subconfigure(build_env, prepare_configure_options, mozconfig,
                 ((previous_args or options) != options)):
                 skip_configure = False
 
+    ret = 0
     if not skip_configure:
-        # Because configure is a shell script calling a python script
-        # calling a shell script, on Windows, with msys screwing the
-        # environment, we lose the benefits from our own efforts in this
-        # script to get past the msys problems. So manually call the python
-        # script instead, so that we don't do a native->msys transition
-        # here. Then the python configure will still have the right
-        # environment when calling the shell configure.
+        oldpwd = os.getcwd()
+        os.chdir(objdir)
         command = [
-            sys.executable,
             os.path.join(build_env.topsrcdir, 'configure.py'),
             '--enable-project=js',
         ]
@@ -173,17 +172,18 @@ def js_subconfigure(build_env, prepare_configure_options, mozconfig,
 
         log.info('configuring')
         log.info('running %s' % ' '.join(command[:-1]))
-        proc = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            cwd=objdir, env=encode(environ))
-        while True:
-            line = proc.stdout.readline()
-            if not line:
-                break
-            log.info(line.rstrip())
-        ret = proc.wait()
-        if ret:
-            log.error('subconfigure failed')
-            sys.exit(ret)
+        config = {}
+        sandbox = ConfigureSandbox(config, environ, command, logger=logger)
+        sandbox.run(os.path.join(build_env.topsrcdir, 'moz.configure'))
+        ret = config_status(config)
+        os.chdir(oldpwd)
 
-    return 0
+    # Restore unprefixed logging.
+    formatter = logging.Formatter('%(levelname)s: %(message)s')
+    for handler in logger.handlers:
+        handler.setFormatter(formatter)
+        if isinstance(handler, ConfigureOutputHandler):
+            handler._stdout.flush()
+            handler._stdout = handler._stdout._fh
+
+    return ret
