@@ -199,7 +199,7 @@ var dataProviders = {
 
     try {
       data.launcherProcessState = Services.appinfo.launcherProcessState;
-    } catch(e) {}
+    } catch (e) {}
 
     data.remoteAutoStart = Services.appinfo.browserTabsRemoteAutostart;
 
