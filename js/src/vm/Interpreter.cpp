@@ -119,11 +119,13 @@ bool js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame,
   MOZ_ASSERT(frame.isFunctionFrame());
   MOZ_ASSERT(!frame.callee()->isArrow());
 
-  if (frame.thisArgument().isObject() || frame.callee()->strict() ||
-      frame.callee()->isSelfHostedBuiltin()) {
+  if (frame.thisArgument().isObject() || frame.callee()->strict()) {
     res.set(frame.thisArgument());
     return true;
   }
+
+  MOZ_ASSERT(!frame.callee()->isSelfHostedBuiltin(),
+             "Self-hosted builtins must be strict");
 
   RootedValue thisv(cx, frame.thisArgument());
 
