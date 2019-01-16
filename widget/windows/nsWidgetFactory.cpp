@@ -166,11 +166,11 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     {&kNS_COLORPICKER_CID, false, nullptr, ColorPickerConstructor,
      Module::MAIN_PROCESS_ONLY},
     {&kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor,
-     Module::ALLOW_IN_GPU_AND_VR_PROCESS},
+     Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS},
     {&kNS_SCREENMANAGER_CID, false, nullptr, ScreenManagerConstructor,
      Module::MAIN_PROCESS_ONLY},
     {&kNS_GFXINFO_CID, false, nullptr, GfxInfoConstructor,
-     Module::ALLOW_IN_GPU_PROCESS},
+     Module::ALLOW_IN_GPU_AND_SOCKET_PROCESS},
     {&kNS_IDLE_SERVICE_CID, false, nullptr, nsIdleServiceWinConstructor},
     {&kNS_CLIPBOARD_CID, false, nullptr, nsClipboardConstructor,
      Module::MAIN_PROCESS_ONLY},
@@ -216,10 +216,11 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     {"@mozilla.org/colorpicker;1", &kNS_COLORPICKER_CID,
      Module::MAIN_PROCESS_ONLY},
     {"@mozilla.org/widget/appshell/win;1", &kNS_APPSHELL_CID,
-     Module::ALLOW_IN_GPU_AND_VR_PROCESS},
+     Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS},
     {"@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID,
      Module::MAIN_PROCESS_ONLY},
-    {"@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID, Module::ALLOW_IN_GPU_PROCESS},
+    {"@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID,
+     Module::ALLOW_IN_GPU_AND_SOCKET_PROCESS},
     {"@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID},
     {"@mozilla.org/widget/clipboard;1", &kNS_CLIPBOARD_CID,
      Module::MAIN_PROCESS_ONLY},
@@ -271,6 +272,6 @@ static const mozilla::Module kWidgetModule = {
     nullptr,
     nsAppShellInit,
     nsWidgetWindowsModuleDtor,
-    Module::ALLOW_IN_GPU_AND_VR_PROCESS};
+    Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS};
 
 NSMODULE_DEFN(nsWidgetModule) = &kWidgetModule;

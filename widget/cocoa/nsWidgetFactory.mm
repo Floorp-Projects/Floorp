@@ -134,7 +134,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     mozilla::Module::MAIN_PROCESS_ONLY },
   { &kNS_COLORPICKER_CID, false, NULL, nsColorPickerConstructor,
     mozilla::Module::MAIN_PROCESS_ONLY },
-  { &kNS_APPSHELL_CID, false, NULL, nsAppShellConstructor, mozilla::Module::ALLOW_IN_GPU_AND_VR_PROCESS },
+  { &kNS_APPSHELL_CID, false, NULL, nsAppShellConstructor, mozilla::Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS },
   { &kNS_SOUND_CID, false, NULL, nsSoundConstructor,
     mozilla::Module::MAIN_PROCESS_ONLY },
   { &kNS_TRANSFERABLE_CID, false, NULL, nsTransferableConstructor },
@@ -167,7 +167,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     mozilla::Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/colorpicker;1", &kNS_COLORPICKER_CID,
     mozilla::Module::MAIN_PROCESS_ONLY },
-  { "@mozilla.org/widget/appshell/mac;1", &kNS_APPSHELL_CID, mozilla::Module::ALLOW_IN_GPU_AND_VR_PROCESS },
+  { "@mozilla.org/widget/appshell/mac;1", &kNS_APPSHELL_CID, mozilla::Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS },
   { "@mozilla.org/sound;1", &kNS_SOUND_CID,
     mozilla::Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
@@ -215,7 +215,7 @@ static const mozilla::Module kWidgetModule = {
   NULL,
   nsAppShellInit,
   nsWidgetCocoaModuleDtor,
-  mozilla::Module::ALLOW_IN_GPU_AND_VR_PROCESS
+  mozilla::Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS
 };
 
 NSMODULE_DEFN(nsWidgetMacModule) = &kWidgetModule;
