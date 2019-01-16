@@ -3999,7 +3999,7 @@ nsStyleUI::nsStyleUI(const nsPresContext* aContext)
       mUserModify(StyleUserModify::ReadOnly),
       mUserFocus(StyleUserFocus::None),
       mPointerEvents(NS_STYLE_POINTER_EVENTS_AUTO),
-      mCursor(NS_STYLE_CURSOR_AUTO),
+      mCursor(StyleCursorKind::Auto),
       mCaretColor(StyleComplexColor::Auto()),
       mScrollbarFaceColor(StyleComplexColor::Auto()),
       mScrollbarTrackColor(StyleComplexColor::Auto()) {

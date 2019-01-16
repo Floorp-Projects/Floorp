@@ -113,6 +113,7 @@ class Instance {
   size_t memoryMappedSize() const;
   SharedArrayRawBuffer* sharedMemoryBuffer() const;  // never null
   bool memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const;
+  bool memoryAccessInBounds(uint8_t* addr, unsigned numBytes) const;
   const StructTypeVector& structTypes() const { return code_->structTypes(); }
 
   static constexpr size_t offsetOfJSJitArgsRectifier() {
