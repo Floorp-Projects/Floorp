@@ -344,7 +344,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   /* User interface properties */
   already_AddRefed<CSSValue> DoGetCaretColor();
-  already_AddRefed<CSSValue> DoGetCursor();
   already_AddRefed<CSSValue> DoGetForceBrokenImageIcon();
 
   /* Column properties */
