@@ -6419,6 +6419,7 @@ class SnippetBase_SnippetBase extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onBlockClicked = this.onBlockClicked.bind(this);
+    this.onDismissClicked = this.onDismissClicked.bind(this);
   }
 
   onBlockClicked() {
@@ -6427,6 +6428,14 @@ class SnippetBase_SnippetBase extends external_React_default.a.PureComponent {
     }
 
     this.props.onBlock();
+  }
+
+  onDismissClicked() {
+    if (this.props.provider !== "preview") {
+      this.props.sendUserActionTelemetry({ event: "DISMISS", id: this.props.UISurface });
+    }
+
+    this.props.onDismiss();
   }
 
   renderDismissButton() {
@@ -6441,7 +6450,7 @@ class SnippetBase_SnippetBase extends external_React_default.a.PureComponent {
             "button",
             {
               className: "ASRouterButton secondary",
-              onClick: this.props.onDismiss },
+              onClick: this.onDismissClicked },
             this.props.content.scene2_dismiss_button_text
           )
         )
@@ -6779,6 +6788,8 @@ class SubmitFormSnippet_SubmitFormSnippet extends external_React_default.a.PureC
   }
 
   expandSnippet() {
+    this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", value: "scene1-button-learn-more", id: this.props.UISurface });
+
     this.setState({
       expanded: true,
       signupSuccess: false,
