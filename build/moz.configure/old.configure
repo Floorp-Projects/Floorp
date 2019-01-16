@@ -322,12 +322,12 @@ def old_configure(prepare_configure, prepare_configure_options):
                   ' '.join('%s=%s' % pair for pair in extra_env.iteritems()))
 
     # Our logging goes to config.log, the same file old.configure uses.
-    # We can't share the handle on the file, so close it. We assume nothing
-    # beyond this point is going to be interesting to log to config.log from
-    # our end, so we don't make the effort to recreate a logging.FileHandler.
+    # We can't share the handle on the file, so close it.
     logger = logging.getLogger('moz.configure')
+    config_log = None
     for handler in logger.handlers:
         if isinstance(handler, logging.FileHandler):
+            config_log = handler
             handler.close()
             logger.removeHandler(handler)
 
@@ -350,6 +350,12 @@ def old_configure(prepare_configure, prepare_configure_options):
                     log.debug(line.rstrip())
             log.error('old-configure failed')
         sys.exit(ret)
+
+    if config_log:
+        # Create a new handler in append mode
+        handler = logging.FileHandler(config_log.baseFilename, mode='a', delay=True)
+        handler.setFormatter(config_log.formatter)
+        logger.addHandler(handler)
 
     raw_config = {
         'split': split,
