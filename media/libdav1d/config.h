@@ -36,7 +36,8 @@
 #define CONFIG_8BPC 1
 
 // Enable asm
-#if ARCH_X86_64 == 1 && defined(__linux__) && !defined(__ANDROID__)
+#if (ARCH_x86_32 == 1 || ARCH_X86_64 == 1) && defined(__linux__) && \
+    !defined(__ANDROID__)
 #define HAVE_ASM 1
 #else
 #define HAVE_ASM 0
@@ -53,7 +54,7 @@
 #endif
 
 // unistd.h is used by tools, which we do not
-// built, so we do not really care.
+// build, so we do not really care.
 #define HAVE_UNISTD_H 1
 
 // Important when asm is enabled
@@ -61,5 +62,8 @@
 #define PREFIX 1
 #endif
 
-// aligment is 32 in evry case
+#if ARCH_X86_32 == 1 && defined(__linux__) && !defined(__ANDROID__)
+#define STACK_ALIGNMENT 16
+#else
 #define STACK_ALIGNMENT 32
+#endif
