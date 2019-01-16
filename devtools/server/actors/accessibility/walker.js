@@ -477,6 +477,40 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   },
 
   /**
+   * Load accessibility highlighter style sheet used for preventing transitions and
+   * applying transparency when calculating colour contrast.
+   * @param  {Object} win
+   *         Window where highlighting happens.
+   */
+  loadTransitionDisablingStyleSheet(win) {
+    if (this._sheetLoaded) {
+      return;
+    }
+
+    // Disable potential mouse driven transitions (This is important because accessibility
+    // highlighter temporarily modifies text color related CSS properties. In case where
+    // there are transitions that affect them, there might be unexpected side effects when
+    // taking a snapshot for contrast measurement).
+    loadSheet(win, HIGHLIGHTER_STYLES_SHEET);
+    this._sheetLoaded = true;
+  },
+
+  /**
+   * Unload accessibility highlighter style sheet used for preventing transitions and
+   * applying transparency when calculating colour contrast.
+   * @param  {Object} win
+   *         Window where highlighting was happenning.
+   */
+  removeTransitionDisablingStyleSheet(win) {
+    if (!this._sheetLoaded) {
+      return;
+    }
+
+    removeSheet(win, HIGHLIGHTER_STYLES_SHEET);
+    this._sheetLoaded = false;
+  },
+
+  /**
    * Public method used to show an accessible object highlighter on the client
    * side.
    *
@@ -489,25 +523,40 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    * @return {Boolean}
    *         True if highlighter shows the accessible object.
    */
-  highlightAccessible(accessible, options = {}) {
+  async highlightAccessible(accessible, options = {}) {
     this.unhighlight();
+    // Do not highlight if accessible is dead.
+    if (!accessible || accessible.isDefunct || accessible.indexInParent < 0) {
+      return false;
+    }
+
+    this._highlightingAccessible = accessible;
     const { bounds } = accessible;
     if (!bounds) {
       return false;
     }
 
-    // Disable potential mouse driven transitions (This is important because accessibility
-    // highlighter temporarily modifies text color related CSS properties. In case where
-    // there are transitions that affect them, there might be unexpected side effects when
-    // taking a snapshot for contrast measurement)
     const { DOMNode: rawNode } = accessible.rawAccessible;
     const win = rawNode.ownerGlobal;
-    loadSheet(win, HIGHLIGHTER_STYLES_SHEET);
-    const { audit, name, role } = accessible;
+    this.loadTransitionDisablingStyleSheet(win);
+    const audit = await accessible.audit();
+    if (this._highlightingAccessible !== accessible) {
+      if (!this._highlightingAccessible) {
+        // Unhilight might have been called while waiting for audit, remove style sheet
+        // (re-enable transitions) if so.
+        this.removeTransitionDisablingStyleSheet(win);
+      }
+
+      return false;
+    }
+
+    this.removeTransitionDisablingStyleSheet(win);
+
+    const { name, role } = accessible;
     const shown = this.highlighter.show({ rawNode },
                                         { ...options, ...bounds, name, role, audit });
-    // Re-enable transitions.
-    removeSheet(win, HIGHLIGHTER_STYLES_SHEET);
+    this._highlightingAccessible = null;
+
     return shown;
   },
 
@@ -521,6 +570,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     }
 
     this.highlighter.hide();
+    this._highlightingAccessible = null;
   },
 
   /**
@@ -601,7 +651,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    * @param  {Object} event
    *         Current hover event.
    */
-  onHovered(event) {
+  async onHovered(event) {
     if (!this._isPicking) {
       return;
     }
@@ -612,14 +662,17 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     }
 
     const accessible = this._findAndAttachAccessible(event);
-    if (!accessible) {
+    if (!accessible || this._currentAccessible === accessible) {
       return;
     }
 
-    if (this._currentAccessible !== accessible) {
-      this.highlightAccessible(accessible);
+    this._currentAccessible = accessible;
+    // Highlight current accessible and by the time we are done, if accessible that was
+    // highlighted is not current any more (user moved the mouse to a new node) highlight
+    // the most current accessible again.
+    const shown = await this.highlightAccessible(accessible);
+    if (this._isPicking && shown && accessible === this._currentAccessible) {
       events.emit(this, "picker-accessible-hovered", accessible);
-      this._currentAccessible = accessible;
     }
   },
 
