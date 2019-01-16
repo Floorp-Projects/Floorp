@@ -46,7 +46,8 @@ using namespace js;
                                         JSExnType type,
                                         UniquePtr<JSErrorReport> errorReport,
                                         HandleString fileName,
-                                        HandleObject stack, uint32_t lineNumber,
+                                        HandleObject stack, uint32_t sourceId,
+                                        uint32_t lineNumber,
                                         uint32_t columnNumber,
                                         HandleString message) {
   AssertObjectIsSavedFrameOrWrapper(cx, stack);
@@ -95,6 +96,7 @@ using namespace js;
   if (message) {
     obj->setSlotWithType(cx, messageShape, StringValue(message));
   }
+  obj->initReservedSlot(SOURCEID_SLOT, Int32Value(sourceId));
 
   // When recording/replaying and running on the main thread, get a counter
   // which the devtools can use to warp to this point in the future.
@@ -114,7 +116,8 @@ using namespace js;
 
 /* static */ ErrorObject* js::ErrorObject::create(
     JSContext* cx, JSExnType errorType, HandleObject stack,
-    HandleString fileName, uint32_t lineNumber, uint32_t columnNumber,
+    HandleString fileName, uint32_t sourceId,
+    uint32_t lineNumber, uint32_t columnNumber,
     UniquePtr<JSErrorReport> report, HandleString message,
     HandleObject protoArg /* = nullptr */) {
   AssertObjectIsSavedFrameOrWrapper(cx, stack);
@@ -139,7 +142,7 @@ using namespace js;
   }
 
   if (!ErrorObject::init(cx, errObject, errorType, std::move(report), fileName,
-                         stack, lineNumber, columnNumber, message)) {
+                         stack, sourceId, lineNumber, columnNumber, message)) {
     return nullptr;
   }
 
@@ -167,6 +170,7 @@ JSErrorReport* js::ErrorObject::getOrCreateErrorReport(JSContext* cx) {
   report.filename = filenameStr.get();
 
   // Coordinates.
+  report.sourceId = sourceId();
   report.lineno = lineNumber();
   report.column = columnNumber();
 
