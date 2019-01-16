@@ -252,7 +252,7 @@ class QueryContext {
    *   Set to true if this query was started from a private browsing window.
    * @param {number} options.maxResults
    *   The maximum number of results that will be displayed for this query.
-   * @param {boolean} [options.autoFill]
+   * @param {boolean} [options.autofill]
    *   Whether or not to include autofill results. Optional, as this is normally
    *   set by the UrlbarController.
    */
@@ -278,7 +278,7 @@ class QueryContext {
       throw new Error(`Invalid sources list`);
     }
 
-    this.autoFill = !!options.autoFill;
+    this.autofill = !!options.autofill;
   }
 
   /**

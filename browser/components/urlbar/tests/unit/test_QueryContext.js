@@ -34,7 +34,7 @@ add_task(function test_constructor() {
     lastKey: "b",
     maxResults: 1,
     isPrivate: true,
-    autoFill: false,
+    autofill: false,
   });
 
   Assert.equal(qc.searchString, "foo",
@@ -45,6 +45,6 @@ add_task(function test_constructor() {
     "Should have saved the correct value for maxResults");
   Assert.strictEqual(qc.isPrivate, true,
     "Should have saved the correct value for isPrivate");
-  Assert.strictEqual(qc.autoFill, false,
-    "Should have saved the correct value for autoFill");
+  Assert.strictEqual(qc.autofill, false,
+    "Should have saved the correct value for autofill");
 });
