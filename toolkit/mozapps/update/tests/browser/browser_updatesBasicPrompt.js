@@ -5,7 +5,6 @@ add_task(async function testBasicPrompt() {
   await UpdateUtils.setAppUpdateAutoEnabled(false);
 
   let updateParams = "promptWaitTime=0";
-  gUseTestUpdater = true;
 
   await runUpdateTest(updateParams, 1, [
     {
