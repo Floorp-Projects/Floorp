@@ -262,7 +262,8 @@ about-debugging-page-title-selected-page =
   }
 
 # Page title with the runtime displayed in the tab
-about-debugging-page-title-with-runtime = { -application-title } - { about-debugging-page-title-selected-page } / { $selectedRuntime }
+# { $selectedRuntimeId } is the id of the current runtime, such as "this-firefox", "localhost:6080", ...
+about-debugging-page-title-with-runtime = { -application-title } - { about-debugging-page-title-selected-page } / { $selectedRuntimeId }
 
 # Page title without the runtime displayed in the tab
 about-debugging-page-title = { -application-title } - { about-debugging-page-title-selected-page }

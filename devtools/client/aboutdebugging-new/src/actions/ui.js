@@ -68,7 +68,7 @@ function selectPage(page, runtimeId) {
         await dispatch(Actions.watchRuntime(runtimeId));
       }
 
-      dispatch({ type: SELECT_PAGE_SUCCESS, page, runtimeId });
+      dispatch({ type: SELECT_PAGE_SUCCESS, page });
     } catch (e) {
       dispatch({ type: SELECT_PAGE_FAILURE, error: e });
     }
