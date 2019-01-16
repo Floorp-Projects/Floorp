@@ -14,6 +14,12 @@ loader.lazyRequireGetter(this, "DevToolsWorker", "devtools/shared/worker/worker"
 
 const WORKER_URL = "resource://devtools/server/actors/accessibility/worker.js";
 const HIGHLIGHTED_PSEUDO_CLASS = ":-moz-devtools-highlighted";
+// CSS pixel value (constant) that corresponds to 14 point text size which defines large
+// text when font text is bold (font weight is greater than or equal to 600).
+const BOLD_LARGE_TEXT_MIN_PIXELS = 18.66;
+// CSS pixel value (constant) that corresponds to 18 point text size which defines large
+// text for normal text (e.g. not bold).
+const LARGE_TEXT_MIN_PIXELS = 24;
 
 loader.lazyGetter(this, "worker", () => new DevToolsWorker(WORKER_URL));
 
@@ -46,12 +52,16 @@ function getTextProperties(node) {
   }
 
   const isBoldText = parseInt(fontWeight, 10) >= 600;
-  const isLargeText = Math.ceil(parseFloat(fontSize) * 72) / 96 >= (isBoldText ? 14 : 18);
+  const size = parseFloat(fontSize);
+  const isLargeText =
+    size >= (isBoldText ? BOLD_LARGE_TEXT_MIN_PIXELS : LARGE_TEXT_MIN_PIXELS);
 
   return {
     // Blend text color taking its alpha into account asuming white background.
     color: colorUtils.blendColors([r, g, b, a]),
     isLargeText,
+    isBoldText,
+    size,
   };
 }
 
@@ -62,28 +72,33 @@ function getTextProperties(node) {
  *         Current target window.
  * @param  {Object}  bounds
  *         Bounds for the accessible object.
+ * @param  {Object}  zoom
+ *         Current zoom level for the window.
+ * @param  {Object}  scale
+ *         Scale value to scale down the drawn image.
  * @param  {null|DOMNode} node
  *         If not null, a node that corresponds to the accessible object to be used to
  *         make its text color transparent.
  * @return {CanvasRenderingContext2D}
  *         Canvas rendering context for the current window.
  */
-function getImageCtx(win, bounds, node) {
+function getImageCtx(win, bounds, zoom, scale, node) {
   const doc = win.document;
   const canvas = doc.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-  const scale = getCurrentZoom(win);
 
   const { left, top, width, height } = bounds;
-  canvas.width = width / scale;
-  canvas.height = height / scale;
+  canvas.width = width * zoom * scale;
+  canvas.height = height * zoom * scale;
   const ctx = canvas.getContext("2d", { alpha: false });
+  ctx.imageSmoothingEnabled = false;
+  ctx.scale(scale, scale);
 
   // If node is passed, make its color related text properties invisible.
   if (node) {
     addPseudoClassLock(node, HIGHLIGHTED_PSEUDO_CLASS);
   }
 
-  ctx.drawWindow(win, left / scale, top / scale, width / scale, height / scale, "#fff",
+  ctx.drawWindow(win, left * zoom, top * zoom, width * zoom, height * zoom, "#fff",
                  ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
 
   // Restore all inline styling.
@@ -117,13 +132,38 @@ async function getContrastRatioFor(node, options = {}) {
     };
   }
 
+  const { color, isLargeText, isBoldText, size } = props;
   const bounds = getBounds(options.win, options.bounds);
-  const textContext = getImageCtx(options.win, bounds);
-  const backgroundContext = getImageCtx(options.win, bounds, node);
+  const zoom = 1 / getCurrentZoom(options.win);
+  // When calculating colour contrast, we traverse image data for text nodes that are
+  // drawn both with and without transparent text. Image data arrays are typically really
+  // big. In cases when the font size is fairly large or when the page is zoomed in image
+  // data is especially large (retrieving it and/or traversing it takes significant amount
+  // of time). Here we optimize the size of the image data by scaling down the drawn nodes
+  // to a size where their text size equals either BOLD_LARGE_TEXT_MIN_PIXELS or
+  // LARGE_TEXT_MIN_PIXELS (lower threshold for large text size) depending on the font
+  // weight.
+  //
+  // IMPORTANT: this optimization, in some cases where background colour is non-uniform
+  // (gradient or image), can result in small (not noticeable) blending of the background
+  // colours. In turn this might affect the reported values of the contrast ratio. The
+  // delta is fairly small (<0.1) to noticeably skew the results.
+  //
+  // NOTE: this optimization does not help in cases where contrast is being calculated for
+  // nodes with a lot of text.
+  let scale =
+    (isBoldText ? BOLD_LARGE_TEXT_MIN_PIXELS : LARGE_TEXT_MIN_PIXELS) / size * zoom;
+  // We do not need to scale the images if the font is smaller than large or if the page
+  // is zoomed out (scaling in this case would've been scaling up).
+  scale = scale > 1 ? 1 : scale;
 
-  const { data: dataText } = textContext.getImageData(0, 0, bounds.width, bounds.height);
+  const textContext = getImageCtx(options.win, bounds, zoom, scale);
+  const backgroundContext = getImageCtx(options.win, bounds, zoom, scale, node);
+
+  const { data: dataText } = textContext.getImageData(
+    0, 0, bounds.width * scale, bounds.height * scale);
   const { data: dataBackground } = backgroundContext.getImageData(
-    0, 0, bounds.width, bounds.height);
+    0, 0, bounds.width * scale, bounds.height * scale);
 
   const rgba = await worker.performTask("getBgRGBA", {
     dataTextBuf: dataText.buffer,
@@ -136,7 +176,6 @@ async function getContrastRatioFor(node, options = {}) {
     };
   }
 
-  const { color, isLargeText } = props;
   if (rgba.value) {
     return {
       value: colorUtils.calculateContrastRatio(rgba.value, color),
