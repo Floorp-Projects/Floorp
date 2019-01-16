@@ -676,8 +676,18 @@ button.warning {
   margin: 8px 4px;
   max-width: 664px;
   /* The .addon-control element on the end has 4px of margin, remove it
-   * from the padding to stay balanced. */
-  padding-inline-end: 12px;
+   * from the padding to stay balanced (also the 1px border for high-contrast). */
+  padding-inline-end: calc(var(--card-padding) - 5px);
+}
+
+.list:focus > .addon[selected] {
+  /* Needed for high-contrast where the border will appear. */
+  border: 2px solid transparent;
+  /* Remove the border from the overall padding. */
+  padding: calc(var(--card-padding) - 2px);
+  /* The .addon-control element on the end has 4px of margin, remove it
+   * from the padding to stay balanced (also the 2px border). */
+  padding-inline-end: calc(var(--card-padding) - 6px);
 }
 
 .addon-detail.card:hover {
