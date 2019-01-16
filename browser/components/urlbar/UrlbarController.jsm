@@ -11,7 +11,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   // BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -91,8 +90,6 @@ class UrlbarController {
       this.cancelQuery(this._lastQueryContext);
     }
     this._lastQueryContext = queryContext;
-
-    queryContext.autofill = UrlbarPrefs.get("autoFill");
 
     queryContext.lastTelemetryResultCount = 0;
     TelemetryStopwatch.start(TELEMETRY_1ST_RESULT, queryContext);
