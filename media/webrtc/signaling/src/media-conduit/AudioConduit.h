@@ -226,8 +226,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   bool GetVideoEncoderStats(double* framerateMean, double* framerateStdDev,
                             double* bitrateMean, double* bitrateStdDev,
-                            uint32_t* droppedFrames,
-                            uint32_t* framesEncoded) override {
+                            uint32_t* droppedFrames, uint32_t* framesEncoded,
+                            Maybe<uint64_t>* qpSum) override {
     return false;
   }
   bool GetVideoDecoderStats(double* framerateMean, double* framerateStdDev,

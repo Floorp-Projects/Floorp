@@ -4,13 +4,14 @@ let taskcluster = require("taskcluster-client");
 let index = new taskcluster.Index({
   delayFactor:    750,  // Good solid delay for background process
   retries:        8,    // A few extra retries for robustness
-  baseUrl:        "taskcluster/index/v1",
+  rootUrl:        process.env.TASKCLUSTER_PROXY_URL || process.env.TASKCLUSTER_ROOT_URL,
 });
 
 // Create queue instance for fetching taskId
 let queue = new taskcluster.Queue({
-    delayFactor:    750,  // Good solid delay for background process
-    retries:        8,    // A few extra retries for robustness
+  delayFactor:    750,  // Good solid delay for background process
+  retries:        8,    // A few extra retries for robustness
+  rootUrl:        process.env.TASKCLUSTER_PROXY_URL || process.env.TASKCLUSTER_ROOT_URL,
 });
 
 // Load input

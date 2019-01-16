@@ -110,7 +110,8 @@ struct nsWidgetInitData {
         mIsAnimationSuppressed(false),
         mSupportTranslucency(false),
         mMouseTransparent(false),
-        mHasRemoteContent(false) {}
+        mHasRemoteContent(false),
+        mAlwaysOnTop(false) {}
 
   nsWindowType mWindowType;
   nsBorderStyle mBorderStyle;
@@ -135,6 +136,7 @@ struct nsWidgetInitData {
   // only valid for eWindowType_popup widgets
   bool mMouseTransparent;
   bool mHasRemoteContent;
+  bool mAlwaysOnTop;
 };
 
 #endif  // nsWidgetInitData_h__

@@ -4,9 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SimplePrograms([
-    'TestXREMakeCommandLineWin',
-])
+GeckoCppUnitTests(
+    [
+        'TestLauncherRegistryInfo',
+        'TestXREMakeCommandLineWin',
+    ],
+    linkage=None
+)
 
 DEFINES['NS_NO_XPCOM'] = True
 
@@ -23,6 +27,10 @@ OS_LIBS += [
     'shell32',
     'ws2_32',
 ]
+
+# Needed for TestLauncherRegistryInfo
+for var in ('MOZ_APP_BASENAME', 'MOZ_APP_VENDOR'):
+    DEFINES[var] = '"%s"' % CONFIG[var]
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     AllowCompilerWarnings()  # workaround for bug 1090497

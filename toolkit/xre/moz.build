@@ -59,6 +59,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
         '../components/printingui',
     ]
+    if CONFIG['MOZ_LAUNCHER_PROCESS']:
+        EXPORTS.mozilla += [
+          'LauncherRegistryInfo.h',
+          'LauncherResult.h',
+        ]
+        UNIFIED_SOURCES += [
+          'LauncherRegistryInfo.cpp',
+        ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'MacApplicationDelegate.mm',
@@ -156,7 +164,8 @@ if CONFIG['MOZ_X11']:
     DEFINES['USE_GLX_TEST'] = True
 
 for var in ('MOZ_APP_NAME', 'MOZ_APP_BASENAME', 'MOZ_APP_DISPLAYNAME',
-            'MOZ_APP_VERSION', 'OS_TARGET', 'MOZ_WIDGET_TOOLKIT'):
+            'MOZ_APP_VENDOR', 'MOZ_APP_VERSION', 'OS_TARGET',
+            'MOZ_WIDGET_TOOLKIT'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
 if CONFIG['MOZ_UPDATER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
@@ -190,6 +199,7 @@ LOCAL_INCLUDES += [
     '../components/find',
     '../components/printingui/ipc',
     '../components/windowwatcher',
+    '../mozapps/update/common',
     '../profile',
     '/config',
     '/dom/base',

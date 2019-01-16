@@ -1694,6 +1694,10 @@ class JSScript : public js::gc::TenuredCell {
 
     // Script came from eval().
     IsForEval = 1 << 22,
+
+    // Whether the record/replay execution progress counter (see RecordReplay.h)
+    // should be updated as this script runs.
+    TrackRecordReplayProgress = 1 << 23,
   };
   // Note: don't make this a bitfield! It makes it hard to read these flags
   // from JIT code.
@@ -2732,9 +2736,9 @@ class JSScript : public js::gc::TenuredCell {
     void dropScript();
   };
 
-  // Return whether the record/replay execution progress counter
-  // (see RecordReplay.h) should be updated as this script runs.
-  inline bool trackRecordReplayProgress() const;
+  bool trackRecordReplayProgress() const {
+    return hasFlag(ImmutableFlags::TrackRecordReplayProgress);
+  }
 };
 
 /* If this fails, add/remove padding within JSScript. */

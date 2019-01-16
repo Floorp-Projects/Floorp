@@ -38,6 +38,9 @@
 #include "nsJSUtils.h"
 #include "nsWidgetsCID.h"
 #include "nsXREDirProvider.h"
+#ifdef MOZ_ASAN_REPORTER
+#include "CmdLineAndEnvUtils.h"
+#endif
 #include "ThreadAnnotation.h"
 
 #include "mozilla/Omnijar.h"

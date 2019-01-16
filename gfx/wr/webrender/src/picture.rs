@@ -4,7 +4,7 @@
 
 use api::{DeviceRect, FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, PictureRect, PicturePoint, WorldPoint};
 use api::{DeviceIntRect, DevicePoint, LayoutRect, PictureToRasterTransform, LayoutPixel, PropertyBinding, PropertyBindingId};
-use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, DirtyRect, WorldSize, ClipMode};
+use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, DirtyRect, WorldSize, ClipMode, LayoutSize};
 use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, ImageFormat, ImageDescriptor, WorldVector2D, LayoutPoint};
 #[cfg(feature = "debug_renderer")]
 use api::{DebugFlags, DeviceVector2D};
@@ -16,6 +16,7 @@ use debug_colors;
 use device::TextureFilter;
 use euclid::{TypedScale, vec3, TypedRect, TypedPoint2D, TypedSize2D};
 use euclid::approxeq::ApproxEq;
+use frame_builder::FrameVisibilityContext;
 use intern::ItemUid;
 use internal_types::{FastHashMap, FastHashSet, PlaneSplitter};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
@@ -23,7 +24,7 @@ use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use gpu_types::{TransformPalette, TransformPaletteId, UvRectKind};
 use plane_split::{Clipper, Polygon, Splitter};
 use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind};
-use prim_store::{get_raster_rects, CoordinateSpaceMapping, PrimitiveScratchBuffer};
+use prim_store::{get_raster_rects, PrimitiveScratchBuffer, VectorKey, PointKey};
 use prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex, RectangleKey};
 use print_tree::PrintTreePrinter;
 use render_backend::FrameResources;
@@ -33,7 +34,7 @@ use resource_cache::ResourceCache;
 use scene::{FilterOpHelpers, SceneProperties};
 use scene_builder::DocumentResources;
 use smallvec::SmallVec;
-use surface::{SurfaceDescriptor, TransformKey};
+use surface::{SurfaceDescriptor};
 use std::{mem, u16};
 use texture_cache::{Eviction, TextureCacheHandle};
 use tiling::RenderTargetKind;
@@ -59,14 +60,26 @@ struct PictureInfo {
 /// Stores a list of cached picture tiles that are retained
 /// between new scenes.
 pub struct RetainedTiles {
+    /// The tiles retained between display lists.
     pub tiles: Vec<Tile>,
+    /// List of reference primitives that we will compare
+    /// to try and correlate the positioning of items
+    /// between display lists.
+    pub ref_prims: FastHashMap<ItemUid, WorldPoint>,
 }
 
 impl RetainedTiles {
     pub fn new() -> Self {
         RetainedTiles {
             tiles: Vec::new(),
+            ref_prims: FastHashMap::default(),
         }
+    }
+
+    /// Merge items from one retained tiles into another.
+    pub fn merge(&mut self, other: RetainedTiles) {
+        self.tiles.extend(other.tiles);
+        self.ref_prims.extend(other.ref_prims);
     }
 }
 
@@ -97,15 +110,12 @@ const MAX_CACHE_SIZE: f32 = 2048.0;
 const MAX_SURFACE_SIZE: f32 = 4096.0;
 
 
-#[derive(Debug)]
-pub struct GlobalTransformInfo {
-    /// Current (quantized) value of the transform, that is
-    /// independent of the value of the spatial node index.
-    /// Only calculated on first use.
-    current: Option<TransformKey>,
-    /// Tiles check this to see if the dependencies have changed.
-    changed: bool,
-}
+/// The number of primitives to search for, trying to correlate
+/// the offset between one display list and another.
+const MAX_PRIMS_TO_CORRELATE: usize = 64;
+/// The minmum number of primitives we need to correlate in
+/// order to consider it a success.
+const MIN_PRIMS_TO_CORRELATE: usize = MAX_PRIMS_TO_CORRELATE / 4;
 
 /// Information about the state of an opacity binding.
 #[derive(Debug)]
@@ -133,7 +143,7 @@ impl From<PropertyBinding<f32>> for OpacityBinding {
 }
 
 /// A stable ID for a given tile, to help debugging.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 struct TileId(usize);
 
 /// Information about a cached tile.
@@ -235,6 +245,8 @@ pub struct PrimitiveDescriptor {
     first_clip: u16,
     /// The number of clips that affect this primitive instance.
     clip_count: u16,
+    /// The combined local clips + prim rect for this primitive.
+    world_culling_rect: WorldRect,
 }
 
 /// Uniquely describes the content of this tile, in a way that can be
@@ -253,7 +265,7 @@ pub struct TileDescriptor {
     /// List of local offsets of the clip node origins. This
     /// ensures that if a clip node is supplied but has a different
     /// transform between frames that the tile is invalidated.
-    clip_vertices: ComparableVec<LayoutPoint>,
+    clip_vertices: ComparableVec<PointKey>,
 
     /// List of image keys that this tile depends on.
     image_keys: ComparableVec<ImageKey>,
@@ -262,9 +274,9 @@ pub struct TileDescriptor {
     // TODO(gw): Ugh, get rid of all opacity binding support!
     opacity_bindings: ComparableVec<OpacityBinding>,
 
-    /// List of the (quantized) transforms that we care about
+    /// List of the effects of transforms that we care about
     /// tracking for this tile.
-    transforms: ComparableVec<TransformKey>,
+    transforms: ComparableVec<PointKey>,
 }
 
 impl TileDescriptor {
@@ -322,9 +334,6 @@ pub struct TileCache {
     map_local_to_world: SpaceMapper<LayoutPixel, WorldPixel>,
     /// A list of tiles to draw during batching.
     pub tiles_to_draw: Vec<TileIndex>,
-    /// List of transform keys - used to check if transforms
-    /// have changed.
-    transforms: Vec<GlobalTransformInfo>,
     /// List of opacity bindings, with some extra information
     /// about whether they changed since last frame.
     opacity_bindings: FastHashMap<PropertyBindingId, OpacityBindingInfo>,
@@ -355,10 +364,69 @@ pub struct TileCache {
     world_bounding_rect: WorldRect,
     /// Counter for the next id to assign for a new tile.
     next_id: usize,
+    /// List of reference primitive information used for
+    /// correlating the position between display lists.
+    reference_prims: Vec<ReferencePrimitive>,
+    /// The root clip chain for this tile cache.
+    root_clip_chain_id: ClipChainId,
+}
+
+/// Stores information about a primitive in the cache that we will
+/// try to use to correlate positions between display lists.
+struct ReferencePrimitive {
+    uid: ItemUid,
+    local_pos: LayoutPoint,
+    spatial_node_index: SpatialNodeIndex,
+}
+
+/// Collect a sample of primitives from the prim list that can
+/// be used to correlate positions.
+// TODO(gw): Investigate best how to select which primitives to select.
+fn collect_ref_prims(
+    prim_instances: &[PrimitiveInstance],
+    ref_prims: &mut Vec<ReferencePrimitive>,
+    pictures: &[PicturePrimitive],
+) {
+    for prim_instance in prim_instances {
+        if ref_prims.len() >= MAX_PRIMS_TO_CORRELATE {
+            return;
+        }
+
+        match prim_instance.kind {
+            PrimitiveInstanceKind::Picture { pic_index, .. } => {
+                collect_ref_prims(
+                    &pictures[pic_index.0].prim_list.prim_instances,
+                    ref_prims,
+                    pictures,
+                );
+            }
+            _ => {
+                ref_prims.push(ReferencePrimitive {
+                    uid: prim_instance.uid(),
+                    local_pos: prim_instance.prim_origin,
+                    spatial_node_index: prim_instance.spatial_node_index,
+                });
+            }
+        }
+    }
 }
 
 impl TileCache {
-    pub fn new(spatial_node_index: SpatialNodeIndex) -> Self {
+    pub fn new(
+        spatial_node_index: SpatialNodeIndex,
+        prim_instances: &[PrimitiveInstance],
+        root_clip_chain_id: ClipChainId,
+        pictures: &[PicturePrimitive],
+    ) -> Self {
+        // Build the list of reference primitives
+        // for this picture cache.
+        let mut reference_prims = Vec::with_capacity(MAX_PRIMS_TO_CORRELATE);
+        collect_ref_prims(
+            prim_instances,
+            &mut reference_prims,
+            pictures,
+        );
+
         TileCache {
             spatial_node_index,
             tiles: Vec::new(),
@@ -367,7 +435,6 @@ impl TileCache {
                 WorldRect::zero(),
             ),
             tiles_to_draw: Vec::new(),
-            transforms: Vec::new(),
             opacity_bindings: FastHashMap::default(),
             dirty_region: None,
             needs_update: true,
@@ -378,6 +445,8 @@ impl TileCache {
             pending_blits: Vec::new(),
             world_bounding_rect: WorldRect::zero(),
             next_id: 0,
+            reference_prims,
+            root_clip_chain_id,
         }
     }
 
@@ -413,7 +482,7 @@ impl TileCache {
     pub fn pre_update(
         &mut self,
         pic_rect: LayoutRect,
-        frame_context: &FrameBuildingContext,
+        frame_context: &FrameVisibilityContext,
         resource_cache: &ResourceCache,
         retained_tiles: &mut RetainedTiles,
     ) {
@@ -433,10 +502,27 @@ impl TileCache {
         self.scroll_offset = Some(scroll_offset);
 
         // Pull any retained tiles from the previous scene.
-        if !retained_tiles.tiles.is_empty() {
+        let world_offset = if retained_tiles.tiles.is_empty() {
+            None
+        } else {
             assert!(self.tiles.is_empty());
             self.tiles = mem::replace(&mut retained_tiles.tiles, Vec::new());
-        }
+
+            // Get the positions of the reference primitives for this
+            // new display list.
+            let mut new_prim_map = FastHashMap::default();
+            build_ref_prims(
+                &self.reference_prims,
+                &mut new_prim_map,
+                frame_context.clip_scroll_tree,
+            );
+
+            // Attempt to correlate them to work out which offset to apply.
+            correlate_prim_maps(
+                &retained_tiles.ref_prims,
+                &new_prim_map,
+            )
+        }.unwrap_or(WorldVector2D::zero());
 
         // Assume no tiles are valid to draw by default
         self.tiles_to_draw.clear();
@@ -452,39 +538,6 @@ impl TileCache {
             frame_context.screen_world_rect,
             frame_context.clip_scroll_tree,
         );
-
-        // Walk the transforms and see if we need to rebuild the primitive
-        // dependencies for each tile.
-        // TODO(gw): We could be smarter here and only rebuild for the primitives
-        //           which are affected by transforms that have changed.
-        if self.transforms.len() == frame_context.clip_scroll_tree.spatial_nodes.len() {
-            for (i, transform) in self.transforms.iter_mut().enumerate() {
-                // If this relative transform was used on the previous frame,
-                // update it and store whether it changed for use during
-                // tile invalidation later.
-                if let Some(ref mut current) = transform.current {
-                    let mapping: CoordinateSpaceMapping<LayoutPixel, PicturePixel> = CoordinateSpaceMapping::new(
-                        self.spatial_node_index,
-                        SpatialNodeIndex::new(i),
-                        frame_context.clip_scroll_tree,
-                    ).expect("todo: handle invalid mappings");
-
-                    let key = mapping.into();
-                    transform.changed = key != *current;
-                    *current = key;
-                }
-            }
-        } else {
-            // If the size of the transforms array changed, just invalidate all the transforms for now.
-            self.transforms.clear();
-
-            for _ in 0 .. frame_context.clip_scroll_tree.spatial_nodes.len() {
-                self.transforms.push(GlobalTransformInfo {
-                    current: None,
-                    changed: true,
-                });
-            }
-        };
 
         // Do a hacky diff of opacity binding values from the last frame. This is
         // used later on during tile invalidation tests.
@@ -526,7 +579,7 @@ impl TileCache {
         let mut world_ref_point = if self.tiles.is_empty() {
             needed_world_rect.origin.floor()
         } else {
-            self.tiles[0].world_rect.origin
+            self.tiles[0].world_rect.origin + world_offset
         };
 
         // Apply the scroll delta so that existing tiles still get used.
@@ -575,7 +628,10 @@ impl TileCache {
         let mut old_tiles = FastHashMap::default();
         for tile in self.tiles.drain(..) {
             let tile_device_pos = (tile.world_rect.origin + scroll_delta) * frame_context.device_pixel_scale;
-            let key = (tile_device_pos.x.round() as i32, tile_device_pos.y.round() as i32);
+            let key = (
+                (tile_device_pos.x + world_offset.x).round() as i32,
+                (tile_device_pos.y + world_offset.y).round() as i32,
+            );
             old_tiles.insert(key, tile);
         }
 
@@ -670,7 +726,6 @@ impl TileCache {
     pub fn update_prim_dependencies(
         &mut self,
         prim_instance: &PrimitiveInstance,
-        prim_list: &PrimitiveList,
         clip_scroll_tree: &ClipScrollTree,
         resources: &FrameResources,
         clip_chain_nodes: &[ClipChainNode],
@@ -683,14 +738,6 @@ impl TileCache {
             return;
         }
 
-        // We need to ensure that if a primitive belongs to a cluster that has
-        // been marked invisible, we exclude it here. Otherwise, we may end up
-        // with a primitive that is outside the bounding rect of the calculated
-        // picture rect (which takes the cluster visibility into account).
-        if !prim_list.clusters[prim_instance.cluster_index.0 as usize].is_visible {
-            return;
-        }
-
         self.map_local_to_world.set_target_spatial_node(
             prim_instance.spatial_node_index,
             clip_scroll_tree,
@@ -698,34 +745,21 @@ impl TileCache {
 
         let prim_data = &resources.as_common_data(&prim_instance);
 
-        let (prim_rect, clip_rect) = match prim_instance.kind {
+        let prim_rect = match prim_instance.kind {
             PrimitiveInstanceKind::Picture { pic_index, .. } => {
                 let pic = &pictures[pic_index.0];
-                (pic.local_rect, LayoutRect::max_rect())
+                pic.local_rect
             }
             _ => {
-                let prim_rect = LayoutRect::new(
+                LayoutRect::new(
                     prim_instance.prim_origin,
                     prim_data.prim_size,
-                );
-                let clip_rect = prim_data
-                    .prim_relative_clip_rect
-                    .translate(&prim_instance.prim_origin.to_vector());
-
-                (prim_rect, clip_rect)
+                )
             }
         };
 
-        // Map the primitive local rect into the picture space.
-        // TODO(gw): We should maybe store this in the primitive template
-        //           during interning so that we never have to calculate
-        //           it during frame building.
-        let culling_rect = match prim_rect.intersection(&clip_rect) {
-            Some(rect) => rect,
-            None => return,
-        };
-
-        let world_rect = match self.map_local_to_world.map(&culling_rect) {
+        // Map the primitive local rect into world space.
+        let world_rect = match self.map_local_to_world.map(&prim_rect) {
             Some(rect) => rect,
             None => {
                 return;
@@ -744,18 +778,14 @@ impl TileCache {
         // Build the list of resources that this primitive has dependencies on.
         let mut opacity_bindings: SmallVec<[OpacityBinding; 4]> = SmallVec::new();
         let mut clip_chain_uids: SmallVec<[ItemUid; 8]> = SmallVec::new();
-        let mut clip_vertices: SmallVec<[LayoutPoint; 8]> = SmallVec::new();
+        let mut clip_vertices: SmallVec<[WorldPoint; 8]> = SmallVec::new();
         let mut image_keys: SmallVec<[ImageKey; 8]> = SmallVec::new();
-        let mut current_clip_chain_id = prim_instance.clip_chain_id;
         let mut clip_spatial_nodes = FastHashSet::default();
 
         // TODO(gw): We only care about world clip rects that don't have the main
         //           scroll root as an ancestor. It may be a worthwhile optimization
         //           to check for these and skip them.
-        // TODO(gw): We could also trivially track and exclude the root iframe / content
-        //           clip chain id, since we know that will exist on every item but never
-        //           actually be relevant.
-        let mut world_clips: FastHashMap<RectangleKey, SpatialNodeIndex> = FastHashMap::default();
+        let mut world_clips: SmallVec<[(RectangleKey, SpatialNodeIndex); 4]> = SmallVec::default();
 
         // Some primitives can not be cached (e.g. external video images)
         let is_cacheable = prim_instance.is_cacheable(
@@ -829,9 +859,21 @@ impl TileCache {
         // The transforms of any clips that are relative to the picture may affect
         // the content rendered by this primitive.
         let mut world_clip_rect = world_rect;
+        let mut culling_rect = prim_rect
+            .intersection(&prim_instance.local_clip_rect)
+            .unwrap_or(LayoutRect::zero());
+
+        let mut current_clip_chain_id = prim_instance.clip_chain_id;
         while current_clip_chain_id != ClipChainId::NONE {
             let clip_chain_node = &clip_chain_nodes[current_clip_chain_id.0 as usize];
             let clip_node = &resources.clip_data_store[clip_chain_node.handle];
+
+            // We can skip the root clip node - it will be taken care of by the
+            // world bounding rect calculated for the cache.
+            if current_clip_chain_id == self.root_clip_chain_id {
+                current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
+                continue;
+            }
 
             self.map_local_to_world.set_target_spatial_node(
                 clip_chain_node.spatial_node_index,
@@ -845,15 +887,20 @@ impl TileCache {
                 ClipItem::Rectangle(size, ClipMode::Clip) => {
                     let clip_spatial_node = &clip_scroll_tree.spatial_nodes[clip_chain_node.spatial_node_index.0 as usize];
 
-                    // Clips that are not in the root coordinate system are not axis-aligned,
-                    // so we need to treat them as normal style clips with vertices.
-                    if clip_spatial_node.coordinate_system_id == CoordinateSystemId(0) {
-                        let local_rect = LayoutRect::new(
-                            clip_chain_node.local_pos,
-                            size,
-                        );
+                    let local_clip_rect = LayoutRect::new(
+                        clip_chain_node.local_pos,
+                        size,
+                    );
 
-                        match self.map_local_to_world.map(&local_rect) {
+                    // If the clip rect is in the same spatial node, it can be handled by the
+                    // local clip rect.
+                    if clip_chain_node.spatial_node_index == prim_instance.spatial_node_index {
+                        culling_rect = culling_rect.intersection(&local_clip_rect).unwrap_or(LayoutRect::zero());
+                        false
+                    } else if clip_spatial_node.coordinate_system_id == CoordinateSystemId(0) {
+                        // Clips that are not in the root coordinate system are not axis-aligned,
+                        // so we need to treat them as normal style clips with vertices.
+                        match self.map_local_to_world.map(&local_clip_rect) {
                             Some(clip_world_rect) => {
                                 // Even if this ends up getting clipped out by the current clip
                                 // stack, we want to ensure the primitive gets added to the tiles
@@ -863,10 +910,10 @@ impl TileCache {
                                     .intersection(&clip_world_rect)
                                     .unwrap_or(WorldRect::zero());
 
-                                world_clips.insert(
+                                world_clips.push((
                                     clip_world_rect.into(),
                                     clip_chain_node.spatial_node_index,
-                                );
+                                ));
 
                                 false
                             }
@@ -886,11 +933,17 @@ impl TileCache {
                 }
             };
 
-            clip_vertices.push(clip_chain_node.local_pos);
-            clip_chain_uids.push(clip_chain_node.handle.uid());
-
             if add_to_clip_deps {
+                clip_chain_uids.push(clip_chain_node.handle.uid());
                 clip_spatial_nodes.insert(clip_chain_node.spatial_node_index);
+
+                let local_clip_rect = LayoutRect::new(
+                    clip_chain_node.local_pos,
+                    LayoutSize::zero(),
+                );
+                if let Some(world_clip_rect) = self.map_local_to_world.map(&local_clip_rect) {
+                    clip_vertices.push(world_clip_rect.origin);
+                }
             }
 
             current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
@@ -899,6 +952,15 @@ impl TileCache {
         if include_clip_rect {
             self.world_bounding_rect = self.world_bounding_rect.union(&world_clip_rect);
         }
+
+        self.map_local_to_world.set_target_spatial_node(
+            prim_instance.spatial_node_index,
+            clip_scroll_tree,
+        );
+        let world_culling_rect = self
+            .map_local_to_world
+            .map(&culling_rect)
+            .expect("bug: unable to map local clip rect");
 
         // Normalize the tile coordinates before adding to tile dependencies.
         // For each affected tile, mark any of the primitive dependencies.
@@ -912,6 +974,16 @@ impl TileCache {
 
                 let index = (y * self.tile_count.width + x) as usize;
                 let tile = &mut self.tiles[index];
+
+                // Store the local clip rect by calculating what portion
+                // of the tile it covers.
+                let world_culling_rect = world_culling_rect
+                    .intersection(&tile.world_rect)
+                    .map(|rect| {
+                        rect.translate(&-tile.world_rect.origin.to_vector())
+                    })
+                    .unwrap_or(WorldRect::zero())
+                    .round();
 
                 // Work out the needed rect for the primitive on this tile.
                 // TODO(gw): We should be able to remove this for any tile that is not
@@ -930,12 +1002,16 @@ impl TileCache {
                 // Update the tile descriptor, used for tile comparison during scene swaps.
                 tile.descriptor.prims.push(PrimitiveDescriptor {
                     prim_uid: prim_instance.uid(),
-                    origin: world_rect.origin - tile.world_rect.origin.to_vector(),
+                    origin: (world_rect.origin - tile.world_rect.origin.to_vector()).round(),
                     first_clip: tile.descriptor.clip_uids.len() as u16,
                     clip_count: clip_chain_uids.len() as u16,
+                    world_culling_rect,
                 });
                 tile.descriptor.clip_uids.extend_from_slice(&clip_chain_uids);
-                tile.descriptor.clip_vertices.extend_from_slice(&clip_vertices);
+                for clip_vertex in &clip_vertices {
+                    let clip_vertex = (*clip_vertex - tile.world_rect.origin.to_vector()).round();
+                    tile.descriptor.clip_vertices.push(clip_vertex.into());
+                }
 
                 tile.transforms.insert(prim_instance.spatial_node_index);
                 for spatial_node_index in &clip_spatial_nodes {
@@ -955,7 +1031,7 @@ impl TileCache {
         &mut self,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-        frame_context: &FrameBuildingContext,
+        frame_context: &FrameVisibilityContext,
         _scratch: &mut PrimitiveScratchBuffer,
     ) -> LayoutRect {
         let mut dirty_world_rect = WorldRect::zero();
@@ -1004,12 +1080,16 @@ impl TileCache {
             let mut transform_spatial_nodes: Vec<SpatialNodeIndex> = tile.transforms.drain().collect();
             transform_spatial_nodes.sort();
             for spatial_node_index in transform_spatial_nodes {
-                let mapping: CoordinateSpaceMapping<LayoutPixel, PicturePixel> = CoordinateSpaceMapping::new(
+                let xf = frame_context.clip_scroll_tree.get_relative_transform(
                     self.spatial_node_index,
                     spatial_node_index,
-                    frame_context.clip_scroll_tree,
-                ).expect("todo: handle invalid mappings");
-                tile.descriptor.transforms.push(mapping.into());
+                ).expect("BUG: unable to get relative transform");
+                // Store the result of transforming a fixed point by this
+                // transform.
+                // TODO(gw): This could in theory give incorrect results for a
+                //           primitive behind the near plane.
+                let key = xf.transform_point2d(&LayoutPoint::zero()).unwrap_or(LayoutPoint::zero()).round();
+                tile.descriptor.transforms.push(key.into());
             }
 
             // Invalidate if the backing texture was evicted.
@@ -1143,19 +1223,6 @@ impl TileCache {
         };
 
         local_clip_rect
-    }
-}
-
-/// State structure that is used during the tile cache update picture traversal.
-pub struct TileCacheUpdateState {
-    pub tile_cache: Option<TileCache>,
-}
-
-impl TileCacheUpdateState {
-    pub fn new() -> Self {
-        TileCacheUpdateState {
-            tile_cache: None,
-        }
     }
 }
 
@@ -1545,10 +1612,7 @@ impl PrimitiveList {
                     prim_instance.prim_origin,
                     prim_data.prim_size,
                 );
-                let clip_rect = prim_data
-                    .prim_relative_clip_rect
-                    .translate(&prim_instance.prim_origin.to_vector());
-                let culling_rect = clip_rect
+                let culling_rect = prim_instance.local_clip_rect
                     .intersection(&prim_rect)
                     .unwrap_or(LayoutRect::zero());
 
@@ -1681,8 +1745,17 @@ impl PicturePrimitive {
     pub fn destroy(
         mut self,
         retained_tiles: &mut RetainedTiles,
+        clip_scroll_tree: &ClipScrollTree,
     ) {
         if let Some(tile_cache) = self.tile_cache.take() {
+            // Calculate and store positions of the reference
+            // primitives for this tile cache.
+            build_ref_prims(
+                &tile_cache.reference_prims,
+                &mut retained_tiles.ref_prims,
+                clip_scroll_tree,
+            );
+
             for tile in tile_cache.tiles {
                 retained_tiles.tiles.push(tile);
             }
@@ -1700,6 +1773,7 @@ impl PicturePrimitive {
         spatial_node_index: SpatialNodeIndex,
         local_clip_rect: LayoutRect,
         clip_store: &ClipStore,
+        tile_cache: Option<TileCache>,
     ) -> Self {
         // For now, only create a cache descriptor for blur filters (which
         // includes text shadows). We can incrementally expand this to
@@ -1721,15 +1795,6 @@ impl PicturePrimitive {
             )
         } else {
             None
-        };
-
-        let tile_cache = match requested_composite_mode {
-            Some(PictureCompositeMode::TileCache { .. }) => {
-                Some(TileCache::new(spatial_node_index))
-            }
-            Some(_) | None => {
-                None
-            }
         };
 
         PicturePrimitive {
@@ -2109,34 +2174,6 @@ impl PicturePrimitive {
         }
 
         Some(mem::replace(&mut self.prim_list.pictures, SmallVec::new()))
-    }
-
-    /// Update the primitive dependencies for any active tile caches,
-    /// but only *if* the transforms have made the mappings out of date.
-    pub fn update_prim_dependencies(
-        &self,
-        tile_cache: &mut TileCache,
-        frame_context: &FrameBuildingContext,
-        resource_cache: &mut ResourceCache,
-        resources: &FrameResources,
-        pictures: &[PicturePrimitive],
-        clip_store: &ClipStore,
-        opacity_binding_store: &OpacityBindingStorage,
-        image_instances: &ImageInstanceStorage,
-    ) {
-        for prim_instance in &self.prim_list.prim_instances {
-            tile_cache.update_prim_dependencies(
-                prim_instance,
-                &self.prim_list,
-                &frame_context.clip_scroll_tree,
-                resources,
-                &clip_store.clip_chain_nodes,
-                pictures,
-                resource_cache,
-                opacity_binding_store,
-                image_instances,
-            );
-        }
     }
 
     /// Called after updating child pictures during the initial
@@ -2773,4 +2810,83 @@ fn create_raster_mappers(
     );
 
     (map_raster_to_world, map_pic_to_raster)
+}
+
+// Convert a list of reference primitives into a map of prim uid -> world position.
+fn build_ref_prims(
+    ref_prims: &[ReferencePrimitive],
+    prim_map: &mut FastHashMap<ItemUid, WorldPoint>,
+    clip_scroll_tree: &ClipScrollTree,
+) {
+    prim_map.clear();
+
+    let mut map_local_to_world = SpaceMapper::new(
+        ROOT_SPATIAL_NODE_INDEX,
+        WorldRect::zero(),
+    );
+
+    for ref_prim in ref_prims {
+        map_local_to_world.set_target_spatial_node(
+            ref_prim.spatial_node_index,
+            clip_scroll_tree,
+        );
+
+        // We only care about the origin.
+        // TODO(gw): Consider adding a map_point to SpaceMapper.
+        let rect = LayoutRect::new(
+            ref_prim.local_pos,
+            LayoutSize::zero(),
+        );
+
+        if let Some(rect) = map_local_to_world.map(&rect) {
+            prim_map.insert(ref_prim.uid, rect.origin);
+        }
+    }
+}
+
+// Attempt to correlate the offset between two display lists by
+// comparing the offsets between a small number of primitives in
+// each display list.
+// TODO(gw): This is basically a horrible hack - there must be a better
+//           way to achieve this!
+fn correlate_prim_maps(
+    old_prims: &FastHashMap<ItemUid, WorldPoint>,
+    new_prims: &FastHashMap<ItemUid, WorldPoint>,
+) -> Option<WorldVector2D> {
+    let mut map: FastHashMap<VectorKey, usize> = FastHashMap::default();
+
+    // Find primitives with the same uid, find the difference
+    // between them and store the frequency of this offset
+    // in a hash map.
+    for (uid, old_point) in old_prims {
+        if let Some(new_point) = new_prims.get(uid) {
+            let key = (*new_point - *old_point).round().into();
+
+            let key_count = map.entry(key).or_insert(0);
+            *key_count += 1;
+        }
+    }
+
+    // Calculate the mode (the most common frequency of offset). This
+    // can be different for some primitives, if they've animated, or
+    // are attached to a different scroll node etc.
+    map.into_iter()
+        .max_by_key(|&(_, count)| count)
+        .and_then(|(offset, count)| {
+            // We will assume we can use the calculated offset if:
+            // (a) We found more than one quarter of the selected
+            //     reference primitives to have the same offset.
+            // (b) The display lists both had the same number of
+            //     primitives, and we exactly matched. This handles
+            //     edge cases like scenes where there are very
+            //     few primitives, while excluding edge cases like
+            //     dl_mutate that have thousands of primitives with
+            //     the same uid.
+            if (count >= MIN_PRIMS_TO_CORRELATE) ||
+               (count == old_prims.len() && count == new_prims.len()) {
+                Some(offset.into())
+            } else {
+                None
+            }
+        })
 }

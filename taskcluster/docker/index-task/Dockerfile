@@ -1,11 +1,11 @@
-FROM node:6-alpine
+FROM node:10-alpine
 
 ENV       NODE_ENV        production
 RUN       mkdir /app
 ADD       insert-indexes.js   /app/
 ADD       package.json        /app/
-ADD       npm-shrinkwrap.json /app/
+ADD       yarn.lock           /app/
 WORKDIR   /app
-RUN       npm install && npm cache clean
+RUN       yarn --frozen-lockfile && yarn cache clean
 
 ENTRYPOINT ["node"]
