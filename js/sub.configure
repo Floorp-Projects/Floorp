@@ -6,7 +6,7 @@
          old_configure, old_configure_assignments, '--cache-file')
 @imports('itertools')
 @imports('os')
-@imports('subprocess')
+@imports('subconfigure')
 @imports('sys')
 @imports(_from='mozbuild.util', _import='encode')
 def js_subconfigure(build_env, prepare_configure_options, mozconfig,
@@ -78,14 +78,15 @@ def js_subconfigure(build_env, prepare_configure_options, mozconfig,
             value = ' '.join(value)
         environ[var] = value
 
-    ret = subprocess.call([
-        sys.executable,
-        os.path.join(build_env.topsrcdir, 'build', 'subconfigure.py'),
-        build_env.topsrcdir
-    ] + options + [
+    options += [
         'JS_STANDALONE=',
         '--cache-file=%s' % (cache_file or './config.cache'),
-    ], env=encode(environ))
+    ]
+    srcdir = os.path.join(build_env.topsrcdir, 'js', 'src')
+    objdir = os.path.join(build_env.topobjdir, 'js', 'src')
+    data = subconfigure.prepare(srcdir, objdir, options)
+    data['env'] = encode(environ)
+    ret = subconfigure.run(data)
 
     if ret:
         log.error('subconfigure failed')
