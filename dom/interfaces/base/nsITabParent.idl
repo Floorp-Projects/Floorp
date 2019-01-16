@@ -6,6 +6,7 @@
 #include "domstubs.idl"
 
 interface nsIPrincipal;
+webidl Element;
 
 [builtinclass, scriptable, uuid(8e49f7b0-1f98-4939-bf91-e9c39cd56434)]
 interface nsITabParent : nsISupports
@@ -80,6 +81,11 @@ interface nsITabParent : nsISupports
    * an onbeforeunload event handler.
    */
   readonly attribute boolean hasBeforeUnload;
+
+  /**
+   * The frame element which currently embeds this nsITabParent object.
+   */
+  readonly attribute Element ownerElement;
 
   /**
    * Notify APZ to start autoscrolling.
