@@ -13,8 +13,9 @@ ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils",
                                "resource://gre/modules/UpdateUtils.jsm");
 
-const PREF_APP_UPDATE_CANCELATIONS_OSX = "app.update.cancelations.osx";
-const PREF_APP_UPDATE_ELEVATE_NEVER    = "app.update.elevate.never";
+const PREF_APP_UPDATE_CANCELATIONS_OSX   = "app.update.cancelations.osx";
+const PREF_APP_UPDATE_ELEVATE_NEVER      = "app.update.elevate.never";
+const PREF_APP_UPDATE_DISABLEDFORTESTING = "app.update.disabledForTesting";
 
 var gAppUpdater;
 
@@ -131,7 +132,20 @@ appUpdater.prototype =
 
   // true when updating has been disabled by enterprise policy
   get updateDisabledByPolicy() {
-    return Services.policies && !Services.policies.isAllowed("appUpdate");
+    return Services.policies && !Services.policies.isAllowed("appUpdate") ||
+           this.disabledForTesting;
+  },
+
+  get disabledForTesting() {
+    let marionetteRunning = false;
+
+    if ("nsIMarionette" in Ci) {
+      marionetteRunning = Cc["@mozilla.org/remote/marionette;1"].
+                          createInstance(Ci.nsIMarionette).running;
+    }
+
+    return (Cu.isInAutomation || marionetteRunning) &&
+           Services.prefs.getBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false);
   },
 
   // true when updating in background is enabled.
