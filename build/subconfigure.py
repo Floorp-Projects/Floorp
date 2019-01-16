@@ -8,7 +8,6 @@
 import argparse
 import errno
 import os
-import re
 import subprocess
 import sys
 import pickle
@@ -16,79 +15,11 @@ import pickle
 import mozpack.path as mozpath
 
 
-# As defined in the various sub-configures in the tree
-PRECIOUS_VARS = set([
-    'build_alias',
-    'host_alias',
-    'target_alias',
-    'CC',
-    'CFLAGS',
-    'LDFLAGS',
-    'LIBS',
-    'CPPFLAGS',
-    'CPP',
-    'CCC',
-    'CXXFLAGS',
-    'CXX',
-    'CCASFLAGS',
-    'CCAS',
-])
-
-
 CONFIGURE_DATA = 'configure.pkl'
-
-
-# Autoconf, in some of the sub-configures used in the tree, likes to error
-# out when "precious" variables change in value. The solution it gives to
-# straighten things is to either run make distclean or remove config.cache.
-# There's no reason not to do the latter automatically instead of failing,
-# doing the cleanup (which, on buildbots means a full clobber), and
-# restarting from scratch.
-def maybe_clear_cache(data):
-    env = dict(data['env'])
-    for kind in ('target', 'host', 'build'):
-        arg = data[kind]
-        if arg is not None:
-            env['%s_alias' % kind] = arg
-    # configure can take variables assignments in its arguments, and that
-    # overrides whatever is in the environment.
-    for arg in data['args']:
-        if arg[:1] != '-' and '=' in arg:
-            key, value = arg.split('=', 1)
-            env[key] = value
-
-    comment = re.compile(r'^\s+#')
-    cache = {}
-    with open(data['cache-file']) as f:
-        for line in f:
-            if not comment.match(line) and '=' in line:
-                key, value = line.rstrip(os.linesep).split('=', 1)
-                # If the value is quoted, unquote it
-                if value[:1] == "'":
-                    value = value[1:-1].replace("'\\''", "'")
-                cache[key] = value
-    for precious in PRECIOUS_VARS:
-        # If there is no entry at all for that precious variable, then
-        # its value is not precious for that particular configure.
-        if 'ac_cv_env_%s_set' % precious not in cache:
-            continue
-        is_set = cache.get('ac_cv_env_%s_set' % precious) == 'set'
-        value = cache.get('ac_cv_env_%s_value' % precious) if is_set else None
-        if value != env.get(precious):
-            print('Removing %s because of %s value change from:' % (data['cache-file'], precious))
-            print('  %s' % (value if value is not None else 'undefined'))
-            print('to:')
-            print('  %s' % env.get(precious, 'undefined'))
-            os.remove(data['cache-file'])
-            return True
-    return False
 
 
 def prepare(srcdir, objdir, args):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--target', type=str)
-    parser.add_argument('--host', type=str)
-    parser.add_argument('--build', type=str)
     parser.add_argument('--cache-file', type=str)
     # The --srcdir argument is simply ignored. It's a useless autoconf feature
     # that we don't support well anyways. This makes it stripped from `others`
@@ -106,9 +37,6 @@ def prepare(srcdir, objdir, args):
     args, others = parser.parse_known_args(args)
 
     data = {
-        'target': args.target,
-        'host': args.host,
-        'build': args.build,
         'args': others,
         'srcdir': srcdir,
         'objdir': objdir,
@@ -159,15 +87,11 @@ def run(data):
     relobjdir = data['relobjdir'] = os.path.relpath(objdir, os.getcwd())
 
     cache_file = data['cache-file']
-    cleared_cache = True
-    if os.path.exists(cache_file):
-        cleared_cache = maybe_clear_cache(data)
 
     # Only run configure if one of the following is true:
     # - config.status doesn't exist
     # - config.status is older than an input to configure
     # - the configure arguments changed
-    # - the environment changed in a way that requires a cache clear.
     configure = mozpath.join(data['srcdir'], 'old-configure')
     config_status_path = mozpath.join(objdir, 'config.status')
     skip_configure = True
@@ -183,8 +107,7 @@ def run(data):
             if (any(not os.path.exists(f) or
                     (os.path.getmtime(config_status_path) < os.path.getmtime(f))
                     for f in dep_files) or
-                data.get('previous-args', data['args']) != data['args'] or
-                cleared_cache):
+                data.get('previous-args', data['args']) != data['args']):
                 skip_configure = False
 
     if not skip_configure:
@@ -202,9 +125,6 @@ def run(data):
         ]
         data['env']['OLD_CONFIGURE'] = os.path.join(
             os.path.dirname(configure), 'old-configure')
-        for kind in ('target', 'build', 'host'):
-            if data.get(kind) is not None:
-                command += ['--%s=%s' % (kind, data[kind])]
         command += data['args']
         command += ['--cache-file=%s' % cache_file]
 
