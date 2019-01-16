@@ -57,21 +57,3 @@ def prepare(srcdir, objdir, args):
         pickle.dump(data, f)
 
     return data
-
-
-def prefix_lines(text, prefix):
-    return ''.join('%s> %s' % (prefix, line) for line in text.splitlines(True))
-
-
-def execute_and_prefix(*args, **kwargs):
-    prefix = kwargs['prefix']
-    del kwargs['prefix']
-    proc = subprocess.Popen(*args, stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT, **kwargs)
-    while True:
-        line = proc.stdout.readline()
-        if not line:
-            break
-        print(prefix_lines(line.rstrip(), prefix))
-        sys.stdout.flush()
-    return proc.wait()
