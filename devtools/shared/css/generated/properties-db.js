@@ -6445,6 +6445,20 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "inset-block": {
+    "isInherited": false,
+    "subproperties": [
+      "inset-block-start",
+      "inset-block-end"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
   "inset-block-end": {
     "isInherited": false,
     "subproperties": [
@@ -6462,6 +6476,20 @@ exports.CSS_PROPERTIES = {
     "isInherited": false,
     "subproperties": [
       "inset-block-start"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "inset-inline": {
+    "isInherited": false,
+    "subproperties": [
+      "inset-inline-start",
+      "inset-inline-end"
     ],
     "supports": [],
     "values": [

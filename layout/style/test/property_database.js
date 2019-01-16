@@ -6386,6 +6386,24 @@ var gCSSProperties = {
     ],
     invalid_values: [ "none", "5" ]
   },
+  "inset-block": {
+    domProp: "insetBlock",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "inset-block-start", "inset-block-end" ],
+    /* FIXME: run tests with multiple prerequisites */
+    prerequisites: { "position": "relative" },
+    initial_values: [ "auto", "auto auto" ],
+    other_values: [ "32px", "-3em", "12%", "32px auto", "auto -3em", "12% auto",
+      "calc(2px)", "calc(2px) auto",
+      "calc(-2px)", "auto calc(-2px)",
+      "calc(50%)", "auto calc(50%)",
+      "calc(3*25px)", "calc(3*25px) auto",
+      "calc(25px*3)", "auto calc(25px*3)",
+      "calc(3*25px + 50%)", "auto calc(3*25px + 50%)",
+    ],
+    invalid_values: [ "none" ]
+  },
   "inset-block-end": {
     domProp: "insetBlockEnd",
     inherited: false,
@@ -6423,6 +6441,24 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: []
+  },
+  "inset-inline": {
+    domProp: "insetInline",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "inset-inline-start", "inset-inline-end" ],
+    /* FIXME: run tests with multiple prerequisites */
+    prerequisites: { "position": "relative" },
+    initial_values: [ "auto", "auto auto" ],
+    other_values: [ "32px", "-3em", "12%", "32px auto", "auto -3em", "12% auto",
+      "calc(2px)", "calc(2px) auto",
+      "calc(-2px)", "auto calc(-2px)",
+      "calc(50%)", "auto calc(50%)",
+      "calc(3*25px)", "calc(3*25px) auto",
+      "calc(25px*3)", "auto calc(25px*3)",
+      "calc(3*25px + 50%)", "auto calc(3*25px + 50%)",
+    ],
+    invalid_values: [ "none" ]
   },
   "inset-inline-end": {
     domProp: "insetInlineEnd",
