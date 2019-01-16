@@ -84,8 +84,8 @@ function runtimesReducer(state = RuntimesState(), action) {
     }
 
     case SELECTED_RUNTIME_ID_UPDATED: {
-      const { runtimeId } = action;
-      return Object.assign({}, state, { selectedRuntimeId: runtimeId });
+      const selectedRuntimeId = action.runtimeId || null;
+      return Object.assign({}, state, { selectedRuntimeId });
     }
 
     case UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS: {
