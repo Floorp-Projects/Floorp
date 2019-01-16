@@ -398,6 +398,8 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
   const int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect fillRect =
       LayoutDeviceRect::FromAppUnits(dest, appUnitsPerDevPixel);
+  fillRect.Round();
+
   Maybe<SVGImageContext> svgContext;
   gfx::IntSize decodeSize =
       nsLayoutUtils::ComputeImageContainerDrawingParameters(
@@ -420,7 +422,7 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
   if (key.isNothing()) {
     return result;
   }
-  wr::LayoutRect fill = wr::ToRoundedLayoutRect(fillRect);
+  wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
   LayoutDeviceSize gapSize(0, 0);
   aBuilder.PushImage(fill, fill, !BackfaceIsHidden(),

@@ -990,7 +990,7 @@ SimpleTest.promiseClipboardChange = async function(aExpectedStringOrValidatorFn,
     let maxPolls = aTimeout ? aTimeout / 100 : 50;
 
     async function putAndVerify(operationFn, validatorFn, flavor) {
-        operationFn();
+        await operationFn();
 
         let data;
         for (let i = 0; i < maxPolls; i++) {
