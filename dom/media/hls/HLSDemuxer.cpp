@@ -356,10 +356,13 @@ void HLSTrackDemuxer::UpdateMediaInfo(int index) {
           NS_ConvertUTF16toUTF8(audioInfoObj->MimeType()->ToString());
       audioInfo->mDuration =
           TimeUnit::FromMicroseconds(audioInfoObj->Duration());
-      auto&& csd = audioInfoObj->CodecSpecificData()->GetElements();
-      audioInfo->mCodecSpecificConfig->Clear();
-      audioInfo->mCodecSpecificConfig->AppendElements(
-          reinterpret_cast<uint8_t*>(&csd[0]), csd.Length());
+      jni::ByteArray::LocalRef csdBytes = audioInfoObj->CodecSpecificData();
+      if (csdBytes) {
+        auto&& csd = csdBytes->GetElements();
+        audioInfo->mCodecSpecificConfig->Clear();
+        audioInfo->mCodecSpecificConfig->AppendElements(
+            reinterpret_cast<uint8_t*>(&csd[0]), csd.Length());
+      }
     }
   } else {
     infoObj = mParent->mHLSDemuxerWrapper->GetVideoInfo(index);
