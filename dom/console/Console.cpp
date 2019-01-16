@@ -1323,8 +1323,8 @@ void StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
 
   aStackFrame->GetFilename(aCx, aStackEntry.mFilename);
 
+  aStackEntry.mSourceId = aStackFrame->GetSourceId(aCx);
   aStackEntry.mLineNumber = aStackFrame->GetLineNumber(aCx);
-
   aStackEntry.mColumnNumber = aStackFrame->GetColumnNumber(aCx);
 
   aStackFrame->GetName(aCx, aStackEntry.mFunctionName);
@@ -1696,6 +1696,7 @@ bool Console::PopulateConsoleNotificationInTheTargetScope(
     }
   }
 
+  event.mSourceId = frame.mSourceId;
   event.mLineNumber = frame.mLineNumber;
   event.mColumnNumber = frame.mColumnNumber;
   event.mFunctionName = frame.mFunctionName;
