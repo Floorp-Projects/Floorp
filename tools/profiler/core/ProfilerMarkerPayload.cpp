@@ -97,6 +97,21 @@ void UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
+void TextMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                      const TimeStamp& aProcessStartTime,
+                                      UniqueStacks& aUniqueStacks) {
+  StreamCommonProps("Text", aWriter, aProcessStartTime, aUniqueStacks);
+  aWriter.StringProperty("name", mText.get());
+}
+
+void LogMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                     const TimeStamp& aProcessStartTime,
+                                     UniqueStacks& aUniqueStacks) {
+  StreamCommonProps("Log", aWriter, aProcessStartTime, aUniqueStacks);
+  aWriter.StringProperty("name", mText.get());
+  aWriter.StringProperty("module", mModule.get());
+}
+
 void DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                           const TimeStamp& aProcessStartTime,
                                           UniqueStacks& aUniqueStacks) {
