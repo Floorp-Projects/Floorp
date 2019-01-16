@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<meta charset=UTF-8>
+<script>
+/* eslint-disable */
+eval("window.foo = function() { console.log('FOO'); }");
+eval("window.bar = function() { throw new Error('BAR') };");
+foo();
+bar();
+</script>
