@@ -149,8 +149,8 @@ nsHttpConnection::~nsHttpConnection() {
     uint32_t totalKBRead = static_cast<uint32_t>(mTotalBytesRead >> 10);
     LOG(("nsHttpConnection %p read %dkb on connection spdy=%d\n", this,
          totalKBRead, mEverUsedSpdy));
-    Telemetry::Accumulate(mEverUsedSpdy ? Telemetry::SPDY_KBREAD_PER_CONN
-                                        : Telemetry::HTTP_KBREAD_PER_CONN,
+    Telemetry::Accumulate(mEverUsedSpdy ? Telemetry::SPDY_KBREAD_PER_CONN2
+                                        : Telemetry::HTTP_KBREAD_PER_CONN2,
                           totalKBRead);
   }
   if (mForceSendTimer) {
