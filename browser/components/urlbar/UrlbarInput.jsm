@@ -475,14 +475,6 @@ class UrlbarInput {
       }
     }
 
-    // If the value was filled by a search suggestion, just return it.
-    // FIXME: This is wrong, the new system doesn't return action urls, it
-    // should instead build this based on MATCH_TYPE.
-    let action = this._parseActionUrl(this.value);
-    if (action && action.type == "searchengine") {
-      return selectedVal;
-    }
-
     let uri;
     if (this.getAttribute("pageproxystate") == "valid") {
       uri = this.window.gBrowser.currentURI;
@@ -527,42 +519,6 @@ class UrlbarInput {
            event.altKey ||
            (AppConstants.platform == "macosx" ?
               event.metaKey : event.ctrlKey);
-  }
-
-  /**
-   * @param {string} url
-   * @returns {object}
-   *   The action object
-   */
-  _parseActionUrl(url) {
-    const MOZ_ACTION_REGEX = /^moz-action:([^,]+),(.*)$/;
-    if (!MOZ_ACTION_REGEX.test(url)) {
-      return null;
-    }
-
-    // URL is in the format moz-action:ACTION,PARAMS
-    // Where PARAMS is a JSON encoded object.
-    let [, type, params] = url.match(MOZ_ACTION_REGEX);
-
-    let action = {
-      type,
-    };
-
-    action.params = JSON.parse(params);
-    for (let key in action.params) {
-      action.params[key] = decodeURIComponent(action.params[key]);
-    }
-
-    if ("url" in action.params) {
-      try {
-        let uri = Services.io.newURI(action.params.url);
-        action.params.displayUrl = this.window.losslessDecodeURI(uri);
-      } catch (e) {
-        action.params.displayUrl = action.params.url;
-      }
-    }
-
-    return action;
   }
 
   /**
