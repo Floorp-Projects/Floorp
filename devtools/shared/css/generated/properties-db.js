@@ -3723,28 +3723,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "border-block-color": {
-    "isInherited": false,
-    "subproperties": [
-      "border-block-start-color",
-      "border-block-end-color"
-    ],
-    "supports": [
-      2
-    ],
-    "values": [
-      "COLOR",
-      "currentColor",
-      "hsl",
-      "hsla",
-      "inherit",
-      "initial",
-      "rgb",
-      "rgba",
-      "transparent",
-      "unset"
-    ]
-  },
   "border-block-end": {
     "isInherited": false,
     "subproperties": [
@@ -3922,45 +3900,6 @@ exports.CSS_PROPERTIES = {
     "isInherited": false,
     "subproperties": [
       "border-block-start-width"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "medium",
-      "thick",
-      "thin",
-      "unset"
-    ]
-  },
-  "border-block-style": {
-    "isInherited": false,
-    "subproperties": [
-      "border-block-start-style",
-      "border-block-end-style"
-    ],
-    "supports": [],
-    "values": [
-      "dashed",
-      "dotted",
-      "double",
-      "groove",
-      "hidden",
-      "inherit",
-      "initial",
-      "inset",
-      "none",
-      "outset",
-      "ridge",
-      "solid",
-      "unset"
-    ]
-  },
-  "border-block-width": {
-    "isInherited": false,
-    "subproperties": [
-      "border-block-start-width",
-      "border-block-end-width"
     ],
     "supports": [],
     "values": [
@@ -4293,28 +4232,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "border-inline-color": {
-    "isInherited": false,
-    "subproperties": [
-      "border-inline-start-color",
-      "border-inline-end-color"
-    ],
-    "supports": [
-      2
-    ],
-    "values": [
-      "COLOR",
-      "currentColor",
-      "hsl",
-      "hsla",
-      "inherit",
-      "initial",
-      "rgb",
-      "rgba",
-      "transparent",
-      "unset"
-    ]
-  },
   "border-inline-end": {
     "isInherited": false,
     "subproperties": [
@@ -4492,45 +4409,6 @@ exports.CSS_PROPERTIES = {
     "isInherited": false,
     "subproperties": [
       "border-inline-start-width"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "medium",
-      "thick",
-      "thin",
-      "unset"
-    ]
-  },
-  "border-inline-style": {
-    "isInherited": false,
-    "subproperties": [
-      "border-inline-start-style",
-      "border-inline-end-style"
-    ],
-    "supports": [],
-    "values": [
-      "dashed",
-      "dotted",
-      "double",
-      "groove",
-      "hidden",
-      "inherit",
-      "initial",
-      "inset",
-      "none",
-      "outset",
-      "ridge",
-      "solid",
-      "unset"
-    ]
-  },
-  "border-inline-width": {
-    "isInherited": false,
-    "subproperties": [
-      "border-inline-start-width",
-      "border-inline-end-width"
     ],
     "supports": [],
     "values": [
