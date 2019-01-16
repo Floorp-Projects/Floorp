@@ -264,7 +264,7 @@ pref("dom.script_loader.binast_encoding.enabled", false);
 #endif
 
 // Whether window.event is enabled
-pref("dom.window.event.enabled", true);
+pref("dom.window.event.enabled", false);
 
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
