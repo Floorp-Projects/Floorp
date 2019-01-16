@@ -15,6 +15,7 @@
 //     This is allows the use of DOMPrefs in WebIDL files.
 
 DOM_WEBIDL_PREF(dom_caches_enabled)
+DOM_WEBIDL_PREF(dom_event_returnValue_enabled)
 DOM_WEBIDL_PREF(dom_webnotifications_serviceworker_enabled)
 DOM_WEBIDL_PREF(dom_webnotifications_requireinteraction_enabled)
 DOM_WEBIDL_PREF(dom_serviceWorkers_enabled)
