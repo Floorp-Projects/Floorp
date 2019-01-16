@@ -47,7 +47,7 @@ using namespace mozilla;
 using CrashReporter::Annotation;
 using CrashReporter::AnnotationToString;
 
-static SRWLOCK gDllServicesLock = SRWLOCK_INIT;
+static glue::Win32SRWLock gDllServicesLock;
 static glue::detail::DllServicesBase* gDllServices;
 
 #define DLL_BLOCKLIST_ENTRY(name, ...) {name, __VA_ARGS__},

@@ -49,12 +49,6 @@ static nsresult ParseMIMEType(const nsAString::const_iterator& aStart_iter,
 
 inline bool IsNetscapeFormat(const nsACString& aBuffer);
 
-nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService() {
-  mode_t mask = umask(0777);
-  umask(mask);
-  mPermissions = 0666 & ~mask;
-}
-
 nsOSHelperAppService::~nsOSHelperAppService() {}
 
 /*
