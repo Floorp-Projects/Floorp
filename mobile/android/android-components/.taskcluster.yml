@@ -180,7 +180,6 @@ tasks:
                   scopes:
                     - project:mobile:android-components:releng:beetmover:action:push-to-maven
                     - project:mobile:android-components:releng:beetmover:bucket:${beetmover_bucket}
-                    - queue:create-task:${tasks_priority}:aws-provisioner-v1/github-worker      # Still used by non build tasks
                     - queue:create-task:${tasks_priority}:scriptworker-prov-v1/${beetmover_worker_type}
                   payload:
                     env:

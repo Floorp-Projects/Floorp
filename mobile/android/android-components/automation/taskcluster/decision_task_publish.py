@@ -66,7 +66,7 @@ def generate_build_task(version, artifact_info, is_snapshot):
         for gradle_task in BUILD_GRADLE_TASK_NAMES
     )
 
-    return taskcluster.slugId(), BUILDER.build_task(
+    return taskcluster.slugId(), BUILDER.craft_build_ish_task(
         name='Android Components - Module {} ({})'.format(module_name, version),
         description='Building and testing module {}'.format(module_name),
         command=(
@@ -112,7 +112,7 @@ def generate_beetmover_task(build_task_id, version, artifact, artifact_name, is_
         "project:mobile:android-components:releng:beetmover:bucket:{}".format(bucket_name),
         "project:mobile:android-components:releng:beetmover:action:push-to-maven",
     ]
-    return taskcluster.slugId(), BUILDER.beetmover_task(
+    return taskcluster.slugId(), BUILDER.craft_beetmover_task(
         name="Android Components - Publish Module :{} via beetmover".format(artifact_name),
         description="Publish release module {} to {}".format(artifact_name, bucket_public_url),
         version=version,
@@ -128,11 +128,10 @@ def generate_raw_task(name, description, command_to_run):
     checkout = ("export TERM=dumb && git fetch {} {} && "
                 "git config advice.detachedHead false && "
                 "git checkout {} && ".format(REPO_URL, BRANCH, HEAD_REV))
-    return taskcluster.slugId(), BUILDER.raw_task(
+    return taskcluster.slugId(), BUILDER.craft_build_ish_task(
         name=name,
         description=description,
-        command=(checkout +
-                 command_to_run)
+        command=(checkout + command_to_run)
     )
 
 

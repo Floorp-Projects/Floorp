@@ -20,131 +20,98 @@ class TaskBuilder(object):
         self.beetmover_worker_type = beetmover_worker_type
         self.tasks_priority = tasks_priority
 
-    def raw_task(self, name, description, command, dependencies=[],
-                   artifacts={}, scopes=[], routes=[], features={},
-                   worker_type='github-worker'):
+    def craft_build_ish_task(
+        self, name, description, command, dependencies=None, artifacts=None, scopes=None,
+        routes=None, features=None
+    ):
+        dependencies = [] if dependencies is None else dependencies
+        artifacts = {} if artifacts is None else artifacts
+        scopes = [] if scopes is None else scopes
+        routes = [] if routes is None else routes
+        features = {} if features is None else features
+
+        payload = {
+            "features": features,
+            "maxRunTime": 7200,
+            "image": "mozillamobile/android-components:1.15",
+            "command": [
+                "/bin/bash",
+                "--login",
+                "-cx",
+                command
+            ],
+            "artifacts": artifacts,
+        }
+
+        return self._craft_default_task_definition(
+            self.build_worker_type,
+            'aws-provisioner-v1',
+            dependencies,
+            routes,
+            scopes,
+            name,
+            description,
+            payload
+        )
+
+    def craft_beetmover_task(
+        self, name, description, version, artifact_id, dependencies=None, upstreamArtifacts=None,
+        scopes=None, is_snapshot=False
+    ):
+        dependencies = [] if dependencies is None else dependencies
+        upstreamArtifacts = [] if upstreamArtifacts is None else upstreamArtifacts
+        scopes = [] if scopes is None else scopes
+
+        payload = {
+            "maxRunTime": 600,
+            "upstreamArtifacts": upstreamArtifacts,
+            "releaseProperties": {
+                "appName": "snapshot_components" if is_snapshot else "components",
+            },
+            "version": "{}-SNAPSHOT".format(version) if is_snapshot else version,
+            "artifact_id": artifact_id
+        }
+
+        return self._craft_default_task_definition(
+            self.beetmover_worker_type,
+            'scriptworker-prov-v1',
+            dependencies,
+            [],
+            scopes,
+            name,
+            description,
+            payload
+        )
+
+    def _craft_default_task_definition(
+        self, worker_type, provisioner_id, dependencies, routes, scopes, name, description, payload
+    ):
         created = datetime.datetime.now()
-        expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
+        expires = taskcluster.fromNow('1 year')
 
         return {
+            "provisionerId": provisioner_id,
             "workerType": worker_type,
             "taskGroupId": self.task_id,
             "schedulerId": self.scheduler_id,
+            "created": taskcluster.stringDate(created),
+            "deadline": taskcluster.stringDate(deadline),
             "expires": taskcluster.stringDate(expires),
             "retries": 5,
-            "created": taskcluster.stringDate(created),
             "tags": {},
             "priority": self.tasks_priority,
-            "deadline": taskcluster.stringDate(deadline),
             "dependencies": [self.task_id] + dependencies,
+            "requires": "all-completed",
             "routes": routes,
             "scopes": scopes,
-            "requires": "all-completed",
-            "payload": {
-                "features": features,
-                "maxRunTime": 7200,
-                "image": "mozillamobile/android-components:1.15",
-                "command": [
-                    "/bin/bash",
-                    "--login",
-                    "-cx",
-                    command
-                ],
-                "artifacts": artifacts,
-            },
-            "provisionerId": "aws-provisioner-v1",
+            "payload": payload,
             "metadata": {
                 "name": name,
                 "description": description,
                 "owner": self.owner,
-                "source": self.source
-            }
-        }
-
-    def build_task(self, name, description, command, dependencies=[],
-                   artifacts={}, scopes=[], routes=[], features={}):
-        created = datetime.datetime.now()
-        expires = taskcluster.fromNow('1 year')
-        deadline = taskcluster.fromNow('1 day')
-
-        features = features.copy()
-        features.update({
-            "taskclusterProxy": True
-        })
-
-        return {
-            "workerType": self.build_worker_type,
-            "taskGroupId": self.task_id,
-            "schedulerId": self.scheduler_id,
-            "expires": taskcluster.stringDate(expires),
-            "retries": 5,
-            "created": taskcluster.stringDate(created),
-            "tags": {},
-            "priority": self.tasks_priority,
-            "deadline": taskcluster.stringDate(deadline),
-            "dependencies": [self.task_id] + dependencies,
-            "routes": routes,
-            "scopes": scopes,
-            "requires": "all-completed",
-            "payload": {
-                "features": features,
-                "maxRunTime": 7200,
-                "image": "mozillamobile/android-components:1.15",
-                "command": [
-                    "/bin/bash",
-                    "--login",
-                    "-cx",
-                    command
-                ],
-                "artifacts": artifacts
+                "source": self.source,
             },
-            "provisionerId": "aws-provisioner-v1",
-            "metadata": {
-                "name": name,
-                "description": description,
-                "owner": self.owner,
-                "source": self.source
-            }
-        }
-
-    def beetmover_task(self, name, description, version, artifact_id,
-                       dependencies=[], upstreamArtifacts=[], scopes=[],
-                       is_snapshot=False):
-        created = datetime.datetime.now()
-        expires = taskcluster.fromNow('1 year')
-        deadline = taskcluster.fromNow('1 day')
-
-        return {
-            "workerType": self.beetmover_worker_type,
-            "taskGroupId": self.task_id,
-            "schedulerId": self.scheduler_id,
-            "expires": taskcluster.stringDate(expires),
-            "retries": 5,
-            "created": taskcluster.stringDate(created),
-            "tags": {},
-            "priority": self.tasks_priority,
-            "deadline": taskcluster.stringDate(deadline),
-            "dependencies": [self.task_id] + dependencies,
-            "routes": [],
-            "scopes": scopes,
-            "requires": "all-completed",
-            "payload": {
-                "maxRunTime": 600,
-                "upstreamArtifacts": upstreamArtifacts,
-                "releaseProperties": {
-                    "appName": "snapshot_components" if is_snapshot else "components",
-                },
-                "version": "{}-SNAPSHOT".format(version) if is_snapshot else version,
-                "artifact_id": artifact_id
-            },
-            "provisionerId": "scriptworker-prov-v1",
-            "metadata": {
-                "name": name,
-                "description": description,
-                "owner": self.owner,
-                "source": self.source
-            }
         }
 
 
