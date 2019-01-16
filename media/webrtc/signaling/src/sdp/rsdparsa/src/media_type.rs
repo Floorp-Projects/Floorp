@@ -38,6 +38,7 @@ pub enum SdpProtocolValue {
     RtpSavpf,
     UdpTlsRtpSavpf,
     TcpTlsRtpSavpf,
+    TcpDtlsRtpSavpf,
     DtlsSctp,
     UdpDtlsSctp,
     TcpDtlsSctp,
@@ -49,6 +50,7 @@ impl fmt::Display for SdpProtocolValue {
             SdpProtocolValue::RtpSavpf => "Rtp/Savpf",
             SdpProtocolValue::UdpTlsRtpSavpf => "Udp/Tls/Rtp/Savpf",
             SdpProtocolValue::TcpTlsRtpSavpf => "Tcp/Tls/Rtp/Savpf",
+            SdpProtocolValue::TcpDtlsRtpSavpf => "Tcp/Dtls/Rtp/Savpf",
             SdpProtocolValue::DtlsSctp => "Dtls/Sctp",
             SdpProtocolValue::UdpDtlsSctp => "Udp/Dtls/Sctp",
             SdpProtocolValue::TcpDtlsSctp => "Tcp/Dtls/Sctp",
@@ -270,6 +272,7 @@ fn parse_protocol_token(value: &str) -> Result<SdpProtocolValue, SdpParserIntern
            "RTP/SAVPF" => SdpProtocolValue::RtpSavpf,
            "UDP/TLS/RTP/SAVPF" => SdpProtocolValue::UdpTlsRtpSavpf,
            "TCP/TLS/RTP/SAVPF" => SdpProtocolValue::TcpTlsRtpSavpf,
+           "TCP/DTLS/RTP/SAVPF" => SdpProtocolValue::TcpDtlsRtpSavpf,
            "DTLS/SCTP" => SdpProtocolValue::DtlsSctp,
            "UDP/DTLS/SCTP" => SdpProtocolValue::UdpDtlsSctp,
            "TCP/DTLS/SCTP" => SdpProtocolValue::TcpDtlsSctp,
@@ -291,6 +294,9 @@ fn test_parse_protocol_token() {
     let tcps = parse_protocol_token("TCP/tls/rtp/savpf");
     assert!(tcps.is_ok());
     assert_eq!(tcps.unwrap(), SdpProtocolValue::TcpTlsRtpSavpf);
+    let tcps = parse_protocol_token("TCP/DtlS/rTp/sAVpf");
+    assert!(tcps.is_ok());
+    assert_eq!(tcps.unwrap(), SdpProtocolValue::TcpDtlsRtpSavpf);
     let dtls = parse_protocol_token("dtLs/ScTP");
     assert!(dtls.is_ok());
     assert_eq!(dtls.unwrap(), SdpProtocolValue::DtlsSctp);
