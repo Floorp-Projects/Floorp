@@ -128,10 +128,6 @@ def run(data):
         command += data['args']
         command += ['--cache-file=%s' % cache_file]
 
-        # Pass --no-create to configure so that it doesn't run config.status.
-        # We're going to run it ourselves.
-        command += ['--no-create']
-
         print(prefix_lines('configuring', relobjdir))
         print(prefix_lines('running %s' % ' '.join(command[:-1]), relobjdir))
         sys.stdout.flush()
