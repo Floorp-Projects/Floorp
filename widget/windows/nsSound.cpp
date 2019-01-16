@@ -115,13 +115,16 @@ void nsSound::PurgeLastSound() {
   // Halt any currently playing sound.
   if (mSoundPlayer) {
     if (mPlayerThread) {
-      mPlayerThread->Dispatch(NS_NewRunnableFunction(
-        "nsSound::PurgeLastSound", [player = std::move(mSoundPlayer)]() {
-          // Capture move mSoundPlayer to lambda then
-          // PlaySoundW(nullptr, nullptr, SND_PURGE) will be called before
-          // freeing the nsSoundPlayer.
-          ::PlaySoundW(nullptr, nullptr, SND_PURGE);
-        }), NS_DISPATCH_NORMAL);
+      mPlayerThread->Dispatch(
+          NS_NewRunnableFunction("nsSound::PurgeLastSound",
+                                 [player = std::move(mSoundPlayer)]() {
+                                   // Capture move mSoundPlayer to lambda then
+                                   // PlaySoundW(nullptr, nullptr, SND_PURGE)
+                                   // will be called before freeing the
+                                   // nsSoundPlayer.
+                                   ::PlaySoundW(nullptr, nullptr, SND_PURGE);
+                                 }),
+          NS_DISPATCH_NORMAL);
     }
   }
 }

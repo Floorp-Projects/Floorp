@@ -175,8 +175,8 @@ class RemoteObjectProxy : public RemoteObjectProxyBase {
   using RemoteObjectProxyBase::RemoteObjectProxyBase;
 
  private:
-  bool DefinePropertiesAndFunctions(
-      JSContext* aCx, JS::Handle<JSObject*> aHolder) const final {
+  bool DefinePropertiesAndFunctions(JSContext* aCx,
+                                    JS::Handle<JSObject*> aHolder) const final {
     return JS_DefineProperties(aCx, aHolder, P) &&
            JS_DefineFunctions(aCx, aHolder, F);
   }

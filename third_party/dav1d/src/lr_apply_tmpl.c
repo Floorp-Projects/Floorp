@@ -47,7 +47,8 @@ static void backup_lpf(const Dav1dFrameContext *const f,
                        pixel *dst, const ptrdiff_t dst_stride,
                        const pixel *src, const ptrdiff_t src_stride,
                        const int ss_ver, const int sb128,
-                       int row, const int row_h, const int src_w, const int ss_hor)
+                       int row, const int row_h, const int src_w,
+                       const int h, const int ss_hor)
 {
     const int dst_w = f->frame_hdr->super_res.enabled ?
                       (f->frame_hdr->width[1] + ss_hor) >> ss_hor : src_w;
@@ -74,18 +75,25 @@ static void backup_lpf(const Dav1dFrameContext *const f,
 
     if (f->frame_hdr->super_res.enabled) {
         while (row + stripe_h <= row_h) {
+            const int n_lines = 4 - (row + stripe_h + 1 == h);
             f->dsp->mc.resize(dst, dst_stride, src, src_stride,
-                              dst_w, src_w, 4, f->resize_step[ss_hor],
+                              dst_w, src_w, n_lines, f->resize_step[ss_hor],
                               f->resize_start[ss_hor] HIGHBD_CALL_SUFFIX);
             row += stripe_h; // unmodified stripe_h for the 1st stripe
             stripe_h = 64 >> ss_ver;
             src += stripe_h * PXSTRIDE(src_stride);
-            dst += 4 * PXSTRIDE(dst_stride);
+            dst += n_lines * PXSTRIDE(dst_stride);
+            if (n_lines == 3) {
+                pixel_copy(dst, &dst[-PXSTRIDE(dst_stride)], dst_w);
+                dst += PXSTRIDE(dst_stride);
+            }
         }
     } else {
         while (row + stripe_h <= row_h) {
+            const int n_lines = 4 - (row + stripe_h + 1 == h);
             for (int i = 0; i < 4; i++) {
-                pixel_copy(dst, src, src_w);
+                pixel_copy(dst, i == n_lines ? &dst[-PXSTRIDE(dst_stride)] :
+                                               src, src_w);
                 dst += PXSTRIDE(dst_stride);
                 src += PXSTRIDE(src_stride);
             }
@@ -110,20 +118,20 @@ void bytefn(dav1d_lr_copy_lpf)(Dav1dFrameContext *const f,
         ((f->frame_hdr->restoration.type[2] != DAV1D_RESTORATION_NONE) << 2);
 
     if (restore_planes & LR_RESTORE_Y) {
-        const int h = f->bh << 2;
+        const int h = f->cur.p.h;
         const int w = f->bw << 2;
-        const int row_h = imin((sby + 1) << (6 + f->seq_hdr->sb128), h - 4);
+        const int row_h = imin((sby + 1) << (6 + f->seq_hdr->sb128), h - 1);
         const int y_stripe = (sby << (6 + f->seq_hdr->sb128)) - offset;
         backup_lpf(f, f->lf.lr_lpf_line_ptr[0], lr_stride,
                    src[0] - offset * PXSTRIDE(src_stride[0]), src_stride[0],
-                   0, f->seq_hdr->sb128, y_stripe, row_h, w, 0);
+                   0, f->seq_hdr->sb128, y_stripe, row_h, w, h, 0);
     }
     if (restore_planes & (LR_RESTORE_U | LR_RESTORE_V)) {
         const int ss_ver = f->sr_cur.p.p.layout == DAV1D_PIXEL_LAYOUT_I420;
         const int ss_hor = f->sr_cur.p.p.layout != DAV1D_PIXEL_LAYOUT_I444;
-        const int h = f->bh << (2 - ss_ver);
+        const int h = (f->cur.p.h + ss_ver) >> ss_ver;
         const int w = f->bw << (2 - ss_hor);
-        const int row_h = imin((sby + 1) << ((6 - ss_ver) + f->seq_hdr->sb128), h - 4);
+        const int row_h = imin((sby + 1) << ((6 - ss_ver) + f->seq_hdr->sb128), h - 1);
         const ptrdiff_t offset_uv = offset >> ss_ver;
         const int y_stripe =
             (sby << ((6 - ss_ver) + f->seq_hdr->sb128)) - offset_uv;
@@ -131,12 +139,12 @@ void bytefn(dav1d_lr_copy_lpf)(Dav1dFrameContext *const f,
         if (restore_planes & LR_RESTORE_U) {
             backup_lpf(f, f->lf.lr_lpf_line_ptr[1], lr_stride,
                        src[1] - offset_uv * PXSTRIDE(src_stride[1]), src_stride[1],
-                       ss_ver, f->seq_hdr->sb128, y_stripe, row_h, w, ss_hor);
+                       ss_ver, f->seq_hdr->sb128, y_stripe, row_h, w, h, ss_hor);
         }
         if (restore_planes & LR_RESTORE_V) {
             backup_lpf(f, f->lf.lr_lpf_line_ptr[2], lr_stride,
                        src[2] - offset_uv * PXSTRIDE(src_stride[1]), src_stride[1],
-                       ss_ver, f->seq_hdr->sb128, y_stripe, row_h, w, ss_hor);
+                       ss_ver, f->seq_hdr->sb128, y_stripe, row_h, w, h, ss_hor);
         }
     }
 }

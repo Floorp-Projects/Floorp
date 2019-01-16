@@ -54,8 +54,8 @@ NS_IMPL_ISUPPORTS(MemoryReportRequestClient, nsIRunnable)
     const ReportCallback& aReportCallback,
     const FinishCallback& aFinishCallback) {
   RefPtr<MemoryReportRequestClient> request = new MemoryReportRequestClient(
-      aGeneration, aAnonymize, aDMDFile, aProcessString,
-      aReportCallback, aFinishCallback);
+      aGeneration, aAnonymize, aDMDFile, aProcessString, aReportCallback,
+      aFinishCallback);
 
   DebugOnly<nsresult> rv;
   if (aMinimizeMemoryUsage) {
@@ -127,8 +127,7 @@ class FinishReportingCallback final : public nsIFinishReportingCallback {
 
   explicit FinishReportingCallback(uint32_t aGeneration,
                                    const FinishCallback& aFinishCallback)
-      : mGeneration(aGeneration),
-        mFinishCallback(aFinishCallback) {}
+      : mGeneration(aGeneration), mFinishCallback(aFinishCallback) {}
 
   NS_IMETHOD Callback(nsISupports* aUnused) override {
     return mFinishCallback(mGeneration) ? NS_OK : NS_ERROR_FAILURE;

@@ -1905,11 +1905,10 @@ pref("network.http.rcwn.max_wait_before_racing_ms", 500);
 // all available active connections.
 pref("network.http.focused_window_transaction_ratio", "0.9");
 
-// XXX Disable for intranet downloading issue.
 // This is the size of the flow control window (KB) (i.e., the amount of data
 // that the parent can send to the child before getting an ack). 0 for disable
 // the flow control.
-pref("network.http.send_window_size", 0);
+pref("network.http.send_window_size", 1024);
 
 // Whether or not we give more priority to active tab.
 // Note that this requires restart for changes to take effect.

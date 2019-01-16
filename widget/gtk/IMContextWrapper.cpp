@@ -279,7 +279,6 @@ class SelectionStyleProvider final {
       // formatting of floating-point values.
       style.AppendFloat(alpha);
       style.AppendPrintf(");");
-
     }
     nscolor selectionBackgroundColor;
     if (NS_SUCCEEDED(

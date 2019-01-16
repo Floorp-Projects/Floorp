@@ -27,7 +27,6 @@
   --in-content-border-invalid-shadow: var(--red-50-a30);
   --in-content-border-color: #d7d7db;
   --in-content-category-outline-focus: 1px dotted #0a84ff;
-  --in-content-category-text: rgba(12,12,13);
   --in-content-category-text-selected: #0a84ff;
   --in-content-category-text-selected-active: #0060df;
   --in-content-category-background-hover: rgba(12,12,13,0.1);
@@ -591,7 +590,6 @@ xul|*.radio-label-box {
 *|*#categories > *|*.category {
   min-height: 48px;
   -moz-appearance: none;
-  color: var(--in-content-category-text);
   margin-inline-start: 34px;
   padding-inline-end: 10px;
   padding-inline-start: 10px;

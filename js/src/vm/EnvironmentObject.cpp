@@ -1133,15 +1133,18 @@ bool LexicalEnvironmentObject::isExtensible() const {
 Value LexicalEnvironmentObject::thisValue() const {
   MOZ_ASSERT(isExtensible());
   Value v = getReservedSlot(THIS_VALUE_OR_SCOPE_SLOT);
-  if (v.isObject()) {
-    // A WindowProxy may have been attached after this environment was
-    // created so check ToWindowProxyIfWindow again. For example,
-    // GlobalObject::createInternal will construct its lexical environment
-    // before SetWindowProxy can be called.
-    // See also: js::GetThisValue / js::GetThisValueOfLexical
-    return ObjectValue(*ToWindowProxyIfWindow(&v.toObject()));
-  }
+
+  // Windows must never be exposed to script. setWindowProxyThisValue should
+  // have set this to the WindowProxy.
+  MOZ_ASSERT_IF(v.isObject(), !IsWindow(&v.toObject()));
+
   return v;
+}
+
+void LexicalEnvironmentObject::setWindowProxyThisValue(JSObject* obj) {
+  MOZ_ASSERT(isGlobal());
+  MOZ_ASSERT(IsWindowProxy(obj));
+  setReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, ObjectValue(*obj));
 }
 
 const Class LexicalEnvironmentObject::class_ = {

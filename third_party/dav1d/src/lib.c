@@ -194,11 +194,11 @@ int dav1d_parse_sequence_header(Dav1dSequenceHeader *const out,
     dav1d_default_settings(&s);
 
     Dav1dContext *c;
-    res	= dav1d_open(&c, &s);
+    res = dav1d_open(&c, &s);
     if (res < 0) return res;
 
     if (ptr) {
-        res = dav1d_data_wrap(&buf, ptr, sz, dummy_free, NULL);
+        res = dav1d_data_wrap_internal(&buf, ptr, sz, dummy_free, NULL);
         if (res < 0) goto error;
     }
 
@@ -220,7 +220,7 @@ int dav1d_parse_sequence_header(Dav1dSequenceHeader *const out,
 
     res = 0;
 error:
-    dav1d_data_unref(&buf);
+    dav1d_data_unref_internal(&buf);
     dav1d_close(&c);
 
     return res;
@@ -257,8 +257,8 @@ static int output_image(Dav1dContext *const c, Dav1dPicture *const out,
     // Apply film grain to a new copy of the image to avoid corrupting refs
     int res = dav1d_picture_alloc_copy(out, in->p.w, in);
     if (res < 0) {
-        dav1d_picture_unref(in);
-        dav1d_picture_unref(out);
+        dav1d_picture_unref_internal(in);
+        dav1d_picture_unref_internal(out);
         return res;
     }
 
@@ -278,7 +278,7 @@ static int output_image(Dav1dContext *const c, Dav1dPicture *const out,
         assert(0);
     }
 
-    dav1d_picture_unref(in);
+    dav1d_picture_unref_internal(in);
     return 0;
 }
 
@@ -290,7 +290,7 @@ static int output_picture_ready(Dav1dContext *const c) {
     if (c->operating_point_idc && !c->all_layers) {
         const int max_spatial_id = ulog2(c->operating_point_idc >> 8);
         if (max_spatial_id > c->out.frame_hdr->spatial_id) {
-            dav1d_picture_unref(&c->out);
+            dav1d_picture_unref_internal(&c->out);
             return 0;
         }
     }
@@ -346,12 +346,12 @@ int dav1d_get_picture(Dav1dContext *const c, Dav1dPicture *const out)
     while (in->sz > 0) {
         res = dav1d_parse_obus(c, in, 0);
         if (res < 0) {
-            dav1d_data_unref(in);
+            dav1d_data_unref_internal(in);
         } else {
             assert((size_t)res <= in->sz);
             in->sz -= res;
             in->data += res;
-            if (!in->sz) dav1d_data_unref(in);
+            if (!in->sz) dav1d_data_unref_internal(in);
         }
         if (output_picture_ready(c))
             break;
@@ -369,7 +369,7 @@ int dav1d_get_picture(Dav1dContext *const c, Dav1dPicture *const out)
 }
 
 void dav1d_flush(Dav1dContext *const c) {
-    dav1d_data_unref(&c->in);
+    dav1d_data_unref_internal(&c->in);
     c->drain = 0;
 
     if (c->n_fc == 1) return;
@@ -482,7 +482,7 @@ void dav1d_close(Dav1dContext **const c_out) {
         dav1d_free_aligned(f->lf.lr_lpf_line);
     }
     dav1d_free_aligned(c->fc);
-    dav1d_data_unref(&c->in);
+    dav1d_data_unref_internal(&c->in);
     if (c->n_fc > 1) {
         for (unsigned n = 0; n < c->n_fc; n++)
             if (c->frame_thread.out_delayed[n].p.data[0])
@@ -490,7 +490,7 @@ void dav1d_close(Dav1dContext **const c_out) {
         free(c->frame_thread.out_delayed);
     }
     for (int n = 0; n < c->n_tile_data; n++)
-        dav1d_data_unref(&c->tile[n].data);
+        dav1d_data_unref_internal(&c->tile[n].data);
     for (int n = 0; n < 8; n++) {
         dav1d_cdf_thread_unref(&c->cdf[n]);
         if (c->refs[n].p.p.data[0])
@@ -502,4 +502,37 @@ void dav1d_close(Dav1dContext **const c_out) {
     dav1d_ref_dec(&c->frame_hdr_ref);
 
     dav1d_freep_aligned(c_out);
+}
+
+void dav1d_picture_unref(Dav1dPicture *const p) {
+    dav1d_picture_unref_internal(p);
+}
+
+uint8_t *dav1d_data_create(Dav1dData *const buf, const size_t sz) {
+    return dav1d_data_create_internal(buf, sz);
+}
+
+int dav1d_data_wrap(Dav1dData *const buf, const uint8_t *const ptr,
+                    const size_t sz,
+                    void (*const free_callback)(const uint8_t *data,
+                                                void *user_data),
+                    void *const user_data)
+{
+    return dav1d_data_wrap_internal(buf, ptr, sz, free_callback, user_data);
+}
+
+int dav1d_data_wrap_user_data(Dav1dData *const buf,
+                              const uint8_t *const user_data,
+                              void (*const free_callback)(const uint8_t *user_data,
+                                                          void *cookie),
+                              void *const cookie)
+{
+    return dav1d_data_wrap_user_data_internal(buf,
+                                              user_data,
+                                              free_callback,
+                                              cookie);
+}
+
+void dav1d_data_unref(Dav1dData *const buf) {
+    dav1d_data_unref_internal(buf);
 }

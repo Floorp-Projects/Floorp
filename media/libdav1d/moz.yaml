@@ -20,7 +20,7 @@ origin:
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: commit b53a99b97f93d0eb15d1f532739ca062fe44b4ca
+  release: commit f813285c1d1a5421e0180efbb7cbdd377cd31c69 (2019-01-13T22:08:25.000Z).
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/

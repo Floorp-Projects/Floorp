@@ -1677,8 +1677,8 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
 }
 
 void SavedStacks::chooseSamplingProbability(Realm* realm) {
-  // Use unbarriered version to prevent triggering read barrier while collecting,
-  // this is safe as long as global does not escape.
+  // Use unbarriered version to prevent triggering read barrier while
+  // collecting, this is safe as long as global does not escape.
   GlobalObject* global = realm->unsafeUnbarrieredMaybeGlobal();
   if (!global) {
     return;
@@ -1703,8 +1703,7 @@ void SavedStacks::chooseSamplingProbability(Realm* realm) {
 
     if (dbgp->trackingAllocationSites && dbgp->enabled) {
       foundAnyDebuggers = true;
-      probability =
-          std::max(dbgp->allocationSamplingProbability, probability);
+      probability = std::max(dbgp->allocationSamplingProbability, probability);
     }
   }
   MOZ_ASSERT(foundAnyDebuggers);

@@ -750,7 +750,8 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
   /*
    * This locates the inner datetimebox UA Widget element and only the
    * UA Widget
-   * element. This should fold into GetDateTimeBoxElement() when the XBL binding is removed.
+   * element. This should fold into GetDateTimeBoxElement() when the XBL binding
+   * is removed.
    */
   Element* GetDateTimeBoxElementInUAWidget();
 
