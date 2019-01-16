@@ -70,14 +70,6 @@ WebConsoleClient.prototype = {
     return this._networkRequests.get(actorId);
   },
 
-  hasNetworkRequest(actorId) {
-    return this._networkRequests.has(actorId);
-  },
-
-  removeNetworkRequest(actorId) {
-    this._networkRequests.delete(actorId);
-  },
-
   getNetworkEvents() {
     return this._networkRequests.values();
   },
