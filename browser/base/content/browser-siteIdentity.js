@@ -760,7 +760,7 @@ var gIdentityHandler = {
     // Fill in organization information if we have a valid EV certificate.
     if (this._isEV) {
       let iData = this.getIdentityData();
-      owner = iData.subjectOrg;
+      host = owner = iData.subjectOrg;
       verifier = this._identityIconLabels.tooltipText;
 
       // Build an appropriate supplemental block out of whatever location data we have
