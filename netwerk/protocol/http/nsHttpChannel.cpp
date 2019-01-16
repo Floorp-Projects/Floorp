@@ -7499,20 +7499,6 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
       mTransactionTimings.domainLookupEnd = mDNSPrefetch->EndTimestamp();
     }
     mDNSPrefetch = nullptr;
-#ifdef MOZ_GECKO_PROFILER
-    if (profiler_is_active() && !mRedirectURI) {
-      // Don't include this if we already redirected
-      // These do allocations/frees/etc; avoid if not active
-      nsCOMPtr<nsIURI> uri;
-      GetURI(getter_AddRefs(uri));
-      int32_t priority = PRIORITY_NORMAL;
-      GetPriority(&priority);
-      profiler_add_network_marker(
-          uri, priority, mChannelId, NetworkLoadType::LOAD_STOP,
-          mLastStatusReported, TimeStamp::Now(), mLogicalOffset,
-          mCacheDisposition, &mTransactionTimings, nullptr);
-    }
-#endif
 
     // handle auth retry...
     if (authRetry) {
@@ -7742,6 +7728,21 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
 
   // Register entry to the PerformanceStorage resource timing
   MaybeReportTimingData();
+
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_is_active() && !mRedirectURI) {
+    // Don't include this if we already redirected
+    // These do allocations/frees/etc; avoid if not active
+    nsCOMPtr<nsIURI> uri;
+    GetURI(getter_AddRefs(uri));
+    int32_t priority = PRIORITY_NORMAL;
+    GetPriority(&priority);
+    profiler_add_network_marker(
+        uri, priority, mChannelId, NetworkLoadType::LOAD_STOP,
+        mLastStatusReported, TimeStamp::Now(), mLogicalOffset,
+        mCacheDisposition, &mTransactionTimings, nullptr);
+  }
+#endif
 
   if (mListener) {
     LOG(("nsHttpChannel %p calling OnStopRequest\n", this));
