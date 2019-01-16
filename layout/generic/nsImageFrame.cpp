@@ -1627,8 +1627,9 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
           nsLayoutUtils::ComputeImageContainerDrawingParameters(
               imgCon, this, destRect, aSc, aFlags, svgContext);
       RefPtr<ImageContainer> container;
-      result = imgCon->GetImageContainerAtSize(
-          aManager->LayerManager(), decodeSize, svgContext, aFlags, getter_AddRefs(container));
+      result = imgCon->GetImageContainerAtSize(aManager->LayerManager(),
+                                               decodeSize, svgContext, aFlags,
+                                               getter_AddRefs(container));
       if (container) {
         bool wrResult = aManager->CommandBuilder().PushImage(
             aItem, container, aBuilder, aResources, aSc, destRect, bounds);

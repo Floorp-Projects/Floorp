@@ -243,15 +243,13 @@ class NowSingleton {
 
  private:
   explicit NowSingleton(mozilla::StaticMutex& aMutex)
-    : lock_(aMutex)
-    , rollover_(TimeDelta::FromMilliseconds(0))
-    , last_seen_(0)
-  {
-  }
+      : lock_(aMutex),
+        rollover_(TimeDelta::FromMilliseconds(0)),
+        last_seen_(0) {}
   ~NowSingleton() = default;
 
   mozilla::StaticMutex& lock_;  // To protected last_seen_ and rollover_.
-  TimeDelta rollover_;  // Accumulation of time lost due to rollover.
+  TimeDelta rollover_;          // Accumulation of time lost due to rollover.
   DWORD last_seen_;  // The last timeGetTime value we saw, to detect rollover.
 
   DISALLOW_COPY_AND_ASSIGN(NowSingleton);

@@ -415,7 +415,6 @@ class MOZ_STACK_CLASS TryNoteIter {
     uint32_t start = tn_->start;
     uint32_t length = tn_->length;
     return offset - start < length;
-
   }
   bool done() const { return tn_ == tnEnd_; }
   const JSTryNote* operator*() const { return tn_; }

@@ -19,8 +19,8 @@ inline HTMLBodyElement* Document::GetBodyElement() {
 }
 
 template <typename T>
-size_t Document::FindDocStyleSheetInsertionPoint(
-    const nsTArray<T>& aDocSheets, const StyleSheet& aSheet) {
+size_t Document::FindDocStyleSheetInsertionPoint(const nsTArray<T>& aDocSheets,
+                                                 const StyleSheet& aSheet) {
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
 
   // lowest index first

@@ -1382,7 +1382,8 @@ ScriptSourceObject* ScriptSourceObject::createInternal(JSContext* cx,
   obj->initReservedSlot(ELEMENT_SLOT, MagicValue(JS_GENERIC_MAGIC));
   obj->initReservedSlot(ELEMENT_PROPERTY_SLOT, MagicValue(JS_GENERIC_MAGIC));
   obj->initReservedSlot(INTRODUCTION_SCRIPT_SLOT, MagicValue(JS_GENERIC_MAGIC));
-  obj->initReservedSlot(INTRODUCTION_SOURCE_OBJECT_SLOT, MagicValue(JS_GENERIC_MAGIC));
+  obj->initReservedSlot(INTRODUCTION_SOURCE_OBJECT_SLOT,
+                        MagicValue(JS_GENERIC_MAGIC));
 
   return obj;
 }

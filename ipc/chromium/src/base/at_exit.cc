@@ -15,15 +15,13 @@ namespace base {
 // thread-safe access, since it will only be modified in testing.
 static AtExitManager* g_top_manager = NULL;
 
-AtExitManager::AtExitManager() : lock_("AtExitManager"),
-                                 next_manager_(NULL) {
+AtExitManager::AtExitManager() : lock_("AtExitManager"), next_manager_(NULL) {
   DCHECK(!g_top_manager);
   g_top_manager = this;
 }
 
-AtExitManager::AtExitManager(bool shadow) : lock_("AtExitManager"),
-                                            next_manager_(g_top_manager)
- {
+AtExitManager::AtExitManager(bool shadow)
+    : lock_("AtExitManager"), next_manager_(g_top_manager) {
   DCHECK(shadow || !g_top_manager);
   g_top_manager = this;
 }

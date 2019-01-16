@@ -1325,7 +1325,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
   using MathNameMap = HashMap<PropertyName*, MathBuiltin>;
   using ArrayViewVector = Vector<ArrayView>;
 
-protected:
+ protected:
   JSContext* cx_;
   CodeNode* moduleFunctionNode_;
   PropertyName* moduleFunctionName_;

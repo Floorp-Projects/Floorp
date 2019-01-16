@@ -1898,7 +1898,7 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
     };
 
     const nsIFrame* ancestor =
-      nsLayoutUtils::FindNearestCommonAncestorFrame(aFrame1, aFrame2);
+        nsLayoutUtils::FindNearestCommonAncestorFrame(aFrame1, aFrame2);
     MOZ_ASSERT(ancestor);
 
     // Map inline-end and inline-start to physical sides for checking presence

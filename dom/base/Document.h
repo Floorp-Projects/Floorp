@@ -445,7 +445,8 @@ class Document : public nsINode,
   Document& operator=(const Document&) = delete;
 
  public:
-  typedef mozilla::dom::ExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
+  typedef mozilla::dom::ExternalResourceMap::ExternalResourceLoad
+      ExternalResourceLoad;
   typedef net::ReferrerPolicy ReferrerPolicyEnum;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
@@ -3096,7 +3097,9 @@ class Document : public nsINode,
 
 #ifdef MOZILLA_INTERNAL_API
   bool Hidden() const { return mVisibilityState != VisibilityState::Visible; }
-  mozilla::dom::VisibilityState VisibilityState() const { return mVisibilityState; }
+  mozilla::dom::VisibilityState VisibilityState() const {
+    return mVisibilityState;
+  }
 #endif
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   void SetSelectedStyleSheetSet(const nsAString& aSheetSet);

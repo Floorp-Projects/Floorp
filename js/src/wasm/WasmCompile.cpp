@@ -259,8 +259,10 @@ static const double arm64IonBytecodesPerMs = 750;  // Estimate
 static const double x64DesktopTierCutoff = x64IonBytecodesPerMs * tierCutoffMs;
 static const double x86DesktopTierCutoff = x86IonBytecodesPerMs * tierCutoffMs;
 static const double x86MobileTierCutoff = x86DesktopTierCutoff / 2;  // Guess
-static const double arm32MobileTierCutoff = arm32IonBytecodesPerMs * tierCutoffMs;
-static const double arm64MobileTierCutoff = arm64IonBytecodesPerMs * tierCutoffMs;
+static const double arm32MobileTierCutoff =
+    arm32IonBytecodesPerMs * tierCutoffMs;
+static const double arm64MobileTierCutoff =
+    arm64IonBytecodesPerMs * tierCutoffMs;
 
 static double CodesizeCutoff(SystemClass cls) {
   switch (cls) {
