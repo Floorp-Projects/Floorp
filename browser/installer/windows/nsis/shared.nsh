@@ -162,6 +162,13 @@
     ${EndIf}
   ${EndIf}
 !endif
+
+!ifdef MOZ_LAUNCHER_PROCESS
+!ifdef RELEASE_OR_BETA
+  ${DisableLauncherProcessByDefault}
+!endif
+!endif
+
 !macroend
 !define PostUpdate "!insertmacro PostUpdate"
 
@@ -1607,3 +1614,22 @@ FunctionEnd
 !define SetAsDefaultAppUser "Call SetAsDefaultAppUser"
 
 !endif ; NO_LOG
+
+!ifdef MOZ_LAUNCHER_PROCESS
+!ifdef RELEASE_OR_BETA
+!macro DisableLauncherProcessByDefault
+  ClearErrors
+  ${ReadRegQWORD} $0 HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Launcher"
+  ${If} ${Errors}
+    ClearErrors
+    ${ReadRegQWORD} $0 HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Browser"
+    ${If} ${Errors}
+      ClearErrors
+      ; New install that hasn't seen this yet; disable by default
+      ${WriteRegQWORD} HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Browser" 0
+    ${EndIf}
+  ${EndIf}
+!macroend
+!define DisableLauncherProcessByDefault "!insertmacro DisableLauncherProcessByDefault"
+!endif
+!endif
