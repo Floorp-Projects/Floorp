@@ -191,8 +191,7 @@ class SVGContentUtils {
   /*
    * Report a localized error message to the error console.
    */
-  static nsresult ReportToConsole(dom::Document* doc,
-                                  const char* aWarning,
+  static nsresult ReportToConsole(dom::Document* doc, const char* aWarning,
                                   const char16_t** aParams,
                                   uint32_t aParamsLength);
 

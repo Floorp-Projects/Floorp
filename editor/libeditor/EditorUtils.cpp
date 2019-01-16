@@ -35,9 +35,7 @@ DOMIterator::DOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-nsresult DOMIterator::Init(nsRange& aRange) {
-  return mIter->Init(&aRange);
-}
+nsresult DOMIterator::Init(nsRange& aRange) { return mIter->Init(&aRange); }
 
 DOMIterator::DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
     : mIter(&mPostOrderIter) {

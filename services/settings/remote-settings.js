@@ -168,6 +168,8 @@ function remoteSettingsFunction() {
       }
     }
 
+    Services.obs.notifyObservers(null, "remote-settings:changes-poll-start", JSON.stringify({ expectedTimestamp }));
+
     const lastEtag = gPrefs.getCharPref(PREF_SETTINGS_LAST_ETAG, "");
 
     let pollResult;
@@ -226,6 +228,7 @@ function remoteSettingsFunction() {
       // the one in the local database.
       try {
         await client.maybeSync(last_modified, { loadDump });
+
         // Save last time this client was successfully synced.
         Services.prefs.setIntPref(client.lastCheckTimePref, checkedServerTimeInSeconds);
       } catch (e) {
@@ -245,7 +248,7 @@ function remoteSettingsFunction() {
       gPrefs.setCharPref(PREF_SETTINGS_LAST_ETAG, currentEtag);
     }
 
-    Services.obs.notifyObservers(null, "remote-settings-changes-polled");
+    Services.obs.notifyObservers(null, "remote-settings:changes-poll-end");
   };
 
   /**

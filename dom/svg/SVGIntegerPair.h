@@ -77,8 +77,8 @@ class SVGIntegerPair {
           mIndex(aIndex) {}
     virtual ~DOMAnimatedInteger();
 
-    SVGIntegerPair* mVal;    // kept alive because it belongs to content
-    PairIndex mIndex;        // are we the first or second integer
+    SVGIntegerPair* mVal;  // kept alive because it belongs to content
+    PairIndex mIndex;      // are we the first or second integer
 
     virtual int32_t BaseVal() override { return mVal->GetBaseValue(mIndex); }
     virtual void SetBaseVal(int32_t aValue) override {

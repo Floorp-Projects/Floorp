@@ -152,8 +152,9 @@ already_AddRefed<WakeLock> PowerManagerService::NewWakeLockOnBehalfOfProcess(
 
 NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPowerManagerService,
-                                         mozilla::dom::power::PowerManagerService::GetInstance)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(
+    nsIPowerManagerService,
+    mozilla::dom::power::PowerManagerService::GetInstance)
 
 static const mozilla::Module::CIDEntry kPowerManagerCIDs[] = {
     // clang-format off
@@ -171,13 +172,14 @@ static const mozilla::Module::ContractIDEntry kPowerManagerContracts[] = {
 
 // We mark the power module as being available in the GPU process because the
 // appshell depends on the power manager service.
-static const mozilla::Module kPowerManagerModule = {mozilla::Module::kVersion,
-                                                    kPowerManagerCIDs,
-                                                    kPowerManagerContracts,
-                                                    nullptr,
-                                                    nullptr,
-                                                    nullptr,
-                                                    nullptr,
-                                                    mozilla::Module::ALLOW_IN_GPU_PROCESS};
+static const mozilla::Module kPowerManagerModule = {
+    mozilla::Module::kVersion,
+    kPowerManagerCIDs,
+    kPowerManagerContracts,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    mozilla::Module::ALLOW_IN_GPU_PROCESS};
 
 NSMODULE_DEFN(nsPowerManagerModule) = &kPowerManagerModule;

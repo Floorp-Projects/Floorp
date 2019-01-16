@@ -312,8 +312,7 @@ class Nursery {
   }
   size_t sizeOfMallocedBuffers(mozilla::MallocSizeOf mallocSizeOf) const {
     size_t total = 0;
-    for (BufferSet::Range r = mallocedBuffers.all(); !r.empty();
-         r.popFront()) {
+    for (BufferSet::Range r = mallocedBuffers.all(); !r.empty(); r.popFront()) {
       total += mallocSizeOf(r.front());
     }
     total += mallocedBuffers.shallowSizeOfExcludingThis(mallocSizeOf);

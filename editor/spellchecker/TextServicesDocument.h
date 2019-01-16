@@ -29,7 +29,7 @@ class TextEditor;
 namespace dom {
 class Document;
 class Element;
-};
+};  // namespace dom
 
 /**
  * The TextServicesDocument presents the document in as a bunch of flattened

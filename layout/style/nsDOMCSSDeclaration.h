@@ -33,7 +33,7 @@ class Rule;
 namespace dom {
 class Document;
 class Element;
-}
+}  // namespace dom
 
 struct MutationClosureData {
   MutationClosureData() : mClosure(nullptr), mElement(nullptr), mModType(0) {}

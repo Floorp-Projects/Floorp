@@ -44,6 +44,14 @@
 #endif
 
 /**
+ * A reference-counted object wrapper for a user-configurable pointer.
+ */
+typedef struct Dav1dUserData {
+    const uint8_t *data; ///< data pointer
+    struct Dav1dRef *ref; ///< allocation origin
+} Dav1dUserData;
+
+/**
  * Input packet metadata which are copied from the input data used to
  * decode each image into the matching structure of the output image
  * returned back to the user. Since these are metadata fields, they
@@ -56,6 +64,7 @@ typedef struct Dav1dDataProps {
     int64_t duration; ///< container duration of input data, 0 if unknown (default)
     int64_t offset; ///< stream offset of input data, -1 if unknown (default)
     size_t size; ///< packet size, default Dav1dData.sz
+    struct Dav1dUserData user_data; ///< user-configurable data, default NULL members
 } Dav1dDataProps;
 
 #endif // __DAV1D_COMMON_H__

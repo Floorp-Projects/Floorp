@@ -46,7 +46,8 @@ bool SVGTests::HasExtension(const nsAString& aExtension) const {
   if (aExtension.EqualsLiteral(str)) return true;
   SVG_SUPPORTED_EXTENSION("http://www.w3.org/1999/xhtml")
   nsNameSpaceManager* nameSpaceManager = nsNameSpaceManager::GetInstance();
-  if (AsSVGElement()->IsInChromeDocument() || !nameSpaceManager->mMathMLDisabled) {
+  if (AsSVGElement()->IsInChromeDocument() ||
+      !nameSpaceManager->mMathMLDisabled) {
     SVG_SUPPORTED_EXTENSION("http://www.w3.org/1998/Math/MathML")
   }
 #undef SVG_SUPPORTED_EXTENSION

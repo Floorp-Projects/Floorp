@@ -89,16 +89,13 @@
     %endif
 %endmacro
 
-%if WIN64
-    %define PIC
-%elif ARCH_X86_64 == 0
-; x86_32 doesn't require PIC.
-; Some distros prefer shared objects to be PIC, but nothing breaks if
-; the code contains a few textrels, so we'll skip that complexity.
-    %undef PIC
-%endif
-%ifdef PIC
+%if ARCH_X86_64
+    %define PIC 1 ; always use PIC on x86-64
     default rel
+%elifidn __OUTPUT_FORMAT__,win32
+    %define PIC 0 ; PIC isn't used on 32-bit Windows
+%elifndef PIC
+    %define PIC 0
 %endif
 
 %ifdef __NASM_VER__
@@ -219,6 +216,18 @@ DECLARE_REG_TMP_SIZE 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
 %else
     %define gprsize 4
 %endif
+
+%macro LEA 2
+%if ARCH_X86_64
+    lea %1, [%2]
+%elif PIC
+    call $+5 ; special-cased to not affect the RSB on most CPU:s
+    pop %1
+    add %1, (%2)-$+1
+%else
+    mov %1, %2
+%endif
+%endmacro
 
 %macro PUSH 1
     push %1
@@ -673,7 +682,7 @@ DECLARE_ARG 7, 8, 9, 10, 11, 12, 13, 14
 
 BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, jna, jnae, jb, jbe, jnb, jnbe, jc, jnc, js, jns, jo, jno, jp, jnp
 
-%macro TAIL_CALL 2 ; callee, is_nonadjacent
+%macro TAIL_CALL 1-2 1 ; callee, is_nonadjacent
     %if has_epilogue
         call %1
         RET

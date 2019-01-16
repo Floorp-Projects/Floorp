@@ -114,7 +114,7 @@ extern const int8_t dav1d_mc_warp_filter[193][8];
 extern const int16_t dav1d_resize_filter[64][8];
 
 extern const uint8_t dav1d_sm_weights[128];
-extern const int16_t dav1d_dr_intra_derivative[90];
+extern const uint16_t dav1d_dr_intra_derivative[44];
 extern const int8_t dav1d_filter_intra_taps[5][64];
 
 extern const uint8_t dav1d_obmc_masks[64];

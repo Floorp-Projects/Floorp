@@ -135,8 +135,8 @@ HandlerProvider::GetHandlerPayloadSize(
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
 
   if (!IsTargetInterfaceCacheable()) {
-    *aOutPayloadSize = mscom::StructToStream::GetEmptySize();
-    return S_OK;
+    // No handler, so no payload for this instance.
+    return E_NOTIMPL;
   }
 
   MutexAutoLock lock(mMutex);
@@ -378,6 +378,11 @@ bool HandlerProvider::IsTargetInterfaceCacheable() {
 HRESULT
 HandlerProvider::WriteHandlerPayload(NotNull<mscom::IInterceptor*> aInterceptor,
                                      NotNull<IStream*> aStream) {
+  if (!IsTargetInterfaceCacheable()) {
+    // No handler, so no payload for this instance.
+    return E_NOTIMPL;
+  }
+
   MutexAutoLock lock(mMutex);
 
   if (!mSerializer || !(*mSerializer)) {
@@ -433,6 +438,13 @@ HandlerProvider::GetEffectiveOutParamIid(REFIID aCallIid, ULONG aCallMethod) {
   if ((aCallIid == IID_IAccessible2_2 || aCallIid == IID_IAccessible2_3) &&
       aCallMethod == 47) {
     return NEWEST_IA2_IID;
+  }
+
+  // IAccessible::get_accSelection
+  if ((aCallIid == IID_IAccessible || aCallIid == IID_IAccessible2 ||
+       aCallIid == IID_IAccessible2_2 || aCallIid == IID_IAccessible2_3) &&
+      aCallMethod == 19) {
+    return IID_IEnumVARIANT;
   }
 
   MOZ_ASSERT(false);

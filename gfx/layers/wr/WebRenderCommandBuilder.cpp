@@ -1067,8 +1067,9 @@ static bool IsItemProbablyActive(nsDisplayItem* aItem,
       bool is2D = t.Is2D(&t2d);
       GP("active: %d\n", transformItem->MayBeAnimated(aDisplayListBuilder));
       return transformItem->MayBeAnimated(aDisplayListBuilder, false) ||
-             !is2D || HasActiveChildren(*transformItem->GetChildren(),
-                                        aDisplayListBuilder);
+             !is2D ||
+             HasActiveChildren(*transformItem->GetChildren(),
+                               aDisplayListBuilder);
     }
     case DisplayItemType::TYPE_OPACITY: {
       nsDisplayOpacity* opacityItem = static_cast<nsDisplayOpacity*>(aItem);
@@ -2303,8 +2304,7 @@ Maybe<wr::WrImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
 
     recorder->FlushItem(IntRect(0, 0, size.width, size.height));
     TakeExternalSurfaces(recorder, maskData->mExternalSurfaces,
-                         mManager->GetRenderRootStateManager(),
-                         aResources);
+                         mManager->GetRenderRootStateManager(), aResources);
     recorder->Finish();
 
     Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData,
