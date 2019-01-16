@@ -304,7 +304,7 @@ class MozSearchbar extends MozXULElement {
 
     if (!selection || (selection.index == -1)) {
       oneOffRecorded = this.textbox.popup.oneOffButtons
-        .maybeRecordTelemetry(aEvent, aWhere, aParams);
+        .maybeRecordTelemetry(aEvent);
       if (!oneOffRecorded) {
         let source = "unknown";
         let type = "unknown";
@@ -325,8 +325,7 @@ class MozSearchbar extends MozXULElement {
         if (!aEngine) {
           aEngine = this.currentEngine;
         }
-        BrowserSearch.recordOneoffSearchInTelemetry(aEngine, source, type,
-          aWhere);
+        BrowserSearch.recordOneoffSearchInTelemetry(aEngine, source, type);
       }
     }
 
