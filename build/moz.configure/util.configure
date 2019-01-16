@@ -486,13 +486,13 @@ def add_old_configure_assignment(var, value, when=None):
         if var is None or value is None:
             return
         if value is True:
-            assignments.append('%s=1' % var)
+            assignments.append((var, '1'))
         elif value is False:
-            assignments.append('%s=' % var)
+            assignments.append((var, ''))
         else:
             if isinstance(value, (list, tuple)):
                 value = quote(*value)
-            assignments.append('%s=%s' % (var, quote(str(value))))
+            assignments.append((var, str(value)))
 
 
 @template
