@@ -8,6 +8,7 @@
 @imports('os')
 @imports('subconfigure')
 @imports('sys')
+@imports(_from='__builtin__', _import='open')
 @imports(_from='mozbuild.util', _import='encode')
 def js_subconfigure(build_env, prepare_configure_options, mozconfig,
                     old_configure, old_configure_assignments, cache_file):
@@ -85,9 +86,56 @@ def js_subconfigure(build_env, prepare_configure_options, mozconfig,
     srcdir = os.path.join(build_env.topsrcdir, 'js', 'src')
     objdir = os.path.join(build_env.topobjdir, 'js', 'src')
     data = subconfigure.prepare(srcdir, objdir, options)
-    data['env'] = encode(environ)
-    ret = subconfigure.run(data)
 
-    if ret:
-        log.error('subconfigure failed')
-        sys.exit(ret)
+    # subconfigure.prepare does some normalization so use the value it returned.
+    cache_file = data['cache-file']
+
+    # Only run configure if one of the following is true:
+    # - config.status doesn't exist
+    # - config.status is older than an input to configure
+    # - the configure arguments changed
+    configure = os.path.join(srcdir, 'old-configure')
+    config_status_path = os.path.join(objdir, 'config.status')
+    skip_configure = True
+    if not os.path.exists(config_status_path):
+        skip_configure = False
+    else:
+        config_status_deps = os.path.join(objdir, 'config_status_deps.in')
+        if not os.path.exists(config_status_deps):
+            skip_configure = False
+        else:
+            with open(config_status_deps, 'r') as fh:
+                dep_files = fh.read().splitlines() + [configure]
+            if (any(not os.path.exists(f) or
+                    (os.path.getmtime(config_status_path) < os.path.getmtime(f))
+                    for f in dep_files) or
+                data.get('previous-args', data['args']) != data['args']):
+                skip_configure = False
+
+    if not skip_configure:
+        # Because configure is a shell script calling a python script
+        # calling a shell script, on Windows, with msys screwing the
+        # environment, we lose the benefits from our own efforts in this
+        # script to get past the msys problems. So manually call the python
+        # script instead, so that we don't do a native->msys transition
+        # here. Then the python configure will still have the right
+        # environment when calling the shell configure.
+        command = [
+            sys.executable,
+            os.path.join(build_env.topsrcdir, 'configure.py'),
+            '--enable-project=js',
+        ]
+        environ['OLD_CONFIGURE'] = os.path.join(
+            os.path.dirname(configure), 'old-configure')
+        command += data['args']
+        command += ['--cache-file=%s' % cache_file]
+
+        log.info(subconfigure.prefix_lines('configuring', 'js/src'))
+        log.info(subconfigure.prefix_lines('running %s' % ' '.join(command[:-1]), 'js/src'))
+        ret = subconfigure.execute_and_prefix(command, cwd=objdir, env=encode(environ),
+                                              prefix='js/src')
+        if ret:
+            log.error('subconfigure failed')
+            sys.exit(ret)
+
+    return 0
