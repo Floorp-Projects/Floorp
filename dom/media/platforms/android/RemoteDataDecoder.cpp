@@ -174,6 +174,10 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
     JavaCallbacksSupport::Init();
 
     mJavaCallbacks = CodecProxy::NativeCallbacks::New();
+    if (!mJavaCallbacks) {
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                          __func__);
+    }
     JavaCallbacksSupport::AttachNative(
         mJavaCallbacks, mozilla::MakeUnique<CallbacksSupport>(this));
 
@@ -296,6 +300,10 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     JavaCallbacksSupport::Init();
 
     mJavaCallbacks = CodecProxy::NativeCallbacks::New();
+    if (!mJavaCallbacks) {
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                          __func__);
+    }
     JavaCallbacksSupport::AttachNative(
         mJavaCallbacks, mozilla::MakeUnique<CallbacksSupport>(this));
 
