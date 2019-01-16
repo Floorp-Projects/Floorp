@@ -8,7 +8,7 @@ import taskcluster
 
 
 class TaskBuilder(object):
-    def __init__(self, task_id, repo_url, branch, commit, owner, source, scheduler_id, build_worker_type, tasks_priority='lowest'):
+    def __init__(self, task_id, repo_url, branch, commit, owner, source, scheduler_id, build_worker_type, beetmover_worker_type, tasks_priority='lowest'):
         self.task_id = task_id
         self.repo_url = repo_url
         self.branch = branch
@@ -17,6 +17,7 @@ class TaskBuilder(object):
         self.source = source
         self.scheduler_id = scheduler_id
         self.build_worker_type = build_worker_type
+        self.beetmover_worker_type = beetmover_worker_type
         self.tasks_priority = tasks_priority
 
     def raw_task(self, name, description, command, dependencies=[],
@@ -109,13 +110,13 @@ class TaskBuilder(object):
 
     def beetmover_task(self, name, description, version, artifact_id,
                        dependencies=[], upstreamArtifacts=[], scopes=[],
-                       is_staging=False, is_snapshot=False):
+                       is_snapshot=False):
         created = datetime.datetime.now()
         expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
 
         return {
-            "workerType": "mobile-beetmover-dev" if is_staging else "mobile-beetmover-v1",
+            "workerType": self.beetmover_worker_type,
             "taskGroupId": self.task_id,
             "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),

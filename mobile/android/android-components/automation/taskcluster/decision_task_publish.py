@@ -31,6 +31,7 @@ BUILDER = lib.tasks.TaskBuilder(
     source='{}/raw/{}/.taskcluster.yml'.format(REPO_URL, HEAD_REV),
     scheduler_id=os.environ.get('SCHEDULER_ID'),
     build_worker_type=os.environ.get('BUILD_WORKER_TYPE'),
+    beetmover_worker_type=os.environ.get('BEETMOVER_WORKER_TYPE'),
     tasks_priority=os.environ.get('TASKS_PRIORITY'),
 )
 
@@ -119,7 +120,6 @@ def generate_beetmover_task(build_task_id, version, artifact, artifact_name, is_
         dependencies=[build_task_id],
         upstreamArtifacts=upstream_artifacts,
         scopes=scopes,
-        is_staging=is_staging,
         is_snapshot=is_snapshot
     )
 
