@@ -1,10 +1,10 @@
 {
-    "mochitest": ["base", "common", "unittest-stability", "unittest-features"],
-    "profileserver": ["base", "common", "unittest-stability", "unittest-features", "profileserver"],
+    "mochitest": ["base", "common", "unittest"],
+    "profileserver": ["base", "common", "unittest", "profileserver"],
     "raptor": ["base", "common", "perf", "raptor"],
     "reftest": ["base", "common", "reftest"],
     "talos": ["base", "common", "perf"],
-    "valgrind": ["base", "common", "unittest-stability", "unittest-features"],
+    "valgrind": ["base", "common", "unittest"],
     "xpcshell": ["base", "xpcshell"],
-    "web-platform-tests": ["base", "common", "unittest-stability", "unittest-features", "web-platform"]
+    "web-platform-tests": ["base", "common", "unittest", "web-platform"]
 }
