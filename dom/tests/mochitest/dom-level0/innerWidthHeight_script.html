@@ -2,23 +2,24 @@
 <html>
 <head>
   <meta name="viewport" content="width=320,height=320" />
-  <title>Bug 602580 - Test getting and setting innerWidth and Height after using setCSSViewport</title>
+  <title>Bug 602580 - Test layout viewport and visual viewport sizes with meta tags and changed innerWidth</title>
   <script class="testbody" type="text/javascript">
   function runSubTest()
   {
+    /* CSS viewport is set the by the meta tag in this document. */
+    window.opener.is(document.documentElement.clientWidth, 320, "CSS viewport width is meta viewport width");
+    window.opener.is(document.documentElement.clientHeight, 320, "CSS viewport height is meta viewport height");
+
+    /* Visual viewport values can be changed by setting window.innerWidth and innerHeight. */
     var oldWidth = window.innerWidth;
     var oldHeight = window.innerHeight;
 
-    /* Test that return values are now from viewport */
-    window.opener.is(window.innerWidth, 320, "innerWidth is css viewport width");
-    window.opener.is(window.innerHeight, 320, "innerHeight is css viewport height");
-
     window.innerWidth = 300;
-    window.opener.is(window.innerWidth, 300, "innerWidth returns value that was set");
+    window.opener.is(window.innerWidth, 300, "visual viewport width returns set value");
     window.innerWidth = oldWidth;
 
     window.innerHeight = 300;
-    window.opener.is(window.innerHeight, 300, "innerHeight returns value that was set");
+    window.opener.is(window.innerHeight, 300, "visual viewport height returns set value");
     window.innerHeight = oldHeight;
 
     window.opener.finish();
