@@ -92,7 +92,7 @@ class UrlbarController {
     }
     this._lastQueryContext = queryContext;
 
-    queryContext.autoFill = UrlbarPrefs.get("autoFill");
+    queryContext.autofill = UrlbarPrefs.get("autoFill");
 
     queryContext.lastTelemetryResultCount = 0;
     TelemetryStopwatch.start(TELEMETRY_1ST_RESULT, queryContext);
@@ -200,7 +200,7 @@ class UrlbarController {
           // Prevent beep on Mac.
           event.preventDefault();
         }
-        // TODO: We may have an autoFill entry, so we should use that instead.
+        // TODO: We may have an autofill entry, so we should use that instead.
         // TODO: We should have an input bufferrer so that we can use search results
         // if appropriate.
         this.input.handleCommand(event);
