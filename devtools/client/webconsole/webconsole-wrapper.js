@@ -240,9 +240,12 @@ class WebConsoleWrapper {
 
         Object.assign(serviceContainer, {
           onViewSourceInDebugger: frame => {
-            this.toolbox.viewSourceInDebugger(frame.url, frame.line).then(() => {
-              this.telemetry.recordEvent("jump_to_source", "webconsole",
-                                         null, { "session_id": this.toolbox.sessionId }
+            this.toolbox.viewSourceInDebugger(
+              frame.url, frame.line, frame.sourceId
+            ).then(() => {
+              this.telemetry.recordEvent(
+                "jump_to_source", "webconsole",
+                null, { "session_id": this.toolbox.sessionId }
               );
               this.webConsoleUI.emit("source-in-debugger-opened");
             });
