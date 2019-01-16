@@ -368,7 +368,12 @@ class ImageResource : public Image {
                                       uint32_t aFlags,
                                       layers::ImageContainer** aContainer);
 
-  void UpdateImageContainer(const Maybe<gfx::IntRect>& aDirtyRect);
+  /**
+   * Re-requests the appropriate frames for each image container using
+   * GetFrameInternal.
+   * @returns True if any image containers were updated, else false.
+   */
+  bool UpdateImageContainer(const Maybe<gfx::IntRect>& aDirtyRect);
 
   void ReleaseImageContainer();
 

@@ -102,6 +102,14 @@ static nsRect FindScrollAnchoringBoundingRect(const nsIFrame* aScrollFrame,
   }
 
   nsRect localRect = aCandidate->GetScrollableOverflowRectRelativeToSelf();
+
+  // XXX this isn't correct with non-vertical-tb writing-mode, see bug 1520344
+  if (localRect.X() < 0) {
+    localRect.SetBoxX(0, localRect.XMost());
+  }
+  if (localRect.Y() < 0) {
+    localRect.SetBoxY(0, localRect.YMost());
+  }
   nsRect transformed = nsLayoutUtils::TransformFrameRectToAncestor(
       aCandidate, localRect, aScrollFrame);
   return transformed;

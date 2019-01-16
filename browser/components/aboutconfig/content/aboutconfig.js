@@ -2,29 +2,63 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ChromeUtils.import("resource://gre/modules/DeferredTask.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
+const SEARCH_TIMEOUT_MS = 500;
+
 let gDefaultBranch = Services.prefs.getDefaultBranch("");
-let gPrefArray;
+let gFilterPrefsTask = new DeferredTask(() => filterPrefs(), SEARCH_TIMEOUT_MS);
+
+/**
+ * Maps the name of each preference in the back-end to its PrefRow object,
+ * separating the preferences that actually exist. This is as an optimization to
+ * avoid querying the preferences service each time the list is filtered.
+ */
+let gExistingPrefs = new Map();
+let gDeletedPrefs = new Map();
+
+/**
+ * Maps each row element currently in the table to its PrefRow object.
+ */
+let gElementToPrefMap = new WeakMap();
+
+/**
+ * Reference to the PrefRow currently being edited, if any.
+ */
 let gPrefInEdit = null;
+
+/**
+ * Lowercase substring that should be contained in the preference name.
+ */
+let gFilterString = null;
 
 class PrefRow {
   constructor(name) {
     this.name = name;
+    this.value = true;
     this.refreshValue();
 
     this.editing = false;
     this.element = document.createElement("tr");
-    this.element.setAttribute("aria-label", this.name);
     this._setupElement();
+    gElementToPrefMap.set(this.element, this);
   }
 
   refreshValue() {
+    this.hasDefaultValue = prefHasDefaultValue(this.name);
     this.hasUserValue = Services.prefs.prefHasUserValue(this.name);
-    this.hasDefaultValue = this.hasUserValue ? prefHasDefaultValue(this.name)
-                                             : true;
     this.isLocked = Services.prefs.prefIsLocked(this.name);
+
+    // If this preference has been deleted, we keep its last known value.
+    if (!this.exists) {
+      gExistingPrefs.delete(this.name);
+      gDeletedPrefs.set(this.name, this);
+      return;
+    }
+    gExistingPrefs.set(this.name, this);
+    gDeletedPrefs.delete(this.name);
 
     try {
       // This can throw for locked preferences without a default value.
@@ -40,6 +74,18 @@ class PrefRow {
     } catch (ex) {
       this.value = "";
     }
+  }
+
+  get type() {
+    return this.value.constructor.name;
+  }
+
+  get exists() {
+    return this.hasDefaultValue || this.hasUserValue;
+  }
+
+  get matchesFilter() {
+    return !gFilterString || this.name.toLowerCase().includes(gFilterString);
   }
 
   _setupElement() {
@@ -73,9 +119,15 @@ class PrefRow {
   refreshElement() {
     this.element.classList.toggle("has-user-value", !!this.hasUserValue);
     this.element.classList.toggle("locked", !!this.isLocked);
-    if (!this.editing) {
-      this.valueCell.textContent = this.value;
-      if (this.value.constructor.name == "Boolean") {
+    this.element.classList.toggle("deleted", !this.exists);
+    if (this.exists && !this.editing) {
+      // We need to place the text inside a "span" element to ensure that the
+      // text copied to the clipboard includes all whitespace.
+      let span = document.createElement("span");
+      span.textContent = this.value;
+      this.valueCell.textContent = "";
+      this.valueCell.append(span);
+      if (this.type == "Boolean") {
         document.l10n.setAttributes(this.editButton, "about-config-pref-toggle");
         this.editButton.className = "button-toggle";
       } else {
@@ -91,20 +143,52 @@ class PrefRow {
       let form = document.createElement("form");
       form.addEventListener("submit", event => event.preventDefault());
       form.id = "form-edit";
-      this.inputField = document.createElement("input");
-      this.inputField.value = this.value;
-      if (this.value.constructor.name == "Number") {
-        this.inputField.type = "number";
-        this.inputField.required = true;
-        this.inputField.min = -2147483648;
-        this.inputField.max = 2147483647;
+      if (this.editing) {
+        this.inputField = document.createElement("input");
+        this.inputField.value = this.value;
+        if (this.type == "Number") {
+          this.inputField.type = "number";
+          this.inputField.required = true;
+          this.inputField.min = -2147483648;
+          this.inputField.max = 2147483647;
+        } else {
+          this.inputField.type = "text";
+        }
+        form.appendChild(this.inputField);
+        document.l10n.setAttributes(this.editButton, "about-config-pref-save");
+        this.editButton.className = "primary button-save";
       } else {
-        this.inputField.type = "text";
+        delete this.inputField;
+        for (let type of ["Boolean", "Number", "String"]) {
+          let radio = document.createElement("input");
+          radio.type = "radio";
+          radio.name = "type";
+          radio.value = type;
+          radio.checked = this.type == type;
+          form.appendChild(radio);
+          let radioLabel = document.createElement("span");
+          radioLabel.textContent = type;
+          form.appendChild(radioLabel);
+        }
+        form.addEventListener("click", event => {
+          if (event.target.name != "type") {
+            return;
+          }
+          let type = event.target.value;
+          if (this.type != type) {
+            if (type == "Boolean") {
+              this.value = true;
+            } else if (type == "Number") {
+              this.value = 0;
+            } else {
+              this.value = "";
+            }
+          }
+        });
+        document.l10n.setAttributes(this.editButton, "about-config-pref-add");
+        this.editButton.className = "button-add";
       }
-      form.appendChild(this.inputField);
       this.valueCell.appendChild(form);
-      document.l10n.setAttributes(this.editButton, "about-config-pref-save");
-      this.editButton.className = "primary button-save";
       this.editButton.setAttribute("form", "form-edit");
     }
     this.editButton.disabled = this.isLocked;
@@ -139,7 +223,7 @@ class PrefRow {
   }
 
   save() {
-    if (this.value.constructor.name == "Number") {
+    if (this.type == "Number") {
       if (!this.inputField.reportValidity()) {
         return;
       }
@@ -159,19 +243,37 @@ class PrefRow {
   }
 }
 
-function getPrefName(prefRow) {
-  return prefRow.getAttribute("aria-label");
+let gPrefObserver = {
+  observe(subject, topic, data) {
+    let pref = gExistingPrefs.get(data) || gDeletedPrefs.get(data);
+    if (pref) {
+      pref.refreshValue();
+      if (!pref.editing) {
+        pref.refreshElement();
+      }
+      return;
+    }
+
+    let newPref = new PrefRow(data);
+    if (newPref.matchesFilter) {
+      document.getElementById("prefs").appendChild(newPref.element);
+    }
+  },
+};
+
+if (!Preferences.get("browser.aboutConfig.showWarning")) {
+  // When showing the filtered preferences directly, remove the warning elements
+  // immediately to prevent flickering, but wait to filter the preferences until
+  // the value of the textbox has been restored from previous sessions.
+  document.addEventListener("DOMContentLoaded", loadPrefs, { once: true });
+  window.addEventListener("load", filterPrefs, { once: true });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  if (!Preferences.get("browser.aboutConfig.showWarning")) {
-    loadPrefs();
-  }
-}, { once: true });
-
-function alterWarningState() {
+function onWarningButtonClick() {
   Services.prefs.setBoolPref("browser.aboutConfig.showWarning",
     document.getElementById("showWarningNextTime").checked);
+  loadPrefs();
+  filterPrefs();
 }
 
 function loadPrefs() {
@@ -187,110 +289,82 @@ function loadPrefs() {
   prefs.id = "prefs";
   document.body.appendChild(prefs);
 
-  gPrefArray = Services.prefs.getChildList("").map(name => new PrefRow(name));
+  for (let name of Services.prefs.getChildList("")) {
+    new PrefRow(name);
+  }
 
-  gPrefArray.sort((a, b) => a.name > b.name);
-
-  search.addEventListener("keypress", e => {
-    if (e.key == "Enter") {
-      filterPrefs();
+  search.addEventListener("keypress", event => {
+    switch (event.key) {
+      case "Escape":
+        search.value = "";
+        // Fall through.
+      case "Enter":
+        gFilterPrefsTask.disarm();
+        filterPrefs();
     }
+  });
+
+  search.addEventListener("input", () => {
+    // We call "disarm" to restart the timer at every input.
+    gFilterPrefsTask.disarm();
+    gFilterPrefsTask.arm();
   });
 
   prefs.addEventListener("click", event => {
     if (event.target.localName != "button") {
       return;
     }
-    let prefRow = event.target.closest("tr");
-    let prefName = getPrefName(prefRow);
-    let pref = gPrefArray.find(p => p.name == prefName);
+    let pref = gElementToPrefMap.get(event.target.closest("tr"));
     let button = event.target.closest("button");
-    if (button.classList.contains("button-reset")) {
-      // Reset pref and update gPrefArray.
-      Services.prefs.clearUserPref(prefName);
-      pref.refreshValue();
-      pref.refreshElement();
-      pref.editButton.focus();
-    } else if (button.classList.contains("add-true")) {
-      addNewPref(prefRow.firstChild.innerHTML, true);
-    } else if (button.classList.contains("add-false")) {
-      addNewPref(prefRow.firstChild.innerHTML, false);
-    } else if (button.classList.contains("add-Number") ||
-      button.classList.contains("add-String")) {
-      addNewPref(prefRow.firstChild.innerHTML,
-        button.classList.contains("add-Number") ? 0 : "").edit();
+    if (button.classList.contains("button-add")) {
+      Preferences.set(pref.name, pref.value);
+      if (pref.type != "Boolean") {
+        pref.edit();
+      }
     } else if (button.classList.contains("button-toggle")) {
-      // Toggle the pref and update gPrefArray.
-      Services.prefs.setBoolPref(prefName, !pref.value);
-      pref.refreshValue();
-      pref.refreshElement();
+      Services.prefs.setBoolPref(pref.name, !pref.value);
     } else if (button.classList.contains("button-edit")) {
       pref.edit();
     } else if (button.classList.contains("button-save")) {
       pref.save();
     } else {
-      Services.prefs.clearUserPref(prefName);
-      gPrefArray.splice(gPrefArray.findIndex(p => p.name == prefName), 1);
-      prefRow.remove();
+      // This is "button-reset" or "button-delete".
+      pref.editing = false;
+      Services.prefs.clearUserPref(pref.name);
+      pref.editButton.focus();
     }
   });
 
-  filterPrefs();
+  Services.prefs.addObserver("", gPrefObserver);
+  window.addEventListener("unload", () => {
+    Services.prefs.removeObserver("", gPrefObserver);
+  }, { once: true });
 }
 
 function filterPrefs() {
   if (gPrefInEdit) {
     gPrefInEdit.endEdit();
   }
+  gDeletedPrefs.clear();
 
-  let substring = document.getElementById("search").value.trim();
-  document.getElementById("prefs").textContent = "";
-  if (substring && !gPrefArray.some(pref => pref.name == substring)) {
-    document.getElementById("prefs").appendChild(createNewPrefFragment(substring));
+  let searchName = document.getElementById("search").value.trim();
+  gFilterString = searchName.toLowerCase();
+  let prefArray = [...gExistingPrefs.values()];
+  if (gFilterString) {
+    prefArray = prefArray.filter(pref => pref.matchesFilter);
   }
-  let fragment = createPrefsFragment(gPrefArray.filter(pref => pref.name.includes(substring)));
-  document.getElementById("prefs").appendChild(fragment);
-}
+  prefArray.sort((a, b) => a.name > b.name);
+  if (searchName && !gExistingPrefs.has(searchName)) {
+    prefArray.push(new PrefRow(searchName));
+  }
 
-function createPrefsFragment(prefArray) {
+  let prefsElement = document.getElementById("prefs");
+  prefsElement.textContent = "";
   let fragment = document.createDocumentFragment();
   for (let pref of prefArray) {
     fragment.appendChild(pref.element);
   }
-  return fragment;
-}
-
-function createNewPrefFragment(name) {
-  let fragment = document.createDocumentFragment();
-  let row = document.createElement("tr");
-  row.classList.add("has-user-value");
-  row.setAttribute("aria-label", name);
-  let nameCell = document.createElement("td");
-  nameCell.className = "cell-name";
-  nameCell.append(name);
-  row.appendChild(nameCell);
-
-  let valueCell = document.createElement("td");
-  valueCell.classList.add("cell-value");
-  let guideText = document.createElement("span");
-  document.l10n.setAttributes(guideText, "about-config-pref-add");
-  valueCell.appendChild(guideText);
-  for (let item of ["true", "false", "Number", "String"]) {
-    let optionBtn = document.createElement("button");
-    optionBtn.textContent = item;
-    optionBtn.classList.add("add-" + item);
-    valueCell.appendChild(optionBtn);
-  }
-  row.appendChild(valueCell);
-
-  let editCell = document.createElement("td");
-  row.appendChild(editCell);
-
-  let buttonCell = document.createElement("td");
-  row.appendChild(buttonCell);
-
-  fragment.appendChild(row);
-  return fragment;
+  prefsElement.appendChild(fragment);
 }
 
 function prefHasDefaultValue(name) {
@@ -308,13 +382,4 @@ function prefHasDefaultValue(name) {
     }
   } catch (ex) {}
   return false;
-}
-
-function addNewPref(name, value) {
-  Preferences.set(name, value);
-  let pref = new PrefRow(name);
-  gPrefArray.push(pref);
-  gPrefArray.sort((a, b) => a.name > b.name);
-  filterPrefs();
-  return pref;
 }
