@@ -4,12 +4,14 @@
 
 @depends(check_build_environment, prepare_configure_options, prepare_mozconfig,
          old_configure, old_configure_assignments, '--cache-file')
+@imports('errno')
 @imports('itertools')
 @imports('logging')
 @imports('os')
-@imports('subconfigure')
+@imports('pickle')
 @imports('subprocess')
 @imports('sys')
+@imports(_from='__builtin__', _import='OSError')
 @imports(_from='__builtin__', _import='open')
 @imports(_from='__builtin__', _import='object')
 @imports(_from='mozbuild.configure.util', _import='ConfigureOutputHandler')
@@ -106,16 +108,28 @@ def js_subconfigure(build_env, prepare_configure_options, mozconfig,
             value = ' '.join(value)
         environ[var] = value
 
-    options += [
-        'JS_STANDALONE=',
-        '--cache-file=%s' % (cache_file or './config.cache'),
-    ]
+    options.append('JS_STANDALONE=')
+
     srcdir = os.path.join(build_env.topsrcdir, 'js', 'src')
     objdir = os.path.join(build_env.topobjdir, 'js', 'src')
-    data = subconfigure.prepare(srcdir, objdir, options)
 
-    # subconfigure.prepare does some normalization so use the value it returned.
-    cache_file = data['cache-file']
+    data_file = os.path.join(objdir, 'configure.pkl')
+    previous_args = None
+    if os.path.exists(data_file):
+        with open(data_file, 'rb') as f:
+            previous_args = pickle.load(f)
+
+    cache_file = cache_file or './config.cache'
+    cache_file = os.path.join(build_env.topobjdir, cache_file)
+
+    try:
+        os.makedirs(objdir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+    with open(data_file, 'wb') as f:
+        pickle.dump(options, f)
 
     # Only run configure if one of the following is true:
     # - config.status doesn't exist
@@ -136,7 +150,7 @@ def js_subconfigure(build_env, prepare_configure_options, mozconfig,
             if (any(not os.path.exists(f) or
                     (os.path.getmtime(config_status_path) < os.path.getmtime(f))
                     for f in dep_files) or
-                data.get('previous-args', data['args']) != data['args']):
+                ((previous_args or options) != options)):
                 skip_configure = False
 
     if not skip_configure:
@@ -154,7 +168,7 @@ def js_subconfigure(build_env, prepare_configure_options, mozconfig,
         ]
         environ['OLD_CONFIGURE'] = os.path.join(
             os.path.dirname(configure), 'old-configure')
-        command += data['args']
+        command += options
         command += ['--cache-file=%s' % cache_file]
 
         log.info('configuring')
