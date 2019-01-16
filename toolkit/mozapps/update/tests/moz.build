@@ -65,14 +65,12 @@ TEST_HARNESS_FILES.testing.mochitest.browser.toolkit.mozapps.update.tests.browse
     'data/shared.js',
     'data/sharedUpdateXML.js',
     'data/simple.mar',
-    'data/update.sjs',
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.chrome.toolkit.mozapps.update.tests.chrome += [
     'data/shared.js',
     'data/sharedUpdateXML.js',
     'data/simple.mar',
-    'data/update.sjs',
 ]
 
 FINAL_TARGET_FILES += [
