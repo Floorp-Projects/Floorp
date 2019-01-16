@@ -6635,6 +6635,20 @@ void nsGlobalWindowInner::BeginWindowMove(Event& aMouseDownEvent,
   aError = widget->BeginMoveDrag(mouseEvent);
 }
 
+static bool CheckSubframesNeedLayoutOrStyleFlush(Document* aDoc, void* aData) {
+  nsIPresShell* shell = aDoc->GetShell();
+  if (shell) {
+    bool* needFlush = static_cast<bool*>(aData);
+
+    if (shell->NeedStyleFlush() || shell->NeedLayoutFlush()) {
+      *needFlush = true;
+      return false;
+    }
+  }
+  aDoc->EnumerateSubDocuments(CheckSubframesNeedLayoutOrStyleFlush, aData);
+  return true;
+}
+
 already_AddRefed<Promise> nsGlobalWindowInner::PromiseDocumentFlushed(
     PromiseDocumentFlushedCallback& aCallback, ErrorResult& aError) {
   MOZ_RELEASE_ASSERT(IsChromeWindow());
@@ -6678,7 +6692,14 @@ already_AddRefed<Promise> nsGlobalWindowInner::PromiseDocumentFlushed(
   UniquePtr<PromiseDocumentFlushedResolver> flushResolver(
       new PromiseDocumentFlushedResolver(resultPromise, aCallback));
 
-  if (!shell->NeedStyleFlush() && !shell->NeedLayoutFlush()) {
+  // Check to see if any of the subdocuments need a style or
+  // layout flush too.
+  bool subframeNeedsFlush = false;
+  mDoc->EnumerateSubDocuments(CheckSubframesNeedLayoutOrStyleFlush,
+                              &subframeNeedsFlush);
+
+  if (!shell->NeedStyleFlush() && !shell->NeedLayoutFlush() &&
+      !subframeNeedsFlush) {
     flushResolver->Call();
     return resultPromise.forget();
   }
@@ -6765,7 +6786,14 @@ void nsGlobalWindowInner::DidRefresh() {
   nsIPresShell* shell = mDoc->GetShell();
   MOZ_ASSERT(shell);
 
-  if (shell->NeedStyleFlush() || shell->NeedLayoutFlush()) {
+  // Check to see if any of the subdocuments need a style or
+  // layout flush too.
+  bool subframeNeedsFlush = false;
+  mDoc->EnumerateSubDocuments(CheckSubframesNeedLayoutOrStyleFlush,
+                              &subframeNeedsFlush);
+
+  if (shell->NeedStyleFlush() || shell->NeedLayoutFlush() ||
+      subframeNeedsFlush) {
     // By the time our observer fired, something has already invalidated
     // style or layout - or perhaps we're still in the middle of a flush that
     // was interrupted. In either case, we'll wait until the next refresh driver
