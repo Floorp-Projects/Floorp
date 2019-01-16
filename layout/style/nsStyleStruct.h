@@ -2574,7 +2574,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {
   mozilla::StyleUserFocus mUserFocus;    // (auto-select)
   uint8_t mPointerEvents;                // NS_STYLE_POINTER_EVENTS_*
 
-  uint8_t mCursor;                        // NS_STYLE_CURSOR_*
+  mozilla::StyleCursorKind mCursor;
   nsTArray<nsCursorImage> mCursorImages;  // images and coords
   mozilla::StyleComplexColor mCaretColor;
 

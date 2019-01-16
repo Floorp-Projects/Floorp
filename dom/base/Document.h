@@ -136,6 +136,7 @@ class FullscreenRequest;
 class PendingAnimationTracker;
 class ServoStyleSet;
 class SMILAnimationController;
+enum class StyleCursorKind : uint8_t;
 template <typename>
 class OwningNonNull;
 struct URLExtraData;
@@ -1821,8 +1822,8 @@ class Document : public nsINode,
    */
   static bool HandlePendingFullscreenRequests(Document* aDocument);
 
-  void RequestPointerLock(Element* aElement, mozilla::dom::CallerType);
-  bool SetPointerLock(Element* aElement, int aCursorStyle);
+  void RequestPointerLock(Element* aElement, CallerType);
+  bool SetPointerLock(Element* aElement, StyleCursorKind);
 
   static void UnlockPointer(Document* aDoc = nullptr);
 

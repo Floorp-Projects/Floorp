@@ -221,12 +221,14 @@ bool EventStateManager::WheelPrefs::sHonoursRootForAutoDir = false;
 EventStateManager::DeltaAccumulator*
     EventStateManager::DeltaAccumulator::sInstance = nullptr;
 
+constexpr const StyleCursorKind kInvalidCursorKind =
+  static_cast<StyleCursorKind>(255);
+
 EventStateManager::EventStateManager()
-    : mLockCursor(0),
+    : mLockCursor(kInvalidCursorKind),
       mLastFrameConsumedSetCursor(false),
-      mCurrentTarget(nullptr)
+      mCurrentTarget(nullptr),
       // init d&d gesture state machine variables
-      ,
       mGestureDownPoint(0, 0),
       mGestureModifiers(0),
       mGestureDownButtons(0),
@@ -3612,13 +3614,13 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
     return;
   }
 
-  int32_t cursor = NS_STYLE_CURSOR_DEFAULT;
+  auto cursor = StyleCursorKind::Default;
   imgIContainer* container = nullptr;
   bool haveHotspot = false;
   float hotspotX = 0.0f, hotspotY = 0.0f;
 
   // If cursor is locked just use the locked one
-  if (mLockCursor) {
+  if (mLockCursor != kInvalidCursorKind) {
     cursor = mLockCursor;
   }
   // If not locked, look for correct cursor
@@ -3663,8 +3665,8 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
     // Show busy cursor everywhere before page loads
     // and just replace the arrow cursor after page starts loading
     if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY &&
-        (cursor == NS_STYLE_CURSOR_AUTO || cursor == NS_STYLE_CURSOR_DEFAULT)) {
-      cursor = NS_STYLE_CURSOR_SPINNING;
+        (cursor == StyleCursorKind::Auto || cursor == StyleCursorKind::Default)) {
+      cursor = StyleCursorKind::Progress;
       container = nullptr;
     }
   }
@@ -3676,7 +3678,7 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
     gLastCursorUpdateTime = TimeStamp::NowLoRes();
   }
 
-  if (mLockCursor || NS_STYLE_CURSOR_AUTO != cursor) {
+  if (mLockCursor != kInvalidCursorKind || StyleCursorKind::Auto != cursor) {
     *aStatus = nsEventStatus_eConsumeDoDefault;
   }
 }
@@ -3692,7 +3694,7 @@ void EventStateManager::ClearCachedWidgetCursor(nsIFrame* aTargetFrame) {
   aWidget->ClearCachedCursor();
 }
 
-nsresult EventStateManager::SetCursor(int32_t aCursor,
+nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
                                       imgIContainer* aContainer,
                                       bool aHaveHotspot, float aHotspotX,
                                       float aHotspotY, nsIWidget* aWidget,
@@ -3705,119 +3707,119 @@ nsresult EventStateManager::SetCursor(int32_t aCursor,
 
   NS_ENSURE_TRUE(aWidget, NS_ERROR_FAILURE);
   if (aLockCursor) {
-    if (NS_STYLE_CURSOR_AUTO != aCursor) {
+    if (StyleCursorKind::Auto != aCursor) {
       mLockCursor = aCursor;
     } else {
       // If cursor style is set to auto we unlock the cursor again.
-      mLockCursor = 0;
+      mLockCursor = kInvalidCursorKind;
     }
   }
   switch (aCursor) {
     default:
-    case NS_STYLE_CURSOR_AUTO:
-    case NS_STYLE_CURSOR_DEFAULT:
+    case StyleCursorKind::Auto:
+    case StyleCursorKind::Default:
       c = eCursor_standard;
       break;
-    case NS_STYLE_CURSOR_POINTER:
+    case StyleCursorKind::Pointer:
       c = eCursor_hyperlink;
       break;
-    case NS_STYLE_CURSOR_CROSSHAIR:
+    case StyleCursorKind::Crosshair:
       c = eCursor_crosshair;
       break;
-    case NS_STYLE_CURSOR_MOVE:
+    case StyleCursorKind::Move:
       c = eCursor_move;
       break;
-    case NS_STYLE_CURSOR_TEXT:
+    case StyleCursorKind::Text:
       c = eCursor_select;
       break;
-    case NS_STYLE_CURSOR_WAIT:
+    case StyleCursorKind::Wait:
       c = eCursor_wait;
       break;
-    case NS_STYLE_CURSOR_HELP:
+    case StyleCursorKind::Help:
       c = eCursor_help;
       break;
-    case NS_STYLE_CURSOR_N_RESIZE:
+    case StyleCursorKind::NResize:
       c = eCursor_n_resize;
       break;
-    case NS_STYLE_CURSOR_S_RESIZE:
+    case StyleCursorKind::SResize:
       c = eCursor_s_resize;
       break;
-    case NS_STYLE_CURSOR_W_RESIZE:
+    case StyleCursorKind::WResize:
       c = eCursor_w_resize;
       break;
-    case NS_STYLE_CURSOR_E_RESIZE:
+    case StyleCursorKind::EResize:
       c = eCursor_e_resize;
       break;
-    case NS_STYLE_CURSOR_NW_RESIZE:
+    case StyleCursorKind::NwResize:
       c = eCursor_nw_resize;
       break;
-    case NS_STYLE_CURSOR_SE_RESIZE:
+    case StyleCursorKind::SeResize:
       c = eCursor_se_resize;
       break;
-    case NS_STYLE_CURSOR_NE_RESIZE:
+    case StyleCursorKind::NeResize:
       c = eCursor_ne_resize;
       break;
-    case NS_STYLE_CURSOR_SW_RESIZE:
+    case StyleCursorKind::SwResize:
       c = eCursor_sw_resize;
       break;
-    case NS_STYLE_CURSOR_COPY:  // CSS3
+    case StyleCursorKind::Copy:  // CSS3
       c = eCursor_copy;
       break;
-    case NS_STYLE_CURSOR_ALIAS:
+    case StyleCursorKind::Alias:
       c = eCursor_alias;
       break;
-    case NS_STYLE_CURSOR_CONTEXT_MENU:
+    case StyleCursorKind::ContextMenu:
       c = eCursor_context_menu;
       break;
-    case NS_STYLE_CURSOR_CELL:
+    case StyleCursorKind::Cell:
       c = eCursor_cell;
       break;
-    case NS_STYLE_CURSOR_GRAB:
+    case StyleCursorKind::Grab:
       c = eCursor_grab;
       break;
-    case NS_STYLE_CURSOR_GRABBING:
+    case StyleCursorKind::Grabbing:
       c = eCursor_grabbing;
       break;
-    case NS_STYLE_CURSOR_SPINNING:
+    case StyleCursorKind::Progress:
       c = eCursor_spinning;
       break;
-    case NS_STYLE_CURSOR_ZOOM_IN:
+    case StyleCursorKind::ZoomIn:
       c = eCursor_zoom_in;
       break;
-    case NS_STYLE_CURSOR_ZOOM_OUT:
+    case StyleCursorKind::ZoomOut:
       c = eCursor_zoom_out;
       break;
-    case NS_STYLE_CURSOR_NOT_ALLOWED:
+    case StyleCursorKind::NotAllowed:
       c = eCursor_not_allowed;
       break;
-    case NS_STYLE_CURSOR_COL_RESIZE:
+    case StyleCursorKind::ColResize:
       c = eCursor_col_resize;
       break;
-    case NS_STYLE_CURSOR_ROW_RESIZE:
+    case StyleCursorKind::RowResize:
       c = eCursor_row_resize;
       break;
-    case NS_STYLE_CURSOR_NO_DROP:
+    case StyleCursorKind::NoDrop:
       c = eCursor_no_drop;
       break;
-    case NS_STYLE_CURSOR_VERTICAL_TEXT:
+    case StyleCursorKind::VerticalText:
       c = eCursor_vertical_text;
       break;
-    case NS_STYLE_CURSOR_ALL_SCROLL:
+    case StyleCursorKind::AllScroll:
       c = eCursor_all_scroll;
       break;
-    case NS_STYLE_CURSOR_NESW_RESIZE:
+    case StyleCursorKind::NeswResize:
       c = eCursor_nesw_resize;
       break;
-    case NS_STYLE_CURSOR_NWSE_RESIZE:
+    case StyleCursorKind::NwseResize:
       c = eCursor_nwse_resize;
       break;
-    case NS_STYLE_CURSOR_NS_RESIZE:
+    case StyleCursorKind::NsResize:
       c = eCursor_ns_resize;
       break;
-    case NS_STYLE_CURSOR_EW_RESIZE:
+    case StyleCursorKind::EwResize:
       c = eCursor_ew_resize;
       break;
-    case NS_STYLE_CURSOR_NONE:
+    case StyleCursorKind::None:
       c = eCursor_none;
       break;
   }
