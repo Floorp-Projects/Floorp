@@ -290,6 +290,14 @@ void Exception::GetMessageMoz(nsString& retval) {
 
 uint32_t Exception::Result() const { return (uint32_t)mResult; }
 
+uint32_t Exception::SourceId(JSContext* aCx) const {
+  if (mLocation) {
+    return mLocation->GetSourceId(aCx);
+  }
+
+  return 0;
+}
+
 uint32_t Exception::LineNumber(JSContext* aCx) const {
   if (mLocation) {
     return mLocation->GetLineNumber(aCx);

@@ -552,10 +552,11 @@ class ErrorBase {
  public:
   nsString mErrorMsg;
   nsString mFileName;
+  uint32_t mSourceId;
   uint32_t mLineNumber;
   uint32_t mColumn;
 
-  ErrorBase() : mLineNumber(0), mColumn(0) {}
+  ErrorBase() : mSourceId(0), mLineNumber(0), mColumn(0) {}
 
   void Init(JSErrorBase* aReport);
 

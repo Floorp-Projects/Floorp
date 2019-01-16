@@ -502,7 +502,7 @@ void WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport) {
       const ErrorDataNote& note = aReport.notes().ElementAt(i);
 
       nsScriptErrorNote* noteObject = new nsScriptErrorNote();
-      noteObject->Init(note.message(), note.filename(), note.lineNumber(),
+      noteObject->Init(note.message(), note.filename(), 0, note.lineNumber(),
                        note.columnNumber());
       scriptError->AddNote(noteObject);
     }
