@@ -221,16 +221,3 @@ def run(data):
             return returncode
 
     return 0
-
-
-def main(args):
-    topsrcdir = os.path.abspath(args[0])
-    srcdir = os.path.join(topsrcdir, 'js/src')
-    objdir = os.path.abspath('js/src')
-
-    data = prepare(srcdir, objdir, args[1:])
-    return run(data)
-
-
-if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
