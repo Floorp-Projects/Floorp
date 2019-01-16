@@ -16,6 +16,11 @@ inline JSString* js::ErrorObject::fileName(JSContext* cx) const {
   return slot.isString() ? slot.toString() : cx->names().empty;
 }
 
+inline uint32_t js::ErrorObject::sourceId() const {
+  const HeapSlot& slot = getReservedSlotRef(SOURCEID_SLOT);
+  return slot.isInt32() ? slot.toInt32() : 0;
+}
+
 inline uint32_t js::ErrorObject::lineNumber() const {
   const HeapSlot& slot = getReservedSlotRef(LINENUMBER_SLOT);
   return slot.isInt32() ? slot.toInt32() : 0;
