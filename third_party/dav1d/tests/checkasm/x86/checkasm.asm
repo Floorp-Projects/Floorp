@@ -200,7 +200,7 @@ cglobal checked_call, 1,7
     jz .ok
     mov  r3, eax
     mov  r4, edx
-    lea  r0, [error_message]
+    LEA  r0, error_message
     mov [esp], r0
     call fail_func
     mov  edx, r4

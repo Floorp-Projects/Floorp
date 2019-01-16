@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "config.h"
+
 #include <stdint.h>
 
 #include "src/x86/cpu.h"
@@ -47,6 +49,8 @@ unsigned dav1d_get_cpu_flags_x86(void) {
         if (info[2] & (1 <<  9)) flags |= DAV1D_X86_CPU_FLAG_SSSE3;
         if (info[2] & (1 << 19)) flags |= DAV1D_X86_CPU_FLAG_SSE41;
         if (info[2] & (1 << 20)) flags |= DAV1D_X86_CPU_FLAG_SSE42;
+#if ARCH_X86_64
+        /* We only support >128-bit SIMD on x86-64. */
         if (info[2] & (1 << 27)) /* OSXSAVE */ {
             uint64_t xcr = dav1d_cpu_xgetbv(0);
             if ((xcr & 0x00000006) == 0x00000006) /* XMM/YMM */ {
@@ -61,6 +65,7 @@ unsigned dav1d_get_cpu_flags_x86(void) {
                 }
             }
         }
+#endif
     }
 
     return flags;

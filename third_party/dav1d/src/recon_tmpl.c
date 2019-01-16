@@ -205,8 +205,9 @@ static int decode_coefs(Dav1dTileContext *const t,
 
     // residual and sign
     int dc_sign = 1;
+    const int lossless = f->frame_hdr->segmentation.lossless[b->seg_id];
     const uint16_t *const dq_tbl = ts->dq[b->seg_id][plane];
-    const uint8_t *const qm_tbl = f->qm[is_1d || *txtp == IDTX][tx][plane];
+    const uint8_t *const qm_tbl = f->qm[lossless || is_1d || *txtp == IDTX][tx][plane];
     const int dq_shift = imax(0, t_dim->ctx - 2);
     const int bitdepth = BITDEPTH == 8 ? 8 : f->cur.p.bpc;
     const int cf_min = -(1 << (7 + bitdepth));
