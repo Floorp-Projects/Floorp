@@ -31,7 +31,7 @@ namespace mozilla {
 namespace dom {
 class Document;
 class Element;
-}
+}  // namespace dom
 
 /**
  * Right now our identifier map entries contain information for 'name'

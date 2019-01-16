@@ -6,8 +6,8 @@
 #include "TextServicesDocument.h"
 
 #include "FilteredContentIterator.h"  // for FilteredContentIterator
-#include "mozilla/Assertions.h"   // for MOZ_ASSERT, etc
-#include "mozilla/EditorUtils.h"  // for AutoTransactionBatchExternal
+#include "mozilla/Assertions.h"       // for MOZ_ASSERT, etc
+#include "mozilla/EditorUtils.h"      // for AutoTransactionBatchExternal
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/mozalloc.h"    // for operator new, etc
@@ -15,22 +15,22 @@
 #include "nsAString.h"           // for nsAString::Length, etc
 #include "nsContentUtils.h"      // for nsContentUtils
 #include "nsComposeTxtSrvFilter.h"
-#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
-#include "nsDependentSubstring.h"       // for Substring
-#include "nsError.h"                    // for NS_OK, NS_ERROR_FAILURE, etc
-#include "nsGenericHTMLElement.h"       // for nsGenericHTMLElement
-#include "nsIContent.h"                 // for nsIContent, etc
-#include "nsID.h"                       // for NS_GET_IID
-#include "nsIEditor.h"                  // for nsIEditor, etc
-#include "nsINode.h"                    // for nsINode
-#include "nsISelectionController.h"     // for nsISelectionController, etc
-#include "nsISupportsBase.h"            // for nsISupports
-#include "nsISupportsUtils.h"           // for NS_IF_ADDREF, NS_ADDREF, etc
-#include "mozilla/intl/WordBreaker.h"   // for WordRange, WordBreaker
-#include "nsRange.h"                    // for nsRange
-#include "nsString.h"                   // for nsString, nsAutoString
-#include "nscore.h"                     // for nsresult, NS_IMETHODIMP, etc
-#include "mozilla/UniquePtr.h"          // for UniquePtr
+#include "nsDebug.h"                   // for NS_ENSURE_TRUE, etc
+#include "nsDependentSubstring.h"      // for Substring
+#include "nsError.h"                   // for NS_OK, NS_ERROR_FAILURE, etc
+#include "nsGenericHTMLElement.h"      // for nsGenericHTMLElement
+#include "nsIContent.h"                // for nsIContent, etc
+#include "nsID.h"                      // for NS_GET_IID
+#include "nsIEditor.h"                 // for nsIEditor, etc
+#include "nsINode.h"                   // for nsINode
+#include "nsISelectionController.h"    // for nsISelectionController, etc
+#include "nsISupportsBase.h"           // for nsISupports
+#include "nsISupportsUtils.h"          // for NS_IF_ADDREF, NS_ADDREF, etc
+#include "mozilla/intl/WordBreaker.h"  // for WordRange, WordBreaker
+#include "nsRange.h"                   // for nsRange
+#include "nsString.h"                  // for nsString, nsAutoString
+#include "nscore.h"                    // for nsresult, NS_IMETHODIMP, etc
+#include "mozilla/UniquePtr.h"         // for UniquePtr
 
 namespace mozilla {
 

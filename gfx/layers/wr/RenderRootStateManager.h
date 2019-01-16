@@ -16,11 +16,11 @@ namespace mozilla {
 
 namespace layers {
 
-class RenderRootStateManager
-{
-  typedef nsTHashtable<nsRefPtrHashKey<WebRenderUserData>> WebRenderUserDataRefTable;
+class RenderRootStateManager {
+  typedef nsTHashtable<nsRefPtrHashKey<WebRenderUserData>>
+      WebRenderUserDataRefTable;
 
-public:
+ public:
   void AddRef();
   void Release();
 
@@ -32,10 +32,7 @@ public:
   WebRenderBridgeChild* WrBridge() const;
   WebRenderCommandBuilder& CommandBuilder();
   WebRenderUserDataRefTable* GetWebRenderUserDataTable();
-  WebRenderLayerManager* LayerManager()
-  {
-    return mLayerManager;
-  }
+  WebRenderLayerManager* LayerManager() { return mLayerManager; }
 
   void AddImageKeyForDiscard(wr::ImageKey key);
   void AddBlobImageKeyForDiscard(wr::BlobImageKey key);
@@ -51,7 +48,8 @@ public:
   void AddCompositorAnimationsIdForDiscard(uint64_t aId);
   void DiscardCompositorAnimations();
 
-  void RegisterAsyncAnimation(const wr::ImageKey& aKey, SharedSurfacesAnimation* aAnimation);
+  void RegisterAsyncAnimation(const wr::ImageKey& aKey,
+                              SharedSurfacesAnimation* aAnimation);
   void DeregisterAsyncAnimation(const wr::ImageKey& aKey);
   void ClearAsyncAnimations();
   void WrReleasedImages(const nsTArray<wr::ExternalImageKeyPair>& aPairs);
@@ -66,19 +64,23 @@ public:
   /// Release TextureClient that is bounded to ImageKey.
   /// It is used for recycling TextureClient.
   void ReleaseTextureOfImage(const wr::ImageKey& aKey);
-  wr::FontInstanceKey GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont,
-                                              wr::IpcResourceUpdateQueue* aResources = nullptr);
-  wr::FontKey GetFontKeyForUnscaledFont(gfx::UnscaledFont* aUnscaledFont,
-                                        wr::IpcResourceUpdateQueue* aResources = nullptr);
+  wr::FontInstanceKey GetFontKeyForScaledFont(
+      gfx::ScaledFont* aScaledFont,
+      wr::IpcResourceUpdateQueue* aResources = nullptr);
+  wr::FontKey GetFontKeyForUnscaledFont(
+      gfx::UnscaledFont* aUnscaledFont,
+      wr::IpcResourceUpdateQueue* aResources = nullptr);
 
   void FlushAsyncResourceUpdates();
-private:
+
+ private:
   ~RenderRootStateManager();
   WebRenderLayerManager* mLayerManager;
   Maybe<wr::IpcResourceUpdateQueue> mAsyncResourceUpdates;
   nsTArray<wr::ImageKey> mImageKeysToDelete;
   nsTArray<wr::BlobImageKey> mBlobImageKeysToDelete;
-  std::unordered_map<uint64_t, RefPtr<SharedSurfacesAnimation>> mAsyncAnimations;
+  std::unordered_map<uint64_t, RefPtr<SharedSurfacesAnimation>>
+      mAsyncAnimations;
 
   // Set of compositor animation ids for which there are active animations (as
   // of the last transaction) on the compositor side.
@@ -92,7 +94,7 @@ private:
   friend class WebRenderLayerManager;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* GFX_RENDERROOTSTATEMANAGER_H */

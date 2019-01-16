@@ -1105,8 +1105,7 @@ class InterpreterTryNoteFilter {
   }
 };
 
-class TryNoteIterInterpreter
-    : public TryNoteIter<InterpreterTryNoteFilter> {
+class TryNoteIterInterpreter : public TryNoteIter<InterpreterTryNoteFilter> {
  public:
   TryNoteIterInterpreter(JSContext* cx, const InterpreterRegs& regs)
       : TryNoteIter(cx, regs.fp()->script(), regs.pc,

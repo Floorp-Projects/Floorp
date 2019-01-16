@@ -119,7 +119,7 @@ inline js::GlobalObject& JSScript::global() const {
   return *realm()->maybeGlobal();
 }
 
-inline bool JSScript::hasGlobal(const js::GlobalObject *global) const {
+inline bool JSScript::hasGlobal(const js::GlobalObject* global) const {
   return global == realm()->unsafeUnbarrieredMaybeGlobal();
 }
 

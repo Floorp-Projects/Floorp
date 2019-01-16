@@ -823,24 +823,24 @@ void GetEnumAttr(nsGenericHTMLElement* aContent, nsAtom* atom,
   rv = aForm->GetActionURL(getter_AddRefs(actionURL), aOriginatingElement);
   NS_ENSURE_SUCCESS(rv, rv);
 
- // Check if CSP allows this form-action
- nsCOMPtr<nsIContentSecurityPolicy> csp;
- rv = aForm->NodePrincipal()->GetCsp(getter_AddRefs(csp));
- NS_ENSURE_SUCCESS(rv, rv);
- if (csp) {
-   bool permitsFormAction = true;
+  // Check if CSP allows this form-action
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = aForm->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (csp) {
+    bool permitsFormAction = true;
 
-   // form-action is only enforced if explicitly defined in the
-   // policy - do *not* consult default-src, see:
-   // http://www.w3.org/TR/CSP2/#directive-default-src
-   rv = csp->Permits(aForm, nullptr /* nsICSPEventListener */, actionURL,
-                     nsIContentSecurityPolicy::FORM_ACTION_DIRECTIVE, true,
-                     &permitsFormAction);
-   NS_ENSURE_SUCCESS(rv, rv);
-   if (!permitsFormAction) {
-     return NS_ERROR_CSP_FORM_ACTION_VIOLATION;
-   }
- }
+    // form-action is only enforced if explicitly defined in the
+    // policy - do *not* consult default-src, see:
+    // http://www.w3.org/TR/CSP2/#directive-default-src
+    rv = csp->Permits(aForm, nullptr /* nsICSPEventListener */, actionURL,
+                      nsIContentSecurityPolicy::FORM_ACTION_DIRECTIVE, true,
+                      &permitsFormAction);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!permitsFormAction) {
+      return NS_ERROR_CSP_FORM_ACTION_VIOLATION;
+    }
+  }
 
   // Get target
   // The target is the originating element formtarget attribute if the element

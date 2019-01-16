@@ -729,7 +729,8 @@ already_AddRefed<nsTimerImpl> TimerThread::PostTimerEvent(
   if (!p) {
     return timer.forget();
   }
-  RefPtr<nsTimerEvent> event = ::new (KnownNotNull, p) nsTimerEvent(timer.forget());
+  RefPtr<nsTimerEvent> event =
+      ::new (KnownNotNull, p) nsTimerEvent(timer.forget());
 
   nsresult rv;
   {

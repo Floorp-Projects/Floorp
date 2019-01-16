@@ -381,7 +381,8 @@ bool IndirectBindingMap::lookup(jsid name, ModuleEnvironmentObject** envOut,
   }
 
   SetProxyReservedSlot(object, ExportsSlot, ObjectValue(*exports));
-  SetProxyReservedSlot(object, BindingsSlot, PrivateValue(rootedBindings.release()));
+  SetProxyReservedSlot(object, BindingsSlot,
+                       PrivateValue(rootedBindings.release()));
 
   return &object->as<ModuleNamespaceObject>();
 }

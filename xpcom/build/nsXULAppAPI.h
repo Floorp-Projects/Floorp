@@ -374,8 +374,7 @@ enum GeckoProcessType {
 };
 
 static const char* const kGeckoProcessTypeString[] = {
-#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name) \
-  string_name,
+#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name) string_name,
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
 };

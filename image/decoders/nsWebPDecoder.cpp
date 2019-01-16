@@ -308,10 +308,10 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
   uint32_t profileSpace = qcms_profile_get_color_space(mInProfile);
   if (profileSpace == icSigGrayData) {
     // WebP doesn't produce grayscale data, this must be corrupt.
-    MOZ_LOG(
-        sWebPLog, LogLevel::Error,
-        ("[this=%p] nsWebPDecoder::ApplyColorProfile -- ignoring grayscale color profile\n",
-         this));
+    MOZ_LOG(sWebPLog, LogLevel::Error,
+            ("[this=%p] nsWebPDecoder::ApplyColorProfile -- ignoring grayscale "
+             "color profile\n",
+             this));
     return;
   }
 

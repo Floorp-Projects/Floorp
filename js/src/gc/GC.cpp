@@ -592,7 +592,7 @@ inline size_t Arena::finalize(FreeOp* fop, AllocKind thingKind,
     } else {
       t->finalize(fop);
       AlwaysPoison(t, JS_SWEPT_TENURED_PATTERN, thingSize,
-             MemCheckKind::MakeUndefined);
+                   MemCheckKind::MakeUndefined);
       gcTracer.traceTenuredFinalize(t);
     }
   }
@@ -3587,8 +3587,8 @@ void GCRuntime::sweepFromBackgroundThread(AutoLockHelperThreadState& lock) {
     AutoUnlockHelperThreadState unlock(lock);
     sweepBackgroundThings(zones, freeLifoAlloc);
 
-    // The main thread may call queueZonesAndStartBackgroundSweep() while this is
-    // running so we must check there is no more work after releasing the
+    // The main thread may call queueZonesAndStartBackgroundSweep() while this
+    // is running so we must check there is no more work after releasing the
     // lock.
   } while (!backgroundSweepZones.ref().isEmpty());
 }
@@ -3642,8 +3642,7 @@ void GCRuntime::startBackgroundFree() {
 }
 
 void BackgroundFreeTask::run() {
-  AutoTraceLog logFreeing(TraceLoggerForCurrentThread(),
-                           TraceLogger_GCFree);
+  AutoTraceLog logFreeing(TraceLoggerForCurrentThread(), TraceLogger_GCFree);
 
   AutoLockHelperThreadState lock;
 
@@ -3666,16 +3665,15 @@ void GCRuntime::freeFromBackgroundThread(AutoLockHelperThreadState& lock) {
 
     lifoBlocks.freeAll();
 
-    for (Nursery::BufferSet::Range r = buffers.all(); !r.empty(); r.popFront()) {
+    for (Nursery::BufferSet::Range r = buffers.all(); !r.empty();
+         r.popFront()) {
       rt->defaultFreeOp()->free_(r.front());
     }
   } while (!lifoBlocksToFree.ref().isEmpty() ||
            !buffersToFreeAfterMinorGC.ref().empty());
 }
 
-void GCRuntime::waitBackgroundFreeEnd() {
-  freeTask.join();
-}
+void GCRuntime::waitBackgroundFreeEnd() { freeTask.join(); }
 
 struct IsAboutToBeFinalizedFunctor {
   template <typename T>
@@ -6935,8 +6933,8 @@ static bool ShouldCleanUpEverything(JS::gcreason::Reason reason,
 }
 
 static bool ShouldSweepOnBackgroundThread(JS::gcreason::Reason reason) {
-  return reason != JS::gcreason::DESTROY_RUNTIME &&
-         !gcTracer.traceEnabled() && CanUseExtraThreads();
+  return reason != JS::gcreason::DESTROY_RUNTIME && !gcTracer.traceEnabled() &&
+         CanUseExtraThreads();
 }
 
 void GCRuntime::incrementalSlice(SliceBudget& budget,

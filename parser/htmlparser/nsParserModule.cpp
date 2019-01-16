@@ -15,8 +15,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
 NS_DEFINE_NAMED_CID(NS_PARSER_CID);
 
 static const mozilla::Module::CIDEntry kParserCIDs[] = {
-    {&kNS_PARSER_CID, false, nullptr, nsParserConstructor},
-    {nullptr}};
+    {&kNS_PARSER_CID, false, nullptr, nsParserConstructor}, {nullptr}};
 
 static nsresult Initialize() {
   nsresult rv = nsHTMLTags::AddRefTable();
