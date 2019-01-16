@@ -12,6 +12,7 @@ const {
   UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
   UPDATE_RUNTIME_MULTIE10S_SUCCESS,
   REMOTE_RUNTIMES_UPDATED,
+  THIS_FIREFOX_RUNTIME_CREATED,
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
@@ -33,12 +34,10 @@ function RuntimesState() {
   return {
     networkRuntimes: [],
     selectedRuntimeId: null,
-    thisFirefoxRuntimes: [{
-      id: RUNTIMES.THIS_FIREFOX,
-      isUnknown: false,
-      name: "This Firefox",
-      type: RUNTIMES.THIS_FIREFOX,
-    }],
+    // "This Firefox" runtimes is an array for consistency, but it should only contain one
+    // runtime. This runtime will be added after initializing the application via
+    // THIS_FIREFOX_RUNTIME_CREATED.
+    thisFirefoxRuntimes: [],
     usbRuntimes: [],
   };
 }
@@ -112,6 +111,13 @@ function runtimesReducer(state = RuntimesState(), action) {
       const key = TYPE_TO_RUNTIMES_KEY[runtimeType];
       return Object.assign({}, state, {
         [key]: runtimes,
+      });
+    }
+
+    case THIS_FIREFOX_RUNTIME_CREATED: {
+      const { runtime } = action;
+      return Object.assign({}, state, {
+        thisFirefoxRuntimes: [runtime],
       });
     }
 

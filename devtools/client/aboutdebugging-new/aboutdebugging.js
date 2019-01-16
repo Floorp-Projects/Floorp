@@ -57,6 +57,8 @@ const AboutDebugging = {
 
     await l10n.init();
 
+    this.actions.createThisFirefoxRuntime();
+
     render(
       Provider(
         {
