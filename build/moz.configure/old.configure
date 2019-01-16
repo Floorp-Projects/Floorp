@@ -225,7 +225,6 @@ def old_configure_options(*options):
     '--enable-zipwriter',
     '--includedir',
     '--libdir',
-    '--no-create',
     '--prefix',
     '--with-android-distribution-directory',
     '--with-android-max-sdk',
