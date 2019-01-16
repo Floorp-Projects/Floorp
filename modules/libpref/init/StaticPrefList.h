@@ -1604,6 +1604,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+VARCACHE_PREF(
+  "media.autoplay.blackList-override-default",
+   MediaAutoplayBlackListOverrideDefault,
+  RelaxedAtomicBool, true
+)
+
 //---------------------------------------------------------------------------
 // Network prefs
 //---------------------------------------------------------------------------

@@ -195,7 +195,8 @@ static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
   }
 
   if (DefaultAutoplayBehaviour() == nsIAutoplay::ALLOWED &&
-      !IsSiteInAutoplayBlackList(approver)) {
+      !(IsSiteInAutoplayBlackList(approver) &&
+        StaticPrefs::MediaAutoplayBlackListOverrideDefault())) {
     AUTOPLAY_LOG(
         "Allow autoplay as global autoplay setting is allowing autoplay by "
         "default.");
