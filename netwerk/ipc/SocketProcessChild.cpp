@@ -68,6 +68,10 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
   // Init crash reporter support.
   CrashReporterClient::InitSingleton(this);
 
+  if (NS_FAILED(NS_InitMinimalXPCOM())) {
+    return false;
+  }
+
   SetThisProcessName("Socket Process");
   return true;
 }
