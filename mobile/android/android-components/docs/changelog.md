@@ -23,6 +23,9 @@ permalink: /changelog/
 * **feature-prompts**, **browser-engine-gecko***
   * Added support for [Window.prompt](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt).
 
+* **browser-menu**
+  * Added [docs](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/README.md#browsermenu) for customizing `BrowserMenu`.
+
 # 0.38.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.37.0...v0.38.0),
