@@ -9,7 +9,6 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/Unused.h"
 
-#include "nsContentUtils.h"
 #include "nsICacheInfoChannel.h"
 #include "ScriptLoadRequest.h"
 #include "ScriptSettings.h"
@@ -196,18 +195,7 @@ bool ScriptLoadRequest::ShouldAcceptBinASTEncoding() const {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   Unused << rv;
 
-  if (!isHTTPS) {
-    return false;
-  }
-
-  if (StaticPrefs::dom_script_loader_binast_encoding_domain_restrict()) {
-    if (!nsContentUtils::IsURIInPrefList(
-            mURI, "dom.script_loader.binast_encoding.domain.restrict.list")) {
-      return false;
-    }
-  }
-
-  return true;
+  return isHTTPS;
 #else
   MOZ_CRASH("BinAST not supported");
 #endif

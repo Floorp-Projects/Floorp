@@ -264,7 +264,6 @@ pref("dom.script_loader.bytecode_cache.strategy", 0);
 
 #ifdef JS_BUILD_BINAST
 pref("dom.script_loader.binast_encoding.enabled", false);
-pref("dom.script_loader.binast_encoding.domain.restrict.list", "*.facebook.com,static.xx.fbcdn.net");
 #endif
 
 // Whether window.event is enabled
