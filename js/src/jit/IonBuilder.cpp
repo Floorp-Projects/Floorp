@@ -4796,6 +4796,10 @@ AbortReasonOr<Ok> IonBuilder::inlineCalls(CallInfo& callInfo,
     inlineInfo.popCallStack(inlineBlock);
     inlineInfo.setFun(funcDef);
 
+    if (callInfo.constructing() && callInfo.getNewTarget() == callInfo.fun()) {
+      inlineInfo.setNewTarget(funcDef);
+    }
+
     if (maybeCache) {
       // Assign the 'this' value a TypeSet specialized to the groups that
       // can generate this inlining target.
