@@ -36,6 +36,7 @@ use scene_builder::DocumentResources;
 use smallvec::SmallVec;
 use surface::{SurfaceDescriptor};
 use std::{mem, u16};
+use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 use texture_cache::{Eviction, TextureCacheHandle};
 use tiling::RenderTargetKind;
 use util::{ComparableVec, TransformedRectKind, MatrixHelpers, MaxRect};
@@ -78,6 +79,7 @@ impl RetainedTiles {
 
     /// Merge items from one retained tiles into another.
     pub fn merge(&mut self, other: RetainedTiles) {
+        assert!(self.tiles.is_empty() || other.tiles.is_empty());
         self.tiles.extend(other.tiles);
         self.ref_prims.extend(other.ref_prims);
     }
@@ -110,12 +112,13 @@ const MAX_CACHE_SIZE: f32 = 2048.0;
 const MAX_SURFACE_SIZE: f32 = 4096.0;
 
 
-/// The number of primitives to search for, trying to correlate
-/// the offset between one display list and another.
-const MAX_PRIMS_TO_CORRELATE: usize = 64;
-/// The minmum number of primitives we need to correlate in
-/// order to consider it a success.
-const MIN_PRIMS_TO_CORRELATE: usize = MAX_PRIMS_TO_CORRELATE / 4;
+/// The maximum number of primitives to look for in a display
+/// list, trying to find unique primitives.
+const MAX_PRIMS_TO_SEARCH: usize = 128;
+
+/// Used to get unique tile IDs, even when the tile cache is
+/// destroyed between display lists / scenes.
+static NEXT_TILE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
 /// Information about the state of an opacity binding.
 #[derive(Debug)]
@@ -213,17 +216,23 @@ impl Tile {
         self.potential_clips.clear();
     }
 
-    /// Update state related to whether a tile has the same
-    /// content and is valid to use.
-    fn update_validity(&mut self, tile_bounding_rect: &WorldRect) {
+    /// Invalidate a tile based on change in content. This
+    /// muct be called even if the tile is not currently
+    /// visible on screen. We might be able to improve this
+    /// later by changing how ComparableVec is used.
+    fn update_content_validity(&mut self) {
         // Check if the contents of the primitives, clips, and
         // other dependencies are the same.
         self.is_same_content &= self.descriptor.is_same_content();
+        self.is_valid &= self.is_same_content;
+    }
 
+    /// Update state related to whether a tile has a valid rect that
+    /// covers the required visible part of the tile.
+    fn update_rect_validity(&mut self, tile_bounding_rect: &WorldRect) {
         // The tile is only valid if:
         // - The content is the same *and*
         // - The valid part of the tile includes the needed part.
-        self.is_valid &= self.is_same_content;
         self.is_valid &= self.valid_rect.contains_rect(tile_bounding_rect);
 
         // Update count of how many times this tile has had the same content.
@@ -362,33 +371,70 @@ pub struct TileCache {
     /// scroll bars in gecko, when the content overflows under the
     /// scroll bar).
     world_bounding_rect: WorldRect,
-    /// Counter for the next id to assign for a new tile.
-    next_id: usize,
     /// List of reference primitive information used for
     /// correlating the position between display lists.
-    reference_prims: Vec<ReferencePrimitive>,
+    reference_prims: ReferencePrimitiveList,
     /// The root clip chain for this tile cache.
     root_clip_chain_id: ClipChainId,
 }
 
 /// Stores information about a primitive in the cache that we will
 /// try to use to correlate positions between display lists.
+#[derive(Clone)]
 struct ReferencePrimitive {
     uid: ItemUid,
     local_pos: LayoutPoint,
     spatial_node_index: SpatialNodeIndex,
+    ref_count: usize,
+}
+
+/// A list of primitive with uids that only exist once in a display
+/// list. Used to obtain reference points to correlate the offset
+/// between two similar display lists.
+struct ReferencePrimitiveList {
+    ref_prims: Vec<ReferencePrimitive>,
+}
+
+impl ReferencePrimitiveList {
+    fn new(
+        prim_instances: &[PrimitiveInstance],
+        pictures: &[PicturePrimitive],
+    ) -> Self {
+        let mut map = FastHashMap::default();
+        let mut search_count = 0;
+
+        // Collect a set of primitives that we can
+        // potentially use for correlation.
+        collect_ref_prims(
+            prim_instances,
+            pictures,
+            &mut map,
+            &mut search_count,
+        );
+
+        // Select only primitives where the uid is unique
+        // in the display list, giving the best chance
+        // of finding correct correlations.
+        let ref_prims = map.values().filter(|prim| {
+            prim.ref_count == 1
+        }).cloned().collect();
+
+        ReferencePrimitiveList {
+            ref_prims,
+        }
+    }
 }
 
 /// Collect a sample of primitives from the prim list that can
 /// be used to correlate positions.
-// TODO(gw): Investigate best how to select which primitives to select.
 fn collect_ref_prims(
     prim_instances: &[PrimitiveInstance],
-    ref_prims: &mut Vec<ReferencePrimitive>,
     pictures: &[PicturePrimitive],
+    map: &mut FastHashMap<ItemUid, ReferencePrimitive>,
+    search_count: &mut usize,
 ) {
     for prim_instance in prim_instances {
-        if ref_prims.len() >= MAX_PRIMS_TO_CORRELATE {
+        if *search_count > MAX_PRIMS_TO_SEARCH {
             return;
         }
 
@@ -396,16 +442,25 @@ fn collect_ref_prims(
             PrimitiveInstanceKind::Picture { pic_index, .. } => {
                 collect_ref_prims(
                     &pictures[pic_index.0].prim_list.prim_instances,
-                    ref_prims,
                     pictures,
+                    map,
+                    search_count,
                 );
             }
             _ => {
-                ref_prims.push(ReferencePrimitive {
-                    uid: prim_instance.uid(),
-                    local_pos: prim_instance.prim_origin,
-                    spatial_node_index: prim_instance.spatial_node_index,
+                let uid = prim_instance.uid();
+
+                let entry = map.entry(uid).or_insert_with(|| {
+                    ReferencePrimitive {
+                        uid,
+                        local_pos: prim_instance.prim_origin,
+                        spatial_node_index: prim_instance.spatial_node_index,
+                        ref_count: 0,
+                    }
                 });
+                entry.ref_count += 1;
+
+                *search_count = *search_count + 1;
             }
         }
     }
@@ -420,10 +475,8 @@ impl TileCache {
     ) -> Self {
         // Build the list of reference primitives
         // for this picture cache.
-        let mut reference_prims = Vec::with_capacity(MAX_PRIMS_TO_CORRELATE);
-        collect_ref_prims(
+        let reference_prims = ReferencePrimitiveList::new(
             prim_instances,
-            &mut reference_prims,
             pictures,
         );
 
@@ -444,16 +497,9 @@ impl TileCache {
             scroll_offset: None,
             pending_blits: Vec::new(),
             world_bounding_rect: WorldRect::zero(),
-            next_id: 0,
             reference_prims,
             root_clip_chain_id,
         }
-    }
-
-    fn next_id(&mut self) -> TileId {
-        let id = TileId(self.next_id);
-        self.next_id += 1;
-        id
     }
 
     /// Get the tile coordinates for a given rectangle.
@@ -512,7 +558,7 @@ impl TileCache {
             // new display list.
             let mut new_prim_map = FastHashMap::default();
             build_ref_prims(
-                &self.reference_prims,
+                &self.reference_prims.ref_prims,
                 &mut new_prim_map,
                 frame_context.clip_scroll_tree,
             );
@@ -656,7 +702,10 @@ impl TileCache {
 
                 let mut tile = match old_tiles.remove(&key) {
                     Some(tile) => tile,
-                    None => Tile::new(self.next_id()),
+                    None => {
+                        let next_id = TileId(NEXT_TILE_ID.fetch_add(1, Ordering::Relaxed));
+                        Tile::new(next_id)
+                    }
                 };
 
                 tile.world_rect = WorldRect::new(
@@ -1107,18 +1156,21 @@ impl TileCache {
                 tile.is_valid = false;
             }
 
+            // Invalidate the tile based on the content changing.
+            tile.update_content_validity();
+
             let visible_rect = match tile.visible_rect {
                 Some(rect) => rect,
                 None => continue,
             };
 
-            // Check the content of the tile is the same
+            // Check the valid rect of the primitive is sufficient.
             let tile_bounding_rect = match visible_rect.intersection(&self.world_bounding_rect) {
                 Some(rect) => rect.translate(&-tile.world_rect.origin.to_vector()),
                 None => continue,
             };
 
-            tile.update_validity(&tile_bounding_rect);
+            tile.update_rect_validity(&tile_bounding_rect);
 
             // If there are no primitives there is no need to draw or cache it.
             if tile.descriptor.prims.is_empty() {
@@ -1140,13 +1192,13 @@ impl TileCache {
                         );
                         _scratch.push_debug_string(
                             label_pos,
-                            debug_colors::WHITE,
-                            format!("{:?}", tile.id),
+                            debug_colors::RED,
+                            format!("{:?} {:?}", tile.id, tile.handle),
                         );
                         label_pos.y += 20.0;
                         _scratch.push_debug_string(
                             label_pos,
-                            debug_colors::WHITE,
+                            debug_colors::RED,
                             format!("same: {} frames", tile.same_frames),
                         );
                     }
@@ -1751,7 +1803,7 @@ impl PicturePrimitive {
             // Calculate and store positions of the reference
             // primitives for this tile cache.
             build_ref_prims(
-                &tile_cache.reference_prims,
+                &tile_cache.reference_prims.ref_prims,
                 &mut retained_tiles.ref_prims,
                 clip_scroll_tree,
             );
@@ -2873,17 +2925,11 @@ fn correlate_prim_maps(
     map.into_iter()
         .max_by_key(|&(_, count)| count)
         .and_then(|(offset, count)| {
-            // We will assume we can use the calculated offset if:
-            // (a) We found more than one quarter of the selected
-            //     reference primitives to have the same offset.
-            // (b) The display lists both had the same number of
-            //     primitives, and we exactly matched. This handles
-            //     edge cases like scenes where there are very
-            //     few primitives, while excluding edge cases like
-            //     dl_mutate that have thousands of primitives with
-            //     the same uid.
-            if (count >= MIN_PRIMS_TO_CORRELATE) ||
-               (count == old_prims.len() && count == new_prims.len()) {
+            // We will assume we can use the calculated offset if we
+            // found more than one quarter of the selected reference
+            // primitives to have the same offset.
+            let prims_available = new_prims.len().min(old_prims.len());
+            if count >= prims_available / 4 {
                 Some(offset.into())
             } else {
                 None
