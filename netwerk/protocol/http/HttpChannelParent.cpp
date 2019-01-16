@@ -1609,6 +1609,7 @@ HttpChannelParent::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
     // We're going to run out of sending window size
     if (mSendWindowSize > 0 && mSendWindowSize <= count) {
       MOZ_ASSERT(!mSuspendedForFlowControl);
+      LOG(("  suspend the channel due to e10s backpressure"));
       Unused << mChannel->Suspend();
       mSuspendedForFlowControl = true;
       mHasSuspendedByBackPressure = true;
@@ -1652,7 +1653,8 @@ bool HttpChannelParent::NeedFlowControl() {
 
 mozilla::ipc::IPCResult HttpChannelParent::RecvBytesRead(
     const int32_t& aCount) {
-  if (!NeedFlowControl()) {
+  // no more flow control after diviersion starts
+  if (!NeedFlowControl() || mDivertingFromChild) {
     return IPC_OK();
   }
 
@@ -1661,6 +1663,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvBytesRead(
 
   if (mSendWindowSize <= 0 && mSendWindowSize + aCount > 0) {
     MOZ_ASSERT(mSuspendedForFlowControl);
+    LOG(("  resume the channel due to e10s backpressure relief"));
     Unused << mChannel->Resume();
     mSuspendedForFlowControl = false;
 
@@ -2075,6 +2078,14 @@ nsresult HttpChannelParent::SuspendForDiversion() {
 
   rv = mParentListener->SuspendForDiversion();
   MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  // After we suspend for diversion, we don't need the flow control since the
+  // channel is suspended until all the data is consumed and no more e10s later.
+  // No point to have another redundant suspension.
+  if (mSuspendedForFlowControl) {
+    Unused << mChannel->Resume();
+    mSuspendedForFlowControl = false;
+  }
 
   // Once this is set, no more OnStart/OnData/OnStop callbacks should be sent
   // to the child.

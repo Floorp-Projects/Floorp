@@ -4155,10 +4155,8 @@ const BrowserSearch = {
    *        allowed values.
    * @param type
    *        (string) Indicates how the user selected the search item.
-   * @param where
-   *        (string) Where was the search link opened (e.g. new tab, current tab, ..).
    */
-  recordOneoffSearchInTelemetry(engine, source, type, where) {
+  recordOneoffSearchInTelemetry(engine, source, type) {
     try {
       const details = {type, isOneOff: true};
       BrowserUsageTelemetry.recordSearch(gBrowser, engine, source, details);

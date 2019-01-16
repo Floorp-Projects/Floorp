@@ -493,10 +493,10 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
     } else {
       MOZ_CRASH("Unknown register type.");
     }
-
   }
   MOZ_ASSERT(numFpu == 0);
-  // Padding to keep the stack aligned, taken from the x64 and mips64 implementations.
+  // Padding to keep the stack aligned, taken from the x64 and mips64
+  // implementations.
   diffF -= diffF % sizeof(uintptr_t);
   MOZ_ASSERT(diffF == 0);
 }

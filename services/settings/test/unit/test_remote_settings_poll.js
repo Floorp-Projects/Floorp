@@ -60,6 +60,30 @@ function run_test() {
 
 add_task(clear_state);
 
+
+add_task(async function test_an_event_is_sent_on_start() {
+  server.registerPathHandler(CHANGES_PATH, (request, response) => {
+    response.write(JSON.stringify({ data: [] }));
+    response.setHeader("ETag", '"42"');
+    response.setHeader("Date", (new Date()).toUTCString());
+    response.setStatusLine(null, 200, "OK");
+  });
+  let notificationObserved = null;
+  const observer = {
+    observe(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(this, "remote-settings:changes-poll-start");
+      notificationObserved = JSON.parse(aData);
+    },
+  };
+  Services.obs.addObserver(observer, "remote-settings:changes-poll-start");
+
+  await RemoteSettings.pollChanges({ expectedTimestamp: 13 });
+
+  Assert.equal(notificationObserved.expectedTimestamp, 13, "start notification should have been observed");
+});
+add_task(clear_state);
+
+
 add_task(async function test_check_success() {
   const startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
   const serverTime = 8000;
@@ -86,15 +110,15 @@ add_task(async function test_check_success() {
   let maybeSyncCalled = false;
   c.maybeSync = () => { maybeSyncCalled = true; };
 
-  // Ensure that the remote-settings-changes-polled notification works
+  // Ensure that the remote-settings:changes-poll-end notification works
   let notificationObserved = false;
   const observer = {
     observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, "remote-settings-changes-polled");
+      Services.obs.removeObserver(this, "remote-settings:changes-poll-end");
       notificationObserved = true;
     },
   };
-  Services.obs.addObserver(observer, "remote-settings-changes-polled");
+  Services.obs.addObserver(observer, "remote-settings:changes-poll-end");
 
   await RemoteSettings.pollChanges();
 
@@ -131,7 +155,7 @@ add_task(async function test_update_timer_interface() {
   }]));
 
   await new Promise((resolve) => {
-    const e = "remote-settings-changes-polled";
+    const e = "remote-settings:changes-poll-end";
     const changesPolledObserver = {
       observe(aSubject, aTopic, aData) {
         Services.obs.removeObserver(this, e);
@@ -164,15 +188,15 @@ add_task(async function test_check_up_to_date() {
 
   Services.prefs.setCharPref(PREF_LAST_ETAG, '"1100"');
 
-  // Ensure that the remote-settings-changes-polled notification is sent.
+  // Ensure that the remote-settings:changes-poll-end notification is sent.
   let notificationObserved = false;
   const observer = {
     observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, "remote-settings-changes-polled");
+      Services.obs.removeObserver(this, "remote-settings:changes-poll-end");
       notificationObserved = true;
     },
   };
-  Services.obs.addObserver(observer, "remote-settings-changes-polled");
+  Services.obs.addObserver(observer, "remote-settings:changes-poll-end");
 
   // If server has no change, a 304 is received, maybeSync() is not called.
   let maybeSyncCalled = false;
@@ -256,6 +280,7 @@ add_task(async function test_client_last_check_is_saved() {
   notEqual(Services.prefs.getIntPref(c.lastCheckTimePref), 0);
 });
 add_task(clear_state);
+
 
 add_task(async function test_success_with_partial_list() {
   function partialList(request, response) {
@@ -353,11 +378,11 @@ add_task(async function test_server_error() {
   let notificationObserved = false;
   const observer = {
     observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, "remote-settings-changes-polled");
+      Services.obs.removeObserver(this, "remote-settings:changes-poll-end");
       notificationObserved = true;
     },
   };
-  Services.obs.addObserver(observer, "remote-settings-changes-polled");
+  Services.obs.addObserver(observer, "remote-settings:changes-poll-end");
   Services.prefs.setIntPref(PREF_LAST_UPDATE, 42);
 
   // pollChanges() fails with adequate error and no notification.

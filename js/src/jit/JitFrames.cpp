@@ -150,8 +150,7 @@ class IonTryNoteFilter {
 class TryNoteIterIon : public TryNoteIter<IonTryNoteFilter> {
  public:
   TryNoteIterIon(JSContext* cx, const InlineFrameIterator& frame)
-      : TryNoteIter(cx, frame.script(), frame.pc(),
-                    IonTryNoteFilter(frame)) {}
+      : TryNoteIter(cx, frame.script(), frame.pc(), IonTryNoteFilter(frame)) {}
 };
 
 static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
@@ -323,8 +322,7 @@ class BaselineTryNoteFilter {
 class TryNoteIterBaseline : public TryNoteIter<BaselineTryNoteFilter> {
  public:
   TryNoteIterBaseline(JSContext* cx, BaselineFrame* frame, jsbytecode* pc)
-      : TryNoteIter(cx, frame->script(), pc, BaselineTryNoteFilter(frame)) {
-  }
+      : TryNoteIter(cx, frame->script(), pc, BaselineTryNoteFilter(frame)) {}
 };
 
 // Close all live iterators on a BaselineFrame due to exception unwinding. The

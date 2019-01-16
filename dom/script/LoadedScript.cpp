@@ -40,9 +40,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadedScript)
 
 LoadedScript::LoadedScript(ScriptKind aKind, ScriptFetchOptions* aFetchOptions,
                            nsIURI* aBaseURL)
-    : mKind(aKind),
-      mFetchOptions(aFetchOptions),
-      mBaseURL(aBaseURL) {
+    : mKind(aKind), mFetchOptions(aFetchOptions), mBaseURL(aBaseURL) {
   MOZ_ASSERT(mFetchOptions);
   MOZ_ASSERT(mBaseURL);
 }

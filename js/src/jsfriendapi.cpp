@@ -1328,9 +1328,11 @@ JS_FRIEND_API void js::SetWindowProxy(JSContext* cx, HandleObject global,
   CHECK_THREAD(cx);
 
   cx->check(global, windowProxy);
-
   MOZ_ASSERT(IsWindowProxy(windowProxy));
-  global->as<GlobalObject>().setWindowProxy(windowProxy);
+
+  GlobalObject& globalObj = global->as<GlobalObject>();
+  globalObj.setWindowProxy(windowProxy);
+  globalObj.lexicalEnvironment().setWindowProxyThisValue(windowProxy);
 }
 
 JS_FRIEND_API JSObject* js::ToWindowIfWindowProxy(JSObject* obj) {

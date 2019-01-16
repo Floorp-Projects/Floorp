@@ -99,8 +99,9 @@ static void free_buffer(const uint8_t *const data, void *const user_data) {
 
 static int picture_alloc_with_edges(Dav1dPicture *const p,
                                     const int w, const int h,
-                                    const enum Dav1dPixelLayout layout,
-                                    const int bpc,
+                                    Dav1dSequenceHeader *seq_hdr, Dav1dRef *seq_hdr_ref,
+                                    Dav1dFrameHeader *frame_hdr,  Dav1dRef *frame_hdr_ref,
+                                    const int bpc, const Dav1dDataProps *props,
                                     Dav1dPicAllocator *const p_allocator,
                                     const size_t extra, void **const extra_ptr)
 {
@@ -120,7 +121,11 @@ static int picture_alloc_with_edges(Dav1dPicture *const p,
     p->m.timestamp = INT64_MIN;
     p->m.duration = 0;
     p->m.offset = -1;
-    p->p.layout = layout;
+    p->m.user_data.data = NULL;
+    p->m.user_data.ref = NULL;
+    p->seq_hdr = seq_hdr;
+    p->frame_hdr = frame_hdr;
+    p->p.layout = seq_hdr->layout;
     p->p.bpc = bpc;
     int res = p_allocator->alloc_picture_callback(p, p_allocator->cookie);
     if (res < 0) {
@@ -138,6 +143,14 @@ static int picture_alloc_with_edges(Dav1dPicture *const p,
         return -ENOMEM;
     }
 
+    p->seq_hdr_ref = seq_hdr_ref;
+    if (seq_hdr_ref) dav1d_ref_inc(seq_hdr_ref);
+
+    p->frame_hdr_ref = frame_hdr_ref;
+    if (frame_hdr_ref) dav1d_ref_inc(frame_hdr_ref);
+
+    dav1d_data_props_copy(&p->m, props);
+
     if (extra && extra_ptr)
         *extra_ptr = &pic_ctx->extra_ptr;
 
@@ -146,14 +159,19 @@ static int picture_alloc_with_edges(Dav1dPicture *const p,
 
 int dav1d_thread_picture_alloc(Dav1dThreadPicture *const p,
                                const int w, const int h,
-                               const enum Dav1dPixelLayout layout, const int bpc,
+                               Dav1dSequenceHeader *seq_hdr, Dav1dRef *seq_hdr_ref,
+                               Dav1dFrameHeader *frame_hdr, Dav1dRef *frame_hdr_ref,
+                               const int bpc, const Dav1dDataProps *props,
                                struct thread_data *const t, const int visible,
                                Dav1dPicAllocator *const p_allocator)
 {
     p->t = t;
 
     const int res =
-        picture_alloc_with_edges(&p->p, w, h, layout, bpc, p_allocator,
+        picture_alloc_with_edges(&p->p, w, h,
+                                 seq_hdr, seq_hdr_ref,
+                                 frame_hdr, frame_hdr_ref,
+                                 bpc, props, p_allocator,
                                  t != NULL ? sizeof(atomic_int) * 2 : 0,
                                  (void **) &p->progress);
     if (res) return res;
@@ -170,22 +188,11 @@ int dav1d_picture_alloc_copy(Dav1dPicture *const dst, const int w,
                              const Dav1dPicture *const src)
 {
     struct pic_ctx_context *const pic_ctx = src->ref->user_data;
-    const int res = picture_alloc_with_edges(dst, w, src->p.h, src->p.layout,
-                                             src->p.bpc, &pic_ctx->allocator,
+    const int res = picture_alloc_with_edges(dst, w, src->p.h,
+                                             src->seq_hdr, src->seq_hdr_ref,
+                                             src->frame_hdr, src->frame_hdr_ref,
+                                             src->p.bpc, &src->m, &pic_ctx->allocator,
                                              0, NULL);
-
-    if (!res) {
-        dst->p = src->p;
-        dst->m = src->m;
-        dst->p.w = w;
-        dst->frame_hdr = src->frame_hdr;
-        dst->frame_hdr_ref = src->frame_hdr_ref;
-        if (dst->frame_hdr_ref) dav1d_ref_inc(dst->frame_hdr_ref);
-        dst->seq_hdr = src->seq_hdr;
-        dst->seq_hdr_ref = src->seq_hdr_ref;
-        if (dst->seq_hdr_ref) dav1d_ref_inc(dst->seq_hdr_ref);
-    }
-
     return res;
 }
 
@@ -199,6 +206,7 @@ void dav1d_picture_ref(Dav1dPicture *const dst, const Dav1dPicture *const src) {
         dav1d_ref_inc(src->ref);
         if (src->frame_hdr_ref) dav1d_ref_inc(src->frame_hdr_ref);
         if (src->seq_hdr_ref) dav1d_ref_inc(src->seq_hdr_ref);
+        if (src->m.user_data.ref) dav1d_ref_inc(src->m.user_data.ref);
     }
     *dst = *src;
 }
@@ -224,7 +232,7 @@ void dav1d_thread_picture_ref(Dav1dThreadPicture *dst,
     dst->progress = src->progress;
 }
 
-void dav1d_picture_unref(Dav1dPicture *const p) {
+void dav1d_picture_unref_internal(Dav1dPicture *const p) {
     validate_input(p != NULL);
 
     if (p->ref) {
@@ -232,12 +240,13 @@ void dav1d_picture_unref(Dav1dPicture *const p) {
         dav1d_ref_dec(&p->ref);
         dav1d_ref_dec(&p->seq_hdr_ref);
         dav1d_ref_dec(&p->frame_hdr_ref);
+        dav1d_ref_dec(&p->m.user_data.ref);
     }
     memset(p, 0, sizeof(*p));
 }
 
 void dav1d_thread_picture_unref(Dav1dThreadPicture *const p) {
-    dav1d_picture_unref(&p->p);
+    dav1d_picture_unref_internal(&p->p);
 
     p->t = NULL;
     p->progress = NULL;

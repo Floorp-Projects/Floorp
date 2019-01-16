@@ -62,8 +62,8 @@ class OfflineObserver final : public nsIObserver {
     } else if (!strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID)) {
       nsCOMPtr<nsIObserverService> obs =
           mozilla::services::GetObserverService();
-        obs->RemoveObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
-        obs->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
+      obs->RemoveObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
+      obs->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
     }
 
     return NS_OK;

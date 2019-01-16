@@ -17,7 +17,8 @@ void FrameMetrics::RecalculateLayoutViewportOffset() {
   if (!mIsRootContent) {
     return;
   }
-  KeepLayoutViewportEnclosingVisualViewport(GetVisualViewport(), mLayoutViewport);
+  KeepLayoutViewportEnclosingVisualViewport(GetVisualViewport(),
+                                            mLayoutViewport);
 }
 
 /* static */ void FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(

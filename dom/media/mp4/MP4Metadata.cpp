@@ -460,7 +460,7 @@ MP4Metadata::ResultAndIndice MP4Metadata::GetTrackIndice(
 
 /*static*/ MP4Metadata::ResultAndByteBuffer MP4Metadata::Metadata(
     ByteStream* aSource) {
-  auto parser = mozilla::MakeUnique<MoofParser>(aSource, 0, false);
+  auto parser = mozilla::MakeUnique<MoofParser>(aSource, 0, false, true);
   RefPtr<mozilla::MediaByteBuffer> buffer = parser->Metadata();
   if (!buffer) {
     return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,

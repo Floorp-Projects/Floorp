@@ -58,7 +58,6 @@ inv_txfm_add_c(pixel *dst, const ptrdiff_t stride,
     const int bitdepth = bitdepth_from_max(bitdepth_max);
     const int row_clip_max = (1 << (bitdepth + 8 - 1)) - 1;
     const int col_clip_max = (1 << (imax(bitdepth + 6, 16) - 1)) -1;
-    const int col_clip_min = -col_clip_max - 1;
 
     if (w != sw) memset(&in_mem[sw], 0, (w - sw) * sizeof(*in_mem));
     const int rnd1 = (1 << shift1) >> 1;
@@ -74,8 +73,12 @@ inv_txfm_add_c(pixel *dst, const ptrdiff_t stride,
             first_1d_fn(&coeff[i], sh, &tmp[i * w], 1, row_clip_max);
         }
         for (j = 0; j < w; j++)
+#if BITDEPTH == 8
+            tmp[i * w + j] = (tmp[i * w + j] + (rnd1)) >> shift1;
+#else
             tmp[i * w + j] = iclip((tmp[i * w + j] + (rnd1)) >> shift1,
-                                   col_clip_min, col_clip_max);
+                                   -col_clip_max - 1, col_clip_max);
+#endif
     }
 
     if (h != sh) memset(&tmp[sh * w], 0, w * (h - sh) * sizeof(*tmp));

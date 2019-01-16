@@ -3767,6 +3767,13 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
 static JSObject* NewSandbox(JSContext* cx, bool lazy) {
   JS::RealmOptions options;
   SetStandardRealmOptions(options);
+
+  if (defaultToSameCompartment) {
+    options.creationOptions().setExistingCompartment(cx->global());
+  } else {
+    options.creationOptions().setNewCompartmentAndZone();
+  }
+
   RootedObject obj(cx,
                    JS_NewGlobalObject(cx, &sandbox_class, nullptr,
                                       JS::DontFireOnNewGlobalHook, options));
@@ -3848,17 +3855,13 @@ static bool EvalInContext(JSContext* cx, unsigned argc, Value* vp) {
 
   DescribeScriptedCaller(cx, &filename, &lineno);
   {
-    Maybe<JSAutoRealm> ar;
-    unsigned flags;
-    JSObject* unwrapped = UncheckedUnwrap(sobj, true, &flags);
-    if (flags & Wrapper::CROSS_COMPARTMENT) {
-      sobj = unwrapped;
-      ar.emplace(cx, sobj);
-    }
+    sobj = UncheckedUnwrap(sobj, true);
+
+    JSAutoRealm ar(cx, sobj);
 
     sobj = ToWindowIfWindowProxy(sobj);
 
-    if (!(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
+    if (!JS_IsGlobalObject(sobj)) {
       JS_ReportErrorASCII(cx, "Invalid scope argument to evalcx");
       return false;
     }

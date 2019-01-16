@@ -974,7 +974,7 @@ static bool TraceKindParticipatesInCC(JS::TraceKind kind) {
   return DispatchTraceKindTyped(ParticipatesInCCFunctor(), kind);
 }
 
-#endif // DEBUG
+#endif  // DEBUG
 
 template <typename T>
 bool js::GCMarker::mark(T* thing) {

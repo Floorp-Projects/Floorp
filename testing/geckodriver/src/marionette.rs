@@ -20,10 +20,10 @@ use std::sync::Mutex;
 use std::thread;
 use std::time;
 use webdriver::capabilities::CapabilitiesMatching;
-use webdriver::command::WebDriverCommand::{AcceptAlert, AddCookie, CloseWindow, DeleteCookie,
-                                           DeleteCookies, DeleteSession, DismissAlert,
-                                           ElementClear, ElementClick, ElementSendKeys,
-                                           ExecuteAsyncScript, ExecuteScript,
+use webdriver::command::WebDriverCommand::{AcceptAlert, AddCookie, NewWindow, CloseWindow,
+                                           DeleteCookie, DeleteCookies, DeleteSession,
+                                           DismissAlert, ElementClear, ElementClick,
+                                           ElementSendKeys, ExecuteAsyncScript, ExecuteScript,
                                            Extension, FindElement, FindElementElement,
                                            FindElementElements, FindElements, FullscreenWindow,
                                            Get, GetActiveElement, GetAlertText, GetCSSValue,
@@ -41,11 +41,11 @@ use webdriver::command::WebDriverCommand::{AcceptAlert, AddCookie, CloseWindow, 
 use webdriver::command::{ActionsParameters, AddCookieParameters, GetNamedCookieParameters,
                          GetParameters, JavascriptCommandParameters, LocatorParameters,
                          NewSessionParameters, SwitchToFrameParameters, SwitchToWindowParameters,
-                         TimeoutsParameters, WindowRectParameters};
+                         TimeoutsParameters, WindowRectParameters, NewWindowParameters};
 use webdriver::command::{WebDriverCommand, WebDriverMessage};
 use webdriver::common::{Cookie, FrameId, WebElement, ELEMENT_KEY, FRAME_KEY, WINDOW_KEY};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
-use webdriver::response::{CloseWindowResponse, CookieResponse, CookiesResponse,
+use webdriver::response::{NewWindowResponse, CloseWindowResponse, CookieResponse, CookiesResponse,
                           ElementRectResponse, NewSessionResponse, TimeoutsResponse,
                           ValueResponse, WebDriverResponse, WindowRectResponse};
 use webdriver::server::{Session, WebDriverHandler};
@@ -522,6 +522,28 @@ impl MarionetteSession {
             }
             Status => panic!("Got status command that should already have been handled"),
             GetWindowHandles => WebDriverResponse::Generic(resp.to_value_response(false)?),
+            NewWindow(_) => {
+                let handle: String = try_opt!(
+                    try_opt!(
+                        resp.result.get("handle"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find handle field"
+                    ).as_str(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret handle as string"
+                ).into();
+                let typ: String = try_opt!(
+                    try_opt!(
+                        resp.result.get("type"),
+                        ErrorStatus::UnknownError,
+                        "Failed to find type field"
+                    ).as_str(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret type as string"
+                ).into();
+
+                WebDriverResponse::NewWindow(NewWindowResponse { handle, typ })
+            }
             CloseWindow => {
                 let data = try_opt!(
                     resp.result.as_array(),
@@ -788,6 +810,7 @@ impl MarionetteCommand {
                 (Some("WebDriver:AcceptDialog"), None)
             }
             AddCookie(ref x) => (Some("WebDriver:AddCookie"), Some(x.to_marionette())),
+            NewWindow(ref x) => (Some("WebDriver:NewWindow"), Some(x.to_marionette())),
             CloseWindow => (Some("WebDriver:CloseWindow"), None),
             DeleteCookie(ref x) => {
                 let mut data = Map::new();
@@ -1422,6 +1445,16 @@ impl ToMarionette for LocatorParameters {
             ErrorStatus::UnknownError,
             "Expected an object"
         ).clone())
+    }
+}
+
+impl ToMarionette for NewWindowParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        if let Some(ref x) = self.type_hint {
+            data.insert("type".to_string(), serde_json::to_value(x)?);
+        }
+        Ok(data)
     }
 }
 

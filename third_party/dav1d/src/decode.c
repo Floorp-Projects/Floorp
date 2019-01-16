@@ -1264,16 +1264,17 @@ static int decode_b(Dav1dTileContext *const t,
         }
         int src_left   = t->bx * 4 + (b->mv[0].x >> 3);
         int src_top    = t->by * 4 + (b->mv[0].y >> 3);
-        int src_right  = src_left + w4 * 4;
-        int src_bottom = src_top  + h4 * 4;
+        int src_right  = src_left + bw4 * 4;
+        int src_bottom = src_top  + bh4 * 4;
+        const int border_right = ((ts->tiling.col_end + (bw4 - 1)) & ~(bw4 - 1)) * 4;
 
         // check against left or right tile boundary and adjust if necessary
         if (src_left < border_left) {
             src_right += border_left - src_left;
             src_left  += border_left - src_left;
-        } else if (src_right > ts->tiling.col_end * 4) {
-            src_left  -= src_right - ts->tiling.col_end * 4;
-            src_right -= src_right - ts->tiling.col_end * 4;
+        } else if (src_right > border_right) {
+            src_left  -= src_right - border_right;
+            src_right -= src_right - border_right;
         }
         // check against top tile boundary and adjust if necessary
         if (src_top < border_top) {
@@ -1904,6 +1905,61 @@ static int decode_b(Dav1dTileContext *const t,
 
     return 0;
 }
+
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+
+#include <sanitizer/msan_interface.h>
+
+static int checked_decode_b(Dav1dTileContext *const t,
+                            const enum BlockLevel bl,
+                            const enum BlockSize bs,
+                            const enum BlockPartition bp,
+                            const enum EdgeFlags intra_edge_flags)
+{
+    const Dav1dFrameContext *const f = t->f;
+    const int err = decode_b(t, bl, bs, bp, intra_edge_flags);
+
+    if (err == 0 && !(f->frame_thread.pass & 1)) {
+        const int ss_ver = f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
+        const int ss_hor = f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I444;
+        const uint8_t *const b_dim = dav1d_block_dimensions[bs];
+        const int bw4 = b_dim[0], bh4 = b_dim[1];
+        const int w4 = imin(bw4, f->bw - t->bx), h4 = imin(bh4, f->bh - t->by);
+        const int has_chroma = f->seq_hdr->layout != DAV1D_PIXEL_LAYOUT_I400 &&
+                               (bw4 > ss_hor || t->bx & 1) &&
+                               (bh4 > ss_ver || t->by & 1);
+
+        for (int p = 0; p < 1 + 2 * has_chroma; p++) {
+            const int ss_ver = p && f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
+            const int ss_hor = p && f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I444;
+            const int stride = f->cur.stride[!!p];
+            const int bx = t->bx & ~ss_hor;
+            const int by = t->by & ~ss_ver;
+            const int width  = w4 << (2 - ss_hor + (bw4 == ss_hor));
+            const int height = h4 << (2 - ss_ver + (bh4 == ss_ver));
+
+            const uint8_t *data = f->cur.data[p] + (by << (2 - ss_ver)) * stride +
+                                  (bx << (2 - ss_hor + !!f->seq_hdr->hbd));
+
+            for (int y = 0; y < height; data += stride, y++) {
+                const size_t line_sz = width << !!f->seq_hdr->hbd;
+                if (__msan_test_shadow(data, line_sz) != -1) {
+                    fprintf(stderr, "B[%d](%d, %d) w4:%d, h4:%d, row:%d\n",
+                            p, bx, by, w4, h4, y);
+                    __msan_check_mem_is_initialized(data, line_sz);
+                }
+            }
+        }
+    }
+
+    return err;
+}
+
+#define decode_b checked_decode_b
+
+#endif /* defined(__has_feature) */
+#endif /* __has_feature(memory_sanitizer) */
 
 static int decode_sb(Dav1dTileContext *const t, const enum BlockLevel bl,
                      const EdgeNode *const node)
@@ -2946,7 +3002,7 @@ error:
         dav1d_ref_dec(&f->ref_mvs_ref[i]);
     }
 
-    dav1d_picture_unref(&f->cur);
+    dav1d_picture_unref_internal(&f->cur);
     dav1d_thread_picture_unref(&f->sr_cur);
     dav1d_cdf_thread_unref(&f->in_cdf);
     if (f->frame_hdr->refresh_context) {
@@ -2960,7 +3016,7 @@ error:
     dav1d_ref_dec(&f->frame_hdr_ref);
 
     for (int i = 0; i < f->n_tile_data; i++)
-        dav1d_data_unref(&f->tile[i].data);
+        dav1d_data_unref_internal(&f->tile[i].data);
 
     return retval;
 }
@@ -3124,18 +3180,12 @@ int dav1d_submit_frame(Dav1dContext *const c) {
     // allocate frame
     res = dav1d_thread_picture_alloc(&f->sr_cur, f->frame_hdr->width[1],
                                      f->frame_hdr->height,
-                                     f->seq_hdr->layout, bpc,
+                                     f->seq_hdr, f->seq_hdr_ref,
+                                     f->frame_hdr, f->frame_hdr_ref,
+                                     bpc, &f->tile[0].data.m,
                                      c->n_fc > 1 ? &f->frame_thread.td : NULL,
                                      f->frame_hdr->show_frame, &c->allocator);
     if (res < 0) goto error;
-
-    f->sr_cur.p.m = f->tile[0].data.m;
-    f->sr_cur.p.frame_hdr = f->frame_hdr;
-    f->sr_cur.p.frame_hdr_ref = f->frame_hdr_ref;
-    dav1d_ref_inc(f->frame_hdr_ref);
-    f->sr_cur.p.seq_hdr = f->seq_hdr;
-    f->sr_cur.p.seq_hdr_ref = f->seq_hdr_ref;
-    dav1d_ref_inc(f->seq_hdr_ref);
 
     if (f->frame_hdr->super_res.enabled) {
         res = dav1d_picture_alloc_copy(&f->cur, f->frame_hdr->width[0], &f->sr_cur.p);
@@ -3300,7 +3350,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
     if (c->n_fc == 1) {
         const unsigned refresh_frame_flags = f->frame_hdr->refresh_frame_flags;
         if ((res = dav1d_decode_frame(f)) < 0) {
-            dav1d_picture_unref(&c->out);
+            dav1d_picture_unref_internal(&c->out);
             for (int i = 0; i < 8; i++) {
                 if (refresh_frame_flags & (1 << i)) {
                     if (c->refs[i].p.p.data[0])
@@ -3328,17 +3378,17 @@ error:
         dav1d_ref_dec(&f->ref_mvs_ref[i]);
     }
     if (c->n_fc == 1)
-        dav1d_picture_unref(&c->out);
+        dav1d_picture_unref_internal(&c->out);
     else
         dav1d_thread_picture_unref(out_delayed);
-    dav1d_picture_unref(&f->cur);
+    dav1d_picture_unref_internal(&f->cur);
     dav1d_thread_picture_unref(&f->sr_cur);
     dav1d_ref_dec(&f->mvs_ref);
     dav1d_ref_dec(&f->seq_hdr_ref);
     dav1d_ref_dec(&f->frame_hdr_ref);
 
     for (int i = 0; i < f->n_tile_data; i++)
-        dav1d_data_unref(&f->tile[i].data);
+        dav1d_data_unref_internal(&f->tile[i].data);
     f->n_tile_data = 0;
 
     if (c->n_fc > 1) {

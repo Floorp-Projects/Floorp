@@ -3347,6 +3347,7 @@ bool JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx,
 
   MOZ_ASSERT(sourceFun->nargs() == targetFun->nargs());
   MOZ_ASSERT(sourceScript->hasRest() == targetFun->nonLazyScript()->hasRest());
+  MOZ_ASSERT(targetFun->strict(), "Self-hosted builtins must be strict");
 
   // The target function might have been relazified after its flags changed.
   targetFun->setFlags(targetFun->flags() | sourceFun->flags());

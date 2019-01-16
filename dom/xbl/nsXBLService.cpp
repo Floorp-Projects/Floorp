@@ -152,8 +152,8 @@ class nsXBLStreamListener final : public nsIStreamListener,
   AutoTArray<nsXBLBindingRequest*, 8> mBindingRequests;
 
   nsWeakPtr mBoundDocument;
-  nsCOMPtr<nsIXMLContentSink> mSink;       // Only set until OnStartRequest
-  nsCOMPtr<Document> mBindingDocument;     // Only set until OnStartRequest
+  nsCOMPtr<nsIXMLContentSink> mSink;    // Only set until OnStartRequest
+  nsCOMPtr<Document> mBindingDocument;  // Only set until OnStartRequest
 };
 
 /* Implementation file */

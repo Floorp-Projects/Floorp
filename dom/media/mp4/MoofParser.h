@@ -227,7 +227,8 @@ struct SampleDescriptionEntry {
 class Moof final : public Atom {
  public:
   Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts,
-       Sinf& aSinf, uint64_t* aDecoderTime, bool aIsAudio);
+       Sinf& aSinf, uint64_t* aDecoderTime, bool aIsAudio,
+       bool aIsMultitrackParser);
   bool GetAuxInfo(AtomType aType, FallibleTArray<MediaByteRange>* aByteRanges);
   void FixRounding(const Moof& aMoof);
 
@@ -248,7 +249,8 @@ class Moof final : public Atom {
  private:
   // aDecodeTime is updated to the end of the parsed TRAF on return.
   void ParseTraf(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts,
-                 Sinf& aSinf, uint64_t* aDecodeTime, bool aIsAudio);
+                 Sinf& aSinf, uint64_t* aDecodeTime, bool aIsAudio,
+                 bool aIsMultitrackParser);
   // aDecodeTime is updated to the end of the parsed TRUN on return.
   Result<Ok, nsresult> ParseTrun(Box& aBox, Mvhd& aMvhd, Mdhd& aMdhd,
                                  Edts& aEdts, uint64_t* aDecodeTime,
@@ -267,14 +269,18 @@ DDLoggedTypeDeclName(MoofParser);
 
 class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
  public:
-  MoofParser(ByteStream* aSource, uint32_t aTrackId, bool aIsAudio)
+  MoofParser(ByteStream* aSource, uint32_t aTrackId, bool aIsAudio,
+             bool aIsMultitrackParser = false)
       : mSource(aSource),
         mOffset(0),
         mTrex(aTrackId),
         mIsAudio(aIsAudio),
-        mLastDecodeTime(0) {
-    // Setting the mTrex.mTrackId to 0 is a nasty work around for calculating
-    // the composition range for MSE. We need an array of tracks.
+        mLastDecodeTime(0),
+        mIsMultitrackParser(aIsMultitrackParser) {
+    // Setting mIsMultitrackParser is a nasty work around for calculating
+    // the composition range for MSE that causes the parser to parse multiple
+    // tracks. Ideally we'd store an array of tracks with different metadata
+    // for each.
     DDLINKCHILD("source", aSource);
   }
   bool RebuildFragmentedIndex(const mozilla::MediaByteRangeSet& aByteRanges);
@@ -326,6 +332,7 @@ class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
   nsTArray<MediaByteRange> mMediaRanges;
   bool mIsAudio;
   uint64_t mLastDecodeTime;
+  bool mIsMultitrackParser;
 };
 }  // namespace mozilla
 

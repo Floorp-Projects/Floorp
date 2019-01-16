@@ -181,8 +181,9 @@ Phase Statistics::lookupChildPhase(PhaseKind phaseKind) const {
   }
 
   if (phase == Phase::NONE) {
-      MOZ_CRASH_UNSAFE_PRINTF("Child phase kind %u not found under current phase kind %u",
-                              unsigned(phaseKind), unsigned(currentPhaseKind()));
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "Child phase kind %u not found under current phase kind %u",
+        unsigned(phaseKind), unsigned(currentPhaseKind()));
   }
 
   return phase;

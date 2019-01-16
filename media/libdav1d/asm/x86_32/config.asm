@@ -5,5 +5,7 @@
 
 %define ARCH_X86_64 0
 
-%define STACK_ALIGNMENT 32
+%define PIC 1
+
+%define STACK_ALIGNMENT 16
 
