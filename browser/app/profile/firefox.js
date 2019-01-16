@@ -459,9 +459,9 @@ pref("browser.tabs.loadBookmarksInBackground", false);
 pref("browser.tabs.loadBookmarksInTabs", false);
 pref("browser.tabs.tabClipWidth", 140);
 pref("browser.tabs.tabMinWidth", 76);
-// Initial titlebar state is managed by -moz-gtk-csd-hide-titlebar-by-default
-// on Linux.
-#ifndef UNIX_BUT_NOT_MAC
+#ifdef UNIX_BUT_NOT_MAC
+pref("browser.tabs.drawInTitlebar", false);
+#else
 pref("browser.tabs.drawInTitlebar", true);
 #endif
 
