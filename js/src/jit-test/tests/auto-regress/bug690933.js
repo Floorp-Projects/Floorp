@@ -1,4 +1,4 @@
-// |jit-test| slow;
+// |jit-test| slow; error:allocation size overflow
 
 // Binary: cache/js-dbg-32-1463dc6308a8-linux
 // Flags:
