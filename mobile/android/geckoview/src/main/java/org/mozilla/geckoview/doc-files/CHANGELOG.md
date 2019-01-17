@@ -26,6 +26,8 @@ description: GeckoView API Changelog.
 - Added `@UiThread` to `GeckoSession.releaseSession` and `GeckoSession.setSession`
 
 ## v65
+- Added experimental ad-blocking category to `GeckoSession.TrackingProtectionDelegate`.
+
 - Moved [`CompositorController`][65.1], [`DynamicToolbarAnimator`][65.2],
   [`OverscrollEdgeEffect`][65.3], [`PanZoomController`][65.4] from
   `org.mozilla.gecko.gfx` to [`org.mozilla.geckoview`][65.5]
@@ -113,4 +115,4 @@ description: GeckoView API Changelog.
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: e7a6a3ed65c75f7cb278b693adfa09cae5238ca2
+[api-version]: a38f6e16fd8ad8dc947d349b595c6c1e98fce83b
