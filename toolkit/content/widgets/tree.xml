@@ -18,9 +18,16 @@
     <content hidevscroll="true" hidehscroll="true" clickthrough="never">
       <children includes="treecols"/>
       <xul:stack class="tree-stack" flex="1">
-        <xul:treerows class="tree-rows" flex="1" xbl:inherits="hidevscroll">
-          <children/>
-        </xul:treerows>
+        <xul:hbox class="tree-rows" flex="1">
+          <xul:hbox flex="1" class="tree-bodybox">
+            <children/>
+          </xul:hbox>
+          <xul:scrollbar height="0" minwidth="0" minheight="0" orient="vertical" xbl:inherits="collapsed=hidevscroll" style="position:relative; z-index:2147483647;"
+            oncontextmenu="event.stopPropagation(); event.preventDefault();"
+            onclick="event.stopPropagation(); event.preventDefault();"
+            ondblclick="event.stopPropagation();"
+            oncommand="event.stopPropagation();"/>
+          </xul:hbox>
         <xul:textbox anonid="input" class="tree-input" left="0" top="0" hidden="true"/>
       </xul:stack>
       <xul:hbox xbl:inherits="collapsed=hidehscroll">
@@ -601,6 +608,32 @@
     </implementation>
 
     <handlers>
+      <handler event="underflow">
+        <![CDATA[
+          // Scrollport event orientation
+          // 0: vertical
+          // 1: horizontal
+          // 2: both (not used)
+          if (event.target.tagName != "treechildren")
+            return;
+          if (event.detail == 1)
+            this.setAttribute("hidehscroll", "true");
+          else if (event.detail == 0)
+            this.setAttribute("hidevscroll", "true");
+          event.stopPropagation();
+        ]]>
+      </handler>
+      <handler event="overflow">
+        <![CDATA[
+          if (event.target.tagName != "treechildren")
+            return;
+          if (event.detail == 1)
+            this.removeAttribute("hidehscroll");
+          else if (event.detail == 0)
+            this.removeAttribute("hidevscroll");
+          event.stopPropagation();
+        ]]>
+      </handler>
       <handler event="touchstart">
         <![CDATA[
           function isScrollbarElement(target) {
@@ -868,45 +901,6 @@
            event.preventDefault();
          }
          ]]>
-      </handler>
-    </handlers>
-  </binding>
-
-  <binding id="treerows" extends="chrome://global/content/bindings/general.xml#basecontrol">
-    <content>
-      <xul:hbox flex="1" class="tree-bodybox">
-        <children/>
-      </xul:hbox>
-      <xul:scrollbar height="0" minwidth="0" minheight="0" orient="vertical" xbl:inherits="collapsed=hidevscroll" style="position:relative; z-index:2147483647;"
-        oncontextmenu="event.stopPropagation(); event.preventDefault();"
-        onclick="event.stopPropagation(); event.preventDefault();"
-        ondblclick="event.stopPropagation();"
-        oncommand="event.stopPropagation();"/>
-    </content>
-    <handlers>
-      <handler event="underflow">
-        <![CDATA[
-          // Scrollport event orientation
-          // 0: vertical
-          // 1: horizontal
-          // 2: both (not used)
-          var tree = document.getBindingParent(this);
-          if (event.detail == 1)
-            tree.setAttribute("hidehscroll", "true");
-          else if (event.detail == 0)
-            tree.setAttribute("hidevscroll", "true");
-          event.stopPropagation();
-        ]]>
-      </handler>
-      <handler event="overflow">
-        <![CDATA[
-          var tree = document.getBindingParent(this);
-          if (event.detail == 1)
-            tree.removeAttribute("hidehscroll");
-          else if (event.detail == 0)
-            tree.removeAttribute("hidevscroll");
-          event.stopPropagation();
-        ]]>
       </handler>
     </handlers>
   </binding>
