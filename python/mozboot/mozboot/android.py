@@ -47,7 +47,7 @@ Paste the lines between the chevrons (>>> and <<<) into your
 $topsrcdir/mozconfig file, or create the file if it does not exist:
 
 >>>
-# Build Firefox for Android:
+# Build GeckoView/Firefox for Android:
 ac_add_options --enable-application=mobile/android
 ac_add_options --target=arm-linux-androideabi
 
@@ -63,7 +63,7 @@ Paste the lines between the chevrons (>>> and <<<) into your
 $topsrcdir/mozconfig file, or create the file if it does not exist:
 
 >>>
-# Build Firefox for Android Artifact Mode:
+# Build GeckoView/Firefox for Android Artifact Mode:
 ac_add_options --enable-application=mobile/android
 ac_add_options --target=arm-linux-androideabi
 ac_add_options --enable-artifact-builds
