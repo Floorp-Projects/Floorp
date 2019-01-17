@@ -116,12 +116,13 @@
               referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
               triggeringPrincipal,
               postData,
+              headers,
             } = aParams || {};
 
             this._wrapURIChangeCall(() =>
               this.webNavigation.loadURIWithOptions(
                   aURI, flags, referrerURI, referrerPolicy,
-                  postData, null, null, triggeringPrincipal));
+                  postData, headers, null, triggeringPrincipal));
           ]]>
         </body>
       </method>
