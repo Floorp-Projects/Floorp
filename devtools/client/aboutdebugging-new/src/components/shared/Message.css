@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.message--level-error {
+  --message-color: var(--white-100);
+  --message-background-color: var(--error-60);
+}
+
+.message--level-warning {
+  --message-color: var(--warning-90);
+  --message-background-color: var(--warning-50);
+}
+
+
+/*
+ * Layout of the message
+ *
+ *  +--------+-----------------+
+ *  | Icon   | Message content |
+ *  |        | (several lines) |
+ *  |        | (     ...     ) |
+ *  +--------+-----------------+
+ */
+.message {
+  background-color: var(--message-background-color);
+  border-radius: var(--base-distance);
+  color: var(--message-color);
+  display: grid;
+  fill: var(--message-color);
+  grid-column-gap: var(--base-distance);
+  grid-template-columns: calc(var(--base-distance) * 6) 1fr;
+  margin: calc(var(--base-distance) * 2) 0;
+  padding: var(--base-distance);
+
+  -moz-context-properties: fill;
+}
+
+.message__icon {
+  margin: var(--base-distance);
+}

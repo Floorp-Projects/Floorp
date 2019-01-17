@@ -294,7 +294,11 @@ const QuotaCleaner = {
     // localStorage: The legacy LocalStorage implementation that will
     // eventually be removed depends on this observer notification to clear by
     // principal.
-    Services.obs.notifyObservers(null, "browser:purge-domain-data",
+    Services.obs.notifyObservers(null, "extension:purge-localStorage",
+                                 aPrincipal.URI.host);
+
+    // Clear sessionStorage
+    Services.obs.notifyObservers(null, "browser:purge-sessionStorage",
                                  aPrincipal.URI.host);
 
     // ServiceWorkers: they must be removed before cleaning QuotaManager.
@@ -320,7 +324,10 @@ const QuotaCleaner = {
     // localStorage: The legacy LocalStorage implementation that will
     // eventually be removed depends on this observer notification to clear by
     // host.  Some other subsystems like Reporting headers depend on this too.
-    Services.obs.notifyObservers(null, "browser:purge-domain-data", aHost);
+    Services.obs.notifyObservers(null, "extension:purge-localStorage", aHost);
+
+    // Clear sessionStorage
+    Services.obs.notifyObservers(null, "browser:purge-sessionStorage", aHost);
 
     let exceptionThrown = false;
 
@@ -423,6 +430,9 @@ const QuotaCleaner = {
   deleteAll() {
     // localStorage
     Services.obs.notifyObservers(null, "extension:purge-localStorage");
+
+    // sessionStorage
+    Services.obs.notifyObservers(null, "browser:purge-sessionStorage");
 
     // ServiceWorkers
     return ServiceWorkerCleanUp.removeAll()
@@ -530,6 +540,14 @@ const HistoryCleaner = {
 };
 
 const SessionHistoryCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise(aResolve => {
+      Services.obs.notifyObservers(null, "browser:purge-sessionStorage", aHost);
+      Services.obs.notifyObservers(null, "browser:purge-session-history-for-domain", aHost);
+      aResolve();
+    });
+  },
+
   deleteByRange(aFrom, aTo) {
     return new Promise(aResolve => {
       Services.obs.notifyObservers(null, "browser:purge-session-history", String(aFrom));
@@ -627,9 +645,6 @@ const PreferencesCleaner = {
                    .getService(Ci.nsIContentPrefService2);
       cps2.removeBySubdomain(aHost, null, {
         handleCompletion: aReason => {
-          // Notify other consumers, including extensions
-          Services.obs.notifyObservers(null, "browser:purge-domain-data",
-                                       aHost);
           if (aReason === cps2.COMPLETE_ERROR) {
             aReject();
           } else {

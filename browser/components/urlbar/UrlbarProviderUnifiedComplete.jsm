@@ -90,6 +90,8 @@ class ProviderUnifiedComplete extends UrlbarProvider {
     //  * "disable-private-actions": set for private windows, if not in permanent
     //    private browsing mode. ()
     //  * "private-window": the search is taking place in a private window.
+    //  * "prohibit-autofill": disable autofill, i.e., the first (heuristic)
+    //    result should never be an autofill result.
     //  * "user-context-id:#": the userContextId to use.
     let params = ["enable-actions"];
     params.push(`max-results:${queryContext.maxResults}`);
@@ -107,6 +109,9 @@ class ProviderUnifiedComplete extends UrlbarProvider {
     }
     if (queryContext.userContextId) {
       params.push(`user-context-id:${queryContext.userContextId}}`);
+    }
+    if (!queryContext.enableAutofill) {
+      params.push("prohibit-autofill");
     }
 
     let urls = new Set();
@@ -179,7 +184,7 @@ function convertResultToMatches(context, result, urls) {
       continue;
     }
     urls.add(url);
-    // Not used yet: result.getValueAt(i), result.getLabelAt(i)
+    // Not used yet: result.getLabelAt(i)
     let style = result.getStyleAt(i);
     let match = makeUrlbarMatch(context.tokens, {
       url,
@@ -193,12 +198,10 @@ function convertResultToMatches(context, result, urls) {
       continue;
     }
     matches.push(match);
-    // Manage autofill and preselected properties for the first match.
+    // Manage autofillValue and preselected properties for the first match.
     if (i == 0) {
-      if (style.includes("autofill") &&
-          result.defaultIndex == 0 &&
-          context.enableAutofill) {
-        context.autofill = true;
+      if (style.includes("autofill") && result.defaultIndex == 0) {
+        context.autofillValue = result.getValueAt(i);
       }
       if (style.includes("heuristic")) {
         context.preselected = true;

@@ -865,7 +865,7 @@ async function getDisplayedNodeTextContent(selector, inspector) {
  *        If true, the shapes highlighter is being shown. If false, it is being hidden
  * @param {Options} options
  *        Config option for the shapes highlighter. Contains:
- *        - {Boolean} transformMode: wether to show the highlighter in transforms mode
+ *        - {Boolean} transformMode: whether to show the highlighter in transforms mode
  */
 async function toggleShapesHighlighter(view, selector, property, show, options = {}) {
   info(`Toggle shapes highlighter ${show ? "on" : "off"} for ${property} on ${selector}`);

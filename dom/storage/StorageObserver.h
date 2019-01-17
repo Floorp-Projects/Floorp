@@ -53,7 +53,7 @@ class StorageObserver : public nsIObserver, public nsSupportsWeakReference {
  private:
   virtual ~StorageObserver() {}
 
-  nsresult ClearMatchingOrigin(const char16_t* aData, nsACString& aOriginScope);
+  nsresult GetOriginScope(const char16_t* aData, nsACString& aOriginScope);
 
   static void TestingPrefChanged(const char* aPrefName, void* aClosure);
 

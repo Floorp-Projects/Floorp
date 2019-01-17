@@ -140,7 +140,7 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
             path = config_log.baseFilename
         else:
             path = '/dev/null'
-        script = script.replace('>./config.log', '>>%s' % path)
+        script = script.replace('>./config.log', '>>%s' % quote(normsep(path)))
 
         with open(old_configure, 'wb') as fh:
             fh.write(script)

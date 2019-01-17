@@ -890,7 +890,14 @@ class nsWindow::LayerViewSupport final
     }
 
     MOZ_ASSERT(aNPZC);
-    MOZ_ASSERT(!mWindow->mNPZCSupport);
+
+    // We can have this situation if we get two GeckoViewSupport::Transfer()
+    // called before the first AttachNPZC() gets here. Just detach the current
+    // instance since that's what happens in GeckoViewSupport::Transfer() as
+    // well.
+    if (mWindow->mNPZCSupport) {
+      mWindow->mNPZCSupport.Detach(mWindow->mNPZCSupport->GetJavaNPZC());
+    }
 
     auto npzc = PanZoomController::LocalRef(
         jni::GetGeckoThreadEnv(), PanZoomController::Ref::From(aNPZC));

@@ -66,6 +66,12 @@ const _dragging = Symbol("shapes/dragging");
  *
  * A refresher for coordinates and change of basis that may be helpful:
  * https://www.math.ubc.ca/~behrend/math221/Coords.pdf
+ *
+ * @param {String} options.hoverPoint
+ *        The point to highlight.
+ * @param {Boolean} options.transformMode
+ *        Whether to show the highlighter in transforms mode.
+ * @param {} options.mode
  */
 class ShapesHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {

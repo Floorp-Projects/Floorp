@@ -405,6 +405,8 @@ static MIRType ParseCacheIRStub(ICStub* stub) {
     case CacheOp::DoubleDivResult:
     case CacheOp::DoubleModResult:
     case CacheOp::DoubleNegationResult:
+    case CacheOp::DoubleIncResult:
+    case CacheOp::DoubleDecResult:
       return MIRType::Double;
     case CacheOp::Int32AddResult:
     case CacheOp::Int32SubResult:
@@ -418,6 +420,8 @@ static MIRType ParseCacheIRStub(ICStub* stub) {
     case CacheOp::Int32RightShiftResult:
     case CacheOp::Int32NotResult:
     case CacheOp::Int32NegationResult:
+    case CacheOp::Int32IncResult:
+    case CacheOp::Int32DecResult:
       return MIRType::Int32;
     // Int32URightShiftResult may return a double under some
     // circumstances.

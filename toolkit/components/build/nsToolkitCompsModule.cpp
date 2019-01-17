@@ -37,8 +37,6 @@
 #include "mozilla/AddonManagerStartup.h"
 #include "mozilla/ExtensionPolicyService.h"
 
-#include "nsSessionStoreUtils.h"
-
 #if defined(XP_WIN)
 #include "NativeFileWatcherWin.h"
 #else
@@ -121,8 +119,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AddonManagerStartup,
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ExtensionPolicyService,
                                          ExtensionPolicyService::GetInstance)
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSessionStoreUtils)
-
 #if defined(ENABLE_TESTS)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TelemetryGeckoViewTestingImpl)
 #endif
@@ -155,7 +151,6 @@ NS_DEFINE_NAMED_CID(NATIVE_OSFILE_INTERNALS_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_ADDONCONTENTPOLICY_CID);
 NS_DEFINE_NAMED_CID(NS_ADDON_MANAGER_STARTUP_CID);
 NS_DEFINE_NAMED_CID(NS_ADDON_POLICY_SERVICE_CID);
-NS_DEFINE_NAMED_CID(NS_SESSIONSTOREUTILS_CID);
 NS_DEFINE_NAMED_CID(NATIVE_FILEWATCHER_SERVICE_CID);
 #if defined(ENABLE_TESTS)
 NS_DEFINE_NAMED_CID(NS_TELEMETRYGECKOVIEWTESTING_CID);
@@ -203,8 +198,6 @@ static const Module::CIDEntry kToolkitCIDs[] = {
      AddonManagerStartupConstructor},
     {&kNS_ADDON_POLICY_SERVICE_CID, false, nullptr,
      ExtensionPolicyServiceConstructor},
-    {&kNS_SESSIONSTOREUTILS_CID, false, nullptr,
-     nsSessionStoreUtilsConstructor},
     {&kNATIVE_FILEWATCHER_SERVICE_CID, false, nullptr,
      NativeFileWatcherServiceConstructor},
 #if defined(ENABLE_TESTS)
@@ -246,7 +239,6 @@ static const Module::ContractIDEntry kToolkitContracts[] = {
     {NS_ADDONCONTENTPOLICY_CONTRACTID, &kNS_ADDONCONTENTPOLICY_CID},
     {NS_ADDONMANAGERSTARTUP_CONTRACTID, &kNS_ADDON_MANAGER_STARTUP_CID},
     {NS_ADDON_POLICY_SERVICE_CONTRACTID, &kNS_ADDON_POLICY_SERVICE_CID},
-    {NS_SESSIONSTOREUTILS_CONTRACTID, &kNS_SESSIONSTOREUTILS_CID},
     {NATIVE_FILEWATCHER_SERVICE_CONTRACTID, &kNATIVE_FILEWATCHER_SERVICE_CID},
 #if defined(ENABLE_TESTS)
     {NS_TELEMETRYGECKOVIEWTESTING_CONTRACTID,

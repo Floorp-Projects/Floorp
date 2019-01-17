@@ -15,11 +15,15 @@ const {
   moveInfobar,
 } = require("./utils/markup");
 const {
-  setIgnoreLayoutChanges,
+  findFlexOrGridParentContainerForNode,
   getCurrentZoom,
+  setIgnoreLayoutChanges,
  } = require("devtools/shared/layout/utils");
 const { getNodeDisplayName } = require("devtools/server/actors/inspector/utils");
 const nodeConstants = require("devtools/shared/dom-node-constants");
+
+loader.lazyRequireGetter(this, "FlexboxHighlighter",
+  "devtools/server/actors/highlighters/flexbox", true);
 
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.
@@ -43,23 +47,21 @@ const PSEUDO_CLASSES = [":hover", ":active", ":focus", ":focus-within"];
  * h.hide();
  * h.destroy();
  *
- * Available options:
- * - region {String}
- *   "content", "padding", "border" or "margin"
- *   This specifies the region that the guides should outline.
- *   Defaults to "content"
- * - hideGuides {Boolean}
- *   Defaults to false
- * - hideInfoBar {Boolean}
- *   Defaults to false
- * - showOnly {String}
- *   "content", "padding", "border" or "margin"
- *   If set, only this region will be highlighted. Use with onlyRegionArea to
- *   only highlight the area of the region.
- * - onlyRegionArea {Boolean}
- *   This can be set to true to make each region's box only highlight the area
- *   of the corresponding region rather than the area of nested regions too.
- *   This is useful when used with showOnly.
+ * @param {String} options.region
+ *        Specifies the region that the guides should outline:
+ *          "content" (default), "padding", "border" or "margin".
+ * @param {Boolean} options.hideGuides
+ *        Defaults to false
+ * @param {Boolean} options.hideInfoBar
+ *        Defaults to false
+ * @param {String} options.showOnly
+ *        If set, only this region will be highlighted. Use with onlyRegionArea
+ *        to only highlight the area of the region:
+ *        "content", "padding", "border" or "margin"
+ * @param {Boolean} options.onlyRegionArea
+ *        This can be set to true to make each region's box only highlight the
+ *        area of the corresponding region rather than the area of nested
+ *        regions too. This is useful when used with showOnly.
  *
  * Structure:
  * <div class="highlighter-container">
@@ -274,7 +276,21 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     }
 
     this.markup.destroy();
+
+    if (this._flexboxHighlighter) {
+      this._flexboxHighlighter.destroy();
+      this._flexboxHighlighter = null;
+    }
+
     AutoRefreshHighlighter.prototype.destroy.call(this);
+  }
+
+  get flexboxHighlighter() {
+    if (!this._flexboxHighlighter) {
+      this._flexboxHighlighter = new FlexboxHighlighter(this.highlighterEnv);
+    }
+
+    return this._flexboxHighlighter;
   }
 
   getElement(id) {
@@ -330,15 +346,20 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
    * Should be called whenever node size or attributes change
    */
   _update() {
+    const node = this.currentNode;
     let shown = false;
     setIgnoreLayoutChanges(true);
+
+    // We need to set this option before calling _updateBoxModel().
+    this.options.isFlexboxContainer =
+      !!(node && node.getAsFlexContainer && node.getAsFlexContainer());
 
     if (this._updateBoxModel()) {
       // Show the infobar only if configured to do so and the node is an element or a text
       // node.
       if (!this.options.hideInfoBar && (
-          this.currentNode.nodeType === this.currentNode.ELEMENT_NODE ||
-          this.currentNode.nodeType === this.currentNode.TEXT_NODE)) {
+          node.nodeType === node.ELEMENT_NODE ||
+          node.nodeType === node.TEXT_NODE)) {
         this._showInfobar();
       } else {
         this._hideInfobar();
@@ -350,9 +371,87 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       this._hide();
     }
 
+    this._updateFlexboxHighlighter();
+
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
 
     return shown;
+  }
+
+  /**
+   * Update the flexbox highlighter on the current highlighted node. Show it
+   * if the current node is a flexbox container or flexbox item.
+   */
+  _updateFlexboxHighlighter() {
+    this._hideFlexboxHighlighter();
+
+    if (!this.currentNode) {
+      return;
+    }
+
+    const options = {};
+    let node = this.currentNode;
+    let showFlexboxHighlighter = false;
+
+    // If the current node is a flexbox container then remove the box model
+    // content region and make the other regions a little more transparent so
+    // that the flexbox highlighting is emphasized.
+    if (this.options.isFlexboxContainer) {
+      for (const region of BOX_MODEL_REGIONS) {
+        const box = this.getElement(region);
+
+        if (region === "content") {
+          // Hide the content region.
+          box.removeAttribute("d");
+        } else {
+          // Make the non-content regions a little more transparent.
+          box.setAttribute("half-faded", "");
+        }
+      }
+
+      // Stop the flexbox highlighter from showing an outline (the guides do a
+      // great job of that themselves).
+      options.noContainerOutline = true;
+
+      // Toggle the flag to show the flexbox highlighter.
+      showFlexboxHighlighter = true;
+    } else {
+      // The highlighted element is not a flexbox container so we need to check
+      // if it is a flex item.
+      const container = findFlexOrGridParentContainerForNode(node, "flex");
+
+      if (container) {
+        for (const region of BOX_MODEL_REGIONS) {
+          const box = this.getElement(region);
+
+          // Ensure that the box model regions are not faded. The content region
+          // will reappear because it is regenerated by the highlighter.
+          box.setAttribute("half-faded", "");
+        }
+
+        // Hide the guides because we are only interested in the flex item's
+        // box model regions in relation to the flexbox overlay (and to make
+        // things less ugly).
+        this._hideGuides();
+
+        node = container;
+
+        // Toggle the flag to show the flexbox highlighter.
+        showFlexboxHighlighter = true;
+      }
+    }
+
+    if (showFlexboxHighlighter) {
+      // If the flag is set then show the flexbox highlighter.
+      this.flexboxHighlighter.show(node, options);
+    } else {
+      // Otherwise ensure that the box model regions are not faded.
+      for (const region of BOX_MODEL_REGIONS) {
+        const box = this.getElement(region);
+
+        box.removeAttribute("half-faded");
+      }
+    }
   }
 
   _scrollUpdate() {
@@ -368,8 +467,18 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     this._untrackMutations();
     this._hideBoxModel();
     this._hideInfobar();
+    this._hideFlexboxHighlighter();
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
+  }
+
+  /**
+   * Hide the Flexbox highlighter.
+   */
+  _hideFlexboxHighlighter() {
+    if (this._flexboxHighlighter) {
+      this.flexboxHighlighter.hide();
+    }
   }
 
   /**
@@ -523,9 +632,11 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
   _getBoxPathCoordinates(boxQuad, nextBoxQuad) {
     const {p1, p2, p3, p4} = boxQuad;
+    const isFlexboxContainer = this.options.isFlexboxContainer;
 
     let path;
-    if (!nextBoxQuad || !this.options.onlyRegionArea) {
+    if ((isFlexboxContainer && !nextBoxQuad) ||
+        (!isFlexboxContainer && (!nextBoxQuad || !this.options.onlyRegionArea))) {
       // If this is the content box (inner-most box) or if we're not being asked
       // to highlight only region areas, then draw a simple rectangle.
       path = "M" + p1.x + "," + p1.y + " " +

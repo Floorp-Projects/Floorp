@@ -801,6 +801,7 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
         referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
         triggeringPrincipal,
         postData,
+        headers,
     } = aParams || {};
     let loadURIOptions = {
       triggeringPrincipal,
@@ -808,6 +809,7 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
       loadFlags: flags,
       referrerPolicy,
       postData,
+      headers,
     };
     this._wrapURIChangeCall(() =>
       this.webNavigation.loadURI(aURI, loadURIOptions));

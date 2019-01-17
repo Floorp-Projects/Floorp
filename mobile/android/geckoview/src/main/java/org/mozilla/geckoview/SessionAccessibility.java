@@ -66,6 +66,7 @@ public class SessionAccessibility {
     @WrapForJNI static final int FLAG_VISIBLE_TO_USER = 1 << 15;
     @WrapForJNI static final int FLAG_SELECTABLE = 1 << 16;
 
+    static final int CLASSNAME_UNKNOWN = -1;
     @WrapForJNI static final int CLASSNAME_VIEW = 0;
     @WrapForJNI static final int CLASSNAME_BUTTON = 1;
     @WrapForJNI static final int CLASSNAME_CHECKBOX = 2;
@@ -103,7 +104,7 @@ public class SessionAccessibility {
     };
 
     static private String getClassName(final int index) {
-        if (index < CLASSNAMES.length) {
+        if (index >= 0 && index < CLASSNAMES.length) {
             return CLASSNAMES[index];
         }
 
@@ -140,29 +141,26 @@ public class SessionAccessibility {
 
             switch (action) {
             case AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS:
-                sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED, virtualViewId, CLASSNAME_VIEW, null);
+                sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED, virtualViewId, CLASSNAME_UNKNOWN, null);
                 return true;
             case AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS:
                     if (virtualViewId == View.NO_ID) {
                         sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, View.NO_ID, CLASSNAME_WEBVIEW, null);
                     } else {
-                        final GeckoBundle nodeInfo = nativeProvider.getNodeInfo(virtualViewId);
-                        final int flags = nodeInfo != null ? nodeInfo.getInt("flags") : 0;
-                        if ((flags & FLAG_FOCUSED) != 0) {
+                        if (mFocusedNode == virtualViewId) {
                             mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityCursorToFocused", null);
                         } else {
-                            final int className = nodeInfo != null ? nodeInfo.getInt("className") : CLASSNAME_VIEW;
-                            sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, virtualViewId, className, null);
+                            sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, virtualViewId, CLASSNAME_UNKNOWN, null);
                         }
                     }
                 return true;
             case AccessibilityNodeInfo.ACTION_CLICK:
                 nativeProvider.click(virtualViewId);
-                GeckoBundle nodeInfo = nativeProvider.getNodeInfo(virtualViewId);
-                final int flags = nodeInfo != null ? nodeInfo.getInt("flags") : 0;
-                if ((flags & (FLAG_SELECTABLE | FLAG_CHECKABLE)) == 0) {
-                    final int className = nodeInfo != null ? nodeInfo.getInt("className") : CLASSNAME_VIEW;
-                    sendEvent(AccessibilityEvent.TYPE_VIEW_CLICKED, virtualViewId, className, null);
+                GeckoBundle nodeInfo = getMostRecentBundle(virtualViewId);
+                if (nodeInfo != null) {
+                    if ((nodeInfo.getInt("flags") & (FLAG_SELECTABLE | FLAG_CHECKABLE)) == 0) {
+                        sendEvent(AccessibilityEvent.TYPE_VIEW_CLICKED, virtualViewId, nodeInfo.getInt("className"), null);
+                    }
                 }
                 return true;
             case AccessibilityNodeInfo.ACTION_LONG_CLICK:
@@ -666,20 +664,21 @@ public class SessionAccessibility {
             return;
         }
 
-        GeckoBundle cachedBundle = null;
-        if (!mSession.getSettings().getFullAccessibilityTree()) {
-            cachedBundle = getMostRecentBundle(sourceId);
-            // Suppress events from non cached nodes if cache is enabled.
-            if (cachedBundle == null && sourceId != View.NO_ID) {
-                return;
-            }
+        GeckoBundle cachedBundle = getMostRecentBundle(sourceId);
+        if (cachedBundle == null && sourceId != View.NO_ID) {
+            // Suppress events from non cached nodes.
+            return;
         }
 
         final AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
         event.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
         event.setSource(mView, sourceId);
-        event.setClassName(getClassName(className));
         event.setEnabled(true);
+        if (className == CLASSNAME_UNKNOWN && cachedBundle != null) {
+            event.setClassName(getClassName(cachedBundle.getInt("className")));
+        } else {
+            event.setClassName(getClassName(className));
+        }
 
         if (eventData != null) {
             if (eventData.containsKey("text")) {

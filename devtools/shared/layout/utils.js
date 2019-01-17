@@ -906,3 +906,84 @@ function getUntransformedQuad(node, region = "border") {
   return quad;
 }
 exports.getUntransformedQuad = getUntransformedQuad;
+
+/**
+ * If the provided node is a grid of flex item, then return its parent grid or flex
+ * container.
+ *
+ * @param  {DOMNode} node
+ *         The node that is supposedly a grid or flex item.
+ * @param  {String} type
+ *         The type of container/item to look for: "flex" or "grid".
+ * @return {DOMNode|null}
+ *         The parent grid or flex container if found, null otherwise.
+ */
+function findFlexOrGridParentContainerForNode(node, type) {
+  const doc = node.ownerDocument;
+  const win = doc.defaultView;
+  const treeWalker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT);
+  const flexType = type === "flex";
+  const gridType = type === "grid";
+  let currentNode = null;
+
+  treeWalker.currentNode = node;
+
+  try {
+    while ((currentNode = treeWalker.parentNode())) {
+      const displayType = win.getComputedStyle(currentNode).display;
+      if (!displayType) {
+        break;
+      }
+
+      if (flexType && displayType.includes("flex")) {
+        if (isNodeAFlexItemInContainer(node, currentNode)) {
+          return currentNode;
+        }
+      } else if (gridType && displayType.includes("grid")) {
+        return currentNode;
+      } else if (displayType === "contents") {
+        // Continue walking up the tree since the parent node is a content element.
+        continue;
+      }
+
+      break;
+    }
+  } catch (e) {
+    // Getting the parentNode can fail when the supplied node is in shadow DOM.
+  }
+
+  return null;
+}
+exports.findFlexOrGridParentContainerForNode = findFlexOrGridParentContainerForNode;
+
+/**
+ * Returns whether or not the given node is actually considered a flex item by its
+ * container.
+ *
+ * @param  {DOMNode} supposedItem
+ *         The node that might be a flex item of its container.
+ * @param  {DOMNode} container
+ *         The node's container.
+ * @return {Boolean}
+ *         Whether or not the node we are looking at is a flex item of its container.
+ */
+function isNodeAFlexItemInContainer(supposedItem, container) {
+  const doc = container.ownerDocument;
+  const win = doc.defaultView;
+  const containerDisplayType = win.getComputedStyle(container).display;
+
+  if (containerDisplayType.includes("flex")) {
+    const containerFlex = container.getAsFlexContainer();
+
+    for (const line of containerFlex.getLines()) {
+      for (const item of line.getItems()) {
+        if (item.node === supposedItem) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+exports.isNodeAFlexItemInContainer = isNodeAFlexItemInContainer;

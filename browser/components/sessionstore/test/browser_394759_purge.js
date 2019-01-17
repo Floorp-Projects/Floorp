@@ -8,11 +8,11 @@ function promiseClearHistory() {
   return new Promise(resolve => {
     let observer = {
       observe(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(this, "browser:purge-domain-data");
+        Services.obs.removeObserver(this, "browser:purge-session-history-for-domain");
         resolve();
       },
     };
-    Services.obs.addObserver(observer, "browser:purge-domain-data");
+    Services.obs.addObserver(observer, "browser:purge-session-history-for-domain");
   });
 }
 

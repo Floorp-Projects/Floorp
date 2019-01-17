@@ -20,9 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetter(this, "Log", "resource://gre/modules/AndroidLog.jsm", "AndroidLog");
 
-const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
-              .getService(Ci.nsISessionStoreUtils);
-
 function dump(a) {
   Services.console.logStringMessage(a);
 }
@@ -897,7 +894,7 @@ SessionStore.prototype = {
 
     // Store the form data.
     let content = aBrowser.contentWindow;
-    let [formdata] = Utils.mapFrameTree(content, FormData.collect);
+    let [formdata] = Utils.mapFrameTree(content, SessionStoreUtils.collectFormData);
     formdata = PrivacyFilter.filterFormData(formdata || {});
 
     // If we found any form data, main content or frames, let's save it
@@ -936,7 +933,8 @@ SessionStore.prototype = {
 
     // Save the scroll position itself.
     let content = aBrowser.contentWindow;
-    let [scrolldata] = Utils.mapFrameTree(content, ssu.collectScrollPosition.bind(ssu));
+    let [scrolldata] =
+        Utils.mapFrameTree(content, SessionStoreUtils.collectScrollPosition);
     scrolldata = scrolldata || {};
 
     // Save the current document resolution.
@@ -1427,7 +1425,7 @@ SessionStore.prototype = {
       log("_restoreScrollPosition()");
       Utils.restoreFrameTreeData(aBrowser.contentWindow, aScrollData, (frame, data) => {
         if (data.scroll) {
-          ssu.restoreScrollPosition(frame, data.scroll);
+          SessionStoreUtils.restoreScrollPosition(frame, data);
         }
       });
     }

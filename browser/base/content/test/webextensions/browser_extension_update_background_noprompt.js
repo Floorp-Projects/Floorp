@@ -70,7 +70,7 @@ async function testNoPrompt(origUrl, id) {
   addon = await AddonManager.getAddonByID(id);
   is(addon.version, "2.0", "Update should have applied");
 
-  addon.uninstall();
+  await addon.uninstall();
   await SpecialPowers.popPrefEnv();
 }
 
