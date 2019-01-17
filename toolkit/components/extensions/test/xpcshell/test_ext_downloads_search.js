@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
+
 ChromeUtils.import("resource://gre/modules/Downloads.jsm");
 
 const server = createHttpServer();
@@ -422,5 +424,51 @@ add_task(async function test_search() {
   await checkBadSearch({orderBy: "startTime"}, /Expected array/, "query.orderBy is not an array");
   await checkBadSearch({orderBy: ["bogus"]}, /Invalid orderBy field/, "query.orderBy references a non-existent field");
 
+  await extension.unload();
+});
+
+// Test that downloads with totalBytes of -1 (ie, that have not yet started)
+// work properly.  See bug 1519762 for details of a past regression in
+// this area.
+add_task(async function test_inprogress() {
+  let resume, resumePromise = new Promise(resolve => { resume = resolve; });
+  server.registerPathHandler("/slow", async (request, response) => {
+    response.processAsync();
+    await resumePromise;
+    response.setHeader("Content-type", "text/plain");
+    response.write("");
+    response.finish();
+  });
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["downloads"],
+    },
+    background() {
+      browser.test.onMessage.addListener(async (msg, url) => {
+        let id = await browser.downloads.download({url});
+        let full = await browser.downloads.search({id});
+
+        browser.test.assertEq(full.length, 1,
+                              "Found new download in search results");
+        browser.test.assertEq(full[0].totalBytes, -1,
+                              "New download still has totalBytes == -1");
+
+        browser.downloads.onChanged.addListener(info => {
+          if (info.id == id && info.state.current == "complete") {
+            browser.test.notifyPass("done");
+          }
+        });
+
+        browser.test.sendMessage("started");
+      });
+    },
+  });
+
+  await extension.startup();
+  extension.sendMessage("go", `${BASE}/slow`);
+  await extension.awaitMessage("started");
+  resume();
+  await extension.awaitFinish("done");
   await extension.unload();
 });

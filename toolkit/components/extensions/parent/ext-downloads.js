@@ -266,8 +266,8 @@ const downloadQuery = query => {
   // const endedBefore = normalizeDownloadTime(query.endedBefore, true);
   // const endedAfter = normalizeDownloadTime(query.endedAfter, false);
 
-  const totalBytesGreater = query.totalBytesGreater;
-  const totalBytesLess = query.totalBytesLess != null ? query.totalBytesLess : Number.MAX_VALUE;
+  const totalBytesGreater = query.totalBytesGreater !== null ? query.totalBytesGreater : -1;
+  const totalBytesLess = query.totalBytesLess !== null ? query.totalBytesLess : Number.MAX_VALUE;
 
   // Handle options for which we can have a regular expression and/or
   // an explicit value to match.
@@ -323,7 +323,7 @@ const downloadQuery = query => {
     // todo endedBefore, endedAfter
 
     if (item.totalBytes == -1) {
-      if (query.totalBytesGreater != null || query.totalBytesLess != null) {
+      if (query.totalBytesGreater !== null || query.totalBytesLess !== null) {
         return false;
       }
     } else if (item.totalBytes <= totalBytesGreater || item.totalBytes >= totalBytesLess) {
