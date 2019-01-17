@@ -1095,6 +1095,15 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
       }
     }
 
+    const nsStyleDisplay* oldDisp = aOldComputedStyle->PeekStyleDisplay();
+    if (oldDisp &&
+        (oldDisp->mOverflowAnchor != StyleDisplay()->mOverflowAnchor)) {
+      ScrollAnchorContainer::FindFor(this)->InvalidateAnchor();
+      if (nsIScrollableFrame* scrollableFrame = do_QueryFrame(this)) {
+        scrollableFrame->GetAnchor()->InvalidateAnchor();
+      }
+    }
+
     if (mInScrollAnchorChain) {
       const nsStylePosition* oldPosition =
           aOldComputedStyle->PeekStylePosition();
@@ -1109,7 +1118,6 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
         needAnchorSuppression = true;
       }
 
-      const nsStyleDisplay* oldDisp = aOldComputedStyle->PeekStyleDisplay();
       if (oldDisp && (oldDisp->mPosition != StyleDisplay()->mPosition ||
                       oldDisp->TransformChanged(*StyleDisplay()))) {
         needAnchorSuppression = true;

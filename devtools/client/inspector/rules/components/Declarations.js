@@ -16,11 +16,15 @@ class Declarations extends PureComponent {
   static get propTypes() {
     return {
       declarations: PropTypes.arrayOf(PropTypes.shape(Types.declaration)).isRequired,
+      onToggleDeclaration: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { declarations } = this.props;
+    const {
+      declarations,
+      onToggleDeclaration,
+    } = this.props;
 
     if (!declarations.length) {
       return null;
@@ -32,6 +36,7 @@ class Declarations extends PureComponent {
           return Declaration({
             key: declaration.id,
             declaration,
+            onToggleDeclaration,
           });
         })
       )

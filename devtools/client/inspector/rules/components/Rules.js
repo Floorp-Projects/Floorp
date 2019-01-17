@@ -14,14 +14,21 @@ const Types = require("../types");
 class Rules extends PureComponent {
   static get propTypes() {
     return {
+      onToggleDeclaration: PropTypes.func.isRequired,
       rules: PropTypes.arrayOf(PropTypes.shape(Types.rule)).isRequired,
     };
   }
 
   render() {
-    return this.props.rules.map(rule => {
+    const {
+      onToggleDeclaration,
+      rules,
+    } = this.props;
+
+    return rules.map(rule => {
       return Rule({
         key: rule.id,
+        onToggleDeclaration,
         rule,
       });
     });
