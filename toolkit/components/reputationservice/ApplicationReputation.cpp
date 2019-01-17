@@ -1525,8 +1525,14 @@ nsresult PendingLookup::SendRemoteQueryInternal(Reason& aReason) {
   if (!mRequest.SerializeToString(&serialized)) {
     return NS_ERROR_UNEXPECTED;
   }
-  LOG(("Serialized protocol buffer [this = %p]: (length=%zu) %s", this,
-       serialized.length(), serialized.c_str()));
+
+  if (LOG_ENABLED()) {
+    nsAutoCString serializedStr(serialized.c_str(), serialized.length());
+    serializedStr.ReplaceSubstring(NS_LITERAL_CSTRING("\0"), NS_LITERAL_CSTRING("\\0"));
+
+    LOG(("Serialized protocol buffer [this = %p]: (length=%d) %s", this,
+         serializedStr.Length(), serializedStr.get()));
+  }
 
   // Set the input stream to the serialized protocol buffer
   nsCOMPtr<nsIStringInputStream> sstream =
