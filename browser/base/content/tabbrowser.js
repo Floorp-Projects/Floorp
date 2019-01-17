@@ -349,6 +349,10 @@ window._gBrowser = {
 
     this._appendStatusPanel();
 
+    // This is the initial browser, so it's usually active; the default is false
+    // so we have to update it:
+    browser.docShellIsActive = this.shouldActivateDocShell(browser);
+
     // Only necessary because of pageloader talos tests which access this.
     // Bug 1508171 covers removing this.
     this.initialBrowser = browser;
