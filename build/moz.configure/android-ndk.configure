@@ -51,13 +51,12 @@ def android_version(value, min_version):
 add_old_configure_assignment('android_version', android_version)
 
 
-@depends('--with-android-ndk', build_project)
-def ndk(value, build_project):
-    if build_project == 'mobile/android' and not value:
+@depends('--with-android-ndk')
+def ndk(value):
+    if not value:
         die('You must specify --with-android-ndk=/path/to/ndk when '
-            'building mobile/android')
-    if value:
-        return value[0]
+            'building for Android')
+    return value[0]
 
 
 set_config('ANDROID_NDK', ndk)
