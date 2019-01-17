@@ -243,8 +243,8 @@ nsresult SessionStorageManager::Observe(
   }
 
   // Clear everything (including so and pb data) from caches and database
-  // for the gived domain and subdomains.
-  if (!strcmp(aTopic, "domain-data-cleared")) {
+  // for the given domain and subdomains.
+  if (!strcmp(aTopic, "browser:purge-sessionStorage")) {
     ClearStorages(eAll, pattern, aOriginScope);
     return NS_OK;
   }
