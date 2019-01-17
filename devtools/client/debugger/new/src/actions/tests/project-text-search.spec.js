@@ -61,19 +61,6 @@ describe("project text search", () => {
     expect(getTextSearchQuery(getState())).toEqual(mockQuery);
   });
 
-  it("should remove the  project text search query", () => {
-    const { dispatch, getState } = createStore();
-    const mockQuery = "foo";
-
-    dispatch(actions.addSearchQuery(mockQuery));
-    expect(getTextSearchQuery(getState())).toEqual(mockQuery);
-    dispatch(actions.updateSearchStatus("DONE"));
-    dispatch(actions.clearSearchQuery());
-    expect(getTextSearchQuery(getState())).toEqual("");
-    const status = getTextSearchStatus(getState());
-    expect(status).toEqual("INITIAL");
-  });
-
   it("should search all the loaded sources based on the query", async () => {
     const { dispatch, getState } = createStore(threadClient);
     const mockQuery = "foo";

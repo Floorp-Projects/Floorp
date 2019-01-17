@@ -11,49 +11,16 @@ import {
   getBreakpointsList,
   getSelectedSource
 } from "../selectors";
-import { isGenerated, getFilename } from "../utils/source";
+import { getFilename } from "../utils/source";
 import { getSelectedLocation } from "../utils/source-maps";
 
-import type {
-  Source,
-  Breakpoint,
-  BreakpointId,
-  SourceLocation
-} from "../types";
+import type { Source, Breakpoint } from "../types";
 import type { Selector, SourcesMap } from "../reducers/types";
 
 export type BreakpointSources = Array<{
   source: Source,
-  breakpoints: FormattedBreakpoint[]
+  breakpoints: Breakpoint[]
 }>;
-
-export type FormattedBreakpoint = {|
-  id: BreakpointId,
-  condition: ?string,
-  log: boolean,
-  disabled: boolean,
-  text: string,
-  selectedLocation: SourceLocation
-|};
-
-function formatBreakpoint(
-  breakpoint: Breakpoint,
-  selectedSource: ?Source
-): FormattedBreakpoint {
-  const { id, condition, disabled, log } = breakpoint;
-
-  return {
-    id,
-    condition,
-    disabled,
-    log,
-    text:
-      selectedSource && isGenerated(selectedSource)
-        ? breakpoint.text
-        : breakpoint.originalText,
-    selectedLocation: getSelectedLocation(breakpoint, selectedSource)
-  };
-}
 
 function getBreakpointsForSource(
   source: Source,
@@ -68,8 +35,9 @@ function getBreakpointsForSource(
         !bp.loading &&
         (bp.text || bp.originalText || bp.condition || bp.disabled)
     )
-    .map(bp => formatBreakpoint(bp, selectedSource))
-    .filter(bp => bp.selectedLocation.sourceId == source.id);
+    .filter(
+      bp => getSelectedLocation(bp, selectedSource).sourceId == source.id
+    );
 }
 
 function findBreakpointSources(
