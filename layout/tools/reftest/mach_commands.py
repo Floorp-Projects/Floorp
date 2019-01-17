@@ -238,7 +238,7 @@ class MachCommands(MachCommandBase):
         reftest.log_manager.enable_unstructured()
         if conditions.is_android(self):
             from mozrunner.devices.android_device import verify_android_device
-            verify_android_device(self, install=True, xre=True, app=kwargs["app"],
-                                  device_serial=kwargs["deviceSerial"])
+            verify_android_device(self, install=True, xre=True, network=True,
+                                  app=kwargs["app"], device_serial=kwargs["deviceSerial"])
             return reftest.run_android_test(**kwargs)
         return reftest.run_desktop_test(**kwargs)

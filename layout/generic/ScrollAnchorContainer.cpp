@@ -6,6 +6,7 @@
 
 #include "ScrollAnchorContainer.h"
 
+#include "GeckoProfiler.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsGfxScrollFrame.h"
@@ -123,6 +124,7 @@ void ScrollAnchorContainer::SelectAnchor() {
     return;
   }
 
+  AUTO_PROFILER_LABEL("ScrollAnchorContainer::SelectAnchor", LAYOUT);
   ANCHOR_LOG("Selecting anchor for %p with scroll-port [%d %d x %d %d].\n",
              this, mScrollFrame->mScrollPort.x, mScrollFrame->mScrollPort.y,
              mScrollFrame->mScrollPort.width, mScrollFrame->mScrollPort.height);
