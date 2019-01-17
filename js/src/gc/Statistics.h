@@ -292,7 +292,7 @@ struct Statistics {
   };
 
   // Return JSON for a whole major GC.  If use == PROFILER then
-  // detailed per-slice data will be included.
+  // detailed per-slice data and some other fields will be included.
   UniqueChars renderJsonMessage(uint64_t timestamp, JSONUse use) const;
 
   // Return JSON for the timings of just the given slice.
@@ -360,8 +360,9 @@ struct Statistics {
     uint32_t tenured;
   } allocsSinceMinorGC;
 
-  /* Heap size before the GC started. */
+  /* Heap size before and after the GC ran. */
   size_t preHeapSize;
+  size_t postHeapSize;
 
   /* If the GC was triggered by exceeding some threshold, record the
    * threshold and the value that exceeded it. */
@@ -443,7 +444,7 @@ struct Statistics {
   UniqueChars formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const;
   UniqueChars formatDetailedTotals() const;
 
-  void formatJsonDescription(uint64_t timestamp, JSONPrinter&) const;
+  void formatJsonDescription(uint64_t timestamp, JSONPrinter&, JSONUse) const;
   void formatJsonSliceDescription(unsigned i, const SliceData& slice,
                                   JSONPrinter&) const;
   void formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes,
