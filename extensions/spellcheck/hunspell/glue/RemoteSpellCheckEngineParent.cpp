@@ -45,6 +45,23 @@ mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvCheck(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvCheckAsync(
+    nsTArray<nsString>&& aWords, CheckAsyncResolver&& aResolve) {
+  nsTArray<bool> misspells;
+  misspells.SetCapacity(aWords.Length());
+  for (auto& word : aWords) {
+    bool misspelled;
+    nsresult rv = mSpellChecker->CheckWord(word, &misspelled, nullptr);
+    // If CheckWord failed, we can't tell whether the word is correctly spelled
+    if (NS_FAILED(rv)) {
+      misspelled = false;
+    }
+    misspells.AppendElement(misspelled);
+  }
+  aResolve(std::move(misspells));
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvCheckAndSuggest(
     const nsString& aWord, bool* aIsMisspelled,
     InfallibleTArray<nsString>* aSuggestions) {

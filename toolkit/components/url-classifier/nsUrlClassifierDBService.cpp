@@ -111,7 +111,7 @@ class FeatureHolder final {
 
   class TableData {
    public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TableData);
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FeatureHolder::TableData);
 
     explicit TableData(const nsACString& aTable) : mTable(aTable) {}
 

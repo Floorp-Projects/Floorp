@@ -10,11 +10,11 @@
 #include "nsIDOMEventListener.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIInlineSpellChecker.h"
+#include "mozInlineSpellWordUtil.h"
 #include "nsRange.h"
 #include "nsWeakReference.h"
 
 class InitEditorSpellCheckCallback;
-class mozInlineSpellWordUtil;
 class mozInlineSpellChecker;
 class mozInlineSpellResume;
 class UpdateCurrentDictionaryCallback;
@@ -51,11 +51,6 @@ class mozInlineSpellStatus {
   bool IsFullSpellCheck() const { return mOp == eOpChange && !mRange; }
 
   RefPtr<mozInlineSpellChecker> mSpellChecker;
-
-  // The total number of words checked in this sequence, using this tally tells
-  // us when to stop. This count is preserved as we continue checking in new
-  // messages.
-  int32_t mWordCount;
 
   // what happened?
   enum Operation {
@@ -138,13 +133,6 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
 
   int32_t mNumWordsInSpellSelection;
   int32_t mMaxNumWordsInSpellSelection;
-
-  // How many misspellings we can add at once. This is often less than the max
-  // total number of misspellings. When you have a large textarea prepopulated
-  // with text with many misspellings, we can hit this limit. By making it
-  // lower than the total number of misspelled words, new text typed by the
-  // user can also have spellchecking in it.
-  int32_t mMaxMisspellingsPerCheck;
 
   // we need to keep track of the current text position in the document
   // so we can spell check the old word when the user clicks around the
@@ -282,6 +270,10 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
 
   void StartToListenToEditSubActions() { mIsListeningToEditSubActions = true; }
   void EndListeningToEditSubActions() { mIsListeningToEditSubActions = false; }
+
+  void CheckCurrentWordsNoSuggest(mozilla::dom::Selection* aSpellCheckSelection,
+                                  const nsTArray<nsString>& aWords,
+                                  const nsTArray<NodeOffsetRange>& aRanges);
 };
 
 #endif  // #ifndef mozilla_mozInlineSpellChecker_h
