@@ -24,6 +24,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
 
 #include <new>
@@ -81,6 +82,7 @@ using mozilla::IsPowerOfTwo;
 using mozilla::PodZero;
 using mozilla::PositiveInfinity;
 using mozilla::Unused;
+using mozilla::Utf8Unit;
 using mozilla::Compression::LZ4;
 
 /*****************************************************************************/
@@ -7137,8 +7139,9 @@ static bool EstablishPreconditions(JSContext* cx,
   return true;
 }
 
-bool js::CompileAsmJS(JSContext* cx, AsmJSParser<char16_t>& parser,
-                      ParseNode* stmtList, bool* validated) {
+template <typename Unit>
+static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
+                           ParseNode* stmtList, bool* validated) {
   *validated = false;
 
   // Various conditions disable asm.js optimizations.
@@ -7189,6 +7192,16 @@ bool js::CompileAsmJS(JSContext* cx, AsmJSParser<char16_t>& parser,
   *validated = true;
   SuccessfulValidation(parser, time);
   return NoExceptionPending(cx);
+}
+
+bool js::CompileAsmJS(JSContext* cx, AsmJSParser<char16_t>& parser,
+                      ParseNode* stmtList, bool* validated) {
+  return DoCompileAsmJS(cx, parser, stmtList, validated);
+}
+
+bool js::CompileAsmJS(JSContext* cx, AsmJSParser<Utf8Unit>& parser,
+                      ParseNode* stmtList, bool* validated) {
+  return DoCompileAsmJS(cx, parser, stmtList, validated);
 }
 
 /*****************************************************************************/
