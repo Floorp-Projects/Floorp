@@ -183,39 +183,30 @@ set_config('L10NBASEDIR', l10n_base)
 
 # Default toolkit
 # ==============================================================
-# Normally, we'd want to use the `default` field on the option, but that
-# requires --target to be resolved at --help time, which requires to run
-# config.guess, which we want to avoid. Even better, we could actually set
-# `choices` depending on the target, but that doesn't pan out for the same
-# reason.
+@depends(target)
+def toolkit_choices(target):
+    if target.os == 'WINNT':
+        return ('cairo-windows',)
+    elif target.os == 'OSX':
+        return ('cairo-cocoa',)
+    elif target.os == 'iOS':
+        return ('cairo-uikit',)
+    elif target.os == 'Android':
+        return ('cairo-android',)
+    else:
+        return ('cairo-gtk3', 'cairo-gtk3-wayland')
+
+@depends(toolkit_choices)
+def toolkit_default(choices):
+    return choices[0]
+
 option('--enable-default-toolkit', nargs=1,
-       choices=('cairo-windows', 'cairo-gtk3', 'cairo-gtk3-wayland',
-                'cairo-cocoa', 'cairo-uikit', 'cairo-android'),
+       choices=toolkit_choices, default=toolkit_default,
        help='Select default toolkit')
 
-@depends('--enable-default-toolkit', target)
-def full_toolkit(value, target):
-    # Define possible choices for each platform. The default is the first one
-    # listed when there are several.
-    if target.os == 'WINNT':
-        platform_choices = ('cairo-windows',)
-    elif target.os == 'OSX':
-        platform_choices = ('cairo-cocoa',)
-    elif target.os == 'iOS':
-        platform_choices = ('cairo-uikit',)
-    elif target.os == 'Android':
-        platform_choices = ('cairo-android',)
-    else:
-        platform_choices = ('cairo-gtk3', 'cairo-gtk3-wayland')
-
-    if value:
-        if value[0] not in platform_choices:
-            die('`%s` is not a valid value for --enable-default-toolkit on %s\n'
-                'Valid values: %s', value[0], target.os,
-                ', '.join(platform_choices))
-        return value[0]
-
-    return platform_choices[0]
+@depends_if('--enable-default-toolkit')
+def full_toolkit(value):
+    return value[0]
 
 @depends(full_toolkit)
 def toolkit(toolkit):
