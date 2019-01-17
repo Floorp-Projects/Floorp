@@ -19,6 +19,13 @@ var heroesToCapture = [];
 // default only; this is set via control server settings json
 var getFNBPaint = false;
 
+// measure time-to-first-contentful-paint
+// supported on: Firefox, Chromium, Geckoview
+// note: this browser pref must be enabled:
+// dom.performance.time_to_contentful_paint.enabled = True
+// default only; this is set via control server settings json
+var getFCP = false;
+
 // measure domContentFlushed
 // supported on: Firefox, Geckoview
 // note: this browser pref must be enabled:
@@ -33,12 +40,6 @@ var getDCF = false;
 // default only; this is set via control server settings json
 var getTTFI = false;
 
-// measure first-contentful-paint
-// supported on: Chromium
-// default only; this is set via control server settings json
-var getFCP = false;
-
-// measure loadtime
 // supported on: Firefox, Chromium, Geckoview
 // default only; this is set via control server settings json
 var getLoadTime = false;
@@ -227,11 +228,10 @@ function measureTTFI() {
     gRetryCounter += 1;
     // NOTE: currently the gecko implementation doesn't look at network
     // requests, so this is closer to TimeToFirstInteractive than
-    // TimeToInteractive.  Also, we use FNBP instead of FCP as the start
-    // point.  TTFI/TTI requires running at least 5 seconds past last
-    // "busy" point, give 25 seconds here (overall the harness times out at
-    // 30 seconds).  Some pages will never get 5 seconds without a busy
-    // period!
+    // TimeToInteractive.  TTFI/TTI requires running at least 5 seconds
+    // past last "busy" point, give 25 seconds here (overall the harness
+    // times out at 30 seconds).  Some pages will never get 5 seconds
+    // without a busy period!
     if (gRetryCounter <= 25 * (1000 / 200)) {
       console.log("TTFI is not yet available (0), retry number " + gRetryCounter + "...\n");
       window.setTimeout(measureTTFI, 200);
@@ -246,17 +246,30 @@ function measureTTFI() {
 function measureFCP() {
   // see https://developer.mozilla.org/en-US/docs/Web/API/PerformancePaintTiming
   var resultType = "fcp";
-  var result = 0;
+  var result;
 
-  let perfEntries = perfData.getEntriesByType("paint");
+  // Firefox implementation of FCP is not yet spec-compliant (see Bug 1519410)
+  result = window.performance.timing.timeToContentfulPaint;
+  if (typeof(result) == "undefined") {
+    // we're on chromium
+    result = 0;
+    let perfEntries = perfData.getEntriesByType("paint");
 
-  if (perfEntries.length >= 2) {
-    if (perfEntries[1].name == "first-contentful-paint" && perfEntries[1].startTime != undefined)
-      result = perfEntries[1].startTime;
+    if (perfEntries.length >= 2) {
+      if (perfEntries[1].name == "first-contentful-paint" && perfEntries[1].startTime != undefined) {
+        // this value is actually the final measurement / time to get the FCP event in MS
+        result = perfEntries[1].startTime;
+      }
+    }
   }
 
   if (result > 0) {
     console.log("got time to first-contentful-paint");
+    if (typeof(browser) !== "undefined") {
+      // Firefox returns a timestamp, not the actual measurement in MS; need to calculate result
+      var startTime = perfData.timing.fetchStart;
+      result = result - startTime;
+    }
     sendResult(resultType, result);
     perfData.clearMarks();
     perfData.clearMeasures();
