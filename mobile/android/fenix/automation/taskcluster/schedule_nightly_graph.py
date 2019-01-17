@@ -75,12 +75,11 @@ def make_decision_task(params):
     return task_id, task
 
 
-def schedule(is_staging):
+def schedule():
     queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
 
     html_url, branch, head_rev = calculate_git_references(ROOT)
     params = {
-        'is_staging': is_staging,
         'html_url': html_url,
         'head_rev': head_rev,
         'branch': branch,
@@ -92,10 +91,4 @@ def schedule(is_staging):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Schedule a nightly release pipeline')
-
-    parser.add_argument('--staging', action='store_true',
-                        help="Perform a staging build (use dep workers, don't communicate with Google Play) ")
-
-    result = parser.parse_args()
-    schedule(result.staging)
+    schedule()
