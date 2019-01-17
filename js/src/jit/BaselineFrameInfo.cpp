@@ -146,6 +146,42 @@ void FrameInfo::popRegsAndSync(uint32_t uses) {
   }
 }
 
+void FrameInfo::storeStackValue(int32_t depth, const Address& dest,
+                                const ValueOperand& scratch) {
+  const StackValue* source = peek(depth);
+  switch (source->kind()) {
+    case StackValue::Constant:
+      masm.storeValue(source->constant(), dest);
+      break;
+    case StackValue::Register:
+      masm.storeValue(source->reg(), dest);
+      break;
+    case StackValue::LocalSlot:
+      masm.loadValue(addressOfLocal(source->localSlot()), scratch);
+      masm.storeValue(scratch, dest);
+      break;
+    case StackValue::ArgSlot:
+      masm.loadValue(addressOfArg(source->argSlot()), scratch);
+      masm.storeValue(scratch, dest);
+      break;
+    case StackValue::ThisSlot:
+      masm.loadValue(addressOfThis(), scratch);
+      masm.storeValue(scratch, dest);
+      break;
+    case StackValue::EvalNewTargetSlot:
+      MOZ_ASSERT(script->isForEval());
+      masm.loadValue(addressOfEvalNewTarget(), scratch);
+      masm.storeValue(scratch, dest);
+      break;
+    case StackValue::Stack:
+      masm.loadValue(addressOfStackValue(depth), scratch);
+      masm.storeValue(scratch, dest);
+      break;
+    default:
+      MOZ_CRASH("Invalid kind");
+  }
+}
+
 #ifdef DEBUG
 void FrameInfo::assertValidState(const BytecodeInfo& info) {
   // Check stack depth.
@@ -185,3 +221,19 @@ void FrameInfo::assertValidState(const BytecodeInfo& info) {
   }
 }
 #endif
+
+PCMappingSlotInfo::SlotLocation FrameInfo::stackValueSlotLocation(
+    int32_t depth) {
+  const StackValue* stackVal = peek(depth);
+
+  if (stackVal->kind() == StackValue::Register) {
+    if (stackVal->reg() == R0) {
+      return PCMappingSlotInfo::SlotInR0;
+    }
+    MOZ_ASSERT(stackVal->reg() == R1);
+    return PCMappingSlotInfo::SlotInR1;
+  }
+
+  MOZ_ASSERT(stackVal->kind() != StackValue::Stack);
+  return PCMappingSlotInfo::SlotIgnore;
+}

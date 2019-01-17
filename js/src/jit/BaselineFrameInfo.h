@@ -12,6 +12,7 @@
 #include <new>
 
 #include "jit/BaselineFrame.h"
+#include "jit/BaselineJIT.h"
 #include "jit/FixedList.h"
 #include "jit/MacroAssembler.h"
 #include "jit/SharedICRegisters.h"
@@ -93,7 +94,6 @@ class StackValue {
     MOZ_ASSERT(type != JSVAL_TYPE_UNKNOWN);
     return knownType_ == type;
   }
-  bool isKnownBoolean() const { return hasKnownType(JSVAL_TYPE_BOOLEAN); }
   JSValueType knownType() const {
     MOZ_ASSERT(hasKnownType());
     return knownType_;
@@ -181,6 +181,11 @@ class FrameInfo {
     return val;
   }
 
+  inline StackValue* peek(int32_t index) const {
+    MOZ_ASSERT(index < 0);
+    return const_cast<StackValue*>(&stack[spIndex + index]);
+  }
+
  public:
   inline size_t stackDepth() const { return spIndex; }
   inline void setStackDepth(uint32_t newDepth) {
@@ -195,10 +200,6 @@ class FrameInfo {
 
       MOZ_ASSERT(spIndex == newDepth);
     }
-  }
-  inline StackValue* peek(int32_t index) const {
-    MOZ_ASSERT(index < 0);
-    return const_cast<StackValue*>(&stack[spIndex + index]);
   }
 
   inline void pop(StackAdjustment adjust = AdjustStack);
@@ -268,7 +269,8 @@ class FrameInfo {
   Address addressOfArgsObj() const {
     return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfArgsObj());
   }
-  Address addressOfStackValue(const StackValue* value) const {
+  Address addressOfStackValue(int32_t depth) const {
+    const StackValue* value = peek(depth);
     MOZ_ASSERT(value->kind() == StackValue::Stack);
     size_t slot = value - &stack[0];
     MOZ_ASSERT(slot < stackDepth());
@@ -290,6 +292,15 @@ class FrameInfo {
   inline void assertSyncedStack() const {
     MOZ_ASSERT_IF(stackDepth() > 0, peek(-1)->kind() == StackValue::Stack);
   }
+
+  bool stackValueHasKnownType(int32_t depth, JSValueType type) const {
+    return peek(depth)->hasKnownType(type);
+  }
+
+  void storeStackValue(int32_t depth, const Address& dest,
+                       const ValueOperand& scratch);
+
+  PCMappingSlotInfo::SlotLocation stackValueSlotLocation(int32_t depth);
 
 #ifdef DEBUG
   // Assert the state is valid before excuting "pc".

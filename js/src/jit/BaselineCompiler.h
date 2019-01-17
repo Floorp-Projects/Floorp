@@ -353,9 +353,6 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitTraceLoggerResume(Register script,
                                           AllocatableGeneralRegisterSet& regs);
 
-  void storeValue(const StackValue* source, const Address& dest,
-                  const ValueOperand& scratch);
-
 #define EMIT_OP(op) bool emit_##op();
   OPCODE_LIST(EMIT_OP)
 #undef EMIT_OP
@@ -527,14 +524,16 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
     switch (frame.numUnsyncedSlots()) {
       case 0:
         return PCMappingSlotInfo::MakeSlotInfo();
-      case 1:
-        return PCMappingSlotInfo::MakeSlotInfo(
-            PCMappingSlotInfo::ToSlotLocation(frame.peek(-1)));
+      case 1: {
+        PCMappingSlotInfo::SlotLocation loc = frame.stackValueSlotLocation(-1);
+        return PCMappingSlotInfo::MakeSlotInfo(loc);
+      }
       case 2:
-      default:
-        return PCMappingSlotInfo::MakeSlotInfo(
-            PCMappingSlotInfo::ToSlotLocation(frame.peek(-1)),
-            PCMappingSlotInfo::ToSlotLocation(frame.peek(-2)));
+      default: {
+        PCMappingSlotInfo::SlotLocation loc1 = frame.stackValueSlotLocation(-1);
+        PCMappingSlotInfo::SlotLocation loc2 = frame.stackValueSlotLocation(-2);
+        return PCMappingSlotInfo::MakeSlotInfo(loc1, loc2);
+      }
     }
   }
 
