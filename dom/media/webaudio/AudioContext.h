@@ -201,6 +201,12 @@ class AudioContext final : public DOMEventTargetHelper,
   already_AddRefed<Promise> Close(ErrorResult& aRv);
   IMPL_EVENT_HANDLER(statechange)
 
+  // These two functions are similar with Suspend() and Resume(), the difference
+  // is they are designed for calling from chrome side, not content side. eg.
+  // calling from inner window, so we won't need to return promise for caller.
+  void SuspendFromChrome();
+  void ResumeFromChrome();
+
   already_AddRefed<AudioBufferSourceNode> CreateBufferSource(ErrorResult& aRv);
 
   already_AddRefed<ConstantSourceNode> CreateConstantSource(ErrorResult& aRv);
