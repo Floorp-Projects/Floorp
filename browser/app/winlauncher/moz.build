@@ -9,7 +9,6 @@ Library('winlauncher')
 FORCE_STATIC_LIB = True
 
 UNIFIED_SOURCES += [
-    '/toolkit/xre/LauncherRegistryInfo.cpp',
     'DllBlocklistWin.cpp',
     'ErrorHandler.cpp',
     'LauncherProcessWin.cpp',
@@ -26,8 +25,12 @@ TEST_DIRS += [
     'test',
 ]
 
-for var in ('MOZ_APP_BASENAME', 'MOZ_APP_VENDOR'):
-    DEFINES[var] = '"%s"' % CONFIG[var]
+if CONFIG['MOZ_LAUNCHER_PROCESS']:
+    UNIFIED_SOURCES += [
+        '/toolkit/xre/LauncherRegistryInfo.cpp',
+    ]
+    for var in ('MOZ_APP_BASENAME', 'MOZ_APP_VENDOR'):
+        DEFINES[var] = '"%s"' % CONFIG[var]
 
 DisableStlWrapping()
 
