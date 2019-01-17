@@ -419,6 +419,12 @@ VARCACHE_PREF(
    dom_script_loader_binast_encoding_enabled,
   RelaxedAtomicBool, false
 )
+
+VARCACHE_PREF(
+  "dom.script_loader.binast_encoding.domain.restrict",
+   dom_script_loader_binast_encoding_domain_restrict,
+  bool, true
+)
 #endif
 
 // IMPORTANT: Keep this in condition in sync with all.js. The value
