@@ -3,9 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var testGenerator = testSteps();
-
-function* testSteps()
+async function testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStoreName = "foo";
@@ -14,11 +12,8 @@ function* testSteps()
   info("Opening database");
 
   let request = indexedDB.open(name);
-  request.onerror = errorHandler;
-  request.onupgradeneeded = grabEventAndContinueHandler;
-  request.onsuccess = unexpectedSuccessHandler;
+  let event =  await expectingUpgrade(request);
 
-  let event = yield undefined;
   let db = event.target.result;
 
   info("Creating objectStore");
@@ -56,9 +51,6 @@ function* testSteps()
        "Threw with correct error message");
   }
 
-  request.onsuccess = grabEventAndContinueHandler;
-  yield undefined;
+  await expectingSuccess(request);
   db.close();
-
-  finishTest();
 }
