@@ -645,9 +645,6 @@ const PreferencesCleaner = {
                    .getService(Ci.nsIContentPrefService2);
       cps2.removeBySubdomain(aHost, null, {
         handleCompletion: aReason => {
-          // Notify other consumers, including extensions
-          Services.obs.notifyObservers(null, "browser:purge-domain-data",
-                                       aHost);
           if (aReason === cps2.COMPLETE_ERROR) {
             aReject();
           } else {
