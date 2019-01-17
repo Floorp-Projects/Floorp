@@ -309,7 +309,7 @@ describe("PlacesFeed", () => {
     it("should call handoffSearchToAwesomebar on HANDOFF_SEARCH_TO_AWESOMEBAR", () => {
       const action = {
         type: at.HANDOFF_SEARCH_TO_AWESOMEBAR,
-        data: {hiddenFocus: false},
+        data: {text: "f"},
         meta: {fromTarget: {}},
         _target: {browser: {ownerGlobal: {gURLBar: {focus: () => {}}}}},
       };
@@ -336,77 +336,14 @@ describe("PlacesFeed", () => {
       };
       listeners = {};
     });
-    it("should properly handle hiddenFocus=false", () => {
+    it("should properly handle normal focus (no text passed in)", () => {
       feed.handoffSearchToAwesomebar({
         _target: {browser: {ownerGlobal: {gURLBar: fakeUrlBar}}},
-        data: {hiddenFocus: false},
+        data: {},
         meta: {fromTarget: {}},
       });
       assert.calledOnce(fakeUrlBar.focus);
-      assert.notCalled(fakeUrlBar.hiddenFocus);
-      assert.calledOnce(feed.store.dispatch);
-      assert.calledWith(feed.store.dispatch, {
-        meta: {
-          from: "ActivityStream:Main",
-          skipMain: true,
-          to: "ActivityStream:Content",
-          toTarget: {},
-        },
-        type: "SHOW_SEARCH",
-      });
-    });
-    it("should properly handle hiddenFocus=true", () => {
-      feed.handoffSearchToAwesomebar({
-        _target: {browser: {ownerGlobal: {gURLBar: fakeUrlBar}}},
-        data: {hiddenFocus: true},
-        meta: {fromTarget: {}},
-      });
-      assert.calledOnce(fakeUrlBar.hiddenFocus);
-      assert.notCalled(fakeUrlBar.focus);
       assert.notCalled(feed.store.dispatch);
-
-      // Now call keydown listener with "Ctrl".
-      feed.store.dispatch.resetHistory();
-      listeners.keydown({key: "Ctrl"});
-      assert.notCalled(fakeUrlBar.removeHiddenFocus);
-      assert.notCalled(feed.store.dispatch);
-
-      // Now call keydown listener with "Ctrl+f".
-      feed.store.dispatch.resetHistory();
-      listeners.keydown({key: "f", ctrlKey: true});
-      assert.notCalled(fakeUrlBar.removeHiddenFocus);
-      assert.notCalled(feed.store.dispatch);
-
-      // Now call keydown listener with "f".
-      feed.store.dispatch.resetHistory();
-      listeners.keydown({key: "f"});
-      assert.calledOnce(fakeUrlBar.removeHiddenFocus);
-      assert.calledOnce(feed.store.dispatch);
-      assert.calledWith(feed.store.dispatch, {
-        meta: {
-          from: "ActivityStream:Main",
-          skipMain: true,
-          to: "ActivityStream:Content",
-          toTarget: {},
-        },
-        type: "HIDE_SEARCH",
-      });
-
-      // And then call blur listener.
-      fakeUrlBar.removeHiddenFocus.resetHistory();
-      feed.store.dispatch.resetHistory();
-      listeners.blur();
-      assert.calledOnce(fakeUrlBar.removeHiddenFocus);
-      assert.calledOnce(feed.store.dispatch);
-      assert.calledWith(feed.store.dispatch, {
-        meta: {
-          from: "ActivityStream:Main",
-          skipMain: true,
-          to: "ActivityStream:Content",
-          toTarget: {},
-        },
-        type: "SHOW_SEARCH",
-      });
     });
     it("should properly handle text data passed in", () => {
       feed.handoffSearchToAwesomebar({
@@ -416,8 +353,10 @@ describe("PlacesFeed", () => {
       });
       assert.calledOnce(fakeUrlBar.search);
       assert.calledWith(fakeUrlBar.search, "f");
-      assert.notCalled(fakeUrlBar.hiddenFocus);
       assert.notCalled(fakeUrlBar.focus);
+
+      // Now call blur listener.
+      listeners.blur();
       assert.calledOnce(feed.store.dispatch);
       assert.calledWith(feed.store.dispatch, {
         meta: {
@@ -426,7 +365,30 @@ describe("PlacesFeed", () => {
           to: "ActivityStream:Content",
           toTarget: {},
         },
-        type: "HIDE_SEARCH",
+        type: "SHOW_SEARCH",
+      });
+    });
+    it("should SHOW_SEARCH on ESC keydown", () => {
+      feed.handoffSearchToAwesomebar({
+        _target: {browser: {ownerGlobal: {gURLBar: fakeUrlBar}}},
+        data: {text: "f"},
+        meta: {fromTarget: {}},
+      });
+      assert.calledOnce(fakeUrlBar.search);
+      assert.calledWith(fakeUrlBar.search, "f");
+      assert.notCalled(fakeUrlBar.focus);
+
+      // Now call ESC keydown.
+      listeners.keydown({key: "Escape"});
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        meta: {
+          from: "ActivityStream:Main",
+          skipMain: true,
+          to: "ActivityStream:Content",
+          toTarget: {},
+        },
+        type: "SHOW_SEARCH",
       });
     });
   });

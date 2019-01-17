@@ -1,3 +1,9 @@
+// Type sizes
+$header-font-size: 17;
+$header-line-height: 24;
+$excerpt-font-size: 13;
+$excerpt-line-height: 20;
+
 .ds-card {
   border: 5px solid transparent;
 
@@ -11,7 +17,6 @@
     width: 100%;
     border: 0.5px solid $black-10;
     border-radius: 4px;
-    margin: 0 0 12px;
   }
 
   .img {
@@ -23,11 +28,21 @@
 
   .meta {
     padding: 16px;
+
+    .title {
+      // show only 2 lines of copy
+      @include limit-visibile-lines(2, $header-line-height, $header-font-size);
+    }
+
+    .excerpt {
+      // show only 4 lines of copy
+      @include limit-visibile-lines(4, $excerpt-line-height, $excerpt-font-size);
+    }
   }
 
   header {
-    line-height: 24px;
-    font-size: 17px;
+    line-height: $header-line-height * 1px;
+    font-size: $header-font-size * 1px;
     color: $grey-90;
 
     &:hover {
@@ -40,8 +55,8 @@
   }
 
   p {
-    font-size: 13px;
-    line-height: 20px;
+    font-size: $excerpt-font-size * 1px;
+    line-height: $excerpt-line-height * 1px;
     color: $grey-50;
     margin: 8px 0;
   }
