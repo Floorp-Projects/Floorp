@@ -2367,6 +2367,40 @@ bool CacheIRCompiler::emitInt32NegationResult() {
   return true;
 }
 
+bool CacheIRCompiler::emitInt32IncResult() {
+  AutoOutputRegister output(*this);
+  Register input = allocator.useRegister(masm, reader.int32OperandId());
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.mov(input, scratch);
+  masm.branchAdd32(Assembler::Overflow, Imm32(1), scratch, failure->label());
+  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+
+  return true;
+}
+
+bool CacheIRCompiler::emitInt32DecResult() {
+  AutoOutputRegister output(*this);
+  Register input = allocator.useRegister(masm, reader.int32OperandId());
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.mov(input, scratch);
+  masm.branchSub32(Assembler::Overflow, Imm32(1), scratch, failure->label());
+  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+
+  return true;
+}
+
 bool CacheIRCompiler::emitInt32NotResult() {
   AutoOutputRegister output(*this);
   Register val = allocator.useRegister(masm, reader.int32OperandId());
@@ -2407,6 +2441,53 @@ bool CacheIRCompiler::emitDoubleNegationResult() {
 
   masm.bind(&done);
   return true;
+}
+
+bool CacheIRCompiler::emitDoubleIncDecResult(bool isInc) {
+  AutoOutputRegister output(*this);
+  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // If we're compiling a Baseline IC, FloatReg0 is always available.
+  Label failurePopReg, done;
+  if (mode_ != Mode::Baseline) {
+    masm.push(FloatReg0);
+  }
+
+  masm.ensureDouble(
+      val, FloatReg0,
+      (mode_ != Mode::Baseline) ? &failurePopReg : failure->label());
+  masm.loadConstantDouble(1.0, ScratchDoubleReg);
+  if (isInc) {
+    masm.addDouble(ScratchDoubleReg, FloatReg0);
+  } else {
+    masm.subDouble(ScratchDoubleReg, FloatReg0);
+  }
+  masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+
+  if (mode_ != Mode::Baseline) {
+    masm.pop(FloatReg0);
+    masm.jump(&done);
+
+    masm.bind(&failurePopReg);
+    masm.pop(FloatReg0);
+    masm.jump(failure->label());
+  }
+
+  masm.bind(&done);
+  return true;
+}
+
+bool CacheIRCompiler::emitDoubleIncResult() {
+  return emitDoubleIncDecResult(true);
+}
+
+bool CacheIRCompiler::emitDoubleDecResult() {
+  return emitDoubleIncDecResult(false);
 }
 
 bool CacheIRCompiler::emitTruncateDoubleToUInt32() {

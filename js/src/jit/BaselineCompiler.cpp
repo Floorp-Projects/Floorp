@@ -2070,6 +2070,16 @@ bool BaselineCodeGen<Handler>::emit_JSOP_NEG() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_INC() {
+  return emitUnaryArith();
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_DEC() {
+  return emitUnaryArith();
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_LT() {
   return emitCompare();
 }

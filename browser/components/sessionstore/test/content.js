@@ -54,11 +54,6 @@ addEventListener("hashchange", function() {
   sendAsyncMessage("ss-test:hashchange");
 });
 
-addMessageListener("ss-test:purgeDomainData", function({data: domain}) {
-  Services.obs.notifyObservers(null, "browser:purge-domain-data", domain);
-  content.setTimeout(() => sendAsyncMessage("ss-test:purgeDomainData"));
-});
-
 addMessageListener("ss-test:getStyleSheets", function(msg) {
   let sheets = content.document.styleSheets;
   let titles = Array.map(sheets, ss => [ss.title, ss.disabled]);

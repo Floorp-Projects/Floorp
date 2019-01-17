@@ -103,8 +103,8 @@ add_task(async function test_nested() {
 
   const FORM_DATA = {
     children: [{
-      xpath: {"/xhtml:html/xhtml:body/xhtml:input": "m"},
       url: "data:text/html;charset=utf-8,<input autofocus=true>",
+      xpath: {"/xhtml:html/xhtml:body/xhtml:input": "m"},
     }],
   };
 

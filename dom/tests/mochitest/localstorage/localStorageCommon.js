@@ -102,7 +102,7 @@ function localStorageClearDomain(domain, callback)
     return;
   }
 
-  os().notifyObservers(null, "browser:purge-domain-data", domain);
+  os().notifyObservers(null, "extension:purge-localStorage", domain);
   SimpleTest.executeSoon(function () {
     callback();
   });

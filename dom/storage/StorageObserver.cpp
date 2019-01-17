@@ -59,10 +59,10 @@ nsresult StorageObserver::Init() {
   obs->AddObserver(sSelf, kStartupTopic, true);
   obs->AddObserver(sSelf, "cookie-changed", true);
   obs->AddObserver(sSelf, "perm-changed", true);
-  obs->AddObserver(sSelf, "browser:purge-domain-data", true);
   obs->AddObserver(sSelf, "last-pb-context-exited", true);
   obs->AddObserver(sSelf, "clear-origin-attributes-data", true);
   obs->AddObserver(sSelf, "extension:purge-localStorage", true);
+  obs->AddObserver(sSelf, "browser:purge-sessionStorage", true);
 
   // Shutdown
   obs->AddObserver(sSelf, "profile-after-change", true);
@@ -135,8 +135,8 @@ void StorageObserver::NoteBackgroundThread(nsIEventTarget* aBackgroundThread) {
   mBackgroundThread = aBackgroundThread;
 }
 
-nsresult StorageObserver::ClearMatchingOrigin(const char16_t* aData,
-                                              nsACString& aOriginScope) {
+nsresult StorageObserver::GetOriginScope(const char16_t* aData,
+                                         nsACString& aOriginScope) {
   nsresult rv;
 
   NS_ConvertUTF16toUTF8 domain(aData);
@@ -160,17 +160,6 @@ nsresult StorageObserver::ClearMatchingOrigin(const char16_t* aData,
   rv = CreateReversedDomain(convertedDomain, originScope);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
-  }
-
-  if (!NextGenLocalStorageEnabled()) {
-    if (XRE_IsParentProcess()) {
-      StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
-      if (NS_WARN_IF(!storageChild)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      storageChild->SendClearMatchingOrigin(originScope);
-    }
   }
 
   aOriginScope = originScope;
@@ -309,9 +298,19 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
     if (aData) {
       nsCString originScope;
-      rv = ClearMatchingOrigin(aData, originScope);
+
+      rv = GetOriginScope(aData, originScope);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
+      }
+
+      if (XRE_IsParentProcess()) {
+        StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
+        if (NS_WARN_IF(!storageChild)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        storageChild->SendClearMatchingOrigin(originScope);
       }
 
       Notify(topic, EmptyString(), originScope);
@@ -333,16 +332,18 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  // Clear everything (including so and pb data) from caches and database
-  // for the given domain and subdomains.
-  if (!strcmp(aTopic, "browser:purge-domain-data")) {
-    nsCString originScope;
-    rv = ClearMatchingOrigin(aData, originScope);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  if (!strcmp(aTopic, "browser:purge-sessionStorage")) {
+    if (aData) {
+      nsCString originScope;
+      rv = GetOriginScope(aData, originScope);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-    Notify("domain-data-cleared", EmptyString(), originScope);
+      Notify(aTopic, EmptyString(), originScope);
+    } else {
+      Notify(aTopic, EmptyString(), EmptyCString());
+    }
 
     return NS_OK;
   }

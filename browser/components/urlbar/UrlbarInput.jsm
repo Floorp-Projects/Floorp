@@ -348,13 +348,10 @@ class UrlbarInput {
   /**
    * Starts a query based on the user input.
    *
-   * @param {string} [options.searchString]
-   *   The string the user entered in autocomplete.
    * @param {number} [options.lastKey]
    *   The last key the user entered (as a key code).
    */
   startQuery({
-    searchString = "",
     lastKey = null,
   } = {}) {
     this.controller.startQuery(new QueryContext({
@@ -364,7 +361,7 @@ class UrlbarInput {
       maxResults: UrlbarPrefs.get("maxRichResults"),
       muxer: "UnifiedComplete",
       providers: ["UnifiedComplete"],
-      searchString,
+      searchString: this.textValue,
     }));
   }
 
@@ -665,8 +662,8 @@ class UrlbarInput {
     }
   }
 
-  _on_input(event) {
-    let value = event.target.value;
+  _on_input() {
+    let value = this.textValue;
     this.valueIsTyped = true;
     this._untrimmedValue = value;
     this.window.gBrowser.userTypedValue = value;
@@ -679,7 +676,6 @@ class UrlbarInput {
 
     // XXX Fill in lastKey, and add anything else we need.
     this.startQuery({
-      searchString: value,
       lastKey: null,
     });
   }

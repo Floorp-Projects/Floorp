@@ -83,6 +83,10 @@ namespace jit {
   _(Int32URightShiftResult)               \
   _(Int32NegationResult)                  \
   _(Int32NotResult)                       \
+  _(Int32IncResult)                       \
+  _(Int32DecResult)                       \
+  _(DoubleIncResult)                      \
+  _(DoubleDecResult)                      \
   _(DoubleNegationResult)                 \
   _(TruncateDoubleToUInt32)               \
   _(LoadArgumentsObjectLengthResult)      \
@@ -787,6 +791,8 @@ class MOZ_RAII CacheIRCompiler {
   }
 
   bool emitComparePointerResultShared(bool symbol);
+
+  bool emitDoubleIncDecResult(bool isInc);
 
 #define DEFINE_SHARED_OP(op) MOZ_MUST_USE bool emit##op();
   CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)

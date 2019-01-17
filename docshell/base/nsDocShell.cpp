@@ -1047,8 +1047,6 @@ nsDOMNavigationTiming* nsDocShell::GetNavigationTiming() const {
   }
 
   // Not strictly equal, special case if both are file: uris
-  bool originIsFile = false;
-  bool targetIsFile = false;
   nsCOMPtr<nsIURI> originURI;
   nsCOMPtr<nsIURI> targetURI;
   nsCOMPtr<nsIURI> innerOriginURI;
@@ -1065,9 +1063,8 @@ nsDOMNavigationTiming* nsDocShell::GetNavigationTiming() const {
   }
 
   return innerOriginURI && innerTargetURI &&
-         NS_SUCCEEDED(innerOriginURI->SchemeIs("file", &originIsFile)) &&
-         NS_SUCCEEDED(innerTargetURI->SchemeIs("file", &targetIsFile)) &&
-         originIsFile && targetIsFile;
+    SchemeIsFile(innerOriginURI) &&
+    SchemeIsFile(innerTargetURI);
 }
 
 nsPresContext* nsDocShell::GetEldestPresContext() {
@@ -1232,11 +1229,8 @@ nsDocShell::GatherCharsetMenuTelemetry() {
 
   Telemetry::ScalarSet(Telemetry::ScalarID::ENCODING_OVERRIDE_USED, true);
 
-  bool isFileURL = false;
   nsIURI* url = doc->GetOriginalURI();
-  if (url) {
-    url->SchemeIs("file", &isFileURL);
-  }
+  bool isFileURL = url && SchemeIsFile(url);
 
   int32_t charsetSource = doc->GetDocumentCharacterSetSource();
   switch (charsetSource) {
@@ -3281,14 +3275,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild) {
     return NS_OK;
   }
 
-  bool isWyciwyg = false;
-
-  if (mCurrentURI) {
-    // Check if the url is wyciwyg
-    mCurrentURI->SchemeIs("wyciwyg", &isWyciwyg);
-  }
-
-  if (!isWyciwyg) {
+  if (!(mCurrentURI && SchemeIsWYCIWYG(mCurrentURI))) {
     // If this docshell is loaded from a wyciwyg: URI, don't
     // advertise our charset since it does not in any way reflect
     // the actual source charset, which is what we're trying to
@@ -4346,9 +4333,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     if (aURI) {
       // displaying "file://" is aesthetically unpleasing and could even be
       // confusing to the user
-      bool isFileURI = false;
-      rv = aURI->SchemeIs("file", &isFileURI);
-      if (NS_SUCCEEDED(rv) && isFileURI) {
+      if (SchemeIsFile(aURI)) {
         aURI->GetPathQueryRef(spec);
       } else {
         aURI->GetSpec(spec);
@@ -4383,13 +4368,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
   // Display the error as a page or an alert prompt
   NS_ENSURE_FALSE(messageStr.IsEmpty(), NS_ERROR_FAILURE);
 
-  if (NS_ERROR_NET_INTERRUPT == aError || NS_ERROR_NET_RESET == aError) {
-    bool isSecureURI = false;
-    rv = aURI->SchemeIs("https", &isSecureURI);
-    if (NS_SUCCEEDED(rv) && isSecureURI) {
-      // Maybe TLS intolerant. Treat this as an SSL error.
-      error = "nssFailure2";
-    }
+  if ((NS_ERROR_NET_INTERRUPT == aError || NS_ERROR_NET_RESET == aError) &&
+      SchemeIsHTTPS(aURI)) {
+    // Maybe TLS intolerant. Treat this as an SSL error.
+    error = "nssFailure2";
   }
 
   if (UseErrorPages()) {
@@ -5525,10 +5507,9 @@ nsDocShell::GetAllowMixedContentAndConnectionData(
 
     // For things with system principal (e.g. scratchpad) there is no uri
     // aRootHasSecureConnection should be false.
-    nsCOMPtr<nsIURI> rootUri;
+    nsCOMPtr<nsIURI> rootUri = rootPrincipal->GetURI();
     if (nsContentUtils::IsSystemPrincipal(rootPrincipal) ||
-        NS_FAILED(rootPrincipal->GetURI(getter_AddRefs(rootUri))) || !rootUri ||
-        NS_FAILED(rootUri->SchemeIs("https", aRootHasSecureConnection))) {
+        !rootUri || !SchemeIsHTTPS(rootUri)) {
       *aRootHasSecureConnection = false;
     }
 
@@ -6284,13 +6265,9 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
       (mLoadType & LOAD_CMD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL ||
        mLoadType == LOAD_RELOAD_CHARSET_CHANGE ||
        mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE ||
-       mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE)) {
-    bool isWyciwyg = false;
-    // Check if the url is wyciwyg
-    rv = mCurrentURI->SchemeIs("wyciwyg", &isWyciwyg);
-    if (isWyciwyg && NS_SUCCEEDED(rv)) {
-      SetBaseUrlForWyciwyg(aContentViewer);
-    }
+       mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE) &&
+      SchemeIsWYCIWYG(mCurrentURI)) {
+    SetBaseUrlForWyciwyg(aContentViewer);
   }
   // XXX What if SetupNewViewer fails?
   if (mLSHE) {
@@ -8600,18 +8577,12 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 
   // wyciwyg urls can only be loaded through history. Any normal load of
   // wyciwyg through docshell is  illegal. Disallow such loads.
-  if (aLoadState->LoadType() & LOAD_CMD_NORMAL) {
-    bool isWyciwyg = false;
-    rv = aLoadState->URI()->SchemeIs("wyciwyg", &isWyciwyg);
-    if ((isWyciwyg && NS_SUCCEEDED(rv)) || NS_FAILED(rv)) {
-      return NS_ERROR_FAILURE;
-    }
+  if ((aLoadState->LoadType() & LOAD_CMD_NORMAL) &&
+      SchemeIsWYCIWYG(aLoadState->URI())) {
+    return NS_ERROR_FAILURE;
   }
 
-  bool isJavaScript = false;
-  if (NS_FAILED(aLoadState->URI()->SchemeIs("javascript", &isJavaScript))) {
-    isJavaScript = false;
-  }
+  bool isJavaScript = SchemeIsJavascript(aLoadState->URI());
 
   bool isTargetTopLevelDocShell = false;
   nsCOMPtr<nsIDocShell> targetDocShell;
@@ -9032,9 +9003,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   if (aLoadState->LoadType() == LOAD_NORMAL_EXTERNAL) {
     loadFromExternal = true;
     // Disallow external chrome: loads targetted at content windows
-    bool isChrome = false;
-    if (NS_SUCCEEDED(aLoadState->URI()->SchemeIs("chrome", &isChrome)) &&
-        isChrome) {
+    if (SchemeIsChrome(aLoadState->URI())) {
       NS_WARNING("blocked external chrome: url -- use '--chrome' option");
       return NS_ERROR_FAILURE;
     }
@@ -9620,17 +9589,15 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
     return false;
   }
 
-  nsCOMPtr<nsIURI> resultURI;
-  nsresult rv = aResultPrincipal->GetURI(getter_AddRefs(resultURI));
-  NS_ENSURE_SUCCESS(rv, false);
+  nsCOMPtr<nsIURI> resultURI = aResultPrincipal->GetURI();
 
-  nsAutoCString resultScheme;
-  rv = resultURI->GetScheme(resultScheme);
-  NS_ENSURE_SUCCESS(rv, false);
-  if (!resultScheme.EqualsLiteral("http")) {
+  // We know this is a codebase principal, and codebase principals require valid
+  // URIs, so we shouldn't need to check non-null here.
+  if (!SchemeIsHTTP(resultURI)) {
     return false;
   }
 
+  nsresult rv;
   nsAutoCString tmpResultSpec;
   rv = resultURI->GetSpec(tmpResultSpec);
   NS_ENSURE_SUCCESS(rv, false);
@@ -9710,9 +9677,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     while (nestedURI) {
       // view-source should always be an nsINestedURI, loop and check the
       // scheme on this and all inner URIs that are also nested URIs.
-      bool isViewSource = false;
-      rv = tempURI->SchemeIs("view-source", &isViewSource);
-      if (NS_FAILED(rv) || isViewSource) {
+      if (SchemeIsViewSource(tempURI)) {
         return NS_ERROR_UNKNOWN_PROTOCOL;
       }
       nestedURI->GetInnerURI(getter_AddRefs(tempURI));
@@ -9805,10 +9770,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
         true,  // aInheritForAboutBlank
         isSrcdoc);
 
-    bool isData;
     bool isURIUniqueOrigin =
         nsIOService::IsDataURIUniqueOpaqueOrigin() &&
-        NS_SUCCEEDED(aLoadState->URI()->SchemeIs("data", &isData)) && isData;
+        SchemeIsData(aLoadState->URI());
     inheritPrincipal = inheritAttrs && !isURIUniqueOrigin;
   }
 
@@ -9920,28 +9884,20 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
     }
+  } else if (SchemeIsViewSource(aLoadState->URI())) {
+    nsViewSourceHandler* vsh = nsViewSourceHandler::GetInstance();
+    NS_ENSURE_TRUE(vsh, NS_ERROR_FAILURE);
+
+    rv = vsh->NewSrcdocChannel(aLoadState->URI(), baseURI, aSrcdoc, loadInfo,
+                               getter_AddRefs(channel));
   } else {
-    nsAutoCString scheme;
-    rv = aLoadState->URI()->GetScheme(scheme);
+    rv = NS_NewInputStreamChannelInternal(
+      getter_AddRefs(channel), aLoadState->URI(), aSrcdoc,
+      NS_LITERAL_CSTRING("text/html"), loadInfo, true);
     NS_ENSURE_SUCCESS(rv, rv);
-    bool isViewSource;
-    aLoadState->URI()->SchemeIs("view-source", &isViewSource);
-
-    if (isViewSource) {
-      nsViewSourceHandler* vsh = nsViewSourceHandler::GetInstance();
-      NS_ENSURE_TRUE(vsh, NS_ERROR_FAILURE);
-
-      rv = vsh->NewSrcdocChannel(aLoadState->URI(), baseURI, aSrcdoc, loadInfo,
-                                 getter_AddRefs(channel));
-    } else {
-      rv = NS_NewInputStreamChannelInternal(
-          getter_AddRefs(channel), aLoadState->URI(), aSrcdoc,
-          NS_LITERAL_CSTRING("text/html"), loadInfo, true);
-      NS_ENSURE_SUCCESS(rv, rv);
-      nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(channel);
-      MOZ_ASSERT(isc);
-      isc->SetBaseURI(baseURI);
-    }
+    nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(channel);
+    MOZ_ASSERT(isc);
+    isc->SetBaseURI(baseURI);
   }
 
   // Navigational requests that are same origin need to be upgraded in case
@@ -11484,9 +11440,8 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType) {
   // die while we're loading it.  So hold a strong ref to aEntry here, just
   // in case.
   nsCOMPtr<nsISHEntry> kungFuDeathGrip(aEntry);
-  bool isJS;
-  nsresult rv = uri->SchemeIs("javascript", &isJS);
-  if (NS_FAILED(rv) || isJS) {
+  nsresult rv;
+  if (SchemeIsJavascript(uri)) {
     // We're loading a URL that will execute script from inside asyncOpen.
     // Replace the current document with about:blank now to prevent
     // anything from the current document from leaking into any JavaScript

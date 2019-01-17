@@ -30,9 +30,12 @@
   /* Colors from Photon */
   --success-50: #30e60b;
   --warning-50: #ffe900;
+  --warning-90: #3e2800;
   --error-50: #ff0039;
+  --error-60: #d70022;
   --highlight-50: #0a84ff;
   --grey-30: #d7d7db; /* for ui, no special semantic */
+  --white-100: #fff; /* for ui, no special semantic */
 
   /* Global layout vars */
   --page-width: 664px;

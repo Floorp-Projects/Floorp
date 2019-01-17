@@ -69,6 +69,11 @@ const DEBUG_TARGET_PANE = {
   TEMPORARY_EXTENSION: "temporaryExtension",
 };
 
+const MESSAGE_LEVEL = {
+  ERROR: "error",
+  WARNING: "warning",
+};
+
 const PAGE_TYPES = {
   RUNTIME: "runtime",
   CONNECT: "connect",
@@ -114,6 +119,7 @@ const USB_STATES = {
 module.exports = Object.assign({}, {
   DEBUG_TARGETS,
   DEBUG_TARGET_PANE,
+  MESSAGE_LEVEL,
   PAGE_TYPES,
   PREFERENCES,
   RUNTIME_PREFERENCE,

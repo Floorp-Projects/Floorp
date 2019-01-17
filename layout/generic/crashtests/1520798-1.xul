@@ -1,0 +1,10 @@
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="go()">
+<div id="tweakMe">abc</div>
+<script>
+    function go() {
+      document.getElementById("tweakMe").style.overflowAnchor = "none";
+    }
+</script>
+</window>
