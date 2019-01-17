@@ -621,6 +621,7 @@ package org.mozilla.geckoview {
   public static interface GeckoSession.TrackingProtectionDelegate {
     method @android.support.annotation.UiThread public void onTrackerBlocked(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, @android.support.annotation.Nullable java.lang.String, int);
     field public static final int CATEGORY_AD = 1;
+    field public static final int CATEGORY_AD_EXT = 64;
     field public static final int CATEGORY_ALL = 31;
     field public static final int CATEGORY_ANALYTIC = 2;
     field public static final int CATEGORY_CONTENT = 8;
