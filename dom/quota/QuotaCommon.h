@@ -32,9 +32,53 @@
     NS_WARNING(str.get());                                                   \
   } while (0)
 
+// Telemetry probes to collect number of failure during the initialization.
+#ifdef NIGHTLY_BUILD
+#define REPORT_TELEMETRY_INIT_ERR(_key, _label)   \
+  mozilla::Telemetry::AccumulateCategoricalKeyed( \
+      mozilla::dom::quota::_key,                  \
+      mozilla::Telemetry::LABELS_QM_INIT_TELEMETRY_ERROR::_label);
+
+#define REPORT_TELEMETRY_ERR_IN_INIT(_initializing, _key, _label) \
+  do {                                                            \
+    if (_initializing) {                                          \
+      REPORT_TELEMETRY_INIT_ERR(_key, _label)                     \
+    }                                                             \
+  } while (0)
+
+#define RECORD_IN_NIGHTLY(_recorder, _status) \
+  do {                                        \
+    if (NS_SUCCEEDED(_recorder)) {            \
+      _recorder = _status;                    \
+    }                                         \
+  } while (0)
+
+#define CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(_dummy) continue
+#else
+#define REPORT_TELEMETRY_INIT_ERR(_key, _label) \
+  {}
+
+#define REPORT_TELEMETRY_ERR_IN_INIT(_initializing, _key, _label) \
+  {}
+
+#define RECORD_IN_NIGHTLY(_dummy, _status) \
+  {}
+
+#define CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(_rv) return _rv
+#endif
+
 class nsIEventTarget;
 
 BEGIN_QUOTA_NAMESPACE
+
+// Telemetry keys to indicate types of errors.
+#ifdef NIGHTLY_BUILD
+const nsCString kInternalError = NS_LITERAL_CSTRING("internal");
+const nsCString kExternalError = NS_LITERAL_CSTRING("external");
+#else
+const nsCString kInternalError = EmptyCString();
+const nsCString kExternalError = EmptyCString();
+#endif
 
 class BackgroundThreadObject {
  protected:

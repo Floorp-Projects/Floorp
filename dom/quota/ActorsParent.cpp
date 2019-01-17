@@ -49,6 +49,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 #include "mozStorageCID.h"
@@ -3625,18 +3626,24 @@ nsresult QuotaManager::GetDirectoryMetadata2(
 nsresult QuotaManager::GetDirectoryMetadata2WithRestore(
     nsIFile* aDirectory, bool aPersistent, int64_t* aTimestamp,
     bool* aPersisted, nsACString& aSuffix, nsACString& aGroup,
-    nsACString& aOrigin) {
+    nsACString& aOrigin, const bool aTelemetry) {
   nsresult rv = GetDirectoryMetadata2(aDirectory, aTimestamp, aPersisted,
                                       aSuffix, aGroup, aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     rv = RestoreDirectoryMetadata2(aDirectory, aPersistent);
     if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (aTelemetry) {
+        REPORT_TELEMETRY_INIT_ERR(kInternalError, Rep_RestoreDirMeta);
+      }
       return rv;
     }
 
     rv = GetDirectoryMetadata2(aDirectory, aTimestamp, aPersisted, aSuffix,
                                aGroup, aOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (aTelemetry) {
+        REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_GetDirMeta);
+      }
       return rv;
     }
   }
@@ -3711,20 +3718,29 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
   nsresult rv = NS_NewLocalFile(GetStoragePath(aPersistenceType), false,
                                 getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_NewLocalFile);
     return rv;
   }
 
   bool created;
   rv = EnsureDirectory(directory, &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_EnsureDirectory);
     return rv;
   }
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_GetDirEntries);
     return rv;
   }
+
+  // A keeper to defer the return only in Nightly, so that the telemetry data
+  // for whole profile can be collected
+#ifdef NIGHTLY_BUILD
+  nsresult statusKeeper = NS_OK;
+#endif
 
   nsCOMPtr<nsIFile> childDirectory;
   while (NS_SUCCEEDED(
@@ -3733,14 +3749,18 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
     bool isDirectory;
     rv = childDirectory->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_IsDirectory);
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
     }
 
     if (!isDirectory) {
       nsString leafName;
       rv = childDirectory->GetLeafName(leafName);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_GetLeafName);
+        RECORD_IN_NIGHTLY(statusKeeper, rv);
+        CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
       }
 
       if (IsOSMetadata(leafName)) {
@@ -3748,7 +3768,10 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
       }
 
       UNKNOWN_FILE_WARNING(leafName);
-      return NS_ERROR_UNEXPECTED;
+
+      REPORT_TELEMETRY_INIT_ERR(kInternalError, Rep_UnexpectedFile);
+      RECORD_IN_NIGHTLY(statusKeeper, NS_ERROR_UNEXPECTED);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(NS_ERROR_UNEXPECTED);
     }
 
     int64_t timestamp;
@@ -3758,20 +3781,35 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
     nsCString origin;
     rv = GetDirectoryMetadata2WithRestore(childDirectory,
                                           /* aPersistent */ false, &timestamp,
-                                          &persisted, suffix, group, origin);
+                                          &persisted, suffix, group, origin,
+                                          /* aTelemetry */ true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      // Error should have reported in GetDirectoryMetadata2WithRestore
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
     }
 
     rv = InitializeOrigin(aPersistenceType, group, origin, timestamp, persisted,
                           childDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      // Error should have reported in InitializeOrigin
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
     }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    REPORT_TELEMETRY_INIT_ERR(kInternalError, Rep_GetNextFile);
+    RECORD_IN_NIGHTLY(statusKeeper, rv);
+#ifndef NIGHTLY_BUILD
     return rv;
+#endif
   }
+
+#ifdef NIGHTLY_BUILD
+  if (NS_FAILED(statusKeeper)) {
+    return statusKeeper;
+  }
+#endif
 
   return NS_OK;
 }
@@ -3794,9 +3832,18 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     usageInfo = new UsageInfo();
   }
 
+  // A keeper to defer the return only in Nightly, so that the telemetry data
+  // for whole profile can be collected
+#ifdef NIGHTLY_BUILD
+  nsresult statusKeeper = NS_OK;
+#endif
+
   nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    REPORT_TELEMETRY_INIT_ERR(kExternalError, Ori_GetDirEntries);
+    return rv;
+  }
 
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
@@ -3804,13 +3851,17 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      REPORT_TELEMETRY_INIT_ERR(kExternalError, Ori_IsDirectory);
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
     }
 
     nsString leafName;
     rv = file->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      REPORT_TELEMETRY_INIT_ERR(kExternalError, Ori_GetLeafName);
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
     }
 
     if (!isDirectory) {
@@ -3821,28 +3872,51 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
       if (IsTempMetadata(leafName)) {
         rv = file->Remove(/* recursive */ false);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          REPORT_TELEMETRY_INIT_ERR(kExternalError, Ori_Remove);
+          RECORD_IN_NIGHTLY(statusKeeper, rv);
+          CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
         }
 
         continue;
       }
 
       UNKNOWN_FILE_WARNING(leafName);
-      return NS_ERROR_UNEXPECTED;
+      REPORT_TELEMETRY_INIT_ERR(kInternalError, Ori_UnexpectedFile);
+      RECORD_IN_NIGHTLY(statusKeeper, NS_ERROR_UNEXPECTED);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(NS_ERROR_UNEXPECTED);
     }
 
     Client::Type clientType;
     rv = Client::TypeFromText(leafName, clientType);
     if (NS_FAILED(rv)) {
       UNKNOWN_FILE_WARNING(leafName);
-      return NS_ERROR_UNEXPECTED;
+      REPORT_TELEMETRY_INIT_ERR(kInternalError, Ori_UnexpectedClient);
+      RECORD_IN_NIGHTLY(statusKeeper, NS_ERROR_UNEXPECTED);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(NS_ERROR_UNEXPECTED);
     }
 
     Atomic<bool> dummy(false);
     rv = mClients[clientType]->InitOrigin(aPersistenceType, aGroup, aOrigin,
                                           /* aCanceled */ dummy, usageInfo);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // error should have reported in InitOrigin
+      RECORD_IN_NIGHTLY(statusKeeper, rv);
+      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
+    }
   }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    REPORT_TELEMETRY_INIT_ERR(kInternalError, Ori_GetNextFile);
+    RECORD_IN_NIGHTLY(statusKeeper, rv);
+#ifndef NIGHTLY_BUILD
+    return rv;
+#endif
+  }
+
+#ifdef NIGHTLY_BUILD
+  if (NS_FAILED(statusKeeper)) {
+    return statusKeeper;
+  }
+#endif
 
   if (trackQuota) {
     InitQuotaForOrigin(aPersistenceType, aGroup, aOrigin,
@@ -5012,20 +5086,32 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 
   TimeStamp startTime = TimeStamp::Now();
 
+  // A keeper to defer the return only in Nightly, so that the telemetry data
+  // for whole profile can be collected
+  nsresult statusKeeper = NS_OK;
+
   nsresult rv = InitializeRepository(PERSISTENCE_TYPE_DEFAULT);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    RECORD_IN_NIGHTLY(statusKeeper, rv);
+
+#ifndef NIGHTLY_BUILD
     // We have to cleanup partially initialized quota.
     RemoveQuota();
 
     return rv;
+#endif
   }
 
   rv = InitializeRepository(PERSISTENCE_TYPE_TEMPORARY);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_WARN_IF(NS_FAILED(rv)) || NS_FAILED(statusKeeper)) {
     // We have to cleanup partially initialized quota.
     RemoveQuota();
 
+#ifdef NIGHTLY_BUILD
+    return NS_FAILED(statusKeeper) ? statusKeeper : rv;
+#else
     return rv;
+#endif
   }
 
   Telemetry::AccumulateTimeDelta(Telemetry::QM_REPOSITORIES_INITIALIZATION_TIME,
