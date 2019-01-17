@@ -6346,6 +6346,25 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
   return sCSDSupportLevel;
 }
 
+bool nsWindow::HideTitlebarByDefault() {
+  static int hideTitlebar = -1;
+  if (hideTitlebar != -1) {
+    return hideTitlebar;
+  }
+
+  const char *currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+  hideTitlebar =
+      (currentDesktop && GetSystemCSDSupportLevel() != CSD_SUPPORT_NONE);
+
+  if (hideTitlebar) {
+    hideTitlebar =
+        (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr ||
+         strstr(currentDesktop, "GNOME") != nullptr);
+  }
+
+  return hideTitlebar;
+}
+
 bool nsWindow::TopLevelWindowUseARGBVisual() {
   static int useARGBVisual = -1;
   if (useARGBVisual != -1) {
