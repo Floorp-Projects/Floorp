@@ -3345,8 +3345,8 @@ bool Parser<SyntaxParseHandler, Unit>::asmJS(ListNodeType list) {
   return false;
 }
 
-template <>
-bool Parser<FullParseHandler, char16_t>::asmJS(ListNodeType list) {
+template <typename Unit>
+bool Parser<FullParseHandler, Unit>::asmJS(ListNodeType list) {
   // Disable syntax parsing in anything nested inside the asm.js module.
   disableSyntaxParser();
 
@@ -3381,14 +3381,6 @@ bool Parser<FullParseHandler, char16_t>::asmJS(ListNodeType list) {
     return false;
   }
 
-  return true;
-}
-
-template <>
-bool Parser<FullParseHandler, Utf8Unit>::asmJS(ListNodeType list) {
-  // Just succeed without setting the asm.js directive flag.  Given Web
-  // Assembly's rapid advance, it's probably not worth the trouble to really
-  // support UTF-8 asm.js.
   return true;
 }
 

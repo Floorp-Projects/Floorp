@@ -20,6 +20,7 @@
 #define wasm_AsmJS_h
 
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include <stdint.h>  // uint32_t
 
@@ -59,6 +60,11 @@ using AsmJSParser = frontend::Parser<frontend::FullParseHandler, Unit>;
 // as asm.js. In this case, the parser.tokenStream has been advanced an
 // indeterminate amount and the entire function should be reparsed from the
 // beginning.
+
+extern MOZ_MUST_USE bool CompileAsmJS(JSContext* cx,
+                                      AsmJSParser<mozilla::Utf8Unit>& parser,
+                                      frontend::ParseNode* stmtList,
+                                      bool* validated);
 
 extern MOZ_MUST_USE bool CompileAsmJS(JSContext* cx,
                                       AsmJSParser<char16_t>& parser,
