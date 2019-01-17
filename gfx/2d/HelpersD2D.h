@@ -40,6 +40,12 @@ static inline D2D1_RECT_F D2DRect(const T &aRect) {
   return D2D1::RectF(aRect.X(), aRect.Y(), aRect.XMost(), aRect.YMost());
 }
 
+static inline D2D1_ROUNDED_RECT D2DRoundedRect(const RoundedRect &aRect) {
+  return D2D1::RoundedRect(D2DRect(aRect.rect),
+                           aRect.corners.BottomLeft().width,
+                           aRect.corners.BottomLeft().height);
+}
+
 static inline D2D1_EXTEND_MODE D2DExtend(ExtendMode aExtendMode, Axis aAxis) {
   D2D1_EXTEND_MODE extend;
   switch (aExtendMode) {
