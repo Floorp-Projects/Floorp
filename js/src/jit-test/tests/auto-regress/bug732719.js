@@ -4,10 +4,12 @@
 // Flags: -m -n
 //
 
-function TestCase(n, d, e, a)
-TestCase.prototype.dump = function () {};
-function enterFunc (funcName)
-function writeHeaderToLog( string ) {}
+function TestCase(n, d, e, a) {
+  return TestCase.prototype.dump = function () {};
+}
+function enterFunc (funcName) {
+return function writeHeaderToLog( string ) {};
+}
 gczeal(2);
 function f() {}
 try {
