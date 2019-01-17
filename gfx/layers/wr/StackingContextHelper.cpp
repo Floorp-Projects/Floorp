@@ -27,8 +27,7 @@ StackingContextHelper::StackingContextHelper(
     wr::DisplayListBuilder& aBuilder, const nsTArray<wr::FilterOp>& aFilters,
     const LayoutDeviceRect& aBounds, const gfx::Matrix4x4* aBoundTransform,
     const wr::WrAnimationProperty* aAnimation, const float* aOpacityPtr,
-    const gfx::Matrix4x4* aTransformPtr,
-    wr::ReferenceFrameKind aReferenceFrameKind,
+    const gfx::Matrix4x4* aTransformPtr, const gfx::Matrix4x4* aPerspectivePtr,
     const gfx::CompositionOp& aMixBlendMode, bool aBackfaceVisible,
     bool aIsPreserve3D,
     const Maybe<nsDisplayTransform*>& aDeferredTransformItem,
@@ -42,8 +41,7 @@ StackingContextHelper::StackingContextHelper(
   // transformed items
   gfx::Matrix transform2d;
   if (aBoundTransform && aBoundTransform->CanDraw2D(&transform2d) &&
-      aReferenceFrameKind != wr::ReferenceFrameKind::Perspective &&
-      !aParentSC.mIsPreserve3D) {
+      !aPerspectivePtr && !aParentSC.mIsPreserve3D) {
     mInheritedTransform = transform2d * aParentSC.mInheritedTransform;
 
     int32_t apd = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
@@ -72,7 +70,7 @@ StackingContextHelper::StackingContextHelper(
   mReferenceFrameId = mBuilder->PushStackingContext(
       wr::ToLayoutRect(aBounds), aClip, aAnimation, aOpacityPtr, aTransformPtr,
       aIsPreserve3D ? wr::TransformStyle::Preserve3D : wr::TransformStyle::Flat,
-      aReferenceFrameKind, wr::ToMixBlendMode(aMixBlendMode), aFilters,
+      aPerspectivePtr, wr::ToMixBlendMode(aMixBlendMode), aFilters,
       aBackfaceVisible, rasterSpace);
 
   if (mReferenceFrameId) {

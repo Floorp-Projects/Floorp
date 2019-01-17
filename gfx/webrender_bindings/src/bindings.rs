@@ -1904,7 +1904,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
     opacity: *const f32,
     transform: *const LayoutTransform,
     transform_style: TransformStyle,
-    reference_frame_kind: ReferenceFrameKind,
+    perspective: *const LayoutTransform,
     mix_blend_mode: MixBlendMode,
     filters: *const FilterOp,
     filter_count: usize,
@@ -1955,10 +1955,16 @@ pub extern "C" fn wr_dp_push_stacking_context(
         }
     }
 
+    let perspective_ref = unsafe { perspective.as_ref() };
+    let perspective = match perspective_ref {
+        Some(perspective) => Some(perspective.clone()),
+        None => None,
+    };
+
     let mut wr_spatial_id = spatial_id.to_webrender(state.pipeline_id);
     let wr_clip_id = clip.to_webrender(state.pipeline_id);
 
-    let is_reference_frame = transform_binding.is_some();
+    let is_reference_frame = transform_binding.is_some() || perspective.is_some();
     // Note: 0 has special meaning in WR land, standing for ROOT_REFERENCE_FRAME.
     // However, it is never returned by `push_reference_frame`, and we need to return
     // an option here across FFI, so we take that 0 value for the None semantics.
@@ -1970,7 +1976,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
             wr_spatial_id,
             transform_style,
             transform_binding,
-            reference_frame_kind,
+            perspective,
         );
 
         bounds.origin = LayoutPoint::zero();
