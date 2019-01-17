@@ -111,7 +111,7 @@ We will install a modern version of Clang through %s.
 PACKAGE_MANAGER_CHOICE = '''
 Please choose a package manager you'd like:
 1. Homebrew
-2. MacPorts (Does not yet support bootstrapping Firefox for Android.)
+2. MacPorts (Does not yet support bootstrapping GeckoView/Firefox for Android.)
 Your choice:
 '''
 
@@ -374,7 +374,8 @@ class OSXBootstrapper(BaseBootstrapper):
 
         is_64bits = sys.maxsize > 2**32
         if not is_64bits:
-            raise Exception('You need a 64-bit version of Mac OS X to build Firefox for Android.')
+            raise Exception('You need a 64-bit version of Mac OS X to build '
+                            'GeckoView/Firefox for Android.')
 
         # 2. Android pieces.
         from mozboot import android
@@ -452,7 +453,8 @@ class OSXBootstrapper(BaseBootstrapper):
 
         is_64bits = sys.maxsize > 2**32
         if not is_64bits:
-            raise Exception('You need a 64-bit version of Mac OS X to build Firefox for Android.')
+            raise Exception('You need a 64-bit version of Mac OS X to build '
+                            'GeckoView/Firefox for Android.')
 
         # 2. Android pieces.
         from mozboot import android

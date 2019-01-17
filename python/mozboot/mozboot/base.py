@@ -216,7 +216,7 @@ class BaseBootstrapper(object):
         Install packages required to build Firefox for Android (application
         'mobile/android', also known as Fennec).
         '''
-        raise NotImplementedError('Cannot bootstrap Firefox for Android: '
+        raise NotImplementedError('Cannot bootstrap GeckoView/Firefox for Android: '
                                   '%s does not yet implement install_mobile_android_packages()'
                                   % __name__)
 
@@ -225,7 +225,7 @@ class BaseBootstrapper(object):
         Print a message to the console detailing what the user's mozconfig
         should contain.
 
-        Firefox for Android needs an application and an ABI set, and it needs
+        GeckoView/Firefox for Android needs an application and an ABI set, and it needs
         paths to the Android SDK and NDK.
         '''
         raise NotImplementedError('%s does not yet implement suggest_mobile_android_mozconfig()' %
@@ -233,11 +233,11 @@ class BaseBootstrapper(object):
 
     def install_mobile_android_artifact_mode_packages(self):
         '''
-        Install packages required to build Firefox for Android (application
+        Install packages required to build GeckoView/Firefox for Android (application
         'mobile/android', also known as Fennec) in Artifact Mode.
         '''
         raise NotImplementedError(
-            'Cannot bootstrap Firefox for Android Artifact Mode: '
+            'Cannot bootstrap GeckoView/Firefox for Android Artifact Mode: '
             '%s does not yet implement install_mobile_android_artifact_mode_packages()'
             % __name__)
 
@@ -246,7 +246,7 @@ class BaseBootstrapper(object):
         Print a message to the console detailing what the user's mozconfig
         should contain.
 
-        Firefox for Android Artifact Mode needs an application and an ABI set,
+        GeckoView/Firefox for Android Artifact Mode needs an application and an ABI set,
         and it needs paths to the Android SDK.
         '''
         raise NotImplementedError(
