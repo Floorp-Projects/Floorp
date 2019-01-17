@@ -46,7 +46,7 @@ const OBSERVING = [
   "browser-window-before-show", "domwindowclosed",
   "quit-application-granted", "browser-lastwindow-close-granted",
   "quit-application", "browser:purge-session-history",
-  "browser:purge-domain-data",
+  "browser:purge-session-history-for-domain",
   "idle-daily", "clear-origin-attributes-data",
 ];
 
@@ -786,7 +786,7 @@ var SessionStoreInternal = {
         this.onPurgeSessionHistory();
         this._notifyOfClosedObjectsChange();
         break;
-      case "browser:purge-domain-data":
+      case "browser:purge-session-history-for-domain":
         this.onPurgeDomainData(aData);
         this._notifyOfClosedObjectsChange();
         break;
