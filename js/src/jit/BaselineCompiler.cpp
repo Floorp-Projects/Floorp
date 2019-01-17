@@ -414,146 +414,6 @@ void BaselineCompiler::emitInitializeLocals() {
   }
 }
 
-bool BaselineCompiler::emitPrologue() {
-#ifdef JS_USE_LINK_REGISTER
-  // Push link register from generateEnterJIT()'s BLR.
-  masm.pushReturnAddress();
-  masm.checkStackAlignment();
-#endif
-  emitProfilerEnterFrame();
-
-  if (script->trackRecordReplayProgress()) {
-    masm.inc64(
-        AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
-  }
-
-  masm.push(BaselineFrameReg);
-  masm.moveStackPtrTo(BaselineFrameReg);
-  masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
-
-  // Initialize BaselineFrame. For eval scripts, the env chain
-  // is passed in R1, so we have to be careful not to clobber it.
-
-  // Initialize BaselineFrame::flags.
-  masm.store32(Imm32(0), frame.addressOfFlags());
-
-  // Handle env chain pre-initialization (in case GC gets run
-  // during stack check).  For global and eval scripts, the env
-  // chain is in R1.  For function scripts, the env chain is in
-  // the callee, nullptr is stored for now so that GC doesn't choke
-  // on a bogus EnvironmentChain value in the frame.
-  if (function()) {
-    masm.storePtr(ImmPtr(nullptr), frame.addressOfEnvironmentChain());
-  } else {
-    masm.storePtr(R1.scratchReg(), frame.addressOfEnvironmentChain());
-  }
-
-  // Functions with a large number of locals require two stack checks.
-  // The VMCall for a fallible stack check can only occur after the
-  // env chain has been initialized, as that is required for proper
-  // exception handling if the VMCall returns false.  The env chain
-  // initialization can only happen after the UndefinedValues for the
-  // local slots have been pushed. However by that time, the stack might
-  // have grown too much.
-  //
-  // In these cases, we emit an extra, early, infallible check before pushing
-  // the locals. The early check just sets a flag on the frame if the stack
-  // check fails. If the flag is set, then the jitcode skips past the pushing
-  // of the locals, and directly to env chain initialization followed by the
-  // actual stack check, which will throw the correct exception.
-  Label earlyStackCheckFailed;
-  if (needsEarlyStackCheck()) {
-    // Subtract the size of script->nslots() from the stack pointer.
-    uint32_t slotsSize = script->nslots() * sizeof(Value);
-    Register scratch = R1.scratchReg();
-    masm.moveStackPtrTo(scratch);
-    masm.subPtr(Imm32(slotsSize), scratch);
-
-    // Set the OVER_RECURSED flag on the frame if the computed stack pointer
-    // overflows the stack limit. We have to use the actual (*NoInterrupt)
-    // stack limit here because we don't want to set the flag and throw an
-    // overrecursion exception later in the interrupt case.
-    Label stackCheckOk;
-    masm.branchPtr(Assembler::BelowOrEqual,
-                   AbsoluteAddress(cx->addressOfJitStackLimitNoInterrupt()),
-                   scratch, &stackCheckOk);
-    {
-      masm.or32(Imm32(BaselineFrame::OVER_RECURSED), frame.addressOfFlags());
-      masm.jump(&earlyStackCheckFailed);
-    }
-    masm.bind(&stackCheckOk);
-  }
-
-  emitInitializeLocals();
-
-  if (needsEarlyStackCheck()) {
-    masm.bind(&earlyStackCheckFailed);
-  }
-
-#ifdef JS_TRACE_LOGGING
-  if (!emitTraceLoggerEnter()) {
-    return false;
-  }
-#endif
-
-  // Record the offset of the prologue, because Ion can bailout before
-  // the env chain is initialized.
-  bailoutPrologueOffset_ = CodeOffset(masm.currentOffset());
-
-  // When compiling with Debugger instrumentation, set the debuggeeness of
-  // the frame before any operation that can call into the VM.
-  emitIsDebuggeeCheck();
-
-  // Initialize the env chain before any operation that may
-  // call into the VM and trigger a GC.
-  if (!initEnvironmentChain()) {
-    return false;
-  }
-
-  frame.assertSyncedStack();
-  masm.debugAssertContextRealm(script->realm(), R1.scratchReg());
-
-  if (!emitStackCheck()) {
-    return false;
-  }
-
-  if (!emitDebugPrologue()) {
-    return false;
-  }
-
-  if (!emitWarmUpCounterIncrement()) {
-    return false;
-  }
-
-  if (!emitArgumentTypeChecks()) {
-    return false;
-  }
-
-  return true;
-}
-
-bool BaselineCompiler::emitEpilogue() {
-  // Record the offset of the epilogue, so we can do early return from
-  // Debugger handlers during on-stack recompile.
-  debugOsrEpilogueOffset_ = CodeOffset(masm.currentOffset());
-
-  masm.bind(&return_);
-
-#ifdef JS_TRACE_LOGGING
-  if (!emitTraceLoggerExit()) {
-    return false;
-  }
-#endif
-
-  masm.moveToStackPtr(BaselineFrameReg);
-  masm.pop(BaselineFrameReg);
-
-  emitProfilerExitFrame();
-
-  masm.ret();
-  return true;
-}
-
 // On input:
 //  R2.scratchReg() contains object being written to.
 //  Called with the baseline stack synced, except for R0 which is preserved.
@@ -1228,117 +1088,6 @@ void BaselineCompiler::emitProfilerExitFrame() {
   // Store the start offset in the appropriate location.
   MOZ_ASSERT(!profilerExitFrameToggleOffset_.bound());
   profilerExitFrameToggleOffset_ = toggleOffset;
-}
-
-MethodStatus BaselineCompiler::emitBody() {
-  MOZ_ASSERT(pc == script->code());
-
-  bool lastOpUnreachable = false;
-  uint32_t emittedOps = 0;
-  mozilla::DebugOnly<jsbytecode*> prevpc = pc;
-
-  while (true) {
-    JSOp op = JSOp(*pc);
-    JitSpew(JitSpew_BaselineOp, "Compiling op @ %d: %s",
-            int(script->pcToOffset(pc)), CodeName[op]);
-
-    BytecodeInfo* info = analysis_.maybeInfo(pc);
-
-    // Skip unreachable ops.
-    if (!info) {
-      // Test if last instructions and stop emitting in that case.
-      pc += GetBytecodeLength(pc);
-      if (pc >= script->codeEnd()) {
-        break;
-      }
-
-      lastOpUnreachable = true;
-      prevpc = pc;
-      continue;
-    }
-
-    if (info->jumpTarget) {
-      // Fully sync the stack if there are incoming jumps.
-      frame.syncStack(0);
-      frame.setStackDepth(info->stackDepth);
-      masm.bind(handler.labelOf(pc));
-    } else if (MOZ_UNLIKELY(compileDebugInstrumentation())) {
-      // Also fully sync the stack if the debugger is enabled.
-      frame.syncStack(0);
-    } else {
-      // At the beginning of any op, at most the top 2 stack-values are
-      // unsynced.
-      if (frame.stackDepth() > 2) {
-        frame.syncStack(2);
-      }
-    }
-
-    frame.assertValidState(*info);
-
-    // Add a PC -> native mapping entry for the current op. These entries are
-    // used when we need the native code address for a given pc, for instance
-    // for bailouts from Ion, the debugger and exception handling. See
-    // PCMappingIndexEntry for more information.
-    bool addIndexEntry =
-        (pc == script->code() || lastOpUnreachable || emittedOps > 100);
-    if (addIndexEntry) {
-      emittedOps = 0;
-    }
-    if (MOZ_UNLIKELY(!addPCMappingEntry(addIndexEntry))) {
-      ReportOutOfMemory(cx);
-      return Method_Error;
-    }
-
-    // Emit traps for breakpoints and step mode.
-    if (MOZ_UNLIKELY(compileDebugInstrumentation()) && !emitDebugTrap()) {
-      return Method_Error;
-    }
-
-    switch (op) {
-      // ===== NOT Yet Implemented =====
-      case JSOP_FORCEINTERPRETER:
-        // Intentionally not implemented.
-      case JSOP_SETINTRINSIC:
-        // Run-once opcode during self-hosting initialization.
-      case JSOP_UNUSED151:
-      case JSOP_LIMIT:
-        // === !! WARNING WARNING WARNING !! ===
-        // Do you really want to sacrifice performance by not implementing
-        // this operation in the BaselineCompiler?
-        JitSpew(JitSpew_BaselineAbort, "Unhandled op: %s", CodeName[op]);
-        return Method_CantCompile;
-
-#define EMIT_OP(OP)                                            \
-  case OP:                                                     \
-    if (MOZ_UNLIKELY(!this->emit_##OP())) return Method_Error; \
-    break;
-        OPCODE_LIST(EMIT_OP)
-#undef EMIT_OP
-    }
-
-    // If the main instruction is not a jump target, then we emit the
-    //  corresponding code coverage counter.
-    if (pc == script->main() && !BytecodeIsJumpTarget(op)) {
-      if (!emit_JSOP_JUMPTARGET()) {
-        return Method_Error;
-      }
-    }
-
-    // Test if last instructions and stop emitting in that case.
-    pc += GetBytecodeLength(pc);
-    if (pc >= script->codeEnd()) {
-      break;
-    }
-
-    emittedOps++;
-    lastOpUnreachable = false;
-#ifdef DEBUG
-    prevpc = pc;
-#endif
-  }
-
-  MOZ_ASSERT(JSOp(*prevpc) == JSOP_RETRVAL);
-  return Method_Compiled;
 }
 
 template <typename Handler>
@@ -5459,6 +5208,257 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DYNAMIC_IMPORT() {
   masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
   frame.push(R0);
   return true;
+}
+
+bool BaselineCompiler::emitPrologue() {
+#ifdef JS_USE_LINK_REGISTER
+  // Push link register from generateEnterJIT()'s BLR.
+  masm.pushReturnAddress();
+  masm.checkStackAlignment();
+#endif
+  emitProfilerEnterFrame();
+
+  if (script->trackRecordReplayProgress()) {
+    masm.inc64(
+        AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
+  }
+
+  masm.push(BaselineFrameReg);
+  masm.moveStackPtrTo(BaselineFrameReg);
+  masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
+
+  // Initialize BaselineFrame. For eval scripts, the env chain
+  // is passed in R1, so we have to be careful not to clobber it.
+
+  // Initialize BaselineFrame::flags.
+  masm.store32(Imm32(0), frame.addressOfFlags());
+
+  // Handle env chain pre-initialization (in case GC gets run
+  // during stack check).  For global and eval scripts, the env
+  // chain is in R1.  For function scripts, the env chain is in
+  // the callee, nullptr is stored for now so that GC doesn't choke
+  // on a bogus EnvironmentChain value in the frame.
+  if (function()) {
+    masm.storePtr(ImmPtr(nullptr), frame.addressOfEnvironmentChain());
+  } else {
+    masm.storePtr(R1.scratchReg(), frame.addressOfEnvironmentChain());
+  }
+
+  // Functions with a large number of locals require two stack checks.
+  // The VMCall for a fallible stack check can only occur after the
+  // env chain has been initialized, as that is required for proper
+  // exception handling if the VMCall returns false.  The env chain
+  // initialization can only happen after the UndefinedValues for the
+  // local slots have been pushed. However by that time, the stack might
+  // have grown too much.
+  //
+  // In these cases, we emit an extra, early, infallible check before pushing
+  // the locals. The early check just sets a flag on the frame if the stack
+  // check fails. If the flag is set, then the jitcode skips past the pushing
+  // of the locals, and directly to env chain initialization followed by the
+  // actual stack check, which will throw the correct exception.
+  Label earlyStackCheckFailed;
+  if (needsEarlyStackCheck()) {
+    // Subtract the size of script->nslots() from the stack pointer.
+    uint32_t slotsSize = script->nslots() * sizeof(Value);
+    Register scratch = R1.scratchReg();
+    masm.moveStackPtrTo(scratch);
+    masm.subPtr(Imm32(slotsSize), scratch);
+
+    // Set the OVER_RECURSED flag on the frame if the computed stack pointer
+    // overflows the stack limit. We have to use the actual (*NoInterrupt)
+    // stack limit here because we don't want to set the flag and throw an
+    // overrecursion exception later in the interrupt case.
+    Label stackCheckOk;
+    masm.branchPtr(Assembler::BelowOrEqual,
+                   AbsoluteAddress(cx->addressOfJitStackLimitNoInterrupt()),
+                   scratch, &stackCheckOk);
+    {
+      masm.or32(Imm32(BaselineFrame::OVER_RECURSED), frame.addressOfFlags());
+      masm.jump(&earlyStackCheckFailed);
+    }
+    masm.bind(&stackCheckOk);
+  }
+
+  emitInitializeLocals();
+
+  if (needsEarlyStackCheck()) {
+    masm.bind(&earlyStackCheckFailed);
+  }
+
+#ifdef JS_TRACE_LOGGING
+  if (!emitTraceLoggerEnter()) {
+    return false;
+  }
+#endif
+
+  // Record the offset of the prologue, because Ion can bailout before
+  // the env chain is initialized.
+  bailoutPrologueOffset_ = CodeOffset(masm.currentOffset());
+
+  // When compiling with Debugger instrumentation, set the debuggeeness of
+  // the frame before any operation that can call into the VM.
+  emitIsDebuggeeCheck();
+
+  // Initialize the env chain before any operation that may
+  // call into the VM and trigger a GC.
+  if (!initEnvironmentChain()) {
+    return false;
+  }
+
+  frame.assertSyncedStack();
+  masm.debugAssertContextRealm(script->realm(), R1.scratchReg());
+
+  if (!emitStackCheck()) {
+    return false;
+  }
+
+  if (!emitDebugPrologue()) {
+    return false;
+  }
+
+  if (!emitWarmUpCounterIncrement()) {
+    return false;
+  }
+
+  if (!emitArgumentTypeChecks()) {
+    return false;
+  }
+
+  return true;
+}
+
+bool BaselineCompiler::emitEpilogue() {
+  // Record the offset of the epilogue, so we can do early return from
+  // Debugger handlers during on-stack recompile.
+  debugOsrEpilogueOffset_ = CodeOffset(masm.currentOffset());
+
+  masm.bind(&return_);
+
+#ifdef JS_TRACE_LOGGING
+  if (!emitTraceLoggerExit()) {
+    return false;
+  }
+#endif
+
+  masm.moveToStackPtr(BaselineFrameReg);
+  masm.pop(BaselineFrameReg);
+
+  emitProfilerExitFrame();
+
+  masm.ret();
+  return true;
+}
+
+MethodStatus BaselineCompiler::emitBody() {
+  MOZ_ASSERT(pc == script->code());
+
+  bool lastOpUnreachable = false;
+  uint32_t emittedOps = 0;
+  mozilla::DebugOnly<jsbytecode*> prevpc = pc;
+
+  while (true) {
+    JSOp op = JSOp(*pc);
+    JitSpew(JitSpew_BaselineOp, "Compiling op @ %d: %s",
+            int(script->pcToOffset(pc)), CodeName[op]);
+
+    BytecodeInfo* info = analysis_.maybeInfo(pc);
+
+    // Skip unreachable ops.
+    if (!info) {
+      // Test if last instructions and stop emitting in that case.
+      pc += GetBytecodeLength(pc);
+      if (pc >= script->codeEnd()) {
+        break;
+      }
+
+      lastOpUnreachable = true;
+      prevpc = pc;
+      continue;
+    }
+
+    if (info->jumpTarget) {
+      // Fully sync the stack if there are incoming jumps.
+      frame.syncStack(0);
+      frame.setStackDepth(info->stackDepth);
+      masm.bind(handler.labelOf(pc));
+    } else if (MOZ_UNLIKELY(compileDebugInstrumentation())) {
+      // Also fully sync the stack if the debugger is enabled.
+      frame.syncStack(0);
+    } else {
+      // At the beginning of any op, at most the top 2 stack-values are
+      // unsynced.
+      if (frame.stackDepth() > 2) {
+        frame.syncStack(2);
+      }
+    }
+
+    frame.assertValidState(*info);
+
+    // Add a PC -> native mapping entry for the current op. These entries are
+    // used when we need the native code address for a given pc, for instance
+    // for bailouts from Ion, the debugger and exception handling. See
+    // PCMappingIndexEntry for more information.
+    bool addIndexEntry =
+        (pc == script->code() || lastOpUnreachable || emittedOps > 100);
+    if (addIndexEntry) {
+      emittedOps = 0;
+    }
+    if (MOZ_UNLIKELY(!addPCMappingEntry(addIndexEntry))) {
+      ReportOutOfMemory(cx);
+      return Method_Error;
+    }
+
+    // Emit traps for breakpoints and step mode.
+    if (MOZ_UNLIKELY(compileDebugInstrumentation()) && !emitDebugTrap()) {
+      return Method_Error;
+    }
+
+    switch (op) {
+      // ===== NOT Yet Implemented =====
+      case JSOP_FORCEINTERPRETER:
+        // Intentionally not implemented.
+      case JSOP_SETINTRINSIC:
+        // Run-once opcode during self-hosting initialization.
+      case JSOP_UNUSED151:
+      case JSOP_LIMIT:
+        // === !! WARNING WARNING WARNING !! ===
+        // Do you really want to sacrifice performance by not implementing
+        // this operation in the BaselineCompiler?
+        JitSpew(JitSpew_BaselineAbort, "Unhandled op: %s", CodeName[op]);
+        return Method_CantCompile;
+
+#define EMIT_OP(OP)                                            \
+  case OP:                                                     \
+    if (MOZ_UNLIKELY(!this->emit_##OP())) return Method_Error; \
+    break;
+        OPCODE_LIST(EMIT_OP)
+#undef EMIT_OP
+    }
+
+    // If the main instruction is not a jump target, then we emit the
+    //  corresponding code coverage counter.
+    if (pc == script->main() && !BytecodeIsJumpTarget(op)) {
+      if (!emit_JSOP_JUMPTARGET()) {
+        return Method_Error;
+      }
+    }
+
+    // Test if last instructions and stop emitting in that case.
+    pc += GetBytecodeLength(pc);
+    if (pc >= script->codeEnd()) {
+      break;
+    }
+
+    emittedOps++;
+    lastOpUnreachable = false;
+#ifdef DEBUG
+    prevpc = pc;
+#endif
+  }
+
+  MOZ_ASSERT(JSOp(*prevpc) == JSOP_RETRVAL);
+  return Method_Compiled;
 }
 
 // Instantiate explicitly for now to make sure it compiles.
