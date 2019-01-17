@@ -1034,7 +1034,7 @@ impl ClipItem {
     // reduce the size of a primitive region. This is typically
     // used to eliminate redundant clips, and reduce the size of
     // any clip mask that eventually gets drawn.
-    fn get_local_clip_rect(&self, local_pos: LayoutPoint) -> Option<LayoutRect> {
+    pub fn get_local_clip_rect(&self, local_pos: LayoutPoint) -> Option<LayoutRect> {
         let size = match *self {
             ClipItem::Rectangle(size, ClipMode::Clip) => Some(size),
             ClipItem::Rectangle(_, ClipMode::ClipOut) => None,

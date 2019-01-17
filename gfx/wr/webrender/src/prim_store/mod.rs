@@ -1791,8 +1791,7 @@ impl PrimitiveStore {
                 tile_cache.pre_update(
                     pic.local_rect,
                     frame_context,
-                    frame_state.resource_cache,
-                    frame_state.retained_tiles,
+                    frame_state,
                 );
 
                 frame_state.tile_cache = Some(tile_cache);
