@@ -6,6 +6,8 @@
 
 "use strict";
 
+const { generateUUID } = require("devtools/shared/generate-uuid");
+
 loader.lazyRequireGetter(this, "escapeCSSComment", "devtools/shared/css/parsing-utils", true);
 
 /**
@@ -35,6 +37,7 @@ loader.lazyRequireGetter(this, "escapeCSSComment", "devtools/shared/css/parsing-
  */
 function TextProperty(rule, name, value, priority, enabled = true,
                       invisible = false) {
+  this.id = name + "_" + generateUUID().toString();
   this.rule = rule;
   this.name = name;
   this.value = value;

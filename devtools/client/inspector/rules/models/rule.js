@@ -169,6 +169,18 @@ Rule.prototype = {
   },
 
   /**
+   * Returns the TextProperty with the given id or undefined if it cannot be found.
+   *
+   * @param {String} id
+   *        A TextProperty id.
+   * @return {TextProperty|undefined} with the given id in the current Rule or undefined
+   * if it cannot be found.
+   */
+  getDeclaration: function(id) {
+    return this.textProps.find(textProp => textProp.id === id);
+  },
+
+  /**
    * Returns true if the rule matches the creation options
    * specified.
    *

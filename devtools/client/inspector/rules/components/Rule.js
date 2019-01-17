@@ -17,12 +17,16 @@ const Types = require("../types");
 class Rule extends PureComponent {
   static get propTypes() {
     return {
+      onToggleDeclaration: PropTypes.func.isRequired,
       rule: PropTypes.shape(Types.rule).isRequired,
     };
   }
 
   render() {
-    const { rule } = this.props;
+    const {
+      onToggleDeclaration,
+      rule,
+    } = this.props;
     const {
       declarations,
       selector,
@@ -42,7 +46,10 @@ class Rule extends PureComponent {
             }),
             dom.span({ className: "ruleview-ruleopen" }, " {")
           ),
-          Declarations({ declarations }),
+          Declarations({
+            declarations,
+            onToggleDeclaration,
+          }),
           dom.div({ className: "ruleview-ruleclose" }, "}")
         )
       )

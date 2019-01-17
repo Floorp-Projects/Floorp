@@ -130,6 +130,17 @@ ElementStyle.prototype = {
   },
 
   /**
+   * Returns the Rule object of the given rule id.
+   *
+   * @param  {String} id
+   *         The id of the Rule object.
+   * @return {Rule|undefined} of the given rule id or undefined if it cannot be found.
+   */
+  getRule: function(id) {
+    return this.rules.find(rule => rule.domRule.actorID === id);
+  },
+
+  /**
    * Get the font families in use by the element.
    *
    * Returns a promise that will be resolved to a list of CSS family
@@ -319,6 +330,28 @@ ElementStyle.prototype = {
         textProp.updateEditor();
       }
     }
+  },
+
+  /**
+   * Toggles the enabled state of the given CSS declaration.
+   *
+   * @param {String} ruleId
+   *        The Rule id of the given CSS declaration.
+   * @param {String} declarationId
+   *        The TextProperty id for the CSS declaration.
+   */
+  toggleDeclaration: function(ruleId, declarationId) {
+    const rule = this.getRule(ruleId);
+    if (!rule) {
+      return;
+    }
+
+    const declaration = rule.getDeclaration(declarationId);
+    if (!declaration) {
+      return;
+    }
+
+    declaration.setEnabled(!declaration.enabled);
   },
 
   /**
