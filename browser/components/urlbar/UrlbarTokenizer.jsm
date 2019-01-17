@@ -25,8 +25,9 @@ var UrlbarTokenizer = {
   REGEXP_SPACES: /\s+/,
 
   // Regex used to guess url-like strings.
-  // These are not expected to cover 100% of the cases.
-  REGEXP_PROTOCOL: /^[A-Z+.-]+:(\/\/)?(?!\/)/i,
+  // These are not expected to be 100% correct, we accept some user mistypes
+  // and we're unlikely to be able to cover 100% of the cases.
+  REGEXP_LIKE_PROTOCOL: /^[A-Z+.-]+:\/{0,2}(?!\/)/i,
   REGEXP_USERINFO_INVALID_CHARS: /[^\w.~%!$&'()*+,;=:-]/,
   REGEXP_HOSTPORT_INVALID_CHARS: /[^\[\]A-Z0-9.:-]/i,
   REGEXP_HOSTPORT_IP_LIKE: /^[a-f0-9\.\[\]:]+$/i,
@@ -84,7 +85,7 @@ var UrlbarTokenizer = {
     if (this.REGEXP_SPACES.test(token))
       return false;
     // If it starts with something that looks like a protocol, it's likely a url.
-    if (this.REGEXP_PROTOCOL.test(token))
+    if (this.REGEXP_LIKE_PROTOCOL.test(token))
       return true;
     // Guess path and prePath. At this point we should be analyzing strings not
     // having a protocol.
@@ -103,6 +104,11 @@ var UrlbarTokenizer = {
     if (path.length && userinfo.length)
       return true;
 
+    // If the first character after the slash in the path is a letter, then the
+    // token may be an "abc/def" url.
+    if (/^\/[a-z]/i.test(path)) {
+      return true;
+    }
     // If the path contains special chars, it is likely a url.
     if (["%", "?", "#"].some(c => path.includes(c)))
       return true;
@@ -132,6 +138,9 @@ var UrlbarTokenizer = {
    * @returns {boolean} whether the token looks like an origin.
    */
   looksLikeOrigin(token) {
+    if (token.length == 0) {
+      return false;
+    }
     let atIndex = token.indexOf("@");
     if (atIndex != -1 && this.REGEXP_COMMON_EMAIL.test(token)) {
       // We prefer handling it as an email rather than an origin with userinfo.
@@ -141,12 +150,14 @@ var UrlbarTokenizer = {
     let hostPort = atIndex != -1 ? token.slice(atIndex + 1) : token;
     logger.debug("userinfo", userinfo);
     logger.debug("hostPort", hostPort);
-    if (this.REGEXP_HOSTPORT_IPV4.test(hostPort))
+    if (this.REGEXP_HOSTPORT_IPV4.test(hostPort) ||
+        this.REGEXP_HOSTPORT_IPV6.test(hostPort)) {
       return true;
-    if (this.REGEXP_HOSTPORT_IPV6.test(hostPort))
-      return true;
+    }
+
     // Check for invalid chars.
-    return !this.REGEXP_USERINFO_INVALID_CHARS.test(userinfo) &&
+    return !this.REGEXP_LIKE_PROTOCOL.test(hostPort) &&
+           !this.REGEXP_USERINFO_INVALID_CHARS.test(userinfo) &&
            !this.REGEXP_HOSTPORT_INVALID_CHARS.test(hostPort) &&
            (!this.REGEXP_HOSTPORT_IP_LIKE.test(hostPort) ||
             !this.REGEXP_HOSTPORT_INVALID_IP.test(hostPort));
@@ -237,31 +248,23 @@ function splitString(searchString) {
  * @param {array} tokens
  *        An array of strings, representing search tokens.
  * @returns {array} An array of token objects.
+ * @note restriction characters are only considered if they appear at the start
+ *       or at the end of the tokens list. In case of restriction characters
+ *       conflict, the most external ones win. Leading ones win over trailing
+ *       ones. Discarded restriction characters are considered text.
  */
 function filterTokens(tokens) {
   let filtered = [];
-  let foundRestriction = [];
-  // Tokens that can be combined with others (but not with themselves).
-  // We can have a maximum of 2 tokens, one combinable and one non-combinable.
-  let combinables = new Set([
-    UrlbarTokenizer.TYPE.RESTRICT_TITLE,
-    UrlbarTokenizer.TYPE.RESTRICT_URL,
-  ]);
-  for (let token of tokens) {
+  let restrictions = [];
+  for (let i = 0; i < tokens.length; ++i) {
+    let token = tokens[i];
     let tokenObj = {
       value: token,
       type: UrlbarTokenizer.TYPE.TEXT,
     };
     let restrictionType = CHAR_TO_TYPE_MAP.get(token);
-    let firstRestriction = foundRestriction.length > 0 ? foundRestriction[0] : null;
-    if (tokens.length > 1 &&
-        restrictionType &&
-        !firstRestriction ||
-        (foundRestriction.length == 1 &&
-         (combinables.has(firstRestriction) && !combinables.has(restrictionType)) ||
-         (!combinables.has(firstRestriction) && combinables.has(restrictionType)))) {
-      tokenObj.type = restrictionType;
-      foundRestriction.push(restrictionType);
+    if (restrictionType) {
+      restrictions.push({index: i, type: restrictionType});
     } else if (UrlbarTokenizer.looksLikeOrigin(token)) {
       tokenObj.type = UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN;
     } else if (UrlbarTokenizer.looksLikeUrl(token, {requirePath: true})) {
@@ -269,6 +272,47 @@ function filterTokens(tokens) {
     }
     filtered.push(tokenObj);
   }
+
+  // Handle restriction characters.
+  if (restrictions.length > 0) {
+    // We can apply two kind of restrictions: type (bookmark, search, ...) and
+    // matching (url, title). These kind of restrictions can be combined, but we
+    // can only have one restriction per kind.
+    let matchingRestrictionFound = false;
+    let typeRestrictionFound = false;
+    function assignRestriction(r) {
+      if (r && !(matchingRestrictionFound && typeRestrictionFound)) {
+        if ([UrlbarTokenizer.TYPE.RESTRICT_TITLE,
+             UrlbarTokenizer.TYPE.RESTRICT_URL].includes(r.type)) {
+          if (!matchingRestrictionFound) {
+            matchingRestrictionFound = true;
+            filtered[r.index].type = r.type;
+            return true;
+          }
+        } else if (!typeRestrictionFound) {
+          typeRestrictionFound = true;
+          filtered[r.index].type = r.type;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Look at the first token.
+    let found = assignRestriction(restrictions.find(r => r.index == 0));
+    if (found) {
+      // If the first token was assigned, look at the next one.
+      assignRestriction(restrictions.find(r => r.index == 1));
+    }
+    // Then look at the last token.
+    let lastIndex = tokens.length - 1;
+    found = assignRestriction(restrictions.find(r => r.index == lastIndex));
+    if (found) {
+      // If the last token was assigned, look at the previous one.
+      assignRestriction(restrictions.find(r => r.index == lastIndex - 1));
+    }
+  }
+
   logger.info("Filtered Tokens", tokens);
   return filtered;
 }
