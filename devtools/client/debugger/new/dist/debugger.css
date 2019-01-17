@@ -360,8 +360,8 @@ button.invoke-getter {
   background:url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat;
   background-size:contain;
   background-position:center center;
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border:0;
   padding:0;
   margin-inline-start: 1px;
@@ -1011,215 +1011,6 @@ menuseparator {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.arrow,
-.worker,
-.refresh,
-.shortcut,
-.add-button {
-  fill: var(--theme-splitter-color);
-}
-
-.img.folder,
-.img.domain,
-.img.file,
-.img.extension,
-.img.worker {
-  background-color: var(--theme-comment);
-}
-
-.worker,
-.file,
-.folder,
-.sources-list .source-icon,
-.extension {
-  position: relative;
-  top: 2px;
-}
-
-.domain,
-.worker,
-.refresh,
-.add-button {
-  position: relative;
-  top: 1px;
-}
-
-.worker svg,
-.refresh svg,
-.shortcut svg,
-.add-button svg {
-  width: 15px;
-}
-
-.img.domain,
-.img.folder {
-  width: 15px;
-  height: 15px;
-}
-
-.img.extension,
-.img.worker {
-  width: 13px;
-  height: 13px;
-  margin-inline-start: 2px;
-}
-
-.img.result-item-icon {
-  height: 18px;
-  width: 18px;
-}
-
-.img.domain {
-  mask: url("resource://devtools/client/debugger/new/images/domain.svg") no-repeat;
-}
-
-.img.folder {
-  mask: url("resource://devtools/client/debugger/new/images/folder.svg") no-repeat;
-}
-
-.img.coffeescript {
-  mask: url("resource://devtools/client/debugger/new/images/coffeescript.svg") no-repeat;
-}
-
-.img.javascript {
-  mask: url("resource://devtools/client/debugger/new/images/javascript.svg") no-repeat;
-}
-
-.img.tab {
-  mask: url("resource://devtools/client/debugger/new/images/tab.svg") no-repeat;
-}
-
-.img.react {
-  mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
-}
-
-.img.typescript {
-  mask: url("resource://devtools/client/debugger/new/images/typescript.svg") no-repeat;
-}
-
-.img.extension {
-  mask: url("resource://devtools/client/debugger/new/images/extension.svg") no-repeat;
-}
-
-.img.file {
-  mask: url("resource://devtools/client/debugger/new/images/file.svg") no-repeat;
-  width: 13px;
-  height: 13px;
-}
-
-.img.worker {
-  mask: url("resource://devtools/client/debugger/new/images/worker.svg") no-repeat;
-}
-
-.img.domain,
-.img.folder,
-.img.file,
-.sources-list .img.source-icon,
-.img.extension,
-.img.worker {
-  mask-size: 100%;
-  margin-inline-end: 5px;
-  display: inline-block;
-}
-
-.img.result-item-icon {
-  mask-size: 100%;
-  margin-inline-end: 15px;
-  margin-inline-start: 5px;
-  display: inline-block;
-}
-
-.refresh svg,
-.shortcut svg,
-.worker svg {
-  margin-inline-end: 5px;
-}
-
-.img.arrow {
-  mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
-  margin-inline-end: 5px;
-  margin-top: 3px;
-  width: 9px;
-  height: 9px;
-  padding-top: 9px;
-  background: var(--disclosure-arrow);
-  mask-size: 100%;
-  display: inline-block;
-  margin-bottom: 1px;
-  transform: rotate(-90deg);
-  transition: transform 0.18s ease;
-}
-
-html[dir="ltr"] .img.arrow {
-  transform: rotate(-90deg);
-}
-
-html[dir="rtl"] .img.arrow {
-  transform: rotate(90deg);
-}
-
-.arrow svg {
-  transition: transform 0.125s ease;
-  width: 10px;
-  margin-inline-end: 5px;
-  transform: rotate(-90deg);
-}
-
-html[dir="rtl"] .arrow svg,
-.arrow svg:dir(rtl),
-.arrow svg:-moz-locale-dir(rtl) {
-  transform: rotate(90deg);
-}
-
-.arrow.expanded.expanded svg {
-  transform: rotate(0deg);
-}
-
-.arrow.hidden {
-  visibility: hidden;
-}
-
-.webpack svg {
-  width: 15px;
-  height: 15px;
-  margin-right: 5px;
-  vertical-align: sub;
-}
-
-.function svg {
-  height: 10px;
-  width: 15px;
-}
-
-.function path {
-  fill: var(--theme-body-color);
-}
-
-.angular svg,
-.source-icon svg {
-  width: 15px;
-  height: 15px;
-  margin-right: 5px;
-  vertical-align: sub;
-}
-
-.angular,
-.webpack {
-  opacity: 0.8;
-}
-
-.theme-dark .angular,
-.theme-dark .webpack {
-  opacity: 0.5;
-}
-
-.source-icon svg {
-  fill: var(--theme-comment);
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .managed-tree .tree {
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -1273,6 +1064,12 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   height: 12px;
   /* makes span appear like an image */
   display: inline-block;
+  background: var(--theme-body-color);
+  mask-size: 100%;
+}
+
+.img.arrow.arrow.expanded {
+  transform: rotate(0deg);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1373,9 +1170,6 @@ img.close::before {
   transform: translate(0, 0px);
   transition: transform 0.25s ease-in-out;
   padding: 5px;
-  -webkit-border-start: 1px solid;
-  border-inline-start: 1px solid;
-  border-image: var(--separator-border-image) 1 1;
   height: inherit;
 }
 
@@ -1409,6 +1203,390 @@ html .toggle-button.end.vertical svg {
 .toggle-button.start.collapsed,
 .toggle-button.end.collapsed {
   transform: rotate(180deg);
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.arrow,
+.worker,
+.refresh,
+.shortcut,
+.add-button {
+  fill: var(--theme-splitter-color);
+}
+
+.img.folder,
+.img.domain,
+.img.file,
+.img.extension,
+.img.worker {
+  background-color: var(--theme-comment);
+}
+
+.worker,
+.file,
+.folder,
+.sources-list .source-icon,
+.extension {
+  position: relative;
+  top: 2px;
+}
+
+.domain,
+.worker,
+.refresh,
+.add-button {
+  position: relative;
+  top: 1px;
+}
+
+.worker svg,
+.refresh svg,
+.shortcut svg,
+.add-button svg {
+  width: 15px;
+}
+
+.img.domain,
+.img.folder {
+  width: 15px;
+  height: 15px;
+}
+
+.img.extension,
+.img.worker {
+  width: 13px;
+  height: 13px;
+  margin-inline-start: 2px;
+}
+
+.img.result-item-icon {
+  height: 18px;
+  width: 18px;
+}
+
+.img.domain {
+  mask: url("resource://devtools/client/debugger/new/images/domain.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.folder {
+  mask: url("resource://devtools/client/debugger/new/images/folder.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.coffeescript {
+  mask: url("resource://devtools/client/debugger/new/images/coffeescript.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.javascript {
+  mask: url("resource://devtools/client/debugger/new/images/javascript.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.tab {
+  mask: url("resource://devtools/client/debugger/new/images/tab.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.react {
+  mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.aframe {
+  background-image: url("resource://devtools/client/debugger/new/images/aframe.svg");
+  background-size: 15px 15px;
+}
+
+.img.babel {
+  mask: url("resource://devtools/client/debugger/new/images/babel.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.backbone {
+  mask: url("resource://devtools/client/debugger/new/images/backbone.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.choo {
+  mask: url("resource://devtools/client/debugger/new/images/choo.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.dojo {
+  background-image: url("resource://devtools/client/debugger/new/images/dojo.svg");
+}
+
+.img.ember {
+  background-image: url("resource://devtools/client/debugger/new/images/ember.svg");
+}
+
+.img.immutable {
+  mask: url("resource://devtools/client/debugger/new/images/immutable.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.jquery {
+  mask: url("resource://devtools/client/debugger/new/images/jquery.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.lodash {
+  mask: url("resource://devtools/client/debugger/new/images/lodash.svg") no-repeat;
+  mask-size: 100%;
+}
+
+span.img.marko {
+  background-image: url("resource://devtools/client/debugger/new/images/marko.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.img.mobx {
+  background-image: url("resource://devtools/client/debugger/new/images/mobx.svg");
+}
+
+.img.next-circle {
+  mask: url("resource://devtools/client/debugger/new/images/next-circle.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.next {
+  mask: url("resource://devtools/client/debugger/new/images/next.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.nextjs {
+  background-image: url("resource://devtools/client/debugger/new/images/nextjs.svg");
+}
+
+.img.nuxtjs {
+  background-image: url("resource://devtools/client/debugger/new/images/nuxtjs.svg");
+}
+
+.img.preact {
+  background-image: url("resource://devtools/client/debugger/new/images/preact.svg");
+}
+
+.img.pug {
+  background-image: url("resource://devtools/client/debugger/new/images/pug.svg");
+}
+
+.img.redux {
+  mask: url("resource://devtools/client/debugger/new/images/redux.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.rxjs {
+  background-image: url("resource://devtools/client/debugger/new/images/rxjs.svg");
+}
+
+.img.sencha-extjs {
+  background-image: url("resource://devtools/client/debugger/new/images/sencha-extjs.svg");
+}
+
+.img.underscore {
+  mask: url("resource://devtools/client/debugger/new/images/underscore.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.webpack {
+  background-image: url("resource://devtools/client/debugger/new/images/webpack.svg");
+  background-repeat: no-repeat;
+}
+
+.img.vue {
+  background: url("resource://devtools/client/debugger/new/images/vuejs.svg") 1px 1px no-repeat;
+  background-size: 15px;
+}
+
+.img.typescript {
+  mask: url("resource://devtools/client/debugger/new/images/typescript.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.extension {
+  mask: url("resource://devtools/client/debugger/new/images/extension.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.toggle-panes {
+  mask: url("resource://devtools/client/debugger/new/images/toggle-panes.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.file {
+  mask: url("resource://devtools/client/debugger/new/images/file.svg") no-repeat;
+  mask-size: 100%;
+  width: 13px;
+  height: 13px;
+}
+
+.img.worker {
+  mask: url("resource://devtools/client/debugger/new/images/worker.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.plus {
+  mask: url("resource://devtools/client/debugger/new/images/plus.svg") no-repeat;
+  mask-size: 100%;
+  height: 16px;
+  width: 16px;
+}
+
+.img.magnifying-glass {
+  mask: url("resource://devtools/client/debugger/new/images/magnifying-glass.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.case-match {
+  mask: url("resource://devtools/client/debugger/new/images/case-match.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.regex-match {
+  mask: url("resource://devtools/client/debugger/new/images/regex-match.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.whole-word-match {
+  mask: url("resource://devtools/client/debugger/new/images/whole-word-match.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.breadcrumb {
+  mask: url("resource://devtools/client/debugger/new/images/breadcrumbs-divider.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.home {
+  mask: url("resource://devtools/client/debugger/new/images/home.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.angular {
+  background-image: url("resource://devtools/client/debugger/new/images/angular.svg");
+  background-repeat: no-repeat;
+}
+
+.img.angular,
+.img.webpack,
+.img.vue,
+.img.aframe,
+.img.dojo,
+.img.ember,
+.img.marko,
+.img.mobx,
+.img.nextjs,
+.img.nuxtjs,
+.img.preact,
+.img.pug,
+.img.rxjs,
+.img.sencha-extjs {
+  background-size: 15px 15px;
+  background-color: transparent;
+  width: 15px;
+  height: 15px;
+  position: relative;
+}
+
+.sources-list .img.angular,
+.sources-list .img.webpack,
+.sources-list .img.vue,
+.sources-list .img.aframe,
+.sources-list .img.dojo,
+.sources-list .img.ember,
+.sources-list .img.marko,
+.sources-list .img.mobx,
+.sources-list .img.nextjs,
+.sources-list .img.nuxtjs,
+.sources-list .img.preact,
+.sources-list .img.pug,
+.sources-list .img.rxjs,
+.sources-list .img.sencha-extjs {
+  top: 3px;
+}
+
+.img.domain,
+.img.folder,
+.img.file,
+.sources-list .img.source-icon,
+.img.extension,
+.img.worker {
+  mask-size: 100%;
+  margin-inline-end: 5px;
+  display: inline-block;
+}
+
+.img.result-item-icon {
+  mask-size: 100%;
+  margin-inline-end: 15px;
+  margin-inline-start: 5px;
+  display: inline-block;
+}
+
+.img.refresh,
+.img.shortcut,
+.img.worker,
+.img.arrow {
+  margin-inline-end: 5px;
+}
+
+.img.arrow {
+  mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
+  margin-inline-end: 4px;
+  width: 10px;
+  height: 10px;
+  padding-top: 9px;
+  background: var(--disclosure-arrow);
+  mask-size: 100%;
+  display: inline-block;
+  transform: rotate(-90deg);
+  transition: transform 0.18s ease;
+}
+
+html[dir="rtl"] .img.arrow {
+  transform: rotate(90deg);
+}
+
+.arrow {
+  transition: transform 0.125s ease;
+  height: 10px;
+  width: 10px;
+  transform: rotate(-90deg);
+  vertical-align: -1px;
+}
+
+html[dir="rtl"] .arrow,
+.arrow:dir(rtl),
+.arrow:-moz-locale-dir(rtl) {
+  transform: rotate(90deg);
+}
+
+.arrow.expanded {
+  transform: rotate(0deg);
+}
+
+.arrow.hidden {
+  visibility: hidden;
+}
+
+.angular,
+.webpack {
+  opacity: 0.8;
+}
+
+.theme-dark .angular,
+.theme-dark .webpack {
+  opacity: 0.5;
+}
+
+.source-icon svg {
+  fill: var(--theme-comment);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1454,9 +1632,14 @@ html .toggle-button.end.vertical svg {
   width: 22px;
 }
 
-.search-field i.loader {
+.search-field .img.loader {
   padding-top: 4px;
   margin-right: 8px;
+  mask-image: url("resource://devtools/client/debugger/new/images/loader.svg");
+  mask-size: 100%;
+  width: 20px;
+  height: 20px;
+  margin-top: 6px;
 }
 
 .search-field input {
@@ -1542,6 +1725,14 @@ html .toggle-button.end.vertical svg {
   padding-top: 4px;
   padding-left: 5px;
   padding-right: 5px;
+}
+
+.search-field .search-nav-buttons .img.arrow-up {
+  mask: url("resource://devtools/client/debugger/new/images/arrow-up.svg") no-repeat;
+}
+
+.search-field .search-nav-buttons .img.arrow-down {
+  mask: url("resource://devtools/client/debugger/new/images/arrow-down.svg") no-repeat;
 }
 
 .search-field .search-nav-buttons .nav-btn:hover {
@@ -1819,8 +2010,7 @@ menuseparator {
   z-index: 999;
 }
 .outline-filter {
-  margin: 5px 0 0 0;
-  padding: 0px 10px;
+  padding: 4px 10px 0 10px;
 }
 
 .outline-filter-input {
@@ -1990,8 +2180,7 @@ menuseparator {
   margin-inline-end: 5px;
 }
 
-.source-icon,
-.source-icon svg {
+.source-icon {
   width: 15px;
   height: 15px;
 }
@@ -2048,9 +2237,6 @@ menuseparator {
   white-space: nowrap;
   color: inherit;
   display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
@@ -2064,7 +2250,7 @@ menuseparator {
   height: 13px;
 }
 
-.theme-dark .sources-clear-root svg {
+.theme-dark .sources-clear-root {
   fill: var(--theme-body-color);
 }
 
@@ -2072,11 +2258,11 @@ menuseparator {
   opacity: 0.5;
 }
 
-.sources-clear-root .breadcrumb svg {
+.sources-clear-root .breadcrumb {
   width: 5px;
-  top: 2px;
-  position: absolute;
-  margin-right: 5px;
+  margin: 0 2px 0 6px;
+  vertical-align: bottom;
+  background: var(--theme-body-color-alt);
 }
 
 .sources-clear-root-label {
@@ -2087,7 +2273,6 @@ menuseparator {
   display: flex;
   flex: 1;
   flex-direction: column;
-  height: 100%;
 }
 
 .sources-list {
@@ -2100,8 +2285,8 @@ menuseparator {
   display: flex;
 }
 
-.sources-list .managed-tree .tree-node:first-child {
-  margin-top: 4px;
+.sources-list .managed-tree .tree {
+  padding: 4px 0;
 }
 
 .sources-list .managed-tree .tree .node {
@@ -2109,11 +2294,11 @@ menuseparator {
   width: 100%;
 }
 
-.sources-list .tree .img.arrow {
-  margin-right: 5px;
+.sources-list .img {
+  margin-inline-end: 5px;
 }
 
-.sources-list .tree .focused .img:not(.vue):not(.angular),
+.sources-list .tree .focused .img:not(.vue):not(.angular):not(.webpack):not(.dojo):not(.ember):not(.aframe):not(.marko):not(.mobx):not(.nextjs):not(.nuxtjs):not(.preact):not(.pug):not(.rxjs):not(.sencha-extjs),
 .sources-list .managed-tree .tree .node.focused .img.blackBox {
   background: #ffffff;
 }
@@ -2128,10 +2313,6 @@ menuseparator {
   color: inherit;
 }
 
-.sources-list .tree .img.arrow.expanded {
-  transform: rotate(0deg);
-}
-
 .theme-dark .source-list .tree .node.focused {
   background-color: var(--theme-tab-toolbar-background);
 }
@@ -2143,6 +2324,10 @@ menuseparator {
 .sources-list .tree .label {
   padding: 3px 0px 3px 0px;
   display: inline-block;
+}
+
+.sources-list .tree .arrow {
+  vertical-align: 1px;
 }
 
 .sources-list .tree .node .no-arrow {
@@ -2237,6 +2422,10 @@ menuseparator {
   height: 100%;
 }
 
+.source-outline-panel.has-root .thread-header {
+  margin-top: 4px;
+}
+
 .sources-list .managed-tree .tree .node .img.blackBox {
   mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
   mask-size: 100%;
@@ -2265,7 +2454,6 @@ menuseparator {
   display: block;
 }
 
-.sources-list-custom-root .sources-list,
 .sources-list-custom-root .no-sources-message {
   position: absolute;
   top: 26px;
@@ -2380,7 +2568,7 @@ menuseparator {
 .source-footer .mapped-source,
 .source-footer .cursor-position {
   color: var(--theme-body-color);
-  padding-left: 2.5px;
+  padding-right: 2.5px;
 }
 
 .source-footer .mapped-source {
@@ -2487,11 +2675,11 @@ menuseparator {
   padding: 0;
   width: 16px;
 }
-
-.search-bottom-bar .search-modifiers button svg {
-  fill: var(--theme-comment);
-  height: 16px;
+.search-bottom-bar .search-modifiers .img {
   width: 16px;
+  height: 16px;
+  vertical-align: bottom;
+  background-color: var(--theme-comment);
 }
 
 .search-bottom-bar .search-modifiers button:hover {
@@ -2502,11 +2690,11 @@ menuseparator {
   background: var(--theme-selection-background);
 }
 
-.search-bottom-bar .search-modifiers button.active svg {
-  fill: var(--theme-selection-background);
+.search-bottom-bar .search-modifiers button.active .img {
+  background-color: var(--theme-selection-background);
 }
 
-.theme-dark .search-bottom-bar .search-modifiers button.active svg {
+.theme-dark .search-bottom-bar .search-modifiers button.active .img {
   fill: white;
 }
 
@@ -2863,6 +3051,10 @@ menuseparator {
   min-width: 0 !important;
 }
 
+.CodeMirror.cm-s-mozilla, .CodeMirror-scroll, .CodeMirror-sizer {
+  overflow-anchor: none;
+}
+
 .theme-dark {
   --theme-conditional-breakpoint-color: #9fa4a9;
 }
@@ -2909,7 +3101,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .theme-dark .cm-s-mozilla .empty-line .CodeMirror-linenumber {
-  color: var(--grey-60);
+  color: var(--grey-50);
 }
 
 :not(.empty-line):not(.new-breakpoint)
@@ -3573,6 +3765,11 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 .frames ul .frames-group.expanded .badge {
   color: var(--theme-highlight-blue);
 }
+
+.group-description-name {
+  padding-left: 5px;
+}
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -3632,12 +3829,12 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .frames ul {
   list-style: none;
-  margin: 0;
+  margin-top: 4px;
   padding: 0;
 }
 
 .frames ul li {
-  padding: 7px 10px 7px 21px;
+  padding: 2px 10px 2px 20px;
   overflow: hidden;
   display: flex;
   justify-content: space-between;
@@ -3731,9 +3928,9 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .annotation-logo {
+  mask-size: 100%;
   display: inline-block;
   width: 12px;
-  margin-inline-start: 4px;
 }
 
 :root.theme-dark .annotation-logo:not(.angular) svg path {
@@ -4109,6 +4306,47 @@ html[dir="rtl"] .command-bar {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+.event-listeners-content {
+	padding: 4px 20px;
+}
+
+.event-listeners-content ul {
+	padding: 0;
+	list-style-type: none;
+}
+
+.event-listener-group {
+	user-select: none;
+}
+
+.event-listeners-content .arrow {
+	margin-inline-end: 0;
+	position: relative;
+	top: 1px;
+}
+
+html[dir="ltr"] .event-listeners-content .arrow.expanded {
+  transform: rotate(0deg);
+}
+
+html[dir="rtl"] .event-listeners-content .arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.event-listener-event {
+	display: flex;
+	align-items: center;
+	margin-inline-start: 30px;
+}
+
+.event-listener-event input {
+	margin-inline-end: 4px;
+	margin-inline-start: 0px;
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 .object-node.default-property {
   opacity: 0.6;
 }
@@ -4218,10 +4456,6 @@ html[dir="rtl"] .object-node {
 
 .secondary-panes .breakpoints-buttons {
   display: flex;
-}
-
-.secondary-panes .accordion .plus {
-  margin-top: -2px;
 }
 
 .secondary-panes .accordion .plus svg {

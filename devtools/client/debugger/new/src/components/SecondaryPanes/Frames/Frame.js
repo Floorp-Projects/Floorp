@@ -7,8 +7,8 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 
 import classNames from "classnames";
-import Svg from "../../shared/Svg";
 
+import AccessibleImage from "../../shared/AccessibleImage";
 import { formatDisplayName } from "../../../utils/pause/frames";
 import { getFilename, getFileURL } from "../../../utils/source";
 import FrameMenu from "./FrameMenu";
@@ -38,7 +38,9 @@ function FrameLocation({ frame, displayFullUrl = false }: FrameLocationProps) {
     return (
       <span className="location">
         {frame.library}
-        <Svg name={frame.library.toLowerCase()} className="annotation-logo" />
+        <AccessibleImage
+          className={`annotation-logo ${frame.library.toLowerCase()}`}
+        />
       </span>
     );
   }

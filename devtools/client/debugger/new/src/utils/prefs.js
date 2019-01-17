@@ -28,6 +28,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.expressions-visible", true);
   pref("devtools.debugger.xhr-breakpoints-visible", true);
   pref("devtools.debugger.breakpoints-visible", true);
+  pref("devtools.debugger.event-listeners-visible", true);
   pref("devtools.debugger.start-panel-collapsed", false);
   pref("devtools.debugger.end-panel-collapsed", false);
   pref("devtools.debugger.start-panel-size", 300);
@@ -63,6 +64,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.xhr-breakpoints", true);
   pref("devtools.debugger.features.original-blackbox", true);
   pref("devtools.debugger.features.windowless-workers", false);
+  pref("devtools.debugger.features.event-listeners-breakpoints", true);
 }
 
 export const prefs = new PrefsHelper("devtools", {
@@ -80,6 +82,7 @@ export const prefs = new PrefsHelper("devtools", {
   breakpointsVisible: ["Bool", "debugger.breakpoints-visible"],
   expressionsVisible: ["Bool", "debugger.expressions-visible"],
   xhrBreakpointsVisible: ["Bool", "debugger.xhr-breakpoints-visible"],
+  eventListenersVisible: ["Bool", "debugger.event-listeners-visible"],
   startPanelCollapsed: ["Bool", "debugger.start-panel-collapsed"],
   endPanelCollapsed: ["Bool", "debugger.end-panel-collapsed"],
   startPanelSize: ["Int", "debugger.start-panel-size"],
@@ -117,13 +120,15 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   mapAwaitExpression: ["Bool", "map-await-expression"],
   componentPane: ["Bool", "component-pane"],
   xhrBreakpoints: ["Bool", "xhr-breakpoints"],
-  originalBlackbox: ["Bool", "original-blackbox"]
+  originalBlackbox: ["Bool", "original-blackbox"],
+  eventListenersBreakpoints: ["Bool", "event-listeners-breakpoints"]
 });
 
 export const asyncStore = asyncStoreHelper("debugger", {
   pendingBreakpoints: ["pending-breakpoints", {}],
   tabs: ["tabs", []],
-  xhrBreakpoints: ["xhr-breakpoints", []]
+  xhrBreakpoints: ["xhr-breakpoints", []],
+  eventListenerBreakpoints: ["event-listener-breakpoints", []]
 });
 
 if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
