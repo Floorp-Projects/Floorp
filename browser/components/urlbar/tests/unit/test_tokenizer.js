@@ -4,10 +4,8 @@
 add_task(async function test_tokenizer() {
   let testContexts = [
     { desc: "Empty string",
-      searchString: "test",
-      expectedTokens: [
-        { value: "test", type: UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN },
-      ],
+      searchString: "",
+      expectedTokens: [],
     },
     { desc: "Single word string",
       searchString: "test",
@@ -45,6 +43,20 @@ add_task(async function test_tokenizer() {
         { value: UrlbarTokenizer.RESTRICT.BOOKMARK, type: UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK },
       ],
     },
+    { desc: "separate restriction char in the middle",
+      searchString: `test ${UrlbarTokenizer.RESTRICT.BOOKMARK} test`,
+      expectedTokens: [
+        { value: "test", type: UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN },
+        { value: UrlbarTokenizer.RESTRICT.BOOKMARK, type: UrlbarTokenizer.TYPE.TEXT },
+        { value: "test", type: UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN },
+      ],
+    },
+    { desc: "restriction char in the middle",
+      searchString: `test${UrlbarTokenizer.RESTRICT.BOOKMARK}test`,
+      expectedTokens: [
+        { value: `test${UrlbarTokenizer.RESTRICT.BOOKMARK}test`, type: UrlbarTokenizer.TYPE.TEXT },
+      ],
+    },
     { desc: "double boundary restriction char",
       searchString: `${UrlbarTokenizer.RESTRICT.BOOKMARK}test${UrlbarTokenizer.RESTRICT.TITLE}`,
       expectedTokens: [
@@ -69,7 +81,7 @@ add_task(async function test_tokenizer() {
     { desc: "only the boundary restriction char",
       searchString: UrlbarTokenizer.RESTRICT.BOOKMARK,
       expectedTokens: [
-        { value: UrlbarTokenizer.RESTRICT.BOOKMARK, type: UrlbarTokenizer.TYPE.TEXT },
+        { value: UrlbarTokenizer.RESTRICT.BOOKMARK, type: UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK },
       ],
     },
     // Some restriction chars may be # or ?, that are also valid path parts.
@@ -90,8 +102,8 @@ add_task(async function test_tokenizer() {
       searchString: `test ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.TAG}`,
       expectedTokens: [
         { value: "test", type: UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN },
-        { value: UrlbarTokenizer.RESTRICT.HISTORY, type: UrlbarTokenizer.TYPE.RESTRICT_HISTORY },
-        { value: UrlbarTokenizer.RESTRICT.TAG, type: UrlbarTokenizer.TYPE.TEXT },
+        { value: UrlbarTokenizer.RESTRICT.HISTORY, type: UrlbarTokenizer.TYPE.TEXT },
+        { value: UrlbarTokenizer.RESTRICT.TAG, type: UrlbarTokenizer.TYPE.RESTRICT_TAG },
       ],
     },
     { desc: "multiple boundary restriction chars prefix",
@@ -125,6 +137,18 @@ add_task(async function test_tokenizer() {
       searchString: "http://test",
       expectedTokens: [
         { value: "http://test", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },
+      ],
+    },
+    { desc: "almost a protocol",
+      searchString: "http:",
+      expectedTokens: [
+        { value: "http:", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },
+      ],
+    },
+    { desc: "almost a protocol 2",
+      searchString: "http:/",
+      expectedTokens: [
+        { value: "http:/", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },
       ],
     },
     { desc: "bogus protocol",
@@ -167,6 +191,18 @@ add_task(async function test_tokenizer() {
       searchString: "192.2134.1.2",
       expectedTokens: [
         { value: "192.2134.1.2", type: UrlbarTokenizer.TYPE.TEXT },
+      ],
+    },
+    { desc: "ipv4",
+      searchString: "1.2.3.4",
+      expectedTokens: [
+        { value: "1.2.3.4", type: UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN },
+      ],
+    },
+    { desc: "host/path",
+      searchString: "test/test",
+      expectedTokens: [
+        { value: "test/test", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },
       ],
     },
   ];
