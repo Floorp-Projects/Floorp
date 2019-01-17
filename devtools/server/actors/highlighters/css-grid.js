@@ -134,36 +134,39 @@ const gCachedGridPattern = new Map();
  * h.hide();
  * h.destroy();
  *
- * Available Options:
- * - color(colorValue)
- *     @param  {String} colorValue
- *     The color that should be used to draw the highlighter for this grid.
- * - showAllGridAreas(isShown)
- *     @param  {Boolean} isShown
- *     Shows all the grid area highlights for the current grid if isShown is true.
- * - showGridArea(areaName)
- *     @param  {String} areaName
- *     Shows the grid area highlight for the given area name.
- * - showGridAreasOverlay(isShown)
- *     @param  {Boolean} isShown
- *     Displays an overlay of all the grid areas for the current grid container if
- *     isShown is true.
- * - showGridCell({ gridFragmentIndex: Number, rowNumber: Number, columnNumber: Number })
- *     @param  {Object} { gridFragmentIndex: Number, rowNumber: Number,
- *                        columnNumber: Number }
- *     An object containing the grid fragment index, row and column numbers to the
- *     corresponding grid cell to highlight for the current grid.
- * - showGridLineNames({ gridFragmentIndex: Number, lineNumber: Number,
- *                       type: String })
- *     @param  {Object} { gridFragmentIndex: Number, lineNumber: Number }
- *     An object containing the grid fragment index and line number to the
- *     corresponding grid line to highlight for the current grid.
- * - showGridLineNumbers(isShown)
- *     @param  {Boolean} isShown
- *     Displays the grid line numbers on the grid lines if isShown is true.
- * - showInfiniteLines(isShown)
- *     @param  {Boolean} isShown
- *     Displays an infinite line to represent the grid lines if isShown is true.
+ * @param {String} options.color
+ *        The color that should be used to draw the highlighter for this grid.
+ * @param {Boolean} options.showAllGridAreas
+ *        Shows all the grid area highlights for the current grid if isShown is
+ *        true.
+ * @param {String} options.showGridArea
+ *        Shows the grid area highlight for the given area name.
+ * @param {Boolean} options.showGridAreasOverlay
+ *        Displays an overlay of all the grid areas for the current grid
+ *        container if isShown is true.
+ * @param {Object} options.showGridCell
+ *        An object containing the grid fragment index, row and column numbers
+ *        to the corresponding grid cell to highlight for the current grid.
+ * @param {Number} options.showGridCell.gridFragmentIndex
+ *        Index of the grid fragment to render the grid cell highlight.
+ * @param {Number} options.showGridCell.rowNumber
+ *        Row number of the grid cell to highlight.
+ * @param {Number} options.showGridCell.columnNumber
+ *        Column number of the grid cell to highlight.
+ * @param {Object} options.showGridLineNames
+ *        An object containing the grid fragment index and line number to the
+ *        corresponding grid line to highlight for the current grid.
+ * @param {Number} options.showGridLineNames.gridFragmentIndex
+ *        Index of the grid fragment to render the grid line highlight.
+ * @param {Number} options.showGridLineNames.lineNumber
+ *        Line number of the grid line to highlight.
+ * @param {String} options.showGridLineNames.type
+ *        The dimension type of the grid line.
+ * @param {Boolean} options.showGridLineNumbers
+ *        Displays the grid line numbers on the grid lines if isShown is true.
+ * @param {Boolean} options.showInfiniteLines
+ *        Displays an infinite line to represent the grid lines if isShown is
+ *        true.
  *
  * Structure:
  * <div class="highlighter-container">

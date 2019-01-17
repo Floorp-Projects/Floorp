@@ -47,23 +47,21 @@ const PSEUDO_CLASSES = [":hover", ":active", ":focus", ":focus-within"];
  * h.hide();
  * h.destroy();
  *
- * Available options:
- * - region {String}
- *   "content", "padding", "border" or "margin"
- *   This specifies the region that the guides should outline.
- *   Defaults to "content"
- * - hideGuides {Boolean}
- *   Defaults to false
- * - hideInfoBar {Boolean}
- *   Defaults to false
- * - showOnly {String}
- *   "content", "padding", "border" or "margin"
- *   If set, only this region will be highlighted. Use with onlyRegionArea to
- *   only highlight the area of the region.
- * - onlyRegionArea {Boolean}
- *   This can be set to true to make each region's box only highlight the area
- *   of the corresponding region rather than the area of nested regions too.
- *   This is useful when used with showOnly.
+ * @param {String} options.region
+ *        Specifies the region that the guides should outline:
+ *          "content" (default), "padding", "border" or "margin".
+ * @param {Boolean} options.hideGuides
+ *        Defaults to false
+ * @param {Boolean} options.hideInfoBar
+ *        Defaults to false
+ * @param {String} options.showOnly
+ *        If set, only this region will be highlighted. Use with onlyRegionArea
+ *        to only highlight the area of the region:
+ *        "content", "padding", "border" or "margin"
+ * @param {Boolean} options.onlyRegionArea
+ *        This can be set to true to make each region's box only highlight the
+ *        area of the corresponding region rather than the area of nested
+ *        regions too. This is useful when used with showOnly.
  *
  * Structure:
  * <div class="highlighter-container">

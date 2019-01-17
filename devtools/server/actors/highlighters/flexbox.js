@@ -59,16 +59,12 @@ const JUSTIFY_CONTENT = "justify-content";
  * The FlexboxHighlighter is the class that overlays a visual canvas on top of
  * display: [inline-]flex elements.
  *
- * Available Options:
- * - color(colorValue)
- *     @param  {String} colorValue
- *     The color that should be used to draw the highlighter for this flexbox.
- * - showAlignment(isShown)
- *     @param  {Boolean} isShown
- *     Shows the alignment in the flexbox highlighter.
- * - noCountainerOutline(isShown)
- *     @param  {Boolean} noContainerOutline
- *     Prevent drawing an outline around the flex container.
+ * @param {String} options.color
+ *        The color that should be used to draw the highlighter for this flexbox.
+ * @param {Boolean} options.showAlignment
+ *        Shows the alignment in the flexbox highlighter.
+ * @param {Boolean} options.noCountainerOutline
+ *        Prevent drawing an outline around the flex container.
  *
  * Structure:
  * <div class="highlighter-container">
