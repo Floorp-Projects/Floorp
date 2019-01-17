@@ -212,7 +212,7 @@ SourceClient.prototype = {
             this,
             response.actor,
             location,
-            root.traits.conditionalBreakpoints ? condition : undefined
+            condition
           );
         }
         if (callback) {
