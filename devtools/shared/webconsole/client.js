@@ -21,7 +21,7 @@ const LongStringClient = require("devtools/shared/client/long-string-client");
  *        the WebConsoleActor.
  */
 function WebConsoleClient(debuggerClient, response) {
-  this._actor = response.from;
+  this.actorID = response.from;
   this._client = debuggerClient;
   this._longStrings = {};
   this.traits = response.traits || {};
@@ -83,7 +83,7 @@ WebConsoleClient.prototype = {
   },
 
   get actor() {
-    return this._actor;
+    return this.actorID;
   },
 
   /**
@@ -97,7 +97,7 @@ WebConsoleClient.prototype = {
    *        The message received from the server.
    */
   _onNetworkEvent: function(type, packet) {
-    if (packet.from == this._actor) {
+    if (packet.from == this.actorID) {
       const actor = packet.eventActor;
       const networkInfo = {
         _type: "NetworkEvent",
@@ -231,7 +231,7 @@ WebConsoleClient.prototype = {
    */
   getCachedMessages: function(types, onResponse) {
     const packet = {
-      to: this._actor,
+      to: this.actorID,
       type: "getCachedMessages",
       messageTypes: types,
     };
@@ -297,7 +297,7 @@ WebConsoleClient.prototype = {
    */
   evaluateJS: function(string, onResponse, options = {}) {
     const packet = {
-      to: this._actor,
+      to: this.actorID,
       type: "evaluateJS",
       text: string,
       bindObjectActor: options.bindObjectActor,
@@ -315,7 +315,7 @@ WebConsoleClient.prototype = {
    */
   evaluateJSAsync: function(string, onResponse, options = {}) {
     const packet = {
-      to: this._actor,
+      to: this.actorID,
       type: "evaluateJSAsync",
       text: string,
       bindObjectActor: options.bindObjectActor,
@@ -353,7 +353,7 @@ WebConsoleClient.prototype = {
     // The client on the main thread can receive notification packets from
     // multiple webconsole actors: the one on the main thread and the ones
     // on worker threads.  So make sure we should be handling this request.
-    if (packet.from !== this._actor) {
+    if (packet.from !== this.actorID) {
       return;
     }
 
@@ -396,7 +396,7 @@ WebConsoleClient.prototype = {
     authorizedEvaluations
   ) {
     const packet = {
-      to: this._actor,
+      to: this.actorID,
       type: "autocomplete",
       text: string,
       cursor,
@@ -415,7 +415,7 @@ WebConsoleClient.prototype = {
    */
   clearMessagesCache: function() {
     const packet = {
-      to: this._actor,
+      to: this.actorID,
       type: "clearMessagesCache",
     };
     return this._client.request(packet);
@@ -433,7 +433,7 @@ WebConsoleClient.prototype = {
    */
   getPreferences: function(preferences, onResponse) {
     const packet = {
-      to: this._actor,
+      to: this.actorID,
       type: "getPreferences",
       preferences: preferences,
     };
@@ -452,7 +452,7 @@ WebConsoleClient.prototype = {
    */
   setPreferences: function(preferences, onResponse) {
     const packet = {
-      to: this._actor,
+      to: this.actorID,
       type: "setPreferences",
       preferences: preferences,
     };
@@ -651,7 +651,7 @@ WebConsoleClient.prototype = {
    */
   sendHTTPRequest: function(data, onResponse) {
     const packet = {
-      to: this._actor,
+      to: this.actorID,
       type: "sendHTTPRequest",
       request: data,
     };
@@ -672,7 +672,7 @@ WebConsoleClient.prototype = {
    */
   startListeners: function(listeners, onResponse) {
     const packet = {
-      to: this._actor,
+      to: this.actorID,
       type: "startListeners",
       listeners: listeners,
     };
@@ -693,7 +693,7 @@ WebConsoleClient.prototype = {
    */
   stopListeners: function(listeners, onResponse) {
     const packet = {
-      to: this._actor,
+      to: this.actorID,
       type: "stopListeners",
       listeners: listeners,
     };
