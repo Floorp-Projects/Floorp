@@ -891,6 +891,31 @@ class TestConfigure(unittest.TestCase):
         '''):
             self.get_config()
 
+        with self.moz_configure('''
+            option('--with-foo', help='foo')
+            option('--without-bar', help='bar', when='--with-foo')
+            option('--with-qux', help='qux', when='--with-bar')
+            set_config('QUX', True, when='--with-qux')
+        '''):
+            # These are valid:
+            self.get_config(['--with-foo'])
+            self.get_config(['--with-foo', '--with-bar'])
+            self.get_config(['--with-foo', '--without-bar'])
+            self.get_config(['--with-foo', '--with-bar', '--with-qux'])
+            self.get_config(['--with-foo', '--with-bar', '--without-qux'])
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config(['--with-bar'])
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config(['--without-bar'])
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config(['--with-qux'])
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config(['--without-qux'])
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config(['--with-foo', '--without-bar', '--with-qux'])
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config(['--with-foo', '--without-bar', '--without-qux'])
+
     def test_include_failures(self):
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('include("../foo.configure")'):
