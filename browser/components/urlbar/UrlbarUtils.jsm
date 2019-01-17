@@ -252,16 +252,16 @@ class QueryContext {
    *   Set to true if this query was started from a private browsing window.
    * @param {number} options.maxResults
    *   The maximum number of results that will be displayed for this query.
-   * @param {boolean} [options.autoFill]
-   *   Whether or not to include autofill results. Optional, as this is normally
-   *   set by the UrlbarController.
+   * @param {boolean} options.enableAutofill
+   *   Whether or not to include autofill results.
    */
   constructor(options = {}) {
     this._checkRequiredOptions(options, [
-      "searchString",
+      "enableAutofill",
+      "isPrivate",
       "lastKey",
       "maxResults",
-      "isPrivate",
+      "searchString",
     ]);
 
     if (isNaN(parseInt(options.maxResults))) {
@@ -277,8 +277,6 @@ class QueryContext {
         (!Array.isArray(options.sources) || !options.sources.length)) {
       throw new Error(`Invalid sources list`);
     }
-
-    this.autoFill = !!options.autoFill;
   }
 
   /**

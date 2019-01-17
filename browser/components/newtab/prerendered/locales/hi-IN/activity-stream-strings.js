@@ -40,6 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "ठीक है, समझ गए",
   "prefs_home_header": "Firefox होम सामग्री",
   "prefs_home_description": "चुनें जो सामग्री आप अपने Firefox होम स्क्रीन पर चाहते हैं ।",
+  "prefs_content_discovery_header": "Firefox Home",
+  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
+  "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} row;{num} rows",
   "prefs_search_header": "वेब खोज",
   "prefs_topsites_description": "साइटों आप सबसे अधिक यात्रा",
@@ -107,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "गोपनीयता नीति",
   "firstrun_continue_to_login": "जारी रखें",
   "firstrun_skip_login": "इस चरण को छोड़ दें",
-  "context_menu_title": "Open menu",
-  "pocket_learn_more": "अधिक जानें"
+  "context_menu_title": "मेन्यू खोलें"
 };

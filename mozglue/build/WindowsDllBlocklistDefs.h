@@ -27,6 +27,9 @@ DLL_BLOCKLIST_ENTRY("avgrsstx.dll", MAKE_VERSION(8, 5, 0, 401))
 // calc.dll - Suspected malware
 DLL_BLOCKLIST_ENTRY("calc.dll", MAKE_VERSION(1, 0, 0, 1))
 
+// fraps64.dll - Unmaintained since 2013, causes crashes
+DLL_BLOCKLIST_ENTRY("fraps64.dll", ALL_VERSIONS)
+
 // hook.dll - Suspected malware
 DLL_BLOCKLIST_ENTRY("hook.dll", ALL_VERSIONS)
 

@@ -246,9 +246,9 @@ def android_toolchain_prefix_base(target):
     return target.toolchain
 
 
-option(env='STLPORT_CPPFLAGS',
-       nargs=1,
-       help='Options compiler should pass for standard C++ library')
+js_option(env='STLPORT_CPPFLAGS',
+          nargs=1,
+          help='Options compiler should pass for standard C++ library')
 
 
 @depends('STLPORT_CPPFLAGS', ndk, '--help')

@@ -1,14 +1,63 @@
+.ds-header {
+  font-size: 17px;
+  line-height: 24px;
+  color: $grey-90;
+  margin: 16px 0;
+}
+
 .ds-hero {
+  .img {
+    border: 0.5px solid $black-10;
+    box-sizing: border-box;
+    border-radius: 4px;
+  }
+
+  .ds-card {
+    border: 0;
+
+    &:hover {
+      border: 0;
+      box-shadow: none;
+      border-radius: 0;
+    }
+
+    .meta {
+      padding: 0;
+    }
+  }
+
   // "1/3 width layout" (aka "Mobile First")
   .wrapper {
-    img {
+    color: $grey-50;
+    margin: 18px 0;
+    padding: 20px 0;
+    border-top: 1px solid transparentize($grey-40, 0.64);
+    border-bottom: 1px solid transparentize($grey-40, 0.64);
+
+    .img-wrapper {
       width: 100%;
-      height: auto;
+    }
+
+    .img {
+      height: 0;
+      padding-top: 50%; // 2:1 aspect ratio
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-color: $grey-30;
     }
 
     .meta {
       header {
         font-size: 22px;
+        color: $grey-90;
+
+        &:hover {
+          color: $blue-60;
+        }
+
+        &:active {
+          color: $blue-70;
+        }
       }
 
       p {
@@ -18,60 +67,51 @@
   }
 
   // "2/3 width layout"
-  .column-5 &,
-  .column-6 &,
-  .column-7 &,
-  .column-8 & {
+  .ds-column-5 &,
+  .ds-column-6 &,
+  .ds-column-7 &,
+  .ds-column-8 & {
     .wrapper {
-      display: flex;
-      align-items: flex-start;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-column-gap: 24px;
 
-      img {
-        width: 50%;
-        height: auto;
-      }
-
-      .meta {
-        width: 50%;
+      .img {
+        height: 0;
+        padding-top: 100%; // 1:1 aspect ratio
       }
     }
 
 
     .cards {
-      display: flex;
-      flex-wrap: wrap;
-
-      .ds-card {
-        width: 50%;
-        padding: 12px;
-
-        &:nth-child(odd) {
-          padding: 12px 12px 12px 0;
-        }
-
-        &:nth-child(even) {
-          padding: 12px 0 12px 12px;
-        }
-      }
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-column-gap: 24px;
     }
   }
 
   // "Full width layout"
-  .column-9 &,
-  .column-10 &,
-  .column-11 &,
-  .column-12 & {
+  .ds-column-9 &,
+  .ds-column-10 &,
+  .ds-column-11 &,
+  .ds-column-12 & {
     .wrapper {
       display: flex;
       align-items: flex-start;
+      flex-direction: row-reverse;
 
-      img {
+      .img-wrapper {
         width: 67%;
+      }
+
+      .img {
+        height: 0;
+        padding-top: 50%; // 2:1 aspect ratio
       }
 
       .meta {
         width: 33%;
-        padding: 24px;
+        padding: 0 24px 0 0;
 
         header {
           font-size: 22px;
@@ -84,24 +124,9 @@
     }
 
     .cards {
-      display: flex;
-
-      .ds-card {
-        width: 25%;
-        padding: 12px;
-
-        .meta {
-          padding: 0;
-        }
-
-        &:first-child {
-          padding: 12px 12px 12px 0;
-        }
-
-        &:last-child {
-          padding: 12px 0 12px 12px;
-        }
-      }
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-column-gap: 24px;
     }
   }
 }

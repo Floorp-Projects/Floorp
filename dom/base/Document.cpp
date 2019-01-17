@@ -3290,6 +3290,14 @@ void Document::GetReferrer(nsAString& aReferrer) const {
     CopyUTF8toUTF16(mReferrer, aReferrer);
 }
 
+mozilla::net::ReferrerPolicy Document::GetReferrerPolicy() const {
+  if (mIsSrcdocDocument && mParentDocument &&
+      mReferrerPolicy == mozilla::net::RP_Unset) {
+    return mParentDocument->GetReferrerPolicy();
+  }
+  return mReferrerPolicy;
+}
+
 nsresult Document::GetSrcdocData(nsAString& aSrcdocData) {
   if (mIsSrcdocDocument) {
     nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(mChannel);
@@ -8278,7 +8286,7 @@ void Document::MaybePreLoadImage(
   RefPtr<imgRequestProxy> request;
   nsresult rv = nsContentUtils::LoadImage(
       uri, static_cast<nsINode*>(this), this, NodePrincipal(), 0,
-      mDocumentURI,  // uri of document used as referrer
+      GetDocumentURIAsReferrer(),  // uri of document used as referrer
       aReferrerPolicy,
       nullptr,  // no observer
       loadFlags, NS_LITERAL_STRING("img"), getter_AddRefs(request), policyType);

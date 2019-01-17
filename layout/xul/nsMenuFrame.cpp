@@ -662,8 +662,11 @@ bool nsMenuFrame::IsSizedToPopup(nsIContent* aContent, bool aRequireAlways) {
   nsAutoString sizedToPopup;
   aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup,
                                  sizedToPopup);
+  bool sizedToPopupSetToPref =
+      sizedToPopup.EqualsLiteral("pref") ||
+      (sizedToPopup.IsEmpty() && aContent->IsXULElement(nsGkAtoms::menulist));
   return sizedToPopup.EqualsLiteral("always") ||
-         (!aRequireAlways && sizedToPopup.EqualsLiteral("pref"));
+         (!aRequireAlways && sizedToPopupSetToPref);
 }
 
 nsSize nsMenuFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) {

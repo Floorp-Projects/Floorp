@@ -140,6 +140,14 @@ static bool ModuleInfoToJSObj(JSContext* cx, JS::MutableHandleObject aRet,
     return false;
   }
 
+  if (aModInfo.mLoadDurationMS.isSome()) {
+    jsval.setNumber(aModInfo.mLoadDurationMS.value());
+    if (!JS_DefineProperty(cx, modObj, "loadDurationMS", jsval,
+                           JSPROP_ENUMERATE)) {
+      return false;
+    }
+  }
+
   jsval.setNumber((uint32_t)aModInfo.mTrustFlags);
   if (!JS_DefineProperty(cx, modObj, "moduleTrustFlags", jsval,
                          JSPROP_ENUMERATE)) {
@@ -243,6 +251,14 @@ nsresult GetUntrustedModuleLoadEventsJSValue(
   if (!JS_DefineProperty(cx, mainObj, "structVersion", jsval,
                          JSPROP_ENUMERATE)) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (aData.mXULLoadDurationMS.isSome()) {
+    jsval.setNumber(aData.mXULLoadDurationMS.value());
+    if (!JS_DefineProperty(cx, mainObj, "xulLoadDurationMS", jsval,
+                           JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   JS::RootedObject eventsArray(cx);

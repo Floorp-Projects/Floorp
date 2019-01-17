@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = ["UrlbarInput"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   QueryContext: "resource:///modules/UrlbarUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -293,6 +294,11 @@ class UrlbarInput {
 
     switch (result.type) {
       case UrlbarUtils.MATCH_TYPE.TAB_SWITCH: {
+        if (this._overrideDefaultAction(event)) {
+          where = "current";
+          break;
+        }
+
         this.handleRevert();
         let prevTab = this.window.gBrowser.selectedTab;
         let loadOpts = {
@@ -304,13 +310,6 @@ class UrlbarInput {
           this.window.gBrowser.removeTab(prevTab);
         }
         return;
-
-        // TODO: How to handle meta chars?
-        // Once we get here, we got a TAB_SWITCH match but the user
-        // bypassed it by pressing shift/meta/ctrl. Those modifiers
-        // might otherwise affect where we open - we always want to
-        // open in the current tab.
-        // where = "current";
       }
       case UrlbarUtils.MATCH_TYPE.SEARCH:
         // TODO: port _parseAndRecordSearchEngineLoad.
@@ -359,12 +358,13 @@ class UrlbarInput {
     lastKey = null,
   } = {}) {
     this.controller.startQuery(new QueryContext({
-      searchString,
+      enableAutofill: UrlbarPrefs.get("autoFill"),
+      isPrivate: this.isPrivate,
       lastKey,
       maxResults: UrlbarPrefs.get("maxRichResults"),
-      isPrivate: this.isPrivate,
-      providers: ["UnifiedComplete"],
       muxer: "UnifiedComplete",
+      providers: ["UnifiedComplete"],
+      searchString,
     }));
   }
 
@@ -475,14 +475,6 @@ class UrlbarInput {
       }
     }
 
-    // If the value was filled by a search suggestion, just return it.
-    // FIXME: This is wrong, the new system doesn't return action urls, it
-    // should instead build this based on MATCH_TYPE.
-    let action = this._parseActionUrl(this.value);
-    if (action && action.type == "searchengine") {
-      return selectedVal;
-    }
-
     let uri;
     if (this.getAttribute("pageproxystate") == "valid") {
       uri = this.window.gBrowser.currentURI;
@@ -522,40 +514,11 @@ class UrlbarInput {
     return selectedVal;
   }
 
-  /**
-   * @param {string} url
-   * @returns {object}
-   *   The action object
-   */
-  _parseActionUrl(url) {
-    const MOZ_ACTION_REGEX = /^moz-action:([^,]+),(.*)$/;
-    if (!MOZ_ACTION_REGEX.test(url)) {
-      return null;
-    }
-
-    // URL is in the format moz-action:ACTION,PARAMS
-    // Where PARAMS is a JSON encoded object.
-    let [, type, params] = url.match(MOZ_ACTION_REGEX);
-
-    let action = {
-      type,
-    };
-
-    action.params = JSON.parse(params);
-    for (let key in action.params) {
-      action.params[key] = decodeURIComponent(action.params[key]);
-    }
-
-    if ("url" in action.params) {
-      try {
-        let uri = Services.io.newURI(action.params.url);
-        action.params.displayUrl = this.window.losslessDecodeURI(uri);
-      } catch (e) {
-        action.params.displayUrl = action.params.url;
-      }
-    }
-
-    return action;
+  _overrideDefaultAction(event) {
+    return event.shiftKey ||
+           event.altKey ||
+           (AppConstants.platform == "macosx" ?
+              event.metaKey : event.ctrlKey);
   }
 
   /**

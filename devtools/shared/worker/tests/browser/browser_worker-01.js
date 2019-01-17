@@ -9,6 +9,7 @@
 const WORKER_URL =
   "resource://devtools/client/shared/widgets/GraphsWorker.js";
 
+const BUFFER_SIZE = 8;
 const count = 100000;
 const WORKER_DATA = (function() {
   const timestamps = [];
@@ -25,6 +26,7 @@ add_task(async function() {
 
   await testWorker("JSM", () => ChromeUtils.import("resource://devtools/shared/worker/worker.js", {}));
   await testWorker("CommonJS", () => require("devtools/shared/worker/worker"));
+  await testTransfer();
 });
 
 async function testWorker(context, workerFactory) {
@@ -44,4 +46,21 @@ async function testWorker(context, workerFactory) {
   fn.destroy();
 
   worker.destroy();
+}
+
+async function testTransfer() {
+  const { workerify } =
+    ChromeUtils.import("resource://devtools/shared/worker/worker.js", {});
+  const workerFn = workerify(({ buf }) => buf.byteLength);
+  const buf = new ArrayBuffer(BUFFER_SIZE);
+
+  is(buf.byteLength, BUFFER_SIZE, "Size of the buffer before transfer is correct.");
+
+  is((await workerFn({ buf })), 8, "Sent array buffer to worker");
+  is(buf.byteLength, 8, "Array buffer was copied, not transferred.");
+
+  is((await workerFn({ buf }, [ buf ])), 8, "Sent array buffer to worker");
+  is(buf.byteLength, 0, "Array buffer was transferred, not copied.");
+
+  workerFn.destroy();
 }

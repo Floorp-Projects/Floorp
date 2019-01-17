@@ -211,7 +211,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // }
 const actionTypes = {};
 
-for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DOWNLOAD_CHANGED", "FILL_SEARCH_TERM", "FOCUS_SEARCH", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_UPDATE", "DOWNLOAD_CHANGED", "FILL_SEARCH_TERM", "FOCUS_SEARCH", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 }
 
@@ -10324,9 +10324,13 @@ const CardGrid = Object(external_ReactRedux_["connect"])(state => ({ DiscoverySt
 class DSCard_DSCard extends external_React_default.a.PureComponent {
   render() {
     return external_React_default.a.createElement(
-      "div",
-      { className: "ds-card" },
-      external_React_default.a.createElement("img", { src: this.props.image_src }),
+      "a",
+      { href: this.props.url, className: "ds-card" },
+      external_React_default.a.createElement(
+        "div",
+        { className: "img-wrapper" },
+        external_React_default.a.createElement("div", { className: "img", style: { backgroundImage: `url(${this.props.image_src}` } })
+      ),
       external_React_default.a.createElement(
         "div",
         { className: "meta" },
@@ -10364,46 +10368,59 @@ class Hero_Hero extends external_React_default.a.PureComponent {
     }
 
     let [heroRec, ...otherRecs] = feed.data.recommendations;
+    let truncateText = (text, cap) => `${text.substring(0, cap)}${text.length > cap ? `...` : ``}`;
 
-    // TODO: Let this count be determined by the endpoint
-    let cards = otherRecs.slice(1, 5).map((rec, index) => external_React_default.a.createElement(DSCard_DSCard, {
+    let cards = otherRecs.slice(1, this.props.items).map((rec, index) => external_React_default.a.createElement(DSCard_DSCard, {
       key: `dscard-${index}`,
       image_src: rec.image_src,
-      title: rec.title,
-      excerpt: rec.excerpt,
-      source: "TODO: SOURCE" }));
+      title: truncateText(rec.title, 44),
+      url: rec.url,
+      source: truncateText(`TODO: SOURCE`, 22) }));
 
     return external_React_default.a.createElement(
       "div",
-      { className: `ds-hero ds-hero-${this.props.style}` },
+      null,
       external_React_default.a.createElement(
         "div",
-        { className: "wrapper" },
-        external_React_default.a.createElement("img", { src: heroRec.image_src }),
-        external_React_default.a.createElement(
-          "div",
-          { className: "meta" },
-          external_React_default.a.createElement(
-            "header",
-            null,
-            heroRec.title
-          ),
-          external_React_default.a.createElement(
-            "p",
-            null,
-            heroRec.excerpt
-          ),
-          external_React_default.a.createElement(
-            "p",
-            null,
-            "TODO: SOURCE"
-          )
-        )
+        { className: "ds-header" },
+        this.props.title
       ),
       external_React_default.a.createElement(
         "div",
-        { className: "cards" },
-        cards
+        { className: `ds-hero ds-hero-${this.props.style}` },
+        external_React_default.a.createElement(
+          "a",
+          { href: heroRec.url, className: "wrapper" },
+          external_React_default.a.createElement(
+            "div",
+            { className: "img-wrapper" },
+            external_React_default.a.createElement("div", { className: "img", style: { backgroundImage: `url(${heroRec.image_src})` } })
+          ),
+          external_React_default.a.createElement(
+            "div",
+            { className: "meta" },
+            external_React_default.a.createElement(
+              "header",
+              null,
+              truncateText(heroRec.title, 28)
+            ),
+            external_React_default.a.createElement(
+              "p",
+              null,
+              truncateText(heroRec.excerpt, 114)
+            ),
+            external_React_default.a.createElement(
+              "p",
+              null,
+              truncateText(`TODO: SOURCE`, 22)
+            )
+          )
+        ),
+        external_React_default.a.createElement(
+          "div",
+          { className: "cards" },
+          cards
+        )
       )
     );
   }
@@ -10522,6 +10539,7 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
         return external_React_default.a.createElement(CardGrid, { feed: component.feed });
       case "Hero":
         return external_React_default.a.createElement(Hero, {
+          title: component.header.title,
           feed: component.feed,
           style: component.properties.style,
           items: component.properties.items });
@@ -10663,6 +10681,11 @@ const INITIAL_STATE = {
     lastUpdated: null,
     feeds: {
       // "https://foo.com/feed1": {lastUpdated: 123, data: []}
+    },
+    spocs: {
+      spocs_endpoint: "",
+      lastUpdated: null,
+      data: []
     }
   },
   Search: {
@@ -11066,6 +11089,22 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
       return Object.assign({}, prevState, { lastUpdated: INITIAL_STATE.DiscoveryStream.lastUpdated, layout: INITIAL_STATE.DiscoveryStream.layout });
     case Actions["actionTypes"].DISCOVERY_STREAM_FEEDS_UPDATE:
       return Object.assign({}, prevState, { feeds: action.data || prevState.feeds });
+    case Actions["actionTypes"].DISCOVERY_STREAM_SPOCS_ENDPOINT:
+      return Object.assign({}, prevState, {
+        spocs: Object.assign({}, INITIAL_STATE.DiscoveryStream.spocs, {
+          spocs_endpoint: action.data || INITIAL_STATE.DiscoveryStream.spocs.spocs_endpoint
+        })
+      });
+    case Actions["actionTypes"].DISCOVERY_STREAM_SPOCS_UPDATE:
+      if (action.data) {
+        return Object.assign({}, prevState, {
+          spocs: Object.assign({}, prevState.spocs, {
+            lastUpdated: action.data.lastUpdated,
+            data: action.data.spocs
+          })
+        });
+      }
+      return prevState;
     default:
       return prevState;
   }

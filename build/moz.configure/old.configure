@@ -62,8 +62,31 @@ def autoconf(mozconfig, autoconf):
 set_config('AUTOCONF', autoconf)
 
 
-@depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
-         old_configure_assignments, build_project)
+@depends(mozconfig)
+def prepare_mozconfig(mozconfig):
+    if mozconfig['path']:
+        items = {}
+        for key, value in mozconfig['vars']['added'].items():
+            items[key] = (value, 'added')
+        for key, (old, value) in mozconfig['vars']['modified'].items():
+            items[key] = (value, 'modified')
+        for t in ('env', 'vars'):
+            for key in mozconfig[t]['removed'].keys():
+                items[key] = (None, 'removed ' + t)
+        return items
+
+
+@dependable
+@imports('logging')
+def config_log():
+    logger = logging.getLogger('moz.configure')
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            return handler
+
+
+@depends('OLD_CONFIGURE', prepare_mozconfig, autoconf, check_build_environment,
+         shell, old_configure_assignments, build_project, config_log)
 @imports(_from='__builtin__', _import='open')
 @imports(_from='__builtin__', _import='print')
 @imports(_from='__builtin__', _import='sorted')
@@ -75,7 +98,7 @@ set_config('AUTOCONF', autoconf)
 @imports(_from='os.path', _import='exists')
 @imports(_from='mozbuild.shellutil', _import='quote')
 def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
-                      old_configure_assignments, build_project):
+                      old_configure_assignments, build_project, config_log):
     # os.path.abspath in the sandbox will ensure forward slashes on Windows,
     # which is actually necessary because this path actually ends up literally
     # as $0, and backslashes there breaks autoconf's detection of the source
@@ -113,7 +136,11 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
 
         # Make old-configure append to config.log, where we put our own log.
         # This could be done with a m4 macro, but it's way easier this way
-        script = script.replace('>./config.log', '>>./config.log')
+        if config_log:
+            path = config_log.baseFilename
+        else:
+            path = '/dev/null'
+        script = script.replace('>./config.log', '>>%s' % path)
 
         with open(old_configure, 'wb') as fh:
             fh.write(script)
@@ -126,20 +153,14 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
             print(command, file=out) # noqa Python 2vs3
             log.debug('| %s', command)
 
-        if mozconfig['path']:
+        if mozconfig:
             inject('# start of mozconfig values')
-            items = {}
-            for key, value in mozconfig['vars']['added'].items():
-                items[key] = (value, 'added')
-            for key, (old, value) in mozconfig['vars']['modified'].items():
-                items[key] = (value, 'modified')
-
-            for key, (value, action) in sorted(items.items()):
-                inject("%s=%s # %s" % (key, quote(value), action))
-
-            for t in ('env', 'vars'):
-                for key in sorted(mozconfig[t]['removed'].keys()):
-                    inject("unset %s # from %s" % (key, t))
+            for key, (value, action) in sorted(mozconfig.items()):
+                if action.startswith('removed '):
+                    inject("unset %s # from %s" % (
+                        key, action[len('removed '):]))
+                else:
+                    inject("%s=%s # %s" % (key, quote(value), action))
 
             inject('# end of mozconfig values')
 
@@ -147,8 +168,8 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
         # mozconfig['make_extra'], which we don't pass automatically above.
         inject('export AUTOCONF=%s' % quote(autoconf))
 
-        for assignment in old_configure_assignments:
-            inject(assignment)
+        for k, v in old_configure_assignments:
+            inject('%s=%s' % (k, quote(v)))
 
     return cmd
 
@@ -162,8 +183,7 @@ def old_configure_options(*options):
     def all_options():
         return list(options)
 
-    return depends(prepare_configure, extra_old_configure_args, all_options,
-                   *options)
+    return depends(extra_old_configure_args, all_options, *options)
 
 
 @old_configure_options(
@@ -218,7 +238,6 @@ def old_configure_options(*options):
     '--enable-zipwriter',
     '--includedir',
     '--libdir',
-    '--no-create',
     '--prefix',
     '--with-android-distribution-directory',
     '--with-android-max-sdk',
@@ -263,29 +282,16 @@ def old_configure_options(*options):
     '--x-includes',
     '--x-libraries',
 )
-@imports(_from='__builtin__', _import='compile')
-@imports(_from='__builtin__', _import='open')
-@imports('logging')
-@imports('os')
-@imports('subprocess')
-@imports('sys')
-@imports(_from='mozbuild.shellutil', _import='quote')
-@imports(_from='mozbuild.shellutil', _import='split')
-@imports(_from='mozbuild.util', _import='encode')
-def old_configure(prepare_configure, extra_old_configure_args, all_options,
-                  *options):
-    cmd = prepare_configure
-
+def prepare_configure_options(extra_old_configure_args, all_options, *options):
     # old-configure only supports the options listed in @old_configure_options
     # so we don't need to pass it every single option we've been passed. Only
     # the ones that are not supported by python configure need to.
-    cmd += [
+    options = [
         value.format(name)
         for name, value in zip(all_options, options)
         if value.origin != 'default'
     ]
 
-    env = dict(os.environ)
     extra_env = {}
 
     # We also pass it the options from js/moz.configure so that it can pass
@@ -295,11 +301,30 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
     if extra_old_configure_args:
         for arg in extra_old_configure_args:
             if arg.startswith('-'):
-                cmd.append(arg)
+                options.append(arg)
             else:
                 k, v = arg.split('=', 1)
                 extra_env[k] = v
 
+    return namespace(options=options, extra_env=extra_env, all_options=all_options)
+
+
+@depends(prepare_configure, prepare_configure_options, config_log)
+@imports(_from='__builtin__', _import='compile')
+@imports(_from='__builtin__', _import='open')
+@imports('logging')
+@imports('os')
+@imports('subprocess')
+@imports('sys')
+@imports('types')
+@imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from='mozbuild.shellutil', _import='split')
+@imports(_from='mozbuild.util', _import='encode')
+def old_configure(prepare_configure, prepare_configure_options, config_log):
+    cmd = prepare_configure + prepare_configure_options.options
+    extra_env = prepare_configure_options.extra_env
+
+    env = dict(os.environ)
     if extra_env:
         env.update(extra_env)
 
@@ -310,26 +335,38 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
                   ' '.join('%s=%s' % pair for pair in extra_env.iteritems()))
 
     # Our logging goes to config.log, the same file old.configure uses.
-    # We can't share the handle on the file, so close it. We assume nothing
-    # beyond this point is going to be interesting to log to config.log from
-    # our end, so we don't make the effort to recreate a logging.FileHandler.
+    # We can't share the handle on the file, so close it.
     logger = logging.getLogger('moz.configure')
-    for handler in logger.handlers:
-        if isinstance(handler, logging.FileHandler):
-            handler.close()
-            logger.removeHandler(handler)
+    if config_log:
+        config_log.close()
+        logger.removeHandler(config_log)
 
-    log_size = os.path.getsize('config.log')
+        log_size = os.path.getsize(config_log.baseFilename)
 
-    ret = subprocess.call(cmd, env=encode(env))
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            env=encode(env))
+    while True:
+        line = proc.stdout.readline()
+        if not line:
+            break
+        log.info(line.rstrip())
+
+    ret = proc.wait()
     if ret:
         with log.queue_debug():
-            with encoded_open('config.log', 'r') as fh:
-                fh.seek(log_size)
-                for line in fh:
-                    log.debug(line.rstrip())
+            if config_log:
+                with encoded_open(config_log.baseFilename, 'r') as fh:
+                    fh.seek(log_size)
+                    for line in fh:
+                        log.debug(line.rstrip())
             log.error('old-configure failed')
         sys.exit(ret)
+
+    if config_log:
+        # Create a new handler in append mode
+        handler = logging.FileHandler(config_log.baseFilename, mode='a', delay=True)
+        handler.setFormatter(config_log.formatter)
+        logger.addHandler(handler)
 
     raw_config = {
         'split': split,
@@ -344,7 +381,7 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
 
     # Ensure all the flags known to old-configure appear in the
     # @old_configure_options above.
-    all_options = set(all_options)
+    all_options = set(prepare_configure_options.all_options)
     for flag in raw_config['flags']:
         if flag not in all_options:
             die('Missing option in `@old_configure_options` in %s: %s',
@@ -353,6 +390,13 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
     # If the code execution above fails, we want to keep the file around for
     # debugging.
     os.remove('config.data')
+
+    for c in ('substs', 'defines'):
+        raw_config[c] = [
+            (k[1:-1], v[1:-1] if isinstance(v, types.StringTypes) else v)
+            for k, v in raw_config[c]
+        ]
+
     return raw_config
 
 
@@ -372,14 +416,12 @@ def set_old_configure_define(name, value):
 
 
 @depends(old_configure)
-@imports('types')
 def post_old_configure(raw_config):
     for k, v in raw_config['substs']:
-        set_old_configure_config(
-            k[1:-1], v[1:-1] if isinstance(v, types.StringTypes) else v)
+        set_old_configure_config(k, v)
 
     for k, v in dict(raw_config['defines']).iteritems():
-        set_old_configure_define(k[1:-1], v[1:-1])
+        set_old_configure_define(k, v)
 
     set_old_configure_config('non_global_defines',
                              raw_config['non_global_defines'])

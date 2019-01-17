@@ -1,0 +1,189 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+@depends(check_build_environment, prepare_configure_options, prepare_mozconfig,
+         old_configure, old_configure_assignments, '--cache-file')
+@imports('errno')
+@imports('itertools')
+@imports('logging')
+@imports('os')
+@imports('pickle')
+@imports('subprocess')
+@imports('sys')
+@imports(_from='__main__', _import='config_status')
+@imports(_from='__builtin__', _import='OSError')
+@imports(_from='__builtin__', _import='open')
+@imports(_from='__builtin__', _import='object')
+@imports(_from='mozbuild.configure', _import='ConfigureSandbox')
+@imports(_from='mozbuild.configure.util', _import='ConfigureOutputHandler')
+@imports(_from='mozbuild.util', _import='encode')
+def js_subconfigure(build_env, prepare_configure_options, mozconfig,
+                    old_configure, old_configure_assignments, cache_file):
+
+    class PrefixOutput(object):
+        def __init__(self, prefix, fh):
+            self._fh = fh
+            self._begin_line = True
+            self._prefix = prefix
+
+        def write(self, content):
+            if self._begin_line:
+                self._fh.write(self._prefix)
+            self._fh.write(('\n' + self._prefix).join(content.splitlines()))
+            self._begin_line = content.endswith('\n')
+            if self._begin_line:
+                self._fh.write('\n')
+
+        def flush(self):
+            self._fh.flush()
+
+    logger = logging.getLogger('moz.configure')
+    formatter = logging.Formatter('js/src> %(levelname)s: %(message)s')
+    for handler in logger.handlers:
+        handler.setFormatter(formatter)
+        if isinstance(handler, ConfigureOutputHandler):
+            handler._stdout = PrefixOutput('js/src> ', handler._stdout)
+
+    substs = dict(old_configure['substs'])
+    assignments = dict(old_configure_assignments)
+    environ = dict(os.environ)
+    if prepare_configure_options.extra_env:
+        environ.update(prepare_configure_options.extra_env)
+
+    options = [
+        o for o in prepare_configure_options.options
+        # --with-system-nspr will have been converted into the relevant $NSPR_CFLAGS
+        # and $NSPR_LIBS.
+        if not o.startswith('--with-system-nspr')
+    ]
+
+    if not substs.get('ENABLE_INTL_API'):
+        options.append('--without-intl-api')
+
+    if substs.get('NSPR_CFLAGS') or substs.get('NSPR_LIBS'):
+        options.append(
+            '--with-nspr-cflags=%s' % ' '.join(substs.get('NSPR_CFLAGS', [])))
+        options.append(
+            '--with-nspr-libs=%s' % ' '.join(substs.get('NSPR_LIBS', [])))
+
+    options.append('--prefix=%s/dist' % build_env.topobjdir)
+
+    if substs.get('ZLIB_IN_MOZGLUE'):
+        substs['MOZ_ZLIB_LIBS'] = ''
+
+    environ['MOZILLA_CENTRAL_PATH'] = build_env.topsrcdir
+    if 'MOZ_BUILD_APP' in environ:
+        del environ['MOZ_BUILD_APP']
+
+    # Here, we mimic what we used to do from old-configure, which makes this
+    # all awkward.
+
+    # The following variables were saved at the beginning of old-configure,
+    # and restored before invoking the subconfigure. Which means their value
+    # should be taken from the old_configure_assignments or mozconfig.
+    from_assignment = set(
+        ('CC', 'CXX', 'CPPFLAGS', 'CFLAGS', 'CXXFLAGS', 'LDFLAGS', 'HOST_CC',
+         'HOST_CXXFLAGS', 'HOST_LDFLAGS'))
+
+    # Variables that were explicitly exported from old-configure, and those
+    # explicitly set in the environment when invoking old-configure, were
+    # automatically inherited from subconfigure. We assume the relevant ones
+    # have a corresponding AC_SUBST in old-configure, making them available
+    # in `substs`.
+    for var in itertools.chain((
+        'MOZ_SYSTEM_ZLIB', 'MOZ_ZLIB_CFLAGS', 'MOZ_ZLIB_LIBS',
+        'MOZ_APP_NAME', 'MOZ_APP_REMOTINGNAME', 'MOZ_DEV_EDITION',
+        'STLPORT_LIBS', 'DIST', 'MOZ_LINKER', 'ZLIB_IN_MOZGLUE', 'RANLIB',
+        'AR', 'CPP', 'CC', 'CXX', 'CPPFLAGS', 'CFLAGS', 'CXXFLAGS',
+        'LDFLAGS', 'HOST_CC', 'HOST_CXX', 'HOST_CPPFLAGS',
+        'HOST_CXXFLAGS', 'HOST_LDFLAGS'
+    ), prepare_configure_options.extra_env):
+        if var not in from_assignment and var in substs:
+            value = substs[var]
+        elif var in assignments:
+            value = assignments[var]
+        elif mozconfig and var in mozconfig and \
+                not mozconfig[var][1].startswith('removed'):
+            value = mozconfig[var][0]
+        else:
+            continue
+        if isinstance(value, list):
+            value = ' '.join(value)
+        environ[var] = value
+
+    options.append('JS_STANDALONE=')
+
+    srcdir = os.path.join(build_env.topsrcdir, 'js', 'src')
+    objdir = os.path.join(build_env.topobjdir, 'js', 'src')
+
+    data_file = os.path.join(objdir, 'configure.pkl')
+    previous_args = None
+    if os.path.exists(data_file):
+        with open(data_file, 'rb') as f:
+            previous_args = pickle.load(f)
+
+    cache_file = cache_file or './config.cache'
+    cache_file = os.path.join(build_env.topobjdir, cache_file)
+
+    try:
+        os.makedirs(objdir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+    with open(data_file, 'wb') as f:
+        pickle.dump(options, f)
+
+    # Only run configure if one of the following is true:
+    # - config.status doesn't exist
+    # - config.status is older than an input to configure
+    # - the configure arguments changed
+    configure = os.path.join(srcdir, 'old-configure')
+    config_status_path = os.path.join(objdir, 'config.status')
+    skip_configure = True
+    if not os.path.exists(config_status_path):
+        skip_configure = False
+    else:
+        config_status_deps = os.path.join(objdir, 'config_status_deps.in')
+        if not os.path.exists(config_status_deps):
+            skip_configure = False
+        else:
+            with open(config_status_deps, 'r') as fh:
+                dep_files = fh.read().splitlines() + [configure]
+            if (any(not os.path.exists(f) or
+                    (os.path.getmtime(config_status_path) < os.path.getmtime(f))
+                    for f in dep_files) or
+                ((previous_args or options) != options)):
+                skip_configure = False
+
+    ret = 0
+    if not skip_configure:
+        oldpwd = os.getcwd()
+        os.chdir(objdir)
+        command = [
+            os.path.join(build_env.topsrcdir, 'configure.py'),
+            '--enable-project=js',
+        ]
+        environ['OLD_CONFIGURE'] = os.path.join(
+            os.path.dirname(configure), 'old-configure')
+        command += options
+        command += ['--cache-file=%s' % cache_file]
+
+        log.info('configuring')
+        log.info('running %s' % ' '.join(command[:-1]))
+        config = {}
+        sandbox = ConfigureSandbox(config, environ, command, logger=logger)
+        sandbox.run(os.path.join(build_env.topsrcdir, 'moz.configure'))
+        ret = config_status(config)
+        os.chdir(oldpwd)
+
+    # Restore unprefixed logging.
+    formatter = logging.Formatter('%(levelname)s: %(message)s')
+    for handler in logger.handlers:
+        handler.setFormatter(formatter)
+        if isinstance(handler, ConfigureOutputHandler):
+            handler._stdout.flush()
+            handler._stdout = handler._stdout._fh
+
+    return ret
