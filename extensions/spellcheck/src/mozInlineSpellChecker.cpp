@@ -68,6 +68,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::ipc;
 
 // Set to spew messages to the console about what is happening.
 //#define DEBUG_INLINESPELL
@@ -81,6 +82,9 @@ using namespace mozilla::dom;
 // be too short to a low-end machine.
 #define INLINESPELL_MINIMUM_WORDS_BEFORE_TIMEOUT 5
 
+// The maximum number of words to check word via IPC.
+#define INLINESPELL_MAXIMUM_CHUNKED_WORDS_PER_TASK 25
+
 // These notifications are broadcast when spell check starts and ends.  STARTED
 // must always be followed by ENDED.
 #define INLINESPELL_STARTED_TOPIC "inlineSpellChecker-spellCheck-started"
@@ -92,7 +96,7 @@ static const PRTime kMaxSpellCheckTimeInUsec =
     INLINESPELL_CHECK_TIMEOUT * PR_USEC_PER_MSEC;
 
 mozInlineSpellStatus::mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker)
-    : mSpellChecker(aSpellChecker), mWordCount(0) {}
+    : mSpellChecker(aSpellChecker) {}
 
 // mozInlineSpellStatus::InitForEditorChange
 //
@@ -520,7 +524,6 @@ mozInlineSpellChecker::mozInlineSpellChecker()
   if (prefs)
     prefs->GetIntPref(kMaxSpellCheckSelectionSize,
                       &mMaxNumWordsInSpellSelection);
-  mMaxMisspellingsPerCheck = mMaxNumWordsInSpellSelection * 3 / 4;
 }
 
 mozInlineSpellChecker::~mozInlineSpellChecker() {}
@@ -1195,8 +1198,6 @@ nsresult mozInlineSpellChecker::DoSpellCheckSelection(
     MOZ_ASSERT(
         doneChecking,
         "We gave the spellchecker one word, but it didn't finish checking?!?!");
-
-    status->mWordCount = 0;
   }
 
   return NS_OK;
@@ -1238,12 +1239,18 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
     const UniquePtr<mozInlineSpellStatus>& aStatus, bool* aDoneChecking) {
   *aDoneChecking = true;
 
-  NS_ENSURE_TRUE(mSpellCheck, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!mSpellCheck)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  if (SpellCheckSelectionIsFull()) {
+    return NS_OK;
+  }
 
   // get the editor for ShouldSpellCheckNode, this may fail in reasonable
   // circumstances since the editor could have gone away
   RefPtr<TextEditor> textEditor = mTextEditor;
-  if (!textEditor) {
+  if (!textEditor || textEditor->Destroyed()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1291,25 +1298,34 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
   int32_t wordsChecked = 0;
   PRTime beginTime = PR_Now();
 
+  nsTArray<nsString> words;
+  nsTArray<NodeOffsetRange> checkRanges;
   nsAutoString wordText;
   NodeOffsetRange wordNodeOffsetRange;
   bool dontCheckWord;
+  // XXX Spellchecker API isn't async on chrome process.
+  static const size_t requestChunkSize =
+      XRE_IsContentProcess() ? INLINESPELL_MAXIMUM_CHUNKED_WORDS_PER_TASK : 1;
   while (NS_SUCCEEDED(aWordUtil.GetNextWord(wordText, &wordNodeOffsetRange,
                                             &dontCheckWord)) &&
          !wordNodeOffsetRange.Empty()) {
     // get the range for the current word.
-    nsINode* beginNode = wordNodeOffsetRange.Begin().mNode;
-    nsINode* endNode = wordNodeOffsetRange.End().mNode;
-    int32_t beginOffset = wordNodeOffsetRange.Begin().mOffset;
-    int32_t endOffset = wordNodeOffsetRange.End().mOffset;
+    nsINode* beginNode = wordNodeOffsetRange.Begin().Node();
+    nsINode* endNode = wordNodeOffsetRange.End().Node();
+    int32_t beginOffset = wordNodeOffsetRange.Begin().Offset();
+    int32_t endOffset = wordNodeOffsetRange.End().Offset();
 
     // see if we've done enough words in this round and run out of time.
     if (wordsChecked >= INLINESPELL_MINIMUM_WORDS_BEFORE_TIMEOUT &&
         PR_Now() > PRTime(beginTime + kMaxSpellCheckTimeInUsec)) {
 // stop checking, our time limit has been exceeded.
 #ifdef DEBUG_INLINESPELL
-      printf("We have run out of the time, schedule next round.");
+      printf("We have run out of the time, schedule next round.\n");
 #endif
+      CheckCurrentWordsNoSuggest(aSpellCheckSelection, words, checkRanges);
+      words.Clear();
+      checkRanges.Clear();
+
       // move the range to encompass the stuff that needs checking.
       nsresult rv = aStatus->mRange->SetStart(beginNode, beginOffset);
       if (NS_FAILED(rv)) {
@@ -1366,39 +1382,31 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
     }
 
     // check spelling and add to selection if misspelled
-    bool isMisspelled;
     mozInlineSpellWordUtil::NormalizeWord(wordText);
-    nsresult rv =
-        mSpellCheck->CheckCurrentWordNoSuggest(wordText, &isMisspelled);
-    if (NS_FAILED(rv)) continue;
-
+    words.AppendElement(wordText);
+    checkRanges.AppendElement(wordNodeOffsetRange);
     wordsChecked++;
-    if (isMisspelled) {
-      // misspelled words count extra toward the max
-      RefPtr<nsRange> wordRange;
-      // If we somehow can't make a range for this word, just ignore it.
-      if (NS_SUCCEEDED(aWordUtil.MakeRange(wordNodeOffsetRange.Begin(),
-                                           wordNodeOffsetRange.End(),
-                                           getter_AddRefs(wordRange)))) {
-        AddRange(aSpellCheckSelection, wordRange);
-        aStatus->mWordCount++;
-        if (aStatus->mWordCount >= mMaxMisspellingsPerCheck ||
-            SpellCheckSelectionIsFull()) {
-          break;
-        }
-      }
+    if (words.Length() >= requestChunkSize) {
+      CheckCurrentWordsNoSuggest(aSpellCheckSelection, words, checkRanges);
+      words.Clear();
+      checkRanges.Clear();
     }
   }
+
+  CheckCurrentWordsNoSuggest(aSpellCheckSelection, words, checkRanges);
 
   return NS_OK;
 }
 
 // An RAII helper that calls ChangeNumPendingSpellChecks on destruction.
-class AutoChangeNumPendingSpellChecks {
+class MOZ_RAII AutoChangeNumPendingSpellChecks final {
  public:
-  AutoChangeNumPendingSpellChecks(mozInlineSpellChecker* aSpellChecker,
-                                  int32_t aDelta)
-      : mSpellChecker(aSpellChecker), mDelta(aDelta) {}
+  explicit AutoChangeNumPendingSpellChecks(mozInlineSpellChecker* aSpellChecker,
+                                           int32_t aDelta
+                                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mSpellChecker(aSpellChecker), mDelta(aDelta) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
   ~AutoChangeNumPendingSpellChecks() {
     mSpellChecker->ChangeNumPendingSpellChecks(mDelta);
@@ -1407,7 +1415,67 @@ class AutoChangeNumPendingSpellChecks {
  private:
   RefPtr<mozInlineSpellChecker> mSpellChecker;
   int32_t mDelta;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
+
+void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
+    Selection* aSpellCheckSelection, const nsTArray<nsString>& aWords,
+    const nsTArray<NodeOffsetRange>& aRanges) {
+  if (aWords.IsEmpty()) {
+    return;
+  }
+
+  ChangeNumPendingSpellChecks(1);
+
+  RefPtr<mozInlineSpellChecker> self = this;
+  RefPtr<Selection> spellCheckerSelection = aSpellCheckSelection;
+  uint32_t token = mDisabledAsyncToken;
+  mSpellCheck->CheckCurrentWordsNoSuggest(aWords)->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [self, spellCheckerSelection, aRanges,
+       token](const nsTArray<bool>& aIsMisspelled) {
+        if (token != self->mDisabledAsyncToken) {
+          // This result is never used
+          return;
+        }
+
+        if (!self->mTextEditor || self->mTextEditor->Destroyed()) {
+          return;
+        }
+
+        AutoChangeNumPendingSpellChecks pendingChecks(self, -1);
+
+        if (self->SpellCheckSelectionIsFull()) {
+          return;
+        }
+
+        for (size_t i = 0; i < aIsMisspelled.Length(); i++) {
+          if (!aIsMisspelled[i]) {
+            continue;
+          }
+
+          RefPtr<nsRange> wordRange =
+              mozInlineSpellWordUtil::MakeRange(aRanges[i]);
+          // If we somehow can't make a range for this word, just ignore
+          // it.
+          if (wordRange) {
+            self->AddRange(spellCheckerSelection, wordRange);
+          }
+        }
+      },
+      [self, token](nsresult aRv) {
+        if (!self->mTextEditor || self->mTextEditor->Destroyed()) {
+          return;
+        }
+
+        if (token != self->mDisabledAsyncToken) {
+          // This result is never used
+          return;
+        }
+
+        self->ChangeNumPendingSpellChecks(-1);
+      });
+}
 
 // mozInlineSpellChecker::ResumeCheck
 //
