@@ -85,6 +85,8 @@ exports.pseudoClasses = {
  * A CSS selector.
  */
 const selector = exports.selector = {
+  // Function that returns a Promise containing an unique CSS selector.
+  getUniqueSelector: PropTypes.func,
   // Array of the selectors that match the selected element.
   matchedSelectors: PropTypes.arrayOf(PropTypes.string),
   // The CSS rule's selector text content.
