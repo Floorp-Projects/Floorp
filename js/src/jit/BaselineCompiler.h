@@ -266,7 +266,7 @@ class BaselineCodeGen {
 
   TempAllocator& alloc_;
   BytecodeAnalysis analysis_;
-  FrameInfo frame;
+  typename Handler::FrameInfoT& frame;
 
   js::Vector<CodeOffset> traceLoggerToggleOffsets_;
 
@@ -321,6 +321,10 @@ class BaselineCodeGen {
   void loadResumeIndexBytecodeOperand(Register dest);
 
   void prepareVMCall();
+
+  void storeFrameSizeAndPushDescriptor(uint32_t frameBaseSize, uint32_t argSize,
+                                       const Address& frameSizeAddr);
+  void computeFullFrameSize(uint32_t frameBaseSize, Register dest);
 
   enum CallVMPhase { POST_INITIALIZE, CHECK_OVER_RECURSED };
   bool callVM(const VMFunction& fun, CallVMPhase phase = POST_INITIALIZE);
@@ -423,6 +427,7 @@ using RetAddrEntryVector = js::Vector<RetAddrEntry, 16, SystemAllocPolicy>;
 
 // Interface used by BaselineCodeGen for BaselineCompiler.
 class BaselineCompilerHandler {
+  CompilerFrameInfo frame_;
   TempAllocator& alloc_;
   FixedList<Label> labels_;
   RetAddrEntryVector retAddrEntries_;
@@ -431,9 +436,14 @@ class BaselineCompilerHandler {
   bool compileDebugInstrumentation_;
 
  public:
-  BaselineCompilerHandler(TempAllocator& alloc, JSScript* script);
+  using FrameInfoT = CompilerFrameInfo;
+
+  BaselineCompilerHandler(MacroAssembler& masm, TempAllocator& alloc,
+                          JSScript* script);
 
   MOZ_MUST_USE bool init();
+
+  CompilerFrameInfo& frame() { return frame_; }
 
   jsbytecode* pc() const { return pc_; }
   jsbytecode* maybePC() const { return pc_; }
@@ -563,8 +573,14 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
 
 // Interface used by BaselineCodeGen for BaselineInterpreterGenerator.
 class BaselineInterpreterHandler {
+  InterpreterFrameInfo frame_;
+
  public:
-  explicit BaselineInterpreterHandler();
+  using FrameInfoT = InterpreterFrameInfo;
+
+  explicit BaselineInterpreterHandler(MacroAssembler& masm);
+
+  InterpreterFrameInfo& frame() { return frame_; }
 
   // Interpreter doesn't know the pc statically.
   jsbytecode* maybePC() const { return nullptr; }
@@ -583,6 +599,7 @@ using BaselineInterpreterCodeGen = BaselineCodeGen<BaselineInterpreterHandler>;
 
 class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
  public:
+  BaselineInterpreterGenerator(JSContext* cx, TempAllocator& alloc);
 };
 
 extern const VMFunction NewArrayCopyOnWriteInfo;
