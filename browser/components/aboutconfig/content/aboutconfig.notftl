@@ -11,7 +11,7 @@ about-config-warning-button = I accept the risk
 about-config-title = about:config
 
 about-config-search =
-    .placeholder = Search
+    .placeholder = Search or press ESC to show all
 
 about-config-pref-add = Add
 about-config-pref-toggle = Toggle

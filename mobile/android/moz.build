@@ -18,7 +18,7 @@ with Files('docs/**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
 with Files('geckoview/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'GeckoView')
+    BUG_COMPONENT = ('GeckoView', 'General')
 
 with Files('geckoview/src/main/aidl/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Audio/Video')
@@ -27,7 +27,7 @@ with Files('geckoview/src/main/java/org/mozilla/gecko/mozglue/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Audio/Video')
 
 with Files('geckoview_example/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'GeckoView')
+    BUG_COMPONENT = ('GeckoView', 'General')
 
 with Files('gradle/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
