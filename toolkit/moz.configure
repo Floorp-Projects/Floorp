@@ -193,8 +193,8 @@ option('--enable-default-toolkit', nargs=1,
                 'cairo-cocoa', 'cairo-uikit', 'cairo-android'),
        help='Select default toolkit')
 
-@depends('--enable-default-toolkit', target, '--help')
-def full_toolkit(value, target, _):
+@depends('--enable-default-toolkit', target)
+def full_toolkit(value, target):
     # Define possible choices for each platform. The default is the first one
     # listed when there are several.
     if target.os == 'WINNT':
