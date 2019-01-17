@@ -121,9 +121,6 @@ RootActor.prototype = {
     storageInspector: true,
     // Whether storage inspector is read only
     storageInspectorReadOnly: true,
-    // Whether the server supports full source actors (breakpoints on
-    // eval scripts, etc)
-    debuggerSourceActors: true,
     // Whether the server can return wasm binary source
     wasmBinarySource: true,
     bulk: true,
