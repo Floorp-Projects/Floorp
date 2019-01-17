@@ -504,8 +504,8 @@ fn add_reference_frame(
     cst.add_reference_frame(
         parent,
         TransformStyle::Preserve3D,
-        Some(PropertyBinding::Value(transform)),
-        None,
+        PropertyBinding::Value(transform),
+        ReferenceFrameKind::Perspective,
         origin_in_parent_reference_frame,
         PipelineId::dummy(),
     )
