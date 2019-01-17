@@ -6,6 +6,7 @@
 
 #include "builtin/JSON.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
@@ -34,6 +35,7 @@
 
 using namespace js;
 
+using mozilla::CheckedInt;
 using mozilla::IsFinite;
 using mozilla::Maybe;
 using mozilla::RangedPtr;
@@ -138,13 +140,20 @@ static MOZ_ALWAYS_INLINE RangedPtr<DstCharT> InfallibleQuote(
 }
 
 template <typename SrcCharT, typename CharVectorT>
-static bool Quote(CharVectorT& sb, JSLinearString* str) {
+static bool Quote(JSContext* cx, CharVectorT& sb, JSLinearString* str) {
   // We resize the backing buffer to the maximum size we could possibly need,
   // write the escaped string into it, and shrink it back to the size we ended
   // up needing.
+
   size_t len = str->length();
+  CheckedInt<size_t> reservedLen = CheckedInt<size_t>(len) * 6 + 2;
+  if (MOZ_UNLIKELY(!reservedLen.isValid())) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+
   size_t sbInitialLen = sb.length();
-  if (!sb.growByUninitialized(len * 6 + 2)) {
+  if (!sb.growByUninitialized(reservedLen.value())) {
     return false;
   }
 
@@ -174,12 +183,12 @@ static bool Quote(JSContext* cx, StringBuffer& sb, JSString* str) {
     }
   }
   if (linear->hasTwoByteChars()) {
-    return Quote<char16_t>(sb.rawTwoByteBuffer(), linear);
+    return Quote<char16_t>(cx, sb.rawTwoByteBuffer(), linear);
   }
 
   return sb.isUnderlyingBufferLatin1()
-             ? Quote<Latin1Char>(sb.latin1Chars(), linear)
-             : Quote<Latin1Char>(sb.rawTwoByteBuffer(), linear);
+             ? Quote<Latin1Char>(cx, sb.latin1Chars(), linear)
+             : Quote<Latin1Char>(cx, sb.rawTwoByteBuffer(), linear);
 }
 
 namespace {
