@@ -490,10 +490,6 @@ function findFlexOrGridParentContainerForNode(node, type, walker) {
 
   try {
     while ((currentNode = treeWalker.parentNode())) {
-      if (!currentNode) {
-        break;
-      }
-
       const displayType = walker.getNode(currentNode).displayType;
       if (!displayType) {
         break;
