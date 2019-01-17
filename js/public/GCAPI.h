@@ -634,15 +634,16 @@ struct JS_PUBLIC_API GCDescription {
 
   char16_t* formatSliceMessage(JSContext* cx) const;
   char16_t* formatSummaryMessage(JSContext* cx) const;
-  char16_t* formatJSON(JSContext* cx, uint64_t timestamp) const;
 
   mozilla::TimeStamp startTime(JSContext* cx) const;
   mozilla::TimeStamp endTime(JSContext* cx) const;
   mozilla::TimeStamp lastSliceStart(JSContext* cx) const;
   mozilla::TimeStamp lastSliceEnd(JSContext* cx) const;
 
-  JS::UniqueChars sliceToJSON(JSContext* cx) const;
-  JS::UniqueChars summaryToJSON(JSContext* cx) const;
+  char16_t* formatJSONTelemetry(JSContext* cx, uint64_t timestamp) const;
+
+  JS::UniqueChars sliceToJSONProfiler(JSContext* cx) const;
+  JS::UniqueChars formatJSONProfiler(JSContext* cx) const;
 
   JS::dbg::GarbageCollectionEvent::Ptr toGCEvent(JSContext* cx) const;
 };
