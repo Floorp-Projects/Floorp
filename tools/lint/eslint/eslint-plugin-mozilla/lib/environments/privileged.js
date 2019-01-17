@@ -467,6 +467,7 @@ module.exports = {
     "ReportingObserver": false,
     "Request": false,
     "Response": false,
+    "SessionStoreUtils": false,
     "SVGAElement": false,
     "SVGAngle": false,
     "SVGAnimateElement": false,
