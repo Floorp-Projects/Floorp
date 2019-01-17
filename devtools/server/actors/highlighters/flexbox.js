@@ -66,6 +66,9 @@ const JUSTIFY_CONTENT = "justify-content";
  * - showAlignment(isShown)
  *     @param  {Boolean} isShown
  *     Shows the alignment in the flexbox highlighter.
+ * - noCountainerOutline(isShown)
+ *     @param  {Boolean} noContainerOutline
+ *     Prevent drawing an outline around the flex container.
  *
  * Structure:
  * <div class="highlighter-container">
@@ -113,7 +116,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   _buildMarkup() {
     const container = createNode(this.win, {
       attributes: {
-        "class": "highlighter-container",
+        "class": "highlighter-container flexbox",
       },
     });
 
@@ -524,6 +527,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     });
 
     this.ctx.fillStyle = this.getFlexContainerPattern(devicePixelRatio);
+    this.ctx.strokeStyle =
+      this.options.noContainerOutline ? "transparent" : this.color;
+
     drawRect(this.ctx, 0, 0, width, height, this.currentMatrix);
 
     // Find current angle of outer flex element by measuring the angle of two arbitrary
