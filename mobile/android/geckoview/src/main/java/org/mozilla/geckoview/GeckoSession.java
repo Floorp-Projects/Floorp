@@ -3816,7 +3816,7 @@ public class GeckoSession implements Parcelable {
         @IntDef(flag = true,
                 value = { CATEGORY_NONE, CATEGORY_AD, CATEGORY_ANALYTIC,
                           CATEGORY_SOCIAL, CATEGORY_CONTENT, CATEGORY_ALL,
-                          CATEGORY_TEST })
+                          CATEGORY_TEST, CATEGORY_AD_EXT })
         /* package */ @interface Category {}
 
         static final int CATEGORY_NONE = 0;
@@ -3844,6 +3844,10 @@ public class GeckoSession implements Parcelable {
          * Block all known trackers.
          */
         static final int CATEGORY_ALL = (1 << 5) - 1;
+        /**
+         * Experimental: Block advertisements.
+         */
+        static final int CATEGORY_AD_EXT = 1 << 6;
 
         /**
          * A tracking element has been blocked from loading.

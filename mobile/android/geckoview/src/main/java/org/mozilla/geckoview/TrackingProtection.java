@@ -14,6 +14,13 @@ import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
     private static final String ANALYTIC = "analytics-track-digest256";
     private static final String SOCIAL = "social-track-digest256";
     private static final String CONTENT = "content-track-digest256";
+    private static final String[] AD_EXT = new String[] {
+        "fanboy-annoyance-digest256",
+        "fanboy-social-digest256",
+        "easylist-digest25",
+        "easyprivacy-digest25",
+        "adguard-digest25"
+    };
 
     /* package */ static String buildPrefValue(int categories) {
         StringBuilder builder = new StringBuilder();
@@ -36,6 +43,11 @@ import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
         if ((categories & TrackingProtectionDelegate.CATEGORY_CONTENT) != 0) {
             builder.append(CONTENT).append(',');
         }
+        if ((categories & TrackingProtectionDelegate.CATEGORY_AD_EXT) != 0) {
+            for (final String l: AD_EXT) {
+                builder.append(l).append(',');
+            }
+        }
         // Trim final ','.
         return builder.substring(0, builder.length() - 1);
     }
@@ -56,6 +68,12 @@ import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
         }
         if (list.indexOf(CONTENT) != -1) {
             category |= TrackingProtectionDelegate.CATEGORY_CONTENT;
+        }
+        for (final String l: AD_EXT) {
+            if (list.indexOf(l) != -1) {
+                category |= TrackingProtectionDelegate.CATEGORY_AD_EXT;
+                break;
+            }
         }
         return category;
     }
