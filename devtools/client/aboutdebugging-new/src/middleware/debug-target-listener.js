@@ -5,12 +5,10 @@
 "use strict";
 
 const {
-  DEBUG_TARGETS,
   UNWATCH_RUNTIME_START,
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 const Actions = require("../actions/index");
-const { isSupportedDebugTarget } = require("../modules/debug-target-support");
 
 function debugTargetListenerMiddleware(store) {
   const onExtensionsUpdated = () => {
@@ -31,63 +29,59 @@ function debugTargetListenerMiddleware(store) {
         const { runtime } = action;
         const { clientWrapper } = runtime.runtimeDetails;
 
-        if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.TAB)) {
-          clientWrapper.addListener("tabListChanged", onTabsUpdated);
-        }
+        // Tabs
+        clientWrapper.addListener("tabListChanged", onTabsUpdated);
 
-        if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.EXTENSION)) {
-          clientWrapper.addListener("addonListChanged", onExtensionsUpdated);
-        }
+        // Addons
+        clientWrapper.addListener("addonListChanged", onExtensionsUpdated);
 
-        if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
-          clientWrapper.addListener("workerListChanged", onWorkersUpdated);
-          clientWrapper.onFront("contentProcessTarget", front => {
-            clientWrapper.contentProcessFronts.push(front);
-            front.on("workerListChanged", onWorkersUpdated);
-          });
+        // Workers
+        clientWrapper.addListener("workerListChanged", onWorkersUpdated);
+        clientWrapper.onFront("contentProcessTarget", front => {
+          clientWrapper.contentProcessFronts.push(front);
+          front.on("workerListChanged", onWorkersUpdated);
+        });
 
-          clientWrapper.onFront("serviceWorkerRegistration", front => {
-            clientWrapper.serviceWorkerRegistrationFronts.push(front);
-            front.on("push-subscription-modified", onWorkersUpdated);
-            front.on("registration-changed", onWorkersUpdated);
-          });
+        clientWrapper.onFront("serviceWorkerRegistration", front => {
+          clientWrapper.serviceWorkerRegistrationFronts.push(front);
+          front.on("push-subscription-modified", onWorkersUpdated);
+          front.on("registration-changed", onWorkersUpdated);
+        });
 
-          clientWrapper.addListener("serviceWorkerRegistrationListChanged",
-            onWorkersUpdated);
-          clientWrapper.addListener("processListChanged", onWorkersUpdated);
-        }
+        clientWrapper.addListener("serviceWorkerRegistrationListChanged",
+          onWorkersUpdated);
+        clientWrapper.addListener("processListChanged", onWorkersUpdated);
+
         break;
       }
       case UNWATCH_RUNTIME_START: {
         const { runtime } = action;
         const { clientWrapper } = runtime.runtimeDetails;
 
-        if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.TAB)) {
-          clientWrapper.removeListener("tabListChanged", onTabsUpdated);
+        // Tabs
+        clientWrapper.removeListener("tabListChanged", onTabsUpdated);
+
+        // Addons
+        clientWrapper.removeListener("addonListChanged", onExtensionsUpdated);
+
+        // Workers
+        clientWrapper.removeListener("workerListChanged", onWorkersUpdated);
+        clientWrapper.removeListener("serviceWorkerRegistrationListChanged",
+          onWorkersUpdated);
+
+        for (const front of clientWrapper.contentProcessFronts) {
+          front.off("workerListChanged", onWorkersUpdated);
         }
+        clientWrapper.contentProcessFronts = [];
 
-        if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.EXTENSION)) {
-          clientWrapper.removeListener("addonListChanged", onExtensionsUpdated);
+        for (const front of clientWrapper.serviceWorkerRegistrationFronts) {
+          front.off("push-subscription-modified", onWorkersUpdated);
+          front.off("registration-changed", onWorkersUpdated);
         }
+        clientWrapper.serviceWorkerRegistrationFronts = [];
 
-        if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
-          clientWrapper.removeListener("workerListChanged", onWorkersUpdated);
-          clientWrapper.removeListener("serviceWorkerRegistrationListChanged",
-            onWorkersUpdated);
+        clientWrapper.removeListener("processListChanged", onWorkersUpdated);
 
-          for (const front of clientWrapper.contentProcessFronts) {
-            front.off("workerListChanged", onWorkersUpdated);
-          }
-          clientWrapper.contentProcessFronts = [];
-
-          for (const front of clientWrapper.serviceWorkerRegistrationFronts) {
-            front.off("push-subscription-modified", onWorkersUpdated);
-            front.off("registration-changed", onWorkersUpdated);
-          }
-          clientWrapper.serviceWorkerRegistrationFronts = [];
-
-          clientWrapper.removeListener("processListChanged", onWorkersUpdated);
-        }
         break;
       }
     }
