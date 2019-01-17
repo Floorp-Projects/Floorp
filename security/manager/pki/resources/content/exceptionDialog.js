@@ -22,7 +22,12 @@ function initExceptionDialog() {
   gNsISecTel = Ci.nsISecurityUITelemetry;
   let warningText = document.getElementById("warningText");
   document.l10n.setAttributes(warningText, "add-exception-branded-warning");
-  gDialog.getButton("extra1").disabled = true;
+  let confirmButton = gDialog.getButton("extra1");
+  let l10nUpdatedElements = [
+    confirmButton,
+    warningText,
+  ];
+  confirmButton.disabled = true;
 
   var args = window.arguments;
   if (args && args[0]) {
@@ -35,7 +40,7 @@ function initExceptionDialog() {
         gSecInfo = args[0].securityInfo;
         gCert = gSecInfo.serverCert;
         gBroken = true;
-        updateCertStatus();
+        l10nUpdatedElements = l10nUpdatedElements.concat(updateCertStatus());
       } else if (args[0].prefetchCert) {
         // We can optionally pre-fetch the certificate too.  Don't do this
         // synchronously, since it would prevent the window from appearing
@@ -45,7 +50,7 @@ function initExceptionDialog() {
         // is appropriately responsive.  Bug 453855
         document.getElementById("checkCertButton").disabled = true;
         gChecking = true;
-        updateCertStatus();
+        l10nUpdatedElements = l10nUpdatedElements.concat(updateCertStatus());
 
         window.setTimeout(checkCert, 0);
       }
@@ -54,7 +59,21 @@ function initExceptionDialog() {
     // Set out parameter to false by default
     args[0].exceptionAdded = false;
   }
-  window.sizeToContent();
+
+  for (let id of [
+    "warningSupplemental",
+    "certLocationLabel",
+    "checkCertButton",
+    "statusDescription",
+    "statusLongDescription",
+    "viewCertButton",
+    "permanent",
+  ]) {
+    let element = document.getElementById(id);
+    l10nUpdatedElements.push(element);
+  }
+
+  document.l10n.translateElements(l10nUpdatedElements).then(() => window.sizeToContent());
 }
 
 /**
@@ -75,18 +94,21 @@ function grabCert(req, evt) {
   }
   gBroken = evt.type == "error";
   gChecking = false;
-  updateCertStatus();
+  document.l10n.translateElements(updateCertStatus()).then(() => window.sizeToContent());
 }
 
 /**
  * Attempt to download the certificate for the location specified, and populate
  * the Certificate Status section with the result.
  */
-function checkCert() {
+async function checkCert() {
   gCert = null;
   gSecInfo = null;
   gChecking = true;
   gBroken = false;
+  await document.l10n.translateElements(updateCertStatus());
+  window.sizeToContent();
+
   updateCertStatus();
 
   let uri = getURI();
@@ -99,7 +121,8 @@ function checkCert() {
     req.send(null);
   } else {
     gChecking = false;
-    updateCertStatus();
+    await document.l10n.translateElements(updateCertStatus());
+    window.sizeToContent();
   }
 }
 
@@ -168,6 +191,7 @@ function updateCertStatus() {
   var use2 = false;
   var use3 = false;
   let bucketId = gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_BASE;
+  let l10nUpdatedElements = [];
   if (gCert) {
     if (gBroken) {
       var mms = "add-exception-domain-mismatch-short";
@@ -227,6 +251,7 @@ function updateCertStatus() {
 
       let headerDescription = document.getElementById("headerDescription");
       document.l10n.setAttributes(headerDescription, "add-exception-invalid-header");
+      l10nUpdatedElements.push(headerDescription);
     } else {
       shortDesc = "add-exception-valid-short";
       longDesc  = "add-exception-valid-long";
@@ -263,12 +288,16 @@ function updateCertStatus() {
   let statusLongDescription = document.getElementById("statusLongDescription");
   document.l10n.setAttributes(statusDescription, shortDesc);
   document.l10n.setAttributes(statusLongDescription, longDesc);
+  l10nUpdatedElements.push(statusDescription);
+  l10nUpdatedElements.push(statusLongDescription);
 
   if (use2) {
     let status2Description = document.getElementById("status2Description");
     let status2LongDescription = document.getElementById("status2LongDescription");
     document.l10n.setAttributes(status2Description, shortDesc2);
     document.l10n.setAttributes(status2LongDescription, longDesc2);
+    l10nUpdatedElements.push(status2Description);
+    l10nUpdatedElements.push(status2LongDescription);
   }
 
   if (use3) {
@@ -276,10 +305,12 @@ function updateCertStatus() {
     let status3LongDescription = document.getElementById("status3LongDescription");
     document.l10n.setAttributes(status3Description, shortDesc3);
     document.l10n.setAttributes(status3LongDescription, longDesc3);
+    l10nUpdatedElements.push(status3Description);
+    l10nUpdatedElements.push(status3LongDescription);
   }
 
-  window.sizeToContent();
   gNeedReset = true;
+  return l10nUpdatedElements;
 }
 
 /**
