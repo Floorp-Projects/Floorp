@@ -11,7 +11,6 @@ const {
   getCurrentRuntime,
   findRuntimeById,
 } = require("../modules/runtimes-state-helper");
-const { isSupportedDebugTarget } = require("../modules/debug-target-support");
 
 const { l10n } = require("../modules/l10n");
 const { createClientForRuntime } = require("../modules/runtime-client-factory");
@@ -23,7 +22,6 @@ const {
   CONNECT_RUNTIME_FAILURE,
   CONNECT_RUNTIME_START,
   CONNECT_RUNTIME_SUCCESS,
-  DEBUG_TARGETS,
   DISCONNECT_RUNTIME_FAILURE,
   DISCONNECT_RUNTIME_START,
   DISCONNECT_RUNTIME_SUCCESS,
@@ -210,17 +208,9 @@ function watchRuntime(id) {
       const runtime = findRuntimeById(id, getState().runtimes);
       await dispatch({ type: WATCH_RUNTIME_SUCCESS, runtime });
 
-      if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.EXTENSION)) {
-        dispatch(Actions.requestExtensions());
-      }
-
-      if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.TAB)) {
-        dispatch(Actions.requestTabs());
-      }
-
-      if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
-        dispatch(Actions.requestWorkers());
-      }
+      dispatch(Actions.requestExtensions());
+      dispatch(Actions.requestTabs());
+      dispatch(Actions.requestWorkers());
     } catch (e) {
       dispatch({ type: WATCH_RUNTIME_FAILURE, error: e });
     }
