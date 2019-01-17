@@ -894,7 +894,7 @@ SessionStore.prototype = {
 
     // Store the form data.
     let content = aBrowser.contentWindow;
-    let [formdata] = Utils.mapFrameTree(content, FormData.collect);
+    let [formdata] = Utils.mapFrameTree(content, SessionStoreUtils.collectFormData);
     formdata = PrivacyFilter.filterFormData(formdata || {});
 
     // If we found any form data, main content or frames, let's save it
