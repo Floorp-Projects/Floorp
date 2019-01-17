@@ -9,9 +9,11 @@
 #include "DBAction.h"
 #include "FileUtils.h"
 #include "mozilla/dom/cache/Manager.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
@@ -151,8 +153,9 @@ class CacheQuotaClient final : public Client {
       return NS_OK;
     }
 
-    return GetUsageForOrigin(aPersistenceType, aGroup, aOrigin, aCanceled,
-                             aUsageInfo);
+    return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin,
+                                     aCanceled, aUsageInfo,
+                                     /* aInitializing*/ true);
   }
 
   virtual nsresult GetUsageForOrigin(PersistenceType aPersistenceType,
@@ -160,109 +163,9 @@ class CacheQuotaClient final : public Client {
                                      const nsACString& aOrigin,
                                      const AtomicBool& aCanceled,
                                      UsageInfo* aUsageInfo) override {
-    AssertIsOnIOThread();
-    MOZ_DIAGNOSTIC_ASSERT(aUsageInfo);
-
-    QuotaManager* qm = QuotaManager::Get();
-    MOZ_DIAGNOSTIC_ASSERT(qm);
-
-    nsCOMPtr<nsIFile> dir;
-    nsresult rv = qm->GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                                            getter_AddRefs(dir));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = dir->Append(NS_LITERAL_STRING(DOMCACHE_DIRECTORY_NAME));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    int64_t paddingSize = 0;
-    {
-      // If the tempoary file still exists after locking, it means the previous
-      // action fails, so restore the padding file.
-      MutexAutoLock lock(mDirPaddingFileMutex);
-
-      if (mozilla::dom::cache::DirectoryPaddingFileExists(
-              dir, DirPaddingFile::TMP_FILE) ||
-          NS_WARN_IF(NS_FAILED(mozilla::dom::cache::LockedDirectoryPaddingGet(
-              dir, &paddingSize)))) {
-        rv = LockedGetPaddingSizeFromDB(dir, aGroup, aOrigin, &paddingSize);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      }
-    }
-
-    aUsageInfo->AppendToFileUsage(paddingSize);
-
-    nsCOMPtr<nsIDirectoryEnumerator> entries;
-    rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> file;
-    while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
-           file && !aCanceled) {
-      nsAutoString leafName;
-      rv = file->GetLeafName(leafName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      bool isDir;
-      rv = file->IsDirectory(&isDir);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      if (isDir) {
-        if (leafName.EqualsLiteral("morgue")) {
-          rv = GetBodyUsage(file, aCanceled, aUsageInfo);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-        } else {
-          NS_WARNING("Unknown Cache directory found!");
-        }
-
-        continue;
-      }
-
-      // Ignore transient sqlite files and marker files
-      if (leafName.EqualsLiteral("caches.sqlite-journal") ||
-          leafName.EqualsLiteral("caches.sqlite-shm") ||
-          leafName.Find(NS_LITERAL_CSTRING("caches.sqlite-mj"), false, 0, 0) ==
-              0 ||
-          leafName.EqualsLiteral("context_open.marker")) {
-        continue;
-      }
-
-      if (leafName.EqualsLiteral("caches.sqlite") ||
-          leafName.EqualsLiteral("caches.sqlite-wal")) {
-        int64_t fileSize;
-        rv = file->GetFileSize(&fileSize);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
-
-        aUsageInfo->AppendToDatabaseUsage(fileSize);
-        continue;
-      }
-
-      // Ignore directory padding file
-      if (leafName.EqualsLiteral(PADDING_FILE_NAME) ||
-          leafName.EqualsLiteral(PADDING_TMP_FILE_NAME)) {
-        continue;
-      }
-
-      NS_WARNING("Unknown Cache file found!");
-    }
-
-    return NS_OK;
+    return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin,
+                                     aCanceled, aUsageInfo,
+                                     /* aInitializing*/ false);
   }
 
   virtual void OnOriginClearCompleted(PersistenceType aPersistenceType,
@@ -458,6 +361,135 @@ class CacheQuotaClient final : public Client {
     MOZ_DIAGNOSTIC_ASSERT(sInstance == this);
 
     sInstance = nullptr;
+  }
+
+  nsresult GetUsageForOriginInternal(PersistenceType aPersistenceType,
+                                     const nsACString& aGroup,
+                                     const nsACString& aOrigin,
+                                     const AtomicBool& aCanceled,
+                                     UsageInfo* aUsageInfo,
+                                     const bool aInitializing) {
+    AssertIsOnIOThread();
+    MOZ_DIAGNOSTIC_ASSERT(aUsageInfo);
+#ifndef NIGHTLY_BUILD
+    Unused << aInitializing;
+#endif
+
+    QuotaManager* qm = QuotaManager::Get();
+    MOZ_DIAGNOSTIC_ASSERT(qm);
+
+    nsCOMPtr<nsIFile> dir;
+    nsresult rv = qm->GetDirectoryForOrigin(aPersistenceType, aOrigin,
+                                            getter_AddRefs(dir));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+                                   Cache_GetDirForOri);
+      return rv;
+    }
+
+    rv = dir->Append(NS_LITERAL_STRING(DOMCACHE_DIRECTORY_NAME));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError, Cache_Append);
+      return rv;
+    }
+
+    int64_t paddingSize = 0;
+    {
+      // If the tempoary file still exists after locking, it means the previous
+      // action fails, so restore the padding file.
+      MutexAutoLock lock(mDirPaddingFileMutex);
+
+      if (mozilla::dom::cache::DirectoryPaddingFileExists(
+              dir, DirPaddingFile::TMP_FILE) ||
+          NS_WARN_IF(NS_FAILED(mozilla::dom::cache::LockedDirectoryPaddingGet(
+              dir, &paddingSize)))) {
+        rv = LockedGetPaddingSizeFromDB(dir, aGroup, aOrigin, &paddingSize);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kInternalError,
+                                       Cache_GetPaddingSize);
+          return rv;
+        }
+      }
+    }
+
+    aUsageInfo->AppendToFileUsage(paddingSize);
+
+    nsCOMPtr<nsIDirectoryEnumerator> entries;
+    rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+                                   Cache_GetDirEntries);
+      return rv;
+    }
+
+    nsCOMPtr<nsIFile> file;
+    while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
+           file && !aCanceled) {
+      nsAutoString leafName;
+      rv = file->GetLeafName(leafName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+                                     Cache_GetLeafName);
+        return rv;
+      }
+
+      bool isDir;
+      rv = file->IsDirectory(&isDir);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+                                     Cache_IsDirectory);
+        return rv;
+      }
+
+      if (isDir) {
+        if (leafName.EqualsLiteral("morgue")) {
+          rv = GetBodyUsage(file, aCanceled, aUsageInfo);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+                                         Cache_GetBodyUsage);
+            return rv;
+          }
+        } else {
+          NS_WARNING("Unknown Cache directory found!");
+        }
+
+        continue;
+      }
+
+      // Ignore transient sqlite files and marker files
+      if (leafName.EqualsLiteral("caches.sqlite-journal") ||
+          leafName.EqualsLiteral("caches.sqlite-shm") ||
+          leafName.Find(NS_LITERAL_CSTRING("caches.sqlite-mj"), false, 0, 0) ==
+              0 ||
+          leafName.EqualsLiteral("context_open.marker")) {
+        continue;
+      }
+
+      if (leafName.EqualsLiteral("caches.sqlite") ||
+          leafName.EqualsLiteral("caches.sqlite-wal")) {
+        int64_t fileSize;
+        rv = file->GetFileSize(&fileSize);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+                                       Cache_GetFileSize);
+          return rv;
+        }
+        MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
+
+        aUsageInfo->AppendToDatabaseUsage(fileSize);
+        continue;
+      }
+
+      // Ignore directory padding file
+      if (leafName.EqualsLiteral(PADDING_FILE_NAME) ||
+          leafName.EqualsLiteral(PADDING_TMP_FILE_NAME)) {
+        continue;
+      }
+
+      NS_WARNING("Unknown Cache file found!");
+    }
+
+    return NS_OK;
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheQuotaClient, override)
