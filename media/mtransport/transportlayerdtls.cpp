@@ -885,12 +885,6 @@ void TransportLayerDtls::Handshake() {
       TL_SET_STATE(TS_ERROR);
       return;
     }
-    if (!enabled_srtp_ciphers_.empty() && srtp_cipher_ == 0) {
-      // We enabled SRTP, but got no cipher, this should have failed.
-      ssl_fd_ = nullptr;
-      TL_SET_STATE(TS_ERROR);
-      return;
-    }
 
     TL_SET_STATE(TS_OPEN);
 
@@ -1593,7 +1587,7 @@ void TransportLayerDtls::RecordTlsTelemetry() {
   nsresult rv = GetSrtpCipher(&cipher);
 
   if (NS_FAILED(rv)) {
-    MOZ_MTLOG(ML_ERROR, "Failed to get SRTP cipher suite");
+    MOZ_MTLOG(ML_DEBUG, "No SRTP cipher suite");
     return;
   }
 
