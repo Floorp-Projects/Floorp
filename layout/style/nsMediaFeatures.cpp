@@ -390,6 +390,13 @@ PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(
         (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_available);
   }
 
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDHideTitlebarByDefault,
+                           &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(
+        (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_hide_titlebar_by_default);
+  }
+
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDTransparentBackground,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {

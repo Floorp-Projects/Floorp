@@ -7,7 +7,7 @@ function x3(){x3();}
 ...
 */
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new g.Debugger(this);
 
 var s = '';

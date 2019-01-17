@@ -1,3 +1,4 @@
+mozcrash ~= 1.0
 mozrunner ~= 7.0
 mozprofile ~= 2.1
 manifestparser >= 1.1
