@@ -1202,6 +1202,7 @@ Search.prototype = {
           // that to the moz-action URL.
           let aliasPreservingUserCase = token + alias.substr(token.length);
           let value = aliasPreservingUserCase + " ";
+          this._result.setDefaultIndex(0);
           this._addMatch({
             value,
             finalCompleteValue: PlacesUtils.mozActionURI("searchengine", {
@@ -1215,7 +1216,6 @@ Search.prototype = {
             style: "autofill action searchengine",
             icon: engine.iconURI ? engine.iconURI.spec : null,
           });
-          this._result.setDefaultIndex(0);
 
           // Set _searchEngineAliasMatch with an empty query so that we don't
           // attempt to add any more matches.  When a token alias is autofilled,
