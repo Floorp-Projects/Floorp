@@ -40,7 +40,7 @@ function initExceptionDialog() {
         gSecInfo = args[0].securityInfo;
         gCert = gSecInfo.serverCert;
         gBroken = true;
-        l10nUpdatedElements.concat(updateCertStatus());
+        l10nUpdatedElements = l10nUpdatedElements.concat(updateCertStatus());
       } else if (args[0].prefetchCert) {
         // We can optionally pre-fetch the certificate too.  Don't do this
         // synchronously, since it would prevent the window from appearing
@@ -50,7 +50,7 @@ function initExceptionDialog() {
         // is appropriately responsive.  Bug 453855
         document.getElementById("checkCertButton").disabled = true;
         gChecking = true;
-        l10nUpdatedElements.concat(updateCertStatus());
+        l10nUpdatedElements = l10nUpdatedElements.concat(updateCertStatus());
 
         window.setTimeout(checkCert, 0);
       }
@@ -119,7 +119,8 @@ async function checkCert() {
     req.send(null);
   } else {
     gChecking = false;
-    document.l10n.translateElements(updateCertStatus()).then(() => window.sizeToContent());
+    await document.l10n.translateElements(updateCertStatus());
+    window.sizeToContent();
   }
 }
 
