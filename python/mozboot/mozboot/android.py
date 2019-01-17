@@ -296,7 +296,7 @@ def suggest_mozconfig(os_name, artifact_mode=False, java_bin_path=None):
     extra_lines = []
     if java_bin_path:
         extra_lines += [
-            '# With the following java and javac:',
+            '# With the following java:',
             'ac_add_options --with-java-bin-path="{}"'.format(java_bin_path),
         ]
     if extra_lines:
