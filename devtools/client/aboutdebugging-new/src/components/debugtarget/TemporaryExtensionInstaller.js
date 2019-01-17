@@ -11,9 +11,10 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const ErrorMessage = createFactory(require("../shared/ErrorMessage"));
+const Message = createFactory(require("../shared/Message"));
 
 const Actions = require("../../actions/index");
+const { MESSAGE_LEVEL } = require("../../constants");
 
 /**
  * This component provides an installer for temporary extension.
@@ -46,15 +47,24 @@ class TemporaryExtensionInstaller extends PureComponent {
           "Load Temporary Add-on…"
         )
       ),
-      temporaryInstallError ? ErrorMessage(
+      temporaryInstallError ? Message(
         {
-          errorDescriptionKey: "about-debugging-tmp-extension-install-error",
+          level: MESSAGE_LEVEL.ERROR,
         },
         dom.div(
-          {
-            className: "technical-text",
-          },
-          temporaryInstallError
+          {},
+          Localized(
+            {
+              id: "about-debugging-tmp-extension-install-error",
+            },
+            dom.span({}, "There was an error during the temporary add-on installation")
+          ),
+          dom.div(
+            {
+              className: "technical-text",
+            },
+            temporaryInstallError
+          )
         )
       ) : null
     );
