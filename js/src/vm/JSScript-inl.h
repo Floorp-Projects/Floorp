@@ -97,6 +97,10 @@ inline JSFunction* JSScript::getFunction(size_t index) {
   return fun;
 }
 
+inline JSFunction* JSScript::getFunction(jsbytecode* pc) {
+  return getFunction(GET_UINT32_INDEX(pc));
+}
+
 inline js::RegExpObject* JSScript::getRegExp(size_t index) {
   JSObject* obj = getObject(index);
   MOZ_RELEASE_ASSERT(obj->is<js::RegExpObject>(),

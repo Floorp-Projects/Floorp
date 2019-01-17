@@ -71,6 +71,8 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] = {
     {"ui.contextMenuOffsetHorizontal", eIntID_ContextMenuOffsetHorizontal,
      false, 0},
     {"ui.GtkCSDAvailable", eIntID_GTKCSDAvailable, false, 0},
+    {"ui.GtkCSDHideTitlebarByDefault", eIntID_GTKCSDHideTitlebarByDefault,
+     false, 0},
     {"ui.GtkCSDTransparentBackground", eIntID_GTKCSDTransparentBackground,
      false, 0},
     {"ui.GtkCSDMinimizeButton", eIntID_GTKCSDMinimizeButton, false, 0},

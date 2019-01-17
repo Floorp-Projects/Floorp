@@ -115,9 +115,9 @@ add_task(async function test_escape() {
     ],
   });
 
-  info("Match word boundaries '()_+' that are among word boundaries");
+  info("Match word boundaries '()_' that are among word boundaries");
   await check_autocomplete({
-    search: "()_+",
+    search: "()_",
     checkSorting: true,
     matches: [
       { uri: "http://crazytitle/", title: "!@#$%^&*()_+{}|:<>?word" },

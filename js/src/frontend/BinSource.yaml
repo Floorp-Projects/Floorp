@@ -400,6 +400,14 @@ AssertedBoundName:
 AssertedDeclaredName:
     inherits: AssertedBoundName
     fields:
+        kind:
+            after: |
+                if (kind_ == AssertedDeclaredKind::NonConstLexical) {
+                    return raiseError("Let is not supported in this preview release");
+                }
+                if (kind_ == AssertedDeclaredKind::ConstLexical) {
+                    return raiseError("Const is not supported in this preview release");
+                }
         isCaptured:
             after: |
                 ParseContext::Scope* scope;

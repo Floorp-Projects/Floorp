@@ -21,7 +21,8 @@ addNewTestCase( 28800000, 23, 59, 999,0, "TDATE = new Date(28800000);(TDATE).set
 function addNewTestCase( time, hours, min, sec, ms, DateString) {
   UTCDateFromTime( SetHours( time, hours, min, sec, ms ))
 }
-function MyDate() this.seconds=0;function UTCDateFromTime(t) {
+function MyDate() { return this.seconds=0; }
+function UTCDateFromTime(t) {
   MyDateFromTime(t)
 }
 function MyDateFromTime( t ) {

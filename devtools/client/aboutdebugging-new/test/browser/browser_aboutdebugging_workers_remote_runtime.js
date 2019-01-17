@@ -8,6 +8,9 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
 
 const NETWORK_RUNTIME_HOST = "localhost:6080";
 const NETWORK_RUNTIME_APP_NAME = "TestNetworkApp";
+const USB_RUNTIME_ID = "test-runtime-id";
+const USB_RUNTIME_DEVICE_NAME = "test device name";
+const USB_RUNTIME_APP_NAME = "TestUsbApp";
 
 const TESTS = [
   {
@@ -36,6 +39,21 @@ add_task(async function() {
   const mocks = new Mocks();
 
   const { document, tab } = await openAboutDebugging();
+
+  info("Prepare USB client mock");
+  const usbClient = mocks.createUSBRuntime(USB_RUNTIME_ID, {
+    deviceName: USB_RUNTIME_DEVICE_NAME,
+    name: USB_RUNTIME_APP_NAME,
+  });
+  mocks.emitUSBUpdate();
+
+  info("Test addons in runtime page for USB client");
+  await connectToRuntime(USB_RUNTIME_DEVICE_NAME, document);
+  await selectRuntime(USB_RUNTIME_DEVICE_NAME, USB_RUNTIME_APP_NAME, document);
+  for (const testData of TESTS) {
+    await testWorkerOnMockedRemoteClient(testData, usbClient, mocks.thisFirefoxClient,
+     document);
+  }
 
   info("Prepare Network client mock");
   const networkClient = mocks.createNetworkRuntime(NETWORK_RUNTIME_HOST, {

@@ -1,6 +1,6 @@
-// |jit-test| slow; skip-if: !('oomTest' in this)
+// |jit-test| slow; skip-if: !('oomTest' in this); allow-oom
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 dbg.onNewScript = function (s) {
   log += dbg.findScripts({ source: s.source }).length;

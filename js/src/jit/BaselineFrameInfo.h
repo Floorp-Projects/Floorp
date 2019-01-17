@@ -12,6 +12,7 @@
 #include <new>
 
 #include "jit/BaselineFrame.h"
+#include "jit/BaselineJIT.h"
 #include "jit/FixedList.h"
 #include "jit/MacroAssembler.h"
 #include "jit/SharedICRegisters.h"
@@ -21,13 +22,24 @@ namespace jit {
 
 struct BytecodeInfo;
 
-// FrameInfo overview.
+// [SMDOC] Baseline FrameInfo overview.
 //
-// FrameInfo is used by the compiler to track values stored in the frame. This
-// includes locals, arguments and stack values. Locals and arguments are always
-// fully synced. Stack values can either be synced, stored as constant, stored
-// in a Value register or refer to a local slot. Syncing a StackValue ensures
-// it's stored on the stack, e.g. kind == Stack.
+// FrameInfo is used by BaselineCodeGen to track values stored in the frame.
+// There are two implementations:
+//
+// InterpreterFrameInfo
+// --------------------
+// The InterpreterFrameInfo class is used by the interpreter generator and is
+// a very simple interface on top of the MacroAssembler, because the stack is
+// always synced.
+//
+// CompilerFrameInfo
+// -----------------
+// The CompilerFrameInfo class is more complicated because it maintains a
+// virtual stack to optimize some common stack operations. Locals and arguments
+// are always fully synced. Stack values can either be synced, stored as
+// constant, stored in a Value register or refer to a local slot. Syncing a
+// StackValue ensures it's stored on the stack, e.g. kind == Stack.
 //
 // To see how this works, consider the following statement:
 //
@@ -93,7 +105,6 @@ class StackValue {
     MOZ_ASSERT(type != JSVAL_TYPE_UNKNOWN);
     return knownType_ == type;
   }
-  bool isKnownBoolean() const { return hasKnownType(JSVAL_TYPE_BOOLEAN); }
   JSValueType knownType() const {
     MOZ_ASSERT(hasKnownType());
     return knownType_;
@@ -159,16 +170,56 @@ class StackValue {
 enum StackAdjustment { AdjustStack, DontAdjustStack };
 
 class FrameInfo {
-  JSScript* script;
+ protected:
   MacroAssembler& masm;
 
+ public:
+  explicit FrameInfo(MacroAssembler& masm) : masm(masm) {}
+
+  Address addressOfLocal(size_t local) const {
+    return Address(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfLocal(local));
+  }
+  Address addressOfArg(size_t arg) const {
+    return Address(BaselineFrameReg, BaselineFrame::offsetOfArg(arg));
+  }
+  Address addressOfThis() const {
+    return Address(BaselineFrameReg, BaselineFrame::offsetOfThis());
+  }
+  Address addressOfEvalNewTarget() const {
+    return Address(BaselineFrameReg, BaselineFrame::offsetOfEvalNewTarget());
+  }
+  Address addressOfCalleeToken() const {
+    return Address(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
+  }
+  Address addressOfEnvironmentChain() const {
+    return Address(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfEnvironmentChain());
+  }
+  Address addressOfFlags() const {
+    return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags());
+  }
+  Address addressOfReturnValue() const {
+    return Address(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfReturnValue());
+  }
+  Address addressOfArgsObj() const {
+    return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfArgsObj());
+  }
+  Address addressOfScratchValue() const {
+    return Address(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfScratchValue());
+  }
+};
+
+class CompilerFrameInfo : public FrameInfo {
+  JSScript* script;
   FixedList<StackValue> stack;
   size_t spIndex;
 
  public:
-  FrameInfo(JSScript* script, MacroAssembler& masm)
-      : script(script), masm(masm), stack(), spIndex(0) {}
-
+  CompilerFrameInfo(JSScript* script, MacroAssembler& masm)
+      : FrameInfo(masm), script(script), stack(), spIndex(0) {}
   MOZ_MUST_USE bool init(TempAllocator& alloc);
 
   size_t nlocals() const { return script->nfixed(); }
@@ -179,6 +230,11 @@ class FrameInfo {
     StackValue* val = &stack[spIndex++];
     val->reset();
     return val;
+  }
+
+  inline StackValue* peek(int32_t index) const {
+    MOZ_ASSERT(index < 0);
+    return const_cast<StackValue*>(&stack[spIndex + index]);
   }
 
  public:
@@ -196,10 +252,10 @@ class FrameInfo {
       MOZ_ASSERT(spIndex == newDepth);
     }
   }
-  inline StackValue* peek(int32_t index) const {
-    MOZ_ASSERT(index < 0);
-    return const_cast<StackValue*>(&stack[spIndex + index]);
-  }
+
+  void assertStackDepth(uint32_t depth) { MOZ_ASSERT(stackDepth() == depth); }
+  void incStackDepth(int32_t diff) { setStackDepth(stackDepth() + diff); }
+  bool hasKnownStackDepth(uint32_t depth) { return stackDepth() == depth; }
 
   inline void pop(StackAdjustment adjust = AdjustStack);
   inline void popn(uint32_t n, StackAdjustment adjust = AdjustStack);
@@ -236,48 +292,23 @@ class FrameInfo {
     StackValue* sv = rawPush();
     sv->setStack();
   }
-  inline Address addressOfLocal(size_t local) const {
+
+  Address addressOfLocal(size_t local) const {
     MOZ_ASSERT(local < nlocals());
-    return Address(BaselineFrameReg,
-                   BaselineFrame::reverseOffsetOfLocal(local));
+    return FrameInfo::addressOfLocal(local);
   }
   Address addressOfArg(size_t arg) const {
     MOZ_ASSERT(arg < nargs());
-    return Address(BaselineFrameReg, BaselineFrame::offsetOfArg(arg));
+    return FrameInfo::addressOfArg(arg);
   }
-  Address addressOfThis() const {
-    return Address(BaselineFrameReg, BaselineFrame::offsetOfThis());
-  }
-  Address addressOfEvalNewTarget() const {
-    return Address(BaselineFrameReg, BaselineFrame::offsetOfEvalNewTarget());
-  }
-  Address addressOfCalleeToken() const {
-    return Address(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
-  }
-  Address addressOfEnvironmentChain() const {
-    return Address(BaselineFrameReg,
-                   BaselineFrame::reverseOffsetOfEnvironmentChain());
-  }
-  Address addressOfFlags() const {
-    return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags());
-  }
-  Address addressOfReturnValue() const {
-    return Address(BaselineFrameReg,
-                   BaselineFrame::reverseOffsetOfReturnValue());
-  }
-  Address addressOfArgsObj() const {
-    return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfArgsObj());
-  }
-  Address addressOfStackValue(const StackValue* value) const {
+
+  Address addressOfStackValue(int32_t depth) const {
+    const StackValue* value = peek(depth);
     MOZ_ASSERT(value->kind() == StackValue::Stack);
     size_t slot = value - &stack[0];
     MOZ_ASSERT(slot < stackDepth());
     return Address(BaselineFrameReg,
                    BaselineFrame::reverseOffsetOfLocal(nlocals() + slot));
-  }
-  Address addressOfScratchValue() const {
-    return Address(BaselineFrameReg,
-                   BaselineFrame::reverseOffsetOfScratchValue());
   }
 
   void popValue(ValueOperand dest);
@@ -287,9 +318,18 @@ class FrameInfo {
   uint32_t numUnsyncedSlots();
   void popRegsAndSync(uint32_t uses);
 
-  inline void assertSyncedStack() const {
+  void assertSyncedStack() const {
     MOZ_ASSERT_IF(stackDepth() > 0, peek(-1)->kind() == StackValue::Stack);
   }
+
+  bool stackValueHasKnownType(int32_t depth, JSValueType type) const {
+    return peek(depth)->hasKnownType(type);
+  }
+
+  void storeStackValue(int32_t depth, const Address& dest,
+                       const ValueOperand& scratch);
+
+  PCMappingSlotInfo::SlotLocation stackValueSlotLocation(int32_t depth);
 
 #ifdef DEBUG
   // Assert the state is valid before excuting "pc".
@@ -297,6 +337,54 @@ class FrameInfo {
 #else
   inline void assertValidState(const BytecodeInfo& info) {}
 #endif
+};
+
+class InterpreterFrameInfo : public FrameInfo {
+ public:
+  explicit InterpreterFrameInfo(MacroAssembler& masm) : FrameInfo(masm) {}
+
+  // These methods are no-ops in the interpreter, because we don't have a
+  // virtual stack there.
+  void syncStack(uint32_t uses) {}
+  void assertSyncedStack() const {}
+  void assertStackDepth(uint32_t depth) {}
+  void incStackDepth(int32_t diff) {}
+  bool hasKnownStackDepth(uint32_t depth) { return false; }
+  uint32_t numUnsyncedSlots() { return 0; }
+
+  bool stackValueHasKnownType(int32_t depth, JSValueType type) const {
+    return false;
+  }
+
+  Address addressOfStackValue(int depth) const {
+    MOZ_ASSERT(depth < 0);
+    return Address(masm.getStackPointer(),
+                   masm.framePushed() + size_t(-(depth + 1)) * sizeof(Value));
+  }
+
+  void popRegsAndSync(uint32_t uses);
+
+  void pop() { popn(1); }
+
+  void popn(uint32_t n) { masm.addToStackPtr(Imm32(n * sizeof(Value))); }
+
+  void popValue(ValueOperand dest) { masm.popValue(dest); }
+
+  void push(const ValueOperand& val,
+            JSValueType knownType = JSVAL_TYPE_UNKNOWN) {
+    masm.pushValue(val);
+  }
+  void push(const Value& val) { masm.pushValue(val); }
+
+  void pushThis() { masm.pushValue(addressOfThis()); }
+  void pushEvalNewTarget() { masm.pushValue(addressOfEvalNewTarget()); }
+  void pushScratchValue() { masm.pushValue(addressOfScratchValue()); }
+
+  void storeStackValue(int32_t depth, const Address& dest,
+                       const ValueOperand& scratch) {
+    masm.loadValue(addressOfStackValue(depth), scratch);
+    masm.storeValue(scratch, dest);
+  }
 };
 
 }  // namespace jit

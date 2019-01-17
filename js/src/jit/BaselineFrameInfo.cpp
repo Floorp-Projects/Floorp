@@ -16,7 +16,7 @@
 using namespace js;
 using namespace js::jit;
 
-bool FrameInfo::init(TempAllocator& alloc) {
+bool CompilerFrameInfo::init(TempAllocator& alloc) {
   // An extra slot is needed for global scopes because INITGLEXICAL (stack
   // depth 1) is compiled as a SETPROP (stack depth 2) on the global lexical
   // scope.
@@ -30,7 +30,7 @@ bool FrameInfo::init(TempAllocator& alloc) {
   return true;
 }
 
-void FrameInfo::sync(StackValue* val) {
+void CompilerFrameInfo::sync(StackValue* val) {
   switch (val->kind()) {
     case StackValue::Stack:
       break;
@@ -60,7 +60,7 @@ void FrameInfo::sync(StackValue* val) {
   val->setStack();
 }
 
-void FrameInfo::syncStack(uint32_t uses) {
+void CompilerFrameInfo::syncStack(uint32_t uses) {
   MOZ_ASSERT(uses <= stackDepth());
 
   uint32_t depth = stackDepth() - uses;
@@ -71,7 +71,7 @@ void FrameInfo::syncStack(uint32_t uses) {
   }
 }
 
-uint32_t FrameInfo::numUnsyncedSlots() {
+uint32_t CompilerFrameInfo::numUnsyncedSlots() {
   // Start at the bottom, find the first value that's not synced.
   uint32_t i = 0;
   for (; i < stackDepth(); i++) {
@@ -82,7 +82,7 @@ uint32_t FrameInfo::numUnsyncedSlots() {
   return i;
 }
 
-void FrameInfo::popValue(ValueOperand dest) {
+void CompilerFrameInfo::popValue(ValueOperand dest) {
   StackValue* val = peek(-1);
 
   switch (val->kind()) {
@@ -115,7 +115,7 @@ void FrameInfo::popValue(ValueOperand dest) {
   pop(DontAdjustStack);
 }
 
-void FrameInfo::popRegsAndSync(uint32_t uses) {
+void CompilerFrameInfo::popRegsAndSync(uint32_t uses) {
   // x86 has only 3 Value registers. Only support 2 regs here for now,
   // so that there's always a scratch Value register for reg -> reg
   // moves.
@@ -146,8 +146,59 @@ void FrameInfo::popRegsAndSync(uint32_t uses) {
   }
 }
 
+void InterpreterFrameInfo::popRegsAndSync(uint32_t uses) {
+  switch (uses) {
+    case 1:
+      popValue(R0);
+      break;
+    case 2: {
+      popValue(R1);
+      popValue(R0);
+      break;
+    }
+    default:
+      MOZ_CRASH("Invalid uses");
+  }
+}
+
+void CompilerFrameInfo::storeStackValue(int32_t depth, const Address& dest,
+                                        const ValueOperand& scratch) {
+  const StackValue* source = peek(depth);
+  switch (source->kind()) {
+    case StackValue::Constant:
+      masm.storeValue(source->constant(), dest);
+      break;
+    case StackValue::Register:
+      masm.storeValue(source->reg(), dest);
+      break;
+    case StackValue::LocalSlot:
+      masm.loadValue(addressOfLocal(source->localSlot()), scratch);
+      masm.storeValue(scratch, dest);
+      break;
+    case StackValue::ArgSlot:
+      masm.loadValue(addressOfArg(source->argSlot()), scratch);
+      masm.storeValue(scratch, dest);
+      break;
+    case StackValue::ThisSlot:
+      masm.loadValue(addressOfThis(), scratch);
+      masm.storeValue(scratch, dest);
+      break;
+    case StackValue::EvalNewTargetSlot:
+      MOZ_ASSERT(script->isForEval());
+      masm.loadValue(addressOfEvalNewTarget(), scratch);
+      masm.storeValue(scratch, dest);
+      break;
+    case StackValue::Stack:
+      masm.loadValue(addressOfStackValue(depth), scratch);
+      masm.storeValue(scratch, dest);
+      break;
+    default:
+      MOZ_CRASH("Invalid kind");
+  }
+}
+
 #ifdef DEBUG
-void FrameInfo::assertValidState(const BytecodeInfo& info) {
+void CompilerFrameInfo::assertValidState(const BytecodeInfo& info) {
   // Check stack depth.
   MOZ_ASSERT(stackDepth() == info.stackDepth);
 
@@ -185,3 +236,19 @@ void FrameInfo::assertValidState(const BytecodeInfo& info) {
   }
 }
 #endif
+
+PCMappingSlotInfo::SlotLocation CompilerFrameInfo::stackValueSlotLocation(
+    int32_t depth) {
+  const StackValue* stackVal = peek(depth);
+
+  if (stackVal->kind() == StackValue::Register) {
+    if (stackVal->reg() == R0) {
+      return PCMappingSlotInfo::SlotInR0;
+    }
+    MOZ_ASSERT(stackVal->reg() == R1);
+    return PCMappingSlotInfo::SlotInR1;
+  }
+
+  MOZ_ASSERT(stackVal->kind() != StackValue::Stack);
+  return PCMappingSlotInfo::SlotIgnore;
+}
