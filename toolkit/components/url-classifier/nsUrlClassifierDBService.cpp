@@ -60,9 +60,6 @@
 #include "nsToolkitCompsCID.h"
 #include "nsIClassifiedChannel.h"
 
-#define TABLE_TRACKING_BLACKLIST_PREF "tracking-blacklist-pref"
-#define TABLE_TRACKING_WHITELIST_PREF "tracking-whitelist-pref"
-
 namespace mozilla {
 namespace safebrowsing {
 
@@ -1652,9 +1649,6 @@ nsresult nsUrlClassifierDBService::ReadTablesFromPrefs() {
   nsAutoCString tables;
 
   mBaseTables.Truncate();
-  mTrackingProtectionTables.Truncate();
-  mTrackingProtectionWhitelistExtraEntriesByPrefs.Truncate();
-  mTrackingProtectionBlacklistExtraEntriesByPrefs.Truncate();
 
   Preferences::GetCString(PHISH_TABLE_PREF, allTables);
   if (mCheckPhishing) {
@@ -1684,17 +1678,9 @@ nsresult nsUrlClassifierDBService::ReadTablesFromPrefs() {
 
   Preferences::GetCString(TRACKING_TABLE_PREF, tables);
   AppendTables(tables, allTables);
-  AppendTables(tables, mTrackingProtectionTables);
-
-  Preferences::GetCString(TRACKING_TABLE_TEST_ENTRIES_PREF, tables);
-  AppendTables(tables, mTrackingProtectionBlacklistExtraEntriesByPrefs);
 
   Preferences::GetCString(TRACKING_WHITELIST_TABLE_PREF, tables);
   AppendTables(tables, allTables);
-  AppendTables(tables, mTrackingProtectionTables);
-
-  Preferences::GetCString(TRACKING_WHITELIST_TABLE_TEST_ENTRIES_PREF, tables);
-  AppendTables(tables, mTrackingProtectionWhitelistExtraEntriesByPrefs);
 
   Classifier::SplitTables(allTables, mGethashTables);
 
@@ -1804,7 +1790,6 @@ nsresult nsUrlClassifierDBService::Init() {
 NS_IMETHODIMP
 nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
                                    nsIEventTarget* aEventTarget,
-                                   bool aTrackingProtectionEnabled,
                                    nsIURIClassifierCallback* c, bool* result) {
   NS_ENSURE_ARG(aPrincipal);
 
@@ -1814,9 +1799,8 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
     ContentChild* content = ContentChild::GetSingleton();
     MOZ_ASSERT(content);
 
-    auto actor =
-        static_cast<URLClassifierChild*>(content->AllocPURLClassifierChild(
-            IPC::Principal(aPrincipal), aTrackingProtectionEnabled, result));
+    auto actor = static_cast<URLClassifierChild*>(
+        content->AllocPURLClassifierChild(IPC::Principal(aPrincipal), result));
     MOZ_ASSERT(actor);
 
     if (aEventTarget) {
@@ -1830,8 +1814,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
       content->SetEventTargetForActor(actor, systemGroupEventTarget);
     }
     if (!content->SendPURLClassifierConstructor(
-            actor, IPC::Principal(aPrincipal), aTrackingProtectionEnabled,
-            result)) {
+            actor, IPC::Principal(aPrincipal), result)) {
       *result = false;
       return NS_ERROR_FAILURE;
     }
@@ -1842,8 +1825,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
-  if (!(mCheckMalware || mCheckPhishing || aTrackingProtectionEnabled ||
-        mCheckBlockedURIs)) {
+  if (!(mCheckMalware || mCheckPhishing || mCheckBlockedURIs)) {
     *result = false;
     return NS_OK;
   }
@@ -1853,22 +1835,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCString tables = mBaseTables;
-  nsTArray<nsCString> extraTablesByPrefs;
-  nsTArray<nsCString> extraEntriesByPrefs;
-  if (aTrackingProtectionEnabled) {
-    AppendTables(mTrackingProtectionTables, tables);
-    extraTablesByPrefs.AppendElement(TABLE_TRACKING_WHITELIST_PREF);
-    extraEntriesByPrefs.AppendElement(
-        mTrackingProtectionWhitelistExtraEntriesByPrefs);
-
-    extraTablesByPrefs.AppendElement(TABLE_TRACKING_BLACKLIST_PREF);
-    extraEntriesByPrefs.AppendElement(
-        mTrackingProtectionBlacklistExtraEntriesByPrefs);
-  }
-
-  nsresult rv = LookupURI(aPrincipal, tables, extraTablesByPrefs,
-                          extraEntriesByPrefs, callback, false, result);
+  nsresult rv = LookupURI(aPrincipal, mBaseTables, callback, false, result);
   if (rv == NS_ERROR_MALFORMED_URI) {
     *result = false;
     // The URI had no hostname, don't try to classify it.
@@ -2106,14 +2073,11 @@ nsUrlClassifierDBService::Lookup(nsIPrincipal* aPrincipal,
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   bool dummy;
-  return LookupURI(aPrincipal, tables, nsTArray<nsCString>(),
-                   nsTArray<nsCString>(), c, true, &dummy);
+  return LookupURI(aPrincipal, tables, c, true, &dummy);
 }
 
 nsresult nsUrlClassifierDBService::LookupURI(
     nsIPrincipal* aPrincipal, const nsACString& tables,
-    const nsTArray<nsCString>& aExtraTablesByPrefs,
-    const nsTArray<nsCString>& aExtraEntriesByPrefs,
     nsIUrlClassifierCallback* c, bool forceLookup, bool* didLookup) {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG(aPrincipal);
@@ -2130,33 +2094,6 @@ nsresult nsUrlClassifierDBService::LookupURI(
 
   uri = NS_GetInnermostURI(uri);
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-
-  if (aExtraTablesByPrefs.Length() != aExtraEntriesByPrefs.Length()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!aExtraEntriesByPrefs.IsEmpty()) {
-    nsAutoCString host;
-    rv = uri->GetHost(host);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    for (uint32_t i = 0; i < aExtraEntriesByPrefs.Length(); ++i) {
-      nsTArray<nsCString> entries;
-      Classifier::SplitTables(aExtraEntriesByPrefs[i], entries);
-      if (entries.Contains(host)) {
-        *didLookup = true;
-
-        nsCString table = aExtraTablesByPrefs[i];
-        nsCOMPtr<nsIUrlClassifierCallback> callback(c);
-        nsCOMPtr<nsIRunnable> cbRunnable = NS_NewRunnableFunction(
-            "nsUrlClassifierDBService::LookupURI",
-            [callback, table]() -> void { callback->HandleEvent(table); });
-
-        NS_DispatchToMainThread(cbRunnable);
-        return NS_OK;
-      }
-    }
-  }
 
   nsAutoCString key;
   // Canonicalize the url

@@ -2222,7 +2222,7 @@ SpecialPowersAPI.prototype = {
    * chrome-privileged and allowed to run inside SystemGroup
    */
 
-  doUrlClassify(principal, eventTarget, tpEnabled, callback) {
+  doUrlClassify(principal, eventTarget, callback) {
     let classifierService =
       Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIURIClassifier);
 
@@ -2237,7 +2237,7 @@ SpecialPowersAPI.prototype = {
     };
 
     return classifierService.classify(unwrapIfWrapped(principal), eventTarget,
-                                      tpEnabled, wrapCallback);
+                                      wrapCallback);
   },
 
   // TODO: Bug 1353701 - Supports custom event target for labelling.

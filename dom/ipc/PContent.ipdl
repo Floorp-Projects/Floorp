@@ -816,7 +816,7 @@ parent:
 
     async CreateAudioIPCConnection() returns (FileDescriptor fd);
 
-    sync PURLClassifier(Principal principal, bool useTrackingProtection)
+    sync PURLClassifier(Principal principal)
         returns (bool success);
 
     async PURLClassifierLocal(URIParams uri, IPCURLClassifierFeature[] features);
