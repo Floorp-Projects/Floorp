@@ -35,7 +35,7 @@ There are multiple properties that you customize of the menu browser by just add
 ```
 
 ### BrowserMenuDivider
-To customize the divider you can have a 1. Quick customization or a 2. Full customization:
+To customize the divider you could use a 1. Quick customization or a 2. Full customization:
 
 1) If you just want to change the height of the divider, add this item your ``dimes.xml`` file, and your
 prefer height size.
@@ -52,6 +52,56 @@ prefer height size.
         </style>
 ```
 
+### BrowserMenuImageText
+To customize the menu you could use separate properties 1 or full access to the style of the menu 2:
+
+1) If you just want to change a specify property, just add one these dimen items to your ``dimes.xml`` file.
+
+```xml
+
+    <!--Menu Item -->
+       <!--Change the text_size for ALL menu items NOT only for the BrowserMenuImageText -->
+        <dimen name="mozac_browser_menu_item_text_size">16sp</dimen>
+    <!--Menu Item -->
+
+    <!--Icon-->
+       <!--Change the icon's width-->
+        <dimen name="mozac_browser_menu_item_image_text_icon_width">24dp</dimen> <!--Default value-->
+
+       <!--Change the icon's height-->
+        <dimen name="mozac_browser_menu_item_image_text_icon_height">24dp</dimen> <!--Default value-->
+
+    <!--Icon-->
+
+    <!--Label-->
+           <!--Change the label's layout_height-->
+            <dimen name="mozac_browser_menu_item_image_text_label_layout_height">48dp</dimen> <!--Default value-->
+
+           <!--Change the separation between the label and the icon-->
+            <dimen name="mozac_browser_menu_item_image_text_label_padding_start">20dp</dimen> <!--Default value-->
+
+    <!--Label-->
+
+```
+
+2) For full customization, override the default style of menu by adding this style item in your `style.xml` file, and customize to your liking.
+```xml
+    <style name="Mozac.Browser.Menu.Item.ImageText.Icon" parent="">
+        <item name="android:layout_width">@dimen/mozac_browser_menu_item_image_text_icon_layout_width</item>
+        <item name="android:layout_height">@dimen/mozac_browser_menu_item_image_text_icon_layout_height</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.ImageText.Label" parent="@android:style/TextAppearance.Material.Menu">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/mozac_browser_menu_item_image_text_label_layout_height</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_item_image_text_label_padding_start</item>
+        <item name="android:lines">1</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu_item_text_size</item>
+        <item name="android:clickable">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:focusable">true</item>
+    </style>
+```
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public

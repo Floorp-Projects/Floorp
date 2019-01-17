@@ -13,4 +13,29 @@
         <item name="android:layout_height">@dimen/mozac_browser_menu_item_divider_height</item>
     </style>
     <!-- Item Divider -->
+
+    <style name="Mozac.Browser.Menu.Item.Container" parent="">
+        <item name="android:layout_height">@dimen/mozac_browser_menu_item_container_layout_height</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_item_container_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu_item_container_padding_end</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+
+    <!-- BrowserMenuImageText -->
+    <style name="Mozac.Browser.Menu.Item.ImageText.Icon" parent="">
+        <item name="android:layout_width">@dimen/mozac_browser_menu_item_image_text_icon_width</item>
+        <item name="android:layout_height">@dimen/mozac_browser_menu_item_image_text_icon_height</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.ImageText.Label" parent="@android:style/TextAppearance.Material.Menu">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/mozac_browser_menu_item_image_text_label_layout_height</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_item_image_text_label_padding_start</item>
+        <item name="android:lines">1</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu_item_text_size</item>
+        <item name="android:clickable">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:focusable">true</item>
+    </style>
+    <!-- BrowserMenuImageText -->
 </resources>

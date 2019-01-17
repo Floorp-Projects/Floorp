@@ -22,6 +22,8 @@ permalink: /changelog/
 
 * **browser-menu**
   * Added [docs](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/README.md#browsermenu) for customizing `BrowserMenu`.
+  * Added `BrowserMenuDivider`.[For customization take a look at the docs.](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/menu/README.md#BrowserMenuDivider)
+  * Added [BrowserMenuImageText](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/README.md#BrowserMenuImageText) for show an icon next to text in menus.
   * Added support for showing a menu with DOWN and UP orientation (e.g. for supporting menus in bottom toolbars).
 
 * **concept-engine**, **browser-engine-gecko-***
