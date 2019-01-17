@@ -1098,7 +1098,10 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
     const nsStyleDisplay* oldDisp = aOldComputedStyle->PeekStyleDisplay();
     if (oldDisp &&
         (oldDisp->mOverflowAnchor != StyleDisplay()->mOverflowAnchor)) {
-      ScrollAnchorContainer::FindFor(this)->InvalidateAnchor();
+      if (ScrollAnchorContainer* container =
+              ScrollAnchorContainer::FindFor(this)) {
+        container->InvalidateAnchor();
+      }
       if (nsIScrollableFrame* scrollableFrame = do_QueryFrame(this)) {
         scrollableFrame->GetAnchor()->InvalidateAnchor();
       }
