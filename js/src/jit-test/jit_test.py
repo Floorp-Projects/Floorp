@@ -327,8 +327,16 @@ def main(argv):
         read_all = False
         try:
             with open(options.ignore_timeouts) as f:
-                options.ignore_timeouts = set(
-                    [line.strip('\n') for line in f.readlines()])
+                ignore = set()
+                for line in f.readlines():
+                    path = line.strip('\n')
+                    ignore.add(path)
+
+                    binjs_path = path.replace('.js', '.binjs')
+                    # Do not use os.path.join to always use '/'.
+                    ignore.add('binast/nonlazy/{}'.format(binjs_path))
+                    ignore.add('binast/lazy/{}'.format(binjs_path))
+                options.ignore_timeouts = ignore
         except IOError:
             sys.exit("Error reading file: " + options.ignore_timeouts)
     else:
