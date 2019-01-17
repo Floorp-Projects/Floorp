@@ -116,15 +116,14 @@ impl SpatialNode {
     pub fn new_reference_frame(
         parent_index: Option<SpatialNodeIndex>,
         transform_style: TransformStyle,
-        source_transform: Option<PropertyBinding<LayoutTransform>>,
+        source_transform: PropertyBinding<LayoutTransform>,
         kind: ReferenceFrameKind,
         origin_in_parent_reference_frame: LayoutVector2D,
         pipeline_id: PipelineId,
     ) -> Self {
-        let identity = LayoutTransform::identity();
         let info = ReferenceFrameInfo {
             transform_style,
-            source_transform: source_transform.unwrap_or(PropertyBinding::Value(identity)),
+            source_transform,
             kind,
             origin_in_parent_reference_frame,
             invertible: true,
