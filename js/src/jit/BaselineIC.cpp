@@ -168,7 +168,9 @@ void ICEntry::trace(JSTracer* trc) {
         break;
       }
       case JSOP_BITNOT:
-      case JSOP_NEG: {
+      case JSOP_NEG:
+      case JSOP_INC:
+      case JSOP_DEC: {
         ICUnaryArith_Fallback::Compiler stubCompiler(cx);
         if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
           return nullptr;
@@ -5747,18 +5749,30 @@ static bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
   JSOp op = JSOp(*pc);
   FallbackICSpew(cx, stub, "UnaryArith(%s)", CodeName[op]);
 
+  // The unary operations take a copied val because the original value is needed
+  // below.
+  RootedValue valCopy(cx, val);
   switch (op) {
     case JSOP_BITNOT: {
-      RootedValue valCopy(cx, val);
       if (!BitNot(cx, &valCopy, res)) {
         return false;
       }
       break;
     }
     case JSOP_NEG: {
-      // We copy val here because the original value is needed below.
-      RootedValue valCopy(cx, val);
       if (!NegOperation(cx, &valCopy, res)) {
+        return false;
+      }
+      break;
+    }
+    case JSOP_INC: {
+      if (!IncOperation(cx, &valCopy, res)) {
+        return false;
+      }
+      break;
+    }
+    case JSOP_DEC: {
+      if (!DecOperation(cx, &valCopy, res)) {
         return false;
       }
       break;

@@ -342,8 +342,9 @@ var SiteDataManager = {
     for (let host of hosts) {
       let site = this._sites.get(host);
       if (site) {
-        // Clear localstorage.
-        Services.obs.notifyObservers(null, "browser:purge-domain-data", host);
+        // Clear localStorage & sessionStorage
+        Services.obs.notifyObservers(null, "extension:purge-localStorage", host);
+        Services.obs.notifyObservers(null, "extension:purge-sessionStorage", host);
         this._removePermission(site);
         this._removeAppCache(site);
         this._removeCookies(site);

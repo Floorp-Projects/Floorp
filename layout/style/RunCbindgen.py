@@ -25,7 +25,9 @@ def generate(output, cbindgen_crate_path, *in_tree_dependencies):
 
     stdout, stderr = p.communicate()
     if p.returncode != 0:
-        raise TypeError("cbindgen failed: %s" % stderr)
+        print(stdout)
+        print(stderr)
+        return p.returncode
 
     output.write(stdout)
 

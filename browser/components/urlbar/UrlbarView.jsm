@@ -130,6 +130,12 @@ class UrlbarView {
     for (let resultIndex in queryContext.results) {
       this._addRow(resultIndex);
     }
+
+    if (queryContext.preselected) {
+      this._selected = this._rows.firstElementChild;
+      this._selected.toggleAttribute("selected", true);
+    }
+
     this._openPanel();
   }
 
@@ -192,9 +198,6 @@ class UrlbarView {
     this.oneOffSearchButtons;
 
     this.panel.openPopup(this.input.textbox.closest("toolbar"), "after_end", 0, -1);
-
-    this._selected = this._rows.firstElementChild;
-    this._selected.toggleAttribute("selected", true);
   }
 
   _alignPanel() {

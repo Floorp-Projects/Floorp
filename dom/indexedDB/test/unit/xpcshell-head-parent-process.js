@@ -4,7 +4,9 @@
  */
 
 // Tests using testGenerator are expected to define it themselves.
-/* global testGenerator */
+// Testing functions are expected to call testSteps and its type should either
+// be GeneratorFunction or AsyncFunction
+/* global testGenerator, testSteps:false */
 
 var { "classes": Cc, "interfaces": Ci, "utils": Cu } = Components;
 
@@ -49,8 +51,28 @@ if (!this.runTest) {
 
     Cu.importGlobalProperties(["indexedDB"]);
 
-    do_test_pending();
-    testGenerator.next();
+    // In order to support converting tests to using async functions from using
+    // generator functions, we detect async functions by checking the name of
+    // function's constructor.
+    Assert.ok(typeof testSteps === "function",
+              "There should be a testSteps function");
+    if (testSteps.constructor.name === "AsyncFunction") {
+      // Do run our existing cleanup function that would normally be called by
+      // the generator's call to finishTest().
+      registerCleanupFunction(resetTesting);
+
+      add_task(testSteps);
+
+      // Since we defined run_test, we must invoke run_next_test() to start the
+      // async test.
+      run_next_test();
+    } else {
+      Assert.ok(testSteps.constructor.name === "GeneratorFunction",
+                "Unsupported function type");
+
+      do_test_pending();
+      testGenerator.next();
+    }
   };
 }
 
@@ -532,6 +554,38 @@ function getPrincipal(url)
 {
   let uri = Services.io.newURI(url);
   return Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+}
+
+function expectingSuccess(request) {
+  return new Promise(function(resolve, reject) {
+    request.onerror = function(event) {
+      ok(false, "indexedDB error, '" + event.target.error.name + "'");
+      reject(event);
+    };
+    request.onsuccess = function(event) {
+      resolve(event);
+    };
+    request.onupgradeneeded = function(event) {
+      ok(false, "Got upgrade, but did not expect it!");
+      reject(event);
+    };
+  });
+}
+
+function expectingUpgrade(request) {
+  return new Promise(function(resolve, reject) {
+    request.onerror = function(event) {
+      ok(false, "indexedDB error, '" + event.target.error.name + "'");
+      reject(event);
+    };
+    request.onupgradeneeded = function(event) {
+      resolve(event);
+    };
+    request.onsuccess = function(event) {
+      ok(false, "Got success, but did not expect it!");
+      reject(event);
+    };
+  });
 }
 
 var SpecialPowers = {

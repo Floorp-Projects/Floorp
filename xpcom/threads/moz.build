@@ -43,6 +43,7 @@ EXPORTS.mozilla += [
     'CondVar.h',
     'CooperativeThreadPool.h',
     'CPUUsageWatcher.h',
+    'DataMutex.h',
     'DeadlockDetector.h',
     'EventQueue.h',
     'IdleTaskRunner.h',

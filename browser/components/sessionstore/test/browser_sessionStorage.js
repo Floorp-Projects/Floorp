@@ -200,5 +200,8 @@ add_task(async function respect_privacy_level() {
 });
 
 function purgeDomainData(browser, domain) {
-  return sendMessage(browser, "ss-test:purgeDomainData", domain);
+  return new Promise(resolve => {
+    Services.clearData.deleteDataFromHost(
+      domain, true, Services.clearData.CLEAR_SESSION_HISTORY, resolve);
+  });
 }

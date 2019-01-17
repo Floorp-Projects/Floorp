@@ -6,9 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["FormData"];
 
-ChromeUtils.defineModuleGetter(this, "CreditCard",
-  "resource://gre/modules/CreditCard.jsm");
-
 /**
  * Returns whether the given URL very likely has input
  * fields that contain serialized session store data.
@@ -37,31 +34,11 @@ function getDocumentURI(doc) {
   return doc.documentURI.replace(/#.*$/, "");
 }
 
-// For a comprehensive list of all available <INPUT> types see
-// https://dxr.mozilla.org/mozilla-central/search?q=kInputTypeTable&redirect=false
-const IGNORE_PROPERTIES = [
-  ["type", new Set(["password", "hidden", "button", "image", "submit", "reset"])],
-  ["autocomplete", new Set(["off"])],
-];
-function shouldIgnoreNode(node) {
-  for (let i = 0; i < IGNORE_PROPERTIES.length; ++i) {
-    let [propName, propValues] = IGNORE_PROPERTIES[i];
-    if (node[propName] && propValues.has(node[propName])) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /**
  * The public API exported by this module that allows to collect
  * and restore form data for a document and its subframes.
  */
 var FormData = Object.freeze({
-  collect(frame) {
-    return FormDataInternal.collect(frame);
-  },
-
   restore(frame, data) {
     return FormDataInternal.restore(frame, data);
   },
@@ -107,148 +84,6 @@ var FormDataInternal = {
 
     delete this.restorableFormNodesXPath;
     return (this.restorableFormNodesXPath = formNodesXPath);
-  },
-
-  /**
-   * Collect form data for a given |frame| *not* including any subframes.
-   *
-   * The returned object may have an "id", "xpath", or "innerHTML" key or a
-   * combination of those three. Form data stored under "id" is for input
-   * fields with id attributes. Data stored under "xpath" is used for input
-   * fields that don't have a unique id and need to be queried using XPath.
-   * The "innerHTML" key is used for editable documents (designMode=on).
-   *
-   * Example:
-   *   {
-   *     id: {input1: "value1", input3: "value3"},
-   *     xpath: {
-   *       "/xhtml:html/xhtml:body/xhtml:input[@name='input2']" : "value2",
-   *       "/xhtml:html/xhtml:body/xhtml:input[@name='input4']" : "value4"
-   *     }
-   *   }
-   *
-   * @param  doc
-   *         DOMDocument instance to obtain form data for.
-   * @return object
-   *         Form data encoded in an object.
-   */
-  collect(doc) {
-    let formNodes = doc.evaluate(
-      this.restorableFormNodesXPath,
-      doc,
-      this.resolveNS.bind(this),
-      doc.defaultView.XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null
-    );
-
-    let node;
-    let ret = {};
-
-    // Limit the number of XPath expressions for performance reasons. See
-    // bug 477564.
-    const MAX_TRAVERSED_XPATHS = 100;
-    let generatedCount = 0;
-
-    while ((node = formNodes.iterateNext())) {
-      if (shouldIgnoreNode(node)) {
-        continue;
-      }
-      let hasDefaultValue = true;
-      let value;
-
-      // Only generate a limited number of XPath expressions for perf reasons
-      // (cf. bug 477564)
-      if (!node.id && generatedCount > MAX_TRAVERSED_XPATHS) {
-        continue;
-      }
-
-      // We do not want to collect credit card numbers or past/current password fields.
-      if (ChromeUtils.getClassName(node) === "HTMLInputElement") {
-        if (CreditCard.isValidNumber(node.value) || node.hasBeenTypePassword) {
-          continue;
-        }
-      }
-
-      // We don't want to collect values from sensitive fields (indicated by the 'autocomplete'
-      // attribute on relevant elements e.g. autocomplete=off).
-      if (node.getAutocompleteInfo) {
-        let autocompleteInfo = node.getAutocompleteInfo();
-        if (autocompleteInfo && !autocompleteInfo.canAutomaticallyPersist) {
-          continue;
-        }
-      }
-
-      if (ChromeUtils.getClassName(node) === "HTMLInputElement" ||
-          ChromeUtils.getClassName(node) === "HTMLTextAreaElement" ||
-          (node.namespaceURI == this.namespaceURIs.xul && node.localName == "textbox")) {
-        switch (node.type) {
-          case "checkbox":
-          case "radio":
-            value = node.checked;
-            hasDefaultValue = value == node.defaultChecked;
-            break;
-          case "file":
-            value = { type: "file", fileList: node.mozGetFileNameArray() };
-            hasDefaultValue = !value.fileList.length;
-            break;
-          default: // text, textarea
-            value = node.value;
-            hasDefaultValue = value == node.defaultValue;
-            break;
-        }
-      } else if (!node.multiple) {
-        // <select>s without the multiple attribute are hard to determine the
-        // default value, so assume we don't have the default.
-        hasDefaultValue = false;
-        value = { selectedIndex: node.selectedIndex, value: node.value };
-      } else {
-        // <select>s with the multiple attribute are easier to determine the
-        // default value since each <option> has a defaultSelected property
-        let options = Array.map(node.options, opt => {
-          hasDefaultValue = hasDefaultValue && (opt.selected == opt.defaultSelected);
-          return opt.selected ? opt.value : -1;
-        });
-        value = options.filter(ix => ix > -1);
-      }
-
-      // In order to reduce XPath generation (which is slow), we only save data
-      // for form fields that have been changed. (cf. bug 537289)
-      if (hasDefaultValue) {
-        continue;
-      }
-
-      if (node.id) {
-        ret.id = ret.id || {};
-        ret.id[node.id] = value;
-      } else {
-        generatedCount++;
-        ret.xpath = ret.xpath || {};
-        ret.xpath[node.generateXPath()] = value;
-      }
-    }
-
-    // designMode is undefined e.g. for XUL documents (as about:config)
-    if ((doc.designMode || "") == "on" && doc.body) {
-      // eslint-disable-next-line no-unsanitized/property
-      ret.innerHTML = doc.body.innerHTML;
-    }
-
-    // Return |null| if no form data has been found.
-    if (Object.keys(ret).length === 0) {
-      return null;
-    }
-
-    // Store the frame's current URL with its form data so that we can compare
-    // it when restoring data to not inject form data into the wrong document.
-    ret.url = getDocumentURI(doc);
-
-    // We want to avoid saving data for about:sessionrestore as a string.
-    // Since it's stored in the form as stringified JSON, stringifying further
-    // causes an explosion of escape characters. cf. bug 467409
-    if (isRestorationPage(ret.url)) {
-      ret.id.sessionData = JSON.parse(ret.id.sessionData);
-    }
-
-    return ret;
   },
 
   /**

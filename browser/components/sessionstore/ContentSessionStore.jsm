@@ -14,20 +14,14 @@ function debug(msg) {
   Services.console.logStringMessage("SessionStoreContent: " + msg);
 }
 
-ChromeUtils.defineModuleGetter(this, "FormData",
-  "resource://gre/modules/FormData.jsm");
-
 ChromeUtils.defineModuleGetter(this, "ContentRestore",
   "resource:///modules/sessionstore/ContentRestore.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionHistory",
   "resource://gre/modules/sessionstore/SessionHistory.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
-
 ChromeUtils.defineModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
-const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
-              .getService(Ci.nsISessionStoreUtils);
 
 // A bound to the size of data to store for DOM Storage.
 const DOM_STORAGE_LIMIT_PREF = "browser.sessionstore.dom_storage_limit";
@@ -151,7 +145,7 @@ class EventListener extends Handler {
   constructor(store) {
     super(store);
 
-    ssu.addDynamicFrameFilteredListener(this.mm, "load", this, true);
+    SessionStoreUtils.addDynamicFrameFilteredListener(this.mm, "load", this, true);
   }
 
   handleEvent(event) {
@@ -329,8 +323,10 @@ class ScrollPositionListener extends Handler {
   constructor(store) {
     super(store);
 
-    ssu.addDynamicFrameFilteredListener(this.mm, "mozvisualscroll", this,
-                                        /* capture */ false, /* system group */ true);
+    SessionStoreUtils.addDynamicFrameFilteredListener(
+        this.mm, "mozvisualscroll", this,
+        /* capture */ false, /* system group */ true);
+
     this.stateChangeNotifier.addObserver(this);
   }
 
@@ -347,7 +343,7 @@ class ScrollPositionListener extends Handler {
   }
 
   collect() {
-    return mapFrameTree(this.mm, ssu.collectScrollPosition.bind(ssu));
+    return mapFrameTree(this.mm, SessionStoreUtils.collectScrollPosition);
   }
 }
 
@@ -372,7 +368,7 @@ class FormDataListener extends Handler {
   constructor(store) {
     super(store);
 
-    ssu.addDynamicFrameFilteredListener(this.mm, "input", this, true);
+    SessionStoreUtils.addDynamicFrameFilteredListener(this.mm, "input", this, true);
     this.stateChangeNotifier.addObserver(this);
   }
 
@@ -385,7 +381,7 @@ class FormDataListener extends Handler {
   }
 
   collect() {
-    return mapFrameTree(this.mm, FormData.collect);
+    return mapFrameTree(this.mm, SessionStoreUtils.collectFormData);
   }
 }
 
@@ -412,7 +408,7 @@ class DocShellCapabilitiesListener extends Handler {
   }
 
   onPageLoadStarted() {
-    let caps = ssu.collectDocShellCapabilities(this.mm.docShell);
+    let caps = SessionStoreUtils.collectDocShellCapabilities(this.mm.docShell);
 
     // Send new data only when the capability list changes.
     if (caps != this._latestCapabilities) {
@@ -445,13 +441,13 @@ class SessionStorageListener extends Handler {
     // The event listener waiting for MozSessionStorageChanged events.
     this._listener = null;
 
-    Services.obs.addObserver(this, "browser:purge-domain-data");
+    Services.obs.addObserver(this, "browser:purge-sessionStorage");
     this.stateChangeNotifier.addObserver(this);
     this.resetEventListener();
   }
 
   uninit() {
-    Services.obs.removeObserver(this, "browser:purge-domain-data");
+    Services.obs.removeObserver(this, "browser:purge-sessionStorage");
   }
 
   observe() {
@@ -467,14 +463,14 @@ class SessionStorageListener extends Handler {
   resetEventListener() {
     if (!this._listener) {
       this._listener =
-        ssu.addDynamicFrameFilteredListener(this.mm, "MozSessionStorageChanged",
-                                            this, true);
+        SessionStoreUtils.addDynamicFrameFilteredListener(this.mm, "MozSessionStorageChanged",
+                                                          this, true);
     }
   }
 
   removeEventListener() {
-    ssu.removeDynamicFrameFilteredListener(this.mm, "MozSessionStorageChanged",
-                                           this._listener, true);
+    SessionStoreUtils.removeDynamicFrameFilteredListener(this.mm, "MozSessionStorageChanged",
+                                                         this._listener, true);
     this._listener = null;
   }
 

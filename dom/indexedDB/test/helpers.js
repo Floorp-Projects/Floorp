@@ -6,7 +6,10 @@
 // testSteps is expected to be defined by the test using this file.
 /* global testSteps:false */
 
-var testGenerator = testSteps();
+var testGenerator;
+if (testSteps.constructor.name === "GeneratorFunction") {
+  testGenerator = testSteps();
+}
 // The test js is shared between xpcshell (which has no SpecialPowers object)
 // and content mochitests (where the |Components| object is accessible only as
 // SpecialPowers.Components). Expose Components if necessary here to make things
@@ -45,6 +48,12 @@ function* testHarnessSteps() {
   function nextTestHarnessStep(val) {
     testHarnessGenerator.next(val);
   }
+
+  let script = document.createElement("script");
+  script.src = "/tests/SimpleTest/AddTask.js";
+  script.onload = nextTestHarnessStep;
+  document.head.appendChild(script);
+  yield undefined;
 
   let testScriptPath;
   let testScriptFilename;
@@ -99,92 +108,21 @@ function* testHarnessSteps() {
   yield undefined;
 
   if (testScriptFilename && !window.disableWorkerTest) {
-    info("Running test in a worker");
+    // For the AsyncFunction, let AddTask.js handle the executing sequece by
+    // add_task(). For the GeneratorFunction, we just handle the sequence
+    // manually.
+    if (testSteps.constructor.name === "AsyncFunction") {
+      add_task(function workerTestSteps() {
+        return executeWorkerTestAndCleanUp(testScriptPath);
+      });
+    } else {
+      ok(testSteps.constructor.name === "GeneratorFunction",
+         "Unsupported function type");
+      executeWorkerTestAndCleanUp(testScriptPath)
+        .then(nextTestHarnessStep);
 
-    let workerScriptBlob =
-      new Blob([ "(" + workerScript.toString() + ")();" ],
-               { type: "text/javascript" });
-    let workerScriptURL = URL.createObjectURL(workerScriptBlob);
-
-    let worker = new Worker(workerScriptURL);
-
-    worker._expectingUncaughtException = false;
-    worker.onerror = function(event) {
-      if (worker._expectingUncaughtException) {
-        ok(true, "Worker had an expected error: " + event.message);
-        worker._expectingUncaughtException = false;
-        event.preventDefault();
-        return;
-      }
-      ok(false, "Worker had an error: " + event.message);
-      worker.terminate();
-      nextTestHarnessStep();
-    };
-
-    worker.onmessage = function(event) {
-      let message = event.data;
-      switch (message.op) {
-        case "ok":
-          SimpleTest.ok(message.condition, `${message.name}: ${message.diag}`);
-          break;
-
-        case "todo":
-          todo(message.condition, message.name, message.diag);
-          break;
-
-        case "info":
-          info(message.msg);
-          break;
-
-        case "ready":
-          worker.postMessage({ op: "load", files: [ testScriptPath ] });
-          break;
-
-        case "loaded":
-          worker.postMessage({ op: "start", wasmSupported: isWasmSupported() });
-          break;
-
-        case "done":
-          ok(true, "Worker finished");
-          nextTestHarnessStep();
-          break;
-
-        case "expectUncaughtException":
-          worker._expectingUncaughtException = message.expecting;
-          break;
-
-        case "clearAllDatabases":
-          clearAllDatabases(function() {
-            worker.postMessage({ op: "clearAllDatabasesDone" });
-          });
-          break;
-
-        case "getWasmBinary":
-          worker.postMessage({ op: "getWasmBinaryDone",
-                               wasmBinary: getWasmBinarySync(message.text) });
-          break;
-
-        default:
-          ok(false,
-             "Received a bad message from worker: " + JSON.stringify(message));
-          nextTestHarnessStep();
-      }
-    };
-
-    URL.revokeObjectURL(workerScriptURL);
-
-    yield undefined;
-
-    if (worker._expectingUncaughtException) {
-      ok(false, "expectUncaughtException was called but no uncaught " +
-                "exception was detected!");
+      yield undefined;
     }
-
-    worker.terminate();
-    worker = null;
-
-    clearAllDatabases(nextTestHarnessStep);
-    yield undefined;
   } else if (testScriptFilename) {
     todo(false,
          "Skipping test in a worker because it is explicitly disabled: " +
@@ -197,9 +135,27 @@ function* testHarnessSteps() {
   info("Running test in main thread");
 
   // Now run the test script in the main thread.
-  testGenerator.next();
+  if (testSteps.constructor.name === "AsyncFunction") {
+    // Register a callback to clean up databases because it's the only way for
+    // add_task() to clean them right before the SimpleTest.FinishTest
+    SimpleTest.registerCleanupFunction(async function() {
+      await new Promise(function(resolve, reject) {
+        clearAllDatabases(function(result) {
+          if (result.resultCode == SpecialPowers.Cr.NS_OK) {
+            resolve(result);
+          } else {
+            reject(result.resultCode);
+          }
+        });
+      });
+    });
 
-  yield undefined;
+    add_task(testSteps);
+  } else {
+    testGenerator.next();
+
+    yield undefined;
+  }
 }
 
 if (!window.runTest) {
@@ -212,6 +168,8 @@ if (!window.runTest) {
 
 function finishTest()
 {
+  ok(testSteps.constructor.name === "GeneratorFunction",
+     "Async/await tests shouldn't call finishTest()");
   SimpleTest.executeSoon(function() {
     clearAllDatabases(function() { SimpleTest.finish(); });
   });
@@ -376,6 +334,38 @@ function getWasmModule(_binary_) {
   return module;
 }
 
+function expectingSuccess(request) {
+  return new Promise(function(resolve, reject) {
+    request.onerror = function(event) {
+      ok(false, "indexedDB error, '" + event.target.error.name + "'");
+      reject(event);
+    };
+    request.onsuccess = function(event) {
+      resolve(event);
+    };
+    request.onupgradeneeded = function(event) {
+      ok(false, "Got upgrade, but did not expect it!");
+      reject(event);
+    };
+  });
+}
+
+function expectingUpgrade(request) {
+  return new Promise(function(resolve, reject) {
+    request.onerror = function(event) {
+      ok(false, "indexedDB error, '" + event.target.error.name + "'");
+      reject(event);
+    };
+    request.onupgradeneeded = function(event) {
+      resolve(event);
+    };
+    request.onsuccess = function(event) {
+      ok(false, "Got success, but did not expect it!");
+      reject(event);
+    };
+  });
+}
+
 function workerScript() {
   "use strict";
 
@@ -442,9 +432,11 @@ function workerScript() {
   };
 
   self.finishTest = function() {
+    self.ok(testSteps.constructor.name === "GeneratorFunction",
+            "Async/await tests shouldn't call finishTest()");
     if (self._expectingUncaughtException) {
-      self.ok(false, "expectUncaughtException was called but no uncaught "
-                     + "exception was detected!");
+      self.ok(false, "expectUncaughtException was called but no uncaught " +
+                     "exception was detected!");
     }
     self.postMessage({ op: "done" });
   };
@@ -601,9 +593,20 @@ function workerScript() {
 
       case "start":
         self.wasmSupported = message.wasmSupported;
-        executeSoon(function() {
+        executeSoon(async function() {
           info("Worker: starting tests");
-          testGenerator.next();
+          if (testSteps.constructor.name === "AsyncFunction") {
+            await testSteps();
+            if (self._expectingUncaughtException) {
+              self.ok(false, "expectUncaughtException was called but no " +
+                             "uncaught exception was detected!");
+            }
+            self.postMessage({ op: "done" });
+          } else {
+            ok(testSteps.constructor.name === "GeneratorFunction",
+               "Unsupported function type");
+            testGenerator.next();
+          }
         });
         break;
 
@@ -625,5 +628,135 @@ function workerScript() {
     }
   };
 
+
+  self.expectingSuccess = function(_request_) {
+    return new Promise(function(_resolve_, _reject_) {
+      _request_.onerror = function(_event_) {
+        ok(false, "indexedDB error, '" + _event_.target.error.name + "'");
+        _reject_(_event_);
+      };
+      _request_.onsuccess = function(_event_) {
+        _resolve_(_event_);
+      };
+      _request_.onupgradeneeded = function(_event_) {
+        ok(false, "Got upgrade, but did not expect it!");
+        _reject_(_event_);
+        };
+      });
+  };
+
+  self.expectingUpgrade = function(_request_) {
+    return new Promise(function(_resolve_, _reject_) {
+      _request_.onerror = function(_event_) {
+        ok(false, "indexedDB error, '" + _event_.target.error.name + "'");
+        _reject_(_event_);
+      };
+      _request_.onupgradeneeded = function(_event_) {
+        _resolve_(_event_);
+      };
+      _request_.onsuccess = function(_event_) {
+        ok(false, "Got success, but did not expect it!");
+        _reject_(_event_);
+      };
+    });
+ };
+
   self.postMessage({ op: "ready" });
+}
+
+async function executeWorkerTestAndCleanUp(testScriptPath) {
+  info("Running test in a worker");
+
+  let workerScriptBlob =
+    new Blob([ "(" + workerScript.toString() + ")();" ],
+             { type: "text/javascript" });
+  let workerScriptURL = URL.createObjectURL(workerScriptBlob);
+
+  let worker;
+  try {
+    await new Promise(function(resolve, reject) {
+      worker = new Worker(workerScriptURL);
+
+      worker._expectingUncaughtException = false;
+      worker.onerror = function(event) {
+        if (worker._expectingUncaughtException) {
+          ok(true, "Worker had an expected error: " + event.message);
+          worker._expectingUncaughtException = false;
+          event.preventDefault();
+          return;
+        }
+        ok(false, "Worker had an error: " + event.message);
+        worker.terminate();
+        reject();
+      };
+
+      worker.onmessage = function(event) {
+        let message = event.data;
+        switch (message.op) {
+          case "ok":
+            SimpleTest.ok(message.condition, `${message.name}: ${message.diag}`);
+            break;
+
+          case "todo":
+            todo(message.condition, message.name, message.diag);
+            break;
+
+          case "info":
+            info(message.msg);
+            break;
+
+          case "ready":
+            worker.postMessage({ op: "load", files: [ testScriptPath ] });
+            break;
+
+          case "loaded":
+            worker.postMessage({ op: "start", wasmSupported: isWasmSupported() });
+            break;
+
+          case "done":
+            ok(true, "Worker finished");
+            resolve();
+            break;
+
+          case "expectUncaughtException":
+            worker._expectingUncaughtException = message.expecting;
+            break;
+
+          case "clearAllDatabases":
+            clearAllDatabases(function() {
+              worker.postMessage({ op: "clearAllDatabasesDone" });
+            });
+            break;
+
+          case "getWasmBinary":
+             worker.postMessage({ op: "getWasmBinaryDone",
+                                 wasmBinary: getWasmBinarySync(message.text) });
+             break;
+
+          default:
+            ok(false,
+               "Received a bad message from worker: " + JSON.stringify(message));
+            reject();
+        }
+      };
+    });
+
+    URL.revokeObjectURL(workerScriptURL);
+  } catch (e) {
+    info("Unexpected thing happened: " + e);
+  }
+
+  return new Promise(function(resolve) {
+    info("Cleaning up the databases");
+
+    if (worker._expectingUncaughtException) {
+      ok(false, "expectUncaughtException was called but no uncaught " +
+                "exception was detected!");
+    }
+
+    worker.terminate();
+    worker = null;
+
+    clearAllDatabases(resolve);
+  });
 }

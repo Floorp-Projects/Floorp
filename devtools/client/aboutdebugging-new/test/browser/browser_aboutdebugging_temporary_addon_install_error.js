@@ -24,8 +24,8 @@ add_task(async function() {
   document.querySelector(".js-temporary-extension-install-button").click();
 
   info("Wait until the install error message appears");
-  await waitUntil(() => document.querySelector(".js-error-message"));
-  const installError = document.querySelector(".js-error-message");
+  await waitUntil(() => document.querySelector(".js-message"));
+  const installError = document.querySelector(".js-message");
   ok(installError.textContent.includes("JSON.parse: unexpected keyword"),
     "The expected installation error is displayed: " + installError.textContent);
 
@@ -33,7 +33,7 @@ add_task(async function() {
   await installTemporaryExtension(EXTENSION_PATH, EXTENSION_NAME, document);
 
   info("Wait until the error message disappears");
-  await waitUntil(() => !document.querySelector(".js-error-message"));
+  await waitUntil(() => !document.querySelector(".js-message"));
 
   info("Wait for the temporary addon to be displayed as a debug target");
   await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, document));
