@@ -985,7 +985,7 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   nsresult rv = nsContentUtils::LoadImage(
       aNewURI, thisNode, aDocument, triggeringPrincipal, 0,
-      aDocument->GetDocumentURI(), referrerPolicy, this, loadFlags,
+      aDocument->GetDocumentURIAsReferrer(), referrerPolicy, this, loadFlags,
       content->LocalName(), getter_AddRefs(req), policyType,
       mUseUrgentStartForChannel);
 

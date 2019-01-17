@@ -67,6 +67,7 @@ class UntrustedModulesManager {
 
   ModuleEvaluator mEvaluator;
   int mErrorModules = 0;
+  Maybe<double> mXULLoadDurationMS;
 
   // In order to get a list of modules loaded at startup, we take a list of
   // currently-loaded modules, and subtract:
@@ -177,13 +178,20 @@ class UntrustedModulesManager {
       ModuleLoadEvent eventCopy(
           e, ModuleLoadEvent::CopyOption::CopyWithoutModules);
       for (auto& m : e.mModules) {
-        Maybe<bool> ret =
+        Maybe<bool> maybeIsTrusted =
             mEvaluator.IsModuleTrusted(m, eventCopy, dllSvcRef.get());
-        if (ret.isNothing()) {
+
+        // Save xul.dll load timing for the ping payload.
+        if ((m.mTrustFlags & ModuleTrustFlags::Xul) &&
+            mXULLoadDurationMS.isNothing()) {
+          mXULLoadDurationMS = m.mLoadDurationMS;
+        }
+
+        if (maybeIsTrusted.isNothing()) {
           // If there was an error, assume the DLL is trusted to avoid
           // flooding the telemetry packet, but record that an error occurred.
           errorModules++;
-        } else if (*ret) {
+        } else if (maybeIsTrusted.value()) {
           // Module is trusted. If we haven't yet processed startup modules,
           // we need to remember it.
           if (!aHasProcessedStartupModules) {
@@ -302,6 +310,7 @@ class UntrustedModulesManager {
         // One module = one event here.
         ModuleLoadEvent::ModuleInfo mi;
         mi.mBase = base;
+        mi.mLoadDurationMS = Nothing();
         ModuleLoadEvent e;
         e.mIsStartup = true;
         e.mProcessUptimeMS = 0;
@@ -355,6 +364,7 @@ class UntrustedModulesManager {
     }
 
     aOut.mErrorModules = mErrorModules;
+    aOut.mXULLoadDurationMS = mXULLoadDurationMS;
 
     // Lock mProcessedEvents and mProcessedStacks to make a copy for the caller.
     // Only trivial (loader lock friendly) code allowed here!

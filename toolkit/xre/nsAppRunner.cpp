@@ -4710,7 +4710,7 @@ bool XRE_IsE10sParentProcess() {
 
 bool XRE_UseNativeEventProcessing() {
 #ifdef XP_MACOSX
-  if (XRE_IsRDDProcess()) {
+  if (XRE_IsRDDProcess() || XRE_IsSocketProcess()) {
     return false;
   }
 #endif

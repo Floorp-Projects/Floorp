@@ -583,8 +583,14 @@ set_config('MAKENSISU_FLAGS', nsis_flags)
 
 check_prog('7Z', ('7z', '7za'), allow_missing=True, when=target_is_windows)
 
+# Please do not add configure checks from here on.
+
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
+
+# JS Subconfigure.
+include('js/sub.configure', when=compile_environment & toolkit)
+
 
 @depends(check_build_environment, build_project)
 @imports('__sandbox__')

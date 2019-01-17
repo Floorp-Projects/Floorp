@@ -7,14 +7,16 @@ describe("AboutPreferences Feed", () => {
   let globals;
   let sandbox;
   let Sections;
+  let DiscoveryStream;
   let instance;
 
   beforeEach(() => {
     globals = new GlobalOverrider();
     sandbox = globals.sandbox;
     Sections = [];
+    DiscoveryStream = {config: {enabled: false}};
     instance = new AboutPreferences();
-    instance.store = {getState: () => ({Sections})};
+    instance.store = {getState: () => ({Sections, DiscoveryStream})};
   });
   afterEach(() => {
     globals.restore();
@@ -134,20 +136,22 @@ describe("AboutPreferences Feed", () => {
       document: {
         createXULElement: sandbox.stub().returns(node),
         createProcessingInstruction: sandbox.stub(),
-        createElementNS: sandbox.stub().callsFake((NS, el) => document.createElement(el)),
+        createElementNS: sandbox.stub().callsFake((NS, el) => node),
         getElementById: sandbox.stub().returns(node),
         insertBefore: sandbox.stub().returnsArg(0),
       },
       Preferences,
       gHomePane,
-    }, strings, prefStructure);
+    }, strings, prefStructure, DiscoveryStream.config.enabled);
     beforeEach(() => {
       node = {
         appendChild: sandbox.stub().returnsArg(0),
+        addEventListener: sandbox.stub(),
         classList: {add: sandbox.stub()},
         cloneNode: sandbox.stub().returnsThis(),
         insertAdjacentElement: sandbox.stub().returnsArg(1),
         setAttribute: sandbox.stub(),
+        style: {},
       };
       strings = {};
       prefStructure = [];
@@ -286,6 +290,40 @@ describe("AboutPreferences Feed", () => {
         testRender();
 
         assert.calledOnce(gHomePane.toggleRestoreDefaultsBtn);
+      });
+    });
+    describe("#DiscoveryStream", () => {
+      it("should not render the Discovery Stream section", () => {
+        testRender();
+
+        assert.isFalse(node.textContent.includes("prefs_content_discovery"));
+      });
+      it("should render the Discovery Stream section", () => {
+        DiscoveryStream = {config: {enabled: true}};
+        const spy = sandbox.spy(instance, "renderPreferences");
+
+        testRender();
+
+        const documentStub = spy.firstCall.args[0].document;
+
+        assert.equal(node.textContent, "prefs_content_discovery_button");
+        assert.calledWith(documentStub.createElementNS, "http://www.w3.org/1999/xhtml", "button");
+        // node points to contentsGroup, style is set to hidden if Discovery
+        // Stream is enabled
+        assert.propertyVal(node.style, "visibility", "hidden");
+      });
+      it("should toggle the Discovery Stream pref on button click", () => {
+        DiscoveryStream = {config: {enabled: true}};
+        const stub = sandbox.stub(Services.prefs, "clearUserPref");
+
+        testRender();
+
+        assert.calledOnce(node.addEventListener);
+
+        node.addEventListener.firstCall.args[1]();
+
+        assert.calledOnce(stub);
+        assert.calledWithExactly(stub, "browser.newtabpage.activity-stream.discoverystream.config");
       });
     });
   });

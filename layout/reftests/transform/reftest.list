@@ -3,7 +3,7 @@
 # this test.
 == singular-1a.html about:blank
 # Multiple transforms should act identically to nested divs.
-fuzzy-if(webrender,0-1,0-27) == compound-1a.html compound-1-ref.html
+fuzzy-if(webrender,0-1,0-27) pref(apz.allow_zooming,true) == compound-1a.html compound-1-ref.html
 != compound-1a.html compound-1-fail.html
 == dynamic-inherit-1.html dynamic-inherit-1-ref.html
 == dynamic-addremove-1a.html dynamic-addremove-1-ref.html

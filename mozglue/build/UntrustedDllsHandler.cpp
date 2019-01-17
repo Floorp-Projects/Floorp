@@ -277,7 +277,8 @@ void UntrustedDllsHandler::ExitLoaderCall() {
 
 /* static */
 void UntrustedDllsHandler::OnAfterModuleLoad(uintptr_t aBaseAddr,
-                                             PUNICODE_STRING aLdrModuleName) {
+                                             PUNICODE_STRING aLdrModuleName,
+                                             double aLoadDurationMS) {
   RefPtr<UntrustedDllsHandlerImpl> p(UntrustedDllsHandlerImpl::GetInstance());
   if (!p) {
     return;
@@ -295,6 +296,7 @@ void UntrustedDllsHandler::OnAfterModuleLoad(uintptr_t aBaseAddr,
   moduleInfo.mLdrName = CopyString(aLdrModuleName);
   moduleInfo.mBase = aBaseAddr;
   moduleInfo.mFullPath = GetModuleFullPath(aBaseAddr);
+  moduleInfo.mLoadDurationMS = aLoadDurationMS;
 
   Unused << tlsData->mModulesLoaded.emplaceBack(std::move(moduleInfo));
 

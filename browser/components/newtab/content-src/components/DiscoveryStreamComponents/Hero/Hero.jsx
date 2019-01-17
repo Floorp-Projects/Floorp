@@ -14,29 +14,34 @@ export class _Hero extends React.PureComponent {
     }
 
     let [heroRec, ...otherRecs] = feed.data.recommendations;
+    let truncateText = (text, cap) => `${text.substring(0, cap)}${text.length > cap ? `...` : ``}`;
 
-    // TODO: Let this count be determined by the endpoint
-    let cards = otherRecs.slice(1, 5).map((rec, index) => (
+    let cards = otherRecs.slice(1, this.props.items).map((rec, index) => (
       <DSCard
         key={`dscard-${index}`}
         image_src={rec.image_src}
-        title={rec.title}
-        excerpt={rec.excerpt}
-        source="TODO: SOURCE" />
+        title={truncateText(rec.title, 44)}
+        url={rec.url}
+        source={truncateText(`TODO: SOURCE`, 22)} />
     ));
 
     return (
-      <div className={`ds-hero ds-hero-${this.props.style}`}>
-        <div className="wrapper">
-          <img src={heroRec.image_src} />
-          <div className="meta">
-            <header>{heroRec.title}</header>
-            <p>{heroRec.excerpt}</p>
-            <p>TODO: SOURCE</p>
+      <div>
+        <div className="ds-header">{this.props.title}</div>
+        <div className={`ds-hero ds-hero-${this.props.style}`}>
+          <a href={heroRec.url} className="wrapper">
+            <div className="img-wrapper">
+              <div className="img" style={{backgroundImage: `url(${heroRec.image_src})`}} />
+            </div>
+            <div className="meta">
+              <header>{truncateText(heroRec.title, 28)}</header>
+              <p>{truncateText(heroRec.excerpt, 114)}</p>
+              <p>{truncateText(`TODO: SOURCE`, 22)}</p>
+            </div>
+          </a>
+          <div className="cards">
+            { cards }
           </div>
-        </div>
-        <div className="cards">
-          { cards }
         </div>
       </div>
     );

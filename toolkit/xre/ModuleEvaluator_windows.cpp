@@ -38,7 +38,7 @@ static bool GetDirectoryName(const nsCOMPtr<nsIFile> aFile,
 
 ModuleLoadEvent::ModuleInfo::ModuleInfo(
     const glue::ModuleLoadEvent::ModuleInfo& aOther)
-    : mBase(aOther.mBase) {
+    : mBase(aOther.mBase), mLoadDurationMS(Some(aOther.mLoadDurationMS)) {
   if (aOther.mLdrName) {
     mLdrName.Assign(aOther.mLdrName.get());
   }
@@ -130,6 +130,26 @@ ModuleEvaluator::ModuleEvaluator() {
       winSxSDir->GetPath(mWinSxSDirectory);
     }
   }
+
+#ifdef _M_IX86
+  mSysWOW64Directory.SetLength(MAX_PATH);
+  UINT sysWOWlen =
+      ::GetSystemWow64DirectoryW((char16ptr_t)mSysWOW64Directory.BeginWriting(),
+                                 mSysWOW64Directory.Length());
+  if (!sysWOWlen || (sysWOWlen > mSysWOW64Directory.Length())) {
+    // This could be the following cases:
+    // - Genuine error
+    // - GetLastError == ERROR_CALL_NOT_IMPLEMENTED (32-bit Windows)
+    // - Buffer too small. The buffer being MAX_PATH, this should be so rare we
+    //   don't bother with this case.
+    // In all these cases, consider this directory unavailable.
+    mSysWOW64Directory.Truncate();
+  } else {
+    // In this case, GetSystemWow64DirectoryW returns the length of the string,
+    // not including the null-terminator.
+    mSysWOW64Directory.SetLength(sysWOWlen);
+  }
+#endif  // _M_IX86
 
   nsCOMPtr<nsIFile> exeDir;
   if (NS_SUCCEEDED(
@@ -229,6 +249,17 @@ Maybe<bool> ModuleEvaluator::IsModuleTrusted(
     score += 50;
   }
 
+#ifdef _M_IX86
+  // Under WOW64, SysWOW64 is the effective system directory. Give SysWOW64 the
+  // same trustworthiness as ModuleTrustFlags::SystemDirectory.
+  if (!mSysWOW64Directory.IsEmpty() &&
+      StringBeginsWith(dllFullPath, mSysWOW64Directory,
+                       nsCaseInsensitiveStringComparator())) {
+    aDllInfo.mTrustFlags |= ModuleTrustFlags::SysWOW64Directory;
+    score += 50;
+  }
+#endif  // _M_IX86
+
   // Is the DLL in the WinSxS directory? Some Microsoft DLLs (e.g. comctl32) are
   // loaded from here and don't have digital signatures. So while this is not a
   // guarantee of trustworthiness, but is at least as valid as system32.
@@ -263,6 +294,13 @@ Maybe<bool> ModuleEvaluator::IsModuleTrusted(
                            nsCaseInsensitiveStringComparator())) {
         score += 50;
         aDllInfo.mTrustFlags |= ModuleTrustFlags::FirefoxDirectory;
+
+        if (dllLeafLower.EqualsLiteral("xul.dll")) {
+          // The caller wants to know if this DLL is xul.dll, but this flag
+          // doesn't need to affect trust score. Xul will be considered trusted
+          // by other measures.
+          aDllInfo.mTrustFlags |= ModuleTrustFlags::Xul;
+        }
 
         // If it's in the Firefox directory, does it also share the Firefox
         // version info? We only care about this inside the app directory.

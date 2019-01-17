@@ -674,8 +674,9 @@ class Document : public nsINode,
   /**
    * Return the referrer policy of the document. Return "default" if there's no
    * valid meta referrer tag found in the document.
+   * Referrer policy should be inherited from parent if the iframe is srcdoc
    */
-  ReferrerPolicyEnum GetReferrerPolicy() const { return mReferrerPolicy; }
+  ReferrerPolicyEnum GetReferrerPolicy() const;
 
   /**
    * GetReferrerPolicy() for Document.webidl.
@@ -753,6 +754,22 @@ class Document : public nsINode,
   nsIURI* GetFallbackBaseURI() const {
     if (mIsSrcdocDocument && mParentDocument) {
       return mParentDocument->GetDocBaseURI();
+    }
+    return mDocumentURI;
+  }
+
+  /**
+   * Return the referrer from document URI as defined in the Referrer Policy
+   * specification.
+   * https://w3c.github.io/webappsec-referrer-policy/#determine-requests-referrer
+   * While document is an iframe srcdoc document, let document be document’s
+   * browsing context’s browsing context container’s node document.
+   * Then referrer should be document's URL
+   */
+
+  nsIURI* GetDocumentURIAsReferrer() const {
+    if (mIsSrcdocDocument && mParentDocument) {
+      return mParentDocument->GetDocumentURIAsReferrer();
     }
     return mDocumentURI;
   }

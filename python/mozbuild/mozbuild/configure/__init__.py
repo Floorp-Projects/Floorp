@@ -30,8 +30,10 @@ from mozbuild.configure.util import (
     LineIO,
 )
 from mozbuild.util import (
+    encode,
     exec_,
     memoize,
+    memoized_property,
     ReadOnlyDict,
     ReadOnlyNamespace,
 )
@@ -293,6 +295,8 @@ class ConfigureSandbox(dict):
     def __init__(self, config, environ=os.environ, argv=sys.argv,
                  stdout=sys.stdout, stderr=sys.stderr, logger=None):
         dict.__setitem__(self, '__builtins__', self.BUILTINS)
+
+        self._environ = dict(environ)
 
         self._paths = []
         self._all_paths = set()
@@ -824,6 +828,30 @@ class ConfigureSandbox(dict):
                 what = _import.split('.')[0]
                 glob[what] = self._get_one_import('%s%s' % (_from, what))
 
+    @memoized_property
+    def _wrapped_os(self):
+        wrapped_os = {}
+        exec_('from os import *', {}, wrapped_os)
+        wrapped_os['environ'] = self._environ
+        return ReadOnlyNamespace(**wrapped_os)
+
+    @memoized_property
+    def _wrapped_subprocess(self):
+        wrapped_subprocess = {}
+        exec_('from subprocess import *', {}, wrapped_subprocess)
+
+        def wrap(function):
+            def wrapper(*args, **kwargs):
+                if 'env' not in kwargs:
+                    kwargs['env'] = encode(self._environ)
+                return function(*args, **kwargs)
+            return wrapper
+
+        for f in ('call', 'check_call', 'check_output', 'Popen'):
+            wrapped_subprocess[f] = wrap(wrapped_subprocess[f])
+
+        return ReadOnlyNamespace(**wrapped_subprocess)
+
     def _get_one_import(self, what):
         # The special `__sandbox__` module gives access to the sandbox
         # instance.
@@ -834,6 +862,18 @@ class ConfigureSandbox(dict):
         # restricted mode"
         if what == '__builtin__.open':
             return lambda *args, **kwargs: open(*args, **kwargs)
+        # Special case os and os.environ so that os.environ is our copy of
+        # the environment.
+        if what == 'os.environ':
+            return self._environ
+        if what == 'os':
+            return self._wrapped_os
+        # And subprocess, so that its functions use our os.environ
+        if what == 'subprocess':
+            return self._wrapped_subprocess
+        if what in ('subprocess.call', 'subprocess.check_call',
+                    'subprocess.check_output', 'subprocess.Popen'):
+            return getattr(self._wrapped_subprocess, what[len('subprocess.'):])
         # Until this proves to be a performance problem, just construct an
         # import statement and execute it.
         import_line = ''

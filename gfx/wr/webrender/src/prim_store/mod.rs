@@ -18,6 +18,8 @@ use clip::{ClipStore};
 use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex, ROOT_SPATIAL_NODE_INDEX};
 use clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem};
 #[cfg(feature = "debug_renderer")]
+use debug_colors;
+#[cfg(feature = "debug_renderer")]
 use debug_render::DebugItem;
 use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use euclid::{SideOffsets2D, TypedTransform3D, TypedRect, TypedScale, TypedSize2D};
@@ -50,7 +52,7 @@ use std::{cmp, fmt, hash, ops, u32, usize, mem};
 #[cfg(debug_assertions)]
 use std::sync::atomic::{AtomicUsize, Ordering};
 use storage;
-use util::{ScaleOffset, MatrixHelpers, recycle_vec, MaxRect};
+use util::{ScaleOffset, MatrixHelpers, MaxRect, Recycler};
 use util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
 use smallvec::SmallVec;
 
@@ -1581,16 +1583,16 @@ impl PrimitiveScratchBuffer {
         }
     }
 
-    pub fn recycle(&mut self) {
-        recycle_vec(&mut self.clip_mask_instances);
-        recycle_vec(&mut self.prim_info);
-        self.glyph_keys.recycle();
-        self.border_cache_handles.recycle();
-        self.segments.recycle();
-        self.segment_instances.recycle();
-        self.gradient_tiles.recycle();
+    pub fn recycle(&mut self, recycler: &mut Recycler) {
+        recycler.recycle_vec(&mut self.clip_mask_instances);
+        recycler.recycle_vec(&mut self.prim_info);
+        self.glyph_keys.recycle(recycler);
+        self.border_cache_handles.recycle(recycler);
+        self.segments.recycle(recycler);
+        self.segment_instances.recycle(recycler);
+        self.gradient_tiles.recycle(recycler);
         #[cfg(feature = "debug_renderer")]
-        recycle_vec(&mut self.debug_items);
+        recycler.recycle_vec(&mut self.debug_items);
     }
 
     pub fn begin_frame(&mut self) {
@@ -1997,6 +1999,29 @@ impl PrimitiveStore {
                         continue;
                     }
                 };
+
+                // When the debug display is enabled, paint a colored rectangle around each
+                // primitive.
+                #[cfg(feature = "debug_renderer")]
+                {
+                    if frame_context.debug_flags.contains(::api::DebugFlags::PRIMITIVE_DBG) {
+                        let debug_color = match prim_instance.kind {
+                            PrimitiveInstanceKind::Picture { .. } => debug_colors::GREEN,
+                            PrimitiveInstanceKind::TextRun { .. } => debug_colors::RED,
+                            PrimitiveInstanceKind::LineDecoration { .. } => debug_colors::PURPLE,
+                            PrimitiveInstanceKind::NormalBorder { .. } |
+                            PrimitiveInstanceKind::ImageBorder { .. } => debug_colors::ORANGE,
+                            PrimitiveInstanceKind::Rectangle { .. } => ColorF { r: 0.8, g: 0.8, b: 0.8, a: 0.5 },
+                            PrimitiveInstanceKind::YuvImage { .. } => debug_colors::BLUE,
+                            PrimitiveInstanceKind::Image { .. } => debug_colors::BLUE,
+                            PrimitiveInstanceKind::LinearGradient { .. } => debug_colors::PINK,
+                            PrimitiveInstanceKind::RadialGradient { .. } => debug_colors::PINK,
+                            PrimitiveInstanceKind::Clear { .. } => debug_colors::CYAN,
+                        };
+                        let debug_rect = clipped_world_rect * frame_context.device_pixel_scale;
+                        frame_state.scratch.push_debug_rect(debug_rect, debug_color);
+                    }
+                }
 
                 let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.prim_info.len() as u32);
 

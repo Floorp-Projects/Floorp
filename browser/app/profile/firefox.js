@@ -1297,6 +1297,12 @@ pref("browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", 
 pref("browser.newtabpage.activity-stream.asrouter.providers.cfr", "{\"id\":\"cfr\",\"enabled\":true,\"type\":\"local\",\"localProvider\":\"CFRMessageProvider\",\"frequency\":{\"custom\":[{\"period\":\"daily\",\"cap\":1}]}}");
 pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":\"snippets\",\"enabled\":true,\"type\":\"remote\",\"url\":\"https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/\",\"updateCycleInMs\":14400000}");
 
+// The pref controls if search hand-off is enabled for Activity Stream.
+#ifdef NIGHTLY_BUILD
+pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", true);
+#else
+pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
+#endif
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);

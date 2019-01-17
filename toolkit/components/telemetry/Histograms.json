@@ -1565,11 +1565,14 @@
     "n_buckets": 50,
     "description": "HTTP: requests per connection"
   },
-  "HTTP_KBREAD_PER_CONN": {
+  "HTTP_KBREAD_PER_CONN2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1520260],
     "kind": "exponential",
-    "high": 3000,
+    "high": 100000,
     "n_buckets": 50,
     "description": "HTTP: KB read per connection"
   },
@@ -2382,15 +2385,6 @@
     "n_values": 16,
     "description": "SSL Handshake Key Exchange Algorithm for resumed handshake (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
   },
-  "SSL_OBSERVED_END_ENTITY_CERTIFICATE_LIFETIME": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "55",
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "kind": "enumerated",
-    "n_values": 125,
-    "releaseChannelCollection": "opt-out",
-    "description": "The lifetime of accepted HTTPS server certificates, in weeks, up to 2 years. Bucket 105 is all end-entity HTTPS server certificates with a lifetime > 2 years."
-  },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -2511,12 +2505,14 @@
     "kind": "boolean",
     "description": "SPDY: Coalesce Succeeded"
   },
-  "SPDY_KBREAD_PER_CONN": {
+  "SPDY_KBREAD_PER_CONN2": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["necko@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1520260],
     "kind": "exponential",
-    "high": 3000,
+    "high": 100000,
     "n_buckets": 50,
     "description": "SPDY: KB read per connection"
   },

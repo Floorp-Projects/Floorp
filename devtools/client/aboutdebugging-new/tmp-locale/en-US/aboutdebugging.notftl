@@ -5,9 +5,16 @@
 ### These strings are used inside the about:debugging panel which is available
 ### by setting the preference `devtools.aboutdebugging.new-enabled` to true.
 
+# Display name of the runtime "This Firefox". Reused as the sidebar name for This Firefox
+# (about-debugging-sidebar-this-firefox.name). Not displayed elsewhere in the application
+# at the moment.
+# This should the same string as the part outside of the parentheses in toolbox.properties
+# toolbox.debugTargetInfo.runtimeLabel.thisFirefox. See 1520525.
+about-debugging-this-firefox-runtime-name = This Firefox
+
 # Sidebar heading for selecting the currently running instance of Firefox
 about-debugging-sidebar-this-firefox =
-  .name = This Firefox
+  .name = { about-debugging-this-firefox-runtime-name }
 
 # Sidebar heading for connecting to some remote source
 about-debugging-sidebar-connect =
@@ -248,14 +255,15 @@ about-debugging-connection-prompt-disable-button = Disable connection prompt
 
 # Page title of connect / runtime page
 # Part of "about-debugging-page-title" string defined below
-about-debugging-page-title-selected-page = 
-  { $selectedPage -> 
+about-debugging-page-title-selected-page =
+  { $selectedPage ->
      [connect] Connect
      *[runtime] Runtime
   }
 
 # Page title with the runtime displayed in the tab
-about-debugging-page-title-with-runtime = { -application-title } - { about-debugging-page-title-selected-page } / { $selectedRuntime }
+# { $selectedRuntimeId } is the id of the current runtime, such as "this-firefox", "localhost:6080", ...
+about-debugging-page-title-with-runtime = { -application-title } - { about-debugging-page-title-selected-page } / { $selectedRuntimeId }
 
 # Page title without the runtime displayed in the tab
 about-debugging-page-title = { -application-title } - { about-debugging-page-title-selected-page }

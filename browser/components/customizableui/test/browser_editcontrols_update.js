@@ -59,6 +59,7 @@ add_task(async function test_init() {
 // Test updating when the panel is open with the edit-controls on the panel.
 // Updates should occur.
 add_task(async function test_panelui_opened() {
+  document.commandDispatcher.unlock();
   gURLBar.focus();
   gURLBar.value = "test";
 

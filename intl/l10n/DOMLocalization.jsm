@@ -755,6 +755,12 @@ class DOMLocalization extends Localization {
       return undefined;
     }
 
+    // Remove elements from the pending list since
+    // their translations will get applied below.
+    for (let element of elements) {
+      this.pendingElements.delete(element);
+    }
+
     const keys = elements.map(this.getKeysForElement);
     const translations = await this.formatMessages(keys);
     return this.applyTranslations(elements, translations);

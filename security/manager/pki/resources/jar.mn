@@ -24,6 +24,7 @@ pippki.jar:
     content/pippki/downloadcert.xul          (content/downloadcert.xul)
     content/pippki/editcacert.js             (content/editcacert.js)
     content/pippki/editcacert.xul            (content/editcacert.xul)
+    content/pippki/exceptionDialog.css       (content/exceptionDialog.css)
     content/pippki/exceptionDialog.js        (content/exceptionDialog.js)
 *   content/pippki/exceptionDialog.xul       (content/exceptionDialog.xul)
     content/pippki/load_device.js            (content/load_device.js)

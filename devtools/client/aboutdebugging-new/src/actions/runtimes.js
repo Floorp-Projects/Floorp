@@ -13,6 +13,7 @@ const {
 } = require("../modules/runtimes-state-helper");
 const { isSupportedDebugTarget } = require("../modules/debug-target-support");
 
+const { l10n } = require("../modules/l10n");
 const { createClientForRuntime } = require("../modules/runtime-client-factory");
 
 const { remoteClientManager } =
@@ -30,6 +31,7 @@ const {
   REMOTE_RUNTIMES_UPDATED,
   RUNTIME_PREFERENCE,
   RUNTIMES,
+  THIS_FIREFOX_RUNTIME_CREATED,
   UNWATCH_RUNTIME_FAILURE,
   UNWATCH_RUNTIME_START,
   UNWATCH_RUNTIME_SUCCESS,
@@ -113,6 +115,18 @@ function connectRuntime(id) {
     } catch (e) {
       dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e });
     }
+  };
+}
+
+function createThisFirefoxRuntime() {
+  return (dispatch, getState) => {
+    const thisFirefoxRuntime = {
+      id: RUNTIMES.THIS_FIREFOX,
+      isUnknown: false,
+      name: l10n.getString("about-debugging-this-firefox-runtime-name"),
+      type: RUNTIMES.THIS_FIREFOX,
+    };
+    dispatch({ type: THIS_FIREFOX_RUNTIME_CREATED, runtime: thisFirefoxRuntime });
   };
 }
 
@@ -358,6 +372,7 @@ function removeRuntimeListeners() {
 
 module.exports = {
   connectRuntime,
+  createThisFirefoxRuntime,
   disconnectRuntime,
   removeRuntimeListeners,
   unwatchRuntime,

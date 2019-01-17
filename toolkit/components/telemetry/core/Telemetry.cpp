@@ -1543,12 +1543,12 @@ NS_DEFINE_NAMED_CID(NS_TELEMETRY_CID);
 
 const Module::CIDEntry kTelemetryCIDs[] = {
     {&kNS_TELEMETRY_CID, false, nullptr, nsITelemetryConstructor,
-     Module::ALLOW_IN_GPU_AND_VR_PROCESS},
+     Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS},
     {nullptr}};
 
 const Module::ContractIDEntry kTelemetryContracts[] = {
     {"@mozilla.org/base/telemetry;1", &kNS_TELEMETRY_CID,
-     Module::ALLOW_IN_GPU_AND_VR_PROCESS},
+     Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS},
     {nullptr}};
 
 const Module kTelemetryModule = {Module::kVersion,
@@ -1558,7 +1558,7 @@ const Module kTelemetryModule = {Module::kVersion,
                                  nullptr,
                                  nullptr,
                                  TelemetryImpl::ShutdownTelemetry,
-                                 Module::ALLOW_IN_GPU_AND_VR_PROCESS};
+                                 Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS};
 
 NS_IMETHODIMP
 TelemetryImpl::GetFileIOReports(JSContext* cx, JS::MutableHandleValue ret) {
