@@ -1,0 +1,10 @@
+[
+  {
+    "size": 66557,
+    "visibility": "public",
+    "digest": "d76080610277be4ce1a0a5983f88a7b028f8f347eeb14f9672542ae427d2bdd7f55bea62327651acb1b440df5a36ca6046382099b82676dbc3682f5299ececf6",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-tp6m-facebook.zip",
+    "unpack": true
+  }
+]
