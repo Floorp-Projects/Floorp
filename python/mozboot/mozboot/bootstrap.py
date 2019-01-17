@@ -380,9 +380,10 @@ class Bootstrapper(object):
             sys.exit(1)
 
         self.instance.state_dir = state_dir
-        self.instance.ensure_stylo_packages(state_dir, checkout_root)
         self.instance.ensure_node_packages(state_dir, checkout_root)
-        self.instance.ensure_clang_static_analysis_package(checkout_root)
+        if not self.instance.artifact_mode:
+            self.instance.ensure_stylo_packages(state_dir, checkout_root)
+            self.instance.ensure_clang_static_analysis_package(checkout_root)
 
     def check_telemetry_opt_in(self, state_dir):
         # We can't prompt the user.
@@ -410,6 +411,9 @@ class Bootstrapper(object):
                             '/'.join(APPLICATIONS.keys()))
         else:
             name, application = APPLICATIONS[self.choice]
+
+        self.instance.application = application
+        self.instance.artifact_mode = 'artifact_mode' in application
 
         if self.instance.no_system_changes:
             state_dir_available, state_dir = self.try_to_create_state_dir()
