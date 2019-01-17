@@ -243,6 +243,7 @@ class PrefRow {
   }
 }
 
+let gPrefObserverRegistered = false;
 let gPrefObserver = {
   observe(subject, topic, data) {
     let pref = gExistingPrefs.get(data) || gDeletedPrefs.get(data);
@@ -266,17 +267,21 @@ if (!Preferences.get("browser.aboutConfig.showWarning")) {
   // immediately to prevent flickering, but wait to filter the preferences until
   // the value of the textbox has been restored from previous sessions.
   document.addEventListener("DOMContentLoaded", loadPrefs, { once: true });
-  window.addEventListener("load", filterPrefs, { once: true });
+  window.addEventListener("load", () => {
+    if (document.getElementById("search").value) {
+      filterPrefs();
+    }
+  }, { once: true });
 }
 
 function onWarningButtonClick() {
   Services.prefs.setBoolPref("browser.aboutConfig.showWarning",
     document.getElementById("showWarningNextTime").checked);
   loadPrefs();
-  filterPrefs();
 }
 
 function loadPrefs() {
+  document.body.className = "config-background";
   [...document.styleSheets].find(s => s.title == "infop").disabled = true;
 
   document.body.textContent = "";
@@ -285,6 +290,8 @@ function loadPrefs() {
   search.id = "search";
   document.l10n.setAttributes(search, "about-config-search");
   document.body.appendChild(search);
+  search.focus();
+
   let prefs = document.createElement("table");
   prefs.id = "prefs";
   document.body.appendChild(prefs);
@@ -334,11 +341,6 @@ function loadPrefs() {
       pref.editButton.focus();
     }
   });
-
-  Services.prefs.addObserver("", gPrefObserver);
-  window.addEventListener("unload", () => {
-    Services.prefs.removeObserver("", gPrefObserver);
-  }, { once: true });
 }
 
 function filterPrefs() {
@@ -365,6 +367,19 @@ function filterPrefs() {
     fragment.appendChild(pref.element);
   }
   prefsElement.appendChild(fragment);
+
+  // We only start observing preference changes after the first search is done,
+  // so that newly added preferences won't appear while the page is still empty.
+  if (!gPrefObserverRegistered) {
+    gPrefObserverRegistered = true;
+    Services.prefs.addObserver("", gPrefObserver);
+    window.addEventListener("unload", () => {
+      Services.prefs.removeObserver("", gPrefObserver);
+    }, { once: true });
+  }
+
+  document.body.classList.toggle("config-warning",
+    location.href.split(":").every(l => gFilterString.includes(l)));
 }
 
 function prefHasDefaultValue(name) {
