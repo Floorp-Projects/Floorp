@@ -1,7 +1,7 @@
-    COMPONENT_M(MEMORY, nsMemoryImpl::Create, Module::ALLOW_IN_GPU_AND_VR_PROCESS)
-    COMPONENT_M(DEBUG,  nsDebugImpl::Create, Module::ALLOW_IN_GPU_PROCESS)
+    COMPONENT_M(MEMORY, nsMemoryImpl::Create, Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS)
+    COMPONENT_M(DEBUG,  nsDebugImpl::Create, Module::ALLOW_IN_GPU_AND_SOCKET_PROCESS)
 
-    COMPONENT_M(CATEGORYMANAGER, nsCategoryManager::Create, Module::ALLOW_IN_GPU_PROCESS)
+    COMPONENT_M(CATEGORYMANAGER, nsCategoryManager::Create, Module::ALLOW_IN_GPU_AND_SOCKET_PROCESS)
 
     COMPONENT(SCRIPTABLEINPUTSTREAM, nsScriptableInputStream::Create)
     COMPONENT(BINARYINPUTSTREAM, nsBinaryInputStreamConstructor)
@@ -13,9 +13,9 @@
 
     COMPONENT(ARRAY, nsArrayBase::XPCOMConstructor)
     COMPONENT(CONSOLESERVICE, nsConsoleServiceConstructor)
-    COMPONENT_M(OBSERVERSERVICE, nsObserverService::Create, Module::ALLOW_IN_GPU_AND_VR_PROCESS)
+    COMPONENT_M(OBSERVERSERVICE, nsObserverService::Create, Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS)
 
-    COMPONENT_M(TIMER, nsTimer::XPCOMConstructor, Module::ALLOW_IN_GPU_PROCESS)
+    COMPONENT_M(TIMER, nsTimer::XPCOMConstructor, Module::ALLOW_IN_GPU_AND_SOCKET_PROCESS)
 
 #define COMPONENT_SUPPORTS(TYPE, Type)                                         \
   COMPONENT(SUPPORTS_##TYPE, nsSupports##Type##Constructor)
@@ -63,7 +63,7 @@
 #endif
 
     COMPONENT(SYSTEMINFO, nsSystemInfoConstructor)
-    COMPONENT_M(MEMORY_REPORTER_MANAGER, nsMemoryReporterManagerConstructor, Module::ALLOW_IN_GPU_PROCESS)
+    COMPONENT_M(MEMORY_REPORTER_MANAGER, nsMemoryReporterManagerConstructor, Module::ALLOW_IN_GPU_AND_SOCKET_PROCESS)
     COMPONENT(MEMORY_INFO_DUMPER, nsMemoryInfoDumperConstructor)
     COMPONENT(IOUTIL, nsIOUtilConstructor)
     COMPONENT(MESSAGE_LOOP, nsMessageLoopConstructor)

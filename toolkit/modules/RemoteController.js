@@ -83,6 +83,10 @@ RemoteController.prototype = {
       this._supportedCommands[aDisabledCommands[c]] = false;
     }
 
+    // Don't update anything if we're not the active element
+    if (this._browser != this._browser.ownerDocument.activeElement) {
+      return;
+    }
     this._browser.ownerGlobal.updateCommands(aAction);
   },
 };

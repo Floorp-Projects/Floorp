@@ -698,7 +698,7 @@ class Marionette(object):
             attempt will be aborted.
         """
         if timeout is None:
-            timeout = self.DEFAULT_STARTUP_TIMEOUT
+            timeout = self.startup_timeout
 
         runner = None
         if self.instance is not None:

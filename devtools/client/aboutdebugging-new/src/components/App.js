@@ -38,7 +38,7 @@ class App extends PureComponent {
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: PropTypes.string,
-      selectedRuntime: PropTypes.string,
+      selectedRuntimeId: PropTypes.string,
       usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       wifiEnabled: PropTypes.bool.isRequired,
     };
@@ -49,12 +49,12 @@ class App extends PureComponent {
   }
 
   updateTitle() {
-    const { getString, selectedPage, selectedRuntime } = this.props;
+    const { getString, selectedPage, selectedRuntimeId } = this.props;
 
-    const runtimeTitle = selectedRuntime ?
+    const runtimeTitle = selectedRuntimeId ?
                           getString(
                             "about-debugging-page-title-with-runtime",
-                            { selectedPage, selectedRuntime }
+                            { selectedPage, selectedRuntimeId }
                           )
                           : getString(
                             "about-debugging-page-title",
@@ -159,7 +159,7 @@ class App extends PureComponent {
       isScanningUsb,
       networkRuntimes,
       selectedPage,
-      selectedRuntime,
+      selectedRuntimeId,
       usbRuntimes,
     } = this.props;
 
@@ -174,7 +174,7 @@ class App extends PureComponent {
           isScanningUsb,
           networkRuntimes,
           selectedPage,
-          selectedRuntime,
+          selectedRuntimeId,
           usbRuntimes,
         }),
         dom.main({ className: "app__content" }, this.renderRoutes())
@@ -191,7 +191,7 @@ const mapStateToProps = state => {
     networkLocations: state.ui.networkLocations,
     networkRuntimes: state.runtimes.networkRuntimes,
     selectedPage: state.ui.selectedPage,
-    selectedRuntime: state.ui.selectedRuntime,
+    selectedRuntimeId: state.runtimes.selectedRuntimeId,
     usbRuntimes: state.runtimes.usbRuntimes,
     wifiEnabled: state.ui.wifiEnabled,
   };

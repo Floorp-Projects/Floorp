@@ -682,10 +682,6 @@ void PluginModuleChromeParent::WriteExtraDataForMinidump() {
   if (mCrashReporter) {
 #ifdef XP_WIN
     if (mPluginCpuUsageOnHang.Length() > 0) {
-      mCrashReporter->AddAnnotation(
-          CrashReporter::Annotation::NumberOfProcessors,
-          PR_GetNumberOfProcessors());
-
       nsCString cpuUsageStr;
       cpuUsageStr.AppendFloat(std::ceil(mPluginCpuUsageOnHang[0] * 100) / 100);
       mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginCpuUsage,

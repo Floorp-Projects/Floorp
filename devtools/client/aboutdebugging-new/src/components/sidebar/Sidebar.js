@@ -33,7 +33,7 @@ class Sidebar extends PureComponent {
       isScanningUsb: PropTypes.bool.isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: PropTypes.string,
-      selectedRuntime: PropTypes.string,
+      selectedRuntimeId: PropTypes.string,
       usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
     };
   }
@@ -88,13 +88,13 @@ class Sidebar extends PureComponent {
   }
 
   renderSidebarItems(icon, runtimes) {
-    const { dispatch, selectedPage, selectedRuntime } = this.props;
+    const { dispatch, selectedPage, selectedRuntimeId } = this.props;
 
     return runtimes.map(runtime => {
       const keyId = `${runtime.type}-${runtime.id}`;
       const runtimeHasDetails = !!runtime.runtimeDetails;
       const isSelected = selectedPage === PAGE_TYPES.RUNTIME &&
-        runtime.id === selectedRuntime;
+        runtime.id === selectedRuntimeId;
 
       return SidebarRuntimeItem({
         deviceName: runtime.extra.deviceName,
@@ -111,7 +111,7 @@ class Sidebar extends PureComponent {
   }
 
   render() {
-    const { dispatch, selectedPage, selectedRuntime, isScanningUsb } = this.props;
+    const { dispatch, selectedPage, selectedRuntimeId, isScanningUsb } = this.props;
 
     return dom.aside(
       {
@@ -124,7 +124,7 @@ class Sidebar extends PureComponent {
           SidebarFixedItem({
             icon: FIREFOX_ICON,
             isSelected: PAGE_TYPES.RUNTIME === selectedPage &&
-              selectedRuntime === RUNTIMES.THIS_FIREFOX,
+              selectedRuntimeId === RUNTIMES.THIS_FIREFOX,
             key: RUNTIMES.THIS_FIREFOX,
             name: "This Firefox",
             to: `/runtime/${RUNTIMES.THIS_FIREFOX}`,

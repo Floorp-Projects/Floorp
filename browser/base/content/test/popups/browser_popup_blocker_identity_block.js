@@ -127,6 +127,7 @@ add_task(async function check_permission_state_change() {
   // Open identity popup and change permission state to allow.
   await openIdentityPopup();
   let menulist = document.getElementById("identity-popup-popup-menulist");
+  menulist.menupopup.openPopup(); // Open the allow/block menu
   let menuitem = menulist.getElementsByTagName("menuitem")[0];
   menuitem.click();
   await closeIdentityPopup();
@@ -160,6 +161,7 @@ add_task(async function check_permission_state_change() {
   // Open identity popup and change permission state to block.
   await openIdentityPopup();
   menulist = document.getElementById("identity-popup-popup-menulist");
+  menulist.menupopup.openPopup(); // Open the allow/block menu
   menuitem = menulist.getElementsByTagName("menuitem")[1];
   menuitem.click();
   await closeIdentityPopup();

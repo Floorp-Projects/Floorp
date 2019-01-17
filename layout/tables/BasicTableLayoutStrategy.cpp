@@ -123,9 +123,9 @@ static CellISizeInfo GetISizeInfo(gfxContext *aRenderingContext,
 
   const nsStyleCoord &iSize = stylePos->ISize(aWM);
   nsStyleUnit unit = iSize.GetUnit();
-  // NOTE: We're ignoring calc() units with percentages here, for lack of a
-  // sensible idea for what to do with them.  This means calc() with
-  // percentages is basically handled like 'auto' for table cells and
+  // NOTE: We're ignoring calc() units with both lengths and percentages here,
+  // for lack of a sensible idea for what to do with them.  This means calc()
+  // with percentages is basically handled like 'auto' for table cells and
   // columns.
   if (iSize.ConvertsToLength()) {
     hasSpecifiedISize = true;
@@ -145,8 +145,8 @@ static CellISizeInfo GetISizeInfo(gfxContext *aRenderingContext,
       minCoord = c;
     }
     prefCoord = std::max(c, minCoord);
-  } else if (unit == eStyleUnit_Percent) {
-    prefPercent = iSize.GetPercentValue();
+  } else if (iSize.ConvertsToPercent()) {
+    prefPercent = iSize.ToPercent();
   } else if (unit == eStyleUnit_Enumerated && aIsCell) {
     switch (iSize.GetIntValue()) {
       case NS_STYLE_WIDTH_MAX_CONTENT:
@@ -181,13 +181,12 @@ static CellISizeInfo GetISizeInfo(gfxContext *aRenderingContext,
     nscoord c = aFrame->ComputeISizeValue(aRenderingContext, 0, 0, 0, maxISize);
     minCoord = std::min(c, minCoord);
     prefCoord = std::min(c, prefCoord);
-  } else if (unit == eStyleUnit_Percent) {
-    float p = stylePos->MaxISize(aWM).GetPercentValue();
+  } else if (maxISize.ConvertsToPercent()) {
+    float p = maxISize.ToPercent();
     if (p < prefPercent) {
       prefPercent = p;
     }
   }
-  // treat calc() with percentages on max-inline-size just like 'none'.
 
   nsStyleCoord minISize(stylePos->MinISize(aWM));
   if (minISize.GetUnit() == eStyleUnit_Enumerated) {
@@ -203,13 +202,12 @@ static CellISizeInfo GetISizeInfo(gfxContext *aRenderingContext,
     nscoord c = aFrame->ComputeISizeValue(aRenderingContext, 0, 0, 0, minISize);
     minCoord = std::max(c, minCoord);
     prefCoord = std::max(c, prefCoord);
-  } else if (unit == eStyleUnit_Percent) {
-    float p = stylePos->MinISize(aWM).GetPercentValue();
+  } else if (minISize.ConvertsToPercent()) {
+    float p = minISize.ToPercent();
     if (p > prefPercent) {
       prefPercent = p;
     }
   }
-  // treat calc() with percentages on min-inline-size just like '0'.
 
   // XXX Should col frame have border/padding considered?
   if (aIsCell) {

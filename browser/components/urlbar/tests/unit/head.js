@@ -42,10 +42,11 @@ Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", 
  */
 function createContext(searchString = "foo", properties = {}) {
   let context = new QueryContext({
-    searchString,
+    enableAutofill: UrlbarPrefs.get("autoFill"),
+    isPrivate: true,
     lastKey: searchString ? searchString[searchString.length - 1] : "",
     maxResults: UrlbarPrefs.get("maxRichResults"),
-    isPrivate: true,
+    searchString,
   });
   return Object.assign(context, properties);
 }

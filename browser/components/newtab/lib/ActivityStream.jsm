@@ -193,10 +193,6 @@ const PREFS_CONFIG = new Map([
     title: "A comma-delimited list of search shortcuts that have previously been pinned",
     value: "",
   }],
-  ["improvesearch.handoffToAwesomebar", {
-    title: "Should the search box handoff to the Awesomebar?",
-    value: true,
-  }],
   ["asrouter.devtoolsEnabled", {
     title: "Are the asrouter devtools enabled?",
     value: false,

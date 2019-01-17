@@ -14,6 +14,7 @@ were loaded into the Firefox process.
       "environment": { ... },
       "payload": {
         "structVersion": <number>, // See below
+        "xulLoadDurationMS": <number>, // Time spent loading xul.dll, in milliseconds (introduced in Firefox 66)
         "errorModules": <number>, // Number of modules that failed to be evaluated
         "events": [ ... ]
         "combinedStacks": { ... },
@@ -47,6 +48,7 @@ A maximum of 50 events are captured.
         {
           "moduleName": <string>, // See below
           "loaderName": <string>, // See below
+          "loadDurationMS" : <number>, // Optional. Time spent loading this module, in milliseconds (introduced in Firefox 66)
           "baseAddress": <string>, // Base address where the module was loaded, e.g. "0x7ffc01260000"
           "fileVersion": <string>, // The module file version, e.g. "1.10.2.6502"
           "moduleTrustFlags": <unsigned integer> // See below
@@ -85,10 +87,13 @@ This is a bitfield indicating whether various attributes apply to the module.
 * ``2`` if the module is digitally signed by Microsoft
 * ``4`` if the module's version info indicates it's a Microsoft module
 * ``8`` if the module is located in the Firefox application directory
-* ``16`` if the module has the same location and version information as the Firefox executable
-* ``32`` if the module is located in the system directory
-* ``64`` if the module is a known keyboard layout DLL
-* ``128`` if the module is located in the Windows Side-by-side directory
+* ``0x10`` if the module has the same location and version information as the Firefox executable
+* ``0x20`` if the module is located in the system directory
+* ``0x40`` if the module is a known keyboard layout DLL
+* ``0x80`` if the module is an internally-recognized JIT module
+* ``0x100`` if the module is located in the Windows Side-by-side directory (introduced in Firefox 66)
+* ``0x200`` if the module is the XPCOM module, xul.dll (introduced in Firefox 66)
+* ``0x400`` if the module is located in the SysWOW64 directory (introduced in Firefox 66)
 
 payload.combinedStacks
 ----------------------
@@ -125,3 +130,12 @@ Notes
 * This ping is sent once daily.
 * Only events occurring on the main browser process are recorded.
 * If there are no events to report, this ping is not sent.
+
+Version History
+~~~~~~~~~~~~~~~
+- Firefox 65: Initial support (`bug 1435827 <https://bugzilla.mozilla.org/show_bug.cgi?id=1435827>`_).
+- Firefox 66:
+
+   - Added Windows Side-by-side directory trust flag (`bug 1514694 <https://bugzilla.mozilla.org/show_bug.cgi?id=1514694>`_).
+   - Added module load times (``xulLoadDurationMS``, ``loadDurationMS``) and xul.dll trust flag (`bug 1518490 <https://bugzilla.mozilla.org/show_bug.cgi?id=1518490>`_).
+   - Added SysWOW64 trust flag (`bug 1518798 <https://bugzilla.mozilla.org/show_bug.cgi?id=1518798>`_).

@@ -5,46 +5,57 @@
 
 add_task(function test_constructor() {
   Assert.throws(() => new QueryContext(),
-    /Missing or empty searchString provided to QueryContext/,
+    /Missing or empty enableAutofill provided to QueryContext/,
     "Should throw with no arguments");
 
   Assert.throws(() => new QueryContext({
-    searchString: "foo",
-    maxResults: 1,
+    enableAutofill: true,
     isPrivate: false,
+    maxResults: 1,
+    searchString: "foo",
   }), /Missing or empty lastKey provided to QueryContext/,
     "Should throw with a missing lastKey parameter");
 
   Assert.throws(() => new QueryContext({
-    searchString: "foo",
-    lastKey: "b",
+    enableAutofill: true,
     isPrivate: false,
+    lastKey: "b",
+    searchString: "foo",
   }), /Missing or empty maxResults provided to QueryContext/,
     "Should throw with a missing maxResults parameter");
 
   Assert.throws(() => new QueryContext({
-    searchString: "foo",
+    enableAutofill: true,
     lastKey: "b",
     maxResults: 1,
+    searchString: "foo",
   }), /Missing or empty isPrivate provided to QueryContext/,
     "Should throw with a missing isPrivate parameter");
 
-  let qc = new QueryContext({
-    searchString: "foo",
+  Assert.throws(() => new QueryContext({
+    isPrivate: false,
     lastKey: "b",
     maxResults: 1,
+    searchString: "foo",
+  }), /Missing or empty enableAutofill provided to QueryContext/,
+    "Should throw with a missing enableAutofill parameter");
+
+  let qc = new QueryContext({
+    enableAutofill: false,
     isPrivate: true,
-    autoFill: false,
+    lastKey: "b",
+    maxResults: 1,
+    searchString: "foo",
   });
 
-  Assert.equal(qc.searchString, "foo",
-    "Should have saved the correct value for searchString");
+  Assert.strictEqual(qc.enableAutofill, false,
+    "Should have saved the correct value for enableAutofill");
+  Assert.strictEqual(qc.isPrivate, true,
+    "Should have saved the correct value for isPrivate");
   Assert.equal(qc.lastKey, "b",
     "Should have saved the correct value for lastKey");
   Assert.equal(qc.maxResults, 1,
     "Should have saved the correct value for maxResults");
-  Assert.strictEqual(qc.isPrivate, true,
-    "Should have saved the correct value for isPrivate");
-  Assert.strictEqual(qc.autoFill, false,
-    "Should have saved the correct value for autoFill");
+  Assert.equal(qc.searchString, "foo",
+    "Should have saved the correct value for searchString");
 });

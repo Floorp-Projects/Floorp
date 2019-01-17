@@ -340,7 +340,7 @@ class OSXBootstrapper(BaseBootstrapper):
             'mercurial',
             'node',
             'python',
-            'python3',
+            'python@2',
             'terminal-notifier',
             'watchman',
         ]

@@ -9,6 +9,7 @@
 
 #include "mozilla/CombinedStacks.h"
 #include "mozilla/glue/WindowsDllServices.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/ModuleEvaluator_windows.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/UniquePtr.h"
@@ -30,6 +31,7 @@ class UntrustedModuleLoadTelemetryData {
   Vector<ModuleLoadEvent, 0, InfallibleAllocPolicy> mEvents;
   Telemetry::CombinedStacks mStacks;
   int mErrorModules = 0;
+  Maybe<double> mXULLoadDurationMS;
 };
 
 class UntrustedModulesManager;

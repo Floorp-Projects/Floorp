@@ -6,7 +6,9 @@ DevToolsModules(
   'accessibility-parent.js',
   'accessibility.js',
   'accessible.js',
+  'contrast.js',
   'walker.js',
+  'worker.js',
 )
 
 with Files('**'):

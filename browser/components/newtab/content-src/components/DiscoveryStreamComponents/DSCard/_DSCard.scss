@@ -1,9 +1,24 @@
 .ds-card {
-  img {
+  border: 5px solid transparent;
+
+  &:hover {
+    border: 5px solid $grey-30;
+    box-shadow: 0 1px 4px $grey-30;
+    border-radius: 4px;
+  }
+
+  .img-wrapper {
     width: 100%;
     border: 0.5px solid $black-10;
-    box-sizing: border-box;
     border-radius: 4px;
+    margin: 0 0 12px;
+  }
+
+  .img {
+    height: 0;
+    padding-top: 50%; // 2:1 aspect ratio
+    background-repeat: no-repeat;
+    background-size: cover;
   }
 
   .meta {
@@ -14,11 +29,20 @@
     line-height: 24px;
     font-size: 17px;
     color: $grey-90;
+
+    &:hover {
+      color: $blue-60;
+    }
+
+    &:active {
+      color: $blue-70;
+    }
   }
 
   p {
     font-size: 13px;
     line-height: 20px;
     color: $grey-50;
+    margin: 8px 0;
   }
 }
