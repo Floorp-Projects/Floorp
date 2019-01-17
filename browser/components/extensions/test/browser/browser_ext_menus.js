@@ -165,15 +165,6 @@ add_task(async function test_hiddenPageActionContextMenu() {
 });
 
 add_task(async function test_bookmarkContextMenu() {
-  async function showBookmarksToolbar(visible = true) {
-    let bt = document.getElementById("PersonalToolbar");
-    let transitionPromise =
-      BrowserTestUtils.waitForEvent(bt, "transitionend",
-                                    e => e.propertyName == "max-height");
-    setToolbarVisibility(bt, visible);
-    await transitionPromise;
-  }
-
   const ext = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["menus", "bookmarks"],
@@ -188,7 +179,7 @@ add_task(async function test_bookmarkContextMenu() {
     },
   });
 
-  await showBookmarksToolbar();
+  await toggleBookmarksToolbar(true);
   await ext.startup();
   await ext.awaitMessage("ready");
 
@@ -201,7 +192,7 @@ add_task(async function test_bookmarkContextMenu() {
 
   closeChromeContextMenu("placesContext", item);
   await ext.unload();
-  await showBookmarksToolbar(false);
+  await toggleBookmarksToolbar(false);
 });
 
 add_task(async function test_tabContextMenu() {
