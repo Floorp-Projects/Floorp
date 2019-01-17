@@ -29,9 +29,9 @@ js_option('--with-android-version',
           default=min_android_version)
 
 
-@depends('--with-android-version', min_android_version, '--help')
+@depends('--with-android-version', min_android_version)
 @imports(_from='__builtin__', _import='ValueError')
-def android_version(value, min_version, _):
+def android_version(value, min_version):
     if not value:
         # Someone has passed --without-android-version.
         die('--with-android-version cannot be disabled.')
@@ -51,10 +51,8 @@ def android_version(value, min_version, _):
 add_old_configure_assignment('android_version', android_version)
 
 
-@depends('--with-android-ndk', build_project, '--help')
-def ndk(value, build_project, help):
-    if help:
-        return
+@depends('--with-android-ndk', build_project)
+def ndk(value, build_project):
     if build_project == 'mobile/android' and not value:
         die('You must specify --with-android-ndk=/path/to/ndk when '
             'building mobile/android')
@@ -112,10 +110,10 @@ def ndk_minor_version(ndk_version):
 set_config('ANDROID_NDK_MINOR_VERSION', ndk_minor_version)
 
 
-@depends(target, android_version, ndk, '--help')
+@depends(target, android_version, ndk)
 @checking('for android platform directory')
 @imports(_from='os.path', _import='isdir')
-def android_platform(target, android_version, ndk, _):
+def android_platform(target, android_version, ndk):
     if target.os != 'Android':
         return
 
@@ -148,10 +146,10 @@ def android_platform(target, android_version, ndk, _):
 add_old_configure_assignment('android_platform', android_platform)
 
 
-@depends(android_platform, ndk, target, '--help')
+@depends(android_platform, ndk, target)
 @checking('for android sysroot directory')
 @imports(_from='os.path', _import='isdir')
-def android_sysroot(android_platform, ndk, target, _):
+def android_sysroot(android_platform, ndk, target):
     if target.os != 'Android':
         return
 
@@ -174,10 +172,10 @@ def android_sysroot(android_platform, ndk, target, _):
 add_old_configure_assignment('android_sysroot', android_sysroot)
 
 
-@depends(android_platform, ndk, target, '--help')
+@depends(android_platform, ndk, target)
 @checking('for android system directory')
 @imports(_from='os.path', _import='isdir')
-def android_system(android_platform, ndk, target, _):
+def android_system(android_platform, ndk, target):
     if target.os != 'Android':
         return
 
@@ -198,11 +196,11 @@ def android_system(android_platform, ndk, target, _):
 add_old_configure_assignment('android_system', android_system)
 
 
-@depends(target, host, ndk, '--with-android-toolchain', '--help')
+@depends(target, host, ndk, '--with-android-toolchain')
 @checking('for the Android toolchain directory', lambda x: x or 'not found')
 @imports(_from='os.path', _import='isdir')
 @imports(_from='mozbuild.shellutil', _import='quote')
-def android_toolchain(target, host, ndk, toolchain, _):
+def android_toolchain(target, host, ndk, toolchain):
     if not ndk:
         return
     if toolchain:
@@ -251,9 +249,9 @@ js_option(env='STLPORT_CPPFLAGS',
           help='Options compiler should pass for standard C++ library')
 
 
-@depends('STLPORT_CPPFLAGS', ndk, '--help')
+@depends('STLPORT_CPPFLAGS', ndk)
 @imports(_from='os.path', _import='isdir')
-def stlport_cppflags(value, ndk, _):
+def stlport_cppflags(value, ndk):
     if value and len(value):
         return value.split()
     if not ndk:
@@ -317,9 +315,9 @@ imply_option('--with-toolchain-prefix', android_toolchain_prefix,
 
 
 @depends(extra_toolchain_flags, android_toolchain,
-         android_toolchain_prefix_base, '--help')
+         android_toolchain_prefix_base)
 @imports(_from='os.path', _import='isdir')
-def bindgen_cflags_android(toolchain_flags, toolchain, toolchain_prefix, _):
+def bindgen_cflags_android(toolchain_flags, toolchain, toolchain_prefix):
     if not toolchain_flags:
         return
 
