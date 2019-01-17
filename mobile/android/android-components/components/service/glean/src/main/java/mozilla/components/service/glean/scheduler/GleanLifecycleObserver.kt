@@ -27,7 +27,7 @@ internal class GleanLifecycleObserver : LifecycleObserver {
     }
 
     /**
-     * Updates the baseline.sessions metric when entering the foreground.
+     * Updates the baseline.duration metric when entering the foreground.
      * We use ON_RESUME here because there are a number of paths by which
      * the application can re-enter the foreground, e.g. from a cold start
      * or warm start, etc., all of which eventually call ON_RESUME.
@@ -36,7 +36,6 @@ internal class GleanLifecycleObserver : LifecycleObserver {
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     fun onEnterForeground() {
-        Baseline.sessions.add()
         // Note that this is sending the length of the last foreground session
         // because it belongs to the baseline ping and that ping is sent every
         // time the app goes to background.

@@ -7,7 +7,6 @@ the following fields:
 
 | Field name | Type | Description |
 |---|---|---|
-| `sessions` | Counter | The number of foreground sessions since the last upload |
 | `duration` | Timespan | The duration, in seconds, of the last foreground session |
 | `os` | String | The name of the operating system (e.g. "linux", "android", "ios") |
 | `os_version` | String | The version of the operating system |

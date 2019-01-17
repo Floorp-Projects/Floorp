@@ -8,19 +8,6 @@ baseline:
   ## TODO: Some metrics are commented out below until we implement them as part
   ## of 1497894 and its dependent bugs
 
-  sessions:
-    type: counter
-    description: |
-      The number of foreground sessions since the last ping upload.
-    send_in_pings:
-      - baseline
-    bugs:
-      - 1497894
-    reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
-    notification_emails:
-      - telemetry-client-dev@mozilla.com
-
   duration:
     type: timespan
     description: |

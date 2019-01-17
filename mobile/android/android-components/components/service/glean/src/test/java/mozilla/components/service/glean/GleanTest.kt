@@ -15,7 +15,6 @@ import mozilla.components.service.glean.net.HttpPingUploader
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
-import mozilla.components.service.glean.metrics.Baseline
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -236,15 +235,6 @@ class GleanTest {
                 assertNotNull(baselineStringMetrics.get(metric))
             }
 
-            val expectedBaselineCounterMetrics = arrayOf(
-                "baseline.sessions"
-            )
-            val baselineCounterMetrics = baselineMetricsObject.getJSONObject("counter")!!
-            assertEquals(expectedBaselineCounterMetrics.size, baselineCounterMetrics.length())
-            for (metric in expectedBaselineCounterMetrics) {
-                assertNotNull(baselineCounterMetrics.get(metric))
-            }
-
             val baselineTimespanMetrics = baselineMetricsObject.getJSONObject("timespan")!!
             assertEquals(1, baselineTimespanMetrics.length())
             assertNotNull(baselineTimespanMetrics.get("baseline.duration"))
@@ -353,8 +343,6 @@ class GleanTest {
         Glean.httpPingUploader = HttpPingUploader(testConfig)
 
         try {
-            Baseline.sessions.add()
-
             Glean.handleEvent(Glean.PingEvent.Background)
 
             val requests: MutableMap<String, String> = mutableMapOf()
