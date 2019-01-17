@@ -11,7 +11,10 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
-nsTArrayHeader sEmptyTArrayHeader = {0, 0, 0};
+// Ensure this is sufficiently aligned so that Elements() and co don't create
+// unaligned pointers, or slices with unaligned pointers for empty arrays, see
+// https://github.com/servo/servo/issues/22613.
+alignas(8) nsTArrayHeader sEmptyTArrayHeader = {0, 0, 0};
 
 bool IsTwiceTheRequiredBytesRepresentableAsUint32(size_t aCapacity,
                                                   size_t aElemSize) {

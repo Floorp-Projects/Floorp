@@ -9,20 +9,30 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function test_load_warningpage() {
-  await AboutConfigTest.withNewTab(async function() {
-    // Test that the warning page is presented:
-    Assert.equal(this.document.getElementsByTagName("button").length, 1);
-    Assert.ok(!this.document.getElementById("search"));
-    Assert.ok(!this.document.getElementById("prefs"));
+add_task(async function test_showWarningNextTime() {
+  for (let test of [
+    { expectWarningPage: true, disableShowWarningNextTime: false },
+    { expectWarningPage: true, disableShowWarningNextTime: true },
+    { expectWarningPage: false },
+  ]) {
+    await AboutConfigTest.withNewTab(async function() {
+      if (test.expectWarningPage) {
+        this.assertWarningPage(true);
+        Assert.ok(this.document.getElementById("showWarningNextTime").checked);
+        if (test.disableShowWarningNextTime) {
+          this.document.getElementById("showWarningNextTime").click();
+        }
+        this.bypassWarningButton.click();
+      }
 
-    // Disable checkbox and reload.
-    this.document.getElementById("showWarningNextTime").click();
-    this.document.querySelector("button").click();
-  }, { dontBypassWarning: true });
+      // No results are shown after the warning page is dismissed or bypassed.
+      this.assertWarningPage(false);
+      Assert.ok(!this.prefsTable.firstElementChild);
+      Assert.equal(this.document.activeElement, this.searchInput);
 
-  await AboutConfigTest.withNewTab(async function() {
-    Assert.ok(this.document.getElementById("search"));
-    Assert.ok(this.document.getElementById("prefs"));
-  }, { dontBypassWarning: true });
+      // Pressing ESC shows all results immediately.
+      EventUtils.sendKey("escape");
+      Assert.ok(this.prefsTable.firstElementChild);
+    }, { dontBypassWarning: true });
+  }
 });

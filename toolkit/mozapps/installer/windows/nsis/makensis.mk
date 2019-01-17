@@ -102,6 +102,17 @@ uninstaller:: $(CONFIG_DIR)/helper.exe
 
 ifdef MOZ_MAINTENANCE_SERVICE
 maintenanceservice_installer::
+	$(RM) -r $(CONFIG_DIR)
+	$(MKDIR) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/,$(BRANDING_FILES)) $(CONFIG_DIR)
+	$(call py_action,preprocessor,-Fsubstitution $(DEFINES) $(ACDEFINES) \
+	  $(srcdir)/nsis/defines.nsi.in -o $(CONFIG_DIR)/defines.nsi)
+	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+	  --preprocess-locale $(topsrcdir) \
+	  $(PPL_LOCALE_ARGS) $(AB_CD) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS)) $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && $(MAKENSISU) $(MAKENSISU_FLAGS) maintenanceservice_installer.nsi
 	$(NSINSTALL) -D $(DIST)/bin/
 	cp $(CONFIG_DIR)/maintenanceservice_installer.exe $(DIST)/bin
