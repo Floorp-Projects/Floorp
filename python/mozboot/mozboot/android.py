@@ -175,7 +175,7 @@ def ensure_android(os_name, artifact_mode=False, ndk_only=False, no_interactive=
     # ~/.mozbuild/{android-sdk-$OS_NAME, android-ndk-$VER}.
     mozbuild_path, sdk_path, ndk_path = get_paths(os_name)
     os_tag = 'darwin' if os_name == 'macosx' else os_name
-    sdk_url = 'https://dl.google.com/android/repository/sdk-tools-{0}-3859397.zip'.format(os_tag)
+    sdk_url = 'https://dl.google.com/android/repository/sdk-tools-{0}-4333796.zip'.format(os_tag)
     ndk_url = android_ndk_url(os_name)
 
     ensure_android_sdk_and_ndk(mozbuild_path, os_name,
