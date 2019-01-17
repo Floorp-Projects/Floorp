@@ -5,7 +5,7 @@
 // @flow
 
 import type { Position } from "../../types";
-import { parseScript, parseConsoleScript } from "./utils/ast";
+import { parseScript } from "./utils/ast";
 import { buildScopeList } from "./getScopes";
 import generate from "@babel/generator";
 import * as t from "@babel/types";
@@ -36,11 +36,11 @@ function locationKey(start: Position): string {
 
 export default function mapOriginalExpression(
   expression: string,
+  ast: ?Object,
   mappings: {
     [string]: string | null
   }
 ): string {
-  const ast = parseConsoleScript(expression);
   const scopes = buildScopeList(ast, "");
   let shouldUpdate = false;
 

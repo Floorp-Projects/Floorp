@@ -9,11 +9,13 @@ import { sortBy } from "lodash";
 import { getBreakpoint } from "../../selectors";
 import assert from "../assert";
 import { features } from "../prefs";
+import { getSelectedLocation } from "../source-maps";
+import { isGenerated } from "../source";
 
 export { getASTLocation, findScopeByName } from "./astBreakpointLocation";
 
-import type { FormattedBreakpoint } from "../../selectors/breakpointSources";
 import type {
+  Source,
   SourceLocation,
   PendingLocation,
   Breakpoint,
@@ -166,7 +168,7 @@ export function createXHRBreakpoint(
     method,
     disabled: false,
     loading: false,
-    text: `URL contains "${path}"`
+    text: L10N.getFormatStr("xhrBreakpoints.item.label", path)
   };
 
   return { ...properties, ...overrides };
@@ -193,8 +195,27 @@ export function createPendingBreakpoint(bp: Breakpoint) {
   };
 }
 
-export function sortFormattedBreakpoints(breakpoints: FormattedBreakpoint[]) {
-  return _sortBreakpoints(breakpoints, "selectedLocation");
+export function getSelectedText(
+  breakpoint: Breakpoint,
+  selectedSource: Source
+) {
+  return selectedSource && isGenerated(selectedSource)
+    ? breakpoint.text
+    : breakpoint.originalText;
+}
+
+export function sortSelectedBreakpoints(
+  breakpoints: Breakpoint[],
+  selectedSource: Source
+): Breakpoint[] {
+  return sortBy(breakpoints, [
+    // Priority: line number, undefined column, column number
+    bp => getSelectedLocation(bp, selectedSource).line,
+    bp => {
+      const location = getSelectedLocation(bp, selectedSource);
+      return location.column === undefined || location.column;
+    }
+  ]);
 }
 
 export function sortBreakpoints(breakpoints: Breakpoint[]) {

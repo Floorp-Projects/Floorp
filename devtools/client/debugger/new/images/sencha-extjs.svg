@@ -1,0 +1,48 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   version="1.1"
+   id="svg2"
+   viewBox="0 0 34 34"
+   height="34"
+   width="34">
+  <defs
+     id="defs4">
+    <linearGradient
+       id="linearGradient4275">
+      <stop
+         id="stop4277"
+         offset="0"
+         style="stop-color:#006e00;stop-opacity:1" />
+      <stop
+         style="stop-color:#00cc00;stop-opacity:1;"
+         offset="0.55349338"
+         id="stop4283" />
+      <stop
+         id="stop4279"
+         offset="1"
+         style="stop-color:#eeff2a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient
+       gradientTransform="matrix(0.03267513,0,0,0.03267513,5.555801,1018.6805)"
+       gradientUnits="userSpaceOnUse"
+       y2="275.13159"
+       x2="162.84953"
+       y1="823.703"
+       x1="555.89331"
+       id="linearGradient4281"
+       xlink:href="#linearGradient4275" />
+  </defs>
+  <g
+     transform="translate(0,-1018.3622)"
+     id="layer1">
+    <path
+       id="path4136"
+       d="m 13.661978,1019.0545 c -9.6447445,1.1926 -10.316754,13.2244 -4.2596149,18.1959 6.0571409,4.9714 13.9697969,9.3171 10.7466029,14.4295 9.372821,-1.0092 10.165143,-10.5469 5.793842,-15.3419 -4.371301,-4.7949 -17.4582341,-10.442 -12.28083,-17.2835 z"
+       style="opacity:1;fill:url(#linearGradient4281);fill-opacity:1;stroke:#000080;stroke-width:0.29986507;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+  </g>
+</svg>

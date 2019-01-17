@@ -6,6 +6,7 @@
 import React, { PureComponent } from "react";
 import ReactDOM from "react-dom";
 import classnames from "classnames";
+import actions from "../../actions";
 import { getDocument } from "../../utils/editor";
 import Svg from "../shared/Svg";
 
@@ -20,23 +21,23 @@ type Props = {
   editor: Object,
   source: Object,
   enabled: boolean,
-  toggleBreakpoint: (number, number) => void,
+  toggleBreakpoint: typeof actions.toggleBreakpoint,
   columnBreakpoint: ColumnBreakpointType
 };
 
 const breakpointImg = document.createElement("div");
 ReactDOM.render(<Svg name={"column-marker"} />, breakpointImg);
-function makeBookmark(isActive, condition, { onClick }) {
+function makeBookmark({ breakpoint }, { onClick }) {
   const bp = breakpointImg.cloneNode(true);
-  const className = isActive ? "active" : "disabled";
+  const isActive = breakpoint && !breakpoint.disabled;
+  const condition = breakpoint && breakpoint.condition;
 
-  bp.className = classnames(
-    "column-breakpoint",
-    {
-      "has-condition": condition
-    },
-    className
-  );
+  bp.className = classnames("column-breakpoint", {
+    "has-condition": condition,
+    active: isActive,
+    disabled: !isActive
+  });
+
   if (condition) {
     bp.setAttribute("title", condition);
   }
@@ -59,13 +60,9 @@ export default class ColumnBreakpoint extends PureComponent<Props> {
     }
 
     const { line, column } = columnBreakpoint.location;
-    const widget = makeBookmark(
-      columnBreakpoint.enabled,
-      columnBreakpoint.condition,
-      {
-        onClick: this.toggleBreakpoint
-      }
-    );
+    const widget = makeBookmark(columnBreakpoint, {
+      onClick: this.toggleBreakpoint
+    });
 
     this.bookmark = doc.setBookmark({ line: line - 1, ch: column }, { widget });
   };

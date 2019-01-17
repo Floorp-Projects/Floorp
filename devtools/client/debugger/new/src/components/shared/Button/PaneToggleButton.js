@@ -5,7 +5,7 @@
 // @flow
 import React, { PureComponent } from "react";
 import classnames from "classnames";
-import Svg from "../Svg";
+import AccessibleImage from "../AccessibleImage";
 import { CommandBarButton } from "./";
 import "./styles/PaneToggleButton.css";
 
@@ -36,7 +36,7 @@ class PaneToggleButton extends PureComponent<Props> {
         onClick={() => handleClick(position, collapsed)}
         title={title}
       >
-        <Svg name="togglePanes" />
+        <AccessibleImage className="toggle-panes" />
       </CommandBarButton>
     );
   }

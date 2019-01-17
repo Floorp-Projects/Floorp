@@ -6,6 +6,7 @@
 
 import * as breakpoints from "./breakpoints";
 import * as expressions from "./expressions";
+import * as eventListeners from "./event-listeners";
 import * as pause from "./pause";
 import * as navigation from "./navigation";
 import * as ui from "./ui";
@@ -24,6 +25,7 @@ export default {
   ...navigation,
   ...breakpoints,
   ...expressions,
+  ...eventListeners,
   ...sources,
   ...tabs,
   ...pause,
