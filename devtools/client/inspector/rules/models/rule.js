@@ -57,6 +57,8 @@ function Rule(elementStyle, options) {
   // value, and add in any disabled properties from the store.
   this.textProps = this._getTextProperties();
   this.textProps = this.textProps.concat(this._getDisabledProperties());
+
+  this.getUniqueSelector = this.getUniqueSelector.bind(this);
 }
 
 Rule.prototype = {
@@ -79,6 +81,7 @@ Rule.prototype = {
 
   get selector() {
     return {
+      getUniqueSelector: this.getUniqueSelector,
       matchedSelectors: this.matchedSelectors,
       selectors: this.domRule.selectors,
       selectorText: this.keyframes ? this.domRule.keyText : this.selectorText,
@@ -178,6 +181,27 @@ Rule.prototype = {
    */
   getDeclaration: function(id) {
     return this.textProps.find(textProp => textProp.id === id);
+  },
+
+  /**
+   * Returns an unique selector for the CSS rule.
+   */
+  async getUniqueSelector() {
+    let selector = "";
+
+    if (this.domRule.selectors) {
+      // This is a style rule with a selector.
+      selector = this.domRule.selectors.join(", ");
+    } else if (this.inherited) {
+      // This is an inline style from an inherited rule. Need to resolve the unique
+      // selector from the node which rule this is inherited from.
+      selector = await this.inherited.getUniqueSelector();
+    } else {
+      // This is an inline style from the current node.
+      selector = this.elementStyle.ruleView.inspector.selectionCssSelector;
+    }
+
+    return selector;
   },
 
   /**

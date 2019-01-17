@@ -6,9 +6,12 @@
 
 const {
   UPDATE_RULES,
+  UPDATE_HIGHLIGHTED_SELECTOR,
 } = require("../actions/index");
 
 const INITIAL_RULES = {
+  // The selector of the node that is highlighted by the selector highlighter.
+  highlightedSelector: "",
   // Array of CSS rules.
   rules: [],
 };
@@ -81,9 +84,17 @@ function getRuleState(rule) {
 
 const reducers = {
 
-  [UPDATE_RULES](_, { rules }) {
+  [UPDATE_HIGHLIGHTED_SELECTOR](rules, { highlightedSelector }) {
     return {
-      rules: rules.map(rule => getRuleState(rule)),
+      ...rules,
+      highlightedSelector,
+    };
+  },
+
+  [UPDATE_RULES](rules, { rules: newRules }) {
+    return {
+      highlightedSelector: rules.highlightedSelector,
+      rules: newRules.map(rule => getRuleState(rule)),
     };
   },
 
