@@ -2607,6 +2607,8 @@ class ICRest_Fallback : public ICFallbackStub {
 // UnaryArith
 //     JSOP_BITNOT
 //     JSOP_NEG
+//     JSOP_INC
+//     JSOP_DEC
 
 class ICUnaryArith_Fallback : public ICFallbackStub {
   friend class ICStubSpace;

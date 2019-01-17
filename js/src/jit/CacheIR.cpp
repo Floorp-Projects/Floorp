@@ -5824,6 +5824,14 @@ bool UnaryArithIRGenerator::tryAttachInt32() {
       writer.int32NegationResult(intId);
       trackAttached("UnaryArith.Int32Neg");
       break;
+    case JSOP_INC:
+      writer.int32IncResult(intId);
+      trackAttached("UnaryArith.Int32Inc");
+      break;
+    case JSOP_DEC:
+      writer.int32DecResult(intId);
+      trackAttached("UnaryArith.Int32Dec");
+      break;
     default:
       MOZ_CRASH("Unexected OP");
   }
@@ -5849,6 +5857,14 @@ bool UnaryArithIRGenerator::tryAttachNumber() {
     case JSOP_NEG:
       writer.doubleNegationResult(valId);
       trackAttached("UnaryArith.DoubleNeg");
+      break;
+    case JSOP_INC:
+      writer.doubleIncResult(valId);
+      trackAttached("UnaryArith.DoubleInc");
+      break;
+    case JSOP_DEC:
+      writer.doubleDecResult(valId);
+      trackAttached("UnaryArith.DoubleDec");
       break;
     default:
       MOZ_CRASH("Unexpected OP");

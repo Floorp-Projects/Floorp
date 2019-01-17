@@ -248,7 +248,9 @@ namespace jit {
   _(JSOP_CLASSCONSTRUCTOR)      \
   _(JSOP_DERIVEDCONSTRUCTOR)    \
   _(JSOP_IMPORTMETA)            \
-  _(JSOP_DYNAMIC_IMPORT)
+  _(JSOP_DYNAMIC_IMPORT)        \
+  _(JSOP_INC)                   \
+  _(JSOP_DEC)
 
 // Base class for BaselineCompiler and BaselineInterpreterGenerator. The Handler
 // template is a class storing fields/methods that are interpreter or compiler
@@ -361,7 +363,7 @@ class BaselineCodeGen {
   OPCODE_LIST(EMIT_OP)
 #undef EMIT_OP
 
-  // JSOP_NEG, JSOP_BITNOT
+  // JSOP_NEG, JSOP_BITNOT, JSOP_INC, JSOP_DEC
   MOZ_MUST_USE bool emitUnaryArith();
 
   // JSOP_BITXOR, JSOP_LSH, JSOP_ADD etc.
