@@ -10,6 +10,7 @@
 <dialog id="exceptiondialog"
         windowtype="mozilla:exceptiondialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="max-width: 40em"
         data-l10n-id="exception-mgr"
         buttonidextra1="exception-mgr-extra-button"
         buttons="cancel,extra1,extra2"
@@ -41,13 +42,13 @@
       <description id="warningText"
                    style="white-space: pre-wrap"/>
       <description id="warningSupplemental"
-                   style="font-weight: bold; white-space: pre-wrap;"
+                   style="font-weight: bold; white-space: pre-wrap; width: calc(40em - 18px)"
                    data-l10n-id="exception-mgr-supplemental-warning"></description>
     </vbox>
   </hbox>
 
   <hbox align="center">
-    <label control="locationTextBox" data-l10n-id="exception-mgr-cert-location-url"/>
+    <label id="certLocationLabel" control="locationTextBox" data-l10n-id="exception-mgr-cert-location-url"/>
     <textbox id="locationTextBox" flex="1" oninput="handleTextChange();"
              value="https://" class="uri-element"/>
     <button id="checkCertButton" disabled="true" dlgtype="extra2"
