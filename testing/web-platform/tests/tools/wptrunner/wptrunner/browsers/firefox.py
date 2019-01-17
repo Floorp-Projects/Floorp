@@ -410,12 +410,16 @@ class FirefoxBrowser(Browser):
     def check_crash(self, process, test):
         dump_dir = os.path.join(self.profile.profile, "minidumps")
 
-        return bool(mozcrash.log_crashes(self.logger,
-                                         dump_dir,
-                                         symbols_path=self.symbols_path,
-                                         stackwalk_binary=self.stackwalk_binary,
-                                         process=process,
-                                         test=test))
+        try:
+            return bool(mozcrash.log_crashes(self.logger,
+                                             dump_dir,
+                                             symbols_path=self.symbols_path,
+                                             stackwalk_binary=self.stackwalk_binary,
+                                             process=process,
+                                             test=test))
+        except IOError:
+            self.logger.warning("Looking for crash dump files failed")
+            return False
 
     def setup_ssl(self):
         """Create a certificate database to use in the test profile. This is configured
