@@ -112,7 +112,7 @@ void TransportLayerSrtp::StateChange(TransportLayer* layer, State state) {
     uint16_t cipher_suite;
     nsresult res = dtls->GetSrtpCipher(&cipher_suite);
     if (NS_FAILED(res)) {
-      MOZ_MTLOG(ML_ERROR, "Failed to negotiate DTLS-SRTP. This is an error");
+      MOZ_MTLOG(ML_DEBUG, "DTLS-SRTP disabled");
       TL_SET_STATE(TS_ERROR);
       return;
     }
