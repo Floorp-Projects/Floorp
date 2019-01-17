@@ -1,0 +1,10 @@
+[
+  {
+    "size": 105653,
+    "visibility": "public",
+    "digest": "8f513ea138b722f96c1413d1399afc116c3b4d45c9784b521a920cdd74ec41a81ba32f8e4edae558fc4362122dda32f4074957d1e526aad1cdc777f941d8e81a",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-tp6m-google.zip",
+    "unpack": true
+  }
+]

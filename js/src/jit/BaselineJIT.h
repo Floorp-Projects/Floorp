@@ -21,7 +21,6 @@
 namespace js {
 namespace jit {
 
-class StackValue;
 class ICEntry;
 class ICStub;
 class ControlFlowGraph;
@@ -46,8 +45,6 @@ class PCMappingSlotInfo {
   static inline bool ValidSlotLocation(SlotLocation loc) {
     return (loc == SlotInR0) || (loc == SlotInR1) || (loc == SlotIgnore);
   }
-
-  static SlotLocation ToSlotLocation(const StackValue* stackVal);
 
   inline static PCMappingSlotInfo MakeSlotInfo() {
     return PCMappingSlotInfo(0);

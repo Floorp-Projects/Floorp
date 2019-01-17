@@ -14,6 +14,12 @@ const { RootActor } = require("devtools/server/actors/root");
 const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 const { BrowserTabList, BrowserAddonList, sendShutdownEvent } =
   require("devtools/server/actors/webbrowser");
+const { ServiceWorkerRegistrationActorList } =
+  require("devtools/server/actors/worker/service-worker-registration-list");
+const { WorkerTargetActorList } =
+  require("devtools/server/actors/worker/worker-target-actor-list");
+
+const { ProcessActorList } = require("devtools/server/actors/process");
 
 /**
  * Construct a root actor appropriate for use in a server running in a
@@ -30,6 +36,10 @@ exports.createRootActor = function createRootActor(aConnection) {
   let parameters = {
     tabList: new MobileTabList(aConnection),
     addonList: new BrowserAddonList(aConnection),
+    workerList: new WorkerTargetActorList(aConnection, {}),
+    serviceWorkerRegistrationList:
+      new ServiceWorkerRegistrationActorList(aConnection),
+    processList: new ProcessActorList(),
     globalActorFactories: ActorRegistry.globalActorFactories,
     onShutdown: sendShutdownEvent,
   };

@@ -365,6 +365,17 @@ def shell(value, mozillabuild):
     return find_program(shell)
 
 
+# This defines a reasonable shell for when running with --help.
+# If one was passed in the environment, though, fall back to that.
+@depends('--help', 'CONFIG_SHELL')
+def help_shell(help, shell):
+    if help and not shell:
+        return 'sh'
+
+
+shell = help_shell | shell
+
+
 # Python 3
 # ========
 
@@ -726,9 +737,11 @@ def split_triplet(triplet, allow_unknown=False):
 
 
 # This defines a fake target/host namespace for when running with --help
-@depends('--help')
-def help_host_target(help):
-    if help:
+# If either --host or --target is passed on the command line, then fall
+# back to the real deal.
+@depends('--help', '--host', '--target')
+def help_host_target(help, host, target):
+    if help and not host and not target:
         return namespace(
             alias='unknown-unknown-unknown',
             cpu='unknown',

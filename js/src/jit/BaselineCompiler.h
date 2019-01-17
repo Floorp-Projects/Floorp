@@ -261,15 +261,13 @@ class BaselineCodeGen {
 
   JSContext* cx;
   JSScript* script;
-  jsbytecode* pc;
   StackMacroAssembler masm;
   bool ionCompileable_;
 
   TempAllocator& alloc_;
   BytecodeAnalysis analysis_;
-  FrameInfo frame;
+  typename Handler::FrameInfoT& frame;
 
-  js::Vector<RetAddrEntry, 16, SystemAllocPolicy> retAddrEntries_;
   js::Vector<CodeOffset> traceLoggerToggleOffsets_;
 
   NonAssertingLabel return_;
@@ -290,16 +288,6 @@ class BaselineCodeGen {
   BaselineCodeGen(JSContext* cx, TempAllocator& alloc, JSScript* script,
                   HandlerArgs&&... args);
 
-  MOZ_MUST_USE bool appendRetAddrEntry(RetAddrEntry::Kind kind,
-                                       uint32_t retOffset) {
-    if (!retAddrEntries_.emplaceBack(script->pcToOffset(pc), kind,
-                                     CodeOffset(retOffset))) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-    return true;
-  }
-
   JSFunction* function() const {
     // Not delazifying here is ok as the function is guaranteed to have
     // been delazified before compilation started.
@@ -312,7 +300,31 @@ class BaselineCodeGen {
   void pushArg(const T& t) {
     masm.Push(t);
   }
+
+  // Pushes the current script as argument for a VM function.
+  void pushScriptArg();
+
+  // Pushes the bytecode pc as argument for a VM function.
+  void pushBytecodePCArg();
+
+  // Pushes a name/object/scope associated with the current bytecode op (and
+  // stored in the script) as argument for a VM function.
+  enum class ScriptObjectType { RegExp, Function, ObjectLiteral };
+  void pushScriptObjectArg(ScriptObjectType type);
+  void pushScriptNameArg();
+  void pushScriptScopeArg();
+
+  // Pushes a bytecode operand as argument for a VM function.
+  void pushUint8BytecodeOperandArg();
+  void pushUint16BytecodeOperandArg();
+
+  void loadResumeIndexBytecodeOperand(Register dest);
+
   void prepareVMCall();
+
+  void storeFrameSizeAndPushDescriptor(uint32_t frameBaseSize, uint32_t argSize,
+                                       const Address& frameSizeAddr);
+  void computeFullFrameSize(uint32_t frameBaseSize, Register dest);
 
   enum CallVMPhase { POST_INITIALIZE, CHECK_OVER_RECURSED };
   bool callVM(const VMFunction& fun, CallVMPhase phase = POST_INITIALIZE);
@@ -321,7 +333,7 @@ class BaselineCodeGen {
     if (!callVM(fun, phase)) {
       return false;
     }
-    retAddrEntries_.back().setKind(RetAddrEntry::Kind::NonOpCallVM);
+    handler.markLastRetAddrEntryKind(RetAddrEntry::Kind::NonOpCallVM);
     return true;
   }
 
@@ -341,12 +353,9 @@ class BaselineCodeGen {
 
   MOZ_MUST_USE bool emitNextIC();
   MOZ_MUST_USE bool emitInterruptCheck();
-  MOZ_MUST_USE bool emitWarmUpCounterIncrement(bool allowOsr = true);
+  MOZ_MUST_USE bool emitWarmUpCounterIncrement();
   MOZ_MUST_USE bool emitTraceLoggerResume(Register script,
                                           AllocatableGeneralRegisterSet& regs);
-
-  void storeValue(const StackValue* source, const Address& dest,
-                  const ValueOperand& scratch);
 
 #define EMIT_OP(op) bool emit_##op();
   OPCODE_LIST(EMIT_OP)
@@ -372,6 +381,10 @@ class BaselineCodeGen {
   // or branches to the default pc if not int32 or out-of-range.
   void emitGetTableSwitchIndex(ValueOperand val, Register dest);
 
+  // Jumps to the target of a table switch based on |key| and the
+  // firstResumeIndex stored in JSOP_TABLESWITCH.
+  void emitTableSwitchJump(Register key, Register scratch1, Register scratch2);
+
   MOZ_MUST_USE bool emitReturn();
 
   MOZ_MUST_USE bool emitToBoolean();
@@ -389,10 +402,15 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitBindName(JSOp op);
   MOZ_MUST_USE bool emitDefLexical(JSOp op);
 
+  // Try to bake in the result of GETGNAME/BINDGNAME instead of using an IC.
+  // Return true if we managed to optimize the op.
+  bool tryOptimizeGetGlobalName();
+  bool tryOptimizeBindGlobalName();
+
   MOZ_MUST_USE bool emitInitPropGetterSetter();
   MOZ_MUST_USE bool emitInitElemGetterSetter();
 
-  MOZ_MUST_USE bool emitFormalArgAccess(uint32_t arg, bool get);
+  MOZ_MUST_USE bool emitFormalArgAccess(JSOp op);
 
   MOZ_MUST_USE bool emitThrowConstAssignment();
   MOZ_MUST_USE bool emitUninitializedLexicalCheck(const ValueOperand& val);
@@ -405,23 +423,54 @@ class BaselineCodeGen {
   Address getEnvironmentCoordinateAddress(Register reg);
 };
 
+using RetAddrEntryVector = js::Vector<RetAddrEntry, 16, SystemAllocPolicy>;
+
 // Interface used by BaselineCodeGen for BaselineCompiler.
 class BaselineCompilerHandler {
+  CompilerFrameInfo frame_;
   TempAllocator& alloc_;
   FixedList<Label> labels_;
+  RetAddrEntryVector retAddrEntries_;
   JSScript* script_;
+  jsbytecode* pc_;
   bool compileDebugInstrumentation_;
 
  public:
-  BaselineCompilerHandler(TempAllocator& alloc, JSScript* script);
+  using FrameInfoT = CompilerFrameInfo;
+
+  BaselineCompilerHandler(MacroAssembler& masm, TempAllocator& alloc,
+                          JSScript* script);
 
   MOZ_MUST_USE bool init();
 
+  CompilerFrameInfo& frame() { return frame_; }
+
+  jsbytecode* pc() const { return pc_; }
+  jsbytecode* maybePC() const { return pc_; }
+
+  void moveToNextPC() { pc_ += GetBytecodeLength(pc_); }
   Label* labelOf(jsbytecode* pc) { return &labels_[script_->pcToOffset(pc)]; }
+
+  bool isDefinitelyLastOp() const { return pc_ == script_->lastPC(); }
 
   void setCompileDebugInstrumentation() { compileDebugInstrumentation_ = true; }
   bool compileDebugInstrumentation() const {
     return compileDebugInstrumentation_;
+  }
+
+  RetAddrEntryVector& retAddrEntries() { return retAddrEntries_; }
+
+  MOZ_MUST_USE bool appendRetAddrEntry(JSContext* cx, RetAddrEntry::Kind kind,
+                                       uint32_t retOffset) {
+    if (!retAddrEntries_.emplaceBack(script_->pcToOffset(pc_), kind,
+                                     CodeOffset(retOffset))) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    return true;
+  }
+  void markLastRetAddrEntryKind(RetAddrEntry::Kind kind) {
+    retAddrEntries_.back().setKind(kind);
   }
 };
 
@@ -485,14 +534,16 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
     switch (frame.numUnsyncedSlots()) {
       case 0:
         return PCMappingSlotInfo::MakeSlotInfo();
-      case 1:
-        return PCMappingSlotInfo::MakeSlotInfo(
-            PCMappingSlotInfo::ToSlotLocation(frame.peek(-1)));
+      case 1: {
+        PCMappingSlotInfo::SlotLocation loc = frame.stackValueSlotLocation(-1);
+        return PCMappingSlotInfo::MakeSlotInfo(loc);
+      }
       case 2:
-      default:
-        return PCMappingSlotInfo::MakeSlotInfo(
-            PCMappingSlotInfo::ToSlotLocation(frame.peek(-1)),
-            PCMappingSlotInfo::ToSlotLocation(frame.peek(-2)));
+      default: {
+        PCMappingSlotInfo::SlotLocation loc1 = frame.stackValueSlotLocation(-1);
+        PCMappingSlotInfo::SlotLocation loc2 = frame.stackValueSlotLocation(-2);
+        return PCMappingSlotInfo::MakeSlotInfo(loc1, loc2);
+      }
     }
   }
 
@@ -522,14 +573,33 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
 
 // Interface used by BaselineCodeGen for BaselineInterpreterGenerator.
 class BaselineInterpreterHandler {
+  InterpreterFrameInfo frame_;
+
  public:
-  explicit BaselineInterpreterHandler();
+  using FrameInfoT = InterpreterFrameInfo;
+
+  explicit BaselineInterpreterHandler(MacroAssembler& masm);
+
+  InterpreterFrameInfo& frame() { return frame_; }
+
+  // Interpreter doesn't know the pc statically.
+  jsbytecode* maybePC() const { return nullptr; }
+  bool isDefinitelyLastOp() const { return false; }
+
+  // Interpreter doesn't need to keep track of RetAddrEntries, so these methods
+  // are no-ops.
+  MOZ_MUST_USE bool appendRetAddrEntry(JSContext* cx, RetAddrEntry::Kind kind,
+                                       uint32_t retOffset) {
+    return true;
+  }
+  void markLastRetAddrEntryKind(RetAddrEntry::Kind) {}
 };
 
 using BaselineInterpreterCodeGen = BaselineCodeGen<BaselineInterpreterHandler>;
 
 class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
  public:
+  BaselineInterpreterGenerator(JSContext* cx, TempAllocator& alloc);
 };
 
 extern const VMFunction NewArrayCopyOnWriteInfo;

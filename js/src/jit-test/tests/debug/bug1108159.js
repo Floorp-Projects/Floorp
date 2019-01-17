@@ -6,7 +6,7 @@ for (var i = 0; i < 70000; i++)
     s += 'function x' + i + '() { x' + i + '(); }\n';
 }
 evaluate(s);
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 (new Debugger).addDebuggee(g);
 g.offThreadCompileScript('debugger;',{});
 g.runOffThreadScript();
