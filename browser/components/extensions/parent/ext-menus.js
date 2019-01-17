@@ -879,10 +879,7 @@ const menuTracker = {
   unregister() {
     Services.obs.removeObserver(this, "on-build-contextmenu");
     for (const window of windowTracker.browserWindows()) {
-      for (const id of this.menuIds) {
-        const menu = window.document.getElementById(id);
-        menu.removeEventListener("popupshowing", this);
-      }
+      this.cleanupWindow(window);
     }
     windowTracker.removeOpenListener(this.onWindowOpen);
   },
@@ -897,10 +894,52 @@ const menuTracker = {
       const menu = window.document.getElementById(id);
       menu.addEventListener("popupshowing", menuTracker);
     }
+
+    const sidebarHeader = window.document.getElementById("sidebar-switcher-target");
+    sidebarHeader.addEventListener("SidebarShown", menuTracker.onSidebarShown);
+    if (window.SidebarUI.currentID === "viewBookmarksSidebar") {
+      menuTracker.onSidebarShown({currentTarget: sidebarHeader});
+    }
+  },
+
+  cleanupWindow(window) {
+    for (const id of this.menuIds) {
+      const menu = window.document.getElementById(id);
+      menu.removeEventListener("popupshowing", this);
+    }
+
+    const sidebarHeader = window.document.getElementById("sidebar-switcher-target");
+    sidebarHeader.removeEventListener("SidebarShown", this.onSidebarShown);
+
+    if (window.SidebarUI.currentID === "viewBookmarksSidebar") {
+      let sidebarBrowser = window.SidebarUI.browser;
+      sidebarBrowser.removeEventListener("load", this.onSidebarShown);
+      const menu = sidebarBrowser.contentDocument.getElementById("placesContext");
+      menu.removeEventListener("popupshowing", this.onBookmarksContextMenu);
+    }
+  },
+
+  onSidebarShown(event) {
+    // The event target is an element in a browser window, so |window| will be
+    // the browser window that contains the sidebar.
+    const window = event.currentTarget.ownerGlobal;
+    if (window.SidebarUI.currentID === "viewBookmarksSidebar") {
+      let sidebarBrowser = window.SidebarUI.browser;
+      if (sidebarBrowser.contentDocument.readyState !== "complete") {
+        // SidebarUI.currentID may be updated before the bookmark sidebar's
+        // document has finished loading. This sometimes happens when the
+        // sidebar is automatically shown when a new window is opened.
+        sidebarBrowser.addEventListener("load", menuTracker.onSidebarShown, {once: true});
+        return;
+      }
+      const menu = sidebarBrowser.contentDocument.getElementById("placesContext");
+      menu.addEventListener("popupshowing", menuTracker.onBookmarksContextMenu);
+    }
   },
 
   handleEvent(event) {
     const menu = event.target;
+
     if (menu.id === "placesContext") {
       const trigger = menu.triggerNode;
       if (!trigger._placesNode) {
@@ -924,6 +963,19 @@ const menuTracker = {
       const pageUrl = tab.linkedBrowser.currentURI.spec;
       gMenuBuilder.build({menu, tab, pageUrl, onTab: true});
     }
+  },
+
+  onBookmarksContextMenu(event) {
+    const menu = event.target;
+    const tree = menu.triggerNode.parentElement;
+    const cell = tree.getCellAt(event.x, event.y);
+    const node = tree.view.nodeForTreeIndex(cell.row);
+
+    gMenuBuilder.build({
+      menu,
+      bookmarkId: node.bookmarkGuid,
+      onBookmark: true,
+    });
   },
 };
 
