@@ -394,8 +394,8 @@ impl Wrench {
         self.font_key_from_properties(
             font_name,
             dwrote::FontWeight::Regular.to_u32(),
-            dwrote::FontStretch::Normal.to_u32(),
             dwrote::FontStyle::Normal.to_u32(),
+            dwrote::FontStretch::Normal.to_u32(),
         )
     }
 
