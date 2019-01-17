@@ -5,29 +5,29 @@
 ---
 root:
   items:
-    -
-      type: "stacking-context"
-      transform: rotate-y(30) rotate-x(75) translate(-100, 100, 0)
+    - type: "stacking-context"
       transform-style: preserve-3d
-      perspective: 400
+      transform: rotate-y(30) rotate-x(75) translate(-100, 100, 0)
       items:
-        -
-          bounds: [0, 0, 450, 300]
-          type: rect
-          color: 0 255 0 1.0000
-        - type: stacking-context
-          bounds: [0, 0, 600, 600]
-          transform: translate(200, 0, 0)
+        - type: "stacking-context"
+          perspective: 400
+          transform-style: preserve-3d
           items:
-            -
-              bounds: [-200, 0, 150, 300]
-              type: rect
-              color: 255 0 0 1.0000
-        - type: stacking-context
-          bounds: [0, 0, 600, 600]
-          transform: rotate-z(90)
-          items:
-            -
-              bounds: [0, 200, 150, 200]
-              type: rect
-              color: 0 0 255 1.0000
+            - type: rect
+              bounds: [0, 0, 450, 300]
+              color: 0 255 0 1.0000
+            - type: stacking-context
+              bounds: [0, 0, 600, 600]
+              transform: translate(200, 0, 0)
+              items:
+                - type: rect
+                  bounds: [-200, 0, 150, 300]
+                  color: 255 0 0 1.0000
+            - type: stacking-context
+              bounds: [0, 0, 600, 600]
+              transform: rotate-z(90)
+              items:
+                -
+                  bounds: [0, 200, 150, 200]
+                  type: rect
+                  color: 0 0 255 1.0000
