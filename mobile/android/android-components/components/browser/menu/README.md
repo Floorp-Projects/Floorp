@@ -74,9 +74,6 @@ To customize the menu you could use separate properties 1 or full access to the 
     <!--Icon-->
 
     <!--Label-->
-           <!--Change the label's layout_height-->
-            <dimen name="mozac_browser_menu_item_image_text_label_layout_height">48dp</dimen> <!--Default value-->
-
            <!--Change the separation between the label and the icon-->
             <dimen name="mozac_browser_menu_item_image_text_label_padding_start">20dp</dimen> <!--Default value-->
 
@@ -86,20 +83,26 @@ To customize the menu you could use separate properties 1 or full access to the 
 
 2) For full customization, override the default style of menu by adding this style item in your `style.xml` file, and customize to your liking.
 ```xml
-    <style name="Mozac.Browser.Menu.Item.ImageText.Icon" parent="">
-        <item name="android:layout_width">@dimen/mozac_browser_menu_item_image_text_icon_layout_width</item>
-        <item name="android:layout_height">@dimen/mozac_browser_menu_item_image_text_icon_layout_height</item>
+
+    <!--Change the appearance of all text menu items-->
+    <style name="Mozac.Browser.Menu.Item.Text" parent="@android:style/TextAppearance.Material.Menu">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu_item_text_size</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:lines">1</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
     </style>
 
-    <style name="Mozac.Browser.Menu.Item.ImageText.Label" parent="@android:style/TextAppearance.Material.Menu">
+    <style name="Mozac.Browser.Menu.Item.ImageText.Icon" parent="">
+        <item name="android:layout_width">@dimen/mozac_browser_menu_item_image_text_icon_width</item>
+        <item name="android:layout_height">@dimen/mozac_browser_menu_item_image_text_icon_height</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.ImageText.Label" parent="Mozac.Browser.Menu.Item.Text">
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">@dimen/mozac_browser_menu_item_image_text_label_layout_height</item>
+        <item name="android:layout_height">wrap_content</item>
         <item name="android:paddingStart">@dimen/mozac_browser_menu_item_image_text_label_padding_start</item>
-        <item name="android:lines">1</item>
-        <item name="android:textSize">@dimen/mozac_browser_menu_item_text_size</item>
-        <item name="android:clickable">true</item>
-        <item name="android:ellipsize">end</item>
-        <item name="android:focusable">true</item>
     </style>
 ```
 ## License

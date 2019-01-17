@@ -26,7 +26,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class BrowserMenuImageTextTest {
 
-    private val context: Context = ApplicationProvider.getApplicationContext()
+    private val context: Context get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `browser menu ImageText should be inflated`() {

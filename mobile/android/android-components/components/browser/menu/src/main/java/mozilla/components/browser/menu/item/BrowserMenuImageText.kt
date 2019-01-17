@@ -40,7 +40,6 @@ class BrowserMenuImageText(
     override fun getLayoutResource() = R.layout.mozac_browser_menu_item_image_text
 
     override fun bind(menu: BrowserMenu, view: View) {
-
         bindText(view)
 
         bindImage(view)
