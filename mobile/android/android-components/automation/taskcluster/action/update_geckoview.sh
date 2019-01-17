@@ -11,10 +11,6 @@ set -ex
 git config --global user.email "sebastian@mozilla.com"
 git config --global user.name "MickeyMoz"
 
-# Update checkout
-git fetch origin master
-git checkout origin/master
-
 # Use Gradle plugin to look for new GeckoView version (non major version update!)
 ./gradlew updateGVNightlyVersion
 
@@ -56,8 +52,4 @@ git push  --no-verify --quiet $URL $BRANCH
 echo "Done ($?)"
 
 echo "Opening pull request"
-./gradlew openPR -Ptitle="GeckoView update ($TIMESTAMP)" -Pbranch="$BRANCH" -Powner="pocmo" -PtokenFile="token.properties"
-
-
-# hook-id:project-mobile/firefox-tv-strings-import
-# secrets:get:project/mobile/github
+./gradlew openPR -Ptitle="GeckoView update ($TIMESTAMP)" -Pbranch="$BRANCH" -PtokenFile="token.properties"
