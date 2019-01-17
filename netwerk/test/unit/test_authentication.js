@@ -1,8 +1,8 @@
 // This file tests authentication prompt callbacks
 // TODO NIT use do_check_eq(expected, actual) consistently, not sometimes eq(actual, expected)
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 

@@ -3,8 +3,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 let delay = () => new Promise(resolve => setTimeout(resolve, 0));
 

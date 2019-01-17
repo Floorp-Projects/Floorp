@@ -3,8 +3,8 @@
 
 "use strict";
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
-var {SessionWorker} = ChromeUtils.import("resource:///modules/sessionstore/SessionWorker.jsm", {});
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {SessionWorker} = ChromeUtils.import("resource:///modules/sessionstore/SessionWorker.jsm");
 
 var File = OS.File;
 var Paths;

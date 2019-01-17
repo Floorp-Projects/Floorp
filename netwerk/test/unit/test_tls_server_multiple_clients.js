@@ -8,9 +8,8 @@ do_get_profile();
 // Ensure PSM is initialized
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
-const { PromiseUtils } = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", {});
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { PromiseUtils } = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 const certService = Cc["@mozilla.org/security/local-cert-service;1"]
                     .getService(Ci.nsILocalCertService);
 const certOverrideService = Cc["@mozilla.org/security/certoverride;1"]

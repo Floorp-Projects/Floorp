@@ -4,7 +4,7 @@
 const URL = "http://mochi.test:8888/";
 const URL_COPY = URL + "#copy";
 
-const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
+const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 
 /**
  * These tests ensure that the thumbnail storage is working as intended.

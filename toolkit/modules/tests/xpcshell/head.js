@@ -1,6 +1,6 @@
-ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {NewTabUtils} = ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["btoa"]);
 
 ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",

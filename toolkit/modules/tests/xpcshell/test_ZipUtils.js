@@ -7,9 +7,8 @@ const ARCHIVE = "zips/zen.zip";
 const SUBDIR = "zen";
 const ENTRIES = ["beyond.txt", "waterwood.txt"];
 
-ChromeUtils.import("resource://gre/modules/ZipUtils.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {ZipUtils} = ChromeUtils.import("resource://gre/modules/ZipUtils.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 const archive = do_get_file(ARCHIVE, false);
 const dir = do_get_profile().clone();

@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource:///modules/ChromeMigrationUtils.jsm");
+const {ChromeMigrationUtils} = ChromeUtils.import("resource:///modules/ChromeMigrationUtils.jsm");
 
 // Setup chrome user data path for all platforms.
 ChromeMigrationUtils.getDataPath = () => {

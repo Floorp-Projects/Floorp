@@ -3,8 +3,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/FxAccountsProfileClient.jsm");
+const {ERRNO_NETWORK, ERRNO_PARSE, ERRNO_UNKNOWN_ERROR, ERROR_CODE_METHOD_NOT_ALLOWED, ERROR_MSG_METHOD_NOT_ALLOWED, ERROR_NETWORK, ERROR_PARSE, ERROR_UNKNOWN} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {FxAccountsProfileClient, FxAccountsProfileClientError} = ChromeUtils.import("resource://gre/modules/FxAccountsProfileClient.jsm");
 
 const STATUS_SUCCESS = 200;
 

@@ -34,14 +34,14 @@ const MSG_ADDON_EVENT      = "WebAPIAddonEvent";
 
 const CHILD_SCRIPT = "resource://gre/modules/addons/Content.js";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gSingleton = null;
 
+var AddonManager, AddonManagerPrivate;
 function amManager() {
-  ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-  /* globals AddonManagerPrivate*/
+  ({AddonManager, AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm"));
 
   Services.mm.loadFrameScript(CHILD_SCRIPT, true, true);
   Services.mm.addMessageListener(MSG_INSTALL_ENABLED, this);

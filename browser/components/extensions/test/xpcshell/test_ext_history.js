@@ -9,7 +9,7 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
 ChromeUtils.defineModuleGetter(this, "ExtensionCommon",
                                "resource://gre/modules/ExtensionCommon.jsm");
 
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+const {PromiseTestUtils} = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
 
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 

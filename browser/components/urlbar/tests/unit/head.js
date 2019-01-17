@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Import common head.
 /* import-globals-from ../../../../../toolkit/components/places/tests/head_common.js */
@@ -12,7 +12,7 @@ if (commonFile) {
 }
 
 // Put any other stuff relative to this test folder below.
-ChromeUtils.import("resource:///modules/UrlbarUtils.jsm");
+var {UrlbarMuxer, UrlbarProvider, UrlbarQueryContext, UrlbarUtils} = ChromeUtils.import("resource:///modules/UrlbarUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   HttpServer: "resource://testing-common/httpd.js",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // Load mocking/stubbing library, sinon
 // docs: http://sinonjs.org/releases/v2.3.2/
 // Sinon needs Timer.jsm for setTimeout etc.
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+var {clearInterval, clearTimeout, setInterval, setIntervalWithTarget, setTimeout, setTimeoutWithTarget} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", this);
 /* globals sinon */
 // ================================================

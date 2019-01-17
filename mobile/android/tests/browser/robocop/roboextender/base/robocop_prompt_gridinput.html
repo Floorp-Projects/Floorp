@@ -6,7 +6,7 @@
     <script type="application/javascript">
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Prompt.jsm");
+const {Prompt} = ChromeUtils.import("resource://gre/modules/Prompt.jsm");
 
 function start() {
   var test = location.hash.substring(1);

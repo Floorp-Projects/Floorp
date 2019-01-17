@@ -8,7 +8,7 @@
 
 "use strict";
 
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 add_task(async function() {
   const { promisesFront } = await createMainProcessPromisesFront();

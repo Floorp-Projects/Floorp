@@ -11,8 +11,8 @@
  * process, including the parent one.
  */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://normandy-content/AboutPages.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AboutPages} = ChromeUtils.import("resource://normandy-content/AboutPages.jsm");
 
 // generateNSGetFactory only knows how to register factory classes, with
 // classID properties on their prototype, and a constructor that returns

@@ -18,7 +18,7 @@
 
 var EXPORTED_SYMBOLS = ["PdfJsTelemetry"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var PdfJsTelemetry = {
   onViewerIsUsed() {

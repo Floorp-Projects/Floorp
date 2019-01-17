@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-ChromeUtils.import("resource://services-common/utils.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 
 /**
  * Return the path to the definitions file for the events.

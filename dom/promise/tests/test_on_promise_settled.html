@@ -27,7 +27,7 @@ Debugger.prototype.onPromiseResolved.
      "[object Promise]",
      "We should have the native DOM promise implementation.");
 
-  ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+  const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
   var dbgGlobal = new Cu.Sandbox(document.nodePrincipal,
                                  {freshCompartment: true});
   addDebuggerToGlobal(dbgGlobal);

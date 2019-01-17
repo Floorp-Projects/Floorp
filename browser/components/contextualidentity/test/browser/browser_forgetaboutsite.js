@@ -4,9 +4,8 @@
 
 const CC = Components.Constructor;
 
-let {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm", {});
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});
+let {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
+let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const USER_CONTEXTS = [
   "default",

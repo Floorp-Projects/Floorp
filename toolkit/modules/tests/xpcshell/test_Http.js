@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/Http.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
+const {httpRequest} = ChromeUtils.import("resource://gre/modules/Http.jsm");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");

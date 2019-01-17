@@ -6,7 +6,7 @@
 
 // see http://mxr.mozilla.org/mozilla-central/source/services/sync/Weave.js#76
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const rph = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
 

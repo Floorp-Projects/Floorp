@@ -5,14 +5,14 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/IndexedDBHelper.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {IndexedDBHelper} = ChromeUtils.import("resource://gre/modules/IndexedDBHelper.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB"]);
 
 var EXPORTED_SYMBOLS = ["PushDB"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
-  let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     maxLogLevelPref: "dom.push.loglevel",
     prefix: "PushDB",

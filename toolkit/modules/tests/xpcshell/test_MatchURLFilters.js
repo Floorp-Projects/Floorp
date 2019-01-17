@@ -3,8 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/MatchURLFilters.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {MatchURLFilters} = ChromeUtils.import("resource://gre/modules/MatchURLFilters.jsm");
 
 function createTestFilter({url, filters}) {
   let m = new MatchURLFilters(filters);

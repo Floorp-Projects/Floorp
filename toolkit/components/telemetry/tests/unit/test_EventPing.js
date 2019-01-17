@@ -26,7 +26,7 @@ function checkPingStructure(type, payload, options) {
 }
 
 function fakePolicy(set, clear, send) {
-  let mod = ChromeUtils.import("resource://gre/modules/EventPing.jsm", {});
+  let mod = ChromeUtils.import("resource://gre/modules/EventPing.jsm", null);
   mod.Policy.setTimeout = set;
   mod.Policy.clearTimeout = clear;
   mod.Policy.sendPing = send;

@@ -3,9 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.import("resource:///modules/SiteDataManager.jsm");
-ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+const {SiteDataManager} = ChromeUtils.import("resource:///modules/SiteDataManager.jsm");
+const {DownloadUtils} = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
 
 /* import-globals-from pageInfo.js */
 

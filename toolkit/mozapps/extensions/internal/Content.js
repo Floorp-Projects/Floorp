@@ -8,7 +8,7 @@
 
 (function() {
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const MSG_JAR_FLUSH = "AddonJarFlush";
 const MSG_MESSAGE_MANAGER_CACHES_FLUSH = "AddonMessageManagerCachesFlush";

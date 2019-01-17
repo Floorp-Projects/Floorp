@@ -20,8 +20,8 @@ var EXPORTED_SYMBOLS = [
   "DownloadPDFSaver",
 ];
 
-ChromeUtils.import("resource://gre/modules/Integration.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Integration} = ChromeUtils.import("resource://gre/modules/Integration.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",

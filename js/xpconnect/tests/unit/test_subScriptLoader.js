@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(async function test_executeScriptAfterNuked() {
   let scriptUrl = Services.io.newFileURI(do_get_file("file_simple_script.js")).spec;

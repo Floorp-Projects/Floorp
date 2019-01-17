@@ -11,7 +11,7 @@
 var EXPORTED_SYMBOLS = ["ReceiverStateMachine"]; // jshint ignore:line
 
 /* globals State, CommandType */
-ChromeUtils.import("resource://gre/modules/presentation/StateMachineHelper.jsm");
+const {CommandType, State} = ChromeUtils.import("resource://gre/modules/presentation/StateMachineHelper.jsm");
 
 const DEBUG = false;
 function debug(str) {

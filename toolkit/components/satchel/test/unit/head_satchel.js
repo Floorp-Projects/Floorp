@@ -12,9 +12,9 @@
 const CURRENT_SCHEMA = 4;
 const PR_HOURS = 60 * 60 * 1000000;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
 
 do_get_profile();
 

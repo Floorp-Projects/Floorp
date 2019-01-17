@@ -4,8 +4,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var XULStore = null;
 var browserURI = "chrome://browser/content/browser.xul";

@@ -4,9 +4,6 @@
 
 // Tests the semantics of extension proxy files and symlinks
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 var ADDONS = [
   {
     id: "proxy1@tests.mozilla.org",

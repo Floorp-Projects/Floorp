@@ -18,16 +18,16 @@ const TRANSITION_RELOAD = Ci.nsINavHistoryService.TRANSITION_RELOAD;
 
 const TITLE_LENGTH_MAX = 4096;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {PlacesSyncUtils} = ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.jsm",
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.jsm",
   PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
-  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
   OS: "resource://gre/modules/osfile.jsm",

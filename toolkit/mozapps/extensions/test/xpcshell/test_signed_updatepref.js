@@ -33,7 +33,7 @@ function verifySignatures() {
     Services.obs.addObserver(observer, "xpi-signature-changed");
 
     info("Verifying signatures");
-    let XPIscope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+    let XPIscope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
     XPIscope.XPIDatabase.verifySignatures();
   });
 }

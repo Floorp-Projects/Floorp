@@ -3,7 +3,7 @@
 "use strict";
 
 add_task(async function testExecuteScript() {
-  let {MessageChannel} = ChromeUtils.import("resource://gre/modules/MessageChannel.jsm", {});
+  let {MessageChannel} = ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
 
   // When the first extension is started, ProxyMessenger.init adds MessageChannel
   // listeners for Services.mm and Services.ppmm, and they are never unsubscribed.

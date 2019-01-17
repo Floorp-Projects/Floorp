@@ -5,7 +5,7 @@
 /* import-globals-from extensionControlled.js */
 /* import-globals-from preferences.js */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 ChromeUtils.defineModuleGetter(this, "DownloadUtils",
   "resource://gre/modules/DownloadUtils.jsm");
@@ -14,7 +14,7 @@ ChromeUtils.defineModuleGetter(this, "LoginHelper",
 ChromeUtils.defineModuleGetter(this, "SiteDataManager",
   "resource:///modules/SiteDataManager.jsm");
 
-ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+var {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const PREF_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 

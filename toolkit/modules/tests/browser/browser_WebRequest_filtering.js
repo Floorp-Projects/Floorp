@@ -1,6 +1,6 @@
 "use strict";
 
-var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm", {});
+var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm");
 
 const BASE = "http://example.com/browser/toolkit/modules/tests/browser";
 const URL = BASE + "/file_WebRequest_page2.html";

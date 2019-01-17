@@ -16,8 +16,8 @@ var EXPORTED_SYMBOLS = ["Subprocess"];
 
 /* exported Subprocess */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/subprocess/subprocess_common.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {SubprocessConstants} = ChromeUtils.import("resource://gre/modules/subprocess/subprocess_common.jsm");
 
 if (AppConstants.platform == "win") {
   ChromeUtils.defineModuleGetter(this, "SubprocessImpl",

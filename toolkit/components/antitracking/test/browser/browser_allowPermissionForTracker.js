@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // This test works by setting up an exception for the tracker domain, which
 // disables all the anti-tracking tests.
 

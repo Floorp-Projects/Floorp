@@ -3,8 +3,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
+const {ERRNO_INVALID_FXA_ASSERTION, ERRNO_NETWORK, ERRNO_PARSE, ERRNO_UNKNOWN_ERROR, ERROR_CODE_METHOD_NOT_ALLOWED, ERROR_MSG_METHOD_NOT_ALLOWED, ERROR_NETWORK, ERROR_PARSE, ERROR_UNKNOWN} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {FxAccountsOAuthGrantClient, FxAccountsOAuthGrantClientError} = ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 
 const CLIENT_OPTIONS = {
   serverURL: "https://127.0.0.1:9010/v1",

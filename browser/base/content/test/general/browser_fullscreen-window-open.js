@@ -1,6 +1,4 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PREF_DISABLE_OPEN_NEW_WINDOW = "browser.link.open_newwindow.disabled_in_fullscreen";
 const PREF_BLOCK_TOPLEVEL_DATA = "security.data_uri.block_toplevel_data_uri_navigations";

@@ -8,8 +8,8 @@
 
 var EXPORTED_SYMBOLS = ["DNSRecord"];
 
-ChromeUtils.import("resource://gre/modules/DataWriter.jsm");
-ChromeUtils.import("resource://gre/modules/DNSTypes.jsm");
+const {DataWriter} = ChromeUtils.import("resource://gre/modules/DataWriter.jsm");
+const {DNS_CLASS_CODES, DNS_RECORD_TYPES} = ChromeUtils.import("resource://gre/modules/DNSTypes.jsm");
 
 class DNSRecord {
   constructor(properties = {}) {

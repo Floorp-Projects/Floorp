@@ -3,14 +3,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://services-sync/addonutils.js");
-ChromeUtils.import("resource://services-sync/engines/addons.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {AddonsEngine} = ChromeUtils.import("resource://services-sync/engines/addons.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 const HTTP_PORT = 8888;
 

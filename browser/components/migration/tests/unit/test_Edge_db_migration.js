@@ -1,8 +1,7 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-let eseBackStage = ChromeUtils.import("resource:///modules/ESEDBReader.jsm", {});
+const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+let eseBackStage = ChromeUtils.import("resource:///modules/ESEDBReader.jsm", null);
 let ESE = eseBackStage.ESE;
 let KERNEL = eseBackStage.KERNEL;
 let gLibs = eseBackStage.gLibs;

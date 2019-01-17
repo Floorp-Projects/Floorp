@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   WindowsGPOParser: "resource:///modules/policies/WindowsGPOParser.jsm",
@@ -34,7 +34,7 @@ const PREF_LOGLEVEL           = "browser.policies.loglevel";
 const PREF_DISALLOW_ENTERPRISE = "browser.policies.testing.disallowEnterprise";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     prefix: "Enterprise Policies",
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
@@ -96,7 +96,7 @@ EnterprisePoliciesManager.prototype = {
   },
 
   _activatePolicies(unparsedPolicies) {
-    let { schema } = ChromeUtils.import("resource:///modules/policies/schema.jsm", {});
+    let { schema } = ChromeUtils.import("resource:///modules/policies/schema.jsm");
 
     for (let policyName of Object.keys(unparsedPolicies)) {
       let policySchema = schema.properties[policyName];
@@ -188,8 +188,7 @@ EnterprisePoliciesManager.prototype = {
       this._callbacks[timing] = [];
     }
 
-    let { PromiseUtils } = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm",
-                                              {});
+    let { PromiseUtils } = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
     // Simulate the startup process. This step-by-step is a bit ugly but it
     // tries to emulate the same behavior as of a normal startup.
 

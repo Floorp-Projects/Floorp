@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 AntiTracking.runTest("Storage Access API returns promises that maintain user activation",
   // blocking callback
   async _ => {

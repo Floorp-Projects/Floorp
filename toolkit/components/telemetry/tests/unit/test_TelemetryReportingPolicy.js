@@ -22,7 +22,7 @@ const PREF_MINIMUM_CHANNEL_POLICY_VERSION =
   TelemetryUtils.Preferences.MinimumPolicyVersion + ".channel-" + TEST_CHANNEL;
 
 function fakeShowPolicyTimeout(set, clear) {
-  let reportingPolicy = ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm", {});
+  let reportingPolicy = ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm", null);
   reportingPolicy.Policy.setShowInfobarTimeout = set;
   reportingPolicy.Policy.clearShowInfobarTimeout = clear;
 }

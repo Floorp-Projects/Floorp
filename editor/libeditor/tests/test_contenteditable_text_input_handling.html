@@ -27,7 +27,7 @@ SimpleTest.waitForFocus(runTests);
 const kLF = !navigator.platform.indexOf("Win") ? "\r\n" : "\n";
 
 function runTests() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", null);
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   var fm = Services.focus;
 
   var listener = {

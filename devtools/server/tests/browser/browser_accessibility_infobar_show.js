@@ -12,7 +12,7 @@ add_task(async function() {
     url: MAIN_DOMAIN + "doc_accessibility_infobar.html",
   }, async function(browser) {
     await ContentTask.spawn(browser, null, async function() {
-      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
       const { HighlighterEnvironment } = require("devtools/server/actors/highlighters");
       const { AccessibleHighlighter } = require("devtools/server/actors/highlighters/accessible");
       const { XULWindowAccessibleHighlighter } = require("devtools/server/actors/highlighters/xul-accessible");

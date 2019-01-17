@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["PrivacyLevel"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PREF = "browser.sessionstore.privacy_level";
 

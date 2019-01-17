@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["SessionStorage"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // A bound to the size of data to store for DOM Storage.
 const DOM_STORAGE_LIMIT_PREF = "browser.sessionstore.dom_storage_limit";

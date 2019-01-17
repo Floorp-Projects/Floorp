@@ -8,17 +8,16 @@
 AddonTestUtils.init(this);
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionStorage.jsm");
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
+const {ExtensionStorage} = ChromeUtils.import("resource://gre/modules/ExtensionStorage.jsm");
+const {TelemetryController} = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
 
 const {
   ExtensionStorageIDB,
-} = ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm", {});
+} = ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
 
 const {
   getTrimmedString,
-} = ChromeUtils.import("resource://gre/modules/ExtensionTelemetry.jsm", {});
+} = ChromeUtils.import("resource://gre/modules/ExtensionTelemetry.jsm", null);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",

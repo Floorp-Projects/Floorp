@@ -8,7 +8,7 @@
 
 var tmp = {};
 
-const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
+const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 
 function test() {
 

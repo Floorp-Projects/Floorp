@@ -106,7 +106,7 @@ var gFontsDialog = {
       {id: "fonts-very-large-warning-message"},
       {id: "fonts-very-large-warning-accept"},
     ]);
-    let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+    let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     let flags = Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL |
                 Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING |
                 Services.prompt.BUTTON_POS_1_DEFAULT;

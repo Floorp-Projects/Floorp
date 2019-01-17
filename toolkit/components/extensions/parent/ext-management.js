@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "promptService",
                                    "nsIPromptService");
 
 XPCOMUtils.defineLazyGetter(this, "GlobalManager", () => {
-  const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
   return GlobalManager;
 });
 

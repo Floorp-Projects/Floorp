@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["AudioPlaybackChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 class AudioPlaybackChild extends ActorChild {
   handleMediaControlMessage(msg) {

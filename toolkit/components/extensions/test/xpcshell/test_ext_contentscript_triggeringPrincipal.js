@@ -9,7 +9,7 @@
  * loads.
  */
 
-const {escaped} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
+const {escaped} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", null);
 
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 

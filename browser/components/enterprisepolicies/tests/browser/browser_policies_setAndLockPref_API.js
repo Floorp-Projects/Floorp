@@ -7,7 +7,7 @@ let {
   Policies,
   setAndLockPref,
   setDefaultPref,
-} = ChromeUtils.import("resource:///modules/policies/Policies.jsm", {});
+} = ChromeUtils.import("resource:///modules/policies/Policies.jsm", null);
 
 add_task(async function test_API_directly() {
   await setupPolicyEngineWithJson("");

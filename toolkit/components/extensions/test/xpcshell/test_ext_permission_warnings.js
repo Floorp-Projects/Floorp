@@ -1,6 +1,6 @@
 "use strict";
 
-let {ExtensionTestCommon} = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
+let {ExtensionTestCommon} = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm");
 
 let bundle;
 if (AppConstants.MOZ_APP_NAME == "thunderbird") {
@@ -35,7 +35,7 @@ async function getPermissionWarningsForUpdate(oldExtensionData, newExtensionData
 // Tests that the expected permission warnings are generated for various
 // combinations of host permissions.
 add_task(async function host_permissions() {
-  let {PluralForm} = ChromeUtils.import("resource://gre/modules/PluralForm.jsm", {});
+  let {PluralForm} = ChromeUtils.import("resource://gre/modules/PluralForm.jsm");
 
   let permissionTestCases = [{
     description: "Empty manifest without permissions",

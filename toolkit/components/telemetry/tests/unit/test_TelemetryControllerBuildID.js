@@ -18,7 +18,6 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // Set up our dummy AppInfo object so we can control the appBuildID.
 ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);

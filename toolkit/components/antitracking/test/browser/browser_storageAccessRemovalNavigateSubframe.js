@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 AntiTracking.runTest("Storage Access is removed when subframe navigates",
   // blocking callback
   async _ => {

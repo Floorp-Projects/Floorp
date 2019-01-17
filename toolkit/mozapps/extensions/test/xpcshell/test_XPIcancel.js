@@ -4,7 +4,7 @@
 
 // Test the cancellable doing/done/cancelAll API in XPIProvider
 
-ChromeUtils.import("resource://gre/modules/addons/XPIInstall.jsm");
+const {XPIInstall} = ChromeUtils.import("resource://gre/modules/addons/XPIInstall.jsm");
 
 function run_test() {
   // Check that cancelling with nothing in progress doesn't blow up

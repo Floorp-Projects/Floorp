@@ -4,7 +4,7 @@
 "use strict";
 
 function checkSpacers() {
-  let bsPass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
+  let bsPass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", null);
   let navbarWidgets = CustomizableUI.getWidgetIdsInArea("nav-bar");
   let currentSetWidgets = bsPass.CustomizableUIInternal._getCurrentWidgetsInContainer(document.getElementById("nav-bar"));
   navbarWidgets = navbarWidgets.filter(w => CustomizableUI.isSpecialWidget(w));

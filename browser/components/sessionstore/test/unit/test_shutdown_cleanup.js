@@ -7,11 +7,11 @@
  * entries.
  */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
-const {SessionWorker} = ChromeUtils.import("resource:///modules/sessionstore/SessionWorker.jsm", {});
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {SessionWorker} = ChromeUtils.import("resource:///modules/sessionstore/SessionWorker.jsm");
 
 const profd = do_get_profile();
-const {SessionFile} = ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm", {});
+const {SessionFile} = ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm");
 const {Paths} = SessionFile;
 
 const {File} = OS;

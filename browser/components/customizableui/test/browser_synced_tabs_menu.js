@@ -6,9 +6,9 @@
 
 requestLongerTimeout(2);
 
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-let {SyncedTabs} = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm", {});
-let {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm", {});
+const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+let {SyncedTabs} = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
+let {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
 ChromeUtils.defineModuleGetter(this, "UITour", "resource:///modules/UITour.jsm");
 

@@ -12,9 +12,9 @@
 "use strict";
 
 const { ManifestObtainer } =
-  ChromeUtils.import("resource://gre/modules/ManifestObtainer.jsm", {});
+  ChromeUtils.import("resource://gre/modules/ManifestObtainer.jsm");
 const { ManifestIcons } =
-  ChromeUtils.import("resource://gre/modules/ManifestIcons.jsm", {});
+  ChromeUtils.import("resource://gre/modules/ManifestIcons.jsm");
 
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");

@@ -68,7 +68,7 @@ add_task(async function test_initial_state() {
 
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
       let {
         savedAddresses,
         savedBasicCards,
@@ -112,7 +112,7 @@ add_task(async function test_initial_state() {
 
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
       let {
         savedAddresses,
         savedBasicCards,
@@ -154,7 +154,7 @@ add_task(async function test_initial_state() {
 
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
       let {
         savedAddresses,
         savedBasicCards,

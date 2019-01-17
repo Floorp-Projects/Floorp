@@ -8,10 +8,10 @@ var EXPORTED_SYMBOLS = [
   "FxAccountsStorageManager",
 ];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {DATA_FORMAT_VERSION, DEFAULT_STORAGE_FILENAME, FXA_PWDMGR_HOST, FXA_PWDMGR_MEMORY_FIELDS, FXA_PWDMGR_PLAINTEXT_FIELDS, FXA_PWDMGR_REALM, FXA_PWDMGR_SECURE_FIELDS, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 
 // A helper function so code can check what fields are able to be stored by
 // the storage manager without having a reference to a manager instance.

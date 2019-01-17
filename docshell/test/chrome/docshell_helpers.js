@@ -6,8 +6,8 @@ var imports = [ "SimpleTest", "is", "isnot", "ok", "onerror", "todo",
 for (var name of imports) {
   window[name] = window.opener.wrappedJSObject[name];
 }
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Some functions assume chrome-harness.js has been loaded.
 /* import-globals-from ../../../testing/mochitest/chrome-harness.js */

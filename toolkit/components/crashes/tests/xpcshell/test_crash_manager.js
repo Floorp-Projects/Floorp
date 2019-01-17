@@ -3,7 +3,7 @@
 
 "use strict";
 
-var {CrashStore, CrashManager} = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", {});
+var {CrashStore, CrashManager} = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", null);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);

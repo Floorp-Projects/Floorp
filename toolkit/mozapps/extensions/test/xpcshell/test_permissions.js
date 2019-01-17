@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-
 // Checks that permissions set in preferences are correctly imported but can
 // be removed by the user.
 

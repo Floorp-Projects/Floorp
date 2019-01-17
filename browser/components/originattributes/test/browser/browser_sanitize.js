@@ -6,7 +6,7 @@ const CC = Components.Constructor;
 
 const TEST_DOMAIN = "http://example.net/";
 
-const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
+const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 
 function setCookies(aBrowser) {
   ContentTask.spawn(aBrowser, null, function() {

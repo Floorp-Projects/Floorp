@@ -4,8 +4,8 @@
 // etc--see HttpBaseChannel::IsSafeMethod).  Since no prompting is possible
 // in xpcshell, we get an error for prompts, and the request fails.
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 

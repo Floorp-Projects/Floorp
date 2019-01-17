@@ -7,7 +7,7 @@
 
 var EXPORTED_SYMBOLS = [ "ZoomUI" ];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var ZoomUI = {
   init(aWindow) {
@@ -99,7 +99,7 @@ function updateZoomUI(aBrowser, aAnimate = false) {
   }
 }
 
-ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
+const {CustomizableUI} = ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
 let customizationListener = {};
 customizationListener.onWidgetAdded =
 customizationListener.onWidgetRemoved =

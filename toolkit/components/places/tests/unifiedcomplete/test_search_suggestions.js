@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
+const {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
 
 const ENGINE_NAME = "engine-suggestions.xml";
 // This is fixed to match the port number in engine-suggestions.xml.

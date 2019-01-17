@@ -1,7 +1,7 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
-const {AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
+const {AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
 AddonTestUtils.initMochitest(this);
 

@@ -9,8 +9,8 @@
 
 var EXPORTED_SYMBOLS = ["Password", "DumpPasswords"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://tps/logger.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
 
 var nsLoginInfo = new Components.Constructor(
                       "@mozilla.org/login-manager/loginInfo;1",

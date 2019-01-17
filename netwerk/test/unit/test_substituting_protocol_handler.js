@@ -1,7 +1,5 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 add_task(async function test_case_insensitive_substitutions() {
   let resProto = Services.io.getProtocolHandler("resource")
     .QueryInterface(Ci.nsISubstitutingProtocolHandler);

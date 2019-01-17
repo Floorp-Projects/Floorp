@@ -3,9 +3,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 add_task(async function() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:support" }, async function(browser) {
     let keyGoogleStatus = await ContentTask.spawn(browser, null, async function() {

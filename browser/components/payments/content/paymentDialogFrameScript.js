@@ -20,7 +20,7 @@
 /* eslint-env mozilla/frame-script */
 /* global Services */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "FormAutofill",
                                "resource://formautofill/FormAutofill.jsm");
@@ -35,7 +35,7 @@ const SAVE_ADDRESS_DEFAULT_PREF = "dom.payments.defaults.saveAddress";
 let PaymentFrameScript = {
   init() {
     XPCOMUtils.defineLazyGetter(this, "log", () => {
-      let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+      let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm");
       return new ConsoleAPI({
         maxLogLevelPref: "dom.payments.loglevel",
         prefix: "paymentDialogFrameScript",

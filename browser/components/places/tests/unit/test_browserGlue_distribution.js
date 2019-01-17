@@ -47,7 +47,7 @@ registerCleanupFunction(function() {
 });
 
 add_task(async function() {
-  let {DistributionCustomizer} = ChromeUtils.import("resource:///modules/distribution.js", {});
+  let {DistributionCustomizer} = ChromeUtils.import("resource:///modules/distribution.js");
   let distribution = new DistributionCustomizer();
 
   let glue = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);

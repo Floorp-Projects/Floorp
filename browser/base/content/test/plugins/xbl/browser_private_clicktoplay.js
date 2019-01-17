@@ -8,8 +8,6 @@ var gTestBrowser = null;
 var gNextTest = null;
 var gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var gPrivateWindow = null;
 var gPrivateBrowser = null;
 

@@ -7,11 +7,11 @@
 "use strict";
 
 /* globals ControllerStateMachine */
-ChromeUtils.import("resource://gre/modules/presentation/ControllerStateMachine.jsm");
+const {ControllerStateMachine} = ChromeUtils.import("resource://gre/modules/presentation/ControllerStateMachine.jsm");
 /* globals ReceiverStateMachine */
-ChromeUtils.import("resource://gre/modules/presentation/ReceiverStateMachine.jsm");
+const {ReceiverStateMachine} = ChromeUtils.import("resource://gre/modules/presentation/ReceiverStateMachine.jsm");
 /* globals State */
-ChromeUtils.import("resource://gre/modules/presentation/StateMachineHelper.jsm");
+const {State} = ChromeUtils.import("resource://gre/modules/presentation/StateMachineHelper.jsm");
 
 const testControllerId = "test-controller-id";
 const testPresentationId = "test-presentation-id";

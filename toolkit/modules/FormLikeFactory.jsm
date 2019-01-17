@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["FormLikeFactory"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
  * A factory to generate FormLike objects that represent a set of related fields

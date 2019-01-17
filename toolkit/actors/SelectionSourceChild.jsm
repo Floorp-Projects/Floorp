@@ -5,8 +5,8 @@
 
 var EXPORTED_SYMBOLS = ["SelectionSourceChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class SelectionSourceChild extends ActorChild {
   receiveMessage(message) {

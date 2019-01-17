@@ -4,10 +4,9 @@
 
 let reportURL;
 
-ChromeUtils.import("resource://gre/modules/CrashReports.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {CrashReports} = ChromeUtils.import("resource://gre/modules/CrashReports.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineModuleGetter(this, "CrashSubmit", "resource://gre/modules/CrashSubmit.jsm");
 

@@ -1,9 +1,9 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const {ExtensionTestUtils} = ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm");
 
 const PROCESS_COUNT_PREF = "dom.ipc.processCount";
 
@@ -90,7 +90,7 @@ async function loadContentPage() {
   registerCleanupFunction(() => page.close());
 
   page.addFrameScriptHelper(`
-    ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+    var {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
     Cu.importGlobalProperties(["FileReader"]);
   `);
   return page;

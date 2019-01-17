@@ -21,9 +21,9 @@
   const CONTENT_PAGE =
     "http://mochi.test:8888/chrome/security/manager/ssl/tests/mochitest/stricttransportsecurity/page_blank.html";
 
-  ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-  ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+  const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   // This is how many sub-tests (testframes) in each round.
   // When the round begins, this will be initialized.

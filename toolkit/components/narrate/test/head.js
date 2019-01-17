@@ -13,10 +13,9 @@ const TEST_ARTICLE =
 const TEST_ITALIAN_ARTICLE =
   "http://example.com/browser/toolkit/components/narrate/test/inferno.html";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
@@ -66,7 +65,8 @@ function spawnInNewReaderTab(url, func) {
           // a global here which will make it ESLint happy.
           /* global NarrateTestUtils */
           ChromeUtils.import("chrome://mochitests/content/browser/" +
-            "toolkit/components/narrate/test/NarrateTestUtils.jsm");
+            "toolkit/components/narrate/test/NarrateTestUtils.jsm",
+            Cu.getGlobalForObject({}));
 
           await NarrateTestUtils.getReaderReadyPromise(content);
         });

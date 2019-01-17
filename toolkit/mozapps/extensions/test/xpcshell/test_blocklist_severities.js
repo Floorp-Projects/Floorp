@@ -5,8 +5,6 @@
 
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
-
 var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gTestserver.registerDirectory("/data/", do_get_file("data"));
 

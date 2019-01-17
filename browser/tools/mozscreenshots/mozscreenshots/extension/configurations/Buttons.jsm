@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["Buttons"];
 
-ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {CustomizableUI} = ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Buttons = {
 

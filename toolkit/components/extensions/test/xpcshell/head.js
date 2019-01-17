@@ -3,11 +3,11 @@
 /* exported createHttpServer, promiseConsoleOutput, cleanupDir, clearCache, testEnv
             runWithPrefs, withHandlingUserInput */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {clearInterval, clearTimeout, setInterval, setIntervalWithTarget, setTimeout, setTimeoutWithTarget} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+var {AddonTestUtils, MockAsyncShutdown} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
 // eslint-disable-next-line no-unused-vars
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -182,7 +182,8 @@ let extensionHandlers = new WeakSet();
 
 function handlingUserInputFrameScript() {
   /* globals content */
-  ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
+  // eslint-disable-next-line no-shadow
+  const {MessageChannel} = ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
 
   let handle;
   MessageChannel.addListener(this, "ExtensionTest:HandleUserInput", {
@@ -201,7 +202,7 @@ async function withHandlingUserInput(extension, fn) {
   let {messageManager} = extension.extension.groupFrameLoader;
 
   if (!extensionHandlers.has(extension)) {
-    messageManager.loadFrameScript(`data:,(${handlingUserInputFrameScript}).call(this)`, false, true);
+    messageManager.loadFrameScript(`data:,(${encodeURI(handlingUserInputFrameScript)}).call(this)`, false, true);
     extensionHandlers.add(extension);
   }
 

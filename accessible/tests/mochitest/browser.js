@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 /**
  * Load the browser with the given url and then invokes the given function.
@@ -91,7 +91,7 @@ function reloadButton() {
 // //////////////////////////////////////////////////////////////////////////////
 // private section
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gBrowserContext =
 {

@@ -4,14 +4,9 @@
 _("Test that node reassignment responses are respected on all kinds of " +
   "requests.");
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/rest.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/status.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
 
 add_task(async function setup() {

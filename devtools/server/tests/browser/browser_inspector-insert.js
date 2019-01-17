@@ -36,7 +36,7 @@ async function testRearrange(walker) {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, [nextNode.actorID],
     async function(actorID) {
-      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
       const { DebuggerServer } = require("devtools/server/main");
       const {DocumentWalker} = require("devtools/server/actors/inspector/document-walker");
       const sibling =
@@ -62,7 +62,7 @@ async function testInsertInvalidInput(walker) {
   // Now move it to the original location and make sure no mutation happens.
   await ContentTask.spawn(gBrowser.selectedBrowser, [longlist.actorID],
     async function(actorID) {
-      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
       const { DebuggerServer } = require("devtools/server/main");
       // Convert actorID to current compartment string otherwise
       // searchAllConnectionsForActor is confused and won't find the actor.

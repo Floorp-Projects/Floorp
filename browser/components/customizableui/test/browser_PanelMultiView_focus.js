@@ -7,7 +7,7 @@
  * Test the focus behavior when opening PanelViews.
  */
 
-ChromeUtils.import("resource:///modules/PanelMultiView.jsm");
+const {PanelMultiView} = ChromeUtils.import("resource:///modules/PanelMultiView.jsm");
 
 let gAnchor;
 let gPanel;

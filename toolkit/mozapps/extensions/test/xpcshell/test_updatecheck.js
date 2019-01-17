@@ -4,9 +4,7 @@
 
 // This verifies that AddonUpdateChecker works correctly
 
-ChromeUtils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
-
-ChromeUtils.import("resource://testing-common/httpd.js");
+const {AddonUpdateChecker} = ChromeUtils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
 
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 

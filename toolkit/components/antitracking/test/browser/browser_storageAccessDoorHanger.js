@@ -1,6 +1,4 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const CHROME_BASE = "chrome://mochitests/content/browser/browser/modules/test/browser/";
 Services.scriptloader.loadSubScript(CHROME_BASE + "head.js", this);
 /* import-globals-from ../../../../../browser/modules/test/browser/head.js */

@@ -2,9 +2,9 @@
 // assert is available to chrome scripts loaded via SpecialPowers.loadChromeScript.
 /* global assert */
 
-ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
+const {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {ContentTaskUtils} = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
 
 var gAutocompletePopup = Services.ww.activeWindow
                                     .document

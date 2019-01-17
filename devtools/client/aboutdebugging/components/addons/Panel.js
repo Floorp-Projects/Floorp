@@ -5,7 +5,7 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const { Management } = require("resource://gre/modules/Extension.jsm");
+const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 const { createFactory, Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");

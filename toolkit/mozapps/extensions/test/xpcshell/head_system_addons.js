@@ -39,7 +39,7 @@ async function installSystemAddons(xml, waitIDs = []) {
   info("Triggering system add-on update check.");
 
   await serveSystemUpdate(xml, async function() {
-    let { XPIProvider } = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+    let { XPIProvider } = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm");
     await Promise.all([
       XPIProvider.updateSystemAddons(),
       ...waitIDs.map(id => promiseWebExtensionStartup(id)),

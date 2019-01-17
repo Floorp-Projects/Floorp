@@ -1,5 +1,5 @@
-ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {TelemetryArchive} = ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = [
   "TelemetryArchiveTesting",

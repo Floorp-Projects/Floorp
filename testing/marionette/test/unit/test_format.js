@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {pprint, truncate} = ChromeUtils.import("chrome://marionette/content/format.js", {});
+const {pprint, truncate} = ChromeUtils.import("chrome://marionette/content/format.js");
 
 const MAX_STRING_LENGTH = 250;
 const HALF = "x".repeat(MAX_STRING_LENGTH / 2);

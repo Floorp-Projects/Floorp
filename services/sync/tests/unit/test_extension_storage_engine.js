@@ -3,12 +3,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/engines/extension-storage.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://gre/modules/ExtensionStorageSync.jsm");
-/* globals extensionStorageSync */
+const {ExtensionStorageEngine} = ChromeUtils.import("resource://services-sync/engines/extension-storage.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {extensionStorageSync} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSync.jsm");
 
 let engine;
 

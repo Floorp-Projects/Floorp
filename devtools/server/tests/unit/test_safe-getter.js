@@ -4,7 +4,7 @@ function run_test() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
   });
-  ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+  const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
   addDebuggerToGlobal(this);
   const g = testGlobal("test");
   const dbg = new Debugger();

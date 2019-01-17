@@ -13,8 +13,6 @@
  * not being already installed and enabled.
  */
 
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-
 const kPageURL =
   "http://example.com/browser/security/sandbox/test/bug1393259.html";
 

@@ -6,7 +6,7 @@ async function runWithDisabledPrivateBrowsing(callback) {
   const {
     EnterprisePolicyTesting,
     PoliciesPrefTracker,
-  } = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", {});
+  } = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", null);
 
   PoliciesPrefTracker.start();
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({

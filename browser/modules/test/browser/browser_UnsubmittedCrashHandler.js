@@ -6,13 +6,13 @@
  */
 
 const { UnsubmittedCrashHandler } =
-  ChromeUtils.import("resource:///modules/ContentCrashHandlers.jsm", {});
+  ChromeUtils.import("resource:///modules/ContentCrashHandlers.jsm");
 const { FileUtils } =
-  ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
+  ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 const { makeFakeAppDir }  =
-  ChromeUtils.import("resource://testing-common/AppData.jsm", {});
+  ChromeUtils.import("resource://testing-common/AppData.jsm");
 const { OS } =
-  ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
+  ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const DAY = 24 * 60 * 60 * 1000; // milliseconds
 const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";

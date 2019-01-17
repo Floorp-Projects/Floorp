@@ -4,7 +4,7 @@
 
 "use strict";
 
-let { EventEmitter } = ChromeUtils.import("resource:///modules/syncedtabs/EventEmitter.jsm", {});
+let { EventEmitter } = ChromeUtils.import("resource:///modules/syncedtabs/EventEmitter.jsm");
 
 var EXPORTED_SYMBOLS = [
   "SyncedTabsDeckStore",

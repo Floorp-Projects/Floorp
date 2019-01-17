@@ -13,23 +13,23 @@ const PBKDF2_KEY_BYTES = 16;
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/engines/clients.js");
-ChromeUtils.import("resource://services-sync/main.js");
-ChromeUtils.import("resource://services-sync/policies.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-sync/stages/enginesync.js");
-ChromeUtils.import("resource://services-sync/stages/declined.js");
-ChromeUtils.import("resource://services-sync/status.js");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {CLIENT_NOT_CONFIGURED, CREDENTIALS_CHANGED, HMAC_EVENT_INTERVAL, LOGIN_FAILED, LOGIN_FAILED_INVALID_PASSPHRASE, LOGIN_FAILED_NETWORK_ERROR, LOGIN_FAILED_NO_PASSPHRASE, LOGIN_FAILED_NO_USERNAME, LOGIN_FAILED_SERVER_ERROR, LOGIN_SUCCEEDED, MASTER_PASSWORD_LOCKED, METARECORD_DOWNLOAD_FAIL, NO_SYNC_NODE_FOUND, PREFS_BRANCH, STATUS_DISABLED, STATUS_OK, STORAGE_VERSION, VERSION_OUT_OF_DATE, WEAVE_VERSION, kFirefoxShuttingDown, kFirstSyncChoiceNotMade, kSyncBackoffNotMet, kSyncMasterPasswordLocked, kSyncNetworkOffline, kSyncNotConfigured, kSyncWeaveDisabled} = ChromeUtils.import("resource://services-sync/constants.js");
+const {EngineManager} = ChromeUtils.import("resource://services-sync/engines.js");
+const {ClientEngine} = ChromeUtils.import("resource://services-sync/engines/clients.js");
+const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
+const {ErrorHandler, SyncScheduler} = ChromeUtils.import("resource://services-sync/policies.js");
+const {CollectionKeyManager, CryptoWrapper, RecordManager, WBORecord} = ChromeUtils.import("resource://services-sync/record.js");
+const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
+const {EngineSynchronizer} = ChromeUtils.import("resource://services-sync/stages/enginesync.js");
+const {DeclinedEngines} = ChromeUtils.import("resource://services-sync/stages/declined.js");
+const {Status} = ChromeUtils.import("resource://services-sync/status.js");
 ChromeUtils.import("resource://services-sync/telemetry.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
 
 function getEngineModules() {
   let result = {

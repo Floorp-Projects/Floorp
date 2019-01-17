@@ -1,4 +1,4 @@
-ChromeUtils.import("resource:///modules/HomePage.jsm");
+var {HomePage} = ChromeUtils.import("resource:///modules/HomePage.jsm");
 
 add_task(async function testSetHomepageUseCurrent() {
   is(gBrowser.currentURI.spec, "about:blank", "Test starts with about:blank open");

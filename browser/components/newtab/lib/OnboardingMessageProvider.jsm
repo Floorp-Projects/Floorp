@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
-ChromeUtils.import("resource://gre/modules/Localization.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsConfig.jsm");
-ChromeUtils.import("resource:///modules/AttributionCode.jsm");
-ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
+const {Localization} = ChromeUtils.import("resource://gre/modules/Localization.jsm");
+const {FxAccountsConfig} = ChromeUtils.import("resource://gre/modules/FxAccountsConfig.jsm");
+const {AttributionCode} = ChromeUtils.import("resource:///modules/AttributionCode.jsm");
+const {AddonRepository} = ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
 
 async function getAddonInfo() {
   try {

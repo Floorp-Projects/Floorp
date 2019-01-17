@@ -431,7 +431,7 @@ var TelemetryReportingPolicyImpl = {
     }
     firstRunPolicyURL = Services.urlFormatter.formatURL(firstRunPolicyURL);
 
-    const { BrowserWindowTracker } = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm", {});
+    const { BrowserWindowTracker } = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
     let win = BrowserWindowTracker.getTopWindow();
 
     if (!win) {

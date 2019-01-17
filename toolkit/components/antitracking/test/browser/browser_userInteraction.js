@@ -3,8 +3,6 @@
 
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 add_task(async function() {
   info("Starting subResources test");
 

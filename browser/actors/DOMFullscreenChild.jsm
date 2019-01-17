@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["DOMFullscreenChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 class DOMFullscreenChild extends ActorChild {
   receiveMessage(aMessage) {

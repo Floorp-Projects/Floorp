@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["URIFixupChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 class URIFixupChild extends ActorChild {
   observe(subject) {

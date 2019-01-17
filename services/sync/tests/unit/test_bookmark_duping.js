@@ -1,12 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/bookmark_validator.js");
+const {BookmarksEngine} = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {BookmarkValidator} = ChromeUtils.import("resource://services-sync/bookmark_validator.js");
 
 const BookmarksToolbarTitle = "toolbar";
 const bms = PlacesUtils.bookmarks;
