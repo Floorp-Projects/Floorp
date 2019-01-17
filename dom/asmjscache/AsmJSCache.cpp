@@ -18,6 +18,7 @@
 #include "mozilla/dom/asmjscache/PAsmJSCacheEntryParent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/quota/Client.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/dom/quota/UsageInfo.h"
@@ -26,6 +27,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "nsAutoPtr.h"
 #include "nsAtom.h"
@@ -294,6 +296,13 @@ class Client : public quota::Client {
 
  private:
   ~Client() override;
+
+  nsresult GetUsageForOriginInternal(PersistenceType aPersistenceType,
+                                     const nsACString& aGroup,
+                                     const nsACString& aOrigin,
+                                     const AtomicBool& aCanceled,
+                                     UsageInfo* aUsageInfo,
+                                     const bool aInitializing);
 };
 
 // FileDescriptorHolder owns a file descriptor and its memory mapping.
@@ -1666,8 +1675,8 @@ nsresult Client::InitOrigin(PersistenceType aPersistenceType,
   if (!aUsageInfo) {
     return NS_OK;
   }
-  return GetUsageForOrigin(aPersistenceType, aGroup, aOrigin, aCanceled,
-                           aUsageInfo);
+  return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+                                   aUsageInfo, /* aInitializing */ true);
 }
 
 nsresult Client::GetUsageForOrigin(PersistenceType aPersistenceType,
@@ -1675,52 +1684,8 @@ nsresult Client::GetUsageForOrigin(PersistenceType aPersistenceType,
                                    const nsACString& aOrigin,
                                    const AtomicBool& aCanceled,
                                    UsageInfo* aUsageInfo) {
-  QuotaManager* qm = QuotaManager::Get();
-  MOZ_ASSERT(qm, "We were being called by the QuotaManager");
-
-  nsCOMPtr<nsIFile> directory;
-  nsresult rv = qm->GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                                          getter_AddRefs(directory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(directory, "We're here because the origin directory exists");
-
-  rv = directory->Append(NS_LITERAL_STRING(ASMJSCACHE_DIRECTORY_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  DebugOnly<bool> exists;
-  MOZ_ASSERT(NS_SUCCEEDED(directory->Exists(&exists)) && exists);
-
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIFile> file;
-  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
-         file && !aCanceled) {
-    int64_t fileSize;
-    rv = file->GetFileSize(&fileSize);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    MOZ_ASSERT(fileSize >= 0, "Negative size?!");
-
-    // Since the client is not explicitly storing files, append to database
-    // usage which represents implicit storage allocation.
-    aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
+  return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+                                   aUsageInfo, /* aInitializing */ false);
 }
 
 void Client::OnOriginClearCompleted(PersistenceType aPersistenceType,
@@ -1745,6 +1710,72 @@ void Client::ShutdownWorkThreads() {
   if (sLiveParentActors) {
     MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return !sLiveParentActors; }));
   }
+}
+
+nsresult Client::GetUsageForOriginInternal(PersistenceType aPersistenceType,
+                                           const nsACString& aGroup,
+                                           const nsACString& aOrigin,
+                                           const AtomicBool& aCanceled,
+                                           UsageInfo* aUsageInfo,
+                                           const bool aInitializing) {
+  QuotaManager* qm = QuotaManager::Get();
+  MOZ_ASSERT(qm, "We were being called by the QuotaManager");
+#ifndef NIGHTLY_BUILD
+  Unused << aInitializing;
+#endif
+
+  nsCOMPtr<nsIFile> directory;
+  nsresult rv = qm->GetDirectoryForOrigin(aPersistenceType, aOrigin,
+                                          getter_AddRefs(directory));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+                                 Asm_GetDirForOrigin);
+    return rv;
+  }
+
+  MOZ_ASSERT(directory, "We're here because the origin directory exists");
+
+  rv = directory->Append(NS_LITERAL_STRING(ASMJSCACHE_DIRECTORY_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError, Asm_Append);
+    return rv;
+  }
+
+  DebugOnly<bool> exists;
+  MOZ_ASSERT(NS_SUCCEEDED(directory->Exists(&exists)) && exists);
+
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
+  rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+                                 Asm_GetDirEntries);
+    return rv;
+  }
+
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
+         file && !aCanceled) {
+    int64_t fileSize;
+    rv = file->GetFileSize(&fileSize);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+                                   Asm_GetFileSize);
+      return rv;
+    }
+
+    MOZ_ASSERT(fileSize >= 0, "Negative size?!");
+
+    // Since the client is not explicitly storing files, append to database
+    // usage which represents implicit storage allocation.
+    aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+                                 Asm_GetNextFile);
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 quota::Client* CreateClient() { return new Client(); }

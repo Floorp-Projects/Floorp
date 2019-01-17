@@ -185,7 +185,7 @@ class QuotaManager final : public BackgroundThreadObject {
   nsresult GetDirectoryMetadata2WithRestore(
       nsIFile* aDirectory, bool aPersistent, int64_t* aTimestamp,
       bool* aPersisted, nsACString& aSuffix, nsACString& aGroup,
-      nsACString& aOrigin);
+      nsACString& aOrigin, const bool aTelemetry = false);
 
   nsresult GetDirectoryMetadata2(nsIFile* aDirectory, int64_t* aTimestamp,
                                  bool* aPersisted);
