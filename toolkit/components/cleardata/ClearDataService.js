@@ -530,6 +530,13 @@ const HistoryCleaner = {
 };
 
 const SessionHistoryCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise(aResolve => {
+      Services.obs.notifyObservers(null, "browser:purge-session-history-for-domain", aHost);
+      aResolve();
+    });
+  },
+
   deleteByRange(aFrom, aTo) {
     return new Promise(aResolve => {
       Services.obs.notifyObservers(null, "browser:purge-session-history", String(aFrom));
