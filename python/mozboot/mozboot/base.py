@@ -747,3 +747,57 @@ class BaseBootstrapper(object):
         if h.hexdigest() != hexhash:
             os.remove(dest)
             raise ValueError('Hash of downloaded file does not match expected hash')
+
+    def ensure_java(self, extra_search_dirs=()):
+        """Verify the presence of java.
+
+        Note that we currently require a JDK (not just a JRE) because we
+        use `jarsigner` in local builds.
+
+        Soon we won't require Java 1.8 to build (after Bug 1515248 and
+        we use Android-Gradle plugin 3.2.1), but the Android
+        `sdkmanager` tool still requires exactly 1.8.  Sigh.  Note that
+        we no longer require javac explicitly; it's fetched by
+        Gradle.
+        """
+
+        if 'JAVA_HOME' in os.environ:
+            extra_search_dirs += (os.path.join(os.environ['JAVA_HOME'], 'bin'),)
+        java = self.which('java', extra_search_dirs)
+
+        if not java:
+            raise Exception('You need to have Java version 1.8 installed. '
+                            'Please visit http://www.java.com/en/download '
+                            'to get version 1.8.')
+
+        try:
+            output = subprocess.check_output([java,
+                                              '-XshowSettings:properties',
+                                              '-version'],
+                                             stderr=subprocess.STDOUT).rstrip()
+
+            # -version strings are pretty free-form, like: 'java version
+            # "1.8.0_192"' or 'openjdk version "11.0.1" 2018-10-16', but the
+            # -XshowSettings:properties gives the information (to stderr, sigh)
+            # like 'java.specification.version = 8'.  That flag is non-standard
+            # but has been around since at least 2011.
+            version = [line for line in output.splitlines()
+                       if 'java.specification.version' in line]
+            if not len(version) == 1:
+                raise Exception('You need to have Java version 1.8 installed '
+                                '(found {} but could not parse version "{}"). '
+                                'Check the JAVA_HOME environment variable. '
+                                'Please visit http://www.java.com/en/download '
+                                'to get version 1.8.'.format(java, output))
+
+            version = version[0].split(' = ')[-1]
+            if version not in ['1.8', '8']:
+                raise Exception('You need to have Java version 1.8 installed '
+                                '(found {} with version "{}"). '
+                                'Check the JAVA_HOME environment variable. '
+                                'Please visit http://www.java.com/en/download '
+                                'to get version 1.8.'.format(java, version))
+        except subprocess.CalledProcessError as e:
+            raise Exception('Failed to get java version from {}: {}'.format(java, e.output))
+
+        print('Your version of Java ({}) is at least 1.8 ({}).'.format(java, version))
