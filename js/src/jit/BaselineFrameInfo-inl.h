@@ -10,7 +10,7 @@
 namespace js {
 namespace jit {
 
-void FrameInfo::pop(StackAdjustment adjust) {
+void CompilerFrameInfo::pop(StackAdjustment adjust) {
   spIndex--;
   StackValue* popped = &stack[spIndex];
 
@@ -21,7 +21,7 @@ void FrameInfo::pop(StackAdjustment adjust) {
   popped->reset();
 }
 
-void FrameInfo::popn(uint32_t n, StackAdjustment adjust) {
+void CompilerFrameInfo::popn(uint32_t n, StackAdjustment adjust) {
   uint32_t poppedStack = 0;
   for (uint32_t i = 0; i < n; i++) {
     if (peek(-1)->kind() == StackValue::Stack) {

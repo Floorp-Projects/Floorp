@@ -1017,8 +1017,7 @@ void FrameIsDebuggeeCheck(BaselineFrame* frame);
 JSObject* CreateGenerator(JSContext* cx, BaselineFrame* frame);
 
 MOZ_MUST_USE bool NormalSuspend(JSContext* cx, HandleObject obj,
-                                BaselineFrame* frame, jsbytecode* pc,
-                                uint32_t stackDepth);
+                                BaselineFrame* frame, jsbytecode* pc);
 MOZ_MUST_USE bool FinalSuspend(JSContext* cx, HandleObject obj, jsbytecode* pc);
 MOZ_MUST_USE bool InterpretResume(JSContext* cx, HandleObject obj,
                                   HandleValue val, HandlePropertyName kind,

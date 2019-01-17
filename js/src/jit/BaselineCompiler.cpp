@@ -45,27 +45,30 @@ using mozilla::Maybe;
 namespace js {
 namespace jit {
 
-BaselineCompilerHandler::BaselineCompilerHandler(TempAllocator& alloc,
+BaselineCompilerHandler::BaselineCompilerHandler(MacroAssembler& masm,
+                                                 TempAllocator& alloc,
                                                  JSScript* script)
-    : alloc_(alloc),
+    : frame_(script, masm),
+      alloc_(alloc),
       script_(script),
       pc_(script->code()),
       compileDebugInstrumentation_(script->isDebuggee()) {}
 
-BaselineInterpreterHandler::BaselineInterpreterHandler() {}
+BaselineInterpreterHandler::BaselineInterpreterHandler(MacroAssembler& masm)
+    : frame_(masm) {}
 
 template <typename Handler>
 template <typename... HandlerArgs>
 BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc,
                                           JSScript* script,
                                           HandlerArgs&&... args)
-    : handler(std::forward<HandlerArgs>(args)...),
+    : handler(masm, std::forward<HandlerArgs>(args)...),
       cx(cx),
       script(script),
       ionCompileable_(jit::IsIonEnabled(cx) && CanIonCompileScript(cx, script)),
       alloc_(alloc),
       analysis_(alloc, script),
-      frame(script, masm),
+      frame(handler.frame()),
       traceLoggerToggleOffsets_(cx),
       icEntryIndex_(0),
       pushedBeforeCall_(0),
@@ -88,6 +91,11 @@ BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc,
   MOZ_CRASH();
 #endif
 }
+
+BaselineInterpreterGenerator::BaselineInterpreterGenerator(JSContext* cx,
+                                                           TempAllocator& alloc)
+    // Note: the nullptr script here is temporary. See bug 1519378.
+    : BaselineCodeGen(cx, alloc, /* script = */ nullptr) {}
 
 bool BaselineCompilerHandler::init() {
   uint32_t len = script_->length();
@@ -502,6 +510,39 @@ void BaselineCodeGen<Handler>::prepareVMCall() {
   masm.Push(BaselineFrameReg);
 }
 
+template <>
+void BaselineCompilerCodeGen::storeFrameSizeAndPushDescriptor(
+    uint32_t frameBaseSize, uint32_t argSize, const Address& frameSizeAddr) {
+  uint32_t frameVals = frame.nlocals() + frame.stackDepth();
+
+  uint32_t frameFullSize = frameBaseSize + (frameVals * sizeof(Value));
+  masm.store32(Imm32(frameFullSize), frameSizeAddr);
+
+  uint32_t descriptor = MakeFrameDescriptor(
+      frameFullSize + argSize, FrameType::BaselineJS, ExitFrameLayout::Size());
+  masm.push(Imm32(descriptor));
+}
+
+template <>
+void BaselineInterpreterCodeGen::storeFrameSizeAndPushDescriptor(
+    uint32_t frameBaseSize, uint32_t argSize, const Address& frameSizeAddr) {
+  MOZ_CRASH("NYI: interpreter storeFrameSizeAndPushDescriptor");
+}
+
+template <>
+void BaselineCompilerCodeGen::computeFullFrameSize(uint32_t frameBaseSize,
+                                                   Register dest) {
+  uint32_t frameVals = frame.nlocals() + frame.stackDepth();
+  uint32_t frameFullSize = frameBaseSize + (frameVals * sizeof(Value));
+  masm.move32(Imm32(frameFullSize), dest);
+}
+
+template <>
+void BaselineInterpreterCodeGen::computeFullFrameSize(uint32_t frameBaseSize,
+                                                      Register dest) {
+  MOZ_CRASH("NYI: interpreter computeFullFrameSize");
+}
+
 template <typename Handler>
 bool BaselineCodeGen<Handler>::callVM(const VMFunction& fun,
                                       CallVMPhase phase) {
@@ -533,16 +574,10 @@ bool BaselineCodeGen<Handler>::callVM(const VMFunction& fun,
 
   Address frameSizeAddress(BaselineFrameReg,
                            BaselineFrame::reverseOffsetOfFrameSize());
-  uint32_t frameVals = frame.nlocals() + frame.stackDepth();
   uint32_t frameBaseSize =
       BaselineFrame::FramePointerOffset + BaselineFrame::Size();
-  uint32_t frameFullSize = frameBaseSize + (frameVals * sizeof(Value));
   if (phase == POST_INITIALIZE) {
-    masm.store32(Imm32(frameFullSize), frameSizeAddress);
-    uint32_t descriptor =
-        MakeFrameDescriptor(frameFullSize + argSize, FrameType::BaselineJS,
-                            ExitFrameLayout::Size());
-    masm.push(Imm32(descriptor));
+    storeFrameSizeAndPushDescriptor(frameBaseSize, argSize, frameSizeAddress);
   } else {
     MOZ_ASSERT(phase == CHECK_OVER_RECURSED);
     Label afterWrite;
@@ -557,7 +592,7 @@ bool BaselineCodeGen<Handler>::callVM(const VMFunction& fun,
     masm.jump(&afterWrite);
 
     masm.bind(&writePostInitialize);
-    masm.move32(Imm32(frameFullSize), ICTailCallReg);
+    computeFullFrameSize(frameBaseSize, ICTailCallReg);
 
     masm.bind(&afterWrite);
     masm.store32(ICTailCallReg, frameSizeAddress);
@@ -3738,7 +3773,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_FINALLY() {
   // JSOP_FINALLY has a def count of 2, but these values are already on the
   // stack (they're pushed by JSOP_GOSUB). Update the compiler's stack state.
-  frame.setStackDepth(frame.stackDepth() + 2);
+  frame.incStackDepth(2);
 
   // To match the interpreter, emit an interrupt check at the start of the
   // finally block.
@@ -4116,7 +4151,7 @@ bool BaselineCodeGen<Handler>::emitReturn() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_RETURN() {
-  MOZ_ASSERT(frame.stackDepth() == 1);
+  frame.assertStackDepth(1);
 
   frame.popValue(JSReturnOperand);
   return emitReturn();
@@ -4138,7 +4173,7 @@ void BaselineCodeGen<Handler>::emitLoadReturnValue(ValueOperand val) {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_RETRVAL() {
-  MOZ_ASSERT(frame.stackDepth() == 0);
+  frame.assertStackDepth(0);
 
   masm.moveValue(UndefinedValue(), JSReturnOperand);
 
@@ -4715,7 +4750,7 @@ static const VMFunction CreateGeneratorInfo =
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_GENERATOR() {
-  MOZ_ASSERT(frame.stackDepth() == 0);
+  frame.assertStackDepth(0);
 
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
@@ -4733,7 +4768,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GENERATOR() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_INITIALYIELD() {
   frame.syncStack(0);
-  MOZ_ASSERT(frame.stackDepth() == 1);
+  frame.assertStackDepth(1);
 
   Register genObj = R2.scratchReg();
   masm.unboxObject(frame.addressOfStackValue(-1), genObj);
@@ -4763,7 +4798,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITIALYIELD() {
 }
 
 typedef bool (*NormalSuspendFn)(JSContext*, HandleObject, BaselineFrame*,
-                                jsbytecode*, uint32_t);
+                                jsbytecode*);
 static const VMFunction NormalSuspendInfo =
     FunctionInfo<NormalSuspendFn>(jit::NormalSuspend, "NormalSuspend");
 
@@ -4775,9 +4810,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_YIELD() {
   Register genObj = R2.scratchReg();
   masm.unboxObject(R0, genObj);
 
-  MOZ_ASSERT(frame.stackDepth() >= 1);
-
-  if (frame.stackDepth() == 1) {
+  if (frame.hasKnownStackDepth(1)) {
     // If the expression stack is empty, we can inline the YIELD.
 
     Register temp = R1.scratchReg();
@@ -4803,7 +4836,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_YIELD() {
     masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
 
     prepareVMCall();
-    pushArg(Imm32(frame.stackDepth()));
     pushBytecodePCArg();
     pushArg(R1.scratchReg());
     pushArg(genObj);
