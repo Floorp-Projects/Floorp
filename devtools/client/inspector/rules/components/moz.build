@@ -12,6 +12,7 @@ DevToolsModules(
     'RulesApp.js',
     'SearchBox.js',
     'Selector.js',
+    'SelectorHighlighter.js',
     'SourceLink.js',
     'Toolbar.js',
 )

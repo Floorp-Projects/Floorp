@@ -7,7 +7,7 @@ html {
 }
 
 body.config-background {
-  height: 100%;
+  min-height: 100%;
   background-image: url("chrome://browser/content/aboutconfig/background.svg");
   background-repeat: no-repeat;
   background-position: center center;
