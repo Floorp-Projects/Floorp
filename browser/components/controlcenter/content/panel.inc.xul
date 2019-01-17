@@ -137,7 +137,7 @@
       <!-- Clear Site Data Button -->
       <vbox hidden="true"
             id="identity-popup-clear-sitedata-footer"
-            class="panel-footer identity-popup-footer">
+            class="panel-footer">
         <button id="identity-popup-clear-sitedata-button"
                 label="&identity.clearSiteData;"
                 oncommand="gIdentityHandler.clearSiteData(event); gIdentityHandler.recordClick('clear_sitedata');"/>
@@ -226,7 +226,7 @@
                 oncommand="gIdentityHandler.enableMixedContentProtection()"/>
       </vbox>
 
-      <vbox id="identity-popup-more-info-footer" class="panel-footer identity-popup-footer">
+      <vbox id="identity-popup-more-info-footer" class="panel-footer">
         <!-- More Security Information -->
         <button id="identity-popup-more-info"
                 label="&identity.moreInfoLinkText2;"
@@ -246,7 +246,7 @@
           <image/>
           <label>&contentBlocking.trackersView.strictInfo.label;</label>
         </hbox>
-        <vbox class="panel-footer identity-popup-footer">
+        <vbox class="panel-footer">
           <button id="identity-popup-trackersView-settings-button"
                   label="&contentBlocking.manageSettings.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
@@ -261,7 +261,7 @@
                descriptionheightworkaround="true">
         <vbox id="identity-popup-cookiesView-list" class="identity-popup-content-blocking-list">
         </vbox>
-        <vbox class="panel-footer identity-popup-footer">
+        <vbox class="panel-footer">
           <button id="identity-popup-cookiesView-settings-button"
                   label="&contentBlocking.manageSettings.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
@@ -289,7 +289,7 @@
           </vbox>
         </vbox>
         <vbox id="identity-popup-breakageReportView-footer"
-              class="panel-footer identity-popup-footer">
+              class="panel-footer">
           <button id="identity-popup-breakageReportView-cancel"
                   label="&contentBlocking.breakageReportView.cancel.label;"
                   oncommand="ContentBlocking.backToMainView();"/>

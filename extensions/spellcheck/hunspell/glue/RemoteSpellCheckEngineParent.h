@@ -30,6 +30,9 @@ class RemoteSpellcheckEngineParent : public PRemoteSpellcheckEngineParent {
   virtual mozilla::ipc::IPCResult RecvCheck(const nsString& aWord,
                                             bool* aIsMisspelled) override;
 
+  virtual mozilla::ipc::IPCResult RecvCheckAsync(
+      nsTArray<nsString>&& aWord, CheckAsyncResolver&& aResolve) override;
+
   virtual mozilla::ipc::IPCResult RecvCheckAndSuggest(
       const nsString& aWord, bool* aIsMisspelled,
       InfallibleTArray<nsString>* aSuggestions) override;
