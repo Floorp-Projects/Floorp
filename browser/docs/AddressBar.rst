@@ -75,7 +75,8 @@ It is augmented as it progresses through the system, with various information:
              // MATCH_SOURCE.*, that can be returned by the model.
 
     // Properties added by the Model.
-    autofill; // {boolean} whether the first match is an autofill match.
+    autofillValue; // {string} the text value that should be autofilled in the
+                   // input, if any.
     preselected; // {boolean} whether the first match should be preselected.
     results; // {array} list of UrlbarMatch objects.
     tokens; // {array} tokens extracted from the searchString, each token is an
