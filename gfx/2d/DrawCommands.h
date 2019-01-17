@@ -369,6 +369,38 @@ class FillRectCommand : public DrawingCommand {
   DrawOptions mOptions;
 };
 
+class FillRoundedRectCommand : public DrawingCommand {
+ public:
+  FillRoundedRectCommand(const RoundedRect& aRect, const Pattern& aPattern,
+                         const DrawOptions& aOptions)
+      : mRect(aRect), mPattern(aPattern), mOptions(aOptions) {}
+
+  CommandType GetType() const override { return FillRoundedRectCommand::Type; }
+
+  void CloneInto(CaptureCommandList* aList) override {
+    CLONE_INTO(FillRoundedRectCommand)(mRect, mPattern, mOptions);
+  }
+
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override {
+    aDT->FillRoundedRect(mRect, mPattern, mOptions);
+  }
+
+  void Log(TreeLog& aStream) const override {
+    aStream << "[FillRoundedRect rect=" << mRect.rect;
+    aStream << " pattern=" << mPattern.Get();
+    aStream << " opt=" << mOptions;
+    aStream << "]";
+  }
+
+  static const bool AffectsSnapshot = true;
+  static const CommandType Type = CommandType::FILLROUNDEDRECT;
+
+ private:
+  RoundedRect mRect;
+  StoredPattern mPattern;
+  DrawOptions mOptions;
+};
+
 class StrokeRectCommand : public StrokeOptionsCommand {
  public:
   StrokeRectCommand(const Rect& aRect, const Pattern& aPattern,
