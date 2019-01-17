@@ -1,9 +1,9 @@
 
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm");
-ChromeUtils.import("resource://normandy/actions/AddonStudyAction.jsm");
-ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const {ExtensionTestUtils} = ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm");
+const {AddonStudyAction} = ChromeUtils.import("resource://normandy/actions/AddonStudyAction.jsm");
+const {TelemetryEvents} = ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm");
+const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
 const global = this;
 
@@ -57,8 +57,8 @@ add_task(async function test_addon_unenroll() {
       // the following line avoids false eslint warnings:
       /* globals browser, ExtensionAPI */
       "api.js": () => {
-        const {AddonStudies} = ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", {});
-        const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm", {});
+        const {AddonStudies} = ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm");
+        const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
         this.study = class extends ExtensionAPI {
           getAPI(context) {
             return {

@@ -1,12 +1,11 @@
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
-const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
-const { Kinto } = ChromeUtils.import("resource://services-common/kinto-offline-client.js", {});
+const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js");
+const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
+const { Kinto } = ChromeUtils.import("resource://services-common/kinto-offline-client.js");
 
 const IS_ANDROID = AppConstants.platform == "android";
 

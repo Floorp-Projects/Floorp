@@ -5,21 +5,21 @@
 "use strict";
 /* eslint-disable no-restricted-globals */
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.import("chrome://marionette/content/accessibility.js");
-ChromeUtils.import("chrome://marionette/content/atom.js");
-ChromeUtils.import("chrome://marionette/content/element.js");
+const {accessibility} = ChromeUtils.import("chrome://marionette/content/accessibility.js");
+const {atom} = ChromeUtils.import("chrome://marionette/content/atom.js");
+const {element} = ChromeUtils.import("chrome://marionette/content/element.js");
 const {
   ElementClickInterceptedError,
   ElementNotInteractableError,
   InvalidArgumentError,
   InvalidElementStateError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
-ChromeUtils.import("chrome://marionette/content/event.js");
-const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js", {});
-const {TimedPromise} = ChromeUtils.import("chrome://marionette/content/sync.js", {});
+} = ChromeUtils.import("chrome://marionette/content/error.js");
+const {event} = ChromeUtils.import("chrome://marionette/content/event.js");
+const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js");
+const {TimedPromise} = ChromeUtils.import("chrome://marionette/content/sync.js");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
 

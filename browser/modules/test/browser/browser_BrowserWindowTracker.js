@@ -1,7 +1,7 @@
 "use strict";
 
-ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {BrowserWindowTracker} = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const TEST_WINDOW = window;
 

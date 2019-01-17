@@ -1,9 +1,9 @@
 const {CFRPageActions} =
-  ChromeUtils.import("resource://activity-stream/lib/CFRPageActions.jsm", {});
+  ChromeUtils.import("resource://activity-stream/lib/CFRPageActions.jsm");
 const {ASRouterTriggerListeners} =
-  ChromeUtils.import("resource://activity-stream/lib/ASRouterTriggerListeners.jsm", {});
+  ChromeUtils.import("resource://activity-stream/lib/ASRouterTriggerListeners.jsm");
 const {ASRouter} =
-  ChromeUtils.import("resource://activity-stream/lib/ASRouter.jsm", {});
+  ChromeUtils.import("resource://activity-stream/lib/ASRouter.jsm");
 
 function trigger_cfr_panel(browser, trigger, action = {type: "FOO"}) { // a fake action type will result in the action being ignored
   return CFRPageActions.addRecommendation(

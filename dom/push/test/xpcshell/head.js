@@ -3,12 +3,12 @@
 
 'use strict';
 
-ChromeUtils.import('resource://gre/modules/XPCOMUtils.jsm');
-ChromeUtils.import('resource://gre/modules/Services.jsm');
-ChromeUtils.import('resource://gre/modules/Timer.jsm');
-ChromeUtils.import('resource://gre/modules/Preferences.jsm');
-ChromeUtils.import('resource://gre/modules/PlacesUtils.jsm');
-ChromeUtils.import('resource://gre/modules/ObjectUtils.jsm');
+var {XPCOMUtils} = ChromeUtils.import('resource://gre/modules/XPCOMUtils.jsm');
+var {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
+var {clearInterval, clearTimeout, setInterval, setIntervalWithTarget, setTimeout, setTimeoutWithTarget} = ChromeUtils.import('resource://gre/modules/Timer.jsm');
+var {Preferences} = ChromeUtils.import('resource://gre/modules/Preferences.jsm');
+var {PlacesUtils} = ChromeUtils.import('resource://gre/modules/PlacesUtils.jsm');
+var {ObjectUtils} = ChromeUtils.import('resource://gre/modules/ObjectUtils.jsm');
 
 ChromeUtils.defineModuleGetter(this, 'PlacesTestUtils',
                                'resource://testing-common/PlacesTestUtils.jsm');
@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(this, 'pushBroadcastService',
 XPCOMUtils.defineLazyServiceGetter(this, 'PushServiceComponent',
                                    '@mozilla.org/push/Service;1', 'nsIPushService');
 
-const serviceExports = ChromeUtils.import('resource://gre/modules/PushService.jsm', {});
+const serviceExports = ChromeUtils.import("resource://gre/modules/PushService.jsm", null);
 const servicePrefs = new Preferences('dom.push.');
 
 const WEBSOCKET_CLOSE_GOING_AWAY = 1001;

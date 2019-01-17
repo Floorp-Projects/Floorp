@@ -11,8 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm", {});
-const { Kinto } = ChromeUtils.import("resource://services-common/kinto-offline-client.js", {});
+const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { Kinto } = ChromeUtils.import("resource://services-common/kinto-offline-client.js");
 
 /**
  * Filter and sort list against provided filters and order.

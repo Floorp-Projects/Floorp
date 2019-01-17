@@ -172,7 +172,6 @@ module.exports = {
     "mozilla/import-globals": "error",
     "mozilla/no-compare-against-boolean-literals": "error",
     "mozilla/no-define-cc-etc": "error",
-    "mozilla/no-import-into-var-and-global": "error",
     "mozilla/no-useless-parameters": "error",
     "mozilla/no-useless-removeEventListener": "error",
     "mozilla/reject-importGlobalProperties": ["error", "allownonwebidl"],

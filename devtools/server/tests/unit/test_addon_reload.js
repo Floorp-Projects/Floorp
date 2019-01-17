@@ -22,7 +22,7 @@ function promiseAddonEvent(event) {
 }
 
 function promiseWebExtensionStartup() {
-  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
   return new Promise(resolve => {
     const listener = (evt, extension) => {

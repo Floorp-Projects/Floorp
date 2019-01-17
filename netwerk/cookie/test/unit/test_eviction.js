@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const BASE_HOSTNAMES = ["example.org", "example.co.uk"];
 const SUBDOMAINS = ["", "pub.", "www.", "other."];

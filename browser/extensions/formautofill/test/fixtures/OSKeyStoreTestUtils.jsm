@@ -8,9 +8,9 @@ var EXPORTED_SYMBOLS = [
 ];
 
 ChromeUtils.import("resource://formautofill/OSKeyStore.jsm", this);
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 var OSKeyStoreTestUtils = {
   TEST_ONLY_REAUTH: "extensions.formautofill.osKeyStore.unofficialBuildOnlyLogin",

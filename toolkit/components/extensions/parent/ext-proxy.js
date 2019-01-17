@@ -10,7 +10,7 @@ ChromeUtils.defineModuleGetter(this, "ProxyScriptContext",
                                "resource://gre/modules/ProxyScriptContext.jsm");
 ChromeUtils.defineModuleGetter(this, "ProxyChannelFilter",
                                "resource://gre/modules/ProxyScriptContext.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
+var {ExtensionPreferencesManager} = ChromeUtils.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
 
 var {
   ExtensionError,

@@ -60,7 +60,7 @@ var EXPORTED_SYMBOLS = [
  * imported, subclassed, and have prompt() called directly, without
  * the caller having called into createPermissionPrompt.
  */
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");

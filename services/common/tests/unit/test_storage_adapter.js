@@ -1,8 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-common/kinto-offline-client.js");
-ChromeUtils.import("resource://services-common/kinto-storage-adapter.js");
+const {FirefoxAdapter} = ChromeUtils.import("resource://services-common/kinto-storage-adapter.js");
 
 // set up what we need to make storage adapters
 const kintoFilename = "kinto.sqlite";

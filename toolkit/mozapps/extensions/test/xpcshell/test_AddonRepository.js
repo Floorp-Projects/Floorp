@@ -4,8 +4,6 @@
 
 // Tests AddonRepository.jsm
 
-ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
-
 var gServer = createHttpServer({hosts: ["example.com"]});
 
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";

@@ -10,7 +10,7 @@ ChromeUtils.import("resource://normandy/lib/ActionsManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
 
-const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
+const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
 
 add_task(async function getFilterContext() {
   const recipe = {id: 17, arguments: {foo: "bar"}, unrelated: false};

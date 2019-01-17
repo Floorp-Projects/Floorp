@@ -6,15 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewRemoteDebugger"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {GeckoViewUtils} = ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "require", () => {
-  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
   return require;
 });
 

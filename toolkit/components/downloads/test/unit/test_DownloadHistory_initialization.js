@@ -3,8 +3,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/DownloadHistory.jsm");
-ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+const {DownloadHistory} = ChromeUtils.import("resource://gre/modules/DownloadHistory.jsm");
+const {PlacesTestUtils} = ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
 
 let baseDate = new Date("2000-01-01");
 

@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // These tables have a different update URL (for v4).
 const TEST_TABLE_DATA_V4 = {

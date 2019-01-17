@@ -589,8 +589,8 @@ function test_http2_post_big() {
   do_post(posts[1], chan, listener, "POST");
 }
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserv = null;
 var httpserv2 = null;

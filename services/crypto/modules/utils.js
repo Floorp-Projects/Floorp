@@ -4,9 +4,9 @@
 
 var EXPORTED_SYMBOLS = ["CryptoUtils"];
 
-ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
 XPCOMUtils.defineLazyGetter(this, "textEncoder",

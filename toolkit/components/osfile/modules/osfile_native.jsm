@@ -10,7 +10,7 @@
 
 var EXPORTED_SYMBOLS = ["read", "writeAtomic"];
 
-var SharedAll = ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", {});
+var SharedAll = ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", null);
 
 var SysAll = {};
 if (SharedAll.Constants.Win) {
@@ -20,7 +20,7 @@ if (SharedAll.Constants.Win) {
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
 }
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
  * The native service holding the implementation of the functions.

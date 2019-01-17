@@ -44,7 +44,6 @@
 /* eslint-disable no-shadow */
 /* eslint-env mozilla/browser-window */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ReaderMode",

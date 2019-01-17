@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var pref = "browser.fixup.typo.scheme";
 
 var data = [

@@ -4,7 +4,7 @@
 "use strict";
 
 const { UrlClassifierTestUtils } =
-  ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
+  ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 
 const TEST_URI = "http://example.com/browser/devtools/client/" +
                  "netmonitor/test/html_tracking-protection.html";

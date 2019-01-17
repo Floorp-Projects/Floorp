@@ -6,8 +6,8 @@
 
 /* globals ExtensionAPI */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "@mozilla.org/network/protocol;1?name=resource",
@@ -18,7 +18,7 @@ this.mozscreenshots = class extends ExtensionAPI {
     let uri = Services.io.newURI("resources/", null, this.extension.rootURI);
     resProto.setSubstitution("mozscreenshots", uri);
 
-    ChromeUtils.import("resource://mozscreenshots/TestRunner.jsm");
+    const {TestRunner} = ChromeUtils.import("resource://mozscreenshots/TestRunner.jsm");
     TestRunner.init(this.extension.rootURI);
   }
 };

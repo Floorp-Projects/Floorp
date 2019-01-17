@@ -20,14 +20,14 @@ const TEST_POLICY_VERSION = 37;
 
 function fakeShowPolicyTimeout(set, clear) {
   let reportingPolicy =
-    ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm", {}).Policy;
+    ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm", null).Policy;
   reportingPolicy.setShowInfobarTimeout = set;
   reportingPolicy.clearShowInfobarTimeout = clear;
 }
 
 function sendSessionRestoredNotification() {
   let reportingPolicyImpl =
-    ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm", {}).TelemetryReportingPolicyImpl;
+    ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm", null).TelemetryReportingPolicyImpl;
   reportingPolicyImpl.observe(null, "sessionstore-windows-restored", null);
 }
 

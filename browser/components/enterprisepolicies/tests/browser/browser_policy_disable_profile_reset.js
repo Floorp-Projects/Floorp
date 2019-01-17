@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-let {ResetProfile} = ChromeUtils.import("resource://gre/modules/ResetProfile.jsm", {});
+let {ResetProfile} = ChromeUtils.import("resource://gre/modules/ResetProfile.jsm");
 
 // For this test to work properly, this profile actually needs to be
 // "reset-able", which requires that it be recognized by the profile service

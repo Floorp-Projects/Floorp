@@ -40,7 +40,7 @@ async function add_link(aOptions = {}) {
     await spawnPaymentDialogTask(frame, async function checkState(testArgs = {}) {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return Object.keys(state.savedBasicCards).length == 1 &&
@@ -102,7 +102,7 @@ async function add_link(aOptions = {}) {
     await spawnPaymentDialogTask(frame, async function checkTask(testArgs = {}) {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let title = content.document.querySelector("basic-card-form h2");
       let card = Object.assign({}, PTU.BasicCards.JaneMasterCard);
@@ -150,7 +150,7 @@ async function add_link(aOptions = {}) {
     await spawnPaymentDialogTask(frame, async function checkCardPage(testArgs = {}) {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page" && !state["basic-card-page"].guid;
@@ -189,7 +189,7 @@ async function add_link(aOptions = {}) {
     await spawnPaymentDialogTask(frame, async function checkSaveButtonUpdatesOnCCNumberChange() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let button = content.document.querySelector(`basic-card-form button.primary`);
       ok(!button.disabled, "Save button should not be disabled");
@@ -230,7 +230,7 @@ async function add_link(aOptions = {}) {
     await spawnPaymentDialogTask(frame, async function waitForSummaryPage(testArgs = {}) {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
@@ -244,7 +244,7 @@ async function add_link(aOptions = {}) {
     await spawnPaymentDialogTask(frame, async function checkCardState(testArgs = {}) {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let {prefilledGuids} = testArgs;
       let card = Object.assign({}, PTU.BasicCards.JaneMasterCard);
@@ -441,7 +441,7 @@ add_task(async function test_edit_link() {
     async function check({prefilledGuids}) {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let paymentMethodPicker = content.document.querySelector("payment-method-picker");
       let editLink = paymentMethodPicker.querySelector(".edit-link");
@@ -643,7 +643,7 @@ add_task(async function test_invalid_network_card_edit() {
     async function check({prefilledGuids}) {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let paymentMethodPicker = content.document.querySelector("payment-method-picker");
       let editLink = paymentMethodPicker.querySelector(".edit-link");
@@ -715,7 +715,7 @@ add_task(async function test_private_card_adding() {
     await spawnPaymentDialogTask(frame, async function check() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let addLink = content.document.querySelector("payment-method-picker .add-link");
       is(addLink.textContent, "Add", "Add link text");
@@ -736,7 +736,7 @@ add_task(async function test_private_card_adding() {
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let card = Object.assign({}, PTU.BasicCards.JohnDoe);
       let state = await PTU.DialogContentUtils.getCurrentState(content);

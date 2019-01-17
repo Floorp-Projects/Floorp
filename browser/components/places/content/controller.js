@@ -225,7 +225,7 @@ PlacesController.prototype = {
       } else {
         host = Services.io.newURI(this._view.selectedNode.uri).host;
       }
-      let {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm", {});
+      let {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
       ForgetAboutSite.removeDataFromDomain(host)
                      .catch(Cu.reportError);
       break;

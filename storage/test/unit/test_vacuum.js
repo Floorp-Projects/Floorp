@@ -4,9 +4,6 @@
 
 // This file tests the Vacuum Manager.
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /**
  * Loads a test component that will register as a vacuum-participant.
  * If other participants are found they will be unregistered, to avoid conflicts

@@ -17,7 +17,7 @@ Bug 1060093 - Test DebuggerServer.getProcess
 // Part of this is a frame script.
 /* eslint-env mozilla/frame-script */
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 const {DebuggerServer} = require("devtools/server/main");
 const Services = require("Services");
@@ -116,7 +116,8 @@ function runTests() {
   }
 
   function processScript() {
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    // eslint-disable-next-line no-shadow
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     const listener = function() {
       Services.obs.removeObserver(listener, "devtools:loader:destroy");
       sendAsyncMessage("test:getProcess-destroy", null);
@@ -132,7 +133,7 @@ function runTests() {
       };
       Services.ppmm.addMessageListener("test:getProcess-destroy", processListener);
     });
-    const script = "data:,(" + processScript + ")()";
+    const script = `data:,(${encodeURI(processScript)})()`;
     Services.ppmm.loadProcessScript(script, true);
     client.close();
 

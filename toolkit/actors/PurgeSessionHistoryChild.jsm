@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["PurgeSessionHistoryChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 class PurgeSessionHistoryChild extends ActorChild {
   receiveMessage(message) {

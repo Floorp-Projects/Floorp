@@ -5,16 +5,16 @@
 "use strict";
 
 const { AppConstants } =
-  ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
-const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm", {});
-const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js", {});
+  ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { MockRegistrar } =
-  ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", {});
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
-const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm", {});
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
+  ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"]
                        .getService(Ci.nsIDebug2).isDebugBuild;

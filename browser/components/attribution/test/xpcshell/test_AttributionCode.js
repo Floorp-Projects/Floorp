@@ -3,10 +3,10 @@
  */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource:///modules/AttributionCode.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {AttributionCode} = ChromeUtils.import("resource:///modules/AttributionCode.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let validAttrCodes = [
   {code: "source%3Dgoogle.com%26medium%3Dorganic%26campaign%3D(not%20set)%26content%3D(not%20set)",

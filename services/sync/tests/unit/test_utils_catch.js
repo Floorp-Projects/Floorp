@@ -1,5 +1,4 @@
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/service.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
 
 add_task(async function run_test() {
   _("Make sure catch when copied to an object will correctly catch stuff");

@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
 const MESSAGE_CHILD_TEST_DONE = "ChildTest:Done";

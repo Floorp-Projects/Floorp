@@ -16,10 +16,10 @@
 <pre id="test">
 
 <script class="testbody" type="text/javascript">
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 var mainWindow = window.docShell.rootTreeItem.domWindow;
 const SJS = "mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs";

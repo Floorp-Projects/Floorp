@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { TabState } = ChromeUtils.import("resource:///modules/sessionstore/TabState.jsm", {});
+const { TabState } = ChromeUtils.import("resource:///modules/sessionstore/TabState.jsm");
 
 /**
  * Simulate a restart of a tab by removing it, then add a lazy tab

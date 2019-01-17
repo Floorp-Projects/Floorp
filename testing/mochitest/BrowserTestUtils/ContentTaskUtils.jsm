@@ -16,7 +16,7 @@ var EXPORTED_SYMBOLS = [
   "ContentTaskUtils",
 ];
 
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {clearInterval, setInterval, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var ContentTaskUtils = {
   /**

@@ -7,11 +7,11 @@
 var EXPORTED_SYMBOLS = ["SyncedTabs"];
 
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/main.js");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 // The Sync XPCOM service
 XPCOMUtils.defineLazyGetter(this, "weaveXPCService", function() {

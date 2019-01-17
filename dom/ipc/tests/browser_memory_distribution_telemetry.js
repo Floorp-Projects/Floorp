@@ -1,6 +1,6 @@
 "use strict";
 
-var session = ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", {});
+var session = ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", null);
 
 const DUMMY_PAGE_DATA_URI = `data:text/html,
     <html>

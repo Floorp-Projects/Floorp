@@ -14,7 +14,7 @@ var EXPORTED_SYMBOLS = ["ExtensionPageChild"];
  * child process.
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ExtensionChildDevToolsUtils",
                                "resource://gre/modules/ExtensionChildDevToolsUtils.jsm");
@@ -28,9 +28,9 @@ ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
 const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
 const CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS = "webextension-scripts-devtools";
 
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+const {ExtensionChild} = ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm");
+const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
   getInnerWindowID,

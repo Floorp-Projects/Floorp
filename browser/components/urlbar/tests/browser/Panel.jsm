@@ -6,7 +6,7 @@ var EXPORTED_SYMBOLS = [
   "Panel",
 ];
 
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {clearInterval, setInterval, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var Panel = function(panelElt, iframeURL) {
   this.p = panelElt;

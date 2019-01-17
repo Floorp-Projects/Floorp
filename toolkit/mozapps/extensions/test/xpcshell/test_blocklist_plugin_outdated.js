@@ -4,8 +4,6 @@
 
 const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-
 const nsIBLS = Ci.nsIBlocklistService;
 
 var gBlocklist = null;

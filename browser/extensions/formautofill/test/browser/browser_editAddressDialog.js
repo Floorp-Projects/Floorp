@@ -1,6 +1,6 @@
 "use strict";
 
-const {FormAutofillUtils} = ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm", {});
+const {FormAutofillUtils} = ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 requestLongerTimeout(6);
 

@@ -5,7 +5,7 @@
 ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 
-ChromeUtils.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
+var {ExtensionPreferencesManager} = ChromeUtils.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
 
 var {
   ExtensionError,

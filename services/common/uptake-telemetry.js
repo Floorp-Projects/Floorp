@@ -7,7 +7,7 @@
 
 var EXPORTED_SYMBOLS = ["UptakeTelemetry"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 
 // Telemetry report results.

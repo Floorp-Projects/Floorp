@@ -17,9 +17,9 @@ const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
 const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
                      .getService(Ci.nsIPaymentUIService);
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
                                "resource:///modules/BrowserWindowTracker.jsm");
@@ -545,7 +545,7 @@ var paymentDialogWrapper = {
     }
     let {
       gDevToolsBrowser,
-    } = ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm", {});
+    } = ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm");
     gDevToolsBrowser.openContentProcessToolbox({
       selectedBrowser: this.frameWeakRef.get(),
     });

@@ -18,11 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
 
   "use strict";
 
-  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
-  ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-  ChromeUtils.import("resource://gre/modules/Promise.jsm");
-  ChromeUtils.import("resource://gre/modules/SharedPreferences.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {Promise} = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+  const {SharedPreferences} = ChromeUtils.import("resource://gre/modules/SharedPreferences.jsm");
 
   const GECKO_PREF_FONT_INFLATION = "font.size.inflation.minTwips";
   const FONT_INFLATION_DEFAULT_VALUE = 120;

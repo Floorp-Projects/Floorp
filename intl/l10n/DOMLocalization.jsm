@@ -18,9 +18,9 @@
 /* fluent-dom@fa25466f (October 12, 2018) */
 
 const { Localization } =
-  ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
+  ChromeUtils.import("resource://gre/modules/Localization.jsm");
 const { Services } =
-  ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Match the opening angle bracket (<) in HTML tags, and HTML entities like
 // &amp;, &#0038;, &#x0026;.

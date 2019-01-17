@@ -4,8 +4,8 @@
 // associated with a window.
 const {XMLHttpRequest} = Cu.Sandbox(window, {wantGlobalProperties: ["XMLHttpRequest"]});
 
-var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm", {});
-var {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", {});
+var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm");
+var {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
 add_task(async function test_ancestors_exist() {
   let deferred = PromiseUtils.defer();

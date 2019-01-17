@@ -2,14 +2,11 @@
 
 do_get_profile();
 
-ChromeUtils.import("resource://gre/modules/Promise.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const {Promise} = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {Sqlite} = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
 
 function sleep(ms) {
   return new Promise(resolve => {
@@ -78,7 +75,7 @@ async function getDummyTempDatabase(name, extraOptions = {}) {
 }
 
 add_task(async function test_setup() {
-  ChromeUtils.import("resource://testing-common/services/common/logging.js");
+  const {initTestLogging} = ChromeUtils.import("resource://testing-common/services/common/logging.js");
   initTestLogging("Trace");
 });
 

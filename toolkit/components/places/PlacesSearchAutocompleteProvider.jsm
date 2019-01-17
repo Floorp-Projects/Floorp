@@ -10,7 +10,7 @@
 
 var EXPORTED_SYMBOLS = [ "PlacesSearchAutocompleteProvider" ];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "SearchSuggestionController",
   "resource://gre/modules/SearchSuggestionController.jsm");

@@ -31,7 +31,7 @@ var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(Ci.nsISupport
   .wrappedJSObject;
 
 const { BrowserLoader } =
-  ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
+  ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");

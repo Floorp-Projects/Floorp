@@ -4,9 +4,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource:///modules/AttributionCode.jsm");
-ChromeUtils.import("resource://activity-stream/lib/ASRouterTargeting.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AttributionCode} = ChromeUtils.import("resource:///modules/AttributionCode.jsm");
+const {ASRouterTargeting} = ChromeUtils.import("resource://activity-stream/lib/ASRouterTargeting.jsm");
 
 add_task(async function check_attribution_data() {
   // Some setup to fake the correct attribution data

@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Extension.jsm");
+const {Extension, ExtensionData} = ChromeUtils.import("resource://gre/modules/Extension.jsm");
 
 /* globals ExtensionData */
 

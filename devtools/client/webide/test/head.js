@@ -3,11 +3,11 @@
 
 "use strict";
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const Services = require("Services");
+var Services = require("Services");
 const { AppProjects } = require("devtools/client/webide/modules/app-projects");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { DebuggerServer } = require("devtools/server/main");

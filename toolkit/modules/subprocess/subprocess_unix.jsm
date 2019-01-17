@@ -9,10 +9,10 @@
 
 var EXPORTED_SYMBOLS = ["SubprocessImpl"];
 
-ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/subprocess/subprocess_common.jsm");
+const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {BaseProcess, PromiseWorker} = ChromeUtils.import("resource://gre/modules/subprocess/subprocess_common.jsm");
 
 /* import-globals-from subprocess_shared.js */
 /* import-globals-from subprocess_shared_unix.js */

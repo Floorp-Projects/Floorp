@@ -14,7 +14,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript">
 
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   add_task(async function test_reader_view_visibility() {
     let gWin = Services.wm.getMostRecentWindow("navigator:browser");

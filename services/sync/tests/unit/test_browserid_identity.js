@@ -1,21 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://services-sync/browserid_identity.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-crypto/utils.js");
-ChromeUtils.import("resource://testing-common/services/sync/fxa_utils.js");
-ChromeUtils.import("resource://services-common/hawkclient.js");
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/status.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-common/tokenserverclient.js");
+const {AuthenticationError, BrowserIDManager} = ChromeUtils.import("resource://services-sync/browserid_identity.js");
+const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
+const {initializeIdentityWithTokenServerResponse} = ChromeUtils.import("resource://testing-common/services/sync/fxa_utils.js");
+const {HawkClient} = ChromeUtils.import("resource://services-common/hawkclient.js");
+const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
+const {CERT_LIFETIME, ERRNO_INVALID_AUTH_TOKEN, ONLOGIN_NOTIFICATION, ONVERIFIED_NOTIFICATION} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {Status} = ChromeUtils.import("resource://services-sync/status.js");
+const {TokenServerClient, TokenServerClientServerError} = ChromeUtils.import("resource://services-common/tokenserverclient.js");
 
 const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;

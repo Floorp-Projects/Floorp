@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["AutoplayChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 class AutoplayChild extends ActorChild {
   handleEvent(event) {

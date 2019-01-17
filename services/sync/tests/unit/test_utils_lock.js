@@ -1,5 +1,4 @@
 _("Make sure lock prevents calling with a shared lock");
-ChromeUtils.import("resource://services-sync/util.js");
 
 // Utility that we only use here.
 

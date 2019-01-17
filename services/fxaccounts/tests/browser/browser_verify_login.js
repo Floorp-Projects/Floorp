@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 add_task(async function() {
   let payload = {
     data: {

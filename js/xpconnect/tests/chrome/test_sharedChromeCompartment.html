@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1517694
 "use strict";
 
 /** Test for Bug 1517694 **/
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 SimpleTest.waitForExplicitFinish();
 

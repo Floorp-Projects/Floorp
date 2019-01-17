@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // This test works by setting up an exception for the private window allow list
 // manually, and it then expects to see some blocking notifications (note the
 // document.cookie setter in the blocking callback.)

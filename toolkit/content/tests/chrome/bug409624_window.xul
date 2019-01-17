@@ -16,7 +16,7 @@
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
   <script type="application/javascript"><![CDATA[
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     var gFindBar = null;
     var gBrowser;
 

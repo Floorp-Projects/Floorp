@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/util.js");
-
 add_test(function test_creation() {
   // Explicit callback for this one.
   let server = new SyncServer({
@@ -60,7 +57,7 @@ add_test(function test_url_parsing() {
   run_next_test();
 });
 
-ChromeUtils.import("resource://services-common/rest.js");
+const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
 function localRequest(server, path) {
   _("localRequest: " + path);
   let url = server.baseURI.substr(0, server.baseURI.length - 1) + path;

@@ -3,7 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/DownloadHistory.jsm");
+const {DownloadHistory} = ChromeUtils.import("resource://gre/modules/DownloadHistory.jsm");
 
 /**
  * This test is designed to ensure the cache of download history is correctly

@@ -21,7 +21,7 @@ add_task(async function test_dropdown() {
     await spawnPaymentDialogTask(frame, async function changeToAddressAddPage() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let addLink = content.document.querySelector("address-picker.shipping-related .add-link");
       is(addLink.textContent, "Add", "Add link text");

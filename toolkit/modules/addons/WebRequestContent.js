@@ -7,7 +7,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "WebRequestCommon",
                                "resource://gre/modules/WebRequestCommon.jsm");

@@ -18,7 +18,7 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
+        const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
         (async function() {
           const win = await openWebIDE();

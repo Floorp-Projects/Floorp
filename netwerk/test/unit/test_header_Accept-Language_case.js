@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var testpath = "/bug1054739";
 

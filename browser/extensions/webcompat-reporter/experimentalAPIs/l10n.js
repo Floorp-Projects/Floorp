@@ -6,7 +6,7 @@
 
 /* global ExtensionAPI, XPCOMUtils */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "l10nStrings", function() {
   return Services.strings.createBundle(

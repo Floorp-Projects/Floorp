@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
+const {ExtensionStorageIDB} = ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
 
 PromiseTestUtils.whitelistRejectionsGlobally(/WebExtension context not found/);
 

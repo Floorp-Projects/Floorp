@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {parseKeyValuePairs, parseKeyValuePairsFromFileAsync} = ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["File", "FormData", "XMLHttpRequest"]);
 
 ChromeUtils.defineModuleGetter(this, "OS",

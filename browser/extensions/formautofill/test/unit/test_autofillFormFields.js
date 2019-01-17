@@ -5,9 +5,10 @@
 
 "use strict";
 
+var FormAutofillHandler, OSKeyStore;
 add_task(async function setup() {
-  ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm");
-  ChromeUtils.import("resource://formautofill/OSKeyStore.jsm");
+  ({FormAutofillHandler} = ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm"));
+  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm"));
 });
 
 const TESTCASES = [

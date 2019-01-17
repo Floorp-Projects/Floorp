@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function test_policy(test) {
   info("Running test: " + test.toSource());

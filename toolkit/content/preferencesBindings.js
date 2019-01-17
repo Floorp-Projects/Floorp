@@ -7,8 +7,8 @@
 // We attach Preferences to the window object so other contexts (tests, JSMs)
 // have access to it.
 const Preferences = window.Preferences = (function() {
-  ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
   const lazy = {};

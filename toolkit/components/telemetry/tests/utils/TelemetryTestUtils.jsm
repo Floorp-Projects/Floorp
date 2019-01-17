@@ -5,8 +5,8 @@
 
 const EXPORTED_SYMBOLS = ["TelemetryTestUtils"];
 
-ChromeUtils.import("resource://testing-common/Assert.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var TelemetryTestUtils = {
   /* Scalars */

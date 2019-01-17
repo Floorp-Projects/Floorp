@@ -4,8 +4,7 @@
 
 var EXPORTED_SYMBOLS = ["Async"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /*
  * Helpers for various async operations.

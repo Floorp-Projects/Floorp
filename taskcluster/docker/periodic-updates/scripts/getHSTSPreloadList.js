@@ -16,9 +16,8 @@ var Cr = Components.results;
 */
 var gSSService = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 const SOURCE = "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT";
 const TOOL_SOURCE = "https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/docker/periodic-updates/scripts/getHSTSPreloadList.js";
@@ -383,7 +382,7 @@ function filterForcedInclusions(inHosts, outNotForced, outForced) {
 function output(statuses) {
   dump("INFO: Writing output to " + OUTPUT + "\n");
   try {
-    ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+    var {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
     let file = FileUtils.getFile("CurWorkD", [OUTPUT]);
     let fos = FileUtils.openSafeFileOutputStream(file);

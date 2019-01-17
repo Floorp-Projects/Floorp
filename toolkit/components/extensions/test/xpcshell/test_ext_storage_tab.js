@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
+const {ExtensionStorageIDB} = ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
 
 async function test_multiple_pages() {
   let extension = ExtensionTestUtils.loadExtension({

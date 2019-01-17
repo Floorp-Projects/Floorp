@@ -4,15 +4,15 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource:///modules/ShellService.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
-ChromeUtils.import("resource://normandy/lib/Storage.jsm");
-ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm");
-ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {ShellService} = ChromeUtils.import("resource:///modules/ShellService.jsm");
+const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {LogManager} = ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
+const {Storage} = ChromeUtils.import("resource://normandy/lib/Storage.jsm");
+const {ClientEnvironment} = ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm");
+const {PreferenceExperiments} = ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm");
 
 ChromeUtils.defineModuleGetter(
   this, "Sampling", "resource://gre/modules/components-utils/Sampling.jsm");

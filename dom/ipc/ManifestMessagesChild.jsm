@@ -15,7 +15,7 @@
 
 var EXPORTED_SYMBOLS = ["ManifestMessagesChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ManifestObtainer",
                                "resource://gre/modules/ManifestObtainer.jsm");

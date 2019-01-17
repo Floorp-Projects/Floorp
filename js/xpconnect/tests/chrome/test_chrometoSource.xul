@@ -15,8 +15,8 @@
   <!-- test code goes here -->
   <script type="application/javascript" src="outoflinexulscript.js"></script>
   <script type="application/javascript"><![CDATA[
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function inlinefunction() {
          return 42;

@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { require, loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { require, loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 try {
   Services.scriptloader.loadSubScript(

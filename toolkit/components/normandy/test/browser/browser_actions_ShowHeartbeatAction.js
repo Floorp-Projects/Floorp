@@ -47,7 +47,7 @@ class MockEventEmitter {
 
 function withStubbedHeartbeat(testFunction) {
   return async function wrappedTestFunction(...args) {
-    const backstage = ChromeUtils.import("resource://normandy/actions/ShowHeartbeatAction.jsm", {});
+    const backstage = ChromeUtils.import("resource://normandy/actions/ShowHeartbeatAction.jsm", null);
     const originalHeartbeat = backstage.Heartbeat;
     const heartbeatInstanceStub = new MockHeartbeat();
     const heartbeatClassStub = sinon.stub();

@@ -10,7 +10,7 @@ const TOPIC_PRESENTATION_RECEIVER_LAUNCH = "presentation-receiver:launch";
 const TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE = "presentation-receiver:launch:response";
 
 // globals Services
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function log(str) {
   // dump("-*- PresentationView.js -*-: " + str + "\n");

@@ -57,7 +57,7 @@ async function runTest(installer) {
 }
 
 function promiseWebExtensionStartup() {
-  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
   return new Promise(resolve => {
     let listener = (event, extension) => {

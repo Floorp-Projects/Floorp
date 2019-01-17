@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const providerCID = Components.ID("{14aa4b81-e266-45cb-88f8-89595dece114}");
 const providerContract = "@mozilla.org/geolocation/provider;1";

@@ -9,7 +9,7 @@
 // a block to prevent accidentally leaking globals onto `window`.
 {
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class MozFindbar extends XULElement {
   constructor() {
@@ -995,7 +995,7 @@ class MozFindbar extends XULElement {
     }
 
     let { PromiseUtils } =
-      ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", {});
+      ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
     this._startFindDeferred = PromiseUtils.defer();
     let startFindPromise = this._startFindDeferred.promise;
 

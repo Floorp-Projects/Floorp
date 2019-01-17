@@ -7,7 +7,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(async function test_all_cookies() {
   const expiry = Date.now() + 24 * 60 * 60;

@@ -5,7 +5,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const WELLKNOWNOPPORTUNISTICUTILS_CONTRACTID = "@mozilla.org/network/well-known-opportunistic-utils;1";
 const WELLKNOWNOPPORTUNISTICUTILS_CID = Components.ID("{b4f96c89-5238-450c-8bda-e12c26f1d150}");

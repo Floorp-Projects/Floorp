@@ -1,6 +1,6 @@
 
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 let global = this;
 

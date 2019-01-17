@@ -5,7 +5,7 @@ var Cm = Components.manager;
 
 // Required to avoid failures.
 do_get_profile();
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
 updateAppInfo({
@@ -16,7 +16,7 @@ updateAppInfo({
 });
 
 function addResourceAlias() {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   const handler = Services.io.getProtocolHandler("resource")
                   .QueryInterface(Ci.nsIResProtocolHandler);
 

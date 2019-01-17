@@ -119,7 +119,7 @@ add_task(async function test_detachToNewWindow() {
   await spawnPaymentDialogTask(frame, async function waitForPageChange() {
     let {
       PaymentTestUtils: PTU,
-    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
     await PTU.DialogContentUtils.waitForState(content, (state) => {
       return state.page.id == "basic-card-page";
@@ -155,7 +155,7 @@ add_task(async function test_detachToNewWindow() {
   let state = await spawnPaymentDialogTask(widget.frameElement, async function checkAfterDetach() {
     let {
       PaymentTestUtils: PTU,
-    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
     return PTU.DialogContentUtils.getCurrentState(content);
   });
@@ -173,7 +173,7 @@ add_task(async function test_detachToNewWindow() {
   await spawnPaymentDialogTask(widget.frameElement, async function waitForSavedAddress() {
     let {
       PaymentTestUtils: PTU,
-    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
     await PTU.DialogContentUtils.waitForState(content, function checkSavedAddresses(s) {
       return Object.values(s.savedAddresses).length == 1;

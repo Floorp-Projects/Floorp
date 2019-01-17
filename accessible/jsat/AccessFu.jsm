@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["AccessFu"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Logger, Utils} = ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "Rect",
                                "resource://gre/modules/Geometry.jsm");
 
@@ -50,8 +50,6 @@ var AccessFu = {
       return;
     }
     this._enabled = true;
-
-    ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
 
     Services.obs.addObserver(this, "remote-browser-shown");
     Services.obs.addObserver(this, "inprocess-browser-shown");

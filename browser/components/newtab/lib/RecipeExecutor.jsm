@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {tokenize} = ChromeUtils.import("resource://activity-stream/lib/Tokenize.jsm", {});
+const {tokenize} = ChromeUtils.import("resource://activity-stream/lib/Tokenize.jsm");
 
 /**
  * RecipeExecutor is the core feature engineering pipeline for the in-browser

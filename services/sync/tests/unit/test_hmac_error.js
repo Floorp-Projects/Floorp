@@ -1,10 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
 
 // Track HMAC error counts.
 var hmacErrorCount = 0;

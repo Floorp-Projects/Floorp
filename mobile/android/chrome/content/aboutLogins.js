@@ -3,9 +3,9 @@
 * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ChromeUtils.import("resource://services-common/utils.js"); /* global: CommonUtils */
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Accounts.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Accounts} = ChromeUtils.import("resource://gre/modules/Accounts.jsm");
 
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", () =>
   window.docShell.rootTreeItem.domWindow

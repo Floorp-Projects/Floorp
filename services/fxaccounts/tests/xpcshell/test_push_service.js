@@ -8,8 +8,7 @@
 /* eslint-disable no-shadow */
 /* eslint-disable mozilla/use-chromeutils-generateqi */
 
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {FXA_PUSH_SCOPE_ACCOUNT_UPDATE, ONLOGOUT_NOTIFICATION, ON_ACCOUNT_DESTROYED_NOTIFICATION, ON_DEVICE_CONNECTED_NOTIFICATION, ON_DEVICE_DISCONNECTED_NOTIFICATION, ON_PASSWORD_CHANGED_NOTIFICATION, ON_PASSWORD_RESET_NOTIFICATION, ON_PROFILE_CHANGE_NOTIFICATION, ON_PROFILE_UPDATED_NOTIFICATION, ON_VERIFY_LOGIN_NOTIFICATION, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 let importScope = {};
 Services.scriptloader.loadSubScript("resource://gre/components/FxAccountsPush.js", importScope);
@@ -191,7 +190,7 @@ add_task(async function observePushTopicDeviceDisconnected_current_device() {
   };
 
   let signoutCalled = false;
-  let { FxAccounts } = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", {});
+  let { FxAccounts } = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
   const fxAccountsMock = new FxAccounts({
     newAccountState() {
       return {
@@ -241,7 +240,7 @@ add_task(async function observePushTopicDeviceDisconnected_another_device() {
   };
 
   let signoutCalled = false;
-  let { FxAccounts } = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", {});
+  let { FxAccounts } = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
   const fxAccountsMock = new FxAccounts({
     newAccountState() {
       return {

@@ -29,7 +29,7 @@ let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
 runInParent(() => {
   // eslint-disable-next-line no-shadow
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   let login3A, login3B, login4;
   login3A = Cc["@mozilla.org/login-manager/loginInfo;1"].
@@ -209,7 +209,7 @@ add_task(async function test_iframe() {
 
   // Housekeeping: Delete login4 to test the save prompt in the next test.
   runInParent(() => {
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     var tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
                    createInstance(Ci.nsILoginInfo);

@@ -4,7 +4,7 @@
 
 var EXPORTED_SYMBOLS = ["LightWeightThemeInstallChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 class LightWeightThemeInstallChild extends ActorChild {
   handleEvent(event) {

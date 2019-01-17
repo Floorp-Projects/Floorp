@@ -16,7 +16,7 @@
 xmlns="http://www.w3.org/1999/xhtml"
 #endif
 >
-Components.utils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Services.scriptloader.loadSubScript("chrome://browser/content/browser.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-places.js", this);

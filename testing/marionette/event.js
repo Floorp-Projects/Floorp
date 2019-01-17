@@ -9,9 +9,9 @@ this.event = {};
 /* global content, is */
 /* eslint-disable no-restricted-globals */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.import("chrome://marionette/content/element.js");
+const {element} = ChromeUtils.import("chrome://marionette/content/element.js");
 
 const dblclickTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 

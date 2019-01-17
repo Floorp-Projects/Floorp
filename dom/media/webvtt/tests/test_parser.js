@@ -1,7 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/vtt.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {WebVTT} = ChromeUtils.import("resource://gre/modules/vtt.jsm");
 
 let fakeWindow = {
   VTTCue: function() {},

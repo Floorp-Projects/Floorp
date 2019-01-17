@@ -3,7 +3,7 @@
 
 "use strict";
 
-let { macOSPoliciesParser } = ChromeUtils.import("resource:///modules/policies/macOSPoliciesParser.jsm", {});
+let { macOSPoliciesParser } = ChromeUtils.import("resource:///modules/policies/macOSPoliciesParser.jsm");
 
 add_task(async function test_object_unflatten() {
   // Note: these policies are just examples and they won't actually

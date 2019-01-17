@@ -9,8 +9,7 @@ const TEST_ENGINE_2_BASENAME = "searchSuggestionEngine2.xml";
 
 const TEST_MSG = "ContentSearchUIControllerTest";
 
-let {SearchTestUtils} = ChromeUtils.import(
-  "resource://testing-common/SearchTestUtils.jsm", {});
+let {SearchTestUtils} = ChromeUtils.import("resource://testing-common/SearchTestUtils.jsm");
 
 SearchTestUtils.init(Assert, registerCleanupFunction);
 
@@ -633,7 +632,7 @@ var gDidInitialSetUp = false;
 function setUp(aNoEngine) {
   return (async function() {
     if (!gDidInitialSetUp) {
-      ChromeUtils.import("resource:///modules/ContentSearch.jsm");
+      var {ContentSearch} = ChromeUtils.import("resource:///modules/ContentSearch.jsm");
       let originalOnMessageSearch = ContentSearch._onMessageSearch;
       let originalOnMessageManageEngines = ContentSearch._onMessageManageEngines;
       ContentSearch._onMessageSearch = () => {};

@@ -1,16 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://services-sync/browserid_identity.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/engines/clients.js");
-ChromeUtils.import("resource://services-sync/policies.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/status.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const {BrowserIDManager} = ChromeUtils.import("resource://services-sync/browserid_identity.js");
+const {SyncScheduler} = ChromeUtils.import("resource://services-sync/policies.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {Status} = ChromeUtils.import("resource://services-sync/status.js");
 
 function CatapultEngine() {
   SyncEngine.call(this, "Catapult", Service);

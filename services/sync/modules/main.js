@@ -4,7 +4,7 @@
 
 var EXPORTED_SYMBOLS = ["Weave"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var Weave = {};
 ChromeUtils.import("resource://services-sync/constants.js", Weave);
@@ -31,6 +31,6 @@ for (let mod in lazies) {
 }
 
 XPCOMUtils.defineLazyGetter(Weave, "Crypto", function() {
-  let { WeaveCrypto } = ChromeUtils.import("resource://services-crypto/WeaveCrypto.js", {});
+  let { WeaveCrypto } = ChromeUtils.import("resource://services-crypto/WeaveCrypto.js");
   return new WeaveCrypto();
 });

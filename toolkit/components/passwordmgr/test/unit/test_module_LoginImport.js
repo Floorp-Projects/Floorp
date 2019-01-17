@@ -12,8 +12,6 @@
 // Globals
 
 
-ChromeUtils.defineModuleGetter(this, "LoginHelper",
-                               "resource://gre/modules/LoginHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginImport",
                                "resource://gre/modules/LoginImport.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginStore",

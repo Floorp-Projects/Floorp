@@ -3,8 +3,8 @@
  */
 "use strict";
 
-ChromeUtils.import("resource:///modules/SitePermissions.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {SitePermissions} = ChromeUtils.import("resource:///modules/SitePermissions.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const RESIST_FINGERPRINTING_ENABLED = Services.prefs.getBoolPref("privacy.resistFingerprinting");
 const MIDI_ENABLED = Services.prefs.getBoolPref("dom.webmidi.enabled");

@@ -1,5 +1,5 @@
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-let {telemetryHelper} = ChromeUtils.import("resource://services-sync/browserid_identity.js", {});
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+let {telemetryHelper} = ChromeUtils.import("resource://services-sync/browserid_identity.js", null);
 
 const prefs = new Preferences("services.sync.");
 

@@ -4,7 +4,7 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 <script>
   /* globals SpecialPowers, SimpleTest */
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   SimpleTest.waitForExplicitFinish();
 

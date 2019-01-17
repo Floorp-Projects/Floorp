@@ -6,16 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["SyncTelemetry"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/browserid_identity.js");
-ChromeUtils.import("resource://services-sync/main.js");
-ChromeUtils.import("resource://services-sync/status.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://services-common/async.js");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {AuthenticationError} = ChromeUtils.import("resource://services-sync/browserid_identity.js");
+const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
+const {Status} = ChromeUtils.import("resource://services-sync/status.js");
+const {Svc} = ChromeUtils.import("resource://services-sync/util.js");
+const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
+const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
 
 let constants = {};
 ChromeUtils.import("resource://services-sync/constants.js", constants);

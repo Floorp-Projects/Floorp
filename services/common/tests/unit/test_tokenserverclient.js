@@ -1,8 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/tokenserverclient.js");
+const {TokenServerClient, TokenServerClientError, TokenServerClientServerError} = ChromeUtils.import("resource://services-common/tokenserverclient.js");
 
 initTestLogging("Trace");
 

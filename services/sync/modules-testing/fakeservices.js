@@ -11,9 +11,9 @@ var EXPORTED_SYMBOLS = [
   "fakeSHA256HMAC",
 ];
 
-ChromeUtils.import("resource://services-sync/main.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
+const {CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
+const {Utils} = ChromeUtils.import("resource://services-sync/util.js");
 
 function FakeFilesystemService(contents) {
   this.fakeContents = contents;

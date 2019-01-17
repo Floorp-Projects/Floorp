@@ -1,11 +1,10 @@
-ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-ChromeUtils.import("resource://services-sync/engines/history.js");
-ChromeUtils.import("resource://services-sync/engines/forms.js");
-ChromeUtils.import("resource://services-sync/engines/passwords.js");
-ChromeUtils.import("resource://services-sync/engines/prefs.js");
+const {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {Bookmark, BookmarkFolder, BookmarkQuery} = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
+const {HistoryRec} = ChromeUtils.import("resource://services-sync/engines/history.js");
+const {FormRec} = ChromeUtils.import("resource://services-sync/engines/forms.js");
+const {LoginRec} = ChromeUtils.import("resource://services-sync/engines/passwords.js");
+const {PrefRec} = ChromeUtils.import("resource://services-sync/engines/prefs.js");
 
 const LoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");

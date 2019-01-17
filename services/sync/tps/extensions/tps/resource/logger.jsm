@@ -9,7 +9,7 @@
 
 var EXPORTED_SYMBOLS = ["Logger"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Logger = {
   _foStream: null,

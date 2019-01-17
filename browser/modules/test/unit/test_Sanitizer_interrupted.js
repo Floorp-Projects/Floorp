@@ -3,14 +3,14 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 do_get_profile();
 
 // Test that interrupted sanitizations are properly tracked.
 
 add_task(async function() {
-  ChromeUtils.import("resource:///modules/Sanitizer.jsm");
+  const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 
   Services.prefs.setBoolPref(Sanitizer.PREF_NEWTAB_SEGREGATION, false);
 

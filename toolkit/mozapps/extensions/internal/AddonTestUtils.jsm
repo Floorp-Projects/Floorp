@@ -13,22 +13,22 @@ const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 
 Cu.importGlobalProperties(["fetch"]);
 
-ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AsyncShutdown} = ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
+const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AMTelemetry",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionTestCommon",
                                "resource://testing-common/ExtensionTestCommon.jsm");
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
-  let {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  let {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
   return Management;
 });
 
@@ -77,7 +77,7 @@ function isRegExp(val) {
 }
 
 // We need some internal bits of AddonManager
-var AMscope = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
+var AMscope = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", null);
 var {AddonManager, AddonManagerPrivate} = AMscope;
 
 class MockBarrier {
@@ -773,7 +773,7 @@ var AddonTestUtils = {
     if (newVersion) {
       this.appInfo.version = newVersion;
       if (Cu.isModuleLoaded("resource://gre/modules/Blocklist.jsm")) {
-        let bsPassBlocklist = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", {});
+        let bsPassBlocklist = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
         Object.defineProperty(bsPassBlocklist, "gAppVersion", {value: newVersion});
       }
     }
@@ -805,7 +805,7 @@ var AddonTestUtils = {
     await this.loadAddonsList(true);
 
     // Wait for all add-ons to finish starting up before resolving.
-    const {XPIProvider} = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
+    const {XPIProvider} = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm");
     await Promise.all(Array.from(XPIProvider.activeAddons.values(),
                                  addon => addon.startupPromise));
   },
@@ -842,7 +842,7 @@ var AddonTestUtils = {
 
     // Force the XPIProvider provider to reload to better
     // simulate real-world usage.
-    let XPIscope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+    let XPIscope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
     // This would be cleaner if I could get it as the rejection reason from
     // the AddonManagerInternal.shutdown() promise
     let shutdownError = XPIscope.XPIDatabase._saveError;
@@ -878,7 +878,7 @@ var AddonTestUtils = {
 
   async loadAddonsList(flush = false) {
     if (flush) {
-      let XPIScope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+      let XPIScope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
       XPIScope.XPIStates.save();
       await XPIScope.XPIStates._jsonFile._save();
     }

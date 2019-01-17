@@ -7,7 +7,7 @@
 let syncService = {};
 ChromeUtils.import("resource://services-sync/service.js", syncService);
 const service = syncService.Service;
-const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm", {});
+const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
 let getState;
 let originalSync;

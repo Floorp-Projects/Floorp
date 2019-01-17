@@ -263,7 +263,7 @@ var PaymentTestUtils = {
     completePayment: async () => {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
@@ -287,7 +287,7 @@ var PaymentTestUtils = {
     waitForState: async (content, stateCheckFn, msg) => {
       const {
         ContentTaskUtils,
-      } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
       let {requestStore} = Cu.waiveXrays(content.document.querySelector("payment-dialog"));
       await ContentTaskUtils.waitForCondition(() => stateCheckFn(requestStore.getState()), msg);
       return requestStore.getState();

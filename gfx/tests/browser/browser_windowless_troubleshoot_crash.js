@@ -1,5 +1,3 @@
-let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-
 add_task(async function test_windowlessBrowserTroubleshootCrash() {
   let webNav = Services.appShell.createWindowlessBrowser(false);
 

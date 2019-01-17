@@ -5,8 +5,8 @@
 /* globals ChromeUtils, Services, Cc, Ci, HomePage, Assert, add_task */
 "use strict";
 
-ChromeUtils.import("resource:///modules/HomePage.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {HomePage} = ChromeUtils.import("resource:///modules/HomePage.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(function testHomePage() {
   Assert.ok(!HomePage.overridden, "Homepage should not be overriden by default.");

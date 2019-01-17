@@ -9,7 +9,7 @@ const TEST_URL = "http://example.com/";
 const CONTAINER_URL = "chrome://devtools/content/responsive.html/index.xhtml";
 
 const { TabStateFlusher } =
-  ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
+  ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm");
 const { OUTER_FRAME_LOADER_SYMBOL } =
   require("devtools/client/responsive.html/browser/tunnel");
 

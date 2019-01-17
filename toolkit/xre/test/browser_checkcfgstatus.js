@@ -43,7 +43,7 @@ add_task(async function test_cfg_enabled() {
       // Until 1342564 is fixed, we need to disable this call or it will cause False Positives
       privateNoteIntentionalCrash();
 
-      ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+      const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
       let mozglue = ctypes.open("mozglue.dll");
       let CFG_DisabledOrCrash = mozglue.declare("CFG_DisabledOrCrash", ctypes.default_abi, ctypes.bool);
       CFG_DisabledOrCrash();

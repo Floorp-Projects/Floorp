@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserTestUtils",
   "resource://testing-common/BrowserTestUtils.jsm");

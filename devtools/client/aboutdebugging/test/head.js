@@ -12,9 +12,9 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
   this);
 
-const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
-const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
-const { ExtensionTestCommon } = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
+const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+const { ExtensionTestCommon } = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm");
 
 async function openAboutDebugging(page, win) {
   info("opening about:debugging");

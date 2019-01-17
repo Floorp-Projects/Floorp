@@ -1,7 +1,5 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Extension.jsm");
-
 XPCOMUtils.defineLazyServiceGetter(this, "gProxyService",
                                    "@mozilla.org/network/protocol-proxy-service;1",
                                    "nsIProtocolProxyService");

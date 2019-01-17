@@ -3,7 +3,7 @@
 "use strict";
 
 add_task(async function setup() {
-  let {formAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
+  let {formAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm");
   await formAutofillStorage.initialize();
 });
 
@@ -265,7 +265,7 @@ add_task(async function test_editInvalidCreditCardNumber() {
   // Directly use FormAutofillStorage so we can set
   // sourceSync: true, since saveCreditCard uses FormAutofillParent
   // which doesn't expose this option.
-  let {formAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
+  let {formAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm");
   await formAutofillStorage.initialize();
   // Use `sourceSync: true` to bypass field normalization which will
   // fail due to the invalid credit card number.

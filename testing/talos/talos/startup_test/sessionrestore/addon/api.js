@@ -6,7 +6,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -34,7 +34,7 @@ this.sessionrestore = class extends ExtensionAPI {
     // the profile to disk.
     async function getTalosParentProfiler() {
       try {
-        ChromeUtils.import("resource://talos-powers/TalosParentProfiler.jsm");
+        var {TalosParentProfiler} = ChromeUtils.import("resource://talos-powers/TalosParentProfiler.jsm");
         return TalosParentProfiler;
       } catch (err) {
         await new Promise(resolve => setTimeout(resolve, 500));

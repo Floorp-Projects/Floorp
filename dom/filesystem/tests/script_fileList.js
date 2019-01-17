@@ -1,7 +1,7 @@
 /* eslint-env mozilla/frame-script */
 // eslint-disable-next-line mozilla/reject-importGlobalProperties
 Cu.importGlobalProperties(["File"]);
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 function createProfDFile() {
   return Services.dirsvc.QueryInterface(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
 }

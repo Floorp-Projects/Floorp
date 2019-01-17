@@ -1,7 +1,5 @@
 var gNotifications = 0;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var observer = {
   QueryInterface: ChromeUtils.generateQI(["nsIPrivacyTransitionObserver", "nsISupportsWeakReference"]),
 

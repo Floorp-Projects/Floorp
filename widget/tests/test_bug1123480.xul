@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
   var SHORT_STRING_NO_CACHE = "short string that will never be cached to the disk";
 
   function isWindows() {
-    ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+    const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     return AppConstants.platform === 'win';
   }
 
@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
       // handles, so if FILE_FLAG_DELETE_ON_CLOSE does the thing it promises, the
       // file is actually removed when the handle is closed.
 
-      ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+      var {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
       // Path from nsAnonymousTemporaryFile.cpp, GetTempDir.
       dir = FileUtils.getFile("TmpD", ["mozilla-temp-files"]);
     } else {
@@ -73,7 +73,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
 
   function RunTest() {
     const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     // Sanitize environment
     gClipboardHelper.copyString(SHORT_STRING_NO_CACHE);
@@ -95,8 +95,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
 
     // Repeat procedure of plain text selection with private browsing
     // disabled and enabled
-    ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-    ChromeUtils.import('resource://gre/modules/Services.jsm');
+    const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
     for (let private of [false, true]) {
       var win = window.open("about:blank", "_blank", "chrome, width=500, height=200" + (private ? ", private" : ""));
       ok(win, private ? "should open private window" : "should open non-private window");

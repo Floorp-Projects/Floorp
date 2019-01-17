@@ -11,9 +11,9 @@ var EXPORTED_SYMBOLS = [
   "RotaryTracker",
 ];
 
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {Store, SyncEngine, Tracker} = ChromeUtils.import("resource://services-sync/engines.js");
+const {CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
+const {SerializableSet, Utils} = ChromeUtils.import("resource://services-sync/util.js");
 
 /*
  * A fake engine implementation.

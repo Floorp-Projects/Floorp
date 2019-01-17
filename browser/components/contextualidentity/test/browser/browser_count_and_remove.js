@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/ContextualIdentityService.jsm");
+const {ContextualIdentityService} = ChromeUtils.import("resource://gre/modules/ContextualIdentityService.jsm");
 
 function openTabInUserContext(userContextId) {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank", {userContextId});

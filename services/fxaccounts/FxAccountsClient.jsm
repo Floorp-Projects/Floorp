@@ -4,13 +4,13 @@
 
 var EXPORTED_SYMBOLS = ["FxAccountsClient"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-common/hawkclient.js");
-ChromeUtils.import("resource://services-common/hawkrequest.js");
-ChromeUtils.import("resource://services-crypto/utils.js");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/Credentials.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {HawkClient} = ChromeUtils.import("resource://services-common/hawkclient.js");
+const {deriveHawkCredentials} = ChromeUtils.import("resource://services-common/hawkrequest.js");
+const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js");
+const {ERRNO_ACCOUNT_DOES_NOT_EXIST, ERRNO_INCORRECT_EMAIL_CASE, ERRNO_INCORRECT_PASSWORD, ERRNO_INVALID_AUTH_NONCE, ERRNO_INVALID_AUTH_TIMESTAMP, ERRNO_INVALID_AUTH_TOKEN, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {Credentials} = ChromeUtils.import("resource://gre/modules/Credentials.jsm");
 
 const HOST_PREF = "identity.fxaccounts.auth.uri";
 

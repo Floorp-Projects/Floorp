@@ -10,8 +10,8 @@ const PAGE_HOST_PATTERN = "http://mochi.test/*";
 const EXPECT_TARGET_ELEMENT = 13337;
 
 async function grantOptionalPermission(extension, permissions) {
-  const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
-  const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm", {});
+  const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
   let ext = GlobalManager.extensionMap.get(extension.id);
   return ExtensionPermissions.add(ext, permissions);
 }
@@ -423,7 +423,7 @@ add_task(async function test_show_hide_frame() {
     },
     async doOpenMenu() {
       frameId = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-        ChromeUtils.import("resource://gre/modules/WebNavigationFrames.jsm");
+        const {WebNavigationFrames} = ChromeUtils.import("resource://gre/modules/WebNavigationFrames.jsm");
 
         let {contentWindow} = content.document.getElementById("frame");
         return WebNavigationFrames.getFrameId(contentWindow);

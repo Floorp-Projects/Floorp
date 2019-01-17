@@ -30,7 +30,7 @@ const {
   UnknownError,
   UnsupportedOperationError,
   WebDriverError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+} = ChromeUtils.import("chrome://marionette/content/error.js");
 
 function notok(condition) {
   ok(!(condition));
