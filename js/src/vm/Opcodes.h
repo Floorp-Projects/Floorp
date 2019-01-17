@@ -2512,13 +2512,31 @@
      */ \
     MACRO(JSOP_DYNAMIC_IMPORT, 233, "call-import", NULL, 1, 1, 1, JOF_BYTE) \
     /*
+     * Pops the numeric value 'val' from the stack, then pushes 'val + 1'.
+     *
+     *   Category: Operators
+     *   Type: Arithmetic Operators
+     *   Operands:
+     *   Stack: val => (val + 1)
+     */ \
+    MACRO(JSOP_INC, 234, "inc", NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
+    /*
+     * Pops the numeric value 'val' from the stack, then pushes 'val - 1'.
+     *
+     *   Category: Operators
+     *   Type: Arithmetic Operators
+     *   Operands:
+     *   Stack: val => (val - 1)
+     */ \
+    MACRO(JSOP_DEC, 235, "dec", NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
+    /*
      * Pushes a BigInt constant onto the stack.
      *   Category: Literals
      *   Type: Constants
      *   Operands: uint32_t constIndex
      *   Stack: => val
      */ \
-    IF_BIGINT(MACRO(JSOP_BIGINT, 234, "bigint", NULL, 5, 0, 1, JOF_BIGINT),)
+    IF_BIGINT(MACRO(JSOP_BIGINT, 236, "bigint", NULL, 5, 0, 1, JOF_BIGINT),)
 // clang-format on
 
 /*
@@ -2526,9 +2544,7 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  IF_BIGINT(, MACRO(234))                      \
-  MACRO(235)                                   \
-  MACRO(236)                                   \
+  IF_BIGINT(, MACRO(236))                      \
   MACRO(237)                                   \
   MACRO(238)                                   \
   MACRO(239)                                   \
