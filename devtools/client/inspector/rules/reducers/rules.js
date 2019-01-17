@@ -19,16 +19,16 @@ const INITIAL_RULES = {
  *
  * @param  {TextProperty} declaration
  *         A TextProperty of a rule.
- * @param  {Number} index
- *         The index of the CSS declaration within the declaration block.
+ * @param  {String} ruleId
+ *         The rule id that is associated with the given CSS declaration.
  * @return {Object} containing the properties needed to render a CSS declaration.
  */
-function getDeclarationState(declaration, index) {
+function getDeclarationState(declaration, ruleId) {
   return {
     // Array of the computed properties for a CSS declaration.
     computedProperties: declaration.computedProperties,
     // An unique CSS declaration id.
-    id: `${declaration.name}${declaration.value}${index}`,
+    id: declaration.id,
     // Whether or not the declaration is enabled.
     isEnabled: declaration.enabled,
     // Whether or not the declaration's property name is known.
@@ -39,6 +39,8 @@ function getDeclarationState(declaration, index) {
     name: declaration.name,
     // The declaration's priority (either "important" or an empty string).
     priority: declaration.priority,
+    // The CSS rule id that is associated with this CSS declaration.
+    ruleId,
     // The declaration's property value.
     value: declaration.value,
   };
@@ -54,8 +56,8 @@ function getDeclarationState(declaration, index) {
 function getRuleState(rule) {
   return {
     // Array of CSS declarations.
-    declarations: rule.declarations.map((declaration, i) =>
-      getDeclarationState(declaration, i)),
+    declarations: rule.declarations.map(declaration =>
+      getDeclarationState(declaration, rule.domRule.actorID)),
     // An unique CSS rule id.
     id: rule.domRule.actorID,
     // An object containing information about the CSS rule's inheritance.

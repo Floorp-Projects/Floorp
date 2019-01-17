@@ -14,6 +14,7 @@ class Declaration extends PureComponent {
   static get propTypes() {
     return {
       declaration: PropTypes.shape(Types.declaration).isRequired,
+      onToggleDeclaration: PropTypes.func.isRequired,
     };
   }
 
@@ -26,6 +27,7 @@ class Declaration extends PureComponent {
     };
 
     this.onComputedExpanderClick = this.onComputedExpanderClick.bind(this);
+    this.onToggleDeclarationClick = this.onToggleDeclarationClick.bind(this);
   }
 
   onComputedExpanderClick(event) {
@@ -34,6 +36,12 @@ class Declaration extends PureComponent {
     this.setState(prevState => {
       return { isComputedListExpanded: !prevState.isComputedListExpanded };
     });
+  }
+
+  onToggleDeclarationClick(event) {
+    event.stopPropagation();
+    const { id, ruleId } = this.props.declaration;
+    this.props.onToggleDeclaration(ruleId, id);
   }
 
   renderComputedPropertyList() {
@@ -131,6 +139,7 @@ class Declaration extends PureComponent {
           dom.div({
             className: "ruleview-enableproperty theme-checkbox" +
                         (isEnabled ? " checked" : ""),
+            onClick: this.onToggleDeclarationClick,
             tabIndex: -1,
           }),
           dom.span({ className: "ruleview-namecontainer" },
