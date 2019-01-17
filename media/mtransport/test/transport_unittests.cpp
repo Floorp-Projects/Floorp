@@ -1388,18 +1388,21 @@ TEST_F(TransportTest, TestSrtpErrorClientSendsUnevenList) {
 TEST_F(TransportTest, OnlyServerSendsSrtpXtn) {
   p1_->SetupSrtp();
   SetDtlsPeer();
-  ConnectSocketExpectState(TransportLayer::TS_ERROR,
-                           TransportLayer::TS_CLOSED);
+  // This should connect, but with no SRTP extension neogtiated.
+  // The client side might negotiate a data channel only.
+  ConnectSocket();
+  ASSERT_NE(TLS_NULL_WITH_NULL_NULL, p1_->cipherSuite());
+  ASSERT_EQ(0, p1_->srtpCipher());
 }
 
 TEST_F(TransportTest, OnlyClientSendsSrtpXtn) {
   p2_->SetupSrtp();
   SetDtlsPeer();
-  // This means that the server won't semd the extension as well.  The server
-  // (p1) thinks that everything is OK.  The client (p2) notices the problem
-  // after connecting and aborts.
-  ConnectSocketExpectState(TransportLayer::TS_CLOSED,
-                           TransportLayer::TS_ERROR);
+  // This should connect, but with no SRTP extension neogtiated.
+  // The server side might negotiate a data channel only.
+  ConnectSocket();
+  ASSERT_NE(TLS_NULL_WITH_NULL_NULL, p1_->cipherSuite());
+  ASSERT_EQ(0, p1_->srtpCipher());
 }
 
 class TransportSrtpParameterTest : public TransportTest,

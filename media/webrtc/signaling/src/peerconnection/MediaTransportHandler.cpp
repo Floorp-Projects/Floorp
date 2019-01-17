@@ -501,6 +501,8 @@ void MediaTransportHandler::SendPacket(const std::string& aTransportId,
 
 TransportLayer::State MediaTransportHandler::GetState(
     const std::string& aTransportId, bool aRtcp) const {
+  // TODO Bug 1520692: we should allow Datachannel to connect without
+  // DTLS SRTP keys
   RefPtr<TransportFlow> flow = GetTransportFlow(aTransportId, aRtcp);
   if (flow) {
     return flow->GetLayer(TransportLayerDtls::ID())->state();
