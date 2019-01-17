@@ -99,10 +99,9 @@ add_task(async function setup() {
 });
 
 add_task(function test_input_starts_query() {
+  input.inputField.value = "search";
   input.handleEvent({
-    target: {
-      value: "search",
-    },
+    target: input.inputField,
     type: "input",
   });
 
@@ -122,10 +121,9 @@ add_task(function test_input_with_private_browsing() {
   // will use the updated return value of the private browsing stub.
   let privateInput = new UrlbarInput(inputOptions);
 
+  privateInput.inputField.value = "search";
   privateInput.handleEvent({
-    target: {
-      value: "search",
-    },
+    target: privateInput.inputField,
     type: "input",
   });
 
