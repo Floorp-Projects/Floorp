@@ -16,12 +16,9 @@ const FILE_UPDATER_BIN_BAK = FILE_UPDATER_BIN + ".bak";
 const PREF_APP_UPDATE_INTERVAL = "app.update.interval";
 const PREF_APP_UPDATE_LASTUPDATETIME = "app.update.lastUpdateTime.background-update-timer";
 
-let gRembemberedPrefs = [];
-
 const DATA_URI_SPEC =  "chrome://mochitests/content/browser/toolkit/mozapps/update/tests/browser/";
 
 var DEBUG_AUS_TEST = true;
-var gUseTestUpdater = false;
 
 const LOG_FUNCTION = info;
 
@@ -38,33 +35,105 @@ const URL_MANUAL_UPDATE = gURLData + "downloadPage.html";
 const gEnv = Cc["@mozilla.org/process/environment;1"].
              getService(Ci.nsIEnvironment);
 
-const NOTIFICATIONS = [
-  "update-available",
-  "update-manual",
-  "update-restart",
-];
-
 let gOriginalUpdateAutoValue = null;
 
 /**
- * Delay for a very short period. Useful for moving the code after this
- * to the back of the event loop.
+ * Creates the continue file used to signal that update staging or the mock http
+ * server should continue. The delay this creates allows the tests to verify the
+ * user interfaces before they auto advance to phases of an update. The continue
+ * file for staging will be deleted by the test updater and the continue file
+ * for update check and update download requests will be deleted by the test
+ * http server handler implemented in app_update.sjs. The test returns a promise
+ * so the test can wait on the deletion of the continue file when necessary.
  *
- * @return A promise which will resolve after a very short period.
+ * @param  leafName
+ *         The leafName of the file to create. This should be one of the
+ *         folowing constants that are defined in testConstants.js:
+ *         CONTINUE_CHECK
+ *         CONTINUE_DOWNLOAD
+ *         CONTINUE_STAGING
+ * @return Promise
+ *         Resolves when the file is deleted.
+ *         Rejects if timeout is exceeded or condition ever throws.
+ * @throws If the file already exists.
  */
-function delay() {
-  return new Promise(resolve => executeSoon(resolve));
+async function continueFileHandler(leafName) {
+  // The default number of retries of 50 in TestUtils.waitForCondition is
+  // sufficient for test http server requests. The total time to wait with the
+  // default interval of 100 is approximately 5 seconds.
+  let retries = undefined;
+  let continueFile;
+  if (leafName == CONTINUE_STAGING) {
+    debugDump("creating " + leafName + " file for slow update staging");
+    // Use 100 retries for staging requests to lessen the likelihood of tests
+    // intermittently failing on debug builds due to launching the updater. The
+    // total time to wait with the default interval of 100 is approximately 10
+    // seconds. The test updater uses the same values.
+    retries = 100;
+    continueFile = getUpdatesPatchDir();
+    continueFile.append(leafName);
+  } else {
+    debugDump("creating " + leafName + " file for slow http server requests");
+    continueFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+    let continuePath = REL_PATH_DATA + leafName;
+    let continuePathParts = continuePath.split("/");
+    for (let i = 0; i < continuePathParts.length; ++i) {
+      continueFile.append(continuePathParts[i]);
+    }
+  }
+  if (continueFile.exists()) {
+    throw new Error("The continue file should not exist, path: " +
+                    continueFile.path);
+  }
+  continueFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
+  return BrowserTestUtils.waitForCondition(() =>
+    (!continueFile.exists()),
+    "Waiting for file to be deleted, path: " + continueFile.path,
+    undefined, retries);
+
+}
+
+/**
+ * Creates and locks the app update write test file so it is possible to test
+ * when the user doesn't have write access to update. Since this is only
+ * possible on Windows the function throws when it is called on other platforms.
+ * This uses registerCleanupFunction to remove the lock and the file when the
+ * test completes.
+ *
+ * @throws If the function is called on a platform other than Windows.
+ */
+function lockWriteTestFile() {
+  if (AppConstants.platform != "win") {
+    throw new Error("Windows only test function called");
+  }
+  let file = getUpdatesRootDir();
+  file.append(FILE_UPDATE_TEST);
+  file.QueryInterface(Ci.nsILocalFileWin);
+  // Remove the file if it exists just in case.
+  if (file.exists()) {
+    file.fileAttributesWin |= file.WFA_READWRITE;
+    file.fileAttributesWin &= ~file.WFA_READONLY;
+    file.remove(false);
+  }
+  file.create(file.NORMAL_FILE_TYPE, 0o444);
+  file.fileAttributesWin |= file.WFA_READONLY;
+  file.fileAttributesWin &= ~file.WFA_READWRITE;
+  registerCleanupFunction(() => {
+    file.fileAttributesWin |= file.WFA_READWRITE;
+    file.fileAttributesWin &= ~file.WFA_READONLY;
+    file.remove(false);
+  });
 }
 
 /**
  * Gets the update version info for the update url parameters to send to
- * update.sjs.
+ * app_update.sjs.
  *
  * @param  aAppVersion (optional)
  *         The application version for the update snippet. If not specified the
  *         current application version will be used.
  * @return The url parameters for the application and platform version to send
- *         to update.sjs.
+ *         to app_update.sjs.
  */
 function getVersionParams(aAppVersion) {
   let appInfo = Services.appinfo;
@@ -124,7 +193,7 @@ add_task(async function setDefaults() {
  * everything is cleaned up afterwards.
  *
  * @param  updateParams
- *         URL-encoded params which will be sent to update.sjs.
+ *         Params which will be sent to app_update.sjs.
  * @param  checkAttempts
  *         How many times to check for updates. Useful for testing the UI
  *         for check failures.
@@ -318,21 +387,20 @@ function checkWhatsNewLink(win, id, url) {
 }
 
 /**
- * For tests that use the test updater restores the backed up real updater if
- * it exists and tries again on failure since Windows debug builds at times
- * leave the file in use. After success moveRealUpdater is called to continue
- * the setup of the test updater. For tests that don't use the test updater
- * runTest will be called.
+ * For staging tests the test updater must be used and this restores the backed
+ * up real updater if it exists and tries again on failure since Windows debug
+ * builds at times leave the file in use. After success moveRealUpdater is
+ * called to continue the setup of the test updater.
  */
 function setupTestUpdater() {
   return (async function() {
-    if (gUseTestUpdater) {
+    if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
       try {
         restoreUpdaterBackup();
       } catch (e) {
         logTestInfo("Attempt to restore the backed up updater failed... " +
                     "will try again, Exception: " + e);
-        await delay();
+        await TestUtils.waitForTick();
         await setupTestUpdater();
         return;
       }
@@ -357,7 +425,7 @@ function moveRealUpdater() {
     } catch (e) {
       logTestInfo("Attempt to move the real updater out of the way failed... " +
                   "will try again, Exception: " + e);
-      await delay();
+      await TestUtils.waitForTick();
       await moveRealUpdater();
       return;
     }
@@ -367,9 +435,8 @@ function moveRealUpdater() {
 }
 
 /**
- * Copies the test updater so it can be used by tests and tries again on failure
- * since Windows debug builds at times leave the file in use. After success it
- * will call runTest to continue the test.
+ * Copies the test updater and tries again on failure since Windows debug builds
+ * at times leave the file in use.
  */
 function copyTestUpdater(attempt = 0) {
   return (async function() {
@@ -391,7 +458,7 @@ function copyTestUpdater(attempt = 0) {
       if (attempt < MAX_UPDATE_COPY_ATTEMPTS) {
         logTestInfo("Attempt to copy the test updater failed... " +
                     "will try again, Exception: " + e);
-        await delay();
+        await TestUtils.waitForTick();
         await copyTestUpdater(attempt + 1);
       }
     }
@@ -401,9 +468,7 @@ function copyTestUpdater(attempt = 0) {
 /**
  * Restores the updater that was backed up. This is called in setupTestUpdater
  * before the backup of the real updater is done in case the previous test
- * failed to restore the updater, in finishTestDefaultWaitForWindowClosed when
- * the test has finished, and in test_9999_cleanup.xul after all tests have
- * finished.
+ * failed to restore the updater when the test has finished.
  */
 function restoreUpdaterBackup() {
   let baseAppDir = getAppBaseDir();
@@ -420,13 +485,12 @@ function restoreUpdaterBackup() {
 }
 
 /**
- * When a test finishes this will repeatedly attempt to restore the real updater
- * for tests that use the test updater and then call
- * finishTestDefaultWaitForWindowClosed after the restore is successful.
+ * When a staging test finishes this will repeatedly attempt to restore the real
+ * updater.
  */
 function finishTestRestoreUpdaterBackup() {
   return (async function() {
-    if (gUseTestUpdater) {
+    if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
       try {
         // Windows debug builds keep the updater file in use for a short period of
         // time after the updater process exits.
@@ -435,9 +499,169 @@ function finishTestRestoreUpdaterBackup() {
         logTestInfo("Attempt to restore the backed up updater failed... " +
                     "will try again, Exception: " + e);
 
-        await delay();
+        await TestUtils.waitForTick();
         await finishTestRestoreUpdaterBackup();
       }
     }
+  })();
+}
+
+/**
+ * Waits for the About Dialog to load.
+ *
+ * @return A promise that returns the domWindow for the About Dialog and
+ *         resolves when the About Dialog loads.
+ */
+function waitForAboutDialog() {
+  return new Promise(resolve => {
+    var listener = {
+      onOpenWindow: aXULWindow => {
+        debugDump("About dialog shown...");
+        Services.wm.removeListener(listener);
+
+         async function aboutDialogOnLoad() {
+          domwindow.removeEventListener("load", aboutDialogOnLoad, true);
+          let chromeURI = "chrome://browser/content/aboutDialog.xul";
+          is(domwindow.document.location.href, chromeURI, "About dialog appeared");
+          resolve(domwindow);
+        }
+
+        var domwindow = aXULWindow.docShell.domWindow;
+        domwindow.addEventListener("load", aboutDialogOnLoad, true);
+      },
+      onCloseWindow: aXULWindow => {},
+    };
+
+    Services.wm.addListener(listener);
+    openAboutDialog();
+  });
+}
+
+/**
+ * Runs an About Dialog update test. This will set various common prefs for
+ * updating and runs the provided list of steps.
+ *
+ * @param  updateParams
+ *         Params which will be sent to app_update.sjs.
+ * @param  backgroundUpdate
+ *         If true a background check will be performed before opening the About
+ *         Dialog.
+ * @param  steps
+ *         An array of test steps to perform. A step will either be an object
+ *         containing expected conditions and actions or a function to call.
+ * @return A promise which will resolve once all of the steps have been run.
+ */
+function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
+  let aboutDialog;
+  function processAboutDialogStep(step) {
+    if (typeof(step) == "function") {
+      return step();
+    }
+
+    // Helper function to get the selected panel.
+    function getSelectedPanel() {
+      return aboutDialog.document.getElementById("updateDeck").selectedPanel;
+    }
+
+    // Helper function to get the selected panel's button.
+    function getSelectedPanelButton() {
+      return getSelectedPanel().querySelector("button");
+    }
+
+    // Helper function to get the selected panel's label with a class of
+    // text-link.
+    function getSelectedLabelLink() {
+      return getSelectedPanel().querySelector("label.text-link");
+    }
+
+    const {panelId, checkActiveUpdate, continueFile} = step;
+    return (async function() {
+      await BrowserTestUtils.waitForCondition(() =>
+        (getSelectedPanel() && getSelectedPanel().id == panelId),
+        "Waiting for expected panel ID - expected \"" + panelId + "\"");
+
+      // Skip when checkActiveUpdate evaluates to false.
+      if (checkActiveUpdate) {
+        ok(!!gUpdateManager.activeUpdate, "There should be an active update");
+        is(gUpdateManager.activeUpdate.state, checkActiveUpdate.state,
+           "The active update state should equal " + checkActiveUpdate.state);
+      } else {
+        ok(!gUpdateManager.activeUpdate,
+           "There should not be an active update");
+      }
+
+      if (continueFile) {
+        await continueFileHandler(continueFile);
+      }
+
+      let linkPanels = ["downloadFailed", "manualUpdate", "unsupportedSystem"];
+      if (linkPanels.includes(panelId)) {
+        // The unsupportedSystem panel uses the update's detailsURL and the
+        // downloadFailed and manualUpdate panels use the app.update.url.manual
+        // preference.
+        let labelLink = getSelectedLabelLink();
+        is(labelLink.href, URL_HOST,
+           "The panel's link href should equal the expected value");
+      }
+
+      let buttonPanels = ["downloadAndInstall", "apply"];
+      if (buttonPanels.includes(panelId)) {
+        let buttonEl = getSelectedPanelButton();
+        await BrowserTestUtils.waitForCondition(() =>
+          (aboutDialog.document.activeElement == buttonEl),
+          "The button should receive focus");
+        ok(!buttonEl.disabled, "The button should be enabled");
+        // Don't click the button on the apply panel since this will restart the
+        // application.
+        if (panelId != "apply") {
+          buttonEl.click();
+        }
+      }
+    })();
+  }
+
+  return (async function() {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [PREF_APP_UPDATE_SERVICE_ENABLED, false],
+        [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
+        [PREF_APP_UPDATE_URL_MANUAL, URL_HOST],
+      ],
+    });
+    registerCleanupFunction(() => {
+      gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "");
+      UpdateListener.reset();
+      cleanUpUpdates();
+    });
+
+    gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
+    setUpdateTimerPrefs();
+    removeUpdateDirsAndFiles();
+
+    await setupTestUpdater();
+
+    let url = URL_HTTP_UPDATE_SJS + "?detailsURL=" + URL_HOST +
+              updateParams + getVersionParams();
+    if (backgroundUpdate) {
+      setUpdateURL(url);
+      if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
+        // Don't wait on the deletion of the continueStaging file
+        continueFileHandler(CONTINUE_STAGING);
+      }
+      gAUS.checkForBackgroundUpdates();
+      await waitForEvent("update-downloaded");
+    } else {
+      url += "&slowUpdateCheck=1&useSlowDownloadMar=1";
+      setUpdateURL(url);
+    }
+
+    aboutDialog = await waitForAboutDialog();
+
+    for (let step of steps) {
+      await processAboutDialogStep(step);
+    }
+
+    aboutDialog.close();
+    await finishTestRestoreUpdaterBackup();
   })();
 }
