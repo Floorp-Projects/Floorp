@@ -112,7 +112,8 @@
           },
           "mime": {
             "description": "The file's MIME type.",
-            "type": "string"
+            "type": "string",
+            "optional": true
           },
           "startTime": {
             "description": "Number of milliseconds between the unix epoch and when this download began.",
@@ -257,8 +258,7 @@
           "totalBytesGreater": {
             "description": "Limits results to downloads whose totalBytes is greater than the given integer.",
             "optional": true,
-            "type": "number",
-            "default": -1
+            "type": "number"
           },
           "totalBytesLess": {
             "description": "Limits results to downloads whose totalBytes is less than the given integer.",
