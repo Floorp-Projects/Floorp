@@ -1147,9 +1147,10 @@ namespace js {
 //   which records the source line and column as well as the function, is not
 //   correct. To detect this case, when we push a cache entry, we record the
 //   frame's pc. When consulting the cache, if a frame's address matches but its
-//   pc does not, then we pop the cache entry and continue walking the stack.
-//   The next stack frame will definitely hit: since its callee frame never left
-//   the stack, the calling frame never got the chance to execute.
+//   pc does not, then we pop the cache entry, clear the frame's bit, and
+//   continue walking the stack. The next stack frame will definitely hit: since
+//   its callee frame never left the stack, the calling frame never got the
+//   chance to execute.
 //
 // - Generators, at least conceptually, have long-lived stack frames that
 //   disappear from the stack when the generator yields, and reappear on the
@@ -1177,14 +1178,20 @@ namespace js {
 //   compartment of the code that requested the capture, *not* in that of the
 //   frames it represents, so in general, different compartments may have
 //   different SavedFrame objects representing the same actual stack frame. The
-//   LiveSavedFrameCache simply records whichever SavedFrames were created most
-//   recently. When we find a cache hit, we check the entry's SavedFrame's
-//   compartment against the current compartment; if they do not match, we flush
-//   the entire cache. This means that it is not always true that, if a frame's
-//   bit is set, it must have an entry in the cache. But we can still assert
-//   that, if a frame's bit is set and the cache is not completely empty, the
-//   frame will have an entry. When the cache is flushed, it will be repopulated
-//   immediately with the new capture's frames.
+//   LiveSavedFrameCache simply records whichever SavedFrames were used in the
+//   most recent captures. When we find a cache hit, we check the entry's
+//   SavedFrame's compartment against the current compartment; if they do not
+//   match, we clear the entire cache.
+//
+//   This means that it is not always true that, if a frame's
+//   hasCachedSavedFrame bit is set, it must have an entry in the cache. The
+//   actual invariant is: either the cache is completely empty, or the frames'
+//   bits are trustworthy. This invariant holds even though capture can be
+//   interrupted at many places by OOM failures. Clearing the cache is a single,
+//   uninterruptible step. When we try to look up a frame whose bit is set and
+//   find an empty cache, we clear the frame's bit. And we only add the first
+//   frame to an empty cache once we've walked the stack all the way, so we know
+//   that all frames' bits are cleared by that point.
 //
 // - When the Debugger API evaluates an expression in some frame (the 'target
 //   frame'), it's SpiderMonkey's convention that the target frame be treated as

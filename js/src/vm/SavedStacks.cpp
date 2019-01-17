@@ -98,6 +98,11 @@ void LiveSavedFrameCache::find(JSContext* cx, FramePtr& framePtr,
   MOZ_ASSERT(initialized());
   MOZ_ASSERT(framePtr.hasCachedSavedFrame());
 
+  // The assertions here check that either 1) frames' hasCachedSavedFrame flags
+  // accurately indicate the presence of a cache entry for that frame (ignoring
+  // pc mismatches), or 2) the cache is completely empty, having been flushed
+  // for a realm mismatch.
+
   // If we flushed the cache due to a realm mismatch, then we shouldn't
   // expect to find any frames in the cache.
   if (frames->empty()) {
@@ -124,20 +129,14 @@ void LiveSavedFrameCache::find(JSContext* cx, FramePtr& framePtr,
   while (key != frames->back().key) {
     MOZ_ASSERT(frames->back().savedFrame->realm() == cx->realm());
 
-    // We know that the cache does contain an entry for frameIter's frame,
-    // since its bit is set. That entry must be below this one in the stack,
-    // so frames->back() must correspond to a frame younger than
-    // frameIter's. If frameIter is the youngest frame with its bit set,
-    // then its entry is the youngest that is valid, and we can pop this
-    // entry. Even if frameIter is not the youngest frame with its bit set,
-    // since we're going to push new cache entries for all frames younger
-    // than frameIter, we must pop it anyway.
+    // framePtr must have an entry, but apparently it's below this one on the
+    // stack; frames->back() must correspond to a frame younger than framePtr's.
+    // SavedStacks::insertFrames is going to push new cache entries for
+    // everything younger than framePtr, so this entry should be popped.
     frames->popBack();
 
-    // If the frame's bit was set, the frame should always have an entry in
-    // the cache. (If we purged the entire cache because its SavedFrames had
-    // been captured for a different compartment, then we would have
-    // returned early above.)
+    // Since the cache does contain an entry for framePtr's frame somewhere,
+    // popping this younger frame had better not empty the cache.
     MOZ_ALWAYS_TRUE(!frames->empty());
   }
 
@@ -147,11 +146,6 @@ void LiveSavedFrameCache::find(JSContext* cx, FramePtr& framePtr,
   // this frame for that to happen, but this frame's bit is set.
   if (pc != frames->back().pc) {
     frames->popBack();
-
-    // Since we've removed this entry from the cache, clear the bit on its
-    // frame. Usually we'll repopulate the cache anyway, but if there's an
-    // OOM that might not happen.
-    framePtr.clearHasCachedSavedFrame();
     frame.set(nullptr);
     return;
   }
@@ -1321,17 +1315,19 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
       }
       cache->find(cx, *framePtr, iter.pc(), &parent);
 
-      // Even though iter.hasCachedSavedFrame() was true, we can't
-      // necessarily stop walking the stack here. We can get cache misses
-      // for two reasons:
-      // 1) This is the youngest valid frame in the cache, and it has run
-      //    code and advanced to a new pc since it was cached.
-      // 2) The cache was populated with SavedFrames captured for a
-      //    different compartment, and got purged completely. We will
-      //    repopulate it from scratch.
+      // Even though iter.hasCachedSavedFrame() was true, we may still get a
+      // cache miss, if the frame's pc doesn't match the cache entry's, or if
+      // the cache was emptied due to a realm mismatch.
       if (parent) {
         break;
       }
+
+      // This frame doesn't have a cache entry, despite its hasCachedSavedFrame
+      // flag being set. If this was due to a pc mismatch, we can clear the flag
+      // here and set things right. If the cache was emptied due to a realm mismatch,
+      // we should clear all the frames' flags as we walk to the bottom of the stack,
+      // so that they are all clear before we start pushing any new entries.
+      framePtr->clearHasCachedSavedFrame();
     }
 
     // We'll be pushing this frame onto stackChain. Gather the information
