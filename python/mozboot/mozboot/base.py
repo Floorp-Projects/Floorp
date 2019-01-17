@@ -690,6 +690,16 @@ class BaseBootstrapper(object):
         if rust.platform() == win64 and win32 not in targets:
             subprocess.check_call([rustup, 'target', 'add', win32])
 
+        if 'mobile_android' in self.application:
+            # Let's add the most common targets.
+            android_targets = ('armv7-linux-androideabi',
+                               'aarch64-linux-android',
+                               'i686-linux-android',
+                               'x86_64-linux-android', )
+            for target in android_targets:
+                if target not in targets:
+                    subprocess.check_call([rustup, 'target', 'add', target])
+
     def upgrade_rust(self, rustup):
         """Upgrade Rust.
 
