@@ -690,7 +690,7 @@ impl<'a> DisplayListFlattener<'a> {
             Some(spatial_node_index),
             iframe_pipeline_id,
             TransformStyle::Flat,
-            None,
+            PropertyBinding::Value(LayoutTransform::identity()),
             ReferenceFrameKind::Transform,
             origin,
         );
@@ -1584,7 +1584,7 @@ impl<'a> DisplayListFlattener<'a> {
         parent_index: Option<SpatialNodeIndex>,
         pipeline_id: PipelineId,
         transform_style: TransformStyle,
-        source_transform: Option<PropertyBinding<LayoutTransform>>,
+        source_transform: PropertyBinding<LayoutTransform>,
         kind: ReferenceFrameKind,
         origin_in_parent_reference_frame: LayoutVector2D,
     ) -> SpatialNodeIndex {
@@ -1619,7 +1619,7 @@ impl<'a> DisplayListFlattener<'a> {
             None,
             pipeline_id,
             TransformStyle::Flat,
-            None,
+            PropertyBinding::Value(LayoutTransform::identity()),
             ReferenceFrameKind::Transform,
             LayoutVector2D::zero(),
         );

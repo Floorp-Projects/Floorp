@@ -1256,7 +1256,7 @@ impl DisplayListBuilder {
         rect: &LayoutRect,
         parent: SpatialId,
         transform_style: TransformStyle,
-        transform: Option<PropertyBinding<LayoutTransform>>,
+        transform: PropertyBinding<LayoutTransform>,
         kind: ReferenceFrameKind,
     ) -> SpatialId {
         let id = self.generate_spatial_index();
