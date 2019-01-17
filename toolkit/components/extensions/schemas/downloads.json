@@ -257,7 +257,8 @@
           "totalBytesGreater": {
             "description": "Limits results to downloads whose totalBytes is greater than the given integer.",
             "optional": true,
-            "type": "number"
+            "type": "number",
+            "default": -1
           },
           "totalBytesLess": {
             "description": "Limits results to downloads whose totalBytes is less than the given integer.",
