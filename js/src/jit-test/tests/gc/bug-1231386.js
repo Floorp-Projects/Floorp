@@ -10,7 +10,7 @@ function f3() {
     };
 }
 var x = f3();
-var h = newGlobal();
+var h = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 dbg.addDebuggee(h);
 oomTest(() => getBacktrace({
