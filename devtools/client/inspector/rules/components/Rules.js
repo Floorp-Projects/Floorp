@@ -15,6 +15,7 @@ class Rules extends PureComponent {
   static get propTypes() {
     return {
       onToggleDeclaration: PropTypes.func.isRequired,
+      onToggleSelectorHighlighter: PropTypes.func.isRequired,
       rules: PropTypes.arrayOf(PropTypes.shape(Types.rule)).isRequired,
     };
   }
@@ -22,6 +23,7 @@ class Rules extends PureComponent {
   render() {
     const {
       onToggleDeclaration,
+      onToggleSelectorHighlighter,
       rules,
     } = this.props;
 
@@ -29,6 +31,7 @@ class Rules extends PureComponent {
       return Rule({
         key: rule.id,
         onToggleDeclaration,
+        onToggleSelectorHighlighter,
         rule,
       });
     });
