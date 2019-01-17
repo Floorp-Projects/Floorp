@@ -19,6 +19,9 @@ createEnum([
   // Toggles on or off the given pseudo class value for the current selected element.
   "TOGGLE_PSEUDO_CLASS",
 
+  // Updates the highlighted selector.
+  "UPDATE_HIGHLIGHTED_SELECTOR",
+
   // Updates the rules state with the new list of CSS rules for the selected element.
   "UPDATE_RULES",
 
