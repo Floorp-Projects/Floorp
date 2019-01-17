@@ -43,8 +43,8 @@ Artifact builds download prebuilt C++ components rather than building
 them locally. Artifact builds are faster!
 
 Artifact builds are recommended for people working on Firefox or
-Firefox for Android frontends. They are unsuitable for those working
-on C++ code. For more information see:
+Firefox for Android frontends, or the GeckoView Java API. They are unsuitable
+for those working on C++ code. For more information see:
 https://developer.mozilla.org/en-US/docs/Artifact_builds.
 
 Please choose the version of Firefox you want to build:
@@ -54,8 +54,8 @@ Your choice: '''
 APPLICATIONS_LIST = [
     ('Firefox for Desktop Artifact Mode', 'browser_artifact_mode'),
     ('Firefox for Desktop', 'browser'),
-    ('Firefox for Android Artifact Mode', 'mobile_android_artifact_mode'),
-    ('Firefox for Android', 'mobile_android'),
+    ('GeckoView/Firefox for Android Artifact Mode', 'mobile_android_artifact_mode'),
+    ('GeckoView/Firefox for Android', 'mobile_android'),
 ]
 
 # This is a workaround for the fact that we must support python2.6 (which has
