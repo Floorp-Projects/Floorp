@@ -153,7 +153,6 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
       mSuspendCalled(false),
       mIsDisconnecting(false),
       mWasAllowedToStart(true),
-      mSuspendedByContent(false),
       mWasEverAllowedToStart(false),
       mWasEverBlockedToStart(false),
       mWouldBeAllowedToStart(true) {
@@ -194,11 +193,7 @@ void AudioContext::StartBlockedAudioContextIfAllowed() {
   const bool isAllowedToPlay = AutoplayPolicy::IsAllowedToPlay(*this);
   AUTOPLAY_LOG("Trying to start AudioContext %p, IsAllowedToPlay=%d", this,
                isAllowedToPlay);
-
-  // Only start the AudioContext if this resume() call was initiated by content,
-  // not if it was a result of the AudioContext starting after having been
-  // blocked because of the auto-play policy.
-  if (isAllowedToPlay && !mSuspendedByContent) {
+  if (isAllowedToPlay) {
     ResumeInternal();
   } else {
     ReportBlocked();
@@ -907,20 +902,9 @@ already_AddRefed<Promise> AudioContext::Suspend(ErrorResult& aRv) {
     return promise.forget();
   }
 
-  mSuspendedByContent = true;
   mPromiseGripArray.AppendElement(promise);
   SuspendInternal(promise);
   return promise.forget();
-}
-
-void AudioContext::SuspendFromChrome() {
-  // Not support suspend call for these situations.
-  if (mAudioContextState == AudioContextState::Suspended ||
-      mIsOffline ||
-      (mAudioContextState == AudioContextState::Closed || mCloseCalled)) {
-    return;
-  }
-  SuspendInternal(nullptr);
 }
 
 void AudioContext::SuspendInternal(void* aPromise) {
@@ -938,16 +922,6 @@ void AudioContext::SuspendInternal(void* aPromise) {
                                       AudioContextOperation::Suspend, aPromise);
 
   mSuspendCalled = true;
-}
-
-void AudioContext::ResumeFromChrome() {
-  // Not support resume call for these situations.
-  if (mAudioContextState == AudioContextState::Running ||
-      mIsOffline ||
-      (mAudioContextState == AudioContextState::Closed || mCloseCalled)) {
-    return;
-  }
-  ResumeInternal();
 }
 
 already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
@@ -968,7 +942,6 @@ already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
     return promise.forget();
   }
 
-  mSuspendedByContent = false;
   mPendingResumePromises.AppendElement(promise);
 
   const bool isAllowedToPlay = AutoplayPolicy::IsAllowedToPlay(*this);
