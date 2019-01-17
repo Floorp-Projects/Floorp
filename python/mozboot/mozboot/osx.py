@@ -521,7 +521,10 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
         from mozboot import stylo
-        # We installed clang via homebrew earlier.
+        # We installed clang via homebrew earlier.  However, on Android, we're
+        # seeing many compiler errors so we use our own toolchain clang.
+        if 'mobile_android' in self.application:
+            self.install_toolchain_artifact(state_dir, checkout_root, stylo.MACOS_CLANG)
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.MACOS_CBINDGEN)
 
     def ensure_node_packages(self, state_dir, checkout_root):

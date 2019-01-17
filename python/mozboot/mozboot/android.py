@@ -49,12 +49,25 @@ $topsrcdir/mozconfig file, or create the file if it does not exist:
 >>>
 # Build GeckoView/Firefox for Android:
 ac_add_options --enable-application=mobile/android
+
+# Targeting the following architecture.  Ensure exactly one --target is uncommented!
+# For regular phones:
 ac_add_options --target=arm-linux-androideabi
+# For newer phones.
+# ac_add_options --target=aarch64-linux-android
+# For x86 emulators (and x86 devices, which are uncommon):
+# ac_add_options --target=i686-linux-android
+# For x86_64 emulators (and x86_64 devices, which are even less common):
+# ac_add_options --target=x86_64-linux-android
 
 {extra_lines}
 # With the following Android SDK and NDK:
 ac_add_options --with-android-sdk="{sdk_path}"
 ac_add_options --with-android-ndk="{ndk_path}"
+
+# With the following compiler toolchain:
+CC="{moz_state_dir}/clang/bin/clang"
+CXX="{moz_state_dir}/clang/bin/clang++"
 <<<
 '''
 
@@ -291,7 +304,7 @@ def ensure_android_packages(sdkmanager_tool, packages=None, no_interactive=False
 
 
 def suggest_mozconfig(os_name, artifact_mode=False, java_bin_path=None):
-    _mozbuild_path, sdk_path, ndk_path = get_paths(os_name)
+    moz_state_dir, sdk_path, ndk_path = get_paths(os_name)
 
     extra_lines = []
     if java_bin_path:
@@ -310,6 +323,7 @@ def suggest_mozconfig(os_name, artifact_mode=False, java_bin_path=None):
     kwargs = dict(
         sdk_path=sdk_path,
         ndk_path=ndk_path,
+        moz_state_dir=moz_state_dir,
         extra_lines='\n'.join(extra_lines),
     )
     print(template.format(**kwargs))
