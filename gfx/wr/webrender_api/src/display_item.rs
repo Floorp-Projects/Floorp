@@ -537,7 +537,7 @@ pub struct ReferenceFrame {
     pub transform_style: TransformStyle,
     /// The transform matrix, either the perspective matrix or the transform
     /// matrix.
-    pub transform: Option<PropertyBinding<LayoutTransform>>,
+    pub transform: PropertyBinding<LayoutTransform>,
     pub id: SpatialId,
 }
 

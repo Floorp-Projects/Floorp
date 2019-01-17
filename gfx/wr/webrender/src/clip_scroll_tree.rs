@@ -352,7 +352,7 @@ impl ClipScrollTree {
         &mut self,
         parent_index: Option<SpatialNodeIndex>,
         transform_style: TransformStyle,
-        source_transform: Option<PropertyBinding<LayoutTransform>>,
+        source_transform: PropertyBinding<LayoutTransform>,
         kind: ReferenceFrameKind,
         origin_in_parent_reference_frame: LayoutVector2D,
         pipeline_id: PipelineId,
