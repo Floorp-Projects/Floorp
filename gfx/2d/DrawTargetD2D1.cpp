@@ -551,6 +551,22 @@ void DrawTargetD2D1::FillRect(const Rect &aRect, const Pattern &aPattern,
   FinalizeDrawing(aOptions.mCompositionOp, aPattern);
 }
 
+void DrawTargetD2D1::FillRoundedRect(const RoundedRect &aRect,
+                                     const Pattern &aPattern,
+                                     const DrawOptions &aOptions) {
+  if (!aRect.corners.AreRadiiSame()) {
+    return DrawTarget::FillRoundedRect(aRect, aPattern, aOptions);
+  }
+  PrepareForDrawing(aOptions.mCompositionOp, aPattern);
+
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
+
+  RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
+  mDC->FillRoundedRectangle(D2DRoundedRect(aRect), brush);
+
+  FinalizeDrawing(aOptions.mCompositionOp, aPattern);
+}
+
 void DrawTargetD2D1::StrokeRect(const Rect &aRect, const Pattern &aPattern,
                                 const StrokeOptions &aStrokeOptions,
                                 const DrawOptions &aOptions) {
