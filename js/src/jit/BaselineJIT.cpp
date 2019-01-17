@@ -38,19 +38,6 @@ using mozilla::DebugOnly;
 using namespace js;
 using namespace js::jit;
 
-/* static */ PCMappingSlotInfo::SlotLocation PCMappingSlotInfo::ToSlotLocation(
-    const StackValue* stackVal) {
-  if (stackVal->kind() == StackValue::Register) {
-    if (stackVal->reg() == R0) {
-      return SlotInR0;
-    }
-    MOZ_ASSERT(stackVal->reg() == R1);
-    return SlotInR1;
-  }
-  MOZ_ASSERT(stackVal->kind() != StackValue::Stack);
-  return SlotIgnore;
-}
-
 void ICStubSpace::freeAllAfterMinorGC(Zone* zone) {
   if (zone->isAtomsZone()) {
     MOZ_ASSERT(allocator_.isEmpty());

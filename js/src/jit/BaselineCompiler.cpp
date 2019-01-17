@@ -1165,7 +1165,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_DUPAT() {
   // stack frame.
 
   int depth = -(GET_UINT24(handler.pc()) + 1);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(depth)), R0);
+  masm.loadValue(frame.addressOfStackValue(depth), R0);
   frame.push(R0);
   return true;
 }
@@ -1193,8 +1193,8 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_DUP2() {
   frame.syncStack(0);
 
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+  masm.loadValue(frame.addressOfStackValue(-2), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R1);
 
   frame.push(R0);
   frame.push(R1);
@@ -1222,13 +1222,13 @@ bool BaselineCompilerCodeGen::emit_JSOP_PICK() {
 
   // First, move value at -(amount + 1) into R0.
   int32_t depth = -(GET_INT8(handler.pc()) + 1);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(depth)), R0);
+  masm.loadValue(frame.addressOfStackValue(depth), R0);
 
   // Move the other values down.
   depth++;
   for (; depth < 0; depth++) {
-    Address source = frame.addressOfStackValue(frame.peek(depth));
-    Address dest = frame.addressOfStackValue(frame.peek(depth - 1));
+    Address source = frame.addressOfStackValue(depth);
+    Address dest = frame.addressOfStackValue(depth - 1);
     masm.loadValue(source, R1);
     masm.storeValue(R1, dest);
   }
@@ -1254,19 +1254,19 @@ bool BaselineCompilerCodeGen::emit_JSOP_UNPICK() {
   //     after : A B E C D
 
   // First, move value at -1 into R0.
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   // Move the other values up.
   int32_t depth = -(GET_INT8(handler.pc()) + 1);
   for (int32_t i = -1; i > depth; i--) {
-    Address source = frame.addressOfStackValue(frame.peek(i - 1));
-    Address dest = frame.addressOfStackValue(frame.peek(i));
+    Address source = frame.addressOfStackValue(i - 1);
+    Address dest = frame.addressOfStackValue(i);
     masm.loadValue(source, R1);
     masm.storeValue(R1, dest);
   }
 
   // Store R0 under the nth value.
-  Address dest = frame.addressOfStackValue(frame.peek(depth));
+  Address dest = frame.addressOfStackValue(depth);
   masm.storeValue(R0, dest);
   return true;
 }
@@ -1335,7 +1335,7 @@ bool BaselineCodeGen<Handler>::emitToBoolean() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitTest(bool branchIfTrue) {
-  bool knownBoolean = frame.peek(-1)->isKnownBoolean();
+  bool knownBoolean = frame.stackValueHasKnownType(-1, JSVAL_TYPE_BOOLEAN);
 
   // Keep top stack value in R0.
   frame.popRegsAndSync(1);
@@ -1361,12 +1361,12 @@ bool BaselineCodeGen<Handler>::emit_JSOP_IFNE() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitAndOr(bool branchIfTrue) {
-  bool knownBoolean = frame.peek(-1)->isKnownBoolean();
+  bool knownBoolean = frame.stackValueHasKnownType(-1, JSVAL_TYPE_BOOLEAN);
 
   // AND and OR leave the original value on the stack.
   frame.syncStack(0);
 
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
   if (!knownBoolean && !emitToBoolean()) {
     return false;
   }
@@ -1387,7 +1387,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_OR() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_NOT() {
-  bool knownBoolean = frame.peek(-1)->isKnownBoolean();
+  bool knownBoolean = frame.stackValueHasKnownType(-1, JSVAL_TYPE_BOOLEAN);
 
   // Keep top stack value in R0.
   frame.popRegsAndSync(1);
@@ -1479,7 +1479,7 @@ static const VMFunction ThrowCheckIsObjectInfo =
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKISOBJ() {
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   Label ok;
   masm.branchTestObject(Assembler::Equal, R0, &ok);
@@ -1502,7 +1502,7 @@ static const VMFunction CheckIsCallableInfo =
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKISCALLABLE() {
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   prepareVMCall();
 
@@ -1528,7 +1528,7 @@ static const VMFunction ThrowInitializedThisInfo =
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKTHIS() {
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   return emitCheckThis(R0);
 }
@@ -1536,7 +1536,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CHECKTHIS() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKTHISREINIT() {
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   return emitCheckThis(R0, /* reinit = */ true);
 }
@@ -1935,43 +1935,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_SETFUNNAME() {
 }
 
 template <typename Handler>
-void BaselineCodeGen<Handler>::storeValue(const StackValue* source,
-                                          const Address& dest,
-                                          const ValueOperand& scratch) {
-  switch (source->kind()) {
-    case StackValue::Constant:
-      masm.storeValue(source->constant(), dest);
-      break;
-    case StackValue::Register:
-      masm.storeValue(source->reg(), dest);
-      break;
-    case StackValue::LocalSlot:
-      masm.loadValue(frame.addressOfLocal(source->localSlot()), scratch);
-      masm.storeValue(scratch, dest);
-      break;
-    case StackValue::ArgSlot:
-      masm.loadValue(frame.addressOfArg(source->argSlot()), scratch);
-      masm.storeValue(scratch, dest);
-      break;
-    case StackValue::ThisSlot:
-      masm.loadValue(frame.addressOfThis(), scratch);
-      masm.storeValue(scratch, dest);
-      break;
-    case StackValue::EvalNewTargetSlot:
-      MOZ_ASSERT(script->isForEval());
-      masm.loadValue(frame.addressOfEvalNewTarget(), scratch);
-      masm.storeValue(scratch, dest);
-      break;
-    case StackValue::Stack:
-      masm.loadValue(frame.addressOfStackValue(source), scratch);
-      masm.storeValue(scratch, dest);
-      break;
-    default:
-      MOZ_CRASH("Invalid kind");
-  }
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_BITOR() {
   return emitBinaryArith();
 }
@@ -2224,7 +2187,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_INITELEM_ARRAY() {
   frame.syncStack(0);
 
   // Load object in R0, index in R1.
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
+  masm.loadValue(frame.addressOfStackValue(-2), R0);
   uint32_t index = GET_UINT32(handler.pc());
   MOZ_ASSERT(index <= INT32_MAX,
              "the bytecode emitter must fail to compile code that would "
@@ -2274,7 +2237,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_NEWINIT() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_INITELEM() {
   // Store RHS in the scratch slot.
-  storeValue(frame.peek(-1), frame.addressOfScratchValue(), R2);
+  frame.storeStackValue(-1, frame.addressOfScratchValue(), R2);
   frame.pop();
 
   // Keep object and index in R0 and R1.
@@ -2312,8 +2275,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_MUTATEPROTO() {
   // Keep values on the stack for the decompiler.
   frame.syncStack(0);
 
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-2)), R0.scratchReg());
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+  masm.unboxObject(frame.addressOfStackValue(-2), R0.scratchReg());
+  masm.loadValue(frame.addressOfStackValue(-1), R1);
 
   prepareVMCall();
 
@@ -2332,8 +2295,8 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_INITPROP() {
   // Load lhs in R0, rhs in R1.
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+  masm.loadValue(frame.addressOfStackValue(-2), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R1);
 
   // Call IC.
   if (!emitNextIC()) {
@@ -2373,7 +2336,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GETELEM() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_GETELEM_SUPER() {
   // Store obj in the scratch slot.
-  storeValue(frame.peek(-1), frame.addressOfScratchValue(), R2);
+  frame.storeStackValue(-1, frame.addressOfScratchValue(), R2);
   frame.pop();
 
   // Keep receiver and index in R0 and R1.
@@ -2399,7 +2362,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CALLELEM() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_SETELEM() {
   // Store RHS in the scratch slot.
-  storeValue(frame.peek(-1), frame.addressOfScratchValue(), R2);
+  frame.storeStackValue(-1, frame.addressOfScratchValue(), R2);
   frame.pop();
 
   // Keep object and index in R0 and R1.
@@ -2428,17 +2391,17 @@ bool BaselineCodeGen<Handler>::emitSetElemSuper(bool strict) {
 
   // Pop rval into R0, then load receiver into R1 and replace with rval.
   frame.popRegsAndSync(1);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-3)), R1);
-  masm.storeValue(R0, frame.addressOfStackValue(frame.peek(-3)));
+  masm.loadValue(frame.addressOfStackValue(-3), R1);
+  masm.storeValue(R0, frame.addressOfStackValue(-3));
 
   prepareVMCall();
 
   pushArg(Imm32(strict));
   pushArg(R1);  // receiver
   pushArg(R0);  // rval
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
+  masm.loadValue(frame.addressOfStackValue(-2), R0);
   pushArg(R0);  // propval
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+  masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
   pushArg(R0.scratchReg());  // obj
 
   if (!callVM(SetObjectElementInfo)) {
@@ -2470,8 +2433,8 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emitDelElem(bool strict) {
   // Keep values on the stack for the decompiler.
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+  masm.loadValue(frame.addressOfStackValue(-2), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R1);
 
   prepareVMCall();
 
@@ -2697,8 +2660,8 @@ bool BaselineCodeGen<Handler>::emitSetPropSuper(bool strict) {
 
   // Pop rval into R0, then load receiver into R1 and replace with rval.
   frame.popRegsAndSync(1);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R1);
-  masm.storeValue(R0, frame.addressOfStackValue(frame.peek(-2)));
+  masm.loadValue(frame.addressOfStackValue(-2), R1);
+  masm.storeValue(R0, frame.addressOfStackValue(-2));
 
   prepareVMCall();
 
@@ -2706,7 +2669,7 @@ bool BaselineCodeGen<Handler>::emitSetPropSuper(bool strict) {
   pushArg(R0);  // rval
   pushScriptNameArg();
   pushArg(R1);  // receiver
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+  masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
   pushArg(R0.scratchReg());  // obj
 
   if (!callVM(SetPropertySuperInfo)) {
@@ -2761,7 +2724,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_GETPROP_SUPER() {
   // Receiver -> R1, Object -> R0
   frame.popRegsAndSync(1);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+  masm.loadValue(frame.addressOfStackValue(-1), R1);
   frame.pop();
 
   if (!emitNextIC()) {
@@ -2785,7 +2748,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emitDelProp(bool strict) {
   // Keep value on the stack for the decompiler.
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   prepareVMCall();
 
@@ -2884,7 +2847,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_SETALIASEDVAR() {
 
     // Load rhs into R1.
     frame.syncStack(0);
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+    masm.loadValue(frame.addressOfStackValue(-1), R1);
 
     // Load and box lhs into R0.
     getEnvironmentCoordinateObject(R2.scratchReg());
@@ -3142,8 +3105,8 @@ bool BaselineCodeGen<Handler>::emitInitPropGetterSetter() {
 
   prepareVMCall();
 
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-2)), R1.scratchReg());
+  masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
+  masm.unboxObject(frame.addressOfStackValue(-2), R1.scratchReg());
 
   pushArg(R0.scratchReg());
   pushScriptNameArg();
@@ -3189,14 +3152,14 @@ bool BaselineCodeGen<Handler>::emitInitElemGetterSetter() {
   // Load index and value in R0 and R1, but keep values on the stack for the
   // decompiler.
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R1.scratchReg());
+  masm.loadValue(frame.addressOfStackValue(-2), R0);
+  masm.unboxObject(frame.addressOfStackValue(-1), R1.scratchReg());
 
   prepareVMCall();
 
   pushArg(R1.scratchReg());
   pushArg(R0);
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-3)), R0.scratchReg());
+  masm.unboxObject(frame.addressOfStackValue(-3), R0.scratchReg());
   pushArg(R0.scratchReg());
   pushBytecodePCArg();
 
@@ -3234,8 +3197,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITELEM_INC() {
   frame.syncStack(0);
 
   // Load object in R0, index in R1.
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-3)), R0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R1);
+  masm.loadValue(frame.addressOfStackValue(-3), R0);
+  masm.loadValue(frame.addressOfStackValue(-2), R1);
 
   // Call IC.
   if (!emitNextIC()) {
@@ -3246,7 +3209,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITELEM_INC() {
   frame.pop();
 
   // Increment index
-  Address indexAddr = frame.addressOfStackValue(frame.peek(-1));
+  Address indexAddr = frame.addressOfStackValue(-1);
 #ifdef DEBUG
   Label isInt32;
   masm.branchTestInt32(Assembler::Equal, indexAddr, &isInt32);
@@ -3275,7 +3238,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_SETLOCAL() {
   frame.syncStack(1);
 
   uint32_t local = GET_LOCALNO(handler.pc());
-  storeValue(frame.peek(-1), frame.addressOfLocal(local), R0);
+  frame.storeStackValue(-1, frame.addressOfLocal(local), R0);
   return true;
 }
 
@@ -3298,7 +3261,7 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
     } else {
       // See the comment in emit_JSOP_SETLOCAL.
       frame.syncStack(1);
-      storeValue(frame.peek(-1), frame.addressOfArg(arg), R0);
+      frame.storeStackValue(-1, frame.addressOfArg(arg), R0);
     }
 
     return true;
@@ -3318,7 +3281,7 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
     if (op == JSOP_GETARG) {
       masm.loadValue(frame.addressOfArg(arg), R0);
     } else {
-      storeValue(frame.peek(-1), frame.addressOfArg(arg), R0);
+      frame.storeStackValue(-1, frame.addressOfArg(arg), R0);
     }
     masm.jump(&done);
     masm.bind(&hasArgsObj);
@@ -3337,7 +3300,7 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
     frame.push(R0);
   } else {
     masm.guardedCallPreBarrier(argAddr, MIRType::Value);
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+    masm.loadValue(frame.addressOfStackValue(-1), R0);
     masm.storeValue(R0, argAddr);
 
     MOZ_ASSERT(frame.numUnsyncedSlots() == 0);
@@ -3659,7 +3622,7 @@ static const VMFunction OptimizeSpreadCallInfo =
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_OPTIMIZE_SPREADCALL() {
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   prepareVMCall();
   pushArg(R0);
@@ -4200,7 +4163,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TOID() {
   // Load index in R0, but keep values on the stack for the decompiler.
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   // No-op if the index is trivally convertable to an id.
   Label done;
@@ -4229,7 +4192,7 @@ static const VMFunction ToAsyncInfo =
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TOASYNC() {
   frame.syncStack(0);
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+  masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
 
   prepareVMCall();
   pushArg(R0.scratchReg());
@@ -4251,7 +4214,7 @@ static const VMFunction ToAsyncGenInfo =
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TOASYNCGEN() {
   frame.syncStack(0);
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+  masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
 
   prepareVMCall();
   pushArg(R0.scratchReg());
@@ -4273,8 +4236,8 @@ static const VMFunction ToAsyncIterInfo =
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TOASYNCITER() {
   frame.syncStack(0);
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-2)), R0.scratchReg());
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+  masm.unboxObject(frame.addressOfStackValue(-2), R0.scratchReg());
+  masm.loadValue(frame.addressOfStackValue(-1), R1);
 
   prepareVMCall();
   pushArg(R1);
@@ -4297,7 +4260,7 @@ static const VMFunction TrySkipAwaitInfo =
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TRYSKIPAWAIT() {
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   prepareVMCall();
   pushArg(R0);
@@ -4313,7 +4276,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TRYSKIPAWAIT() {
   masm.jump(&done);
 
   masm.bind(&cannotSkip);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
   masm.moveValue(BooleanValue(false), R1);
 
   masm.bind(&done);
@@ -4332,7 +4295,7 @@ static const VMFunction ThrowObjectCoercibleInfo =
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKOBJCOERCIBLE() {
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   Label fail, done;
 
@@ -4470,7 +4433,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ITER() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_MOREITER() {
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   if (!emitNextIC()) {
     return false;
@@ -4485,8 +4448,8 @@ bool BaselineCodeGen<Handler>::emitIsMagicValue() {
   frame.syncStack(0);
 
   Label isMagic, done;
-  masm.branchTestMagic(Assembler::Equal,
-                       frame.addressOfStackValue(frame.peek(-1)), &isMagic);
+  masm.branchTestMagic(Assembler::Equal, frame.addressOfStackValue(-1),
+                       &isMagic);
   masm.moveValue(BooleanValue(false), R0);
   masm.jump(&done);
 
@@ -4535,7 +4498,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GETRVAL() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_SETRVAL() {
   // Store to the frame's return value slot.
-  storeValue(frame.peek(-1), frame.addressOfReturnValue(), R2);
+  frame.storeStackValue(-1, frame.addressOfReturnValue(), R2);
   masm.or32(Imm32(BaselineFrame::HAS_RVAL), frame.addressOfFlags());
   frame.pop();
   return true;
@@ -4773,7 +4736,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITIALYIELD() {
   MOZ_ASSERT(frame.stackDepth() == 1);
 
   Register genObj = R2.scratchReg();
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), genObj);
+  masm.unboxObject(frame.addressOfStackValue(-1), genObj);
 
   MOZ_ASSERT_IF(handler.maybePC(), GET_RESUMEINDEX(handler.maybePC()) == 0);
   masm.storeValue(Int32Value(0),
@@ -4850,7 +4813,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_YIELD() {
     }
   }
 
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), JSReturnOperand);
+  masm.loadValue(frame.addressOfStackValue(-1), JSReturnOperand);
   return emitReturn();
 }
 
@@ -4937,7 +4900,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
 
   // Load generator object.
   Register genObj = regs.takeAny();
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-2)), genObj);
+  masm.unboxObject(frame.addressOfStackValue(-2), genObj);
 
   // Load callee.
   Register callee = regs.takeAny();
@@ -4994,7 +4957,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
 
   // Load the return value.
   ValueOperand retVal = regs.takeAnyValue();
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), retVal);
+  masm.loadValue(frame.addressOfStackValue(-1), retVal);
 
   // Push a fake return address on the stack. We will resume here when the
   // generator returns.
@@ -5168,7 +5131,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
     pushArg(ImmGCPtr(cx->names().return_));
   }
 
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), retVal);
+  masm.loadValue(frame.addressOfStackValue(-1), retVal);
   pushArg(retVal);
   pushArg(genObj);
 
@@ -5179,7 +5142,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
   // After the generator returns, we restore the stack pointer, switch back to
   // the current realm, push the return value, and we're done.
   masm.bind(&returnTarget);
-  masm.computeEffectiveAddress(frame.addressOfStackValue(frame.peek(-1)),
+  masm.computeEffectiveAddress(frame.addressOfStackValue(-1),
                                masm.getStackPointer());
   masm.switchToRealm(script->realm(), R2.scratchReg());
   frame.popn(2);
@@ -5201,7 +5164,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DEBUGCHECKSELFHOSTED() {
 #ifdef DEBUG
   frame.syncStack(0);
 
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   prepareVMCall();
   pushArg(R0);
@@ -5244,7 +5207,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CHECKCLASSHERITAGE() {
   frame.syncStack(0);
 
   // Leave the heritage value on the stack.
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   prepareVMCall();
   pushArg(R0);
@@ -5258,7 +5221,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITHOMEOBJECT() {
 
   // Load function off stack
   Register func = R2.scratchReg();
-  masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), func);
+  masm.unboxObject(frame.addressOfStackValue(-1), func);
 
   // Set HOMEOBJECT_SLOT
   Address addr(func, FunctionExtended::offsetOfMethodHomeObjectSlot());
@@ -5303,7 +5266,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_OBJWITHPROTO() {
   frame.syncStack(0);
 
   // Leave the proto value on the stack for the decompiler
-  masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   prepareVMCall();
   pushArg(R0);
