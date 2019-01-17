@@ -184,7 +184,7 @@ function convertResultToMatches(context, result, urls) {
       continue;
     }
     urls.add(url);
-    // Not used yet: result.getValueAt(i), result.getLabelAt(i)
+    // Not used yet: result.getLabelAt(i)
     let style = result.getStyleAt(i);
     let match = makeUrlbarMatch(context.tokens, {
       url,
@@ -198,10 +198,10 @@ function convertResultToMatches(context, result, urls) {
       continue;
     }
     matches.push(match);
-    // Manage autofill and preselected properties for the first match.
+    // Manage autofillValue and preselected properties for the first match.
     if (i == 0) {
       if (style.includes("autofill") && result.defaultIndex == 0) {
-        context.autofill = true;
+        context.autofillValue = result.getValueAt(i);
       }
       if (style.includes("heuristic")) {
         context.preselected = true;
