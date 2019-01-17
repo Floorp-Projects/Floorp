@@ -27,21 +27,20 @@ loader.lazyRequireGetter(this, "Infobar", "devtools/server/actors/highlighters/u
  * h.hide();
  * h.destroy();
  *
- * Available options:
- *         - {Number} x
- *           x coordinate of the top left corner of the accessible object
- *         - {Number} y
- *           y coordinate of the top left corner of the accessible object
- *         - {Number} w
- *           width of the the accessible object
- *         - {Number} h
- *           height of the the accessible object
- *         - {Number} duration
- *           Duration of time that the highlighter should be shown.
- *         - {String|null} name
- *           name of the the accessible object
- *         - {String} role
- *           role of the the accessible object
+ * @param {Number} options.x
+ *        X coordinate of the top left corner of the accessible object
+ * @param {Number} options.y
+ *        Y coordinate of the top left corner of the accessible object
+ * @param {Number} options.w
+ *        Width of the the accessible object
+ * @param {Number} options.h
+ *        Height of the the accessible object
+ * @param {Number} options.duration
+ *        Duration of time that the highlighter should be shown.
+ * @param {String|null} options.name
+ *        Name of the the accessible object
+ * @param {String} options.role
+ *        Role of the the accessible object
  *
  * Structure:
  * <div class="highlighter-container" aria-hidden="true">
