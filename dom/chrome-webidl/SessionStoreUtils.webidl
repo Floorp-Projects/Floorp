@@ -86,8 +86,56 @@ namespace SessionStoreUtils {
    * @param value (object, see collectScrollPosition())
    */
   void restoreScrollPosition(Window frame, optional SSScrollPositionDict data);
+
+  /**
+   * Collect form data for a given |frame| *not* including any subframes.
+   *
+   * The returned object may have an "id", "xpath", or "innerHTML" key or a
+   * combination of those three. Form data stored under "id" is for input
+   * fields with id attributes. Data stored under "xpath" is used for input
+   * fields that don't have a unique id and need to be queried using XPath.
+   * The "innerHTML" key is used for editable documents (designMode=on).
+   *
+   * Example:
+   *   {
+   *     id: {input1: "value1", input3: "value3"},
+   *     xpath: {
+   *       "/xhtml:html/xhtml:body/xhtml:input[@name='input2']" : "value2",
+   *       "/xhtml:html/xhtml:body/xhtml:input[@name='input4']" : "value4"
+   *     }
+   *   }
+   *
+   * @param  doc
+   *         DOMDocument instance to obtain form data for.
+   * @return object
+   *         Form data encoded in an object.
+   */
+  CollectedFormData collectFormData(Document document);
 };
 
 dictionary SSScrollPositionDict {
   ByteString scroll;
+};
+
+dictionary CollectedFileListValue
+{
+  required DOMString type;
+  required sequence<DOMString> fileList;
+};
+
+dictionary CollectedNonMultipleSelectValue
+{
+  required long selectedIndex;
+  required DOMString value;
+};
+
+// object contains either a CollectedFileListValue or a CollectedNonMultipleSelectValue or Sequence<DOMString>
+typedef (DOMString or boolean or long or object) CollectedFormDataValue;
+
+dictionary CollectedFormData
+{
+  record<DOMString, CollectedFormDataValue> id;
+  record<DOMString, CollectedFormDataValue> xpath;
+  DOMString innerHTML;
+  ByteString url;
 };

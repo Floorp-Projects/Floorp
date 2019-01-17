@@ -14,9 +14,6 @@ function debug(msg) {
   Services.console.logStringMessage("SessionStoreContent: " + msg);
 }
 
-ChromeUtils.defineModuleGetter(this, "FormData",
-  "resource://gre/modules/FormData.jsm");
-
 ChromeUtils.defineModuleGetter(this, "ContentRestore",
   "resource:///modules/sessionstore/ContentRestore.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionHistory",
@@ -384,7 +381,7 @@ class FormDataListener extends Handler {
   }
 
   collect() {
-    return mapFrameTree(this.mm, FormData.collect);
+    return mapFrameTree(this.mm, SessionStoreUtils.collectFormData);
   }
 }
 

@@ -51,6 +51,9 @@ class SessionStoreUtils {
   static void RestoreScrollPosition(const GlobalObject& aGlobal,
                                     nsGlobalWindowInner& aWindow,
                                     const SSScrollPositionDict& data);
+
+  static void CollectFormData(const GlobalObject& aGlobal, Document& aDocument,
+                              CollectedFormData& aRetVal);
 };
 
 }  // namespace dom

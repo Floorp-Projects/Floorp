@@ -2,13 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDocShell.h"
+#include "js/JSON.h"
+#include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/HTMLSelectElement.h"
+#include "mozilla/dom/HTMLTextAreaElement.h"
+#include "mozilla/dom/SessionStoreUtils.h"
+#include "nsCharSeparatedTokenizer.h"
+#include "nsContentList.h"
+#include "nsContentUtils.h"
+#include "nsFocusManager.h"
 #include "nsGlobalWindowOuter.h"
+#include "nsIDocShell.h"
+#include "nsIFormControl.h"
 #include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "nsPrintfCString.h"
-#include "mozilla/dom/SessionStoreUtils.h"
+#include "nsTArrayHelpers.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -268,4 +277,386 @@ SessionStoreUtils::AddDynamicFrameFilteredListener(
   token = tokenizer.nextToken();
   int pos_Y = atoi(token.get());
   aWindow.ScrollTo(pos_X, pos_Y);
+}
+
+// Implements the Luhn checksum algorithm as described at
+// http://wikipedia.org/wiki/Luhn_algorithm
+// Number digit lengths vary with network, but should fall within 12-19 range.
+// [2] More details at https://en.wikipedia.org/wiki/Payment_card_number
+static bool IsValidCCNumber(nsAString& aValue) {
+  uint32_t total = 0;
+  uint32_t numLength = 0;
+  uint32_t strLen = aValue.Length();
+  for (uint32_t i = 0; i < strLen; ++i) {
+    uint32_t idx = strLen - i - 1;
+    // ignore whitespace and dashes)
+    char16_t chr = aValue[idx];
+    if (IsSpaceCharacter(chr) || chr == '-') {
+      continue;
+    }
+    // If our number is too long, note that fact
+    ++numLength;
+    if (numLength > 19) {
+      return false;
+    }
+    // Try to parse the character as a base-10 integer.
+    nsresult rv = NS_OK;
+    uint32_t val = Substring(aValue, idx, 1).ToInteger(&rv, 10);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+    if (i % 2 == 1) {
+      val *= 2;
+      if (val > 9) {
+        val -= 9;
+      }
+    }
+    total += val;
+  }
+
+  return numLength >= 12 && total % 10 == 0;
+}
+
+// Limit the number of XPath expressions for performance reasons. See bug
+// 477564.
+static const uint16_t kMaxTraversedXPaths = 100;
+
+// A helper function to append a element into mId or mXpath of CollectedFormData
+static Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType*
+AppendEntryToCollectedData(nsINode* aNode, const nsAString& aId,
+                           uint16_t& aGeneratedCount,
+                           CollectedFormData& aRetVal) {
+  Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry;
+  if (!aId.IsEmpty()) {
+    if (!aRetVal.mId.WasPassed()) {
+      aRetVal.mId.Construct();
+    }
+    auto& recordEntries = aRetVal.mId.Value().Entries();
+    entry = recordEntries.AppendElement();
+    entry->mKey = aId;
+  } else {
+    if (!aRetVal.mXpath.WasPassed()) {
+      aRetVal.mXpath.Construct();
+    }
+    auto& recordEntries = aRetVal.mXpath.Value().Entries();
+    entry = recordEntries.AppendElement();
+    nsAutoString xpath;
+    aNode->GenerateXPath(xpath);
+    aGeneratedCount++;
+    entry->mKey = xpath;
+  }
+  return entry;
+}
+
+/*
+  @param aDocument: DOMDocument instance to obtain form data for.
+  @param aGeneratedCount: the current number of XPath expressions in the
+                          returned object.
+  @return aRetVal: Form data encoded in an object.
+ */
+static void CollectFromTextAreaElement(Document& aDocument,
+                                       uint16_t& aGeneratedCount,
+                                       CollectedFormData& aRetVal) {
+  RefPtr<nsContentList> textlist = NS_GetContentList(
+      &aDocument, kNameSpaceID_XHTML, NS_LITERAL_STRING("textarea"));
+  uint32_t length = textlist->Length(true);
+  for (uint32_t i = 0; i < length; ++i) {
+    MOZ_ASSERT(textlist->Item(i), "null item in node list!");
+
+    HTMLTextAreaElement* textArea =
+        HTMLTextAreaElement::FromNodeOrNull(textlist->Item(i));
+    if (!textArea) {
+      continue;
+    }
+    DOMString autocomplete;
+    textArea->GetAutocomplete(autocomplete);
+    if (autocomplete.AsAString().EqualsLiteral("off")) {
+      continue;
+    }
+    nsAutoString id;
+    textArea->GetId(id);
+    if (id.IsEmpty() && (aGeneratedCount > kMaxTraversedXPaths)) {
+      continue;
+    }
+    nsAutoString value;
+    textArea->GetValue(value);
+    // In order to reduce XPath generation (which is slow), we only save data
+    // for form fields that have been changed. (cf. bug 537289)
+    if (textArea->AttrValueIs(kNameSpaceID_None, nsGkAtoms::value, value, eCaseMatters)) {
+      continue;
+    }
+    Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
+        AppendEntryToCollectedData(textArea, id, aGeneratedCount, aRetVal);
+    entry->mValue.SetAsString() = value;
+  }
+}
+
+/*
+  @param aDocument: DOMDocument instance to obtain form data for.
+  @param aGeneratedCount: the current number of XPath expressions in the
+                          returned object.
+  @return aRetVal: Form data encoded in an object.
+ */
+static void CollectFromInputElement(JSContext* aCx, Document& aDocument,
+                                    uint16_t& aGeneratedCount,
+                                    CollectedFormData& aRetVal) {
+  RefPtr<nsContentList> inputlist = NS_GetContentList(
+      &aDocument, kNameSpaceID_XHTML, NS_LITERAL_STRING("input"));
+  uint32_t length = inputlist->Length(true);
+  for (uint32_t i = 0; i < length; ++i) {
+    MOZ_ASSERT(inputlist->Item(i), "null item in node list!");
+    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(inputlist->Item(i));
+    if (formControl) {
+      uint8_t controlType = formControl->ControlType();
+      if (controlType == NS_FORM_INPUT_PASSWORD ||
+          controlType == NS_FORM_INPUT_HIDDEN ||
+          controlType == NS_FORM_INPUT_BUTTON ||
+          controlType == NS_FORM_INPUT_IMAGE ||
+          controlType == NS_FORM_INPUT_SUBMIT ||
+          controlType == NS_FORM_INPUT_RESET) {
+        continue;
+      }
+    }
+    RefPtr<HTMLInputElement> input =
+        HTMLInputElement::FromNodeOrNull(inputlist->Item(i));
+    if (!input || !nsContentUtils::IsAutocompleteEnabled(input)) {
+      continue;
+    }
+    nsAutoString id;
+    input->GetId(id);
+    if (id.IsEmpty() && (aGeneratedCount > kMaxTraversedXPaths)) {
+      continue;
+    }
+    Nullable<AutocompleteInfo> aInfo;
+    input->GetAutocompleteInfo(aInfo);
+    if (!aInfo.IsNull() && !aInfo.Value().mCanAutomaticallyPersist) {
+      continue;
+    }
+    nsAutoString value;
+    if (input->ControlType() == NS_FORM_INPUT_CHECKBOX ||
+        input->ControlType() == NS_FORM_INPUT_RADIO) {
+      bool checked = input->Checked();
+      if (checked == input->DefaultChecked()) {
+        continue;
+      }
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
+          AppendEntryToCollectedData(input, id, aGeneratedCount, aRetVal);
+      entry->mValue.SetAsBoolean() = checked;
+    } else if (input->ControlType() == NS_FORM_INPUT_FILE) {
+      IgnoredErrorResult rv;
+      nsTArray<nsString> result;
+      input->MozGetFileNameArray(result, rv);
+      if (rv.Failed() || result.Length() == 0) {
+        continue;
+      }
+      CollectedFileListValue val;
+      val.mType = NS_LITERAL_STRING("file");
+      val.mFileList.SwapElements(result);
+
+      JS::Rooted<JS::Value> jsval(aCx);
+      if (!ToJSValue(aCx, val, &jsval)) {
+        JS_ClearPendingException(aCx);
+        continue;
+      }
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
+          AppendEntryToCollectedData(input, id, aGeneratedCount, aRetVal);
+      entry->mValue.SetAsObject() = &jsval.toObject();
+    } else {
+      input->GetValue(value, CallerType::System);
+      // In order to reduce XPath generation (which is slow), we only save data
+      // for form fields that have been changed. (cf. bug 537289)
+      // Also, don't want to collect credit card number.
+      if (value.IsEmpty() || IsValidCCNumber(value) ||
+          input->HasBeenTypePassword() ||
+          input->AttrValueIs(kNameSpaceID_None, nsGkAtoms::value, value, eCaseMatters)) {
+        continue;
+      }
+      if (!id.IsEmpty()) {
+        // We want to avoid saving data for about:sessionrestore as a string.
+        // Since it's stored in the form as stringified JSON, stringifying
+        // further causes an explosion of escape characters. cf. bug 467409
+        if (id.EqualsLiteral("sessionData")) {
+          nsAutoCString url;
+          Unused << aDocument.GetDocumentURI()->GetSpecIgnoringRef(url);
+          if (url.EqualsLiteral("about:sessionrestore") ||
+              url.EqualsLiteral("about:welcomeback")) {
+            JS::Rooted<JS::Value> jsval(aCx);
+            if (JS_ParseJSON(aCx, value.get(), value.Length(), &jsval) &&
+                jsval.isObject()) {
+              Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType*
+                  entry = AppendEntryToCollectedData(input, id, aGeneratedCount, aRetVal);
+              entry->mValue.SetAsObject() = &jsval.toObject();
+            } else {
+              JS_ClearPendingException(aCx);
+            }
+            continue;
+          }
+        }
+      }
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
+          AppendEntryToCollectedData(input, id, aGeneratedCount, aRetVal);
+      entry->mValue.SetAsString() = value;
+    }
+  }
+}
+
+/*
+  @param aDocument: DOMDocument instance to obtain form data for.
+  @param aGeneratedCount: the current number of XPath expressions in the
+                          returned object.
+  @return aRetVal: Form data encoded in an object.
+ */
+static void CollectFromSelectElement(JSContext* aCx, Document& aDocument,
+                                     uint16_t& aGeneratedCount,
+                                     CollectedFormData& aRetVal) {
+  RefPtr<nsContentList> selectlist = NS_GetContentList(
+      &aDocument, kNameSpaceID_XHTML, NS_LITERAL_STRING("select"));
+  uint32_t length = selectlist->Length(true);
+  for (uint32_t i = 0; i < length; ++i) {
+    MOZ_ASSERT(selectlist->Item(i), "null item in node list!");
+    RefPtr<HTMLSelectElement> select =
+        HTMLSelectElement::FromNodeOrNull(selectlist->Item(i));
+    if (!select) {
+      continue;
+    }
+    nsAutoString id;
+    select->GetId(id);
+    if (id.IsEmpty() && (aGeneratedCount > kMaxTraversedXPaths)) {
+      continue;
+    }
+    AutocompleteInfo aInfo;
+    select->GetAutocompleteInfo(aInfo);
+    if (!aInfo.mCanAutomaticallyPersist) {
+      continue;
+    }
+    nsAutoCString value;
+    if (!select->Multiple()) {
+      // <select>s without the multiple attribute are hard to determine the
+      // default value, so assume we don't have the default.
+      DOMString selectVal;
+      select->GetValue(selectVal);
+      CollectedNonMultipleSelectValue val;
+      val.mSelectedIndex = select->SelectedIndex();
+      val.mValue = selectVal.AsAString();
+
+      JS::Rooted<JS::Value> jsval(aCx);
+      if (!ToJSValue(aCx, val, &jsval)) {
+        JS_ClearPendingException(aCx);
+        continue;
+      }
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
+          AppendEntryToCollectedData(select, id, aGeneratedCount, aRetVal);
+      entry->mValue.SetAsObject() = &jsval.toObject();
+    } else {
+      // <select>s with the multiple attribute are easier to determine the
+      // default value since each <option> has a defaultSelected property
+      HTMLOptionsCollection* options = select->GetOptions();
+      if (!options) {
+        continue;
+      }
+      bool hasDefaultValue = true;
+      nsTArray<nsString> selectslist;
+      int numOptions = options->Length();
+      for (int idx = 0; idx < numOptions; idx++) {
+        HTMLOptionElement* option = options->ItemAsOption(idx);
+        bool selected = option->Selected();
+        if (!selected) {
+          continue;
+        }
+        option->GetValue(*selectslist.AppendElement());
+        hasDefaultValue =
+            hasDefaultValue && (selected == option->DefaultSelected());
+      }
+      // In order to reduce XPath generation (which is slow), we only save data
+      // for form fields that have been changed. (cf. bug 537289)
+      if (hasDefaultValue) {
+        continue;
+      }
+      JS::Rooted<JS::Value> jsval(aCx);
+      if (!ToJSValue(aCx, selectslist, &jsval)) {
+        JS_ClearPendingException(aCx);
+        continue;
+      }
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
+          AppendEntryToCollectedData(select, id, aGeneratedCount, aRetVal);
+      entry->mValue.SetAsObject() = &jsval.toObject();
+    }
+  }
+}
+
+/*
+  @param aDocument: DOMDocument instance to obtain form data for.
+  @return aRetVal: Form data encoded in an object.
+ */
+static void CollectFromXULTextbox(Document& aDocument,
+                                  CollectedFormData& aRetVal) {
+  nsAutoCString url;
+  Unused << aDocument.GetDocumentURI()->GetSpecIgnoringRef(url);
+  if (!url.EqualsLiteral("about:config")) {
+    return;
+  }
+  RefPtr<nsContentList> aboutConfigElements = NS_GetContentList(
+      &aDocument, kNameSpaceID_XUL, NS_LITERAL_STRING("window"));
+  uint32_t length = aboutConfigElements->Length(true);
+  for (uint32_t i = 0; i < length; ++i) {
+    MOZ_ASSERT(aboutConfigElements->Item(i), "null item in node list!");
+    nsAutoString id, value;
+    aboutConfigElements->Item(i)->AsElement()->GetId(id);
+    if (!id.EqualsLiteral("config")) {
+      continue;
+    }
+    RefPtr<nsContentList> textboxs =
+        NS_GetContentList(aboutConfigElements->Item(i)->AsElement(),
+                          kNameSpaceID_XUL, NS_LITERAL_STRING("textbox"));
+    uint32_t boxsLength = textboxs->Length(true);
+    for (uint32_t idx = 0; idx < boxsLength; idx++) {
+      textboxs->Item(idx)->AsElement()->GetId(id);
+      if (!id.EqualsLiteral("textbox")) {
+        continue;
+      }
+      RefPtr<HTMLInputElement> input = HTMLInputElement::FromNode(
+          nsFocusManager::GetRedirectedFocus(textboxs->Item(idx)));
+      if (!input) {
+        continue;
+      }
+      input->GetValue(value, CallerType::System);
+      if (value.IsEmpty() ||
+          input->AttrValueIs(kNameSpaceID_None, nsGkAtoms::value, value, eCaseMatters)) {
+        continue;
+      }
+      uint16_t generatedCount = 0;
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
+          AppendEntryToCollectedData(input, id, generatedCount, aRetVal);
+      entry->mValue.SetAsString() = value;
+      return;
+    }
+  }
+}
+
+/* static */ void SessionStoreUtils::CollectFormData(
+    const GlobalObject& aGlobal, Document& aDocument, CollectedFormData& aRetVal) {
+  uint16_t generatedCount = 0;
+  /* textarea element */
+  CollectFromTextAreaElement(aDocument, generatedCount, aRetVal);
+  /* input element */
+  CollectFromInputElement(aGlobal.Context(), aDocument, generatedCount, aRetVal);
+  /* select element */
+  CollectFromSelectElement(aGlobal.Context(), aDocument, generatedCount, aRetVal);
+  /* special case for about:config's search field */
+  CollectFromXULTextbox(aDocument, aRetVal);
+
+  Element* bodyElement = aDocument.GetBody();
+  if (aDocument.HasFlag(NODE_IS_EDITABLE) && bodyElement) {
+    bodyElement->GetInnerHTML(aRetVal.mInnerHTML.Construct(), IgnoreErrors());
+  }
+  if (!aRetVal.mId.WasPassed() && !aRetVal.mXpath.WasPassed() &&
+      !aRetVal.mInnerHTML.WasPassed()) {
+    return;
+  }
+  // Store the frame's current URL with its form data so that we can compare
+  // it when restoring data to not inject form data into the wrong document.
+  nsIURI* uri = aDocument.GetDocumentURI();
+  if (uri) {
+    uri->GetSpecIgnoringRef(aRetVal.mUrl.Construct());
+  }
 }
