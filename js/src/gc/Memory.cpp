@@ -263,6 +263,7 @@ static inline uint64_t GetNumberInRange(uint64_t minNum, uint64_t maxNum) {
   do {
     mozilla::Maybe<uint64_t> result;
     do {
+      mozilla::recordreplay::AutoPassThroughThreadEvents pt;
       result = mozilla::RandomUint64();
     } while (!result);
     rndNum = result.value() / binSize;

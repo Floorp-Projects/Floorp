@@ -1299,6 +1299,16 @@ var gCSSProperties = {
     other_values: [ "url(foo.xml)" ],
     invalid_values: []
   },
+  "border-inline": {
+    domProp: "borderInline",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "border-inline-start-color", "border-inline-start-style", "border-inline-start-width",
+                     "border-inline-end-color", "border-inline-end-style", "border-inline-end-width" ],
+    initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+    other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+    invalid_values: [ "5%", "5", "5 solid green" ]
+  },
   "border-inline-end": {
     domProp: "borderInlineEnd",
     inherited: false,
@@ -6044,6 +6054,16 @@ var gCSSProperties = {
     ],
     invalid_values: [ "none" ],
   },
+  "border-block": {
+    domProp: "borderBlock",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "border-block-start-color", "border-block-start-style", "border-block-start-width",
+                     "border-block-end-color", "border-block-end-style", "border-block-end-width" ],
+    initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+    other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+    invalid_values: [ "5%", "5", "5 solid green" ]
+  },
   "border-block-end-color": {
     domProp: "borderBlockEndColor",
     inherited: false,
@@ -6386,6 +6406,24 @@ var gCSSProperties = {
     ],
     invalid_values: [ "none", "5" ]
   },
+  "inset-block": {
+    domProp: "insetBlock",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "inset-block-start", "inset-block-end" ],
+    /* FIXME: run tests with multiple prerequisites */
+    prerequisites: { "position": "relative" },
+    initial_values: [ "auto", "auto auto" ],
+    other_values: [ "32px", "-3em", "12%", "32px auto", "auto -3em", "12% auto",
+      "calc(2px)", "calc(2px) auto",
+      "calc(-2px)", "auto calc(-2px)",
+      "calc(50%)", "auto calc(50%)",
+      "calc(3*25px)", "calc(3*25px) auto",
+      "calc(25px*3)", "auto calc(25px*3)",
+      "calc(3*25px + 50%)", "auto calc(3*25px + 50%)",
+    ],
+    invalid_values: [ "none" ]
+  },
   "inset-block-end": {
     domProp: "insetBlockEnd",
     inherited: false,
@@ -6423,6 +6461,24 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: []
+  },
+  "inset-inline": {
+    domProp: "insetInline",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "inset-inline-start", "inset-inline-end" ],
+    /* FIXME: run tests with multiple prerequisites */
+    prerequisites: { "position": "relative" },
+    initial_values: [ "auto", "auto auto" ],
+    other_values: [ "32px", "-3em", "12%", "32px auto", "auto -3em", "12% auto",
+      "calc(2px)", "calc(2px) auto",
+      "calc(-2px)", "auto calc(-2px)",
+      "calc(50%)", "auto calc(50%)",
+      "calc(3*25px)", "calc(3*25px) auto",
+      "calc(25px*3)", "auto calc(25px*3)",
+      "calc(3*25px + 50%)", "auto calc(3*25px + 50%)",
+    ],
+    invalid_values: [ "none" ]
   },
   "inset-inline-end": {
     domProp: "insetInlineEnd",

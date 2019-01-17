@@ -15,7 +15,7 @@ with Files('HomeProvider.jsm'):
     BUG_COMPONENT = ('Firefox for Android', 'Data Providers')
 
 with Files('geckoview/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'GeckoView')
+    BUG_COMPONENT = ('GeckoView', 'General')
 
 DIRS += ['geckoview']
 
