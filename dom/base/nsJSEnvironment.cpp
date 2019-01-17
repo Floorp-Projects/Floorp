@@ -2174,7 +2174,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         if (StaticPrefs::javascript_options_mem_notify() ||
             Telemetry::CanRecordExtended()) {
           nsString json;
-          json.Adopt(aDesc.formatJSON(aCx, PR_Now()));
+          json.Adopt(aDesc.formatJSONTelemetry(aCx, PR_Now()));
           RefPtr<NotifyGCEndRunnable> notify =
               new NotifyGCEndRunnable(std::move(json));
           SystemGroup::Dispatch(TaskCategory::GarbageCollection,

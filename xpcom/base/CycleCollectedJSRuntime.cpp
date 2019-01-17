@@ -800,12 +800,12 @@ void CycleCollectedJSRuntime::TraverseNativeRoots(
       profiler_add_marker(
           "GCMajor", MakeUnique<GCMajorMarkerPayload>(
                          aDesc.startTime(aContext), aDesc.endTime(aContext),
-                         aDesc.summaryToJSON(aContext)));
+                         aDesc.formatJSONProfiler(aContext)));
     } else if (aProgress == JS::GC_SLICE_END) {
       profiler_add_marker("GCSlice", MakeUnique<GCSliceMarkerPayload>(
                                          aDesc.lastSliceStart(aContext),
                                          aDesc.lastSliceEnd(aContext),
-                                         aDesc.sliceToJSON(aContext)));
+                                         aDesc.sliceToJSONProfiler(aContext)));
     }
   }
 #endif

@@ -8592,8 +8592,8 @@ JS::dbg::GarbageCollectionEvent::Ptr JS::GCDescription::toGCEvent(
       cx->runtime()->gc.majorGCCount());
 }
 
-char16_t* JS::GCDescription::formatJSON(JSContext* cx,
-                                        uint64_t timestamp) const {
+char16_t* JS::GCDescription::formatJSONTelemetry(JSContext* cx,
+                                                 uint64_t timestamp) const {
   UniqueChars cstr = cx->runtime()->gc.stats().renderJsonMessage(timestamp);
 
   size_t nchars = strlen(cstr.get());
@@ -8623,13 +8623,13 @@ TimeStamp JS::GCDescription::lastSliceEnd(JSContext* cx) const {
   return cx->runtime()->gc.stats().slices().back().end;
 }
 
-JS::UniqueChars JS::GCDescription::sliceToJSON(JSContext* cx) const {
+JS::UniqueChars JS::GCDescription::sliceToJSONProfiler(JSContext* cx) const {
   size_t slices = cx->runtime()->gc.stats().slices().length();
   MOZ_ASSERT(slices > 0);
   return cx->runtime()->gc.stats().renderJsonSlice(slices - 1);
 }
 
-JS::UniqueChars JS::GCDescription::summaryToJSON(JSContext* cx) const {
+JS::UniqueChars JS::GCDescription::formatJSONProfiler(JSContext* cx) const {
   return cx->runtime()->gc.stats().renderJsonMessage(0, false);
 }
 
