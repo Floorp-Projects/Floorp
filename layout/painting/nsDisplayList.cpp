@@ -1044,6 +1044,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsInChromePresContext(false),
       mSyncDecodeImages(false),
       mIsPaintingToWindow(false),
+      mIsPaintingForWebRender(false),
       mIsCompositingCheap(false),
       mContainsPluginItem(false),
       mAncestorHasApzAwareEventHandler(false),
@@ -7651,6 +7652,14 @@ bool nsDisplayBackgroundColor::CanUseAsyncAnimations(
   // we are already rendering the entire content.
   nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
   if (aDirtyRect->Contains(overflow)) {
+    return FullPrerender;
+  }
+
+  // If painting is for WebRender, allow full prerender even for large size
+  // frame. With WebRender, memory usage increase for async animation is limited
+  // compared to non-WebRender case.
+  if (aBuilder->IsPaintingForWebRender()) {
+    *aDirtyRect = overflow;
     return FullPrerender;
   }
 
