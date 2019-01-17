@@ -29,6 +29,9 @@ add_task(async function() {
 
   const SUPPORTED_TARGET_PANES = [
     "Extensions",
+    "Other Workers",
+    "Shared Workers",
+    "Service Workers",
     "Tabs",
   ];
 
