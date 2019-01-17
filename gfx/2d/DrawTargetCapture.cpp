@@ -189,6 +189,12 @@ void DrawTargetCaptureImpl::FillRect(const Rect& aRect, const Pattern& aPattern,
   AppendCommand(FillRectCommand)(aRect, aPattern, aOptions);
 }
 
+void DrawTargetCaptureImpl::FillRoundedRect(const RoundedRect& aRect,
+                                            const Pattern& aPattern,
+                                            const DrawOptions& aOptions) {
+  AppendCommand(FillRoundedRectCommand)(aRect, aPattern, aOptions);
+}
+
 void DrawTargetCaptureImpl::StrokeRect(const Rect& aRect,
                                        const Pattern& aPattern,
                                        const StrokeOptions& aStrokeOptions,
