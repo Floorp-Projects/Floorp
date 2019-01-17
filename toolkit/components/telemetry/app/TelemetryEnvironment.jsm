@@ -48,21 +48,6 @@ const MAX_EXPERIMENT_TYPE_LENGTH = 20;
 // eslint-disable-next-line no-unused-vars
 var Policy = {
   now: () => new Date(),
-  _intlLoaded: false,
-  _browserDelayedStartup() {
-    if (Policy._intlLoaded) {
-      return Promise.resolve();
-    }
-    return new Promise(resolve => {
-      let startupTopic = "browser-delayed-startup-finished";
-      Services.obs.addObserver(function observer(subject, topic) {
-        if (topic == startupTopic) {
-          Services.obs.removeObserver(observer, startupTopic);
-          resolve();
-        }
-      }, startupTopic);
-    });
-  },
 };
 
 // This is used to buffer calls to setExperimentActive and friends, so that we
@@ -333,22 +318,6 @@ function getSystemLocale() {
   } catch (e) {
     return null;
   }
-}
-
-function getIntlSettings() {
-  let osprefs = Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
-  return {
-    requestedLocales: Services.locale.requestedLocales,
-    availableLocales: Services.locale.availableLocales,
-    appLocales: Services.locale.appLocalesAsBCP47,
-    systemLocales: osprefs.systemLocales,
-    regionalPrefsLocales: osprefs.regionalPrefsLocales,
-    acceptLanguages:
-      Services.prefs.getComplexValue("intl.accept_languages", Ci.nsIPrefLocalizedString)
-        .data
-        .split(",")
-        .map(str => str.trim()),
-  };
 }
 
 /**
@@ -935,7 +904,6 @@ function EnvironmentCache() {
     p.push(this._loadAttributionAsync());
   }
   p.push(this._loadAutoUpdateAsync());
-  p.push(this._loadIntlData());
 
   for (const [id, {branch, options}] of gActiveExperimentStartupBuffer.entries()) {
     this.setExperimentActive(id, branch, options);
@@ -1448,9 +1416,6 @@ EnvironmentCache.prototype = {
       e10sMultiProcesses: Services.appinfo.maxWebProcessCount,
       telemetryEnabled: Utils.isTelemetryEnabled,
       locale: getBrowserLocale(),
-      // We need to wait for browser-delayed-startup-finished to ensure that the locales
-      // have settled, once that's happened we can get the intl data directly.
-      intl: Policy._intlLoaded ? getIntlSettings() : {},
       update: {
         channel: updateChannel,
         enabled: !Services.policies || Services.policies.isAllowed("appUpdate"),
@@ -1564,17 +1529,6 @@ EnvironmentCache.prototype = {
       return;
     }
     this._currentEnvironment.settings.update.autoDownload = this._updateAutoDownloadCache;
-  },
-
-  /**
-  * Get i18n data about the system.
-  * @return A promise of completion.
-  */
-  async _loadIntlData() {
-    // Wait for the startup topic.
-    await Policy._browserDelayedStartup();
-    this._currentEnvironment.settings.intl = getIntlSettings();
-    Policy._intlLoaded = true;
   },
 
   /**
