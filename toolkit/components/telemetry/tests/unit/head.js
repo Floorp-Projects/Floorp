@@ -294,6 +294,13 @@ function fakePrioEncode() {
   m.Policy.prioEncode = (batchID, prioParams) => prioParams;
 }
 
+function fakeIntlReady() {
+  const m = ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", {});
+  m.Policy._intlLoaded = true;
+  // Dispatch the observer event in case the promise has been registered already.
+  Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
+}
+
 // Return a date that is |offset| ms in the future from |date|.
 function futureDate(date, offset) {
   return new Date(date.getTime() + offset);
