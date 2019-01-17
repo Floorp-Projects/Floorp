@@ -2632,7 +2632,10 @@ var CustomizableUIInternal = {
 
   _resetUIState() {
     try {
-      gUIStateBeforeReset.drawInTitlebar = Services.prefs.getBoolPref(kPrefDrawInTitlebar);
+      // kPrefDrawInTitlebar may not be defined on Linux/Gtk+ which throws an exception
+      // and leads to whole test failure. Let's set a fallback default value to avoid that,
+      // both titlebar states are tested anyway and it's not important which state is tested first.
+      gUIStateBeforeReset.drawInTitlebar = Services.prefs.getBoolPref(kPrefDrawInTitlebar, false);
       gUIStateBeforeReset.extraDragSpace = Services.prefs.getBoolPref(kPrefExtraDragSpace);
       gUIStateBeforeReset.uiCustomizationState = Services.prefs.getCharPref(kPrefCustomizationState);
       gUIStateBeforeReset.uiDensity = Services.prefs.getIntPref(kPrefUIDensity);
