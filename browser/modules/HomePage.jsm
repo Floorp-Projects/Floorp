@@ -9,7 +9,7 @@
 
 var EXPORTED_SYMBOLS = ["HomePage"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const kPrefName = "browser.startup.homepage";
 

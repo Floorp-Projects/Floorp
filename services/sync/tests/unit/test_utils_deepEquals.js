@@ -1,6 +1,4 @@
 _("Make sure Utils.deepEquals correctly finds items that are deeply equal");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 registerCleanupFunction(() => {

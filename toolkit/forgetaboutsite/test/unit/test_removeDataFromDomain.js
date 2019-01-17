@@ -11,10 +11,7 @@
 
 // Globals
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
+const {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
                                "resource://testing-common/PlacesTestUtils.jsm");
@@ -366,7 +363,8 @@ async function test_push_cleared() {
 
   do_get_profile();
   setPrefs();
-  const {PushService, PushServiceWebSocket} = serviceExports;
+  const {PushServiceWebSocket} = ChromeUtils.import("resource://gre/modules/PushServiceWebSocket.jsm");
+  const {PushService} = serviceExports;
   const userAgentID = "bd744428-f125-436a-b6d0-dd0c9845837f";
   const channelID = "0ef2ad4a-6c49-41ad-af6e-95d2425276bf";
 

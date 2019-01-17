@@ -1,5 +1,4 @@
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function getTestReferrer(server_uri, referer_uri, isPrivate=false) {
   var uri = NetUtil.newURI(server_uri)

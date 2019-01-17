@@ -69,7 +69,7 @@ add_task(async function test_hiddenFieldNotSaved() {
     await spawnPaymentDialogTask(frame, async () => {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let {savedAddresses} = await PTU.DialogContentUtils.getCurrentState(content);
       is(Object.keys(savedAddresses).length, 2, "2 saved addresses");
@@ -113,7 +113,7 @@ add_task(async function test_hiddenFieldRemovedWhenCountryChanged() {
     await spawnPaymentDialogTask(frame, async (args) => {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let picker = content.document
                      .querySelector("address-picker[selected-state-key='selectedShippingAddress']");
@@ -146,7 +146,7 @@ add_task(async function test_hiddenFieldRemovedWhenCountryChanged() {
     await spawnPaymentDialogTask(frame, async () => {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let {savedAddresses} = await PTU.DialogContentUtils.getCurrentState(content);
       is(Object.keys(savedAddresses).length, 1, "1 saved address");

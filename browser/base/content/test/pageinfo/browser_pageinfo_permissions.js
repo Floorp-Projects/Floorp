@@ -1,4 +1,4 @@
-ChromeUtils.import("resource:///modules/SitePermissions.jsm");
+const {SitePermissions} = ChromeUtils.import("resource:///modules/SitePermissions.jsm");
 
 const TEST_ORIGIN = "https://example.com";
 

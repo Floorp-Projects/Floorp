@@ -3,7 +3,7 @@
 
 var Cm = Components.manager;
 
-ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
+const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 
 add_task(async function test_extractFiles() {
   testEmitter(new EventEmitter());

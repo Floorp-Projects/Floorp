@@ -66,7 +66,7 @@ add_task(async function test_permissions() {
       },
     };
 
-    ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
+    const {MessageChannel} = ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
     MessageChannel.addListener(this, "Test:Check", messageListener);
   };
 

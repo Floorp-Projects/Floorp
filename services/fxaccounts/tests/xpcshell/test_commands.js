@@ -3,8 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/Assert.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommands.js");
+const {FxAccountsCommands, SendTab} = ChromeUtils.import("resource://gre/modules/FxAccountsCommands.js");
 
 add_task(async function test_sendtab_isDeviceCompatible() {
   const sendTab = new SendTab(null, null);

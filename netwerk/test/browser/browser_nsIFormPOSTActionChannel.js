@@ -3,8 +3,7 @@
  * should be able to accept form POST.
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const SCHEME = "x-bug1241377";
 

@@ -12,7 +12,7 @@ this.pageActionExtras = class extends ExtensionAPI {
     const pageActionAPI = extension.apiManager.getAPI("pageAction", extension,
                                                       context.envType);
     const {Management: {global: {windowTracker}}} =
-                ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+                ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
     return {
       pageActionExtras: {
         async setDefaultTitle(title) {

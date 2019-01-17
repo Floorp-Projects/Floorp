@@ -47,7 +47,7 @@ add_task(async function setup() {
       gBrowser.selectedBrowser,
       [animations.actorID],
       function(actorID) {
-        const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+        const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
         const { DebuggerServer } = require("devtools/server/main");
         // Convert actorID to current compartment string otherwise
         // searchAllConnectionsForActor is confused and won't find the actor.

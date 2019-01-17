@@ -4,7 +4,7 @@
 
 /* import-globals-from controller.js */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * This returns the key for any node/details object.

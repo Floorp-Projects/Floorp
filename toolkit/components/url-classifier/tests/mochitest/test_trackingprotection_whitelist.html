@@ -21,9 +21,9 @@ var contentPage1 = "http://www.itisatrap.org/tests/toolkit/components/url-classi
 var contentPage2 = "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/whitelistFrame.html";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 function testOnWindow(contentPage) {
   return new Promise((resolve, reject) => {

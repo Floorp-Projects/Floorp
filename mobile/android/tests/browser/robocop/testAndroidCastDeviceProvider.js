@@ -8,7 +8,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
 // event name
 const TOPIC_ANDROID_CAST_DEVICE_ADDED   = "AndroidCastDevice:Added";

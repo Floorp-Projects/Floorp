@@ -3,7 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
+const {CreditCard} = ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
 
 add_task(function isValidNumber() {
   function testValid(number, shouldPass) {

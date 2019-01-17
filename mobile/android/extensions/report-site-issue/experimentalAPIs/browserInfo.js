@@ -6,8 +6,8 @@
 
 /* global ExtensionAPI */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const gParentalControls = (function() {
   if ("@mozilla.org/parental-controls-service;1" in Cc) {

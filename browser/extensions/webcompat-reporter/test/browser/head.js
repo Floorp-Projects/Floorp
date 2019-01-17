@@ -3,7 +3,7 @@
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
 
-const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
 const PREF_WC_REPORTER_ENABLED = "extensions.webcompat-reporter.enabled";
 const PREF_WC_REPORTER_ENDPOINT = "extensions.webcompat-reporter.newIssueEndpoint";
@@ -171,7 +171,7 @@ async function startIssueServer() {
     xhr.send();
   });
 
-  const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});
+  const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
   const server = new HttpServer();
 
   registerCleanupFunction(async function cleanup() {

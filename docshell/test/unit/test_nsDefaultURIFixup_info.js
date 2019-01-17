@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var prefList = ["browser.fixup.typo.scheme", "keyword.enabled",
                 "browser.fixup.domainwhitelist.whitelisted"];
 for (let pref of prefList) {

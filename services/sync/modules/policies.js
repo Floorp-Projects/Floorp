@@ -7,14 +7,14 @@ var EXPORTED_SYMBOLS = [
   "SyncScheduler",
 ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-common/logmanager.js");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/utils.js");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {CREDENTIALS_CHANGED, ENGINE_APPLY_FAIL, ENGINE_UNKNOWN_FAIL, IDLE_OBSERVER_BACK_DELAY, LOGIN_FAILED_INVALID_PASSPHRASE, LOGIN_FAILED_LOGIN_REJECTED, LOGIN_FAILED_NETWORK_ERROR, LOGIN_FAILED_NO_PASSPHRASE, LOGIN_SUCCEEDED, MASTER_PASSWORD_LOCKED, MASTER_PASSWORD_LOCKED_RETRY_INTERVAL, MAX_ERROR_COUNT_BEFORE_BACKOFF, MINIMUM_BACKOFF_INTERVAL, MULTI_DEVICE_THRESHOLD, NO_SYNC_NODE_FOUND, NO_SYNC_NODE_INTERVAL, OVER_QUOTA, RESPONSE_OVER_QUOTA, SCORE_UPDATE_DELAY, SERVER_MAINTENANCE, SINGLE_USER_THRESHOLD, STATUS_OK, SYNC_FAILED_PARTIAL, SYNC_SUCCEEDED, kSyncBackoffNotMet, kSyncMasterPasswordLocked} = ChromeUtils.import("resource://services-sync/constants.js");
+const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
+const {LogManager} = ChromeUtils.import("resource://services-common/logmanager.js");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 
 ChromeUtils.defineModuleGetter(this, "Status",
                                "resource://services-sync/status.js");

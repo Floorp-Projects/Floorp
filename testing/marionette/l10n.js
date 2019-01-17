@@ -15,14 +15,14 @@
  * content retrieved.
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 XPCOMUtils.defineLazyGetter(this, "domParser", () => new DOMParser());
 
 const {NoSuchElementError} =
-    ChromeUtils.import("chrome://marionette/content/error.js", {});
+    ChromeUtils.import("chrome://marionette/content/error.js");
 
 this.EXPORTED_SYMBOLS = ["l10n"];
 

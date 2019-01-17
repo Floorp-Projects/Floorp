@@ -1,6 +1,6 @@
 "use strict";
 
-const {ExtensionManager} = ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm", {});
+const {ExtensionManager} = ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm", null);
 
 let experimentAPIs = {
   userinputtest: {

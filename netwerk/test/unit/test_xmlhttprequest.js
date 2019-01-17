@@ -1,5 +1,5 @@
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 

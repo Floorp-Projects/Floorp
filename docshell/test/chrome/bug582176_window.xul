@@ -11,8 +11,6 @@
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
   <script type="application/javascript" src="docshell_helpers.js" />
   <script type="application/javascript"><![CDATA[
-
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     // Define the generator-iterator for the tests.
     var tests = testIterator();
 

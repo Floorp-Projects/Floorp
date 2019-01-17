@@ -4,7 +4,7 @@
 
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+const {MockRegistrar} = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
 let idleService = {
   _observers: new Set(),

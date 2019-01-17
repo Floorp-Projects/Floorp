@@ -6,7 +6,7 @@
 
 /* global ExtensionAPI, ExtensionCommon */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 this.aboutConfigPrefs = class extends ExtensionAPI {
   getAPI(context) {

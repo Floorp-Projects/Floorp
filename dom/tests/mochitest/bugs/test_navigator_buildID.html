@@ -40,7 +40,7 @@ is(+contentBuildID, LEGACY_BUILD_ID,
 // Access navigator.buildID from chrome.
 //
 let chromeScript = SpecialPowers.loadChromeScript(() => {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   addMessageListener("test:getBuildID", nav => {
     const browser = Services.wm.getMostRecentBrowserWindow();
     return browser.navigator.buildID;

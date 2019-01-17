@@ -43,7 +43,7 @@ SpecialPowers.pushPrefEnv({"set": [
     // Inject a frame script that crashes the content process.
     var mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
     mm.loadFrameScript("data:,new " + function ContentScriptScope() {
-      ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+      const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
       let crash = function() {
         let zero = new ctypes.intptr_t(8);
         let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));

@@ -6,8 +6,8 @@
 
 this.EXPORTED_SYMBOLS = ["ExtensionStorageIDB"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/IndexedDB.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {IndexedDB} = ChromeUtils.import("resource://gre/modules/IndexedDB.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",

@@ -7,7 +7,7 @@
 "use strict";
 do_get_profile(); // must be called before getting nsIX509CertDB
 
-const { RemoteSecuritySettings } = ChromeUtils.import("resource://testing-common/psm/RemoteSecuritySettings.jsm", {});
+const { RemoteSecuritySettings } = ChromeUtils.import("resource://testing-common/psm/RemoteSecuritySettings.jsm");
 
 let remoteSecSetting = new RemoteSecuritySettings();
 let server;

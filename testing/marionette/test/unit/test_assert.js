@@ -5,7 +5,7 @@
 "use strict";
 /* eslint-disable no-array-constructor, no-new-object */
 
-ChromeUtils.import("chrome://marionette/content/assert.js");
+const {assert} = ChromeUtils.import("chrome://marionette/content/assert.js");
 const {
   InvalidArgumentError,
   InvalidSessionIDError,
@@ -14,7 +14,7 @@ const {
   SessionNotCreatedError,
   UnexpectedAlertOpenError,
   UnsupportedOperationError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+} = ChromeUtils.import("chrome://marionette/content/error.js");
 
 add_test(function test_acyclic() {
   assert.acyclic({});

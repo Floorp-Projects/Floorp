@@ -81,7 +81,7 @@ add_task(async function test_change_shipping() {
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
       // verify update of total
       // Note: The update includes a modifier, and modifiers must include a total
       // so the expected total is that one

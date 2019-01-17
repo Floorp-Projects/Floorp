@@ -11,7 +11,7 @@
   // * nothing else is included
   // * no property is mapped to more than one animation type
   window.onload = function() {
-    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
     const { ANIMATION_TYPE_FOR_LONGHANDS } =
       require("devtools/server/actors/animation-type-longhand");
     const InspectorUtils = SpecialPowers.InspectorUtils;

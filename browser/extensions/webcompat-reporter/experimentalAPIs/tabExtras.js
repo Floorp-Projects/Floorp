@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 function getInfoFrameScript(messageName) {
   /* eslint-env mozilla/frame-script */
 
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   function getInnerWindowId(window) {
     return window.windowUtils.currentInnerWindowID;
@@ -90,7 +90,10 @@ this.tabExtras = class extends ExtensionAPI {
   getAPI(context) {
     const {tabManager} = context.extension;
     const {Management: {global: {windowTracker}}} =
-                ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+                ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
     return {
       tabExtras: {
         async loadURIWithPostData(tabId, url, postData, postDataContentType) {

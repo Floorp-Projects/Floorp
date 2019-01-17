@@ -1,12 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/browserid_identity.js");
+const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
+const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
+const {BrowserIDManager} = ChromeUtils.import("resource://services-sync/browserid_identity.js");
 
 var logger;
 

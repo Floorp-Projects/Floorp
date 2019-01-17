@@ -19,8 +19,8 @@ if (window.MozXULElement) {
   return;
 }
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 // The listener of DOMContentLoaded must be set on window, rather than
 // document, because the window can go away before the event is fired.

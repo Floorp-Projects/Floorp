@@ -4,9 +4,7 @@
 
 /* eslint-env mozilla/frame-script */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/WebProgressChild.jsm");
+const {WebProgressChild} = ChromeUtils.import("resource://gre/modules/WebProgressChild.jsm");
 
 this.WebProgress = new WebProgressChild(this);
 

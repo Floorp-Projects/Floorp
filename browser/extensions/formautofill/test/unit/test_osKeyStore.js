@@ -8,7 +8,7 @@ let OSKeyStore;
 add_task(async function setup() {
   Services.prefs.setBoolPref("extensions.formautofill.reauth.enabled", true);
 
-  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm", {}));
+  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm"));
 });
 
 // Ensure that the appropriate initialization has happened.

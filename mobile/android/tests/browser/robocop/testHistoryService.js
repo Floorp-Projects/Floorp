@@ -6,7 +6,7 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Make the timer global so it doesn't get GC'd
 var gTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);

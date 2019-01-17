@@ -64,9 +64,10 @@ const FIXTURE = [
 
 let originalSyncedTabsInternal = null;
 
+const {SyncedTabs} = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
+
 async function testClean() {
   let syncedTabsDeckComponent = window.SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
-  let SyncedTabs = window.SidebarUI.browser.contentWindow.SyncedTabs;
   syncedTabsDeckComponent._getSignedInUser.restore();
   SyncedTabs._internal.getTabClients.restore();
   SyncedTabs._internal = originalSyncedTabsInternal;
@@ -85,7 +86,6 @@ add_task(async function testSyncedTabsSidebarList() {
   Assert.equal(SidebarUI.currentID, "viewTabsSidebar", "Sidebar should have SyncedTabs loaded");
 
   let syncedTabsDeckComponent = SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
-  let SyncedTabs = SidebarUI.browser.contentWindow.SyncedTabs;
 
   Assert.ok(syncedTabsDeckComponent, "component exists");
 
@@ -138,7 +138,6 @@ add_task(testClean);
 add_task(async function testSyncedTabsSidebarFilteredList() {
   await SidebarUI.show("viewTabsSidebar");
   let syncedTabsDeckComponent = window.SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
-  let SyncedTabs = window.SidebarUI.browser.contentWindow.SyncedTabs;
 
   Assert.ok(syncedTabsDeckComponent, "component exists");
 
@@ -199,7 +198,6 @@ add_task(async function testSyncedTabsSidebarStatus() {
 
   await SidebarUI.show("viewTabsSidebar");
   let syncedTabsDeckComponent = window.SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
-  let SyncedTabs = window.SidebarUI.browser.contentWindow.SyncedTabs;
 
   originalSyncedTabsInternal = SyncedTabs._internal;
   SyncedTabs._internal = {
@@ -275,7 +273,6 @@ add_task(testClean);
 add_task(async function testSyncedTabsSidebarContextMenu() {
   await SidebarUI.show("viewTabsSidebar");
   let syncedTabsDeckComponent = window.SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
-  let SyncedTabs = window.SidebarUI.browser.contentWindow.SyncedTabs;
 
   Assert.ok(syncedTabsDeckComponent, "component exists");
 

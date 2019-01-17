@@ -181,7 +181,7 @@ add_task(async function test_set_responseHeaders() {
   let resolveHeaderPromise;
   let headerPromise = new Promise(resolve => { resolveHeaderPromise = resolve; });
   {
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     let ssm = Services.scriptSecurityManager;
 

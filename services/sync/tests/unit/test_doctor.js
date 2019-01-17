@@ -1,8 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Doctor, REPAIR_ADVANCE_PERIOD } = ChromeUtils.import("resource://services-sync/doctor.js", {});
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Doctor, REPAIR_ADVANCE_PERIOD } = ChromeUtils.import("resource://services-sync/doctor.js", null);
 
 function mockDoctor(mocks) {
   // Clone the object and put mocks in that.

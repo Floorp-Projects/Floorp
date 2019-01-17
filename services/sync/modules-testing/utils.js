@@ -21,21 +21,17 @@ var EXPORTED_SYMBOLS = [
   "syncTestLogging",
 ];
 
-ChromeUtils.import("resource://services-sync/status.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-crypto/utils.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/browserid_identity.js");
-ChromeUtils.import("resource://testing-common/Assert.jsm");
-ChromeUtils.import("resource://testing-common/services/common/logging.js");
-ChromeUtils.import("resource://testing-common/services/sync/fakeservices.js");
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js");
+const {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm");
+const {initTestLogging} = ChromeUtils.import("resource://testing-common/services/common/logging.js");
+const {FakeCryptoService, FakeFilesystemService, FakeGUIDService, fakeSHA256HMAC} = ChromeUtils.import("resource://testing-common/services/sync/fakeservices.js");
+const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // and grab non-exported stuff via a backstage pass.
-const {AccountState} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", {});
+const {AccountState} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", null);
 
 // A mock "storage manager" for FxAccounts that doesn't actually write anywhere.
 function MockFxaStorageManager() {

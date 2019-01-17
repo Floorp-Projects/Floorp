@@ -4,12 +4,12 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-let { getChromeWindow } = ChromeUtils.import("resource:///modules/syncedtabs/util.js", {});
+let { getChromeWindow } = ChromeUtils.import("resource:///modules/syncedtabs/util.js");
 
 let log = ChromeUtils.import("resource://gre/modules/Log.jsm", {})
             .Log.repository.getLogger("Sync.RemoteTabs");

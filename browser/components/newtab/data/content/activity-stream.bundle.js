@@ -4847,7 +4847,7 @@ __webpack_require__.r(__webpack_exports__);
 /* istanbul ignore if */
 
 if (typeof ChromeUtils !== "undefined") {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 }
 
 let usablePerfObj;

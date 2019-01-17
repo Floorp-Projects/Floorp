@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["FinderIterator"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 ChromeUtils.defineModuleGetter(this, "NLP", "resource://gre/modules/NLP.jsm");
 ChromeUtils.defineModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");

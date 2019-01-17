@@ -16,7 +16,7 @@
   // Import our test JSM. We first strip the filename off
   // the chrome url, then append the jsm filename.
   var base = /.*\//.exec(window.location.href)[0];
-  ChromeUtils.import(base + "file_url.jsm");
+  const {checkFromJSM} = ChromeUtils.import(base + "file_url.jsm");
 
   checkFromJSM(ok, is);
 

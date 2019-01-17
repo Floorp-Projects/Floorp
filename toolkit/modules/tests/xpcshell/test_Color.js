@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Color.jsm");
+const {Color} = ChromeUtils.import("resource://gre/modules/Color.jsm");
 
 function run_test() {
   testRelativeLuminance();

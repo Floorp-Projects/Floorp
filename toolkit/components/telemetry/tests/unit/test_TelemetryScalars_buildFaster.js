@@ -7,7 +7,7 @@ const STRING_SCALAR = "telemetry.test.string_kind";
 const BOOLEAN_SCALAR = "telemetry.test.boolean_kind";
 const KEYED_UINT_SCALAR = "telemetry.test.keyed_unsigned_int";
 
-ChromeUtils.import("resource://services-common/utils.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 
 /**
  * Return the path to the definitions file for the scalars.

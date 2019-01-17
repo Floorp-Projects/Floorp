@@ -5,7 +5,7 @@
 
 var EXPORTED_SYMBOLS = ["SelectHelper"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Prompt: "resource://gre/modules/Prompt.jsm",

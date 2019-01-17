@@ -16,39 +16,39 @@ var EXPORTED_SYMBOLS = [
 var module = this;
 
 // Global modules
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/main.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/telemetry.js");
-ChromeUtils.import("resource://services-sync/bookmark_validator.js");
-ChromeUtils.import("resource://services-sync/engines/passwords.js");
-ChromeUtils.import("resource://services-sync/engines/forms.js");
-ChromeUtils.import("resource://services-sync/engines/addons.js");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {SessionStore} = ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {WEAVE_VERSION} = ChromeUtils.import("resource://services-sync/constants.js");
+const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
+const {Svc} = ChromeUtils.import("resource://services-sync/util.js");
+const {SyncTelemetry} = ChromeUtils.import("resource://services-sync/telemetry.js");
+const {BookmarkValidator} = ChromeUtils.import("resource://services-sync/bookmark_validator.js");
+const {PasswordValidator} = ChromeUtils.import("resource://services-sync/engines/passwords.js");
+const {FormValidator} = ChromeUtils.import("resource://services-sync/engines/forms.js");
+const {AddonValidator} = ChromeUtils.import("resource://services-sync/engines/addons.js");
 // TPS modules
-ChromeUtils.import("resource://tps/logger.jsm");
+const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
 
 // Module wrappers for tests
-ChromeUtils.import("resource://tps/modules/addons.jsm");
-ChromeUtils.import("resource://tps/modules/bookmarks.jsm");
-ChromeUtils.import("resource://tps/modules/formautofill.jsm");
-ChromeUtils.import("resource://tps/modules/forms.jsm");
-ChromeUtils.import("resource://tps/modules/history.jsm");
-ChromeUtils.import("resource://tps/modules/passwords.jsm");
-ChromeUtils.import("resource://tps/modules/prefs.jsm");
-ChromeUtils.import("resource://tps/modules/tabs.jsm");
-ChromeUtils.import("resource://tps/modules/windows.jsm");
+const {Addon} = ChromeUtils.import("resource://tps/modules/addons.jsm");
+const {Bookmark, BookmarkFolder, DumpBookmarks, Livemark, Separator} = ChromeUtils.import("resource://tps/modules/bookmarks.jsm");
+const {Address, CreditCard, DumpAddresses, DumpCreditCards} = ChromeUtils.import("resource://tps/modules/formautofill.jsm");
+const {FormData} = ChromeUtils.import("resource://tps/modules/forms.jsm");
+const {DumpHistory, HistoryEntry} = ChromeUtils.import("resource://tps/modules/history.jsm");
+const {DumpPasswords, Password} = ChromeUtils.import("resource://tps/modules/passwords.jsm");
+const {Preference} = ChromeUtils.import("resource://tps/modules/prefs.jsm");
+const {BrowserTabs} = ChromeUtils.import("resource://tps/modules/tabs.jsm");
+const {BrowserWindows} = ChromeUtils.import("resource://tps/modules/windows.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "fileProtocolHandler", () => {
   let fileHandler = Services.io.getProtocolHandler("file");

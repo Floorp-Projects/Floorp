@@ -5,8 +5,8 @@ const {
   L10nRegistry,
   FileSource,
   IndexedFileSource,
-} = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+} = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 let fs;
 L10nRegistry.load = async function(url) {

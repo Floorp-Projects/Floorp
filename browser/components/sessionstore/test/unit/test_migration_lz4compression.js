@@ -1,7 +1,7 @@
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
-const {SessionWorker} = ChromeUtils.import("resource:///modules/sessionstore/SessionWorker.jsm", {});
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {SessionWorker} = ChromeUtils.import("resource:///modules/sessionstore/SessionWorker.jsm");
 
 var Paths;
 var SessionFile;

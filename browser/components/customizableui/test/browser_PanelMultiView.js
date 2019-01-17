@@ -7,7 +7,7 @@
  * Unit tests for the PanelMultiView module.
  */
 
-ChromeUtils.import("resource:///modules/PanelMultiView.jsm");
+const {PanelMultiView} = ChromeUtils.import("resource:///modules/PanelMultiView.jsm");
 
 const PANELS_COUNT = 2;
 let gPanelAnchors = [];

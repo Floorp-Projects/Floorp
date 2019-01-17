@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Import common head.
 {
@@ -13,14 +13,14 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Put any other stuff relative to this test folder below.
 
-ChromeUtils.import("resource://gre/modules/CanonicalJSON.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
-ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
-ChromeUtils.import("resource://gre/modules/SyncedBookmarksMirror.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
+var {CanonicalJSON} = ChromeUtils.import("resource://gre/modules/CanonicalJSON.jsm");
+var {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+var {ObjectUtils} = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+var {PlacesSyncUtils} = ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
+var {SyncedBookmarksMirror} = ChromeUtils.import("resource://gre/modules/SyncedBookmarksMirror.jsm");
+var {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+var {FileTestUtils} = ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
+var {HTTP_400, HTTP_401, HTTP_402, HTTP_403, HTTP_404, HTTP_405, HTTP_406, HTTP_407, HTTP_408, HTTP_409, HTTP_410, HTTP_411, HTTP_412, HTTP_413, HTTP_414, HTTP_415, HTTP_417, HTTP_500, HTTP_501, HTTP_502, HTTP_503, HTTP_504, HTTP_505, HttpError, HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 // These titles are defined in Database::CreateBookmarkRoots
 const BookmarksMenuTitle = "menu";

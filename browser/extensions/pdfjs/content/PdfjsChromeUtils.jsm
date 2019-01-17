@@ -20,8 +20,8 @@ var EXPORTED_SYMBOLS = ["PdfjsChromeUtils"];
 const PREF_PREFIX = "pdfjs";
 const PDF_CONTENT_TYPE = "application/pdf";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PdfJsDefaultPreferences",
   "resource://pdf.js/PdfJsDefaultPreferences.jsm");

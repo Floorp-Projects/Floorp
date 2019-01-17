@@ -4,15 +4,14 @@
 'use strict';
 
 const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
-const {BroadcastService} = ChromeUtils.import("resource://gre/modules/PushBroadcastService.jsm", {});
-ChromeUtils.import("resource://gre/modules/JSONFile.jsm");
+const {BroadcastService} = ChromeUtils.import("resource://gre/modules/PushBroadcastService.jsm", null);
+const {JSONFile} = ChromeUtils.import("resource://gre/modules/JSONFile.jsm");
 
-ChromeUtils.import("resource://testing-common/Assert.jsm");
-ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
-ChromeUtils.import("resource://test/broadcast_handler.jsm");
+const {FileTestUtils} = ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
+const {broadcastHandler} = ChromeUtils.import("resource://test/broadcast_handler.jsm");
 
 const broadcastService = pushBroadcastService;
-const assert = new Assert();
+const assert = Assert;
 const userAgentID = 'bd744428-f125-436a-b6d0-dd0c9845837f';
 const channelID = '0ef2ad4a-6c49-41ad-af6e-95d2425276bf';
 

@@ -113,8 +113,8 @@ var Profiler;
         Services.profiler.getProfileDataAsync().then((profile) => {
           let profileFile = profiler_dir + "/" + currentTest + ".profile";
 
-          Cu.import("resource://gre/modules/NetUtil.jsm");
-          Cu.import("resource://gre/modules/FileUtils.jsm");
+          const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm");
+          const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
 
           var file = Cc["@mozilla.org/file/local;1"].
            createInstance(Ci.nsIFile);

@@ -6,9 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["LightweightThemes"];
 
-ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var LightweightThemes = {
   init(libDir) {

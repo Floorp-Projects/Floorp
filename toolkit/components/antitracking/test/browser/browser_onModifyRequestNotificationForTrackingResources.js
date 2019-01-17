@@ -1,6 +1,4 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /**
  * This test ensures that http-on-modify-request is dispatched for channels that
  * are blocked by tracking protection.  It sets up a page with a third-party script

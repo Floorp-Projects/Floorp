@@ -8,10 +8,10 @@
 
 var EXPORTED_SYMBOLS = ["DNSResourceRecord"];
 
-ChromeUtils.import("resource://gre/modules/DataReader.jsm");
-ChromeUtils.import("resource://gre/modules/DataWriter.jsm");
-ChromeUtils.import("resource://gre/modules/DNSRecord.jsm");
-ChromeUtils.import("resource://gre/modules/DNSTypes.jsm");
+const {DataReader} = ChromeUtils.import("resource://gre/modules/DataReader.jsm");
+const {DataWriter} = ChromeUtils.import("resource://gre/modules/DataWriter.jsm");
+const {DNSRecord} = ChromeUtils.import("resource://gre/modules/DNSRecord.jsm");
+const {DNS_RECORD_TYPES} = ChromeUtils.import("resource://gre/modules/DNSTypes.jsm");
 
 const DNS_RESOURCE_RECORD_DEFAULT_TTL = 120; // 120 seconds
 

@@ -11,9 +11,9 @@ const TP_PREF = "privacy.trackingprotection.enabled";
 const PREF_REPORT_BREAKAGE_ENABLED = "browser.contentblocking.reportBreakage.enabled";
 const PREF_REPORT_BREAKAGE_URL = "browser.contentblocking.reportBreakage.url";
 
-let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});
-let {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js", {});
-let {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm", {});
+let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+let {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+let {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 add_task(async function setup() {
   await UrlClassifierTestUtils.addTestTrackers();

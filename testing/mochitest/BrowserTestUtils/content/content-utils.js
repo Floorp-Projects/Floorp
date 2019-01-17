@@ -6,8 +6,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 addEventListener("DOMContentLoaded", function(event) {
   let subframe = event.target != content.document;
   // For error page, internalURL is 'about:neterror?...', and visibleURL

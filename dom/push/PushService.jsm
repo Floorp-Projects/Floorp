@@ -5,23 +5,24 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const {
+var {
   PushCrypto,
-  getCryptoParams,
   CryptoError,
-} = ChromeUtils.import("resource://gre/modules/PushCrypto.jsm");
+} = ChromeUtils.import("resource://gre/modules/PushCrypto.jsm", null);
 const {PushDB} = ChromeUtils.import("resource://gre/modules/PushDB.jsm");
+
+var PushServiceWebSocket, PushServiceHttp2;
 
 const CONNECTION_PROTOCOLS = (function() {
   if ('android' != AppConstants.MOZ_WIDGET_TOOLKIT) {
-    const {PushServiceWebSocket} = ChromeUtils.import("resource://gre/modules/PushServiceWebSocket.jsm");
-    const {PushServiceHttp2} = ChromeUtils.import("resource://gre/modules/PushServiceHttp2.jsm");
+    ({PushServiceWebSocket} = ChromeUtils.import("resource://gre/modules/PushServiceWebSocket.jsm"));
+    ({PushServiceHttp2} = ChromeUtils.import("resource://gre/modules/PushServiceHttp2.jsm"));
     return [PushServiceWebSocket, PushServiceHttp2];
   } else {
     const {PushServiceAndroidGCM} = ChromeUtils.import("resource://gre/modules/PushServiceAndroidGCM.jsm");
@@ -40,7 +41,7 @@ ChromeUtils.defineModuleGetter(this, "pushBroadcastService", "resource://gre/mod
 var EXPORTED_SYMBOLS = ["PushService"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
-  let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     maxLogLevelPref: "dom.push.loglevel",
     prefix: "PushService",

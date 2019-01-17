@@ -4,7 +4,7 @@
 var testPath = "http://mochi.test:8888/browser/dom/html/test/";
 var popup;
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", null);
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function checkCache(url, inMemory, shouldExist, cb)
 {

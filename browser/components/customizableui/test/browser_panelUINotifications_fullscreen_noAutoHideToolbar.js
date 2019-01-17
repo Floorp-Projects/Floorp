@@ -6,7 +6,7 @@
 // error.
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
-ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+const {AppMenuNotifications} = ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
 
 function waitForDocshellActivated() {
   return ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {

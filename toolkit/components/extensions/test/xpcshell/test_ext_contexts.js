@@ -2,9 +2,7 @@
 
 const global = this;
 
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 
 var {
   BaseContext,

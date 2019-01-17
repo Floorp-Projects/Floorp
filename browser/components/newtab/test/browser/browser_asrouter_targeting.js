@@ -1,7 +1,7 @@
 const {ASRouterTargeting, QueryCache} =
-  ChromeUtils.import("resource://activity-stream/lib/ASRouterTargeting.jsm", {});
+  ChromeUtils.import("resource://activity-stream/lib/ASRouterTargeting.jsm");
 const {AddonTestUtils} =
-  ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
+  ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManager",

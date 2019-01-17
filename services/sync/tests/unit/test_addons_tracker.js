@@ -3,11 +3,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://services-sync/engines/addons.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {AddonsEngine} = ChromeUtils.import("resource://services-sync/engines/addons.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
 
 AddonTestUtils.init(this);
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");

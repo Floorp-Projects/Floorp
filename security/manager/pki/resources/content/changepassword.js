@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const nsIPK11TokenDB = Ci.nsIPK11TokenDB;
 const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";

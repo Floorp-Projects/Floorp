@@ -6,11 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["ProfileAge"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {TelemetryUtils} = ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 
 const FILE_TIMES = "times.json";
 

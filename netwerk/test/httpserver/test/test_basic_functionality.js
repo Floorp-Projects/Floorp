@@ -8,8 +8,6 @@
  * Basic functionality test, from the client programmer's POV.
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 XPCOMUtils.defineLazyGetter(this, "port", function() {
   return srv.identity.primaryPort;
 });

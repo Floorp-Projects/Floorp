@@ -9,7 +9,7 @@ requestLongerTimeout(4);
 ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {gDevTools} = require("devtools/client/framework/devtools");
 
 const DEVTOOLS_THEME_PREF = "devtools.theme";

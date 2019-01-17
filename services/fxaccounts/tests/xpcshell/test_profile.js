@@ -3,10 +3,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/FxAccountsProfileClient.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsProfile.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const {ON_PROFILE_CHANGE_NOTIFICATION, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {FxAccountsProfileClient} = ChromeUtils.import("resource://gre/modules/FxAccountsProfileClient.jsm");
+const {FxAccountsProfile} = ChromeUtils.import("resource://gre/modules/FxAccountsProfile.jsm");
+const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
 let mockClient = function(fxa) {
   let options = {

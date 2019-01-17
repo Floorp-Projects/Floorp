@@ -3,8 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://services-sync/resource.js");
+const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
 
 var httpServer = new HttpServer();
 httpServer.registerPathHandler("/content", contentHandler);

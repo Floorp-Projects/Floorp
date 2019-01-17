@@ -5,7 +5,6 @@
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"></script>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="chrome_head.js"></script>
   <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
@@ -14,8 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-/* global webrequest_test */
-ChromeUtils.import(SimpleTest.getTestFileURL("webrequest_test.jsm"));
+const {webrequest_test} = ChromeUtils.import(SimpleTest.getTestFileURL("webrequest_test.jsm"));
 let {testFetch, testXHR} = webrequest_test;
 
 // Here we test that any requests originating from a system principal are not

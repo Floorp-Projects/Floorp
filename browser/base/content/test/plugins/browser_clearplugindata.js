@@ -6,7 +6,7 @@ var gTestBrowser = null;
 const testURL1 = gTestRoot + "browser_clearplugindata.html";
 const testURL2 = gTestRoot + "browser_clearplugindata_noage.html";
 
-const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
+const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 
 const pluginHostIface = Ci.nsIPluginHost;
 var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);

@@ -29,7 +29,6 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 // eslint-disable-next-line prefer-const
 let promise = require("promise");
 const defer = require("devtools/shared/defer");
-const Services = require("Services");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
@@ -665,7 +664,7 @@ function waitForTitleChange(toolbox) {
  * @returns {HttpServer}
  */
 function createTestHTTPServer() {
-  const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});
+  const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
   const server = new HttpServer();
 
   registerCleanupFunction(async function cleanup() {
@@ -743,7 +742,7 @@ async function registerActorInContentProcess(url, options) {
   url = url.startsWith("chrome://mochitests") ? convertChromeToFile(url) : url;
   return ContentTask.spawn(gBrowser.selectedBrowser, { url, options }, args => {
     // eslint-disable-next-line no-shadow
-    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
     const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
     ActorRegistry.registerModule(args.url, args.options);
   });

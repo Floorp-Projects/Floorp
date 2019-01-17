@@ -11,10 +11,9 @@ var EXPORTED_SYMBOLS = [
   "TokenServerClientServerError",
 ];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/rest.js");
-ChromeUtils.import("resource://services-common/observers.js");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
+const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
 
 const PREF_LOG_LEVEL = "services.common.log.logger.tokenserverclient";
 

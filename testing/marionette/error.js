@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js", {});
+const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js");
 
 const ERRORS = new Set([
   "ElementClickInterceptedError",

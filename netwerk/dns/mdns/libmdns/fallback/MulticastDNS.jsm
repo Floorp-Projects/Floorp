@@ -8,13 +8,13 @@
 
 var EXPORTED_SYMBOLS = ["MulticastDNS"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-ChromeUtils.import("resource://gre/modules/DNSPacket.jsm");
-ChromeUtils.import("resource://gre/modules/DNSRecord.jsm");
-ChromeUtils.import("resource://gre/modules/DNSResourceRecord.jsm");
-ChromeUtils.import("resource://gre/modules/DNSTypes.jsm");
+const {DNSPacket} = ChromeUtils.import("resource://gre/modules/DNSPacket.jsm");
+const {DNSRecord} = ChromeUtils.import("resource://gre/modules/DNSRecord.jsm");
+const {DNSResourceRecord} = ChromeUtils.import("resource://gre/modules/DNSResourceRecord.jsm");
+const {DNS_AUTHORITATIVE_ANSWER_CODES, DNS_CLASS_CODES, DNS_QUERY_RESPONSE_CODES, DNS_RECORD_TYPES} = ChromeUtils.import("resource://gre/modules/DNSTypes.jsm");
 
 const NS_NETWORK_LINK_TOPIC = "network:link-status-changed";
 

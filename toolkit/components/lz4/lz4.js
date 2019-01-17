@@ -5,12 +5,11 @@
 "use strict";
 
 var SharedAll;
-var Primitives;
 if (typeof Components != "undefined") {
   SharedAll = {};
   ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
-  ChromeUtils.import("resource://gre/modules/lz4_internal.js");
-  ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  var {Primitives} = ChromeUtils.import("resource://gre/modules/lz4_internal.js");
+  var {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
   this.EXPORTED_SYMBOLS = [
     "Lz4",
@@ -20,6 +19,7 @@ if (typeof Components != "undefined") {
   /* eslint-env commonjs */
   SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
   Primitives = require("resource://gre/modules/lz4_internal.js");
+  ctypes = self.ctypes;
 } else {
   throw new Error("Please load this module with Component.utils.import or with require()");
 }

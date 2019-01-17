@@ -17,7 +17,7 @@ Bug 966991 - Test DebuggerServer.connectToFrame
 // Part of this is a frame script.
 /* eslint-env mozilla/frame-script */
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 
@@ -45,7 +45,7 @@ function runTests() {
   // this fake actor is destroyed.
   mm.loadFrameScript("data:text/javascript,new " + function FrameScriptScope() {
     /* eslint-disable no-shadow */
-    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
     const { DebuggerServer } = require("devtools/server/main");
     const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
     /* eslint-enable no-shadow */

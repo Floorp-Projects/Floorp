@@ -7,7 +7,7 @@
 
 var EXPORTED_SYMBOLS = ["SharedPreferences"];
 
-ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
 var Scope = Object.freeze({
   APP:          "app",

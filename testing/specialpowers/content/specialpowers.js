@@ -7,7 +7,7 @@
 
 /* globals bindDOMWindowUtils, SpecialPowersAPI */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Services.scriptloader.loadSubScript("resource://specialpowers/MozillaLogger.js", this);
 

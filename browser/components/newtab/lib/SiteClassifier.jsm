@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
+const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
 
 // Returns whether the passed in params match the criteria.
 // To match, they must contain all the params specified in criteria and the values

@@ -1,6 +1,6 @@
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(function test_compartment_realm_counts() {
   const compsSystem = "MEMORY_JS_COMPARTMENTS_SYSTEM";

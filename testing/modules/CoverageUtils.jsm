@@ -9,8 +9,7 @@ var EXPORTED_SYMBOLS = [
 ];
 
 /* globals Debugger */
-const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm",
-                                                 {});
+const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(Cu.getGlobalForObject(this));
 
 /**

@@ -4,17 +4,20 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
-ChromeUtils.import("resource://gre/modules/FormLikeFactory.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm");
-ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/MockDocument.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {ObjectUtils} = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+var {FormLikeFactory} = ChromeUtils.import("resource://gre/modules/FormLikeFactory.jsm");
+var {AddonTestUtils, MockAsyncShutdown} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+var {ExtensionTestUtils} = ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm");
+var {FileTestUtils} = ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
+var {MockDocument} = ChromeUtils.import("resource://testing-common/MockDocument.jsm");
+var {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+                               "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
+                               "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "DownloadPaths",
                                "resource://gre/modules/DownloadPaths.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
@@ -28,7 +31,7 @@ ChromeUtils.defineModuleGetter(this, "ExtensionParent",
   // with region names based on en-US. This is
   // necessary for tests that expect to match
   // on region code display names.
-  const {L10nRegistry, FileSource} = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
+  const {L10nRegistry, FileSource} = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
   const fs = {
     "toolkit/intl/regionNames.ftl": `
@@ -58,7 +61,14 @@ do_get_profile();
 // ================================================
 // Load mocking/stubbing library, sinon
 // docs: http://sinonjs.org/releases/v2.3.2/
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+var {
+  clearInterval,
+  clearTimeout,
+  setInterval,
+  setIntervalWithTarget,
+  setTimeout,
+  setTimeoutWithTarget,
+} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", this);
 /* globals sinon */
 // ================================================
@@ -104,7 +114,7 @@ function getTempFile(leafName) {
 }
 
 async function initProfileStorage(fileName, records, collectionName = "addresses") {
-  let {FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
+  let {FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", null);
   let path = getTempFile(fileName).path;
   let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
@@ -153,10 +163,13 @@ function verifySectionFieldDetails(sections, expectedResults) {
   });
 }
 
+var FormAutofillHeuristics, LabelUtils;
+var AddressDataLoader, FormAutofillUtils;
+
 async function runHeuristicsTest(patterns, fixturePathPrefix) {
   add_task(async function setup() {
-    ChromeUtils.import("resource://formautofill/FormAutofillHeuristics.jsm");
-    ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+    ({FormAutofillHeuristics, LabelUtils} = ChromeUtils.import("resource://formautofill/FormAutofillHeuristics.jsm"));
+    ({AddressDataLoader, FormAutofillUtils} = ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm"));
   });
 
   patterns.forEach(testPattern => {
@@ -257,7 +270,7 @@ add_task(async function head_initialize() {
 let OSKeyStoreTestUtils;
 add_task(async function os_key_store_setup() {
   ({OSKeyStoreTestUtils} =
-    ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", {}));
+    ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm"));
   OSKeyStoreTestUtils.setup();
   registerCleanupFunction(async function cleanup() {
     await OSKeyStoreTestUtils.cleanup();

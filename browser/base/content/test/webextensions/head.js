@@ -3,10 +3,10 @@ ChromeUtils.defineModuleGetter(this, "AddonTestUtils", "resource://testing-commo
 const BASE = getRootDirectory(gTestPath)
   .replace("chrome://mochitests/content/", "https://example.com/");
 
-ChromeUtils.import("resource:///modules/ExtensionsUI.jsm");
+var {ExtensionsUI} = ChromeUtils.import("resource:///modules/ExtensionsUI.jsm");
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
   // eslint-disable-next-line no-shadow
-  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
   return Management;
 });
 
@@ -40,7 +40,7 @@ function promisePopupNotificationShown(name) {
 }
 
 function promiseAppMenuNotificationShown(id) {
-  ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+  const {AppMenuNotifications} = ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
   return new Promise(resolve => {
     function popupshown() {
       let notification = AppMenuNotifications.activeNotification;

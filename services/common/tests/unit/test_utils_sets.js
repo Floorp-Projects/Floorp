@@ -3,8 +3,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://services-common/utils.js");
-
 const EMPTY = new Set();
 const A = new Set(["a"]);
 const ABC = new Set(["a", "b", "c"]);

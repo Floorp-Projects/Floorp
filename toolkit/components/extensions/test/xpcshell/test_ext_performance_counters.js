@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 const ENABLE_COUNTER_PREF = "extensions.webextensions.enablePerformanceCounters";
 const TIMING_MAX_AGE = "extensions.webextensions.performanceCountersMaxAge";

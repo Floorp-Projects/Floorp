@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(this, "ContextualIdentityService",
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+var {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 
 global.EventEmitter = ExtensionCommon.EventEmitter;
 global.EventManager = ExtensionCommon.EventManager;
