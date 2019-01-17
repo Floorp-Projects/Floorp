@@ -20,6 +20,10 @@ const PREF_STRING_LOCALIZED_MISSING = "gecko.handlerService.schemes.irc.1.name";
 // Other preference names used in tests.
 const PREF_NEW = "test.aboutconfig.new";
 
+// These tests can be slow to execute because they show all the preferences
+// several times, and each time can require a second on some virtual machines.
+requestLongerTimeout(2);
+
 class AboutConfigRowTest {
   constructor(element) {
     this.element = element;
