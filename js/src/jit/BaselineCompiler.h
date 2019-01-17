@@ -261,7 +261,6 @@ class BaselineCodeGen {
 
   JSContext* cx;
   JSScript* script;
-  jsbytecode* pc;
   StackMacroAssembler masm;
   bool ionCompileable_;
 
@@ -269,7 +268,6 @@ class BaselineCodeGen {
   BytecodeAnalysis analysis_;
   FrameInfo frame;
 
-  js::Vector<RetAddrEntry, 16, SystemAllocPolicy> retAddrEntries_;
   js::Vector<CodeOffset> traceLoggerToggleOffsets_;
 
   NonAssertingLabel return_;
@@ -289,16 +287,6 @@ class BaselineCodeGen {
   template <typename... HandlerArgs>
   BaselineCodeGen(JSContext* cx, TempAllocator& alloc, JSScript* script,
                   HandlerArgs&&... args);
-
-  MOZ_MUST_USE bool appendRetAddrEntry(RetAddrEntry::Kind kind,
-                                       uint32_t retOffset) {
-    if (!retAddrEntries_.emplaceBack(script->pcToOffset(pc), kind,
-                                     CodeOffset(retOffset))) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-    return true;
-  }
 
   JSFunction* function() const {
     // Not delazifying here is ok as the function is guaranteed to have
@@ -330,6 +318,8 @@ class BaselineCodeGen {
   void pushUint8BytecodeOperandArg();
   void pushUint16BytecodeOperandArg();
 
+  void loadResumeIndexBytecodeOperand(Register dest);
+
   void prepareVMCall();
 
   enum CallVMPhase { POST_INITIALIZE, CHECK_OVER_RECURSED };
@@ -339,7 +329,7 @@ class BaselineCodeGen {
     if (!callVM(fun, phase)) {
       return false;
     }
-    retAddrEntries_.back().setKind(RetAddrEntry::Kind::NonOpCallVM);
+    handler.markLastRetAddrEntryKind(RetAddrEntry::Kind::NonOpCallVM);
     return true;
   }
 
@@ -359,7 +349,7 @@ class BaselineCodeGen {
 
   MOZ_MUST_USE bool emitNextIC();
   MOZ_MUST_USE bool emitInterruptCheck();
-  MOZ_MUST_USE bool emitWarmUpCounterIncrement(bool allowOsr = true);
+  MOZ_MUST_USE bool emitWarmUpCounterIncrement();
   MOZ_MUST_USE bool emitTraceLoggerResume(Register script,
                                           AllocatableGeneralRegisterSet& regs);
 
@@ -390,6 +380,10 @@ class BaselineCodeGen {
   // or branches to the default pc if not int32 or out-of-range.
   void emitGetTableSwitchIndex(ValueOperand val, Register dest);
 
+  // Jumps to the target of a table switch based on |key| and the
+  // firstResumeIndex stored in JSOP_TABLESWITCH.
+  void emitTableSwitchJump(Register key, Register scratch1, Register scratch2);
+
   MOZ_MUST_USE bool emitReturn();
 
   MOZ_MUST_USE bool emitToBoolean();
@@ -407,10 +401,15 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitBindName(JSOp op);
   MOZ_MUST_USE bool emitDefLexical(JSOp op);
 
+  // Try to bake in the result of GETGNAME/BINDGNAME instead of using an IC.
+  // Return true if we managed to optimize the op.
+  bool tryOptimizeGetGlobalName();
+  bool tryOptimizeBindGlobalName();
+
   MOZ_MUST_USE bool emitInitPropGetterSetter();
   MOZ_MUST_USE bool emitInitElemGetterSetter();
 
-  MOZ_MUST_USE bool emitFormalArgAccess(uint32_t arg, bool get);
+  MOZ_MUST_USE bool emitFormalArgAccess(JSOp op);
 
   MOZ_MUST_USE bool emitThrowConstAssignment();
   MOZ_MUST_USE bool emitUninitializedLexicalCheck(const ValueOperand& val);
@@ -423,11 +422,15 @@ class BaselineCodeGen {
   Address getEnvironmentCoordinateAddress(Register reg);
 };
 
+using RetAddrEntryVector = js::Vector<RetAddrEntry, 16, SystemAllocPolicy>;
+
 // Interface used by BaselineCodeGen for BaselineCompiler.
 class BaselineCompilerHandler {
   TempAllocator& alloc_;
   FixedList<Label> labels_;
+  RetAddrEntryVector retAddrEntries_;
   JSScript* script_;
+  jsbytecode* pc_;
   bool compileDebugInstrumentation_;
 
  public:
@@ -435,11 +438,32 @@ class BaselineCompilerHandler {
 
   MOZ_MUST_USE bool init();
 
+  jsbytecode* pc() const { return pc_; }
+  jsbytecode* maybePC() const { return pc_; }
+
+  void moveToNextPC() { pc_ += GetBytecodeLength(pc_); }
   Label* labelOf(jsbytecode* pc) { return &labels_[script_->pcToOffset(pc)]; }
+
+  bool isDefinitelyLastOp() const { return pc_ == script_->lastPC(); }
 
   void setCompileDebugInstrumentation() { compileDebugInstrumentation_ = true; }
   bool compileDebugInstrumentation() const {
     return compileDebugInstrumentation_;
+  }
+
+  RetAddrEntryVector& retAddrEntries() { return retAddrEntries_; }
+
+  MOZ_MUST_USE bool appendRetAddrEntry(JSContext* cx, RetAddrEntry::Kind kind,
+                                       uint32_t retOffset) {
+    if (!retAddrEntries_.emplaceBack(script_->pcToOffset(pc_), kind,
+                                     CodeOffset(retOffset))) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    return true;
+  }
+  void markLastRetAddrEntryKind(RetAddrEntry::Kind kind) {
+    retAddrEntries_.back().setKind(kind);
   }
 };
 
@@ -542,6 +566,18 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
 class BaselineInterpreterHandler {
  public:
   explicit BaselineInterpreterHandler();
+
+  // Interpreter doesn't know the pc statically.
+  jsbytecode* maybePC() const { return nullptr; }
+  bool isDefinitelyLastOp() const { return false; }
+
+  // Interpreter doesn't need to keep track of RetAddrEntries, so these methods
+  // are no-ops.
+  MOZ_MUST_USE bool appendRetAddrEntry(JSContext* cx, RetAddrEntry::Kind kind,
+                                       uint32_t retOffset) {
+    return true;
+  }
+  void markLastRetAddrEntryKind(RetAddrEntry::Kind) {}
 };
 
 using BaselineInterpreterCodeGen = BaselineCodeGen<BaselineInterpreterHandler>;
