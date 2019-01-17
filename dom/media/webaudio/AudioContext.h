@@ -386,6 +386,9 @@ class AudioContext final : public DOMEventTargetHelper,
   // This flag stores the value of previous status of `allowed-to-start`.
   bool mWasAllowedToStart;
 
+  // True if this AudioContext has been suspended by the page.
+  bool mSuspendedByContent;
+
   // These variables are used for telemetry, they're not reflect the actual
   // status of AudioContext, they are based on the "assumption" of enabling
   // blocking web audio. Because we want to record Telemetry no matter user
