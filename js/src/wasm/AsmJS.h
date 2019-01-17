@@ -84,9 +84,6 @@ extern bool IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc,
 
 extern bool IsAsmJSModule(JSContext* cx, unsigned argc, JS::Value* vp);
 
-extern bool IsAsmJSModuleLoadedFromCache(JSContext* cx, unsigned argc,
-                                         JS::Value* vp);
-
 extern bool IsAsmJSFunction(JSContext* cx, unsigned argc, JS::Value* vp);
 
 // asm.js toString/toSource support:
