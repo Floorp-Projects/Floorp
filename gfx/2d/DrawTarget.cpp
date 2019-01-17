@@ -183,6 +183,13 @@ void DrawTarget::PushDeviceSpaceClipRects(const IntRect* aRects,
   SetTransform(oldTransform);
 }
 
+void DrawTarget::FillRoundedRect(const RoundedRect& aRect,
+                                 const Pattern& aPattern,
+                                 const DrawOptions& aOptions) {
+  RefPtr<Path> path = MakePathForRoundedRect(*this, aRect.rect, aRect.corners);
+  Fill(path, aPattern, aOptions);
+}
+
 void DrawTarget::StrokeGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
                               const Pattern& aPattern,
                               const StrokeOptions& aStrokeOptions,

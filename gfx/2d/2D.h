@@ -1059,6 +1059,18 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
                         const DrawOptions &aOptions = DrawOptions()) = 0;
 
   /**
+   * Fill a rounded rectangle on the DrawTarget with a certain source pattern.
+   *
+   * @param aRect Rounded rectangle that forms the mask of this filling
+   * operation
+   * @param aPattern Pattern that forms the source of this filling operation
+   * @param aOptions Options that are applied to this operation
+   */
+  virtual void FillRoundedRect(const RoundedRect &aRect,
+                               const Pattern &aPattern,
+                               const DrawOptions &aOptions = DrawOptions());
+
+  /**
    * Stroke a rectangle on the DrawTarget with a certain source pattern.
    *
    * @param aRect Rectangle that forms the mask of this stroking operation
