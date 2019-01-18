@@ -187,15 +187,6 @@ function removeXHRBreakpoint(path: string, method: string) {
   return threadClient.removeXHRBreakpoint(path, method);
 }
 
-// Source and breakpoint clients do not yet support an options structure, so
-// for now we transform options into condition strings when setting breakpoints.
-function transformOptionsToCondition(options) {
-  if (options.logValue) {
-    return `console.log(${options.logValue})`;
-  }
-  return options.condition;
-}
-
 function setBreakpoint(
   location: SourceActorLocation,
   options: BreakpointOptions,
@@ -210,7 +201,7 @@ function setBreakpoint(
     .setBreakpoint({
       line: location.line,
       column: location.column,
-      condition: transformOptionsToCondition(options),
+      options,
       noSliding
     })
     .then(([{ actualLocation }, bpClient]) => {
@@ -248,14 +239,18 @@ function setBreakpointOptions(
 ) {
   const id = makeBreakpointActorId(location);
   const bpClient = bpClients[id];
-  delete bpClients[id];
 
-  const sourceThreadClient = bpClient.source._activeThread;
-  return bpClient
-    .setCondition(sourceThreadClient, transformOptionsToCondition(options))
-    .then(_bpClient => {
-      bpClients[id] = _bpClient;
-    });
+  if (debuggerClient.mainRoot.traits.nativeLogpoints) {
+    bpClient.setOptions(options);
+  } else {
+    // Older server breakpoints destroy themselves when changing options.
+    delete bpClients[id];
+    bpClient
+      .setOptions(options)
+      .then(_bpClient => {
+        bpClients[id] = _bpClient;
+      });
+  }
 }
 
 async function evaluateInFrame(script: Script, options: EvaluateParam) {
