@@ -28,8 +28,10 @@ class ExtensionDetail extends PureComponent {
   }
 
   renderUUID() {
-    const { target } = this.props;
-    const { manifestURL, uuid } = target.details;
+    const { manifestURL, uuid } = this.props.target.details;
+    if (!uuid) {
+      return null;
+    }
 
     const value = [
       uuid,
@@ -64,8 +66,29 @@ class ExtensionDetail extends PureComponent {
     );
   }
 
+  renderExtensionId() {
+    const { id } = this.props.target;
+
+    return Localized(
+      {
+        id: "about-debugging-extension-id",
+        attrs: { label: true },
+      },
+      FieldPair(
+        {
+          slug: "extension",
+          label: "Extension ID",
+          value: id,
+        }
+      )
+    );
+  }
+
   renderLocation() {
     const { location } = this.props.target.details;
+    if (!location) {
+      return null;
+    }
 
     return Localized(
       {
@@ -83,29 +106,13 @@ class ExtensionDetail extends PureComponent {
   }
 
   render() {
-    const { target } = this.props;
-    const { id, details } = target;
-    const { location, uuid } = details;
-
     return dom.dl(
       {
         className: "extension-detail",
       },
-      location ? this.renderLocation() : null,
-      Localized(
-        {
-          id: "about-debugging-extension-id",
-          attrs: { label: true },
-        },
-        FieldPair(
-          {
-            slug: "extension",
-            label: "Extension ID",
-            value: id,
-          }
-        )
-      ),
-      uuid ? this.renderUUID() : null,
+      this.renderLocation(),
+      this.renderExtensionId(),
+      this.renderUUID(),
     );
   }
 }
