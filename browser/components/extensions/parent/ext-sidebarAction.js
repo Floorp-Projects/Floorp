@@ -140,6 +140,9 @@ this.sidebarAction = class extends ExtensionAPI {
   }
 
   createMenuItem(window, details) {
+    if (!this.extension.canAccessWindow(window)) {
+      return;
+    }
     let {document, SidebarUI} = window;
     let keyId = `ext-key-id-${this.id}`;
 
@@ -241,6 +244,9 @@ this.sidebarAction = class extends ExtensionAPI {
    *        Browser chrome window.
    */
   updateWindow(window) {
+    if (!this.extension.canAccessWindow(window)) {
+      return;
+    }
     let nativeTab = window.gBrowser.selectedTab;
     this.updateButton(window, this.tabContext.get(nativeTab));
   }
@@ -283,12 +289,19 @@ this.sidebarAction = class extends ExtensionAPI {
     if (tabId != null && windowId != null) {
       throw new ExtensionError("Only one of tabId and windowId can be specified.");
     }
+    let target = null;
     if (tabId != null) {
-      return tabTracker.getTab(tabId);
+      target = tabTracker.getTab(tabId);
+      if (!this.extension.canAccessWindow(target.ownerGlobal)) {
+        throw new ExtensionError(`Invalid tab ID: ${tabId}`);
+      }
     } else if (windowId != null) {
-      return windowTracker.getWindow(windowId);
+      target = windowTracker.getWindow(windowId);
+      if (!this.extension.canAccessWindow(target)) {
+        throw new ExtensionError(`Invalid window ID: ${windowId}`);
+      }
     }
-    return null;
+    return target;
   }
 
   /**
@@ -357,7 +370,7 @@ this.sidebarAction = class extends ExtensionAPI {
    */
   triggerAction(window) {
     let {SidebarUI} = window;
-    if (SidebarUI) {
+    if (SidebarUI && this.extension.canAccessWindow(window)) {
       SidebarUI.toggle(this.id);
     }
   }
@@ -369,7 +382,7 @@ this.sidebarAction = class extends ExtensionAPI {
    */
   open(window) {
     let {SidebarUI} = window;
-    if (SidebarUI) {
+    if (SidebarUI && this.extension.canAccessWindow(window)) {
       SidebarUI.show(this.id);
     }
   }
@@ -439,12 +452,16 @@ this.sidebarAction = class extends ExtensionAPI {
 
         open() {
           let window = windowTracker.topWindow;
-          sidebarAction.open(window);
+          if (context.canAccessWindow(window)) {
+            sidebarAction.open(window);
+          }
         },
 
         close() {
           let window = windowTracker.topWindow;
-          sidebarAction.close(window);
+          if (context.canAccessWindow(window)) {
+            sidebarAction.close(window);
+          }
         },
 
         isOpen(details) {
