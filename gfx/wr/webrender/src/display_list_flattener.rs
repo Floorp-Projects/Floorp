@@ -35,7 +35,7 @@ use prim_store::text_run::TextRun;
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
-use scene_builder::{DocumentResources, InternerMut};
+use scene_builder::{InternerMut, Interners};
 use spatial_node::{StickyFrameInfo, ScrollFrameKind, SpatialNodeType};
 use std::{f32, mem, usize};
 use std::collections::vec_deque::VecDeque;
@@ -139,9 +139,8 @@ pub struct DisplayListFlattener<'a> {
     /// order to determine the default font.
     pub config: FrameBuilderConfig,
 
-    /// Reference to the document resources, which contains
-    /// shared (interned) data between display lists.
-    resources: &'a mut DocumentResources,
+    /// Reference to the set of data that is interned across display lists.
+    interners: &'a mut Interners,
 
     /// The root picture index for this flattener. This is the picture
     /// to start the culling phase from.
@@ -157,7 +156,7 @@ impl<'a> DisplayListFlattener<'a> {
         output_pipelines: &FastHashSet<PipelineId>,
         frame_builder_config: &FrameBuilderConfig,
         new_scene: &mut Scene,
-        resources: &mut DocumentResources,
+        interners: &mut Interners,
         prim_store_stats: &PrimitiveStoreStats,
     ) -> FrameBuilder {
         // We checked that the root pipeline is available on the render backend.
@@ -181,7 +180,7 @@ impl<'a> DisplayListFlattener<'a> {
             pipeline_clip_chain_stack: vec![ClipChainId::NONE],
             prim_store: PrimitiveStore::new(&prim_store_stats),
             clip_store: ClipStore::new(),
-            resources,
+            interners,
             root_pic_index: PictureIndex(0),
         };
 
@@ -326,7 +325,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         let prim_list = PrimitiveList::new(
             remaining_prims,
-            &self.resources,
+            &self.interners,
         );
 
         // Now, create a picture with tile caching enabled that will hold all
@@ -339,7 +338,7 @@ impl<'a> DisplayListFlattener<'a> {
             },
         );
 
-        let pic_data_handle = self.resources
+        let pic_data_handle = self.interners
             .picture
             .intern(&pic_key, || {
                 PrimitiveSceneData {
@@ -1028,7 +1027,7 @@ impl<'a> DisplayListFlattener<'a> {
             for (local_pos, item) in clip_items {
                 // Intern this clip item, and store the handle
                 // in the clip chain node.
-                let handle = self.resources
+                let handle = self.interners
                     .clip
                     .intern(&item, || ());
 
@@ -1059,12 +1058,12 @@ impl<'a> DisplayListFlattener<'a> {
     where
         P: Internable<InternData=PrimitiveSceneData>,
         P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
-        DocumentResources: InternerMut<P>,
+        Interners: InternerMut<P>,
     {
         // Build a primitive key.
         let prim_key = prim.build_key(info);
 
-        let interner = self.resources.interner_mut();
+        let interner = self.interners.interner_mut();
         let prim_data_handle =
             interner
             .intern(&prim_key, || {
@@ -1134,7 +1133,7 @@ impl<'a> DisplayListFlattener<'a> {
     where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
         P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
-        DocumentResources: InternerMut<P>,
+        Interners: InternerMut<P>,
     {
         if prim.is_visible() {
             let clip_chain_id = self.build_clip_chain(
@@ -1161,7 +1160,7 @@ impl<'a> DisplayListFlattener<'a> {
     where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
         P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
-        DocumentResources: InternerMut<P>,
+        Interners: InternerMut<P>,
         ShadowItem: From<PendingPrimitive<P>>
     {
         // If a shadow context is not active, then add the primitive
@@ -1191,7 +1190,7 @@ impl<'a> DisplayListFlattener<'a> {
     where
         P: Internable<InternData = PrimitiveSceneData>,
         P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
-        DocumentResources: InternerMut<P>,
+        Interners: InternerMut<P>,
     {
         let prim_instance = self.create_primitive(
             info,
@@ -1238,7 +1237,7 @@ impl<'a> DisplayListFlattener<'a> {
                 // so that the relative order between them and our current SC is preserved.
                 let extra_instance = sc.cut_flat_item_sequence(
                     &mut self.prim_store,
-                    &mut self.resources,
+                    &mut self.interners,
                     &self.clip_store,
                 );
                 (sc.is_3d(), extra_instance)
@@ -1386,7 +1385,7 @@ impl<'a> DisplayListFlattener<'a> {
                 stacking_context.requested_raster_space,
                 PrimitiveList::new(
                     stacking_context.primitives,
-                    &self.resources,
+                    &self.interners,
                 ),
                 stacking_context.spatial_node_index,
                 max_clip,
@@ -1405,7 +1404,7 @@ impl<'a> DisplayListFlattener<'a> {
             stacking_context.is_backface_visible,
             stacking_context.clip_chain_id,
             stacking_context.spatial_node_index,
-            &mut self.resources,
+            &mut self.interners,
         );
 
         if cur_instance.is_chased() {
@@ -1433,7 +1432,7 @@ impl<'a> DisplayListFlattener<'a> {
                     stacking_context.requested_raster_space,
                     PrimitiveList::new(
                         prims,
-                        &self.resources,
+                        &self.interners,
                     ),
                     stacking_context.spatial_node_index,
                     max_clip,
@@ -1448,7 +1447,7 @@ impl<'a> DisplayListFlattener<'a> {
                 stacking_context.is_backface_visible,
                 stacking_context.clip_chain_id,
                 stacking_context.spatial_node_index,
-                &mut self.resources,
+                &mut self.interners,
             );
         }
 
@@ -1468,7 +1467,7 @@ impl<'a> DisplayListFlattener<'a> {
                     stacking_context.requested_raster_space,
                     PrimitiveList::new(
                         vec![cur_instance.clone()],
-                        &self.resources,
+                        &self.interners,
                     ),
                     stacking_context.spatial_node_index,
                     max_clip,
@@ -1484,7 +1483,7 @@ impl<'a> DisplayListFlattener<'a> {
                 stacking_context.is_backface_visible,
                 stacking_context.clip_chain_id,
                 stacking_context.spatial_node_index,
-                &mut self.resources,
+                &mut self.interners,
             );
 
             if cur_instance.is_chased() {
@@ -1511,7 +1510,7 @@ impl<'a> DisplayListFlattener<'a> {
                     stacking_context.requested_raster_space,
                     PrimitiveList::new(
                         vec![cur_instance.clone()],
-                        &self.resources,
+                        &self.interners,
                     ),
                     stacking_context.spatial_node_index,
                     max_clip,
@@ -1527,7 +1526,7 @@ impl<'a> DisplayListFlattener<'a> {
                 stacking_context.is_backface_visible,
                 stacking_context.clip_chain_id,
                 stacking_context.spatial_node_index,
-                &mut self.resources,
+                &mut self.interners,
             );
 
             if cur_instance.is_chased() {
@@ -1662,7 +1661,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         // Build the clip sources from the supplied region.
         let handle = self
-            .resources
+            .interners
             .clip
             .intern(&ClipItemKey::rectangle(clip_region.main.size, ClipMode::Clip), || ());
 
@@ -1678,7 +1677,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         if let Some(ref image_mask) = clip_region.image_mask {
             let handle = self
-                .resources
+                .interners
                 .clip
                 .intern(&ClipItemKey::image_mask(image_mask), || ());
 
@@ -1695,7 +1694,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         for region in clip_region.complex_clips {
             let handle = self
-                .resources
+                .interners
                 .clip
                 .intern(&ClipItemKey::rounded_rect(region.rect.size, region.radii, region.mode), || ());
 
@@ -1847,7 +1846,7 @@ impl<'a> DisplayListFlattener<'a> {
                                 raster_space,
                                 PrimitiveList::new(
                                     prims,
-                                    &self.resources,
+                                    &self.interners,
                                 ),
                                 pending_shadow.clip_and_scroll.spatial_node_index,
                                 max_clip,
@@ -1862,7 +1861,7 @@ impl<'a> DisplayListFlattener<'a> {
                             Picture { composite_mode_key },
                         );
 
-                        let shadow_prim_data_handle = self.resources
+                        let shadow_prim_data_handle = self.interners
                             .picture
                             .intern(&shadow_pic_key, || {
                                 PrimitiveSceneData {
@@ -1919,7 +1918,7 @@ impl<'a> DisplayListFlattener<'a> {
     where
         P: Internable<InternData=PrimitiveSceneData> + CreateShadow,
         P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
-        DocumentResources: InternerMut<P>,
+        Interners: InternerMut<P>,
     {
         // Offset the local rect and clip rect by the shadow offset.
         let mut info = pending_primitive.info.clone();
@@ -1944,7 +1943,7 @@ impl<'a> DisplayListFlattener<'a> {
     where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
         P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
-        DocumentResources: InternerMut<P>,
+        Interners: InternerMut<P>,
     {
         // For a normal primitive, if it has alpha > 0, then we add this
         // as a normal primitive to the parent picture.
@@ -2594,7 +2593,7 @@ impl FlattenedStackingContext {
     pub fn cut_flat_item_sequence(
         &mut self,
         prim_store: &mut PrimitiveStore,
-        resources: &mut DocumentResources,
+        interners: &mut Interners,
         clip_store: &ClipStore,
     ) -> Option<PrimitiveInstance> {
         if !self.is_3d() || self.primitives.is_empty() {
@@ -2619,7 +2618,7 @@ impl FlattenedStackingContext {
                 self.requested_raster_space,
                 PrimitiveList::new(
                     mem::replace(&mut self.primitives, Vec::new()),
-                    resources,
+                    interners,
                 ),
                 self.spatial_node_index,
                 LayoutRect::max_rect(),
@@ -2634,7 +2633,7 @@ impl FlattenedStackingContext {
             self.is_backface_visible,
             self.clip_chain_id,
             self.spatial_node_index,
-            resources,
+            interners,
         );
 
         Some(prim_instance)
@@ -2702,7 +2701,7 @@ fn create_prim_instance(
     is_backface_visible: bool,
     clip_chain_id: ClipChainId,
     spatial_node_index: SpatialNodeIndex,
-    resources: &mut DocumentResources,
+    interners: &mut Interners,
 ) -> PrimitiveInstance {
     let pic_key = PictureKey::new(
         is_backface_visible,
@@ -2710,7 +2709,7 @@ fn create_prim_instance(
         Picture { composite_mode_key },
     );
 
-    let data_handle = resources
+    let data_handle = interners
         .picture
         .intern(&pic_key, || {
             PrimitiveSceneData {
