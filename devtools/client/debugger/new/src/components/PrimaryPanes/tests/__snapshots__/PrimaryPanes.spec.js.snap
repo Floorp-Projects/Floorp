@@ -42,11 +42,11 @@ exports[`PrimaryPanes with custom root renders custom root source list 1`] = `
           onClick={[Function]}
           title="Remove directory root"
         >
-          <Svg
-            name="home"
+          <AccessibleImage
+            className="home"
           />
-          <Svg
-            name="breadcrumb"
+          <AccessibleImage
+            className="breadcrumb"
           />
           <span
             className="sources-clear-root-label"
@@ -106,11 +106,11 @@ exports[`PrimaryPanes with custom root renders empty custom root source list 1`]
           onClick={[Function]}
           title="Remove directory root"
         >
-          <Svg
-            name="home"
+          <AccessibleImage
+            className="home"
           />
-          <Svg
-            name="breadcrumb"
+          <AccessibleImage
+            className="breadcrumb"
           />
           <span
             className="sources-clear-root-label"

@@ -62,44 +62,231 @@
 
 .img.domain {
   mask: url(/images/domain.svg) no-repeat;
+  mask-size: 100%;
 }
 
 .img.folder {
   mask: url(/images/folder.svg) no-repeat;
+  mask-size: 100%;
 }
 
 .img.coffeescript {
   mask: url(/images/coffeescript.svg) no-repeat;
+  mask-size: 100%;
 }
 
 .img.javascript {
   mask: url(/images/javascript.svg) no-repeat;
+  mask-size: 100%;
 }
 
 .img.tab {
   mask: url(/images/tab.svg) no-repeat;
+  mask-size: 100%;
 }
 
 .img.react {
   mask: url(/images/react.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.aframe {
+  background-image: url(/images/aframe.svg);
+  background-size: 15px 15px;
+}
+
+.img.babel {
+  mask: url(/images/babel.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.backbone {
+  mask: url(/images/backbone.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.choo {
+  mask: url(/images/choo.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.dojo {
+  background-image: url(/images/dojo.svg);
+}
+
+.img.ember {
+  background-image: url(/images/ember.svg);
+}
+
+.img.immutable {
+  mask: url(/images/immutable.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.jquery {
+  mask: url(/images/jquery.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.lodash {
+  mask: url(/images/lodash.svg) no-repeat;
+  mask-size: 100%;
+}
+
+span.img.marko {
+  background-image: url(/images/marko.svg);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.img.mobx {
+  background-image: url(/images/mobx.svg);
+}
+
+.img.next-circle {
+  mask: url(/images/next-circle.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.next {
+  mask: url(/images/next.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.nextjs {
+  background-image: url(/images/nextjs.svg);
+}
+
+.img.nuxtjs {
+  background-image: url(/images/nuxtjs.svg);
+}
+
+.img.preact {
+  background-image: url(/images/preact.svg);
+}
+
+.img.pug {
+  background-image: url(/images/pug.svg);
+}
+
+.img.redux {
+  mask: url(/images/redux.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.rxjs {
+  background-image: url(/images/rxjs.svg);
+}
+
+.img.sencha-extjs {
+  background-image: url(/images/sencha-extjs.svg);
+}
+
+.img.underscore {
+  mask: url(/images/underscore.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.webpack {
+  background-image: url(/images/webpack.svg);
+  background-repeat: no-repeat;
+}
+
+.img.vue {
+  background: url(/images/vuejs.svg) 1px 1px no-repeat;
+  background-size: 15px;
 }
 
 .img.typescript {
   mask: url(/images/typescript.svg) no-repeat;
+  mask-size: 100%;
 }
 
 .img.extension {
   mask: url(/images/extension.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.toggle-panes {
+  mask: url(/images/toggle-panes.svg) no-repeat;
+  mask-size: 100%;
 }
 
 .img.file {
   mask: url(/images/file.svg) no-repeat;
+  mask-size: 100%;
   width: 13px;
   height: 13px;
 }
 
 .img.worker {
   mask: url(/images/worker.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.plus {
+  mask: url(/images/plus.svg) no-repeat;
+  mask-size: 100%;
+  height: 16px;
+  width: 16px;
+}
+
+.img.magnifying-glass {
+  mask: url(/images/magnifying-glass.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.case-match {
+  mask: url(/images/case-match.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.regex-match {
+  mask: url(/images/regex-match.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.whole-word-match {
+  mask: url(/images/whole-word-match.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.breadcrumb {
+  mask: url(/images/breadcrumbs-divider.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.home {
+  mask: url(/images/home.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.img.angular {
+  background-image: url(/images/angular.svg);
+  background-repeat: no-repeat;
+}
+
+.img.angular,
+.img.webpack,
+.img.vue,
+.img.aframe,
+.img.dojo,
+.img.ember,
+.img.marko,
+.img.mobx,
+.img.nextjs,
+.img.nuxtjs,
+.img.preact,
+.img.pug,
+.img.rxjs,
+.img.sencha-extjs {
+  background-size: 15px 15px;
+  background-color: transparent;
+  width: 15px;
+  height: 15px;
+  position: relative;
+  top: 3px;
 }
 
 .img.domain,
@@ -120,9 +307,10 @@
   display: inline-block;
 }
 
-.refresh svg,
-.shortcut svg,
-.worker svg {
+.img.refresh,
+.img.shortcut,
+.img.worker,
+.img.arrow {
   margin-inline-end: 5px;
 }
 
@@ -141,57 +329,28 @@
   transition: transform 0.18s ease;
 }
 
-html[dir="ltr"] .img.arrow {
-  transform: rotate(-90deg);
-}
-
 html[dir="rtl"] .img.arrow {
   transform: rotate(90deg);
 }
 
-.arrow svg {
+.arrow {
   transition: transform 0.125s ease;
   width: 10px;
-  margin-inline-end: 5px;
   transform: rotate(-90deg);
 }
 
-html[dir="rtl"] .arrow svg,
-.arrow svg:dir(rtl),
-.arrow svg:-moz-locale-dir(rtl) {
+html[dir="rtl"] .arrow,
+.arrow:dir(rtl),
+.arrow:-moz-locale-dir(rtl) {
   transform: rotate(90deg);
 }
 
-.arrow.expanded.expanded svg {
+.arrow.expanded {
   transform: rotate(0deg);
 }
 
 .arrow.hidden {
   visibility: hidden;
-}
-
-.webpack svg {
-  width: 15px;
-  height: 15px;
-  margin-right: 5px;
-  vertical-align: sub;
-}
-
-.function svg {
-  height: 10px;
-  width: 15px;
-}
-
-.function path {
-  fill: var(--theme-body-color);
-}
-
-.angular svg,
-.source-icon svg {
-  width: 15px;
-  height: 15px;
-  margin-right: 5px;
-  vertical-align: sub;
 }
 
 .angular,
