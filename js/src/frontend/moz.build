@@ -41,6 +41,7 @@ UNIFIED_SOURCES += [
     'ForOfLoopControl.cpp',
     'IfEmitter.cpp',
     'JumpList.cpp',
+    'LabelEmitter.cpp',
     'NameFunctions.cpp',
     'NameOpEmitter.cpp',
     'ParseContext.cpp',
