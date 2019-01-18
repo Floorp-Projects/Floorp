@@ -1274,6 +1274,10 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   /* makes span appear like an image */
   display: inline-block;
 }
+
+.img.arrow.arrow.expanded {
+  transform: rotate(0deg);
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2126,10 +2130,6 @@ menuseparator {
 
 .sources-list .tree .focused .label .suffix {
   color: inherit;
-}
-
-.sources-list .tree .img.arrow.expanded {
-  transform: rotate(0deg);
 }
 
 .theme-dark .source-list .tree .node.focused {
@@ -3573,6 +3573,11 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 .frames ul .frames-group.expanded .badge {
   color: var(--theme-highlight-blue);
 }
+
+.group-description-name {
+  padding-left: 5px;
+}
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -3632,12 +3637,12 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .frames ul {
   list-style: none;
-  margin: 0;
+  margin-top: 4px;
   padding: 0;
 }
 
 .frames ul li {
-  padding: 7px 10px 7px 21px;
+  padding: 2px 10px 2px 20px;
   overflow: hidden;
   display: flex;
   justify-content: space-between;
@@ -3733,7 +3738,6 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 .annotation-logo {
   display: inline-block;
   width: 12px;
-  margin-inline-start: 4px;
 }
 
 :root.theme-dark .annotation-logo:not(.angular) svg path {
