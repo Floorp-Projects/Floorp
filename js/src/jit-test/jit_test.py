@@ -178,6 +178,11 @@ def main(argv):
     op.add_option('--test-reflect-stringify', dest="test_reflect_stringify",
                   help="instead of running tests, use them to test the "
                   "Reflect.stringify code in specified file")
+    op.add_option('--run-binast', action='store_true',
+                  dest="run_binast",
+                  help="By default BinAST testcases encoded from JS "
+                  "testcases are skipped. If specified, BinAST testcases "
+                  "are also executed.")
 
     options, args = op.parse_args(argv)
     if len(args) < 1:
@@ -227,7 +232,7 @@ def main(argv):
     if test_args:
         read_all = False
         for arg in test_args:
-            test_list += jittests.find_tests(arg)
+            test_list += jittests.find_tests(arg, run_binast=options.run_binast)
 
     if options.read_tests:
         read_all = False
@@ -247,7 +252,7 @@ def main(argv):
                 sys.stderr.write('---\n')
 
     if read_all:
-        test_list = jittests.find_tests()
+        test_list = jittests.find_tests(run_binast=options.run_binast)
 
     # Exclude tests when code coverage is enabled.
     # This part is equivalent to:
@@ -281,7 +286,7 @@ def main(argv):
     if options.exclude:
         exclude_list = []
         for exclude in options.exclude:
-            exclude_list += jittests.find_tests(exclude)
+            exclude_list += jittests.find_tests(exclude, run_binast=options.run_binast)
         test_list = [test for test in test_list
                      if test not in set(exclude_list)]
 
