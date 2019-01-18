@@ -399,13 +399,20 @@ class JitTest:
         return self.command(prefix, LIB_DIR, MODULE_DIR)
 
 
-def find_tests(substring=None):
+def find_tests(substring=None, run_binast=False):
     ans = []
     for dirpath, dirnames, filenames in os.walk(TEST_DIR):
         dirnames.sort()
         filenames.sort()
         if dirpath == '.':
             continue
+
+        if not run_binast:
+            if os.path.join('binast', 'lazy') in dirpath:
+                continue
+            if os.path.join('binast', 'nonlazy') in dirpath:
+                continue
+
         for filename in filenames:
             if not (filename.endswith('.js') or filename.endswith('.binjs')):
                 continue
