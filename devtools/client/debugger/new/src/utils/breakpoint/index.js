@@ -166,7 +166,7 @@ export function createXHRBreakpoint(
     method,
     disabled: false,
     loading: false,
-    text: L10N.getFormatStr("xhrBreakpoints.item.label", path)
+    text: `URL contains "${path}"`
   };
 
   return { ...properties, ...overrides };

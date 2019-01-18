@@ -12,5 +12,4 @@ DebuggerModules(
     'chrome.js',
     'firefox.js',
     'index.js',
-    'README.md',
 )

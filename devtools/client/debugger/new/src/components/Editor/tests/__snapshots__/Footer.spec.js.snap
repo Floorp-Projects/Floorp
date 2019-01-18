@@ -4,18 +4,18 @@ exports[`SourceFooter Component default case should render 1`] = `
 <div
   className="source-footer"
 >
-  <span
-    className="cursor-position"
-    title="(Line 2, column 2)"
-  >
-    (2, 2)
-  </span>
   <PaneToggleButton
     collapsed={true}
     horizontal={false}
     key="toggle"
     position="end"
   />
+  <span
+    className="cursor-position"
+    title="(Line 2, column 2)"
+  >
+    (2, 2)
+  </span>
 </div>
 `;
 
@@ -23,17 +23,17 @@ exports[`SourceFooter Component move cursor should render new cursor position 1`
 <div
   className="source-footer"
 >
-  <span
-    className="cursor-position"
-    title="(Line 6, column 11)"
-  >
-    (6, 11)
-  </span>
   <PaneToggleButton
     collapsed={true}
     horizontal={false}
     key="toggle"
     position="end"
   />
+  <span
+    className="cursor-position"
+    title="(Line 6, column 11)"
+  >
+    (6, 11)
+  </span>
 </div>
 `;

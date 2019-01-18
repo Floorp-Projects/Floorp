@@ -239,8 +239,8 @@ class SourceFooter extends PureComponent<Props, State> {
       <div className="source-footer">
         {this.renderCommands()}
         {this.renderSourceSummary()}
-        {this.renderCursorPosition()}
         {this.renderToggleButton()}
+        {this.renderCursorPosition()}
       </div>
     );
   }
