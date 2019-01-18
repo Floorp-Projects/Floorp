@@ -110,18 +110,6 @@ LaunchMacPostProcess(const char* aAppBundle)
   [task release];
 }
 
-void RefreshMacAppIcon(const char* aAppBundle)
-{
-  NSString* appBundlePath = [NSString stringWithUTF8String:aAppBundle];
-  NSDictionary* date =
-    [NSDictionary dictionaryWithObjectsAndKeys:
-      [NSDate date], NSFileModificationDate,
-      nil];
-  [[NSFileManager defaultManager] setAttributes:date
-                                   ofItemAtPath:appBundlePath
-                                          error:nil];
-}
-
 id ConnectToUpdateServer()
 {
   MacAutoreleasePool pool;
