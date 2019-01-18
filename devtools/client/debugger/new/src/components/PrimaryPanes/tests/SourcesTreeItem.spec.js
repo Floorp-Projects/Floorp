@@ -236,13 +236,11 @@ describe("SourceTreeItem", () => {
 
     it("should focus on and select item on click", async () => {
       const event = { event: "click" };
-      const setExpanded = jest.fn();
       const selectItem = jest.fn();
       const { component, instance, props } = render({
         depth: 1,
         focused: true,
         expanded: false,
-        setExpanded,
         selectItem
       });
 
@@ -250,26 +248,21 @@ describe("SourceTreeItem", () => {
       component.simulate("click", event);
       await component.simulate("keydown", { keyCode: 13 });
       expect(props.selectItem).toHaveBeenCalledWith(item);
-      expect(setExpanded).not.toHaveBeenCalled();
     });
 
-    it("should focus on and expand directory on click", async () => {
-      const setExpanded = jest.fn();
+    it("should focus on directory on click", async () => {
       const selectItem = jest.fn();
 
-      const { component, instance, props } = render({
+      const { component, props } = render({
         item: createMockDirectory(),
         source: null,
         depth: 1,
         focused: true,
         expanded: false,
-        setExpanded,
         selectItem
       });
 
-      const { item } = instance.props;
       component.simulate("click", { event: "click" });
-      expect(setExpanded).toHaveBeenCalledWith(item, false, undefined);
       expect(props.selectItem).not.toHaveBeenCalled();
     });
   });
@@ -295,7 +288,6 @@ function generateDefaults(overrides) {
     projectRoot: "",
     clearProjectDirectoryRoot: jest.fn(),
     setProjectDirectoryRoot: jest.fn(),
-    setExpanded: jest.fn(),
     selectItem: jest.fn(),
     focusItem: jest.fn(),
     ...overrides

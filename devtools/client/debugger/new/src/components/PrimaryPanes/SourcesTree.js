@@ -83,8 +83,6 @@ type State = {
   highlightItems?: any
 };
 
-type SetExpanded = (item: TreeNode, expanded: boolean, altKey: boolean) => void;
-
 class SourcesTree extends Component<Props, State> {
   mounted: boolean;
 
@@ -266,8 +264,7 @@ class SourcesTree extends Component<Props, State> {
     depth: number,
     focused: boolean,
     _,
-    expanded: boolean,
-    { setExpanded }: { setExpanded: SetExpanded }
+    expanded: boolean
   ) => {
     const { debuggeeUrl, projectRoot } = this.props;
 
@@ -282,7 +279,6 @@ class SourcesTree extends Component<Props, State> {
         source={this.getSource(item)}
         debuggeeUrl={debuggeeUrl}
         projectRoot={projectRoot}
-        setExpanded={setExpanded}
       />
     );
   };
