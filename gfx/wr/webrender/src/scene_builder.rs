@@ -10,31 +10,20 @@ use api::channel::MsgSender;
 #[cfg(feature = "capture")]
 use capture::CaptureConfig;
 use frame_builder::{FrameBuilderConfig, FrameBuilder};
-use clip::{ClipDataInterner, ClipDataUpdateList};
 use clip_scroll_tree::ClipScrollTree;
 use display_list_flattener::DisplayListFlattener;
 use intern::{Internable, Interner};
+use intern_types;
 use internal_types::{FastHashMap, FastHashSet};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
-use prim_store::{PrimitiveDataInterner, PrimitiveDataUpdateList, PrimitiveKeyKind};
+use prim_store::{PrimitiveKeyKind};
 use prim_store::PrimitiveStoreStats;
-use prim_store::borders::{
-    ImageBorder, ImageBorderDataInterner, ImageBorderDataUpdateList,
-    NormalBorderPrim, NormalBorderDataInterner, NormalBorderDataUpdateList
-};
-use prim_store::gradient::{
-    LinearGradient, LinearGradientDataInterner, LinearGradientDataUpdateList,
-    RadialGradient, RadialGradientDataInterner, RadialGradientDataUpdateList
-};
-use prim_store::image::{
-    Image, ImageDataInterner, ImageDataUpdateList,
-    YuvImage, YuvImageDataInterner, YuvImageDataUpdateList,
-};
-use prim_store::line_dec::{
-    LineDecoration, LineDecorationDataInterner, LineDecorationDataUpdateList
-};
-use prim_store::picture::{PictureDataInterner, Picture, PictureDataUpdateList};
-use prim_store::text_run::{TextRunDataInterner, TextRun, TextRunDataUpdateList};
+use prim_store::borders::{ImageBorder, NormalBorderPrim};
+use prim_store::gradient::{LinearGradient, RadialGradient};
+use prim_store::image::{Image, YuvImage};
+use prim_store::line_dec::LineDecoration;
+use prim_store::picture::Picture;
+use prim_store::text_run::TextRun;
 use resource_cache::{AsyncBlobImageInfo, FontInstanceMap};
 use render_backend::DocumentView;
 use renderer::{PipelineInfo, SceneBuilderHooks};
@@ -47,17 +36,17 @@ use std::thread;
 use std::time::Duration;
 
 pub struct DocumentResourceUpdates {
-    pub clip_updates: ClipDataUpdateList,
-    pub prim_updates: PrimitiveDataUpdateList,
-    pub image_updates: ImageDataUpdateList,
-    pub image_border_updates: ImageBorderDataUpdateList,
-    pub line_decoration_updates: LineDecorationDataUpdateList,
-    pub linear_grad_updates: LinearGradientDataUpdateList,
-    pub normal_border_updates: NormalBorderDataUpdateList,
-    pub picture_updates: PictureDataUpdateList,
-    pub radial_grad_updates: RadialGradientDataUpdateList,
-    pub text_run_updates: TextRunDataUpdateList,
-    pub yuv_image_updates: YuvImageDataUpdateList,
+    pub clip_updates: ::intern_types::clip::UpdateList,
+    pub prim_updates: ::intern_types::prim::UpdateList,
+    pub image_updates: ::intern_types::image::UpdateList,
+    pub image_border_updates: ::intern_types::image_border::UpdateList,
+    pub line_decoration_updates: ::intern_types::line_decoration::UpdateList,
+    pub linear_grad_updates: ::intern_types::linear_grad::UpdateList,
+    pub normal_border_updates: ::intern_types::normal_border::UpdateList,
+    pub picture_updates: ::intern_types::picture::UpdateList,
+    pub radial_grad_updates: ::intern_types::radial_grad::UpdateList,
+    pub text_run_updates: ::intern_types::text_run::UpdateList,
+    pub yuv_image_updates: ::intern_types::yuv_image::UpdateList,
 }
 
 /// Represents the work associated to a transaction before scene building.
@@ -195,7 +184,7 @@ pub enum SceneSwapResult {
 }
 
 macro_rules! declare_document_resources {
-    ( $( { $interner_ident: ident, $interner_type: ty, $x: ident, $y: ty } )+ ) => {
+    ( $( { $name: ident, $interner_ident: ident, $y: ident } )+ ) => {
         /// This struct contains all items that can be shared between
         /// display lists. We want to intern and share the same clips,
         /// primitives and other things between display lists so that:
@@ -207,7 +196,7 @@ macro_rules! declare_document_resources {
         #[derive(Default)]
         pub struct DocumentResources {
             $(
-                pub $interner_ident: $interner_type,
+                pub $interner_ident: intern_types::$name::Interner,
             )+
         }
 

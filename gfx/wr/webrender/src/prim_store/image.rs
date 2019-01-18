@@ -11,7 +11,8 @@ use api::ImageKey as ApiImageKey;
 use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use frame_builder::FrameBuildingState;
 use gpu_cache::{GpuCacheHandle, GpuDataRequest};
-use intern::{DataStore, Handle, Internable, Interner, InternDebug, UpdateList};
+use intern::{Internable, InternDebug};
+use intern_types;
 use prim_store::{
     EdgeAaSegmentMask, OpacityBindingIndex, PrimitiveInstanceKind,
     PrimitiveOpacity, PrimitiveSceneData, PrimKey, PrimKeyCommonData,
@@ -333,18 +334,10 @@ impl From<ImageKey> for ImageTemplate {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
-pub struct ImageDataMarker;
-
-pub type ImageDataStore = DataStore<ImageKey, ImageTemplate, ImageDataMarker>;
-pub type ImageDataHandle = Handle<ImageDataMarker>;
-pub type ImageDataUpdateList = UpdateList<ImageKey>;
-pub type ImageDataInterner = Interner<ImageKey, PrimitiveSceneData, ImageDataMarker>;
+pub use intern_types::image::Handle as ImageDataHandle;
 
 impl Internable for Image {
-    type Marker = ImageDataMarker;
+    type Marker = intern_types::image::Marker;
     type Source = ImageKey;
     type StoreData = ImageTemplate;
     type InternData = PrimitiveSceneData;
@@ -507,18 +500,10 @@ impl From<YuvImageKey> for YuvImageTemplate {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
-pub struct YuvImageDataMarker;
-
-pub type YuvImageDataStore = DataStore<YuvImageKey, YuvImageTemplate, YuvImageDataMarker>;
-pub type YuvImageDataHandle = Handle<YuvImageDataMarker>;
-pub type YuvImageDataUpdateList = UpdateList<YuvImageKey>;
-pub type YuvImageDataInterner = Interner<YuvImageKey, PrimitiveSceneData, YuvImageDataMarker>;
+pub use intern_types::yuv_image::Handle as YuvImageDataHandle;
 
 impl Internable for YuvImage {
-    type Marker = YuvImageDataMarker;
+    type Marker = intern_types::yuv_image::Marker;
     type Source = YuvImageKey;
     type StoreData = YuvImageTemplate;
     type InternData = PrimitiveSceneData;

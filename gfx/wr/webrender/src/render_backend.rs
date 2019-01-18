@@ -22,24 +22,18 @@ use api::channel::{MsgReceiver, MsgSender, Payload};
 use api::CaptureBits;
 #[cfg(feature = "replay")]
 use api::CapturedDocument;
-use clip::ClipDataStore;
 use clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
 #[cfg(feature = "debugger")]
 use debug_server;
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
 use hit_test::{HitTest, HitTester};
+use intern_types;
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use picture::RetainedTiles;
-use prim_store::{PrimitiveDataStore, PrimitiveScratchBuffer, PrimitiveInstance};
+use prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
 use prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
-use prim_store::borders::{ImageBorderDataStore, NormalBorderDataStore};
-use prim_store::gradient::{LinearGradientDataStore, RadialGradientDataStore};
-use prim_store::image::{ImageDataStore, YuvImageDataStore};
-use prim_store::line_dec::LineDecorationDataStore;
-use prim_store::picture::PictureDataStore;
-use prim_store::text_run::TextRunDataStore;
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
 use renderer::{AsyncPropertySampler, PipelineInfo};
@@ -215,7 +209,7 @@ impl FrameStamp {
 }
 
 macro_rules! declare_frame_resources {
-    ( $( { $x: ident, $y: ty, $datastore_ident: ident, $datastore_type: ty } )+ ) => {
+    ( $( { $name: ident, $x: ident, $datastore_ident: ident } )+ ) => {
         /// A collection of resources that are shared by clips, primitives
         /// between display lists.
         #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -223,7 +217,7 @@ macro_rules! declare_frame_resources {
         #[derive(Default)]
         pub struct FrameResources {
             $(
-                pub $datastore_ident: $datastore_type,
+                pub $datastore_ident: intern_types::$name::Store,
             )+
         }
 
