@@ -14,6 +14,7 @@
 #include "mozilla/dom/U2FBinding.h"
 #include "mozilla/dom/WebAuthnManagerBase.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "nsProxyRelease.h"
 #include "nsWrapperCache.h"
@@ -77,8 +78,9 @@ class U2FTransaction {
 
 class U2F final : public WebAuthnManagerBase, public nsWrapperCache {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(U2F)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(U2F,
+                                                         WebAuthnManagerBase)
 
   explicit U2F(nsPIDOMWindowInner* aParent) : WebAuthnManagerBase(aParent) {}
 
@@ -135,6 +137,26 @@ class U2F final : public WebAuthnManagerBase, public nsWrapperCache {
   // The current transaction, if any.
   Maybe<U2FTransaction> mTransaction;
 };
+
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback, U2FTransaction& aTransaction,
+    const char* aName, uint32_t aFlags = 0) {
+  if (aTransaction.HasRegisterCallback()) {
+    CycleCollectionNoteChild(
+        aCallback, aTransaction.GetRegisterCallback().get(), aName, aFlags);
+  } else {
+    CycleCollectionNoteChild(aCallback, aTransaction.GetSignCallback().get(),
+                             aName, aFlags);
+  }
+}
+
+inline void ImplCycleCollectionUnlink(U2FTransaction& aTransaction) {
+  if (aTransaction.HasRegisterCallback()) {
+    aTransaction.GetRegisterCallback() = nullptr;
+  } else {
+    aTransaction.GetSignCallback() = nullptr;
+  }
+}
 
 }  // namespace dom
 }  // namespace mozilla

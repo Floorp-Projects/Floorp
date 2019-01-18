@@ -24,6 +24,16 @@ WebAuthnManagerBase::WebAuthnManagerBase(nsPIDOMWindowInner* aParent)
 
 WebAuthnManagerBase::~WebAuthnManagerBase() { MOZ_ASSERT(NS_IsMainThread()); }
 
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebAuthnManagerBase)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION(WebAuthnManagerBase, mParent)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(WebAuthnManagerBase)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(WebAuthnManagerBase)
+
 /***********************************************************************
  * IPC Protocol Implementation
  **********************************************************************/
