@@ -825,37 +825,35 @@ impl PipelineId {
 macro_rules! enumerate_interners {
     ($macro_name: ident) => {
         $macro_name! {
-            { clip, clip_interner, clip_data_store }
-            { prim, prim_interner, prim_data_store }
-            { normal_border, normal_border_interner, normal_border_data_store }
-            { image_border, image_border_interner, image_border_data_store }
-            { image, image_interner, image_data_store }
-            { yuv_image, yuv_image_interner, yuv_image_data_store }
-            { line_decoration, line_decoration_interner, line_decoration_data_store }
-            { linear_grad, linear_grad_interner, linear_grad_data_store }
-            { radial_grad, radial_grad_interner, radial_grad_data_store }
-            { picture, picture_interner, picture_data_store }
-            { text_run, text_run_interner, text_run_data_store }
+            clip,
+            prim,
+            normal_border,
+            image_border,
+            image,
+            yuv_image,
+            line_decoration,
+            linear_grad,
+            radial_grad,
+            picture,
+            text_run,
         }
     }
 }
 
 macro_rules! declare_interning_memory_report {
-    ( $( { $x: ident, $interner_ident: ident, $datastore_ident: ident } )+ ) => {
+    ( $( $name: ident, )+ ) => {
         #[repr(C)]
         #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-        pub struct InterningMemoryReport {
+        pub struct InternerSubReport {
             $(
-                pub $interner_ident: usize,
-                pub $datastore_ident: usize,
+                pub $name: usize,
             )+
         }
 
-        impl ::std::ops::AddAssign for InterningMemoryReport {
-            fn add_assign(&mut self, other: InterningMemoryReport) {
+        impl ::std::ops::AddAssign for InternerSubReport {
+            fn add_assign(&mut self, other: InternerSubReport) {
                 $(
-                    self.$interner_ident += other.$interner_ident;
-                    self.$datastore_ident += other.$datastore_ident;
+                    self.$name += other.$name;
                 )+
             }
         }
@@ -863,6 +861,22 @@ macro_rules! declare_interning_memory_report {
 }
 
 enumerate_interners!(declare_interning_memory_report);
+
+/// Memory report for interning-related data structures.
+/// cbindgen:derive-eq=false
+#[repr(C)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct InterningMemoryReport {
+    pub interners: InternerSubReport,
+    pub data_stores: InternerSubReport,
+}
+
+impl ::std::ops::AddAssign for InterningMemoryReport {
+    fn add_assign(&mut self, other: InterningMemoryReport) {
+        self.interners += other.interners;
+        self.data_stores += other.data_stores;
+    }
+}
 
 /// Collection of heap sizes, in bytes.
 /// cbindgen:derive-eq=false
