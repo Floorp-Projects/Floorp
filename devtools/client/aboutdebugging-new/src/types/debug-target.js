@@ -15,6 +15,8 @@ const extensionTargetDetails = {
   manifestURL: PropTypes.string,
   // unique extension id.
   uuid: PropTypes.string.isRequired,
+  // warning messages forwarded from the addon manager.
+  warnings: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 const tabTargetDetails = {

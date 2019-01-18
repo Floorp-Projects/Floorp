@@ -12,7 +12,9 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const FieldPair = createFactory(require("./FieldPair"));
+const Message = createFactory(require("../shared/Message"));
 
+const { MESSAGE_LEVEL } = require("../../constants");
 const Types = require("../../types/index");
 
 /**
@@ -25,6 +27,29 @@ class ExtensionDetail extends PureComponent {
       getString: PropTypes.func.isRequired,
       target: Types.debugTarget.isRequired,
     };
+  }
+
+  renderWarnings() {
+    const { warnings } = this.props.target.details;
+    return dom.section(
+      {
+        key: "extension-warnings",
+      },
+      warnings.map((warning, index) => {
+        return Message(
+          {
+            level: MESSAGE_LEVEL.WARNING,
+            key: `warning-${index}`,
+          },
+          dom.p(
+            {
+              className: "extension-details__warning technical-text",
+            },
+            warning
+          )
+        );
+      })
+    );
   }
 
   renderUUID() {
@@ -106,14 +131,18 @@ class ExtensionDetail extends PureComponent {
   }
 
   render() {
-    return dom.dl(
-      {
-        className: "extension-detail",
-      },
-      this.renderLocation(),
-      this.renderExtensionId(),
-      this.renderUUID(),
-    );
+    return [
+      this.renderWarnings(),
+      dom.dl(
+        {
+          key: "extension-detail",
+          className: "extension-detail",
+        },
+        this.renderLocation(),
+        this.renderExtensionId(),
+        this.renderUUID(),
+      ),
+    ];
   }
 }
 
