@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Iawn, deall",
   "prefs_home_header": "Cynnwys Cartref Firefox",
   "prefs_home_description": "Dewis pa gynnwys rydych eisiau ar eich sgrin Firefox Cartref.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Cartref Firefox",
+  "prefs_content_discovery_description": "Mae Darganfod Cynnwys yng Nghartref Firefox yn caniatáu i chi ddarganfod erthyglau perthnasol o ansawdd uchel ar draws y we.",
+  "prefs_content_discovery_button": "Diffodd Ddarganfod Cynnwys",
   "prefs_section_rows_option": "{num} rhes;{num} rhes;{num} rhes;{num} rhes;{num} rhes;{num} rhes",
   "prefs_search_header": "Chwilio'r We",
   "prefs_topsites_description": "Y gwefannau rydych yn ymweld â nhw amlaf",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Hysbysiad Preifatrwydd",
   "firstrun_continue_to_login": "Parhau",
   "firstrun_skip_login": "Hepgor y cam hwn",
-  "context_menu_title": "Agor y ddewislen",
-  "pocket_learn_more": "Dysgu Rhagor"
+  "context_menu_title": "Agor y ddewislen"
 };

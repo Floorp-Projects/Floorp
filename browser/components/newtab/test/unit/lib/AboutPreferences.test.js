@@ -312,18 +312,24 @@ describe("AboutPreferences Feed", () => {
         // Stream is enabled
         assert.propertyVal(node.style, "visibility", "hidden");
       });
-      it("should toggle the Discovery Stream pref on button click", () => {
+      it("should toggle the Discovery Stream pref on button click", async () => {
         DiscoveryStream = {config: {enabled: true}};
-        const stub = sandbox.stub(Services.prefs, "clearUserPref");
+        const PreferenceExperimentsStub = {
+          getAllActive: sandbox.stub().resolves([{name: "discoverystream", preferenceName: "browser.newtabpage.activity-stream.discoverystream.config"}]),
+          stop: sandbox.stub().resolves(),
+        };
+        globals.set("PreferenceExperiments", PreferenceExperimentsStub);
 
         testRender();
 
         assert.calledOnce(node.addEventListener);
 
-        node.addEventListener.firstCall.args[1]();
+        // Trigger the button click listener
+        await node.addEventListener.firstCall.args[1]();
 
-        assert.calledOnce(stub);
-        assert.calledWithExactly(stub, "browser.newtabpage.activity-stream.discoverystream.config");
+        assert.calledOnce(PreferenceExperimentsStub.getAllActive);
+        assert.calledOnce(PreferenceExperimentsStub.stop);
+        assert.calledWithExactly(PreferenceExperimentsStub.stop, "discoverystream", {resetValue: true, reason: "individual-opt-out"});
       });
     });
   });
