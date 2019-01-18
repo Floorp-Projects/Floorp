@@ -71,7 +71,7 @@ open class GleanInternalAPI {
         }
 
         storageEngineManager = StorageEngineManager(applicationContext = applicationContext)
-        pingMaker = PingMaker(storageEngineManager)
+        pingMaker = PingMaker(storageEngineManager, applicationContext)
         this.configuration = configuration
         httpPingUploader = HttpPingUploader(configuration)
         initialized = true

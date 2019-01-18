@@ -20,6 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -31,9 +32,15 @@ class PingMakerTest {
     @Test
     @Config(minSdk = 21)
     fun `"ping_info" must contain a non-empty start_time and end_time`() {
-        val maker = PingMaker(StorageEngineManager(storageEngines = mapOf(
-                "engine2" to MockStorageEngine(JSONObject())
-            ), applicationContext = mockApplicationContext))
+        val maker = PingMaker(
+            StorageEngineManager(
+                storageEngines = mapOf(
+                    "engine2" to MockStorageEngine(JSONObject())
+                ),
+                applicationContext = mockApplicationContext
+            ),
+            mockApplicationContext
+        )
 
         // Gather the data. We expect an empty ping with the "ping_info" information
         val data = maker.collect("test")
@@ -55,9 +62,15 @@ class PingMakerTest {
 
     @Test
     fun `getPingInfo() must report all the required fields`() {
-        val maker = PingMaker(StorageEngineManager(storageEngines = mapOf(
-            "engine2" to MockStorageEngine(JSONArray(listOf("a", "b", "c")))
-        ), applicationContext = mockApplicationContext))
+        val maker = PingMaker(
+            StorageEngineManager(
+                storageEngines = mapOf(
+                    "engine2" to MockStorageEngine(JSONArray(listOf("a", "b", "c")))
+                ),
+                applicationContext = mockApplicationContext
+            ),
+            mockApplicationContext
+        )
 
         // Gather the data. We expect an empty ping with the "ping_info" information
         val data = maker.collect("test")
@@ -77,11 +90,17 @@ class PingMakerTest {
     fun `collect() must report a valid ping with the data from the engines`() {
         val engine1Data = JSONArray(listOf("1", "2", "3"))
         val engine2Data = JSONArray(listOf("a", "b", "c"))
-        val maker = PingMaker(StorageEngineManager(storageEngines = mapOf(
-            "engine1" to MockStorageEngine(engine1Data),
-            "engine2" to MockStorageEngine(engine2Data),
-            "wontCollect" to MockStorageEngine(JSONObject(), "notThisPing")
-        ), applicationContext = mockApplicationContext))
+        val maker = PingMaker(
+            StorageEngineManager(
+                storageEngines = mapOf(
+                    "engine1" to MockStorageEngine(engine1Data),
+                    "engine2" to MockStorageEngine(engine2Data),
+                    "wontCollect" to MockStorageEngine(JSONObject(), "notThisPing")
+                ),
+                applicationContext = mockApplicationContext
+            ),
+            mockApplicationContext
+        )
 
         // Gather the data, this should have everything in the 'test' ping which is the default
         // storex
@@ -100,13 +119,61 @@ class PingMakerTest {
     fun `collect() must report an empty string when no data is stored`() {
         val engine1Data = JSONArray(listOf("1", "2", "3"))
         val engine2Data = JSONArray(listOf("a", "b", "c"))
-        val maker = PingMaker(StorageEngineManager(storageEngines = mapOf(
-            "engine1" to MockStorageEngine(engine1Data),
-            "engine2" to MockStorageEngine(engine2Data)
-        ), applicationContext = mockApplicationContext))
+        val maker = PingMaker(
+            StorageEngineManager(
+                storageEngines = mapOf(
+                    "engine1" to MockStorageEngine(engine1Data),
+                    "engine2" to MockStorageEngine(engine2Data)
+                ),
+                applicationContext = mockApplicationContext
+            ),
+            mockApplicationContext
+        )
 
         // Gather the data. We expect an empty string
         val data = maker.collect("noSuchData")
         assertNull("We expect an empty string", data)
+    }
+
+    @Test
+    fun `seq number must be sequential`() {
+        // NOTE: Using a "real" ApplicationContext here so that it will have
+        // a working SharedPreferences implementation
+        var applicationContext = RuntimeEnvironment.application.applicationContext
+        val maker = PingMaker(
+            StorageEngineManager(
+                storageEngines = mapOf(
+                    "engine1" to MockStorageEngine(JSONObject(), "test1"),
+                    "engine2" to MockStorageEngine(JSONObject(), "test2")
+                ),
+                applicationContext = applicationContext
+            ),
+            applicationContext
+        )
+
+        // Clear the sharedPreferences on the PingMaker so we can test that the
+        // numbers start at zero.
+        maker.sharedPreferences?.let {
+            val editor = it.edit()
+            editor.clear()
+            editor.apply()
+        }
+        // Collect pings, and make sure the seq numbers within each ping type
+        // are sequential
+        val results = mutableListOf<Int>()
+        for (i in 1..2) {
+            for (pingName in arrayOf("test1", "test2")) {
+                val data = maker.collect(pingName)
+                val jsonData = JSONObject(data)
+                val pingInfo = jsonData["ping_info"] as JSONObject
+                val seqNum = pingInfo.getInt("seq")
+                results.add(seqNum)
+            }
+        }
+
+        assertEquals(results[0], 0)
+        assertEquals(results[1], 0)
+        assertEquals(results[2], 1)
+        assertEquals(results[3], 1)
     }
 }

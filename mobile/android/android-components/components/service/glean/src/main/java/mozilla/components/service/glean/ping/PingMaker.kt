@@ -4,6 +4,8 @@
 
 package mozilla.components.service.glean.ping
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.storages.StorageEngineManager
@@ -18,11 +20,18 @@ import java.util.Date
 import java.util.Locale
 
 internal class PingMaker(
-    private val storageManager: StorageEngineManager
+    private val storageManager: StorageEngineManager,
+    private val applicationContext: Context
 ) {
     private val logger = Logger("glean/PingMaker")
     private val pingStartTimes: MutableMap<String, String> = mutableMapOf()
     private val objectStartTime = getISOTimeString()
+    internal val sharedPreferences: SharedPreferences? by lazy {
+        applicationContext.getSharedPreferences(
+            this.javaClass.simpleName,
+            Context.MODE_PRIVATE
+        )
+    }
 
     /**
      * Generate an ISO8601 compliant time string for the current time.
@@ -45,6 +54,30 @@ internal class PingMaker(
     }
 
     /**
+     * Get the ping sequence number for a given ping. This is a
+     * monotonically-increasing value that is updated every time a particular ping
+     * type is sent.
+     *
+     * @param pingName The name of the ping
+     * @return sequence number
+     */
+    private fun getPingSeq(pingName: String): Int {
+        sharedPreferences?.let {
+            val key = "${pingName}_seq"
+            val currentValue = it.getInt(key, 0)
+            val editor = it.edit()
+            editor.putInt(key, currentValue + 1)
+            editor.apply()
+            return currentValue
+        }
+
+        // This clause should happen in testing only, where a sharedPreferences object
+        // isn't guaranteed to exist if using a mocked ApplicationContext
+        logger.error("Couldn't get SharedPreferences object for ping sequence number")
+        return 0
+    }
+
+    /**
      * Return the object containing the "ping_info" section of a ping.
      *
      * @param pingName the name of the ping to be sent
@@ -59,9 +92,9 @@ internal class PingMaker(
         // Experiments belong in ping_info, because they must appear in every ping
         pingInfo.put("experiments", ExperimentsStorageEngine.getSnapshotAsJSON("", false))
 
-        // TODO this section is still missing real app_build, seq and experiments.
+        // TODO this section is still missing real app_build and experiments.
         // These fields will be added by bug 1497894 when 1499756 and 1501318 land.
-        pingInfo.put("seq", 0)
+        pingInfo.put("seq", getPingSeq(pingName))
         pingInfo.put("app_build", "test-placeholder")
 
         pingInfo.mergeWith(getPingInfoMetrics())
