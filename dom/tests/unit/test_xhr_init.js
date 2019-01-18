@@ -1,5 +1,4 @@
-function run_test()
-{
+function run_test() {
     Cu.importGlobalProperties(["XMLHttpRequest"]);
 
     var x = new XMLHttpRequest({mozAnon: true, mozSystem: false});

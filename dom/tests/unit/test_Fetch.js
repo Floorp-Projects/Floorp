@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.importGlobalProperties(['fetch']);
+Cu.importGlobalProperties(["fetch"]);
 ChromeUtils.import("resource://testing-common/httpd.js");
 
 const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
@@ -9,14 +9,14 @@ const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream
 
 var server;
 
-function getBaseUrl () {
+function getBaseUrl() {
   return "http://localhost:" + server.identity.primaryPort;
 }
 
 // a way to create some test defaults
 function createTestData(testPath) {
   return {
-    testPath: testPath,
+    testPath,
     request: {
       headers: {},
       contentType: "application/json",
@@ -26,7 +26,7 @@ function createTestData(testPath) {
       contentType: "application/json",
       body: "{\"Look\": \"Success!\"}",
       status: 200,
-      statusText: "OK"
+      statusText: "OK",
     },
   };
 }
@@ -90,7 +90,7 @@ add_test(function test_GetData() {
 
   // fetch, via GET, with some request headers set
   fetch(getBaseUrl() + testData.testPath, {headers: testData.request.headers})
-    .then(function(response){
+    .then(function(response) {
     // check response looks as expected
     Assert.ok(response.ok);
     Assert.equal(response.status, testData.response.status);
@@ -110,7 +110,7 @@ add_test(function test_GetData() {
       do_test_finished();
       run_next_test();
     });
-  }).catch(function(e){
+  }).catch(function(e) {
     do_report_unexpected_exception(e);
     do_test_finished();
     run_next_test();
@@ -133,7 +133,7 @@ add_test(function test_GetDataNoInit() {
   });
 
   fetch(getBaseUrl() + testData.testPath, {headers: testData.request.headers})
-    .then(function(response){
+    .then(function(response) {
     // check response looks as expected
     Assert.ok(response.ok);
     Assert.equal(response.status, testData.response.status);
@@ -144,7 +144,7 @@ add_test(function test_GetDataNoInit() {
       do_test_finished();
       run_next_test();
     });
-  }).catch(function(e){
+  }).catch(function(e) {
     do_report_unexpected_exception(e);
     do_test_finished();
     run_next_test();
@@ -163,7 +163,7 @@ add_test(function test_get40x() {
 
   // No need to register a path handler - httpd will return 404 anyway.
   // Fetch, via GET, the resource that doesn't exist
-  fetch(getBaseUrl() + notFoundData.testPath).then(function(response){
+  fetch(getBaseUrl() + notFoundData.testPath).then(function(response) {
     Assert.equal(response.status, 404);
     do_test_finished();
     run_next_test();
@@ -190,7 +190,7 @@ add_test(function test_get50x() {
   });
 
   // fetch, via GET, the resource that creates a server error
-  fetch(getBaseUrl() + serverErrorData.testPath).then(function(response){
+  fetch(getBaseUrl() + serverErrorData.testPath).then(function(response) {
     Assert.equal(response.status, 500);
     do_test_finished();
     run_next_test();
@@ -262,8 +262,8 @@ add_test(function test_PostJSONData() {
     method: "POST",
     body: testData.request.body,
     headers: {
-      'Content-Type': 'application/json'
-    }
+      "Content-Type": "application/json",
+    },
   }).then(function(aResponse) {
     Assert.ok(aResponse.ok);
     Assert.equal(aResponse.status, testData.response.status);
@@ -308,8 +308,8 @@ add_test(function test_PostTextData() {
     method: "POST",
     body: testData.request.body,
     headers: {
-      'Content-Type': testData.request.contentType
-    }
+      "Content-Type": testData.request.contentType,
+    },
   }).then(function(aResponse) {
     Assert.ok(aResponse.ok);
     Assert.equal(aResponse.status, testData.response.status);

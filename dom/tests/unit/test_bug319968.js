@@ -5,8 +5,7 @@
 
 Cu.importGlobalProperties(["DOMParser"]);
 
-function run_test()
-{
+function run_test() {
   var domParser = new DOMParser();
   var aDom = domParser.parseFromString("<root><feed><entry/><entry/></feed></root>",
                                        "application/xml");
