@@ -77,6 +77,7 @@ bool IsOwnedByGroupAdmin(const char *aAppBundle);
 bool IsRecursivelyWritable(const char *aPath);
 void LaunchChild(int argc, const char **argv);
 void LaunchMacPostProcess(const char *aAppBundle);
+void RefreshMacAppIcon(const char* aAppBundle);
 bool ObtainUpdaterArguments(int *argc, char ***argv);
 bool ServeElevatedUpdate(int argc, const char **argv);
 void SetGroupOwnershipAndPermissions(const char *aAppBundle);
@@ -2595,6 +2596,7 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar **argv,
     if (!isElevated) {
       if (gSucceeded) {
         LaunchMacPostProcess(gInstallDirPath);
+        RefreshMacAppIcon(gInstallDirPath);
       }
 #endif
 
