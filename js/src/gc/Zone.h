@@ -544,8 +544,8 @@ class Zone : public JS::shadow::Zone,
     return functionToStringCache_.ref();
   }
 
-  // Track heap usage under this Zone.
-  js::gc::HeapUsage usage;
+  // Track heap size under this Zone.
+  js::gc::HeapSize zoneSize;
 
   // Thresholds used to trigger GC.
   js::gc::ZoneHeapThreshold threshold;
