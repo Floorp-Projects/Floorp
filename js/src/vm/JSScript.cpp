@@ -1318,15 +1318,8 @@ void ScriptSourceObject::finalize(FreeOp* fop, JSObject* obj) {
   ScriptSourceObject* sso = &obj->as<ScriptSourceObject>();
   sso->source()->decref();
 
-  Value value = sso->canonicalPrivate();
-  if (!value.isUndefined()) {
-    // The embedding may need to dispose of its private data.
-    JS::AutoSuppressGCAnalysis suppressGC;
-    if (JS::ScriptPrivateFinalizeHook hook =
-            fop->runtime()->scriptPrivateFinalizeHook) {
-      hook(fop, value);
-    }
-  }
+  // Clear the private value, calling the release hook if necessary.
+  sso->setPrivate(fop->runtime(), UndefinedValue());
 }
 
 void ScriptSourceObject::trace(JSTracer* trc, JSObject* obj) {
@@ -1382,8 +1375,6 @@ ScriptSourceObject* ScriptSourceObject::createInternal(JSContext* cx,
   obj->initReservedSlot(ELEMENT_SLOT, MagicValue(JS_GENERIC_MAGIC));
   obj->initReservedSlot(ELEMENT_PROPERTY_SLOT, MagicValue(JS_GENERIC_MAGIC));
   obj->initReservedSlot(INTRODUCTION_SCRIPT_SLOT, MagicValue(JS_GENERIC_MAGIC));
-  obj->initReservedSlot(INTRODUCTION_SOURCE_OBJECT_SLOT,
-                        MagicValue(JS_GENERIC_MAGIC));
 
   return obj;
 }
@@ -1422,8 +1413,6 @@ ScriptSourceObject* ScriptSourceObject::unwrappedCanonical() const {
       source->getReservedSlot(ELEMENT_PROPERTY_SLOT).isMagic(JS_GENERIC_MAGIC));
   MOZ_ASSERT(source->getReservedSlot(INTRODUCTION_SCRIPT_SLOT)
                  .isMagic(JS_GENERIC_MAGIC));
-  MOZ_ASSERT(source->getReservedSlot(INTRODUCTION_SOURCE_OBJECT_SLOT)
-                 .isMagic(JS_GENERIC_MAGIC));
 
   RootedObject element(cx, options.element());
   RootedString elementAttributeName(cx, options.elementAttributeName());
@@ -1435,19 +1424,24 @@ ScriptSourceObject* ScriptSourceObject::unwrappedCanonical() const {
   // introduction script and ScriptSourceObject are in different compartments,
   // we would be creating a cross-compartment script reference, which is
   // forbidden. We can still store a CCW to the script source object though.
-  RootedValue introdutionScript(cx);
-  RootedValue introdutionSource(cx);
-  if (options.introductionScript()) {
-    if (options.introductionScript()->compartment() == cx->compartment()) {
-      introdutionScript.setPrivateGCThing(options.introductionScript());
+  RootedValue introductionScript(cx);
+  if (JSScript* script = options.introductionScript()) {
+    if (script->compartment() == cx->compartment()) {
+      introductionScript.setPrivateGCThing(options.introductionScript());
     }
-    introdutionSource.setObject(*options.introductionScript()->sourceObject());
-    if (!cx->compartment()->wrap(cx, &introdutionSource)) {
+  }
+  source->setReservedSlot(INTRODUCTION_SCRIPT_SLOT, introductionScript);
+
+  // Set the private value to that of the script or module that this source is
+  // part of, if any.
+  RootedValue privateValue(cx);
+  if (JSScript* script = options.scriptOrModule()) {
+    privateValue = script->sourceObject()->canonicalPrivate();
+    if (!JS_WrapValue(cx, &privateValue)) {
       return false;
     }
   }
-  source->setReservedSlot(INTRODUCTION_SCRIPT_SLOT, introdutionScript);
-  source->setReservedSlot(INTRODUCTION_SOURCE_OBJECT_SLOT, introdutionSource);
+  source->setPrivate(cx->runtime(), privateValue);
 
   return true;
 }
@@ -1474,6 +1468,25 @@ ScriptSourceObject* ScriptSourceObject::unwrappedCanonical() const {
   source->setReservedSlot(ELEMENT_PROPERTY_SLOT, nameValue);
 
   return true;
+}
+
+void ScriptSourceObject::setPrivate(JSRuntime* rt, const Value& value) {
+  // Update the private value, calling addRef/release hooks if necessary
+  // to allow the embedding to maintain a reference count for the
+  // private data.
+  JS::AutoSuppressGCAnalysis nogc;
+  Value prevValue = getReservedSlot(PRIVATE_SLOT);
+  if (!prevValue.isUndefined()) {
+    if (auto releaseHook = rt->scriptPrivateReleaseHook) {
+      releaseHook(prevValue);
+    }
+  }
+  setReservedSlot(PRIVATE_SLOT, value);
+  if (!value.isUndefined()) {
+    if (auto addRefHook = rt->scriptPrivateAddRefHook) {
+      addRefHook(value);
+    }
+  }
 }
 
 /* static */ bool JSScript::loadSource(JSContext* cx, ScriptSource* ss,
