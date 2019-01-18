@@ -56,13 +56,15 @@ exports[`SearchBar should render 1`] = `
         svgName="whole-word-match"
         tooltip="Whole word"
       />
-      <span
-        className="pipe-divider"
-      />
-      <CloseButton
-        buttonClass="big"
-        handleClick={[Function]}
-      />
+      <React.Fragment>
+        <span
+          className="pipe-divider"
+        />
+        <CloseButton
+          buttonClass="big"
+          handleClick={[Function]}
+        />
+      </React.Fragment>
     </div>
   </div>
 </div>
@@ -127,13 +129,15 @@ exports[`showErrorEmoji false if no query + no results 1`] = `
         svgName="whole-word-match"
         tooltip="Whole word"
       />
-      <span
-        className="pipe-divider"
-      />
-      <CloseButton
-        buttonClass="big"
-        handleClick={[Function]}
-      />
+      <React.Fragment>
+        <span
+          className="pipe-divider"
+        />
+        <CloseButton
+          buttonClass="big"
+          handleClick={[Function]}
+        />
+      </React.Fragment>
     </div>
   </div>
 </div>
@@ -196,13 +200,15 @@ exports[`showErrorEmoji false if query + results 1`] = `
         svgName="whole-word-match"
         tooltip="Whole word"
       />
-      <span
-        className="pipe-divider"
-      />
-      <CloseButton
-        buttonClass="big"
-        handleClick={[Function]}
-      />
+      <React.Fragment>
+        <span
+          className="pipe-divider"
+        />
+        <CloseButton
+          buttonClass="big"
+          handleClick={[Function]}
+        />
+      </React.Fragment>
     </div>
   </div>
 </div>
@@ -265,13 +271,15 @@ exports[`showErrorEmoji true if query + no results 1`] = `
         svgName="whole-word-match"
         tooltip="Whole word"
       />
-      <span
-        className="pipe-divider"
-      />
-      <CloseButton
-        buttonClass="big"
-        handleClick={[Function]}
-      />
+      <React.Fragment>
+        <span
+          className="pipe-divider"
+        />
+        <CloseButton
+          buttonClass="big"
+          handleClick={[Function]}
+        />
+      </React.Fragment>
     </div>
   </div>
 </div>

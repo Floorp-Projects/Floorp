@@ -13,6 +13,7 @@ DebuggerModules(
     'get-token-location.js',
     'index.js',
     'source-documents.js',
+    'source-editor.css',
     'source-editor.js',
     'source-search.js',
     'token-events.js',

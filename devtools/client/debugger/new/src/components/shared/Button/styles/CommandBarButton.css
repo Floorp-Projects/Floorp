@@ -11,6 +11,7 @@
   position: relative;
   padding: 0px 5px;
   fill: currentColor;
+  min-width: 30px;
 }
 
 .command-bar-button:disabled {
