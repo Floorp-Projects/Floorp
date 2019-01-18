@@ -18,6 +18,14 @@ const {getAutocompleteState} = require("devtools/client/webconsole/selectors/aut
 const autocompleteActions = require("devtools/client/webconsole/actions/autocomplete");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 
+const utmParams = new URLSearchParams({
+  "utm_source": "mozilla",
+  "utm_medium": "devtools-webconsole",
+  "utm_campaign": "default",
+});
+const LEARN_MORE_URL =
+  `https://developer.mozilla.org/docs/Tools/Web_Console/Invoke_getters_from_autocomplete?${utmParams}`;
+
 class ConfirmDialog extends Component {
   static get propTypes() {
     return {
@@ -40,6 +48,7 @@ class ConfirmDialog extends Component {
 
     this.cancel = this.cancel.bind(this);
     this.confirm = this.confirm.bind(this);
+    this.onLearnMoreClick = this.onLearnMoreClick.bind(this);
   }
 
   componentDidMount() {
@@ -70,6 +79,10 @@ class ConfirmDialog extends Component {
     this.setState(state => ({...state, hasError: true}));
   }
 
+  onLearnMoreClick(e) {
+    this.props.serviceContainer.openLink(LEARN_MORE_URL, e);
+  }
+
   cancel() {
     this.tooltip.hide();
     this.props.autocompleteClear();
@@ -96,6 +109,12 @@ class ConfirmDialog extends Component {
     const description = l10n.getStr("webconsole.confirmDialog.getter.label");
     const [descriptionPrefix, descriptionSuffix] = description.split("%S");
 
+    const learnMoreElement = dom.a({
+      className: "learn-more-link",
+      title: LEARN_MORE_URL.split("?")[0],
+      onClick: this.onLearnMoreClick,
+    }, l10n.getStr("webConsoleMoreInfoLabel"));
+
     return createPortal([
       dom.p({
         className: "confirm-label",
@@ -119,6 +138,11 @@ class ConfirmDialog extends Component {
             this.confirm();
             event.stopPropagation();
           }
+
+          if (key === "?") {
+            this.onLearnMoreClick();
+            event.stopPropagation();
+          }
         },
         // We can't use onClick because it would respond to Enter and Space keypress.
         // We don't want that because we have a Ctrl+Space shortcut to force an
@@ -126,7 +150,8 @@ class ConfirmDialog extends Component {
         // we automatically focus the button, the keyup on space would fire the onClick
         // handler.
         onMouseDown: this.confirm,
-      }, l10n.getStr("webconsole.confirmDialog.getter.confirmButtonLabel")),
+      }, l10n.getStr("webconsole.confirmDialog.getter.invokeButtonLabel")),
+      learnMoreElement,
     ], this.tooltip.panel);
   }
 }
