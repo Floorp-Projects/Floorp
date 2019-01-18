@@ -1975,11 +1975,22 @@ already_AddRefed<ID2D1Brush> DrawTargetD2D1::CreateBrushForPattern(
 
     MOZ_ASSERT(pat->mSurface->IsValid());
 
+    RefPtr<SourceSurface> surf = pat->mSurface;
+
+    if (pat->mSurface->GetType() == SurfaceType::CAPTURE) {
+      SourceSurfaceCapture *capture =
+          static_cast<SourceSurfaceCapture *>(pat->mSurface.get());
+      RefPtr<SourceSurface> resolved = capture->Resolve(GetBackendType());
+      if (resolved) {
+        surf = resolved;
+      }
+    }
+
     RefPtr<ID2D1Image> image = GetImageForSurface(
-        pat->mSurface, mat, pat->mExtendMode,
+        surf, mat, pat->mExtendMode,
         !pat->mSamplingRect.IsEmpty() ? &pat->mSamplingRect : nullptr);
 
-    if (pat->mSurface->GetFormat() == SurfaceFormat::A8) {
+    if (surf->GetFormat() == SurfaceFormat::A8) {
       // See bug 1251431, at least FillOpacityMask does not appear to allow a
       // source bitmapbrush with source format A8. This creates a BGRA surface
       // with the same alpha values that the A8 surface has.
@@ -2043,7 +2054,7 @@ already_AddRefed<ID2D1Brush> DrawTargetD2D1::CreateBrushForPattern(
     if (pat->mSamplingRect.IsEmpty()) {
       samplingBounds = D2D1::RectF(0, 0, Float(pat->mSurface->GetSize().width),
                                    Float(pat->mSurface->GetSize().height));
-    } else if (pat->mSurface->GetType() == SurfaceType::D2D1_1_IMAGE) {
+    } else if (surf->GetType() == SurfaceType::D2D1_1_IMAGE) {
       samplingBounds = D2DRect(pat->mSamplingRect);
       mat.PreTranslate(pat->mSamplingRect.X(), pat->mSamplingRect.Y());
     } else {

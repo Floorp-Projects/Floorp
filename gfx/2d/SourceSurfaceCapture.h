@@ -25,6 +25,8 @@ class SourceSurfaceCapture : public SourceSurface {
   explicit SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner);
   explicit SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner,
                                 LuminanceType aLuminanceType, float aOpacity);
+  explicit SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner,
+                                SourceSurface* aSurfToOptimize);
   ~SourceSurfaceCapture();
 
   SurfaceType GetType() const override { return SurfaceType::CAPTURE; }
@@ -62,6 +64,7 @@ class SourceSurfaceCapture : public SourceSurface {
   // isn't easily possible for nested surfaces.
   mutable Mutex mLock;
   RefPtr<SourceSurface> mResolved;
+  RefPtr<SourceSurface> mSurfToOptimize;
 };
 
 }  // namespace gfx

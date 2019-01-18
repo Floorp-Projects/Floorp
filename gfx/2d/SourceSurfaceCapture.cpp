@@ -48,22 +48,41 @@ SourceSurfaceCapture::SourceSurfaceCapture(
   DrawTargetWillChange();
 }
 
+SourceSurfaceCapture::SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner,
+                                           SourceSurface* aSurfToOptimize)
+    : mOwner{aOwner},
+      mHasCommandList{false},
+      mShouldResolveToLuminance{false},
+      mLuminanceType{LuminanceType::LUMINANCE},
+      mOpacity{1.0f},
+      mLock{"SourceSurfaceCapture.mLock"},
+      mSurfToOptimize(aSurfToOptimize) {
+  mSize = aSurfToOptimize->GetSize();
+  mFormat = aSurfToOptimize->GetFormat();
+  mRefDT = mOwner->mRefDT;
+}
+
 SourceSurfaceCapture::~SourceSurfaceCapture() {}
 
 bool SourceSurfaceCapture::IsValid() const {
   // We must either be able to source a command list, or we must have a cached
   // and rasterized surface.
   MutexAutoLock lock(mLock);
-  return (mOwner || mHasCommandList) || mResolved;
+  return (mOwner || mHasCommandList || mSurfToOptimize) || mResolved;
 }
 
 RefPtr<SourceSurface> SourceSurfaceCapture::Resolve(BackendType aBackendType) {
   MutexAutoLock lock(mLock);
 
-  if (!mOwner && !mHasCommandList) {
-    // There is no way we can rasterize anything, we don't have a source
-    // DrawTarget and we don't have a command list. Return whatever our
-    // cached surface is.
+  if (mSurfToOptimize) {
+    mResolved = mRefDT->OptimizeSourceSurface(mSurfToOptimize);
+    mSurfToOptimize = nullptr;
+  }
+
+  if (mResolved || (!mOwner && !mHasCommandList)) {
+    // We are already resolved, or there is no way we can rasterize
+    // anything, we don't have a source DrawTarget and we don't have
+    // a command list. Return whatever our cached surface is.
     return mResolved;
   }
 
@@ -79,9 +98,9 @@ RefPtr<SourceSurface> SourceSurfaceCapture::Resolve(BackendType aBackendType) {
 
   // Note: SurfaceType is not 1:1 with BackendType, so we can't easily decide
   // that they match. Instead we just cache the first thing to be requested.
-  if (!mResolved) {
-    mResolved = ResolveImpl(backendType);
-  }
+  // We ensured no mResolved existed before.
+  mResolved = ResolveImpl(backendType);
+
   return mResolved;
 }
 

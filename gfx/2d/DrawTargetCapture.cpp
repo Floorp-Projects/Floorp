@@ -113,7 +113,9 @@ already_AddRefed<SourceSurface> DrawTargetCaptureImpl::OptimizeSourceSurface(
     RefPtr<SourceSurface> surface = aSurface;
     return surface.forget();
   }
-  return mRefDT->OptimizeSourceSurface(aSurface);
+  RefPtr<SourceSurfaceCapture> surface = new SourceSurfaceCapture(
+      const_cast<DrawTargetCaptureImpl*>(this), aSurface);
+  return surface.forget();
 }
 
 void DrawTargetCaptureImpl::DetachAllSnapshots() { MarkChanged(); }
