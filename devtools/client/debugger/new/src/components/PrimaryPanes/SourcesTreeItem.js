@@ -40,7 +40,6 @@ type Props = {
   expanded: boolean,
   hasMatchingGeneratedSource: boolean,
   hasSiblingOfSameName: boolean,
-  setExpanded: (TreeNode, boolean, boolean) => void,
   focusItem: TreeNode => void,
   selectItem: TreeNode => void,
   clearProjectDirectoryRoot: typeof actions.clearProjectDirectoryRoot,
@@ -83,13 +82,11 @@ class SourceTreeItem extends Component<Props, State> {
   }
 
   onClick = (e: MouseEvent) => {
-    const { expanded, item, focusItem, setExpanded, selectItem } = this.props;
+    const { item, focusItem, selectItem } = this.props;
 
     focusItem(item);
 
-    if (isDirectory(item)) {
-      setExpanded(item, !!expanded, e.altKey);
-    } else {
+    if (!isDirectory(item)) {
       selectItem(item);
     }
   };
