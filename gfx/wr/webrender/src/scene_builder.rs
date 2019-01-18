@@ -35,20 +35,6 @@ use util::drain_filter;
 use std::thread;
 use std::time::Duration;
 
-pub struct DocumentResourceUpdates {
-    pub clip_updates: ::intern_types::clip::UpdateList,
-    pub prim_updates: ::intern_types::prim::UpdateList,
-    pub image_updates: ::intern_types::image::UpdateList,
-    pub image_border_updates: ::intern_types::image_border::UpdateList,
-    pub line_decoration_updates: ::intern_types::line_decoration::UpdateList,
-    pub linear_grad_updates: ::intern_types::linear_grad::UpdateList,
-    pub normal_border_updates: ::intern_types::normal_border::UpdateList,
-    pub picture_updates: ::intern_types::picture::UpdateList,
-    pub radial_grad_updates: ::intern_types::radial_grad::UpdateList,
-    pub text_run_updates: ::intern_types::text_run::UpdateList,
-    pub yuv_image_updates: ::intern_types::yuv_image::UpdateList,
-}
-
 /// Represents the work associated to a transaction before scene building.
 pub struct Transaction {
     pub document_id: DocumentId,
@@ -200,6 +186,12 @@ macro_rules! declare_document_resources {
             )+
         }
 
+        pub struct DocumentResourceUpdates {
+            $(
+                pub $name: intern_types::$name::UpdateList,
+            )+
+        }
+
         impl DocumentResources {
             /// Reports CPU heap memory used by the interners.
             fn report_memory(
@@ -210,6 +202,14 @@ macro_rules! declare_document_resources {
                 $(
                     r.interning.$interner_ident += self.$interner_ident.size_of(ops);
                 )+
+            }
+
+            fn end_frame_and_get_pending_updates(&mut self) -> DocumentResourceUpdates {
+                DocumentResourceUpdates {
+                    $(
+                        $name: self.$interner_ident.end_frame_and_get_pending_updates(),
+                    )+
+                }
             }
         }
     }
@@ -223,7 +223,7 @@ pub trait InternerMut<I: Internable>
     fn interner_mut(&mut self) -> &mut Interner<I::Source, I::InternData, I::Marker>;
 }
 
-macro_rules! impl_internet_mut {
+macro_rules! impl_interner_mut {
     ($($ty:ident: $mem:ident,)*) => {
         $(impl InternerMut<$ty> for DocumentResources {
             fn interner_mut(&mut self) -> &mut Interner<
@@ -237,7 +237,7 @@ macro_rules! impl_internet_mut {
     }
 }
 
-impl_internet_mut! {
+impl_interner_mut! {
     Image: image_interner,
     ImageBorder: image_border_interner,
     LineDecoration: line_decoration_interner,
@@ -415,77 +415,8 @@ impl SceneBuilder {
                     &PrimitiveStoreStats::empty(),
                 );
 
-                // TODO(djg): Can we do better than this?  Use a #[derive] to
-                // write the code for us, or unify updates into one enum/list?
-                let clip_updates = item
-                    .doc_resources
-                    .clip_interner
-                    .end_frame_and_get_pending_updates();
-
-                let prim_updates = item
-                    .doc_resources
-                    .prim_interner
-                    .end_frame_and_get_pending_updates();
-
-                let image_updates = item
-                    .doc_resources
-                    .image_interner
-                    .end_frame_and_get_pending_updates();
-
-                let image_border_updates = item
-                    .doc_resources
-                    .image_border_interner
-                    .end_frame_and_get_pending_updates();
-
-                let line_decoration_updates = item
-                    .doc_resources
-                    .line_decoration_interner
-                    .end_frame_and_get_pending_updates();
-
-                let linear_grad_updates = item
-                    .doc_resources
-                    .linear_grad_interner
-                    .end_frame_and_get_pending_updates();
-
-                let normal_border_updates = item
-                    .doc_resources
-                    .normal_border_interner
-                    .end_frame_and_get_pending_updates();
-
-                let picture_updates = item
-                    .doc_resources
-                    .picture_interner
-                    .end_frame_and_get_pending_updates();
-
-                let radial_grad_updates = item
-                    .doc_resources
-                    .radial_grad_interner
-                    .end_frame_and_get_pending_updates();
-
-                let text_run_updates = item
-                    .doc_resources
-                    .text_run_interner
-                    .end_frame_and_get_pending_updates();
-
-                let yuv_image_updates = item
-                    .doc_resources
-                    .yuv_image_interner
-                    .end_frame_and_get_pending_updates();
-
                 doc_resource_updates = Some(
-                    DocumentResourceUpdates {
-                        clip_updates,
-                        prim_updates,
-                        image_updates,
-                        image_border_updates,
-                        line_decoration_updates,
-                        linear_grad_updates,
-                        normal_border_updates,
-                        picture_updates,
-                        radial_grad_updates,
-                        text_run_updates,
-                        yuv_image_updates,
-                    }
+                    item.doc_resources.end_frame_and_get_pending_updates()
                 );
 
                 built_scene = Some(BuiltScene {
@@ -583,75 +514,8 @@ impl SceneBuilder {
                 doc.prim_store_stats = frame_builder.prim_store.get_stats();
 
                 // Retrieve the list of updates from the clip interner.
-                let clip_updates = doc
-                    .resources
-                    .clip_interner
-                    .end_frame_and_get_pending_updates();
-
-                let prim_updates = doc
-                    .resources
-                    .prim_interner
-                    .end_frame_and_get_pending_updates();
-
-                let image_updates = doc
-                    .resources
-                    .image_interner
-                    .end_frame_and_get_pending_updates();
-
-                let image_border_updates = doc
-                    .resources
-                    .image_border_interner
-                    .end_frame_and_get_pending_updates();
-
-                let line_decoration_updates = doc
-                    .resources
-                    .line_decoration_interner
-                    .end_frame_and_get_pending_updates();
-
-                let linear_grad_updates = doc
-                    .resources
-                    .linear_grad_interner
-                    .end_frame_and_get_pending_updates();
-
-                let normal_border_updates = doc
-                    .resources
-                    .normal_border_interner
-                    .end_frame_and_get_pending_updates();
-
-                let picture_updates = doc
-                    .resources
-                    .picture_interner
-                    .end_frame_and_get_pending_updates();
-
-                let radial_grad_updates = doc
-                    .resources
-                    .radial_grad_interner
-                    .end_frame_and_get_pending_updates();
-
-                let text_run_updates = doc
-                    .resources
-                    .text_run_interner
-                    .end_frame_and_get_pending_updates();
-
-                let yuv_image_updates = doc
-                    .resources
-                    .yuv_image_interner
-                    .end_frame_and_get_pending_updates();
-
                 doc_resource_updates = Some(
-                    DocumentResourceUpdates {
-                        clip_updates,
-                        prim_updates,
-                        image_updates,
-                        image_border_updates,
-                        line_decoration_updates,
-                        linear_grad_updates,
-                        normal_border_updates,
-                        picture_updates,
-                        radial_grad_updates,
-                        text_run_updates,
-                        yuv_image_updates,
-                    }
+                    doc.resources.end_frame_and_get_pending_updates()
                 );
 
                 built_scene = Some(BuiltScene {

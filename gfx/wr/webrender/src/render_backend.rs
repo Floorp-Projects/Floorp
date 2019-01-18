@@ -228,6 +228,19 @@ macro_rules! declare_frame_resources {
                     r.interning.$datastore_ident += self.$datastore_ident.size_of(ops);
                 )+
             }
+
+            fn apply_updates(
+                &mut self,
+                updates: DocumentResourceUpdates,
+                profile_counters: &mut BackendProfileCounters,
+            ) {
+                $(
+                    self.$datastore_ident.apply_updates(
+                        updates.$name,
+                        &mut profile_counters.intern.$name,
+                    );
+                )+
+            }
         }
     }
 }
@@ -1292,50 +1305,7 @@ impl RenderBackend {
         // If there are any additions or removals of clip modes
         // during the scene build, apply them to the data store now.
         if let Some(updates) = doc_resource_updates {
-            doc.resources.clip_data_store.apply_updates(
-                updates.clip_updates,
-                &mut profile_counters.intern.clips,
-            );
-            doc.resources.prim_data_store.apply_updates(
-                updates.prim_updates,
-                &mut profile_counters.intern.prims,
-            );
-            doc.resources.image_data_store.apply_updates(
-                updates.image_updates,
-                &mut profile_counters.intern.images,
-            );
-            doc.resources.image_border_data_store.apply_updates(
-                updates.image_border_updates,
-                &mut profile_counters.intern.image_borders,
-            );
-            doc.resources.line_decoration_data_store.apply_updates(
-                updates.line_decoration_updates,
-                &mut profile_counters.intern.line_decs,
-            );
-            doc.resources.linear_grad_data_store.apply_updates(
-                updates.linear_grad_updates,
-                &mut profile_counters.intern.linear_gradients,
-            );
-            doc.resources.normal_border_data_store.apply_updates(
-                updates.normal_border_updates,
-                &mut profile_counters.intern.normal_borders,
-            );
-            doc.resources.picture_data_store.apply_updates(
-                updates.picture_updates,
-                &mut profile_counters.intern.pictures,
-            );
-            doc.resources.radial_grad_data_store.apply_updates(
-                updates.radial_grad_updates,
-                &mut profile_counters.intern.radial_gradients,
-            );
-            doc.resources.text_run_data_store.apply_updates(
-                updates.text_run_updates,
-                &mut profile_counters.intern.text_runs,
-            );
-            doc.resources.yuv_image_data_store.apply_updates(
-                updates.yuv_image_updates,
-                &mut profile_counters.intern.yuv_images,
-            );
+            doc.resources.apply_updates(updates, profile_counters);
         }
 
         // TODO: this scroll variable doesn't necessarily mean we scrolled. It is only used
