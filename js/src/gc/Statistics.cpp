@@ -585,8 +585,7 @@ void Statistics::writeLogMessage(const char* fmt, ...) {
 }
 #endif
 
-UniqueChars Statistics::renderJsonMessage(uint64_t timestamp,
-                                          bool includeSlices) const {
+UniqueChars Statistics::renderJsonMessage(uint64_t timestamp, Statistics::JSONUse use) const {
   /*
    * The format of the JSON message is specified by the GCMajorMarkerPayload
    * type in perf.html
@@ -609,7 +608,7 @@ UniqueChars Statistics::renderJsonMessage(uint64_t timestamp,
   json.property("status", "completed");    // JSON Key #1
   formatJsonDescription(timestamp, json);  // #2-22
 
-  if (includeSlices) {
+  if (use == Statistics::JSONUse::TELEMETRY) {
     json.beginListProperty("slices_list");  // #23
     for (unsigned i = 0; i < slices_.length(); i++) {
       formatJsonSlice(i, json);
