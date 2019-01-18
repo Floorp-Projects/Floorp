@@ -112,6 +112,7 @@ class CallOrNewEmitter;
 class ElemOpEmitter;
 class EmitterScope;
 class NestableControl;
+class PropertyEmitter;
 class TDZCheckCache;
 
 struct MOZ_STACK_CLASS BytecodeEmitter {
@@ -604,8 +605,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitHoistedFunctionsInList(ListNode* stmtList);
 
-  MOZ_MUST_USE bool emitPropertyList(ListNode* obj,
-                                     MutableHandlePlainObject objp,
+  MOZ_MUST_USE bool emitPropertyList(ListNode* obj, PropertyEmitter& pe,
                                      PropListType type);
 
   // To catch accidental misuse, emitUint16Operand/emit3 assert that they are
@@ -783,6 +783,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool setOrEmitSetFunName(ParseNode* maybeFun, HandleAtom name);
 
+  MOZ_MUST_USE bool setFunName(JSFunction* fun, JSAtom* name);
+  MOZ_MUST_USE bool emitSetClassConstructorName(JSAtom* name);
   MOZ_MUST_USE bool emitInitializer(ParseNode* initializer, ParseNode* pattern);
 
   MOZ_MUST_USE bool emitCallSiteObject(CallSiteNode* callSiteObj);
@@ -851,6 +853,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitInitializeFunctionSpecialNames();
   MOZ_MUST_USE bool emitFunctionBody(ParseNode* funBody);
   MOZ_MUST_USE bool emitLexicalInitialization(NameNode* name);
+  MOZ_MUST_USE bool emitLexicalInitialization(JSAtom* name);
 
   // Emit bytecode for the spread operator.
   //
