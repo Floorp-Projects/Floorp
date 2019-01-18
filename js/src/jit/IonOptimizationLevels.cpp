@@ -32,7 +32,6 @@ void OptimizationInfo::initNormalOptimizationInfo() {
   inlineInterpreted_ = true;
   inlineNative_ = true;
   licm_ = true;
-  loopUnrolling_ = true;
   gvn_ = true;
   rangeAnalysis_ = true;
   reordering_ = true;
