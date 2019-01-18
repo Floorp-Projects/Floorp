@@ -7,6 +7,7 @@
 #ifndef DataMutex_h__
 #define DataMutex_h__
 
+#include <utility>
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
@@ -81,7 +82,7 @@ class DataMutex {
  public:
   explicit DataMutex(const char* aName) : mMutex(aName) {}
 
-  DataMutex(T&& aValue, const char* aName) : mMutex(aName), mValue(aValue) {}
+  DataMutex(T&& aValue, const char* aName) : mMutex(aName), mValue(std::move(aValue)) {}
 
   AutoLock Lock() { return AutoLock(this); }
 
