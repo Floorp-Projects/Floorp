@@ -36,7 +36,7 @@
   height: 13px;
 }
 
-.theme-dark .sources-clear-root svg {
+.theme-dark .sources-clear-root {
   fill: var(--theme-body-color);
 }
 
@@ -44,11 +44,11 @@
   opacity: 0.5;
 }
 
-.sources-clear-root .breadcrumb svg {
+.sources-clear-root .breadcrumb {
   width: 5px;
-  top: 2px;
-  position: absolute;
-  margin-right: 5px;
+  margin: 0 2px 0 6px;
+  vertical-align: bottom;
+  background: var(--theme-body-color-alt);
 }
 
 .sources-clear-root-label {
@@ -80,11 +80,11 @@
   width: 100%;
 }
 
-.sources-list .tree .img.arrow {
-  margin-right: 5px;
+.sources-list .img {
+  margin-inline-end: 5px;
 }
 
-.sources-list .tree .focused .img:not(.vue):not(.angular),
+.sources-list .tree .focused .img:not(.vue):not(.angular):not(.webpack):not(.dojo):not(.ember):not(.aframe):not(.marko):not(.mobx):not(.nextjs):not(.nuxtjs):not(.preact):not(.pug):not(.rxjs):not(.sencha-extjs),
 .sources-list .managed-tree .tree .node.focused .img.blackBox {
   background: #ffffff;
 }

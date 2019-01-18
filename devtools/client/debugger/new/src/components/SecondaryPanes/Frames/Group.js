@@ -6,8 +6,9 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import classNames from "classnames";
-import Svg from "../../shared/Svg";
+
 import { getLibraryFromUrl } from "../../../utils/pause/frames";
+
 import FrameMenu from "./FrameMenu";
 import AccessibleImage from "../../shared/AccessibleImage";
 
@@ -29,7 +30,7 @@ function FrameLocation({ frame, expanded }: FrameLocationProps) {
   return (
     <span className="group-description">
       <AccessibleImage className={arrowClassName} />
-      <Svg name={library.toLowerCase()} className="annotation-logo" />
+      <AccessibleImage className={`annotation-logo ${library.toLowerCase()}`} />
       <span className="group-description-name">{library}</span>
     </span>
   );

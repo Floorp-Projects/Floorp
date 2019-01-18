@@ -22,12 +22,11 @@ import { formatKeyShortcut } from "../../utils/text";
 
 import Outline from "./Outline";
 import SourcesTree from "./SourcesTree";
+import AccessibleImage from "../shared/AccessibleImage";
 
 import type { SourcesMapByThread } from "../../reducers/types";
 import type { SelectedPrimaryPaneTabType } from "../../selectors";
 import type { Thread } from "../../types";
-
-import Svg from "../shared/Svg";
 
 import "./Sources.css";
 
@@ -117,8 +116,8 @@ class PrimaryPanes extends Component<Props, State> {
           onClick={() => this.props.clearProjectDirectoryRoot()}
           title={L10N.getStr("removeDirectoryRoot.label")}
         >
-          <Svg name="home" />
-          <Svg name="breadcrumb" />
+          <AccessibleImage className="home" />
+          <AccessibleImage className="breadcrumb" />
           <span className="sources-clear-root-label">{rootLabel}</span>
         </button>
       </div>

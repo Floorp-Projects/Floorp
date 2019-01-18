@@ -21,7 +21,7 @@ import {
   getWorkers
 } from "../../selectors";
 
-import Svg from "../shared/Svg";
+import AccessibleImage from "../shared/AccessibleImage";
 import { prefs, features } from "../../utils/prefs";
 
 import Breakpoints from "./Breakpoints";
@@ -58,7 +58,7 @@ function debugBtn(onClick, type, className, tooltip) {
       key={type}
       title={tooltip}
     >
-      <Svg name={type} title={tooltip} aria-label={tooltip} />
+      <AccessibleImage className={type} title={tooltip} aria-label={tooltip} />
     </button>
   );
 }

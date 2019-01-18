@@ -11,7 +11,6 @@ import { showMenu } from "devtools-contextmenu";
 
 import SourceIcon from "../shared/SourceIcon";
 import AccessibleImage from "../shared/AccessibleImage";
-import Svg from "../shared/Svg";
 
 import {
   getGeneratedSourceByURL,
@@ -63,9 +62,9 @@ class SourceTreeItem extends Component<Props, State> {
     const { debuggeeUrl, projectRoot, source } = this.props;
 
     if (item.path === "webpack://") {
-      return <Svg name="webpack" />;
+      return <AccessibleImage className="webpack" />;
     } else if (item.path === "ng://") {
-      return <Svg name="angular" />;
+      return <AccessibleImage className="angular" />;
     } else if (item.path.startsWith("moz-extension://") && depth === 0) {
       return <AccessibleImage className="extension" />;
     }
