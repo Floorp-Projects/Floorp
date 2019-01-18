@@ -44,6 +44,7 @@ UNIFIED_SOURCES += [
     'LabelEmitter.cpp',
     'NameFunctions.cpp',
     'NameOpEmitter.cpp',
+    'ObjectEmitter.cpp',
     'ParseContext.cpp',
     'ParseNode.cpp',
     'PropOpEmitter.cpp',
