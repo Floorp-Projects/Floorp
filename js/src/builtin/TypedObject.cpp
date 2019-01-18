@@ -18,6 +18,7 @@
 #include "util/StringBuffer.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSFunction.h"
+#include "vm/JSObject.h"
 #include "vm/Realm.h"
 #include "vm/SelfHosting.h"
 #include "vm/StringType.h"
@@ -2074,15 +2075,7 @@ static bool IsOwnId(JSContext* cx, HandleObject obj, HandleId id) {
 bool TypedObject::obj_deleteProperty(JSContext* cx, HandleObject obj,
                                      HandleId id, ObjectOpResult& result) {
   if (IsOwnId(cx, obj, id)) {
-    UniqueChars propName =
-        IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
-    if (!propName) {
-      return false;
-    }
-
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_CANT_DELETE,
-                             propName.get());
-    return false;
+    return Throw(cx, id, JSMSG_CANT_DELETE);
   }
 
   RootedObject proto(cx, obj->staticPrototype());
