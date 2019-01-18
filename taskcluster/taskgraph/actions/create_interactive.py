@@ -69,7 +69,7 @@ def context(params):
     if int(params['level']) < 3:
         return [{'worker-implementation': 'docker-worker'}]
     else:
-        return [{'worker-implementation': 'docker-worker', 'kind': 'test'}],
+        return [{'worker-implementation': 'docker-worker', 'kind': 'test'}]
 
 
 @register_callback_action(
