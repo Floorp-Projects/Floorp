@@ -40,19 +40,19 @@
 #include <limits.h>
 
 #if defined(XP_WIN)
-#include <io.h>
+#  include <io.h>
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #ifdef XP_WIN
-#include <winsock2.h>
+#  include <winsock2.h>
 #else
-#include <arpa/inet.h>
+#  include <arpa/inet.h>
 #endif
 
 #ifndef SSIZE_MAX
-#define SSIZE_MAX LONG_MAX
+#  define SSIZE_MAX LONG_MAX
 #endif
 
 int MBS_ReadHeader(FILE *file, MBSPatchHeader *header) {

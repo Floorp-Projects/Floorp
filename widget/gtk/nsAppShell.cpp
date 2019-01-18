@@ -21,7 +21,7 @@
 #include "GeckoProfiler.h"
 #include "nsIPowerManagerService.h"
 #ifdef MOZ_ENABLE_DBUS
-#include "WakeLockListener.h"
+#  include "WakeLockListener.h"
 #endif
 #include "gfxPlatform.h"
 #include "ScreenHelperGTK.h"

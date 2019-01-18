@@ -9,11 +9,11 @@
 #define nsISupportsBase_h__
 
 #ifndef nscore_h___
-#include "nscore.h"
+#  include "nscore.h"
 #endif
 
 #ifndef nsID_h__
-#include "nsID.h"
+#  include "nsID.h"
 #endif
 
 /*@{*/

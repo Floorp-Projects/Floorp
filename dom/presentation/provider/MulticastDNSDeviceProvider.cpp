@@ -20,7 +20,7 @@
 #include "nsThreadUtils.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "nsIPropertyBag2.h"
+#  include "nsIPropertyBag2.h"
 #endif  // MOZ_WIDGET_ANDROID
 
 #define PREF_PRESENTATION_DISCOVERY "dom.presentation.discovery.enabled"

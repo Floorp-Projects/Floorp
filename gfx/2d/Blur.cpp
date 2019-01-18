@@ -17,7 +17,7 @@
 #include "Tools.h"
 
 #ifdef USE_NEON
-#include "mozilla/arm.h"
+#  include "mozilla/arm.h"
 #endif
 
 using namespace std;

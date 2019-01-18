@@ -132,14 +132,14 @@ void js::ThisThread::SetName(const char* name) {
   static const DWORD THREAD_NAME_EXCEPTION = 0x406D1388;
   static const DWORD THREAD_NAME_INFO_TYPE = 0x1000;
 
-#pragma pack(push, 8)
+#  pragma pack(push, 8)
   struct THREADNAME_INFO {
     DWORD dwType;
     LPCSTR szName;
     DWORD dwThreadID;
     DWORD dwFlags;
   };
-#pragma pack(pop)
+#  pragma pack(pop)
 
   THREADNAME_INFO info;
   info.dwType = THREAD_NAME_INFO_TYPE;

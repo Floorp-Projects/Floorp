@@ -15,11 +15,11 @@
 // values are consistent across OS versions so the rename does not affect
 // runtime, just compilation.
 #ifdef __MAC_10_9
-#define NS_PAPER_ORIENTATION_PORTRAIT (NSPaperOrientationPortrait)
-#define NS_PAPER_ORIENTATION_LANDSCAPE (NSPaperOrientationLandscape)
+#  define NS_PAPER_ORIENTATION_PORTRAIT (NSPaperOrientationPortrait)
+#  define NS_PAPER_ORIENTATION_LANDSCAPE (NSPaperOrientationLandscape)
 #else
-#define NS_PAPER_ORIENTATION_PORTRAIT (NSPortraitOrientation)
-#define NS_PAPER_ORIENTATION_LANDSCAPE (NSLandscapeOrientation)
+#  define NS_PAPER_ORIENTATION_PORTRAIT (NSPortraitOrientation)
+#  define NS_PAPER_ORIENTATION_LANDSCAPE (NSLandscapeOrientation)
 #endif
 
 #define NS_PRINTSETTINGSX_IID                        \

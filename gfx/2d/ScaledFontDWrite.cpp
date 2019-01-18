@@ -24,22 +24,22 @@
 // we #include an extra header that contains copies of the relevant
 // classes/interfaces we need.
 #if !defined(__MINGW32__) && WINVER < 0x0A00
-#include "dw-extra.h"
+#  include "dw-extra.h"
 #endif
 
 using namespace std;
 
 #ifdef USE_SKIA
-#include "PathSkia.h"
-#include "skia/include/core/SkPaint.h"
-#include "skia/include/core/SkPath.h"
-#include "skia/include/ports/SkTypeface_win.h"
+#  include "PathSkia.h"
+#  include "skia/include/core/SkPaint.h"
+#  include "skia/include/core/SkPath.h"
+#  include "skia/include/ports/SkTypeface_win.h"
 #endif
 
 #include <vector>
 
 #ifdef USE_CAIRO_SCALED_FONT
-#include "cairo-win32.h"
+#  include "cairo-win32.h"
 #endif
 
 #include "HelpersWinFonts.h"

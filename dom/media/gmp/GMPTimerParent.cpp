@@ -11,7 +11,7 @@
 namespace mozilla {
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 extern LogModule* GetGMPLog();
@@ -20,7 +20,7 @@ extern LogModule* GetGMPLog();
 #define LOG(level, msg) MOZ_LOG(GetGMPLog(), (level), msg)
 
 #ifdef __CLASS__
-#undef __CLASS__
+#  undef __CLASS__
 #endif
 #define __CLASS__ "GMPParent"
 

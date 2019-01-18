@@ -10,20 +10,20 @@
 #include <sched.h>
 
 #if defined(OS_MACOSX)
-#include <mach/mach.h>
+#  include <mach/mach.h>
 #elif defined(OS_NETBSD)
-#include <lwp.h>
+#  include <lwp.h>
 #elif defined(OS_LINUX)
-#include <sys/syscall.h>
-#include <sys/prctl.h>
+#  include <sys/syscall.h>
+#  include <sys/prctl.h>
 #endif
 
 #if !defined(OS_MACOSX)
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #if defined(OS_BSD) && !defined(OS_NETBSD) && !defined(__GLIBC__)
-#include <pthread_np.h>
+#  include <pthread_np.h>
 #endif
 
 #include "nsThreadUtils.h"

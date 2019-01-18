@@ -17,7 +17,7 @@
 #include "TestHarness.h"
 
 #ifndef MOZILLA_INTERNAL_API
-#error This test needs MOZILLA_INTERNAL_API (see bug 652123)
+#  error This test needs MOZILLA_INTERNAL_API (see bug 652123)
 #endif
 
 #include "nscore.h"

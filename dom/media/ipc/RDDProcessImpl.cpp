@@ -8,7 +8,7 @@
 #include "mozilla/ipc/IOThreadChild.h"
 
 #if defined(OS_WIN) && defined(MOZ_SANDBOX)
-#include "mozilla/sandboxTarget.h"
+#  include "mozilla/sandboxTarget.h"
 #endif
 
 namespace mozilla {

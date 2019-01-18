@@ -16,8 +16,8 @@
 #include <algorithm>
 
 #ifdef DEBUG_BenB_Perf
-#include "prtime.h"
-#include "prinrval.h"
+#  include "prtime.h"
+#  include "prinrval.h"
 #endif
 
 const double growthRate = 1.2;

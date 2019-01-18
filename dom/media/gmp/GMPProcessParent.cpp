@@ -9,7 +9,7 @@
 #include "nsIFile.h"
 #include "nsIRunnable.h"
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-#include "WinUtils.h"
+#  include "WinUtils.h"
 #endif
 #include "GMPLog.h"
 

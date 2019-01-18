@@ -29,7 +29,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"
+#  include "ProfilerMarkerPayload.h"
 #endif
 
 #define PERFLOG(msg, ...) printf_stderr(msg, ##__VA_ARGS__)

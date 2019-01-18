@@ -13,14 +13,14 @@
 #include "nsCRTGlue.h"
 
 #if defined(XP_WIN)
-#define NS_LINEBREAK "\015\012"
-#define NS_LINEBREAK_LEN 2
+#  define NS_LINEBREAK "\015\012"
+#  define NS_LINEBREAK_LEN 2
 #else
-#ifdef XP_UNIX
-#define NS_LINEBREAK "\012"
-#define NS_LINEBREAK_LEN 1
-#endif /* XP_UNIX */
-#endif /* XP_WIN */
+#  ifdef XP_UNIX
+#    define NS_LINEBREAK "\012"
+#    define NS_LINEBREAK_LEN 1
+#  endif /* XP_UNIX */
+#endif   /* XP_WIN */
 
 extern const char16_t kIsoLatin1ToUCS2[256];
 
@@ -107,10 +107,10 @@ inline bool NS_IS_SPACE(char16_t aChar) {
 #define NS_IS_CNTRL(i) ((((unsigned int)(i)) > 0x7f) ? (int)0 : iscntrl(i))
 #define NS_IS_DIGIT(i) ((((unsigned int)(i)) > 0x7f) ? (int)0 : isdigit(i))
 #if defined(XP_WIN)
-#define NS_IS_ALPHA(VAL) (isascii((int)(VAL)) && isalpha((int)(VAL)))
+#  define NS_IS_ALPHA(VAL) (isascii((int)(VAL)) && isalpha((int)(VAL)))
 #else
-#define NS_IS_ALPHA(VAL) \
-  ((((unsigned int)(VAL)) > 0x7f) ? (int)0 : isalpha((int)(VAL)))
+#  define NS_IS_ALPHA(VAL) \
+    ((((unsigned int)(VAL)) > 0x7f) ? (int)0 : isalpha((int)(VAL)))
 #endif
 
 #endif /* nsCRT_h___ */

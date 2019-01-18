@@ -16,14 +16,14 @@
 #include "js/Utility.h"
 
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wattributes"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wattributes"
 #endif  // JS_BROKEN_GCC_ATTRIBUTE_WARNING
 
 class JS_PUBLIC_API JSTracer;
 
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif  // JS_BROKEN_GCC_ATTRIBUTE_WARNING
 
 class ProfilingStack;

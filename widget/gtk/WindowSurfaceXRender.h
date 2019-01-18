@@ -9,8 +9,8 @@
 
 #ifdef MOZ_X11
 
-#include "WindowSurfaceX11.h"
-#include "gfxXlibSurface.h"
+#  include "WindowSurfaceX11.h"
+#  include "gfxXlibSurface.h"
 
 namespace mozilla {
 namespace widget {

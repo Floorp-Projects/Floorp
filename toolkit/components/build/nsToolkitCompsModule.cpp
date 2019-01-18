@@ -9,11 +9,11 @@
 #include "nsToolkitCompsCID.h"
 #include "nsFindService.h"
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-#include "nsUpdateDriver.h"
+#  include "nsUpdateDriver.h"
 #endif
 
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
-#include "nsParentalControlsService.h"
+#  include "nsParentalControlsService.h"
 #endif
 
 #include "mozilla/AlertNotification.h"
@@ -38,21 +38,21 @@
 #include "mozilla/ExtensionPolicyService.h"
 
 #if defined(XP_WIN)
-#include "NativeFileWatcherWin.h"
+#  include "NativeFileWatcherWin.h"
 #else
-#include "NativeFileWatcherNotSupported.h"
+#  include "NativeFileWatcherNotSupported.h"
 #endif  // (XP_WIN)
 
 #if !defined(MOZ_WIDGET_ANDROID)
-#define MOZ_HAS_TERMINATOR
+#  define MOZ_HAS_TERMINATOR
 #endif
 
 #if defined(MOZ_HAS_TERMINATOR)
-#include "nsTerminator.h"
+#  include "nsTerminator.h"
 #endif
 
 #if defined(ENABLE_TESTS)
-#include "geckoview/TelemetryGeckoViewTesting.h"
+#  include "geckoview/TelemetryGeckoViewTesting.h"
 #endif
 
 using namespace mozilla;

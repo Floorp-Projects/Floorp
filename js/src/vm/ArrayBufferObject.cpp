@@ -16,10 +16,10 @@
 
 #include <string.h>
 #ifndef XP_WIN
-#include <sys/mman.h>
+#  include <sys/mman.h>
 #endif
 #ifdef MOZ_VALGRIND
-#include <valgrind/memcheck.h>
+#  include <valgrind/memcheck.h>
 #endif
 
 #include "jsapi.h"
@@ -229,24 +229,24 @@ bool js::ExtendBufferMapping(void* dataPointer, size_t mappedSize,
   MOZ_ASSERT(newMappedSize % gc::SystemPageSize() == 0);
   MOZ_ASSERT(newMappedSize >= mappedSize);
 
-#ifdef XP_WIN
+#  ifdef XP_WIN
   void* mappedEnd = (char*)dataPointer + mappedSize;
   uint32_t delta = newMappedSize - mappedSize;
   if (!VirtualAlloc(mappedEnd, delta, MEM_RESERVE, PAGE_NOACCESS)) {
     return false;
   }
   return true;
-#elif defined(XP_LINUX)
+#  elif defined(XP_LINUX)
   // Note this will not move memory (no MREMAP_MAYMOVE specified)
   if (MAP_FAILED == mremap(dataPointer, mappedSize, newMappedSize, 0)) {
     return false;
   }
   return true;
-#else
+#  else
   // No mechanism for remapping on MacOS and other Unices. Luckily
   // shouldn't need it here as most of these are 64-bit.
   return false;
-#endif
+#  endif
 }
 #endif
 

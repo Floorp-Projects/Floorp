@@ -44,7 +44,7 @@
 #include "nsNetCID.h"
 
 #if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
-#define BUILD_NETWORK_INFO_SERVICE 1
+#  define BUILD_NETWORK_INFO_SERVICE 1
 #endif
 
 typedef nsCategoryCache<nsIContentSniffer> ContentSnifferCache;
@@ -182,7 +182,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerTee)
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef NECKO_COOKIES
-#include "nsCookieService.h"
+#  include "nsCookieService.h"
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsICookieService,
                                          nsCookieService::GetXPCOMSingleton)
 #endif
@@ -190,9 +190,9 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsICookieService,
 ///////////////////////////////////////////////////////////////////////////////
 #ifdef NECKO_WIFI
 
-#include "nsWifiMonitor.h"
-#undef LOG
-#undef LOG_ENABLED
+#  include "nsWifiMonitor.h"
+#  undef LOG
+#  undef LOG_ENABLED
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWifiMonitor)
 
 #endif
@@ -340,16 +340,16 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsIDNService, Init)
 
 ///////////////////////////////////////////////////////////////////////////////
 #if defined(XP_WIN)
-#include "nsNotifyAddrListener.h"
+#  include "nsNotifyAddrListener.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNotifyAddrListener, Init)
 #elif defined(MOZ_WIDGET_COCOA)
-#include "nsNetworkLinkService.h"
+#  include "nsNetworkLinkService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNetworkLinkService, Init)
 #elif defined(MOZ_WIDGET_ANDROID)
-#include "nsAndroidNetworkLinkService.h"
+#  include "nsAndroidNetworkLinkService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAndroidNetworkLinkService)
 #elif defined(XP_LINUX)
-#include "nsNotifyAddrListener_Linux.h"
+#  include "nsNotifyAddrListener_Linux.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNotifyAddrListener, Init)
 #endif
 
@@ -367,7 +367,7 @@ nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef BUILD_NETWORK_INFO_SERVICE
-#include "nsNetworkInfoService.h"
+#  include "nsNetworkInfoService.h"
 typedef mozilla::net::nsNetworkInfoService nsNetworkInfoService;
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNetworkInfoService, Init)
 #endif  // BUILD_NETWORK_INFO_SERVICE

@@ -8,10 +8,10 @@
 #include "nsShellService.h"
 
 #ifdef MOZ_ANDROID_HISTORY
-#include "GeckoViewHistory.h"
-#include "nsDocShellCID.h"
-#include "nsAndroidHistory.h"
-#include "mozilla/jni/Utils.h"
+#  include "GeckoViewHistory.h"
+#  include "nsDocShellCID.h"
+#  include "nsAndroidHistory.h"
+#  include "mozilla/jni/Utils.h"
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsShellService)

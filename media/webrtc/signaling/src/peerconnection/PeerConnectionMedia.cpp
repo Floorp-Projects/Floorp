@@ -36,7 +36,7 @@ using namespace dom;
 
 static const char* pcmLogTag = "PeerConnectionMedia";
 #ifdef LOGTAG
-#undef LOGTAG
+#  undef LOGTAG
 #endif
 #define LOGTAG pcmLogTag
 

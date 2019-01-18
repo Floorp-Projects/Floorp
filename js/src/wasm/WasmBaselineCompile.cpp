@@ -123,19 +123,19 @@
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
 #if defined(JS_CODEGEN_ARM)
-#include "jit/arm/Assembler-arm.h"
+#  include "jit/arm/Assembler-arm.h"
 #endif
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-#include "jit/x86-shared/Architecture-x86-shared.h"
-#include "jit/x86-shared/Assembler-x86-shared.h"
+#  include "jit/x86-shared/Architecture-x86-shared.h"
+#  include "jit/x86-shared/Assembler-x86-shared.h"
 #endif
 #if defined(JS_CODEGEN_MIPS32)
-#include "jit/mips-shared/Assembler-mips-shared.h"
-#include "jit/mips32/Assembler-mips32.h"
+#  include "jit/mips-shared/Assembler-mips-shared.h"
+#  include "jit/mips32/Assembler-mips32.h"
 #endif
 #if defined(JS_CODEGEN_MIPS64)
-#include "jit/mips-shared/Assembler-mips-shared.h"
-#include "jit/mips64/Assembler-mips64.h"
+#  include "jit/mips-shared/Assembler-mips-shared.h"
+#  include "jit/mips64/Assembler-mips64.h"
 #endif
 
 #include "wasm/WasmGenerator.h"
@@ -193,9 +193,9 @@ enum class UseABI { Wasm, Builtin, System };
 enum class InterModule { False = false, True = true };
 
 #if defined(JS_CODEGEN_NONE)
-#define RABALDR_SCRATCH_I32
-#define RABALDR_SCRATCH_F32
-#define RABALDR_SCRATCH_F64
+#  define RABALDR_SCRATCH_I32
+#  define RABALDR_SCRATCH_F32
+#  define RABALDR_SCRATCH_F64
 
 static const Register RabaldrScratchI32 = Register::Invalid();
 static const FloatRegister RabaldrScratchF32 = InvalidFloatReg;
@@ -203,11 +203,11 @@ static const FloatRegister RabaldrScratchF64 = InvalidFloatReg;
 #endif
 
 #ifdef JS_CODEGEN_ARM64
-#define RABALDR_CHUNKY_STACK
-#define RABALDR_SCRATCH_I32
-#define RABALDR_SCRATCH_F32
-#define RABALDR_SCRATCH_F64
-#define RABALDR_SCRATCH_F32_ALIASES_F64
+#  define RABALDR_CHUNKY_STACK
+#  define RABALDR_SCRATCH_I32
+#  define RABALDR_SCRATCH_F32
+#  define RABALDR_SCRATCH_F64
+#  define RABALDR_SCRATCH_F32_ALIASES_F64
 
 static const Register RabaldrScratchI32 = Register::FromCode(15);
 
@@ -235,10 +235,10 @@ static_assert(RabaldrScratchF64 != ScratchDoubleReg, "Too busy");
 // persona.  Code for 8-byte atomic operations assumes that
 // RabaldrScratchI32 is in fact ebx.
 
-#define RABALDR_SCRATCH_I32
+#  define RABALDR_SCRATCH_I32
 static const Register RabaldrScratchI32 = ebx;
 
-#define RABALDR_INT_DIV_I64_CALLOUT
+#  define RABALDR_INT_DIV_I64_CALLOUT
 #endif
 
 #ifdef JS_CODEGEN_ARM
@@ -247,32 +247,32 @@ static const Register RabaldrScratchI32 = ebx;
 // work around that in several cases but the mess does not seem
 // worth it yet.  CallTempReg2 seems safe.
 
-#define RABALDR_SCRATCH_I32
+#  define RABALDR_SCRATCH_I32
 static const Register RabaldrScratchI32 = CallTempReg2;
 
-#define RABALDR_INT_DIV_I64_CALLOUT
-#define RABALDR_I64_TO_FLOAT_CALLOUT
-#define RABALDR_FLOAT_TO_I64_CALLOUT
+#  define RABALDR_INT_DIV_I64_CALLOUT
+#  define RABALDR_I64_TO_FLOAT_CALLOUT
+#  define RABALDR_FLOAT_TO_I64_CALLOUT
 #endif
 
 #ifdef JS_CODEGEN_MIPS32
-#define RABALDR_SCRATCH_I32
+#  define RABALDR_SCRATCH_I32
 static const Register RabaldrScratchI32 = CallTempReg2;
 
-#define RABALDR_INT_DIV_I64_CALLOUT
-#define RABALDR_I64_TO_FLOAT_CALLOUT
-#define RABALDR_FLOAT_TO_I64_CALLOUT
+#  define RABALDR_INT_DIV_I64_CALLOUT
+#  define RABALDR_I64_TO_FLOAT_CALLOUT
+#  define RABALDR_FLOAT_TO_I64_CALLOUT
 #endif
 
 #ifdef JS_CODEGEN_MIPS64
-#define RABALDR_SCRATCH_I32
+#  define RABALDR_SCRATCH_I32
 static const Register RabaldrScratchI32 = CallTempReg2;
 #endif
 
 #ifdef RABALDR_SCRATCH_F32_ALIASES_F64
-#if !defined(RABALDR_SCRATCH_F32) || !defined(RABALDR_SCRATCH_F64)
-#error "Bad configuration"
-#endif
+#  if !defined(RABALDR_SCRATCH_F32) || !defined(RABALDR_SCRATCH_F64)
+#    error "Bad configuration"
+#  endif
 #endif
 
 template <MIRType t>
@@ -468,9 +468,9 @@ struct SpecificRegs {
 struct SpecificRegs {};
 #else
 struct SpecificRegs {
-#ifndef JS_64BIT
+#  ifndef JS_64BIT
   RegI64 abiReturnRegI64;
-#endif
+#  endif
 
   SpecificRegs() { MOZ_CRASH("BaseCompiler porting interface: SpecificRegs"); }
 };
@@ -668,15 +668,15 @@ class BaseRegAlloc {
 #endif
 
 #if defined(RABALDR_SCRATCH_F64)
-#ifdef RABALDR_SCRATCH_F32_ALIASES_F64
+#  ifdef RABALDR_SCRATCH_F32_ALIASES_F64
     MOZ_ASSERT(availFPU.has(RabaldrScratchF32));
-#endif
+#  endif
     if (RabaldrScratchF64 != RegF64::Invalid()) {
       availFPU.take(RabaldrScratchF64);
     }
-#ifdef RABALDR_SCRATCH_F32_ALIASES_F64
+#  ifdef RABALDR_SCRATCH_F32_ALIASES_F64
     MOZ_ASSERT(!availFPU.has(RabaldrScratchF32));
-#endif
+#  endif
 #endif
 
 #ifdef DEBUG
@@ -838,12 +838,12 @@ class BaseRegAlloc {
     void addKnownI32(RegI32 r) { knownGPR_.add(r); }
 
     void addKnownI64(RegI64 r) {
-#ifdef JS_PUNBOX64
+#  ifdef JS_PUNBOX64
       knownGPR_.add(r.reg);
-#else
+#  else
       knownGPR_.add(r.high);
       knownGPR_.add(r.low);
-#endif
+#  endif
     }
 
     void addKnownF32(RegF32 r) { knownFPU_.add(r); }
@@ -4489,21 +4489,21 @@ class BaseCompiler final : public BaseCompilerInterface {
           }
 #if defined(JS_CODEGEN_REGISTER_PAIR)
           case ABIArg::GPR_PAIR: {
-#if defined(JS_CODEGEN_ARM)
+#  if defined(JS_CODEGEN_ARM)
             ScratchF64 scratch(*this);
             loadF64(arg, scratch);
             masm.ma_vxfer(scratch, argLoc.evenGpr(), argLoc.oddGpr());
             break;
-#elif defined(JS_CODEGEN_MIPS32)
+#  elif defined(JS_CODEGEN_MIPS32)
             ScratchF64 scratch(*this);
             loadF64(arg, scratch);
             MOZ_ASSERT(MOZ_LITTLE_ENDIAN);
             masm.moveFromDoubleLo(scratch, argLoc.evenGpr());
             masm.moveFromDoubleHi(scratch, argLoc.oddGpr());
             break;
-#else
+#  else
             MOZ_CRASH("BaseCompiler platform hook: passArg F64 pair");
-#endif
+#  endif
           }
 #endif
           case ABIArg::FPU: {
@@ -4834,7 +4834,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(false));
     }
 
-#if defined(JS_CODEGEN_X64)
+#  if defined(JS_CODEGEN_X64)
     // The caller must set up the following situation.
     MOZ_ASSERT(srcDest.reg == rax);
     MOZ_ASSERT(reserved == specific_.rdx);
@@ -4845,14 +4845,14 @@ class BaseCompiler final : public BaseCompilerInterface {
       masm.cqo();
       masm.idivq(rhs.reg);
     }
-#elif defined(JS_CODEGEN_MIPS64)
+#  elif defined(JS_CODEGEN_MIPS64)
     if (isUnsigned) {
       masm.as_ddivu(srcDest.reg, rhs.reg);
     } else {
       masm.as_ddiv(srcDest.reg, rhs.reg);
     }
     masm.as_mflo(srcDest.reg);
-#elif defined(JS_CODEGEN_ARM64)
+#  elif defined(JS_CODEGEN_ARM64)
     ARMRegister sd(srcDest.reg, 64);
     ARMRegister r(rhs.reg, 64);
     if (isUnsigned) {
@@ -4860,9 +4860,9 @@ class BaseCompiler final : public BaseCompilerInterface {
     } else {
       masm.Sdiv(sd, sd, r);
     }
-#else
+#  else
     MOZ_CRASH("BaseCompiler platform hook: quotientI64");
-#endif
+#  endif
     masm.bind(&done);
   }
 
@@ -4878,7 +4878,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(true));
     }
 
-#if defined(JS_CODEGEN_X64)
+#  if defined(JS_CODEGEN_X64)
     // The caller must set up the following situation.
     MOZ_ASSERT(srcDest.reg == rax);
     MOZ_ASSERT(reserved == specific_.rdx);
@@ -4891,14 +4891,14 @@ class BaseCompiler final : public BaseCompilerInterface {
       masm.idivq(rhs.reg);
     }
     masm.movq(rdx, rax);
-#elif defined(JS_CODEGEN_MIPS64)
+#  elif defined(JS_CODEGEN_MIPS64)
     if (isUnsigned) {
       masm.as_ddivu(srcDest.reg, rhs.reg);
     } else {
       masm.as_ddiv(srcDest.reg, rhs.reg);
     }
     masm.as_mfhi(srcDest.reg);
-#elif defined(JS_CODEGEN_ARM64)
+#  elif defined(JS_CODEGEN_ARM64)
     MOZ_ASSERT(reserved.isInvalid());
     ARMRegister sd(srcDest.reg, 64);
     ARMRegister r(rhs.reg, 64);
@@ -4911,9 +4911,9 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
     masm.Mul(t, t, r);
     masm.Sub(sd, sd, t);
-#else
+#  else
     MOZ_CRASH("BaseCompiler platform hook: remainderI64");
-#endif
+#  endif
     masm.bind(&done);
   }
 #endif  // RABALDR_INT_DIV_I64_CALLOUT
@@ -5046,11 +5046,11 @@ class BaseCompiler final : public BaseCompilerInterface {
 
 #ifndef RABALDR_FLOAT_TO_I64_CALLOUT
   MOZ_MUST_USE RegF64 needTempForFloatingToI64(TruncFlags flags) {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     if (flags & TRUNC_UNSIGNED) {
       return needF64();
     }
-#endif
+#  endif
     return RegF64::Invalid();
   }
 
@@ -5099,9 +5099,9 @@ class BaseCompiler final : public BaseCompilerInterface {
     if (to == ValType::F64) {
       needs = isUnsigned && masm.convertUInt64ToDoubleNeedsTemp();
     } else {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
       needs = true;
-#endif
+#  endif
     }
     return needs ? needI32() : RegI32::Invalid();
   }
@@ -5972,7 +5972,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     using Base = PopBase<RegI64>;
 
    public:
-#if defined(JS_CODEGEN_X86)
+#  if defined(JS_CODEGEN_X86)
     explicit PopAtomicLoad64Regs(BaseCompiler* bc) : Base(bc) {
       // The result is in edx:eax, and we need ecx:ebx as a temp.  But we
       // can't reserve ebx yet, so we'll accept it as an argument to the
@@ -5982,33 +5982,33 @@ class BaseCompiler final : public BaseCompilerInterface {
       setRd(bc->specific_.edx_eax);
     }
     ~PopAtomicLoad64Regs() { bc->freeI32(bc->specific_.ecx); }
-#elif defined(JS_CODEGEN_ARM)
+#  elif defined(JS_CODEGEN_ARM)
     explicit PopAtomicLoad64Regs(BaseCompiler* bc) : Base(bc) {
       setRd(bc->needI64Pair());
     }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#  elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     explicit PopAtomicLoad64Regs(BaseCompiler* bc) : Base(bc) {
       setRd(bc->needI64());
     }
-#else
+#  else
     explicit PopAtomicLoad64Regs(BaseCompiler* bc) : Base(bc) {
       MOZ_CRASH("BaseCompiler porting interface: PopAtomicLoad64Regs");
     }
-#endif
+#  endif
 
-#ifdef JS_CODEGEN_X86
+#  ifdef JS_CODEGEN_X86
     template <typename T>
     void atomicLoad64(const MemoryAccessDesc& access, T srcAddr, RegI32 ebx) {
       MOZ_ASSERT(ebx == js::jit::ebx);
       bc->masm.wasmAtomicLoad64(access, srcAddr, bc->specific_.ecx_ebx,
                                 getRd());
     }
-#else  // ARM, MIPS32
+#  else  // ARM, MIPS32
     template <typename T>
     void atomicLoad64(const MemoryAccessDesc& access, T srcAddr) {
       bc->masm.wasmAtomicLoad64(access, srcAddr, RegI64::Invalid(), getRd());
     }
-#endif
+#  endif
   };
 #endif  // JS_64BIT
 
@@ -6044,15 +6044,15 @@ class BaseCompiler final : public BaseCompilerInterface {
           rv = bc->popI32();
         }
         setRd(bc->specific_.eax);
-#if defined(JS_CODEGEN_X86)
+#  if defined(JS_CODEGEN_X86)
         // Single-byte is a special case handled very locally with
         // ScratchReg, see atomicRMW32 above.
         if (Scalar::byteSize(viewType) > 1) {
           temps.allocate(bc);
         }
-#else
+#  else
         temps.allocate(bc);
-#endif
+#  endif
       }
     }
     ~PopAtomicRMW32Regs() {
@@ -7137,7 +7137,7 @@ void BaseCompiler::emitRemainderU32() {
 
 #ifndef RABALDR_INT_DIV_I64_CALLOUT
 void BaseCompiler::emitQuotientI64() {
-#ifdef JS_64BIT
+#  ifdef JS_64BIT
   int64_t c;
   uint_fast8_t power;
   if (popConstPositivePowerOfTwoI64(&c, &power, 0)) {
@@ -7161,13 +7161,13 @@ void BaseCompiler::emitQuotientI64() {
     freeI64(rs);
     pushI64(r);
   }
-#else
+#  else
   MOZ_CRASH("BaseCompiler platform hook: emitQuotientI64");
-#endif
+#  endif
 }
 
 void BaseCompiler::emitQuotientU64() {
-#ifdef JS_64BIT
+#  ifdef JS_64BIT
   int64_t c;
   uint_fast8_t power;
   if (popConstPositivePowerOfTwoI64(&c, &power, 0)) {
@@ -7185,13 +7185,13 @@ void BaseCompiler::emitQuotientU64() {
     freeI64(rs);
     pushI64(r);
   }
-#else
+#  else
   MOZ_CRASH("BaseCompiler platform hook: emitQuotientU64");
-#endif
+#  endif
 }
 
 void BaseCompiler::emitRemainderI64() {
-#ifdef JS_64BIT
+#  ifdef JS_64BIT
   int64_t c;
   uint_fast8_t power;
   if (popConstPositivePowerOfTwoI64(&c, &power, 1)) {
@@ -7220,13 +7220,13 @@ void BaseCompiler::emitRemainderI64() {
     freeI64(rs);
     pushI64(r);
   }
-#else
+#  else
   MOZ_CRASH("BaseCompiler platform hook: emitRemainderI64");
-#endif
+#  endif
 }
 
 void BaseCompiler::emitRemainderU64() {
-#ifdef JS_64BIT
+#  ifdef JS_64BIT
   int64_t c;
   uint_fast8_t power;
   if (popConstPositivePowerOfTwoI64(&c, &power, 1)) {
@@ -7242,9 +7242,9 @@ void BaseCompiler::emitRemainderU64() {
     freeI64(rs);
     pushI64(r);
   }
-#else
+#  else
   MOZ_CRASH("BaseCompiler platform hook: emitRemainderU64");
-#endif
+#  endif
 }
 #endif  // RABALDR_INT_DIV_I64_CALLOUT
 
@@ -8867,12 +8867,12 @@ bool BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee,
   FunctionCall call(0);
 
   masm.setupWasmABICall();
-#ifdef JS_PUNBOX64
+#  ifdef JS_PUNBOX64
   MOZ_CRASH("BaseCompiler platform hook: emitConvertInt64ToFloatingCallout");
-#else
+#  else
   masm.passABIArg(input.high);
   masm.passABIArg(input.low);
-#endif
+#  endif
   CodeOffset raOffset = masm.callWithABI(
       bytecodeOffset(), callee,
       resultType == ValType::F32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE);
@@ -9936,17 +9936,17 @@ bool BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType) {
   AccessCheck check;
   RegI32 rp = popMemoryAccess(&access, &check);
 
-#ifdef JS_CODEGEN_X86
+#  ifdef JS_CODEGEN_X86
   ScratchEBX ebx(*this);
   RegI32 tls = maybeLoadTlsForAccess(check, ebx);
   auto memaddr = prepareAtomicMemoryAccess(&access, &check, tls, rp);
   regs.atomicLoad64(access, memaddr, ebx);
-#else
+#  else
   RegI32 tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(&access, &check, tls, rp);
   regs.atomicLoad64(access, memaddr);
   maybeFreeI32(tls);
-#endif
+#  endif
 
   freeI32(rp);
 
@@ -10822,14 +10822,14 @@ bool BaseCompiler::emitBody() {
 #ifdef DEBUG
     // Check that the number of ref-typed entries in the operand stack matches
     // reality.
-#define CHECK_POINTER_COUNT                                  \
-  do {                                                       \
-    MOZ_ASSERT(countMemRefsOnStk() == smgen_.memRefsOnStk_); \
-  } while (0)
+#  define CHECK_POINTER_COUNT                                  \
+    do {                                                       \
+      MOZ_ASSERT(countMemRefsOnStk() == smgen_.memRefsOnStk_); \
+    } while (0)
 #else
-#define CHECK_POINTER_COUNT \
-  do {                      \
-  } while (0)
+#  define CHECK_POINTER_COUNT \
+    do {                      \
+    } while (0)
 #endif
 
 #define CHECK(E) \
@@ -12008,7 +12008,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
 
 #ifdef DEBUG
 bool js::wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+#  if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
   const uint8_t* insn = nextPC;
   return (insn[-2] == 0x0F && insn[-1] == 0x0B) ||  // ud2
          (insn[-2] == 0xFF && insn[-1] == 0xD0) ||  // call *%{rax,eax}
@@ -12017,7 +12017,7 @@ bool js::wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
           insn[-3] == 0x44 && insn[-2] == 0x00 &&
           insn[-1] == 0x00);  // nop_five
 
-#elif defined(JS_CODEGEN_ARM)
+#  elif defined(JS_CODEGEN_ARM)
   const uint32_t* insn = (const uint32_t*)nextPC;
   return ((uintptr_t(insn) & 3) == 0) &&              // must be ARM, not Thumb
          (insn[-1] == 0xe7f000f0 ||                   // udf
@@ -12025,12 +12025,12 @@ bool js::wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
           (insn[-1] & 0xff000000) == 0xeb000000 ||    // bl simm24 (ARM, enc A1)
           (debugEnabled && insn[-1] == 0xe320f000));  // "as_nop"
 
-#elif defined(JS_CODEGEN_ARM64)
-#ifdef JS_SIMULATOR_ARM64
+#  elif defined(JS_CODEGEN_ARM64)
+#    ifdef JS_SIMULATOR_ARM64
   const uint32_t hltInsn = 0xd45bd600;
-#else
+#    else
   const uint32_t hltInsn = 0xd4a00000;
-#endif
+#    endif
   const uint32_t* insn = (const uint32_t*)nextPC;
   return ((uintptr_t(insn) & 3) == 0) &&
          (insn[-1] == hltInsn ||                      // hlt
@@ -12038,9 +12038,9 @@ bool js::wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
           (insn[-1] & 0xfc000000) == 0x94000000 ||    // bl simm26
           (debugEnabled && insn[-1] == 0xd503201f));  // nop
 
-#else
+#  else
   MOZ_CRASH("IsValidStackMapKey: requires implementation on this platform");
-#endif
+#  endif
 }
 #endif
 

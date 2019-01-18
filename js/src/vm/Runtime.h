@@ -35,7 +35,7 @@
 #include "js/GCVector.h"
 #include "js/HashTable.h"
 #ifdef DEBUG
-#include "js/Proxy.h"  // For AutoEnterPolicy
+#  include "js/Proxy.h"  // For AutoEnterPolicy
 #endif
 #include "js/Stream.h"
 #include "js/Symbol.h"

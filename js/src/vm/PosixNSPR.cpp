@@ -10,9 +10,9 @@
 
 #ifdef JS_POSIX_NSPR
 
-#include <errno.h>
-#include <sys/time.h>
-#include <time.h>
+#  include <errno.h>
+#  include <sys/time.h>
+#  include <time.h>
 
 int32_t PR_FileDesc2NativeHandle(PRFileDesc *fd) {
   MOZ_CRASH("PR_FileDesc2NativeHandle");

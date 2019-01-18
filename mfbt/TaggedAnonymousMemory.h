@@ -34,16 +34,16 @@
 
 #ifndef XP_WIN
 
-#include <sys/types.h>
-#include <sys/mman.h>
+#  include <sys/types.h>
+#  include <sys/mman.h>
 
-#include "mozilla/Types.h"
+#  include "mozilla/Types.h"
 
-#ifdef ANDROID
+#  ifdef ANDROID
 
-#ifdef __cplusplus
+#    ifdef __cplusplus
 extern "C" {
-#endif
+#    endif
 
 MFBT_API void MozTagAnonymousMemory(const void* aPtr, size_t aLength,
                                     const char* aTag);
@@ -54,11 +54,11 @@ MFBT_API void* MozTaggedAnonymousMmap(void* aAddr, size_t aLength, int aProt,
 
 MFBT_API int MozTaggedMemoryIsSupported(void);
 
-#ifdef __cplusplus
+#    ifdef __cplusplus
 }  // extern "C"
-#endif
+#    endif
 
-#else  // ANDROID
+#  else  // ANDROID
 
 static inline void MozTagAnonymousMemory(const void* aPtr, size_t aLength,
                                          const char* aTag) {}
@@ -71,7 +71,7 @@ static inline void* MozTaggedAnonymousMmap(void* aAddr, size_t aLength,
 
 static inline int MozTaggedMemoryIsSupported(void) { return 0; }
 
-#endif  // ANDROID
+#  endif  // ANDROID
 
 #endif  // !XP_WIN
 

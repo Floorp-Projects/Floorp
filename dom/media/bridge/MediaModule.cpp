@@ -7,18 +7,18 @@
 
 #ifdef MOZ_WEBRTC
 
-#include "PeerConnectionImpl.h"
+#  include "PeerConnectionImpl.h"
 
-#define PEERCONNECTION_CID                           \
-  {                                                  \
-    0xb93af7a1, 0x3411, 0x44a8, {                    \
-      0xbd, 0x0a, 0x8a, 0xf3, 0xdd, 0xe4, 0xd8, 0xd8 \
-    }                                                \
-  }
+#  define PEERCONNECTION_CID                           \
+    {                                                  \
+      0xb93af7a1, 0x3411, 0x44a8, {                    \
+        0xbd, 0x0a, 0x8a, 0xf3, 0xdd, 0xe4, 0xd8, 0xd8 \
+      }                                                \
+    }
 
-#define PEERCONNECTION_CONTRACTID "@mozilla.org/peerconnection;1"
+#  define PEERCONNECTION_CONTRACTID "@mozilla.org/peerconnection;1"
 
-#include "stun_socket_filter.h"
+#  include "stun_socket_filter.h"
 
 NS_DEFINE_NAMED_CID(NS_STUN_UDP_SOCKET_FILTER_HANDLER_CID)
 NS_DEFINE_NAMED_CID(NS_STUN_TCP_SOCKET_FILTER_HANDLER_CID)

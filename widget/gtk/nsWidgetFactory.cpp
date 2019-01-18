@@ -20,12 +20,12 @@
 #include "HeadlessClipboard.h"
 #include "IMContextWrapper.h"
 #ifdef MOZ_X11
-#include "nsClipboardHelper.h"
-#include "nsClipboard.h"
-#include "nsDragService.h"
+#  include "nsClipboardHelper.h"
+#  include "nsClipboard.h"
+#  include "nsDragService.h"
 #endif
 #ifdef MOZ_WIDGET_GTK
-#include "nsApplicationChooser.h"
+#  include "nsApplicationChooser.h"
 #endif
 #include "TaskbarProgress.h"
 #include "nsColorPicker.h"
@@ -35,17 +35,17 @@
 #include "WakeLockListener.h"
 
 #ifdef NS_PRINTING
-#include "nsPrintSettingsServiceGTK.h"
-#include "nsPrintSession.h"
-#include "nsDeviceContextSpecG.h"
+#  include "nsPrintSettingsServiceGTK.h"
+#  include "nsPrintSession.h"
+#  include "nsDeviceContextSpecG.h"
 #endif
 
 #include "nsImageToPixbuf.h"
 #include "nsPrintDialogGTK.h"
 
 #if defined(MOZ_X11)
-#include "nsIdleServiceGTK.h"
-#include "GfxInfoX11.h"
+#  include "nsIdleServiceGTK.h"
+#  include "GfxInfoX11.h"
 #endif
 
 #include "nsIComponentRegistrar.h"

@@ -27,7 +27,7 @@
 #include "mozilla/Logging.h"
 
 #ifdef XP_MACOSX
-#include <CoreFoundation/CoreFoundation.h>
+#  include <CoreFoundation/CoreFoundation.h>
 #endif
 
 #define LOG(log, args) MOZ_LOG(gfxPlatform::GetLog(log), LogLevel::Debug, args)
@@ -392,22 +392,22 @@ nsresult gfxFontUtils::ReadCMAPTableFormat14(const uint8_t* aBuf,
 // subtable to replace it.
 
 #if defined(XP_MACOSX)
-#define acceptableFormat4(p, e, k)                                         \
-  (((p) == PLATFORM_ID_MICROSOFT && (e) == EncodingIDMicrosoft && !(k)) || \
-   ((p) == PLATFORM_ID_UNICODE))
+#  define acceptableFormat4(p, e, k)                                         \
+    (((p) == PLATFORM_ID_MICROSOFT && (e) == EncodingIDMicrosoft && !(k)) || \
+     ((p) == PLATFORM_ID_UNICODE))
 
-#define acceptableUCS4Encoding(p, e, k)           \
-  (((p) == PLATFORM_ID_MICROSOFT &&               \
-    (e) == EncodingIDUCS4ForMicrosoftPlatform) && \
-       (k) != 12 ||                               \
-   ((p) == PLATFORM_ID_UNICODE && ((e) != EncodingIDUVSForUnicodePlatform)))
+#  define acceptableUCS4Encoding(p, e, k)           \
+    (((p) == PLATFORM_ID_MICROSOFT &&               \
+      (e) == EncodingIDUCS4ForMicrosoftPlatform) && \
+         (k) != 12 ||                               \
+     ((p) == PLATFORM_ID_UNICODE && ((e) != EncodingIDUVSForUnicodePlatform)))
 #else
-#define acceptableFormat4(p, e, k)                                 \
-  (((p) == PLATFORM_ID_MICROSOFT && (e) == EncodingIDMicrosoft) || \
-   ((p) == PLATFORM_ID_UNICODE))
+#  define acceptableFormat4(p, e, k)                                 \
+    (((p) == PLATFORM_ID_MICROSOFT && (e) == EncodingIDMicrosoft) || \
+     ((p) == PLATFORM_ID_UNICODE))
 
-#define acceptableUCS4Encoding(p, e, k) \
-  ((p) == PLATFORM_ID_MICROSOFT && (e) == EncodingIDUCS4ForMicrosoftPlatform)
+#  define acceptableUCS4Encoding(p, e, k) \
+    ((p) == PLATFORM_ID_MICROSOFT && (e) == EncodingIDUCS4ForMicrosoftPlatform)
 #endif
 
 #define acceptablePlatform(p) \

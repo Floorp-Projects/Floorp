@@ -2000,15 +2000,15 @@ TEST(TestTXMgr, AggregationBatchStressTest) {
 #ifdef DEBUG
       10
 #else
-#if defined(MOZ_ASAN) || defined(MOZ_WIDGET_ANDROID)
+#  if defined(MOZ_ASAN) || defined(MOZ_WIDGET_ANDROID)
       // See Bug 929985: 500 is too many for ASAN and Android, 100 is safe.
       100
-#else
+#  else
       //
       // 500 iterations sends 2,630,250 transactions through the system!!
       //
       500
-#endif
+#  endif
 #endif
       ;
   stress_test(&factory, iterations);

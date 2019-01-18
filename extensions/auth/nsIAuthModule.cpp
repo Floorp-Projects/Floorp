@@ -4,9 +4,9 @@
 
 #include "nsIAuthModule.h"
 #if defined(USE_SSPI)
-#include "nsAuthSSPI.h"
+#  include "nsAuthSSPI.h"
 #else
-#include "nsAuthSambaNTLM.h"
+#  include "nsAuthSambaNTLM.h"
 #endif
 #include "nsCRT.h"
 #include "nsAuthGSSAPI.h"

@@ -26,7 +26,7 @@
 #include "gfxPrefs.h"
 
 #ifdef MOZ_ENABLE_SKIA
-#include "mozilla/gfx/ConvolutionFilter.h"
+#  include "mozilla/gfx/ConvolutionFilter.h"
 #endif
 
 #include "SurfacePipe.h"

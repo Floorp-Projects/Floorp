@@ -17,13 +17,13 @@
 #include "mozilla/Sprintf.h"
 
 #ifdef XP_WIN
-#include <io.h>
-#include <windows.h>
-#include "mozilla/UniquePtr.h"
+#  include <io.h>
+#  include <windows.h>
+#  include "mozilla/UniquePtr.h"
 #endif
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 using namespace mozilla;
@@ -200,7 +200,7 @@ bool NS_IsLower(char aChar) {
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
 void NS_MakeRandomString(char* aBuf, int32_t aBufLen) {
-#define TABLE_SIZE 36
+#  define TABLE_SIZE 36
   static const char table[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
                                'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
                                's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0',
@@ -227,11 +227,11 @@ void NS_MakeRandomString(char* aBuf, int32_t aBufLen) {
 #endif
 
 #ifdef HAVE_VA_COPY
-#define VARARGS_ASSIGN(foo, bar) VA_COPY(foo, bar)
+#  define VARARGS_ASSIGN(foo, bar) VA_COPY(foo, bar)
 #elif defined(HAVE_VA_LIST_AS_ARRAY)
-#define VARARGS_ASSIGN(foo, bar) foo[0] = bar[0]
+#  define VARARGS_ASSIGN(foo, bar) foo[0] = bar[0]
 #else
-#define VARARGS_ASSIGN(foo, bar) (foo) = (bar)
+#  define VARARGS_ASSIGN(foo, bar) (foo) = (bar)
 #endif
 
 #if defined(XP_WIN)

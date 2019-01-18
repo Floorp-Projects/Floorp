@@ -10,8 +10,8 @@
 #define M_MAPFILE "jprof-map"
 
 #if defined(linux) || defined(NTO)
-#define USE_BFD
-#undef NEED_WRAPPERS
+#  define USE_BFD
+#  undef NEED_WRAPPERS
 
 #endif /* linux */
 

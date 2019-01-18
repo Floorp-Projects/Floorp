@@ -10,172 +10,172 @@
  * is the most complete on older Android API versions without unified headers.
  */
 #if defined(ANDROID) && __ANDROID_API__ < 21 && !defined(__ANDROID_API_L__)
-#include <linux/elf.h>
+#  include <linux/elf.h>
 #else
-#include <elf.h>
+#  include <elf.h>
 #endif
 #include <endian.h>
 
 #if defined(__ARM_EABI__) && !defined(PT_ARM_EXIDX)
-#define PT_ARM_EXIDX 0x70000001
+#  define PT_ARM_EXIDX 0x70000001
 #endif
 
 /**
  * Generic ELF macros for the target system
  */
 #ifdef __LP64__
-#define Elf_(type) Elf64_##type
-#define ELFCLASS ELFCLASS64
-#define ELF_R_TYPE ELF64_R_TYPE
-#define ELF_R_SYM ELF64_R_SYM
-#ifndef ELF_ST_BIND
-#define ELF_ST_BIND ELF64_ST_BIND
-#endif
+#  define Elf_(type) Elf64_##type
+#  define ELFCLASS ELFCLASS64
+#  define ELF_R_TYPE ELF64_R_TYPE
+#  define ELF_R_SYM ELF64_R_SYM
+#  ifndef ELF_ST_BIND
+#    define ELF_ST_BIND ELF64_ST_BIND
+#  endif
 #else
-#define Elf_(type) Elf32_##type
-#define ELFCLASS ELFCLASS32
-#define ELF_R_TYPE ELF32_R_TYPE
-#define ELF_R_SYM ELF32_R_SYM
-#ifndef ELF_ST_BIND
-#define ELF_ST_BIND ELF32_ST_BIND
-#endif
+#  define Elf_(type) Elf32_##type
+#  define ELFCLASS ELFCLASS32
+#  define ELF_R_TYPE ELF32_R_TYPE
+#  define ELF_R_SYM ELF32_R_SYM
+#  ifndef ELF_ST_BIND
+#    define ELF_ST_BIND ELF32_ST_BIND
+#  endif
 #endif
 
 #ifndef __BYTE_ORDER
-#error Cannot find endianness
+#  error Cannot find endianness
 #endif
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-#define ELFDATA ELFDATA2LSB
+#  define ELFDATA ELFDATA2LSB
 #elif __BYTE_ORDER == __BIG_ENDIAN
-#define ELFDATA ELFDATA2MSB
+#  define ELFDATA ELFDATA2MSB
 #endif
 
 #ifdef __linux__
-#define ELFOSABI ELFOSABI_LINUX
-#ifdef EI_ABIVERSION
-#define ELFABIVERSION 0
-#endif
+#  define ELFOSABI ELFOSABI_LINUX
+#  ifdef EI_ABIVERSION
+#    define ELFABIVERSION 0
+#  endif
 #else
-#error Unknown ELF OSABI
+#  error Unknown ELF OSABI
 #endif
 
 #if defined(__i386__)
-#define ELFMACHINE EM_386
+#  define ELFMACHINE EM_386
 
 // Doing this way probably doesn't scale to other architectures
-#define R_ABS R_386_32
-#define R_GLOB_DAT R_386_GLOB_DAT
-#define R_JMP_SLOT R_386_JMP_SLOT
-#define R_RELATIVE R_386_RELATIVE
-#define RELOC(n) DT_REL##n
-#define UNSUPPORTED_RELOC(n) DT_RELA##n
-#define STR_RELOC(n) "DT_REL" #n
-#define Reloc Rel
+#  define R_ABS R_386_32
+#  define R_GLOB_DAT R_386_GLOB_DAT
+#  define R_JMP_SLOT R_386_JMP_SLOT
+#  define R_RELATIVE R_386_RELATIVE
+#  define RELOC(n) DT_REL##n
+#  define UNSUPPORTED_RELOC(n) DT_RELA##n
+#  define STR_RELOC(n) "DT_REL" #  n
+#  define Reloc Rel
 
 #elif defined(__x86_64__)
-#define ELFMACHINE EM_X86_64
+#  define ELFMACHINE EM_X86_64
 
-#define R_ABS R_X86_64_64
-#define R_GLOB_DAT R_X86_64_GLOB_DAT
-#define R_JMP_SLOT R_X86_64_JUMP_SLOT
-#define R_RELATIVE R_X86_64_RELATIVE
-#define RELOC(n) DT_RELA##n
-#define UNSUPPORTED_RELOC(n) DT_REL##n
-#define STR_RELOC(n) "DT_RELA" #n
-#define Reloc Rela
+#  define R_ABS R_X86_64_64
+#  define R_GLOB_DAT R_X86_64_GLOB_DAT
+#  define R_JMP_SLOT R_X86_64_JUMP_SLOT
+#  define R_RELATIVE R_X86_64_RELATIVE
+#  define RELOC(n) DT_RELA##n
+#  define UNSUPPORTED_RELOC(n) DT_REL##n
+#  define STR_RELOC(n) "DT_RELA" #  n
+#  define Reloc Rela
 
 #elif defined(__arm__)
-#define ELFMACHINE EM_ARM
+#  define ELFMACHINE EM_ARM
 
-#ifndef R_ARM_ABS32
-#define R_ARM_ABS32 2
-#endif
-#ifndef R_ARM_GLOB_DAT
-#define R_ARM_GLOB_DAT 21
-#endif
-#ifndef R_ARM_JUMP_SLOT
-#define R_ARM_JUMP_SLOT 22
-#endif
-#ifndef R_ARM_RELATIVE
-#define R_ARM_RELATIVE 23
-#endif
+#  ifndef R_ARM_ABS32
+#    define R_ARM_ABS32 2
+#  endif
+#  ifndef R_ARM_GLOB_DAT
+#    define R_ARM_GLOB_DAT 21
+#  endif
+#  ifndef R_ARM_JUMP_SLOT
+#    define R_ARM_JUMP_SLOT 22
+#  endif
+#  ifndef R_ARM_RELATIVE
+#    define R_ARM_RELATIVE 23
+#  endif
 
-#define R_ABS R_ARM_ABS32
-#define R_GLOB_DAT R_ARM_GLOB_DAT
-#define R_JMP_SLOT R_ARM_JUMP_SLOT
-#define R_RELATIVE R_ARM_RELATIVE
-#define RELOC(n) DT_REL##n
-#define UNSUPPORTED_RELOC(n) DT_RELA##n
-#define STR_RELOC(n) "DT_REL" #n
-#define Reloc Rel
+#  define R_ABS R_ARM_ABS32
+#  define R_GLOB_DAT R_ARM_GLOB_DAT
+#  define R_JMP_SLOT R_ARM_JUMP_SLOT
+#  define R_RELATIVE R_ARM_RELATIVE
+#  define RELOC(n) DT_REL##n
+#  define UNSUPPORTED_RELOC(n) DT_RELA##n
+#  define STR_RELOC(n) "DT_REL" #  n
+#  define Reloc Rel
 
 #elif defined(__aarch64__)
-#define ELFMACHINE EM_AARCH64
+#  define ELFMACHINE EM_AARCH64
 
-#define R_ABS R_AARCH64_ABS64
-#define R_GLOB_DAT R_AARCH64_GLOB_DAT
-#define R_JMP_SLOT R_AARCH64_JUMP_SLOT
-#define R_RELATIVE R_AARCH64_RELATIVE
-#define RELOC(n) DT_RELA##n
-#define UNSUPPORTED_RELOC(n) DT_REL##n
-#define STR_RELOC(n) "DT_RELA" #n
-#define Reloc Rela
+#  define R_ABS R_AARCH64_ABS64
+#  define R_GLOB_DAT R_AARCH64_GLOB_DAT
+#  define R_JMP_SLOT R_AARCH64_JUMP_SLOT
+#  define R_RELATIVE R_AARCH64_RELATIVE
+#  define RELOC(n) DT_RELA##n
+#  define UNSUPPORTED_RELOC(n) DT_REL##n
+#  define STR_RELOC(n) "DT_RELA" #  n
+#  define Reloc Rela
 
 #else
-#error Unknown ELF machine type
+#  error Unknown ELF machine type
 #endif
 
 /**
  * Android system headers don't have all definitions
  */
 #ifndef STN_UNDEF
-#define STN_UNDEF 0
+#  define STN_UNDEF 0
 #endif
 #ifndef DT_INIT_ARRAY
-#define DT_INIT_ARRAY 25
+#  define DT_INIT_ARRAY 25
 #endif
 #ifndef DT_FINI_ARRAY
-#define DT_FINI_ARRAY 26
+#  define DT_FINI_ARRAY 26
 #endif
 #ifndef DT_INIT_ARRAYSZ
-#define DT_INIT_ARRAYSZ 27
+#  define DT_INIT_ARRAYSZ 27
 #endif
 #ifndef DT_FINI_ARRAYSZ
-#define DT_FINI_ARRAYSZ 28
+#  define DT_FINI_ARRAYSZ 28
 #endif
 #ifndef DT_RELACOUNT
-#define DT_RELACOUNT 0x6ffffff9
+#  define DT_RELACOUNT 0x6ffffff9
 #endif
 #ifndef DT_RELCOUNT
-#define DT_RELCOUNT 0x6ffffffa
+#  define DT_RELCOUNT 0x6ffffffa
 #endif
 #ifndef DT_VERSYM
-#define DT_VERSYM 0x6ffffff0
+#  define DT_VERSYM 0x6ffffff0
 #endif
 #ifndef DT_VERDEF
-#define DT_VERDEF 0x6ffffffc
+#  define DT_VERDEF 0x6ffffffc
 #endif
 #ifndef DT_VERDEFNUM
-#define DT_VERDEFNUM 0x6ffffffd
+#  define DT_VERDEFNUM 0x6ffffffd
 #endif
 #ifndef DT_VERNEED
-#define DT_VERNEED 0x6ffffffe
+#  define DT_VERNEED 0x6ffffffe
 #endif
 #ifndef DT_VERNEEDNUM
-#define DT_VERNEEDNUM 0x6fffffff
+#  define DT_VERNEEDNUM 0x6fffffff
 #endif
 #ifndef DT_FLAGS_1
-#define DT_FLAGS_1 0x6ffffffb
+#  define DT_FLAGS_1 0x6ffffffb
 #endif
 #ifndef DT_FLAGS
-#define DT_FLAGS 30
+#  define DT_FLAGS 30
 #endif
 #ifndef DF_SYMBOLIC
-#define DF_SYMBOLIC 0x00000002
+#  define DF_SYMBOLIC 0x00000002
 #endif
 #ifndef DF_TEXTREL
-#define DF_TEXTREL 0x00000004
+#  define DF_TEXTREL 0x00000004
 #endif
 
 namespace Elf {

@@ -16,8 +16,8 @@
 #include "nsTArray.h"
 
 #ifdef XP_WIN
-#undef GetClassName
-#undef GetClassInfo
+#  undef GetClassName
+#  undef GetClassInfo
 #endif
 
 namespace mozilla {

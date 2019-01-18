@@ -62,59 +62,59 @@ void LogTerm();
 
 #if defined(XP_WIN32)
 
-#define XPCOM_SEARCH_KEY "PATH"
-#define GRE_CONF_NAME "gre.config"
-#define GRE_WIN_REG_LOC L"Software\\mozilla.org\\GRE"
-#define XPCOM_DLL XUL_DLL
-#define LXPCOM_DLL LXUL_DLL
-#define XUL_DLL "xul.dll"
-#define LXUL_DLL L"xul.dll"
+#  define XPCOM_SEARCH_KEY "PATH"
+#  define GRE_CONF_NAME "gre.config"
+#  define GRE_WIN_REG_LOC L"Software\\mozilla.org\\GRE"
+#  define XPCOM_DLL XUL_DLL
+#  define LXPCOM_DLL LXUL_DLL
+#  define XUL_DLL "xul.dll"
+#  define LXUL_DLL L"xul.dll"
 
-#else                // Unix
-#include <limits.h>  // for PATH_MAX
+#else                  // Unix
+#  include <limits.h>  // for PATH_MAX
 
-#define XPCOM_DLL XUL_DLL
+#  define XPCOM_DLL XUL_DLL
 
 // you have to love apple..
-#ifdef XP_MACOSX
-#define XPCOM_SEARCH_KEY "DYLD_LIBRARY_PATH"
-#define GRE_FRAMEWORK_NAME "XUL.framework"
-#define XUL_DLL "XUL"
-#else
-#define XPCOM_SEARCH_KEY "LD_LIBRARY_PATH"
-#define XUL_DLL "libxul" MOZ_DLL_SUFFIX
-#endif
+#  ifdef XP_MACOSX
+#    define XPCOM_SEARCH_KEY "DYLD_LIBRARY_PATH"
+#    define GRE_FRAMEWORK_NAME "XUL.framework"
+#    define XUL_DLL "XUL"
+#  else
+#    define XPCOM_SEARCH_KEY "LD_LIBRARY_PATH"
+#    define XUL_DLL "libxul" MOZ_DLL_SUFFIX
+#  endif
 
-#define GRE_CONF_NAME ".gre.config"
-#define GRE_CONF_PATH "/etc/gre.conf"
-#define GRE_CONF_DIR "/etc/gre.d"
-#define GRE_USER_CONF_DIR ".gre.d"
+#  define GRE_CONF_NAME ".gre.config"
+#  define GRE_CONF_PATH "/etc/gre.conf"
+#  define GRE_CONF_DIR "/etc/gre.d"
+#  define GRE_USER_CONF_DIR ".gre.d"
 #endif
 
 #if defined(XP_WIN)
-#define XPCOM_FILE_PATH_SEPARATOR "\\"
-#define XPCOM_ENV_PATH_SEPARATOR ";"
+#  define XPCOM_FILE_PATH_SEPARATOR "\\"
+#  define XPCOM_ENV_PATH_SEPARATOR ";"
 #elif defined(XP_UNIX)
-#define XPCOM_FILE_PATH_SEPARATOR "/"
-#define XPCOM_ENV_PATH_SEPARATOR ":"
+#  define XPCOM_FILE_PATH_SEPARATOR "/"
+#  define XPCOM_ENV_PATH_SEPARATOR ":"
 #else
-#error need_to_define_your_file_path_separator_and_illegal_characters
+#  error need_to_define_your_file_path_separator_and_illegal_characters
 #endif
 
 #ifdef AIX
-#include <sys/param.h>
+#  include <sys/param.h>
 #endif
 
 #ifndef MAXPATHLEN
-#ifdef PATH_MAX
-#define MAXPATHLEN PATH_MAX
-#elif defined(_MAX_PATH)
-#define MAXPATHLEN _MAX_PATH
-#elif defined(CCHMAXPATH)
-#define MAXPATHLEN CCHMAXPATH
-#else
-#define MAXPATHLEN 1024
-#endif
+#  ifdef PATH_MAX
+#    define MAXPATHLEN PATH_MAX
+#  elif defined(_MAX_PATH)
+#    define MAXPATHLEN _MAX_PATH
+#  elif defined(CCHMAXPATH)
+#    define MAXPATHLEN CCHMAXPATH
+#  else
+#    define MAXPATHLEN 1024
+#  endif
 #endif
 
 // Needed by the IPC layer from off the main thread

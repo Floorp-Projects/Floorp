@@ -57,9 +57,9 @@
 
 #ifdef XP_WIN
 // We need to undef the MS macro for Document::CreateEvent
-#ifdef CreateEvent
-#undef CreateEvent
-#endif
+#  ifdef CreateEvent
+#    undef CreateEvent
+#  endif
 #endif  // XP_WIN
 
 #include "mozilla/dom/Document.h"
@@ -109,17 +109,17 @@
 #ifdef XP_WIN
 // We need to undef the MS macro again in case the windows include file
 // got imported after we included mozilla/dom/Document.h
-#ifdef CreateEvent
-#undef CreateEvent
-#endif
+#  ifdef CreateEvent
+#    undef CreateEvent
+#  endif
 #endif  // XP_WIN
 
 #include "MediaSegment.h"
 
 #ifdef USE_FAKE_PCOBSERVER
-#include "FakePCObserver.h"
+#  include "FakePCObserver.h"
 #else
-#include "mozilla/dom/PeerConnectionObserverBinding.h"
+#  include "mozilla/dom/PeerConnectionObserverBinding.h"
 #endif
 #include "mozilla/dom/PeerConnectionObserverEnumsBinding.h"
 
@@ -133,7 +133,7 @@ typedef PCObserverString ObString;
 
 static const char* pciLogTag = "PeerConnectionImpl";
 #ifdef LOGTAG
-#undef LOGTAG
+#  undef LOGTAG
 #endif
 #define LOGTAG pciLogTag
 

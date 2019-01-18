@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(BufferMediaResource_h_)
-#define BufferMediaResource_h_
+#  define BufferMediaResource_h_
 
-#include "MediaResource.h"
-#include "nsISeekableStream.h"
-#include <algorithm>
+#  include "MediaResource.h"
+#  include "nsISeekableStream.h"
+#  include <algorithm>
 
 namespace mozilla {
 

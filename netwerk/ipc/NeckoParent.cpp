@@ -31,8 +31,8 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/net/PSocketProcessBridgeParent.h"
 #ifdef MOZ_WEBRTC
-#include "mozilla/net/StunAddrsRequestParent.h"
-#include "mozilla/net/WebrtcProxyChannelParent.h"
+#  include "mozilla/net/StunAddrsRequestParent.h"
+#  include "mozilla/net/WebrtcProxyChannelParent.h"
 #endif
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ContentParent.h"

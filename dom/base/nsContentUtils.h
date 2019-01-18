@@ -10,11 +10,11 @@
 #define nsContentUtils_h___
 
 #if defined(XP_WIN)
-#include <float.h>
+#  include <float.h>
 #endif
 
 #if defined(SOLARIS)
-#include <ieeefp.h>
+#  include <ieeefp.h>
 #endif
 
 #include "js/TypeDecls.h"
@@ -50,7 +50,7 @@
 
 #if defined(XP_WIN)
 // Undefine LoadImage to prevent naming conflict with Windows.
-#undef LoadImage
+#  undef LoadImage
 #endif
 
 class imgICache;

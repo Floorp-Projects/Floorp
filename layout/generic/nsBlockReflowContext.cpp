@@ -18,13 +18,13 @@
 using namespace mozilla;
 
 #ifdef DEBUG
-#undef NOISY_MAX_ELEMENT_SIZE
-#undef REALLY_NOISY_MAX_ELEMENT_SIZE
-#undef NOISY_BLOCK_DIR_MARGINS
+#  undef NOISY_MAX_ELEMENT_SIZE
+#  undef REALLY_NOISY_MAX_ELEMENT_SIZE
+#  undef NOISY_BLOCK_DIR_MARGINS
 #else
-#undef NOISY_MAX_ELEMENT_SIZE
-#undef REALLY_NOISY_MAX_ELEMENT_SIZE
-#undef NOISY_BLOCK_DIR_MARGINS
+#  undef NOISY_MAX_ELEMENT_SIZE
+#  undef REALLY_NOISY_MAX_ELEMENT_SIZE
+#  undef NOISY_BLOCK_DIR_MARGINS
 #endif
 
 nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,

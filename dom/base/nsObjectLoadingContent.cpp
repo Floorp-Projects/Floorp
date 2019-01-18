@@ -95,9 +95,9 @@
 
 #ifdef XP_WIN
 // Thanks so much, Microsoft! :(
-#ifdef CreateEvent
-#undef CreateEvent
-#endif
+#  ifdef CreateEvent
+#    undef CreateEvent
+#  endif
 #endif  // XP_WIN
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);

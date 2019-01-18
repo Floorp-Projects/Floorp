@@ -13,11 +13,11 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 #ifdef A
-#undef A
+#  undef A
 #endif
 
 #ifdef B
-#undef B
+#  undef B
 #endif
 
 // to avoid having symbols that collide easily like A and B in the global

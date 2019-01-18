@@ -29,7 +29,7 @@
 // better we will end up with inline assembler or JIT-generated code.
 
 #if !defined(__clang__) && !defined(__GNUC__)
-#error "This file only for gcc-compatible compilers"
+#  error "This file only for gcc-compatible compilers"
 #endif
 
 inline bool js::jit::AtomicOperations::hasAtomic8() {

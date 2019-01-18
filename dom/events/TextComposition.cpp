@@ -25,17 +25,17 @@
 
 #ifdef XP_MACOSX
 // Some defiens will be conflict with OSX SDK
-#define TextRange _TextRange
-#define TextRangeArray _TextRangeArray
-#define Comment _Comment
+#  define TextRange _TextRange
+#  define TextRangeArray _TextRangeArray
+#  define Comment _Comment
 #endif
 
 #include "nsPluginInstanceOwner.h"
 
 #ifdef XP_MACOSX
-#undef TextRange
-#undef TextRangeArray
-#undef Comment
+#  undef TextRange
+#  undef TextRangeArray
+#  undef Comment
 #endif
 
 using namespace mozilla::widget;

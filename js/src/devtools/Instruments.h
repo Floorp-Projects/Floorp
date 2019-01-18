@@ -7,7 +7,7 @@
 
 #ifdef __APPLE__
 
-#include <unistd.h>
+#  include <unistd.h>
 
 namespace Instruments {
 

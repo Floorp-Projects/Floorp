@@ -22,8 +22,8 @@
 #include "gfxVRPuppet.h"
 #include "ipc/VRLayerParent.h"
 #if !defined(MOZ_WIDGET_ANDROID)
-#include "service/VRService.h"
-#include "service/VRServiceManager.h"
+#  include "service/VRService.h"
+#  include "service/VRServiceManager.h"
 #endif
 
 using namespace mozilla;

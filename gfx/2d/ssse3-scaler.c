@@ -66,9 +66,9 @@ struct pixman_transform {
 };
 
 #ifdef _MSC_VER
-#define force_inline __forceinline
+#  define force_inline __forceinline
 #else
-#define force_inline __inline__ __attribute__((always_inline))
+#  define force_inline __inline__ __attribute__((always_inline))
 #endif
 
 #define BILINEAR_INTERPOLATION_BITS 6

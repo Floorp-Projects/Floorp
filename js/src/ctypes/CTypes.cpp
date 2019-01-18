@@ -15,19 +15,19 @@
 #include "mozilla/WrappingOperations.h"
 
 #if defined(XP_UNIX)
-#include <errno.h>
+#  include <errno.h>
 #endif
 #if defined(XP_WIN)
-#include <float.h>
+#  include <float.h>
 #endif
 #if defined(SOLARIS)
-#include <ieeefp.h>
+#  include <ieeefp.h>
 #endif
 #include <limits>
 #include <math.h>
 #include <stdint.h>
 #ifdef HAVE_SSIZE_T
-#include <sys/types.h>
+#  include <sys/types.h>
 #endif
 #include <type_traits>
 
@@ -6430,13 +6430,13 @@ static bool GetABI(JSContext* cx, HandleValue abiType, ffi_abi* result) {
       return true;
     case ABI_THISCALL:
 #if defined(_WIN64)
-#if defined(_M_X64)
+#  if defined(_M_X64)
       *result = FFI_WIN64;
-#elif defined(_M_ARM64)
+#  elif defined(_M_ARM64)
       *result = FFI_SYSV;
-#else
-#error unknown 64-bit Windows platform
-#endif
+#  else
+#    error unknown 64-bit Windows platform
+#  endif
       return true;
 #elif defined(_WIN32)
       *result = FFI_THISCALL;
@@ -6452,13 +6452,13 @@ static bool GetABI(JSContext* cx, HandleValue abiType, ffi_abi* result) {
 #elif (defined(_WIN64))
       // We'd like the same code to work across Win32 and Win64, so stdcall_api
       // and winapi_abi become aliases to the lone Win64 ABI.
-#if defined(_M_X64)
+#  if defined(_M_X64)
       *result = FFI_WIN64;
-#elif defined(_M_ARM64)
+#  elif defined(_M_ARM64)
       *result = FFI_SYSV;
-#else
-#error unknown 64-bit Windows platform
-#endif
+#  else
+#    error unknown 64-bit Windows platform
+#  endif
       return true;
 #endif
     case INVALID_ABI:

@@ -8,14 +8,14 @@
 
 #if defined(WCHAR_T_IS_UTF16)
 
-#error This file should not be used on 2-byte wchar_t systems
+#  error This file should not be used on 2-byte wchar_t systems
 // If this winds up being needed on 2-byte wchar_t systems, either the
 // definitions below can be used, or the host system's wide character
 // functions like wmemcmp can be wrapped.
 
 #elif defined(WCHAR_T_IS_UTF32)
 
-#include "base/string_util.h"
+#  include "base/string_util.h"
 
 namespace base {
 

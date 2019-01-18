@@ -14,13 +14,13 @@
 #if defined(MOZ_FMP4)
 extern mozilla::LogModule* GetDemuxerLog();
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#define LOG(name, arg, ...)                          \
-  MOZ_LOG(GetDemuxerLog(), mozilla::LogLevel::Debug, \
-          (TOSTRING(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#  define STRINGIFY(x) #  x
+#  define TOSTRING(x) STRINGIFY(x)
+#  define LOG(name, arg, ...)                          \
+    MOZ_LOG(GetDemuxerLog(), mozilla::LogLevel::Debug, \
+            (TOSTRING(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 #else
-#define LOG(...)
+#  define LOG(...)
 #endif
 
 namespace mozilla {

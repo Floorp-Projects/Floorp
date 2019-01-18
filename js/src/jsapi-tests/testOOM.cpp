@@ -32,25 +32,25 @@ END_TEST(testOOM)
 
 const uint32_t maxAllocsPerTest = 100;
 
-#define START_OOM_TEST(name)                                                  \
-  testName = name;                                                            \
-  printf("Test %s: started\n", testName);                                     \
-  for (oomAfter = 1; oomAfter < maxAllocsPerTest; ++oomAfter) {               \
-    js::oom::simulator.simulateFailureAfter(                                  \
-        js::oom::FailureSimulator::Kind::OOM, oomAfter, js::THREAD_TYPE_MAIN, \
-        true)
+#  define START_OOM_TEST(name)                                    \
+    testName = name;                                              \
+    printf("Test %s: started\n", testName);                       \
+    for (oomAfter = 1; oomAfter < maxAllocsPerTest; ++oomAfter) { \
+      js::oom::simulator.simulateFailureAfter(                    \
+          js::oom::FailureSimulator::Kind::OOM, oomAfter,         \
+          js::THREAD_TYPE_MAIN, true)
 
-#define OOM_TEST_FINISHED                                                \
-  {                                                                      \
-    printf("Test %s: finished with %" PRIu64 " allocations\n", testName, \
-           oomAfter - 1);                                                \
-    break;                                                               \
-  }
+#  define OOM_TEST_FINISHED                                                \
+    {                                                                      \
+      printf("Test %s: finished with %" PRIu64 " allocations\n", testName, \
+             oomAfter - 1);                                                \
+      break;                                                               \
+    }
 
-#define END_OOM_TEST          \
-  }                           \
-  js::oom::simulator.reset(); \
-  CHECK(oomAfter != maxAllocsPerTest)
+#  define END_OOM_TEST          \
+    }                           \
+    js::oom::simulator.reset(); \
+    CHECK(oomAfter != maxAllocsPerTest)
 
 BEGIN_TEST(testNewContext) {
   uninit();  // Get rid of test harness' original JSContext.

@@ -25,12 +25,12 @@ using namespace mozilla;
 Atomic<size_t, ReleaseAcquire> gPageSize;
 
 #if defined(ANDROID)
-#include <sys/syscall.h>
-#include <sys/system_properties.h>
-#include <math.h>
+#  include <sys/syscall.h>
+#  include <sys/system_properties.h>
+#  include <math.h>
 
-#include <android/api-level.h>
-#if __ANDROID_API__ < 8
+#  include <android/api-level.h>
+#  if __ANDROID_API__ < 8
 /* Android API < 8 doesn't provide sigaltstack */
 
 extern "C" {
@@ -40,8 +40,8 @@ inline int sigaltstack(const stack_t *ss, stack_t *oss) {
 }
 
 } /* extern "C" */
-#endif /* __ANDROID_API__ */
-#endif /* ANDROID */
+#  endif /* __ANDROID_API__ */
+#endif   /* ANDROID */
 
 #ifdef __ARM_EABI__
 extern "C" MOZ_EXPORT const void *__gnu_Unwind_Find_exidx(void *pc, int *pcount)
@@ -1036,16 +1036,16 @@ static bool Divert(T func, T new_func) {
   void *ptr = FunctionPtr(func);
   uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
 
-#if defined(__i386__)
+#  if defined(__i386__)
   // A 32-bit jump is a 5 bytes instruction.
   EnsureWritable w(ptr, 5);
   *reinterpret_cast<unsigned char *>(addr) = 0xe9;  // jmp
   *reinterpret_cast<intptr_t *>(addr + 1) =
       reinterpret_cast<uintptr_t>(new_func) - addr - 5;  // target displacement
   return true;
-#elif defined(__arm__) || defined(__aarch64__)
+#  elif defined(__arm__) || defined(__aarch64__)
   const unsigned char trampoline[] = {
-#ifdef __arm__
+#    ifdef __arm__
       // .thumb
       0x46, 0x04,              // nop
       0x78, 0x47,              // bx pc
@@ -1053,17 +1053,17 @@ static bool Divert(T func, T new_func) {
                                // .arm
       0x04, 0xf0, 0x1f, 0xe5,  // ldr pc, [pc, #-4]
                                // .word <new_func>
-#else  // __aarch64__
+#    else  // __aarch64__
       0x50, 0x00,
       0x00, 0x58,  // ldr x16, [pc, #8]   ; x16 (aka ip0) is the first
       0x00, 0x02,
       0x1f, 0xd6,  // br x16              ; intra-procedure-call
                    // .word <new_func.lo> ; scratch register.
                    // .word <new_func.hi>
-#endif
+#    endif
   };
   const unsigned char *start;
-#ifdef __arm__
+#    ifdef __arm__
   if (addr & 0x01) {
     /* Function is thumb, the actual address of the code is without the
      * least significant bit. */
@@ -1077,9 +1077,9 @@ static bool Divert(T func, T new_func) {
     /* Function is arm, we only need the arm part of the trampoline */
     start = trampoline + 6;
   }
-#else  // __aarch64__
+#    else  // __aarch64__
   start = trampoline;
-#endif
+#    endif
 
   size_t len = sizeof(trampoline) - (start - trampoline);
   EnsureWritable w(reinterpret_cast<void *>(addr), len + sizeof(void *));
@@ -1089,12 +1089,12 @@ static bool Divert(T func, T new_func) {
       reinterpret_cast<char *>(addr),
       reinterpret_cast<char *>(addr + len + sizeof(void *)));
   return true;
-#else
+#  else
   return false;
-#endif
+#  endif
 }
 #else
-#define sys_sigaction sigaction
+#  define sys_sigaction sigaction
 template <typename T>
 static bool Divert(T func, T new_func) {
   return false;

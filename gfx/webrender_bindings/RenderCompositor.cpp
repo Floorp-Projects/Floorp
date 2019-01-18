@@ -13,7 +13,7 @@
 #include "mozilla/widget/CompositorWidget.h"
 
 #ifdef XP_WIN
-#include "mozilla/webrender/RenderCompositorANGLE.h"
+#  include "mozilla/webrender/RenderCompositorANGLE.h"
 #endif
 
 namespace mozilla {

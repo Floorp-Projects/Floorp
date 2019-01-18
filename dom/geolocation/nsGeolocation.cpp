@@ -36,20 +36,20 @@
 class nsIPrincipal;
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidLocationProvider.h"
+#  include "AndroidLocationProvider.h"
 #endif
 
 #ifdef MOZ_GPSD
-#include "GpsdLocationProvider.h"
+#  include "GpsdLocationProvider.h"
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
-#include "CoreLocationLocationProvider.h"
+#  include "CoreLocationLocationProvider.h"
 #endif
 
 #ifdef XP_WIN
-#include "WindowsLocationProvider.h"
-#include "mozilla/WindowsVersion.h"
+#  include "WindowsLocationProvider.h"
+#  include "mozilla/WindowsVersion.h"
 #endif
 
 // Some limit to the number of get or watch geolocation requests
@@ -525,11 +525,11 @@ nsresult nsGeolocationService::Init() {
 #endif
 
 #ifdef MOZ_WIDGET_GTK
-#ifdef MOZ_GPSD
+#  ifdef MOZ_GPSD
   if (Preferences::GetBool("geo.provider.use_gpsd", false)) {
     mProvider = new GpsdLocationProvider();
   }
-#endif
+#  endif
 #endif
 
 #ifdef MOZ_WIDGET_COCOA

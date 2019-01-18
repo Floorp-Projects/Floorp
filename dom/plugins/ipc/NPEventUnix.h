@@ -10,7 +10,7 @@
 #include "npapi.h"
 
 #ifdef MOZ_X11
-#include "mozilla/X11Util.h"
+#  include "mozilla/X11Util.h"
 #endif
 
 namespace mozilla {

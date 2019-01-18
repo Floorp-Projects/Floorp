@@ -41,7 +41,7 @@ class Element;
 
 #ifdef LoadImage
 // Undefine LoadImage to prevent naming conflict with Windows.
-#undef LoadImage
+#  undef LoadImage
 #endif
 
 class nsImageLoadingContent : public nsIImageLoadingContent {

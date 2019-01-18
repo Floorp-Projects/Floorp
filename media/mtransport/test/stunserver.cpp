@@ -84,7 +84,7 @@ nrappkit copyright:
 
 // mozilla/utils.h defines this as well
 #ifdef UNIMPLEMENTED
-#undef UNIMPLEMENTED
+#  undef UNIMPLEMENTED
 #endif
 
 extern "C" {

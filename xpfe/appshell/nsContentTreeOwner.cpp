@@ -40,7 +40,7 @@
 #include "nsIURI.h"
 #include "mozilla/dom/Document.h"
 #if defined(XP_MACOSX)
-#include "nsThreadUtils.h"
+#  include "nsThreadUtils.h"
 #endif
 
 #include "mozilla/Preferences.h"

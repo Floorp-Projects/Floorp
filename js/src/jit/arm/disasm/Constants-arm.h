@@ -10,10 +10,10 @@
 
 #ifdef JS_DISASM_ARM
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Types.h"
+#  include "mozilla/Assertions.h"
+#  include "mozilla/Types.h"
 
-#include <string.h>
+#  include <string.h>
 
 namespace js {
 namespace jit {
@@ -422,13 +422,13 @@ class Instruction {
 
   // Helper macro to define static accessors.
   // We use the cast to char* trick to bypass the strict anti-aliasing rules.
-#define DECLARE_STATIC_TYPED_ACCESSOR(return_type, Name) \
-  static inline return_type Name(Instr instr) {          \
-    char* temp = reinterpret_cast<char*>(&instr);        \
-    return reinterpret_cast<Instruction*>(temp)->Name(); \
-  }
+#  define DECLARE_STATIC_TYPED_ACCESSOR(return_type, Name) \
+    static inline return_type Name(Instr instr) {          \
+      char* temp = reinterpret_cast<char*>(&instr);        \
+      return reinterpret_cast<Instruction*>(temp)->Name(); \
+    }
 
-#define DECLARE_STATIC_ACCESSOR(Name) DECLARE_STATIC_TYPED_ACCESSOR(int, Name)
+#  define DECLARE_STATIC_ACCESSOR(Name) DECLARE_STATIC_TYPED_ACCESSOR(int, Name)
 
   // Get the raw instruction bits.
   inline Instr InstructionBits() const {

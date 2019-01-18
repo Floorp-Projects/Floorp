@@ -23,7 +23,7 @@ extern MOZ_EXPORT SLresult mozilla_realize_sles_engine(SLObjectItf aObjectm);
 #endif
 
 #ifdef __cplusplus
-#include "mozilla/Mutex.h"
+#  include "mozilla/Mutex.h"
 
 extern mozilla::LazyLogModule gOpenSLESProviderLog;
 

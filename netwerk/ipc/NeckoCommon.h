@@ -20,9 +20,9 @@ class TabChild;
 }  // namespace mozilla
 
 #if defined(DEBUG)
-#define NECKO_ERRORS_ARE_FATAL_DEFAULT true
+#  define NECKO_ERRORS_ARE_FATAL_DEFAULT true
 #else
-#define NECKO_ERRORS_ARE_FATAL_DEFAULT false
+#  define NECKO_ERRORS_ARE_FATAL_DEFAULT false
 #endif
 
 // TODO: Eventually remove NECKO_MAYBE_ABORT and DROP_DEAD (bug 575494).

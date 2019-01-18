@@ -77,7 +77,7 @@
 #include "InputData.h"
 #include "FrameLayerBuilder.h"
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
+#  include "nsAccessibilityService.h"
 #endif
 #include "gfxConfig.h"
 #include "mozilla/layers/CompositorSession.h"
@@ -87,7 +87,7 @@
 #include "nsViewManager.h"
 
 #ifdef DEBUG
-#include "nsIObserver.h"
+#  include "nsIObserver.h"
 
 static void debug_RegisterPrefCallbacks();
 
@@ -98,7 +98,7 @@ static int32_t gNumWidgets;
 #endif
 
 #ifdef XP_MACOSX
-#include "nsCocoaFeatures.h"
+#  include "nsCocoaFeatures.h"
 #endif
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
@@ -545,14 +545,14 @@ void nsBaseWidget::AddChild(nsIWidget* aChild) {
 //-------------------------------------------------------------------------
 void nsBaseWidget::RemoveChild(nsIWidget* aChild) {
 #ifdef DEBUG
-#ifdef XP_MACOSX
+#  ifdef XP_MACOSX
   // nsCocoaWindow doesn't implement GetParent, so in that case parent will be
   // null and we'll just have to do without this assertion.
   nsIWidget* parent = aChild->GetParent();
   NS_ASSERTION(!parent || parent == this, "Not one of our kids!");
-#else
+#  else
   MOZ_RELEASE_ASSERT(aChild->GetParent() == this, "Not one of our kids!");
-#endif
+#  endif
 #endif
 
   if (mLastChild == aChild) {
@@ -3049,10 +3049,10 @@ void IMENotification::TextChangeDataBase::Test() {
 
   nsAutoString eventName(NS_LITERAL_STRING("UNKNOWN"));
 
-#define _ASSIGN_eventName(_value, _name) \
-  case _value:                           \
-    eventName.AssignLiteral(_name);      \
-    break
+#  define _ASSIGN_eventName(_value, _name) \
+    case _value:                           \
+      eventName.AssignLiteral(_name);      \
+      break
 
   switch (aGuiEvent->mMessage) {
     _ASSIGN_eventName(eBlur, "eBlur");
@@ -3091,7 +3091,7 @@ void IMENotification::TextChangeDataBase::Test() {
     _ASSIGN_eventName(eXULBroadcast, "eXULBroadcast");
     _ASSIGN_eventName(eXULCommandUpdate, "eXULCommandUpdate");
 
-#undef _ASSIGN_eventName
+#  undef _ASSIGN_eventName
 
     default: {
       eventName.AssignLiteral("UNKNOWN: ");

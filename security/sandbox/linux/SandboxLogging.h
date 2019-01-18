@@ -24,11 +24,11 @@
 // %-directives instead of crashing.  See also the moz.build files,
 // which apply NDEBUG to the .cc file.
 #ifndef NDEBUG
-#define NDEBUG 1
-#include "base/strings/safe_sprintf.h"
-#undef NDEBUG
+#  define NDEBUG 1
+#  include "base/strings/safe_sprintf.h"
+#  undef NDEBUG
 #else
-#include "base/strings/safe_sprintf.h"
+#  include "base/strings/safe_sprintf.h"
 #endif
 
 namespace mozilla {

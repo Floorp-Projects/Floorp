@@ -16,7 +16,7 @@
 ** applefile definitions used
 */
 #if PRAGMA_STRUCT_ALIGN
-#pragma options align = mac68k
+#  pragma options align = mac68k
 #endif
 
 #define APPLESINGLE_MAGIC 0x00051600L
@@ -58,7 +58,7 @@ typedef struct ap_dates {
 } ap_dates;
 
 #if PRAGMA_STRUCT_ALIGN
-#pragma options align = reset
+#  pragma options align = reset
 #endif
 
 /*

@@ -27,7 +27,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 
 #ifdef MOZ_XUL
-#include "nsXULElement.h"
+#  include "nsXULElement.h"
 #endif
 
 using namespace mozilla;

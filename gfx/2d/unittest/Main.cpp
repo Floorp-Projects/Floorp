@@ -9,7 +9,7 @@
 #include "TestScaling.h"
 #include "TestBugs.h"
 #ifdef WIN32
-#include "TestDrawTargetD2D.h"
+#  include "TestDrawTargetD2D.h"
 #endif
 
 #include <string>

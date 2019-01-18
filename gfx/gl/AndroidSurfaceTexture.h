@@ -8,8 +8,8 @@
 #define AndroidSurfaceTexture_h__
 #ifdef MOZ_WIDGET_ANDROID
 
-#include "mozilla/gfx/Matrix.h"
-#include "SurfaceTexture.h"
+#  include "mozilla/gfx/Matrix.h"
+#  include "SurfaceTexture.h"
 
 typedef uint32_t AndroidSurfaceTextureHandle;
 

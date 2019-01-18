@@ -23,7 +23,7 @@
 #include "qcms.h"
 
 #ifdef DEBUG
-#include "nsSize.h"
+#  include "nsSize.h"
 #endif
 
 using namespace mozilla;

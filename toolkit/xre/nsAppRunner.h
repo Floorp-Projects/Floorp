@@ -7,21 +7,21 @@
 #define nsAppRunner_h__
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #else
-#include <limits.h>
+#  include <limits.h>
 #endif
 
 #ifndef MAXPATHLEN
-#ifdef PATH_MAX
-#define MAXPATHLEN PATH_MAX
-#elif defined(_MAX_PATH)
-#define MAXPATHLEN _MAX_PATH
-#elif defined(CCHMAXPATH)
-#define MAXPATHLEN CCHMAXPATH
-#else
-#define MAXPATHLEN 1024
-#endif
+#  ifdef PATH_MAX
+#    define MAXPATHLEN PATH_MAX
+#  elif defined(_MAX_PATH)
+#    define MAXPATHLEN _MAX_PATH
+#  elif defined(CCHMAXPATH)
+#    define MAXPATHLEN CCHMAXPATH
+#  else
+#    define MAXPATHLEN 1024
+#  endif
 #endif
 
 #include "nsStringFwd.h"
@@ -100,12 +100,12 @@ void UseParentConsole();
 BOOL WinLaunchChild(const wchar_t* exePath, int argc, char** argv,
                     HANDLE userToken = nullptr, HANDLE* hProcess = nullptr);
 
-#define PREF_WIN_REGISTER_APPLICATION_RESTART \
-  "toolkit.winRegisterApplicationRestart"
+#  define PREF_WIN_REGISTER_APPLICATION_RESTART \
+    "toolkit.winRegisterApplicationRestart"
 
-#if defined(MOZ_LAUNCHER_PROCESS)
-#define PREF_WIN_LAUNCHER_PROCESS_ENABLED "browser.launcherProcess.enabled"
-#endif  // defined(MOZ_LAUNCHER_PROCESS)
+#  if defined(MOZ_LAUNCHER_PROCESS)
+#    define PREF_WIN_LAUNCHER_PROCESS_ENABLED "browser.launcherProcess.enabled"
+#  endif  // defined(MOZ_LAUNCHER_PROCESS)
 #endif
 
 namespace mozilla {

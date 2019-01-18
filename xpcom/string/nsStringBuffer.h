@@ -19,7 +19,7 @@ struct already_AddRefed;
  * beta.
  */
 #if (defined(DEBUG) || defined(NIGHTLY_BUILD)) && !defined(MOZ_ASAN)
-#define STRING_BUFFER_CANARY 1
+#  define STRING_BUFFER_CANARY 1
 #endif
 
 #ifdef STRING_BUFFER_CANARY

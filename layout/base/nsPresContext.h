@@ -1571,10 +1571,10 @@ class nsRootPresContext final : public nsPresContext {
 
 #ifdef MOZ_REFLOW_PERF
 
-#define DO_GLOBAL_REFLOW_COUNT(_name) \
-  aPresContext->CountReflows((_name), (nsIFrame*)this);
+#  define DO_GLOBAL_REFLOW_COUNT(_name) \
+    aPresContext->CountReflows((_name), (nsIFrame*)this);
 #else
-#define DO_GLOBAL_REFLOW_COUNT(_name)
+#  define DO_GLOBAL_REFLOW_COUNT(_name)
 #endif  // MOZ_REFLOW_PERF
 
 #endif /* nsPresContext_h___ */

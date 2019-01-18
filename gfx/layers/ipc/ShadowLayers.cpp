@@ -33,7 +33,7 @@
 #include "mozilla/layers/PTextureChild.h"
 #include "mozilla/layers/SyncObject.h"
 #ifdef XP_DARWIN
-#include "mozilla/layers/TextureSync.h"
+#  include "mozilla/layers/TextureSync.h"
 #endif
 #include "ShadowLayerUtils.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient

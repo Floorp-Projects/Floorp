@@ -28,8 +28,8 @@
 #include "mozilla/Atomics.h"
 
 #ifdef XP_WIN
-#include "WinUtils.h"
-#include <wincrypt.h>
+#  include "WinUtils.h"
+#  include <wincrypt.h>
 #endif
 
 #define QUERYUPDATE_TIME 0
@@ -51,8 +51,8 @@
 
 #ifdef MOZ_XUL
 // Fired after autocomplete feedback has been updated.
-#define TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED \
-  "places-autocomplete-feedback-updated"
+#  define TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED \
+    "places-autocomplete-feedback-updated"
 #endif
 
 // The preference we watch to know when the mobile bookmarks folder is filled by

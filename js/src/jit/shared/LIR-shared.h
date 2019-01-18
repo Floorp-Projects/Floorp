@@ -7023,9 +7023,9 @@ class LArrowNewTarget : public LInstructionHelper<BOX_PIECES, 1, 0> {
 
 // Math.random().
 #ifdef JS_PUNBOX64
-#define LRANDOM_NUM_TEMPS 3
+#  define LRANDOM_NUM_TEMPS 3
 #else
-#define LRANDOM_NUM_TEMPS 5
+#  define LRANDOM_NUM_TEMPS 5
 #endif
 
 class LRandom : public LInstructionHelper<1, 0, LRANDOM_NUM_TEMPS> {

@@ -34,7 +34,7 @@
 #include "nsServiceManagerUtils.h"
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 using namespace mozilla;

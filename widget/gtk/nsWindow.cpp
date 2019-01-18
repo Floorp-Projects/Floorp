@@ -43,29 +43,29 @@
 #include <gtk/gtkx.h>
 
 #ifdef MOZ_WAYLAND
-#include <gdk/gdkwayland.h>
+#  include <gdk/gdkwayland.h>
 #endif /* MOZ_WAYLAND */
 
 #ifdef MOZ_X11
-#include <gdk/gdkx.h>
-#include <X11/Xatom.h>
-#include <X11/extensions/XShm.h>
-#include <X11/extensions/shape.h>
-#include <gdk/gdkkeysyms-compat.h>
+#  include <gdk/gdkx.h>
+#  include <X11/Xatom.h>
+#  include <X11/extensions/XShm.h>
+#  include <X11/extensions/shape.h>
+#  include <gdk/gdkkeysyms-compat.h>
 #endif /* MOZ_X11 */
 
 #include <gdk/gdkkeysyms.h>
 
 #if defined(MOZ_WAYLAND)
-#include <gdk/gdkwayland.h>
-#include "nsView.h"
+#  include <gdk/gdkwayland.h>
+#  include "nsView.h"
 #endif
 
 #include "nsGkAtoms.h"
 
 #ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
-#define SN_API_NOT_YET_FROZEN
-#include <startup-notification-1.0/libsn/sn.h>
+#  define SN_API_NOT_YET_FROZEN
+#  include <startup-notification-1.0/libsn/sn.h>
 #endif
 
 #include "mozilla/Assertions.h"
@@ -84,9 +84,9 @@
 #include "gfx2DGlue.h"
 
 #ifdef ACCESSIBILITY
-#include "mozilla/a11y/Accessible.h"
-#include "mozilla/a11y/Platform.h"
-#include "nsAccessibilityService.h"
+#  include "mozilla/a11y/Accessible.h"
+#  include "mozilla/a11y/Platform.h"
+#  include "nsAccessibilityService.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -119,15 +119,15 @@ using namespace mozilla::widget;
 #include "mozilla/layers/CompositorThread.h"
 
 #ifdef MOZ_X11
-#include "GLContextGLX.h"  // for GLContextGLX::FindVisual()
-#include "GtkCompositorWidget.h"
-#include "gfxXlibSurface.h"
-#include "WindowSurfaceX11Image.h"
-#include "WindowSurfaceX11SHM.h"
-#include "WindowSurfaceXRender.h"
+#  include "GLContextGLX.h"  // for GLContextGLX::FindVisual()
+#  include "GtkCompositorWidget.h"
+#  include "gfxXlibSurface.h"
+#  include "WindowSurfaceX11Image.h"
+#  include "WindowSurfaceX11SHM.h"
+#  include "WindowSurfaceXRender.h"
 #endif  // MOZ_X11
 #ifdef MOZ_WAYLAND
-#include "nsIClipboard.h"
+#  include "nsIClipboard.h"
 #endif
 
 #include "nsShmImage.h"
@@ -1769,15 +1769,15 @@ bool nsWindow::HasPendingInputEvent() {
 }
 
 #if 0
-#ifdef DEBUG
+#  ifdef DEBUG
 // Paint flashing code (disabled for cairo - see below)
 
-#define CAPS_LOCK_IS_ON \
-  (KeymapWrapper::AreModifiersCurrentlyActive(KeymapWrapper::CAPS_LOCK))
+#    define CAPS_LOCK_IS_ON \
+      (KeymapWrapper::AreModifiersCurrentlyActive(KeymapWrapper::CAPS_LOCK))
 
-#define WANT_PAINT_FLASHING (debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
+#    define WANT_PAINT_FLASHING (debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
 
-#ifdef MOZ_X11
+#    ifdef MOZ_X11
 static void
 gdk_window_flash(GdkWindow *    aGdkWindow,
                  unsigned int   aTimes,
@@ -1832,12 +1832,12 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
 
   gdk_region_offset(aRegion, -x, -y);
 }
-#endif  /* MOZ_X11 */
-#endif  // DEBUG
+#    endif /* MOZ_X11 */
+#  endif   // DEBUG
 #endif
 
 #ifdef cairo_copy_clip_rectangle_list
-#error "Looks like we're including Mozilla's cairo instead of system cairo"
+#  error "Looks like we're including Mozilla's cairo instead of system cairo"
 #endif
 static bool ExtractExposeRegion(LayoutDeviceIntRegion &aRegion, cairo_t *cr) {
   cairo_rectangle_list_t *rects = cairo_copy_clip_rectangle_list(cr);
@@ -2008,16 +2008,16 @@ gboolean nsWindow::OnExposeEvent(cairo_t *cr) {
   }
   MOZ_ASSERT(ctx);  // checked both dt and destDT valid draw target above
 
-#if 0
+#  if 0
     // NOTE: Paint flashing region would be wrong for cairo, since
     // cairo inflates the update region, etc.  So don't paint flash
     // for cairo.
-#ifdef DEBUG
+#    ifdef DEBUG
     // XXX aEvent->region may refer to a newly-invalid area.  FIXME
     if (0 && WANT_PAINT_FLASHING && gtk_widget_get_window(aEvent))
         gdk_window_flash(mGdkWindow, 1, 100, aEvent->region);
-#endif
-#endif
+#    endif
+#  endif
 
 #endif  // MOZ_X11
 
@@ -3648,11 +3648,11 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
       SetCompositorHint(GTK_WIDGET_COMPOSIDED_ENABLED);
     }
   }
-#ifdef MOZ_WAYLAND
+#  ifdef MOZ_WAYLAND
   else if (!mIsX11Display) {
     mSurfaceProvider.Initialize(this);
   }
-#endif
+#  endif
 #endif
   return NS_OK;
 }
@@ -5225,7 +5225,7 @@ static gboolean key_press_event_cb(GtkWidget *widget, GdkEventKey *event) {
   // We use the event time of the last one.
   // Note: GDK calls XkbSetDetectableAutorepeat so that KeyRelease events
   // are generated only when the key is physically released.
-#define NS_GDKEVENT_MATCH_MASK 0x1FFF /* GDK_SHIFT_MASK .. GDK_BUTTON5_MASK */
+#  define NS_GDKEVENT_MATCH_MASK 0x1FFF  // GDK_SHIFT_MASK .. GDK_BUTTON5_MASK
   GdkDisplay *gdkDisplay = gtk_widget_get_display(widget);
   if (GDK_IS_X11_DISPLAY(gdkDisplay)) {
     Display *dpy = GDK_DISPLAY_XDISPLAY(gdkDisplay);
@@ -6439,7 +6439,7 @@ bool nsWindow::WaylandSurfaceNeedsClear() {
  * for further details.
  */
 
-#define PROGRESS_HINT "_NET_WM_XAPP_PROGRESS"
+#  define PROGRESS_HINT "_NET_WM_XAPP_PROGRESS"
 
 static void set_window_hint_cardinal(Window xid, const gchar *atom_name,
                                      gulong cardinal) {

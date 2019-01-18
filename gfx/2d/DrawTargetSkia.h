@@ -18,7 +18,7 @@
 #include <vector>
 
 #ifdef MOZ_WIDGET_COCOA
-#include <ApplicationServices/ApplicationServices.h>
+#  include <ApplicationServices/ApplicationServices.h>
 #endif
 
 namespace mozilla {

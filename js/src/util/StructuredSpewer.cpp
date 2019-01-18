@@ -6,35 +6,35 @@
 
 #ifdef JS_STRUCTURED_SPEW
 
-#include "util/StructuredSpewer.h"
+#  include "util/StructuredSpewer.h"
 
-#include "mozilla/Sprintf.h"
+#  include "mozilla/Sprintf.h"
 
-#include "util/Text.h"
-#include "vm/JSContext.h"
-#include "vm/JSScript.h"
+#  include "util/Text.h"
+#  include "vm/JSContext.h"
+#  include "vm/JSScript.h"
 
 using namespace js;
 
 const StructuredSpewer::NameArray StructuredSpewer::names_ = {
-#define STRUCTURED_CHANNEL(name) #name,
+#  define STRUCTURED_CHANNEL(name) #  name,
     STRUCTURED_CHANNEL_LIST(STRUCTURED_CHANNEL)
-#undef STRUCTURED_CHANNEL
+#  undef STRUCTURED_CHANNEL
 };
 
 // Choose a sensible default spew directory.
 //
 // The preference here is to use the current working directory,
 // except on Android.
-#ifndef DEFAULT_SPEW_DIRECTORY
-#if defined(_WIN32)
-#define DEFAULT_SPEW_DIRECTORY "."
-#elif defined(__ANDROID__)
-#define DEFAULT_SPEW_DIRECTORY "/data/local/tmp"
-#else
-#define DEFAULT_SPEW_DIRECTORY "."
-#endif
-#endif
+#  ifndef DEFAULT_SPEW_DIRECTORY
+#    if defined(_WIN32)
+#      define DEFAULT_SPEW_DIRECTORY "."
+#    elif defined(__ANDROID__)
+#      define DEFAULT_SPEW_DIRECTORY "/data/local/tmp"
+#    else
+#      define DEFAULT_SPEW_DIRECTORY "."
+#    endif
+#  endif
 
 void StructuredSpewer::ensureInitializationAttempted() {
   if (!outputInitializationAttempted_) {
@@ -166,14 +166,14 @@ void StructuredSpewer::startObject(JSContext* cx, const JSScript* script,
 void StructuredSpewer::parseSpewFlags(const char* flags) {
   // If '*' or 'all' are in the list, enable all spew.
   bool star = ContainsFlag(flags, "*") || ContainsFlag(flags, "all");
-#define CHECK_CHANNEL(name)                             \
-  if (ContainsFlag(flags, #name) || star) {             \
-    selectedChannels_.enableChannel(SpewChannel::name); \
-  }
+#  define CHECK_CHANNEL(name)                             \
+    if (ContainsFlag(flags, #name) || star) {             \
+      selectedChannels_.enableChannel(SpewChannel::name); \
+    }
 
   STRUCTURED_CHANNEL_LIST(CHECK_CHANNEL)
 
-#undef CHECK_CHANNEL
+#  undef CHECK_CHANNEL
 
   if (ContainsFlag(flags, "help")) {
     printf(

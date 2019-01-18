@@ -3779,9 +3779,9 @@ class nsDisplayReflowCount : public nsDisplayItem {
     MOZ_COUNT_CTOR(nsDisplayReflowCount);
   }
 
-#ifdef NS_BUILD_REFCNT_LOGGING
+#  ifdef NS_BUILD_REFCNT_LOGGING
   ~nsDisplayReflowCount() override { MOZ_COUNT_DTOR(nsDisplayReflowCount); }
-#endif
+#  endif
 
   NS_DISPLAY_DECL_NAME("nsDisplayReflowCount", TYPE_REFLOW_COUNT)
 
@@ -3795,40 +3795,40 @@ class nsDisplayReflowCount : public nsDisplayItem {
   nscolor mColor;
 };
 
-#define DO_GLOBAL_REFLOW_COUNT_DSP(_name)                                 \
-  PR_BEGIN_MACRO                                                          \
-  if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() && \
-      PresShell()->IsPaintingFrameCounts()) {                             \
-    aLists.Outlines()->AppendToTop(                                       \
-        MakeDisplayItem<nsDisplayReflowCount>(aBuilder, this, _name));    \
-  }                                                                       \
-  PR_END_MACRO
+#  define DO_GLOBAL_REFLOW_COUNT_DSP(_name)                                 \
+    PR_BEGIN_MACRO                                                          \
+    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() && \
+        PresShell()->IsPaintingFrameCounts()) {                             \
+      aLists.Outlines()->AppendToTop(                                       \
+          MakeDisplayItem<nsDisplayReflowCount>(aBuilder, this, _name));    \
+    }                                                                       \
+    PR_END_MACRO
 
-#define DO_GLOBAL_REFLOW_COUNT_DSP_COLOR(_name, _color)                        \
-  PR_BEGIN_MACRO                                                               \
-  if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() &&      \
-      PresShell()->IsPaintingFrameCounts()) {                                  \
-    aLists.Outlines()->AppendToTop(                                            \
-        MakeDisplayItem<nsDisplayReflowCount>(aBuilder, this, _name, _color)); \
-  }                                                                            \
-  PR_END_MACRO
+#  define DO_GLOBAL_REFLOW_COUNT_DSP_COLOR(_name, _color)                   \
+    PR_BEGIN_MACRO                                                          \
+    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() && \
+        PresShell()->IsPaintingFrameCounts()) {                             \
+      aLists.Outlines()->AppendToTop(MakeDisplayItem<nsDisplayReflowCount>( \
+          aBuilder, this, _name, _color));                                  \
+    }                                                                       \
+    PR_END_MACRO
 
 /*
   Macro to be used for classes that don't actually implement BuildDisplayList
  */
-#define DECL_DO_GLOBAL_REFLOW_COUNT_DSP(_class, _super)     \
-  void BuildDisplayList(nsDisplayListBuilder* aBuilder,     \
-                        const nsRect& aDirtyRect,           \
-                        const nsDisplayListSet& aLists) {   \
-    DO_GLOBAL_REFLOW_COUNT_DSP(#_class);                    \
-    _super::BuildDisplayList(aBuilder, aDirtyRect, aLists); \
-  }
+#  define DECL_DO_GLOBAL_REFLOW_COUNT_DSP(_class, _super)     \
+    void BuildDisplayList(nsDisplayListBuilder* aBuilder,     \
+                          const nsRect& aDirtyRect,           \
+                          const nsDisplayListSet& aLists) {   \
+      DO_GLOBAL_REFLOW_COUNT_DSP(#_class);                    \
+      _super::BuildDisplayList(aBuilder, aDirtyRect, aLists); \
+    }
 
 #else  // MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF
 
-#define DO_GLOBAL_REFLOW_COUNT_DSP(_name)
-#define DO_GLOBAL_REFLOW_COUNT_DSP_COLOR(_name, _color)
-#define DECL_DO_GLOBAL_REFLOW_COUNT_DSP(_class, _super)
+#  define DO_GLOBAL_REFLOW_COUNT_DSP(_name)
+#  define DO_GLOBAL_REFLOW_COUNT_DSP_COLOR(_name, _color)
+#  define DECL_DO_GLOBAL_REFLOW_COUNT_DSP(_class, _super)
 
 #endif  // MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF
 

@@ -8,15 +8,15 @@
  * directory with a Unicode character to test bug 473417.
  */
 #ifdef XP_WIN
-#include <windows.h>
-#define NS_main wmain
-#define PATH_SEPARATOR_CHAR L'\\'
+#  include <windows.h>
+#  define NS_main wmain
+#  define PATH_SEPARATOR_CHAR L'\\'
 // On Windows, argv[0] can also have forward slashes instead
-#define ALT_PATH_SEPARATOR_CHAR L'/'
+#  define ALT_PATH_SEPARATOR_CHAR L'/'
 #else
-#include <unistd.h>
-#define NS_main main
-#define PATH_SEPARATOR_CHAR '/'
+#  include <unistd.h>
+#  define NS_main main
+#  define PATH_SEPARATOR_CHAR '/'
 #endif
 
 #include <stdio.h>
@@ -31,17 +31,17 @@
 #include "mozilla/ArrayUtils.h"
 
 #ifndef MAXPATHLEN
-#ifdef PATH_MAX
-#define MAXPATHLEN PATH_MAX
-#elif defined(MAX_PATH)
-#define MAXPATHLEN MAX_PATH
-#elif defined(_MAX_PATH)
-#define MAXPATHLEN _MAX_PATH
-#elif defined(CCHMAXPATH)
-#define MAXPATHLEN CCHMAXPATH
-#else
-#define MAXPATHLEN 1024
-#endif
+#  ifdef PATH_MAX
+#    define MAXPATHLEN PATH_MAX
+#  elif defined(MAX_PATH)
+#    define MAXPATHLEN MAX_PATH
+#  elif defined(_MAX_PATH)
+#    define MAXPATHLEN _MAX_PATH
+#  elif defined(CCHMAXPATH)
+#    define MAXPATHLEN CCHMAXPATH
+#  else
+#    define MAXPATHLEN 1024
+#  endif
 #endif
 
 #define TEST_NAME "Updater ReadStrings"

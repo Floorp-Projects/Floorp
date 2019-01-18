@@ -10,18 +10,18 @@
 #include "mozilla/Atomics.h"
 
 #if defined(XP_WIN)
-#include "util/Windows.h"
+#  include "util/Windows.h"
 #elif defined(XP_UNIX) && !defined(XP_DARWIN)
-#include <signal.h>
-#include <sys/types.h>
-#include <unistd.h>
+#  include <signal.h>
+#  include <sys/types.h>
+#  include <unistd.h>
 #elif defined(XP_DARWIN)
-#include <mach/mach.h>
-#include <unistd.h>
+#  include <mach/mach.h>
+#  include <unistd.h>
 #endif
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 #include "ds/SplayTree.h"
@@ -148,15 +148,15 @@ void MemoryProtectionExceptionHandler::removeRegion(void* addr) {
 static MOZ_COLD MOZ_ALWAYS_INLINE void ReportCrashIfDebug(const char* aStr)
     MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS {
 #ifdef DEBUG
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   DWORD bytesWritten;
   BOOL ret = WriteFile(GetStdHandle(STD_ERROR_HANDLE), aStr, strlen(aStr) + 1,
                        &bytesWritten, nullptr);
-#elif defined(ANDROID)
+#  elif defined(ANDROID)
   int ret = __android_log_write(ANDROID_LOG_FATAL, "MOZ_CRASH", aStr);
-#else
+#  else
   ssize_t ret = write(STDERR_FILENO, aStr, strlen(aStr) + 1);
-#endif
+#  endif
   (void)ret;  // Ignore failures; we're already crashing anyway.
 #endif
 }
@@ -342,55 +342,55 @@ static const mach_msg_id_t sIDRequestStateIdentity64 = 2407;
  * Each message ID has an associated Mach message structure.
  * We use the preprocessor to make defining them a little less arduous.
  */
-#define REQUEST_HEADER_FIELDS mach_msg_header_t header;
+#  define REQUEST_HEADER_FIELDS mach_msg_header_t header;
 
-#define REQUEST_IDENTITY_FIELDS      \
-  mach_msg_body_t msgh_body;         \
-  mach_msg_port_descriptor_t thread; \
-  mach_msg_port_descriptor_t task;
+#  define REQUEST_IDENTITY_FIELDS      \
+    mach_msg_body_t msgh_body;         \
+    mach_msg_port_descriptor_t thread; \
+    mach_msg_port_descriptor_t task;
 
-#define REQUEST_GENERAL_FIELDS(bits) \
-  NDR_record_t NDR;                  \
-  exception_type_t exception;        \
-  mach_msg_type_number_t code_count; \
-  int##bits##_t code[2];
+#  define REQUEST_GENERAL_FIELDS(bits) \
+    NDR_record_t NDR;                  \
+    exception_type_t exception;        \
+    mach_msg_type_number_t code_count; \
+    int##bits##_t code[2];
 
-#define REQUEST_STATE_FIELDS              \
-  int flavor;                             \
-  mach_msg_type_number_t old_state_count; \
-  natural_t old_state[THREAD_STATE_MAX];
+#  define REQUEST_STATE_FIELDS              \
+    int flavor;                             \
+    mach_msg_type_number_t old_state_count; \
+    natural_t old_state[THREAD_STATE_MAX];
 
-#define REQUEST_TRAILER_FIELDS mach_msg_trailer_t trailer;
+#  define REQUEST_TRAILER_FIELDS mach_msg_trailer_t trailer;
 
-#define EXCEPTION_REQUEST(bits)   \
-  struct ExceptionRequest##bits { \
-    REQUEST_HEADER_FIELDS         \
-    REQUEST_IDENTITY_FIELDS       \
-    REQUEST_GENERAL_FIELDS(bits)  \
-    REQUEST_TRAILER_FIELDS        \
-  };
+#  define EXCEPTION_REQUEST(bits)   \
+    struct ExceptionRequest##bits { \
+      REQUEST_HEADER_FIELDS         \
+      REQUEST_IDENTITY_FIELDS       \
+      REQUEST_GENERAL_FIELDS(bits)  \
+      REQUEST_TRAILER_FIELDS        \
+    };
 
-#define EXCEPTION_REQUEST_STATE(bits)  \
-  struct ExceptionRequestState##bits { \
-    REQUEST_HEADER_FIELDS              \
-    REQUEST_GENERAL_FIELDS(bits)       \
-    REQUEST_STATE_FIELDS               \
-    REQUEST_TRAILER_FIELDS             \
-  };
+#  define EXCEPTION_REQUEST_STATE(bits)  \
+    struct ExceptionRequestState##bits { \
+      REQUEST_HEADER_FIELDS              \
+      REQUEST_GENERAL_FIELDS(bits)       \
+      REQUEST_STATE_FIELDS               \
+      REQUEST_TRAILER_FIELDS             \
+    };
 
-#define EXCEPTION_REQUEST_STATE_IDENTITY(bits) \
-  struct ExceptionRequestStateIdentity##bits { \
-    REQUEST_HEADER_FIELDS                      \
-    REQUEST_IDENTITY_FIELDS                    \
-    REQUEST_GENERAL_FIELDS(bits)               \
-    REQUEST_STATE_FIELDS                       \
-    REQUEST_TRAILER_FIELDS                     \
-  };
+#  define EXCEPTION_REQUEST_STATE_IDENTITY(bits) \
+    struct ExceptionRequestStateIdentity##bits { \
+      REQUEST_HEADER_FIELDS                      \
+      REQUEST_IDENTITY_FIELDS                    \
+      REQUEST_GENERAL_FIELDS(bits)               \
+      REQUEST_STATE_FIELDS                       \
+      REQUEST_TRAILER_FIELDS                     \
+    };
 
 /* This is needed because not all fields are naturally aligned on 64-bit. */
-#ifdef __MigPackStructs
-#pragma pack(4)
-#endif
+#  ifdef __MigPackStructs
+#    pragma pack(4)
+#  endif
 
 EXCEPTION_REQUEST(32)
 EXCEPTION_REQUEST(64)
@@ -417,72 +417,73 @@ struct ExceptionReply {
   kern_return_t RetCode;
 };
 
-#ifdef __MigPackStructs
-#pragma pack()
-#endif
+#  ifdef __MigPackStructs
+#    pragma pack()
+#  endif
 
-#undef EXCEPTION_REQUEST_STATE_IDENTITY
-#undef EXCEPTION_REQUEST_STATE
-#undef EXCEPTION_REQUEST
-#undef REQUEST_STATE_FIELDS
-#undef REQUEST_GENERAL_FIELDS
-#undef REQUEST_IDENTITY_FIELDS
-#undef REQUEST_HEADER_FIELDS
+#  undef EXCEPTION_REQUEST_STATE_IDENTITY
+#  undef EXCEPTION_REQUEST_STATE
+#  undef EXCEPTION_REQUEST
+#  undef REQUEST_STATE_FIELDS
+#  undef REQUEST_GENERAL_FIELDS
+#  undef REQUEST_IDENTITY_FIELDS
+#  undef REQUEST_HEADER_FIELDS
 
 /*
  * The exception handler we're forwarding to may not have the same behavior
  * or thread state flavor as what we're using. These macros help populate
  * the fields of the message we're about to send to the previous handler.
  */
-#define COPY_REQUEST_COMMON(bits, id)                                  \
-  dst.header = src.header;                                             \
-  dst.header.msgh_id = id;                                             \
-  dst.header.msgh_size =                                               \
-      static_cast<mach_msg_size_t>(sizeof(dst) - sizeof(dst.trailer)); \
-  dst.NDR = src.NDR;                                                   \
-  dst.exception = src.exception;                                       \
-  dst.code_count = src.code_count;                                     \
-  dst.code[0] = int##bits##_t(src.code[0]);                            \
-  dst.code[1] = int##bits##_t(src.code[1]);
+#  define COPY_REQUEST_COMMON(bits, id)                                  \
+    dst.header = src.header;                                             \
+    dst.header.msgh_id = id;                                             \
+    dst.header.msgh_size =                                               \
+        static_cast<mach_msg_size_t>(sizeof(dst) - sizeof(dst.trailer)); \
+    dst.NDR = src.NDR;                                                   \
+    dst.exception = src.exception;                                       \
+    dst.code_count = src.code_count;                                     \
+    dst.code[0] = int##bits##_t(src.code[0]);                            \
+    dst.code[1] = int##bits##_t(src.code[1]);
 
-#define COPY_REQUEST_IDENTITY    \
-  dst.msgh_body = src.msgh_body; \
-  dst.thread = src.thread;       \
-  dst.task = src.task;
+#  define COPY_REQUEST_IDENTITY    \
+    dst.msgh_body = src.msgh_body; \
+    dst.thread = src.thread;       \
+    dst.task = src.task;
 
-#define COPY_REQUEST_STATE(flavor, stateCount, state)                         \
-  mach_msg_size_t stateSize = stateCount * sizeof(natural_t);                 \
-  dst.header.msgh_size = static_cast<mach_msg_size_t>(                        \
-      sizeof(dst) - sizeof(dst.trailer) - sizeof(dst.old_state) + stateSize); \
-  dst.flavor = flavor;                                                        \
-  dst.old_state_count = stateCount;                                           \
-  memcpy(dst.old_state, state, stateSize);
+#  define COPY_REQUEST_STATE(flavor, stateCount, state)                  \
+    mach_msg_size_t stateSize = stateCount * sizeof(natural_t);          \
+    dst.header.msgh_size =                                               \
+        static_cast<mach_msg_size_t>(sizeof(dst) - sizeof(dst.trailer) - \
+                                     sizeof(dst.old_state) + stateSize); \
+    dst.flavor = flavor;                                                 \
+    dst.old_state_count = stateCount;                                    \
+    memcpy(dst.old_state, state, stateSize);
 
-#define COPY_EXCEPTION_REQUEST(bits)                                    \
-  static void CopyExceptionRequest##bits(ExceptionRequest64& src,       \
-                                         ExceptionRequest##bits& dst) { \
-    COPY_REQUEST_COMMON(bits, sIDRequest##bits)                         \
-    COPY_REQUEST_IDENTITY                                               \
-  }
+#  define COPY_EXCEPTION_REQUEST(bits)                                    \
+    static void CopyExceptionRequest##bits(ExceptionRequest64& src,       \
+                                           ExceptionRequest##bits& dst) { \
+      COPY_REQUEST_COMMON(bits, sIDRequest##bits)                         \
+      COPY_REQUEST_IDENTITY                                               \
+    }
 
-#define COPY_EXCEPTION_REQUEST_STATE(bits)                             \
-  static void CopyExceptionRequestState##bits(                         \
-      ExceptionRequest64& src, ExceptionRequestState##bits& dst,       \
-      thread_state_flavor_t flavor, mach_msg_type_number_t stateCount, \
-      thread_state_t state) {                                          \
-    COPY_REQUEST_COMMON(bits, sIDRequestState##bits)                   \
-    COPY_REQUEST_STATE(flavor, stateCount, state)                      \
-  }
+#  define COPY_EXCEPTION_REQUEST_STATE(bits)                             \
+    static void CopyExceptionRequestState##bits(                         \
+        ExceptionRequest64& src, ExceptionRequestState##bits& dst,       \
+        thread_state_flavor_t flavor, mach_msg_type_number_t stateCount, \
+        thread_state_t state) {                                          \
+      COPY_REQUEST_COMMON(bits, sIDRequestState##bits)                   \
+      COPY_REQUEST_STATE(flavor, stateCount, state)                      \
+    }
 
-#define COPY_EXCEPTION_REQUEST_STATE_IDENTITY(bits)                      \
-  static void CopyExceptionRequestStateIdentity##bits(                   \
-      ExceptionRequest64& src, ExceptionRequestStateIdentity##bits& dst, \
-      thread_state_flavor_t flavor, mach_msg_type_number_t stateCount,   \
-      thread_state_t state) {                                            \
-    COPY_REQUEST_COMMON(bits, sIDRequestStateIdentity##bits)             \
-    COPY_REQUEST_IDENTITY                                                \
-    COPY_REQUEST_STATE(flavor, stateCount, state)                        \
-  }
+#  define COPY_EXCEPTION_REQUEST_STATE_IDENTITY(bits)                      \
+    static void CopyExceptionRequestStateIdentity##bits(                   \
+        ExceptionRequest64& src, ExceptionRequestStateIdentity##bits& dst, \
+        thread_state_flavor_t flavor, mach_msg_type_number_t stateCount,   \
+        thread_state_t state) {                                            \
+      COPY_REQUEST_COMMON(bits, sIDRequestStateIdentity##bits)             \
+      COPY_REQUEST_IDENTITY                                                \
+      COPY_REQUEST_STATE(flavor, stateCount, state)                        \
+    }
 
 COPY_EXCEPTION_REQUEST(32)
 COPY_EXCEPTION_REQUEST_STATE(32)
@@ -491,12 +492,12 @@ COPY_EXCEPTION_REQUEST(64)
 COPY_EXCEPTION_REQUEST_STATE(64)
 COPY_EXCEPTION_REQUEST_STATE_IDENTITY(64)
 
-#undef COPY_EXCEPTION_REQUEST_STATE_IDENTITY
-#undef COPY_EXCEPTION_REQUEST_STATE
-#undef COPY_EXCEPTION_REQUEST
-#undef COPY_REQUEST_STATE
-#undef COPY_REQUEST_IDENTITY
-#undef COPY_REQUEST_COMMON
+#  undef COPY_EXCEPTION_REQUEST_STATE_IDENTITY
+#  undef COPY_EXCEPTION_REQUEST_STATE
+#  undef COPY_EXCEPTION_REQUEST
+#  undef COPY_REQUEST_STATE
+#  undef COPY_REQUEST_IDENTITY
+#  undef COPY_REQUEST_COMMON
 
 /* -------------------------------------------------------------------------- */
 /*                 End Mach definitions and helper functions                  */
@@ -781,7 +782,7 @@ void MemoryProtectionExceptionHandler::uninstall() {
 
 #else
 
-#error "This platform is not supported!"
+#  error "This platform is not supported!"
 
 #endif
 

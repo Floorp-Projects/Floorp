@@ -5,18 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(XP_MACOSX) || defined(XP_LINUX)
-#include <unistd.h>
+#  include <unistd.h>
 #elif defined(XP_WIN)
-#include <winsock2.h>
+#  include <winsock2.h>
 #endif
 
 #include "nsNetworkInfoService.h"
 #include "mozilla/ScopeExit.h"
 
 #if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
-#include "NetworkInfoServiceImpl.h"
+#  include "NetworkInfoServiceImpl.h"
 #else
-#error "Unsupported platform for nsNetworkInfoService!  Check moz.build"
+#  error "Unsupported platform for nsNetworkInfoService!  Check moz.build"
 #endif
 
 namespace mozilla {

@@ -68,7 +68,7 @@ class CompositorWidgetParent;
 // PCompositorWidgetChild.
 class CompositorWidgetChild;
 
-#define MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
+#  define MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
 #endif
 
 class WidgetRenderingContext {

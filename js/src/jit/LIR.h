@@ -39,7 +39,7 @@ static const uint32_t VREG_INCREMENT = 1;
 static const uint32_t THIS_FRAME_ARGSLOT = 0;
 
 #if defined(JS_NUNBOX32)
-#define BOX_PIECES 2
+#  define BOX_PIECES 2
 static const uint32_t VREG_TYPE_OFFSET = 0;
 static const uint32_t VREG_DATA_OFFSET = 1;
 static const uint32_t TYPE_INDEX = 0;
@@ -47,9 +47,9 @@ static const uint32_t PAYLOAD_INDEX = 1;
 static const uint32_t INT64LOW_INDEX = 0;
 static const uint32_t INT64HIGH_INDEX = 1;
 #elif defined(JS_PUNBOX64)
-#define BOX_PIECES 1
+#  define BOX_PIECES 1
 #else
-#error "Unknown!"
+#  error "Unknown!"
 #endif
 
 static const uint32_t INT64_PIECES = sizeof(int64_t) / sizeof(uintptr_t);
@@ -1547,7 +1547,7 @@ class LSafepoint : public TempObject {
     return LUse(typeVreg, LUse::ANY);
   }
 
-#ifdef DEBUG
+#  ifdef DEBUG
   bool hasNunboxPayload(LAllocation payload) const {
     if (payload.isMemory() &&
         hasValueSlot(payload.isStackSlot(), payload.memorySlot())) {
@@ -1560,7 +1560,7 @@ class LSafepoint : public TempObject {
     }
     return false;
   }
-#endif
+#  endif
 
   NunboxList& nunboxParts() { return nunboxParts_; }
 
@@ -1800,27 +1800,27 @@ AnyRegister LAllocation::toRegister() const {
 
 #include "jit/shared/LIR-shared.h"
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-#if defined(JS_CODEGEN_X86)
-#include "jit/x86/LIR-x86.h"
-#elif defined(JS_CODEGEN_X64)
-#include "jit/x64/LIR-x64.h"
-#endif
-#include "jit/x86-shared/LIR-x86-shared.h"
+#  if defined(JS_CODEGEN_X86)
+#    include "jit/x86/LIR-x86.h"
+#  elif defined(JS_CODEGEN_X64)
+#    include "jit/x64/LIR-x64.h"
+#  endif
+#  include "jit/x86-shared/LIR-x86-shared.h"
 #elif defined(JS_CODEGEN_ARM)
-#include "jit/arm/LIR-arm.h"
+#  include "jit/arm/LIR-arm.h"
 #elif defined(JS_CODEGEN_ARM64)
-#include "jit/arm64/LIR-arm64.h"
+#  include "jit/arm64/LIR-arm64.h"
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-#if defined(JS_CODEGEN_MIPS32)
-#include "jit/mips32/LIR-mips32.h"
-#elif defined(JS_CODEGEN_MIPS64)
-#include "jit/mips64/LIR-mips64.h"
-#endif
-#include "jit/mips-shared/LIR-mips-shared.h"
+#  if defined(JS_CODEGEN_MIPS32)
+#    include "jit/mips32/LIR-mips32.h"
+#  elif defined(JS_CODEGEN_MIPS64)
+#    include "jit/mips64/LIR-mips64.h"
+#  endif
+#  include "jit/mips-shared/LIR-mips-shared.h"
 #elif defined(JS_CODEGEN_NONE)
-#include "jit/none/LIR-none.h"
+#  include "jit/none/LIR-none.h"
 #else
-#error "Unknown architecture!"
+#  error "Unknown architecture!"
 #endif
 
 #undef LIR_HEADER

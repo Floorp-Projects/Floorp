@@ -33,17 +33,17 @@
 #include <unistd.h>
 
 #ifdef MOZ_WIDGET_GTK
-#include <gdk/gdk.h>
-#include "gfxPlatformGtk.h"
+#  include <gdk/gdk.h>
+#  include "gfxPlatformGtk.h"
 #endif
 
 #ifdef MOZ_X11
-#include "mozilla/X11Util.h"
+#  include "mozilla/X11Util.h"
 #endif
 
 #if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
-#include "mozilla/SandboxBrokerPolicyFactory.h"
-#include "mozilla/SandboxSettings.h"
+#  include "mozilla/SandboxBrokerPolicyFactory.h"
+#  include "mozilla/SandboxSettings.h"
 #endif
 
 #include FT_MULTIPLE_MASTERS_H
@@ -56,10 +56,10 @@ using mozilla::dom::FontPatternListEntry;
 using mozilla::dom::SystemFontListEntry;
 
 #ifndef FC_POSTSCRIPT_NAME
-#define FC_POSTSCRIPT_NAME "postscriptname" /* String */
+#  define FC_POSTSCRIPT_NAME "postscriptname" /* String */
 #endif
 #ifndef FC_VARIABLE
-#define FC_VARIABLE "variable" /* Bool */
+#  define FC_VARIABLE "variable" /* Bool */
 #endif
 
 #define PRINTING_FC_PROPERTY "gfx.printing"
@@ -846,7 +846,7 @@ static void PreparePattern(FcPattern* aPattern, bool aIsPrinterFont) {
 #ifdef MOZ_WIDGET_GTK
     ApplyGdkScreenFontOptions(aPattern);
 
-#ifdef MOZ_X11
+#  ifdef MOZ_X11
     FcValue value;
     int lcdfilter;
     if (FcPatternGet(aPattern, FC_LCD_FILTER, 0, &value) == FcResultNoMatch) {
@@ -856,8 +856,8 @@ static void PreparePattern(FcPattern* aPattern, bool aIsPrinterFont) {
         FcPatternAddInteger(aPattern, FC_LCD_FILTER, lcdfilter);
       }
     }
-#endif  // MOZ_X11
-#endif  // MOZ_WIDGET_GTK
+#  endif  // MOZ_X11
+#endif    // MOZ_WIDGET_GTK
   }
 
   FcDefaultSubstitute(aPattern);
@@ -2389,10 +2389,10 @@ void gfxFcPlatformFontList::ActivateBundledFonts() {
  * MOZ_TREE_CAIRO.
  */
 
-#if MOZ_TREE_CAIRO
+#  if MOZ_TREE_CAIRO
 // Tree cairo symbols have different names.  Disable their activation through
 // preprocessor macros.
-#undef cairo_ft_font_options_substitute
+#    undef cairo_ft_font_options_substitute
 
 // The system cairo functions are not declared because the include paths cause
 // the gdk headers to pick up the tree cairo.h.
@@ -2400,7 +2400,7 @@ extern "C" {
 NS_VISIBILITY_DEFAULT void cairo_ft_font_options_substitute(
     const cairo_font_options_t* options, FcPattern* pattern);
 }
-#endif
+#  endif
 
 static void ApplyGdkScreenFontOptions(FcPattern* aPattern) {
   const cairo_font_options_t* options =

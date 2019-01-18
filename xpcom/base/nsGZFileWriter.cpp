@@ -10,10 +10,10 @@
 #include "zlib.h"
 
 #ifdef XP_WIN
-#include <io.h>
-#define _dup dup
+#  include <io.h>
+#  define _dup dup
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 NS_IMPL_ISUPPORTS(nsGZFileWriter, nsIGZFileWriter)

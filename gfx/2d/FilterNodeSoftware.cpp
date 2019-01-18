@@ -19,7 +19,7 @@
 // #define DEBUG_DUMP_SURFACES
 
 #ifdef DEBUG_DUMP_SURFACES
-#include "gfxUtils.h"  // not part of Moz2D
+#  include "gfxUtils.h"  // not part of Moz2D
 #endif
 
 namespace mozilla {
@@ -2218,7 +2218,7 @@ static inline void DebugOnlyCheckColorSamplingAccess(
   MOZ_ASSERT(aSampleAddress < aBoundsEnd, "accessing after end");
 }
 #else
-#define DebugOnlyCheckColorSamplingAccess(address, boundsBegin, boundsEnd)
+#  define DebugOnlyCheckColorSamplingAccess(address, boundsBegin, boundsEnd)
 #endif
 
 static inline uint8_t ColorComponentAtPoint(

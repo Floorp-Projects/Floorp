@@ -20,7 +20,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"
+#  include "ProfilerMarkerPayload.h"
 #endif
 
 using namespace mozilla;

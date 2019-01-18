@@ -20,12 +20,12 @@
 #include <stdarg.h>
 #include <string.h>
 #ifdef ANDROID
-#include <android/log.h>
-#include <fstream>
-#include <string>
+#  include <android/log.h>
+#  include <fstream>
+#  include <string>
 #endif  // ANDROID
 #ifdef XP_WIN
-#include <processthreadsapi.h>
+#  include <processthreadsapi.h>
 #endif  // XP_WIN
 
 #include "jsexn.h"
@@ -40,10 +40,10 @@
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #ifdef JS_SIMULATOR_ARM64
-#include "jit/arm64/vixl/Simulator-vixl.h"
+#  include "jit/arm64/vixl/Simulator-vixl.h"
 #endif
 #ifdef JS_SIMULATOR_ARM
-#include "jit/arm/Simulator-arm.h"
+#  include "jit/arm/Simulator-arm.h"
 #endif
 #include "util/DoubleToString.h"
 #include "util/NativeStack.h"

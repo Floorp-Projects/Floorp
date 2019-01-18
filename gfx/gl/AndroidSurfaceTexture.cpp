@@ -6,14 +6,14 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 
-#include "AndroidSurfaceTexture.h"
+#  include "AndroidSurfaceTexture.h"
 
-#include "GeneratedJNINatives.h"
+#  include "GeneratedJNINatives.h"
 
-#include "AndroidNativeWindow.h"
-#include "GLContextEGL.h"
-#include "GLBlitHelper.h"
-#include "GLImages.h"
+#  include "AndroidNativeWindow.h"
+#  include "GLContextEGL.h"
+#  include "GLBlitHelper.h"
+#  include "GLImages.h"
 
 using namespace mozilla;
 

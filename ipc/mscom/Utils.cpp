@@ -5,14 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(MOZILLA_INTERNAL_API)
-#include "mozilla/dom/ContentChild.h"
+#  include "mozilla/dom/ContentChild.h"
 #endif
 
 #if defined(ACCESSIBILITY)
-#include "mozilla/mscom/Registration.h"
-#if defined(MOZILLA_INTERNAL_API)
-#include "nsTArray.h"
-#endif
+#  include "mozilla/mscom/Registration.h"
+#  if defined(MOZILLA_INTERNAL_API)
+#    include "nsTArray.h"
+#  endif
 #endif
 
 #include "mozilla/mscom/Objref.h"
@@ -281,7 +281,7 @@ bool IsVtableIndexFromParentInterface(REFIID aInterface,
   return result;
 }
 
-#if defined(MOZILLA_INTERNAL_API)
+#  if defined(MOZILLA_INTERNAL_API)
 
 bool IsCallerExternalProcess() {
   MOZ_ASSERT(XRE_IsContentProcess());
@@ -386,7 +386,7 @@ bool IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
   return false;
 }
 
-#endif  // defined(MOZILLA_INTERNAL_API)
+#  endif  // defined(MOZILLA_INTERNAL_API)
 
 #endif  // defined(ACCESSIBILITY)
 

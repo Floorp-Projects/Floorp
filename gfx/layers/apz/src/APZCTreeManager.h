@@ -28,7 +28,7 @@
 #include "TouchCounter.h"                // for TouchCounter
 
 #if defined(MOZ_WIDGET_ANDROID)
-#include "mozilla/layers/AndroidDynamicToolbarAnimator.h"
+#  include "mozilla/layers/AndroidDynamicToolbarAnimator.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 namespace mozilla {

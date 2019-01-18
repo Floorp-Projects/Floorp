@@ -46,20 +46,20 @@ nsContentPolicy::nsContentPolicy() : mPolicies(NS_CONTENTPOLICY_CATEGORY) {}
 nsContentPolicy::~nsContentPolicy() {}
 
 #ifdef DEBUG
-#define WARN_IF_URI_UNINITIALIZED(uri, name)            \
-  PR_BEGIN_MACRO                                        \
-  if ((uri)) {                                          \
-    nsAutoCString spec;                                 \
-    (uri)->GetAsciiSpec(spec);                          \
-    if (spec.IsEmpty()) {                               \
-      NS_WARNING(name " is uninitialized, fix caller"); \
-    }                                                   \
-  }                                                     \
-  PR_END_MACRO
+#  define WARN_IF_URI_UNINITIALIZED(uri, name)            \
+    PR_BEGIN_MACRO                                        \
+    if ((uri)) {                                          \
+      nsAutoCString spec;                                 \
+      (uri)->GetAsciiSpec(spec);                          \
+      if (spec.IsEmpty()) {                               \
+        NS_WARNING(name " is uninitialized, fix caller"); \
+      }                                                   \
+    }                                                     \
+    PR_END_MACRO
 
 #else  // ! defined(DEBUG)
 
-#define WARN_IF_URI_UNINITIALIZED(uri, name)
+#  define WARN_IF_URI_UNINITIALIZED(uri, name)
 
 #endif  // defined(DEBUG)
 

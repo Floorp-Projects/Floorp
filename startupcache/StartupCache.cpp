@@ -36,15 +36,15 @@
 #include "GeckoProfiler.h"
 
 #ifdef IS_BIG_ENDIAN
-#define SC_ENDIAN "big"
+#  define SC_ENDIAN "big"
 #else
-#define SC_ENDIAN "little"
+#  define SC_ENDIAN "little"
 #endif
 
 #if PR_BYTES_PER_WORD == 4
-#define SC_WORDSIZE "4"
+#  define SC_WORDSIZE "4"
 #else
-#define SC_WORDSIZE "8"
+#  define SC_WORDSIZE "8"
 #endif
 
 namespace mozilla {

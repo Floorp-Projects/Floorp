@@ -4,21 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(MediaInfo_h)
-#define MediaInfo_h
+#  define MediaInfo_h
 
-#include "mozilla/UniquePtr.h"
-#include "mozilla/RefPtr.h"
-#include "nsDataHashtable.h"
-#include "nsString.h"
-#include "nsTArray.h"
-#include "AudioConfig.h"
-#include "ImageTypes.h"
-#include "MediaData.h"
-#include "TrackID.h"  // for TrackID
-#include "TimeUnits.h"
-#include "mozilla/gfx/Point.h"  // for gfx::IntSize
-#include "mozilla/gfx/Rect.h"   // for gfx::IntRect
-#include "mozilla/gfx/Types.h"  // for gfx::ColorDepth
+#  include "mozilla/UniquePtr.h"
+#  include "mozilla/RefPtr.h"
+#  include "nsDataHashtable.h"
+#  include "nsString.h"
+#  include "nsTArray.h"
+#  include "AudioConfig.h"
+#  include "ImageTypes.h"
+#  include "MediaData.h"
+#  include "TrackID.h"  // for TrackID
+#  include "TimeUnits.h"
+#  include "mozilla/gfx/Point.h"  // for gfx::IntSize
+#  include "mozilla/gfx/Rect.h"   // for gfx::IntRect
+#  include "mozilla/gfx/Types.h"  // for gfx::ColorDepth
 
 namespace mozilla {
 

@@ -9,8 +9,8 @@
 #include "TabParent.h"
 
 #ifdef ACCESSIBILITY
-#include "mozilla/a11y/DocAccessibleParent.h"
-#include "nsAccessibilityService.h"
+#  include "mozilla/a11y/DocAccessibleParent.h"
+#  include "nsAccessibilityService.h"
 #endif
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/dom/ChromeMessageSender.h"
@@ -71,7 +71,7 @@
 #include "nsIWidget.h"
 #include "nsNetUtil.h"
 #ifndef XP_WIN
-#include "nsJARProtocolHandler.h"
+#  include "nsJARProtocolHandler.h"
 #endif
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
@@ -105,17 +105,17 @@
 #include "mozilla/dom/ChromeBrowsingContext.h"
 
 #ifdef XP_WIN
-#include "mozilla/plugins/PluginWidgetParent.h"
+#  include "mozilla/plugins/PluginWidgetParent.h"
 #endif
 
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
-#include "mozilla/a11y/AccessibleWrap.h"
-#include "mozilla/a11y/Compatibility.h"
-#include "mozilla/a11y/nsWinUtils.h"
+#  include "mozilla/a11y/AccessibleWrap.h"
+#  include "mozilla/a11y/Compatibility.h"
+#  include "mozilla/a11y/nsWinUtils.h"
 #endif
 
 #ifdef MOZ_ANDROID_HISTORY
-#include "GeckoViewHistory.h"
+#  include "GeckoViewHistory.h"
 #endif
 
 using namespace mozilla::dom;
@@ -878,20 +878,20 @@ mozilla::ipc::IPCResult TabParent::RecvPDocAccessibleConstructor(
     auto parentDoc = static_cast<a11y::DocAccessibleParent*>(aParentDoc);
     mozilla::ipc::IPCResult added = parentDoc->AddChildDoc(doc, aParentID);
     if (!added) {
-#ifdef DEBUG
+#  ifdef DEBUG
       return added;
-#else
+#  else
       return IPC_OK();
-#endif
+#  endif
     }
 
-#ifdef XP_WIN
+#  ifdef XP_WIN
     MOZ_ASSERT(aDocCOMProxy.IsNull());
     a11y::WrapperFor(doc)->SetID(aMsaaID);
     if (a11y::nsWinUtils::IsWindowEmulationStarted()) {
       doc->SetEmulatedWindowHandle(parentDoc->GetEmulatedWindowHandle());
     }
-#endif
+#  endif
 
     return IPC_OK();
   } else {
@@ -905,7 +905,7 @@ mozilla::ipc::IPCResult TabParent::RecvPDocAccessibleConstructor(
 
     doc->SetTopLevel();
     a11y::DocManager::RemoteDocAdded(doc);
-#ifdef XP_WIN
+#  ifdef XP_WIN
     a11y::WrapperFor(doc)->SetID(aMsaaID);
     MOZ_ASSERT(!aDocCOMProxy.IsNull());
 
@@ -913,7 +913,7 @@ mozilla::ipc::IPCResult TabParent::RecvPDocAccessibleConstructor(
     doc->SetCOMInterface(proxy);
     doc->MaybeInitWindowEmulation();
     doc->SendParentCOMProxy();
-#endif
+#  endif
   }
 #endif
   return IPC_OK();

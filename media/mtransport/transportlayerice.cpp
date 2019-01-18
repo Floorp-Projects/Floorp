@@ -78,7 +78,7 @@ extern "C" {
 namespace mozilla {
 
 #ifdef ERROR
-#undef ERROR
+#  undef ERROR
 #endif
 
 MOZ_MTLOG_MODULE("mtransport")

@@ -18,7 +18,7 @@
 #include "WebMDemuxer.h"
 
 #ifdef MOZ_FMP4
-#include "MP4Demuxer.h"
+#  include "MP4Demuxer.h"
 #endif
 
 #include <limits>

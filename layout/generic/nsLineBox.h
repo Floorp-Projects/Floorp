@@ -1512,16 +1512,16 @@ class nsLineList {
 
 // NOTE: ASSIGN_FROM is meant to be used *only* as the entire body
 // of a function and therefore lacks PR_{BEGIN,END}_MACRO
-#define ASSIGN_FROM(other_)     \
-  mCurrent = other_.mCurrent;   \
-  mListLink = other_.mListLink; \
-  return *this;
+#  define ASSIGN_FROM(other_)     \
+    mCurrent = other_.mCurrent;   \
+    mListLink = other_.mListLink; \
+    return *this;
 
 #else /* !NS_LINELIST_DEBUG_PASS_END */
 
-#define ASSIGN_FROM(other_)   \
-  mCurrent = other_.mCurrent; \
-  return *this;
+#  define ASSIGN_FROM(other_)   \
+    mCurrent = other_.mCurrent; \
+    return *this;
 
 #endif /* !NS_LINELIST_DEBUG_PASS_END */
 

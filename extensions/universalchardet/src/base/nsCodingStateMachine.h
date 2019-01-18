@@ -77,9 +77,9 @@ extern const SMModel ISO2022KRSMModel;
 
 #undef CHAR_LEN_TABLE
 #ifdef DEBUG
-#define CHAR_LEN_TABLE(x) x, mozilla::ArrayLength(x)
+#  define CHAR_LEN_TABLE(x) x, mozilla::ArrayLength(x)
 #else
-#define CHAR_LEN_TABLE(x) x
+#  define CHAR_LEN_TABLE(x) x
 #endif
 
 #endif /* nsCodingStateMachine_h__ */

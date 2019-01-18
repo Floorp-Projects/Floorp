@@ -5,32 +5,32 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaDecoder_h_)
-#define MediaDecoder_h_
+#  define MediaDecoder_h_
 
-#include "BackgroundVideoDecodingPermissionObserver.h"
-#include "DecoderDoctorDiagnostics.h"
-#include "MediaContainerType.h"
-#include "MediaDecoderOwner.h"
-#include "MediaEventSource.h"
-#include "MediaMetadataManager.h"
-#include "MediaPromiseDefs.h"
-#include "MediaResource.h"
-#include "MediaStatistics.h"
-#include "MediaStreamGraph.h"
-#include "SeekTarget.h"
-#include "TimeUnits.h"
-#include "TrackID.h"
-#include "mozilla/Atomics.h"
-#include "mozilla/CDMProxy.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/ReentrantMonitor.h"
-#include "mozilla/StateMirroring.h"
-#include "mozilla/StateWatching.h"
-#include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
-#include "nsIObserver.h"
-#include "nsISupports.h"
-#include "nsITimer.h"
+#  include "BackgroundVideoDecodingPermissionObserver.h"
+#  include "DecoderDoctorDiagnostics.h"
+#  include "MediaContainerType.h"
+#  include "MediaDecoderOwner.h"
+#  include "MediaEventSource.h"
+#  include "MediaMetadataManager.h"
+#  include "MediaPromiseDefs.h"
+#  include "MediaResource.h"
+#  include "MediaStatistics.h"
+#  include "MediaStreamGraph.h"
+#  include "SeekTarget.h"
+#  include "TimeUnits.h"
+#  include "TrackID.h"
+#  include "mozilla/Atomics.h"
+#  include "mozilla/CDMProxy.h"
+#  include "mozilla/MozPromise.h"
+#  include "mozilla/ReentrantMonitor.h"
+#  include "mozilla/StateMirroring.h"
+#  include "mozilla/StateWatching.h"
+#  include "nsAutoPtr.h"
+#  include "nsCOMPtr.h"
+#  include "nsIObserver.h"
+#  include "nsISupports.h"
+#  include "nsITimer.h"
 
 class nsIPrincipal;
 
@@ -53,9 +53,9 @@ enum class Visibility : uint8_t;
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with MediaDecoder::GetCurrentTime
 // implementation.
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
+#  ifdef GetCurrentTime
+#    undef GetCurrentTime
+#  endif
 
 struct MOZ_STACK_CLASS MediaDecoderInit {
   MediaDecoderOwner* const mOwner;
@@ -368,9 +368,9 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   static bool IsWaveEnabled();
   static bool IsWebMEnabled();
 
-#ifdef MOZ_WMF
+#  ifdef MOZ_WMF
   static bool IsWMFEnabled();
-#endif
+#  endif
 
   // Return the frame decode/paint related statistics.
   FrameStatistics& GetFrameStatistics() { return *mFrameStats; }

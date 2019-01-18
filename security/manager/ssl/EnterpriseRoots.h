@@ -11,8 +11,8 @@
 #include "ScopedNSSTypes.h"
 
 #ifdef XP_WIN
-#include "windows.h"  // this needs to be before the following includes
-#include "wincrypt.h"
+#  include "windows.h"  // this needs to be before the following includes
+#  include "wincrypt.h"
 #endif  // XP_WIN
 
 nsresult GatherEnterpriseRoots(mozilla::UniqueCERTCertList& result);

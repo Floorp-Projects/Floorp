@@ -26,7 +26,7 @@ static uint32_t get_mips_flags() {
   flags |= HWCAP_FPU;
   flags |= HWCAP_R2;
 #else
-#ifdef __linux__
+#  ifdef __linux__
   FILE* fp = fopen("/proc/cpuinfo", "r");
   if (!fp) {
     return flags;
@@ -45,7 +45,7 @@ static uint32_t get_mips_flags() {
   if (strstr(buf, "mips32r2") || strstr(buf, "mips64r2")) {
     flags |= HWCAP_R2;
   }
-#endif
+#  endif
 #endif  // JS_SIMULATOR_MIPS32 || JS_SIMULATOR_MIPS64
   return flags;
 }

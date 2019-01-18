@@ -36,7 +36,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 
 #ifdef STREAM_LOG
-#undef STREAM_LOG
+#  undef STREAM_LOG
 #endif
 
 LazyLogModule gTrackUnionStreamLog("TrackUnionStream");

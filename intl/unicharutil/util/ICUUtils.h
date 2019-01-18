@@ -10,9 +10,9 @@
 // nsGkAtom, so we only build when included into internal libs:
 #ifdef MOZILLA_INTERNAL_API
 
-#include "mozilla/Scoped.h"
-#include "nsString.h"
-#include "unicode/unum.h"  // for UNumberFormat
+#  include "mozilla/Scoped.h"
+#  include "nsString.h"
+#  include "unicode/unum.h"  // for UNumberFormat
 
 class nsIContent;
 
@@ -83,7 +83,7 @@ class ICUUtils {
    */
   static nsresult UErrorToNsResult(const UErrorCode aErrorCode);
 
-#if 0
+#  if 0
   // Currently disabled because using C++ API doesn't play nicely with enabling
   // system ICU.
 
@@ -94,7 +94,7 @@ class ICUUtils {
 
   static void ToMozString(UnicodeString& aICUString, nsAString& aMozString);
   static void ToICUString(nsAString& aMozString, UnicodeString& aICUString);
-#endif
+#  endif
 };
 
 #endif /* MOZILLA_INTERNAL_API */

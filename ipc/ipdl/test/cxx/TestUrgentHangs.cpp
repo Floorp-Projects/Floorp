@@ -6,9 +6,9 @@
 #include "IPDLUnitTests.h"  // fail etc.
 #include "prthread.h"
 #if defined(OS_POSIX)
-#include <unistd.h>
+#  include <unistd.h>
 #else
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 namespace mozilla {

@@ -4,16 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(VPXDecoder_h_)
-#define VPXDecoder_h_
+#  define VPXDecoder_h_
 
-#include "PlatformDecoderModule.h"
-#include "mozilla/Span.h"
+#  include "PlatformDecoderModule.h"
+#  include "mozilla/Span.h"
 
-#include <stdint.h>
-#define VPX_DONT_DEFINE_STDINT_TYPES
-#include "vpx/vp8dx.h"
-#include "vpx/vpx_codec.h"
-#include "vpx/vpx_decoder.h"
+#  include <stdint.h>
+#  define VPX_DONT_DEFINE_STDINT_TYPES
+#  include "vpx/vp8dx.h"
+#  include "vpx/vpx_codec.h"
+#  include "vpx/vpx_decoder.h"
 
 namespace mozilla {
 

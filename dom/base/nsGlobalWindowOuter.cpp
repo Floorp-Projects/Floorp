@@ -41,7 +41,7 @@
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #if defined(MOZ_WIDGET_ANDROID)
-#include "mozilla/dom/WindowOrientationObserver.h"
+#  include "mozilla/dom/WindowOrientationObserver.h"
 #endif
 #include "nsError.h"
 #include "nsIIdleService.h"
@@ -153,8 +153,8 @@
 #include "nsIURIFixup.h"
 #include "nsIURIMutator.h"
 #ifndef DEBUG
-#include "nsIAppStartup.h"
-#include "nsToolkitCompsCID.h"
+#  include "nsIAppStartup.h"
+#  include "nsToolkitCompsCID.h"
 #endif
 #include "nsCDefaultURIFixup.h"
 #include "mozilla/EventDispatcher.h"
@@ -172,9 +172,9 @@
 #include "xpcprivate.h"
 
 #ifdef NS_PRINTING
-#include "nsIPrintSettings.h"
-#include "nsIPrintSettingsService.h"
-#include "nsIWebBrowserPrint.h"
+#  include "nsIPrintSettings.h"
+#  include "nsIPrintSettingsService.h"
+#  include "nsIWebBrowserPrint.h"
 #endif
 
 #include "nsWindowRoot.h"
@@ -246,29 +246,29 @@
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/Worklet.h"
 #ifdef HAVE_SIDEBAR
-#include "mozilla/dom/ExternalBinding.h"
+#  include "mozilla/dom/ExternalBinding.h"
 #endif
 
 #ifdef MOZ_WEBSPEECH
-#include "mozilla/dom/SpeechSynthesis.h"
+#  include "mozilla/dom/SpeechSynthesis.h"
 #endif
 
 // Apple system headers seem to have a check() macro.  <sigh>
 #ifdef check
 class nsIScriptTimeoutHandler;
-#undef check
+#  undef check
 #endif  // check
 #include "AccessCheck.h"
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 #ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
+#  include <process.h>
+#  define getpid _getpid
 #else
-#include <unistd.h>  // for getpid()
+#  include <unistd.h>  // for getpid()
 #endif
 
 using namespace mozilla;
@@ -4702,7 +4702,7 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
         printSettings->GetPrinterName(printerName);
 
         bool shouldGetDefaultPrinterName = printerName.IsEmpty();
-#ifdef MOZ_X11
+#  ifdef MOZ_X11
         // In Linux, GTK backend does not support per printer settings.
         // Calling GetDefaultPrinterName causes a sandbox violation (see Bug
         // 1329216). The printer name is not needed anywhere else on Linux
@@ -4712,7 +4712,7 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
         if (!XRE_IsParentProcess()) {
           shouldGetDefaultPrinterName = false;
         }
-#endif
+#  endif
         if (shouldGetDefaultPrinterName) {
           printSettingsService->GetDefaultPrinterName(printerName);
           printSettings->SetPrinterName(printerName);
@@ -7244,8 +7244,9 @@ void nsGlobalWindowOuter::ReportLargeAllocStatus() {
 }
 
 #if defined(_WINDOWS_) && !defined(MOZ_WRAPPED_WINDOWS_H)
-#pragma message("wrapper failure reason: " MOZ_WINDOWS_WRAPPER_DISABLED_REASON)
-#error "Never include unwrapped windows.h in this file!"
+#  pragma message( \
+      "wrapper failure reason: " MOZ_WINDOWS_WRAPPER_DISABLED_REASON)
+#  error "Never include unwrapped windows.h in this file!"
 #endif
 
 // Helper called by methods that move/resize the window,

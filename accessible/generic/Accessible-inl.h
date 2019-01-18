@@ -12,7 +12,7 @@
 #include "nsCoreUtils.h"
 
 #ifdef A11Y_LOG
-#include "Logging.h"
+#  include "Logging.h"
 #endif
 
 namespace mozilla {

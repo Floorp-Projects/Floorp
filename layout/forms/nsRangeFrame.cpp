@@ -27,7 +27,7 @@
 #include "nsStyleConsts.h"
 
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
+#  include "nsAccessibilityService.h"
 #endif
 
 // Our intrinsic size is 12em in the main-axis and 1.3em in the cross-axis.

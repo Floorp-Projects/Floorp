@@ -25,10 +25,10 @@
 // DnsQuery_A is dependent on UNICODE being set. It should *always* be
 // PDNS_RECORDA, but if UNICODE is set it is PDNS_RECORDW. To get around this
 // we make sure that UNICODE is unset.
-#undef UNICODE
-#include <ws2tcpip.h>
-#undef GetAddrInfo
-#include <windns.h>
+#  undef UNICODE
+#  include <ws2tcpip.h>
+#  undef GetAddrInfo
+#  include <windns.h>
 #endif
 
 namespace mozilla {

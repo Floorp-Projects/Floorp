@@ -7,7 +7,7 @@
 #include "mozilla/mscom/MainThreadRuntime.h"
 
 #if defined(ACCESSIBILITY)
-#include "mozilla/a11y/Compatibility.h"
+#  include "mozilla/a11y/Compatibility.h"
 #endif
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
@@ -15,7 +15,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #if defined(ACCESSIBILITY)
-#include "nsExceptionHandler.h"
+#  include "nsExceptionHandler.h"
 #endif  // defined(ACCESSIBILITY)
 #include "nsWindowsHelpers.h"
 #include "nsXULAppAPI.h"

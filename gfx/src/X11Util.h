@@ -10,11 +10,11 @@
 // Utilities common to all X clients, regardless of UI toolkit.
 
 #if defined(MOZ_WIDGET_GTK)
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
-#include "X11UndefineNone.h"
+#  include <gdk/gdk.h>
+#  include <gdk/gdkx.h>
+#  include "X11UndefineNone.h"
 #else
-#error Unknown toolkit
+#  error Unknown toolkit
 #endif
 
 #include <string.h>          // for memset

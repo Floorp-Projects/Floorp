@@ -7,16 +7,16 @@
 #include "NSSBridge.h"
 #include "APKOpen.h"
 #ifdef ANDROID
-#include <jni.h>
-#include <android/log.h>
+#  include <jni.h>
+#  include <android/log.h>
 #endif
 
 #include "ElfLoader.h"
 
 #ifdef DEBUG
-#define LOG(x...) __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", x)
+#  define LOG(x...) __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", x)
 #else
-#define LOG(x...)
+#  define LOG(x...)
 #endif
 
 static bool initialized = false;

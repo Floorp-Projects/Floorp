@@ -15,16 +15,16 @@
 #include "Tracing.h"
 
 #ifdef MOZ_WEBRTC
-#include "webrtc/MediaEngineWebRTC.h"
+#  include "webrtc/MediaEngineWebRTC.h"
 #endif
 
 #ifdef XP_MACOSX
-#include <sys/sysctl.h>
+#  include <sys/sysctl.h>
 #endif
 
 extern mozilla::LazyLogModule gMediaStreamGraphLog;
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif  // LOG
 #define LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
 

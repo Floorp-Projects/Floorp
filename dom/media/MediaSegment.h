@@ -10,7 +10,7 @@
 #include "nsIPrincipal.h"
 #include "nsProxyRelease.h"
 #ifdef MOZILLA_INTERNAL_API
-#include "mozilla/TimeStamp.h"
+#  include "mozilla/TimeStamp.h"
 #endif
 #include <algorithm>
 

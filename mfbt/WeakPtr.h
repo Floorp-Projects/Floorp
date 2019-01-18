@@ -79,7 +79,7 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 // For thread safety checking.
-#include "nsISupportsImpl.h"
+#  include "nsISupportsImpl.h"
 #endif
 
 #if defined(MOZILLA_INTERNAL_API) && \
@@ -101,38 +101,38 @@
 // We re-use XPCOM's nsAutoOwningThread checks when they are available. This has
 // the advantage that it works with cooperative thread pools.
 
-#define MOZ_WEAKPTR_DECLARE_THREAD_SAFETY_CHECK \
-  /* Will be none if mPtr = nullptr. */         \
-  Maybe<nsAutoOwningThread> _owningThread;
-#define MOZ_WEAKPTR_INIT_THREAD_SAFETY_CHECK() \
-  do {                                         \
-    if (p) {                                   \
-      _owningThread.emplace();                 \
-    }                                          \
-  } while (false)
-#define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY()                                  \
-  do {                                                                      \
-    if (_owningThread.isSome() && !_owningThread.ref().IsCurrentThread()) { \
-      WeakPtrTraits<T>::AssertSafeToAccessFromNonOwningThread();            \
-    }                                                                       \
-  } while (false)
-#define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(that) \
-  (that)->AssertThreadSafety();
+#  define MOZ_WEAKPTR_DECLARE_THREAD_SAFETY_CHECK \
+    /* Will be none if mPtr = nullptr. */         \
+    Maybe<nsAutoOwningThread> _owningThread;
+#  define MOZ_WEAKPTR_INIT_THREAD_SAFETY_CHECK() \
+    do {                                         \
+      if (p) {                                   \
+        _owningThread.emplace();                 \
+      }                                          \
+    } while (false)
+#  define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY()                                  \
+    do {                                                                      \
+      if (_owningThread.isSome() && !_owningThread.ref().IsCurrentThread()) { \
+        WeakPtrTraits<T>::AssertSafeToAccessFromNonOwningThread();            \
+      }                                                                       \
+    } while (false)
+#  define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(that) \
+    (that)->AssertThreadSafety();
 
-#define MOZ_WEAKPTR_THREAD_SAFETY_CHECKING 1
+#  define MOZ_WEAKPTR_THREAD_SAFETY_CHECKING 1
 
 #else
 
-#define MOZ_WEAKPTR_DECLARE_THREAD_SAFETY_CHECK
-#define MOZ_WEAKPTR_INIT_THREAD_SAFETY_CHECK() \
-  do {                                         \
-  } while (false)
-#define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY() \
-  do {                                     \
-  } while (false)
-#define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(that) \
-  do {                                                   \
-  } while (false)
+#  define MOZ_WEAKPTR_DECLARE_THREAD_SAFETY_CHECK
+#  define MOZ_WEAKPTR_INIT_THREAD_SAFETY_CHECK() \
+    do {                                         \
+    } while (false)
+#  define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY() \
+    do {                                     \
+    } while (false)
+#  define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(that) \
+    do {                                                   \
+    } while (false)
 
 #endif
 
@@ -144,10 +144,12 @@ template <typename T>
 class SupportsWeakPtr;
 
 #ifdef MOZ_REFCOUNTED_LEAK_CHECKING
-#define MOZ_DECLARE_WEAKREFERENCE_TYPENAME(T) \
-  static const char* weakReferenceTypeName() { return "WeakReference<" #T ">"; }
+#  define MOZ_DECLARE_WEAKREFERENCE_TYPENAME(T)  \
+    static const char* weakReferenceTypeName() { \
+      return "WeakReference<" #T ">";            \
+    }
 #else
-#define MOZ_DECLARE_WEAKREFERENCE_TYPENAME(T)
+#  define MOZ_DECLARE_WEAKREFERENCE_TYPENAME(T)
 #endif
 
 template <class T>

@@ -9,7 +9,7 @@
 
 #if defined(XP_WIN)
 
-#include <windows.h>
+#  include <windows.h>
 
 // NB: This code must be able to run apart from XPCOM
 

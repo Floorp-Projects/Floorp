@@ -16,23 +16,23 @@
 #include "base/thread_local.h"
 
 #if defined(OS_MACOSX)
-#include "base/message_pump_mac.h"
+#  include "base/message_pump_mac.h"
 #endif
 #if defined(OS_POSIX)
-#include "base/message_pump_libevent.h"
+#  include "base/message_pump_libevent.h"
 #endif
 #if defined(OS_LINUX) || defined(OS_BSD)
-#if defined(MOZ_WIDGET_GTK)
-#include "base/message_pump_glib.h"
-#endif
+#  if defined(MOZ_WIDGET_GTK)
+#    include "base/message_pump_glib.h"
+#  endif
 #endif
 #ifdef ANDROID
-#include "base/message_pump_android.h"
+#  include "base/message_pump_android.h"
 #endif
 #include "nsISerialEventTarget.h"
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
-#include "TracedTaskCommon.h"
+#  include "GeckoTaskTracer.h"
+#  include "TracedTaskCommon.h"
 #endif
 
 #include "MessagePump.h"
@@ -233,17 +233,17 @@ MessageLoop::MessageLoop(Type type, nsIEventTarget* aEventTarget)
   }
 #elif defined(OS_POSIX)
   if (type_ == TYPE_UI) {
-#if defined(OS_MACOSX)
+#  if defined(OS_MACOSX)
     pump_ = base::MessagePumpMac::Create();
-#elif defined(OS_LINUX) || defined(OS_BSD)
+#  elif defined(OS_LINUX) || defined(OS_BSD)
     pump_ = new base::MessagePumpForUI();
-#endif  // OS_LINUX
+#  endif  // OS_LINUX
   } else if (type_ == TYPE_IO) {
     pump_ = new base::MessagePumpLibevent();
   } else {
     pump_ = new base::MessagePumpDefault();
   }
-#endif  // OS_POSIX
+#endif    // OS_POSIX
 }
 
 MessageLoop::~MessageLoop() {

@@ -457,8 +457,8 @@ nsresult nsPrintSettingsWin::_Assign(nsIPrintSettings* aPS) {
 // This define turns on the testing module below
 // so at start up it writes and reads the prefs.
 #ifdef DEBUG_rodsX
-#include "nsIPrintSettingsService.h"
-#include "nsIServiceManager.h"
+#  include "nsIPrintSettingsService.h"
+#  include "nsIServiceManager.h"
 class Tester {
  public:
   Tester();

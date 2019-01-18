@@ -6,13 +6,13 @@
 
 #ifdef USE_ELF
 
-#include "leaky.h"
-#include <stdio.h>
-#include <malloc.h>
-#include <libelf/libelf.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
+#  include "leaky.h"
+#  include <stdio.h>
+#  include <malloc.h>
+#  include <libelf/libelf.h>
+#  include <unistd.h>
+#  include <fcntl.h>
+#  include <string.h>
 
 void leaky::readSymbols(const char *fileName) {
   int fd = ::open(fileName, O_RDONLY);
@@ -41,25 +41,25 @@ void leaky::readSymbols(const char *fileName) {
     fprintf(stderr, "%s: elf library lossage\n", applicationName);
     exit(-1);
   }
-#if 0
+#  if 0
     Elf32_Half ndx = ehdr->e_shstrndx;
-#endif
+#  endif
 
   Elf_Scn *scn = 0;
   int strtabndx = -1;
   for (int i = 1; (scn = elf_nextscn(elf, scn)) != 0; i++) {
     Elf32_Shdr *shdr = elf32_getshdr(scn);
-#if 0
+#  if 0
 	char *name = elf_strptr(elf, ndx, (size_t) shdr->sh_name);
 	printf("Section %s (%d 0x%x)\n", name ? name : "(null)",
 	       shdr->sh_type, shdr->sh_type);
-#endif
+#  endif
     if (shdr->sh_type == SHT_STRTAB) {
       /* We assume here that string tables preceed symbol tables... */
       strtabndx = i;
       continue;
     }
-#if 0
+#  if 0
 	if (shdr->sh_type == SHT_DYNAMIC) {
 	    /* Dynamic */
 	    Elf_Data *data = elf_getdata(scn, 0);
@@ -75,7 +75,7 @@ void leaky::readSymbols(const char *fileName) {
 		printf("tag=%d value=0x%x\n", dyn->d_tag, dyn->d_un.d_val);
 	    }
 	} else
-#endif
+#  endif
     if ((shdr->sh_type == SHT_SYMTAB) || (shdr->sh_type == SHT_DYNSYM)) {
       /* Symbol table */
       Elf_Data *data = elf_getdata(scn, 0);
@@ -88,21 +88,21 @@ void leaky::readSymbols(const char *fileName) {
       Elf32_Sym *esym = (Elf32_Sym *)data->d_buf;
       Elf32_Sym *lastsym = (Elf32_Sym *)((char *)data->d_buf + data->d_size);
       for (; esym < lastsym; esym++) {
-#if 0
+#  if 0
 		char *nm = elf_strptr(elf, strtabndx, (size_t)esym->st_name);
 		printf("%20s 0x%08x %02x %02x\n",
 		       nm, esym->st_value, ELF32_ST_BIND(esym->st_info),
 		       ELF32_ST_TYPE(esym->st_info));
-#endif
+#  endif
         if ((esym->st_value == 0) ||
             (ELF32_ST_BIND(esym->st_info) == STB_WEAK) ||
             (ELF32_ST_BIND(esym->st_info) == STB_NUM) ||
             (ELF32_ST_TYPE(esym->st_info) != STT_FUNC)) {
           continue;
         }
-#if 1
+#  if 1
         char *nm = elf_strptr(elf, strtabndx, (size_t)esym->st_name);
-#endif
+#  endif
         sp->name = nm ? strdup(nm) : "(no name)";
         sp->address = esym->st_value;
         sp++;

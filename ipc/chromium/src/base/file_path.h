@@ -78,8 +78,8 @@
 // here so that the same setting can be used in both the implementation and
 // in the unit test.
 #if defined(OS_WIN)
-#define FILE_PATH_USES_DRIVE_LETTERS
-#define FILE_PATH_USES_WIN_SEPARATORS
+#  define FILE_PATH_USES_DRIVE_LETTERS
+#  define FILE_PATH_USES_WIN_SEPARATORS
 #endif  // OS_WIN
 
 // An abstraction to isolate users from the differences between native
@@ -241,9 +241,9 @@ class FilePath {
 
 // Macros for string literal initialization of FilePath::CharType[].
 #if defined(OS_POSIX)
-#define FILE_PATH_LITERAL(x) x
+#  define FILE_PATH_LITERAL(x) x
 #elif defined(OS_WIN)
-#define FILE_PATH_LITERAL(x) L##x
+#  define FILE_PATH_LITERAL(x) L##x
 #endif  // OS_WIN
 
 // Implement hash function so that we can use FilePaths in hashsets and maps.

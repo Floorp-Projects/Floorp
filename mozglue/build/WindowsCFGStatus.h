@@ -9,9 +9,9 @@
 #if defined(_MSC_VER) && \
     (defined(_M_IX86) || defined(_M_X64) || defined(_M_ARM64))
 
-#include <windows.h>
-#include "mozilla/Attributes.h"
-#include "mozilla/Types.h"
+#  include <windows.h>
+#  include "mozilla/Attributes.h"
+#  include "mozilla/Types.h"
 
 extern "C" {
 

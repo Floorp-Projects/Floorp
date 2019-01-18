@@ -53,7 +53,7 @@
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
 #ifdef MOZ_WEBRTC
-#include "mozilla/dom/RTCIdentityProviderRegistrar.h"
+#  include "mozilla/dom/RTCIdentityProviderRegistrar.h"
 #endif
 #include "mozilla/dom/FileReaderBinding.h"
 #include "mozilla/dom/ScriptSettings.h"

@@ -48,10 +48,10 @@ class nsLocalHandlerApp : public nsILocalHandlerApp {
 // any platforms that need a platform-specific class instead of just
 // using nsLocalHandlerApp need to add an include and a typedef here.
 #ifdef XP_MACOSX
-#ifndef NSLOCALHANDLERAPPMAC_H_
-#include "mac/nsLocalHandlerAppMac.h"
+#  ifndef NSLOCALHANDLERAPPMAC_H_
+#    include "mac/nsLocalHandlerAppMac.h"
 typedef nsLocalHandlerAppMac PlatformLocalHandlerApp_t;
-#endif
+#  endif
 #else
 typedef nsLocalHandlerApp PlatformLocalHandlerApp_t;
 #endif

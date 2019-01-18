@@ -604,7 +604,7 @@ void Realm::checkScriptMapsAfterMovingGC() {
     }
   }
 
-#ifdef MOZ_VTUNE
+#  ifdef MOZ_VTUNE
   if (scriptVTuneIdMap) {
     for (auto r = scriptVTuneIdMap->all(); !r.empty(); r.popFront()) {
       JSScript* script = r.front().key();
@@ -614,7 +614,7 @@ void Realm::checkScriptMapsAfterMovingGC() {
       MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
     }
   }
-#endif  // MOZ_VTUNE
+#  endif  // MOZ_VTUNE
 }
 #endif
 

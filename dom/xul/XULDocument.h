@@ -32,9 +32,9 @@ class nsXULPrototypeElement;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 #else
-#include "nsIObjectInputStream.h"
-#include "nsIObjectOutputStream.h"
-#include "nsXULElement.h"
+#  include "nsIObjectInputStream.h"
+#  include "nsIObjectOutputStream.h"
+#  include "nsXULElement.h"
 #endif
 #include "nsURIHashKey.h"
 #include "nsInterfaceHashtable.h"

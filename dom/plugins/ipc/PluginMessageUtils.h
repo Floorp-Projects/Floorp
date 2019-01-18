@@ -26,7 +26,7 @@
 #include "nsHashKeys.h"
 
 #ifdef XP_MACOSX
-#include "PluginInterposeOSX.h"
+#  include "PluginInterposeOSX.h"
 #else
 namespace mac_plugin_interposing {
 class NSCursorInfo {};
@@ -51,11 +51,11 @@ std::string UnmungePluginDsoPath(const std::string& munged);
 extern mozilla::LogModule* GetPluginLog();
 
 #if defined(_MSC_VER)
-#define FULLFUNCTION __FUNCSIG__
+#  define FULLFUNCTION __FUNCSIG__
 #elif defined(__GNUC__)
-#define FULLFUNCTION __PRETTY_FUNCTION__
+#  define FULLFUNCTION __PRETTY_FUNCTION__
 #else
-#define FULLFUNCTION __FUNCTION__
+#  define FULLFUNCTION __FUNCTION__
 #endif
 
 #define PLUGIN_LOG_DEBUG(args) \
@@ -118,7 +118,7 @@ typedef XID NativeWindowHandle;
 #elif defined(XP_DARWIN) || defined(ANDROID)
 typedef intptr_t NativeWindowHandle;  // never actually used, will always be 0
 #else
-#error Need NativeWindowHandle for this platform
+#  error Need NativeWindowHandle for this platform
 #endif
 
 #ifdef XP_WIN
@@ -516,13 +516,13 @@ struct ParamTraits<NSCursorInfo> {
     const char* typeName = aParam.GetTypeName();
     nsPoint hotSpot = aParam.GetHotSpot();
     int hotSpotX, hotSpotY;
-#ifdef NS_COORD_IS_FLOAT
+#  ifdef NS_COORD_IS_FLOAT
     hotSpotX = rint(hotSpot.x);
     hotSpotY = rint(hotSpot.y);
-#else
+#  else
     hotSpotX = hotSpot.x;
     hotSpotY = hotSpot.y;
-#endif
+#  endif
     uint32_t dataLength = aParam.GetCustomImageDataLength();
     uint8_t* data = aParam.GetCustomImageData();
 
@@ -648,15 +648,15 @@ struct ParamTraits<mozilla::plugins::NPAudioDeviceStateChangedIPC> {
 // NB: these guards are based on those where struct NPEvent is defined
 // in npapi.h.  They should be kept in sync.
 #if defined(XP_MACOSX)
-#include "mozilla/plugins/NPEventOSX.h"
+#  include "mozilla/plugins/NPEventOSX.h"
 #elif defined(XP_WIN)
-#include "mozilla/plugins/NPEventWindows.h"
+#  include "mozilla/plugins/NPEventWindows.h"
 #elif defined(ANDROID)
-#include "mozilla/plugins/NPEventAndroid.h"
+#  include "mozilla/plugins/NPEventAndroid.h"
 #elif defined(XP_UNIX)
-#include "mozilla/plugins/NPEventUnix.h"
+#  include "mozilla/plugins/NPEventUnix.h"
 #else
-#error Unsupported platform
+#  error Unsupported platform
 #endif
 
 #endif /* DOM_PLUGINS_PLUGINMESSAGEUTILS_H */

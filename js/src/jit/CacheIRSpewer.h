@@ -9,13 +9,13 @@
 
 #ifdef JS_CACHEIR_SPEW
 
-#include "mozilla/Maybe.h"
+#  include "mozilla/Maybe.h"
 
-#include "jit/CacheIR.h"
-#include "js/TypeDecls.h"
-#include "threading/LockGuard.h"
-#include "vm/JSONPrinter.h"
-#include "vm/MutexIDs.h"
+#  include "jit/CacheIR.h"
+#  include "js/TypeDecls.h"
+#  include "threading/LockGuard.h"
+#  include "vm/JSONPrinter.h"
+#  include "vm/MutexIDs.h"
 
 namespace js {
 namespace jit {

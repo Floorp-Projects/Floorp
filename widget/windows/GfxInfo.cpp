@@ -283,12 +283,12 @@ static int32_t WindowsOSVersion() {
   if (winVersion == UNINITIALIZED_VALUE) {
     vinfo.dwOSVersionInfoSize = sizeof(vinfo);
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
+#  pragma warning(push)
+#  pragma warning(disable : 4996)
 #endif
     if (!GetVersionEx(&vinfo)) {
 #ifdef _MSC_VER
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif
       winVersion = kWindowsUnknown;
     } else {

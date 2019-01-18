@@ -9,7 +9,7 @@
 
 #include "base/message_pump_default.h"
 #if defined(XP_WIN)
-#include "base/message_pump_win.h"
+#  include "base/message_pump_win.h"
 #endif
 
 #include "base/time.h"

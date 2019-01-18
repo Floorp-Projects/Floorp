@@ -9,13 +9,13 @@
 #include <string>
 
 #if defined(XP_LINUX)
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
+#  include <fcntl.h>
+#  include <unistd.h>
+#  include <sys/stat.h>
 #elif defined(XP_MACOSX)
-#include <CoreFoundation/CoreFoundation.h>
+#  include <CoreFoundation/CoreFoundation.h>
 #elif defined(XP_WIN)
-#include <objbase.h>
+#  include <objbase.h>
 #endif
 
 #include "json/json.h"

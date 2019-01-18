@@ -8,7 +8,7 @@
 #include "nsTArray.h"
 
 #ifdef MOZ_WEBRTC
-#include "mtransport/nricestunaddr.h"
+#  include "mtransport/nricestunaddr.h"
 #endif
 
 namespace mozilla {

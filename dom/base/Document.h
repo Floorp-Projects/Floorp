@@ -63,11 +63,11 @@
 
 // windows.h #defines CreateEvent
 #ifdef CreateEvent
-#undef CreateEvent
+#  undef CreateEvent
 #endif
 
 #ifdef MOZILLA_INTERNAL_API
-#include "mozilla/dom/DocumentBinding.h"
+#  include "mozilla/dom/DocumentBinding.h"
 #else
 namespace mozilla {
 namespace dom {

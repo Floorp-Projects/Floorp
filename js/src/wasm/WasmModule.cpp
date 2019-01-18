@@ -1191,9 +1191,9 @@ bool Module::makeStructTypeDescrs(
   MOZ_CRASH("Should not have seen any struct types");
 #else
 
-#ifndef ENABLE_BINARYDATA
-#error "GC types require TypedObject"
-#endif
+#  ifndef ENABLE_BINARYDATA
+#    error "GC types require TypedObject"
+#  endif
 
   // Not just any prototype object will do, we must have the actual
   // StructTypePrototype.

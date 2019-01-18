@@ -64,11 +64,11 @@
 #include "nsAttrValueOrString.h"
 #include "nsQueryObject.h"
 #ifdef MOZ_XUL
-#include "nsXULElement.h"
+#  include "nsXULElement.h"
 #endif /* MOZ_XUL */
 #include "nsFrameSelection.h"
 #ifdef DEBUG
-#include "nsRange.h"
+#  include "nsRange.h"
 #endif
 
 #include "nsBindingManager.h"

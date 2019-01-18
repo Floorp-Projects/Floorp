@@ -13,7 +13,7 @@
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
 #ifdef JS_ION_PERF
-#include "jit/PerfSpewer.h"
+#  include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
 #include "jit/x86/SharedICHelpers-x86.h"

@@ -25,17 +25,17 @@
 #include "mozilla/Attributes.h"
 
 #ifdef MOZ_WIDGET_COCOA
-#include <CoreFoundation/CoreFoundation.h>
-#include "nsILocalFileMac.h"
+#  include <CoreFoundation/CoreFoundation.h>
+#  include "nsILocalFileMac.h"
 #elif defined(XP_WIN)
-#include <windows.h>
-#include <shlobj.h>
+#  include <windows.h>
+#  include <shlobj.h>
 #elif defined(XP_UNIX)
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #ifdef DEBUG_bsmedberg
-#define DEBUG_COMMANDLINE
+#  define DEBUG_COMMANDLINE
 #endif
 
 #define NS_COMMANDLINE_CID                           \
@@ -294,7 +294,7 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile** aResult) {
   return NS_OK;
 
 #else
-#error Need platform-specific logic here.
+#  error Need platform-specific logic here.
 #endif
 }
 

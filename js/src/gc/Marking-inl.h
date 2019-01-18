@@ -12,7 +12,7 @@
 #include "gc/RelocationOverlay.h"
 
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 
 namespace js {

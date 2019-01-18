@@ -24,7 +24,7 @@
 #include "nsHashKeys.h"
 
 #ifdef MOZ_WIDGET_COCOA
-#include "PluginInterposeOSX.h"
+#  include "PluginInterposeOSX.h"
 #endif
 
 #include "mozilla/plugins/PPluginModuleChild.h"
@@ -274,13 +274,13 @@ class PluginModuleChild : public PPluginModuleChild {
   // When the browser no longer might be blocked on a plugin's IPC
   // response, we deschedule whichever of (1) or (2) is active.
   guint mNestedLoopTimerId;
-#ifdef DEBUG
+#  ifdef DEBUG
   // Depth of the stack of calls to g_main_context_dispatch before any
   // nested loops are run.  This is 1 when IPC calls are dispatched from
   // g_main_context_iteration, or 0 when dispatched directly from
   // MessagePumpForUI.
   int mTopLoopDepth;
-#endif
+#  endif
 #endif
 
 #if defined(XP_WIN)

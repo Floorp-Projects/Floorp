@@ -13,11 +13,11 @@
 #include "nscore.h"                 // for nsresult
 
 #ifndef __gen_nsIWebProgressListener_h__
-#include "nsIWebProgressListener.h"
+#  include "nsIWebProgressListener.h"
 #endif
 
 #ifndef __gen_nsIEditingSession_h__
-#include "nsIEditingSession.h"  // for NS_DECL_NSIEDITINGSESSION, etc
+#  include "nsIEditingSession.h"  // for NS_DECL_NSIEDITINGSESSION, etc
 #endif
 
 #include "nsString.h"  // for nsCString

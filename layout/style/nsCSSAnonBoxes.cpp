@@ -45,16 +45,16 @@ nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsAtom* aPseudo) {
 /* static */ void nsCSSAnonBoxes::AssertAtoms() {
   nsStaticAtom* base = GetAtomBase();
   size_t index = 0;
-#define CSS_ANON_BOX(name_, value_)                                 \
-  {                                                                 \
-    RefPtr<nsAtom> atom = NS_Atomize(value_);                       \
-    MOZ_ASSERT(atom == nsGkAtoms::AnonBox_##name_,                  \
-               "Static atom for " #name_ " has incorrect value");   \
-    MOZ_ASSERT(atom == &base[index],                                \
-               "Static atom for " #name_ " not at expected index"); \
-    ++index;                                                        \
-  }
-#include "nsCSSAnonBoxList.h"
-#undef CSS_ANON_BOX
+#  define CSS_ANON_BOX(name_, value_)                                 \
+    {                                                                 \
+      RefPtr<nsAtom> atom = NS_Atomize(value_);                       \
+      MOZ_ASSERT(atom == nsGkAtoms::AnonBox_##name_,                  \
+                 "Static atom for " #name_ " has incorrect value");   \
+      MOZ_ASSERT(atom == &base[index],                                \
+                 "Static atom for " #name_ " not at expected index"); \
+      ++index;                                                        \
+    }
+#  include "nsCSSAnonBoxList.h"
+#  undef CSS_ANON_BOX
 }
 #endif

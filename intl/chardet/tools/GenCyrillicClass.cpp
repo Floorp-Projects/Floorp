@@ -13,10 +13,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #if defined(XP_WIN)
-#include <io.h>
+#  include <io.h>
 #endif
 #ifdef XP_UNIX
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 //---------------------------------------------------------------------------

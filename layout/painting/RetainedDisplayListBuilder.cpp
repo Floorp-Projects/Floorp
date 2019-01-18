@@ -790,9 +790,9 @@ static void GetModifiedAndFramesWithProps(
 // ComputeRebuildRegion  debugging
 // #define CRR_DEBUG 1
 #if CRR_DEBUG
-#define CRR_LOG(...) printf_stderr(__VA_ARGS__)
+#  define CRR_LOG(...) printf_stderr(__VA_ARGS__)
 #else
-#define CRR_LOG(...)
+#  define CRR_LOG(...)
 #endif
 
 static nsDisplayItem* GetFirstDisplayItemWithChildren(nsIFrame* aFrame) {

@@ -14,8 +14,8 @@
 #include <gdk/gdk.h>
 #include <X11/XKBlib.h>
 #ifdef MOZ_WAYLAND
-#include <gdk/gdkwayland.h>
-#include <xkbcommon/xkbcommon.h>
+#  include <gdk/gdkwayland.h>
+#  include <xkbcommon/xkbcommon.h>
 #endif
 
 class nsWindow;

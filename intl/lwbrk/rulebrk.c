@@ -61,8 +61,8 @@ extern const twb_t _TwbType[0x100 - 0xa0];
 #define twbtype(c) (_TwbType[th_zcode(c)])
 
 #ifndef TRUE
-#define TRUE 1
-#define FALSE 0
+#  define TRUE 1
+#  define FALSE 0
 #endif
 #define RETURN(b) return (b)
 

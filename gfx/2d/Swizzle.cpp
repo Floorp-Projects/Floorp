@@ -11,11 +11,11 @@
 #include "mozilla/EndianUtils.h"
 
 #ifdef USE_SSE2
-#include "mozilla/SSE.h"
+#  include "mozilla/SSE.h"
 #endif
 
 #ifdef USE_NEON
-#include "mozilla/arm.h"
+#  include "mozilla/arm.h"
 #endif
 
 namespace mozilla {
@@ -109,25 +109,25 @@ static constexpr bool ShouldForceOpaque(SurfaceFormat aSrcFormat,
 template <bool aSwapRB, bool aOpaqueAlpha>
 void Premultiply_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
-#define PREMULTIPLY_SSE2(aSrcFormat, aDstFormat)                     \
-  FORMAT_CASE(aSrcFormat, aDstFormat,                                \
-              Premultiply_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat), \
-                               ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+#  define PREMULTIPLY_SSE2(aSrcFormat, aDstFormat)                     \
+    FORMAT_CASE(aSrcFormat, aDstFormat,                                \
+                Premultiply_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat), \
+                                 ShouldForceOpaque(aSrcFormat, aDstFormat)>)
 
 template <bool aSwapRB>
 void Unpremultiply_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
-#define UNPREMULTIPLY_SSE2(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat,              \
-              Unpremultiply_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat)>)
+#  define UNPREMULTIPLY_SSE2(aSrcFormat, aDstFormat) \
+    FORMAT_CASE(aSrcFormat, aDstFormat,              \
+                Unpremultiply_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat)>)
 
 template <bool aSwapRB, bool aOpaqueAlpha>
 void Swizzle_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
-#define SWIZZLE_SSE2(aSrcFormat, aDstFormat)                     \
-  FORMAT_CASE(aSrcFormat, aDstFormat,                            \
-              Swizzle_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat), \
-                           ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+#  define SWIZZLE_SSE2(aSrcFormat, aDstFormat)                     \
+    FORMAT_CASE(aSrcFormat, aDstFormat,                            \
+                Swizzle_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat), \
+                             ShouldForceOpaque(aSrcFormat, aDstFormat)>)
 
 #endif
 
@@ -139,25 +139,25 @@ void Swizzle_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 template <bool aSwapRB, bool aOpaqueAlpha>
 void Premultiply_NEON(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
-#define PREMULTIPLY_NEON(aSrcFormat, aDstFormat)                     \
-  FORMAT_CASE(aSrcFormat, aDstFormat,                                \
-              Premultiply_NEON<ShouldSwapRB(aSrcFormat, aDstFormat), \
-                               ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+#  define PREMULTIPLY_NEON(aSrcFormat, aDstFormat)                     \
+    FORMAT_CASE(aSrcFormat, aDstFormat,                                \
+                Premultiply_NEON<ShouldSwapRB(aSrcFormat, aDstFormat), \
+                                 ShouldForceOpaque(aSrcFormat, aDstFormat)>)
 
 template <bool aSwapRB>
 void Unpremultiply_NEON(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
-#define UNPREMULTIPLY_NEON(aSrcFormat, aDstFormat) \
-  FORMAT_CASE(aSrcFormat, aDstFormat,              \
-              Unpremultiply_NEON<ShouldSwapRB(aSrcFormat, aDstFormat)>)
+#  define UNPREMULTIPLY_NEON(aSrcFormat, aDstFormat) \
+    FORMAT_CASE(aSrcFormat, aDstFormat,              \
+                Unpremultiply_NEON<ShouldSwapRB(aSrcFormat, aDstFormat)>)
 
 template <bool aSwapRB, bool aOpaqueAlpha>
 void Swizzle_NEON(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
-#define SWIZZLE_NEON(aSrcFormat, aDstFormat)                     \
-  FORMAT_CASE(aSrcFormat, aDstFormat,                            \
-              Swizzle_NEON<ShouldSwapRB(aSrcFormat, aDstFormat), \
-                           ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+#  define SWIZZLE_NEON(aSrcFormat, aDstFormat)                     \
+    FORMAT_CASE(aSrcFormat, aDstFormat,                            \
+                Swizzle_NEON<ShouldSwapRB(aSrcFormat, aDstFormat), \
+                             ShouldForceOpaque(aSrcFormat, aDstFormat)>)
 
 #endif
 

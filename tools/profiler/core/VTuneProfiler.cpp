@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef XP_WIN
-#undef UNICODE
-#undef _UNICODE
+#  undef UNICODE
+#  undef _UNICODE
 #endif
 
 #include "VTuneProfiler.h"

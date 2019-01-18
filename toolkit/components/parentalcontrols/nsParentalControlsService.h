@@ -12,8 +12,8 @@
 #include "nsIURI.h"
 
 #if defined(XP_WIN)
-#include <wpcapi.h>
-#include <wpcevent.h>
+#  include <wpcapi.h>
+#  include <wpcevent.h>
 #endif
 
 class nsParentalControlsService : public nsIParentalControlsService {

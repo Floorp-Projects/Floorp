@@ -10,7 +10,7 @@
 
 #ifdef _MIPS_ARCH_LOONGSON3A
 
-#include "MMIHelpers.h"
+#  include "MMIHelpers.h"
 
 namespace mozilla {
 namespace gfx {

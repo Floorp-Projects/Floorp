@@ -508,7 +508,7 @@ void Summariser::Rule(uintptr_t aAddress, int aNewReg, LExprHow how,
 
 #else
 
-#error "Unsupported arch"
+#  error "Unsupported arch"
 #endif
 
   return;

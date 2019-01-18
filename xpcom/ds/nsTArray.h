@@ -768,9 +768,9 @@ struct IsCompareMethod<T, U,
 template <typename T, typename U, bool IsCompare = IsCompareMethod<T, U>::value>
 struct CompareWrapper {
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4180) /* Silence "qualifier applied to function type \
-                                   has no meaning" warning */
+#  pragma warning(push)
+#  pragma warning(disable : 4180) /* Silence "qualifier applied to function \
+                                     type has no meaning" warning */
 #endif
   MOZ_IMPLICIT CompareWrapper(const T& aComparator)
       : mComparator(aComparator) {}
@@ -792,7 +792,7 @@ struct CompareWrapper {
 
   const T& mComparator;
 #ifdef _MSC_VER
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif
 };
 

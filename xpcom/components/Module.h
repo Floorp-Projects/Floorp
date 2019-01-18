@@ -133,35 +133,38 @@ struct Module {
 }  // namespace mozilla
 
 #if defined(MOZILLA_INTERNAL_API)
-#define NSMODULE_NAME(_name) _name##_NSModule
-#if defined(_MSC_VER) || (defined(__clang__) && defined(__MINGW32__))
-#pragma section(".kPStaticModules$M", read)
-#pragma comment(linker, "/merge:.kPStaticModules=.rdata")
-#define NSMODULE_SECTION __declspec(allocate(".kPStaticModules$M"), dllexport)
-#elif defined(__GNUC__)
-#if defined(__ELF__)
-#define NSMODULE_SECTION \
-  __attribute__((section("kPStaticModules"), visibility("default")))
-#elif defined(__MACH__)
-#define NSMODULE_SECTION \
-  __attribute__((section("__DATA, .kPStaticModules"), visibility("default")))
-#elif defined(_WIN32)
-#define NSMODULE_SECTION __attribute__((section("kPStaticModules"), dllexport))
-#endif
-#endif
-#if !defined(NSMODULE_SECTION)
-#error Do not know how to define sections.
-#endif
-#if defined(MOZ_HAVE_ASAN_BLACKLIST)
-#define NSMODULE_ASAN_BLACKLIST __attribute__((no_sanitize_address))
+#  define NSMODULE_NAME(_name) _name##_NSModule
+#  if defined(_MSC_VER) || (defined(__clang__) && defined(__MINGW32__))
+#    pragma section(".kPStaticModules$M", read)
+#    pragma comment(linker, "/merge:.kPStaticModules=.rdata")
+#    define NSMODULE_SECTION \
+      __declspec(allocate(".kPStaticModules$M"), dllexport)
+#  elif defined(__GNUC__)
+#    if defined(__ELF__)
+#      define NSMODULE_SECTION \
+        __attribute__((section("kPStaticModules"), visibility("default")))
+#    elif defined(__MACH__)
+#      define NSMODULE_SECTION \
+        __attribute__(         \
+            (section("__DATA, .kPStaticModules"), visibility("default")))
+#    elif defined(_WIN32)
+#      define NSMODULE_SECTION \
+        __attribute__((section("kPStaticModules"), dllexport))
+#    endif
+#  endif
+#  if !defined(NSMODULE_SECTION)
+#    error Do not know how to define sections.
+#  endif
+#  if defined(MOZ_HAVE_ASAN_BLACKLIST)
+#    define NSMODULE_ASAN_BLACKLIST __attribute__((no_sanitize_address))
+#  else
+#    define NSMODULE_ASAN_BLACKLIST
+#  endif
+#  define NSMODULE_DEFN(_name)                      \
+    extern NSMODULE_SECTION NSMODULE_ASAN_BLACKLIST \
+        mozilla::Module const* const NSMODULE_NAME(_name)
 #else
-#define NSMODULE_ASAN_BLACKLIST
-#endif
-#define NSMODULE_DEFN(_name)                      \
-  extern NSMODULE_SECTION NSMODULE_ASAN_BLACKLIST \
-      mozilla::Module const* const NSMODULE_NAME(_name)
-#else
-#error Building binary XPCOM components is not supported anymore.
+#  error Building binary XPCOM components is not supported anymore.
 #endif
 
 #endif  // mozilla_Module_h

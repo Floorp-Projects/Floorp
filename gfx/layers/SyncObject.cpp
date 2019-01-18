@@ -7,7 +7,7 @@
 #include "SyncObject.h"
 
 #ifdef XP_WIN
-#include "mozilla/layers/TextureD3D11.h"
+#  include "mozilla/layers/TextureD3D11.h"
 #endif
 
 namespace mozilla {

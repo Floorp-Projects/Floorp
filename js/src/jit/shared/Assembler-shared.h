@@ -22,21 +22,21 @@
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 // Push return addresses callee-side.
-#define JS_USE_LINK_REGISTER
+#  define JS_USE_LINK_REGISTER
 #endif
 
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
     defined(JS_CODEGEN_ARM64)
 // JS_SMALL_BRANCH means the range on a branch instruction
 // is smaller than the whole address space
-#define JS_SMALL_BRANCH
+#  define JS_SMALL_BRANCH
 #endif
 
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
     defined(JS_CODEGEN_ARM64)
 // JS_CODELABEL_LINKMODE gives labels additional metadata
 // describing how Bind() should patch them.
-#define JS_CODELABEL_LINKMODE
+#  define JS_CODELABEL_LINKMODE
 #endif
 
 using mozilla::CheckedInt;

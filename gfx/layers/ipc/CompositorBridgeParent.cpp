@@ -22,7 +22,7 @@
 #include "gfxPlatform.h"              // for gfxPlatform
 #include "TreeTraversal.h"            // for ForEachNode
 #ifdef MOZ_WIDGET_GTK
-#include "gfxPlatformGtk.h"  // for gfxPlatform
+#  include "gfxPlatformGtk.h"  // for gfxPlatform
 #endif
 #include "gfxPrefs.h"                 // for gfxPrefs
 #include "mozilla/AutoRestore.h"      // for AutoRestore
@@ -67,7 +67,7 @@
 #include "mozilla/mozalloc.h"                          // for operator new, etc
 #include "mozilla/Telemetry.h"
 #ifdef MOZ_WIDGET_GTK
-#include "basic/X11BasicCompositor.h"  // for X11BasicCompositor
+#  include "basic/X11BasicCompositor.h"  // for X11BasicCompositor
 #endif
 #include "nsCOMPtr.h"         // for already_AddRefed
 #include "nsDebug.h"          // for NS_ASSERTION, etc
@@ -77,8 +77,8 @@
 #include "nsThreadUtils.h"    // for NS_IsMainThread
 #include "nsXULAppAPI.h"      // for XRE_GetIOMessageLoop
 #ifdef XP_WIN
-#include "mozilla/layers/CompositorD3D11.h"
-#include "mozilla/widget/WinCompositorWidget.h"
+#  include "mozilla/layers/CompositorD3D11.h"
+#  include "mozilla/widget/WinCompositorWidget.h"
 #endif
 #include "GeckoProfiler.h"
 #include "mozilla/ipc/ProtocolTypes.h"
@@ -88,18 +88,18 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"
+#  include "ProfilerMarkerPayload.h"
 #endif
 #include "mozilla/VsyncDispatcher.h"
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-#include "VsyncSource.h"
+#  include "VsyncSource.h"
 #endif
 #include "mozilla/widget/CompositorWidget.h"
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
-#include "mozilla/widget/CompositorWidgetParent.h"
+#  include "mozilla/widget/CompositorWidgetParent.h"
 #endif
 #ifdef XP_WIN
-#include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 #include "LayerScope.h"
@@ -1933,11 +1933,11 @@ CompositorBridgeParent::AllocPCompositorWidgetParent(
       new widget::CompositorWidgetParent(aInitData, mOptions);
   widget->AddRef();
 
-#ifdef XP_WIN
+#  ifdef XP_WIN
   if (mOptions.UseWebRender() && DeviceManagerDx::Get()->CanUseDComp()) {
     widget->AsWindows()->EnsureCompositorWindow();
   }
-#endif
+#  endif
 
   // Sending the constructor acts as initialization as well.
   mWidget = widget;
@@ -2247,7 +2247,7 @@ void CompositorBridgeParent::NotifyWebRenderContextPurge() {
 //#define PLUGINS_LOG(...) printf_stderr("CP [%s]: ", __FUNCTION__);
 //                         printf_stderr(__VA_ARGS__);
 //                         printf_stderr("\n");
-#define PLUGINS_LOG(...)
+#  define PLUGINS_LOG(...)
 
 bool CompositorBridgeParent::UpdatePluginWindowState(LayersId aId) {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
@@ -2401,14 +2401,14 @@ void CompositorBridgeParent::HideAllPluginWindows() {
   mDeferPluginWindows = true;
   mPluginWindowsHidden = true;
 
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   // We will get an async reply that this has happened and then send hide.
   mWaitForPluginsUntil = TimeStamp::Now() + mVsyncRate;
   Unused << SendCaptureAllPlugins(parentWidget);
-#else
+#  else
   Unused << SendHideAllPlugins(parentWidget);
   ScheduleComposition();
-#endif
+#  endif
 }
 #endif  // #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 

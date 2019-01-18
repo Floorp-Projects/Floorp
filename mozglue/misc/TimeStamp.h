@@ -24,7 +24,7 @@ struct ParamTraits;
 #ifdef XP_WIN
 // defines TimeStampValue as a complex value keeping both
 // GetTickCount and QueryPerformanceCounter values
-#include "TimeStamp_windows.h"
+#  include "TimeStamp_windows.h"
 #endif
 
 namespace mozilla {

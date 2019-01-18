@@ -8,11 +8,11 @@
 #define Mutex_h
 
 #if defined(XP_WIN)
-#include <windows.h>
+#  include <windows.h>
 #elif defined(XP_DARWIN)
-#include <libkern/OSAtomic.h>
+#  include <libkern/OSAtomic.h>
 #else
-#include <pthread.h>
+#  include <pthread.h>
 #endif
 #include "mozilla/GuardObjects.h"
 
@@ -95,18 +95,18 @@ struct StaticMutex {
 
 // Normally, we'd use a constexpr constructor, but MSVC likes to create
 // static initializers anyways.
-#define STATIC_MUTEX_INIT SRWLOCK_INIT
+#  define STATIC_MUTEX_INIT SRWLOCK_INIT
 
 #else
 typedef Mutex StaticMutex;
 
-#if defined(XP_DARWIN)
-#define STATIC_MUTEX_INIT OS_SPINLOCK_INIT
-#elif defined(XP_LINUX) && !defined(ANDROID)
-#define STATIC_MUTEX_INIT PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
-#else
-#define STATIC_MUTEX_INIT PTHREAD_MUTEX_INITIALIZER
-#endif
+#  if defined(XP_DARWIN)
+#    define STATIC_MUTEX_INIT OS_SPINLOCK_INIT
+#  elif defined(XP_LINUX) && !defined(ANDROID)
+#    define STATIC_MUTEX_INIT PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
+#  else
+#    define STATIC_MUTEX_INIT PTHREAD_MUTEX_INITIALIZER
+#  endif
 
 #endif
 

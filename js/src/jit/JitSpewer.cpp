@@ -6,37 +6,37 @@
 
 #ifdef JS_JITSPEW
 
-#include "jit/JitSpewer.h"
+#  include "jit/JitSpewer.h"
 
-#include "mozilla/Atomics.h"
-#include "mozilla/Sprintf.h"
+#  include "mozilla/Atomics.h"
+#  include "mozilla/Sprintf.h"
 
-#ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
-#else
-#include <unistd.h>
-#endif
-#include "jit/Ion.h"
-#include "jit/MIR.h"
-#include "jit/MIRGenerator.h"
-#include "jit/MIRGraph.h"
-#include "threading/LockGuard.h"
-#include "util/Text.h"
-#include "vm/HelperThreads.h"
-#include "vm/MutexIDs.h"
+#  ifdef XP_WIN
+#    include <process.h>
+#    define getpid _getpid
+#  else
+#    include <unistd.h>
+#  endif
+#  include "jit/Ion.h"
+#  include "jit/MIR.h"
+#  include "jit/MIRGenerator.h"
+#  include "jit/MIRGraph.h"
+#  include "threading/LockGuard.h"
+#  include "util/Text.h"
+#  include "vm/HelperThreads.h"
+#  include "vm/MutexIDs.h"
 
-#include "vm/Realm-inl.h"
+#  include "vm/Realm-inl.h"
 
-#ifndef JIT_SPEW_DIR
-#if defined(_WIN32)
-#define JIT_SPEW_DIR "."
-#elif defined(__ANDROID__)
-#define JIT_SPEW_DIR "/data/local/tmp"
-#else
-#define JIT_SPEW_DIR "/tmp"
-#endif
-#endif
+#  ifndef JIT_SPEW_DIR
+#    if defined(_WIN32)
+#      define JIT_SPEW_DIR "."
+#    elif defined(__ANDROID__)
+#      define JIT_SPEW_DIR "/data/local/tmp"
+#    else
+#      define JIT_SPEW_DIR "/tmp"
+#    endif
+#  endif
 
 using namespace js;
 using namespace js::jit;
@@ -81,15 +81,15 @@ static uint64_t LoggingBits = 0;
 static mozilla::Atomic<uint32_t, mozilla::Relaxed> filteredOutCompilations(0);
 
 static const char* const ChannelNames[] = {
-#define JITSPEW_CHANNEL(name) #name,
+#  define JITSPEW_CHANNEL(name) #  name,
     JITSPEW_CHANNEL_LIST(JITSPEW_CHANNEL)
-#undef JITSPEW_CHANNEL
+#  undef JITSPEW_CHANNEL
 };
 
 static size_t ChannelIndentLevel[] = {
-#define JITSPEW_CHANNEL(name) 0,
+#  define JITSPEW_CHANNEL(name) 0,
     JITSPEW_CHANNEL_LIST(JITSPEW_CHANNEL)
-#undef JITSPEW_CHANNEL
+#  undef JITSPEW_CHANNEL
 };
 
 // The IONFILTER environment variable specifies an expression to select only

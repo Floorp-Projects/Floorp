@@ -14,7 +14,7 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #ifdef MOZ_WIDGET_GTK
-#include <gdk/gdkkeysyms-compat.h>
+#  include <gdk/gdkkeysyms-compat.h>
 #endif
 #include <X11/XKBlib.h>
 #include "IMContextWrapper.h"
@@ -33,7 +33,7 @@
 #include "mozilla/TextEvents.h"
 
 #ifdef MOZ_WAYLAND
-#include <sys/mman.h>
+#  include <sys/mman.h>
 #endif
 
 namespace mozilla {

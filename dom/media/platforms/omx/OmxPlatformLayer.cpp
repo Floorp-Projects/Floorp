@@ -9,13 +9,13 @@
 #include "OMX_VideoExt.h"  // For VP8.
 
 #ifdef MOZ_OMX
-#include "PureOmxPlatformLayer.h"
+#  include "PureOmxPlatformLayer.h"
 #endif
 
 #include "VPXDecoder.h"
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 #define LOG(arg, ...)                        \

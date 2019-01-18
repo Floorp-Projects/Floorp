@@ -12,7 +12,7 @@
 #include "MediaContainerType.h"
 #include "nsMimeTypes.h"
 #ifdef XP_WIN
-#include "WMFDecoderModule.h"
+#  include "WMFDecoderModule.h"
 #endif
 #include "nsContentCID.h"
 #include "nsServiceManagerUtils.h"
@@ -34,9 +34,9 @@
 #include "mozilla/dom/MediaSource.h"
 #include "DecoderTraits.h"
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidDecoderModule.h"
-#include "FennecJNIWrappers.h"
-#include "GeneratedJNIWrappers.h"
+#  include "AndroidDecoderModule.h"
+#  include "FennecJNIWrappers.h"
+#  include "GeneratedJNIWrappers.h"
 #endif
 #include <functional>
 

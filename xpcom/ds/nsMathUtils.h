@@ -12,7 +12,7 @@
 #include <float.h>
 
 #if defined(XP_SOLARIS)
-#include <ieeefp.h>
+#  include <ieeefp.h>
 #endif
 
 /*

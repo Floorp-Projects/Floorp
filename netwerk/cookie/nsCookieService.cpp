@@ -184,7 +184,7 @@ struct nsListIter {
 //    set MOZ_LOG=cookie:4 -- shows accepted and rejected cookies
 //    set MOZ_LOG_FILE=cookie.log
 //
-#include "mozilla/Logging.h"
+#  include "mozilla/Logging.h"
 #endif
 
 // define logging macros for convenience
@@ -322,18 +322,18 @@ static inline void LogSuccess(bool aSetCookie, nsIURI *aHostURI,
 }
 
 #ifdef DEBUG
-#define NS_ASSERT_SUCCESS(res)                                       \
-  PR_BEGIN_MACRO                                                     \
-  nsresult __rv = res; /* Do not evaluate |res| more than once! */   \
-  if (NS_FAILED(__rv)) {                                             \
-    SmprintfPointer msg = mozilla::Smprintf(                         \
-        "NS_ASSERT_SUCCESS(%s) failed with result 0x%" PRIX32, #res, \
-        static_cast<uint32_t>(__rv));                                \
-    NS_ASSERTION(NS_SUCCEEDED(__rv), msg.get());                     \
-  }                                                                  \
-  PR_END_MACRO
+#  define NS_ASSERT_SUCCESS(res)                                       \
+    PR_BEGIN_MACRO                                                     \
+    nsresult __rv = res; /* Do not evaluate |res| more than once! */   \
+    if (NS_FAILED(__rv)) {                                             \
+      SmprintfPointer msg = mozilla::Smprintf(                         \
+          "NS_ASSERT_SUCCESS(%s) failed with result 0x%" PRIX32, #res, \
+          static_cast<uint32_t>(__rv));                                \
+      NS_ASSERTION(NS_SUCCEEDED(__rv), msg.get());                     \
+    }                                                                  \
+    PR_END_MACRO
 #else
-#define NS_ASSERT_SUCCESS(res) PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#  define NS_ASSERT_SUCCESS(res) PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
 #endif
 
 /******************************************************************************

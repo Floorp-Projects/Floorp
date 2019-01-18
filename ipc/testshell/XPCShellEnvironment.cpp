@@ -7,10 +7,10 @@
 #include <stdlib.h>
 #include <errno.h>
 #ifdef HAVE_IO_H
-#include <io.h> /* for isatty() */
+#  include <io.h> /* for isatty() */
 #endif
 #ifdef HAVE_UNISTD_H
-#include <unistd.h> /* for isatty() */
+#  include <unistd.h> /* for isatty() */
 #endif
 
 #include "base/basictypes.h"

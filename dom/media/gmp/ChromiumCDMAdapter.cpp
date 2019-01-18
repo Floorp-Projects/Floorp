@@ -14,17 +14,17 @@
 #include "mozilla/Move.h"
 
 #ifdef XP_WIN
-#include "WinUtils.h"
-#include "nsWindowsDllInterceptor.h"
-#include <windows.h>
-#include <strsafe.h>
-#include <unordered_map>
-#include <vector>
+#  include "WinUtils.h"
+#  include "nsWindowsDllInterceptor.h"
+#  include <windows.h>
+#  include <strsafe.h>
+#  include <unordered_map>
+#  include <vector>
 #else
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#  include <unistd.h>
+#  include <fcntl.h>
 #endif
 
 const GMPPlatformAPI* sPlatform = nullptr;

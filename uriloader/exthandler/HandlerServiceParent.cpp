@@ -5,7 +5,7 @@
 #include "ContentHandlerService.h"
 #include "nsStringEnumerator.h"
 #ifdef MOZ_WIDGET_GTK
-#include "unix/nsGNOMERegistry.h"
+#  include "unix/nsGNOMERegistry.h"
 #endif
 
 using mozilla::dom::ContentHandlerService;

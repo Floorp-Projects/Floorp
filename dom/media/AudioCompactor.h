@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(AudioCompactor_h)
-#define AudioCompactor_h
+#  define AudioCompactor_h
 
-#include "MediaQueue.h"
-#include "MediaData.h"
-#include "VideoUtils.h"
+#  include "MediaQueue.h"
+#  include "MediaData.h"
+#  include "VideoUtils.h"
 
 namespace mozilla {
 

@@ -48,13 +48,13 @@
 
 #include "GeckoProfiler.h"
 #ifdef MOZ_ANDROID_HISTORY
-#include "nsNetUtil.h"
-#include "nsIURI.h"
-#include "IHistory.h"
+#  include "nsNetUtil.h"
+#  include "nsIURI.h"
+#  include "IHistory.h"
 #endif
 
 #ifdef MOZ_LOGGING
-#include "mozilla/Logging.h"
+#  include "mozilla/Logging.h"
 #endif
 
 #include "AndroidAlerts.h"
@@ -74,11 +74,11 @@
 #include "WebExecutorSupport.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
-#define EVLOG(args...) ALOG(args)
+#  define EVLOG(args...) ALOG(args)
 #else
-#define EVLOG(args...) \
-  do {                 \
-  } while (0)
+#  define EVLOG(args...) \
+    do {                 \
+    } while (0)
 #endif
 
 using namespace mozilla;

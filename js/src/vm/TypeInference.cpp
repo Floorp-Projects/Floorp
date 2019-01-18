@@ -236,7 +236,7 @@ const char* js::InferSpewColor(TypeSet* types) {
   return colors[DefaultHasher<TypeSet*>::hash(types) % 7];
 }
 
-#ifdef DEBUG
+#  ifdef DEBUG
 void js::InferSpewImpl(const char* fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
@@ -245,7 +245,7 @@ void js::InferSpewImpl(const char* fmt, ...) {
   fprintf(stderr, "\n");
   va_end(ap);
 }
-#endif
+#  endif
 
 MOZ_NORETURN MOZ_COLD static void MOZ_FORMAT_PRINTF(2, 3)
     TypeFailure(JSContext* cx, const char* fmt, ...) {

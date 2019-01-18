@@ -14,11 +14,11 @@
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/RefPtr.h"
 #ifdef XP_WIN
-#include "IMFYCbCrImage.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
-#include "mozilla/layers/D3D11YCbCrImage.h"
-#include "mozilla/layers/TextureD3D11.h"
-#include "mozilla/layers/TextureDIB.h"
+#  include "IMFYCbCrImage.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/layers/D3D11YCbCrImage.h"
+#  include "mozilla/layers/TextureD3D11.h"
+#  include "mozilla/layers/TextureDIB.h"
 #endif
 
 using mozilla::gfx::SurfaceFormat;

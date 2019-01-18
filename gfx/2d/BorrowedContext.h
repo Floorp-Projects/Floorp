@@ -10,9 +10,9 @@
 #include "2D.h"
 
 #ifdef MOZ_X11
-#include <X11/extensions/Xrender.h>
-#include <X11/Xlib.h>
-#include "X11UndefineNone.h"
+#  include <X11/extensions/Xrender.h>
+#  include <X11/Xlib.h>
+#  include "X11UndefineNone.h"
 #endif
 
 struct _cairo;
@@ -173,10 +173,10 @@ class BorrowedCGContext {
   CGContextRef cg;
 
  private:
-#ifdef USE_SKIA
+#  ifdef USE_SKIA
   static CGContextRef BorrowCGContextFromDrawTarget(DrawTarget *aDT);
   static void ReturnCGContextToDrawTarget(DrawTarget *aDT, CGContextRef cg);
-#else
+#  else
   static CGContextRef BorrowCGContextFromDrawTarget(DrawTarget *aDT) {
     MOZ_CRASH("Not supported without Skia");
   }
@@ -184,7 +184,7 @@ class BorrowedCGContext {
   static void ReturnCGContextToDrawTarget(DrawTarget *aDT, CGContextRef cg) {
     MOZ_CRASH("not supported without Skia");
   }
-#endif
+#  endif
   DrawTarget *mDT;
 };
 #endif

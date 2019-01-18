@@ -13,12 +13,12 @@
 #include "build/build_config.h"
 
 #if defined(OS_WIN)
-#include <windows.h>
+#  include <windows.h>
 #elif defined(ANDROID)
-#include <sys/stat.h>
+#  include <sys/stat.h>
 #elif defined(OS_POSIX)
-#include <sys/types.h>
-#include <sys/stat.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
 #endif
 
 #include <stdio.h>

@@ -11,7 +11,7 @@
 
 #include "frontend/TokenStream.h"
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 #include "vm/BytecodeUtil.h"
 #include "vm/Printer.h"
@@ -1566,9 +1566,9 @@ class BigIntLiteral : public ParseNode {
     return true;
   }
 
-#ifdef DEBUG
+#  ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
-#endif
+#  endif
 
   BigIntBox* box() const { return pn_u.bigint.box; }
 };

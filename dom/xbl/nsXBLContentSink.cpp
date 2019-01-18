@@ -14,7 +14,7 @@
 #include "nsIURI.h"
 #include "nsTextFragment.h"
 #ifdef MOZ_XUL
-#include "nsXULElement.h"
+#  include "nsXULElement.h"
 #endif
 #include "nsXBLProtoImplProperty.h"
 #include "nsXBLProtoImplMethod.h"

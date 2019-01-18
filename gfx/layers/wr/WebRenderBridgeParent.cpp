@@ -37,11 +37,11 @@
 #include "mozilla/widget/CompositorWidget.h"
 
 #ifdef XP_WIN
-#include "dwrite.h"
+#  include "dwrite.h"
 #endif
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"
+#  include "ProfilerMarkerPayload.h"
 #endif
 
 bool is_in_main_thread() { return NS_IsMainThread(); }

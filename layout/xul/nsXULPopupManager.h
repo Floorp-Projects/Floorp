@@ -30,7 +30,7 @@
 
 // X.h defines KeyPress
 #ifdef KeyPress
-#undef KeyPress
+#  undef KeyPress
 #endif
 
 /**

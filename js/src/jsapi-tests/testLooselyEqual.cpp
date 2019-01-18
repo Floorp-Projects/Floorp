@@ -60,12 +60,12 @@ struct LooseEqualityData {
     poszero = JS::DoubleValue(0.0);
     negzero = JS::DoubleValue(-0.0);
 #ifdef XP_WIN
-#define copysign _copysign
+#  define copysign _copysign
 #endif
     MOZ_RELEASE_ASSERT(copysign(1.0, poszero.toDouble()) == 1.0);
     MOZ_RELEASE_ASSERT(copysign(1.0, negzero.toDouble()) == -1.0);
 #ifdef XP_WIN
-#undef copysign
+#  undef copysign
 #endif
   }
 };

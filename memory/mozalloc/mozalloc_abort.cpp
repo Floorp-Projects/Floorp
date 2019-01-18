@@ -8,11 +8,11 @@
 #include "mozilla/mozalloc_abort.h"
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 #ifdef MOZ_WIDGET_ANDROID
-#include "APKOpen.h"
-#include "dlfcn.h"
+#  include "APKOpen.h"
+#  include "dlfcn.h"
 #endif
 #include <stdio.h>
 #include <string.h>
@@ -69,12 +69,12 @@ void fillAbortMessage(char (&msg)[N], uintptr_t retAddress) {
 // That segmentation fault will be interpreted as another bug by ASan and as a
 // result, ASan will just exit(1) instead of aborting.
 extern "C" void abort(void) {
-#ifdef MOZ_WIDGET_ANDROID
+#  ifdef MOZ_WIDGET_ANDROID
   char msg[64] = {};
   fillAbortMessage(msg, uintptr_t(__builtin_return_address(0)));
-#else
+#  else
   const char* const msg = "Redirecting call to abort() to mozalloc_abort\n";
-#endif
+#  endif
 
   mozalloc_abort(msg);
 

@@ -38,10 +38,10 @@
 #include "nsIXULRuntime.h"
 #include "nsTextFormatter.h"
 #ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
+#  include <process.h>
+#  define getpid _getpid
 #else
-#include <unistd.h>  // for getpid()
+#  include <unistd.h>  // for getpid()
 #endif
 #include "xpcpublic.h"
 
@@ -71,7 +71,7 @@
 
 #ifdef XP_MACOSX
 // AssertMacros.h defines 'check' and conflicts with AccessCheck.h
-#undef check
+#  undef check
 #endif
 #include "AccessCheck.h"
 
@@ -101,7 +101,7 @@ const size_t gStackSize = 8192;
 
 // Thank you Microsoft!
 #ifdef CompareString
-#undef CompareString
+#  undef CompareString
 #endif
 
 #define NS_SHRINK_GC_BUFFERS_DELAY 4000  // ms
@@ -961,7 +961,7 @@ nsresult nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports* aArg,
 
 #ifdef MOZ_JPROF
 
-#include <signal.h>
+#  include <signal.h>
 
 inline bool IsJProfAction(struct sigaction* action) {
   return (action->sa_sigaction &&

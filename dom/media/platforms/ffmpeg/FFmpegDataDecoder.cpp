@@ -6,7 +6,7 @@
 
 #include <string.h>
 #ifdef __GNUC__
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include "FFmpegLog.h"

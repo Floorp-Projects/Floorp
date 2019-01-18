@@ -5,18 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(TaskDispatcher_h_)
-#define TaskDispatcher_h_
+#  define TaskDispatcher_h_
 
-#include "mozilla/AbstractThread.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
+#  include "mozilla/AbstractThread.h"
+#  include "mozilla/Maybe.h"
+#  include "mozilla/UniquePtr.h"
+#  include "mozilla/Unused.h"
 
-#include "nsISupportsImpl.h"
-#include "nsTArray.h"
-#include "nsThreadUtils.h"
+#  include "nsISupportsImpl.h"
+#  include "nsTArray.h"
+#  include "nsThreadUtils.h"
 
-#include <queue>
+#  include <queue>
 
 namespace mozilla {
 

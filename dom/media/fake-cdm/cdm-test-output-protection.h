@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(XP_WIN)
-#include <d3d9.h>  // needed to prevent re-definition of enums
-#include <stdio.h>
-#include <string>
-#include <vector>
-#include <windows.h>
+#  include <d3d9.h>  // needed to prevent re-definition of enums
+#  include <stdio.h>
+#  include <string>
+#  include <vector>
+#  include <windows.h>
 
-#include "opmapi.h"
+#  include "opmapi.h"
 #endif
 
 namespace mozilla {

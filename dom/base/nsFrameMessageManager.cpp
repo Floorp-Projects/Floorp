@@ -63,13 +63,13 @@
 #include "chrome/common/ipc_channel.h"  // for IPC::Channel::kMaximumMessageSize
 
 #ifdef XP_WIN
-#if defined(SendMessage)
-#undef SendMessage
-#endif
+#  if defined(SendMessage)
+#    undef SendMessage
+#  endif
 #endif
 
 #ifdef FUZZING
-#include "MessageManagerFuzzer.h"
+#  include "MessageManagerFuzzer.h"
 #endif
 
 using namespace mozilla;

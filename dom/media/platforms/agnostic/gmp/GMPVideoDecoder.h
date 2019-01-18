@@ -5,14 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(GMPVideoDecoder_h_)
-#define GMPVideoDecoder_h_
+#  define GMPVideoDecoder_h_
 
-#include "GMPVideoDecoderProxy.h"
-#include "ImageContainer.h"
-#include "MediaDataDecoderProxy.h"
-#include "MediaInfo.h"
-#include "PlatformDecoderModule.h"
-#include "mozIGeckoMediaPluginService.h"
+#  include "GMPVideoDecoderProxy.h"
+#  include "ImageContainer.h"
+#  include "MediaDataDecoderProxy.h"
+#  include "MediaInfo.h"
+#  include "PlatformDecoderModule.h"
+#  include "mozIGeckoMediaPluginService.h"
 
 namespace mozilla {
 

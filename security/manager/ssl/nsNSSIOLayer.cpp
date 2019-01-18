@@ -941,7 +941,7 @@ nsNSSSocketInfo::GetServerRootCertIsBuiltInRoot(bool* aIsBuiltInRoot) {
 #if defined(DEBUG_SSL_VERBOSE) && defined(DUMP_BUFFER)
 // Dumps a (potentially binary) buffer using SSM_DEBUG.  (We could have used
 // the version in ssltrace.c, but that's specifically tailored to SSLTRACE.)
-#define DUMPBUF_LINESIZE 24
+#  define DUMPBUF_LINESIZE 24
 static void nsDumpBuffer(unsigned char* buf, int len) {
   char hexbuf[DUMPBUF_LINESIZE * 3 + 1];
   char chrbuf[DUMPBUF_LINESIZE + 1];
@@ -988,9 +988,9 @@ static void nsDumpBuffer(unsigned char* buf, int len) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("%s%s\n", hexbuf, chrbuf));
 }
 
-#define DEBUG_DUMP_BUFFER(buf, len) nsDumpBuffer(buf, len)
+#  define DEBUG_DUMP_BUFFER(buf, len) nsDumpBuffer(buf, len)
 #else
-#define DEBUG_DUMP_BUFFER(buf, len)
+#  define DEBUG_DUMP_BUFFER(buf, len)
 #endif
 
 namespace {

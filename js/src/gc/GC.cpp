@@ -204,8 +204,8 @@
 #include <initializer_list>
 #include <string.h>
 #ifndef XP_WIN
-#include <sys/mman.h>
-#include <unistd.h>
+#  include <sys/mman.h>
+#  include <unistd.h>
 #endif
 
 #include "jsapi.h"
@@ -230,7 +230,7 @@
 #include "proxy/DeadObjectProxy.h"
 #include "util/Windows.h"
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
@@ -1127,9 +1127,9 @@ static bool ParseZealModeName(CharRange text, uint32_t* modeOut) {
   };
 
   static const ModeInfo zealModes[] = {{"None", 0},
-#define ZEAL_MODE(name, value) {#name, strlen(#name), value},
+#  define ZEAL_MODE(name, value) {#  name, strlen(#  name), value},
                                        JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
-#undef ZEAL_MODE
+#  undef ZEAL_MODE
   };
 
   for (auto mode : zealModes) {
@@ -1221,9 +1221,9 @@ bool GCRuntime::parseAndSetZeal(const char* str) {
 
 const char* js::gc::AllocKindName(AllocKind kind) {
   static const char* const names[] = {
-#define EXPAND_THING_NAME(allocKind, _1, _2, _3, _4, _5, _6) #allocKind,
+#  define EXPAND_THING_NAME(allocKind, _1, _2, _3, _4, _5, _6) #  allocKind,
       FOR_EACH_ALLOCKIND(EXPAND_THING_NAME)
-#undef EXPAND_THING_NAME
+#  undef EXPAND_THING_NAME
   };
   static_assert(ArrayLength(names) == size_t(AllocKind::LIMIT),
                 "names array should have an entry for every AllocKind");
@@ -3853,12 +3853,12 @@ void GCRuntime::sweepZones(FreeOp* fop, bool destroyingRuntime) {
 #ifdef DEBUG
 static const char* AllocKindToAscii(AllocKind kind) {
   switch (kind) {
-#define MAKE_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery, \
-                  compact)                                                 \
-  case AllocKind::allocKind:                                               \
-    return #allocKind;
+#  define MAKE_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery, \
+                    compact)                                                 \
+    case AllocKind::allocKind:                                               \
+      return #allocKind;
     FOR_EACH_ALLOCKIND(MAKE_CASE)
-#undef MAKE_CASE
+#  undef MAKE_CASE
 
     default:
       MOZ_CRASH("Unknown AllocKind in AllocKindToAscii");
@@ -5264,11 +5264,11 @@ static inline void MaybeCheckWeakMapMarking(GCRuntime* gc) {
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
 
   bool shouldCheck;
-#if defined(DEBUG)
+#  if defined(DEBUG)
   shouldCheck = true;
-#else
+#  else
   shouldCheck = gc->hasZealMode(ZealMode::CheckWeakMapMarking);
-#endif
+#  endif
 
   if (shouldCheck) {
     for (SweepGroupZonesIter zone(gc->rt); !zone.done(); zone.next()) {

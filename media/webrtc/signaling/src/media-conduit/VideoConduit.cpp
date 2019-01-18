@@ -34,13 +34,13 @@
 #include "mozilla/Unused.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
-#include "VideoEngine.h"
+#  include "VideoEngine.h"
 #endif
 
 #include "GmpVideoCodec.h"
 
 #ifdef MOZ_WEBRTC_MEDIACODEC
-#include "MediaCodecVideoCodec.h"
+#  include "MediaCodecVideoCodec.h"
 #endif
 #include "WebrtcGmpVideoCodec.h"
 
@@ -48,9 +48,9 @@
 
 // for ntohs
 #ifdef _MSC_VER
-#include "Winsock2.h"
+#  include "Winsock2.h"
 #else
-#include <netinet/in.h>
+#  include <netinet/in.h>
 #endif
 
 #include <algorithm>
@@ -64,7 +64,7 @@ namespace mozilla {
 
 static const char* vcLogTag = "WebrtcVideoSessionConduit";
 #ifdef LOGTAG
-#undef LOGTAG
+#  undef LOGTAG
 #endif
 #define LOGTAG vcLogTag
 

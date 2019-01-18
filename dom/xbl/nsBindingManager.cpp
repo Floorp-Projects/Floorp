@@ -33,7 +33,7 @@
 #include "nsXBLDocumentInfo.h"
 #include "mozilla/dom/XBLChildrenElement.h"
 #ifdef MOZ_XUL
-#include "nsXULPrototypeCache.h"
+#  include "nsXULPrototypeCache.h"
 #endif
 
 #include "nsIWeakReference.h"

@@ -65,7 +65,7 @@
 // are taken care of by memory/replace/defs.mk.
 
 #ifdef replace_malloc_bridge_h
-#error Do not include replace_malloc_bridge.h before replace_malloc.h. \
+#  error Do not include replace_malloc_bridge.h before replace_malloc.h. \
   In fact, you only need the latter.
 #endif
 
@@ -84,17 +84,17 @@ MOZ_BEGIN_EXTERN_C
 // MOZ_REPLACE_WEAK is only defined in mozjemalloc.cpp. Normally including
 // this header will add function definitions.
 #ifndef MOZ_REPLACE_WEAK
-#define MOZ_REPLACE_WEAK
+#  define MOZ_REPLACE_WEAK
 #endif
 
 // When building a replace-malloc library for static linking, we want
 // each to have a different name for their "public" functions.
 // The build system defines MOZ_REPLACE_MALLOC_PREFIX in that case.
 #ifdef MOZ_REPLACE_MALLOC_PREFIX
-#define replace_init MOZ_CONCAT(MOZ_REPLACE_MALLOC_PREFIX, _init)
-#define MOZ_REPLACE_PUBLIC
+#  define replace_init MOZ_CONCAT(MOZ_REPLACE_MALLOC_PREFIX, _init)
+#  define MOZ_REPLACE_PUBLIC
 #else
-#define MOZ_REPLACE_PUBLIC MOZ_EXPORT
+#  define MOZ_REPLACE_PUBLIC MOZ_EXPORT
 #endif
 
 struct ReplaceMallocBridge;

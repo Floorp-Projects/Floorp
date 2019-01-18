@@ -9,7 +9,7 @@
 #include "nsICrashReporter.h"
 
 #ifndef TEST_NAME
-#error "Must #define TEST_NAME before including places_test_harness_tail.h"
+#  error "Must #define TEST_NAME before including places_test_harness_tail.h"
 #endif
 
 int gTestsIndex = 0;

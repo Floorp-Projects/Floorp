@@ -20,7 +20,7 @@
 
 /* GDK_AVAILABLE_IN_ALL was introduced in 3.10 */
 #ifndef GDK_AVAILABLE_IN_ALL
-#define GDK_AVAILABLE_IN_ALL
+#  define GDK_AVAILABLE_IN_ALL
 #endif
 
 #undef GDK_DEPRECATED

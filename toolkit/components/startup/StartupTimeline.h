@@ -37,15 +37,15 @@ mozilla_StartupTimeline_Event(PROCESS_CREATION, "process")
                                       "profileBeforeChange")
 #else
 
-#ifndef mozilla_StartupTimeline
-#define mozilla_StartupTimeline
+#  ifndef mozilla_StartupTimeline
+#    define mozilla_StartupTimeline
 
-#include "mozilla/TimeStamp.h"
-#include "nscore.h"
+#    include "mozilla/TimeStamp.h"
+#    include "nscore.h"
 
-#ifdef MOZILLA_INTERNAL_API
-#include "GeckoProfiler.h"
-#endif
+#    ifdef MOZILLA_INTERNAL_API
+#      include "GeckoProfiler.h"
+#    endif
 
 namespace mozilla {
 
@@ -55,9 +55,9 @@ void RecordShutdownStartTimeStamp();
 class StartupTimeline {
  public:
   enum Event {
-#define mozilla_StartupTimeline_Event(ev, z) ev,
-#include "StartupTimeline.h"
-#undef mozilla_StartupTimeline_Event
+#    define mozilla_StartupTimeline_Event(ev, z) ev,
+#    include "StartupTimeline.h"
+#    undef mozilla_StartupTimeline_Event
     MAX_EVENT_ID
   };
 
@@ -65,7 +65,7 @@ class StartupTimeline {
 
   static const char* Describe(Event ev) { return sStartupTimelineDesc[ev]; }
 
-#ifdef MOZILLA_INTERNAL_API
+#    ifdef MOZILLA_INTERNAL_API
   static void Record(Event ev) {
     PROFILER_ADD_MARKER(Describe(ev));
     Record(ev, TimeStamp::Now());
@@ -74,7 +74,7 @@ class StartupTimeline {
   static void Record(Event ev, TimeStamp when) { sStartupTimeline[ev] = when; }
 
   static void RecordOnce(Event ev);
-#endif
+#    endif
 
   static bool HasRecord(Event ev) { return !sStartupTimeline[ev].IsNull(); }
 
@@ -85,6 +85,6 @@ class StartupTimeline {
 
 }  // namespace mozilla
 
-#endif /* mozilla_StartupTimeline */
+#  endif /* mozilla_StartupTimeline */
 
 #endif /* mozilla_StartupTimeline_Event */

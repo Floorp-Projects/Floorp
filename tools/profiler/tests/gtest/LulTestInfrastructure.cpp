@@ -84,9 +84,9 @@ Label Label::operator-(uint64_t subtrahend) const {
 // NDEBUG is #defined; when NDEBUG is not #defined, it further asserts
 // that x is true.
 #ifdef NDEBUG
-#define ALWAYS_EVALUATE_AND_ASSERT(x) x
+#  define ALWAYS_EVALUATE_AND_ASSERT(x) x
 #else
-#define ALWAYS_EVALUATE_AND_ASSERT(x) assert(x)
+#  define ALWAYS_EVALUATE_AND_ASSERT(x) assert(x)
 #endif
 
 uint64_t Label::operator-(const Label &label) const {

@@ -8,7 +8,7 @@
 #define NETWERK_SCTP_DATACHANNEL_DATACHANNEL_H_
 
 #ifdef MOZ_WEBRTC_SIGNALING
-#define SCTP_DTLS_SUPPORTED 1
+#  define SCTP_DTLS_SUPPORTED 1
 #endif
 
 #include <string>
@@ -26,16 +26,16 @@
 #include "DataChannelListener.h"
 #include "mozilla/net/NeckoTargetHolder.h"
 #ifdef SCTP_DTLS_SUPPORTED
-#include "mtransport/sigslot.h"
-#include "mtransport/transportlayer.h"  // For TransportLayer::State
+#  include "mtransport/sigslot.h"
+#  include "mtransport/transportlayer.h"  // For TransportLayer::State
 #endif
 
 #ifndef DATACHANNEL_LOG
-#define DATACHANNEL_LOG(args)
+#  define DATACHANNEL_LOG(args)
 #endif
 
 #ifndef EALREADY
-#define EALREADY WSAEALREADY
+#  define EALREADY WSAEALREADY
 #endif
 
 extern "C" {

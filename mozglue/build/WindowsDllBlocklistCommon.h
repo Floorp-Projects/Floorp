@@ -59,8 +59,8 @@ struct DllBlockInfoT {
 
 // MSVC does not properly handle the constexpr MAKE_VERSION, so we use a macro
 // instead (ugh).
-#define MAKE_VERSION(a, b, c, d) \
-  ((a##ULL << 48) + (b##ULL << 32) + (c##ULL << 16) + d##ULL)
+#  define MAKE_VERSION(a, b, c, d) \
+    ((a##ULL << 48) + (b##ULL << 32) + (c##ULL << 16) + d##ULL)
 
 #else
 
@@ -73,7 +73,7 @@ static inline constexpr uint64_t MAKE_VERSION(uint16_t a, uint16_t b,
 #endif
 
 #if !defined(DLL_BLOCKLIST_STRING_TYPE)
-#error "You must define DLL_BLOCKLIST_STRING_TYPE"
+#  error "You must define DLL_BLOCKLIST_STRING_TYPE"
 #endif  // !defined(DLL_BLOCKLIST_STRING_TYPE)
 
 #define DLL_BLOCKLIST_DEFINITIONS_BEGIN                                   \

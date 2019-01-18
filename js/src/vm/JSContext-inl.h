@@ -13,7 +13,7 @@
 #include "jit/JitFrames.h"
 #include "proxy/Proxy.h"
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 #include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"

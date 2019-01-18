@@ -263,12 +263,12 @@ bool GetTempDir(FilePath* path) {
 }
 
 bool GetShmemTempDir(FilePath* path) {
-#if defined(OS_LINUX) && !defined(ANDROID)
+#  if defined(OS_LINUX) && !defined(ANDROID)
   *path = FilePath("/dev/shm");
   return true;
-#else
+#  else
   return GetTempDir(path);
-#endif
+#  endif
 }
 
 bool CopyFile(const FilePath& from_path, const FilePath& to_path) {

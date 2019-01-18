@@ -25,7 +25,7 @@
 
 // Work around nasty macro in webrtc/voice_engine/voice_engine_defines.h
 #ifdef GetLastError
-#undef GetLastError
+#  undef GetLastError
 #endif
 
 #include "signaling/src/jsep/JsepSession.h"
@@ -86,7 +86,7 @@ typedef NS_ConvertUTF8toUTF16 PCObserverString;
 #if defined(__cplusplus) && __cplusplus >= 201103L
 typedef struct Timecard Timecard;
 #else
-#include "signaling/src/common/time_profiling/timecard.h"
+#  include "signaling/src/common/time_profiling/timecard.h"
 #endif
 
 // To preserve blame, convert nsresult to ErrorResult with wrappers. These

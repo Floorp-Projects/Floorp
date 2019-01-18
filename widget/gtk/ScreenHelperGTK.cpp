@@ -7,10 +7,10 @@
 #include "ScreenHelperGTK.h"
 
 #ifdef MOZ_X11
-#include <gdk/gdkx.h>
+#  include <gdk/gdkx.h>
 #endif /* MOZ_X11 */
 #ifdef MOZ_WAYLAND
-#include <gdk/gdkwayland.h>
+#  include <gdk/gdkwayland.h>
 #endif /* MOZ_WAYLAND */
 #include <dlfcn.h>
 #include <gtk/gtk.h>

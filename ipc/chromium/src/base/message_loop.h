@@ -21,9 +21,9 @@
 #if defined(OS_WIN)
 // We need this to declare base::MessagePumpWin::Dispatcher, which we should
 // really just eliminate.
-#include "base/message_pump_win.h"
+#  include "base/message_pump_win.h"
 #elif defined(OS_POSIX)
-#include "base/message_pump_libevent.h"
+#  include "base/message_pump_libevent.h"
 #endif
 
 #include "nsAutoPtr.h"

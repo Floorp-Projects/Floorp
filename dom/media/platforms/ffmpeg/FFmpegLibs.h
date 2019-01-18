@@ -9,28 +9,28 @@
 
 extern "C" {
 #ifdef __GNUC__
-#pragma GCC visibility push(default)
+#  pragma GCC visibility push(default)
 #endif
 #include "libavcodec/avcodec.h"
 #include "libavutil/avutil.h"
 #include "libavutil/mem.h"
 #ifdef __GNUC__
-#pragma GCC visibility pop
+#  pragma GCC visibility pop
 #endif
 }
 
 #if LIBAVCODEC_VERSION_MAJOR < 55
-#define AV_CODEC_ID_VP6F CODEC_ID_VP6F
-#define AV_CODEC_ID_H264 CODEC_ID_H264
-#define AV_CODEC_ID_AAC CODEC_ID_AAC
-#define AV_CODEC_ID_MP3 CODEC_ID_MP3
-#define AV_CODEC_ID_VP8 CODEC_ID_VP8
-#define AV_CODEC_ID_NONE CODEC_ID_NONE
-#define AV_CODEC_ID_FLAC CODEC_ID_FLAC
+#  define AV_CODEC_ID_VP6F CODEC_ID_VP6F
+#  define AV_CODEC_ID_H264 CODEC_ID_H264
+#  define AV_CODEC_ID_AAC CODEC_ID_AAC
+#  define AV_CODEC_ID_MP3 CODEC_ID_MP3
+#  define AV_CODEC_ID_VP8 CODEC_ID_VP8
+#  define AV_CODEC_ID_NONE CODEC_ID_NONE
+#  define AV_CODEC_ID_FLAC CODEC_ID_FLAC
 typedef CodecID AVCodecID;
 #endif
 #if LIBAVCODEC_VERSION_MAJOR <= 55
-#define AV_CODEC_FLAG_LOW_DELAY CODEC_FLAG_LOW_DELAY
+#  define AV_CODEC_FLAG_LOW_DELAY CODEC_FLAG_LOW_DELAY
 #endif
 
 #ifdef FFVPX_VERSION

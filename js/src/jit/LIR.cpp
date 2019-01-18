@@ -324,9 +324,9 @@ void LSnapshot::rewriteRecoveredInput(LUse input) {
 #ifdef JS_JITSPEW
 void LNode::printName(GenericPrinter& out, Opcode op) {
   static const char* const names[] = {
-#define LIROP(x) #x,
+#  define LIROP(x) #  x,
       LIR_OPCODE_LIST(LIROP)
-#undef LIROP
+#  undef LIROP
   };
   const char* name = names[uint32_t(op)];
   size_t len = strlen(name);
@@ -366,15 +366,15 @@ static const char* DefTypeName(LDefinition::Type type) {
       return "simd128float";
     case LDefinition::SINCOS:
       return "sincos";
-#ifdef JS_NUNBOX32
+#  ifdef JS_NUNBOX32
     case LDefinition::TYPE:
       return "t";
     case LDefinition::PAYLOAD:
       return "p";
-#else
+#  else
     case LDefinition::BOX:
       return "x";
-#endif
+#  endif
   }
   MOZ_CRASH("Invalid type");
 }
@@ -520,11 +520,11 @@ static size_t NumSuccessors(const LInstruction* ins) {
   switch (ins->op()) {
     default:
       MOZ_CRASH("Unexpected LIR op");
-#define LIROP(x)         \
-  case LNode::Opcode::x: \
-    return NumSuccessorsHelper(ins->to##x());
+#  define LIROP(x)         \
+    case LNode::Opcode::x: \
+      return NumSuccessorsHelper(ins->to##x());
       LIR_OPCODE_LIST(LIROP)
-#undef LIROP
+#  undef LIROP
   }
 }
 
@@ -544,11 +544,11 @@ static MBasicBlock* GetSuccessor(const LInstruction* ins, size_t i) {
   switch (ins->op()) {
     default:
       MOZ_CRASH("Unexpected LIR op");
-#define LIROP(x)         \
-  case LNode::Opcode::x: \
-    return GetSuccessorHelper(ins->to##x(), i);
+#  define LIROP(x)         \
+    case LNode::Opcode::x: \
+      return GetSuccessorHelper(ins->to##x(), i);
       LIR_OPCODE_LIST(LIROP)
-#undef LIROP
+#  undef LIROP
   }
 }
 #endif
@@ -585,7 +585,7 @@ void LNode::dump(GenericPrinter& out) {
       out.printf(")");
     }
 
-#ifdef JS_JITSPEW
+#  ifdef JS_JITSPEW
     size_t numSuccessors = NumSuccessors(ins);
     if (numSuccessors > 0) {
       out.printf(" s=(");
@@ -598,7 +598,7 @@ void LNode::dump(GenericPrinter& out) {
       }
       out.printf(")");
     }
-#endif
+#  endif
   }
 }
 
@@ -613,11 +613,11 @@ const char* LNode::getExtraName() const {
   switch (op()) {
     default:
       MOZ_CRASH("Unexpected LIR op");
-#define LIROP(x)         \
-  case LNode::Opcode::x: \
-    return to##x()->extraName();
+#  define LIROP(x)         \
+    case LNode::Opcode::x: \
+      return to##x()->extraName();
       LIR_OPCODE_LIST(LIROP)
-#undef LIROP
+#  undef LIROP
   }
 }
 #endif

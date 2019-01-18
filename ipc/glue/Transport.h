@@ -11,9 +11,9 @@
 #include "chrome/common/ipc_channel.h"
 
 #ifdef OS_POSIX
-#include "mozilla/ipc/Transport_posix.h"
+#  include "mozilla/ipc/Transport_posix.h"
 #elif OS_WIN
-#include "mozilla/ipc/Transport_win.h"
+#  include "mozilla/ipc/Transport_win.h"
 #endif
 #include "mozilla/UniquePtr.h"
 

@@ -5,10 +5,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaSystemResourceMessageUtils_h_)
-#define MediaSystemResourceMessageUtils_h_
+#  define MediaSystemResourceMessageUtils_h_
 
-#include "ipc/IPCMessageUtils.h"
-#include "MediaSystemResourceTypes.h"
+#  include "ipc/IPCMessageUtils.h"
+#  include "MediaSystemResourceTypes.h"
 
 namespace IPC {
 
