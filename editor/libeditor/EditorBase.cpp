@@ -263,6 +263,19 @@ nsresult EditorBase::Init(nsIDocument& aDocument, Element* aRoot,
   MOZ_ASSERT(selectionController,
              "Selection controller should be available at this point");
 
+  if (mEditActionData) {
+    // During edit action, selection is cached. But this selection is invalid
+    // now since selection controller is updated, so we have to update this
+    // cache.
+    Selection* selection = selectionController->GetSelection(
+        nsISelectionController::SELECTION_NORMAL);
+    NS_WARNING_ASSERTION(selection,
+                         "We cannot update selection cache in the edit action");
+    if (selection) {
+      mEditActionData->UpdateSelectionCache(*selection);
+    }
+  }
+
   // set up root element if we are passed one.
   if (aRoot) {
     mRootElement = aRoot;
