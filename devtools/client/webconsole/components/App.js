@@ -49,6 +49,7 @@ class App extends Component {
       jstermCodeMirror: PropTypes.bool,
       currentReverseSearchEntry: PropTypes.string,
       reverseSearchInputVisible: PropTypes.bool,
+      reverseSearchInitialValue: PropTypes.string,
     };
   }
 
@@ -63,13 +64,15 @@ class App extends Component {
   onKeyDown(event) {
     const {
       dispatch,
+      hud,
     } = this.props;
 
     if (
       (!isMacOS && event.key === "F9") ||
       (isMacOS && event.key === "r" && event.ctrlKey === true)
     ) {
-      dispatch(actions.reverseSearchInputToggle());
+      const initialValue = hud.jsterm && hud.jsterm.getSelectedText();
+      dispatch(actions.reverseSearchInputToggle({initialValue}));
       event.stopPropagation();
     }
   }
@@ -196,6 +199,7 @@ class App extends Component {
       serviceContainer,
       closeSplitConsole,
       jstermCodeMirror,
+      reverseSearchInitialValue,
     } = this.props;
 
     const classNames = ["webconsole-output-wrapper"];
@@ -243,6 +247,7 @@ class App extends Component {
           }),
           ReverseSearchInput({
             hud,
+            initialValue: reverseSearchInitialValue,
           })
         ),
         SideBar({
@@ -261,6 +266,7 @@ class App extends Component {
 const mapStateToProps = state => ({
   notifications: getAllNotifications(state),
   reverseSearchInputVisible: state.ui.reverseSearchInputVisible,
+  reverseSearchInitialValue: state.ui.reverseSearchInitialValue,
 });
 
 const mapDispatchToProps = dispatch => ({
