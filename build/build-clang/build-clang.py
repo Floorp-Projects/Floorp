@@ -269,10 +269,11 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
             sysroot_dir = cfg["ndk_sysroot"]
             android_gcc_dir = cfg["ndk_toolchain"]
             android_include_dirs = cfg["ndk_includes"]
+            api_level = cfg["api_level"]
 
             android_flags = ["-isystem %s" % d for d in android_include_dirs]
             android_flags += ["--gcc-toolchain=%s" % android_gcc_dir]
-            android_flags += ["-D__ANDROID_API__=16"]
+            android_flags += ["-D__ANDROID_API__=%s" % api_level]
             rt_c_flags = " ".join(android_flags + cc[1:])
             rt_cxx_flags = " ".join(android_flags + cxx[1:])
             rt_asm_flags = " ".join(android_flags + asm[1:])
@@ -293,10 +294,11 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
                 "-DRUNTIMES_%s_CMAKE_SYSROOT=%s" % (target, sysroot_dir),
                 "-DRUNTIMES_%s_COMPILER_RT_BUILD_PROFILE=ON" % target,
                 "-DRUNTIMES_%s_COMPILER_RT_BUILD_SANITIZERS=OFF" % target,
+                "-DRUNTIMES_%s_COMPILER_RT_BUILD_LIBFUZZER=OFF" % target,
                 "-DRUNTIMES_%s_COMPILER_RT_INCLUDE_TESTS=OFF" % target,
                 "-DRUNTIMES_%s_LLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF" % target,
                 "-DRUNTIMES_%s_LLVM_INCLUDE_TESTS=OFF" % target,
-                "-DRUNTIMES_%s_ANDROID_NATIVE_API_LEVEL=16" % target,
+                "-DRUNTIMES_%s_ANDROID_NATIVE_API_LEVEL=%s" % (target, api_level),
             ]
 
     cmake_args += cmake_base_args(
@@ -586,7 +588,7 @@ if __name__ == "__main__":
     android_targets = None
     if "android_targets" in config:
         android_targets = config["android_targets"]
-        for attr in ("ndk_toolchain", "ndk_sysroot", "ndk_includes"):
+        for attr in ("ndk_toolchain", "ndk_sysroot", "ndk_includes", "api_level"):
             for target, cfg in android_targets.iteritems():
                 if attr not in cfg:
                     raise ValueError("must specify '%s' as a key for android target: %s" %

@@ -22,7 +22,26 @@
         "ndk_includes": [
           "/builds/worker/workspace/build/src/android-ndk/sysroot/usr/include/arm-linux-androideabi",
           "/builds/worker/workspace/build/src/android-ndk/sysroot/usr/include"
-        ]
+        ],
+        "api_level": 16
+      },
+      "i686-linux-android": {
+        "ndk_toolchain": "/builds/worker/workspace/build/src/android-ndk/toolchains/x86-4.9/prebuilt/linux-x86_64",
+        "ndk_sysroot": "/builds/worker/workspace/build/src/android-ndk/platforms/android-16/arch-x86",
+        "ndk_includes": [
+          "/builds/worker/workspace/build/src/android-ndk/sysroot/usr/include/i686-linux-android",
+          "/builds/worker/workspace/build/src/android-ndk/sysroot/usr/include"
+        ],
+        "api_level": 16
+      },
+      "aarch64-linux-android": {
+        "ndk_toolchain": "/builds/worker/workspace/build/src/android-ndk/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64",
+        "ndk_sysroot": "/builds/worker/workspace/build/src/android-ndk/platforms/android-21/arch-arm64",
+        "ndk_includes": [
+          "/builds/worker/workspace/build/src/android-ndk/sysroot/usr/include/aarch64-linux-android",
+          "/builds/worker/workspace/build/src/android-ndk/sysroot/usr/include"
+        ],
+        "api_level": 21
       }
     },
     "patches": [
