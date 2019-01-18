@@ -12,7 +12,6 @@ import type { EventListenerBreakpoints } from "../types";
 type OuterState = { eventListenerBreakpoints: EventListenerBreakpoints };
 
 function update(state: EventListenerBreakpoints = [], action: any) {
-  console.log("update; state is: ", state);
   switch (action.type) {
     case "ADD_EVENT_LISTENERS":
       return updateEventTypes("add", state, action.events);
