@@ -39,8 +39,6 @@ HIGHMEM_LDFLAG          = -Zhigh-mem
 endif
 
 ifndef NO_SHARED_LIB
-WRAP_MALLOC_LIB         = 
-WRAP_MALLOC_CFLAGS      = 
 DSO_CFLAGS              = 
 DSO_PIC_CFLAGS          = 
 MKSHLIB                 = $(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@

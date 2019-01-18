@@ -21,21 +21,11 @@ include $(CORE_DEPTH)/coreconf/config.mk
 #######################################################################
 
 
-
 #######################################################################
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-# Don't build sysinit gtests unless we are also building libnsssysinit.
-# See lib/Makefile for the corresponding rules.
-ifndef MOZILLA_CLIENT
-ifeq ($(OS_ARCH),Linux)
-ifneq ($(NSS_BUILD_UTIL_ONLY),1)
-SYSINIT_GTEST=sysinit_gtest
-endif
-endif
-endif
-
+include ../common/gtest.mk
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
@@ -46,7 +36,6 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 # (6) Execute "component" rules. (OPTIONAL)                           #
 #######################################################################
-
 
 
 #######################################################################
