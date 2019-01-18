@@ -25,8 +25,6 @@ class TestDocker(unittest.TestCase):
 
     def test_generate_context_hash(self):
         tmpdir = tempfile.mkdtemp()
-        old_GECKO = docker.GECKO
-        docker.GECKO = tmpdir
         try:
             os.makedirs(os.path.join(tmpdir, 'docker', 'my-image'))
             p = os.path.join(tmpdir, 'docker', 'my-image', 'Dockerfile')
@@ -38,13 +36,12 @@ class TestDocker(unittest.TestCase):
                 f.write("data\n")
             os.chmod(p, MODE_STANDARD)
             self.assertEqual(
-                docker.generate_context_hash(docker.GECKO,
-                                             os.path.join(docker.GECKO, 'docker/my-image'),
+                docker.generate_context_hash(tmpdir,
+                                             os.path.join(tmpdir, 'docker/my-image'),
                                              'my-image'),
                 'e61e675ce05e8c11424437db3f1004079374c1a5fe6ad6800346cebe137b0797'
             )
         finally:
-            docker.GECKO = old_GECKO
             shutil.rmtree(tmpdir)
 
     def test_docker_image_explicit_registry(self):
