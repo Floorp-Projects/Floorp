@@ -12,6 +12,7 @@
 
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/Unused.h"
 
 #define COPY_CODES(NBYTES)                          \
   do {                                              \
@@ -137,6 +138,7 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
         continue;
       }
 #elif defined(_M_ARM64)
+      Unused << opcode1;
       MOZ_RELEASE_ASSERT(false, "Shouldn't get here");
 #else
 #error "Unknown processor type"
