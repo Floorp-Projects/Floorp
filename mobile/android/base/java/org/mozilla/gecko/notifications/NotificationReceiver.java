@@ -89,7 +89,7 @@ public class NotificationReceiver extends BroadcastReceiver {
 
         if (persistentIntent != null) {
             // Go through GeckoService for persistent notifications.
-            GeckoServicesCreatorService.enqueueWork(context, intent);
+            GeckoServicesCreatorService.enqueueWork(context, persistentIntent);
         }
 
         if (NotificationClient.CLICK_ACTION.equals(action)) {
