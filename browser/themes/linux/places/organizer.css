@@ -10,7 +10,7 @@
 
 @media (-moz-menubar-drag) {
   #placesToolbar {
-    -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+    -moz-window-dragging: drag;
   }
 }
 
