@@ -84,7 +84,14 @@ open class DefaultComponents(private val applicationContext: Context) {
     val defaultSearchUseCase by lazy { { searchTerms: String -> searchUseCases.defaultSearch.invoke(searchTerms) } }
 
     // Intent
-    val sessionIntentProcessor by lazy { IntentProcessor(sessionUseCases, sessionManager, searchUseCases) }
+    val sessionIntentProcessor by lazy {
+        IntentProcessor(
+            sessionUseCases,
+            sessionManager,
+            searchUseCases,
+            applicationContext
+        )
+    }
 
     // Menu
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }

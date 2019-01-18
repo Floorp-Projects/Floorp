@@ -7,7 +7,6 @@
 package mozilla.components.feature.customtabs
 
 import android.graphics.Color
-import android.graphics.drawable.Drawable
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -168,24 +167,5 @@ class CustomTabsToolbarFeatureTest {
 
         assertTrue(result)
         assertTrue(closeExecuted)
-    }
-
-    @Test
-    fun isSmallerThan() {
-        val toolbar = spy(BrowserToolbar(RuntimeEnvironment.application))
-        val drawable: Drawable = mock()
-        with(CustomTabsToolbarFeature(mock(), toolbar, "") {}) {
-            `when`(drawable.minimumWidth).thenReturn(84)
-            `when`(drawable.minimumHeight).thenReturn(84)
-            assertFalse(drawable.isSmallerThan(CustomTabsToolbarFeature.MAX_CLOSE_BUTTON_SIZE_DP))
-
-            `when`(drawable.minimumWidth).thenReturn(24)
-            `when`(drawable.minimumHeight).thenReturn(24)
-            assertTrue(drawable.isSmallerThan(CustomTabsToolbarFeature.MAX_CLOSE_BUTTON_SIZE_DP))
-
-            `when`(drawable.minimumWidth).thenReturn(24)
-            `when`(drawable.minimumHeight).thenReturn(84)
-            assertFalse(drawable.isSmallerThan(CustomTabsToolbarFeature.MAX_CLOSE_BUTTON_SIZE_DP))
-        }
     }
 }

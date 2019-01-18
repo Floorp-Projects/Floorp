@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.intent
 
+import android.content.Context
 import android.content.Intent
 import android.text.TextUtils
 import mozilla.components.browser.session.Session
@@ -32,6 +33,7 @@ class IntentProcessor(
     private val sessionUseCases: SessionUseCases,
     private val sessionManager: SessionManager,
     private val searchUseCases: SearchUseCases,
+    private val context: Context,
     private val useDefaultHandlers: Boolean = true,
     private val openNewTab: Boolean = true
 ) {
@@ -44,7 +46,8 @@ class IntentProcessor(
 
             CustomTabConfig.isCustomTabIntent(safeIntent) -> {
                 val session = Session(url, false, Source.CUSTOM_TAB).apply {
-                    this.customTabConfig = CustomTabConfig.createFromIntent(safeIntent)
+                    val displayMetrics = context.resources.displayMetrics
+                    this.customTabConfig = CustomTabConfig.createFromIntent(safeIntent, displayMetrics)
                 }
                 sessionManager.add(session)
                 sessionUseCases.loadUrl.invoke(url, session)

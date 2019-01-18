@@ -9,7 +9,6 @@ package mozilla.components.feature.customtabs
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.support.v4.content.ContextCompat
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -17,7 +16,6 @@ import mozilla.components.browser.session.runWithSession
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.android.content.res.pxToDp
 
 /**
  * Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig.
@@ -59,11 +57,10 @@ class CustomTabsToolbarFeature(
     }
 
     internal fun addCloseButton(bitmap: Bitmap?) {
-        val drawableIcon = bitmap?.let { icon ->
-            BitmapDrawable(context.resources, icon).also {
-                if (it.isSmallerThan(MAX_CLOSE_BUTTON_SIZE_DP)) return@also
-            }
-        } ?: ContextCompat.getDrawable(context, R.drawable.mozac_ic_close)
+        val drawableIcon = bitmap?.let { BitmapDrawable(context.resources, it) } ?: ContextCompat.getDrawable(
+            context,
+            R.drawable.mozac_ic_close
+        )
 
         drawableIcon?.let {
             val button = Toolbar.ActionButton(
@@ -86,10 +83,6 @@ class CustomTabsToolbarFeature(
         }
         closeListener.invoke()
         return result
-    }
-
-    internal fun Drawable.isSmallerThan(maxSize: Int): Boolean = with(context.resources) {
-        pxToDp(minimumWidth) <= maxSize && pxToDp(minimumHeight) <= maxSize
     }
 
     companion object {
