@@ -601,8 +601,7 @@ this.BrowserIDManager.prototype = {
     if (!this._token) {
       return null;
     }
-    let credentials = {algorithm: "sha256",
-                       id: this._token.id,
+    let credentials = {id: this._token.id,
                        key: this._token.key,
                       };
     method = method || httpObject.method;
@@ -615,7 +614,7 @@ this.BrowserIDManager.prototype = {
       credentials,
     };
 
-    let headerValue = CryptoUtils.computeHAWK(httpObject.uri, method, options);
+    let headerValue = await CryptoUtils.computeHAWK(httpObject.uri, method, options);
     return {headers: {authorization: headerValue.field}};
   },
 

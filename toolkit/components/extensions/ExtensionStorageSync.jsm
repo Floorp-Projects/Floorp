@@ -434,7 +434,7 @@ class CryptoCollection {
    * @returns {string} A base64-encoded string of the salt
    */
   getNewSalt() {
-    return btoa(CryptoUtils.generateRandomBytes(STORAGE_SYNC_CRYPTO_SALT_LENGTH_BYTES));
+    return btoa(CryptoUtils.generateRandomBytesLegacy(STORAGE_SYNC_CRYPTO_SALT_LENGTH_BYTES));
   }
 
   /**
