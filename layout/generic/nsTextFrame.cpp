@@ -5733,8 +5733,9 @@ gfxFloat nsTextFrame::ComputeSelectionUnderlineHeight(
       // computed value from the default font size can be too thick for the
       // current font size.
       nscoord defaultFontSize =
-          aPresContext
-              ->GetDefaultFont(kPresContext_DefaultVariableFont_ID, nullptr)
+          aPresContext->Document()
+              ->GetFontPrefsForLang(nullptr)
+              ->GetDefaultFont(kPresContext_DefaultVariableFont_ID)
               ->size;
       int32_t zoomedFontSize = aPresContext->AppUnitsToDevPixels(
           nsStyleFont::ZoomText(aPresContext, defaultFontSize));
