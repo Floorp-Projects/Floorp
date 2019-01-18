@@ -84,6 +84,7 @@ toolkit.jar:
 *  content/global/bindings/textbox.xml         (widgets/textbox.xml)
    content/global/bindings/timekeeper.js       (widgets/timekeeper.js)
    content/global/bindings/timepicker.js       (widgets/timepicker.js)
+   content/global/bindings/toolbar.xml         (widgets/toolbar.xml)
    content/global/bindings/toolbarbutton.xml   (widgets/toolbarbutton.xml)
    content/global/bindings/tree.xml            (widgets/tree.xml)
    content/global/bindings/videocontrols.xml   (widgets/videocontrols.xml)

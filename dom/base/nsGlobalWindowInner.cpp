@@ -6617,6 +6617,24 @@ void nsGlobalWindowInner::GetAttentionWithCycleCount(int32_t aCycleCount,
   }
 }
 
+void nsGlobalWindowInner::BeginWindowMove(Event& aMouseDownEvent,
+                                          ErrorResult& aError) {
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+
+  if (!widget) {
+    return;
+  }
+
+  WidgetMouseEvent* mouseEvent =
+      aMouseDownEvent.WidgetEventPtr()->AsMouseEvent();
+  if (!mouseEvent || mouseEvent->mClass != eMouseEventClass) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  aError = widget->BeginMoveDrag(mouseEvent);
+}
+
 already_AddRefed<Promise> nsGlobalWindowInner::PromiseDocumentFlushed(
     PromiseDocumentFlushedCallback& aCallback, ErrorResult& aError) {
   MOZ_RELEASE_ASSERT(IsChromeWindow());
