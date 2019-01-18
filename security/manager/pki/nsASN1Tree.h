@@ -21,7 +21,7 @@
 #elif defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wextra"
-#endif // __clang__ || __GNUC__
+#endif  // __clang__ || __GNUC__
 
 #include "mozilla/dom/XULTreeElement.h"
 
@@ -29,7 +29,7 @@
 #pragma clang diagnostic pop
 #elif defined(__GNUC__)
 #pragma GCC diagnostic pop
-#endif // __clang__ || __GNUC__
+#endif  // __clang__ || __GNUC__
 
 // 4bfaa9f0-1dd2-11b2-afae-a82cbaa0b606
 #define NS_NSSASN1OUTINER_CID                        \

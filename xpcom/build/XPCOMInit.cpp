@@ -301,14 +301,15 @@ const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
 #undef COMPONENT
 #undef COMPONENT_M
 
-const mozilla::Module kXPCOMModule = {mozilla::Module::kVersion,
-                                      kXPCOMCIDEntries,
-                                      kXPCOMContracts,
-                                      nullptr,
-                                      nullptr,
-                                      nullptr,
-                                      nullptr,
-                                      Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS};
+const mozilla::Module kXPCOMModule = {
+    mozilla::Module::kVersion,
+    kXPCOMCIDEntries,
+    kXPCOMContracts,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS};
 
 // gDebug will be freed during shutdown.
 static nsIDebug2* gDebug = nullptr;

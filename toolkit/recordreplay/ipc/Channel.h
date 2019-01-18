@@ -161,7 +161,10 @@ struct Message {
   }
 
  public:
-  struct FreePolicy { void operator()(Message* msg) { /*free(msg);*/ } };
+  struct FreePolicy {
+    void operator()(Message* msg) { /*free(msg);*/
+    }
+  };
   typedef UniquePtr<Message, FreePolicy> UniquePtr;
 
   UniquePtr Clone() const {

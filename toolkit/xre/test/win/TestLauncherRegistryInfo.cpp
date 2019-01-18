@@ -674,9 +674,8 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  auto onExit = mozilla::MakeScopeExit([]() {
-    mozilla::Unused << DeleteAllTimestamps();
-  });
+  auto onExit = mozilla::MakeScopeExit(
+      []() { mozilla::Unused << DeleteAllTimestamps(); });
 
   VoidResult vr = mozilla::Ok();
 

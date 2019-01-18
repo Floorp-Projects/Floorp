@@ -886,11 +886,11 @@ bool LayerTransactionParent::IsSameProcess() const {
 void LayerTransactionParent::SetPendingTransactionId(
     TransactionId aId, const VsyncId& aVsyncId,
     const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
-    const TimeStamp& aTxnStartTime, const TimeStamp& aTxnEndTime, bool aContainsSVG,
-    const nsCString& aURL, const TimeStamp& aFwdTime) {
-  mPendingTransactions.AppendElement(
-      PendingTransaction{aId, aVsyncId, aVsyncStartTime, aRefreshStartTime,
-                         aTxnStartTime, aTxnEndTime, aFwdTime, aURL, aContainsSVG});
+    const TimeStamp& aTxnStartTime, const TimeStamp& aTxnEndTime,
+    bool aContainsSVG, const nsCString& aURL, const TimeStamp& aFwdTime) {
+  mPendingTransactions.AppendElement(PendingTransaction{
+      aId, aVsyncId, aVsyncStartTime, aRefreshStartTime, aTxnStartTime,
+      aTxnEndTime, aFwdTime, aURL, aContainsSVG});
 }
 
 TransactionId LayerTransactionParent::FlushTransactionId(

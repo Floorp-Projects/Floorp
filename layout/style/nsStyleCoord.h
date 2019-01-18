@@ -174,7 +174,6 @@ class nsStyleCoord {
 
   static bool ConvertsToPercent(const nsStyleUnit aUnit,
                                 const nsStyleUnion aValue) {
-
     if (aUnit == eStyleUnit_Percent) {
       return true;
     }

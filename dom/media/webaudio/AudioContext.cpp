@@ -1017,7 +1017,8 @@ void AudioContext::MaybeUpdateAutoplayTelemetryWhenShutdown() {
 }
 
 void AudioContext::ReportBlocked() {
-  ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayWebAudioStartError");
+  ReportToConsole(nsIScriptError::warningFlag,
+                  "BlockAutoplayWebAudioStartError");
   mWasAllowedToStart = false;
 
   if (!StaticPrefs::MediaBlockEventEnabled()) {

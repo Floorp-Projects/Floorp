@@ -13,17 +13,14 @@ namespace gfx {
 
 using namespace ipc;
 
-VRGPUParent::VRGPUParent(ProcessId aChildProcessId)
- : mClosed(false) {
+VRGPUParent::VRGPUParent(ProcessId aChildProcessId) : mClosed(false) {
   MOZ_COUNT_CTOR(VRGPUParent);
   MOZ_ASSERT(NS_IsMainThread());
 
   SetOtherProcessId(aChildProcessId);
 }
 
-VRGPUParent::~VRGPUParent() {
-  MOZ_COUNT_DTOR(VRGPUParent);
-}
+VRGPUParent::~VRGPUParent() { MOZ_COUNT_DTOR(VRGPUParent); }
 
 void VRGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
 #if !defined(MOZ_WIDGET_ANDROID)
@@ -80,9 +77,7 @@ mozilla::ipc::IPCResult VRGPUParent::RecvStopVRService() {
   return IPC_OK();
 }
 
-bool VRGPUParent::IsClosed() {
-  return mClosed;
-}
+bool VRGPUParent::IsClosed() { return mClosed; }
 
 }  // namespace gfx
 }  // namespace mozilla
