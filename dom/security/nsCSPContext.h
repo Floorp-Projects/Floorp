@@ -37,9 +37,6 @@ namespace mozilla {
 namespace dom {
 class Element;
 }
-namespace ipc {
-class ContentSecurityPolicy;
-}
 }  // namespace mozilla
 
 class nsCSPContext : public nsIContentSecurityPolicy {
@@ -57,9 +54,6 @@ class nsCSPContext : public nsIContentSecurityPolicy {
   nsresult InitFromOther(nsCSPContext* otherContext,
                          mozilla::dom::Document* aDoc,
                          nsIPrincipal* aPrincipal);
-
-  void SetIPCPolicies(
-      const nsTArray<mozilla::ipc::ContentSecurityPolicy>& policies);
 
   /**
    * SetRequestContext() needs to be called before the innerWindowID
@@ -139,8 +133,6 @@ class nsCSPContext : public nsIContentSecurityPolicy {
   }
 
  private:
-  void EnsureIPCPoliciesRead();
-
   bool permitsInternal(CSPDirective aDir,
                        mozilla::dom::Element* aTriggeringElement,
                        nsICSPEventListener* aCSPEventListener,
@@ -161,12 +153,6 @@ class nsCSPContext : public nsIContentSecurityPolicy {
 
   nsString mReferrer;
   uint64_t mInnerWindowID;  // used for web console logging
-  // When deserializing an nsCSPContext instance, we initially just keep the
-  // policies unparsed. We will only reconstruct actual CSP policy instances
-  // when there's an attempt to use the CSP. Given a better way to serialize/
-  // deserialize individual nsCSPPolicy objects, this performance
-  // optimization could go away.
-  nsTArray<mozilla::ipc::ContentSecurityPolicy> mIPCPolicies;
   nsTArray<nsCSPPolicy*> mPolicies;
   nsCOMPtr<nsIURI> mSelfURI;
   nsCOMPtr<nsILoadGroup> mCallingChannelLoadGroup;
