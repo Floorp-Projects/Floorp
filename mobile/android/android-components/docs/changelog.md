@@ -6,16 +6,12 @@ permalink: /changelog/
 
 # 0.39.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.39.0...master),
-[Milestone](https://github.com/mozilla-mobile/android-components/milestone/41?closed=1),
-[API reference](https://mozilla-mobile.github.io/android-components/api/0.39.0/index)
-
-* Compiled against:
-  * Android (SDK: 28, Support Libraries: 28.0.0)
-  * Kotlin (Stdlib: 1.3.10, Coroutines: 1.0.1)
-  * GeckoView (Nightly: 66.0.20190111093148, Beta: 65.0.20181211223337, Release: 64.0.20181214004633)
-  * Mozilla App Services (FxA: 0.13.3, Sync Logins: 0.13.3, Places: 0.13.3)
-  * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.38.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/41?closed=1)
+* [API reference](https://mozilla-mobile.github.io/android-components/api/0.39.0/index)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
 * **feature-awesomebar**
   * Added `ClipboardSuggestionProvider` - An `AwesomeBar.SuggestionProvider` implementation that returns a suggestions for an URL in the clipboard (if there's any).
