@@ -659,24 +659,19 @@
 /* Tooltip: Invoke getter confirm Tooltip */
 
 .invoke-confirm {
-  font-family: var(--monospace-font-family);
   color: var(--theme-popup-color);
   border: 1px solid rgba(0,0,0, 0.1);
-  max-width: 400px;
-}
-
-.invoke-confirm .tooltip-panel {
-  display: flex;
-  flex-direction: column;
+  max-width: 212px;
 }
 
 .invoke-confirm .confirm-label {
   margin: 0;
-  padding: 8px;
-  flex-grow: 1;
+  padding: 4px;
+  background-color: var(--theme-toolbar-background-alt);
 }
 
 .invoke-confirm .emphasized {
+  font-family: var(--monospace-font-family);
   font-weight: bold;
   overflow-wrap: break-word;
 }
@@ -685,11 +680,10 @@
   background-color: var(--theme-selection-background);
   color: white;
   border: none;
-  padding: 8px;
+  padding: 6px;
   display: block;
   width: 100%;
   text-align: left;
-  font-family: var(--monospace-font-family);
 }
 
 /* The button already has a "selected" style, we can remove the focus rings. */
@@ -697,4 +691,26 @@
 .confirm-button::-moz-focus-inner {
   outline: none;
   border: none;
+}
+
+.invoke-confirm .learn-more-link {
+  color: var(--theme-highlight-blue);
+  padding-inline-end: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  min-height: 20px;
+  cursor: pointer;
+}
+
+.invoke-confirm .learn-more-link::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  -moz-context-properties: fill;
+  background-image: url(chrome://devtools/skin/images/help.svg);
+  background-size: contain;
+  background-repeat: no-repeat;
+  margin-inline-start: 4px;
 }
