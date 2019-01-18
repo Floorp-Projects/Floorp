@@ -19,7 +19,8 @@ namespace dom {
 
 class ScriptLoader;
 
-void HostFinalizeTopLevelScript(JSFreeOp* aFop, const JS::Value& aPrivate);
+void HostAddRefTopLevelScript(const JS::Value& aPrivate);
+void HostReleaseTopLevelScript(const JS::Value& aPrivate);
 
 class ClassicScript;
 class ModuleScript;
@@ -89,7 +90,7 @@ class ModuleScript final : public LoadedScript {
 
   void UnlinkModuleRecord();
 
-  friend void HostFinalizeTopLevelScript(JSFreeOp*, const JS::Value&);
+  friend void CheckModuleScriptPrivate(LoadedScript*, const JS::Value&);
 };
 
 ClassicScript* LoadedScript::AsClassicScript() {

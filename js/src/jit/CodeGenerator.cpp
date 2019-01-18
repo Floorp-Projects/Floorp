@@ -2982,7 +2982,7 @@ void CodeGenerator::visitModuleMetadata(LModuleMetadata* lir) {
   callVM(GetOrCreateModuleMetaObjectInfo, lir);
 }
 
-typedef JSObject* (*StartDynamicModuleImportFn)(JSContext*, HandleValue,
+typedef JSObject* (*StartDynamicModuleImportFn)(JSContext*, HandleObject,
                                                 HandleValue);
 static const VMFunction StartDynamicModuleImportInfo =
     FunctionInfo<StartDynamicModuleImportFn>(js::StartDynamicModuleImport,
@@ -2990,7 +2990,7 @@ static const VMFunction StartDynamicModuleImportInfo =
 
 void CodeGenerator::visitDynamicImport(LDynamicImport* lir) {
   pushArg(ToValue(lir, LDynamicImport::SpecifierIndex));
-  pushArg(ToValue(lir, LDynamicImport::ReferencingPrivateIndex));
+  pushArg(ImmGCPtr(lir->mir()->referencingScriptSource()));
   callVM(StartDynamicModuleImportInfo, lir);
 }
 

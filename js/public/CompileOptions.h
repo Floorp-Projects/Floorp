@@ -145,6 +145,15 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   virtual JSString* elementAttributeName() const = 0;
   virtual JSScript* introductionScript() const = 0;
 
+  // For some compilations the spec requires the ScriptOrModule field of the
+  // resulting script to be set to the currently executing script. This can be
+  // achieved by setting this option with setScriptOrModule() below.
+  //
+  // Note that this field doesn't explicitly exist in our implementation;
+  // instead the ScriptSourceObject's private value is set to that associated
+  // with the specified script.
+  virtual JSScript* scriptOrModule() const = 0;
+
  private:
   void operator=(const TransitiveCompileOptions&) = delete;
 };
@@ -202,9 +211,10 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
   const char* filename() const { return filename_; }
   const char* introducerFilename() const { return introducerFilename_; }
   const char16_t* sourceMapURL() const { return sourceMapURL_; }
-  virtual JSObject* element() const override = 0;
-  virtual JSString* elementAttributeName() const override = 0;
-  virtual JSScript* introductionScript() const override = 0;
+  JSObject* element() const override = 0;
+  JSString* elementAttributeName() const override = 0;
+  JSScript* introductionScript() const override = 0;
+  JSScript* scriptOrModule() const override = 0;
 
  private:
   void operator=(const ReadOnlyCompileOptions&) = delete;
@@ -227,6 +237,7 @@ class JS_PUBLIC_API OwningCompileOptions final : public ReadOnlyCompileOptions {
   PersistentRooted<JSObject*> elementRoot;
   PersistentRooted<JSString*> elementAttributeNameRoot;
   PersistentRooted<JSScript*> introductionScriptRoot;
+  PersistentRooted<JSScript*> scriptOrModuleRoot;
 
  public:
   // A minimal constructor, for use with OwningCompileOptions::copy.
@@ -239,6 +250,9 @@ class JS_PUBLIC_API OwningCompileOptions final : public ReadOnlyCompileOptions {
   }
   JSScript* introductionScript() const override {
     return introductionScriptRoot;
+  }
+  JSScript* scriptOrModule() const override {
+    return scriptOrModuleRoot;
   }
 
   /** Set this to a copy of |rhs|.  Return false on OOM. */
@@ -269,6 +283,11 @@ class JS_PUBLIC_API OwningCompileOptions final : public ReadOnlyCompileOptions {
 
   OwningCompileOptions& setIntroductionScript(JSScript* s) {
     introductionScriptRoot = s;
+    return *this;
+  }
+
+  OwningCompileOptions& setScriptOrModule(JSScript* s) {
+    scriptOrModuleRoot = s;
     return *this;
   }
 
@@ -361,6 +380,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   Rooted<JSObject*> elementRoot;
   Rooted<JSString*> elementAttributeNameRoot;
   Rooted<JSScript*> introductionScriptRoot;
+  Rooted<JSScript*> scriptOrModuleRoot;
 
  public:
   explicit CompileOptions(JSContext* cx);
@@ -369,7 +389,8 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
       : ReadOnlyCompileOptions(),
         elementRoot(cx),
         elementAttributeNameRoot(cx),
-        introductionScriptRoot(cx) {
+        introductionScriptRoot(cx),
+        scriptOrModuleRoot(cx) {
     copyPODOptions(rhs);
 
     filename_ = rhs.filename();
@@ -378,13 +399,15 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     elementRoot = rhs.element();
     elementAttributeNameRoot = rhs.elementAttributeName();
     introductionScriptRoot = rhs.introductionScript();
+    scriptOrModuleRoot = rhs.scriptOrModule();
   }
 
   CompileOptions(JSContext* cx, const TransitiveCompileOptions& rhs)
       : ReadOnlyCompileOptions(),
         elementRoot(cx),
         elementAttributeNameRoot(cx),
-        introductionScriptRoot(cx) {
+        introductionScriptRoot(cx),
+        scriptOrModuleRoot(cx) {
     copyPODTransitiveOptions(rhs);
 
     filename_ = rhs.filename();
@@ -393,6 +416,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     elementRoot = rhs.element();
     elementAttributeNameRoot = rhs.elementAttributeName();
     introductionScriptRoot = rhs.introductionScript();
+    scriptOrModuleRoot = rhs.scriptOrModule();
   }
 
   JSObject* element() const override { return elementRoot; }
@@ -403,6 +427,10 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
 
   JSScript* introductionScript() const override {
     return introductionScriptRoot;
+  }
+
+  JSScript* scriptOrModule() const override {
+    return scriptOrModuleRoot;
   }
 
   CompileOptions& setFile(const char* f) {
@@ -438,6 +466,11 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
 
   CompileOptions& setIntroductionScript(JSScript* s) {
     introductionScriptRoot = s;
+    return *this;
+  }
+
+  CompileOptions& setScriptOrModule(JSScript* s) {
+    scriptOrModuleRoot = s;
     return *this;
   }
 
