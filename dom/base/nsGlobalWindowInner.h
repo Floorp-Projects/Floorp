@@ -903,8 +903,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   mozilla::dom::ChromeMessageBroadcaster* MessageManager();
   mozilla::dom::ChromeMessageBroadcaster* GetGroupMessageManager(
       const nsAString& aGroup);
-  void BeginWindowMove(mozilla::dom::Event& aMouseDownEvent,
-                       mozilla::ErrorResult& aError);
 
   already_AddRefed<mozilla::dom::Promise> PromiseDocumentFlushed(
       mozilla::dom::PromiseDocumentFlushedCallback& aCallback,
