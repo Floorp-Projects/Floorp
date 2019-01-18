@@ -11,7 +11,7 @@ import mozilla.components.service.fretboard.Fretboard
 
 abstract class SyncWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     override fun doWork(): Result {
-        return if (fretboard.updateExperiments()) Result.SUCCESS else Result.RETRY
+        return if (fretboard.updateExperiments()) Result.success() else Result.retry()
     }
 
     /**
