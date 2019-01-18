@@ -292,7 +292,7 @@ static void RunCompositorBench(Compositor* aCompositor,
     BenchTest* test = tests[i];
     std::vector<TimeDuration> results;
     int testsOverThreshold = 0;
-    PROFILER_ADD_MARKER(test->ToString());
+    PROFILER_ADD_MARKER(test->ToString(), GRAPHICS);
     for (size_t j = 0; j < TEST_STEPS; j++) {
       test->Setup(aCompositor, j);
 

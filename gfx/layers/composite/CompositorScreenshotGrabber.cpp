@@ -87,7 +87,8 @@ void CompositorScreenshotGrabber::MaybeProcessQueue() {
 
 void CompositorScreenshotGrabber::NotifyEmptyFrame() {
 #ifdef MOZ_GECKO_PROFILER
-  profiler_add_marker("NoCompositorScreenshot because nothing changed");
+  profiler_add_marker("NoCompositorScreenshot because nothing changed",
+                      js::ProfilingStackFrame::Category::GRAPHICS);
 #endif
 }
 
@@ -146,7 +147,8 @@ void CompositorScreenshotGrabberImpl::GrabScreenshot(Compositor* aCompositor) {
   if (!windowTarget) {
     PROFILER_ADD_MARKER(
         "NoCompositorScreenshot because of unsupported compositor "
-        "configuration");
+        "configuration",
+        GRAPHICS);
     return;
   }
 
@@ -162,14 +164,16 @@ void CompositorScreenshotGrabberImpl::GrabScreenshot(Compositor* aCompositor) {
 
   if (!scaledTarget) {
     PROFILER_ADD_MARKER(
-        "NoCompositorScreenshot because ScaleDownWindowTargetToSize failed");
+        "NoCompositorScreenshot because ScaleDownWindowTargetToSize failed",
+        GRAPHICS);
     return;
   }
 
   RefPtr<AsyncReadbackBuffer> buffer = TakeNextBuffer(aCompositor);
   if (!buffer) {
     PROFILER_ADD_MARKER(
-        "NoCompositorScreenshot because AsyncReadbackBuffer creation failed");
+        "NoCompositorScreenshot because AsyncReadbackBuffer creation failed",
+        GRAPHICS);
     return;
   }
 
