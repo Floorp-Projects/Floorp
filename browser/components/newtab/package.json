@@ -13,7 +13,8 @@
     "react-dom": "16.2.0",
     "react-intl": "2.4.0",
     "react-redux": "5.1.0",
-    "redux": "4.0.1"
+    "redux": "4.0.1",
+    "reselect": "4.0.0"
   },
   "devDependencies": {
     "@octokit/rest": "15.17.0",

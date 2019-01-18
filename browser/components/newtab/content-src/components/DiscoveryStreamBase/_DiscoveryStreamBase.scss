@@ -1,9 +1,16 @@
+
+.outer-wrapper a {
+  color: $grey-90;
+}
+
 .discovery-stream.ds-layout {
   $columns: 12;
   display: grid;
   grid-template-columns: repeat($columns, 1fr);
   grid-column-gap: 48px;
   grid-row-gap: 10px;
+  width: 936px;
+  margin: 0 auto;
 
   @while $columns > 0 {
     .ds-column-#{$columns} {

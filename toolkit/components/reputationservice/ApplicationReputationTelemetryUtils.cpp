@@ -6,6 +6,8 @@
 #include "mozilla/Assertions.h"
 
 using ServerLabel = mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2;
+using ServerVerdictLabel =
+    mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_VERDICT_2;
 
 struct NSErrorTelemetryResult {
   nsresult mValue;
@@ -72,11 +74,11 @@ static const NSErrorTelemetryResult sResult[] = {
 };
 
 mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2 NSErrorToLabel(
-    nsresult rv) {
-  MOZ_ASSERT(rv != NS_OK);
+    nsresult aRv) {
+  MOZ_ASSERT(aRv != NS_OK);
 
   for (const auto& p : sResult) {
-    if (p.mValue == rv) {
+    if (p.mValue == aRv) {
       return p.mLabel;
     }
   }
@@ -84,28 +86,24 @@ mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2 NSErrorToLabel(
 }
 
 mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2 HTTPStatusToLabel(
-    uint32_t status) {
-  MOZ_ASSERT(status != 200);
+    uint32_t aStatus) {
+  MOZ_ASSERT(aStatus != 200);
 
-  ServerLabel label;
-  switch (status) {
+  switch (aStatus) {
     case 100:
     case 101:
       // Unexpected 1xx return code
-      label = ServerLabel::HTTP1xx;
-      break;
+      return ServerLabel::HTTP1xx;
     case 201:
     case 202:
     case 203:
     case 205:
     case 206:
       // Unexpected 2xx return code
-      label = ServerLabel::HTTP2xx;
-      break;
+      return ServerLabel::HTTP2xx;
     case 204:
       // No Content
-      label = ServerLabel::HTTP204;
-      break;
+      return ServerLabel::HTTP204;
     case 300:
     case 301:
     case 302:
@@ -115,13 +113,11 @@ mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2 HTTPStatusToLabel(
     case 307:
     case 308:
       // Unexpected 3xx return code
-      label = ServerLabel::HTTP3xx;
-      break;
+      return ServerLabel::HTTP3xx;
     case 400:
       // Bad Request - The HTTP request was not correctly formed.
       // The client did not provide all required CGI parameters.
-      label = ServerLabel::HTTP400;
-      break;
+      return ServerLabel::HTTP400;
     case 401:
     case 402:
     case 405:
@@ -142,49 +138,57 @@ mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2 HTTPStatusToLabel(
     case 431:
     case 451:
       // Unexpected 4xx return code
-      label = ServerLabel::HTTP4xx;
-      break;
+      return ServerLabel::HTTP4xx;
     case 403:
       // Forbidden - The client id is invalid.
-      label = ServerLabel::HTTP403;
-      break;
+      return ServerLabel::HTTP403;
     case 404:
       // Not Found
-      label = ServerLabel::HTTP404;
-      break;
+      return ServerLabel::HTTP404;
     case 408:
       // Request Timeout
-      label = ServerLabel::HTTP408;
-      break;
+      return ServerLabel::HTTP408;
     case 413:
       // Request Entity Too Large
-      label = ServerLabel::HTTP413;
-      break;
+      return ServerLabel::HTTP413;
     case 500:
     case 501:
     case 510:
       // Unexpected 5xx return code
-      label = ServerLabel::HTTP5xx;
-      break;
+      return ServerLabel::HTTP5xx;
     case 502:
     case 504:
     case 511:
       // Local network errors, we'll ignore these.
-      label = ServerLabel::HTTP502_504_511;
-      break;
+      return ServerLabel::HTTP502_504_511;
     case 503:
       // Service Unavailable - The server cannot handle the request.
       // Clients MUST follow the backoff behavior specified in the
       // Request Frequency section.
-      label = ServerLabel::HTTP503;
-      break;
+      return ServerLabel::HTTP503;
     case 505:
       // HTTP Version Not Supported - The server CANNOT handle the requested
       // protocol major version.
-      label = ServerLabel::HTTP505;
-      break;
+      return ServerLabel::HTTP505;
     default:
-      label = ServerLabel::HTTPOthers;
-  };
-  return label;
+      return ServerLabel::HTTPOthers;
+  }
+}
+
+mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_VERDICT_2
+VerdictToLabel(uint32_t aVerdict) {
+  switch (aVerdict) {
+    case safe_browsing::ClientDownloadResponse::DANGEROUS:
+      return ServerVerdictLabel::Dangerous;
+    case safe_browsing::ClientDownloadResponse::DANGEROUS_HOST:
+      return ServerVerdictLabel::DangerousHost;
+    case safe_browsing::ClientDownloadResponse::POTENTIALLY_UNWANTED:
+      return ServerVerdictLabel::PotentiallyUnwanted;
+    case safe_browsing::ClientDownloadResponse::UNCOMMON:
+      return ServerVerdictLabel::Uncommon;
+    case safe_browsing::ClientDownloadResponse::UNKNOWN:
+      return ServerVerdictLabel::Unknown;
+    default:
+      return ServerVerdictLabel::Safe;
+  }
 }

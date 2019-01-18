@@ -104,15 +104,9 @@ use util::{extract_inner_rect_safe, project_rect, ScaleOffset};
  */
 
 // Type definitions for interning clip nodes.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq)]
-pub struct ClipDataMarker;
 
-pub type ClipDataStore = intern::DataStore<ClipItemKey, ClipNode, ClipDataMarker>;
-pub type ClipDataHandle = intern::Handle<ClipDataMarker>;
-pub type ClipDataUpdateList = intern::UpdateList<ClipItemKey>;
-pub type ClipDataInterner = intern::Interner<ClipItemKey, (), ClipDataMarker>;
+pub use intern_types::clip::Store as ClipDataStore;
+use intern_types::clip::Handle as ClipDataHandle;
 
 // Result of comparing a clip node instance against a local rect.
 #[derive(Debug)]
@@ -1034,7 +1028,7 @@ impl ClipItem {
     // reduce the size of a primitive region. This is typically
     // used to eliminate redundant clips, and reduce the size of
     // any clip mask that eventually gets drawn.
-    fn get_local_clip_rect(&self, local_pos: LayoutPoint) -> Option<LayoutRect> {
+    pub fn get_local_clip_rect(&self, local_pos: LayoutPoint) -> Option<LayoutRect> {
         let size = match *self {
             ClipItem::Rectangle(size, ClipMode::Clip) => Some(size),
             ClipItem::Rectangle(_, ClipMode::ClipOut) => None,

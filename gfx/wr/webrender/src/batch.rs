@@ -19,7 +19,7 @@ use prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind, Prim
 use prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
 use prim_store::image::ImageSource;
-use render_backend::FrameResources;
+use render_backend::DataStores;
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree, TileBlit};
 use renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use renderer::BLOCKS_PER_UV_RECT;
@@ -614,7 +614,7 @@ impl AlphaBatchBuilder {
             render_tasks,
         ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
-        let prim_common_data = &ctx.resources.as_common_data(&prim_instance);
+        let prim_common_data = &ctx.data_stores.as_common_data(&prim_instance);
         let prim_rect = LayoutRect::new(
             prim_instance.prim_origin,
             prim_common_data.prim_size,
@@ -622,7 +622,7 @@ impl AlphaBatchBuilder {
 
         match prim_instance.kind {
             PrimitiveInstanceKind::Clear { data_handle } => {
-                let prim_data = &ctx.resources.prim_data_store[data_handle];
+                let prim_data = &ctx.data_stores.prim[data_handle];
                 let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
 
                 // TODO(gw): We can abstract some of the common code below into
@@ -667,7 +667,7 @@ impl AlphaBatchBuilder {
                 );
             }
             PrimitiveInstanceKind::NormalBorder { data_handle, ref cache_handles, .. } => {
-                let prim_data = &ctx.resources.normal_border_data_store[data_handle];
+                let prim_data = &ctx.data_stores.normal_border[data_handle];
                 let common_data = &prim_data.common;
                 let prim_cache_address = gpu_cache.get_address(&common_data.gpu_cache_handle);
                 let cache_handles = &ctx.scratch.border_cache_handles[*cache_handles];
@@ -747,7 +747,7 @@ impl AlphaBatchBuilder {
 
                 // The GPU cache data is stored in the template and reused across
                 // frames and display lists.
-                let prim_data = &ctx.resources.text_run_data_store[data_handle];
+                let prim_data = &ctx.data_stores.text_run[data_handle];
                 let glyph_fetch_buffer = &mut self.glyph_fetch_buffer;
                 let alpha_batch_list = &mut self.batch_lists.last_mut().unwrap().alpha_batch_list;
                 let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
@@ -854,7 +854,7 @@ impl AlphaBatchBuilder {
             PrimitiveInstanceKind::LineDecoration { data_handle, ref cache_handle, .. } => {
                 // The GPU cache data is stored in the template and reused across
                 // frames and display lists.
-                let common_data = &ctx.resources.line_decoration_data_store[data_handle].common;
+                let common_data = &ctx.data_stores.line_decoration[data_handle].common;
                 let prim_cache_address = gpu_cache.get_address(&common_data.gpu_cache_handle);
 
                 let (batch_kind, textures, prim_user_data, segment_user_data) = match cache_handle {
@@ -1488,7 +1488,7 @@ impl AlphaBatchBuilder {
                 }
             }
             PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
-                let prim_data = &ctx.resources.image_border_data_store[data_handle];
+                let prim_data = &ctx.data_stores.image_border[data_handle];
                 let common_data = &prim_data.common;
                 let border_data = &prim_data.kind;
 
@@ -1557,7 +1557,7 @@ impl AlphaBatchBuilder {
                 );
             }
             PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, opacity_binding_index, .. } => {
-                let prim_data = &ctx.resources.prim_data_store[data_handle];
+                let prim_data = &ctx.data_stores.prim[data_handle];
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
                 let opacity_binding = ctx.prim_store.get_opacity_binding(opacity_binding_index);
 
@@ -1620,7 +1620,7 @@ impl AlphaBatchBuilder {
                 );
             }
             PrimitiveInstanceKind::YuvImage { data_handle, segment_instance_index, .. } => {
-                let yuv_image_data = &ctx.resources.yuv_image_data_store[data_handle].kind;
+                let yuv_image_data = &ctx.data_stores.yuv_image[data_handle].kind;
                 let mut textures = BatchTextures::no_texture();
                 let mut uv_rect_addresses = [0; 3];
 
@@ -1728,8 +1728,8 @@ impl AlphaBatchBuilder {
                 );
             }
             PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
-                let image_data = &ctx.resources.image_data_store[data_handle].kind;
-                let common_data = &ctx.resources.image_data_store[data_handle].common;
+                let image_data = &ctx.data_stores.image[data_handle].kind;
+                let common_data = &ctx.data_stores.image[data_handle].common;
                 let image_instance = &ctx.prim_store.images[image_instance_index];
                 let opacity_binding = ctx.prim_store.get_opacity_binding(image_instance.opacity_binding_index);
                 let specified_blend_mode = match image_data.alpha_type {
@@ -1867,7 +1867,7 @@ impl AlphaBatchBuilder {
                 }
             }
             PrimitiveInstanceKind::LinearGradient { data_handle, ref visible_tiles_range, .. } => {
-                let prim_data = &ctx.resources.linear_grad_data_store[data_handle];
+                let prim_data = &ctx.data_stores.linear_grad[data_handle];
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
                 let mut prim_header = PrimitiveHeader {
@@ -1948,7 +1948,7 @@ impl AlphaBatchBuilder {
                 }
             }
             PrimitiveInstanceKind::RadialGradient { data_handle, ref visible_tiles_range, .. } => {
-                let prim_data = &ctx.resources.radial_grad_data_store[data_handle];
+                let prim_data = &ctx.data_stores.radial_grad[data_handle];
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
                 let mut prim_header = PrimitiveHeader {
@@ -2359,17 +2359,17 @@ impl BrushBatchParameters {
 impl PrimitiveInstance {
     pub fn is_cacheable(
         &self,
-        resources: &FrameResources,
+        data_stores: &DataStores,
         resource_cache: &ResourceCache,
     ) -> bool {
         let image_key = match self.kind {
             PrimitiveInstanceKind::Image { data_handle, .. } => {
-                let image_data = &resources.image_data_store[data_handle].kind;
+                let image_data = &data_stores.image[data_handle].kind;
                 image_data.key
             }
             PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
                 let yuv_image_data =
-                    &resources.yuv_image_data_store[data_handle].kind;
+                    &data_stores.yuv_image[data_handle].kind;
                 yuv_image_data.yuv_key[0]
             }
             PrimitiveInstanceKind::Picture { .. } |

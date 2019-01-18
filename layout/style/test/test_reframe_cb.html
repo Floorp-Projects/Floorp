@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>
+  Test for bug 1519371: We don't reframe for changes that affect our containing
+  block status unless whether we're a containing block really changed.
+</title>
+<link rel="author" href="mailto:emilio@crisal.io" title="Emilio Cobos Álvarez">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<div id="content"></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+const utils = SpecialPowers.getDOMWindowUtils(window);
+
+function expectReframe(shouldHaveReframed, callback) {
+  document.documentElement.offsetTop;
+  const previousConstructCount = utils.framesConstructed;
+  const previousRestyleGeneration = utils.restyleGeneration;
+
+  callback();
+
+  document.documentElement.offsetTop;
+  isnot(previousRestyleGeneration, utils.restyleGeneration,
+        "We should have restyled");
+  (shouldHaveReframed ? isnot : is)(previousConstructCount,
+                                    utils.framesConstructed,
+    `We should ${shouldHaveReframed ? "" : "not"} have reframed`);
+}
+
+const content = document.getElementById("content");
+
+// Without fixed-pos descendants, we should not reframe.
+expectReframe(false, () => {
+  content.style.transform = "scale(1)";
+});
+
+content.style.transform = "";
+content.innerHTML = `<div style="position: fixed"></div>`;
+
+// With fixed-pos descendants, got to reframe.
+expectReframe(true, () => {
+  content.style.transform = "scale(1)";
+});
+
+// If our containing-block-ness didn't change, we should not need to reframe.
+expectReframe(false, () => {
+  content.style.willChange = "transform";
+});
+
+// If it does change, we need to reframe.
+expectReframe(true, () => {
+  content.style.willChange = "";
+  content.style.transform = "";
+});
+
+SimpleTest.finish();
+</script>
