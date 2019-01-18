@@ -65,7 +65,7 @@ add_test(function test_set_invalid_values() {
   }
 
   try {
-    bundle.hmacKey = Utils.generateRandomBytes(15);
+    bundle.hmacKey = Utils.generateRandomBytesLegacy(15);
   } catch (ex) {
     thrown = true;
     Assert.equal(ex.message.indexOf("HMAC key must be at least 128"), 0);
@@ -95,7 +95,7 @@ add_test(function test_set_invalid_values() {
   }
 
   try {
-    bundle.hmacKey = Utils.generateRandomBytes(15);
+    bundle.hmacKey = Utils.generateRandomBytesLegacy(15);
   } catch (ex) {
     thrown = true;
     Assert.equal(ex.message.indexOf("HMAC key must be at least 128"), 0);
