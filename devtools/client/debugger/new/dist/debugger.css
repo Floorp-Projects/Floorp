@@ -1492,6 +1492,22 @@ span.img.marko {
   width: 15px;
   height: 15px;
   position: relative;
+}
+
+.sources-list .img.angular,
+.sources-list .img.webpack,
+.sources-list .img.vue,
+.sources-list .img.aframe,
+.sources-list .img.dojo,
+.sources-list .img.ember,
+.sources-list .img.marko,
+.sources-list .img.mobx,
+.sources-list .img.nextjs,
+.sources-list .img.nuxtjs,
+.sources-list .img.preact,
+.sources-list .img.pug,
+.sources-list .img.rxjs,
+.sources-list .img.sencha-extjs {
   top: 3px;
 }
 
