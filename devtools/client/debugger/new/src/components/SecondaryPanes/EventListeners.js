@@ -152,16 +152,18 @@ class EventListeners extends Component<Props, State> {
 
   render() {
     return (
-      <ul className="event-listeners-list">
-        {Object.keys(CATEGORIES).map(category => {
-          return (
-            <li className="event-listener-group" key={category}>
-              {this.renderCategoryHeading(category)}
-              {this.renderCategoryListing(category)}
-            </li>
-          );
-        })}
-      </ul>
+      <div className="event-listeners-content">
+        <ul className="event-listeners-list">
+          {Object.keys(CATEGORIES).map(category => {
+            return (
+              <li className="event-listener-group" key={category}>
+                {this.renderCategoryHeading(category)}
+                {this.renderCategoryListing(category)}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     );
   }
 }
