@@ -104,9 +104,15 @@ use util::{extract_inner_rect_safe, project_rect, ScaleOffset};
  */
 
 // Type definitions for interning clip nodes.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq)]
+pub struct ClipDataMarker;
 
-pub use intern_types::clip::Store as ClipDataStore;
-use intern_types::clip::Handle as ClipDataHandle;
+pub type ClipDataStore = intern::DataStore<ClipItemKey, ClipNode, ClipDataMarker>;
+pub type ClipDataHandle = intern::Handle<ClipDataMarker>;
+pub type ClipDataUpdateList = intern::UpdateList<ClipItemKey>;
+pub type ClipDataInterner = intern::Interner<ClipItemKey, (), ClipDataMarker>;
 
 // Result of comparing a clip node instance against a local rect.
 #[derive(Debug)]
