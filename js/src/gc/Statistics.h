@@ -286,10 +286,14 @@ struct Statistics {
   // Print total profile times on shutdown.
   void printTotalProfileTimes();
 
-  // Return JSON for a whole major GC, optionally including detailed
-  // per-slice data.
-  UniqueChars renderJsonMessage(uint64_t timestamp,
-                                bool includeSlices = true) const;
+  enum JSONUse {
+    TELEMETRY,
+    PROFILER
+  };
+
+  // Return JSON for a whole major GC.  If use == PROFILER then
+  // detailed per-slice data and some other fields will be included.
+  UniqueChars renderJsonMessage(uint64_t timestamp, JSONUse use) const;
 
   // Return JSON for the timings of just the given slice.
   UniqueChars renderJsonSlice(size_t sliceNum) const;
@@ -356,8 +360,9 @@ struct Statistics {
     uint32_t tenured;
   } allocsSinceMinorGC;
 
-  /* Allocated space before the GC started. */
-  size_t preBytes;
+  /* Heap size before and after the GC ran. */
+  size_t preHeapSize;
+  size_t postHeapSize;
 
   /* If the GC was triggered by exceeding some threshold, record the
    * threshold and the value that exceeded it. */
@@ -439,7 +444,7 @@ struct Statistics {
   UniqueChars formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const;
   UniqueChars formatDetailedTotals() const;
 
-  void formatJsonDescription(uint64_t timestamp, JSONPrinter&) const;
+  void formatJsonDescription(uint64_t timestamp, JSONPrinter&, JSONUse) const;
   void formatJsonSliceDescription(unsigned i, const SliceData& slice,
                                   JSONPrinter&) const;
   void formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes,
