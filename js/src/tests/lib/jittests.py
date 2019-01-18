@@ -401,11 +401,21 @@ class JitTest:
 
 def find_tests(substring=None):
     ans = []
+    is_win = sys.platform.startswith(('win', 'cygwin', 'msys'))
     for dirpath, dirnames, filenames in os.walk(TEST_DIR):
         dirnames.sort()
         filenames.sort()
         if dirpath == '.':
             continue
+
+        # BinAST encoded jit-tests are not executed on windows
+        # to avoid increasing the time taken by tests on automation.
+        if is_win:
+            if os.path.join('binast', 'lazy') in dirpath:
+                continue
+            if os.path.join('binast', 'nonlazy') in dirpath:
+                continue
+
         for filename in filenames:
             if not (filename.endswith('.js') or filename.endswith('.binjs')):
                 continue
