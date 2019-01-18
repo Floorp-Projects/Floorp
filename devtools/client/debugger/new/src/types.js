@@ -410,3 +410,5 @@ export type WorkerList = Array<Worker>;
 export type Cancellable = {
   cancel: () => void
 };
+
+export type EventListenerBreakpoints = string[];
