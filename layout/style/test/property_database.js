@@ -1592,6 +1592,94 @@ var gCSSProperties = {
             ],
     invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)", "unset 2px", "2px unset" ]
   },
+  "border-start-start-radius": {
+    domProp: "borderStartStartRadius",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    logical: true,
+    prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
+    initial_values: [ "0", "0px", "calc(-2px)" ],
+    other_values: [ "0%", "3%", "1px", "2em", // circular
+            "3% 2%", "1px 4px", "2em 2pt", // elliptical
+      "calc(-1%)",
+      "calc(2px)",
+      "calc(50%)",
+      "calc(3*25px)",
+      "calc(3*25px) 5px",
+      "5px calc(3*25px)",
+      "calc(20%) calc(3*25px)",
+      "calc(25px*3)",
+      "calc(3*25px + 50%)",
+            ],
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)", "unset 2px", "2px unset" ]
+  },
+  "border-start-end-radius": {
+    domProp: "borderStartEndRadius",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    logical: true,
+    prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
+    initial_values: [ "0", "0px", "calc(-2px)" ],
+    other_values: [ "0%", "3%", "1px", "2em", // circular
+            "3% 2%", "1px 4px", "2em 2pt", // elliptical
+      "calc(-1%)",
+      "calc(2px)",
+      "calc(50%)",
+      "calc(3*25px)",
+      "calc(3*25px) 5px",
+      "5px calc(3*25px)",
+      "calc(20%) calc(3*25px)",
+      "calc(25px*3)",
+      "calc(3*25px + 50%)",
+            ],
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)", "unset 2px", "2px unset" ]
+  },
+  "border-end-start-radius": {
+    domProp: "borderEndStartRadius",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    logical: true,
+    prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
+    initial_values: [ "0", "0px", "calc(-2px)" ],
+    other_values: [ "0%", "3%", "1px", "2em", // circular
+            "3% 2%", "1px 4px", "2em 2pt", // elliptical
+      "calc(-1%)",
+      "calc(2px)",
+      "calc(50%)",
+      "calc(3*25px)",
+      "calc(3*25px) 5px",
+      "5px calc(3*25px)",
+      "calc(20%) calc(3*25px)",
+      "calc(25px*3)",
+      "calc(3*25px + 50%)",
+            ],
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)", "unset 2px", "2px unset" ]
+  },
+  "border-end-end-radius": {
+    domProp: "borderEndEndRadius",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    logical: true,
+    prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
+    initial_values: [ "0", "0px", "calc(-2px)" ],
+    other_values: [ "0%", "3%", "1px", "2em", // circular
+            "3% 2%", "1px 4px", "2em 2pt", // elliptical
+      "calc(-1%)",
+      "calc(2px)",
+      "calc(50%)",
+      "calc(3*25px)",
+      "calc(3*25px) 5px",
+      "5px calc(3*25px)",
+      "calc(20%) calc(3*25px)",
+      "calc(25px*3)",
+      "calc(3*25px + 50%)",
+            ],
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)", "unset 2px", "2px unset" ]
+  },
   "border-inline-start": {
     domProp: "borderInlineStart",
     inherited: false,

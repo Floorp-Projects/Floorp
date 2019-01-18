@@ -2857,6 +2857,10 @@ exports.CSS_PROPERTIES = {
       "border-inline-end-color",
       "border-inline-end-style",
       "border-inline-end-width",
+      "border-start-start-radius",
+      "border-start-end-radius",
+      "border-end-start-radius",
+      "border-end-end-radius",
       "margin-block-start",
       "margin-block-end",
       "margin-inline-start",
@@ -4128,6 +4132,30 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "border-end-end-radius": {
+    "isInherited": false,
+    "subproperties": [
+      "border-end-end-radius"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "border-end-start-radius": {
+    "isInherited": false,
+    "subproperties": [
+      "border-end-start-radius"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
   "border-image": {
     "isInherited": false,
     "subproperties": [
@@ -4749,6 +4777,30 @@ exports.CSS_PROPERTIES = {
     "isInherited": true,
     "subproperties": [
       "border-spacing"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "border-start-end-radius": {
+    "isInherited": false,
+    "subproperties": [
+      "border-start-end-radius"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "border-start-start-radius": {
+    "isInherited": false,
+    "subproperties": [
+      "border-start-start-radius"
     ],
     "supports": [],
     "values": [

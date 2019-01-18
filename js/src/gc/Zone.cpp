@@ -52,7 +52,7 @@ JS::Zone::Zone(JSRuntime* rt)
       functionToStringCache_(this),
       keepAtomsCount(this, 0),
       purgeAtomsDeferred(this, 0),
-      usage(&rt->gc.usage),
+      zoneSize(&rt->gc.heapSize),
       threshold(),
       gcDelayBytes(0),
       tenuredStrings(this, 0),
