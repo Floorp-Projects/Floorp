@@ -2,8 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import org.yaml.snakeyaml.Yaml
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'org.yaml:snakeyaml:1.23'
+    }
+}
+
+def generatedSrcDir = new File(buildDir, "generated/components/src/main/java")
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -22,6 +36,13 @@ android {
         }
     }
 
+    sourceSets {
+        main {
+            java {
+                srcDirs += generatedSrcDir
+            }
+        }
+    }
 }
 
 dependencies {
@@ -35,6 +56,40 @@ dependencies {
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+}
+
+
+preBuild.finalizedBy("generateComponentEnum")
+
+
+/**
+ * Generates a "Components" enum listing all published components.
+ */
+task generateComponentEnum {
+    doLast {
+        generatedSrcDir.mkdirs()
+
+        def file = new File(generatedSrcDir, "Component.kt")
+        file.delete()
+        file.createNewFile()
+
+        file << "package mozilla.components.support.base" << "\n"
+        file << "\n"
+        file << "// Automatically generated file. DO NOT MODIFY" << "\n"
+        file << "\n"
+        file << "enum class Component {" << "\n"
+
+        def buildconfig = new Yaml().load(new File(rootDir, '.buildconfig.yml').newInputStream())
+        file << buildconfig.projects.findAll { project ->
+            project.value.publish
+        }.collect { project ->
+            "    " + project.key.replace("-", "_").toUpperCase(Locale.US)
+        }.join(", \n")
+
+        file << "\n"
+        file << "}\n"
+        file << "\n"
+    }
 }
 
 apply from: '../../../publish.gradle'
