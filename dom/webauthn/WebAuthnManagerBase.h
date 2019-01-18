@@ -25,6 +25,9 @@ class WebAuthnManagerBase : public nsIDOMEventListener {
  public:
   NS_DECL_NSIDOMEVENTLISTENER
 
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(WebAuthnManagerBase)
+
   explicit WebAuthnManagerBase(nsPIDOMWindowInner* aParent);
 
   virtual void FinishMakeCredential(
@@ -41,7 +44,7 @@ class WebAuthnManagerBase : public nsIDOMEventListener {
   void ActorDestroyed();
 
  protected:
-  ~WebAuthnManagerBase();
+  virtual ~WebAuthnManagerBase();
 
   // Needed by HandleEvent() to cancel transactions.
   virtual void CancelTransaction(const nsresult& aError) = 0;

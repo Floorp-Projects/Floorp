@@ -370,4 +370,21 @@ using PtrHandle = nsMainThreadPtrHandle<T>;
 
 }  // namespace mozilla
 
+class nsCycleCollectionTraversalCallback;
+template <typename T>
+void CycleCollectionNoteChild(nsCycleCollectionTraversalCallback& aCallback,
+                              T* aChild, const char* aName, uint32_t aFlags);
+
+template <typename T>
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    nsMainThreadPtrHandle<T>& aField, const char* aName, uint32_t aFlags = 0) {
+  CycleCollectionNoteChild(aCallback, aField.get(), aName, aFlags);
+}
+
+template <typename T>
+inline void ImplCycleCollectionUnlink(nsMainThreadPtrHandle<T>& aField) {
+  aField = nullptr;
+}
+
 #endif
