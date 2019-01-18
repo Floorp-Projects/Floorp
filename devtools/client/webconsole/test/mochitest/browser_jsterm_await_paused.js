@@ -61,6 +61,9 @@ async function performTests() {
   // be send, which won't happen until we resume the debugger.
   await jsterm.execute(`"smoke"`);
 
+  // Give the engine some time to evaluate the await expression before resuming.
+  await waitForTick();
+
   // Click on the resume button to not be paused anymore.
   await resume(dbg);
 
