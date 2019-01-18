@@ -80,6 +80,9 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         if kwargs["lsan_dir"] is None:
             kwargs["lsan_dir"] = os.path.join(self.topsrcdir, "build", "sanitizers")
 
+        if kwargs["reftest_screenshot"] is None:
+            kwargs["reftest_screenshot"] = "fail"
+
         kwargs["capture_stdio"] = True
 
         return kwargs
