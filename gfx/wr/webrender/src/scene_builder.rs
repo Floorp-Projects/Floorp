@@ -92,7 +92,7 @@ pub struct BuiltTransaction {
     pub frame_ops: Vec<FrameMsg>,
     pub removed_pipelines: Vec<PipelineId>,
     pub notifications: Vec<NotificationRequest>,
-    pub doc_resource_updates: Option<DocumentResourceUpdates>,
+    pub interner_updates: Option<InternerUpdates>,
     pub scene_build_start_time: u64,
     pub scene_build_end_time: u64,
     pub render_frame: bool,
@@ -124,7 +124,7 @@ pub struct LoadScene {
     pub view: DocumentView,
     pub config: FrameBuilderConfig,
     pub build_frame: bool,
-    pub doc_resources: DocumentResources,
+    pub interners: Interners,
 }
 
 pub struct BuiltScene {
@@ -169,7 +169,7 @@ pub enum SceneSwapResult {
     Aborted,
 }
 
-macro_rules! declare_document_resources {
+macro_rules! declare_interners {
     ( $( $name: ident, )+ ) => {
         /// This struct contains all items that can be shared between
         /// display lists. We want to intern and share the same clips,
@@ -180,19 +180,19 @@ macro_rules! declare_document_resources {
         #[cfg_attr(feature = "capture", derive(Serialize))]
         #[cfg_attr(feature = "replay", derive(Deserialize))]
         #[derive(Default)]
-        pub struct DocumentResources {
+        pub struct Interners {
             $(
                 pub $name: intern_types::$name::Interner,
             )+
         }
 
-        pub struct DocumentResourceUpdates {
+        pub struct InternerUpdates {
             $(
                 pub $name: intern_types::$name::UpdateList,
             )+
         }
 
-        impl DocumentResources {
+        impl Interners {
             /// Reports CPU heap memory used by the interners.
             fn report_memory(
                 &self,
@@ -204,8 +204,8 @@ macro_rules! declare_document_resources {
                 )+
             }
 
-            fn end_frame_and_get_pending_updates(&mut self) -> DocumentResourceUpdates {
-                DocumentResourceUpdates {
+            fn end_frame_and_get_pending_updates(&mut self) -> InternerUpdates {
+                InternerUpdates {
                     $(
                         $name: self.$name.end_frame_and_get_pending_updates(),
                     )+
@@ -215,9 +215,9 @@ macro_rules! declare_document_resources {
     }
 }
 
-enumerate_interners!(declare_document_resources);
+enumerate_interners!(declare_interners);
 
-// Access to `DocumentResources` interners by `Internable`
+// Access to `Interners` interners by `Internable`
 pub trait InternerMut<I: Internable>
 {
     fn interner_mut(&mut self) -> &mut Interner<I::Source, I::InternData, I::Marker>;
@@ -225,7 +225,7 @@ pub trait InternerMut<I: Internable>
 
 macro_rules! impl_interner_mut {
     ($($ty:ident: $mem:ident,)*) => {
-        $(impl InternerMut<$ty> for DocumentResources {
+        $(impl InternerMut<$ty> for Interners {
             fn interner_mut(&mut self) -> &mut Interner<
                 <$ty as Internable>::Source,
                 <$ty as Internable>::InternData,
@@ -256,7 +256,7 @@ impl_interner_mut! {
 // display lists.
 struct Document {
     scene: Scene,
-    resources: DocumentResources,
+    interners: Interners,
     prim_store_stats: PrimitiveStoreStats,
 }
 
@@ -264,7 +264,7 @@ impl Document {
     fn new(scene: Scene) -> Self {
         Document {
             scene,
-            resources: DocumentResources::default(),
+            interners: Interners::default(),
             prim_store_stats: PrimitiveStoreStats::empty(),
         }
     }
@@ -384,8 +384,8 @@ impl SceneBuilder {
     #[cfg(feature = "capture")]
     fn save_scene(&mut self, config: CaptureConfig) {
         for (id, doc) in &self.documents {
-            let doc_resources_name = format!("doc-resources-{}-{}", (id.0).0, id.1);
-            config.serialize(&doc.resources, doc_resources_name);
+            let interners_name = format!("interners-{}-{}", (id.0).0, id.1);
+            config.serialize(&doc.interners, interners_name);
         }
     }
 
@@ -397,7 +397,7 @@ impl SceneBuilder {
             let scene_build_start_time = precise_time_ns();
 
             let mut built_scene = None;
-            let mut doc_resource_updates = None;
+            let mut interner_updates = None;
 
             if item.scene.has_root_pipeline() {
                 let mut clip_scroll_tree = ClipScrollTree::new();
@@ -411,12 +411,12 @@ impl SceneBuilder {
                     &item.output_pipelines,
                     &self.config,
                     &mut new_scene,
-                    &mut item.doc_resources,
+                    &mut item.interners,
                     &PrimitiveStoreStats::empty(),
                 );
 
-                doc_resource_updates = Some(
-                    item.doc_resources.end_frame_and_get_pending_updates()
+                interner_updates = Some(
+                    item.interners.end_frame_and_get_pending_updates()
                 );
 
                 built_scene = Some(BuiltScene {
@@ -430,7 +430,7 @@ impl SceneBuilder {
                 item.document_id,
                 Document {
                     scene: item.scene,
-                    resources: item.doc_resources,
+                    interners: item.interners,
                     prim_store_stats: PrimitiveStoreStats::empty(),
                 },
             );
@@ -448,7 +448,7 @@ impl SceneBuilder {
                 notifications: Vec::new(),
                 scene_build_start_time,
                 scene_build_end_time: precise_time_ns(),
-                doc_resource_updates,
+                interner_updates,
             });
 
             self.forward_built_transaction(txn);
@@ -492,7 +492,7 @@ impl SceneBuilder {
         }
 
         let mut built_scene = None;
-        let mut doc_resource_updates = None;
+        let mut interner_updates = None;
         if scene.has_root_pipeline() {
             if let Some(request) = txn.request_scene_build.take() {
                 let mut clip_scroll_tree = ClipScrollTree::new();
@@ -506,7 +506,7 @@ impl SceneBuilder {
                     &request.output_pipelines,
                     &self.config,
                     &mut new_scene,
-                    &mut doc.resources,
+                    &mut doc.interners,
                     &doc.prim_store_stats,
                 );
 
@@ -514,8 +514,8 @@ impl SceneBuilder {
                 doc.prim_store_stats = frame_builder.prim_store.get_stats();
 
                 // Retrieve the list of updates from the clip interner.
-                doc_resource_updates = Some(
-                    doc.resources.end_frame_and_get_pending_updates()
+                interner_updates = Some(
+                    doc.interners.end_frame_and_get_pending_updates()
                 );
 
                 built_scene = Some(BuiltScene {
@@ -550,7 +550,7 @@ impl SceneBuilder {
             frame_ops: replace(&mut txn.frame_ops, Vec::new()),
             removed_pipelines: replace(&mut txn.removed_pipelines, Vec::new()),
             notifications: replace(&mut txn.notifications, Vec::new()),
-            doc_resource_updates,
+            interner_updates,
             scene_build_start_time,
             scene_build_end_time: precise_time_ns(),
         })
@@ -613,7 +613,7 @@ impl SceneBuilder {
         let ops = self.size_of_ops.as_mut().unwrap();
         let mut report = MemoryReport::default();
         for doc in self.documents.values() {
-            doc.resources.report_memory(ops, &mut report);
+            doc.interners.report_memory(ops, &mut report);
         }
 
         report
