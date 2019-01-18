@@ -30,22 +30,14 @@
         <xul:label xbl:inherits="href=detailsURL,hidden=hideDetailsURL" class="text-link"
                    value="&update.details.label;"/>
       </xul:hbox>
-      <xul:grid>
-        <xul:columns>
-          <xul:column class="update-label-column"/>
-          <xul:column flex="1"/>
-        </xul:columns>
-        <xul:rows>
-          <xul:row>
-            <xul:label class="update-installedOn-label">&update.installedOn.label;</xul:label>
-            <xul:label class="update-installedOn-value" xbl:inherits="value=installDate" flex="1" crop="right"/>
-          </xul:row>
-          <xul:row>
-            <xul:label class="update-status-label">&update.status.label;</xul:label>
-            <xul:description class="update-status-value" flex="1"/>
-          </xul:row>
-        </xul:rows>
-      </xul:grid>
+      <xul:hbox>
+        <xul:label class="update-installedOn-label">&update.installedOn.label;</xul:label>
+        <xul:label class="update-installedOn-value" flex="1"/>
+      </xul:hbox>
+      <xul:hbox>
+        <xul:label class="update-status-label">&update.status.label;</xul:label>
+        <xul:description class="update-status-value" flex="1"/>
+      </xul:hbox>
     </content>
     <implementation>
       <property name="name"
@@ -55,8 +47,14 @@
                 onget="return this.getAttribute('detailsURL');"
                 onset="this.setAttribute('detailsURL', val); return val;"/>
       <property name="installDate"
-                onget="return this.getAttribute('installDate');"
-                onset="this.setAttribute('installDate', val); return val;"/>
+                onget="return this.getAttribute('installDate');">
+        <setter><![CDATA[
+          this.setAttribute("installDate", val);
+          var field = document.getAnonymousElementByAttribute(this, "class", "update-installedOn-value");
+          field.textContent = val;
+          return val;
+        ]]></setter>
+      </property>
       <property name="hideDetailsURL"
                 onget="return this.getAttribute('hideDetailsURL');"
                 onset="this.setAttribute('hideDetailsURL', val); return val;"/>
@@ -65,9 +63,7 @@
         <setter><![CDATA[
           this.setAttribute("status", val);
           var field = document.getAnonymousElementByAttribute(this, "class", "update-status-value");
-          while (field.hasChildNodes())
-            field.firstChild.remove();
-          field.appendChild(document.createTextNode(val));
+          field.textContent = val;
           return val;
         ]]></setter>
       </property>
