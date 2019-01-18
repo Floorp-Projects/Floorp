@@ -4380,7 +4380,7 @@ class IDLAttribute(IDLInterfaceMember):
                                   [attr.location, self.location])
         elif (identifier == "CrossOriginReadable" or
               identifier == "CrossOriginWritable"):
-            if not attr.noArguments() and identifier == "CrossOriginReadable":
+            if not attr.noArguments():
                 raise WebIDLError("[%s] must take no arguments" % identifier,
                                   [attr.location])
             if self.isStatic():
