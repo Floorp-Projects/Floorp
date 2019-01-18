@@ -339,8 +339,6 @@ class JSObject : public js::gc::Cell {
 
   js::TaggedProto taggedProto() const { return group_->proto(); }
 
-  bool hasTenuredProto() const;
-
   bool uninlinedIsProxy() const;
 
   JSObject* staticPrototype() const {
@@ -480,8 +478,6 @@ class JSObject : public js::gc::Cell {
   void fixDictionaryShapeAfterSwap();
 
  public:
-  inline void initArrayClass();
-
   /*
    * In addition to the generic object interface provided by JSObject,
    * specific types of objects may provide additional operations. To access,
