@@ -235,6 +235,8 @@ html|button:enabled:hover:active,
 html|select:not([size]):not([multiple]):enabled:hover:active,
 html|input[type="color"]:enabled:hover:active,
 xul|button:not([disabled="true"]):hover:active,
+xul|button[open],
+xul|button[open]:hover,
 xul|menulist[open="true"]:not([disabled="true"]) {
   background-color: var(--in-content-button-background-active);
 }

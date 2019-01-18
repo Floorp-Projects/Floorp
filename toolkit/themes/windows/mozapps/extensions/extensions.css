@@ -8,18 +8,6 @@
   font-size: 1.25em;
 }
 
-#header-utils-btn {
-  list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg");
-  -moz-context-properties: fill;
-  fill: #424f5a;
-}
-
-@media (-moz-windows-default-theme: 0) {
-  #header-utils-btn {
-    fill: GrayText;
-  }
-}
-
 .sorter[checkState="1"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
