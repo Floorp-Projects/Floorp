@@ -42,7 +42,8 @@ export function createPrettySource(sourceId: string) {
       isPrettyPrinted: true,
       isWasm: false,
       contentType: "text/javascript",
-      loadedState: "loading"
+      loadedState: "loading",
+      introductionUrl: null
     };
 
     dispatch(({ type: "ADD_SOURCE", source: prettySource }: Action));
