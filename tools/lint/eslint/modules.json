@@ -210,7 +210,6 @@
   "version.jsm": ["VERSION"],
   "vtt.jsm": ["WebVTT"],
   "WebChannel.jsm": ["WebChannel", "WebChannelBroker"],
-  "WindowDraggingUtils.jsm": ["WindowDraggingElement"],
   "windows.jsm": ["BrowserWindows"],
   "WindowsJumpLists.jsm": ["WinTaskbarJumpList"],
   "WindowsPreviewPerTab.jsm": ["AeroPeek"],
