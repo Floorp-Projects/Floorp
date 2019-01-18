@@ -825,24 +825,23 @@ impl PipelineId {
 macro_rules! enumerate_interners {
     ($macro_name: ident) => {
         $macro_name! {
-            { clip_interner, ClipDataInterner, clip_data_store, ClipDataStore }
-            { prim_interner, PrimitiveDataInterner, prim_data_store, PrimitiveDataStore }
-            { normal_border_interner, NormalBorderDataInterner, normal_border_data_store, NormalBorderDataStore }
-            { image_border_interner, ImageBorderDataInterner, image_border_data_store, ImageBorderDataStore }
-            { image_interner, ImageDataInterner, image_data_store, ImageDataStore }
-            { yuv_image_interner, YuvImageDataInterner, yuv_image_data_store, YuvImageDataStore }
-            { line_decoration_interner, LineDecorationDataInterner,
-              line_decoration_data_store, LineDecorationDataStore }
-            { linear_grad_interner, LinearGradientDataInterner, linear_grad_data_store, LinearGradientDataStore }
-            { radial_grad_interner, RadialGradientDataInterner, radial_grad_data_store, RadialGradientDataStore }
-            { picture_interner, PictureDataInterner, picture_data_store, PictureDataStore }
-            { text_run_interner, TextRunDataInterner, text_run_data_store, TextRunDataStore }
+            { clip, clip_interner, clip_data_store }
+            { prim, prim_interner, prim_data_store }
+            { normal_border, normal_border_interner, normal_border_data_store }
+            { image_border, image_border_interner, image_border_data_store }
+            { image, image_interner, image_data_store }
+            { yuv_image, yuv_image_interner, yuv_image_data_store }
+            { line_decoration, line_decoration_interner, line_decoration_data_store }
+            { linear_grad, linear_grad_interner, linear_grad_data_store }
+            { radial_grad, radial_grad_interner, radial_grad_data_store }
+            { picture, picture_interner, picture_data_store }
+            { text_run, text_run_interner, text_run_data_store }
         }
     }
 }
 
 macro_rules! declare_interning_memory_report {
-    ( $( { $interner_ident: ident, $x: ty, $datastore_ident: ident, $y: ty } )+ ) => {
+    ( $( { $x: ident, $interner_ident: ident, $datastore_ident: ident } )+ ) => {
         #[repr(C)]
         #[derive(Clone, Debug, Default, Deserialize, Serialize)]
         pub struct InterningMemoryReport {
