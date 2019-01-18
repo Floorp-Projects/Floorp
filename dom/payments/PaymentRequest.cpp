@@ -10,6 +10,7 @@
 #include "mozilla/dom/PaymentRequest.h"
 #include "mozilla/dom/PaymentRequestChild.h"
 #include "mozilla/dom/PaymentRequestManager.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/MozLocale.h"
 #include "mozilla/EventStateManager.h"
@@ -1080,7 +1081,7 @@ void PaymentRequest::ResolvedCallback(JSContext* aCx,
   }
 
   // Converting value to a PaymentDetailsUpdate dictionary
-  PaymentDetailsUpdate details;
+  RootedDictionary<PaymentDetailsUpdate> details(aCx);
   if (!details.Init(aCx, aValue)) {
     AbortUpdate(NS_ERROR_DOM_TYPE_ERR);
     JS_ClearPendingException(aCx);
