@@ -11,11 +11,11 @@
 #include "mozilla/Sprintf.h"
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 static void DebugDump(const char* fmt, ...) {

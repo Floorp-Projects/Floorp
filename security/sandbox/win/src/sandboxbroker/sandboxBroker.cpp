@@ -410,13 +410,13 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     }
   }
 
-#if defined(DEBUG)
+#  if defined(DEBUG)
   // This is required for a MOZ_ASSERT check in WindowsMessageLoop.cpp
   // WinEventHook, see bug 1366694 for details.
   DWORD uiExceptions = JOB_OBJECT_UILIMIT_HANDLES;
-#else
+#  else
   DWORD uiExceptions = 0;
-#endif
+#  endif
   sandbox::ResultCode result = SetJobLevel(mPolicy, jobLevel, uiExceptions);
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "Setting job level failed, have you set memory limit when "
@@ -511,11 +511,11 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
                      sUserExtensionsDevDir, NS_LITERAL_STRING("\\*"));
 
-#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
+#  ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     // Add rule to allow read access to the per-user extensions directory.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
                      sUserExtensionsDir, NS_LITERAL_STRING("\\*"));
-#endif
+#  endif
   }
 
   // Add the policy for the client side of a pipe. It is just a file

@@ -48,7 +48,7 @@
 #include "nsWebBrowser.h"
 
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
-#include "EventTracer.h"
+#  include "EventTracer.h"
 #endif
 
 using namespace mozilla;

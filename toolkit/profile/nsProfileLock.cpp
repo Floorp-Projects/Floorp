@@ -9,25 +9,25 @@
 #include "nsString.h"
 
 #if defined(XP_WIN)
-#include "ProfileUnlockerWin.h"
-#include "nsAutoPtr.h"
+#  include "ProfileUnlockerWin.h"
+#  include "nsAutoPtr.h"
 #endif
 
 #if defined(XP_MACOSX)
-#include <Carbon/Carbon.h>
-#include <CoreFoundation/CoreFoundation.h>
+#  include <Carbon/Carbon.h>
+#  include <CoreFoundation/CoreFoundation.h>
 #endif
 
 #ifdef XP_UNIX
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <signal.h>
-#include <stdlib.h>
-#include "prnetdb.h"
-#include "prsystem.h"
-#include "prenv.h"
-#include "mozilla/Printf.h"
+#  include <unistd.h>
+#  include <fcntl.h>
+#  include <errno.h>
+#  include <signal.h>
+#  include <stdlib.h>
+#  include "prnetdb.h"
+#  include "prsystem.h"
+#  include "prenv.h"
+#  include "mozilla/Printf.h"
 #endif
 
 // **********************************************************************
@@ -109,10 +109,10 @@ static struct sigaction SIGSEGV_oldact;
 static struct sigaction SIGTERM_oldact;
 
 void nsProfileLock::FatalSignalHandler(int signo
-#ifdef SA_SIGINFO
+#  ifdef SA_SIGINFO
                                        ,
                                        siginfo_t *info, void *context
-#endif
+#  endif
 ) {
   // Remove any locks still held.
   RemovePidLockFiles(true);
@@ -164,12 +164,12 @@ void nsProfileLock::FatalSignalHandler(int signo
 
       raise(signo);
     }
-#ifdef SA_SIGINFO
+#  ifdef SA_SIGINFO
     else if (oldact->sa_sigaction &&
              (oldact->sa_flags & SA_SIGINFO) == SA_SIGINFO) {
       oldact->sa_sigaction(signo, info, context);
     }
-#endif
+#  endif
     else if (oldact->sa_handler && oldact->sa_handler != SIG_IGN) {
       oldact->sa_handler(signo);
     }
@@ -213,9 +213,9 @@ nsresult nsProfileLock::LockWithFcntl(nsIFile *aLockFile) {
 
       // With OS X, on NFS, errno == ENOTSUP
       // XXX Check for that and return specific rv for it?
-#ifdef DEBUG
+#  ifdef DEBUG
       printf("fcntl(F_SETLK) failed. errno = %d\n", errno);
-#endif
+#  endif
       if (errno == EAGAIN || errno == EACCES)
         rv = NS_ERROR_FILE_ACCESS_DENIED;
       else
@@ -336,21 +336,21 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile,
         // because mozilla is run via nohup.
         if (!sDisableSignalHandling) {
           struct sigaction act, oldact;
-#ifdef SA_SIGINFO
+#  ifdef SA_SIGINFO
           act.sa_sigaction = FatalSignalHandler;
           act.sa_flags = SA_SIGINFO | SA_ONSTACK;
-#else
+#  else
           act.sa_handler = FatalSignalHandler;
-#endif
+#  endif
           sigfillset(&act.sa_mask);
 
-#define CATCH_SIGNAL(signame)                      \
-  PR_BEGIN_MACRO                                   \
-  if (sigaction(signame, nullptr, &oldact) == 0 && \
-      oldact.sa_handler != SIG_IGN) {              \
-    sigaction(signame, &act, &signame##_oldact);   \
-  }                                                \
-  PR_END_MACRO
+#  define CATCH_SIGNAL(signame)                      \
+    PR_BEGIN_MACRO                                   \
+    if (sigaction(signame, nullptr, &oldact) == 0 && \
+        oldact.sa_handler != SIG_IGN) {              \
+      sigaction(signame, &act, &signame##_oldact);   \
+    }                                                \
+    PR_END_MACRO
 
           CATCH_SIGNAL(SIGHUP);
           CATCH_SIGNAL(SIGINT);
@@ -360,16 +360,16 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile,
           CATCH_SIGNAL(SIGSEGV);
           CATCH_SIGNAL(SIGTERM);
 
-#undef CATCH_SIGNAL
+#  undef CATCH_SIGNAL
         }
       }
     }
   } else if (symlink_errno == EEXIST)
     rv = NS_ERROR_FILE_ACCESS_DENIED;
   else {
-#ifdef DEBUG
+#  ifdef DEBUG
     printf("symlink() failed. errno = %d\n", errno);
-#endif
+#  endif
     rv = NS_ERROR_FAILURE;
   }
   return rv;
@@ -448,11 +448,11 @@ nsresult nsProfileLock::Lock(nsIFile *aProfileDir,
       PR_Close(fd);
 
       if (ioBytes == sizeof(LockProcessInfo)) {
-#ifdef __LP64__
+#  ifdef __LP64__
         processInfo.processAppRef = nullptr;
-#else
+#  else
         processInfo.processAppSpec = nullptr;
-#endif
+#  endif
         processInfo.processName = nullptr;
         processInfo.processInfoLength = sizeof(ProcessInfoRec);
         if (::GetProcessInformation(&lockProcessInfo.psn, &processInfo) ==

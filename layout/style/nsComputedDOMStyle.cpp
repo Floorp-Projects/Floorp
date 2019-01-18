@@ -60,7 +60,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
-#define DEBUG_ComputedDOMStyle
+#  define DEBUG_ComputedDOMStyle
 #endif
 
 /*

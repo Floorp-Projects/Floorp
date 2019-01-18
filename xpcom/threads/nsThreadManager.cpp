@@ -24,8 +24,8 @@
 #include "mozilla/ThreadLocal.h"
 #include "PrioritizedEventQueue.h"
 #ifdef MOZ_CANARY
-#include <fcntl.h>
-#include <unistd.h>
+#  include <fcntl.h>
+#  include <unistd.h>
 #endif
 
 #include "MainThreadIdlePeriod.h"

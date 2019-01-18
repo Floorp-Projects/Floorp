@@ -20,7 +20,7 @@
 using namespace mozilla;
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 static LazyLogModule sTeeLog("nsInputStreamTee");

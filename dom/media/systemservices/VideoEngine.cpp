@@ -9,11 +9,11 @@
 #include "video_engine/desktop_capture_impl.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #ifdef WEBRTC_ANDROID
-#include "webrtc/modules/video_capture/video_capture.h"
+#  include "webrtc/modules/video_capture/video_capture.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "mozilla/jni/Utils.h"
+#  include "mozilla/jni/Utils.h"
 #endif
 
 namespace mozilla {
@@ -35,12 +35,12 @@ int VideoEngine::SetAndroidObjects() {
     LOG(("Could not set capture Android VM"));
     return -1;
   }
-#ifdef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
+#  ifdef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
   if (webrtc::SetRenderAndroidVM(javaVM) != 0) {
     LOG(("Could not set render Android VM"));
     return -1;
   }
-#endif
+#  endif
   return 0;
 }
 #endif
@@ -73,7 +73,7 @@ void VideoEngine::CreateVideoCapture(int32_t& id,
     }
   } else {
 #ifndef WEBRTC_ANDROID
-#ifdef MOZ_X11
+#  ifdef MOZ_X11
     webrtc::VideoCaptureModule* captureModule;
     auto type = mCaptureDevInfo.type;
     nsresult result = NS_DispatchToMainThread(
@@ -90,10 +90,10 @@ void VideoEngine::CreateVideoCapture(int32_t& id,
     } else {
       return;
     }
-#else
+#  else
     entry = CaptureEntry(id, webrtc::DesktopCaptureImpl::Create(
                                  id, deviceUniqueIdUTF8, mCaptureDevInfo.type));
-#endif
+#  endif
 #else
     MOZ_ASSERT("CreateVideoCapture NO DESKTOP CAPTURE IMPL ON ANDROID" ==
                nullptr);

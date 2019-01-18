@@ -31,12 +31,12 @@
 #include "Tracing.h"
 
 #ifdef MOZ_WEBM_ENCODER
-#include "VP8TrackEncoder.h"
-#include "WebMWriter.h"
+#  include "VP8TrackEncoder.h"
+#  include "WebMWriter.h"
 #endif
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 mozilla::LazyLogModule gMediaEncoderLog("MediaEncoder");

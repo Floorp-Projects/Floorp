@@ -16,17 +16,17 @@
 #include <stack>
 
 #ifdef DEBUG
-#include <string.h>
+#  include <string.h>
 #endif
 
 #ifdef GetClassName
-#undef GetClassName
+#  undef GetClassName
 #endif
 
 // Define MOZ_GL_DEBUG unconditionally to enable GL debugging in opt
 // builds.
 #ifdef DEBUG
-#define MOZ_GL_DEBUG 1
+#  define MOZ_GL_DEBUG 1
 #endif
 
 #include "../../mfbt/RefPtr.h"
@@ -617,22 +617,22 @@ class GLContext : public GLLibraryLoader,
   // MOZ_GL_DEBUG implementation
  private:
 #ifndef MOZ_FUNCTION_NAME
-#ifdef __GNUC__
-#define MOZ_FUNCTION_NAME __PRETTY_FUNCTION__
-#elif defined(_MSC_VER)
-#define MOZ_FUNCTION_NAME __FUNCTION__
-#else
-#define MOZ_FUNCTION_NAME \
-  __func__  // defined in C99, supported in various C++ compilers. Just raw
-            // function name.
-#endif
+#  ifdef __GNUC__
+#    define MOZ_FUNCTION_NAME __PRETTY_FUNCTION__
+#  elif defined(_MSC_VER)
+#    define MOZ_FUNCTION_NAME __FUNCTION__
+#  else
+#    define MOZ_FUNCTION_NAME \
+      __func__  // defined in C99, supported in various C++ compilers. Just raw
+                // function name.
+#  endif
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
 // Record the name of the GL call for better hang stacks on Android.
-#define ANDROID_ONLY_PROFILER_LABEL AUTO_PROFILER_LABEL(__func__, GRAPHICS);
+#  define ANDROID_ONLY_PROFILER_LABEL AUTO_PROFILER_LABEL(__func__, GRAPHICS);
 #else
-#define ANDROID_ONLY_PROFILER_LABEL
+#  define ANDROID_ONLY_PROFILER_LABEL
 #endif
 
 #define BEFORE_GL_CALL                               \
@@ -684,35 +684,36 @@ class GLContext : public GLLibraryLoader,
 
 #ifdef MOZ_GL_DEBUG
 
-#define TRACKING_CONTEXT(a) \
-  do {                      \
-    TrackingContext()->a;   \
-  } while (0)
+#  define TRACKING_CONTEXT(a) \
+    do {                      \
+      TrackingContext()->a;   \
+    } while (0)
 
-#define ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(ptr) \
-  AssertNotPassingStackBufferToTheGL(ptr)
+#  define ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(ptr) \
+    AssertNotPassingStackBufferToTheGL(ptr)
 
-#define ASSERT_SYMBOL_PRESENT(func)                                            \
-  do {                                                                         \
-    MOZ_ASSERT(strstr(MOZ_FUNCTION_NAME, #func) != nullptr,                    \
-               "Mismatched symbol check.");                                    \
-    if (MOZ_UNLIKELY(!mSymbols.func)) {                                        \
-      printf_stderr("RUNTIME ASSERT: Uninitialized GL function: %s\n", #func); \
-      MOZ_CRASH("GFX: Uninitialized GL function");                             \
-    }                                                                          \
-  } while (0)
+#  define ASSERT_SYMBOL_PRESENT(func)                                    \
+    do {                                                                 \
+      MOZ_ASSERT(strstr(MOZ_FUNCTION_NAME, #func) != nullptr,            \
+                 "Mismatched symbol check.");                            \
+      if (MOZ_UNLIKELY(!mSymbols.func)) {                                \
+        printf_stderr("RUNTIME ASSERT: Uninitialized GL function: %s\n", \
+                      #func);                                            \
+        MOZ_CRASH("GFX: Uninitialized GL function");                     \
+      }                                                                  \
+    } while (0)
 
 #else  // ifdef MOZ_GL_DEBUG
 
-#define TRACKING_CONTEXT(a) \
-  do {                      \
-  } while (0)
-#define ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(ptr) \
-  do {                                             \
-  } while (0)
-#define ASSERT_SYMBOL_PRESENT(func) \
-  do {                              \
-  } while (0)
+#  define TRACKING_CONTEXT(a) \
+    do {                      \
+    } while (0)
+#  define ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(ptr) \
+    do {                                             \
+    } while (0)
+#  define ASSERT_SYMBOL_PRESENT(func) \
+    do {                              \
+    } while (0)
 
 #endif  // ifdef MOZ_GL_DEBUG
 

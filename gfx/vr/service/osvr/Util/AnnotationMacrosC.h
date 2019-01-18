@@ -34,42 +34,42 @@
 
 #ifndef OSVR_DISABLE_ANALYSIS
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1700)
+#  if defined(_MSC_VER) && (_MSC_VER >= 1700)
 /* Visual C++ (2012 and newer) */
 /* Using SAL attribute format:
  * http://msdn.microsoft.com/en-us/library/ms182032(v=vs.120).aspx */
 
-#include <sal.h>
+#    include <sal.h>
 
-#define OSVR_IN _In_
-#define OSVR_IN_PTR _In_
-#define OSVR_IN_OPT _In_opt_
-#define OSVR_IN_STRZ _In_z_
-#define OSVR_IN_READS(NUM_ELEMENTS) _In_reads_(NUM_ELEMENTS)
+#    define OSVR_IN _In_
+#    define OSVR_IN_PTR _In_
+#    define OSVR_IN_OPT _In_opt_
+#    define OSVR_IN_STRZ _In_z_
+#    define OSVR_IN_READS(NUM_ELEMENTS) _In_reads_(NUM_ELEMENTS)
 
-#define OSVR_OUT _Out_
-#define OSVR_OUT_PTR _Outptr_
-#define OSVR_OUT_OPT _Out_opt_
+#    define OSVR_OUT _Out_
+#    define OSVR_OUT_PTR _Outptr_
+#    define OSVR_OUT_OPT _Out_opt_
 
-#define OSVR_INOUT _Inout_
-#define OSVR_INOUT_PTR _Inout_
+#    define OSVR_INOUT _Inout_
+#    define OSVR_INOUT_PTR _Inout_
 
-#define OSVR_RETURN_WARN_UNUSED _Must_inspect_result_
-#define OSVR_RETURN_SUCCESS_CONDITION(X) _Return_type_success_(X)
+#    define OSVR_RETURN_WARN_UNUSED _Must_inspect_result_
+#    define OSVR_RETURN_SUCCESS_CONDITION(X) _Return_type_success_(X)
 
 /* end of msvc section */
-#elif defined(__GNUC__) && (__GNUC__ >= 4)
+#  elif defined(__GNUC__) && (__GNUC__ >= 4)
 /* section for GCC and GCC-alikes */
 
-#if defined(__clang__)
+#    if defined(__clang__)
 /* clang-specific section */
-#endif
+#    endif
 
-#define OSVR_FUNC_NONNULL(X) __attribute__((__nonnull__ X))
-#define OSVR_RETURN_WARN_UNUSED __attribute__((warn_unused_result))
+#    define OSVR_FUNC_NONNULL(X) __attribute__((__nonnull__ X))
+#    define OSVR_RETURN_WARN_UNUSED __attribute__((warn_unused_result))
 
 /* end of gcc section and compiler detection */
-#endif
+#  endif
 
 /* end of ndef disable analysis */
 #endif
@@ -97,7 +97,7 @@ as well as any methods handling a buffer with a length.
     @brief Indicates a required function parameter that serves only as input.
 */
 #ifndef OSVR_IN
-#define OSVR_IN
+#  define OSVR_IN
 #endif
 
 /** @def OSVR_IN_PTR
@@ -105,7 +105,7 @@ as well as any methods handling a buffer with a length.
     serves only as input.
 */
 #ifndef OSVR_IN_PTR
-#define OSVR_IN_PTR
+#  define OSVR_IN_PTR
 #endif
 
 /** @def OSVR_IN_OPT
@@ -113,7 +113,7 @@ as well as any methods handling a buffer with a length.
    but is optional and might be NULL.
 */
 #ifndef OSVR_IN_OPT
-#define OSVR_IN_OPT
+#  define OSVR_IN_OPT
 #endif
 
 /** @def OSVR_IN_STRZ
@@ -121,7 +121,7 @@ as well as any methods handling a buffer with a length.
    only as input.
 */
 #ifndef OSVR_IN_STRZ
-#define OSVR_IN_STRZ
+#  define OSVR_IN_STRZ
 #endif
 
 /** @def OSVR_IN_READS(NUM_ELEMENTS)
@@ -131,7 +131,7 @@ as well as any methods handling a buffer with a length.
     The specified number of elements is typically the name of another parameter.
 */
 #ifndef OSVR_IN_READS
-#define OSVR_IN_READS(NUM_ELEMENTS)
+#  define OSVR_IN_READS(NUM_ELEMENTS)
 #endif
 
 /** @def OSVR_OUT
@@ -140,7 +140,7 @@ as well as any methods handling a buffer with a length.
    OSVR_OUT_PTR instead.
 */
 #ifndef OSVR_OUT
-#define OSVR_OUT
+#  define OSVR_OUT
 #endif
 
 /** @def OSVR_OUT_PTR
@@ -148,7 +148,7 @@ as well as any methods handling a buffer with a length.
     serves only as output.
 */
 #ifndef OSVR_OUT_PTR
-#define OSVR_OUT_PTR
+#  define OSVR_OUT_PTR
 #endif
 
 /** @def OSVR_OUT_OPT
@@ -156,7 +156,7 @@ as well as any methods handling a buffer with a length.
    but is optional and might be NULL
 */
 #ifndef OSVR_OUT_OPT
-#define OSVR_OUT_OPT
+#  define OSVR_OUT_OPT
 #endif
 
 /** @def OSVR_INOUT
@@ -167,7 +167,7 @@ as well as any methods handling a buffer with a length.
    OSVR_INOUT_PTR instead.
 */
 #ifndef OSVR_INOUT
-#define OSVR_INOUT
+#  define OSVR_INOUT
 #endif
 
 /** @def OSVR_INOUT_PTR
@@ -175,7 +175,7 @@ as well as any methods handling a buffer with a length.
     both read and written to.
 */
 #ifndef OSVR_INOUT_PTR
-#define OSVR_INOUT_PTR
+#  define OSVR_INOUT_PTR
 #endif
 
 /* End of parameter annotations. */
@@ -199,7 +199,7 @@ as well as any methods handling a buffer with a length.
    semicolon). Repeating in the definition is not needed.
 */
 #ifndef OSVR_FUNC_NONNULL
-#define OSVR_FUNC_NONNULL(X)
+#  define OSVR_FUNC_NONNULL(X)
 #endif
 
 /** @def OSVR_RETURN_WARN_UNUSED
@@ -210,7 +210,7 @@ as well as any methods handling a buffer with a length.
    applicable) in both declaration and definition.
 */
 #ifndef OSVR_RETURN_WARN_UNUSED
-#define OSVR_RETURN_WARN_UNUSED
+#  define OSVR_RETURN_WARN_UNUSED
 #endif
 /* End of function annotations. */
 /** @} */
@@ -224,7 +224,7 @@ as well as any methods handling a buffer with a length.
    including the keyword `return` to substitute for the return value.
 */
 #ifndef OSVR_RETURN_SUCCESS_CONDITION
-#define OSVR_RETURN_SUCCESS_CONDITION(X)
+#  define OSVR_RETURN_SUCCESS_CONDITION(X)
 #endif
 
 /* End of annotation group. */

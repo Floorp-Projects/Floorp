@@ -8,7 +8,7 @@
 #include <cstddef>
 
 #ifndef UNICODE
-#define UNICODE
+#  define UNICODE
 #endif
 #include <windows.h>
 #include <hidsdi.h>
@@ -53,7 +53,7 @@ const uint32_t kWindowsGamepadPollInterval = 50;
 const UINT kRawInputError = (UINT)-1;
 
 #ifndef XUSER_MAX_COUNT
-#define XUSER_MAX_COUNT 4
+#  define XUSER_MAX_COUNT 4
 #endif
 
 const struct {

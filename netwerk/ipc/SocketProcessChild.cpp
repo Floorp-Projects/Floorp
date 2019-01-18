@@ -18,7 +18,7 @@
 #include "SocketProcessBridgeParent.h"
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ChildProfilerController.h"
+#  include "ChildProfilerController.h"
 #endif
 
 namespace mozilla {

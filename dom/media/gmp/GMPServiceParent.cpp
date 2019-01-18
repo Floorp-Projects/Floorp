@@ -28,7 +28,7 @@
 #include "runnable_utils.h"
 #include "VideoUtils.h"
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-#include "mozilla/SandboxInfo.h"
+#  include "mozilla/SandboxInfo.h"
 #endif
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -46,14 +46,14 @@ using mozilla::ipc::Transport;
 namespace mozilla {
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 #define LOGD(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Debug, msg)
 #define LOG(level, msg) MOZ_LOG(GetGMPLog(), (level), msg)
 
 #ifdef __CLASS__
-#undef __CLASS__
+#  undef __CLASS__
 #endif
 #define __CLASS__ "GMPService"
 

@@ -791,11 +791,11 @@ const char *GetVFSName() { return "telemetry-vfs"; }
 
 sqlite3_vfs *ConstructTelemetryVFS() {
 #if defined(XP_WIN)
-#define EXPECTED_VFS "win32"
-#define EXPECTED_VFS_EXCL "win32"
+#  define EXPECTED_VFS "win32"
+#  define EXPECTED_VFS_EXCL "win32"
 #else
-#define EXPECTED_VFS "unix"
-#define EXPECTED_VFS_EXCL "unix-excl"
+#  define EXPECTED_VFS "unix"
+#  define EXPECTED_VFS_EXCL "unix-excl"
 #endif
 
   bool expected_vfs;

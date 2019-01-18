@@ -11,7 +11,7 @@
 
 #include <sys/types.h>
 #ifdef OS_WIN
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 namespace base {

@@ -10,9 +10,9 @@
 #include "nsDebug.h"
 
 #ifdef XP_WIN
-#define PLUGIN_REGISTRY_FIELD_DELIMITER '|'
+#  define PLUGIN_REGISTRY_FIELD_DELIMITER '|'
 #else
-#define PLUGIN_REGISTRY_FIELD_DELIMITER ':'
+#  define PLUGIN_REGISTRY_FIELD_DELIMITER ':'
 #endif
 
 #define PLUGIN_REGISTRY_END_OF_LINE_MARKER '$'

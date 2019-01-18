@@ -102,8 +102,8 @@ JS_PUBLIC_API void JS_Assert(const char* s, const char* file, int ln) {
 
 #ifdef __linux__
 
-#include <malloc.h>
-#include <stdlib.h>
+#  include <malloc.h>
+#  include <stdlib.h>
 
 namespace js {
 

@@ -5875,10 +5875,10 @@ bool CodeGenerator::generateBody() {
                                     current->mir()->pc(), &columnNumber);
       }
     } else {
-#ifdef DEBUG
+#  ifdef DEBUG
       lineNumber = current->mir()->lineno();
       columnNumber = current->mir()->columnIndex();
-#endif
+#  endif
     }
     JitSpew(JitSpew_Codegen, "# block%zu %s:%zu:%u%s:", i,
             filename ? filename : "?", lineNumber, columnNumber,
@@ -5956,12 +5956,12 @@ bool CodeGenerator::generateBody() {
 
       switch (iter->op()) {
 #ifndef JS_CODEGEN_NONE
-#define LIROP(op)              \
-  case LNode::Opcode::op:      \
-    visit##op(iter->to##op()); \
-    break;
+#  define LIROP(op)              \
+    case LNode::Opcode::op:      \
+      visit##op(iter->to##op()); \
+      break;
         LIR_OPCODE_LIST(LIROP)
-#undef LIROP
+#  undef LIROP
 #endif
         case LNode::Opcode::Invalid:
         default:

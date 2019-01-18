@@ -5,18 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(PlatformEncoderModule_h_)
-#define PlatformEncoderModule_h_
+#  define PlatformEncoderModule_h_
 
-#include "MediaData.h"
-#include "MediaInfo.h"
-#include "MediaResult.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/TaskQueue.h"
-#include "mozilla/dom/ImageBitmapBinding.h"
-#include "nsISupportsImpl.h"
+#  include "MediaData.h"
+#  include "MediaInfo.h"
+#  include "MediaResult.h"
+#  include "mozilla/Attributes.h"
+#  include "mozilla/Maybe.h"
+#  include "mozilla/MozPromise.h"
+#  include "mozilla/RefPtr.h"
+#  include "mozilla/TaskQueue.h"
+#  include "mozilla/dom/ImageBitmapBinding.h"
+#  include "nsISupportsImpl.h"
 
 namespace mozilla {
 

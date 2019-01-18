@@ -100,9 +100,9 @@ void Sampler::SuspendAndSampleAndResumeThread(
   x86_thread_state64_t state;
   mach_msg_type_number_t count = x86_THREAD_STATE64_COUNT;
 #if __DARWIN_UNIX03
-#define REGISTER_FIELD(name) __r##name
+#  define REGISTER_FIELD(name) __r##name
 #else
-#define REGISTER_FIELD(name) r##name
+#  define REGISTER_FIELD(name) r##name
 #endif  // __DARWIN_UNIX03
 
   if (thread_get_state(samplee_thread, flavor,

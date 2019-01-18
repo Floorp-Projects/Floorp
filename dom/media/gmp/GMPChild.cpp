@@ -30,16 +30,16 @@
 using namespace mozilla::ipc;
 
 #ifdef XP_WIN
-#include <stdlib.h>  // for _exit()
-#include "WinUtils.h"
+#  include <stdlib.h>  // for _exit()
+#  include "WinUtils.h"
 #else
-#include <unistd.h>  // for _exit()
+#  include <unistd.h>  // for _exit()
 #endif
 
 #if defined(MOZ_GMP_SANDBOX)
-#if defined(XP_MACOSX)
-#include "mozilla/Sandbox.h"
-#endif
+#  if defined(XP_MACOSX)
+#    include "mozilla/Sandbox.h"
+#  endif
 #endif
 
 namespace mozilla {
@@ -106,7 +106,7 @@ static bool GetPluginFile(const nsAString& aPluginPath,
 #elif defined(XP_WIN)
   nsAutoString binaryName = baseName + NS_LITERAL_STRING(".dll");
 #else
-#error not defined
+#  error not defined
 #endif
   aLibFile->AppendRelativePath(binaryName);
   return true;
@@ -131,7 +131,7 @@ static nsCString GetNativeTarget(nsIFile* aFile) {
   return path;
 }
 
-#if defined(MOZ_GMP_SANDBOX)
+#  if defined(MOZ_GMP_SANDBOX)
 static bool GetPluginPaths(const nsAString& aPluginPath,
                            nsCString& aPluginDirectoryPath,
                            nsCString& aPluginFilePath) {
@@ -217,8 +217,8 @@ bool GMPChild::SetMacSandboxInfo(MacSandboxPluginType aPluginType) {
   mGMPLoader->SetSandboxInfo(&info);
   return true;
 }
-#endif  // MOZ_GMP_SANDBOX
-#endif  // XP_MACOSX
+#  endif  // MOZ_GMP_SANDBOX
+#endif    // XP_MACOSX
 
 bool GMPChild::Init(const nsAString& aPluginPath, base::ProcessId aParentPid,
                     MessageLoop* aIOLoop, IPC::Channel* aChannel) {
@@ -330,14 +330,14 @@ bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
 }
 
 #if defined(XP_WIN)
-#define FIREFOX_FILE NS_LITERAL_STRING("firefox.exe")
-#define XUL_LIB_FILE NS_LITERAL_STRING("xul.dll")
+#  define FIREFOX_FILE NS_LITERAL_STRING("firefox.exe")
+#  define XUL_LIB_FILE NS_LITERAL_STRING("xul.dll")
 #elif defined(XP_MACOSX)
-#define FIREFOX_FILE NS_LITERAL_STRING("firefox")
-#define XUL_LIB_FILE NS_LITERAL_STRING("XUL")
+#  define FIREFOX_FILE NS_LITERAL_STRING("firefox")
+#  define XUL_LIB_FILE NS_LITERAL_STRING("XUL")
 #else
-#define FIREFOX_FILE NS_LITERAL_STRING("firefox")
-#define XUL_LIB_FILE NS_LITERAL_STRING("libxul.so")
+#  define FIREFOX_FILE NS_LITERAL_STRING("firefox")
+#  define XUL_LIB_FILE NS_LITERAL_STRING("libxul.so")
 #endif
 
 #if defined(XP_MACOSX)

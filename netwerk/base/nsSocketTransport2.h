@@ -6,7 +6,7 @@
 #define nsSocketTransport2_h__
 
 #ifdef DEBUG_darinf
-#define ENABLE_SOCKET_TRACING
+#  define ENABLE_SOCKET_TRACING
 #endif
 
 #include "mozilla/Mutex.h"

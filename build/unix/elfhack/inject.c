@@ -13,11 +13,11 @@
 #undef Elf_Addr
 
 #if defined(__LP64__)
-#define Elf_Ehdr Elf64_Ehdr
-#define Elf_Addr Elf64_Addr
+#  define Elf_Ehdr Elf64_Ehdr
+#  define Elf_Addr Elf64_Addr
 #else
-#define Elf_Ehdr Elf32_Ehdr
-#define Elf_Addr Elf32_Addr
+#  define Elf_Ehdr Elf32_Ehdr
+#  define Elf_Addr Elf32_Addr
 #endif
 
 extern __attribute__((visibility("hidden"))) void original_init(int argc,

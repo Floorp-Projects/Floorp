@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(XP_WIN)
-#include "CompositorD3D11.h"
-#include "TextureD3D11.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
+#  include "CompositorD3D11.h"
+#  include "TextureD3D11.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #elif defined(XP_MACOSX)
-#include "mozilla/gfx/MacIOSurface.h"
+#  include "mozilla/gfx/MacIOSurface.h"
 #endif
 
 #include "mozilla/Base64.h"

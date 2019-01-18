@@ -73,21 +73,21 @@
 #include "nsNSSComponent.h"
 
 #if defined(XP_UNIX)
-#include <sys/utsname.h>
+#  include <sys/utsname.h>
 #endif
 
 #if defined(XP_WIN)
-#include <windows.h>
-#include "mozilla/WindowsVersion.h"
+#  include <windows.h>
+#  include "mozilla/WindowsVersion.h"
 #endif
 
 #if defined(XP_MACOSX)
-#include <CoreServices/CoreServices.h>
-#include "nsCocoaFeatures.h"
+#  include <CoreServices/CoreServices.h>
+#  include "nsCocoaFeatures.h"
 #endif
 
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
+#  include "GeckoTaskTracer.h"
 #endif
 
 //-----------------------------------------------------------------------------
@@ -95,7 +95,7 @@
 
 #define UA_PREF_PREFIX "general.useragent."
 #ifdef XP_WIN
-#define UA_SPARE_PLATFORM
+#  define UA_SPARE_PLATFORM
 #endif
 
 #define HTTP_PREF_PREFIX "network.http."
@@ -331,13 +331,13 @@ void nsHttpHandler::SetFastOpenOSSupport() {
 
   nsAutoCString version;
   nsresult rv;
-#ifdef ANDROID
+#  ifdef ANDROID
   nsCOMPtr<nsIPropertyBag2> infoService =
       do_GetService("@mozilla.org/system-info;1");
   MOZ_ASSERT(infoService, "Could not find a system info service");
   rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("sdk_version"),
                                           version);
-#else
+#  else
   char buf[SYS_INFO_BUFFER_LENGTH];
   if (PR_GetSystemInfo(PR_SI_RELEASE, buf, sizeof(buf)) == PR_SUCCESS) {
     version = buf;
@@ -345,19 +345,19 @@ void nsHttpHandler::SetFastOpenOSSupport() {
   } else {
     rv = NS_ERROR_FAILURE;
   }
-#endif
+#  endif
 
   LOG(("nsHttpHandler::SetFastOpenOSSupport version %s", version.get()));
 
   if (NS_SUCCEEDED(rv)) {
     // set min version minus 1.
-#if XP_MACOSX
+#  if XP_MACOSX
     int min_version[] = {17, 5};  // High Sierra 10.13.4
-#elif ANDROID
+#  elif ANDROID
     int min_version[] = {4, 4};
-#elif XP_LINUX
+#  elif XP_LINUX
     int min_version[] = {3, 6};
-#endif
+#  endif
     int inx = 0;
     nsCCharSeparatedTokenizer tokenizer(version, '.');
     while ((inx < 2) && tokenizer.hasMoreTokens()) {
@@ -951,27 +951,27 @@ void nsHttpHandler::BuildUserAgent() {
 }
 
 #ifdef XP_WIN
-#define WNT_BASE "Windows NT %ld.%ld"
-#define W64_PREFIX "; Win64"
+#  define WNT_BASE "Windows NT %ld.%ld"
+#  define W64_PREFIX "; Win64"
 #endif
 
 void nsHttpHandler::InitUserAgentComponents() {
 #ifndef MOZ_UA_OS_AGNOSTIC
   // Gather platform.
   mPlatform.AssignLiteral(
-#if defined(ANDROID)
+#  if defined(ANDROID)
       "Android"
-#elif defined(XP_WIN)
+#  elif defined(XP_WIN)
       "Windows"
-#elif defined(XP_MACOSX)
+#  elif defined(XP_MACOSX)
       "Macintosh"
-#elif defined(XP_UNIX)
+#  elif defined(XP_UNIX)
       // We historically have always had X11 here,
       // and there seems little a webpage can sensibly do
       // based on it being something else, so use X11 for
       // backwards compatibility in all cases.
       "X11"
-#endif
+#  endif
   );
 #endif
 
@@ -981,8 +981,9 @@ void nsHttpHandler::InitUserAgentComponents() {
   MOZ_ASSERT(infoService, "Could not find a system info service");
   nsresult rv;
   // Add the Android version number to the Fennec platform identifier.
-#if defined MOZ_WIDGET_ANDROID
-#ifndef MOZ_UA_OS_AGNOSTIC  // Don't add anything to mPlatform since it's empty.
+#  if defined MOZ_WIDGET_ANDROID
+#    ifndef MOZ_UA_OS_AGNOSTIC  // Don't add anything to mPlatform since it's
+                                // empty.
   nsAutoString androidVersion;
   rv = infoService->GetPropertyAsAString(NS_LITERAL_STRING("release_version"),
                                          androidVersion);
@@ -997,8 +998,8 @@ void nsHttpHandler::InitUserAgentComponents() {
       mPlatform += NS_LossyConvertUTF16toASCII(androidVersion);
     }
   }
-#endif
-#endif
+#    endif
+#  endif
   // Add the `Mobile` or `Tablet` or `TV` token when running on device.
   bool isTablet;
   rv = infoService->GetPropertyAsBool(NS_LITERAL_STRING("tablet"), &isTablet);
@@ -1021,41 +1022,41 @@ void nsHttpHandler::InitUserAgentComponents() {
 
 #ifndef MOZ_UA_OS_AGNOSTIC
   // Gather OS/CPU.
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   OSVERSIONINFO info = {sizeof(OSVERSIONINFO)};
-#pragma warning(push)
-#pragma warning(disable : 4996)
+#    pragma warning(push)
+#    pragma warning(disable : 4996)
   if (GetVersionEx(&info)) {
-#pragma warning(pop)
+#    pragma warning(pop)
     const char *format;
-#if defined _M_IA64
+#    if defined _M_IA64
     format = WNT_BASE W64_PREFIX "; IA64";
-#elif defined _M_X64 || defined _M_AMD64
+#    elif defined _M_X64 || defined _M_AMD64
     format = WNT_BASE W64_PREFIX "; x64";
-#else
+#    else
     BOOL isWow64 = FALSE;
     if (!IsWow64Process(GetCurrentProcess(), &isWow64)) {
       isWow64 = FALSE;
     }
     format = isWow64 ? WNT_BASE "; WOW64" : WNT_BASE;
-#endif
+#    endif
     SmprintfPointer buf =
         mozilla::Smprintf(format, info.dwMajorVersion, info.dwMinorVersion);
     if (buf) {
       mOscpu = buf.get();
     }
   }
-#elif defined(XP_MACOSX)
-#if defined(__ppc__)
+#  elif defined(XP_MACOSX)
+#    if defined(__ppc__)
   mOscpu.AssignLiteral("PPC Mac OS X");
-#elif defined(__i386__) || defined(__x86_64__)
+#    elif defined(__i386__) || defined(__x86_64__)
   mOscpu.AssignLiteral("Intel Mac OS X");
-#endif
+#    endif
   SInt32 majorVersion = nsCocoaFeatures::OSXVersionMajor();
   SInt32 minorVersion = nsCocoaFeatures::OSXVersionMinor();
   mOscpu += nsPrintfCString(" %d.%d", static_cast<int>(majorVersion),
                             static_cast<int>(minorVersion));
-#elif defined(XP_UNIX)
+#  elif defined(XP_UNIX)
   struct utsname name;
 
   int ret = uname(&name);
@@ -1075,21 +1076,21 @@ void nsHttpHandler::InitUserAgentComponents() {
     } else {
       buf += ' ';
 
-#ifdef AIX
+#    ifdef AIX
       // AIX uname returns machine specific info in the uname.machine
       // field and does not return the cpu type like other platforms.
       // We use the AIX version and release numbers instead.
       buf += (char *)name.version;
       buf += '.';
       buf += (char *)name.release;
-#else
+#    else
       buf += (char *)name.machine;
-#endif
+#    endif
     }
 
     mOscpu.Assign(buf);
   }
-#endif
+#  endif
 #endif
 
   mUserAgentIsDirty = true;

@@ -4070,17 +4070,17 @@ bool nsTableFrame::ColumnHasCellSpacingBefore(int32_t aColIndex) const {
  *******************************************************************************/
 
 #ifdef DEBUG
-#define VerifyNonNegativeDamageRect(r)                       \
-  NS_ASSERTION((r).StartCol() >= 0, "negative col index");   \
-  NS_ASSERTION((r).StartRow() >= 0, "negative row index");   \
-  NS_ASSERTION((r).ColCount() >= 0, "negative cols damage"); \
-  NS_ASSERTION((r).RowCount() >= 0, "negative rows damage");
-#define VerifyDamageRect(r)                          \
-  VerifyNonNegativeDamageRect(r);                    \
-  NS_ASSERTION((r).EndCol() <= GetColCount(),        \
-               "cols damage extends outside table"); \
-  NS_ASSERTION((r).EndRow() <= GetRowCount(),        \
-               "rows damage extends outside table");
+#  define VerifyNonNegativeDamageRect(r)                       \
+    NS_ASSERTION((r).StartCol() >= 0, "negative col index");   \
+    NS_ASSERTION((r).StartRow() >= 0, "negative row index");   \
+    NS_ASSERTION((r).ColCount() >= 0, "negative cols damage"); \
+    NS_ASSERTION((r).RowCount() >= 0, "negative rows damage");
+#  define VerifyDamageRect(r)                          \
+    VerifyNonNegativeDamageRect(r);                    \
+    NS_ASSERTION((r).EndCol() <= GetColCount(),        \
+                 "cols damage extends outside table"); \
+    NS_ASSERTION((r).EndRow() <= GetRowCount(),        \
+                 "rows damage extends outside table");
 #endif
 
 void nsTableFrame::AddBCDamageArea(const TableArea& aValue) {

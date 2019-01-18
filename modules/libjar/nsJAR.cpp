@@ -13,9 +13,9 @@
 #include "mozilla/Unused.h"
 
 #ifdef XP_UNIX
-#include <sys/stat.h>
+#  include <sys/stat.h>
 #elif defined(XP_WIN)
-#include <io.h>
+#  include <io.h>
 #endif
 
 using namespace mozilla;

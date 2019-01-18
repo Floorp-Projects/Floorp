@@ -10,10 +10,10 @@
 #include <fstream>
 #include <prinrval.h>
 #ifdef _WINDOWS
-#include <process.h>
-#define getpid _getpid
+#  include <process.h>
+#  define getpid _getpid
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 #include "base/string_util.h"
 #include "FuzzingMutate.h"
@@ -39,7 +39,7 @@
 
 #ifdef IsLoggingEnabled
 // This is defined in the Windows SDK urlmon.h
-#undef IsLoggingEnabled
+#  undef IsLoggingEnabled
 #endif
 
 namespace mozilla {

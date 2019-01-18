@@ -20,11 +20,11 @@
 #include "pathsub.h"
 
 #ifdef USE_REENTRANT_LIBC
-#include <libc_r.h>
+#  include <libc_r.h>
 #endif
 
 #ifdef SUNOS4
-#include "sunos4.h"
+#  include "sunos4.h"
 #endif
 
 char *program;
@@ -70,7 +70,7 @@ char *getcomponent(char *path, char *name) {
 }
 
 #ifdef LAME_READDIR
-#include <sys/param.h>
+#  include <sys/param.h>
 /*
 ** The static buffer in Unixware's readdir is too small.
 */

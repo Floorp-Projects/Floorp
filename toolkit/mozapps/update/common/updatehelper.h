@@ -23,7 +23,7 @@ BOOL IsUnpromptedElevation(BOOL &isUnpromptedElevation);
 
 // Disable impersonation on release (Bug 1514898)
 #ifndef EARLY_BETA_OR_EARLIER
-#define DISABLE_USER_IMPERSONATION
+#  define DISABLE_USER_IMPERSONATION
 #endif
 
 // Environment variable used to pass impersonation token to child

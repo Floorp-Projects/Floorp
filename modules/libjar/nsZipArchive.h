@@ -23,18 +23,18 @@
 #include "mozilla/UniquePtr.h"
 
 #ifdef HAVE_SEH_EXCEPTIONS
-#define MOZ_WIN_MEM_TRY_BEGIN __try {
-#define MOZ_WIN_MEM_TRY_CATCH(cmd)                        \
-  }                                                       \
-  __except (GetExceptionCode() == EXCEPTION_IN_PAGE_ERROR \
-                ? EXCEPTION_EXECUTE_HANDLER               \
-                : EXCEPTION_CONTINUE_SEARCH) {            \
-    NS_WARNING("unexpected EXCEPTION_IN_PAGE_ERROR");     \
-    cmd;                                                  \
-  }
+#  define MOZ_WIN_MEM_TRY_BEGIN __try {
+#  define MOZ_WIN_MEM_TRY_CATCH(cmd)                        \
+    }                                                       \
+    __except (GetExceptionCode() == EXCEPTION_IN_PAGE_ERROR \
+                  ? EXCEPTION_EXECUTE_HANDLER               \
+                  : EXCEPTION_CONTINUE_SEARCH) {            \
+      NS_WARNING("unexpected EXCEPTION_IN_PAGE_ERROR");     \
+      cmd;                                                  \
+    }
 #else
-#define MOZ_WIN_MEM_TRY_BEGIN {
-#define MOZ_WIN_MEM_TRY_CATCH(cmd) }
+#  define MOZ_WIN_MEM_TRY_BEGIN {
+#  define MOZ_WIN_MEM_TRY_CATCH(cmd) }
 #endif
 
 class nsZipFind;

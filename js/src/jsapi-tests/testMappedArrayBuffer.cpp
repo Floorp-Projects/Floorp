@@ -11,11 +11,11 @@
 #include "vm/ArrayBufferObject.h"
 
 #ifdef XP_WIN
-#include <io.h>
-#define GET_OS_FD(a) int(_get_osfhandle(a))
+#  include <io.h>
+#  define GET_OS_FD(a) int(_get_osfhandle(a))
 #else
-#include <unistd.h>
-#define GET_OS_FD(a) (a)
+#  include <unistd.h>
+#  define GET_OS_FD(a) (a)
 #endif
 
 const char test_data[] =

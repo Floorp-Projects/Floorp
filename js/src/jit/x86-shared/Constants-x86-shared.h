@@ -103,7 +103,7 @@ inline const char* GPReg64Name(RegisterID reg) {
                                       "%rbp",
                                       "%rsi",
                                       "%rdi"
-#ifdef JS_CODEGEN_X64
+#  ifdef JS_CODEGEN_X64
                                       ,
                                       "%r8",
                                       "%r9",
@@ -113,7 +113,7 @@ inline const char* GPReg64Name(RegisterID reg) {
                                       "%r13",
                                       "%r14",
                                       "%r15"
-#endif
+#  endif
   };
   MOZ_ASSERT(size_t(reg) < mozilla::ArrayLength(names));
   return names[reg];

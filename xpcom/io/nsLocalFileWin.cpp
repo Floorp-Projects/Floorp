@@ -66,15 +66,15 @@ using namespace mozilla;
 
 // CopyFileEx only supports unbuffered I/O in Windows Vista and above
 #ifndef COPY_FILE_NO_BUFFERING
-#define COPY_FILE_NO_BUFFERING 0x00001000
+#  define COPY_FILE_NO_BUFFERING 0x00001000
 #endif
 
 #ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
-#define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED 0x00002000
+#  define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED 0x00002000
 #endif
 
 #ifndef DRIVE_REMOTE
-#define DRIVE_REMOTE 4
+#  define DRIVE_REMOTE 4
 #endif
 
 static HWND GetMostRecentNavigatorHWND() {

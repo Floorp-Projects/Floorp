@@ -55,7 +55,7 @@
 
 #ifdef LoadImage
 // Undefine LoadImage to prevent naming conflict with Windows.
-#undef LoadImage
+#  undef LoadImage
 #endif
 
 using namespace mozilla;

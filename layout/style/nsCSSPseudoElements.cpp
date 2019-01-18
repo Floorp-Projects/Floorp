@@ -140,16 +140,16 @@ bool nsCSSPseudoElements::IsPseudoElement(nsAtom* aAtom) {
 #ifdef DEBUG
 /* static */ void nsCSSPseudoElements::AssertAtoms() {
   nsStaticAtom* base = GetAtomBase();
-#define CSS_PSEUDO_ELEMENT(name_, value_, flags_)                    \
-  {                                                                  \
-    RefPtr<nsAtom> atom = NS_Atomize(value_);                        \
-    size_t index = static_cast<size_t>(CSSPseudoElementType::name_); \
-    MOZ_ASSERT(atom == nsGkAtoms::PseudoElement_##name_,             \
-               "Static atom for " #name_ " has incorrect value");    \
-    MOZ_ASSERT(atom == &base[index],                                 \
-               "Static atom for " #name_ " not at expected index");  \
-  }
-#include "nsCSSPseudoElementList.h"
-#undef CSS_PSEUDO_ELEMENT
+#  define CSS_PSEUDO_ELEMENT(name_, value_, flags_)                    \
+    {                                                                  \
+      RefPtr<nsAtom> atom = NS_Atomize(value_);                        \
+      size_t index = static_cast<size_t>(CSSPseudoElementType::name_); \
+      MOZ_ASSERT(atom == nsGkAtoms::PseudoElement_##name_,             \
+                 "Static atom for " #name_ " has incorrect value");    \
+      MOZ_ASSERT(atom == &base[index],                                 \
+                 "Static atom for " #name_ " not at expected index");  \
+    }
+#  include "nsCSSPseudoElementList.h"
+#  undef CSS_PSEUDO_ELEMENT
 }
 #endif

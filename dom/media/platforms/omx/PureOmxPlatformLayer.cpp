@@ -10,7 +10,7 @@
 #include "OmxCoreLibLinker.h"
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 #define LOG(arg, ...)                    \

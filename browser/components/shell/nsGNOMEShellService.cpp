@@ -29,7 +29,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/Element.h"
 #if defined(MOZ_WIDGET_GTK)
-#include "nsIImageToPixbuf.h"
+#  include "nsIImageToPixbuf.h"
 #endif
 #include "nsXULAppAPI.h"
 #include "gfxPlatform.h"

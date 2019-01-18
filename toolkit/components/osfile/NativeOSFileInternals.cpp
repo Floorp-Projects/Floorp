@@ -43,15 +43,15 @@
 
 #include <algorithm>
 #if defined(XP_UNIX)
-#include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
+#  include <unistd.h>
+#  include <errno.h>
+#  include <fcntl.h>
+#  include <sys/stat.h>
+#  include <sys/uio.h>
 #endif  // defined (XP_UNIX)
 
 #if defined(XP_WIN)
-#include <windows.h>
+#  include <windows.h>
 #endif  // defined (XP_WIN)
 
 namespace mozilla {
@@ -140,19 +140,19 @@ struct MOZ_NON_TEMPORARY_CLASS ScopedArrayBufferContents
 // errors, we need to map a few high-level errors to OS-level
 // constants.
 #if defined(XP_UNIX)
-#define OS_ERROR_FILE_EXISTS EEXIST
-#define OS_ERROR_NOMEM ENOMEM
-#define OS_ERROR_INVAL EINVAL
-#define OS_ERROR_TOO_LARGE EFBIG
-#define OS_ERROR_RACE EIO
+#  define OS_ERROR_FILE_EXISTS EEXIST
+#  define OS_ERROR_NOMEM ENOMEM
+#  define OS_ERROR_INVAL EINVAL
+#  define OS_ERROR_TOO_LARGE EFBIG
+#  define OS_ERROR_RACE EIO
 #elif defined(XP_WIN)
-#define OS_ERROR_FILE_EXISTS ERROR_ALREADY_EXISTS
-#define OS_ERROR_NOMEM ERROR_NOT_ENOUGH_MEMORY
-#define OS_ERROR_INVAL ERROR_BAD_ARGUMENTS
-#define OS_ERROR_TOO_LARGE ERROR_FILE_TOO_LARGE
-#define OS_ERROR_RACE ERROR_SHARING_VIOLATION
+#  define OS_ERROR_FILE_EXISTS ERROR_ALREADY_EXISTS
+#  define OS_ERROR_NOMEM ERROR_NOT_ENOUGH_MEMORY
+#  define OS_ERROR_INVAL ERROR_BAD_ARGUMENTS
+#  define OS_ERROR_TOO_LARGE ERROR_FILE_TOO_LARGE
+#  define OS_ERROR_RACE ERROR_SHARING_VIOLATION
 #else
-#error "We do not have platform-specific constants for this platform"
+#  error "We do not have platform-specific constants for this platform"
 #endif
 
 ///////// Results of OS.File operations

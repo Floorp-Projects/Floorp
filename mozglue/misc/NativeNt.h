@@ -23,13 +23,13 @@
 
 extern "C" {
 
-#if !defined(STATUS_ACCESS_DENIED)
-#define STATUS_ACCESS_DENIED ((NTSTATUS)0xC0000022L)
-#endif  // !defined(STATUS_ACCESS_DENIED)
+#  if !defined(STATUS_ACCESS_DENIED)
+#    define STATUS_ACCESS_DENIED ((NTSTATUS)0xC0000022L)
+#  endif  // !defined(STATUS_ACCESS_DENIED)
 
-#if !defined(STATUS_DLL_NOT_FOUND)
-#define STATUS_DLL_NOT_FOUND ((NTSTATUS)0xC0000135L)
-#endif  // !defined(STATUS_DLL_NOT_FOUND)
+#  if !defined(STATUS_DLL_NOT_FOUND)
+#    define STATUS_DLL_NOT_FOUND ((NTSTATUS)0xC0000135L)
+#  endif  // !defined(STATUS_DLL_NOT_FOUND)
 
 enum SECTION_INHERIT { ViewShare = 1, ViewUnmap = 2 };
 

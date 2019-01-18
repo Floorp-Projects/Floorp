@@ -28,22 +28,22 @@ import NEWEST_IA2_IDL;
 
 #else
 
-#include "HandlerData.h"
+#  include "HandlerData.h"
 
-#include <windows.h>
+#  include <windows.h>
 
-#if !defined(MOZILLA_INTERNAL_API)
+#  if !defined(MOZILLA_INTERNAL_API)
 
-#include "Accessible2_3.h"
-#include "AccessibleHyperlink.h"
-#include "AccessibleHypertext2.h"
-#include "AccessibleTableCell.h"
-#include "Handler.h"
-#include "mozilla/mscom/StructStream.h"
-#include "mozilla/UniquePtr.h"
+#    include "Accessible2_3.h"
+#    include "AccessibleHyperlink.h"
+#    include "AccessibleHypertext2.h"
+#    include "AccessibleTableCell.h"
+#    include "Handler.h"
+#    include "mozilla/mscom/StructStream.h"
+#    include "mozilla/UniquePtr.h"
 
-#include <ocidl.h>
-#include <servprov.h>
+#    include <ocidl.h>
+#    include <servprov.h>
 
 namespace mozilla {
 namespace a11y {
@@ -306,7 +306,7 @@ inline static BSTR CopyBSTR(BSTR aSrc) {
 }  // namespace a11y
 }  // namespace mozilla
 
-#endif  // !defined(MOZILLA_INTERNAL_API)
+#  endif  // !defined(MOZILLA_INTERNAL_API)
 
 #endif  // defined(__midl)
 

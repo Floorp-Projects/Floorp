@@ -15,7 +15,7 @@ extern "C" int posix_memalign(void** memptr, size_t alignment, size_t size);
 #endif
 
 #ifndef MEM_RESET_UNDO
-#define MEM_RESET_UNDO 0x1000000
+#  define MEM_RESET_UNDO 0x1000000
 #endif
 
 #define MIN_VOLATILE_ALLOC_SIZE 8192

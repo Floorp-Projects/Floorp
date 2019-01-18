@@ -86,11 +86,11 @@ void NS_STDCALL test_void_t_stdcall() {
   return;
 }
 
-#define ABI NS_STDCALL
-#define DEFINE_STDCALL_FUNCTIONS(x, y, z) FUNCTION_TESTS(x##_, y, z, stdcall)
+#  define ABI NS_STDCALL
+#  define DEFINE_STDCALL_FUNCTIONS(x, y, z) FUNCTION_TESTS(x##_, y, z, stdcall)
 CTYPES_FOR_EACH_TYPE(DEFINE_STDCALL_FUNCTIONS)
-#undef DEFINE_STDCALL_FUNCTIONS
-#undef ABI
+#  undef DEFINE_STDCALL_FUNCTIONS
+#  undef ABI
 
 #endif /* defined(_WIN32) */
 

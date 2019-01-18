@@ -26,16 +26,16 @@
  */
 
 #ifndef WEBGLTEXELCONVERSIONS_H_
-#define WEBGLTEXELCONVERSIONS_H_
+#  define WEBGLTEXELCONVERSIONS_H_
 
-#ifdef __SUNPRO_CC
-#define __restrict
-#endif
+#  ifdef __SUNPRO_CC
+#    define __restrict
+#  endif
 
-#include "WebGLTypes.h"
-#include <stdint.h>
-#include "mozilla/Attributes.h"
-#include "mozilla/Casting.h"
+#  include "WebGLTypes.h"
+#  include <stdint.h>
+#  include "mozilla/Attributes.h"
+#  include "mozilla/Casting.h"
 
 namespace mozilla {
 

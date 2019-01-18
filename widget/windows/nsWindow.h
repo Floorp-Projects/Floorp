@@ -41,8 +41,8 @@
 #include "TaskbarWindowPreview.h"
 
 #ifdef ACCESSIBILITY
-#include "oleacc.h"
-#include "mozilla/a11y/Accessible.h"
+#  include "oleacc.h"
+#  include "mozilla/a11y/Accessible.h"
 #endif
 
 #include "nsUXThemeData.h"

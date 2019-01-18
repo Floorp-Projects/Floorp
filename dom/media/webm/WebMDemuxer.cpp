@@ -7,7 +7,7 @@
 #include "nsError.h"
 #include "MediaResource.h"
 #ifdef MOZ_AV1
-#include "AOMDecoder.h"
+#  include "AOMDecoder.h"
 #endif
 #include "OpusDecoder.h"
 #include "VPXDecoder.h"

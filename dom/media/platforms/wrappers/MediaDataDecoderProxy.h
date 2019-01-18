@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaDataDecoderProxy_h_)
-#define MediaDataDecoderProxy_h_
+#  define MediaDataDecoderProxy_h_
 
-#include "PlatformDecoderModule.h"
-#include "mozilla/Atomics.h"
-#include "mozilla/RefPtr.h"
-#include "nsThreadUtils.h"
-#include "nscore.h"
+#  include "PlatformDecoderModule.h"
+#  include "mozilla/Atomics.h"
+#  include "mozilla/RefPtr.h"
+#  include "nsThreadUtils.h"
+#  include "nscore.h"
 
 namespace mozilla {
 
@@ -23,20 +23,20 @@ class MediaDataDecoderProxy
  public:
   explicit MediaDataDecoderProxy(already_AddRefed<AbstractThread> aProxyThread)
       : mProxyThread(aProxyThread)
-#if defined(DEBUG)
+#  if defined(DEBUG)
         ,
         mIsShutdown(false)
-#endif
+#  endif
   {
   }
 
   explicit MediaDataDecoderProxy(
       already_AddRefed<MediaDataDecoder> aProxyDecoder)
       : mProxyDecoder(aProxyDecoder)
-#if defined(DEBUG)
+#  if defined(DEBUG)
         ,
         mIsShutdown(false)
-#endif
+#  endif
   {
     DDLINKCHILD("proxy decoder", mProxyDecoder.get());
   }
@@ -62,9 +62,9 @@ class MediaDataDecoderProxy
   RefPtr<MediaDataDecoder> mProxyDecoder;
   RefPtr<AbstractThread> mProxyThread;
 
-#if defined(DEBUG)
+#  if defined(DEBUG)
   Atomic<bool> mIsShutdown;
-#endif
+#  endif
 };
 
 }  // namespace mozilla

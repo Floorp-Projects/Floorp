@@ -4,15 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_MEMORY
-#define MOZ_MEMORY_IMPL
-#include "mozmemory_wrap.h"
-#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
+#  define MOZ_MEMORY_IMPL
+#  include "mozmemory_wrap.h"
+#  define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 // See mozmemory_wrap.h for more details. This file is part of libmozglue, so
 // it needs to use _impl suffixes.
-#define MALLOC_DECL(name, return_type, ...) \
-  MOZ_MEMORY_API return_type name##_impl(__VA_ARGS__);
-#include "malloc_decls.h"
-#include "mozilla/mozalloc.h"
+#  define MALLOC_DECL(name, return_type, ...) \
+    MOZ_MEMORY_API return_type name##_impl(__VA_ARGS__);
+#  include "malloc_decls.h"
+#  include "mozilla/mozalloc.h"
 #endif
 
 #include <windows.h>
@@ -437,8 +437,8 @@ const char* DllBlocklist_TestBlocklistIntegrity() {
 }
 
 #else  // ENABLE_TESTS
-#define CallDllLoadHook(...)
-#define CallCreateThreadHook(...)
+#  define CallDllLoadHook(...)
+#  define CallCreateThreadHook(...)
 #endif  // ENABLE_TESTS
 
 static NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR filePath, PULONG flags,

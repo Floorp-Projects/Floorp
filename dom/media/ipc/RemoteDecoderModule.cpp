@@ -11,7 +11,7 @@
 #include "mozilla/StaticPrefs.h"
 
 #ifdef MOZ_AV1
-#include "AOMDecoder.h"
+#  include "AOMDecoder.h"
 #endif
 #include "RemoteDecoderManagerChild.h"
 #include "RemoteMediaDataDecoder.h"

@@ -317,12 +317,12 @@ class nsDisplaymtdBorder final : public nsDisplayBorder {
 };
 
 #ifdef DEBUG
-#define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)                       \
-  MOZ_ASSERT(                                                               \
-      mozilla::StyleDisplay::_expected == _frame->StyleDisplay()->mDisplay, \
-      "internal error");
+#  define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)                       \
+    MOZ_ASSERT(                                                               \
+        mozilla::StyleDisplay::_expected == _frame->StyleDisplay()->mDisplay, \
+        "internal error");
 #else
-#define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)
+#  define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)
 #endif
 
 static void ParseFrameAttribute(nsIFrame* aFrame, nsAtom* aAttribute,

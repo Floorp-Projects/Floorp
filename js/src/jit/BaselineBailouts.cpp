@@ -424,7 +424,7 @@ struct BaselineStackBuilder {
     (void)priorOffset;
     MOZ_CRASH();
 #else
-#error "Bad architecture!"
+#  error "Bad architecture!"
 #endif
   }
 

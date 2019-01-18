@@ -7,10 +7,10 @@
 #include "mozilla/AvailableMemoryTracker.h"
 
 #if defined(XP_WIN)
-#include "nsExceptionHandler.h"
-#include "nsICrashReporter.h"
-#include "nsIMemoryReporter.h"
-#include "nsMemoryPressure.h"
+#  include "nsExceptionHandler.h"
+#  include "nsICrashReporter.h"
+#  include "nsIMemoryReporter.h"
+#  include "nsMemoryPressure.h"
 #endif
 
 #include "nsIObserver.h"
@@ -26,7 +26,7 @@
 #include "mozilla/Unused.h"
 
 #if defined(MOZ_MEMORY)
-#include "mozmemory.h"
+#  include "mozmemory.h"
 #endif  // MOZ_MEMORY
 
 using namespace mozilla;
@@ -52,11 +52,11 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
  private:
   // Fire a low-memory notification if we have less than this many bytes of
   // virtual address space available.
-#if defined(HAVE_64BIT_BUILD)
+#  if defined(HAVE_64BIT_BUILD)
   static const size_t kLowVirtualMemoryThreshold = 0;
-#else
+#  else
   static const size_t kLowVirtualMemoryThreshold = 256 * 1024 * 1024;
-#endif
+#  endif
 
   // Fire a low-memory notification if we have less than this many bytes of
   // commit space (physical memory plus page file) left.

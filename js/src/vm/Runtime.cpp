@@ -12,14 +12,14 @@
 #include "mozilla/Unused.h"
 
 #if defined(XP_DARWIN)
-#include <mach/mach.h>
+#  include <mach/mach.h>
 #elif defined(XP_UNIX)
-#include <sys/resource.h>
+#  include <sys/resource.h>
 #endif  // defined(XP_DARWIN) || defined(XP_UNIX) || defined(XP_WIN)
 #include <locale.h>
 #include <string.h>
 #ifdef JS_CAN_CHECK_THREADSAFE_ACCESSES
-#include <sys/mman.h>
+#  include <sys/mman.h>
 #endif
 
 #include "jsfriendapi.h"

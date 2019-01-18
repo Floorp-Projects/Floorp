@@ -18,17 +18,17 @@
 using namespace js;
 
 #if MOZ_LITTLE_ENDIAN
-#define IEEE_8087
+#  define IEEE_8087
 #else
-#define IEEE_MC68k
+#  define IEEE_MC68k
 #endif
 
 #ifndef Long
-#define Long int32_t
+#  define Long int32_t
 #endif
 
 #ifndef ULong
-#define ULong uint32_t
+#  define ULong uint32_t
 #endif
 
 /*

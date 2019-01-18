@@ -8,10 +8,10 @@
 #define MOZILLA_GFX_CRITICALSECTION_H_
 
 #ifdef WIN32
-#include <windows.h>
+#  include <windows.h>
 #else
-#include <pthread.h>
-#include "mozilla/DebugOnly.h"
+#  include <pthread.h>
+#  include "mozilla/DebugOnly.h"
 #endif
 
 namespace mozilla {

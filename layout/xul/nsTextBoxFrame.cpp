@@ -38,7 +38,7 @@
 #include "TextDrawTarget.h"
 
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
+#  include "nsAccessibilityService.h"
 #endif
 
 #include "nsBidiUtils.h"

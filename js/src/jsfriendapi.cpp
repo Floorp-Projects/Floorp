@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 #ifdef ENABLE_BIGINT
-#include "builtin/BigInt.h"
+#  include "builtin/BigInt.h"
 #endif
 #include "builtin/Promise.h"
 #include "builtin/TestingFunctions.h"

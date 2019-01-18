@@ -7,7 +7,7 @@
 #include "mozilla/GfxMessageUtils.h"  // For ParamTraits<GeckoProcessType>
 
 #ifdef MOZ_GECKO_PROFILER
-#include "shared-libraries.h"
+#  include "shared-libraries.h"
 #endif
 
 namespace mozilla {

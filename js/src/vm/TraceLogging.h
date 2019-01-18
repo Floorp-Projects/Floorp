@@ -239,10 +239,10 @@ class TraceLoggerThread : public mozilla::LinkedListElement<TraceLoggerThread> {
   // event.
   uint32_t iteration_;
 
-#ifdef DEBUG
+#  ifdef DEBUG
   typedef Vector<uint32_t, 1, js::SystemAllocPolicy> GraphStack;
   GraphStack graphStack;
-#endif
+#  endif
 
  public:
   AutoTraceLog* top;
@@ -354,9 +354,9 @@ class TraceLoggerThread : public mozilla::LinkedListElement<TraceLoggerThread> {
 class TraceLoggerThreadState {
 #ifdef JS_TRACE_LOGGING
   friend JS::TraceLoggerDictionaryImpl;
-#ifdef DEBUG
+#  ifdef DEBUG
   bool initialized;
-#endif
+#  endif
 
   bool enabledTextIds[TraceLogger_Last];
   bool mainThreadEnabled;
@@ -406,9 +406,9 @@ class TraceLoggerThreadState {
 
   TraceLoggerThreadState()
       :
-#ifdef DEBUG
+#  ifdef DEBUG
         initialized(false),
-#endif
+#  endif
         mainThreadEnabled(false),
         helperThreadEnabled(false),
         graphEnabled(false),

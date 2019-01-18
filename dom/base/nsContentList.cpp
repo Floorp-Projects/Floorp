@@ -31,9 +31,9 @@
 #include "PLDHashTable.h"
 
 #ifdef DEBUG_CONTENT_LIST
-#define ASSERT_IN_SYNC AssertInSync()
+#  define ASSERT_IN_SYNC AssertInSync()
 #else
-#define ASSERT_IN_SYNC PR_BEGIN_MACRO PR_END_MACRO
+#  define ASSERT_IN_SYNC PR_BEGIN_MACRO PR_END_MACRO
 #endif
 
 using namespace mozilla;

@@ -17,7 +17,7 @@
 #include <osvr/ClientKit/DisplayC.h>
 
 #if defined(XP_WIN)
-#include <d3d11_1.h>
+#  include <d3d11_1.h>
 #endif
 
 namespace mozilla {

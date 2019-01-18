@@ -20,18 +20,18 @@
 #include "mozilla/layers/TextureClientSharedSurface.h"
 
 #ifdef XP_WIN
-#include "SharedSurfaceANGLE.h"         // for SurfaceFactory_ANGLEShareHandle
-#include "SharedSurfaceD3D11Interop.h"  // for SurfaceFactory_D3D11Interop
-#include "mozilla/gfx/DeviceManagerDx.h"
+#  include "SharedSurfaceANGLE.h"         // for SurfaceFactory_ANGLEShareHandle
+#  include "SharedSurfaceD3D11Interop.h"  // for SurfaceFactory_D3D11Interop
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 #ifdef XP_MACOSX
-#include "SharedSurfaceIO.h"
+#  include "SharedSurfaceIO.h"
 #endif
 
 #ifdef MOZ_X11
-#include "GLXLibrary.h"
-#include "SharedSurfaceGLX.h"
+#  include "GLXLibrary.h"
+#  include "SharedSurfaceGLX.h"
 #endif
 
 namespace mozilla {

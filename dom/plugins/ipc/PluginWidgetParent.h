@@ -6,7 +6,7 @@
 #define mozilla_plugins_PluginWidgetParent_h
 
 #ifndef XP_WIN
-#error "This header should be Windows-only."
+#  error "This header should be Windows-only."
 #endif
 
 #include "mozilla/plugins/PPluginWidgetParent.h"

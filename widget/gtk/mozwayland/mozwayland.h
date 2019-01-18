@@ -39,7 +39,7 @@ enum wl_data_device_manager_dnd_action {
 #endif
 
 #ifndef WL_DATA_OFFER_SET_ACTIONS
-#define WL_DATA_OFFER_SET_ACTIONS 4
+#  define WL_DATA_OFFER_SET_ACTIONS 4
 
 struct moz_wl_data_offer_listener {
   void (*offer)(void *data, struct wl_data_offer *wl_data_offer,
@@ -61,22 +61,22 @@ typedef struct wl_data_offer_listener moz_wl_data_offer_listener;
 #endif
 
 #ifndef WL_SUBCOMPOSITOR_GET_SUBSURFACE
-#define WL_SUBCOMPOSITOR_GET_SUBSURFACE 1
+#  define WL_SUBCOMPOSITOR_GET_SUBSURFACE 1
 struct wl_subcompositor;
 
 // Emulate what mozilla header wrapper does - make the
 // wl_subcompositor_interface always visible.
-#pragma GCC visibility push(default)
+#  pragma GCC visibility push(default)
 extern const struct wl_interface wl_subsurface_interface;
 extern const struct wl_interface wl_subcompositor_interface;
-#pragma GCC visibility pop
+#  pragma GCC visibility pop
 
-#define WL_SUBSURFACE_DESTROY 0
-#define WL_SUBSURFACE_SET_POSITION 1
-#define WL_SUBSURFACE_PLACE_ABOVE 2
-#define WL_SUBSURFACE_PLACE_BELOW 3
-#define WL_SUBSURFACE_SET_SYNC 4
-#define WL_SUBSURFACE_SET_DESYNC 5
+#  define WL_SUBSURFACE_DESTROY 0
+#  define WL_SUBSURFACE_SET_POSITION 1
+#  define WL_SUBSURFACE_PLACE_ABOVE 2
+#  define WL_SUBSURFACE_PLACE_BELOW 3
+#  define WL_SUBSURFACE_SET_SYNC 4
+#  define WL_SUBSURFACE_SET_DESYNC 5
 
 static inline struct wl_subsurface *wl_subcompositor_get_subsurface(
     struct wl_subcompositor *wl_subcompositor, struct wl_surface *surface,

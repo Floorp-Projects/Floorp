@@ -34,19 +34,19 @@ csf_vsprintf
 */
 
 #ifdef WIN32
-#if !defined(_countof)
-#if !defined(__cplusplus)
-#define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
-#else
+#  if !defined(_countof)
+#    if !defined(__cplusplus)
+#      define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
+#    else
 extern "C++" {
 template <typename _CountofType, size_t _SizeOfArray>
 char (*_csf_countof_helper(_CountofType (&_Array)[_SizeOfArray]))[_SizeOfArray];
-#define _countof(_Array) sizeof(*_csf_countof_helper(_Array))
+#      define _countof(_Array) sizeof(*_csf_countof_helper(_Array))
 }
-#endif
-#endif
+#    endif
+#  endif
 #else
-#define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
+#  define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
 #endif
 // csf_countof
 
@@ -57,34 +57,34 @@ char (*_csf_countof_helper(_CountofType (&_Array)[_SizeOfArray]))[_SizeOfArray];
 #ifdef _WIN32
 // Unlike snprintf, sprintf_s guarantees that the buffer will be null-terminated
 // (unless the buffer size is zero).
-#define csf_sprintf(/* char* */ buffer,                                   \
-                    /* size_t */ sizeOfBufferInCharsInclNullTerm,         \
-                    /* const char * */ format, ...)                       \
-  _snprintf_s(buffer, sizeOfBufferInCharsInclNullTerm, _TRUNCATE, format, \
-              __VA_ARGS__)
+#  define csf_sprintf(/* char* */ buffer,                                   \
+                      /* size_t */ sizeOfBufferInCharsInclNullTerm,         \
+                      /* const char * */ format, ...)                       \
+    _snprintf_s(buffer, sizeOfBufferInCharsInclNullTerm, _TRUNCATE, format, \
+                __VA_ARGS__)
 #else
-#define csf_sprintf(/* char */ buffer,                                    \
-                    /* size_t */ sizeOfBufferInCharsInclNullTerm,         \
-                    /* const char * */ format, ...)                       \
-  snprintf(buffer, sizeOfBufferInCharsInclNullTerm, format, __VA_ARGS__); \
-  buffer[sizeOfBufferInCharsInclNullTerm - 1] = '\0'
+#  define csf_sprintf(/* char */ buffer,                                    \
+                      /* size_t */ sizeOfBufferInCharsInclNullTerm,         \
+                      /* const char * */ format, ...)                       \
+    snprintf(buffer, sizeOfBufferInCharsInclNullTerm, format, __VA_ARGS__); \
+    buffer[sizeOfBufferInCharsInclNullTerm - 1] = '\0'
 #endif
 
 // csf_vsprintf
 
 #ifdef _WIN32
-#define csf_vsprintf(/* char* */ buffer,                                  \
-                     /* size_t */ sizeOfBufferInCharsInclNullTerm,        \
-                     /* const char * */ format, /* va_list */ vaList)     \
-  vsnprintf_s(buffer, sizeOfBufferInCharsInclNullTerm, _TRUNCATE, format, \
-              vaList);                                                    \
-  buffer[sizeOfBufferInCharsInclNullTerm - 1] = '\0'
+#  define csf_vsprintf(/* char* */ buffer,                                  \
+                       /* size_t */ sizeOfBufferInCharsInclNullTerm,        \
+                       /* const char * */ format, /* va_list */ vaList)     \
+    vsnprintf_s(buffer, sizeOfBufferInCharsInclNullTerm, _TRUNCATE, format, \
+                vaList);                                                    \
+    buffer[sizeOfBufferInCharsInclNullTerm - 1] = '\0'
 #else
-#define csf_vsprintf(/* char */ buffer,                               \
-                     /* size_t */ sizeOfBufferInCharsInclNullTerm,    \
-                     /* const char * */ format, /* va_list */ vaList) \
-  vsprintf(buffer, format, vaList);                                   \
-  buffer[sizeOfBufferInCharsInclNullTerm - 1] = '\0'
+#  define csf_vsprintf(/* char */ buffer,                               \
+                       /* size_t */ sizeOfBufferInCharsInclNullTerm,    \
+                       /* const char * */ format, /* va_list */ vaList) \
+    vsprintf(buffer, format, vaList);                                   \
+    buffer[sizeOfBufferInCharsInclNullTerm - 1] = '\0'
 #endif
 
 #endif

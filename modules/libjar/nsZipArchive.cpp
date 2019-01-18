@@ -13,7 +13,7 @@
 #define READTYPE int32_t
 #include "zlib.h"
 #ifdef MOZ_JAR_BROTLI
-#include "brotli/decode.h"  // brotli
+#  include "brotli/decode.h"  // brotli
 #endif
 #include "nsISupportsUtils.h"
 #include "prio.h"
@@ -27,7 +27,7 @@
 #include "nsString.h"
 #include "prenv.h"
 #if defined(XP_WIN)
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 // For placement new used for arena allocations of zip file list
@@ -35,33 +35,33 @@
 #define ZIP_ARENABLOCKSIZE (1 * 1024)
 
 #ifdef XP_UNIX
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <limits.h>
-#include <unistd.h>
+#  include <sys/mman.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#  include <limits.h>
+#  include <unistd.h>
 #elif defined(XP_WIN)
-#include <io.h>
+#  include <io.h>
 #endif
 
 #ifdef __SYMBIAN32__
-#include <sys/syslimits.h>
+#  include <sys/syslimits.h>
 #endif /*__SYMBIAN32__*/
 
 #ifndef XP_UNIX /* we need some constants defined in limits.h and unistd.h */
-#ifndef S_IFMT
-#define S_IFMT 0170000
-#endif
-#ifndef S_IFLNK
-#define S_IFLNK 0120000
-#endif
-#ifndef PATH_MAX
-#define PATH_MAX 1024
-#endif
+#  ifndef S_IFMT
+#    define S_IFMT 0170000
+#  endif
+#  ifndef S_IFLNK
+#    define S_IFLNK 0120000
+#  endif
+#  ifndef PATH_MAX
+#    define PATH_MAX 1024
+#  endif
 #endif /* XP_UNIX */
 
 #ifdef XP_WIN
-#include "private/pprio.h"  // To get PR_ImportFile
+#  include "private/pprio.h"  // To get PR_ImportFile
 #endif
 
 using namespace mozilla;

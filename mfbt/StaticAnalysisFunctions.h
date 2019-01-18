@@ -8,12 +8,12 @@
 #define mozilla_StaticAnalysisFunctions_h
 
 #ifndef __cplusplus
-#ifndef bool
-#include <stdbool.h>
-#endif
-#define MOZ_CONSTEXPR
+#  ifndef bool
+#    include <stdbool.h>
+#  endif
+#  define MOZ_CONSTEXPR
 #else  // __cplusplus
-#define MOZ_CONSTEXPR constexpr
+#  define MOZ_CONSTEXPR constexpr
 #endif
 /*
  * Functions that are used as markers in Gecko code for static analysis. Their
@@ -23,7 +23,7 @@
 
 #ifdef MOZ_CLANG_PLUGIN
 
-#ifdef __cplusplus
+#  ifdef __cplusplus
 /**
  * MOZ_KnownLive - used to opt an argument out of the CanRunScript checker so
  * that we don't check it if is a strong ref.
@@ -44,7 +44,7 @@ static MOZ_ALWAYS_INLINE T& MOZ_KnownLive(T& ref) {
   return ref;
 }
 
-#endif
+#  endif
 
 /**
  * MOZ_AssertAssignmentTest - used in MOZ_ASSERT in order to test the possible
@@ -58,12 +58,12 @@ static MOZ_ALWAYS_INLINE MOZ_CONSTEXPR bool MOZ_AssertAssignmentTest(
   return exprResult;
 }
 
-#define MOZ_CHECK_ASSERT_ASSIGNMENT(expr) MOZ_AssertAssignmentTest(!!(expr))
+#  define MOZ_CHECK_ASSERT_ASSIGNMENT(expr) MOZ_AssertAssignmentTest(!!(expr))
 
 #else
 
-#define MOZ_CHECK_ASSERT_ASSIGNMENT(expr) (!!(expr))
-#define MOZ_KnownLive(expr) (expr)
+#  define MOZ_CHECK_ASSERT_ASSIGNMENT(expr) (!!(expr))
+#  define MOZ_KnownLive(expr) (expr)
 
 #endif /* MOZ_CLANG_PLUGIN */
 #endif /* StaticAnalysisFunctions_h */

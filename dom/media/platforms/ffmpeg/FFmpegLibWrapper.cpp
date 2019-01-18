@@ -6,7 +6,7 @@
 #include "FFmpegLog.h"
 #include "mozilla/PodOperations.h"
 #ifdef MOZ_FFMPEG
-#include "mozilla/StaticPrefs.h"
+#  include "mozilla/StaticPrefs.h"
 #endif
 #include "mozilla/Types.h"
 #include "PlatformDecoderModule.h"

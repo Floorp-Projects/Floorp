@@ -89,54 +89,54 @@
 // That implementation would call malloc by using "malloc_impl".
 
 #if defined(MOZ_MEMORY_IMPL) && !defined(IMPL_MFBT)
-#ifdef MFBT_API  // mozilla/Types.h was already included
+#  ifdef MFBT_API  // mozilla/Types.h was already included
 #    error mozmemory_wrap.h has to be included before mozilla/Types.h when MOZ_MEMORY_IMPL is set and IMPL_MFBT is not.
-#endif
-#define IMPL_MFBT
+#  endif
+#  define IMPL_MFBT
 #endif
 
 #include "mozilla/Types.h"
 
 #ifndef MOZ_EXTERN_C
-#ifdef __cplusplus
-#define MOZ_EXTERN_C extern "C"
-#else
-#define MOZ_EXTERN_C
-#endif
+#  ifdef __cplusplus
+#    define MOZ_EXTERN_C extern "C"
+#  else
+#    define MOZ_EXTERN_C
+#  endif
 #endif
 
 #ifdef MOZ_MEMORY_IMPL
-#define MOZ_JEMALLOC_API MOZ_EXTERN_C MFBT_API
-#if defined(XP_WIN)
-#define mozmem_malloc_impl(a) je_##a
-#else
-#define MOZ_MEMORY_API MOZ_EXTERN_C MFBT_API
-#if defined(MOZ_WIDGET_ANDROID)
-#define MOZ_WRAP_NEW_DELETE
-#endif
-#endif
+#  define MOZ_JEMALLOC_API MOZ_EXTERN_C MFBT_API
+#  if defined(XP_WIN)
+#    define mozmem_malloc_impl(a) je_##a
+#  else
+#    define MOZ_MEMORY_API MOZ_EXTERN_C MFBT_API
+#    if defined(MOZ_WIDGET_ANDROID)
+#      define MOZ_WRAP_NEW_DELETE
+#    endif
+#  endif
 #endif
 #ifdef XP_WIN
-#define mozmem_dup_impl(a) wrap_##a
+#  define mozmem_dup_impl(a) wrap_##a
 #endif
 
 #if !defined(MOZ_MEMORY_IMPL)
-#define MOZ_MEMORY_API MOZ_EXTERN_C MFBT_API
-#define MOZ_JEMALLOC_API MOZ_EXTERN_C MFBT_API
+#  define MOZ_MEMORY_API MOZ_EXTERN_C MFBT_API
+#  define MOZ_JEMALLOC_API MOZ_EXTERN_C MFBT_API
 #endif
 
 #ifndef MOZ_MEMORY_API
-#define MOZ_MEMORY_API MOZ_EXTERN_C
+#  define MOZ_MEMORY_API MOZ_EXTERN_C
 #endif
 #ifndef MOZ_JEMALLOC_API
-#define MOZ_JEMALLOC_API MOZ_EXTERN_C
+#  define MOZ_JEMALLOC_API MOZ_EXTERN_C
 #endif
 
 #ifndef mozmem_malloc_impl
-#define mozmem_malloc_impl(a) a
+#  define mozmem_malloc_impl(a) a
 #endif
 #ifndef mozmem_dup_impl
-#define mozmem_dup_impl(a) a
+#  define mozmem_dup_impl(a) a
 #endif
 
 // Malloc implementation functions
@@ -155,16 +155,16 @@
 #define strndup_impl mozmem_dup_impl(strndup)
 #define strdup_impl mozmem_dup_impl(strdup)
 #ifdef XP_WIN
-#define wcsdup_impl mozmem_dup_impl(wcsdup)
-#define _aligned_malloc_impl mozmem_dup_impl(_aligned_malloc)
+#  define wcsdup_impl mozmem_dup_impl(wcsdup)
+#  define _aligned_malloc_impl mozmem_dup_impl(_aligned_malloc)
 #endif
 
 // String functions
 #ifdef ANDROID
 // Bug 801571 and Bug 879668, libstagefright uses vasprintf, causing malloc()/
 // free() to be mismatched between bionic and mozglue implementation.
-#define vasprintf_impl mozmem_dup_impl(vasprintf)
-#define asprintf_impl mozmem_dup_impl(asprintf)
+#  define vasprintf_impl mozmem_dup_impl(vasprintf)
+#  define asprintf_impl mozmem_dup_impl(asprintf)
 #endif
 
 #endif  // mozmemory_wrap_h

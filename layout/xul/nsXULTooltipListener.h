@@ -12,7 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #ifdef MOZ_XUL
-#include "XULTreeElement.h"
+#  include "XULTreeElement.h"
 #endif
 #include "nsIWeakReferenceUtils.h"
 #include "mozilla/Attributes.h"

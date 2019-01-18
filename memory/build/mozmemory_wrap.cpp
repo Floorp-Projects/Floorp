@@ -16,7 +16,7 @@
 #include "malloc_decls.h"
 
 #ifdef MOZ_WRAP_NEW_DELETE
-#include <new>
+#  include <new>
 
 MFBT_API void* operator new(size_t size) { return malloc_impl(size); }
 
@@ -64,8 +64,8 @@ MOZ_MEMORY_API char* strdup_impl(const char* src) {
 }
 
 #ifdef ANDROID
-#include <stdarg.h>
-#include <stdio.h>
+#  include <stdarg.h>
+#  include <stdio.h>
 
 MOZ_MEMORY_API int vasprintf_impl(char** str, const char* fmt, va_list ap) {
   char *ptr, *_ptr;
@@ -114,7 +114,7 @@ MOZ_MEMORY_API int asprintf_impl(char** str, const char* fmt, ...) {
 #endif
 
 #ifdef XP_WIN
-#include <wchar.h>
+#  include <wchar.h>
 
 // We also need to provide our own impl of wcsdup so that we don't ask
 // the CRT for memory from its heap (which will then be unfreeable).

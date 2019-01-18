@@ -15,7 +15,7 @@
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/gfxVars.h"
 #if defined(XP_WIN)
-#include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/layers/APZInputBridgeChild.h"
@@ -25,7 +25,7 @@
 #include "nsIObserverService.h"
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerParent.h"
+#  include "ProfilerParent.h"
 #endif
 
 namespace mozilla {

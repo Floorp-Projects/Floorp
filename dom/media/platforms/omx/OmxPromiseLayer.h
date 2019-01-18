@@ -5,14 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(OmxPromiseLayer_h_)
-#define OmxPromiseLayer_h_
+#  define OmxPromiseLayer_h_
 
-#include "mozilla/MozPromise.h"
-#include "mozilla/TaskQueue.h"
-#include "nsAutoPtr.h"
+#  include "mozilla/MozPromise.h"
+#  include "mozilla/TaskQueue.h"
+#  include "nsAutoPtr.h"
 
-#include "OMX_Core.h"
-#include "OMX_Types.h"
+#  include "OMX_Core.h"
+#  include "OMX_Types.h"
 
 namespace mozilla {
 

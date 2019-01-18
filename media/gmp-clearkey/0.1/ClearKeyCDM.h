@@ -9,8 +9,8 @@
 #include "content_decryption_module.h"
 
 #ifdef ENABLE_WMF
-#include "WMFUtils.h"
-#include "VideoDecoder.h"
+#  include "WMFUtils.h"
+#  include "VideoDecoder.h"
 #endif
 
 class ClearKeyCDM : public cdm::ContentDecryptionModule_10 {

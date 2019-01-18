@@ -24,7 +24,7 @@
 #include "js/Vector.h"
 #include "util/Text.h"
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"

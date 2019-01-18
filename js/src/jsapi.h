@@ -3587,7 +3587,7 @@ extern JS_PUBLIC_API JSObject* JS_NewObjectForConstructor(
 /************************************************************************/
 
 #ifdef JS_GC_ZEAL
-#define JS_DEFAULT_ZEAL_FREQ 100
+#  define JS_DEFAULT_ZEAL_FREQ 100
 
 extern JS_PUBLIC_API void JS_GetGCZealBits(JSContext* cx, uint32_t* zealBits,
                                            uint32_t* frequency,

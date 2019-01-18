@@ -10,9 +10,9 @@
 #include "mozilla/Casting.h"
 
 #if defined(JS_CODEGEN_X86)
-#include "jit/x86/Assembler-x86.h"
+#  include "jit/x86/Assembler-x86.h"
 #elif defined(JS_CODEGEN_X64)
-#include "jit/x64/Assembler-x64.h"
+#  include "jit/x64/Assembler-x64.h"
 #endif
 
 namespace js {

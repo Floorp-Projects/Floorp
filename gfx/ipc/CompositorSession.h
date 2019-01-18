@@ -11,7 +11,7 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "nsISupportsImpl.h"
 #if defined(MOZ_WIDGET_ANDROID)
-#include "mozilla/layers/UiCompositorControllerChild.h"
+#  include "mozilla/layers/UiCompositorControllerChild.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 class nsIWidget;

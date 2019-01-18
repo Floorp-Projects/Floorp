@@ -11,8 +11,8 @@
 
 #ifdef MOZILLA_INTERNAL_API
 
-#include "prlink.h"
-#include "mozilla/Char16.h"
+#  include "prlink.h"
+#  include "mozilla/Char16.h"
 
 namespace mozilla {
 
@@ -23,20 +23,20 @@ namespace mozilla {
 // @param aFlags takes PR_LD_* flags (see prlink.h)
 //
 inline PRLibrary*
-#ifdef XP_WIN
+#  ifdef XP_WIN
 LoadLibraryWithFlags(char16ptr_t aPath, PRUint32 aFlags = 0)
-#else
+#  else
 LoadLibraryWithFlags(const char* aPath, PRUint32 aFlags = 0)
-#endif
+#  endif
 {
   PRLibSpec libSpec;
-#ifdef XP_WIN
+#  ifdef XP_WIN
   libSpec.type = PR_LibSpec_PathnameU;
   libSpec.value.pathname_u = aPath;
-#else
+#  else
   libSpec.type = PR_LibSpec_Pathname;
   libSpec.value.pathname = aPath;
-#endif
+#  endif
   return PR_LoadLibraryWithFlags(libSpec, aFlags);
 }
 

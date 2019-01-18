@@ -13,7 +13,7 @@
 namespace mozilla {
 
 #ifdef LOGTAG
-#undef LOGTAG
+#  undef LOGTAG
 #endif
 #define LOGTAG "WebrtcVideoSessionConduit"
 

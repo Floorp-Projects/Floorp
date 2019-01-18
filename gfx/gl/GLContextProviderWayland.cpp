@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_WIDGET_GTK
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
+#  include <gdk/gdk.h>
+#  include <gdk/gdkx.h>
 #endif
 
 #include "GLContextProvider.h"

@@ -9,8 +9,8 @@
 
 #ifdef __APPLE__
 
-#include <mach/mach.h>
-#include <stdint.h>
+#  include <mach/mach.h>
+#  include <stdint.h>
 
 namespace Shark {
 

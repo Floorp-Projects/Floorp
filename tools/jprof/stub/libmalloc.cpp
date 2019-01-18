@@ -6,17 +6,17 @@
 
 // The linux glibc hides part of sigaction if _POSIX_SOURCE is defined
 #if defined(linux)
-#undef _POSIX_SOURCE
-#undef _SVID_SOURCE
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
+#  undef _POSIX_SOURCE
+#  undef _SVID_SOURCE
+#  ifndef _GNU_SOURCE
+#    define _GNU_SOURCE
+#  endif
 #endif
 
 #include <errno.h>
 #if defined(linux)
-#include <linux/rtc.h>
-#include <pthread.h>
+#  include <linux/rtc.h>
+#  include <pthread.h>
 #endif
 #include <unistd.h>
 #include <fcntl.h>
@@ -38,10 +38,10 @@
 #include <dlfcn.h>
 
 #ifdef NTO
-#include <sys/link.h>
+#  include <sys/link.h>
 extern r_debug _r_debug;
 #else
-#include <link.h>
+#  include <link.h>
 #endif
 
 #define USE_GLIBC_BACKTRACE 1
@@ -77,7 +77,7 @@ static void RegisterJprofShutdown() {
 #if defined(i386) || defined(_i386) || defined(__x86_64__)
 JPROF_STATIC void CrawlStack(malloc_log_entry *me, void *stack_top,
                              void *top_instr_ptr) {
-#if USE_GLIBC_BACKTRACE
+#  if USE_GLIBC_BACKTRACE
   // This probably works on more than x86!  But we need a way to get the
   // top instruction pointer, which is kindof arch-specific
   void *array[500];
@@ -96,19 +96,19 @@ JPROF_STATIC void CrawlStack(malloc_log_entry *me, void *stack_top,
   }
   me->numpcs = numpcs;
 
-#else
+#  else
   // original code - this breaks on many platforms
   void **bp;
-#if defined(__i386)
+#    if defined(__i386)
   __asm__("movl %%ebp, %0" : "=g"(bp));
-#elif defined(__x86_64__)
+#    elif defined(__x86_64__)
   __asm__("movq %%rbp, %0" : "=g"(bp));
-#else
+#    else
   // It would be nice if this worked uniformly, but at least on i386 and
   // x86_64, it stopped working with gcc 4.1, because it points to the
   // end of the saved registers instead of the start.
   bp = __builtin_frame_address(0);
-#endif
+#    endif
   u_long numpcs = 0;
   bool tracing = false;
 
@@ -129,7 +129,7 @@ JPROF_STATIC void CrawlStack(malloc_log_entry *me, void *stack_top,
     bp = nextbp;
   }
   me->numpcs = numpcs;
-#endif
+#  endif
 }
 #endif
 
@@ -142,11 +142,11 @@ static bool circular = false;
 #if defined(linux) || defined(NTO)
 static void DumpAddressMap() {
   // Turn off the timer so we don't get interrupts during shutdown
-#if defined(linux)
+#  if defined(linux)
   if (rtcHz) {
     enableRTCSignals(false);
   } else
-#endif
+#  endif
   {
     startSignalCounter(0);
   }
@@ -167,10 +167,10 @@ static void DumpAddressMap() {
         mme.address = map->l_addr;
         write(mfd, &mme, sizeof(mme));
         write(mfd, map->l_name, mme.nameLen);
-#if 0
+#  if 0
 	write(1, map->l_name, mme.nameLen);
 	write(1, "\n", 1);
-#endif
+#  endif
       }
       map = map->l_next;
     }
@@ -203,11 +203,11 @@ static void EndProfilingHook(int signum) {
 // proper usage would be a template, including the function to find the
 // size of an entry, or include a size header explicitly to each entry.
 #if defined(linux)
-#define DUMB_LOCK() pthread_mutex_lock(&mutex);
-#define DUMB_UNLOCK() pthread_mutex_unlock(&mutex);
+#  define DUMB_LOCK() pthread_mutex_lock(&mutex);
+#  define DUMB_UNLOCK() pthread_mutex_unlock(&mutex);
 #else
-#define DUMB_LOCK() FIXME()
-#define DUMB_UNLOCK() FIXME()
+#  define DUMB_LOCK() FIXME()
+#  define DUMB_UNLOCK() FIXME()
 #endif
 
 class DumbCircularBuffer {
@@ -611,7 +611,7 @@ NS_EXPORT_(void) setupProfilingStuff(void) {
         timerMilliSec = 0; /* This makes JP_FIRST work right. */
         realTime = 1;      /* It's the _R_TC and all.  ;) */
 
-#define IS_POWER_OF_TWO(x) (((x) & ((x)-1)) == 0)
+#  define IS_POWER_OF_TWO(x) (((x) & ((x)-1)) == 0)
 
         if (!IS_POWER_OF_TWO(rtcHz) || rtcHz < 2) {
           fprintf(stderr,

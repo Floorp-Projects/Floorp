@@ -10,11 +10,11 @@
 #include "mozilla/plugins/PPluginInstanceParent.h"
 #include "mozilla/plugins/PluginScriptableObjectParent.h"
 #if defined(OS_WIN)
-#include "mozilla/gfx/SharedDIBWin.h"
-#include <d3d10_1.h>
-#include "nsRefPtrHashtable.h"
+#  include "mozilla/gfx/SharedDIBWin.h"
+#  include <d3d10_1.h>
+#  include "nsRefPtrHashtable.h"
 #elif defined(MOZ_WIDGET_COCOA)
-#include "mozilla/gfx/QuartzSupport.h"
+#  include "mozilla/gfx/QuartzSupport.h"
 #endif
 
 #include "npfunctions.h"

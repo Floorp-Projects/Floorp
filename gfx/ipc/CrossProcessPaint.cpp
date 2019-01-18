@@ -24,11 +24,11 @@
 // #define ENABLE_PAINT_LOG 1
 
 #if ENABLE_PAINT_LOG
-#define PF_LOG(...) printf_stderr("PaintFragment: " __VA_ARGS__)
-#define CPP_LOG(...) printf_stderr("CrossProcessPaint: " __VA_ARGS__)
+#  define PF_LOG(...) printf_stderr("PaintFragment: " __VA_ARGS__)
+#  define CPP_LOG(...) printf_stderr("CrossProcessPaint: " __VA_ARGS__)
 #else
-#define PF_LOG(...)
-#define CPP_LOG(...)
+#  define PF_LOG(...)
+#  define CPP_LOG(...)
 #endif
 
 namespace mozilla {

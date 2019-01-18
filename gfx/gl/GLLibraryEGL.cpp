@@ -19,10 +19,10 @@
 #include "nsIGfxInfo.h"
 #include "nsPrintfCString.h"
 #ifdef XP_WIN
-#include "mozilla/gfx/DeviceManagerDx.h"
-#include "nsWindowsHelpers.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "nsWindowsHelpers.h"
 
-#include <d3d11.h>
+#  include <d3d11.h>
 #endif
 #include "OGLShaderProgram.h"
 #include "prenv.h"
@@ -32,12 +32,12 @@
 #include "gfxPrefs.h"
 #include "ScopedGLHelpers.h"
 #ifdef MOZ_WIDGET_GTK
-#include <gdk/gdk.h>
-#ifdef MOZ_WAYLAND
-#include <gdk/gdkwayland.h>
-#include <dlfcn.h>
-#endif  // MOZ_WIDGET_GTK
-#endif  // MOZ_WAYLAND
+#  include <gdk/gdk.h>
+#  ifdef MOZ_WAYLAND
+#    include <gdk/gdkwayland.h>
+#    include <dlfcn.h>
+#  endif  // MOZ_WIDGET_GTK
+#endif    // MOZ_WAYLAND
 
 namespace mozilla {
 namespace gl {
@@ -390,11 +390,11 @@ bool GLLibraryEGL::DoEnsureInitialized(bool forceAccel,
 
       if (LoadLibrarySystem32(L"d3dcompiler_47.dll")) break;
 
-#ifdef MOZ_D3DCOMPILER_VISTA_DLL
+#  ifdef MOZ_D3DCOMPILER_VISTA_DLL
       if (LoadLibraryForEGLOnWindows(
               NS_LITERAL_STRING(NS_STRINGIFY(MOZ_D3DCOMPILER_VISTA_DLL))))
         break;
-#endif
+#  endif
 
       MOZ_ASSERT(false, "d3dcompiler DLL loading failed.");
     } while (false);
@@ -414,19 +414,19 @@ bool GLLibraryEGL::DoEnsureInitialized(bool forceAccel,
   // On non-Windows (Android) we use system copies of libEGL. We look for
   // the APITrace lib, libEGL.so, and libEGL.so.1 in that order.
 
-#if defined(ANDROID)
+#  if defined(ANDROID)
   if (!mEGLLibrary) mEGLLibrary = LoadApitraceLibrary();
-#endif
+#  endif
 
   if (!mEGLLibrary) {
     printf_stderr("Attempting load of libEGL.so\n");
     mEGLLibrary = PR_LoadLibrary("libEGL.so");
   }
-#if defined(XP_UNIX)
+#  if defined(XP_UNIX)
   if (!mEGLLibrary) {
     mEGLLibrary = PR_LoadLibrary("libEGL.so.1");
   }
-#endif
+#  endif
 
   if (!mEGLLibrary) {
     NS_WARNING("Couldn't load EGL LIB.");

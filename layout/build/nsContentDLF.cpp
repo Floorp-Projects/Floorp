@@ -31,7 +31,7 @@
 #include "nsMimeTypes.h"
 #include "DecoderTraits.h"
 #ifdef MOZ_XUL
-#include "XULDocument.h"
+#  include "XULDocument.h"
 #endif
 
 // plugins

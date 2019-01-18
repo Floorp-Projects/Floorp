@@ -14,7 +14,7 @@
 #include "nsIFile.h"
 
 #ifdef XP_UNIX
-#include <sys/stat.h>
+#  include <sys/stat.h>
 #endif
 
 namespace mozilla {
@@ -107,7 +107,7 @@ Result<Ok, nsresult> MemMapSnapshot::Freeze(AutoMemMap& aMem) {
 }
 
 #else
-#error "Unsupported build configuration"
+#  error "Unsupported build configuration"
 #endif
 
 }  // namespace ipc

@@ -23,8 +23,8 @@
 #include <stdarg.h>
 
 #if defined(GP_OS_windows)
-#include <windows.h>
-#define getpid GetCurrentProcessId
+#  include <windows.h>
+#  define getpid GetCurrentProcessId
 #endif
 
 #define MAX_SIZE_LOG (1024 * 128)

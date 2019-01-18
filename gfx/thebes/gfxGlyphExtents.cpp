@@ -9,7 +9,7 @@
 using namespace mozilla;
 
 #ifdef DEBUG_roc
-#define DEBUG_TEXT_RUN_STORAGE_METRICS
+#  define DEBUG_TEXT_RUN_STORAGE_METRICS
 #endif
 
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS

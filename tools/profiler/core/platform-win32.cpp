@@ -61,7 +61,7 @@ static void PopulateRegsFromContext(Registers& aRegs, CONTEXT* aContext) {
   aRegs.mSP = reinterpret_cast<Address>(aContext->Sp);
   aRegs.mFP = reinterpret_cast<Address>(aContext->Fp);
 #else
-#error "bad arch"
+#  error "bad arch"
 #endif
   aRegs.mLR = 0;
 }

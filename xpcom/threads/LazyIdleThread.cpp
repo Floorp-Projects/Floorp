@@ -16,12 +16,12 @@
 #include "mozilla/Services.h"
 
 #ifdef DEBUG
-#define ASSERT_OWNING_THREAD()                           \
-  do {                                                   \
-    MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread()); \
-  } while (0)
+#  define ASSERT_OWNING_THREAD()                           \
+    do {                                                   \
+      MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread()); \
+    } while (0)
 #else
-#define ASSERT_OWNING_THREAD() /* nothing */
+#  define ASSERT_OWNING_THREAD() /* nothing */
 #endif
 
 namespace mozilla {

@@ -20,7 +20,7 @@
 #include "mozilla/SyncRunnable.h"
 
 #if XP_WIN
-#include <objbase.h>
+#  include <objbase.h>
 #endif
 
 namespace mozilla {

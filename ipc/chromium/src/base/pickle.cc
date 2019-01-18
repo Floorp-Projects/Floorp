@@ -68,11 +68,11 @@ struct Copier {
 template <typename T>
 struct Copier<T, sizeof(uint64_t), false> {
   static void Copy(T* dest, const char* iter) {
-#if MOZ_LITTLE_ENDIAN
+#  if MOZ_LITTLE_ENDIAN
     static const int loIndex = 0, hiIndex = 1;
-#else
+#  else
     static const int loIndex = 1, hiIndex = 0;
-#endif
+#  endif
     static_assert(MOZ_ALIGNOF(uint32_t*) == MOZ_ALIGNOF(void*),
                   "Pointers have different alignments");
     const uint32_t* src = reinterpret_cast<const uint32_t*>(iter);

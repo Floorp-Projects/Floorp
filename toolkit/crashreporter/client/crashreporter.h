@@ -6,9 +6,9 @@
 #define CRASHREPORTER_H__
 
 #ifdef _MSC_VER
-#pragma warning(push)
+#  pragma warning(push)
 // Disable exception handler warnings.
-#pragma warning(disable : 4530)
+#  pragma warning(disable : 4530)
 #endif
 
 #include <string>
@@ -23,26 +23,26 @@
 
 #if defined(XP_WIN32)
 
-#include <windows.h>
+#  include <windows.h>
 
-#define UI_SNPRINTF _snprintf
-#define UI_DIR_SEPARATOR "\\"
+#  define UI_SNPRINTF _snprintf
+#  define UI_DIR_SEPARATOR "\\"
 
 std::string WideToUTF8(const std::wstring& wide, bool* success = 0);
 
 #else
 
-#define UI_SNPRINTF snprintf
-#define UI_DIR_SEPARATOR "/"
+#  define UI_SNPRINTF snprintf
+#  define UI_DIR_SEPARATOR "/"
 
 #endif
 
 #define UI_CRASH_REPORTER_FILENAME "crashreporter"
 #define UI_MINIDUMP_ANALYZER_FILENAME "minidump-analyzer"
 #ifndef XP_MACOSX
-#define UI_PING_SENDER_FILENAME "pingsender"
+#  define UI_PING_SENDER_FILENAME "pingsender"
 #else
-#define UI_PING_SENDER_FILENAME "../../../pingsender"
+#  define UI_PING_SENDER_FILENAME "../../../pingsender"
 #endif
 
 typedef std::map<std::string, std::string> StringTable;
@@ -159,7 +159,7 @@ bool UIRunProgram(const std::string& exename,
 std::string UIGetEnv(const std::string& name);
 
 #ifdef _MSC_VER
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif
 
 #endif

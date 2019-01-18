@@ -31,15 +31,15 @@
 #include <algorithm>
 
 #ifdef DEBUG
-#undef NOISY_INLINEDIR_ALIGN
-#undef NOISY_BLOCKDIR_ALIGN
-#undef NOISY_REFLOW
-#undef REALLY_NOISY_REFLOW
-#undef NOISY_PUSHING
-#undef REALLY_NOISY_PUSHING
-#undef NOISY_CAN_PLACE_FRAME
-#undef NOISY_TRIM
-#undef REALLY_NOISY_TRIM
+#  undef NOISY_INLINEDIR_ALIGN
+#  undef NOISY_BLOCKDIR_ALIGN
+#  undef NOISY_REFLOW
+#  undef REALLY_NOISY_REFLOW
+#  undef NOISY_PUSHING
+#  undef REALLY_NOISY_PUSHING
+#  undef NOISY_CAN_PLACE_FRAME
+#  undef NOISY_TRIM
+#  undef REALLY_NOISY_TRIM
 #endif
 
 using namespace mozilla;

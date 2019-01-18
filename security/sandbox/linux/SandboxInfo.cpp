@@ -24,7 +24,7 @@
 #include "sandbox/linux/system_headers/linux_syscalls.h"
 
 #ifdef MOZ_VALGRIND
-#include <valgrind/valgrind.h>
+#  include <valgrind/valgrind.h>
 #endif
 
 // A note about assertions: in general, the worst thing this module

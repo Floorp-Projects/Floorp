@@ -430,40 +430,40 @@ enum class RunnableKind { Standard, Cancelable, Idle, IdleWithTimer };
 // Implementing nsINamed on Runnable bloats vtables for the hundreds of
 // Runnable subclasses that we have, so we want to avoid that overhead
 // when we're not using nsINamed for anything.
-#ifndef RELEASE_OR_BETA
-#define MOZ_COLLECTING_RUNNABLE_TELEMETRY
-#endif
+#  ifndef RELEASE_OR_BETA
+#    define MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#  endif
 
 // This class is designed to be subclassed.
 class Runnable : public nsIRunnable
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
     ,
                  public nsINamed
-#endif
+#  endif
 {
  public:
   // Runnable refcount changes are preserved when recording/replaying to ensure
   // that they are destroyed at consistent points.
   NS_DECL_THREADSAFE_ISUPPORTS_WITH_RECORDING(recordreplay::Behavior::Preserve)
   NS_DECL_NSIRUNNABLE
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   NS_DECL_NSINAMED
-#endif
+#  endif
 
   Runnable() = delete;
 
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   explicit Runnable(const char* aName) : mName(aName) {}
-#else
+#  else
   explicit Runnable(const char* aName) {}
-#endif
+#  endif
 
  protected:
   virtual ~Runnable() {}
 
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   const char* mName = nullptr;
-#endif
+#  endif
 
  private:
   Runnable(const Runnable&) = delete;
@@ -514,9 +514,9 @@ class PrioritizableRunnable : public Runnable, public nsIRunnablePriority {
   PrioritizableRunnable(already_AddRefed<nsIRunnable>&& aRunnable,
                         uint32_t aPriority);
 
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   NS_IMETHOD GetName(nsACString& aName) override;
-#endif
+#  endif
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
@@ -771,7 +771,7 @@ struct nsRunnableMethodTraits<PtrType, R (C::*)(As...) const, Owning, Kind> {
   static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 
-#ifdef NS_HAVE_STDCALL
+#  ifdef NS_HAVE_STDCALL
 template <typename PtrType, class C, typename R, bool Owning,
           mozilla::RunnableKind Kind, typename... As>
 struct nsRunnableMethodTraits<PtrType, R (__stdcall C::*)(As...), Owning,
@@ -820,7 +820,7 @@ struct nsRunnableMethodTraits<PtrType, R (NS_STDCALL C::*)() const, Owning,
   typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
   static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
-#endif
+#  endif
 
 // IsParameterStorageClass<T>::value is true if T is a parameter-storage class
 // that will be recognized by NS_New[NonOwning]RunnableMethodWithArg[s] to

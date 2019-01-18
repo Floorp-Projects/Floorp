@@ -20,11 +20,11 @@
 #include <unordered_map>
 
 #ifdef XP_MACOSX
-#include "mozilla/gfx/UnscaledFontMac.h"
+#  include "mozilla/gfx/UnscaledFontMac.h"
 #elif defined(XP_WIN)
-#include "mozilla/gfx/UnscaledFontDWrite.h"
+#  include "mozilla/gfx/UnscaledFontDWrite.h"
 #else
-#include "mozilla/gfx/UnscaledFontFreeType.h"
+#  include "mozilla/gfx/UnscaledFontFreeType.h"
 #endif
 
 namespace std {

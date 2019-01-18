@@ -12,7 +12,7 @@
 #include "SharedMemory.h"
 
 #ifdef FUZZING
-#include "SharedMemoryFuzzer.h"
+#  include "SharedMemoryFuzzer.h"
 #endif
 
 //

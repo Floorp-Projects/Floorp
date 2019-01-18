@@ -46,7 +46,7 @@
 #include "js/GCHashTable.h"
 #include "js/Wrapper.h"
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"

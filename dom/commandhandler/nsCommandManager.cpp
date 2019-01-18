@@ -82,7 +82,7 @@ nsCommandManager::CommandStatusChanged(const char* aCommandName) {
 }
 
 #if 0
-#pragma mark -
+#  pragma mark -
 #endif
 
 NS_IMETHODIMP

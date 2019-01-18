@@ -18,7 +18,7 @@
 #include "mozilla/ThreadLocal.h"
 #include "nscore.h"  // for NS_FREE_PERMANENT_DATA
 #if !defined(XP_WIN)
-#include "NSPRInterposer.h"
+#  include "NSPRInterposer.h"
 #endif  // !defined(XP_WIN)
 #include "nsXULAppAPI.h"
 #include "PoisonIOInterposer.h"

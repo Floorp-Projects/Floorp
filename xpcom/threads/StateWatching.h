@@ -5,15 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(StateWatching_h_)
-#define StateWatching_h_
+#  define StateWatching_h_
 
-#include "mozilla/AbstractThread.h"
-#include "mozilla/Logging.h"
-#include "mozilla/TaskDispatcher.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
+#  include "mozilla/AbstractThread.h"
+#  include "mozilla/Logging.h"
+#  include "mozilla/TaskDispatcher.h"
+#  include "mozilla/UniquePtr.h"
+#  include "mozilla/Unused.h"
 
-#include "nsISupportsImpl.h"
+#  include "nsISupportsImpl.h"
 
 /*
  * The state-watching machinery automates the process of responding to changes
@@ -59,8 +59,8 @@ namespace mozilla {
 
 extern LazyLogModule gStateWatchingLog;
 
-#define WATCH_LOG(x, ...) \
-  MOZ_LOG(gStateWatchingLog, LogLevel::Debug, (x, ##__VA_ARGS__))
+#  define WATCH_LOG(x, ...) \
+    MOZ_LOG(gStateWatchingLog, LogLevel::Debug, (x, ##__VA_ARGS__))
 
 /*
  * AbstractWatcher is a superclass from which all watchers must inherit.
@@ -295,7 +295,7 @@ class WatchManager {
   RefPtr<AbstractThread> mOwnerThread;
 };
 
-#undef WATCH_LOG
+#  undef WATCH_LOG
 
 }  // namespace mozilla
 

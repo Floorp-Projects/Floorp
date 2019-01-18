@@ -25,7 +25,7 @@
 #include <oaidl.h>
 
 #if !defined(STATE_SYSTEM_NORMAL)
-#define STATE_SYSTEM_NORMAL (0)
+#  define STATE_SYSTEM_NORMAL (0)
 #endif  // !defined(STATE_SYSTEM_NORMAL)
 
 namespace mozilla {

@@ -13,10 +13,10 @@
 #include "gfxPrefs.h"
 
 #if defined(XP_WIN)
-#include <d3d11.h>
-#include "mozilla/gfx/DeviceManagerDx.h"
+#  include <d3d11.h>
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #elif defined(XP_MACOSX)
-#include "mozilla/gfx/MacIOSurface.h"
+#  include "mozilla/gfx/MacIOSurface.h"
 #endif
 
 #include "mozilla/dom/GamepadEventTypes.h"
@@ -24,7 +24,7 @@
 #include "binding/OpenVRKnucklesBinding.h"
 #include "binding/OpenVRViveBinding.h"
 #if defined(XP_WIN)  // Windows Mixed Reality is only available in Windows.
-#include "binding/OpenVRWMRBinding.h"
+#  include "binding/OpenVRWMRBinding.h"
 #endif
 
 #include "VRParent.h"
@@ -32,7 +32,7 @@
 #include "VRThread.h"
 
 #if !defined(M_PI)
-#define M_PI 3.14159265358979323846264338327950288
+#  define M_PI 3.14159265358979323846264338327950288
 #endif
 
 #define BTN_MASK_FROM_ID(_id) ::vr::ButtonMaskFromId(vr::EVRButtonId::_id)

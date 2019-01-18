@@ -108,9 +108,9 @@ typedef PersistentRooted<Value> PersistentRootedValue;
 using jsid = JS::PropertyKey;
 
 #ifdef ENABLE_BIGINT
-#define IF_BIGINT(x, y) x
+#  define IF_BIGINT(x, y) x
 #else
-#define IF_BIGINT(x, y) y
+#  define IF_BIGINT(x, y) y
 #endif
 
 #endif /* js_TypeDecls_h */

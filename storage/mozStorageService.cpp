@@ -29,7 +29,7 @@
 
 #ifdef XP_WIN
 // "windows.h" was included and it can #define lots of things we care about...
-#undef CompareString
+#  undef CompareString
 #endif
 
 #include "nsIPromptService.h"

@@ -41,7 +41,7 @@
 #include "ActorsChild.h"
 
 #ifdef DEBUG
-#include "nsContentUtils.h"  // For assertions.
+#  include "nsContentUtils.h"  // For assertions.
 #endif
 
 namespace mozilla {

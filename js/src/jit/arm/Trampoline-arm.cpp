@@ -11,7 +11,7 @@
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
 #ifdef JS_ION_PERF
-#include "jit/PerfSpewer.h"
+#  include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
 #include "vm/Realm.h"

@@ -40,7 +40,7 @@
 #include "nsIScriptTimeoutHandler.h"
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 #include "Crypto.h"
@@ -53,7 +53,7 @@
 #include "mozilla/dom/ServiceWorkerRegistration.h"
 
 #ifdef XP_WIN
-#undef PostMessage
+#  undef PostMessage
 #endif
 
 extern already_AddRefed<nsIScriptTimeoutHandler> NS_CreateJSTimeoutHandler(

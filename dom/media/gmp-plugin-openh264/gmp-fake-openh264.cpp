@@ -53,9 +53,9 @@
 #include "mozilla/PodOperations.h"
 
 #if defined(_MSC_VER)
-#define PUBLIC_FUNC __declspec(dllexport)
+#  define PUBLIC_FUNC __declspec(dllexport)
 #else
-#define PUBLIC_FUNC
+#  define PUBLIC_FUNC
 #endif
 
 #define BIG_FRAME 10000

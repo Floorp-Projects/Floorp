@@ -43,7 +43,7 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 // Ignore any LOG macro that we inherit from arbitrary headers. (We define our
 // own LOG macro below.)
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 //

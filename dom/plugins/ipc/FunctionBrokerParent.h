@@ -9,7 +9,7 @@
 
 #include "mozilla/plugins/PFunctionBrokerParent.h"
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-#include "sandboxPermissions.h"
+#  include "sandboxPermissions.h"
 #endif
 
 namespace mozilla {

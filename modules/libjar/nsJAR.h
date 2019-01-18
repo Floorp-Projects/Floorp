@@ -144,7 +144,7 @@ class nsJAREnumerator final : public nsStringEnumeratorBase {
 ////////////////////////////////////////////////////////////////////////////////
 
 #if defined(DEBUG_warren) || defined(DEBUG_jband)
-#define ZIP_CACHE_HIT_RATE
+#  define ZIP_CACHE_HIT_RATE
 #endif
 
 class nsZipReaderCache : public nsIZipReaderCache,

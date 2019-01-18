@@ -126,11 +126,11 @@ const nsTPromiseFlatString<T> TPromiseFlatString(
 }
 
 #ifndef PromiseFlatCString
-#define PromiseFlatCString TPromiseFlatString<char>
+#  define PromiseFlatCString TPromiseFlatString<char>
 #endif
 
 #ifndef PromiseFlatString
-#define PromiseFlatString TPromiseFlatString<char16_t>
+#  define PromiseFlatString TPromiseFlatString<char16_t>
 #endif
 
 #endif

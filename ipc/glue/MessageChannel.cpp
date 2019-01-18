@@ -30,7 +30,7 @@
 #include <math.h>
 
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
+#  include "GeckoTaskTracer.h"
 using namespace mozilla::tasktracer;
 #endif
 
@@ -1891,7 +1891,7 @@ void MessageChannel::RunMessage(MessageTask& aTask) {
 
   // Check that we're going to run the first message that's valid to run.
 #if 0
-#ifdef DEBUG
+#  ifdef DEBUG
     nsCOMPtr<nsIEventTarget> messageTarget =
         mListener->GetMessageEventTarget(msg);
 
@@ -1908,7 +1908,7 @@ void MessageChannel::RunMessage(MessageTask& aTask) {
                    aTask.Msg().priority() != task->Msg().priority());
 
     }
-#endif
+#  endif
 #endif
 
   if (!mDeferred.empty()) {
@@ -2329,14 +2329,14 @@ bool MessageChannel::WaitResponse(bool aWaitTimedOut) {
 
 #ifndef OS_WIN
 bool MessageChannel::WaitForSyncNotify(bool /* aHandleWindowsMessages */) {
-#ifdef DEBUG
+#  ifdef DEBUG
   // WARNING: We don't release the lock here. We can't because the link thread
   // could signal at this time and we would miss it. Instead we require
   // ArtificialTimeout() to be extremely simple.
   if (mListener->ArtificialTimeout()) {
     return false;
   }
-#endif
+#  endif
 
   MOZ_RELEASE_ASSERT(!mIsSameThreadChannel,
                      "Wait on same-thread channel will deadlock!");

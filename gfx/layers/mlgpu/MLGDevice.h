@@ -423,8 +423,8 @@ class MLGDevice {
   // MOZ_FORMAT_PRINTF macro does not work on this function, so we
   // disable the warning.
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-security"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wformat-security"
 #endif
   template <typename... T>
   bool Fail(const char* aFailureId) {
@@ -438,7 +438,7 @@ class MLGDevice {
     return Fail(failureId, &message);
   }
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif
 
   void UnmapSharedBuffers();

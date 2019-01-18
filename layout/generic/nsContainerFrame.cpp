@@ -992,7 +992,7 @@ void nsContainerFrame::PositionChildViews(nsIFrame* aFrame) {
  * https://bugzil.la/1424281#c12
  */
 #if defined(_MSC_VER) && !defined(__clang__) && defined(_M_AMD64)
-#pragma optimize("g", off)
+#  pragma optimize("g", off)
 #endif
 void nsContainerFrame::FinishReflowChild(
     nsIFrame* aKidFrame, nsPresContext* aPresContext,
@@ -1036,7 +1036,7 @@ void nsContainerFrame::FinishReflowChild(
   aKidFrame->DidReflow(aPresContext, aReflowInput);
 }
 #if defined(_MSC_VER) && !defined(__clang__) && defined(_M_AMD64)
-#pragma optimize("", on)
+#  pragma optimize("", on)
 #endif
 
 // XXX temporary: hold on to a copy of the old physical version of

@@ -32,7 +32,7 @@
 #include "ProcThreadAttributes.h"
 
 #if defined(MOZ_LAUNCHER_PROCESS)
-#include "SameBinary.h"
+#  include "SameBinary.h"
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
 /**
@@ -56,8 +56,8 @@ static mozilla::LauncherVoidResult PostCreationSetup(HANDLE aChildProcess,
 
 #if !defined( \
     PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON)
-#define PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON \
-  (0x00000001ULL << 60)
+#  define PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON \
+    (0x00000001ULL << 60)
 #endif  // !defined(PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON)
 
 #if (_WIN32_WINNT < 0x0602)

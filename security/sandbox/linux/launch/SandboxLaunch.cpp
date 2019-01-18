@@ -40,13 +40,13 @@
 #include "sandbox/linux/system_headers/linux_syscalls.h"
 
 #ifdef MOZ_X11
-#ifndef MOZ_WIDGET_GTK
-#error "Unknown toolkit"
-#endif
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
-#include "X11UndefineNone.h"
-#include "gfxPlatform.h"
+#  ifndef MOZ_WIDGET_GTK
+#    error "Unknown toolkit"
+#  endif
+#  include <gdk/gdk.h>
+#  include <gdk/gdkx.h>
+#  include "X11UndefineNone.h"
+#  include "gfxPlatform.h"
 #endif
 
 namespace mozilla {

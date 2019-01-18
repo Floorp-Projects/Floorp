@@ -1786,7 +1786,7 @@ void CacheEntry::BackgroundOp(uint32_t aOperations, bool aForceAsync) {
       ++mUseCount;
 
 #ifndef M_LN2
-#define M_LN2 0.69314718055994530942
+#  define M_LN2 0.69314718055994530942
 #endif
 
       // Half-life is dynamic, in seconds.

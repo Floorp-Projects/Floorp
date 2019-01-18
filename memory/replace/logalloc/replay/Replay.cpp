@@ -8,12 +8,12 @@
 #include "mozmemory_wrap.h"
 
 #ifdef _WIN32
-#include <windows.h>
-#include <io.h>
+#  include <windows.h>
+#  include <io.h>
 typedef intptr_t ssize_t;
 #else
-#include <sys/mman.h>
-#include <unistd.h>
+#  include <sys/mman.h>
+#  include <unistd.h>
 #endif
 #include <algorithm>
 #include <cstdio>

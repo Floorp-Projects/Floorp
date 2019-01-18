@@ -30,7 +30,7 @@ typedef struct gr_face gr_face;
 typedef struct FT_MM_Var_ FT_MM_Var;
 
 #ifdef DEBUG
-#include <stdio.h>
+#  include <stdio.h>
 #endif
 
 struct gfxFontStyle;

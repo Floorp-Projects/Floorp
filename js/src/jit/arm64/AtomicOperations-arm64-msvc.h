@@ -11,7 +11,7 @@
 #include "mozilla/Types.h"
 
 #if !defined(_MSC_VER)
-#error "This file only for Microsoft Visual C++"
+#  error "This file only for Microsoft Visual C++"
 #endif
 
 // For overall documentation, see jit/AtomicOperations.h/
@@ -71,18 +71,18 @@ inline T js::jit::AtomicOperations::loadSeqCst(T* addr) {
 namespace js {
 namespace jit {
 
-#define MSC_LOADOP(T)                                                       \
-  template <>                                                               \
-  inline T AtomicOperations::loadSeqCst(T* addr) {                          \
-    MOZ_ASSERT(tier1Constraints(addr));                                     \
-    _ReadWriteBarrier();                                                    \
-    return (T)_InterlockedCompareExchange64((__int64 volatile*)addr, 0, 0); \
-  }
+#  define MSC_LOADOP(T)                                                       \
+    template <>                                                               \
+    inline T AtomicOperations::loadSeqCst(T* addr) {                          \
+      MOZ_ASSERT(tier1Constraints(addr));                                     \
+      _ReadWriteBarrier();                                                    \
+      return (T)_InterlockedCompareExchange64((__int64 volatile*)addr, 0, 0); \
+    }
 
 MSC_LOADOP(int64_t)
 MSC_LOADOP(uint64_t)
 
-#undef MSC_LOADOP
+#  undef MSC_LOADOP
 
 }  // namespace jit
 }  // namespace js
@@ -100,25 +100,25 @@ inline void js::jit::AtomicOperations::storeSeqCst(T* addr, T val) {
 namespace js {
 namespace jit {
 
-#define MSC_STOREOP(T)                                             \
-  template <>                                                      \
-  inline void AtomicOperations::storeSeqCst(T* addr, T val) {      \
-    MOZ_ASSERT(tier1Constraints(addr));                            \
-    _ReadWriteBarrier();                                           \
-    T oldval = *addr;                                              \
-    for (;;) {                                                     \
-      T nextval = (T)_InterlockedCompareExchange64(                \
-          (__int64 volatile*)addr, (__int64)val, (__int64)oldval); \
-      if (nextval == oldval) break;                                \
-      oldval = nextval;                                            \
-    }                                                              \
-    _ReadWriteBarrier();                                           \
-  }
+#  define MSC_STOREOP(T)                                             \
+    template <>                                                      \
+    inline void AtomicOperations::storeSeqCst(T* addr, T val) {      \
+      MOZ_ASSERT(tier1Constraints(addr));                            \
+      _ReadWriteBarrier();                                           \
+      T oldval = *addr;                                              \
+      for (;;) {                                                     \
+        T nextval = (T)_InterlockedCompareExchange64(                \
+            (__int64 volatile*)addr, (__int64)val, (__int64)oldval); \
+        if (nextval == oldval) break;                                \
+        oldval = nextval;                                            \
+      }                                                              \
+      _ReadWriteBarrier();                                           \
+    }
 
 MSC_STOREOP(int64_t)
 MSC_STOREOP(uint64_t)
 
-#undef MSC_STOREOP
+#  undef MSC_STOREOP
 
 }  // namespace jit
 }  // namespace js
@@ -132,21 +132,21 @@ MSC_STOREOP(uint64_t)
   }
 
 #ifdef _M_IX86
-#define MSC_EXCHANGEOP_CAS(T)                                      \
-  template <>                                                      \
-  inline T AtomicOperations::exchangeSeqCst(T* addr, T val) {      \
-    MOZ_ASSERT(tier1Constraints(addr));                            \
-    _ReadWriteBarrier();                                           \
-    T oldval = *addr;                                              \
-    for (;;) {                                                     \
-      T nextval = (T)_InterlockedCompareExchange64(                \
-          (__int64 volatile*)addr, (__int64)val, (__int64)oldval); \
-      if (nextval == oldval) break;                                \
-      oldval = nextval;                                            \
-    }                                                              \
-    _ReadWriteBarrier();                                           \
-    return oldval;                                                 \
-  }
+#  define MSC_EXCHANGEOP_CAS(T)                                      \
+    template <>                                                      \
+    inline T AtomicOperations::exchangeSeqCst(T* addr, T val) {      \
+      MOZ_ASSERT(tier1Constraints(addr));                            \
+      _ReadWriteBarrier();                                           \
+      T oldval = *addr;                                              \
+      for (;;) {                                                     \
+        T nextval = (T)_InterlockedCompareExchange64(                \
+            (__int64 volatile*)addr, (__int64)val, (__int64)oldval); \
+        if (nextval == oldval) break;                                \
+        oldval = nextval;                                            \
+      }                                                              \
+      _ReadWriteBarrier();                                           \
+      return oldval;                                                 \
+    }
 #endif  // _M_IX86
 
 namespace js {
@@ -212,21 +212,22 @@ MSC_CAS(uint64_t, __int64, _InterlockedCompareExchange64)
   }
 
 #ifdef _M_IX86
-#define MSC_FETCHADDOP_CAS(T)                                                 \
-  template <>                                                                 \
-  inline T AtomicOperations::fetchAddSeqCst(T* addr, T val) {                 \
-    MOZ_ASSERT(tier1Constraints(addr));                                       \
-    _ReadWriteBarrier();                                                      \
-    T oldval = *addr;                                                         \
-    for (;;) {                                                                \
-      T nextval = (T)_InterlockedCompareExchange64(                           \
-          (__int64 volatile*)addr, (__int64)(oldval + val), (__int64)oldval); \
-      if (nextval == oldval) break;                                           \
-      oldval = nextval;                                                       \
-    }                                                                         \
-    _ReadWriteBarrier();                                                      \
-    return oldval;                                                            \
-  }
+#  define MSC_FETCHADDOP_CAS(T)                                               \
+    template <>                                                               \
+    inline T AtomicOperations::fetchAddSeqCst(T* addr, T val) {               \
+      MOZ_ASSERT(tier1Constraints(addr));                                     \
+      _ReadWriteBarrier();                                                    \
+      T oldval = *addr;                                                       \
+      for (;;) {                                                              \
+        T nextval = (T)_InterlockedCompareExchange64((__int64 volatile*)addr, \
+                                                     (__int64)(oldval + val), \
+                                                     (__int64)oldval);        \
+        if (nextval == oldval) break;                                         \
+        oldval = nextval;                                                     \
+      }                                                                       \
+      _ReadWriteBarrier();                                                    \
+      return oldval;                                                          \
+    }
 #endif  // _M_IX86
 
 namespace js {
@@ -276,29 +277,30 @@ MSC_FETCHSUBOP(uint64_t)
   MSC_FETCHBITOPX(T, U, fetchXorSeqCst, xorop)
 
 #ifdef _M_IX86
-#define AND_OP &
-#define OR_OP |
-#define XOR_OP ^
-#define MSC_FETCHBITOPX_CAS(T, name, OP)                                       \
-  template <>                                                                  \
-  inline T AtomicOperations::name(T* addr, T val) {                            \
-    MOZ_ASSERT(tier1Constraints(addr));                                        \
-    _ReadWriteBarrier();                                                       \
-    T oldval = *addr;                                                          \
-    for (;;) {                                                                 \
-      T nextval = (T)_InterlockedCompareExchange64(                            \
-          (__int64 volatile*)addr, (__int64)(oldval OP val), (__int64)oldval); \
-      if (nextval == oldval) break;                                            \
-      oldval = nextval;                                                        \
-    }                                                                          \
-    _ReadWriteBarrier();                                                       \
-    return oldval;                                                             \
-  }
+#  define AND_OP &
+#  define OR_OP |
+#  define XOR_OP ^
+#  define MSC_FETCHBITOPX_CAS(T, name, OP)                                     \
+    template <>                                                                \
+    inline T AtomicOperations::name(T* addr, T val) {                          \
+      MOZ_ASSERT(tier1Constraints(addr));                                      \
+      _ReadWriteBarrier();                                                     \
+      T oldval = *addr;                                                        \
+      for (;;) {                                                               \
+        T nextval = (T)_InterlockedCompareExchange64((__int64 volatile*)addr,  \
+                                                     (__int64)(oldval OP val), \
+                                                     (__int64)oldval);         \
+        if (nextval == oldval) break;                                          \
+        oldval = nextval;                                                      \
+      }                                                                        \
+      _ReadWriteBarrier();                                                     \
+      return oldval;                                                           \
+    }
 
-#define MSC_FETCHBITOP_CAS(T)                    \
-  MSC_FETCHBITOPX_CAS(T, fetchAndSeqCst, AND_OP) \
-  MSC_FETCHBITOPX_CAS(T, fetchOrSeqCst, OR_OP)   \
-  MSC_FETCHBITOPX_CAS(T, fetchXorSeqCst, XOR_OP)
+#  define MSC_FETCHBITOP_CAS(T)                    \
+    MSC_FETCHBITOPX_CAS(T, fetchAndSeqCst, AND_OP) \
+    MSC_FETCHBITOPX_CAS(T, fetchOrSeqCst, OR_OP)   \
+    MSC_FETCHBITOPX_CAS(T, fetchXorSeqCst, XOR_OP)
 
 #endif
 

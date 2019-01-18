@@ -17,7 +17,7 @@
 #include "nsXULAppAPI.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "jni.h"
+#  include "jni.h"
 
 extern "C" NS_EXPORT void GeckoStart(JNIEnv* aEnv, char** argv, int argc,
                                      const mozilla::StaticXREAppData& aAppData);

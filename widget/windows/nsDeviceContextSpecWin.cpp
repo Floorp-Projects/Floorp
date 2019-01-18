@@ -34,12 +34,12 @@
 #include "mozilla/gfx/Logging.h"
 
 #ifdef MOZ_ENABLE_SKIA_PDF
-#include "mozilla/gfx/PrintTargetSkPDF.h"
-#include "mozilla/gfx/PrintTargetEMF.h"
-#include "nsIUUIDGenerator.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsPrintfCString.h"
-#include "nsThreadUtils.h"
+#  include "mozilla/gfx/PrintTargetSkPDF.h"
+#  include "mozilla/gfx/PrintTargetEMF.h"
+#  include "nsIUUIDGenerator.h"
+#  include "nsDirectoryServiceDefs.h"
+#  include "nsPrintfCString.h"
+#  include "nsThreadUtils.h"
 #endif
 
 static mozilla::LazyLogModule kWidgetPrintingLogMod("printing-widget");

@@ -39,8 +39,8 @@
 #include <pthread.h>
 #include <gdk/gdk.h>
 #ifdef MOZ_X11
-#include <gdk/gdkx.h>
-#include <X11/extensions/shape.h>
+#  include <gdk/gdkx.h>
+#  include <X11/extensions/shape.h>
 #endif
 #include <glib.h>
 #include <gtk/gtk.h>

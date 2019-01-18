@@ -43,27 +43,27 @@
  */
 
 #ifndef GSS_CALLCONV
-#if defined(_WIN32)
-#define GSS_CALLCONV __stdcall
-#define GSS_CALLCONV_C __cdecl
-#else
-#define GSS_CALLCONV
-#define GSS_CALLCONV_C
-#endif
+#  if defined(_WIN32)
+#    define GSS_CALLCONV __stdcall
+#    define GSS_CALLCONV_C __cdecl
+#  else
+#    define GSS_CALLCONV
+#    define GSS_CALLCONV_C
+#  endif
 #endif /* GSS_CALLCONV */
 
 #ifdef GSS_USE_FUNCTION_POINTERS
-#ifdef _WIN32
-#undef GSS_CALLCONV
-#define GSS_CALLCONV
-#define GSS_FUNC(f) (__stdcall * f##_type)
+#  ifdef _WIN32
+#    undef GSS_CALLCONV
+#    define GSS_CALLCONV
+#    define GSS_FUNC(f) (__stdcall * f##_type)
+#  else
+#    define GSS_FUNC(f) (*f##_type)
+#  endif
+#  define GSS_MAKE_TYPEDEF typedef
 #else
-#define GSS_FUNC(f) (*f##_type)
-#endif
-#define GSS_MAKE_TYPEDEF typedef
-#else
-#define GSS_FUNC(f) f
-#define GSS_MAKE_TYPEDEF
+#  define GSS_FUNC(f) f
+#  define GSS_MAKE_TYPEDEF
 #endif
 
 /*
@@ -76,26 +76,26 @@
  */
 
 #ifndef SIZEOF_LONG
-#undef SIZEOF_LONG
+#  undef SIZEOF_LONG
 #endif
 #ifndef SIZEOF_SHORT
-#undef SIZEOF_SHORT
+#  undef SIZEOF_SHORT
 #endif
 
 #ifndef EXTERN_C_BEGIN
-#ifdef __cplusplus
-#define EXTERN_C_BEGIN extern "C" {
-#define EXTERN_C_END }
-#else
-#define EXTERN_C_BEGIN
-#define EXTERN_C_END
-#endif
+#  ifdef __cplusplus
+#    define EXTERN_C_BEGIN extern "C" {
+#    define EXTERN_C_END }
+#  else
+#    define EXTERN_C_BEGIN
+#    define EXTERN_C_END
+#  endif
 #endif
 
 EXTERN_C_BEGIN
 
 #if defined(XP_MACOSX)
-#pragma pack(push, 2)
+#  pragma pack(push, 2)
 #endif
 
 /*
@@ -133,9 +133,9 @@ typedef unsigned int gss_uint32;
  * is defined correctly.
  */
 
-#if sizeof(gss_uint32) != sizeof(OM_uint32)
-#error Incompatible definition of OM_uint32 from xom.h
-#endif
+#  if sizeof(gss_uint32) != sizeof(OM_uint32)
+#    error Incompatible definition of OM_uint32 from xom.h
+#  endif
 
 typedef OM_object_identifier gss_OID_desc, *gss_OID;
 
@@ -786,7 +786,7 @@ OM_uint32 GSS_CALLCONV GSS_FUNC(gss_unseal)(
 );
 
 #if defined(XP_MACOSX)
-#pragma pack(pop)
+#  pragma pack(pop)
 #endif
 
 EXTERN_C_END

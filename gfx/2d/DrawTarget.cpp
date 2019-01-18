@@ -15,8 +15,8 @@
 #include "BufferUnrotate.h"
 
 #ifdef USE_NEON
-#include "mozilla/arm.h"
-#include "LuminanceNEON.h"
+#  include "mozilla/arm.h"
+#  include "LuminanceNEON.h"
 #endif
 
 namespace mozilla {
@@ -26,15 +26,15 @@ namespace gfx {
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.
  */
 #ifdef IS_BIG_ENDIAN
-#define GFX_ARGB32_OFFSET_A 0
-#define GFX_ARGB32_OFFSET_R 1
-#define GFX_ARGB32_OFFSET_G 2
-#define GFX_ARGB32_OFFSET_B 3
+#  define GFX_ARGB32_OFFSET_A 0
+#  define GFX_ARGB32_OFFSET_R 1
+#  define GFX_ARGB32_OFFSET_G 2
+#  define GFX_ARGB32_OFFSET_B 3
 #else
-#define GFX_ARGB32_OFFSET_A 3
-#define GFX_ARGB32_OFFSET_R 2
-#define GFX_ARGB32_OFFSET_G 1
-#define GFX_ARGB32_OFFSET_B 0
+#  define GFX_ARGB32_OFFSET_A 3
+#  define GFX_ARGB32_OFFSET_R 2
+#  define GFX_ARGB32_OFFSET_G 1
+#  define GFX_ARGB32_OFFSET_B 0
 #endif
 
 // c = n / 255

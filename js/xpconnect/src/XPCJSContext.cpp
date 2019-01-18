@@ -65,12 +65,12 @@
 
 #if defined(XP_LINUX) && !defined(ANDROID)
 // For getrlimit and min/max.
-#include <algorithm>
-#include <sys/resource.h>
+#  include <algorithm>
+#  include <sys/resource.h>
 #endif
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 static MOZ_THREAD_LOCAL(XPCJSContext*) gTlsContext;
@@ -83,7 +83,7 @@ using mozilla::dom::AutoEntryScript;
 // The watchdog thread loop is pretty trivial, and should not require much stack
 // space to do its job. So only give it 32KiB or the platform minimum.
 #if !defined(PTHREAD_STACK_MIN)
-#define PTHREAD_STACK_MIN 0
+#  define PTHREAD_STACK_MIN 0
 #endif
 static constexpr size_t kWatchdogStackSize =
     PTHREAD_STACK_MIN < 32 * 1024 ? 32 * 1024 : PTHREAD_STACK_MIN;
@@ -989,13 +989,13 @@ static size_t GetWindowsStackSize() {
   // First, get the stack base. Because the stack grows down, this is the top
   // of the stack.
   const uint8_t* stackTop;
-#ifdef _WIN64
+#  ifdef _WIN64
   PNT_TIB64 pTib = reinterpret_cast<PNT_TIB64>(NtCurrentTeb());
   stackTop = reinterpret_cast<const uint8_t*>(pTib->StackBase);
-#else
+#  else
   PNT_TIB pTib = reinterpret_cast<PNT_TIB>(NtCurrentTeb());
   stackTop = reinterpret_cast<const uint8_t*>(pTib->StackBase);
-#endif
+#  endif
 
   // Now determine the stack bottom. Note that we can't use tib->StackLimit,
   // because that's the size of the committed area and we're also interested
@@ -1095,15 +1095,15 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
   // Most Linux distributions set default stack size to 8MB.  Use it as the
   // maximum value.
   const size_t kStackQuotaMax = 8 * 1024 * 1024;
-#if defined(MOZ_ASAN) || defined(DEBUG)
+#  if defined(MOZ_ASAN) || defined(DEBUG)
   // Bug 803182: account for the 4x difference in the size of js::Interpret
   // between optimized and debug builds.  We use 2x since the JIT part
   // doesn't increase much.
   // See the standalone MOZ_ASAN branch below for the ASan case.
   const size_t kStackQuotaMin = 2 * kDefaultStackQuota;
-#else
+#  else
   const size_t kStackQuotaMin = kDefaultStackQuota;
-#endif
+#  endif
   // Allocate 128kB margin for the safe space.
   const size_t kStackSafeMargin = 128 * 1024;
 
@@ -1114,25 +1114,25 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
                               kStackQuotaMax - kStackSafeMargin),
                      kStackQuotaMin)
           : kStackQuotaMin;
-#if defined(MOZ_ASAN)
+#  if defined(MOZ_ASAN)
   // See the standalone MOZ_ASAN branch below for the ASan case.
   const size_t kTrustedScriptBuffer = 450 * 1024;
-#else
+#  else
   const size_t kTrustedScriptBuffer = 180 * 1024;
-#endif
+#  endif
 #elif defined(XP_WIN)
   // 1MB is the default stack size on Windows. We use the -STACK linker flag
   // (see WIN32_EXE_LDFLAGS in config/config.mk) to request a larger stack,
   // so we determine the stack size at runtime.
   const size_t kStackQuota = GetWindowsStackSize();
-#if defined(MOZ_ASAN)
+#  if defined(MOZ_ASAN)
   // See the standalone MOZ_ASAN branch below for the ASan case.
   const size_t kTrustedScriptBuffer = 450 * 1024;
-#else
+#  else
   const size_t kTrustedScriptBuffer = (sizeof(size_t) == 8)
                                           ? 180 * 1024   // win64
                                           : 120 * 1024;  // win32
-#endif
+#  endif
 #elif defined(MOZ_ASAN)
   // ASan requires more stack space due to red-zones, so give it double the
   // default (1MB on 32-bit, 2MB on 64-bit). ASAN stack frame measurements
@@ -1153,11 +1153,11 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
   const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;
 #else
   // Catch-all configuration for other environments.
-#if defined(DEBUG)
+#  if defined(DEBUG)
   const size_t kStackQuota = 2 * kDefaultStackQuota;
-#else
+#  else
   const size_t kStackQuota = kDefaultStackQuota;
-#endif
+#  endif
   // Given the numbers above, we use 50k and 100k trusted buffers on 32-bit
   // and 64-bit respectively.
   const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;

@@ -8,13 +8,13 @@
 
 #if XP_WIN && HAVE_64BIT_BUILD
 
-#include <functional>
-#include <map>
-#include <string>
+#  include <functional>
+#  include <map>
+#  include <string>
 
-#include <windows.h>
-#include <winnt.h>
-#include <imagehlp.h>
+#  include <windows.h>
+#  include <winnt.h>
+#  include <imagehlp.h>
 
 namespace CrashReporter {
 

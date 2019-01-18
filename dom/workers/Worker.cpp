@@ -14,7 +14,7 @@
 #include "WorkerPrivate.h"
 
 #ifdef XP_WIN
-#undef PostMessage
+#  undef PostMessage
 #endif
 
 namespace mozilla {

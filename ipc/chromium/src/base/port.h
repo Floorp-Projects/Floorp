@@ -11,11 +11,11 @@
 #include "build/build_config.h"
 
 #ifdef COMPILER_MSVC
-#define GG_LONGLONG(x) x##I64
-#define GG_ULONGLONG(x) x##UI64
+#  define GG_LONGLONG(x) x##I64
+#  define GG_ULONGLONG(x) x##UI64
 #else
-#define GG_LONGLONG(x) x##LL
-#define GG_ULONGLONG(x) x##ULL
+#  define GG_LONGLONG(x) x##LL
+#  define GG_ULONGLONG(x) x##ULL
 #endif
 
 // Per C99 7.8.14, define __STDC_CONSTANT_MACROS before including <stdint.h>
@@ -46,20 +46,20 @@ namespace base {
 // The C standard says that va_copy is a "macro", not a function.  Trying to
 // use va_list as ref args to a function, as above, breaks some machines.
 #if defined(COMPILER_GCC)
-#define base_va_copy(_a, _b) ::va_copy(_a, _b)
+#  define base_va_copy(_a, _b) ::va_copy(_a, _b)
 #elif defined(COMPILER_MSVC)
-#define base_va_copy(_a, _b) (_a = _b)
+#  define base_va_copy(_a, _b) (_a = _b)
 #else
-#error No va_copy for your compiler
+#  error No va_copy for your compiler
 #endif
 
 }  // namespace base
 
 // Define an OS-neutral wrapper for shared library entry points
 #if defined(OS_WIN)
-#define API_CALL __stdcall
+#  define API_CALL __stdcall
 #elif defined(OS_LINUX) || defined(OS_MACOSX)
-#define API_CALL
+#  define API_CALL
 #endif
 
 #endif  // BASE_PORT_H_

@@ -12,7 +12,7 @@
 #include "mozilla/mscom/Ptr.h"
 #include "mozilla/NotNull.h"
 #if defined(MOZ_CONTENT_SANDBOX)
-#include "mozilla/SandboxSettings.h"
+#  include "mozilla/SandboxSettings.h"
 #endif  // defined(MOZ_CONTENT_SANDBOX)
 
 #include <objbase.h>

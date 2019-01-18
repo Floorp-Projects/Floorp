@@ -12,7 +12,7 @@
 #include "prmem.h"
 #include "prlink.h"
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 // We use a known symbol located in lgpllibs to determine its location.

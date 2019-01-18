@@ -905,10 +905,10 @@ void BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc) {
 #ifdef JS_TRACE_LOGGING
 void BaselineScript::initTraceLogger(JSScript* script,
                                      const Vector<CodeOffset>& offsets) {
-#ifdef DEBUG
+#  ifdef DEBUG
   traceLoggerScriptsEnabled_ = TraceLogTextIdEnabled(TraceLogger_Scripts);
   traceLoggerEngineEnabled_ = TraceLogTextIdEnabled(TraceLogger_Engine);
-#endif
+#  endif
 
   MOZ_ASSERT(offsets.length() == numTraceLoggerToggleOffsets_);
   for (size_t i = 0; i < offsets.length(); i++) {
@@ -949,9 +949,9 @@ void BaselineScript::toggleTraceLoggerScripts(JSScript* script, bool enable) {
     }
   }
 
-#if DEBUG
+#  if DEBUG
   traceLoggerScriptsEnabled_ = enable;
-#endif
+#  endif
 }
 
 void BaselineScript::toggleTraceLoggerEngine(bool enable) {
@@ -971,9 +971,9 @@ void BaselineScript::toggleTraceLoggerEngine(bool enable) {
     }
   }
 
-#if DEBUG
+#  if DEBUG
   traceLoggerEngineEnabled_ = enable;
-#endif
+#  endif
 }
 #endif
 

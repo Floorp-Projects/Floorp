@@ -37,12 +37,12 @@
 #include <algorithm>
 
 #ifndef WINABLEAPI
-#include <winable.h>
+#  include <winable.h>
 #endif
 
 // In WinUser.h, MAPVK_VK_TO_VSC_EX is defined only when WINVER >= 0x0600
 #ifndef MAPVK_VK_TO_VSC_EX
-#define MAPVK_VK_TO_VSC_EX (4)
+#  define MAPVK_VK_TO_VSC_EX (4)
 #endif
 
 namespace mozilla {

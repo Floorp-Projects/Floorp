@@ -7,12 +7,12 @@
 #include "jit/arm/Architecture-arm.h"
 
 #if !defined(JS_SIMULATOR_ARM) && !defined(__APPLE__)
-#include <elf.h>
+#  include <elf.h>
 #endif
 
 #include <fcntl.h>
 #ifdef XP_UNIX
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include "jit/arm/Assembler-arm.h"
@@ -22,23 +22,23 @@
 // The Android NDK and B2G do not include the hwcap.h kernel header, and it is
 // not defined when building the simulator, so inline the header defines we
 // need.
-#define HWCAP_VFP (1 << 6)
-#define HWCAP_NEON (1 << 12)
-#define HWCAP_VFPv3 (1 << 13)
-#define HWCAP_VFPv3D16 (1 << 14) /* also set for VFPv4-D16 */
-#define HWCAP_VFPv4 (1 << 16)
-#define HWCAP_IDIVA (1 << 17)
-#define HWCAP_IDIVT (1 << 18)
-#define HWCAP_VFPD32 (1 << 19) /* set if VFP has 32 regs (not 16) */
-#define AT_HWCAP 16
+#  define HWCAP_VFP (1 << 6)
+#  define HWCAP_NEON (1 << 12)
+#  define HWCAP_VFPv3 (1 << 13)
+#  define HWCAP_VFPv3D16 (1 << 14) /* also set for VFPv4-D16 */
+#  define HWCAP_VFPv4 (1 << 16)
+#  define HWCAP_IDIVA (1 << 17)
+#  define HWCAP_IDIVT (1 << 18)
+#  define HWCAP_VFPD32 (1 << 19) /* set if VFP has 32 regs (not 16) */
+#  define AT_HWCAP 16
 #else
-#include <asm/hwcap.h>
-#if !defined(HWCAP_IDIVA)
-#define HWCAP_IDIVA (1 << 17)
-#endif
-#if !defined(HWCAP_VFPD32)
-#define HWCAP_VFPD32 (1 << 19) /* set if VFP has 32 regs (not 16) */
-#endif
+#  include <asm/hwcap.h>
+#  if !defined(HWCAP_IDIVA)
+#    define HWCAP_IDIVA (1 << 17)
+#  endif
+#  if !defined(HWCAP_VFPD32)
+#    define HWCAP_VFPD32 (1 << 19) /* set if VFP has 32 regs (not 16) */
+#  endif
 #endif
 
 namespace js {
@@ -212,7 +212,7 @@ void InitARMFlags() {
           HWCAP_IDIVA | HWCAP_FIXUP_FAULT;
 #else
 
-#if defined(__linux__) || defined(ANDROID)
+#  if defined(__linux__) || defined(ANDROID)
   // This includes Android and B2G.
   bool readAuxv = false;
   int fd = open("/proc/self/auxv", O_RDONLY);
@@ -261,34 +261,34 @@ void InitARMFlags() {
       forceDoubleCacheFlush = true;
     }
   }
-#endif
+#  endif
 
   // If compiled to use specialized features then these features can be
   // assumed to be present otherwise the compiler would fail to run.
 
-#ifdef JS_CODEGEN_ARM_HARDFP
+#  ifdef JS_CODEGEN_ARM_HARDFP
   // Compiled to use the hardfp ABI.
   flags |= HWCAP_USE_HARDFP_ABI;
-#endif
+#  endif
 
-#if defined(__VFP_FP__) && !defined(__SOFTFP__)
+#  if defined(__VFP_FP__) && !defined(__SOFTFP__)
   // Compiled to use VFP instructions so assume VFP support.
   flags |= HWCAP_VFP;
-#endif
+#  endif
 
-#if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__)
+#  if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__)
   // Compiled to use ARMv7 instructions so assume the ARMv7 arch.
   flags |= HWCAP_ARMv7;
-#endif
+#  endif
 
-#if defined(__APPLE__)
-#if defined(__ARM_NEON__)
+#  if defined(__APPLE__)
+#    if defined(__ARM_NEON__)
   flags |= HWCAP_NEON;
-#endif
-#if defined(__ARMVFPV3__)
+#    endif
+#    if defined(__ARMVFPV3__)
   flags |= HWCAP_VFPv3 | HWCAP_VFPD32
-#endif
-#endif
+#    endif
+#  endif
 
 #endif  // JS_SIMULATOR_ARM
 

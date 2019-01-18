@@ -7,7 +7,7 @@
 #include "PEMFactory.h"
 
 #ifdef MOZ_APPLEMEDIA
-#include "AppleEncoderModule.h"
+#  include "AppleEncoderModule.h"
 #endif
 
 namespace mozilla {

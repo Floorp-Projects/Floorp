@@ -16,14 +16,14 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/Telemetry.h"
 #ifdef MOZ_WIDGET_ANDROID
-#include "mozilla/MediaDrmCDMProxy.h"
+#  include "mozilla/MediaDrmCDMProxy.h"
 #endif
 #include "mozilla/EMEUtils.h"
 #include "nsContentUtils.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsContentTypeParser.h"
 #ifdef XP_WIN
-#include "mozilla/WindowsVersion.h"
+#  include "mozilla/WindowsVersion.h"
 #endif
 #include "nsContentCID.h"
 #include "nsServiceManagerUtils.h"

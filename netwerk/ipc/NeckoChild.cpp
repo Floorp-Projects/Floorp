@@ -25,8 +25,8 @@
 #include "mozilla/net/AltDataOutputStreamChild.h"
 #include "mozilla/net/TrackingDummyChannelChild.h"
 #ifdef MOZ_WEBRTC
-#include "mozilla/net/StunAddrsRequestChild.h"
-#include "mozilla/net/WebrtcProxyChannelChild.h"
+#  include "mozilla/net/StunAddrsRequestChild.h"
+#  include "mozilla/net/WebrtcProxyChannelChild.h"
 #endif
 
 #include "SerializedLoadContext.h"

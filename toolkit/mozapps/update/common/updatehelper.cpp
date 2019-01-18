@@ -8,16 +8,16 @@
 #include <tlhelp32.h>
 #ifndef ONLY_SERVICE_LAUNCHING
 
-#include <stdio.h>
-#include "shlobj.h"
-#include "updatehelper.h"
-#include "uachelper.h"
-#include "pathhash.h"
-#include "mozilla/UniquePtr.h"
-#include "nsWindowsHelpers.h"
+#  include <stdio.h>
+#  include "shlobj.h"
+#  include "updatehelper.h"
+#  include "uachelper.h"
+#  include "pathhash.h"
+#  include "mozilla/UniquePtr.h"
+#  include "nsWindowsHelpers.h"
 
 // Needed for PathAppendW
-#include <shlwapi.h>
+#  include <shlwapi.h>
 
 using mozilla::MakeUnique;
 using mozilla::UniquePtr;

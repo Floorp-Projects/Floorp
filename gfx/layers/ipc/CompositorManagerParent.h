@@ -22,7 +22,7 @@ class CompositorBridgeParent;
 class CompositorThreadHolder;
 
 #ifndef DEBUG
-#define COMPOSITOR_MANAGER_PARENT_EXPLICIT_SHUTDOWN
+#  define COMPOSITOR_MANAGER_PARENT_EXPLICIT_SHUTDOWN
 #endif
 
 class CompositorManagerParent final : public PCompositorManagerParent {

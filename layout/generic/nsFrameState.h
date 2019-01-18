@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 #ifdef DEBUG
-#include "nsString.h"
+#  include "nsString.h"
 
 class nsIFrame;
 #endif

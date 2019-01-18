@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef nsTArray_h__
-#error "Don't include this file directly"
+#  error "Don't include this file directly"
 #endif
 
 template <class Alloc, class Copy>

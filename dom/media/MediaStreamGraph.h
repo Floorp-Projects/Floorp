@@ -257,7 +257,7 @@ struct TrackBound {
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with MediaStream::GetCurrentTime.
 #ifdef GetCurrentTime
-#undef GetCurrentTime
+#  undef GetCurrentTime
 #endif
 
 class MediaStream : public mozilla::LinkedListElement<MediaStream> {

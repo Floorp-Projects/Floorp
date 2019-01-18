@@ -6,25 +6,25 @@
 
 #ifdef ANDROID
 
-#include "mozilla/TaggedAnonymousMemory.h"
+#  include "mozilla/TaggedAnonymousMemory.h"
 
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <sys/prctl.h>
-#include <sys/syscall.h>
-#include <unistd.h>
+#  include <sys/types.h>
+#  include <sys/mman.h>
+#  include <sys/prctl.h>
+#  include <sys/syscall.h>
+#  include <unistd.h>
 
-#include "mozilla/Assertions.h"
+#  include "mozilla/Assertions.h"
 
 // These constants are copied from <sys/prctl.h>, because the headers
 // used for building may not have them even though the running kernel
 // supports them.
-#ifndef PR_SET_VMA
-#define PR_SET_VMA 0x53564d41
-#endif
-#ifndef PR_SET_VMA_ANON_NAME
-#define PR_SET_VMA_ANON_NAME 0
-#endif
+#  ifndef PR_SET_VMA
+#    define PR_SET_VMA 0x53564d41
+#  endif
+#  ifndef PR_SET_VMA_ANON_NAME
+#    define PR_SET_VMA_ANON_NAME 0
+#  endif
 
 namespace mozilla {
 

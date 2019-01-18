@@ -22,11 +22,11 @@
 #include "nscore.h"           // for NS_BUILD_REFCNT_LOGGING
 #if !defined(ANDROID) && (defined(__SSE2__) || defined(_M_X64) || \
                           (defined(_M_IX86_FP) && _M_IX86_FP >= 2))
-#if defined(_MSC_VER) && !defined(__clang__)
-#include "smmintrin.h"
-#else
-#include "emmintrin.h"
-#endif
+#  if defined(_MSC_VER) && !defined(__clang__)
+#    include "smmintrin.h"
+#  else
+#    include "emmintrin.h"
+#  endif
 #endif
 
 typedef mozilla::gfx::IntRect nsIntRect;
@@ -120,8 +120,8 @@ struct nsRect : public mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize,
     *this = aRect1.Union(aRect2);
   }
 
-#if defined(_MSC_VER) && !defined(__clang__) && \
-    (defined(_M_X64) || defined(_M_IX86))
+#  if defined(_MSC_VER) && !defined(__clang__) && \
+      (defined(_M_X64) || defined(_M_IX86))
   // Only MSVC supports inlining intrinsics for archs you're not compiling for.
   MOZ_MUST_USE nsRect Intersect(const nsRect& aRect) const {
     nsRect result;
@@ -221,7 +221,7 @@ struct nsRect : public mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize,
     }
     return true;
   }
-#endif
+#  endif
 #endif
 
   void SaturatingUnionRect(const nsRect& aRect1, const nsRect& aRect2) {

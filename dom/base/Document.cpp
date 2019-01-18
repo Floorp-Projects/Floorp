@@ -266,12 +266,12 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #ifdef MOZ_XUL
-#include "mozilla/dom/XULBroadcastManager.h"
-#include "mozilla/dom/XULPersist.h"
-#include "nsIXULWindow.h"
-#include "nsXULCommandDispatcher.h"
-#include "nsXULPopupManager.h"
-#include "nsIDocShellTreeOwner.h"
+#  include "mozilla/dom/XULBroadcastManager.h"
+#  include "mozilla/dom/XULPersist.h"
+#  include "nsIXULWindow.h"
+#  include "nsXULCommandDispatcher.h"
+#  include "nsXULPopupManager.h"
+#  include "nsIDocShellTreeOwner.h"
 #endif
 #include "nsIPresShellInlines.h"
 #include "mozilla/dom/BoxObject.h"
@@ -7337,7 +7337,7 @@ void Document::CollectDescendantDocuments(
 }
 
 #ifdef DEBUG_bryner
-#define DEBUG_PAGE_CACHE
+#  define DEBUG_PAGE_CACHE
 #endif
 
 bool Document::CanSavePresentation(nsIRequest* aNewRequest) {

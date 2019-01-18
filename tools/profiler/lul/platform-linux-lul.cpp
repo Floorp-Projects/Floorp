@@ -32,13 +32,13 @@ void read_procmaps(lul::LUL* aLUL) {
 
     std::string nativePath = lib.GetNativeDebugPath();
 
-#if defined(GP_OS_android)
+#  if defined(GP_OS_android)
     // We're using faulty.lib.  Use a special-case object mapper.
     AutoObjectMapperFaultyLib mapper(aLUL->mLog);
-#else
+#  else
     // We can use the standard POSIX-based mapper.
     AutoObjectMapperPOSIX mapper(aLUL->mLog);
-#endif
+#  endif
 
     // Ask |mapper| to map the object.  Then hand its mapped address
     // to NotifyAfterMap().
@@ -63,7 +63,7 @@ void read_procmaps(lul::LUL* aLUL) {
   }
 
 #else
-#error "Unknown platform"
+#  error "Unknown platform"
 #endif
 }
 

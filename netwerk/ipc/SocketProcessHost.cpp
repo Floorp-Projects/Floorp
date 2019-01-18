@@ -10,7 +10,7 @@
 #include "SocketProcessParent.h"
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerParent.h"
+#  include "ProfilerParent.h"
 #endif
 
 namespace mozilla {

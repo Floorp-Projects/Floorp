@@ -543,7 +543,7 @@ static void TestPrint() {
  * these warnings are unacceptable.  So for now, compile tests for those macros
  * only if we aren't compiling with gcc.
  */
-#define SHOULD_TEST_8BIT_FORMAT_MACROS (!(MOZ_IS_GCC))
+#  define SHOULD_TEST_8BIT_FORMAT_MACROS (!(MOZ_IS_GCC))
 
 template <typename T>
 union Input {
@@ -568,7 +568,7 @@ static bool ExtraBitsUntouched(const Input<T>& aInput) {
 }
 
 static void TestScanSigned8() {
-#if SHOULD_TEST_8BIT_FORMAT_MACROS
+#  if SHOULD_TEST_8BIT_FORMAT_MACROS
   Input<int8_t> u;
 
   PoisonInput(u);
@@ -580,7 +580,7 @@ static void TestScanSigned8() {
   sscanf("042", "%" SCNi8, &u.mI);
   MOZ_RELEASE_ASSERT(u.mI == 042);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
-#endif
+#  endif
 }
 
 static void TestScanSigned16() {
@@ -633,7 +633,7 @@ static void TestScanSignedN() {
 }
 
 static void TestScanSignedLeast8() {
-#if SHOULD_TEST_8BIT_FORMAT_MACROS
+#  if SHOULD_TEST_8BIT_FORMAT_MACROS
   Input<int_least8_t> u;
 
   PoisonInput(u);
@@ -645,7 +645,7 @@ static void TestScanSignedLeast8() {
   sscanf("042", "%" SCNiLEAST8, &u.mI);
   MOZ_RELEASE_ASSERT(u.mI == 042);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
-#endif
+#  endif
 }
 
 static void TestScanSignedLeast16() {
@@ -698,7 +698,7 @@ static void TestScanSignedLeastN() {
 }
 
 static void TestScanSignedFast8() {
-#if SHOULD_TEST_8BIT_FORMAT_MACROS
+#  if SHOULD_TEST_8BIT_FORMAT_MACROS
   Input<int_fast8_t> u;
 
   PoisonInput(u);
@@ -710,7 +710,7 @@ static void TestScanSignedFast8() {
   sscanf("042", "%" SCNiFAST8, &u.mI);
   MOZ_RELEASE_ASSERT(u.mI == 042);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
-#endif
+#  endif
 }
 
 static void TestScanSignedFast16() {
@@ -809,7 +809,7 @@ static void TestScanSigned() {
  */
 
 static void TestScanUnsigned8() {
-#if SHOULD_TEST_8BIT_FORMAT_MACROS
+#  if SHOULD_TEST_8BIT_FORMAT_MACROS
   Input<uint8_t> u;
 
   PoisonInput(u);
@@ -826,7 +826,7 @@ static void TestScanUnsigned8() {
   sscanf("2A", "%" SCNx8, &u.mI);
   MOZ_RELEASE_ASSERT(u.mI == 0x2A);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
-#endif
+#  endif
 }
 
 static void TestScanUnsigned16() {
@@ -894,7 +894,7 @@ static void TestScanUnsignedN() {
 }
 
 static void TestScanUnsignedLeast8() {
-#if SHOULD_TEST_8BIT_FORMAT_MACROS
+#  if SHOULD_TEST_8BIT_FORMAT_MACROS
   Input<uint_least8_t> u;
 
   PoisonInput(u);
@@ -911,7 +911,7 @@ static void TestScanUnsignedLeast8() {
   sscanf("2A", "%" SCNxLEAST8, &u.mI);
   MOZ_RELEASE_ASSERT(u.mI == 0x2A);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
-#endif
+#  endif
 }
 
 static void TestScanUnsignedLeast16() {
@@ -979,7 +979,7 @@ static void TestScanUnsignedLeastN() {
 }
 
 static void TestScanUnsignedFast8() {
-#if SHOULD_TEST_8BIT_FORMAT_MACROS
+#  if SHOULD_TEST_8BIT_FORMAT_MACROS
   Input<uint_fast8_t> u;
 
   PoisonInput(u);
@@ -996,7 +996,7 @@ static void TestScanUnsignedFast8() {
   sscanf("2A", "%" SCNxFAST8, &u.mI);
   MOZ_RELEASE_ASSERT(u.mI == 0x2A);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
-#endif
+#  endif
 }
 
 static void TestScanUnsignedFast16() {

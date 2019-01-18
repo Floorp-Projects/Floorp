@@ -37,27 +37,27 @@
 #include "mozilla/ipc/CrossProcessSemaphore.h"
 
 #ifdef XP_WIN
-#include "mozilla/gfx/DeviceManagerDx.h"
-#include "mozilla/layers/TextureD3D11.h"
-#include "mozilla/layers/TextureDIB.h"
-#include "gfxWindowsPlatform.h"
-#include "gfx2DGlue.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/layers/TextureD3D11.h"
+#  include "mozilla/layers/TextureDIB.h"
+#  include "gfxWindowsPlatform.h"
+#  include "gfx2DGlue.h"
 #endif
 #ifdef MOZ_X11
-#include "mozilla/layers/TextureClientX11.h"
-#include "GLXLibrary.h"
+#  include "mozilla/layers/TextureClientX11.h"
+#  include "GLXLibrary.h"
 #endif
 
 #ifdef XP_MACOSX
-#include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
+#  include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
 #endif
 
 #if 0
-#define RECYCLE_LOG(...) printf_stderr(__VA_ARGS__)
+#  define RECYCLE_LOG(...) printf_stderr(__VA_ARGS__)
 #else
-#define RECYCLE_LOG(...) \
-  do {                   \
-  } while (0)
+#  define RECYCLE_LOG(...) \
+    do {                   \
+    } while (0)
 #endif
 
 namespace mozilla {

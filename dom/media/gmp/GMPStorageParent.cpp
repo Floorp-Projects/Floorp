@@ -12,7 +12,7 @@
 namespace mozilla {
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 extern LogModule* GetGMPLog();

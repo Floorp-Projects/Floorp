@@ -38,8 +38,8 @@
 #include "mozilla/TypeTraits.h"
 
 #ifdef XPCOM_GLUE
-#error \
-    "nsTextFormatter is not available in the standalone glue due to NSPR dependencies."
+#  error \
+      "nsTextFormatter is not available in the standalone glue due to NSPR dependencies."
 #endif
 
 class nsTextFormatter {

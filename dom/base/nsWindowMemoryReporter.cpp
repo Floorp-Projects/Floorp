@@ -21,7 +21,7 @@
 #include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
 #ifdef MOZ_XUL
-#include "nsXULPrototypeCache.h"
+#  include "nsXULPrototypeCache.h"
 #endif
 
 using namespace mozilla;

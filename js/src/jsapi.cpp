@@ -17,7 +17,7 @@
 
 #include <ctype.h>
 #ifdef __linux__
-#include <dlfcn.h>
+#  include <dlfcn.h>
 #endif
 #include <stdarg.h>
 #include <string.h>
@@ -42,7 +42,7 @@
 #include "builtin/String.h"
 #include "builtin/Symbol.h"
 #ifdef ENABLE_BINARYDATA
-#include "builtin/TypedObject.h"
+#  include "builtin/TypedObject.h"
 #endif
 #include "frontend/BytecodeCompiler.h"
 #include "gc/FreeOp.h"
@@ -120,9 +120,9 @@ using JS::ReadOnlyCompileOptions;
 using JS::SourceText;
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
-#define JS_ADDRESSOF_VA_LIST(ap) ((va_list*)(ap))
+#  define JS_ADDRESSOF_VA_LIST(ap) ((va_list*)(ap))
 #else
-#define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
+#  define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
 #endif
 
 JS_PUBLIC_API void JS::CallArgs::reportMoreArgsNeeded(JSContext* cx,
@@ -5628,11 +5628,11 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
     case JSJITCOMPILER_WASM_FOLD_OFFSETS:
       *valueOut = jit::JitOptions.wasmFoldOffsets ? 1 : 0;
       break;
-#ifdef DEBUG
+#  ifdef DEBUG
     case JSJITCOMPILER_FULL_DEBUG_CHECKS:
       *valueOut = jit::JitOptions.fullDebugChecks ? 1 : 0;
       break;
-#endif
+#  endif
     default:
       return false;
   }
@@ -5647,7 +5647,7 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
 #if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && \
     defined(XP_WIN)
 
-#include "util/Windows.h"
+#  include "util/Windows.h"
 
 /*
  * Initialization routine for the JS DLL.

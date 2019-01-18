@@ -1017,12 +1017,12 @@ void gfxWindowsPlatform::GetPlatformCMSOutputProfile(void*& mem,
 #ifdef _WIN32
   qcms_data_from_unicode_path(str, &mem, &mem_size);
 
-#ifdef DEBUG_tor
+#  ifdef DEBUG_tor
   if (mem_size > 0)
     fprintf(stderr, "ICM profile read from %s successfully\n",
             NS_ConvertUTF16toUTF8(str).get());
-#endif  // DEBUG_tor
-#endif  // _WIN32
+#  endif  // DEBUG_tor
+#endif    // _WIN32
 }
 
 void gfxWindowsPlatform::GetDLLVersion(char16ptr_t aDLLPath,

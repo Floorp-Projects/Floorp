@@ -30,21 +30,21 @@
 #include <algorithm>
 
 #ifdef USE_SKIA_GPU
-#include "GLDefs.h"
-#include "skia/include/gpu/GrContext.h"
-#include "skia/include/gpu/GrTexture.h"
-#include "skia/include/gpu/gl/GrGLInterface.h"
+#  include "GLDefs.h"
+#  include "skia/include/gpu/GrContext.h"
+#  include "skia/include/gpu/GrTexture.h"
+#  include "skia/include/gpu/gl/GrGLInterface.h"
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
-#include "BorrowedContext.h"
-#include <ApplicationServices/ApplicationServices.h>
-#include "ScaledFontMac.h"
-#include "CGTextDrawing.h"
+#  include "BorrowedContext.h"
+#  include <ApplicationServices/ApplicationServices.h>
+#  include "ScaledFontMac.h"
+#  include "CGTextDrawing.h"
 #endif
 
 #ifdef XP_WIN
-#include "ScaledFontDWrite.h"
+#  include "ScaledFontDWrite.h"
 #endif
 
 using namespace std;

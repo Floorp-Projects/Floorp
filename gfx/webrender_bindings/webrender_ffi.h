@@ -148,15 +148,15 @@ void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 // destructors in C++ classes, use WR_DESTRUCTOR_SAFE_FUNC instead, which omits
 // the unreachable annotation.
 #ifdef MOZ_BUILD_WEBRENDER
-#define WR_INLINE
-#define WR_FUNC
-#define WR_DESTRUCTOR_SAFE_FUNC
+#  define WR_INLINE
+#  define WR_FUNC
+#  define WR_DESTRUCTOR_SAFE_FUNC
 #else
-#define WR_INLINE inline
-#define WR_FUNC \
-  { MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("WebRender disabled"); }
-#define WR_DESTRUCTOR_SAFE_FUNC \
-  {}
+#  define WR_INLINE inline
+#  define WR_FUNC \
+    { MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("WebRender disabled"); }
+#  define WR_DESTRUCTOR_SAFE_FUNC \
+    {}
 #endif
 
 #include "webrender_ffi_generated.h"

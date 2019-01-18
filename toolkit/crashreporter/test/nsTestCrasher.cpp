@@ -8,8 +8,8 @@
 #include "ExceptionThrower.h"
 
 #ifdef XP_WIN
-#include <malloc.h>
-#include <windows.h>
+#  include <malloc.h>
+#  include <windows.h>
 #endif
 
 /*

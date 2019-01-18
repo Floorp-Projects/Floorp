@@ -27,8 +27,8 @@ void report_mapping(char *name, void *base, uint32_t len, uint32_t offset);
 void delete_mapping(const char *name);
 }
 #else
-#define report_mapping(...)
-#define delete_mapping(...)
+#  define report_mapping(...)
+#  define delete_mapping(...)
 #endif
 
 const Ehdr *Ehdr::validate(const void *buf) {

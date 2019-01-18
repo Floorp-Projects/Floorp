@@ -27,7 +27,7 @@ class nsIDirectoryEnumerator;
 class nsITimer;
 
 #ifdef DEBUG
-#define DEBUG_STATS 1
+#  define DEBUG_STATS 1
 #endif
 
 namespace mozilla {

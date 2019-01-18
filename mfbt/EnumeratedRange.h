@@ -156,8 +156,8 @@ class EnumeratedRange {
 // Enums can have an unsigned underlying type, which makes some of the
 // comparisons below always true or always false. Temporarily disable
 // -Wtype-limits to avoid breaking -Werror builds.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtype-limits"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wtype-limits"
 #endif
 
 // Create a range to iterate from aBegin to aEnd, exclusive.
@@ -176,7 +176,7 @@ inline detail::EnumeratedRange<EnumType> MakeEnumeratedRange(EnumType aEnd) {
 }
 
 #ifdef __GNUC__
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif
 
 }  // namespace mozilla

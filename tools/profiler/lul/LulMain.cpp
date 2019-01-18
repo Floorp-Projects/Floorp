@@ -97,7 +97,7 @@ static const char* NameOf_DW_REG(int16_t aReg) {
     case DW_REG_MIPS_PC:
       return "pc";
 #else
-#error "Unsupported arch"
+#  error "Unsupported arch"
 #endif
     default:
       return "???";
@@ -158,7 +158,7 @@ void RuleSet::Print(void (*aLog)(const char*)) const {
   res += mSPexpr.ShowRule(" SP");
   res += mFPexpr.ShowRule(" FP");
 #else
-#error "Unsupported arch"
+#  error "Unsupported arch"
 #endif
   aLog(res.c_str());
 }
@@ -202,7 +202,7 @@ LExpr* RuleSet::ExprForRegno(DW_REG_NUMBER aRegno) {
     case DW_REG_MIPS_PC:
       return &mPCexpr;
 #else
-#error "Unknown arch"
+#  error "Unknown arch"
 #endif
     default:
       return nullptr;
@@ -930,7 +930,7 @@ static TaggedUWord EvaluateReg(int16_t aReg, const UnwindRegs* aOldRegs,
     case DW_REG_MIPS_PC:
       return aOldRegs->pc;
 #else
-#error "Unsupported arch"
+#  error "Unsupported arch"
 #endif
     default:
       MOZ_ASSERT(0);
@@ -1133,7 +1133,7 @@ static void UseRuleSet(/*MOD*/ UnwindRegs* aRegs, const StackImage* aStackImg,
   aRegs->fp = TaggedUWord();
   aRegs->pc = TaggedUWord();
 #else
-#error "Unsupported arch"
+#  error "Unsupported arch"
 #endif
 
   // This is generally useful.
@@ -1178,7 +1178,7 @@ static void UseRuleSet(/*MOD*/ UnwindRegs* aRegs, const StackImage* aStackImg,
   aRegs->fp = aRS->mFPexpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->pc = aRS->mPCexpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
 #else
-#error "Unsupported arch"
+#  error "Unsupported arch"
 #endif
 
   // We're done.  Any regs for which we didn't manage to compute a
@@ -1247,7 +1247,7 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
       buf[sizeof(buf) - 1] = 0;
       mLog(buf);
 #else
-#error "Unsupported arch"
+#  error "Unsupported arch"
 #endif
     }
 
@@ -1264,7 +1264,7 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
     TaggedUWord ia = regs.pc;
     TaggedUWord sp = regs.sp;
 #else
-#error "Unsupported arch"
+#  error "Unsupported arch"
 #endif
 
     if (*aFramesUsed >= aFramesAvail) {
@@ -1605,7 +1605,7 @@ static __attribute__((noinline)) bool GetAndCheckStackTrace(
   const uintptr_t REDZONE_SIZE = 0;
   uintptr_t start = block[1] - REDZONE_SIZE;
 #else
-#error "Unsupported platform"
+#  error "Unsupported platform"
 #endif
 
   // Get hold of the innermost LUL_UNIT_TEST_STACK_SIZE bytes of the

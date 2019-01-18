@@ -11,9 +11,9 @@
 #include "nsChromeRegistryChrome.h"
 
 #if defined(XP_WIN)
-#include <windows.h>
+#  include <windows.h>
 #elif defined(XP_MACOSX)
-#include <CoreServices/CoreServices.h>
+#  include <CoreServices/CoreServices.h>
 #endif
 
 #include "nsArrayEnumerator.h"

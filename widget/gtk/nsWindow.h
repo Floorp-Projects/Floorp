@@ -11,11 +11,11 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 #ifdef MOZ_X11
-#include <gdk/gdkx.h>
-#include "X11UndefineNone.h"
+#  include <gdk/gdkx.h>
+#  include "X11UndefineNone.h"
 #endif /* MOZ_X11 */
 #ifdef MOZ_WAYLAND
-#include <gdk/gdkwayland.h>
+#  include <gdk/gdkwayland.h>
 #endif
 #include "mozcontainer.h"
 #include "mozilla/RefPtr.h"
@@ -31,7 +31,7 @@
 #include "mozilla/widget/WindowSurfaceProvider.h"
 
 #ifdef ACCESSIBILITY
-#include "mozilla/a11y/Accessible.h"
+#  include "mozilla/a11y/Accessible.h"
 #endif
 #include "mozilla/EventForwards.h"
 #include "mozilla/TouchEvents.h"
@@ -41,26 +41,27 @@
 #undef LOG
 #ifdef MOZ_LOGGING
 
-#include "mozilla/Logging.h"
-#include "nsTArray.h"
-#include "Units.h"
+#  include "mozilla/Logging.h"
+#  include "nsTArray.h"
+#  include "Units.h"
 
 extern mozilla::LazyLogModule gWidgetLog;
 extern mozilla::LazyLogModule gWidgetFocusLog;
 extern mozilla::LazyLogModule gWidgetDragLog;
 extern mozilla::LazyLogModule gWidgetDrawLog;
 
-#define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
-#define LOGFOCUS(args) MOZ_LOG(gWidgetFocusLog, mozilla::LogLevel::Debug, args)
-#define LOGDRAG(args) MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, args)
-#define LOGDRAW(args) MOZ_LOG(gWidgetDrawLog, mozilla::LogLevel::Debug, args)
+#  define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
+#  define LOGFOCUS(args) \
+    MOZ_LOG(gWidgetFocusLog, mozilla::LogLevel::Debug, args)
+#  define LOGDRAG(args) MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, args)
+#  define LOGDRAW(args) MOZ_LOG(gWidgetDrawLog, mozilla::LogLevel::Debug, args)
 
 #else
 
-#define LOG(args)
-#define LOGFOCUS(args)
-#define LOGDRAG(args)
-#define LOGDRAW(args)
+#  define LOG(args)
+#  define LOGFOCUS(args)
+#  define LOGDRAG(args)
+#  define LOGDRAW(args)
 
 #endif /* MOZ_LOGGING */
 

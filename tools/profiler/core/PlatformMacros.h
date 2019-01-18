@@ -40,69 +40,69 @@
 // Android and Linux, whereas GP_OS_android is not defined on vanilla Linux.
 
 #if defined(__ANDROID__) && defined(__i386__)
-#define GP_PLAT_x86_android 1
-#define GP_ARCH_x86 1
-#define GP_OS_android 1
+#  define GP_PLAT_x86_android 1
+#  define GP_ARCH_x86 1
+#  define GP_OS_android 1
 
 #elif defined(__ANDROID__) && defined(__arm__)
-#define GP_PLAT_arm_android 1
-#define GP_ARCH_arm 1
-#define GP_OS_android 1
+#  define GP_PLAT_arm_android 1
+#  define GP_ARCH_arm 1
+#  define GP_OS_android 1
 
 #elif defined(__ANDROID__) && defined(__aarch64__)
-#define GP_PLAT_arm64_android 1
-#define GP_ARCH_arm64 1
-#define GP_OS_android 1
+#  define GP_PLAT_arm64_android 1
+#  define GP_ARCH_arm64 1
+#  define GP_OS_android 1
 
 #elif defined(__linux__) && defined(__i386__)
-#define GP_PLAT_x86_linux 1
-#define GP_ARCH_x86 1
-#define GP_OS_linux 1
+#  define GP_PLAT_x86_linux 1
+#  define GP_ARCH_x86 1
+#  define GP_OS_linux 1
 
 #elif defined(__linux__) && defined(__x86_64__)
-#define GP_PLAT_amd64_linux 1
-#define GP_ARCH_amd64 1
-#define GP_OS_linux 1
+#  define GP_PLAT_amd64_linux 1
+#  define GP_ARCH_amd64 1
+#  define GP_OS_linux 1
 
 #elif defined(__linux__) && defined(__arm__)
-#define GP_PLAT_arm_linux 1
-#define GP_ARCH_arm 1
-#define GP_OS_linux 1
+#  define GP_PLAT_arm_linux 1
+#  define GP_ARCH_arm 1
+#  define GP_OS_linux 1
 
 #elif defined(__linux__) && defined(__aarch64__)
-#define GP_PLAT_arm64_linux 1
-#define GP_ARCH_arm64 1
-#define GP_OS_linux 1
+#  define GP_PLAT_arm64_linux 1
+#  define GP_ARCH_arm64 1
+#  define GP_OS_linux 1
 
 #elif defined(__linux__) && defined(__mips64)
-#define GP_PLAT_mips64_linux 1
-#define GP_ARCH_mips64 1
-#define GP_OS_linux 1
+#  define GP_PLAT_mips64_linux 1
+#  define GP_ARCH_mips64 1
+#  define GP_OS_linux 1
 
 #elif defined(__APPLE__) && defined(__x86_64__)
-#define GP_PLAT_amd64_darwin 1
-#define GP_ARCH_amd64 1
-#define GP_OS_darwin 1
+#  define GP_PLAT_amd64_darwin 1
+#  define GP_ARCH_amd64 1
+#  define GP_OS_darwin 1
 
 #elif (defined(_MSC_VER) || defined(__MINGW32__)) && \
     (defined(_M_IX86) || defined(__i386__))
-#define GP_PLAT_x86_windows 1
-#define GP_ARCH_x86 1
-#define GP_OS_windows 1
+#  define GP_PLAT_x86_windows 1
+#  define GP_ARCH_x86 1
+#  define GP_OS_windows 1
 
 #elif (defined(_MSC_VER) || defined(__MINGW32__)) && \
     (defined(_M_X64) || defined(__x86_64__))
-#define GP_PLAT_amd64_windows 1
-#define GP_ARCH_amd64 1
-#define GP_OS_windows 1
+#  define GP_PLAT_amd64_windows 1
+#  define GP_ARCH_amd64 1
+#  define GP_OS_windows 1
 
 #elif defined(_MSC_VER) && defined(_M_ARM64)
-#define GP_PLAT_arm64_windows 1
-#define GP_ARCH_arm64 1
-#define GP_OS_windows 1
+#  define GP_PLAT_arm64_windows 1
+#  define GP_ARCH_arm64 1
+#  define GP_OS_windows 1
 
 #else
-#error "Unsupported platform"
+#  error "Unsupported platform"
 #endif
 
 #endif /* ndef PLATFORM_MACROS_H */

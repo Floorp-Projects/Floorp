@@ -84,7 +84,7 @@
 #include "ServiceWorkerUtils.h"
 
 #ifdef PostMessage
-#undef PostMessage
+#  undef PostMessage
 #endif
 
 using namespace mozilla;

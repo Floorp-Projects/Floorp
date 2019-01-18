@@ -71,8 +71,8 @@
 #include "gfxPlatform.h"
 
 #ifdef XP_MACOSX
-#include "nsINativeMenuService.h"
-#define USE_NATIVE_MENUS
+#  include "nsINativeMenuService.h"
+#  define USE_NATIVE_MENUS
 #endif
 
 using namespace mozilla;

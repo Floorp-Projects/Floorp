@@ -150,13 +150,13 @@ void NS_MakeRandomString(char* aBuf, int32_t aBufLen);
 #define KNOWN_PATH_SEPARATORS "\\/"
 
 #if defined(XP_MACOSX)
-#define FILE_PATH_SEPARATOR "/"
+#  define FILE_PATH_SEPARATOR "/"
 #elif defined(XP_WIN)
-#define FILE_PATH_SEPARATOR "\\"
+#  define FILE_PATH_SEPARATOR "\\"
 #elif defined(XP_UNIX)
-#define FILE_PATH_SEPARATOR "/"
+#  define FILE_PATH_SEPARATOR "/"
 #else
-#error need_to_define_your_file_path_separator_and_maybe_illegal_characters
+#  error need_to_define_your_file_path_separator_and_maybe_illegal_characters
 #endif
 
 // Not all these control characters are illegal in all OSs, but we don't really

@@ -10,10 +10,10 @@
 #include "build/build_config.h"
 
 #if defined(OS_POSIX)
-#include "chrome/common/file_descriptor_set_posix.h"
+#  include "chrome/common/file_descriptor_set_posix.h"
 #endif
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracerImpl.h"
+#  include "GeckoTaskTracerImpl.h"
 #endif
 
 #include "mozilla/Move.h"
@@ -22,12 +22,12 @@
 #ifdef MOZ_TASK_TRACER
 using namespace mozilla::tasktracer;
 
-#define MSG_HEADER_SZ                                    \
-  (IsStartLogging() && GetOrCreateTraceInfo() == nullptr \
-       ? sizeof(Header)                                  \
-       : sizeof(HeaderTaskTracer))
+#  define MSG_HEADER_SZ                                    \
+    (IsStartLogging() && GetOrCreateTraceInfo() == nullptr \
+         ? sizeof(Header)                                  \
+         : sizeof(HeaderTaskTracer))
 #else
-#define MSG_HEADER_SZ sizeof(Header)
+#  define MSG_HEADER_SZ sizeof(Header)
 #endif
 
 namespace IPC {
@@ -82,12 +82,12 @@ Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
 }
 
 #ifndef MOZ_TASK_TRACER
-#define MSG_HEADER_SZ_DATA sizeof(Header)
+#  define MSG_HEADER_SZ_DATA sizeof(Header)
 #else
-#define MSG_HEADER_SZ_DATA                                     \
-  (reinterpret_cast<const Header*>(data)->flags.IsTaskTracer() \
-       ? sizeof(HeaderTaskTracer)                              \
-       : sizeof(Header))
+#  define MSG_HEADER_SZ_DATA                                     \
+    (reinterpret_cast<const Header*>(data)->flags.IsTaskTracer() \
+         ? sizeof(HeaderTaskTracer)                              \
+         : sizeof(Header))
 #endif
 
 Message::Message(const char* data, int data_len)
