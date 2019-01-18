@@ -4549,7 +4549,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     StmtExpr(ExprCall(ExprVar('AUTO_PROFILER_TRACING'),
                                       [ExprLiteral.String("IPC"),
                                        ExprLiteral.String(self.protocol.name + "::" +
-                                                          md.prettyMsgName())])),
+                                                          md.prettyMsgName()),
+                                       ExprVar('OTHER')])),
                     StmtExpr(ExprAssn(sendok,
                                       ExprCall(
                                           ExprSelect(self.protocol.callGetChannel(actor),

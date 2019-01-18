@@ -224,9 +224,10 @@ void Performance::Mark(const nsAString& aName, ErrorResult& aRv) {
     nsCOMPtr<nsIDocShell> docShell =
         nsContentUtils::GetDocShellForEventTarget(et);
     DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
-    profiler_add_marker("UserTiming", MakeUnique<UserTimingMarkerPayload>(
-                                          aName, TimeStamp::Now(), docShellId,
-                                          docShellHistoryId));
+    profiler_add_marker(
+        "UserTiming", js::ProfilingStackFrame::Category::DOM,
+        MakeUnique<UserTimingMarkerPayload>(aName, TimeStamp::Now(), docShellId,
+                                            docShellHistoryId));
   }
 #endif
 }
@@ -320,7 +321,7 @@ void Performance::Measure(const nsAString& aName,
     nsCOMPtr<nsIDocShell> docShell =
         nsContentUtils::GetDocShellForEventTarget(et);
     DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
-    profiler_add_marker("UserTiming",
+    profiler_add_marker("UserTiming", js::ProfilingStackFrame::Category::DOM,
                         MakeUnique<UserTimingMarkerPayload>(
                             aName, startMark, endMark, startTimeStamp,
                             endTimeStamp, docShellId, docShellHistoryId));

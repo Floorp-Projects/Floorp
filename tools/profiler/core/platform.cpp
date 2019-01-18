@@ -3628,7 +3628,8 @@ void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
 }
 
 static void racy_profiler_add_marker(
-    const char* aMarkerName, UniquePtr<ProfilerMarkerPayload> aPayload) {
+    const char* aMarkerName, js::ProfilingStackFrame::Category aCategory,
+    UniquePtr<ProfilerMarkerPayload> aPayload) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   // We don't assert that RacyFeatures::IsActiveWithoutPrivacy() or
@@ -3648,11 +3649,12 @@ static void racy_profiler_add_marker(
                          ? aPayload->GetStartTime()
                          : TimeStamp::Now();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
-  racyRegisteredThread->AddPendingMarker(aMarkerName, std::move(aPayload),
-                                         delta.ToMilliseconds());
+  racyRegisteredThread->AddPendingMarker(
+      aMarkerName, aCategory, std::move(aPayload), delta.ToMilliseconds());
 }
 
 void profiler_add_marker(const char* aMarkerName,
+                         js::ProfilingStackFrame::Category aCategory,
                          UniquePtr<ProfilerMarkerPayload> aPayload) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -3661,11 +3663,19 @@ void profiler_add_marker(const char* aMarkerName,
     return;
   }
 
-  racy_profiler_add_marker(aMarkerName, std::move(aPayload));
+  racy_profiler_add_marker(aMarkerName, aCategory, std::move(aPayload));
 }
 
-void profiler_add_marker(const char* aMarkerName) {
-  profiler_add_marker(aMarkerName, nullptr);
+void profiler_add_marker(const char* aMarkerName,
+                         js::ProfilingStackFrame::Category aCategory) {
+  profiler_add_marker(aMarkerName, aCategory, nullptr);
+}
+
+// This is a simplified version of profiler_add_marker that can be easily passed
+// into the JS engine.
+void profiler_add_js_marker(const char* aMarkerName) {
+  profiler_add_marker(aMarkerName, js::ProfilingStackFrame::Category::JS,
+                      nullptr);
 }
 
 void profiler_add_network_marker(
@@ -3690,7 +3700,7 @@ void profiler_add_network_marker(
   char name[2048];
   SprintfLiteral(name, "Load %d: %s", id, PromiseFlatCString(spec).get());
   profiler_add_marker(
-      name,
+      name, js::ProfilingStackFrame::Category::NETWORK,
       MakeUnique<NetworkMarkerPayload>(
           static_cast<int64_t>(aChannelId), PromiseFlatCString(spec).get(),
           aType, aStart, aEnd, aPriority, aCount, aCacheDisposition, aTimings,
@@ -3699,7 +3709,9 @@ void profiler_add_network_marker(
 
 // This logic needs to add a marker for a different thread, so we actually need
 // to lock here.
-void profiler_add_marker_for_thread(int aThreadId, const char* aMarkerName,
+void profiler_add_marker_for_thread(int aThreadId,
+                                    js::ProfilingStackFrame::Category aCategory,
+                                    const char* aMarkerName,
                                     UniquePtr<ProfilerMarkerPayload> aPayload) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -3713,8 +3725,9 @@ void profiler_add_marker_for_thread(int aThreadId, const char* aMarkerName,
                          ? aPayload->GetStartTime()
                          : TimeStamp::Now();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
-  ProfilerMarker* marker = new ProfilerMarker(
-      aMarkerName, aThreadId, std::move(aPayload), delta.ToMilliseconds());
+  ProfilerMarker* marker =
+      new ProfilerMarker(aMarkerName, aCategory, aThreadId, std::move(aPayload),
+                         delta.ToMilliseconds());
 
 #ifdef DEBUG
   // Assert that our thread ID makes sense
@@ -3737,7 +3750,8 @@ void profiler_add_marker_for_thread(int aThreadId, const char* aMarkerName,
   buffer.AddEntry(ProfileBufferEntry::Marker(marker));
 }
 
-void profiler_tracing(const char* aCategory, const char* aMarkerName,
+void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
+                      js::ProfilingStackFrame::Category aCategory,
                       TracingKind aKind, const Maybe<nsID>& aDocShellId,
                       const Maybe<uint32_t>& aDocShellHistoryId) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -3749,12 +3763,13 @@ void profiler_tracing(const char* aCategory, const char* aMarkerName,
     return;
   }
 
-  auto payload = MakeUnique<TracingMarkerPayload>(aCategory, aKind, aDocShellId,
-                                                  aDocShellHistoryId);
-  racy_profiler_add_marker(aMarkerName, std::move(payload));
+  auto payload = MakeUnique<TracingMarkerPayload>(
+      aCategoryString, aKind, aDocShellId, aDocShellHistoryId);
+  racy_profiler_add_marker(aMarkerName, aCategory, std::move(payload));
 }
 
-void profiler_tracing(const char* aCategory, const char* aMarkerName,
+void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
+                      js::ProfilingStackFrame::Category aCategory,
                       TracingKind aKind, UniqueProfilerBacktrace aCause,
                       const Maybe<nsID>& aDocShellId,
                       const Maybe<uint32_t>& aDocShellHistoryId) {
@@ -3767,9 +3782,10 @@ void profiler_tracing(const char* aCategory, const char* aMarkerName,
     return;
   }
 
-  auto payload = MakeUnique<TracingMarkerPayload>(
-      aCategory, aKind, aDocShellId, aDocShellHistoryId, std::move(aCause));
-  racy_profiler_add_marker(aMarkerName, std::move(payload));
+  auto payload =
+      MakeUnique<TracingMarkerPayload>(aCategoryString, aKind, aDocShellId,
+                                       aDocShellHistoryId, std::move(aCause));
+  racy_profiler_add_marker(aMarkerName, aCategory, std::move(payload));
 }
 
 void profiler_set_js_context(JSContext* aCx) {

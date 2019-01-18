@@ -498,8 +498,8 @@ void BackgroundHangThread::ReportHang(TimeDuration aHangTime) {
     TimeStamp endTime = TimeStamp::Now();
     TimeStamp startTime = endTime - aHangTime;
     profiler_add_marker_for_thread(
-        mStackHelper.GetThreadId(), "BHR-detected hang",
-        MakeUnique<HangMarkerPayload>(startTime, endTime));
+        mStackHelper.GetThreadId(), js::ProfilingStackFrame::Category::OTHER,
+        "BHR-detected hang", MakeUnique<HangMarkerPayload>(startTime, endTime));
   }
 #endif
 }
