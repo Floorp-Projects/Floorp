@@ -19,6 +19,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/UniquePtr.h"
 #include "vm/ArrayObject.h"
+#include "vm/GlobalObject.h"
 #include "vm/JSObject.h"
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
@@ -251,21 +252,14 @@ void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
 // JSObject
 /////////////////////////////////////////////////////////////////////
 
-bool JSObject::shouldSplicePrototype() {
-  /*
-   * During bootstrapping, if inference is enabled we need to make sure not
-   * to splice a new prototype in for Function.prototype or the global
-   * object if their __proto__ had previously been set to null, as this
-   * will change the prototype for all other objects with the same type.
-   */
-  if (staticPrototype() != nullptr) {
-    return false;
-  }
-  return isSingleton();
+bool GlobalObject::shouldSplicePrototype() {
+  // During bootstrapping, we need to make sure not to splice a new prototype in
+  // for the global object if its __proto__ had previously been set to non-null,
+  // as this will change the prototype for all other objects with the same type.
+  return staticPrototype() == nullptr;
 }
 
 /* static */ bool JSObject::splicePrototype(JSContext* cx, HandleObject obj,
-                                            const Class* clasp,
                                             Handle<TaggedProto> proto) {
   MOZ_ASSERT(cx->compartment() == obj->compartment());
 
@@ -278,6 +272,10 @@ bool JSObject::shouldSplicePrototype() {
 
   // Windows may not appear on prototype chains.
   MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
+
+#ifdef DEBUG
+  const Class* oldClass = obj->getClass();
+#endif
 
   if (proto.isObject()) {
     RootedObject protoObj(cx, proto.toObject());
@@ -300,7 +298,8 @@ bool JSObject::shouldSplicePrototype() {
     }
   }
 
-  group->setClasp(clasp);
+  MOZ_ASSERT(group->clasp() == oldClass,
+             "splicing a prototype doesn't change a group's class");
   group->setProto(proto);
   return true;
 }
