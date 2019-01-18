@@ -11,6 +11,7 @@ DebuggerModules(
     'Breakpoint.js',
     'BreakpointHeading.js',
     'BreakpointHeadingsContextMenu.js',
+    'Breakpoints.css',
     'BreakpointsContextMenu.js',
     'ExceptionOption.js',
     'index.js',
