@@ -112,6 +112,10 @@
   display: inline-block;
 }
 
+.sources-list .tree .arrow {
+  vertical-align: 1px;
+}
+
 .sources-list .tree .node .no-arrow {
   width: 10px;
   display: inline-block;
