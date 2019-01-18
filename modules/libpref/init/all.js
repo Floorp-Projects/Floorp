@@ -653,6 +653,8 @@ pref("media.cubeb.sandbox", false);
 #ifdef MOZ_AV1
 #if defined(XP_WIN) && !defined(_ARM64_)
 pref("media.av1.enabled", true);
+#elif defined(XP_MACOSX)
+pref("media.av1.enabled", true);
 #else
 pref("media.av1.enabled", false);
 #endif
