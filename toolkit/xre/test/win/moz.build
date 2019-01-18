@@ -6,7 +6,6 @@
 
 GeckoCppUnitTests(
     [
-        'TestLauncherRegistryInfo',
         'TestXREMakeCommandLineWin',
     ],
     linkage=None
@@ -28,9 +27,16 @@ OS_LIBS += [
     'ws2_32',
 ]
 
-# Needed for TestLauncherRegistryInfo
-for var in ('MOZ_APP_BASENAME', 'MOZ_APP_VENDOR'):
-    DEFINES[var] = '"%s"' % CONFIG[var]
+if CONFIG['MOZ_LAUNCHER_PROCESS']:
+    GeckoCppUnitTests(
+        [
+            'TestLauncherRegistryInfo',
+        ],
+        linkage=None
+    )
+    # Needed for TestLauncherRegistryInfo
+    for var in ('MOZ_APP_BASENAME', 'MOZ_APP_VENDOR'):
+        DEFINES[var] = '"%s"' % CONFIG[var]
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     AllowCompilerWarnings()  # workaround for bug 1090497

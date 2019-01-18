@@ -28,12 +28,18 @@
  * NS_ERROR_UNKNOWN_PROXY_HOST
  */
 mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2 NSErrorToLabel(
-    nsresult rv);
+    nsresult aRv);
 
 /**
  * Convert http response status to telemetry labels
  */
 mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2 HTTPStatusToLabel(
-    uint32_t status);
+    uint32_t aStatus);
+
+/**
+ * Convert verdict type to telemetry labels
+ */
+mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_VERDICT_2
+VerdictToLabel(uint32_t aVerdict);
 
 #endif  // ApplicationReputationTelemetryUtils_h__

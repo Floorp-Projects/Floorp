@@ -79,9 +79,9 @@ BrowserElementWebNavigation.prototype = {
       postData: postData ? readInputStreamToString(postData) : null,
       headers: headers ? readInputStreamToString(headers) : null,
       baseURI: baseURI ? baseURI.spec : null,
-      triggeringPrincipal: triggeringPrincipal
-                           ? Utils.serializePrincipal(triggeringPrincipal)
-                           : Services.scriptSecurityManager.createNullPrincipal({}),
+      triggeringPrincipal: Utils.serializePrincipal(
+                           triggeringPrincipal ||
+                           Services.scriptSecurityManager.createNullPrincipal({})),
       requestTime: telemetry.msSystemNow(),
     });
   },

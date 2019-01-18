@@ -9,7 +9,6 @@ root:
         -
           bounds: [0, 0, 500, 500]
           type: stacking-context
-          transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
           perspective: [1, 0, 0, 0, 0, 1, 0, 0, -0.25416666, -0.23866667, 1, -0.00083333335, 0, 0, 0, 1]
           "transform-style": preserve-3d
           items:

@@ -77,7 +77,7 @@ window.gActivityStreamPrerenderedState = {
     "spocs": {
       "spocs_endpoint": "",
       "lastUpdated": null,
-      "data": []
+      "data": {}
     }
   },
   "Search": {

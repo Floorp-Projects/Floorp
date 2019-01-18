@@ -4250,13 +4250,6 @@ class Document : public nsINode,
   // timer is scheduled.
   bool mHasUserInteractionTimerScheduled;
 
-  // Whether the user has interacted with the document via a restricted
-  // set of gestures which are likely to be interaction with the document,
-  // and not events that are fired as a byproduct of the user interacting
-  // with the browser (events for like scrolling the page, keyboard short
-  // cuts, etc).
-  bool mUserGestureActivated;
-
   mozilla::TimeStamp mPageUnloadingEventTimeStamp;
 
   RefPtr<mozilla::dom::DocGroup> mDocGroup;

@@ -9,7 +9,8 @@ use api::{
 use display_list_flattener::{AsInstanceKind, IsVisible};
 use frame_builder::FrameBuildingState;
 use gpu_cache::{GpuCacheHandle, GpuDataRequest};
-use intern::{DataStore, Handle, Internable, InternDebug, Interner, UpdateList};
+use intern::{Internable, InternDebug};
+use intern_types;
 use prim_store::{BrushSegment, GradientTileRange};
 use prim_store::{PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData};
 use prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};
@@ -225,15 +226,7 @@ impl LinearGradientTemplate {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
-pub struct LinearGradientDataMarker;
-
-pub type LinearGradientDataStore = DataStore<LinearGradientKey, LinearGradientTemplate, LinearGradientDataMarker>;
-pub type LinearGradientDataHandle = Handle<LinearGradientDataMarker>;
-pub type LinearGradientDataUpdateList = UpdateList<LinearGradientKey>;
-pub type LinearGradientDataInterner = Interner<LinearGradientKey, PrimitiveSceneData, LinearGradientDataMarker>;
+pub type LinearGradientDataHandle = intern_types::linear_grad::Handle;
 
 pub struct LinearGradient {
     pub extend_mode: ExtendMode,
@@ -247,7 +240,7 @@ pub struct LinearGradient {
 }
 
 impl Internable for LinearGradient {
-    type Marker = LinearGradientDataMarker;
+    type Marker = intern_types::linear_grad::Marker;
     type Source = LinearGradientKey;
     type StoreData = LinearGradientTemplate;
     type InternData = PrimitiveSceneData;
@@ -452,15 +445,7 @@ impl RadialGradientTemplate {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
-pub struct RadialGradientDataMarker;
-
-pub type RadialGradientDataStore = DataStore<RadialGradientKey, RadialGradientTemplate, RadialGradientDataMarker>;
-pub type RadialGradientDataHandle = Handle<RadialGradientDataMarker>;
-pub type RadialGradientDataUpdateList = UpdateList<RadialGradientKey>;
-pub type RadialGradientDataInterner = Interner<RadialGradientKey, PrimitiveSceneData, RadialGradientDataMarker>;
+pub type RadialGradientDataHandle = intern_types::radial_grad::Handle;
 
 pub struct RadialGradient {
     pub extend_mode: ExtendMode,
@@ -473,7 +458,7 @@ pub struct RadialGradient {
 }
 
 impl Internable for RadialGradient {
-    type Marker = RadialGradientDataMarker;
+    type Marker = intern_types::radial_grad::Marker;
     type Source = RadialGradientKey;
     type StoreData = RadialGradientTemplate;
     type InternData = PrimitiveSceneData;

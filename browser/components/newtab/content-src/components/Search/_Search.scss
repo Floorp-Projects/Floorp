@@ -160,8 +160,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     box-shadow: $shadow-secondary, 0 0 0 1px $black-25;
   }
 
-  &:focus,
-  .search-active & {
+  &:focus {
     border: $input-border-active;
     box-shadow: var(--newtab-textbox-focus-boxshadow);
 

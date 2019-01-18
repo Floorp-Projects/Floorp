@@ -11,6 +11,7 @@ use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use frame_builder::{FrameBuildingState};
 use gpu_cache::GpuDataRequest;
 use intern;
+use intern_types;
 use prim_store::{
     PrimKey, PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
     PrimitiveSceneData, PrimitiveStore,
@@ -133,18 +134,10 @@ impl From<LineDecorationKey> for LineDecorationTemplate {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
-pub struct LineDecorationDataMarker;
-
-pub type LineDecorationDataStore = intern::DataStore<LineDecorationKey, LineDecorationTemplate, LineDecorationDataMarker>;
-pub type LineDecorationDataHandle = intern::Handle<LineDecorationDataMarker>;
-pub type LineDecorationDataUpdateList = intern::UpdateList<LineDecorationKey>;
-pub type LineDecorationDataInterner = intern::Interner<LineDecorationKey, PrimitiveSceneData, LineDecorationDataMarker>;
+pub use intern_types::line_decoration::Handle as LineDecorationDataHandle;
 
 impl intern::Internable for LineDecoration {
-    type Marker = LineDecorationDataMarker;
+    type Marker = intern_types::line_decoration::Marker;
     type Source = LineDecorationKey;
     type StoreData = LineDecorationTemplate;
     type InternData = PrimitiveSceneData;

@@ -59,7 +59,7 @@ const INITIAL_STATE = {
     spocs: {
       spocs_endpoint: "",
       lastUpdated: null,
-      data: [],
+      data: {}, // {spocs: []}
     },
   },
   Search: {
@@ -491,10 +491,8 @@ function Search(prevState = INITIAL_STATE.Search, action) {
   switch (action.type) {
     case at.HIDE_SEARCH:
       return Object.assign({...prevState, hide: true});
-    case at.FOCUS_SEARCH:
-      return Object.assign({...prevState, focus: true});
     case at.SHOW_SEARCH:
-      return Object.assign({...prevState, hide: false, focus: false});
+      return Object.assign({...prevState, hide: false});
     default:
       return prevState;
   }

@@ -1,0 +1,58 @@
+.ds-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-row-gap: 10px;
+  grid-column-gap: 24px;
+
+  // reset some stuff from <ul>.  Should maybe be hoisted when we have better
+  // regression detection?
+  padding-inline-start: 0;
+}
+
+.ds-list-item {
+  // XXX see if we really want absolute units, maybe hoist somewhere central?
+  line-height: 20px;
+  font-size: 13px;
+
+  // reset some stuff from <li>.  Should maybe be hoisted when we have better
+  // regression detection?
+  display: block;
+  text-align: start;
+
+  .ds-list-item-link {
+    mix-blend-mode: normal;
+
+    padding-bottom: 16px;
+
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .ds-list-item-info {
+    color: $grey-50;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ds-list-item-title {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+
+  .ds-list-item-text {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+  }
+
+  .ds-list-image {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+
+    border: 0.5px solid $black-12;
+    box-sizing: border-box;
+    border-radius: 4px;
+  }
+}

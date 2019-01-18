@@ -5,6 +5,8 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       "extensions.webextPermissionPrompts", false);
@@ -224,6 +226,9 @@ class WebAPI extends APIObject {
   }
 
   createInstall(options) {
+    if (!Services.prefs.getBoolPref("xpinstall.enabled", true)) {
+      throw new this.window.Error("Software installation is disabled.");
+    }
     let installOptions = {
       ...options,
       // Provide the host from which the amWebAPI is being called

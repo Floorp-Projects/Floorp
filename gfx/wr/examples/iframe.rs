@@ -66,8 +66,8 @@ impl Example for App {
             &sub_bounds,
             space_and_clip.spatial_id,
             TransformStyle::Flat,
-            Some(PropertyBinding::Binding(PropertyBindingKey::new(42), LayoutTransform::identity())),
-            None,
+            PropertyBinding::Binding(PropertyBindingKey::new(42), LayoutTransform::identity()),
+            ReferenceFrameKind::Transform,
         );
 
         // And this is for the root pipeline
