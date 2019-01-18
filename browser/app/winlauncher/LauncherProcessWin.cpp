@@ -13,7 +13,6 @@
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
-#include "mozilla/LauncherRegistryInfo.h"
 #include "mozilla/LauncherResult.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SafeMode.h"
@@ -32,6 +31,7 @@
 #include "ProcThreadAttributes.h"
 
 #if defined(MOZ_LAUNCHER_PROCESS)
+#  include "mozilla/LauncherRegistryInfo.h"
 #  include "SameBinary.h"
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
@@ -175,19 +175,20 @@ static bool DoLauncherProcessChecks(int& argc, wchar_t** argv) {
 namespace mozilla {
 
 bool RunAsLauncherProcess(int& argc, wchar_t** argv) {
-  LauncherRegistryInfo::ProcessType desiredType =
-      DoLauncherProcessChecks(argc, argv)
-          ? LauncherRegistryInfo::ProcessType::Launcher
-          : LauncherRegistryInfo::ProcessType::Browser;
+  bool runAsLauncher = DoLauncherProcessChecks(argc, argv);
 
-  // If we're looking at browser, return fast when we're a child process.
-  if (desiredType == LauncherRegistryInfo::ProcessType::Browser &&
+  // If we're running as browser, return fast when we're a child process.
+  if (!runAsLauncher &&
       mozilla::CheckArg(argc, argv, L"contentproc",
                         static_cast<const wchar_t**>(nullptr),
                         mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND) {
     return false;
   }
 
+#if defined(MOZ_LAUNCHER_PROCESS)
+  LauncherRegistryInfo::ProcessType desiredType =
+      runAsLauncher ? LauncherRegistryInfo::ProcessType::Launcher
+                    : LauncherRegistryInfo::ProcessType::Browser;
   LauncherRegistryInfo regInfo;
   LauncherResult<LauncherRegistryInfo::ProcessType> runAsType =
       regInfo.Check(desiredType);
@@ -199,13 +200,17 @@ bool RunAsLauncherProcess(int& argc, wchar_t** argv) {
     return false;
   }
 
-  if (runAsType.unwrap() == LauncherRegistryInfo::ProcessType::Browser) {
+  runAsLauncher =
+      runAsType.unwrap() == LauncherRegistryInfo::ProcessType::Launcher;
+#endif  // defined(MOZ_LAUNCHER_PROCESS)
+
+  if (!runAsLauncher) {
     // In this case, we will be proceeding to run as the browser.
     // We should check MOZ_DEBUG_BROWSER_* env vars.
     MaybeBreakForBrowserDebugging();
   }
 
-  return runAsType.unwrap() == LauncherRegistryInfo::ProcessType::Launcher;
+  return runAsLauncher;
 }
 
 int LauncherMain(int argc, wchar_t* argv[]) {

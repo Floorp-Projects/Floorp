@@ -1323,7 +1323,6 @@ Document::Document(const char* aContentType)
       mNotifiedPageForUseCounter(0),
       mUserHasInteracted(false),
       mHasUserInteractionTimerScheduled(false),
-      mUserGestureActivated(false),
       mStackRefCnt(0),
       mUpdateNestLevel(0),
       mViewportType(Unknown),
@@ -11717,13 +11716,14 @@ void Document::MaybeNotifyAutoplayBlocked() {
 }
 
 void Document::ClearUserGestureActivation() {
-  Document* doc = this;
-  while (doc) {
-    MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug,
-            ("Reset user activation flag for document %p.", this));
-    doc->mUserGestureActivated = false;
-    doc = doc->GetSameTypeParentDocument();
+  if (!HasBeenUserGestureActivated()) {
+    return;
   }
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  if (!bc) {
+    return;
+  }
+  bc->NotifyResetUserGestureActivation();
 }
 
 void Document::SetDocTreeHadAudibleMedia() {

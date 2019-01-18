@@ -63,10 +63,6 @@ interface nsIURIClassifier : nsISupports
    *        The event target should be tied to Docgroup/Tabgroup by
    *        using EventTargetFor
    *
-   * @param aTrackingProtectionEnabled
-   *        Whether or not to classify the given URI against tracking
-   *        protection lists
-   *
    * @param aCallback
    *        The URI classifier will call this callback when the URI has been
    *        classified.
@@ -78,7 +74,6 @@ interface nsIURIClassifier : nsISupports
    */
   boolean classify(in nsIPrincipal aPrincipal,
                    in nsIEventTarget aEventTarget,
-                   in boolean aTrackingProtectionEnabled,
                    in nsIURIClassifierCallback aCallback);
 
   /**

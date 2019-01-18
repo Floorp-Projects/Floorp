@@ -10,6 +10,7 @@ use frame_builder::{FrameBuildingState, PictureContext};
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use gpu_cache::GpuCache;
 use intern;
+use intern_types;
 use prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
 use prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData, VectorKey};
 use render_task::{RenderTaskTree};
@@ -161,15 +162,7 @@ impl TextRunTemplate {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
-pub struct TextRunDataMarker;
-
-pub type TextRunDataStore = intern::DataStore<TextRunKey, TextRunTemplate, TextRunDataMarker>;
-pub type TextRunDataHandle = intern::Handle<TextRunDataMarker>;
-pub type TextRunDataUpdateList = intern::UpdateList<TextRunKey>;
-pub type TextRunDataInterner = intern::Interner<TextRunKey, PrimitiveSceneData, TextRunDataMarker>;
+pub use intern_types::text_run::Handle as TextRunDataHandle;
 
 pub struct TextRun {
     pub font: FontInstance,
@@ -179,7 +172,7 @@ pub struct TextRun {
 }
 
 impl intern::Internable for TextRun {
-    type Marker = TextRunDataMarker;
+    type Marker = intern_types::text_run::Marker;
     type Source = TextRunKey;
     type StoreData = TextRunTemplate;
     type InternData = PrimitiveSceneData;

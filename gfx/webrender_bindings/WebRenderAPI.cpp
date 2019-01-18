@@ -676,7 +676,7 @@ Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(
     const wr::LayoutRect& aBounds, const wr::WrStackingContextClip& aClip,
     const WrAnimationProperty* aAnimation, const float* aOpacity,
     const gfx::Matrix4x4* aTransform, wr::TransformStyle aTransformStyle,
-    const gfx::Matrix4x4* aPerspective, const wr::MixBlendMode& aMixBlendMode,
+    const wr::ReferenceFrameKind aReferenceFrameKind, const wr::MixBlendMode& aMixBlendMode,
     const nsTArray<wr::FilterOp>& aFilters, bool aIsBackfaceVisible,
     const wr::RasterSpace& aRasterSpace) {
   MOZ_ASSERT(mClipChainLeaf.isNothing(),
@@ -687,20 +687,13 @@ Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(
     matrix = ToLayoutTransform(*aTransform);
   }
   const wr::LayoutTransform* maybeTransform = aTransform ? &matrix : nullptr;
-  wr::LayoutTransform perspective;
-  if (aPerspective) {
-    perspective = ToLayoutTransform(*aPerspective);
-  }
-
-  const wr::LayoutTransform* maybePerspective =
-      aPerspective ? &perspective : nullptr;
   WRDL_LOG("PushStackingContext b=%s t=%s\n", mWrState,
            Stringify(aBounds).c_str(),
            aTransform ? Stringify(*aTransform).c_str() : "none");
 
   auto spatialId = wr_dp_push_stacking_context(
       mWrState, aBounds, mCurrentSpaceAndClipChain.space, &aClip, aAnimation,
-      aOpacity, maybeTransform, aTransformStyle, maybePerspective,
+      aOpacity, maybeTransform, aTransformStyle, aReferenceFrameKind,
       aMixBlendMode, aFilters.Elements(), aFilters.Length(), aIsBackfaceVisible,
       aRasterSpace);
 

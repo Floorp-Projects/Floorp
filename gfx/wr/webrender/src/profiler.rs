@@ -401,20 +401,38 @@ pub struct IpcProfileCounters {
     pub display_lists: ResourceProfileCounter,
 }
 
-#[derive(Clone)]
-pub struct InternProfileCounters {
-    pub prims: ResourceProfileCounter,
-    pub images: ResourceProfileCounter,
-    pub image_borders: ResourceProfileCounter,
-    pub line_decs: ResourceProfileCounter,
-    pub linear_gradients: ResourceProfileCounter,
-    pub normal_borders: ResourceProfileCounter,
-    pub pictures: ResourceProfileCounter,
-    pub radial_gradients: ResourceProfileCounter,
-    pub text_runs: ResourceProfileCounter,
-    pub yuv_images: ResourceProfileCounter,
-    pub clips: ResourceProfileCounter,
+macro_rules! declare_intern_profile_counters {
+    ( $( $name: ident, )+ ) => {
+        #[derive(Clone)]
+        pub struct InternProfileCounters {
+            $(
+                pub $name: ResourceProfileCounter,
+            )+
+        }
+
+        impl InternProfileCounters {
+            #[cfg(feature = "debug_renderer")]
+            fn draw(
+                &self,
+                debug_renderer: &mut DebugRenderer,
+                draw_state: &mut DrawState,
+            ) {
+                Profiler::draw_counters(
+                    &[
+                        $(
+                            &self.$name,
+                        )+
+                    ],
+                    debug_renderer,
+                    true,
+                    draw_state,
+                );
+            }
+        }
+    }
 }
+
+enumerate_interners!(declare_intern_profile_counters);
 
 impl IpcProfileCounters {
     pub fn set(
@@ -455,17 +473,17 @@ impl BackendProfileCounters {
                 display_lists: ResourceProfileCounter::new("Display Lists Sent"),
             },
             intern: InternProfileCounters {
-                prims: ResourceProfileCounter::new("Interned primitives"),
-                images: ResourceProfileCounter::new("Interned images"),
-                image_borders: ResourceProfileCounter::new("Interned image borders"),
-                line_decs: ResourceProfileCounter::new("Interned line decorations"),
-                linear_gradients: ResourceProfileCounter::new("Interned linear gradients"),
-                normal_borders: ResourceProfileCounter::new("Interned normal borders"),
-                pictures: ResourceProfileCounter::new("Interned pictures"),
-                radial_gradients: ResourceProfileCounter::new("Interned radial gradients"),
-                text_runs: ResourceProfileCounter::new("Interned text runs"),
-                yuv_images: ResourceProfileCounter::new("Interned YUV images"),
-                clips: ResourceProfileCounter::new("Interned clips"),
+                prim: ResourceProfileCounter::new("Interned primitives"),
+                image: ResourceProfileCounter::new("Interned images"),
+                image_border: ResourceProfileCounter::new("Interned image borders"),
+                line_decoration: ResourceProfileCounter::new("Interned line decorations"),
+                linear_grad: ResourceProfileCounter::new("Interned linear gradients"),
+                normal_border: ResourceProfileCounter::new("Interned normal borders"),
+                picture: ResourceProfileCounter::new("Interned pictures"),
+                radial_grad: ResourceProfileCounter::new("Interned radial gradients"),
+                text_run: ResourceProfileCounter::new("Interned text runs"),
+                yuv_image: ResourceProfileCounter::new("Interned YUV images"),
+                clip: ResourceProfileCounter::new("Interned clips"),
             },
         }
     }
@@ -1111,24 +1129,7 @@ impl Profiler {
             &mut self.draw_state
         );
 
-        Profiler::draw_counters(
-            &[
-                &backend_profile.intern.clips,
-                &backend_profile.intern.prims,
-                &backend_profile.intern.images,
-                &backend_profile.intern.image_borders,
-                &backend_profile.intern.line_decs,
-                &backend_profile.intern.linear_gradients,
-                &backend_profile.intern.normal_borders,
-                &backend_profile.intern.pictures,
-                &backend_profile.intern.radial_gradients,
-                &backend_profile.intern.text_runs,
-                &backend_profile.intern.yuv_images,
-            ],
-            debug_renderer,
-            true,
-            &mut self.draw_state
-        );
+        backend_profile.intern.draw(debug_renderer, &mut self.draw_state);
 
         Profiler::draw_counters(
             &[

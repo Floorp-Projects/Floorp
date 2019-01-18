@@ -29,29 +29,35 @@ export class _Search extends React.PureComponent {
     window.gContentSearchController.search(event);
   }
 
+  doSearchHandoff(text) {
+    this.props.dispatch(ac.OnlyToMain({type: at.HANDOFF_SEARCH_TO_AWESOMEBAR, data: {text}}));
+    this.props.dispatch(ac.UserEvent({event: "SEARCH_HANDOFF"}));
+    if (text) {
+      // We don't hide the in-content search if there is no text (user hit <Enter>)
+      this.props.dispatch({type: at.HIDE_SEARCH});
+    }
+  }
+
   onSearchHandoffClick(event) {
     // When search hand-off is enabled, we render a big button that is styled to
-    // look like a search textbox. If the button is clicked with the mouse, we style
-    // the button as if it was a focused search box and show a fake cursor but
-    // really focus the awesomebar without the focus styles.
+    // look like a search textbox. If the button is clicked with the mouse, we
+    // focus it. If the user types, transfer focus to awesomebar.
     // If the button is clicked from the keyboard, we focus the awesomebar normally.
     // This is to minimize confusion with users navigating with the keyboard and
     // users using assistive technologoy.
+    event.preventDefault();
     const isKeyboardClick = event.clientX === 0 && event.clientY === 0;
-    const hiddenFocus =  !isKeyboardClick;
-    this.props.dispatch(ac.OnlyToMain({type: at.HANDOFF_SEARCH_TO_AWESOMEBAR, data: {hiddenFocus}}));
-    this.props.dispatch({type: at.FOCUS_SEARCH});
-
-    // TODO: Send a telemetry ping. BUG 1514732
+    if (isKeyboardClick) {
+      this.doSearchHandoff();
+    } else {
+      this._searchHandoffButton.focus();
+    }
   }
 
   onSearchHandoffKeyDown(event) {
     if (event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
       // We only care about key strokes that will produce a character.
-      const text = event.key;
-      this.props.dispatch(ac.OnlyToMain({type: at.HANDOFF_SEARCH_TO_AWESOMEBAR, data: {text}}));
-
-      // TODO: Send a telemetry ping. BUG 1514732
+      this.doSearchHandoff(event.key);
     }
   }
 
@@ -63,10 +69,7 @@ export class _Search extends React.PureComponent {
       return;
     }
     event.preventDefault();
-    const text = event.clipboardData.getData("Text");
-    this.props.dispatch(ac.OnlyToMain({type: at.HANDOFF_SEARCH_TO_AWESOMEBAR, data: {text}}));
-
-    // TODO: Send a telemetry ping. BUG 1514732
+    this.doSearchHandoff(event.clipboardData.getData("Text"));
   }
 
   componentWillMount() {
@@ -127,7 +130,6 @@ export class _Search extends React.PureComponent {
     const wrapperClassName = [
       "search-wrapper",
       this.props.hide && "search-hidden",
-      this.props.focus && "search-active",
     ].filter(v => v).join(" ");
 
     return (<div className={wrapperClassName}>

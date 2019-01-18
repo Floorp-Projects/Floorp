@@ -7,6 +7,7 @@
   font-size: 14px;
   padding-left: $sidebar-width;
   display: flex;
+  color: var(--newtab-text-primary-color);
 
   .sidebar {
     inset-inline-start: 0;
@@ -23,9 +24,10 @@
     li a {
       padding: 10px 34px;
       display: block;
+      color: var(--lwt-sidebar-text-color);
 
       &:hover {
-        background: $grey-20;
+        background: var(--newtab-textbox-background-color);
       }
     }
   }
@@ -49,7 +51,7 @@
   }
 
   .sourceLabel {
-    background: $grey-20;
+    background: var(--newtab-textbox-background-color);
     padding: 2px 5px;
     border-radius: 3px;
 
@@ -136,6 +138,7 @@
     display: flex;
     background: $yellow-50;
     border-radius: 3px;
+    color: $grey-90;
 
     a {
       text-decoration: underline;

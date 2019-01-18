@@ -726,8 +726,8 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_DNSSERVICE_CID, false, nullptr, nsIDNSServiceConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { &kNS_IDNSERVICE_CID, false, nullptr, nsIDNServiceConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { &kNS_EFFECTIVETLDSERVICE_CID, false, nullptr, nsEffectiveTLDServiceConstructor },
-    { &kNS_SIMPLEURI_CID, false, nullptr, nsSimpleURIMutatorConstructor }, // do_CreateInstance returns mutator
-    { &kNS_SIMPLEURIMUTATOR_CID, false, nullptr, nsSimpleURIMutatorConstructor },
+    { &kNS_SIMPLEURI_CID, false, nullptr, nsSimpleURIMutatorConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS }, // do_CreateInstance returns mutator
+    { &kNS_SIMPLEURIMUTATOR_CID, false, nullptr, nsSimpleURIMutatorConstructor, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { &kNS_SIMPLENESTEDURI_CID, false, nullptr, nsSimpleNestedURIMutatorConstructor }, // do_CreateInstance returns mutator
     { &kNS_SIMPLENESTEDURIMUTATOR_CID, false, nullptr, nsSimpleNestedURIMutatorConstructor },
     { &kNS_ASYNCSTREAMCOPIER_CID, false, nullptr, nsAsyncStreamCopierConstructor },
@@ -836,7 +836,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_DNSSERVICE_CONTRACTID, &kNS_DNSSERVICE_CID, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { NS_IDNSERVICE_CONTRACTID, &kNS_IDNSERVICE_CID, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { NS_EFFECTIVETLDSERVICE_CONTRACTID, &kNS_EFFECTIVETLDSERVICE_CID },
-    { NS_SIMPLEURIMUTATOR_CONTRACTID, &kNS_SIMPLEURIMUTATOR_CID },
+    { NS_SIMPLEURIMUTATOR_CONTRACTID, &kNS_SIMPLEURIMUTATOR_CID, mozilla::Module::ALLOW_IN_SOCKET_PROCESS },
     { NS_ASYNCSTREAMCOPIER_CONTRACTID, &kNS_ASYNCSTREAMCOPIER_CID },
     { NS_INPUTSTREAMPUMP_CONTRACTID, &kNS_INPUTSTREAMPUMP_CID },
     { NS_INPUTSTREAMCHANNEL_CONTRACTID, &kNS_INPUTSTREAMCHANNEL_CID },

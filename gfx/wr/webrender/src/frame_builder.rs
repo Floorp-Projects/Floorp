@@ -18,7 +18,7 @@ use prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, Pr
 #[cfg(feature = "replay")]
 use prim_store::{PrimitiveStoreStats};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
-use render_backend::{FrameResources, FrameStamp};
+use render_backend::{DataStores, FrameStamp};
 use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
 use resource_cache::{ResourceCache};
 use scene::{ScenePipeline, SceneProperties};
@@ -86,7 +86,7 @@ pub struct FrameVisibilityState<'a> {
     pub scratch: &'a mut PrimitiveScratchBuffer,
     pub tile_cache: Option<TileCache>,
     pub retained_tiles: &'a mut RetainedTiles,
-    pub resources: &'a mut FrameResources,
+    pub data_stores: &'a mut DataStores,
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -244,7 +244,7 @@ impl FrameBuilder {
         device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
         transform_palette: &mut TransformPalette,
-        resources: &mut FrameResources,
+        data_stores: &mut DataStores,
         surfaces: &mut Vec<SurfaceInfo>,
         scratch: &mut PrimitiveScratchBuffer,
         debug_flags: DebugFlags,
@@ -305,7 +305,7 @@ impl FrameBuilder {
             &mut pic_update_state,
             &frame_context,
             gpu_cache,
-            resources,
+            data_stores,
             &self.clip_store,
         );
 
@@ -326,7 +326,7 @@ impl FrameBuilder {
                 scratch,
                 tile_cache: None,
                 retained_tiles: &mut retained_tiles,
-                resources,
+                data_stores,
             };
 
             self.prim_store.update_visibility(
@@ -369,7 +369,7 @@ impl FrameBuilder {
             &mut pic_state,
             &frame_context,
             &mut frame_state,
-            resources,
+            data_stores,
             scratch,
         );
 
@@ -417,7 +417,7 @@ impl FrameBuilder {
         texture_cache_profile: &mut TextureCacheProfileCounters,
         gpu_cache_profile: &mut GpuCacheProfileCounters,
         scene_properties: &SceneProperties,
-        resources: &mut FrameResources,
+        data_stores: &mut DataStores,
         scratch: &mut PrimitiveScratchBuffer,
         debug_flags: DebugFlags,
     ) -> Frame {
@@ -458,7 +458,7 @@ impl FrameBuilder {
             device_pixel_scale,
             scene_properties,
             &mut transform_palette,
-            resources,
+            data_stores,
             &mut surfaces,
             scratch,
             debug_flags,
@@ -512,7 +512,7 @@ impl FrameBuilder {
                 resource_cache,
                 use_dual_source_blending,
                 clip_scroll_tree,
-                resources,
+                data_stores,
                 surfaces: &surfaces,
                 scratch,
             };

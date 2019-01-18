@@ -18,7 +18,7 @@ using namespace mozilla::dom;
 NS_IMPL_ISUPPORTS(URLClassifierParent, nsIURIClassifierCallback)
 
 mozilla::ipc::IPCResult URLClassifierParent::StartClassify(
-    nsIPrincipal* aPrincipal, bool aUseTrackingProtection, bool* aSuccess) {
+    nsIPrincipal* aPrincipal, bool* aSuccess) {
   *aSuccess = false;
   nsresult rv = NS_OK;
   // Note that in safe mode, the URL classifier service isn't available, so we
@@ -26,8 +26,7 @@ mozilla::ipc::IPCResult URLClassifierParent::StartClassify(
   nsCOMPtr<nsIURIClassifier> uriClassifier =
       do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = uriClassifier->Classify(aPrincipal, nullptr, aUseTrackingProtection,
-                                 this, aSuccess);
+    rv = uriClassifier->Classify(aPrincipal, nullptr, this, aSuccess);
   }
   if (NS_FAILED(rv) || !*aSuccess) {
     // We treat the case where we fail to classify and the case where the

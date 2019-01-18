@@ -10,61 +10,42 @@ def moz_jemalloc4(value):
     die('MOZ_JEMALLOC4 is deprecated')
 
 
-option('--enable-jemalloc', env='MOZ_MEMORY',
-       help='Replace memory allocator with jemalloc')
+@depends(target)
+def jemalloc_default(target):
+    return target.kernel in ('Darwin', 'Linux', 'WINNT')
 
 
-@depends('--enable-jemalloc', target)
-def jemalloc(value, target):
-    if value.origin != 'default':
-        return bool(value) or None
-
-    if target.kernel in ('Darwin', 'Linux', 'WINNT'):
-        return True
+js_option('--enable-jemalloc', env='MOZ_MEMORY', default=jemalloc_default,
+          help='{Replace|Do not replace} memory allocator with jemalloc')
 
 
-set_config('MOZ_MEMORY', jemalloc)
-set_define('MOZ_MEMORY', jemalloc)
-add_old_configure_assignment('MOZ_MEMORY', jemalloc)
+set_config('MOZ_MEMORY', True, when='--enable-jemalloc')
+set_define('MOZ_MEMORY', True, when='--enable-jemalloc')
+add_old_configure_assignment('MOZ_MEMORY', True, when='--enable-jemalloc')
 
 
-# Because --enable-jemalloc doesn't use a default because of the dependency
-# on the target, we can't use a js_option for it to propagate to js/src
-# through the old-configure.
-@depends(jemalloc)
-def jemalloc_for_old_configure(jemalloc):
-    return '--%s-jemalloc' % ('enable' if jemalloc else 'disable')
-
-
-add_old_configure_arg(jemalloc_for_old_configure)
-
-
-option('--enable-replace-malloc',
-       help='Enable ability to dynamically replace the malloc implementation')
-
-
-@depends('--enable-replace-malloc', jemalloc, milestone, build_project)
-def replace_malloc(value, jemalloc, milestone, build_project):
-    # Enable on central for the debugging opportunities it adds.
-    if value and not jemalloc:
-        die('--enable-replace-malloc requires --enable-jemalloc')
-    if value.origin != 'default':
-        return bool(value) or None
+@depends(milestone, build_project)
+def replace_malloc_default(milestone, build_project):
     if build_project == 'memory':
         return True
-    if milestone.is_nightly and jemalloc and build_project != 'js':
+    if milestone.is_nightly and build_project != 'js':
         return True
 
 
-set_config('MOZ_REPLACE_MALLOC', replace_malloc)
-set_define('MOZ_REPLACE_MALLOC', replace_malloc)
+js_option('--enable-replace-malloc', default=replace_malloc_default,
+          when='--enable-jemalloc',
+          help='{Enable|Disable} ability to dynamically replace the malloc implementation')
 
 
-@depends(replace_malloc, build_project)
-def replace_malloc_static(replace_malloc, build_project):
+set_config('MOZ_REPLACE_MALLOC', True, when='--enable-replace-malloc')
+set_define('MOZ_REPLACE_MALLOC', True, when='--enable-replace-malloc')
+
+
+@depends(build_project, when='--enable-replace-malloc')
+def replace_malloc_static(build_project):
     # Default to statically linking replace-malloc libraries that can be
     # statically linked, except when building with --enable-project=memory.
-    if replace_malloc and build_project != 'memory':
+    if build_project != 'memory':
         return True
 
 

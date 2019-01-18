@@ -732,8 +732,6 @@ nsresult nsExpatDriver::HandleError() {
   CreateErrorText(description.get(), XML_GetBase(mExpatParser), lineNumber,
                   colNumber, errorText);
 
-  NS_ASSERTION(mSink, "no sink?");
-
   nsAutoString sourceText(mLastLine);
   AppendErrorPointer(colNumber, mLastLine.get(), sourceText);
 
@@ -749,6 +747,7 @@ nsresult nsExpatDriver::HandleError() {
   // If it didn't initialize, we can't do any logging.
   bool shouldReportError = NS_SUCCEEDED(rv);
 
+  // mSink might be null here if our parser was terminated.
   if (mSink && shouldReportError) {
     rv = mSink->ReportError(errorText.get(), sourceText.get(), serr,
                             &shouldReportError);
@@ -757,6 +756,7 @@ nsresult nsExpatDriver::HandleError() {
     }
   }
 
+  // mOriginalSink might be null here if our parser was terminated.
   if (mOriginalSink) {
     nsCOMPtr<Document> doc = do_QueryInterface(mOriginalSink->GetTarget());
     if (doc && doc->SuppressParserErrorConsoleMessages()) {

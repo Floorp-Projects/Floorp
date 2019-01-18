@@ -198,13 +198,12 @@ fn write_reference_frame(
 ) {
     matrix4d_node(
         parent,
-        "transform",
+        match reference_frame.kind {
+            ReferenceFrameKind::Transform => "transform",
+            ReferenceFrameKind::Perspective => "perspective",
+        },
         &properties.resolve_layout_transform(&reference_frame.transform)
     );
-
-    if let Some(perspective) = reference_frame.perspective {
-        matrix4d_node(parent, "perspective", &perspective);
-    }
 
     usize_node(parent, "id", clip_id_mapper.add_spatial_id(reference_frame.id));
 }
