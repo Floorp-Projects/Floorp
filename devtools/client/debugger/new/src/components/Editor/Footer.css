@@ -86,7 +86,7 @@
 .source-footer .mapped-source,
 .source-footer .cursor-position {
   color: var(--theme-body-color);
-  padding-left: 2.5px;
+  padding-right: 2.5px;
 }
 
 .source-footer .mapped-source {
