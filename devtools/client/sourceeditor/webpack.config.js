@@ -4,6 +4,9 @@
 
 "use strict";
 
+/* global __dirname */
+const path = require("path");
+
 module.exports = [{
   bail: true,
   entry: [
@@ -37,7 +40,8 @@ module.exports = [{
     "./codemirror/lib/codemirror.js",
   ],
   output: {
-    filename: "./codemirror/codemirror.bundle.js",
+    path: path.resolve(__dirname, "./codemirror/"),
+    filename: "codemirror.bundle.js",
     libraryTarget: "var",
     library: "CodeMirror",
   },
