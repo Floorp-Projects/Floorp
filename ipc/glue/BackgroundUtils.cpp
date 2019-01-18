@@ -115,15 +115,8 @@ already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return nullptr;
         }
-
-        for (auto policy : info.securityPolicies()) {
-          rv = csp->AppendPolicy(policy.policy(), policy.reportOnlyFlag(),
-                                 policy.deliveredViaMetaTagFlag());
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return nullptr;
-          }
-        }
-
+        static_cast<nsCSPContext*>(csp.get())->SetIPCPolicies(
+            info.securityPolicies());
         principal->SetCsp(csp);
       }
 
