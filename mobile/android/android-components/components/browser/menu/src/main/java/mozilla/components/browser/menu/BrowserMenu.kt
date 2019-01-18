@@ -71,7 +71,7 @@ class BrowserMenu internal constructor(
         fun determineMenuOrientation(parent: View): BrowserMenu.Orientation {
             val params = parent.layoutParams
             return if (params is CoordinatorLayout.LayoutParams) {
-                if (params.gravity and Gravity.BOTTOM == Gravity.BOTTOM) {
+                if ((params.gravity and Gravity.BOTTOM) == Gravity.BOTTOM) {
                     BrowserMenu.Orientation.UP
                 } else {
                     BrowserMenu.Orientation.DOWN
