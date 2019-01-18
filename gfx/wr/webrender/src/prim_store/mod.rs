@@ -821,14 +821,8 @@ impl PrimitiveTemplate {
     }
 }
 
-// Type definitions for interning primitives.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
-pub struct PrimitiveDataMarker;
-
 impl intern::Internable for PrimitiveKeyKind {
-    type Marker = PrimitiveDataMarker;
+    type Marker = ::intern_types::prim::Marker;
     type Source = PrimitiveKey;
     type StoreData = PrimitiveTemplate;
     type InternData = PrimitiveSceneData;
@@ -845,10 +839,7 @@ impl intern::Internable for PrimitiveKeyKind {
     }
 }
 
-pub type PrimitiveDataStore = intern::DataStore<PrimitiveKey, PrimitiveTemplate, PrimitiveDataMarker>;
-pub type PrimitiveDataHandle = intern::Handle<PrimitiveDataMarker>;
-pub type PrimitiveDataUpdateList = intern::UpdateList<PrimitiveKey>;
-pub type PrimitiveDataInterner = intern::Interner<PrimitiveKey, PrimitiveSceneData, PrimitiveDataMarker>;
+use intern_types::prim::Handle as PrimitiveDataHandle;
 
 // Maintains a list of opacity bindings that have been collapsed into
 // the color of a single primitive. This is an important optimization
