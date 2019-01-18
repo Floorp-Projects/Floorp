@@ -455,6 +455,17 @@ partial interface Window {
   ChromeMessageBroadcaster getGroupMessageManager(DOMString aGroup);
 
   /**
+   * On some operating systems, we must allow the window manager to
+   * handle window dragging. This function tells the window manager to
+   * start dragging the window. This function will fail unless called
+   * while the left mouse button is held down, callers must check this.
+   *
+   * Throws NS_ERROR_NOT_IMPLEMENTED if the OS doesn't support this.
+   */
+  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
+  void beginWindowMove(Event mouseDownEvent);
+
+  /**
    * Calls the given function as soon as a style or layout flush for the
    * top-level document is not necessary, and returns a Promise which
    * resolves to the callback's return value after it executes.
