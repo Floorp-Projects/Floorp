@@ -13,7 +13,6 @@ import android.view.accessibility.AccessibilityManager
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import mozilla.components.service.glean.net.HttpPingUploader
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
@@ -51,8 +50,7 @@ class GleanTest {
 
     @Before
     fun setup() {
-        Glean.initialized = false
-        Glean.initialize(ApplicationProvider.getApplicationContext())
+        resetGlean()
     }
 
     @After
@@ -132,12 +130,10 @@ class GleanTest {
             sendInPings = listOf("default")
         )
 
-        val realClient = Glean.httpPingUploader
-        val testConfig = Glean.configuration.copy(
+        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
             serverEndpoint = "http://" + server.hostName + ":" + server.port,
             logPings = true
-        )
-        Glean.httpPingUploader = HttpPingUploader(testConfig)
+        ))
 
         try {
             stringMetric.set("foo")
@@ -172,7 +168,6 @@ class GleanTest {
                 request.path.startsWith("/submit/$applicationId/metrics/${Glean.SCHEMA_VERSION}/")
             )
         } finally {
-            Glean.httpPingUploader = realClient
             server.shutdown()
         }
     }
@@ -192,12 +187,10 @@ class GleanTest {
             objects = listOf("buttonA")
         )
 
-        val realClient = Glean.httpPingUploader
-        val testConfig = Glean.configuration.copy(
+        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
             serverEndpoint = "http://" + server.hostName + ":" + server.port,
             logPings = true
-        )
-        Glean.httpPingUploader = HttpPingUploader(testConfig)
+        ))
 
         // Fake calling the lifecycle observer.
         val lifecycleRegistry = LifecycleRegistry(mock(LifecycleOwner::class.java))
@@ -243,7 +236,6 @@ class GleanTest {
             assertEquals(1, baselineTimespanMetrics.length())
             assertNotNull(baselineTimespanMetrics.get("baseline.duration"))
         } finally {
-            Glean.httpPingUploader = realClient
             server.shutdown()
             lifecycleRegistry.removeObserver(gleanLifecycleObserver)
         }
@@ -261,10 +253,7 @@ class GleanTest {
         // Create a file in its place.
         assertTrue(gleanDir.createNewFile())
 
-        Glean.initialized = false
-
-        // Try to init Glean: it should not crash.
-        Glean.initialize(applicationContext = ApplicationProvider.getApplicationContext())
+        resetGlean()
 
         // Clean up after this, so that other tests don't fail.
         assertTrue(gleanDir.delete())
@@ -292,7 +281,7 @@ class GleanTest {
 
     @Test(expected = IllegalStateException::class)
     fun `Don't initialize twice`() {
-        Glean.initialize(applicationContext = ApplicationProvider.getApplicationContext())
+        Glean.initialize(ApplicationProvider.getApplicationContext())
     }
 
     @Test
@@ -311,11 +300,9 @@ class GleanTest {
 
         EventsStorageEngine.clearAllStores()
 
-        val realClient = Glean.httpPingUploader
-        val testConfig = Glean.configuration.copy(
+        resetGlean(config = Glean.configuration.copy(
             serverEndpoint = "http://" + server.hostName + ":" + server.port
-        )
-        Glean.httpPingUploader = HttpPingUploader(testConfig)
+        ))
         Glean.setMetricsEnabled(false)
 
         try {
@@ -328,7 +315,6 @@ class GleanTest {
             // request will be null if no pings were sent
             assertNull(request)
         } finally {
-            Glean.httpPingUploader = realClient
             server.shutdown()
         }
     }
@@ -340,11 +326,9 @@ class GleanTest {
 
         EventsStorageEngine.clearAllStores()
 
-        val realClient = Glean.httpPingUploader
-        val testConfig = Glean.configuration.copy(
+        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
             serverEndpoint = "http://" + server.hostName + ":" + server.port
-        )
-        Glean.httpPingUploader = HttpPingUploader(testConfig)
+        ))
 
         try {
             Glean.handleEvent(Glean.PingEvent.Background)
@@ -364,7 +348,6 @@ class GleanTest {
             // Make sure the events ping is NOT there since no events should have been recorded
             assertNull("Events request should be null since there was no event data", requests["events"])
         } finally {
-            Glean.httpPingUploader = realClient
             server.shutdown()
         }
     }

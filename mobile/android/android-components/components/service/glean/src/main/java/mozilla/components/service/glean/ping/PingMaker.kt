@@ -92,10 +92,7 @@ internal class PingMaker(
         // Experiments belong in ping_info, because they must appear in every ping
         pingInfo.put("experiments", ExperimentsStorageEngine.getSnapshotAsJSON("", false))
 
-        // TODO this section is still missing real app_build and experiments.
-        // These fields will be added by bug 1497894 when 1499756 and 1501318 land.
         pingInfo.put("seq", getPingSeq(pingName))
-        pingInfo.put("app_build", "test-placeholder")
 
         pingInfo.mergeWith(getPingInfoMetrics())
 

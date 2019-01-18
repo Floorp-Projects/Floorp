@@ -6,11 +6,12 @@ package mozilla.components.service.glean.storages
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.checkPingSchema
-import mozilla.components.service.glean.FakeDispatchersInTest
-import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.EventMetricType
 import mozilla.components.service.glean.Lifetime
-import mozilla.components.service.glean.net.HttpPingUploader
+import mozilla.components.service.glean.EventMetricType
+import mozilla.components.service.glean.FakeDispatchersInTest
+import mozilla.components.service.glean.getContextWithMockedInfo
+import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.resetGlean
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
@@ -31,9 +32,7 @@ class EventsStorageEngineTest {
     @Before
     fun setUp() {
         Glean.initialized = false
-        Glean.initialize(
-            applicationContext = ApplicationProvider.getApplicationContext()
-        )
+        Glean.initialize(ApplicationProvider.getApplicationContext())
         assert(Glean.initialized)
         EventsStorageEngine.clearAllStores()
     }
@@ -189,11 +188,10 @@ class EventsStorageEngineTest {
             objects = listOf("buttonA")
         )
 
-        val realClient = Glean.httpPingUploader
-        val testConfig = Glean.configuration.copy(
-            serverEndpoint = "http://" + server.hostName + ":" + server.port
-        )
-        Glean.httpPingUploader = HttpPingUploader(testConfig)
+        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
+            serverEndpoint = "http://" + server.hostName + ":" + server.port,
+            logPings = true
+        ))
 
         try {
             // We send 510 events.  We expect to get the first 500 in the ping, and 10 remaining afterward
@@ -214,7 +212,6 @@ class EventsStorageEngineTest {
                 assertEquals("$i", eventsArray.getJSONArray(i).getString(4))
             }
         } finally {
-            Glean.httpPingUploader = realClient
             server.shutdown()
         }
 

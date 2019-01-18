@@ -8,9 +8,9 @@ import android.view.accessibility.AccessibilityManager
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.arch.lifecycle.ProcessLifecycleOwner
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.support.annotation.VisibleForTesting
-import android.support.v4.view.accessibility.AccessibilityManagerCompat.getEnabledAccessibilityServiceList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -218,6 +218,19 @@ open class GleanInternalAPI {
         val firstRunDetector = FileFirstRunDetector(gleanDataDir)
         if (firstRunDetector.isFirstRun()) {
             GleanInternalMetrics.clientId.generateAndSet()
+        }
+
+        try {
+            val packageInfo = applicationContext.packageManager.getPackageInfo(
+                applicationContext.packageName, 0
+            )
+            GleanInternalMetrics.appBuild.set(packageInfo.versionCode.toString())
+            packageInfo.versionName?.let {
+                GleanInternalMetrics.appDisplayVersion.set(it)
+            }
+        } catch (e: PackageManager.NameNotFoundException) {
+            logger.error("Could not get own package info, unable to report build id and display version")
+            throw AssertionError("Could not get own package info, aborting init")
         }
 
         // Set the OS type
