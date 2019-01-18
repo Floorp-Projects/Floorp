@@ -30,6 +30,10 @@ export function addOngoingSearch(ongoingSearch: SearchOperation): Action {
   return { type: "ADD_ONGOING_SEARCH", ongoingSearch };
 }
 
+export function clearSearchQuery(): Action {
+  return { type: "CLEAR_QUERY" };
+}
+
 export function addSearchResult(
   sourceId: string,
   filepath: string,

@@ -9,11 +9,8 @@ DIRS += [
 
 DebuggerModules(
     'index.js',
-    'Outline.css',
     'Outline.js',
-    'OutlineFilter.css',
     'OutlineFilter.js',
-    'Sources.css',
     'SourcesTree.js',
     'SourcesTreeItem.js',
 )

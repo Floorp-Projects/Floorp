@@ -17,5 +17,4 @@ DebuggerModules(
     'mappingContains.js',
     'positionCmp.js',
     'rangeMetadata.js',
-    'README.md',
 )
