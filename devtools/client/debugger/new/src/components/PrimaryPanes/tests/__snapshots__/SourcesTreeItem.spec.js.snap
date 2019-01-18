@@ -861,8 +861,8 @@ Object {
     <AccessibleImage
       className="arrow"
     />
-    <Svg
-      name="angular"
+    <AccessibleImage
+      className="angular"
     />
     <span
       className="label"
@@ -955,8 +955,8 @@ Object {
           <AccessibleImage
             className="arrow"
           />
-          <Svg
-            name="angular"
+          <AccessibleImage
+            className="angular"
           />
           <span
             className="label"
@@ -1408,8 +1408,8 @@ Object {
     <AccessibleImage
       className="arrow"
     />
-    <Svg
-      name="webpack"
+    <AccessibleImage
+      className="webpack"
     />
     <span
       className="label"
@@ -1502,8 +1502,8 @@ Object {
           <AccessibleImage
             className="arrow"
           />
-          <Svg
-            name="webpack"
+          <AccessibleImage
+            className="webpack"
           />
           <span
             className="label"

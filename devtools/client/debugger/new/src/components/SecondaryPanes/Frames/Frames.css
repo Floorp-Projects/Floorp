@@ -103,6 +103,7 @@
 }
 
 .annotation-logo {
+  mask-size: 100%;
   display: inline-block;
   width: 12px;
 }
