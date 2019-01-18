@@ -2168,6 +2168,7 @@ STATIC_ATOMS = [
     Atom("_moz_gtk_csd_minimize_button", "-moz-gtk-csd-minimize-button"),
     Atom("_moz_gtk_csd_maximize_button", "-moz-gtk-csd-maximize-button"),
     Atom("_moz_gtk_csd_close_button", "-moz-gtk-csd-close-button"),
+    Atom("_moz_gtk_csd_reversed_placement", "-moz-gtk-csd-reversed-placement"),
     Atom("_moz_system_dark_theme", "-moz-system-dark-theme"),
 
     # application commands
