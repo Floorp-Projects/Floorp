@@ -83,6 +83,12 @@ class BasicCompositor : public Compositor {
 
   bool SupportsLayerGeometry() const override;
 
+  virtual bool ReadbackRenderTarget(CompositingRenderTarget* aSource,
+                                    AsyncReadbackBuffer* aDest) override;
+
+  virtual already_AddRefed<AsyncReadbackBuffer> CreateAsyncReadbackBuffer(
+      const gfx::IntSize& aSize) override;
+
   virtual void SetRenderTarget(CompositingRenderTarget* aSource) override {
     mRenderTarget = static_cast<BasicCompositingRenderTarget*>(aSource);
     mRenderTarget->BindRenderTarget();

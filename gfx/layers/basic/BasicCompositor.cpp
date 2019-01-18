@@ -14,6 +14,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/gfx/Swizzle.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/ssse3-scaler.h"
 #include "mozilla/layers/ImageDataSerializer.h"
@@ -178,6 +179,37 @@ class WrappingTextureSourceYCbCrBasic : public DataTextureSource,
   RefPtr<gfx::DataSourceSurface> mSurface;
   bool mNeedsUpdate;
 };
+
+class BasicAsyncReadbackBuffer final : public AsyncReadbackBuffer {
+ public:
+  explicit BasicAsyncReadbackBuffer(const IntSize& aSize)
+      : AsyncReadbackBuffer(aSize) {}
+
+  bool MapAndCopyInto(DataSourceSurface* aSurface,
+                      const IntSize& aReadSize) const override;
+
+  void TakeSurface(SourceSurface* aSurface) { mSurface = aSurface; }
+
+ private:
+  RefPtr<SourceSurface> mSurface;
+};
+
+bool BasicAsyncReadbackBuffer::MapAndCopyInto(DataSourceSurface* aSurface,
+                                              const IntSize& aReadSize) const {
+  if (!mSurface) {
+    return false;
+  }
+
+  MOZ_RELEASE_ASSERT(aReadSize <= aSurface->GetSize());
+  RefPtr<DataSourceSurface> source = mSurface->GetDataSurface();
+
+  DataSourceSurface::ScopedMap sourceMap(source, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap destMap(aSurface, DataSourceSurface::WRITE);
+
+  return SwizzleData(sourceMap.GetData(), sourceMap.GetStride(),
+                     mSurface->GetFormat(), destMap.GetData(),
+                     destMap.GetStride(), aSurface->GetFormat(), aReadSize);
+}
 
 BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent,
                                  widget::CompositorWidget* aWidget)
@@ -819,6 +851,20 @@ void BasicCompositor::ClearRect(const gfx::Rect& aRect) {
   if (mFullWindowRenderTarget) {
     mFullWindowRenderTarget->mDrawTarget->ClearRect(aRect);
   }
+}
+
+bool BasicCompositor::ReadbackRenderTarget(CompositingRenderTarget* aSource,
+                                           AsyncReadbackBuffer* aDest) {
+  RefPtr<SourceSurface> snapshot =
+      static_cast<BasicCompositingRenderTarget*>(aSource)
+          ->mDrawTarget->Snapshot();
+  static_cast<BasicAsyncReadbackBuffer*>(aDest)->TakeSurface(snapshot);
+  return true;
+}
+
+already_AddRefed<AsyncReadbackBuffer>
+BasicCompositor::CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) {
+  return MakeAndAddRef<BasicAsyncReadbackBuffer>(aSize);
 }
 
 void BasicCompositor::BeginFrame(
