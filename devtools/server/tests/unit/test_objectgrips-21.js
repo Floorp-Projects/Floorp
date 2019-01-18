@@ -4,12 +4,6 @@
 
 "use strict";
 
-Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-});
-
 // Run test_unsafe_grips twice, one against a system principal debuggee
 // and another time with a null principal debuggee
 
