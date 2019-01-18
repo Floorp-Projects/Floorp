@@ -8,8 +8,7 @@ use api::{
 };
 use app_units::Au;
 use display_list_flattener::{AsInstanceKind, IsVisible};
-use intern::{Internable, InternDebug};
-use intern_types;
+use intern::{DataStore, Handle, Internable, Interner, InternDebug, UpdateList};
 use picture::PictureCompositeMode;
 use prim_store::{
     PrimKey, PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
@@ -186,10 +185,18 @@ impl From<PictureKey> for PictureTemplate {
     }
 }
 
-pub use intern_types::picture::Handle as PictureDataHandle;
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
+pub struct PictureDataMarker;
+
+pub type PictureDataStore = DataStore<PictureKey, PictureTemplate, PictureDataMarker>;
+pub type PictureDataHandle = Handle<PictureDataMarker>;
+pub type PictureDataUpdateList = UpdateList<PictureKey>;
+pub type PictureDataInterner = Interner<PictureKey, PrimitiveSceneData, PictureDataMarker>;
 
 impl Internable for Picture {
-    type Marker = intern_types::picture::Marker;
+    type Marker = PictureDataMarker;
     type Source = PictureKey;
     type StoreData = PictureTemplate;
     type InternData = PrimitiveSceneData;

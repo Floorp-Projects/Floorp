@@ -13,7 +13,6 @@ use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use frame_builder::{FrameBuildingState};
 use gpu_cache::GpuDataRequest;
 use intern;
-use intern_types;
 use prim_store::{
     BorderSegmentInfo, BrushSegment, NinePatchDescriptor, PrimKey,
     PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
@@ -159,10 +158,18 @@ impl From<NormalBorderKey> for NormalBorderTemplate {
     }
 }
 
-pub use intern_types::normal_border::Handle as NormalBorderDataHandle;
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
+pub struct NormalBorderDataMarker;
+
+pub type NormalBorderDataStore = intern::DataStore<NormalBorderKey, NormalBorderTemplate, NormalBorderDataMarker>;
+pub type NormalBorderDataHandle = intern::Handle<NormalBorderDataMarker>;
+pub type NormalBorderDataUpdateList = intern::UpdateList<NormalBorderKey>;
+pub type NormalBorderDataInterner = intern::Interner<NormalBorderKey, PrimitiveSceneData, NormalBorderDataMarker>;
 
 impl intern::Internable for NormalBorderPrim {
-    type Marker = intern_types::normal_border::Marker;
+    type Marker = NormalBorderDataMarker;
     type Source = NormalBorderKey;
     type StoreData = NormalBorderTemplate;
     type InternData = PrimitiveSceneData;
@@ -328,10 +335,18 @@ impl From<ImageBorderKey> for ImageBorderTemplate {
     }
 }
 
-pub use intern_types::image_border::Handle as ImageBorderDataHandle;
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
+pub struct ImageBorderDataMarker;
+
+pub type ImageBorderDataStore = intern::DataStore<ImageBorderKey, ImageBorderTemplate, ImageBorderDataMarker>;
+pub type ImageBorderDataHandle = intern::Handle<ImageBorderDataMarker>;
+pub type ImageBorderDataUpdateList = intern::UpdateList<ImageBorderKey>;
+pub type ImageBorderDataInterner = intern::Interner<ImageBorderKey, PrimitiveSceneData, ImageBorderDataMarker>;
 
 impl intern::Internable for ImageBorder {
-    type Marker = intern_types::image_border::Marker;
+    type Marker = ImageBorderDataMarker;
     type Source = ImageBorderKey;
     type StoreData = ImageBorderTemplate;
     type InternData = PrimitiveSceneData;

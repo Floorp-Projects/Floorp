@@ -27,12 +27,12 @@ use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, Prim
 use prim_store::{get_raster_rects, PrimitiveScratchBuffer, VectorKey, PointKey};
 use prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex, RectangleKey};
 use print_tree::PrintTreePrinter;
-use render_backend::DataStores;
+use render_backend::FrameResources;
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle, TileBlit};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
 use resource_cache::ResourceCache;
 use scene::{FilterOpHelpers, SceneProperties};
-use scene_builder::Interners;
+use scene_builder::DocumentResources;
 use smallvec::SmallVec;
 use surface::{SurfaceDescriptor};
 use std::{mem, u16};
@@ -815,7 +815,7 @@ impl TileCache {
         &mut self,
         prim_instance: &PrimitiveInstance,
         clip_scroll_tree: &ClipScrollTree,
-        data_stores: &DataStores,
+        resources: &FrameResources,
         clip_chain_nodes: &[ClipChainNode],
         pictures: &[PicturePrimitive],
         resource_cache: &ResourceCache,
@@ -831,7 +831,7 @@ impl TileCache {
             clip_scroll_tree,
         );
 
-        let prim_data = &data_stores.as_common_data(&prim_instance);
+        let prim_data = &resources.as_common_data(&prim_instance);
 
         let prim_rect = match prim_instance.kind {
             PrimitiveInstanceKind::Picture { pic_index, .. } => {
@@ -877,7 +877,7 @@ impl TileCache {
 
         // Some primitives can not be cached (e.g. external video images)
         let is_cacheable = prim_instance.is_cacheable(
-            &data_stores,
+            &resources,
             resource_cache,
         );
 
@@ -913,7 +913,7 @@ impl TileCache {
                 true
             }
             PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
-                let image_data = &data_stores.image[data_handle].kind;
+                let image_data = &resources.image_data_store[data_handle].kind;
                 let image_instance = &image_instances[image_instance_index];
                 let opacity_binding_index = image_instance.opacity_binding_index;
 
@@ -928,7 +928,7 @@ impl TileCache {
                 true
             }
             PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
-                let yuv_image_data = &data_stores.yuv_image[data_handle].kind;
+                let yuv_image_data = &resources.yuv_image_data_store[data_handle].kind;
                 image_keys.extend_from_slice(&yuv_image_data.yuv_key);
                 true
             }
@@ -954,7 +954,7 @@ impl TileCache {
         let mut current_clip_chain_id = prim_instance.clip_chain_id;
         while current_clip_chain_id != ClipChainId::NONE {
             let clip_chain_node = &clip_chain_nodes[current_clip_chain_id.0 as usize];
-            let clip_node = &data_stores.clip[clip_chain_node.handle];
+            let clip_node = &resources.clip_data_store[clip_chain_node.handle];
 
             // We can skip the root clip node - it will be taken care of by the
             // world bounding rect calculated for the cache.
@@ -1634,7 +1634,7 @@ impl PrimitiveList {
     /// significantly faster.
     pub fn new(
         mut prim_instances: Vec<PrimitiveInstance>,
-        interners: &Interners
+        resources: &DocumentResources
     ) -> Self {
         let mut pictures = SmallVec::new();
         let mut clusters_map = FastHashMap::default();
@@ -1658,34 +1658,34 @@ impl PrimitiveList {
             let prim_data = match prim_instance.kind {
                 PrimitiveInstanceKind::Rectangle { data_handle, .. } |
                 PrimitiveInstanceKind::Clear { data_handle, .. } => {
-                    &interners.prim[data_handle]
+                    &resources.prim_interner[data_handle]
                 }
                 PrimitiveInstanceKind::Image { data_handle, .. } => {
-                    &interners.image[data_handle]
+                    &resources.image_interner[data_handle]
                 }
                 PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
-                    &interners.image_border[data_handle]
+                    &resources.image_border_interner[data_handle]
                 }
                 PrimitiveInstanceKind::LineDecoration { data_handle, .. } => {
-                    &interners.line_decoration[data_handle]
+                    &resources.line_decoration_interner[data_handle]
                 }
                 PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
-                    &interners.linear_grad[data_handle]
+                    &resources.linear_grad_interner[data_handle]
                 }
                 PrimitiveInstanceKind::NormalBorder { data_handle, .. } => {
-                    &interners.normal_border[data_handle]
+                    &resources.normal_border_interner[data_handle]
                 }
                 PrimitiveInstanceKind::Picture { data_handle, .. } => {
-                    &interners.picture[data_handle]
+                    &resources.picture_interner[data_handle]
                 }
                 PrimitiveInstanceKind::RadialGradient { data_handle, ..} => {
-                    &interners.radial_grad[data_handle]
+                    &resources.radial_grad_interner[data_handle]
                 }
                 PrimitiveInstanceKind::TextRun { data_handle, .. } => {
-                    &interners.text_run[data_handle]
+                    &resources.text_run_interner[data_handle]
                 }
                 PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
-                    &interners.yuv_image[data_handle]
+                    &resources.yuv_image_interner[data_handle]
                 }
             };
 
