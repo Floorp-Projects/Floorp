@@ -58,8 +58,8 @@
   background:url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat;
   background-size:contain;
   background-position:center center;
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border:0;
   padding:0;
   margin-inline-start: 1px;
@@ -509,15 +509,13 @@ span.img.marko {
 
 .img.arrow {
   mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
-  margin-inline-end: 5px;
-  margin-top: 3px;
-  width: 9px;
-  height: 9px;
+  margin-inline-end: 4px;
+  width: 10px;
+  height: 10px;
   padding-top: 9px;
   background: var(--disclosure-arrow);
   mask-size: 100%;
   display: inline-block;
-  margin-bottom: 1px;
   transform: rotate(-90deg);
   transition: transform 0.18s ease;
 }
@@ -528,8 +526,10 @@ html[dir="rtl"] .img.arrow {
 
 .arrow {
   transition: transform 0.125s ease;
+  height: 10px;
   width: 10px;
   transform: rotate(-90deg);
+  vertical-align: -1px;
 }
 
 html[dir="rtl"] .arrow,
