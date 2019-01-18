@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ok, jag förstår",
   "prefs_home_header": "Innehåll Firefox-startskärm",
   "prefs_home_description": "Välj vilket innehåll du vill ha på din startskärm i Firefox.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Firefox startsida",
+  "prefs_content_discovery_description": "Content Discovery på Firefox startsida låter dig upptäcka högkvalitativa, relevanta artiklar från hela webben.",
+  "prefs_content_discovery_button": "Stäng av innehållsupptäckt",
   "prefs_section_rows_option": "{num} rad;{num} rader",
   "prefs_search_header": "Webbsök",
   "prefs_topsites_description": "Sidorna du besöker mest",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Sekretesspolicy",
   "firstrun_continue_to_login": "Fortsätt",
   "firstrun_skip_login": "Hoppa över det här steget",
-  "context_menu_title": "Öppna meny",
-  "pocket_learn_more": "Läs mer"
+  "context_menu_title": "Öppna meny"
 };

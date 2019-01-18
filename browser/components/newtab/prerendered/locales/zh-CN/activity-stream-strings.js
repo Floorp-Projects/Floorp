@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "我明白了",
   "prefs_home_header": "Firefox 主页内容",
   "prefs_home_description": "选择要在您的 Firefox 主页上显示的版块。",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Firefox 主页",
+  "prefs_content_discovery_description": "Firefox 主页中的“内容发现”可助您发现网络上的高品质、有价值的文章。",
+  "prefs_content_discovery_button": "关闭内容发现",
   "prefs_section_rows_option": "{num} 行",
   "prefs_search_header": "网络搜索",
   "prefs_topsites_description": "您经常访问的网站",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "隐私声明",
   "firstrun_continue_to_login": "继续",
   "firstrun_skip_login": "跳过此步骤",
-  "context_menu_title": "打开菜单",
-  "pocket_learn_more": "详细了解"
+  "context_menu_title": "打开菜单"
 };

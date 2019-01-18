@@ -8,17 +8,19 @@ export class DSCard extends React.PureComponent {
   }
 
   onLinkClick(event) {
-    this.props.dispatch(ac.UserEvent({
-      event: "CLICK",
-      source: this.props.type.toUpperCase(),
-      action_position: this.props.index,
-    }));
+    if (this.props.dispatch) {
+      this.props.dispatch(ac.UserEvent({
+        event: "CLICK",
+        source: this.props.type.toUpperCase(),
+        action_position: this.props.index,
+      }));
 
-    this.props.dispatch(ac.ImpressionStats({
-      source: this.props.type.toUpperCase(),
-      click: 0,
-      tiles: [{id: this.props.id, pos: this.props.index}],
-    }));
+      this.props.dispatch(ac.ImpressionStats({
+        source: this.props.type.toUpperCase(),
+        click: 0,
+        tiles: [{id: this.props.id, pos: this.props.index}],
+      }));
+    }
   }
 
   render() {
