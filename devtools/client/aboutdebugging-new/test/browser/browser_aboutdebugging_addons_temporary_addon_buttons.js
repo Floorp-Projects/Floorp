@@ -74,12 +74,6 @@ add_task(async function() {
   const removeButton = target.querySelector(".js-temporary-extension-remove-button");
   ok(!removeButton, "No remove button displayed for a regularly installed extension");
 
-  info("Retrieve the extension instance from the addon manager, and uninstall it");
-  const extension = await AddonManager.getAddonByID(PACKAGED_EXTENSION_ID);
-  extension.uninstall();
-
-  info("Wait until the addon disappears from about:debugging");
-  await waitUntil(() => !findDebugTargetByText(PACKAGED_EXTENSION_NAME, document));
-
+  await removeExtension(PACKAGED_EXTENSION_ID, PACKAGED_EXTENSION_NAME, document);
   await removeTab(tab);
 });
