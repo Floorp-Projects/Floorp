@@ -1461,6 +1461,12 @@ class nsIWidget : public nsISupports {
                                                 int32_t aHorizontal,
                                                 int32_t aVertical) = 0;
 
+  /**
+   * Begin a window moving drag, based on the event passed in.
+   */
+  virtual MOZ_MUST_USE nsresult
+  BeginMoveDrag(mozilla::WidgetMouseEvent* aEvent) = 0;
+
   enum Modifiers {
     CAPS_LOCK = 0x00000001,  // when CapsLock is active
     NUM_LOCK = 0x00000002,   // when NumLock is active

@@ -249,6 +249,7 @@ EXTRA_JS_MODULES += [
     'UpdateUtils.jsm',
     'WebChannel.jsm',
     'WebProgressChild.jsm',
+    'WindowDraggingUtils.jsm',
     'ZipUtils.jsm',
 ]
 
