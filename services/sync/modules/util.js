@@ -55,12 +55,10 @@ class HMACMismatch extends Error {
  */
 var Utils = {
   // Aliases from CryptoUtils.
-  generateRandomBytes: CryptoUtils.generateRandomBytes,
+  generateRandomBytesLegacy: CryptoUtils.generateRandomBytesLegacy,
   computeHTTPMACSHA1: CryptoUtils.computeHTTPMACSHA1,
   digestUTF8: CryptoUtils.digestUTF8,
   digestBytes: CryptoUtils.digestBytes,
-  sha1: CryptoUtils.sha1,
-  sha1Base32: CryptoUtils.sha1Base32,
   sha256: CryptoUtils.sha256,
   makeHMACKey: CryptoUtils.makeHMACKey,
   makeHMACHasher: CryptoUtils.makeHMACHasher,
@@ -192,7 +190,7 @@ var Utils = {
    * That makes them 12 characters long with 72 bits of entropy.
    */
   makeGUID: function makeGUID() {
-    return CommonUtils.encodeBase64URL(Utils.generateRandomBytes(9));
+    return CommonUtils.encodeBase64URL(Utils.generateRandomBytesLegacy(9));
   },
 
   _base64url_regex: /^[-abcdefghijklmnopqrstuvwxyz0123456789_]{12}$/i,
