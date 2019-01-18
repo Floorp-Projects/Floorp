@@ -286,10 +286,14 @@ struct Statistics {
   // Print total profile times on shutdown.
   void printTotalProfileTimes();
 
-  // Return JSON for a whole major GC, optionally including detailed
-  // per-slice data.
-  UniqueChars renderJsonMessage(uint64_t timestamp,
-                                bool includeSlices = true) const;
+  enum JSONUse {
+    TELEMETRY,
+    PROFILER
+  };
+
+  // Return JSON for a whole major GC.  If use == PROFILER then
+  // detailed per-slice data will be included.
+  UniqueChars renderJsonMessage(uint64_t timestamp, JSONUse use) const;
 
   // Return JSON for the timings of just the given slice.
   UniqueChars renderJsonSlice(size_t sliceNum) const;
