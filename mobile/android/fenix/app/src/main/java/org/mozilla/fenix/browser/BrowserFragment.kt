@@ -4,13 +4,24 @@
 package org.mozilla.fenix.browser
 
 import android.os.Bundle
+import android.transition.TransitionInflater
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import kotlinx.android.synthetic.main.fragment_browser.*
+import mozilla.components.feature.intent.IntentProcessor
+import mozilla.components.feature.session.SessionFeature
+import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.utils.SafeIntent
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 
 class BrowserFragment : Fragment() {
+
+    private lateinit var sessionFeature: SessionFeature
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -18,4 +29,28 @@ class BrowserFragment : Fragment() {
     ): View? {
         return inflater.inflate(R.layout.fragment_browser, container, false)
     }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+
+        val sessionManager = (activity as HomeActivity).core.sessionManager
+        val sessionId = (activity as HomeActivity).sessionId
+
+        sessionFeature = SessionFeature(
+            sessionManager,
+            SessionUseCases(sessionManager),
+            engineView,
+            sessionId)
+
+        lifecycle.addObservers(sessionFeature)
+    }
 }
+
+private fun Lifecycle.addObservers(vararg observers: LifecycleObserver) = observers.forEach { addObserver(it) }

@@ -68,8 +68,16 @@ dependencies {
     implementation Deps.androidx_appcompat
     implementation Deps.androidx_constraintlayout
 
+    implementation Deps.mozilla_concept_engine
+    implementation Deps.mozilla_concept_storage
+
     implementation Deps.mozilla_browser_awesomebar
+    implementation Deps.mozilla_browser_engine_gecko_nightly
+    implementation Deps.mozilla_browser_session
     implementation Deps.mozilla_browser_toolbar
+
+    implementation Deps.mozilla_feature_intent
+    implementation Deps.mozilla_feature_session
 
     testImplementation Deps.junit
     androidTestImplementation Deps.tools_test_runner

@@ -5,7 +5,7 @@
 private object Versions {
     const val kotlin = "1.3.11"
     const val android_gradle_plugin = "3.2.1"
-    const val geckoNightly = "66.0.20181217093726"
+    const val geckoNightly = "66.0.20190111093148"
 
     const val androidx_appcompat = "1.0.2"
     const val androidx_constraint_layout = "2.0.0-alpha3"
@@ -32,8 +32,17 @@ object Deps {
     const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.androidx_appcompat}"
     const val androidx_constraintlayout = "androidx.constraintlayout:constraintlayout:${Versions.androidx_constraint_layout}"
 
+    const val mozilla_concept_engine = "org.mozilla.components:concept-engine:${Versions.mozilla_android_components}"
+    const val mozilla_concept_storage = "org.mozilla.components:concept-storage:${Versions.mozilla_android_components}"
+
     const val mozilla_browser_awesomebar = "org.mozilla.components:browser-awesomebar:${Versions.mozilla_android_components}"
+    const val mozilla_browser_engine_gecko_nightly = "org.mozilla.components:browser-engine-gecko-nightly:${Versions.mozilla_android_components}"
+    const val mozilla_browser_session = "org.mozilla.components:browser-session:${Versions.mozilla_android_components}"
     const val mozilla_browser_toolbar = "org.mozilla.components:browser-toolbar:${Versions.mozilla_android_components}"
+
+    const val mozilla_feature_intent = "org.mozilla.components:feature-intent:${Versions.mozilla_android_components}"
+    const val mozilla_feature_session = "org.mozilla.components:feature-session:${Versions.mozilla_android_components}"
+    const val mozilla_feature_storage = "org.mozilla.components:feature-storage:${Versions.mozilla_android_components}"
 
     const val junit = "junit:junit:${Versions.junit}"
     const val tools_test_runner = "com.android.support.test:runner:${Versions.test_tools}"

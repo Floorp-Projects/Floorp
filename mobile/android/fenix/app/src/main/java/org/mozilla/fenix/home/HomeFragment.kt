@@ -17,6 +17,8 @@ import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -44,7 +46,7 @@ class HomeFragment : Fragment() {
             val extras = FragmentNavigator.Extras.Builder().addSharedElement(
                 toolbar_wrapper, ViewCompat.getTransitionName(toolbar_wrapper)!!
             ).build()
-            Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_searchFragment, null, null, extras)
+            Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_browserFragment, null, null, extras)
         }
 
         session_list.apply {
