@@ -11,10 +11,17 @@ DIRS += [
 ]
 
 DebuggerModules(
+    'A11yIntention.css',
     'A11yIntention.js',
+    'App.css',
     'App.js',
+    'ProjectSearch.css',
     'ProjectSearch.js',
+    'QuickOpenModal.css',
     'QuickOpenModal.js',
+    'ShortcutsModal.css',
     'ShortcutsModal.js',
+    'variables.css',
+    'WelcomeBox.css',
     'WelcomeBox.js',
 )

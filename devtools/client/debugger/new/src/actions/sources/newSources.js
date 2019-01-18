@@ -44,7 +44,8 @@ function createOriginalSource(
     isPrettyPrinted: false,
     isWasm: false,
     isBlackBoxed: false,
-    loadedState: "unloaded"
+    loadedState: "unloaded",
+    introductionUrl: null
   };
 }
 

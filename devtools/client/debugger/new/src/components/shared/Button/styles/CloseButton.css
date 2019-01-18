@@ -20,9 +20,12 @@
   background-color: var(--theme-comment);
   width: 8px;
   height: 8px;
-  transition: all 0.15s ease-in-out;
   padding: 0;
   margin-top: 0;
+}
+
+.close-btn .close:hover {
+  background-color: var(--theme-comment);
 }
 
 .close-btn:hover .img.close {

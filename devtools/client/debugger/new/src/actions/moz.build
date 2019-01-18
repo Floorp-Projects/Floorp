@@ -21,6 +21,7 @@ DebuggerModules(
     'preview.js',
     'project-text-search.js',
     'quick-open.js',
+    'README.md',
     'source-tree.js',
     'tabs.js',
     'toolbox.js',
