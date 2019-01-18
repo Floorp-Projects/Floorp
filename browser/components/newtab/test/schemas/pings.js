@@ -70,6 +70,7 @@ export const UserEventAction = Joi.object().keys({
     event: Joi.valid([
       "CLICK",
       "SEARCH",
+      "SEARCH_HANDOFF",
       "BLOCK",
       "DELETE",
       "DELETE_CONFIRM",

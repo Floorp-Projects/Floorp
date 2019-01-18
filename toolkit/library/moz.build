@@ -82,6 +82,8 @@ def Libxul(name, output_category=None):
 
     if CONFIG['MOZ_DEBUG_SYMBOLS'] and CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         LDFLAGS += ['-NATVIS:%s/toolkit/library/gecko.natvis' % TOPSRCDIR]
+    if CONFIG['RUSTC_NATVIS_LDFLAGS']:
+        LDFLAGS += CONFIG['RUSTC_NATVIS_LDFLAGS']
 
 Libxul('xul')
 

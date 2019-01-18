@@ -4251,7 +4251,7 @@ impl Renderer {
         for item in items {
             match item {
                 DebugItem::Rect { rect, color } => {
-                    let inner_color = color.scale_alpha(0.1).into();
+                    let inner_color = color.scale_alpha(0.5).into();
                     let outer_color = (*color).into();
 
                     debug_renderer.add_quad(

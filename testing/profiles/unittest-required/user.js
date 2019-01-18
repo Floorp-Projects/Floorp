@@ -1,4 +1,6 @@
-// Base preferences file for unittests.
+// Base preferences file to allow unittests to run successfully.
+// NOTE: Toggling prefs for testing features should happen in
+// unittest-features/user.js or in harness/test manifests, not here!
 /* globals user_pref */
 user_pref("accessibility.typeaheadfind.autostart", false);
 // Make sure Shield doesn't hit the network.
@@ -38,8 +40,8 @@ user_pref("browser.newtabpage.activity-stream.telemetry", false);
 // Background thumbnails in particular cause grief, and disabling thumbnails
 // in general can't hurt - we re-enable them when tests need them.
 user_pref("browser.pagethumbnails.capturing_disabled", true);
-user_pref("browser.ping-centre.production.endpoint", "");
 // Make sure PingCentre doesn't hit the network.
+user_pref("browser.ping-centre.production.endpoint", "");
 user_pref("browser.ping-centre.staging.endpoint", "");
 // Point the url-classifier to the local testing server for fast failures
 user_pref("browser.safebrowsing.downloads.remote.url", "http://{server}/safebrowsing-dummy/update");
@@ -95,13 +97,6 @@ user_pref("devtools.testing", true);
 user_pref("dom.audioworklet.enabled", false);
 user_pref("dom.allow_scripts_to_close_windows", true);
 user_pref("dom.disable_open_during_load", false);
-user_pref("dom.experimental_forms", true); // on for testing
-user_pref("dom.forms.color", true); // on for testing
-user_pref("dom.forms.datetime", true); // on for testing
-user_pref("dom.forms.datetime.others", true); // on for testing
-// Enable Gamepad
-user_pref("dom.gamepad.enabled", true);
-user_pref("dom.gamepad.non_standard_events.enabled", true);
 user_pref("dom.ipc.reportProcessHangs", false); // process hang monitor
 // Don't forceably kill content processes after a timeout
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
@@ -119,16 +114,12 @@ user_pref("dom.successive_dialog_time_limit", 0);
 // the configuration that we ship to users without special whitelisting. So we
 // use an additional pref here to allow automation to use the "normal" behavior.
 user_pref("dom.use_xbl_scopes_for_remote_xul", true);
-user_pref("dom.visualviewport.enabled", true); // on for testing
-user_pref("dom.w3c_touch_events.enabled", 1);
 user_pref("extensions.autoDisableScopes", 0);
 user_pref("extensions.blocklist.detailsURL", "http://{server}/extensions-dummy/blocklistDetailsURL");
 user_pref("extensions.blocklist.itemURL", "http://{server}/extensions-dummy/blocklistItemURL");
 user_pref("extensions.blocklist.url", "http://{server}/extensions-dummy/blocklistURL");
 // XPI extensions are required for test harnesses to load
 user_pref("extensions.defaultProviders.enabled", true);
-// Enable form autofill feature testing.
-user_pref("extensions.formautofill.available", "on");
 // Disable metadata caching for installed add-ons by default
 user_pref("extensions.getAddons.cache.enabled", false);
 // Make sure AddonRepository won't hit the network
@@ -169,18 +160,6 @@ user_pref("identity.fxaccounts.auth.uri", "https://{server}/fxa-dummy/");
 user_pref("identity.fxaccounts.remote.root", "https://{server}/");
 user_pref("javascript.options.showInConsole", true);
 user_pref("layout.accessiblecaret.enabled_on_touch", false);
-// Enable CSS clip-path `path()` for testing
-user_pref("layout.css.clip-path-path.enabled", true);
-// Enable CSS 'contain' for testing
-user_pref("layout.css.contain.enabled", true);
-// Enable CSS Grid 'subgrid' feature for testing
-user_pref("layout.css.grid-template-subgrid-value.enabled", true);
-// Enable CSS initial-letter for testing
-user_pref("layout.css.initial-letter.enabled", true);
-// Enable -webkit-{min|max}-device-pixel-ratio media queries for testing
-user_pref("layout.css.prefixes.device-pixel-ratio-webkit", true);
-// Enable webkit prefixed CSS features for testing
-user_pref("layout.css.prefixes.webkit", true);
 // Make sure CSS error reporting is enabled for tests
 user_pref("layout.css.report_errors", true);
 // Disable spammy layout warnings because they pollute test logs
@@ -192,23 +171,18 @@ user_pref("lightweightThemes.selectedThemeID", "");
 // The prefs recommended by Marionette are typically geared towards
 // consumer automation; not vendor testing.
 user_pref("marionette.prefs.recommended", false);
-user_pref("media.av1.enabled", true);
 user_pref("media.cache_size", 1000);
 user_pref("media.dormant-on-pause-timeout-ms", 0); // Enter dormant immediately without waiting for timeout.
 // Set the number of shmems the PChromiumCDM protocol pre-allocates to 0,
 // so that we test the case where we under-estimate how many shmems we need
 // to send decoded video frames from the CDM to Gecko.
 user_pref("media.eme.chromium-api.video-shmems", 0);
-user_pref("media.eme.enabled", true);
 // Make sure GMPInstallManager won't hit the network.
 user_pref("media.gmp-manager.url.override", "http://{server}/dummy-gmp-manager.xml");
 user_pref("media.hls.server.url", "http://{server}/tests/dom/media/test/hls");
 // Don't block old libavcodec libraries when testing, because our test systems
 // cannot easily be upgraded.
 user_pref("media.libavcodec.allow-obsolete", true);
-// Enable Media Source Extensions for testing
-user_pref("media.mediasource.mp4.enabled", true);
-user_pref("media.mediasource.webm.enabled", true);
 user_pref("media.memory_cache_max_size", 32);
 user_pref("media.memory_caches_combined_limit_kb", 256);
 user_pref("media.openUnsupportedTypeWithExternalApp", false);
@@ -234,9 +208,6 @@ user_pref("network.sntp.pools", "{server}");
 // relatively long time which may cause unnecessary intermittents and slow down
 // tests. This, like many things, will stop working correctly in 2038.
 user_pref("places.database.lastMaintenance", 2147483647);
-// For Firefox 52 only, ESR will support non-Flash plugins while release will
-// not, so we keep testing the non-Flash pathways
-user_pref("plugin.load_flash_only", false);
 user_pref("privacy.trackingprotection.introURL", "http://{server}/trackingprotection/tour");
 user_pref("security.default_personal_cert", "Select Automatically"); // Need to client auth test be w/o any dialogs
 // Existing tests don't wait for the notification button security delay

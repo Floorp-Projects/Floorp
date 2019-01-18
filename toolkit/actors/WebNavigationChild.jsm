@@ -108,7 +108,9 @@ class WebNavigationChild extends ActorChild {
     if (triggeringPrincipal)
       triggeringPrincipal = Utils.deserializePrincipal(triggeringPrincipal);
     if (!triggeringPrincipal) {
-      triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal({});
+      // If we don't have a triggering principal we won't be able to continue the load.
+      let debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
+      debug.abort("WebNavigationChild.js", 112);
     }
     let loadURIOptions = {
       triggeringPrincipal,

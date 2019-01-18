@@ -22,7 +22,7 @@ use pathfinder_partitioner::mesh::Mesh;
 use picture::SurfaceInfo;
 use prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use profiler::FrameProfileCounters;
-use render_backend::{FrameId, FrameResources};
+use render_backend::{DataStores, FrameId};
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
 use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree, ScalingTask};
 use resource_cache::ResourceCache;
@@ -55,7 +55,7 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub resource_cache: &'rc mut ResourceCache,
     pub use_dual_source_blending: bool,
     pub clip_scroll_tree: &'a ClipScrollTree,
-    pub resources: &'a FrameResources,
+    pub data_stores: &'a DataStores,
     pub surfaces: &'a [SurfaceInfo],
     pub scratch: &'a PrimitiveScratchBuffer,
 }
@@ -658,7 +658,7 @@ impl RenderTarget for AlphaRenderTarget {
                     clip_store,
                     ctx.clip_scroll_tree,
                     transforms,
-                    &ctx.resources.clip_data_store,
+                    &ctx.data_stores.clip,
                 );
             }
             RenderTaskKind::ClipRegion(ref task) => {

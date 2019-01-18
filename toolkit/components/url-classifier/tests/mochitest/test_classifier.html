@@ -27,9 +27,6 @@ var testData = [
   { url: "unwanted.example.com/",
     db: "test-unwanted-simple",
   },
-  { url: "tracking.example.com/",
-    db: "test-track-simple",
-  },
   { url: "blocked.example.com/",
     db: "test-block-simple",
   },
@@ -44,72 +41,26 @@ const Cr = SpecialPowers.Cr;
 
 var testURLs = [
   { url: "http://example.com",
-    trackingProtection: false,
-    table: "",
-    result: Cr.NS_OK,
-  },
-  { url: "http://example.com",
-    trackingProtection: true,
     table: "",
     result: Cr.NS_OK,
   },
   { url: "http://malware.example.com",
-    trackingProtection: false,
-    table: "test-malware-simple",
-    result: Cr.NS_ERROR_MALWARE_URI,
-  },
-  { url: "http://malware.example.com",
-    trackingProtection: true,
     table: "test-malware-simple",
     result: Cr.NS_ERROR_MALWARE_URI,
   },
   { url: "http://unwanted.example.com",
-    trackingProtection: false,
-    table: "test-unwanted-simple",
-    result: Cr.NS_ERROR_UNWANTED_URI,
-  },
-  { url: "http://unwanted.example.com",
-    trackingProtection: true,
     table: "test-unwanted-simple",
     result: Cr.NS_ERROR_UNWANTED_URI,
   },
   { url: "http://itisatrap.org/firefox/its-a-trap.html",
-    trackingProtection: false,
-    table: "test-phish-simple",
-    result: Cr.NS_ERROR_PHISHING_URI,
-  },
-  { url: "http://itisatrap.org/firefox/its-a-trap.html",
-    trackingProtection: true,
     table: "test-phish-simple",
     result: Cr.NS_ERROR_PHISHING_URI,
   },
   { url: "http://harmful.example.com",
-    trackingProtection: false,
     table: "test-harmful-simple",
     result: Cr.NS_ERROR_HARMFUL_URI,
   },
-  { url: "http://harmful.example.com",
-    trackingProtection: true,
-    table: "test-harmful-simple",
-    result: Cr.NS_ERROR_HARMFUL_URI,
-  },
-  { url: "http://tracking.example.com",
-    trackingProtection: false,
-    table: "test-track-simple",
-    result: Cr.NS_OK,
-  },
-  { url: "http://tracking.example.com",
-    trackingProtection: true,
-    table: "test-track-simple",
-    result: Cr.NS_ERROR_TRACKING_URI,
-  },
   { url: "http://blocked.example.com",
-    trackingProtection: false,
-    table: "test-block-simple",
-    result: Cr.NS_ERROR_BLOCKED_URI,
-  },
-  { url: "http://blocked.example.com",
-    trackingProtection: true,
     table: "test-block-simple",
     result: Cr.NS_ERROR_BLOCKED_URI,
   },
@@ -141,20 +92,20 @@ function testService() {
         return;
       }
       let test = testURLs.shift();
-      let tables = "test-malware-simple,test-unwanted-simple,test-phish-simple,test-track-simple,test-block-simple,test-harmful-simple";
+      let tables = "test-malware-simple,test-unwanted-simple,test-phish-simple,test-block-simple,test-harmful-simple";
       let uri = SpecialPowers.Services.io.newURI(test.url);
       let prin = SpecialPowers.Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-      SpecialPowers.doUrlClassify(prin, null, test.trackingProtection, function(errorCode) {
+      SpecialPowers.doUrlClassify(prin, null, function(errorCode) {
         is(errorCode, test.result,
-           `Successful asynchronous classification of ${test.url} with TP=${test.trackingProtection}`);
+           `Successful asynchronous classification of ${test.url}`);
         SpecialPowers.doUrlClassifyLocal(uri, tables, function(results) {
           if (results.length == 0) {
             is(test.table, "",
-               `Successful asynchronous local classification of ${test.url} with TP=${test.trackingProtection}`);
+               `Successful asynchronous local classification of ${test.url}`);
           } else {
             let result = results[0].QueryInterface(Ci.nsIUrlClassifierFeatureResult);
             is(result.list, test.table,
-               `Successful asynchronous local classification of ${test.url} with TP=${test.trackingProtection}`);
+               `Successful asynchronous local classification of ${test.url}`);
           }
           runNextTest();
         });
@@ -169,9 +120,7 @@ SpecialPowers.pushPrefEnv(
   {"set": [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple,test-harmful-simple"],
            ["urlclassifier.phishTable", "test-phish-simple"],
            ["urlclassifier.downloadBlockTable", "test-block-simple"],
-           ["urlclassifier.trackingTable", "test-track-simple"],
-           ["browser.safebrowsing.debug", true],
-           ["privacy.trackingprotection.annotate_channels", true]]},
+           ["browser.safebrowsing.debug", true]]},
   function() {
     classifierHelper.waitForInit()
       .then(() => classifierHelper.addUrlToDB(testData))
