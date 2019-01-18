@@ -1,0 +1,5 @@
+// Note: lineHeight and fontSize should be unitless but can be derived from pixel values
+@mixin limit-visibile-lines($line-count, $line-height, $font-size) {
+  max-height: 1em * $line-count * $line-height / $font-size;
+  overflow: hidden;
+}

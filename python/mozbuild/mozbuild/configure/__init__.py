@@ -561,15 +561,18 @@ class ConfigureSandbox(dict):
             self._raw_options[option] = option_string
 
         when = self._conditions.get(option)
-        if (when and not self._value_for(when) and
-            value is not None and value.origin != 'default'):
-            if value.origin == 'environment':
-                # The value we return doesn't really matter, because of the
-                # requirement for @depends to have the same when.
-                return None
-            raise InvalidOptionError(
-                '%s is not available in this configuration'
-                % option_string.split('=', 1)[0])
+        # If `when` resolves to a false-ish value, we always return None.
+        # This makes option(..., when='--foo') equivalent to
+        # option(..., when=depends('--foo')(lambda x: x)).
+        if when and not self._value_for(when) and value is not None:
+            # If the option was passed explicitly, we throw an error that
+            # the option is not available. Except when the option was passed
+            # from the environment, because that would be too cumbersome.
+            if value.origin not in ('default', 'environment'):
+                raise InvalidOptionError(
+                    '%s is not available in this configuration'
+                    % option_string.split('=', 1)[0])
+            return None
 
         return value
 

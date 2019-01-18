@@ -62,7 +62,7 @@ $(CONFIG_DIR)/setup.exe::
 	  --convert-utf8-utf16le \
 	  $(srcdir)/nsis/extensionsLocale.nsh $(CONFIG_DIR)/extensionsLocale.nsh
 
-GARBARGE_DIRS += instgen
+GARBAGE_DIRS += instgen
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk

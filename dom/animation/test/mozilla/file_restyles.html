@@ -1834,9 +1834,11 @@ waitForAllPaints(() => {
     await ensureElementRemoval(div);
   });
 
-  // Tests that transform animations are not able to run on the compositor due
-  // to layout restrictions (e.g. animations on a large size frame) doesn't
-  // flush layout at all.
+  // Tests that transform animations on a large size frame doesn't flush layout at all.
+  //
+  // With WebRender, the large size frame could run on compositor.
+  // Without WebRender, the large size frame is not able to run on the compositor
+  // due to layout restrictions.
   add_task(async function flush_layout_for_transform_animations() {
     // Set layout.animation.prerender.partial to disallow transform animations
     // on large frames to be sent to the compositor.
@@ -1850,11 +1852,17 @@ waitForAllPaints(() => {
                                     easing: 'step-end' });
 
     const FLUSH_LAYOUT = SpecialPowers.DOMWindowUtils.FLUSH_LAYOUT;
+    const isWebRender =
+      SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
     ok(SpecialPowers.DOMWindowUtils.needsFlush(FLUSH_LAYOUT),
        'Flush layout is needed for the appended div');
     await waitForAnimationReadyToRestyle(animation);
 
-    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+    if (isWebRender) {
+      ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+    } else {
+      ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+    }
     ok(!SpecialPowers.DOMWindowUtils.needsFlush(FLUSH_LAYOUT),
        'No further flush layout needed');
 

@@ -37,7 +37,7 @@ class MOZ_RAII StackingContextHelper {
       const wr::WrAnimationProperty* aAnimation = nullptr,
       const float* aOpacityPtr = nullptr,
       const gfx::Matrix4x4* aTransformPtr = nullptr,
-      const gfx::Matrix4x4* aPerspectivePtr = nullptr,
+      const wr::ReferenceFrameKind = wr::ReferenceFrameKind::Transform,
       const gfx::CompositionOp& aMixBlendMode = gfx::CompositionOp::OP_OVER,
       bool aBackfaceVisible = true, bool aIsPreserve3D = false,
       const Maybe<nsDisplayTransform*>& aDeferredTransformItem = Nothing(),

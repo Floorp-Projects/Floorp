@@ -47,14 +47,27 @@ Paste the lines between the chevrons (>>> and <<<) into your
 $topsrcdir/mozconfig file, or create the file if it does not exist:
 
 >>>
-# Build Firefox for Android:
+# Build GeckoView/Firefox for Android:
 ac_add_options --enable-application=mobile/android
+
+# Targeting the following architecture.  Ensure exactly one --target is uncommented!
+# For regular phones:
 ac_add_options --target=arm-linux-androideabi
+# For x86 emulators (and x86 devices, which are uncommon):
+# ac_add_options --target=i686-linux-android
+# For newer phones.
+# ac_add_options --target=aarch64-linux-android
+# For x86_64 emulators (and x86_64 devices, which are even less common):
+# ac_add_options --target=x86_64-linux-android
 
 {extra_lines}
 # With the following Android SDK and NDK:
 ac_add_options --with-android-sdk="{sdk_path}"
 ac_add_options --with-android-ndk="{ndk_path}"
+
+# With the following compiler toolchain:
+CC="{moz_state_dir}/clang/bin/clang"
+CXX="{moz_state_dir}/clang/bin/clang++"
 <<<
 '''
 
@@ -63,7 +76,7 @@ Paste the lines between the chevrons (>>> and <<<) into your
 $topsrcdir/mozconfig file, or create the file if it does not exist:
 
 >>>
-# Build Firefox for Android Artifact Mode:
+# Build GeckoView/Firefox for Android Artifact Mode:
 ac_add_options --enable-application=mobile/android
 ac_add_options --target=arm-linux-androideabi
 ac_add_options --enable-artifact-builds
@@ -175,7 +188,7 @@ def ensure_android(os_name, artifact_mode=False, ndk_only=False, no_interactive=
     # ~/.mozbuild/{android-sdk-$OS_NAME, android-ndk-$VER}.
     mozbuild_path, sdk_path, ndk_path = get_paths(os_name)
     os_tag = 'darwin' if os_name == 'macosx' else os_name
-    sdk_url = 'https://dl.google.com/android/repository/sdk-tools-{0}-3859397.zip'.format(os_tag)
+    sdk_url = 'https://dl.google.com/android/repository/sdk-tools-{0}-4333796.zip'.format(os_tag)
     ndk_url = android_ndk_url(os_name)
 
     ensure_android_sdk_and_ndk(mozbuild_path, os_name,
@@ -291,12 +304,12 @@ def ensure_android_packages(sdkmanager_tool, packages=None, no_interactive=False
 
 
 def suggest_mozconfig(os_name, artifact_mode=False, java_bin_path=None):
-    _mozbuild_path, sdk_path, ndk_path = get_paths(os_name)
+    moz_state_dir, sdk_path, ndk_path = get_paths(os_name)
 
     extra_lines = []
     if java_bin_path:
         extra_lines += [
-            '# With the following java and javac:',
+            '# With the following java:',
             'ac_add_options --with-java-bin-path="{}"'.format(java_bin_path),
         ]
     if extra_lines:
@@ -310,6 +323,7 @@ def suggest_mozconfig(os_name, artifact_mode=False, java_bin_path=None):
     kwargs = dict(
         sdk_path=sdk_path,
         ndk_path=ndk_path,
+        moz_state_dir=moz_state_dir,
         extra_lines='\n'.join(extra_lines),
     )
     print(template.format(**kwargs))

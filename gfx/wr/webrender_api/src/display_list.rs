@@ -23,7 +23,7 @@ use {ImageRendering, LayoutPoint, LayoutPrimitiveInfo, LayoutRect, LayoutSideOff
 use {LayoutTransform, LayoutVector2D, LineDisplayItem, LineOrientation, LineStyle, MixBlendMode};
 use {PipelineId, PropertyBinding, ReferenceFrameDisplayListItem};
 use {PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
-use {RectangleDisplayItem, ReferenceFrame, ScrollFrameDisplayItem, ScrollSensitivity};
+use {RectangleDisplayItem, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
 use {SerializedDisplayItem, Shadow, SpaceAndClipInfo, SpatialId, SpecificDisplayItem};
 use {StackingContext, StickyFrameDisplayItem, StickyOffsetBounds};
 use {TextDisplayItem, TransformStyle, YuvColorSpace, YuvData, YuvImageDisplayItem, ColorDepth};
@@ -1256,8 +1256,8 @@ impl DisplayListBuilder {
         rect: &LayoutRect,
         parent: SpatialId,
         transform_style: TransformStyle,
-        transform: Option<PropertyBinding<LayoutTransform>>,
-        perspective: Option<LayoutTransform>,
+        transform: PropertyBinding<LayoutTransform>,
+        kind: ReferenceFrameKind,
     ) -> SpatialId {
         let id = self.generate_spatial_index();
 
@@ -1265,7 +1265,7 @@ impl DisplayListBuilder {
             reference_frame: ReferenceFrame {
                 transform_style,
                 transform,
-                perspective,
+                kind,
                 id,
             },
         });

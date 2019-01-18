@@ -286,40 +286,27 @@ class PlacesFeed {
   handoffSearchToAwesomebar({_target, data, meta}) {
     const urlBar = _target.browser.ownerGlobal.gURLBar;
 
-    if (!data.hiddenFocus && !data.text) {
-      // Do a normal focus of awesomebar and reset the in content search (remove fake focus styles).
+    if (!data.text) {
+      // Do a normal focus of awesomebar.
       urlBar.focus();
-      this.store.dispatch(ac.OnlyToOneContent({type: at.SHOW_SEARCH}, meta.fromTarget));
       // We are done here. return early.
       return;
     }
 
-    if (data.text) {
-      // Pass the provided text to the awesomebar.
-      urlBar.search(data.text);
-      this.store.dispatch(ac.OnlyToOneContent({type: at.HIDE_SEARCH}, meta.fromTarget));
-    } else {
-      // Focus the awesomebar without the style changes.
-      urlBar.hiddenFocus();
-    }
+    // Pass the provided text to the awesomebar.
+    urlBar.search(data.text);
 
-    const onKeydown = event => {
-      // We only care about key strokes that will produce a character.
-      if (event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
-        // Once the user starts typing, we want to hide the in content search box
-        // and show the focus styles on the awesomebar.
-        this.store.dispatch(ac.OnlyToOneContent({type: at.HIDE_SEARCH}, meta.fromTarget));
-        urlBar.removeHiddenFocus();
-        urlBar.removeEventListener("keydown", onKeydown);
-      }
-    };
     const onDone = () => {
       // When done, let's cleanup everything.
       this.store.dispatch(ac.OnlyToOneContent({type: at.SHOW_SEARCH}, meta.fromTarget));
-      urlBar.removeHiddenFocus();
-      urlBar.removeEventListener("keydown", onKeydown);
       urlBar.removeEventListener("mousedown", onDone);
       urlBar.removeEventListener("blur", onDone);
+    };
+    const onKeydown = event => {
+      // If the Esc button is pressed, we are done. Show in-content search and cleanup.
+      if (event.key === "Escape") {
+        onDone();
+      }
     };
     urlBar.addEventListener("keydown", onKeydown);
     urlBar.addEventListener("mousedown", onDone);

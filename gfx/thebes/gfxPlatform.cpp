@@ -685,12 +685,12 @@ static void FinishAsyncMemoryReport() {
 // clang-format off
 // (For some reason, clang-format gets the second macro right, but totally mangles the first).
 #define REPORT_INTERNER(id)                      \
-  helper.Report(aReport.interning.id##_interner, \
+  helper.Report(aReport.interning.interners.id, \
                 "interning/" #id "/interners");
 // clang-format on
 
 #define REPORT_DATA_STORE(id)                      \
-  helper.Report(aReport.interning.id##_data_store, \
+  helper.Report(aReport.interning.data_stores.id, \
                 "interning/" #id "/data-stores");
 
 NS_IMPL_ISUPPORTS(WebRenderMemoryReporter, nsIMemoryReporter)

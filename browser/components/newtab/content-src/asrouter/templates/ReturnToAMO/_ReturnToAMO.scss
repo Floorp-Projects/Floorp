@@ -11,7 +11,7 @@
   z-index: 2100;
 
   .ReturnToAMOText {
-    color: $grey-90-80;
+    color: $grey-90;
     line-height: 32px;
     font-size: 23px;
     width: 100%;
@@ -23,19 +23,19 @@
   }
 
   h2 {
-    color: $grey-60-60;
+    color: $grey-60;
     font-weight: 100;
-    margin: 0 0 22px;
+    margin: 0 0 36px;
     font-size: 36px;
     line-height: 48px;
     letter-spacing: 1.2px;
   }
 
   p {
-    color: $grey-90-50;
+    color: $grey-60;
     font-size: 14px;
     line-height: 18px;
-    margin-bottom: 4px;
+    margin-bottom: 16px;
   }
 
   .puffy {
@@ -95,17 +95,18 @@
   }
 
   .ReturnToAMOContainer {
-    width: 835px;
+    width: 960px;
     background: $white;
     box-shadow: 0 1px 15px 0 $black-30;
     border-radius: 4px;
     display: flex;
-    padding: 38px 96px 28px 48px;
+    padding: 64px 64px 72px;
   }
 
   .ReturnToAMOAddonContents {
-    width: 400px;
-    margin-top: 42px;
+    width: 560px;
+    margin-top: 32px;
+    margin-inline-end: 24px;
   }
 
   .ReturnToAMOIcon {

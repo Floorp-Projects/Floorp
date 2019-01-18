@@ -1051,6 +1051,9 @@ void GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
 
 bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
                                          jni::String::Param aText) {
+  ALOGIME("IME: IME_REPLACE_TEXT: text=\"%s\"",
+          NS_ConvertUTF16toUTF8(aText->ToString()).get());
+
   // Return true if processed and we should reply to the OnImeReplaceText
   // event later. Return false if _not_ processed and we should reply to the
   // OnImeReplaceText event now.
@@ -1297,6 +1300,7 @@ bool GeckoEditableSupport::DoUpdateComposition(int32_t aStart, int32_t aEnd,
   }
   mDispatcher->SetPendingComposition(string, mIMERanges);
   mDispatcher->FlushPendingComposition(status);
+  mIMEActiveCompositionCount++;
   mIMERanges->Clear();
   return true;
 }
@@ -1434,17 +1438,20 @@ nsresult GeckoEditableSupport::NotifyIME(
     case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED: {
       ALOGIME("IME: NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED");
 
-      // We often only get one event-handled notification after a pair of
-      // update-composition then replace-text calls. Therefore, only count
-      // the number of composition events for replace-text calls to reduce
-      // the chance of mismatch.
-      if (!(--mIMEActiveCompositionCount) && mIMEDelaySynchronizeReply) {
-        FlushIMEChanges();
-      }
-
-      // Hardware keyboard support requires each string rect.
-      if (mIMEMonitorCursor) {
-        UpdateCompositionRects();
+      // NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED isn't sent per IME call.
+      // Receiving this event means that Gecko has already handled all IME
+      // composing events in queue.
+      //
+      if (mIsRemote) {
+        OnNotifyIMEOfCompositionEventHandled();
+      } else {
+        // Also, when receiving this event, mIMEDelaySynchronizeReply won't
+        // update yet on non-e10s case since IME event is posted before updating
+        // it. So we have to delay handling of this event.
+        RefPtr<GeckoEditableSupport> self(this);
+        nsAppShell::PostEvent([this, self] {
+          OnNotifyIMEOfCompositionEventHandled();
+        });
       }
       break;
     }
@@ -1453,6 +1460,21 @@ nsresult GeckoEditableSupport::NotifyIME(
       break;
   }
   return NS_OK;
+}
+
+void GeckoEditableSupport::OnNotifyIMEOfCompositionEventHandled()
+{
+  // NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED may be merged with multiple events,
+  // so reset count.
+  mIMEActiveCompositionCount = 0;
+  if (mIMEDelaySynchronizeReply) {
+    FlushIMEChanges();
+  }
+
+  // Hardware keyboard support requires each string rect.
+  if (mIMEMonitorCursor) {
+    UpdateCompositionRects();
+  }
 }
 
 void GeckoEditableSupport::OnRemovedFrom(

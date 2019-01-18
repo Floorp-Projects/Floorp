@@ -6070,6 +6070,9 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
     flags |= PaintFrameFlags::PAINT_COMPRESSED;
     mNextPaintCompressed = false;
   }
+  if (layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+    flags |= PaintFrameFlags::PAINT_FOR_WEBRENDER;
+  }
 
   if (frame) {
     // We can paint directly into the widget using its layer manager.

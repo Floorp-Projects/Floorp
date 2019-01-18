@@ -123,6 +123,7 @@ class GeckoEditableSupport final
   void UpdateCompositionRects();
   bool DoReplaceText(int32_t aStart, int32_t aEnd, jni::String::Param aText);
   bool DoUpdateComposition(int32_t aStart, int32_t aEnd, int32_t aFlags);
+  void OnNotifyIMEOfCompositionEventHandled();
   void NotifyIMEContext(const InputContext& aContext,
                         const InputContextAction& aAction);
 

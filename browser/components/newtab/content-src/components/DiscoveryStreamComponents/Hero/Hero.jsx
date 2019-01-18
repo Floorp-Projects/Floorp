@@ -1,27 +1,52 @@
-import {connect} from "react-redux";
+import {actionCreators as ac} from "common/Actions.jsm";
 import {DSCard} from "../DSCard/DSCard.jsx";
 import React from "react";
 
-export class _Hero extends React.PureComponent {
+export class Hero extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onLinkClick = this.onLinkClick.bind(this);
+  }
+
+  onLinkClick(event) {
+    this.props.dispatch(ac.UserEvent({
+      event: "CLICK",
+      source: this.props.type.toUpperCase(),
+      action_position: 0,
+    }));
+
+    this.props.dispatch(ac.ImpressionStats({
+      source: this.props.type.toUpperCase(),
+      click: 0,
+      tiles: [{id: this.heroRec.id, pos: 0}],
+    }));
+  }
+
   render() {
-    const feed = this.props.DiscoveryStream.feeds[this.props.feed.url];
+    const {data} = this.props;
 
     // Handle a render before feed has been fetched by displaying nothing
-    if (!feed) {
+    if (!data || !data.recommendations) {
       return (
         <div />
       );
     }
 
-    let [heroRec, ...otherRecs] = feed.data.recommendations;
+    let [heroRec, ...otherRecs] = data.recommendations.slice(0, this.props.items);
+    this.heroRec = heroRec;
     let truncateText = (text, cap) => `${text.substring(0, cap)}${text.length > cap ? `...` : ``}`;
 
-    let cards = otherRecs.slice(1, this.props.items).map((rec, index) => (
+    // Note that `{index + 1}` is necessary below for telemetry since we treat heroRec as index 0.
+    let cards = otherRecs.map((rec, index) => (
       <DSCard
         key={`dscard-${index}`}
         image_src={rec.image_src}
         title={truncateText(rec.title, 44)}
         url={rec.url}
+        id={rec.id}
+        index={index + 1}
+        type={this.props.type}
+        dispatch={this.props.dispatch}
         source={truncateText(`TODO: SOURCE`, 22)} />
     ));
 
@@ -29,7 +54,7 @@ export class _Hero extends React.PureComponent {
       <div>
         <div className="ds-header">{this.props.title}</div>
         <div className={`ds-hero ds-hero-${this.props.style}`}>
-          <a href={heroRec.url} className="wrapper">
+          <a href={heroRec.url} className="wrapper" onClick={this.onLinkClick}>
             <div className="img-wrapper">
               <div className="img" style={{backgroundImage: `url(${heroRec.image_src})`}} />
             </div>
@@ -48,9 +73,8 @@ export class _Hero extends React.PureComponent {
   }
 }
 
-_Hero.defaultProps = {
+Hero.defaultProps = {
+  data: {},
   style: `border`,
   items: 1, // Number of stories to display
 };
-
-export const Hero = connect(state => ({DiscoveryStream: state.DiscoveryStream}))(_Hero);

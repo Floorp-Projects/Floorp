@@ -24,7 +24,6 @@ class URLClassifierParent : public nsIURIClassifierCallback,
   NS_DECL_THREADSAFE_ISUPPORTS
 
   mozilla::ipc::IPCResult StartClassify(nsIPrincipal* aPrincipal,
-                                        bool aUseTrackingProtection,
                                         bool* aSuccess);
 
   // nsIURIClassifierCallback.
