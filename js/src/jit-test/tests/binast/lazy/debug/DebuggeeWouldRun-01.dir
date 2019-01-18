@@ -1,1 +1,0 @@
-// Bug 1250190: Shouldn't crash. |jit-test| exitstatus: 3
