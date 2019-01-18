@@ -9,18 +9,12 @@ DIRS += [
 ]
 
 DebuggerModules(
-    'CommandBar.css',
     'CommandBar.js',
-    'Expressions.css',
     'Expressions.js',
     'index.js',
-    'Scopes.css',
     'Scopes.js',
-    'SecondaryPanes.css',
     'UtilsBar.js',
     'Worker.js',
-    'Workers.css',
     'Workers.js',
-    'XHRBreakpoints.css',
     'XHRBreakpoints.js',
 )

@@ -10,10 +10,7 @@ DIRS += [
 DebuggerModules(
     'Frame.js',
     'FrameMenu.js',
-    'Frames.css',
-    'Group.css',
     'Group.js',
     'index.js',
-    'WhyPaused.css',
     'WhyPaused.js',
 )

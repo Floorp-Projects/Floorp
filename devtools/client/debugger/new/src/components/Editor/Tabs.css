@@ -38,9 +38,12 @@
 }
 
 .source-tab {
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
   display: inline-flex;
   align-items: center;
   position: relative;
+  transition: all 0.15s ease;
   min-width: 40px;
   max-width: 100%;
   overflow: hidden;
@@ -48,7 +51,6 @@
   cursor: default;
   height: 30px;
   font-size: 12px;
-  background-color: transparent;
 }
 
 .source-tab::before {
@@ -81,6 +83,9 @@
 .source-tab.active {
   color: var(--theme-toolbar-selected-color);
   border-bottom-color: transparent;
+  border-left: 1px solid var(--theme-splitter-color);
+  border-right: 1px solid var(--theme-splitter-color);
+  background-color: var(--theme-body-background);
 }
 
 .source-tab.active::before {
@@ -130,6 +135,21 @@
   fill: var(--theme-body-color);
 }
 
+img.moreTabs {
+  mask: url(/images/command-chevron.svg) no-repeat;
+  mask-size: 100%;
+  width: 12px;
+  height: 12px;
+  display: block;
+  background: var(--theme-body-color);
+  margin-left: 6px;
+}
+
+html[dir="rtl"] .img.moreTabs {
+  transform: rotate(180deg);
+  margin-right: 6px;
+}
+
 .source-tab .filename {
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -151,11 +171,6 @@
 
 .source-tab.active .close-btn {
   visibility: visible;
-}
-
-.source-tab.active .close {
-  visibility: visible;
-  background-color: var(--theme-toolbar-selected-color);
 }
 
 .source-tab:hover .close-btn {

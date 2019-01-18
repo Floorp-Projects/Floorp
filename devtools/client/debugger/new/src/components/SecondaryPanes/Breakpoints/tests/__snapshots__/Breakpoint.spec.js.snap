@@ -16,7 +16,6 @@ exports[`Breakpoint disabled 1`] = `
   />
   <label
     className="breakpoint-label cm-s-mozilla"
-    onClick={[Function]}
   >
     <span
       dangerouslySetInnerHTML={
@@ -58,7 +57,6 @@ exports[`Breakpoint paused at a different 1`] = `
   />
   <label
     className="breakpoint-label cm-s-mozilla"
-    onClick={[Function]}
   >
     <span
       dangerouslySetInnerHTML={
@@ -100,7 +98,6 @@ exports[`Breakpoint paused at a generatedLocation 1`] = `
   />
   <label
     className="breakpoint-label cm-s-mozilla"
-    onClick={[Function]}
   >
     <span
       dangerouslySetInnerHTML={
@@ -142,7 +139,6 @@ exports[`Breakpoint paused at an original location 1`] = `
   />
   <label
     className="breakpoint-label cm-s-mozilla"
-    onClick={[Function]}
   >
     <span
       dangerouslySetInnerHTML={
@@ -184,7 +180,6 @@ exports[`Breakpoint simple 1`] = `
   />
   <label
     className="breakpoint-label cm-s-mozilla"
-    onClick={[Function]}
   >
     <span
       dangerouslySetInnerHTML={

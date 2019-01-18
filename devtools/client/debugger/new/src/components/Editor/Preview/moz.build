@@ -9,6 +9,5 @@ DIRS += [
 
 DebuggerModules(
     'index.js',
-    'Popup.css',
     'Popup.js',
 )
