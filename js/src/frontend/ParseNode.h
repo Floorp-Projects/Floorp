@@ -1154,6 +1154,9 @@ class ListNode : public ParseNode {
   //   * object/class has computed property
   static constexpr uint32_t hasNonConstInitializerBit = 0x04;
 
+  // Flag set by the emitter after emitting top-level function statements.
+  static constexpr uint32_t emittedTopLevelFunctionDeclarationsBit = 0x08;
+
   void checkConsistency() const
 #ifndef DEBUG
   {
@@ -1227,6 +1230,12 @@ class ListNode : public ParseNode {
     return pn_u.list.xflags & hasTopLevelFunctionDeclarationsBit;
   }
 
+  MOZ_MUST_USE bool emittedTopLevelFunctionDeclarations() const {
+    MOZ_ASSERT(isKind(ParseNodeKind::StatementList));
+    MOZ_ASSERT(hasTopLevelFunctionDeclarations());
+    return pn_u.list.xflags & emittedTopLevelFunctionDeclarationsBit;
+  }
+
   MOZ_MUST_USE bool hasArrayHoleOrSpread() const {
     MOZ_ASSERT(isKind(ParseNodeKind::ArrayExpr));
     return pn_u.list.xflags & hasArrayHoleOrSpreadBit;
@@ -1241,6 +1250,12 @@ class ListNode : public ParseNode {
   void setHasTopLevelFunctionDeclarations() {
     MOZ_ASSERT(isKind(ParseNodeKind::StatementList));
     pn_u.list.xflags |= hasTopLevelFunctionDeclarationsBit;
+  }
+
+  void setEmittedTopLevelFunctionDeclarations() {
+    MOZ_ASSERT(isKind(ParseNodeKind::StatementList));
+    MOZ_ASSERT(hasTopLevelFunctionDeclarations());
+    pn_u.list.xflags |= emittedTopLevelFunctionDeclarationsBit;
   }
 
   void setHasArrayHoleOrSpread() {

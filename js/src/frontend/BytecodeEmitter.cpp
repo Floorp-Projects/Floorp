@@ -98,7 +98,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       lazyScript(cx, lazyScript),
       prologue(cx, lineNum),
       main(cx, lineNum),
-      current(&main),
+      current(&prologue),
       parser(nullptr),
       atomIndices(cx->frontendCollectionPool()),
       firstLine(lineNum),
@@ -442,6 +442,11 @@ static inline unsigned LengthOfSetLine(unsigned line) {
 
 /* Updates line number notes, not column notes. */
 bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
+  // Don't emit line/column number notes in the prologue.
+  if (inPrologue()) {
+    return true;
+  }
+
   ErrorReporter* er = &parser->errorReporter();
   bool onThisLine;
   if (!er->isOnThisLine(offset, currentLine(), &onThisLine)) {
@@ -485,6 +490,11 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
 bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
   if (!updateLineNumberNotes(offset)) {
     return false;
+  }
+
+  // Don't emit line/column number notes in the prologue.
+  if (inPrologue()) {
+    return true;
   }
 
   uint32_t columnIndex = parser->errorReporter().columnAt(offset);
@@ -2265,26 +2275,41 @@ bool BytecodeEmitter::emitSetThis(BinaryNode* setThisNode) {
   return true;
 }
 
+bool BytecodeEmitter::defineHoistedTopLevelFunctions(ParseNode* body) {
+  MOZ_ASSERT(inPrologue());
+  MOZ_ASSERT(sc->isGlobalContext() || (sc->isEvalContext() && !sc->strict()));
+  MOZ_ASSERT(body->is<LexicalScopeNode>() || body->is<ListNode>());
+
+  if (body->is<LexicalScopeNode>()) {
+    body = body->as<LexicalScopeNode>().scopeBody();
+    MOZ_ASSERT(body->is<ListNode>());
+  }
+
+  if (!body->as<ListNode>().hasTopLevelFunctionDeclarations()) {
+    return true;
+  }
+
+  return emitHoistedFunctionsInList(&body->as<ListNode>());
+}
+
 bool BytecodeEmitter::emitScript(ParseNode* body) {
   AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission,
                                 parser->errorReporter(), body);
 
   setScriptStartOffsetIfUnset(body->pn_pos);
 
+  MOZ_ASSERT(inPrologue());
+
   TDZCheckCache tdzCache(this);
   EmitterScope emitterScope(this);
   if (sc->isGlobalContext()) {
-    switchToPrologue();
     if (!emitterScope.enterGlobal(this, sc->asGlobalContext())) {
       return false;
     }
-    switchToMain();
   } else if (sc->isEvalContext()) {
-    switchToPrologue();
     if (!emitterScope.enterEval(this, sc->asEvalContext())) {
       return false;
     }
-    switchToMain();
   } else {
     MOZ_ASSERT(sc->isModuleContext());
     if (!emitterScope.enterModule(this, sc->asModuleContext())) {
@@ -2294,7 +2319,8 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
 
   setFunctionBodyEndPos(body->pn_pos);
 
-  if (sc->isEvalContext() && !sc->strict() && body->is<LexicalScopeNode>() &&
+  bool isSloppyEval = sc->isEvalContext() && !sc->strict();
+  if (isSloppyEval && body->is<LexicalScopeNode>() &&
       !body->as<LexicalScopeNode>().isEmptyScope()) {
     // Sloppy eval scripts may need to emit DEFFUNs in the prologue. If there is
     // an immediately enclosed lexical scope, we need to enter the lexical
@@ -2303,11 +2329,15 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     EmitterScope lexicalEmitterScope(this);
     LexicalScopeNode* scope = &body->as<LexicalScopeNode>();
 
-    switchToPrologue();
     if (!lexicalEmitterScope.enterLexical(this, ScopeKind::Lexical,
                                           scope->scopeBindings())) {
       return false;
     }
+
+    if (!defineHoistedTopLevelFunctions(scope->scopeBody())) {
+      return false;
+    }
+
     switchToMain();
 
     if (!emitLexicalScopeBody(scope->scopeBody())) {
@@ -2318,6 +2348,14 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
       return false;
     }
   } else {
+    if (sc->isGlobalContext() || isSloppyEval) {
+      if (!defineHoistedTopLevelFunctions(body)) {
+        return false;
+      }
+    }
+
+    switchToMain();
+
     if (!emitTree(body)) {
       return false;
     }
@@ -2350,6 +2388,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
 
 bool BytecodeEmitter::emitFunctionScript(CodeNode* funNode,
                                          TopLevelFunction isTopLevel) {
+  MOZ_ASSERT(inPrologue());
   MOZ_ASSERT(funNode->isKind(ParseNodeKind::Function));
   ParseNode* body = funNode->body();
   MOZ_ASSERT(body->isKind(ParseNodeKind::ParamsBody));
@@ -2383,11 +2422,9 @@ bool BytecodeEmitter::emitFunctionScript(CodeNode* funNode,
     script->setTreatAsRunOnce();
     MOZ_ASSERT(!script->hasRunOnce());
 
-    switchToPrologue();
     if (!emit1(JSOP_RUNONCE)) {
       return false;
     }
-    switchToMain();
   }
 
   setFunctionBodyEndPos(body->pn_pos);
@@ -4646,6 +4683,13 @@ if_again:
 bool BytecodeEmitter::emitHoistedFunctionsInList(ListNode* stmtList) {
   MOZ_ASSERT(stmtList->hasTopLevelFunctionDeclarations());
 
+  // We can call this multiple times for sloppy eval scopes.
+  if (stmtList->emittedTopLevelFunctionDeclarations()) {
+    return true;
+  }
+
+  stmtList->setEmittedTopLevelFunctionDeclarations();
+
   for (ParseNode* stmt : stmtList->contents()) {
     ParseNode* maybeFun = stmt;
 
@@ -5643,7 +5687,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(CodeNode* funNode,
     } else {
       MOZ_ASSERT(sc->isGlobalContext() || sc->isEvalContext());
       MOZ_ASSERT(funNode->getOp() == JSOP_NOP);
-      switchToPrologue();
+      MOZ_ASSERT(inPrologue());
       if (funbox->isAsync()) {
         if (!emitAsyncWrapper(index, fun->isMethod(), fun->isArrow(),
                               fun->isGenerator())) {
@@ -5657,7 +5701,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(CodeNode* funNode,
       if (!emit1(JSOP_DEFFUN)) {
         return false;
       }
-      switchToMain();
     }
   } else {
     // For functions nested within functions and blocks, make a lambda and
@@ -8053,6 +8096,7 @@ bool BytecodeEmitter::emitTypeof(UnaryNode* typeofNode, JSOp op) {
 bool BytecodeEmitter::emitFunctionFormalParametersAndBody(
     ListNode* paramsBody) {
   MOZ_ASSERT(paramsBody->isKind(ParseNodeKind::ParamsBody));
+  MOZ_ASSERT(inPrologue());
 
   ParseNode* funBody = paramsBody->last();
   FunctionBox* funbox = sc->asFunctionBox();
@@ -8060,6 +8104,8 @@ bool BytecodeEmitter::emitFunctionFormalParametersAndBody(
   TDZCheckCache tdzCache(this);
 
   if (funbox->hasParameterExprs) {
+    switchToMain();
+
     EmitterScope funEmitterScope(this);
     if (!funEmitterScope.enterFunction(this, funbox)) {
       return false;
@@ -8148,7 +8194,6 @@ bool BytecodeEmitter::emitFunctionFormalParametersAndBody(
   // messes up breakpoint tests.
   EmitterScope emitterScope(this);
 
-  switchToPrologue();
   if (!emitterScope.enterFunction(this, funbox)) {
     return false;
   }
