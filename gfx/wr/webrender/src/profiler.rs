@@ -402,7 +402,7 @@ pub struct IpcProfileCounters {
 }
 
 macro_rules! declare_intern_profile_counters {
-    ( $( { $name: ident, $x: ident, $y: ident } )+ ) => {
+    ( $( $name: ident, )+ ) => {
         #[derive(Clone)]
         pub struct InternProfileCounters {
             $(
@@ -411,6 +411,7 @@ macro_rules! declare_intern_profile_counters {
         }
 
         impl InternProfileCounters {
+            #[cfg(feature = "debug_renderer")]
             fn draw(
                 &self,
                 debug_renderer: &mut DebugRenderer,

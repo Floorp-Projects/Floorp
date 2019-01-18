@@ -340,7 +340,7 @@ impl<'a> DisplayListFlattener<'a> {
         );
 
         let pic_data_handle = self.resources
-            .picture_interner
+            .picture
             .intern(&pic_key, || {
                 PrimitiveSceneData {
                     prim_size: LayoutSize::zero(),
@@ -1029,7 +1029,7 @@ impl<'a> DisplayListFlattener<'a> {
                 // Intern this clip item, and store the handle
                 // in the clip chain node.
                 let handle = self.resources
-                    .clip_interner
+                    .clip
                     .intern(&item, || ());
 
                 clip_chain_id = self.clip_store.add_clip_chain_node(
@@ -1663,7 +1663,7 @@ impl<'a> DisplayListFlattener<'a> {
         // Build the clip sources from the supplied region.
         let handle = self
             .resources
-            .clip_interner
+            .clip
             .intern(&ClipItemKey::rectangle(clip_region.main.size, ClipMode::Clip), || ());
 
         parent_clip_chain_index = self
@@ -1679,7 +1679,7 @@ impl<'a> DisplayListFlattener<'a> {
         if let Some(ref image_mask) = clip_region.image_mask {
             let handle = self
                 .resources
-                .clip_interner
+                .clip
                 .intern(&ClipItemKey::image_mask(image_mask), || ());
 
             parent_clip_chain_index = self
@@ -1696,7 +1696,7 @@ impl<'a> DisplayListFlattener<'a> {
         for region in clip_region.complex_clips {
             let handle = self
                 .resources
-                .clip_interner
+                .clip
                 .intern(&ClipItemKey::rounded_rect(region.rect.size, region.radii, region.mode), || ());
 
             parent_clip_chain_index = self
@@ -1863,7 +1863,7 @@ impl<'a> DisplayListFlattener<'a> {
                         );
 
                         let shadow_prim_data_handle = self.resources
-                            .picture_interner
+                            .picture
                             .intern(&shadow_pic_key, || {
                                 PrimitiveSceneData {
                                     prim_size: LayoutSize::zero(),
@@ -2711,7 +2711,7 @@ fn create_prim_instance(
     );
 
     let data_handle = resources
-        .picture_interner
+        .picture
         .intern(&pic_key, || {
             PrimitiveSceneData {
                 prim_size: LayoutSize::zero(),

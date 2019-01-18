@@ -658,7 +658,7 @@ impl RenderTarget for AlphaRenderTarget {
                     clip_store,
                     ctx.clip_scroll_tree,
                     transforms,
-                    &ctx.resources.clip_data_store,
+                    &ctx.resources.clip,
                 );
             }
             RenderTaskKind::ClipRegion(ref task) => {
