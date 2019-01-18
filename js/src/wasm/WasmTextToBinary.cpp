@@ -5565,7 +5565,9 @@ static bool ResolveMemFill(Resolver& r, AstMemFill& s) {
 
 static bool ResolveMemOrTableInit(Resolver& r, AstMemOrTableInit& s) {
   return ResolveExpr(r, s.dst()) && ResolveExpr(r, s.src()) &&
-         ResolveExpr(r, s.len()) && r.resolveTable(s.targetTable());
+         ResolveExpr(r, s.len()) &&
+         (s.isMem() ? r.resolveMemory(s.targetMemory())
+                    : r.resolveTable(s.targetTable()));
 }
 #endif
 
@@ -6348,8 +6350,8 @@ static bool EncodeMemOrTableInit(Encoder& e, AstMemOrTableInit& s) {
   return EncodeExpr(e, s.dst()) && EncodeExpr(e, s.src()) &&
          EncodeExpr(e, s.len()) &&
          e.writeOp(s.isMem() ? MiscOp::MemInit : MiscOp::TableInit) &&
-         EncodeOneTableIndex(e, s.targetTable().index()) &&
-         e.writeVarU32(s.segIndex());
+         e.writeVarU32(s.segIndex()) &&
+         e.writeVarU32(s.target().index());
 }
 #endif
 
