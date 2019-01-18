@@ -151,7 +151,8 @@ class ChildProcessInfo {
       const Maybe<RecordingProcessData>& aRecordingProcessData);
 
  public:
-  explicit ChildProcessInfo(const Maybe<RecordingProcessData>& aRecordingProcessData);
+  explicit ChildProcessInfo(
+      const Maybe<RecordingProcessData>& aRecordingProcessData);
   ~ChildProcessInfo();
 
   size_t GetId() { return mChannel->GetId(); }

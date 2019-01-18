@@ -227,8 +227,8 @@ void nsImageBoxFrame::UpdateImage() {
         nsresult rv = nsContentUtils::LoadImage(
             uri, mContent, doc, triggeringPrincipal, requestContextID,
             doc->GetDocumentURIAsReferrer(), doc->GetReferrerPolicy(),
-            mListener, mLoadFlags, EmptyString(),
-            getter_AddRefs(mImageRequest), contentPolicyType);
+            mListener, mLoadFlags, EmptyString(), getter_AddRefs(mImageRequest),
+            contentPolicyType);
 
         if (NS_SUCCEEDED(rv) && mImageRequest) {
           nsLayoutUtils::RegisterImageRequestIfAnimated(

@@ -3231,14 +3231,14 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
       MOZ_ASSERT(shouldAccelerate | !useWebRender);
 
       // Some Gtk+ themes use non-rectangular toplevel windows. To fully support
-      // such themes we need to make toplevel window transparent with ARGB visual.
-      // It may cause performanance issue so make it configurable
-      // and enable it by default for selected window managers.
-      // Also disable it for X11 SW rendering (Bug 1516224) by default.
+      // such themes we need to make toplevel window transparent with ARGB
+      // visual. It may cause performanance issue so make it configurable and
+      // enable it by default for selected window managers. Also disable it for
+      // X11 SW rendering (Bug 1516224) by default.
       if (mWindowType == eWindowType_toplevel &&
           (shouldAccelerate || !mIsX11Display ||
-            Preferences::HasUserValue("mozilla.widget.use-argb-visuals"))) {
-          needsAlphaVisual = TopLevelWindowUseARGBVisual();
+           Preferences::HasUserValue("mozilla.widget.use-argb-visuals"))) {
+        needsAlphaVisual = TopLevelWindowUseARGBVisual();
       }
 
       bool isSetVisual = false;

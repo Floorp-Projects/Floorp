@@ -2175,8 +2175,8 @@ nsresult nsUrlClassifierDBService::LookupURI(
     }
 
     uint32_t perm;
-    rv = permissionManager->TestPermissionFromPrincipal(
-        aPrincipal, "safe-browsing", &perm);
+    rv = permissionManager->TestPermissionFromPrincipal(aPrincipal,
+                                                        "safe-browsing", &perm);
     NS_ENSURE_SUCCESS(rv, rv);
 
     bool clean = (perm == nsIPermissionManager::ALLOW_ACTION);

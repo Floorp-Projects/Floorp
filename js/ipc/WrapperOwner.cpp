@@ -147,9 +147,7 @@ const CPOWProxyHandler CPOWProxyHandler::singleton;
   if (!owner->allowMessage(cx)) {                                       \
     return failRetVal;                                                  \
   }                                                                     \
-  {                                                                     \
-    return owner->call args;                                            \
-  }
+  { return owner->call args; }
 
 bool CPOWProxyHandler::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject proxy, HandleId id,
