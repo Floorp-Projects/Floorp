@@ -234,12 +234,7 @@ exports[`ProjectSearch found search results 1`] = `
               onKeyPress={[Function]}
               onKeyUp={[Function]}
               role="tree"
-              style={
-                Object {
-                  "margin": 0,
-                  "padding": 0,
-                }
-              }
+              style={Object {}}
               tabIndex="0"
             >
               <TreeNode
