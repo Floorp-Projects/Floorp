@@ -250,36 +250,25 @@ button.warning {
   }
 }
 
-#manage-shortcuts {
-  margin: 0 4px;
-  min-height: 30px;
-}
-
 #header-utils-btn {
-  -moz-appearance: none;
-  border: 1px solid var(--in-content-box-border-color);
-  border-radius: 2px;
-  line-height: 20px;
-  min-height: 30px;
-  background-color: var(--in-content-page-background);
-  padding-right: 10px;
-  padding-left: 10px;
-  /* This button is too tall, adding margin-bottom shrinks it. */
-  margin-bottom: 2px;
-  margin-inline-end: 0;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  min-width: auto;
 }
 
-#header-utils-btn:hover {
-  background-color: var(--in-content-box-background-hover);
-  cursor: pointer;
+#header-utils-btn > .button-box > hbox > .button-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg");
 }
 
-#header-utils-btn:active:hover,
-#header-utils-btn[open="true"] {
-  background-color: var(--in-content-box-background-active);
+#header-utils-btn > .button-box > .button-menu-dropmarker {
+  display: block;
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+  width: 12px;
+  margin-inline-start: 5px;
+  margin-inline-end: 1px; /* Match the 1px margin-inline-start on the icon. */
 }
 
-#header-utils-btn > .toolbarbutton-text {
+#header-utils-btn > .button-box > hbox > .button-text {
   display: none;
 }
 
