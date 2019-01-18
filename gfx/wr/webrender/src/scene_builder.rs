@@ -170,7 +170,7 @@ pub enum SceneSwapResult {
 }
 
 macro_rules! declare_document_resources {
-    ( $( { $name: ident, $interner_ident: ident, $y: ident } )+ ) => {
+    ( $( $name: ident, )+ ) => {
         /// This struct contains all items that can be shared between
         /// display lists. We want to intern and share the same clips,
         /// primitives and other things between display lists so that:
@@ -182,7 +182,7 @@ macro_rules! declare_document_resources {
         #[derive(Default)]
         pub struct DocumentResources {
             $(
-                pub $interner_ident: intern_types::$name::Interner,
+                pub $name: intern_types::$name::Interner,
             )+
         }
 
@@ -200,14 +200,14 @@ macro_rules! declare_document_resources {
                 r: &mut MemoryReport,
             ) {
                 $(
-                    r.interning.$interner_ident += self.$interner_ident.size_of(ops);
+                    r.interning.interners.$name += self.$name.size_of(ops);
                 )+
             }
 
             fn end_frame_and_get_pending_updates(&mut self) -> DocumentResourceUpdates {
                 DocumentResourceUpdates {
                     $(
-                        $name: self.$interner_ident.end_frame_and_get_pending_updates(),
+                        $name: self.$name.end_frame_and_get_pending_updates(),
                     )+
                 }
             }
@@ -238,16 +238,16 @@ macro_rules! impl_interner_mut {
 }
 
 impl_interner_mut! {
-    Image: image_interner,
-    ImageBorder: image_border_interner,
-    LineDecoration: line_decoration_interner,
-    LinearGradient: linear_grad_interner,
-    NormalBorderPrim: normal_border_interner,
-    Picture: picture_interner,
-    PrimitiveKeyKind: prim_interner,
-    RadialGradient: radial_grad_interner,
-    TextRun: text_run_interner,
-    YuvImage: yuv_image_interner,
+    Image: image,
+    ImageBorder: image_border,
+    LineDecoration: line_decoration,
+    LinearGradient: linear_grad,
+    NormalBorderPrim: normal_border,
+    Picture: picture,
+    PrimitiveKeyKind: prim,
+    RadialGradient: radial_grad,
+    TextRun: text_run,
+    YuvImage: yuv_image,
 }
 
 // A document in the scene builder contains the current scene,
