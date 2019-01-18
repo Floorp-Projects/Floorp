@@ -42,11 +42,21 @@ type Props = {
   hasSiblingOfSameName: boolean,
   focusItem: TreeNode => void,
   selectItem: TreeNode => void,
+  setExpanded: (TreeNode, boolean, boolean) => void,
   clearProjectDirectoryRoot: typeof actions.clearProjectDirectoryRoot,
   setProjectDirectoryRoot: typeof actions.setProjectDirectoryRoot
 };
 
 type State = {};
+
+type MenuOption = {
+  id: string,
+  label: string,
+  disabled: boolean,
+  click: () => any
+};
+
+type ContextMenu = Array<MenuOption>;
 
 class SourceTreeItem extends Component<Props, State> {
   getIcon(item: TreeNode, depth: number) {
@@ -120,29 +130,51 @@ class SourceTreeItem extends Component<Props, State> {
       }
     }
 
-    if (isDirectory(item) && features.root) {
-      const { path } = item;
-      const { projectRoot } = this.props;
+    if (isDirectory(item)) {
+      this.addCollapseExpandAllOptions(menuOptions, item);
 
-      if (projectRoot.endsWith(path)) {
-        menuOptions.push({
-          id: "node-remove-directory-root",
-          label: removeDirectoryRootLabel,
-          disabled: false,
-          click: () => this.props.clearProjectDirectoryRoot()
-        });
-      } else {
-        menuOptions.push({
-          id: "node-set-directory-root",
-          label: setDirectoryRootLabel,
-          accesskey: setDirectoryRootKey,
-          disabled: false,
-          click: () => this.props.setProjectDirectoryRoot(path)
-        });
+      if (features.root) {
+        const { path } = item;
+        const { projectRoot } = this.props;
+
+        if (projectRoot.endsWith(path)) {
+          menuOptions.push({
+            id: "node-remove-directory-root",
+            label: removeDirectoryRootLabel,
+            disabled: false,
+            click: () => this.props.clearProjectDirectoryRoot()
+          });
+        } else {
+          menuOptions.push({
+            id: "node-set-directory-root",
+            label: setDirectoryRootLabel,
+            accesskey: setDirectoryRootKey,
+            disabled: false,
+            click: () => this.props.setProjectDirectoryRoot(path)
+          });
+        }
       }
     }
 
     showMenu(event, menuOptions);
+  };
+
+  addCollapseExpandAllOptions = (menuOptions: ContextMenu, item: TreeNode) => {
+    const { setExpanded } = this.props;
+
+    menuOptions.push({
+      id: "node-menu-collapse-all",
+      label: L10N.getStr("collapseAll.label"),
+      disabled: false,
+      click: () => setExpanded(item, false, true)
+    });
+
+    menuOptions.push({
+      id: "node-menu-expand-all",
+      label: L10N.getStr("expandAll.label"),
+      disabled: false,
+      click: () => setExpanded(item, true, true)
+    });
   };
 
   renderItemArrow() {

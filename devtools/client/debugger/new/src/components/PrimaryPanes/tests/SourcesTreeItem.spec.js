@@ -35,6 +35,18 @@ describe("SourceTreeItem", () => {
     it("shows context menu on directory to set as root", async () => {
       const menuOptions = [
         {
+          click: expect.any(Function),
+          disabled: false,
+          id: "node-menu-collapse-all",
+          label: "Collapse all"
+        },
+        {
+          click: expect.any(Function),
+          disabled: false,
+          id: "node-menu-expand-all",
+          label: "Expand all"
+        },
+        {
           accesskey: "r",
           click: expect.any(Function),
           disabled: false,
@@ -55,7 +67,7 @@ describe("SourceTreeItem", () => {
       expect(mockEvent.preventDefault).toHaveBeenCalled();
       expect(mockEvent.stopPropagation).toHaveBeenCalled();
 
-      showMenu.mock.calls[0][1][0].click();
+      showMenu.mock.calls[0][1][2].click();
       expect(props.setProjectDirectoryRoot).toHaveBeenCalled();
       expect(props.clearProjectDirectoryRoot).not.toHaveBeenCalled();
       expect(copyToTheClipboard).not.toHaveBeenCalled();
@@ -98,6 +110,18 @@ describe("SourceTreeItem", () => {
         {
           click: expect.any(Function),
           disabled: false,
+          id: "node-menu-collapse-all",
+          label: "Collapse all"
+        },
+        {
+          click: expect.any(Function),
+          disabled: false,
+          id: "node-menu-expand-all",
+          label: "Expand all"
+        },
+        {
+          click: expect.any(Function),
+          disabled: false,
           id: "node-remove-directory-root",
           label: "Remove directory root"
         }
@@ -121,7 +145,7 @@ describe("SourceTreeItem", () => {
       expect(mockEvent.preventDefault).toHaveBeenCalled();
       expect(mockEvent.stopPropagation).toHaveBeenCalled();
 
-      showMenu.mock.calls[0][1][0].click();
+      showMenu.mock.calls[0][1][2].click();
       expect(props.setProjectDirectoryRoot).not.toHaveBeenCalled();
       expect(props.clearProjectDirectoryRoot).toHaveBeenCalled();
       expect(copyToTheClipboard).not.toHaveBeenCalled();
@@ -290,6 +314,7 @@ function generateDefaults(overrides) {
     setProjectDirectoryRoot: jest.fn(),
     selectItem: jest.fn(),
     focusItem: jest.fn(),
+    setExpanded: jest.fn(),
     ...overrides
   };
 }
