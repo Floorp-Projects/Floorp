@@ -23,15 +23,7 @@ add_task(async function() {
       },
     },
   };
-
-  const tempExt = new TemporaryExtension(EXTENSION_ID);
-  tempExt.writeManifest(manifestBase);
-
-  info("Install a temporary extension (original)");
-  await AddonManager.installTemporaryAddon(tempExt.sourceDir);
-
-  info("Wait until a debug target item appears");
-  await waitUntil(() => findDebugTargetByText(ORIGINAL_EXTENSION_NAME, document));
+  const tempExt = await installTemporaryExtensionFromManifest(manifestBase, document);
 
   const originalTarget = findDebugTargetByText(ORIGINAL_EXTENSION_NAME, document);
   ok(!!originalTarget, "The temporary extension isinstalled with the expected name");
@@ -60,9 +52,6 @@ add_task(async function() {
 
   info("Wait until the debug target with the updated extension name disappears");
   await waitUntil(() => !findDebugTargetByText(UPDATED_EXTENSION_NAME, document));
-
-  info("Remove the temporary web extension");
-  tempExt.remove();
 
   await removeTab(tab);
 });
