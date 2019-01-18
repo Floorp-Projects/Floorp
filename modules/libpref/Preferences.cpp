@@ -5416,13 +5416,15 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREFSERVICE_CID);
 static NS_DEFINE_CID(kPrefLocalizedStringCID, NS_PREFLOCALIZEDSTRING_CID);
 
 static mozilla::Module::CIDEntry kPrefCIDs[] = {
-    {&kPrefServiceCID, true, nullptr, PreferencesConstructor, Module::ALLOW_IN_SOCKET_PROCESS},
+    {&kPrefServiceCID, true, nullptr, PreferencesConstructor,
+     Module::ALLOW_IN_SOCKET_PROCESS},
     {&kPrefLocalizedStringCID, false, nullptr,
      nsPrefLocalizedStringConstructor},
     {nullptr}};
 
 static mozilla::Module::ContractIDEntry kPrefContracts[] = {
-    {NS_PREFSERVICE_CONTRACTID, &kPrefServiceCID, Module::ALLOW_IN_SOCKET_PROCESS},
+    {NS_PREFSERVICE_CONTRACTID, &kPrefServiceCID,
+     Module::ALLOW_IN_SOCKET_PROCESS},
     {NS_PREFLOCALIZEDSTRING_CONTRACTID, &kPrefLocalizedStringCID},
     {nullptr}};
 

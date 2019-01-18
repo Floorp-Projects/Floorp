@@ -1143,8 +1143,7 @@ bool Instance::memoryAccessInGuardRegion(uint8_t* addr,
          lastByteOffset < memoryMappedSize();
 }
 
-bool Instance::memoryAccessInBounds(uint8_t* addr,
-                                    unsigned numBytes) const {
+bool Instance::memoryAccessInBounds(uint8_t* addr, unsigned numBytes) const {
   MOZ_ASSERT(numBytes > 0 && numBytes <= sizeof(double));
 
   if (!metadata().usesMemory()) {

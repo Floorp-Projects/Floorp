@@ -260,7 +260,8 @@ std::wstring LauncherRegistryInfo::ResolveImageTimestampValueName() {
 }
 
 LauncherVoidResult LauncherRegistryInfo::WriteStartTimestamp(
-    LauncherRegistryInfo::ProcessType aProcessType, const Maybe<uint64_t>& aValue) {
+    LauncherRegistryInfo::ProcessType aProcessType,
+    const Maybe<uint64_t>& aValue) {
   LauncherResult<std::wstring> name = ResolveValueName(aProcessType);
   if (name.isErr()) {
     return LAUNCHER_ERROR_FROM_RESULT(name);

@@ -65,7 +65,7 @@ static bool gDebuggerRunsInMiddleman;
 
 // Any response received to the last MiddlemanCallRequest message.
 static UniquePtr<MiddlemanCallResponseMessage, Message::FreePolicy>
-  gCallResponseMessage;
+    gCallResponseMessage;
 
 // Whether some thread has sent a MiddlemanCallRequest and is waiting for
 // gCallResponseMessage to be filled in.

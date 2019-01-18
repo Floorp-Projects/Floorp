@@ -26,7 +26,7 @@
 #elif defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wextra"
-#endif // __clang__ || __GNUC__
+#endif  // __clang__ || __GNUC__
 
 #include "mozilla/dom/XULTreeElement.h"
 
@@ -34,7 +34,7 @@
 #pragma clang diagnostic pop
 #elif defined(__GNUC__)
 #pragma GCC diagnostic pop
-#endif // __clang__ || __GNUC__
+#endif  // __clang__ || __GNUC__
 
 typedef struct treeArrayElStr treeArrayEl;
 

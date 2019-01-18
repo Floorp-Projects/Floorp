@@ -930,13 +930,14 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     // clang-format on
 };
 
-static const mozilla::Module kNeckoModule = {mozilla::Module::kVersion,
-                                             kNeckoCIDs,
-                                             kNeckoContracts,
-                                             kNeckoCategories,
-                                             nullptr,
-                                             nsNetStartup,
-                                             nsNetShutdown,
-                                             mozilla::Module::ALLOW_IN_SOCKET_PROCESS};
+static const mozilla::Module kNeckoModule = {
+    mozilla::Module::kVersion,
+    kNeckoCIDs,
+    kNeckoContracts,
+    kNeckoCategories,
+    nullptr,
+    nsNetStartup,
+    nsNetShutdown,
+    mozilla::Module::ALLOW_IN_SOCKET_PROCESS};
 
 NSMODULE_DEFN(necko) = &kNeckoModule;

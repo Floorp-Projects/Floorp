@@ -150,11 +150,9 @@ bool BreakpointPosition::Decode(JSContext* aCx, HandleObject aObject) {
   return true;
 }
 
-void
-BreakpointPosition::ToString(nsCString& aStr) const
-{
+void BreakpointPosition::ToString(nsCString& aStr) const {
   aStr.AppendPrintf("{ Kind: %s, Script: %d, Offset: %d, Frame: %d }",
-                    KindString(), (int) mScript, (int) mOffset, (int) mFrameIndex);
+                    KindString(), (int)mScript, (int)mOffset, (int)mFrameIndex);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -178,9 +176,8 @@ JSObject* ExecutionPoint::Encode(JSContext* aCx) const {
   }
   if (HasPosition()) {
     RootedObject position(aCx, mPosition.Encode(aCx));
-    if (!position ||
-        !JS_DefineProperty(aCx, obj, gPositionProperty, position,
-                           JSPROP_ENUMERATE)) {
+    if (!position || !JS_DefineProperty(aCx, obj, gPositionProperty, position,
+                                        JSPROP_ENUMERATE)) {
       return nullptr;
     }
   }
@@ -205,10 +202,8 @@ bool ExecutionPoint::Decode(JSContext* aCx, HandleObject aObject) {
          GetNumberProperty(aCx, aObject, gProgressProperty, &mProgress);
 }
 
-void
-ExecutionPoint::ToString(nsCString& aStr) const
-{
-  aStr.AppendPrintf("{ Checkpoint %d", (int) mCheckpoint);
+void ExecutionPoint::ToString(nsCString& aStr) const {
+  aStr.AppendPrintf("{ Checkpoint %d", (int)mCheckpoint);
   if (HasPosition()) {
     aStr.AppendPrintf(" Progress %llu Position ", mProgress);
     mPosition.ToString(aStr);
@@ -229,10 +224,9 @@ static JSObject* EncodeChannelMessage(JSContext* aCx,
 
   RootedObject pointObject(aCx, aMsg.mPoint.Encode(aCx));
   if (!pointObject ||
-      !JS_DefineProperty(aCx, obj, "point", pointObject,
+      !JS_DefineProperty(aCx, obj, "point", pointObject, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(aCx, obj, "recordingEndpoint", aMsg.mRecordingEndpoint,
                          JSPROP_ENUMERATE) ||
-      !JS_DefineProperty(aCx, obj, "recordingEndpoint",
-                         aMsg.mRecordingEndpoint, JSPROP_ENUMERATE) ||
       !JS_DefineProperty(aCx, obj, "duration",
                          aMsg.mDurationMicroseconds / 1000.0,
                          JSPROP_ENUMERATE)) {
@@ -252,7 +246,7 @@ void SetupMiddlemanControl(const Maybe<size_t>& aRecordingChildId) {
   MOZ_RELEASE_ASSERT(!gControl);
 
   nsCOMPtr<rrIControl> control =
-    do_ImportModule("resource://devtools/server/actors/replay/control.js");
+      do_ImportModule("resource://devtools/server/actors/replay/control.js");
   gControl = control.forget();
   ClearOnShutdown(&gControl);
 
@@ -270,7 +264,8 @@ void SetupMiddlemanControl(const Maybe<size_t>& aRecordingChildId) {
   }
 }
 
-void ForwardHitExecutionPointMessage(size_t aId, const HitExecutionPointMessage& aMsg) {
+void ForwardHitExecutionPointMessage(size_t aId,
+                                     const HitExecutionPointMessage& aMsg) {
   MOZ_RELEASE_ASSERT(gControl);
 
   AutoSafeJSContext cx;
@@ -361,8 +356,8 @@ static bool Middleman_CanRewind(JSContext* aCx, unsigned aArgc, Value* aVp) {
   return true;
 }
 
-static bool Middleman_SpawnReplayingChild(JSContext* aCx,
-                                          unsigned aArgc, Value* aVp) {
+static bool Middleman_SpawnReplayingChild(JSContext* aCx, unsigned aArgc,
+                                          Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   size_t id = parent::SpawnReplayingChild();
@@ -370,8 +365,8 @@ static bool Middleman_SpawnReplayingChild(JSContext* aCx,
   return true;
 }
 
-static bool Middleman_SetActiveChild(JSContext* aCx,
-                                     unsigned aArgc, Value* aVp) {
+static bool Middleman_SetActiveChild(JSContext* aCx, unsigned aArgc,
+                                     Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0));
@@ -385,8 +380,8 @@ static bool Middleman_SetActiveChild(JSContext* aCx,
   return true;
 }
 
-static bool Middleman_SendSetSaveCheckpoint(JSContext* aCx,
-                                            unsigned aArgc, Value* aVp) {
+static bool Middleman_SendSetSaveCheckpoint(JSContext* aCx, unsigned aArgc,
+                                            Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0));
@@ -407,8 +402,8 @@ static bool Middleman_SendSetSaveCheckpoint(JSContext* aCx,
   return true;
 }
 
-static bool Middleman_SendFlushRecording(JSContext* aCx,
-                                         unsigned aArgc, Value* aVp) {
+static bool Middleman_SendFlushRecording(JSContext* aCx, unsigned aArgc,
+                                         Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0));
@@ -441,7 +436,8 @@ static bool Middleman_SendResume(JSContext* aCx, unsigned aArgc, Value* aVp) {
   return true;
 }
 
-static bool Middleman_SendRestoreCheckpoint(JSContext* aCx, unsigned aArgc, Value* aVp) {
+static bool Middleman_SendRestoreCheckpoint(JSContext* aCx, unsigned aArgc,
+                                            Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0));
@@ -460,7 +456,8 @@ static bool Middleman_SendRestoreCheckpoint(JSContext* aCx, unsigned aArgc, Valu
   return true;
 }
 
-static bool Middleman_SendRunToPoint(JSContext* aCx, unsigned aArgc, Value* aVp) {
+static bool Middleman_SendRunToPoint(JSContext* aCx, unsigned aArgc,
+                                     Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0));
@@ -489,13 +486,13 @@ static js::CharBuffer* gResponseBuffer;
 
 void OnDebuggerResponse(const Message& aMsg) {
   const DebuggerResponseMessage& nmsg =
-    static_cast<const DebuggerResponseMessage&>(aMsg);
+      static_cast<const DebuggerResponseMessage&>(aMsg);
   MOZ_RELEASE_ASSERT(gResponseBuffer && gResponseBuffer->empty());
   gResponseBuffer->append(nmsg.Buffer(), nmsg.BufferSize());
 }
 
-static bool Middleman_SendDebuggerRequest(JSContext* aCx,
-                                          unsigned aArgc, Value* aVp) {
+static bool Middleman_SendDebuggerRequest(JSContext* aCx, unsigned aArgc,
+                                          Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0));
@@ -519,8 +516,8 @@ static bool Middleman_SendDebuggerRequest(JSContext* aCx,
   MOZ_RELEASE_ASSERT(!gResponseBuffer);
   gResponseBuffer = &responseBuffer;
 
-  DebuggerRequestMessage* msg =
-    DebuggerRequestMessage::New(requestBuffer.begin(), requestBuffer.length());
+  DebuggerRequestMessage* msg = DebuggerRequestMessage::New(
+      requestBuffer.begin(), requestBuffer.length());
   child->SendMessage(*msg);
   free(msg);
 
@@ -534,8 +531,8 @@ static bool Middleman_SendDebuggerRequest(JSContext* aCx,
                       args.rval());
 }
 
-static bool Middleman_SendAddBreakpoint(JSContext* aCx,
-                                        unsigned aArgc, Value* aVp) {
+static bool Middleman_SendAddBreakpoint(JSContext* aCx, unsigned aArgc,
+                                        Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0));
@@ -559,8 +556,8 @@ static bool Middleman_SendAddBreakpoint(JSContext* aCx,
   return true;
 }
 
-static bool Middleman_SendClearBreakpoints(JSContext* aCx,
-                                           unsigned aArgc, Value* aVp) {
+static bool Middleman_SendClearBreakpoints(JSContext* aCx, unsigned aArgc,
+                                           Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0));
@@ -602,8 +599,8 @@ static bool Middleman_HadRepaintFailure(JSContext* aCx, unsigned aArgc,
   return true;
 }
 
-static bool Middleman_InRepaintStressMode(JSContext* aCx,
-                                          unsigned aArgc, Value* aVp) {
+static bool Middleman_InRepaintStressMode(JSContext* aCx, unsigned aArgc,
+                                          Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   args.rval().setBoolean(parent::InRepaintStressMode());
@@ -641,7 +638,7 @@ static bool Middleman_WaitUntilPaused(JSContext* aCx, unsigned aArgc,
 
   MOZ_RELEASE_ASSERT(msg->mType == MessageType::HitExecutionPoint);
   const HitExecutionPointMessage& nmsg =
-    static_cast<const HitExecutionPointMessage&>(*msg);
+      static_cast<const HitExecutionPointMessage&>(*msg);
 
   JSObject* obj = EncodeChannelMessage(aCx, nmsg);
   if (!obj) {

@@ -4223,8 +4223,7 @@ static void DiscardJITCodeForGC(JSRuntime* rt) {
   for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
     gcstats::AutoPhase ap(rt->gc.stats(),
                           gcstats::PhaseKind::MARK_DISCARD_CODE);
-    zone->discardJitCode(rt->defaultFreeOp(),
-                         Zone::DiscardBaselineCode,
+    zone->discardJitCode(rt->defaultFreeOp(), Zone::DiscardBaselineCode,
                          Zone::ReleaseTypes);
   }
 }

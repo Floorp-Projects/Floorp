@@ -28,13 +28,13 @@ class SessionStoreUtils {
 
   static already_AddRefed<nsISupports> AddDynamicFrameFilteredListener(
       const GlobalObject& aGlobal, EventTarget& aTarget, const nsAString& aType,
-      JS::Handle<JS::Value> aListener, bool aUseCapture,
-      bool aMozSystemGroup, ErrorResult& aRv);
+      JS::Handle<JS::Value> aListener, bool aUseCapture, bool aMozSystemGroup,
+      ErrorResult& aRv);
 
   static void RemoveDynamicFrameFilteredListener(
       const GlobalObject& aGlobal, EventTarget& aTarget, const nsAString& aType,
-      nsISupports* aListener, bool aUseCapture,
-      bool aMozSystemGroup, ErrorResult& aRv);
+      nsISupports* aListener, bool aUseCapture, bool aMozSystemGroup,
+      ErrorResult& aRv);
 
   static void CollectDocShellCapabilities(const GlobalObject& aGlobal,
                                           nsIDocShell* aDocShell,

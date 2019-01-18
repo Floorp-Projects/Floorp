@@ -1471,7 +1471,7 @@ nsresult nsHTMLFramesetBorderFrame::GetCursor(const nsPoint& aPoint,
     aCursor.mCursor = StyleCursorKind::Default;
   } else {
     aCursor.mCursor =
-        (mVertical) ? StyleCursorKind::EwResize: StyleCursorKind::NsResize;
+        (mVertical) ? StyleCursorKind::EwResize : StyleCursorKind::NsResize;
   }
   return NS_OK;
 }

@@ -28,7 +28,7 @@ enum class CallerType : uint32_t;
 
 class XULTreeElement final : public nsXULElement {
  public:
-  explicit XULTreeElement(already_AddRefed<mozilla::dom::NodeInfo> &&aNodeInfo)
+  explicit XULTreeElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : nsXULElement(std::move(aNodeInfo)),
         mCachedFirstVisibleRow(0),
         mTreeBody(nullptr) {}
@@ -118,8 +118,8 @@ class XULTreeElement final : public nsXULElement {
 
   virtual ~XULTreeElement() {}
 
-  JSObject *WrapNode(JSContext *aCx,
-                     JS::Handle<JSObject *> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 };
 
 }  // namespace dom
