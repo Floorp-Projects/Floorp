@@ -23,9 +23,6 @@
   white-space: nowrap;
   color: inherit;
   display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
@@ -62,7 +59,6 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  height: 100%;
 }
 
 .sources-list {
@@ -208,6 +204,10 @@
   height: 100%;
 }
 
+.source-outline-panel.has-root .thread-header {
+  margin-top: 4px;
+}
+
 .sources-list .managed-tree .tree .node .img.blackBox {
   mask: url(/images/blackBox.svg) no-repeat;
   mask-size: 100%;
@@ -236,7 +236,6 @@
   display: block;
 }
 
-.sources-list-custom-root .sources-list,
 .sources-list-custom-root .no-sources-message {
   position: absolute;
   top: 26px;
