@@ -6,10 +6,32 @@ exports[`SourcesTree After changing expanded nodes Shows the tree with four.js, 
   key="pane"
 >
   <div
-    className="no-sources-message"
-    key="empty"
+    className="sources-list"
+    key="tree"
+    onKeyDown={[Function]}
   >
-    This page has no sources
+    <ManagedTree
+      autoExpandAll={false}
+      autoExpandDepth={0}
+      expanded={
+        Array [
+          "four.js",
+          "five.js",
+          "six.js",
+        ]
+      }
+      getChildren={[Function]}
+      getParent={[Function]}
+      getPath={[Function]}
+      getRoots={[Function]}
+      itemHeight={21}
+      key="full"
+      onCollapse={[Function]}
+      onExpand={[Function]}
+      onFocus={[Function]}
+      preventBlur={true}
+      renderItem={[Function]}
+    />
   </div>
 </div>
 `;
@@ -20,10 +42,25 @@ exports[`SourcesTree Should show the tree with nothing expanded 1`] = `
   key="pane"
 >
   <div
-    className="no-sources-message"
-    key="empty"
+    className="sources-list"
+    key="tree"
+    onKeyDown={[Function]}
   >
-    This page has no sources
+    <ManagedTree
+      autoExpandAll={false}
+      autoExpandDepth={1}
+      getChildren={[Function]}
+      getParent={[Function]}
+      getPath={[Function]}
+      getRoots={[Function]}
+      itemHeight={21}
+      key="full"
+      onCollapse={[Function]}
+      onExpand={[Function]}
+      onFocus={[Function]}
+      preventBlur={true}
+      renderItem={[Function]}
+    />
   </div>
 </div>
 `;
@@ -34,10 +71,32 @@ exports[`SourcesTree When loading initial source Shows the tree with one.js, two
   key="pane"
 >
   <div
-    className="no-sources-message"
-    key="empty"
+    className="sources-list"
+    key="tree"
+    onKeyDown={[Function]}
   >
-    This page has no sources
+    <ManagedTree
+      autoExpandAll={false}
+      autoExpandDepth={0}
+      expanded={
+        Array [
+          "one.js",
+          "two.js",
+          "three.js",
+        ]
+      }
+      getChildren={[Function]}
+      getParent={[Function]}
+      getPath={[Function]}
+      getRoots={[Function]}
+      itemHeight={21}
+      key="full"
+      onCollapse={[Function]}
+      onExpand={[Function]}
+      onFocus={[Function]}
+      preventBlur={true}
+      renderItem={[Function]}
+    />
   </div>
 </div>
 `;
@@ -48,10 +107,144 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
   key="pane"
 >
   <div
-    className="no-sources-message"
-    key="empty"
+    className="sources-list"
+    key="tree"
+    onKeyDown={[Function]}
   >
-    This page has no sources
+    <ManagedTree
+      autoExpandAll={false}
+      autoExpandDepth={1}
+      getChildren={[Function]}
+      getParent={[Function]}
+      getPath={[Function]}
+      getRoots={[Function]}
+      highlightItems={
+        Array [
+          Object {
+            "contents": Object {
+              "contentType": "",
+              "error": undefined,
+              "id": "server1.conn13.child1/41",
+              "isBlackBoxed": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "loadedState": "unloaded",
+              "sourceMapURL": null,
+              "text": undefined,
+              "thread": "",
+              "url": "http://mdn.com/three.js",
+            },
+            "name": "three.js",
+            "path": "mdn.com/three.js",
+            "type": "source",
+          },
+          Object {
+            "contents": Array [
+              Object {
+                "contents": Object {
+                  "contentType": "",
+                  "error": undefined,
+                  "id": "server1.conn13.child1/42",
+                  "isBlackBoxed": false,
+                  "isPrettyPrinted": false,
+                  "isWasm": false,
+                  "loadedState": "unloaded",
+                  "sourceMapURL": "data:application/json?charset=utf?dsffewrsf",
+                  "text": undefined,
+                  "thread": "",
+                  "url": "http://mdn.com/four.js",
+                },
+                "name": "four.js",
+                "path": "mdn.com/four.js",
+                "type": "source",
+              },
+              Object {
+                "contents": Object {
+                  "contentType": "",
+                  "error": undefined,
+                  "id": "server1.conn13.child1/42/originalSource-sha",
+                  "isBlackBoxed": false,
+                  "isPrettyPrinted": false,
+                  "isWasm": false,
+                  "loadedState": "unloaded",
+                  "sourceMapURL": null,
+                  "text": undefined,
+                  "thread": "",
+                  "url": "http://mdn.com/four.js",
+                },
+                "name": "four.js",
+                "path": "mdn.com/four.js",
+                "type": "source",
+              },
+              Object {
+                "contents": Object {
+                  "contentType": "",
+                  "error": undefined,
+                  "id": "server1.conn13.child1/39",
+                  "isBlackBoxed": false,
+                  "isPrettyPrinted": false,
+                  "isWasm": false,
+                  "loadedState": "unloaded",
+                  "sourceMapURL": null,
+                  "text": undefined,
+                  "thread": "",
+                  "url": "http://mdn.com/one.js",
+                },
+                "name": "one.js",
+                "path": "mdn.com/one.js",
+                "type": "source",
+              },
+              Object {
+                "contents": Object {
+                  "contentType": "",
+                  "error": undefined,
+                  "id": "server1.conn13.child1/41",
+                  "isBlackBoxed": false,
+                  "isPrettyPrinted": false,
+                  "isWasm": false,
+                  "loadedState": "unloaded",
+                  "sourceMapURL": null,
+                  "text": undefined,
+                  "thread": "",
+                  "url": "http://mdn.com/three.js",
+                },
+                "name": "three.js",
+                "path": "mdn.com/three.js",
+                "type": "source",
+              },
+              Object {
+                "contents": Object {
+                  "contentType": "",
+                  "error": undefined,
+                  "id": "server1.conn13.child1/40",
+                  "isBlackBoxed": false,
+                  "isPrettyPrinted": false,
+                  "isWasm": false,
+                  "loadedState": "unloaded",
+                  "sourceMapURL": null,
+                  "text": undefined,
+                  "thread": "",
+                  "url": "http://mdn.com/two.js",
+                },
+                "name": "two.js",
+                "path": "mdn.com/two.js",
+                "type": "source",
+              },
+            ],
+            "name": "mdn.com",
+            "path": "mdn.com",
+            "type": "directory",
+          },
+        ]
+      }
+      itemHeight={21}
+      key="full"
+      onCollapse={[Function]}
+      onExpand={[Function]}
+      onFocus={[Function]}
+      preventBlur={true}
+      renderItem={[Function]}
+    />
   </div>
 </div>
 `;
@@ -84,10 +277,25 @@ exports[`SourcesTree with custom root renders custom root source list 1`] = `
     </button>
   </div>
   <div
-    className="no-sources-message"
-    key="empty"
+    className="sources-list"
+    key="tree"
+    onKeyDown={[Function]}
   >
-    This directory root has no sources
+    <ManagedTree
+      autoExpandAll={false}
+      autoExpandDepth={1}
+      getChildren={[Function]}
+      getParent={[Function]}
+      getPath={[Function]}
+      getRoots={[Function]}
+      itemHeight={21}
+      key="full"
+      onCollapse={[Function]}
+      onExpand={[Function]}
+      onFocus={[Function]}
+      preventBlur={true}
+      renderItem={[Function]}
+    />
   </div>
 </div>
 `;

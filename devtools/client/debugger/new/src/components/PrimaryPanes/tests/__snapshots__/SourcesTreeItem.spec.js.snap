@@ -72,6 +72,7 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -87,6 +88,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -119,6 +121,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -179,6 +182,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -205,6 +209,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -274,6 +279,7 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -289,6 +295,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -321,6 +328,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -363,6 +371,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -389,6 +398,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -447,6 +457,7 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -462,6 +473,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -483,6 +495,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -525,6 +538,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -540,6 +554,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -599,6 +614,7 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -614,6 +630,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -636,6 +653,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -678,6 +696,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -694,6 +713,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -753,10 +773,12 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": null,
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -779,6 +801,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={null}
         />,
@@ -808,6 +831,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -824,6 +848,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": null,
   },
@@ -870,6 +895,7 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -885,6 +911,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -905,6 +932,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -947,6 +975,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -961,6 +990,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -1018,10 +1048,12 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": null,
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1042,6 +1074,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={null}
         />,
@@ -1071,6 +1104,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1085,6 +1119,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": null,
   },
@@ -1133,10 +1168,12 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": null,
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1159,6 +1196,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={null}
         />,
@@ -1188,6 +1226,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1204,6 +1243,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": null,
   },
@@ -1251,6 +1291,7 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -1266,6 +1307,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1287,6 +1329,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -1329,6 +1372,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1344,6 +1388,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -1401,6 +1446,7 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -1416,6 +1462,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1436,6 +1483,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -1478,6 +1526,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1492,6 +1541,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -1573,6 +1623,7 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -1588,6 +1639,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1619,6 +1671,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -1674,6 +1727,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1699,6 +1753,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -1781,6 +1836,7 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -1796,6 +1852,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1828,6 +1885,7 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -1883,6 +1941,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1909,6 +1968,7 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",

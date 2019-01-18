@@ -311,8 +311,7 @@ type BaseSource = {|
   +contentType?: string,
   +error?: string,
   +loadedState: "unloaded" | "loading" | "loaded",
-  +relativeUrl: string,
-  introductionUrl: ?string
+  +relativeUrl: string
 |};
 
 /**
