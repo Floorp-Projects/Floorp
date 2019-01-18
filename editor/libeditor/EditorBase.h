@@ -731,6 +731,16 @@ class EditorBase : public nsIEditor,
       return mParentData ? mParentData->RangeUpdaterRef() : mRangeUpdater;
     }
 
+    void UpdateSelectionCache(Selection& aSelection) {
+      AutoEditActionDataSetter* actionData = this;
+      while (actionData) {
+        if (actionData->mSelection) {
+          actionData->mSelection = &aSelection;
+        }
+        actionData = actionData->mParentData;
+      }
+    }
+
    private:
     EditorBase& mEditorBase;
     RefPtr<Selection> mSelection;
