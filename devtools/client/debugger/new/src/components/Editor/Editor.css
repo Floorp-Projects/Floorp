@@ -71,7 +71,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .theme-dark .cm-s-mozilla .empty-line .CodeMirror-linenumber {
-  color: var(--grey-60);
+  color: var(--grey-50);
 }
 
 :not(.empty-line):not(.new-breakpoint)
