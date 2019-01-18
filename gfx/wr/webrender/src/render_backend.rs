@@ -208,20 +208,20 @@ impl FrameStamp {
     };
 }
 
-macro_rules! declare_frame_resources {
+macro_rules! declare_data_stores {
     ( $( $name: ident, )+ ) => {
         /// A collection of resources that are shared by clips, primitives
         /// between display lists.
         #[cfg_attr(feature = "capture", derive(Serialize))]
         #[cfg_attr(feature = "replay", derive(Deserialize))]
         #[derive(Default)]
-        pub struct FrameResources {
+        pub struct DataStores {
             $(
                 pub $name: intern_types::$name::Store,
             )+
         }
 
-        impl FrameResources {
+        impl DataStores {
             /// Reports CPU heap usage.
             fn report_memory(&self, ops: &mut MallocSizeOfOps, r: &mut MemoryReport) {
                 $(
@@ -231,7 +231,7 @@ macro_rules! declare_frame_resources {
 
             fn apply_updates(
                 &mut self,
-                updates: DocumentResourceUpdates,
+                updates: InternerUpdates,
                 profile_counters: &mut BackendProfileCounters,
             ) {
                 $(
@@ -245,9 +245,9 @@ macro_rules! declare_frame_resources {
     }
 }
 
-enumerate_interners!(declare_frame_resources);
+enumerate_interners!(declare_data_stores);
 
-impl FrameResources {
+impl DataStores {
     pub fn as_common_data(
         &self,
         prim_inst: &PrimitiveInstance
@@ -340,7 +340,7 @@ struct Document {
     // renderer.
     has_built_scene: bool,
 
-    resources: FrameResources,
+    data_stores: DataStores,
 
     /// Contains various vecs of data that is used only during frame building,
     /// where we want to recycle the memory each new display list, to avoid constantly
@@ -377,7 +377,7 @@ impl Document {
             hit_tester_is_valid: false,
             rendered_frame_is_valid: false,
             has_built_scene: false,
-            resources: FrameResources::default(),
+            data_stores: DataStores::default(),
             scratch: PrimitiveScratchBuffer::new(),
         }
     }
@@ -519,13 +519,13 @@ impl Document {
                 &mut resource_profile.texture_cache,
                 &mut resource_profile.gpu_cache,
                 &self.dynamic_properties,
-                &mut self.resources,
+                &mut self.data_stores,
                 &mut self.scratch,
                 debug_flags,
             );
             self.hit_tester = Some(frame_builder.create_hit_tester(
                 &self.clip_scroll_tree,
-                &self.resources.clip,
+                &self.data_stores.clip,
             ));
             frame
         };
@@ -555,7 +555,7 @@ impl Document {
 
             self.hit_tester = Some(frame_builder.create_hit_tester(
                 &self.clip_scroll_tree,
-                &self.resources.clip,
+                &self.data_stores.clip,
             ));
             self.hit_tester_is_valid = true;
         }
@@ -893,7 +893,7 @@ impl RenderBackend {
                         self.update_document(
                             txn.document_id,
                             replace(&mut txn.resource_updates, Vec::new()),
-                            txn.doc_resource_updates.take(),
+                            txn.interner_updates.take(),
                             replace(&mut txn.frame_ops, Vec::new()),
                             replace(&mut txn.notifications, Vec::new()),
                             txn.render_frame,
@@ -1277,7 +1277,7 @@ impl RenderBackend {
         &mut self,
         document_id: DocumentId,
         resource_updates: Vec<ResourceUpdate>,
-        doc_resource_updates: Option<DocumentResourceUpdates>,
+        interner_updates: Option<InternerUpdates>,
         mut frame_ops: Vec<FrameMsg>,
         mut notifications: Vec<NotificationRequest>,
         mut render_frame: bool,
@@ -1304,8 +1304,8 @@ impl RenderBackend {
 
         // If there are any additions or removals of clip modes
         // during the scene build, apply them to the data store now.
-        if let Some(updates) = doc_resource_updates {
-            doc.resources.apply_updates(updates, profile_counters);
+        if let Some(updates) = interner_updates {
+            doc.data_stores.apply_updates(updates, profile_counters);
         }
 
         // TODO: this scroll variable doesn't necessarily mean we scrolled. It is only used
@@ -1528,7 +1528,7 @@ impl RenderBackend {
             }
             report.hit_testers += doc.hit_tester.size_of(ops);
 
-            doc.resources.report_memory(ops, &mut report)
+            doc.data_stores.report_memory(ops, &mut report)
         }
 
         report += self.resource_cache.report_memory(op);
@@ -1637,8 +1637,8 @@ impl RenderBackend {
                 config.serialize_tree(&doc.clip_scroll_tree, file_name);
             }
 
-            let frame_resources_name = format!("frame-resources-{}-{}", (id.0).0, id.1);
-            config.serialize(&doc.resources, frame_resources_name);
+            let data_stores_name = format!("data-stores-{}-{}", (id.0).0, id.1);
+            config.serialize(&doc.data_stores, data_stores_name);
         }
 
         debug!("\tscene builder");
@@ -1722,13 +1722,13 @@ impl RenderBackend {
             let scene = CaptureConfig::deserialize::<Scene, _>(root, &scene_name)
                 .expect(&format!("Unable to open {}.ron", scene_name));
 
-            let doc_resources_name = format!("doc-resources-{}-{}", (id.0).0, id.1);
-            let doc_resources = CaptureConfig::deserialize::<DocumentResources, _>(root, &doc_resources_name)
-                .expect(&format!("Unable to open {}.ron", doc_resources_name));
+            let interners_name = format!("interners-{}-{}", (id.0).0, id.1);
+            let interners = CaptureConfig::deserialize::<Interners, _>(root, &interners_name)
+                .expect(&format!("Unable to open {}.ron", interners_name));
 
-            let frame_resources_name = format!("frame-resources-{}-{}", (id.0).0, id.1);
-            let frame_resources = CaptureConfig::deserialize::<FrameResources, _>(root, &frame_resources_name)
-                .expect(&format!("Unable to open {}.ron", frame_resources_name));
+            let data_stores_name = format!("data-stores-{}-{}", (id.0).0, id.1);
+            let data_stores = CaptureConfig::deserialize::<DataStores, _>(root, &data_stores_name)
+                .expect(&format!("Unable to open {}.ron", data_stores_name));
 
             let mut doc = Document {
                 scene: scene.clone(),
@@ -1744,7 +1744,7 @@ impl RenderBackend {
                 hit_tester_is_valid: false,
                 rendered_frame_is_valid: false,
                 has_built_scene: false,
-                resources: frame_resources,
+                data_stores,
                 scratch: PrimitiveScratchBuffer::new(),
             };
 
@@ -1783,7 +1783,7 @@ impl RenderBackend {
                 output_pipelines: doc.output_pipelines.clone(),
                 font_instances: self.resource_cache.get_font_instances(),
                 build_frame,
-                doc_resources,
+                interners,
             });
 
             self.documents.insert(id, doc);
