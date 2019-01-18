@@ -3546,17 +3546,14 @@ class LModuleMetadata : public LCallInstructionHelper<1, 0, 0> {
   LModuleMetadata() : LCallInstructionHelper(classOpcode) {}
 };
 
-class LDynamicImport : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0> {
+class LDynamicImport : public LCallInstructionHelper<1, BOX_PIECES, 0> {
  public:
   LIR_HEADER(DynamicImport)
 
-  static const size_t ReferencingPrivateIndex = 0;
-  static const size_t SpecifierIndex = BOX_PIECES;
+  static const size_t SpecifierIndex = 0;
 
-  explicit LDynamicImport(const LBoxAllocation& referencingPrivate,
-                          const LBoxAllocation& specifier)
+  explicit LDynamicImport(const LBoxAllocation& specifier)
       : LCallInstructionHelper(classOpcode) {
-    setBoxOperand(ReferencingPrivateIndex, referencingPrivate);
     setBoxOperand(SpecifierIndex, specifier);
   }
 

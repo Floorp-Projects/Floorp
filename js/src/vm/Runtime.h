@@ -968,8 +968,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   // module import and can accessed by off-thread parsing.
   mozilla::Atomic<JS::ModuleDynamicImportHook> moduleDynamicImportHook;
 
-  // A hook called on script finalization.
-  js::MainThreadData<JS::ScriptPrivateFinalizeHook> scriptPrivateFinalizeHook;
+  // Hooks called when script private references are created and destroyed.
+  js::MainThreadData<JS::ScriptPrivateReferenceHook> scriptPrivateAddRefHook;
+  js::MainThreadData<JS::ScriptPrivateReferenceHook> scriptPrivateReleaseHook;
 
  public:
 #if defined(JS_BUILD_BINAST)
