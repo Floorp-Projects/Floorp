@@ -72,7 +72,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -120,7 +119,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -207,7 +205,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -277,7 +274,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -325,7 +321,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -394,7 +389,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -453,7 +447,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -490,7 +483,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -548,7 +540,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -608,7 +599,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -646,7 +636,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -705,7 +694,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -765,7 +753,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": null,
     },
@@ -792,7 +779,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={null}
         />,
@@ -838,7 +824,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": null,
   },
@@ -885,7 +870,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -921,7 +905,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -978,7 +961,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -1036,7 +1018,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": null,
     },
@@ -1061,7 +1042,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={null}
         />,
@@ -1105,7 +1085,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": null,
   },
@@ -1154,7 +1133,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": null,
     },
@@ -1181,7 +1159,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={null}
         />,
@@ -1227,7 +1204,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": null,
   },
@@ -1275,7 +1251,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -1312,7 +1287,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -1370,7 +1344,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -1428,7 +1401,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -1464,7 +1436,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -1521,7 +1492,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -1603,7 +1573,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -1650,7 +1619,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -1731,7 +1699,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",
@@ -1814,7 +1781,6 @@ Object {
       },
       "projectRoot": "",
       "selectItem": [MockFunction],
-      "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "contentType": "",
@@ -1862,7 +1828,6 @@ Object {
           }
           projectRoot=""
           selectItem={[MockFunction]}
-          setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
@@ -1944,7 +1909,6 @@ Object {
     },
     "projectRoot": "",
     "selectItem": [MockFunction],
-    "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "contentType": "",

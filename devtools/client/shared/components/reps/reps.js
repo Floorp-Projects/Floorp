@@ -4567,7 +4567,7 @@ class Tree extends Component {
           // it should be scrolled into view.
           this._focus(item, { preventAutoScroll: true });
           if (this.props.isExpanded(item)) {
-            this.props.onCollapse(item);
+            this.props.onCollapse(item, e.altKey);
           } else {
             this.props.onExpand(item, e.altKey);
           }
