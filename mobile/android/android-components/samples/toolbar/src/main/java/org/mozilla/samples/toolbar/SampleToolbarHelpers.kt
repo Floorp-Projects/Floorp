@@ -22,7 +22,8 @@ enum class ToolbarConfiguration(val label: String) {
     DEFAULT("Default"),
     FOCUS_TABLET("Firefox Focus (Tablet)"),
     FOCUS_PHONE("Firefox Focus (Phone)"),
-    SEEDLING("Seedling")
+    SEEDLING("Seedling"),
+    CUSTOM_MENU("Custom Menu")
 }
 
 @Suppress("MagicNumber")

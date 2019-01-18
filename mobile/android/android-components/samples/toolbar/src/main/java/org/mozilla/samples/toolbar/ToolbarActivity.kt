@@ -23,6 +23,8 @@ import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuItem
+import mozilla.components.browser.menu.item.BrowserMenuDivider
+import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -54,6 +56,7 @@ class ToolbarActivity : AppCompatActivity() {
             ToolbarConfiguration.FOCUS_TABLET -> setupFocusTabletToolbar()
             ToolbarConfiguration.FOCUS_PHONE -> setupFocusPhoneToolbar()
             ToolbarConfiguration.SEEDLING -> setupSeedlingToolbar()
+            ToolbarConfiguration.CUSTOM_MENU -> setupCustomMenu()
         }
 
         recyclerView.adapter = ConfigurationAdapter(configuration)
@@ -142,6 +145,40 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
+    }
+
+    /**
+     * A custom browser menu.
+     */
+    private fun setupCustomMenu() {
+
+        toolbar.setBackgroundColor(
+            ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80))
+
+        // //////////////////////////////////////////////////////////////////////////////////////////
+        // Create a menu with text and icons
+        // //////////////////////////////////////////////////////////////////////////////////////////
+
+        val share = BrowserMenuImageText(
+            "Share",
+            R.drawable.mozac_ic_share,
+            contentDescription = "Sharing menu item"
+        ) { /* Do nothing */ }
+
+        val search = BrowserMenuImageText(
+            "Search",
+            R.drawable.mozac_ic_search,
+            contentDescription = "Sharing menu item"
+        ) { /* Do nothing */ }
+
+        val builder = BrowserMenuBuilder(listOf(share, BrowserMenuDivider(), search))
+        toolbar.setMenuBuilder(builder)
+
+        // //////////////////////////////////////////////////////////////////////////////////////////
+        // Display a URL
+        // //////////////////////////////////////////////////////////////////////////////////////////
+
+        toolbar.url = "https://www.mozilla.org/"
     }
 
     /**
