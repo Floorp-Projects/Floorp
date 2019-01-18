@@ -83,6 +83,16 @@ async function removeTemporaryExtension(name, document) {
 }
 /* exported removeTemporaryExtension */
 
+async function removeExtension(id, name, document) {
+  info("Retrieve the extension instance from the addon manager, and uninstall it");
+  const extension = await AddonManager.getAddonByID(id);
+  extension.uninstall();
+
+  info("Wait until the addon disappears from about:debugging");
+  await waitUntil(() => !findDebugTargetByText(name, document));
+}
+/* exported removeExtension */
+
 function prepareMockFilePicker(path) {
   // Mock the file picker to select a test addon
   const MockFilePicker = SpecialPowers.MockFilePicker;

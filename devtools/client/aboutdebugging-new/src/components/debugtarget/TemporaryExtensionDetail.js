@@ -35,12 +35,14 @@ class TemporaryExtensionDetail extends PureComponent {
       {
         id: "about-debugging-tmp-extension-temporary-id",
         a: dom.a({
+          className: "js-temporary-id-link",
           href: TEMP_ID_DOC_URL,
           target: "_blank",
         }),
       },
       dom.div({
-        className: "temporary-extension-detail__temporary-id-message",
+        className: "temporary-extension-detail__temporary-id-message " +
+          "js-temporary-id-message",
       }),
     );
   }
