@@ -726,17 +726,6 @@ inline const Class* GetClassForProtoKey(JSProtoKey key) {
     case JSProto_Array:
       return &ArrayObject::class_;
 
-    case JSProto_Number:
-      return &NumberObject::class_;
-    case JSProto_Boolean:
-      return &BooleanObject::class_;
-    case JSProto_String:
-      return &StringObject::class_;
-    case JSProto_Symbol:
-      return &SymbolObject::class_;
-    case JSProto_RegExp:
-      return &RegExpObject::class_;
-
     case JSProto_Int8Array:
     case JSProto_Uint8Array:
     case JSProto_Int16Array:
@@ -748,16 +737,8 @@ inline const Class* GetClassForProtoKey(JSProtoKey key) {
     case JSProto_Uint8ClampedArray:
       return &TypedArrayObject::classes[key - JSProto_Int8Array];
 
-    case JSProto_ArrayBuffer:
-      return &ArrayBufferObject::class_;
-
-    case JSProto_SharedArrayBuffer:
-      return &SharedArrayBufferObject::class_;
-
-    case JSProto_DataView:
-      return &DataViewObject::class_;
-
     default:
+      // We only expect to see plain objects, arrays, and typed arrays here.
       MOZ_CRASH("Bad proto key");
   }
 }
@@ -1764,15 +1745,13 @@ ObjectGroup* ObjectGroupRealm::getStringSplitStringGroup(JSContext* cx) {
   // The following code is a specialized version of the code
   // for ObjectGroup::allocationSiteGroup().
 
-  const Class* clasp = GetClassForProtoKey(JSProto_Array);
-
   JSObject* proto = GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
   if (!proto) {
     return nullptr;
   }
   Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
 
-  group = makeGroup(cx, cx->realm(), clasp, tagged, /* initialFlags = */ 0);
+  group = makeGroup(cx, cx->realm(), &ArrayObject::class_, tagged);
   if (!group) {
     return nullptr;
   }

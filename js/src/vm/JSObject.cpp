@@ -1001,8 +1001,8 @@ bool js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj) {
   RootedScript script(cx, cx->currentScript(&pc));
   gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
   NewObjectKind newKind = GenericObject;
-  if (script && ObjectGroup::useSingletonForAllocationSite(
-                    script, pc, &PlainObject::class_)) {
+  if (script &&
+      ObjectGroup::useSingletonForAllocationSite(script, pc, JSProto_Object)) {
     newKind = SingletonObject;
   }
   RootedObject obj(
