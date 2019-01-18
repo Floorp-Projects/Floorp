@@ -98,16 +98,12 @@ function parseVueScript(code) {
   return ast;
 }
 
-export function parseConsoleScript(text: string, opts?: Object): Object | null {
-  try {
-    return _parse(text, {
-      plugins: ["objectRestSpread"],
-      ...opts,
-      allowAwaitOutsideFunction: true
-    });
-  } catch (e) {
-    return null;
-  }
+export function parseConsoleScript(text: string, opts?: Object) {
+  return _parse(text, {
+    plugins: ["objectRestSpread"],
+    ...opts,
+    allowAwaitOutsideFunction: true
+  });
 }
 
 export function parseScript(text: string, opts?: Object) {

@@ -4,7 +4,7 @@
 
 // @flow
 import React, { cloneElement, Component } from "react";
-import AccessibleImage from "./AccessibleImage";
+import Svg from "./Svg";
 
 import "./Accordion.css";
 
@@ -69,7 +69,7 @@ class Accordion extends Component<Props, State> {
           onKeyDown={e => this.onHandleHeaderKeyDown(e, i)}
           onClick={() => this.handleHeaderClick(i)}
         >
-          <AccessibleImage className={`arrow ${opened ? "expanded" : ""}`} />
+          <Svg name="arrow" className={opened ? "expanded" : ""} />
           {item.header}
           {item.buttons ? (
             <div className="header-buttons" tabIndex="-1">

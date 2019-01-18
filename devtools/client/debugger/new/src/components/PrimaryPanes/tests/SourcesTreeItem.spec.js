@@ -35,18 +35,6 @@ describe("SourceTreeItem", () => {
     it("shows context menu on directory to set as root", async () => {
       const menuOptions = [
         {
-          click: expect.any(Function),
-          disabled: false,
-          id: "node-menu-collapse-all",
-          label: "Collapse all"
-        },
-        {
-          click: expect.any(Function),
-          disabled: false,
-          id: "node-menu-expand-all",
-          label: "Expand all"
-        },
-        {
           accesskey: "r",
           click: expect.any(Function),
           disabled: false,
@@ -67,7 +55,7 @@ describe("SourceTreeItem", () => {
       expect(mockEvent.preventDefault).toHaveBeenCalled();
       expect(mockEvent.stopPropagation).toHaveBeenCalled();
 
-      showMenu.mock.calls[0][1][2].click();
+      showMenu.mock.calls[0][1][0].click();
       expect(props.setProjectDirectoryRoot).toHaveBeenCalled();
       expect(props.clearProjectDirectoryRoot).not.toHaveBeenCalled();
       expect(copyToTheClipboard).not.toHaveBeenCalled();
@@ -110,18 +98,6 @@ describe("SourceTreeItem", () => {
         {
           click: expect.any(Function),
           disabled: false,
-          id: "node-menu-collapse-all",
-          label: "Collapse all"
-        },
-        {
-          click: expect.any(Function),
-          disabled: false,
-          id: "node-menu-expand-all",
-          label: "Expand all"
-        },
-        {
-          click: expect.any(Function),
-          disabled: false,
           id: "node-remove-directory-root",
           label: "Remove directory root"
         }
@@ -145,7 +121,7 @@ describe("SourceTreeItem", () => {
       expect(mockEvent.preventDefault).toHaveBeenCalled();
       expect(mockEvent.stopPropagation).toHaveBeenCalled();
 
-      showMenu.mock.calls[0][1][2].click();
+      showMenu.mock.calls[0][1][0].click();
       expect(props.setProjectDirectoryRoot).not.toHaveBeenCalled();
       expect(props.clearProjectDirectoryRoot).toHaveBeenCalled();
       expect(copyToTheClipboard).not.toHaveBeenCalled();
@@ -260,11 +236,13 @@ describe("SourceTreeItem", () => {
 
     it("should focus on and select item on click", async () => {
       const event = { event: "click" };
+      const setExpanded = jest.fn();
       const selectItem = jest.fn();
       const { component, instance, props } = render({
         depth: 1,
         focused: true,
         expanded: false,
+        setExpanded,
         selectItem
       });
 
@@ -272,21 +250,26 @@ describe("SourceTreeItem", () => {
       component.simulate("click", event);
       await component.simulate("keydown", { keyCode: 13 });
       expect(props.selectItem).toHaveBeenCalledWith(item);
+      expect(setExpanded).not.toHaveBeenCalled();
     });
 
-    it("should focus on directory on click", async () => {
+    it("should focus on and expand directory on click", async () => {
+      const setExpanded = jest.fn();
       const selectItem = jest.fn();
 
-      const { component, props } = render({
+      const { component, instance, props } = render({
         item: createMockDirectory(),
         source: null,
         depth: 1,
         focused: true,
         expanded: false,
+        setExpanded,
         selectItem
       });
 
+      const { item } = instance.props;
       component.simulate("click", { event: "click" });
+      expect(setExpanded).toHaveBeenCalledWith(item, false, undefined);
       expect(props.selectItem).not.toHaveBeenCalled();
     });
   });
@@ -312,9 +295,9 @@ function generateDefaults(overrides) {
     projectRoot: "",
     clearProjectDirectoryRoot: jest.fn(),
     setProjectDirectoryRoot: jest.fn(),
+    setExpanded: jest.fn(),
     selectItem: jest.fn(),
     focusItem: jest.fn(),
-    setExpanded: jest.fn(),
     ...overrides
   };
 }
