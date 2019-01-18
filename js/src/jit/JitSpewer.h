@@ -39,8 +39,6 @@ namespace jit {
   _(Sink)                                  \
   /* Information during Range analysis */  \
   _(Range)                                 \
-  /* Information during loop unrolling */  \
-  _(Unrolling)                             \
   /* Information during LICM */            \
   _(LICM)                                  \
   /* Info about fold linear constants */   \

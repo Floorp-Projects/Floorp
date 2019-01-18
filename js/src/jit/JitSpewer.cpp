@@ -369,7 +369,6 @@ void jit::CheckLogging() {
         "  pools         Literal Pools (ARM only for now)\n"
         "  cacheflush    Instruction Cache flushes (ARM only for now)\n"
         "  range         Range Analysis\n"
-        "  unroll        Loop unrolling\n"
         "  logs          JSON visualization logging\n"
         "  logs-sync     Same as logs, but flushes between each pass (sync. "
         "compiled functions only).\n"
@@ -423,9 +422,6 @@ void jit::CheckLogging() {
   }
   if (ContainsFlag(env, "range")) {
     EnableChannel(JitSpew_Range);
-  }
-  if (ContainsFlag(env, "unroll")) {
-    EnableChannel(JitSpew_Unrolling);
   }
   if (ContainsFlag(env, "licm")) {
     EnableChannel(JitSpew_LICM);

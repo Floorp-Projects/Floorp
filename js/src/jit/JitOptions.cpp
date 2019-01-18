@@ -101,9 +101,6 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether loop invariant code motion is globally disabled.
   SET_DEFAULT(disableLicm, false);
 
-  // Toggles whether Loop Unrolling is globally disabled.
-  SET_DEFAULT(disableLoopUnrolling, true);
-
   // Toggles wheter optimization tracking is globally disabled.
   SET_DEFAULT(disableOptimizationTracking, true);
 
