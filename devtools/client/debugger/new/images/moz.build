@@ -8,6 +8,8 @@
 DevToolsModules(
     'aframe.svg',
     'angular.svg',
+    'arrow-down.svg',
+    'arrow-up.svg',
     'arrow.svg',
     'babel.svg',
     'backbone.svg',
@@ -31,6 +33,7 @@ DevToolsModules(
     'immutable.svg',
     'javascript.svg',
     'jquery.svg',
+    'loader.svg',
     'lodash.svg',
     'magnifying-glass.svg',
     'marko.svg',
