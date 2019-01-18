@@ -11,7 +11,7 @@ const TEST_URI = TEST_PATH + TEST_FILE;
 const NET_PREF = "devtools.webconsole.filter.net";
 const XHR_PREF = "devtools.webconsole.filter.netxhr";
 const { l10n } = require("devtools/client/webconsole/utils/messages");
-const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Web/HTTP/Status/200" + STATUS_CODES_GA_PARAMS;
+const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Web/HTTP/Status/200" + GA_PARAMS;
 
 pushPref(NET_PREF, true);
 pushPref(XHR_PREF, true);
