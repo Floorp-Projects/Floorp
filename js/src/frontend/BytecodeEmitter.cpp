@@ -96,9 +96,13 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       parent(parent),
       script(cx, script),
       lazyScript(cx, lazyScript),
-      prologue(cx, lineNum),
-      main(cx, lineNum),
-      current(&prologue),
+      code_(cx),
+      notes_(cx),
+      lastNoteOffset_(0),
+      currentLine_(lineNum),
+      lastColumn_(0),
+      mainOffset_(),
+      lastTarget{-1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH)},
       parser(nullptr),
       atomIndices(cx->frontendCollectionPool()),
       firstLine(lineNum),
@@ -301,13 +305,13 @@ bool BytecodeEmitter::emitJumpTarget(JumpTarget* target) {
   ptrdiff_t off = offset();
 
   // Alias consecutive jump targets.
-  if (off == current->lastTarget.offset + ptrdiff_t(JSOP_JUMPTARGET_LENGTH)) {
-    target->offset = current->lastTarget.offset;
+  if (off == lastTarget.offset + ptrdiff_t(JSOP_JUMPTARGET_LENGTH)) {
+    target->offset = lastTarget.offset;
     return true;
   }
 
   target->offset = off;
-  current->lastTarget.offset = off;
+  lastTarget.offset = off;
   if (!emit1(JSOP_JUMPTARGET)) {
     return false;
   }
@@ -469,8 +473,7 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
      * unsigned delta_ wrap to a very large number, which triggers a
      * SRC_SETLINE.
      */
-    current->currentLine = line;
-    current->lastColumn = 0;
+    setCurrentLine(line);
     if (delta >= LengthOfSetLine(line)) {
       if (!newSrcNote2(SRC_SETLINE, ptrdiff_t(line))) {
         return false;
@@ -498,7 +501,7 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
   }
 
   uint32_t columnIndex = parser->errorReporter().columnAt(offset);
-  ptrdiff_t colspan = ptrdiff_t(columnIndex) - ptrdiff_t(current->lastColumn);
+  ptrdiff_t colspan = ptrdiff_t(columnIndex) - ptrdiff_t(lastColumn_);
   if (colspan != 0) {
     // If the column span is so large that we can't store it, then just
     // discard this information. This can happen with minimized or otherwise
@@ -511,7 +514,7 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
     if (!newSrcNote2(SRC_COLSPAN, SN_COLSPAN_TO_OFFSET(colspan))) {
       return false;
     }
-    current->lastColumn = columnIndex;
+    lastColumn_ = columnIndex;
   }
   return true;
 }
@@ -604,7 +607,7 @@ class NonLocalExitControl {
   ~NonLocalExitControl() {
     for (uint32_t n = savedScopeNoteIndex_; n < bce_->scopeNoteList.length();
          n++) {
-      bce_->scopeNoteList.recordEnd(n, bce_->offset(), bce_->inPrologue());
+      bce_->scopeNoteList.recordEnd(n, bce_->offset());
     }
     bce_->stackDepth = savedDepth_;
   }
@@ -629,7 +632,7 @@ bool NonLocalExitControl::leaveScope(EmitterScope* es) {
     enclosingScopeIndex = es->enclosingInFrame()->index();
   }
   if (!bce_->scopeNoteList.append(enclosingScopeIndex, bce_->offset(),
-                                  bce_->inPrologue(), openScopeNoteIndex_)) {
+                                  openScopeNoteIndex_)) {
     return false;
   }
   openScopeNoteIndex_ = bce_->scopeNoteList.length() - 1;
@@ -9147,9 +9150,6 @@ static bool AllocSrcNote(JSContext* cx, SrcNotesVector& notes,
 
 bool BytecodeEmitter::addTryNote(JSTryNoteKind kind, uint32_t stackDepth,
                                  size_t start, size_t end) {
-  // The tryNoteList stores offsets relative to current section should must
-  // be main section. During tryNoteList.finish(), the prologueLength will be
-  // added to correct offset.
   MOZ_ASSERT(!inPrologue());
   return tryNoteList.append(kind, stackDepth, start, end);
 }
@@ -9167,7 +9167,7 @@ bool BytecodeEmitter::newSrcNote(SrcNoteType type, unsigned* indexp) {
    */
   ptrdiff_t offset = this->offset();
   ptrdiff_t delta = offset - lastNoteOffset();
-  current->lastNoteOffset = offset;
+  lastNoteOffset_ = offset;
   if (delta >= SN_DELTA_LIMIT) {
     do {
       ptrdiff_t xdelta = Min(delta, SN_XDELTA_MASK);
@@ -9274,52 +9274,12 @@ bool BytecodeEmitter::setSrcNoteOffset(unsigned index, unsigned which,
   return true;
 }
 
-bool BytecodeEmitter::finishTakingSrcNotes(uint32_t* out) {
-  MOZ_ASSERT(current == &main);
-
-  MOZ_ASSERT(prologue.notes.length() == 0);
-  MOZ_ASSERT(prologue.lastNoteOffset == 0);
-
-  // We may need to adjust the offset of the first main note to account for
-  // prologue bytecodes. If it can be done by adjusting the delta of the first
-  // main note, we do so. Otherwise, we insert xdeltas into the prologue.
-  ptrdiff_t offset = prologueOffset();
-  MOZ_ASSERT(offset >= 0);
-  if (offset > 0 && main.notes.length() != 0) {
-    // Use the first main note's delta if we can.
-    jssrcnote* sn = main.notes.begin();
-    ptrdiff_t newDelta = SN_DELTA(sn) + offset;
-    ptrdiff_t deltaLimit = SN_IS_XDELTA(sn) ? SN_XDELTA_LIMIT : SN_DELTA_LIMIT;
-    if (newDelta < deltaLimit) {
-      SN_SET_DELTA(sn, newDelta);
-    } else {
-      // Otherwise, add xdeltas to the prologue.
-      while (offset > 0) {
-        jssrcnote xdelta;
-        ptrdiff_t xdelta_size = Min(offset, SN_XDELTA_MASK);
-        SN_MAKE_XDELTA(&xdelta, xdelta_size);
-        if (!prologue.notes.append(xdelta)) {
-          return false;
-        }
-        offset -= xdelta_size;
-      }
-    }
-  }
-
-  // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
-  // when the notes are copied to their final destination by copySrcNotes.
-  *out = prologue.notes.length() + main.notes.length() + 1;
-  return true;
-}
-
 void BytecodeEmitter::copySrcNotes(jssrcnote* destination, uint32_t nsrcnotes) {
-  unsigned prologueCount = prologue.notes.length();
-  unsigned mainCount = main.notes.length();
+  unsigned count = notes_.length();
   // nsrcnotes includes SN_MAKE_TERMINATOR in addition to the srcnotes.
-  MOZ_ASSERT(nsrcnotes == prologueCount + mainCount + 1);
-  PodCopy(destination, prologue.notes.begin(), prologueCount);
-  PodCopy(destination + prologueCount, main.notes.begin(), mainCount);
-  SN_MAKE_TERMINATOR(&destination[prologueCount + mainCount]);
+  MOZ_ASSERT(nsrcnotes == count + 1);
+  PodCopy(destination, notes_.begin(), count);
+  SN_MAKE_TERMINATOR(&destination[count]);
 }
 
 void CGNumberList::finish(mozilla::Span<GCPtrValue> array) {
@@ -9389,18 +9349,16 @@ bool CGTryNoteList::append(JSTryNoteKind kind, uint32_t stackDepth,
   return list.append(note);
 }
 
-void CGTryNoteList::finish(mozilla::Span<JSTryNote> array,
-                           uint32_t prologueLength) {
+void CGTryNoteList::finish(mozilla::Span<JSTryNote> array) {
   MOZ_ASSERT(length() == array.size());
 
   for (unsigned i = 0; i < length(); i++) {
-    list[i].start += prologueLength;
     array[i] = list[i];
   }
 }
 
 bool CGScopeNoteList::append(uint32_t scopeIndex, uint32_t offset,
-                             bool inPrologue, uint32_t parent) {
+                             uint32_t parent) {
   CGScopeNote note;
   mozilla::PodZero(&note);
 
@@ -9410,42 +9368,31 @@ bool CGScopeNoteList::append(uint32_t scopeIndex, uint32_t offset,
   note.index = scopeIndex;
   note.start = offset;
   note.parent = parent;
-  note.startInPrologue = inPrologue;
 
   return list.append(note);
 }
 
-void CGScopeNoteList::recordEnd(uint32_t index, uint32_t offset,
-                                bool inPrologue) {
+void CGScopeNoteList::recordEnd(uint32_t index, uint32_t offset) {
   MOZ_ASSERT(index < length());
   MOZ_ASSERT(list[index].length == 0);
   list[index].end = offset;
-  list[index].endInPrologue = inPrologue;
 }
 
-void CGScopeNoteList::finish(mozilla::Span<ScopeNote> array,
-                             uint32_t prologueLength) {
+void CGScopeNoteList::finish(mozilla::Span<ScopeNote> array) {
   MOZ_ASSERT(length() == array.size());
 
   for (unsigned i = 0; i < length(); i++) {
-    if (!list[i].startInPrologue) {
-      list[i].start += prologueLength;
-    }
-    if (!list[i].endInPrologue && list[i].end != UINT32_MAX) {
-      list[i].end += prologueLength;
-    }
     MOZ_ASSERT(list[i].end >= list[i].start);
     list[i].length = list[i].end - list[i].start;
     array[i] = list[i];
   }
 }
 
-void CGResumeOffsetList::finish(mozilla::Span<uint32_t> array,
-                                uint32_t prologueLength) {
+void CGResumeOffsetList::finish(mozilla::Span<uint32_t> array) {
   MOZ_ASSERT(length() == array.size());
 
   for (unsigned i = 0; i < length(); i++) {
-    array[i] = prologueLength + list[i];
+    array[i] = list[i];
   }
 }
 
