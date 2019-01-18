@@ -1117,7 +1117,8 @@ already_AddRefed<SourceSurface> VectorImage::CreateSurface(
   auto frame = MakeNotNull<RefPtr<imgFrame>>();
   nsresult rv = frame->InitWithDrawable(
       aSVGDrawable, aParams.size, SurfaceFormat::B8G8R8A8,
-      SamplingFilter::POINT, aParams.flags, backend);
+      SamplingFilter::POINT, aParams.flags, backend,
+      aParams.context ? aParams.context->GetDrawTarget() : nullptr);
 
   // If we couldn't create the frame, it was probably because it would end
   // up way too big. Generally it also wouldn't fit in the cache, but the prefs
