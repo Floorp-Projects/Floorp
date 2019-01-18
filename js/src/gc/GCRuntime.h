@@ -714,8 +714,8 @@ class GCRuntime {
 
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;
 
-  /* Track heap usage for this runtime. */
-  HeapUsage usage;
+  /* Track heap size for this runtime. */
+  HeapSize heapSize;
 
   /* GC scheduling state and parameters. */
   GCSchedulingTunables tunables;
