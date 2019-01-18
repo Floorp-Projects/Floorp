@@ -201,6 +201,10 @@ function testEscapeStringPosix() {
     "$'It\\'s unusual to put crickets in your coffee.'",
     "Single quotes should be escaped.");
 
+  const escapeChar = "\'!ls:q:gs|ls|;ping 8.8.8.8;|";
+  is(CurlUtils.escapeStringPosix(escapeChar), "$'\\'\\041ls:q:gs|ls|;ping 8.8.8.8;|'",
+    "'!' should be escaped.");
+
   const newLines = "Line 1\r\nLine 2\u000d\u000ALine3";
   is(CurlUtils.escapeStringPosix(newLines), "$'Line 1\\r\\nLine 2\\r\\nLine3'",
     "Newlines should be escaped.");
