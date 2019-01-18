@@ -327,7 +327,7 @@ UniqueChars Statistics::formatCompactSummaryMessage() const {
                  zoneStats.collectedZoneCount, zoneStats.zoneCount,
                  zoneStats.sweptZoneCount, zoneStats.collectedCompartmentCount,
                  zoneStats.compartmentCount, zoneStats.sweptCompartmentCount,
-                 double(preBytes) / bytesPerMiB,
+                 double(preHeapSize) / bytesPerMiB,
                  counts[COUNT_NEW_CHUNK] - counts[COUNT_DESTROY_CHUNK],
                  counts[COUNT_NEW_CHUNK] + counts[COUNT_DESTROY_CHUNK]);
   if (!fragments.append(DuplicateString(buffer))) {
@@ -449,7 +449,7 @@ UniqueChars Statistics::formatDetailedDescription() const {
       zoneStats.compartmentCount, zoneStats.sweptCompartmentCount,
       getCount(COUNT_MINOR_GC), getCount(COUNT_STOREBUFFER_OVERFLOW),
       mmu20 * 100., mmu50 * 100., t(sccTotal), t(sccLongest),
-      double(preBytes) / bytesPerMiB,
+      double(preHeapSize) / bytesPerMiB,
       getCount(COUNT_NEW_CHUNK) - getCount(COUNT_DESTROY_CHUNK),
       getCount(COUNT_NEW_CHUNK) + getCount(COUNT_DESTROY_CHUNK),
       double(ArenaSize * getCount(COUNT_ARENA_RELOCATED)) / bytesPerMiB,
@@ -585,8 +585,7 @@ void Statistics::writeLogMessage(const char* fmt, ...) {
 }
 #endif
 
-UniqueChars Statistics::renderJsonMessage(uint64_t timestamp,
-                                          bool includeSlices) const {
+UniqueChars Statistics::renderJsonMessage(uint64_t timestamp, Statistics::JSONUse use) const {
   /*
    * The format of the JSON message is specified by the GCMajorMarkerPayload
    * type in perf.html
@@ -607,9 +606,9 @@ UniqueChars Statistics::renderJsonMessage(uint64_t timestamp,
 
   json.beginObject();
   json.property("status", "completed");    // JSON Key #1
-  formatJsonDescription(timestamp, json);  // #2-22
+  formatJsonDescription(timestamp, json, use);  // #2-22
 
-  if (includeSlices) {
+  if (use == Statistics::JSONUse::TELEMETRY) {
     json.beginListProperty("slices_list");  // #23
     for (unsigned i = 0; i < slices_.length(); i++) {
       formatJsonSlice(i, json);
@@ -627,10 +626,11 @@ UniqueChars Statistics::renderJsonMessage(uint64_t timestamp,
 }
 
 void Statistics::formatJsonDescription(uint64_t timestamp,
-                                       JSONPrinter& json) const {
+                                       JSONPrinter& json,
+                                       JSONUse use) const {
   // If you change JSON properties here, please update:
   // Telemetry ping code:
-  //   toolkit/components/telemetry/GCTelemetry.jsm
+  //   toolkit/components/telemetry/other/GCTelemetry.jsm
   // Telemetry documentation:
   //   toolkit/components/telemetry/docs/data/main-ping.rst
   // Telemetry tests:
@@ -676,7 +676,11 @@ void Statistics::formatJsonDescription(uint64_t timestamp,
     json.property("nonincremental_reason",
                   ExplainAbortReason(nonincrementalReason_));  // #16
   }
-  json.property("allocated_bytes", preBytes);  // #17
+  json.property("allocated_bytes", preHeapSize);  // #17
+  if (use == Statistics::JSONUse::PROFILER) {
+    json.property("post_heap_size", postHeapSize);
+  }
+
   uint32_t addedChunks = getCount(COUNT_NEW_CHUNK);
   if (addedChunks) {
     json.property("added_chunks", addedChunks);  // #18
@@ -694,7 +698,7 @@ void Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice,
                                             JSONPrinter& json) const {
   // If you change JSON properties here, please update:
   // Telemetry ping code:
-  //   toolkit/components/telemetry/GCTelemetry.jsm
+  //   toolkit/components/telemetry/other/GCTelemetry.jsm
   // Telemetry documentation:
   //   toolkit/components/telemetry/docs/data/main-ping.rst
   // Telemetry tests:
@@ -742,7 +746,8 @@ Statistics::Statistics(JSRuntime* rt)
       gcDebugFile(nullptr),
       nonincrementalReason_(gc::AbortReason::None),
       allocsSinceMinorGC({0, 0}),
-      preBytes(0),
+      preHeapSize(0),
+      postHeapSize(0),
       thresholdTriggered(false),
       triggerAmount(0.0),
       triggerThreshold(0.0),
@@ -971,7 +976,7 @@ void Statistics::beginGC(JSGCInvocationKind kind) {
   gckind = kind;
   nonincrementalReason_ = gc::AbortReason::None;
 
-  preBytes = runtime->gc.usage.gcBytes();
+  preHeapSize = runtime->gc.heapSize.gcBytes();
   startingMajorGCNumber = runtime->gc.majorGCCount();
   startingSliceNumber = runtime->gc.gcNumber();
 }
@@ -979,6 +984,7 @@ void Statistics::beginGC(JSGCInvocationKind kind) {
 void Statistics::endGC() {
   TimeDuration sccTotal, sccLongest;
   sccDurations(&sccTotal, &sccLongest);
+  postHeapSize = runtime->gc.heapSize.gcBytes();
 
   runtime->addTelemetry(JS_TELEMETRY_GC_IS_ZONE_GC,
                         !zoneStats.isFullCollection());
