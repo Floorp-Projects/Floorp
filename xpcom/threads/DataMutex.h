@@ -39,9 +39,11 @@ class DataMutex {
  private:
   class MOZ_STACK_CLASS AutoLock {
    public:
-    T* operator->() const { return &ref(); }
+    T* operator->() const& { return &ref(); }
+    T* operator->() const&& = delete;
 
-    T& operator*() const { return ref(); }
+    T& operator*() const& { return ref(); }
+    T& operator*() const&& = delete;
 
     // Like RefPtr, make this act like its underlying raw pointer type
     // whenever it is used in a context where a raw pointer is expected.
@@ -50,10 +52,11 @@ class DataMutex {
     // Like RefPtr, don't allow implicit conversion of temporary to raw pointer.
     operator T*() const&& = delete;
 
-    T& ref() const {
+    T& ref() const& {
       MOZ_ASSERT(mOwner);
       return mOwner->mValue;
     }
+    T& ref() const&& = delete;
 
     AutoLock(AutoLock&& aOther) : mOwner(aOther.mOwner) {
       aOther.mOwner = nullptr;
