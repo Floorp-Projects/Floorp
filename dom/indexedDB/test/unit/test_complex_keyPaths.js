@@ -140,15 +140,8 @@ function* testSteps()
     let newValue = cursor.value;
     let destProp = Array.isArray(info.keyPath) ? info.keyPath[0] : info.keyPath;
     if (destProp) {
-      let splitDestProp = destProp.split(".");
-      if (splitDestProp.length == 1)
-      {
-        newValue[splitDestProp[0]] = "newKeyValue";
-      } else if (splitDestProp.length == 2) {
-        newValue[splitDestProp[0]][splitDestProp[1]] = "newKeyValue";
-      } else {
-        newValue[splitDestProp[0]][splitDestProp[1]][splitDestProp[2]] = "newKeyValue";
-      }
+      // eslint-disable-next-line no-eval
+      eval("newValue." + destProp + " = 'newKeyValue'");
     }
     else {
       newValue = "newKeyValue";
