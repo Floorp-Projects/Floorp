@@ -41,11 +41,13 @@ function selectPage(page, runtimeId) {
         return newPage === oldPage;
       };
 
+      if (!page) {
+        throw new Error("No page provided.");
+      }
+
       const currentPage = getState().ui.selectedPage;
-      // Nothing to dispatch if the page is the same as the current page, or
-      // if we are not providing any page.
-      // TODO: we should dispatch SELECT_PAGE_FAILURE if page is missing. See Bug 1518559.
-      if (!page || isSamePage(currentPage, page)) {
+      // Nothing to dispatch if the page is the same as the current page
+      if (isSamePage(currentPage, page)) {
         return;
       }
 
