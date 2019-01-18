@@ -11,7 +11,8 @@ profile_files = [
     'profiles.json',
     'profileserver/*',
     'reftest/*',
-    'unittest/*',
+    'unittest-features/*',
+    'unittest-required/*',
     'web-platform/*'
 ]
 
