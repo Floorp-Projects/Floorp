@@ -218,30 +218,32 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
           // Don't ask if it already the current engine
           let engine = Services.search.getEngineByName(engineName);
           if (Services.search.defaultEngine != engine) {
-            let allow = await new Promise(resolve => {
-              let subject = {
-                wrappedJSObject: {
-                  // This is a hack because we don't have the browser of
-                  // the actual install. This means the popup might show
-                  // in a different window. Will be addressed in a followup bug.
-                  browser: windowTracker.topWindow.gBrowser.selectedBrowser,
-                  name: this.extension.name,
-                  icon: this.extension.iconURL,
-                  currentEngine: Services.search.defaultEngine.name,
-                  newEngine: engineName,
-                  resolve,
+            let subject = {
+              wrappedJSObject: {
+                // This is a hack because we don't have the browser of
+                // the actual install. This means the popup might show
+                // in a different window. Will be addressed in a followup bug.
+                browser: windowTracker.topWindow.gBrowser.selectedBrowser,
+                name: this.extension.name,
+                icon: this.extension.iconURL,
+                currentEngine: Services.search.defaultEngine.name,
+                newEngine: engineName,
+                resolve(allow) {
+                  if (allow) {
+                    ExtensionSettingsStore.addSetting(
+                      extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => Services.search.defaultEngine.name);
+                    Services.search.defaultEngine = Services.search.getEngineByName(engineName);
+                  }
                 },
-              };
-              Services.obs.notifyObservers(subject, "webextension-defaultsearch-prompt");
-            });
-            if (!allow) {
-              return;
-            }
+              },
+            };
+            Services.obs.notifyObservers(subject, "webextension-defaultsearch-prompt");
           }
+        } else {
+          // Needs to be called every time to handle reenabling, but
+          // only sets default for install or enable.
+          this.setDefault(engineName);
         }
-        // Needs to be called every time to handle reenabling, but
-        // only sets default for install or enable.
-        await this.setDefault(engineName);
       } else if (ExtensionSettingsStore.hasSetting(extension.id,
                                                    DEFAULT_SEARCH_STORE_TYPE,
                                                    DEFAULT_SEARCH_SETTING_NAME)) {
@@ -255,9 +257,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     let {extension} = this;
     if (extension.startupReason === "ADDON_INSTALL") {
       let item = await ExtensionSettingsStore.addSetting(
-        extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => {
-          return Services.search.defaultEngine.name;
-        });
+        extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => Services.search.defaultEngine.name);
       Services.search.defaultEngine = Services.search.getEngineByName(item.value);
     } else if (extension.startupReason === "ADDON_ENABLE") {
       chrome_settings_overrides.processDefaultSearchSetting("enable", extension.id);
