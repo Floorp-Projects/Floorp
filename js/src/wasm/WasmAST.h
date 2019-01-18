@@ -872,26 +872,28 @@ class AstMemFill : public AstExpr {
 class AstMemOrTableInit : public AstExpr {
   bool isMem_;
   uint32_t segIndex_;
-  AstRef targetTable_;
+  AstRef target_;
   AstExpr* dst_;
   AstExpr* src_;
   AstExpr* len_;
 
  public:
   static const AstExprKind Kind = AstExprKind::MemOrTableInit;
-  explicit AstMemOrTableInit(bool isMem, uint32_t segIndex, AstRef targetTable,
+  explicit AstMemOrTableInit(bool isMem, uint32_t segIndex, AstRef target,
                              AstExpr* dst, AstExpr* src, AstExpr* len)
       : AstExpr(Kind, ExprType::Void),
         isMem_(isMem),
         segIndex_(segIndex),
-        targetTable_(targetTable),
+        target_(target),
         dst_(dst),
         src_(src),
         len_(len) {}
 
   bool isMem() const { return isMem_; }
   uint32_t segIndex() const { return segIndex_; }
-  AstRef& targetTable() { return targetTable_; }
+  AstRef& target() { return target_; }
+  AstRef& targetTable() { MOZ_ASSERT(!isMem()); return target_; }
+  AstRef& targetMemory() { MOZ_ASSERT(isMem()); return target_; }
   AstExpr& dst() const { return *dst_; }
   AstExpr& src() const { return *src_; }
   AstExpr& len() const { return *len_; }
