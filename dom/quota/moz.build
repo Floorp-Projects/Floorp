@@ -54,6 +54,7 @@ UNIFIED_SOURCES += [
     'ActorsParent.cpp',
     'FileStreams.cpp',
     'MemoryOutputStream.cpp',
+    'QuotaCommon.cpp',
     'QuotaManagerService.cpp',
     'QuotaRequests.cpp',
     'QuotaResults.cpp',
