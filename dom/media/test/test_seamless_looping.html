@@ -1,151 +1,181 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for seamless loop of HTMLMediaElements</title>
+  <title>Test for seamless loop of HTMLAudioElements</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
-<pre id="test">
+<canvas id="canvas" width="300" height="300"></canvas>
 <script type="application/javascript">
-  SimpleTest.waitForExplicitFinish();
+/**
+ * This test is used to ensure every time we loop audio, the audio can loop
+ * seamlessly which means there won't have any silenece or noise between the
+ * end and the start.
+ */
 
-  var tone_frequency = 440;
-  // Set DEBUG to true to add a canvas with a little drawing of what is going
-  // on, and actually outputs the audio to the speakers.
-  var DEBUG = false;
-  var again = true;
+SimpleTest.waitForExplicitFinish();
 
-  function doAnalysis(buf, ctxSampleRate) {
-    // The size of an FFT is twice the number of bins in its output.
-    var fftSize = 2 * buf.length;
-    // first find a peak where we expect one.
-    var binIndexTone = 1 + Math.round(tone_frequency * fftSize / ctxSampleRate);
-    ok(buf[binIndexTone] > -25,
-       `Could not find a peak: ${buf[binIndexTone]} db at ${tone_frequency}Hz`);
+// Set DEBUG to true to add a canvas with a little drawing of what is going
+// on, and actually outputs the audio to the speakers.
+var DEBUG = true;
+var LOOPING_COUNT = 0;
+var MAX_LOOPING_COUNT = 10;
+var TONE_FREQUENCY = 440;
 
-    // check that the energy some octaves higher is very low.
-    var binIndexOutsidePeak = 1 + Math.round(tone_frequency * 4 * buf.length / ctxSampleRate);
-    ok(buf[binIndexOutsidePeak] < -110,
-       `Found unexpected high frequency content: ${buf[binIndexOutsidePeak]}db at ${tone_frequency * 4}Hz`);
+(async function testSeamlesslooping() {
+  info(`- create looping audio element -`);
+  let audio = createAudioElement();
+
+  info(`- start audio and analyze audio wave data to ensure looping audio without any silence or noise -`);
+  await playAudioAndStartAnalyzingWaveData(audio);
+
+  info(`- test seamless looping multiples times -`);
+  for (LOOPING_COUNT = 0; LOOPING_COUNT < MAX_LOOPING_COUNT; LOOPING_COUNT++) {
+    await once(audio, "seeked");
+    info(`- the round ${LOOPING_COUNT} of the seamless looping succeeds -`);
   }
-  window.onload = function () {
-    // Generate the sine in floats, then convert, for simplicity.
-    var channels = 1;
-    var sampleRate = 44100;
-    var buffer = new Float32Array(sampleRate * channels);
-    var phase = 0;
-    const TAU = 2 * Math.PI;
-    for (var i = 0; i < buffer.length; i++) {
-      // Adjust the gain a little so we're sure it's not going to clip. This is
-      // important because we're converting to 16bit integer right after, and
-      // clipping will clearly introduce a discontinuity that will be
-      // mischaracterized as a looping click.
-      buffer[i] = Math.sin(phase) * 0.99;
-      phase += TAU * tone_frequency / 44100;
-      if (phase > 2 * TAU) {
-        phase -= TAU;
-      }
+
+  info(`- end of seamless looping test -`);
+  SimpleTest.finish();
+})();
+
+/**
+ * Test utility functions
+ */
+function createSrcBuffer() {
+  // Generate the sine in floats, then convert, for simplicity.
+  let channels = 1;
+  let sampleRate = 44100;
+  let buffer = new Float32Array(sampleRate * channels);
+  let phase = 0;
+  const TAU = 2 * Math.PI;
+  for (let i = 0; i < buffer.length; i++) {
+    // Adjust the gain a little so we're sure it's not going to clip. This is
+    // important because we're converting to 16bit integer right after, and
+    // clipping will clearly introduce a discontinuity that will be
+    // mischaracterized as a looping click.
+    buffer[i] = Math.sin(phase) * 0.99;
+    phase += TAU * TONE_FREQUENCY / 44100;
+    if (phase > 2 * TAU) {
+      phase -= TAU;
     }
+  }
 
-    // Make a RIFF header, it's 23 bytes
-    var buf = new Int16Array(buffer.length + 23);
-    buf[0] = 0x4952;
-    buf[1] = 0x4646;
-    buf[2] = (2 * buffer.length + 15) & 0x0000ffff;
-    buf[3] = ((2 * buffer.length + 15) & 0xffff0000) >> 16;
-    buf[4] = 0x4157;
-    buf[5] = 0x4556;
-    buf[6] = 0x6d66;
-    buf[7] = 0x2074;
-    buf[8] = 0x0012;
-    buf[9] = 0x0000;
-    buf[10] = 0x0001;
-    buf[11] = 1;
-    buf[12] = 44100 & 0x0000ffff;
-    buf[13] = (44100 & 0xffff0000) >> 16;
-    buf[14] = (2 * channels * sampleRate) & 0x0000ffff;
-    buf[15] = ((2 * channels * sampleRate) & 0xffff0000) >> 16;
-    buf[16] = 0x0004;
-    buf[17] = 0x0010;
-    buf[18] = 0x0000;
-    buf[19] = 0x6164;
-    buf[20] = 0x6174;
-    buf[21] = (2 * buffer.length) & 0x0000ffff;
-    buf[22] = ((2 * buffer.length) & 0xffff0000) >> 16;
+  // Make a RIFF header, it's 23 bytes
+  let buf = new Int16Array(buffer.length + 23);
+  buf[0] = 0x4952;
+  buf[1] = 0x4646;
+  buf[2] = (2 * buffer.length + 15) & 0x0000ffff;
+  buf[3] = ((2 * buffer.length + 15) & 0xffff0000) >> 16;
+  buf[4] = 0x4157;
+  buf[5] = 0x4556;
+  buf[6] = 0x6d66;
+  buf[7] = 0x2074;
+  buf[8] = 0x0012;
+  buf[9] = 0x0000;
+  buf[10] = 0x0001;
+  buf[11] = 1;
+  buf[12] = 44100 & 0x0000ffff;
+  buf[13] = (44100 & 0xffff0000) >> 16;
+  buf[14] = (2 * channels * sampleRate) & 0x0000ffff;
+  buf[15] = ((2 * channels * sampleRate) & 0xffff0000) >> 16;
+  buf[16] = 0x0004;
+  buf[17] = 0x0010;
+  buf[18] = 0x0000;
+  buf[19] = 0x6164;
+  buf[20] = 0x6174;
+  buf[21] = (2 * buffer.length) & 0x0000ffff;
+  buf[22] = ((2 * buffer.length) & 0xffff0000) >> 16;
 
-    // convert to int16 and copy.
-    for (var i = 0; i < buffer.length; i++) {
-      buf[i + 23] = Math.round(buffer[i] * (1 << 15));
+  // convert to int16 and copy.
+  for (let i = 0; i < buffer.length; i++) {
+    buf[i + 23] = Math.round(buffer[i] * (1 << 15));
+  }
+  return buf;
+}
+
+function createAudioElement() {
+  window.audio = document.createElement("audio");
+  audio.src = URL.createObjectURL(new Blob([createSrcBuffer()],
+                                  { type: 'audio/wav' }));
+  audio.controls = true;
+  audio.loop = true;
+  document.body.appendChild(audio);
+  return audio;
+}
+
+async function playAudioAndStartAnalyzingWaveData(audio) {
+  createAudioWaveAnalyser(audio);
+  ok(await once(audio, "canplay").then(() => true, () => false),
+     `audio can start playing.`)
+  ok(await audio.play().then(() => true, () => false),
+     `audio started playing successfully.`);
+}
+
+function createAudioWaveAnalyser(source) {
+  window.ac = new AudioContext();
+  window.analyser = ac.createAnalyser();
+  analyser.frequencyBuf = new Float32Array(analyser.frequencyBinCount);
+  analyser.smoothingTimeConstant = 0;
+  analyser.fftSize = 2048; // 1024 bins
+
+  let sourceNode = ac.createMediaElementSource(source);
+  sourceNode.connect(analyser);
+
+  if (DEBUG) {
+    analyser.connect(ac.destination);
+    analyser.timeDomainBuf = new Float32Array(analyser.frequencyBinCount);
+    let cvs = document.querySelector("canvas");
+    analyser.c = cvs.getContext("2d");
+    analyser.w = cvs.width;
+    analyser.h = cvs.height;
+  }
+
+  analyser.notifyAnalysis = () => {
+    if (LOOPING_COUNT >= MAX_LOOPING_COUNT) {
+      return;
     }
-
-    var b = new Blob([buf], { type: 'audio/wav' });
-
-    var media = document.createElement("audio");
-    media.src = URL.createObjectURL(b);
-    media.controls = true;
-    media.loop = true;
-    document.body.appendChild(media);
-
-    var ac = new AudioContext();
-
-    var analyser = ac.createAnalyser();
-    var frequencyBuf = new Float32Array(analyser.frequencyBinCount);
-    analyser.smoothingTimeConstant = 0;
-    analyser.fftSize = 2048; // 1024 bins
-
-    var source = ac.createMediaElementSource(media);
-    source.connect(analyser);
+    let {frequencyBuf} = analyser;
+    analyser.getFloatFrequencyData(frequencyBuf);
+    // Let things stabilize at the beginning. See bug 1441509.
+    if (LOOPING_COUNT > 1) {
+      analyser.doAnalysis(frequencyBuf, ac.sampleRate);
+    }
 
     if (DEBUG) {
-      analyser.connect(ac.destination);
-      var timeDomainBuf = new Float32Array(analyser.frequencyBinCount);
-      var cvs = document.querySelector("canvas");
-      var c = cvs.getContext("2d");
-      var w = cvs.width;
-      var h = cvs.height;
-    }
+      let {c, w, h, timeDomainBuf} = analyser;
+      c.clearRect(0, 0, w, h);
+      analyser.getFloatTimeDomainData(timeDomainBuf);
+      for (let i = 0; i < frequencyBuf.length; i++) {
+        c.fillRect(i, h, 1, -frequencyBuf[i] + analyser.minDecibels);
+      }
 
-
-    // We count the number of times we've played this media.
-    var loopCount = 0;
-    media.onseeked = function () {
-      loopCount++;
-      if (loopCount > 10) {
-        again = false;
-        media.onseeked = null;
-        SimpleTest.finish();
+      for (let i = 0; i < timeDomainBuf.length; i++) {
+        c.fillRect(i, h / 2, 1, -timeDomainBuf[i] * h / 2);
       }
     }
 
-    function analysisCallback() {
-      if (!again) {
-        return;
-      }
-      analyser.getFloatFrequencyData(frequencyBuf);
-      // Let things stabilize at the beginning. See bug bug 1441509.
-      if (loopCount > 1) {
-        doAnalysis(frequencyBuf, ac.sampleRate);
-      }
-
-      if (DEBUG) {
-        c.clearRect(0, 0, w, h);
-        analyser.getFloatTimeDomainData(timeDomainBuf);
-        for (var i = 0; i < frequencyBuf.length; i++) {
-          c.fillRect(i, h, 1, -frequencyBuf[i] + analyser.minDecibels);
-        }
-
-        for (var i = 0; i < timeDomainBuf.length; i++) {
-          c.fillRect(i, h / 2, 1, -timeDomainBuf[i] * h / 2);
-        }
-      }
-
-      requestAnimationFrame(analysisCallback);
-    }
-
-    media.play();
-    analysisCallback();
+    requestAnimationFrame(analyser.notifyAnalysis);
   }
+
+  analyser.doAnalysis = (buf, ctxSampleRate) => {
+    // The size of an FFT is twice the number of bins in its output.
+    let fftSize = 2 * buf.length;
+    // first find a peak where we expect one.
+    let binIndexTone = 1 + Math.round(TONE_FREQUENCY * fftSize / ctxSampleRate);
+    ok(buf[binIndexTone] > -25,
+       `Could not find a peak: ${buf[binIndexTone]} db at ${TONE_FREQUENCY}Hz`);
+
+    // check that the energy some octaves higher is very low.
+    let binIndexOutsidePeak = 1 + Math.round(TONE_FREQUENCY * 4 * buf.length / ctxSampleRate);
+    ok(buf[binIndexOutsidePeak] < -110,
+       `Found unexpected high frequency content: ${buf[binIndexOutsidePeak]}db at ${TONE_FREQUENCY * 4}Hz`);
+  }
+
+  analyser.notifyAnalysis();
+}
 
 </script>
 </pre>
