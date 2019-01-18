@@ -2206,7 +2206,7 @@ NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
                                                                        \
   void Gecko_Construct_Default_nsStyle##name(                          \
       nsStyle##name* ptr, const nsPresContext* pres_context) {         \
-    new (ptr) nsStyle##name(pres_context);                             \
+    new (ptr) nsStyle##name(*pres_context->Document());                \
   }                                                                    \
                                                                        \
   void Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,           \
