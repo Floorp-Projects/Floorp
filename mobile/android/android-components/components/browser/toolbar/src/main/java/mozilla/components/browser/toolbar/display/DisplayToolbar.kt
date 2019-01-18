@@ -15,6 +15,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
+import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
@@ -111,7 +112,9 @@ internal class DisplayToolbar(
         visibility = View.GONE
 
         setOnClickListener {
-            menuBuilder?.build(context)?.show(this)
+            menuBuilder?.build(context)?.show(
+                anchor = this,
+                orientation = BrowserMenu.determineMenuOrientation(toolbar))
         }
     }
 

@@ -22,6 +22,7 @@ permalink: /changelog/
 
 * **browser-menu**
   * Added [docs](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/README.md#browsermenu) for customizing `BrowserMenu`.
+  * Added support for showing a menu with DOWN and UP orientation (e.g. for supporting menus in bottom toolbars).
 
 * **concept-engine**, **browser-engine-gecko-***
   * Added support for enabling tracking protection for specific session type:
