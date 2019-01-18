@@ -6,6 +6,7 @@
 import React, { PureComponent } from "react";
 import { connect } from "../../utils/connect";
 import classnames from "classnames";
+import Svg from "../shared/Svg";
 import actions from "../../actions";
 import {
   getSelectedSource,
@@ -75,7 +76,7 @@ class SourceFooter extends PureComponent<Props, State> {
     if (isLoading(selectedSource) && selectedSource.isPrettyPrinted) {
       return (
         <div className="loader" key="pretty-loader">
-          <AccessibleImage className="loader" />
+          <Svg name="loader" />
         </div>
       );
     }
@@ -238,8 +239,8 @@ class SourceFooter extends PureComponent<Props, State> {
       <div className="source-footer">
         {this.renderCommands()}
         {this.renderSourceSummary()}
-        {this.renderCursorPosition()}
         {this.renderToggleButton()}
+        {this.renderCursorPosition()}
       </div>
     );
   }

@@ -11,6 +11,7 @@ import { showMenu } from "devtools-contextmenu";
 
 import SourceIcon from "../shared/SourceIcon";
 import AccessibleImage from "../shared/AccessibleImage";
+import Svg from "../shared/Svg";
 
 import {
   getGeneratedSourceByURL,
@@ -39,32 +40,23 @@ type Props = {
   expanded: boolean,
   hasMatchingGeneratedSource: boolean,
   hasSiblingOfSameName: boolean,
+  setExpanded: (TreeNode, boolean, boolean) => void,
   focusItem: TreeNode => void,
   selectItem: TreeNode => void,
-  setExpanded: (TreeNode, boolean, boolean) => void,
   clearProjectDirectoryRoot: typeof actions.clearProjectDirectoryRoot,
   setProjectDirectoryRoot: typeof actions.setProjectDirectoryRoot
 };
 
 type State = {};
 
-type MenuOption = {
-  id: string,
-  label: string,
-  disabled: boolean,
-  click: () => any
-};
-
-type ContextMenu = Array<MenuOption>;
-
 class SourceTreeItem extends Component<Props, State> {
   getIcon(item: TreeNode, depth: number) {
     const { debuggeeUrl, projectRoot, source } = this.props;
 
     if (item.path === "webpack://") {
-      return <AccessibleImage className="webpack" />;
+      return <Svg name="webpack" />;
     } else if (item.path === "ng://") {
-      return <AccessibleImage className="angular" />;
+      return <Svg name="angular" />;
     } else if (item.path.startsWith("moz-extension://") && depth === 0) {
       return <AccessibleImage className="extension" />;
     }
@@ -91,11 +83,13 @@ class SourceTreeItem extends Component<Props, State> {
   }
 
   onClick = (e: MouseEvent) => {
-    const { item, focusItem, selectItem } = this.props;
+    const { expanded, item, focusItem, setExpanded, selectItem } = this.props;
 
     focusItem(item);
 
-    if (!isDirectory(item)) {
+    if (isDirectory(item)) {
+      setExpanded(item, !!expanded, e.altKey);
+    } else {
       selectItem(item);
     }
   };
@@ -129,51 +123,29 @@ class SourceTreeItem extends Component<Props, State> {
       }
     }
 
-    if (isDirectory(item)) {
-      this.addCollapseExpandAllOptions(menuOptions, item);
+    if (isDirectory(item) && features.root) {
+      const { path } = item;
+      const { projectRoot } = this.props;
 
-      if (features.root) {
-        const { path } = item;
-        const { projectRoot } = this.props;
-
-        if (projectRoot.endsWith(path)) {
-          menuOptions.push({
-            id: "node-remove-directory-root",
-            label: removeDirectoryRootLabel,
-            disabled: false,
-            click: () => this.props.clearProjectDirectoryRoot()
-          });
-        } else {
-          menuOptions.push({
-            id: "node-set-directory-root",
-            label: setDirectoryRootLabel,
-            accesskey: setDirectoryRootKey,
-            disabled: false,
-            click: () => this.props.setProjectDirectoryRoot(path)
-          });
-        }
+      if (projectRoot.endsWith(path)) {
+        menuOptions.push({
+          id: "node-remove-directory-root",
+          label: removeDirectoryRootLabel,
+          disabled: false,
+          click: () => this.props.clearProjectDirectoryRoot()
+        });
+      } else {
+        menuOptions.push({
+          id: "node-set-directory-root",
+          label: setDirectoryRootLabel,
+          accesskey: setDirectoryRootKey,
+          disabled: false,
+          click: () => this.props.setProjectDirectoryRoot(path)
+        });
       }
     }
 
     showMenu(event, menuOptions);
-  };
-
-  addCollapseExpandAllOptions = (menuOptions: ContextMenu, item: TreeNode) => {
-    const { setExpanded } = this.props;
-
-    menuOptions.push({
-      id: "node-menu-collapse-all",
-      label: L10N.getStr("collapseAll.label"),
-      disabled: false,
-      click: () => setExpanded(item, false, true)
-    });
-
-    menuOptions.push({
-      id: "node-menu-expand-all",
-      label: L10N.getStr("expandAll.label"),
-      disabled: false,
-      click: () => setExpanded(item, true, true)
-    });
   };
 
   renderItemArrow() {
