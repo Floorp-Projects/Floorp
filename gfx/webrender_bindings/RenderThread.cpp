@@ -180,7 +180,8 @@ void RenderThread::AddRenderer(wr::WindowId aWindowId,
 
   mRenderers[aWindowId] = std::move(aRenderer);
 
-  mWindowInfos.Lock()->emplace(AsUint64(aWindowId), new WindowInfo());
+  auto windows = mWindowInfos.Lock();
+  windows->emplace(AsUint64(aWindowId), new WindowInfo());
 }
 
 void RenderThread::RemoveRenderer(wr::WindowId aWindowId) {
