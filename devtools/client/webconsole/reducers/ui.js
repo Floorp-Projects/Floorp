@@ -32,6 +32,7 @@ const UiState = (overrides) => Object.freeze(Object.assign({
   gripInSidebar: null,
   closeButtonVisible: false,
   reverseSearchInputVisible: false,
+  reverseSearchInitialValue: "",
 }, overrides));
 
 function ui(state = UiState(), action) {
@@ -61,7 +62,11 @@ function ui(state = UiState(), action) {
     case SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE:
       return Object.assign({}, state, {closeButtonVisible: action.shouldDisplayButton});
     case REVERSE_SEARCH_INPUT_TOGGLE:
-      return {...state, reverseSearchInputVisible: !state.reverseSearchInputVisible};
+      return {
+        ...state,
+        reverseSearchInputVisible: !state.reverseSearchInputVisible,
+        reverseSearchInitialValue: action.initialValue || "",
+      };
   }
 
   return state;

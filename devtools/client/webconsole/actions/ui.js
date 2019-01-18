@@ -103,9 +103,10 @@ function showObjectInSidebar(grip) {
   };
 }
 
-function reverseSearchInputToggle() {
+function reverseSearchInputToggle({initialValue} = {}) {
   return {
     type: REVERSE_SEARCH_INPUT_TOGGLE,
+    initialValue,
   };
 }
 
