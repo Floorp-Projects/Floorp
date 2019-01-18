@@ -12,38 +12,38 @@
 #include "prsystem.h"
 
 #if defined(XP_UNIX)
-#include "unistd.h"
-#include "dirent.h"
-#include "poll.h"
-#include "sys/stat.h"
-#if defined(XP_LINUX)
-#include <sys/vfs.h>
-#define statvfs statfs
-#define f_frsize f_bsize
-#else
-#include "sys/statvfs.h"
-#endif  // defined(XP_LINUX)
-#if !defined(ANDROID)
-#include "sys/wait.h"
-#include <spawn.h>
-#endif  // !defined(ANDROID)
-#endif  // defined(XP_UNIX)
+#  include "unistd.h"
+#  include "dirent.h"
+#  include "poll.h"
+#  include "sys/stat.h"
+#  if defined(XP_LINUX)
+#    include <sys/vfs.h>
+#    define statvfs statfs
+#    define f_frsize f_bsize
+#  else
+#    include "sys/statvfs.h"
+#  endif  // defined(XP_LINUX)
+#  if !defined(ANDROID)
+#    include "sys/wait.h"
+#    include <spawn.h>
+#  endif  // !defined(ANDROID)
+#endif    // defined(XP_UNIX)
 
 #if defined(XP_LINUX)
-#include <linux/fadvise.h>
+#  include <linux/fadvise.h>
 #endif  // defined(XP_LINUX)
 
 #if defined(XP_MACOSX)
-#include "copyfile.h"
+#  include "copyfile.h"
 #endif  // defined(XP_MACOSX)
 
 #if defined(XP_WIN)
-#include <windows.h>
-#include <accctrl.h>
+#  include <windows.h>
+#  include <accctrl.h>
 
-#ifndef PATH_MAX
-#define PATH_MAX MAX_PATH
-#endif
+#  ifndef PATH_MAX
+#    define PATH_MAX MAX_PATH
+#  endif
 
 #endif  // defined(XP_WIN)
 
@@ -78,7 +78,7 @@
 
 #if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || \
     defined(__OpenBSD__)
-#define __dd_fd dd_fd
+#  define __dd_fd dd_fd
 #endif
 
 /**
@@ -261,18 +261,18 @@ nsresult OSFileConstantsService::InitOSFileConstants() {
 
 // Define missing constants for Android
 #if !defined(S_IRGRP)
-#define S_IXOTH 0001
-#define S_IWOTH 0002
-#define S_IROTH 0004
-#define S_IRWXO 0007
-#define S_IXGRP 0010
-#define S_IWGRP 0020
-#define S_IRGRP 0040
-#define S_IRWXG 0070
-#define S_IXUSR 0100
-#define S_IWUSR 0200
-#define S_IRUSR 0400
-#define S_IRWXU 0700
+#  define S_IXOTH 0001
+#  define S_IWOTH 0002
+#  define S_IROTH 0004
+#  define S_IRWXO 0007
+#  define S_IXGRP 0010
+#  define S_IWGRP 0020
+#  define S_IRGRP 0040
+#  define S_IRWXG 0070
+#  define S_IXUSR 0100
+#  define S_IWUSR 0200
+#  define S_IRUSR 0400
+#  define S_IRWXU 0700
 #endif  // !defined(S_IRGRP)
 
 /**
@@ -380,9 +380,9 @@ static const dom::ConstantSpec gLibcProperties[] = {
     INT_CONSTANT(POLLOUT),
 
 // wait
-#if defined(WNOHANG)
+#  if defined(WNOHANG)
     INT_CONSTANT(WNOHANG),
-#endif  // defined(WNOHANG)
+#  endif  // defined(WNOHANG)
 
     // fcntl command values
     INT_CONSTANT(F_GETLK),
@@ -397,19 +397,19 @@ static const dom::ConstantSpec gLibcProperties[] = {
     INT_CONSTANT(F_UNLCK),
 
 // splice
-#if defined(SPLICE_F_MOVE)
+#  if defined(SPLICE_F_MOVE)
     INT_CONSTANT(SPLICE_F_MOVE),
-#endif  // defined(SPLICE_F_MOVE)
-#if defined(SPLICE_F_NONBLOCK)
+#  endif  // defined(SPLICE_F_MOVE)
+#  if defined(SPLICE_F_NONBLOCK)
     INT_CONSTANT(SPLICE_F_NONBLOCK),
-#endif  // defined(SPLICE_F_NONBLOCK)
-#if defined(SPLICE_F_MORE)
+#  endif  // defined(SPLICE_F_NONBLOCK)
+#  if defined(SPLICE_F_MORE)
     INT_CONSTANT(SPLICE_F_MORE),
-#endif  // defined(SPLICE_F_MORE)
-#if defined(SPLICE_F_GIFT)
+#  endif  // defined(SPLICE_F_MORE)
+#  if defined(SPLICE_F_GIFT)
     INT_CONSTANT(SPLICE_F_GIFT),
-#endif  // defined(SPLICE_F_GIFT)
-#endif  // defined(XP_UNIX)
+#  endif  // defined(SPLICE_F_GIFT)
+#endif    // defined(XP_UNIX)
 // copyfile
 #if defined(COPYFILE_DATA)
     INT_CONSTANT(COPYFILE_DATA),
@@ -508,18 +508,18 @@ static const dom::ConstantSpec gLibcProperties[] = {
     // The size of |fsblkcnt_t|.
     {"OSFILE_SIZEOF_FSBLKCNT_T", JS::Int32Value(sizeof(fsblkcnt_t))},
 
-#if !defined(ANDROID)
+#  if !defined(ANDROID)
     // The size of |posix_spawn_file_actions_t|.
     {"OSFILE_SIZEOF_POSIX_SPAWN_FILE_ACTIONS_T",
      JS::Int32Value(sizeof(posix_spawn_file_actions_t))},
-#endif  // !defined(ANDROID)
+#  endif  // !defined(ANDROID)
 
     // Defining |dirent|.
     // Size
     {"OSFILE_SIZEOF_DIRENT", JS::Int32Value(sizeof(dirent))},
 
 // Defining |flock|.
-#if defined(XP_UNIX)
+#  if defined(XP_UNIX)
     {"OSFILE_SIZEOF_FLOCK", JS::Int32Value(sizeof(struct flock))},
     {"OSFILE_OFFSETOF_FLOCK_L_START",
      JS::Int32Value(offsetof(struct flock, l_start))},
@@ -531,7 +531,7 @@ static const dom::ConstantSpec gLibcProperties[] = {
      JS::Int32Value(offsetof(struct flock, l_type))},
     {"OSFILE_OFFSETOF_FLOCK_L_WHENCE",
      JS::Int32Value(offsetof(struct flock, l_whence))},
-#endif  // defined(XP_UNIX)
+#  endif  // defined(XP_UNIX)
     // Offset of field |d_name|.
     {"OSFILE_OFFSETOF_DIRENT_D_NAME",
      JS::Int32Value(offsetof(struct dirent, d_name))},
@@ -547,21 +547,21 @@ static const dom::ConstantSpec gLibcProperties[] = {
     {"OSFILE_OFFSETOF_TIMEVAL_TV_USEC",
      JS::Int32Value(offsetof(struct timeval, tv_usec))},
 
-#if defined(DT_UNKNOWN)
+#  if defined(DT_UNKNOWN)
     // Position of field |d_type| in |dirent|
     // Not strictly posix, but seems defined on all platforms
     // except mingw32.
     {"OSFILE_OFFSETOF_DIRENT_D_TYPE",
      JS::Int32Value(offsetof(struct dirent, d_type))},
-#endif  // defined(DT_UNKNOWN)
+#  endif  // defined(DT_UNKNOWN)
 
 // Under MacOS X and BSDs, |dirfd| is a macro rather than a
 // function, so we need a little help to get it to work
-#if defined(dirfd)
+#  if defined(dirfd)
     {"OSFILE_SIZEOF_DIR", JS::Int32Value(sizeof(DIR))},
 
     {"OSFILE_OFFSETOF_DIR_DD_FD", JS::Int32Value(offsetof(DIR, __dd_fd))},
-#endif
+#  endif
 
     // Defining |stat|
 
@@ -576,27 +576,27 @@ static const dom::ConstantSpec gLibcProperties[] = {
     {"OSFILE_OFFSETOF_STAT_ST_SIZE",
      JS::Int32Value(offsetof(struct stat, st_size))},
 
-#if defined(HAVE_ST_ATIMESPEC)
+#  if defined(HAVE_ST_ATIMESPEC)
     {"OSFILE_OFFSETOF_STAT_ST_ATIME",
      JS::Int32Value(offsetof(struct stat, st_atimespec))},
     {"OSFILE_OFFSETOF_STAT_ST_MTIME",
      JS::Int32Value(offsetof(struct stat, st_mtimespec))},
     {"OSFILE_OFFSETOF_STAT_ST_CTIME",
      JS::Int32Value(offsetof(struct stat, st_ctimespec))},
-#else
+#  else
     {"OSFILE_OFFSETOF_STAT_ST_ATIME",
      JS::Int32Value(offsetof(struct stat, st_atime))},
     {"OSFILE_OFFSETOF_STAT_ST_MTIME",
      JS::Int32Value(offsetof(struct stat, st_mtime))},
     {"OSFILE_OFFSETOF_STAT_ST_CTIME",
      JS::Int32Value(offsetof(struct stat, st_ctime))},
-#endif  // defined(HAVE_ST_ATIME)
+#  endif  // defined(HAVE_ST_ATIME)
 
 // Several OSes have a birthtime field. For the moment, supporting only Darwin.
-#if defined(_DARWIN_FEATURE_64_BIT_INODE)
+#  if defined(_DARWIN_FEATURE_64_BIT_INODE)
     {"OSFILE_OFFSETOF_STAT_ST_BIRTHTIME",
      JS::Int32Value(offsetof(struct stat, st_birthtime))},
-#endif  // defined(_DARWIN_FEATURE_64_BIT_INODE)
+#  endif  // defined(_DARWIN_FEATURE_64_BIT_INODE)
 
     // Defining |statvfs|
 

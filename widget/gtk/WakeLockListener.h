@@ -8,17 +8,17 @@
 #include <unistd.h>
 
 #ifndef __WakeLockListener_h__
-#define __WakeLockListener_h__
+#  define __WakeLockListener_h__
 
-#include "mozilla/StaticPtr.h"
-#include "nsHashKeys.h"
-#include "nsClassHashtable.h"
+#  include "mozilla/StaticPtr.h"
+#  include "nsHashKeys.h"
+#  include "nsClassHashtable.h"
 
-#include "nsIDOMWakeLockListener.h"
+#  include "nsIDOMWakeLockListener.h"
 
-#ifdef MOZ_ENABLE_DBUS
-#include "mozilla/DBusHelpers.h"
-#endif
+#  ifdef MOZ_ENABLE_DBUS
+#    include "mozilla/DBusHelpers.h"
+#  endif
 
 class WakeLockTopic;
 
@@ -44,9 +44,9 @@ class WakeLockListener final : public nsIDOMMozWakeLockListener {
 
   static mozilla::StaticRefPtr<WakeLockListener> sSingleton;
 
-#ifdef MOZ_ENABLE_DBUS
+#  ifdef MOZ_ENABLE_DBUS
   RefPtr<DBusConnection> mConnection;
-#endif
+#  endif
   // Map of topic names to |WakeLockTopic|s.
   // We assume a small, finite-sized set of topics.
   nsClassHashtable<nsStringHashKey, WakeLockTopic> mTopics;

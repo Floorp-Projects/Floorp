@@ -34,8 +34,8 @@
 #include "OGLShaderProgram.h"  // for ShaderProgramType, etc
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "GeneratedJNIWrappers.h"
-#include "AndroidSurfaceTexture.h"
+#  include "GeneratedJNIWrappers.h"
+#  include "AndroidSurfaceTexture.h"
 #endif
 
 namespace mozilla {

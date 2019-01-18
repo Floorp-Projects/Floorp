@@ -77,11 +77,11 @@
 #include "WebGLVertexAttribData.h"
 
 #ifdef MOZ_WIDGET_COCOA
-#include "nsCocoaFeatures.h"
+#  include "nsCocoaFeatures.h"
 #endif
 
 #ifdef XP_WIN
-#include "WGLLibrary.h"
+#  include "WGLLibrary.h"
 #endif
 
 // Generated

@@ -348,57 +348,57 @@ inline bool AtomicOperations::isLockfreeJS(int32_t size) {
 // Such a solution is likely to be difficult.
 
 #if defined(JS_SIMULATOR_MIPS32)
-#if defined(__clang__) || defined(__GNUC__)
-#include "jit/mips-shared/AtomicOperations-mips-shared.h"
-#else
-#error "No AtomicOperations support for this platform+compiler combination"
-#endif
+#  if defined(__clang__) || defined(__GNUC__)
+#    include "jit/mips-shared/AtomicOperations-mips-shared.h"
+#  else
+#    error "No AtomicOperations support for this platform+compiler combination"
+#  endif
 #elif defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || \
     defined(_M_IX86)
-#if defined(__clang__) || defined(__GNUC__)
-#include "jit/x86-shared/AtomicOperations-x86-shared-gcc.h"
-#elif defined(_MSC_VER)
-#include "jit/x86-shared/AtomicOperations-x86-shared-msvc.h"
-#else
-#error "No AtomicOperations support for this platform+compiler combination"
-#endif
+#  if defined(__clang__) || defined(__GNUC__)
+#    include "jit/x86-shared/AtomicOperations-x86-shared-gcc.h"
+#  elif defined(_MSC_VER)
+#    include "jit/x86-shared/AtomicOperations-x86-shared-msvc.h"
+#  else
+#    error "No AtomicOperations support for this platform+compiler combination"
+#  endif
 #elif defined(__arm__)
-#if defined(__clang__) || defined(__GNUC__)
-#include "jit/arm/AtomicOperations-arm.h"
-#else
-#error "No AtomicOperations support for this platform+compiler combination"
-#endif
+#  if defined(__clang__) || defined(__GNUC__)
+#    include "jit/arm/AtomicOperations-arm.h"
+#  else
+#    error "No AtomicOperations support for this platform+compiler combination"
+#  endif
 #elif defined(__aarch64__) || defined(_M_ARM64)
-#if defined(__clang__) || defined(__GNUC__)
-#include "jit/arm64/AtomicOperations-arm64-gcc.h"
-#elif defined(_MSC_VER)
-#include "jit/arm64/AtomicOperations-arm64-msvc.h"
-#else
-#error "No AtomicOperations support for this platform+compiler combination"
-#endif
+#  if defined(__clang__) || defined(__GNUC__)
+#    include "jit/arm64/AtomicOperations-arm64-gcc.h"
+#  elif defined(_MSC_VER)
+#    include "jit/arm64/AtomicOperations-arm64-msvc.h"
+#  else
+#    error "No AtomicOperations support for this platform+compiler combination"
+#  endif
 #elif defined(__mips__)
-#if defined(__clang__) || defined(__GNUC__)
-#include "jit/mips-shared/AtomicOperations-mips-shared.h"
-#else
-#error "No AtomicOperations support for this platform+compiler combination"
-#endif
+#  if defined(__clang__) || defined(__GNUC__)
+#    include "jit/mips-shared/AtomicOperations-mips-shared.h"
+#  else
+#    error "No AtomicOperations support for this platform+compiler combination"
+#  endif
 #elif defined(__ppc__) || defined(__PPC__)
-#include "jit/none/AtomicOperations-feeling-lucky.h"
+#  include "jit/none/AtomicOperations-feeling-lucky.h"
 #elif defined(__sparc__)
-#include "jit/none/AtomicOperations-feeling-lucky.h"
+#  include "jit/none/AtomicOperations-feeling-lucky.h"
 #elif defined(__ppc64__) || defined(__PPC64__) || defined(__ppc64le__) || \
     defined(__PPC64LE__)
-#include "jit/none/AtomicOperations-feeling-lucky.h"
+#  include "jit/none/AtomicOperations-feeling-lucky.h"
 #elif defined(__alpha__)
-#include "jit/none/AtomicOperations-feeling-lucky.h"
+#  include "jit/none/AtomicOperations-feeling-lucky.h"
 #elif defined(__hppa__)
-#include "jit/none/AtomicOperations-feeling-lucky.h"
+#  include "jit/none/AtomicOperations-feeling-lucky.h"
 #elif defined(__sh__)
-#include "jit/none/AtomicOperations-feeling-lucky.h"
+#  include "jit/none/AtomicOperations-feeling-lucky.h"
 #elif defined(__s390__) || defined(__s390x__)
-#include "jit/none/AtomicOperations-feeling-lucky.h"
+#  include "jit/none/AtomicOperations-feeling-lucky.h"
 #else
-#error "No AtomicOperations support provided for this platform"
+#  error "No AtomicOperations support provided for this platform"
 #endif
 
 #endif  // jit_AtomicOperations_h

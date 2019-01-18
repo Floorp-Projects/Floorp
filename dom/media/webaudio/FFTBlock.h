@@ -8,18 +8,18 @@
 #define FFTBlock_h_
 
 #ifdef BUILD_ARM_NEON
-#include <cmath>
-#include "mozilla/arm.h"
-#include "dl/sp/api/omxSP.h"
+#  include <cmath>
+#  include "mozilla/arm.h"
+#  include "dl/sp/api/omxSP.h"
 #endif
 
 #include "AlignedTArray.h"
 #include "AudioNodeEngine.h"
 #if defined(MOZ_LIBAV_FFT)
-#include "FFmpegRDFTTypes.h"
-#include "FFVPXRuntimeLinker.h"
+#  include "FFmpegRDFTTypes.h"
+#  include "FFVPXRuntimeLinker.h"
 #else
-#include "kiss_fft/kiss_fftr.h"
+#  include "kiss_fft/kiss_fftr.h"
 #endif
 
 namespace mozilla {
@@ -54,11 +54,11 @@ class FFTBlock final {
 #else
       : mKissFFT(nullptr),
         mKissIFFT(nullptr)
-#ifdef BUILD_ARM_NEON
+#  ifdef BUILD_ARM_NEON
         ,
         mOmxFFT(nullptr),
         mOmxIFFT(nullptr)
-#endif
+#  endif
 #endif
   {
     MOZ_COUNT_CTOR(FFTBlock);
@@ -88,11 +88,11 @@ class FFTBlock final {
     mOutputBuffer[mFFTSize / 2].r = mOutputBuffer[0].i;
     mOutputBuffer[0].i = 0.0f;
 #else
-#ifdef BUILD_ARM_NEON
+#  ifdef BUILD_ARM_NEON
     if (mozilla::supports_neon()) {
       omxSP_FFTFwd_RToCCS_F32_Sfs(aData, mOutputBuffer.Elements()->f, mOmxFFT);
     } else
-#endif
+#  endif
     {
       kiss_fftr(mKissFFT, aData, &(mOutputBuffer.Elements()->c));
     }
@@ -125,12 +125,12 @@ class FFTBlock final {
       sRDFTFuncs.calc(mAvIRDFT, aDataOut);
     }
 #else
-#ifdef BUILD_ARM_NEON
+#  ifdef BUILD_ARM_NEON
     if (mozilla::supports_neon()) {
       omxSP_FFTInv_CCSToR_F32_Sfs_unscaled(mOutputBuffer.Elements()->f,
                                            aDataOut, mOmxIFFT);
     } else
-#endif
+#  endif
     {
       kiss_fftri(mKissIFFT, &(mOutputBuffer.Elements()->c), aDataOut);
     }
@@ -206,13 +206,13 @@ class FFTBlock final {
     amount += ComputedSizeOfContextIfSet(mAvRDFT);
     amount += ComputedSizeOfContextIfSet(mAvIRDFT);
 #else
-#ifdef BUILD_ARM_NEON
+#  ifdef BUILD_ARM_NEON
     amount += aMallocSizeOf(mOmxFFT);
     amount += aMallocSizeOf(mOmxIFFT);
-#endif
-#ifdef USE_SIMD
-#error kiss fft uses malloc only when USE_SIMD is not defined
-#endif
+#  endif
+#  ifdef USE_SIMD
+#    error kiss fft uses malloc only when USE_SIMD is not defined
+#  endif
     amount += aMallocSizeOf(mKissFFT);
     amount += aMallocSizeOf(mKissIFFT);
 #endif
@@ -238,13 +238,13 @@ class FFTBlock final {
       mAvRDFT = sRDFTFuncs.init(log((double)mFFTSize) / M_LN2, DFT_R2C);
     }
 #else
-#ifdef BUILD_ARM_NEON
+#  ifdef BUILD_ARM_NEON
     if (mozilla::supports_neon()) {
       if (!mOmxFFT) {
         mOmxFFT = createOmxFFT(mFFTSize);
       }
     } else
-#endif
+#  endif
     {
       if (!mKissFFT) {
         mKissFFT = kiss_fftr_alloc(mFFTSize, 0, nullptr, nullptr);
@@ -264,13 +264,13 @@ class FFTBlock final {
       mAvIRDFT = sRDFTFuncs.init(log((double)mFFTSize) / M_LN2, IDFT_C2R);
     }
 #else
-#ifdef BUILD_ARM_NEON
+#  ifdef BUILD_ARM_NEON
     if (mozilla::supports_neon()) {
       if (!mOmxIFFT) {
         mOmxIFFT = createOmxFFT(mFFTSize);
       }
     } else
-#endif
+#  endif
     {
       if (!mKissIFFT) {
         mKissIFFT = kiss_fftr_alloc(mFFTSize, 1, nullptr, nullptr);
@@ -310,11 +310,11 @@ class FFTBlock final {
       mAvIRDFT = nullptr;
     }
 #else
-#ifdef BUILD_ARM_NEON
+#  ifdef BUILD_ARM_NEON
     free(mOmxFFT);
     free(mOmxIFFT);
     mOmxFFT = mOmxIFFT = nullptr;
-#endif
+#  endif
     free(mKissFFT);
     free(mKissIFFT);
     mKissFFT = mKissIFFT = nullptr;
@@ -330,10 +330,10 @@ class FFTBlock final {
 #else
   kiss_fftr_cfg mKissFFT;
   kiss_fftr_cfg mKissIFFT;
-#ifdef BUILD_ARM_NEON
+#  ifdef BUILD_ARM_NEON
   OMXFFTSpec_R_F32* mOmxFFT;
   OMXFFTSpec_R_F32* mOmxIFFT;
-#endif
+#  endif
 #endif
   AlignedTArray<ComplexU> mOutputBuffer;
   uint32_t mFFTSize;

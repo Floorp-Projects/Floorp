@@ -42,7 +42,7 @@
 
 // This is defined to something else on Windows
 #ifdef DispatchMessage
-#undef DispatchMessage
+#  undef DispatchMessage
 #endif
 
 namespace mozilla {

@@ -45,7 +45,7 @@ using mozilla::ipc::StringInputStreamParams;
 //
 static LazyLogModule sStorageStreamLog("nsStorageStream");
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 #define LOG(args) MOZ_LOG(sStorageStreamLog, mozilla::LogLevel::Debug, args)
 

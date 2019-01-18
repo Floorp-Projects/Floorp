@@ -10,7 +10,7 @@
 #include "nsCacheEntry.h"
 
 #ifdef XP_WIN
-#include <winsock.h>  // for htonl/ntohl
+#  include <winsock.h>  // for htonl/ntohl
 #endif
 
 class nsDiskCache {

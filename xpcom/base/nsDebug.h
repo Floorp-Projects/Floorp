@@ -16,8 +16,8 @@
 #include <stdarg.h>
 
 #ifdef DEBUG
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Printf.h"
+#  include "mozilla/IntegerPrintfMacros.h"
+#  include "mozilla/Printf.h"
 #endif
 
 /**
@@ -48,7 +48,7 @@
  * @note This is C++-only
  */
 #ifdef __cplusplus
-#ifdef DEBUG
+#  ifdef DEBUG
 inline MOZ_MUST_USE bool NS_warn_if_impl(bool aCondition, const char* aExpr,
                                          const char* aFile, int32_t aLine) {
   if (MOZ_UNLIKELY(aCondition)) {
@@ -56,11 +56,11 @@ inline MOZ_MUST_USE bool NS_warn_if_impl(bool aCondition, const char* aExpr,
   }
   return aCondition;
 }
-#define NS_WARN_IF(condition) \
-  NS_warn_if_impl(condition, #condition, __FILE__, __LINE__)
-#else
-#define NS_WARN_IF(condition) (bool)(condition)
-#endif
+#    define NS_WARN_IF(condition) \
+      NS_warn_if_impl(condition, #condition, __FILE__, __LINE__)
+#  else
+#    define NS_WARN_IF(condition) (bool)(condition)
+#  endif
 #endif
 
 /**
@@ -73,16 +73,16 @@ inline MOZ_MUST_USE bool NS_warn_if_impl(bool aCondition, const char* aExpr,
  * evaluate the message argument.
  */
 #ifdef DEBUG
-#define NS_WARNING_ASSERTION(_expr, _msg)                                \
-  do {                                                                   \
-    if (!(_expr)) {                                                      \
-      NS_DebugBreak(NS_DEBUG_WARNING, _msg, #_expr, __FILE__, __LINE__); \
-    }                                                                    \
-  } while (false)
+#  define NS_WARNING_ASSERTION(_expr, _msg)                                \
+    do {                                                                   \
+      if (!(_expr)) {                                                      \
+        NS_DebugBreak(NS_DEBUG_WARNING, _msg, #_expr, __FILE__, __LINE__); \
+      }                                                                    \
+    } while (false)
 #else
-#define NS_WARNING_ASSERTION(_expr, _msg) \
-  do { /* nothing */                      \
-  } while (false)
+#  define NS_WARNING_ASSERTION(_expr, _msg) \
+    do { /* nothing */                      \
+    } while (false)
 #endif
 
 /**
@@ -94,59 +94,59 @@ inline MOZ_MUST_USE bool NS_warn_if_impl(bool aCondition, const char* aExpr,
  */
 #ifdef DEBUG
 inline void MOZ_PretendNoReturn() MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS {}
-#define NS_ASSERTION(expr, str)                                          \
-  do {                                                                   \
-    if (!(expr)) {                                                       \
-      NS_DebugBreak(NS_DEBUG_ASSERTION, str, #expr, __FILE__, __LINE__); \
-      MOZ_PretendNoReturn();                                             \
-    }                                                                    \
-  } while (0)
+#  define NS_ASSERTION(expr, str)                                          \
+    do {                                                                   \
+      if (!(expr)) {                                                       \
+        NS_DebugBreak(NS_DEBUG_ASSERTION, str, #expr, __FILE__, __LINE__); \
+        MOZ_PretendNoReturn();                                             \
+      }                                                                    \
+    } while (0)
 #else
-#define NS_ASSERTION(expr, str) \
-  do { /* nothing */            \
-  } while (0)
+#  define NS_ASSERTION(expr, str) \
+    do { /* nothing */            \
+    } while (0)
 #endif
 
 /**
  * Log an error message.
  */
 #ifdef DEBUG
-#define NS_ERROR(str)                                                    \
-  do {                                                                   \
-    NS_DebugBreak(NS_DEBUG_ASSERTION, str, "Error", __FILE__, __LINE__); \
-    MOZ_PretendNoReturn();                                               \
-  } while (0)
+#  define NS_ERROR(str)                                                    \
+    do {                                                                   \
+      NS_DebugBreak(NS_DEBUG_ASSERTION, str, "Error", __FILE__, __LINE__); \
+      MOZ_PretendNoReturn();                                               \
+    } while (0)
 #else
-#define NS_ERROR(str) \
-  do { /* nothing */  \
-  } while (0)
+#  define NS_ERROR(str) \
+    do { /* nothing */  \
+    } while (0)
 #endif
 
 /**
  * Log a warning message.
  */
 #ifdef DEBUG
-#define NS_WARNING(str) \
-  NS_DebugBreak(NS_DEBUG_WARNING, str, nullptr, __FILE__, __LINE__)
+#  define NS_WARNING(str) \
+    NS_DebugBreak(NS_DEBUG_WARNING, str, nullptr, __FILE__, __LINE__)
 #else
-#define NS_WARNING(str) \
-  do { /* nothing */    \
-  } while (0)
+#  define NS_WARNING(str) \
+    do { /* nothing */    \
+    } while (0)
 #endif
 
 /**
  * Trigger a debugger breakpoint, only in debug builds.
  */
 #ifdef DEBUG
-#define NS_BREAK()                                                       \
-  do {                                                                   \
-    NS_DebugBreak(NS_DEBUG_BREAK, nullptr, nullptr, __FILE__, __LINE__); \
-    MOZ_PretendNoReturn();                                               \
-  } while (0)
+#  define NS_BREAK()                                                       \
+    do {                                                                   \
+      NS_DebugBreak(NS_DEBUG_BREAK, nullptr, nullptr, __FILE__, __LINE__); \
+      MOZ_PretendNoReturn();                                               \
+    } while (0)
 #else
-#define NS_BREAK()   \
-  do { /* nothing */ \
-  } while (0)
+#  define NS_BREAK()   \
+    do { /* nothing */ \
+    } while (0)
 #endif
 
 /******************************************************************************
@@ -156,54 +156,56 @@ inline void MOZ_PretendNoReturn() MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS {}
 
 /* Avoid name collision if included with other headers defining annotations. */
 #ifndef HAVE_STATIC_ANNOTATIONS
-#define HAVE_STATIC_ANNOTATIONS
+#  define HAVE_STATIC_ANNOTATIONS
 
-#ifdef XGILL_PLUGIN
+#  ifdef XGILL_PLUGIN
 
-#define STATIC_PRECONDITION(COND) __attribute__((precondition(#COND)))
-#define STATIC_PRECONDITION_ASSUME(COND) \
-  __attribute__((precondition_assume(#COND)))
-#define STATIC_POSTCONDITION(COND) __attribute__((postcondition(#COND)))
-#define STATIC_POSTCONDITION_ASSUME(COND) \
-  __attribute__((postcondition_assume(#COND)))
-#define STATIC_INVARIANT(COND) __attribute__((invariant(#COND)))
-#define STATIC_INVARIANT_ASSUME(COND) __attribute__((invariant_assume(#COND)))
+#    define STATIC_PRECONDITION(COND) __attribute__((precondition(#    COND)))
+#    define STATIC_PRECONDITION_ASSUME(COND) \
+      __attribute__((precondition_assume(#COND)))
+#    define STATIC_POSTCONDITION(COND) __attribute__((postcondition(#    COND)))
+#    define STATIC_POSTCONDITION_ASSUME(COND) \
+      __attribute__((postcondition_assume(#COND)))
+#    define STATIC_INVARIANT(COND) __attribute__((invariant(#    COND)))
+#    define STATIC_INVARIANT_ASSUME(COND) \
+      __attribute__((invariant_assume(#COND)))
 
 /* Used to make identifiers for assert/assume annotations in a function. */
-#define STATIC_PASTE2(X, Y) X##Y
-#define STATIC_PASTE1(X, Y) STATIC_PASTE2(X, Y)
+#    define STATIC_PASTE2(X, Y) X##Y
+#    define STATIC_PASTE1(X, Y) STATIC_PASTE2(X, Y)
 
-#define STATIC_ASSUME(COND)                                          \
-  do {                                                               \
-    __attribute__((assume_static(#COND), unused)) int STATIC_PASTE1( \
-        assume_static_, __COUNTER__);                                \
-  } while (false)
+#    define STATIC_ASSUME(COND)                                          \
+      do {                                                               \
+        __attribute__((assume_static(#COND), unused)) int STATIC_PASTE1( \
+            assume_static_, __COUNTER__);                                \
+      } while (false)
 
-#define STATIC_ASSERT_RUNTIME(COND)                                          \
-  do {                                                                       \
-    __attribute__((assert_static_runtime(#COND), unused)) int STATIC_PASTE1( \
-        assert_static_runtime_, __COUNTER__);                                \
-  } while (false)
+#    define STATIC_ASSERT_RUNTIME(COND)                                   \
+      do {                                                                \
+        __attribute__((assert_static_runtime(#COND),                      \
+                       unused)) int STATIC_PASTE1(assert_static_runtime_, \
+                                                  __COUNTER__);           \
+      } while (false)
 
-#else /* XGILL_PLUGIN */
+#  else /* XGILL_PLUGIN */
 
-#define STATIC_PRECONDITION(COND)         /* nothing */
-#define STATIC_PRECONDITION_ASSUME(COND)  /* nothing */
-#define STATIC_POSTCONDITION(COND)        /* nothing */
-#define STATIC_POSTCONDITION_ASSUME(COND) /* nothing */
-#define STATIC_INVARIANT(COND)            /* nothing */
-#define STATIC_INVARIANT_ASSUME(COND)     /* nothing */
+#    define STATIC_PRECONDITION(COND)         /* nothing */
+#    define STATIC_PRECONDITION_ASSUME(COND)  /* nothing */
+#    define STATIC_POSTCONDITION(COND)        /* nothing */
+#    define STATIC_POSTCONDITION_ASSUME(COND) /* nothing */
+#    define STATIC_INVARIANT(COND)            /* nothing */
+#    define STATIC_INVARIANT_ASSUME(COND)     /* nothing */
 
-#define STATIC_ASSUME(COND) \
-  do { /* nothing */        \
-  } while (false)
-#define STATIC_ASSERT_RUNTIME(COND) \
-  do { /* nothing */                \
-  } while (false)
+#    define STATIC_ASSUME(COND) \
+      do { /* nothing */        \
+      } while (false)
+#    define STATIC_ASSERT_RUNTIME(COND) \
+      do { /* nothing */                \
+      } while (false)
 
-#endif /* XGILL_PLUGIN */
+#  endif /* XGILL_PLUGIN */
 
-#define STATIC_SKIP_INFERENCE STATIC_INVARIANT(skip_inference())
+#  define STATIC_SKIP_INFERENCE STATIC_INVARIANT(skip_inference())
 
 #endif /* HAVE_STATIC_ANNOTATIONS */
 
@@ -244,27 +246,27 @@ inline void MOZ_PretendNoReturn() MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS {}
 
 #if defined(DEBUG) && !defined(XPCOM_GLUE_AVOID_NSPR)
 
-#define NS_ENSURE_SUCCESS_BODY(res, ret)            \
-  mozilla::SmprintfPointer msg = mozilla::Smprintf( \
-      "NS_ENSURE_SUCCESS(%s, %s) failed with "      \
-      "result 0x%" PRIX32,                          \
-      #res, #ret, static_cast<uint32_t>(__rv));     \
-  NS_WARNING(msg.get());
+#  define NS_ENSURE_SUCCESS_BODY(res, ret)            \
+    mozilla::SmprintfPointer msg = mozilla::Smprintf( \
+        "NS_ENSURE_SUCCESS(%s, %s) failed with "      \
+        "result 0x%" PRIX32,                          \
+        #res, #ret, static_cast<uint32_t>(__rv));     \
+    NS_WARNING(msg.get());
 
-#define NS_ENSURE_SUCCESS_BODY_VOID(res)            \
-  mozilla::SmprintfPointer msg = mozilla::Smprintf( \
-      "NS_ENSURE_SUCCESS_VOID(%s) failed with "     \
-      "result 0x%" PRIX32,                          \
-      #res, static_cast<uint32_t>(__rv));           \
-  NS_WARNING(msg.get());
+#  define NS_ENSURE_SUCCESS_BODY_VOID(res)            \
+    mozilla::SmprintfPointer msg = mozilla::Smprintf( \
+        "NS_ENSURE_SUCCESS_VOID(%s) failed with "     \
+        "result 0x%" PRIX32,                          \
+        #res, static_cast<uint32_t>(__rv));           \
+    NS_WARNING(msg.get());
 
 #else
 
-#define NS_ENSURE_SUCCESS_BODY(res, ret) \
-  NS_WARNING("NS_ENSURE_SUCCESS(" #res ", " #ret ") failed");
+#  define NS_ENSURE_SUCCESS_BODY(res, ret) \
+    NS_WARNING("NS_ENSURE_SUCCESS(" #res ", " #ret ") failed");
 
-#define NS_ENSURE_SUCCESS_BODY_VOID(res) \
-  NS_WARNING("NS_ENSURE_SUCCESS_VOID(" #res ") failed");
+#  define NS_ENSURE_SUCCESS_BODY_VOID(res) \
+    NS_WARNING("NS_ENSURE_SUCCESS_VOID(" #res ") failed");
 
 #endif
 
@@ -312,7 +314,7 @@ inline void MOZ_PretendNoReturn() MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS {}
 
 #if (defined(DEBUG) || (defined(NIGHTLY_BUILD) && !defined(MOZ_PROFILING))) && \
     !defined(XPCOM_GLUE_AVOID_NSPR)
-#define MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED 1
+#  define MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED 1
 #endif
 
 #ifdef MOZILLA_INTERNAL_API

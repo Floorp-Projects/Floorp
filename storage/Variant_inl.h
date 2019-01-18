@@ -9,7 +9,7 @@
  */
 
 #ifndef mozilla_storage_Variant_h__
-#error "Do not include this file directly!"
+#  error "Do not include this file directly!"
 #endif
 
 namespace mozilla {

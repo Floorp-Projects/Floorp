@@ -35,7 +35,7 @@ static ToolbarGTKMetrics sToolbarMetrics;
 #define ARROW_LEFT (G_PI + G_PI_2)
 
 #if !GTK_CHECK_VERSION(3, 14, 0)
-#define GTK_STATE_FLAG_CHECKED (1 << 11)
+#  define GTK_STATE_FLAG_CHECKED (1 << 11)
 #endif
 
 #if 0

@@ -11,14 +11,14 @@
 
 #include "builtin/String.h"
 #ifdef DEBUG
-#include "jsutil.h"
+#  include "jsutil.h"
 #endif
 
 #include "builtin/RegExp.h"
 #include "frontend/TokenStream.h"
 #include "gc/HashUtil.h"
 #ifdef DEBUG
-#include "irregexp/RegExpBytecode.h"
+#  include "irregexp/RegExpBytecode.h"
 #endif
 #include "irregexp/RegExpParser.h"
 #include "jit/VMFunctions.h"
@@ -29,7 +29,7 @@
 #include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 #ifdef DEBUG
-#include "util/Unicode.h"
+#  include "util/Unicode.h"
 #endif
 #include "vm/Xdr.h"
 
@@ -551,28 +551,28 @@ JSFlatString* RegExpObject::toString(JSContext* cx) const {
     }
   };
 
-#define BYTECODE(NAME)      \
-  case irregexp::BC_##NAME: \
-    DumpLower(#NAME);
-#define ADVANCE(NAME)                 \
-  fprintf(stderr, "\n");              \
-  pc += irregexp::BC_##NAME##_LENGTH; \
-  maxPc = js::Max(maxPc, pc);         \
-  break;
-#define STOP(NAME)                    \
-  fprintf(stderr, "\n");              \
-  pc += irregexp::BC_##NAME##_LENGTH; \
-  break;
-#define JUMP(NAME, OFFSET)                   \
-  fprintf(stderr, "\n");                     \
-  maxPc = js::Max(maxPc, byteCode + OFFSET); \
-  pc += irregexp::BC_##NAME##_LENGTH;        \
-  break;
-#define BRANCH(NAME, OFFSET)                              \
-  fprintf(stderr, "\n");                                  \
-  pc += irregexp::BC_##NAME##_LENGTH;                     \
-  maxPc = js::Max(maxPc, js::Max(pc, byteCode + OFFSET)); \
-  break;
+#  define BYTECODE(NAME)      \
+    case irregexp::BC_##NAME: \
+      DumpLower(#NAME);
+#  define ADVANCE(NAME)                 \
+    fprintf(stderr, "\n");              \
+    pc += irregexp::BC_##NAME##_LENGTH; \
+    maxPc = js::Max(maxPc, pc);         \
+    break;
+#  define STOP(NAME)                    \
+    fprintf(stderr, "\n");              \
+    pc += irregexp::BC_##NAME##_LENGTH; \
+    break;
+#  define JUMP(NAME, OFFSET)                   \
+    fprintf(stderr, "\n");                     \
+    maxPc = js::Max(maxPc, byteCode + OFFSET); \
+    pc += irregexp::BC_##NAME##_LENGTH;        \
+    break;
+#  define BRANCH(NAME, OFFSET)                              \
+    fprintf(stderr, "\n");                                  \
+    pc += irregexp::BC_##NAME##_LENGTH;                     \
+    maxPc = js::Max(maxPc, js::Max(pc, byteCode + OFFSET)); \
+    break;
 
   // Bytecode has no end marker, we need to calculate the bytecode length by
   // tracing jumps and branches.
@@ -818,11 +818,11 @@ JSFlatString* RegExpObject::toString(JSContext* cx) const {
     }
   }
 
-#undef BYTECODE
-#undef ADVANCE
-#undef STOP
-#undef JUMP
-#undef BRANCH
+#  undef BYTECODE
+#  undef ADVANCE
+#  undef STOP
+#  undef JUMP
+#  undef BRANCH
 
   return true;
 }

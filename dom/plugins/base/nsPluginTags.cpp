@@ -22,8 +22,8 @@
 #include "mozilla/dom/FakePluginTagInitBinding.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-#include "mozilla/SandboxSettings.h"
-#include "nsCocoaFeatures.h"
+#  include "mozilla/SandboxSettings.h"
+#  include "nsCocoaFeatures.h"
 #endif
 
 using mozilla::dom::FakePluginTagInit;
@@ -370,14 +370,14 @@ void nsPluginTag::InitSandboxLevel() {
         Preferences::GetInt("dom.ipc.plugins.sandbox-level.default");
   }
 
-#if defined(_AMD64_)
+#  if defined(_AMD64_)
   // Level 3 is now the default NPAPI sandbox level for 64-bit flash.
   // We permit the user to drop the sandbox level by at most 1.  This should
   // be kept up to date with the default value in the firefox.js pref file.
   if (mIsFlashPlugin && mSandboxLevel < 2) {
     mSandboxLevel = 2;
   }
-#endif /* defined(_AMD64_) */
+#  endif /* defined(_AMD64_) */
 
 #elif defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   if (mIsFlashPlugin) {

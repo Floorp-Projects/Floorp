@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "AudioCompactor.h"
 #if defined(MOZ_MEMORY)
-#include "mozmemory.h"
+#  include "mozmemory.h"
 #endif
 
 namespace mozilla {

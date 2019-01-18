@@ -1186,10 +1186,10 @@ class StoreOp {
       masm.storeDouble(reg, dump);
     } else if (reg.isSingle()) {
       masm.storeFloat32(reg, dump);
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     } else if (reg.isSimd128()) {
       masm.storeUnalignedSimd128Float(reg, dump);
-#endif
+#  endif
     } else {
       MOZ_CRASH("Unexpected register type.");
     }

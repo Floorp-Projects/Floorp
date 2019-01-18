@@ -13,12 +13,12 @@
 #include "mozilla/gfx/Quaternion.h"
 
 #if defined(XP_WIN)
-#include <d3d11.h>
-#include "mozilla/gfx/DeviceManagerDx.h"
+#  include <d3d11.h>
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #endif  // defined(XP_WIN)
 
 #ifndef M_PI
-#define M_PI 3.14159265358979323846
+#  define M_PI 3.14159265358979323846
 #endif
 
 using namespace mozilla;

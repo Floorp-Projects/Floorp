@@ -5,16 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaShutdownManager_h_)
-#define MediaShutdownManager_h_
+#  define MediaShutdownManager_h_
 
-#include "mozilla/Monitor.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/StaticPtr.h"
-#include "nsCOMPtr.h"
-#include "nsIAsyncShutdown.h"
-#include "nsIThread.h"
-#include "nsHashKeys.h"
-#include "nsTHashtable.h"
+#  include "mozilla/Monitor.h"
+#  include "mozilla/RefPtr.h"
+#  include "mozilla/StaticPtr.h"
+#  include "nsCOMPtr.h"
+#  include "nsIAsyncShutdown.h"
+#  include "nsIThread.h"
+#  include "nsHashKeys.h"
+#  include "nsTHashtable.h"
 
 namespace mozilla {
 

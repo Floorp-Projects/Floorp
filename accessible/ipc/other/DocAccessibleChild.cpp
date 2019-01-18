@@ -19,7 +19,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsAccUtils.h"
 #ifdef MOZ_ACCESSIBILITY_ATK
-#include "AccessibleWrap.h"
+#  include "AccessibleWrap.h"
 #endif
 
 namespace mozilla {

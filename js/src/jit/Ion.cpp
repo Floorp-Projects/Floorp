@@ -67,7 +67,7 @@
 #include "vm/Stack-inl.h"
 
 #if defined(ANDROID)
-#include <sys/system_properties.h>
+#  include <sys/system_properties.h>
 #endif
 
 using namespace js;
@@ -3094,9 +3094,9 @@ AutoFlushICache::AutoFlushICache(const char* nonce, bool inhibit)
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     : start_(0),
       stop_(0),
-#ifdef JS_JITSPEW
+#  ifdef JS_JITSPEW
       name_(nonce),
-#endif
+#  endif
       inhibit_(inhibit)
 #endif
 {

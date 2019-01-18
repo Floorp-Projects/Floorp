@@ -26,17 +26,17 @@
 #include "js/Utility.h"
 
 #ifndef JS_STACK_GROWTH_DIRECTION
-#ifdef __hppa
-#define JS_STACK_GROWTH_DIRECTION (1)
-#else
-#define JS_STACK_GROWTH_DIRECTION (-1)
-#endif
+#  ifdef __hppa
+#    define JS_STACK_GROWTH_DIRECTION (1)
+#  else
+#    define JS_STACK_GROWTH_DIRECTION (-1)
+#  endif
 #endif
 
 #if JS_STACK_GROWTH_DIRECTION > 0
-#define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) < (limit)))
+#  define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) < (limit)))
 #else
-#define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) > (limit)))
+#  define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) > (limit)))
 #endif
 
 struct JSErrorFormatString;

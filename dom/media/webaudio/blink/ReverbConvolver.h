@@ -35,7 +35,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Monitor.h"
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 #include "base/thread.h"
 

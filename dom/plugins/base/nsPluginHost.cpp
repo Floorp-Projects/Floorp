@@ -32,7 +32,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsIFile.h"
 #if defined(XP_MACOSX)
-#include "nsILocalFileMac.h"
+#  include "nsILocalFileMac.h"
 #endif
 #include "nsISeekableStream.h"
 #include "nsNetUtil.h"
@@ -100,10 +100,10 @@
 #include "mozilla/dom/Promise.h"
 
 #if defined(XP_WIN)
-#include "nsIWindowMediator.h"
-#include "nsIBaseWindow.h"
-#include "windows.h"
-#include "winbase.h"
+#  include "nsIWindowMediator.h"
+#  include "nsIBaseWindow.h"
+#  include "windows.h"
+#  include "winbase.h"
 #endif
 
 #include "npapi.h"

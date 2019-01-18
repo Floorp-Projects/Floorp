@@ -13,7 +13,7 @@
 #include "mozilla/UniquePtr.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-#include "mozilla/Sandbox.h"
+#  include "mozilla/Sandbox.h"
 #endif
 
 namespace mozilla {

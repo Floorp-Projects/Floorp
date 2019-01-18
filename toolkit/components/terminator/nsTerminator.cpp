@@ -34,9 +34,9 @@
 #include "nsThreadUtils.h"
 
 #if defined(XP_WIN)
-#include <windows.h>
+#  include <windows.h>
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include "mozilla/ArrayUtils.h"

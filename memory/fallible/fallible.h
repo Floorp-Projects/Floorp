@@ -49,7 +49,7 @@
  *
  */
 
-#include <new>
+#  include <new>
 
 namespace mozilla {
 

@@ -18,9 +18,9 @@
 
 #include <errno.h>
 #ifdef XP_WIN
-#include <io.h>
+#  include <io.h>
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 using mozilla::ipc::CloseFileRunnable;

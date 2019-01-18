@@ -79,11 +79,11 @@
 #define DISABLE_ASSERTS_FOR_FUZZING 0
 
 #if DISABLE_ASSERTS_FOR_FUZZING
-#define ASSERT_UNLESS_FUZZING(...) \
-  do {                             \
-  } while (0)
+#  define ASSERT_UNLESS_FUZZING(...) \
+    do {                             \
+    } while (0)
 #else
-#define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
+#  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
 #endif
 
 #define UNKNOWN_FILE_WARNING(_leafName)                              \

@@ -10,11 +10,11 @@ typedef unsigned uint32_t;
 typedef unsigned nsXPCVariant;
 
 #if defined(WIN32)
-#define NS_IMETHOD virtual nsresult __stdcall
-#define NS_IMETHODIMP nsresult __stdcall
+#  define NS_IMETHOD virtual nsresult __stdcall
+#  define NS_IMETHODIMP nsresult __stdcall
 #else
-#define NS_IMETHOD virtual nsresult
-#define NS_IMETHODIMP nsresult
+#  define NS_IMETHOD virtual nsresult
+#  define NS_IMETHODIMP nsresult
 #endif
 
 class base {

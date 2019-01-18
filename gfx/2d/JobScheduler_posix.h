@@ -5,20 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef WIN32
-#ifndef MOZILLA_GFX_TASKSCHEDULER_POSIX_H_
-#define MOZILLA_GFX_TASKSCHEDULER_POSIX_H_
+#  ifndef MOZILLA_GFX_TASKSCHEDULER_POSIX_H_
+#    define MOZILLA_GFX_TASKSCHEDULER_POSIX_H_
 
-#include <string>
-#include <vector>
-#include <list>
-#include <pthread.h>
-#include <stdint.h>
-#include <stdio.h>
+#    include <string>
+#    include <vector>
+#    include <list>
+#    include <pthread.h>
+#    include <stdint.h>
+#    include <stdio.h>
 
-#include "mozilla/RefPtr.h"
-#include "mozilla/DebugOnly.h"
-#include "mozilla/gfx/CriticalSection.h"
-#include "mozilla/RefCounted.h"
+#    include "mozilla/RefPtr.h"
+#    include "mozilla/DebugOnly.h"
+#    include "mozilla/gfx/CriticalSection.h"
+#    include "mozilla/RefCounted.h"
 
 namespace mozilla {
 namespace gfx {
@@ -131,7 +131,7 @@ class EventObject : public external::AtomicRefCounted<EventObject> {
 }  // namespace gfx
 }  // namespace mozilla
 
-#include "JobScheduler.h"
+#    include "JobScheduler.h"
 
-#endif
+#  endif
 #endif

@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(PureOmxPlatformLayer_h_)
-#define PureOmxPlatformLayer_h_
+#  define PureOmxPlatformLayer_h_
 
-#include "OmxPlatformLayer.h"
+#  include "OmxPlatformLayer.h"
 
 namespace mozilla {
 

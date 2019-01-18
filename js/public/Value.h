@@ -35,7 +35,7 @@ union Value;
 #define JSVAL_INT_MAX ((int32_t)0x7fffffff)
 
 #if defined(JS_PUNBOX64)
-#define JSVAL_TAG_SHIFT 47
+#  define JSVAL_TAG_SHIFT 47
 #endif
 
 // Use enums so that printing a JS::Value in the debugger shows nice
@@ -43,11 +43,11 @@ union Value;
 
 // Work around a GCC bug. See comment above #undef JS_ENUM_HEADER.
 #if MOZ_IS_GCC
-#define JS_ENUM_HEADER(id, type) enum id
-#define JS_ENUM_FOOTER(id) __attribute__((packed))
+#  define JS_ENUM_HEADER(id, type) enum id
+#  define JS_ENUM_FOOTER(id) __attribute__((packed))
 #else
-#define JS_ENUM_HEADER(id, type) enum id : type
-#define JS_ENUM_FOOTER(id)
+#  define JS_ENUM_HEADER(id, type) enum id : type
+#  define JS_ENUM_FOOTER(id)
 #endif
 
 enum JSValueType : uint8_t {
@@ -86,9 +86,9 @@ JS_ENUM_HEADER(JSValueTag, uint32_t){
     JSVAL_TAG_STRING = JSVAL_TAG_CLEAR | JSVAL_TYPE_STRING,
     JSVAL_TAG_SYMBOL = JSVAL_TAG_CLEAR | JSVAL_TYPE_SYMBOL,
     JSVAL_TAG_PRIVATE_GCTHING = JSVAL_TAG_CLEAR | JSVAL_TYPE_PRIVATE_GCTHING,
-#ifdef ENABLE_BIGINT
+#  ifdef ENABLE_BIGINT
     JSVAL_TAG_BIGINT = JSVAL_TAG_CLEAR | JSVAL_TYPE_BIGINT,
-#endif
+#  endif
     JSVAL_TAG_OBJECT = JSVAL_TAG_CLEAR |
                        JSVAL_TYPE_OBJECT} JS_ENUM_FOOTER(JSValueTag);
 
@@ -108,9 +108,9 @@ JS_ENUM_HEADER(JSValueTag, uint32_t){
     JSVAL_TAG_SYMBOL = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_SYMBOL,
     JSVAL_TAG_PRIVATE_GCTHING = JSVAL_TAG_MAX_DOUBLE |
                                 JSVAL_TYPE_PRIVATE_GCTHING,
-#ifdef ENABLE_BIGINT
+#  ifdef ENABLE_BIGINT
     JSVAL_TAG_BIGINT = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BIGINT,
-#endif
+#  endif
     JSVAL_TAG_OBJECT = JSVAL_TAG_MAX_DOUBLE |
                        JSVAL_TYPE_OBJECT} JS_ENUM_FOOTER(JSValueTag);
 
@@ -131,9 +131,9 @@ enum JSValueShiftedTag : uint64_t {
   JSVAL_SHIFTED_TAG_SYMBOL = (((uint64_t)JSVAL_TAG_SYMBOL) << JSVAL_TAG_SHIFT),
   JSVAL_SHIFTED_TAG_PRIVATE_GCTHING =
       (((uint64_t)JSVAL_TAG_PRIVATE_GCTHING) << JSVAL_TAG_SHIFT),
-#ifdef ENABLE_BIGINT
+#  ifdef ENABLE_BIGINT
   JSVAL_SHIFTED_TAG_BIGINT = (((uint64_t)JSVAL_TAG_BIGINT) << JSVAL_TAG_SHIFT),
-#endif
+#  endif
   JSVAL_SHIFTED_TAG_OBJECT = (((uint64_t)JSVAL_TAG_OBJECT) << JSVAL_TAG_SHIFT)
 };
 
@@ -154,33 +154,33 @@ static_assert(sizeof(JSValueShiftedTag) == sizeof(uint64_t),
 
 #if defined(JS_NUNBOX32)
 
-#define JSVAL_TYPE_TO_TAG(type) ((JSValueTag)(JSVAL_TAG_CLEAR | (type)))
+#  define JSVAL_TYPE_TO_TAG(type) ((JSValueTag)(JSVAL_TAG_CLEAR | (type)))
 
-#define JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET JSVAL_TAG_OBJECT
-#define JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET JSVAL_TAG_INT32
-#define JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET JSVAL_TAG_STRING
+#  define JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET JSVAL_TAG_OBJECT
+#  define JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET JSVAL_TAG_INT32
+#  define JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET JSVAL_TAG_STRING
 
 #elif defined(JS_PUNBOX64)
 
 // This should only be used in toGCThing, see the 'Spectre mitigations' comment.
-#define JSVAL_PAYLOAD_MASK_GCTHING 0x00007FFFFFFFFFFFLL
+#  define JSVAL_PAYLOAD_MASK_GCTHING 0x00007FFFFFFFFFFFLL
 
-#define JSVAL_TAG_MASK 0xFFFF800000000000LL
-#define JSVAL_TYPE_TO_TAG(type) ((JSValueTag)(JSVAL_TAG_MAX_DOUBLE | (type)))
-#define JSVAL_TYPE_TO_SHIFTED_TAG(type) \
-  (((uint64_t)JSVAL_TYPE_TO_TAG(type)) << JSVAL_TAG_SHIFT)
+#  define JSVAL_TAG_MASK 0xFFFF800000000000LL
+#  define JSVAL_TYPE_TO_TAG(type) ((JSValueTag)(JSVAL_TAG_MAX_DOUBLE | (type)))
+#  define JSVAL_TYPE_TO_SHIFTED_TAG(type) \
+    (((uint64_t)JSVAL_TYPE_TO_TAG(type)) << JSVAL_TAG_SHIFT)
 
-#define JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET JSVAL_TAG_OBJECT
-#define JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET JSVAL_TAG_INT32
-#define JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET JSVAL_TAG_STRING
+#  define JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET JSVAL_TAG_OBJECT
+#  define JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET JSVAL_TAG_INT32
+#  define JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET JSVAL_TAG_STRING
 
-#define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET JSVAL_SHIFTED_TAG_OBJECT
-#define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET JSVAL_SHIFTED_TAG_BOOLEAN
-#define JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET JSVAL_SHIFTED_TAG_STRING
+#  define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET JSVAL_SHIFTED_TAG_OBJECT
+#  define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET JSVAL_SHIFTED_TAG_BOOLEAN
+#  define JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET JSVAL_SHIFTED_TAG_STRING
 
 // JSVAL_TYPE_OBJECT and JSVAL_TYPE_NULL differ by one bit. We can use this to
 // implement toObjectOrNull more efficiently.
-#define JSVAL_OBJECT_OR_NULL_BIT (uint64_t(0x8) << JSVAL_TAG_SHIFT)
+#  define JSVAL_OBJECT_OR_NULL_BIT (uint64_t(0x8) << JSVAL_TAG_SHIFT)
 static_assert(
     (JSVAL_SHIFTED_TAG_NULL ^ JSVAL_SHIFTED_TAG_OBJECT) ==
         JSVAL_OBJECT_OR_NULL_BIT,
@@ -326,48 +326,48 @@ union alignas(8) Value {
 #if defined(JS_PUNBOX64) && !defined(_WIN64)
   // MSVC doesn't pack these correctly :-(
   struct {
-#if MOZ_LITTLE_ENDIAN
+#  if MOZ_LITTLE_ENDIAN
     uint64_t payload47_ : 47;
     JSValueTag tag_ : 17;
-#else
+#  else
     JSValueTag tag_ : 17;
     uint64_t payload47_ : 47;
-#endif  // MOZ_LITTLE_ENDIAN
+#  endif  // MOZ_LITTLE_ENDIAN
   } debugView_;
 #endif  // defined(JS_PUNBOX64) && !defined(_WIN64)
 
   struct {
 #if defined(JS_PUNBOX64)
-#if MOZ_BIG_ENDIAN
+#  if MOZ_BIG_ENDIAN
     uint32_t : 32;  // padding
-#endif              // MOZ_BIG_ENDIAN
+#  endif            // MOZ_BIG_ENDIAN
     union {
       int32_t i32_;
       uint32_t u32_;
       JSWhyMagic why_;
     } payload_;
 #elif defined(JS_NUNBOX32)
-#if MOZ_BIG_ENDIAN
+#  if MOZ_BIG_ENDIAN
     JSValueTag tag_;
-#endif  // MOZ_BIG_ENDIAN
+#  endif  // MOZ_BIG_ENDIAN
     union {
       int32_t i32_;
       uint32_t u32_;
       uint32_t boo_;  // Don't use |bool| -- it must be four bytes.
       JSString* str_;
       JS::Symbol* sym_;
-#ifdef ENABLE_BIGINT
+#  ifdef ENABLE_BIGINT
       JS::BigInt* bi_;
-#endif
+#  endif
       JSObject* obj_;
       js::gc::Cell* cell_;
       void* ptr_;
       JSWhyMagic why_;
     } payload_;
-#if MOZ_LITTLE_ENDIAN
+#  if MOZ_LITTLE_ENDIAN
     JSValueTag tag_;
-#endif  // MOZ_LITTLE_ENDIAN
-#endif  // defined(JS_PUNBOX64)
+#  endif  // MOZ_LITTLE_ENDIAN
+#endif    // defined(JS_PUNBOX64)
   } s_;
 
  public:
@@ -738,11 +738,11 @@ union alignas(8) Value {
 #ifdef ENABLE_BIGINT
   JS::BigInt* toBigInt() const {
     MOZ_ASSERT(isBigInt());
-#if defined(JS_NUNBOX32)
+#  if defined(JS_NUNBOX32)
     return s_.payload_.bi_;
-#elif defined(JS_PUNBOX64)
+#  elif defined(JS_PUNBOX64)
     return reinterpret_cast<JS::BigInt*>(asBits_ ^ JSVAL_SHIFTED_TAG_BIGINT);
-#endif
+#  endif
   }
 #endif
 

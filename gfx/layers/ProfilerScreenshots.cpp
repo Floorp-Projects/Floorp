@@ -12,7 +12,7 @@
 #include "gfxUtils.h"
 #include "nsThreadUtils.h"
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"
+#  include "ProfilerMarkerPayload.h"
 #endif
 
 using namespace mozilla;

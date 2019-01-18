@@ -29,9 +29,9 @@
 
 // GCC < 6.1 workaround, see bug 1329593
 #if defined(XP_WIN) && defined(__MINGW32__)
-#define GCC_MANGLING_WORKAROUND __stdcall
+#  define GCC_MANGLING_WORKAROUND __stdcall
 #else
-#define GCC_MANGLING_WORKAROUND
+#  define GCC_MANGLING_WORKAROUND
 #endif
 
 // The hash length for a domain key.

@@ -18,7 +18,7 @@
 #include "mozilla/StaticMutex.h"
 #include "nsServiceManagerUtils.h"
 #ifdef XP_WIN
-#include "WMFDecoderModule.h"
+#  include "WMFDecoderModule.h"
 #endif
 
 namespace mozilla {

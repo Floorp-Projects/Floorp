@@ -107,9 +107,9 @@ const ParseNodeArity js::frontend::ParseNodeKindArity[] = {
 #ifdef DEBUG
 
 static const char* const parseNodeNames[] = {
-#define STRINGIFY(name, _type) #name,
+#  define STRINGIFY(name, _type) #  name,
     FOR_EACH_PARSE_NODE_KIND(STRINGIFY)
-#undef STRINGIFY
+#  undef STRINGIFY
 };
 
 void frontend::DumpParseTree(ParseNode* pn, GenericPrinter& out, int indent) {
@@ -166,11 +166,11 @@ void ParseNode::dump(GenericPrinter& out, int indent) {
     case PN_NUMBER:
       as<NumericLiteral>().dump(out, indent);
       return;
-#ifdef ENABLE_BIGINT
+#  ifdef ENABLE_BIGINT
     case PN_BIGINT:
       as<BigIntLiteral>().dump(out, indent);
       return;
-#endif
+#  endif
     case PN_REGEXP:
       as<RegExpLiteral>().dump(out, indent);
       return;
@@ -217,11 +217,11 @@ void NumericLiteral::dump(GenericPrinter& out, int indent) {
   }
 }
 
-#ifdef ENABLE_BIGINT
+#  ifdef ENABLE_BIGINT
 void BigIntLiteral::dump(GenericPrinter& out, int indent) {
   out.printf("(%s)", parseNodeNames[size_t(getKind())]);
 }
-#endif
+#  endif
 
 void RegExpLiteral::dump(GenericPrinter& out, int indent) {
   out.printf("(%s)", parseNodeNames[size_t(getKind())]);

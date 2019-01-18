@@ -81,9 +81,9 @@ static bool IsValidSelectionPoint(nsFrameSelection* aFrameSel, nsINode* aNode);
 
 #ifdef PRINT_RANGE
 static void printRange(nsRange* aDomRange);
-#define DEBUG_OUT_RANGE(x) printRange(x)
+#  define DEBUG_OUT_RANGE(x) printRange(x)
 #else
-#define DEBUG_OUT_RANGE(x)
+#  define DEBUG_OUT_RANGE(x)
 #endif  // PRINT_RANGE
 
 /******************************************************************************

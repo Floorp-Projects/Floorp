@@ -4,16 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaResource_h_)
-#define MediaResource_h_
+#  define MediaResource_h_
 
-#include "DecoderDoctorLogger.h"
-#include "Intervals.h"
-#include "MediaData.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/GuardObjects.h"
-#include "mozilla/UniquePtr.h"
-#include "nsISeekableStream.h"
-#include "nsThreadUtils.h"
+#  include "DecoderDoctorLogger.h"
+#  include "Intervals.h"
+#  include "MediaData.h"
+#  include "mozilla/Attributes.h"
+#  include "mozilla/GuardObjects.h"
+#  include "mozilla/UniquePtr.h"
+#  include "nsISeekableStream.h"
+#  include "nsThreadUtils.h"
 
 namespace mozilla {
 

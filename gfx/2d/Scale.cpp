@@ -7,8 +7,8 @@
 #include "Scale.h"
 
 #ifdef USE_SKIA
-#include "HelpersSkia.h"
-#include "skia/src/core/SkBitmapScaler.h"
+#  include "HelpersSkia.h"
+#  include "skia/src/core/SkBitmapScaler.h"
 #endif
 
 namespace mozilla {

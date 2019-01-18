@@ -21,8 +21,8 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCSSFrameConstructor.h"
 #ifdef XP_WIN
-#include "nsISound.h"
-#include "nsWidgetsCID.h"
+#  include "nsISound.h"
+#  include "nsWidgetsCID.h"
 #endif
 #include "nsUTF8Utils.h"
 #include "mozilla/TextEvents.h"

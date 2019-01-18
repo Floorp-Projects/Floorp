@@ -30,8 +30,8 @@
 #include "mozilla/Atomics.h"
 
 #if defined(ACCESSIBILITY)
-#include "mozilla/a11y/Compatibility.h"
-#include "mozilla/a11y/Platform.h"
+#  include "mozilla/a11y/Compatibility.h"
+#  include "mozilla/a11y/Platform.h"
 #endif  // defined(ACCESSIBILITY)
 
 // These are two messages that the code in winspool.drv on Windows 7 explicitly

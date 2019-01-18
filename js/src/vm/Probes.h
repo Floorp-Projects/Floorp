@@ -8,7 +8,7 @@
 #define vm_Probes_h
 
 #ifdef INCLUDE_MOZILLA_DTRACE
-#include "javascript-trace.h"
+#  include "javascript-trace.h"
 #endif
 
 #include "vm/Stack.h"

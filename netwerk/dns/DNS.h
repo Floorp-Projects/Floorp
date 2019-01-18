@@ -16,15 +16,15 @@
 #include "mozilla/MemoryReporting.h"
 
 #if !defined(XP_WIN)
-#include <arpa/inet.h>
+#  include <arpa/inet.h>
 #endif
 
 #ifdef XP_WIN
-#include "winsock2.h"
+#  include "winsock2.h"
 #endif
 
 #ifndef AF_LOCAL
-#define AF_LOCAL 1  // used for named pipe
+#  define AF_LOCAL 1  // used for named pipe
 #endif
 
 #define IPv6ADDR_IS_LOOPBACK(a)                                      \

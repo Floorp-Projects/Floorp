@@ -40,11 +40,11 @@ class GLXLibrary {
 
  public:
 #ifdef DEBUG
-#define BEFORE_CALL BeforeGLXCall();
-#define AFTER_CALL AfterGLXCall();
+#  define BEFORE_CALL BeforeGLXCall();
+#  define AFTER_CALL AfterGLXCall();
 #else
-#define BEFORE_CALL
-#define AFTER_CALL
+#  define BEFORE_CALL
+#  define AFTER_CALL
 #endif
 
 #define WRAP(X)                  \

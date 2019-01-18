@@ -9,10 +9,10 @@
 #include <algorithm>
 
 #ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
+#  include <process.h>
+#  define getpid _getpid
 #else
-#include <unistd.h>  // for getpid()
+#  include <unistd.h>  // for getpid()
 #endif
 
 #include "mozilla/ArrayUtils.h"
@@ -209,17 +209,17 @@
 #include "timeline/JavascriptTimelineMarker.h"
 
 #ifdef MOZ_PLACES
-#include "nsIFaviconService.h"
-#include "mozIPlacesPendingOperation.h"
+#  include "nsIFaviconService.h"
+#  include "mozIPlacesPendingOperation.h"
 #endif
 
 #if NS_PRINT_PREVIEW
-#include "nsIDocumentViewerPrint.h"
-#include "nsIWebBrowserPrint.h"
+#  include "nsIDocumentViewerPrint.h"
+#  include "nsIWebBrowserPrint.h"
 #endif
 
 #ifdef MOZ_TOOLKIT_SEARCH
-#include "nsIBrowserSearchService.h"
+#  include "nsIBrowserSearchService.h"
 #endif
 
 using namespace mozilla;

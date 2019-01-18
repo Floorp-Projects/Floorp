@@ -12,10 +12,10 @@
 
 #include <stdio.h>
 #ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
+#  include <process.h>
+#  define getpid _getpid
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include "util/Text.h"

@@ -30,7 +30,7 @@
 #include "WebGLVertexAttribData.h"
 
 #if defined(MOZ_WIDGET_COCOA)
-#include "nsCocoaFeatures.h"
+#  include "nsCocoaFeatures.h"
 #endif
 
 ////////////////////

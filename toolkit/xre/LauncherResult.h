@@ -51,46 +51,46 @@ using LauncherVoidResult = LauncherResult<Ok>;
 
 #if defined(MOZILLA_INTERNAL_API)
 
-#define LAUNCHER_ERROR_GENERIC() \
-  ::mozilla::Err(::mozilla::WindowsError::CreateGeneric())
+#  define LAUNCHER_ERROR_GENERIC() \
+    ::mozilla::Err(::mozilla::WindowsError::CreateGeneric())
 
-#define LAUNCHER_ERROR_FROM_WIN32(err) \
-  ::mozilla::Err(::mozilla::WindowsError::FromWin32Error(err))
+#  define LAUNCHER_ERROR_FROM_WIN32(err) \
+    ::mozilla::Err(::mozilla::WindowsError::FromWin32Error(err))
 
-#define LAUNCHER_ERROR_FROM_LAST() \
-  ::mozilla::Err(::mozilla::WindowsError::FromLastError())
+#  define LAUNCHER_ERROR_FROM_LAST() \
+    ::mozilla::Err(::mozilla::WindowsError::FromLastError())
 
-#define LAUNCHER_ERROR_FROM_NTSTATUS(ntstatus) \
-  ::mozilla::Err(::mozilla::WindowsError::FromNtStatus(ntstatus))
+#  define LAUNCHER_ERROR_FROM_NTSTATUS(ntstatus) \
+    ::mozilla::Err(::mozilla::WindowsError::FromNtStatus(ntstatus))
 
-#define LAUNCHER_ERROR_FROM_HRESULT(hresult) \
-  ::mozilla::Err(::mozilla::WindowsError::FromHResult(hresult))
+#  define LAUNCHER_ERROR_FROM_HRESULT(hresult) \
+    ::mozilla::Err(::mozilla::WindowsError::FromHResult(hresult))
 
 #else
 
-#define LAUNCHER_ERROR_GENERIC()           \
-  ::mozilla::Err(::mozilla::LauncherError( \
-      __FILE__, __LINE__, ::mozilla::WindowsError::CreateGeneric()))
+#  define LAUNCHER_ERROR_GENERIC()           \
+    ::mozilla::Err(::mozilla::LauncherError( \
+        __FILE__, __LINE__, ::mozilla::WindowsError::CreateGeneric()))
 
-#define LAUNCHER_ERROR_FROM_WIN32(err)     \
-  ::mozilla::Err(::mozilla::LauncherError( \
-      __FILE__, __LINE__, ::mozilla::WindowsError::FromWin32Error(err)))
+#  define LAUNCHER_ERROR_FROM_WIN32(err)     \
+    ::mozilla::Err(::mozilla::LauncherError( \
+        __FILE__, __LINE__, ::mozilla::WindowsError::FromWin32Error(err)))
 
-#define LAUNCHER_ERROR_FROM_LAST()         \
-  ::mozilla::Err(::mozilla::LauncherError( \
-      __FILE__, __LINE__, ::mozilla::WindowsError::FromLastError()))
+#  define LAUNCHER_ERROR_FROM_LAST()         \
+    ::mozilla::Err(::mozilla::LauncherError( \
+        __FILE__, __LINE__, ::mozilla::WindowsError::FromLastError()))
 
-#define LAUNCHER_ERROR_FROM_NTSTATUS(ntstatus) \
-  ::mozilla::Err(::mozilla::LauncherError(     \
-      __FILE__, __LINE__, ::mozilla::WindowsError::FromNtStatus(ntstatus)))
+#  define LAUNCHER_ERROR_FROM_NTSTATUS(ntstatus) \
+    ::mozilla::Err(::mozilla::LauncherError(     \
+        __FILE__, __LINE__, ::mozilla::WindowsError::FromNtStatus(ntstatus)))
 
-#define LAUNCHER_ERROR_FROM_HRESULT(hresult) \
-  ::mozilla::Err(::mozilla::LauncherError(   \
-      __FILE__, __LINE__, ::mozilla::WindowsError::FromHResult(hresult)))
+#  define LAUNCHER_ERROR_FROM_HRESULT(hresult) \
+    ::mozilla::Err(::mozilla::LauncherError(   \
+        __FILE__, __LINE__, ::mozilla::WindowsError::FromHResult(hresult)))
 
 // This macro wraps the supplied WindowsError with a LauncherError
-#define LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(err) \
-  ::mozilla::Err(::mozilla::LauncherError(__FILE__, __LINE__, err))
+#  define LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(err) \
+    ::mozilla::Err(::mozilla::LauncherError(__FILE__, __LINE__, err))
 
 #endif  // defined(MOZILLA_INTERNAL_API)
 

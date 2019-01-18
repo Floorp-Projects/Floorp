@@ -27,7 +27,7 @@
 #include "gfxEnv.h"                          // for gfxEnv
 #include "gfxPrefs.h"                        // for gfxPrefs
 #ifdef XP_MACOSX
-#include "gfxPlatformMac.h"
+#  include "gfxPlatformMac.h"
 #endif
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for frame color util
@@ -56,16 +56,16 @@
 #include "nsRect.h"           // for mozilla::gfx::IntRect
 #include "nsRegion.h"         // for nsIntRegion, etc
 #if defined(MOZ_WIDGET_ANDROID)
-#include <android/log.h>
-#include <android/native_window.h>
-#include "mozilla/jni/Utils.h"
-#include "mozilla/widget/AndroidCompositorWidget.h"
-#include "opengl/CompositorOGL.h"
-#include "GLConsts.h"
-#include "GLContextEGL.h"
-#include "GLContextProvider.h"
-#include "mozilla/Unused.h"
-#include "ScopedGLHelpers.h"
+#  include <android/log.h>
+#  include <android/native_window.h>
+#  include "mozilla/jni/Utils.h"
+#  include "mozilla/widget/AndroidCompositorWidget.h"
+#  include "opengl/CompositorOGL.h"
+#  include "GLConsts.h"
+#  include "GLContextEGL.h"
+#  include "GLContextProvider.h"
+#  include "mozilla/Unused.h"
+#  include "ScopedGLHelpers.h"
 #endif
 #include "GeckoProfiler.h"
 #include "TextRenderer.h"  // for TextRenderer
@@ -73,7 +73,7 @@
 #include "TreeTraversal.h"  // for ForEachNode
 
 #ifdef USE_SKIA
-#include "PaintCounter.h"  // For PaintCounter
+#  include "PaintCounter.h"  // For PaintCounter
 #endif
 
 class gfxContext;

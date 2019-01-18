@@ -6,16 +6,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(JS_SIMULATOR_MIPS32)
-#include "jit/Linker.h"
-#include "jit/MacroAssembler.h"
-#include "jit/mips32/Assembler-mips32.h"
-#include "jit/mips32/MoveEmitter-mips32.h"
-#include "jit/mips32/Simulator-mips32.h"
-#include "jit/MoveResolver.h"
+#  include "jit/Linker.h"
+#  include "jit/MacroAssembler.h"
+#  include "jit/mips32/Assembler-mips32.h"
+#  include "jit/mips32/MoveEmitter-mips32.h"
+#  include "jit/mips32/Simulator-mips32.h"
+#  include "jit/MoveResolver.h"
 
-#include "jsapi-tests/tests.h"
+#  include "jsapi-tests/tests.h"
 
-#include "vm/Runtime.h"
+#  include "vm/Runtime.h"
 
 static const int LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 4 * 1024;
 
@@ -126,8 +126,8 @@ static js::jit::JitCode* linkAndAllocate(JSContext* cx,
   return l.newCode(cx, CodeKind::Ion);
 }
 
-#define TRY(x) \
-  if (!(x)) return false;
+#  define TRY(x) \
+    if (!(x)) return false;
 
 BEGIN_TEST(testJitMoveEmitterCycles_simple) {
   using namespace js;

@@ -3,7 +3,7 @@
 
 #include "js/Symbol.h"
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 
 FRAGMENT(jsval, simple) {

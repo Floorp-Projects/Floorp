@@ -14,20 +14,20 @@
 
 #if defined(XP_WIN)
 
-#include <d3d11.h>
-#include "gfxWindowsPlatform.h"
-#include "../layers/d3d11/CompositorD3D11.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
-#include "mozilla/layers/TextureD3D11.h"
+#  include <d3d11.h>
+#  include "gfxWindowsPlatform.h"
+#  include "../layers/d3d11/CompositorD3D11.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/layers/TextureD3D11.h"
 
 #elif defined(XP_MACOSX)
 
-#include "mozilla/gfx/MacIOSurface.h"
+#  include "mozilla/gfx/MacIOSurface.h"
 
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
-#include "mozilla/layers/CompositorThread.h"
+#  include "mozilla/layers/CompositorThread.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 using namespace mozilla;

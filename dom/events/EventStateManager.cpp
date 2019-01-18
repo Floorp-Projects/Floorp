@@ -85,7 +85,7 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "nsContentAreaDragDrop.h"
 #ifdef MOZ_XUL
-#include "nsTreeBodyFrame.h"
+#  include "nsTreeBodyFrame.h"
 #endif
 #include "nsIController.h"
 #include "nsICommandParams.h"
@@ -101,7 +101,7 @@
 #include "nsIObjectLoadingContent.h"
 
 #ifdef XP_MACOSX
-#import <ApplicationServices/ApplicationServices.h>
+#  import <ApplicationServices/ApplicationServices.h>
 #endif
 
 namespace mozilla {

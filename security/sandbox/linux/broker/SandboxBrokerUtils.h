@@ -17,14 +17,14 @@
 
 #if defined(__NR_stat64)
 typedef struct stat64 statstruct;
-#define statsyscall stat64
-#define lstatsyscall lstat64
+#  define statsyscall stat64
+#  define lstatsyscall lstat64
 #elif defined(__NR_stat)
 typedef struct stat statstruct;
-#define statsyscall stat
-#define lstatsyscall lstat
+#  define statsyscall stat
+#  define lstatsyscall lstat
 #else
-#error Missing stat syscall include.
+#  error Missing stat syscall include.
 #endif
 
 #endif  // mozilla_SandboxBrokerUtils_h

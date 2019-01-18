@@ -10,7 +10,7 @@
 // narrow-character strings.
 
 #ifndef XP_WIN
-#error This file only makes sense on Windows.
+#  error This file only makes sense on Windows.
 #endif
 
 #include "mozilla/Char16.h"
@@ -24,7 +24,7 @@
    startup routines.  Workaround is to implement something like
    it ourselves.  See bug 411826 */
 
-#include <shellapi.h>
+#  include <shellapi.h>
 
 int wmain(int argc, WCHAR **argv);
 

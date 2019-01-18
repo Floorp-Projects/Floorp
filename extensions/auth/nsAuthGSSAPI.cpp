@@ -29,7 +29,7 @@
 #include "nsAuthGSSAPI.h"
 
 #ifdef XP_MACOSX
-#include <Kerberos/Kerberos.h>
+#  include <Kerberos/Kerberos.h>
 #endif
 
 #ifdef XP_MACOSX
@@ -39,10 +39,10 @@ typedef KLStatus (*KLCacheHasValidTickets_type)(KLPrincipal, KLKerberosVersion,
 #endif
 
 #if defined(HAVE_RES_NINIT)
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/nameser.h>
-#include <resolv.h>
+#  include <sys/types.h>
+#  include <netinet/in.h>
+#  include <arpa/nameser.h>
+#  include <resolv.h>
 #endif
 
 using namespace mozilla;
@@ -91,8 +91,8 @@ static PRLibrary *gssLibrary = nullptr;
 
 #ifdef XP_MACOSX
 static PRFuncPtr KLCacheHasValidTicketsPtr;
-#define KLCacheHasValidTickets_ptr \
-  ((KLCacheHasValidTickets_type)*KLCacheHasValidTicketsPtr)
+#  define KLCacheHasValidTickets_ptr \
+    ((KLCacheHasValidTickets_type)*KLCacheHasValidTicketsPtr)
 #endif
 
 static nsresult gssInit() {
@@ -118,11 +118,11 @@ static nsresult gssInit() {
 #endif
   } else {
 #ifdef XP_WIN
-#ifdef _WIN64
+#  ifdef _WIN64
     NS_NAMED_LITERAL_STRING(kLibName, "gssapi64.dll");
-#else
+#  else
     NS_NAMED_LITERAL_STRING(kLibName, "gssapi32.dll");
-#endif
+#  endif
 
     lib = LoadLibraryWithFlags(kLibName.get());
 #elif defined(__OpenBSD__)

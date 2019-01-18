@@ -242,7 +242,7 @@
 
 #if defined(XP_WIN)
 // Undefine LoadImage to prevent naming conflict with Windows.
-#undef LoadImage
+#  undef LoadImage
 #endif
 
 extern "C" int MOZ_XMLTranslateEntity(const char* ptr, const char* end,

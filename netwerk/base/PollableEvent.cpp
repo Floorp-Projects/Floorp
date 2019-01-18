@@ -15,10 +15,10 @@
 #include "prnetdb.h"
 
 #ifdef XP_WIN
-#include "ShutdownLayer.h"
+#  include "ShutdownLayer.h"
 #else
-#include <fcntl.h>
-#define USEPIPE 1
+#  include <fcntl.h>
+#  define USEPIPE 1
 #endif
 
 namespace mozilla {

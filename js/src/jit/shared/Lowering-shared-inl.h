@@ -342,7 +342,7 @@ void LIRGeneratorShared::defineSinCos(LInstructionHelper<2, Ops, Temps>* lir,
   lir->setDef(1, LDefinition(vreg + VREG_INCREMENT, LDefinition::DOUBLE,
                              LFloatReg(xmm1)));
 #else
-#error "Unsupported architecture for SinCos"
+#  error "Unsupported architecture for SinCos"
 #endif
 
   getVirtualRegister();

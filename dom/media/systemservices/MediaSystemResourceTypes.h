@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaSystemResourceTypes_h_)
-#define MediaSystemResourceTypes_h_
+#  define MediaSystemResourceTypes_h_
 
 namespace mozilla {
 

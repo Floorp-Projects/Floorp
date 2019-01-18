@@ -15,7 +15,7 @@
 #include "mozilla/layers/ImageDataSerializer.h"
 
 #ifdef MOZ_WIDGET_GTK
-#include "gfxPlatformGtk.h"
+#  include "gfxPlatformGtk.h"
 #endif
 
 namespace mozilla {

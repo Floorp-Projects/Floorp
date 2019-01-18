@@ -36,7 +36,7 @@
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 #include "vm/BytecodeUtil.h"
 #include "vm/Debugger.h"
@@ -378,7 +378,7 @@ InterpreterFrame* RunState::pushInterpreterFrame(JSContext* cx) {
 // stack frames and stack overflow issues, see bug 1167883. Turn off PGO to
 // avoid this.
 #ifdef _MSC_VER
-#pragma optimize("g", off)
+#  pragma optimize("g", off)
 #endif
 bool js::RunScript(JSContext* cx, RunState& state) {
   if (!CheckRecursionLimit(cx)) {
@@ -421,7 +421,7 @@ bool js::RunScript(JSContext* cx, RunState& state) {
   return Interpret(cx, state);
 }
 #ifdef _MSC_VER
-#pragma optimize("", on)
+#  pragma optimize("", on)
 #endif
 
 STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
@@ -1676,38 +1676,38 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 #if (defined(__GNUC__) || (__IBMC__ >= 700 && defined __IBM_COMPUTED_GOTO) || \
      __SUNPRO_C >= 0x570)
 // Non-standard but faster indirect-goto-based dispatch.
-#define INTERPRETER_LOOP()
-#define CASE(OP) label_##OP:
-#define DEFAULT() \
+#  define INTERPRETER_LOOP()
+#  define CASE(OP) label_##OP:
+#  define DEFAULT() \
   label_default:
-#define DISPATCH_TO(OP) goto* addresses[(OP)]
+#  define DISPATCH_TO(OP) goto* addresses[(OP)]
 
-#define LABEL(X) (&&label_##X)
+#  define LABEL(X) (&&label_##X)
 
   // Use addresses instead of offsets to optimize for runtime speed over
   // load-time relocation overhead.
   static const void* const addresses[EnableInterruptsPseudoOpcode + 1] = {
-#define OPCODE_LABEL(op, ...) LABEL(op),
+#  define OPCODE_LABEL(op, ...) LABEL(op),
       FOR_EACH_OPCODE(OPCODE_LABEL)
-#undef OPCODE_LABEL
-#define TRAILING_LABEL(v)                                                    \
-  ((v) == EnableInterruptsPseudoOpcode ? LABEL(EnableInterruptsPseudoOpcode) \
-                                       : LABEL(default)),
+#  undef OPCODE_LABEL
+#  define TRAILING_LABEL(v)                                                    \
+    ((v) == EnableInterruptsPseudoOpcode ? LABEL(EnableInterruptsPseudoOpcode) \
+                                         : LABEL(default)),
           FOR_EACH_TRAILING_UNUSED_OPCODE(TRAILING_LABEL)
-#undef TRAILING_LABEL
+#  undef TRAILING_LABEL
   };
 #else
 // Portable switch-based dispatch.
-#define INTERPRETER_LOOP() \
-  the_switch:              \
-  switch (switchOp)
-#define CASE(OP) case OP:
-#define DEFAULT() default:
-#define DISPATCH_TO(OP) \
-  JS_BEGIN_MACRO        \
-    switchOp = (OP);    \
-    goto the_switch;    \
-  JS_END_MACRO
+#  define INTERPRETER_LOOP() \
+  the_switch:                \
+    switch (switchOp)
+#  define CASE(OP) case OP:
+#  define DEFAULT() default:
+#  define DISPATCH_TO(OP) \
+    JS_BEGIN_MACRO        \
+      switchOp = (OP);    \
+      goto the_switch;    \
+    JS_END_MACRO
 
   // This variable is effectively a parameter to the_switch.
   jsbytecode switchOp;

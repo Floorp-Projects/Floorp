@@ -111,16 +111,16 @@
 #include <cstring>
 #include <cerrno>
 #ifdef XP_WIN
-#include <io.h>
-#include <windows.h>
+#  include <io.h>
+#  include <windows.h>
 #else
-#include <sys/mman.h>
-#include <unistd.h>
+#  include <sys/mman.h>
+#  include <unistd.h>
 #endif
 #ifdef XP_DARWIN
-#include <libkern/OSAtomic.h>
-#include <mach/mach_init.h>
-#include <mach/vm_map.h>
+#  include <libkern/OSAtomic.h>
+#  include <mach/mach_init.h>
+#  include <mach/vm_map.h>
 #endif
 
 #include "mozilla/Atomics.h"
@@ -168,11 +168,11 @@ using namespace mozilla;
 // to be adjusted if MALLOC_DOUBLE_PURGE is ever enabled on Linux.
 
 #ifdef XP_DARWIN
-#define MALLOC_DOUBLE_PURGE
+#  define MALLOC_DOUBLE_PURGE
 #endif
 
 #ifdef XP_WIN
-#define MALLOC_DECOMMIT
+#  define MALLOC_DECOMMIT
 #endif
 
 // When MALLOC_STATIC_PAGESIZE is defined, the page size is fixed at
@@ -181,19 +181,19 @@ using namespace mozilla;
 // depending on kernel configuration, so they are opted out by default.
 // Debug builds are opted out too, for test coverage.
 #ifndef MOZ_DEBUG
-#if !defined(__ia64__) && !defined(__sparc__) && !defined(__mips__) && \
-    !defined(__aarch64__)
-#define MALLOC_STATIC_PAGESIZE 1
-#endif
+#  if !defined(__ia64__) && !defined(__sparc__) && !defined(__mips__) && \
+      !defined(__aarch64__)
+#    define MALLOC_STATIC_PAGESIZE 1
+#  endif
 #endif
 
 #ifdef XP_WIN
-#define STDERR_FILENO 2
+#  define STDERR_FILENO 2
 
 // Implement getenv without using malloc.
 static char mozillaMallocOptionsBuf[64];
 
-#define getenv xgetenv
+#  define getenv xgetenv
 static char* getenv(const char* name) {
   if (GetEnvironmentVariableA(name, mozillaMallocOptionsBuf,
                               sizeof(mozillaMallocOptionsBuf)) > 0) {
@@ -207,12 +207,12 @@ static char* getenv(const char* name) {
 #ifndef XP_WIN
 // Newer Linux systems support MADV_FREE, but we're not supporting
 // that properly. bug #1406304.
-#if defined(XP_LINUX) && defined(MADV_FREE)
-#undef MADV_FREE
-#endif
-#ifndef MADV_FREE
-#define MADV_FREE MADV_DONTNEED
-#endif
+#  if defined(XP_LINUX) && defined(MADV_FREE)
+#    undef MADV_FREE
+#  endif
+#  ifndef MADV_FREE
+#    define MADV_FREE MADV_DONTNEED
+#  endif
 #endif
 
 // Some tools, such as /dev/dsp wrappers, LD_PRELOAD libraries that
@@ -228,13 +228,13 @@ static char* getenv(const char* name) {
 // calls with 6 arguments.
 #if (defined(XP_LINUX) && !defined(__alpha__)) || \
     (defined(__FreeBSD_kernel__) && defined(__GLIBC__))
-#include <sys/syscall.h>
-#if defined(SYS_mmap) || defined(SYS_mmap2)
+#  include <sys/syscall.h>
+#  if defined(SYS_mmap) || defined(SYS_mmap2)
 static inline void* _mmap(void* addr, size_t length, int prot, int flags,
                           int fd, off_t offset) {
 // S390 only passes one argument to the mmap system call, which is a
 // pointer to a structure containing the arguments.
-#ifdef __s390__
+#    ifdef __s390__
   struct {
     void* addr;
     size_t length;
@@ -244,21 +244,21 @@ static inline void* _mmap(void* addr, size_t length, int prot, int flags,
     off_t offset;
   } args = {addr, length, prot, flags, fd, offset};
   return (void*)syscall(SYS_mmap, &args);
-#else
-#if defined(ANDROID) && defined(__aarch64__) && defined(SYS_mmap2)
+#    else
+#      if defined(ANDROID) && defined(__aarch64__) && defined(SYS_mmap2)
 // Android NDK defines SYS_mmap2 for AArch64 despite it not supporting mmap2.
-#undef SYS_mmap2
-#endif
-#ifdef SYS_mmap2
+#        undef SYS_mmap2
+#      endif
+#      ifdef SYS_mmap2
   return (void*)syscall(SYS_mmap2, addr, length, prot, flags, fd, offset >> 12);
-#else
+#      else
   return (void*)syscall(SYS_mmap, addr, length, prot, flags, fd, offset);
-#endif
-#endif
+#      endif
+#    endif
 }
-#define mmap _mmap
-#define munmap(a, l) syscall(SYS_munmap, a, l)
-#endif
+#    define mmap _mmap
+#    define munmap(a, l) syscall(SYS_munmap, a, l)
+#  endif
 #endif
 
 // ***************************************************************************
@@ -420,38 +420,38 @@ static const size_t kChunkSizeMask = kChunkSize - 1;
 // VM page size. It must divide the runtime CPU page size or the code
 // will abort.
 // Platform specific page size conditions copied from js/public/HeapAPI.h
-#if (defined(SOLARIS) || defined(__FreeBSD__)) && \
-    (defined(__sparc) || defined(__sparcv9) || defined(__ia64))
+#  if (defined(SOLARIS) || defined(__FreeBSD__)) && \
+      (defined(__sparc) || defined(__sparcv9) || defined(__ia64))
 static const size_t gPageSize = 8_KiB;
-#elif defined(__powerpc64__)
+#  elif defined(__powerpc64__)
 static const size_t gPageSize = 64_KiB;
-#else
+#  else
 static const size_t gPageSize = 4_KiB;
-#endif
+#  endif
 
 #else
 static size_t gPageSize;
 #endif
 
 #ifdef MALLOC_STATIC_PAGESIZE
-#define DECLARE_GLOBAL(type, name)
-#define DEFINE_GLOBALS
-#define END_GLOBALS
-#define DEFINE_GLOBAL(type) static const type
-#define GLOBAL_LOG2 LOG2
-#define GLOBAL_ASSERT_HELPER1(x) static_assert(x, #x)
-#define GLOBAL_ASSERT_HELPER2(x, y) static_assert(x, y)
-#define GLOBAL_ASSERT(...)                                               \
-  MACRO_CALL(                                                            \
-      MOZ_PASTE_PREFIX_AND_ARG_COUNT(GLOBAL_ASSERT_HELPER, __VA_ARGS__), \
-      (__VA_ARGS__))
+#  define DECLARE_GLOBAL(type, name)
+#  define DEFINE_GLOBALS
+#  define END_GLOBALS
+#  define DEFINE_GLOBAL(type) static const type
+#  define GLOBAL_LOG2 LOG2
+#  define GLOBAL_ASSERT_HELPER1(x) static_assert(x, #  x)
+#  define GLOBAL_ASSERT_HELPER2(x, y) static_assert(x, y)
+#  define GLOBAL_ASSERT(...)                                               \
+    MACRO_CALL(                                                            \
+        MOZ_PASTE_PREFIX_AND_ARG_COUNT(GLOBAL_ASSERT_HELPER, __VA_ARGS__), \
+        (__VA_ARGS__))
 #else
-#define DECLARE_GLOBAL(type, name) static type name;
-#define DEFINE_GLOBALS static void DefineGlobals() {
-#define END_GLOBALS }
-#define DEFINE_GLOBAL(type)
-#define GLOBAL_LOG2 FloorLog2
-#define GLOBAL_ASSERT MOZ_RELEASE_ASSERT
+#  define DECLARE_GLOBAL(type, name) static type name;
+#  define DEFINE_GLOBALS static void DefineGlobals() {
+#  define END_GLOBALS }
+#  define DEFINE_GLOBAL(type)
+#  define GLOBAL_LOG2 FloorLog2
+#  define GLOBAL_ASSERT MOZ_RELEASE_ASSERT
 #endif
 
 DECLARE_GLOBAL(size_t, gMaxSubPageClass)
@@ -531,7 +531,7 @@ static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
 // ***************************************************************************
 // MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive.
 #if defined(MALLOC_DECOMMIT) && defined(MALLOC_DOUBLE_PURGE)
-#error MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive.
+#  error MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive.
 #endif
 
 static void* base_alloc(size_t aSize);
@@ -795,7 +795,7 @@ struct GetDoublyLinkedListElement<arena_chunk_t> {
 struct arena_run_t {
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   uint32_t mMagic;
-#define ARENA_RUN_MAGIC 0x384adf93
+#  define ARENA_RUN_MAGIC 0x384adf93
 
   // On 64-bit platforms, having the arena_bin_t pointer following
   // the mMagic field means there's padding between both fields, making
@@ -878,7 +878,7 @@ struct arena_bin_t {
 struct arena_t {
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   uint32_t mMagic;
-#define ARENA_MAGIC 0x947d3d24
+#  define ARENA_MAGIC 0x947d3d24
 #endif
 
   arena_id_t mId;
@@ -1188,9 +1188,9 @@ static void huge_dalloc(void* aPtr, arena_t* aArena);
 static bool malloc_init_hard();
 
 #ifdef XP_DARWIN
-#define FORK_HOOK extern "C"
+#  define FORK_HOOK extern "C"
 #else
-#define FORK_HOOK static
+#  define FORK_HOOK static
 #endif
 FORK_HOOK void _malloc_prefork(void);
 FORK_HOOK void _malloc_postfork_parent(void);
@@ -1213,7 +1213,7 @@ static inline bool malloc_init() {
 
 static void _malloc_message(const char* p) {
 #if !defined(XP_WIN)
-#define _write write
+#  define _write write
 #endif
   // Pretend to check _write() errors to suppress gcc warnings about
   // warn_unused_result annotations in some versions of glibc headers.
@@ -1443,8 +1443,8 @@ static void pages_unmap(void* aAddr, size_t aSize) {
 
 static void* pages_map(void* aAddr, size_t aSize) {
   void* ret;
-#if defined(__ia64__) || \
-    (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
+#  if defined(__ia64__) || \
+      (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
   // The JS engine assumes that all allocated pointers have their high 17 bits
   // clear, which ia64's mmap doesn't support directly. However, we can emulate
   // it by passing mmap an "addr" parameter with those bits clear. The mmap will
@@ -1461,9 +1461,9 @@ static void* pages_map(void* aAddr, size_t aSize) {
     aAddr = (void*)0x0000070000000000;
     check_placement = false;
   }
-#endif
+#  endif
 
-#if defined(__sparc__) && defined(__arch64__) && defined(__linux__)
+#  if defined(__sparc__) && defined(__arch64__) && defined(__linux__)
   const uintptr_t start = 0x0000070000000000ULL;
   const uintptr_t end = 0x0000800000000000ULL;
 
@@ -1484,18 +1484,18 @@ static void* pages_map(void* aAddr, size_t aSize) {
     }
   }
   ret = region;
-#else
+#  else
   // We don't use MAP_FIXED here, because it can cause the *replacement*
   // of existing mappings, and we only want to create new mappings.
   ret =
       mmap(aAddr, aSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
   MOZ_ASSERT(ret);
-#endif
+#  endif
   if (ret == MAP_FAILED) {
     ret = nullptr;
   }
-#if defined(__ia64__) || \
-    (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
+#  if defined(__ia64__) || \
+      (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
   // If the allocated memory doesn't have its upper 17 bits clear, consider it
   // as out of memory.
   else if ((long long)ret & 0xffff800000000000) {
@@ -1505,9 +1505,9 @@ static void* pages_map(void* aAddr, size_t aSize) {
   // If the caller requested a specific memory location, verify that's what mmap
   // returned.
   else if (check_placement && ret != aAddr) {
-#else
+#  else
   else if (aAddr && ret != aAddr) {
-#endif
+#  endif
     // We succeeded in mapping memory, but not in the right place.
     pages_unmap(ret, aSize);
     ret = nullptr;
@@ -1516,19 +1516,19 @@ static void* pages_map(void* aAddr, size_t aSize) {
     MozTagAnonymousMemory(ret, aSize, "jemalloc");
   }
 
-#if defined(__ia64__) || \
-    (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
+#  if defined(__ia64__) || \
+      (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
   MOZ_ASSERT(!ret || (!check_placement && ret) ||
              (check_placement && ret == aAddr));
-#else
+#  else
   MOZ_ASSERT(!ret || (!aAddr && ret != aAddr) || (aAddr && ret == aAddr));
-#endif
+#  endif
   return ret;
 }
 #endif
 
 #ifdef XP_DARWIN
-#define VM_COPY_MIN (gPageSize * 32)
+#  define VM_COPY_MIN (gPageSize * 32)
 static inline void pages_copy(void* dest, const void* src, size_t n) {
   MOZ_ASSERT((void*)((uintptr_t)dest & ~gPageSizeMask) == dest);
   MOZ_ASSERT(n >= VM_COPY_MIN);
@@ -1732,12 +1732,12 @@ static bool pages_purge(void* addr, size_t length, bool force_zero) {
   pages_decommit(addr, length);
   return true;
 #else
-#ifndef XP_LINUX
+#  ifndef XP_LINUX
   if (force_zero) {
     memset(addr, 0, length);
   }
-#endif
-#ifdef XP_WIN
+#  endif
+#  ifdef XP_WIN
   // The region starting at addr may have been allocated in multiple calls
   // to VirtualAlloc and recycled, so resetting the entire region in one
   // go may not be valid. However, since we allocate at least a chunk at a
@@ -1750,19 +1750,19 @@ static bool pages_purge(void* addr, size_t length, bool force_zero) {
     pages_size = std::min(length, kChunkSize);
   }
   return force_zero;
-#else
-#ifdef XP_LINUX
-#define JEMALLOC_MADV_PURGE MADV_DONTNEED
-#define JEMALLOC_MADV_ZEROS true
-#else  // FreeBSD and Darwin.
-#define JEMALLOC_MADV_PURGE MADV_FREE
-#define JEMALLOC_MADV_ZEROS force_zero
-#endif
+#  else
+#    ifdef XP_LINUX
+#      define JEMALLOC_MADV_PURGE MADV_DONTNEED
+#      define JEMALLOC_MADV_ZEROS true
+#    else  // FreeBSD and Darwin.
+#      define JEMALLOC_MADV_PURGE MADV_FREE
+#      define JEMALLOC_MADV_ZEROS force_zero
+#    endif
   int err = madvise(addr, length, JEMALLOC_MADV_PURGE);
   return JEMALLOC_MADV_ZEROS && err == 0;
-#undef JEMALLOC_MADV_PURGE
-#undef JEMALLOC_MADV_ZEROS
-#endif
+#    undef JEMALLOC_MADV_PURGE
+#    undef JEMALLOC_MADV_ZEROS
+#  endif
 #endif
 }
 
@@ -1849,9 +1849,9 @@ static void* chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed) {
 // awkward to recycle allocations of varying sizes. Therefore we only allow
 // recycling when the size equals the chunksize, unless deallocation is entirely
 // disabled.
-#define CAN_RECYCLE(size) (size == kChunkSize)
+#  define CAN_RECYCLE(size) (size == kChunkSize)
 #else
-#define CAN_RECYCLE(size) true
+#  define CAN_RECYCLE(size) true
 #endif
 
 // Allocates `size` bytes of system memory aligned for `alignment`.
@@ -2468,9 +2468,9 @@ void arena_t::Purge(bool aAll) {
 #ifndef MALLOC_DECOMMIT
         madvise((void*)(uintptr_t(chunk) + (i << gPageSize2Pow)),
                 (npages << gPageSize2Pow), MADV_FREE);
-#ifdef MALLOC_DOUBLE_PURGE
+#  ifdef MALLOC_DOUBLE_PURGE
         madvised = true;
-#endif
+#  endif
 #endif
         if (mNumDirty <= (dirty_max >> 1)) {
           break;
@@ -4417,28 +4417,28 @@ static
 // the Android linker doesn't handle weak linking with non LD_PRELOADed
 // libraries, but LD_PRELOADing is not very convenient on Android, with
 // the zygote.
-#ifdef XP_DARWIN
-#define MOZ_REPLACE_WEAK __attribute__((weak_import))
-#elif defined(XP_WIN) || defined(ANDROID)
-#define MOZ_DYNAMIC_REPLACE_INIT
-#define replace_init replace_init_decl
-#elif defined(__GNUC__)
-#define MOZ_REPLACE_WEAK __attribute__((weak))
-#endif
+#  ifdef XP_DARWIN
+#    define MOZ_REPLACE_WEAK __attribute__((weak_import))
+#  elif defined(XP_WIN) || defined(ANDROID)
+#    define MOZ_DYNAMIC_REPLACE_INIT
+#    define replace_init replace_init_decl
+#  elif defined(__GNUC__)
+#    define MOZ_REPLACE_WEAK __attribute__((weak))
+#  endif
 
-#include "replace_malloc.h"
+#  include "replace_malloc.h"
 
-#define MALLOC_DECL(name, return_type, ...) MozJemalloc::name,
+#  define MALLOC_DECL(name, return_type, ...) MozJemalloc::name,
 
 static const malloc_table_t gReplaceMallocTableDefault = {
-#include "malloc_decls.h"
+#  include "malloc_decls.h"
 };
 static malloc_table_t gReplaceMallocTables[2] = {
     {
-#include "malloc_decls.h"
+#  include "malloc_decls.h"
     },
     {
-#include "malloc_decls.h"
+#  include "malloc_decls.h"
     },
 };
 unsigned gReplaceMallocIndex = 0;
@@ -4448,13 +4448,13 @@ static Atomic<malloc_table_t const*, mozilla::MemoryOrdering::Relaxed,
               recordreplay::Behavior::DontPreserve>
     gReplaceMallocTable;
 
-#ifdef MOZ_DYNAMIC_REPLACE_INIT
-#undef replace_init
+#  ifdef MOZ_DYNAMIC_REPLACE_INIT
+#    undef replace_init
 typedef decltype(replace_init_decl) replace_init_impl_t;
 static replace_init_impl_t* replace_init = nullptr;
-#endif
+#  endif
 
-#ifdef XP_WIN
+#  ifdef XP_WIN
 typedef HMODULE replace_malloc_handle_t;
 
 static replace_malloc_handle_t replace_malloc_handle() {
@@ -4466,11 +4466,11 @@ static replace_malloc_handle_t replace_malloc_handle() {
   return nullptr;
 }
 
-#define REPLACE_MALLOC_GET_INIT_FUNC(handle) \
-  (replace_init_impl_t*)GetProcAddress(handle, "replace_init")
+#    define REPLACE_MALLOC_GET_INIT_FUNC(handle) \
+      (replace_init_impl_t*)GetProcAddress(handle, "replace_init")
 
-#elif defined(ANDROID)
-#include <dlfcn.h>
+#  elif defined(ANDROID)
+#    include <dlfcn.h>
 
 typedef void* replace_malloc_handle_t;
 
@@ -4482,18 +4482,18 @@ static replace_malloc_handle_t replace_malloc_handle() {
   return nullptr;
 }
 
-#define REPLACE_MALLOC_GET_INIT_FUNC(handle) \
-  (replace_init_impl_t*)dlsym(handle, "replace_init")
+#    define REPLACE_MALLOC_GET_INIT_FUNC(handle) \
+      (replace_init_impl_t*)dlsym(handle, "replace_init")
 
-#endif
+#  endif
 
 static void replace_malloc_init_funcs(malloc_table_t*);
 
-#ifdef MOZ_REPLACE_MALLOC_STATIC
+#  ifdef MOZ_REPLACE_MALLOC_STATIC
 extern "C" void logalloc_init(malloc_table_t*, ReplaceMallocBridge**);
 
 extern "C" void dmd_init(malloc_table_t*, ReplaceMallocBridge**);
-#endif
+#  endif
 
 bool Equals(const malloc_table_t& aTable1, const malloc_table_t& aTable2) {
   return memcmp(&aTable1, &aTable2, sizeof(malloc_table_t)) == 0;
@@ -4505,12 +4505,12 @@ static ReplaceMallocBridge* gReplaceMallocBridge = nullptr;
 static void init() {
   malloc_table_t tempTable = gReplaceMallocTableDefault;
 
-#ifdef MOZ_DYNAMIC_REPLACE_INIT
+#  ifdef MOZ_DYNAMIC_REPLACE_INIT
   replace_malloc_handle_t handle = replace_malloc_handle();
   if (handle) {
     replace_init = REPLACE_MALLOC_GET_INIT_FUNC(handle);
   }
-#endif
+#  endif
 
   // Set this *before* calling replace_init, otherwise if replace_init calls
   // malloc() we'll get an infinite loop.
@@ -4523,16 +4523,16 @@ static void init() {
   if (replace_init) {
     replace_init(&tempTable, &gReplaceMallocBridge);
   }
-#ifdef MOZ_REPLACE_MALLOC_STATIC
+#  ifdef MOZ_REPLACE_MALLOC_STATIC
   if (Equals(tempTable, gReplaceMallocTableDefault)) {
     logalloc_init(&tempTable, &gReplaceMallocBridge);
   }
-#ifdef MOZ_DMD
+#    ifdef MOZ_DMD
   if (Equals(tempTable, gReplaceMallocTableDefault)) {
     dmd_init(&tempTable, &gReplaceMallocBridge);
   }
-#endif
-#endif
+#    endif
+#  endif
   if (!Equals(tempTable, gReplaceMallocTableDefault)) {
     replace_malloc_init_funcs(&tempTable);
     gReplaceMallocIndex = (gReplaceMallocIndex + 1) % 2;
@@ -4572,16 +4572,16 @@ MOZ_JEMALLOC_API void jemalloc_replace_dynamic(
   gReplaceMallocTable = &gReplaceMallocTableDefault;
 }
 
-#define MALLOC_DECL(name, return_type, ...)                               \
-  template <>                                                             \
-  inline return_type ReplaceMalloc::name(                                 \
-      ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) {                           \
-    if (MOZ_UNLIKELY(!gReplaceMallocTable)) {                             \
-      init();                                                             \
-    }                                                                     \
-    return (*gReplaceMallocTable).name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
-  }
-#include "malloc_decls.h"
+#  define MALLOC_DECL(name, return_type, ...)                               \
+    template <>                                                             \
+    inline return_type ReplaceMalloc::name(                                 \
+        ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) {                           \
+      if (MOZ_UNLIKELY(!gReplaceMallocTable)) {                             \
+        init();                                                             \
+      }                                                                     \
+      return (*gReplaceMallocTable).name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
+    }
+#  include "malloc_decls.h"
 
 MOZ_JEMALLOC_API struct ReplaceMallocBridge* get_bridge(void) {
   if (MOZ_UNLIKELY(!gReplaceMallocTable)) {
@@ -4613,17 +4613,17 @@ static void replace_malloc_init_funcs(malloc_table_t* table) {
   if (table->moz_create_arena_with_params ==
           MozJemalloc::moz_create_arena_with_params &&
       table->malloc != MozJemalloc::malloc) {
-#define MALLOC_DECL(name, ...) \
-  table->name = DummyArenaAllocator<ReplaceMalloc>::name;
-#define MALLOC_FUNCS MALLOC_FUNCS_ARENA_BASE
-#include "malloc_decls.h"
+#  define MALLOC_DECL(name, ...) \
+    table->name = DummyArenaAllocator<ReplaceMalloc>::name;
+#  define MALLOC_FUNCS MALLOC_FUNCS_ARENA_BASE
+#  include "malloc_decls.h"
   }
   if (table->moz_arena_malloc == MozJemalloc::moz_arena_malloc &&
       table->malloc != MozJemalloc::malloc) {
-#define MALLOC_DECL(name, ...) \
-  table->name = DummyArenaAllocator<ReplaceMalloc>::name;
-#define MALLOC_FUNCS MALLOC_FUNCS_ARENA_ALLOC
-#include "malloc_decls.h"
+#  define MALLOC_DECL(name, ...) \
+    table->name = DummyArenaAllocator<ReplaceMalloc>::name;
+#  define MALLOC_FUNCS MALLOC_FUNCS_ARENA_ALLOC
+#  include "malloc_decls.h"
   }
 }
 
@@ -4655,7 +4655,7 @@ static void replace_malloc_init_funcs(malloc_table_t* table) {
 // ***************************************************************************
 
 #ifdef HAVE_DLOPEN
-#include <dlfcn.h>
+#  include <dlfcn.h>
 #endif
 
 #if defined(__GLIBC__) && !defined(__UCLIBC__)
@@ -4678,7 +4678,8 @@ MOZ_EXPORT void* (*__memalign_hook)(size_t, size_t) = memalign_impl;
 // XXX On systems that support RTLD_GROUP or DF_1_GROUP, do their
 // implementations permit similar inconsistencies?  Should STV_SINGLETON
 // visibility be used for interposition where available?
-#error "Interposing malloc is unsafe on this system without libc malloc hooks."
+#  error \
+      "Interposing malloc is unsafe on this system without libc malloc hooks."
 #endif
 
 #ifdef XP_WIN

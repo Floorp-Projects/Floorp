@@ -5,23 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaFormatReader_h_)
-#define MediaFormatReader_h_
+#  define MediaFormatReader_h_
 
-#include "mozilla/Atomics.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/StateMirroring.h"
-#include "mozilla/StaticPrefs.h"
-#include "mozilla/TaskQueue.h"
+#  include "mozilla/Atomics.h"
+#  include "mozilla/Maybe.h"
+#  include "mozilla/Mutex.h"
+#  include "mozilla/StateMirroring.h"
+#  include "mozilla/StaticPrefs.h"
+#  include "mozilla/TaskQueue.h"
 
-#include "FrameStatistics.h"
-#include "MediaEventSource.h"
-#include "MediaDataDemuxer.h"
-#include "MediaMetadataManager.h"
-#include "MediaPromiseDefs.h"
-#include "nsAutoPtr.h"
-#include "PDMFactory.h"
-#include "SeekTarget.h"
+#  include "FrameStatistics.h"
+#  include "MediaEventSource.h"
+#  include "MediaDataDemuxer.h"
+#  include "MediaMetadataManager.h"
+#  include "MediaPromiseDefs.h"
+#  include "nsAutoPtr.h"
+#  include "PDMFactory.h"
+#  include "SeekTarget.h"
 
 namespace mozilla {
 

@@ -21,7 +21,7 @@ using namespace mozilla;
 
 static LazyLogModule sThreadPoolLog("nsThreadPool");
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 #define LOG(args) MOZ_LOG(sThreadPoolLog, mozilla::LogLevel::Debug, args)
 

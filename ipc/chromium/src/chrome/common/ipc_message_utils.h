@@ -17,7 +17,7 @@
 #include "base/time.h"
 
 #if defined(OS_POSIX)
-#include "chrome/common/file_descriptor_set_posix.h"
+#  include "chrome/common/file_descriptor_set_posix.h"
 #endif
 #include "chrome/common/ipc_message.h"
 

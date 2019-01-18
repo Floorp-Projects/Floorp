@@ -62,14 +62,14 @@
 #include "mozilla/Unused.h"
 
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/Likely.h"
+#  include "GeckoTaskTracer.h"
+#  include "mozilla/dom/Element.h"
+#  include "mozilla/Likely.h"
 using namespace mozilla::tasktracer;
 #endif
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"
+#  include "ProfilerMarkerPayload.h"
 #endif
 
 namespace mozilla {

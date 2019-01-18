@@ -12,9 +12,9 @@
 #include "SQLiteBridge.h"
 
 #ifdef DEBUG
-#define LOG(x...) __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", x)
+#  define LOG(x...) __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", x)
 #else
-#define LOG(x...)
+#  define LOG(x...)
 #endif
 
 #define SQLITE_WRAPPER_INT(name) name##_t f_##name;

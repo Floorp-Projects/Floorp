@@ -9,18 +9,18 @@
 
 #ifdef MOZILLA_INTERNAL_API
 
-#include "nsDOMNavigationTiming.h"
-#include "nsIDocShell.h"
-#include "nsIWebNavigation.h"
+#  include "nsDOMNavigationTiming.h"
+#  include "nsIDocShell.h"
+#  include "nsIWebNavigation.h"
 
 /**
  * Load flag for error pages. This uses one of the reserved flag
  * values from nsIWebNavigation.
  */
-#define LOAD_FLAGS_ERROR_PAGE 0x0001U
+#  define LOAD_FLAGS_ERROR_PAGE 0x0001U
 
-#define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
-#define LOAD_TYPE_HAS_FLAGS(type, flags) ((type) & ((flags) << 16))
+#  define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
+#  define LOAD_TYPE_HAS_FLAGS(type, flags) ((type) & ((flags) << 16))
 
 /**
  * These are flags that confuse ConvertLoadTypeToDocShellLoadInfo and should
@@ -28,8 +28,8 @@
  * above 0xffff (e.g. LOAD_FLAGS_BYPASS_CLASSIFIER), since MAKE_LOAD_TYPE would
  * just shift them out anyway.
  */
-#define EXTRA_LOAD_FLAGS \
-  (LOAD_FLAGS_FIRST_LOAD | LOAD_FLAGS_ALLOW_POPUPS | 0xffff0000)
+#  define EXTRA_LOAD_FLAGS \
+    (LOAD_FLAGS_FIRST_LOAD | LOAD_FLAGS_ALLOW_POPUPS | 0xffff0000)
 
 /* load types are legal combinations of load commands and flags
  *

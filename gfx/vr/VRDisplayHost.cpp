@@ -15,24 +15,24 @@
 
 #if defined(XP_WIN)
 
-#include <d3d11.h>
-#include "gfxWindowsPlatform.h"
-#include "../layers/d3d11/CompositorD3D11.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
-#include "mozilla/layers/TextureD3D11.h"
+#  include <d3d11.h>
+#  include "gfxWindowsPlatform.h"
+#  include "../layers/d3d11/CompositorD3D11.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/layers/TextureD3D11.h"
 
 #elif defined(XP_MACOSX)
 
-#include "mozilla/gfx/MacIOSurface.h"
+#  include "mozilla/gfx/MacIOSurface.h"
 
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
-#include "mozilla/layers/CompositorThread.h"
+#  include "mozilla/layers/CompositorThread.h"
 // Max frame duration on Android before the watchdog submits a new one.
 // Probably we can get rid of this when we enforce that SubmitFrame can only be
 // called in a VRDisplay loop.
-#define ANDROID_MAX_FRAME_DURATION 4000
+#  define ANDROID_MAX_FRAME_DURATION 4000
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 using namespace mozilla;

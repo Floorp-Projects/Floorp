@@ -13,12 +13,12 @@
 #include "nsServiceManagerUtils.h"
 #include "nsSocketTransportService2.h"
 #ifdef DEBUG
-#include "MainThreadUtils.h"
+#  include "MainThreadUtils.h"
 #endif
 
 #ifdef XP_WIN
-#include <windows.h>
-#include <mmsystem.h>
+#  include <windows.h>
+#  include <mmsystem.h>
 #endif
 
 namespace mozilla {

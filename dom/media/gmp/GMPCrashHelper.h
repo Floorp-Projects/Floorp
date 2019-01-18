@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(GMPCrashHelper_h_)
-#define GMPCrashHelper_h_
+#  define GMPCrashHelper_h_
 
-#include "MainThreadUtils.h"
-#include "nsISupportsImpl.h"
-#include "nsPIDOMWindow.h"
+#  include "MainThreadUtils.h"
+#  include "nsISupportsImpl.h"
+#  include "nsPIDOMWindow.h"
 
 namespace mozilla {
 

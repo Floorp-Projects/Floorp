@@ -8041,7 +8041,7 @@ bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 #ifdef DEBUG_HIT
-#include <time.h>
+#  include <time.h>
 #endif
 
 /* HitTest does some fun stuff with matrix transforms to obtain the answer. */

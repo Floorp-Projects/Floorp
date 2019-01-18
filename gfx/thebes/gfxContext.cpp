@@ -26,8 +26,8 @@
 #include "TextDrawTarget.h"
 
 #if XP_WIN
-#include "gfxWindowsPlatform.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
+#  include "gfxWindowsPlatform.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 using namespace mozilla;
@@ -36,9 +36,9 @@ using namespace mozilla::gfx;
 UserDataKey gfxContext::sDontUseAsSourceKey;
 
 #ifdef DEBUG
-#define CURRENTSTATE_CHANGED() CurrentState().mContentChanged = true;
+#  define CURRENTSTATE_CHANGED() CurrentState().mContentChanged = true;
 #else
-#define CURRENTSTATE_CHANGED()
+#  define CURRENTSTATE_CHANGED()
 #endif
 
 PatternFromState::operator mozilla::gfx::Pattern&() {

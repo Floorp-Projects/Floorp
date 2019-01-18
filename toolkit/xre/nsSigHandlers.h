@@ -16,7 +16,7 @@
  * 4 -> UM  Underflow
  * 5 -> PM  Precision
  */
-#define FPU_EXCEPTION_MASK 0x3f
+#  define FPU_EXCEPTION_MASK 0x3f
 
 /*
  * x86 FPU Status Word:
@@ -25,7 +25,7 @@
  * 6     -> SF   Stack Fault
  * 7     -> ES   Error Summary Status
  */
-#define FPU_STATUS_FLAGS 0xff
+#  define FPU_STATUS_FLAGS 0xff
 
 /*
  * MXCSR Control and Status Register:
@@ -34,7 +34,7 @@
  * 6     -> DAZ  Denormals Are Zero
  * 7..12 ->      Exception mask (see x86 FPU Control Word)
  */
-#define SSE_STATUS_FLAGS FPU_EXCEPTION_MASK
-#define SSE_EXCEPTION_MASK (FPU_EXCEPTION_MASK << 7)
+#  define SSE_STATUS_FLAGS FPU_EXCEPTION_MASK
+#  define SSE_EXCEPTION_MASK (FPU_EXCEPTION_MASK << 7)
 
 #endif

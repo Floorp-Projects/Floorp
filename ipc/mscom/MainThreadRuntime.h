@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #if defined(ACCESSIBILITY)
-#include "mozilla/mscom/ActivationContext.h"
+#  include "mozilla/mscom/ActivationContext.h"
 #endif  // defined(ACCESSIBILITY)
 #include "mozilla/mscom/COMApartmentRegion.h"
 #include "mozilla/mscom/MainThreadClientInfo.h"

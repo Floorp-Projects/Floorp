@@ -20,10 +20,10 @@
 #include "nsIGlobalObject.h"
 #include "nsIXPConnect.h"
 #ifdef MOZ_GECKO_PROFILER
-#include "GeckoProfilerReporter.h"
+#  include "GeckoProfilerReporter.h"
 #endif
 #if defined(XP_UNIX) || defined(MOZ_DMD)
-#include "nsMemoryInfoDumper.h"
+#  include "nsMemoryInfoDumper.h"
 #endif
 #include "nsNetCID.h"
 #include "nsThread.h"
@@ -42,31 +42,31 @@
 #include "mozilla/ipc/FileDescriptorUtils.h"
 
 #ifdef XP_WIN
-#include "mozilla/MemoryInfo.h"
+#  include "mozilla/MemoryInfo.h"
 
-#include <process.h>
-#ifndef getpid
-#define getpid _getpid
-#endif
+#  include <process.h>
+#  ifndef getpid
+#    define getpid _getpid
+#  endif
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 using namespace mozilla;
 using namespace dom;
 
 #if defined(MOZ_MEMORY)
-#define HAVE_JEMALLOC_STATS 1
-#include "mozmemory.h"
+#  define HAVE_JEMALLOC_STATS 1
+#  include "mozmemory.h"
 #endif  // MOZ_MEMORY
 
 #if defined(XP_LINUX)
 
-#include "mozilla/MemoryMapping.h"
+#  include "mozilla/MemoryMapping.h"
 
-#include <malloc.h>
-#include <string.h>
-#include <stdlib.h>
+#  include <malloc.h>
+#  include <string.h>
+#  include <stdlib.h>
 
 static MOZ_MUST_USE nsresult GetProcSelfStatmField(int aField, int64_t* aN) {
   // There are more than two fields, but we're only interested in the first
@@ -105,7 +105,7 @@ static MOZ_MUST_USE nsresult GetProcSelfSmapsPrivate(int64_t* aN) {
   return NS_OK;
 }
 
-#define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
+#  define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
 static MOZ_MUST_USE nsresult VsizeDistinguishedAmount(int64_t* aN) {
   return GetProcSelfStatmField(0, aN);
 }
@@ -118,13 +118,13 @@ static MOZ_MUST_USE nsresult ResidentFastDistinguishedAmount(int64_t* aN) {
   return ResidentDistinguishedAmount(aN);
 }
 
-#define HAVE_RESIDENT_UNIQUE_REPORTER 1
+#  define HAVE_RESIDENT_UNIQUE_REPORTER 1
 static MOZ_MUST_USE nsresult ResidentUniqueDistinguishedAmount(int64_t* aN) {
   return GetProcSelfSmapsPrivate(aN);
 }
 
-#ifdef HAVE_MALLINFO
-#define HAVE_SYSTEM_HEAP_REPORTER 1
+#  ifdef HAVE_MALLINFO
+#    define HAVE_SYSTEM_HEAP_REPORTER 1
 static MOZ_MUST_USE nsresult SystemHeapSize(int64_t* aSizeOut) {
   struct mallinfo info = mallinfo();
 
@@ -141,59 +141,59 @@ static MOZ_MUST_USE nsresult SystemHeapSize(int64_t* aSizeOut) {
   *aSizeOut = size_t(info.hblkhd) + size_t(info.uordblks);
   return NS_OK;
 }
-#endif
+#  endif
 
 #elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || \
     defined(__OpenBSD__) || defined(__FreeBSD_kernel__)
 
-#include <sys/param.h>
-#include <sys/sysctl.h>
-#if defined(__DragonFly__) || defined(__FreeBSD__) || \
-    defined(__FreeBSD_kernel__)
-#include <sys/user.h>
-#endif
+#  include <sys/param.h>
+#  include <sys/sysctl.h>
+#  if defined(__DragonFly__) || defined(__FreeBSD__) || \
+      defined(__FreeBSD_kernel__)
+#    include <sys/user.h>
+#  endif
 
-#include <unistd.h>
+#  include <unistd.h>
 
-#if defined(__NetBSD__)
-#undef KERN_PROC
-#define KERN_PROC KERN_PROC2
-#define KINFO_PROC struct kinfo_proc2
-#else
-#define KINFO_PROC struct kinfo_proc
-#endif
+#  if defined(__NetBSD__)
+#    undef KERN_PROC
+#    define KERN_PROC KERN_PROC2
+#    define KINFO_PROC struct kinfo_proc2
+#  else
+#    define KINFO_PROC struct kinfo_proc
+#  endif
 
-#if defined(__DragonFly__)
-#define KP_SIZE(kp) (kp.kp_vm_map_size)
-#define KP_RSS(kp) (kp.kp_vm_rssize * getpagesize())
-#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-#define KP_SIZE(kp) (kp.ki_size)
-#define KP_RSS(kp) (kp.ki_rssize * getpagesize())
-#elif defined(__NetBSD__)
-#define KP_SIZE(kp) (kp.p_vm_msize * getpagesize())
-#define KP_RSS(kp) (kp.p_vm_rssize * getpagesize())
-#elif defined(__OpenBSD__)
-#define KP_SIZE(kp) \
-  ((kp.p_vm_dsize + kp.p_vm_ssize + kp.p_vm_tsize) * getpagesize())
-#define KP_RSS(kp) (kp.p_vm_rssize * getpagesize())
-#endif
+#  if defined(__DragonFly__)
+#    define KP_SIZE(kp) (kp.kp_vm_map_size)
+#    define KP_RSS(kp) (kp.kp_vm_rssize * getpagesize())
+#  elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+#    define KP_SIZE(kp) (kp.ki_size)
+#    define KP_RSS(kp) (kp.ki_rssize * getpagesize())
+#  elif defined(__NetBSD__)
+#    define KP_SIZE(kp) (kp.p_vm_msize * getpagesize())
+#    define KP_RSS(kp) (kp.p_vm_rssize * getpagesize())
+#  elif defined(__OpenBSD__)
+#    define KP_SIZE(kp) \
+      ((kp.p_vm_dsize + kp.p_vm_ssize + kp.p_vm_tsize) * getpagesize())
+#    define KP_RSS(kp) (kp.p_vm_rssize * getpagesize())
+#  endif
 
 static MOZ_MUST_USE nsresult GetKinfoProcSelf(KINFO_PROC* aProc) {
-#if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
+#  if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
   static LazyLogModule sPledgeLog("SandboxPledge");
   MOZ_LOG(sPledgeLog, LogLevel::Debug,
           ("%s called when pledged, returning NS_ERROR_FAILURE\n", __func__));
   return NS_ERROR_FAILURE;
-#endif
+#  endif
   int mib[] = {
     CTL_KERN,
     KERN_PROC,
     KERN_PROC_PID,
     getpid(),
-#if defined(__NetBSD__) || defined(__OpenBSD__)
+#  if defined(__NetBSD__) || defined(__OpenBSD__)
     sizeof(KINFO_PROC),
     1,
-#endif
+#  endif
   };
   u_int miblen = sizeof(mib) / sizeof(mib[0]);
   size_t size = sizeof(KINFO_PROC);
@@ -203,7 +203,7 @@ static MOZ_MUST_USE nsresult GetKinfoProcSelf(KINFO_PROC* aProc) {
   return NS_OK;
 }
 
-#define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
+#  define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
 static MOZ_MUST_USE nsresult VsizeDistinguishedAmount(int64_t* aN) {
   KINFO_PROC proc;
   nsresult rv = GetKinfoProcSelf(&proc);
@@ -226,9 +226,9 @@ static MOZ_MUST_USE nsresult ResidentFastDistinguishedAmount(int64_t* aN) {
   return ResidentDistinguishedAmount(aN);
 }
 
-#ifdef __FreeBSD__
-#include <libutil.h>
-#include <algorithm>
+#  ifdef __FreeBSD__
+#    include <libutil.h>
+#    include <algorithm>
 
 static MOZ_MUST_USE nsresult GetKinfoVmentrySelf(int64_t* aPrss,
                                                  uint64_t* aMaxreg) {
@@ -259,7 +259,7 @@ static MOZ_MUST_USE nsresult GetKinfoVmentrySelf(int64_t* aPrss,
   return NS_OK;
 }
 
-#define HAVE_PRIVATE_REPORTER 1
+#    define HAVE_PRIVATE_REPORTER 1
 static MOZ_MUST_USE nsresult PrivateDistinguishedAmount(int64_t* aN) {
   int64_t priv;
   nsresult rv = GetKinfoVmentrySelf(&priv, nullptr);
@@ -268,7 +268,7 @@ static MOZ_MUST_USE nsresult PrivateDistinguishedAmount(int64_t* aN) {
   return NS_OK;
 }
 
-#define HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER 1
+#    define HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER 1
 static MOZ_MUST_USE nsresult
 VsizeMaxContiguousDistinguishedAmount(int64_t* aN) {
   uint64_t biggestRegion;
@@ -278,13 +278,13 @@ VsizeMaxContiguousDistinguishedAmount(int64_t* aN) {
   }
   return NS_OK;
 }
-#endif  // FreeBSD
+#  endif  // FreeBSD
 
 #elif defined(SOLARIS)
 
-#include <procfs.h>
-#include <fcntl.h>
-#include <unistd.h>
+#  include <procfs.h>
+#  include <fcntl.h>
+#  include <unistd.h>
 
 static void XMappingIter(int64_t& aVsize, int64_t& aResident,
                          int64_t& aShared) {
@@ -332,7 +332,7 @@ static void XMappingIter(int64_t& aVsize, int64_t& aResident,
   }
 }
 
-#define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
+#  define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
 static MOZ_MUST_USE nsresult VsizeDistinguishedAmount(int64_t* aN) {
   int64_t vsize, resident, shared;
   XMappingIter(vsize, resident, shared);
@@ -357,7 +357,7 @@ static MOZ_MUST_USE nsresult ResidentFastDistinguishedAmount(int64_t* aN) {
   return ResidentDistinguishedAmount(aN);
 }
 
-#define HAVE_RESIDENT_UNIQUE_REPORTER 1
+#  define HAVE_RESIDENT_UNIQUE_REPORTER 1
 static MOZ_MUST_USE nsresult ResidentUniqueDistinguishedAmount(int64_t* aN) {
   int64_t vsize, resident, shared;
   XMappingIter(vsize, resident, shared);
@@ -370,11 +370,11 @@ static MOZ_MUST_USE nsresult ResidentUniqueDistinguishedAmount(int64_t* aN) {
 
 #elif defined(XP_MACOSX)
 
-#include <mach/mach_init.h>
-#include <mach/mach_vm.h>
-#include <mach/shared_region.h>
-#include <mach/task.h>
-#include <sys/sysctl.h>
+#  include <mach/mach_init.h>
+#  include <mach/mach_vm.h>
+#  include <mach/shared_region.h>
+#  include <mach/task.h>
+#  include <sys/sysctl.h>
 
 static MOZ_MUST_USE bool GetTaskBasicInfo(struct task_basic_info* aTi) {
   mach_msg_type_number_t count = TASK_BASIC_INFO_COUNT;
@@ -386,7 +386,7 @@ static MOZ_MUST_USE bool GetTaskBasicInfo(struct task_basic_info* aTi) {
 // The VSIZE figure on Mac includes huge amounts of shared memory and is always
 // absurdly high, eg. 2GB+ even at start-up.  But both 'top' and 'ps' report
 // it, so we might as well too.
-#define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
+#  define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
 static MOZ_MUST_USE nsresult VsizeDistinguishedAmount(int64_t* aN) {
   task_basic_info ti;
   if (!GetTaskBasicInfo(&ti)) {
@@ -405,12 +405,12 @@ static MOZ_MUST_USE nsresult VsizeDistinguishedAmount(int64_t* aN) {
 // so we provide the option to get the RSS without purging first.
 static MOZ_MUST_USE nsresult ResidentDistinguishedAmountHelper(int64_t* aN,
                                                                bool aDoPurge) {
-#ifdef HAVE_JEMALLOC_STATS
+#  ifdef HAVE_JEMALLOC_STATS
   if (aDoPurge) {
     Telemetry::AutoTimer<Telemetry::MEMORY_FREE_PURGED_PAGES_MS> timer;
     jemalloc_purge_freed_pages();
   }
-#endif
+#  endif
 
   task_basic_info ti;
   if (!GetTaskBasicInfo(&ti)) {
@@ -428,7 +428,7 @@ static MOZ_MUST_USE nsresult ResidentDistinguishedAmount(int64_t* aN) {
   return ResidentDistinguishedAmountHelper(aN, /* doPurge = */ true);
 }
 
-#define HAVE_RESIDENT_UNIQUE_REPORTER 1
+#  define HAVE_RESIDENT_UNIQUE_REPORTER 1
 
 static bool InSharedRegion(mach_vm_address_t aAddr, cpu_type_t aType) {
   mach_vm_address_t base;
@@ -520,11 +520,11 @@ static MOZ_MUST_USE nsresult ResidentUniqueDistinguishedAmount(int64_t* aN) {
 
 #elif defined(XP_WIN)
 
-#include <windows.h>
-#include <psapi.h>
-#include <algorithm>
+#  include <windows.h>
+#  include <psapi.h>
+#  include <algorithm>
 
-#define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
+#  define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
 static MOZ_MUST_USE nsresult VsizeDistinguishedAmount(int64_t* aN) {
   MEMORYSTATUSEX s;
   s.dwLength = sizeof(s);
@@ -553,7 +553,7 @@ static MOZ_MUST_USE nsresult ResidentFastDistinguishedAmount(int64_t* aN) {
   return ResidentDistinguishedAmount(aN);
 }
 
-#define HAVE_RESIDENT_UNIQUE_REPORTER 1
+#  define HAVE_RESIDENT_UNIQUE_REPORTER 1
 
 static MOZ_MUST_USE nsresult ResidentUniqueDistinguishedAmount(int64_t* aN) {
   // Determine how many entries we need.
@@ -600,7 +600,7 @@ static MOZ_MUST_USE nsresult ResidentUniqueDistinguishedAmount(int64_t* aN) {
   return NS_OK;
 }
 
-#define HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER 1
+#  define HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER 1
 static MOZ_MUST_USE nsresult
 VsizeMaxContiguousDistinguishedAmount(int64_t* aN) {
   SIZE_T biggestRegion = 0;
@@ -628,7 +628,7 @@ VsizeMaxContiguousDistinguishedAmount(int64_t* aN) {
   return NS_OK;
 }
 
-#define HAVE_PRIVATE_REPORTER 1
+#  define HAVE_PRIVATE_REPORTER 1
 static MOZ_MUST_USE nsresult PrivateDistinguishedAmount(int64_t* aN) {
   PROCESS_MEMORY_COUNTERS_EX pmcex;
   pmcex.cb = sizeof(PROCESS_MEMORY_COUNTERS_EX);
@@ -642,7 +642,7 @@ static MOZ_MUST_USE nsresult PrivateDistinguishedAmount(int64_t* aN) {
   return NS_OK;
 }
 
-#define HAVE_SYSTEM_HEAP_REPORTER 1
+#  define HAVE_SYSTEM_HEAP_REPORTER 1
 // Windows can have multiple separate heaps. During testing there were multiple
 // heaps present but the non-default ones had sizes no more than a few 10s of
 // KiBs. So we combine their sizes into a single measurement.
@@ -1075,9 +1075,9 @@ NS_IMPL_ISUPPORTS(SystemHeapReporter, nsIMemoryReporter)
 
 #ifdef XP_UNIX
 
-#include <sys/resource.h>
+#  include <sys/resource.h>
 
-#define HAVE_RESIDENT_PEAK_REPORTER 1
+#  define HAVE_RESIDENT_PEAK_REPORTER 1
 
 static MOZ_MUST_USE nsresult ResidentPeakDistinguishedAmount(int64_t* aN) {
   struct rusage usage;
@@ -1087,13 +1087,13 @@ static MOZ_MUST_USE nsresult ResidentPeakDistinguishedAmount(int64_t* aN) {
     // - Solaris: pages? But some sources it actually always returns 0, so
     //   check for that
     // - Linux, {Net/Open/Free}BSD, DragonFly: KiB
-#ifdef XP_MACOSX
+#  ifdef XP_MACOSX
     *aN = usage.ru_maxrss;
-#elif defined(SOLARIS)
+#  elif defined(SOLARIS)
     *aN = usage.ru_maxrss * getpagesize();
-#else
+#  else
     *aN = usage.ru_maxrss * 1024;
-#endif
+#  endif
     if (*aN > 0) {
       return NS_OK;
     }
@@ -1120,7 +1120,7 @@ class ResidentPeakReporter final : public nsIMemoryReporter {
 };
 NS_IMPL_ISUPPORTS(ResidentPeakReporter, nsIMemoryReporter)
 
-#define HAVE_PAGE_FAULT_REPORTERS 1
+#  define HAVE_PAGE_FAULT_REPORTERS 1
 
 class PageFaultsSoftReporter final : public nsIMemoryReporter {
   ~PageFaultsSoftReporter() {}
@@ -1402,10 +1402,10 @@ class ThreadsReporter final : public nsIMemoryReporter {
       // special cases don't cover. And if there are, we want to know about it.
       // So assert that total size of the memory region we're reporting actually
       // matches the allocated size of the thread stack.
-#ifndef ANDROID
+#  ifndef ANDROID
       MOZ_ASSERT(mappings[idx].Size() == thread->StackSize(),
                  "Mapping region size doesn't match stack allocation size");
-#endif
+#  endif
 #elif defined(XP_WIN)
       auto memInfo = MemoryInfo::Get(thread->StackBase(), thread->StackSize());
       size_t privateSize = memInfo.Committed();
@@ -1458,11 +1458,11 @@ class ThreadsReporter final : public nsIMemoryReporter {
     // On Linux, kernel stacks are usually 8K. However, on x86, they are
     // allocated virtually, and start out at 4K. They may grow to 8K, but we
     // have no way of knowing which ones do, so all we can do is guess.
-#if defined(__x86_64__) || defined(__i386__)
+#  if defined(__x86_64__) || defined(__i386__)
     constexpr size_t kKernelSize = 4 * 1024;
-#else
+#  else
     constexpr size_t kKernelSize = 8 * 1024;
-#endif
+#  endif
 #elif defined(XP_MACOSX)
     // On Darwin, kernel stacks are 16K:
     //
@@ -1704,10 +1704,10 @@ nsMemoryReporterManager::CollectReports(nsIHandleReportCallback* aHandleReport,
 }
 
 #ifdef DEBUG_CHILD_PROCESS_MEMORY_REPORTING
-#define MEMORY_REPORTING_LOG(format, ...) \
-  printf_stderr("++++ MEMORY REPORTING: " format, ##__VA_ARGS__);
+#  define MEMORY_REPORTING_LOG(format, ...) \
+    printf_stderr("++++ MEMORY REPORTING: " format, ##__VA_ARGS__);
 #else
-#define MEMORY_REPORTING_LOG(...)
+#  define MEMORY_REPORTING_LOG(...)
 #endif
 
 NS_IMETHODIMP

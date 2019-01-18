@@ -10,7 +10,7 @@
 #include "BroadcastChannelChild.h"
 #include "FileDescriptorSetChild.h"
 #ifdef MOZ_WEBRTC
-#include "CamerasChild.h"
+#  include "CamerasChild.h"
 #endif
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/Assertions.h"

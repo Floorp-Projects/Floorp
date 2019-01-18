@@ -9,19 +9,19 @@
 #include "DirectoryProvider.h"
 
 #if defined(XP_WIN)
-#include "nsWindowsShellService.h"
+#  include "nsWindowsShellService.h"
 #elif defined(XP_MACOSX)
-#include "nsMacShellService.h"
+#  include "nsMacShellService.h"
 #elif defined(MOZ_WIDGET_GTK)
-#include "nsGNOMEShellService.h"
+#  include "nsGNOMEShellService.h"
 #endif
 
 #if defined(MOZ_WIDGET_COCOA)
-#include "nsMacAttribution.h"
+#  include "nsMacAttribution.h"
 #endif
 
 #if defined(XP_WIN)
-#include "nsIEHistoryEnumerator.h"
+#  include "nsIEHistoryEnumerator.h"
 #endif
 
 #include "AboutRedirector.h"

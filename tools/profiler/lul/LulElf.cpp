@@ -69,12 +69,12 @@
 
 #if defined(GP_PLAT_arm_android) && !defined(SHT_ARM_EXIDX)
 // bionic and older glibsc don't define it
-#define SHT_ARM_EXIDX (SHT_LOPROC + 1)
+#  define SHT_ARM_EXIDX (SHT_LOPROC + 1)
 #endif
 
 // Old Linux header doesn't define EM_AARCH64
 #ifndef EM_AARCH64
-#define EM_AARCH64 183
+#  define EM_AARCH64 183
 #endif
 
 // This namespace contains helper functions.

@@ -13,7 +13,7 @@
 #include "nsTArray.h"
 
 #ifdef XP_WIN
-#undef PostMessage
+#  undef PostMessage
 #endif
 
 class nsIGlobalObject;

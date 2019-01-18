@@ -640,7 +640,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 #ifdef MOZ_XUL
   /* If FCDATA_IS_POPUP is set, the new frame is a XUL popup frame.  These need
      some really weird special handling.  */
-#define FCDATA_IS_POPUP 0x100
+#  define FCDATA_IS_POPUP 0x100
 #endif /* MOZ_XUL */
   /* If FCDATA_SKIP_ABSPOS_PUSH is set, don't push this frame as an
      absolute containing block, no matter what its style says. */
@@ -749,11 +749,11 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   };
 
 #ifdef DEBUG
-#define FCDATA_FOR_DISPLAY(_display, _fcdata) \
-  { _display, _fcdata }
+#  define FCDATA_FOR_DISPLAY(_display, _fcdata) \
+    { _display, _fcdata }
 #else
-#define FCDATA_FOR_DISPLAY(_display, _fcdata) \
-  { _fcdata }
+#  define FCDATA_FOR_DISPLAY(_display, _fcdata) \
+    { _fcdata }
 #endif
 
   /* Structure that has a FrameConstructionData and style pseudo-type
@@ -1527,11 +1527,11 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                                        ComputedStyle&);
   static const FrameConstructionData* FindXULDescriptionData(const Element&,
                                                              ComputedStyle&);
-#ifdef XP_MACOSX
+#  ifdef XP_MACOSX
   static const FrameConstructionData* FindXULMenubarData(const Element&,
                                                          ComputedStyle&);
-#endif /* XP_MACOSX */
-#endif /* MOZ_XUL */
+#  endif /* XP_MACOSX */
+#endif   /* MOZ_XUL */
 
   // Function to find FrameConstructionData for an element using one of the XUL
   // display types.  Will return null if the style doesn't have a XUL display

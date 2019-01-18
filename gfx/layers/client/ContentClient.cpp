@@ -29,10 +29,10 @@
 #include "nsIWidget.h"        // for nsIWidget
 #include "nsLayoutUtils.h"
 #ifdef XP_WIN
-#include "gfxWindowsPlatform.h"
+#  include "gfxWindowsPlatform.h"
 #endif
 #ifdef MOZ_WIDGET_GTK
-#include "gfxPlatformGtk.h"
+#  include "gfxPlatformGtk.h"
 #endif
 #include "ReadbackLayer.h"
 

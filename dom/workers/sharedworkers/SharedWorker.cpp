@@ -29,7 +29,7 @@
 #include "nsPIDOMWindow.h"
 
 #ifdef XP_WIN
-#undef PostMessage
+#  undef PostMessage
 #endif
 
 using namespace mozilla;

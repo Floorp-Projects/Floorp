@@ -188,8 +188,8 @@ template <typename T>
 }
 
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wattributes"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wattributes"
 #endif  // JS_BROKEN_GCC_ATTRIBUTE_WARNING
 
 template struct JS_PUBLIC_API MovableCellHasher<JSObject*>;
@@ -201,7 +201,7 @@ template struct JS_PUBLIC_API MovableCellHasher<JSScript*>;
 template struct JS_PUBLIC_API MovableCellHasher<LazyScript*>;
 
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif  // JS_BROKEN_GCC_ATTRIBUTE_WARNING
 
 }  // namespace js

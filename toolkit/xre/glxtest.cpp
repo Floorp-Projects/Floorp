@@ -28,7 +28,7 @@
 #include "stdint.h"
 
 #ifdef __SUNPRO_CC
-#include <stdio.h>
+#  include <stdio.h>
 #endif
 
 #include "X11/Xlib.h"
@@ -117,9 +117,9 @@ void glxtest() {
 
     ///// Open libGL and load needed symbols /////
 #ifdef __OpenBSD__
-#define LIBGL_FILENAME "libGL.so"
+#  define LIBGL_FILENAME "libGL.so"
 #else
-#define LIBGL_FILENAME "libGL.so.1"
+#  define LIBGL_FILENAME "libGL.so.1"
 #endif
   void *libgl = dlopen(LIBGL_FILENAME, RTLD_LAZY);
   if (!libgl) fatal_error("Unable to load " LIBGL_FILENAME);

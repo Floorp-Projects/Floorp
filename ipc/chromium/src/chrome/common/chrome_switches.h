@@ -10,7 +10,7 @@
 #define CHROME_COMMON_CHROME_SWITCHES_H__
 
 #if defined(COMPILER_MSVC)
-#include <string.h>
+#  include <string.h>
 #endif
 
 namespace switches {

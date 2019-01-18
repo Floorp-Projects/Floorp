@@ -63,13 +63,13 @@ void LIRGenerator::visitParameter(MParameter* param) {
 
   offset *= sizeof(Value);
 #if defined(JS_NUNBOX32)
-#if MOZ_BIG_ENDIAN
+#  if MOZ_BIG_ENDIAN
   ins->getDef(0)->setOutput(LArgument(offset));
   ins->getDef(1)->setOutput(LArgument(offset + 4));
-#else
+#  else
   ins->getDef(0)->setOutput(LArgument(offset + 4));
   ins->getDef(1)->setOutput(LArgument(offset));
-#endif
+#  endif
 #elif defined(JS_PUNBOX64)
   ins->getDef(0)->setOutput(LArgument(offset));
 #endif
@@ -4730,12 +4730,12 @@ void LIRGenerator::visitInstructionDispatch(MInstruction* ins) {
   MOZ_CRASH();
 #else
   switch (ins->op()) {
-#define MIR_OP(op)              \
-  case MDefinition::Opcode::op: \
-    visit##op(ins->to##op());   \
-    break;
+#  define MIR_OP(op)              \
+    case MDefinition::Opcode::op: \
+      visit##op(ins->to##op());   \
+      break;
     MIR_OPCODE_LIST(MIR_OP)
-#undef MIR_OP
+#  undef MIR_OP
     default:
       MOZ_CRASH("Invalid instruction");
   }

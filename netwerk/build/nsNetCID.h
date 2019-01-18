@@ -719,14 +719,14 @@
  * netwerk/wifi classes
  */
 #ifdef NECKO_WIFI
-#define NS_WIFI_MONITOR_CONTRACTID "@mozilla.org/wifi/monitor;1"
+#  define NS_WIFI_MONITOR_CONTRACTID "@mozilla.org/wifi/monitor;1"
 
-#define NS_WIFI_MONITOR_COMPONENT_CID                \
-  {                                                  \
-    0x3FF8FB9F, 0xEE63, 0x48DF, {                    \
-      0x89, 0xF0, 0xDA, 0xCE, 0x02, 0x42, 0xFD, 0x82 \
-    }                                                \
-  }
+#  define NS_WIFI_MONITOR_COMPONENT_CID                \
+    {                                                  \
+      0x3FF8FB9F, 0xEE63, 0x48DF, {                    \
+        0x89, 0xF0, 0xDA, 0xCE, 0x02, 0x42, 0xFD, 0x82 \
+      }                                                \
+    }
 #endif
 
 /******************************************************************************

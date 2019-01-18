@@ -16,8 +16,8 @@
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
 #ifdef XP_MACOSX
-#include "mozilla/EventDispatcher.h"
-#include "mozilla/dom/Event.h"
+#  include "mozilla/EventDispatcher.h"
+#  include "mozilla/dom/Event.h"
 #endif
 #include "mozilla/dom/HTMLObjectElement.h"
 

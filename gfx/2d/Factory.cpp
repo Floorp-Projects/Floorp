@@ -8,44 +8,44 @@
 #include "Swizzle.h"
 
 #ifdef USE_CAIRO
-#include "DrawTargetCairo.h"
-#include "SourceSurfaceCairo.h"
+#  include "DrawTargetCairo.h"
+#  include "SourceSurfaceCairo.h"
 #endif
 
 #ifdef USE_SKIA
-#include "DrawTargetSkia.h"
-#include "ScaledFontBase.h"
+#  include "DrawTargetSkia.h"
+#  include "ScaledFontBase.h"
 #endif
 
 #if defined(WIN32)
-#include "ScaledFontWin.h"
-#include "NativeFontResourceGDI.h"
-#include "UnscaledFontGDI.h"
+#  include "ScaledFontWin.h"
+#  include "NativeFontResourceGDI.h"
+#  include "UnscaledFontGDI.h"
 #endif
 
 #ifdef XP_DARWIN
-#include "ScaledFontMac.h"
-#include "NativeFontResourceMac.h"
+#  include "ScaledFontMac.h"
+#  include "NativeFontResourceMac.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
-#include "ScaledFontFontconfig.h"
-#include "NativeFontResourceFreeType.h"
-#include "UnscaledFontFreeType.h"
+#  include "ScaledFontFontconfig.h"
+#  include "NativeFontResourceFreeType.h"
+#  include "UnscaledFontFreeType.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "ScaledFontFreeType.h"
-#include "NativeFontResourceFreeType.h"
+#  include "ScaledFontFreeType.h"
+#  include "NativeFontResourceFreeType.h"
 #endif
 
 #ifdef WIN32
-#include "DrawTargetD2D1.h"
-#include "ScaledFontDWrite.h"
-#include "NativeFontResourceDWrite.h"
-#include <d3d10_1.h>
-#include "HelpersD2D.h"
-#include "HelpersWinFonts.h"
+#  include "DrawTargetD2D1.h"
+#  include "ScaledFontDWrite.h"
+#  include "NativeFontResourceDWrite.h"
+#  include <d3d10_1.h>
+#  include "HelpersD2D.h"
+#  include "HelpersWinFonts.h"
 #endif
 
 #include "DrawTargetCapture.h"
@@ -64,8 +64,8 @@
 #include "mozilla/CheckedInt.h"
 
 #ifdef MOZ_ENABLE_FREETYPE
-#include "ft2build.h"
-#include FT_FREETYPE_H
+#  include "ft2build.h"
+#  include FT_FREETYPE_H
 #endif
 #include "MainThreadUtils.h"
 
@@ -82,11 +82,11 @@ enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
 
 #ifdef HAVE_CPUID_H
 
-#if !(defined(__SSE2__) || defined(_M_X64) ||      \
-      (defined(_M_IX86_FP) && _M_IX86_FP >= 2)) || \
-    !defined(__SSE4__)
+#  if !(defined(__SSE2__) || defined(_M_X64) ||      \
+        (defined(_M_IX86_FP) && _M_IX86_FP >= 2)) || \
+      !defined(__SSE4__)
 // cpuid.h is available on gcc 4.3 and higher on i386 and x86_64
-#include <cpuid.h>
+#    include <cpuid.h>
 
 static inline bool HasCPUIDBit(unsigned int level, CPUIDRegister reg,
                                unsigned int bit) {
@@ -94,20 +94,20 @@ static inline bool HasCPUIDBit(unsigned int level, CPUIDRegister reg,
   return __get_cpuid(level, &regs[0], &regs[1], &regs[2], &regs[3]) &&
          (regs[reg] & bit);
 }
-#endif
+#  endif
 
-#define HAVE_CPU_DETECTION
+#  define HAVE_CPU_DETECTION
 #else
 
-#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
+#  if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
 // MSVC 2005 or later supports __cpuid by intrin.h
-#include <intrin.h>
+#    include <intrin.h>
 
-#define HAVE_CPU_DETECTION
-#elif defined(__SUNPRO_CC) && (defined(__i386) || defined(__x86_64__))
+#    define HAVE_CPU_DETECTION
+#  elif defined(__SUNPRO_CC) && (defined(__i386) || defined(__x86_64__))
 
 // Define a function identical to MSVC function.
-#ifdef __i386
+#    ifdef __i386
 static void __cpuid(int CPUInfo[4], int InfoType) {
   asm("xchg %esi, %ebx\n"
       "cpuid\n"
@@ -121,7 +121,7 @@ static void __cpuid(int CPUInfo[4], int InfoType) {
         "D"(CPUInfo)    // %edi
       : "%ecx", "%edx", "%esi");
 }
-#else
+#    else
 static void __cpuid(int CPUInfo[4], int InfoType) {
   asm("xchg %rsi, %rbx\n"
       "cpuid\n"
@@ -136,11 +136,11 @@ static void __cpuid(int CPUInfo[4], int InfoType) {
       : "%ecx", "%edx", "%rsi");
 }
 
-#define HAVE_CPU_DETECTION
-#endif
-#endif
+#      define HAVE_CPU_DETECTION
+#    endif
+#  endif
 
-#ifdef HAVE_CPU_DETECTION
+#  ifdef HAVE_CPU_DETECTION
 static inline bool HasCPUIDBit(unsigned int level, CPUIDRegister reg,
                                unsigned int bit) {
   // Check that the level in question is supported.
@@ -150,7 +150,7 @@ static inline bool HasCPUIDBit(unsigned int level, CPUIDRegister reg,
   __cpuid((int*)regs, level);
   return !!(unsigned(regs[reg]) & bit);
 }
-#endif
+#  endif
 #endif
 
 #ifdef MOZ_ENABLE_FREETYPE
@@ -545,13 +545,13 @@ already_AddRefed<ScaledFont> Factory::CreateScaledFontForNativeFont(
     case NativeFontType::GDI_LOGFONT: {
       RefPtr<ScaledFontWin> font = MakeAndAddRef<ScaledFontWin>(
           static_cast<LOGFONT*>(aNativeFont.mFont), aUnscaledFont, aSize);
-#ifdef USE_CAIRO
+#  ifdef USE_CAIRO
       if (aScaledFont) {
         font->SetCairoScaledFont(aScaledFont);
       } else {
         font->PopulateCairoScaledFont();
       }
-#endif
+#  endif
       return font.forget();
     }
 #elif defined(MOZ_WIDGET_GTK)

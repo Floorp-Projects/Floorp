@@ -74,18 +74,18 @@ void ConditionVariable::TimedWait(const base::TimeDelta& max_time) {
 #else
   // The timeout argument to pthread_cond_timedwait is in absolute time.
   struct timespec absolute_time;
-#if defined(OS_NACL)
+#  if defined(OS_NACL)
   // See comment in constructor for why this is different in NaCl.
   struct timeval now;
   gettimeofday(&now, NULL);
   absolute_time.tv_sec = now.tv_sec;
   absolute_time.tv_nsec = now.tv_usec * base::Time::kNanosecondsPerMicrosecond;
-#else
+#  else
   struct timespec now;
   clock_gettime(CLOCK_MONOTONIC, &now);
   absolute_time.tv_sec = now.tv_sec;
   absolute_time.tv_nsec = now.tv_nsec;
-#endif
+#  endif
 
   absolute_time.tv_sec += relative_time.tv_sec;
   absolute_time.tv_nsec += relative_time.tv_nsec;
@@ -94,13 +94,13 @@ void ConditionVariable::TimedWait(const base::TimeDelta& max_time) {
   absolute_time.tv_nsec %= base::Time::kNanosecondsPerSecond;
   DCHECK_GE(absolute_time.tv_sec, now.tv_sec);  // Overflow paranoia
 
-#if defined(OS_ANDROID) && defined(HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC)
+#  if defined(OS_ANDROID) && defined(HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC)
   int rv = pthread_cond_timedwait_monotonic_np(&condition_, user_mutex_,
                                                &absolute_time);
-#else
+#  else
   int rv = pthread_cond_timedwait(&condition_, user_mutex_, &absolute_time);
-#endif  // OS_ANDROID && HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC
-#endif  // OS_MACOSX
+#  endif  // OS_ANDROID && HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC
+#endif    // OS_MACOSX
 
   // On failure, we only expect the CV to timeout. Any other error value means
   // that we've unexpectedly woken up.

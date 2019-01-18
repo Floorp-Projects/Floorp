@@ -27,15 +27,15 @@
 #if defined(GP_ARCH_x86)
 typedef mach_header platform_mach_header;
 typedef segment_command mach_segment_command_type;
-#define MACHO_MAGIC_NUMBER MH_MAGIC
-#define CMD_SEGMENT LC_SEGMENT
-#define seg_size uint32_t
+#  define MACHO_MAGIC_NUMBER MH_MAGIC
+#  define CMD_SEGMENT LC_SEGMENT
+#  define seg_size uint32_t
 #else
 typedef mach_header_64 platform_mach_header;
 typedef segment_command_64 mach_segment_command_type;
-#define MACHO_MAGIC_NUMBER MH_MAGIC_64
-#define CMD_SEGMENT LC_SEGMENT_64
-#define seg_size uint64_t
+#  define MACHO_MAGIC_NUMBER MH_MAGIC_64
+#  define CMD_SEGMENT LC_SEGMENT_64
+#  define seg_size uint64_t
 #endif
 
 struct NativeSharedLibrary {

@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(AudioLayout_h)
-#define AudioLayout_h
+#  define AudioLayout_h
 
-#include <cstdint>
-#include <initializer_list>
-#include "mozilla/MathAlgorithms.h"
-#include "nsTArray.h"
+#  include <cstdint>
+#  include <initializer_list>
+#  include "mozilla/MathAlgorithms.h"
+#  include "nsTArray.h"
 
 namespace mozilla {
 
@@ -185,13 +185,13 @@ class AudioConfig {
     FORMAT_S24,
     FORMAT_S32,
     FORMAT_FLT,
-#if defined(MOZ_SAMPLE_TYPE_FLOAT32)
+#  if defined(MOZ_SAMPLE_TYPE_FLOAT32)
     FORMAT_DEFAULT = FORMAT_FLT
-#elif defined(MOZ_SAMPLE_TYPE_S16)
+#  elif defined(MOZ_SAMPLE_TYPE_S16)
     FORMAT_DEFAULT = FORMAT_S16
-#else
-#error "Not supported audio type"
-#endif
+#  else
+#    error "Not supported audio type"
+#  endif
   };
 
   AudioConfig(const ChannelLayout& aChannelLayout, uint32_t aRate,

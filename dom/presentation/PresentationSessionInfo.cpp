@@ -26,7 +26,7 @@
 #include "PresentationSessionInfo.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "nsIPresentationNetworkHelper.h"
+#  include "nsIPresentationNetworkHelper.h"
 #endif  // MOZ_WIDGET_ANDROID
 
 using namespace mozilla;

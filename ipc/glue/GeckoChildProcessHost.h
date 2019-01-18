@@ -24,7 +24,7 @@
 #include "nsString.h"
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-#include "sandboxBroker.h"
+#  include "sandboxBroker.h"
 #endif
 
 namespace mozilla {
@@ -162,12 +162,12 @@ class GeckoChildProcessHost : public ChildProcessHost {
   void InitWindowsGroupID();
   nsString mGroupId;
 
-#ifdef MOZ_SANDBOX
+#  ifdef MOZ_SANDBOX
   SandboxBroker mSandboxBroker;
   std::vector<std::wstring> mAllowedFilesRead;
   bool mEnableSandboxLogging;
   int32_t mSandboxLevel;
-#endif
+#  endif
 #endif  // XP_WIN
 
   ProcessHandle mChildProcessHandle;

@@ -24,7 +24,7 @@
 // Inheriting from both XPCOM and MSCOM interfaces causes a lot of warnings
 // about virtual functions being hidden by each other. This is done by
 // design, so silence the warning.
-#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#  pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #endif
 
 namespace mozilla {
@@ -301,11 +301,11 @@ static inline AccessibleWrap *WrapperFor(const ProxyAccessible *aProxy) {
 
 #ifdef XP_WIN
 // Undo the windows.h damage
-#undef GetMessage
-#undef CreateEvent
-#undef GetClassName
-#undef GetBinaryType
-#undef RemoveDirectory
+#  undef GetMessage
+#  undef CreateEvent
+#  undef GetClassName
+#  undef GetBinaryType
+#  undef RemoveDirectory
 #endif
 
 #endif

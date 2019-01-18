@@ -13,14 +13,14 @@
 #include "pk11pub.h"
 
 #if defined(XP_MACOSX)
-#include "KeychainSecret.h"
+#  include "KeychainSecret.h"
 #elif defined(XP_WIN)
-#include "CredentialManagerSecret.h"
+#  include "CredentialManagerSecret.h"
 #elif defined(MOZ_WIDGET_GTK)
-#include "LibSecret.h"
-#include "NSSKeyStore.h"
+#  include "LibSecret.h"
+#  include "NSSKeyStore.h"
 #else
-#include "NSSKeyStore.h"
+#  include "NSSKeyStore.h"
 #endif
 
 NS_IMPL_ISUPPORTS(OSKeyStore, nsIOSKeyStore, nsIObserver)

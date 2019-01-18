@@ -20,15 +20,15 @@
 #include "mozpkix/pkixtypes.h"
 
 #if defined(_MSC_VER)
-#pragma warning(push)
+#  pragma warning(push)
 // Silence "RootingAPI.h(718): warning C4324: 'js::DispatchWrapper<T>':
 // structure was padded due to alignment specifier with [ T=void * ]"
-#pragma warning(disable : 4324)
+#  pragma warning(disable : 4324)
 #endif /* defined(_MSC_VER) */
 #include "mozilla/BasePrincipal.h"
 #if defined(_MSC_VER)
-#pragma warning(pop) /* popping the pragma in this file */
-#endif               /* defined(_MSC_VER) */
+#  pragma warning(pop) /* popping the pragma in this file */
+#endif                 /* defined(_MSC_VER) */
 
 namespace mozilla {
 namespace ct {

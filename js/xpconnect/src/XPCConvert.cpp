@@ -38,9 +38,9 @@ using namespace JS;
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
-#define ILLEGAL_RANGE(c) (0 != ((c)&0xFF80))
+#  define ILLEGAL_RANGE(c) (0 != ((c)&0xFF80))
 #else  // STRICT_CHECK_OF_UNICODE
-#define ILLEGAL_RANGE(c) (0 != ((c)&0xFF00))
+#  define ILLEGAL_RANGE(c) (0 != ((c)&0xFF00))
 #endif  // STRICT_CHECK_OF_UNICODE
 
 #define ILLEGAL_CHAR_RANGE(c) (0 != ((c)&0x80))

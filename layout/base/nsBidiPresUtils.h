@@ -14,7 +14,7 @@
 #include "nsCoord.h"
 
 #ifdef DrawText
-#undef DrawText
+#  undef DrawText
 #endif
 
 struct BidiParagraphData;

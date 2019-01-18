@@ -22,15 +22,15 @@
 // like __builtin_sadd_overflow.
 #if MOZ_IS_GCC
 // GCC supports these functions.
-#define BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(x) 1
+#  define BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(x) 1
 #else
 // For CLANG, we use its own function to check for this.
-#ifdef __has_builtin
-#define BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(x) __has_builtin(x)
-#endif
+#  ifdef __has_builtin
+#    define BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(x) __has_builtin(x)
+#  endif
 #endif
 #ifndef BUILTIN_CHECKED_ARITHMETIC_SUPPORTED
-#define BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(x) 0
+#  define BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(x) 0
 #endif
 
 namespace js {

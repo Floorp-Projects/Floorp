@@ -12,11 +12,11 @@
 #include "nsIProtocolHandler.h"
 
 #if defined(MOZ_WIDGET_ANDROID) && defined(RELEASE_OR_BETA)
-#define ABOUT_CONFIG_BLOCKED_GV
+#  define ABOUT_CONFIG_BLOCKED_GV
 #endif
 
 #ifdef ABOUT_CONFIG_BLOCKED_GV
-#include "mozilla/jni/Utils.h"  // for mozilla::jni::IsFennec()
+#  include "mozilla/jni/Utils.h"  // for mozilla::jni::IsFennec()
 #endif
 
 NS_IMPL_ISUPPORTS(nsAboutRedirector, nsIAboutModule)

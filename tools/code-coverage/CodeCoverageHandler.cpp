@@ -5,11 +5,11 @@
 
 #include <stdio.h>
 #ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
+#  include <process.h>
+#  define getpid _getpid
 #else
-#include <signal.h>
-#include <unistd.h>
+#  include <signal.h>
+#  include <unistd.h>
 #endif
 #include "mozilla/dom/ScriptSettings.h"  // for AutoJSAPI
 #include "mozilla/CodeCoverageHandler.h"
@@ -34,7 +34,7 @@ using namespace mozilla;
 // are building with LLVM exclusively, we need to use __custom_llvm_gcov_flush
 // instead.
 #if defined(XP_LINUX) && defined(__clang__)
-#define __gcov_flush __custom_llvm_gcov_flush
+#  define __gcov_flush __custom_llvm_gcov_flush
 #endif
 
 extern "C" void __gcov_flush();

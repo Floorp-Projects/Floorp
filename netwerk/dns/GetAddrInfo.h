@@ -11,9 +11,9 @@
 #include "nscore.h"
 
 #if defined(XP_WIN)
-#define DNSQUERY_AVAILABLE 1
+#  define DNSQUERY_AVAILABLE 1
 #else
-#undef DNSQUERY_AVAILABLE
+#  undef DNSQUERY_AVAILABLE
 #endif
 
 namespace mozilla {

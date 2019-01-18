@@ -14,7 +14,7 @@
 #include "nsISupportsImpl.h"     // for MOZ_COUNT_CTOR
 
 #ifndef MOZILLA_LAYERS_SHAREDPLANARYCBCRIMAGE_H
-#define MOZILLA_LAYERS_SHAREDPLANARYCBCRIMAGE_H
+#  define MOZILLA_LAYERS_SHAREDPLANARYCBCRIMAGE_H
 
 namespace mozilla {
 namespace layers {

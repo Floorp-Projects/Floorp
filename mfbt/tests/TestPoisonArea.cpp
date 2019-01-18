@@ -93,23 +93,23 @@
 #include <string.h>
 
 #ifdef _WIN32
-#include <windows.h>
+#  include <windows.h>
 #else
-#include <sys/types.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
+#  include <sys/types.h>
+#  include <fcntl.h>
+#  include <signal.h>
+#  include <unistd.h>
+#  include <sys/stat.h>
+#  include <sys/wait.h>
 
-#include <sys/mman.h>
-#ifndef MAP_ANON
-#ifdef MAP_ANONYMOUS
-#define MAP_ANON MAP_ANONYMOUS
-#else
-#error "Don't know how to get anonymous memory"
-#endif
-#endif
+#  include <sys/mman.h>
+#  ifndef MAP_ANON
+#    ifdef MAP_ANONYMOUS
+#      define MAP_ANON MAP_ANONYMOUS
+#    else
+#      error "Don't know how to get anonymous memory"
+#    endif
+#  endif
 #endif
 
 #define SIZxPTR ((int)(sizeof(uintptr_t) * 2))
@@ -122,42 +122,42 @@
 
 #if defined __i386__ || defined __x86_64__ || defined __i386 || \
     defined __x86_64 || defined _M_IX86 || defined _M_AMD64
-#define RETURN_INSTR 0xC3C3C3C3 /* ret; ret; ret; ret */
+#  define RETURN_INSTR 0xC3C3C3C3 /* ret; ret; ret; ret */
 
 #elif defined __arm__ || defined _M_ARM
-#define RETURN_INSTR 0xE12FFF1E /* bx lr */
+#  define RETURN_INSTR 0xE12FFF1E /* bx lr */
 
 // PPC has its own style of CPU-id #defines.  There is no Windows for
 // PPC as far as I know, so no _M_ variant.
 #elif defined _ARCH_PPC || defined _ARCH_PWR || defined _ARCH_PWR2
-#define RETURN_INSTR 0x4E800020 /* blr */
+#  define RETURN_INSTR 0x4E800020 /* blr */
 
 #elif defined __sparc || defined __sparcv9
-#define RETURN_INSTR 0x81c3e008 /* retl */
+#  define RETURN_INSTR 0x81c3e008 /* retl */
 
 #elif defined __alpha
-#define RETURN_INSTR 0x6bfa8001 /* ret */
+#  define RETURN_INSTR 0x6bfa8001 /* ret */
 
 #elif defined __hppa
-#define RETURN_INSTR 0xe840c002 /* bv,n r0(rp) */
+#  define RETURN_INSTR 0xe840c002 /* bv,n r0(rp) */
 
 #elif defined __mips
-#define RETURN_INSTR 0x03e00008 /* jr ra */
+#  define RETURN_INSTR 0x03e00008 /* jr ra */
 
-#ifdef __MIPSEL
+#  ifdef __MIPSEL
 /* On mipsel, jr ra needs to be followed by a nop.
    0x03e00008 as a 64 bits integer just does that */
-#define RETURN_INSTR_TYPE uint64_t
-#endif
+#    define RETURN_INSTR_TYPE uint64_t
+#  endif
 
 #elif defined __s390__
-#define RETURN_INSTR 0x07fe0000 /* br %r14 */
+#  define RETURN_INSTR 0x07fe0000 /* br %r14 */
 
 #elif defined __sh__
-#define RETURN_INSTR 0x0b000b00 /* rts; rts */
+#  define RETURN_INSTR 0x0b000b00 /* rts; rts */
 
 #elif defined __aarch64__ || defined _M_ARM64
-#define RETURN_INSTR 0xd65f03c0 /* ret */
+#  define RETURN_INSTR 0xd65f03c0 /* ret */
 
 #elif defined __ia64
 struct ia64_instr {
@@ -166,15 +166,15 @@ struct ia64_instr {
 static const ia64_instr _return_instr = {
     {0x00000011, 0x00000001, 0x80000200, 0x00840008}}; /* br.ret.sptk.many b0 */
 
-#define RETURN_INSTR _return_instr
-#define RETURN_INSTR_TYPE ia64_instr
+#  define RETURN_INSTR _return_instr
+#  define RETURN_INSTR_TYPE ia64_instr
 
 #else
-#error "Need return instruction for this architecture"
+#  error "Need return instruction for this architecture"
 #endif
 
 #ifndef RETURN_INSTR_TYPE
-#define RETURN_INSTR_TYPE uint32_t
+#  define RETURN_INSTR_TYPE uint32_t
 #endif
 
 // Miscellaneous Windows/Unix portability gumph
@@ -196,7 +196,7 @@ static LPSTR StrW32Error(DWORD aErrcode) {
   errmsg[n + 1] = '\0';
   return errmsg;
 }
-#define LastErrMsg() (StrW32Error(GetLastError()))
+#  define LastErrMsg() (StrW32Error(GetLastError()))
 
 // Because we use VirtualAlloc in MEM_RESERVE mode, the "page size" we want
 // is the allocation granularity.
@@ -221,12 +221,12 @@ static bool ProbeRegion(uintptr_t aPage) {
 
 static bool MakeRegionExecutable(void*) { return false; }
 
-#undef MAP_FAILED
-#define MAP_FAILED 0
+#  undef MAP_FAILED
+#  define MAP_FAILED 0
 
 #else  // Unix
 
-#define LastErrMsg() (strerror(errno))
+#  define LastErrMsg() (strerror(errno))
 
 static unsigned long gUnixPageSize;
 
@@ -241,12 +241,12 @@ static void* ReserveRegion(uintptr_t aRequest, bool aAccessible) {
 static void ReleaseRegion(void* aPage) { munmap(aPage, PageSize()); }
 
 static bool ProbeRegion(uintptr_t aPage) {
-#ifdef XP_SOLARIS
+#  ifdef XP_SOLARIS
   return !!posix_madvise(reinterpret_cast<void*>(aPage), PageSize(),
                          POSIX_MADV_NORMAL);
-#else
+#  else
   return !!madvise(reinterpret_cast<void*>(aPage), PageSize(), MADV_NORMAL);
-#endif
+#  endif
 }
 
 static int MakeRegionExecutable(void* aPage) {
@@ -378,17 +378,17 @@ static void JumpTo(uintptr_t aOpaddr) {
 static BOOL IsBadExecPtr(uintptr_t aPtr) {
   BOOL ret = false;
 
-#ifdef _MSC_VER
+#  ifdef _MSC_VER
   __try {
     JumpTo(aPtr);
   } __except (EXCEPTION_EXECUTE_HANDLER) {
     ret = true;
   }
-#else
+#  else
   printf("INFO | exec test not supported on MinGW build\n");
   // We do our best
   ret = IsBadReadPtr((const void*)aPtr, 1);
-#endif
+#  endif
   return ret;
 }
 #endif

@@ -12,7 +12,7 @@
 #include "WindowSurfaceX11SHM.h"
 #include "WindowSurfaceXRender.h"
 #ifdef MOZ_WAYLAND
-#include "WindowSurfaceWayland.h"
+#  include "WindowSurfaceWayland.h"
 #endif
 
 namespace mozilla {

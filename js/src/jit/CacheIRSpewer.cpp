@@ -6,24 +6,24 @@
 
 #ifdef JS_CACHEIR_SPEW
 
-#include "jit/CacheIRSpewer.h"
+#  include "jit/CacheIRSpewer.h"
 
-#include "mozilla/Sprintf.h"
+#  include "mozilla/Sprintf.h"
 
-#ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
-#else
-#include <unistd.h>
-#endif
-#include <stdarg.h>
+#  ifdef XP_WIN
+#    include <process.h>
+#    define getpid _getpid
+#  else
+#    include <unistd.h>
+#  endif
+#  include <stdarg.h>
 
-#include "vm/JSFunction.h"
-#include "vm/JSObject.h"
-#include "vm/JSScript.h"
+#  include "vm/JSFunction.h"
+#  include "vm/JSObject.h"
+#  include "vm/JSScript.h"
 
-#include "vm/JSObject-inl.h"
-#include "vm/Realm-inl.h"
+#  include "vm/JSObject-inl.h"
+#  include "vm/Realm-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -50,15 +50,15 @@ CacheIRSpewer::~CacheIRSpewer() {
   output.finish();
 }
 
-#ifndef JIT_SPEW_DIR
-#if defined(_WIN32)
-#define JIT_SPEW_DIR "."
-#elif defined(__ANDROID__)
-#define JIT_SPEW_DIR "/data/local/tmp"
-#else
-#define JIT_SPEW_DIR "/tmp"
-#endif
-#endif
+#  ifndef JIT_SPEW_DIR
+#    if defined(_WIN32)
+#      define JIT_SPEW_DIR "."
+#    elif defined(__ANDROID__)
+#      define JIT_SPEW_DIR "/data/local/tmp"
+#    else
+#      define JIT_SPEW_DIR "/tmp"
+#    endif
+#  endif
 
 bool CacheIRSpewer::init(const char* filename) {
   if (enabled()) {

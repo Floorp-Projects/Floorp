@@ -110,7 +110,7 @@
 #include "XPathGenerator.h"
 
 #ifdef ACCESSIBILITY
-#include "mozilla/dom/AccessibleNode.h"
+#  include "mozilla/dom/AccessibleNode.h"
 #endif
 
 using namespace mozilla;
@@ -145,10 +145,10 @@ void nsINode::nsSlots::Unlink() {
 nsINode::nsINode(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : mNodeInfo(std::move(aNodeInfo)),
       mParent(nullptr)
-#ifndef BOOL_FLAGS_ON_WRAPPER_CACHE
+#  ifndef BOOL_FLAGS_ON_WRAPPER_CACHE
       ,
       mBoolFlags(0)
-#endif
+#  endif
       ,
       mChildCount(0),
       mPreviousOrLastSibling(nullptr),

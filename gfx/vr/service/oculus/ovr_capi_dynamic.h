@@ -12,52 +12,52 @@
  */
 
 #ifdef OVR_CAPI_h
-#ifdef _MSC_VER
-#pragma message( \
-    "ovr_capi_dyanmic.h: OVR_CAPI.h included before ovr_capi_dynamic.h, skipping this")
-#else
-#warning OVR_CAPI.h included before ovr_capi_dynamic.h, skipping this
-#endif
-#define mozilla_ovr_capi_dynamic_h_
+#  ifdef _MSC_VER
+#    pragma message( \
+        "ovr_capi_dyanmic.h: OVR_CAPI.h included before ovr_capi_dynamic.h, skipping this")
+#  else
+#    warning OVR_CAPI.h included before ovr_capi_dynamic.h, skipping this
+#  endif
+#  define mozilla_ovr_capi_dynamic_h_
 
 #else
 
-#ifndef mozilla_ovr_capi_dynamic_h_
-#define mozilla_ovr_capi_dynamic_h_
+#  ifndef mozilla_ovr_capi_dynamic_h_
+#    define mozilla_ovr_capi_dynamic_h_
 
-#ifdef HAVE_64BIT_BUILD
-#define OVR_PTR_SIZE 8
-#define OVR_ON64(x) x
-#else
-#define OVR_PTR_SIZE 4
-#define OVR_ON64(x) /**/
-#endif
+#    ifdef HAVE_64BIT_BUILD
+#      define OVR_PTR_SIZE 8
+#      define OVR_ON64(x) x
+#    else
+#      define OVR_PTR_SIZE 4
+#      define OVR_ON64(x) /**/
+#    endif
 
-#if defined(_WIN32)
-#define OVR_PFN __cdecl
-#else
-#define OVR_PFN
-#endif
+#    if defined(_WIN32)
+#      define OVR_PFN __cdecl
+#    else
+#      define OVR_PFN
+#    endif
 
-#if !defined(OVR_ALIGNAS)
-#if defined(__GNUC__) || defined(__clang__)
-#define OVR_ALIGNAS(n) __attribute__((aligned(n)))
-#elif defined(_MSC_VER) || defined(__INTEL_COMPILER)
-#define OVR_ALIGNAS(n) __declspec(align(n))
-#elif defined(__CC_ARM)
-#define OVR_ALIGNAS(n) __align(n)
-#else
-#error Need to define OVR_ALIGNAS
-#endif
-#endif
+#    if !defined(OVR_ALIGNAS)
+#      if defined(__GNUC__) || defined(__clang__)
+#        define OVR_ALIGNAS(n) __attribute__((aligned(n)))
+#      elif defined(_MSC_VER) || defined(__INTEL_COMPILER)
+#        define OVR_ALIGNAS(n) __declspec(align(n))
+#      elif defined(__CC_ARM)
+#        define OVR_ALIGNAS(n) __align(n)
+#      else
+#        error Need to define OVR_ALIGNAS
+#      endif
+#    endif
 
-#if !defined(OVR_UNUSED_STRUCT_PAD)
-#define OVR_UNUSED_STRUCT_PAD(padName, size) char padName[size];
-#endif
+#    if !defined(OVR_UNUSED_STRUCT_PAD)
+#      define OVR_UNUSED_STRUCT_PAD(padName, size) char padName[size];
+#    endif
 
-#ifdef __cplusplus
+#    ifdef __cplusplus
 extern "C" {
-#endif
+#    endif
 
 typedef int32_t ovrResult;
 
@@ -188,11 +188,11 @@ typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
 
 typedef struct ovrHmdStruct* ovrSession;
 
-#ifdef XP_WIN
+#    ifdef XP_WIN
 typedef uint32_t ovrProcessId;
-#else
+#    else
 typedef pid_t ovrProcessId;
-#endif
+#    endif
 
 typedef enum {
   ovrStatus_OrientationTracked = 0x0001,
@@ -403,7 +403,7 @@ typedef enum {
 
 typedef enum { ovrHapticsBufferSubmit_Enqueue } ovrHapticsBufferSubmitMode;
 
-#define OVR_HAPTICS_BUFFER_SAMPLES_MAX 256
+#    define OVR_HAPTICS_BUFFER_SAMPLES_MAX 256
 
 typedef struct {
   const void* Samples;
@@ -498,7 +498,7 @@ typedef struct {
   double AdditionalLatencySeconds;
 } ovrCameraExtrinsics;
 
-#define OVR_EXTERNAL_CAMERA_NAME_SIZE 32
+#    define OVR_EXTERNAL_CAMERA_NAME_SIZE 32
 typedef struct {
   char Name[OVR_EXTERNAL_CAMERA_NAME_SIZE];
   ovrCameraIntrinsics Intrinsics;
@@ -923,7 +923,7 @@ typedef enum {
   ovrError_MisformattedBlock = -9002,
 } ovrErrorType;
 
-#ifdef XP_WIN
+#    ifdef XP_WIN
 
 struct IUnknown;
 
@@ -943,7 +943,7 @@ typedef ovrResult(OVR_PFN* pfn_ovr_GetMirrorTextureBufferDX)(
     ovrSession session, ovrMirrorTexture mirrorTexture, IID iid,
     void** out_Buffer);
 
-#endif
+#    endif
 
 typedef ovrResult(OVR_PFN* pfn_ovr_CreateTextureSwapChainGL)(
     ovrSession session, const ovrTextureSwapChainDesc* desc,
@@ -961,24 +961,24 @@ typedef ovrResult(OVR_PFN* pfn_ovr_GetMirrorTextureBufferGL)(
     ovrSession session, ovrMirrorTexture mirrorTexture,
     unsigned int* out_TexId);
 
-#define OVR_KEY_EYE_HEIGHT "EyeHeight"  // float meters
-#define OVR_DEFAULT_EYE_HEIGHT 1.675f
+#    define OVR_KEY_EYE_HEIGHT "EyeHeight"  // float meters
+#    define OVR_DEFAULT_EYE_HEIGHT 1.675f
 
-#if !defined(OVR_SUCCESS)
-#define OVR_SUCCESS(result) (result >= 0)
-#endif
+#    if !defined(OVR_SUCCESS)
+#      define OVR_SUCCESS(result) (result >= 0)
+#    endif
 
-#if !defined(OVR_UNQUALIFIED_SUCCESS)
-#define OVR_UNQUALIFIED_SUCCESS(result) (result == ovrSuccess)
-#endif
+#    if !defined(OVR_UNQUALIFIED_SUCCESS)
+#      define OVR_UNQUALIFIED_SUCCESS(result) (result == ovrSuccess)
+#    endif
 
-#if !defined(OVR_FAILURE)
-#define OVR_FAILURE(result) (!OVR_SUCCESS(result))
-#endif
+#    if !defined(OVR_FAILURE)
+#      define OVR_FAILURE(result) (!OVR_SUCCESS(result))
+#    endif
 
-#ifdef __cplusplus
+#    ifdef __cplusplus
 }
-#endif
+#    endif
 
-#endif /* mozilla_ovr_capi_dynamic_h_ */
-#endif /* OVR_CAPI_h */
+#  endif /* mozilla_ovr_capi_dynamic_h_ */
+#endif   /* OVR_CAPI_h */

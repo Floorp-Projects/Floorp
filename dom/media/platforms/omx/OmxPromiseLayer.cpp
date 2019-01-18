@@ -12,7 +12,7 @@
 #include "OmxPlatformLayer.h"
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 #define LOG(arg, ...)                        \

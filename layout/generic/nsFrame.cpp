@@ -10962,7 +10962,7 @@ void nsFrame::VerifyDirtyBitSet(const nsFrameList& aFrameList) {
 }
 
 // Start Display Reflow
-#ifdef DEBUG
+#  ifdef DEBUG
 
 DR_cookie::DR_cookie(nsPresContext* aPresContext, nsIFrame* aFrame,
                      const ReflowInput& aReflowInput, ReflowOutput& aMetrics,
@@ -11460,12 +11460,12 @@ void DR_State::InitFrameTypeTable() {
   AddFrameTypeInfo(LayoutFrameType::TextInput, "textCtl", "textInput");
   AddFrameTypeInfo(LayoutFrameType::Text, "text", "text");
   AddFrameTypeInfo(LayoutFrameType::Viewport, "VP", "viewport");
-#ifdef MOZ_XUL
+#    ifdef MOZ_XUL
   AddFrameTypeInfo(LayoutFrameType::XULLabel, "XULLabel", "XULLabel");
   AddFrameTypeInfo(LayoutFrameType::Box, "Box", "Box");
   AddFrameTypeInfo(LayoutFrameType::Slider, "Slider", "Slider");
   AddFrameTypeInfo(LayoutFrameType::PopupSet, "PopupSet", "PopupSet");
-#endif
+#    endif
   AddFrameTypeInfo(LayoutFrameType::None, "unknown", "unknown");
 }
 
@@ -12033,7 +12033,7 @@ void DR_cookie::Change() const {
   DR_state->DeleteTreeNode(*treeNode);
 }
 
-#endif
+#  endif
 // End Display Reflow
 
 #endif

@@ -6,7 +6,7 @@
 #define nsNSSCertHelper_h
 
 #ifndef INET6_ADDRSTRLEN
-#define INET6_ADDRSTRLEN 46
+#  define INET6_ADDRSTRLEN 46
 #endif
 
 #include "certt.h"

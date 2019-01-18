@@ -11,15 +11,15 @@
 
 // Skia uses cairo_scaled_font_t as the internal font type in ScaledFont
 #if defined(USE_SKIA) || defined(USE_CAIRO)
-#define USE_CAIRO_SCALED_FONT
+#  define USE_CAIRO_SCALED_FONT
 #endif
 
 #ifdef USE_SKIA
-#include "skia/include/core/SkPath.h"
-#include "skia/include/core/SkTypeface.h"
+#  include "skia/include/core/SkPath.h"
+#  include "skia/include/core/SkTypeface.h"
 #endif
 #ifdef USE_CAIRO_SCALED_FONT
-#include "cairo.h"
+#  include "cairo.h"
 #endif
 
 namespace mozilla {

@@ -5,17 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(MOZILLA_INTERNAL_API)
-#error This code is NOT for internal Gecko use!
+#  error This code is NOT for internal Gecko use!
 #endif  // defined(MOZILLA_INTERNAL_API)
 
 #ifndef mozilla_a11y_AccessibleHandlerControl_h
-#define mozilla_a11y_AccessibleHandlerControl_h
+#  define mozilla_a11y_AccessibleHandlerControl_h
 
-#include "Factory.h"
-#include "HandlerData.h"
-#include "IUnknownImpl.h"
-#include "mozilla/mscom/Registration.h"
-#include "mozilla/NotNull.h"
+#  include "Factory.h"
+#  include "HandlerData.h"
+#  include "IUnknownImpl.h"
+#  include "mozilla/mscom/Registration.h"
+#  include "mozilla/NotNull.h"
 
 namespace mozilla {
 namespace a11y {

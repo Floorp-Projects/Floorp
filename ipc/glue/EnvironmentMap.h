@@ -19,8 +19,9 @@ typedef std::wstring NativeEnvironmentString;
 typedef std::map<NativeEnvironmentString, NativeEnvironmentString>
     EnvironmentMap;
 
-#define ENVIRONMENT_LITERAL(x) L##x
-#define ENVIRONMENT_STRING(x) ((std::wstring)(NS_ConvertUTF8toUTF16((x)).get()))
+#  define ENVIRONMENT_LITERAL(x) L##x
+#  define ENVIRONMENT_STRING(x) \
+    ((std::wstring)(NS_ConvertUTF8toUTF16((x)).get()))
 
 // Returns a modified environment vector constructed from the given environment
 // and the list of changes given in |changes|. Each key in the environment is
@@ -41,8 +42,8 @@ typedef std::string NativeEnvironmentString;
 typedef std::map<NativeEnvironmentString, NativeEnvironmentString>
     EnvironmentMap;
 
-#define ENVIRONMENT_LITERAL(x) x
-#define ENVIRONMENT_STRING(x) x
+#  define ENVIRONMENT_LITERAL(x) x
+#  define ENVIRONMENT_STRING(x) x
 
 // See general comments for the Windows version above.
 //

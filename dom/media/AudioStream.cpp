@@ -21,7 +21,7 @@
 #include "gfxPrefs.h"
 #include "AudioConverter.h"
 #if defined(XP_WIN)
-#include "nsXULAppAPI.h"
+#  include "nsXULAppAPI.h"
 #endif
 
 namespace mozilla {

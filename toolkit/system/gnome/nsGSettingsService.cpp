@@ -24,14 +24,14 @@ typedef struct _GVariantType GVariantType;
 typedef struct _GVariant GVariant;
 
 #ifndef G_VARIANT_TYPE_INT32
-#define G_VARIANT_TYPE_INT32 ((const GVariantType *)"i")
-#define G_VARIANT_TYPE_BOOLEAN ((const GVariantType *)"b")
-#define G_VARIANT_TYPE_STRING ((const GVariantType *)"s")
-#define G_VARIANT_TYPE_OBJECT_PATH ((const GVariantType *)"o")
-#define G_VARIANT_TYPE_SIGNATURE ((const GVariantType *)"g")
+#  define G_VARIANT_TYPE_INT32 ((const GVariantType *)"i")
+#  define G_VARIANT_TYPE_BOOLEAN ((const GVariantType *)"b")
+#  define G_VARIANT_TYPE_STRING ((const GVariantType *)"s")
+#  define G_VARIANT_TYPE_OBJECT_PATH ((const GVariantType *)"o")
+#  define G_VARIANT_TYPE_SIGNATURE ((const GVariantType *)"g")
 #endif
 #ifndef G_VARIANT_TYPE_STRING_ARRAY
-#define G_VARIANT_TYPE_STRING_ARRAY ((const GVariantType *)"as")
+#  define G_VARIANT_TYPE_STRING_ARRAY ((const GVariantType *)"as")
 #endif
 
 #define GSETTINGS_FUNCTIONS                                                    \

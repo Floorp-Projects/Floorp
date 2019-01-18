@@ -706,11 +706,11 @@ static inline const char* PropertyNameToExtraName(PropertyName* name) {
 #ifdef DEBUG
 
 // Track the pipeline of opcodes which has produced a snapshot.
-#define TRACK_SNAPSHOTS 1
+#  define TRACK_SNAPSHOTS 1
 
 // Make sure registers are not modified between an instruction and
 // its OsiPoint.
-#define CHECK_OSIPOINT_REGISTERS 1
+#  define CHECK_OSIPOINT_REGISTERS 1
 
 #endif  // DEBUG
 

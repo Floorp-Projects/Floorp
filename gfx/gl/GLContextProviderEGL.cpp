@@ -4,51 +4,52 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(MOZ_WIDGET_GTK)
-#define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) \
-  ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_EGL_WINDOW))
-#define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget)     \
-  ((EGLNativeWindowType)aWidget->RealWidget()->GetNativeData( \
-      NS_NATIVE_EGL_WINDOW))
+#  define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) \
+    ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_EGL_WINDOW))
+#  define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget)     \
+    ((EGLNativeWindowType)aWidget->RealWidget()->GetNativeData( \
+        NS_NATIVE_EGL_WINDOW))
 #elif defined(MOZ_WIDGET_ANDROID)
-#define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) \
-  ((EGLNativeWindowType)aWidget->GetNativeData(NS_JAVA_SURFACE))
-#define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget) \
-  (aWidget->AsAndroid()->GetEGLNativeWindow())
+#  define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) \
+    ((EGLNativeWindowType)aWidget->GetNativeData(NS_JAVA_SURFACE))
+#  define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget) \
+    (aWidget->AsAndroid()->GetEGLNativeWindow())
 #elif defined(XP_WIN)
-#define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) \
-  ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
-#define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget) \
-  ((EGLNativeWindowType)aWidget->AsWindows()->GetHwnd())
+#  define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) \
+    ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
+#  define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget) \
+    ((EGLNativeWindowType)aWidget->AsWindows()->GetHwnd())
 #else
-#define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) \
-  ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
-#define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget) \
-  ((EGLNativeWindowType)aWidget->RealWidget()->GetNativeData(NS_NATIVE_WINDOW))
+#  define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) \
+    ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
+#  define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget)     \
+    ((EGLNativeWindowType)aWidget->RealWidget()->GetNativeData( \
+        NS_NATIVE_WINDOW))
 #endif
 
 #if defined(XP_UNIX)
-#ifdef MOZ_WIDGET_ANDROID
-#include <android/native_window.h>
-#include <android/native_window_jni.h>
-#include "mozilla/widget/AndroidCompositorWidget.h"
-#endif
+#  ifdef MOZ_WIDGET_ANDROID
+#    include <android/native_window.h>
+#    include <android/native_window_jni.h>
+#    include "mozilla/widget/AndroidCompositorWidget.h"
+#  endif
 
-#define GLES2_LIB "libGLESv2.so"
-#define GLES2_LIB2 "libGLESv2.so.2"
+#  define GLES2_LIB "libGLESv2.so"
+#  define GLES2_LIB2 "libGLESv2.so.2"
 
 #elif defined(XP_WIN)
-#include "mozilla/widget/WinCompositorWidget.h"
-#include "nsIFile.h"
+#  include "mozilla/widget/WinCompositorWidget.h"
+#  include "nsIFile.h"
 
-#define GLES2_LIB "libGLESv2.dll"
+#  define GLES2_LIB "libGLESv2.dll"
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN 1
-#endif
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN 1
+#  endif
 
-#include <windows.h>
+#  include <windows.h>
 #else
-#error "Platform not recognized"
+#  error "Platform not recognized"
 #endif
 
 #include "gfxASurface.h"
@@ -73,14 +74,14 @@
 #include "TextureImageEGL.h"
 
 #if defined(MOZ_WAYLAND)
-#include "nsAutoPtr.h"
-#include "nsDataHashtable.h"
+#  include "nsAutoPtr.h"
+#  include "nsDataHashtable.h"
 
-#include <gtk/gtk.h>
-#include <gdk/gdkx.h>
-#include <gdk/gdkwayland.h>
-#include <wayland-egl.h>
-#include <dlfcn.h>
+#  include <gtk/gtk.h>
+#  include <gdk/gdkx.h>
+#  include <gdk/gdkwayland.h>
+#  include <wayland-egl.h>
+#  include <dlfcn.h>
 #endif
 
 using namespace mozilla::gfx;

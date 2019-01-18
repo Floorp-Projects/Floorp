@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #if !defined(__Userspace_os_Windows)
-#include <arpa/inet.h>
+#  include <arpa/inet.h>
 #endif
 // usrsctp.h expects to have errno definitions prior to its inclusion.
 #include <errno.h>
@@ -20,14 +20,14 @@
 // Disable "warning C4200: nonstandard extension used : zero-sized array in
 //          struct/union"
 // ...which the third-party file usrsctp.h runs afoul of.
-#pragma warning(push)
-#pragma warning(disable : 4200)
+#  pragma warning(push)
+#  pragma warning(disable : 4200)
 #endif
 
 #include "usrsctp.h"
 
 #ifdef _MSC_VER
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif
 
 #include "DataChannelLog.h"
@@ -51,9 +51,9 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
 #ifdef MOZ_PEERCONNECTION
-#include "mtransport/runnable_utils.h"
-#include "signaling/src/peerconnection/MediaTransportHandler.h"
-#include "mediapacket.h"
+#  include "mtransport/runnable_utils.h"
+#  include "signaling/src/peerconnection/MediaTransportHandler.h"
+#  include "mediapacket.h"
 #endif
 
 #include "DataChannel.h"
@@ -61,14 +61,14 @@
 
 // Let us turn on and off important assertions in non-debug builds
 #ifdef DEBUG
-#define ASSERT_WEBRTC(x) MOZ_ASSERT((x))
+#  define ASSERT_WEBRTC(x) MOZ_ASSERT((x))
 #elif defined(MOZ_WEBRTC_ASSERT_ALWAYS)
-#define ASSERT_WEBRTC(x) \
-  do {                   \
-    if (!(x)) {          \
-      MOZ_CRASH();       \
-    }                    \
-  } while (0)
+#  define ASSERT_WEBRTC(x) \
+    do {                   \
+      if (!(x)) {          \
+        MOZ_CRASH();       \
+      }                    \
+    } while (0)
 #endif
 
 static bool sctp_initialized;
@@ -727,9 +727,9 @@ void DataChannelConnection::CompleteConnect() {
   struct sockaddr_conn addr;
   memset(&addr, 0, sizeof(addr));
   addr.sconn_family = AF_CONN;
-#if defined(__Userspace_os_Darwin)
+#  if defined(__Userspace_os_Darwin)
   addr.sconn_len = sizeof(addr);
-#endif
+#  endif
   addr.sconn_port = htons(mLocalPort);
   addr.sconn_addr = static_cast<void *>(this);
 
@@ -902,9 +902,9 @@ bool DataChannelConnection::Listen(unsigned short port) {
 
   /* Acting as the 'server' */
   memset((void *)&addr, 0, sizeof(addr));
-#ifdef HAVE_SIN_LEN
+#  ifdef HAVE_SIN_LEN
   addr.sin_len = sizeof(struct sockaddr_in);
-#endif
+#  endif
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -959,19 +959,19 @@ bool DataChannelConnection::Connect(const char *addr, unsigned short port) {
   LOG(("Connecting to %s, port %u", addr, port));
   memset((void *)&addr4, 0, sizeof(struct sockaddr_in));
   memset((void *)&addr6, 0, sizeof(struct sockaddr_in6));
-#ifdef HAVE_SIN_LEN
+#  ifdef HAVE_SIN_LEN
   addr4.sin_len = sizeof(struct sockaddr_in);
-#endif
-#ifdef HAVE_SIN6_LEN
+#  endif
+#  ifdef HAVE_SIN6_LEN
   addr6.sin6_len = sizeof(struct sockaddr_in6);
-#endif
+#  endif
   addr4.sin_family = AF_INET;
   addr6.sin6_family = AF_INET6;
   addr4.sin_port = htons(port);
   addr6.sin6_port = htons(port);
   mState = CONNECTING;
 
-#if !defined(__Userspace_os_Windows)
+#  if !defined(__Userspace_os_Windows)
   if (inet_pton(AF_INET6, addr, &addr6.sin6_addr) == 1) {
     if (usrsctp_connect(mMasterSocket,
                         reinterpret_cast<struct sockaddr *>(&addr6),
@@ -989,7 +989,7 @@ bool DataChannelConnection::Connect(const char *addr, unsigned short port) {
   } else {
     LOG(("*** Illegal destination address."));
   }
-#else
+#  else
   {
     struct sockaddr_storage ss;
     int sslen = sizeof(ss);
@@ -1017,7 +1017,7 @@ bool DataChannelConnection::Connect(const char *addr, unsigned short port) {
       LOG(("*** Illegal destination address."));
     }
   }
-#endif
+#  endif
 
   mSocket = mMasterSocket;
 

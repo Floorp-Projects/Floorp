@@ -17,7 +17,7 @@
 #include "nsTArray.h"
 
 #ifdef DEBUG
-#include "nsIThread.h"
+#  include "nsIThread.h"
 #endif
 
 class nsIInputStream;

@@ -18,11 +18,11 @@
 // #define ENABLE_FT_LOGGING 1
 
 #if ENABLE_FT_LOGGING
-#define FT_LOG(FMT, ...)                                                       \
-  printf_stderr("FT (%s): " FMT, XRE_IsParentProcess() ? "chrome" : "content", \
-                __VA_ARGS__)
+#  define FT_LOG(FMT, ...)         \
+    printf_stderr("FT (%s): " FMT, \
+                  XRE_IsParentProcess() ? "chrome" : "content", __VA_ARGS__)
 #else
-#define FT_LOG(...)
+#  define FT_LOG(...)
 #endif
 
 using namespace mozilla::dom;

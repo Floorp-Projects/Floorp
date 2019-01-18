@@ -11,7 +11,7 @@
 #include "nsClipboard.h"
 #include "nsClipboardX11.h"
 #if defined(MOZ_WAYLAND)
-#include "nsClipboardWayland.h"
+#  include "nsClipboardWayland.h"
 #endif
 #include "nsContentUtils.h"
 #include "HeadlessClipboard.h"

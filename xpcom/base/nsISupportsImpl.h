@@ -13,7 +13,7 @@
 #include "nsISupportsUtils.h"
 
 #if !defined(XPCOM_GLUE_AVOID_NSPR)
-#include "prthread.h" /* needed for cargo-culting headers */
+#  include "prthread.h" /* needed for cargo-culting headers */
 #endif
 
 #include "nsDebug.h"
@@ -43,7 +43,7 @@ inline nsISupports* ToSupports(nsISupports* aSupports) { return aSupports; }
 
 #ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
 
-#include "prthread.h" /* needed for thread-safety checks */
+#  include "prthread.h" /* needed for thread-safety checks */
 
 class nsAutoOwningThread {
  public:
@@ -68,16 +68,16 @@ class nsAutoOwningThread {
   void* mThread;
 };
 
-#define NS_DECL_OWNINGTHREAD nsAutoOwningThread _mOwningThread;
-#define NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class) \
-  agg->_mOwningThread.AssertOwnership(#_class " not thread-safe")
-#define NS_ASSERT_OWNINGTHREAD(_class) \
-  NS_ASSERT_OWNINGTHREAD_AGGREGATE(this, _class)
+#  define NS_DECL_OWNINGTHREAD nsAutoOwningThread _mOwningThread;
+#  define NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class) \
+    agg->_mOwningThread.AssertOwnership(#_class " not thread-safe")
+#  define NS_ASSERT_OWNINGTHREAD(_class) \
+    NS_ASSERT_OWNINGTHREAD_AGGREGATE(this, _class)
 #else  // !MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
 
-#define NS_DECL_OWNINGTHREAD /* nothing */
-#define NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class) ((void)0)
-#define NS_ASSERT_OWNINGTHREAD(_class) ((void)0)
+#  define NS_DECL_OWNINGTHREAD /* nothing */
+#  define NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class) ((void)0)
+#  define NS_ASSERT_OWNINGTHREAD(_class) ((void)0)
 
 #endif  // MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
 
@@ -85,85 +85,85 @@ class nsAutoOwningThread {
 
 #if defined(NS_BUILD_REFCNT_LOGGING)
 
-#define NS_LOG_ADDREF(_p, _rc, _type, _size) \
-  NS_LogAddRef((_p), (_rc), (_type), (uint32_t)(_size))
+#  define NS_LOG_ADDREF(_p, _rc, _type, _size) \
+    NS_LogAddRef((_p), (_rc), (_type), (uint32_t)(_size))
 
-#define NS_LOG_RELEASE(_p, _rc, _type) NS_LogRelease((_p), (_rc), (_type))
+#  define NS_LOG_RELEASE(_p, _rc, _type) NS_LogRelease((_p), (_rc), (_type))
 
-#include "mozilla/TypeTraits.h"
-#define MOZ_ASSERT_CLASSNAME(_type)             \
-  static_assert(mozilla::IsClass<_type>::value, \
-                "Token '" #_type "' is not a class type.")
+#  include "mozilla/TypeTraits.h"
+#  define MOZ_ASSERT_CLASSNAME(_type)             \
+    static_assert(mozilla::IsClass<_type>::value, \
+                  "Token '" #_type "' is not a class type.")
 
-#define MOZ_ASSERT_NOT_ISUPPORTS(_type)                                     \
-  static_assert(!mozilla::IsBaseOf<nsISupports, _type>::value,              \
-                "nsISupports classes don't need to call MOZ_COUNT_CTOR or " \
-                "MOZ_COUNT_DTOR");
+#  define MOZ_ASSERT_NOT_ISUPPORTS(_type)                                     \
+    static_assert(!mozilla::IsBaseOf<nsISupports, _type>::value,              \
+                  "nsISupports classes don't need to call MOZ_COUNT_CTOR or " \
+                  "MOZ_COUNT_DTOR");
 
 // Note that the following constructor/destructor logging macros are redundant
 // for refcounted objects that log via the NS_LOG_ADDREF/NS_LOG_RELEASE macros.
 // Refcount logging is preferred.
-#define MOZ_COUNT_CTOR(_type)                       \
-  do {                                              \
-    MOZ_ASSERT_CLASSNAME(_type);                    \
-    MOZ_ASSERT_NOT_ISUPPORTS(_type);                \
-    NS_LogCtor((void*)this, #_type, sizeof(*this)); \
-  } while (0)
+#  define MOZ_COUNT_CTOR(_type)                       \
+    do {                                              \
+      MOZ_ASSERT_CLASSNAME(_type);                    \
+      MOZ_ASSERT_NOT_ISUPPORTS(_type);                \
+      NS_LogCtor((void*)this, #_type, sizeof(*this)); \
+    } while (0)
 
-#define MOZ_COUNT_CTOR_INHERITED(_type, _base)                      \
-  do {                                                              \
-    MOZ_ASSERT_CLASSNAME(_type);                                    \
-    MOZ_ASSERT_CLASSNAME(_base);                                    \
-    MOZ_ASSERT_NOT_ISUPPORTS(_type);                                \
-    NS_LogCtor((void*)this, #_type, sizeof(*this) - sizeof(_base)); \
-  } while (0)
+#  define MOZ_COUNT_CTOR_INHERITED(_type, _base)                      \
+    do {                                                              \
+      MOZ_ASSERT_CLASSNAME(_type);                                    \
+      MOZ_ASSERT_CLASSNAME(_base);                                    \
+      MOZ_ASSERT_NOT_ISUPPORTS(_type);                                \
+      NS_LogCtor((void*)this, #_type, sizeof(*this) - sizeof(_base)); \
+    } while (0)
 
-#define MOZ_LOG_CTOR(_ptr, _name, _size)   \
-  do {                                     \
-    NS_LogCtor((void*)_ptr, _name, _size); \
-  } while (0)
+#  define MOZ_LOG_CTOR(_ptr, _name, _size)   \
+    do {                                     \
+      NS_LogCtor((void*)_ptr, _name, _size); \
+    } while (0)
 
-#define MOZ_COUNT_DTOR(_type)                       \
-  do {                                              \
-    MOZ_ASSERT_CLASSNAME(_type);                    \
-    MOZ_ASSERT_NOT_ISUPPORTS(_type);                \
-    NS_LogDtor((void*)this, #_type, sizeof(*this)); \
-  } while (0)
+#  define MOZ_COUNT_DTOR(_type)                       \
+    do {                                              \
+      MOZ_ASSERT_CLASSNAME(_type);                    \
+      MOZ_ASSERT_NOT_ISUPPORTS(_type);                \
+      NS_LogDtor((void*)this, #_type, sizeof(*this)); \
+    } while (0)
 
-#define MOZ_COUNT_DTOR_INHERITED(_type, _base)                      \
-  do {                                                              \
-    MOZ_ASSERT_CLASSNAME(_type);                                    \
-    MOZ_ASSERT_CLASSNAME(_base);                                    \
-    MOZ_ASSERT_NOT_ISUPPORTS(_type);                                \
-    NS_LogDtor((void*)this, #_type, sizeof(*this) - sizeof(_base)); \
-  } while (0)
+#  define MOZ_COUNT_DTOR_INHERITED(_type, _base)                      \
+    do {                                                              \
+      MOZ_ASSERT_CLASSNAME(_type);                                    \
+      MOZ_ASSERT_CLASSNAME(_base);                                    \
+      MOZ_ASSERT_NOT_ISUPPORTS(_type);                                \
+      NS_LogDtor((void*)this, #_type, sizeof(*this) - sizeof(_base)); \
+    } while (0)
 
-#define MOZ_LOG_DTOR(_ptr, _name, _size)   \
-  do {                                     \
-    NS_LogDtor((void*)_ptr, _name, _size); \
-  } while (0)
+#  define MOZ_LOG_DTOR(_ptr, _name, _size)   \
+    do {                                     \
+      NS_LogDtor((void*)_ptr, _name, _size); \
+    } while (0)
 
 /* nsCOMPtr.h allows these macros to be defined by clients
  * These logging functions require dynamic_cast<void*>, so they don't
  * do anything useful if we don't have dynamic_cast<void*>.
  * Note: The explicit comparison to nullptr is needed to avoid warnings
  *       when _p is a nullptr itself. */
-#define NSCAP_LOG_ASSIGNMENT(_c, _p) \
-  if (_p != nullptr) NS_LogCOMPtrAddRef((_c), ToSupports(_p))
+#  define NSCAP_LOG_ASSIGNMENT(_c, _p) \
+    if (_p != nullptr) NS_LogCOMPtrAddRef((_c), ToSupports(_p))
 
-#define NSCAP_LOG_RELEASE(_c, _p) \
-  if (_p) NS_LogCOMPtrRelease((_c), ToSupports(_p))
+#  define NSCAP_LOG_RELEASE(_c, _p) \
+    if (_p) NS_LogCOMPtrRelease((_c), ToSupports(_p))
 
 #else /* !NS_BUILD_REFCNT_LOGGING */
 
-#define NS_LOG_ADDREF(_p, _rc, _type, _size)
-#define NS_LOG_RELEASE(_p, _rc, _type)
-#define MOZ_COUNT_CTOR(_type)
-#define MOZ_COUNT_CTOR_INHERITED(_type, _base)
-#define MOZ_LOG_CTOR(_ptr, _name, _size)
-#define MOZ_COUNT_DTOR(_type)
-#define MOZ_COUNT_DTOR_INHERITED(_type, _base)
-#define MOZ_LOG_DTOR(_ptr, _name, _size)
+#  define NS_LOG_ADDREF(_p, _rc, _type, _size)
+#  define NS_LOG_RELEASE(_p, _rc, _type)
+#  define MOZ_COUNT_CTOR(_type)
+#  define MOZ_COUNT_CTOR_INHERITED(_type, _base)
+#  define MOZ_LOG_CTOR(_ptr, _name, _size)
+#  define MOZ_COUNT_DTOR(_type)
+#  define MOZ_COUNT_DTOR_INHERITED(_type, _base)
+#  define MOZ_LOG_DTOR(_ptr, _name, _size)
 
 #endif /* NS_BUILD_REFCNT_LOGGING */
 
@@ -705,10 +705,10 @@ typedef ThreadSafeAutoRefCntWithRecording<recordreplay::Behavior::DontPreserve>
 // the refcnt decrement.  (We use a macro to make absolutely sure the name
 // isn't loaded in builds where it wouldn't be used.)
 #ifdef NS_BUILD_REFCNT_LOGGING
-#define NS_LOAD_NAME_BEFORE_RELEASE(localname, _name) \
-  const char* const localname = _name
+#  define NS_LOAD_NAME_BEFORE_RELEASE(localname, _name) \
+    const char* const localname = _name
 #else
-#define NS_LOAD_NAME_BEFORE_RELEASE(localname, _name)
+#  define NS_LOAD_NAME_BEFORE_RELEASE(localname, _name)
 #endif
 
 /**
@@ -1222,15 +1222,15 @@ class Runnable;
  * class.
  */
 #if defined(NS_BUILD_REFCNT_LOGGING)
-#define NS_INLINE_DECL_REFCOUNTING_INHERITED(Class, Super)  \
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() override {  \
-    NS_IMPL_ADDREF_INHERITED_GUTS(Class, Super);            \
-  }                                                         \
-  NS_IMETHOD_(MozExternalRefCountType) Release() override { \
-    NS_IMPL_RELEASE_INHERITED_GUTS(Class, Super);           \
-  }
+#  define NS_INLINE_DECL_REFCOUNTING_INHERITED(Class, Super)  \
+    NS_IMETHOD_(MozExternalRefCountType) AddRef() override {  \
+      NS_IMPL_ADDREF_INHERITED_GUTS(Class, Super);            \
+    }                                                         \
+    NS_IMETHOD_(MozExternalRefCountType) Release() override { \
+      NS_IMPL_RELEASE_INHERITED_GUTS(Class, Super);           \
+    }
 #else  // NS_BUILD_REFCNT_LOGGING
-#define NS_INLINE_DECL_REFCOUNTING_INHERITED(Class, Super)
+#  define NS_INLINE_DECL_REFCOUNTING_INHERITED(Class, Super)
 #endif  // NS_BUILD_REFCNT_LOGGINGx
 
 /*

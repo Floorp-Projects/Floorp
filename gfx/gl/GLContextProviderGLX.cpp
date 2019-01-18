@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_WIDGET_GTK
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
-#define GET_NATIVE_WINDOW(aWidget) \
-  GDK_WINDOW_XID((GdkWindow*)aWidget->GetNativeData(NS_NATIVE_WINDOW))
+#  include <gdk/gdk.h>
+#  include <gdk/gdkx.h>
+#  define GET_NATIVE_WINDOW(aWidget) \
+    GDK_WINDOW_XID((GdkWindow*)aWidget->GetNativeData(NS_NATIVE_WINDOW))
 #endif
 
 #include <X11/Xlib.h>
@@ -42,7 +42,7 @@
 #include "gfxCrashReporterUtils.h"
 
 #ifdef MOZ_WIDGET_GTK
-#include "gfxPlatformGtk.h"
+#  include "gfxPlatformGtk.h"
 #endif
 
 namespace mozilla {

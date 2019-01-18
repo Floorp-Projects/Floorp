@@ -5,16 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(WMFVideoMFTManager_h_)
-#define WMFVideoMFTManager_h_
+#  define WMFVideoMFTManager_h_
 
-#include "MFTDecoder.h"
-#include "MediaResult.h"
-#include "WMF.h"
-#include "WMFMediaDataDecoder.h"
-#include "mozilla/Atomics.h"
-#include "mozilla/RefPtr.h"
-#include "nsAutoPtr.h"
-#include "mozilla/gfx/Rect.h"
+#  include "MFTDecoder.h"
+#  include "MediaResult.h"
+#  include "WMF.h"
+#  include "WMFMediaDataDecoder.h"
+#  include "mozilla/Atomics.h"
+#  include "mozilla/RefPtr.h"
+#  include "nsAutoPtr.h"
+#  include "mozilla/gfx/Rect.h"
 
 namespace mozilla {
 

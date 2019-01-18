@@ -245,13 +245,13 @@ void nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                           const nsDisplayListSet& aLists) {
   DO_GLOBAL_REFLOW_COUNT_DSP("nsPlaceholderFrame");
 
-#ifdef DEBUG
+#  ifdef DEBUG
   if (GetShowFrameBorders()) {
     aLists.Outlines()->AppendToTop(MakeDisplayItem<nsDisplayGeneric>(
         aBuilder, this, PaintDebugPlaceholder, "DebugPlaceholder",
         DisplayItemType::TYPE_DEBUG_PLACEHOLDER));
   }
-#endif
+#  endif
 }
 #endif  // DEBUG || (MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF)
 

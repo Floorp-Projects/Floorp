@@ -649,7 +649,7 @@ STUB(gtk_object_get_type)
 #ifndef GTK3_SYMBOLS
 // Only define the following workaround when using GTK3, which we detect
 // by checking if GTK3 stubs are not provided.
-#include <X11/Xlib.h>
+#  include <X11/Xlib.h>
 // Bug 1271100
 // We need to trick system Cairo into not using the XShm extension due to
 // a race condition in it that results in frequent BadAccess errors. Cairo

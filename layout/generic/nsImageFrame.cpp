@@ -53,7 +53,7 @@
 #include "nsNameSpaceManager.h"
 #include <algorithm>
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
+#  include "nsAccessibilityService.h"
 #endif
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"

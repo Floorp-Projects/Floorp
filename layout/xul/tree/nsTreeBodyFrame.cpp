@@ -66,8 +66,8 @@
 #include "ScrollbarActivity.h"
 
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#include "nsIWritablePropertyBag2.h"
+#  include "nsAccessibilityService.h"
+#  include "nsIWritablePropertyBag2.h"
 #endif
 #include "nsBidiUtils.h"
 

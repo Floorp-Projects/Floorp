@@ -18,7 +18,7 @@
 #include <thread>
 
 #if defined(XP_WIN)
-#include "mozilla/audio/AudioNotificationReceiver.h"
+#  include "mozilla/audio/AudioNotificationReceiver.h"
 #endif
 
 struct cubeb_stream;

@@ -7,14 +7,14 @@
 
 #if defined(XP_UNIX)
 
-#include <dirent.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#  include <dirent.h>
+#  include <fcntl.h>
+#  include <sys/stat.h>
+#  include <unistd.h>
 
 #elif defined(XP_WIN)
 
-#include <windows.h>
+#  include <windows.h>
 
 #endif
 
@@ -43,7 +43,7 @@ using namespace js;
 
 #if defined(XP_UNIX)
 
-#include <sys/param.h>
+#  include <sys/param.h>
 
 static int gJsDirectory(0);
 void enterJsDirectory() {
@@ -410,9 +410,9 @@ void runTestFromPath(JSContext* cx, const char* path) {
               txtPath.begin(), (void*)binPrinter.getOffset(),
               (void*)txtPrinter.getOffset(), binPrinter.string(),
               txtPrinter.string());
-#if 0   // Not for release, but useful for debugging.
-        // In case of error, this dumps files to /tmp, so they may
-        // easily be diffed.
+#  if 0   // Not for release, but useful for debugging.
+          // In case of error, this dumps files to /tmp, so they may
+          // easily be diffed.
             auto fd = open("/tmp/bin.ast", O_CREAT | O_TRUNC | O_WRONLY, 0666);
             if (!fd) {
                 MOZ_CRASH("Could not open bin.ast");
@@ -438,7 +438,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
             if (result != 0) {
                 MOZ_CRASH("Could not close txt.ast");
             }
-#endif  // 0
+#  endif  // 0
       MOZ_CRASH("Got distinct ASTs");
     }
 

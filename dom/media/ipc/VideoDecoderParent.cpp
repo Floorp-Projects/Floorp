@@ -13,7 +13,7 @@
 #include "MediaInfo.h"
 #include "VideoDecoderManagerParent.h"
 #ifdef XP_WIN
-#include "WMFDecoderModule.h"
+#  include "WMFDecoderModule.h"
 #endif
 
 namespace mozilla {

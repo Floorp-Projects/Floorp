@@ -12,7 +12,7 @@
 #include "mozilla/Assertions.h"
 
 #ifndef JS_STANDALONE
-#include "nsNetUtil.h"
+#  include "nsNetUtil.h"
 #endif
 
 namespace mozilla {

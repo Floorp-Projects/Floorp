@@ -33,7 +33,7 @@
 #include "secport.h"
 
 #ifndef MOZ_NO_MOZALLOC
-#include "mozilla/mozalloc_oom.h"
+#  include "mozilla/mozalloc_oom.h"
 #endif
 
 namespace mozilla {
@@ -135,10 +135,10 @@ class Digest {
  private:
   nsresult SetLength(SECOidTag hashType) {
 #ifdef _MSC_VER
-#pragma warning(push)
+#  pragma warning(push)
     // C4061: enumerator 'symbol' in switch of enum 'symbol' is not
     // explicitly handled.
-#pragma warning(disable : 4061)
+#  pragma warning(disable : 4061)
 #endif
     switch (hashType) {
       case SEC_OID_SHA1:
@@ -157,7 +157,7 @@ class Digest {
         return NS_ERROR_INVALID_ARG;
     }
 #ifdef _MSC_VER
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif
 
     return NS_OK;

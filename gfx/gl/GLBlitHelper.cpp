@@ -19,15 +19,15 @@
 #include "GPUVideoImage.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "GeneratedJNIWrappers.h"
-#include "AndroidSurfaceTexture.h"
-#include "GLImages.h"
-#include "GLLibraryEGL.h"
+#  include "GeneratedJNIWrappers.h"
+#  include "AndroidSurfaceTexture.h"
+#  include "GLImages.h"
+#  include "GLLibraryEGL.h"
 #endif
 
 #ifdef XP_MACOSX
-#include "MacIOSurfaceImage.h"
-#include "GLContextCGL.h"
+#  include "MacIOSurfaceImage.h"
+#  include "GLContextCGL.h"
 #endif
 
 using mozilla::layers::PlanarYCbCrData;

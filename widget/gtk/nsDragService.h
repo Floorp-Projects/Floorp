@@ -23,7 +23,7 @@ class SourceSurface;
 }  // namespace mozilla
 
 #ifndef HAVE_NSGOBJECTREFTRAITS
-#define HAVE_NSGOBJECTREFTRAITS
+#  define HAVE_NSGOBJECTREFTRAITS
 template <class T>
 class nsGObjectRefTraits : public nsPointerRefTraits<T> {
  public:
@@ -33,13 +33,13 @@ class nsGObjectRefTraits : public nsPointerRefTraits<T> {
 #endif
 
 #ifndef HAVE_NSAUTOREFTRAITS_GTKWIDGET
-#define HAVE_NSAUTOREFTRAITS_GTKWIDGET
+#  define HAVE_NSAUTOREFTRAITS_GTKWIDGET
 template <>
 class nsAutoRefTraits<GtkWidget> : public nsGObjectRefTraits<GtkWidget> {};
 #endif
 
 #ifndef HAVE_NSAUTOREFTRAITS_GDKDRAGCONTEXT
-#define HAVE_NSAUTOREFTRAITS_GDKDRAGCONTEXT
+#  define HAVE_NSAUTOREFTRAITS_GDKDRAGCONTEXT
 template <>
 class nsAutoRefTraits<GdkDragContext>
     : public nsGObjectRefTraits<GdkDragContext> {};

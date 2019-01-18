@@ -88,11 +88,11 @@
 #include "prlink.h"
 
 #ifdef MOZ_MEMORY
-#include "mozmemory.h"
+#  include "mozmemory.h"
 #endif
 
 #ifdef XP_WIN
-#include "windows.h"
+#  include "windows.h"
 #endif
 
 using namespace mozilla;
@@ -101,23 +101,23 @@ using mozilla::ipc::FileDescriptor;
 
 #ifdef DEBUG
 
-#define ENSURE_PARENT_PROCESS(func, pref)                                   \
-  do {                                                                      \
-    if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                             \
-      nsPrintfCString msg(                                                  \
-          "ENSURE_PARENT_PROCESS: called %s on %s in a non-parent process", \
-          func, pref);                                                      \
-      NS_ERROR(msg.get());                                                  \
-      return NS_ERROR_NOT_AVAILABLE;                                        \
-    }                                                                       \
-  } while (0)
+#  define ENSURE_PARENT_PROCESS(func, pref)                                   \
+    do {                                                                      \
+      if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                             \
+        nsPrintfCString msg(                                                  \
+            "ENSURE_PARENT_PROCESS: called %s on %s in a non-parent process", \
+            func, pref);                                                      \
+        NS_ERROR(msg.get());                                                  \
+        return NS_ERROR_NOT_AVAILABLE;                                        \
+      }                                                                       \
+    } while (0)
 
 #else  // DEBUG
 
-#define ENSURE_PARENT_PROCESS(func, pref)     \
-  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) { \
-    return NS_ERROR_NOT_AVAILABLE;            \
-  }
+#  define ENSURE_PARENT_PROCESS(func, pref)     \
+    if (MOZ_UNLIKELY(!XRE_IsParentProcess())) { \
+      return NS_ERROR_NOT_AVAILABLE;            \
+    }
 
 #endif  // DEBUG
 
@@ -1182,7 +1182,7 @@ static CallbackNode* gFirstCallback = nullptr;
 static CallbackNode* gLastPriorityNode = nullptr;
 
 #ifdef DEBUG
-#define ACCESS_COUNTS
+#  define ACCESS_COUNTS
 #endif
 
 #ifdef ACCESS_COUNTS
@@ -3346,14 +3346,14 @@ static Maybe<bool> TelemetryPrefValue() {
   // build has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta channel,
   // telemetry is on by default, otherwise not. This is necessary so that
   // beta users who are testing final release builds don't flipflop defaults.
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+#  ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
   return Some(true);
-#else
+#  else
   nsAutoCString channelPrefValue;
   Unused << Preferences::GetCString(kChannelPref, channelPrefValue,
                                     PrefValueKind::Default);
   return Some(channelPrefValue.EqualsLiteral("beta"));
-#endif
+#  endif
 }
 
 /* static */ void Preferences::SetupTelemetryPref() {
@@ -3381,12 +3381,12 @@ static bool TelemetryPrefValue() {
     return true;
   }
 
-#ifndef MOZILLA_OFFICIAL
+#  ifndef MOZILLA_OFFICIAL
   // Local developer builds: non-official builds on the "default" channel.
   if (channel.EqualsLiteral("default")) {
     return true;
   }
-#endif
+#  endif
 
   // Release Candidate builds: builds that think they are release builds, but
   // are shipped to beta users.
@@ -4367,13 +4367,14 @@ float MOZ_MAYBE_UNUSED GetPref<float>(const char* aName, float aDefaultValue) {
     // is changed in a preference file or at runtime, rather than in
     // StaticPrefList.h.
 
-#define PREF(name, cpp_type, value)
-#define VARCACHE_PREF(name, id, cpp_type, value)                               \
-  MOZ_ASSERT(GetPref<StripAtomic<cpp_type>>(name, value) == StaticPrefs::id(), \
-             "Incorrect cached value for " name);
-#include "mozilla/StaticPrefList.h"
-#undef PREF
-#undef VARCACHE_PREF
+#  define PREF(name, cpp_type, value)
+#  define VARCACHE_PREF(name, id, cpp_type, value)                        \
+    MOZ_ASSERT(                                                           \
+        GetPref<StripAtomic<cpp_type>>(name, value) == StaticPrefs::id(), \
+        "Incorrect cached value for " name);
+#  include "mozilla/StaticPrefList.h"
+#  undef PREF
+#  undef VARCACHE_PREF
 #endif
 
     return Ok();
@@ -4471,10 +4472,10 @@ float MOZ_MAYBE_UNUSED GetPref<float>(const char* aName, float aDefaultValue) {
     "winpref.js"
 #elif defined(XP_UNIX)
     "unix.js"
-#if defined(_AIX)
+#  if defined(_AIX)
     ,
     "aix.js"
-#endif
+#  endif
 #elif defined(XP_BEOS)
     "beos.js"
 #endif

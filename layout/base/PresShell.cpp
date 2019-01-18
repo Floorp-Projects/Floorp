@@ -32,7 +32,7 @@
 #include <algorithm>
 
 #ifdef XP_WIN
-#include "winuser.h"
+#  include "winuser.h"
 #endif
 
 #include "gfxContext.h"
@@ -90,10 +90,10 @@
 #include "nsRegion.h"
 #include "nsAutoLayoutPhase.h"
 #ifdef MOZ_GECKO_PROFILER
-#include "AutoProfilerStyleMarker.h"
+#  include "AutoProfilerStyleMarker.h"
 #endif
 #ifdef MOZ_REFLOW_PERF
-#include "nsFontMetrics.h"
+#  include "nsFontMetrics.h"
 #endif
 #include "OverflowChangedTracker.h"
 #include "PositionedEventTargeting.h"
@@ -124,26 +124,26 @@
 #include "nsIScrollableFrame.h"
 #include "nsITimer.h"
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#include "mozilla/a11y/DocAccessible.h"
-#ifdef DEBUG
-#include "mozilla/a11y/Logging.h"
-#endif
+#  include "nsAccessibilityService.h"
+#  include "mozilla/a11y/DocAccessible.h"
+#  ifdef DEBUG
+#    include "mozilla/a11y/Logging.h"
+#  endif
 #endif
 
 // For style data reconstruction
 #include "nsStyleChangeList.h"
 #include "nsCSSFrameConstructor.h"
 #ifdef MOZ_XUL
-#include "nsMenuFrame.h"
-#include "nsTreeBodyFrame.h"
-#include "XULTreeElement.h"
-#include "nsMenuPopupFrame.h"
-#include "nsTreeColumns.h"
-#include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsIDOMXULMenuListElement.h"
-#include "nsXULElement.h"
+#  include "nsMenuFrame.h"
+#  include "nsTreeBodyFrame.h"
+#  include "XULTreeElement.h"
+#  include "nsMenuPopupFrame.h"
+#  include "nsTreeColumns.h"
+#  include "nsIDOMXULMultSelectCntrlEl.h"
+#  include "nsIDOMXULSelectCntrlItemEl.h"
+#  include "nsIDOMXULMenuListElement.h"
+#  include "nsXULElement.h"
 #endif  // MOZ_XUL
 
 #include "mozilla/layers/CompositorBridgeChild.h"
@@ -190,7 +190,7 @@
 #include "VisualViewport.h"
 
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
+#  include "GeckoTaskTracer.h"
 using namespace mozilla::tasktracer;
 #endif
 
@@ -266,7 +266,7 @@ static const VerifyReflowFlags gFlags[] = {
     // clang-format on
 };
 
-#define NUM_VERIFY_REFLOW_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
+#  define NUM_VERIFY_REFLOW_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
 
 static void ShowVerifyReflowFlags() {
   printf("Here are the available GECKO_VERIFY_REFLOW_FLAGS:\n");
@@ -429,20 +429,21 @@ struct nsCallbackEventRequest {
 // bfcache, but font pref changes don't care about that, and maybe / probably
 // shouldn't.
 #ifdef DEBUG
-#define ASSERT_REFLOW_SCHEDULED_STATE()                                       \
-  {                                                                           \
-    if (ObservingLayoutFlushes()) {                                           \
-      MOZ_ASSERT(                                                             \
-          mDocument->GetBFCacheEntry() ||                                     \
-              mPresContext->RefreshDriver()->IsLayoutFlushObserver(this),     \
-          "Unexpected state");                                                \
-    } else {                                                                  \
-      MOZ_ASSERT(!mPresContext->RefreshDriver()->IsLayoutFlushObserver(this), \
-                 "Unexpected state");                                         \
-    }                                                                         \
-  }
+#  define ASSERT_REFLOW_SCHEDULED_STATE()                                   \
+    {                                                                       \
+      if (ObservingLayoutFlushes()) {                                       \
+        MOZ_ASSERT(                                                         \
+            mDocument->GetBFCacheEntry() ||                                 \
+                mPresContext->RefreshDriver()->IsLayoutFlushObserver(this), \
+            "Unexpected state");                                            \
+      } else {                                                              \
+        MOZ_ASSERT(                                                         \
+            !mPresContext->RefreshDriver()->IsLayoutFlushObserver(this),    \
+            "Unexpected state");                                            \
+      }                                                                     \
+    }
 #else
-#define ASSERT_REFLOW_SCHEDULED_STATE() /* nothing */
+#  define ASSERT_REFLOW_SCHEDULED_STATE() /* nothing */
 #endif
 
 class nsAutoCauseReflowNotifier {
@@ -1201,10 +1202,10 @@ void PresShell::Destroy() {
 
 #ifdef ACCESSIBILITY
   if (mDocAccessible) {
-#ifdef DEBUG
+#  ifdef DEBUG
     if (a11y::logging::IsEnabled(a11y::logging::eDocDestroy))
       a11y::logging::DocDestroy("presshell destroyed", mDocument);
-#endif
+#  endif
 
     mDocAccessible->Shutdown();
     mDocAccessible = nullptr;
@@ -4043,12 +4044,12 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
 #endif
 
 #ifdef ACCESSIBILITY
-#ifdef DEBUG
+#  ifdef DEBUG
   if (nsAccessibilityService* accService = GetAccService()) {
     NS_ASSERTION(!accService->IsProcessingRefreshDriverNotification(),
                  "Flush during accessible tree update!");
   }
-#endif
+#  endif
 #endif
 
   NS_ASSERTION(flushType >= FlushType::Frames, "Why did we get called?");
@@ -4663,7 +4664,7 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
 }
 
 #ifdef DEBUG
-#include <stdio.h>
+#  include <stdio.h>
 
 static bool gDumpRangePaintList = false;
 #endif
@@ -9289,14 +9290,14 @@ static void CopySheetsIntoClone(ServoStyleSet* aSet, ServoStyleSet* aClone) {
   }
 
   // The document expects to insert document stylesheets itself
-#if 0
+#  if 0
   n = aSet->SheetCount(SheetType::Doc);
   for (i = 0; i < n; i++) {
     StyleSheet* ss = aSet->StyleSheetAt(SheetType::Doc, i);
     if (ss)
       aClone->AddDocStyleSheet(ss, mDocument);
   }
-#endif
+#  endif
 
   n = aSet->SheetCount(SheetType::User);
   for (i = 0; i < n; i++) {
@@ -9400,7 +9401,7 @@ bool PresShell::VerifyIncrementalReflow() {
     root2->List(stdout);
   }
 
-#if 0
+#  if 0
   // Sample code for dumping page to png
   // XXX Needs to be made more flexible
   if (!ok) {
@@ -9417,7 +9418,7 @@ bool PresShell::VerifyIncrementalReflow() {
     gfxUtils::WriteAsPNG(sh, strb);
     ++num;
   }
-#endif
+#  endif
 
   sh->EndObservingDocument();
   sh->Destroy();
@@ -9581,7 +9582,8 @@ void ReflowCounter::DisplayHTMLTotals(uint32_t aTotal, const char* aTitle) {
 //-- ReflowCountMgr
 //------------------------------------------------------------------
 
-#define KEY_BUF_SIZE_FOR_PTR 24  // adequate char[] buffer to sprintf a pointer
+#  define KEY_BUF_SIZE_FOR_PTR \
+    24  // adequate char[] buffer to sprintf a pointer
 
 ReflowCountMgr::ReflowCountMgr() : mCounts(10), mIndiFrameCounts(10) {
   mCycledOnce = false;
@@ -9792,9 +9794,9 @@ void ReflowCountMgr::DoGrandHTMLTotals() {
 
 //------------------------------------
 void ReflowCountMgr::DisplayTotals(const char* aStr) {
-#ifdef DEBUG_rods
+#  ifdef DEBUG_rods
   printf("%s\n", aStr ? aStr : "No name");
-#endif
+#  endif
   if (mDumpFrameCounts) {
     DoGrandTotals();
   }
@@ -9804,7 +9806,7 @@ void ReflowCountMgr::DisplayTotals(const char* aStr) {
 }
 //------------------------------------
 void ReflowCountMgr::DisplayHTMLTotals(const char* aStr) {
-#ifdef WIN32x  // XXX NOT XP!
+#  ifdef WIN32x  // XXX NOT XP!
   char name[1024];
 
   char* sptr = strrchr(aStr, '/');
@@ -9831,7 +9833,7 @@ void ReflowCountMgr::DisplayHTMLTotals(const char* aStr) {
     fclose(mFD);
     mFD = nullptr;
   }
-#endif  // not XP!
+#  endif  // not XP!
 }
 
 //------------------------------------------------------------------

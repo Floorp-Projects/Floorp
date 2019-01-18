@@ -8,12 +8,12 @@
 #define NETWERK_SCTP_DATACHANNEL_DATACHANNELPROTOCOL_H_
 
 #if defined(__GNUC__)
-#define SCTP_PACKED __attribute__((packed))
+#  define SCTP_PACKED __attribute__((packed))
 #elif defined(_MSC_VER)
-#pragma pack(push, 1)
-#define SCTP_PACKED
+#  pragma pack(push, 1)
+#  define SCTP_PACKED
 #else
-#error "Unsupported compiler"
+#  error "Unsupported compiler"
 #endif
 
 #define WEBRTC_DATACHANNEL_STREAMS_DEFAULT 256
@@ -84,8 +84,8 @@ struct rtcweb_datachannel_ack {
 #define ERR_DATA_CHANNEL_NONE_AVAILABLE 2
 
 #if defined(_MSC_VER)
-#pragma pack(pop)
-#undef SCTP_PACKED
+#  pragma pack(pop)
+#  undef SCTP_PACKED
 #endif
 
 #endif

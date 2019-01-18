@@ -43,13 +43,13 @@
 #include "nsContentCID.h"
 
 #ifdef XP_WIN
-#include "nsCExternalHandlerService.h"
-#include "nsEscape.h"
-#include "nsIMIMEInfo.h"
-#include "nsIMIMEService.h"
-#include "nsIURL.h"
-#include "nsReadableUtils.h"
-#include "nsXULAppAPI.h"
+#  include "nsCExternalHandlerService.h"
+#  include "nsEscape.h"
+#  include "nsIMIMEInfo.h"
+#  include "nsIMIMEService.h"
+#  include "nsIURL.h"
+#  include "nsReadableUtils.h"
+#  include "nsXULAppAPI.h"
 #endif
 
 #include "mozilla/ContentEvents.h"

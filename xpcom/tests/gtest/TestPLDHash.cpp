@@ -14,9 +14,9 @@
 // operations wouldn't be a bad thing.
 
 #ifdef XP_UNIX
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#  include <unistd.h>
+#  include <sys/types.h>
+#  include <sys/wait.h>
 
 // This global variable is defined in toolkit/xre/nsSigHandlers.cpp.
 extern unsigned int _gdb_sleep_duration;
@@ -181,12 +181,12 @@ TEST(PLDHashTableTest, MoveSemantics) {
   t2.Add((const void*)99);
 
 #if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wself-move"
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wself-move"
 #endif
   t1 = std::move(t1);  // self-move
 #if defined(__clang__)
-#pragma clang diagnostic pop
+#  pragma clang diagnostic pop
 #endif
 
   t1 = std::move(t2);  // empty overwritten with empty

@@ -7,7 +7,7 @@
 #include "nsThreadUtils.h"
 
 #ifndef __GMPTestMonitor_h__
-#define __GMPTestMonitor_h__
+#  define __GMPTestMonitor_h__
 
 class GMPTestMonitor {
  public:

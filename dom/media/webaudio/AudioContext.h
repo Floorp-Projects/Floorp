@@ -25,7 +25,7 @@
 // X11 has a #define for CurrentTime. Unbelievable :-(.
 // See dom/media/DOMMediaStream.h for more fun!
 #ifdef CurrentTime
-#undef CurrentTime
+#  undef CurrentTime
 #endif
 
 namespace WebCore {

@@ -46,15 +46,15 @@
 #define DISABLE_ASSERTS_FOR_FUZZING 0
 
 #if DISABLE_ASSERTS_FOR_FUZZING
-#define ASSERT_UNLESS_FUZZING(...) \
-  do {                             \
-  } while (0)
+#  define ASSERT_UNLESS_FUZZING(...) \
+    do {                             \
+    } while (0)
 #else
-#define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
+#  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
-#define LS_MOBILE
+#  define LS_MOBILE
 #endif
 
 namespace mozilla {

@@ -8,10 +8,10 @@
 #include "sqlite3.h"
 
 #ifdef MOZ_STORAGE_MEMORY
-#include "mozmemory.h"
-#ifdef MOZ_DMD
-#include "DMD.h"
-#endif
+#  include "mozmemory.h"
+#  ifdef MOZ_DMD
+#    include "DMD.h"
+#  endif
 
 namespace {
 
@@ -33,7 +33,7 @@ namespace {
 // from the standard ones -- they use int instead of size_t.  But we don't need
 // a wrapper for free.
 
-#ifdef MOZ_DMD
+#  ifdef MOZ_DMD
 
 // sqlite does its own memory accounting, and we use its numbers in our memory
 // reporters.  But we don't want sqlite's heap blocks to show up in DMD's
@@ -51,25 +51,25 @@ namespace {
 MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(SqliteMallocSizeOfOnAlloc)
 MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(SqliteMallocSizeOfOnFree)
 
-#endif
+#  endif
 
 static void *sqliteMemMalloc(int n) {
   void *p = ::malloc(n);
-#ifdef MOZ_DMD
+#  ifdef MOZ_DMD
   gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(p);
-#endif
+#  endif
   return p;
 }
 
 static void sqliteMemFree(void *p) {
-#ifdef MOZ_DMD
+#  ifdef MOZ_DMD
   gSqliteMemoryUsed -= SqliteMallocSizeOfOnFree(p);
-#endif
+#  endif
   ::free(p);
 }
 
 static void *sqliteMemRealloc(void *p, int n) {
-#ifdef MOZ_DMD
+#  ifdef MOZ_DMD
   gSqliteMemoryUsed -= SqliteMallocSizeOfOnFree(p);
   void *pnew = ::realloc(p, n);
   if (pnew) {
@@ -79,9 +79,9 @@ static void *sqliteMemRealloc(void *p, int n) {
     gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(p);
   }
   return pnew;
-#else
+#  else
   return ::realloc(p, n);
-#endif
+#  endif
 }
 
 static int sqliteMemSize(void *p) { return ::moz_malloc_usable_size(p); }

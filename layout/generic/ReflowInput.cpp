@@ -33,9 +33,9 @@
 #include "mozilla/dom/HTMLInputElement.h"
 
 #ifdef DEBUG
-#undef NOISY_VERTICAL_ALIGN
+#  undef NOISY_VERTICAL_ALIGN
 #else
-#undef NOISY_VERTICAL_ALIGN
+#  undef NOISY_VERTICAL_ALIGN
 #endif
 
 using namespace mozilla;

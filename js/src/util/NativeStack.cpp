@@ -7,28 +7,28 @@
 #include "util/NativeStack.h"
 
 #ifdef XP_WIN
-#include "util/Windows.h"
+#  include "util/Windows.h"
 #elif defined(XP_DARWIN) || defined(DARWIN) || defined(XP_UNIX)
-#include <pthread.h>
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
-#include <pthread_np.h>
-#endif
-#if defined(SOLARIS) || defined(AIX)
-#include <ucontext.h>
-#endif
-#if defined(ANDROID) && !defined(__aarch64__)
-#include <sys/types.h>
-#include <unistd.h>
-#endif
-#if defined(XP_LINUX) && !defined(ANDROID) && defined(__GLIBC__)
-#include <dlfcn.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-#include <unistd.h>
+#  include <pthread.h>
+#  if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+#    include <pthread_np.h>
+#  endif
+#  if defined(SOLARIS) || defined(AIX)
+#    include <ucontext.h>
+#  endif
+#  if defined(ANDROID) && !defined(__aarch64__)
+#    include <sys/types.h>
+#    include <unistd.h>
+#  endif
+#  if defined(XP_LINUX) && !defined(ANDROID) && defined(__GLIBC__)
+#    include <dlfcn.h>
+#    include <sys/syscall.h>
+#    include <sys/types.h>
+#    include <unistd.h>
 static pid_t gettid() { return syscall(__NR_gettid); }
-#endif
+#  endif
 #else
-#error "Unsupported platform"
+#  error "Unsupported platform"
 #endif
 
 #include "jsfriendapi.h"
@@ -106,44 +106,44 @@ void* js::GetNativeStackBaseImpl() {
                      "invalid stack base, unable to setup stack range for JS");
   pthread_attr_destroy(&sattr);
 
-#if JS_STACK_GROWTH_DIRECTION > 0
+#  if JS_STACK_GROWTH_DIRECTION > 0
   return stackBase;
-#else
+#  else
   return static_cast<char*>(stackBase) + stackSize;
-#endif
+#  endif
 }
 
 #else /* XP_UNIX */
 
 void* js::GetNativeStackBaseImpl() {
   pthread_t thread = pthread_self();
-#if defined(XP_DARWIN) || defined(DARWIN)
+#  if defined(XP_DARWIN) || defined(DARWIN)
   return pthread_get_stackaddr_np(thread);
 
-#else
+#  else
   pthread_attr_t sattr;
   pthread_attr_init(&sattr);
-#if defined(__OpenBSD__)
+#    if defined(__OpenBSD__)
   stack_t ss;
-#elif defined(PTHREAD_NP_H) || defined(_PTHREAD_NP_H_) || defined(NETBSD)
+#    elif defined(PTHREAD_NP_H) || defined(_PTHREAD_NP_H_) || defined(NETBSD)
   /* e.g. on FreeBSD 4.8 or newer, neundorf@kde.org */
   pthread_attr_get_np(thread, &sattr);
-#else
+#    else
   /*
    * FIXME: this function is non-portable;
    * other POSIX systems may have different np alternatives
    */
   pthread_getattr_np(thread, &sattr);
-#endif
+#    endif
 
   void* stackBase = 0;
   size_t stackSize = 0;
   int rc;
-#if defined(__OpenBSD__)
+#    if defined(__OpenBSD__)
   rc = pthread_stackseg_np(pthread_self(), &ss);
   stackBase = (void*)((size_t)ss.ss_sp - ss.ss_size);
   stackSize = ss.ss_size;
-#elif defined(ANDROID) && !defined(__aarch64__)
+#    elif defined(ANDROID) && !defined(__aarch64__)
   if (gettid() == getpid()) {
     // bionic's pthread_attr_getstack prior to API 21 doesn't tell the truth
     // for the main thread (see bug 846670). So we scan /proc/self/maps to
@@ -179,21 +179,21 @@ void* js::GetNativeStackBaseImpl() {
     // the truth.
     rc = pthread_attr_getstack(&sattr, &stackBase, &stackSize);
   }
-#else
+#    else
   rc = pthread_attr_getstack(&sattr, &stackBase, &stackSize);
-#endif
+#    endif
   if (rc) {
     MOZ_CRASH();
   }
   MOZ_ASSERT(stackBase);
   pthread_attr_destroy(&sattr);
 
-#if JS_STACK_GROWTH_DIRECTION > 0
+#    if JS_STACK_GROWTH_DIRECTION > 0
   return stackBase;
-#else
+#    else
   return static_cast<char*>(stackBase) + stackSize;
-#endif
-#endif
+#    endif
+#  endif
 }
 
 #endif /* !XP_WIN */

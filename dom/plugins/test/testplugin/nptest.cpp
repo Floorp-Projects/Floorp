@@ -50,14 +50,14 @@
 #include <ctime>
 
 #ifdef XP_WIN
-#include <process.h>
-#include <float.h>
-#include <windows.h>
-#define getpid _getpid
-#define strcasecmp _stricmp
+#  include <process.h>
+#  include <float.h>
+#  include <windows.h>
+#  define getpid _getpid
+#  define strcasecmp _stricmp
 #else
-#include <unistd.h>
-#include <pthread.h>
+#  include <unistd.h>
+#  include <pthread.h>
 #endif
 
 using namespace std;

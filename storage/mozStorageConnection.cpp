@@ -56,18 +56,19 @@ mozilla::LazyLogModule gStorageLog("mozStorage");
 // Checks that the protected code is running on the main-thread only if the
 // connection was also opened on it.
 #ifdef DEBUG
-#define CHECK_MAINTHREAD_ABUSE()                                              \
-  do {                                                                        \
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();                      \
-    NS_WARNING_ASSERTION(threadOpenedOn == mainThread || !NS_IsMainThread(),  \
-                         "Using Storage synchronous API on main-thread, but " \
-                         "the connection was "                                \
-                         "opened on another thread.");                        \
-  } while (0)
+#  define CHECK_MAINTHREAD_ABUSE()                             \
+    do {                                                       \
+      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();     \
+      NS_WARNING_ASSERTION(                                    \
+          threadOpenedOn == mainThread || !NS_IsMainThread(),  \
+          "Using Storage synchronous API on main-thread, but " \
+          "the connection was "                                \
+          "opened on another thread.");                        \
+    } while (0)
 #else
-#define CHECK_MAINTHREAD_ABUSE() \
-  do { /* Nothing */             \
-  } while (0)
+#  define CHECK_MAINTHREAD_ABUSE() \
+    do { /* Nothing */             \
+    } while (0)
 #endif
 
 namespace mozilla {

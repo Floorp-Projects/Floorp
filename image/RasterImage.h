@@ -40,7 +40,7 @@
 #include "ImageContainer.h"
 #include "PlaybackType.h"
 #ifdef DEBUG
-#include "imgIContainerDebug.h"
+#  include "imgIContainerDebug.h"
 #endif
 
 class nsIInputStream;

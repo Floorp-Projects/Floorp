@@ -16,15 +16,15 @@
 #include "nsTArray.h"
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 #ifdef ANDROID
-#include "android/log.h"
-#define LOG(...) \
-  __android_log_print(ANDROID_LOG_INFO, "Gecko:DumpUtils", ##__VA_ARGS__)
+#  include "android/log.h"
+#  define LOG(...) \
+    __android_log_print(ANDROID_LOG_INFO, "Gecko:DumpUtils", ##__VA_ARGS__)
 #else
-#define LOG(...)
+#  define LOG(...)
 #endif
 
 #ifdef XP_UNIX  // {

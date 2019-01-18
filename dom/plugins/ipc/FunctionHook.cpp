@@ -10,8 +10,8 @@
 #include "mozilla/ClearOnShutdown.h"
 
 #if defined(XP_WIN)
-#include <shlobj.h>
-#include "PluginModuleChild.h"
+#  include <shlobj.h>
+#  include "PluginModuleChild.h"
 #endif
 
 namespace mozilla {
@@ -295,7 +295,7 @@ void FunctionHook::HookProtectedMode() {
   sCreateFileAStub.Set(sKernel32Intercept, "CreateFileA", &CreateFileAHookFn);
 }
 
-#if defined(MOZ_SANDBOX)
+#  if defined(MOZ_SANDBOX)
 
 /* GetFileAttributesW */
 
@@ -330,7 +330,7 @@ DWORD WINAPI GetFileAttributesWHook(LPCWSTR aFilename) {
   return FILE_ATTRIBUTE_DIRECTORY;
 }
 
-#endif  // defined(MOZ_SANDBOX)
+#  endif  // defined(MOZ_SANDBOX)
 
 #endif  // defined(XP_WIN)
 
@@ -343,12 +343,12 @@ void FunctionHook::AddFunctionHooks(FunctionHookArray& aHooks) {
       "user32.dll", "GetWindowInfo", &GetWindowInfo, &GetWindowInfoHook));
   aHooks[ID_PrintDlgW] = FUN_HOOK(
       new PrintDlgWFH("comdlg32.dll", "PrintDlgW", &PrintDlgW, PrintDlgWHook));
-#if defined(MOZ_SANDBOX)
+#  if defined(MOZ_SANDBOX)
   aHooks[ID_GetFileAttributesW] = FUN_HOOK(
       new GetFileAttributesWFH("kernel32.dll", "GetFileAttributesW",
                                &GetFileAttributesW, &GetFileAttributesWHook));
-#endif  // defined(MOZ_SANDBOX)
-#endif  // defined(XP_WIN)
+#  endif  // defined(MOZ_SANDBOX)
+#endif    // defined(XP_WIN)
 }
 
 #undef FUN_HOOK

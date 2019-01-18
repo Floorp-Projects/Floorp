@@ -10,7 +10,7 @@
 #include "signaling/src/sdp/SdpErrorHolder.h"
 
 #ifdef CRLF
-#undef CRLF
+#  undef CRLF
 #endif
 #define CRLF "\r\n"
 

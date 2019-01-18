@@ -14,47 +14,47 @@
 #include "mozilla/Sprintf.h"
 
 #ifdef XP_WIN
-#include <comutil.h>
-#include <time.h>
-#ifndef __MINGW32__
-#include <iwscapi.h>
-#endif  // __MINGW32__
-#include <windows.h>
-#include <winioctl.h>
-#ifndef __MINGW32__
-#include <wscapi.h>
-#endif  // __MINGW32__
-#include "base/scoped_handle_win.h"
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsDirectoryServiceUtils.h"
-#include "nsIObserverService.h"
-#include "nsWindowsHelpers.h"
+#  include <comutil.h>
+#  include <time.h>
+#  ifndef __MINGW32__
+#    include <iwscapi.h>
+#  endif  // __MINGW32__
+#  include <windows.h>
+#  include <winioctl.h>
+#  ifndef __MINGW32__
+#    include <wscapi.h>
+#  endif  // __MINGW32__
+#  include "base/scoped_handle_win.h"
+#  include "nsAppDirectoryServiceDefs.h"
+#  include "nsDirectoryServiceDefs.h"
+#  include "nsDirectoryServiceUtils.h"
+#  include "nsIObserverService.h"
+#  include "nsWindowsHelpers.h"
 
 #endif
 
 #ifdef XP_MACOSX
-#include "MacHelpers.h"
+#  include "MacHelpers.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
-#include <gtk/gtk.h>
-#include <dlfcn.h>
+#  include <gtk/gtk.h>
+#  include <dlfcn.h>
 #endif
 
 #if defined(XP_LINUX) && !defined(ANDROID)
-#include <unistd.h>
-#include <fstream>
-#include "mozilla/Tokenizer.h"
-#include "nsCharSeparatedTokenizer.h"
+#  include <unistd.h>
+#  include <fstream>
+#  include "mozilla/Tokenizer.h"
+#  include "nsCharSeparatedTokenizer.h"
 
-#include <map>
-#include <string>
+#  include <map>
+#  include <string>
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
-#include "mozilla/dom/ContentChild.h"
+#  include "AndroidBridge.h"
+#  include "mozilla/dom/ContentChild.h"
 #endif
 
 #ifdef ANDROID
@@ -64,11 +64,11 @@ NS_EXPORT int android_sdk_version;
 #endif
 
 #ifdef XP_MACOSX
-#include <sys/sysctl.h>
+#  include <sys/sysctl.h>
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-#include "mozilla/SandboxInfo.h"
+#  include "mozilla/SandboxInfo.h"
 #endif
 
 // Slot for NS_InitXPCOM2 to pass information to nsSystemInfo::Init.
@@ -237,7 +237,7 @@ nsresult GetCountryCode(nsAString& aCountryCode) {
 
 }  // namespace
 
-#ifndef __MINGW32__
+#  ifndef __MINGW32__
 
 static HRESULT EnumWSCProductList(nsAString& aOutput,
                                   NotNull<IWSCProductList*> aProdList) {
@@ -334,7 +334,7 @@ static nsresult GetWindowsSecurityCenterInfo(nsAString& aAVInfo,
   return NS_OK;
 }
 
-#endif  // __MINGW32__
+#  endif  // __MINGW32__
 
 #endif  // defined(XP_WIN)
 
@@ -788,7 +788,7 @@ nsresult nsSystemInfo::Init() {
     }
   }
 
-#ifndef __MINGW32__
+#  ifndef __MINGW32__
   nsAutoString avInfo, antiSpyInfo, firewallInfo;
   if (NS_SUCCEEDED(
           GetWindowsSecurityCenterInfo(avInfo, antiSpyInfo, firewallInfo))) {
@@ -816,7 +816,7 @@ nsresult nsSystemInfo::Init() {
       }
     }
   }
-#endif  // __MINGW32__
+#  endif  // __MINGW32__
 #endif
 
 #if defined(XP_MACOSX)
@@ -922,7 +922,7 @@ nsresult nsSystemInfo::Init() {
 // This version will need to be updated whenever there is a new official
 // Android release.
 // See: https://cs.chromium.org/chromium/src/base/sys_info_android.cc?l=61
-#define DEFAULT_ANDROID_VERSION "6.0.99"
+#  define DEFAULT_ANDROID_VERSION "6.0.99"
 
 /* static */
 void nsSystemInfo::GetAndroidSystemInfo(AndroidSystemInfo* aInfo) {

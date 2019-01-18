@@ -31,7 +31,7 @@
 #include "nsMenuPopupFrame.h"
 #include "SVGImageContext.h"
 #ifdef MOZ_XUL
-#include "nsTreeBodyFrame.h"
+#  include "nsTreeBodyFrame.h"
 #endif
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"

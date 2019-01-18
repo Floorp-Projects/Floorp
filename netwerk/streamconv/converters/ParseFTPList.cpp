@@ -1078,7 +1078,7 @@ int ParseFTPList(const char *line, struct list_state *state,
           }
         }
 
-#if defined(SUPPORT_LSLF) /* some (very rare) servers return ls -lF */
+#  if defined(SUPPORT_LSLF) /* some (very rare) servers return ls -lF */
         if (result->fe_fnlen > 1) {
           p = result->fe_fname[result->fe_fnlen - 1];
           pos = result->fe_type;
@@ -1092,7 +1092,7 @@ int ParseFTPList(const char *line, struct list_state *state,
             result->fe_fnlen--; /* socket, whiteout, fifo */
           }
         }
-#endif
+#  endif
 
         /* the caller should do this (if dropping "." and ".." is desired)
         if (result->fe_type == 'd' && result->fe_fname[0] == '.' &&

@@ -81,12 +81,12 @@
 #include "nsCSSPseudoElements.h"
 #include "nsWindowSizes.h"
 #ifdef MOZ_XUL
-#include "nsXULElement.h"
+#  include "nsXULElement.h"
 #endif /* MOZ_XUL */
 #include "SVGElement.h"
 #include "nsFrameSelection.h"
 #ifdef DEBUG
-#include "nsRange.h"
+#  include "nsRange.h"
 #endif
 
 #include "nsBindingManager.h"
@@ -179,9 +179,9 @@ namespace dom {
 // thread pointer that comes with the non-threadsafe refcount on
 // nsIContent.
 #ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
-#define EXTRA_DOM_NODE_BYTES 8
+#  define EXTRA_DOM_NODE_BYTES 8
 #else
-#define EXTRA_DOM_NODE_BYTES 0
+#  define EXTRA_DOM_NODE_BYTES 0
 #endif
 
 #define ASSERT_NODE_SIZE(type, opt_size_64, opt_size_32)              \

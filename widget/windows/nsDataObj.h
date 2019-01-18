@@ -26,12 +26,12 @@ class nsIPrincipal;
 // IDataObjectAsyncCapability.  We try to detect this, and rename this in our
 // code too to make sure that we pick the correct name when building.
 #ifdef __IDataObjectAsyncCapability_INTERFACE_DEFINED__
-#define IAsyncOperation IDataObjectAsyncCapability
-#define IID_IAsyncOperation IID_IDataObjectAsyncCapability
+#  define IAsyncOperation IDataObjectAsyncCapability
+#  define IID_IAsyncOperation IID_IDataObjectAsyncCapability
 #else
 // XXX for older version of PSDK where IAsyncOperation and related stuff is not
 // available but thisdefine  should be removed when parocles config is updated
-#ifndef __IAsyncOperation_INTERFACE_DEFINED__
+#  ifndef __IAsyncOperation_INTERFACE_DEFINED__
 // IAsyncOperation interface definition
 EXTERN_C const IID IID_IAsyncOperation;
 
@@ -45,12 +45,12 @@ IAsyncOperation : public IUnknown {
       HRESULT hResult, IBindCtx * pbcReserved, DWORD dwEffects) = 0;
 };
 // this is not defined in the old headers for some reason
-#ifndef FD_PROGRESSUI
-#define FD_PROGRESSUI 0x4000
-#endif
+#    ifndef FD_PROGRESSUI
+#      define FD_PROGRESSUI 0x4000
+#    endif
 
-#endif  // __IAsyncOperation_INTERFACE_DEFINED__
-#endif  // __IDataObjectAsyncCapability_INTERFACE_DEFINED__
+#  endif  // __IAsyncOperation_INTERFACE_DEFINED__
+#endif    // __IDataObjectAsyncCapability_INTERFACE_DEFINED__
 
 /*
  * CFSTR_SHELLURL is deprecated and doesn't have a Unicode version.
@@ -59,10 +59,10 @@ IAsyncOperation : public IUnknown {
  * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_basics/shell_basics_programming/transferring/clipboard.asp
  */
 #ifndef CFSTR_INETURLA
-#define CFSTR_INETURLA L"UniformResourceLocator"
+#  define CFSTR_INETURLA L"UniformResourceLocator"
 #endif
 #ifndef CFSTR_INETURLW
-#define CFSTR_INETURLW L"UniformResourceLocatorW"
+#  define CFSTR_INETURLW L"UniformResourceLocatorW"
 #endif
 
 // For support of MinGW w32api v2.4.
@@ -71,10 +71,10 @@ IAsyncOperation : public IUnknown {
 // then that can be made the base required version and this code should be
 // removed.
 #ifndef CFSTR_FILEDESCRIPTORA
-#define CFSTR_FILEDESCRIPTORA L"FileGroupDescriptor"
+#  define CFSTR_FILEDESCRIPTORA L"FileGroupDescriptor"
 #endif
 #ifndef CFSTR_FILEDESCRIPTORW
-#define CFSTR_FILEDESCRIPTORW L"FileGroupDescriptorW"
+#  define CFSTR_FILEDESCRIPTORW L"FileGroupDescriptorW"
 #endif
 
 class CEnumFormatEtc;

@@ -28,7 +28,7 @@
 #include "crashreporter_gtk_common.h"
 
 #ifndef GDK_KEY_Escape
-#define GDK_KEY_Escape GDK_Escape
+#  define GDK_KEY_Escape GDK_Escape
 #endif
 
 using std::string;
@@ -108,7 +108,7 @@ static gboolean ReportCompleted(gpointer success) {
 }
 
 #ifdef MOZ_ENABLE_GCONF
-#define HTTP_PROXY_DIR "/system/http_proxy"
+#  define HTTP_PROXY_DIR "/system/http_proxy"
 
 void LoadProxyinfo() {
   class GConfClient;

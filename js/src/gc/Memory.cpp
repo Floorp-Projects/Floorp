@@ -16,18 +16,18 @@
 
 #ifdef XP_WIN
 
-#include "util/Windows.h"
-#include <psapi.h>
+#  include "util/Windows.h"
+#  include <psapi.h>
 
 #else
 
-#include <algorithm>
-#include <errno.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+#  include <algorithm>
+#  include <errno.h>
+#  include <sys/mman.h>
+#  include <sys/resource.h>
+#  include <sys/stat.h>
+#  include <sys/types.h>
+#  include <unistd.h>
 
 #endif
 
@@ -272,7 +272,7 @@ static inline uint64_t GetNumberInRange(uint64_t minNum, uint64_t maxNum) {
   return minNum + rndNum;
 }
 
-#ifndef XP_WIN
+#  ifndef XP_WIN
 /*
  * The address range available to applications depends on both hardware and
  * kernel configuration. For example, AArch64 on Linux uses addresses with
@@ -353,7 +353,7 @@ static size_t FindAddressLimit() {
   // High was excluded, so use low (but sanity check it).
   return std::min(low + 1, size_t(47));
 }
-#endif  // !defined(XP_WIN)
+#  endif  // !defined(XP_WIN)
 
 #endif  // defined(JS_64BIT)
 
@@ -369,16 +369,16 @@ void InitMemorySubsystem() {
     allocGranularity = pageSize;
 #endif
 #ifdef JS_64BIT
-#ifdef XP_WIN
+#  ifdef XP_WIN
     minValidAddress = size_t(sysinfo.lpMinimumApplicationAddress);
     maxValidAddress = size_t(sysinfo.lpMaximumApplicationAddress);
     numAddressBits = mozilla::FloorLog2(maxValidAddress) + 1;
-#else
+#  else
     // No standard way to determine these, so fall back to FindAddressLimit().
     numAddressBits = FindAddressLimit();
     minValidAddress = allocGranularity;
     maxValidAddress = (UINT64_C(1) << numAddressBits) - 1 - allocGranularity;
-#endif
+#  endif
     // Sanity check the address to ensure we don't use more than 47 bits.
     uint64_t maxJSAddress = UINT64_C(0x00007fffffffffff) - allocGranularity;
     if (maxValidAddress > maxJSAddress) {

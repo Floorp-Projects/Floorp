@@ -18,24 +18,24 @@
 
 #define LOCAL_PLUGIN_DLL_SUFFIX ".so"
 #if defined(__hpux)
-#define DEFAULT_X11_PATH "/usr/lib/X11R6/"
-#undef LOCAL_PLUGIN_DLL_SUFFIX
-#define LOCAL_PLUGIN_DLL_SUFFIX ".sl"
-#define LOCAL_PLUGIN_DLL_ALT_SUFFIX ".so"
+#  define DEFAULT_X11_PATH "/usr/lib/X11R6/"
+#  undef LOCAL_PLUGIN_DLL_SUFFIX
+#  define LOCAL_PLUGIN_DLL_SUFFIX ".sl"
+#  define LOCAL_PLUGIN_DLL_ALT_SUFFIX ".so"
 #elif defined(_AIX)
-#define DEFAULT_X11_PATH "/usr/lib"
-#define LOCAL_PLUGIN_DLL_ALT_SUFFIX ".a"
+#  define DEFAULT_X11_PATH "/usr/lib"
+#  define LOCAL_PLUGIN_DLL_ALT_SUFFIX ".a"
 #elif defined(SOLARIS)
-#define DEFAULT_X11_PATH "/usr/openwin/lib/"
+#  define DEFAULT_X11_PATH "/usr/openwin/lib/"
 #elif defined(LINUX)
-#define DEFAULT_X11_PATH "/usr/X11R6/lib/"
+#  define DEFAULT_X11_PATH "/usr/X11R6/lib/"
 #elif defined(__APPLE__)
-#define DEFAULT_X11_PATH "/usr/X11R6/lib"
-#undef LOCAL_PLUGIN_DLL_SUFFIX
-#define LOCAL_PLUGIN_DLL_SUFFIX ".dylib"
-#define LOCAL_PLUGIN_DLL_ALT_SUFFIX ".so"
+#  define DEFAULT_X11_PATH "/usr/X11R6/lib"
+#  undef LOCAL_PLUGIN_DLL_SUFFIX
+#  define LOCAL_PLUGIN_DLL_SUFFIX ".dylib"
+#  define LOCAL_PLUGIN_DLL_ALT_SUFFIX ".so"
 #else
-#define DEFAULT_X11_PATH ""
+#  define DEFAULT_X11_PATH ""
 #endif
 
 /* nsPluginsDir implementation */

@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_X11
-#include <cairo-xlib.h>
-#include "gfxXlibSurface.h"
+#  include <cairo-xlib.h>
+#  include "gfxXlibSurface.h"
 /* X headers suck */
 enum { XKeyPress = KeyPress };
-#include "mozilla/X11Util.h"
+#  include "mozilla/X11Util.h"
 using mozilla::DefaultXDisplay;
 #endif
 
@@ -70,18 +70,18 @@ using mozilla::DefaultXDisplay;
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 #ifdef XP_WIN
-#include <wtypes.h>
-#include <winuser.h>
-#include "mozilla/widget/WinMessages.h"
+#  include <wtypes.h>
+#  include <winuser.h>
+#  include "mozilla/widget/WinMessages.h"
 #endif  // #ifdef XP_WIN
 
 #ifdef XP_MACOSX
-#include "ComplexTextInputPanel.h"
+#  include "ComplexTextInputPanel.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
-#include <gdk/gdk.h>
-#include <gtk/gtk.h>
+#  include <gdk/gdk.h>
+#  include <gtk/gtk.h>
 #endif
 
 using namespace mozilla;
@@ -259,12 +259,12 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mLastMouseDownButtonType = -1;
 
 #ifdef XP_MACOSX
-#ifndef NP_NO_CARBON
+#  ifndef NP_NO_CARBON
   // We don't support Carbon, but it is still the default model for i386 NPAPI.
   mEventModel = NPEventModelCarbon;
-#else
+#  else
   mEventModel = NPEventModelCocoa;
-#endif
+#  endif
   mUseAsyncRendering = false;
 #endif
 
@@ -1228,13 +1228,13 @@ static void InitializeNPCocoaEvent(NPCocoaEvent* event) {
 }
 
 NPDrawingModel nsPluginInstanceOwner::GetDrawingModel() {
-#ifndef NP_NO_QUICKDRAW
+#  ifndef NP_NO_QUICKDRAW
   // We don't support the Quickdraw drawing model any more but it's still
   // the default model for i386 per NPAPI.
   NPDrawingModel drawingModel = NPDrawingModelQuickDraw;
-#else
+#  else
   NPDrawingModel drawingModel = NPDrawingModelCoreGraphics;
-#endif
+#  endif
 
   if (!mInstance) return drawingModel;
 
@@ -1254,7 +1254,7 @@ bool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation() {
 
 NPEventModel nsPluginInstanceOwner::GetEventModel() { return mEventModel; }
 
-#define DEFAULT_REFRESH_RATE 20  // 50 FPS
+#  define DEFAULT_REFRESH_RATE 20  // 50 FPS
 StaticRefPtr<nsITimer> nsPluginInstanceOwner::sCATimer;
 nsTArray<nsPluginInstanceOwner*>* nsPluginInstanceOwner::sCARefreshListeners =
     nullptr;
@@ -2258,11 +2258,11 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
       if (widget) {
         rootPoint = anEvent.mRefPoint + widget->WidgetToScreenOffset();
       }
-#ifdef MOZ_WIDGET_GTK
+#  ifdef MOZ_WIDGET_GTK
       Window root = GDK_ROOT_WINDOW();
-#else
+#  else
       Window root = X11None;  // Could XQueryTree, but this is not important.
-#endif
+#  endif
 
       switch (anEvent.mMessage) {
         case eMouseOver:
@@ -2336,7 +2336,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
     case eKeyboardEventClass:
       if (anEvent.mPluginEvent) {
         XKeyEvent& event = pluginEvent.xkey;
-#ifdef MOZ_WIDGET_GTK
+#  ifdef MOZ_WIDGET_GTK
         event.root = GDK_ROOT_WINDOW();
         event.time = anEvent.mTime;
         const GdkEventKey* gdkEvent =
@@ -2358,7 +2358,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
           default:
             break;
         }
-#endif
+#  endif
 
         // Information that could be obtained from pluginEvent but we may not
         // want to promise to provide:
@@ -2656,14 +2656,14 @@ nsresult nsPluginInstanceOwner::Renderer::DrawWithXlib(
 
   NPSetWindowCallbackStruct* ws_info =
       static_cast<NPSetWindowCallbackStruct*>(mWindow->ws_info);
-#ifdef MOZ_X11
+#  ifdef MOZ_X11
   if (ws_info->visual != visual || ws_info->colormap != colormap) {
     ws_info->visual = visual;
     ws_info->colormap = colormap;
     ws_info->depth = gfxXlibSurface::DepthOfVisual(screen, visual);
     doupdatewindow = true;
   }
-#endif
+#  endif
 
   {
     if (doupdatewindow) instance->SetWindow(mWindow);

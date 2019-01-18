@@ -7,9 +7,9 @@
 #define GTEST_MOZGTESTFRIEND_H
 
 #ifdef ENABLE_TESTS
-#include "gtest_prod.h"
+#  include "gtest_prod.h"
 #else
-#define FRIEND_TEST(a, b)
+#  define FRIEND_TEST(a, b)
 #endif
 
 #endif  // GTEST_MOZGTESTFRIEND_H

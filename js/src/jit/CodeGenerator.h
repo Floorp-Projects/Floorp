@@ -9,25 +9,25 @@
 
 #include "jit/CacheIR.h"
 #if defined(JS_ION_PERF)
-#include "jit/PerfSpewer.h"
+#  include "jit/PerfSpewer.h"
 #endif
 
 #if defined(JS_CODEGEN_X86)
-#include "jit/x86/CodeGenerator-x86.h"
+#  include "jit/x86/CodeGenerator-x86.h"
 #elif defined(JS_CODEGEN_X64)
-#include "jit/x64/CodeGenerator-x64.h"
+#  include "jit/x64/CodeGenerator-x64.h"
 #elif defined(JS_CODEGEN_ARM)
-#include "jit/arm/CodeGenerator-arm.h"
+#  include "jit/arm/CodeGenerator-arm.h"
 #elif defined(JS_CODEGEN_ARM64)
-#include "jit/arm64/CodeGenerator-arm64.h"
+#  include "jit/arm64/CodeGenerator-arm64.h"
 #elif defined(JS_CODEGEN_MIPS32)
-#include "jit/mips32/CodeGenerator-mips32.h"
+#  include "jit/mips32/CodeGenerator-mips32.h"
 #elif defined(JS_CODEGEN_MIPS64)
-#include "jit/mips64/CodeGenerator-mips64.h"
+#  include "jit/mips64/CodeGenerator-mips64.h"
 #elif defined(JS_CODEGEN_NONE)
-#include "jit/none/CodeGenerator-none.h"
+#  include "jit/none/CodeGenerator-none.h"
 #else
-#error "Unknown architecture!"
+#  error "Unknown architecture!"
 #endif
 
 namespace js {

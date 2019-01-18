@@ -23,7 +23,7 @@
 #include "nsIInterfaceRequestor.h"
 
 #ifdef XP_WIN
-#include "win_wifiScanner.h"
+#  include "win_wifiScanner.h"
 #endif
 
 extern mozilla::LazyLogModule gWifiMonitorLog;

@@ -18,17 +18,17 @@
 #define DUMMY_ARG1 L"\"arg 1\" "
 
 #ifndef MAXPATHLEN
-#ifdef PATH_MAX
-#define MAXPATHLEN PATH_MAX
-#elif defined(MAX_PATH)
-#define MAXPATHLEN MAX_PATH
-#elif defined(_MAX_PATH)
-#define MAXPATHLEN _MAX_PATH
-#elif defined(CCHMAXPATH)
-#define MAXPATHLEN CCHMAXPATH
-#else
-#define MAXPATHLEN 1024
-#endif
+#  ifdef PATH_MAX
+#    define MAXPATHLEN PATH_MAX
+#  elif defined(MAX_PATH)
+#    define MAXPATHLEN MAX_PATH
+#  elif defined(_MAX_PATH)
+#    define MAXPATHLEN _MAX_PATH
+#  elif defined(CCHMAXPATH)
+#    define MAXPATHLEN CCHMAXPATH
+#  else
+#    define MAXPATHLEN 1024
+#  endif
 #endif
 
 #define TEST_NAME L"XRE MakeCommandLine"
@@ -251,7 +251,7 @@ int wmain(int argc, wchar_t *argv[]) {
    startup routines.  Workaround is to implement something like
    it ourselves.  See bug 411826 */
 
-#include <shellapi.h>
+#  include <shellapi.h>
 
 int main(int argc, char **argv) {
   LPWSTR commandLine = GetCommandLineW();

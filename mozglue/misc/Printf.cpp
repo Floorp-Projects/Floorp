@@ -23,7 +23,7 @@
 #include <string.h>
 
 #if defined(XP_WIN)
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 /*
@@ -31,11 +31,11 @@
  * and requires array notation.
  */
 #ifdef HAVE_VA_COPY
-#define VARARGS_ASSIGN(foo, bar) VA_COPY(foo, bar)
+#  define VARARGS_ASSIGN(foo, bar) VA_COPY(foo, bar)
 #elif defined(HAVE_VA_LIST_AS_ARRAY)
-#define VARARGS_ASSIGN(foo, bar) foo[0] = bar[0]
+#  define VARARGS_ASSIGN(foo, bar) foo[0] = bar[0]
 #else
-#define VARARGS_ASSIGN(foo, bar) (foo) = (bar)
+#  define VARARGS_ASSIGN(foo, bar) (foo) = (bar)
 #endif
 
 /*
@@ -62,7 +62,7 @@ typedef mozilla::Vector<NumArgState, 20, mozilla::MallocAllocPolicy>
 #define TYPE_INTSTR 10
 #define TYPE_POINTER 11
 #if defined(XP_WIN)
-#define TYPE_WSTRING 12
+#  define TYPE_WSTRING 12
 #endif
 #define TYPE_UNKNOWN 20
 

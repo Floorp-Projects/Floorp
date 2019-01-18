@@ -8,7 +8,7 @@
 #define WINDIRENT_H__
 
 #ifndef XP_WIN
-#error This library should only be used on Windows
+#  error This library should only be used on Windows
 #endif
 
 #include <windows.h>

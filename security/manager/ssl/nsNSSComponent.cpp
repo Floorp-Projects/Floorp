@@ -61,19 +61,19 @@
 #include "prmem.h"
 
 #if defined(XP_LINUX) && !defined(ANDROID)
-#include <linux/magic.h>
-#include <sys/vfs.h>
+#  include <linux/magic.h>
+#  include <sys/vfs.h>
 #endif
 
 #ifdef XP_WIN
-#include "mozilla/WindowsVersion.h"
-#include "nsILocalFileWin.h"
+#  include "mozilla/WindowsVersion.h"
+#  include "nsILocalFileWin.h"
 
-#include "windows.h"  // this needs to be before the following includes
-#include "lmcons.h"
-#include "sddl.h"
-#include "wincrypt.h"
-#include "nsIWindowsRegKey.h"
+#  include "windows.h"  // this needs to be before the following includes
+#  include "lmcons.h"
+#  include "sddl.h"
+#  include "wincrypt.h"
+#  include "nsIWindowsRegKey.h"
 #endif
 
 using namespace mozilla;
@@ -1449,7 +1449,7 @@ static void SetNSSDatabaseCacheModeAsAppropriate() {
   static const char sNSS_SDB_USE_CACHE_WITH_VALUE[] = "NSS_SDB_USE_CACHE=yes";
   auto profilePath = profileFile->NativePath();
 
-#if defined(XP_LINUX) && !defined(ANDROID)
+#  if defined(XP_LINUX) && !defined(ANDROID)
   struct statfs statfs_s;
   if (statfs(profilePath.get(), &statfs_s) == 0 &&
       statfs_s.f_type == NFS_SUPER_MAGIC && !PR_GetEnv(sNSS_SDB_USE_CACHE)) {
@@ -1460,9 +1460,9 @@ static void SetNSSDatabaseCacheModeAsAppropriate() {
   } else {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("not setting NSS_SDB_USE_CACHE"));
   }
-#endif  // defined(XP_LINUX) && !defined(ANDROID)
+#  endif  // defined(XP_LINUX) && !defined(ANDROID)
 
-#ifdef XP_WIN
+#  ifdef XP_WIN
   wchar_t volPath[MAX_PATH];
   if (::GetVolumePathNameW(profilePath.get(), volPath, MAX_PATH) &&
       ::GetDriveTypeW(volPath) == DRIVE_REMOTE &&
@@ -1474,7 +1474,7 @@ static void SetNSSDatabaseCacheModeAsAppropriate() {
   } else {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("not setting NSS_SDB_USE_CACHE"));
   }
-#endif  // XP_WIN
+#  endif  // XP_WIN
 }
 #endif  // defined(XP_WIN) || (defined(XP_LINUX) && !defined(ANDROID))
 

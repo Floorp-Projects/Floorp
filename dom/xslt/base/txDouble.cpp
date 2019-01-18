@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #ifdef WIN32
-#include <float.h>
+#  include <float.h>
 #endif
 #include "prdtoa.h"
 

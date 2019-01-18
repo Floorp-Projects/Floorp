@@ -17,11 +17,11 @@
 #include "WebMDemuxer.h"
 
 #ifdef MOZ_ANDROID_HLS_SUPPORT
-#include "HLSDecoder.h"
+#  include "HLSDecoder.h"
 #endif
 #ifdef MOZ_FMP4
-#include "MP4Decoder.h"
-#include "MP4Demuxer.h"
+#  include "MP4Decoder.h"
+#  include "MP4Demuxer.h"
 #endif
 #include "MediaFormatReader.h"
 

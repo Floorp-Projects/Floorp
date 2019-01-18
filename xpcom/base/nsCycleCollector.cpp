@@ -143,10 +143,10 @@
 //
 
 #if !defined(__MINGW32__)
-#ifdef WIN32
-#include <crtdbg.h>
-#include <errno.h>
-#endif
+#  ifdef WIN32
+#    include <crtdbg.h>
+#    include <errno.h>
+#  endif
 #endif
 
 #include "base/process_util.h"
@@ -502,9 +502,9 @@ class EdgePool {
 };
 
 #ifdef DEBUG_CC_GRAPH
-#define CC_GRAPH_ASSERT(b) MOZ_ASSERT(b)
+#  define CC_GRAPH_ASSERT(b) MOZ_ASSERT(b)
 #else
-#define CC_GRAPH_ASSERT(b)
+#  define CC_GRAPH_ASSERT(b)
 #endif
 
 #define CC_TELEMETRY(_name, _value)                                            \

@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaChannelStatistics_h_)
-#define MediaChannelStatistics_h_
+#  define MediaChannelStatistics_h_
 
-#include "mozilla/TimeStamp.h"
+#  include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 

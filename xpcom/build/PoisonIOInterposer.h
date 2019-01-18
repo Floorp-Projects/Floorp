@@ -39,7 +39,7 @@ MOZ_END_EXTERN_C
 
 #if defined(XP_MACOSX) || (defined(XP_WIN) && !defined(__MINGW32__))
 
-#ifdef __cplusplus
+#  ifdef __cplusplus
 namespace mozilla {
 
 /**
@@ -55,7 +55,7 @@ bool IsDebugFile(intptr_t aFileID);
  */
 void InitPoisonIOInterposer();
 
-#ifdef XP_MACOSX
+#    ifdef XP_MACOSX
 /**
  * Check that writes are dirty before reporting I/O (Mac OS X only)
  * This is necessary for late-write checks on Mac OS X, but reading the buffer
@@ -63,7 +63,7 @@ void InitPoisonIOInterposer();
  * to do this for everything else that uses
  */
 void OnlyReportDirtyWrites();
-#endif /* XP_MACOSX */
+#    endif /* XP_MACOSX */
 
 /**
  * Clear IO poisoning, this is only safe to do on the main-thread when no other
@@ -72,20 +72,20 @@ void OnlyReportDirtyWrites();
 void ClearPoisonIOInterposer();
 
 }  // namespace mozilla
-#endif /* __cplusplus */
+#  endif /* __cplusplus */
 
 #else /* defined(XP_MACOSX) || (defined(XP_WIN) && !defined(__MINGW32__)) */
 
-#ifdef __cplusplus
+#  ifdef __cplusplus
 namespace mozilla {
 inline bool IsDebugFile(intptr_t aFileID) { return true; }
 inline void InitPoisonIOInterposer() {}
 inline void ClearPoisonIOInterposer() {}
-#ifdef XP_MACOSX
+#    ifdef XP_MACOSX
 inline void OnlyReportDirtyWrites() {}
-#endif /* XP_MACOSX */
+#    endif /* XP_MACOSX */
 }  // namespace mozilla
-#endif /* __cplusplus */
+#  endif   /* __cplusplus */
 
 #endif /* XP_WIN || XP_MACOSX */
 

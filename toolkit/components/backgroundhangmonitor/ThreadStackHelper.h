@@ -9,34 +9,34 @@
 
 #ifdef MOZ_GECKO_PROFILER
 
-#include "js/ProfilingStack.h"
-#include "HangDetails.h"
-#include "nsThread.h"
+#  include "js/ProfilingStack.h"
+#  include "HangDetails.h"
+#  include "nsThread.h"
 
-#include <stddef.h>
+#  include <stddef.h>
 
-#if defined(XP_LINUX)
-#include <signal.h>
-#include <semaphore.h>
-#include <sys/types.h>
-#elif defined(XP_WIN)
-#include <windows.h>
-#elif defined(XP_MACOSX)
-#include <mach/mach.h>
-#endif
+#  if defined(XP_LINUX)
+#    include <signal.h>
+#    include <semaphore.h>
+#    include <sys/types.h>
+#  elif defined(XP_WIN)
+#    include <windows.h>
+#  elif defined(XP_MACOSX)
+#    include <mach/mach.h>
+#  endif
 
 // Support profiling stack and native stack on these platforms.
-#if defined(XP_LINUX) || defined(XP_WIN) || defined(XP_MACOSX)
-#define MOZ_THREADSTACKHELPER_PROFILING_STACK
-#define MOZ_THREADSTACKHELPER_NATIVE_STACK
-#endif
+#  if defined(XP_LINUX) || defined(XP_WIN) || defined(XP_MACOSX)
+#    define MOZ_THREADSTACKHELPER_PROFILING_STACK
+#    define MOZ_THREADSTACKHELPER_NATIVE_STACK
+#  endif
 
 // Android x86 builds consistently crash in the Background Hang Reporter. bug
 // 1368520.
-#if defined(__ANDROID__)
-#undef MOZ_THREADSTACKHELPER_PROFILING_STACK
-#undef MOZ_THREADSTACKHELPER_NATIVE_STACK
-#endif
+#  if defined(__ANDROID__)
+#    undef MOZ_THREADSTACKHELPER_PROFILING_STACK
+#    undef MOZ_THREADSTACKHELPER_NATIVE_STACK
+#  endif
 
 namespace mozilla {
 

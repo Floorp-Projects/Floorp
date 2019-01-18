@@ -6,13 +6,13 @@
 #include "leaky.h"
 
 #ifdef USE_BFD
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <libgen.h>
-#include <bfd.h>
-#include <cxxabi.h>
+#  include <stdio.h>
+#  include <string.h>
+#  include <fcntl.h>
+#  include <unistd.h>
+#  include <libgen.h>
+#  include <bfd.h>
+#  include <cxxabi.h>
 
 static bfd *try_debug_file(const char *filename, unsigned long crc32) {
   int fd = open(filename, O_RDONLY);
@@ -105,13 +105,13 @@ Symbol **leaky::ExtendSymbols(int num) {
   return sp;
 }
 
-#define NEXT_SYMBOL              \
-  do {                           \
-    sp++;                        \
-    if (sp >= lastSymbol) {      \
-      sp = ExtendSymbols(16384); \
-    }                            \
-  } while (0)
+#  define NEXT_SYMBOL              \
+    do {                           \
+      sp++;                        \
+      if (sp >= lastSymbol) {      \
+        sp = ExtendSymbols(16384); \
+      }                            \
+    } while (0)
 
 void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress) {
   int initialSymbols = usefulSymbols;

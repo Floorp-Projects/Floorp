@@ -19,7 +19,7 @@
 #include "nsCOMArray.h"
 #include "nsPIDOMWindow.h"
 #ifdef MOZ_XUL
-#include "nsXULElement.h"
+#  include "nsXULElement.h"
 #endif
 #include "nsBindingManager.h"
 #include "nsGenericHTMLElement.h"
@@ -48,10 +48,10 @@ enum class IsRemoveNotification {
 };
 
 #ifdef DEBUG
-#define COMPOSED_DOC_DECL \
-  const bool wasInComposedDoc = !!node->GetComposedDoc();
+#  define COMPOSED_DOC_DECL \
+    const bool wasInComposedDoc = !!node->GetComposedDoc();
 #else
-#define COMPOSED_DOC_DECL
+#  define COMPOSED_DOC_DECL
 #endif
 
 // This macro expects the ownerDocument of content_ to be in scope as

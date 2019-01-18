@@ -73,12 +73,12 @@
 #include "mozilla/dom/WebCryptoThreadPool.h"
 
 #ifdef MOZ_XUL
-#include "nsXULPopupManager.h"
-#include "nsXULContentUtils.h"
-#include "nsXULPrototypeCache.h"
-#include "nsXULTooltipListener.h"
+#  include "nsXULPopupManager.h"
+#  include "nsXULContentUtils.h"
+#  include "nsXULPrototypeCache.h"
+#  include "nsXULTooltipListener.h"
 
-#include "nsMenuBarListener.h"
+#  include "nsMenuBarListener.h"
 #endif
 
 #include "CubebUtils.h"

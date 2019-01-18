@@ -23,7 +23,7 @@
 
 #include "jit/ExecutableAllocator.h"
 #ifdef JS_ION_PERF
-#include "jit/PerfSpewer.h"
+#  include "jit/PerfSpewer.h"
 #endif
 #include "vtune/VTuneWrapper.h"
 #include "wasm/WasmModule.h"

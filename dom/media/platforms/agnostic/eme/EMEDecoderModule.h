@@ -5,12 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(EMEDecoderModule_h_)
-#define EMEDecoderModule_h_
+#  define EMEDecoderModule_h_
 
-#include "MediaDataDecoderProxy.h"
-#include "PlatformDecoderModule.h"
-#include "PlatformDecoderModule.h"
-#include "SamplesWaitingForKey.h"
+#  include "MediaDataDecoderProxy.h"
+#  include "PlatformDecoderModule.h"
+#  include "PlatformDecoderModule.h"
+#  include "SamplesWaitingForKey.h"
 
 namespace mozilla {
 

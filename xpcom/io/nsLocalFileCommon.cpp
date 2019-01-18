@@ -18,7 +18,7 @@
 #include "nsArray.h"
 
 #ifdef XP_WIN
-#include <string.h>
+#  include <string.h>
 #endif
 
 #if !defined(MOZ_WIDGET_COCOA) && !defined(XP_WIN)
@@ -163,7 +163,7 @@ static const char16_t kPathSeparatorChar = '\\';
 #elif defined(XP_UNIX)
 static const char16_t kPathSeparatorChar = '/';
 #else
-#error Need to define file path separator for your platform
+#  error Need to define file path separator for your platform
 #endif
 
 static void SplitPath(char16_t* aPath, nsTArray<char16_t*>& aNodeArray) {

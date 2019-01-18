@@ -12,7 +12,7 @@
 #include "base/thread.h"  // for Thread
 #include "gfxPlatform.h"  // for gfxPlatform
 #ifdef MOZ_WIDGET_GTK
-#include "gfxPlatformGtk.h"  // for gfxPlatform
+#  include "gfxPlatformGtk.h"  // for gfxPlatform
 #endif
 #include "gfxPrefs.h"             // for gfxPrefs
 #include "mozilla/AutoRestore.h"  // for AutoRestore
@@ -31,7 +31,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/VsyncDispatcher.h"
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-#include "VsyncSource.h"
+#  include "VsyncSource.h"
 #endif
 #include "mozilla/widget/CompositorWidget.h"
 #include "VRManager.h"

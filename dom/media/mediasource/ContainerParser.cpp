@@ -17,11 +17,11 @@
 #include "MediaData.h"
 #include "nsMimeTypes.h"
 #ifdef MOZ_FMP4
-#include "AtomType.h"
-#include "BufferReader.h"
-#include "Index.h"
-#include "MP4Interval.h"
-#include "ByteStream.h"
+#  include "AtomType.h"
+#  include "BufferReader.h"
+#  include "Index.h"
+#  include "MP4Interval.h"
+#  include "ByteStream.h"
 #endif
 #include "nsAutoPtr.h"
 #include "SourceBufferResource.h"

@@ -617,9 +617,9 @@ struct AutoFlushICache {
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
   uintptr_t start_;
   uintptr_t stop_;
-#ifdef JS_JITSPEW
+#  ifdef JS_JITSPEW
   const char* name_;
-#endif
+#  endif
   bool inhibit_;
   AutoFlushICache* prev_;
 #endif

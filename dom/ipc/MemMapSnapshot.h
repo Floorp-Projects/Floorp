@@ -13,7 +13,7 @@
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Result.h"
 #ifdef XP_WIN
-#include "mozilla/ipc/FileDescriptor.h"
+#  include "mozilla/ipc/FileDescriptor.h"
 #endif
 
 namespace mozilla {

@@ -18,12 +18,12 @@
 #include <unistd.h>
 
 #ifndef ANDROID_VERSION
-#include <android/api-level.h>
-#define ANDROID_VERSION __ANDROID_API__
+#  include <android/api-level.h>
+#  define ANDROID_VERSION __ANDROID_API__
 #endif
 
 #if ANDROID_VERSION < 21
-#define RTLD_NOLOAD 0
+#  define RTLD_NOLOAD 0
 #endif
 
 #define sysinfo(foo) -1

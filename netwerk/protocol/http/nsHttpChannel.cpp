@@ -125,11 +125,11 @@
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
 
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
+#  include "GeckoTaskTracer.h"
 #endif
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"
+#  include "ProfilerMarkerPayload.h"
 #endif
 
 namespace mozilla {

@@ -57,11 +57,11 @@ class nsCSSAnonBoxes {
   // for wrapper anon boxes as well, since they're all inheriting.
   static bool IsInheritingAnonBox(nsAtom* aPseudo) {
     return
-#define CSS_ANON_BOX(_name, _value) nsGkAtoms::AnonBox_##_name == aPseudo ||
-#define CSS_NON_INHERITING_ANON_BOX(_name, _value) /* nothing */
-#include "nsCSSAnonBoxList.h"
-#undef CSS_NON_INHERITING_ANON_BOX
-#undef CSS_ANON_BOX
+#  define CSS_ANON_BOX(_name, _value) nsGkAtoms::AnonBox_##_name == aPseudo ||
+#  define CSS_NON_INHERITING_ANON_BOX(_name, _value) /* nothing */
+#  include "nsCSSAnonBoxList.h"
+#  undef CSS_NON_INHERITING_ANON_BOX
+#  undef CSS_ANON_BOX
         false;
   }
 #endif  // DEBUG

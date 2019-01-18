@@ -13,7 +13,7 @@
 #include "mozilla/ipc/MessageChannel.h"
 
 #ifdef MOZ_WIDGET_GTK
-#include <gtk/gtk.h>
+#  include <gtk/gtk.h>
 #endif
 
 #include "nsIFile.h"
@@ -25,8 +25,8 @@
 #include "nsXULAppAPI.h"
 
 #ifdef MOZ_X11
-#include "nsX11ErrorHandler.h"
-#include "mozilla/X11Util.h"
+#  include "nsX11ErrorHandler.h"
+#  include "mozilla/X11Util.h"
 #endif
 
 #include "mozilla/ipc/CrashReporterClient.h"
@@ -42,21 +42,21 @@
 #include "FunctionBrokerChild.h"
 
 #ifdef XP_WIN
-#include "mozilla/widget/AudioSession.h"
-#include <knownfolders.h>
+#  include "mozilla/widget/AudioSession.h"
+#  include <knownfolders.h>
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
-#include "PluginInterposeOSX.h"
-#include "PluginUtilsOSX.h"
+#  include "PluginInterposeOSX.h"
+#  include "PluginUtilsOSX.h"
 #endif
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ChildProfilerController.h"
+#  include "ChildProfilerController.h"
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-#include "mozilla/Sandbox.h"
+#  include "mozilla/Sandbox.h"
 #endif
 
 using namespace mozilla;
@@ -66,9 +66,9 @@ using namespace mozilla::widget;
 
 #if defined(XP_WIN)
 const wchar_t* kFlashFullscreenClass = L"ShockwaveFlashFullScreen";
-#if defined(MOZ_SANDBOX)
+#  if defined(MOZ_SANDBOX)
 std::wstring sRoamingPath;
-#endif
+#  endif
 #endif
 
 namespace {
@@ -306,7 +306,7 @@ bool PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
   NS_ENSURE_TRUE(mInitializeFunc, false);
 #else
 
-#error Please copy the initialization code from nsNPAPIPlugin.cpp
+#  error Please copy the initialization code from nsNPAPIPlugin.cpp
 
 #endif
 
@@ -520,9 +520,9 @@ void PluginModuleChild::EnteredCxxStack() {
       kNestedLoopDetectorPriority, kNestedLoopDetectorIntervalMs,
       PluginModuleChild::DetectNestedEventLoop, this, nullptr);
 
-#ifdef DEBUG
+#  ifdef DEBUG
   mTopLoopDepth = g_main_depth();
-#endif
+#  endif
 }
 
 void PluginModuleChild::ExitedCxxStack() {
@@ -1531,7 +1531,7 @@ mozilla::ipc::IPCResult PluginModuleChild::AnswerNP_GetEntryPoints(
   *_retval = mGetEntryPointsFunc(&mFunctions);
   return IPC_OK();
 #else
-#error Please implement me for your platform
+#  error Please implement me for your platform
 #endif
 }
 
@@ -1565,7 +1565,7 @@ NPError PluginModuleChild::DoNP_Initialize(const PluginSettings& aSettings) {
 #elif defined(OS_WIN) || defined(OS_MACOSX)
   result = mInitializeFunc(&sBrowserFuncs);
 #else
-#error Please implement me for your platform
+#  error Please implement me for your platform
 #endif
 
   return result;

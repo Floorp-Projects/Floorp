@@ -80,24 +80,24 @@ hardware (via AudioStream).
 
 */
 #if !defined(MediaDecoderStateMachine_h__)
-#define MediaDecoderStateMachine_h__
+#  define MediaDecoderStateMachine_h__
 
-#include "ImageContainer.h"
-#include "MediaDecoder.h"
-#include "MediaDecoderOwner.h"
-#include "MediaEventSource.h"
-#include "MediaFormatReader.h"
-#include "MediaMetadataManager.h"
-#include "MediaQueue.h"
-#include "MediaSink.h"
-#include "MediaStatistics.h"
-#include "MediaTimer.h"
-#include "SeekJob.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/ReentrantMonitor.h"
-#include "mozilla/StateMirroring.h"
-#include "nsAutoPtr.h"
-#include "nsThreadUtils.h"
+#  include "ImageContainer.h"
+#  include "MediaDecoder.h"
+#  include "MediaDecoderOwner.h"
+#  include "MediaEventSource.h"
+#  include "MediaFormatReader.h"
+#  include "MediaMetadataManager.h"
+#  include "MediaQueue.h"
+#  include "MediaSink.h"
+#  include "MediaStatistics.h"
+#  include "MediaTimer.h"
+#  include "SeekJob.h"
+#  include "mozilla/Attributes.h"
+#  include "mozilla/ReentrantMonitor.h"
+#  include "mozilla/StateMirroring.h"
+#  include "nsAutoPtr.h"
+#  include "nsThreadUtils.h"
 
 namespace mozilla {
 

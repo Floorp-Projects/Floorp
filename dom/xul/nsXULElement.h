@@ -55,10 +55,10 @@ enum class CallerType : uint32_t;
 ////////////////////////////////////////////////////////////////////////
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
-#define XUL_PROTOTYPE_ATTRIBUTE_METER(counter) \
-  (nsXULPrototypeAttribute::counter++)
+#  define XUL_PROTOTYPE_ATTRIBUTE_METER(counter) \
+    (nsXULPrototypeAttribute::counter++)
 #else
-#define XUL_PROTOTYPE_ATTRIBUTE_METER(counter) ((void)0)
+#  define XUL_PROTOTYPE_ATTRIBUTE_METER(counter) ((void)0)
 #endif
 
 /**

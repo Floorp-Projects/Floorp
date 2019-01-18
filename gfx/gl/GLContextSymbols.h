@@ -14,12 +14,12 @@
  */
 
 #ifndef GLAPIENTRY
-#ifdef XP_WIN
-#define GLAPIENTRY __stdcall
-#else
-#define GLAPIENTRY
-#endif
-#define GLAPI
+#  ifdef XP_WIN
+#    define GLAPIENTRY __stdcall
+#  else
+#    define GLAPIENTRY
+#  endif
+#  define GLAPI
 #endif
 
 namespace mozilla {

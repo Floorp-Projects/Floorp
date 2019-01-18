@@ -26,15 +26,15 @@
 #include <algorithm>
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
-#include "gfxWindowsSurface.h"
+#  include "gfxWindowsSurface.h"
 #endif
 
 #ifdef MOZ_X11
-#include "gfxXlibSurface.h"
+#  include "gfxXlibSurface.h"
 #endif
 
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
-#include "gfxQuartzSurface.h"
+#  include "gfxQuartzSurface.h"
 #endif
 
 #include <stdio.h>

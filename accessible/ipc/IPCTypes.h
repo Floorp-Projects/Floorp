@@ -8,7 +8,7 @@
 #define mozilla_a11y_IPCTypes_h
 
 #ifdef ACCESSIBILITY
-#include "mozilla/a11y/Role.h"
+#  include "mozilla/a11y/Role.h"
 
 namespace IPC {
 
@@ -36,25 +36,25 @@ typedef uint32_t role;
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
 
 // So that we don't include a bunch of other Windows junk.
-#if !defined(COM_NO_WINDOWS_H)
-#define COM_NO_WINDOWS_H
-#endif  // !defined(COM_NO_WINDOWS_H)
+#  if !defined(COM_NO_WINDOWS_H)
+#    define COM_NO_WINDOWS_H
+#  endif  // !defined(COM_NO_WINDOWS_H)
 
 // COM headers pull in MSXML which conflicts with our own XMLDocument class.
 // This define excludes those conflicting definitions.
-#if !defined(__XMLDocument_FWD_DEFINED__)
-#define __XMLDocument_FWD_DEFINED__
-#endif  // !defined(__XMLDocument_FWD_DEFINED__)
+#  if !defined(__XMLDocument_FWD_DEFINED__)
+#    define __XMLDocument_FWD_DEFINED__
+#  endif  // !defined(__XMLDocument_FWD_DEFINED__)
 
-#include <combaseapi.h>
+#  include <combaseapi.h>
 
-#include "mozilla/a11y/COMPtrTypes.h"
+#  include "mozilla/a11y/COMPtrTypes.h"
 
 // This define in rpcndr.h messes up our code, so we must undefine it after
 // COMPtrTypes.h has been included.
-#if defined(small)
-#undef small
-#endif  // defined(small)
+#  if defined(small)
+#    undef small
+#  endif  // defined(small)
 
 #else
 

@@ -103,16 +103,16 @@
 // At present, all sandboxed content processes use the same directory for
 // NS_APP_CONTENT_PROCESS_TEMP_DIR, but that should not be relied upon.
 //
-#define NS_APP_CONTENT_PROCESS_TEMP_DIR "ContentTmpD"
+#  define NS_APP_CONTENT_PROCESS_TEMP_DIR "ContentTmpD"
 #else
 // Otherwise NS_APP_CONTENT_PROCESS_TEMP_DIR must match NS_OS_TEMP_DIR.
-#define NS_APP_CONTENT_PROCESS_TEMP_DIR "TmpD"
+#  define NS_APP_CONTENT_PROCESS_TEMP_DIR "TmpD"
 #endif  // defined(MOZ_CONTENT_SANDBOX)
 
 #if defined(MOZ_SANDBOX)
-#define NS_APP_PLUGIN_PROCESS_TEMP_DIR "PluginTmpD"
+#  define NS_APP_PLUGIN_PROCESS_TEMP_DIR "PluginTmpD"
 #else
-#define NS_APP_PLUGIN_PROCESS_TEMP_DIR "TmpD"
+#  define NS_APP_PLUGIN_PROCESS_TEMP_DIR "TmpD"
 #endif
 
 #endif  // nsAppDirectoryServiceDefs_h___

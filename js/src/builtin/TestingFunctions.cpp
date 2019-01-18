@@ -21,9 +21,9 @@
 #include <ctime>
 
 #if defined(XP_UNIX) && !defined(XP_DARWIN)
-#include <time.h>
+#  include <time.h>
 #else
-#include <chrono>
+#  include <chrono>
 #endif
 
 #include "jsapi.h"
@@ -32,10 +32,10 @@
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
 #ifdef DEBUG
-#include "frontend/TokenStream.h"
-#include "irregexp/RegExpAST.h"
-#include "irregexp/RegExpEngine.h"
-#include "irregexp/RegExpParser.h"
+#  include "frontend/TokenStream.h"
+#  include "irregexp/RegExpAST.h"
+#  include "irregexp/RegExpEngine.h"
+#  include "irregexp/RegExpParser.h"
 #endif
 #include "gc/Heap.h"
 #include "jit/BaselineJIT.h"
@@ -658,11 +658,11 @@ static bool WasmBulkMemSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef ENABLE_WASM_BULKMEM_OPS
   bool isSupported = true;
-#ifdef ENABLE_WASM_CRANELIFT
+#  ifdef ENABLE_WASM_CRANELIFT
   if (cx->options().wasmForceCranelift()) {
     isSupported = false;
   }
-#endif
+#  endif
 #else
   bool isSupported = false;
 #endif
@@ -1820,9 +1820,9 @@ bool RunIterativeFailureTest(JSContext* cx,
 
   MOZ_ASSERT(!cx->isExceptionPending());
 
-#ifdef JS_GC_ZEAL
+#  ifdef JS_GC_ZEAL
   JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
-#endif
+#  endif
 
   size_t compartmentCount = CountCompartments(cx);
 
@@ -1891,7 +1891,7 @@ bool RunIterativeFailureTest(JSContext* cx,
         compartmentCount = CountCompartments(cx);
       }
 
-#ifdef JS_TRACE_LOGGING
+#  ifdef JS_TRACE_LOGGING
       // Reset the TraceLogger state if enabled.
       TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
       if (logger && logger->enabled()) {
@@ -1900,7 +1900,7 @@ bool RunIterativeFailureTest(JSContext* cx,
         }
         logger->enable(cx);
       }
-#endif
+#  endif
 
       iteration++;
     } while (failureWasSimulated);
@@ -3286,16 +3286,16 @@ static bool ObjectAddress(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef JS_MORE_DETERMINISTIC
+#  ifdef JS_MORE_DETERMINISTIC
   args.rval().setInt32(0);
   return true;
-#else
+#  else
   void* ptr = js::UncheckedUnwrap(&args[0].toObject(), true);
   char buffer[64];
   SprintfLiteral(buffer, "%p", ptr);
 
   return ReturnStringCopy(cx, args, buffer);
-#endif
+#  endif
 }
 
 static bool SharedAddress(JSContext* cx, unsigned argc, Value* vp) {
@@ -3311,9 +3311,9 @@ static bool SharedAddress(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef JS_MORE_DETERMINISTIC
+#  ifdef JS_MORE_DETERMINISTIC
   args.rval().setString(cx->staticStrings().getUint(0));
-#else
+#  else
   RootedObject obj(cx, CheckedUnwrap(&args[0].toObject()));
   if (!obj) {
     ReportAccessDenied(cx);
@@ -3335,7 +3335,7 @@ static bool SharedAddress(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setString(str);
-#endif
+#  endif
 
   return true;
 }
@@ -4940,21 +4940,21 @@ static bool GetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
     }
 #else
     tzset();
-#if defined(HAVE_LOCALTIME_R)
+#  if defined(HAVE_LOCALTIME_R)
     if (localtime_r(now, &local)) {
-#else
+#  else
     std::tm* localtm = std::localtime(now);
     if (localtm) {
       *local = *localtm;
-#endif /* HAVE_LOCALTIME_R */
+#  endif /* HAVE_LOCALTIME_R */
 
-#if defined(HAVE_TM_ZONE_TM_GMTOFF)
+#  if defined(HAVE_TM_ZONE_TM_GMTOFF)
       return local.tm_zone;
-#else
+#  else
       return tzname[local.tm_isdst > 0];
-#endif /* HAVE_TM_ZONE_TM_GMTOFF */
+#  endif /* HAVE_TM_ZONE_TM_GMTOFF */
     }
-#endif /* _WIN32 */
+#endif   /* _WIN32 */
     return nullptr;
   };
 
