@@ -3034,6 +3034,10 @@ menuseparator {
   min-width: 0 !important;
 }
 
+.CodeMirror.cm-s-mozilla, .CodeMirror-scroll, .CodeMirror-sizer {
+  overflow-anchor: none;
+}
+
 .theme-dark {
   --theme-conditional-breakpoint-color: #9fa4a9;
 }
