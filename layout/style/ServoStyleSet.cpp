@@ -387,10 +387,13 @@ void ServoStyleSet::PreTraverseSync() {
 
   LookAndFeel::NativeInit();
 
-  nsPresContext* presContext = GetPresContext();
-  MOZ_ASSERT(presContext,
-             "For now, we don't call into here without a pres context");
+  mDocument->CacheAllKnownLangPrefs();
+
   if (gfxUserFontSet* userFontSet = mDocument->GetUserFontSet()) {
+    nsPresContext* presContext = GetPresContext();
+    MOZ_ASSERT(presContext,
+               "For now, we don't call into here without a pres context");
+
     // Ensure that the @font-face data is not stale
     uint64_t generation = userFontSet->GetGeneration();
     if (generation != mUserFontSetUpdateGeneration) {
@@ -401,7 +404,6 @@ void ServoStyleSet::PreTraverseSync() {
   }
 
   MOZ_ASSERT(!StylistNeedsUpdate());
-  presContext->CacheAllLangs();
 }
 
 void ServoStyleSet::PreTraverse(ServoTraversalFlags aFlags, Element* aRoot) {
