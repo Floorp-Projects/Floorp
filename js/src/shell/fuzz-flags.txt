@@ -21,8 +21,6 @@
 --ion-licm=on
 --ion-limit-script-size=off
 --ion-limit-script-size=on
---ion-loop-unrolling=off
---ion-loop-unrolling=on
 --ion-offthread-compile=off
 --ion-osr=off
 --ion-osr=on

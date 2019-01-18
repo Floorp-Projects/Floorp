@@ -75,7 +75,6 @@ UNIFIED_SOURCES += [
     'LICM.cpp',
     'Linker.cpp',
     'LIR.cpp',
-    'LoopUnroller.cpp',
     'Lowering.cpp',
     'MacroAssembler.cpp',
     'MCallOptimize.cpp',
