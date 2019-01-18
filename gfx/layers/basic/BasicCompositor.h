@@ -89,6 +89,10 @@ class BasicCompositor : public Compositor {
   virtual already_AddRefed<AsyncReadbackBuffer> CreateAsyncReadbackBuffer(
       const gfx::IntSize& aSize) override;
 
+  virtual bool BlitRenderTarget(CompositingRenderTarget* aSource,
+                                const gfx::IntSize& aSourceSize,
+                                const gfx::IntSize& aDestSize) override;
+
   virtual void SetRenderTarget(CompositingRenderTarget* aSource) override {
     mRenderTarget = static_cast<BasicCompositingRenderTarget*>(aSource);
     mRenderTarget->BindRenderTarget();

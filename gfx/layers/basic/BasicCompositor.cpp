@@ -867,6 +867,18 @@ BasicCompositor::CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) {
   return MakeAndAddRef<BasicAsyncReadbackBuffer>(aSize);
 }
 
+bool BasicCompositor::BlitRenderTarget(CompositingRenderTarget* aSource,
+                                       const gfx::IntSize& aSourceSize,
+                                       const gfx::IntSize& aDestSize) {
+  RefPtr<SourceSurface> surface =
+      static_cast<BasicCompositingRenderTarget*>(aSource)
+          ->mDrawTarget->Snapshot();
+  mRenderTarget->mDrawTarget->DrawSurface(
+      surface, Rect(Point(), Size(aDestSize)), Rect(Point(), Size(aSourceSize)),
+      DrawSurfaceOptions(), DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+  return true;
+}
+
 void BasicCompositor::BeginFrame(
     const nsIntRegion& aInvalidRegion, const gfx::IntRect* aClipRectIn,
     const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
