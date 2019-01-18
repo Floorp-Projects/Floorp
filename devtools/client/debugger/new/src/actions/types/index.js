@@ -111,6 +111,7 @@ export type ProjectTextSearchAction =
       +type: "ADD_SEARCH_RESULT",
       +result: ProjectTextSearchResult
     |}
+  | {| +type: "CLEAR_QUERY" |}
   | {| +type: "UPDATE_STATUS", +status: string |}
   | {| +type: "CLEAR_SEARCH_RESULTS" |}
   | {| +type: "ADD_ONGOING_SEARCH", +ongoingSearch: SearchOperation |}
