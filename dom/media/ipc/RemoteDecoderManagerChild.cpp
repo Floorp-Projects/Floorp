@@ -94,6 +94,16 @@ bool RemoteDecoderManagerChild::DeallocPRemoteVideoDecoderChild(
 
 void RemoteDecoderManagerChild::Open(
     Endpoint<PRemoteDecoderManagerChild>&& aEndpoint) {
+  MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());
+  // Only create RemoteDecoderManagerChild, bind new endpoint and init
+  // ipdl if:
+  // 1) haven't init'd sRemoteDecoderManagerChild
+  // or
+  // 2) if ActorDestroy was called (mCanSend is false) meaning the other
+  // end of the ipc channel was torn down
+  if (sRemoteDecoderManagerChild && sRemoteDecoderManagerChild->mCanSend) {
+    return;
+  }
   sRemoteDecoderManagerChild = nullptr;
   if (aEndpoint.IsValid()) {
     RefPtr<RemoteDecoderManagerChild> manager = new RemoteDecoderManagerChild();
