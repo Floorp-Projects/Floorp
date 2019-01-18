@@ -363,12 +363,10 @@ nsresult imgFrame::InitForDecoderRecycle(const AnimationParams& aAnimParams) {
   return NS_OK;
 }
 
-nsresult imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
-                                    const nsIntSize& aSize,
-                                    const SurfaceFormat aFormat,
-                                    SamplingFilter aSamplingFilter,
-                                    uint32_t aImageFlags,
-                                    gfx::BackendType aBackend) {
+nsresult imgFrame::InitWithDrawable(
+    gfxDrawable* aDrawable, const nsIntSize& aSize, const SurfaceFormat aFormat,
+    SamplingFilter aSamplingFilter, uint32_t aImageFlags,
+    gfx::BackendType aBackend, DrawTarget* aTargetDT) {
   // Assert for properties that should be verified by decoders,
   // warn for properties related to bad content.
   if (!SurfaceCache::IsLegalSize(aSize)) {
@@ -421,12 +419,16 @@ nsresult imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
     // the documentation for this method.
     MOZ_ASSERT(!mOptSurface, "Called imgFrame::InitWithDrawable() twice?");
 
-    if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(aBackend)) {
-      target = gfxPlatform::GetPlatform()->CreateDrawTargetForBackend(
-          aBackend, mFrameRect.Size(), mFormat);
+    if (aTargetDT && !gfxVars::UseWebRender()) {
+      target = aTargetDT->CreateSimilarDrawTarget(mFrameRect.Size(), mFormat);
     } else {
-      target = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-          mFrameRect.Size(), mFormat);
+      if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(aBackend)) {
+        target = gfxPlatform::GetPlatform()->CreateDrawTargetForBackend(
+            aBackend, mFrameRect.Size(), mFormat);
+      } else {
+        target = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+            mFrameRect.Size(), mFormat);
+      }
     }
   }
 
@@ -505,10 +507,11 @@ nsresult imgFrame::Optimize(DrawTarget* aTarget) {
   if (mNonPremult) {
     return NS_OK;
   }
-
-  mOptSurface = gfxPlatform::GetPlatform()
-                    ->ScreenReferenceDrawTarget()
-                    ->OptimizeSourceSurface(mLockedSurface);
+  if (!gfxVars::UseWebRender()) {
+    mOptSurface = aTarget->OptimizeSourceSurface(mLockedSurface);
+  } else {
+    mOptSurface = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->OptimizeSourceSurface(mLockedSurface);
+  }
   if (mOptSurface == mLockedSurface) {
     mOptSurface = nullptr;
   }
