@@ -34,12 +34,13 @@ class RacyRegisteredThread final {
   bool IsBeingProfiled() const { return mIsBeingProfiled; }
 
   void AddPendingMarker(const char* aMarkerName,
+                        js::ProfilingStackFrame::Category aCategory,
                         mozilla::UniquePtr<ProfilerMarkerPayload> aPayload,
                         double aTime) {
     // Note: We don't assert on mIsBeingProfiled, because it could have changed
     // between the check in the caller and now.
-    ProfilerMarker* marker =
-        new ProfilerMarker(aMarkerName, mThreadId, std::move(aPayload), aTime);
+    ProfilerMarker* marker = new ProfilerMarker(
+        aMarkerName, aCategory, mThreadId, std::move(aPayload), aTime);
     mPendingMarkers.insert(marker);
   }
 
@@ -245,7 +246,8 @@ class RegisteredThread final {
         if (JSTracerEnabled()) {
           JS::StartTraceLogger(mContext);
         }
-        js::RegisterContextProfilingEventMarker(mContext, profiler_add_marker);
+        js::RegisterContextProfilingEventMarker(mContext,
+                                                profiler_add_js_marker);
 
       } else if (mJSSampling == INACTIVE_REQUESTED) {
         mJSSampling = INACTIVE;

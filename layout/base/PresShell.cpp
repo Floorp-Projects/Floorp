@@ -3704,7 +3704,7 @@ void PresShell::ScheduleViewManagerFlush(PaintType aType) {
 }
 
 void nsIPresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent) {
-  AUTO_PROFILER_TRACING_DOCSHELL("Paint", "DispatchSynthMouseMove",
+  AUTO_PROFILER_TRACING_DOCSHELL("Paint", "DispatchSynthMouseMove", GRAPHICS,
                                  mPresContext->GetDocShell());
   nsEventStatus status = nsEventStatus_eIgnore;
   nsView* targetView = nsView::GetViewFor(aEvent->mWidget);
@@ -8516,9 +8516,9 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
 
 #ifdef MOZ_GECKO_PROFILER
   DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
-  AutoProfilerTracing tracingLayoutFlush("Paint", "Reflow",
-                                         std::move(mReflowCause), docShellId,
-                                         docShellHistoryId);
+  AutoProfilerTracing tracingLayoutFlush(
+      "Paint", "Reflow", js::ProfilingStackFrame::Category::LAYOUT,
+      std::move(mReflowCause), docShellId, docShellHistoryId);
   mReflowCause = nullptr;
 #endif
 

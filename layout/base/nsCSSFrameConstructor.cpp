@@ -8302,7 +8302,7 @@ bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
     nsIFrame* aFrame) {
 #define TRACE(reason)                                                          \
   PROFILER_TRACING("Layout", "MaybeRecreateContainerForFrameRemoval: " reason, \
-                   TRACING_EVENT)
+                   LAYOUT, TRACING_EVENT)
   MOZ_ASSERT(aFrame, "Must have a frame");
   MOZ_ASSERT(aFrame->GetParent(), "Frame shouldn't be root");
   MOZ_ASSERT(aFrame == aFrame->FirstContinuation(),
@@ -11188,8 +11188,9 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
     nsFrameConstructorState& aState, nsIFrame* aContainingBlock,
     nsIFrame* aFrame, FrameConstructionItemList& aItems, bool aIsAppend,
     nsIFrame* aPrevSibling) {
-#define TRACE(reason) \
-  PROFILER_TRACING("Layout", "WipeContainingBlock: " reason, TRACING_EVENT)
+#define TRACE(reason)                                                \
+  PROFILER_TRACING("Layout", "WipeContainingBlock: " reason, LAYOUT, \
+                   TRACING_EVENT)
 
   if (aItems.IsEmpty()) {
     return false;

@@ -412,7 +412,7 @@ class LogModuleManager {
 #ifdef MOZ_GECKO_PROFILER
     if (mAddProfilerMarker && profiler_is_active()) {
       profiler_add_marker(
-          "LogMessages",
+          "LogMessages", js::ProfilingStackFrame::Category::OTHER,
           MakeUnique<LogMarkerPayload>(aName, buffToWrite, TimeStamp::Now()));
     }
 #endif
