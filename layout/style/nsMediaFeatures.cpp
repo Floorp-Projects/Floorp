@@ -425,6 +425,13 @@ PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(
         (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_close_button);
   }
 
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDReversedPlacement,
+                           &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(
+        (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_reversed_placement);
+  }
+
   metricResult = LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme);
   if (metricResult) {
     sSystemMetrics->AppendElement(

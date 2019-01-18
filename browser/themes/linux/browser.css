@@ -716,4 +716,10 @@ notification[value="translation"] menulist > .menulist-dropmarker {
       display: none;
     }
   }
+  @media (-moz-gtk-csd-reversed-placement) {
+    .titlebar-buttonbox-container,
+    .titlebar-close {
+      -moz-box-ordinal-group: 0;
+    }
+  }
 }
