@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * Check conditional breakpoint when condition throws and make sure it pauses
+ * Check that logpoints call console.log.
  */
 
 var gDebuggee;
@@ -14,10 +14,10 @@ var gThreadClient;
 
 function run_test() {
   initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-conditional-breakpoint");
+  gDebuggee = addTestGlobal("test-logpoint");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-conditional-breakpoint",
+    attachTestTabAndResume(gClient, "test-logpoint",
                            function(response, targetFront, threadClient) {
                              gThreadClient = threadClient;
                              test_simple_breakpoint();
@@ -32,34 +32,29 @@ function test_simple_breakpoint() {
       gThreadClient,
       packet.frame.where.actor
     );
-    source.setBreakpoint({
-      line: 3,
-      options: { condition: "throw new Error()" },
-    }).then(function([response, bpClient]) {
-      gThreadClient.addOneTimeListener("paused", function(event, packet) {
-        // Check the return value.
-        Assert.equal(packet.why.type, "breakpointConditionThrown");
-        Assert.equal(packet.frame.where.line, 3);
 
-        // Remove the breakpoint.
-        bpClient.remove(function(response) {
-          gThreadClient.resume(function() {
-            finishClient(gClient);
-          });
-        });
-      });
-      // Continue until the breakpoint is hit.
-      gThreadClient.resume();
+    // Set a logpoint which should invoke console.log.
+    await source.setBreakpoint({
+      line: 4,
+      options: { logValue: "a" },
     });
+
+    // Execute the rest of the code.
+    gThreadClient.resume();
   });
 
+  // Sandboxes don't have a console available so we add our own.
   /* eslint-disable */
-  Cu.evalInSandbox("debugger;\n" +   // 1
-                   "var a = 1;\n" +  // 2
-                   "var b = 2;\n",  // 3
+  Cu.evalInSandbox("var console = { log: v => { this.logValue = v } };\n" + // 1
+                   "debugger;\n" + // 2
+                   "var a = 'three';\n" +  // 3
+                   "var b = 2;\n", // 4
                    gDebuggee,
                    "1.8",
                    "test.js",
                    1);
   /* eslint-enable */
+
+  Assert.equal(gDebuggee.logValue, "three");
+  finishClient(gClient);
 }

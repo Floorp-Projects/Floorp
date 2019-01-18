@@ -559,8 +559,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *        Line to break on.
    * @param Number column
    *        Column to break on.
-   * @param String condition
-   *        A condition which must be true for breakpoint to be hit.
+   * @param Object options
+   *        Any options for the breakpoint.
    * @param Boolean noSliding
    *        If true, disables breakpoint sliding.
    *
@@ -568,11 +568,11 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *          A promise that resolves to a JSON object representing the
    *          response.
    */
-  setBreakpoint: function(line, column, condition, noSliding) {
+  setBreakpoint: function(line, column, options, noSliding) {
     const location = new GeneratedLocation(this, line, column);
     const actor = this._getOrCreateBreakpointActor(
       location,
-      condition,
+      options,
       noSliding
     );
 
@@ -597,16 +597,15 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    * @param GeneratedLocation generatedLocation
    *        A GeneratedLocation representing the location of the breakpoint in
    *        the generated source.
-   * @param String condition
-   *        A string that is evaluated whenever the breakpoint is hit. If the
-   *        string evaluates to false, the breakpoint is ignored.
+   * @param Object options
+   *        Any options for the breakpoint.
    * @param Boolean noSliding
    *        If true, disables breakpoint sliding.
    *
    * @returns BreakpointActor
    *          A BreakpointActor representing the breakpoint.
    */
-  _getOrCreateBreakpointActor: function(generatedLocation, condition, noSliding) {
+  _getOrCreateBreakpointActor: function(generatedLocation, options, noSliding) {
     let actor = this.breakpointActorMap.getActor(generatedLocation);
     if (!actor) {
       actor = new BreakpointActor(this.threadActor, generatedLocation);
@@ -614,7 +613,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       this.breakpointActorMap.setActor(generatedLocation, actor);
     }
 
-    actor.condition = condition;
+    actor.setOptions(options);
 
     return this._setBreakpoint(actor, noSliding);
   },
