@@ -7,7 +7,6 @@
 export * from "../reducers/expressions";
 export * from "../reducers/sources";
 export * from "../reducers/tabs";
-export * from "../reducers/event-listeners";
 export * from "../reducers/pause";
 export * from "../reducers/debuggee";
 export * from "../reducers/breakpoints";

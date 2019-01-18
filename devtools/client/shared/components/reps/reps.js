@@ -4581,7 +4581,7 @@ class Tree extends Component {
           // it should be scrolled into view.
           this._focus(item, { preventAutoScroll: true });
           if (this.props.isExpanded(item)) {
-            this.props.onCollapse(item, e.altKey);
+            this.props.onCollapse(item);
           } else {
             this.props.onExpand(item, e.altKey);
           }
@@ -4589,7 +4589,10 @@ class Tree extends Component {
       });
     });
 
-    const style = Object.assign({}, this.props.style || {});
+    const style = Object.assign({}, this.props.style || {}, {
+      padding: 0,
+      margin: 0
+    });
 
     return _reactDomFactories2.default.div({
       className: `tree ${this.props.className ? this.props.className : ""}`,
@@ -7015,8 +7018,8 @@ const {
   nodeIsLongString,
   nodeHasFullText,
   nodeHasGetter,
-  getNonPrototypeParentGripValue,
-  getParentGripValue
+  getParentGripValue,
+  getNonPrototypeParentGripValue
 } = Utils.node;
 
 class ObjectInspectorItem extends Component {

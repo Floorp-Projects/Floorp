@@ -198,6 +198,31 @@ describe("SourcesTree", () => {
     });
   });
 
+  describe("with custom root", () => {
+    it("renders custom root source list", async () => {
+      const { component } = render({
+        projectRoot: "mdn.com"
+      });
+      expect(component).toMatchSnapshot();
+    });
+
+    it("calls clearProjectDirectoryRoot on click", async () => {
+      const { component, props } = render({
+        projectRoot: "mdn"
+      });
+      component.find(".sources-clear-root").simulate("click");
+      expect(props.clearProjectDirectoryRoot).toHaveBeenCalled();
+    });
+
+    it("renders empty custom root source list", async () => {
+      const { component } = render({
+        projectRoot: "custom",
+        sources: {}
+      });
+      expect(component).toMatchSnapshot();
+    });
+  });
+
   describe("selectItem", () => {
     it("should select item with no children", async () => {
       const { instance, props } = render();

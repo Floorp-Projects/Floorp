@@ -22,7 +22,6 @@ import quickOpen from "./quick-open";
 import sourceTree from "./source-tree";
 import debuggee from "./debuggee";
 import { objectInspector } from "devtools-reps";
-import eventListenerBreakpoints from "./event-listeners";
 
 export default {
   expressions,
@@ -39,6 +38,5 @@ export default {
   quickOpen,
   sourceTree,
   debuggee,
-  objectInspector: objectInspector.reducer.default,
-  eventListenerBreakpoints
+  objectInspector: objectInspector.reducer.default
 };

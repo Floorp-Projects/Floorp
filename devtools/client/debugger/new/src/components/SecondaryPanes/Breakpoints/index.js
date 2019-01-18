@@ -15,11 +15,9 @@ import BreakpointHeading from "./BreakpointHeading";
 
 import actions from "../../../actions";
 import { getDisplayPath } from "../../../utils/source";
-import { getSelectedLocation } from "../../../utils/source-maps";
-
 import {
   makeLocationId,
-  sortSelectedBreakpoints
+  sortFormattedBreakpoints
 } from "../../../utils/breakpoint";
 
 import { getSelectedSource, getBreakpointSources } from "../../../selectors";
@@ -76,7 +74,7 @@ class Breakpoints extends Component<Props> {
   }
 
   renderBreakpoints() {
-    const { breakpointSources, selectedSource } = this.props;
+    const { breakpointSources } = this.props;
     const sources = [
       ...breakpointSources.map(({ source, breakpoints }) => source)
     ];
@@ -84,10 +82,7 @@ class Breakpoints extends Component<Props> {
     return [
       ...breakpointSources.map(({ source, breakpoints, i }) => {
         const path = getDisplayPath(source, sources);
-        const sortedBreakpoints = sortSelectedBreakpoints(
-          breakpoints,
-          selectedSource
-        );
+        const sortedBreakpoints = sortFormattedBreakpoints(breakpoints);
 
         return [
           <BreakpointHeading
@@ -100,10 +95,7 @@ class Breakpoints extends Component<Props> {
             <Breakpoint
               breakpoint={breakpoint}
               source={source}
-              selectedSource={selectedSource}
-              key={makeLocationId(
-                getSelectedLocation(breakpoint, selectedSource)
-              )}
+              key={makeLocationId(breakpoint.selectedLocation)}
             />
           ))
         ];

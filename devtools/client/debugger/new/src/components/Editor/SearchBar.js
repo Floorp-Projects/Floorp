@@ -8,7 +8,7 @@ import PropTypes from "prop-types";
 import React, { Component } from "react";
 import { connect } from "../../utils/connect";
 import { CloseButton } from "../shared/Button";
-import AccessibleImage from "../shared/AccessibleImage";
+import Svg from "../shared/Svg";
 import actions from "../../actions";
 import {
   getActiveSearch,
@@ -270,7 +270,7 @@ class SearchBar extends Component<Props, State> {
           }}
           title={tooltip}
         >
-          <AccessibleImage className={svgName} />
+          <Svg name={svgName} />
         </button>
       );
     }
