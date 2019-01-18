@@ -90,6 +90,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   bool mCSDMaximizeButton;
   bool mCSDMinimizeButton;
   bool mCSDCloseButton;
+  bool mCSDReversedPlacement;
   bool mInitialized;
 
   void EnsureInit();

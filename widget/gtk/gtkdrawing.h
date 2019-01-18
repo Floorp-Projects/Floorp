@@ -598,14 +598,17 @@ const ToolbarButtonGTKMetrics* GetToolbarButtonMetrics(
  * Get toolbar button layout.
  * aButtonLayout:  [IN][OUT] An array which will be filled by WidgetNodeType
  *                           references to visible titlebar buttons.
-                             Must contains at least TOOLBAR_BUTTONS entries.
+ *                           Must contains at least TOOLBAR_BUTTONS entries.
  * aMaxButtonNums: [IN] Allocated aButtonLayout entries. Must be at least
-                        TOOLBAR_BUTTONS wide.
+ *                      TOOLBAR_BUTTONS wide.
+ * aReversedButtonsPlacement: [OUT] True if the buttons are placed in opposite
+ *                                  titlebar corner.
  *
  * returns:    Number of returned entries at aButtonLayout.
  */
 int GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout,
-                                int aMaxButtonNums);
+                                int aMaxButtonNums,
+                                bool* aReversedButtonsPlacement);
 
 /**
  * Get size of CSD window extents of given GtkWindow.
