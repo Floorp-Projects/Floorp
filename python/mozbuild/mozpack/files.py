@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import errno
+import inspect
 import os
 import platform
 import shutil
@@ -588,7 +589,17 @@ class GeneratedFile(BaseFile):
     File class for content with no previous existence on the filesystem.
     '''
     def __init__(self, content):
-        self.content = content
+        self._content = content
+
+    @property
+    def content(self):
+        if inspect.isfunction(self._content):
+            self._content = self._content()
+        return self._content
+
+    @content.setter
+    def content(self, content):
+        self._content = content
 
     def open(self):
         return BytesIO(self.content)
