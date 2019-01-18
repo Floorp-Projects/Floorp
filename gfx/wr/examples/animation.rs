@@ -59,8 +59,8 @@ impl App {
             &LayoutRect::new(bounds.origin, LayoutSize::zero()),
             SpatialId::root_scroll_node(pipeline_id),
             TransformStyle::Flat,
-            Some(PropertyBinding::Binding(property_key, LayoutTransform::identity())),
-            None,
+            PropertyBinding::Binding(property_key, LayoutTransform::identity()),
+            ReferenceFrameKind::Transform,
         );
 
         builder.push_stacking_context(

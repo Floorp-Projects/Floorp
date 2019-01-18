@@ -332,9 +332,7 @@ var E10SUtils = {
         uri: aURI.spec,
         flags: aFlags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
         referrer: aReferrer ? aReferrer.spec : null,
-        triggeringPrincipal: aTriggeringPrincipal
-                             ? Utils.serializePrincipal(aTriggeringPrincipal)
-                             : null,
+        triggeringPrincipal: Utils.serializePrincipal(aTriggeringPrincipal || Services.scriptSecurityManager.createNullPrincipal({})),
         reloadInFreshProcess: !!aFreshProcess,
       },
       historyIndex: sessionHistory.legacySHistory.requestedIndex,

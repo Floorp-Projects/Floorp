@@ -3457,6 +3457,9 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
                 PaintFrameFlags::PAINT_TO_WINDOW)) {
     builder.SetPaintingToWindow(true);
   }
+  if (aFlags & PaintFrameFlags::PAINT_FOR_WEBRENDER) {
+    builder.SetPaintingForWebRender(true);
+  }
   if (aFlags & PaintFrameFlags::PAINT_IGNORE_SUPPRESSION) {
     builder.IgnorePaintSuppression();
   }

@@ -525,10 +525,19 @@ pub struct CacheMarkerDisplayItem {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+#[repr(u8)]
+pub enum ReferenceFrameKind {
+    Transform,
+    Perspective,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ReferenceFrame {
+    pub kind: ReferenceFrameKind,
     pub transform_style: TransformStyle,
-    pub transform: Option<PropertyBinding<LayoutTransform>>,
-    pub perspective: Option<LayoutTransform>,
+    /// The transform matrix, either the perspective matrix or the transform
+    /// matrix.
+    pub transform: PropertyBinding<LayoutTransform>,
     pub id: SpatialId,
 }
 

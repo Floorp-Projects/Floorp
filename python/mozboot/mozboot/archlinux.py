@@ -120,6 +120,7 @@ class ArchlinuxBootstrapper(NodeInstall, StyloInstall,
             raise e
 
         # 2. Android pieces.
+        self.ensure_java()
         from mozboot import android
         android.ensure_android('linux', artifact_mode=artifact_mode,
                                no_interactive=self.no_interactive)

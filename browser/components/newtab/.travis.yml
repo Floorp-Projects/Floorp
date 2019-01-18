@@ -22,10 +22,6 @@ install:
   - npm config set spin false
   - npm install
 
-before_script:
-  - bash bin/download-firefox-travis.sh release-linux64-add-on-devel
-  - export FIREFOX_BIN=./firefox/firefox
-
 script:
   - npm test
 

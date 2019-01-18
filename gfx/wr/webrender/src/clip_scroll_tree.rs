@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D};
+use api::{ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D, ReferenceFrameKind};
 use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation, ScrollSensitivity};
 use api::{LayoutSize, LayoutTransform, PropertyBinding, TransformStyle, WorldPoint};
 use gpu_types::TransformPalette;
@@ -352,8 +352,8 @@ impl ClipScrollTree {
         &mut self,
         parent_index: Option<SpatialNodeIndex>,
         transform_style: TransformStyle,
-        source_transform: Option<PropertyBinding<LayoutTransform>>,
-        source_perspective: Option<LayoutTransform>,
+        source_transform: PropertyBinding<LayoutTransform>,
+        kind: ReferenceFrameKind,
         origin_in_parent_reference_frame: LayoutVector2D,
         pipeline_id: PipelineId,
     ) -> SpatialNodeIndex {
@@ -361,7 +361,7 @@ impl ClipScrollTree {
             parent_index,
             transform_style,
             source_transform,
-            source_perspective,
+            kind,
             origin_in_parent_reference_frame,
             pipeline_id,
         );
@@ -456,10 +456,6 @@ impl ClipScrollTree {
 
             match node.node_type {
                 SpatialNodeType::ReferenceFrame(ref info) => {
-                    if !info.source_perspective.is_identity() {
-                        return false;
-                    }
-
                     match info.source_transform {
                         PropertyBinding::Value(transform) => {
                             if transform != LayoutTransform::identity() {
@@ -508,8 +504,8 @@ fn add_reference_frame(
     cst.add_reference_frame(
         parent,
         TransformStyle::Preserve3D,
-        Some(PropertyBinding::Value(transform)),
-        None,
+        PropertyBinding::Value(transform),
+        ReferenceFrameKind::Perspective,
         origin_in_parent_reference_frame,
         PipelineId::dummy(),
     )

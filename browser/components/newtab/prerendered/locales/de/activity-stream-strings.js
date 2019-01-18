@@ -66,15 +66,15 @@ window.gActivityStreamStrings = {
   "topsites_form_title_label": "Titel",
   "topsites_form_title_placeholder": "Name eingeben",
   "topsites_form_url_label": "Adresse",
-  "topsites_form_image_url_label": "URL von benutzerdefinierter Grafik",
+  "topsites_form_image_url_label": "Adresse von benutzerdefinierter Grafik",
   "topsites_form_url_placeholder": "Eine Adresse eingeben oder einfügen",
   "topsites_form_use_image_link": "Eine benutzerdefinierte Grafik verwenden…",
   "topsites_form_preview_button": "Vorschau",
   "topsites_form_add_button": "Hinzufügen",
   "topsites_form_save_button": "Speichern",
   "topsites_form_cancel_button": "Abbrechen",
-  "topsites_form_url_validation": "Gültige URL erforderlich",
-  "topsites_form_image_validation": "Grafik konnte nicht geladen werden. Verwenden Sie eine andere URL.",
+  "topsites_form_url_validation": "Gültige Adresse erforderlich",
+  "topsites_form_image_validation": "Grafik konnte nicht geladen werden. Verwenden Sie eine andere Adresse.",
   "pocket_read_more": "Beliebte Themen:",
   "pocket_read_even_more": "Weitere Nachrichten ansehen",
   "pocket_more_reccommendations": "Mehr Empfehlungen",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Datenschutzhinweis",
   "firstrun_continue_to_login": "Weiter",
   "firstrun_skip_login": "Diesen Schritt überspringen",
-  "context_menu_title": "Menü öffnen",
-  "pocket_learn_more": "Weitere Informationen"
+  "context_menu_title": "Menü öffnen"
 };

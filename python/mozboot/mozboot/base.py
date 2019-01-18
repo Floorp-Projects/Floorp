@@ -216,7 +216,7 @@ class BaseBootstrapper(object):
         Install packages required to build Firefox for Android (application
         'mobile/android', also known as Fennec).
         '''
-        raise NotImplementedError('Cannot bootstrap Firefox for Android: '
+        raise NotImplementedError('Cannot bootstrap GeckoView/Firefox for Android: '
                                   '%s does not yet implement install_mobile_android_packages()'
                                   % __name__)
 
@@ -225,7 +225,7 @@ class BaseBootstrapper(object):
         Print a message to the console detailing what the user's mozconfig
         should contain.
 
-        Firefox for Android needs an application and an ABI set, and it needs
+        GeckoView/Firefox for Android needs an application and an ABI set, and it needs
         paths to the Android SDK and NDK.
         '''
         raise NotImplementedError('%s does not yet implement suggest_mobile_android_mozconfig()' %
@@ -233,11 +233,11 @@ class BaseBootstrapper(object):
 
     def install_mobile_android_artifact_mode_packages(self):
         '''
-        Install packages required to build Firefox for Android (application
+        Install packages required to build GeckoView/Firefox for Android (application
         'mobile/android', also known as Fennec) in Artifact Mode.
         '''
         raise NotImplementedError(
-            'Cannot bootstrap Firefox for Android Artifact Mode: '
+            'Cannot bootstrap GeckoView/Firefox for Android Artifact Mode: '
             '%s does not yet implement install_mobile_android_artifact_mode_packages()'
             % __name__)
 
@@ -246,7 +246,7 @@ class BaseBootstrapper(object):
         Print a message to the console detailing what the user's mozconfig
         should contain.
 
-        Firefox for Android Artifact Mode needs an application and an ABI set,
+        GeckoView/Firefox for Android Artifact Mode needs an application and an ABI set,
         and it needs paths to the Android SDK.
         '''
         raise NotImplementedError(
@@ -690,6 +690,16 @@ class BaseBootstrapper(object):
         if rust.platform() == win64 and win32 not in targets:
             subprocess.check_call([rustup, 'target', 'add', win32])
 
+        if 'mobile_android' in self.application:
+            # Let's add the most common targets.
+            android_targets = ('armv7-linux-androideabi',
+                               'aarch64-linux-android',
+                               'i686-linux-android',
+                               'x86_64-linux-android', )
+            for target in android_targets:
+                if target not in targets:
+                    subprocess.check_call([rustup, 'target', 'add', target])
+
     def upgrade_rust(self, rustup):
         """Upgrade Rust.
 
@@ -747,3 +757,57 @@ class BaseBootstrapper(object):
         if h.hexdigest() != hexhash:
             os.remove(dest)
             raise ValueError('Hash of downloaded file does not match expected hash')
+
+    def ensure_java(self, extra_search_dirs=()):
+        """Verify the presence of java.
+
+        Note that we currently require a JDK (not just a JRE) because we
+        use `jarsigner` in local builds.
+
+        Soon we won't require Java 1.8 to build (after Bug 1515248 and
+        we use Android-Gradle plugin 3.2.1), but the Android
+        `sdkmanager` tool still requires exactly 1.8.  Sigh.  Note that
+        we no longer require javac explicitly; it's fetched by
+        Gradle.
+        """
+
+        if 'JAVA_HOME' in os.environ:
+            extra_search_dirs += (os.path.join(os.environ['JAVA_HOME'], 'bin'),)
+        java = self.which('java', extra_search_dirs)
+
+        if not java:
+            raise Exception('You need to have Java version 1.8 installed. '
+                            'Please visit http://www.java.com/en/download '
+                            'to get version 1.8.')
+
+        try:
+            output = subprocess.check_output([java,
+                                              '-XshowSettings:properties',
+                                              '-version'],
+                                             stderr=subprocess.STDOUT).rstrip()
+
+            # -version strings are pretty free-form, like: 'java version
+            # "1.8.0_192"' or 'openjdk version "11.0.1" 2018-10-16', but the
+            # -XshowSettings:properties gives the information (to stderr, sigh)
+            # like 'java.specification.version = 8'.  That flag is non-standard
+            # but has been around since at least 2011.
+            version = [line for line in output.splitlines()
+                       if 'java.specification.version' in line]
+            if not len(version) == 1:
+                raise Exception('You need to have Java version 1.8 installed '
+                                '(found {} but could not parse version "{}"). '
+                                'Check the JAVA_HOME environment variable. '
+                                'Please visit http://www.java.com/en/download '
+                                'to get version 1.8.'.format(java, output))
+
+            version = version[0].split(' = ')[-1]
+            if version not in ['1.8', '8']:
+                raise Exception('You need to have Java version 1.8 installed '
+                                '(found {} with version "{}"). '
+                                'Check the JAVA_HOME environment variable. '
+                                'Please visit http://www.java.com/en/download '
+                                'to get version 1.8.'.format(java, version))
+        except subprocess.CalledProcessError as e:
+            raise Exception('Failed to get java version from {}: {}'.format(java, e.output))
+
+        print('Your version of Java ({}) is at least 1.8 ({}).'.format(java, version))
