@@ -209,7 +209,7 @@ impl FrameStamp {
 }
 
 macro_rules! declare_frame_resources {
-    ( $( { $name: ident, $x: ident, $datastore_ident: ident } )+ ) => {
+    ( $( $name: ident, )+ ) => {
         /// A collection of resources that are shared by clips, primitives
         /// between display lists.
         #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -217,7 +217,7 @@ macro_rules! declare_frame_resources {
         #[derive(Default)]
         pub struct FrameResources {
             $(
-                pub $datastore_ident: intern_types::$name::Store,
+                pub $name: intern_types::$name::Store,
             )+
         }
 
@@ -225,7 +225,7 @@ macro_rules! declare_frame_resources {
             /// Reports CPU heap usage.
             fn report_memory(&self, ops: &mut MallocSizeOfOps, r: &mut MemoryReport) {
                 $(
-                    r.interning.$datastore_ident += self.$datastore_ident.size_of(ops);
+                    r.interning.data_stores.$name += self.$name.size_of(ops);
                 )+
             }
 
@@ -235,7 +235,7 @@ macro_rules! declare_frame_resources {
                 profile_counters: &mut BackendProfileCounters,
             ) {
                 $(
-                    self.$datastore_ident.apply_updates(
+                    self.$name.apply_updates(
                         updates.$name,
                         &mut profile_counters.intern.$name,
                     );
@@ -255,43 +255,43 @@ impl FrameResources {
         match prim_inst.kind {
             PrimitiveInstanceKind::Rectangle { data_handle, .. } |
             PrimitiveInstanceKind::Clear { data_handle, .. } => {
-                let prim_data = &self.prim_data_store[data_handle];
+                let prim_data = &self.prim[data_handle];
                 &prim_data.common
             }
             PrimitiveInstanceKind::Image { data_handle, .. } => {
-                let prim_data = &self.image_data_store[data_handle];
+                let prim_data = &self.image[data_handle];
                 &prim_data.common
             }
             PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
-                let prim_data = &self.image_border_data_store[data_handle];
+                let prim_data = &self.image_border[data_handle];
                 &prim_data.common
             }
             PrimitiveInstanceKind::LineDecoration { data_handle, .. } => {
-                let prim_data = &self.line_decoration_data_store[data_handle];
+                let prim_data = &self.line_decoration[data_handle];
                 &prim_data.common
             }
             PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
-                let prim_data = &self.linear_grad_data_store[data_handle];
+                let prim_data = &self.linear_grad[data_handle];
                 &prim_data.common
             }
             PrimitiveInstanceKind::NormalBorder { data_handle, .. } => {
-                let prim_data = &self.normal_border_data_store[data_handle];
+                let prim_data = &self.normal_border[data_handle];
                 &prim_data.common
             }
             PrimitiveInstanceKind::Picture { data_handle, .. } => {
-                let prim_data = &self.picture_data_store[data_handle];
+                let prim_data = &self.picture[data_handle];
                 &prim_data.common
             }
             PrimitiveInstanceKind::RadialGradient { data_handle, .. } => {
-                let prim_data = &self.radial_grad_data_store[data_handle];
+                let prim_data = &self.radial_grad[data_handle];
                 &prim_data.common
             }
             PrimitiveInstanceKind::TextRun { data_handle, .. }  => {
-                let prim_data = &self.text_run_data_store[data_handle];
+                let prim_data = &self.text_run[data_handle];
                 &prim_data.common
             }
             PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
-                let prim_data = &self.yuv_image_data_store[data_handle];
+                let prim_data = &self.yuv_image[data_handle];
                 &prim_data.common
             }
         }
@@ -525,7 +525,7 @@ impl Document {
             );
             self.hit_tester = Some(frame_builder.create_hit_tester(
                 &self.clip_scroll_tree,
-                &self.resources.clip_data_store,
+                &self.resources.clip,
             ));
             frame
         };
@@ -555,7 +555,7 @@ impl Document {
 
             self.hit_tester = Some(frame_builder.create_hit_tester(
                 &self.clip_scroll_tree,
-                &self.resources.clip_data_store,
+                &self.resources.clip,
             ));
             self.hit_tester_is_valid = true;
         }

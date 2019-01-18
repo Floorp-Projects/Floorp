@@ -913,7 +913,7 @@ impl TileCache {
                 true
             }
             PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
-                let image_data = &resources.image_data_store[data_handle].kind;
+                let image_data = &resources.image[data_handle].kind;
                 let image_instance = &image_instances[image_instance_index];
                 let opacity_binding_index = image_instance.opacity_binding_index;
 
@@ -928,7 +928,7 @@ impl TileCache {
                 true
             }
             PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
-                let yuv_image_data = &resources.yuv_image_data_store[data_handle].kind;
+                let yuv_image_data = &resources.yuv_image[data_handle].kind;
                 image_keys.extend_from_slice(&yuv_image_data.yuv_key);
                 true
             }
@@ -954,7 +954,7 @@ impl TileCache {
         let mut current_clip_chain_id = prim_instance.clip_chain_id;
         while current_clip_chain_id != ClipChainId::NONE {
             let clip_chain_node = &clip_chain_nodes[current_clip_chain_id.0 as usize];
-            let clip_node = &resources.clip_data_store[clip_chain_node.handle];
+            let clip_node = &resources.clip[clip_chain_node.handle];
 
             // We can skip the root clip node - it will be taken care of by the
             // world bounding rect calculated for the cache.
@@ -1658,34 +1658,34 @@ impl PrimitiveList {
             let prim_data = match prim_instance.kind {
                 PrimitiveInstanceKind::Rectangle { data_handle, .. } |
                 PrimitiveInstanceKind::Clear { data_handle, .. } => {
-                    &resources.prim_interner[data_handle]
+                    &resources.prim[data_handle]
                 }
                 PrimitiveInstanceKind::Image { data_handle, .. } => {
-                    &resources.image_interner[data_handle]
+                    &resources.image[data_handle]
                 }
                 PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
-                    &resources.image_border_interner[data_handle]
+                    &resources.image_border[data_handle]
                 }
                 PrimitiveInstanceKind::LineDecoration { data_handle, .. } => {
-                    &resources.line_decoration_interner[data_handle]
+                    &resources.line_decoration[data_handle]
                 }
                 PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
-                    &resources.linear_grad_interner[data_handle]
+                    &resources.linear_grad[data_handle]
                 }
                 PrimitiveInstanceKind::NormalBorder { data_handle, .. } => {
-                    &resources.normal_border_interner[data_handle]
+                    &resources.normal_border[data_handle]
                 }
                 PrimitiveInstanceKind::Picture { data_handle, .. } => {
-                    &resources.picture_interner[data_handle]
+                    &resources.picture[data_handle]
                 }
                 PrimitiveInstanceKind::RadialGradient { data_handle, ..} => {
-                    &resources.radial_grad_interner[data_handle]
+                    &resources.radial_grad[data_handle]
                 }
                 PrimitiveInstanceKind::TextRun { data_handle, .. } => {
-                    &resources.text_run_interner[data_handle]
+                    &resources.text_run[data_handle]
                 }
                 PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
-                    &resources.yuv_image_interner[data_handle]
+                    &resources.yuv_image[data_handle]
                 }
             };
 
