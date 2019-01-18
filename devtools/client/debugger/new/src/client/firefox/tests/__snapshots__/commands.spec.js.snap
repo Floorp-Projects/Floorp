@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`firefox commands getProperties empty response 1`] = `
+Object {
+  "ownProperties": Object {},
+  "safeGetterValues": Object {},
+}
+`;
+
+exports[`firefox commands getProperties getter values 1`] = `
+Object {
+  "ownProperties": Object {
+    "foo": Object {
+      "value": "foo",
+    },
+    "obj": Object {
+      "enumerable": true,
+      "value": "getter",
+      "writable": false,
+    },
+  },
+  "safeGetterValues": Object {
+    "obj": Object {
+      "enumerable": true,
+      "getterValue": "getter",
+      "writable": false,
+    },
+  },
+}
+`;
+
+exports[`firefox commands getProperties new getter values 1`] = `
+Object {
+  "ownProperties": Object {
+    "foo": Object {
+      "value": "foo",
+    },
+    "obj": Object {
+      "enumerable": true,
+      "value": "getter",
+      "writable": false,
+    },
+  },
+  "safeGetterValues": Object {
+    "obj": Object {
+      "enumerable": true,
+      "getterValue": "getter",
+      "writable": false,
+    },
+  },
+}
+`;
+
+exports[`firefox commands getProperties simple properties 1`] = `
+Object {
+  "ownProperties": Object {
+    "foo": Object {
+      "value": "foo",
+    },
+    "obj": Object {
+      "value": "obj",
+    },
+  },
+  "safeGetterValues": Object {},
+}
+`;
