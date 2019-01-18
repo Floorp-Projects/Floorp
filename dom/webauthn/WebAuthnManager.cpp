@@ -31,7 +31,11 @@ namespace {
 static mozilla::LazyLogModule gWebAuthnManagerLog("webauthnmanager");
 }
 
-NS_IMPL_ISUPPORTS(WebAuthnManager, nsIDOMEventListener);
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(WebAuthnManager,
+                                               WebAuthnManagerBase)
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(WebAuthnManager, WebAuthnManagerBase,
+                                   mFollowingSignal, mTransaction)
 
 /***********************************************************************
  * Utility Functions
