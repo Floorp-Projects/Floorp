@@ -6,10 +6,10 @@
   transform: translate(0, 0px);
   transition: transform 0.25s ease-in-out;
   padding: 5px;
-}
-
-.toggle-button .togglePanes {
-  vertical-align: -2px;
+  -webkit-border-start: 1px solid;
+  border-inline-start: 1px solid;
+  border-image: var(--separator-border-image) 1 1;
+  height: inherit;
 }
 
 .toggle-button svg {
