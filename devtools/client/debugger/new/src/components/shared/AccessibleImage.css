@@ -4,4 +4,10 @@
   height: 12px;
   /* makes span appear like an image */
   display: inline-block;
+  background: var(--theme-body-color);
+  mask-size: 100%;
+}
+
+.img.arrow.arrow.expanded {
+  transform: rotate(0deg);
 }

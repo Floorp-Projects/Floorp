@@ -8,6 +8,7 @@ import React, { Component } from "react";
 
 import { CloseButton } from "./Button";
 
+import AccessibleImage from "./AccessibleImage";
 import Svg from "./Svg";
 import classnames from "classnames";
 import "./SearchInput.css";
@@ -23,7 +24,7 @@ const arrowBtn = (onClick, type, className, tooltip) => {
 
   return (
     <button {...props}>
-      <Svg name={type} />
+      <AccessibleImage className={type} />
     </button>
   );
 };
@@ -104,8 +105,7 @@ class SearchInput extends Component<Props, State> {
   }
 
   renderSvg() {
-    const svgName = "magnifying-glass";
-    return <Svg name={svgName} />;
+    return <Svg name="magnifying-glass" />;
   }
 
   renderArrowButtons() {
@@ -203,7 +203,7 @@ class SearchInput extends Component<Props, State> {
   renderSpinner() {
     const { isLoading } = this.props;
     if (isLoading) {
-      return <Svg name="loader" />;
+      return <AccessibleImage className="loader" />;
     }
   }
 

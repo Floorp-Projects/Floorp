@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.event-listeners-content {
+	padding: 4px 20px;
+}
+
+.event-listeners-content ul {
+	padding: 0;
+	list-style-type: none;
+}
+
+.event-listener-group {
+	user-select: none;
+}
+
+.event-listeners-content .arrow {
+	margin-inline-end: 0;
+	position: relative;
+	top: 1px;
+}
+
+html[dir="ltr"] .event-listeners-content .arrow.expanded {
+  transform: rotate(0deg);
+}
+
+html[dir="rtl"] .event-listeners-content .arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.event-listener-event {
+	display: flex;
+	align-items: center;
+	margin-inline-start: 30px;
+}
+
+.event-listener-event input {
+	margin-inline-end: 4px;
+	margin-inline-start: 0px;
+}
