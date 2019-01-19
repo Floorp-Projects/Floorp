@@ -69,6 +69,10 @@ class DrawTargetDual : public DrawTarget {
     mB->SetTransform(aTransform);
   }
 
+  virtual bool SupportsRegionClipping() const override {
+    return mA->SupportsRegionClipping() && mB->SupportsRegionClipping();
+  }
+
   virtual void DrawSurface(SourceSurface *aSurface, const Rect &aDest,
                            const Rect &aSource,
                            const DrawSurfaceOptions &aSurfOptions,

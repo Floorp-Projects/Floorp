@@ -26,7 +26,7 @@
 // Undefine the macro of CreateFile to avoid FileCreatorHelper#CreateFile being
 // replaced by FileCreatorHelper#CreateFileW.
 #ifdef CreateFile
-#undef CreateFile
+#  undef CreateFile
 #endif
 
 namespace mozilla {

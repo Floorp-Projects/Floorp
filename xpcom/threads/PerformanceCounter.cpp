@@ -10,7 +10,7 @@
 
 static mozilla::LazyLogModule sPerformanceCounter("PerformanceCounter");
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 #define LOG(args) MOZ_LOG(sPerformanceCounter, mozilla::LogLevel::Debug, args)
 

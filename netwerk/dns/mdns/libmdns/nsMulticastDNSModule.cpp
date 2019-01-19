@@ -4,25 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(MOZ_WIDGET_COCOA)
-#define ENABLE_DNS_SERVICE_DISCOVERY
+#  define ENABLE_DNS_SERVICE_DISCOVERY
 #endif
 
 #include "mozilla/ModuleUtils.h"
 
 #ifdef ENABLE_DNS_SERVICE_DISCOVERY
-#include "nsDNSServiceDiscovery.h"
+#  include "nsDNSServiceDiscovery.h"
 #endif
 
 #include "nsDNSServiceInfo.h"
 
 #ifdef ENABLE_DNS_SERVICE_DISCOVERY
 using mozilla::net::nsDNSServiceDiscovery;
-#define DNSSERVICEDISCOVERY_CID                      \
-  {                                                  \
-    0x8df43d23, 0xd3f9, 0x4dd5, {                    \
-      0xb9, 0x65, 0xde, 0x2c, 0xa3, 0xf6, 0xa4, 0x2c \
-    }                                                \
-  }
+#  define DNSSERVICEDISCOVERY_CID                      \
+    {                                                  \
+      0x8df43d23, 0xd3f9, 0x4dd5, {                    \
+        0xb9, 0x65, 0xde, 0x2c, 0xa3, 0xf6, 0xa4, 0x2c \
+      }                                                \
+    }
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDNSServiceDiscovery, Init)
 NS_DEFINE_NAMED_CID(DNSSERVICEDISCOVERY_CID);
 #endif  // ENABLE_DNS_SERVICE_DISCOVERY

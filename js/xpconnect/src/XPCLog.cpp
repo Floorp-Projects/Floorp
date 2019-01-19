@@ -16,11 +16,11 @@
 // this all only works for DEBUG...
 #ifdef DEBUG
 
-#define SPACE_COUNT 200
-#define LINE_LEN 200
-#define INDENT_FACTOR 2
+#  define SPACE_COUNT 200
+#  define LINE_LEN 200
+#  define INDENT_FACTOR 2
 
-#define CAN_RUN (g_InitState == 1 || (g_InitState == 0 && Init()))
+#  define CAN_RUN (g_InitState == 1 || (g_InitState == 0 && Init()))
 
 static char* g_Spaces;
 static int g_InitState = 0;

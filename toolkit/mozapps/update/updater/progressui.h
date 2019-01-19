@@ -11,10 +11,10 @@
 
 #if defined(XP_WIN)
 typedef WCHAR NS_tchar;
-#define NS_main wmain
+#  define NS_main wmain
 #else
 typedef char NS_tchar;
-#define NS_main main
+#  define NS_main main
 #endif
 
 // Called to perform any initialization of the widget toolkit

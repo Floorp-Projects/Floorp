@@ -26,8 +26,8 @@
 #include "mozilla/layers/TextRenderer.h"
 
 #ifdef XP_WIN
-#include "mozilla/widget/WinCompositorWidget.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/widget/WinCompositorWidget.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 using namespace std;

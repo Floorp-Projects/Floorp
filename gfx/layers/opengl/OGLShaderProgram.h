@@ -297,18 +297,18 @@ struct ProgramProfileOGL {
 };
 
 #if defined(DEBUG)
-#define CHECK_CURRENT_PROGRAM 1
-#define ASSERT_THIS_PROGRAM                                       \
-  do {                                                            \
-    GLuint currentProgram;                                        \
-    mGL->GetUIntegerv(LOCAL_GL_CURRENT_PROGRAM, &currentProgram); \
-    MOZ_ASSERT(currentProgram == mProgram,                        \
-               "SetUniform with wrong program active!");          \
-  } while (0)
+#  define CHECK_CURRENT_PROGRAM 1
+#  define ASSERT_THIS_PROGRAM                                       \
+    do {                                                            \
+      GLuint currentProgram;                                        \
+      mGL->GetUIntegerv(LOCAL_GL_CURRENT_PROGRAM, &currentProgram); \
+      MOZ_ASSERT(currentProgram == mProgram,                        \
+                 "SetUniform with wrong program active!");          \
+    } while (0)
 #else
-#define ASSERT_THIS_PROGRAM \
-  do {                      \
-  } while (0)
+#  define ASSERT_THIS_PROGRAM \
+    do {                      \
+    } while (0)
 #endif
 
 /**

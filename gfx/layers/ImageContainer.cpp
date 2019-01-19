@@ -30,14 +30,14 @@
 #include "mozilla/CheckedInt.h"
 
 #ifdef XP_MACOSX
-#include "mozilla/gfx/QuartzSupport.h"
+#  include "mozilla/gfx/QuartzSupport.h"
 #endif
 
 #ifdef XP_WIN
-#include "gfxWindowsPlatform.h"
-#include <d3d10_1.h>
-#include "mozilla/gfx/DeviceManagerDx.h"
-#include "mozilla/layers/D3D11YCbCrImage.h"
+#  include "gfxWindowsPlatform.h"
+#  include <d3d10_1.h>
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/layers/D3D11YCbCrImage.h"
 #endif
 
 namespace mozilla {

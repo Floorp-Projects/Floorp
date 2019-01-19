@@ -28,10 +28,10 @@
 
 #include "nsXULAppAPI.h"
 #ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
+#  include <process.h>
+#  define getpid _getpid
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include "mozilla/Atomics.h"
@@ -44,12 +44,12 @@
 #include <vector>
 
 #ifdef HAVE_DLOPEN
-#include <dlfcn.h>
+#  include <dlfcn.h>
 #endif
 
 #ifdef MOZ_DMD
-#include "base/process_util.h"
-#include "nsMemoryInfoDumper.h"
+#  include "base/process_util.h"
+#  include "nsMemoryInfoDumper.h"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,14 +190,14 @@ static void AssertActivityIsLegal() {
     }
   }
 }
-#define ASSERT_ACTIVITY_IS_LEGAL \
-  do {                           \
-    AssertActivityIsLegal();     \
-  } while (0)
+#  define ASSERT_ACTIVITY_IS_LEGAL \
+    do {                           \
+      AssertActivityIsLegal();     \
+    } while (0)
 #else
-#define ASSERT_ACTIVITY_IS_LEGAL \
-  do {                           \
-  } while (0)
+#  define ASSERT_ACTIVITY_IS_LEGAL \
+    do {                           \
+    } while (0)
 #endif  // DEBUG
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -490,11 +490,11 @@ static bool InitLog(const EnvCharType* aEnvVar, const char* aMsg,
   // This is gross, I know.
   const wchar_t* envvar = reinterpret_cast<const wchar_t*>(aEnvVar);
   const char16_t* value = reinterpret_cast<const char16_t*>(::_wgetenv(envvar));
-#define ENVVAR_PRINTF "%S"
+#  define ENVVAR_PRINTF "%S"
 #else
   const char* envvar = aEnvVar;
   const char* value = ::getenv(aEnvVar);
-#define ENVVAR_PRINTF "%s"
+#  define ENVVAR_PRINTF "%s"
 #endif
 
   if (value) {
@@ -566,9 +566,9 @@ static void maybeUnregisterAndCloseFile(FILE*& aFile) {
 
 static void InitTraceLog() {
 #ifdef XP_WIN
-#define ENVVAR(x) u"" x
+#  define ENVVAR(x) u"" x
 #else
-#define ENVVAR(x) x
+#  define ENVVAR(x) x
 #endif
 
   if (gInitialized) {

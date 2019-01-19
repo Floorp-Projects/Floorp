@@ -15,7 +15,7 @@
 #include "prlink.h"
 
 #ifdef MOZ_ENABLE_DBUS
-#include <dbus/dbus.h>
+#  include <dbus/dbus.h>
 #endif
 #include <gtk/gtk.h>
 

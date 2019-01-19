@@ -26,9 +26,9 @@
 #define DLL_BLOCKLIST_STRING_TYPE UNICODE_STRING
 
 #if defined(MOZ_LAUNCHER_PROCESS) || defined(NIGHTLY_BUILD)
-#include "mozilla/WindowsDllBlocklistDefs.h"
+#  include "mozilla/WindowsDllBlocklistDefs.h"
 #else
-#include "mozilla/WindowsDllBlocklistCommon.h"
+#  include "mozilla/WindowsDllBlocklistCommon.h"
 DLL_BLOCKLIST_DEFINITIONS_BEGIN
 DLL_BLOCKLIST_DEFINITIONS_END
 #endif

@@ -64,9 +64,45 @@ function IsTypedArrayEnsuringArrayBuffer(arg) {
     return false;
 }
 
+// ES2019 draft rev 85ce767c86a1a8ed719fe97e978028bff819d1f2
+// 7.3.20 SpeciesConstructor ( O, defaultConstructor )
+//
+// SpeciesConstructor function optimized for TypedArrays to avoid calling
+// _ConstructorForTypedArray, a non-inlineable runtime function, in the normal
+// case.
+function TypedArraySpeciesConstructor(obj) {
+    // Step 1.
+    assert(IsObject(obj), "not passed an object");
+
+    // Step 2.
+    var ctor = obj.constructor;
+
+    // Step 3.
+    if (ctor === undefined)
+        return _ConstructorForTypedArray(obj);
+
+    // Step 4.
+    if (!IsObject(ctor))
+        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, "object's 'constructor' property");
+
+    // Steps 5.
+    var s = ctor[std_species];
+
+    // Step 6.
+    if (s === undefined || s === null)
+        return _ConstructorForTypedArray(obj);
+
+    // Step 7.
+    if (IsConstructor(s))
+        return s;
+
+    // Step 8.
+    ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, "@@species property of object's constructor");
+}
+
 // ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
 // 22.2.3.5.1 Runtime Semantics: ValidateTypedArray ( O )
-function ValidateTypedArray(obj, error) {
+function ValidateTypedArray(obj) {
     if (IsObject(obj)) {
         /* Steps 3-5 (non-wrapped typed arrays). */
         if (IsTypedArray(obj)) {
@@ -84,7 +120,7 @@ function ValidateTypedArray(obj, error) {
     }
 
     /* Steps 1-2. */
-    ThrowTypeError(error);
+    ThrowTypeError(JSMSG_NON_TYPED_ARRAY_RETURNED);
 }
 
 // ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
@@ -94,7 +130,7 @@ function TypedArrayCreateWithLength(constructor, length) {
     var newTypedArray = new constructor(length);
 
     // Step 2.
-    var isTypedArray = ValidateTypedArray(newTypedArray, JSMSG_NON_TYPED_ARRAY_RETURNED);
+    var isTypedArray = ValidateTypedArray(newTypedArray);
 
     // Step 3.
     var len;
@@ -119,7 +155,7 @@ function TypedArrayCreateWithBuffer(constructor, buffer, byteOffset, length) {
     var newTypedArray = new constructor(buffer, byteOffset, length);
 
     // Step 2.
-    ValidateTypedArray(newTypedArray, JSMSG_NON_TYPED_ARRAY_RETURNED);
+    ValidateTypedArray(newTypedArray);
 
     // Step 3 (not applicable).
 
@@ -132,11 +168,8 @@ function TypedArrayCreateWithBuffer(constructor, buffer, byteOffset, length) {
 function TypedArraySpeciesCreateWithLength(exemplar, length) {
     // Step 1 (omitted).
 
-    // Step 2.
-    var defaultConstructor = _ConstructorForTypedArray(exemplar);
-
-    // Step 3.
-    var C = SpeciesConstructor(exemplar, defaultConstructor);
+    // Steps 2-3.
+    var C = TypedArraySpeciesConstructor(exemplar);
 
     // Step 4.
     return TypedArrayCreateWithLength(C, length);
@@ -147,11 +180,8 @@ function TypedArraySpeciesCreateWithLength(exemplar, length) {
 function TypedArraySpeciesCreateWithBuffer(exemplar, buffer, byteOffset, length) {
     // Step 1 (omitted).
 
-    // Step 2.
-    var defaultConstructor = _ConstructorForTypedArray(exemplar);
-
-    // Step 3.
-    var C = SpeciesConstructor(exemplar, defaultConstructor);
+    // Steps 2-3.
+    var C = TypedArraySpeciesConstructor(exemplar);
 
     // Step 4.
     return TypedArrayCreateWithBuffer(C, buffer, byteOffset, length);

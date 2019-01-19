@@ -7,7 +7,7 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/Assertions.h"
 #ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
-#include "nsThreadUtils.h"
+#  include "nsThreadUtils.h"
 #endif  // MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
 
 using namespace mozilla;

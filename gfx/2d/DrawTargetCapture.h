@@ -65,6 +65,9 @@ class DrawTargetCaptureImpl : public DrawTargetCapture {
 
   virtual void FillRect(const Rect &aRect, const Pattern &aPattern,
                         const DrawOptions &aOptions = DrawOptions()) override;
+  virtual void FillRoundedRect(
+      const RoundedRect &aRect, const Pattern &aPattern,
+      const DrawOptions &aOptions = DrawOptions()) override;
   virtual void StrokeRect(const Rect &aRect, const Pattern &aPattern,
                           const StrokeOptions &aStrokeOptions = StrokeOptions(),
                           const DrawOptions &aOptions = DrawOptions()) override;
@@ -121,9 +124,7 @@ class DrawTargetCaptureImpl : public DrawTargetCapture {
       const IntSize &aSize, SurfaceFormat aFormat) const override;
 
   virtual already_AddRefed<PathBuilder> CreatePathBuilder(
-      FillRule aFillRule = FillRule::FILL_WINDING) const override {
-    return mRefDT->CreatePathBuilder(aFillRule);
-  }
+      FillRule aFillRule = FillRule::FILL_WINDING) const override;
 
   virtual already_AddRefed<GradientStops> CreateGradientStops(
       GradientStop *aStops, uint32_t aNumStops,

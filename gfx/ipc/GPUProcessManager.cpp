@@ -30,7 +30,7 @@
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsAppRunner.h"
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
-#include "mozilla/widget/CompositorWidgetChild.h"
+#  include "mozilla/widget/CompositorWidgetChild.h"
 #endif
 #include "nsBaseWidget.h"
 #include "nsContentUtils.h"
@@ -43,8 +43,8 @@
 #include "nsPrintfCString.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
-#include "mozilla/widget/AndroidUiThread.h"
-#include "mozilla/layers/UiCompositorControllerChild.h"
+#  include "mozilla/widget/AndroidUiThread.h"
+#  include "mozilla/layers/UiCompositorControllerChild.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 namespace mozilla {

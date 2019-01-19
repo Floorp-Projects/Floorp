@@ -22,7 +22,7 @@
 #include <algorithm>
 
 #ifdef MOZ_WIDGET_ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 using namespace mozilla;

@@ -1772,11 +1772,11 @@ class nsDisplayMathMLCharDebug final : public nsDisplayItem {
       : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharDebug);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
+#  ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayMathMLCharDebug() {
     MOZ_COUNT_DTOR(nsDisplayMathMLCharDebug);
   }
-#endif
+#  endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLCharDebug", TYPE_MATHML_CHAR_DEBUG)

@@ -18,7 +18,7 @@
 
 #include "gc/Rooting.h"
 #ifdef CHECK_OSIPOINT_REGISTERS
-#include "jit/Registers.h"  // for RegisterDump
+#  include "jit/Registers.h"  // for RegisterDump
 #endif
 #include "jit/JSJitFrameIter.h"
 #include "js/RootingAPI.h"
@@ -33,14 +33,14 @@
 namespace JS {
 namespace dbg {
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wattributes"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wattributes"
 #endif  // JS_BROKEN_GCC_ATTRIBUTE_WARNING
 
 class JS_PUBLIC_API AutoEntryMonitor;
 
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif  // JS_BROKEN_GCC_ATTRIBUTE_WARNING
 }  // namespace dbg
 }  // namespace JS

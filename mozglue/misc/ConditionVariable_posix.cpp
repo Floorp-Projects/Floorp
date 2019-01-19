@@ -27,7 +27,7 @@ static const long NanoSecPerSec = 1000000000;
 // pthread_condattr_setclock.
 #if defined(HAVE_CLOCK_MONOTONIC) && \
     !(defined(__ANDROID__) && !defined(__LP64__)) && !defined(__APPLE__)
-#define CV_USE_CLOCK_API
+#  define CV_USE_CLOCK_API
 #endif
 
 #ifdef CV_USE_CLOCK_API

@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaSystemResourceManagerChild_h_)
-#define MediaSystemResourceManagerChild_h_
+#  define MediaSystemResourceManagerChild_h_
 
-#include "mozilla/media/PMediaSystemResourceManagerChild.h"
-#include "nsISupportsImpl.h"
+#  include "mozilla/media/PMediaSystemResourceManagerChild.h"
+#  include "nsISupportsImpl.h"
 
 namespace mozilla {
 

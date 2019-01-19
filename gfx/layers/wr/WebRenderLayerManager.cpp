@@ -22,7 +22,7 @@
 #include "WebRenderCanvasRenderer.h"
 
 #ifdef XP_WIN
-#include "gfxDWriteFonts.h"
+#  include "gfxDWriteFonts.h"
 #endif
 
 namespace mozilla {

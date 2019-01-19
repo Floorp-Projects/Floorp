@@ -139,7 +139,7 @@ using namespace mozilla::dom;
 #ifndef PR_PL
 static mozilla::LazyLogModule gPrintingLog("printing");
 
-#define PR_PL(_p1) MOZ_LOG(gPrintingLog, mozilla::LogLevel::Debug, _p1);
+#  define PR_PL(_p1) MOZ_LOG(gPrintingLog, mozilla::LogLevel::Debug, _p1);
 #endif
 
 #ifdef EXTENDED_DEBUG_PRINTING
@@ -173,15 +173,15 @@ static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
                                        nsDeviceContext* aDC, int aLevel = 0,
                                        FILE* aFD = nullptr);
 
-#define DUMP_DOC_LIST(_title) \
-  DumpPrintObjectsListStart((_title), mPrt->mPrintDocList);
-#define DUMP_DOC_TREE DumpPrintObjectsTree(mPrt->mPrintObject.get());
-#define DUMP_DOC_TREELAYOUT \
-  DumpPrintObjectsTreeLayout(mPrt->mPrintObject, mPrt->mPrintDC);
+#  define DUMP_DOC_LIST(_title) \
+    DumpPrintObjectsListStart((_title), mPrt->mPrintDocList);
+#  define DUMP_DOC_TREE DumpPrintObjectsTree(mPrt->mPrintObject.get());
+#  define DUMP_DOC_TREELAYOUT \
+    DumpPrintObjectsTreeLayout(mPrt->mPrintObject, mPrt->mPrintDC);
 #else
-#define DUMP_DOC_LIST(_title)
-#define DUMP_DOC_TREE
-#define DUMP_DOC_TREELAYOUT
+#  define DUMP_DOC_LIST(_title)
+#  define DUMP_DOC_TREE
+#  define DUMP_DOC_TREELAYOUT
 #endif
 
 class nsScriptSuppressor {
@@ -563,9 +563,9 @@ nsresult nsPrintJob::GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame,
 
 // Foward decl for Debug Helper Functions
 #ifdef EXTENDED_DEBUG_PRINTING
-#ifdef XP_WIN
+#  ifdef XP_WIN
 static int RemoveFilesInDir(const char* aDir);
-#endif
+#  endif
 static void GetDocTitleAndURL(const UniquePtr<nsPrintObject>& aPO,
                               nsACString& aDocStr, nsACString& aURLStr);
 static void DumpPrintObjectsTree(nsPrintObject* aPO, int aLevel, FILE* aFD);
@@ -1187,13 +1187,13 @@ nsresult nsPrintJob::CheckForPrinters(nsIPrintSettings* aPrintSettings) {
   // Mac doesn't support retrieving a printer list.
   return NS_OK;
 #else
-#if defined(MOZ_X11)
+#  if defined(MOZ_X11)
   // On Linux, default printer name should be requested on the parent side.
   // Unless we are in the parent, we ignore this function
   if (!XRE_IsParentProcess()) {
     return NS_OK;
   }
-#endif
+#  endif
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
   // See if aPrintSettings already has a printer
@@ -3426,16 +3426,16 @@ void nsPrintJob::DisconnectPagePrintTimer() {
 //---------------------------------------------------------------
 //---------------------------------------------------------------
 #if defined(XP_WIN) && defined(EXTENDED_DEBUG_PRINTING)
-#include "windows.h"
-#include "process.h"
-#include "direct.h"
+#  include "windows.h"
+#  include "process.h"
+#  include "direct.h"
 
-#define MY_FINDFIRST(a, b) FindFirstFile(a, b)
-#define MY_FINDNEXT(a, b) FindNextFile(a, b)
-#define ISDIR(a) (a.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-#define MY_FINDCLOSE(a) FindClose(a)
-#define MY_FILENAME(a) a.cFileName
-#define MY_FILESIZE(a) (a.nFileSizeHigh * MAXDWORD) + a.nFileSizeLow
+#  define MY_FINDFIRST(a, b) FindFirstFile(a, b)
+#  define MY_FINDNEXT(a, b) FindNextFile(a, b)
+#  define ISDIR(a) (a.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+#  define MY_FINDCLOSE(a) FindClose(a)
+#  define MY_FILENAME(a) a.cFileName
+#  define MY_FILESIZE(a) (a.nFileSizeHigh * MAXDWORD) + a.nFileSizeLow
 
 int RemoveFilesInDir(const char* aDir) {
   WIN32_FIND_DATA data_ptr;
@@ -3577,11 +3577,11 @@ void DumpLayoutData(const char* aTitleStr, const char* aURLStr,
     return;
   }
 
-#ifdef NS_PRINT_PREVIEW
+#  ifdef NS_PRINT_PREVIEW
   if (aPresContext->Type() == nsPresContext::eContext_PrintPreview) {
     return;
   }
-#endif
+#  endif
 
   NS_ASSERTION(aRootFrame, "Pointer is null!");
   NS_ASSERTION(aDocShell, "Pointer is null!");

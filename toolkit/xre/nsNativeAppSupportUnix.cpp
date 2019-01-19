@@ -33,17 +33,17 @@
 #include <gtk/gtk.h>
 
 #ifdef MOZ_X11
-#include <gdk/gdkx.h>
-#include <X11/ICE/ICElib.h>
-#include <X11/SM/SMlib.h>
-#include <fcntl.h>
-#include "nsThreadUtils.h"
+#  include <gdk/gdkx.h>
+#  include <X11/ICE/ICElib.h>
+#  include <X11/SM/SMlib.h>
+#  include <fcntl.h>
+#  include "nsThreadUtils.h"
 
-#include <pwd.h>
+#  include <pwd.h>
 #endif
 
 #ifdef MOZ_ENABLE_DBUS
-#include <dbus/dbus.h>
+#  include <dbus/dbus.h>
 #endif
 
 #define MIN_GTK_MAJOR_VERSION 2
@@ -54,17 +54,17 @@ You have GTK+ %d.%d.\nThis application requires GTK+ %d.%d or newer.\n\n\
 Please upgrade your GTK+ library if you wish to use this application."
 
 #if MOZ_X11
-#undef IceSetIOErrorHandler
-#undef IceAddConnectionWatch
-#undef IceConnectionNumber
-#undef IceProcessMessages
-#undef IceGetConnectionContext
-#undef SmcInteractDone
-#undef SmcSaveYourselfDone
-#undef SmcInteractRequest
-#undef SmcCloseConnection
-#undef SmcOpenConnection
-#undef SmcSetProperties
+#  undef IceSetIOErrorHandler
+#  undef IceAddConnectionWatch
+#  undef IceConnectionNumber
+#  undef IceProcessMessages
+#  undef IceGetConnectionContext
+#  undef SmcInteractDone
+#  undef SmcSaveYourselfDone
+#  undef SmcInteractRequest
+#  undef SmcCloseConnection
+#  undef SmcOpenConnection
+#  undef SmcSetProperties
 
 typedef IceIOErrorHandler (*IceSetIOErrorHandlerFn)(IceIOErrorHandler);
 typedef int (*IceAddConnectionWatchFn)(IceWatchProc, IcePointer);
@@ -95,17 +95,17 @@ static SmcCloseConnectionFn SmcCloseConnectionPtr;
 static SmcOpenConnectionFn SmcOpenConnectionPtr;
 static SmcSetPropertiesFn SmcSetPropertiesPtr;
 
-#define IceSetIOErrorHandler IceSetIOErrorHandlerPtr
-#define IceAddConnectionWatch IceAddConnectionWatchPtr
-#define IceConnectionNumber IceConnectionNumberPtr
-#define IceProcessMessages IceProcessMessagesPtr
-#define IceGetConnectionContext IceGetConnectionContextPtr
-#define SmcInteractDone SmcInteractDonePtr
-#define SmcSaveYourselfDone SmcSaveYourselfDonePtr
-#define SmcInteractRequest SmcInteractRequestPtr
-#define SmcCloseConnection SmcCloseConnectionPtr
-#define SmcOpenConnection SmcOpenConnectionPtr
-#define SmcSetProperties SmcSetPropertiesPtr
+#  define IceSetIOErrorHandler IceSetIOErrorHandlerPtr
+#  define IceAddConnectionWatch IceAddConnectionWatchPtr
+#  define IceConnectionNumber IceConnectionNumberPtr
+#  define IceProcessMessages IceProcessMessagesPtr
+#  define IceGetConnectionContext IceGetConnectionContextPtr
+#  define SmcInteractDone SmcInteractDonePtr
+#  define SmcSaveYourselfDone SmcSaveYourselfDonePtr
+#  define SmcInteractRequest SmcInteractRequestPtr
+#  define SmcCloseConnection SmcCloseConnectionPtr
+#  define SmcOpenConnection SmcOpenConnectionPtr
+#  define SmcSetProperties SmcSetPropertiesPtr
 
 enum ClientState {
   STATE_DISCONNECTED,

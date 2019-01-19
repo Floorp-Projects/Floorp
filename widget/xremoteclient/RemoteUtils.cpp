@@ -15,19 +15,19 @@
 #include "RemoteUtils.h"
 
 #ifdef IS_BIG_ENDIAN
-#define TO_LITTLE_ENDIAN32(x)                           \
-  ((((x)&0xff000000) >> 24) | (((x)&0x00ff0000) >> 8) | \
-   (((x)&0x0000ff00) << 8) | (((x)&0x000000ff) << 24))
+#  define TO_LITTLE_ENDIAN32(x)                           \
+    ((((x)&0xff000000) >> 24) | (((x)&0x00ff0000) >> 8) | \
+     (((x)&0x0000ff00) << 8) | (((x)&0x000000ff) << 24))
 #else
-#define TO_LITTLE_ENDIAN32(x) (x)
+#  define TO_LITTLE_ENDIAN32(x) (x)
 #endif
 
 #ifndef MAX_PATH
-#ifdef PATH_MAX
-#define MAX_PATH PATH_MAX
-#else
-#define MAX_PATH 1024
-#endif
+#  ifdef PATH_MAX
+#    define MAX_PATH PATH_MAX
+#  else
+#    define MAX_PATH 1024
+#  endif
 #endif
 
 /* like strcpy, but return the char after the final null */

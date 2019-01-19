@@ -19,13 +19,13 @@
 // are not redefined as compiler intrinsics. Fix that for the interlocked
 // functions that are used in this file.
 #if defined(_MSC_VER) && !defined(InterlockedExchangeAdd)
-#define InterlockedExchangeAdd(addend, value) \
-  _InterlockedExchangeAdd((volatile long*)(addend), (long)(value))
+#  define InterlockedExchangeAdd(addend, value) \
+    _InterlockedExchangeAdd((volatile long*)(addend), (long)(value))
 #endif
 
 #if defined(_MSC_VER) && !defined(InterlockedIncrement)
-#define InterlockedIncrement(addend) \
-  _InterlockedIncrement((volatile long*)(addend))
+#  define InterlockedIncrement(addend) \
+    _InterlockedIncrement((volatile long*)(addend))
 #endif
 
 // Wrapper for native condition variable APIs.

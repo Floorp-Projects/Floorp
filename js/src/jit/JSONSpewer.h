@@ -9,10 +9,10 @@
 
 #ifdef JS_JITSPEW
 
-#include <stdio.h>
+#  include <stdio.h>
 
-#include "js/TypeDecls.h"
-#include "vm/JSONPrinter.h"
+#  include "js/TypeDecls.h"
+#  include "vm/JSONPrinter.h"
 
 namespace js {
 namespace jit {

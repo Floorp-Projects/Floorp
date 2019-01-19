@@ -13,7 +13,7 @@ class NrIceStunAddr;
 
 #include "ipc/IPCMessageUtils.h"
 #ifdef MOZ_WEBRTC
-#include "mtransport/nricestunaddr.h"
+#  include "mtransport/nricestunaddr.h"
 #endif
 
 namespace IPC {

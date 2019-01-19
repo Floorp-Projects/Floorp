@@ -34,7 +34,7 @@
 #include "nsContentUtils.h"
 #include "nsLayoutStylesheetCache.h"
 #ifdef ACCESSIBILITY
-#include "mozilla/a11y/DocAccessible.h"
+#  include "mozilla/a11y/DocAccessible.h"
 #endif
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Encoding.h"
@@ -61,7 +61,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsCopySupport.h"
 #ifdef MOZ_XUL
-#include "nsXULPopupManager.h"
+#  include "nsXULPopupManager.h"
 #endif
 
 #include "nsIClipboardHelper.h"
@@ -89,16 +89,16 @@
 //---------------------------
 #ifdef NS_PRINTING
 
-#include "nsIWebBrowserPrint.h"
+#  include "nsIWebBrowserPrint.h"
 
-#include "nsPrintJob.h"
+#  include "nsPrintJob.h"
 
 // Print Options
-#include "nsIPrintSettings.h"
-#include "nsIPrintSettingsService.h"
-#include "nsISimpleEnumerator.h"
+#  include "nsIPrintSettings.h"
+#  include "nsIPrintSettingsService.h"
+#  include "nsISimpleEnumerator.h"
 
-#include "nsIPluginDocument.h"
+#  include "nsIPluginDocument.h"
 
 #endif  // NS_PRINTING
 
@@ -135,7 +135,7 @@ using namespace mozilla::dom;
 #ifdef NS_PRINTING
 static mozilla::LazyLogModule gPrintingLog("printing");
 
-#define PR_PL(_p1) MOZ_LOG(gPrintingLog, mozilla::LogLevel::Debug, _p1);
+#  define PR_PL(_p1) MOZ_LOG(gPrintingLog, mozilla::LogLevel::Debug, _p1);
 #endif  // NS_PRINTING
 
 #define PRT_YESNO(_p) ((_p) ? "YES" : "NO")
@@ -441,7 +441,7 @@ class nsDocumentViewer final : public nsIContentViewer,
 #ifdef NS_PRINTING
   unsigned mClosingWhilePrinting : 1;
 
-#if NS_PRINT_PREVIEW
+#  if NS_PRINT_PREVIEW
   unsigned mPrintPreviewZoomed : 1;
 
   // These data members support delayed printing when the document is loading
@@ -454,7 +454,7 @@ class nsDocumentViewer final : public nsIContentViewer,
   float mOriginalPrintPreviewScale;
   float mPrintPreviewZoom;
   UniquePtr<AutoPrintEventDispatcher> mAutoBeforeAndAfterPrint;
-#endif  // NS_PRINT_PREVIEW
+#  endif  // NS_PRINT_PREVIEW
 
 #endif  // NS_PRINTING
 
@@ -547,9 +547,9 @@ void nsDocumentViewer::PrepareToStartLoad() {
   if (mPrintJob) {
     mPrintJob->Destroy();
     mPrintJob = nullptr;
-#ifdef NS_PRINT_PREVIEW
+#  ifdef NS_PRINT_PREVIEW
     SetIsPrintPreview(false);
-#endif
+#  endif
   }
 
 #endif  // NS_PRINTING
@@ -572,14 +572,14 @@ nsDocumentViewer::nsDocumentViewer()
       mInPermitUnloadPrompt(false),
 #ifdef NS_PRINTING
       mClosingWhilePrinting(false),
-#if NS_PRINT_PREVIEW
+#  if NS_PRINT_PREVIEW
       mPrintPreviewZoomed(false),
       mPrintIsPending(false),
       mPrintDocIsFullyLoaded(false),
       mOriginalPrintPreviewScale(0.0),
       mPrintPreviewZoom(1.0),
-#endif  // NS_PRINT_PREVIEW
-#endif  // NS_PRINTING
+#  endif  // NS_PRINT_PREVIEW
+#endif    // NS_PRINTING
       mHintCharsetSource(kCharsetUninitialized),
       mHintCharset(nullptr),
       mForceCharacterSet(nullptr),
@@ -1815,13 +1815,13 @@ nsDocumentViewer::Destroy() {
 #ifdef NS_PRINTING
   if (mPrintJob) {
     RefPtr<nsPrintJob> printJob = std::move(mPrintJob);
-#ifdef NS_PRINT_PREVIEW
+#  ifdef NS_PRINT_PREVIEW
     bool doingPrintPreview;
     printJob->GetDoingPrintPreview(&doingPrintPreview);
     if (doingPrintPreview) {
       printJob->FinishPrintPreview();
     }
-#endif
+#  endif
     printJob->Destroy();
     MOZ_ASSERT(!mPrintJob,
                "mPrintJob shouldn't be recreated while destroying it");
@@ -3664,7 +3664,7 @@ NS_IMETHODIMP
 nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
                                mozIDOMWindowProxy* aChildDOMWin,
                                nsIWebProgressListener* aWebProgressListener) {
-#if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
+#  if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   MOZ_ASSERT(IsInitializedForPrintPreview(),
              "For print preview nsIWebBrowserPrint must be from "
              "docshell.printPreview!");
@@ -3746,9 +3746,9 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
     OnDonePrinting();
   }
   return rv;
-#else
+#  else
   return NS_ERROR_FAILURE;
-#endif
+#  endif
 }
 
 //----------------------------------------------------------------------
@@ -3900,75 +3900,75 @@ nsDocumentViewer::ExitPrintPreview() {
 NS_IMETHODIMP
 nsDocumentViewer::EnumerateDocumentNames(uint32_t* aCount,
                                          char16_t*** aResult) {
-#ifdef NS_PRINTING
+#  ifdef NS_PRINTING
   NS_ENSURE_ARG(aCount);
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
 
   return mPrintJob->EnumerateDocumentNames(aCount, aResult);
-#else
+#  else
   return NS_ERROR_FAILURE;
-#endif
+#  endif
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::GetIsFramesetFrameSelected(bool* aIsFramesetFrameSelected) {
-#ifdef NS_PRINTING
+#  ifdef NS_PRINTING
   *aIsFramesetFrameSelected = false;
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
 
   return mPrintJob->GetIsFramesetFrameSelected(aIsFramesetFrameSelected);
-#else
+#  else
   return NS_ERROR_FAILURE;
-#endif
+#  endif
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::GetPrintPreviewNumPages(int32_t* aPrintPreviewNumPages) {
-#ifdef NS_PRINTING
+#  ifdef NS_PRINTING
   NS_ENSURE_ARG_POINTER(aPrintPreviewNumPages);
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
 
   return mPrintJob->GetPrintPreviewNumPages(aPrintPreviewNumPages);
-#else
+#  else
   return NS_ERROR_FAILURE;
-#endif
+#  endif
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::GetIsFramesetDocument(bool* aIsFramesetDocument) {
-#ifdef NS_PRINTING
+#  ifdef NS_PRINTING
   *aIsFramesetDocument = false;
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
 
   return mPrintJob->GetIsFramesetDocument(aIsFramesetDocument);
-#else
+#  else
   return NS_ERROR_FAILURE;
-#endif
+#  endif
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::GetIsIFrameSelected(bool* aIsIFrameSelected) {
-#ifdef NS_PRINTING
+#  ifdef NS_PRINTING
   *aIsIFrameSelected = false;
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
 
   return mPrintJob->GetIsIFrameSelected(aIsIFrameSelected);
-#else
+#  else
   return NS_ERROR_FAILURE;
-#endif
+#  endif
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::GetIsRangeSelection(bool* aIsRangeSelection) {
-#ifdef NS_PRINTING
+#  ifdef NS_PRINTING
   *aIsRangeSelection = false;
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
 
   return mPrintJob->GetIsRangeSelection(aIsRangeSelection);
-#else
+#  else
   return NS_ERROR_FAILURE;
-#endif
+#  endif
 }
 
 //----------------------------------------------------------------------------------

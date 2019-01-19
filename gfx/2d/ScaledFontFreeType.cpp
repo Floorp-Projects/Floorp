@@ -12,7 +12,7 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 
 #ifdef USE_SKIA
-#include "skia/include/ports/SkTypeface_cairo.h"
+#  include "skia/include/ports/SkTypeface_cairo.h"
 #endif
 
 #include FT_MULTIPLE_MASTERS_H

@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(XP_WIN)
-#include <windows.h>
-#include <winioctl.h>  // for FSCTL_GET_REPARSE_POINT
+#  include <windows.h>
+#  include <winioctl.h>  // for FSCTL_GET_REPARSE_POINT
 #endif
 
 #include <stdio.h>
@@ -14,9 +14,9 @@
 
 #include "updatecommon.h"
 #ifdef XP_WIN
-#include "updatehelper.h"
-#include "nsWindowsHelpers.h"
-#include "mozilla/UniquePtr.h"
+#  include "updatehelper.h"
+#  include "nsWindowsHelpers.h"
+#  include "mozilla/UniquePtr.h"
 
 // This struct isn't in any SDK header, so this definition was copied from:
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/ntifs/ns-ntifs-_reparse_data_buffer

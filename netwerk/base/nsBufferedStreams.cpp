@@ -13,13 +13,13 @@
 #include <algorithm>
 
 #ifdef DEBUG_brendan
-#define METERING
+#  define METERING
 #endif
 
 #ifdef METERING
-#include <stdio.h>
-#define METER(x) x
-#define MAX_BIG_SEEKS 20
+#  include <stdio.h>
+#  define METER(x) x
+#  define MAX_BIG_SEEKS 20
 
 static struct {
   uint32_t mSeeksWithinBuffer;
@@ -34,7 +34,7 @@ static struct {
   } mBigSeek[MAX_BIG_SEEKS];
 } bufstats;
 #else
-#define METER(x) /* nothing */
+#  define METER(x) /* nothing */
 #endif
 
 using namespace mozilla::ipc;

@@ -31,9 +31,9 @@
 #include "modules/video_capture/video_capture.h"
 
 #if defined(_WIN32)
-#include "platform_uithread.h"
+#  include "platform_uithread.h"
 #else
-#include "rtc_base/platform_thread.h"
+#  include "rtc_base/platform_thread.h"
 #endif
 
 namespace webrtc {
@@ -410,12 +410,12 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id, const char* uniqueId,
       capturer_thread_(
           new rtc::PlatformUIThread(Run, this, "ScreenCaptureThread")),
 #else
-#if defined(WEBRTC_LINUX)
+#  if defined(WEBRTC_LINUX)
       capturer_thread_(nullptr),
-#else
+#  else
       capturer_thread_(
           new rtc::PlatformThread(Run, this, "ScreenCaptureThread")),
-#endif
+#  endif
 #endif
       started_(false) {
   //-> TODO @@NG why is this crashing (seen on Linux)

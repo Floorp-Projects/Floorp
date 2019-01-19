@@ -1,7 +1,7 @@
 #if !defined(AgnosticDecoderModule_h_)
-#define AgnosticDecoderModule_h_
+#  define AgnosticDecoderModule_h_
 
-#include "PlatformDecoderModule.h"
+#  include "PlatformDecoderModule.h"
 
 namespace mozilla {
 

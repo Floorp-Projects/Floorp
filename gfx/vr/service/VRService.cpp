@@ -10,15 +10,15 @@
 #include <cstring>        // for memcmp
 
 #if defined(XP_WIN)
-#include "OculusSession.h"
+#  include "OculusSession.h"
 #endif
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || \
     (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
-#include "OpenVRSession.h"
+#  include "OpenVRSession.h"
 #endif
 #if !defined(MOZ_WIDGET_ANDROID)
-#include "OSVRSession.h"
+#  include "OSVRSession.h"
 #endif
 
 using namespace mozilla;

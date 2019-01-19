@@ -16,7 +16,7 @@
 #include "gtest/gtest.h"
 
 #if defined(DEBUG) && !defined(XP_WIN) && !defined(ANDROID)
-#define HAS_GDB_SLEEP_DURATION 1
+#  define HAS_GDB_SLEEP_DURATION 1
 extern unsigned int _gdb_sleep_duration;
 #endif
 
@@ -33,15 +33,15 @@ static void DisableCrashReporter() {
 // Wrap ASSERT_DEATH_IF_SUPPORTED to disable the crash reporter
 // when entering the subprocess, so that the expected crashes don't
 // create a minidump that the gtest harness will interpret as an error.
-#define ASSERT_DEATH_WRAP(a, b) \
-  ASSERT_DEATH_IF_SUPPORTED(    \
-      {                         \
-        DisableCrashReporter(); \
-        a;                      \
-      },                        \
-      b)
+#  define ASSERT_DEATH_WRAP(a, b) \
+    ASSERT_DEATH_IF_SUPPORTED(    \
+        {                         \
+          DisableCrashReporter(); \
+          a;                      \
+        },                        \
+        b)
 #else
-#define ASSERT_DEATH_WRAP(a, b)
+#  define ASSERT_DEATH_WRAP(a, b)
 #endif
 
 using namespace mozilla;
@@ -499,14 +499,14 @@ TEST(Jemalloc, JunkPoison) {
               bulk_compare(ptr, 0, to_size, fill_buf, stats.page_size));
           // On Windows (MALLOC_DECOMMIT), in-place realloc of huge allocations
           // decommits extra pages, writing to them becomes an error.
-#ifdef XP_WIN
+#  ifdef XP_WIN
           if (to_size > stats.large_max) {
             size_t page_limit = ALIGNMENT_CEILING(to_size, stats.page_size);
             ASSERT_NO_FATAL_FAILURE(bulk_compare(ptr, to_size, page_limit,
                                                  poison_buf, stats.page_size));
             ASSERT_DEATH_WRAP(ptr[page_limit] = 0, "");
           } else
-#endif
+#  endif
           {
             ASSERT_NO_FATAL_FAILURE(bulk_compare(ptr, to_size, from_size,
                                                  poison_buf, stats.page_size));

@@ -21,7 +21,7 @@ using namespace mozilla::dom;
 
 static mozilla::LazyLogModule sPerfLog("PerformanceMetricsCollector");
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 #define LOG(args) MOZ_LOG(sPerfLog, mozilla::LogLevel::Debug, args)
 

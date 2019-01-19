@@ -7,8 +7,8 @@
 #include "WindowsNetworkFunctionsWrapper.h"
 
 #ifndef __MINGW32__
-#pragma comment(lib, "IPHLPAPI.lib")
-#pragma comment(lib, "dhcpcsvc.lib")
+#  pragma comment(lib, "IPHLPAPI.lib")
+#  pragma comment(lib, "dhcpcsvc.lib")
 #endif
 
 namespace mozilla {

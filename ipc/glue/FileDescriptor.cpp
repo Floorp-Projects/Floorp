@@ -12,20 +12,20 @@
 
 #ifdef XP_WIN
 
-#include <windows.h>
-#include "ProtocolUtils.h"
-#define INVALID_HANDLE INVALID_HANDLE_VALUE
+#  include <windows.h>
+#  include "ProtocolUtils.h"
+#  define INVALID_HANDLE INVALID_HANDLE_VALUE
 
 #else  // XP_WIN
 
-#include <unistd.h>
+#  include <unistd.h>
 
-#ifndef OS_POSIX
-#define OS_POSIX
-#endif
+#  ifndef OS_POSIX
+#    define OS_POSIX
+#  endif
 
-#include "base/eintr_wrapper.h"
-#define INVALID_HANDLE -1
+#  include "base/eintr_wrapper.h"
+#  define INVALID_HANDLE -1
 
 #endif  // XP_WIN
 

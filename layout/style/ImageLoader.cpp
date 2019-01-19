@@ -516,7 +516,7 @@ static void InvalidateImages(nsIFrame* aFrame) {
           break;
         case layers::WebRenderUserData::UserDataType::eImage:
           if (static_cast<layers::WebRenderImageData*>(data.get())
-                  ->IsAsyncAnimatedImage()) {
+                  ->UsingSharedSurface()) {
             break;
           }
           MOZ_FALLTHROUGH;

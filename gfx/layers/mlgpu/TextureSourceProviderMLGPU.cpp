@@ -8,7 +8,7 @@
 #include "LayerManagerMLGPU.h"
 #include "MLGDevice.h"
 #ifdef XP_WIN
-#include "mozilla/layers/MLGDeviceD3D11.h"
+#  include "mozilla/layers/MLGDeviceD3D11.h"
 #endif
 
 namespace mozilla {

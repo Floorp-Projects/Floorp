@@ -28,7 +28,7 @@
 // can also be restricted to particular handset models in the future.
 
 #if defined(ANDROID) && !defined(MOZ_PROXY_BYPASS_PROTECTION)
-#define MOZ_USE_WIFI_TICKLER
+#  define MOZ_USE_WIFI_TICKLER
 #endif
 
 #include "mozilla/Attributes.h"
@@ -36,14 +36,14 @@
 #include <stdint.h>
 
 #ifdef MOZ_USE_WIFI_TICKLER
-#include "mozilla/Mutex.h"
-#include "mozilla/TimeStamp.h"
-#include "nsAutoPtr.h"
-#include "nsISupports.h"
-#include "nsIThread.h"
-#include "nsITimer.h"
-#include "nsWeakReference.h"
-#include "prio.h"
+#  include "mozilla/Mutex.h"
+#  include "mozilla/TimeStamp.h"
+#  include "nsAutoPtr.h"
+#  include "nsISupports.h"
+#  include "nsIThread.h"
+#  include "nsITimer.h"
+#  include "nsWeakReference.h"
+#  include "prio.h"
 
 class nsIPrefBranch;
 #endif
@@ -54,12 +54,12 @@ namespace net {
 #ifdef MOZ_USE_WIFI_TICKLER
 
 // 8f769ed6-207c-4af9-9f7e-9e832da3754e
-#define NS_TICKLER_IID                               \
-  {                                                  \
-    0x8f769ed6, 0x207c, 0x4af9, {                    \
-      0x9f, 0x7e, 0x9e, 0x83, 0x2d, 0xa3, 0x75, 0x4e \
-    }                                                \
-  }
+#  define NS_TICKLER_IID                               \
+    {                                                  \
+      0x8f769ed6, 0x207c, 0x4af9, {                    \
+        0x9f, 0x7e, 0x9e, 0x83, 0x2d, 0xa3, 0x75, 0x4e \
+      }                                                \
+    }
 
 class Tickler final : public nsSupportsWeakReference {
  public:

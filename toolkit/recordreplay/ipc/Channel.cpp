@@ -239,7 +239,7 @@ void Channel::PrintMessage(const char* aPrefix, const Message& aMsg) {
   switch (aMsg.mType) {
     case MessageType::HitExecutionPoint: {
       const HitExecutionPointMessage& nmsg =
-        (const HitExecutionPointMessage&)aMsg;
+          (const HitExecutionPointMessage&)aMsg;
       nmsg.mPoint.ToString(data);
       data.AppendPrintf(" Endpoint %d Duration %.2f ms",
                         nmsg.mRecordingEndpoint,

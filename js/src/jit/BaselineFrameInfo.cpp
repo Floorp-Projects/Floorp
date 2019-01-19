@@ -7,7 +7,7 @@
 #include "jit/BaselineFrameInfo.h"
 
 #ifdef DEBUG
-#include "jit/BytecodeAnalysis.h"
+#  include "jit/BytecodeAnalysis.h"
 #endif
 
 #include "jit/BaselineFrameInfo-inl.h"

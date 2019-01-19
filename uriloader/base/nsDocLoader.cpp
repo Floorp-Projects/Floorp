@@ -1469,7 +1469,7 @@ void nsDocLoader::DumpChannelInfo()
   for(i=0; i<count; i++) {
     info = (nsChannelInfo *)mChannelInfoList.ElementAt(i);
 
-#if defined(DEBUG)
+#  if defined(DEBUG)
     nsAutoCString buffer;
     nsresult rv = NS_OK;
     if (info->mURI) {
@@ -1479,7 +1479,7 @@ void nsDocLoader::DumpChannelInfo()
     printf("  [%d] current=%d  max=%d [%s]\n", i,
            info->mCurrentProgress,
            info->mMaxProgress, buffer.get());
-#endif /* DEBUG */
+#  endif /* DEBUG */
 
     current += info->mCurrentProgress;
     if (max >= 0) {
@@ -1493,4 +1493,4 @@ void nsDocLoader::DumpChannelInfo()
 
   printf("\nCurrent=%d   Total=%d\n====\n", current, max);
 }
-#endif /* 0 */
+#endif   /* 0 */

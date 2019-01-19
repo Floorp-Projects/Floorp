@@ -11,12 +11,12 @@
 #include <errno.h>
 #include <stdlib.h>
 #ifdef XP_WIN
-#include <direct.h>
-#include <process.h>
-#include <string.h>
+#  include <direct.h>
+#  include <process.h>
+#  include <string.h>
 #else
-#include <sys/wait.h>
-#include <unistd.h>
+#  include <sys/wait.h>
+#  include <unistd.h>
 #endif
 
 #include "jsapi.h"
@@ -39,12 +39,12 @@
 #include "vm/JSObject-inl.h"
 
 #ifdef XP_WIN
-#ifndef PATH_MAX
-#define PATH_MAX (MAX_PATH > _MAX_DIR ? MAX_PATH : _MAX_DIR)
-#endif
-#define getcwd _getcwd
+#  ifndef PATH_MAX
+#    define PATH_MAX (MAX_PATH > _MAX_DIR ? MAX_PATH : _MAX_DIR)
+#  endif
+#  define getcwd _getcwd
 #else
-#include <libgen.h>
+#  include <libgen.h>
 #endif
 
 using js::shell::RCFile;

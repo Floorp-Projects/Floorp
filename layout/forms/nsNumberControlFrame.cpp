@@ -26,7 +26,7 @@
 #include "mozilla/dom/MutationEventBinding.h"
 
 #ifdef ACCESSIBILITY
-#include "mozilla/a11y/AccTypes.h"
+#  include "mozilla/a11y/AccTypes.h"
 #endif
 
 using namespace mozilla;

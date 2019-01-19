@@ -33,12 +33,12 @@
 //
 // Ideally, we'd get rid of this smaller limit and make 32-bit Windows and
 // Android capable of working with the Linux/Mac/Win64 number below.
-#define MAX_REFLOW_DEPTH 585
+#  define MAX_REFLOW_DEPTH 585
 #else
 // Blink's magic depth limit from its HTML parser times two. Also just about
 // fits within the system default runtime stack limit of 8 MB on 64-bit Mac and
 // Linux with display: table-cell.
-#define MAX_REFLOW_DEPTH 1026
+#  define MAX_REFLOW_DEPTH 1026
 #endif
 
 /* nsIFrame is in the process of being deCOMtaminated, i.e., this file is
@@ -74,7 +74,7 @@
 #include "nsDisplayItemTypes.h"
 
 #ifdef ACCESSIBILITY
-#include "mozilla/a11y/AccTypes.h"
+#  include "mozilla/a11y/AccTypes.h"
 #endif
 
 /**

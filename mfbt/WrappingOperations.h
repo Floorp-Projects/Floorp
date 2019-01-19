@@ -272,13 +272,13 @@ constexpr T WrappingMultiply(T aX, T aY) {
 //
 // If/when MSVC fix this bug, we should remove these macros.
 #ifdef _MSC_VER
-#define MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING \
-  __pragma(warning(push)) __pragma(warning(disable : 4307))
-#define MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING \
-  __pragma(warning(pop))
+#  define MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING \
+    __pragma(warning(push)) __pragma(warning(disable : 4307))
+#  define MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING \
+    __pragma(warning(pop))
 #else
-#define MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
-#define MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+#  define MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+#  define MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
 #endif
 
 } /* namespace mozilla */

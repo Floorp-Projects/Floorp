@@ -9,7 +9,7 @@
 #include <pthread.h>
 
 #if !defined(OS_NETBSD)
-#include <pthread_np.h>
+#  include <pthread_np.h>
 #endif
 
 namespace mozilla {

@@ -18,9 +18,9 @@
 #include "nsCharTraits.h"
 
 #ifdef MOZILLA_INTERNAL_API
-#define UTF8UTILS_WARNING(msg) NS_WARNING(msg)
+#  define UTF8UTILS_WARNING(msg) NS_WARNING(msg)
 #else
-#define UTF8UTILS_WARNING(msg)
+#  define UTF8UTILS_WARNING(msg)
 #endif
 
 class UTF8traits {

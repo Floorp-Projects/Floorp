@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 #ifdef XP_LINUX
-#include <sys/prctl.h>
+#  include <sys/prctl.h>
 #endif
 
 #include "base/string_util.h"

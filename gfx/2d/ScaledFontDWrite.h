@@ -44,7 +44,8 @@ class ScaledFontDWrite final : public ScaledFontBase {
   void CopyGlyphsToBuilder(const GlyphBuffer& aBuffer, PathBuilder* aBuilder,
                            const Matrix* aTransformHint) override;
 
-  void CopyGlyphsToSink(const GlyphBuffer& aBuffer, ID2D1GeometrySink* aSink);
+  void CopyGlyphsToSink(const GlyphBuffer& aBuffer,
+                        ID2D1SimplifiedGeometrySink* aSink);
 
   void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs,
                              GlyphMetrics* aGlyphMetrics) override;

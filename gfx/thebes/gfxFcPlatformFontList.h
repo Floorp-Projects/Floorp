@@ -24,7 +24,7 @@
 #include <cairo-ft.h>
 
 #if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
-#include "mozilla/SandboxBroker.h"
+#  include "mozilla/SandboxBroker.h"
 #endif
 
 namespace mozilla {

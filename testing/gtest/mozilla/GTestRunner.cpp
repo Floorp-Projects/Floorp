@@ -10,7 +10,7 @@
 #include "testing/TestHarness.h"
 #include "prenv.h"
 #ifdef XP_WIN
-#include "mozilla/ipc/WindowsMessageLoop.h"
+#  include "mozilla/ipc/WindowsMessageLoop.h"
 #endif
 
 using ::testing::EmptyTestEventListener;

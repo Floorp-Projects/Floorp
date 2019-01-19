@@ -10,9 +10,9 @@
 
 #ifndef TOUCH_FEEDBACK_DEFAULT
 
-#define TOUCH_FEEDBACK_DEFAULT 0x1
-#define TOUCH_FEEDBACK_INDIRECT 0x2
-#define TOUCH_FEEDBACK_NONE 0x3
+#  define TOUCH_FEEDBACK_DEFAULT 0x1
+#  define TOUCH_FEEDBACK_INDIRECT 0x2
+#  define TOUCH_FEEDBACK_NONE 0x3
 
 enum {
   PT_POINTER = 0x00000001,  // Generic pointer
@@ -70,36 +70,36 @@ typedef struct {
   UINT32 pressure;
 } POINTER_TOUCH_INFO;
 
-#define TOUCH_FLAG_NONE 0x00000000  // Default
+#  define TOUCH_FLAG_NONE 0x00000000  // Default
 
-#define TOUCH_MASK_NONE \
-  0x00000000  // Default - none of the optional fields are valid
-#define TOUCH_MASK_CONTACTAREA 0x00000001  // The rcContact field is valid
-#define TOUCH_MASK_ORIENTATION 0x00000002  // The orientation field is valid
-#define TOUCH_MASK_PRESSURE 0x00000004     // The pressure field is valid
+#  define TOUCH_MASK_NONE \
+    0x00000000  // Default - none of the optional fields are valid
+#  define TOUCH_MASK_CONTACTAREA 0x00000001  // The rcContact field is valid
+#  define TOUCH_MASK_ORIENTATION 0x00000002  // The orientation field is valid
+#  define TOUCH_MASK_PRESSURE 0x00000004     // The pressure field is valid
 
-#define POINTER_FLAG_NONE 0x00000000          // Default
-#define POINTER_FLAG_NEW 0x00000001           // New pointer
-#define POINTER_FLAG_INRANGE 0x00000002       // Pointer has not departed
-#define POINTER_FLAG_INCONTACT 0x00000004     // Pointer is in contact
-#define POINTER_FLAG_FIRSTBUTTON 0x00000010   // Primary action
-#define POINTER_FLAG_SECONDBUTTON 0x00000020  // Secondary action
-#define POINTER_FLAG_THIRDBUTTON 0x00000040   // Third button
-#define POINTER_FLAG_FOURTHBUTTON 0x00000080  // Fourth button
-#define POINTER_FLAG_FIFTHBUTTON 0x00000100   // Fifth button
-#define POINTER_FLAG_PRIMARY 0x00002000       // Pointer is primary
-#define POINTER_FLAG_CONFIDENCE \
-  0x00004000  // Pointer is considered unlikely to be accidental
-#define POINTER_FLAG_CANCELED \
-  0x00008000  // Pointer is departing in an abnormal manner
-#define POINTER_FLAG_DOWN \
-  0x00010000  // Pointer transitioned to down state (made contact)
-#define POINTER_FLAG_UPDATE 0x00020000  // Pointer update
-#define POINTER_FLAG_UP \
-  0x00040000  // Pointer transitioned from down state (broke contact)
-#define POINTER_FLAG_WHEEL 0x00080000           // Vertical wheel
-#define POINTER_FLAG_HWHEEL 0x00100000          // Horizontal wheel
-#define POINTER_FLAG_CAPTURECHANGED 0x00200000  // Lost capture
+#  define POINTER_FLAG_NONE 0x00000000          // Default
+#  define POINTER_FLAG_NEW 0x00000001           // New pointer
+#  define POINTER_FLAG_INRANGE 0x00000002       // Pointer has not departed
+#  define POINTER_FLAG_INCONTACT 0x00000004     // Pointer is in contact
+#  define POINTER_FLAG_FIRSTBUTTON 0x00000010   // Primary action
+#  define POINTER_FLAG_SECONDBUTTON 0x00000020  // Secondary action
+#  define POINTER_FLAG_THIRDBUTTON 0x00000040   // Third button
+#  define POINTER_FLAG_FOURTHBUTTON 0x00000080  // Fourth button
+#  define POINTER_FLAG_FIFTHBUTTON 0x00000100   // Fifth button
+#  define POINTER_FLAG_PRIMARY 0x00002000       // Pointer is primary
+#  define POINTER_FLAG_CONFIDENCE \
+    0x00004000  // Pointer is considered unlikely to be accidental
+#  define POINTER_FLAG_CANCELED \
+    0x00008000  // Pointer is departing in an abnormal manner
+#  define POINTER_FLAG_DOWN \
+    0x00010000  // Pointer transitioned to down state (made contact)
+#  define POINTER_FLAG_UPDATE 0x00020000  // Pointer update
+#  define POINTER_FLAG_UP \
+    0x00040000  // Pointer transitioned from down state (broke contact)
+#  define POINTER_FLAG_WHEEL 0x00080000           // Vertical wheel
+#  define POINTER_FLAG_HWHEEL 0x00100000          // Horizontal wheel
+#  define POINTER_FLAG_CAPTURECHANGED 0x00200000  // Lost capture
 
 #endif  // TOUCH_FEEDBACK_DEFAULT
 

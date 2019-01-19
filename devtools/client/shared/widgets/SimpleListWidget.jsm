@@ -170,9 +170,8 @@ SimpleListWidget.prototype = {
     }
 
     // Ensure the element is visible but not scrolled horizontally.
-    const scrollbox = this._list;
-    scrollbox.ensureElementIsVisible(aElement);
-    scrollbox.scrollBy(-this._list.clientWidth, 0);
+    aElement.scrollIntoView({ block: "nearest" });
+    this._list.scrollBy(-this._list.clientWidth, 0);
   },
 
   /**

@@ -22,8 +22,8 @@
 #include "mozilla/widget/CompositorWidget.h"
 
 #ifdef XP_WIN
-#include "GLLibraryEGL.h"
-#include "mozilla/widget/WinCompositorWindowThread.h"
+#  include "GLLibraryEGL.h"
+#  include "mozilla/widget/WinCompositorWindowThread.h"
 #endif
 
 using namespace mozilla;

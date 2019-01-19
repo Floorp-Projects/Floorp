@@ -11,19 +11,19 @@
 #include "prlink.h"
 #include "prenv.h"
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-#include "mozilla/sandboxTarget.h"
-#include "mozilla/sandboxing/SandboxInitialization.h"
-#include "mozilla/sandboxing/sandboxLogging.h"
+#  include "mozilla/sandboxTarget.h"
+#  include "mozilla/sandboxing/SandboxInitialization.h"
+#  include "mozilla/sandboxing/sandboxLogging.h"
 #endif
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-#include "mozilla/Sandbox.h"
-#include "mozilla/SandboxInfo.h"
+#  include "mozilla/Sandbox.h"
+#  include "mozilla/SandboxInfo.h"
 #endif
 
 #include <string>
 
 #ifdef XP_WIN
-#include "windows.h"
+#  include "windows.h"
 #endif
 
 namespace mozilla {

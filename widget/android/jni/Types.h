@@ -49,9 +49,9 @@ struct TypeAdapter<LocalRef<Cls>> {
 // clang is picky about function types, including attributes that modify the
 // calling convention, lining up.  GCC appears to be somewhat less so.
 #ifdef __clang__
-#define MOZ_JNICALL_ABI JNICALL
+#  define MOZ_JNICALL_ABI JNICALL
 #else
-#define MOZ_JNICALL_ABI
+#  define MOZ_JNICALL_ABI
 #endif
 
 // NDK r18 made jvalue* method parameters const. We detect the change directly

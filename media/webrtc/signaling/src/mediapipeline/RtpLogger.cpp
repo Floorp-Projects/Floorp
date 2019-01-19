@@ -10,10 +10,10 @@
 #include <iomanip>
 #include <sstream>
 #ifdef _WIN32
-#include <time.h>
-#include <sys/timeb.h>
+#  include <time.h>
+#  include <sys/timeb.h>
 #else
-#include <sys/time.h>
+#  include <sys/time.h>
 #endif
 
 // Logging context

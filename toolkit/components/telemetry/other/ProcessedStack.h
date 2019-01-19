@@ -10,7 +10,7 @@
 #include <vector>
 #include "nsString.h"
 #if defined(MOZ_GECKO_PROFILER)
-#include "shared-libraries.h"
+#  include "shared-libraries.h"
 #endif  // MOZ_GECKO_PROFILER
 
 namespace mozilla {

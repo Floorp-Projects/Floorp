@@ -827,8 +827,8 @@ void AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState) {
   }
 
 #ifndef WIN32  // Bug 1170547
-#ifndef XP_MACOSX
-#ifdef DEBUG
+#  ifndef XP_MACOSX
+#    ifdef DEBUG
 
   if (!((mAudioContextState == AudioContextState::Suspended &&
          aNewState == AudioContextState::Running) ||
@@ -845,9 +845,9 @@ void AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState) {
     MOZ_ASSERT(false);
   }
 
-#endif  // DEBUG
-#endif  // XP_MACOSX
-#endif  // WIN32
+#    endif  // DEBUG
+#  endif    // XP_MACOSX
+#endif      // WIN32
 
   if (aPromise) {
     Promise* promise = reinterpret_cast<Promise*>(aPromise);
@@ -1042,7 +1042,8 @@ void AudioContext::MaybeUpdateAutoplayTelemetryWhenShutdown() {
 }
 
 void AudioContext::ReportBlocked() {
-  ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayWebAudioStartError");
+  ReportToConsole(nsIScriptError::warningFlag,
+                  "BlockAutoplayWebAudioStartError");
   mWasAllowedToStart = false;
 
   if (!StaticPrefs::MediaBlockEventEnabled()) {

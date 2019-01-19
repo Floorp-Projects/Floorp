@@ -8,8 +8,8 @@
 
 // If rendertrace is off let's no compile this code
 #ifdef MOZ_RENDERTRACE
-#include "Layers.h"
-#include "TreeTraversal.h"  // for ForEachNode
+#  include "Layers.h"
+#  include "TreeTraversal.h"  // for ForEachNode
 
 namespace mozilla {
 namespace layers {

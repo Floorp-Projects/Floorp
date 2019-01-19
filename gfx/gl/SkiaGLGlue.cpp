@@ -12,8 +12,8 @@
 /* SkPostConfig.h includes windows.h, which includes windef.h
  * which redefines min/max. We don't want that. */
 #ifdef _WIN32
-#undef min
-#undef max
+#  undef min
+#  undef max
 #endif
 
 #include "GLContext.h"

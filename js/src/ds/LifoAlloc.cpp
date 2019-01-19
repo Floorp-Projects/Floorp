@@ -12,7 +12,7 @@
 #include "ds/MemoryProtectionExceptionHandler.h"
 
 #ifdef LIFO_CHUNK_PROTECT
-#include "gc/Memory.h"
+#  include "gc/Memory.h"
 #endif
 
 using namespace js;

@@ -13,7 +13,7 @@ namespace mozilla {
 
 static const char* mcvcLogTag = "MediaCodecVideoCodec";
 #ifdef LOGTAG
-#undef LOGTAG
+#  undef LOGTAG
 #endif
 #define LOGTAG mcvcLogTag
 

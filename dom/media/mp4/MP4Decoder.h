@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(MP4Decoder_h_)
-#define MP4Decoder_h_
+#  define MP4Decoder_h_
 
-#include "mozilla/UniquePtr.h"
-#include "nsStringFwd.h"
-#include "nsTArray.h"
+#  include "mozilla/UniquePtr.h"
+#  include "nsStringFwd.h"
+#  include "nsTArray.h"
 
 namespace mozilla {
 

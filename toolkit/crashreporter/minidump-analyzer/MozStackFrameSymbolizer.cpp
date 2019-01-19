@@ -5,15 +5,15 @@
 
 #if XP_WIN && HAVE_64BIT_BUILD
 
-#include "MozStackFrameSymbolizer.h"
+#  include "MozStackFrameSymbolizer.h"
 
-#include "MinidumpAnalyzerUtils.h"
+#  include "MinidumpAnalyzerUtils.h"
 
-#include "processor/cfi_frame_info.h"
+#  include "processor/cfi_frame_info.h"
 
-#include <iostream>
-#include <sstream>
-#include <fstream>
+#  include <iostream>
+#  include <sstream>
+#  include <fstream>
 
 namespace CrashReporter {
 

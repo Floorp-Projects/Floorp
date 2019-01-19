@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(WaveDecoder_h_)
-#define WaveDecoder_h_
+#  define WaveDecoder_h_
 
-#include "PlatformDecoderModule.h"
+#  include "PlatformDecoderModule.h"
 
 namespace mozilla {
 

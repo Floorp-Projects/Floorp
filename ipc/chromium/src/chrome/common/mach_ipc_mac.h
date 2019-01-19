@@ -68,8 +68,8 @@
 //
 
 #ifndef PRINT_MACH_RESULT
-#define PRINT_MACH_RESULT(result_, message_) \
-  printf(message_ " %s (%d)\n", mach_error_string(result_), result_);
+#  define PRINT_MACH_RESULT(result_, message_) \
+    printf(message_ " %s (%d)\n", mach_error_string(result_), result_);
 #endif
 
 //==============================================================================

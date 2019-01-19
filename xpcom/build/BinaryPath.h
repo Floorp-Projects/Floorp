@@ -9,28 +9,28 @@
 
 #include "nsXPCOMPrivate.h"  // for MAXPATHLEN
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #elif defined(XP_MACOSX)
-#include <CoreFoundation/CoreFoundation.h>
+#  include <CoreFoundation/CoreFoundation.h>
 #elif defined(XP_UNIX)
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
+#  include <unistd.h>
+#  include <stdlib.h>
+#  include <string.h>
 #endif
 #if defined(__FreeBSD__) || defined(__DragonFly__) || \
     defined(__FreeBSD_kernel__) || defined(__NetBSD__) || defined(__OpenBSD__)
-#include <sys/sysctl.h>
+#  include <sys/sysctl.h>
 #endif
 #if defined(__OpenBSD__)
-#include <sys/stat.h>
+#  include <sys/stat.h>
 #endif
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 
 #ifdef MOZILLA_INTERNAL_API
-#include "nsCOMPtr.h"
-#include "nsIFile.h"
-#include "nsString.h"
+#  include "nsCOMPtr.h"
+#  include "nsIFile.h"
+#  include "nsString.h"
 #endif
 
 namespace mozilla {
@@ -149,11 +149,11 @@ class BinaryPath {
 
 #elif defined(XP_LINUX) || defined(XP_SOLARIS)
   static nsresult Get(char aResult[MAXPATHLEN]) {
-#if defined(XP_SOLARIS)
+#  if defined(XP_SOLARIS)
     const char path[] = "/proc/self/path/a.out";
-#else
+#  else
     const char path[] = "/proc/self/exe";
-#endif
+#  endif
 
     ssize_t len = readlink(path, aResult, MAXPATHLEN - 1);
     if (len < 0) {
@@ -168,15 +168,15 @@ class BinaryPath {
   static nsresult Get(char aResult[MAXPATHLEN]) {
     int mib[4];
     mib[0] = CTL_KERN;
-#ifdef __NetBSD__
+#  ifdef __NetBSD__
     mib[1] = KERN_PROC_ARGS;
     mib[2] = -1;
     mib[3] = KERN_PROC_PATHNAME;
-#else
+#  else
     mib[1] = KERN_PROC;
     mib[2] = KERN_PROC_PATHNAME;
     mib[3] = -1;
-#endif
+#  endif
 
     size_t len = MAXPATHLEN;
     if (sysctl(mib, 4, aResult, &len, nullptr, 0) < 0) {
@@ -247,7 +247,7 @@ class BinaryPath {
   }
 
 #else
-#error Oops, you need platform-specific code here
+#  error Oops, you need platform-specific code here
 #endif
 
  public:
@@ -264,22 +264,22 @@ class BinaryPath {
 #ifdef MOZILLA_INTERNAL_API
   static nsresult GetFile(nsIFile** aResult) {
     nsCOMPtr<nsIFile> lf;
-#ifdef XP_WIN
+#  ifdef XP_WIN
     wchar_t exePath[MAXPATHLEN];
     nsresult rv = GetW(exePath);
-#else
+#  else
     char exePath[MAXPATHLEN];
     nsresult rv = Get(exePath);
-#endif
+#  endif
     if (NS_FAILED(rv)) {
       return rv;
     }
-#ifdef XP_WIN
+#  ifdef XP_WIN
     rv = NS_NewLocalFile(nsDependentString(exePath), true, getter_AddRefs(lf));
-#else
+#  else
     rv = NS_NewNativeLocalFile(nsDependentCString(exePath), true,
                                getter_AddRefs(lf));
-#endif
+#  endif
     if (NS_FAILED(rv)) {
       return rv;
     }

@@ -41,7 +41,7 @@
 #include "nsTArray.h"
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 mozilla::LazyLogModule gMediaRecorderLog("MediaRecorder");

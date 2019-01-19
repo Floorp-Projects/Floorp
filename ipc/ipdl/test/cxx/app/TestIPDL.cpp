@@ -6,8 +6,8 @@
 #include "mozilla/Bootstrap.h"
 
 #if defined(XP_WIN)
-#include <windows.h>
-#include "nsWindowsWMain.cpp"
+#  include <windows.h>
+#  include "nsWindowsWMain.cpp"
 #endif
 
 using namespace mozilla;

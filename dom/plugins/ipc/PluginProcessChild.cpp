@@ -16,28 +16,28 @@
 #include "ClearOnShutdown.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-#include "mozilla/SandboxSettings.h"
+#  include "mozilla/SandboxSettings.h"
 #endif
 
 #if defined(XP_MACOSX)
-#include "nsCocoaFeatures.h"
+#  include "nsCocoaFeatures.h"
 // An undocumented CoreGraphics framework method, present in the same form
 // since at least OS X 10.5.
 extern "C" CGError CGSSetDebugOptions(int options);
 #endif
 
 #ifdef XP_WIN
-#if defined(MOZ_SANDBOX)
-#include "mozilla/sandboxTarget.h"
-#include "ProcessUtils.h"
-#include "nsDirectoryService.h"
-#endif
+#  if defined(MOZ_SANDBOX)
+#    include "mozilla/sandboxTarget.h"
+#    include "ProcessUtils.h"
+#    include "nsDirectoryService.h"
+#  endif
 #endif
 
 using mozilla::ipc::IOThreadChild;
 
 #ifdef OS_WIN
-#include <algorithm>
+#  include <algorithm>
 #endif
 
 namespace mozilla {
@@ -110,7 +110,7 @@ bool PluginProcessChild::Init(int aArgc, char* aArgv[]) {
 
   pluginFilename = UnmungePluginDsoPath(values[1]);
 
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+#  if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   int level;
   if (values.size() >= 4 && values[2] == "-flashSandboxLevel" &&
       (level = std::stoi(values[3], nullptr)) > 0) {
@@ -124,7 +124,7 @@ bool PluginProcessChild::Init(int aArgc, char* aArgv[]) {
 
     mPlugin.EnableFlashSandbox(level, enableLogging);
   }
-#endif
+#  endif
 
 #elif defined(OS_WIN)
   std::vector<std::wstring> values =
@@ -147,7 +147,7 @@ bool PluginProcessChild::Init(int aArgc, char* aArgv[]) {
   mozilla::LogModule::Init(aArgc, aArgv);
   nsThreadManager::get().Init();
 
-#if defined(MOZ_SANDBOX)
+#  if defined(MOZ_SANDBOX)
   MOZ_ASSERT(values.size() >= 3,
              "not enough loose args for sandboxed plugin process");
 
@@ -160,9 +160,9 @@ bool PluginProcessChild::Init(int aArgc, char* aArgv[]) {
   // As we attempt to tighten the sandbox, we may need to consider moving this
   // to later in the plugin initialization.
   mozilla::SandboxTarget::Instance()->StartSandbox();
-#endif
+#  endif
 #else
-#error Sorry
+#  error Sorry
 #endif
 
   bool retval = mPlugin.InitForChrome(pluginFilename, ParentPid(),

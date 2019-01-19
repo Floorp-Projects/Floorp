@@ -20,11 +20,11 @@
 #include "nsRefreshDriver.h"
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 // mmsystem isn't part of WIN32_LEAN_AND_MEAN, so we have
 // to manually include it
-#include <mmsystem.h>
-#include "WinUtils.h"
+#  include <mmsystem.h>
+#  include "WinUtils.h"
 #endif
 
 #include "mozilla/AnimationEventDispatcher.h"
@@ -74,7 +74,7 @@
 #include "nsTransitionManager.h"
 
 #ifdef MOZ_XUL
-#include "nsXULPopupManager.h"
+#  include "nsXULPopupManager.h"
 #endif
 
 using namespace mozilla;
@@ -96,15 +96,15 @@ static mozilla::LazyLogModule sRefreshDriverLog("nsRefreshDriver");
 // The number of seconds spent skipping frames because we are waiting for the
 // compositor before logging.
 #if defined(MOZ_ASAN)
-#define REFRESH_WAIT_WARNING 5
+#  define REFRESH_WAIT_WARNING 5
 #elif defined(DEBUG) && !defined(MOZ_VALGRIND)
-#define REFRESH_WAIT_WARNING 5
+#  define REFRESH_WAIT_WARNING 5
 #elif defined(DEBUG) && defined(MOZ_VALGRIND)
-#define REFRESH_WAIT_WARNING (RUNNING_ON_VALGRIND ? 20 : 5)
+#  define REFRESH_WAIT_WARNING (RUNNING_ON_VALGRIND ? 20 : 5)
 #elif defined(MOZ_VALGRIND)
-#define REFRESH_WAIT_WARNING (RUNNING_ON_VALGRIND ? 10 : 1)
+#  define REFRESH_WAIT_WARNING (RUNNING_ON_VALGRIND ? 10 : 1)
 #else
-#define REFRESH_WAIT_WARNING 1
+#  define REFRESH_WAIT_WARNING 1
 #endif
 
 namespace {

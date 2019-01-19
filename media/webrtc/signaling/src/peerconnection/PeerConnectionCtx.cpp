@@ -31,7 +31,7 @@
 
 static const char* pccLogTag = "PeerConnectionCtx";
 #ifdef LOGTAG
-#undef LOGTAG
+#  undef LOGTAG
 #endif
 #define LOGTAG pccLogTag
 

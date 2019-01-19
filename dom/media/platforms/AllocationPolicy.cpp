@@ -11,7 +11,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SystemGroup.h"
 #ifdef MOZ_WIDGET_ANDROID
-#include "mozilla/jni/Utils.h"
+#  include "mozilla/jni/Utils.h"
 #endif
 
 namespace mozilla {

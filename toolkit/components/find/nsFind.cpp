@@ -64,9 +64,9 @@ nsFind::nsFind()
 nsFind::~nsFind() = default;
 
 #ifdef DEBUG_FIND
-#define DEBUG_FIND_PRINTF(...) printf(__VA_ARGS__)
+#  define DEBUG_FIND_PRINTF(...) printf(__VA_ARGS__)
 #else
-#define DEBUG_FIND_PRINTF(...) /* nothing */
+#  define DEBUG_FIND_PRINTF(...) /* nothing */
 #endif
 
 static nsIContent& AnonymousSubtreeRootParent(const nsINode& aNode) {

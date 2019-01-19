@@ -14,9 +14,9 @@
 #include <net/if.h>
 #include <net/if_media.h>
 #ifdef __DragonFly__
-#include <netproto/802_11/ieee80211_ioctl.h>
+#  include <netproto/802_11/ieee80211_ioctl.h>
 #else
-#include <net80211/ieee80211_ioctl.h>
+#  include <net80211/ieee80211_ioctl.h>
 #endif
 
 #include <ifaddrs.h>

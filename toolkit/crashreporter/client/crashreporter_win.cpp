@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef WIN32_LEAN_AND_MEAN
-#undef WIN32_LEAN_AND_MEAN
+#  undef WIN32_LEAN_AND_MEAN
 #endif
 
 #include "crashreporter.h"

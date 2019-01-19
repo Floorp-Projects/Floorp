@@ -717,7 +717,7 @@ class SpecializedRegSet : public Accessors {
 #elif defined(JS_PUNBOX64)
     return ValueOperand(takeAny<RegTypeName::GPR>());
 #else
-#error "Bad architecture"
+#  error "Bad architecture"
 #endif
   }
 
@@ -849,7 +849,7 @@ class SpecializedRegSet<Accessors, RegisterSet> : public Accessors {
 #elif defined(JS_PUNBOX64)
     return ValueOperand(takeAnyGeneral());
 #else
-#error "Bad architecture"
+#  error "Bad architecture"
 #endif
   }
 };
@@ -878,7 +878,7 @@ class CommonRegSet : public SpecializedRegSet<Accessors, Set> {
 #elif defined(JS_PUNBOX64)
     add(value.valueReg());
 #else
-#error "Bad architecture"
+#  error "Bad architecture"
 #endif
   }
 
@@ -890,7 +890,7 @@ class CommonRegSet : public SpecializedRegSet<Accessors, Set> {
 #elif defined(JS_PUNBOX64)
     addUnchecked(value.valueReg());
 #else
-#error "Bad architecture"
+#  error "Bad architecture"
 #endif
   }
 
@@ -910,7 +910,7 @@ class CommonRegSet : public SpecializedRegSet<Accessors, Set> {
 #elif defined(JS_PUNBOX64)
     take(value.valueReg());
 #else
-#error "Bad architecture"
+#  error "Bad architecture"
 #endif
   }
   void take(TypedOrValueRegister reg) {
@@ -929,7 +929,7 @@ class CommonRegSet : public SpecializedRegSet<Accessors, Set> {
 #elif defined(JS_PUNBOX64)
     takeUnchecked(value.valueReg());
 #else
-#error "Bad architecture"
+#  error "Bad architecture"
 #endif
   }
   void takeUnchecked(TypedOrValueRegister reg) {

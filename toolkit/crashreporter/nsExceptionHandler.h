@@ -24,18 +24,18 @@
 #include "prio.h"
 
 #if defined(XP_WIN32)
-#ifdef WIN32_LEAN_AND_MEAN
-#undef WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
+#  ifdef WIN32_LEAN_AND_MEAN
+#    undef WIN32_LEAN_AND_MEAN
+#  endif
+#  include <windows.h>
 #endif
 
 #if defined(XP_MACOSX)
-#include <mach/mach.h>
+#  include <mach/mach.h>
 #endif
 
 #if defined(XP_LINUX)
-#include <signal.h>
+#  include <signal.h>
 #endif
 
 class nsIFile;
@@ -251,7 +251,7 @@ bool CreateAdditionalChildMinidump(ProcessHandle childPid,
 // Parent-side API for children
 const char* GetChildNotificationPipe();
 
-#ifdef MOZ_CRASHREPORTER_INJECTOR
+#  ifdef MOZ_CRASHREPORTER_INJECTOR
 // Inject a crash report client into an arbitrary process, and inform the
 // callback object when it crashes. Parent process only.
 
@@ -272,15 +272,15 @@ class InjectorCrashCallback {
 // This method implies OOPInit
 void InjectCrashReporterIntoProcess(DWORD processID, InjectorCrashCallback* cb);
 void UnregisterInjectorCallback(DWORD processID);
-#endif
+#  endif
 
 // Child-side API
-#if defined(XP_WIN32)
+#  if defined(XP_WIN32)
 bool SetRemoteExceptionHandler(const nsACString& crashPipe,
                                uintptr_t aCrashTimeAnnotationFile);
-#else
+#  else
 bool SetRemoteExceptionHandler(const nsACString& crashPipe);
-#endif
+#  endif
 
 #else
 // Parent-side API for children

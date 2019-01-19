@@ -15,11 +15,11 @@
 #include "mozilla/ipc/CrossProcessMutex.h"
 #include "nsRefPtrHashtable.h"
 #if defined(OS_WIN)
-#include "mozilla/gfx/SharedDIBWin.h"
+#  include "mozilla/gfx/SharedDIBWin.h"
 #elif defined(MOZ_WIDGET_COCOA)
-#include "PluginUtilsOSX.h"
-#include "mozilla/gfx/QuartzSupport.h"
-#include "base/timer.h"
+#  include "PluginUtilsOSX.h"
+#  include "mozilla/gfx/QuartzSupport.h"
+#  include "base/timer.h"
 
 #endif
 
@@ -35,7 +35,7 @@
 #include <map>
 
 #ifdef MOZ_WIDGET_GTK
-#include "gtk2xtbin.h"
+#  include "gtk2xtbin.h"
 #endif
 
 class gfxASurface;
@@ -272,16 +272,16 @@ class PluginInstanceChild : public PPluginInstanceChild {
   static LRESULT CALLBACK WinlessHiddenFlashWndProc(HWND hWnd, UINT message,
                                                     WPARAM wParam,
                                                     LPARAM lParam);
-#ifdef _WIN64
+#  ifdef _WIN64
   static LONG_PTR WINAPI SetWindowLongPtrAHook(HWND hWnd, int nIndex,
                                                LONG_PTR newLong);
   static LONG_PTR WINAPI SetWindowLongPtrWHook(HWND hWnd, int nIndex,
                                                LONG_PTR newLong);
 
-#else
+#  else
   static LONG WINAPI SetWindowLongAHook(HWND hWnd, int nIndex, LONG newLong);
   static LONG WINAPI SetWindowLongWHook(HWND hWnd, int nIndex, LONG newLong);
-#endif
+#  endif
 
   static HIMC WINAPI ImmGetContextProc(HWND aWND);
   static LONG WINAPI ImmGetCompositionStringProc(HIMC aIMC, DWORD aIndex,
@@ -377,9 +377,9 @@ class PluginInstanceChild : public PPluginInstanceChild {
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
   NPSetWindowCallbackStruct mWsInfo;
-#ifdef MOZ_WIDGET_GTK
+#  ifdef MOZ_WIDGET_GTK
   XtClient mXtClient;
-#endif
+#  endif
 #elif defined(OS_WIN)
   HWND mPluginWindowHWND;
   WNDPROC mPluginWndProc;
@@ -406,9 +406,9 @@ class PluginInstanceChild : public PPluginInstanceChild {
 
 #if defined(MOZ_WIDGET_COCOA)
  private:
-#if defined(__i386__)
+#  if defined(__i386__)
   NPEventModel mEventModel;
-#endif
+#  endif
   CGColorSpaceRef mShColorSpace;
   CGContextRef mShContext;
   RefPtr<nsCARenderer> mCARenderer;
@@ -422,9 +422,9 @@ class PluginInstanceChild : public PPluginInstanceChild {
 
   bool CGDraw(CGContextRef ref, nsIntRect aUpdateRect);
 
-#if defined(__i386__)
+#  if defined(__i386__)
   NPEventModel EventModel() { return mEventModel; }
-#endif
+#  endif
 
  private:
   const NPCocoaEvent* mCurrentEvent;

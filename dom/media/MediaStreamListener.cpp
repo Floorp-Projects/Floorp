@@ -12,7 +12,7 @@
 namespace mozilla {
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 #define LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)

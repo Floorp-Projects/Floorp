@@ -20,12 +20,12 @@
 #include <atomic>
 
 #if defined(MOZILLA_INTERNAL_API)
-#include "nsXPCOM.h"
+#  include "nsXPCOM.h"
 #endif
 
 #if defined(MOZILLA_INTERNAL_API) && \
     (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
-#define MOZ_REFCOUNTED_LEAK_CHECKING
+#  define MOZ_REFCOUNTED_LEAK_CHECKING
 #endif
 
 namespace mozilla {
@@ -218,11 +218,11 @@ class RefCounted {
 #ifdef MOZ_REFCOUNTED_LEAK_CHECKING
 // Passing override for the optional argument marks the typeName and
 // typeSize functions defined by this macro as overrides.
-#define MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(T, ...)           \
-  virtual const char* typeName() const __VA_ARGS__ { return #T; } \
-  virtual size_t typeSize() const __VA_ARGS__ { return sizeof(*this); }
+#  define MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(T, ...)           \
+    virtual const char* typeName() const __VA_ARGS__ { return #T; } \
+    virtual size_t typeSize() const __VA_ARGS__ { return sizeof(*this); }
 #else
-#define MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(T, ...)
+#  define MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(T, ...)
 #endif
 
 // Note that this macro is expanded unconditionally because it declares only

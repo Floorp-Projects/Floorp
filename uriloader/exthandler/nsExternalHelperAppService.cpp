@@ -68,7 +68,7 @@
 #include "nsIPropertyBag2.h"     // for the 64-bit content length
 
 #ifdef XP_MACOSX
-#include "nsILocalFileMac.h"
+#  include "nsILocalFileMac.h"
 #endif
 
 #include "nsIPluginHost.h"  // XXX needed for ext->type mapping (bug 233289)
@@ -98,11 +98,11 @@
 #include "ExternalHelperAppChild.h"
 
 #ifdef XP_WIN
-#include "nsWindowsHelpers.h"
+#  include "nsWindowsHelpers.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "FennecJNIWrappers.h"
+#  include "FennecJNIWrappers.h"
 #endif
 
 #include "mozilla/Preferences.h"
@@ -344,7 +344,7 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if defined(XP_UNIX)
+#  if defined(XP_UNIX)
   // Ensuring that only the current user can read the file names we end up
   // creating. Note that Creating directories with specified permission only
   // supported on Unix platform right now. That's why above if exists.
@@ -412,7 +412,7 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
     }
   }
 
-#endif
+#  endif
 #endif
 
   NS_ASSERTION(dir, "Somehow we didn't get a download directory!");
@@ -488,9 +488,9 @@ struct nsExtraMimeTypeEntry {
 };
 
 #ifdef XP_MACOSX
-#define MAC_TYPE(x) x
+#  define MAC_TYPE(x) x
 #else
-#define MAC_TYPE(x) 0
+#  define MAC_TYPE(x) 0
 #endif
 
 /**

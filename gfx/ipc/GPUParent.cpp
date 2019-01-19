@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #ifdef XP_WIN
-#include "WMF.h"
+#  include "WMF.h"
 #endif
 #include "GPUParent.h"
 #include "gfxConfig.h"
@@ -51,16 +51,16 @@
 #include "cairo.h"
 #include "skia/include/core/SkGraphics.h"
 #if defined(XP_WIN)
-#include "mozilla/gfx/DeviceManagerDx.h"
-#include <process.h>
-#include <dwrite.h>
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include <process.h>
+#  include <dwrite.h>
 #endif
 #ifdef MOZ_WIDGET_GTK
-#include <gtk/gtk.h>
-#include "skia/include/ports/SkTypeface_cairo.h"
+#  include <gtk/gtk.h>
+#  include "skia/include/ports/SkTypeface_cairo.h"
 #endif
 #ifdef MOZ_GECKO_PROFILER
-#include "ChildProfilerController.h"
+#  include "ChildProfilerController.h"
 #endif
 
 namespace mozilla {

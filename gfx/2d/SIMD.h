@@ -13,7 +13,7 @@
  */
 
 #ifdef SIMD_COMPILE_SSE2
-#include <xmmintrin.h>
+#  include <xmmintrin.h>
 #endif
 
 namespace mozilla {

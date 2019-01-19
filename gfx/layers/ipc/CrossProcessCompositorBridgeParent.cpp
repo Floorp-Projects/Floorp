@@ -14,7 +14,7 @@
 #include "base/task.h"                // for CancelableTask, etc
 #include "base/thread.h"              // for Thread
 #ifdef XP_WIN
-#include "mozilla/gfx/DeviceManagerDx.h"  // for DeviceManagerDx
+#  include "mozilla/gfx/DeviceManagerDx.h"  // for DeviceManagerDx
 #endif
 #include "mozilla/ipc/Transport.h"           // for Transport
 #include "mozilla/layers/AnimationHelper.h"  // for CompositorAnimationStorage

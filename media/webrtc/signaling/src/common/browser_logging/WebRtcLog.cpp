@@ -136,14 +136,14 @@ nsCString ConfigAecLog() {
   nsCOMPtr<nsIFile> tempDir;
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
   if (NS_SUCCEEDED(rv)) {
-#ifdef XP_WIN
+#  ifdef XP_WIN
     // WebRTC wants a path encoded in the native charset, not UTF-8.
     nsAutoString temp;
     tempDir->GetPath(temp);
     NS_CopyUnicodeToNative(temp, aecLogDir);
-#else
+#  else
     tempDir->GetNativePath(aecLogDir);
-#endif
+#  endif
   }
 #endif
   rtc::LogMessage::set_aec_debug_filename(aecLogDir.get());

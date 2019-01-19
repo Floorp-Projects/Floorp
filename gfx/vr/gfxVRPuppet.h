@@ -15,7 +15,7 @@
 #include "VRDisplayLocal.h"
 
 #if defined(XP_WIN)
-#include "CompositorD3D11.h"
+#  include "CompositorD3D11.h"
 #endif
 
 #if defined(XP_MACOSX)

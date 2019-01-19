@@ -9,9 +9,9 @@
 #if (__GNUC__ && __linux__ && __PPC64__ && _LITTLE_ENDIAN)
 // Stack protection generates incorrect code currently with gcc on ppc64le
 // (bug 1512162).
-#define MOZ_GCC_STACK_PROTECTOR_DISABLED 1  // removed at end of file
-#pragma GCC push_options
-#pragma GCC optimize("no-stack-protector")
+#  define MOZ_GCC_STACK_PROTECTOR_DISABLED 1  // removed at end of file
+#  pragma GCC push_options
+#  pragma GCC optimize("no-stack-protector")
 #endif
 
 #include "xpcprivate.h"
@@ -135,7 +135,7 @@ void XPCWrappedNative::NoteTearoffs(nsCycleCollectionTraversalCallback& cb) {
 #ifdef XPC_CHECK_CLASSINFO_CLAIMS
 static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper);
 #else
-#define DEBUG_CheckClassInfoClaims(wrapper) ((void)0)
+#  define DEBUG_CheckClassInfoClaims(wrapper) ((void)0)
 #endif
 
 /***************************************************************************/
@@ -1714,13 +1714,13 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth) {
 char* XPCWrappedNative::ToString(
     XPCWrappedNativeTearOff* to /* = nullptr */) const {
 #ifdef DEBUG
-#define FMT_ADDR " @ 0x%p"
-#define FMT_STR(str) str
-#define PARAM_ADDR(w) , w
+#  define FMT_ADDR " @ 0x%p"
+#  define FMT_STR(str) str
+#  define PARAM_ADDR(w) , w
 #else
-#define FMT_ADDR ""
-#define FMT_STR(str)
-#define PARAM_ADDR(w)
+#  define FMT_ADDR ""
+#  define FMT_STR(str)
+#  define PARAM_ADDR(w)
 #endif
 
   UniqueChars sz;
@@ -1831,6 +1831,6 @@ static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper) {
 #if (MOZ_GCC_STACK_PROTECTOR_DISABLED)
 // Reenable stack protection in following modules, if we disabled it
 // (bug 1512162).
-#pragma GCC pop_options
-#undef MOZ_GCC_STACK_PROTECTOR_DISABLED
+#  pragma GCC pop_options
+#  undef MOZ_GCC_STACK_PROTECTOR_DISABLED
 #endif

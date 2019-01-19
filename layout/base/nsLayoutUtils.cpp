@@ -132,7 +132,7 @@
 #include "mozilla/dom/InspectorFontFace.h"
 
 #ifdef MOZ_XUL
-#include "nsXULPopupManager.h"
+#  include "nsXULPopupManager.h"
 #endif
 
 #include "GeckoProfiler.h"
@@ -143,10 +143,10 @@
 
 // Make sure getpid() works.
 #ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
+#  include <process.h>
+#  define getpid _getpid
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 using namespace mozilla;
@@ -2945,7 +2945,7 @@ StyleClear nsLayoutUtils::CombineBreakType(StyleClear aOrigBreakType,
 }
 
 #ifdef MOZ_DUMP_PAINTING
-#include <stdio.h>
+#  include <stdio.h>
 
 static bool gDumpEventList = false;
 

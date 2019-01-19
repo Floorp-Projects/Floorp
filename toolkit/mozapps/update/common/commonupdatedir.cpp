@@ -17,34 +17,34 @@
 #include "updatedefines.h"
 
 #ifdef XP_WIN
-#include <accctrl.h>
-#include <aclapi.h>
-#include <cstdarg>
-#include <errno.h>
-#include <objbase.h>
-#include <shellapi.h>
-#include <shlobj.h>
-#include <strsafe.h>
-#include <winerror.h>
-#include "nsWindowsHelpers.h"
-#include "win_dirent.h"
+#  include <accctrl.h>
+#  include <aclapi.h>
+#  include <cstdarg>
+#  include <errno.h>
+#  include <objbase.h>
+#  include <shellapi.h>
+#  include <shlobj.h>
+#  include <strsafe.h>
+#  include <winerror.h>
+#  include "nsWindowsHelpers.h"
+#  include "win_dirent.h"
 #endif
 
 #ifdef XP_WIN
 // This is the name of the directory to be put in the application data directory
 // if no vendor or application name is specified.
 // (i.e. C:\ProgramData\<FALLBACK_VENDOR_NAME>)
-#define FALLBACK_VENDOR_NAME "Mozilla"
+#  define FALLBACK_VENDOR_NAME "Mozilla"
 // This describes the directory between the "Mozilla" directory and the install
 // path hash (i.e. C:\ProgramData\Mozilla\<UPDATE_PATH_MID_DIR_NAME>\<hash>)
-#define UPDATE_PATH_MID_DIR_NAME "updates"
+#  define UPDATE_PATH_MID_DIR_NAME "updates"
 // This describes the directory between the update directory and the patch
 // directory.
 // (i.e. C:\ProgramData\Mozilla\updates\<hash>\<UPDATE_SUBDIRECTORY>\0)
-#define UPDATE_SUBDIRECTORY "updates"
+#  define UPDATE_SUBDIRECTORY "updates"
 // This defines the leaf update directory, where the MAR file is downloaded to
 // (i.e. C:\ProgramData\Mozilla\updates\<hash>\updates\<PATCH_DIRECTORY>)
-#define PATCH_DIRECTORY "0"
+#  define PATCH_DIRECTORY "0"
 
 enum class WhichUpdateDir {
   CommonAppData,

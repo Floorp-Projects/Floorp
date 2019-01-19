@@ -9,7 +9,7 @@
 
 #include <windows.h>
 #ifdef GetClassName
-#undef GetClassName
+#  undef GetClassName
 #endif
 
 #include "base/message_loop.h"

@@ -13,20 +13,20 @@
 #include <string.h>
 
 #if !defined(MOZ_PROFILING)
-#error "DMD requires MOZ_PROFILING"
+#  error "DMD requires MOZ_PROFILING"
 #endif
 
 #ifdef XP_WIN
-#include <windows.h>
-#include <process.h>
+#  include <windows.h>
+#  include <process.h>
 #else
-#include <pthread.h>
-#include <sys/types.h>
-#include <unistd.h>
+#  include <pthread.h>
+#  include <sys/types.h>
+#  include <unistd.h>
 #endif
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 #include "nscore.h"
@@ -76,9 +76,9 @@ inline void StatusMsg(const char* aFmt, ...) {
 //---------------------------------------------------------------------------
 
 #ifndef DISALLOW_COPY_AND_ASSIGN
-#define DISALLOW_COPY_AND_ASSIGN(T) \
-  T(const T&);                      \
-  void operator=(const T&)
+#  define DISALLOW_COPY_AND_ASSIGN(T) \
+    T(const T&);                      \
+    void operator=(const T&)
 #endif
 
 static malloc_table_t gMallocTable;
@@ -439,22 +439,22 @@ class AutoUnlockState {
 
 #ifdef XP_WIN
 
-#define DMD_TLS_INDEX_TYPE DWORD
-#define DMD_CREATE_TLS_INDEX(i_) \
-  do {                           \
-    (i_) = TlsAlloc();           \
-  } while (0)
-#define DMD_DESTROY_TLS_INDEX(i_) TlsFree((i_))
-#define DMD_GET_TLS_DATA(i_) TlsGetValue((i_))
-#define DMD_SET_TLS_DATA(i_, v_) TlsSetValue((i_), (v_))
+#  define DMD_TLS_INDEX_TYPE DWORD
+#  define DMD_CREATE_TLS_INDEX(i_) \
+    do {                           \
+      (i_) = TlsAlloc();           \
+    } while (0)
+#  define DMD_DESTROY_TLS_INDEX(i_) TlsFree((i_))
+#  define DMD_GET_TLS_DATA(i_) TlsGetValue((i_))
+#  define DMD_SET_TLS_DATA(i_, v_) TlsSetValue((i_), (v_))
 
 #else
 
-#define DMD_TLS_INDEX_TYPE pthread_key_t
-#define DMD_CREATE_TLS_INDEX(i_) pthread_key_create(&(i_), nullptr)
-#define DMD_DESTROY_TLS_INDEX(i_) pthread_key_delete((i_))
-#define DMD_GET_TLS_DATA(i_) pthread_getspecific((i_))
-#define DMD_SET_TLS_DATA(i_, v_) pthread_setspecific((i_), (v_))
+#  define DMD_TLS_INDEX_TYPE pthread_key_t
+#  define DMD_CREATE_TLS_INDEX(i_) pthread_key_create(&(i_), nullptr)
+#  define DMD_DESTROY_TLS_INDEX(i_) pthread_key_delete((i_))
+#  define DMD_GET_TLS_DATA(i_) pthread_getspecific((i_))
+#  define DMD_SET_TLS_DATA(i_, v_) pthread_setspecific((i_), (v_))
 
 #endif
 
@@ -701,11 +701,11 @@ static uint32_t gGCStackTraceTableWhenSizeExceeds = 4 * 1024;
     FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0, MaxFrames,
                           &tmp, fp, stackEnd);
 #else
-#if defined(XP_WIN) && defined(_M_X64)
+#  if defined(XP_WIN) && defined(_M_X64)
     int skipFrames = 1;
-#else
+#  else
     int skipFrames = 2;
-#endif
+#  endif
     MozStackWalk(StackWalkCallback, skipFrames, MaxFrames, &tmp);
 #endif
   }

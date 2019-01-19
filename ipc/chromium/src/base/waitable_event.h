@@ -10,16 +10,16 @@
 #include "base/basictypes.h"
 
 #if defined(OS_WIN)
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 #if defined(OS_POSIX)
-#include <list>
-#include <utility>
-#include "base/condition_variable.h"
-#include "base/lock.h"
-#include "nsISupportsImpl.h"
-#include "nsAutoPtr.h"
+#  include <list>
+#  include <utility>
+#  include "base/condition_variable.h"
+#  include "base/lock.h"
+#  include "nsISupportsImpl.h"
+#  include "nsAutoPtr.h"
 #endif
 
 #include "base/message_loop.h"
