@@ -234,12 +234,7 @@ exports[`ProjectSearch found search results 1`] = `
               onKeyPress={[Function]}
               onKeyUp={[Function]}
               role="tree"
-              style={
-                Object {
-                  "margin": 0,
-                  "padding": 0,
-                }
-              }
+              style={Object {}}
               tabIndex="0"
             >
               <TreeNode
@@ -293,27 +288,13 @@ exports[`ProjectSearch found search results 1`] = `
                   <div
                     className="file-result"
                   >
-                    <Svg
-                      className="expanded"
-                      name="arrow"
+                    <AccessibleImage
+                      className="arrow expanded"
                     >
-                      <InlineSVG
-                        className="arrow expanded"
-                        element="i"
-                        raw={false}
-                        src="<svg></svg>"
-                      >
-                        <i
-                          className="arrow expanded"
-                          dangerouslySetInnerHTML={
-                            Object {
-                              "__html": "<svg></svg>",
-                            }
-                          }
-                          src={null}
-                        />
-                      </InlineSVG>
-                    </Svg>
+                      <span
+                        className="img arrow expanded"
+                      />
+                    </AccessibleImage>
                     <AccessibleImage
                       className="file"
                     >
@@ -575,27 +556,13 @@ exports[`ProjectSearch found search results 1`] = `
                   <div
                     className="file-result"
                   >
-                    <Svg
-                      className="expanded"
-                      name="arrow"
+                    <AccessibleImage
+                      className="arrow expanded"
                     >
-                      <InlineSVG
-                        className="arrow expanded"
-                        element="i"
-                        raw={false}
-                        src="<svg></svg>"
-                      >
-                        <i
-                          className="arrow expanded"
-                          dangerouslySetInnerHTML={
-                            Object {
-                              "__html": "<svg></svg>",
-                            }
-                          }
-                          src={null}
-                        />
-                      </InlineSVG>
-                    </Svg>
+                      <span
+                        className="img arrow expanded"
+                      />
+                    </AccessibleImage>
                     <AccessibleImage
                       className="file"
                     >

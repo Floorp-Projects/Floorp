@@ -480,7 +480,7 @@ export function updateXHRBreakpoint(
       ...breakpoint,
       path,
       method,
-      text: `URL contains "${path}"`
+      text: L10N.getFormatStr("xhrBreakpoints.item.label", path)
     };
 
     return dispatch({

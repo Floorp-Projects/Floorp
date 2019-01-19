@@ -1,0 +1,13 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 16 16" stroke="none" fillrule="evenodd">
+  <rect opacity="0.6" x="1" y="3" width="2" height="6"></rect>
+  <rect opacity="0.6" x="17" y="3" width="2" height="6"></rect>
+  <rect x="6" y="3" width="2" height="6"></rect>
+  <rect x="12" y="3" width="2" height="6"></rect>
+  <rect x="9" y="3" width="2" height="6"></rect>
+  <path d="M4.5,13 L15.5,13 L16,13 L16,12 L15.5,12 L4.5,12 L4,12 L4,13 L4.5,13 L4.5,13 Z"></path>
+  <path d="M4,10.5 L4,12.5 L4,13 L5,13 L5,12.5 L5,10.5 L5,10 L4,10 L4,10.5 L4,10.5 Z"></path>
+  <path d="M15,10.5 L15,12.5 L15,13 L16,13 L16,12.5 L16,10.5 L16,10 L15,10 L15,10.5 L15,10.5 Z"></path>
+</svg>
