@@ -57,6 +57,7 @@ class UrlbarInput {
     this.userInitiatedFocus = false;
     this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.window);
     this._untrimmedValue = "";
+    this._suppressStartQuery = false;
 
     // Forward textbox methods and properties.
     const METHODS = ["addEventListener", "removeEventListener",
@@ -111,6 +112,7 @@ class UrlbarInput {
     this.view.panel.addEventListener("popuphidden", this);
 
     this.inputField.controllers.insertControllerAt(0, new CopyCutController(this));
+    this._initPasteAndGo();
   }
 
   /**
@@ -375,6 +377,10 @@ class UrlbarInput {
   startQuery({
     lastKey = null,
   } = {}) {
+    if (this._suppressStartQuery) {
+      return;
+    }
+
     this.controller.startQuery(new QueryContext({
       enableAutofill: UrlbarPrefs.get("autoFill"),
       isPrivate: this.isPrivate,
@@ -694,6 +700,51 @@ class UrlbarInput {
       where = "current";
     }
     return where;
+  }
+
+  _initPasteAndGo() {
+    let inputBox = this.document.getAnonymousElementByAttribute(
+                     this.textbox, "anonid", "moz-input-box");
+    // Force the Custom Element to upgrade until Bug 1470242 handles this:
+    this.window.customElements.upgrade(inputBox);
+    let contextMenu = inputBox.menupopup;
+    let insertLocation = contextMenu.firstElementChild;
+    while (insertLocation.nextElementSibling &&
+           insertLocation.getAttribute("cmd") != "cmd_paste") {
+      insertLocation = insertLocation.nextElementSibling;
+    }
+    if (!insertLocation) {
+      return;
+    }
+
+    let pasteAndGo = this.document.createXULElement("menuitem");
+    let label = Services.strings
+                        .createBundle("chrome://browser/locale/browser.properties")
+                        .GetStringFromName("pasteAndGo.label");
+    pasteAndGo.setAttribute("label", label);
+    pasteAndGo.setAttribute("anonid", "paste-and-go");
+    pasteAndGo.addEventListener("command", () => {
+      this._suppressStartQuery = true;
+
+      this.select();
+      this.window.goDoCommand("cmd_paste");
+      this.handleCommand();
+
+      this._suppressStartQuery = false;
+    });
+
+    contextMenu.addEventListener("popupshowing", () => {
+      let controller =
+        this.document.commandDispatcher.getControllerForCommand("cmd_paste");
+      let enabled = controller.isCommandEnabled("cmd_paste");
+      if (enabled) {
+        pasteAndGo.removeAttribute("disabled");
+      } else {
+        pasteAndGo.setAttribute("disabled", "true");
+      }
+    });
+
+    insertLocation.insertAdjacentElement("afterend", pasteAndGo);
   }
 
   // Event handlers below.
