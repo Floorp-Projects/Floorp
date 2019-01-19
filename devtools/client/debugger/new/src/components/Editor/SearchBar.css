@@ -92,11 +92,11 @@
   padding: 0;
   width: 16px;
 }
-
-.search-bottom-bar .search-modifiers button svg {
-  fill: var(--theme-comment);
-  height: 16px;
+.search-bottom-bar .search-modifiers .img {
   width: 16px;
+  height: 16px;
+  vertical-align: bottom;
+  background-color: var(--theme-comment);
 }
 
 .search-bottom-bar .search-modifiers button:hover {
@@ -107,11 +107,11 @@
   background: var(--theme-selection-background);
 }
 
-.search-bottom-bar .search-modifiers button.active svg {
-  fill: var(--theme-selection-background);
+.search-bottom-bar .search-modifiers button.active .img {
+  background-color: var(--theme-selection-background);
 }
 
-.theme-dark .search-bottom-bar .search-modifiers button.active svg {
+.theme-dark .search-bottom-bar .search-modifiers button.active .img {
   fill: white;
 }
 

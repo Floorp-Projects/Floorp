@@ -42,9 +42,14 @@
   width: 22px;
 }
 
-.search-field i.loader {
+.search-field .img.loader {
   padding-top: 4px;
   margin-right: 8px;
+  mask-image: url(/images/loader.svg);
+  mask-size: 100%;
+  width: 20px;
+  height: 20px;
+  margin-top: 6px;
 }
 
 .search-field input {
@@ -130,6 +135,14 @@
   padding-top: 4px;
   padding-left: 5px;
   padding-right: 5px;
+}
+
+.search-field .search-nav-buttons .img.arrow-up {
+  mask: url(/images/arrow-up.svg) no-repeat;
+}
+
+.search-field .search-nav-buttons .img.arrow-down {
+  mask: url(/images/arrow-down.svg) no-repeat;
 }
 
 .search-field .search-nav-buttons .nav-btn:hover {

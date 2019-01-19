@@ -6,8 +6,8 @@ exports[`PaneToggleButton renders default 1`] = `
   onClick={[Function]}
   title="Expand panes"
 >
-  <Svg
-    name="togglePanes"
+  <AccessibleImage
+    className="toggle-panes"
   />
 </CommandBarButton>
 `;

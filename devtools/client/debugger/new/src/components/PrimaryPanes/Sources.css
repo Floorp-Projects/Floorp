@@ -23,9 +23,6 @@
   white-space: nowrap;
   color: inherit;
   display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
@@ -39,7 +36,7 @@
   height: 13px;
 }
 
-.theme-dark .sources-clear-root svg {
+.theme-dark .sources-clear-root {
   fill: var(--theme-body-color);
 }
 
@@ -47,11 +44,11 @@
   opacity: 0.5;
 }
 
-.sources-clear-root .breadcrumb svg {
+.sources-clear-root .breadcrumb {
   width: 5px;
-  top: 2px;
-  position: absolute;
-  margin-right: 5px;
+  margin: 0 2px 0 6px;
+  vertical-align: bottom;
+  background: var(--theme-body-color-alt);
 }
 
 .sources-clear-root-label {
@@ -62,7 +59,6 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  height: 100%;
 }
 
 .sources-list {
@@ -75,8 +71,8 @@
   display: flex;
 }
 
-.sources-list .managed-tree .tree-node:first-child {
-  margin-top: 4px;
+.sources-list .managed-tree .tree {
+  padding: 4px 0;
 }
 
 .sources-list .managed-tree .tree .node {
@@ -84,11 +80,11 @@
   width: 100%;
 }
 
-.sources-list .tree .img.arrow {
-  margin-right: 5px;
+.sources-list .img {
+  margin-inline-end: 5px;
 }
 
-.sources-list .tree .focused .img:not(.vue):not(.angular),
+.sources-list .tree .focused .img:not(.vue):not(.angular):not(.webpack):not(.dojo):not(.ember):not(.aframe):not(.marko):not(.mobx):not(.nextjs):not(.nuxtjs):not(.preact):not(.pug):not(.rxjs):not(.sencha-extjs),
 .sources-list .managed-tree .tree .node.focused .img.blackBox {
   background: #ffffff;
 }
@@ -118,6 +114,10 @@
 .sources-list .tree .label {
   padding: 3px 0px 3px 0px;
   display: inline-block;
+}
+
+.sources-list .tree .arrow {
+  vertical-align: 1px;
 }
 
 .sources-list .tree .node .no-arrow {
@@ -212,6 +212,10 @@
   height: 100%;
 }
 
+.source-outline-panel.has-root .thread-header {
+  margin-top: 4px;
+}
+
 .sources-list .managed-tree .tree .node .img.blackBox {
   mask: url(/images/blackBox.svg) no-repeat;
   mask-size: 100%;
@@ -240,7 +244,6 @@
   display: block;
 }
 
-.sources-list-custom-root .sources-list,
 .sources-list-custom-root .no-sources-message {
   position: absolute;
   top: 26px;
