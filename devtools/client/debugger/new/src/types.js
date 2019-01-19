@@ -311,8 +311,7 @@ type BaseSource = {|
   +contentType?: string,
   +error?: string,
   +loadedState: "unloaded" | "loading" | "loaded",
-  +relativeUrl: string,
-  introductionUrl: ?string
+  +relativeUrl: string
 |};
 
 /**
@@ -410,5 +409,3 @@ export type WorkerList = Array<Worker>;
 export type Cancellable = {
   cancel: () => void
 };
-
-export type EventListenerBreakpoints = string[];

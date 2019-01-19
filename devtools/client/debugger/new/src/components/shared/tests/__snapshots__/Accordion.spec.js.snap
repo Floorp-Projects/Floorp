@@ -14,8 +14,9 @@ exports[`Accordion basic render 1`] = `
       onKeyDown={[Function]}
       tabIndex="0"
     >
-      <AccessibleImage
-        className="arrow expanded"
+      <Svg
+        className="expanded"
+        name="arrow"
       />
       Test Accordion Item 1
     </h2>
@@ -35,8 +36,9 @@ exports[`Accordion basic render 1`] = `
       onKeyDown={[Function]}
       tabIndex="0"
     >
-      <AccessibleImage
-        className="arrow "
+      <Svg
+        className=""
+        name="arrow"
       />
       Test Accordion Item 2
       <div
@@ -57,8 +59,9 @@ exports[`Accordion basic render 1`] = `
       onKeyDown={[Function]}
       tabIndex="0"
     >
-      <AccessibleImage
-        className="arrow expanded"
+      <Svg
+        className="expanded"
+        name="arrow"
       />
       Test Accordion Item 3
     </h2>

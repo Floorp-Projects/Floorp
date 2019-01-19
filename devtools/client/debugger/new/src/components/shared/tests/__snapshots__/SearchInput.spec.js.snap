@@ -79,8 +79,8 @@ exports[`SearchInput shows nav buttons 1`] = `
         title="Previous result"
         type="arrow-up"
       >
-        <AccessibleImage
-          className="arrow-up"
+        <Svg
+          name="arrow-up"
         />
       </button>
       <button
@@ -90,8 +90,8 @@ exports[`SearchInput shows nav buttons 1`] = `
         title="Next result"
         type="arrow-down"
       >
-        <AccessibleImage
-          className="arrow-down"
+        <Svg
+          name="arrow-down"
         />
       </button>
     </div>
@@ -143,8 +143,8 @@ exports[`SearchInput shows svg error emoji 1`] = `
         title="Previous result"
         type="arrow-up"
       >
-        <AccessibleImage
-          className="arrow-up"
+        <Svg
+          name="arrow-up"
         />
       </button>
       <button
@@ -154,8 +154,8 @@ exports[`SearchInput shows svg error emoji 1`] = `
         title="Next result"
         type="arrow-down"
       >
-        <AccessibleImage
-          className="arrow-down"
+        <Svg
+          name="arrow-down"
         />
       </button>
     </div>
@@ -207,8 +207,8 @@ exports[`SearchInput shows svg magnifying glass 1`] = `
         title="Previous result"
         type="arrow-up"
       >
-        <AccessibleImage
-          className="arrow-up"
+        <Svg
+          name="arrow-up"
         />
       </button>
       <button
@@ -218,8 +218,8 @@ exports[`SearchInput shows svg magnifying glass 1`] = `
         title="Next result"
         type="arrow-down"
       >
-        <AccessibleImage
-          className="arrow-down"
+        <Svg
+          name="arrow-down"
         />
       </button>
     </div>

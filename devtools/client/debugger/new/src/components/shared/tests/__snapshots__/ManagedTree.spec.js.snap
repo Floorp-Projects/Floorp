@@ -219,7 +219,12 @@ exports[`ManagedTree sets expanded items 1`] = `
         onKeyPress={[Function]}
         onKeyUp={[Function]}
         role="tree"
-        style={Object {}}
+        style={
+          Object {
+            "margin": 0,
+            "padding": 0,
+          }
+        }
         tabIndex="0"
       >
         <TreeNode
@@ -438,7 +443,12 @@ exports[`ManagedTree sets expanded items 2`] = `
         onKeyPress={[Function]}
         onKeyUp={[Function]}
         role="tree"
-        style={Object {}}
+        style={
+          Object {
+            "margin": 0,
+            "padding": 0,
+          }
+        }
         tabIndex="0"
       >
         <TreeNode

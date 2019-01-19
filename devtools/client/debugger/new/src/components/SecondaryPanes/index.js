@@ -21,7 +21,7 @@ import {
   getWorkers
 } from "../../selectors";
 
-import AccessibleImage from "../shared/AccessibleImage";
+import Svg from "../shared/Svg";
 import { prefs, features } from "../../utils/prefs";
 
 import Breakpoints from "./Breakpoints";
@@ -33,7 +33,6 @@ import Accordion from "../shared/Accordion";
 import CommandBar from "./CommandBar";
 import UtilsBar from "./UtilsBar";
 import XHRBreakpoints from "./XHRBreakpoints";
-import EventListeners from "./EventListeners";
 
 import Scopes from "./Scopes";
 
@@ -58,7 +57,7 @@ function debugBtn(onClick, type, className, tooltip) {
       key={type}
       title={tooltip}
     >
-      <AccessibleImage className={type} title={tooltip} aria-label={tooltip} />
+      <Svg name={type} title={tooltip} aria-label={tooltip} />
     </button>
   );
 }
@@ -300,19 +299,6 @@ class SecondaryPanes extends Component<Props, State> {
     };
   }
 
-  getEventListenersItem() {
-    return {
-      header: L10N.getStr("eventListenersHeader"),
-      className: "event-listeners-pane",
-      buttons: [],
-      component: <EventListeners />,
-      opened: prefs.eventListenersVisible,
-      onToggle: opened => {
-        prefs.eventListenersVisible = opened;
-      }
-    };
-  }
-
   getStartItems() {
     const { workers } = this.props;
 
@@ -337,10 +323,6 @@ class SecondaryPanes extends Component<Props, State> {
 
     if (features.xhrBreakpoints) {
       items.push(this.getXHRItem());
-    }
-
-    if (features.eventListenersBreakpoints) {
-      items.push(this.getEventListenersItem());
     }
 
     return items.filter(item => item);

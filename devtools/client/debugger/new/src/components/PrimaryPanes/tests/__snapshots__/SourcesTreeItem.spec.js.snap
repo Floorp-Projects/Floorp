@@ -44,7 +44,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -89,6 +88,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -182,6 +182,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -250,7 +251,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -295,6 +295,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -370,6 +371,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -438,7 +440,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -472,6 +473,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -536,6 +538,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -593,7 +596,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -628,6 +630,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -693,6 +696,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -751,7 +755,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -775,6 +778,7 @@ Object {
       "source": null,
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -827,6 +831,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -861,8 +866,8 @@ Object {
     <AccessibleImage
       className="arrow"
     />
-    <AccessibleImage
-      className="angular"
+    <Svg
+      name="angular"
     />
     <span
       className="label"
@@ -874,7 +879,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -907,6 +911,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -955,8 +960,8 @@ Object {
           <AccessibleImage
             className="arrow"
           />
-          <AccessibleImage
-            className="angular"
+          <Svg
+            name="angular"
           />
           <span
             className="label"
@@ -970,6 +975,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1026,7 +1032,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -1048,6 +1053,7 @@ Object {
       "source": null,
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1098,6 +1104,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1143,7 +1150,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -1167,6 +1173,7 @@ Object {
       "source": null,
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1219,6 +1226,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1266,7 +1274,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -1300,6 +1307,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1364,6 +1372,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1408,8 +1417,8 @@ Object {
     <AccessibleImage
       className="arrow"
     />
-    <AccessibleImage
-      className="webpack"
+    <Svg
+      name="webpack"
     />
     <span
       className="label"
@@ -1421,7 +1430,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -1454,6 +1462,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1502,8 +1511,8 @@ Object {
           <AccessibleImage
             className="arrow"
           />
-          <AccessibleImage
-            className="webpack"
+          <Svg
+            name="webpack"
           />
           <span
             className="label"
@@ -1517,6 +1526,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1586,7 +1596,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -1630,6 +1639,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1717,6 +1727,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
@@ -1797,7 +1808,6 @@ Object {
   </div>,
   "defaultState": null,
   "instance": SourceTreeItem {
-    "addCollapseExpandAllOptions": [Function],
     "context": Object {},
     "onClick": [Function],
     "onContextMenu": [Function],
@@ -1842,6 +1852,7 @@ Object {
       },
     },
     "refs": Object {},
+    "setState": [Function],
     "state": null,
     "updater": Updater {
       "_callbacks": Array [],
@@ -1930,6 +1941,7 @@ Object {
         "_updater": [Circular],
       },
     },
+    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],

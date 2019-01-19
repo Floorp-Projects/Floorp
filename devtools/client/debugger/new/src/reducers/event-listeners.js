@@ -2,47 +2,40 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
+/**
+ * Event listeners reducer
+ * @module reducers/event-listeners
+ */
 
-import { uniq } from "lodash";
+const initialEventListenersState = {
+  activeEventNames: [],
+  listeners: [],
+  fetchingListeners: false
+};
 
-import { asyncStore } from "../utils/prefs";
-import type { EventListenerBreakpoints } from "../types";
-
-type OuterState = { eventListenerBreakpoints: EventListenerBreakpoints };
-
-function update(state: EventListenerBreakpoints = [], action: any) {
+function update(state = initialEventListenersState, action, emit) {
   switch (action.type) {
-    case "ADD_EVENT_LISTENERS":
-      return updateEventTypes("add", state, action.events);
-
-    case "REMOVE_EVENT_LISTENERS":
-      return updateEventTypes("remove", state, action.events);
-
-    default:
-      return state;
-  }
-}
-
-function updateEventTypes(
-  addOrRemove: string,
-  currentEvents: EventListenerBreakpoints,
-  events: EventListenerBreakpoints
-): EventListenerBreakpoints {
-  let newEventListeners;
-
-  if (addOrRemove === "add") {
-    newEventListeners = uniq([...currentEvents, ...events]);
-  } else {
-    newEventListeners = currentEvents.filter(event => !events.includes(event));
+    case "UPDATE_EVENT_BREAKPOINTS":
+      state.activeEventNames = action.eventNames;
+      // emit("activeEventNames", state.activeEventNames);
+      break;
+    case "FETCH_EVENT_LISTENERS":
+      if (action.status === "begin") {
+        state.fetchingListeners = true;
+      } else if (action.status === "done") {
+        state.fetchingListeners = false;
+        state.listeners = action.listeners;
+      }
+      break;
+    case "NAVIGATE":
+      return initialEventListenersState;
   }
 
-  asyncStore.eventListenerBreakpoints = newEventListeners;
-  return newEventListeners;
+  return state;
 }
 
-export function getActiveEventListeners(state: OuterState) {
-  return state.eventListenerBreakpoints;
+export function getEventListeners(state) {
+  return state.eventListeners.listeners;
 }
 
 export default update;
