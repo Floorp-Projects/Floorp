@@ -61,7 +61,6 @@ class AccessibilityRow extends Component {
   static get propTypes() {
     return {
       ...TreeRow.propTypes,
-      hasContextMenu: PropTypes.bool.isRequired,
       dispatch: PropTypes.func.isRequired,
       walker: PropTypes.object,
     };
@@ -194,6 +193,11 @@ class AccessibilityRow extends Component {
     }
   }
 
+  get hasContextMenu() {
+    const { supports } = this.props;
+    return supports.snapshot;
+  }
+
   /**
    * Render accessible row component.
    * @returns acecssible-row React component.
@@ -201,7 +205,7 @@ class AccessibilityRow extends Component {
   render() {
     const { object } = this.props.member;
     const props = Object.assign({}, this.props, {
-      onContextMenu: this.props.hasContextMenu && (e => this.onContextMenu(e)),
+      onContextMenu: this.hasContextMenu && (e => this.onContextMenu(e)),
       onMouseOver: () => this.highlight(object),
       onMouseOut: () => this.unhighlight(),
     });
@@ -214,5 +218,4 @@ const mapStateToProps = ({ ui }) => ({
   supports: ui.supports,
 });
 
-module.exports =
-  connect(mapStateToProps, null, null, { withRef: true })(AccessibilityRow);
+module.exports = connect(mapStateToProps)(AccessibilityRow);

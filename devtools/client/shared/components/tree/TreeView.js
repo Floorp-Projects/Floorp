@@ -117,8 +117,6 @@ define(function(require, exports, module) {
         onSort: PropTypes.func,
         // Custom row click callback
         onClickRow: PropTypes.func,
-        // Tree context menu event handler
-        onContextMenuTree: PropTypes.func,
         // A header is displayed if set to true
         header: PropTypes.bool,
         // Long string is expandable by a toggle button
@@ -514,8 +512,8 @@ define(function(require, exports, module) {
       const classNames = ["treeTable"];
       this.rows = [];
 
-      const { className, onContextMenuTree } = this.props;
       // Use custom class name from props.
+      const className = this.props.className;
       if (className) {
         classNames.push(...className.split(" "));
       }
@@ -543,7 +541,6 @@ define(function(require, exports, module) {
           },
           tabIndex: 0,
           onKeyDown: this.onKeyDown,
-          onContextMenu: onContextMenuTree && onContextMenuTree.bind(this),
           "aria-label": this.props.label || "",
           "aria-activedescendant": this.state.selected,
           cellPadding: 0,
@@ -551,6 +548,7 @@ define(function(require, exports, module) {
           TreeHeader(props),
           dom.tbody({
             role: "presentation",
+            tabIndex: -1,
           }, rows)
         )
       );
