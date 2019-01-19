@@ -284,14 +284,16 @@ impl OpaqueBatchList {
 pub struct BatchList {
     pub alpha_batch_list: AlphaBatchList,
     pub opaque_batch_list: OpaqueBatchList,
-    pub scissor_rect: Option<DeviceIntRect>,
+    /// A list of rectangle regions this batch should be drawn
+    /// in. Each region will have scissor rect set before drawing.
+    pub regions: Vec<DeviceIntRect>,
     pub tile_blits: Vec<TileBlit>,
 }
 
 impl BatchList {
     pub fn new(
         screen_size: DeviceIntSize,
-        scissor_rect: Option<DeviceIntRect>,
+        regions: Vec<DeviceIntRect>,
         tile_blits: Vec<TileBlit>,
     ) -> Self {
         // The threshold for creating a new batch is
@@ -301,7 +303,7 @@ impl BatchList {
         BatchList {
             alpha_batch_list: AlphaBatchList::new(),
             opaque_batch_list: OpaqueBatchList::new(batch_area_threshold),
-            scissor_rect,
+            regions,
             tile_blits,
         }
     }
@@ -381,18 +383,25 @@ impl PrimitiveBatch {
 pub struct AlphaBatchContainer {
     pub opaque_batches: Vec<PrimitiveBatch>,
     pub alpha_batches: Vec<PrimitiveBatch>,
-    pub scissor_rect: Option<DeviceIntRect>,
+    /// The overall scissor rect for this render task, if one
+    /// is required.
+    pub task_scissor_rect: Option<DeviceIntRect>,
+    /// A list of rectangle regions this batch should be drawn
+    /// in. Each region will have scissor rect set before drawing.
+    pub regions: Vec<DeviceIntRect>,
     pub tile_blits: Vec<TileBlit>,
 }
 
 impl AlphaBatchContainer {
     pub fn new(
-        scissor_rect: Option<DeviceIntRect>,
+        task_scissor_rect: Option<DeviceIntRect>,
+        regions: Vec<DeviceIntRect>,
     ) -> AlphaBatchContainer {
         AlphaBatchContainer {
             opaque_batches: Vec::new(),
             alpha_batches: Vec::new(),
-            scissor_rect,
+            task_scissor_rect,
+            regions,
             tile_blits: Vec::new(),
         }
     }
@@ -452,26 +461,26 @@ struct SegmentInstanceData {
 pub struct AlphaBatchBuilder {
     pub batch_lists: Vec<BatchList>,
     screen_size: DeviceIntSize,
-    scissor_rect: Option<DeviceIntRect>,
+    task_scissor_rect: Option<DeviceIntRect>,
     glyph_fetch_buffer: Vec<GlyphFetchResult>,
 }
 
 impl AlphaBatchBuilder {
     pub fn new(
         screen_size: DeviceIntSize,
-        scissor_rect: Option<DeviceIntRect>,
+        task_scissor_rect: Option<DeviceIntRect>,
     ) -> Self {
         let batch_lists = vec![
             BatchList::new(
                 screen_size,
-                scissor_rect,
+                Vec::new(),
                 Vec::new(),
             ),
         ];
 
         AlphaBatchBuilder {
             batch_lists,
-            scissor_rect,
+            task_scissor_rect,
             screen_size,
             glyph_fetch_buffer: Vec::new(),
         }
@@ -479,21 +488,12 @@ impl AlphaBatchBuilder {
 
     fn push_new_batch_list(
         &mut self,
-        scissor_rect: Option<DeviceIntRect>,
+        regions: Vec<DeviceIntRect>,
         tile_blits: Vec<TileBlit>,
     ) {
-        let scissor_rect = match (scissor_rect, self.scissor_rect) {
-            (Some(rect0), Some(rect1)) => {
-                Some(rect0.intersection(&rect1).unwrap_or(DeviceIntRect::zero()))
-            }
-            (Some(rect0), None) => Some(rect0),
-            (None, Some(rect1)) => Some(rect1),
-            (None, None) => None,
-        };
-
         self.batch_lists.push(BatchList::new(
             self.screen_size,
-            scissor_rect,
+            regions,
             tile_blits,
         ));
     }
@@ -503,7 +503,7 @@ impl AlphaBatchBuilder {
     }
 
     fn can_merge(&self) -> bool {
-        self.scissor_rect.is_none() &&
+        self.task_scissor_rect.is_none() &&
         self.batch_lists.len() == 1
     }
 
@@ -525,7 +525,8 @@ impl AlphaBatchBuilder {
                 batch_containers.push(AlphaBatchContainer {
                     alpha_batches: batch_list.alpha_batch_list.batches,
                     opaque_batches: batch_list.opaque_batch_list.batches,
-                    scissor_rect: batch_list.scissor_rect,
+                    task_scissor_rect: self.task_scissor_rect,
+                    regions: batch_list.regions,
                     tile_blits: batch_list.tile_blits,
                 });
             }
@@ -1123,7 +1124,7 @@ impl AlphaBatchBuilder {
 
                                     // If there is a dirty rect for the tile cache, recurse into the
                                     // main picture primitive list, and draw them first.
-                                    if let Some(ref dirty_region) = tile_cache.dirty_region {
+                                    if !tile_cache.dirty_region.is_empty() {
                                         let mut tile_blits = Vec::new();
 
                                         let (target_rect, _) = render_tasks[task_id].get_target_rect();
@@ -1140,8 +1141,17 @@ impl AlphaBatchBuilder {
                                             })
                                         }
 
+                                        // Collect the list of regions to scissor and repeat
+                                        // the draw calls into, based on dirty rects.
+                                        let batch_regions = tile_cache
+                                            .dirty_region
+                                            .dirty_rects
+                                            .iter()
+                                            .map(|dirty_rect| dirty_rect.device_rect)
+                                            .collect();
+
                                         self.push_new_batch_list(
-                                            Some(dirty_region.dirty_device_rect),
+                                            batch_regions,
                                             tile_blits,
                                         );
 
@@ -1159,7 +1169,7 @@ impl AlphaBatchBuilder {
                                         );
 
                                         self.push_new_batch_list(
-                                            None,
+                                            Vec::new(),
                                             Vec::new(),
                                         );
                                     }
