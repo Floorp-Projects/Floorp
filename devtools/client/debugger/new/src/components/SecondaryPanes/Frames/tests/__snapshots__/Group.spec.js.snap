@@ -11,8 +11,15 @@ exports[`Group displays a group 1`] = `
     tabIndex={0}
     title="Show Back frames"
   >
+    <span
+      className="title"
+    >
+      foo
+    </span>
+    <Badge>
+      1
+    </Badge>
     <FrameLocation
-      expanded={false}
       frame={
         Object {
           "displayName": "foo",
@@ -20,9 +27,6 @@ exports[`Group displays a group 1`] = `
         }
       }
     />
-    <Badge>
-      1
-    </Badge>
   </li>
 </div>
 `;
@@ -39,8 +43,15 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
     tabIndex={0}
     title="Collapse Back frames"
   >
+    <span
+      className="title"
+    >
+      renderFoo
+    </span>
+    <Badge>
+      3
+    </Badge>
     <FrameLocation
-      expanded={true}
       frame={
         Object {
           "displayName": "renderFoo",
@@ -55,9 +66,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
         }
       }
     />
-    <Badge>
-      3
-    </Badge>
   </li>
   <div
     className="frames-list"
@@ -156,8 +164,15 @@ exports[`Group renders group with anonymous functions 1`] = `
     tabIndex={0}
     title="Show Back frames"
   >
+    <span
+      className="title"
+    >
+      &lt;anonymous&gt;
+    </span>
+    <Badge>
+      3
+    </Badge>
     <FrameLocation
-      expanded={false}
       frame={
         Object {
           "displayName": "",
@@ -172,9 +187,6 @@ exports[`Group renders group with anonymous functions 1`] = `
         }
       }
     />
-    <Badge>
-      3
-    </Badge>
   </li>
 </div>
 `;
@@ -191,8 +203,15 @@ exports[`Group renders group with anonymous functions 2`] = `
     tabIndex={0}
     title="Collapse Back frames"
   >
+    <span
+      className="title"
+    >
+      &lt;anonymous&gt;
+    </span>
+    <Badge>
+      3
+    </Badge>
     <FrameLocation
-      expanded={true}
       frame={
         Object {
           "displayName": "",
@@ -207,9 +226,6 @@ exports[`Group renders group with anonymous functions 2`] = `
         }
       }
     />
-    <Badge>
-      3
-    </Badge>
   </li>
   <div
     className="frames-list"

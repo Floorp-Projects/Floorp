@@ -4,12 +4,12 @@
 
 .frames ul {
   list-style: none;
-  margin-top: 4px;
+  margin: 0;
   padding: 0;
 }
 
 .frames ul li {
-  padding: 2px 10px 2px 20px;
+  padding: 7px 10px 7px 21px;
   overflow: hidden;
   display: flex;
   justify-content: space-between;
@@ -106,6 +106,7 @@
   mask-size: 100%;
   display: inline-block;
   width: 12px;
+  margin-inline-start: 4px;
 }
 
 :root.theme-dark .annotation-logo:not(.angular) svg path {
