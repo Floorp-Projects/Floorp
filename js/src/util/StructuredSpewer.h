@@ -9,22 +9,22 @@
 
 #ifdef JS_STRUCTURED_SPEW
 
-#include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/EnumeratedArray.h"
-#include "mozilla/EnumSet.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/Sprintf.h"
+#  include "mozilla/Atomics.h"
+#  include "mozilla/Attributes.h"
+#  include "mozilla/EnumeratedArray.h"
+#  include "mozilla/EnumSet.h"
+#  include "mozilla/Maybe.h"
+#  include "mozilla/Sprintf.h"
 
-#include "vm/JSONPrinter.h"
-#include "vm/Printer.h"
+#  include "vm/JSONPrinter.h"
+#  include "vm/Printer.h"
 
-#ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
-#else
-#include <unistd.h>
-#endif
+#  ifdef XP_WIN
+#    include <process.h>
+#    define getpid _getpid
+#  else
+#    include <unistd.h>
+#  endif
 
 // [SMDOC] JSON Structured Spewer
 //
@@ -65,13 +65,13 @@ class JSScript;
 
 namespace js {
 
-#define STRUCTURED_CHANNEL_LIST(_) _(BaselineICStats)
+#  define STRUCTURED_CHANNEL_LIST(_) _(BaselineICStats)
 
 // Structured spew channels
 enum class SpewChannel {
-#define STRUCTURED_CHANNEL(name) name,
+#  define STRUCTURED_CHANNEL(name) name,
   STRUCTURED_CHANNEL_LIST(STRUCTURED_CHANNEL)
-#undef STRUCTURED_CHANNEL
+#  undef STRUCTURED_CHANNEL
       Count
 };
 

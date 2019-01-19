@@ -9,11 +9,11 @@
 
 #include "nsHashPropertyBag.h"
 #if defined(XP_WIN)
-#include "nsIObserver.h"
+#  include "nsIObserver.h"
 #endif  // defined(XP_WIN)
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "mozilla/dom/PContent.h"
+#  include "mozilla/dom/PContent.h"
 #endif  // MOZ_WIDGET_ANDROID
 
 class nsSystemInfo final : public nsHashPropertyBag

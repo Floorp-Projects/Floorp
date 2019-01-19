@@ -24,7 +24,7 @@
 #include "mozilla/ServoStyleSet.h"
 
 #ifdef DEBUG
-#undef NOISY_PUSHING
+#  undef NOISY_PUSHING
 #endif
 
 using namespace mozilla;

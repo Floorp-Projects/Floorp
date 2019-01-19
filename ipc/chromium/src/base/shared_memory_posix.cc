@@ -13,7 +13,7 @@
 #include <unistd.h>
 
 #ifdef ANDROID
-#include <linux/ashmem.h>
+#  include <linux/ashmem.h>
 #endif
 
 #include "base/eintr_wrapper.h"
@@ -65,7 +65,7 @@ bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
   return false;
 #else
   *str += '/';
-#ifdef OS_LINUX
+#  ifdef OS_LINUX
   // The Snap package environment doesn't provide a private /dev/shm
   // (it's used for communication with services like PulseAudio);
   // instead AppArmor is used to restrict access to it.  Anything with
@@ -82,12 +82,12 @@ bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
   if (kSnap) {
     StringAppendF(str, "snap.%s.", kSnap);
   }
-#endif  // OS_LINUX
+#  endif  // OS_LINUX
   // Hopefully the "implementation defined" name length limit is long
   // enough for this.
   StringAppendF(str, "org.mozilla.ipc.%d.", static_cast<int>(pid));
   return true;
-#endif  // !ANDROID && !SHM_ANON
+#endif    // !ANDROID && !SHM_ANON
 }
 
 bool SharedMemory::Create(size_t size) {

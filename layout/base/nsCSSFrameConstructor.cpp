@@ -45,8 +45,8 @@
 #include "nsViewManager.h"
 #include "nsStyleConsts.h"
 #ifdef MOZ_XUL
-#include "nsXULElement.h"
-#include "mozilla/dom/BoxObject.h"
+#  include "nsXULElement.h"
+#  include "mozilla/dom/BoxObject.h"
 #endif  // MOZ_XUL
 #include "nsContainerFrame.h"
 #include "nsNameSpaceManager.h"
@@ -63,7 +63,7 @@
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #ifdef XP_MACOSX
-#include "nsIDocShell.h"
+#  include "nsIDocShell.h"
 #endif
 #include "ChildIterator.h"
 #include "nsError.h"
@@ -106,10 +106,10 @@
 #include "DetailsFrame.h"
 
 #ifdef MOZ_XUL
-#include "nsIPopupContainer.h"
+#  include "nsIPopupContainer.h"
 #endif
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
+#  include "nsAccessibilityService.h"
 #endif
 
 #include "nsXBLService.h"
@@ -206,15 +206,15 @@ static FrameCtorDebugFlags gFlags[] = {
     {"really-noisy-content-updates", &gReallyNoisyContentUpdates},
     {"noisy-inline", &gNoisyInlineConstruction}};
 
-#define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
+#  define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
 #endif
 
 #ifdef MOZ_XUL
-#include "nsMenuFrame.h"
-#include "nsPopupSetFrame.h"
-#include "nsTreeColFrame.h"
-#include "nsIBoxObject.h"
-#include "nsXULLabelFrame.h"
+#  include "nsMenuFrame.h"
+#  include "nsPopupSetFrame.h"
+#  include "nsTreeColFrame.h"
+#  include "nsIBoxObject.h"
+#  include "nsXULLabelFrame.h"
 
 //------------------------------------------------------------------
 
@@ -319,7 +319,7 @@ static void AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
   }
 }
 #else
-#define AssertAnonymousFlexOrGridItemParent(x, y) PR_BEGIN_MACRO PR_END_MACRO
+#  define AssertAnonymousFlexOrGridItemParent(x, y) PR_BEGIN_MACRO PR_END_MACRO
 #endif
 
 static inline nsContainerFrame* GetFieldSetBlockFrame(
@@ -3991,11 +3991,11 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement, nsAtom* aTag,
       SIMPLE_XUL_CREATE(menubutton, NS_NewMenuFrame),
       SIMPLE_XUL_CREATE(menulist, NS_NewMenuFrame),
       SIMPLE_XUL_CREATE(menuitem, NS_NewMenuItemFrame),
-#ifdef XP_MACOSX
+#  ifdef XP_MACOSX
       SIMPLE_TAG_CHAIN(menubar, nsCSSFrameConstructor::FindXULMenubarData),
-#else
+#  else
       SIMPLE_XUL_CREATE(menubar, NS_NewMenuBarFrame),
-#endif /* XP_MACOSX */
+#  endif /* XP_MACOSX */
       SIMPLE_TAG_CHAIN(popupgroup, nsCSSFrameConstructor::FindPopupGroupData),
       SIMPLE_XUL_CREATE(iframe, NS_NewSubDocumentFrame),
       SIMPLE_XUL_CREATE(editor, NS_NewSubDocumentFrame),
@@ -4062,7 +4062,7 @@ nsCSSFrameConstructor::FindXULDescriptionData(const Element& aElement,
   return &sDescriptionData;
 }
 
-#ifdef XP_MACOSX
+#  ifdef XP_MACOSX
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULMenubarData(const Element& aElement,
@@ -4083,7 +4083,7 @@ nsCSSFrameConstructor::FindXULMenubarData(const Element& aElement,
       SIMPLE_XUL_FCDATA(NS_NewMenuBarFrame);
   return &sMenubarData;
 }
-#endif /* XP_MACOSX */
+#  endif /* XP_MACOSX */
 
 #endif /* MOZ_XUL */
 

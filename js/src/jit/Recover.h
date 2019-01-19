@@ -175,14 +175,15 @@ class MOZ_NON_PARAM RInstruction {
   uint32_t numOperands() const override { return numOp; }
 
 #ifdef DEBUG
-#define RINSTRUCTION_HEADER_NUM_OP_(op, numOp)                                \
-  RINSTRUCTION_HEADER_NUM_OP_MAIN(op, numOp)                                  \
-  static_assert(M##op::staticNumOperands == numOp,                            \
-                "The recover instructions's numOperands should equal to the " \
-                "MIR's numOperands");
+#  define RINSTRUCTION_HEADER_NUM_OP_(op, numOp)                      \
+    RINSTRUCTION_HEADER_NUM_OP_MAIN(op, numOp)                        \
+    static_assert(                                                    \
+        M##op::staticNumOperands == numOp,                            \
+        "The recover instructions's numOperands should equal to the " \
+        "MIR's numOperands");
 #else
-#define RINSTRUCTION_HEADER_NUM_OP_(op, numOp) \
-  RINSTRUCTION_HEADER_NUM_OP_MAIN(op, numOp)
+#  define RINSTRUCTION_HEADER_NUM_OP_(op, numOp) \
+    RINSTRUCTION_HEADER_NUM_OP_MAIN(op, numOp)
 #endif
 
 class RResumePoint final : public RInstruction {

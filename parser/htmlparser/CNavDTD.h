@@ -12,12 +12,12 @@
 #include "nsCOMPtr.h"
 
 #ifdef _MSC_VER
-#pragma warning(disable : 4275)
+#  pragma warning(disable : 4275)
 #endif
 
 class CNavDTD : public nsIDTD {
 #ifdef _MSC_VER
-#pragma warning(default : 4275)
+#  pragma warning(default : 4275)
 #endif
 
   virtual ~CNavDTD();

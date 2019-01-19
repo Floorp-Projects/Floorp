@@ -95,7 +95,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 
 #if defined(XP_LINUX)
-#include "mozilla/Hal.h"
+#  include "mozilla/Hal.h"
 #endif
 
 #include "mozilla/EMEUtils.h"

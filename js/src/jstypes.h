@@ -39,29 +39,29 @@
  * should not. STATIC_JS_API is used to build JS as a static library.
  */
 #if defined(STATIC_JS_API)
-#define JS_PUBLIC_API
-#define JS_PUBLIC_DATA
-#define JS_FRIEND_API
-#define JS_FRIEND_DATA
+#  define JS_PUBLIC_API
+#  define JS_PUBLIC_DATA
+#  define JS_FRIEND_API
+#  define JS_FRIEND_DATA
 #elif defined(EXPORT_JS_API) || defined(STATIC_EXPORTABLE_JS_API)
-#define JS_PUBLIC_API MOZ_EXPORT
-#define JS_PUBLIC_DATA MOZ_EXPORT
-#define JS_FRIEND_API MOZ_EXPORT
-#define JS_FRIEND_DATA MOZ_EXPORT
+#  define JS_PUBLIC_API MOZ_EXPORT
+#  define JS_PUBLIC_DATA MOZ_EXPORT
+#  define JS_FRIEND_API MOZ_EXPORT
+#  define JS_FRIEND_DATA MOZ_EXPORT
 #else
-#define JS_PUBLIC_API MOZ_IMPORT_API
-#define JS_PUBLIC_DATA MOZ_IMPORT_DATA
-#define JS_FRIEND_API MOZ_IMPORT_API
-#define JS_FRIEND_DATA MOZ_IMPORT_DATA
+#  define JS_PUBLIC_API MOZ_IMPORT_API
+#  define JS_PUBLIC_DATA MOZ_IMPORT_DATA
+#  define JS_FRIEND_API MOZ_IMPORT_API
+#  define JS_FRIEND_DATA MOZ_IMPORT_DATA
 #endif
 
 #if defined(_MSC_VER) && defined(_M_IX86)
-#define JS_FASTCALL __fastcall
+#  define JS_FASTCALL __fastcall
 #elif defined(__GNUC__) && defined(__i386__)
-#define JS_FASTCALL __attribute__((fastcall))
+#  define JS_FASTCALL __attribute__((fastcall))
 #else
-#define JS_FASTCALL
-#define JS_NO_FASTCALL
+#  define JS_FASTCALL
+#  define JS_NO_FASTCALL
 #endif
 
 // gcc is buggy and warns on our attempts to JS_PUBLIC_API our
@@ -76,9 +76,9 @@
 // the latest stable gcc, you have rs=jwalden to bump it to the next gcc minor
 // or major version as needed, e.g. (8, 2, 0) to (8, 3, 0).
 #if MOZ_IS_GCC
-#if !MOZ_GCC_VERSION_AT_LEAST(8, 2, 0)
-#define JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#endif
+#  if !MOZ_GCC_VERSION_AT_LEAST(8, 2, 0)
+#    define JS_BROKEN_GCC_ATTRIBUTE_WARNING
+#  endif
 #endif
 
 /***********************************************************************
@@ -112,9 +112,9 @@
 #define JS_ROUNDUP(x, y) (JS_HOWMANY(x, y) * (y))
 
 #if defined(JS_64BIT)
-#define JS_BITS_PER_WORD 64
+#  define JS_BITS_PER_WORD 64
 #else
-#define JS_BITS_PER_WORD 32
+#  define JS_BITS_PER_WORD 32
 #endif
 
 /***********************************************************************

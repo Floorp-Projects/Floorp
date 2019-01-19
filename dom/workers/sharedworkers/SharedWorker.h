@@ -12,7 +12,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 
 #ifdef XP_WIN
-#undef PostMessage
+#  undef PostMessage
 #endif
 
 class nsPIDOMWindowInner;

@@ -7,29 +7,29 @@
 
 #ifdef __APPLE__
 
-#include <dlfcn.h>
-#include <CoreFoundation/CoreFoundation.h>
-#include <unistd.h>
+#  include <dlfcn.h>
+#  include <CoreFoundation/CoreFoundation.h>
+#  include <unistd.h>
 
 // There are now 2 paths to the DTPerformanceSession framework. We try to load
 // the one contained in /Applications/Xcode.app first, falling back to the one
 // contained in /Library/Developer/4.0/Instruments.
-#define DTPerformanceLibraryPath                                   \
-  "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/" \
-  "DTPerformanceSession.framework/Versions/Current/DTPerformanceSession"
-#define OldDTPerformanceLibraryPath                \
-  "/Library/Developer/4.0/Instruments/Frameworks/" \
-  "DTPerformanceSession.framework/Versions/Current/DTPerformanceSession"
+#  define DTPerformanceLibraryPath                                   \
+    "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/" \
+    "DTPerformanceSession.framework/Versions/Current/DTPerformanceSession"
+#  define OldDTPerformanceLibraryPath                \
+    "/Library/Developer/4.0/Instruments/Frameworks/" \
+    "DTPerformanceSession.framework/Versions/Current/DTPerformanceSession"
 
 extern "C" {
 
 typedef CFTypeRef DTPerformanceSessionRef;
 
-#define DTPerformanceSession_TimeProfiler \
-  "com.apple.instruments.dtps.timeprofiler"
+#  define DTPerformanceSession_TimeProfiler \
+    "com.apple.instruments.dtps.timeprofiler"
 // DTPerformanceSession_Option_SamplingInterval is measured in microseconds
-#define DTPerformanceSession_Option_SamplingInterval \
-  "com.apple.instruments.dtps.option.samplinginterval"
+#  define DTPerformanceSession_Option_SamplingInterval \
+    "com.apple.instruments.dtps.option.samplinginterval"
 
 typedef void (*dtps_errorcallback_t)(CFStringRef, CFErrorRef);
 typedef DTPerformanceSessionRef (*DTPerformanceSessionCreateFunction)(
@@ -68,19 +68,19 @@ class AutoReleased {
   T mTypeRef;
 };
 
-#define DTPERFORMANCE_SYMBOLS               \
-  SYMBOL(DTPerformanceSessionCreate)        \
-  SYMBOL(DTPerformanceSessionAddInstrument) \
-  SYMBOL(DTPerformanceSessionIsRecording)   \
-  SYMBOL(DTPerformanceSessionStart)         \
-  SYMBOL(DTPerformanceSessionStop)          \
-  SYMBOL(DTPerformanceSessionSave)
+#  define DTPERFORMANCE_SYMBOLS               \
+    SYMBOL(DTPerformanceSessionCreate)        \
+    SYMBOL(DTPerformanceSessionAddInstrument) \
+    SYMBOL(DTPerformanceSessionIsRecording)   \
+    SYMBOL(DTPerformanceSessionStart)         \
+    SYMBOL(DTPerformanceSessionStop)          \
+    SYMBOL(DTPerformanceSessionSave)
 
-#define SYMBOL(_sym) _sym##Function _sym = nullptr;
+#  define SYMBOL(_sym) _sym##Function _sym = nullptr;
 
 DTPERFORMANCE_SYMBOLS
 
-#undef SYMBOL
+#  undef SYMBOL
 
 void* LoadDTPerformanceLibraries(bool dontLoad) {
   int flags = RTLD_LAZY | RTLD_LOCAL | RTLD_NODELETE;
@@ -104,17 +104,18 @@ bool LoadDTPerformanceLibrary() {
     }
   }
 
-#define SYMBOL(_sym)                                                           \
-  _sym = reinterpret_cast<_sym##Function>(dlsym(DTPerformanceLibrary, #_sym)); \
-  if (!_sym) {                                                                 \
-    dlclose(DTPerformanceLibrary);                                             \
-    DTPerformanceLibrary = nullptr;                                            \
-    return false;                                                              \
-  }
+#  define SYMBOL(_sym)                                                        \
+    _sym =                                                                    \
+        reinterpret_cast<_sym##Function>(dlsym(DTPerformanceLibrary, #_sym)); \
+    if (!_sym) {                                                              \
+      dlclose(DTPerformanceLibrary);                                          \
+      DTPerformanceLibrary = nullptr;                                         \
+      return false;                                                           \
+    }
 
   DTPERFORMANCE_SYMBOLS
 
-#undef SYMBOL
+#  undef SYMBOL
 
   dlclose(DTPerformanceLibrary);
 
@@ -130,13 +131,13 @@ bool Error(CFErrorRef error) {
     CFRelease(gSession);
     gSession = nullptr;
   }
-#ifdef DEBUG
+#  ifdef DEBUG
   AutoReleased<CFDataRef> data = CFStringCreateExternalRepresentation(
       nullptr, CFErrorCopyDescription(error), kCFStringEncodingUTF8, '?');
   if (data != nullptr) {
     printf("%.*s\n\n", (int)CFDataGetLength(data), CFDataGetBytePtr(data));
   }
-#endif
+#  endif
   return false;
 }
 

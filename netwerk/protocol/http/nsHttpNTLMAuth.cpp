@@ -21,9 +21,9 @@
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIURI.h"
 #ifdef XP_WIN
-#include "nsIChannel.h"
-#include "nsIX509Cert.h"
-#include "nsITransportSecurityInfo.h"
+#  include "nsIChannel.h"
+#  include "nsIX509Cert.h"
+#  include "nsITransportSecurityInfo.h"
 #endif
 #include "mozilla/Attributes.h"
 #include "mozilla/Base64.h"

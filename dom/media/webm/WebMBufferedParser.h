@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(WebMBufferedParser_h_)
-#define WebMBufferedParser_h_
+#  define WebMBufferedParser_h_
 
-#include "nsISupportsImpl.h"
-#include "nsTArray.h"
-#include "mozilla/ReentrantMonitor.h"
-#include "MediaResource.h"
+#  include "nsISupportsImpl.h"
+#  include "nsTArray.h"
+#  include "mozilla/ReentrantMonitor.h"
+#  include "MediaResource.h"
 
 namespace mozilla {
 

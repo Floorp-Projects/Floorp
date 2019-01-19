@@ -5,15 +5,15 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #ifdef XP_WIN
-#define NS_WINIEHISTORYENUMERATOR_CID                \
-  {                                                  \
-    0x93480624, 0x806e, 0x4756, {                    \
-      0xb7, 0xcb, 0x0f, 0xb7, 0xdd, 0x74, 0x6a, 0x8f \
-    }                                                \
-  }
+#  define NS_WINIEHISTORYENUMERATOR_CID                \
+    {                                                  \
+      0x93480624, 0x806e, 0x4756, {                    \
+        0xb7, 0xcb, 0x0f, 0xb7, 0xdd, 0x74, 0x6a, 0x8f \
+      }                                                \
+    }
 
-#define NS_IEHISTORYENUMERATOR_CONTRACTID \
-  "@mozilla.org/profile/migrator/iehistoryenumerator;1"
+#  define NS_IEHISTORYENUMERATOR_CONTRACTID \
+    "@mozilla.org/profile/migrator/iehistoryenumerator;1"
 #endif
 
 #define NS_SHELLSERVICE_CID                         \
@@ -57,12 +57,12 @@
   }
 
 #if defined(MOZ_WIDGET_COCOA)
-#define NS_MACATTRIBUTIONSERVICE_CONTRACTID "@mozilla.org/mac-attribution;1"
+#  define NS_MACATTRIBUTIONSERVICE_CONTRACTID "@mozilla.org/mac-attribution;1"
 
-#define NS_MACATTRIBUTIONSERVICE_CID                 \
-  {                                                  \
-    0x6FC66A78, 0x6CBC, 0x4B3F, {                    \
-      0xB7, 0xBA, 0x37, 0x92, 0x89, 0xB2, 0x92, 0x76 \
-    }                                                \
-  }
+#  define NS_MACATTRIBUTIONSERVICE_CID                 \
+    {                                                  \
+      0x6FC66A78, 0x6CBC, 0x4B3F, {                    \
+        0xB7, 0xBA, 0x37, 0x92, 0x89, 0xB2, 0x92, 0x76 \
+      }                                                \
+    }
 #endif

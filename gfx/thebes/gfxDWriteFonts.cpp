@@ -40,10 +40,10 @@ static inline cairo_antialias_t GetCairoAntialiasOption(
 // based on private functions in cairo-win32-font.c
 
 #ifndef SPI_GETFONTSMOOTHINGTYPE
-#define SPI_GETFONTSMOOTHINGTYPE 0x200a
+#  define SPI_GETFONTSMOOTHINGTYPE 0x200a
 #endif
 #ifndef FE_FONTSMOOTHINGCLEARTYPE
-#define FE_FONTSMOOTHINGCLEARTYPE 2
+#  define FE_FONTSMOOTHINGCLEARTYPE 2
 #endif
 
 // Cleartype can be dynamically enabled/disabled, so we have to allow for

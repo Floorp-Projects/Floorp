@@ -16,7 +16,7 @@
 // from /proc/stat in order to get global CPU values. We would prefer to not
 // eat that cost for this.
 #if defined(NIGHTLY_BUILD) && (defined(XP_WIN) || defined(XP_MACOSX))
-#define CPU_USAGE_WATCHER_ACTIVE
+#  define CPU_USAGE_WATCHER_ACTIVE
 #endif
 
 namespace mozilla {

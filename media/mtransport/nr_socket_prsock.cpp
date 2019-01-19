@@ -119,46 +119,46 @@ nrappkit copyright:
 #include "nsNetUtil.h"
 
 #ifdef XP_WIN
-#include "mozilla/WindowsVersion.h"
+#  include "mozilla/WindowsVersion.h"
 #endif
 
 #if defined(MOZILLA_INTERNAL_API)
 // csi_platform.h deep in nrappkit defines LOG_INFO and LOG_WARNING
-#ifdef LOG_INFO
-#define LOG_TEMP_INFO LOG_INFO
-#undef LOG_INFO
-#endif
-#ifdef LOG_WARNING
-#define LOG_TEMP_WARNING LOG_WARNING
-#undef LOG_WARNING
-#endif
-#if defined(LOG_DEBUG)
-#define LOG_TEMP_DEBUG LOG_DEBUG
-#undef LOG_DEBUG
-#endif
-#undef strlcpy
+#  ifdef LOG_INFO
+#    define LOG_TEMP_INFO LOG_INFO
+#    undef LOG_INFO
+#  endif
+#  ifdef LOG_WARNING
+#    define LOG_TEMP_WARNING LOG_WARNING
+#    undef LOG_WARNING
+#  endif
+#  if defined(LOG_DEBUG)
+#    define LOG_TEMP_DEBUG LOG_DEBUG
+#    undef LOG_DEBUG
+#  endif
+#  undef strlcpy
 
-#include "mozilla/dom/network/TCPSocketChild.h"
-#include "mozilla/dom/network/UDPSocketChild.h"
-#include "nr_socket_proxy.h"
+#  include "mozilla/dom/network/TCPSocketChild.h"
+#  include "mozilla/dom/network/UDPSocketChild.h"
+#  include "nr_socket_proxy.h"
 
-#ifdef LOG_TEMP_INFO
-#define LOG_INFO LOG_TEMP_INFO
-#endif
-#ifdef LOG_TEMP_WARNING
-#define LOG_WARNING LOG_TEMP_WARNING
-#endif
+#  ifdef LOG_TEMP_INFO
+#    define LOG_INFO LOG_TEMP_INFO
+#  endif
+#  ifdef LOG_TEMP_WARNING
+#    define LOG_WARNING LOG_TEMP_WARNING
+#  endif
 
-#ifdef LOG_TEMP_DEBUG
-#define LOG_DEBUG LOG_TEMP_DEBUG
-#endif
-#ifdef XP_WIN
-#ifdef LOG_DEBUG
-#undef LOG_DEBUG
-#endif
+#  ifdef LOG_TEMP_DEBUG
+#    define LOG_DEBUG LOG_TEMP_DEBUG
+#  endif
+#  ifdef XP_WIN
+#    ifdef LOG_DEBUG
+#      undef LOG_DEBUG
+#    endif
 // cloned from csi_platform.h.  Win32 doesn't like how we hide symbols
-#define LOG_DEBUG 7
-#endif
+#    define LOG_DEBUG 7
+#  endif
 #endif
 
 extern "C" {

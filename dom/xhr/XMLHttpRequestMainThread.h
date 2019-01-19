@@ -53,7 +53,7 @@
 #ifdef Status
 /* Xlib headers insist on this for some reason... Nuke it because
    it'll override our member name */
-#undef Status
+#  undef Status
 #endif
 
 class nsIJARChannel;

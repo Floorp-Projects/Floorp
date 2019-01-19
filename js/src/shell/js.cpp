@@ -22,20 +22,20 @@
 
 #include <chrono>
 #ifdef JS_POSIX_NSPR
-#include <dlfcn.h>
+#  include <dlfcn.h>
 #endif
 #ifdef XP_WIN
-#include <direct.h>
-#include <process.h>
+#  include <direct.h>
+#  include <process.h>
 #endif
 #include <errno.h>
 #include <fcntl.h>
 #if defined(XP_WIN)
-#include <io.h> /* for isatty() */
+#  include <io.h> /* for isatty() */
 #endif
 #include <locale.h>
 #if defined(MALLOC_H)
-#include MALLOC_H /* for malloc_usable_size, malloc_size, _msize */
+#  include MALLOC_H /* for malloc_usable_size, malloc_size, _msize */
 #endif
 #include <math.h>
 #include <signal.h>
@@ -47,13 +47,13 @@
 #include <thread>
 #include <utility>
 #ifdef XP_UNIX
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include <unistd.h>
+#  include <sys/mman.h>
+#  include <sys/stat.h>
+#  include <sys/wait.h>
+#  include <unistd.h>
 #endif
 #ifdef XP_LINUX
-#include <sys/prctl.h>
+#  include <sys/prctl.h>
 #endif
 
 #include "jsapi.h"
@@ -61,8 +61,8 @@
 #include "jstypes.h"
 #include "jsutil.h"
 #ifndef JS_POSIX_NSPR
-#include "prerror.h"
-#include "prlink.h"
+#  include "prerror.h"
+#  include "prlink.h"
 #endif
 #include "shellmoduleloader.out.h"
 
@@ -73,7 +73,7 @@
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
 #if defined(JS_BUILD_BINAST)
-#include "frontend/BinASTParser.h"
+#  include "frontend/BinASTParser.h"
 #endif  // defined(JS_BUILD_BINAST)
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/Parser.h"
@@ -173,8 +173,8 @@ struct PRLibSpec {
 
 typedef void PRLibrary;
 
-#define PR_LD_NOW RTLD_NOW
-#define PR_LD_GLOBAL RTLD_GLOBAL
+#  define PR_LD_NOW RTLD_NOW
+#  define PR_LD_GLOBAL RTLD_GLOBAL
 
 static PRLibrary* PR_LoadLibraryWithFlags(PRLibSpec libSpec, int flags) {
   return dlopen(libSpec.value.pathname, flags);
@@ -222,23 +222,23 @@ static const double MAX_TIMEOUT_SECONDS = 1800.0;
 
 // Code to support GCOV code coverage measurements on standalone shell
 #ifdef MOZ_CODE_COVERAGE
-#if defined(__GNUC__) && !defined(__clang__)
+#  if defined(__GNUC__) && !defined(__clang__)
 extern "C" void __gcov_dump();
 extern "C" void __gcov_reset();
 
 void counters_dump(int) { __gcov_dump(); }
 
 void counters_reset(int) { __gcov_reset(); }
-#else
+#  else
 void counters_dump(int) { /* Do nothing */
 }
 
 void counters_reset(int) { /* Do nothing */
 }
-#endif
+#  endif
 
 static void InstallCoverageSignalHandlers() {
-#ifndef XP_WIN
+#  ifndef XP_WIN
   fprintf(stderr, "[CodeCoverage] Setting handlers for process %d.\n",
           getpid());
 
@@ -255,7 +255,7 @@ static void InstallCoverageSignalHandlers() {
   sigemptyset(&reset_sa.sa_mask);
   mozilla::DebugOnly<int> r2 = sigaction(SIGUSR2, &reset_sa, nullptr);
   MOZ_ASSERT(r2 == 0, "Failed to install GCOV SIGUSR2 handler");
-#endif
+#  endif
 }
 #endif
 
@@ -1461,9 +1461,9 @@ static MOZ_MUST_USE bool Process(JSContext* cx, const char* filename,
 }
 
 #ifdef XP_WIN
-#define GET_FD_FROM_FILE(a) int(_get_osfhandle(fileno(a)))
+#  define GET_FD_FROM_FILE(a) int(_get_osfhandle(fileno(a)))
 #else
-#define GET_FD_FROM_FILE(a) fileno(a)
+#  define GET_FD_FROM_FILE(a) fileno(a)
 #endif
 
 static bool CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
@@ -4970,10 +4970,10 @@ static bool ParseBinASTData(JSContext* cx, uint8_t* buf_data,
     return false;
   }
 
-#ifdef DEBUG
+#  ifdef DEBUG
   Fprinter out(stderr);
   DumpParseTree(parsed.unwrap(), out);
-#endif
+#  endif
 
   return true;
 }
@@ -6543,17 +6543,17 @@ static void SingleStepCallback(void* arg, jit::Simulator* sim, void* pc) {
 
   JS::ProfilingFrameIterator::RegisterState state;
   state.pc = pc;
-#if defined(JS_SIMULATOR_ARM)
+#  if defined(JS_SIMULATOR_ARM)
   state.sp = (void*)sim->get_register(jit::Simulator::sp);
   state.lr = (void*)sim->get_register(jit::Simulator::lr);
   state.fp = (void*)sim->get_register(jit::Simulator::fp);
-#elif defined(JS_SIMULATOR_MIPS64) || defined(JS_SIMULATOR_MIPS32)
+#  elif defined(JS_SIMULATOR_MIPS64) || defined(JS_SIMULATOR_MIPS32)
   state.sp = (void*)sim->getRegister(jit::Simulator::sp);
   state.lr = (void*)sim->getRegister(jit::Simulator::ra);
   state.fp = (void*)sim->getRegister(jit::Simulator::fp);
-#else
-#error "NYI: Single-step profiling support"
-#endif
+#  else
+#    error "NYI: Single-step profiling support"
+#  endif
 
   mozilla::DebugOnly<void*> lastStackAddress = nullptr;
   StackChars stack;
@@ -8099,7 +8099,7 @@ static bool SetARMHwCapFlags(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 #ifndef __AFL_HAVE_MANUAL_CONTROL
-#define __AFL_LOOP(x) true
+#  define __AFL_LOOP(x) true
 #endif
 
 static bool WasmLoop(JSContext* cx, unsigned argc, Value* vp) {
@@ -8920,21 +8920,21 @@ bool DefineConsole(JSContext* cx, HandleObject global) {
 }
 
 #ifdef MOZ_PROFILING
-#define PROFILING_FUNCTION_COUNT 5
-#ifdef MOZ_CALLGRIND
-#define CALLGRIND_FUNCTION_COUNT 3
+#  define PROFILING_FUNCTION_COUNT 5
+#  ifdef MOZ_CALLGRIND
+#    define CALLGRIND_FUNCTION_COUNT 3
+#  else
+#    define CALLGRIND_FUNCTION_COUNT 0
+#  endif
+#  ifdef MOZ_VTUNE
+#    define VTUNE_FUNCTION_COUNT 4
+#  else
+#    define VTUNE_FUNCTION_COUNT 0
+#  endif
+#  define EXTERNAL_FUNCTION_COUNT \
+    (PROFILING_FUNCTION_COUNT + CALLGRIND_FUNCTION_COUNT + VTUNE_FUNCTION_COUNT)
 #else
-#define CALLGRIND_FUNCTION_COUNT 0
-#endif
-#ifdef MOZ_VTUNE
-#define VTUNE_FUNCTION_COUNT 4
-#else
-#define VTUNE_FUNCTION_COUNT 0
-#endif
-#define EXTERNAL_FUNCTION_COUNT \
-  (PROFILING_FUNCTION_COUNT + CALLGRIND_FUNCTION_COUNT + VTUNE_FUNCTION_COUNT)
-#else
-#define EXTERNAL_FUNCTION_COUNT 0
+#  define EXTERNAL_FUNCTION_COUNT 0
 #endif
 
 #undef PROFILING_FUNCTION_COUNT
@@ -10193,14 +10193,14 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
 #ifdef ENABLE_WASM_REFTYPES
   enableWasmGc = op.getBoolOption("wasm-gc");
-#ifdef ENABLE_WASM_CRANELIFT
+#  ifdef ENABLE_WASM_CRANELIFT
   if (enableWasmGc && wasmForceCranelift) {
     fprintf(stderr,
             "Do not combine --wasm-gc and --wasm-force-cranelift, they are "
             "incompatible.\n");
   }
   enableWasmGc = enableWasmGc && !wasmForceCranelift;
-#endif
+#  endif
 #endif
   enableWasmVerbose = op.getBoolOption("wasm-verbose");
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");

@@ -19,10 +19,10 @@
 
 #ifdef __cplusplus
 
-#include "mozilla/Alignment.h"
-#include "mozilla/Array.h"
-#include "mozilla/EnumeratedArray.h"
-#include "mozilla/TypeTraits.h"
+#  include "mozilla/Alignment.h"
+#  include "mozilla/Array.h"
+#  include "mozilla/EnumeratedArray.h"
+#  include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 
@@ -175,10 +175,10 @@ char (&ArrayLengthHelper(T (&array)[N]))[N];
  * can't call ArrayLength() when it is not a C++11 constexpr function.
  */
 #ifdef __cplusplus
-#define MOZ_ARRAY_LENGTH(array) \
-  sizeof(mozilla::detail::ArrayLengthHelper(array))
+#  define MOZ_ARRAY_LENGTH(array) \
+    sizeof(mozilla::detail::ArrayLengthHelper(array))
 #else
-#define MOZ_ARRAY_LENGTH(array) (sizeof(array) / sizeof((array)[0]))
+#  define MOZ_ARRAY_LENGTH(array) (sizeof(array) / sizeof((array)[0]))
 #endif
 
 #endif /* mozilla_ArrayUtils_h */

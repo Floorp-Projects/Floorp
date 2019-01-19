@@ -4907,7 +4907,7 @@ class PDFFindBar {
 
     Promise.resolve(matchesCountMsg).then(msg => {
       this.findResultsCount.textContent = msg;
-      this.findResultsCount.classList[!total ? 'add' : 'remove']('hidden');
+      this.findResultsCount.classList.toggle('hidden', !total);
 
       this._adjustWidth();
     });
@@ -5991,10 +5991,19 @@ class PDFHistory {
     }
 
     if (shouldReplace) {
-      window.history.replaceState(newState, '', newUrl);
+      if (newUrl) {
+        window.history.replaceState(newState, '', newUrl);
+      } else {
+        window.history.replaceState(newState, '');
+      }
     } else {
       this._maxUid = this._uid;
-      window.history.pushState(newState, '', newUrl);
+
+      if (newUrl) {
+        window.history.pushState(newState, '', newUrl);
+      } else {
+        window.history.pushState(newState, '');
+      }
     }
   }
 

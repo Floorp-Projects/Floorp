@@ -57,8 +57,8 @@
 
 // Helper macro for the common case of a single class
 #define FRAME_STATE_GROUP(name_, class_) \
-  FRAME_STATE_GROUP_NAME(name_)          \
-  FRAME_STATE_GROUP_CLASS(name_, class_)
+FRAME_STATE_GROUP_NAME(name_)            \
+FRAME_STATE_GROUP_CLASS(name_, class_)
 
 // == Frame state bits that apply to all frames ===============================
 
@@ -542,7 +542,7 @@ FRAME_STATE_BIT(Block, 23, NS_BLOCK_FLOAT_MGR)
 
 // For setting the relevant bits on a block formatting context:
 #define NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS \
-  (NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT)
+(NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT)
 
 FRAME_STATE_BIT(Block, 24, NS_BLOCK_HAS_LINE_CURSOR)
 

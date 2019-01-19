@@ -9,57 +9,57 @@
 // running in the same process.
 
 #ifdef WIN32
-#include "util/Windows.h"
+#  include "util/Windows.h"
 #else
-#define __cdecl
-#include <stdarg.h>
-#include <string.h>
+#  define __cdecl
+#  include <stdarg.h>
+#  include <string.h>
 #endif
 
 #include "vprof.h"
 
 #ifndef MIN
-#define MIN(x, y) ((x) <= (y) ? x : y)
+#  define MIN(x, y) ((x) <= (y) ? x : y)
 #endif
 #ifndef MAX
-#define MAX(x, y) ((x) >= (y) ? x : y)
+#  define MAX(x, y) ((x) >= (y) ? x : y)
 #endif
 
 #ifndef MAXINT
-#define MAXINT int(unsigned(-1) >> 1)
+#  define MAXINT int(unsigned(-1) >> 1)
 #endif
 
 #ifndef MAXINT64
-#define MAXINT64 int64_t(uint64_t(-1) >> 1)
+#  define MAXINT64 int64_t(uint64_t(-1) >> 1)
 #endif
 
 #ifndef __STDC_WANT_SECURE_LIB__
-#define sprintf_s(b, size, fmt, ...) sprintf((b), (fmt), __VA_ARGS__)
+#  define sprintf_s(b, size, fmt, ...) sprintf((b), (fmt), __VA_ARGS__)
 #endif
 
 #if THREADED
-#define DO_LOCK(lock) \
-  Lock(lock);         \
-  {
-#define DO_UNLOCK(lock) \
-  }                     \
-  ;                     \
-  Unlock(lock)
+#  define DO_LOCK(lock) \
+    Lock(lock);         \
+    {
+#  define DO_UNLOCK(lock) \
+    }                     \
+    ;                     \
+    Unlock(lock)
 #else
-#define DO_LOCK(lock) \
-  {                   \
-    (void)(lock);
-#define DO_UNLOCK(lock) }
+#  define DO_LOCK(lock) \
+    {                   \
+      (void)(lock);
+#  define DO_UNLOCK(lock) }
 #endif
 
 #if THREAD_SAFE
-#define LOCK(lock) DO_LOCK(lock)
-#define UNLOCK(lock) DO_UNLOCK(lock)
+#  define LOCK(lock) DO_LOCK(lock)
+#  define UNLOCK(lock) DO_UNLOCK(lock)
 #else
-#define LOCK(lock) \
-  {                \
-    (void)(lock);
-#define UNLOCK(lock) }
+#  define LOCK(lock) \
+    {                \
+      (void)(lock);
+#  define UNLOCK(lock) }
 #endif
 
 static entry* entries = nullptr;
@@ -87,7 +87,7 @@ static void vprof_printf(const char* format, ...) {
   ::OutputDebugStringA(buf);
 }
 #else
-#define vprof_printf printf
+#  define vprof_printf printf
 #endif
 
 static inline entry* reverse(entry* s) {

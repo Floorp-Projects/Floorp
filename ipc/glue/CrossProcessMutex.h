@@ -11,9 +11,9 @@
 #include "mozilla/Mutex.h"
 
 #if !defined(OS_WIN) && !defined(OS_NETBSD) && !defined(OS_OPENBSD)
-#include <pthread.h>
-#include "SharedMemoryBasic.h"
-#include "mozilla/Atomics.h"
+#  include <pthread.h>
+#  include "SharedMemoryBasic.h"
+#  include "mozilla/Atomics.h"
 #endif
 
 namespace IPC {

@@ -27,9 +27,9 @@
 #include <shellapi.h>
 
 #ifndef __MINGW32__
-#pragma comment(lib, "shell32.lib")
-#pragma comment(lib, "oleaut32.lib")
-#pragma comment(lib, "wbemuuid.lib")
+#  pragma comment(lib, "shell32.lib")
+#  pragma comment(lib, "oleaut32.lib")
+#  pragma comment(lib, "wbemuuid.lib")
 #endif
 
 #include "usertoken.h"

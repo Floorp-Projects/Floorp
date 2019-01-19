@@ -48,13 +48,9 @@ static StaticRefPtr<VRGPUChild> sVRGPUChildSingleton;
   sVRGPUChildSingleton = nullptr;
 }
 
-void VRGPUChild::ActorDestroy(ActorDestroyReason aWhy) {
-  mClosed = true;
-}
+void VRGPUChild::ActorDestroy(ActorDestroyReason aWhy) { mClosed = true; }
 
-bool VRGPUChild::IsClosed() {
-  return mClosed;
-}
+bool VRGPUChild::IsClosed() { return mClosed; }
 
 }  // namespace gfx
 }  // namespace mozilla

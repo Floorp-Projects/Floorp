@@ -11,7 +11,7 @@
 #include "nsIIOService.h"
 #include "nsAutoPtr.h"
 #ifdef MOZ_ENABLE_DBUS
-#include "nsDBusHandlerApp.h"
+#  include "nsDBusHandlerApp.h"
 #endif
 
 nsresult nsMIMEInfoUnix::LoadUriInternal(nsIURI *aURI) {

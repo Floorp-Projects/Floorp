@@ -4,17 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(VorbisDecoder_h_)
-#define VorbisDecoder_h_
+#  define VorbisDecoder_h_
 
-#include "AudioConverter.h"
-#include "PlatformDecoderModule.h"
-#include "mozilla/Maybe.h"
+#  include "AudioConverter.h"
+#  include "PlatformDecoderModule.h"
+#  include "mozilla/Maybe.h"
 
-#ifdef MOZ_TREMOR
-#include "tremor/ivorbiscodec.h"
-#else
-#include "vorbis/codec.h"
-#endif
+#  ifdef MOZ_TREMOR
+#    include "tremor/ivorbiscodec.h"
+#  else
+#    include "vorbis/codec.h"
+#  endif
 
 namespace mozilla {
 

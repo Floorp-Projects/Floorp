@@ -28,10 +28,10 @@ using namespace mozilla;
 // used to provide the necessary differentiation between this file and that
 // file.
 #ifndef MUTEX
-#define MUTEX mozilla::Mutex
+#  define MUTEX mozilla::Mutex
 #endif
 #ifndef TESTNAME
-#define TESTNAME(name) XPCOM##name
+#  define TESTNAME(name) XPCOM##name
 #endif
 
 static PRThread* spawn(void (*run)(void*), void* arg) {

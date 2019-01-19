@@ -342,12 +342,12 @@ void MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate* aDelegate) {
 
 NS_IMPL_QUERY_INTERFACE(MessagePumpForNonMainUIThreads, nsIThreadObserver)
 
-#define CHECK_QUIT_STATE       \
-  {                            \
-    if (state_->should_quit) { \
-      break;                   \
-    }                          \
-  }
+#  define CHECK_QUIT_STATE       \
+    {                            \
+      if (state_->should_quit) { \
+        break;                   \
+      }                          \
+    }
 
 void MessagePumpForNonMainUIThreads::DoRunLoop() {
   MOZ_RELEASE_ASSERT(!NS_IsMainThread(),

@@ -22,7 +22,6 @@ class VRGPUParent final : public PVRGPUParent {
   bool IsClosed();
 
  protected:
-
   void Bind(Endpoint<PVRGPUParent>&& aEndpoint);
   virtual mozilla::ipc::IPCResult RecvStartVRService() override;
   virtual mozilla::ipc::IPCResult RecvStopVRService() override;

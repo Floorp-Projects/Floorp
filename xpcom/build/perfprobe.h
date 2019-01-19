@@ -13,7 +13,7 @@
 #define mozilla_perfprobe_h
 
 #if !defined(XP_WIN)
-#error "For the moment, perfprobe.h is defined only for Windows platforms"
+#  error "For the moment, perfprobe.h is defined only for Windows platforms"
 #endif
 
 #include "nsError.h"

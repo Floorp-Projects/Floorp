@@ -21,8 +21,8 @@
 
 /* Bug 341128 - w32api defines min/max which causes problems with <bitset> */
 #ifdef __MINGW32__
-#undef min
-#undef max
+#  undef min
+#  undef max
 #endif
 
 typedef struct hb_blob_t hb_blob_t;

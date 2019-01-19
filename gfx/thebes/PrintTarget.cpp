@@ -7,10 +7,10 @@
 
 #include "cairo.h"
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
-#include "cairo-quartz.h"
+#  include "cairo-quartz.h"
 #endif
 #ifdef CAIRO_HAS_WIN32_SURFACE
-#include "cairo-win32.h"
+#  include "cairo-win32.h"
 #endif
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/HelpersCairo.h"

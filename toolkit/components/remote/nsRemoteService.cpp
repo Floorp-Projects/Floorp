@@ -7,7 +7,7 @@
 
 #include "nsGTKRemoteService.h"
 #ifdef MOZ_ENABLE_DBUS
-#include "nsDBusRemoteService.h"
+#  include "nsDBusRemoteService.h"
 #endif
 #include "nsRemoteService.h"
 

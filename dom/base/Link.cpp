@@ -10,9 +10,9 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
 #if defined(MOZ_PLACES)
-#include "mozilla/places/History.h"
+#  include "mozilla/places/History.h"
 #else
-#include "mozilla/IHistory.h"
+#  include "mozilla/IHistory.h"
 #endif
 #include "nsIURL.h"
 #include "nsIURIMutator.h"

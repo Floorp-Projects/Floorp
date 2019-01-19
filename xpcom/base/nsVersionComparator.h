@@ -13,8 +13,8 @@
 #include <string.h>
 #include <assert.h>
 #if defined(XP_WIN) && !defined(UPDATER_NO_STRING_GLUE_STL)
-#include <wchar.h>
-#include "nsString.h"
+#  include <wchar.h>
+#  include "nsString.h"
 #endif
 
 /**

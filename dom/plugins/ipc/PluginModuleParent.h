@@ -25,7 +25,7 @@
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #ifdef XP_WIN
-#include "nsWindowsHelpers.h"
+#  include "nsWindowsHelpers.h"
 #endif
 
 class nsPluginTag;

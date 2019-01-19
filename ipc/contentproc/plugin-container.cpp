@@ -9,17 +9,17 @@
 #include "mozilla/Bootstrap.h"
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 // we want a wmain entry point
-#include "nsWindowsWMain.cpp"
+#  include "nsWindowsWMain.cpp"
 #else
 // FIXME/cjones testing
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-#include "mozilla/sandboxing/SandboxInitialization.h"
-#include "mozilla/sandboxing/sandboxLogging.h"
+#  include "mozilla/sandboxing/SandboxInitialization.h"
+#  include "mozilla/sandboxing/sandboxLogging.h"
 #endif
 
 int content_process_main(mozilla::Bootstrap* bootstrap, int argc,

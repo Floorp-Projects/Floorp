@@ -9,8 +9,8 @@
 // formal protocols
 #include "mozView.h"
 #ifdef ACCESSIBILITY
-#include "mozilla/a11y/Accessible.h"
-#include "mozAccessibleProtocol.h"
+#  include "mozilla/a11y/Accessible.h"
+#  include "mozAccessibleProtocol.h"
 #endif
 
 #include "nsISupports.h"

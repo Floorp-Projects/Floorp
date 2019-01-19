@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(AOMDecoder_h_)
-#define AOMDecoder_h_
+#  define AOMDecoder_h_
 
-#include "PlatformDecoderModule.h"
-#include "mozilla/Span.h"
+#  include "PlatformDecoderModule.h"
+#  include "mozilla/Span.h"
 
-#include <stdint.h>
-#include "aom/aom_decoder.h"
+#  include <stdint.h>
+#  include "aom/aom_decoder.h"
 
 namespace mozilla {
 

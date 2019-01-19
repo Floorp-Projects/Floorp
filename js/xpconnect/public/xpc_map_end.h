@@ -8,15 +8,15 @@
 // of the file doing the including.
 
 #ifndef XPC_MAP_CLASSNAME
-#error "Must #define XPC_MAP_CLASSNAME before #including xpc_map_end.h"
+#  error "Must #define XPC_MAP_CLASSNAME before #including xpc_map_end.h"
 #endif
 
 #ifndef XPC_MAP_QUOTED_CLASSNAME
-#error "Must #define XPC_MAP_QUOTED_CLASSNAME before #including xpc_map_end.h"
+#  error "Must #define XPC_MAP_QUOTED_CLASSNAME before #including xpc_map_end.h"
 #endif
 
 #ifndef XPC_MAP_FLAGS
-#error "Must #define XPC_MAP_FLAGS before #including xpc_map_end.h"
+#  error "Must #define XPC_MAP_FLAGS before #including xpc_map_end.h"
 #endif
 
 #include "js/Id.h"

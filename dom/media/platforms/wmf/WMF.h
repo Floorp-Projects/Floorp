@@ -26,16 +26,16 @@
 // compile in the presence of std::min and std::max and unified builds.
 // So undef them here.
 #ifdef min
-#undef min
+#  undef min
 #endif
 #ifdef max
-#undef max
+#  undef max
 #endif
 
 // Some SDK versions don't define the AAC decoder CLSID.
 #ifndef CLSID_CMSAACDecMFT
 extern "C" const CLSID CLSID_CMSAACDecMFT;
-#define WMF_MUST_DEFINE_AAC_MFT_CLSID
+#  define WMF_MUST_DEFINE_AAC_MFT_CLSID
 #endif
 
 namespace mozilla {

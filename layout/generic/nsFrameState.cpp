@@ -41,24 +41,25 @@ nsCString GetFrameState(nsIFrame* aFrame) {
     return result;
   }
 
-#define FRAME_STATE_GROUP_CLASS(name_, class_)                                 \
-  {                                                                            \
-    class_* frame = do_QueryFrame(aFrame);                                     \
-    if (frame && (groups.IsEmpty() || strcmp(groups.LastElement(), #name_))) { \
-      groups.AppendElement(#name_);                                            \
-    }                                                                          \
-  }
-#define FRAME_STATE_BIT(group_, value_, name_)                            \
-  if ((state & NS_FRAME_STATE_BIT(value_)) && groups.Contains(#group_)) { \
-    if (!result.IsEmpty()) {                                              \
-      result.InsertLiteral(" | ", 0);                                     \
-    }                                                                     \
-    result.InsertLiteral(#name_, 0);                                      \
-    state = state & ~NS_FRAME_STATE_BIT(value_);                          \
-  }
-#include "nsFrameStateBits.h"
-#undef FRAME_STATE_GROUP_CLASS
-#undef FRAME_STATE_BIT
+#  define FRAME_STATE_GROUP_CLASS(name_, class_)                        \
+    {                                                                   \
+      class_* frame = do_QueryFrame(aFrame);                            \
+      if (frame &&                                                      \
+          (groups.IsEmpty() || strcmp(groups.LastElement(), #name_))) { \
+        groups.AppendElement(#name_);                                   \
+      }                                                                 \
+    }
+#  define FRAME_STATE_BIT(group_, value_, name_)                            \
+    if ((state & NS_FRAME_STATE_BIT(value_)) && groups.Contains(#group_)) { \
+      if (!result.IsEmpty()) {                                              \
+        result.InsertLiteral(" | ", 0);                                     \
+      }                                                                     \
+      result.InsertLiteral(#name_, 0);                                      \
+      state = state & ~NS_FRAME_STATE_BIT(value_);                          \
+    }
+#  include "nsFrameStateBits.h"
+#  undef FRAME_STATE_GROUP_CLASS
+#  undef FRAME_STATE_BIT
 
   if (state) {
     result.AppendPrintf(" | 0x%0" PRIx64, static_cast<uint64_t>(state));
@@ -72,9 +73,9 @@ void PrintFrameState(nsIFrame* aFrame) {
 }
 
 enum class FrameStateGroupId {
-#define FRAME_STATE_GROUP_NAME(name_) name_,
-#include "nsFrameStateBits.h"
-#undef FRAME_STATE_GROUP_NAME
+#  define FRAME_STATE_GROUP_NAME(name_) name_,
+#  include "nsFrameStateBits.h"
+#  undef FRAME_STATE_GROUP_NAME
 
   LENGTH
 };
@@ -86,17 +87,17 @@ void DebugVerifyFrameStateBits() {
   nsFrameState bitsUsedPerGroup[size_t(FrameStateGroupId::LENGTH)] = {
       nsFrameState(0)};
 
-#define FRAME_STATE_BIT(group_, value_, name_)                           \
-  {                                                                      \
-    auto bit = NS_FRAME_STATE_BIT(value_);                               \
-    size_t group = size_t(FrameStateGroupId::group_);                    \
-    MOZ_ASSERT(!(bitsUsedPerGroup[group] & bit), #name_                  \
-               " must not use a bit already declared within its group"); \
-    bitsUsedPerGroup[group] |= bit;                                      \
-  }
+#  define FRAME_STATE_BIT(group_, value_, name_)                           \
+    {                                                                      \
+      auto bit = NS_FRAME_STATE_BIT(value_);                               \
+      size_t group = size_t(FrameStateGroupId::group_);                    \
+      MOZ_ASSERT(!(bitsUsedPerGroup[group] & bit), #name_                  \
+                 " must not use a bit already declared within its group"); \
+      bitsUsedPerGroup[group] |= bit;                                      \
+    }
 
-#include "nsFrameStateBits.h"
-#undef FRAME_STATE_BIT
+#  include "nsFrameStateBits.h"
+#  undef FRAME_STATE_BIT
 
   // FIXME: Can we somehow check across the groups as well???  In other
   // words, find the pairs of groups that could be used on the same

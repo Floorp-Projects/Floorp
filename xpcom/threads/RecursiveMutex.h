@@ -13,7 +13,7 @@
 #include "mozilla/GuardObjects.h"
 
 #ifndef XP_WIN
-#include <pthread.h>
+#  include <pthread.h>
 #endif
 
 namespace mozilla {

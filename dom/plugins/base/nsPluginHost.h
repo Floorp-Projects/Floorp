@@ -30,8 +30,8 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 
 #ifdef XP_WIN
-#include <minwindef.h>
-#include "nsIWindowsRegKey.h"
+#  include <minwindef.h>
+#  include "nsIWindowsRegKey.h"
 #endif
 
 namespace mozilla {

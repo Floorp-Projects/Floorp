@@ -43,17 +43,17 @@
 #include "TaskbarPreview.h"
 // Toast notification support
 #ifndef __MINGW32__
-#include "ToastNotification.h"
-#include "nsToolkitCompsCID.h"
+#  include "ToastNotification.h"
+#  include "nsToolkitCompsCID.h"
 #endif
 
 #include "WindowsUIUtils.h"
 
 #ifdef NS_PRINTING
-#include "nsDeviceContextSpecWin.h"
-#include "nsPrintDialogWin.h"
-#include "nsPrintSettingsServiceWin.h"
-#include "nsPrintSession.h"
+#  include "nsDeviceContextSpecWin.h"
+#  include "nsPrintDialogWin.h"
+#  include "nsPrintSettingsServiceWin.h"
+#  include "nsPrintSession.h"
 #endif
 
 using namespace mozilla;

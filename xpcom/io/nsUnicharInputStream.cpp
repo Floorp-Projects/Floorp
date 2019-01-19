@@ -16,9 +16,9 @@
 #include "mozilla/Attributes.h"
 #include <fcntl.h>
 #if defined(XP_WIN)
-#include <io.h>
+#  include <io.h>
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #define STRING_BUFFER_SIZE 8192

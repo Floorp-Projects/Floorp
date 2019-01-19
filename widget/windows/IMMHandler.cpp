@@ -20,7 +20,7 @@
 #include "mozilla/WindowsVersion.h"
 
 #ifndef IME_PROP_ACCEPT_WIDE_VKEY
-#define IME_PROP_ACCEPT_WIDE_VKEY 0x20
+#  define IME_PROP_ACCEPT_WIDE_VKEY 0x20
 #endif
 
 //-------------------------------------------------------------------------

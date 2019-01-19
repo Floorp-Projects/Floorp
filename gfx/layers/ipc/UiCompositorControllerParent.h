@@ -8,7 +8,7 @@
 
 #include "mozilla/layers/PUiCompositorControllerParent.h"
 #if defined(MOZ_WIDGET_ANDROID)
-#include "mozilla/layers/AndroidDynamicToolbarAnimator.h"
+#  include "mozilla/layers/AndroidDynamicToolbarAnimator.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/RefPtr.h"

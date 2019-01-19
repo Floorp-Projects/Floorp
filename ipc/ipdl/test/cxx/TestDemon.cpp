@@ -7,11 +7,11 @@
 
 #include "IPDLUnitTests.h"  // fail etc.
 #if defined(OS_POSIX)
-#include <sys/time.h>
-#include <unistd.h>
+#  include <sys/time.h>
+#  include <unistd.h>
 #else
-#include <time.h>
-#include <windows.h>
+#  include <time.h>
+#  include <windows.h>
 #endif
 
 namespace mozilla {
@@ -72,11 +72,11 @@ void TestDemonParent::ArtificialSleep() {
   if (Choose(2) == 0) {
     // Sleep for anywhere from 0 to 100 milliseconds.
     unsigned micros = Choose(100) * 1000;
-#ifdef OS_POSIX
+#  ifdef OS_POSIX
     usleep(micros);
-#else
+#  else
     Sleep(micros / 1000);
-#endif
+#  endif
   }
 }
 #endif
@@ -235,11 +235,11 @@ void TestDemonChild::ArtificialSleep() {
   if (Choose(2) == 0) {
     // Sleep for anywhere from 0 to 100 milliseconds.
     unsigned micros = Choose(100) * 1000;
-#ifdef OS_POSIX
+#  ifdef OS_POSIX
     usleep(micros);
-#else
+#  else
     Sleep(micros / 1000);
-#endif
+#  endif
   }
 }
 #endif

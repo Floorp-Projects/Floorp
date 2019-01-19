@@ -17,7 +17,7 @@
 #include "WorkerRunnable.h"
 
 #ifdef DEBUG
-#include "nsThreadManager.h"
+#  include "nsThreadManager.h"
 #endif
 
 namespace mozilla {

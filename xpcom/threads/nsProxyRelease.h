@@ -21,7 +21,7 @@
 #include "mozilla/Unused.h"
 
 #ifdef XPCOM_GLUE_AVOID_NSPR
-#error NS_ProxyRelease implementation depends on NSPR.
+#  error NS_ProxyRelease implementation depends on NSPR.
 #endif
 
 namespace detail {

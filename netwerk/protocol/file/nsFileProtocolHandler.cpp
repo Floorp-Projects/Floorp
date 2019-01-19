@@ -18,18 +18,18 @@
 // URL file handling, copied and modified from
 // xpfe/components/bookmarks/src/nsBookmarksService.cpp
 #ifdef XP_WIN
-#include <shlobj.h>
-#include <intshcut.h>
-#include "nsIFileURL.h"
-#ifdef CompareString
-#undef CompareString
-#endif
+#  include <shlobj.h>
+#  include <intshcut.h>
+#  include "nsIFileURL.h"
+#  ifdef CompareString
+#    undef CompareString
+#  endif
 #endif
 
 // URL file handling for freedesktop.org
 #ifdef XP_UNIX
-#include "nsINIParser.h"
-#define DESKTOP_ENTRY_SECTION "Desktop Entry"
+#  include "nsINIParser.h"
+#  define DESKTOP_ENTRY_SECTION "Desktop Entry"
 #endif
 
 //-----------------------------------------------------------------------------

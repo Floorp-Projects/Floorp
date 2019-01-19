@@ -9,10 +9,10 @@
 
 #ifdef MOZ_VTUNE
 
-#include "vtune/jitprofiling.h"
+#  include "vtune/jitprofiling.h"
 
-#include "jit/IonCode.h"
-#include "vm/JSScript.h"
+#  include "jit/IonCode.h"
+#  include "vm/JSScript.h"
 
 namespace js {
 namespace vtune {

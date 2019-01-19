@@ -9,14 +9,14 @@
 #include "gfxPrefs.h"
 
 #ifdef USE_SKIA
-#include "PathSkia.h"
-#include "skia/include/core/SkPaint.h"
+#  include "PathSkia.h"
+#  include "skia/include/core/SkPaint.h"
 #endif
 
 #ifdef USE_CAIRO
-#include "PathCairo.h"
-#include "DrawTargetCairo.h"
-#include "HelpersCairo.h"
+#  include "PathCairo.h"
+#  include "DrawTargetCairo.h"
+#  include "HelpersCairo.h"
 #endif
 
 #include <vector>
@@ -272,7 +272,7 @@ void ScaledFontBase::GetGlyphDesignMetrics(const uint16_t *aGlyphs,
             aGlyphMetrics[i].mXBearing += 1.0f;
           }
         }
-#if defined(MOZ2D_HAS_MOZ_CAIRO) && defined(CAIRO_HAS_DWRITE_FONT)
+#  if defined(MOZ2D_HAS_MOZ_CAIRO) && defined(CAIRO_HAS_DWRITE_FONT)
         else if (cairo_scaled_font_get_type(mScaledFont) ==
                  CAIRO_FONT_TYPE_DWRITE) {
           if (aGlyphMetrics[i].mWidth > 0 && aGlyphMetrics[i].mHeight > 0) {
@@ -280,7 +280,7 @@ void ScaledFontBase::GetGlyphDesignMetrics(const uint16_t *aGlyphs,
             aGlyphMetrics[i].mXBearing += 1.0f;
           }
         }
-#endif
+#  endif
       }
       cairo_font_options_destroy(options);
     }

@@ -20,7 +20,7 @@
 #include "mozilla/Variant.h"
 
 #ifdef MOZ_TASK_TRACER
-#include "TracedTaskCommon.h"
+#  include "TracedTaskCommon.h"
 #endif
 
 extern mozilla::LogModule* GetTimerLog();

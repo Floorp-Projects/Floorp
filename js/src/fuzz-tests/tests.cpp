@@ -14,7 +14,7 @@
 #include "vm/JSContext.h"
 
 #ifdef LIBFUZZER
-#include "FuzzerDefs.h"
+#  include "FuzzerDefs.h"
 #endif
 
 using namespace mozilla;

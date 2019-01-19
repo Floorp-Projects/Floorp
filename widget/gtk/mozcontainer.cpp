@@ -9,15 +9,15 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #ifdef MOZ_WAYLAND
-#include "nsWaylandDisplay.h"
-#include <wayland-egl.h>
+#  include "nsWaylandDisplay.h"
+#  include <wayland-egl.h>
 #endif
 #include <stdio.h>
 #include <dlfcn.h>
 
 #ifdef ACCESSIBILITY
-#include <atk/atk.h>
-#include "maiRedundantObjectFactory.h"
+#  include <atk/atk.h>
+#  include "maiRedundantObjectFactory.h"
 #endif
 
 #ifdef MOZ_WAYLAND

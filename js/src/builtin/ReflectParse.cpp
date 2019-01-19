@@ -22,7 +22,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"

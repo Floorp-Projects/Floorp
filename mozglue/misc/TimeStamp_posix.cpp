@@ -20,31 +20,31 @@
 
 #if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || \
     defined(__OpenBSD__)
-#include <sys/param.h>
-#include <sys/sysctl.h>
+#  include <sys/param.h>
+#  include <sys/sysctl.h>
 #endif
 
 #if defined(__DragonFly__) || defined(__FreeBSD__)
-#include <sys/user.h>
+#  include <sys/user.h>
 #endif
 
 #if defined(__NetBSD__)
-#undef KERN_PROC
-#define KERN_PROC KERN_PROC2
-#define KINFO_PROC struct kinfo_proc2
+#  undef KERN_PROC
+#  define KERN_PROC KERN_PROC2
+#  define KINFO_PROC struct kinfo_proc2
 #else
-#define KINFO_PROC struct kinfo_proc
+#  define KINFO_PROC struct kinfo_proc
 #endif
 
 #if defined(__DragonFly__)
-#define KP_START_SEC kp_start.tv_sec
-#define KP_START_USEC kp_start.tv_usec
+#  define KP_START_SEC kp_start.tv_sec
+#  define KP_START_USEC kp_start.tv_usec
 #elif defined(__FreeBSD__)
-#define KP_START_SEC ki_start.tv_sec
-#define KP_START_USEC ki_start.tv_usec
+#  define KP_START_SEC ki_start.tv_sec
+#  define KP_START_USEC ki_start.tv_usec
 #else
-#define KP_START_SEC p_ustart_sec
-#define KP_START_USEC p_ustart_usec
+#  define KP_START_SEC p_ustart_sec
+#  define KP_START_USEC p_ustart_usec
 #endif
 
 #include "mozilla/Sprintf.h"
@@ -300,10 +300,10 @@ uint64_t TimeStamp::ComputeProcessUptime() {
     KERN_PROC,
     KERN_PROC_PID,
     getpid(),
-#if defined(__NetBSD__) || defined(__OpenBSD__)
+#  if defined(__NetBSD__) || defined(__OpenBSD__)
     sizeof(KINFO_PROC),
     1,
-#endif
+#  endif
   };
   u_int mibLen = sizeof(mib) / sizeof(mib[0]);
 

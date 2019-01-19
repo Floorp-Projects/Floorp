@@ -23,15 +23,15 @@
 #include "prio.h"
 
 #ifdef XP_WIN
-#define NS_SLASH "\\"
-#include <fcntl.h>
-#include <io.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <windows.h>
+#  define NS_SLASH "\\"
+#  include <fcntl.h>
+#  include <io.h>
+#  include <stdio.h>
+#  include <stdlib.h>
+#  include <sys/stat.h>
+#  include <windows.h>
 #else
-#define NS_SLASH "/"
+#  define NS_SLASH "/"
 #endif
 
 #include "LateWriteChecks.h"

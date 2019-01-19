@@ -8,7 +8,7 @@
 #define mozilla_mscom_Module_h
 
 #if defined(MOZILLA_INTERNAL_API)
-#error This code is NOT for internal Gecko use!
+#  error This code is NOT for internal Gecko use!
 #endif  // defined(MOZILLA_INTERNAL_API)
 
 #include <objbase.h>

@@ -36,7 +36,7 @@ bool GMPProcessChild::Init(int aArgc, char* aArgv[]) {
   MOZ_ASSERT(values.size() >= 1, "not enough loose args");
   pluginFilename = nsDependentString(values[0].c_str());
 #else
-#error Not implemented
+#  error Not implemented
 #endif
 
   BackgroundHangMonitor::Startup();

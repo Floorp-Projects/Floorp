@@ -2982,7 +2982,7 @@ void CodeGenerator::visitModuleMetadata(LModuleMetadata* lir) {
   callVM(GetOrCreateModuleMetaObjectInfo, lir);
 }
 
-typedef JSObject* (*StartDynamicModuleImportFn)(JSContext*, HandleValue,
+typedef JSObject* (*StartDynamicModuleImportFn)(JSContext*, HandleObject,
                                                 HandleValue);
 static const VMFunction StartDynamicModuleImportInfo =
     FunctionInfo<StartDynamicModuleImportFn>(js::StartDynamicModuleImport,
@@ -2990,7 +2990,7 @@ static const VMFunction StartDynamicModuleImportInfo =
 
 void CodeGenerator::visitDynamicImport(LDynamicImport* lir) {
   pushArg(ToValue(lir, LDynamicImport::SpecifierIndex));
-  pushArg(ToValue(lir, LDynamicImport::ReferencingPrivateIndex));
+  pushArg(ImmGCPtr(lir->mir()->referencingScriptSource()));
   callVM(StartDynamicModuleImportInfo, lir);
 }
 
@@ -5875,10 +5875,10 @@ bool CodeGenerator::generateBody() {
                                     current->mir()->pc(), &columnNumber);
       }
     } else {
-#ifdef DEBUG
+#  ifdef DEBUG
       lineNumber = current->mir()->lineno();
       columnNumber = current->mir()->columnIndex();
-#endif
+#  endif
     }
     JitSpew(JitSpew_Codegen, "# block%zu %s:%zu:%u%s:", i,
             filename ? filename : "?", lineNumber, columnNumber,
@@ -5956,12 +5956,12 @@ bool CodeGenerator::generateBody() {
 
       switch (iter->op()) {
 #ifndef JS_CODEGEN_NONE
-#define LIROP(op)              \
-  case LNode::Opcode::op:      \
-    visit##op(iter->to##op()); \
-    break;
+#  define LIROP(op)              \
+    case LNode::Opcode::op:      \
+      visit##op(iter->to##op()); \
+      break;
         LIR_OPCODE_LIST(LIROP)
-#undef LIROP
+#  undef LIROP
 #endif
         case LNode::Opcode::Invalid:
         default:
@@ -12417,10 +12417,6 @@ void CodeGenerator::emitIsCallableOrConstructor(Register object,
   Label notFunction, hasCOps, done;
   masm.loadObjClassUnsafe(object, output);
 
-  // Just skim proxies off. Their notion of isCallable()/isConstructor() is
-  // more complicated.
-  masm.branchTestClassIsProxy(true, output, failure);
-
   // An object is callable iff:
   //   is<JSFunction>() || (getClass()->cOps && getClass()->cOps->call).
   // An object is constructor iff:
@@ -12441,6 +12437,11 @@ void CodeGenerator::emitIsCallableOrConstructor(Register object,
   masm.jump(&done);
 
   masm.bind(&notFunction);
+
+  // Just skim proxies off. Their notion of isCallable()/isConstructor() is
+  // more complicated.
+  masm.branchTestClassIsProxy(true, output, failure);
+
   masm.branchPtr(Assembler::NonZero, Address(output, offsetof(js::Class, cOps)),
                  ImmPtr(nullptr), &hasCOps);
   masm.move32(Imm32(0), output);

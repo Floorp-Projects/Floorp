@@ -23,11 +23,11 @@ using namespace mozilla::ipc;
 #define DEFAULT_IMAGE_SIZE 16
 
 #if defined(MAX_PATH)
-#define SANE_FILE_NAME_LEN MAX_PATH
+#  define SANE_FILE_NAME_LEN MAX_PATH
 #elif defined(PATH_MAX)
-#define SANE_FILE_NAME_LEN PATH_MAX
+#  define SANE_FILE_NAME_LEN PATH_MAX
 #else
-#define SANE_FILE_NAME_LEN 1024
+#  define SANE_FILE_NAME_LEN 1024
 #endif
 
 // helper function for parsing out attributes like size, and contentType

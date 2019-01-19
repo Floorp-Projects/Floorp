@@ -40,11 +40,11 @@
 extern "C" {
 
 #if !defined(DEBUG) && (defined(__cplusplus) || defined(__gcc))
-#ifndef INLINE
-#define INLINE inline
-#endif
+#  ifndef INLINE
+#    define INLINE inline
+#  endif
 #else
-#define INLINE
+#  define INLINE
 #endif
 
 typedef int cmp_t(const void *, const void *, void *);

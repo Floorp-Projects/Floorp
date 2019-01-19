@@ -20,9 +20,9 @@
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
 #ifdef XP_MACOSX
-#include "mozilla/EventDispatcher.h"
-#include "mozilla/dom/Event.h"
-#include "nsFocusManager.h"
+#  include "mozilla/EventDispatcher.h"
+#  include "mozilla/dom/Event.h"
+#  include "nsFocusManager.h"
 #endif
 
 namespace mozilla {

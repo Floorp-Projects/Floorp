@@ -4,16 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(WebMDemuxer_h_)
-#define WebMDemuxer_h_
+#  define WebMDemuxer_h_
 
-#include "nsTArray.h"
-#include "MediaDataDemuxer.h"
-#include "MediaResource.h"
-#include "NesteggPacketHolder.h"
-#include "mozilla/Move.h"
+#  include "nsTArray.h"
+#  include "MediaDataDemuxer.h"
+#  include "MediaResource.h"
+#  include "NesteggPacketHolder.h"
+#  include "mozilla/Move.h"
 
-#include <deque>
-#include <stdint.h>
+#  include <deque>
+#  include <stdint.h>
 
 typedef struct nestegg nestegg;
 

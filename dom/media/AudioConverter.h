@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(AudioConverter_h)
-#define AudioConverter_h
+#  define AudioConverter_h
 
-#include "MediaInfo.h"
+#  include "MediaInfo.h"
 
 // Forward declaration
 typedef struct SpeexResamplerState_ SpeexResamplerState;

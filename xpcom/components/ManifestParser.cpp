@@ -14,16 +14,16 @@
 
 #include "prio.h"
 #if defined(XP_WIN)
-#include <windows.h>
+#  include <windows.h>
 #elif defined(MOZ_WIDGET_COCOA)
-#include <CoreServices/CoreServices.h>
-#include "nsCocoaFeatures.h"
+#  include <CoreServices/CoreServices.h>
+#  include "nsCocoaFeatures.h"
 #elif defined(MOZ_WIDGET_GTK)
-#include <gtk/gtk.h>
+#  include <gtk/gtk.h>
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
+#  include "AndroidBridge.h"
 #endif
 
 #include "mozilla/Services.h"
@@ -453,14 +453,14 @@ void ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
 
   nsAutoString osVersion;
 #if defined(XP_WIN)
-#pragma warning(push)
-#pragma warning(disable : 4996)  // VC12+ deprecates GetVersionEx
+#  pragma warning(push)
+#  pragma warning(disable : 4996)  // VC12+ deprecates GetVersionEx
   OSVERSIONINFO info = {sizeof(OSVERSIONINFO)};
   if (GetVersionEx(&info)) {
     nsTextFormatter::ssprintf(osVersion, u"%ld.%ld", info.dwMajorVersion,
                               info.dwMinorVersion);
   }
-#pragma warning(pop)
+#  pragma warning(pop)
 #elif defined(MOZ_WIDGET_COCOA)
   SInt32 majorVersion = nsCocoaFeatures::OSXVersionMajor();
   SInt32 minorVersion = nsCocoaFeatures::OSXVersionMinor();

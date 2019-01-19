@@ -38,7 +38,7 @@
 #include "GeckoProfiler.h"  // for GeckoProfiler
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"  // for LayerTranslationMarkerPayload
+#  include "ProfilerMarkerPayload.h"  // for LayerTranslationMarkerPayload
 #endif
 
 #define CULLING_LOG(...)

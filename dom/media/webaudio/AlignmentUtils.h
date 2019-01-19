@@ -10,18 +10,18 @@
 #define IS_ALIGNED16(ptr) ((((uintptr_t)ptr + 15) & ~0x0F) == (uintptr_t)ptr)
 
 #ifdef DEBUG
-#define ASSERT_ALIGNED16(ptr)   \
-  MOZ_ASSERT(IS_ALIGNED16(ptr), \
-             #ptr " has to be aligned to a 16 byte boundary");
+#  define ASSERT_ALIGNED16(ptr)   \
+    MOZ_ASSERT(IS_ALIGNED16(ptr), \
+               #ptr " has to be aligned to a 16 byte boundary");
 #else
-#define ASSERT_ALIGNED16(ptr)
+#  define ASSERT_ALIGNED16(ptr)
 #endif
 
 #ifdef DEBUG
-#define ASSERT_MULTIPLE16(v) \
-  MOZ_ASSERT(v % 16 == 0, #v " has to be a a multiple of 16");
+#  define ASSERT_MULTIPLE16(v) \
+    MOZ_ASSERT(v % 16 == 0, #v " has to be a a multiple of 16");
 #else
-#define ASSERT_MULTIPLE16(v)
+#  define ASSERT_MULTIPLE16(v)
 #endif
 
 #define ALIGNED16(ptr) (float*)(((uintptr_t)ptr + 15) & ~0x0F);

@@ -43,22 +43,22 @@
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 
 #ifdef XP_WIN
-#include "mozilla/plugins/PluginSurfaceParent.h"
-#include "mozilla/widget/AudioSession.h"
-#include "PluginHangUIParent.h"
-#include "FunctionBrokerParent.h"
-#include "PluginUtilsWin.h"
+#  include "mozilla/plugins/PluginSurfaceParent.h"
+#  include "mozilla/widget/AudioSession.h"
+#  include "PluginHangUIParent.h"
+#  include "FunctionBrokerParent.h"
+#  include "PluginUtilsWin.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
-#include <glib.h>
+#  include <glib.h>
 #elif XP_MACOSX
-#include "PluginInterposeOSX.h"
-#include "PluginUtilsOSX.h"
+#  include "PluginInterposeOSX.h"
+#  include "PluginUtilsOSX.h"
 #endif
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerParent.h"
+#  include "ProfilerParent.h"
 #endif
 
 using base::KillProcess;
@@ -82,9 +82,9 @@ static const char kLaunchTimeoutPref[] =
 static const char kHangUITimeoutPref[] = "dom.ipc.plugins.hangUITimeoutSecs";
 static const char kHangUIMinDisplayPref[] =
     "dom.ipc.plugins.hangUIMinDisplaySecs";
-#define CHILD_TIMEOUT_PREF kHangUITimeoutPref
+#  define CHILD_TIMEOUT_PREF kHangUITimeoutPref
 #else
-#define CHILD_TIMEOUT_PREF kChildTimeoutPref
+#  define CHILD_TIMEOUT_PREF kChildTimeoutPref
 #endif
 
 bool mozilla::plugins::SetupBridge(
@@ -687,7 +687,7 @@ void PluginModuleChromeParent::WriteExtraDataForMinidump() {
       mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginCpuUsage,
                                     cpuUsageStr);
 
-#ifdef MOZ_CRASHREPORTER_INJECTOR
+#  ifdef MOZ_CRASHREPORTER_INJECTOR
       for (uint32_t i = 1; i < mPluginCpuUsageOnHang.Length(); ++i) {
         nsCString tempStr;
         tempStr.AppendFloat(std::ceil(mPluginCpuUsageOnHang[i] * 100) / 100);
@@ -698,7 +698,7 @@ void PluginModuleChromeParent::WriteExtraDataForMinidump() {
                      : CrashReporter::Annotation::CpuUsageFlashProcess2;
         mCrashReporter->AddAnnotation(annotation, tempStr);
       }
-#endif
+#  endif
     }
 #endif
   }
@@ -1115,7 +1115,7 @@ void PluginModuleChromeParent::TerminateChildProcess(
     processHandles.AppendElement(geckoChildProcess);
   }
 
-#ifdef MOZ_CRASHREPORTER_INJECTOR
+#  ifdef MOZ_CRASHREPORTER_INJECTOR
   mozilla::ipc::ScopedProcessHandle flashBrokerProcess;
   if (mFlashProcess1 &&
       base::OpenProcessHandle(mFlashProcess1, &flashBrokerProcess.rwget())) {
@@ -1126,7 +1126,7 @@ void PluginModuleChromeParent::TerminateChildProcess(
       base::OpenProcessHandle(mFlashProcess2, &flashSandboxProcess.rwget())) {
     processHandles.AppendElement(flashSandboxProcess);
   }
-#endif
+#  endif
 
   if (!GetProcessCpuUsage(processHandles, mPluginCpuUsageOnHang)) {
     mPluginCpuUsageOnHang.Clear();
@@ -1831,7 +1831,7 @@ nsresult PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs,
   return NS_OK;
 }
 
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#  if defined(XP_WIN) || defined(XP_MACOSX)
 
 nsresult PluginModuleContentParent::NP_Initialize(NPNetscapeFuncs* bFuncs,
                                                   NPError* error) {
@@ -1839,7 +1839,7 @@ nsresult PluginModuleContentParent::NP_Initialize(NPNetscapeFuncs* bFuncs,
   return PluginModuleParent::NP_Initialize(bFuncs, error);
 }
 
-#endif
+#  endif
 
 nsresult PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs,
                                                  NPError* error) {
@@ -1857,7 +1857,7 @@ nsresult PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs,
   bool ok = true;
   if (*error == NPERR_NO_ERROR) {
     // Initialization steps for (e10s && !asyncInit) || !e10s
-#if defined XP_WIN
+#  if defined XP_WIN
     // Send the info needed to join the browser process's audio session to
     // the plugin process.
     nsID id;
@@ -1868,11 +1868,11 @@ nsresult PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs,
             mozilla::widget::GetAudioSessionData(id, sessionName, iconPath))) {
       Unused << SendSetAudioSessionData(id, sessionName, iconPath);
     }
-#endif
+#  endif
 
-#ifdef MOZ_CRASHREPORTER_INJECTOR
+#  ifdef MOZ_CRASHREPORTER_INJECTOR
     InitializeInjector();
-#endif
+#  endif
   }
 
   if (!ok) {
@@ -1962,13 +1962,13 @@ nsresult PluginModuleParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs,
 
 nsresult PluginModuleChromeParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs,
                                                      NPError* error) {
-#if !defined(XP_MACOSX)
+#  if !defined(XP_MACOSX)
   if (!mSubprocess->IsConnected()) {
     mNPPIface = pFuncs;
     *error = NPERR_NO_ERROR;
     return NS_OK;
   }
-#endif
+#  endif
 
   // We need to have the plugin process update its function table here by
   // actually calling NP_GetEntryPoints. The parent's function table will
@@ -2087,15 +2087,15 @@ nsresult PluginModuleParent::NPP_NewInternal(
         return NS_ERROR_FAILURE;
       }
     }
-#ifdef _WIN64
+#  ifdef _WIN64
     // For 64-bit builds force windowless if the flash library doesn't support
     // async rendering regardless of sandbox level.
     if (!supportsAsyncRender) {
-#else
+#  else
     // For 32-bit builds force windowless if the flash library doesn't support
     // async rendering and the sandbox level is 2 or greater.
     if (!supportsAsyncRender && mSandboxLevel >= 2) {
-#endif
+#  endif
       ForceWindowless(names, values);
     }
 #elif defined(MOZ_WIDGET_GTK)
@@ -2433,7 +2433,7 @@ PluginModuleParent::AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
 
 // We only add the crash reporter to subprocess which have the filename
 // FlashPlayerPlugin*
-#define FLASH_PROCESS_PREFIX "FLASHPLAYERPLUGIN"
+#  define FLASH_PROCESS_PREFIX "FLASHPLAYERPLUGIN"
 
 static DWORD GetFlashChildOfPID(DWORD pid, HANDLE snapshot) {
   PROCESSENTRY32 entry = {sizeof(entry)};
@@ -2451,7 +2451,7 @@ static DWORD GetFlashChildOfPID(DWORD pid, HANDLE snapshot) {
 }
 
 // We only look for child processes of the Flash plugin, NPSWF*
-#define FLASH_PLUGIN_PREFIX "NPSWF"
+#  define FLASH_PLUGIN_PREFIX "NPSWF"
 
 void PluginModuleChromeParent::InitializeInjector() {
   if (!Preferences::GetBool(

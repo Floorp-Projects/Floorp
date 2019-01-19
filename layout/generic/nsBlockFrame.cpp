@@ -124,7 +124,7 @@ static bool BlockHasAnyFloats(nsIFrame* aFrame) {
 }
 
 #ifdef DEBUG
-#include "nsBlockDebugFlags.h"
+#  include "nsBlockDebugFlags.h"
 
 bool nsBlockFrame::gLamePaintMetrics;
 bool nsBlockFrame::gLameReflowMetrics;
@@ -155,7 +155,7 @@ static const BlockDebugFlags gFlags[] = {
     {"lame-reflow-metrics", &nsBlockFrame::gLameReflowMetrics},
     {"disable-resize-opt", &nsBlockFrame::gDisableResizeOpt},
 };
-#define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
+#  define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
 
 static void ShowDebugFlags() {
   printf("Here are the available GECKO_BLOCK_DEBUG_FLAGS:\n");
@@ -7008,7 +7008,7 @@ void nsBlockFrame::CheckFloats(BlockReflowInput& aState) {
     NS_WARNING(
         "nsBlockFrame::CheckFloats: Explicit float list is out of sync with "
         "float cache");
-#if defined(DEBUG_roc)
+#  if defined(DEBUG_roc)
     nsFrame::RootFrameList(PresContext(), stdout, 0);
     for (i = 0; i < lineFloats.Length(); ++i) {
       printf("Line float: %p\n", lineFloats.ElementAt(i));
@@ -7016,7 +7016,7 @@ void nsBlockFrame::CheckFloats(BlockReflowInput& aState) {
     for (i = 0; i < storedFloats.Length(); ++i) {
       printf("Stored float: %p\n", storedFloats.ElementAt(i));
     }
-#endif
+#  endif
   }
 #endif
 

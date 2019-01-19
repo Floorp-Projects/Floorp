@@ -14,10 +14,10 @@ using namespace mozilla;
 using dom::Promise;
 
 #if defined(XP_WIN)
-#include <combaseapi.h>
-#include <ntsecapi.h>
-#include <wincred.h>
-#include <windows.h>
+#  include <combaseapi.h>
+#  include <ntsecapi.h>
+#  include <wincred.h>
+#  include <windows.h>
 struct HandleCloser {
   typedef HANDLE pointer;
   void operator()(HANDLE h) {

@@ -27,7 +27,7 @@
 #include "States.h"
 
 #ifdef A11Y_LOG
-#include "Logging.h"
+#  include "Logging.h"
 #endif
 
 #include "nsIMutableArray.h"

@@ -20,7 +20,7 @@
 #include "mozilla/net/WebSocketFrame.h"
 #include "mozilla/TimeStamp.h"
 #ifdef XP_WIN
-#include "mozilla/TimeStamp_windows.h"
+#  include "mozilla/TimeStamp_windows.h"
 #endif
 #include "mozilla/TypeTraits.h"
 #include "mozilla/IntegerTypeTraits.h"
@@ -41,7 +41,7 @@
 #include "nsCSSPropertyID.h"
 
 #ifdef _MSC_VER
-#pragma warning(disable : 4800)
+#  pragma warning(disable : 4800)
 #endif
 
 #if !defined(OS_POSIX)

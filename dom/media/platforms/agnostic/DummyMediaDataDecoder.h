@@ -5,12 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(DummyMediaDataDecoder_h_)
-#define DummyMediaDataDecoder_h_
+#  define DummyMediaDataDecoder_h_
 
-#include "MediaInfo.h"
-#include "mozilla/UniquePtr.h"
-#include "PlatformDecoderModule.h"
-#include "ReorderQueue.h"
+#  include "MediaInfo.h"
+#  include "mozilla/UniquePtr.h"
+#  include "PlatformDecoderModule.h"
+#  include "ReorderQueue.h"
 
 namespace mozilla {
 

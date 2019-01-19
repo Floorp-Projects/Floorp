@@ -8,7 +8,7 @@
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/PTextureParent.h"
 #ifdef XP_DARWIN
-#include "mozilla/layers/TextureSync.h"
+#  include "mozilla/layers/TextureSync.h"
 #endif
 
 namespace mozilla {

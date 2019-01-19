@@ -5,17 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(StateMirroring_h_)
-#define StateMirroring_h_
+#  define StateMirroring_h_
 
-#include "mozilla/Maybe.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/StateWatching.h"
-#include "mozilla/TaskDispatcher.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
+#  include "mozilla/Maybe.h"
+#  include "mozilla/MozPromise.h"
+#  include "mozilla/StateWatching.h"
+#  include "mozilla/TaskDispatcher.h"
+#  include "mozilla/UniquePtr.h"
+#  include "mozilla/Unused.h"
 
-#include "mozilla/Logging.h"
-#include "nsISupportsImpl.h"
+#  include "mozilla/Logging.h"
+#  include "nsISupportsImpl.h"
 
 /*
  * The state-mirroring machinery allows pieces of interesting state to be
@@ -47,9 +47,9 @@ namespace mozilla {
 // Mirror<T> and Canonical<T> inherit WatchTarget, so we piggy-back on the
 // logging that WatchTarget already does. Given that, it makes sense to share
 // the same log module.
-#define MIRROR_LOG(x, ...)       \
-  MOZ_ASSERT(gStateWatchingLog); \
-  MOZ_LOG(gStateWatchingLog, LogLevel::Debug, (x, ##__VA_ARGS__))
+#  define MIRROR_LOG(x, ...)       \
+    MOZ_ASSERT(gStateWatchingLog); \
+    MOZ_LOG(gStateWatchingLog, LogLevel::Debug, (x, ##__VA_ARGS__))
 
 template <typename T>
 class AbstractMirror;
@@ -382,7 +382,7 @@ class Mirror {
   RefPtr<Impl> mImpl;
 };
 
-#undef MIRROR_LOG
+#  undef MIRROR_LOG
 
 }  // namespace mozilla
 

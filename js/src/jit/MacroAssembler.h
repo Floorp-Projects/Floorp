@@ -14,21 +14,21 @@
 #include "vm/Realm.h"
 
 #if defined(JS_CODEGEN_X86)
-#include "jit/x86/MacroAssembler-x86.h"
+#  include "jit/x86/MacroAssembler-x86.h"
 #elif defined(JS_CODEGEN_X64)
-#include "jit/x64/MacroAssembler-x64.h"
+#  include "jit/x64/MacroAssembler-x64.h"
 #elif defined(JS_CODEGEN_ARM)
-#include "jit/arm/MacroAssembler-arm.h"
+#  include "jit/arm/MacroAssembler-arm.h"
 #elif defined(JS_CODEGEN_ARM64)
-#include "jit/arm64/MacroAssembler-arm64.h"
+#  include "jit/arm64/MacroAssembler-arm64.h"
 #elif defined(JS_CODEGEN_MIPS32)
-#include "jit/mips32/MacroAssembler-mips32.h"
+#  include "jit/mips32/MacroAssembler-mips32.h"
 #elif defined(JS_CODEGEN_MIPS64)
-#include "jit/mips64/MacroAssembler-mips64.h"
+#  include "jit/mips64/MacroAssembler-mips64.h"
 #elif defined(JS_CODEGEN_NONE)
-#include "jit/none/MacroAssembler-none.h"
+#  include "jit/none/MacroAssembler-none.h"
 #else
-#error "Unknown architecture!"
+#  error "Unknown architecture!"
 #endif
 #include "jit/AtomicOp.h"
 #include "jit/IonInstrumentation.h"
@@ -140,36 +140,36 @@
 
 // Specialize for each architecture.
 #if defined(JS_CODEGEN_X86)
-#undef DEFINED_ON_x86
-#define DEFINED_ON_x86 define
-#undef DEFINED_ON_x86_shared
-#define DEFINED_ON_x86_shared define
+#  undef DEFINED_ON_x86
+#  define DEFINED_ON_x86 define
+#  undef DEFINED_ON_x86_shared
+#  define DEFINED_ON_x86_shared define
 #elif defined(JS_CODEGEN_X64)
-#undef DEFINED_ON_x64
-#define DEFINED_ON_x64 define
-#undef DEFINED_ON_x86_shared
-#define DEFINED_ON_x86_shared define
+#  undef DEFINED_ON_x64
+#  define DEFINED_ON_x64 define
+#  undef DEFINED_ON_x86_shared
+#  define DEFINED_ON_x86_shared define
 #elif defined(JS_CODEGEN_ARM)
-#undef DEFINED_ON_arm
-#define DEFINED_ON_arm define
+#  undef DEFINED_ON_arm
+#  define DEFINED_ON_arm define
 #elif defined(JS_CODEGEN_ARM64)
-#undef DEFINED_ON_arm64
-#define DEFINED_ON_arm64 define
+#  undef DEFINED_ON_arm64
+#  define DEFINED_ON_arm64 define
 #elif defined(JS_CODEGEN_MIPS32)
-#undef DEFINED_ON_mips32
-#define DEFINED_ON_mips32 define
-#undef DEFINED_ON_mips_shared
-#define DEFINED_ON_mips_shared define
+#  undef DEFINED_ON_mips32
+#  define DEFINED_ON_mips32 define
+#  undef DEFINED_ON_mips_shared
+#  define DEFINED_ON_mips_shared define
 #elif defined(JS_CODEGEN_MIPS64)
-#undef DEFINED_ON_mips64
-#define DEFINED_ON_mips64 define
-#undef DEFINED_ON_mips_shared
-#define DEFINED_ON_mips_shared define
+#  undef DEFINED_ON_mips64
+#  define DEFINED_ON_mips64 define
+#  undef DEFINED_ON_mips_shared
+#  define DEFINED_ON_mips_shared define
 #elif defined(JS_CODEGEN_NONE)
-#undef DEFINED_ON_none
-#define DEFINED_ON_none crash
+#  undef DEFINED_ON_none
+#  define DEFINED_ON_none crash
 #else
-#error "Unknown architecture!"
+#  error "Unknown architecture!"
 #endif
 
 #define DEFINED_ON_RESULT_crash \
@@ -201,9 +201,9 @@
 #define OOL_IN_HEADER
 
 #if MOZ_LITTLE_ENDIAN
-#define IMM32_16ADJ(X) (X) << 16
+#  define IMM32_16ADJ(X) (X) << 16
 #else
-#define IMM32_16ADJ(X) (X)
+#  define IMM32_16ADJ(X) (X)
 #endif
 
 namespace js {
@@ -2560,7 +2560,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       mov(JSReturnReg, dest.valueReg());
     }
 #else
-#error "Bad architecture"
+#  error "Bad architecture"
 #endif
   }
 

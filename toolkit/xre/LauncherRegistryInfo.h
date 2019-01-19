@@ -44,8 +44,8 @@ class LauncherRegistryInfo final {
 
  private:
   LauncherResult<Disposition> Open();
-  LauncherVoidResult WriteStartTimestamp(ProcessType aProcessType,
-                                         const Maybe<uint64_t>& aValue = Nothing());
+  LauncherVoidResult WriteStartTimestamp(
+      ProcessType aProcessType, const Maybe<uint64_t>& aValue = Nothing());
   LauncherResult<DWORD> GetCurrentImageTimestamp();
   LauncherVoidResult WriteImageTimestamp(DWORD aTimestamp);
   LauncherResult<bool> ClearStartTimestamp(ProcessType aProcessType);

@@ -14,7 +14,7 @@
 #include "jit/mips-shared/SharedICHelpers-mips-shared.h"
 #include "jit/mips32/Bailouts-mips32.h"
 #ifdef JS_ION_PERF
-#include "jit/PerfSpewer.h"
+#  include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
 #include "vm/Realm.h"

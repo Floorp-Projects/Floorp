@@ -14,17 +14,17 @@
 #include "nsITimer.h"
 
 #ifdef MOZILLA_INTERNAL_API
-#include "nsThreadManager.h"
+#  include "nsThreadManager.h"
 #else
-#include "nsXPCOMCIDInternal.h"
-#include "nsIThreadManager.h"
-#include "nsServiceManagerUtils.h"
+#  include "nsXPCOMCIDInternal.h"
+#  include "nsIThreadManager.h"
+#  include "nsServiceManagerUtils.h"
 #endif
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #elif defined(XP_MACOSX)
-#include <sys/resource.h>
+#  include <sys/resource.h>
 #endif
 
 using namespace mozilla;
@@ -42,13 +42,13 @@ IdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline) {
 // NS_IMPL_NAMED_* relies on the mName field, which is not present on
 // release or beta. Instead, fall back to using "Runnable" for all
 // runnables.
-#ifndef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#  ifndef MOZ_COLLECTING_RUNNABLE_TELEMETRY
 NS_IMPL_ISUPPORTS(Runnable, nsIRunnable)
-#else
+#  else
 NS_IMPL_NAMED_ADDREF(Runnable, mName)
 NS_IMPL_NAMED_RELEASE(Runnable, mName)
 NS_IMPL_QUERY_INTERFACE(Runnable, nsIRunnable, nsINamed)
-#endif
+#  endif
 
 NS_IMETHODIMP
 Runnable::Run() {
@@ -56,7 +56,7 @@ Runnable::Run() {
   return NS_OK;
 }
 
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
 NS_IMETHODIMP
 Runnable::GetName(nsACString& aName) {
   if (mName) {
@@ -66,7 +66,7 @@ Runnable::GetName(nsACString& aName) {
   }
   return NS_OK;
 }
-#endif
+#  endif
 
 NS_IMPL_ISUPPORTS_INHERITED(CancelableRunnable, Runnable, nsICancelableRunnable)
 
@@ -86,13 +86,13 @@ PrioritizableRunnable::PrioritizableRunnable(
     : Runnable("PrioritizableRunnable"),
       mRunnable(std::move(aRunnable)),
       mPriority(aPriority) {
-#if DEBUG
+#  if DEBUG
   nsCOMPtr<nsIRunnablePriority> runnablePrio = do_QueryInterface(mRunnable);
   MOZ_ASSERT(!runnablePrio);
-#endif
+#  endif
 }
 
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
 NS_IMETHODIMP
 PrioritizableRunnable::GetName(nsACString& aName) {
   // Try to get a name from the underlying runnable.
@@ -102,7 +102,7 @@ PrioritizableRunnable::GetName(nsACString& aName) {
   }
   return NS_OK;
 }
-#endif
+#  endif
 
 NS_IMETHODIMP
 PrioritizableRunnable::Run() {
@@ -392,14 +392,14 @@ extern nsresult NS_IdleDispatchToCurrentThread(
 nsresult NS_ProcessPendingEvents(nsIThread* aThread, PRIntervalTime aTimeout) {
   nsresult rv = NS_OK;
 
-#ifdef MOZILLA_INTERNAL_API
+#  ifdef MOZILLA_INTERNAL_API
   if (!aThread) {
     aThread = NS_GetCurrentThread();
     if (NS_WARN_IF(!aThread)) {
       return NS_ERROR_UNEXPECTED;
     }
   }
-#else
+#  else
   nsCOMPtr<nsIThread> current;
   if (!aThread) {
     rv = NS_GetCurrentThread(getter_AddRefs(current));
@@ -408,7 +408,7 @@ nsresult NS_ProcessPendingEvents(nsIThread* aThread, PRIntervalTime aTimeout) {
     }
     aThread = current.get();
   }
-#endif
+#  endif
 
   PRIntervalTime start = PR_IntervalNow();
   for (;;) {

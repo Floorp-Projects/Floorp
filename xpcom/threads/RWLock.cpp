@@ -7,13 +7,13 @@
 #include "mozilla/RWLock.h"
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 
 static_assert(sizeof(SRWLOCK) <= sizeof(void*), "SRWLOCK is too big!");
 
-#define NativeHandle(m) (reinterpret_cast<SRWLOCK*>(&m))
+#  define NativeHandle(m) (reinterpret_cast<SRWLOCK*>(&m))
 #else
-#define NativeHandle(m) (&m)
+#  define NativeHandle(m) (&m)
 #endif
 
 namespace mozilla {

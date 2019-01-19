@@ -33,7 +33,7 @@
 // Since we've moved the windows.h include down here, we have to explicitly
 // undef GetBinaryType, otherwise we'll get really odd conflicts
 #ifdef GetBinaryType
-#undef GetBinaryType
+#  undef GetBinaryType
 #endif
 
 using namespace mozilla;

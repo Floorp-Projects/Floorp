@@ -36,25 +36,25 @@
 
 #include "gfxImageSurface.h"
 #ifdef MOZ_X11
-#include <gdk/gdkx.h>
-#include "gfxXlibSurface.h"
-#include "cairo-xlib.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/X11Util.h"
+#  include <gdk/gdkx.h>
+#  include "gfxXlibSurface.h"
+#  include "cairo-xlib.h"
+#  include "mozilla/Preferences.h"
+#  include "mozilla/X11Util.h"
 
-#include "GLContextProvider.h"
-#include "GLContextGLX.h"
-#include "GLXLibrary.h"
+#  include "GLContextProvider.h"
+#  include "GLContextGLX.h"
+#  include "GLXLibrary.h"
 
 /* Undefine the Status from Xlib since it will conflict with system headers on
  * OSX */
-#if defined(__APPLE__) && defined(Status)
-#undef Status
-#endif
+#  if defined(__APPLE__) && defined(Status)
+#    undef Status
+#  endif
 
-#ifdef MOZ_WAYLAND
-#include <gdk/gdkwayland.h>
-#endif
+#  ifdef MOZ_WAYLAND
+#    include <gdk/gdkwayland.h>
+#  endif
 
 #endif /* MOZ_X11 */
 
@@ -376,10 +376,10 @@ void gfxPlatformGtk::GetPlatformCMSOutputProfile(void*& mem, size_t& size) {
 
       XFree(retProperty);
       if (size > 0) {
-#ifdef DEBUG_tor
+#  ifdef DEBUG_tor
         fprintf(stderr, "ICM profile read from %s successfully\n",
                 ICC_PROFILE_ATOM_NAME);
-#endif
+#  endif
         return;
       }
     }
@@ -395,9 +395,9 @@ void gfxPlatformGtk::GetPlatformCMSOutputProfile(void*& mem, size_t& size) {
       qcms_CIE_xyYTRIPLE primaries;
 
       if (retLength != 128) {
-#ifdef DEBUG_tor
+#  ifdef DEBUG_tor
         fprintf(stderr, "Short EDID data\n");
-#endif
+#  endif
         return;
       }
 
@@ -430,7 +430,7 @@ void gfxPlatformGtk::GetPlatformCMSOutputProfile(void*& mem, size_t& size) {
 
       XFree(retProperty);
 
-#ifdef DEBUG_tor
+#  ifdef DEBUG_tor
       fprintf(stderr, "EDID gamma: %f\n", gamma);
       fprintf(stderr, "EDID whitepoint: %f %f %f\n", whitePoint.x, whitePoint.y,
               whitePoint.Y);
@@ -438,17 +438,17 @@ void gfxPlatformGtk::GetPlatformCMSOutputProfile(void*& mem, size_t& size) {
               primaries.Red.x, primaries.Red.y, primaries.Red.Y,
               primaries.Green.x, primaries.Green.y, primaries.Green.Y,
               primaries.Blue.x, primaries.Blue.y, primaries.Blue.Y);
-#endif
+#  endif
 
       qcms_data_create_rgb_with_gamma(whitePoint, primaries, gamma, &mem,
                                       &size);
 
-#ifdef DEBUG_tor
+#  ifdef DEBUG_tor
       if (size > 0) {
         fprintf(stderr, "ICM profile read from %s successfully\n",
                 EDID1_ATOM_NAME);
       }
-#endif
+#  endif
     }
   }
 #endif
@@ -488,10 +488,10 @@ class GtkVsyncSource final : public VsyncSource {
           mVsyncTask(nullptr),
           mVsyncEnabledLock("GLXVsyncEnabledLock"),
           mVsyncEnabled(false)
-#ifdef MOZ_WAYLAND
+#  ifdef MOZ_WAYLAND
           ,
           mIsWaylandDisplay(false)
-#endif
+#  endif
     {
     }
 
@@ -512,14 +512,14 @@ class GtkVsyncSource final : public VsyncSource {
       return mGLContext != nullptr;
     }
 
-#ifdef MOZ_WAYLAND
+#  ifdef MOZ_WAYLAND
     bool SetupWayland() {
       MonitorAutoLock lock(mSetupLock);
       MOZ_ASSERT(NS_IsMainThread());
       mIsWaylandDisplay = true;
       return mVsyncThread.Start();
     }
-#endif
+#  endif
 
     // Called on the Vsync thread to setup the GL context.
     void SetupGLContext() {
@@ -571,9 +571,9 @@ class GtkVsyncSource final : public VsyncSource {
 
     virtual void EnableVsync() override {
       MOZ_ASSERT(NS_IsMainThread());
-#if !defined(MOZ_WAYLAND)
+#  if !defined(MOZ_WAYLAND)
       MOZ_ASSERT(mGLContext, "GLContext not setup!");
-#endif
+#  endif
 
       MonitorAutoLock lock(mVsyncEnabledLock);
       if (mVsyncEnabled) {
@@ -586,9 +586,9 @@ class GtkVsyncSource final : public VsyncSource {
       if (!mVsyncTask) {
         mVsyncTask =
             NewRunnableMethod("GtkVsyncSource::GLXDisplay::RunVsync", this,
-#if defined(MOZ_WAYLAND)
+#  if defined(MOZ_WAYLAND)
                               mIsWaylandDisplay ? &GLXDisplay::RunVsyncWayland :
-#endif
+#  endif
                                                 &GLXDisplay::RunVsync);
         RefPtr<Runnable> addrefedTask = mVsyncTask;
         mVsyncThread.message_loop()->PostTask(addrefedTask.forget());
@@ -669,7 +669,7 @@ class GtkVsyncSource final : public VsyncSource {
       }
     }
 
-#ifdef MOZ_WAYLAND
+#  ifdef MOZ_WAYLAND
     /* VSync on Wayland is tricky as we can get only "last VSync" event signal.
      * That means we should draw next frame at "last Vsync + frame delay" time.
      */
@@ -702,7 +702,7 @@ class GtkVsyncSource final : public VsyncSource {
         NotifyVsync(TimeStamp::Now());
       }
     }
-#endif
+#  endif
 
     void Cleanup() {
       MOZ_ASSERT(!NS_IsMainThread());
@@ -719,9 +719,9 @@ class GtkVsyncSource final : public VsyncSource {
     RefPtr<Runnable> mVsyncTask;
     Monitor mVsyncEnabledLock;
     bool mVsyncEnabled;
-#ifdef MOZ_WAYLAND
+#  ifdef MOZ_WAYLAND
     bool mIsWaylandDisplay;
-#endif
+#  endif
   };
 
  private:
@@ -730,14 +730,14 @@ class GtkVsyncSource final : public VsyncSource {
 };
 
 already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
-#ifdef MOZ_WAYLAND
+#  ifdef MOZ_WAYLAND
   if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     RefPtr<VsyncSource> vsyncSource = new GtkVsyncSource();
     VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
     static_cast<GtkVsyncSource::GLXDisplay&>(display).SetupWayland();
     return vsyncSource.forget();
   }
-#endif
+#  endif
 
   // Only use GLX vsync when the OpenGL compositor is being used.
   // The extra cost of initializing a GLX context while blocking the main
