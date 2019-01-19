@@ -5401,8 +5401,7 @@ void nsGlobalWindowInner::Suspend() {
 
   // Suspend all of the AudioContexts for this window
   for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-    ErrorResult dummy;
-    RefPtr<Promise> d = mAudioContexts[i]->Suspend(dummy);
+    mAudioContexts[i]->SuspendFromChrome();
   }
 }
 
@@ -5443,8 +5442,7 @@ void nsGlobalWindowInner::Resume() {
 
   // Resume all of the AudioContexts for this window
   for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-    ErrorResult dummy;
-    RefPtr<Promise> d = mAudioContexts[i]->Resume(dummy);
+    mAudioContexts[i]->ResumeFromChrome();
   }
 
   mTimeoutManager->Resume();

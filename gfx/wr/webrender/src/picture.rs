@@ -100,6 +100,7 @@ pub struct TileIndex(pub usize);
 pub const TILE_SIZE_WIDTH: i32 = 1024;
 pub const TILE_SIZE_HEIGHT: i32 = 256;
 const FRAMES_BEFORE_CACHING: usize = 2;
+const MAX_DIRTY_RECTS: usize = 3;
 
 /// The maximum size per axis of texture cache item,
 ///  in WorldPixel coordinates.
@@ -186,6 +187,9 @@ pub struct Tile {
     /// they were important or can be discarded until we know the
     /// tile cache bounding rect.
     potential_clips: FastHashMap<RectangleKey, SpatialNodeIndex>,
+    /// If true, this tile should still be considered as part of
+    /// the dirty rect calculations.
+    consider_for_dirty_rect: bool,
 }
 
 impl Tile {
@@ -206,6 +210,7 @@ impl Tile {
             transforms: FastHashSet::default(),
             potential_clips: FastHashMap::default(),
             id,
+            consider_for_dirty_rect: false,
         }
     }
 
@@ -338,13 +343,177 @@ impl TileDescriptor {
     }
 }
 
+/// Stores both the world and devices rects for a single dirty rect.
+#[derive(Debug, Clone)]
+pub struct DirtyRegionRect {
+    pub world_rect: WorldRect,
+    pub device_rect: DeviceIntRect,
+}
+
 /// Represents the dirty region of a tile cache picture.
-/// In future, we will want to support multiple dirty
-/// regions.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DirtyRegion {
-    pub dirty_world_rect: WorldRect,
-    pub dirty_device_rect: DeviceIntRect,
+    /// The individual dirty rects of this region.
+    pub dirty_rects: Vec<DirtyRegionRect>,
+
+    /// The overall dirty rect, a combination of dirty_rects
+    pub combined: DirtyRegionRect,
+}
+
+impl DirtyRegion {
+    /// Construct a new dirty region tracker.
+    pub fn new() -> Self {
+        DirtyRegion {
+            dirty_rects: Vec::with_capacity(MAX_DIRTY_RECTS),
+            combined: DirtyRegionRect {
+                world_rect: WorldRect::zero(),
+                device_rect: DeviceIntRect::zero(),
+            },
+        }
+    }
+
+    /// Reset the dirty regions back to empty
+    pub fn clear(&mut self) {
+        self.dirty_rects.clear();
+        self.combined = DirtyRegionRect {
+            world_rect: WorldRect::zero(),
+            device_rect: DeviceIntRect::zero(),
+        }
+    }
+
+    /// Push a dirty rect into this region
+    pub fn push(
+        &mut self,
+        rect: WorldRect,
+        device_pixel_scale: DevicePixelScale,
+    ) {
+        let device_rect = (rect * device_pixel_scale).round().to_i32();
+
+        // Include this in the overall dirty rect
+        self.combined.world_rect = self.combined.world_rect.union(&rect);
+        self.combined.device_rect = self.combined.device_rect.union(&device_rect);
+
+        // Store the individual dirty rect.
+        self.dirty_rects.push(DirtyRegionRect {
+            world_rect: rect,
+            device_rect,
+        });
+    }
+
+    /// Returns true if this region has no dirty rects
+    pub fn is_empty(&self) -> bool {
+        self.dirty_rects.is_empty()
+    }
+
+    /// Collapse all dirty rects into a single dirty rect.
+    pub fn collapse(&mut self) {
+        self.dirty_rects.clear();
+        self.dirty_rects.push(self.combined.clone());
+    }
+}
+
+/// A helper struct to build a (roughly) minimal set of dirty rectangles
+/// from a list of individual dirty rectangles. This minimizes the number
+/// of scissors rects and batch resubmissions that are needed.
+struct DirtyRegionBuilder<'a> {
+    tiles: &'a mut [Tile],
+    tile_count: TileSize,
+    device_pixel_scale: DevicePixelScale,
+}
+
+impl<'a> DirtyRegionBuilder<'a> {
+    fn new(
+        tiles: &'a mut [Tile],
+        tile_count: TileSize,
+        device_pixel_scale: DevicePixelScale,
+    ) -> Self {
+        DirtyRegionBuilder {
+            tiles,
+            tile_count,
+            device_pixel_scale,
+        }
+    }
+
+    fn tile_index(&self, x: i32, y: i32) -> usize {
+        (y * self.tile_count.width + x) as usize
+    }
+
+    fn is_dirty(&self, x: i32, y: i32) -> bool {
+        if x == self.tile_count.width || y == self.tile_count.height {
+            return false;
+        }
+
+        self.get_tile(x, y).consider_for_dirty_rect
+    }
+
+    fn get_tile(&self, x: i32, y: i32) -> &Tile {
+        &self.tiles[self.tile_index(x, y)]
+    }
+
+    fn get_tile_mut(&mut self, x: i32, y: i32) -> &mut Tile {
+        &mut self.tiles[self.tile_index(x, y)]
+    }
+
+    /// Return true if the entire column is dirty
+    fn column_is_dirty(&self, x: i32, y0: i32, y1: i32) -> bool {
+        for y in y0 .. y1 {
+            if !self.is_dirty(x, y) {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    /// Push a dirty rect into the final region list.
+    fn push_dirty_rect(
+        &mut self,
+        x0: i32,
+        y0: i32,
+        x1: i32,
+        y1: i32,
+        dirty_region: &mut DirtyRegion,
+    ) {
+        // Construct the overall dirty rect by combining the visible
+        // parts of the dirty rects that were combined.
+        let mut dirty_world_rect = WorldRect::zero();
+
+        for y in y0 .. y1 {
+            for x in x0 .. x1 {
+                let tile = self.get_tile_mut(x, y);
+                tile.consider_for_dirty_rect = false;
+                if let Some(visible_rect) = tile.visible_rect {
+                    dirty_world_rect = dirty_world_rect.union(&visible_rect);
+                }
+            }
+        }
+
+        dirty_region.push(dirty_world_rect, self.device_pixel_scale);
+    }
+
+    /// Simple sweep through the tile grid to try and coalesce individual
+    /// dirty rects into a smaller number of larger dirty rectangles.
+    fn build(&mut self, dirty_region: &mut DirtyRegion) {
+        for x0 in 0 .. self.tile_count.width {
+            for y0 in 0 .. self.tile_count.height {
+                let mut y1 = y0;
+
+                while self.is_dirty(x0, y1) {
+                    y1 += 1;
+                }
+
+                if y1 > y0 {
+                    let mut x1 = x0;
+
+                    while self.column_is_dirty(x1, y0, y1) {
+                        x1 += 1;
+                    }
+
+                    self.push_dirty_rect(x0, y0, x1, y1, dirty_region);
+                }
+            }
+        }
+    }
 }
 
 /// Represents a cache of tiles that make up a picture primitives.
@@ -360,8 +529,8 @@ pub struct TileCache {
     /// List of opacity bindings, with some extra information
     /// about whether they changed since last frame.
     opacity_bindings: FastHashMap<PropertyBindingId, OpacityBindingInfo>,
-    /// If Some(..) the region that is dirty in this picture.
-    pub dirty_region: Option<DirtyRegion>,
+    /// The current dirty region tracker for this picture.
+    pub dirty_region: DirtyRegion,
     /// If true, we need to update the prim dependencies, due
     /// to relative transforms changing. The dependencies are
     /// stored in each tile, and are a list of things that
@@ -506,7 +675,7 @@ impl TileCache {
             ),
             tiles_to_draw: Vec::new(),
             opacity_bindings: FastHashMap::default(),
-            dirty_region: None,
+            dirty_region: DirtyRegion::new(),
             needs_update: true,
             world_origin: WorldPoint::zero(),
             world_tile_size: WorldSize::zero(),
@@ -1137,9 +1306,7 @@ impl TileCache {
         frame_context: &FrameVisibilityContext,
         _scratch: &mut PrimitiveScratchBuffer,
     ) -> LayoutRect {
-        let mut dirty_world_rect = WorldRect::zero();
-
-        self.dirty_region = None;
+        self.dirty_region.clear();
         self.pending_blits.clear();
 
         let descriptor = ImageDescriptor::new(
@@ -1233,6 +1400,8 @@ impl TileCache {
 
             // Decide how to handle this tile when drawing this frame.
             if tile.is_valid {
+                // No need to include this is any dirty rect calculations.
+                tile.consider_for_dirty_rect = false;
                 self.tiles_to_draw.push(TileIndex(i));
 
                 #[cfg(feature = "debug_renderer")]
@@ -1258,9 +1427,6 @@ impl TileCache {
                     }
                 }
             } else {
-                // Add the tile rect to the dirty rect.
-                dirty_world_rect = dirty_world_rect.union(&visible_rect);
-
                 #[cfg(feature = "debug_renderer")]
                 {
                     if frame_context.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
@@ -1313,20 +1479,30 @@ impl TileCache {
                     // We can consider this tile valid now.
                     tile.is_valid = true;
                 }
+
+                // This tile should be considered as part of the dirty rect calculations.
+                tile.consider_for_dirty_rect = true;
             }
         }
 
-        // Store the dirty region for drawing the main scene.
-        self.dirty_region = if dirty_world_rect.is_empty() {
-            None
-        } else {
-            let dirty_device_rect = dirty_world_rect * frame_context.device_pixel_scale;
+        // Build a minimal set of dirty rects from the set of dirty tiles that
+        // were found above.
+        let mut builder = DirtyRegionBuilder::new(
+            &mut self.tiles,
+            self.tile_count,
+            frame_context.device_pixel_scale,
+        );
 
-            Some(DirtyRegion {
-                dirty_world_rect,
-                dirty_device_rect: dirty_device_rect.round().to_i32(),
-            })
-        };
+        builder.build(&mut self.dirty_region);
+
+        // If we end up with too many dirty rects, then it's going to be a lot
+        // of extra draw calls to submit (since we currently just submit every
+        // draw call for every dirty rect). In this case, bail out and work
+        // with a single, large dirty rect. In future we can consider improving
+        // on this by supporting batching per dirty region.
+        if self.dirty_region.dirty_rects.len() > MAX_DIRTY_RECTS {
+            self.dirty_region.collapse();
+        }
 
         local_clip_rect
     }
@@ -1933,31 +2109,10 @@ impl PicturePrimitive {
         parent_allows_subpixel_aa: bool,
         frame_state: &mut FrameBuildingState,
         frame_context: &FrameBuildingContext,
-        dirty_world_rect: WorldRect,
     ) -> Option<(PictureContext, PictureState, PrimitiveList)> {
         if !self.is_visible() {
             return None;
         }
-
-        // Work out the dirty world rect for this picture.
-        let dirty_world_rect = match self.tile_cache {
-            Some(ref tile_cache) => {
-                // If a tile cache is present, extract the dirty
-                // world rect from the dirty region. If there is
-                // no dirty region there is nothing to render.
-                // TODO(gw): We could early out here in that case?
-                tile_cache
-                    .dirty_region
-                    .as_ref()
-                    .map_or(WorldRect::zero(), |region| {
-                        region.dirty_world_rect
-                    })
-            }
-            None => {
-                // No tile cache - just assume the current dirty world rect.
-                dirty_world_rect
-            }
-        };
 
         // Extract the raster and surface spatial nodes from the raster
         // config, if this picture establishes a surface. Otherwise just
@@ -1976,7 +2131,7 @@ impl PicturePrimitive {
         let map_pic_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             surface_spatial_node_index,
-            dirty_world_rect,
+            frame_context.screen_world_rect,
             frame_context.clip_scroll_tree,
         );
 
@@ -1991,7 +2146,7 @@ impl PicturePrimitive {
         let (map_raster_to_world, map_pic_to_raster) = create_raster_mappers(
             surface_spatial_node_index,
             raster_spatial_node_index,
-            dirty_world_rect,
+            frame_context.screen_world_rect,
             frame_context.clip_scroll_tree,
         );
 
@@ -2045,8 +2200,13 @@ impl PicturePrimitive {
             raster_spatial_node_index,
             surface_spatial_node_index,
             surface_index,
-            dirty_world_rect,
         };
+
+        // If this is a picture cache, push the dirty region to ensure any
+        // child primitives are culled and clipped to the dirty rect(s).
+        if let Some(ref tile_cache) = self.tile_cache {
+            frame_state.push_dirty_region(tile_cache.dirty_region.clone());
+        }
 
         let prim_list = mem::replace(&mut self.prim_list, PrimitiveList::empty());
 
@@ -2058,7 +2218,13 @@ impl PicturePrimitive {
         prim_list: PrimitiveList,
         context: PictureContext,
         state: PictureState,
+        frame_state: &mut FrameBuildingState,
     ) {
+        // Pop the dirty region for this picture cache
+        if self.tile_cache.is_some() {
+            frame_state.pop_dirty_region();
+        }
+
         self.prim_list = prim_list;
         self.state = Some((state, context));
     }
@@ -2451,7 +2617,7 @@ impl PicturePrimitive {
         let (map_raster_to_world, map_pic_to_raster) = create_raster_mappers(
             prim_instance.spatial_node_index,
             raster_spatial_node_index,
-            pic_context.dirty_world_rect,
+            frame_context.screen_world_rect,
             frame_context.clip_scroll_tree,
         );
 
@@ -2895,17 +3061,17 @@ fn calculate_uv_rect_kind(
 fn create_raster_mappers(
     surface_spatial_node_index: SpatialNodeIndex,
     raster_spatial_node_index: SpatialNodeIndex,
-    dirty_world_rect: WorldRect,
+    world_rect: WorldRect,
     clip_scroll_tree: &ClipScrollTree,
 ) -> (SpaceMapper<RasterPixel, WorldPixel>, SpaceMapper<PicturePixel, RasterPixel>) {
     let map_raster_to_world = SpaceMapper::new_with_target(
         ROOT_SPATIAL_NODE_INDEX,
         raster_spatial_node_index,
-        dirty_world_rect,
+        world_rect,
         clip_scroll_tree,
     );
 
-    let raster_bounds = map_raster_to_world.unmap(&dirty_world_rect)
+    let raster_bounds = map_raster_to_world.unmap(&world_rect)
                                            .unwrap_or(RasterRect::max_rect());
 
     let map_pic_to_raster = SpaceMapper::new_with_target(
