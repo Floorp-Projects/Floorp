@@ -228,28 +228,30 @@ body {
   min-width: 50%;
 }
 
-.treeTable:focus {
+.treeTable:focus,
+.treeTable > tbody:focus {
   outline: 0;
 }
 
-.treeTable::-moz-focus-inner {
+.treeTable::-moz-focus-inner,
+.treeTable > tbody::-moz-focus-inner {
   border: 0;
 }
 
-.treeTable:not(:focus) .treeRow.selected {
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected {
   background-color: var(--accessibility-unfocused-tree-focused-node-background);
 }
 
-.treeTable:not(:focus) .treeRow.selected .theme-twisty {
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected .theme-twisty {
   fill: var(--accessibility-unfocused-tree-focused-node-twisty-fill);
 }
 
-.treeTable:not(:focus) .treeRow.selected *,
-.treeTable:not(:focus) .treeRow.selected .treeLabelCell:after {
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected *,
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected .treeLabelCell:after {
   color: inherit;
 }
 
-.treeTable:not(:focus) .treeRow.selected .objectBox-string {
+.treeTable:not(:focus) tbody:not(:focus) .treeRow.selected .objectBox-string {
   color: var(--string-color);
 }
 
