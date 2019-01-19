@@ -811,7 +811,7 @@ void js::Nursery::collect(JS::GCReason reason) {
       for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
         if (jit::JitRealm* jitRealm = r->jitRealm()) {
           jitRealm->discardStubs();
-          jitRealm->stringsCanBeInNursery = false;
+          jitRealm->setStringsCanBeInNursery(false);
           numNurseryStringRealmsDisabled++;
         }
       }
