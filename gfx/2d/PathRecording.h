@@ -16,23 +16,6 @@
 namespace mozilla {
 namespace gfx {
 
-struct PathOp {
-  enum OpType {
-    OP_MOVETO = 0,
-    OP_LINETO,
-    OP_BEZIERTO,
-    OP_QUADRATICBEZIERTO,
-    OP_CLOSE
-  };
-
-  OpType mType;
-  Point mP1;
-  Point mP2;
-  Point mP3;
-};
-
-const int32_t sPointCount[] = {1, 1, 3, 2, 0, 0};
-
 class PathRecording;
 class DrawEventRecorderPrivate;
 

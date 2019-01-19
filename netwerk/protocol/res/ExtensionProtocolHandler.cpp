@@ -43,8 +43,8 @@
 #include "SimpleChannel.h"
 
 #if defined(XP_WIN)
-#include "nsILocalFileWin.h"
-#include "WinUtils.h"
+#  include "nsILocalFileWin.h"
+#  include "WinUtils.h"
 #endif
 
 #define EXTENSION_SCHEME "moz-extension"
@@ -317,10 +317,10 @@ ExtensionProtocolHandler::GetSingleton() {
 ExtensionProtocolHandler::ExtensionProtocolHandler()
     : SubstitutingProtocolHandler(EXTENSION_SCHEME)
 #if !defined(XP_WIN)
-#if defined(XP_MACOSX)
+#  if defined(XP_MACOSX)
       ,
       mAlreadyCheckedDevRepo(false)
-#endif /* XP_MACOSX */
+#  endif /* XP_MACOSX */
       ,
       mAlreadyCheckedAppDir(false)
 #endif /* ! XP_WIN */
@@ -499,15 +499,15 @@ Result<Ok, nsresult> ExtensionProtocolHandler::AllowExternalResource(
     return Ok();
   }
 
-#if defined(XP_MACOSX)
+#  if defined(XP_MACOSX)
   // Additionally, on Mac dev builds, we make sure that the requested
   // resource is within the repo dir. We don't perform this check on Linux
   // because we don't have a reliable path to the repo dir on Linux.
   MOZ_TRY(DevRepoContains(aRequestedFile, aResult));
-#endif /* XP_MACOSX */
+#  endif /* XP_MACOSX */
 
   return Ok();
-#endif /* defined(XP_WIN) */
+#endif   /* defined(XP_WIN) */
 }
 
 #if defined(XP_MACOSX)

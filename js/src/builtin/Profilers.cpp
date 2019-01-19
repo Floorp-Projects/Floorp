@@ -14,18 +14,18 @@
 #include <stdarg.h>
 
 #ifdef MOZ_CALLGRIND
-#include <valgrind/callgrind.h>
+#  include <valgrind/callgrind.h>
 #endif
 
 #ifdef __APPLE__
-#ifdef MOZ_INSTRUMENTS
-#include "devtools/Instruments.h"
-#endif
+#  ifdef MOZ_INSTRUMENTS
+#    include "devtools/Instruments.h"
+#  endif
 #endif
 
 #ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
+#  include <process.h>
+#  define getpid _getpid
 #endif
 
 #include "js/CharacterEncoding.h"
@@ -61,10 +61,10 @@ JS_PUBLIC_API const char* JS_UnsafeGetLastProfilingError() {
 static bool StartOSXProfiling(const char* profileName, pid_t pid) {
   bool ok = true;
   const char* profiler = nullptr;
-#ifdef MOZ_INSTRUMENTS
+#  ifdef MOZ_INSTRUMENTS
   ok = Instruments::Start(pid);
   profiler = "Instruments";
-#endif
+#  endif
   if (!ok) {
     if (profileName) {
       UnsafeError("Failed to start %s for %s", profiler, profileName);
@@ -93,9 +93,9 @@ JS_PUBLIC_API bool JS_StartProfiling(const char* profileName, pid_t pid) {
 JS_PUBLIC_API bool JS_StopProfiling(const char* profileName) {
   bool ok = true;
 #ifdef __APPLE__
-#ifdef MOZ_INSTRUMENTS
+#  ifdef MOZ_INSTRUMENTS
   Instruments::Stop(profileName);
-#endif
+#  endif
 #endif
 #ifdef __linux__
   if (!js_StopPerf()) {
@@ -114,16 +114,16 @@ static bool ControlProfilers(bool toState) {
 
   if (!probes::ProfilingActive && toState) {
 #ifdef __APPLE__
-#if defined(MOZ_INSTRUMENTS)
+#  if defined(MOZ_INSTRUMENTS)
     const char* profiler;
-#ifdef MOZ_INSTRUMENTS
+#    ifdef MOZ_INSTRUMENTS
     ok = Instruments::Resume();
     profiler = "Instruments";
-#endif
+#    endif
     if (!ok) {
       UnsafeError("Failed to start %s", profiler);
     }
-#endif
+#  endif
 #endif
 #ifdef MOZ_CALLGRIND
     if (!js_StartCallgrind()) {
@@ -133,9 +133,9 @@ static bool ControlProfilers(bool toState) {
 #endif
   } else if (probes::ProfilingActive && !toState) {
 #ifdef __APPLE__
-#ifdef MOZ_INSTRUMENTS
+#  ifdef MOZ_INSTRUMENTS
     Instruments::Pause();
-#endif
+#  endif
 #endif
 #ifdef MOZ_CALLGRIND
     if (!js_StopCallgrind()) {
@@ -306,7 +306,7 @@ static bool ClearMaxGCPauseAccumulator(JSContext* cx, unsigned argc,
   return true;
 }
 
-#if defined(MOZ_INSTRUMENTS)
+#  if defined(MOZ_INSTRUMENTS)
 
 static bool IgnoreAndReturnTrue(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -314,9 +314,9 @@ static bool IgnoreAndReturnTrue(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-#endif
+#  endif
 
-#ifdef MOZ_CALLGRIND
+#  ifdef MOZ_CALLGRIND
 static bool StartCallgrind(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(js_StartCallgrind());
@@ -344,7 +344,7 @@ static bool DumpCallgrind(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setBoolean(js_DumpCallgrind(outFile.get()));
   return true;
 }
-#endif
+#  endif
 
 static const JSFunctionSpec profiling_functions[] = {
     JS_FN("startProfiling", StartProfiling, 1, 0),
@@ -354,18 +354,18 @@ static const JSFunctionSpec profiling_functions[] = {
     JS_FN("dumpProfile", DumpProfile, 2, 0),
     JS_FN("getMaxGCPauseSinceClear", GetMaxGCPauseSinceClear, 0, 0),
     JS_FN("clearMaxGCPauseAccumulator", ClearMaxGCPauseAccumulator, 0, 0),
-#if defined(MOZ_INSTRUMENTS)
+#  if defined(MOZ_INSTRUMENTS)
     /* Keep users of the old shark API happy. */
     JS_FN("connectShark", IgnoreAndReturnTrue, 0, 0),
     JS_FN("disconnectShark", IgnoreAndReturnTrue, 0, 0),
     JS_FN("startShark", StartProfiling, 0, 0),
     JS_FN("stopShark", StopProfiling, 0, 0),
-#endif
-#ifdef MOZ_CALLGRIND
+#  endif
+#  ifdef MOZ_CALLGRIND
     JS_FN("startCallgrind", StartCallgrind, 0, 0),
     JS_FN("stopCallgrind", StopCallgrind, 0, 0),
     JS_FN("dumpCallgrind", DumpCallgrind, 1, 0),
-#endif
+#  endif
     JS_FS_END};
 
 #endif
@@ -383,32 +383,33 @@ JS_PUBLIC_API bool JS_DefineProfilingFunctions(JSContext* cx,
 #ifdef MOZ_CALLGRIND
 
 /* Wrapper for various macros to stop warnings coming from their expansions. */
-#if defined(__clang__)
-#define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                                \
-  JS_BEGIN_MACRO                                                             \
-    _Pragma("clang diagnostic push") /* If these _Pragmas cause warnings for \
-                                        you, try disabling ccache. */        \
-        _Pragma("clang diagnostic ignored \"-Wunused-value\"") {             \
-      expr;                                                                  \
-    }                                                                        \
-    _Pragma("clang diagnostic pop")                                          \
-  JS_END_MACRO
-#elif MOZ_IS_GCC
+#  if defined(__clang__)
+#    define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                             \
+      JS_BEGIN_MACRO                                                          \
+        _Pragma("clang diagnostic push") /* If these _Pragmas cause warnings  \
+                                            for you, try disabling ccache. */ \
+            _Pragma("clang diagnostic ignored \"-Wunused-value\"") {          \
+          expr;                                                               \
+        }                                                                     \
+        _Pragma("clang diagnostic pop")                                       \
+      JS_END_MACRO
+#  elif MOZ_IS_GCC
 
-#define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                                 \
-  JS_BEGIN_MACRO                                                              \
-    _Pragma("GCC diagnostic push")                                            \
-        _Pragma("GCC diagnostic ignored \"-Wunused-but-set-variable\"") expr; \
-    _Pragma("GCC diagnostic pop")                                             \
-  JS_END_MACRO
-#endif
+#    define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                           \
+      JS_BEGIN_MACRO                                                        \
+        _Pragma("GCC diagnostic push")                                      \
+            _Pragma("GCC diagnostic ignored \"-Wunused-but-set-variable\"") \
+                expr;                                                       \
+        _Pragma("GCC diagnostic pop")                                       \
+      JS_END_MACRO
+#  endif
 
-#if !defined(JS_SILENCE_UNUSED_VALUE_IN_EXPR)
-#define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr) \
-  JS_BEGIN_MACRO                              \
-    expr;                                     \
-  JS_END_MACRO
-#endif
+#  if !defined(JS_SILENCE_UNUSED_VALUE_IN_EXPR)
+#    define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr) \
+      JS_BEGIN_MACRO                              \
+        expr;                                     \
+      JS_END_MACRO
+#  endif
 
 JS_FRIEND_API bool js_StartCallgrind() {
   JS_SILENCE_UNUSED_VALUE_IN_EXPR(CALLGRIND_START_INSTRUMENTATION);
@@ -456,9 +457,9 @@ JS_FRIEND_API bool js_DumpCallgrind(const char* outfile) {
  * MOZ_PROFILE_PERF_FLAGS="-e 'foo bar'").
  */
 
-#include <signal.h>
-#include <sys/wait.h>
-#include <unistd.h>
+#  include <signal.h>
+#  include <sys/wait.h>
+#  include <unistd.h>
 
 static bool perfInitialized = false;
 static pid_t perfPid = 0;

@@ -28,9 +28,9 @@ extern mozilla::LazyLogModule gMediaDemuxerLog;
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
 #ifdef SEEK_LOGGING
-#define SEEK_LOG(type, msg) MOZ_LOG(gMediaDemuxerLog, type, msg)
+#  define SEEK_LOG(type, msg) MOZ_LOG(gMediaDemuxerLog, type, msg)
 #else
-#define SEEK_LOG(type, msg)
+#  define SEEK_LOG(type, msg)
 #endif
 
 namespace mozilla {

@@ -5,18 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZILLA_INTERNAL_API
-#ifndef mozilla_EventDispatcher_h_
-#define mozilla_EventDispatcher_h_
+#  ifndef mozilla_EventDispatcher_h_
+#    define mozilla_EventDispatcher_h_
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/Touch.h"
-#include "mozilla/EventForwards.h"
-#include "mozilla/Maybe.h"
-#include "nsCOMPtr.h"
-#include "nsTArray.h"
+#    include "mozilla/dom/BindingDeclarations.h"
+#    include "mozilla/dom/Touch.h"
+#    include "mozilla/EventForwards.h"
+#    include "mozilla/Maybe.h"
+#    include "nsCOMPtr.h"
+#    include "nsTArray.h"
 
 // Microsoft's API Name hackery sucks
-#undef CreateEvent
+#    undef CreateEvent
 
 class nsIContent;
 class nsPresContext;
@@ -370,5 +370,5 @@ class EventDispatcher {
 
 }  // namespace mozilla
 
-#endif  // mozilla_EventDispatcher_h_
+#  endif  // mozilla_EventDispatcher_h_
 #endif

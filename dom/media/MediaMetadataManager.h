@@ -5,15 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaMetadataManager_h__)
-#define MediaMetadataManager_h__
+#  define MediaMetadataManager_h__
 
-#include "mozilla/AbstractThread.h"
-#include "mozilla/LinkedList.h"
+#  include "mozilla/AbstractThread.h"
+#  include "mozilla/LinkedList.h"
 
-#include "nsAutoPtr.h"
-#include "MediaEventSource.h"
-#include "TimeUnits.h"
-#include "VideoUtils.h"
+#  include "nsAutoPtr.h"
+#  include "MediaEventSource.h"
+#  include "TimeUnits.h"
+#  include "VideoUtils.h"
 
 namespace mozilla {
 

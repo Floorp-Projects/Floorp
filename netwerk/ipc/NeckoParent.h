@@ -13,7 +13,7 @@
 #include "nsNetUtil.h"
 
 #ifndef mozilla_net_NeckoParent_h
-#define mozilla_net_NeckoParent_h
+#  define mozilla_net_NeckoParent_h
 
 namespace mozilla {
 namespace net {

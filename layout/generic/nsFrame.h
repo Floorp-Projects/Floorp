@@ -42,49 +42,49 @@ enum class TableSelection : uint32_t;
   (int(((mozilla::LogModule*)_lm)->Level()) & (_bit))
 
 #ifdef DEBUG
-#define NS_FRAME_LOG(_bit, _args)                          \
-  PR_BEGIN_MACRO                                           \
-  if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
-    printf_stderr _args;                                   \
-  }                                                        \
-  PR_END_MACRO
+#  define NS_FRAME_LOG(_bit, _args)                          \
+    PR_BEGIN_MACRO                                           \
+    if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
+      printf_stderr _args;                                   \
+    }                                                        \
+    PR_END_MACRO
 #else
-#define NS_FRAME_LOG(_bit, _args)
+#  define NS_FRAME_LOG(_bit, _args)
 #endif
 
 // XXX Need to rework this so that logging is free when it's off
 #ifdef DEBUG
-#define NS_FRAME_TRACE_IN(_method) Trace(_method, true)
+#  define NS_FRAME_TRACE_IN(_method) Trace(_method, true)
 
-#define NS_FRAME_TRACE_OUT(_method) Trace(_method, false)
+#  define NS_FRAME_TRACE_OUT(_method) Trace(_method, false)
 
 // XXX remove me
-#define NS_FRAME_TRACE_MSG(_bit, _args)                    \
-  PR_BEGIN_MACRO                                           \
-  if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
-    TraceMsg _args;                                        \
-  }                                                        \
-  PR_END_MACRO
+#  define NS_FRAME_TRACE_MSG(_bit, _args)                    \
+    PR_BEGIN_MACRO                                           \
+    if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
+      TraceMsg _args;                                        \
+    }                                                        \
+    PR_END_MACRO
 
-#define NS_FRAME_TRACE(_bit, _args)                        \
-  PR_BEGIN_MACRO                                           \
-  if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
-    TraceMsg _args;                                        \
-  }                                                        \
-  PR_END_MACRO
+#  define NS_FRAME_TRACE(_bit, _args)                        \
+    PR_BEGIN_MACRO                                           \
+    if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
+      TraceMsg _args;                                        \
+    }                                                        \
+    PR_END_MACRO
 
-#define NS_FRAME_TRACE_REFLOW_IN(_method) Trace(_method, true)
+#  define NS_FRAME_TRACE_REFLOW_IN(_method) Trace(_method, true)
 
-#define NS_FRAME_TRACE_REFLOW_OUT(_method, _status) \
-  Trace(_method, false, _status)
+#  define NS_FRAME_TRACE_REFLOW_OUT(_method, _status) \
+    Trace(_method, false, _status)
 
 #else
-#define NS_FRAME_TRACE(_bits, _args)
-#define NS_FRAME_TRACE_IN(_method)
-#define NS_FRAME_TRACE_OUT(_method)
-#define NS_FRAME_TRACE_MSG(_bits, _args)
-#define NS_FRAME_TRACE_REFLOW_IN(_method)
-#define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
+#  define NS_FRAME_TRACE(_bits, _args)
+#  define NS_FRAME_TRACE_IN(_method)
+#  define NS_FRAME_TRACE_OUT(_method)
+#  define NS_FRAME_TRACE_MSG(_bits, _args)
+#  define NS_FRAME_TRACE_REFLOW_IN(_method)
+#  define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
 #endif
 
 // Frame allocation boilerplate macros. Every subclass of nsFrame must
@@ -806,52 +806,53 @@ struct DR_init_type_cookie {
   void* mValue;
 };
 
-#define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, \
-                       dr_rf_status)                                          \
-  DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics,  \
-                      dr_rf_status);
-#define DISPLAY_REFLOW_CHANGE() dr_cookie.Change();
-#define DISPLAY_LAYOUT(dr_frame) DR_layout_cookie dr_cookie(dr_frame);
-#define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) \
-  DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Min", dr_result)
-#define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
-  DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
-#define DISPLAY_PREF_SIZE(dr_frame, dr_result) \
-  DR_intrinsic_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
-#define DISPLAY_MIN_SIZE(dr_frame, dr_result) \
-  DR_intrinsic_size_cookie dr_cookie(dr_frame, "Min", dr_result)
-#define DISPLAY_MAX_SIZE(dr_frame, dr_result) \
-  DR_intrinsic_size_cookie dr_cookie(dr_frame, "Max", dr_result)
-#define DISPLAY_INIT_CONSTRAINTS(dr_frame, dr_state, dr_cbw, dr_cbh, dr_bdr, \
-                                 dr_pad)                                     \
-  DR_init_constraints_cookie dr_cookie(dr_frame, dr_state, dr_cbw, dr_cbh,   \
-                                       dr_bdr, dr_pad)
-#define DISPLAY_INIT_OFFSETS(dr_frame, dr_state, dr_pb, dr_cbwm, dr_bdr,       \
-                             dr_pad)                                           \
-  DR_init_offsets_cookie dr_cookie(dr_frame, dr_state, dr_pb, dr_cbwm, dr_bdr, \
-                                   dr_pad)
-#define DISPLAY_INIT_TYPE(dr_frame, dr_result) \
-  DR_init_type_cookie dr_cookie(dr_frame, dr_result)
+#  define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state,               \
+                         dr_rf_metrics, dr_rf_status)                          \
+    DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, \
+                        dr_rf_status);
+#  define DISPLAY_REFLOW_CHANGE() dr_cookie.Change();
+#  define DISPLAY_LAYOUT(dr_frame) DR_layout_cookie dr_cookie(dr_frame);
+#  define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) \
+    DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Min", dr_result)
+#  define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
+    DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
+#  define DISPLAY_PREF_SIZE(dr_frame, dr_result) \
+    DR_intrinsic_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
+#  define DISPLAY_MIN_SIZE(dr_frame, dr_result) \
+    DR_intrinsic_size_cookie dr_cookie(dr_frame, "Min", dr_result)
+#  define DISPLAY_MAX_SIZE(dr_frame, dr_result) \
+    DR_intrinsic_size_cookie dr_cookie(dr_frame, "Max", dr_result)
+#  define DISPLAY_INIT_CONSTRAINTS(dr_frame, dr_state, dr_cbw, dr_cbh, dr_bdr, \
+                                   dr_pad)                                     \
+    DR_init_constraints_cookie dr_cookie(dr_frame, dr_state, dr_cbw, dr_cbh,   \
+                                         dr_bdr, dr_pad)
+#  define DISPLAY_INIT_OFFSETS(dr_frame, dr_state, dr_pb, dr_cbwm, dr_bdr, \
+                               dr_pad)                                     \
+    DR_init_offsets_cookie dr_cookie(dr_frame, dr_state, dr_pb, dr_cbwm,   \
+                                     dr_bdr, dr_pad)
+#  define DISPLAY_INIT_TYPE(dr_frame, dr_result) \
+    DR_init_type_cookie dr_cookie(dr_frame, dr_result)
 
 #else
 
-#define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, \
-                       dr_rf_status)
-#define DISPLAY_REFLOW_CHANGE()
-#define DISPLAY_LAYOUT(dr_frame) PR_BEGIN_MACRO PR_END_MACRO
-#define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
-#define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
-  PR_BEGIN_MACRO PR_END_MACRO
-#define DISPLAY_PREF_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
-#define DISPLAY_MIN_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
-#define DISPLAY_MAX_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
-#define DISPLAY_INIT_CONSTRAINTS(dr_frame, dr_state, dr_cbw, dr_cbh, dr_bdr, \
-                                 dr_pad)                                     \
-  PR_BEGIN_MACRO PR_END_MACRO
-#define DISPLAY_INIT_OFFSETS(dr_frame, dr_state, dr_pb, dr_cbwm, dr_bdr, \
-                             dr_pad)                                     \
-  PR_BEGIN_MACRO PR_END_MACRO
-#define DISPLAY_INIT_TYPE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, \
+                         dr_rf_metrics, dr_rf_status)
+#  define DISPLAY_REFLOW_CHANGE()
+#  define DISPLAY_LAYOUT(dr_frame) PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) \
+    PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
+    PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_PREF_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_MIN_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_MAX_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_INIT_CONSTRAINTS(dr_frame, dr_state, dr_cbw, dr_cbh, dr_bdr, \
+                                   dr_pad)                                     \
+    PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_INIT_OFFSETS(dr_frame, dr_state, dr_pb, dr_cbwm, dr_bdr, \
+                               dr_pad)                                     \
+    PR_BEGIN_MACRO PR_END_MACRO
+#  define DISPLAY_INIT_TYPE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
 
 #endif
 // End Display Reflow Debugging

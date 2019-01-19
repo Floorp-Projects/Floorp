@@ -15,7 +15,7 @@
 #include "nsXULAppAPI.h"
 
 #ifndef ANDROID
-#include "nsTerminator.h"
+#  include "nsTerminator.h"
 #endif
 
 #include "nsXPCOMPrivate.h"
@@ -62,7 +62,7 @@
 #include "nsIFile.h"
 #include "nsLocalFile.h"
 #if defined(XP_UNIX)
-#include "nsNativeCharsetUtils.h"
+#  include "nsNativeCharsetUtils.h"
 #endif
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
@@ -88,12 +88,12 @@ extern nsresult nsStringInputStreamConstructor(nsISupports*, REFNSIID, void**);
 #include "SpecialSystemDirectory.h"
 
 #if defined(XP_WIN)
-#include "nsWindowsRegKey.h"
+#  include "nsWindowsRegKey.h"
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
-#include "nsMacUtilsImpl.h"
-#include "nsMacPreferencesReader.h"
+#  include "nsMacUtilsImpl.h"
+#  include "nsMacPreferencesReader.h"
 #endif
 
 #include "nsSystemInfo.h"
@@ -301,14 +301,15 @@ const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
 #undef COMPONENT
 #undef COMPONENT_M
 
-const mozilla::Module kXPCOMModule = {mozilla::Module::kVersion,
-                                      kXPCOMCIDEntries,
-                                      kXPCOMContracts,
-                                      nullptr,
-                                      nullptr,
-                                      nullptr,
-                                      nullptr,
-                                      Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS};
+const mozilla::Module kXPCOMModule = {
+    mozilla::Module::kVersion,
+    kXPCOMCIDEntries,
+    kXPCOMContracts,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS};
 
 // gDebug will be freed during shutdown.
 static nsIDebug2* gDebug = nullptr;

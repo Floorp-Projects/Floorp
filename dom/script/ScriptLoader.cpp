@@ -966,7 +966,9 @@ void ScriptLoader::EnsureModuleHooksInitialized() {
 
   JS::SetModuleResolveHook(rt, HostResolveImportedModule);
   JS::SetModuleMetadataHook(rt, HostPopulateImportMeta);
-  JS::SetScriptPrivateFinalizeHook(rt, HostFinalizeTopLevelScript);
+  JS::SetScriptPrivateReferenceHooks(rt,
+                                     HostAddRefTopLevelScript,
+                                     HostReleaseTopLevelScript);
 
   Preferences::RegisterCallbackAndCall(DynamicImportPrefChangedCallback,
                                        "javascript.options.dynamicImport",

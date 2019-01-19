@@ -122,13 +122,13 @@ TEST(TArray, AssignmentOperatorSelfAssignment) {
   ASSERT_EQ(DummyArray(), array);
 
 #if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wself-move"
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wself-move"
 #endif
   array = std::move(array);  // self-move
   ASSERT_EQ(DummyArray(), array);
 #if defined(__clang__)
-#pragma clang diagnostic pop
+#  pragma clang diagnostic pop
 #endif
 }
 

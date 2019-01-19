@@ -18,17 +18,17 @@
 // since "gcc -m32" claims to support these but its implementation is buggy.
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82274
 #if defined(HAVE_64BIT_BUILD)
-#if defined(__has_builtin)
-#define MOZ_HAS_BUILTIN_OP_OVERFLOW (__has_builtin(__builtin_add_overflow))
-#elif defined(__GNUC__)
+#  if defined(__has_builtin)
+#    define MOZ_HAS_BUILTIN_OP_OVERFLOW (__has_builtin(__builtin_add_overflow))
+#  elif defined(__GNUC__)
 // (clang also defines __GNUC__ but it supports __has_builtin since at least
 //  v3.1 (released in 2012) so it won't get here.)
-#define MOZ_HAS_BUILTIN_OP_OVERFLOW (__GNUC__ >= 5)
+#    define MOZ_HAS_BUILTIN_OP_OVERFLOW (__GNUC__ >= 5)
+#  else
+#    define MOZ_HAS_BUILTIN_OP_OVERFLOW (0)
+#  endif
 #else
-#define MOZ_HAS_BUILTIN_OP_OVERFLOW (0)
-#endif
-#else
-#define MOZ_HAS_BUILTIN_OP_OVERFLOW (0)
+#  define MOZ_HAS_BUILTIN_OP_OVERFLOW (0)
 #endif
 
 namespace mozilla {
@@ -659,20 +659,20 @@ class CheckedInt {
   }
 
 #if MOZ_HAS_BUILTIN_OP_OVERFLOW
-#define MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(NAME, OP, FUN)      \
-  template <typename T>                                           \
-  inline CheckedInt<T> operator OP(const CheckedInt<T>& aLhs,     \
-                                   const CheckedInt<T>& aRhs) {   \
-    T result;                                                     \
-    if (FUN(aLhs.mValue, aRhs.mValue, &result)) {                 \
-      return CheckedInt<T>(0, false);                             \
-    }                                                             \
-    return CheckedInt<T>(result, aLhs.mIsValid && aRhs.mIsValid); \
-  }
+#  define MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(NAME, OP, FUN)      \
+    template <typename T>                                           \
+    inline CheckedInt<T> operator OP(const CheckedInt<T>& aLhs,     \
+                                     const CheckedInt<T>& aRhs) {   \
+      T result;                                                     \
+      if (FUN(aLhs.mValue, aRhs.mValue, &result)) {                 \
+        return CheckedInt<T>(0, false);                             \
+      }                                                             \
+      return CheckedInt<T>(result, aLhs.mIsValid && aRhs.mIsValid); \
+    }
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Add, +, __builtin_add_overflow)
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Sub, -, __builtin_sub_overflow)
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2(Mul, *, __builtin_mul_overflow)
-#undef MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2
+#  undef MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR2
 #else
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Add, +)
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Sub, -)

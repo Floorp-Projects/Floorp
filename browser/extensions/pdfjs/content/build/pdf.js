@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.1.189';
-var pdfjsBuild = '5cb00b79';
+var pdfjsVersion = '2.1.196';
+var pdfjsBuild = 'cdbc33ba';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -5154,7 +5154,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.1.189',
+    apiVersion: '2.1.196',
     source: {
       data: source.data,
       url: source.url,
@@ -6885,9 +6885,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.1.189';
+const version = '2.1.196';
 exports.version = version;
-const build = '5cb00b79';
+const build = 'cdbc33ba';
 exports.build = build;
 
 /***/ }),
@@ -10566,7 +10566,7 @@ class Metadata {
   }
 
   _repair(data) {
-    return data.replace(/>\\376\\377([^<]+)/g, function (all, codes) {
+    return data.replace(/^([^<]+)/, '').replace(/>\\376\\377([^<]+)/g, function (all, codes) {
       let bytes = codes.replace(/\\([0-3])([0-7])([0-7])/g, function (code, d1, d2, d3) {
         return String.fromCharCode(d1 * 64 + d2 * 8 + d3 * 1);
       }).replace(/&(amp|apos|gt|lt|quot);/g, function (str, name) {
@@ -10642,7 +10642,8 @@ class Metadata {
   }
 
   get(name) {
-    return this._metadata[name] || null;
+    const data = this._metadata[name];
+    return typeof data !== 'undefined' ? data : null;
   }
 
   getAll() {

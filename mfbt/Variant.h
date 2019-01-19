@@ -16,7 +16,7 @@
 #include "mozilla/TypeTraits.h"
 
 #ifndef mozilla_Variant_h
-#define mozilla_Variant_h
+#  define mozilla_Variant_h
 
 namespace IPC {
 template <typename T>

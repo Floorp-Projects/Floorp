@@ -17,7 +17,7 @@
 #include "xpcAccessibleDocument.h"
 
 #ifdef A11Y_LOG
-#include "Logging.h"
+#  include "Logging.h"
 #endif
 
 #include "mozilla/EventListenerManager.h"

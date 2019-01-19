@@ -9,7 +9,7 @@
 #include <gdk/gdk.h>
 #include "nsSize.h"
 #ifdef MOZ_X11
-#include "gfxXlibNativeRenderer.h"
+#  include "gfxXlibNativeRenderer.h"
 #endif
 
 class gfxContext;

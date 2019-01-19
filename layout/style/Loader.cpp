@@ -55,7 +55,7 @@
 #include "mozilla/css/StreamLoader.h"
 
 #ifdef MOZ_XUL
-#include "nsXULPrototypeCache.h"
+#  include "nsXULPrototypeCache.h"
 #endif
 
 #include "nsError.h"

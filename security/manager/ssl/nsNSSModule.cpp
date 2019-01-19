@@ -34,7 +34,7 @@
 #include "OSReauthenticator.h"
 
 #ifdef MOZ_XUL
-#include "nsCertTree.h"
+#  include "nsCertTree.h"
 #endif
 
 namespace mozilla {

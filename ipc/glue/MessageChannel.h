@@ -18,7 +18,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/Vector.h"
 #if defined(OS_WIN)
-#include "mozilla/ipc/Neutering.h"
+#  include "mozilla/ipc/Neutering.h"
 #endif  // defined(OS_WIN)
 #include "mozilla/ipc/Transport.h"
 #include "MessageLink.h"
@@ -353,10 +353,10 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
 
  private:
   void SpinInternalEventLoop();
-#if defined(ACCESSIBILITY)
+#  if defined(ACCESSIBILITY)
   bool WaitForSyncNotifyWithA11yReentry();
-#endif  // defined(ACCESSIBILITY)
-#endif  // defined(OS_WIN)
+#  endif  // defined(ACCESSIBILITY)
+#endif    // defined(OS_WIN)
 
  private:
   void CommonThreadOpenInit(MessageChannel* aTargetChan, Side aSide);

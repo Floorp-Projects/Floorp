@@ -32,13 +32,13 @@
 
 #ifdef JS_SIMULATOR_MIPS64
 
-#include "mozilla/Atomics.h"
+#  include "mozilla/Atomics.h"
 
-#include "jit/IonTypes.h"
-#include "js/ProfilingFrameIterator.h"
-#include "threading/Thread.h"
-#include "vm/MutexIDs.h"
-#include "wasm/WasmSignalHandlers.h"
+#  include "jit/IonTypes.h"
+#  include "js/ProfilingFrameIterator.h"
+#  include "threading/Thread.h"
+#  include "vm/MutexIDs.h"
+#  include "wasm/WasmSignalHandlers.h"
 
 namespace js {
 

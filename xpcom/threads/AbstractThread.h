@@ -5,15 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(AbstractThread_h_)
-#define AbstractThread_h_
+#  define AbstractThread_h_
 
-#include "mozilla/RefPtr.h"
-#include "mozilla/ThreadLocal.h"
-#include "nscore.h"
-#include "nsIRunnable.h"
-#include "nsISerialEventTarget.h"
-#include "nsISupportsImpl.h"
-#include "nsIThread.h"
+#  include "mozilla/RefPtr.h"
+#  include "mozilla/ThreadLocal.h"
+#  include "nscore.h"
+#  include "nsIRunnable.h"
+#  include "nsISerialEventTarget.h"
+#  include "nsISupportsImpl.h"
+#  include "nsIThread.h"
 
 namespace mozilla {
 

@@ -18,11 +18,11 @@
 #include "nsToolkitCompsCID.h"
 
 #ifdef MOZ_PLACES
-#include "nsIFaviconService.h"
+#  include "nsIFaviconService.h"
 #endif  // MOZ_PLACES
 
 #ifdef XP_WIN
-#include <shellapi.h>
+#  include <shellapi.h>
 #endif
 
 using namespace mozilla;

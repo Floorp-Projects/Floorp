@@ -30,15 +30,15 @@
 #include "mozilla/SystemGroup.h"
 
 #if defined(ANDROID)
-#include <android/log.h>
-#include "mozilla/dom/ContentChild.h"
+#  include <android/log.h>
+#  include "mozilla/dom/ContentChild.h"
 #endif
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
+#  include "GeckoTaskTracer.h"
 using namespace mozilla::tasktracer;
 #endif
 
@@ -140,11 +140,11 @@ class AddConsolePrefWatchers : public Runnable {
   NS_IMETHOD Run() override {
 #if defined(ANDROID)
     Preferences::AddBoolVarCache(&gLoggingLogcat, "consoleservice.logcat",
-#ifdef RELEASE_OR_BETA
+#  ifdef RELEASE_OR_BETA
                                  false
-#else
+#  else
                                  true
-#endif
+#  endif
     );
 #endif  // defined(ANDROID)
 

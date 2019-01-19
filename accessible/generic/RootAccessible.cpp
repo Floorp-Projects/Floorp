@@ -19,7 +19,7 @@
 #include "Role.h"
 #include "States.h"
 #ifdef MOZ_XUL
-#include "XULTreeAccessible.h"
+#  include "XULTreeAccessible.h"
 #endif
 
 #include "mozilla/dom/BindingUtils.h"
@@ -43,7 +43,7 @@
 #include "nsGlobalWindow.h"
 
 #ifdef MOZ_XUL
-#include "nsIXULWindow.h"
+#  include "nsIXULWindow.h"
 #endif
 
 using namespace mozilla;

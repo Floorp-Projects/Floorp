@@ -24,16 +24,17 @@ using mozilla::LogLevel;
 
 #ifdef MOZ_LOGGING
 
-#include "mozilla/Logging.h"
+#  include "mozilla/Logging.h"
 static mozilla::LazyLogModule sWidgetLog("Widget");
 static mozilla::LazyLogModule sWidgetFocusLog("WidgetFocus");
-#define LOG(args) MOZ_LOG(sWidgetLog, mozilla::LogLevel::Debug, args)
-#define LOGFOCUS(args) MOZ_LOG(sWidgetFocusLog, mozilla::LogLevel::Debug, args)
+#  define LOG(args) MOZ_LOG(sWidgetLog, mozilla::LogLevel::Debug, args)
+#  define LOGFOCUS(args) \
+    MOZ_LOG(sWidgetFocusLog, mozilla::LogLevel::Debug, args)
 
 #else
 
-#define LOG(args)
-#define LOGFOCUS(args)
+#  define LOG(args)
+#  define LOGFOCUS(args)
 
 #endif /* MOZ_LOGGING */
 

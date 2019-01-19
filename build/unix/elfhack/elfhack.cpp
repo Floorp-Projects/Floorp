@@ -15,16 +15,16 @@
 #define elfhack_text ".elfhack.text.v" ver
 
 #ifndef R_ARM_V4BX
-#define R_ARM_V4BX 0x28
+#  define R_ARM_V4BX 0x28
 #endif
 #ifndef R_ARM_CALL
-#define R_ARM_CALL 0x1c
+#  define R_ARM_CALL 0x1c
 #endif
 #ifndef R_ARM_JUMP24
-#define R_ARM_JUMP24 0x1d
+#  define R_ARM_JUMP24 0x1d
 #endif
 #ifndef R_ARM_THM_JUMP24
-#define R_ARM_THM_JUMP24 0x1e
+#  define R_ARM_THM_JUMP24 0x1e
 #endif
 
 char *rundir = nullptr;

@@ -62,7 +62,7 @@ bool PluginProcessParent::Launch(
   // At present, the Mac Flash plugin sandbox does not support different
   // levels and is enabled via a boolean pref or environment variable.
   // On Mac, when |aSandboxLevel| is positive, we enable the sandbox.
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   mSandboxLevel = aSandboxLevel;
 
   // The sandbox process sometimes needs read access to the plugin file.
@@ -71,7 +71,7 @@ bool PluginProcessParent::Launch(
         NS_ConvertUTF8toUTF16(mPluginFilePath.c_str()).get());
     mAllowedFilesRead.push_back(pluginFile);
   }
-#endif  // XP_WIN
+#  endif  // XP_WIN
 #else
   if (aSandboxLevel != 0) {
     MOZ_ASSERT(false,

@@ -166,7 +166,7 @@ static inline ValueOperand ToOutValue(LInstruction* ins) {
 #elif defined(JS_PUNBOX64)
   return ValueOperand(ToRegister(ins->getDef(0)));
 #else
-#error "Unknown"
+#  error "Unknown"
 #endif
 }
 
@@ -177,7 +177,7 @@ static inline ValueOperand GetTempValue(Register type, Register payload) {
   (void)type;
   return ValueOperand(payload);
 #else
-#error "Unknown"
+#  error "Unknown"
 #endif
 }
 

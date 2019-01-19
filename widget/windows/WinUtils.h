@@ -26,7 +26,7 @@
 #include "nsIRunnable.h"
 #include "nsICryptoHash.h"
 #ifdef MOZ_PLACES
-#include "nsIFaviconService.h"
+#  include "nsIFaviconService.h"
 #endif
 #include "nsIDownloader.h"
 #include "nsIURI.h"
@@ -89,11 +89,11 @@ typedef enum DPI_AWARENESS {
   DPI_AWARENESS_PER_MONITOR_AWARE = 2
 } DPI_AWARENESS;
 
-#define DPI_AWARENESS_CONTEXT_UNAWARE ((DPI_AWARENESS_CONTEXT)-1)
-#define DPI_AWARENESS_CONTEXT_SYSTEM_AWARE ((DPI_AWARENESS_CONTEXT)-2)
-#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE ((DPI_AWARENESS_CONTEXT)-3)
+#  define DPI_AWARENESS_CONTEXT_UNAWARE ((DPI_AWARENESS_CONTEXT)-1)
+#  define DPI_AWARENESS_CONTEXT_SYSTEM_AWARE ((DPI_AWARENESS_CONTEXT)-2)
+#  define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE ((DPI_AWARENESS_CONTEXT)-3)
 
-#define DPI_AWARENESS_CONTEXT_DECLARED
+#  define DPI_AWARENESS_CONTEXT_DECLARED
 #endif  // (DPI_AWARENESS_CONTEXT_DECLARED)
 
 #if WINVER < 0x0605
@@ -127,12 +127,12 @@ extern EventMsgInfo gAllEvents[];
 // GetQueueStatus() that include newer win8 specific defines.
 
 #ifndef QS_RAWINPUT
-#define QS_RAWINPUT 0x0400
+#  define QS_RAWINPUT 0x0400
 #endif
 
 #ifndef QS_TOUCH
-#define QS_TOUCH 0x0800
-#define QS_POINTER 0x1000
+#  define QS_TOUCH 0x0800
+#  define QS_POINTER 0x1000
 #endif
 
 #define MOZ_QS_ALLEVENT                                                      \

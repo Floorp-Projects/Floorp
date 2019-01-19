@@ -64,15 +64,15 @@
 #include <algorithm>
 
 #ifdef MOZ_XUL
-#include "nsIDOMXULMenuListElement.h"
+#  include "nsIDOMXULMenuListElement.h"
 #endif
 
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
+#  include "nsAccessibilityService.h"
 #endif
 
 #ifndef XP_MACOSX
-#include "nsIScriptError.h"
+#  include "nsIScriptError.h"
 #endif
 
 using namespace mozilla;

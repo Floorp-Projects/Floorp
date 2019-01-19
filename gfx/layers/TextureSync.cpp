@@ -16,15 +16,15 @@
 #include "mozilla/StaticPtr.h"
 
 #ifdef DEBUG
-#define LOG_ERROR(str, args...)                                  \
-  PR_BEGIN_MACRO                                                 \
-  mozilla::SmprintfPointer msg = mozilla::Smprintf(str, ##args); \
-  NS_WARNING(msg.get());                                         \
-  PR_END_MACRO
+#  define LOG_ERROR(str, args...)                                  \
+    PR_BEGIN_MACRO                                                 \
+    mozilla::SmprintfPointer msg = mozilla::Smprintf(str, ##args); \
+    NS_WARNING(msg.get());                                         \
+    PR_END_MACRO
 #else
-#define LOG_ERROR(str, args...) \
-  do { /* nothing */            \
-  } while (0)
+#  define LOG_ERROR(str, args...) \
+    do { /* nothing */            \
+    } while (0)
 #endif
 
 namespace mozilla {

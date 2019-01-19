@@ -6,9 +6,9 @@
 #include "nspr.h"
 
 #ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
+#  include <netinet/in.h>
 #elif defined XP_WIN
-#include <winsock2.h>
+#  include <winsock2.h>
 #endif
 
 #include "AudioConduit.h"
@@ -34,14 +34,14 @@
 #include "webrtc/system_wrappers/include/clock.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
+#  include "AndroidBridge.h"
 #endif
 
 namespace mozilla {
 
 static const char* acLogTag = "WebrtcAudioSessionConduit";
 #ifdef LOGTAG
-#undef LOGTAG
+#  undef LOGTAG
 #endif
 #define LOGTAG acLogTag
 

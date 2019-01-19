@@ -13,12 +13,12 @@
 #include <vector>
 
 #ifdef MOZ_LOGGING
-#include "mozilla/Logging.h"
+#  include "mozilla/Logging.h"
 #endif
 #include "mozilla/Tuple.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
-#include "nsDebug.h"
+#  include "nsDebug.h"
 #endif
 #include "2D.h"
 #include "Point.h"
@@ -148,11 +148,11 @@ struct BasicLogger {
 #if defined(MOZ_WIDGET_ANDROID)
       return true;
 #else
-#if defined(MOZ_LOGGING)
+#  if defined(MOZ_LOGGING)
       if (MOZ_LOG_TEST(GetGFX2DLog(), PRLogLevelForLevel(aLevel))) {
         return true;
       } else
-#endif
+#  endif
           if ((LoggingPrefs::sGfxLogLevel >= LOG_DEBUG_PRLOG) ||
               (aLevel < LOG_DEBUG)) {
         return true;
@@ -180,12 +180,12 @@ struct BasicLogger {
 #if defined(MOZ_WIDGET_ANDROID)
       printf_stderr("%s%s", aString.c_str(), aNoNewline ? "" : "\n");
 #else
-#if defined(MOZ_LOGGING)
+#  if defined(MOZ_LOGGING)
       if (MOZ_LOG_TEST(GetGFX2DLog(), PRLogLevelForLevel(aLevel))) {
         MOZ_LOG(GetGFX2DLog(), PRLogLevelForLevel(aLevel),
                 ("%s%s", aString.c_str(), aNoNewline ? "" : "\n"));
       } else
-#endif
+#  endif
           if ((LoggingPrefs::sGfxLogLevel >= LOG_DEBUG_PRLOG) ||
               (aLevel < LOG_DEBUG)) {
         printf("%s%s", aString.c_str(), aNoNewline ? "" : "\n");
@@ -766,7 +766,7 @@ typedef Log<LOG_CRITICAL, CriticalLogger> CriticalLog;
 
 // Macro to glue names to get us less chance of name clashing.
 #if defined GFX_LOGGING_GLUE1 || defined GFX_LOGGING_GLUE
-#error "Clash of the macro GFX_LOGGING_GLUE1 or GFX_LOGGING_GLUE"
+#  error "Clash of the macro GFX_LOGGING_GLUE1 or GFX_LOGGING_GLUE"
 #endif
 #define GFX_LOGGING_GLUE1(x, y) x##y
 #define GFX_LOGGING_GLUE(x, y) GFX_LOGGING_GLUE1(x, y)
@@ -798,20 +798,20 @@ typedef Log<LOG_CRITICAL, CriticalLogger> CriticalLog;
 //   gfxCriticalError() << "This message only shows up once;
 // }
 #if defined(DEBUG)
-#define gfxDebug mozilla::gfx::DebugLog
-#define gfxDebugOnce \
-  static gfxDebug GFX_LOGGING_GLUE(sOnceAtLine, __LINE__) = gfxDebug
+#  define gfxDebug mozilla::gfx::DebugLog
+#  define gfxDebugOnce \
+    static gfxDebug GFX_LOGGING_GLUE(sOnceAtLine, __LINE__) = gfxDebug
 #else
-#define gfxDebug \
-  if (1)         \
-    ;            \
-  else           \
-    mozilla::gfx::NoLog
-#define gfxDebugOnce \
-  if (1)             \
-    ;                \
-  else               \
-    mozilla::gfx::NoLog
+#  define gfxDebug \
+    if (1)         \
+      ;            \
+    else           \
+      mozilla::gfx::NoLog
+#  define gfxDebugOnce \
+    if (1)             \
+      ;                \
+    else               \
+      mozilla::gfx::NoLog
 #endif
 
 // Have gfxWarning available (behind a runtime preference)
@@ -842,10 +842,10 @@ inline bool MOZ2D_error_if_impl(bool aCondition, const char* aExpr,
   }
   return aCondition;
 }
-#define MOZ2D_ERROR_IF(condition) \
-  MOZ2D_error_if_impl(condition, #condition, __FILE__, __LINE__)
+#  define MOZ2D_ERROR_IF(condition) \
+    MOZ2D_error_if_impl(condition, #condition, __FILE__, __LINE__)
 
-#ifdef DEBUG
+#  ifdef DEBUG
 inline bool MOZ2D_warn_if_impl(bool aCondition, const char* aExpr,
                                const char* aFile, int32_t aLine) {
   if (MOZ_UNLIKELY(aCondition)) {
@@ -853,11 +853,11 @@ inline bool MOZ2D_warn_if_impl(bool aCondition, const char* aExpr,
   }
   return aCondition;
 }
-#define MOZ2D_WARN_IF(condition) \
-  MOZ2D_warn_if_impl(condition, #condition, __FILE__, __LINE__)
-#else
-#define MOZ2D_WARN_IF(condition) (bool)(condition)
-#endif
+#    define MOZ2D_WARN_IF(condition) \
+      MOZ2D_warn_if_impl(condition, #condition, __FILE__, __LINE__)
+#  else
+#    define MOZ2D_WARN_IF(condition) (bool)(condition)
+#  endif
 #endif
 
 const int INDENT_PER_LEVEL = 2;

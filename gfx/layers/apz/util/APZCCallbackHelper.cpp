@@ -36,9 +36,9 @@
 
 // #define APZCCH_LOGGING 1
 #ifdef APZCCH_LOGGING
-#define APZCCH_LOG(...) printf_stderr("APZCCH: " __VA_ARGS__)
+#  define APZCCH_LOG(...) printf_stderr("APZCCH: " __VA_ARGS__)
 #else
-#define APZCCH_LOG(...)
+#  define APZCCH_LOG(...)
 #endif
 
 namespace mozilla {

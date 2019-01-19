@@ -24,7 +24,7 @@
 // Printing Progress Includes
 #include "nsIWebProgressListener.h"
 #if !defined(XP_MACOSX)
-#include "nsPrintProgress.h"
+#  include "nsPrintProgress.h"
 
 class nsIDOMWindow;
 class nsIDialogParamBlock;

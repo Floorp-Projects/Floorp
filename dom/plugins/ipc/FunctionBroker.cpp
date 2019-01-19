@@ -9,9 +9,9 @@
 #include "PluginQuirks.h"
 
 #if defined(XP_WIN)
-#include <commdlg.h>
-#include <schannel.h>
-#include <sddl.h>
+#  include <commdlg.h>
+#  include <schannel.h>
+#  include <sddl.h>
 #endif  // defined(XP_WIN)
 
 using namespace mozilla;
@@ -233,7 +233,7 @@ typedef FileDlgFunctionBroker<ID_GetSaveFileNameW, decltype(GetSaveFileNameW)>
 // Remember files granted access in the chrome process
 static void GrantFileAccess(base::ProcessId aClientId, LPOPENFILENAME& aLpofn,
                             bool isSave) {
-#if defined(MOZ_SANDBOX)
+#  if defined(MOZ_SANDBOX)
   if (aLpofn->Flags & OFN_ALLOWMULTISELECT) {
     // We only support multiselect with the OFN_EXPLORER flag.
     // This guarantees that ofn.lpstrFile follows the pattern below.
@@ -266,11 +266,11 @@ static void GrantFileAccess(base::ProcessId aClientId, LPOPENFILENAME& aLpofn,
     FunctionBrokerParent::GetSandboxPermissions()->GrantFileAccess(
         aClientId, aLpofn->lpstrFile, isSave);
   }
-#else
+#  else
   MOZ_ASSERT_UNREACHABLE(
       "GetFileName IPC message is only available on "
       "Windows builds with sandbox.");
-#endif
+#  endif
 }
 
 template <>

@@ -52,21 +52,21 @@ class ScriptLoader;
 
 extern mozilla::LazyLogModule gContentSinkLogModuleInfo;
 
-#define SINK_TRACE_CALLS 0x1
-#define SINK_TRACE_REFLOW 0x2
-#define SINK_ALWAYS_REFLOW 0x4
+#  define SINK_TRACE_CALLS 0x1
+#  define SINK_TRACE_REFLOW 0x2
+#  define SINK_ALWAYS_REFLOW 0x4
 
-#define SINK_LOG_TEST(_lm, _bit) (int((_lm)->Level()) & (_bit))
+#  define SINK_LOG_TEST(_lm, _bit) (int((_lm)->Level()) & (_bit))
 
-#define SINK_TRACE(_lm, _bit, _args) \
-  do {                               \
-    if (SINK_LOG_TEST(_lm, _bit)) {  \
-      printf_stderr _args;           \
-    }                                \
-  } while (0)
+#  define SINK_TRACE(_lm, _bit, _args) \
+    do {                               \
+      if (SINK_LOG_TEST(_lm, _bit)) {  \
+        printf_stderr _args;           \
+      }                                \
+    } while (0)
 
 #else
-#define SINK_TRACE(_lm, _bit, _args)
+#  define SINK_TRACE(_lm, _bit, _args)
 #endif
 
 #undef SINK_NO_INCREMENTAL

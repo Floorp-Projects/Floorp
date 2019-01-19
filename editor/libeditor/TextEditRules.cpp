@@ -595,15 +595,15 @@ TextEditRules::GetTextNodeAroundSelectionStartContainer() {
 }
 
 #ifdef DEBUG
-#define ASSERT_PASSWORD_LENGTHS_EQUAL()                               \
-  if (IsPasswordEditor() && mTextEditor->GetRoot()) {                 \
-    int32_t txtLen;                                                   \
-    mTextEditor->GetTextLength(&txtLen);                              \
-    NS_ASSERTION(mPasswordText.Length() == uint32_t(txtLen),          \
-                 "password length not equal to number of asterisks"); \
-  }
+#  define ASSERT_PASSWORD_LENGTHS_EQUAL()                               \
+    if (IsPasswordEditor() && mTextEditor->GetRoot()) {                 \
+      int32_t txtLen;                                                   \
+      mTextEditor->GetTextLength(&txtLen);                              \
+      NS_ASSERTION(mPasswordText.Length() == uint32_t(txtLen),          \
+                   "password length not equal to number of asterisks"); \
+    }
 #else
-#define ASSERT_PASSWORD_LENGTHS_EQUAL()
+#  define ASSERT_PASSWORD_LENGTHS_EQUAL()
 #endif
 
 void TextEditRules::HandleNewLines(nsString& aString) {

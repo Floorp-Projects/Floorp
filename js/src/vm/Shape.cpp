@@ -1993,14 +1993,14 @@ void Shape::dump(js::GenericPrinter& out) const {
   if (attrs) {
     int first = 1;
     out.putChar('(');
-#define DUMP_ATTR(name, display) \
-  if (attrs & JSPROP_##name) out.put(&(" " #display)[first]), first = 0
+#  define DUMP_ATTR(name, display) \
+    if (attrs & JSPROP_##name) out.put(&(" " #display)[first]), first = 0
     DUMP_ATTR(ENUMERATE, enumerate);
     DUMP_ATTR(READONLY, readonly);
     DUMP_ATTR(PERMANENT, permanent);
     DUMP_ATTR(GETTER, getter);
     DUMP_ATTR(SETTER, setter);
-#undef DUMP_ATTR
+#  undef DUMP_ATTR
     out.putChar(')');
   }
 
@@ -2008,10 +2008,10 @@ void Shape::dump(js::GenericPrinter& out) const {
   if (immutableFlags) {
     int first = 1;
     out.putChar('(');
-#define DUMP_FLAG(name, display) \
-  if (immutableFlags & name) out.put(&(" " #display)[first]), first = 0
+#  define DUMP_FLAG(name, display) \
+    if (immutableFlags & name) out.put(&(" " #display)[first]), first = 0
     DUMP_FLAG(IN_DICTIONARY, in_dictionary);
-#undef DUMP_FLAG
+#  undef DUMP_FLAG
     out.putChar(')');
   }
 }

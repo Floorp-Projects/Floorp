@@ -9,9 +9,9 @@
 #include "prsystem.h"
 
 #ifdef XP_MACOSX
-#include <sys/resource.h>
-#include <mach/clock.h>
-#include <mach/mach_host.h>
+#  include <sys/resource.h>
+#  include <mach/clock.h>
+#  include <mach/mach_host.h>
 #endif
 
 namespace mozilla {
@@ -32,7 +32,7 @@ struct CPUStats {
   uint64_t updateTime;
 };
 
-#ifdef XP_MACOSX
+#  ifdef XP_MACOSX
 
 static const uint64_t kMicrosecondsPerSecond = 1000000LL;
 static const uint64_t kNanosecondsPerMicrosecond = 1000LL;
@@ -95,9 +95,9 @@ Result<CPUStats, CPUUsageWatcherError> GetGlobalCPUStats() {
   return result;
 }
 
-#endif  // XP_MACOSX
+#  endif  // XP_MACOSX
 
-#ifdef XP_WIN
+#  ifdef XP_WIN
 
 // A FILETIME represents the number of 100-nanosecond ticks since 1/1/1601 UTC
 static const uint64_t kFILETIMETicksPerSecond = 10000000;
@@ -150,7 +150,7 @@ Result<CPUStats, CPUUsageWatcherError> GetGlobalCPUStats() {
   return result;
 }
 
-#endif  // XP_WIN
+#  endif  // XP_WIN
 
 Result<Ok, CPUUsageWatcherError> CPUUsageWatcher::Init() {
   mNumCPUs = PR_GetNumberOfProcessors();

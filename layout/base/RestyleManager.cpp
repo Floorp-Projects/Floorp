@@ -50,7 +50,7 @@
 #include "nsSVGIntegrationUtils.h"
 
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
+#  include "nsAccessibilityService.h"
 #endif
 
 using mozilla::layers::AnimationInfo;

@@ -48,41 +48,42 @@ static int afl_interface_raw(const char* testFile,
   return 0;
 }
 
-#define MOZ_AFL_INTERFACE_COMMON()                                             \
-  char* testFilePtr = getenv("MOZ_FUZZ_TESTFILE");                             \
-  if (!testFilePtr) {                                                          \
-    fprintf(                                                                   \
-        stderr,                                                                \
-        "Must specify testfile in MOZ_FUZZ_TESTFILE environment variable.\n"); \
-    return 1;                                                                  \
-  }                                                                            \
-  /* Make a copy of testFilePtr so the testing function can safely call getenv \
-   */                                                                          \
-  std::string testFile(testFilePtr);
+#  define MOZ_AFL_INTERFACE_COMMON()                                      \
+    char* testFilePtr = getenv("MOZ_FUZZ_TESTFILE");                      \
+    if (!testFilePtr) {                                                   \
+      fprintf(stderr,                                                     \
+              "Must specify testfile in MOZ_FUZZ_TESTFILE environment "   \
+              "variable.\n");                                             \
+      return 1;                                                           \
+    }                                                                     \
+    /* Make a copy of testFilePtr so the testing function can safely call \
+     * getenv                                                             \
+     */                                                                   \
+    std::string testFile(testFilePtr);
 
-#define MOZ_AFL_INTERFACE_RAW(initFunc, testFunc, moduleName)          \
-  static int afl_fuzz_##moduleName(const uint8_t* data, size_t size) { \
-    MOZ_RELEASE_ASSERT(data == NULL && size == 0);                     \
-    MOZ_AFL_INTERFACE_COMMON();                                        \
-    return ::mozilla::afl_interface_raw(testFile.c_str(), testFunc);   \
-  }                                                                    \
-  static void __attribute__((constructor)) AFLRegister##moduleName() { \
-    ::mozilla::FuzzerRegistry::getInstance().registerModule(           \
-        #moduleName, initFunc, afl_fuzz_##moduleName);                 \
-  }
+#  define MOZ_AFL_INTERFACE_RAW(initFunc, testFunc, moduleName)          \
+    static int afl_fuzz_##moduleName(const uint8_t* data, size_t size) { \
+      MOZ_RELEASE_ASSERT(data == NULL && size == 0);                     \
+      MOZ_AFL_INTERFACE_COMMON();                                        \
+      return ::mozilla::afl_interface_raw(testFile.c_str(), testFunc);   \
+    }                                                                    \
+    static void __attribute__((constructor)) AFLRegister##moduleName() { \
+      ::mozilla::FuzzerRegistry::getInstance().registerModule(           \
+          #moduleName, initFunc, afl_fuzz_##moduleName);                 \
+    }
 #else
-#define MOZ_AFL_INTERFACE_RAW(initFunc, testFunc, moduleName) /* Nothing */
-#endif                                                        // __AFL_COMPILER
+#  define MOZ_AFL_INTERFACE_RAW(initFunc, testFunc, moduleName) /* Nothing */
+#endif  // __AFL_COMPILER
 
 #ifdef LIBFUZZER
-#define MOZ_LIBFUZZER_INTERFACE_RAW(initFunc, testFunc, moduleName)          \
-  static void __attribute__((constructor)) LibFuzzerRegister##moduleName() { \
-    ::mozilla::FuzzerRegistry::getInstance().registerModule(                 \
-        #moduleName, initFunc, testFunc);                                    \
-  }
+#  define MOZ_LIBFUZZER_INTERFACE_RAW(initFunc, testFunc, moduleName)          \
+    static void __attribute__((constructor)) LibFuzzerRegister##moduleName() { \
+      ::mozilla::FuzzerRegistry::getInstance().registerModule(                 \
+          #moduleName, initFunc, testFunc);                                    \
+    }
 #else
-#define MOZ_LIBFUZZER_INTERFACE_RAW(initFunc, testFunc, \
-                                    moduleName) /* Nothing */
+#  define MOZ_LIBFUZZER_INTERFACE_RAW(initFunc, testFunc, \
+                                      moduleName) /* Nothing */
 #endif
 
 #define MOZ_FUZZING_INTERFACE_RAW(initFunc, testFunc, moduleName) \

@@ -9,19 +9,19 @@
 #include <windows.h>
 
 #ifdef _DEBUG
-#define BREAK_TO_DEBUGGER DebugBreak()
+#  define BREAK_TO_DEBUGGER DebugBreak()
 #else
-#define BREAK_TO_DEBUGGER
+#  define BREAK_TO_DEBUGGER
 #endif
 
 #ifdef _DEBUG
-#define VERIFY(exp)    \
-  if (!(exp)) {        \
-    GetLastError();    \
-    BREAK_TO_DEBUGGER; \
-  }
+#  define VERIFY(exp)    \
+    if (!(exp)) {        \
+      GetLastError();    \
+      BREAK_TO_DEBUGGER; \
+    }
 #else  // !_DEBUG
-#define VERIFY(exp) (exp)
+#  define VERIFY(exp) (exp)
 #endif  // !_DEBUG
 
 // Win32 logging modules:

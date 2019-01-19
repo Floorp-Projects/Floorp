@@ -18,7 +18,7 @@
 #include "SocketProcessBridgeParent.h"
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ChildProfilerController.h"
+#  include "ChildProfilerController.h"
 #endif
 
 namespace mozilla {
@@ -158,7 +158,7 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInitProfiler(
 mozilla::ipc::IPCResult SocketProcessChild::RecvSocketProcessTelemetryPing() {
   const uint32_t kExpectedUintValue = 42;
   Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_SOCKET_ONLY_UINT,
-      kExpectedUintValue);
+                       kExpectedUintValue);
   return IPC_OK();
 }
 

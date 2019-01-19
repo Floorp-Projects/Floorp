@@ -15,9 +15,9 @@
  */
 
 #if !defined(WMFH264Decoder_h_)
-#define WMFH264Decoder_h_
+#  define WMFH264Decoder_h_
 
-#include "WMFUtils.h"
+#  include "WMFUtils.h"
 
 namespace wmf {
 

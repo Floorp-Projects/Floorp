@@ -20,12 +20,12 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 #if 0
-#include <stdio.h>
-#define NATIVE_DRAWING_NOTE(m) fprintf(stderr, m)
+#  include <stdio.h>
+#  define NATIVE_DRAWING_NOTE(m) fprintf(stderr, m)
 #else
-#define NATIVE_DRAWING_NOTE(m) \
-  do {                         \
-  } while (0)
+#  define NATIVE_DRAWING_NOTE(m) \
+    do {                         \
+    } while (0)
 #endif
 
 /* We have four basic strategies available:

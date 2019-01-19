@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaSystemResourceManagerParent_h_)
-#define MediaSystemResourceManagerParent_h_
+#  define MediaSystemResourceManagerParent_h_
 
-#include "MediaSystemResourceManager.h"
-#include "MediaSystemResourceService.h"
-#include "MediaSystemResourceTypes.h"
-#include "mozilla/media/PMediaSystemResourceManagerParent.h"
+#  include "MediaSystemResourceManager.h"
+#  include "MediaSystemResourceService.h"
+#  include "MediaSystemResourceTypes.h"
+#  include "mozilla/media/PMediaSystemResourceManagerParent.h"
 
 namespace mozilla {
 namespace media {

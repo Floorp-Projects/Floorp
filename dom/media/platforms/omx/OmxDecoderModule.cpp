@@ -10,7 +10,7 @@
 #include "OmxPlatformLayer.h"
 
 #ifdef MOZ_OMX
-#include "PureOmxPlatformLayer.h"
+#  include "PureOmxPlatformLayer.h"
 #endif
 
 namespace mozilla {

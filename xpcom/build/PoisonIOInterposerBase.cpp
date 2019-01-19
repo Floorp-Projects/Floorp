@@ -15,12 +15,12 @@
 #include "prlock.h"
 
 #ifdef MOZ_REPLACE_MALLOC
-#include "replace_malloc_bridge.h"
+#  include "replace_malloc_bridge.h"
 #endif
 
 // Auxiliary method to convert file descriptors to ids
 #if defined(XP_WIN32)
-#include <io.h>
+#  include <io.h>
 inline intptr_t FileDescriptorToHandle(int aFd) { return _get_osfhandle(aFd); }
 #else
 inline intptr_t FileDescriptorToHandle(int aFd) { return aFd; }

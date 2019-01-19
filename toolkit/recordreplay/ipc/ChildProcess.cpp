@@ -65,13 +65,13 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg,
     case MessageType::FatalError: {
       mHasFatalError = true;
       const FatalErrorMessage& nmsg =
-        static_cast<const FatalErrorMessage&>(aMsg);
+          static_cast<const FatalErrorMessage&>(aMsg);
       OnCrash(nmsg.Error());
       return;
     }
     case MessageType::HitExecutionPoint: {
       const HitExecutionPointMessage& nmsg =
-        static_cast<const HitExecutionPointMessage&>(aMsg);
+          static_cast<const HitExecutionPointMessage&>(aMsg);
       mPaused = true;
       if (this == GetActiveChild() && !nmsg.mPoint.HasPosition()) {
         MaybeUpdateGraphicsAtCheckpoint(nmsg.mPoint.mCheckpoint);
@@ -93,7 +93,7 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg,
       break;
     case MessageType::MiddlemanCallRequest: {
       const MiddlemanCallRequestMessage& nmsg =
-        static_cast<const MiddlemanCallRequestMessage&>(aMsg);
+          static_cast<const MiddlemanCallRequestMessage&>(aMsg);
       Message::UniquePtr response(ProcessMiddlemanCallMessage(nmsg));
       SendMessage(*response);
       break;
@@ -163,10 +163,10 @@ void ChildProcessInfo::LaunchSubprocess(
   // deleting or tearing down the old one's state. This is pretty lame and it
   // would be nice if we could do something better here, especially because
   // with restarts we could create any number of channels over time.
-  mChannel = new Channel(channelId, IsRecording(),
-                         [=](Message::UniquePtr aMsg) {
-                           ReceiveChildMessageOnMainThread(std::move(aMsg));
-                         });
+  mChannel =
+      new Channel(channelId, IsRecording(), [=](Message::UniquePtr aMsg) {
+        ReceiveChildMessageOnMainThread(std::move(aMsg));
+      });
 
   MOZ_RELEASE_ASSERT(IsRecording() == aRecordingProcessData.isSome());
   if (IsRecording()) {
@@ -259,9 +259,7 @@ struct PendingMessage {
     return *this;
   }
 
-  PendingMessage(PendingMessage&& aOther) {
-    *this = std::move(aOther);
-  }
+  PendingMessage(PendingMessage&& aOther) { *this = std::move(aOther); }
 };
 static StaticInfallibleVector<PendingMessage> gPendingMessages;
 
@@ -364,7 +362,8 @@ Message::UniquePtr ChildProcessInfo::WaitUntilPaused() {
 // Execute a task that processes a message received from the child. This is
 // called on a channel thread, and the function executes asynchronously on
 // the main thread.
-void ChildProcessInfo::ReceiveChildMessageOnMainThread(Message::UniquePtr aMsg) {
+void ChildProcessInfo::ReceiveChildMessageOnMainThread(
+    Message::UniquePtr aMsg) {
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
 
   MonitorAutoLock lock(*gMonitor);

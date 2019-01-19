@@ -7,13 +7,13 @@
 #include <string.h>
 
 #if defined(ANDROID)
-#include <fcntl.h>
-#include <linux/ashmem.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#  include <fcntl.h>
+#  include <linux/ashmem.h>
+#  include <sys/ioctl.h>
+#  include <sys/stat.h>
+#  include <sys/types.h>
 #elif defined(XP_DARWIN)
-#include <mach/mach.h>
+#  include <mach/mach.h>
 #endif
 
 using namespace mozilla;

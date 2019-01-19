@@ -32,7 +32,7 @@
 // for focus
 #include "nsIScrollableFrame.h"
 #ifdef DEBUG_CANVAS_FOCUS
-#include "nsIDocShell.h"
+#  include "nsIDocShell.h"
 #endif
 
 //#define DEBUG_CANVAS_FOCUS

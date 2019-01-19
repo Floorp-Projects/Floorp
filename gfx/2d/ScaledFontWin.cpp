@@ -12,11 +12,11 @@
 #include "nsString.h"
 
 #ifdef USE_SKIA
-#include "skia/include/ports/SkTypeface_win.h"
+#  include "skia/include/ports/SkTypeface_win.h"
 #endif
 
 #ifdef USE_CAIRO_SCALED_FONT
-#include "cairo-win32.h"
+#  include "cairo-win32.h"
 #endif
 
 #include "HelpersWinFonts.h"

@@ -26,19 +26,19 @@
 #include "Tools.h"
 
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
-#include "cairo-quartz.h"
-#ifdef MOZ_WIDGET_COCOA
-#include <ApplicationServices/ApplicationServices.h>
-#endif
+#  include "cairo-quartz.h"
+#  ifdef MOZ_WIDGET_COCOA
+#    include <ApplicationServices/ApplicationServices.h>
+#  endif
 #endif
 
 #ifdef CAIRO_HAS_XLIB_SURFACE
-#include "cairo-xlib.h"
-#include "cairo-xlib-xrender.h"
+#  include "cairo-xlib.h"
+#  include "cairo-xlib-xrender.h"
 #endif
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
-#include "cairo-win32.h"
+#  include "cairo-win32.h"
 #endif
 
 #define PIXMAN_DONT_DEFINE_STDINT
@@ -1655,7 +1655,7 @@ already_AddRefed<SourceSurface> DrawTargetCairo::OptimizeSourceSurface(
 // Although the dimension parameters in the xCreatePixmapReq wire protocol are
 // 16-bit unsigned integers, the server's CreatePixmap returns BadAlloc if
 // either dimension cannot be represented by a 16-bit *signed* integer.
-#define XLIB_IMAGE_SIDE_SIZE_LIMIT 0x7fff
+#  define XLIB_IMAGE_SIDE_SIZE_LIMIT 0x7fff
 
   if (size.width > XLIB_IMAGE_SIDE_SIZE_LIMIT ||
       size.height > XLIB_IMAGE_SIDE_SIZE_LIMIT) {
@@ -2180,7 +2180,7 @@ bool BorrowedXlibDrawable::Init(DrawTarget* aDT) {
   mDT = aDT;
   mDrawable = X11None;
 
-#ifdef CAIRO_HAS_XLIB_SURFACE
+#  ifdef CAIRO_HAS_XLIB_SURFACE
   if (aDT->GetBackendType() != BackendType::CAIRO || aDT->IsDualDrawTarget() ||
       aDT->IsTiledDrawTarget()) {
     return false;
@@ -2208,9 +2208,9 @@ bool BorrowedXlibDrawable::Init(DrawTarget* aDT) {
   mOffset = Point(x, y);
 
   return true;
-#else
+#  else
   return false;
-#endif
+#  endif
 }
 
 void BorrowedXlibDrawable::Finish() {

@@ -12,16 +12,16 @@
 #include "jsapi-tests/tests.h"
 
 #if defined(XP_WIN)
-#include "util/Windows.h"
-#include <psapi.h>
+#  include "util/Windows.h"
+#  include <psapi.h>
 #else
-#include <algorithm>
-#include <errno.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+#  include <algorithm>
+#  include <errno.h>
+#  include <sys/mman.h>
+#  include <sys/resource.h>
+#  include <sys/stat.h>
+#  include <sys/types.h>
+#  include <unistd.h>
 #endif
 
 BEGIN_TEST(testGCAllocator) {

@@ -9,7 +9,7 @@
 #include "BaseAccessibles.h"
 
 #if defined(MOZ_CONTENT_SANDBOX)
-#include "mozilla/mscom/Ptr.h"
+#  include "mozilla/mscom/Ptr.h"
 #endif
 
 struct IAccessible;

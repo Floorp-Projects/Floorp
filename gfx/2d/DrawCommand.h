@@ -29,6 +29,7 @@ enum class CommandType : int8_t {
   COPYSURFACE,
   COPYRECT,
   FILLRECT,
+  FILLROUNDEDRECT,
   STROKERECT,
   STROKELINE,
   STROKE,

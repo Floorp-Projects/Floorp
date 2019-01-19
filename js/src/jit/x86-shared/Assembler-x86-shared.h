@@ -12,11 +12,11 @@
 #include "jit/shared/Assembler-shared.h"
 
 #if defined(JS_CODEGEN_X86)
-#include "jit/x86/BaseAssembler-x86.h"
+#  include "jit/x86/BaseAssembler-x86.h"
 #elif defined(JS_CODEGEN_X64)
-#include "jit/x64/BaseAssembler-x64.h"
+#  include "jit/x64/BaseAssembler-x64.h"
 #else
-#error "Unknown architecture!"
+#  error "Unknown architecture!"
 #endif
 
 namespace js {

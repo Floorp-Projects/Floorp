@@ -8,10 +8,10 @@
 #define MOZILLA_GFX_SCALEDFONTMAC_H_
 
 #ifdef MOZ_WIDGET_COCOA
-#include <ApplicationServices/ApplicationServices.h>
+#  include <ApplicationServices/ApplicationServices.h>
 #else
-#include <CoreGraphics/CoreGraphics.h>
-#include <CoreText/CoreText.h>
+#  include <CoreGraphics/CoreGraphics.h>
+#  include <CoreText/CoreText.h>
 #endif
 
 #include "2D.h"

@@ -434,13 +434,13 @@ nsLayoutDebuggingTools::DumpReflowStats() {
 #ifdef DEBUG
   nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell));
   if (shell) {
-#ifdef MOZ_REFLOW_PERF
+#  ifdef MOZ_REFLOW_PERF
     shell->DumpReflows();
-#else
+#  else
     printf("************************************************\n");
     printf("Sorry, you have not built with MOZ_REFLOW_PERF=1\n");
     printf("************************************************\n");
-#endif
+#  endif
   }
 #endif
   return NS_OK;

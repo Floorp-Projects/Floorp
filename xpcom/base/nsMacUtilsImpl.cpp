@@ -182,7 +182,7 @@ bool nsMacUtilsImpl::GetAppPath(nsCString& aAppPath) {
   return true;
 }
 
-#if defined(DEBUG)
+#  if defined(DEBUG)
 // Given a path to a file, return the directory which contains it.
 nsAutoCString nsMacUtilsImpl::GetDirectoryPath(const char* aPath) {
   nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
@@ -201,5 +201,5 @@ nsAutoCString nsMacUtilsImpl::GetDirectoryPath(const char* aPath) {
   }
   return directoryPath;
 }
-#endif /* DEBUG */
-#endif /* MOZ_CONTENT_SANDBOX */
+#  endif /* DEBUG */
+#endif   /* MOZ_CONTENT_SANDBOX */

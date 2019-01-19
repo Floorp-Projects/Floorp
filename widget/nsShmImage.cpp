@@ -7,21 +7,21 @@
 #include "nsShmImage.h"
 
 #ifdef MOZ_HAVE_SHMIMAGE
-#include "mozilla/X11Util.h"
-#include "mozilla/gfx/gfxVars.h"
-#include "mozilla/ipc/SharedMemory.h"
-#include "gfxPlatform.h"
-#include "nsPrintfCString.h"
-#include "nsTArray.h"
+#  include "mozilla/X11Util.h"
+#  include "mozilla/gfx/gfxVars.h"
+#  include "mozilla/ipc/SharedMemory.h"
+#  include "gfxPlatform.h"
+#  include "nsPrintfCString.h"
+#  include "nsTArray.h"
 
-#include <dlfcn.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
+#  include <dlfcn.h>
+#  include <errno.h>
+#  include <string.h>
+#  include <sys/ipc.h>
+#  include <sys/shm.h>
 
 extern "C" {
-#include <X11/ImUtil.h>
+#  include <X11/ImUtil.h>
 }
 
 using namespace mozilla::ipc;
@@ -56,12 +56,12 @@ bool nsShmImage::UseShm() { return gShmAvailable; }
 bool nsShmImage::CreateShmSegment() {
   size_t size = SharedMemory::PageAlignedSize(mStride * mSize.height);
 
-#if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
+#  if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
   static mozilla::LazyLogModule sPledgeLog("SandboxPledge");
   MOZ_LOG(sPledgeLog, mozilla::LogLevel::Debug,
           ("%s called when pledged, returning false\n", __func__));
   return false;
-#endif
+#  endif
   mShmId = shmget(IPC_PRIVATE, size, IPC_CREAT | 0600);
   if (mShmId == -1) {
     return false;
@@ -81,14 +81,14 @@ bool nsShmImage::CreateShmSegment() {
     return false;
   }
 
-#ifdef DEBUG
+#  ifdef DEBUG
   struct shmid_ds info;
   if (shmctl(mShmId, IPC_STAT, &info) < 0) {
     return false;
   }
 
   MOZ_ASSERT(size <= info.shm_segsz, "Segment doesn't have enough space!");
-#endif
+#  endif
 
   return true;
 }

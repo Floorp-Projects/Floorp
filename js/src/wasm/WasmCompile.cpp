@@ -68,7 +68,7 @@ uint32_t wasm::ObservedCPUFeatures() {
 #elif defined(JS_CODEGEN_NONE)
   return 0;
 #else
-#error "unknown architecture"
+#  error "unknown architecture"
 #endif
 }
 

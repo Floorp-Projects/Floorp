@@ -14,20 +14,20 @@
 #include "mozilla/gfx/Quaternion.h"
 
 #ifdef XP_WIN
-#include "CompositorD3D11.h"
-#include "TextureD3D11.h"
+#  include "CompositorD3D11.h"
+#  include "TextureD3D11.h"
 static const char* kShmemName = "moz.gecko.vr_ext.0.0.1";
 #elif defined(XP_MACOSX)
-#include "mozilla/gfx/MacIOSurface.h"
-#include <sys/mman.h>
-#include <sys/stat.h> /* For mode constants */
-#include <fcntl.h>    /* For O_* constants */
-#include <errno.h>
+#  include "mozilla/gfx/MacIOSurface.h"
+#  include <sys/mman.h>
+#  include <sys/stat.h> /* For mode constants */
+#  include <fcntl.h>    /* For O_* constants */
+#  include <errno.h>
 static const char* kShmemName = "/moz.gecko.vr_ext.0.0.1";
 #elif defined(MOZ_WIDGET_ANDROID)
-#include <string.h>
-#include <pthread.h>
-#include "GeckoVRManager.h"
+#  include <string.h>
+#  include <pthread.h>
+#  include "GeckoVRManager.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 #include "gfxVRExternal.h"
@@ -43,7 +43,7 @@ static const char* kShmemName = "/moz.gecko.vr_ext.0.0.1";
 #include "mozilla/Telemetry.h"
 
 #ifndef M_PI
-#define M_PI 3.14159265358979323846
+#  define M_PI 3.14159265358979323846
 #endif
 
 using namespace mozilla;
@@ -281,11 +281,11 @@ bool VRDisplayExternal::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
         return false;
       }
     }
-#ifdef XP_WIN
+#  ifdef XP_WIN
     Sleep(0);
-#else
+#  else
     sleep(0);
-#endif
+#  endif
   }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
@@ -629,13 +629,13 @@ void VRSystemManagerExternal::Enumerate() {
                 [&]() { return mEnumerationCompleted; });
 #else
       while (!PullState(&displayState)) {
-#ifdef XP_WIN
+#  ifdef XP_WIN
         Sleep(0);
-#else
+#  else
         sleep(0);
-#endif  // XP_WIN
+#  endif  // XP_WIN
       }
-#endif  // defined(MOZ_WIDGET_ANDROID)
+#endif    // defined(MOZ_WIDGET_ANDROID)
 
       if (displayState.isConnected) {
         mDisplay = new VRDisplayExternal(displayState);

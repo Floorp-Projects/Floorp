@@ -39,7 +39,7 @@ namespace mozilla {
 
 static const char* wmcLogTag = "WebrtcMediaCodecVP8VideoCodec";
 #ifdef LOGTAG
-#undef LOGTAG
+#  undef LOGTAG
 #endif
 #define LOGTAG wmcLogTag
 

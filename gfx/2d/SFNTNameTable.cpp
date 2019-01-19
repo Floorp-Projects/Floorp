@@ -11,7 +11,7 @@
 #include "mozilla/Move.h"
 
 #if defined(XP_MACOSX)
-#include <CoreFoundation/CoreFoundation.h>
+#  include <CoreFoundation/CoreFoundation.h>
 #endif
 
 namespace mozilla {

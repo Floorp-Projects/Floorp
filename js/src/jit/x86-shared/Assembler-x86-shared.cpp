@@ -7,18 +7,18 @@
 #include "gc/Marking.h"
 #include "jit/JitRealm.h"
 #if defined(JS_CODEGEN_X86)
-#include "jit/x86/MacroAssembler-x86.h"
+#  include "jit/x86/MacroAssembler-x86.h"
 #elif defined(JS_CODEGEN_X64)
-#include "jit/x64/MacroAssembler-x64.h"
+#  include "jit/x64/MacroAssembler-x64.h"
 #else
-#error "Wrong architecture. Only x86 and x64 should build this file!"
+#  error "Wrong architecture. Only x86 and x64 should build this file!"
 #endif
 
 #ifdef _MSC_VER
-#include <intrin.h>  // for __cpuid
-#if defined(_M_X64) && (_MSC_FULL_VER >= 160040219)
-#include <immintrin.h>  // for _xgetbv
-#endif
+#  include <intrin.h>  // for __cpuid
+#  if defined(_M_X64) && (_MSC_FULL_VER >= 160040219)
+#    include <immintrin.h>  // for _xgetbv
+#  endif
 #endif
 
 using namespace js;
@@ -267,18 +267,18 @@ static void ReadCPUInfo(int* flagsEax, int* flagsEbx, int* flagsEcx,
   // random bits indicating SSE3/SSE4 are present. Also make sure that it's
   // set to 0 as an input for BMI detection on all platforms.
   *flagsEcx = 0;
-#ifdef JS_CODEGEN_X64
+#  ifdef JS_CODEGEN_X64
   asm("cpuid;"
       : "+a"(*flagsEax), "=b"(*flagsEbx), "+c"(*flagsEcx), "=d"(*flagsEdx));
-#else
+#  else
   // On x86, preserve ebx. The compiler needs it for PIC mode.
   asm("mov %%ebx, %%edi;"
       "cpuid;"
       "xchg %%edi, %%ebx;"
       : "+a"(*flagsEax), "=D"(*flagsEbx), "+c"(*flagsEcx), "=d"(*flagsEdx));
-#endif
+#  endif
 #else
-#error "Unsupported compiler"
+#  error "Unsupported compiler"
 #endif
 }
 

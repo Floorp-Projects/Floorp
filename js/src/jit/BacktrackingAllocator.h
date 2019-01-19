@@ -17,9 +17,9 @@
 
 // Gives better traces in Nightly/debug builds (could be EARLY_BETA_OR_EARLIER)
 #if defined(NIGHTLY_BUILD) || defined(DEBUG)
-#define AVOID_INLINE_FOR_DEBUGGING MOZ_NEVER_INLINE
+#  define AVOID_INLINE_FOR_DEBUGGING MOZ_NEVER_INLINE
 #else
-#define AVOID_INLINE_FOR_DEBUGGING
+#  define AVOID_INLINE_FOR_DEBUGGING
 #endif
 
 // Backtracking priority queue based register allocator based on that described

@@ -13,8 +13,8 @@
 #include "nsXREDirProvider.h"
 
 #ifdef NS_PRINTING
-#include "nsPrintingPromptService.h"
-#include "nsPrintingProxy.h"
+#  include "nsPrintingPromptService.h"
+#  include "nsPrintingProxy.h"
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowWatcher, Init)
@@ -25,21 +25,21 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsXREDirProvider,
 
 #ifdef MOZ_XUL
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock)
-#ifdef NS_PRINTING
+#  ifdef NS_PRINTING
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPrintingPromptService,
                                          nsPrintingPromptService::GetSingleton)
-#ifdef PROXY_PRINTING
+#    ifdef PROXY_PRINTING
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPrintingProxy,
                                          nsPrintingProxy::GetInstance)
-#endif
-#endif
+#    endif
+#  endif
 #endif
 
 #ifdef MOZ_XUL
 NS_DEFINE_NAMED_CID(NS_DIALOGPARAMBLOCK_CID);
-#ifdef NS_PRINTING
+#  ifdef NS_PRINTING
 NS_DEFINE_NAMED_CID(NS_PRINTINGPROMPTSERVICE_CID);
-#endif
+#  endif
 #endif
 NS_DEFINE_NAMED_CID(NS_WINDOWWATCHER_CID);
 NS_DEFINE_NAMED_CID(NS_FIND_CID);
@@ -49,18 +49,18 @@ NS_DEFINE_NAMED_CID(NS_XREDIRPROVIDER_CID);
 static const mozilla::Module::CIDEntry kEmbeddingCIDs[] = {
 #ifdef MOZ_XUL
     {&kNS_DIALOGPARAMBLOCK_CID, false, nullptr, nsDialogParamBlockConstructor},
-#ifdef NS_PRINTING
+#  ifdef NS_PRINTING
 
-#ifdef PROXY_PRINTING
+#    ifdef PROXY_PRINTING
     {&kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr,
      nsPrintingPromptServiceConstructor, mozilla::Module::MAIN_PROCESS_ONLY},
     {&kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr, nsPrintingProxyConstructor,
      mozilla::Module::CONTENT_PROCESS_ONLY},
-#else
+#    else
     {&kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr,
      nsPrintingPromptServiceConstructor},
-#endif
-#endif
+#    endif
+#  endif
 #endif
     {&kNS_WINDOWWATCHER_CID, false, nullptr, nsWindowWatcherConstructor},
     {&kNS_FIND_CID, false, nullptr, nsFindConstructor},
@@ -72,9 +72,9 @@ static const mozilla::Module::CIDEntry kEmbeddingCIDs[] = {
 static const mozilla::Module::ContractIDEntry kEmbeddingContracts[] = {
 #ifdef MOZ_XUL
     {NS_DIALOGPARAMBLOCK_CONTRACTID, &kNS_DIALOGPARAMBLOCK_CID},
-#ifdef NS_PRINTING
+#  ifdef NS_PRINTING
     {NS_PRINTINGPROMPTSERVICE_CONTRACTID, &kNS_PRINTINGPROMPTSERVICE_CID},
-#endif
+#  endif
 #endif
     {NS_WINDOWWATCHER_CONTRACTID, &kNS_WINDOWWATCHER_CID},
     {NS_FIND_CONTRACTID, &kNS_FIND_CID},

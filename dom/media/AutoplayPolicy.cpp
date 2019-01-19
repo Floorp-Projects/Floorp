@@ -235,8 +235,9 @@ static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
   }
 
   nsPIDOMWindowInner* window = aContext.GetParentObject();
-  Document* approver = aContext.GetParentObject() ?
-      ApproverDocOf(*(window->GetExtantDoc())) : nullptr;
+  Document* approver = aContext.GetParentObject()
+                           ? ApproverDocOf(*(window->GetExtantDoc()))
+                           : nullptr;
   if (IsSiteInAutoplayWhiteList(approver)) {
     AUTOPLAY_LOG(
         "Allow autoplay as document has permanent autoplay permission.");

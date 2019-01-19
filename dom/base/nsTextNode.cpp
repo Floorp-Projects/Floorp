@@ -18,7 +18,7 @@
 #include "nsStubMutationObserver.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #ifdef DEBUG
-#include "nsRange.h"
+#  include "nsRange.h"
 #endif
 
 using namespace mozilla;

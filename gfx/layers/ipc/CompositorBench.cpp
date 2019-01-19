@@ -7,17 +7,17 @@
 #include "CompositorBench.h"
 
 #ifdef MOZ_COMPOSITOR_BENCH
-#include "mozilla/gfx/2D.h"
-#include "mozilla/layers/Compositor.h"
-#include "mozilla/layers/Effects.h"
-#include "mozilla/TimeStamp.h"
-#include "gfxPrefs.h"
-#include <math.h>
-#include "GeckoProfiler.h"
+#  include "mozilla/gfx/2D.h"
+#  include "mozilla/layers/Compositor.h"
+#  include "mozilla/layers/Effects.h"
+#  include "mozilla/TimeStamp.h"
+#  include "gfxPrefs.h"
+#  include <math.h>
+#  include "GeckoProfiler.h"
 
-#define TEST_STEPS 1000
-#define DURATION_THRESHOLD 30
-#define THRESHOLD_ABORT_COUNT 5
+#  define TEST_STEPS 1000
+#  define DURATION_THRESHOLD 30
+#  define THRESHOLD_ABORT_COUNT 5
 
 namespace mozilla {
 namespace layers {

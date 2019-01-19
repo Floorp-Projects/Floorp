@@ -11,7 +11,7 @@
 // That messes up our call to EventDispatcher::CreateEvent below.
 
 #ifdef CreateEvent
-#undef CreateEvent
+#  undef CreateEvent
 #endif
 
 #include "BrowserElementParent.h"

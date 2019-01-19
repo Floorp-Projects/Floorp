@@ -52,17 +52,17 @@
 #include "ReportInternalError.h"
 
 #ifdef DEBUG
-#include "IndexedDatabaseManager.h"
+#  include "IndexedDatabaseManager.h"
 #endif
 
 #define GC_ON_IPC_MESSAGES 0
 
 #if defined(DEBUG) || GC_ON_IPC_MESSAGES
 
-#include "js/GCAPI.h"
-#include "nsJSEnvironment.h"
+#  include "js/GCAPI.h"
+#  include "nsJSEnvironment.h"
 
-#define BUILD_GC_ON_IPC_MESSAGES
+#  define BUILD_GC_ON_IPC_MESSAGES
 
 #endif  // DEBUG || GC_ON_IPC_MESSAGES
 
@@ -103,11 +103,11 @@ namespace {
 void MaybeCollectGarbageOnIPCMessage() {
 #ifdef BUILD_GC_ON_IPC_MESSAGES
   static const bool kCollectGarbageOnIPCMessages =
-#if GC_ON_IPC_MESSAGES
+#  if GC_ON_IPC_MESSAGES
       true;
-#else
+#  else
       false;
-#endif  // GC_ON_IPC_MESSAGES
+#  endif  // GC_ON_IPC_MESSAGES
 
   if (!kCollectGarbageOnIPCMessages) {
     return;

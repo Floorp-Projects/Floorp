@@ -12,9 +12,9 @@
 #include "mozilla/RefCounted.h"
 
 #ifdef WIN32
-#include "mozilla/gfx/JobScheduler_win32.h"
+#  include "mozilla/gfx/JobScheduler_win32.h"
 #else
-#include "mozilla/gfx/JobScheduler_posix.h"
+#  include "mozilla/gfx/JobScheduler_posix.h"
 #endif
 
 #include <vector>

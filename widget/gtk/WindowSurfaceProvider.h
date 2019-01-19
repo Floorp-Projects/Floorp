@@ -14,7 +14,7 @@
 
 #include <gdk/gdk.h>
 #ifdef MOZ_WAYLAND
-#include <gdk/gdkwayland.h>
+#  include <gdk/gdkwayland.h>
 #endif
 #include <X11/Xlib.h>  // for Window, Display, Visual, etc.
 #include "X11UndefineNone.h"

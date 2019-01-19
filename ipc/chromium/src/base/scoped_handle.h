@@ -12,7 +12,7 @@
 #include "base/basictypes.h"
 
 #if defined(OS_WIN)
-#include "base/scoped_handle_win.h"
+#  include "base/scoped_handle_win.h"
 #endif
 
 class ScopedStdioHandle {

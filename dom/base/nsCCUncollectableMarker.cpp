@@ -51,7 +51,7 @@ static bool sInited = 0;
 // to dom::TraceBlackJS().
 uint32_t nsCCUncollectableMarker::sGeneration = 1;
 #ifdef MOZ_XUL
-#include "nsXULPrototypeCache.h"
+#  include "nsXULPrototypeCache.h"
 #endif
 
 NS_IMPL_ISUPPORTS(nsCCUncollectableMarker, nsIObserver)

@@ -7,9 +7,9 @@
 #ifndef MacIOSurface_h__
 #define MacIOSurface_h__
 #ifdef XP_DARWIN
-#include <QuartzCore/QuartzCore.h>
-#include <CoreVideo/CoreVideo.h>
-#include <dlfcn.h>
+#  include <QuartzCore/QuartzCore.h>
+#  include <CoreVideo/CoreVideo.h>
+#  include <dlfcn.h>
 
 namespace mozilla {
 namespace gl {
@@ -24,10 +24,10 @@ typedef struct CGContext* CGContextRef;
 typedef struct CGImage* CGImageRef;
 typedef uint32_t IOSurfaceID;
 
-#ifdef XP_IOS
+#  ifdef XP_IOS
 typedef kern_return_t IOReturn;
 typedef int CGLError;
-#endif
+#  endif
 
 typedef CFTypeRef IOSurfacePtr;
 typedef IOSurfacePtr (*IOSurfaceCreateFunc)(CFDictionaryRef properties);
@@ -61,15 +61,15 @@ typedef IOSurfacePtr (*CVPixelBufferGetIOSurfaceFunc)(
 
 typedef OSType (*IOSurfacePixelFormatFunc)(IOSurfacePtr io_surface);
 
-#ifdef XP_MACOSX
-#import <OpenGL/OpenGL.h>
-#else
-#import <OpenGLES/ES2/gl.h>
-#endif
+#  ifdef XP_MACOSX
+#    import <OpenGL/OpenGL.h>
+#  else
+#    import <OpenGLES/ES2/gl.h>
+#  endif
 
-#include "2D.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/RefCounted.h"
+#  include "2D.h"
+#  include "mozilla/RefPtr.h"
+#  include "mozilla/RefCounted.h"
 
 enum CGContextType {
   CG_CONTEXT_TYPE_UNKNOWN = 0,

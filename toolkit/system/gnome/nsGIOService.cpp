@@ -18,8 +18,8 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 #ifdef MOZ_ENABLE_DBUS
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
+#  include <dbus/dbus-glib.h>
+#  include <dbus/dbus-glib-lowlevel.h>
 #endif
 
 // We use the same code as gtk_should_use_portal() to detect if we're in flatpak

@@ -8,7 +8,7 @@
 #include "nsError.h"
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 typedef WCHAR NS_tchar;
 #else
 typedef char NS_tchar;

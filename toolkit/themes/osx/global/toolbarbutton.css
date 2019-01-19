@@ -27,13 +27,11 @@ toolbarbutton[disabled="true"] {
 
 .toolbarbutton-menu-dropmarker {
   -moz-appearance: none;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
   padding-inline-start: 2px;
   width: auto;
-}
-
-.toolbarbutton-menu-dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.png");
 }
 
 /* ::::: toolbarbutton badged ::::: */

@@ -25,7 +25,7 @@
 #include "webrtc/call/call.h"
 #include "webrtc/common_types.h"
 #ifdef FF
-#undef FF  // Avoid name collision between scoped_ptr.h and nsCRTGlue.h.
+#  undef FF  // Avoid name collision between scoped_ptr.h and nsCRTGlue.h.
 #endif
 #include "webrtc/api/video_codecs/video_decoder.h"
 #include "webrtc/api/video_codecs/video_encoder.h"

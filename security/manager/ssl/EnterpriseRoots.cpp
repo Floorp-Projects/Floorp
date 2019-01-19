@@ -11,9 +11,9 @@
 #include "mozilla/Unused.h"
 
 #ifdef XP_MACOSX
-#include <Security/Security.h>
-#include "KeychainSecret.h"  // for ScopedCFType
-#endif                       // XP_MACOSX
+#  include <Security/Security.h>
+#  include "KeychainSecret.h"  // for ScopedCFType
+#endif                         // XP_MACOSX
 
 extern LazyLogModule gPIPNSSLog;
 

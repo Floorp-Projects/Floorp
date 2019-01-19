@@ -25,7 +25,7 @@
 #include "ProxyWrappers.h"
 
 #if defined(MOZ_TELEMETRY_REPORTING)
-#include "mozilla/Telemetry.h"
+#  include "mozilla/Telemetry.h"
 #endif  // defined(MOZ_TELEMETRY_REPORTING)
 
 using namespace mozilla;
@@ -322,14 +322,14 @@ static void AccumulateInstantiatorTelemetry(const nsAString& aValue) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aValue.IsEmpty()) {
-#if defined(MOZ_TELEMETRY_REPORTING)
+#  if defined(MOZ_TELEMETRY_REPORTING)
     Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS, aValue);
-#endif  // defined(MOZ_TELEMETRY_REPORTING)
-#if defined(MOZ_CRASHREPORTER)
+#  endif  // defined(MOZ_TELEMETRY_REPORTING)
+#  if defined(MOZ_CRASHREPORTER)
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::AccessibilityClient,
         NS_ConvertUTF16toUTF8(aValue));
-#endif  // defined(MOZ_CRASHREPORTER)
+#  endif  // defined(MOZ_CRASHREPORTER)
   }
 }
 

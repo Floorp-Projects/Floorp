@@ -24,7 +24,7 @@
 #include "mozilla/Sprintf.h"
 
 #ifdef DEBUG
-#include "nsBlockFrame.h"
+#  include "nsBlockFrame.h"
 
 static void PrettyUC(nscoord aSize, char* aBuf, int aBufSize) {
   if (NS_UNCONSTRAINEDSIZE == aSize) {

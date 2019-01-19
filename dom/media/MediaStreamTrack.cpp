@@ -17,7 +17,7 @@
 #include "systemservices/MediaUtils.h"
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 static mozilla::LazyLogModule gMediaStreamTrackLog("MediaStreamTrack");
