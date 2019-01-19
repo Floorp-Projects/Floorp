@@ -1,0 +1,20 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg id="svg2" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="100mm" width="100mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 354.33071 354.33071">
+ <metadata id="metadata7">
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g id="layer1" fill="#EF2D5E" transform="translate(0 -698.03)">
+  <path id="text3336" d="m102.28 749.3-88.657 293.97h72.114l14.848-63.206h86.112l14.845 63.206h73.81l-34.36-113.69-128.53 0.00011 30.967-129.8v-50.48z"/>
+  <rect id="rect3356" transform="rotate(237.21)" height="79.557" width="79.557" y="-311.53" x="-785.82"/>
+  <rect id="rect3362" transform="matrix(-.78208 .62317 -.62317 -.78208 0 0)" height="95.238" width="95.238" y="-885.85" x="318.72"/>
+  <rect id="rect3364" transform="rotate(12.582)" height="95.238" width="95.238" y="633.02" x="396.31"/>
+ </g>
+</svg>
