@@ -197,11 +197,8 @@ add_task(async function test_hawk_language_pref_changed() {
   await promiseStopServer(server);
 });
 
-add_task(function test_deriveHawkCredentials() {
-  let credentials = deriveHawkCredentials(
-    SESSION_KEYS.sessionToken, "sessionToken");
-
-  Assert.equal(credentials.algorithm, "sha256");
+add_task(async function test_deriveHawkCredentials() {
+  let credentials = await deriveHawkCredentials(SESSION_KEYS.sessionToken, "sessionToken");
   Assert.equal(credentials.id, SESSION_KEYS.tokenID);
   Assert.equal(CommonUtils.bytesAsHex(credentials.key), SESSION_KEYS.reqHMACkey);
 });

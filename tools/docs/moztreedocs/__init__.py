@@ -130,7 +130,19 @@ class _SphinxManager(object):
         with open(self.index_path, 'rb') as fh:
             data = fh.read()
 
-        indexes = ['%s/index' % p for p in sorted(self.trees.keys())]
+        def is_toplevel(key):
+            """Whether the tree is nested under the toplevel index, or is
+            nested under another tree's index.
+            """
+            for k in self.trees:
+                if k == key:
+                    continue
+                if key.startswith(k):
+                    return False
+            return True
+
+        toplevel_trees = {k: v for k, v in self.trees.items() if is_toplevel(k)}
+        indexes = ['%s/index' % p for p in sorted(toplevel_trees.keys())]
         indexes = '\n   '.join(indexes)
 
         packages = [os.path.basename(p) for p in self.python_package_dirs]

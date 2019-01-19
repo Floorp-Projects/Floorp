@@ -15,6 +15,17 @@ function _getSupportsFile(path) {
   return fileurl.QueryInterface(Ci.nsIFileURL);
 }
 
+async function enableExtensionDebugging() {
+  // Force enabling of addons debugging
+  await pushPref("devtools.chrome.enabled", true);
+  await pushPref("devtools.debugger.remote-enabled", true);
+  // Disable security prompt
+  await pushPref("devtools.debugger.prompt-connection", false);
+  // Enable Browser toolbox test script execution via env variable
+  await pushPref("devtools.browser-toolbox.allow-unsafe-script", true);
+}
+/* exported enableExtensionDebugging */
+
 /**
  * Install a temporary extension at the provided path, with the provided name.
  * Will use a mock file picker to select the file.
@@ -42,6 +53,26 @@ async function installTemporaryExtension(path, name, document) {
 }
 /* exported installTemporaryExtension */
 
+/**
+ * Install a fake temporary extension just using the manifest information.
+ * @return {TemporaryExtension} the temporary extension instance created
+ */
+async function installTemporaryExtensionFromManifest(manifest, document) {
+  const addonId = manifest.applications.gecko.id;
+  const temporaryExtension = new TemporaryExtension(addonId);
+  temporaryExtension.writeManifest(manifest);
+  registerCleanupFunction(() => temporaryExtension.remove(false));
+
+  info("Install a temporary extension");
+  await AddonManager.installTemporaryAddon(temporaryExtension.sourceDir);
+
+  info("Wait until the corresponding debug target item appears");
+  await waitUntil(() => findDebugTargetByText(manifest.name, document));
+
+  return temporaryExtension;
+}
+/* exported installTemporaryExtensionFromManifest */
+
 async function removeTemporaryExtension(name, document) {
   info(`Remove the temporary extension with name: '${name}'`);
   const temporaryExtensionItem = findDebugTargetByText(name, document);
@@ -51,6 +82,16 @@ async function removeTemporaryExtension(name, document) {
   await waitUntil(() => !findDebugTargetByText(name, document));
 }
 /* exported removeTemporaryExtension */
+
+async function removeExtension(id, name, document) {
+  info("Retrieve the extension instance from the addon manager, and uninstall it");
+  const extension = await AddonManager.getAddonByID(id);
+  extension.uninstall();
+
+  info("Wait until the addon disappears from about:debugging");
+  await waitUntil(() => !findDebugTargetByText(name, document));
+}
+/* exported removeExtension */
 
 function prepareMockFilePicker(path) {
   // Mock the file picker to select a test addon

@@ -374,7 +374,7 @@ mozilla::ipc::IPCResult VRManagerChild::RecvReplyCreateVRServiceTestController(
 }
 
 void VRManagerChild::RunFrameRequestCallbacks() {
-  AUTO_PROFILER_TRACING("VR", "RunFrameRequestCallbacks");
+  AUTO_PROFILER_TRACING("VR", "RunFrameRequestCallbacks", GRAPHICS);
 
   TimeStamp nowTime = TimeStamp::Now();
   mozilla::TimeDuration duration = nowTime - mStartTimeStamp;

@@ -480,12 +480,12 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 }
 
 #nav-bar {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+  -moz-window-dragging: drag;
 }
 
 @media (-moz-menubar-drag) {
   #TabsToolbar {
-    -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+    -moz-window-dragging: drag;
   }
 }
 
@@ -714,6 +714,12 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   @media (-moz-gtk-csd-close-button: 0) {
     .titlebar-close {
       display: none;
+    }
+  }
+  @media (-moz-gtk-csd-reversed-placement) {
+    .titlebar-buttonbox-container,
+    .titlebar-close {
+      -moz-box-ordinal-group: 0;
     }
   }
 }

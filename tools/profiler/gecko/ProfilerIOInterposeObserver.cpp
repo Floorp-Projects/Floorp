@@ -19,6 +19,7 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
   aObservation.Filename(filename);
   profiler_add_marker(
       aObservation.ObservedOperationString(),
+      js::ProfilingStackFrame::Category::OTHER,
       MakeUnique<IOMarkerPayload>(
           aObservation.Reference(), NS_ConvertUTF16toUTF8(filename).get(),
           aObservation.Start(), aObservation.End(), std::move(stack)));

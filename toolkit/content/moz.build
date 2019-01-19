@@ -149,9 +149,6 @@ with Files('tests/chrome/rtlchrome/**'):
 with Files('tests/chrome/*451540*'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
-with Files('tests/chrome/*585946*'):
-    BUG_COMPONENT = ('Toolkit', 'Toolbars and Toolbar Customization')
-
 with Files('tests/chrome/*557987*'):
     BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: Menus')
 with Files('tests/chrome/*562554*'):

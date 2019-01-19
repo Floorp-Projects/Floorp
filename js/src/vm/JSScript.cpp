@@ -3392,12 +3392,6 @@ static void InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms) {
     return false;
   }
 
-  uint32_t mainLength = bce->offset();
-  uint32_t prologueLength = bce->prologueOffset();
-  uint32_t nsrcnotes;
-  if (!bce->finishTakingSrcNotes(&nsrcnotes)) {
-    return false;
-  }
   uint32_t natoms = bce->atomIndices->count();
   if (!createPrivateScriptData(
           cx, script, bce->scopeList.length(), bce->numberList.length(),
@@ -3407,12 +3401,15 @@ static void InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms) {
   }
 
   MOZ_ASSERT(script->mainOffset() == 0);
-  script->mainOffset_ = prologueLength;
+  script->mainOffset_ = bce->mainOffset();
   script->nTypeSets_ = bce->typesetCount;
   script->lineno_ = bce->firstLine;
 
-  if (!script->createSharedScriptData(cx, prologueLength + mainLength,
-                                      nsrcnotes, natoms)) {
+  // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
+  // when the notes are copied to their final destination by copySrcNotes.
+  uint32_t nsrcnotes = bce->notes().length() + 1;
+  uint32_t codeLength = bce->code().length();
+  if (!script->createSharedScriptData(cx, codeLength, nsrcnotes, natoms)) {
     return false;
   }
 
@@ -3422,9 +3419,7 @@ static void InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms) {
   // resets it before returning false.
 
   jsbytecode* code = script->code();
-  PodCopy<jsbytecode>(code, bce->prologue.code.begin(), prologueLength);
-  PodCopy<jsbytecode>(code + prologueLength, bce->main.code.begin(),
-                      mainLength);
+  PodCopy<jsbytecode>(code, bce->code().begin(), codeLength);
   bce->copySrcNotes((jssrcnote*)(code + script->length()), nsrcnotes);
   InitAtomMap(*bce->atomIndices, script->atoms());
 
@@ -3443,13 +3438,13 @@ static void InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms) {
     bce->scopeList.finish(data->scopes());
   }
   if (bce->tryNoteList.length() != 0) {
-    bce->tryNoteList.finish(data->tryNotes(), prologueLength);
+    bce->tryNoteList.finish(data->tryNotes());
   }
   if (bce->scopeNoteList.length() != 0) {
-    bce->scopeNoteList.finish(data->scopeNotes(), prologueLength);
+    bce->scopeNoteList.finish(data->scopeNotes());
   }
   if (bce->resumeOffsetList.length() != 0) {
-    bce->resumeOffsetList.finish(data->resumeOffsets(), prologueLength);
+    bce->resumeOffsetList.finish(data->resumeOffsets());
   }
 
   script->setFlag(ImmutableFlags::Strict, bce->sc->strict());

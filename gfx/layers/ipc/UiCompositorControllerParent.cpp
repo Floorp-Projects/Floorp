@@ -17,6 +17,7 @@
 #include "mozilla/Unused.h"
 
 #include "FrameMetrics.h"
+#include "SynchronousTask.h"
 
 namespace mozilla {
 namespace layers {
@@ -277,9 +278,16 @@ void UiCompositorControllerParent::InitializeForSameProcess() {
   // This function is called by UiCompositorControllerChild in the main thread.
   // So dispatch to the compositor thread to Initialize.
   if (!CompositorThreadHolder::IsInCompositorThread()) {
-    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod(
-        "layers::UiCompositorControllerParent::InitializeForSameProcess", this,
-        &UiCompositorControllerParent::InitializeForSameProcess));
+    SynchronousTask task(
+        "UiCompositorControllerParent::InitializeForSameProcess");
+
+    CompositorThreadHolder::Loop()->PostTask(NS_NewRunnableFunction(
+        "UiCompositorControllerParent::InitializeForSameProcess", [&]() {
+          AutoCompleteTask complete(&task);
+          InitializeForSameProcess();
+        }));
+
+    task.Wait();
     return;
   }
 

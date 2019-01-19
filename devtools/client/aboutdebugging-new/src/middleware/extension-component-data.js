@@ -44,7 +44,7 @@ function getFilePath(extension) {
 function toComponentData(extensions) {
   return extensions.map(extension => {
     const type = DEBUG_TARGETS.EXTENSION;
-    const { actor, iconDataURL, iconURL, id, manifestURL, name } = extension;
+    const { actor, iconDataURL, iconURL, id, manifestURL, name, warnings } = extension;
     const icon =
       iconDataURL || iconURL || "chrome://mozapps/skin/extensions/extensionGeneric.svg";
     const location = getFilePath(extension);
@@ -59,6 +59,7 @@ function toComponentData(extensions) {
         location,
         manifestURL,
         uuid,
+        warnings: warnings || [],
       },
     };
   });

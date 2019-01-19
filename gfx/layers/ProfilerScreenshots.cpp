@@ -59,7 +59,8 @@ void ProfilerScreenshots::SubmitScreenshot(
 
   if (!succeeded) {
     PROFILER_ADD_MARKER(
-        "NoCompositorScreenshot because aPopulateSurface callback failed");
+        "NoCompositorScreenshot because aPopulateSurface callback failed",
+        GRAPHICS);
     ReturnSurface(backingSurface);
     return;
   }
@@ -69,7 +70,8 @@ void ProfilerScreenshots::SubmitScreenshot(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       PROFILER_ADD_MARKER(
           "NoCompositorScreenshot because ProfilerScreenshots thread creation "
-          "failed");
+          "failed",
+          DOM);
       ReturnSurface(backingSurface);
       return;
     }
@@ -103,7 +105,8 @@ void ProfilerScreenshots::SubmitScreenshot(
           if (NS_SUCCEEDED(rv)) {
             // Add a marker with the data URL.
             profiler_add_marker_for_thread(
-                sourceThread, "CompositorScreenshot",
+                sourceThread, js::ProfilingStackFrame::Category::GRAPHICS,
+                "CompositorScreenshot",
                 MakeUnique<ScreenshotPayload>(timeStamp, std::move(dataURL),
                                               originalSize, windowIdentifier));
           }

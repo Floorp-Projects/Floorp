@@ -12,7 +12,9 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const FieldPair = createFactory(require("./FieldPair"));
+const Message = createFactory(require("../shared/Message"));
 
+const { MESSAGE_LEVEL } = require("../../constants");
 const Types = require("../../types/index");
 
 /**
@@ -27,9 +29,34 @@ class ExtensionDetail extends PureComponent {
     };
   }
 
+  renderWarnings() {
+    const { warnings } = this.props.target.details;
+    return dom.section(
+      {
+        key: "extension-warnings",
+      },
+      warnings.map((warning, index) => {
+        return Message(
+          {
+            level: MESSAGE_LEVEL.WARNING,
+            key: `warning-${index}`,
+          },
+          dom.p(
+            {
+              className: "extension-details__warning technical-text",
+            },
+            warning
+          )
+        );
+      })
+    );
+  }
+
   renderUUID() {
-    const { target } = this.props;
-    const { manifestURL, uuid } = target.details;
+    const { manifestURL, uuid } = this.props.target.details;
+    if (!uuid) {
+      return null;
+    }
 
     const value = [
       uuid,
@@ -64,8 +91,29 @@ class ExtensionDetail extends PureComponent {
     );
   }
 
+  renderExtensionId() {
+    const { id } = this.props.target;
+
+    return Localized(
+      {
+        id: "about-debugging-extension-id",
+        attrs: { label: true },
+      },
+      FieldPair(
+        {
+          slug: "extension",
+          label: "Extension ID",
+          value: id,
+        }
+      )
+    );
+  }
+
   renderLocation() {
     const { location } = this.props.target.details;
+    if (!location) {
+      return null;
+    }
 
     return Localized(
       {
@@ -83,30 +131,18 @@ class ExtensionDetail extends PureComponent {
   }
 
   render() {
-    const { target } = this.props;
-    const { id, details } = target;
-    const { location, uuid } = details;
-
-    return dom.dl(
-      {
-        className: "extension-detail",
-      },
-      location ? this.renderLocation() : null,
-      Localized(
+    return [
+      this.renderWarnings(),
+      dom.dl(
         {
-          id: "about-debugging-extension-id",
-          attrs: { label: true },
+          key: "extension-detail",
+          className: "extension-detail",
         },
-        FieldPair(
-          {
-            slug: "extension",
-            label: "Extension ID",
-            value: id,
-          }
-        )
+        this.renderLocation(),
+        this.renderExtensionId(),
+        this.renderUUID(),
       ),
-      uuid ? this.renderUUID() : null,
-    );
+    ];
   }
 }
 

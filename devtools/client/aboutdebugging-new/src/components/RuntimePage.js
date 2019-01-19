@@ -20,6 +20,7 @@ const RuntimeInfo = createFactory(require("./RuntimeInfo"));
 const ServiceWorkerAction = createFactory(require("./debugtarget/ServiceWorkerAction"));
 const TabDetail = createFactory(require("./debugtarget/TabDetail"));
 const TemporaryExtensionAction = createFactory(require("./debugtarget/TemporaryExtensionAction"));
+const TemporaryExtensionDetail = createFactory(require("./debugtarget/TemporaryExtensionDetail"));
 const TemporaryExtensionInstaller =
   createFactory(require("./debugtarget/TemporaryExtensionInstaller"));
 const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
@@ -133,7 +134,7 @@ class RuntimePage extends PureComponent {
       this.renderDebugTargetPane("Temporary Extensions",
                                  temporaryExtensions,
                                  TemporaryExtensionAction,
-                                 ExtensionDetail,
+                                 TemporaryExtensionDetail,
                                  DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
                                  "about-debugging-runtime-temporary-extensions"),
       this.renderDebugTargetPane("Extensions",

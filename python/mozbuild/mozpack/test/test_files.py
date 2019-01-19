@@ -656,6 +656,41 @@ class TestGeneratedFile(TestWithTmpDir):
         f = GeneratedFile('fooo')
         self.assertRaises(RuntimeError, f.copy, DestNoWrite(dest))
 
+    def test_generated_file_function(self):
+        '''
+        Test GeneratedFile behavior with functions.
+        '''
+        dest = self.tmppath('dest')
+        data = {
+            'num_calls': 0,
+        }
+
+        def content():
+            data['num_calls'] += 1
+            return 'content'
+
+        f = GeneratedFile(content)
+        self.assertEqual(data['num_calls'], 0)
+        f.copy(dest)
+        self.assertEqual(data['num_calls'], 1)
+        self.assertEqual('content', open(dest, 'rb').read())
+        self.assertEqual('content', f.open().read())
+        self.assertEqual('content', f.read())
+        self.assertEqual(len('content'), f.size())
+        self.assertEqual(data['num_calls'], 1)
+
+        f.content = 'modified'
+        f.copy(dest)
+        self.assertEqual(data['num_calls'], 1)
+        self.assertEqual('modified', open(dest, 'rb').read())
+        self.assertEqual('modified', f.open().read())
+        self.assertEqual('modified', f.read())
+        self.assertEqual(len('modified'), f.size())
+
+        f.content = content
+        self.assertEqual(data['num_calls'], 1)
+        self.assertEqual('content', f.read())
+        self.assertEqual(data['num_calls'], 2)
 
 class TestDeflatedFile(TestWithTmpDir):
     def test_deflated_file(self):

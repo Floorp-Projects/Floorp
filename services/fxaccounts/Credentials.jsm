@@ -23,8 +23,6 @@ const PBKDF2_ROUNDS = 1000;
 const STRETCHED_PW_LENGTH_BYTES = 32;
 const HKDF_SALT = CommonUtils.hexToBytes("00");
 const HKDF_LENGTH = 32;
-const HMAC_ALGORITHM = Ci.nsICryptoHMAC.SHA256;
-const HMAC_LENGTH = 32;
 
 // loglevel preference should be one of: "FATAL", "ERROR", "WARN", "INFO",
 // "CONFIG", "DEBUG", "TRACE" or "ALL". We will be logging error messages by
@@ -52,8 +50,6 @@ var Credentials = Object.freeze({
     STRETCHED_PW_LENGTH_BYTES,
     HKDF_SALT,
     HKDF_LENGTH,
-    HMAC_ALGORITHM,
-    HMAC_LENGTH,
   },
 
   /**
@@ -96,8 +92,6 @@ var Credentials = Object.freeze({
 
       let hkdfSalt = options.hkdfSalt || HKDF_SALT;
       let hkdfLength = options.hkdfLength || HKDF_LENGTH;
-      let hmacLength = options.hmacLength || HMAC_LENGTH;
-      let hmacAlgorithm = options.hmacAlgorithm || HMAC_ALGORITHM;
       let stretchedPWLength = options.stretchedPassLength || STRETCHED_PW_LENGTH_BYTES;
       let pbkdf2Rounds = options.pbkdf2Rounds || PBKDF2_ROUNDS;
 
@@ -106,18 +100,18 @@ var Credentials = Object.freeze({
       let password = CommonUtils.encodeUTF8(passwordInput);
       let salt = this.keyWordExtended("quickStretch", emailInput);
 
-      let runnable = () => {
+      let runnable = async () => {
         let start = Date.now();
-        let quickStretchedPW = CryptoUtils.pbkdf2Generate(
-            password, salt, pbkdf2Rounds, stretchedPWLength, hmacAlgorithm, hmacLength);
+        let quickStretchedPW = await CryptoUtils.pbkdf2Generate(
+            password, salt, pbkdf2Rounds, stretchedPWLength);
 
         result.quickStretchedPW = quickStretchedPW;
 
         result.authPW =
-          CryptoUtils.hkdf(quickStretchedPW, hkdfSalt, this.keyWord("authPW"), hkdfLength);
+          await CryptoUtils.hkdfLegacy(quickStretchedPW, hkdfSalt, this.keyWord("authPW"), hkdfLength);
 
         result.unwrapBKey =
-          CryptoUtils.hkdf(quickStretchedPW, hkdfSalt, this.keyWord("unwrapBkey"), hkdfLength);
+          await CryptoUtils.hkdfLegacy(quickStretchedPW, hkdfSalt, this.keyWord("unwrapBkey"), hkdfLength);
 
         log.debug("Credentials set up after " + (Date.now() - start) + " ms");
         resolve(result);

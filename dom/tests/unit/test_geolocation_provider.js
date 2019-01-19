@@ -1,27 +1,23 @@
 ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var httpserver = null;
 var geolocation = null;
 var success = false;
-var watchId = -1;
+var watchID = -1;
 
 function terminate(succ) {
       success = succ;
       geolocation.clearWatch(watchID);
     }
 
-function successCallback(pos){ terminate(true); }
+function successCallback(pos) { terminate(true); }
 function errorCallback(pos) { terminate(false); }
 
 var observer = {
-    QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIObserver))
-        return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-    observe: function(subject, topic, data) {
+    observe(subject, topic, data) {
         if (data == "shutdown") {
             Assert.ok(1);
             this._numProviders--;
@@ -31,8 +27,7 @@ var observer = {
                         do_test_finished();
                     });
             }
-        }
-        else if (data == "starting") {
+        } else if (data == "starting") {
             Assert.ok(1);
             this._numProviders++;
         }
@@ -41,8 +36,7 @@ var observer = {
     _numProviders: 0,
 };
 
-function geoHandler(metadata, response)
-{
+function geoHandler(metadata, response) {
     var georesponse = {
         status: "OK",
         location: {
@@ -58,8 +52,7 @@ function geoHandler(metadata, response)
   response.write(position);
 }
 
-function run_test()
-{
+function run_test() {
     // XPCShell does not get a profile by default. The geolocation service
     // depends on the settings service which uses IndexedDB and IndexedDB
     // needs a place where it can store databases.
@@ -72,11 +65,10 @@ function run_test()
     httpserver.registerPathHandler("/geo", geoHandler);
     httpserver.start(-1);
 
-    var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-    prefs.setCharPref("geo.wifi.uri", "http://localhost:" +
-                      httpserver.identity.primaryPort + "/geo");
-    prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
-    prefs.setBoolPref("geo.wifi.scan", false);
+    Services.prefs.setCharPref("geo.wifi.uri", "http://localhost:" +
+                               httpserver.identity.primaryPort + "/geo");
+    Services.prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
+    Services.prefs.setBoolPref("geo.wifi.scan", false);
 
     var obs = Cc["@mozilla.org/observer-service;1"].getService();
     obs = obs.QueryInterface(Ci.nsIObserverService);

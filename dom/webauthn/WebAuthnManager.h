@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_WebAuthnManager_h
 #define mozilla_dom_WebAuthnManager_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
 #include "mozilla/dom/WebAuthnManagerBase.h"
@@ -69,7 +70,8 @@ class WebAuthnTransaction {
 
 class WebAuthnManager final : public WebAuthnManagerBase, public AbortFollower {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WebAuthnManager, WebAuthnManagerBase)
 
   explicit WebAuthnManager(nsPIDOMWindowInner* aParent)
       : WebAuthnManagerBase(aParent) {}
@@ -116,6 +118,16 @@ class WebAuthnManager final : public WebAuthnManagerBase, public AbortFollower {
   // The current transaction, if any.
   Maybe<WebAuthnTransaction> mTransaction;
 };
+
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    WebAuthnTransaction& aTransaction, const char* aName, uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(aCallback, aTransaction.mPromise, aName, aFlags);
+}
+
+inline void ImplCycleCollectionUnlink(WebAuthnTransaction& aTransaction) {
+  ImplCycleCollectionUnlink(aTransaction.mPromise);
+}
 
 }  // namespace dom
 }  // namespace mozilla

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/PaymentRequestUpdateEvent.h"
+#include "mozilla/dom/RootedDictionary.h"
 
 namespace mozilla {
 namespace dom {
@@ -61,7 +62,7 @@ void PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx,
   }
 
   // Converting value to a PaymentDetailsUpdate dictionary
-  PaymentDetailsUpdate details;
+  RootedDictionary<PaymentDetailsUpdate> details(aCx);
   if (!details.Init(aCx, aValue)) {
     mRequest->AbortUpdate(NS_ERROR_TYPE_ERR);
     JS_ClearPendingException(aCx);

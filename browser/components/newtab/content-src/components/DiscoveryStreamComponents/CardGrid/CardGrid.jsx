@@ -35,6 +35,6 @@ export class CardGrid extends React.PureComponent {
 }
 
 CardGrid.defaultProps = {
-  style: `border`,
+  border: `border`,
   items: 4, // Number of stories to display
 };

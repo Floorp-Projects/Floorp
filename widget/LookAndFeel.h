@@ -449,6 +449,12 @@ class LookAndFeel {
     eIntID_GTKCSDCloseButton,
 
     /*
+     * A boolean value indicating whether titlebar buttons are located
+     * in left titlebar corner.
+     */
+    eIntID_GTKCSDReversedPlacement,
+
+    /*
      * A boolean value indicating whether or not the OS is using a dark theme,
      * which we may want to switch to as well if not overridden by the user.
      */

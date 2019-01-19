@@ -36,26 +36,32 @@ async function init(aEvent) {
   }
 
   // Include the build ID and display warning if this is an "a#" (nightly or aurora) build
-  let versionField = document.getElementById("version");
-  versionField.textContent = AppConstants.MOZ_APP_VERSION_DISPLAY;
+  let versionId = "aboutDialog-version";
+  let versionAttributes = {
+    version: AppConstants.MOZ_APP_VERSION_DISPLAY,
+    bits: Services.appinfo.is64Bit ? 64 : 32,
+  };
+
   let version = Services.appinfo.version;
   if (/a\d+$/.test(version)) {
+    versionId = "aboutDialog-version-nightly";
     let buildID = Services.appinfo.appBuildID;
     let year = buildID.slice(0, 4);
     let month = buildID.slice(4, 6);
     let day = buildID.slice(6, 8);
-    versionField.textContent += ` (${year}-${month}-${day})`;
+    versionAttributes.isodate = `${year}-${month}-${day}`;
 
     document.getElementById("experimental").hidden = false;
     document.getElementById("communityDesc").hidden = true;
   }
 
-  // Append "(32-bit)" or "(64-bit)" build architecture to the version number:
-  let archResource = Services.appinfo.is64Bit
-                     ? "aboutDialog-architecture-sixtyFourBit"
-                     : "aboutDialog-architecture-thirtyTwoBit";
-  let [arch] = await document.l10n.formatValues([{id: archResource}]);
-  versionField.textContent += ` (${arch})`;
+  // Use Fluent arguments for append version and the architecture of the build
+  let versionField = document.getElementById("version");
+
+  document.l10n.setAttributes(versionField, versionId, versionAttributes);
+
+  await document.l10n.translateElements([versionField]);
+  window.sizeToContent();
 
   // Show a release notes link if we have a URL.
   let relNotesLink = document.getElementById("releasenotes");

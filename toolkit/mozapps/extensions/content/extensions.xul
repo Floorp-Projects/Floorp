@@ -230,7 +230,7 @@
           </hbox>
 
           <hbox id="heading">
-            <hbox class="heading-inner" align="start">
+            <hbox class="heading-inner" align="stretch">
               <label id="heading-name" class="header-name" flex="1"/>
 
               <hbox id="updates-container" align="center">
@@ -254,8 +254,7 @@
 
               <button id="manage-shortcuts" data-l10n-id="shortcuts-manage" command="cmd_showShortcuts" hidden="true"/>
 
-              <toolbarbutton id="header-utils-btn" type="menu"
-                        data-l10n-id="tools-menu">
+              <button id="header-utils-btn" type="menu" data-l10n-id="tools-menu">
                 <menupopup id="utils-menu">
                   <menuitem id="utils-updateNow"
                             data-l10n-id="extensions-updates-check-for-updates"
@@ -282,7 +281,7 @@
                             data-l10n-id="extensions-updates-reset-updates-to-manual"
                             command="cmd_resetAddonAutoUpdate"/>
                 </menupopup>
-              </toolbarbutton>
+              </button>
             </hbox>
           </hbox>
 

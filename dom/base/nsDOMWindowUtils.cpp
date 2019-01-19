@@ -3022,7 +3022,7 @@ static void PrepareForFullscreenChange(nsIPresShell* aPresShell,
 
 NS_IMETHODIMP
 nsDOMWindowUtils::HandleFullscreenRequests(bool* aRetVal) {
-  PROFILER_ADD_MARKER("Enter fullscreen");
+  PROFILER_ADD_MARKER("Enter fullscreen", DOM);
   nsCOMPtr<Document> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
@@ -3043,7 +3043,7 @@ nsDOMWindowUtils::HandleFullscreenRequests(bool* aRetVal) {
 }
 
 nsresult nsDOMWindowUtils::ExitFullscreen() {
-  PROFILER_ADD_MARKER("Exit fullscreen");
+  PROFILER_ADD_MARKER("Exit fullscreen", DOM);
   nsCOMPtr<Document> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 

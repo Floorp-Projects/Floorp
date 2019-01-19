@@ -22,7 +22,7 @@ add_task(async function test_authenticated_request() {
   let key = "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=";
   let method = "GET";
 
-  let nonce = btoa(CryptoUtils.generateRandomBytes(16));
+  let nonce = btoa(CryptoUtils.generateRandomBytesLegacy(16));
   let ts = Math.floor(Date.now() / 1000);
   let extra = {ts, nonce};
 
@@ -37,7 +37,7 @@ add_task(async function test_authenticated_request() {
     },
   });
   let uri = CommonUtils.makeURI(server.baseURI + "/foo");
-  let sig = CryptoUtils.computeHTTPMACSHA1(id, key, method, uri, extra);
+  let sig = await CryptoUtils.computeHTTPMACSHA1(id, key, method, uri, extra);
   auth = sig.getHeader();
 
   let req = new TokenAuthenticatedRESTRequest(uri, {id, key}, extra);

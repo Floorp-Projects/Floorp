@@ -1208,6 +1208,7 @@ Document::Document(const char* aContentType)
       mStyledLinksCleared(false),
 #endif
       mBidiEnabled(false),
+      mFontGroupCacheDirty(true),
       mMathMLEnabled(false),
       mIsInitialDocumentInWindow(false),
       mIgnoreDocGroupMismatches(false),
@@ -1356,6 +1357,8 @@ Document::Document(const char* aContentType)
 
   // void state used to differentiate an empty source from an unselected source
   mPreloadPictureFoundSource.SetIsVoid(true);
+
+  RecomputeLanguageFromCharset();
 }
 
 void Document::ClearAllBoxObjects() {
@@ -3411,6 +3414,7 @@ void Document::SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding) {
   if (mCharacterSet != aEncoding) {
     mCharacterSet = aEncoding;
     mEncodingMenuDisabled = aEncoding == UTF_8_ENCODING;
+    RecomputeLanguageFromCharset();
 
     if (nsPresContext* context = GetPresContext()) {
       context->DispatchCharSetChange(aEncoding);
@@ -3474,6 +3478,7 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
 
   if (aHeaderField == nsGkAtoms::headerContentLanguage) {
     CopyUTF16toUTF8(aData, mContentLanguage);
+    ResetLangPrefs();
     if (auto* presContext = GetPresContext()) {
       presContext->ContentLanguageChanged();
     }
@@ -10889,6 +10894,9 @@ void Document::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
     mPresShell->AddSizeOfIncludingThis(aWindowSizes);
   }
 
+  aWindowSizes.mDOMOtherSize += mLangGroupFontPrefs.SizeOfExcludingThis(
+      aWindowSizes.mState.mMallocSizeOf);
+
   aWindowSizes.mPropertyTablesSize +=
       mPropertyTable.SizeOfExcludingThis(aWindowSizes.mState.mMallocSizeOf);
 
@@ -12496,6 +12504,63 @@ void Document::ReportShadowDOMUsage() {
 bool Document::StorageAccessSandboxed() const {
   return StaticPrefs::dom_storage_access_enabled() &&
          (GetSandboxFlags() & SANDBOXED_STORAGE_ACCESS) != 0;
+}
+
+already_AddRefed<nsAtom> Document::GetContentLanguageAsAtomForStyle() const {
+  nsAutoString contentLang;
+  GetContentLanguage(contentLang);
+  contentLang.StripWhitespace();
+
+  // Content-Language may be a comma-separated list of language codes,
+  // in which case the HTML5 spec says to treat it as unknown
+  if (!contentLang.IsEmpty() && !contentLang.Contains(char16_t(','))) {
+    return NS_Atomize(contentLang);
+  }
+
+  return nullptr;
+}
+
+already_AddRefed<nsAtom> Document::GetLanguageForStyle() const {
+  RefPtr<nsAtom> lang = GetContentLanguageAsAtomForStyle();
+  if (!lang) {
+    lang = mLanguageFromCharset;
+  }
+  return lang.forget();
+}
+
+const LangGroupFontPrefs* Document::GetFontPrefsForLang(
+    nsAtom* aLanguage, bool* aNeedsToCache) const {
+  nsAtom* lang = aLanguage ? aLanguage : mLanguageFromCharset.get();
+  return StaticPresData::Get()->GetFontPrefsForLangHelper(
+      lang, &mLangGroupFontPrefs, aNeedsToCache);
+}
+
+void Document::DoCacheAllKnownLangPrefs() {
+  MOZ_ASSERT(mFontGroupCacheDirty);
+  RefPtr<nsAtom> lang = GetLanguageForStyle();
+  GetFontPrefsForLang(lang.get());
+  GetFontPrefsForLang(nsGkAtoms::x_math);
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1362599#c12
+  GetFontPrefsForLang(nsGkAtoms::Unicode);
+  for (auto iter = mLanguagesUsed.Iter(); !iter.Done(); iter.Next()) {
+    GetFontPrefsForLang(iter.Get()->GetKey());
+  }
+  mFontGroupCacheDirty = false;
+}
+
+void Document::RecomputeLanguageFromCharset() {
+  nsLanguageAtomService* service = nsLanguageAtomService::GetService();
+  RefPtr<nsAtom> language = service->LookupCharSet(mCharacterSet);
+  if (language == nsGkAtoms::Unicode) {
+    language = service->GetLocaleLanguage();
+  }
+
+  if (language == mLanguageFromCharset) {
+    return;
+  }
+
+  ResetLangPrefs();
+  mLanguageFromCharset = language.forget();
 }
 
 }  // namespace dom

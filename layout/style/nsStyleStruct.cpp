@@ -110,8 +110,8 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 }
 
 nsStyleFont::nsStyleFont(const nsPresContext* aContext)
-    : mFont(*aContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                      nullptr)),
+    : mFont(*aContext->Document()->GetFontPrefsForLang(nullptr)->GetDefaultFont(
+          kPresContext_DefaultVariableFont_ID)),
       mSize(ZoomText(aContext, mFont.size)),
       mFontSizeFactor(1.0),
       mFontSizeOffset(0),
@@ -127,7 +127,7 @@ nsStyleFont::nsStyleFont(const nsPresContext* aContext)
       mScriptMinSize(nsPresContext::CSSTwipsToAppUnits(
           NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT))),
       mScriptSizeMultiplier(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER),
-      mLanguage(GetLanguage(aContext)) {
+      mLanguage(aContext->Document()->GetLanguageForStyle()) {
   MOZ_COUNT_CTOR(nsStyleFont);
   MOZ_ASSERT(NS_IsMainThread());
   nscoord minimumFontSize = aContext->MinFontSize(mLanguage);
@@ -178,20 +178,6 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
   // The caller is expected deal with that.
   return NSToCoordTruncClamped(float(aSize) *
                                aPresContext->EffectiveTextZoom());
-}
-
-/* static */ already_AddRefed<nsAtom> nsStyleFont::GetLanguage(
-    const nsPresContext* aPresContext) {
-  RefPtr<nsAtom> language = aPresContext->GetContentLanguage();
-  if (!language) {
-    // we didn't find a (usable) Content-Language, so we fall back
-    // to whatever the presContext guessed from the charset
-    // NOTE this should not be used elsewhere, because we want websites
-    // to use UTF-8 with proper language tag, instead of relying on
-    // deriving language from charset. See bug 1040668 comment 67.
-    language = aPresContext->GetLanguageFromCharset();
-  }
-  return language.forget();
 }
 
 nsStyleMargin::nsStyleMargin(const nsPresContext* aContext) {
@@ -3825,7 +3811,8 @@ nsStyleText::nsStyleText(const nsPresContext* aContext)
       mWebkitTextStrokeWidth(0),
       mTextShadow(nullptr) {
   MOZ_COUNT_CTOR(nsStyleText);
-  RefPtr<nsAtom> language = aContext->GetContentLanguage();
+  RefPtr<nsAtom> language =
+      aContext->Document()->GetContentLanguageAsAtomForStyle();
   mTextEmphasisPosition =
       language && nsStyleUtil::MatchesLanguagePrefix(language, u"zh")
           ? NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT_ZH

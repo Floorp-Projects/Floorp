@@ -699,6 +699,7 @@ function run() {
   expression_should_not_be_parseable("-moz-gtk-csd-minimize-button");
   expression_should_not_be_parseable("-moz-gtk-csd-maximize-button");
   expression_should_not_be_parseable("-moz-gtk-csd-close-button");
+  expression_should_not_be_parseable("-moz-gtk-csd-reversed-placement");
   expression_should_be_parseable("-moz-touch-enabled");
 
   expression_should_not_be_parseable("-moz-scrollbar-start-backward: 0");
@@ -721,6 +722,7 @@ function run() {
   expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: 0");
   expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: 0");
   expression_should_not_be_parseable("-moz-gtk-csd-close-button: 0");
+  expression_should_not_be_parseable("-moz-gtk-csd-reversed-placement: 0");
   expression_should_be_parseable("-moz-touch-enabled: 0");
 
   expression_should_not_be_parseable("-moz-scrollbar-start-backward: 1");
@@ -743,6 +745,7 @@ function run() {
   expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: 1");
   expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: 1");
   expression_should_not_be_parseable("-moz-gtk-csd-close-button: 1");
+  expression_should_not_be_parseable("-moz-gtk-csd-reversed-placement: 1");
   expression_should_be_parseable("-moz-touch-enabled: 1");
 
   expression_should_not_be_parseable("-moz-scrollbar-start-backward: -1");
@@ -766,6 +769,7 @@ function run() {
   expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: -1");
   expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: -1");
   expression_should_not_be_parseable("-moz-gtk-csd-close-button: -1");
+  expression_should_not_be_parseable("-moz-gtk-csd-reversed-placement: -1");
 
   expression_should_not_be_parseable("-moz-scrollbar-start-backward: true");
   expression_should_not_be_parseable("-moz-scrollbar-start-forward: true");
@@ -788,6 +792,7 @@ function run() {
   expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: true");
   expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: true");
   expression_should_not_be_parseable("-moz-gtk-csd-close-button: true");
+  expression_should_not_be_parseable("-moz-gtk-csd-reversed-placement: true");
 
   // os version media queries (currently windows only)
   expression_should_not_be_parseable("-moz-os-version: windows-win7");

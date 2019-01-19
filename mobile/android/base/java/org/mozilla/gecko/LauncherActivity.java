@@ -16,8 +16,6 @@ import android.util.Log;
 
 import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.mma.MmaDelegate;
-import org.mozilla.gecko.switchboard.SwitchBoard;
-import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.webapps.WebAppActivity;
 import org.mozilla.gecko.webapps.WebAppIndexer;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
@@ -32,6 +30,7 @@ import static org.mozilla.gecko.deeplink.DeepLinkContract.DEEP_LINK_SCHEME;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_BOOKMARK_LIST;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_DEFAULT_BROWSER;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_HISTORY_LIST;
+import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_OPEN;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_HOME;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_ACCESSIBILITY;
@@ -43,6 +42,7 @@ import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_SAVE_AS_PDF;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_SIGN_UP;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.SUMO_DEFAULT_BROWSER;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_FXA_SIGNIN;
+import static org.mozilla.gecko.deeplink.DeepLinkContract.URL_PARAM;
 import static org.mozilla.gecko.util.FileUtils.isContentUri;
 
 import org.mozilla.gecko.deeplink.DeepLinkContract;
@@ -196,7 +196,7 @@ public class LauncherActivity extends Activity {
         }
         final String deepLink = intent.getData().getHost();
         final String uid = intent.getData().getQueryParameter("uid");
-        final String localUid = getSharedPreferences(BrowserApp.class.getName(), MODE_PRIVATE).getString(MmaDelegate.KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
+        final String localUid = MmaDelegate.getDeviceId(LauncherActivity.this);
         final boolean isMmaDeepLink = uid != null && localUid != null && uid.equals(localUid);
 
         if (!validateMmaDeepLink(deepLink, isMmaDeepLink)) {
@@ -204,6 +204,9 @@ public class LauncherActivity extends Activity {
         }
 
         switch (deepLink) {
+            case LINK_OPEN:
+                dispatchUrlDeepLink(intent);
+                break;
             case LINK_DEFAULT_BROWSER:
                 GeckoSharedPrefs.forApp(this).edit().putBoolean(GeckoPreferences.PREFS_DEFAULT_BROWSER, true).apply();
 
@@ -304,4 +307,10 @@ public class LauncherActivity extends Activity {
         startActivity(intent);
     }
 
+    private void dispatchUrlDeepLink(final SafeIntent intent) {
+        String url = intent.getData().getQueryParameter(URL_PARAM);
+        if (url != null) {
+            dispatchUrlIntent(url);
+        }
+    }
 }

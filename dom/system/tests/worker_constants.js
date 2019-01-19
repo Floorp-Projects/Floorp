@@ -1,8 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-env mozilla/chrome-worker */
 
 function log(text) {
-  dump("WORKER "+text+"\n");
+  dump("WORKER " + text + "\n");
 }
 
 function send(message) {
@@ -10,8 +11,8 @@ function send(message) {
 }
 
 self.onmessage = function(msg) {
-  self.onmessage = function(msg) {
-    log("ignored message "+JSON.stringify(msg.data));
+  self.onmessage = function(msgInner) {
+    log("ignored message " + JSON.stringify(msgInner.data));
   };
   let { isDebugBuild, umask } = msg.data;
   try {
@@ -34,13 +35,13 @@ function finish() {
 }
 
 function ok(condition, description) {
-  send({kind: "ok", condition: condition, description:description});
+  send({kind: "ok", condition, description});
 }
 function is(a, b, description) {
-  send({kind: "is", a: a, b:b, description:description});
+  send({kind: "is", a, b, description});
 }
 function isnot(a, b, description) {
-  send({kind: "isnot", a: a, b:b, description:description});
+  send({kind: "isnot", a, b, description});
 }
 
 // Test that OS.Constants.Sys.Name is defined
@@ -57,7 +58,7 @@ function test_debugBuildWorkerThread(isDebugBuild) {
 function test_umaskWorkerThread(umask) {
   is(umask, OS.Constants.Sys.umask,
      "OS.Constants.Sys.umask is set properly on worker thread: " +
-     ("0000"+umask.toString(8)).slice(-4));
+     ("0000" + umask.toString(8)).slice(-4));
 }
 
 // Test that OS.Constants.Path.libxul lets us open libxul
@@ -77,6 +78,6 @@ function test_xul() {
 }
 
 // Check if the value of OS.Constants.Sys.bits is 32 or 64
-function test_bits(){
+function test_bits() {
   is(OS.Constants.Sys.bits, ctypes.int.ptr.size * 8, "OS.Constants.Sys.bits is either 32 or 64");
 }

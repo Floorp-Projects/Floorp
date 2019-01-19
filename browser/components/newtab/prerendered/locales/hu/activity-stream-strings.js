@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Rendben, értem",
   "prefs_home_header": "Firefox kezdőlap tartalma",
   "prefs_home_description": "Válassza ki milyen tartalmat szeretne a Firefox kezdőlapon.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Firefox kezdőlap",
+  "prefs_content_discovery_description": "A Firefox kezdőlapon lévő tartalomfelfedezéssel kiváló minőségű, releváns cikkeket találhat szerte a weben.",
+  "prefs_content_discovery_button": "Tartalomfelfedezés kikapcsolása",
   "prefs_section_rows_option": "{num} sor;{num} sor",
   "prefs_search_header": "Webes keresés",
   "prefs_topsites_description": "A leggyakrabban látogatott oldalak",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Adatvédelmi nyilatkozatot",
   "firstrun_continue_to_login": "Folytatás",
   "firstrun_skip_login": "Lépés kihagyása",
-  "context_menu_title": "Menü megnyitása",
-  "pocket_learn_more": "További tudnivalók"
+  "context_menu_title": "Menü megnyitása"
 };

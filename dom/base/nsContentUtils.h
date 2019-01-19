@@ -1214,7 +1214,7 @@ class nsContentUtils {
   /**
    * Returns true if aDocument is a chrome document
    */
-  static bool IsChromeDoc(Document* aDocument);
+  static bool IsChromeDoc(const Document* aDocument);
 
   /**
    * Returns true if aDocument is in a docshell whose parent is the same type
@@ -3436,7 +3436,6 @@ class nsContentUtils {
   static bool sIsFrameTimingPrefEnabled;
   static bool sIsFormAutofillAutocompleteEnabled;
   static bool sIsUAWidgetEnabled;
-  static bool sIsCustomElementsEnabled;
   static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;
   static bool sAnimationsAPICoreEnabled;

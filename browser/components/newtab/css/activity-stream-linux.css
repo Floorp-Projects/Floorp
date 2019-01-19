@@ -1765,7 +1765,7 @@ main {
   .more-recommendations:dir(rtl)::after {
     transform: scaleX(-1); }
 
-.outer-wrapper a {
+.outer-wrapper .discovery-stream.ds-layout a {
   color: #0C0C0D; }
 
 .discovery-stream.ds-layout {
@@ -1947,12 +1947,30 @@ main {
   grid-template-columns: repeat(4, 1fr);
   grid-column-gap: 24px; }
 
+.ds-list-title {
+  color: #0C0C0D;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  padding: 8px 0;
+  line-height: 24px;
+  font-size: 17px; }
+
+.ds-list-border {
+  border: 1px solid rgba(177, 177, 179, 0.36);
+  margin-block-start: 8px;
+  margin-block-end: 8px; }
+
 .ds-list {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-row-gap: 10px;
+  grid-row-gap: 18px;
   grid-column-gap: 24px;
   padding-inline-start: 0; }
+
+.ds-list-item:nth-child(-n+3) {
+  border-bottom: 2px solid rgba(177, 177, 179, 0.36);
+  margin-bottom: -2px;
+  padding-bottom: 2px; }
 
 .ds-list-item {
   line-height: 20px;
@@ -1965,15 +1983,17 @@ main {
     display: flex;
     justify-content: space-between; }
   .ds-list-item .ds-list-item-info {
+    max-height: 1.53846em;
+    overflow: hidden;
     color: #737373;
     overflow: hidden;
     text-overflow: ellipsis; }
   .ds-list-item .ds-list-item-title {
-    margin-bottom: 8px;
-    padding-bottom: 8px; }
+    max-height: 3.07692em;
+    overflow: hidden;
+    margin-bottom: 8px; }
   .ds-list-item .ds-list-item-text {
     display: flex;
-    justify-content: space-between;
     flex-direction: column; }
   .ds-list-item .ds-list-image {
     width: 72px;
