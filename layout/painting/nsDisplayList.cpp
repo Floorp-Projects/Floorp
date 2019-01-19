@@ -9352,25 +9352,19 @@ bool nsDisplayFilters::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
+  bool snap;
   float auPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  nsRect displayBounds = GetBounds(aDisplayListBuilder, &snap);
+  auto postFilterBounds = LayoutDeviceIntRect::Round(
+      LayoutDeviceRect::FromAppUnits(displayBounds, auPerDevPixel));
+  auto preFilterBounds = LayoutDeviceIntRect::Round(
+      LayoutDeviceRect::FromAppUnits(mBounds, auPerDevPixel));
 
   nsTArray<mozilla::wr::FilterOp> wrFilters;
-  Maybe<nsRect> filterClip;
   if (!CreateWebRenderCSSFilters(wrFilters) &&
-      !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, wrFilters,
-                                                    filterClip)) {
+      !nsSVGIntegrationUtils::BuildWebRenderFilters(
+          mFrame, preFilterBounds, wrFilters, postFilterBounds)) {
     return false;
-  }
-
-  wr::WrStackingContextClip clip;
-  if (filterClip) {
-    auto devPxRect = LayoutDeviceRect::FromAppUnits(
-        filterClip.value() + ToReferenceFrame(), auPerDevPixel);
-    wr::WrClipId clipId =
-        aBuilder.DefineClip(Nothing(), wr::ToRoundedLayoutRect(devPxRect));
-    clip = wr::WrStackingContextClip::ClipId(clipId);
-  } else {
-    clip = wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
   }
 
   float opacity = mFrame->StyleEffects()->mOpacity;
@@ -9378,7 +9372,9 @@ bool nsDisplayFilters::CreateWebRenderCommands(
       aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder, wrFilters,
       LayoutDeviceRect(), nullptr, nullptr,
       opacity != 1.0f && mHandleOpacity ? &opacity : nullptr, nullptr,
-      gfx::CompositionOp::OP_OVER, true, false, Nothing(), clip);
+      wr::ReferenceFrameKind::Transform, gfx::CompositionOp::OP_OVER, true,
+      false, Nothing(),
+      wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId()));
 
   nsDisplayEffectsBase::CreateWebRenderCommands(aBuilder, aResources, sc,
                                                 aManager, aDisplayListBuilder);
