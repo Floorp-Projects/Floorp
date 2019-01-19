@@ -226,6 +226,28 @@ diff --git a/devtools/client/sourceeditor/codemirror/addon/search/search.js b/de
              advance();
            };
 
+# Middle-click pasting patch
+
+See Bug 1482875. Not needed anymore when https://github.com/codemirror/CodeMirror/pull/5751 lands.
+
+```diff
+diff --git a/devtools/client/sourceeditor/codemirror/lib/codemirror.js b/devtools/client/sourceeditor/codemirror/lib/codemirror.js
+--- a/devtools/client/sourceeditor/codemirror/lib/codemirror.js
++++ b/devtools/client/sourceeditor/codemirror/lib/codemirror.js
+@@ -9256,8 +9256,9 @@ TextareaInput.prototype.init = function
+
+   on(display.scroller, "paste", function (e) {
+     if (eventInWidget(display, e) || signalDOMEvent(cm, e)) { return }
+-    cm.state.pasteIncoming = true
+-    input.focus()
++    const event = new Event("paste");
++    event.clipboardData = e.clipboardData;
++    te.dispatchEvent(event);
+   })
+
+   // Prevent normal selection in the editor (we handle our own)
+```
+
 # Footnotes
 
 [1] http://codemirror.net

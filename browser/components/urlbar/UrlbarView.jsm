@@ -8,7 +8,12 @@ var EXPORTED_SYMBOLS = ["UrlbarView"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(this, "bundle", function() {
+  return Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
 });
 
 /**
@@ -276,22 +281,27 @@ class UrlbarView {
     let title = this._createElement("span");
     title.className = "urlbarView-title";
     this._addTextContentWithHighlights(
-      title,
-      ...(result.title ?
-          [result.title, result.titleHighlights] :
-          [result.payload.url || "", result.payloadHighlights.url || []])
-    );
+      title, result.title, result.titleHighlights);
     content.appendChild(title);
 
     let secondary = this._createElement("span");
     secondary.className = "urlbarView-secondary";
-    if (result.type == UrlbarUtils.MATCH_TYPE.TAB_SWITCH) {
-      secondary.classList.add("urlbarView-action");
-      this._addTextContentWithHighlights(secondary, "Switch to Tab", []);
-    } else {
-      secondary.classList.add("urlbarView-url");
-      this._addTextContentWithHighlights(secondary, result.payload.url || "",
-                                         result.payloadHighlights.url || []);
+    switch (result.type) {
+      case UrlbarUtils.MATCH_TYPE.TAB_SWITCH:
+        secondary.classList.add("urlbarView-action");
+        secondary.textContent = bundle.GetStringFromName("switchToTab2");
+        break;
+      case UrlbarUtils.MATCH_TYPE.SEARCH:
+        secondary.classList.add("urlbarView-action");
+        secondary.textContent =
+          bundle.formatStringFromName("searchWithEngine",
+                                      [result.payload.engine], 1);
+        break;
+      default:
+        secondary.classList.add("urlbarView-url");
+        this._addTextContentWithHighlights(secondary, result.payload.url || "",
+                                           result.payloadHighlights.url || []);
+        break;
     }
     content.appendChild(secondary);
 

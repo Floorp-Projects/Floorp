@@ -633,8 +633,9 @@ static void CreateHeaderBarButtons() {
                               GTK_STYLE_CLASS_LEFT);
 
   WidgetNodeType buttonLayout[TOOLBAR_BUTTONS];
+
   int activeButtons =
-      GetGtkHeaderBarButtonLayout(buttonLayout, TOOLBAR_BUTTONS);
+      GetGtkHeaderBarButtonLayout(buttonLayout, TOOLBAR_BUTTONS, nullptr);
 
   if (IsToolbarButtonEnabled(buttonLayout, activeButtons,
                              MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE)) {

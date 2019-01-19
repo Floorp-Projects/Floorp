@@ -658,7 +658,7 @@ TokenAuthenticatedRESTRequest.prototype = {
   __proto__: RESTRequest.prototype,
 
   async dispatch(method, data) {
-    let sig = CryptoUtils.computeHTTPMACSHA1(
+    let sig = await CryptoUtils.computeHTTPMACSHA1(
       this.authToken.id, this.authToken.key, method, this.uri, this.extra
     );
 

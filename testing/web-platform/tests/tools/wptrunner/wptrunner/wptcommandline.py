@@ -268,7 +268,7 @@ scheme host and port.""")
     gecko_group.add_argument("--reftest-external", dest="reftest_internal", action="store_false",
                              help="Disable reftest runner implemented inside Marionette")
     gecko_group.add_argument("--reftest-screenshot", dest="reftest_screenshot", action="store",
-                             choices=["always", "fail", "unexpected"], default="unexpected",
+                             choices=["always", "fail", "unexpected"], default=None,
                              help="With --reftest-internal, when to take a screenshot")
     gecko_group.add_argument("--chaos", dest="chaos_mode_flags", action="store",
                              nargs="?", const=0xFFFFFFFF, type=int,
@@ -529,6 +529,9 @@ def check_args(kwargs):
 
     if kwargs["lsan_dir"] is None:
         kwargs["lsan_dir"] = kwargs["prefs_root"]
+
+    if kwargs["reftest_screenshot"] is None:
+        kwargs["reftest_screenshot"] = "unexpected"
 
     return kwargs
 

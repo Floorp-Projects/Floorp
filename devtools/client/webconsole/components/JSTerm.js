@@ -734,6 +734,14 @@ class JSTerm extends Component {
     return this.inputNode ? this.inputNode.selectionStart : null;
   }
 
+  getSelectedText() {
+    if (this.inputNode) {
+      return this.inputNode.value.substring(
+        this.inputNode.selectionStart, this.inputNode.selectionEnd);
+    }
+    return this.editor.getSelection();
+  }
+
   /**
    * Even handler for the "beforeChange" event fired by codeMirror. This event is fired
    * when codeMirror is about to make a change to its DOM representation.

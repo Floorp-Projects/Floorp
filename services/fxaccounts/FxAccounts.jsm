@@ -971,7 +971,7 @@ FxAccountsInternal.prototype = {
         const {uid, kB} = userData;
         await this.updateUserAccountData({
           uid,
-          ...this._deriveKeys(uid, CommonUtils.hexToBytes(kB)),
+          ...(await this._deriveKeys(uid, CommonUtils.hexToBytes(kB))),
           kA: null, // Remove kA and kB from storage.
           kB: null,
         });
@@ -1038,7 +1038,7 @@ FxAccountsInternal.prototype = {
       log.debug("kBbytes: " + kBbytes);
     }
     let updateData = {
-      ...this._deriveKeys(data.uid, kBbytes),
+      ...(await this._deriveKeys(data.uid, kBbytes)),
       keyFetchToken: null, // null values cause the item to be removed.
       unwrapBKey: null,
     };
@@ -1062,11 +1062,11 @@ FxAccountsInternal.prototype = {
     return currentState.resolve(data);
   },
 
-  _deriveKeys(uid, kBbytes) {
+  async _deriveKeys(uid, kBbytes) {
     return {
-      kSync: CommonUtils.bytesAsHex(this._deriveSyncKey(kBbytes)),
+      kSync: CommonUtils.bytesAsHex((await this._deriveSyncKey(kBbytes))),
       kXCS: CommonUtils.bytesAsHex(this._deriveXClientState(kBbytes)),
-      kExtSync: CommonUtils.bytesAsHex(this._deriveWebExtSyncStoreKey(kBbytes)),
+      kExtSync: CommonUtils.bytesAsHex((await this._deriveWebExtSyncStoreKey(kBbytes))),
       kExtKbHash: CommonUtils.bytesAsHex(this._deriveWebExtKbHash(uid, kBbytes)),
     };
   },
@@ -1077,7 +1077,7 @@ FxAccountsInternal.prototype = {
    * @returns HKDF(kB, undefined, "identity.mozilla.com/picl/v1/oldsync", 64)
    */
   _deriveSyncKey(kBbytes) {
-    return CryptoUtils.hkdf(kBbytes, undefined,
+    return CryptoUtils.hkdfLegacy(kBbytes, undefined,
                             "identity.mozilla.com/picl/v1/oldsync", 2 * 32);
   },
 
@@ -1087,7 +1087,7 @@ FxAccountsInternal.prototype = {
    * @returns HKDF(kB, undefined, "identity.mozilla.com/picl/v1/chrome.storage.sync", 64)
    */
   _deriveWebExtSyncStoreKey(kBbytes) {
-    return CryptoUtils.hkdf(kBbytes, undefined,
+    return CryptoUtils.hkdfLegacy(kBbytes, undefined,
                             "identity.mozilla.com/picl/v1/chrome.storage.sync",
                             2 * 32);
   },

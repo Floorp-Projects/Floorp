@@ -299,3 +299,51 @@ exports.removeMenus = function(doc) {
   // unregistering each tool.
   removeTopLevelItems(doc);
 };
+
+/**
+ * This is used for about:devtools-toolbox and that we are hiding the main toolbox toggle
+ * menu item, as well as all the tool items displayed on the menu. But we keep the
+ * non-toolbox menu items such as Scratchpad, Browser Console etc.
+ *
+ * @param {XULDocument} doc
+ * @param {boolean} isEnabled
+ */
+function setDevtoolsMenuItemsEnabled(doc, isEnabled) {
+  setMenuItemEnabled(doc, "menu_devToolbox", isEnabled);
+
+  for (const toolDefinition of gDevTools.getToolDefinitionArray()) {
+    if (!toolDefinition.inMenu) {
+      continue;
+    }
+    setMenuItemEnabled(doc, "menuitem_" + toolDefinition.id, isEnabled);
+  }
+}
+
+function setMenuItemEnabled(doc, menuItemId, isEnabled) {
+  const menuItem = doc.getElementById(menuItemId);
+  if (menuItem) {
+    if (isEnabled) {
+      menuItem.removeAttribute("hidden");
+    } else {
+      menuItem.setAttribute("hidden", true);
+    }
+  }
+}
+
+/**
+ * Enable all devtools menu items.
+ *
+ * @param {XULDocument} doc
+ */
+exports.enableDevtoolsMenuItems = function(doc) {
+  setDevtoolsMenuItemsEnabled(doc, true);
+};
+
+/**
+ * Disable all devtools menu items.
+ *
+ * @param {XULDocument} doc
+ */
+exports.disableDevtoolsMenuItems = function(doc) {
+  setDevtoolsMenuItemsEnabled(doc, false);
+};

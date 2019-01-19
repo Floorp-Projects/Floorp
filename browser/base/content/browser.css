@@ -285,7 +285,9 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 #toolbar-menubar:not([autohide=true]) + #TabsToolbar .titlebar-spacer,
 %endif
 %ifndef MOZ_WIDGET_COCOA
+%ifndef MOZ_WIDGET_GTK
 :root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"],
+%endif
 %endif
 :root:not([chromemargin]) .titlebar-buttonbox-container,
 :root[inFullscreen] .titlebar-buttonbox-container,
@@ -293,6 +295,18 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 :root:not([tabsintitlebar]) .titlebar-spacer {
   display: none;
 }
+%ifdef MOZ_WIDGET_GTK
+@media (-moz-gtk-csd-reversed-placement: 0) {
+  :root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"] {
+    display: none;
+  }
+}
+@media (-moz-gtk-csd-reversed-placement) {
+  :root:not([sizemode=normal]) .titlebar-spacer[type="post-tabs"] {
+    display: none;
+  }
+}
+%endif
 
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar[autohide=true]:not([inactive]) + #TabsToolbar > .titlebar-buttonbox-container {

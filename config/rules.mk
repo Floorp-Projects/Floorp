@@ -835,11 +835,7 @@ endif
 cargo_build_flags += --manifest-path $(CARGO_FILE)
 ifdef BUILD_VERBOSE_LOG
 cargo_build_flags += -vv
-else
-ifdef MOZ_AUTOMATION
-cargo_build_flags += -vv
-endif # MOZ_AUTOMATION
-endif # BUILD_VERBOSE_LOG
+endif
 
 # Enable color output if original stdout was a TTY and color settings
 # aren't already present. This essentially restores the default behavior

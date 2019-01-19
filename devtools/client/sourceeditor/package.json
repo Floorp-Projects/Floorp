@@ -1,23 +1,15 @@
 {
   "name": "sourceeditor",
-  "version": "0.0.1",
-  "description": "",
+  "version": "0.0.2",
+  "description": "Build a minified codeMirror bundle including useful addons",
   "main": "",
   "scripts": {
     "build": "webpack"
   },
-  "babel": {
-    "presets": [
-      "es2015"
-    ]
-  },
   "author": "",
   "license": "",
   "devDependencies": {
-    "babel-core": "^6.11.4",
-    "babel-loader": "^6.2.4",
-    "babel-preset-es2015": "^6.9.0",
-    "raw-loader": "^0.5.1",
-    "webpack": "^1.13.1"
+    "webpack": "^4.28.4",
+    "webpack-cli": "^3.2.1"
   }
 }

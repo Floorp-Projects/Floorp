@@ -469,16 +469,6 @@ add_task(async function test_401_then_500() {
   await promiseStopServer(server);
 });
 
-add_task(async function throw_if_not_json_body() {
-  let client = new HawkClient("https://example.com");
-  try {
-    await client.request("/bogus", "GET", {}, "I am not json");
-    do_throw("Expected an error");
-  } catch (err) {
-    Assert.ok(!!err.message);
-  }
-});
-
 // End of tests.
 // Utility functions follow
 

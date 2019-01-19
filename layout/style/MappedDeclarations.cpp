@@ -23,9 +23,7 @@ void MappedDeclarations::SetIdentAtomValue(nsCSSPropertyID aId,
     // FIXME(emilio): Can we move mapped attribute declarations across
     // documents? Isn't this wrong in that case? This is pretty out of place
     // anyway.
-    if (nsPresContext* pc = mDocument->GetPresContext()) {
-      pc->ForceCacheLang(aValue);
-    }
+    mDocument->ForceCacheLang(aValue);
   }
 }
 

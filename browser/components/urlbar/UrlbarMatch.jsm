@@ -101,9 +101,11 @@ class UrlbarMatch {
       case UrlbarUtils.MATCH_TYPE.REMOTE_TAB:
         return this.payload.title ?
                [this.payload.title, this.payloadHighlights.title] :
-               ["", []];
+               [this.payload.url || "", this.payloadHighlights.url || []];
       case UrlbarUtils.MATCH_TYPE.SEARCH:
-        return [this.payload.engine, this.payloadHighlights.engine];
+        return this.payload.suggestion ?
+               [this.payload.suggestion, this.payloadHighlights.suggestion] :
+               [this.payload.query, this.payloadHighlights.query];
       default:
         return ["", []];
     }

@@ -33,9 +33,7 @@ xul|*.menulist-dropmarker {
 }
 
 xul|menulist > xul|menupopup xul|menu,
-xul|menulist > xul|menupopup xul|menuitem,
-xul|button[type="menu"] > xul|menupopup xul|menu,
-xul|button[type="menu"] > xul|menupopup xul|menuitem {
+xul|menulist > xul|menupopup xul|menuitem {
   padding-inline-end: 34px;
 }
 

@@ -67,7 +67,7 @@ class StartupTimeline {
 
 #    ifdef MOZILLA_INTERNAL_API
   static void Record(Event ev) {
-    PROFILER_ADD_MARKER(Describe(ev));
+    PROFILER_ADD_MARKER(Describe(ev), OTHER);
     Record(ev, TimeStamp::Now());
   }
 

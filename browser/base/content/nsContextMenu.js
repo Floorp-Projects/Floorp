@@ -425,12 +425,21 @@ nsContextMenu.prototype = {
     this.showItem("context-viewpartialsource-selection",
                   this.isContentSelected);
 
+    const {gBrowser} = this.browser.ownerGlobal;
+    // Hide menu that opens devtools when the window is showing `about:devtools-toolbox`.
+    // This is to avoid displaying multiple devtools at the same time. See bug 1495944.
+    const isAboutDevtoolsToolbox = gBrowser &&
+                                   gBrowser.currentURI &&
+                                   gBrowser.currentURI.scheme === "about" &&
+                                   gBrowser.currentURI.filePath === "devtools-toolbox";
+
     var shouldShow = !(this.isContentSelected ||
                        this.onImage || this.onCanvas ||
                        this.onVideo || this.onAudio ||
                        this.onLink || this.onTextInput);
 
     var showInspect = this.inTabBrowser &&
+                      !isAboutDevtoolsToolbox &&
                       Services.prefs.getBoolPref("devtools.inspector.enabled", true) &&
                       !Services.prefs.getBoolPref("devtools.policy.disabled", false);
 

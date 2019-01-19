@@ -76,7 +76,7 @@ void nsDOMNavigationTiming::NotifyNavigationStart(
   mNavigationStart = TimeStamp::Now();
   mDocShellHasBeenActiveSinceNavigationStart =
       (aDocShellState == DocShellState::eActive);
-  PROFILER_ADD_MARKER("Navigation::Start");
+  PROFILER_ADD_MARKER("Navigation::Start", DOM);
 }
 
 void nsDOMNavigationTiming::NotifyFetchStart(nsIURI* aURI,
@@ -98,14 +98,14 @@ void nsDOMNavigationTiming::NotifyUnloadAccepted(nsIURI* aOldURI) {
 
 void nsDOMNavigationTiming::NotifyUnloadEventStart() {
   mUnloadStart = TimeStamp::Now();
-  PROFILER_TRACING_DOCSHELL("Navigation", "Unload", TRACING_INTERVAL_START,
-                            mDocShell);
+  PROFILER_TRACING_DOCSHELL("Navigation", "Unload", NETWORK,
+                            TRACING_INTERVAL_START, mDocShell);
 }
 
 void nsDOMNavigationTiming::NotifyUnloadEventEnd() {
   mUnloadEnd = TimeStamp::Now();
-  PROFILER_TRACING_DOCSHELL("Navigation", "Unload", TRACING_INTERVAL_END,
-                            mDocShell);
+  PROFILER_TRACING_DOCSHELL("Navigation", "Unload", NETWORK,
+                            TRACING_INTERVAL_END, mDocShell);
 }
 
 void nsDOMNavigationTiming::NotifyLoadEventStart() {
@@ -114,8 +114,8 @@ void nsDOMNavigationTiming::NotifyLoadEventStart() {
   }
   mLoadEventStart = TimeStamp::Now();
 
-  PROFILER_TRACING_DOCSHELL("Navigation", "Load", TRACING_INTERVAL_START,
-                            mDocShell);
+  PROFILER_TRACING_DOCSHELL("Navigation", "Load", NETWORK,
+                            TRACING_INTERVAL_START, mDocShell);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     TimeStamp now = TimeStamp::Now();
@@ -144,7 +144,7 @@ void nsDOMNavigationTiming::NotifyLoadEventEnd() {
   }
   mLoadEventEnd = TimeStamp::Now();
 
-  PROFILER_TRACING_DOCSHELL("Navigation", "Load", TRACING_INTERVAL_END,
+  PROFILER_TRACING_DOCSHELL("Navigation", "Load", NETWORK, TRACING_INTERVAL_END,
                             mDocShell);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
@@ -162,7 +162,7 @@ void nsDOMNavigationTiming::NotifyLoadEventEnd() {
       DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
       PAGELOAD_LOG(("%s", marker.get()));
       profiler_add_marker(
-          "DocumentLoad",
+          "DocumentLoad", js::ProfilingStackFrame::Category::DOM,
           MakeUnique<TextMarkerPayload>(marker, mNavigationStart, mLoadEventEnd,
                                         docShellId, docShellHistoryId));
     }
@@ -188,7 +188,7 @@ void nsDOMNavigationTiming::NotifyDOMLoading(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMLoading = TimeStamp::Now();
 
-  PROFILER_ADD_MARKER("Navigation::DOMLoading");
+  PROFILER_ADD_MARKER("Navigation::DOMLoading", DOM);
 }
 
 void nsDOMNavigationTiming::NotifyDOMInteractive(nsIURI* aURI) {
@@ -198,7 +198,7 @@ void nsDOMNavigationTiming::NotifyDOMInteractive(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMInteractive = TimeStamp::Now();
 
-  PROFILER_ADD_MARKER("Navigation::DOMInteractive");
+  PROFILER_ADD_MARKER("Navigation::DOMInteractive", DOM);
 }
 
 void nsDOMNavigationTiming::NotifyDOMComplete(nsIURI* aURI) {
@@ -208,7 +208,7 @@ void nsDOMNavigationTiming::NotifyDOMComplete(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMComplete = TimeStamp::Now();
 
-  PROFILER_ADD_MARKER("Navigation::DOMComplete");
+  PROFILER_ADD_MARKER("Navigation::DOMComplete", DOM);
 }
 
 void nsDOMNavigationTiming::NotifyDOMContentLoadedStart(nsIURI* aURI) {
@@ -219,7 +219,7 @@ void nsDOMNavigationTiming::NotifyDOMContentLoadedStart(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMContentLoadedEventStart = TimeStamp::Now();
 
-  PROFILER_TRACING_DOCSHELL("Navigation", "DOMContentLoaded",
+  PROFILER_TRACING_DOCSHELL("Navigation", "DOMContentLoaded", NETWORK,
                             TRACING_INTERVAL_START, mDocShell);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
@@ -251,7 +251,7 @@ void nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMContentLoadedEventEnd = TimeStamp::Now();
 
-  PROFILER_TRACING_DOCSHELL("Navigation", "DOMContentLoaded",
+  PROFILER_TRACING_DOCSHELL("Navigation", "DOMContentLoaded", NETWORK,
                             TRACING_INTERVAL_END, mDocShell);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
@@ -357,8 +357,9 @@ void nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer) {
 
     DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
     profiler_add_marker(
-        "TTFI", MakeUnique<TextMarkerPayload>(marker, mNavigationStart, mTTFI,
-                                              docShellId, docShellHistoryId));
+        "TTFI", js::ProfilingStackFrame::Category::DOM,
+        MakeUnique<TextMarkerPayload>(marker, mNavigationStart, mTTFI,
+                                      docShellId, docShellHistoryId));
   }
 #endif
   return;
@@ -391,7 +392,7 @@ void nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument() {
     PAGELOAD_LOG(("%s", marker.get()));
     DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
     profiler_add_marker(
-        "FirstNonBlankPaint",
+        "FirstNonBlankPaint", js::ProfilingStackFrame::Category::DOM,
         MakeUnique<TextMarkerPayload>(marker, mNavigationStart, mNonBlankPaint,
                                       docShellId, docShellHistoryId));
   }
@@ -439,10 +440,11 @@ void nsDOMNavigationTiming::NotifyContentfulPaintForRootContentDocument() {
               "and first non-blank paint");
     DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
     PAGELOAD_LOG(("%s", marker.get()));
-    profiler_add_marker("FirstContentfulPaint",
-                        MakeUnique<TextMarkerPayload>(
-                            marker, mNavigationStart, mContentfulPaint,
-                            docShellId, docShellHistoryId));
+    profiler_add_marker(
+        "FirstContentfulPaint", js::ProfilingStackFrame::Category::DOM,
+        MakeUnique<TextMarkerPayload>(marker, mNavigationStart,
+                                      mContentfulPaint, docShellId,
+                                      docShellHistoryId));
   }
 #endif
 
@@ -484,10 +486,11 @@ void nsDOMNavigationTiming::NotifyDOMContentFlushedForRootContentDocument() {
               "and DOMContentFlushed");
     DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
     PAGELOAD_LOG(("%s", marker.get()));
-    profiler_add_marker("DOMContentFlushed",
-                        MakeUnique<TextMarkerPayload>(
-                            marker, mNavigationStart, mDOMContentFlushed,
-                            docShellId, docShellHistoryId));
+    profiler_add_marker(
+        "DOMContentFlushed", js::ProfilingStackFrame::Category::DOM,
+        MakeUnique<TextMarkerPayload>(marker, mNavigationStart,
+                                      mDOMContentFlushed, docShellId,
+                                      docShellHistoryId));
   }
 #endif
 }

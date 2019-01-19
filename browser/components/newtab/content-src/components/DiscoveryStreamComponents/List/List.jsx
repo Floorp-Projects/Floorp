@@ -1,31 +1,53 @@
+import {actionCreators as ac} from "common/Actions.jsm";
 import {connect} from "react-redux";
 import React from "react";
 
 /**
  * @note exported for testing only
  */
-export function ListItem(props) {
+export class ListItem extends React.PureComponent {
   // TODO performance: get feeds to send appropriately sized images rather
   // than waiting longer and scaling down on client?
-  return (
-    <li className="ds-list-item">
-      <a className="ds-list-item-link" href={props.url}>
-        <div className="ds-list-item-text">
-          <div className="ds-list-item-title">
-            <b>
-              {props.title}
-            </b>
-          </div>
-          <div className="ds-list-item-info">
-            {`${props.domain} · TODO:Topic`}
-          </div>
-        </div>
+  constructor(props) {
+    super(props);
+    this.onLinkClick = this.onLinkClick.bind(this);
+  }
 
-        <img className="ds-list-image" src={props.image_src} />
-      </a>
+  onLinkClick(event) {
+    if (this.props.dispatch) {
+      this.props.dispatch(ac.UserEvent({
+        event: "CLICK",
+        source: this.props.type.toUpperCase(),
+        action_position: this.props.index,
+      }));
 
-    </li>
-  );
+      this.props.dispatch(ac.ImpressionStats({
+        source: this.props.type.toUpperCase(),
+        click: 0,
+        tiles: [{id: this.props.id, pos: this.props.index}],
+      }));
+    }
+  }
+
+  render() {
+    return (
+      <li className="ds-list-item">
+        <a className="ds-list-item-link" href={this.props.url} onClick={this.onLinkClick}>
+          <div className="ds-list-item-text">
+            <div className="ds-list-item-title">
+              <b>
+                {this.props.title}
+              </b>
+            </div>
+            <div className="ds-list-item-info">
+              {`${this.props.domain} · TODO:Topic`}
+            </div>
+          </div>
+          <img className="ds-list-image" src={this.props.image_src} />
+        </a>
+      </li>
+    );
+  }
 }
 
 /**
@@ -41,7 +63,7 @@ export function _List(props) {
   const recs = feed.data.recommendations;
 
   let recMarkup = recs.slice(0, props.items).map((rec, index) => (
-    <ListItem {...rec} key={`ds-list-item-$index`} />)
+    <ListItem {...rec} key={`ds-list-item-${index}`} index={index} type={props.type} dispatch={props.dispatch} />)
   );
 
   return (

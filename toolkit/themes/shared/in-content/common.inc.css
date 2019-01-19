@@ -235,6 +235,8 @@ html|button:enabled:hover:active,
 html|select:not([size]):not([multiple]):enabled:hover:active,
 html|input[type="color"]:enabled:hover:active,
 xul|button:not([disabled="true"]):hover:active,
+xul|button[open],
+xul|button[open]:hover,
 xul|menulist[open="true"]:not([disabled="true"]) {
   background-color: var(--in-content-button-background-active);
 }
@@ -271,20 +273,6 @@ xul|menulist > xul|*.menulist-label-box > xul|*.menulist-icon[src] {
   margin-inline-end: 5px;
 }
 
-xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
-  -moz-appearance: none;
-  margin: 1px 0;
-  margin-inline-start: 10px;
-  padding: 0;
-  width: 10px;
-  height: 16px;
-  border: none;
-  background-color: transparent;
-  list-style-image: url("chrome://global/skin/in-content/dropdown.svg");
-  -moz-context-properties: fill;
-  fill: -moz-DialogText;
-}
-
 xul|*.close-icon > xul|*.button-box {
   padding-top: 0;
   padding-bottom: 0;
@@ -312,8 +300,7 @@ xul|menulist[disabled="true"] > xul|*.menulist-dropmarker {
   fill: GrayText;
 }
 
-xul|menulist > xul|menupopup,
-xul|button[type="menu"] > xul|menupopup {
+xul|menulist > xul|menupopup {
   -moz-appearance: none;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
@@ -321,9 +308,7 @@ xul|button[type="menu"] > xul|menupopup {
 }
 
 xul|menulist > xul|menupopup xul|menu,
-xul|menulist > xul|menupopup xul|menuitem,
-xul|button[type="menu"] > xul|menupopup xul|menu,
-xul|button[type="menu"] > xul|menupopup xul|menuitem {
+xul|menulist > xul|menupopup xul|menuitem {
   -moz-appearance: none;
   font-size: 1em;
   color: var(--in-content-text-color);
@@ -334,33 +319,26 @@ xul|button[type="menu"] > xul|menupopup xul|menuitem {
 }
 
 xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[_moz-menuactive="true"],
-xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[_moz-menuactive="true"],
-xul|button[type="menu"] > xul|menupopup > xul|menu:not([disabled="true"])[_moz-menuactive="true"],
-xul|button[type="menu"] > xul|menupopup > xul|menuitem:not([disabled="true"])[_moz-menuactive="true"] {
+xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[_moz-menuactive="true"] {
   color: var(--in-content-text-color);
   background-color: var(--in-content-item-hover);
 }
 
 xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[selected="true"],
-xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[selected="true"],
-xul|button[type="menu"] > xul|menupopup > xul|menu:not([disabled="true"])[selected="true"],
-xul|button[type="menu"] > xul|menupopup > xul|menuitem:not([disabled="true"])[selected="true"] {
+xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[selected="true"] {
   color: var(--in-content-selected-text);
   background-color: var(--in-content-item-selected);
 }
 
 xul|menulist > xul|menupopup > xul|menu[disabled="true"],
-xul|menulist > xul|menupopup > xul|menuitem[disabled="true"],
-xul|button[type="menu"] > xul|menupopup > xul|menu[disabled="true"],
-xul|button[type="menu"] > xul|menupopup > xul|menuitem[disabled="true"] {
+xul|menulist > xul|menupopup > xul|menuitem[disabled="true"] {
   color: #999;
   /* override the [_moz-menuactive="true"] background color from
      global/menu.css */
   background-color: transparent;
 }
 
-xul|menulist > xul|menupopup xul|menuseparator,
-xul|button[type="menu"] > xul|menupopup xul|menuseparator {
+xul|menulist > xul|menupopup xul|menuseparator {
   -moz-appearance: none;
   margin: 0;
   padding: 0;

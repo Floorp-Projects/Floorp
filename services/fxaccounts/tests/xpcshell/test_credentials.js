@@ -33,7 +33,7 @@ add_task(async function test_onepw_setup_credentials() {
   let password = CommonUtils.encodeUTF8("i like pie");
 
   let pbkdf2 = CryptoUtils.pbkdf2Generate;
-  let hkdf = CryptoUtils.hkdf;
+  let hkdf = CryptoUtils.hkdfLegacy;
 
   // quickStretch the email
   let saltyEmail = Credentials.keyWordExtended("quickStretch", email);
@@ -43,7 +43,7 @@ add_task(async function test_onepw_setup_credentials() {
   let pbkdf2Rounds = 1000;
   let pbkdf2Len = 32;
 
-  let quickStretchedPW = pbkdf2(password, saltyEmail, pbkdf2Rounds, pbkdf2Len, Ci.nsICryptoHMAC.SHA256, 32);
+  let quickStretchedPW = await pbkdf2(password, saltyEmail, pbkdf2Rounds, pbkdf2Len);
   let quickStretchedActual = "6b88094c1c73bbf133223f300d101ed70837af48d9d2c1b6e7d38804b20cdde4";
   Assert.equal(b2h(quickStretchedPW), quickStretchedActual);
 
@@ -54,13 +54,13 @@ add_task(async function test_onepw_setup_credentials() {
   // derive auth password
   let hkdfSalt = h2b("00");
   let hkdfLen = 32;
-  let authPW = hkdf(quickStretchedPW, hkdfSalt, authKeyInfo, hkdfLen);
+  let authPW = await hkdf(quickStretchedPW, hkdfSalt, authKeyInfo, hkdfLen);
 
   Assert.equal(b2h(authPW), "4b8dec7f48e7852658163601ff766124c312f9392af6c3d4e1a247eb439be342");
 
   // derive unwrap key
   let unwrapKeyInfo = Credentials.keyWord("unwrapBkey");
-  let unwrapKey = hkdf(quickStretchedPW, hkdfSalt, unwrapKeyInfo, hkdfLen);
+  let unwrapKey = await hkdf(quickStretchedPW, hkdfSalt, unwrapKeyInfo, hkdfLen);
 
   Assert.equal(b2h(unwrapKey), "8ff58975be391338e4ec5d7138b5ed7b65c7d1bfd1f3a4f93e05aa47d5b72be9");
 });
@@ -79,8 +79,6 @@ add_task(async function test_client_stretch_kdf() {
   let options = {
     stretchedPassLength: 32,
     pbkdf2Rounds: 1000,
-    hmacAlgorithm: Ci.nsICryptoHMAC.SHA256,
-    hmacLength: 32,
     hkdfSalt: h2b("00"),
     hkdfLength: 32,
   };

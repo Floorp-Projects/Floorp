@@ -175,7 +175,7 @@ void VRDisplayHost::RemoveLayer(VRLayerParent* aLayer) {
 }
 
 void VRDisplayHost::StartFrame() {
-  AUTO_PROFILER_TRACING("VR", "GetSensorState");
+  AUTO_PROFILER_TRACING("VR", "GetSensorState", OTHER);
 
   TimeStamp now = TimeStamp::Now();
 #if defined(MOZ_WIDGET_ANDROID)
@@ -283,7 +283,7 @@ void VRDisplayHost::SubmitFrameInternal(
 #if !defined(MOZ_WIDGET_ANDROID)
   MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
 #endif  // !defined(MOZ_WIDGET_ANDROID)
-  AUTO_PROFILER_TRACING("VR", "SubmitFrameAtVRDisplayHost");
+  AUTO_PROFILER_TRACING("VR", "SubmitFrameAtVRDisplayHost", OTHER);
 
   if (!SubmitFrame(aTexture, aFrameId, aLeftEyeRect, aRightEyeRect)) {
     return;

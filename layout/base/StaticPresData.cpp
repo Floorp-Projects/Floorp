@@ -282,43 +282,4 @@ const LangGroupFontPrefs* StaticPresData::GetFontPrefsForLangHelper(
   return prefs;
 }
 
-const nsFont* StaticPresData::GetDefaultFontHelper(
-    uint8_t aFontID, nsAtom* aLanguage,
-    const LangGroupFontPrefs* aPrefs) const {
-  MOZ_ASSERT(aLanguage);
-  MOZ_ASSERT(aPrefs);
-
-  const nsFont* font;
-  switch (aFontID) {
-    // Special (our default variable width font and fixed width font)
-    case kPresContext_DefaultVariableFont_ID:
-      font = &aPrefs->mDefaultVariableFont;
-      break;
-    case kPresContext_DefaultFixedFont_ID:
-      font = &aPrefs->mDefaultFixedFont;
-      break;
-    // CSS
-    case kGenericFont_serif:
-      font = &aPrefs->mDefaultSerifFont;
-      break;
-    case kGenericFont_sans_serif:
-      font = &aPrefs->mDefaultSansSerifFont;
-      break;
-    case kGenericFont_monospace:
-      font = &aPrefs->mDefaultMonospaceFont;
-      break;
-    case kGenericFont_cursive:
-      font = &aPrefs->mDefaultCursiveFont;
-      break;
-    case kGenericFont_fantasy:
-      font = &aPrefs->mDefaultFantasyFont;
-      break;
-    default:
-      font = nullptr;
-      NS_ERROR("invalid arg");
-      break;
-  }
-  return font;
-}
-
 }  // namespace mozilla
