@@ -30,6 +30,8 @@ if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         '-wd4756', # overflow in constant arithmetic
     ]
 
+# These sources can't be unified because there are too many conflicting global
+# variables (e.g. almost every source file defines a `one` and a `huge`).
 SOURCES += [
     'e_acos.cpp',
     'e_acosh.cpp',
