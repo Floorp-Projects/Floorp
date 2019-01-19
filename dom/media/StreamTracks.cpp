@@ -12,7 +12,7 @@ namespace mozilla {
 #ifdef DEBUG
 
 extern LazyLogModule gMediaStreamGraphLog;
-#define STREAM_LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
+#  define STREAM_LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
 
 void StreamTracks::DumpTrackInfo() const {
   STREAM_LOG(LogLevel::Info, ("Dumping StreamTracks"));

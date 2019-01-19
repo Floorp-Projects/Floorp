@@ -161,13 +161,13 @@ static bool CanLoadPlugin(char16ptr_t aBinaryPath) {
             DWORD arch =
                 (((IMAGE_NT_HEADERS*)((LPBYTE)mapView + peImageHeaderStart))
                      ->FileHeader.Machine);
-#ifdef _M_IX86
+#  ifdef _M_IX86
             canLoad = (arch == IMAGE_FILE_MACHINE_I386);
-#elif defined(_M_X64)
+#  elif defined(_M_X64)
             canLoad = (arch == IMAGE_FILE_MACHINE_AMD64);
-#elif defined(_M_IA64)
+#  elif defined(_M_IA64)
             canLoad = (arch == IMAGE_FILE_MACHINE_IA64);
-#endif
+#  endif
           }
         }
         UnmapViewOfFile(mapView);

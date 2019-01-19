@@ -46,7 +46,7 @@
 #include "ssl.h"
 
 #ifdef XP_WIN
-#include <winsock.h>  // for ntohl
+#  include <winsock.h>  // for ntohl
 #endif
 
 using namespace mozilla;

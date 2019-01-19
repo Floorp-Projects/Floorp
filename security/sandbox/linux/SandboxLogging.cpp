@@ -7,7 +7,7 @@
 #include "SandboxLogging.h"
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 #include <algorithm>
 #include <stdio.h>

@@ -3,61 +3,61 @@
  */
 
 #ifdef XP_WIN
-#include <windows.h>
-#include <wintrust.h>
-#include <tlhelp32.h>
-#include <softpub.h>
-#include <direct.h>
-#include <io.h>
-#include "commonupdatedir.h"
+#  include <windows.h>
+#  include <wintrust.h>
+#  include <tlhelp32.h>
+#  include <softpub.h>
+#  include <direct.h>
+#  include <io.h>
+#  include "commonupdatedir.h"
 typedef WCHAR NS_tchar;
-#define NS_main wmain
-#ifndef F_OK
-#define F_OK 00
-#endif
-#ifndef W_OK
-#define W_OK 02
-#endif
-#ifndef R_OK
-#define R_OK 04
-#endif
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define stat _stat
-#endif
-#define NS_T(str) L##str
-#define NS_tsnprintf(dest, count, fmt, ...)       \
-  {                                               \
-    int _count = count - 1;                       \
-    _snwprintf(dest, _count, fmt, ##__VA_ARGS__); \
-    dest[_count] = L'\0';                         \
-  }
-#define NS_taccess _waccess
-#define NS_tchdir _wchdir
-#define NS_tfopen _wfopen
-#define NS_tstrcmp wcscmp
-#define NS_ttoi _wtoi
-#define NS_tstat _wstat
-#define NS_tgetcwd _wgetcwd
-#define LOG_S "%S"
+#  define NS_main wmain
+#  ifndef F_OK
+#    define F_OK 00
+#  endif
+#  ifndef W_OK
+#    define W_OK 02
+#  endif
+#  ifndef R_OK
+#    define R_OK 04
+#  endif
+#  if defined(_MSC_VER) && _MSC_VER < 1900
+#    define stat _stat
+#  endif
+#  define NS_T(str) L##str
+#  define NS_tsnprintf(dest, count, fmt, ...)       \
+    {                                               \
+      int _count = count - 1;                       \
+      _snwprintf(dest, _count, fmt, ##__VA_ARGS__); \
+      dest[_count] = L'\0';                         \
+    }
+#  define NS_taccess _waccess
+#  define NS_tchdir _wchdir
+#  define NS_tfopen _wfopen
+#  define NS_tstrcmp wcscmp
+#  define NS_ttoi _wtoi
+#  define NS_tstat _wstat
+#  define NS_tgetcwd _wgetcwd
+#  define LOG_S "%S"
 
-#include "../common/updatehelper.h"
-#include "../common/certificatecheck.h"
+#  include "../common/updatehelper.h"
+#  include "../common/certificatecheck.h"
 
 #else
-#include <unistd.h>
-#define NS_main main
+#  include <unistd.h>
+#  define NS_main main
 typedef char NS_tchar;
-#define NS_T(str) str
-#define NS_tsnprintf snprintf
-#define NS_taccess access
-#define NS_tchdir chdir
-#define NS_tfopen fopen
-#define NS_tstrcmp strcmp
-#define NS_ttoi atoi
-#define NS_tstat stat
-#define NS_tgetcwd getcwd
-#define NS_tfputs fputs
-#define LOG_S "%s"
+#  define NS_T(str) str
+#  define NS_tsnprintf snprintf
+#  define NS_taccess access
+#  define NS_tchdir chdir
+#  define NS_tfopen fopen
+#  define NS_tstrcmp strcmp
+#  define NS_ttoi atoi
+#  define NS_tstat stat
+#  define NS_tgetcwd getcwd
+#  define NS_tfputs fputs
+#  define LOG_S "%s"
 #endif
 
 #include <stdlib.h>
@@ -67,17 +67,17 @@ typedef char NS_tchar;
 #include <sys/stat.h>
 
 #ifndef MAXPATHLEN
-#ifdef PATH_MAX
-#define MAXPATHLEN PATH_MAX
-#elif defined(MAX_PATH)
-#define MAXPATHLEN MAX_PATH
-#elif defined(_MAX_PATH)
-#define MAXPATHLEN _MAX_PATH
-#elif defined(CCHMAXPATH)
-#define MAXPATHLEN CCHMAXPATH
-#else
-#define MAXPATHLEN 1024
-#endif
+#  ifdef PATH_MAX
+#    define MAXPATHLEN PATH_MAX
+#  elif defined(MAX_PATH)
+#    define MAXPATHLEN MAX_PATH
+#  elif defined(_MAX_PATH)
+#    define MAXPATHLEN _MAX_PATH
+#  elif defined(CCHMAXPATH)
+#    define MAXPATHLEN CCHMAXPATH
+#  else
+#    define MAXPATHLEN 1024
+#  endif
 #endif
 
 static void WriteMsg(const NS_tchar *path, const char *status) {

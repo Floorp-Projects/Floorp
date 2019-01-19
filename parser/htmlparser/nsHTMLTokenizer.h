@@ -17,7 +17,7 @@
 #include "nsITokenizer.h"
 
 #ifdef _MSC_VER
-#pragma warning(disable : 4275)
+#  pragma warning(disable : 4275)
 #endif
 
 class nsHTMLTokenizer final : public nsITokenizer {

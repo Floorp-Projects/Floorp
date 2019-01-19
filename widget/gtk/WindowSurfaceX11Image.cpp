@@ -22,9 +22,9 @@ using namespace mozilla::gfx;
 // gfxImageSurface pixel format configuration.
 #define SHAPED_IMAGE_SURFACE_BPP 4
 #ifdef IS_BIG_ENDIAN
-#define SHAPED_IMAGE_SURFACE_ALPHA_INDEX 0
+#  define SHAPED_IMAGE_SURFACE_ALPHA_INDEX 0
 #else
-#define SHAPED_IMAGE_SURFACE_ALPHA_INDEX 3
+#  define SHAPED_IMAGE_SURFACE_ALPHA_INDEX 3
 #endif
 
 WindowSurfaceX11Image::WindowSurfaceX11Image(Display* aDisplay, Window aWindow,

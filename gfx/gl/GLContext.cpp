@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 #ifdef MOZ_WIDGET_ANDROID
-#include <sys/mman.h>
+#  include <sys/mman.h>
 #endif
 
 #include "GLBlitHelper.h"
@@ -43,15 +43,15 @@
 #include "mozilla/DebugOnly.h"
 
 #ifdef XP_MACOSX
-#include <CoreServices/CoreServices.h>
+#  include <CoreServices/CoreServices.h>
 #endif
 
 #if defined(MOZ_WIDGET_COCOA)
-#include "nsCocoaFeatures.h"
+#  include "nsCocoaFeatures.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "mozilla/jni/Utils.h"
+#  include "mozilla/jni/Utils.h"
 #endif
 
 namespace mozilla {

@@ -508,12 +508,12 @@ class AutoLeaveZeal {
       }
     }
 
-#ifdef DEBUG
+#  ifdef DEBUG
     uint32_t zealBitsAfter, frequencyAfter, dummy;
     JS_GetGCZealBits(cx_, &zealBitsAfter, &frequencyAfter, &dummy);
     MOZ_ASSERT(zealBitsAfter == zealBits_);
     MOZ_ASSERT(frequencyAfter == frequency_);
-#endif
+#  endif
   }
 };
 #endif /* JS_GC_ZEAL */

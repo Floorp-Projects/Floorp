@@ -11,8 +11,8 @@
 #include "nsIFile.h"
 
 #ifdef MOZ_WIDGET_COCOA
-#include "nsILocalFileMac.h"
-#include "prenv.h"
+#  include "nsILocalFileMac.h"
+#  include "prenv.h"
 #endif
 
 enum SystemDirectories {

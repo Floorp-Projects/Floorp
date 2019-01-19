@@ -47,15 +47,15 @@ static void EnsureCPUCount() {
 
   // _SC_NPROCESSORS_CONF and _SC_NPROCESSORS_ONLN are common, but not
   // standard.
-#if defined(_SC_NPROCESSORS_CONF)
+#  if defined(_SC_NPROCESSORS_CONF)
   long n = sysconf(_SC_NPROCESSORS_CONF);
   sCPUCount = (n > 0) ? uint32_t(n) : 1;
-#elif defined(_SC_NPROCESSORS_ONLN)
+#  elif defined(_SC_NPROCESSORS_ONLN)
   long n = sysconf(_SC_NPROCESSORS_ONLN);
   sCPUCount = (n > 0) ? uint32_t(n) : 1;
-#else
+#  else
   sCPUCount = 1;
-#endif
+#  endif
 }
 
 #endif  // XP_DARWIN
@@ -76,15 +76,15 @@ mozilla::detail::MutexImpl::MutexImpl(recordreplay::Behavior aRecorded)
   // for a short number of tries before sleeping.  NSPR's locks did
   // this, too, and it seems like a reasonable thing to do.
 #if (defined(__linux__) && defined(__GLIBC__)) || defined(__FreeBSD__)
-#define ADAPTIVE_MUTEX_SUPPORTED
+#  define ADAPTIVE_MUTEX_SUPPORTED
 #endif
 
 #if defined(DEBUG)
-#define ATTR_REQUIRED
-#define MUTEX_KIND PTHREAD_MUTEX_ERRORCHECK
+#  define ATTR_REQUIRED
+#  define MUTEX_KIND PTHREAD_MUTEX_ERRORCHECK
 #elif defined(ADAPTIVE_MUTEX_SUPPORTED)
-#define ATTR_REQUIRED
-#define MUTEX_KIND PTHREAD_MUTEX_ADAPTIVE_NP
+#  define ATTR_REQUIRED
+#  define MUTEX_KIND PTHREAD_MUTEX_ADAPTIVE_NP
 #endif
 
 #if defined(ATTR_REQUIRED)

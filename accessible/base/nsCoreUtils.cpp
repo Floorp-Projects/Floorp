@@ -63,8 +63,8 @@ bool nsCoreUtils::HasClickListener(nsIContent *aContent) {
           listenerManager->HasListenersFor(nsGkAtoms::onmouseup));
 }
 
-void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree,
-                                     int32_t aRowIndex, nsTreeColumn *aColumn,
+void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree, int32_t aRowIndex,
+                                     nsTreeColumn *aColumn,
                                      const nsAString &aPseudoElt) {
   RefPtr<dom::Element> tcElm = aTree->GetTreeBody();
   if (!tcElm) return;

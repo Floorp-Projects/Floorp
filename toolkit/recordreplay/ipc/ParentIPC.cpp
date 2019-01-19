@@ -69,9 +69,7 @@ bool IsMiddlemanWithRecordingChild() {
   return IsMiddleman() && gRecordingChild;
 }
 
-ChildProcessInfo* GetActiveChild() {
-  return gActiveChild;
-}
+ChildProcessInfo* GetActiveChild() { return gActiveChild; }
 
 ChildProcessInfo* GetChildProcess(size_t aId) {
   if (gRecordingChild && gRecordingChild->GetId() == aId) {

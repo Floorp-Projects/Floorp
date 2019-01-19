@@ -40,35 +40,35 @@
 #include "GeckoProfiler.h"
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 #ifdef XP_WIN
-#include "mozilla/ScopeExit.h"
-#include "mozilla/widget/AudioSession.h"
-#include "mozilla/WinDllServices.h"
-#include <windows.h>
-#if defined(MOZ_SANDBOX)
-#include "sandboxBroker.h"
-#endif
+#  include "mozilla/ScopeExit.h"
+#  include "mozilla/widget/AudioSession.h"
+#  include "mozilla/WinDllServices.h"
+#  include <windows.h>
+#  if defined(MOZ_SANDBOX)
+#    include "sandboxBroker.h"
+#  endif
 #endif
 
 #ifdef MOZ_CODE_COVERAGE
-#include "mozilla/CodeCoverageHandler.h"
+#  include "mozilla/CodeCoverageHandler.h"
 #endif
 
 // all this crap is needed to do the interactive shell stuff
 #include <stdlib.h>
 #include <errno.h>
 #ifdef HAVE_IO_H
-#include <io.h> /* for isatty() */
+#  include <io.h> /* for isatty() */
 #endif
 #ifdef HAVE_UNISTD_H
-#include <unistd.h> /* for isatty() */
+#  include <unistd.h> /* for isatty() */
 #endif
 
 #ifdef ENABLE_TESTS
-#include "xpctest_private.h"
+#  include "xpctest_private.h"
 #endif
 
 using namespace mozilla;
@@ -145,7 +145,7 @@ static bool GetLocationProperty(JSContext* cx, unsigned argc, Value* vp) {
 #else
   JS::AutoFilename filename;
   if (JS::DescribeScriptedCaller(cx, &filename) && filename.get()) {
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
     // convert from the system codepage to UTF-16
     int bufferSize =
         MultiByteToWideChar(CP_ACP, 0, filename.get(), -1, nullptr, 0);
@@ -168,9 +168,9 @@ static bool GetLocationProperty(JSContext* cx, unsigned argc, Value* vp) {
       }
       start++;
     }
-#elif defined(XP_UNIX)
+#  elif defined(XP_UNIX)
     NS_ConvertUTF8toUTF16 filenameString(filename.get());
-#endif
+#  endif
 
     nsCOMPtr<nsIFile> location;
     nsresult rv =
@@ -1322,7 +1322,7 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
     RefPtr<DllServices> dllSvc(DllServices::Get());
     auto dllServicesDisable = MakeScopeExit([&dllSvc]() { dllSvc->Disable(); });
 
-#if defined(MOZ_SANDBOX)
+#  if defined(MOZ_SANDBOX)
     // Required for sandboxed child processes.
     if (aShellData->sandboxBrokerServices) {
       SandboxBroker::Initialize(aShellData->sandboxBrokerServices);
@@ -1332,7 +1332,7 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
           "Failed to initialize broker services, sandboxed "
           "processes will fail to start.");
     }
-#endif
+#  endif
 #endif
 
 #ifdef MOZ_CODE_COVERAGE

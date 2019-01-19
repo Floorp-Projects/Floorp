@@ -8,7 +8,7 @@
 #include "mozilla/Unused.h"
 
 #ifdef MOZ_AV1
-#include "AOMDecoder.h"
+#  include "AOMDecoder.h"
 #endif
 #include "ImageContainer.h"
 #include "RemoteDecoderManagerParent.h"

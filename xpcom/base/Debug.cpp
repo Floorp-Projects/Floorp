@@ -7,7 +7,7 @@
 #include "mozilla/Debug.h"
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 #ifdef XP_WIN

@@ -17,12 +17,12 @@
 #include <type_traits>
 
 #ifdef MOZILLA_INTERNAL_API
-#include "mozilla/TypedEnumBits.h"
-#include "mozilla/gfx/2D.h"
+#  include "mozilla/TypedEnumBits.h"
+#  include "mozilla/gfx/2D.h"
 #endif  // MOZILLA_INTERNAL_API
 
 #if defined(__ANDROID__)
-#include <pthread.h>
+#  include <pthread.h>
 #endif  // defined(__ANDROID__)
 
 namespace mozilla {

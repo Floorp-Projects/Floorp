@@ -211,8 +211,8 @@ void FallbackICSpew(JSContext* cx, ICFallbackStub* stub, const char* fmt, ...)
 void TypeFallbackICSpew(JSContext* cx, ICTypeMonitor_Fallback* stub,
                         const char* fmt, ...) MOZ_FORMAT_PRINTF(3, 4);
 #else
-#define FallbackICSpew(...)
-#define TypeFallbackICSpew(...)
+#  define FallbackICSpew(...)
+#  define TypeFallbackICSpew(...)
 #endif
 
 // An entry in the BaselineScript IC descriptor table. There's one ICEntry per

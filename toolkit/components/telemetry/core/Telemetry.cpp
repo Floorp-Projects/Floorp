@@ -10,13 +10,13 @@
 #include <prio.h>
 #include <prproces.h>
 #if defined(XP_UNIX) && !defined(XP_DARWIN)
-#include <time.h>
+#  include <time.h>
 #else
-#include <chrono>
+#  include <chrono>
 #endif
 #include "base/pickle.h"
 #if defined(MOZ_TELEMETRY_GECKOVIEW)
-#include "geckoview/TelemetryGeckoViewPersistence.h"
+#  include "geckoview/TelemetryGeckoViewPersistence.h"
 #endif
 #include "ipc/TelemetryIPCAccumulator.h"
 #include "jsapi.h"
@@ -43,7 +43,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #if defined(XP_WIN)
-#include "mozilla/WinDllServices.h"
+#  include "mozilla/WinDllServices.h"
 #endif
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsBaseHashtable.h"
@@ -63,7 +63,7 @@
 #include "nsIXPConnect.h"
 #include "nsIXULAppInfo.h"
 #if defined(XP_WIN) && defined(NIGHTLY_BUILD)
-#include "other/UntrustedModules.h"
+#  include "other/UntrustedModules.h"
 #endif
 #include "nsJSUtils.h"
 #include "nsLocalFile.h"
@@ -77,7 +77,7 @@
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #if defined(XP_WIN)
-#include "nsUnicharUtils.h"
+#  include "nsUnicharUtils.h"
 #endif
 #include "nsVersionComparator.h"
 #include "nsXPCOMCIDInternal.h"
@@ -88,8 +88,8 @@
 #include "other/WebrtcTelemetry.h"
 #include "plstr.h"
 #if defined(MOZ_GECKO_PROFILER)
-#include "shared-libraries.h"
-#include "other/KeyedStackCapturer.h"
+#  include "shared-libraries.h"
+#  include "other/KeyedStackCapturer.h"
 #endif  // MOZ_GECKO_PROFILER
 #include "TelemetryCommon.h"
 #include "TelemetryEvent.h"
@@ -706,9 +706,9 @@ class GetLoadedModulesResultRunnable final : public Runnable {
   nsMainThreadPtrHandle<Promise> mPromise;
   SharedLibraryInfo mRawModules;
   nsCOMPtr<nsIThread> mWorkerThread;
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   nsDataHashtable<nsStringHashKey, nsString> mCertSubjects;
-#endif  // defined(XP_WIN)
+#  endif  // defined(XP_WIN)
 
  public:
   GetLoadedModulesResultRunnable(const nsMainThreadPtrHandle<Promise>& aPromise,
@@ -718,9 +718,9 @@ class GetLoadedModulesResultRunnable final : public Runnable {
         mRawModules(rawModules),
         mWorkerThread(do_GetCurrentThread()) {
     MOZ_ASSERT(!NS_IsMainThread());
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
     ObtainCertSubjects();
-#endif  // defined(XP_WIN)
+#  endif  // defined(XP_WIN)
   }
 
   NS_IMETHOD
@@ -823,7 +823,7 @@ class GetLoadedModulesResultRunnable final : public Runnable {
         return NS_OK;
       }
 
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
       // Cert Subject.
       nsString* subject = mCertSubjects.GetValue(info.GetModulePath());
       if (subject) {
@@ -842,7 +842,7 @@ class GetLoadedModulesResultRunnable final : public Runnable {
           return NS_OK;
         }
       }
-#endif  // defined(XP_WIN)
+#  endif  // defined(XP_WIN)
 
       if (!JS_DefineElement(cx, moduleArray, i, moduleObj, JSPROP_ENUMERATE)) {
         mPromise->MaybeReject(NS_ERROR_FAILURE);
@@ -855,7 +855,7 @@ class GetLoadedModulesResultRunnable final : public Runnable {
   }
 
  private:
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   void ObtainCertSubjects() {
     MOZ_ASSERT(!NS_IsMainThread());
 
@@ -873,7 +873,7 @@ class GetLoadedModulesResultRunnable final : public Runnable {
       }
     }
   }
-#endif  // defined(XP_WIN)
+#  endif  // defined(XP_WIN)
 };
 
 class GetLoadedModulesRunnable final : public Runnable {

@@ -8,15 +8,15 @@
 #include "UnscaledFontMac.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #ifdef USE_SKIA
-#include "PathSkia.h"
-#include "skia/include/core/SkPaint.h"
-#include "skia/include/core/SkPath.h"
-#include "skia/include/ports/SkTypeface_mac.h"
+#  include "PathSkia.h"
+#  include "skia/include/core/SkPaint.h"
+#  include "skia/include/core/SkPath.h"
+#  include "skia/include/ports/SkTypeface_mac.h"
 #endif
 #include <vector>
 #include <dlfcn.h>
 #ifdef MOZ_WIDGET_UIKIT
-#include <CoreFoundation/CoreFoundation.h>
+#  include <CoreFoundation/CoreFoundation.h>
 #endif
 #include "nsCocoaFeatures.h"
 #include "mozilla/gfx/Logging.h"
@@ -31,7 +31,7 @@ CGPathRef CGFontGetGlyphPath(CGFontRef fontRef,
 #endif
 
 #ifdef USE_CAIRO_SCALED_FONT
-#include "cairo-quartz.h"
+#  include "cairo-quartz.h"
 #endif
 
 namespace mozilla {

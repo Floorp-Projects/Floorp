@@ -153,7 +153,7 @@ struct UnwindRegs {
   TaggedUWord fp;
   TaggedUWord pc;
 #else
-#error "Unknown plat"
+#  error "Unknown plat"
 #endif
 };
 

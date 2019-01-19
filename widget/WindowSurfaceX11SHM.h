@@ -9,8 +9,8 @@
 
 #ifdef MOZ_X11
 
-#include "mozilla/widget/WindowSurface.h"
-#include "nsShmImage.h"
+#  include "mozilla/widget/WindowSurface.h"
+#  include "nsShmImage.h"
 
 namespace mozilla {
 namespace widget {

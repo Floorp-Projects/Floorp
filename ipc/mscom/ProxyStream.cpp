@@ -6,9 +6,9 @@
 
 #include "mozilla/Move.h"
 #if defined(ACCESSIBILITY)
-#include "HandlerData.h"
-#include "mozilla/a11y/Platform.h"
-#include "mozilla/mscom/ActivationContext.h"
+#  include "HandlerData.h"
+#  include "mozilla/a11y/Platform.h"
+#  include "mozilla/mscom/ActivationContext.h"
 #endif  // defined(ACCESSIBILITY)
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/ProxyStream.h"

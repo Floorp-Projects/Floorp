@@ -18,7 +18,7 @@
 #include "mozilla/Utf8.h"
 
 #ifdef HAVE_LOCALECONV
-#include <locale.h>
+#  include <locale.h>
 #endif
 #include <math.h>
 #include <string.h>
@@ -30,13 +30,13 @@
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #if !EXPOSE_INTL_API
-#include "js/LocaleSensitive.h"
+#  include "js/LocaleSensitive.h"
 #endif
 #include "js/PropertySpec.h"
 #include "util/DoubleToString.h"
 #include "util/StringBuffer.h"
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 #include "vm/GlobalObject.h"
 #include "vm/JSAtom.h"
@@ -1184,16 +1184,16 @@ bool js::InitRuntimeNumberState(JSRuntime* rt) {
   const char* thousandsSeparator;
   const char* decimalPoint;
   const char* grouping;
-#ifdef HAVE_LOCALECONV
+#  ifdef HAVE_LOCALECONV
   struct lconv* locale = localeconv();
   thousandsSeparator = locale->thousands_sep;
   decimalPoint = locale->decimal_point;
   grouping = locale->grouping;
-#else
+#  else
   thousandsSeparator = getenv("LOCALE_THOUSANDS_SEP");
   decimalPoint = getenv("LOCALE_DECIMAL_POINT");
   grouping = getenv("LOCALE_GROUPING");
-#endif
+#  endif
   if (!thousandsSeparator) {
     thousandsSeparator = "'";
   }

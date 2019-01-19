@@ -1,5 +1,5 @@
 #if defined(OS_POSIX)
-#include <unistd.h>  // sleep()
+#  include <unistd.h>  // sleep()
 #endif
 
 #include "TestSyncWakeup.h"

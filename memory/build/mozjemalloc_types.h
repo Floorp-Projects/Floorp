@@ -38,9 +38,9 @@
 
 // grab size_t
 #ifdef _MSC_VER
-#include <crtdefs.h>
+#  include <crtdefs.h>
 #else
-#include <stddef.h>
+#  include <stddef.h>
 #endif
 #include <stdbool.h>
 
@@ -49,7 +49,7 @@ extern "C" {
 #endif
 
 #ifndef MALLOC_USABLE_SIZE_CONST_PTR
-#define MALLOC_USABLE_SIZE_CONST_PTR const
+#  define MALLOC_USABLE_SIZE_CONST_PTR const
 #endif
 
 typedef MALLOC_USABLE_SIZE_CONST_PTR void* usable_ptr_t;

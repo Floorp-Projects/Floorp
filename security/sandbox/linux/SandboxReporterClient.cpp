@@ -19,9 +19,9 @@
 #include "prenv.h"
 #include "sandbox/linux/bpf_dsl/seccomp_macros.h"
 #ifdef ANDROID
-#include "sandbox/linux/system_headers/linux_ucontext.h"
+#  include "sandbox/linux/system_headers/linux_ucontext.h"
 #else
-#include <ucontext.h>
+#  include <ucontext.h>
 #endif
 
 namespace mozilla {

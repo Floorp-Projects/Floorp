@@ -31,7 +31,7 @@ class ScriptPreloader;
 }  // namespace mozilla
 
 #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
-#define STARTUP_RECORDER_ENABLED
+#  define STARTUP_RECORDER_ENABLED
 #endif
 
 class mozJSComponentLoader final : public nsIObserver {

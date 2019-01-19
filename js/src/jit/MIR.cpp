@@ -71,9 +71,9 @@ static bool CheckUsesAreFloat32Consumers(const MInstruction* ins) {
 #ifdef JS_JITSPEW
 static const char* OpcodeName(MDefinition::Opcode op) {
   static const char* const names[] = {
-#define NAME(x) #x,
+#  define NAME(x) #  x,
       MIR_OPCODE_LIST(NAME)
-#undef NAME
+#  undef NAME
   };
   return names[unsigned(op)];
 }
@@ -1024,18 +1024,18 @@ void MConstant::assertInitializedPayload() const {
   switch (type()) {
     case MIRType::Int32:
     case MIRType::Float32:
-#if MOZ_LITTLE_ENDIAN
+#  if MOZ_LITTLE_ENDIAN
       MOZ_ASSERT((payload_.asBits >> 32) == 0);
-#else
+#  else
       MOZ_ASSERT((payload_.asBits << 32) == 0);
-#endif
+#  endif
       break;
     case MIRType::Boolean:
-#if MOZ_LITTLE_ENDIAN
+#  if MOZ_LITTLE_ENDIAN
       MOZ_ASSERT((payload_.asBits >> 1) == 0);
-#else
+#  else
       MOZ_ASSERT((payload_.asBits & ~(1ULL << 56)) == 0);
-#endif
+#  endif
       break;
     case MIRType::Double:
     case MIRType::Int64:
@@ -1043,11 +1043,11 @@ void MConstant::assertInitializedPayload() const {
     case MIRType::String:
     case MIRType::Object:
     case MIRType::Symbol:
-#if MOZ_LITTLE_ENDIAN
+#  if MOZ_LITTLE_ENDIAN
       MOZ_ASSERT_IF(JS_BITS_PER_WORD == 32, (payload_.asBits >> 32) == 0);
-#else
+#  else
       MOZ_ASSERT_IF(JS_BITS_PER_WORD == 32, (payload_.asBits << 32) == 0);
-#endif
+#  endif
       break;
     default:
       MOZ_ASSERT(IsNullOrUndefined(type()) || IsMagicType(type()));
@@ -2961,6 +2961,9 @@ void MMinMax::trySpecializeFloat32(TempAllocator& alloc) {
 }
 
 MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
+  if (lhs() == rhs()) {
+    return lhs();
+  }
   if (!lhs()->isConstant() && !rhs()->isConstant()) {
     return this;
   }
@@ -3025,13 +3028,15 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
     }
   }
 
-  if (operand->isArrayLength() && constant->type() == MIRType::Int32) {
+  if ((operand->isArrayLength() || operand->isTypedArrayLength()) &&
+      constant->type() == MIRType::Int32) {
     MOZ_ASSERT(operand->type() == MIRType::Int32);
 
-    // max(array.length, 0) = array.length
-    // ArrayLength is always >= 0, so just return it.
-    if (isMax() && constant->toInt32() <= 0) {
-      return operand;
+    // (Typed)ArrayLength is always >= 0.
+    // max(array.length, cte <= 0) = array.length
+    // min(array.length, cte <= 0) = cte
+    if (constant->toInt32() <= 0) {
+      return isMax() ? operand : constant;
     }
   }
 

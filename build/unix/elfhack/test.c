@@ -83,31 +83,31 @@ DEF(several)
 DEF(times)
 
 #else
-#pragma GCC visibility push(default)
-#include <stdlib.h>
-#include <stdio.h>
+#  pragma GCC visibility push(default)
+#  include <stdlib.h>
+#  include <stdio.h>
 
-#define DEF(w) static const char str_##w[] = #w;
-#include "test.c"
-#undef DEF
+#  define DEF(w) static const char str_##w[] = #  w;
+#  include "test.c"
+#  undef DEF
 
 const char *strings[] = {
-#define DEF(w) str_##w,
-#include "test.c"
-#include "test.c"
-#include "test.c"
+#  define DEF(w) str_##w,
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
 };
 
 /* Create a hole between two zones of relative relocations */
 const int hole[] = {42, 42, 42, 42};
 
 const char *strings2[] = {
-#include "test.c"
-#include "test.c"
-#include "test.c"
-#include "test.c"
-#include "test.c"
-#undef DEF
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  undef DEF
 };
 
 static int ret = 1;
@@ -144,25 +144,25 @@ void end_test() {
 
 void test() {
   int i = 0, j = 0;
-#define DEF_(a, i, w) \
-  if (a[i++] != str_##w) return;
-#define DEF(w) DEF_(strings, i, w)
-#include "test.c"
-#include "test.c"
-#include "test.c"
-#undef DEF
-#define DEF(w) DEF_(strings2, j, w)
-#include "test.c"
-#include "test.c"
-#include "test.c"
-#include "test.c"
-#include "test.c"
-#undef DEF
+#  define DEF_(a, i, w) \
+    if (a[i++] != str_##w) return;
+#  define DEF(w) DEF_(strings, i, w)
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  undef DEF
+#  define DEF(w) DEF_(strings2, j, w)
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  undef DEF
   if (i != sizeof(strings) / sizeof(strings[0]) &&
       j != sizeof(strings2) / sizeof(strings2[0]))
     fprintf(stderr, "WARNING: Test doesn't cover the whole array\n");
   end_test();
 }
 
-#pragma GCC visibility pop
+#  pragma GCC visibility pop
 #endif

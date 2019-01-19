@@ -6,10 +6,10 @@
 // shared objects.
 
 #ifdef nsWindowsRestart_cpp
-#error \
-    "nsWindowsRestart.cpp is not a header file, and must only be included once."
+#  error \
+      "nsWindowsRestart.cpp is not a header file, and must only be included once."
 #else
-#define nsWindowsRestart_cpp
+#  define nsWindowsRestart_cpp
 #endif
 
 #include "mozilla/CmdLineAndEnvUtils.h"
@@ -20,7 +20,7 @@
 // Needed for CreateEnvironmentBlock
 #include <userenv.h>
 #ifndef __MINGW32__
-#pragma comment(lib, "userenv.lib")
+#  pragma comment(lib, "userenv.lib")
 #endif
 
 /**

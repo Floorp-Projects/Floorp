@@ -12,7 +12,7 @@
 #include "mozilla/RefPtr.h"
 
 #ifndef mozilla_ArenaRefPtr_h
-#define mozilla_ArenaRefPtr_h
+#  define mozilla_ArenaRefPtr_h
 
 template <size_t ArenaSize>
 class nsPresArena;

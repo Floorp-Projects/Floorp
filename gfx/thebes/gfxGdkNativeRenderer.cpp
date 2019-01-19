@@ -8,8 +8,8 @@
 #include "gfxPlatformGtk.h"
 
 #ifdef MOZ_X11
-#include <gdk/gdkx.h>
-#include "cairo-xlib.h"
-#include "gfxXlibSurface.h"
+#  include <gdk/gdkx.h>
+#  include "cairo-xlib.h"
+#  include "gfxXlibSurface.h"
 
 #endif

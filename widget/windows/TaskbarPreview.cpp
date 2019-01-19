@@ -29,7 +29,7 @@
 
 // Defined in dwmapi in a header that needs a higher numbered _WINNT #define
 #ifndef DWM_SIT_DISPLAYFRAME
-#define DWM_SIT_DISPLAYFRAME 0x1
+#  define DWM_SIT_DISPLAYFRAME 0x1
 #endif
 
 namespace mozilla {

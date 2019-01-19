@@ -27,7 +27,7 @@
 #include "nsPluginInstanceOwner.h"
 #include "nsFocusManager.h"
 #ifdef MOZ_X11
-#include "gfxXlibSurface.h"
+#  include "gfxXlibSurface.h"
 #endif
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
@@ -41,30 +41,30 @@
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #if defined(XP_WIN)
-#include "mozilla/layers/D3D11ShareHandleImage.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
-#include "mozilla/layers/TextureD3D11.h"
+#  include "mozilla/layers/D3D11ShareHandleImage.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/layers/TextureD3D11.h"
 #endif
 
 #ifdef XP_MACOSX
-#include "MacIOSurfaceImage.h"
+#  include "MacIOSurfaceImage.h"
 #endif
 
 #if defined(OS_WIN)
-#include <windowsx.h>
-#include "gfxWindowsPlatform.h"
-#include "mozilla/plugins/PluginSurfaceParent.h"
-#include "nsClassHashtable.h"
-#include "nsHashKeys.h"
-#include "nsIWidget.h"
-#include "nsPluginNativeWindow.h"
-#include "PluginQuirks.h"
+#  include <windowsx.h>
+#  include "gfxWindowsPlatform.h"
+#  include "mozilla/plugins/PluginSurfaceParent.h"
+#  include "nsClassHashtable.h"
+#  include "nsHashKeys.h"
+#  include "nsIWidget.h"
+#  include "nsPluginNativeWindow.h"
+#  include "PluginQuirks.h"
 extern const wchar_t* kFlashFullscreenClass;
 #elif defined(MOZ_WIDGET_GTK)
-#include "mozilla/dom/ContentChild.h"
-#include <gdk/gdk.h>
+#  include "mozilla/dom/ContentChild.h"
+#  include <gdk/gdk.h>
 #elif defined(XP_MACOSX)
-#include <ApplicationServices/ApplicationServices.h>
+#  include <ApplicationServices/ApplicationServices.h>
 #endif  // defined(XP_MACOSX)
 
 using namespace mozilla::plugins;
@@ -234,7 +234,7 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVnetscapeWindow(
   // TODO: Need Android impl
   int id;
 #else
-#warning Implement me
+#  warning Implement me
 #endif
 
   *result = mNPNIface->getvalue(mNPP, NPNVnetscapeWindow, &id);
@@ -1478,7 +1478,7 @@ int16_t PluginInstanceParent::NPP_HandleEvent(void* event) {
       // Release any active pointer grab so that the plugin X client can
       // grab the pointer if it wishes.
       Display* dpy = DefaultXDisplay();
-#ifdef MOZ_WIDGET_GTK
+#  ifdef MOZ_WIDGET_GTK
       // GDK attempts to (asynchronously) track whether there is an active
       // grab so ungrab through GDK.
       //
@@ -1490,9 +1490,9 @@ int16_t PluginInstanceParent::NPP_HandleEvent(void* event) {
       } else {
         gdk_pointer_ungrab(npevent->xbutton.time);
       }
-#else
+#  else
       XUngrabPointer(dpy, npevent->xbutton.time);
-#endif
+#  endif
       // Wait for the ungrab to complete.
       XSync(dpy, False);
       break;

@@ -25,13 +25,13 @@
 #include <locale.h>
 
 #if defined(HAVE_SYS_QUOTA_H) && defined(HAVE_LINUX_QUOTA_H)
-#define USE_LINUX_QUOTACTL
-#include <sys/mount.h>
-#include <sys/quota.h>
-#include <sys/sysmacros.h>
-#ifndef BLOCK_SIZE
-#define BLOCK_SIZE 1024 /* kernel block size */
-#endif
+#  define USE_LINUX_QUOTACTL
+#  include <sys/mount.h>
+#  include <sys/quota.h>
+#  include <sys/sysmacros.h>
+#  ifndef BLOCK_SIZE
+#    define BLOCK_SIZE 1024 /* kernel block size */
+#  endif
 #endif
 
 #include "xpcom-private.h"
@@ -51,22 +51,22 @@
 #include "prlink.h"
 
 #ifdef MOZ_WIDGET_GTK
-#include "nsIGIOService.h"
+#  include "nsIGIOService.h"
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
-#include <Carbon/Carbon.h>
-#include "CocoaFileUtils.h"
-#include "prmem.h"
-#include "plbase64.h"
+#  include <Carbon/Carbon.h>
+#  include "CocoaFileUtils.h"
+#  include "prmem.h"
+#  include "plbase64.h"
 
 static nsresult MacErrorMapper(OSErr inErr);
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "GeneratedJNIWrappers.h"
-#include "nsIMIMEService.h"
-#include <linux/magic.h>
+#  include "GeneratedJNIWrappers.h"
+#  include "nsIMIMEService.h"
+#  include <linux/magic.h>
 #endif
 
 #include "nsNativeCharsetUtils.h"
@@ -1337,19 +1337,19 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
 
   if (STATFS(mPath.get(), &fs_buf) < 0) {
     // The call to STATFS failed.
-#ifdef DEBUG
+#  ifdef DEBUG
     printf("ERROR: GetDiskSpaceAvailable: STATFS call FAILED. \n");
-#endif
+#  endif
     return NS_ERROR_FAILURE;
   }
 
   *aDiskSpaceAvailable = (int64_t)fs_buf.F_BSIZE * fs_buf.f_bavail;
 
-#ifdef DEBUG_DISK_SPACE
+#  ifdef DEBUG_DISK_SPACE
   printf("DiskSpaceAvailable: %lu bytes\n", *aDiskSpaceAvailable);
-#endif
+#  endif
 
-#if defined(USE_LINUX_QUOTACTL)
+#  if defined(USE_LINUX_QUOTACTL)
 
   if (!FillStatCache()) {
     // Return available size from statfs
@@ -1365,9 +1365,9 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
   struct dqblk dq;
   if (!quotactl(QCMD(Q_GETQUOTA, USRQUOTA), deviceName.get(), getuid(),
                 (caddr_t)&dq)
-#ifdef QIF_BLIMITS
+#    ifdef QIF_BLIMITS
       && dq.dqb_valid & QIF_BLIMITS
-#endif
+#    endif
       && dq.dqb_bhardlimit) {
     int64_t QuotaSpaceAvailable = 0;
     // dqb_bhardlimit is count of BLOCK_SIZE blocks, dqb_curspace is bytes
@@ -1378,7 +1378,7 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
       *aDiskSpaceAvailable = QuotaSpaceAvailable;
     }
   }
-#endif
+#  endif
 
   return NS_OK;
 
@@ -1391,11 +1391,11 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
    * Until we figure out how to do that, lets be honest and say that this
    * command isn't implemented properly for these platforms yet.
    */
-#ifdef DEBUG
+#  ifdef DEBUG
   printf(
       "ERROR: GetDiskSpaceAvailable: Not implemented for plaforms without "
       "statfs.\n");
-#endif
+#  endif
   return NS_ERROR_NOT_IMPLEMENTED;
 
 #endif /* STATFS */

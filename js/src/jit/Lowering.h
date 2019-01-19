@@ -12,21 +12,21 @@
 
 #include "jit/LIR.h"
 #if defined(JS_CODEGEN_X86)
-#include "jit/x86/Lowering-x86.h"
+#  include "jit/x86/Lowering-x86.h"
 #elif defined(JS_CODEGEN_X64)
-#include "jit/x64/Lowering-x64.h"
+#  include "jit/x64/Lowering-x64.h"
 #elif defined(JS_CODEGEN_ARM)
-#include "jit/arm/Lowering-arm.h"
+#  include "jit/arm/Lowering-arm.h"
 #elif defined(JS_CODEGEN_ARM64)
-#include "jit/arm64/Lowering-arm64.h"
+#  include "jit/arm64/Lowering-arm64.h"
 #elif defined(JS_CODEGEN_MIPS32)
-#include "jit/mips32/Lowering-mips32.h"
+#  include "jit/mips32/Lowering-mips32.h"
 #elif defined(JS_CODEGEN_MIPS64)
-#include "jit/mips64/Lowering-mips64.h"
+#  include "jit/mips64/Lowering-mips64.h"
 #elif defined(JS_CODEGEN_NONE)
-#include "jit/none/Lowering-none.h"
+#  include "jit/none/Lowering-none.h"
 #else
-#error "Unknown architecture!"
+#  error "Unknown architecture!"
 #endif
 
 namespace js {

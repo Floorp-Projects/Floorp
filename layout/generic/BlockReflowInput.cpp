@@ -20,7 +20,7 @@
 #include "TextOverflow.h"
 
 #ifdef DEBUG
-#include "nsBlockDebugFlags.h"
+#  include "nsBlockDebugFlags.h"
 #endif
 
 using namespace mozilla;

@@ -7,7 +7,7 @@
 #include "SandboxFilterUtil.h"
 
 #ifndef ANDROID
-#include <linux/ipc.h>
+#  include <linux/ipc.h>
 #endif
 #include <linux/net.h>
 
@@ -17,13 +17,13 @@
 // Older kernel headers (mostly Android, but also some older desktop
 // distributions) are missing some or all of these:
 #ifndef SYS_ACCEPT4
-#define SYS_ACCEPT4 18
+#  define SYS_ACCEPT4 18
 #endif
 #ifndef SYS_RECVMMSG
-#define SYS_RECVMMSG 19
+#  define SYS_RECVMMSG 19
 #endif
 #ifndef SYS_SENDMMSG
-#define SYS_SENDMMSG 20
+#  define SYS_SENDMMSG 20
 #endif
 
 using namespace sandbox::bpf_dsl;
@@ -47,7 +47,7 @@ sandbox::bpf_dsl::ResultExpr SandboxPolicyBase::EvaluateSyscall(
       }
       return acc->Default(InvalidSyscall());
     }
-#ifndef ANDROID
+#  ifndef ANDROID
     case __NR_ipc: {
       Arg<int> callAndVersion(0);
       auto call = callAndVersion & 0xFFFF;
@@ -61,9 +61,9 @@ sandbox::bpf_dsl::ResultExpr SandboxPolicyBase::EvaluateSyscall(
       }
       return acc->Default(InvalidSyscall());
     }
-#endif  // ANDROID
-#endif  // __NR_socketcall
-        // clang-format off
+#  endif  // ANDROID
+#endif    // __NR_socketcall
+          // clang-format off
 #define DISPATCH_SOCKETCALL(sysnum, socketnum) \
   case sysnum:                                 \
     return EvaluateSocketCall(socketnum, true).valueOr(InvalidSyscall())
@@ -114,7 +114,7 @@ sandbox::bpf_dsl::ResultExpr SandboxPolicyBase::EvaluateSyscall(
 #undef DISPATCH_SYSVCALL
 #endif  // ANDROID
 #endif  // __NR_socketcall
-        // clang-format on
+          // clang-format on
     default:
       return InvalidSyscall();
   }

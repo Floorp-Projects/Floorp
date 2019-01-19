@@ -15,7 +15,7 @@
 #include "signaling/src/sdp/RsdparsaSdpMediaSection.h"
 
 #ifdef CRLF
-#undef CRLF
+#  undef CRLF
 #endif
 #define CRLF "\r\n"
 

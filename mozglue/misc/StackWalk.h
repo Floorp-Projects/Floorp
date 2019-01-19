@@ -47,9 +47,9 @@ MFBT_API void MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
 #if defined(_WIN32) && (defined(_M_IX86) || defined(_M_AMD64) || \
                         defined(_M_IA64) || defined(_M_ARM64))
 
-#include <windows.h>
+#  include <windows.h>
 
-#define MOZ_STACKWALK_SUPPORTS_WINDOWS 1
+#  define MOZ_STACKWALK_SUPPORTS_WINDOWS 1
 
 /**
  * Like MozStackWalk, but walks the stack for another thread.
@@ -73,7 +73,7 @@ MFBT_API void MozStackWalkThread(MozWalkStackCallback aCallback,
 
 #else
 
-#define MOZ_STACKWALK_SUPPORTS_WINDOWS 0
+#  define MOZ_STACKWALK_SUPPORTS_WINDOWS 0
 
 #endif
 

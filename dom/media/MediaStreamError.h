@@ -15,7 +15,7 @@
 #include "mozilla/RefPtr.h"
 
 #if defined(XP_WIN) && defined(GetMessage)
-#undef GetMessage
+#  undef GetMessage
 #endif
 
 namespace mozilla {

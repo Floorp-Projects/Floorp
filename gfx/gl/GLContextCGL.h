@@ -12,7 +12,7 @@
 #include "OpenGL/OpenGL.h"
 
 #ifdef __OBJC__
-#include <AppKit/NSOpenGL.h>
+#  include <AppKit/NSOpenGL.h>
 #else
 typedef void NSOpenGLContext;
 #endif

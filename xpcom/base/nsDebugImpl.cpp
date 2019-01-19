@@ -23,60 +23,60 @@
 #include "prenv.h"
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 #ifdef _WIN32
 /* for getenv() */
-#include <stdlib.h>
+#  include <stdlib.h>
 #endif
 
 #include "nsTraceRefcnt.h"
 
 #if defined(XP_UNIX)
-#include <signal.h>
+#  include <signal.h>
 #endif
 
 #if defined(XP_WIN)
-#include <tchar.h>
-#include "nsString.h"
+#  include <tchar.h>
+#  include "nsString.h"
 #endif
 
 #if defined(XP_MACOSX) || defined(__DragonFly__) || defined(__FreeBSD__) || \
     defined(__NetBSD__) || defined(__OpenBSD__)
-#include <stdbool.h>
-#include <unistd.h>
-#include <sys/param.h>
-#include <sys/sysctl.h>
+#  include <stdbool.h>
+#  include <unistd.h>
+#  include <sys/param.h>
+#  include <sys/sysctl.h>
 #endif
 
 #if defined(__OpenBSD__)
-#include <sys/proc.h>
+#  include <sys/proc.h>
 #endif
 
 #if defined(__DragonFly__) || defined(__FreeBSD__)
-#include <sys/user.h>
+#  include <sys/user.h>
 #endif
 
 #if defined(__NetBSD__)
-#undef KERN_PROC
-#define KERN_PROC KERN_PROC2
-#define KINFO_PROC struct kinfo_proc2
+#  undef KERN_PROC
+#  define KERN_PROC KERN_PROC2
+#  define KINFO_PROC struct kinfo_proc2
 #else
-#define KINFO_PROC struct kinfo_proc
+#  define KINFO_PROC struct kinfo_proc
 #endif
 
 #if defined(XP_MACOSX)
-#define KP_FLAGS kp_proc.p_flag
+#  define KP_FLAGS kp_proc.p_flag
 #elif defined(__DragonFly__)
-#define KP_FLAGS kp_flags
+#  define KP_FLAGS kp_flags
 #elif defined(__FreeBSD__)
-#define KP_FLAGS ki_flag
+#  define KP_FLAGS ki_flag
 #elif defined(__OpenBSD__) && !defined(_P_TRACED)
-#define KP_FLAGS p_psflags
-#define P_TRACED PS_TRACED
+#  define KP_FLAGS p_psflags
+#  define P_TRACED PS_TRACED
 #else
-#define KP_FLAGS p_flag
+#  define KP_FLAGS p_flag
 #endif
 
 #include "mozilla/mozalloc_abort.h"
@@ -88,11 +88,11 @@ static void RealBreak();
 static void Break(const char* aMsg);
 
 #if defined(_WIN32)
-#include <windows.h>
-#include <signal.h>
-#include <malloc.h>  // for _alloca
+#  include <windows.h>
+#  include <signal.h>
+#  include <malloc.h>  // for _alloca
 #elif defined(XP_UNIX)
-#include <stdlib.h>
+#  include <stdlib.h>
 #endif
 
 using namespace mozilla;
@@ -177,10 +177,10 @@ nsDebugImpl::GetIsDebuggerAttached(bool* aResult) {
     KERN_PROC,
     KERN_PROC_PID,
     getpid(),
-#if defined(__NetBSD__) || defined(__OpenBSD__)
+#  if defined(__NetBSD__) || defined(__OpenBSD__)
     sizeof(KINFO_PROC),
     1,
-#endif
+#  endif
   };
   u_int mibSize = sizeof(mib) / sizeof(int);
 
@@ -447,25 +447,25 @@ static void RealBreak() {
   asm("int $3");
 #elif defined(__arm__)
   asm(
-#ifdef __ARM_ARCH_4T__
+#  ifdef __ARM_ARCH_4T__
       /* ARMv4T doesn't support the BKPT instruction, so if the compiler target
        * is ARMv4T, we want to ensure the assembler will understand that ARMv5T
        * instruction, while keeping the resulting object tagged as ARMv4T.
        */
       ".arch armv5t\n"
       ".object_arch armv4t\n"
-#endif
+#  endif
       "BKPT #0");
 #elif defined(__aarch64__)
   asm("brk #0");
 #elif defined(SOLARIS)
-#if defined(__i386__) || defined(__i386) || defined(__x86_64__)
+#  if defined(__i386__) || defined(__i386) || defined(__x86_64__)
   asm("int $3");
-#else
+#  else
   raise(SIGTRAP);
-#endif
+#  endif
 #else
-#warning do not know how to break on this platform
+#  warning do not know how to break on this platform
 #endif
 }
 
@@ -541,7 +541,7 @@ static void Break(const char* aMsg) {
 #elif defined(SOLARIS)
   RealBreak();
 #else
-#warning do not know how to break on this platform
+#  warning do not know how to break on this platform
 #endif
 }
 

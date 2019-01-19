@@ -41,8 +41,8 @@
 #include "nsGenericHTMLElement.h"
 
 #if DEBUG
-#include "nsIWebNavigation.h"
-#include "nsString.h"
+#  include "nsIWebNavigation.h"
+#  include "nsString.h"
 #endif
 
 using mozilla::dom::Document;

@@ -15,11 +15,11 @@
 #include "mozilla/Unused.h"
 
 #ifdef XP_UNIX  // {
-#include "mozilla/Preferences.h"
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#  include "mozilla/Preferences.h"
+#  include <fcntl.h>
+#  include <unistd.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
 
 using namespace mozilla;
 
@@ -313,11 +313,11 @@ int FifoWatcher::OpenFd() {
     return -1;
   }
 
-#ifdef ANDROID
+#  ifdef ANDROID
   // Android runs with a umask, so we need to chmod our fifo to make it
   // world-writable.
   chmod(path.get(), 0666);
-#endif
+#  endif
 
   int fd;
   do {

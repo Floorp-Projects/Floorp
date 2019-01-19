@@ -6,9 +6,9 @@
 #include <string>
 
 #ifdef DEBUG
-#define PINGSENDER_LOG(s, ...) printf(s, ##__VA_ARGS__)
+#  define PINGSENDER_LOG(s, ...) printf(s, ##__VA_ARGS__)
 #else
-#define PINGSENDER_LOG(s, ...)
+#  define PINGSENDER_LOG(s, ...)
 #endif  // DEBUG
 
 namespace PingSender {

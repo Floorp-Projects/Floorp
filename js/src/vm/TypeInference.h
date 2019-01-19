@@ -428,11 +428,11 @@ const char* InferSpewColorReset();
 const char* InferSpewColor(TypeConstraint* constraint);
 const char* InferSpewColor(TypeSet* types);
 
-#define InferSpew(channel, ...)   \
-  if (InferSpewActive(channel)) { \
-    InferSpewImpl(__VA_ARGS__);   \
-  } else {                        \
-  }
+#  define InferSpew(channel, ...)   \
+    if (InferSpewActive(channel)) { \
+      InferSpewImpl(__VA_ARGS__);   \
+    } else {                        \
+    }
 void InferSpewImpl(const char* fmt, ...) MOZ_FORMAT_PRINTF(1, 2);
 
 /* Check that the type property for id in group contains value. */
@@ -447,9 +447,9 @@ inline const char* InferSpewColor(TypeConstraint* constraint) {
 }
 inline const char* InferSpewColor(TypeSet* types) { return nullptr; }
 
-#define InferSpew(channel, ...) \
-  do {                          \
-  } while (0)
+#  define InferSpew(channel, ...) \
+    do {                          \
+    } while (0)
 
 #endif
 

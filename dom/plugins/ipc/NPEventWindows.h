@@ -8,7 +8,7 @@
 #define mozilla_dom_plugins_NPEventWindows_h 1
 
 #ifndef WM_MOUSEHWHEEL
-#define WM_MOUSEHWHEEL (0x020E)
+#  define WM_MOUSEHWHEEL (0x020E)
 #endif
 
 #include "npapi.h"

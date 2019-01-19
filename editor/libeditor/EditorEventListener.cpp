@@ -50,8 +50,8 @@
 #include "nsString.h"               // for nsAutoString
 #include "nsQueryObject.h"          // for do_QueryObject
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-#include "nsContentUtils.h"   // for nsContentUtils, etc.
-#include "nsIBidiKeyboard.h"  // for nsIBidiKeyboard
+#  include "nsContentUtils.h"   // for nsContentUtils, etc.
+#  include "nsIBidiKeyboard.h"  // for nsIBidiKeyboard
 #endif
 
 #include "mozilla/dom/TabParent.h"

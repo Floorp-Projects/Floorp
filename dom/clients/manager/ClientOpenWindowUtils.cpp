@@ -23,7 +23,7 @@
 #include "nsPIWindowWatcher.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "FennecJNIWrappers.h"
+#  include "FennecJNIWrappers.h"
 #endif
 
 namespace mozilla {

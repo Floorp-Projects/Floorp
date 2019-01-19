@@ -40,7 +40,7 @@
 #include "nsNetCID.h"
 #include "prtime.h"
 #ifdef MOZ_PLACES
-#include "nsIFaviconService.h"
+#  include "nsIFaviconService.h"
 #endif
 #include "nsIIconURI.h"
 #include "nsIDownloader.h"
@@ -55,8 +55,8 @@
 #include "nsWindowsHelpers.h"
 
 #ifdef NS_ENABLE_TSF
-#include <textstor.h>
-#include "TSFTextStore.h"
+#  include <textstor.h>
+#  include "TSFTextStore.h"
 #endif  // #ifdef NS_ENABLE_TSF
 
 #include <shlobj.h>

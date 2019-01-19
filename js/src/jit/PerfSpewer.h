@@ -8,8 +8,8 @@
 #define jit_PerfSpewer_h
 
 #ifdef JS_ION_PERF
-#include <stdio.h>
-#include "jit/MacroAssembler.h"
+#  include <stdio.h>
+#  include "jit/MacroAssembler.h"
 #endif
 
 namespace {

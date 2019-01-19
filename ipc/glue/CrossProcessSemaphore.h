@@ -12,10 +12,10 @@
 #include "mozilla/Maybe.h"
 
 #if !defined(OS_WIN) && !defined(OS_MACOSX)
-#include <pthread.h>
-#include <semaphore.h>
-#include "SharedMemoryBasic.h"
-#include "mozilla/Atomics.h"
+#  include <pthread.h>
+#  include <semaphore.h>
+#  include "SharedMemoryBasic.h"
+#  include "mozilla/Atomics.h"
 #endif
 
 namespace IPC {

@@ -242,7 +242,7 @@ class MOZ_STACK_CLASS nsThreadEnumerator final {
 
 #if defined(XP_UNIX) && !defined(ANDROID) && !defined(DEBUG) && HAVE_UALARM && \
     defined(_GNU_SOURCE)
-#define MOZ_CANARY
+#  define MOZ_CANARY
 
 extern int sCanaryOutputFD;
 #endif

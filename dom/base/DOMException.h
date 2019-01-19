@@ -9,8 +9,8 @@
 
 // We intentionally shadow non-virtual methods, but gcc gets confused.
 #ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #endif
 
 #include <stdint.h>
@@ -177,7 +177,7 @@ class DOMException : public Exception {
 }  // namespace mozilla
 
 #ifdef __GNUC__
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif
 
 #endif

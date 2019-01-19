@@ -58,7 +58,6 @@ WEBIDL_FILES = [
     'WindowGlobalActors.webidl',
     'XULFrameElement.webidl',
     'XULMenuElement.webidl',
-    'XULScrollElement.webidl',
     'XULTextElement.webidl',
     'XULTreeElement.webidl'
 ]

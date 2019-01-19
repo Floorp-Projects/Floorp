@@ -20,7 +20,7 @@
 #include "VideoUtils.h"
 
 #if defined(MOZ_FFMPEG)
-#include "FFmpegRuntimeLinker.h"
+#  include "FFmpegRuntimeLinker.h"
 #endif
 
 static mozilla::LazyLogModule sDecoderDoctorLog("DecoderDoctor");

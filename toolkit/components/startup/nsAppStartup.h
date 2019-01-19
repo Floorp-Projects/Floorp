@@ -17,8 +17,8 @@
 
 #if defined(XP_WIN)
 // XPerf-backed probes
-#include "mozilla/perfprobe.h"
-#include "nsAutoPtr.h"
+#  include "mozilla/perfprobe.h"
+#  include "nsAutoPtr.h"
 #endif  // defined(XP_WIN)
 
 // {7DD4D320-C84B-4624-8D45-7BB9B2356977}

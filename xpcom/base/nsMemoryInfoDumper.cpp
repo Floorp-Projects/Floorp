@@ -26,32 +26,32 @@
 #include "nsIFile.h"
 
 #ifdef XP_WIN
-#include <process.h>
-#ifndef getpid
-#define getpid _getpid
-#endif
+#  include <process.h>
+#  ifndef getpid
+#    define getpid _getpid
+#  endif
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #ifdef XP_UNIX
-#define MOZ_SUPPORTS_FIFO 1
+#  define MOZ_SUPPORTS_FIFO 1
 #endif
 
 // Some Android devices seem to send RT signals to Firefox so we want to avoid
 // consuming those as they're not user triggered.
 #if !defined(ANDROID) && (defined(XP_LINUX) || defined(__FreeBSD__))
-#define MOZ_SUPPORTS_RT_SIGNALS 1
+#  define MOZ_SUPPORTS_RT_SIGNALS 1
 #endif
 
 #if defined(MOZ_SUPPORTS_RT_SIGNALS)
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#  include <fcntl.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
 #endif
 
 #if defined(MOZ_SUPPORTS_FIFO)
-#include "mozilla/Preferences.h"
+#  include "mozilla/Preferences.h"
 #endif
 
 using namespace mozilla;
@@ -202,9 +202,9 @@ void doGCCCDump(const nsCString& aInputStr) {
 }
 
 bool SetupFifo() {
-#ifdef DEBUG
+#  ifdef DEBUG
   static bool fifoCallbacksRegistered = false;
-#endif
+#  endif
 
   if (!FifoWatcher::MaybeCreate()) {
     return false;
@@ -222,9 +222,9 @@ bool SetupFifo() {
   fw->RegisterCallback(NS_LITERAL_CSTRING("gc log"), doGCCCDump);
   fw->RegisterCallback(NS_LITERAL_CSTRING("abbreviated gc log"), doGCCCDump);
 
-#ifdef DEBUG
+#  ifdef DEBUG
   fifoCallbacksRegistered = true;
-#endif
+#  endif
   return true;
 }
 

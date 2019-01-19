@@ -15,11 +15,11 @@
 
 // Recording and replaying is only enabled on Mac nightlies.
 #if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
-#define ENABLE_RECORD_REPLAY
+#  define ENABLE_RECORD_REPLAY
 #endif
 
 #ifdef ENABLE_RECORD_REPLAY
-#include <dlfcn.h>
+#  include <dlfcn.h>
 #endif
 
 namespace mozilla {

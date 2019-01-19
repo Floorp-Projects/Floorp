@@ -14,16 +14,16 @@
 #include "prio.h"
 
 #ifdef XP_WIN
-#include "nsIObserver.h"
-#include "nsIObserverService.h"
-#include "mozilla/ResultExtensions.h"
-#include "mozilla/Services.h"
-#include "nsIIdleService.h"
-#include "nsISimpleEnumerator.h"
-#include "nsIFile.h"
-#include "nsAutoPtr.h"
-#include "nsITimer.h"
-#include "nsCRT.h"
+#  include "nsIObserver.h"
+#  include "nsIObserverService.h"
+#  include "mozilla/ResultExtensions.h"
+#  include "mozilla/Services.h"
+#  include "nsIIdleService.h"
+#  include "nsISimpleEnumerator.h"
+#  include "nsIFile.h"
+#  include "nsAutoPtr.h"
+#  include "nsITimer.h"
+#  include "nsCRT.h"
 
 #endif
 
@@ -135,13 +135,13 @@ nsresult NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc) {
 
 // Duration of idle time before we'll get a callback whereupon we attempt to
 // remove any stray and unused anonymous temp files.
-#define TEMP_FILE_IDLE_TIME_S 30
+#  define TEMP_FILE_IDLE_TIME_S 30
 
 // The nsAnonTempFileRemover is created in a timer, which sets an idle observer.
 // This is expiration time (in ms) which initial timer is set for (3 minutes).
-#define SCHEDULE_TIMEOUT_MS 3 * 60 * 1000
+#  define SCHEDULE_TIMEOUT_MS 3 * 60 * 1000
 
-#define XPCOM_SHUTDOWN_TOPIC "xpcom-shutdown"
+#  define XPCOM_SHUTDOWN_TOPIC "xpcom-shutdown"
 
 // This class adds itself as an idle observer. When the application has
 // been idle for about 30 seconds we'll get a notification, whereupon we'll

@@ -17,7 +17,7 @@
 
 // enable support for the obsolete string API if not explicitly disabled
 #ifndef MOZ_STRING_WITH_OBSOLETE_API
-#define MOZ_STRING_WITH_OBSOLETE_API 1
+#  define MOZ_STRING_WITH_OBSOLETE_API 1
 #endif
 
 #include "nsTString.h"

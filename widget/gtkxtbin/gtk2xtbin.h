@@ -13,14 +13,14 @@
 #include <X11/Xutil.h>
 #include <X11/Xlib.h>
 #ifdef MOZILLA_CLIENT
-#include "mozilla/Types.h"
-#ifdef _IMPL_GTKXTBIN_API
-#define GTKXTBIN_API(type) MOZ_EXPORT type
+#  include "mozilla/Types.h"
+#  ifdef _IMPL_GTKXTBIN_API
+#    define GTKXTBIN_API(type) MOZ_EXPORT type
+#  else
+#    define GTKXTBIN_API(type) MOZ_IMPORT_API type
+#  endif
 #else
-#define GTKXTBIN_API(type) MOZ_IMPORT_API type
-#endif
-#else
-#define GTKXTBIN_API(type) type
+#  define GTKXTBIN_API(type) type
 #endif
 
 #ifdef __cplusplus
@@ -43,14 +43,14 @@ struct _XtClient {
 typedef struct _GtkXtBin GtkXtBin;
 typedef struct _GtkXtBinClass GtkXtBinClass;
 
-#define GTK_TYPE_XTBIN (gtk_xtbin_get_type())
-#define GTK_XTBIN(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GTK_TYPE_XTBIN, GtkXtBin))
-#define GTK_XTBIN_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GTK_TYPE_XTBIN, GtkXtBinClass))
-#define GTK_IS_XTBIN(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GTK_TYPE_XTBIN))
-#define GTK_IS_XTBIN_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GTK_TYPE_XTBIN))
+#  define GTK_TYPE_XTBIN (gtk_xtbin_get_type())
+#  define GTK_XTBIN(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj), GTK_TYPE_XTBIN, GtkXtBin))
+#  define GTK_XTBIN_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_CAST((klass), GTK_TYPE_XTBIN, GtkXtBinClass))
+#  define GTK_IS_XTBIN(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GTK_TYPE_XTBIN))
+#  define GTK_IS_XTBIN_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GTK_TYPE_XTBIN))
 
 struct _GtkXtBin {
   GtkSocket gsocket;

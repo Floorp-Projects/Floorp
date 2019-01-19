@@ -19,9 +19,9 @@
 #include <ostream>
 #include <fstream>
 #if defined(__MINGW32__) && defined(__GLIBCXX__)
-#include "mozilla/UniquePtr.h"
-#include <fcntl.h>
-#include <ext/stdio_filebuf.h>
+#  include "mozilla/UniquePtr.h"
+#  include <fcntl.h>
+#  include <ext/stdio_filebuf.h>
 #endif
 
 namespace mozilla {

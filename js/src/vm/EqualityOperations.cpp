@@ -17,11 +17,11 @@
 #include "js/RootingAPI.h"  // JS::Rooted
 #include "js/Value.h"       // JS::Int32Value, JS::SameType, JS::Value
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"  // JS::BigInt
-#endif                      // ENABLE_BIGINT
-#include "vm/JSContext.h"   // CHECK_THREAD
-#include "vm/JSObject.h"    // js::ToPrimitive
-#include "vm/StringType.h"  // js::EqualStrings
+#  include "vm/BigIntType.h"  // JS::BigInt
+#endif                        // ENABLE_BIGINT
+#include "vm/JSContext.h"     // CHECK_THREAD
+#include "vm/JSObject.h"      // js::ToPrimitive
+#include "vm/StringType.h"    // js::EqualStrings
 
 #include "builtin/Boolean-inl.h"  // js::EmulatesUndefined
 #include "vm/JSContext-inl.h"     // JSContext::check

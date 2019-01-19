@@ -4,20 +4,20 @@
 
 #ifndef __GNUC__
 // disable warnings about pointer <-> DWORD conversions
-#pragma warning(disable : 4311 4312)
+#  pragma warning(disable : 4311 4312)
 #endif
 
 #ifdef _WIN64
-#define POINTER_TYPE ULONGLONG
+#  define POINTER_TYPE ULONGLONG
 #else
-#define POINTER_TYPE DWORD
+#  define POINTER_TYPE DWORD
 #endif
 
 #include <windows.h>
 #include <winnt.h>
 #include <stdlib.h>
 #ifdef DEBUG_OUTPUT
-#include <stdio.h>
+#  include <stdio.h>
 #endif
 
 #include "nsWindowsHelpers.h"
@@ -37,7 +37,7 @@ class nsAutoRefTraits<FileView> {
 
 #ifndef IMAGE_SIZEOF_BASE_RELOCATION
 // Vista SDKs no longer define IMAGE_SIZEOF_BASE_RELOCATION!?
-#define IMAGE_SIZEOF_BASE_RELOCATION (sizeof(IMAGE_BASE_RELOCATION))
+#  define IMAGE_SIZEOF_BASE_RELOCATION (sizeof(IMAGE_BASE_RELOCATION))
 #endif
 
 #include "LoadLibraryRemote.h"

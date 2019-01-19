@@ -34,9 +34,9 @@
 // scenes.  This latter assumption, however, does not seem to be a
 // problem in practice.
 #if defined(MOZ_MEMORY)
-#define ALLOCATION_ASSERT(b) ASSERT_TRUE((b))
+#  define ALLOCATION_ASSERT(b) ASSERT_TRUE((b))
 #else
-#define ALLOCATION_ASSERT(b) (void)(b)
+#  define ALLOCATION_ASSERT(b) (void)(b)
 #endif
 
 #define ASSERT_ALLOCATION_HAPPENED(lambda) \
@@ -141,12 +141,12 @@ TEST(AllocReplacementDeathTest, posix_memalign_check) {
 #endif
 
 #if defined(XP_WIN)
-#include <windows.h>
+#  include <windows.h>
 
-#undef ASSERT_ALLOCATION_HAPPENED
-#define ASSERT_ALLOCATION_HAPPENED(lambda)    \
-  ALLOCATION_ASSERT(ValidateHookedAllocation( \
-      lambda, [](void* p) { HeapFree(GetProcessHeap(), 0, p); }));
+#  undef ASSERT_ALLOCATION_HAPPENED
+#  define ASSERT_ALLOCATION_HAPPENED(lambda)    \
+    ALLOCATION_ASSERT(ValidateHookedAllocation( \
+        lambda, [](void* p) { HeapFree(GetProcessHeap(), 0, p); }));
 
 // See above for an explanation of the "*DeathTest" suffix used here.
 TEST(AllocReplacementDeathTest, HeapAlloc_check) {

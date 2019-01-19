@@ -4,15 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef IN_GL_CONTEXT_PROVIDER_H
-#error GLContextProviderImpl.h must only be included from GLContextProvider.h
+#  error GLContextProviderImpl.h must only be included from GLContextProvider.h
 #endif
 
 #ifndef GL_CONTEXT_PROVIDER_NAME
-#error GL_CONTEXT_PROVIDER_NAME not defined
+#  error GL_CONTEXT_PROVIDER_NAME not defined
 #endif
 #if defined(MOZ_WIDGET_ANDROID)
-#include "GLTypes.h"  // for EGLSurface and EGLConfig
-#endif                // defined(MOZ_WIDGET_ANDROID)
+#  include "GLTypes.h"  // for EGLSurface and EGLConfig
+#endif                  // defined(MOZ_WIDGET_ANDROID)
 
 class GL_CONTEXT_PROVIDER_NAME {
  public:

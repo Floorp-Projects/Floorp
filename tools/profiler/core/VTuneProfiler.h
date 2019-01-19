@@ -16,24 +16,24 @@
 // should be set to point at the ittnotify DLL.
 #ifndef MOZ_VTUNE_INSTRUMENTATION
 
-#define VTUNE_INIT()
-#define VTUNE_SHUTDOWN()
+#  define VTUNE_INIT()
+#  define VTUNE_SHUTDOWN()
 
-#define VTUNE_TRACING(name, kind)
-#define VTUNE_REGISTER_THREAD(name)
+#  define VTUNE_TRACING(name, kind)
+#  define VTUNE_REGISTER_THREAD(name)
 
 #else
 
-#include <stddef.h>
-#include <unordered_map>
-#include <string>
+#  include <stddef.h>
+#  include <unordered_map>
+#  include <string>
 
-#include "GeckoProfiler.h"
+#  include "GeckoProfiler.h"
 
 // This is the regular Intel header, these functions are actually defined for
 // us inside js/src/vtune by an intel C file which actually dynamically resolves
 // them to the correct DLL. Through libxul these will 'magically' resolve.
-#include "vtune/ittnotify.h"
+#  include "vtune/ittnotify.h"
 
 class VTuneProfiler {
  public:
@@ -61,11 +61,11 @@ class VTuneProfiler {
   std::unordered_map<std::string, __itt_event> mStrings;
 };
 
-#define VTUNE_INIT() VTuneProfiler::Initialize()
-#define VTUNE_SHUTDOWN() VTuneProfiler::Shutdown()
+#  define VTUNE_INIT() VTuneProfiler::Initialize()
+#  define VTUNE_SHUTDOWN() VTuneProfiler::Shutdown()
 
-#define VTUNE_TRACING(name, kind) VTuneProfiler::Trace(name, kind)
-#define VTUNE_REGISTER_THREAD(name) VTuneProfiler::RegisterThread(name)
+#  define VTUNE_TRACING(name, kind) VTuneProfiler::Trace(name, kind)
+#  define VTUNE_REGISTER_THREAD(name) VTuneProfiler::RegisterThread(name)
 
 #endif
 

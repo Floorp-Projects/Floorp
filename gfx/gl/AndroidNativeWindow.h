@@ -8,11 +8,11 @@
 #define AndroidNativeWindow_h__
 #ifdef MOZ_WIDGET_ANDROID
 
-#include <jni.h>
-#include <android/native_window.h>
-#include <android/native_window_jni.h>
-#include "GeneratedJNIWrappers.h"
-#include "SurfaceTexture.h"
+#  include <jni.h>
+#  include <android/native_window.h>
+#  include <android/native_window_jni.h>
+#  include "GeneratedJNIWrappers.h"
+#  include "SurfaceTexture.h"
 
 namespace mozilla {
 namespace gl {

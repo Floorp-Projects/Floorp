@@ -44,7 +44,7 @@
 #include "ScreenHelperGTK.h"
 #include "nsArrayUtils.h"
 #ifdef MOZ_WAYLAND
-#include "nsClipboardWayland.h"
+#  include "nsClipboardWayland.h"
 #endif
 
 using namespace mozilla;
@@ -390,7 +390,7 @@ bool nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
   if (!gdk_screen_is_composited(screen)) return false;
 
 #ifdef cairo_image_surface_create
-#error "Looks like we're including Mozilla's cairo instead of system cairo"
+#  error "Looks like we're including Mozilla's cairo instead of system cairo"
 #endif
   // Prior to GTK 3.9.12, cairo surfaces passed into gtk_drag_set_icon_surface
   // had their shape information derived from the alpha channel and used with

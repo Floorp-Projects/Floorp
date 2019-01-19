@@ -32,7 +32,7 @@ class Promise;
 #ifdef XP_WIN
 // If we're on windows, simulate including windows.h. This step will cause
 // compilation failure if NeedsWindowsUndef is not defined.
-#define NO_ERROR 0x1
+#  define NO_ERROR 0x1
 #endif
 #include "../TestCodeGenBinding.h"
 

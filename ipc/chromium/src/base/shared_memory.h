@@ -10,9 +10,9 @@
 #include "build/build_config.h"
 
 #if defined(OS_POSIX)
-#include <sys/types.h>
-#include <semaphore.h>
-#include "base/file_descriptor_posix.h"
+#  include <sys/types.h>
+#  include <semaphore.h>
+#  include "base/file_descriptor_posix.h"
 #endif
 #include <string>
 

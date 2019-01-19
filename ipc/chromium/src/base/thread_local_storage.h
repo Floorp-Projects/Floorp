@@ -10,7 +10,7 @@
 #include "base/basictypes.h"
 
 #if defined(OS_POSIX)
-#include <pthread.h>
+#  include <pthread.h>
 #endif
 
 // Wrapper for thread local storage.  This class doesn't do much except provide

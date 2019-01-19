@@ -18,17 +18,17 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/ResultExtensions.h"
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracerImpl.h"
+#  include "GeckoTaskTracerImpl.h"
 using namespace mozilla::tasktracer;
 #endif
 
 #ifdef XP_WIN
-#include <process.h>
-#ifndef getpid
-#define getpid _getpid
-#endif
+#  include <process.h>
+#  ifndef getpid
+#    define getpid _getpid
+#  endif
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 using mozilla::Atomic;
@@ -591,12 +591,12 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
 }
 
 #if defined(HAVE_DLADDR) && defined(HAVE___CXA_DEMANGLE)
-#define USE_DLADDR 1
+#  define USE_DLADDR 1
 #endif
 
 #ifdef USE_DLADDR
-#include <cxxabi.h>
-#include <dlfcn.h>
+#  include <cxxabi.h>
+#  include <dlfcn.h>
 #endif
 
 // See the big comment above GetTimerFiringsLog() to understand this code.

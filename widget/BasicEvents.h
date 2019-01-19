@@ -19,7 +19,7 @@
 #include "Units.h"
 
 #ifdef DEBUG
-#include "nsXULAppAPI.h"
+#  include "nsXULAppAPI.h"
 #endif  // #ifdef DEBUG
 
 namespace IPC {

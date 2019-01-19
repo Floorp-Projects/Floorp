@@ -8,14 +8,14 @@
 #include "mozilla/UniquePtr.h"
 
 #if defined(DEBUG) || !defined(RELEASE_OR_BETA)
-#define MOZ_CHECK_JNI
+#  define MOZ_CHECK_JNI
 #endif
 
 #ifdef MOZ_CHECK_JNI
-#include <unistd.h>
-#include "mozilla/Assertions.h"
-#include "APKOpen.h"
-#include "MainThreadUtils.h"
+#  include <unistd.h>
+#  include "mozilla/Assertions.h"
+#  include "APKOpen.h"
+#  include "MainThreadUtils.h"
 #endif
 
 namespace mozilla {
@@ -84,19 +84,19 @@ void SetGeckoThreadEnv(JNIEnv* aEnv);
 JNIEnv* GetEnvForThread();
 
 #ifdef MOZ_CHECK_JNI
-#define MOZ_ASSERT_JNI_THREAD(thread)                            \
-  do {                                                           \
-    if ((thread) == mozilla::jni::CallingThread::GECKO) {        \
-      MOZ_RELEASE_ASSERT(::NS_IsMainThread());                   \
-    } else if ((thread) == mozilla::jni::CallingThread::UI) {    \
-      const bool isOnUiThread = (GetUIThreadId() == ::gettid()); \
-      MOZ_RELEASE_ASSERT(isOnUiThread);                          \
-    }                                                            \
-  } while (0)
+#  define MOZ_ASSERT_JNI_THREAD(thread)                            \
+    do {                                                           \
+      if ((thread) == mozilla::jni::CallingThread::GECKO) {        \
+        MOZ_RELEASE_ASSERT(::NS_IsMainThread());                   \
+      } else if ((thread) == mozilla::jni::CallingThread::UI) {    \
+        const bool isOnUiThread = (GetUIThreadId() == ::gettid()); \
+        MOZ_RELEASE_ASSERT(isOnUiThread);                          \
+      }                                                            \
+    } while (0)
 #else
-#define MOZ_ASSERT_JNI_THREAD(thread) \
-  do {                                \
-  } while (0)
+#  define MOZ_ASSERT_JNI_THREAD(thread) \
+    do {                                \
+    } while (0)
 #endif
 
 bool ThrowException(JNIEnv* aEnv, const char* aClass, const char* aMessage);

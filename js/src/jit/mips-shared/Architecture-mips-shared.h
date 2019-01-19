@@ -19,17 +19,17 @@
 // gcc appears to use _mips_hard_float to denote
 // that the target is a hard-float target.
 #ifdef _mips_hard_float
-#define JS_CODEGEN_MIPS_HARDFP
+#  define JS_CODEGEN_MIPS_HARDFP
 #endif
 
 #if (defined(_MIPS_SIM) && (_MIPS_SIM == _ABIO32)) || \
     defined(JS_SIMULATOR_MIPS32)
-#define USES_O32_ABI
+#  define USES_O32_ABI
 #elif (defined(_MIPS_SIM) && (_MIPS_SIM == _ABI64)) || \
     defined(JS_SIMULATOR_MIPS64)
-#define USES_N64_ABI
+#  define USES_N64_ABI
 #else
-#error "Unsupported ABI"
+#  error "Unsupported ABI"
 #endif
 
 namespace js {

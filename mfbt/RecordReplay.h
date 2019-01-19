@@ -362,35 +362,35 @@ static inline void NoteContentParse(const void* aToken, const char* aURL,
 // Define inline wrappers on builds where recording/replaying is enabled.
 #if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
 
-#define MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(aName, aFormals, aActuals) \
-  MFBT_API void Internal##aName aFormals;                              \
-  static inline void aName aFormals {                                  \
-    if (IsRecordingOrReplaying()) {                                    \
-      Internal##aName aActuals;                                        \
-    }                                                                  \
-  }
+#  define MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(aName, aFormals, aActuals) \
+    MFBT_API void Internal##aName aFormals;                              \
+    static inline void aName aFormals {                                  \
+      if (IsRecordingOrReplaying()) {                                    \
+        Internal##aName aActuals;                                        \
+      }                                                                  \
+    }
 
-#define MOZ_MAKE_RECORD_REPLAY_WRAPPER(aName, aReturnType, aDefaultValue, \
-                                       aFormals, aActuals)                \
-  MFBT_API aReturnType Internal##aName aFormals;                          \
-  static inline aReturnType aName aFormals {                              \
-    if (IsRecordingOrReplaying()) {                                       \
-      return Internal##aName aActuals;                                    \
-    }                                                                     \
-    return aDefaultValue;                                                 \
-  }
+#  define MOZ_MAKE_RECORD_REPLAY_WRAPPER(aName, aReturnType, aDefaultValue, \
+                                         aFormals, aActuals)                \
+    MFBT_API aReturnType Internal##aName aFormals;                          \
+    static inline aReturnType aName aFormals {                              \
+      if (IsRecordingOrReplaying()) {                                       \
+        return Internal##aName aActuals;                                    \
+      }                                                                     \
+      return aDefaultValue;                                                 \
+    }
 
 // Define inline wrappers on other builds. Avoiding references to the out of
 // line method avoids link errors when e.g. using Atomic<> but not linking
 // against MFBT.
 #else
 
-#define MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(aName, aFormals, aActuals) \
-  static inline void aName aFormals {}
+#  define MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(aName, aFormals, aActuals) \
+    static inline void aName aFormals {}
 
-#define MOZ_MAKE_RECORD_REPLAY_WRAPPER(aName, aReturnType, aDefaultValue, \
-                                       aFormals, aActuals)                \
-  static inline aReturnType aName aFormals { return aDefaultValue; }
+#  define MOZ_MAKE_RECORD_REPLAY_WRAPPER(aName, aReturnType, aDefaultValue, \
+                                         aFormals, aActuals)                \
+    static inline aReturnType aName aFormals { return aDefaultValue; }
 
 #endif
 

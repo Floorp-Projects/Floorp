@@ -27,23 +27,23 @@
 #include "mozilla/gfx/gfxVars.h"
 
 #ifdef XP_WIN
-#include "WMFDecoderModule.h"
-#include "mozilla/WindowsVersion.h"
+#  include "WMFDecoderModule.h"
+#  include "mozilla/WindowsVersion.h"
 #endif
 #ifdef MOZ_FFVPX
-#include "FFVPXRuntimeLinker.h"
+#  include "FFVPXRuntimeLinker.h"
 #endif
 #ifdef MOZ_FFMPEG
-#include "FFmpegRuntimeLinker.h"
+#  include "FFmpegRuntimeLinker.h"
 #endif
 #ifdef MOZ_APPLEMEDIA
-#include "AppleDecoderModule.h"
+#  include "AppleDecoderModule.h"
 #endif
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidDecoderModule.h"
+#  include "AndroidDecoderModule.h"
 #endif
 #ifdef MOZ_OMX
-#include "OmxDecoderModule.h"
+#  include "OmxDecoderModule.h"
 #endif
 
 #include <functional>

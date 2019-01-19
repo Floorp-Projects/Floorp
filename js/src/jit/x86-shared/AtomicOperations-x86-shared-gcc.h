@@ -15,7 +15,7 @@
 #include "vm/ArrayBufferObject.h"
 
 #if !defined(__clang__) && !defined(__GNUC__)
-#error "This file only for gcc-compatible compilers"
+#  error "This file only for gcc-compatible compilers"
 #endif
 
 // Lock-freedom and access-atomicity on x86 and x64.

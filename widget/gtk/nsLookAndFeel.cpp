@@ -44,7 +44,7 @@ using mozilla::LookAndFeel;
                     (int)((c).blue * 255), (int)((c).alpha * 255)))
 
 #if !GTK_CHECK_VERSION(3, 12, 0)
-#define GTK_STATE_FLAG_LINK (static_cast<GtkStateFlags>(1 << 9))
+#  define GTK_STATE_FLAG_LINK (static_cast<GtkStateFlags>(1 << 9))
 #endif
 
 nsLookAndFeel::nsLookAndFeel()

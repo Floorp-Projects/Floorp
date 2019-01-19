@@ -20,9 +20,9 @@
 #include "nsThreadUtils.h"
 
 #if defined(_MSC_VER)
-#define FUNC __FUNCSIG__
+#  define FUNC __FUNCSIG__
 #else
-#define FUNC __PRETTY_FUNCTION__
+#  define FUNC __PRETTY_FUNCTION__
 #endif
 
 namespace mozilla {

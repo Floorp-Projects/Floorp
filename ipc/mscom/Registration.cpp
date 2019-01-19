@@ -23,11 +23,11 @@
 #include "nsWindowsHelpers.h"
 
 #if defined(MOZILLA_INTERNAL_API)
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/mscom/EnsureMTA.h"
+#  include "mozilla/ClearOnShutdown.h"
+#  include "mozilla/mscom/EnsureMTA.h"
 HRESULT RegisterPassthruProxy();
 #else
-#include <stdlib.h>
+#  include <stdlib.h>
 #endif  // defined(MOZILLA_INTERNAL_API)
 
 #include <oaidl.h>

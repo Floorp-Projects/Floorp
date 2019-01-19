@@ -31,7 +31,7 @@ namespace js {
 // Protected data checks are enabled in debug builds, except on android where
 // they cause some permatimeouts in automation.
 #if defined(DEBUG) && !defined(ANDROID)
-#define JS_HAS_PROTECTED_DATA_CHECKS
+#  define JS_HAS_PROTECTED_DATA_CHECKS
 #endif
 
 #define DECLARE_ONE_BOOL_OPERATOR(OP, T)   \

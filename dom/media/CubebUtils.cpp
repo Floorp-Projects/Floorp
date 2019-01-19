@@ -7,7 +7,7 @@
 #include "CubebUtils.h"
 
 #ifdef MOZ_WEBRTC
-#include "CubebDeviceEnumerator.h"
+#  include "CubebDeviceEnumerator.h"
 #endif
 #include "MediaInfo.h"
 #include "mozilla/AbstractThread.h"
@@ -30,7 +30,7 @@
 #include <algorithm>
 #include <stdint.h>
 #ifdef MOZ_WIDGET_ANDROID
-#include "GeneratedJNIWrappers.h"
+#  include "GeneratedJNIWrappers.h"
 #endif
 
 #define AUDIOIPC_POOL_SIZE_DEFAULT 2
@@ -55,7 +55,7 @@
 #define PREF_AUDIOIPC_STACK_SIZE "media.audioipc.stack_size"
 
 #if (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)) || defined(XP_MACOSX)
-#define MOZ_CUBEB_REMOTING
+#  define MOZ_CUBEB_REMOTING
 #endif
 
 extern "C" {
@@ -395,11 +395,11 @@ ipc::FileDescriptor CreateAudioIPCConnection() {
   }
   // Close rawFD since FileDescriptor's ctor cloned it.
   // TODO: Find cleaner cross-platform way to close rawFD.
-#ifdef XP_WIN
+#  ifdef XP_WIN
   CloseHandle(rawFD);
-#else
+#  else
   close(rawFD);
-#endif
+#  endif
   return fd;
 #else
   return ipc::FileDescriptor();

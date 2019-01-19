@@ -39,7 +39,7 @@
 #include <string>
 
 #ifndef PT_ARM_EXIDX
-#define PT_ARM_EXIDX 0x70000001
+#  define PT_ARM_EXIDX 0x70000001
 #endif
 
 // Bug 1082817: ICS B2G has a buggy linker that doesn't always ensure
@@ -48,7 +48,7 @@
 // and binary-search that; otherwise, we search the index in place
 // (avoiding the time and space overhead of the indirection).
 #if defined(ANDROID_VERSION) && ANDROID_VERSION < 16
-#define HAVE_UNSORTED_EXIDX
+#  define HAVE_UNSORTED_EXIDX
 #endif
 
 namespace mozilla {
@@ -521,7 +521,7 @@ static const unsigned char hostEndian = ELFDATA2LSB;
 #elif MOZ_BIG_ENDIAN
 static const unsigned char hostEndian = ELFDATA2MSB;
 #else
-#error "No endian?"
+#  error "No endian?"
 #endif
 
 // Async signal unsafe: std::vector::reserve, std::string copy ctor.
@@ -638,7 +638,7 @@ EHState::EHState(const mcontext_t &context) {
   mRegs[14] = context.arm_lr;
   mRegs[15] = context.arm_pc;
 #else
-#error "Unhandled OS for ARM EHABI unwinding"
+#  error "Unhandled OS for ARM EHABI unwinding"
 #endif
 }
 

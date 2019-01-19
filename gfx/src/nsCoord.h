@@ -34,10 +34,10 @@
 
 #ifdef NS_COORD_IS_FLOAT
 typedef float nscoord;
-#define nscoord_MAX (mozilla::PositiveInfinity<float>())
+#  define nscoord_MAX (mozilla::PositiveInfinity<float>())
 #else
 typedef int32_t nscoord;
-#define nscoord_MAX nscoord((1 << 30) - 1)
+#  define nscoord_MAX nscoord((1 << 30) - 1)
 #endif
 
 #define nscoord_MIN (-nscoord_MAX)

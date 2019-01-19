@@ -8,7 +8,7 @@
 #define jit_x86_shared_Architecture_x86_h
 
 #if !defined(JS_CODEGEN_X86) && !defined(JS_CODEGEN_X64)
-#error "Unsupported architecture!"
+#  error "Unsupported architecture!"
 #endif
 
 #include "mozilla/MathAlgorithms.h"
@@ -149,9 +149,9 @@ class Registers {
 
 #elif defined(JS_CODEGEN_X64)
   static const SetType ArgRegMask =
-#if !defined(_WIN64)
+#  if !defined(_WIN64)
       (1 << X86Encoding::rdi) | (1 << X86Encoding::rsi) |
-#endif
+#  endif
       (1 << X86Encoding::rdx) | (1 << X86Encoding::rcx) |
       (1 << X86Encoding::r8) | (1 << X86Encoding::r9);
 

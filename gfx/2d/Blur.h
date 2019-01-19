@@ -15,7 +15,7 @@ namespace mozilla {
 namespace gfx {
 
 #ifdef _MSC_VER
-#pragma warning(disable : 4251)
+#  pragma warning(disable : 4251)
 #endif
 
 /**

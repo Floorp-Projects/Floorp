@@ -12,51 +12,51 @@
 
 #ifdef XP_UNIX
 
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
-#include "prthread.h"
-#include "plstr.h"
-#include "prenv.h"
-#include "nsDebug.h"
-#include "nsXULAppAPI.h"
+#  include <signal.h>
+#  include <stdio.h>
+#  include <string.h>
+#  include "prthread.h"
+#  include "plstr.h"
+#  include "prenv.h"
+#  include "nsDebug.h"
+#  include "nsXULAppAPI.h"
 
-#if defined(LINUX)
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>  // atoi
-#include <sys/prctl.h>
-#ifndef ANDROID  // no Android impl
-#include <ucontext.h>
-#endif
-#endif
+#  if defined(LINUX)
+#    include <sys/time.h>
+#    include <sys/resource.h>
+#    include <unistd.h>
+#    include <stdlib.h>  // atoi
+#    include <sys/prctl.h>
+#    ifndef ANDROID  // no Android impl
+#      include <ucontext.h>
+#    endif
+#  endif
 
-#if defined(SOLARIS)
-#include <sys/resource.h>
-#include <ucontext.h>
-#endif
+#  if defined(SOLARIS)
+#    include <sys/resource.h>
+#    include <ucontext.h>
+#  endif
 
 // Note: some tests manipulate this value.
 unsigned int _gdb_sleep_duration = 300;
 
-#if defined(LINUX) && defined(DEBUG) && \
-    (defined(__i386) || defined(__x86_64) || defined(PPC))
-#define CRAWL_STACK_ON_SIGSEGV
-#endif
+#  if defined(LINUX) && defined(DEBUG) && \
+      (defined(__i386) || defined(__x86_64) || defined(PPC))
+#    define CRAWL_STACK_ON_SIGSEGV
+#  endif
 
-#ifndef PR_SET_PTRACER
-#define PR_SET_PTRACER 0x59616d61
-#endif
-#ifndef PR_SET_PTRACER_ANY
-#define PR_SET_PTRACER_ANY ((unsigned long)-1)
-#endif
+#  ifndef PR_SET_PTRACER
+#    define PR_SET_PTRACER 0x59616d61
+#  endif
+#  ifndef PR_SET_PTRACER_ANY
+#    define PR_SET_PTRACER_ANY ((unsigned long)-1)
+#  endif
 
-#if defined(CRAWL_STACK_ON_SIGSEGV)
+#  if defined(CRAWL_STACK_ON_SIGSEGV)
 
-#include <unistd.h>
-#include "nsISupportsUtils.h"
-#include "mozilla/StackWalk.h"
+#    include <unistd.h>
+#    include "nsISupportsUtils.h"
+#    include "mozilla/StackWalk.h"
 
 static const char *gProgname = "huh?";
 
@@ -105,16 +105,16 @@ void child_ah_crap_handler(int signum) {
   ah_crap_handler(signum);
 }
 
-#endif  // CRAWL_STACK_ON_SIGSEGV
+#  endif  // CRAWL_STACK_ON_SIGSEGV
 
-#ifdef MOZ_WIDGET_GTK
+#  ifdef MOZ_WIDGET_GTK
 // Need this include for version test below.
-#include <glib.h>
-#endif
+#    include <glib.h>
+#  endif
 
-#if defined(MOZ_WIDGET_GTK) && \
-    (GLIB_MAJOR_VERSION > 2 || \
-     (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
+#  if defined(MOZ_WIDGET_GTK) && \
+      (GLIB_MAJOR_VERSION > 2 || \
+       (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
 
 static GLogFunc orig_log_func = nullptr;
 
@@ -138,9 +138,9 @@ static void my_glib_log_func(const gchar *log_domain, GLogLevelFlags log_level,
   orig_log_func(log_domain, log_level, message, nullptr);
 }
 
-#endif
+#  endif
 
-#ifdef SA_SIGINFO
+#  ifdef SA_SIGINFO
 static void fpehandler(int signum, siginfo_t *si, void *context) {
   /* Integer divide by zero or integer overflow. */
   /* Note: FPE_INTOVF is ignored on Intel, PowerPC and SPARC systems. */
@@ -149,10 +149,10 @@ static void fpehandler(int signum, siginfo_t *si, void *context) {
                   __LINE__);
   }
 
-#ifdef XP_MACOSX
+#    ifdef XP_MACOSX
   ucontext_t *uc = (ucontext_t *)context;
 
-#if defined(__i386__) || defined(__amd64__)
+#      if defined(__i386__) || defined(__amd64__)
   _STRUCT_FP_CONTROL *ctrl = &uc->uc_mcontext->__fs.__fpu_fcw;
   ctrl->__invalid = ctrl->__denorm = ctrl->__zdiv = ctrl->__ovrfl =
       ctrl->__undfl = ctrl->__precis = 1;
@@ -165,12 +165,12 @@ static void fpehandler(int signum, siginfo_t *si, void *context) {
   uint32_t *mxcsr = &uc->uc_mcontext->__fs.__fpu_mxcsr;
   *mxcsr |= SSE_EXCEPTION_MASK; /* disable all SSE exceptions */
   *mxcsr &= ~SSE_STATUS_FLAGS;  /* clear all pending SSE exceptions */
-#endif
-#endif
-#if defined(LINUX) && !defined(ANDROID)
+#      endif
+#    endif
+#    if defined(LINUX) && !defined(ANDROID)
   ucontext_t *uc = (ucontext_t *)context;
 
-#if defined(__i386__)
+#      if defined(__i386__)
   /*
    * It seems that we have no access to mxcsr on Linux. libc
    * seems to be translating cw/sw to mxcsr.
@@ -180,8 +180,8 @@ static void fpehandler(int signum, siginfo_t *si, void *context) {
 
   unsigned long int *sw = &uc->uc_mcontext.fpregs->sw;
   *sw &= ~FPU_STATUS_FLAGS;
-#endif
-#if defined(__amd64__)
+#      endif
+#      if defined(__amd64__)
   uint16_t *cw = &uc->uc_mcontext.fpregs->cwd;
   *cw |= FPU_EXCEPTION_MASK;
 
@@ -191,12 +191,12 @@ static void fpehandler(int signum, siginfo_t *si, void *context) {
   uint32_t *mxcsr = &uc->uc_mcontext.fpregs->mxcsr;
   *mxcsr |= SSE_EXCEPTION_MASK; /* disable all SSE exceptions */
   *mxcsr &= ~SSE_STATUS_FLAGS;  /* clear all pending SSE exceptions */
-#endif
-#endif
-#ifdef SOLARIS
+#      endif
+#    endif
+#    ifdef SOLARIS
   ucontext_t *uc = (ucontext_t *)context;
 
-#if defined(__i386)
+#      if defined(__i386)
   uint32_t *cw = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.state[0];
   *cw |= FPU_EXCEPTION_MASK;
 
@@ -206,8 +206,8 @@ static void fpehandler(int signum, siginfo_t *si, void *context) {
   /* address of the instruction that caused the exception */
   uint32_t *ip = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.state[3];
   uc->uc_mcontext.gregs[REG_PC] = *ip;
-#endif
-#if defined(__amd64__)
+#      endif
+#      if defined(__amd64__)
   uint16_t *cw = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.cw;
   *cw |= FPU_EXCEPTION_MASK;
 
@@ -217,18 +217,18 @@ static void fpehandler(int signum, siginfo_t *si, void *context) {
   uint32_t *mxcsr = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.mxcsr;
   *mxcsr |= SSE_EXCEPTION_MASK; /* disable all SSE exceptions */
   *mxcsr &= ~SSE_STATUS_FLAGS;  /* clear all pending SSE exceptions */
-#endif
-#endif
+#      endif
+#    endif
 }
-#endif
+#  endif
 
 void InstallSignalHandlers(const char *aProgname) {
-#if defined(CRAWL_STACK_ON_SIGSEGV)
+#  if defined(CRAWL_STACK_ON_SIGSEGV)
   const char *tmp = PL_strdup(aProgname);
   if (tmp) {
     gProgname = tmp;
   }
-#endif  // CRAWL_STACK_ON_SIGSEGV
+#  endif  // CRAWL_STACK_ON_SIGSEGV
 
   const char *gdbSleep = PR_GetEnv("MOZ_GDB_SLEEP");
   if (gdbSleep && *gdbSleep) {
@@ -238,7 +238,7 @@ void InstallSignalHandlers(const char *aProgname) {
     }
   }
 
-#if defined(CRAWL_STACK_ON_SIGSEGV)
+#  if defined(CRAWL_STACK_ON_SIGSEGV)
   if (!getenv("XRE_NO_WINDOWS_CRASH_DIALOG")) {
     void (*crap_handler)(int) = GeckoProcessType_Default != XRE_GetProcessType()
                                     ? child_ah_crap_handler
@@ -247,9 +247,9 @@ void InstallSignalHandlers(const char *aProgname) {
     signal(SIGILL, crap_handler);
     signal(SIGABRT, crap_handler);
   }
-#endif  // CRAWL_STACK_ON_SIGSEGV
+#  endif  // CRAWL_STACK_ON_SIGSEGV
 
-#ifdef SA_SIGINFO
+#  ifdef SA_SIGINFO
   /* Install a handler for floating point exceptions and disable them if they
    * occur. */
   struct sigaction sa, osa;
@@ -257,7 +257,7 @@ void InstallSignalHandlers(const char *aProgname) {
   sa.sa_sigaction = fpehandler;
   sigemptyset(&sa.sa_mask);
   sigaction(SIGFPE, &sa, &osa);
-#endif
+#  endif
 
   if (!XRE_IsParentProcess()) {
     /*
@@ -268,7 +268,7 @@ void InstallSignalHandlers(const char *aProgname) {
     signal(SIGINT, SIG_IGN);
   }
 
-#if defined(DEBUG) && defined(LINUX)
+#  if defined(DEBUG) && defined(LINUX)
   const char *memLimit = PR_GetEnv("MOZ_MEM_LIMIT");
   if (memLimit && *memLimit) {
     long m = atoi(memLimit);
@@ -278,11 +278,11 @@ void InstallSignalHandlers(const char *aProgname) {
     r.rlim_max = m;
     setrlimit(RLIMIT_AS, &r);
   }
-#endif
+#  endif
 
-#if defined(MOZ_WIDGET_GTK) && \
-    (GLIB_MAJOR_VERSION > 2 || \
-     (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
+#  if defined(MOZ_WIDGET_GTK) && \
+      (GLIB_MAJOR_VERSION > 2 || \
+       (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
   const char *assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
   if (assertString &&
       (!strcmp(assertString, "suspend") || !strcmp(assertString, "stack") ||
@@ -291,34 +291,34 @@ void InstallSignalHandlers(const char *aProgname) {
     // Override the default glib logging function so we get stacks for it too.
     orig_log_func = g_log_set_default_handler(my_glib_log_func, nullptr);
   }
-#endif
+#  endif
 }
 
 #elif XP_WIN
 
-#include <windows.h>
+#  include <windows.h>
 
-#ifdef _M_IX86
+#  ifdef _M_IX86
 /*
  * WinNT.h prior to SDK7 does not expose the structure of the ExtendedRegisters
  * for ia86. We known that MxCsr is at offset 0x18 and is a DWORD.
  */
-#define MXCSR(ctx) (*(DWORD *)(((BYTE *)(ctx)->ExtendedRegisters) + 0x18))
-#endif
+#    define MXCSR(ctx) (*(DWORD *)(((BYTE *)(ctx)->ExtendedRegisters) + 0x18))
+#  endif
 
-#ifdef _M_X64
-#define MXCSR(ctx) (ctx)->MxCsr
-#endif
+#  ifdef _M_X64
+#    define MXCSR(ctx) (ctx)->MxCsr
+#  endif
 
-#if defined(_M_IX86) || defined(_M_X64)
+#  if defined(_M_IX86) || defined(_M_X64)
 
-#ifdef _M_X64
-#define X87CW(ctx) (ctx)->FltSave.ControlWord
-#define X87SW(ctx) (ctx)->FltSave.StatusWord
-#else
-#define X87CW(ctx) (ctx)->FloatSave.ControlWord
-#define X87SW(ctx) (ctx)->FloatSave.StatusWord
-#endif
+#    ifdef _M_X64
+#      define X87CW(ctx) (ctx)->FltSave.ControlWord
+#      define X87SW(ctx) (ctx)->FltSave.StatusWord
+#    else
+#      define X87CW(ctx) (ctx)->FloatSave.ControlWord
+#      define X87SW(ctx) (ctx)->FloatSave.StatusWord
+#    endif
 
 static LPTOP_LEVEL_EXCEPTION_FILTER gFPEPreviousFilter;
 
@@ -338,14 +338,14 @@ LONG __stdcall FpeHandler(PEXCEPTION_POINTERS pe) {
     case STATUS_FLOAT_MULTIPLE_TRAPS:
       X87CW(c) |= FPU_EXCEPTION_MASK; /* disable all FPU exceptions */
       X87SW(c) &= ~FPU_STATUS_FLAGS;  /* clear all pending FPU exceptions */
-#ifdef _M_IX86
+#    ifdef _M_IX86
       if (c->ContextFlags & CONTEXT_EXTENDED_REGISTERS) {
-#endif
+#    endif
         MXCSR(c) |= SSE_EXCEPTION_MASK; /* disable all SSE exceptions */
         MXCSR(c) &= ~SSE_STATUS_FLAGS;  /* clear all pending SSE exceptions */
-#ifdef _M_IX86
+#    ifdef _M_IX86
       }
-#endif
+#    endif
       return EXCEPTION_CONTINUE_EXECUTION;
   }
   LONG action = EXCEPTION_CONTINUE_SEARCH;
@@ -358,12 +358,12 @@ void InstallSignalHandlers(const char *aProgname) {
   gFPEPreviousFilter = SetUnhandledExceptionFilter(FpeHandler);
 }
 
-#else
+#  else
 
 void InstallSignalHandlers(const char *aProgname) {}
 
-#endif
+#  endif
 
 #else
-#error No signal handling implementation for this platform.
+#  error No signal handling implementation for this platform.
 #endif

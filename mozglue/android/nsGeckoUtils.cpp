@@ -12,7 +12,7 @@
 #include "mozilla/RefPtr.h"
 
 #ifdef MOZ_CRASHREPORTER
-#include "minidump-analyzer.h"
+#  include "minidump-analyzer.h"
 #endif
 
 extern "C" __attribute__((visibility("default"))) void MOZ_JNICALL

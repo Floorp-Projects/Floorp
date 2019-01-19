@@ -11,14 +11,14 @@
 
 #include "jit/Label.h"
 #ifdef JS_DISASM_SUPPORTED
-#include "jit/shared/IonAssemblerBuffer.h"
+#  include "jit/shared/IonAssemblerBuffer.h"
 #endif
 
 using js::Sprinter;
 using js::jit::Label;
 
 #if defined(JS_DISASM_ARM) || defined(JS_DISASM_ARM64)
-#define JS_DISASM_SUPPORTED
+#  define JS_DISASM_SUPPORTED
 #endif
 
 namespace js {

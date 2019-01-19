@@ -60,7 +60,7 @@
 #include "LogModulePrefWatcher.h"
 
 #ifdef MOZ_MEMORY
-#include "mozmemory.h"
+#  include "mozmemory.h"
 #endif
 
 using namespace mozilla;
@@ -68,8 +68,8 @@ using namespace mozilla;
 static LazyLogModule nsComponentManagerLog("nsComponentManager");
 
 #if 0
-#define SHOW_DENIED_ON_SHUTDOWN
-#define SHOW_CI_ON_EXISTING_SERVICE
+#  define SHOW_DENIED_ON_SHUTDOWN
+#  define SHOW_CI_ON_EXISTING_SERVICE
 #endif
 
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
@@ -249,7 +249,7 @@ class AllStaticModules {};
 
 #if defined(_MSC_VER) || (defined(__clang__) && defined(__MINGW32__))
 
-#pragma section(".kPStaticModules$A", read)
+#  pragma section(".kPStaticModules$A", read)
 NSMODULE_ASAN_BLACKLIST __declspec(allocate(".kPStaticModules$A"),
                                    dllexport) extern mozilla::Module
     const* const __start_kPStaticModules = nullptr;
@@ -258,28 +258,28 @@ mozilla::Module const* const* begin(AllStaticModules& _) {
   return &__start_kPStaticModules + 1;
 }
 
-#pragma section(".kPStaticModules$Z", read)
+#  pragma section(".kPStaticModules$Z", read)
 NSMODULE_ASAN_BLACKLIST __declspec(allocate(".kPStaticModules$Z"),
                                    dllexport) extern mozilla::Module
     const* const __stop_kPStaticModules = nullptr;
 
 #else
 
-#if defined(__ELF__) || (defined(_WIN32) && defined(__GNUC__))
+#  if defined(__ELF__) || (defined(_WIN32) && defined(__GNUC__))
 
 extern "C" mozilla::Module const* const __start_kPStaticModules;
 extern "C" mozilla::Module const* const __stop_kPStaticModules;
 
-#elif defined(__MACH__)
+#  elif defined(__MACH__)
 
 extern mozilla::Module const* const __start_kPStaticModules __asm(
     "section$start$__DATA$.kPStaticModules");
 extern mozilla::Module const* const __stop_kPStaticModules __asm(
     "section$end$__DATA$.kPStaticModules");
 
-#else
-#error Do not know how to find NSModules.
-#endif
+#  else
+#    error Do not know how to find NSModules.
+#  endif
 
 mozilla::Module const* const* begin(AllStaticModules& _) {
   return &__start_kPStaticModules;

@@ -5,18 +5,18 @@
 
 #include "AudioNodeEngineNEON.h"
 #if defined(_MSC_VER) && defined(_M_ARM64) && !defined(__clang__)
-#include <arm64_neon.h>
+#  include <arm64_neon.h>
 #else
-#include <arm_neon.h>
+#  include <arm_neon.h>
 #endif
 
 //#ifdef DEBUG
 #if 0  // see bug 921099
-#define ASSERT_ALIGNED(ptr)                                     \
-  MOZ_ASSERT((((uintptr_t)ptr + 15) & ~0x0F) == (uintptr_t)ptr, \
-             #ptr " has to be aligned 16-bytes aligned.");
+#  define ASSERT_ALIGNED(ptr)                                     \
+    MOZ_ASSERT((((uintptr_t)ptr + 15) & ~0x0F) == (uintptr_t)ptr, \
+               #ptr " has to be aligned 16-bytes aligned.");
 #else
-#define ASSERT_ALIGNED(ptr)
+#  define ASSERT_ALIGNED(ptr)
 #endif
 
 #define ADDRESS_OF(array, index) ((float32_t*)&array[index])

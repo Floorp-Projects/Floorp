@@ -39,11 +39,11 @@
 #include "nsIFile.h"
 
 #ifdef XP_WIN
-#include "nsLocalFileWin.h"
+#  include "nsLocalFileWin.h"
 #elif defined(XP_UNIX)
-#include "nsLocalFileUnix.h"
+#  include "nsLocalFileUnix.h"
 #else
-#error NOT_IMPLEMENTED
+#  error NOT_IMPLEMENTED
 #endif
 
 #define NSRESULT_FOR_RETURN(ret) (((ret) < 0) ? NSRESULT_FOR_ERRNO() : NS_OK)

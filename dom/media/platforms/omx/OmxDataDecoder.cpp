@@ -15,8 +15,8 @@
 #include "mozilla/IntegerPrintfMacros.h"
 
 #ifdef LOG
-#undef LOG
-#undef LOGL
+#  undef LOG
+#  undef LOGL
 #endif
 
 #define LOG(arg, ...)                                                  \

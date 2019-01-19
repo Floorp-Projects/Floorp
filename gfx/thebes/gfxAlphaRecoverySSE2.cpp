@@ -21,7 +21,7 @@ static uint32_t greenMaski[] __attribute__((aligned(16))) = {
 static uint32_t alphaMaski[] __attribute__((aligned(16))) = {
     0xff000000, 0xff000000, 0xff000000, 0xff000000};
 #elif defined(__SUNPRO_CC) && (defined(__i386) || defined(__x86_64__))
-#pragma align 16(greenMaski, alphaMaski)
+#  pragma align 16(greenMaski, alphaMaski)
 static uint32_t greenMaski[] = {0x0000ff00, 0x0000ff00, 0x0000ff00, 0x0000ff00};
 static uint32_t alphaMaski[] = {0xff000000, 0xff000000, 0xff000000, 0xff000000};
 #endif
