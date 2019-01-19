@@ -880,15 +880,11 @@ function parseVueScript(code) {
 }
 
 function parseConsoleScript(text, opts) {
-  try {
-    return _parse(text, {
-      plugins: ["objectRestSpread"],
-      ...opts,
-      allowAwaitOutsideFunction: true
-    });
-  } catch (e) {
-    return null;
-  }
+  return _parse(text, {
+    plugins: ["objectRestSpread"],
+    ...opts,
+    allowAwaitOutsideFunction: true
+  });
 }
 
 function parseScript(text, opts) {
@@ -23037,7 +23033,8 @@ function locationKey(start) {
   return `${start.line}:${start.column}`;
 }
 
-function mapOriginalExpression(expression, ast, mappings) {
+function mapOriginalExpression(expression, mappings) {
+  const ast = (0, _ast.parseConsoleScript)(expression);
   const scopes = (0, _getScopes.buildScopeList)(ast, "");
   let shouldUpdate = false;
 
@@ -23501,8 +23498,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = mapExpression;
 
-var _ast = __webpack_require__(1375);
-
 var _mapOriginalExpression = __webpack_require__(3613);
 
 var _mapOriginalExpression2 = _interopRequireDefault(_mapOriginalExpression);
@@ -23517,10 +23512,6 @@ var _mapAwaitExpression2 = _interopRequireDefault(_mapAwaitExpression);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 function mapExpression(expression, mappings, bindings, shouldMapBindings = true, shouldMapAwait = true) {
   const mapped = {
     await: false,
@@ -23528,23 +23519,22 @@ function mapExpression(expression, mappings, bindings, shouldMapBindings = true,
     originalExpression: false
   };
 
-  const ast = (0, _ast.parseConsoleScript)(expression);
   try {
-    if (mappings && ast) {
+    if (mappings) {
       const beforeOriginalExpression = expression;
-      expression = (0, _mapOriginalExpression2.default)(expression, ast, mappings);
+      expression = (0, _mapOriginalExpression2.default)(expression, mappings);
       mapped.originalExpression = beforeOriginalExpression !== expression;
     }
 
-    if (shouldMapBindings && ast) {
+    if (shouldMapBindings) {
       const beforeBindings = expression;
-      expression = (0, _mapBindings2.default)(expression, ast, bindings);
+      expression = (0, _mapBindings2.default)(expression, bindings);
       mapped.bindings = beforeBindings !== expression;
     }
 
     if (shouldMapAwait) {
       const beforeAwait = expression;
-      expression = (0, _mapAwaitExpression2.default)(expression, ast);
+      expression = (0, _mapAwaitExpression2.default)(expression);
       mapped.await = beforeAwait !== expression;
     }
   } catch (e) {
@@ -23555,7 +23545,9 @@ function mapExpression(expression, mappings, bindings, shouldMapBindings = true,
     expression,
     mapped
   };
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /***/ }),
 
@@ -23570,6 +23562,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = mapExpressionBindings;
 
+var _ast = __webpack_require__(1375);
+
 var _helpers = __webpack_require__(1411);
 
 var _generator = __webpack_require__(2365);
@@ -23583,6 +23577,10 @@ var t = _interopRequireWildcard(_types);
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function getAssignmentTarget(node, bindings) {
   if (t.isObjectPattern(node)) {
@@ -23626,10 +23624,6 @@ function getAssignmentTarget(node, bindings) {
 
 // translates new bindings `var a = 3` into `self.a = 3`
 // and existing bindings `var a = 3` into `a = 3` for re-assignments
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 function globalizeDeclaration(node, bindings) {
   return node.declarations.map(declaration => t.expressionStatement(t.assignmentExpression("=", getAssignmentTarget(declaration.id, bindings), declaration.init)));
 }
@@ -23654,7 +23648,9 @@ function replaceNode(ancestors, node) {
   }
 }
 
-function mapExpressionBindings(expression, ast, bindings = []) {
+function mapExpressionBindings(expression, bindings = []) {
+  const ast = (0, _ast.parseConsoleScript)(expression);
+
   let isMapped = false;
   let shouldUpdate = true;
 
@@ -44375,13 +44371,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function hasTopLevelAwait(ast) {
+function hasTopLevelAwait(expression) {
+  const ast = (0, _ast.parseConsoleScript)(expression);
   const hasAwait = (0, _ast.hasNode)(ast, (node, ancestors, b) => t.isAwaitExpression(node) && (0, _helpers.isTopLevel)(ancestors));
 
-  return hasAwait;
+  return hasAwait && ast;
 }
 
-function wrapExpressionFromAst(ast) {
+function wrapExpression(ast) {
   const statements = ast.program.body;
   const lastStatement = statements[statements.length - 1];
   const body = statements.slice(0, -1).concat(t.returnStatement(lastStatement.expression));
@@ -44391,25 +44388,13 @@ function wrapExpressionFromAst(ast) {
   return (0, _generator2.default)(newAst).code;
 }
 
-function mapTopLevelAwait(expression, ast) {
-  if (!ast) {
-    // If there's no ast this means the expression is malformed. And if the
-    // expression contains the await keyword, we still want to wrap it in an
-    // async iife in order to get a meaningful message (without this, the
-    // engine will throw an Error stating that await keywords are only valid
-    // in async functions and generators).
-    if (expression.includes("await ")) {
-      return `(async () => { ${expression} })();`;
-    }
-
-    return expression;
+function mapTopLevelAwait(expression) {
+  const ast = hasTopLevelAwait(expression);
+  if (ast) {
+    return wrapExpression(ast);
   }
 
-  if (!hasTopLevelAwait(ast)) {
-    return expression;
-  }
-
-  return wrapExpressionFromAst(ast);
+  return expression;
 }
 
 /***/ }),

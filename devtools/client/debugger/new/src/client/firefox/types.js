@@ -371,8 +371,7 @@ export type ThreadClient = {
   _parent: TabClient,
   actor: ActorId,
   request: (payload: Object) => Promise<*>,
-  url: string,
-  setEventListenerBreakpoints: (string[]) => void
+  url: string
 };
 
 /**

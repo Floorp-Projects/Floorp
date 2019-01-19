@@ -6,7 +6,8 @@
   margin-inline-end: 5px;
 }
 
-.source-icon {
+.source-icon,
+.source-icon svg {
   width: 15px;
   height: 15px;
 }

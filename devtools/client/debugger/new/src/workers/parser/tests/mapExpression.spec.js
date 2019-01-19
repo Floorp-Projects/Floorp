@@ -12,8 +12,7 @@ function test({
   bindings,
   mappings,
   shouldMapExpression,
-  expectedMapped,
-  parseExpression = true
+  expectedMapped
 }) {
   const res = mapExpression(
     expression,
@@ -21,17 +20,11 @@ function test({
     bindings,
     shouldMapExpression
   );
-
-  if (parseExpression) {
-    expect(
-      format(res.expression, {
-        parser: "babylon"
-      })
-    ).toEqual(format(newExpression, { parser: "babylon" }));
-  } else {
-    expect(res.expression).toEqual(newExpression);
-  }
-
+  expect(
+    format(res.expression, {
+      parser: "babylon"
+    })
+  ).toEqual(format(newExpression, { parser: "babylon" }));
   expect(res.mapped).toEqual(expectedMapped);
 }
 
@@ -298,20 +291,6 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
-    },
-    {
-      name: "await (with SyntaxError)",
-      expression: "await new Promise())",
-      newExpression: formatAwait("await new Promise())"),
-      parseExpression: false,
-      bindings: [],
-      mappings: {},
-      shouldMapExpression: true,
-      expectedMapped: {
-        await: true,
-        bindings: false,
         originalExpression: false
       }
     },

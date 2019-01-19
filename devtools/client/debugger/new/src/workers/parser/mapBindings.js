@@ -4,6 +4,7 @@
 
 // @flow
 
+import { parseConsoleScript } from "./utils/ast";
 import { isTopLevel } from "./utils/helpers";
 
 import generate from "@babel/generator";
@@ -91,9 +92,10 @@ function replaceNode(ancestors, node) {
 
 export default function mapExpressionBindings(
   expression: string,
-  ast?: Object,
   bindings: string[] = []
 ): string {
+  const ast = parseConsoleScript(expression);
+
   let isMapped = false;
   let shouldUpdate = true;
 

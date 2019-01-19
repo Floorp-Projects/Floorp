@@ -22,7 +22,6 @@ import { formatKeyShortcut } from "../../utils/text";
 
 import Outline from "./Outline";
 import SourcesTree from "./SourcesTree";
-import AccessibleImage from "../shared/AccessibleImage";
 
 import type { SourcesMapByThread } from "../../reducers/types";
 import type { SelectedPrimaryPaneTabType } from "../../selectors";
@@ -43,7 +42,6 @@ type Props = {
   setPrimaryPaneTab: typeof actions.setPrimaryPaneTab,
   setActiveSearch: typeof actions.setActiveSearch,
   closeActiveSearch: typeof actions.closeActiveSearch,
-  clearProjectDirectoryRoot: typeof actions.clearProjectDirectoryRoot,
   threads: Thread[]
 };
 
@@ -100,30 +98,6 @@ class PrimaryPanes extends Component<Props, State> {
     ];
   }
 
-  renderProjectRootHeader() {
-    const { projectRoot } = this.props;
-
-    if (!projectRoot) {
-      return null;
-    }
-
-    const rootLabel = projectRoot.split("/").pop();
-
-    return (
-      <div key="root" className="sources-clear-root-container">
-        <button
-          className="sources-clear-root"
-          onClick={() => this.props.clearProjectDirectoryRoot()}
-          title={L10N.getStr("removeDirectoryRoot.label")}
-        >
-          <AccessibleImage className="home" />
-          <AccessibleImage className="breadcrumb" />
-          <span className="sources-clear-root-label">{rootLabel}</span>
-        </button>
-      </div>
-    );
-  }
-
   renderThreadSources() {
     return this.props.threads.map(({ actor }) => (
       <SourcesTree thread={actor} key={actor} />
@@ -149,10 +123,7 @@ class PrimaryPanes extends Component<Props, State> {
           })}
           hasFocusableContent
         >
-          <div>
-            {this.renderProjectRootHeader()}
-            {this.renderThreadSources()}
-          </div>
+          <div>{this.renderThreadSources()}</div>
           <Outline
             alphabetizeOutline={this.state.alphabetizeOutline}
             onAlphabetizeClick={this.onAlphabetizeClick}
@@ -176,8 +147,7 @@ const connector = connect(
   {
     setPrimaryPaneTab: actions.setPrimaryPaneTab,
     setActiveSearch: actions.setActiveSearch,
-    closeActiveSearch: actions.closeActiveSearch,
-    clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot
+    closeActiveSearch: actions.closeActiveSearch
   }
 );
 

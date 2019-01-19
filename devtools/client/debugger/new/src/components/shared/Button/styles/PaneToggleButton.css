@@ -6,7 +6,10 @@
   transform: translate(0, 0px);
   transition: transform 0.25s ease-in-out;
   padding: 5px;
-  height: inherit;
+}
+
+.toggle-button .togglePanes {
+  vertical-align: -2px;
 }
 
 .toggle-button svg {

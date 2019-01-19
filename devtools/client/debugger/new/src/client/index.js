@@ -41,11 +41,10 @@ async function loadInitialState() {
   const pendingBreakpoints = await asyncStore.pendingBreakpoints;
   const tabs = await asyncStore.tabs;
   const xhrBreakpoints = await asyncStore.xhrBreakpoints;
-  const eventListenerBreakpoints = await asyncStore.eventListenerBreakpoints;
 
   const breakpoints = initialBreakpointsState(xhrBreakpoints);
 
-  return { pendingBreakpoints, tabs, breakpoints, eventListenerBreakpoints };
+  return { pendingBreakpoints, tabs, breakpoints };
 }
 
 function getClient(connection: any) {

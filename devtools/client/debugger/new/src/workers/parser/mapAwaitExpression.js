@@ -7,19 +7,20 @@
 import generate from "@babel/generator";
 import * as t from "@babel/types";
 
-import { hasNode } from "./utils/ast";
+import { parseConsoleScript, hasNode } from "./utils/ast";
 import { isTopLevel } from "./utils/helpers";
 
-function hasTopLevelAwait(ast: Object): boolean {
+function hasTopLevelAwait(expression: string) {
+  const ast = parseConsoleScript(expression);
   const hasAwait = hasNode(
     ast,
     (node, ancestors, b) => t.isAwaitExpression(node) && isTopLevel(ancestors)
   );
 
-  return hasAwait;
+  return hasAwait && ast;
 }
 
-function wrapExpressionFromAst(ast): string {
+function wrapExpression(ast) {
   const statements = ast.program.body;
   const lastStatement = statements[statements.length - 1];
   const body = statements
@@ -36,26 +37,11 @@ function wrapExpressionFromAst(ast): string {
   return generate(newAst).code;
 }
 
-export default function mapTopLevelAwait(
-  expression: string,
-  ast?: Object
-): string {
-  if (!ast) {
-    // If there's no ast this means the expression is malformed. And if the
-    // expression contains the await keyword, we still want to wrap it in an
-    // async iife in order to get a meaningful message (without this, the
-    // engine will throw an Error stating that await keywords are only valid
-    // in async functions and generators).
-    if (expression.includes("await ")) {
-      return `(async () => { ${expression} })();`;
-    }
-
-    return expression;
+export default function mapTopLevelAwait(expression: string) {
+  const ast = hasTopLevelAwait(expression);
+  if (ast) {
+    return wrapExpression(ast);
   }
 
-  if (!hasTopLevelAwait(ast)) {
-    return expression;
-  }
-
-  return wrapExpressionFromAst(ast);
+  return expression;
 }

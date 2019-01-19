@@ -6,11 +6,12 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import classNames from "classnames";
-
-import { getLibraryFromUrl } from "../../../utils/pause/frames";
-
+import Svg from "../../shared/Svg";
+import {
+  getLibraryFromUrl,
+  formatDisplayName
+} from "../../../utils/pause/frames";
 import FrameMenu from "./FrameMenu";
-import AccessibleImage from "../../shared/AccessibleImage";
 
 import "./Group.css";
 
@@ -19,19 +20,17 @@ import FrameComponent from "./Frame";
 import type { LocalFrame } from "./types";
 import Badge from "../../shared/Badge";
 
-type FrameLocationProps = { frame: LocalFrame, expanded: boolean };
-function FrameLocation({ frame, expanded }: FrameLocationProps) {
+type FrameLocationProps = { frame: LocalFrame };
+function FrameLocation({ frame }: FrameLocationProps) {
   const library = frame.library || getLibraryFromUrl(frame);
   if (!library) {
     return null;
   }
 
-  const arrowClassName = classNames("arrow", { expanded });
   return (
-    <span className="group-description">
-      <AccessibleImage className={arrowClassName} />
-      <AccessibleImage className={`annotation-logo ${library.toLowerCase()}`} />
-      <span className="group-description-name">{library}</span>
+    <span className="location">
+      {library}
+      <Svg name={library.toLowerCase()} className="annotation-logo" />
     </span>
   );
 }
@@ -131,7 +130,8 @@ export default class Group extends Component<Props, State> {
     const { l10n } = this.context;
 
     const frame = this.props.group[0];
-    const expanded = this.state.expanded;
+    const displayName = formatDisplayName(frame, undefined, l10n);
+
     const l10NEntry = this.state.expanded
       ? "callStack.group.collapseTooltip"
       : "callStack.group.expandTooltip";
@@ -145,8 +145,9 @@ export default class Group extends Component<Props, State> {
         tabIndex={0}
         title={title}
       >
-        <FrameLocation frame={frame} expanded={expanded} />
+        <span className="title">{displayName}</span>
         <Badge>{this.props.group.length}</Badge>
+        <FrameLocation frame={frame} />
       </li>
     );
   }

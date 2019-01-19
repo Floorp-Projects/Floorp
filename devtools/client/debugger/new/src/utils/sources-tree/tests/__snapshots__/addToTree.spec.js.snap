@@ -75,24 +75,3 @@ exports[`sources-tree addToTree supports data URLs 1`] = `
     - data:text/html,<script>console.log(123)</script> path=data:text/html,<script>console.log(123)</script> source_id=server1.conn13.child1/39 
 "
 `;
-
-exports[`sources-tree addToTree uses debuggeeUrl as default 1`] = `
-" - root path= 
-  - localhost:4242 path=localhost:4242 
-    - components path=localhost:4242/components 
-      - Header.js path=localhost:4242/components/Header.js source_id=undefined 
-      - TodoItem.js path=localhost:4242/components/TodoItem.js source_id=undefined 
-      - TodoTextInput.js path=localhost:4242/components/TodoTextInput.js source_id=undefined 
-    - reducers path=localhost:4242/reducers 
-      - index.js path=localhost:4242/reducers/index.js source_id=undefined 
-    - index.js path=localhost:4242/index.js source_id=undefined 
-  - resource://gre path=resource://gre 
-    - modules path=resource://gre/modules 
-      - ExtensionContent.jsm path=resource://gre/modules/ExtensionContent.jsm source_id=undefined 
-  - voz37vlg5.codesandbox.io path=voz37vlg5.codesandbox.io 
-    - static path=voz37vlg5.codesandbox.io/static 
-      - js path=voz37vlg5.codesandbox.io/static/js 
-        - components path=voz37vlg5.codesandbox.io/static/js/components 
-          - TodoItem.js path=voz37vlg5.codesandbox.io/static/js/components/TodoItem.js source_id=undefined 
-"
-`;
