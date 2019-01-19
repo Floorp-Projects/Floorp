@@ -6,6 +6,6 @@
   -->
 
 <resources>
-    <string name="mozac_feature_customtabs_exit_button">Return to previous app</string>
-    <string name="mozac_feature_customtabs_share_link">Share link</string>
+    <string name="mozac_support_ktx_menu_share_with">Share with…</string>
+    <string name="mozac_support_ktx_share_dialog_title">Share via</string>
 </resources>

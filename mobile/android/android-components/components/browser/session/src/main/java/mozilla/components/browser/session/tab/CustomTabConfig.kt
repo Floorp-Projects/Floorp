@@ -112,7 +112,7 @@ class CustomTabConfig internal constructor(
                 options.add(ACTION_BUTTON_OPTION)
             }
 
-            val showShareMenuItem = intent.getBooleanExtra(EXTRA_DEFAULT_SHARE_MENU_ITEM, true)
+            val showShareMenuItem = intent.getBooleanExtra(EXTRA_DEFAULT_SHARE_MENU_ITEM, false)
             if (showShareMenuItem) {
                 options.add(SHARE_MENU_ITEM_OPTION)
             }

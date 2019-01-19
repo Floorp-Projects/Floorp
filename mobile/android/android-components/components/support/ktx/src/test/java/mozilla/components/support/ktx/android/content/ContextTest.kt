@@ -7,10 +7,16 @@ package mozilla.components.support.ktx.android.content
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.ActivityManager
 import android.content.Context
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import mozilla.components.support.test.argumentCaptor
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows
@@ -62,5 +68,18 @@ class ContextTest {
         assertEquals(
                 context.isPermissionGranted(WRITE_EXTERNAL_STORAGE),
                 context.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED)
+    }
+
+    @Test
+    fun `share invokes startActivity`() {
+        val context = spy(RuntimeEnvironment.application)
+        val argCaptor = argumentCaptor<Intent>()
+
+        val result = context.share("https://mozilla.org")
+
+        verify(context).startActivity(argCaptor.capture())
+
+        assertTrue(result)
+        assertEquals(FLAG_ACTIVITY_NEW_TASK, argCaptor.firstValue.flags)
     }
 }

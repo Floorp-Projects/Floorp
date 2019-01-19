@@ -7,9 +7,13 @@
 package mozilla.components.feature.customtabs
 
 import android.graphics.Color
+import android.widget.FrameLayout
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -149,6 +153,47 @@ class CustomTabsToolbarFeatureTest {
         feature.initialize(session)
 
         verify(feature).addCloseButton(null)
+    }
+
+    @Test
+    fun `initialize calls addShareButton`() {
+        val session: Session = mock()
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val config: CustomTabConfig = mock()
+        `when`(session.customTabConfig).thenReturn(config)
+        `when`(session.url).thenReturn("https://mozilla.org")
+
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
+
+        feature.initialize(session)
+
+        verify(feature, never()).addShareButton(session)
+
+        // Show share menu only if config.showShareMenuItem has true
+        `when`(config.showShareMenuItem).thenReturn(true)
+
+        feature.initialize(session)
+
+        verify(feature).addShareButton(session)
+    }
+
+    @Test
+    fun `share button uses custom share listener`() {
+        val session: Session = mock()
+        val toolbar = spy(BrowserToolbar(RuntimeEnvironment.application))
+        val captor = argumentCaptor<Toolbar.ActionButton>()
+        var clicked = false
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", { clicked = true }) {})
+
+        `when`(session.customTabConfig).thenReturn(mock())
+
+        feature.addShareButton(session)
+
+        verify(toolbar).addBrowserAction(captor.capture())
+
+        val button = captor.firstValue.createView(FrameLayout(RuntimeEnvironment.application))
+        button.performClick()
+        assertTrue(clicked)
     }
 
     @Test
