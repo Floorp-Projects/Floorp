@@ -192,6 +192,10 @@ projects:
     path: components/support/utils
     description: 'A collection of generic helper classes.'
     publish: true
+  support-rustlog:
+    path: components/support/rustlog
+    description: 'A bridge allowing log messages from Rust code to be sent to the log system in support-base'
+    publish: true
   lib-crash:
     path: components/lib/crash
     description: 'A generic crash reporter library that can report crashes to multiple services.'

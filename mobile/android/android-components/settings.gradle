@@ -67,6 +67,7 @@ if (localProperties != null) {
                 substitute module('org.mozilla.fxaclient:fxaclient') with project(':fxa-client-library')
                 substitute module('org.mozilla.sync15:logins') with project(':logins-library')
                 substitute module('org.mozilla.places:places') with project(':places-library')
+                substitute module('org.mozilla.appservices:rustlog') with project(':rustlog-library')
             }
         }
 

@@ -29,9 +29,7 @@ object Versions {
     const val sentry = "1.7.14"
     const val okhttp = "3.12.1"
 
-    const val mozilla_fxa = "0.13.3"
-    const val mozilla_sync_logins = "0.13.3"
-    const val mozilla_places = "0.13.3"
+    const val mozilla_appservices = "0.14.0"
     const val servo = "0.0.1.20181017.aa95911"
 }
 
@@ -71,9 +69,10 @@ object Dependencies {
     const val tools_lintapi = "com.android.tools.lint:lint-api:${Versions.lint}"
     const val tools_linttests = "com.android.tools.lint:lint-tests:${Versions.lint}"
 
-    const val mozilla_fxa = "org.mozilla.fxaclient:fxaclient:${Versions.mozilla_fxa}"
-    const val mozilla_sync_logins = "org.mozilla.sync15:logins:${Versions.mozilla_sync_logins}"
-    const val mozilla_places = "org.mozilla.places:places:${Versions.mozilla_places}"
+    const val mozilla_fxa = "org.mozilla.fxaclient:fxaclient:${Versions.mozilla_appservices}"
+    const val mozilla_sync_logins = "org.mozilla.sync15:logins:${Versions.mozilla_appservices}"
+    const val mozilla_places = "org.mozilla.places:places:${Versions.mozilla_appservices}"
+    const val mozilla_rustlog = "org.mozilla.appservices:rustlog:${Versions.mozilla_appservices}"
     const val mozilla_servo = "org.mozilla.servoview:servoview-armv7:${Versions.servo}"
 
     const val thirdparty_okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"

@@ -23,7 +23,8 @@ permalink: /changelog/
         customTabsToolbarFeature
       )
     }
-  ```
+    ```
+
 * **feature-awesomebar**
   * Added ability to show one item per search suggestion ([#1779](https://github.com/mozilla-mobile/android-components/issues/1779))
   * Added ability to define custom hooks to be invoked when editing starts or is completed.
@@ -37,6 +38,30 @@ permalink: /changelog/
 
 * **browser-engine-system**
   * Preventing JavaScript `confirm()` and `prompt()` until providing proper implementation #1816.
+
+* **support-rustlog**
+  * 🆕 New component: This component allows consumers of [megazorded](https://mozilla.github.io/application-services/docs/applications/consuming-megazord-libraries.html) Rust libraries produced by application-services to redirect their log output to the base component's log system as follows:
+  ```kotlin
+  import mozilla.components.support.rustlog.RustLog
+  import mozilla.components.support.base.log.Log
+  // In onCreate, any time after MyMegazordClass.init()
+  RustLog.enable()
+  // Note: By default this is enabled at level DEBUG, which can be adjusted.
+  // (It is recommended you do this for performance if you adjust
+  // `Log.logLevel`).
+  RustLog.setMaxLevel(Log.Priority.INFO)
+  // You can also enable "trace logs", which may include PII
+  // (but can assist debugging) as follows. It is recommended
+  // you not do this in builds you distribute to users.
+  RustLog.setMaxLevel(Log.Priority.DEBUG, true)
+  ```
+  * This is pointless to do when not using a megazord.
+    * Megazording is required due to each dynamically loaded Rust library having its own internal/private version of the Rust logging framework. When megazording, this is still true, but there's only a single dynamically loaded library, and so it's redirected properly. (This could probably be worked around, but it would take a great effort, and given that we expect most production use of these libraries will be using megazords, we accepted this limitation)
+    * This would be very annoying during initial development (and debugging the sample apps), so by default, we'll log (directly, e.g. not through the base component logger) to logcat when not megazorded.
+  * Note that you must call `MyMegazordClass.init()` *before* any uses of this class.
+
+* Mozilla App Services library updated to 0.14.0. See [release notes](https://github.com/mozilla/application-services/releases/tag/v0.14.0) for details.
+  * Important: Users consuming megazords must also update the application-services gradle plugin to version 0.3.0.
 
 # 0.39.0
 
