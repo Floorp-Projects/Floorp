@@ -4,7 +4,6 @@
 
 package org.mozilla.samples.sync.logins
 
-import android.content.Context
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
@@ -19,19 +18,25 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.SyncError
 import mozilla.components.feature.sync.FirefoxSyncFeature
+import mozilla.components.service.fxa.FxaAccountManager
+import mozilla.components.service.fxa.AccountObserver
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
+import mozilla.components.service.fxa.FirefoxAccountShaped
 import mozilla.components.service.fxa.FxaException
+import mozilla.components.service.fxa.Profile
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import mozilla.components.service.sync.logins.SyncUnlockInfo
+import mozilla.components.support.base.log.Log
+import mozilla.components.support.base.log.sink.AndroidLogSink
 import java.io.File
 import kotlin.coroutines.CoroutineContext
 
-open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
-    private var scopes: Array<String> = arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
-    private var wantsKeys: Boolean = true
+const val CLIENT_ID = "3c49430b43dfba77"
+const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
 
+open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
     private val loginsStoreName: String = "placesLogins"
     private val loginsStore by lazy {
         SyncableLoginsStore(
@@ -56,20 +61,23 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     private lateinit var adapter: ArrayAdapter<String>
     private lateinit var activityContext: MainActivity
     private lateinit var account: FirefoxAccount
+    private val accountManager by lazy {
+        FxaAccountManager(
+            applicationContext,
+            Config.release(CLIENT_ID, REDIRECT_URL),
+            arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
+        )
+    }
 
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
-
-    companion object {
-        const val CLIENT_ID = "3c49430b43dfba77"
-        const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/3c49430b43dfba77"
-        const val FXA_STATE_PREFS_KEY = "fxaAppState"
-        const val FXA_STATE_KEY = "fxaState"
-    }
+    get() = Dispatchers.Main + job
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Log.addSink(AndroidLogSink())
+
         setContentView(R.layout.activity_main)
         job = Job()
 
@@ -77,23 +85,36 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1)
         listView.adapter = adapter
         activityContext = this
-        account = getAuthenticatedAccount() ?: FirefoxAccount(Config.release(CLIENT_ID, REDIRECT_URL))
+
+        accountManager.register(accountObserver, owner = this, autoPause = true)
+
+        launch { accountManager.init().await() }
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
-                val url = account.beginOAuthFlow(scopes, wantsKeys).await()
-                openWebView(url)
+                val authUrl = try {
+                    accountManager.beginAuthentication().await()
+                } catch (error: FxaException) {
+                    Toast.makeText(this@MainActivity, "Account auth error: $error", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                openWebView(authUrl)
             }
         }
     }
 
-    private fun getAuthenticatedAccount(): FirefoxAccount? {
-        val savedJSON = getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).getString(FXA_STATE_KEY, "")
-        return savedJSON?.let {
-            try {
-                FirefoxAccount.fromJSONString(it)
-            } catch (e: FxaException) {
-                null
+    private val accountObserver = object : AccountObserver {
+        override fun onLoggedOut() {}
+
+        override fun onAuthenticated(account: FirefoxAccountShaped) {
+            launch { syncLogins(account) }
+        }
+
+        override fun onProfileUpdated(profile: Profile) {}
+
+        override fun onError(error: Exception) {
+            launch {
+                Toast.makeText(this@MainActivity, "Account error: $error", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -114,19 +135,12 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     override fun onLoginComplete(code: String, state: String, fragment: LoginFragment) {
         launch {
-            account.completeOAuthFlow(code, state).await()
-            account.toJSONString().let {
-                getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE)
-                        .edit().putString(FXA_STATE_KEY, it).apply()
-            }
-
-            syncLogins(account)
-
+            accountManager.finishAuthentication(code, state).await()
             supportFragmentManager?.popBackStack()
         }
     }
 
-    private suspend fun syncLogins(account: FirefoxAccount) {
+    private suspend fun syncLogins(account: FirefoxAccountShaped) {
         val syncResult = CoroutineScope(Dispatchers.IO + job).async {
             featureSync.sync(account)
         }.await()
@@ -136,9 +150,9 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         val loginsSyncStatus = syncResult[loginsStoreName]!!.status
         if (loginsSyncStatus is SyncError) {
             Toast.makeText(
-                this@MainActivity,
-                "Logins sync error: " + loginsSyncStatus.exception.localizedMessage,
-                Toast.LENGTH_SHORT
+                    this@MainActivity,
+                    "Logins sync error: " + loginsSyncStatus.exception.localizedMessage,
+                    Toast.LENGTH_SHORT
             ).show()
         } else {
             Toast.makeText(this@MainActivity, "Logins sync success", Toast.LENGTH_SHORT).show()

@@ -16,15 +16,21 @@ import org.mozilla.fxaclient.internal.FxaException.Unauthorized as Unauthorized
 /**
  * Facilitates testing consumers of FirefoxAccount.
  */
-interface FirefoxAccountShaped {
+interface FirefoxAccountShaped : AutoCloseable {
+    fun beginOAuthFlow(scopes: Array<String>, wantsKeys: Boolean): Deferred<String>
+    fun beginPairingFlow(pairingUrl: String, scopes: Array<String>): Deferred<String>
+    fun getProfile(ignoreCache: Boolean): Deferred<Profile>
+    fun getProfile(): Deferred<Profile>
+    fun completeOAuthFlow(code: String, state: String): Deferred<Unit>
     fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo>
     fun getTokenServerEndpointURL(): String
+    fun toJSONString(): String
 }
 
 /**
  * FirefoxAccount represents the authentication state of a client.
  */
-class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : AutoCloseable, FirefoxAccountShaped {
+class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : FirefoxAccountShaped {
 
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO) + job
@@ -50,11 +56,11 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      * @param wantsKeys Fetch keys for end-to-end encryption of data from Mozilla-hosted services
      * @return Deferred<String> that resolves to the flow URL when complete
      */
-    fun beginOAuthFlow(scopes: Array<String>, wantsKeys: Boolean): Deferred<String> {
+    override fun beginOAuthFlow(scopes: Array<String>, wantsKeys: Boolean): Deferred<String> {
         return scope.async { inner.beginOAuthFlow(scopes, wantsKeys) }
     }
 
-    fun beginPairingFlow(pairingUrl: String, scopes: Array<String>): Deferred<String> {
+    override fun beginPairingFlow(pairingUrl: String, scopes: Array<String>): Deferred<String> {
         return scope.async { inner.beginPairingFlow(pairingUrl, scopes) }
     }
 
@@ -67,7 +73,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      * @throws Unauthorized We couldn't find any suitable access token to make that call.
      * The caller should then start the OAuth Flow again with the "profile" scope.
      */
-    fun getProfile(ignoreCache: Boolean): Deferred<Profile> {
+    override fun getProfile(ignoreCache: Boolean): Deferred<Profile> {
         return scope.async {
             val internalProfile = inner.getProfile(ignoreCache)
             Profile(
@@ -87,7 +93,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      * @throws Unauthorized We couldn't find any suitable access token to make that call.
      * The caller should then start the OAuth Flow again with the "profile" scope.
      */
-    fun getProfile(): Deferred<Profile> = getProfile(false)
+    override fun getProfile(): Deferred<Profile> = getProfile(false)
 
     /**
      * Fetches the token server endpoint, for authentication using the SAML bearer flow.
@@ -109,7 +115,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      *
      * Modifies the FirefoxAccount state.
      */
-    fun completeOAuthFlow(code: String, state: String): Deferred<Unit> {
+    override fun completeOAuthFlow(code: String, state: String): Deferred<Unit> {
         return scope.async { inner.completeOAuthFlow(code, state) }
     }
 
@@ -135,7 +141,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      *
      * @return String containing the authentication details in JSON format
      */
-    fun toJSONString(): String = inner.toJSONString()
+    override fun toJSONString(): String = inner.toJSONString()
 
     companion object {
         /**
