@@ -1086,12 +1086,10 @@ void nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams) {
 }
 
 bool nsSVGIntegrationUtils::BuildWebRenderFilters(
-    nsIFrame* aFilteredFrame,
-    const mozilla::LayoutDeviceIntRect& aPreFilterBounds,
-    nsTArray<mozilla::wr::FilterOp>& aWrFilters,
-    mozilla::LayoutDeviceIntRect& aPostFilterBounds) {
-  return nsFilterInstance::BuildWebRenderFilters(
-      aFilteredFrame, aPreFilterBounds, aWrFilters, aPostFilterBounds);
+    nsIFrame* aFilteredFrame, nsTArray<mozilla::wr::FilterOp>& aWrFilters,
+    Maybe<nsRect>& aPostFilterClip) {
+  return nsFilterInstance::BuildWebRenderFilters(aFilteredFrame, aWrFilters,
+                                                 aPostFilterClip);
 }
 
 class PaintFrameCallback : public gfxDrawingCallback {
