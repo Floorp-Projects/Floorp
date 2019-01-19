@@ -1434,7 +1434,7 @@ class Extension extends ExtensionData {
    * @property {TabManager} tabManager
    */
 
-  static getBootstrapScope() {
+  static getBootstrapScope(id, file) {
     return new BootstrapScope();
   }
 
@@ -2050,7 +2050,7 @@ class Dictionary extends ExtensionData {
     this.startupData = addonData.startupData;
   }
 
-  static getBootstrapScope() {
+  static getBootstrapScope(id, file) {
     return new DictionaryBootstrapScope();
   }
 
@@ -2080,7 +2080,7 @@ class Langpack extends ExtensionData {
     this.manifestCacheKey = [addonData.id, addonData.version];
   }
 
-  static getBootstrapScope() {
+  static getBootstrapScope(id, file) {
     return new LangpackBootstrapScope();
   }
 
