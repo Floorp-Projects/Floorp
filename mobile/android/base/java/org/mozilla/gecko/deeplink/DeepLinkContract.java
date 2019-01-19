@@ -14,6 +14,7 @@ public class DeepLinkContract {
 
     public static final String LINK_FXA_SIGNIN = "fxa-signin";
 
+    public static final String LINK_OPEN = "open";
     public static final String LINK_DEFAULT_BROWSER = "default_browser";
     public static final String LINK_SAVE_AS_PDF = "save_as_pdf";
     public static final String LINK_BOOKMARK_LIST = "bookmark_list";
@@ -26,6 +27,8 @@ public class DeepLinkContract {
     public static final String LINK_PREFERENCES_NOTIFICATIONS = "preferences_notifications";
     public static final String LINK_PREFERENCES_ACCESSIBILITY = "preferences_accessibility";
     public static final String LINK_PREFERENCES_HOME = "preferences_home";
+
+    public static final String URL_PARAM = "url";
 
     public static final String ACCOUNTS_TOKEN_PARAM = "signin";
     public static final String ACCOUNTS_ENTRYPOINT_PARAM = "entrypoint";
