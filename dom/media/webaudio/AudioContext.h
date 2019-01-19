@@ -201,6 +201,12 @@ class AudioContext final : public DOMEventTargetHelper,
   already_AddRefed<Promise> Close(ErrorResult& aRv);
   IMPL_EVENT_HANDLER(statechange)
 
+  // These two functions are similar with Suspend() and Resume(), the difference
+  // is they are designed for calling from chrome side, not content side. eg.
+  // calling from inner window, so we won't need to return promise for caller.
+  void SuspendFromChrome();
+  void ResumeFromChrome();
+
   already_AddRefed<AudioBufferSourceNode> CreateBufferSource(ErrorResult& aRv);
 
   already_AddRefed<ConstantSourceNode> CreateConstantSource(ErrorResult& aRv);
@@ -379,6 +385,9 @@ class AudioContext final : public DOMEventTargetHelper,
   bool mIsDisconnecting;
   // This flag stores the value of previous status of `allowed-to-start`.
   bool mWasAllowedToStart;
+
+  // True if this AudioContext has been suspended by the page.
+  bool mSuspendedByContent;
 
   // These variables are used for telemetry, they're not reflect the actual
   // status of AudioContext, they are based on the "assumption" of enabling

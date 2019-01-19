@@ -7,9 +7,19 @@ var EXPORTED_SYMBOLS = ["CryptoUtils"];
 ChromeUtils.import("resource://services-common/observers.js");
 ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
+XPCOMUtils.defineLazyGetter(this, "textEncoder",
+  function() { return new TextEncoder(); }
+);
+
+/**
+ * A number of `Legacy` suffixed functions are exposed by CryptoUtils.
+ * They work with octet strings, which were used before Javascript
+ * got ArrayBuffer and friends.
+ */
 var CryptoUtils = {
-  xor: function xor(a, b) {
+  xor(a, b) {
     let bytes = [];
 
     if (a.length != b.length) {
@@ -25,19 +35,22 @@ var CryptoUtils = {
 
   /**
    * Generate a string of random bytes.
+   * @returns {String} Octet string
    */
-  generateRandomBytes: function generateRandomBytes(length) {
-    let rng = Cc["@mozilla.org/security/random-generator;1"]
-                .createInstance(Ci.nsIRandomGenerator);
-    let bytes = rng.generateRandomBytes(length);
-    return CommonUtils.byteArrayToString(bytes);
+  generateRandomBytesLegacy(length) {
+    let bytes = CryptoUtils.generateRandomBytes(length);
+    return CommonUtils.arrayBufferToByteString(bytes);
+  },
+
+  generateRandomBytes(length) {
+    return crypto.getRandomValues(new Uint8Array(length));
   },
 
   /**
    * UTF8-encode a message and hash it with the given hasher. Returns a
    * string containing bytes. The hasher is reset if it's an HMAC hasher.
    */
-  digestUTF8: function digestUTF8(message, hasher) {
+  digestUTF8(message, hasher) {
     let data = this._utf8Converter.convertToByteArray(message, {});
     hasher.update(data, data.length);
     let result = hasher.finish(false);
@@ -48,16 +61,18 @@ var CryptoUtils = {
   },
 
   /**
-   * Treat the given message as a bytes string and hash it with the given
-   * hasher. Returns a string containing bytes. The hasher is reset if it's
-   * an HMAC hasher.
+   * Treat the given message as a bytes string (if necessary) and hash it with
+   * the given hasher. Returns a string containing bytes.
+   * The hasher is reset if it's an HMAC hasher.
    */
-  digestBytes: function digestBytes(message, hasher) {
-    // No UTF-8 encoding for you, sunshine.
-    let bytes = new Uint8Array(message.length);
-    for (let i = 0; i < message.length; ++i) {
-      bytes[i] = message.charCodeAt(i) & 0xff;
+  digestBytes(bytes, hasher) {
+    if (typeof bytes == "string" || bytes instanceof String) {
+      bytes = CommonUtils.byteStringToArrayBuffer(bytes);
     }
+    return CryptoUtils.digestBytesArray(bytes, hasher);
+  },
+
+  digestBytesArray(bytes, hasher) {
     hasher.update(bytes, bytes.length);
     let result = hasher.finish(false);
     if (hasher instanceof Ci.nsICryptoHMAC) {
@@ -75,36 +90,6 @@ var CryptoUtils = {
   updateUTF8(message, hasher) {
     let bytes = this._utf8Converter.convertToByteArray(message, {});
     hasher.update(bytes, bytes.length);
-  },
-
-  /**
-   * UTF-8 encode a message and perform a SHA-1 over it.
-   *
-   * @param message
-   *        (string) Buffer to perform operation on. Should be a JS string.
-   *                 It is possible to pass in a string representing an array
-   *                 of bytes. But, you probably don't want to UTF-8 encode
-   *                 such data and thus should not be using this function.
-   *
-   * @return string
-   *         Raw bytes constituting SHA-1 hash. Value is a JS string. Each
-   *         character is the byte value for that offset. Returned string
-   *         always has .length == 20.
-   */
-  UTF8AndSHA1: function UTF8AndSHA1(message) {
-    let hasher = Cc["@mozilla.org/security/hash;1"]
-                 .createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.SHA1);
-
-    return CryptoUtils.digestUTF8(message, hasher);
-  },
-
-  sha1: function sha1(message) {
-    return CommonUtils.bytesAsHex(CryptoUtils.UTF8AndSHA1(message));
-  },
-
-  sha1Base32: function sha1Base32(message) {
-    return CommonUtils.encodeBase32(CryptoUtils.UTF8AndSHA1(message));
   },
 
   sha256(message) {
@@ -141,121 +126,84 @@ var CryptoUtils = {
   },
 
   /**
-   * HMAC-based Key Derivation (RFC 5869).
+   * @param {string} alg Hash algorithm (common values are SHA-1 or SHA-256)
+   * @param {string} key Key as an octet string.
+   * @param {string} data Data as an octet string.
    */
-  hkdf: function hkdf(ikm, xts, info, len) {
-    let h = CryptoUtils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256,
-                                       CryptoUtils.makeHMACKey(xts));
-    let prk = CryptoUtils.digestBytes(ikm, h);
-    return CryptoUtils.hkdfExpand(prk, info, len);
+  async hmacLegacy(alg, key, data) {
+    if (!key || !key.length) {
+      key = "\0";
+    }
+    data = CommonUtils.byteStringToArrayBuffer(data);
+    key = CommonUtils.byteStringToArrayBuffer(key);
+    const result = await CryptoUtils.hmac(alg, key, data);
+    return CommonUtils.arrayBufferToByteString(result);
   },
 
   /**
-   * HMAC-based Key Derivation Step 2 according to RFC 5869.
+   * @param {string} ikm IKM as an octet string.
+   * @param {string} salt Salt as an Hex string.
+   * @param {string} info Info as a regular string.
+   * @param {Number} len Desired output length in bytes.
    */
-  hkdfExpand: function hkdfExpand(prk, info, len) {
-    const BLOCKSIZE = 256 / 8;
-    let h = CryptoUtils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256,
-                                       CryptoUtils.makeHMACKey(prk));
-    let T = "";
-    let Tn = "";
-    let iterations = Math.ceil(len / BLOCKSIZE);
-    for (let i = 0; i < iterations; i++) {
-      Tn = CryptoUtils.digestBytes(Tn + info + String.fromCharCode(i + 1), h);
-      T += Tn;
-    }
-    return T.slice(0, len);
+  async hkdfLegacy(ikm, xts, info, len) {
+    ikm = CommonUtils.byteStringToArrayBuffer(ikm);
+    xts = CommonUtils.byteStringToArrayBuffer(xts);
+    info = textEncoder.encode(info);
+    const okm = await CryptoUtils.hkdf(ikm, xts, info, len);
+    return CommonUtils.arrayBufferToByteString(okm);
   },
 
   /**
-   * PBKDF2 implementation in Javascript.
-   *
-   * The arguments to this function correspond to items in
-   * PKCS #5, v2.0 pp. 9-10
-   *
-   * P: the passphrase, an octet string:              e.g., "secret phrase"
-   * S: the salt, an octet string:                    e.g., "DNXPzPpiwn"
-   * c: the number of iterations, a positive integer: e.g., 4096
-   * dkLen: the length in octets of the destination
-   *        key, a positive integer:                  e.g., 16
-   * hmacAlg: The algorithm to use for hmac
-   * hmacLen: The hmac length
-   *
-   * The default value of 20 for hmacLen is appropriate for SHA1.  For SHA256,
-   * hmacLen should be 32.
-   *
-   * The output is an octet string of length dkLen, which you
-   * can encode as you wish.
+   * @param {String} alg Hash algorithm (common values are SHA-1 or SHA-256)
+   * @param {ArrayBuffer} key
+   * @param {ArrayBuffer} data
+   * @param {Number} len Desired output length in bytes.
+   * @returns {Uint8Array}
    */
-  pbkdf2Generate: function pbkdf2Generate(P, S, c, dkLen,
-                       hmacAlg = Ci.nsICryptoHMAC.SHA1, hmacLen = 20) {
+  async hmac(alg, key, data) {
+    const hmacKey = await crypto.subtle.importKey("raw", key, {name: "HMAC", hash: alg}, false, ["sign"]);
+    const result = await crypto.subtle.sign("HMAC", hmacKey, data);
+    return new Uint8Array(result);
+  },
 
-    // We don't have a default in the algo itself, as NSS does.
-    if (!dkLen) {
-      throw new Error("dkLen should be defined");
-    }
+  /**
+   * @param {ArrayBuffer} ikm
+   * @param {ArrayBuffer} salt
+   * @param {ArrayBuffer} info
+   * @param {Number} len Desired output length in bytes.
+   * @returns {Uint8Array}
+   */
+  async hkdf(ikm, salt, info, len) {
+    const key = await crypto.subtle.importKey("raw", ikm, {name: "HKDF"}, false, ["deriveBits"]);
+    const okm = await crypto.subtle.deriveBits({
+        name: "HKDF",
+        hash: "SHA-256",
+        salt,
+        info,
+    }, key, len * 8);
+    return new Uint8Array(okm);
+  },
 
-    function F(S, c, i, h) {
-
-      function XOR(a, b, isA) {
-        if (a.length != b.length) {
-          return false;
-        }
-
-        let val = [];
-        for (let i = 0; i < a.length; i++) {
-          if (isA) {
-            val[i] = a[i] ^ b[i];
-          } else {
-            val[i] = a.charCodeAt(i) ^ b.charCodeAt(i);
-          }
-        }
-
-        return val;
-      }
-
-      let ret;
-      let U = [];
-
-      /* Encode i into 4 octets: _INT */
-      let I = [];
-      I[0] = String.fromCharCode((i >> 24) & 0xff);
-      I[1] = String.fromCharCode((i >> 16) & 0xff);
-      I[2] = String.fromCharCode((i >> 8) & 0xff);
-      I[3] = String.fromCharCode(i & 0xff);
-
-      U[0] = CryptoUtils.digestBytes(S + I.join(""), h);
-      for (let j = 1; j < c; j++) {
-        U[j] = CryptoUtils.digestBytes(U[j - 1], h);
-      }
-
-      ret = U[0];
-      for (let j = 1; j < c; j++) {
-        ret = CommonUtils.byteArrayToString(XOR(ret, U[j]));
-      }
-
-      return ret;
-    }
-
-    let l = Math.ceil(dkLen / hmacLen);
-    let r = dkLen - ((l - 1) * hmacLen);
-
-    // Reuse the key and the hasher. Remaking them 4096 times is 'spensive.
-    let h = CryptoUtils.makeHMACHasher(hmacAlg,
-                                       CryptoUtils.makeHMACKey(P));
-
-    let T = [];
-    for (let i = 0; i < l;) {
-      T[i] = F(S, c, ++i, h);
-    }
-
-    let ret = "";
-    for (let i = 0; i < l - 1;) {
-      ret += T[i++];
-    }
-    ret += T[l - 1].substr(0, r);
-
-    return ret;
+  /**
+   * PBKDF2 password stretching with SHA-256 hmac.
+   *
+   * @param {string} passphrase Passphrase as an octet string.
+   * @param {string} salt Salt as an octet string.
+   * @param {string} iterations Number of iterations, a positive integer.
+   * @param {string} len Desired output length in bytes.
+   */
+  async pbkdf2Generate(passphrase, salt, iterations, len) {
+    passphrase = CommonUtils.byteStringToArrayBuffer(passphrase);
+    salt = CommonUtils.byteStringToArrayBuffer(salt);
+    const key = await crypto.subtle.importKey("raw", passphrase, {name: "PBKDF2"}, false, ["deriveBits"]);
+    const output = await crypto.subtle.deriveBits({
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt,
+        iterations,
+    }, key, len * 8);
+    return CommonUtils.arrayBufferToByteString(new Uint8Array(output));
   },
 
   /**
@@ -295,15 +243,14 @@ var CryptoUtils = {
    *           nonce - (string) Nonce value used.
    *           ts - (number) Integer seconds since Unix epoch that was used.
    */
-  computeHTTPMACSHA1: function computeHTTPMACSHA1(identifier, key, method,
-                                                  uri, extra) {
+  async computeHTTPMACSHA1(identifier, key, method, uri, extra) {
     let ts = (extra && extra.ts) ? extra.ts : Math.floor(Date.now() / 1000);
     let nonce_bytes = (extra && extra.nonce_bytes > 0) ? extra.nonce_bytes : 8;
 
     // We are allowed to use more than the Base64 alphabet if we want.
     let nonce = (extra && extra.nonce)
                 ? extra.nonce
-                : btoa(CryptoUtils.generateRandomBytes(nonce_bytes));
+                : btoa(CryptoUtils.generateRandomBytesLegacy(nonce_bytes));
 
     let host = uri.asciiHost;
     let port;
@@ -329,9 +276,7 @@ var CryptoUtils = {
                         port + "\n" +
                         ext + "\n";
 
-    let hasher = CryptoUtils.makeHMACHasher(Ci.nsICryptoHMAC.SHA1,
-                                            CryptoUtils.makeHMACKey(key));
-    let mac = CryptoUtils.digestBytes(requestString, hasher);
+    const mac = await CryptoUtils.hmacLegacy("SHA-1", key, requestString);
 
     function getHeader() {
       return CryptoUtils.getHTTPMACSHA1Header(this.identifier, this.ts,
@@ -406,7 +351,6 @@ var CryptoUtils = {
    *             All three keys are required:
    *             id - (string) key identifier
    *             key - (string) raw key bytes
-   *             algorithm - (string) which hash to use: "sha1" or "sha256"
    *           ext - (string) application-specific data, included in MAC
    *           localtimeOffsetMsec - (number) local clock offset (vs server)
    *           payload - (string) payload to include in hash, containing the
@@ -432,7 +376,7 @@ var CryptoUtils = {
    *                   for testing as this function will generate a
    *                   cryptographically secure random one if not defined.
    * @returns
-   *         (object) Contains results of operation. The object has the
+   *         Promise<Object> Contains results of operation. The object has the
    *         following keys:
    *           field - (string) HAWK header, to use in Authorization: header
    *           artifacts - (object) other generated values:
@@ -446,23 +390,11 @@ var CryptoUtils = {
    *             ext - (string) app-specific data
    *             MAC - (string) request MAC (base64)
    */
-  computeHAWK(uri, method, options) {
+  async computeHAWK(uri, method, options) {
     let credentials = options.credentials;
     let ts = options.ts || Math.floor(((options.now || Date.now()) +
                                        (options.localtimeOffsetMsec || 0))
                                       / 1000);
-
-    let hash_algo, hmac_algo;
-    if (credentials.algorithm == "sha1") {
-      hash_algo = Ci.nsICryptoHash.SHA1;
-      hmac_algo = Ci.nsICryptoHMAC.SHA1;
-    } else if (credentials.algorithm == "sha256") {
-      hash_algo = Ci.nsICryptoHash.SHA256;
-      hmac_algo = Ci.nsICryptoHMAC.SHA256;
-    } else {
-      throw new Error("Unsupported algorithm: " + credentials.algorithm);
-    }
-
     let port;
     if (uri.port != -1) {
       port = uri.port;
@@ -476,7 +408,7 @@ var CryptoUtils = {
 
     let artifacts = {
       ts,
-      nonce: options.nonce || btoa(CryptoUtils.generateRandomBytes(8)),
+      nonce: options.nonce || btoa(CryptoUtils.generateRandomBytesLegacy(8)),
       method: method.toUpperCase(),
       resource: uri.pathQueryRef, // This includes both path and search/queryarg.
       host: uri.asciiHost.toLowerCase(), // This includes punycoding.
@@ -489,18 +421,11 @@ var CryptoUtils = {
 
     if (!artifacts.hash && options.hasOwnProperty("payload")
         && options.payload) {
-      let hasher = Cc["@mozilla.org/security/hash;1"]
-                     .createInstance(Ci.nsICryptoHash);
-      hasher.init(hash_algo);
-      CryptoUtils.updateUTF8("hawk.1.payload\n", hasher);
-      CryptoUtils.updateUTF8(contentType + "\n", hasher);
-      CryptoUtils.updateUTF8(options.payload, hasher);
-      CryptoUtils.updateUTF8("\n", hasher);
-      let hash = hasher.finish(false);
+      const buffer = textEncoder.encode(`hawk.1.payload\n${contentType}\n${options.payload}\n`);
+      const hash = await crypto.subtle.digest("SHA-256", buffer);
       // HAWK specifies this .hash to use +/ (not _-) and include the
       // trailing "==" padding.
-      let hash_b64 = btoa(hash);
-      artifacts.hash = hash_b64;
+      artifacts.hash = ChromeUtils.base64URLEncode(hash, {pad: true}).replace(/-/g, "+").replace(/_/g, "/");
     }
 
     let requestString = ("hawk.1.header\n" +
@@ -516,9 +441,8 @@ var CryptoUtils = {
     }
     requestString += "\n";
 
-    let hasher = CryptoUtils.makeHMACHasher(hmac_algo,
-                                            CryptoUtils.makeHMACKey(credentials.key));
-    artifacts.mac = btoa(CryptoUtils.digestBytes(requestString, hasher));
+    const hash = await CryptoUtils.hmacLegacy("SHA-256", credentials.key, requestString);
+    artifacts.mac = btoa(hash);
     // The output MAC uses "+" and "/", and padded== .
 
     function escape(attribute) {

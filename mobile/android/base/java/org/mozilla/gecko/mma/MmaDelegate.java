@@ -12,7 +12,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Experiments;
@@ -94,7 +93,11 @@ public class MmaDelegate {
         // we gather the information here then pass to mmaHelper.init()
         // Note that generateUserAttribute always return a non null HashMap.
         final Map<String, Object> attributes = gatherUserAttributes(activity);
-        final String deviceId = getDeviceId(activity);
+        String deviceId = getDeviceId(activity);
+        if (deviceId == null) {
+            deviceId = UUID.randomUUID().toString();
+            setDeviceId(activity, deviceId);
+        }
         mmaHelper.setDeviceId(deviceId);
         PrefsHelper.setPref(GeckoPreferences.PREFS_MMA_DEVICE_ID, deviceId);
         // above two config setup required to be invoked before mmaHelper.init.
@@ -108,12 +111,7 @@ public class MmaDelegate {
         activityName = activity.getLocalClassName();
         notifyAboutPreviouslyInstalledPackages(activity);
 
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mmaHelper.listenOnceForVariableChanges(remoteVariablesListener);
-            }
-        });
+        ThreadUtils.postToUiThread(() -> mmaHelper.listenOnceForVariableChanges(remoteVariablesListener));
     }
 
     /**
@@ -283,18 +281,18 @@ public class MmaDelegate {
         return mmaHelper.getPanelConfig(context, panelConfigType, useLocalValues);
     }
 
-    private static String getDeviceId(Activity activity) {
+    public static String getDeviceId(Activity activity) {
         if (SwitchBoard.isInExperiment(activity, Experiments.LEANPLUM_DEBUG)) {
             return DEBUG_LEANPLUM_DEVICE_ID;
         }
 
         final SharedPreferences prefs = activity.getPreferences(Context.MODE_PRIVATE);
-        String deviceId = prefs.getString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
-        if (deviceId == null) {
-            deviceId = UUID.randomUUID().toString();
-            prefs.edit().putString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, deviceId).apply();
-        }
-        return deviceId;
+        return prefs.getString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
+    }
+
+    private static void setDeviceId(Activity activity, String deviceId) {
+        final SharedPreferences prefs = activity.getPreferences(Context.MODE_PRIVATE);
+        prefs.edit().putString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, deviceId).apply();
     }
 
     private static void registerInstalledPackagesReceiver(@NonNull final Activity activity) {

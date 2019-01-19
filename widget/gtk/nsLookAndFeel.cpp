@@ -692,6 +692,10 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
     case eIntID_GTKCSDTransparentBackground:
       aResult = nsWindow::TopLevelWindowUseARGBVisual();
       break;
+    case eIntID_GTKCSDReversedPlacement:
+      EnsureInit();
+      aResult = mCSDReversedPlacement;
+      break;
     case eIntID_PrefersReducedMotion: {
       GtkSettings* settings;
       gboolean enableAnimations;
@@ -1121,8 +1125,8 @@ void nsLookAndFeel::EnsureInit() {
   // as -moz-gtk* media features.
   WidgetNodeType buttonLayout[TOOLBAR_BUTTONS];
 
-  int activeButtons =
-      GetGtkHeaderBarButtonLayout(buttonLayout, TOOLBAR_BUTTONS);
+  int activeButtons = GetGtkHeaderBarButtonLayout(buttonLayout, TOOLBAR_BUTTONS,
+                                                  &mCSDReversedPlacement);
   for (int i = 0; i < activeButtons; i++) {
     switch (buttonLayout[i]) {
       case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:

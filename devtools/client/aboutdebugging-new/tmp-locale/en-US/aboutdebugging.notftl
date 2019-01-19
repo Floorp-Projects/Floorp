@@ -56,7 +56,6 @@ about-debugging-sidebar-runtime-item-name =
 about-debugging-sidebar-runtime-item-name-no-device =
   .title = { $displayName }
 
-
 # Temporary text displayed in a sidebar button to refresh USB devices. Temporary
 # UI, do not localize.
 about-debugging-refresh-usb-devices-button = Refresh devices
@@ -156,6 +155,9 @@ about-debugging-tmp-extension-remove-button = Remove
 # manifest.json .xpi and .zip should not be localized.
 # Note: this message is only displayed in Windows and Linux platforms.
 about-debugging-tmp-extension-install-message = Select manifest.json file or .xpi/.zip archive
+
+# This string is displayed as a message about the add-on having a temporaryID.
+about-debugging-tmp-extension-temporary-id = This WebExtension has a temporary ID. <a>Learn more</a>
 
 # Text of a link displayed for extensions in "runtime" pages.
 # Clicking on the link should open the manifest file in a new tab.

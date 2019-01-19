@@ -3006,12 +3006,12 @@ impl Renderer {
     fn handle_readback_composite(
         &mut self,
         draw_target: DrawTarget,
-        scissor_rect: Option<DeviceIntRect>,
+        uses_scissor: bool,
         source: &RenderTask,
         backdrop: &RenderTask,
         readback: &RenderTask,
     ) {
-        if scissor_rect.is_some() {
+        if uses_scissor {
             self.device.disable_scissor();
         }
 
@@ -3066,7 +3066,7 @@ impl Renderer {
         self.device.bind_draw_target(draw_target);
         self.device.reset_read_target();
 
-        if scissor_rect.is_some() {
+        if uses_scissor {
             self.device.enable_scissor();
         }
     }
@@ -3275,20 +3275,32 @@ impl Renderer {
 
         self.handle_scaling(&target.scalings, TextureSource::PrevPassColor, projection, stats);
 
+        // Small helper fn to iterate a regions list, also invoking the closure
+        // if there are no regions.
+        fn iterate_regions<F>(
+            regions: &[DeviceIntRect],
+            mut f: F,
+        ) where F: FnMut(Option<DeviceIntRect>) {
+            if regions.is_empty() {
+                f(None)
+            } else {
+                for region in regions {
+                    f(Some(*region))
+                }
+            }
+        }
+
         for alpha_batch_container in &target.alpha_batch_containers {
-            if let Some(scissor_rect) = alpha_batch_container.scissor_rect {
-                // Note: `framebuffer_target_rect` needs a Y-flip before going to GL
-                let rect = if draw_target.is_default() {
-                    let mut rect = scissor_rect
-                        .intersection(&framebuffer_target_rect.to_i32())
-                        .unwrap_or(DeviceIntRect::zero());
-                    rect.origin.y = draw_target.dimensions().height as i32 - rect.origin.y - rect.size.height;
-                    rect
-                } else {
-                    scissor_rect
-                };
+            let uses_scissor = alpha_batch_container.task_scissor_rect.is_some() ||
+                               !alpha_batch_container.regions.is_empty();
+
+            if uses_scissor {
                 self.device.enable_scissor();
-                self.device.set_scissor_rect(rect);
+                let scissor_rect = draw_target.build_scissor_rect(
+                    alpha_batch_container.task_scissor_rect,
+                    framebuffer_target_rect,
+                );
+                self.device.set_scissor_rect(scissor_rect)
             }
 
             if !alpha_batch_container.opaque_batches.is_empty() {
@@ -3315,11 +3327,25 @@ impl Renderer {
                         );
 
                     let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
-                    self.draw_instanced_batch(
-                        &batch.instances,
-                        VertexArrayKind::Primitive,
-                        &batch.key.textures,
-                        stats
+
+                    iterate_regions(
+                        &alpha_batch_container.regions,
+                        |region| {
+                            if let Some(region) = region {
+                                let scissor_rect = draw_target.build_scissor_rect(
+                                    Some(region),
+                                    framebuffer_target_rect,
+                                );
+                                self.device.set_scissor_rect(scissor_rect);
+                            }
+
+                            self.draw_instanced_batch(
+                                &batch.instances,
+                                VertexArrayKind::Primitive,
+                                &batch.key.textures,
+                                stats
+                            );
+                        }
                     );
                 }
 
@@ -3385,7 +3411,7 @@ impl Renderer {
                         debug_assert_eq!(batch.instances.len(), 1);
                         self.handle_readback_composite(
                             draw_target,
-                            alpha_batch_container.scissor_rect,
+                            uses_scissor,
                             &render_tasks[source_id],
                             &render_tasks[task_id],
                             &render_tasks[backdrop_id],
@@ -3393,30 +3419,46 @@ impl Renderer {
                     }
 
                     let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
-                    self.draw_instanced_batch(
-                        &batch.instances,
-                        VertexArrayKind::Primitive,
-                        &batch.key.textures,
-                        stats
+
+                    iterate_regions(
+                        &alpha_batch_container.regions,
+                        |region| {
+                            if let Some(region) = region {
+                                let scissor_rect = draw_target.build_scissor_rect(
+                                    Some(region),
+                                    framebuffer_target_rect,
+                                );
+                                self.device.set_scissor_rect(scissor_rect);
+                            }
+
+                            self.draw_instanced_batch(
+                                &batch.instances,
+                                VertexArrayKind::Primitive,
+                                &batch.key.textures,
+                                stats
+                            );
+
+                            if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
+                                self.set_blend_mode_subpixel_with_bg_color_pass1(framebuffer_kind);
+                                self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass1 as _);
+
+                                // When drawing the 2nd and 3rd passes, we know that the VAO, textures etc
+                                // are all set up from the previous draw_instanced_batch call,
+                                // so just issue a draw call here to avoid re-uploading the
+                                // instances and re-binding textures etc.
+                                self.device
+                                    .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+
+                                self.set_blend_mode_subpixel_with_bg_color_pass2(framebuffer_kind);
+                                self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass2 as _);
+
+                                self.device
+                                    .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+                            }
+                        }
                     );
 
                     if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
-                        self.set_blend_mode_subpixel_with_bg_color_pass1(framebuffer_kind);
-                        self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass1 as _);
-
-                        // When drawing the 2nd and 3rd passes, we know that the VAO, textures etc
-                        // are all set up from the previous draw_instanced_batch call,
-                        // so just issue a draw call here to avoid re-uploading the
-                        // instances and re-binding textures etc.
-                        self.device
-                            .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
-
-                        self.set_blend_mode_subpixel_with_bg_color_pass2(framebuffer_kind);
-                        self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass2 as _);
-
-                        self.device
-                            .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
-
                         prev_blend_mode = BlendMode::None;
                     }
                 }
@@ -3426,7 +3468,7 @@ impl Renderer {
                 self.gpu_profile.finish_sampler(transparent_sampler);
             }
 
-            if alpha_batch_container.scissor_rect.is_some() {
+            if uses_scissor {
                 self.device.disable_scissor();
             }
 
@@ -5339,3 +5381,4 @@ enum FramebufferKind {
     Main,
     Other,
 }
+

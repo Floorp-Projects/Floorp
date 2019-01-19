@@ -15,15 +15,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1197901
   SimpleTest.waitForExplicitFinish();
   window.onload = function() {
     SimpleTest.waitForFocus(function() {
-      SpecialPowers.pushPrefEnv({"set": [['device.sensors.test.events', true]]},
-                                doTest); 
+      SpecialPowers.pushPrefEnv({"set": [["device.sensors.test.events", true]]},
+                                doTest);
       }, window);
-  }
+  };
 
   function doTest() {
     window.onmessage = function(event) {
       ok(event.data.result, event.data.message);
-    }
+    };
 
     // Only same-origin iframe should get the events.
     var xo = document.getElementById("cross-origin");
@@ -75,9 +75,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1197901
               SimpleTest.finish();
             }, 500);
           }, win2);
-        }
+        };
       }, win);
-    }
+    };
   }
 
   </script>

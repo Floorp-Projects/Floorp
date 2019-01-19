@@ -804,7 +804,8 @@ nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
     nsAutoCString strMarker;
     strMarker.AppendLiteral("A11y Event - ");
     strMarker.Append(strEventType);
-    profiler_add_marker(strMarker.get());
+    profiler_add_marker(strMarker.get(),
+                        js::ProfilingStackFrame::Category::OTHER);
   }
 #endif
 

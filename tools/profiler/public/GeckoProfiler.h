@@ -49,15 +49,17 @@
 #  define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, category, \
                                            ctx, flags)
 
-#  define PROFILER_ADD_MARKER(markerName)
-#  define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end, \
-                                      count, cache, timings, redirect)
+#define PROFILER_ADD_MARKER(markerName, category)
+#define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end, \
+                                    count, cache, timings, redirect)
 
-#  define DECLARE_DOCSHELL_AND_HISTORY_ID(docShell)
-#  define PROFILER_TRACING(category, markerName, kind)
-#  define PROFILER_TRACING_DOCSHELL(category, markerName, kind, docshell)
-#  define AUTO_PROFILER_TRACING(category, markerName)
-#  define AUTO_PROFILER_TRACING_DOCSHELL(category, markerName, docShell)
+#define DECLARE_DOCSHELL_AND_HISTORY_ID(docShell)
+#define PROFILER_TRACING(categoryString, markerName, category, kind)
+#define PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, kind, \
+                                  docshell)
+#define AUTO_PROFILER_TRACING(categoryString, markerName, category)
+#define AUTO_PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, \
+                                       docShell)
 
 #else  // !MOZ_GECKO_PROFILER
 
@@ -610,14 +612,21 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // aMarkerName is copied, so the caller does not need to ensure it lives for a
 // certain length of time. A no-op if the profiler is inactive or in privacy
 // mode.
-#  define PROFILER_ADD_MARKER(markerName) profiler_add_marker(markerName)
-void profiler_add_marker(const char* aMarkerName);
+
+#define PROFILER_ADD_MARKER(markerName, category) \
+  profiler_add_marker(markerName, js::ProfilingStackFrame::Category::category)
+
 void profiler_add_marker(const char* aMarkerName,
+                         js::ProfilingStackFrame::Category aCategory);
+void profiler_add_marker(const char* aMarkerName,
+                         js::ProfilingStackFrame::Category aCategory,
                          mozilla::UniquePtr<ProfilerMarkerPayload> aPayload);
+void profiler_add_js_marker(const char* aMarkerName);
 
 // Insert a marker in the profile timeline for a specified thread.
 void profiler_add_marker_for_thread(
-    int aThreadId, const char* aMarkerName,
+    int aThreadId, js::ProfilingStackFrame::Category aCategory,
+    const char* aMarkerName,
     mozilla::UniquePtr<ProfilerMarkerPayload> aPayload);
 
 enum class NetworkLoadType { LOAD_START, LOAD_STOP, LOAD_REDIRECT };
@@ -660,29 +669,40 @@ enum TracingKind {
 
 // Adds a tracing marker to the profile. A no-op if the profiler is inactive or
 // in privacy mode.
-#  define PROFILER_TRACING(category, markerName, kind) \
-    profiler_tracing(category, markerName, kind)
-#  define PROFILER_TRACING_DOCSHELL(category, markerName, kind, docShell) \
-    DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);                            \
-    profiler_tracing(category, markerName, kind, docShellId, docShellHistoryId)
+
+#define PROFILER_TRACING(categoryString, markerName, category, kind) \
+  profiler_tracing(categoryString, markerName,                       \
+                   js::ProfilingStackFrame::Category::category, kind)
+#define PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, kind, \
+                                  docShell)                                   \
+  DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);                                  \
+  profiler_tracing(categoryString, markerName,                                \
+                   js::ProfilingStackFrame::Category::category, kind,         \
+                   docShellId, docShellHistoryId)
+
 void profiler_tracing(
-    const char* aCategory, const char* aMarkerName, TracingKind aKind,
+    const char* aCategoryString, const char* aMarkerName,
+    js::ProfilingStackFrame::Category aCategory, TracingKind aKind,
     const mozilla::Maybe<nsID>& aDocShellId = mozilla::Nothing(),
     const mozilla::Maybe<uint32_t>& aDocShellHistoryId = mozilla::Nothing());
 void profiler_tracing(
-    const char* aCategory, const char* aMarkerName, TracingKind aKind,
+    const char* aCategoryString, const char* aMarkerName,
+    js::ProfilingStackFrame::Category aCategory, TracingKind aKind,
     UniqueProfilerBacktrace aCause,
     const mozilla::Maybe<nsID>& aDocShellId = mozilla::Nothing(),
     const mozilla::Maybe<uint32_t>& aDocShellHistoryId = mozilla::Nothing());
 
 // Adds a START/END pair of tracing markers.
-#  define AUTO_PROFILER_TRACING(category, markerName) \
-    mozilla::AutoProfilerTracing PROFILER_RAII(       \
-        category, markerName, mozilla::Nothing(), mozilla::Nothing())
-#  define AUTO_PROFILER_TRACING_DOCSHELL(category, markerName, docShell) \
-    DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);                           \
-    mozilla::AutoProfilerTracing PROFILER_RAII(category, markerName,     \
-                                               docShellId, docShellHistoryId)
+#define AUTO_PROFILER_TRACING(categoryString, markerName, category)            \
+  mozilla::AutoProfilerTracing PROFILER_RAII(                                  \
+      categoryString, markerName, js::ProfilingStackFrame::Category::category, \
+      mozilla::Nothing(), mozilla::Nothing())
+#define AUTO_PROFILER_TRACING_DOCSHELL(categoryString, markerName, category,   \
+                                       docShell)                               \
+  DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);                                   \
+  mozilla::AutoProfilerTracing PROFILER_RAII(                                  \
+      categoryString, markerName, js::ProfilingStackFrame::Category::category, \
+      docShellId, docShellHistoryId)
 
 //---------------------------------------------------------------------------
 // Output profiles
@@ -848,42 +868,48 @@ class MOZ_RAII AutoProfilerLabel {
 
 class MOZ_RAII AutoProfilerTracing {
  public:
-  AutoProfilerTracing(const char* aCategory, const char* aMarkerName,
+  AutoProfilerTracing(const char* aCategoryString, const char* aMarkerName,
+                      js::ProfilingStackFrame::Category aCategory,
                       const mozilla::Maybe<nsID>& aDocShellId,
                       const mozilla::Maybe<uint32_t>& aDocShellHistoryId
                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mCategory(aCategory),
+      : mCategoryString(aCategoryString),
         mMarkerName(aMarkerName),
+        mCategory(aCategory),
         mDocShellId(aDocShellId),
         mDocShellHistoryId(aDocShellHistoryId) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_tracing(mCategory, mMarkerName, TRACING_INTERVAL_START,
-                     mDocShellId, mDocShellHistoryId);
+    profiler_tracing(mCategoryString, mMarkerName, aCategory,
+                     TRACING_INTERVAL_START, mDocShellId, mDocShellHistoryId);
   }
 
-  AutoProfilerTracing(const char* aCategory, const char* aMarkerName,
+  AutoProfilerTracing(const char* aCategoryString, const char* aMarkerName,
+                      js::ProfilingStackFrame::Category aCategory,
                       UniqueProfilerBacktrace aBacktrace,
                       const mozilla::Maybe<nsID>& aDocShellId,
                       const mozilla::Maybe<uint32_t>& aDocShellHistoryId
                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mCategory(aCategory),
+      : mCategoryString(aCategoryString),
         mMarkerName(aMarkerName),
+        mCategory(aCategory),
         mDocShellId(aDocShellId),
         mDocShellHistoryId(aDocShellHistoryId) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_tracing(mCategory, mMarkerName, TRACING_INTERVAL_START,
-                     std::move(aBacktrace), mDocShellId, mDocShellHistoryId);
+    profiler_tracing(mCategoryString, mMarkerName, aCategory,
+                     TRACING_INTERVAL_START, std::move(aBacktrace), mDocShellId,
+                     mDocShellHistoryId);
   }
 
   ~AutoProfilerTracing() {
-    profiler_tracing(mCategory, mMarkerName, TRACING_INTERVAL_END, mDocShellId,
-                     mDocShellHistoryId);
+    profiler_tracing(mCategoryString, mMarkerName, mCategory,
+                     TRACING_INTERVAL_END, mDocShellId, mDocShellHistoryId);
   }
 
  protected:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-  const char* mCategory;
+  const char* mCategoryString;
   const char* mMarkerName;
+  const js::ProfilingStackFrame::Category mCategory;
   const mozilla::Maybe<nsID> mDocShellId;
   const mozilla::Maybe<uint32_t> mDocShellHistoryId;
 };

@@ -272,10 +272,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
                                                 int32_t aVertical) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  virtual MOZ_MUST_USE nsresult
-  BeginMoveDrag(mozilla::WidgetMouseEvent* aEvent) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   virtual nsresult ActivateNativeMenuItemAt(
       const nsAString& indexString) override {
     return NS_ERROR_NOT_IMPLEMENTED;

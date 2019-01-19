@@ -155,5 +155,11 @@ describe("<Search>", () => {
       assert.isUserEventAction(action);
       assert.propertyVal(action.data, "event", "SEARCH_HANDOFF");
     });
+    it("should not accept drop events", () => {
+      const wrapper = shallowWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} />);
+      const preventDefault = sinon.spy();
+      wrapper.find(".fake-editable").simulate("drop", {preventDefault});
+      assert.calledOnce(preventDefault);
+    });
   });
 });

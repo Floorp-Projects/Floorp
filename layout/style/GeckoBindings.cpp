@@ -106,16 +106,22 @@ static const nsFont* ThreadSafeGetDefaultFontHelper(
   bool needsCache = false;
   const nsFont* retval;
 
+  auto GetDefaultFont = [&](bool* aNeedsToCache) {
+    auto* prefs =
+        aPresContext->Document()->GetFontPrefsForLang(aLanguage, aNeedsToCache);
+    return prefs ? prefs->GetDefaultFont(aGenericId) : nullptr;
+  };
+
   {
     AutoReadLock guard(*sServoFFILock);
-    retval = aPresContext->GetDefaultFont(aGenericId, aLanguage, &needsCache);
+    retval = GetDefaultFont(&needsCache);
   }
   if (!needsCache) {
     return retval;
   }
   {
     AutoWriteLock guard(*sServoFFILock);
-    retval = aPresContext->GetDefaultFont(aGenericId, aLanguage, nullptr);
+    retval = GetDefaultFont(nullptr);
   }
   return retval;
 }

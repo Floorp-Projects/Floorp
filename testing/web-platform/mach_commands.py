@@ -77,11 +77,11 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             if kwargs["host_cert_path"] is None:
                 kwargs["host_cert_path"] = os.path.join(cert_root, "web-platform.test.pem")
 
-        if kwargs["log_mach_screenshot"] is None:
-            kwargs["log_mach_screenshot"] = True
-
         if kwargs["lsan_dir"] is None:
             kwargs["lsan_dir"] = os.path.join(self.topsrcdir, "build", "sanitizers")
+
+        if kwargs["reftest_screenshot"] is None:
+            kwargs["reftest_screenshot"] = "fail"
 
         kwargs["capture_stdio"] = True
 
@@ -369,6 +369,9 @@ class MachCommands(MachCommandBase):
 
         wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
         wpt_runner = WebPlatformTestsRunner(wpt_setup)
+
+        if params["log_mach_screenshot"] is None:
+            params["log_mach_screenshot"] = True
 
         logger = wpt_runner.setup_logging(**params)
 

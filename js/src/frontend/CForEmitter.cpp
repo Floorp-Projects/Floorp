@@ -167,8 +167,7 @@ bool CForEmitter::emitCond(const Maybe<uint32_t>& forPos,
         if (!bce_->newSrcNote2(SRC_SETLINE, ptrdiff_t(lineNum))) {
           return false;
         }
-        bce_->current->currentLine = lineNum;
-        bce_->current->lastColumn = 0;
+        bce_->setCurrentLine(lineNum);
       }
     }
   }

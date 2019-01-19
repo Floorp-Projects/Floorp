@@ -6243,6 +6243,7 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
     this.onSearchHandoffPaste = this.onSearchHandoffPaste.bind(this);
     this.onInputMount = this.onInputMount.bind(this);
     this.onSearchHandoffButtonMount = this.onSearchHandoffButtonMount.bind(this);
+    this.cancelEvent = this.cancelEvent.bind(this);
   }
 
   handleEvent(event) {
@@ -6296,6 +6297,10 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
     }
     event.preventDefault();
     this.doSearchHandoff(event.clipboardData.getData("Text"));
+  }
+
+  cancelEvent(event) {
+    event.preventDefault();
   }
 
   componentWillMount() {
@@ -6412,7 +6417,7 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
             { className: "fake-textbox" },
             this.props.intl.formatMessage({ id: "search_web_placeholder" })
           ),
-          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: "fake-editable", tabIndex: "-1", "aria-hidden": "true", contentEditable: "" }),
+          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: "fake-editable", tabIndex: "-1", "aria-hidden": "true", contentEditable: "", onDrop: this.cancelEvent }),
           react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: "fake-caret" })
         ),
         react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
@@ -7027,17 +7032,19 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
   }
 
   onLinkClick(event) {
-    this.props.dispatch(Actions["actionCreators"].UserEvent({
-      event: "CLICK",
-      source: this.props.type.toUpperCase(),
-      action_position: this.props.index
-    }));
+    if (this.props.dispatch) {
+      this.props.dispatch(Actions["actionCreators"].UserEvent({
+        event: "CLICK",
+        source: this.props.type.toUpperCase(),
+        action_position: this.props.index
+      }));
 
-    this.props.dispatch(Actions["actionCreators"].ImpressionStats({
-      source: this.props.type.toUpperCase(),
-      click: 0,
-      tiles: [{ id: this.props.id, pos: this.props.index }]
-    }));
+      this.props.dispatch(Actions["actionCreators"].ImpressionStats({
+        source: this.props.type.toUpperCase(),
+        click: 0,
+        tiles: [{ id: this.props.id, pos: this.props.index }]
+      }));
+    }
   }
 
   render() {
@@ -7105,7 +7112,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
 }
 
 CardGrid_CardGrid.defaultProps = {
-  style: `border`,
+  border: `border`,
   items: 4 // Number of stories to display
 };
 // EXTERNAL MODULE: external "ReactRedux"
@@ -7123,17 +7130,19 @@ class Hero_Hero extends external_React_default.a.PureComponent {
   }
 
   onLinkClick(event) {
-    this.props.dispatch(Actions["actionCreators"].UserEvent({
-      event: "CLICK",
-      source: this.props.type.toUpperCase(),
-      action_position: 0
-    }));
+    if (this.props.dispatch) {
+      this.props.dispatch(Actions["actionCreators"].UserEvent({
+        event: "CLICK",
+        source: this.props.type.toUpperCase(),
+        action_position: 0
+      }));
 
-    this.props.dispatch(Actions["actionCreators"].ImpressionStats({
-      source: this.props.type.toUpperCase(),
-      click: 0,
-      tiles: [{ id: this.heroRec.id, pos: 0 }]
-    }));
+      this.props.dispatch(Actions["actionCreators"].ImpressionStats({
+        source: this.props.type.toUpperCase(),
+        click: 0,
+        tiles: [{ id: this.heroRec.id, pos: 0 }]
+      }));
+    }
   }
 
   render() {
@@ -7170,7 +7179,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
       ),
       external_React_default.a.createElement(
         "div",
-        { className: `ds-hero ds-hero-${this.props.style}` },
+        { className: `ds-hero ds-hero-${this.props.border}` },
         external_React_default.a.createElement(
           "a",
           { href: heroRec.url, className: "wrapper", onClick: this.onLinkClick },
@@ -7211,7 +7220,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
 
 Hero_Hero.defaultProps = {
   data: {},
-  style: `border`,
+  border: `border`,
   items: 1 // Number of stories to display
 };
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule.jsx
@@ -7231,39 +7240,63 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 
 
+
 /**
  * @note exported for testing only
  */
-function ListItem(props) {
+class List_ListItem extends external_React_default.a.PureComponent {
   // TODO performance: get feeds to send appropriately sized images rather
   // than waiting longer and scaling down on client?
-  return external_React_default.a.createElement(
-    "li",
-    { className: "ds-list-item" },
-    external_React_default.a.createElement(
-      "a",
-      { className: "ds-list-item-link", href: props.url },
+  constructor(props) {
+    super(props);
+    this.onLinkClick = this.onLinkClick.bind(this);
+  }
+
+  onLinkClick(event) {
+    if (this.props.dispatch) {
+      this.props.dispatch(Actions["actionCreators"].UserEvent({
+        event: "CLICK",
+        source: this.props.type.toUpperCase(),
+        action_position: this.props.index
+      }));
+
+      this.props.dispatch(Actions["actionCreators"].ImpressionStats({
+        source: this.props.type.toUpperCase(),
+        click: 0,
+        tiles: [{ id: this.props.id, pos: this.props.index }]
+      }));
+    }
+  }
+
+  render() {
+    return external_React_default.a.createElement(
+      "li",
+      { className: "ds-list-item" },
       external_React_default.a.createElement(
-        "div",
-        { className: "ds-list-item-text" },
+        "a",
+        { className: "ds-list-item-link", href: this.props.url, onClick: this.onLinkClick },
         external_React_default.a.createElement(
           "div",
-          { className: "ds-list-item-title" },
+          { className: "ds-list-item-text" },
           external_React_default.a.createElement(
-            "b",
-            null,
-            props.title
+            "div",
+            { className: "ds-list-item-title" },
+            external_React_default.a.createElement(
+              "b",
+              null,
+              this.props.title
+            )
+          ),
+          external_React_default.a.createElement(
+            "div",
+            { className: "ds-list-item-info" },
+            `${this.props.domain} · TODO:Topic`
           )
         ),
-        external_React_default.a.createElement(
-          "div",
-          { className: "ds-list-item-info" },
-          `${props.domain} · TODO:Topic`
-        )
-      ),
-      external_React_default.a.createElement("img", { className: "ds-list-image", src: props.image_src })
-    )
-  );
+        external_React_default.a.createElement("img", { className: "ds-list-image", src: this.props.image_src })
+      )
+    );
+  }
 }
 
 /**
@@ -7278,7 +7311,7 @@ function _List(props) {
 
   const recs = feed.data.recommendations;
 
-  let recMarkup = recs.slice(0, props.items).map((rec, index) => external_React_default.a.createElement(ListItem, _extends({}, rec, { key: `ds-list-item-$index` })));
+  let recMarkup = recs.slice(0, props.items).map((rec, index) => external_React_default.a.createElement(List_ListItem, _extends({}, rec, { key: `ds-list-item-${index}`, index: index, type: props.type, dispatch: props.dispatch })));
 
   return external_React_default.a.createElement(
     "div",
@@ -7467,19 +7500,6 @@ function createStructuredSelector(selectors) {
 // CONCATENATED MODULE: ./content-src/lib/selectLayoutRender.js
 
 
-function calculateSpocs(component, spocs) {
-  let spocIndex = 0;
-  return component.spocs.positions.map(position => {
-    const rickRoll = Math.random();
-    if (spocs.data.spocs[spocIndex] && rickRoll <= component.spocs.probability) {
-      return Object.assign({}, position, {
-        result: spocs.data.spocs[spocIndex++]
-      });
-    }
-    return position;
-  });
-}
-
 const selectLayoutRender = createSelector(
 // Selects layout, feeds, spocs so that we only recompute if
 // any of these values change.
@@ -7488,6 +7508,20 @@ const selectLayoutRender = createSelector(
 // Adds data to each component from feeds. This function only re-runs if one of the inputs change.
 // TODO: calculate spocs
 function layoutRender(layout, feeds, spocs) {
+  let spocIndex = 0;
+
+  function calculateSpocs(component) {
+    return component.spocs.positions.map(position => {
+      const rickRoll = Math.random();
+      if (spocs.data.spocs[spocIndex] && rickRoll <= component.spocs.probability) {
+        return Object.assign({}, position, {
+          result: spocs.data.spocs[spocIndex++]
+        });
+      }
+      return position;
+    });
+  }
+
   return layout.map(row => Object.assign({}, row, {
 
     // Loops through all the components and adds a .data property
@@ -7500,7 +7534,7 @@ function layoutRender(layout, feeds, spocs) {
       // Calculate if we should display a spoc or not.
       if (component.spocs && spocs.data.spocs && spocs.data.spocs.length) {
         component.spocs = Object.assign({}, component.spocs, {
-          positions: calculateSpocs(component, spocs)
+          positions: calculateSpocs(component)
         });
       }
 
@@ -7528,6 +7562,7 @@ class TopSites_TopSites extends external_React_default.a.PureComponent {
 
 const TopSites_TopSites_TopSites = Object(external_ReactRedux_["connect"])(state => ({ TopSites: state.TopSites }))(TopSites_TopSites);
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamBase/DiscoveryStreamBase.jsx
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isAllowedCSS", function() { return isAllowedCSS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_DiscoveryStreamBase", function() { return DiscoveryStreamBase_DiscoveryStreamBase; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DiscoveryStreamBase", function() { return DiscoveryStreamBase; });
 
@@ -7542,51 +7577,164 @@ const TopSites_TopSites_TopSites = Object(external_ReactRedux_["connect"])(state
 
 
 // According to the Pocket API endpoint specs, `component.properties.items` is a required property with following values:
-//   - Lists 1-5 items
+//   - List 1-6 items
 //   - Hero 1-5 items
 //   - CardGrid 1-8 items
 // To enforce that, we define various maximium items for individual components as an extra check.
 // Note that these values are subject to the future changes of the specs.
 const MAX_ROWS_HERO = 5;
-// const MAX_ROWS_LISTS = 5;
-// const MAX_ROWS_CARDGRID = 8;
+const MAX_ROWS_LIST = 6;
+const MAX_ROWS_CARDGRID = 8;
+
+const ALLOWED_CSS_URL_PREFIXES = ["chrome://", "resource://", "https://img-getpocket.cdn.mozilla.net/"];
+const DUMMY_CSS_SELECTOR = "DUMMY#CSS.SELECTOR";
+
+/**
+ * Validate a CSS declaration. The values are assumed to be normalized by CSSOM.
+ */
+function isAllowedCSS(property, value) {
+  // Bug 1454823: INTERNAL properties, e.g., -moz-context-properties, are
+  // exposed but their values aren't resulting in getting nothing. Fortunately,
+  // we don't care about validating the values of the current set of properties.
+  if (value === undefined) {
+    return true;
+  }
+
+  // Make sure all urls are of the allowed protocols/prefixes
+  const urls = value.match(/url\("[^"]+"\)/g);
+  return !urls || urls.every(url => ALLOWED_CSS_URL_PREFIXES.some(prefix => url.slice(5).startsWith(prefix)));
+}
+
+function maybeInjectSpocs(data, spocs) {
+  if (!data || !spocs || !spocs.positions || !spocs.positions.length) {
+    return data;
+  }
+
+  const recommendations = [...data.recommendations];
+
+  for (let position of spocs.positions) {
+    const { result } = position;
+    if (result) {
+      // Insert spoc into the desired index.
+      recommendations.splice(position.index, 0, result);
+    }
+  }
+
+  return Object.assign({}, data, {
+    recommendations
+  });
+}
 
 class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onStyleMount = this.onStyleMount.bind(this);
+  }
+
+  extractRows(component, limit) {
+    if (component.data && component.data.recommendations) {
+      const items = Math.min(limit, component.properties.items || component.data.recommendations.length);
+      return component.data.recommendations.slice(0, items);
+    }
+
+    return [];
+  }
+
+  onStyleMount(style) {
+    // Unmounting style gets rid of old styles, so nothing else to do
+    if (!style) {
+      return;
+    }
+
+    const { sheet } = style;
+    const styles = JSON.parse(style.dataset.styles);
+    styles.forEach((row, rowIndex) => {
+      row.forEach((component, componentIndex) => {
+        // Nothing to do without optional styles overrides
+        if (!component) {
+          return;
+        }
+
+        Object.entries(component).forEach(([selectors, declarations]) => {
+          // Start with a dummy rule to validate declarations and selectors
+          sheet.insertRule(`${DUMMY_CSS_SELECTOR} {}`);
+          const [rule] = sheet.cssRules;
+
+          // Validate declarations and remove any offenders. CSSOM silently
+          // discards invalid entries, so here we apply extra restrictions.
+          rule.style = declarations;
+          [...rule.style].forEach(property => {
+            const value = rule.style[property];
+            if (!isAllowedCSS(property, value)) {
+              console.error(`Bad CSS declaration ${property}: ${value}`); // eslint-disable-line no-console
+              rule.style.removeProperty(property);
+            }
+          });
+
+          // Set the actual desired selectors scoped to the component
+          const prefix = `.ds-layout > .ds-column:nth-child(${rowIndex + 1}) > :nth-child(${componentIndex + 1})`;
+          // NB: Splitting on "," doesn't work with strings with commas, but
+          // we're okay with not supporting those selectors
+          rule.selectorText = selectors.split(",").map(selector => prefix + (
+          // Assume :pseudo-classes are for component instead of descendant
+          selector[0] === ":" ? "" : " ") + selector).join(",");
+
+          // CSSOM silently ignores bad selectors, so we'll be noisy instead
+          if (rule.selectorText === DUMMY_CSS_SELECTOR) {
+            console.error(`Bad CSS selector ${selectors}`); // eslint-disable-line no-console
+          }
+        });
+      });
+    });
+  }
+
   renderComponent(component) {
+    let rows;
+
     switch (component.type) {
       case "TopSites":
         return external_React_default.a.createElement(TopSites_TopSites_TopSites, null);
       case "SectionTitle":
         return external_React_default.a.createElement(SectionTitle_SectionTitle, null);
       case "CardGrid":
-        return external_React_default.a.createElement(CardGrid_CardGrid, {
-          title: component.header && component.header.title,
-          data: component.data,
-          feed: component.feed,
-          style: component.properties.style,
-          type: component.type,
-          dispatch: this.props.dispatch,
-          items: component.properties.items });
+        rows = this.extractRows(component, MAX_ROWS_CARDGRID);
+        return external_React_default.a.createElement(
+          ImpressionStats["ImpressionStats"],
+          { rows: rows, dispatch: this.props.dispatch, source: component.type },
+          external_React_default.a.createElement(CardGrid_CardGrid, {
+            title: component.header && component.header.title,
+            data: maybeInjectSpocs(component.data, component.spocs),
+            feed: component.feed,
+            border: component.properties.border,
+            type: component.type,
+            dispatch: this.props.dispatch,
+            items: component.properties.items })
+        );
       case "Hero":
-        const items = Math.min(MAX_ROWS_HERO, component.properties.items || (component.data ? component.data.recommendations.length : 0));
-        const rows = component.data ? component.data.recommendations.slice(0, items) : [];
+        rows = this.extractRows(component, MAX_ROWS_HERO);
         return external_React_default.a.createElement(
           ImpressionStats["ImpressionStats"],
           { rows: rows, dispatch: this.props.dispatch, source: component.type },
           external_React_default.a.createElement(Hero_Hero, {
             title: component.header && component.header.title,
-            data: component.data,
-            style: component.properties.style,
+            data: maybeInjectSpocs(component.data, component.spocs),
+            border: component.properties.border,
             type: component.type,
             dispatch: this.props.dispatch,
-            items: items })
+            items: component.properties.items })
         );
       case "HorizontalRule":
         return external_React_default.a.createElement(HorizontalRule_HorizontalRule, null);
       case "List":
-        return external_React_default.a.createElement(List, {
-          feed: component.feed,
-          header: component.header });
+        rows = this.extractRows(component, MAX_ROWS_LIST);
+        return external_React_default.a.createElement(
+          ImpressionStats["ImpressionStats"],
+          { rows: rows, dispatch: this.props.dispatch, source: component.type },
+          external_React_default.a.createElement(List, {
+            feed: component.feed,
+            type: component.type,
+            header: component.header })
+        );
       default:
         return external_React_default.a.createElement(
           "div",
@@ -7596,20 +7744,32 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
     }
   }
 
+  renderStyles(styles) {
+    // Use json string as both the key and styles to render so React knows when
+    // to unmount and mount a new instance for new styles.
+    const json = JSON.stringify(styles);
+    return external_React_default.a.createElement("style", { key: json, "data-styles": json, ref: this.onStyleMount });
+  }
+
   render() {
     const { layoutRender } = this.props.DiscoveryStream;
+    const styles = [];
     return external_React_default.a.createElement(
       "div",
       { className: "discovery-stream ds-layout" },
       layoutRender.map((row, rowIndex) => external_React_default.a.createElement(
         "div",
         { key: `row-${rowIndex}`, className: `ds-column ds-column-${row.width}` },
-        row.components.map((component, componentIndex) => external_React_default.a.createElement(
-          "div",
-          { key: `component-${componentIndex}` },
-          this.renderComponent(component)
-        ))
-      ))
+        row.components.map((component, componentIndex) => {
+          styles[rowIndex] = [...(styles[rowIndex] || []), component.styles];
+          return external_React_default.a.createElement(
+            "div",
+            { key: `component-${componentIndex}` },
+            this.renderComponent(component)
+          );
+        })
+      )),
+      this.renderStyles(styles)
     );
   }
 }

@@ -16,6 +16,7 @@ export class _Search extends React.PureComponent {
     this.onSearchHandoffPaste = this.onSearchHandoffPaste.bind(this);
     this.onInputMount = this.onInputMount.bind(this);
     this.onSearchHandoffButtonMount = this.onSearchHandoffButtonMount.bind(this);
+    this.cancelEvent = this.cancelEvent.bind(this);
   }
 
   handleEvent(event) {
@@ -70,6 +71,10 @@ export class _Search extends React.PureComponent {
     }
     event.preventDefault();
     this.doSearchHandoff(event.clipboardData.getData("Text"));
+  }
+
+  cancelEvent(event) {
+    event.preventDefault();
   }
 
   componentWillMount() {
@@ -169,7 +174,7 @@ export class _Search extends React.PureComponent {
             onKeyDown={this.onSearchHandoffKeyDown}
             title={this.props.intl.formatMessage({id: "search_web_placeholder"})}>
             <div className="fake-textbox">{this.props.intl.formatMessage({id: "search_web_placeholder"})}</div>
-            <div className="fake-editable" tabIndex="-1" aria-hidden="true" contentEditable="" />
+            <div className="fake-editable" tabIndex="-1" aria-hidden="true" contentEditable="" onDrop={this.cancelEvent} />
             <div className="fake-caret" />
           </button>
           {/*

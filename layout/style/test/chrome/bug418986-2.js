@@ -59,6 +59,7 @@ var suppressed_toggles = [
   "-moz-gtk-csd-minimize-button",
   "-moz-gtk-csd-maximize-button",
   "-moz-gtk-csd-close-button",
+  "-moz-gtk-csd-reversed-placement",
 ];
 
 var toggles_enabled_in_content = [

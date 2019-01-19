@@ -904,7 +904,7 @@ void CompositorBridgeParent::ScheduleComposition() {
 
 void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
                                                const gfx::IntRect* aRect) {
-  AUTO_PROFILER_TRACING("Paint", "Composite");
+  AUTO_PROFILER_TRACING("Paint", "Composite", GRAPHICS);
   AUTO_PROFILER_LABEL("CompositorBridgeParent::CompositeToTarget", GRAPHICS);
 
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread(),
@@ -1903,6 +1903,7 @@ static void InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (profiler_thread_is_being_profiled()) {
     profiler_add_marker("VsyncTimestamp",
+                        js::ProfilingStackFrame::Category::GRAPHICS,
                         MakeUnique<VsyncMarkerPayload>(aVsyncTimestamp));
   }
 }
@@ -2451,7 +2452,8 @@ int32_t RecordContentFrameTime(
       }
     };
     profiler_add_marker_for_thread(
-        profiler_current_thread_id(), "CONTENT_FRAME_TIME",
+        profiler_current_thread_id(),
+        js::ProfilingStackFrame::Category::GRAPHICS, "CONTENT_FRAME_TIME",
         MakeUnique<ContentFramePayload>(aTxnStart, aCompositeEnd));
   }
 #endif

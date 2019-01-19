@@ -9256,8 +9256,9 @@ TextareaInput.prototype.init = function (display) {
 
   on(display.scroller, "paste", function (e) {
     if (eventInWidget(display, e) || signalDOMEvent(cm, e)) { return }
-    cm.state.pasteIncoming = true
-    input.focus()
+    const event = new Event("paste");
+    event.clipboardData = e.clipboardData;
+    te.dispatchEvent(event);
   })
 
   // Prevent normal selection in the editor (we handle our own)

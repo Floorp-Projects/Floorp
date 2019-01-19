@@ -33,6 +33,7 @@ class ReverseSearchInput extends Component {
       reverseSearchTotalResults: PropTypes.number,
       reverseSearchResultPosition: PropTypes.number,
       visible: PropTypes.bool,
+      initialValue: PropTypes.string,
     };
   }
 
@@ -54,6 +55,14 @@ class ReverseSearchInput extends Component {
 
     if (prevProps.visible === true && this.props.visible === false) {
       jsterm.focus();
+    }
+
+    if (
+      prevProps.visible === false &&
+      this.props.visible === true &&
+      this.props.initialValue
+    ) {
+      this.inputNode.value = this.props.initialValue;
     }
   }
 

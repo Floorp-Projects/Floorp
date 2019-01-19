@@ -2203,7 +2203,6 @@ impl PrimitiveStore {
                         pic_context.allow_subpixel_aa,
                         frame_state,
                         frame_context,
-                        pic_context.dirty_world_rect,
                     ) {
                         Some(info) => Some(info),
                         None => {
@@ -2255,6 +2254,7 @@ impl PrimitiveStore {
                         prim_list,
                         pic_context_for_children,
                         pic_state_for_children,
+                        frame_state,
                     );
 
                 is_passthrough
@@ -2311,7 +2311,7 @@ impl PrimitiveStore {
                             prim_instance,
                             pic.local_rect,
                             &prim_info.combined_local_clip_rect,
-                            pic_context.dirty_world_rect,
+                            frame_context.screen_world_rect,
                             plane_split_anchor,
                         );
                     }
@@ -2377,12 +2377,36 @@ impl PrimitiveStore {
             // for clip masks / render tasks that we make.
             {
                 let visibility_info = &mut scratch.prim_info[prim_instance.visibility_info.0 as usize];
+                let dirty_region = frame_state.current_dirty_region();
 
-                match visibility_info.clipped_world_rect.intersection(&pic_context.dirty_world_rect) {
+                // Check if the primitive world rect intersects with the overall dirty rect first.
+                match visibility_info.clipped_world_rect.intersection(&dirty_region.combined.world_rect) {
                     Some(rect) => {
+                        // It does intersect the overall dirty rect, so it *might* be visible.
+                        // Store this reduced rect here, which is used for clip mask and other
+                        // render task size calculations. In future, we may consider creating multiple
+                        // render task trees, one per dirty region.
                         visibility_info.clipped_world_rect = rect;
+
+                        // If there is more than one dirty region, it's possible that this primitive
+                        // is inside the overal dirty rect, but doesn't intersect any of the individual
+                        // dirty rects. If that's the case, then we can skip drawing this primitive too.
+                        if dirty_region.dirty_rects.len() > 1 {
+                            let in_dirty_rects = dirty_region
+                                .dirty_rects
+                                .iter()
+                                .any(|dirty_rect| {
+                                    visibility_info.clipped_world_rect.intersects(&dirty_rect.world_rect)
+                                });
+
+                            if !in_dirty_rects {
+                                prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                                continue;
+                            }
+                        }
                     }
                     None => {
+                        // Outside the overall dirty rect, so can be skipped.
                         prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
                         continue;
                     }
@@ -2658,7 +2682,7 @@ impl PrimitiveStore {
 
                         let visible_rect = compute_conservative_visible_rect(
                             prim_context,
-                            &pic_context.dirty_world_rect,
+                            &frame_state.current_dirty_region().combined.world_rect,
                             &tight_clip_rect
                         );
 
@@ -2752,7 +2776,6 @@ impl PrimitiveStore {
                         &prim_data.tile_spacing,
                         prim_context,
                         frame_state,
-                        &pic_context.dirty_world_rect,
                         &mut scratch.gradient_tiles,
                         &mut |_, mut request| {
                             request.push([
@@ -2799,7 +2822,6 @@ impl PrimitiveStore {
                         &prim_data.tile_spacing,
                         prim_context,
                         frame_state,
-                        &pic_context.dirty_world_rect,
                         &mut scratch.gradient_tiles,
                         &mut |_, mut request| {
                             request.push([
@@ -2864,11 +2886,11 @@ fn decompose_repeated_primitive(
     tile_spacing: &LayoutSize,
     prim_context: &PrimitiveContext,
     frame_state: &mut FrameBuildingState,
-    world_rect: &WorldRect,
     gradient_tiles: &mut GradientTileStorage,
     callback: &mut FnMut(&LayoutRect, GpuDataRequest),
 ) -> GradientTileRange {
     let mut visible_tiles = Vec::new();
+    let world_rect = frame_state.current_dirty_region().combined.world_rect;
 
     // Tighten the clip rect because decomposing the repeated image can
     // produce primitives that are partially covering the original image
@@ -2878,7 +2900,7 @@ fn decompose_repeated_primitive(
 
     let visible_rect = compute_conservative_visible_rect(
         prim_context,
-        world_rect,
+        &world_rect,
         &tight_clip_rect
     );
     let stride = *stretch_size + *tile_spacing;
@@ -3286,10 +3308,13 @@ impl PrimitiveInstance {
             );
             clip_mask_instances.push(clip_mask_kind);
         } else {
+            let dirty_world_rect = frame_state.current_dirty_region().combined.world_rect;
+
             for segment in segments {
                 // Build a clip chain for the smaller segment rect. This will
                 // often manage to eliminate most/all clips, and sometimes
                 // clip the segment completely.
+
                 let segment_clip_chain = frame_state
                     .clip_store
                     .build_clip_chain_instance(
@@ -3306,7 +3331,7 @@ impl PrimitiveInstance {
                         frame_state.gpu_cache,
                         frame_state.resource_cache,
                         frame_context.device_pixel_scale,
-                        &pic_context.dirty_world_rect,
+                        &dirty_world_rect,
                         None,
                         &mut data_stores.clip,
                     );
