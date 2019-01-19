@@ -1009,6 +1009,38 @@ impl<'a> DrawTarget<'a> {
             DrawTarget::Texture { texture, .. } => texture.get_dimensions(),
         }
     }
+
+    /// Given a scissor rect, convert it to the right coordinate space
+    /// depending on the draw target kind. If no scissor rect was supplied,
+    /// returns a scissor rect that encloses the entire render target.
+    pub fn build_scissor_rect(
+        &self,
+        scissor_rect: Option<DeviceIntRect>,
+        framebuffer_target_rect: DeviceIntRect,
+    ) -> DeviceIntRect {
+        let dimensions = self.dimensions();
+
+        match scissor_rect {
+            Some(scissor_rect) => {
+                // Note: `framebuffer_target_rect` needs a Y-flip before going to GL
+                if self.is_default() {
+                    let mut rect = scissor_rect
+                        .intersection(&framebuffer_target_rect.to_i32())
+                        .unwrap_or(DeviceIntRect::zero());
+                    rect.origin.y = dimensions.height as i32 - rect.origin.y - rect.size.height;
+                    rect
+                } else {
+                    scissor_rect
+                }
+            }
+            None => {
+                DeviceIntRect::new(
+                    DeviceIntPoint::zero(),
+                    dimensions,
+                )
+            }
+        }
+    }
 }
 
 /// Contains the parameters necessary to bind a texture-backed read target.

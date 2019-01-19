@@ -177,6 +177,7 @@ Deep Links:
 Deep links are actions that can point Fennec to open certain pages or load features such as `show bookmark list` or
 `open a SUMO page`. When users see a prompt Leanplum message, they can click the button(s) on it. These buttons can
 trigger the following deep links
+* Link to open pages specifically in Fennec (firefox://open?url=)
 * Link to Set Default Browser settings (firefox://default_browser)
 * Link to specific Add-on page (http://link_to_the_add_on_page)
 * Link to sync signup/sign in (firefox://sign_up)

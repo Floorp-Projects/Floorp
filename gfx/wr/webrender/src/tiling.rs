@@ -381,7 +381,7 @@ impl RenderTarget for ColorRenderTarget {
         transforms: &mut TransformPalette,
         z_generator: &mut ZBufferIdGenerator,
     ) {
-        let mut merged_batches = AlphaBatchContainer::new(None);
+        let mut merged_batches = AlphaBatchContainer::new(None, Vec::new());
 
         for task_id in &self.alpha_tasks {
             let task = &render_tasks[*task_id];
