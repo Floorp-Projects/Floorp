@@ -93,10 +93,9 @@ void nsFilterInstance::PaintFilteredFrame(
   }
 }
 
-bool nsFilterInstance::BuildWebRenderFilters(
-    nsIFrame* aFilteredFrame, const LayoutDeviceIntRect& aPreFilterBounds,
-    nsTArray<wr::FilterOp>& aWrFilters,
-    LayoutDeviceIntRect& aPostFilterBounds) {
+bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
+                                             nsTArray<wr::FilterOp>& aWrFilters,
+                                             Maybe<nsRect>& aPostFilterClip) {
   aWrFilters.Clear();
 
   auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
@@ -121,7 +120,7 @@ bool nsFilterInstance::BuildWebRenderFilters(
     return false;
   }
 
-  Maybe<LayoutDeviceIntRect> finalClip;
+  Maybe<IntRect> finalClip;
   bool srgb = true;
   // We currently apply the clip on the stacking context after applying filters,
   // but primitive subregions imply clipping after each filter and not just the
@@ -132,17 +131,7 @@ bool nsFilterInstance::BuildWebRenderFilters(
   // We can lift this restriction once we have added support for primitive
   // subregions to WebRender's filters.
 
-  // During the loop this tracks whether any of the previous filters in the
-  // chain affected by the primitive subregion.
-  bool chainIsAffectedByPrimSubregion = false;
-  // During the loop this tracks whether the current filter is affected by the
-  // primitive subregion.
-  bool filterIsAffectedByPrimSubregion = false;
-
   for (const auto& primitive : instance.mFilterDescription.mPrimitives) {
-    chainIsAffectedByPrimSubregion |= filterIsAffectedByPrimSubregion;
-    filterIsAffectedByPrimSubregion = false;
-
     bool primIsSrgb = primitive.OutputColorSpace() == gfx::ColorSpace::SRGB;
     if (srgb && !primIsSrgb) {
       aWrFilters.AppendElement(wr::FilterOp::SrgbToLinear());
@@ -153,26 +142,6 @@ bool nsFilterInstance::BuildWebRenderFilters(
     }
 
     const PrimitiveAttributes& attr = primitive.Attributes();
-    auto subregion = LayoutDeviceIntRect::FromUnknownRect(
-        primitive.PrimitiveSubregion() +
-        aPreFilterBounds.TopLeft().ToUnknownPoint());
-
-    if (!subregion.Contains(aPreFilterBounds)) {
-      if (!aPostFilterBounds.Contains(subregion)) {
-        filterIsAffectedByPrimSubregion = true;
-      }
-
-      subregion = subregion.Intersect(aPostFilterBounds);
-
-      if (finalClip.isNothing()) {
-        finalClip = Some(subregion);
-      } else if (!subregion.IsEqualEdges(finalClip.value())) {
-        // We don't currently support rendering a chain of filters with
-        // different primitive subregions in WebRender so bail out in that
-        // situation.
-        return false;
-      }
-    }
 
     bool filterIsNoop = false;
 
@@ -213,7 +182,7 @@ bool nsFilterInstance::BuildWebRenderFilters(
 
       aWrFilters.AppendElement(wr::FilterOp::ColorMatrix(matrix));
     } else if (attr.is<GaussianBlurAttributes>()) {
-      if (chainIsAffectedByPrimSubregion) {
+      if (finalClip) {
         // There's a clip that needs to apply before the blur filter, but
         // WebRender only lets us apply the clip at the end of the filter
         // chain. Clipping after a blur is not equivalent to clipping before
@@ -235,7 +204,7 @@ bool nsFilterInstance::BuildWebRenderFilters(
         filterIsNoop = true;
       }
     } else if (attr.is<DropShadowAttributes>()) {
-      if (chainIsAffectedByPrimSubregion) {
+      if (finalClip) {
         // We have to bail out for the same reason we would with a blur filter.
         return false;
       }
@@ -271,18 +240,24 @@ bool nsFilterInstance::BuildWebRenderFilters(
       Unused << aWrFilters.PopLastElement();
       srgb = !srgb;
     }
+
+    if (!filterIsNoop) {
+      if (finalClip.isNothing()) {
+        finalClip = Some(primitive.PrimitiveSubregion());
+      } else {
+        finalClip =
+            Some(primitive.PrimitiveSubregion().Intersect(finalClip.value()));
+      }
+    }
   }
 
   if (!srgb) {
     aWrFilters.AppendElement(wr::FilterOp::LinearToSrgb());
   }
 
-  // Only adjust the post filter clip if we are able to render this without
-  // fallback.
-  if (finalClip.isSome()) {
-    aPostFilterBounds = finalClip.value();
+  if (finalClip) {
+    aPostFilterClip = Some(instance.FilterSpaceToFrameSpace(finalClip.value()));
   }
-
   return true;
 }
 
