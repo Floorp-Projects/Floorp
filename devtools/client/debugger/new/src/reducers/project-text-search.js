@@ -60,13 +60,6 @@ function update(
     case "ADD_QUERY":
       return { ...state, query: action.query };
 
-    case "CLEAR_QUERY":
-      return {
-        ...state,
-        query: "",
-        status: statusType.initial
-      };
-
     case "ADD_SEARCH_RESULT":
       const results = state.results;
       if (action.result.matches.length === 0) {
