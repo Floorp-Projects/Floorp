@@ -12,7 +12,7 @@
 #include <algorithm>
 
 #ifdef MOZ_TOOLKIT_SEARCH
-#include "nsIBrowserSearchService.h"
+#  include "nsIBrowserSearchService.h"
 #endif
 
 #include "nsIURIFixup.h"

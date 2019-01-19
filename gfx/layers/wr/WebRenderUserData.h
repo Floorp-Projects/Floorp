@@ -147,7 +147,7 @@ class WebRenderImageData : public WebRenderUserData {
 
   bool IsAsync() { return mPipelineId.isSome(); }
 
-  bool IsAsyncAnimatedImage() const;
+  bool UsingSharedSurface() const;
 
  protected:
   virtual void ClearImageKey();

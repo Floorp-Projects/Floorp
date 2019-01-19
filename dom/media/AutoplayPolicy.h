@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(AutoplayPolicy_h_)
-#define AutoplayPolicy_h_
+#  define AutoplayPolicy_h_
 
-#include "mozilla/NotNull.h"
+#  include "mozilla/NotNull.h"
 
 namespace mozilla {
 namespace dom {

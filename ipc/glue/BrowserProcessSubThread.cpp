@@ -7,7 +7,7 @@
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 
 #if defined(OS_WIN)
-#include <objbase.h>
+#  include <objbase.h>
 #endif
 
 namespace mozilla {

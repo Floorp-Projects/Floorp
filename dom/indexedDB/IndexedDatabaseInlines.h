@@ -8,7 +8,7 @@
 #define IndexedDatabaseInlines_h
 
 #ifndef mozilla_dom_indexeddatabase_h__
-#error Must include IndexedDatabase.h first
+#  error Must include IndexedDatabase.h first
 #endif
 
 #include "FileInfo.h"

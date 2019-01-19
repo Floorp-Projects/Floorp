@@ -17,7 +17,7 @@
 #include "nsThreadManager.h"
 
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
+#  include "GeckoTaskTracer.h"
 #endif
 
 namespace base {

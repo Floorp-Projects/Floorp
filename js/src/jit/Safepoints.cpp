@@ -264,7 +264,7 @@ static MOZ_ALWAYS_INLINE bool CanEncodeInfoInHeader(const LAllocation& a,
 void SafepointWriter::writeNunboxParts(LSafepoint* safepoint) {
   LSafepoint::NunboxList& entries = safepoint->nunboxParts();
 
-#ifdef JS_JITSPEW
+#  ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_Safepoints)) {
     for (uint32_t i = 0; i < entries.length(); i++) {
       SafepointNunboxEntry& entry = entries[i];
@@ -280,7 +280,7 @@ void SafepointWriter::writeNunboxParts(LSafepoint* safepoint) {
       out.printf(")\n");
     }
   }
-#endif
+#  endif
 
   // Safepoints are permitted to have partially filled in entries for nunboxes,
   // provided that only the type is live and not the payload. Omit these from

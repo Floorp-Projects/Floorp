@@ -20,11 +20,11 @@
 #include "Tracing.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "nsISupportsUtils.h"
+#  include "nsISupportsUtils.h"
 #endif
 
 #ifdef MOZ_WEBRTC
-#include "YuvStamper.h"
+#  include "YuvStamper.h"
 #endif
 
 #define DEFAULT_AUDIO_TIMER_MS 10

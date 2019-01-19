@@ -304,7 +304,7 @@ class nsCSSBorderImageRenderer final {
 
 namespace mozilla {
 #ifdef DEBUG_NEW_BORDERS
-#include <stdarg.h>
+#  include <stdarg.h>
 
 static inline void PrintAsString(const mozilla::gfx::Point& p) {
   fprintf(stderr, "[%f,%f]", p.x, p.y);

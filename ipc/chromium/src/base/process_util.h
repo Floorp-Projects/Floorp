@@ -13,18 +13,18 @@
 #include "base/basictypes.h"
 
 #if defined(OS_WIN)
-#include <windows.h>
-#include <tlhelp32.h>
-#include <io.h>
-#ifndef STDOUT_FILENO
-#define STDOUT_FILENO 1
-#endif
+#  include <windows.h>
+#  include <tlhelp32.h>
+#  include <io.h>
+#  ifndef STDOUT_FILENO
+#    define STDOUT_FILENO 1
+#  endif
 #elif defined(OS_LINUX) || defined(__GLIBC__)
-#include <dirent.h>
-#include <limits.h>
-#include <sys/types.h>
+#  include <dirent.h>
+#  include <limits.h>
+#  include <sys/types.h>
 #elif defined(OS_MACOSX)
-#include <mach/mach.h>
+#  include <mach/mach.h>
 #endif
 
 #include <functional>
@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef OS_WIN
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include "base/command_line.h"
@@ -229,13 +229,13 @@ class EnvironmentLog {
 
 #if defined(OS_WIN)
 // Undo the windows.h damage
-#undef GetMessage
-#undef CreateEvent
-#undef GetClassName
-#undef GetBinaryType
-#undef RemoveDirectory
-#undef LoadImage
-#undef LoadIcon
+#  undef GetMessage
+#  undef CreateEvent
+#  undef GetClassName
+#  undef GetBinaryType
+#  undef RemoveDirectory
+#  undef LoadImage
+#  undef LoadIcon
 #endif
 
 #endif  // BASE_PROCESS_UTIL_H_

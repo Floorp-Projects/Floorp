@@ -13,16 +13,16 @@
 #include <string.h>
 
 #ifdef XP_WIN
-#include <windows.h>
-#include <process.h>
+#  include <windows.h>
+#  include <process.h>
 #else
-#include <pthread.h>
-#include <sys/types.h>
-#include <unistd.h>
+#  include <pthread.h>
+#  include <sys/types.h>
+#  include <unistd.h>
 #endif
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 #include "memory_hooks.h"

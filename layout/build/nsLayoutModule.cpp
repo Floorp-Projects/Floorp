@@ -74,10 +74,10 @@
 #include "mozilla/OSFileConstants.h"
 
 #ifdef MOZ_WEBSPEECH_TEST_BACKEND
-#include "mozilla/dom/FakeSpeechRecognitionService.h"
+#  include "mozilla/dom/FakeSpeechRecognitionService.h"
 #endif
 #ifdef MOZ_WEBSPEECH
-#include "mozilla/dom/nsSynthVoiceRegistry.h"
+#  include "mozilla/dom/nsSynthVoiceRegistry.h"
 #endif
 
 #include "mozilla/dom/PushNotifier.h"
@@ -99,7 +99,7 @@ using mozilla::dom::PushNotifier;
 #include "mozilla/SystemPrincipal.h"
 #include "nsNetCID.h"
 #if defined(MOZ_WIDGET_ANDROID)
-#include "nsHapticFeedback.h"
+#  include "nsHapticFeedback.h"
 #endif
 #include "nsParserUtils.h"
 
@@ -405,7 +405,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
 
 #ifdef ACCESSIBILITY
-#include "xpcAccessibilityService.h"
+#  include "xpcAccessibilityService.h"
 
 MAKE_CTOR(CreateA11yService, nsIAccessibilityService,
           NS_GetAccessibilityService)

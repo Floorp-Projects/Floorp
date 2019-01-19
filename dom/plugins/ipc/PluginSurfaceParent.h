@@ -10,7 +10,7 @@
 #include "mozilla/plugins/PluginMessageUtils.h"
 
 #ifndef XP_WIN
-#error "This header is for Windows only."
+#  error "This header is for Windows only."
 #endif
 
 class gfxASurface;

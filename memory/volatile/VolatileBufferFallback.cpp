@@ -26,7 +26,7 @@ bool VolatileBuffer::Init(size_t aSize, size_t aAlignment) {
     return false;
   }
 #else
-#error "No memalign implementation found"
+#  error "No memalign implementation found"
 #endif
   return !!mBuf;
 }

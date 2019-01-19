@@ -20,13 +20,13 @@
 #include "mozilla/a11y/DocManager.h"
 
 #ifdef DEBUG
-#include <android/log.h>
-#define AALOG(args...) \
-  __android_log_print(ANDROID_LOG_INFO, "GeckoAccessibilityNative", ##args)
+#  include <android/log.h>
+#  define AALOG(args...) \
+    __android_log_print(ANDROID_LOG_INFO, "GeckoAccessibilityNative", ##args)
 #else
-#define AALOG(args...) \
-  do {                 \
-  } while (0)
+#  define AALOG(args...) \
+    do {                 \
+    } while (0)
 #endif
 
 template <>

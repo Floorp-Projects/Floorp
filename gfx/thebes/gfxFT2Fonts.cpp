@@ -4,14 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(MOZ_WIDGET_GTK)
-#include "gfxPlatformGtk.h"
-#define gfxToolkitPlatform gfxPlatformGtk
+#  include "gfxPlatformGtk.h"
+#  define gfxToolkitPlatform gfxPlatformGtk
 #elif defined(XP_WIN)
-#include "gfxWindowsPlatform.h"
-#define gfxToolkitPlatform gfxWindowsPlatform
+#  include "gfxWindowsPlatform.h"
+#  define gfxToolkitPlatform gfxWindowsPlatform
 #elif defined(ANDROID)
-#include "gfxAndroidPlatform.h"
-#define gfxToolkitPlatform gfxAndroidPlatform
+#  include "gfxAndroidPlatform.h"
+#  define gfxToolkitPlatform gfxAndroidPlatform
 #endif
 
 #include "gfxTypes.h"

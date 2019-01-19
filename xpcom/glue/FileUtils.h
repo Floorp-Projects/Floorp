@@ -10,9 +10,9 @@
 #include "nscore.h"  // nullptr
 
 #if defined(XP_UNIX)
-#include <unistd.h>
+#  include <unistd.h>
 #elif defined(XP_WIN)
-#include <io.h>
+#  include <io.h>
 #endif
 #include "prio.h"
 #include "prlink.h"
@@ -162,14 +162,14 @@ void ReadAhead(filedesc_t aFd, const size_t aOffset = 0,
                const size_t aCount = SIZE_MAX);
 
 #if defined(XP_UNIX)
-#define MOZ_TEMP_FAILURE_RETRY(exp)        \
-  (__extension__({                         \
-    typeof(exp) _rc;                       \
-    do {                                   \
-      _rc = (exp);                         \
-    } while (_rc == -1 && errno == EINTR); \
-    _rc;                                   \
-  }))
+#  define MOZ_TEMP_FAILURE_RETRY(exp)        \
+    (__extension__({                         \
+      typeof(exp) _rc;                       \
+      do {                                   \
+        _rc = (exp);                         \
+      } while (_rc == -1 && errno == EINTR); \
+      _rc;                                   \
+    }))
 #endif
 
 }  // namespace mozilla

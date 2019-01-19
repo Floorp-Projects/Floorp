@@ -28,22 +28,22 @@
 #define DEFAULT_THREAD_TIMEOUT_MS 10000
 
 #ifdef XP_WIN
-#include <shlobj.h>
-#include <urlmon.h>
-#include "nsILocalFileWin.h"
+#  include <shlobj.h>
+#  include <urlmon.h>
+#  include "nsILocalFileWin.h"
 #endif
 
 #ifdef XP_MACOSX
-#include <CoreFoundation/CoreFoundation.h>
-#include "../../../xpcom/io/CocoaFileUtils.h"
+#  include <CoreFoundation/CoreFoundation.h>
+#  include "../../../xpcom/io/CocoaFileUtils.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "FennecJNIWrappers.h"
+#  include "FennecJNIWrappers.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
-#include <gtk/gtk.h>
+#  include <gtk/gtk.h>
 #endif
 
 using namespace mozilla;
@@ -73,10 +73,10 @@ static void gio_set_metadata_done(GObject* source_obj, GAsyncResult* res,
   GError* err = nullptr;
   g_file_set_attributes_finish(G_FILE(source_obj), res, nullptr, &err);
   if (err) {
-#ifdef DEBUG
+#  ifdef DEBUG
     NS_DebugBreak(NS_DEBUG_WARNING, "Set file metadata failed: ", err->message,
                   __FILE__, __LINE__);
-#endif
+#  endif
     g_error_free(err);
   }
 }
@@ -136,20 +136,20 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer,
 
   nsAutoString path;
   if (aTarget && NS_SUCCEEDED(aTarget->GetPath(path))) {
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_ANDROID)
+#  if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_ANDROID)
     // On Windows and Gtk, add the download to the system's "recent documents"
     // list, with a pref to disable.
     {
       bool addToRecentDocs = Preferences::GetBool(PREF_BDM_ADDTORECENTDOCS);
-#ifdef MOZ_WIDGET_ANDROID
+#    ifdef MOZ_WIDGET_ANDROID
       if (jni::IsFennec() && addToRecentDocs) {
         java::DownloadsIntegration::ScanMedia(path, aContentType);
       }
-#else
+#    else
       if (addToRecentDocs && !aIsPrivate) {
-#ifdef XP_WIN
+#      ifdef XP_WIN
         ::SHAddToRecentDocs(SHARD_PATHW, path.get());
-#elif defined(MOZ_WIDGET_GTK)
+#      elif defined(MOZ_WIDGET_GTK)
         GtkRecentManager* manager = gtk_recent_manager_get_default();
 
         gchar* uri = g_filename_to_uri(NS_ConvertUTF16toUTF8(path).get(),
@@ -158,10 +158,10 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer,
           gtk_recent_manager_add_item(manager, uri);
           g_free(uri);
         }
-#endif
+#      endif
       }
-#endif
-#ifdef MOZ_WIDGET_GTK
+#    endif
+#    ifdef MOZ_WIDGET_GTK
       // Use GIO to store the source URI for later display in the file manager.
       GFile* gio_file = g_file_new_for_path(NS_ConvertUTF16toUTF8(path).get());
       nsCString source_uri;
@@ -175,11 +175,11 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer,
                                   gio_set_metadata_done, nullptr);
       g_object_unref(file_info);
       g_object_unref(gio_file);
-#endif
+#    endif
     }
-#endif
+#  endif
 
-#ifdef XP_MACOSX
+#  ifdef XP_MACOSX
     // On OS X, make the downloads stack bounce.
     CFStringRef observedObject = ::CFStringCreateWithCString(
         kCFAllocatorDefault, NS_ConvertUTF16toUTF8(path).get(),
@@ -236,7 +236,7 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer,
         pendingAsyncOperations = true;
       }
     }
-#endif
+#  endif
   }
 
 #endif

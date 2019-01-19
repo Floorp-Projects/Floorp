@@ -1697,20 +1697,20 @@ gfxFontFamily* gfxDWriteFontList::CreateFontFamily(
 
 #ifdef MOZ_BUNDLED_FONTS
 
-#define IMPL_QI_FOR_DWRITE(_interface)                             \
- public:                                                           \
-  IFACEMETHOD(QueryInterface)(IID const& riid, void** ppvObject) { \
-    if (__uuidof(_interface) == riid) {                            \
-      *ppvObject = this;                                           \
-    } else if (__uuidof(IUnknown) == riid) {                       \
-      *ppvObject = this;                                           \
-    } else {                                                       \
-      *ppvObject = nullptr;                                        \
-      return E_NOINTERFACE;                                        \
-    }                                                              \
-    this->AddRef();                                                \
-    return S_OK;                                                   \
-  }
+#  define IMPL_QI_FOR_DWRITE(_interface)                             \
+   public:                                                           \
+    IFACEMETHOD(QueryInterface)(IID const& riid, void** ppvObject) { \
+      if (__uuidof(_interface) == riid) {                            \
+        *ppvObject = this;                                           \
+      } else if (__uuidof(IUnknown) == riid) {                       \
+        *ppvObject = this;                                           \
+      } else {                                                       \
+        *ppvObject = nullptr;                                        \
+        return E_NOINTERFACE;                                        \
+      }                                                              \
+      this->AddRef();                                                \
+      return S_OK;                                                   \
+    }
 
 class BundledFontFileEnumerator : public IDWriteFontFileEnumerator {
   IMPL_QI_FOR_DWRITE(IDWriteFontFileEnumerator)

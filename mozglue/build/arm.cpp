@@ -13,10 +13,10 @@
 // we don't compile one of these detection methods. The detection code here is
 // based on the CPU detection in libtheora.
 
-#if defined(__linux__) || defined(ANDROID)
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#  if defined(__linux__) || defined(ANDROID)
+#    include <stdio.h>
+#    include <stdlib.h>
+#    include <string.h>
 
 enum {
   MOZILLA_HAS_EDSP_FLAG = 1,
@@ -85,46 +85,46 @@ static unsigned get_arm_cpu_flags(void) {
 // Cache a local copy so we only have to read /proc/cpuinfo once.
 static unsigned arm_cpu_flags = get_arm_cpu_flags();
 
-#if !defined(MOZILLA_PRESUME_EDSP)
+#    if !defined(MOZILLA_PRESUME_EDSP)
 static bool check_edsp(void) {
   return (arm_cpu_flags & MOZILLA_HAS_EDSP_FLAG) != 0;
 }
-#endif
+#    endif
 
-#if !defined(MOZILLA_PRESUME_ARMV6)
+#    if !defined(MOZILLA_PRESUME_ARMV6)
 static bool check_armv6(void) {
   return (arm_cpu_flags & MOZILLA_HAS_ARMV6_FLAG) != 0;
 }
-#endif
+#    endif
 
-#if !defined(MOZILLA_PRESUME_ARMV7)
+#    if !defined(MOZILLA_PRESUME_ARMV7)
 static bool check_armv7(void) {
   return (arm_cpu_flags & MOZILLA_HAS_ARMV7_FLAG) != 0;
 }
-#endif
+#    endif
 
-#if !defined(MOZILLA_PRESUME_NEON)
+#    if !defined(MOZILLA_PRESUME_NEON)
 static bool check_neon(void) {
   return (arm_cpu_flags & MOZILLA_HAS_NEON_FLAG) != 0;
 }
-#endif
+#    endif
 
-#endif  // defined(__linux__) || defined(ANDROID)
+#  endif  // defined(__linux__) || defined(ANDROID)
 
 namespace mozilla {
 namespace arm_private {
-#if !defined(MOZILLA_PRESUME_EDSP)
+#  if !defined(MOZILLA_PRESUME_EDSP)
 bool edsp_enabled = check_edsp();
-#endif
-#if !defined(MOZILLA_PRESUME_ARMV6)
+#  endif
+#  if !defined(MOZILLA_PRESUME_ARMV6)
 bool armv6_enabled = check_armv6();
-#endif
-#if !defined(MOZILLA_PRESUME_ARMV7)
+#  endif
+#  if !defined(MOZILLA_PRESUME_ARMV7)
 bool armv7_enabled = check_armv7();
-#endif
-#if !defined(MOZILLA_PRESUME_NEON)
+#  endif
+#  if !defined(MOZILLA_PRESUME_NEON)
 bool neon_enabled = check_neon();
-#endif
+#  endif
 }  // namespace arm_private
 }  // namespace mozilla
 

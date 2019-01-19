@@ -15,7 +15,7 @@
 #include "chrome/common/mach_ipc_mac.h"
 
 #ifdef FUZZING
-#include "SharedMemoryFuzzer.h"
+#  include "SharedMemoryFuzzer.h"
 #endif
 
 //

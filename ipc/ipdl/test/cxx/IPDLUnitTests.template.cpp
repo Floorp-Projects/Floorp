@@ -56,7 +56,7 @@ const char* IPDLUnitTestName() {
     vector<string> argv = CommandLine::ForCurrentProcess()->argv();
     gIPDLUnitTestName = ::moz_xstrdup(argv[1].c_str());
 #else
-#error Sorry
+#  error Sorry
 #endif
   }
   return gIPDLUnitTestName;

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_X11
-#include <X11/Xlib.h>
+#  include <X11/Xlib.h>
 
 /**
  * InstallX11ErrorHandler is not suitable for processes running with GTK3 as

@@ -175,15 +175,15 @@ inline long double Abs<long double>(const long double aLongDouble) {
 
 #if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64) || \
                           defined(_M_X64) || defined(_M_ARM64))
-#define MOZ_BITSCAN_WINDOWS
+#  define MOZ_BITSCAN_WINDOWS
 
-#include <intrin.h>
-#pragma intrinsic(_BitScanForward, _BitScanReverse)
+#  include <intrin.h>
+#  pragma intrinsic(_BitScanForward, _BitScanReverse)
 
-#if defined(_M_AMD64) || defined(_M_X64) || defined(_M_ARM64)
-#define MOZ_BITSCAN_WINDOWS64
-#pragma intrinsic(_BitScanForward64, _BitScanReverse64)
-#endif
+#  if defined(_M_AMD64) || defined(_M_X64) || defined(_M_ARM64)
+#    define MOZ_BITSCAN_WINDOWS64
+#    pragma intrinsic(_BitScanForward64, _BitScanReverse64)
+#  endif
 
 #endif
 
@@ -216,48 +216,48 @@ inline uint_fast8_t CountPopulation64(uint64_t aValue) {
 }
 
 inline uint_fast8_t CountLeadingZeroes64(uint64_t aValue) {
-#if defined(MOZ_BITSCAN_WINDOWS64)
+#  if defined(MOZ_BITSCAN_WINDOWS64)
   unsigned long index;
   if (!_BitScanReverse64(&index, static_cast<unsigned __int64>(aValue)))
     return 64;
   return uint_fast8_t(63 - index);
-#else
+#  else
   uint32_t hi = uint32_t(aValue >> 32);
   if (hi != 0) {
     return CountLeadingZeroes32(hi);
   }
   return 32u + CountLeadingZeroes32(uint32_t(aValue));
-#endif
+#  endif
 }
 
 inline uint_fast8_t CountTrailingZeroes64(uint64_t aValue) {
-#if defined(MOZ_BITSCAN_WINDOWS64)
+#  if defined(MOZ_BITSCAN_WINDOWS64)
   unsigned long index;
   if (!_BitScanForward64(&index, static_cast<unsigned __int64>(aValue)))
     return 64;
   return uint_fast8_t(index);
-#else
+#  else
   uint32_t lo = uint32_t(aValue);
   if (lo != 0) {
     return CountTrailingZeroes32(lo);
   }
   return 32u + CountTrailingZeroes32(uint32_t(aValue >> 32));
-#endif
+#  endif
 }
 
-#ifdef MOZ_HAVE_BITSCAN64
-#undef MOZ_HAVE_BITSCAN64
-#endif
+#  ifdef MOZ_HAVE_BITSCAN64
+#    undef MOZ_HAVE_BITSCAN64
+#  endif
 
 #elif defined(__clang__) || defined(__GNUC__)
 
-#if defined(__clang__)
-#if !__has_builtin(__builtin_ctz) || !__has_builtin(__builtin_clz)
-#error "A clang providing __builtin_c[lt]z is required to build"
-#endif
-#else
+#  if defined(__clang__)
+#    if !__has_builtin(__builtin_ctz) || !__has_builtin(__builtin_clz)
+#      error "A clang providing __builtin_c[lt]z is required to build"
+#    endif
+#  else
 // gcc has had __builtin_clz and friends since 3.4: no need to check.
-#endif
+#  endif
 
 inline uint_fast8_t CountLeadingZeroes32(uint32_t aValue) {
   return __builtin_clz(aValue);
@@ -284,7 +284,7 @@ inline uint_fast8_t CountTrailingZeroes64(uint64_t aValue) {
 }
 
 #else
-#error "Implement these!"
+#  error "Implement these!"
 inline uint_fast8_t CountLeadingZeroes32(uint32_t aValue) = delete;
 inline uint_fast8_t CountTrailingZeroes32(uint32_t aValue) = delete;
 inline uint_fast8_t CountPopulation32(uint32_t aValue) = delete;

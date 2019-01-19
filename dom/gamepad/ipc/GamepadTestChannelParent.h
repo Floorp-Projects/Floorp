@@ -7,7 +7,7 @@
 #include "mozilla/dom/PGamepadTestChannelParent.h"
 
 #ifndef mozilla_dom_GamepadTestChannelParent_h_
-#define mozilla_dom_GamepadTestChannelParent_h_
+#  define mozilla_dom_GamepadTestChannelParent_h_
 
 namespace mozilla {
 namespace dom {

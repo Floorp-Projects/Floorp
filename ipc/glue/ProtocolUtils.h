@@ -37,7 +37,7 @@
 #include "nsILabelableRunnable.h"
 
 #if defined(ANDROID) && defined(DEBUG)
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 template <typename T>

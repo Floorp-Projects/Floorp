@@ -10,7 +10,7 @@
 #include "mozilla/UniquePtr.h"
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-#include "mozilla/sandboxing/loggingTypes.h"
+#  include "mozilla/sandboxing/loggingTypes.h"
 
 namespace sandbox {
 class TargetServices;

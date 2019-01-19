@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(WMFMediaDataDecoder_h_)
-#define WMFMediaDataDecoder_h_
+#  define WMFMediaDataDecoder_h_
 
-#include "MFTDecoder.h"
-#include "PlatformDecoderModule.h"
-#include "WMF.h"
-#include "mozilla/RefPtr.h"
-#include "nsAutoPtr.h"
+#  include "MFTDecoder.h"
+#  include "PlatformDecoderModule.h"
+#  include "WMF.h"
+#  include "mozilla/RefPtr.h"
+#  include "nsAutoPtr.h"
 
 namespace mozilla {
 

@@ -25,7 +25,7 @@
 
 // X11 has a #define for CurrentTime.
 #ifdef CurrentTime
-#undef CurrentTime
+#  undef CurrentTime
 #endif
 
 struct JSContext;

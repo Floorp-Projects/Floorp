@@ -152,12 +152,12 @@
 
 #ifdef XP_WIN
 // Nasty MS defines
-#ifdef GetClassInfo
-#undef GetClassInfo
-#endif
-#ifdef GetClassName
-#undef GetClassName
-#endif
+#  ifdef GetClassInfo
+#    undef GetClassInfo
+#  endif
+#  ifdef GetClassName
+#    undef GetClassName
+#  endif
 #endif /* XP_WIN */
 
 namespace mozilla {
@@ -747,7 +747,7 @@ class MOZ_STACK_CLASS XPCCallContext final {
 #ifdef DEBUG
   inline void CHECK_STATE(int s) const { MOZ_ASSERT(mState >= s, "bad state"); }
 #else
-#define CHECK_STATE(s) ((void)0)
+#  define CHECK_STATE(s) ((void)0)
 #endif
 
  private:

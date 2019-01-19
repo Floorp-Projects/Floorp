@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(BackgroundVideoDecodingPermissionObserver_h_)
-#define BackgroundVideoDecodingPermissionObserver_h_
+#  define BackgroundVideoDecodingPermissionObserver_h_
 
-#include "nsIObserver.h"
-#include "nsISupportsImpl.h"
+#  include "nsIObserver.h"
+#  include "nsISupportsImpl.h"
 
 class nsISupports;
 class nsPIDOMWindowOuter;

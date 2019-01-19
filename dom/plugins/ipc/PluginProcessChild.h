@@ -11,7 +11,7 @@
 #include "mozilla/plugins/PluginModuleChild.h"
 
 #if defined(XP_WIN)
-#include "mozilla/mscom/MainThreadRuntime.h"
+#  include "mozilla/mscom/MainThreadRuntime.h"
 #endif
 
 namespace mozilla {

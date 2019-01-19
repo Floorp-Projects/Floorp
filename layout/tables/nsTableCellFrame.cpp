@@ -721,7 +721,7 @@ nsTableCellFrame::IntrinsicISizeOffsets(nscoord aPercentageBasis) {
 }
 
 #ifdef DEBUG
-#define PROBABLY_TOO_LARGE 1000000
+#  define PROBABLY_TOO_LARGE 1000000
 static void DebugCheckChildSize(nsIFrame* aChild, ReflowOutput& aMet) {
   WritingMode wm = aMet.GetWritingMode();
   if ((aMet.ISize(wm) < 0) || (aMet.ISize(wm) > PROBABLY_TOO_LARGE)) {

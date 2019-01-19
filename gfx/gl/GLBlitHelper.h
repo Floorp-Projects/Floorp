@@ -16,7 +16,7 @@
 #include "../layers/ImageTypes.h"
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 namespace mozilla {

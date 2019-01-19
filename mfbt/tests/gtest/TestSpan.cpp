@@ -1307,10 +1307,10 @@ SPAN_TEST(first) {
 #if 0
         {
             Span<int, 5> av = arr;
-#ifdef CONFIRM_COMPILATION_ERRORS
+#  ifdef CONFIRM_COMPILATION_ERRORS
             ASSERT_EQ(av.First<6>().Length() , 6U);
             ASSERT_EQ(av.First<-1>().Length() , -1);
-#endif
+#  endif
             CHECK_THROW(av.First(6).Length(), fail_fast);
         }
 #endif
@@ -1346,9 +1346,9 @@ SPAN_TEST(last) {
 #if 0
         {
             Span<int, 5> av = arr;
-#ifdef CONFIRM_COMPILATION_ERRORS
+#  ifdef CONFIRM_COMPILATION_ERRORS
             ASSERT_EQ(av.Last<6>().Length() , 6U);
-#endif
+#  endif
             CHECK_THROW(av.Last(6).Length(), fail_fast);
         }
 #endif

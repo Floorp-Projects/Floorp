@@ -62,7 +62,7 @@ enum DW_REG_NUMBER {
   DW_REG_MIPS_FP = 30,
   DW_REG_MIPS_PC = 34,
 #else
-#error "Unknown arch"
+#  error "Unknown arch"
 #endif
 };
 
@@ -285,7 +285,7 @@ class RuleSet {
   LExpr mFPexpr;
   LExpr mSPexpr;
 #else
-#error "Unknown arch"
+#  error "Unknown arch"
 #endif
 };
 
@@ -317,7 +317,7 @@ static inline bool registerIsTracked(DW_REG_NUMBER reg) {
     case DW_REG_MIPS_PC:
       return true;
 #else
-#error "Unknown arch"
+#  error "Unknown arch"
 #endif
     default:
       return false;

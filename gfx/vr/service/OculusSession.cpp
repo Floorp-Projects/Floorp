@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef XP_WIN
-#error "Oculus support only available for Windows"
+#  error "Oculus support only available for Windows"
 #endif
 
 #include <math.h>
@@ -130,9 +130,9 @@ static pfn_ovr_CreateMirrorTextureGL ovr_CreateMirrorTextureGL = nullptr;
 static pfn_ovr_GetMirrorTextureBufferGL ovr_GetMirrorTextureBufferGL = nullptr;
 
 #ifdef HAVE_64BIT_BUILD
-#define BUILD_BITS 64
+#  define BUILD_BITS 64
 #else
-#define BUILD_BITS 32
+#  define BUILD_BITS 32
 #endif
 
 #define OVR_PRODUCT_VERSION 1
@@ -581,7 +581,7 @@ bool OculusSession::LoadOvrLib() {
     }
   }
 #else
-#error "Unsupported platform!"
+#  error "Unsupported platform!"
 #endif
 
   if (!mOvrLib) {

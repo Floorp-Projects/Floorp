@@ -357,8 +357,8 @@ static void DEBUG_CheckUnwrapSafety(HandleObject obj,
   }
 }
 #else
-#define DEBUG_CheckUnwrapSafety(obj, handler, origin, target) \
-  {}
+#  define DEBUG_CheckUnwrapSafety(obj, handler, origin, target) \
+    {}
 #endif
 
 static const Wrapper* SelectWrapper(bool securityWrapper, XrayType xrayType,

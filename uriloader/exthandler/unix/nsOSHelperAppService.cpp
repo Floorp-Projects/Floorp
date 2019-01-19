@@ -10,7 +10,7 @@
 #include "nsOSHelperAppService.h"
 #include "nsMIMEInfoUnix.h"
 #ifdef MOZ_WIDGET_GTK
-#include "nsGNOMERegistry.h"
+#  include "nsGNOMERegistry.h"
 #endif
 #include "nsISupports.h"
 #include "nsString.h"

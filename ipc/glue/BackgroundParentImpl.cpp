@@ -9,7 +9,7 @@
 #include "BroadcastChannelParent.h"
 #include "FileDescriptorSetParent.h"
 #ifdef MOZ_WEBRTC
-#include "CamerasParent.h"
+#  include "CamerasParent.h"
 #endif
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/Assertions.h"
@@ -66,11 +66,11 @@
 #include "nsXULAppAPI.h"
 
 #ifdef DISABLE_ASSERTS_FOR_FUZZING
-#define ASSERT_UNLESS_FUZZING(...) \
-  do {                             \
-  } while (0)
+#  define ASSERT_UNLESS_FUZZING(...) \
+    do {                             \
+    } while (0)
 #else
-#define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false)
+#  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false)
 #endif
 
 using mozilla::AssertIsOnMainThread;

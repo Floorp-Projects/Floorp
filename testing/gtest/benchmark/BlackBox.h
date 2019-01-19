@@ -17,7 +17,7 @@
 
 #include "mozilla/Attributes.h"
 #if defined(_MSC_VER)
-#include <intrin.h>
+#  include <intrin.h>
 #endif  // _MSC_VER
 
 namespace mozilla {

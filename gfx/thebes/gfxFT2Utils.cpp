@@ -8,7 +8,7 @@
 #include "mozilla/Likely.h"
 
 #ifdef HAVE_FONTCONFIG_FCFREETYPE_H
-#include <fontconfig/fcfreetype.h>
+#  include <fontconfig/fcfreetype.h>
 #endif
 
 #include "ft2build.h"

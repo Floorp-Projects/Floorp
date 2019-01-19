@@ -15,6 +15,46 @@
 namespace mozilla {
 namespace gfx {
 
+struct PathOp {
+  PathOp() {}
+  ~PathOp() {}
+
+  enum OpType {
+    OP_MOVETO = 0,
+    OP_LINETO,
+    OP_BEZIERTO,
+    OP_QUADRATICBEZIERTO,
+    OP_ARC,
+    OP_CLOSE
+  };
+
+  OpType mType;
+  Point mP1;
+#if !defined(__GNUC__) || __GNUC__ >= 7
+  union {
+    struct {
+      Point mP2;
+      Point mP3;
+    };
+    struct {
+      float mRadius;
+      float mStartAngle;
+      float mEndAngle;
+      bool mAntiClockwise;
+    };
+  };
+#else
+  Point mP2;
+  Point mP3;
+  float mRadius;
+  float mStartAngle;
+  float mEndAngle;
+  bool mAntiClockwise;
+#endif
+};
+
+const int32_t sPointCount[] = {1, 1, 3, 2, 0, 0};
+
 // Kappa constant for 90-degree angle
 const Float kKappaFactor = 0.55191497064665766025f;
 

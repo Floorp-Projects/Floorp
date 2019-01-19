@@ -11,11 +11,11 @@
 #include "updatererrors.h"
 
 #ifdef XP_WIN
-#define NS_tfopen _wfopen
-#define OPEN_MODE L"rb"
+#  define NS_tfopen _wfopen
+#  define OPEN_MODE L"rb"
 #else
-#define NS_tfopen fopen
-#define OPEN_MODE "r"
+#  define NS_tfopen fopen
+#  define OPEN_MODE "r"
 #endif
 
 // stack based FILE wrapper to ensure that fclose is called.

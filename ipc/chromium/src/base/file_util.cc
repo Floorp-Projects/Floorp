@@ -7,11 +7,11 @@
 #include "base/file_util.h"
 
 #if defined(OS_WIN)
-#include <io.h>
+#  include <io.h>
 #endif
 #include <stdio.h>
 #if defined(ANDROID) || defined(OS_POSIX)
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include <fstream>

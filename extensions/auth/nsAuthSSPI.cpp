@@ -29,15 +29,15 @@
 #define SEC_SUCCESS(Status) ((Status) >= 0)
 
 #ifndef KERB_WRAP_NO_ENCRYPT
-#define KERB_WRAP_NO_ENCRYPT 0x80000001
+#  define KERB_WRAP_NO_ENCRYPT 0x80000001
 #endif
 
 #ifndef SECBUFFER_PADDING
-#define SECBUFFER_PADDING 9
+#  define SECBUFFER_PADDING 9
 #endif
 
 #ifndef SECBUFFER_STREAM
-#define SECBUFFER_STREAM 10
+#  define SECBUFFER_STREAM 10
 #endif
 
 //-----------------------------------------------------------------------------
@@ -45,9 +45,9 @@
 static const wchar_t *const pTypeName[] = {L"Kerberos", L"Negotiate", L"NTLM"};
 
 #ifdef DEBUG
-#define CASE_(_x) \
-  case _x:        \
-    return #_x;
+#  define CASE_(_x) \
+    case _x:        \
+      return #_x;
 static const char *MapErrorCode(int rc) {
   switch (rc) {
     CASE_(SEC_E_OK)
@@ -68,7 +68,7 @@ static const char *MapErrorCode(int rc) {
   return "<unknown>";
 }
 #else
-#define MapErrorCode(_rc) ""
+#  define MapErrorCode(_rc) ""
 #endif
 
 //-----------------------------------------------------------------------------

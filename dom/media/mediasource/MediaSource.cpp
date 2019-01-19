@@ -37,7 +37,7 @@
 #include "mozilla/Sprintf.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
+#  include "AndroidBridge.h"
 #endif
 
 struct JSContext;

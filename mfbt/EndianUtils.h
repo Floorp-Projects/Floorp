@@ -76,47 +76,47 @@
 #include <string.h>
 
 #if defined(_MSC_VER)
-#include <stdlib.h>
-#pragma intrinsic(_byteswap_ushort)
-#pragma intrinsic(_byteswap_ulong)
-#pragma intrinsic(_byteswap_uint64)
+#  include <stdlib.h>
+#  pragma intrinsic(_byteswap_ushort)
+#  pragma intrinsic(_byteswap_ulong)
+#  pragma intrinsic(_byteswap_uint64)
 #endif
 
 #if defined(_WIN64)
-#if defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)
-#define MOZ_LITTLE_ENDIAN 1
-#elif defined(_M_ARM64)
-#define MOZ_LITTLE_ENDIAN 1
-#else
-#error "CPU type is unknown"
-#endif
+#  if defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)
+#    define MOZ_LITTLE_ENDIAN 1
+#  elif defined(_M_ARM64)
+#    define MOZ_LITTLE_ENDIAN 1
+#  else
+#    error "CPU type is unknown"
+#  endif
 #elif defined(_WIN32)
-#if defined(_M_IX86)
-#define MOZ_LITTLE_ENDIAN 1
-#elif defined(_M_ARM)
-#define MOZ_LITTLE_ENDIAN 1
-#else
-#error "CPU type is unknown"
-#endif
+#  if defined(_M_IX86)
+#    define MOZ_LITTLE_ENDIAN 1
+#  elif defined(_M_ARM)
+#    define MOZ_LITTLE_ENDIAN 1
+#  else
+#    error "CPU type is unknown"
+#  endif
 #elif defined(__APPLE__) || defined(__powerpc__) || defined(__ppc__)
-#if __LITTLE_ENDIAN__
-#define MOZ_LITTLE_ENDIAN 1
-#elif __BIG_ENDIAN__
-#define MOZ_BIG_ENDIAN 1
-#endif
+#  if __LITTLE_ENDIAN__
+#    define MOZ_LITTLE_ENDIAN 1
+#  elif __BIG_ENDIAN__
+#    define MOZ_BIG_ENDIAN 1
+#  endif
 #elif defined(__GNUC__) && defined(__BYTE_ORDER__) && \
     defined(__ORDER_LITTLE_ENDIAN__) && defined(__ORDER_BIG_ENDIAN__)
 /*
  * Some versions of GCC provide architecture-independent macros for
  * this.  Yes, there are more than two values for __BYTE_ORDER__.
  */
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define MOZ_LITTLE_ENDIAN 1
-#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define MOZ_BIG_ENDIAN 1
-#else
-#error "Can't handle mixed-endian architectures"
-#endif
+#  if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#    define MOZ_LITTLE_ENDIAN 1
+#  elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#    define MOZ_BIG_ENDIAN 1
+#  else
+#    error "Can't handle mixed-endian architectures"
+#  endif
 /*
  * We can't include useful headers like <endian.h> or <sys/isa_defs.h>
  * here because they're not present on all platforms.  Instead we have
@@ -128,31 +128,31 @@
     defined(__s390__) || defined(__AARCH64EB__) ||                 \
     (defined(__sh__) && defined(__LITTLE_ENDIAN__)) ||             \
     (defined(__ia64) && defined(__BIG_ENDIAN__))
-#define MOZ_BIG_ENDIAN 1
+#  define MOZ_BIG_ENDIAN 1
 #elif defined(__i386) || defined(__i386__) || defined(__x86_64) ||   \
     defined(__x86_64__) || defined(_MIPSEL) || defined(__ARMEL__) || \
     defined(__alpha__) || defined(__AARCH64EL__) ||                  \
     (defined(__sh__) && defined(__BIG_ENDIAN__)) ||                  \
     (defined(__ia64) && !defined(__BIG_ENDIAN__))
-#define MOZ_LITTLE_ENDIAN 1
+#  define MOZ_LITTLE_ENDIAN 1
 #endif
 
 #if MOZ_BIG_ENDIAN
-#define MOZ_LITTLE_ENDIAN 0
+#  define MOZ_LITTLE_ENDIAN 0
 #elif MOZ_LITTLE_ENDIAN
-#define MOZ_BIG_ENDIAN 0
+#  define MOZ_BIG_ENDIAN 0
 #else
-#error "Cannot determine endianness"
+#  error "Cannot determine endianness"
 #endif
 
 #if defined(__clang__)
-#if __has_builtin(__builtin_bswap16)
-#define MOZ_HAVE_BUILTIN_BYTESWAP16 __builtin_bswap16
-#endif
+#  if __has_builtin(__builtin_bswap16)
+#    define MOZ_HAVE_BUILTIN_BYTESWAP16 __builtin_bswap16
+#  endif
 #elif defined(__GNUC__)
-#define MOZ_HAVE_BUILTIN_BYTESWAP16 __builtin_bswap16
+#  define MOZ_HAVE_BUILTIN_BYTESWAP16 __builtin_bswap16
 #elif defined(_MSC_VER)
-#define MOZ_HAVE_BUILTIN_BYTESWAP16 _byteswap_ushort
+#  define MOZ_HAVE_BUILTIN_BYTESWAP16 _byteswap_ushort
 #endif
 
 namespace mozilla {
@@ -215,9 +215,9 @@ struct Swapper<T, 8> {
 enum Endianness { Little, Big };
 
 #if MOZ_BIG_ENDIAN
-#define MOZ_NATIVE_ENDIANNESS detail::Big
+#  define MOZ_NATIVE_ENDIANNESS detail::Big
 #else
-#define MOZ_NATIVE_ENDIANNESS detail::Little
+#  define MOZ_NATIVE_ENDIANNESS detail::Little
 #endif
 
 class EndianUtils {

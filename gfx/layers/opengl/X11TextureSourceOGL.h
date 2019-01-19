@@ -9,10 +9,10 @@
 
 #ifdef MOZ_X11
 
-#include "mozilla/layers/CompositorOGL.h"
-#include "mozilla/layers/TextureHostOGL.h"
-#include "mozilla/layers/X11TextureHost.h"
-#include "mozilla/gfx/2D.h"
+#  include "mozilla/layers/CompositorOGL.h"
+#  include "mozilla/layers/TextureHostOGL.h"
+#  include "mozilla/layers/X11TextureHost.h"
+#  include "mozilla/gfx/2D.h"
 
 namespace mozilla {
 namespace layers {

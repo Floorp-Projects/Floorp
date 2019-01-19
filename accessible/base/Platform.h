@@ -11,8 +11,8 @@
 #include "nsStringFwd.h"
 
 #if defined(ANDROID)
-#include "nsTArray.h"
-#include "nsRect.h"
+#  include "nsTArray.h"
+#  include "nsRect.h"
 #endif
 
 namespace mozilla {

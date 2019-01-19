@@ -17,12 +17,12 @@
 class nsIFile;
 
 #if defined(XP_WIN)
-#include <windows.h>
+#  include <windows.h>
 typedef HANDLE ProcessType;
 #elif defined(XP_UNIX)
 typedef pid_t ProcessType;
 #else
-#include "prproces.h"
+#  include "prproces.h"
 typedef PRProcess *ProcessType;
 #endif
 

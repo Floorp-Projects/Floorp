@@ -8,8 +8,8 @@
 
 #ifdef USE_SKIA_GPU
 
-#include "skia/include/core/SkRefCnt.h"
-#include "mozilla/RefPtr.h"
+#  include "skia/include/core/SkRefCnt.h"
+#  include "mozilla/RefPtr.h"
 
 struct GrGLInterface;
 class GrContext;

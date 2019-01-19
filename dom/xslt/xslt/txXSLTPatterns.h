@@ -81,11 +81,11 @@ class txPattern {
   virtual void setSubPatternAt(uint32_t aPos, txPattern* aPattern) override
 
 #ifndef TX_TO_STRING
-#define TX_DECL_PATTERN TX_DECL_PATTERN_BASE
+#  define TX_DECL_PATTERN TX_DECL_PATTERN_BASE
 #else
-#define TX_DECL_PATTERN \
-  TX_DECL_PATTERN_BASE; \
-  void toString(nsAString& aDest) override
+#  define TX_DECL_PATTERN \
+    TX_DECL_PATTERN_BASE; \
+    void toString(nsAString& aDest) override
 #endif
 
 #define TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(_class)               \

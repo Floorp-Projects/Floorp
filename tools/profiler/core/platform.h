@@ -45,21 +45,21 @@
 // We need a definition of gettid(), but glibc doesn't provide a
 // wrapper for it.
 #if defined(__GLIBC__)
-#include <unistd.h>
-#include <sys/syscall.h>
+#  include <unistd.h>
+#  include <sys/syscall.h>
 static inline pid_t gettid() { return (pid_t)syscall(SYS_gettid); }
 #elif defined(GP_OS_darwin)
-#include <unistd.h>
-#include <sys/syscall.h>
+#  include <unistd.h>
+#  include <sys/syscall.h>
 static inline pid_t gettid() { return (pid_t)syscall(SYS_thread_selfid); }
 #elif defined(GP_OS_android)
-#include <unistd.h>
+#  include <unistd.h>
 #elif defined(GP_OS_windows)
-#include <windows.h>
-#include <process.h>
-#ifndef getpid
-#define getpid _getpid
-#endif
+#  include <windows.h>
+#  include <process.h>
+#  ifndef getpid
+#    define getpid _getpid
+#  endif
 #endif
 
 extern mozilla::LazyLogModule gProfilerLog;

@@ -27,7 +27,7 @@
 #include "mozilla/dom/EventTarget.h"
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 using namespace mozilla;

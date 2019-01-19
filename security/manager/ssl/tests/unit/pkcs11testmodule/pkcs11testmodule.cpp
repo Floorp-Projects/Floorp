@@ -16,9 +16,9 @@
 #include <string.h>
 
 #if defined(WIN32)
-#include <windows.h>  // for Sleep
+#  include <windows.h>  // for Sleep
 #else
-#include <unistd.h>  // for usleep
+#  include <unistd.h>  // for usleep
 #endif
 
 #include "pkcs11.h"

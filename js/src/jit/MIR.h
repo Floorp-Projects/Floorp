@@ -6607,18 +6607,26 @@ class MModuleMetadata : public MNullaryInstruction {
   }
 };
 
-class MDynamicImport : public MBinaryInstruction, public BoxInputsPolicy::Data {
-  explicit MDynamicImport(MDefinition* referencingPrivate,
+class MDynamicImport : public MUnaryInstruction, public BoxInputsPolicy::Data {
+  CompilerObject referencingScriptSource_;
+
+  explicit MDynamicImport(JSObject* referencingScriptSource,
                           MDefinition* specifier)
-      : MBinaryInstruction(classOpcode, referencingPrivate, specifier) {
+      : MUnaryInstruction(classOpcode, specifier),
+        referencingScriptSource_(referencingScriptSource) {
     setResultType(MIRType::Object);
   }
 
  public:
   INSTRUCTION_HEADER(DynamicImport)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, referencingPrivate))
-  NAMED_OPERANDS((1, specifier))
+  NAMED_OPERANDS((0, specifier))
+
+  JSObject* referencingScriptSource() const { return referencingScriptSource_; }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(referencingScriptSource_);
+  }
 };
 
 struct LambdaFunctionInfo {

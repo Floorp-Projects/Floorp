@@ -35,9 +35,9 @@
 
 // MSVC doesn't have ssize_t. Help it along a little.
 #ifdef HAVE_SSIZE_T
-#define CTYPES_SSIZE_T ssize_t
+#  define CTYPES_SSIZE_T ssize_t
 #else
-#define CTYPES_SSIZE_T intptr_t
+#  define CTYPES_SSIZE_T intptr_t
 #endif
 
 // Some #defines to make handling of types whose length varies by platform

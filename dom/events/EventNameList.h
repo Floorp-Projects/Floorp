@@ -53,99 +53,99 @@
  */
 
 #ifdef MESSAGE_TO_EVENT
-#ifdef EVENT
-#error "Don't define EVENT"
-#endif /* EVENT */
-#ifdef WINDOW_ONLY_EVENT
-#error "Don't define WINDOW_ONLY_EVENT"
-#endif /* WINDOW_ONLY_EVENT */
-#ifdef TOUCH_EVENT
-#error "Don't define TOUCH_EVENT"
-#endif /* TOUCH_EVENT */
-#ifdef DOCUMENT_ONLY_EVENT
-#error "Don't define DOCUMENT_ONLY_EVENT"
-#endif /* DOCUMENT_ONLY_EVENT */
-#ifdef NON_IDL_EVENT
-#error "Don't define NON_IDL_EVENT"
-#endif /* NON_IDL_EVENT */
+#  ifdef EVENT
+#    error "Don't define EVENT"
+#  endif /* EVENT */
+#  ifdef WINDOW_ONLY_EVENT
+#    error "Don't define WINDOW_ONLY_EVENT"
+#  endif /* WINDOW_ONLY_EVENT */
+#  ifdef TOUCH_EVENT
+#    error "Don't define TOUCH_EVENT"
+#  endif /* TOUCH_EVENT */
+#  ifdef DOCUMENT_ONLY_EVENT
+#    error "Don't define DOCUMENT_ONLY_EVENT"
+#  endif /* DOCUMENT_ONLY_EVENT */
+#  ifdef NON_IDL_EVENT
+#    error "Don't define NON_IDL_EVENT"
+#  endif /* NON_IDL_EVENT */
 
-#define EVENT MESSAGE_TO_EVENT
-#define WINDOW_ONLY_EVENT MESSAGE_TO_EVENT
-#define TOUCH_EVENT MESSAGE_TO_EVENT
-#define DOCUMENT_ONLY_EVENT MESSAGE_TO_EVENT
-#define NON_IDL_EVENT MESSAGE_TO_EVENT
+#  define EVENT MESSAGE_TO_EVENT
+#  define WINDOW_ONLY_EVENT MESSAGE_TO_EVENT
+#  define TOUCH_EVENT MESSAGE_TO_EVENT
+#  define DOCUMENT_ONLY_EVENT MESSAGE_TO_EVENT
+#  define NON_IDL_EVENT MESSAGE_TO_EVENT
 #endif /* MESSAGE_TO_EVENT */
 
 #ifdef DEFINED_FORWARDED_EVENT
-#error "Don't define DEFINED_FORWARDED_EVENT"
+#  error "Don't define DEFINED_FORWARDED_EVENT"
 #endif /* DEFINED_FORWARDED_EVENT */
 
 #ifndef FORWARDED_EVENT
-#define FORWARDED_EVENT EVENT
-#define DEFINED_FORWARDED_EVENT
+#  define FORWARDED_EVENT EVENT
+#  define DEFINED_FORWARDED_EVENT
 #endif /* FORWARDED_EVENT */
 
 #ifdef DEFINED_WINDOW_ONLY_EVENT
-#error "Don't define DEFINED_WINDOW_ONLY_EVENT"
+#  error "Don't define DEFINED_WINDOW_ONLY_EVENT"
 #endif /* DEFINED_WINDOW_ONLY_EVENT */
 
 #ifndef WINDOW_ONLY_EVENT
-#define WINDOW_ONLY_EVENT(_name, _message, _type, _struct)
-#define DEFINED_WINDOW_ONLY_EVENT
+#  define WINDOW_ONLY_EVENT(_name, _message, _type, _struct)
+#  define DEFINED_WINDOW_ONLY_EVENT
 #endif /* WINDOW_ONLY_EVENT */
 
 #ifdef DEFINED_WINDOW_EVENT
-#error "Don't define DEFINED_WINDOW_EVENT"
+#  error "Don't define DEFINED_WINDOW_EVENT"
 #endif /* DEFINED_WINDOW_EVENT */
 
 #ifndef WINDOW_EVENT
-#define WINDOW_EVENT WINDOW_ONLY_EVENT
-#define DEFINED_WINDOW_EVENT
+#  define WINDOW_EVENT WINDOW_ONLY_EVENT
+#  define DEFINED_WINDOW_EVENT
 #endif /* WINDOW_EVENT */
 
 #ifdef DEFINED_TOUCH_EVENT
-#error "Don't define DEFINED_TOUCH_EVENT"
+#  error "Don't define DEFINED_TOUCH_EVENT"
 #endif /* DEFINED_TOUCH_EVENT */
 
 #ifndef TOUCH_EVENT
-#define TOUCH_EVENT(_name, _message, _type, _struct)
-#define DEFINED_TOUCH_EVENT
+#  define TOUCH_EVENT(_name, _message, _type, _struct)
+#  define DEFINED_TOUCH_EVENT
 #endif /* TOUCH_EVENT */
 
 #ifdef DEFINED_DOCUMENT_ONLY_EVENT
-#error "Don't define DEFINED_DOCUMENT_ONLY_EVENT"
+#  error "Don't define DEFINED_DOCUMENT_ONLY_EVENT"
 #endif /* DEFINED_DOCUMENT_ONLY_EVENT */
 
 #ifndef DOCUMENT_ONLY_EVENT
-#define DOCUMENT_ONLY_EVENT(_name, _message, _type, _struct)
-#define DEFINED_DOCUMENT_ONLY_EVENT
+#  define DOCUMENT_ONLY_EVENT(_name, _message, _type, _struct)
+#  define DEFINED_DOCUMENT_ONLY_EVENT
 #endif /* DOCUMENT_ONLY_EVENT */
 
 #ifdef DEFINED_NON_IDL_EVENT
-#error "Don't define DEFINED_NON_IDL_EVENT"
+#  error "Don't define DEFINED_NON_IDL_EVENT"
 #endif /* DEFINED_NON_IDL_EVENT */
 
 #ifndef NON_IDL_EVENT
-#define NON_IDL_EVENT(_name, _message, _type, _struct)
-#define DEFINED_NON_IDL_EVENT
+#  define NON_IDL_EVENT(_name, _message, _type, _struct)
+#  define DEFINED_NON_IDL_EVENT
 #endif /* NON_IDL_EVENT */
 
 #ifdef DEFINED_ERROR_EVENT
-#error "Don't define DEFINED_ERROR_EVENT"
+#  error "Don't define DEFINED_ERROR_EVENT"
 #endif /* DEFINED_ERROR_EVENT */
 
 #ifndef ERROR_EVENT
-#define ERROR_EVENT FORWARDED_EVENT
-#define DEFINED_ERROR_EVENT
+#  define ERROR_EVENT FORWARDED_EVENT
+#  define DEFINED_ERROR_EVENT
 #endif /* ERROR_EVENT */
 
 #ifdef DEFINED_BEFOREUNLOAD_EVENT
-#error "Don't define DEFINED_BEFOREUNLOAD_EVENT"
+#  error "Don't define DEFINED_BEFOREUNLOAD_EVENT"
 #endif /* DEFINED_BEFOREUNLOAD_EVENT */
 
 #ifndef BEFOREUNLOAD_EVENT
-#define BEFOREUNLOAD_EVENT WINDOW_EVENT
-#define DEFINED_BEFOREUNLOAD_EVENT
+#  define BEFOREUNLOAD_EVENT WINDOW_EVENT
+#  define DEFINED_BEFOREUNLOAD_EVENT
 #endif /* BEFOREUNLOAD_EVENT */
 
 EVENT(abort, eImageAbort, EventNameType_All, eBasicEventClass)
@@ -538,49 +538,49 @@ NON_IDL_EVENT(audioprocess, eAudioProcess, EventNameType_None, eBasicEventClass)
 NON_IDL_EVENT(complete, eAudioComplete, EventNameType_None, eBasicEventClass)
 
 #ifdef DEFINED_FORWARDED_EVENT
-#undef DEFINED_FORWARDED_EVENT
-#undef FORWARDED_EVENT
+#  undef DEFINED_FORWARDED_EVENT
+#  undef FORWARDED_EVENT
 #endif /* DEFINED_FORWARDED_EVENT */
 
 #ifdef DEFINED_WINDOW_EVENT
-#undef DEFINED_WINDOW_EVENT
-#undef WINDOW_EVENT
+#  undef DEFINED_WINDOW_EVENT
+#  undef WINDOW_EVENT
 #endif /* DEFINED_WINDOW_EVENT */
 
 #ifdef DEFINED_WINDOW_ONLY_EVENT
-#undef DEFINED_WINDOW_ONLY_EVENT
-#undef WINDOW_ONLY_EVENT
+#  undef DEFINED_WINDOW_ONLY_EVENT
+#  undef WINDOW_ONLY_EVENT
 #endif /* DEFINED_WINDOW_ONLY_EVENT */
 
 #ifdef DEFINED_TOUCH_EVENT
-#undef DEFINED_TOUCH_EVENT
-#undef TOUCH_EVENT
+#  undef DEFINED_TOUCH_EVENT
+#  undef TOUCH_EVENT
 #endif /* DEFINED_TOUCH_EVENT */
 
 #ifdef DEFINED_DOCUMENT_ONLY_EVENT
-#undef DEFINED_DOCUMENT_ONLY_EVENT
-#undef DOCUMENT_ONLY_EVENT
+#  undef DEFINED_DOCUMENT_ONLY_EVENT
+#  undef DOCUMENT_ONLY_EVENT
 #endif /* DEFINED_DOCUMENT_ONLY_EVENT */
 
 #ifdef DEFINED_NON_IDL_EVENT
-#undef DEFINED_NON_IDL_EVENT
-#undef NON_IDL_EVENT
+#  undef DEFINED_NON_IDL_EVENT
+#  undef NON_IDL_EVENT
 #endif /* DEFINED_NON_IDL_EVENT */
 
 #ifdef DEFINED_ERROR_EVENT
-#undef DEFINED_ERROR_EVENT
-#undef ERROR_EVENT
+#  undef DEFINED_ERROR_EVENT
+#  undef ERROR_EVENT
 #endif /* DEFINED_ERROR_EVENT */
 
 #ifdef DEFINED_BEFOREUNLOAD_EVENT
-#undef DEFINED_BEFOREUNLOAD_EVENT
-#undef BEFOREUNLOAD_EVENT
+#  undef DEFINED_BEFOREUNLOAD_EVENT
+#  undef BEFOREUNLOAD_EVENT
 #endif /* BEFOREUNLOAD_EVENT */
 
 #ifdef MESSAGE_TO_EVENT
-#undef EVENT
-#undef WINDOW_ONLY_EVENT
-#undef TOUCH_EVENT
-#undef DOCUMENT_ONLY_EVENT
-#undef NON_IDL_EVENT
+#  undef EVENT
+#  undef WINDOW_ONLY_EVENT
+#  undef TOUCH_EVENT
+#  undef DOCUMENT_ONLY_EVENT
+#  undef NON_IDL_EVENT
 #endif /* MESSAGE_TO_EVENT */

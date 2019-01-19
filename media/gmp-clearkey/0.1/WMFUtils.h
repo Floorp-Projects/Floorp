@@ -34,13 +34,13 @@
 void LOG(const char* format, ...);
 
 #ifdef LOG_SAMPLE_DECODE
-#define SAMPLE_LOG LOG
+#  define SAMPLE_LOG LOG
 #else
-#define SAMPLE_LOG(...)
+#  define SAMPLE_LOG(...)
 #endif
 
 #ifndef CLSID_CMSAACDecMFT
-#define WMF_MUST_DEFINE_AAC_MFT_CLSID
+#  define WMF_MUST_DEFINE_AAC_MFT_CLSID
 extern "C" const CLSID CLSID_CMSAACDecMFT;
 #endif
 
@@ -113,7 +113,7 @@ class IntRect {
 typedef int64_t Microseconds;
 
 #ifdef ENSURE
-#undef ENSURE
+#  undef ENSURE
 #endif
 
 #define ENSURE(condition, ret)                                 \

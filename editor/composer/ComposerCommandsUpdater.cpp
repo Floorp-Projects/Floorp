@@ -55,7 +55,7 @@ NS_IMPL_CYCLE_COLLECTION(ComposerCommandsUpdater, mUpdateTimer, mDOMWindow,
                          mDocShell)
 
 #if 0
-#pragma mark -
+#  pragma mark -
 #endif
 
 NS_IMETHODIMP
@@ -90,7 +90,7 @@ ComposerCommandsUpdater::NotifyDocumentStateChanged(bool aNowDirty) {
 }
 
 #if 0
-#pragma mark -
+#  pragma mark -
 #endif
 
 NS_IMETHODIMP
@@ -197,7 +197,7 @@ ComposerCommandsUpdater::DidMerge(nsITransactionManager* aManager,
 }
 
 #if 0
-#pragma mark -
+#  pragma mark -
 #endif
 
 nsresult ComposerCommandsUpdater::Init(nsPIDOMWindowOuter* aDOMWindow) {
@@ -338,7 +338,7 @@ ComposerCommandsUpdater::GetName(nsACString& aName) {
 }
 
 #if 0
-#pragma mark -
+#  pragma mark -
 #endif
 
 nsresult ComposerCommandsUpdater::Notify(nsITimer* aTimer) {
@@ -348,7 +348,7 @@ nsresult ComposerCommandsUpdater::Notify(nsITimer* aTimer) {
 }
 
 #if 0
-#pragma mark -
+#  pragma mark -
 #endif
 
 }  // namespace mozilla

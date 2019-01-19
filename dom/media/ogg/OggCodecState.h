@@ -4,29 +4,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(OggCodecState_h_)
-#define OggCodecState_h_
+#  define OggCodecState_h_
 
-#include <ogg/ogg.h>
+#  include <ogg/ogg.h>
 // For MOZ_SAMPLE_TYPE_*
-#include "FlacFrameParser.h"
-#include "VideoUtils.h"
-#include <nsDeque.h>
-#include <nsTArray.h>
-#include <nsClassHashtable.h>
+#  include "FlacFrameParser.h"
+#  include "VideoUtils.h"
+#  include <nsDeque.h>
+#  include <nsTArray.h>
+#  include <nsClassHashtable.h>
 
-#include <theora/theoradec.h>
-#ifdef MOZ_TREMOR
-#include <tremor/ivorbiscodec.h>
-#else
-#include <vorbis/codec.h>
-#endif
+#  include <theora/theoradec.h>
+#  ifdef MOZ_TREMOR
+#    include <tremor/ivorbiscodec.h>
+#  else
+#    include <vorbis/codec.h>
+#  endif
 
 // Uncomment the following to validate that we're predicting the number
 // of Vorbis samples in each packet correctly.
-#define VALIDATE_VORBIS_SAMPLE_CALCULATION
-#ifdef VALIDATE_VORBIS_SAMPLE_CALCULATION
-#include <map>
-#endif
+#  define VALIDATE_VORBIS_SAMPLE_CALCULATION
+#  ifdef VALIDATE_VORBIS_SAMPLE_CALCULATION
+#    include <map>
+#  endif
 
 struct OpusMSDecoder;
 
@@ -317,12 +317,12 @@ class VorbisState : public OggCodecState {
   // back-propagate from.
   int64_t mGranulepos;
 
-#ifdef VALIDATE_VORBIS_SAMPLE_CALCULATION
+#  ifdef VALIDATE_VORBIS_SAMPLE_CALCULATION
   // When validating that we've correctly predicted Vorbis packets' number
   // of samples, we store each packet's predicted number of samples in this
   // map, and verify we decode the predicted number of samples.
   std::map<ogg_packet*, long> mVorbisPacketSamples;
-#endif
+#  endif
 
   // Records that aPacket is predicted to have aSamples samples.
   // This function has no effect if VALIDATE_VORBIS_SAMPLE_CALCULATION
@@ -435,7 +435,7 @@ class OpusState : public OggCodecState {
 
 // Constructs a 32bit version number out of two 16 bit major,minor
 // version numbers.
-#define SKELETON_VERSION(major, minor) (((major) << 16) | (minor))
+#  define SKELETON_VERSION(major, minor) (((major) << 16) | (minor))
 
 enum EMsgHeaderType {
   eContentType,

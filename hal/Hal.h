@@ -31,8 +31,8 @@
 class nsPIDOMWindowInner;
 
 #ifndef MOZ_HAL_NAMESPACE
-#define MOZ_HAL_NAMESPACE hal
-#define MOZ_DEFINED_HAL_NAMESPACE 1
+#  define MOZ_HAL_NAMESPACE hal
+#  define MOZ_DEFINED_HAL_NAMESPACE 1
 #endif
 
 namespace mozilla {
@@ -262,8 +262,8 @@ void SetProcessPriority(int aPid, hal::ProcessPriority aPriority);
 }  // namespace mozilla
 
 #ifdef MOZ_DEFINED_HAL_NAMESPACE
-#undef MOZ_DEFINED_HAL_NAMESPACE
-#undef MOZ_HAL_NAMESPACE
+#  undef MOZ_DEFINED_HAL_NAMESPACE
+#  undef MOZ_HAL_NAMESPACE
 #endif
 
 #endif  // mozilla_Hal_h

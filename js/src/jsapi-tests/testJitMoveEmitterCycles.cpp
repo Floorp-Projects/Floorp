@@ -7,16 +7,16 @@
 
 #if defined(JS_SIMULATOR_ARM)
 
-#include "jit/arm/Assembler-arm.h"
-#include "jit/arm/MoveEmitter-arm.h"
-#include "jit/arm/Simulator-arm.h"
-#include "jit/Linker.h"
-#include "jit/MacroAssembler.h"
-#include "jit/MoveResolver.h"
+#  include "jit/arm/Assembler-arm.h"
+#  include "jit/arm/MoveEmitter-arm.h"
+#  include "jit/arm/Simulator-arm.h"
+#  include "jit/Linker.h"
+#  include "jit/MacroAssembler.h"
+#  include "jit/MoveResolver.h"
 
-#include "jsapi-tests/tests.h"
+#  include "jsapi-tests/tests.h"
 
-#include "vm/Runtime.h"
+#  include "vm/Runtime.h"
 
 static const int LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 4 * 1024;
 
@@ -62,8 +62,8 @@ static js::jit::JitCode* linkAndAllocate(JSContext* cx,
   return l.newCode(cx, CodeKind::Ion);
 }
 
-#define TRY(x) \
-  if (!(x)) return false;
+#  define TRY(x) \
+    if (!(x)) return false;
 
 BEGIN_TEST(testJitMoveEmitterCycles_simple) {
   using namespace js;

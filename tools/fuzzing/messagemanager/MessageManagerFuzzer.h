@@ -29,7 +29,7 @@ MESSAGEMANAGER_FUZZER_BLACKLIST=<path> (optional)
 
 #ifdef IsLoggingEnabled
 // This is defined in the Windows SDK urlmon.h
-#undef IsLoggingEnabled
+#  undef IsLoggingEnabled
 #endif
 
 class MessageManagerFuzzer {

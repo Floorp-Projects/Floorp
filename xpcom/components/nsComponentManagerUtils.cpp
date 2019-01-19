@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef nsXPCOM_h__
-#include "nsXPCOM.h"
+#  include "nsXPCOM.h"
 #endif
 
 #ifndef nsCOMPtr_h__
-#include "nsCOMPtr.h"
+#  include "nsCOMPtr.h"
 #endif
 
 #include "nsComponentManagerUtils.h"
@@ -40,7 +40,7 @@ nsresult CallGetService(const char* aContractID, const nsIID& aIID,
 
 #else
 
-#include "nsComponentManager.h"
+#  include "nsComponentManager.h"
 
 nsresult CallGetService(const nsCID& aCID, const nsIID& aIID, void** aResult) {
   nsComponentManagerImpl* compMgr = nsComponentManagerImpl::gComponentManager;
@@ -107,7 +107,7 @@ nsresult CallGetClassObject(const char* aContractID, const nsIID& aIID,
 
 #else
 
-#include "nsComponentManager.h"
+#  include "nsComponentManager.h"
 
 nsresult CallCreateInstance(const nsCID& aCID, nsISupports* aDelegate,
                             const nsIID& aIID, void** aResult) {

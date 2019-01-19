@@ -28,13 +28,13 @@
 #include "content_decryption_module_ext.h"
 
 #ifndef XP_WIN
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#  include <unistd.h>
 #endif
 
 #ifdef ENABLE_WMF
-#include "WMFUtils.h"
+#  include "WMFUtils.h"
 #endif  // ENABLE_WMF
 
 extern "C" {

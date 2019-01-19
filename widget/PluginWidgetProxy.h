@@ -6,7 +6,7 @@
 #define mozilla_widget_RemotePlugin_h__
 
 #ifndef XP_WIN
-#error "Plugin widgets are Windows-only."
+#  error "Plugin widgets are Windows-only."
 #endif
 
 #include "PuppetWidget.h"

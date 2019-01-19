@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "D3DMessageUtils.h"
 #if defined(XP_WIN)
-#include "gfxWindowsPlatform.h"
+#  include "gfxWindowsPlatform.h"
 #endif
 
 bool DxgiAdapterDesc::operator==(const DxgiAdapterDesc& aOther) const {

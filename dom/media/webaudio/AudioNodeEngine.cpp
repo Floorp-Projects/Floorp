@@ -8,13 +8,13 @@
 
 #include "mozilla/AbstractThread.h"
 #ifdef USE_NEON
-#include "mozilla/arm.h"
-#include "AudioNodeEngineNEON.h"
+#  include "mozilla/arm.h"
+#  include "AudioNodeEngineNEON.h"
 #endif
 #ifdef USE_SSE2
-#include "mozilla/SSE.h"
-#include "AlignmentUtils.h"
-#include "AudioNodeEngineSSE2.h"
+#  include "mozilla/SSE.h"
+#  include "AlignmentUtils.h"
+#  include "AudioNodeEngineSSE2.h"
 #endif
 #include "AudioBlock.h"
 

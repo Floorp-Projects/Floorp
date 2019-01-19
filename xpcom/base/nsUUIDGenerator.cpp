@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(XP_WIN)
-#include <windows.h>
-#include <objbase.h>
+#  include <windows.h>
+#  include <objbase.h>
 #elif defined(XP_MACOSX)
-#include <CoreFoundation/CoreFoundation.h>
+#  include <CoreFoundation/CoreFoundation.h>
 #else
-#include <stdlib.h>
-#include "prrng.h"
+#  include <stdlib.h>
+#  include "prrng.h"
 #endif
 
 #include "nsUUIDGenerator.h"
@@ -54,7 +54,7 @@ nsresult nsUUIDGenerator::Init() {
   setstate(mSavedState);
 
   mRBytes = 4;
-#ifdef RAND_MAX
+#  ifdef RAND_MAX
   if ((unsigned long)RAND_MAX < 0xffffffffUL) {
     mRBytes = 3;
   }
@@ -67,7 +67,7 @@ nsresult nsUUIDGenerator::Init() {
   if ((unsigned long)RAND_MAX < 0x000000ffUL) {
     return NS_ERROR_FAILURE;
   }
-#endif
+#  endif
 
 #endif /* non XP_WIN and non XP_MACOSX and non ARC4RANDOM */
 
@@ -114,28 +114,28 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* aId) {
    * back to it; instead, we use the value returned when we called
    * initstate, since older glibc's have broken setstate() return values
    */
-#ifndef HAVE_ARC4RANDOM
+#  ifndef HAVE_ARC4RANDOM
   setstate(mState);
-#endif
+#  endif
 
-#ifdef HAVE_ARC4RANDOM_BUF
+#  ifdef HAVE_ARC4RANDOM_BUF
   arc4random_buf(aId, sizeof(nsID));
-#else /* HAVE_ARC4RANDOM_BUF */
+#  else /* HAVE_ARC4RANDOM_BUF */
   size_t bytesLeft = sizeof(nsID);
   while (bytesLeft > 0) {
-#ifdef HAVE_ARC4RANDOM
+#    ifdef HAVE_ARC4RANDOM
     long rval = arc4random();
     const size_t mRBytes = 4;
-#else
+#    else
     long rval = random();
-#endif
+#    endif
 
     uint8_t* src = (uint8_t*)&rval;
     // We want to grab the mRBytes least significant bytes of rval, since
     // mRBytes less than sizeof(rval) means the high bytes are 0.
-#ifdef IS_BIG_ENDIAN
+#    ifdef IS_BIG_ENDIAN
     src += sizeof(rval) - mRBytes;
-#endif
+#    endif
     uint8_t* dst = ((uint8_t*)aId) + (sizeof(nsID) - bytesLeft);
     size_t toWrite = (bytesLeft < mRBytes ? bytesLeft : mRBytes);
     for (size_t i = 0; i < toWrite; i++) {
@@ -144,7 +144,7 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* aId) {
 
     bytesLeft -= toWrite;
   }
-#endif /* HAVE_ARC4RANDOM_BUF */
+#  endif /* HAVE_ARC4RANDOM_BUF */
 
   /* Put in the version */
   aId->m2 &= 0x0fff;
@@ -154,10 +154,10 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* aId) {
   aId->m3[0] &= 0x3f;
   aId->m3[0] |= 0x80;
 
-#ifndef HAVE_ARC4RANDOM
+#  ifndef HAVE_ARC4RANDOM
   /* Restore the previous RNG state */
   setstate(mSavedState);
-#endif
+#  endif
 #endif
 
   return NS_OK;

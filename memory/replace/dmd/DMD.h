@@ -78,10 +78,10 @@ struct DMDFuncs {
    public:
     Singleton()
         : mValue(ReplaceMalloc::GetDMDFuncs())
-#ifdef DEBUG
+#  ifdef DEBUG
           ,
           mInitialized(true)
-#endif
+#  endif
     {
     }
 
@@ -92,9 +92,9 @@ struct DMDFuncs {
 
    private:
     DMDFuncs* mValue;
-#ifdef DEBUG
+#  ifdef DEBUG
     bool mInitialized;
-#endif
+#  endif
   };
 
   // This singleton pointer must be defined on the program side. In Gecko,

@@ -23,7 +23,7 @@
 #include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
 #if defined(DEBUG)
-#include "vm/EnvironmentObject.h"
+#  include "vm/EnvironmentObject.h"
 #endif
 #include "vm/JSONPrinter.h"
 #include "vm/Realm.h"

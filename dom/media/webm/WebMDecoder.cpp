@@ -9,7 +9,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs.h"
 #ifdef MOZ_AV1
-#include "AOMDecoder.h"
+#  include "AOMDecoder.h"
 #endif
 #include "MediaContainerType.h"
 #include "PDMFactory.h"

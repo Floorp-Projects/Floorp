@@ -6,7 +6,7 @@
 #include "UiCompositorControllerParent.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
-#include "apz/src/APZCTreeManager.h"
+#  include "apz/src/APZCTreeManager.h"
 #endif
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"

@@ -920,14 +920,14 @@ void IndexedDatabaseManager::LoggingModePrefChangedCallback(
   bool useProfiler =
 #if defined(DEBUG) || defined(MOZ_GECKO_PROFILER)
       Preferences::GetBool(kPrefLoggingProfiler);
-#if !defined(MOZ_GECKO_PROFILER)
+#  if !defined(MOZ_GECKO_PROFILER)
   if (useProfiler) {
     NS_WARNING(
         "IndexedDB cannot create profiler marks because this build does "
         "not have profiler extensions enabled!");
     useProfiler = false;
   }
-#endif
+#  endif
 #else
       false;
 #endif

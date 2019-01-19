@@ -2,12 +2,12 @@
 
 #include <algorithm>
 #ifndef mozilla_algorithm_h
-#error "failed to wrap <algorithm>"
+#  error "failed to wrap <algorithm>"
 #endif
 
 #include <vector>
 #ifndef mozilla_vector_h
-#error "failed to wrap <vector>"
+#  error "failed to wrap <vector>"
 #endif
 
 #include "nsCOMPtr.h"
@@ -19,12 +19,12 @@
 #ifdef _MSC_VER
 // C4530 will be generated whenever try...catch is used without
 // enabling exceptions. We know we don't enbale exceptions.
-#pragma warning(disable : 4530)
-#define TRY try
-#define CATCH(e) catch (e)
+#  pragma warning(disable : 4530)
+#  define TRY try
+#  define CATCH(e) catch (e)
 #else
-#define TRY
-#define CATCH(e) if (0)
+#  define TRY
+#  define CATCH(e) if (0)
 #endif
 
 #include "gtest/gtest.h"

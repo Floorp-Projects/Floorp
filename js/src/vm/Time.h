@@ -125,7 +125,7 @@ extern size_t PRMJ_FormatTime(char* buf, size_t buflen, const char* fmt,
 
 #if defined(_WIN32) && (defined(_M_IX86) || defined(_M_AMD64))
 
-#include <intrin.h>
+#  include <intrin.h>
 static __inline uint64_t ReadTimestampCounter(void) {
   if (mozilla::recordreplay::IsRecordingOrReplaying()) {
     return 0;
@@ -157,7 +157,7 @@ static __inline__ uint64_t ReadTimestampCounter(void) {
 
 #else
 
-#undef MOZ_HAVE_RDTSC
+#  undef MOZ_HAVE_RDTSC
 
 #endif
 

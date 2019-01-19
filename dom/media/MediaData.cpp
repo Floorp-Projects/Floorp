@@ -17,8 +17,8 @@
 #include <stdint.h>
 
 #ifdef XP_WIN
-#include "mozilla/WindowsVersion.h"
-#include "mozilla/layers/D3D11YCbCrImage.h"
+#  include "mozilla/WindowsVersion.h"
+#  include "mozilla/layers/D3D11YCbCrImage.h"
 #endif
 
 namespace mozilla {

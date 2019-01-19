@@ -21,8 +21,8 @@
 #include "gfxRect.h"
 
 #ifdef XP_MACOSX
-#include "mozilla/gfx/QuartzSupport.h"
-#include <ApplicationServices/ApplicationServices.h>
+#  include "mozilla/gfx/QuartzSupport.h"
+#  include <ApplicationServices/ApplicationServices.h>
 #endif
 
 class nsIInputStream;
@@ -49,7 +49,7 @@ class PuppetWidget;
 using mozilla::widget::PuppetWidget;
 
 #ifdef MOZ_X11
-#include "gfxXlibNativeRenderer.h"
+#  include "gfxXlibNativeRenderer.h"
 #endif
 
 class nsPluginInstanceOwner final : public nsIPluginInstanceOwner,

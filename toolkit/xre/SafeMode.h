@@ -13,8 +13,8 @@
 #include "mozilla/Maybe.h"
 
 #if defined(XP_WIN)
-#include "mozilla/PolicyChecks.h"
-#include <windows.h>
+#  include "mozilla/PolicyChecks.h"
+#  include <windows.h>
 #endif  // defined(XP_WIN)
 
 // Undo X11/X.h's definition of None

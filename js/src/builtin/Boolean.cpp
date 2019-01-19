@@ -17,7 +17,7 @@
 #include "js/PropertySpec.h"
 #include "util/StringBuffer.h"
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 #include "vm/GlobalObject.h"
 #include "vm/JSAtom.h"

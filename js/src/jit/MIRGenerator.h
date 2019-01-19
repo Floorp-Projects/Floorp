@@ -19,7 +19,7 @@
 #include "jit/JitRealm.h"
 #include "jit/MIR.h"
 #ifdef JS_ION_PERF
-#include "jit/PerfSpewer.h"
+#  include "jit/PerfSpewer.h"
 #endif
 #include "jit/RegisterSets.h"
 #include "vm/JSContext.h"

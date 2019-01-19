@@ -8,7 +8,7 @@
 #define nsTWeakRef_h__
 
 #ifndef nsDebug_h___
-#include "nsDebug.h"
+#  include "nsDebug.h"
 #endif
 
 /**
