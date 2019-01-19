@@ -24,12 +24,12 @@
 #include <android/log.h>
 
 #ifdef DEBUG_ANDROID_IME
-#define ALOGIME(args...) \
-  __android_log_print(ANDROID_LOG_INFO, "GeckoEditableSupport", ##args)
+#  define ALOGIME(args...) \
+    __android_log_print(ANDROID_LOG_INFO, "GeckoEditableSupport", ##args)
 #else
-#define ALOGIME(args...) \
-  do {                   \
-  } while (0)
+#  define ALOGIME(args...) \
+    do {                   \
+    } while (0)
 #endif
 
 template <>

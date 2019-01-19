@@ -58,7 +58,7 @@ class ProfilerMarker;
 
 // NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
 #if !defined(GP_ARCH_arm)
-#pragma pack(push, 1)
+#  pragma pack(push, 1)
 #endif
 
 class ProfileBufferEntry {
@@ -127,7 +127,7 @@ class ProfileBufferEntry {
 #if !defined(GP_ARCH_arm)
 // Packed layout: 1 byte for the tag + 8 bytes for the value.
 static_assert(sizeof(ProfileBufferEntry) == 9, "bad ProfileBufferEntry size");
-#pragma pack(pop)
+#  pragma pack(pop)
 #endif
 
 class UniqueJSONStrings {

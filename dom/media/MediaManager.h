@@ -36,7 +36,7 @@
 #include "DOMMediaStream.h"
 
 #ifdef MOZ_WEBRTC
-#include "mtransport/runnable_utils.h"
+#  include "mtransport/runnable_utils.h"
 #endif
 
 // Note, these suck in Windows headers, unfortunately.

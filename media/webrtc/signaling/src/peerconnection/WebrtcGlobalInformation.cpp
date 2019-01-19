@@ -37,7 +37,7 @@
 
 static const char* wgiLogTag = "WebrtcGlobalInformation";
 #ifdef LOGTAG
-#undef LOGTAG
+#  undef LOGTAG
 #endif
 #define LOGTAG wgiLogTag
 

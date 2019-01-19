@@ -10,7 +10,7 @@
 #define nsINIParser_h__
 
 #ifdef MOZILLA_INTERNAL_API
-#define nsINIParser nsINIParser_internal
+#  define nsINIParser nsINIParser_internal
 #endif
 
 #include "nscore.h"

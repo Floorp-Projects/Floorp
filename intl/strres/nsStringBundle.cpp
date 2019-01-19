@@ -37,8 +37,8 @@
 
 // for async loading
 #ifdef ASYNC_LOADING
-#include "nsIBinaryInputStream.h"
-#include "nsIStringStream.h"
+#  include "nsIBinaryInputStream.h"
+#  include "nsIStringStream.h"
 #endif
 
 using namespace mozilla;

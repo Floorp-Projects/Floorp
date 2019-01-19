@@ -30,8 +30,8 @@
 
 // Main event loop debug output flags
 #if defined(EVENT_DEBUG_OUTPUT)
-#define SHOW_REPEAT_EVENTS true
-#define SHOW_MOUSEMOVE_EVENTS false
+#  define SHOW_REPEAT_EVENTS true
+#  define SHOW_MOUSEMOVE_EVENTS false
 #endif  // defined(EVENT_DEBUG_OUTPUT)
 
 void PrintEvent(UINT msg, bool aShowAllEvents, bool aShowMouseMoves);
@@ -42,10 +42,10 @@ typedef struct {
   int mId;
 } MSGFEventMsgInfo;
 
-#define DISPLAY_NMM_PRT(_arg) \
-  MOZ_LOG(gWindowsLog, mozilla::LogLevel::Info, ((_arg)));
+#  define DISPLAY_NMM_PRT(_arg) \
+    MOZ_LOG(gWindowsLog, mozilla::LogLevel::Info, ((_arg)));
 #else
-#define DISPLAY_NMM_PRT(_arg)
+#  define DISPLAY_NMM_PRT(_arg)
 #endif  // defined(POPUP_ROLLUP_DEBUG_OUTPUT)
 
 #if defined(DEBUG)
@@ -54,9 +54,9 @@ void DDError(const char *msg, HRESULT hr);
 
 #if defined(DEBUG_VK)
 bool is_vk_down(int vk);
-#define IS_VK_DOWN is_vk_down
+#  define IS_VK_DOWN is_vk_down
 #else
-#define IS_VK_DOWN(a) (GetKeyState(a) < 0)
+#  define IS_VK_DOWN(a) (GetKeyState(a) < 0)
 #endif  // defined(DEBUG_VK)
 
 #endif /* WindowDbg_h__ */

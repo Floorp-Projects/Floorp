@@ -15,7 +15,7 @@
 #include <string.h>
 
 #ifndef MOZILLA_INTERNAL_API
-#error "MOZILLA_INTERNAL_API must be defined"
+#  error "MOZILLA_INTERNAL_API must be defined"
 #endif
 
 // core headers required by pretty much everything else
@@ -132,8 +132,8 @@
 #include "nsIPipe.h"
 
 #ifdef MOZ_WIDGET_COCOA
-#include "nsILocalFileMac.h"
-#include "nsIMacUtils.h"
+#  include "nsILocalFileMac.h"
+#  include "nsIMacUtils.h"
 #endif
 
 // xpcom/glue utility headers

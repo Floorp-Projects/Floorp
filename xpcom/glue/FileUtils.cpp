@@ -15,36 +15,36 @@
 #include "mozilla/Assertions.h"
 
 #if defined(XP_MACOSX)
-#include <fcntl.h>
-#include <unistd.h>
-#include <mach/machine.h>
-#include <mach-o/fat.h>
-#include <mach-o/loader.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <limits.h>
+#  include <fcntl.h>
+#  include <unistd.h>
+#  include <mach/machine.h>
+#  include <mach-o/fat.h>
+#  include <mach-o/loader.h>
+#  include <sys/mman.h>
+#  include <sys/stat.h>
+#  include <limits.h>
 #elif defined(XP_UNIX)
-#include <fcntl.h>
-#include <unistd.h>
-#if defined(LINUX)
-#include <elf.h>
-#endif
-#include <sys/types.h>
-#include <sys/stat.h>
+#  include <fcntl.h>
+#  include <unistd.h>
+#  if defined(LINUX)
+#    include <elf.h>
+#  endif
+#  include <sys/types.h>
+#  include <sys/stat.h>
 #elif defined(XP_WIN)
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 // Functions that are not to be used in standalone glue must be implemented
 // within this #if block
 #if defined(MOZILLA_INTERNAL_API)
 
-#include "nsString.h"
+#  include "nsString.h"
 
 bool mozilla::fallocate(PRFileDesc* aFD, int64_t aLength) {
-#if defined(HAVE_POSIX_FALLOCATE)
+#  if defined(HAVE_POSIX_FALLOCATE)
   return posix_fallocate(PR_FileDesc2NativeHandle(aFD), 0, aLength) == 0;
-#elif defined(XP_WIN)
+#  elif defined(XP_WIN)
   int64_t oldpos = PR_Seek64(aFD, 0, PR_SEEK_CUR);
   if (oldpos == -1) {
     return false;
@@ -58,7 +58,7 @@ bool mozilla::fallocate(PRFileDesc* aFD, int64_t aLength) {
 
   PR_Seek64(aFD, oldpos, PR_SEEK_SET);
   return retval;
-#elif defined(XP_MACOSX)
+#  elif defined(XP_MACOSX)
   int fd = PR_FileDesc2NativeHandle(aFD);
   fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, aLength};
   // Try to get a continous chunk of disk space
@@ -72,7 +72,7 @@ bool mozilla::fallocate(PRFileDesc* aFD, int64_t aLength) {
     }
   }
   return ftruncate(fd, aLength) == 0;
-#elif defined(XP_UNIX)
+#  elif defined(XP_UNIX)
   // The following is copied from fcntlSizeHint in sqlite
   /* If the OS does not have posix_fallocate(), fake it. First use
   ** ftruncate() to set the file size, then write a single byte to
@@ -121,46 +121,46 @@ bool mozilla::fallocate(PRFileDesc* aFD, int64_t aLength) {
 
   PR_Seek64(aFD, oldpos, PR_SEEK_SET);
   return nWrite == 1;
-#endif
+#  endif
   return false;
 }
 
 void mozilla::ReadAheadLib(nsIFile* aFile) {
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   nsAutoString path;
   if (!aFile || NS_FAILED(aFile->GetPath(path))) {
     return;
   }
   ReadAheadLib(path.get());
-#elif defined(LINUX) && !defined(ANDROID) || defined(XP_MACOSX)
+#  elif defined(LINUX) && !defined(ANDROID) || defined(XP_MACOSX)
   nsAutoCString nativePath;
   if (!aFile || NS_FAILED(aFile->GetNativePath(nativePath))) {
     return;
   }
   ReadAheadLib(nativePath.get());
-#endif
+#  endif
 }
 
 void mozilla::ReadAheadFile(nsIFile* aFile, const size_t aOffset,
                             const size_t aCount, mozilla::filedesc_t* aOutFd) {
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   nsAutoString path;
   if (!aFile || NS_FAILED(aFile->GetPath(path))) {
     return;
   }
   ReadAheadFile(path.get(), aOffset, aCount, aOutFd);
-#elif defined(LINUX) && !defined(ANDROID) || defined(XP_MACOSX)
+#  elif defined(LINUX) && !defined(ANDROID) || defined(XP_MACOSX)
   nsAutoCString nativePath;
   if (!aFile || NS_FAILED(aFile->GetNativePath(nativePath))) {
     return;
   }
   ReadAheadFile(nativePath.get(), aOffset, aCount, aOutFd);
-#endif
+#  endif
 }
 
 mozilla::PathString mozilla::GetLibraryName(mozilla::pathstr_t aDirectory,
                                             const char* aLib) {
-#ifdef XP_WIN
+#  ifdef XP_WIN
   nsAutoString fullName;
   if (aDirectory) {
     fullName.Assign(aDirectory);
@@ -171,7 +171,7 @@ mozilla::PathString mozilla::GetLibraryName(mozilla::pathstr_t aDirectory,
     fullName.AppendLiteral(".dll");
   }
   return std::move(fullName);
-#else
+#  else
   char* temp = PR_GetLibraryName(aDirectory, aLib);
   if (!temp) {
     return EmptyCString();
@@ -179,12 +179,12 @@ mozilla::PathString mozilla::GetLibraryName(mozilla::pathstr_t aDirectory,
   nsAutoCString libname(temp);
   PR_FreeLibraryName(temp);
   return std::move(libname);
-#endif
+#  endif
 }
 
 mozilla::PathString mozilla::GetLibraryFilePathname(mozilla::pathstr_t aName,
                                                     PRFuncPtr aAddr) {
-#ifdef XP_WIN
+#  ifdef XP_WIN
   HMODULE handle = GetModuleHandleW(char16ptr_t(aName));
   if (!handle) {
     return EmptyString();
@@ -200,7 +200,7 @@ mozilla::PathString mozilla::GetLibraryFilePathname(mozilla::pathstr_t aName,
 
   path.SetLength(len);
   return std::move(path);
-#else
+#  else
   char* temp = PR_GetLibraryFilePathname(aName, aAddr);
   if (!temp) {
     return EmptyCString();
@@ -208,7 +208,7 @@ mozilla::PathString mozilla::GetLibraryFilePathname(mozilla::pathstr_t aName,
   nsAutoCString path(temp);
   PR_Free(temp);  // PR_GetLibraryFilePathname() uses PR_Malloc().
   return std::move(path);
-#endif
+#  endif
 }
 
 #endif  // defined(MOZILLA_INTERNAL_API)
@@ -217,42 +217,42 @@ mozilla::PathString mozilla::GetLibraryFilePathname(mozilla::pathstr_t aName,
 
 static const unsigned int bufsize = 4096;
 
-#ifdef __LP64__
+#  ifdef __LP64__
 typedef Elf64_Ehdr Elf_Ehdr;
 typedef Elf64_Phdr Elf_Phdr;
 static const unsigned char ELFCLASS = ELFCLASS64;
 typedef Elf64_Off Elf_Off;
-#else
+#  else
 typedef Elf32_Ehdr Elf_Ehdr;
 typedef Elf32_Phdr Elf_Phdr;
 static const unsigned char ELFCLASS = ELFCLASS32;
 typedef Elf32_Off Elf_Off;
-#endif
+#  endif
 
 #elif defined(XP_MACOSX)
 
-#if defined(__i386__)
+#  if defined(__i386__)
 static const uint32_t CPU_TYPE = CPU_TYPE_X86;
-#elif defined(__x86_64__)
+#  elif defined(__x86_64__)
 static const uint32_t CPU_TYPE = CPU_TYPE_X86_64;
-#elif defined(__ppc__)
+#  elif defined(__ppc__)
 static const uint32_t CPU_TYPE = CPU_TYPE_POWERPC;
-#elif defined(__ppc64__)
+#  elif defined(__ppc64__)
 static const uint32_t CPU_TYPE = CPU_TYPE_POWERPC64;
-#else
-#error Unsupported CPU type
-#endif
+#  else
+#    error Unsupported CPU type
+#  endif
 
-#ifdef __LP64__
-#undef LC_SEGMENT
-#define LC_SEGMENT LC_SEGMENT_64
-#undef MH_MAGIC
-#define MH_MAGIC MH_MAGIC_64
-#define cpu_mach_header mach_header_64
-#define segment_command segment_command_64
-#else
-#define cpu_mach_header mach_header
-#endif
+#  ifdef __LP64__
+#    undef LC_SEGMENT
+#    define LC_SEGMENT LC_SEGMENT_64
+#    undef MH_MAGIC
+#    define MH_MAGIC MH_MAGIC_64
+#    define cpu_mach_header mach_header_64
+#    define segment_command segment_command_64
+#  else
+#    define cpu_mach_header mach_header
+#  endif
 
 class ScopedMMap {
  public:
@@ -292,12 +292,12 @@ void mozilla::ReadAhead(mozilla::filedesc_t aFd, const size_t aOffset,
 
   LARGE_INTEGER fpOriginal;
   LARGE_INTEGER fpOffset;
-#if defined(HAVE_LONG_LONG)
+#  if defined(HAVE_LONG_LONG)
   fpOffset.QuadPart = 0;
-#else
+#  else
   fpOffset.u.LowPart = 0;
   fpOffset.u.HighPart = 0;
-#endif
+#  endif
 
   // Get the current file pointer so that we can restore it. This isn't
   // really necessary other than to provide the same semantics regarding the
@@ -307,12 +307,12 @@ void mozilla::ReadAhead(mozilla::filedesc_t aFd, const size_t aOffset,
   }
 
   if (aOffset) {
-#if defined(HAVE_LONG_LONG)
+#  if defined(HAVE_LONG_LONG)
     fpOffset.QuadPart = static_cast<LONGLONG>(aOffset);
-#else
+#  else
     fpOffset.u.LowPart = aOffset;
     fpOffset.u.HighPart = 0;
-#endif
+#  endif
 
     if (!SetFilePointerEx(aFd, fpOffset, nullptr, FILE_BEGIN)) {
       return;

@@ -38,7 +38,7 @@
 #ifndef __OBJC__
 class NSCursor;
 #else
-#import <Cocoa/Cocoa.h>
+#  import <Cocoa/Cocoa.h>
 #endif
 
 // The header file QuickdrawAPI.h is missing on OS X 10.7 and up (though the

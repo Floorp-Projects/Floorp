@@ -5,13 +5,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaSystemResourceService_h_)
-#define MediaSystemResourceService_h_
+#  define MediaSystemResourceService_h_
 
-#include <deque>
+#  include <deque>
 
-#include "MediaSystemResourceTypes.h"
-#include "mozilla/StaticPtr.h"
-#include "nsClassHashtable.h"
+#  include "MediaSystemResourceTypes.h"
+#  include "mozilla/StaticPtr.h"
+#  include "nsClassHashtable.h"
 
 namespace mozilla {
 

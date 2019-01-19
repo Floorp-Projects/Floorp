@@ -17,19 +17,19 @@
    including Element.h.  Looks like it's an inherent part of -Wextra,
    so we can't just disable it in a targeted way in moz.build. */
 #if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wextra"
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wextra"
 #elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wextra"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wextra"
 #endif  // __clang__ || __GNUC__
 
 #include "mozilla/dom/Element.h"
 
 #if defined(__clang__)
-#pragma clang diagnostic pop
+#  pragma clang diagnostic pop
 #elif defined(__GNUC__)
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif  // __clang__ || __GNUC__
 
 #include "nsDependentString.h"

@@ -17,7 +17,7 @@
 #include "nsIThreadManager.h"
 #include "nsThreadPool.h"
 #ifdef XP_WIN
-#include "ThreadPoolCOMListener.h"
+#  include "ThreadPoolCOMListener.h"
 #endif
 
 namespace mozilla {

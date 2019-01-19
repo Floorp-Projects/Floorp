@@ -17,8 +17,8 @@
 #include <time.h>
 
 #if !defined(XP_WIN)
-#include <limits.h>
-#include <unistd.h>
+#  include <limits.h>
+#  include <unistd.h>
 #endif /* !defined(XP_WIN) */
 
 #include "jsutil.h"
@@ -27,13 +27,13 @@
 #include "threading/ExclusiveData.h"
 
 #if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
-#include "unicode/basictz.h"
-#include "unicode/locid.h"
+#  include "unicode/basictz.h"
+#  include "unicode/locid.h"
 #endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
 #if ENABLE_INTL_API && (!MOZ_SYSTEM_ICU || defined(ICU_TZ_HAS_RECREATE_DEFAULT))
-#include "unicode/timezone.h"
-#include "unicode/unistr.h"
+#  include "unicode/timezone.h"
+#  include "unicode/unistr.h"
 #endif /* ENABLE_INTL_API && (!MOZ_SYSTEM_ICU || \
           defined(ICU_TZ_HAS_RECREATE_DEFAULT)) */
 
@@ -633,11 +633,11 @@ static icu::UnicodeString ReadTimeZoneLink(const char* tz) {
   // Four hops should be a reasonable limit for most use cases.
   constexpr uint32_t FollowDepthLimit = 4;
 
-#ifdef PATH_MAX
+#  ifdef PATH_MAX
   constexpr size_t PathMax = PATH_MAX;
-#else
+#  else
   constexpr size_t PathMax = 4096;
-#endif
+#  endif
   static_assert(PathMax > 0, "PathMax should be larger than zero");
 
   char linkName[PathMax];
@@ -742,7 +742,7 @@ void js::ResyncICUDefaultTimeZone() {
     if (const char* tz = std::getenv("TZ")) {
       icu::UnicodeString tzid;
 
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
       // If TZ is set and its value is valid under Windows' and IANA's
       // time zone identifier rules, update the ICU default time zone to
       // use this value.
@@ -753,7 +753,7 @@ void js::ResyncICUDefaultTimeZone() {
         // default Windows time zone for ICU.
         // TODO: Handle invalid time zone identifiers (bug 342068).
       }
-#else
+#  else
       // The TZ environment variable allows both absolute and
       // relative paths, optionally beginning with a colon (':').
       // (Relative paths, without the colon, are just Olson time
@@ -763,7 +763,7 @@ void js::ResyncICUDefaultTimeZone() {
       if (const char* tzlink = TZContainsAbsolutePath(tz)) {
         tzid.setTo(ReadTimeZoneLink(tzlink));
       }
-#endif /* defined(XP_WIN) */
+#  endif /* defined(XP_WIN) */
 
       if (!tzid.isEmpty()) {
         mozilla::UniquePtr<icu::TimeZone> newTimeZone(

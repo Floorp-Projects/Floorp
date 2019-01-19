@@ -10,7 +10,7 @@
 #include "nsICryptoHash.h"
 
 #ifdef SUPPORT_STORAGE_ID
-#include "rlz/lib/machine_id.h"
+#  include "rlz/lib/machine_id.h"
 #endif
 
 namespace mozilla {

@@ -46,38 +46,38 @@
 #include <stdlib.h>
 
 #ifdef XP_WIN
-#include <windows.h>
-#include <shlobj.h>
+#  include <windows.h>
+#  include <shlobj.h>
 #endif
 #ifdef XP_MACOSX
-#include "nsILocalFileMac.h"
+#  include "nsILocalFileMac.h"
 // for chflags()
-#include <sys/stat.h>
-#include <unistd.h>
+#  include <sys/stat.h>
+#  include <unistd.h>
 #endif
 #ifdef XP_UNIX
-#include <ctype.h>
+#  include <ctype.h>
 #endif
 #ifdef XP_IOS
-#include "UIKitDirProvider.h"
+#  include "UIKitDirProvider.h"
 #endif
 
 #if defined(MOZ_SANDBOX)
-#include "mozilla/SandboxSettings.h"
-#include "nsIUUIDGenerator.h"
-#include "mozilla/Unused.h"
-#if defined(XP_WIN)
-#include "sandboxBroker.h"
-#include "WinUtils.h"
-#endif
+#  include "mozilla/SandboxSettings.h"
+#  include "nsIUUIDGenerator.h"
+#  include "mozilla/Unused.h"
+#  if defined(XP_WIN)
+#    include "sandboxBroker.h"
+#    include "WinUtils.h"
+#  endif
 #endif
 
 #if defined(XP_MACOSX)
-#define APP_REGISTRY_NAME "Application Registry"
+#  define APP_REGISTRY_NAME "Application Registry"
 #elif defined(XP_WIN)
-#define APP_REGISTRY_NAME "registry.dat"
+#  define APP_REGISTRY_NAME "registry.dat"
 #else
-#define APP_REGISTRY_NAME "appreg"
+#  define APP_REGISTRY_NAME "appreg"
 #endif
 
 #define PREF_OVERRIDE_DIRNAME "preferences"
@@ -283,24 +283,24 @@ nsresult nsXREDirProvider::GetUserProfilesLocalDir(nsIFile** aResult) {
 static nsresult GetSystemParentDirectory(nsIFile** aFile) {
   nsresult rv;
   nsCOMPtr<nsIFile> localDir;
-#if defined(XP_MACOSX)
+#  if defined(XP_MACOSX)
   rv = GetOSXFolderType(kOnSystemDisk, kApplicationSupportFolderType,
                         getter_AddRefs(localDir));
   if (NS_SUCCEEDED(rv)) {
     rv = localDir->AppendNative(NS_LITERAL_CSTRING("Mozilla"));
   }
-#else
+#  else
   NS_NAMED_LITERAL_CSTRING(dirname,
-#ifdef HAVE_USR_LIB64_DIR
+#    ifdef HAVE_USR_LIB64_DIR
                            "/usr/lib64/mozilla"
-#elif defined(__OpenBSD__) || defined(__FreeBSD__)
+#    elif defined(__OpenBSD__) || defined(__FreeBSD__)
                            "/usr/local/lib/mozilla"
-#else
+#    else
                            "/usr/lib/mozilla"
-#endif
+#    endif
   );
   rv = NS_NewNativeLocalFile(dirname, false, getter_AddRefs(localDir));
-#endif
+#  endif
 
   if (NS_SUCCEEDED(rv)) {
     localDir.forget(aFile);
@@ -385,11 +385,11 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     nsCOMPtr<nsIFile> localDir;
     rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), false);
     if (NS_SUCCEEDED(rv)) {
-#if defined(XP_MACOSX)
+#  if defined(XP_MACOSX)
       rv = localDir->AppendNative(NS_LITERAL_CSTRING("Mozilla"));
-#else
+#  else
       rv = localDir->AppendNative(NS_LITERAL_CSTRING(".mozilla"));
-#endif
+#  endif
     }
     if (NS_SUCCEEDED(rv)) {
       localDir.swap(file);
@@ -427,25 +427,25 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
   }
 #if defined(XP_UNIX) || defined(XP_MACOSX)
   else if (!strcmp(aProperty, XRE_SYS_LOCAL_EXTENSION_PARENT_DIR)) {
-#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
+#  ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     return GetSystemExtensionsDirectory(aFile);
-#else
+#  else
     return NS_ERROR_FAILURE;
-#endif
+#  endif
   }
 #endif
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
   else if (!strcmp(aProperty, XRE_SYS_SHARE_EXTENSION_PARENT_DIR)) {
-#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
+#  ifdef ENABLE_SYSTEM_EXTENSION_DIRS
+#    if defined(__OpenBSD__) || defined(__FreeBSD__)
     static const char* const sysLExtDir = "/usr/local/share/mozilla/extensions";
-#else
+#    else
     static const char* const sysLExtDir = "/usr/share/mozilla/extensions";
-#endif
+#    endif
     return NS_NewNativeLocalFile(nsDependentCString(sysLExtDir), false, aFile);
-#else
+#  else
     return NS_ERROR_FAILURE;
-#endif
+#  endif
   }
 #endif
   else if (!strcmp(aProperty, XRE_USER_SYS_EXTENSION_DIR)) {
@@ -614,14 +614,14 @@ nsXREDirProvider::GetFiles(const char* aProperty,
 #if defined(MOZ_SANDBOX)
 
 static const char* GetProcessTempBaseDirKey() {
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   return NS_WIN_LOW_INTEGRITY_TEMP_BASE;
-#else
+#  else
   return NS_OS_TEMP_DIR;
-#endif
+#  endif
 }
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#  if defined(MOZ_CONTENT_SANDBOX)
 //
 // Sets mContentTempDir so that it refers to the appropriate temp dir.
 // If the sandbox is enabled, NS_APP_CONTENT_PROCESS_TEMP_DIR, otherwise
@@ -647,7 +647,7 @@ nsresult nsXREDirProvider::LoadContentProcessTempDir() {
     }
   }
 
-#if defined(XP_WIN)
+#    if defined(XP_WIN)
   // The content temp dir can be used in sandbox rules, so we need to make sure
   // it doesn't contain any junction points or symlinks or the sandbox will
   // reject those rules.
@@ -655,11 +655,11 @@ nsresult nsXREDirProvider::LoadContentProcessTempDir() {
           mContentTempDir)) {
     NS_WARNING("Failed to resolve Content Temp Dir.");
   }
-#endif
+#    endif
 
   return NS_OK;
 }
-#endif
+#  endif
 
 //
 // Sets mPluginTempDir so that it refers to the appropriate temp dir.
@@ -685,7 +685,7 @@ nsresult nsXREDirProvider::LoadPluginProcessTempDir() {
     }
   }
 
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   // The temp dir is used in sandbox rules, so we need to make sure
   // it doesn't contain any junction points or symlinks or the sandbox will
   // reject those rules.
@@ -693,7 +693,7 @@ nsresult nsXREDirProvider::LoadPluginProcessTempDir() {
           mPluginTempDir)) {
     NS_WARNING("Failed to resolve plugin temp dir.");
   }
-#endif
+#  endif
 
   return NS_OK;
 }
@@ -746,11 +746,11 @@ static already_AddRefed<nsIFile> GetProcessSandboxTempDir(
 //
 static already_AddRefed<nsIFile> CreateProcessSandboxTempDir(
     GeckoProcessType procType) {
-#if defined(MOZ_CONTENT_SANDBOX)
+#  if defined(MOZ_CONTENT_SANDBOX)
   if ((procType == GeckoProcessType_Content) && IsContentSandboxDisabled()) {
     return nullptr;
   }
-#endif
+#  endif
 
   MOZ_ASSERT((procType == GeckoProcessType_Content) ||
              (procType == GeckoProcessType_Plugin));
@@ -779,11 +779,11 @@ static already_AddRefed<nsIFile> CreateProcessSandboxTempDir(
     char uuidChars[NSID_LENGTH];
     uuid.ToProvidedString(uuidChars);
     tempDirSuffix.AssignASCII(uuidChars, NSID_LENGTH);
-#ifdef XP_UNIX
+#  ifdef XP_UNIX
     // Braces in a path are somewhat annoying to deal with
     // and pretty alien on Unix
     tempDirSuffix.StripChars(u"{}");
-#endif
+#  endif
 
     // Save the pref
     rv = mozilla::Preferences::SetString(pref, tempDirSuffix);
@@ -1354,11 +1354,11 @@ nsresult nsXREDirProvider::GetUserDataDirectoryHome(nsIFile** aFile,
   if (aLocal) {
     folderType = kCachedDataFolderType;
   } else {
-#ifdef MOZ_THUNDERBIRD
+#  ifdef MOZ_THUNDERBIRD
     folderType = kDomainLibraryFolderType;
-#else
+#  else
     folderType = kApplicationSupportFolderType;
-#endif
+#  endif
   }
   OSErr err = ::FSFindFolder(kUserDomain, folderType, kCreateFolder, &fsRef);
   NS_ENSURE_FALSE(err, NS_ERROR_FAILURE);
@@ -1400,9 +1400,9 @@ nsresult nsXREDirProvider::GetUserDataDirectoryHome(nsIFile** aFile,
   const char* homeDir = getenv("HOME");
   if (!homeDir || !*homeDir) return NS_ERROR_FAILURE;
 
-#ifdef ANDROID /* We want (ProfD == ProfLD) on Android. */
+#  ifdef ANDROID /* We want (ProfD == ProfLD) on Android. */
   aLocal = false;
-#endif
+#  endif
 
   if (aLocal) {
     // If $XDG_CACHE_HOME is defined use it, otherwise use $HOME/.cache.
@@ -1421,7 +1421,7 @@ nsresult nsXREDirProvider::GetUserDataDirectoryHome(nsIFile** aFile,
                                getter_AddRefs(localDir));
   }
 #else
-#error "Don't know how to get product dir on your platform"
+#  error "Don't know how to get product dir on your platform"
 #endif
 
   NS_IF_ADDREF(*aFile = localDir);
@@ -1482,11 +1482,11 @@ nsresult nsXREDirProvider::GetSystemExtensionsDirectory(nsIFile** aFile) {
   rv = GetSystemParentDirectory(getter_AddRefs(localDir));
   if (NS_SUCCEEDED(rv)) {
     NS_NAMED_LITERAL_CSTRING(sExtensions,
-#if defined(XP_MACOSX)
+#  if defined(XP_MACOSX)
                              "Extensions"
-#else
+#  else
                              "extensions"
-#endif
+#  endif
     );
 
     rv = localDir->AppendNative(sExtensions);
@@ -1564,7 +1564,7 @@ nsresult nsXREDirProvider::AppendSysUserExtensionPath(nsIFile* aFile) {
   NS_ENSURE_SUCCESS(rv, rv);
 
 #else
-#error "Don't know how to get XRE user extension path on your platform"
+#  error "Don't know how to get XRE user extension path on your platform"
 #endif
   return NS_OK;
 }
@@ -1595,7 +1595,7 @@ nsresult nsXREDirProvider::AppendSysUserExtensionsDevPath(nsIFile* aFile) {
   NS_ENSURE_SUCCESS(rv, rv);
 
 #else
-#error "Don't know how to get XRE system extension dev path on your platform"
+#  error "Don't know how to get XRE system extension dev path on your platform"
 #endif
   return NS_OK;
 }
@@ -1690,7 +1690,7 @@ nsresult nsXREDirProvider::AppendProfilePath(nsIFile* aFile, bool aLocal) {
   NS_ENSURE_SUCCESS(rv, rv);
 
 #else
-#error "Don't know how to get profile path on your platform"
+#  error "Don't know how to get profile path on your platform"
 #endif
   return NS_OK;
 }

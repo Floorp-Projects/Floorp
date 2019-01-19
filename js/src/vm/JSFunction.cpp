@@ -1851,7 +1851,8 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
       .setFileAndLine(filename, 1)
       .setNoScriptRval(false)
       .setIntroductionInfo(introducerFilename, introductionType, lineno,
-                           maybeScript, pcOffset);
+                           maybeScript, pcOffset)
+      .setScriptOrModule(maybeScript);
 
   StringBuffer sb(cx);
 

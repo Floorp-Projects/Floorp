@@ -4,7 +4,7 @@
 
 #include "nsStreamListenerWrapper.h"
 #ifdef DEBUG
-#include "MainThreadUtils.h"
+#  include "MainThreadUtils.h"
 #endif
 
 namespace mozilla {

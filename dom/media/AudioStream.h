@@ -4,23 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(AudioStream_h_)
-#define AudioStream_h_
+#  define AudioStream_h_
 
-#include "AudioSampleFormat.h"
-#include "CubebUtils.h"
-#include "MediaInfo.h"
-#include "mozilla/Monitor.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtr.h"
-#include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
-#include "nsThreadUtils.h"
-#include "soundtouch/SoundTouchFactory.h"
+#  include "AudioSampleFormat.h"
+#  include "CubebUtils.h"
+#  include "MediaInfo.h"
+#  include "mozilla/Monitor.h"
+#  include "mozilla/RefPtr.h"
+#  include "mozilla/TimeStamp.h"
+#  include "mozilla/UniquePtr.h"
+#  include "nsAutoPtr.h"
+#  include "nsCOMPtr.h"
+#  include "nsThreadUtils.h"
+#  include "soundtouch/SoundTouchFactory.h"
 
-#if defined(XP_WIN)
-#include "mozilla/audio/AudioNotificationReceiver.h"
-#endif
+#  if defined(XP_WIN)
+#    include "mozilla/audio/AudioNotificationReceiver.h"
+#  endif
 
 namespace mozilla {
 
@@ -152,9 +152,9 @@ class AudioBufferWriter : private AudioBufferCursor {
 // GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels},
 // SetMicrophoneActive is thread-safe without external synchronization.
 class AudioStream final
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
     : public audio::DeviceChangeListener
-#endif
+#  endif
 {
   virtual ~AudioStream();
 
@@ -218,10 +218,10 @@ class AudioStream final
   // Resume audio playback.
   void Resume();
 
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   // Reset stream to the default device.
   void ResetDefaultDevice() override;
-#endif
+#  endif
 
   // Return the position in microseconds of the audio frame being played by
   // the audio hardware, compensated for playback rate change. Thread-safe.

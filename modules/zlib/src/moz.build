@@ -18,6 +18,7 @@ else:
     FINAL_LIBRARY = 'zlib'
     HostLibrary('hostzlib')
 
+# These files can't be unified because zlib's headers don't use include guards.
 SOURCES += [
     'adler32.c',
     'compress.c',

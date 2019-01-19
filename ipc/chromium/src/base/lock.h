@@ -43,7 +43,7 @@ class Lock {
     // https://msdn.microsoft.com/library/windows/desktop/ms684831.aspx
     return true;
 #else
-#error Unsupported platform
+#  error Unsupported platform
 #endif
   }
 

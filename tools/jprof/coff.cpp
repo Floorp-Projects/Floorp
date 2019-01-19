@@ -6,31 +6,31 @@
 
 #ifdef USE_COFF
 
-#define LANGUAGE_C
-#include <sym.h>
-#include <cmplrs/stsupport.h>
-#include <symconst.h>
-#include <filehdr.h>
-#include <ldfcn.h>
-#include <string.h>
-#include <stdlib.h>
+#  define LANGUAGE_C
+#  include <sym.h>
+#  include <cmplrs/stsupport.h>
+#  include <symconst.h>
+#  include <filehdr.h>
+#  include <ldfcn.h>
+#  include <string.h>
+#  include <stdlib.h>
 
-#ifdef IRIX4
+#  ifdef IRIX4
 extern "C" {
 extern char *demangle(char const *in);
 };
-#else
-#include <dem.h>
-#endif
+#  else
+#    include <dem.h>
+#  endif
 
 static char *Demangle(char *rawName) {
-#ifdef IRIX4
+#  ifdef IRIX4
   return strdup(demangle(rawName));
-#else
+#  else
   char namebuf[4000];
   demangle(rawName, namebuf);
   return strdup(namebuf);
-#endif
+#  endif
 }
 
 void leaky::readSymbols(const char *fileName) {

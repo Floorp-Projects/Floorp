@@ -9,7 +9,7 @@
 
 #ifdef JS_POSIX_NSPR
 
-#include "jspubtd.h"
+#  include "jspubtd.h"
 
 int32_t PR_FileDesc2NativeHandle(PRFileDesc *fd);
 

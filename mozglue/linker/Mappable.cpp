@@ -17,7 +17,7 @@
 #include "mozilla/UniquePtr.h"
 
 #ifdef ANDROID
-#include <linux/ashmem.h>
+#  include <linux/ashmem.h>
 #endif
 #include <sys/stat.h>
 #include <errno.h>
@@ -256,7 +256,7 @@ class _MappableBuffer : public MappedPtr {
        * create an empty anonymous page before or after the ashmem mapping,
        * depending on how mappings grow in the address space.
        */
-#if defined(__arm__)
+#  if defined(__arm__)
     // Address increases on ARM.
     void *buf = ::mmap(nullptr, length + PAGE_SIZE, PROT_READ | PROT_WRITE,
                        MAP_SHARED, fd, 0);
@@ -269,7 +269,7 @@ class _MappableBuffer : public MappedPtr {
                 length, str, buf);
       return new _MappableBuffer(fd.forget(), buf, length);
     }
-#elif defined(__i386__) || defined(__x86_64__) || defined(__aarch64__)
+#  elif defined(__i386__) || defined(__x86_64__) || defined(__aarch64__)
     // Address decreases on x86, x86-64, and AArch64.
     size_t anon_mapping_length = length + PAGE_SIZE;
     void *buf = ::mmap(nullptr, anon_mapping_length, PROT_NONE,
@@ -292,9 +292,9 @@ class _MappableBuffer : public MappedPtr {
                 length, str, actual_buf);
       return new _MappableBuffer(fd.forget(), actual_buf, length);
     }
-#else
-#error need to add a case for your CPU
-#endif
+#  else
+#    error need to add a case for your CPU
+#  endif
 #else
     /* On Linux, use /dev/shm as base directory for temporary files, assuming
      * it's on tmpfs */
@@ -334,13 +334,13 @@ class _MappableBuffer : public MappedPtr {
 #ifdef ANDROID
   ~_MappableBuffer() {
     /* Free the additional page we allocated. See _MappableBuffer::Create */
-#if defined(__arm__)
+#  if defined(__arm__)
     ::munmap(AlignedEndPtr(*this + GetLength(), PAGE_SIZE), PAGE_SIZE);
-#elif defined(__i386__) || defined(__x86_64__) || defined(__aarch64__)
+#  elif defined(__i386__) || defined(__x86_64__) || defined(__aarch64__)
     ::munmap(*this - PAGE_SIZE, GetLength() + PAGE_SIZE);
-#else
-#error need to add a case for your CPU
-#endif
+#  else
+#    error need to add a case for your CPU
+#  endif
   }
 #endif
 

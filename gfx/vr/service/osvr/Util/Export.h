@@ -26,69 +26,69 @@
 #define OSVR_UTIL_EXPORT_H
 
 #ifdef OSVR_UTIL_STATIC_DEFINE
-#define OSVR_UTIL_EXPORT
-#define OSVR_UTIL_NO_EXPORT
+#  define OSVR_UTIL_EXPORT
+#  define OSVR_UTIL_NO_EXPORT
 #endif
 
 /* Per-compiler advance preventative definition */
 #if defined(__BORLANDC__) || defined(__CODEGEARC__) || defined(__HP_aCC) || \
     defined(__PGI) || defined(__WATCOMC__)
 /* Compilers that don't support deprecated, according to CMake. */
-#ifndef OSVR_UTIL_DEPRECATED
-#define OSVR_UTIL_DEPRECATED
-#endif
+#  ifndef OSVR_UTIL_DEPRECATED
+#    define OSVR_UTIL_DEPRECATED
+#  endif
 #endif
 
 /* Check for attribute support */
 #if defined(__INTEL_COMPILER)
 /* Checking before GNUC because Intel implements GNU extensions,
  * so it chooses to define __GNUC__ as well. */
-#if __INTEL_COMPILER >= 1200
+#  if __INTEL_COMPILER >= 1200
 /* Intel compiler 12.0 or newer can handle these attributes per CMake */
-#define OSVR_UTIL_EXPORT_HEADER_SUPPORTS_ATTRIBUTES
-#endif
+#    define OSVR_UTIL_EXPORT_HEADER_SUPPORTS_ATTRIBUTES
+#  endif
 
 #elif defined(__GNUC__)
-#if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2))
+#  if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2))
 /* GCC 4.2+ */
-#define OSVR_UTIL_EXPORT_HEADER_SUPPORTS_ATTRIBUTES
-#endif
+#    define OSVR_UTIL_EXPORT_HEADER_SUPPORTS_ATTRIBUTES
+#  endif
 #endif
 
 /* Per-platform defines */
 #if defined(_MSC_VER)
 /* MSVC on Windows */
 
-#ifndef OSVR_UTIL_EXPORT
-#ifdef osvrUtil_EXPORTS
+#  ifndef OSVR_UTIL_EXPORT
+#    ifdef osvrUtil_EXPORTS
 /* We are building this library */
-#define OSVR_UTIL_EXPORT __declspec(dllexport)
-#else
+#      define OSVR_UTIL_EXPORT __declspec(dllexport)
+#    else
 /* We are using this library */
-#define OSVR_UTIL_EXPORT __declspec(dllimport)
-#endif
-#endif
+#      define OSVR_UTIL_EXPORT __declspec(dllimport)
+#    endif
+#  endif
 
-#ifndef OSVR_UTIL_DEPRECATED
-#define OSVR_UTIL_DEPRECATED __declspec(deprecated)
-#endif
+#  ifndef OSVR_UTIL_DEPRECATED
+#    define OSVR_UTIL_DEPRECATED __declspec(deprecated)
+#  endif
 
 #elif defined(_WIN32) && defined(__GNUC__)
 /* GCC-compatible on Windows */
 
-#ifndef OSVR_UTIL_EXPORT
-#ifdef osvrUtil_EXPORTS
+#  ifndef OSVR_UTIL_EXPORT
+#    ifdef osvrUtil_EXPORTS
 /* We are building this library */
-#define OSVR_UTIL_EXPORT __attribute__((dllexport))
-#else
+#      define OSVR_UTIL_EXPORT __attribute__((dllexport))
+#    else
 /* We are using this library */
-#define OSVR_UTIL_EXPORT __attribute__((dllimport))
-#endif
-#endif
+#      define OSVR_UTIL_EXPORT __attribute__((dllimport))
+#    endif
+#  endif
 
-#ifndef OSVR_UTIL_DEPRECATED
-#define OSVR_UTIL_DEPRECATED __attribute__((__deprecated__))
-#endif
+#  ifndef OSVR_UTIL_DEPRECATED
+#    define OSVR_UTIL_DEPRECATED __attribute__((__deprecated__))
+#  endif
 
 #elif defined(OSVR_UTIL_EXPORT_HEADER_SUPPORTS_ATTRIBUTES) || \
     (defined(__APPLE__) && defined(__MACH__))
@@ -96,40 +96,41 @@
 /* (The first macro is defined at the top of the file, if applicable) */
 /* see https://gcc.gnu.org/wiki/Visibility */
 
-#ifndef OSVR_UTIL_EXPORT
+#  ifndef OSVR_UTIL_EXPORT
 /* We are building/using this library */
-#define OSVR_UTIL_EXPORT __attribute__((visibility("default")))
-#endif
+#    define OSVR_UTIL_EXPORT __attribute__((visibility("default")))
+#  endif
 
-#ifndef OSVR_UTIL_NO_EXPORT
-#define OSVR_UTIL_NO_EXPORT __attribute__((visibility("hidden")))
-#endif
+#  ifndef OSVR_UTIL_NO_EXPORT
+#    define OSVR_UTIL_NO_EXPORT __attribute__((visibility("hidden")))
+#  endif
 
-#ifndef OSVR_UTIL_DEPRECATED
-#define OSVR_UTIL_DEPRECATED __attribute__((__deprecated__))
-#endif
+#  ifndef OSVR_UTIL_DEPRECATED
+#    define OSVR_UTIL_DEPRECATED __attribute__((__deprecated__))
+#  endif
 
 #endif
 /* End of platform ifdefs */
 
 /* fallback def */
 #ifndef OSVR_UTIL_EXPORT
-#define OSVR_UTIL_EXPORT
+#  define OSVR_UTIL_EXPORT
 #endif
 
 /* fallback def */
 #ifndef OSVR_UTIL_NO_EXPORT
-#define OSVR_UTIL_NO_EXPORT
+#  define OSVR_UTIL_NO_EXPORT
 #endif
 
 /* fallback def */
 #ifndef OSVR_UTIL_DEPRECATED_EXPORT
-#define OSVR_UTIL_DEPRECATED_EXPORT OSVR_UTIL_EXPORT OSVR_UTIL_DEPRECATED
+#  define OSVR_UTIL_DEPRECATED_EXPORT OSVR_UTIL_EXPORT OSVR_UTIL_DEPRECATED
 #endif
 
 /* fallback def */
 #ifndef OSVR_UTIL_DEPRECATED_NO_EXPORT
-#define OSVR_UTIL_DEPRECATED_NO_EXPORT OSVR_UTIL_NO_EXPORT OSVR_UTIL_DEPRECATED
+#  define OSVR_UTIL_DEPRECATED_NO_EXPORT \
+    OSVR_UTIL_NO_EXPORT OSVR_UTIL_DEPRECATED
 #endif
 
 /* Clean up after ourselves */

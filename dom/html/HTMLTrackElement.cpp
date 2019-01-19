@@ -9,7 +9,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #ifdef XP_WIN
 // HTMLTrackElement.webidl defines ERROR, but so does windows.h:
-#undef ERROR
+#  undef ERROR
 #endif
 #include "WebVTTListener.h"
 #include "mozilla/LoadInfo.h"

@@ -28,7 +28,7 @@
 #include "X11UndefineNone.h"
 
 #ifdef DEBUG
-#include <stdio.h>
+#  include <stdio.h>
 #endif
 
 class gfxContext;

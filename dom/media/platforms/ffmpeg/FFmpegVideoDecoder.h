@@ -60,9 +60,9 @@ class FFmpegVideoDecoder<LIBAV_VER>
 #if LIBAVCODEC_VERSION_MAJOR >= 58
         false;
 #else
-#if LIBAVCODEC_VERSION_MAJOR >= 55
+#  if LIBAVCODEC_VERSION_MAJOR >= 55
         mCodecID == AV_CODEC_ID_VP9 ||
-#endif
+#  endif
         mCodecID == AV_CODEC_ID_VP8;
 #endif
   }

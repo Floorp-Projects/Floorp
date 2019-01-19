@@ -10,7 +10,7 @@
 #include "nsScriptSecurityManager.h"
 #include "jsfriendapi.h"
 #ifdef MOZ_THREADSTACKHELPER_PROFILING_STACK
-#include "js/ProfilingStack.h"
+#  include "js/ProfilingStack.h"
 #endif
 
 #include "mozilla/Assertions.h"
@@ -25,12 +25,12 @@
 #include "mozilla/HangTypes.h"
 
 #ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wshadow"
 #endif
 
 #if defined(MOZ_VALGRIND)
-#include <valgrind/valgrind.h>
+#  include <valgrind/valgrind.h>
 #endif
 
 #include <string.h>
@@ -38,30 +38,30 @@
 #include <cstdlib>
 
 #ifdef XP_LINUX
-#include <ucontext.h>
-#include <unistd.h>
-#include <sys/syscall.h>
+#  include <ucontext.h>
+#  include <unistd.h>
+#  include <sys/syscall.h>
 #endif
 
 #ifdef __GNUC__
-#pragma GCC diagnostic pop  // -Wshadow
+#  pragma GCC diagnostic pop  // -Wshadow
 #endif
 
 #if defined(XP_LINUX) || defined(XP_MACOSX)
-#include <pthread.h>
+#  include <pthread.h>
 #endif
 
 #ifdef ANDROID
-#ifndef SYS_gettid
-#define SYS_gettid __NR_gettid
-#endif
-#if defined(__arm__) && !defined(__NR_rt_tgsigqueueinfo)
+#  ifndef SYS_gettid
+#    define SYS_gettid __NR_gettid
+#  endif
+#  if defined(__arm__) && !defined(__NR_rt_tgsigqueueinfo)
 // Some NDKs don't define this constant even though the kernel supports it.
-#define __NR_rt_tgsigqueueinfo (__NR_SYSCALL_BASE + 363)
-#endif
-#ifndef SYS_rt_tgsigqueueinfo
-#define SYS_rt_tgsigqueueinfo __NR_rt_tgsigqueueinfo
-#endif
+#    define __NR_rt_tgsigqueueinfo (__NR_SYSCALL_BASE + 363)
+#  endif
+#  ifndef SYS_rt_tgsigqueueinfo
+#    define SYS_rt_tgsigqueueinfo __NR_rt_tgsigqueueinfo
+#  endif
 #endif
 
 namespace mozilla {

@@ -17,9 +17,9 @@
 
 /* Some UNIXy platforms don't have pw_gecos. In this case we use pw_name */
 #if defined(NO_PW_GECOS)
-#define PW_GECOS pw_name
+#  define PW_GECOS pw_name
 #else
-#define PW_GECOS pw_gecos
+#  define PW_GECOS pw_gecos
 #endif
 
 nsUserInfo::nsUserInfo() {}

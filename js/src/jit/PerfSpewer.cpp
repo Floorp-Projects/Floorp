@@ -10,14 +10,14 @@
 #include "mozilla/Printf.h"
 
 #ifdef XP_UNIX
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #ifdef JS_ION_PERF
-#include "jit/JitSpewer.h"
-#include "jit/LIR.h"
-#include "jit/MIR.h"
-#include "jit/MIRGraph.h"
+#  include "jit/JitSpewer.h"
+#  include "jit/LIR.h"
+#  include "jit/MIR.h"
+#  include "jit/MIRGraph.h"
 #endif
 
 #include "vm/MutexIDs.h"
@@ -29,12 +29,12 @@
 // /data/local/tmp/ so also try /sdcard/.
 
 #ifndef PERF_SPEW_DIR
-#if defined(__ANDROID__)
-#define PERF_SPEW_DIR "/data/local/tmp/"
-#define PERF_SPEW_DIR_2 "/sdcard/"
-#else
-#define PERF_SPEW_DIR "/tmp/"
-#endif
+#  if defined(__ANDROID__)
+#    define PERF_SPEW_DIR "/data/local/tmp/"
+#    define PERF_SPEW_DIR_2 "/sdcard/"
+#  else
+#    define PERF_SPEW_DIR "/tmp/"
+#  endif
 #endif
 
 using namespace js;
@@ -109,12 +109,12 @@ void js::jit::CheckPerf() {
         return;
       }
 
-#if defined(__ANDROID__)
+#  if defined(__ANDROID__)
       if (openPerfMap(PERF_SPEW_DIR_2)) {
         PerfChecked = true;
         return;
       }
-#endif
+#  endif
       fprintf(stderr, "Failed to open perf map file.  Disabling IONPERF.\n");
       PerfMode = PERF_MODE_NONE;
     }

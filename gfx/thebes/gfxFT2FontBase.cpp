@@ -18,7 +18,7 @@
 #include FT_MULTIPLE_MASTERS_H
 
 #ifndef FT_FACE_FLAG_COLOR
-#define FT_FACE_FLAG_COLOR (1L << 14)
+#  define FT_FACE_FLAG_COLOR (1L << 14)
 #endif
 
 using namespace mozilla::gfx;

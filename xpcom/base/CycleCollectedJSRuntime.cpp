@@ -88,7 +88,7 @@
 #include "GeckoProfiler.h"
 
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"
+#  include "ProfilerMarkerPayload.h"
 #endif
 
 #include "nsIException.h"
@@ -99,7 +99,7 @@
 #ifdef NIGHTLY_BUILD
 // For performance reasons, we make the JS Dev Error Interceptor a Nightly-only
 // feature.
-#define MOZ_JS_DEV_ERROR_INTERCEPTOR = 1
+#  define MOZ_JS_DEV_ERROR_INTERCEPTOR = 1
 #endif  // NIGHTLY_BUILD
 
 using namespace mozilla;

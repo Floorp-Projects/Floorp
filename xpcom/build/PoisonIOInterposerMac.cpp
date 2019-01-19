@@ -34,7 +34,7 @@
 #include <unistd.h>
 
 #ifdef MOZ_REPLACE_MALLOC
-#include "replace_malloc_bridge.h"
+#  include "replace_malloc_bridge.h"
 #endif
 
 namespace {

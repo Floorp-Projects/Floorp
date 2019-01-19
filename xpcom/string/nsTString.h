@@ -197,13 +197,13 @@ class nsTString : public nsTSubstring<T> {
   template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   int32_t Find(const char_type* aString, int32_t aOffset = 0,
                int32_t aCount = -1) const;
-#ifdef MOZ_USE_CHAR16_WRAPPER
+#  ifdef MOZ_USE_CHAR16_WRAPPER
   template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   int32_t Find(char16ptr_t aString, int32_t aOffset = 0,
                int32_t aCount = -1) const {
     return Find(static_cast<const char16_t*>(aString), aOffset, aCount);
   }
-#endif
+#  endif
 
   /**
    * This methods scans the string backwards, looking for the given string

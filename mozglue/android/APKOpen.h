@@ -8,7 +8,7 @@
 #include <jni.h>
 
 #ifndef APKOPEN_EXPORT
-#define APKOPEN_EXPORT __attribute__((visibility("default")))
+#  define APKOPEN_EXPORT __attribute__((visibility("default")))
 #endif
 
 struct mapping_info {
@@ -27,11 +27,11 @@ void JNI_Throw(JNIEnv* jenv, const char* classname, const char* msg);
 
 // Bug 1207642 - Work around Dalvik bug by realigning stack on JNI entry
 #ifndef MOZ_JNICALL
-#ifdef __i386__
-#define MOZ_JNICALL JNICALL __attribute__((force_align_arg_pointer))
-#else
-#define MOZ_JNICALL JNICALL
-#endif
+#  ifdef __i386__
+#    define MOZ_JNICALL JNICALL __attribute__((force_align_arg_pointer))
+#  else
+#    define MOZ_JNICALL JNICALL
+#  endif
 #endif
 
 #endif /* APKOpen_h */

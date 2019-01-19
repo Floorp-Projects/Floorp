@@ -20,7 +20,7 @@
 #include "nsIScreenManager.h"
 
 #ifdef XP_WIN
-#include "../layers/d3d11/CompositorD3D11.h"
+#  include "../layers/d3d11/CompositorD3D11.h"
 #endif
 
 #include "VRDisplayClient.h"

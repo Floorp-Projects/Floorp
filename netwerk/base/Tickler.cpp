@@ -6,16 +6,16 @@
 #include "Tickler.h"
 
 #ifdef MOZ_USE_WIFI_TICKLER
-#include "nsComponentManagerUtils.h"
-#include "nsINamed.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsServiceManagerUtils.h"
-#include "nsThreadUtils.h"
-#include "prnetdb.h"
+#  include "nsComponentManagerUtils.h"
+#  include "nsINamed.h"
+#  include "nsIPrefBranch.h"
+#  include "nsIPrefService.h"
+#  include "nsServiceManagerUtils.h"
+#  include "nsThreadUtils.h"
+#  include "prnetdb.h"
 
-#include "mozilla/jni/Utils.h"
-#include "GeneratedJNIWrappers.h"
+#  include "mozilla/jni/Utils.h"
+#  include "GeneratedJNIWrappers.h"
 
 namespace mozilla {
 namespace net {

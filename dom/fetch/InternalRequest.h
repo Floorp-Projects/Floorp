@@ -17,9 +17,9 @@
 #include "nsIInputStream.h"
 #include "nsISupportsImpl.h"
 #ifdef DEBUG
-#include "nsIURLParser.h"
-#include "nsNetCID.h"
-#include "nsServiceManagerUtils.h"
+#  include "nsIURLParser.h"
+#  include "nsNetCID.h"
+#  include "nsServiceManagerUtils.h"
 #endif
 
 namespace mozilla {

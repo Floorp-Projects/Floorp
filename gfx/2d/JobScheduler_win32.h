@@ -5,15 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef WIN32
-#ifndef MOZILLA_GFX_TASKSCHEDULER_WIN32_H_
-#define MOZILLA_GFX_TASKSCHEDULER_WIN32_H_
+#  ifndef MOZILLA_GFX_TASKSCHEDULER_WIN32_H_
+#    define MOZILLA_GFX_TASKSCHEDULER_WIN32_H_
 
-#include <windows.h>
-#include <list>
+#    include <windows.h>
+#    include <list>
 
-#include "mozilla/RefPtr.h"
-#include "mozilla/gfx/CriticalSection.h"
-#include "mozilla/RefCounted.h"
+#    include "mozilla/RefPtr.h"
+#    include "mozilla/gfx/CriticalSection.h"
+#    include "mozilla/RefCounted.h"
 
 namespace mozilla {
 namespace gfx {
@@ -88,5 +88,5 @@ class EventObject : public external::AtomicRefCounted<EventObject> {
 }  // namespace gfx
 }  // namespace mozilla
 
-#endif
+#  endif
 #endif

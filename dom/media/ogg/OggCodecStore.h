@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(OggCodecStore_h_)
-#define OggCodecStore_h_
+#  define OggCodecStore_h_
 
-#include <ogg/ogg.h>
+#  include <ogg/ogg.h>
 
-#include "OggCodecState.h"
-#include "VideoUtils.h"
-#include "mozilla/Monitor.h"
+#  include "OggCodecState.h"
+#  include "VideoUtils.h"
+#  include "mozilla/Monitor.h"
 
 namespace mozilla {
 

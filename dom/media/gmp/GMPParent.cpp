@@ -22,7 +22,7 @@
 #include "GMPTimerParent.h"
 #include "runnable_utils.h"
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-#include "mozilla/SandboxInfo.h"
+#  include "mozilla/SandboxInfo.h"
 #endif
 #include "CDMStorageIdProvider.h"
 #include "GMPContentParent.h"
@@ -36,7 +36,7 @@ using CrashReporter::GetIDFromMinidump;
 #include "mozilla/Telemetry.h"
 
 #ifdef XP_WIN
-#include "WMFDecoderModule.h"
+#  include "WMFDecoderModule.h"
 #endif
 
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
@@ -54,7 +54,7 @@ extern LogModule* GetGMPLog();
       mChildPid, ##__VA_ARGS__)
 
 #ifdef __CLASS__
-#undef __CLASS__
+#  undef __CLASS__
 #endif
 #define __CLASS__ "GMPParent"
 

@@ -254,11 +254,11 @@ class nsDisplayMathMLBoundingMetrics final : public nsDisplayItem {
       : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLBoundingMetrics);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
+#  ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayMathMLBoundingMetrics() {
     MOZ_COUNT_DTOR(nsDisplayMathMLBoundingMetrics);
   }
-#endif
+#  endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLBoundingMetrics", TYPE_MATHML_BOUNDING_METRICS)

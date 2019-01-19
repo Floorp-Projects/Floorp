@@ -154,13 +154,13 @@ nsChangeHint ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
              "missing a call to DO_STRUCT_DIFFERENCE");
 
 #ifdef DEBUG
-#define STYLE_STRUCT(name_)                                                   \
-  MOZ_ASSERT(                                                                 \
-      !!(structsFound & STYLE_STRUCT_BIT(name_)) == (PEEK(name_) != nullptr), \
-      "PeekStyleData results must not change in the middle of "               \
-      "difference calculation.");
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
+#  define STYLE_STRUCT(name_)                                            \
+    MOZ_ASSERT(!!(structsFound & STYLE_STRUCT_BIT(name_)) ==             \
+                   (PEEK(name_) != nullptr),                             \
+               "PeekStyleData results must not change in the middle of " \
+               "difference calculation.");
+#  include "nsStyleStructList.h"
+#  undef STYLE_STRUCT
 #endif
 
   // Note that we do not check whether this->RelevantLinkVisited() !=
@@ -370,11 +370,11 @@ static const ColorIndexSet gVisitedIndices[2] = {{0, 0}, {1, 0}};
 #ifdef DEBUG
 /* static */ const char* ComputedStyle::StructName(StyleStructID aSID) {
   switch (aSID) {
-#define STYLE_STRUCT(name_)  \
-  case StyleStructID::name_: \
-    return #name_;
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
+#  define STYLE_STRUCT(name_)  \
+    case StyleStructID::name_: \
+      return #name_;
+#  include "nsStyleStructList.h"
+#  undef STYLE_STRUCT
     default:
       return "Unknown";
   }
@@ -382,10 +382,10 @@ static const ColorIndexSet gVisitedIndices[2] = {{0, 0}, {1, 0}};
 
 /* static */ Maybe<StyleStructID> ComputedStyle::LookupStruct(
     const nsACString& aName) {
-#define STYLE_STRUCT(name_) \
-  if (aName.EqualsLiteral(#name_)) return Some(StyleStructID::name_);
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
+#  define STYLE_STRUCT(name_) \
+    if (aName.EqualsLiteral(#name_)) return Some(StyleStructID::name_);
+#  include "nsStyleStructList.h"
+#  undef STYLE_STRUCT
   return Nothing();
 }
 #endif  // DEBUG

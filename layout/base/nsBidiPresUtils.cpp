@@ -740,17 +740,17 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
   nsLineBox* currentLine = nullptr;
 
 #ifdef DEBUG
-#ifdef NOISY_BIDI
+#  ifdef NOISY_BIDI
   printf(
       "Before Resolve(), mCurrentBlock=%p, mBuffer='%s', frameCount=%d, "
       "runCount=%d\n",
       (void*)aBpd->mCurrentBlock, NS_ConvertUTF16toUTF8(aBpd->mBuffer).get(),
       frameCount, runCount);
-#ifdef REALLY_NOISY_BIDI
+#    ifdef REALLY_NOISY_BIDI
   printf(" block frame tree=:\n");
   aBpd->mCurrentBlock->List(stdout, 0);
-#endif
-#endif
+#    endif
+#  endif
 #endif
 
   if (runCount == 1 && frameCount == 1 && aBpd->GetDirection() == NSBIDI_LTR &&
@@ -765,9 +765,9 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
       FrameBidiData bidiData = frame->GetBidiData();
       if (!bidiData.embeddingLevel && !bidiData.baseLevel) {
 #ifdef DEBUG
-#ifdef NOISY_BIDI
+#  ifdef NOISY_BIDI
         printf("early return for single direction frame %p\n", (void*)frame);
-#endif
+#  endif
 #endif
         frame->AddStateBits(NS_FRAME_IS_BIDI);
         return NS_OK;
@@ -979,11 +979,11 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
   }  // for
 
 #ifdef DEBUG
-#ifdef REALLY_NOISY_BIDI
+#  ifdef REALLY_NOISY_BIDI
   printf("---\nAfter Resolve(), frameTree =:\n");
   aBpd->mCurrentBlock->List(stdout, 0);
   printf("===\n");
-#endif
+#  endif
 #endif
 
   return rv;

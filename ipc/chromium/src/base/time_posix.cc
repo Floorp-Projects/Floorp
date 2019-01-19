@@ -7,16 +7,16 @@
 #include "base/time.h"
 
 #ifdef OS_MACOSX
-#include <mach/mach_time.h>
+#  include <mach/mach_time.h>
 #endif
 #include <sys/time.h>
 #if defined(ANDROID) && !defined(__LP64__)
-#include <time64.h>
+#  include <time64.h>
 #else
-#include <time.h>
+#  include <time.h>
 #endif
 #if defined(ANDROID) || defined(OS_POSIX)
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include <limits>
@@ -191,7 +191,7 @@ TimeTicks TimeTicks::Now() {
       (static_cast<int64_t>(ts.tv_nsec) / Time::kNanosecondsPerMicrosecond);
 
 #else  // _POSIX_MONOTONIC_CLOCK
-#error No usable tick clock function on this platform.
+#  error No usable tick clock function on this platform.
 #endif  // _POSIX_MONOTONIC_CLOCK
 
   return TimeTicks(absolute_micro);

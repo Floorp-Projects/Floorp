@@ -53,7 +53,7 @@
 #include "base/basictypes.h"
 
 #if defined(OS_POSIX)
-#include <pthread.h>
+#  include <pthread.h>
 #endif
 
 namespace base {

@@ -10,10 +10,10 @@
 
 #include "mozilla/Logging.h"
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 #include "jsapi.h"

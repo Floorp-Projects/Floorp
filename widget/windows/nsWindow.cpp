@@ -158,20 +158,20 @@
 
 #if defined(ACCESSIBILITY)
 
-#ifdef DEBUG
-#include "mozilla/a11y/Logging.h"
-#endif
+#  ifdef DEBUG
+#    include "mozilla/a11y/Logging.h"
+#  endif
 
-#include "oleidl.h"
-#include <winuser.h>
-#include "nsAccessibilityService.h"
-#include "mozilla/a11y/DocAccessible.h"
-#include "mozilla/a11y/LazyInstantiator.h"
-#include "mozilla/a11y/Platform.h"
-#if !defined(WINABLEAPI)
-#include <winable.h>
-#endif  // !defined(WINABLEAPI)
-#endif  // defined(ACCESSIBILITY)
+#  include "oleidl.h"
+#  include <winuser.h>
+#  include "nsAccessibilityService.h"
+#  include "mozilla/a11y/DocAccessible.h"
+#  include "mozilla/a11y/LazyInstantiator.h"
+#  include "mozilla/a11y/Platform.h"
+#  if !defined(WINABLEAPI)
+#    include <winable.h>
+#  endif  // !defined(WINABLEAPI)
+#endif    // defined(ACCESSIBILITY)
 
 #include "nsIWinTaskbar.h"
 #define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
@@ -200,11 +200,11 @@
 #define ERROR 0
 
 #if !defined(SM_CONVERTIBLESLATEMODE)
-#define SM_CONVERTIBLESLATEMODE 0x2003
+#  define SM_CONVERTIBLESLATEMODE 0x2003
 #endif
 
 #if !defined(WM_DPICHANGED)
-#define WM_DPICHANGED 0x02E0
+#  define WM_DPICHANGED 0x02E0
 #endif
 
 #include "mozilla/gfx/DeviceManagerDx.h"
@@ -7095,24 +7095,25 @@ TextEventDispatcherListener* nsWindow::GetNativeTextEventDispatcherListener() {
 }
 
 #ifdef ACCESSIBILITY
-#ifdef DEBUG
-#define NS_LOG_WMGETOBJECT(aWnd, aHwnd, aAcc)                                  \
-  if (a11y::logging::IsEnabled(a11y::logging::ePlatforms)) {                   \
-    printf(                                                                    \
-        "Get the window:\n  {\n     HWND: %p, parent HWND: %p, wndobj: %p,\n", \
-        aHwnd, ::GetParent(aHwnd), aWnd);                                      \
-    printf("     acc: %p", aAcc);                                              \
-    if (aAcc) {                                                                \
-      nsAutoString name;                                                       \
-      aAcc->Name(name);                                                        \
-      printf(", accname: %s", NS_ConvertUTF16toUTF8(name).get());              \
-    }                                                                          \
-    printf("\n }\n");                                                          \
-  }
+#  ifdef DEBUG
+#    define NS_LOG_WMGETOBJECT(aWnd, aHwnd, aAcc)                            \
+      if (a11y::logging::IsEnabled(a11y::logging::ePlatforms)) {             \
+        printf(                                                              \
+            "Get the window:\n  {\n     HWND: %p, parent HWND: %p, wndobj: " \
+            "%p,\n",                                                         \
+            aHwnd, ::GetParent(aHwnd), aWnd);                                \
+        printf("     acc: %p", aAcc);                                        \
+        if (aAcc) {                                                          \
+          nsAutoString name;                                                 \
+          aAcc->Name(name);                                                  \
+          printf(", accname: %s", NS_ConvertUTF16toUTF8(name).get());        \
+        }                                                                    \
+        printf("\n }\n");                                                    \
+      }
 
-#else
-#define NS_LOG_WMGETOBJECT(aWnd, aHwnd, aAcc)
-#endif
+#  else
+#    define NS_LOG_WMGETOBJECT(aWnd, aHwnd, aAcc)
+#  endif
 
 a11y::Accessible* nsWindow::GetAccessible() {
   // If the pref was ePlatformIsDisabled, return null here, disabling a11y.
@@ -7262,17 +7263,17 @@ LRESULT CALLBACK nsWindow::MozSpecialMsgFilter(int code, WPARAM wParam,
     }
     if (code != gLastMsgCode) {
       if (gMSGFEvents[inx].mId == code) {
-#ifdef DEBUG
+#  ifdef DEBUG
         MOZ_LOG(gWindowsLog, LogLevel::Info,
                 ("MozSpecialMessageProc - code: 0x%X  - %s  hw: %p\n", code,
                  gMSGFEvents[inx].mStr, pMsg->hwnd));
-#endif
+#  endif
       } else {
-#ifdef DEBUG
+#  ifdef DEBUG
         MOZ_LOG(gWindowsLog, LogLevel::Info,
                 ("MozSpecialMessageProc - code: 0x%X  - %d  hw: %p\n", code,
                  gMSGFEvents[inx].mId, pMsg->hwnd));
-#endif
+#  endif
       }
       gLastMsgCode = code;
     }

@@ -65,16 +65,16 @@ void txUnionPattern::setSubPatternAt(uint32_t aPos, txPattern* aPattern) {
 
 #ifdef TX_TO_STRING
 void txUnionPattern::toString(nsAString& aDest) {
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.AppendLiteral("txUnionPattern{");
-#endif
+#  endif
   for (uint32_t i = 0; i < mLocPathPatterns.Length(); ++i) {
     if (i != 0) aDest.AppendLiteral(" | ");
     mLocPathPatterns[i]->toString(aDest);
   }
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.Append(char16_t('}'));
-#endif
+#  endif
 }
 #endif
 
@@ -207,9 +207,9 @@ void txLocPathPattern::setSubPatternAt(uint32_t aPos, txPattern* aPattern) {
 
 #ifdef TX_TO_STRING
 void txLocPathPattern::toString(nsAString& aDest) {
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.AppendLiteral("txLocPathPattern{");
-#endif
+#  endif
   for (uint32_t i = 0; i < mSteps.Length(); ++i) {
     if (i != 0) {
       if (mSteps[i].isChild)
@@ -219,9 +219,9 @@ void txLocPathPattern::toString(nsAString& aDest) {
     }
     mSteps[i].pattern->toString(aDest);
   }
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.Append(char16_t('}'));
-#endif
+#  endif
 }
 #endif
 
@@ -245,13 +245,13 @@ TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txRootPattern)
 
 #ifdef TX_TO_STRING
 void txRootPattern::toString(nsAString& aDest) {
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.AppendLiteral("txRootPattern{");
-#endif
+#  endif
   if (mSerialize) aDest.Append(char16_t('/'));
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.Append(char16_t('}'));
-#endif
+#  endif
 }
 #endif
 
@@ -297,9 +297,9 @@ TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txIdPattern)
 
 #ifdef TX_TO_STRING
 void txIdPattern::toString(nsAString& aDest) {
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.AppendLiteral("txIdPattern{");
-#endif
+#  endif
   aDest.AppendLiteral("id('");
   uint32_t k, count = mIds.Length() - 1;
   for (k = 0; k < count; ++k) {
@@ -312,9 +312,9 @@ void txIdPattern::toString(nsAString& aDest) {
   mIds[count]->ToString(str);
   aDest.Append(str);
   aDest.AppendLiteral("')");
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.Append(char16_t('}'));
-#endif
+#  endif
 }
 #endif
 
@@ -350,9 +350,9 @@ TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txKeyPattern)
 
 #ifdef TX_TO_STRING
 void txKeyPattern::toString(nsAString& aDest) {
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.AppendLiteral("txKeyPattern{");
-#endif
+#  endif
   aDest.AppendLiteral("key('");
   nsAutoString tmp;
   if (mPrefix) {
@@ -365,9 +365,9 @@ void txKeyPattern::toString(nsAString& aDest) {
   aDest.AppendLiteral(", ");
   aDest.Append(mValue);
   aDest.AppendLiteral("')");
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.Append(char16_t('}'));
-#endif
+#  endif
 }
 #endif
 
@@ -517,15 +517,15 @@ void txStepPattern::setSubExprAt(uint32_t aPos, Expr* aExpr) {
 
 #ifdef TX_TO_STRING
 void txStepPattern::toString(nsAString& aDest) {
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.AppendLiteral("txStepPattern{");
-#endif
+#  endif
   if (mIsAttr) aDest.Append(char16_t('@'));
   if (mNodeTest) mNodeTest->toString(aDest);
 
   PredicateList::toString(aDest);
-#ifdef DEBUG
+#  ifdef DEBUG
   aDest.Append(char16_t('}'));
-#endif
+#  endif
 }
 #endif

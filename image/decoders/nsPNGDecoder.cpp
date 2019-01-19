@@ -38,10 +38,10 @@ static LazyLogModule sPNGDecoderAccountingLog("PNGDecoderAccounting");
 
 // limit image dimensions (bug #251381, #591822, #967656, and #1283961)
 #ifndef MOZ_PNG_MAX_WIDTH
-#define MOZ_PNG_MAX_WIDTH 0x7fffffff  // Unlimited
+#  define MOZ_PNG_MAX_WIDTH 0x7fffffff  // Unlimited
 #endif
 #ifndef MOZ_PNG_MAX_HEIGHT
-#define MOZ_PNG_MAX_HEIGHT 0x7fffffff  // Unlimited
+#  define MOZ_PNG_MAX_HEIGHT 0x7fffffff  // Unlimited
 #endif
 
 nsPNGDecoder::AnimFrameInfo::AnimFrameInfo()
@@ -327,17 +327,17 @@ nsresult nsPNGDecoder::InitInternal() {
 #endif
 
 #ifdef PNG_SET_OPTION_SUPPORTED
-#if defined(PNG_sRGB_PROFILE_CHECKS) && PNG_sRGB_PROFILE_CHECKS >= 0
+#  if defined(PNG_sRGB_PROFILE_CHECKS) && PNG_sRGB_PROFILE_CHECKS >= 0
   // Skip checking of sRGB ICC profiles
   png_set_option(mPNG, PNG_SKIP_sRGB_CHECK_PROFILE, PNG_OPTION_ON);
-#endif
+#  endif
 
-#ifdef PNG_MAXIMUM_INFLATE_WINDOW
+#  ifdef PNG_MAXIMUM_INFLATE_WINDOW
   // Force a larger zlib inflate window as some images in the wild have
   // incorrectly set metadata (specifically CMF bits) which prevent us from
   // decoding them otherwise.
   png_set_option(mPNG, PNG_MAXIMUM_INFLATE_WINDOW, PNG_OPTION_ON);
-#endif
+#  endif
 #endif
 
   // use this as libpng "progressive pointer" (retrieve in callbacks)
@@ -961,7 +961,7 @@ void nsPNGDecoder::frame_info_callback(png_structp png_ptr,
                           png_get_next_frame_height(png_ptr, decoder->mInfo));
   const bool isInterlaced = bool(decoder->interlacebuf);
 
-#ifndef MOZ_EMBEDDED_LIBPNG
+#  ifndef MOZ_EMBEDDED_LIBPNG
   // if using system library, check frame_width and height against 0
   if (frameRect.width == 0) {
     png_error(png_ptr, "Frame width must not be 0");
@@ -969,7 +969,7 @@ void nsPNGDecoder::frame_info_callback(png_structp png_ptr,
   if (frameRect.height == 0) {
     png_error(png_ptr, "Frame height must not be 0");
   }
-#endif
+#  endif
 
   const FrameInfo info{frameRect, isInterlaced};
 

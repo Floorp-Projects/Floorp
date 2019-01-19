@@ -10,7 +10,7 @@
 
 #include "gfxPrefs.h"
 #ifdef ACCESSIBILITY
-#include "mozilla/a11y/DocAccessibleChild.h"
+#  include "mozilla/a11y/DocAccessibleChild.h"
 #endif
 #include "Layers.h"
 #include "ContentChild.h"
@@ -129,14 +129,14 @@
 #include "MMPrinter.h"
 
 #ifdef XP_WIN
-#include "mozilla/plugins/PluginWidgetChild.h"
+#  include "mozilla/plugins/PluginWidgetChild.h"
 #endif
 
 #ifdef NS_PRINTING
-#include "nsIPrintSession.h"
-#include "nsIPrintSettings.h"
-#include "nsIPrintSettingsService.h"
-#include "nsIWebBrowserPrint.h"
+#  include "nsIPrintSession.h"
+#  include "nsIPrintSettings.h"
+#  include "nsIPrintSettingsService.h"
+#  include "nsIWebBrowserPrint.h"
 #endif
 
 #define BROWSER_ELEMENT_CHILD_SCRIPT \

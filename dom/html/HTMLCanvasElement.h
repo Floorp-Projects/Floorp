@@ -4,21 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined(mozilla_dom_HTMLCanvasElement_h)
-#define mozilla_dom_HTMLCanvasElement_h
+#  define mozilla_dom_HTMLCanvasElement_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/WeakPtr.h"
-#include "nsIDOMEventListener.h"
-#include "nsIObserver.h"
-#include "nsGenericHTMLElement.h"
-#include "nsGkAtoms.h"
-#include "nsSize.h"
-#include "nsError.h"
+#  include "mozilla/Attributes.h"
+#  include "mozilla/WeakPtr.h"
+#  include "nsIDOMEventListener.h"
+#  include "nsIObserver.h"
+#  include "nsGenericHTMLElement.h"
+#  include "nsGkAtoms.h"
+#  include "nsSize.h"
+#  include "nsError.h"
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/CanvasRenderingContextHelper.h"
-#include "mozilla/gfx/Rect.h"
-#include "mozilla/layers/LayersTypes.h"
+#  include "mozilla/dom/BindingDeclarations.h"
+#  include "mozilla/dom/CanvasRenderingContextHelper.h"
+#  include "mozilla/gfx/Rect.h"
+#  include "mozilla/layers/LayersTypes.h"
 
 class nsICanvasRenderingContextInternal;
 class nsITimerCallback;

@@ -5,16 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if !defined(MediaSourceDemuxer_h_)
-#define MediaSourceDemuxer_h_
+#  define MediaSourceDemuxer_h_
 
-#include "MediaDataDemuxer.h"
-#include "MediaResource.h"
-#include "MediaSource.h"
-#include "TrackBuffersManager.h"
-#include "mozilla/Atomics.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/Monitor.h"
-#include "mozilla/TaskQueue.h"
+#  include "MediaDataDemuxer.h"
+#  include "MediaResource.h"
+#  include "MediaSource.h"
+#  include "TrackBuffersManager.h"
+#  include "mozilla/Atomics.h"
+#  include "mozilla/Maybe.h"
+#  include "mozilla/Monitor.h"
+#  include "mozilla/TaskQueue.h"
 
 namespace mozilla {
 

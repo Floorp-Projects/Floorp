@@ -638,9 +638,7 @@ class JS::Realm : public JS::shadow::Realm {
    * principals during its lifetime (e.g. in case of lazy parsing).
    */
   JSPrincipals* principals() { return principals_; }
-  void setPrincipals(JSPrincipals* principals) {
-    principals_ = principals;
-  }
+  void setPrincipals(JSPrincipals* principals) { principals_ = principals; }
 
   bool isSystem() const { return isSystem_; }
 

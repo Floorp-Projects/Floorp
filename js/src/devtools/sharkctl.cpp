@@ -6,20 +6,20 @@
 
 #ifdef __APPLE__
 
-#include "sharkctl.h"
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#  include "sharkctl.h"
+#  include <stddef.h>
+#  include <stdio.h>
+#  include <stdlib.h>
+#  include <unistd.h>
 
-#include "jsutil.h"
+#  include "jsutil.h"
 
-#define SHARK_MSG_ACQUIRE 0x29a
-#define SHARK_MSG_RELEASE 0x29b
-#define SHARK_MSG_STOP 0x29c
-#define SHARK_MSG_START 0x29d
+#  define SHARK_MSG_ACQUIRE 0x29a
+#  define SHARK_MSG_RELEASE 0x29b
+#  define SHARK_MSG_STOP 0x29c
+#  define SHARK_MSG_START 0x29d
 
-#define RECV_SIZEOF(ty) offsetof(ty, out)
+#  define RECV_SIZEOF(ty) offsetof(ty, out)
 
 // Private API in libSystem.dylib
 extern "C" void bootstrap_look_up(mach_port_t special_port, const char* name,

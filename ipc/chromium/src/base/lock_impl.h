@@ -11,9 +11,9 @@
 #include "build/build_config.h"
 
 #if defined(OS_WIN)
-#include <windows.h>
+#  include <windows.h>
 #elif defined(OS_POSIX)
-#include <pthread.h>
+#  include <pthread.h>
 #endif
 
 namespace base {

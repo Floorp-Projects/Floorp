@@ -25,11 +25,11 @@ __attribute__((naked)) void SignalTrampoline(int aSignal, siginfo_t* aInfo,
   asm volatile("b %0" : : "X"(H) : "memory");
 }
 
-#define MOZ_SIGNAL_TRAMPOLINE(h) (mozilla::SignalTrampoline<h>)
+#  define MOZ_SIGNAL_TRAMPOLINE(h) (mozilla::SignalTrampoline<h>)
 
 #else  // __arm__
 
-#define MOZ_SIGNAL_TRAMPOLINE(h) (h)
+#  define MOZ_SIGNAL_TRAMPOLINE(h) (h)
 
 #endif  // __arm__
 

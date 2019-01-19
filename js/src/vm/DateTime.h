@@ -17,7 +17,7 @@
 #include "threading/ExclusiveData.h"
 
 #if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
-#include "unicode/uversion.h"
+#  include "unicode/uversion.h"
 
 U_NAMESPACE_BEGIN
 class TimeZone;

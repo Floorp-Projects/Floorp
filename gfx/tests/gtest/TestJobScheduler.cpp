@@ -9,8 +9,8 @@
 #include "mozilla/gfx/JobScheduler.h"
 
 #ifndef WIN32
-#include <pthread.h>
-#include <sched.h>
+#  include <pthread.h>
+#  include <sched.h>
 #endif
 
 #include <stdlib.h>

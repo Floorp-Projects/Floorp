@@ -7,7 +7,7 @@
 #define nsDocShellEditorData_h__
 
 #ifndef nsCOMPtr_h___
-#include "nsCOMPtr.h"
+#  include "nsCOMPtr.h"
 #endif
 
 #include "mozilla/HTMLEditor.h"

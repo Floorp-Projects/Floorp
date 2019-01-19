@@ -7,10 +7,10 @@
 #include "vm/TraceLoggingGraph.h"
 
 #ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
+#  include <process.h>
+#  define getpid _getpid
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include "mozilla/EndianUtils.h"
@@ -27,11 +27,11 @@
 #include "vm/TraceLogging.h"
 
 #ifndef DEFAULT_TRACE_LOG_DIR
-#if defined(_WIN32)
-#define DEFAULT_TRACE_LOG_DIR "."
-#else
-#define DEFAULT_TRACE_LOG_DIR "/tmp/"
-#endif
+#  if defined(_WIN32)
+#    define DEFAULT_TRACE_LOG_DIR "."
+#  else
+#    define DEFAULT_TRACE_LOG_DIR "/tmp/"
+#  endif
 #endif
 
 using mozilla::MakeScopeExit;
@@ -41,10 +41,10 @@ TraceLoggerGraphState* traceLoggerGraphState = nullptr;
 
 // gcc and clang have these in symcat.h, but MSVC does not.
 #ifndef STRINGX
-#define STRINGX(x) #x
+#  define STRINGX(x) #  x
 #endif
 #ifndef XSTRING
-#define XSTRING(macro) STRINGX(macro)
+#  define XSTRING(macro) STRINGX(macro)
 #endif
 
 #define MAX_LOGGERS 999

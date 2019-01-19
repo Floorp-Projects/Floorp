@@ -26,10 +26,10 @@
 #include "nsLocalHandlerApp.h"
 #include "ContentHandlerService.h"
 #ifdef MOZ_ENABLE_DBUS
-#include "nsDBusHandlerApp.h"
+#  include "nsDBusHandlerApp.h"
 #endif
 #if defined(MOZ_WIDGET_ANDROID)
-#include "nsExternalURLHandlerService.h"
+#  include "nsExternalURLHandlerService.h"
 #endif
 
 // session history

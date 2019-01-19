@@ -14,7 +14,7 @@
 
 #if defined(_MSC_VER)
 
-#include "gtest/BlackBox.h"
+#  include "gtest/BlackBox.h"
 
 namespace mozilla {
 

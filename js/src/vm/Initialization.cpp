@@ -22,11 +22,11 @@
 #include "jit/JitCommon.h"
 #include "js/Utility.h"
 #if ENABLE_INTL_API
-#include "unicode/uclean.h"
-#include "unicode/utypes.h"
+#  include "unicode/uclean.h"
+#  include "unicode/utypes.h"
 #endif  // ENABLE_INTL_API
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+#  include "vm/BigIntType.h"
 #endif
 #include "vm/DateTime.h"
 #include "vm/HelperThreads.h"
@@ -56,10 +56,10 @@ static unsigned MessageParameterCount(const char* format) {
 static void CheckMessageParameterCounts() {
   // Assert that each message format has the correct number of braced
   // parameters.
-#define MSG_DEF(name, count, exception, format) \
-  MOZ_ASSERT(MessageParameterCount(format) == count);
-#include "js.msg"
-#undef MSG_DEF
+#  define MSG_DEF(name, count, exception, format) \
+    MOZ_ASSERT(MessageParameterCount(format) == count);
+#  include "js.msg"
+#  undef MSG_DEF
 }
 #endif /* DEBUG */
 

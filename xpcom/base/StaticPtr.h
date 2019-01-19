@@ -43,15 +43,15 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticAutoPtr {
   // so that the compiler can see that the constructor is trivial.
 #ifdef DEBUG
   StaticAutoPtr() {
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wuninitialized"
+#  ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wuninitialized"
     // False positive with gcc. See bug 1430729
-#endif
+#  endif
     MOZ_ASSERT(!mRawPtr);
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
+#  ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#  endif
   }
 #endif
 
@@ -104,15 +104,15 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticRefPtr {
   // so that the compiler can see that the constructor is trivial.
 #ifdef DEBUG
   StaticRefPtr() {
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wuninitialized"
+#  ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wuninitialized"
     // False positive with gcc. See bug 1430729
-#endif
+#  endif
     MOZ_ASSERT(!mRawPtr);
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
+#  ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#  endif
   }
 #endif
 

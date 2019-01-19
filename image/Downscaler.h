@@ -17,7 +17,7 @@
 #include "gfxPoint.h"
 #include "nsRect.h"
 #ifdef MOZ_ENABLE_SKIA
-#include "mozilla/gfx/ConvolutionFilter.h"
+#  include "mozilla/gfx/ConvolutionFilter.h"
 #endif
 
 namespace mozilla {

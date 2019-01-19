@@ -17,7 +17,7 @@
 #if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
 // DEBUG_FRAME_DUMP enables nsIFrame::List and related methods.
 // You can also define this in a non-DEBUG build if you need frame dumps.
-#define DEBUG_FRAME_DUMP 1
+#  define DEBUG_FRAME_DUMP 1
 #endif
 
 class nsContainerFrame;

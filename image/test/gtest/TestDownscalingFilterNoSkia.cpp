@@ -25,15 +25,15 @@
 
 #ifdef MOZ_ENABLE_SKIA
 
-#undef MOZ_ENABLE_SKIA
-#include "Common.h"
-#include "DownscalingFilter.h"
-#define MOZ_ENABLE_SKIA
+#  undef MOZ_ENABLE_SKIA
+#  include "Common.h"
+#  include "DownscalingFilter.h"
+#  define MOZ_ENABLE_SKIA
 
 #else
 
-#include "Common.h"
-#include "DownscalingFilter.h"
+#  include "Common.h"
+#  include "DownscalingFilter.h"
 
 #endif
 

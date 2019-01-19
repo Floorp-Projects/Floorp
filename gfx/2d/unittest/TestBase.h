@@ -11,7 +11,7 @@
 
 #ifdef _MSC_VER
 // On MSVC otherwise our generic member pointer trick doesn't work.
-#pragma pointers_to_members(full_generality, single_inheritance)
+#  pragma pointers_to_members(full_generality, single_inheritance)
 #endif
 
 #define VERIFY(arg)                          \

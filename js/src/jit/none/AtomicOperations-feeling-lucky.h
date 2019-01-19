@@ -40,44 +40,44 @@
 // After all, you're already feeling lucky.
 
 #if defined(__ppc__) || defined(__PPC__)
-#define GNUC_COMPATIBLE
+#  define GNUC_COMPATIBLE
 #endif
 
 #if defined(__ppc64__) || defined(__PPC64__) || defined(__ppc64le__) || \
     defined(__PPC64LE__)
-#define HAS_64BIT_ATOMICS
-#define HAS_64BIT_LOCKFREE
-#define GNUC_COMPATIBLE
+#  define HAS_64BIT_ATOMICS
+#  define HAS_64BIT_LOCKFREE
+#  define GNUC_COMPATIBLE
 #endif
 
 #ifdef __sparc__
-#define GNUC_COMPATIBLE
-#ifdef __LP64__
-#define HAS_64BIT_ATOMICS
-#define HAS_64BIT_LOCKFREE
-#endif
+#  define GNUC_COMPATIBLE
+#  ifdef __LP64__
+#    define HAS_64BIT_ATOMICS
+#    define HAS_64BIT_LOCKFREE
+#  endif
 #endif
 
 #ifdef __alpha__
-#define GNUC_COMPATIBLE
+#  define GNUC_COMPATIBLE
 #endif
 
 #ifdef __hppa__
-#define GNUC_COMPATIBLE
+#  define GNUC_COMPATIBLE
 #endif
 
 #ifdef __sh__
-#define GNUC_COMPATIBLE
+#  define GNUC_COMPATIBLE
 #endif
 
 #ifdef __s390__
-#define GNUC_COMPATIBLE
+#  define GNUC_COMPATIBLE
 #endif
 
 #ifdef __s390x__
-#define HAS_64BIT_ATOMICS
-#define HAS_64BIT_LOCKFREE
-#define GNUC_COMPATIBLE
+#  define HAS_64BIT_ATOMICS
+#  define HAS_64BIT_LOCKFREE
+#  define GNUC_COMPATIBLE
 #endif
 
 // The default implementation tactic for gcc/clang is to use the newer
@@ -95,7 +95,7 @@
 // Sanity check.
 
 #if defined(HAS_64BIT_LOCKFREE) && !defined(HAS_64BIT_ATOMICS)
-#error "This combination of features is senseless, please fix"
+#  error "This combination of features is senseless, please fix"
 #endif
 
 // Try to avoid platform #ifdefs below this point.
@@ -103,44 +103,44 @@
 #ifdef GNUC_COMPATIBLE
 
 inline bool js::jit::AtomicOperations::hasAtomic8() {
-#if defined(HAS_64BIT_ATOMICS)
+#  if defined(HAS_64BIT_ATOMICS)
   return true;
-#else
+#  else
   return false;
-#endif
+#  endif
 }
 
 inline bool js::jit::AtomicOperations::isLockfree8() {
-#if defined(HAS_64BIT_LOCKFREE)
+#  if defined(HAS_64BIT_LOCKFREE)
   return true;
-#else
+#  else
   return false;
-#endif
+#  endif
 }
 
 inline void js::jit::AtomicOperations::fenceSeqCst() {
-#ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
   __sync_synchronize();
-#else
+#  else
   __atomic_thread_fence(__ATOMIC_SEQ_CST);
-#endif
+#  endif
 }
 
 template <typename T>
 inline T js::jit::AtomicOperations::loadSeqCst(T* addr) {
   static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-#ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
   __sync_synchronize();
   T v = *addr;
   __sync_synchronize();
-#else
+#  else
   T v;
   __atomic_load(addr, &v, __ATOMIC_SEQ_CST);
-#endif
+#  endif
   return v;
 }
 
-#ifndef HAS_64BIT_ATOMICS
+#  ifndef HAS_64BIT_ATOMICS
 namespace js {
 namespace jit {
 
@@ -156,21 +156,21 @@ inline uint64_t AtomicOperations::loadSeqCst(uint64_t* addr) {
 
 }  // namespace jit
 }  // namespace js
-#endif
+#  endif
 
 template <typename T>
 inline void js::jit::AtomicOperations::storeSeqCst(T* addr, T val) {
   static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-#ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
   __sync_synchronize();
   *addr = val;
   __sync_synchronize();
-#else
+#  else
   __atomic_store(addr, &val, __ATOMIC_SEQ_CST);
-#endif
+#  endif
 }
 
-#ifndef HAS_64BIT_ATOMICS
+#  ifndef HAS_64BIT_ATOMICS
 namespace js {
 namespace jit {
 
@@ -186,22 +186,22 @@ inline void AtomicOperations::storeSeqCst(uint64_t* addr, uint64_t val) {
 
 }  // namespace jit
 }  // namespace js
-#endif
+#  endif
 
 template <typename T>
 inline T js::jit::AtomicOperations::compareExchangeSeqCst(T* addr, T oldval,
                                                           T newval) {
   static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-#ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
   return __sync_val_compare_and_swap(addr, oldval, newval);
-#else
+#  else
   __atomic_compare_exchange(addr, &oldval, &newval, false, __ATOMIC_SEQ_CST,
                             __ATOMIC_SEQ_CST);
   return oldval;
-#endif
+#  endif
 }
 
-#ifndef HAS_64BIT_ATOMICS
+#  ifndef HAS_64BIT_ATOMICS
 namespace js {
 namespace jit {
 
@@ -221,19 +221,19 @@ inline uint64_t AtomicOperations::compareExchangeSeqCst(uint64_t* addr,
 
 }  // namespace jit
 }  // namespace js
-#endif
+#  endif
 
 template <typename T>
 inline T js::jit::AtomicOperations::fetchAddSeqCst(T* addr, T val) {
   static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-#ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
   return __sync_fetch_and_add(addr, val);
-#else
+#  else
   return __atomic_fetch_add(addr, val, __ATOMIC_SEQ_CST);
-#endif
+#  endif
 }
 
-#ifndef HAS_64BIT_ATOMICS
+#  ifndef HAS_64BIT_ATOMICS
 namespace js {
 namespace jit {
 
@@ -249,19 +249,19 @@ inline uint64_t AtomicOperations::fetchAddSeqCst(uint64_t* addr, uint64_t val) {
 
 }  // namespace jit
 }  // namespace js
-#endif
+#  endif
 
 template <typename T>
 inline T js::jit::AtomicOperations::fetchSubSeqCst(T* addr, T val) {
   static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-#ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
   return __sync_fetch_and_sub(addr, val);
-#else
+#  else
   return __atomic_fetch_sub(addr, val, __ATOMIC_SEQ_CST);
-#endif
+#  endif
 }
 
-#ifndef HAS_64BIT_ATOMICS
+#  ifndef HAS_64BIT_ATOMICS
 namespace js {
 namespace jit {
 
@@ -277,19 +277,19 @@ inline uint64_t AtomicOperations::fetchSubSeqCst(uint64_t* addr, uint64_t val) {
 
 }  // namespace jit
 }  // namespace js
-#endif
+#  endif
 
 template <typename T>
 inline T js::jit::AtomicOperations::fetchAndSeqCst(T* addr, T val) {
   static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-#ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
   return __sync_fetch_and_and(addr, val);
-#else
+#  else
   return __atomic_fetch_and(addr, val, __ATOMIC_SEQ_CST);
-#endif
+#  endif
 }
 
-#ifndef HAS_64BIT_ATOMICS
+#  ifndef HAS_64BIT_ATOMICS
 namespace js {
 namespace jit {
 
@@ -305,19 +305,19 @@ inline uint64_t AtomicOperations::fetchAndSeqCst(uint64_t* addr, uint64_t val) {
 
 }  // namespace jit
 }  // namespace js
-#endif
+#  endif
 
 template <typename T>
 inline T js::jit::AtomicOperations::fetchOrSeqCst(T* addr, T val) {
   static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-#ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
   return __sync_fetch_and_or(addr, val);
-#else
+#  else
   return __atomic_fetch_or(addr, val, __ATOMIC_SEQ_CST);
-#endif
+#  endif
 }
 
-#ifndef HAS_64BIT_ATOMICS
+#  ifndef HAS_64BIT_ATOMICS
 namespace js {
 namespace jit {
 
@@ -333,19 +333,19 @@ inline uint64_t AtomicOperations::fetchOrSeqCst(uint64_t* addr, uint64_t val) {
 
 }  // namespace jit
 }  // namespace js
-#endif
+#  endif
 
 template <typename T>
 inline T js::jit::AtomicOperations::fetchXorSeqCst(T* addr, T val) {
   static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-#ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
   return __sync_fetch_and_xor(addr, val);
-#else
+#  else
   return __atomic_fetch_xor(addr, val, __ATOMIC_SEQ_CST);
-#endif
+#  endif
 }
 
-#ifndef HAS_64BIT_ATOMICS
+#  ifndef HAS_64BIT_ATOMICS
 namespace js {
 namespace jit {
 
@@ -361,7 +361,7 @@ inline uint64_t AtomicOperations::fetchXorSeqCst(uint64_t* addr, uint64_t val) {
 
 }  // namespace jit
 }  // namespace js
-#endif
+#  endif
 
 template <typename T>
 inline T js::jit::AtomicOperations::loadSafeWhenRacy(T* addr) {
@@ -396,21 +396,21 @@ inline void js::jit::AtomicOperations::memmoveSafeWhenRacy(void* dest,
 template <typename T>
 inline T js::jit::AtomicOperations::exchangeSeqCst(T* addr, T val) {
   static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-#ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
   T v;
   __sync_synchronize();
   do {
     v = *addr;
   } while (__sync_val_compare_and_swap(addr, v, val) != v);
   return v;
-#else
+#  else
   T v;
   __atomic_exchange(addr, &val, &v, __ATOMIC_SEQ_CST);
   return v;
-#endif
+#  endif
 }
 
-#ifndef HAS_64BIT_ATOMICS
+#  ifndef HAS_64BIT_ATOMICS
 namespace js {
 namespace jit {
 
@@ -426,11 +426,11 @@ inline uint64_t AtomicOperations::exchangeSeqCst(uint64_t* addr, uint64_t val) {
 
 }  // namespace jit
 }  // namespace js
-#endif
+#  endif
 
 #else
 
-#error "Either use GCC or Clang, or add code here"
+#  error "Either use GCC or Clang, or add code here"
 
 #endif
 

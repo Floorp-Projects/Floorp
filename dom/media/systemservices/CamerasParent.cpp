@@ -24,8 +24,8 @@
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
 #if defined(_WIN32)
-#include <process.h>
-#define getpid() _getpid()
+#  include <process.h>
+#  define getpid() _getpid()
 #endif
 
 #undef LOG

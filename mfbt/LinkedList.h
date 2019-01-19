@@ -544,7 +544,7 @@ class LinkedList {
    * mNext/mPrev pointers, only one sentinel).  Has no effect in release builds.
    */
   void debugAssertIsSane() const {
-#ifdef DEBUG
+#  ifdef DEBUG
     const LinkedListElement<T>* slow;
     const LinkedListElement<T>* fast1;
     const LinkedListElement<T>* fast2;
@@ -589,21 +589,21 @@ class LinkedList {
       prev = cur;
       cur = cur->mNext;
     } while (cur != &sentinel);
-#endif /* ifdef DEBUG */
+#  endif /* ifdef DEBUG */
   }
 
  private:
   friend class LinkedListElement<T>;
 
   void assertContains(const RawType aValue) const {
-#ifdef DEBUG
+#  ifdef DEBUG
     for (ConstRawType elem = getFirst(); elem; elem = elem->getNext()) {
       if (elem == aValue) {
         return;
       }
     }
     MOZ_CRASH("element wasn't found in this list!");
-#endif
+#  endif
   }
 
   LinkedList& operator=(const LinkedList<T>& aOther) = delete;

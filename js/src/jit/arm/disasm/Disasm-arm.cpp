@@ -29,11 +29,11 @@
 
 #ifdef JS_DISASM_ARM
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#  include <stdarg.h>
+#  include <stdio.h>
+#  include <string.h>
 
-#include "jit/arm/disasm/Constants-arm.h"
+#  include "jit/arm/disasm/Constants-arm.h"
 
 namespace js {
 namespace jit {
@@ -130,8 +130,8 @@ class Decoder {
 };
 
 // Support for assertions in the Decoder formatting functions.
-#define STRING_STARTS_WITH(string, compare_string) \
-  (strncmp(string, compare_string, strlen(compare_string)) == 0)
+#  define STRING_STARTS_WITH(string, compare_string) \
+    (strncmp(string, compare_string, strlen(compare_string)) == 0)
 
 // Append the ch to the output buffer.
 void Decoder::PrintChar(const char ch) { out_buffer_[out_buffer_pos_++] = ch; }
@@ -650,11 +650,11 @@ void Decoder::Format(Instruction* instr, const char* format) {
 
 // The disassembler may end up decoding data inlined in the code. We do not want
 // it to crash if the data does not ressemble any known instruction.
-#define VERIFY(condition) \
-  if (!(condition)) {     \
-    Unknown(instr);       \
-    return;               \
-  }
+#  define VERIFY(condition) \
+    if (!(condition)) {     \
+      Unknown(instr);       \
+      return;               \
+    }
 
 // For currently unimplemented decodings the disassembler calls Unknown(instr)
 // which will just print "unknown" of the instruction bits.
@@ -1848,7 +1848,7 @@ void Decoder::DecodeSpecialCondition(Instruction* instr) {
   }
 }
 
-#undef VERIFIY
+#  undef VERIFIY
 
 bool Decoder::IsConstantPoolAt(uint8_t* instr_ptr) {
   int instruction_bits = *(reinterpret_cast<int*>(instr_ptr));
@@ -1929,8 +1929,8 @@ int Decoder::InstructionDecode(uint8_t* instr_ptr) {
 
 }  // namespace disasm
 
-#undef STRING_STARTS_WITH
-#undef VERIFY
+#  undef STRING_STARTS_WITH
+#  undef VERIFY
 
 //------------------------------------------------------------------------------
 

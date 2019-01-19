@@ -24,11 +24,11 @@
 #include "GeckoProfiler.h"
 
 #ifdef XP_MACOSX
-#include "mozilla/layers/MacIOSurfaceTextureHostOGL.h"
+#  include "mozilla/layers/MacIOSurfaceTextureHostOGL.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "mozilla/webrender/RenderAndroidSurfaceTextureHostOGL.h"
+#  include "mozilla/webrender/RenderAndroidSurfaceTextureHostOGL.h"
 #endif
 
 using namespace mozilla::gl;

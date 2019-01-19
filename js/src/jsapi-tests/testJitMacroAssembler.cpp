@@ -225,26 +225,26 @@ BEGIN_TEST(testJitMacroAssembler_truncateDoubleToInt64) {
   AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
   AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
   FloatRegister input = allFloatRegs.takeAny();
-#ifdef JS_NUNBOX32
+#  ifdef JS_NUNBOX32
   Register64 output(allRegs.takeAny(), allRegs.takeAny());
-#else
+#  else
   Register64 output(allRegs.takeAny());
-#endif
+#  endif
   Register temp = allRegs.takeAny();
 
   masm.reserveStack(sizeof(int32_t));
 
-#define TEST(INPUT, OUTPUT)                                                 \
-  {                                                                         \
-    Label next;                                                             \
-    masm.loadConstantDouble(double(INPUT), input);                          \
-    masm.storeDouble(input, Operand(esp, 0));                               \
-    masm.truncateDoubleToInt64(Address(esp, 0), Address(esp, 0), temp);     \
-    masm.branch64(Assembler::Equal, Address(esp, 0), Imm64(OUTPUT), &next); \
-    masm.printf("truncateDoubleToInt64(" #INPUT ") failed\n");              \
-    masm.breakpoint();                                                      \
-    masm.bind(&next);                                                       \
-  }
+#  define TEST(INPUT, OUTPUT)                                                 \
+    {                                                                         \
+      Label next;                                                             \
+      masm.loadConstantDouble(double(INPUT), input);                          \
+      masm.storeDouble(input, Operand(esp, 0));                               \
+      masm.truncateDoubleToInt64(Address(esp, 0), Address(esp, 0), temp);     \
+      masm.branch64(Assembler::Equal, Address(esp, 0), Imm64(OUTPUT), &next); \
+      masm.printf("truncateDoubleToInt64(" #INPUT ") failed\n");              \
+      masm.breakpoint();                                                      \
+      masm.bind(&next);                                                       \
+    }
 
   TEST(0, 0);
   TEST(-0, 0);
@@ -255,7 +255,7 @@ BEGIN_TEST(testJitMacroAssembler_truncateDoubleToInt64) {
   TEST(JS::GenericNaN(), 0x8000000000000000);
   TEST(PositiveInfinity<double>(), 0x8000000000000000);
   TEST(NegativeInfinity<double>(), 0x8000000000000000);
-#undef TEST
+#  undef TEST
 
   masm.freeStack(sizeof(int32_t));
 
@@ -274,27 +274,27 @@ BEGIN_TEST(testJitMacroAssembler_truncateDoubleToUInt64) {
   AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
   FloatRegister input = allFloatRegs.takeAny();
   FloatRegister floatTemp = allFloatRegs.takeAny();
-#ifdef JS_NUNBOX32
+#  ifdef JS_NUNBOX32
   Register64 output(allRegs.takeAny(), allRegs.takeAny());
-#else
+#  else
   Register64 output(allRegs.takeAny());
-#endif
+#  endif
   Register temp = allRegs.takeAny();
 
   masm.reserveStack(sizeof(int32_t));
 
-#define TEST(INPUT, OUTPUT)                                                 \
-  {                                                                         \
-    Label next;                                                             \
-    masm.loadConstantDouble(double(INPUT), input);                          \
-    masm.storeDouble(input, Operand(esp, 0));                               \
-    masm.truncateDoubleToUInt64(Address(esp, 0), Address(esp, 0), temp,     \
-                                floatTemp);                                 \
-    masm.branch64(Assembler::Equal, Address(esp, 0), Imm64(OUTPUT), &next); \
-    masm.printf("truncateDoubleToUInt64(" #INPUT ") failed\n");             \
-    masm.breakpoint();                                                      \
-    masm.bind(&next);                                                       \
-  }
+#  define TEST(INPUT, OUTPUT)                                                 \
+    {                                                                         \
+      Label next;                                                             \
+      masm.loadConstantDouble(double(INPUT), input);                          \
+      masm.storeDouble(input, Operand(esp, 0));                               \
+      masm.truncateDoubleToUInt64(Address(esp, 0), Address(esp, 0), temp,     \
+                                  floatTemp);                                 \
+      masm.branch64(Assembler::Equal, Address(esp, 0), Imm64(OUTPUT), &next); \
+      masm.printf("truncateDoubleToUInt64(" #INPUT ") failed\n");             \
+      masm.breakpoint();                                                      \
+      masm.bind(&next);                                                       \
+    }
 
   TEST(0, 0);
   TEST(1, 1);
@@ -308,7 +308,7 @@ BEGIN_TEST(testJitMacroAssembler_truncateDoubleToUInt64) {
   TEST(JS::GenericNaN(), 0x8000000000000000);
   TEST(PositiveInfinity<double>(), 0x8000000000000000);
   TEST(NegativeInfinity<double>(), 0x8000000000000000);
-#undef TEST
+#  undef TEST
 
   masm.freeStack(sizeof(int32_t));
 
@@ -326,32 +326,32 @@ BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInInt64Range) {
   AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
   AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
   FloatRegister input = allFloatRegs.takeAny();
-#ifdef JS_NUNBOX32
+#  ifdef JS_NUNBOX32
   Register64 output(allRegs.takeAny(), allRegs.takeAny());
-#else
+#  else
   Register64 output(allRegs.takeAny());
-#endif
+#  endif
   Register temp = allRegs.takeAny();
 
   masm.reserveStack(sizeof(int32_t));
 
-#define TEST(INPUT, OUTPUT)                                           \
-  {                                                                   \
-    Label next;                                                       \
-    masm.loadConstantDouble(double(INPUT), input);                    \
-    masm.storeDouble(input, Operand(esp, 0));                         \
-    if (OUTPUT) {                                                     \
-      masm.branchDoubleNotInInt64Range(Address(esp, 0), temp, &next); \
-    } else {                                                          \
-      Label fail;                                                     \
-      masm.branchDoubleNotInInt64Range(Address(esp, 0), temp, &fail); \
-      masm.jump(&next);                                               \
-      masm.bind(&fail);                                               \
-    }                                                                 \
-    masm.printf("branchDoubleNotInInt64Range(" #INPUT ") failed\n");  \
-    masm.breakpoint();                                                \
-    masm.bind(&next);                                                 \
-  }
+#  define TEST(INPUT, OUTPUT)                                           \
+    {                                                                   \
+      Label next;                                                       \
+      masm.loadConstantDouble(double(INPUT), input);                    \
+      masm.storeDouble(input, Operand(esp, 0));                         \
+      if (OUTPUT) {                                                     \
+        masm.branchDoubleNotInInt64Range(Address(esp, 0), temp, &next); \
+      } else {                                                          \
+        Label fail;                                                     \
+        masm.branchDoubleNotInInt64Range(Address(esp, 0), temp, &fail); \
+        masm.jump(&next);                                               \
+        masm.bind(&fail);                                               \
+      }                                                                 \
+      masm.printf("branchDoubleNotInInt64Range(" #INPUT ") failed\n");  \
+      masm.breakpoint();                                                \
+      masm.bind(&next);                                                 \
+    }
 
   TEST(0, false);
   TEST(-0, false);
@@ -362,7 +362,7 @@ BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInInt64Range) {
   TEST(JS::GenericNaN(), true);
   TEST(PositiveInfinity<double>(), true);
   TEST(NegativeInfinity<double>(), true);
-#undef TEST
+#  undef TEST
 
   masm.freeStack(sizeof(int32_t));
 
@@ -380,32 +380,32 @@ BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInUInt64Range) {
   AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
   AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
   FloatRegister input = allFloatRegs.takeAny();
-#ifdef JS_NUNBOX32
+#  ifdef JS_NUNBOX32
   Register64 output(allRegs.takeAny(), allRegs.takeAny());
-#else
+#  else
   Register64 output(allRegs.takeAny());
-#endif
+#  endif
   Register temp = allRegs.takeAny();
 
   masm.reserveStack(sizeof(int32_t));
 
-#define TEST(INPUT, OUTPUT)                                            \
-  {                                                                    \
-    Label next;                                                        \
-    masm.loadConstantDouble(double(INPUT), input);                     \
-    masm.storeDouble(input, Operand(esp, 0));                          \
-    if (OUTPUT) {                                                      \
-      masm.branchDoubleNotInUInt64Range(Address(esp, 0), temp, &next); \
-    } else {                                                           \
-      Label fail;                                                      \
-      masm.branchDoubleNotInUInt64Range(Address(esp, 0), temp, &fail); \
-      masm.jump(&next);                                                \
-      masm.bind(&fail);                                                \
-    }                                                                  \
-    masm.printf("branchDoubleNotInUInt64Range(" #INPUT ") failed\n");  \
-    masm.breakpoint();                                                 \
-    masm.bind(&next);                                                  \
-  }
+#  define TEST(INPUT, OUTPUT)                                            \
+    {                                                                    \
+      Label next;                                                        \
+      masm.loadConstantDouble(double(INPUT), input);                     \
+      masm.storeDouble(input, Operand(esp, 0));                          \
+      if (OUTPUT) {                                                      \
+        masm.branchDoubleNotInUInt64Range(Address(esp, 0), temp, &next); \
+      } else {                                                           \
+        Label fail;                                                      \
+        masm.branchDoubleNotInUInt64Range(Address(esp, 0), temp, &fail); \
+        masm.jump(&next);                                                \
+        masm.bind(&fail);                                                \
+      }                                                                  \
+      masm.printf("branchDoubleNotInUInt64Range(" #INPUT ") failed\n");  \
+      masm.breakpoint();                                                 \
+      masm.bind(&next);                                                  \
+    }
 
   TEST(0, false);
   TEST(1, false);
@@ -419,7 +419,7 @@ BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInUInt64Range) {
   TEST(JS::GenericNaN(), true);
   TEST(PositiveInfinity<double>(), true);
   TEST(NegativeInfinity<double>(), true);
-#undef TEST
+#  undef TEST
 
   masm.freeStack(sizeof(int32_t));
 
@@ -436,44 +436,44 @@ BEGIN_TEST(testJitMacroAssembler_lshift64) {
 
   AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
   AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
-#if defined(JS_CODEGEN_X86)
+#  if defined(JS_CODEGEN_X86)
   Register shift = ecx;
   allRegs.take(shift);
-#elif defined(JS_CODEGEN_X64)
+#  elif defined(JS_CODEGEN_X64)
   Register shift = rcx;
   allRegs.take(shift);
-#else
+#  else
   Register shift = allRegs.takeAny();
-#endif
+#  endif
 
-#ifdef JS_NUNBOX32
+#  ifdef JS_NUNBOX32
   Register64 input(allRegs.takeAny(), allRegs.takeAny());
-#else
+#  else
   Register64 input(allRegs.takeAny());
-#endif
+#  endif
 
   masm.reserveStack(sizeof(int32_t));
 
-#define TEST(SHIFT, INPUT, OUTPUT)                                        \
-  {                                                                       \
-    Label next;                                                           \
-    masm.move64(Imm64(INPUT), input);                                     \
-    masm.move32(Imm32(SHIFT), shift);                                     \
-    masm.lshift64(shift, input);                                          \
-    masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);         \
-    masm.printf("lshift64(" #SHIFT ", " #INPUT ") failed\n");             \
-    masm.breakpoint();                                                    \
-    masm.bind(&next);                                                     \
-  }                                                                       \
-  {                                                                       \
-    Label next;                                                           \
-    masm.move64(Imm64(INPUT), input);                                     \
-    masm.lshift64(Imm32(SHIFT & 0x3f), input);                            \
-    masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);         \
-    masm.printf("lshift64(Imm32(" #SHIFT "&0x3f), " #INPUT ") failed\n"); \
-    masm.breakpoint();                                                    \
-    masm.bind(&next);                                                     \
-  }
+#  define TEST(SHIFT, INPUT, OUTPUT)                                        \
+    {                                                                       \
+      Label next;                                                           \
+      masm.move64(Imm64(INPUT), input);                                     \
+      masm.move32(Imm32(SHIFT), shift);                                     \
+      masm.lshift64(shift, input);                                          \
+      masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);         \
+      masm.printf("lshift64(" #SHIFT ", " #INPUT ") failed\n");             \
+      masm.breakpoint();                                                    \
+      masm.bind(&next);                                                     \
+    }                                                                       \
+    {                                                                       \
+      Label next;                                                           \
+      masm.move64(Imm64(INPUT), input);                                     \
+      masm.lshift64(Imm32(SHIFT & 0x3f), input);                            \
+      masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);         \
+      masm.printf("lshift64(Imm32(" #SHIFT "&0x3f), " #INPUT ") failed\n"); \
+      masm.breakpoint();                                                    \
+      masm.bind(&next);                                                     \
+    }
 
   TEST(0, 1, 1);
   TEST(1, 1, 2);
@@ -488,7 +488,7 @@ BEGIN_TEST(testJitMacroAssembler_lshift64) {
   TEST(0xfffffffe, 1, 0x4000000000000000);
   TEST(0xfffffffd, 1, 0x2000000000000000);
   TEST(0x80000001, 1, 2);
-#undef TEST
+#  undef TEST
 
   masm.freeStack(sizeof(int32_t));
 
@@ -505,45 +505,45 @@ BEGIN_TEST(testJitMacroAssembler_rshift64Arithmetic) {
 
   AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
   AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
-#if defined(JS_CODEGEN_X86)
+#  if defined(JS_CODEGEN_X86)
   Register shift = ecx;
   allRegs.take(shift);
-#elif defined(JS_CODEGEN_X64)
+#  elif defined(JS_CODEGEN_X64)
   Register shift = rcx;
   allRegs.take(shift);
-#else
+#  else
   Register shift = allRegs.takeAny();
-#endif
+#  endif
 
-#ifdef JS_NUNBOX32
+#  ifdef JS_NUNBOX32
   Register64 input(allRegs.takeAny(), allRegs.takeAny());
-#else
+#  else
   Register64 input(allRegs.takeAny());
-#endif
+#  endif
 
   masm.reserveStack(sizeof(int32_t));
 
-#define TEST(SHIFT, INPUT, OUTPUT)                                      \
-  {                                                                     \
-    Label next;                                                         \
-    masm.move64(Imm64(INPUT), input);                                   \
-    masm.move32(Imm32(SHIFT), shift);                                   \
-    masm.rshift64Arithmetic(shift, input);                              \
-    masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);       \
-    masm.printf("rshift64Arithmetic(" #SHIFT ", " #INPUT ") failed\n"); \
-    masm.breakpoint();                                                  \
-    masm.bind(&next);                                                   \
-  }                                                                     \
-  {                                                                     \
-    Label next;                                                         \
-    masm.move64(Imm64(INPUT), input);                                   \
-    masm.rshift64Arithmetic(Imm32(SHIFT & 0x3f), input);                \
-    masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);       \
-    masm.printf("rshift64Arithmetic(Imm32(" #SHIFT "&0x3f), " #INPUT    \
-                ") failed\n");                                          \
-    masm.breakpoint();                                                  \
-    masm.bind(&next);                                                   \
-  }
+#  define TEST(SHIFT, INPUT, OUTPUT)                                      \
+    {                                                                     \
+      Label next;                                                         \
+      masm.move64(Imm64(INPUT), input);                                   \
+      masm.move32(Imm32(SHIFT), shift);                                   \
+      masm.rshift64Arithmetic(shift, input);                              \
+      masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);       \
+      masm.printf("rshift64Arithmetic(" #SHIFT ", " #INPUT ") failed\n"); \
+      masm.breakpoint();                                                  \
+      masm.bind(&next);                                                   \
+    }                                                                     \
+    {                                                                     \
+      Label next;                                                         \
+      masm.move64(Imm64(INPUT), input);                                   \
+      masm.rshift64Arithmetic(Imm32(SHIFT & 0x3f), input);                \
+      masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);       \
+      masm.printf("rshift64Arithmetic(Imm32(" #SHIFT "&0x3f), " #INPUT    \
+                  ") failed\n");                                          \
+      masm.breakpoint();                                                  \
+      masm.bind(&next);                                                   \
+    }
 
   TEST(0, 0x4000000000000000, 0x4000000000000000);
   TEST(1, 0x4000000000000000, 0x2000000000000000);
@@ -557,7 +557,7 @@ BEGIN_TEST(testJitMacroAssembler_rshift64Arithmetic) {
   TEST(0xfffffffe, 0x8000000000000000, 0xfffffffffffffffe);
   TEST(0xfffffffd, 0x8000000000000000, 0xfffffffffffffffc);
   TEST(0x80000001, 0x8000000000000000, 0xc000000000000000);
-#undef TEST
+#  undef TEST
 
   masm.freeStack(sizeof(int32_t));
 
@@ -574,44 +574,44 @@ BEGIN_TEST(testJitMacroAssembler_rshift64) {
 
   AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
   AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
-#if defined(JS_CODEGEN_X86)
+#  if defined(JS_CODEGEN_X86)
   Register shift = ecx;
   allRegs.take(shift);
-#elif defined(JS_CODEGEN_X64)
+#  elif defined(JS_CODEGEN_X64)
   Register shift = rcx;
   allRegs.take(shift);
-#else
+#  else
   Register shift = allRegs.takeAny();
-#endif
+#  endif
 
-#ifdef JS_NUNBOX32
+#  ifdef JS_NUNBOX32
   Register64 input(allRegs.takeAny(), allRegs.takeAny());
-#else
+#  else
   Register64 input(allRegs.takeAny());
-#endif
+#  endif
 
   masm.reserveStack(sizeof(int32_t));
 
-#define TEST(SHIFT, INPUT, OUTPUT)                                        \
-  {                                                                       \
-    Label next;                                                           \
-    masm.move64(Imm64(INPUT), input);                                     \
-    masm.move32(Imm32(SHIFT), shift);                                     \
-    masm.rshift64(shift, input);                                          \
-    masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);         \
-    masm.printf("rshift64(" #SHIFT ", " #INPUT ") failed\n");             \
-    masm.breakpoint();                                                    \
-    masm.bind(&next);                                                     \
-  }                                                                       \
-  {                                                                       \
-    Label next;                                                           \
-    masm.move64(Imm64(INPUT), input);                                     \
-    masm.rshift64(Imm32(SHIFT & 0x3f), input);                            \
-    masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);         \
-    masm.printf("rshift64(Imm32(" #SHIFT "&0x3f), " #INPUT ") failed\n"); \
-    masm.breakpoint();                                                    \
-    masm.bind(&next);                                                     \
-  }
+#  define TEST(SHIFT, INPUT, OUTPUT)                                        \
+    {                                                                       \
+      Label next;                                                           \
+      masm.move64(Imm64(INPUT), input);                                     \
+      masm.move32(Imm32(SHIFT), shift);                                     \
+      masm.rshift64(shift, input);                                          \
+      masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);         \
+      masm.printf("rshift64(" #SHIFT ", " #INPUT ") failed\n");             \
+      masm.breakpoint();                                                    \
+      masm.bind(&next);                                                     \
+    }                                                                       \
+    {                                                                       \
+      Label next;                                                           \
+      masm.move64(Imm64(INPUT), input);                                     \
+      masm.rshift64(Imm32(SHIFT & 0x3f), input);                            \
+      masm.branch64(Assembler::Equal, input, Imm64(OUTPUT), &next);         \
+      masm.printf("rshift64(Imm32(" #SHIFT "&0x3f), " #INPUT ") failed\n"); \
+      masm.breakpoint();                                                    \
+      masm.bind(&next);                                                     \
+    }
 
   TEST(0, 0x4000000000000000, 0x4000000000000000);
   TEST(1, 0x4000000000000000, 0x2000000000000000);
@@ -625,7 +625,7 @@ BEGIN_TEST(testJitMacroAssembler_rshift64) {
   TEST(0xfffffffe, 0x8000000000000000, 0x0000000000000002);
   TEST(0xfffffffd, 0x8000000000000000, 0x0000000000000004);
   TEST(0x80000001, 0x8000000000000000, 0x4000000000000000);
-#undef TEST
+#  undef TEST
 
   masm.freeStack(sizeof(int32_t));
 

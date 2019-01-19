@@ -44,8 +44,8 @@
 #include "nsQueryObject.h"
 
 #ifdef MOZ_WEBRTC
-#include "mozilla/dom/RTCCertificate.h"
-#include "mozilla/dom/RTCCertificateBinding.h"
+#  include "mozilla/dom/RTCCertificate.h"
+#  include "mozilla/dom/RTCCertificateBinding.h"
 #endif
 
 using namespace mozilla::ipc;

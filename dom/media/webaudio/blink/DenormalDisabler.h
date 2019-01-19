@@ -36,16 +36,16 @@ namespace WebCore {
 
 #if defined(XP_WIN) && defined(_MSC_VER)
 // Windows compiled using MSVC with SSE2
-#define HAVE_DENORMAL 1
+#  define HAVE_DENORMAL 1
 #endif
 
 #if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
 // X86 chips can flush denormals
-#define HAVE_DENORMAL 1
+#  define HAVE_DENORMAL 1
 #endif
 
 #if defined(__arm__) || defined(__aarch64__)
-#define HAVE_DENORMAL 1
+#  define HAVE_DENORMAL 1
 #endif
 
 #ifdef HAVE_DENORMAL
@@ -61,7 +61,7 @@ class DenormalDisabler {
  private:
   unsigned m_savedCSR;
 
-#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+#  if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
   inline void disableDenormals() {
     m_savedCSR = getCSR();
     setCSR(m_savedCSR | 0x8040);
@@ -80,7 +80,7 @@ class DenormalDisabler {
     asm volatile("ldmxcsr %0" : : "m"(temp));
   }
 
-#elif defined(XP_WIN) && defined(_MSC_VER)
+#  elif defined(XP_WIN) && defined(_MSC_VER)
   inline void disableDenormals() {
     // Save the current state, and set mode to flush denormals.
     //
@@ -94,7 +94,7 @@ class DenormalDisabler {
     unsigned unused;
     _controlfp_s(&unused, m_savedCSR, _MCW_DN);
   }
-#elif defined(__arm__) || defined(__aarch64__)
+#  elif defined(__arm__) || defined(__aarch64__)
   inline void disableDenormals() {
     m_savedCSR = getStatusWord();
     // Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes
@@ -106,23 +106,23 @@ class DenormalDisabler {
 
   inline int getStatusWord() {
     int result;
-#if defined(__aarch64__)
+#    if defined(__aarch64__)
     asm volatile("mrs %x[result], FPCR" : [result] "=r"(result));
-#else
+#    else
     asm volatile("vmrs %[result], FPSCR" : [result] "=r"(result));
-#endif
+#    endif
     return result;
   }
 
   inline void setStatusWord(int a) {
-#if defined(__aarch64__)
+#    if defined(__aarch64__)
     asm volatile("msr FPCR, %x[src]" : : [src] "r"(a));
-#else
+#    else
     asm volatile("vmsr FPSCR, %[src]" : : [src] "r"(a));
-#endif
+#    endif
   }
 
-#endif
+#  endif
 };
 
 #else

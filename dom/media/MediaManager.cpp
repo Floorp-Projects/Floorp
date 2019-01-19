@@ -74,23 +74,23 @@
 /* Using WebRTC backend on Desktops (Mac, Windows, Linux), otherwise default */
 #include "MediaEngineDefault.h"
 #if defined(MOZ_WEBRTC)
-#include "MediaEngineWebRTC.h"
-#include "browser_logging/WebRtcLog.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#  include "MediaEngineWebRTC.h"
+#  include "browser_logging/WebRtcLog.h"
+#  include "webrtc/modules/audio_processing/include/audio_processing.h"
 #endif
 
 #if defined(XP_WIN)
-#include "mozilla/WindowsVersion.h"
-#include <objbase.h>
-#include <winsock2.h>
-#include <iphlpapi.h>
-#include <tchar.h>
+#  include "mozilla/WindowsVersion.h"
+#  include <objbase.h>
+#  include <winsock2.h>
+#  include <iphlpapi.h>
+#  include <tchar.h>
 #endif
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with MediaStream::GetCurrentTime.
 #ifdef GetCurrentTime
-#undef GetCurrentTime
+#  undef GetCurrentTime
 #endif
 
 // XXX Workaround for bug 986974 to maintain the existing broken semantics
@@ -190,7 +190,7 @@ already_AddRefed<nsIAsyncShutdownClient> GetShutdownPhase() {
 namespace mozilla {
 
 #ifdef LOG
-#undef LOG
+#  undef LOG
 #endif
 
 LazyLogModule gMediaManagerLog("MediaManager");

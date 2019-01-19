@@ -31,12 +31,12 @@
 #include "TiledLayerBuffer.h"
 #include "FrameLayerBuilder.h"  // for FrameLayerbuilder
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
-#include "LayerMetricsWrapper.h"
+#  include "AndroidBridge.h"
+#  include "LayerMetricsWrapper.h"
 #endif
 #ifdef XP_WIN
-#include "mozilla/gfx/DeviceManagerDx.h"
-#include "gfxDWriteFonts.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "gfxDWriteFonts.h"
 #endif
 
 namespace mozilla {

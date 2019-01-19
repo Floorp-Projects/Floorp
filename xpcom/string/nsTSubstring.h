@@ -21,7 +21,7 @@
 #include "nsTStringRepr.h"
 
 #ifndef MOZILLA_INTERNAL_API
-#error "Using XPCOM strings is limited to code linked into libxul."
+#  error "Using XPCOM strings is limited to code linked into libxul."
 #endif
 
 // The max number of logically uninitialized code units to
@@ -1118,10 +1118,10 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
                ClassFlags aClassFlags)
 // XXXbz or can I just include nscore.h and use NS_BUILD_REFCNT_LOGGING?
 #if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING)
-#define XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
+#  define XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
       ;
 #else
-#undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
+#  undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
       : base_string_type(aData, aLength, aDataFlags, aClassFlags) {
     AssertValid();
     MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");

@@ -17,7 +17,7 @@
 
 #include "builtin/Array.h"
 #ifdef ENABLE_BIGINT
-#include "builtin/BigInt.h"
+#  include "builtin/BigInt.h"
 #endif
 #include "builtin/String.h"
 #include "js/PropertySpec.h"

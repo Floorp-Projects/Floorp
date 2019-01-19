@@ -17,8 +17,8 @@
 #include "AutoObjectMapper.h"
 
 #if defined(GP_OS_android)
-#include <dlfcn.h>
-#include "mozilla/Types.h"
+#  include <dlfcn.h>
+#  include "mozilla/Types.h"
 // FIXME move these out of mozglue/linker/ElfLoader.h into their
 // own header, so as to avoid conflicts arising from two definitions
 // of Array
@@ -28,9 +28,9 @@ MFBT_API void* __dl_mmap(void* handle, void* addr, size_t length, off_t offset);
 MFBT_API void __dl_munmap(void* handle, void* addr, size_t length);
 }
 // The following are for get_installation_lib_dir()
-#include "nsString.h"
-#include "nsDirectoryServiceUtils.h"
-#include "nsDirectoryServiceDefs.h"
+#  include "nsString.h"
+#  include "nsDirectoryServiceUtils.h"
+#  include "nsDirectoryServiceDefs.h"
 #endif
 
 // A helper function for creating failure error messages in

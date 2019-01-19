@@ -18,17 +18,17 @@ typedef unsigned char tis_char;
  * The char16_t type is only usable in C++ code, so we need this ugly hack to
  * select a binary compatible C type for the expat C code to use.
  */
-#ifdef __cplusplus
+#  ifdef __cplusplus
 typedef char16_t th_char;
-#else
+#  else
 typedef uint16_t th_char;
-#endif
-#define TH_THAIBEGIN_ 0x0e00
-#define th_isthai(c) (0x0e00 <= (c) && (c) <= 0x0e5f)
+#  endif
+#  define TH_THAIBEGIN_ 0x0e00
+#  define th_isthai(c) (0x0e00 <= (c) && (c) <= 0x0e5f)
 #else
 typedef tis_char th_char;
-#define TH_THAIBEGIN_ 0xa0
-#define th_isthai(c) ((c) >= 0xa0)
+#  define TH_THAIBEGIN_ 0xa0
+#  define th_isthai(c) ((c) >= 0xa0)
 #endif
 #define th_zcode(c) ((c)-TH_THAIBEGIN_)
 

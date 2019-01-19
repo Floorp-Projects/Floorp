@@ -62,7 +62,7 @@ typedef unsigned long long uint64;
 typedef __PTRDIFF_TYPE__ intptr;
 typedef unsigned __PTRDIFF_TYPE__ uintptr;
 #else
-#error "Can't find pointer-sized integral types."
+#  error "Can't find pointer-sized integral types."
 #endif
 
 namespace lul {
