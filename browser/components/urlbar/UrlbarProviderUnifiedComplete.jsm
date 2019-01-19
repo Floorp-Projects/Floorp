@@ -305,13 +305,11 @@ function makeUrlbarMatch(tokens, info) {
   }
 
   // This is a normal url/title tuple.
-  let source;
-  let tags = [];
-  let comment = info.comment;
+  let source, tags, comment;
   let hasTags = info.style.includes("tag");
   if (info.style.includes("bookmark") || hasTags) {
     source = UrlbarUtils.MATCH_SOURCE.BOOKMARKS;
-    if (hasTags) {
+    if (info.style.includes("tag")) {
       // Split title and tags.
       [comment, tags] = info.comment.split(TITLE_TAGS_SEPARATOR);
       tags = tags.split(",").map(t => t.trim());
