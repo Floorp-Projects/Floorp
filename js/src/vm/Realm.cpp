@@ -169,7 +169,7 @@ bool Realm::ensureJitRealmExists(JSContext* cx) {
     return false;
   }
 
-  if (!jitRealm->initialize(cx)) {
+  if (!jitRealm->initialize(cx, zone()->allocNurseryStrings)) {
     return false;
   }
 
