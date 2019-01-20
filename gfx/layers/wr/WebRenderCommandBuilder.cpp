@@ -1311,27 +1311,32 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
     return;
   }
 
+  GP("DoGroupingForDisplayList\n");
+
   mClipManager.BeginList(aSc);
   Grouper g(mClipManager);
+
   int32_t appUnitsPerDevPixel =
       aWrappingItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-  GP("DoGroupingForDisplayList\n");
 
   g.mDisplayListBuilder = aDisplayListBuilder;
   RefPtr<WebRenderGroupData> groupData =
       CreateOrRecycleWebRenderUserData<WebRenderGroupData>(aWrappingItem);
+
   bool snapped;
   nsRect groupBounds = aWrappingItem->GetBounds(aDisplayListBuilder, &snapped);
   DIGroup& group = groupData->mSubGroup;
-  auto p = group.mGroupBounds;
-  auto q = groupBounds;
+
   gfx::Size scale = aSc.GetInheritedScale();
+  GP("Inherrited scale %f %f\n", scale.width, scale.height);
+
   auto trans =
       ViewAs<LayerPixel>(aSc.GetSnappingSurfaceTransform().GetTranslation());
   auto snappedTrans = LayerIntPoint::Floor(trans);
   LayerPoint residualOffset = trans - snappedTrans;
 
-  GP("Inherrited scale %f %f\n", scale.width, scale.height);
+  auto p = group.mGroupBounds;
+  auto q = groupBounds;
   GP("Bounds: %d %d %d %d vs %d %d %d %d\n", p.x, p.y, p.width, p.height, q.x,
      q.y, q.width, q.height);
   if (!group.mGroupBounds.IsEqualEdges(groupBounds) ||
