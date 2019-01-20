@@ -252,10 +252,6 @@ void ScrollAnchorContainer::SuppressAdjustments() {
 }
 
 void ScrollAnchorContainer::InvalidateAnchor() {
-  if (!StaticPrefs::layout_css_scroll_anchoring_enabled()) {
-    return;
-  }
-
   ANCHOR_LOG("Invalidating scroll anchor %p for %p.\n", mAnchorNode, this);
 
   if (mAnchorNode) {
@@ -264,6 +260,10 @@ void ScrollAnchorContainer::InvalidateAnchor() {
   mAnchorNode = nullptr;
   mAnchorNodeIsDirty = true;
   mLastAnchorOffset = 0;
+
+  if (!StaticPrefs::layout_css_scroll_anchoring_enabled()) {
+    return;
+  }
   Frame()->PresShell()->PostPendingScrollAnchorSelection(this);
 }
 
