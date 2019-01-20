@@ -121,6 +121,10 @@ const MAX_PRIMS_TO_SEARCH: usize = 128;
 /// destroyed between display lists / scenes.
 static NEXT_TILE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
+fn clamp(value: i32, low: i32, high: i32) -> i32 {
+    value.max(low).min(high)
+}
+
 /// Information about the state of an opacity binding.
 #[derive(Debug)]
 pub struct OpacityBindingInfo {
@@ -698,15 +702,21 @@ impl TileCache {
         let origin = rect.origin - self.world_origin;
 
         // Get the tile coordinates in the picture space.
-        let p0 = TileOffset::new(
+        let mut p0 = TileOffset::new(
             (origin.x / self.world_tile_size.width).floor() as i32,
             (origin.y / self.world_tile_size.height).floor() as i32,
         );
 
-        let p1 = TileOffset::new(
+        let mut p1 = TileOffset::new(
             ((origin.x + rect.size.width) / self.world_tile_size.width).ceil() as i32,
             ((origin.y + rect.size.height) / self.world_tile_size.height).ceil() as i32,
         );
+
+        // Clamp the tile coordinates here to avoid looping over irrelevant tiles later on.
+        p0.x = clamp(p0.x, 0, self.tile_count.width);
+        p0.y = clamp(p0.y, 0, self.tile_count.height);
+        p1.x = clamp(p1.x, 0, self.tile_count.width);
+        p1.y = clamp(p1.y, 0, self.tile_count.height);
 
         (p0, p1)
     }
@@ -1233,12 +1243,6 @@ impl TileCache {
         // For each affected tile, mark any of the primitive dependencies.
         for y in p0.y .. p1.y {
             for x in p0.x .. p1.x {
-                // If the primitive exists on tiles outside the selected tile cache
-                // area, just ignore those.
-                if x < 0 || x >= self.tile_count.width || y < 0 || y >= self.tile_count.height {
-                    continue;
-                }
-
                 let index = (y * self.tile_count.width + x) as usize;
                 let tile = &mut self.tiles[index];
 
