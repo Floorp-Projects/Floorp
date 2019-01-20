@@ -2039,6 +2039,14 @@ WebRenderCommandBuilder::GenerateFallbackData(
                                  appUnitsPerDevPixel, residualOffset));
   auto dtSize = dtRect.Size();
 
+  auto visibleRect = LayerIntRect::FromUnknownRect(
+                         ScaleToOutsidePixelsOffset(
+                             aItem->GetBuildingRect(), scale.width,
+                             scale.height, appUnitsPerDevPixel, residualOffset))
+                         .Intersect(dtRect);
+  // visibleRect is relative to the blob origin so adjust for that
+  visibleRect -= dtRect.TopLeft();
+
   if (dtSize.IsEmpty()) {
     return nullptr;
   }
@@ -2146,6 +2154,10 @@ WebRenderCommandBuilder::GenerateFallbackData(
           return nullptr;
         }
       }
+      aResources.SetBlobImageVisibleArea(
+          fallbackData->GetBlobImageKey().value(),
+          ViewAs<ImagePixel>(visibleRect,
+                             PixelCastJustification::LayerIsImage));
     } else {
       fallbackData->CreateImageClientIfNeeded();
       RefPtr<ImageClient> imageClient = fallbackData->GetImageClient();
