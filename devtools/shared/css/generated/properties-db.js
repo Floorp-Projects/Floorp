@@ -6697,6 +6697,22 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "inset": {
+    "isInherited": false,
+    "subproperties": [
+      "top",
+      "right",
+      "bottom",
+      "left"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
   "inset-block": {
     "isInherited": false,
     "subproperties": [
