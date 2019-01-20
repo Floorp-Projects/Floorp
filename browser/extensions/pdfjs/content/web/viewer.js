@@ -8168,15 +8168,25 @@ class PDFViewer extends _base_viewer.BaseViewer {
     return this._getCurrentVisiblePage();
   }
 
-  _updateHelper(visiblePages) {
-    if (this.isInPresentationMode) {
+  update() {
+    let visible = this._getVisiblePages();
+
+    let visiblePages = visible.views,
+        numVisiblePages = visiblePages.length;
+
+    if (numVisiblePages === 0) {
       return;
     }
 
+    this._resizeBuffer(numVisiblePages, visiblePages);
+
+    this.renderingQueue.renderHighestPriority(visible);
     let currentId = this._currentPageNumber;
     let stillFullyVisible = false;
 
-    for (const page of visiblePages) {
+    for (let i = 0; i < numVisiblePages; ++i) {
+      let page = visiblePages[i];
+
       if (page.percent < 100) {
         break;
       }
@@ -8191,7 +8201,16 @@ class PDFViewer extends _base_viewer.BaseViewer {
       currentId = visiblePages[0].id;
     }
 
-    this._setCurrentPageNumber(currentId);
+    if (!this.isInPresentationMode) {
+      this._setCurrentPageNumber(currentId);
+    }
+
+    this._updateLocation(visible.first);
+
+    this.eventBus.dispatch('updateviewarea', {
+      source: this,
+      location: this._location
+    });
   }
 
   get _isScrollModeHorizontal() {
@@ -8943,32 +8962,8 @@ class BaseViewer {
     };
   }
 
-  _updateHelper(visiblePages) {
-    throw new Error('Not implemented: _updateHelper');
-  }
-
   update() {
-    const visible = this._getVisiblePages();
-
-    const visiblePages = visible.views,
-          numVisiblePages = visiblePages.length;
-
-    if (numVisiblePages === 0) {
-      return;
-    }
-
-    this._resizeBuffer(numVisiblePages, visiblePages);
-
-    this.renderingQueue.renderHighestPriority(visible);
-
-    this._updateHelper(visiblePages);
-
-    this._updateLocation(visible.first);
-
-    this.eventBus.dispatch('updateviewarea', {
-      source: this,
-      location: this._location
-    });
+    throw new Error('Not implemented: update');
   }
 
   containsElement(element) {
@@ -10804,7 +10799,27 @@ class PDFSinglePageViewer extends _base_viewer.BaseViewer {
     return this._getCurrentVisiblePage();
   }
 
-  _updateHelper(visiblePages) {}
+  update() {
+    let visible = this._getVisiblePages();
+
+    let visiblePages = visible.views,
+        numVisiblePages = visiblePages.length;
+
+    if (numVisiblePages === 0) {
+      return;
+    }
+
+    this._resizeBuffer(numVisiblePages);
+
+    this.renderingQueue.renderHighestPriority(visible);
+
+    this._updateLocation(visible.first);
+
+    this.eventBus.dispatch('updateviewarea', {
+      source: this,
+      location: this._location
+    });
+  }
 
   get _isScrollModeHorizontal() {
     return (0, _pdfjsLib.shadow)(this, '_isScrollModeHorizontal', false);
