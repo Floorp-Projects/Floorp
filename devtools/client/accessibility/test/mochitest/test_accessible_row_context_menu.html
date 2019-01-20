@@ -62,9 +62,6 @@ window.onload = async function() {
       return ReactDOM.render(provider, container);
     }
 
-    const checker = Symbol();
-    let isCalled;
-
     const ROW_ID = "test-row";
     const JSON_URL_PREFIX = "data:application/json;charset=UTF-8,";
     const SNAPSHOT = { "snapshot": true };
@@ -87,13 +84,12 @@ window.onload = async function() {
       provider: {
         getValue: (object, id) => object[id],
       },
+      hasContextMenu: true,
     };
 
     const mockProps = {
       ...defaultProps,
-      onContextMenu: () => {
-        isCalled = true;
-      },
+      hasContextMenu: null,
     };
 
     const defaultState = { ui: { supports: { snapshot: true }}};
@@ -133,25 +129,25 @@ window.onload = async function() {
 
       // Reset @openWebLinkIn to default.
       browserWindow.openWebLinkIn = defaultOpenWebLinkIn;
+      menu.remove();
     });
 
     info("Check accessibility row when context menu is not supported.");
-    renderAccessibilityRow(mockProps, mockState);
+    renderAccessibilityRow(defaultProps, mockState);
     row = document.getElementById(ROW_ID);
 
     info("Check contextmenu listener is not called when context menu is not supported.");
-    isCalled = checker;
     Simulate.contextMenu(row);
-    ok(isCalled === checker, "contextmenu event handler was never called.");
+    let menu = document.getElementById("accessibility-row-contextmenu");
+    ok(!menu, "contextmenu event handler was never called.");
 
-    info("Check accessibility row when context menu is supported.");
+    info("Check accessibility row when no context menu is available.");
     renderAccessibilityRow(mockProps, defaultState);
     row = document.getElementById(ROW_ID);
 
-    info("Check contextmenu listener is called when context menu is supported.");
-    isCalled = checker;
     Simulate.contextMenu(row);
-    ok(isCalled, "contextmenu event handler was called correctly.");
+    menu = document.getElementById("accessibility-row-contextmenu");
+    ok(!menu, "contextmenu event handler was never called.");
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
