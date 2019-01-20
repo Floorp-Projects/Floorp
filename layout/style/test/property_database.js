@@ -6564,6 +6564,18 @@ var gCSSProperties = {
     ],
     invalid_values: [ "none", "5" ]
   },
+  "inset": {
+    domProp: "inset",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "top", "right", "bottom", "left" ],
+    /* FIXME: run tests with multiple prerequisites */
+    prerequisites: { "position": "relative" },
+    initial_values: [ "auto" ],
+    other_values: [ "3px 0", "2em 4px 2pt", "1em 2em 3px 4px", "1em calc(2em + 3px) 4ex 5cm" ],
+    invalid_values: [ "1px calc(nonsense)", "1px red", "3" ],
+    unbalanced_values: [ "1px calc(" ],
+  },
   "inset-block": {
     domProp: "insetBlock",
     inherited: false,
