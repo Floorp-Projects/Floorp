@@ -8483,12 +8483,25 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
   nsIFrame* perspectiveFrame =
       mFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME);
 
+  // Passing true here is always correct, since perspective always combines
+  // transforms with the descendants. However that'd make WR do a lot of work
+  // that it doesn't really need to do if there aren't other transforms forming
+  // part of the 3D context.
+  //
+  // WR knows how to treat perspective in that case, so the only thing we need
+  // to do is to ensure we pass true when we're involved in a 3d context in any
+  // other way via the transform-style property on either the transformed frame
+  // or the perspective frame in order to not confuse WR's preserve-3d code in
+  // very awful ways.
+  bool preserve3D =
+      mFrame->Extend3DContext() || perspectiveFrame->Extend3DContext();
+
   nsTArray<mozilla::wr::FilterOp> filters;
   StackingContextHelper sc(
       aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder, filters,
       LayoutDeviceRect(), nullptr, nullptr, nullptr, &perspectiveMatrix,
       wr::ReferenceFrameKind::Perspective, gfx::CompositionOp::OP_OVER,
-      !BackfaceIsHidden(), perspectiveFrame->Extend3DContext());
+      !BackfaceIsHidden(), preserve3D);
 
   return mList.CreateWebRenderCommands(aBuilder, aResources, sc, aManager,
                                        aDisplayListBuilder);
