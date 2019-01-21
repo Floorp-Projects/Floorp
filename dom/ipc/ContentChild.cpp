@@ -2472,7 +2472,7 @@ mozilla::ipc::IPCResult ContentChild::RecvGarbageCollect() {
   if (obs) {
     obs->NotifyObservers(nullptr, "child-gc-request", nullptr);
   }
-  nsJSContext::GarbageCollectNow(JS::gcreason::DOM_IPC);
+  nsJSContext::GarbageCollectNow(JS::GCReason::DOM_IPC);
   return IPC_OK();
 }
 

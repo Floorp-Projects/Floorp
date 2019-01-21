@@ -335,7 +335,7 @@ class ArenaLists {
 
   bool checkEmptyArenaList(AllocKind kind);
 
-  bool relocateArenas(Arena*& relocatedListOut, JS::gcreason::Reason reason,
+  bool relocateArenas(Arena*& relocatedListOut, JS::GCReason reason,
                       js::SliceBudget& sliceBudget, gcstats::Statistics& stats);
 
   void queueForegroundObjectsForSweep(FreeOp* fop);
