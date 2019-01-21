@@ -4,9 +4,18 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.39.0-SNAPSHOT (In Development)
+# 0.40.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.38.0...master)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.39.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/42?closed=1)
+* [API reference](https://mozilla-mobile.github.io/android-components/api/0.39.0/index)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 0.39.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.38.0...v0.39.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/41?closed=1)
 * [API reference](https://mozilla-mobile.github.io/android-components/api/0.39.0/index)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
@@ -22,7 +31,7 @@ permalink: /changelog/
 
 * **browser-menu**
   * Added [docs](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/README.md#browsermenu) for customizing `BrowserMenu`.
-  * Added `BrowserMenuDivider`.[For customization take a look at the docs.](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/menu/README.md#BrowserMenuDivider)
+  * Added `BrowserMenuDivider`. [For customization take a look at the docs.](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/menu/README.md#BrowserMenuDivider)
   * Added [BrowserMenuImageText](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/README.md#BrowserMenuImageText) for show an icon next to text in menus.
   * Added support for showing a menu with DOWN and UP orientation (e.g. for supporting menus in bottom toolbars).
 
@@ -39,6 +48,9 @@ permalink: /changelog/
     * Show/Hide the `BrowserToolbar` automatically when scrolling vertically.
     * On showing a [Snackbar] position it above the `BrowserToolbar`.
     * Snap the `BrowserToolbar` to be hidden or visible when the user stops scrolling.
+
+* **lib-publicsuffixlist**
+  * 🆕 A new component/library for reading and using the [public suffix list](https://publicsuffix.org/). Details can be found in our [docs](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/publicsuffixlist/README.md).
 
 # 0.38.0
 
