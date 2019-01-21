@@ -7,10 +7,10 @@
 /* For documentation, see jit/AtomicOperations.h, both the comment block at the
  * beginning and the #ifdef nest near the end.
  *
- * This is a common file for tier-3 platforms (including simulators for our
- * tier-1 platforms) that are not providing hardware-specific implementations of
- * the atomic operations.  Please keep it reasonably platform-independent by
- * adding #ifdefs at the beginning as much as possible, not throughout the file.
+ * This is a common file for tier-3 platforms that are not providing
+ * hardware-specific implementations of the atomic operations.  Please keep it
+ * reasonably platform-independent by adding #ifdefs at the beginning as much as
+ * possible, not throughout the file.
  *
  *
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -22,24 +22,11 @@
  * frequently good enough for tier-3 platforms.
  */
 
-#ifndef jit_shared_AtomicOperations_feeling_lucky_gcc_h
-#define jit_shared_AtomicOperations_feeling_lucky_gcc_h
+#ifndef jit_none_AtomicOperations_feeling_lucky_h
+#define jit_none_AtomicOperations_feeling_lucky_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
-
-// Explicitly exclude tier-1 platforms.
-
-#if ((defined(__x86_64__) || defined(_M_X64)) && defined(JS_CODEGEN_X64)) || \
-    ((defined(__i386__) || defined(_M_IX86)) && defined(JS_CODEGEN_X86)) ||  \
-    (defined(__arm__) && defined(JS_CODEGEN_ARM)) ||                         \
-    ((defined(__aarch64__) || defined(_M_ARM64)) && defined(JS_CODEGEN_ARM64))
-#  error "Do not use this code on a tier-1 platform when a JIT is available"
-#endif
-
-#if !(defined(__clang__) || defined(__GNUC__))
-#  error "This file only for gcc/Clang"
-#endif
 
 // 64-bit atomics are not required by the JS spec, and you can compile
 // SpiderMonkey without them.
@@ -87,15 +74,21 @@
 #  define GNUC_COMPATIBLE
 #endif
 
-// The default implementation tactic for gcc/clang is to use the newer __atomic
-// intrinsics added for use in C++11 <atomic>.  Where that isn't available, we
-// use GCC's older __sync functions instead.
+#ifdef __s390x__
+#  define HAS_64BIT_ATOMICS
+#  define HAS_64BIT_LOCKFREE
+#  define GNUC_COMPATIBLE
+#endif
+
+// The default implementation tactic for gcc/clang is to use the newer
+// __atomic intrinsics added for use in C++11 <atomic>.  Where that
+// isn't available, we use GCC's older __sync functions instead.
 //
-// ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS is kept as a backward compatible
-// option for older compilers: enable this to use GCC's old __sync functions
-// instead of the newer __atomic functions.  This will be required for GCC 4.6.x
-// and earlier, and probably for Clang 3.1, should we need to use those
-// versions.  Firefox no longer supports compilers that old.
+// ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS is kept as a backward
+// compatible option for older compilers: enable this to use GCC's old
+// __sync functions instead of the newer __atomic functions.  This
+// will be required for GCC 4.6.x and earlier, and probably for Clang
+// 3.1, should we need to use those versions.
 
 //#define ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
 
@@ -107,17 +100,7 @@
 
 // Try to avoid platform #ifdefs below this point.
 
-inline bool js::jit::AtomicOperations::Initialize() {
-  // Nothing
-  return true;
-}
-
-inline void js::jit::AtomicOperations::ShutDown() {
-  // Nothing
-}
-
-// When compiling with Clang on 32-bit linux it will be necessary to link with
-// -latomic to get the proper 64-bit intrinsics.
+#ifdef GNUC_COMPATIBLE
 
 inline bool js::jit::AtomicOperations::hasAtomic8() {
 #  if defined(HAS_64BIT_ATOMICS)
@@ -198,41 +181,6 @@ inline void AtomicOperations::storeSeqCst(int64_t* addr, int64_t val) {
 
 template <>
 inline void AtomicOperations::storeSeqCst(uint64_t* addr, uint64_t val) {
-  MOZ_CRASH("No 64-bit atomics");
-}
-
-}  // namespace jit
-}  // namespace js
-#  endif
-
-template <typename T>
-inline T js::jit::AtomicOperations::exchangeSeqCst(T* addr, T val) {
-  static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
-  T v;
-  __sync_synchronize();
-  do {
-    v = *addr;
-  } while (__sync_val_compare_and_swap(addr, v, val) != v);
-  return v;
-#  else
-  T v;
-  __atomic_exchange(addr, &val, &v, __ATOMIC_SEQ_CST);
-  return v;
-#  endif
-}
-
-#  ifndef HAS_64BIT_ATOMICS
-namespace js {
-namespace jit {
-
-template <>
-inline int64_t AtomicOperations::exchangeSeqCst(int64_t* addr, int64_t val) {
-  MOZ_CRASH("No 64-bit atomics");
-}
-
-template <>
-inline uint64_t AtomicOperations::exchangeSeqCst(uint64_t* addr, uint64_t val) {
   MOZ_CRASH("No 64-bit atomics");
 }
 
@@ -420,9 +368,6 @@ inline T js::jit::AtomicOperations::loadSafeWhenRacy(T* addr) {
   static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
   // This is actually roughly right even on 32-bit platforms since in that
   // case, double, int64, and uint64 loads need not be access-atomic.
-  //
-  // We could use __atomic_load, but it would be needlessly expensive on
-  // 32-bit platforms that could support it and just plain wrong on others.
   return *addr;
 }
 
@@ -431,9 +376,6 @@ inline void js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val) {
   static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
   // This is actually roughly right even on 32-bit platforms since in that
   // case, double, int64, and uint64 loads need not be access-atomic.
-  //
-  // We could use __atomic_store, but it would be needlessly expensive on
-  // 32-bit platforms that could support it and just plain wrong on others.
   *addr = val;
 }
 
@@ -451,8 +393,50 @@ inline void js::jit::AtomicOperations::memmoveSafeWhenRacy(void* dest,
   ::memmove(dest, src, nbytes);
 }
 
+template <typename T>
+inline T js::jit::AtomicOperations::exchangeSeqCst(T* addr, T val) {
+  static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
+#  ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+  T v;
+  __sync_synchronize();
+  do {
+    v = *addr;
+  } while (__sync_val_compare_and_swap(addr, v, val) != v);
+  return v;
+#  else
+  T v;
+  __atomic_exchange(addr, &val, &v, __ATOMIC_SEQ_CST);
+  return v;
+#  endif
+}
+
+#  ifndef HAS_64BIT_ATOMICS
+namespace js {
+namespace jit {
+
+template <>
+inline int64_t AtomicOperations::exchangeSeqCst(int64_t* addr, int64_t val) {
+  MOZ_CRASH("No 64-bit atomics");
+}
+
+template <>
+inline uint64_t AtomicOperations::exchangeSeqCst(uint64_t* addr, uint64_t val) {
+  MOZ_CRASH("No 64-bit atomics");
+}
+
+}  // namespace jit
+}  // namespace js
+#  endif
+
+#else
+
+#  error "Either use GCC or Clang, or add code here"
+
+#endif
+
 #undef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#undef GNUC_COMPATIBLE
 #undef HAS_64BIT_ATOMICS
 #undef HAS_64BIT_LOCKFREE
 
-#endif  // jit_shared_AtomicOperations_feeling_lucky_gcc_h
+#endif  // jit_none_AtomicOperations_feeling_lucky_h

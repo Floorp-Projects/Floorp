@@ -112,7 +112,6 @@ if not CONFIG['ENABLE_ION']:
 elif CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
     LOpcodesGenerated.inputs += ['x86-shared/LIR-x86-shared.h']
     UNIFIED_SOURCES += [
-        'shared/AtomicOperations-shared-jit.cpp',
         'x86-shared/Architecture-x86-shared.cpp',
         'x86-shared/Assembler-x86-shared.cpp',
         'x86-shared/AssemblerBuffer-x86-shared.cpp',
@@ -155,7 +154,6 @@ elif CONFIG['JS_CODEGEN_ARM']:
         'arm/MacroAssembler-arm.cpp',
         'arm/MoveEmitter-arm.cpp',
         'arm/Trampoline-arm.cpp',
-        'shared/AtomicOperations-shared-jit.cpp',
     ]
     if CONFIG['JS_SIMULATOR_ARM']:
         UNIFIED_SOURCES += [
@@ -187,8 +185,7 @@ elif CONFIG['JS_CODEGEN_ARM64']:
         'arm64/vixl/MozAssembler-vixl.cpp',
         'arm64/vixl/MozCpu-vixl.cpp',
         'arm64/vixl/MozInstructions-vixl.cpp',
-        'arm64/vixl/Utils-vixl.cpp',
-        'shared/AtomicOperations-shared-jit.cpp',
+        'arm64/vixl/Utils-vixl.cpp'
     ]
     if CONFIG['JS_SIMULATOR_ARM64']:
         UNIFIED_SOURCES += [
