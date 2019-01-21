@@ -176,7 +176,7 @@
 #canvas-debugging-empty-notice-button .button-icon,
 .event-tooltip-debugger-icon {
   -moz-context-properties: fill;
-  fill: var(--theme-toolbar-icon-color);
+  fill: var(--theme-icon-color);
 }
 
 .hidden-labels-box:not(.visible) > label,
@@ -203,7 +203,7 @@ splitter.devtools-horizontal-splitter,
   overflow: hidden;
   padding-inline-start: 2px !important;
   padding-inline-end: 10px !important;
-  fill: var(--theme-toolbar-icon-color);
+  fill: var(--theme-icon-color);
   -moz-context-properties: fill;
 }
 
