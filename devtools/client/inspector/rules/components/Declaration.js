@@ -46,9 +46,7 @@ class Declaration extends PureComponent {
   }
 
   renderComputedPropertyList() {
-    const { computedProperties } = this.props.declaration;
-
-    if (!computedProperties.length) {
+    if (!this.state.isComputedListExpanded) {
       return null;
     }
 
@@ -57,10 +55,10 @@ class Declaration extends PureComponent {
         {
           className: "ruleview-computedlist",
           style: {
-            display: this.state.isComputedListExpanded ? "block" : "",
+            display: "block",
           },
         },
-        computedProperties.map(({ name, value, isOverridden }) => {
+        this.props.declaration.computedProperties.map(({ name, value, isOverridden }) => {
           return (
             dom.li(
               {
@@ -84,19 +82,20 @@ class Declaration extends PureComponent {
   }
 
   renderShorthandOverriddenList() {
-    const { declaration } = this.props;
+    if (this.state.isComputedListExpanded || this.props.declaration.isOverridden) {
+      return null;
+    }
 
-    if (this.state.isComputedListExpanded || declaration.isOverridden) {
+    const overriddenComputedProperties = this.props.declaration.computedProperties
+      .filter(prop => prop.isOverridden);
+
+    if (!overriddenComputedProperties.length) {
       return null;
     }
 
     return (
       dom.ul({ className: "ruleview-overridden-items" },
-        declaration.computedProperties.map(({ name, value, isOverridden }) => {
-          if (!isOverridden) {
-            return null;
-          }
-
+        overriddenComputedProperties.map(({ name, value }) => {
           return (
             dom.li(
               {
