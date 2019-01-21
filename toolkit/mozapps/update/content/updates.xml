@@ -3,9 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-
-<!DOCTYPE bindings SYSTEM "chrome://mozapps/locale/update/updates.dtd">
-
 <bindings id="updatesBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -21,52 +18,5 @@
         </xul:vbox>
       </xul:hbox>
     </content>
-  </binding>
-
-  <binding id="update" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
-    <content>
-      <xul:hbox>
-        <xul:label class="update-name" xbl:inherits="value=name" flex="1" crop="right"/>
-        <xul:label xbl:inherits="href=detailsURL,hidden=hideDetailsURL" class="text-link"
-                   value="&update.details.label;"/>
-      </xul:hbox>
-      <xul:hbox>
-        <xul:label class="update-installedOn-label">&update.installedOn.label;</xul:label>
-        <xul:label class="update-installedOn-value" flex="1"/>
-      </xul:hbox>
-      <xul:hbox>
-        <xul:label class="update-status-label">&update.status.label;</xul:label>
-        <xul:description class="update-status-value" flex="1"/>
-      </xul:hbox>
-    </content>
-    <implementation>
-      <property name="name"
-                onget="return this.getAttribute('name');"
-                onset="this.setAttribute('name', val); return val;"/>
-      <property name="detailsURL"
-                onget="return this.getAttribute('detailsURL');"
-                onset="this.setAttribute('detailsURL', val); return val;"/>
-      <property name="installDate"
-                onget="return this.getAttribute('installDate');">
-        <setter><![CDATA[
-          this.setAttribute("installDate", val);
-          var field = document.getAnonymousElementByAttribute(this, "class", "update-installedOn-value");
-          field.textContent = val;
-          return val;
-        ]]></setter>
-      </property>
-      <property name="hideDetailsURL"
-                onget="return this.getAttribute('hideDetailsURL');"
-                onset="this.setAttribute('hideDetailsURL', val); return val;"/>
-      <property name="status"
-                onget="return this.getAttribute('status');">
-        <setter><![CDATA[
-          this.setAttribute("status", val);
-          var field = document.getAnonymousElementByAttribute(this, "class", "update-status-value");
-          field.textContent = val;
-          return val;
-        ]]></setter>
-      </property>
-    </implementation>
   </binding>
 </bindings>
