@@ -34,10 +34,10 @@ function promiseWebExtensionStartup() {
   });
 }
 
-async function reloadAddon(addonTargetFront) {
+async function reloadAddon(addonFront) {
   // The add-on will be re-installed after a successful reload.
   const onInstalled = promiseAddonEvent("onInstalled");
-  await addonTargetFront.reload();
+  await addonFront.reload();
   await onInstalled;
 }
 
@@ -67,10 +67,10 @@ add_task(async function testReloadExitedAddon() {
     promiseWebExtensionStartup(),
   ]);
 
-  const addonTargetFront = await client.mainRoot.getAddon({ id: installedAddon.id });
+  const addonFront = await client.mainRoot.getAddon({ id: installedAddon.id });
 
   await Promise.all([
-    reloadAddon(addonTargetFront),
+    reloadAddon(addonFront),
     promiseWebExtensionStartup(),
   ]);
 
@@ -82,10 +82,10 @@ add_task(async function testReloadExitedAddon() {
   // Try to re-list all add-ons after a reload.
   // This was throwing an exception because of the exited actor.
   const newAddonFront = await client.mainRoot.getAddon({ id: installedAddon.id });
-  equal(newAddonFront.id, addonTargetFront.id);
+  equal(newAddonFront.id, addonFront.id);
 
   // The fronts should be the same after the reload
-  equal(newAddonFront, addonTargetFront);
+  equal(newAddonFront, addonFront);
 
   const onAddonListChanged = client.mainRoot.once("addonListChanged");
 
@@ -101,9 +101,9 @@ add_task(async function testReloadExitedAddon() {
 
   // re-list all add-ons after an upgrade.
   const upgradedAddonFront = await client.mainRoot.getAddon({ id: upgradedAddon.id });
-  equal(upgradedAddonFront.id, addonTargetFront.id);
+  equal(upgradedAddonFront.id, addonFront.id);
   // The fronts should be the same after the upgrade.
-  equal(upgradedAddonFront, addonTargetFront);
+  equal(upgradedAddonFront, addonFront);
 
   // The addon metadata has been updated.
   equal(upgradedAddonFront.name, "Test Addons Actor Upgrade");

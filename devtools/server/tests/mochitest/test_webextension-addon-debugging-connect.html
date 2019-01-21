@@ -37,8 +37,11 @@ async function test_connect_addon(oopMode) {
   await client.connect();
 
   // List addons and assertions on the expected addon actor.
-  const addonTargetFront = await client.mainRoot.getAddon({ id: extension.id });
-  ok(addonTargetFront, "The expected webextension addon actor has been found");
+  const addonFront = await client.mainRoot.getAddon({ id: extension.id });
+  ok(addonFront, "The expected webextension addon actor has been found");
+
+  const addonTargetFront = await addonFront.connect();
+  ok(addonTargetFront, "The expected webextension target addon actor has been found");
 
   // Connect to the target addon actor and wait for the updated list of frames.
   const addonTarget = await TargetFactory.forRemoteTab({
