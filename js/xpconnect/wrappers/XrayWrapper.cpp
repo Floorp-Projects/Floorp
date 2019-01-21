@@ -1912,39 +1912,7 @@ bool XrayWrapper<Base, Traits>::getPropertyDescriptor(
   }
   if (desc.object()) {
     desc.object().set(wrapper);
-    return true;
   }
-
-  // We need to handle named access on the Window somewhere other than
-  // Traits::resolveOwnProperty, because per spec it happens on the Global
-  // Scope Polluter and thus the resulting properties are non-|own|. However,
-  // we're set up (above) to cache (on the holder),
-  // which we don't want for something dynamic like named access.
-  // So we just handle it separately here.  Note that this is
-  // only relevant for CrossOriginXrayWrapper, which calls
-  // getPropertyDescriptor from getOwnPropertyDescriptor.
-  nsGlobalWindowInner* win = nullptr;
-  if (!desc.object() && JSID_IS_STRING(id) && (win = AsWindow(cx, wrapper))) {
-    nsAutoJSString name;
-    if (!name.init(cx, JSID_TO_STRING(id))) {
-      return false;
-    }
-    RefPtr<BrowsingContext> childDOMWin(win->GetChildWindow(name));
-    if (childDOMWin) {
-      auto* cwin = nsGlobalWindowOuter::Cast(childDOMWin->GetDOMWindow());
-      JSObject* childObj = cwin->FastGetGlobalJSObject();
-      if (MOZ_UNLIKELY(!childObj)) {
-        return xpc::Throw(cx, NS_ERROR_FAILURE);
-      }
-      ExposeObjectToActiveJS(childObj);
-      FillPropertyDescriptor(desc, wrapper, ObjectValue(*childObj),
-                             /* readOnly = */ true);
-      return JS_WrapPropertyDescriptor(cx, desc);
-    }
-  }
-
-  // We found nothing, we're done.
-  MOZ_ASSERT(!desc.object());
   return true;
 }
 
