@@ -23,9 +23,7 @@
   --theme-tab-toolbar-background: var(--grey-10);
   --theme-toolbar-background: var(--grey-10);
   --theme-toolbar-color: var(--grey-90);
-  --theme-toolbar-icon-color: var(--grey-90-a80);
   --theme-toolbar-selected-color: var(--blue-60);
-  --theme-toolbar-checked-color: var(--blue-60);
   --theme-toolbar-highlighted-color: var(--green-60);
   --theme-toolbar-background-hover: rgba(221, 225, 228, 0.66);
   --theme-toolbar-background-alt: #f5f5f5;
@@ -43,6 +41,11 @@
   --theme-splitter-color: var(--grey-25);
   --theme-emphasized-splitter-color: var(--grey-30);
   --theme-emphasized-splitter-color-hover: var(--grey-40);
+
+  /* Icon colors */
+  --theme-icon-color: rgba(12, 12, 13, 0.8);
+  --theme-icon-dimmed-color: rgba(135, 135, 137, 0.9);
+  --theme-icon-checked-color: var(--blue-60);
 
   /* Text color */
   --theme-comment: var(--grey-50);
@@ -66,10 +69,6 @@
   --theme-highlight-orange: #f13c00;
   --theme-highlight-pink: #b82ee5;
   --theme-highlight-gray: #dde1e4;
-
-  /* Twisty (expand) icon colors */
-  --theme-twisty-fill: hsla(0,0%,50%,.70);
-  --theme-twisty-selected-fill: white;
 
   /* For accessibility purposes we want to enhance the focus styling. This
    * should improve keyboard navigation usability. */
@@ -113,9 +112,7 @@
   --theme-tab-toolbar-background: var(--grey-90);
   --theme-toolbar-background: var(--grey-85);
   --theme-toolbar-color: var(--grey-40);
-  --theme-toolbar-icon-color: var(--grey-40);
   --theme-toolbar-selected-color: white;
-  --theme-toolbar-checked-color: #75BFFF;
   --theme-toolbar-highlighted-color: var(--green-50);
   --theme-toolbar-background-hover: #20232B;
   --theme-toolbar-background-alt: var(--grey-85);
@@ -133,6 +130,11 @@
   --theme-splitter-color: #3c3c3d;
   --theme-emphasized-splitter-color: var(--grey-60);
   --theme-emphasized-splitter-color-hover: var(--grey-50);
+
+  /* Icon colors */
+  --theme-icon-color: rgba(249, 249, 250, 0.7);
+  --theme-icon-dimmed-color: rgba(147, 147, 149, 0.9);
+  --theme-icon-checked-color: var(--blue-30);
 
   /* Text color */
   --theme-comment: var(--grey-45);
@@ -156,10 +158,6 @@
   --theme-highlight-orange: #d96629;
   --theme-highlight-pink: #df80ff;
   --theme-highlight-gray: #e9f4fe;
-
-  /* Twisty (expand) icon colors */
-  --theme-twisty-fill: var(--grey-45);
-  --theme-twisty-selected-fill: white;
 
   /* For accessibility purposes we want to enhance the focus styling. This
    * should improve keyboard navigation usability. */
@@ -251,17 +249,13 @@
   --grey-20: #ededf0;
   --grey-25: #e0e0e2;
   --grey-30: #d7d7db;
-  --grey-30-a40: rgba(215, 215, 219, 0.4);
-  --grey-30-a90: rgba(215, 215, 219, 0.9);
   --grey-40: #b1b1b3;
   --grey-45: #939395;
   --grey-50: #737373;
   --grey-55: #5c5c5f;
   --grey-60: #4a4a4f;
-  --grey-60-a50: rgba(74, 74, 79, 0.5);
   --grey-70: #38383d;
   --grey-80: #2a2a2e;
   --grey-85: #1b1b1d;
   --grey-90: #0c0c0d;
-  --grey-90-a80: rgba(12, 12, 13, 0.8);
 }
