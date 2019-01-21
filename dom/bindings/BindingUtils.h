@@ -782,6 +782,16 @@ inline bool TryToOuterize(JS::MutableHandle<JS::Value> rval) {
   return true;
 }
 
+inline bool TryToOuterize(JS::MutableHandle<JSObject*> obj) {
+  if (js::IsWindow(obj)) {
+    JSObject* proxy = js::ToWindowProxyIfWindow(obj);
+    MOZ_ASSERT(proxy);
+    obj.set(proxy);
+  }
+
+  return true;
+}
+
 // Make sure to wrap the given string value into the right compartment, as
 // needed.
 MOZ_ALWAYS_INLINE
@@ -810,6 +820,25 @@ bool MaybeWrapObjectValue(JSContext* cx, JS::MutableHandle<JS::Value> rval) {
   // objects specially.  Check for that.
   if (IsDOMObject(obj)) {
     return TryToOuterize(rval);
+  }
+
+  // It's not a WebIDL object, so it's OK to just leave it as-is: only WebIDL
+  // objects (specifically only windows) require outerization.
+  return true;
+}
+
+// Like MaybeWrapObjectValue, but working with a
+// JS::MutableHandle<JSObject*> which must be non-null.
+MOZ_ALWAYS_INLINE
+bool MaybeWrapObject(JSContext* cx, JS::MutableHandle<JSObject*> obj) {
+  if (js::GetObjectCompartment(obj) != js::GetContextCompartment(cx)) {
+    return JS_WrapObject(cx, obj);
+  }
+
+  // We're same-compartment, but even then we might need to wrap
+  // objects specially.  Check for that.
+  if (IsDOMObject(obj)) {
+    return TryToOuterize(obj);
   }
 
   // It's not a WebIDL object, so it's OK to just leave it as-is: only WebIDL
@@ -2467,11 +2496,13 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
 
   void CreateProxyObject(JSContext* aCx, const js::Class* aClass,
                          const DOMProxyHandler* aHandler,
-                         JS::Handle<JSObject*> aProto, T* aNative,
-                         JS::Handle<JS::Value> aExpandoValue,
+                         JS::Handle<JSObject*> aProto, bool aLazyProto,
+                         T* aNative, JS::Handle<JS::Value> aExpandoValue,
                          JS::MutableHandle<JSObject*> aReflector) {
     js::ProxyOptions options;
     options.setClass(aClass);
+    options.setLazyProto(aLazyProto);
+
     aReflector.set(
         js::NewProxyObject(aCx, aHandler, aExpandoValue, aProto, options));
     if (aReflector) {

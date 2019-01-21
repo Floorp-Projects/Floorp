@@ -3755,9 +3755,8 @@ JS_PUBLIC_API JS::Value JS::GetScriptedCallerPrivate(JSContext* cx) {
 }
 
 JS_PUBLIC_API void JS::SetScriptPrivateReferenceHooks(
-  JSRuntime* rt,
-  JS::ScriptPrivateReferenceHook addRefHook,
-  JS::ScriptPrivateReferenceHook releaseHook) {
+    JSRuntime* rt, JS::ScriptPrivateReferenceHook addRefHook,
+    JS::ScriptPrivateReferenceHook releaseHook) {
   AssertHeapIsIdle();
   rt->scriptPrivateAddRefHook = addRefHook;
   rt->scriptPrivateReleaseHook = releaseHook;
