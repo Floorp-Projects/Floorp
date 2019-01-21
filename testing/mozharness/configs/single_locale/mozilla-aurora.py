@@ -1,7 +1,6 @@
 import os
 
 config = {
-    "nightly_build": True,
     "branch": "mozilla-aurora",
     "update_channel": "aurora",
 

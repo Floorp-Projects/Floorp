@@ -10,7 +10,6 @@ config = {
     "is_automation": True,
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
-    "nightly_build": True,
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
