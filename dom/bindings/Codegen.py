@@ -3758,7 +3758,7 @@ def InitMemberSlots(descriptor, failureCode):
 
 
 def SetImmutablePrototype(descriptor, failureCode):
-    if not descriptor.hasNonOrdinaryGetPrototypeOf():
+    if not descriptor.isMaybeCrossOriginObject():
         return ""
 
     return fill(
@@ -12522,7 +12522,7 @@ class CGDOMJSProxyHandler(CGClass):
     def __init__(self, descriptor):
         assert (descriptor.supportsIndexedProperties() or
                 descriptor.supportsNamedProperties() or
-                descriptor.hasNonOrdinaryGetPrototypeOf())
+                descriptor.isMaybeCrossOriginObject())
         methods = [CGDOMJSProxyHandler_getOwnPropDescriptor(descriptor),
                    CGDOMJSProxyHandler_defineProperty(descriptor),
                    ClassUsingDeclaration("mozilla::dom::DOMProxyHandler",
@@ -12549,7 +12549,7 @@ class CGDOMJSProxyHandler(CGClass):
             (descriptor.operations['NamedSetter'] is not None and
              descriptor.interface.getExtendedAttribute('OverrideBuiltins'))):
             methods.append(CGDOMJSProxyHandler_setCustom(descriptor))
-        if descriptor.hasNonOrdinaryGetPrototypeOf():
+        if descriptor.isMaybeCrossOriginObject():
             methods.append(CGDOMJSProxyHandler_getPrototypeIfOrdinary())
         if descriptor.operations['LegacyCaller']:
             methods.append(CGDOMJSProxyHandler_call())
