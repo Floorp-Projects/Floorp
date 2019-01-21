@@ -12,10 +12,8 @@
 
 using namespace mozilla;
 
-void
-VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
-                                     const LayoutDeviceIntRegion& aRegion)
-{
+void VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
+                                          const LayoutDeviceIntRegion& aRegion) {
   if (aRegion.IsEmpty()) {
     mVibrantRegions.Remove(uint32_t(aType));
     return;
@@ -26,17 +24,13 @@ VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
   });
 }
 
-void
-VibrancyManager::ClearVibrantAreas() const
-{
+void VibrancyManager::ClearVibrantAreas() const {
   for (auto iter = mVibrantRegions.ConstIter(); !iter.Done(); iter.Next()) {
     ClearVibrantRegion(iter.UserData()->Region());
   }
 }
 
-void
-VibrancyManager::ClearVibrantRegion(const LayoutDeviceIntRegion& aVibrantRegion) const
-{
+void VibrancyManager::ClearVibrantRegion(const LayoutDeviceIntRegion& aVibrantRegion) const {
   [[NSColor clearColor] set];
 
   for (auto iter = aVibrantRegion.RectIter(); !iter.Done(); iter.Next()) {
@@ -44,13 +38,11 @@ VibrancyManager::ClearVibrantRegion(const LayoutDeviceIntRegion& aVibrantRegion)
   }
 }
 
-@interface NSView(CurrentFillColor)
+@interface NSView (CurrentFillColor)
 - (NSColor*)_currentFillColor;
 @end
 
-static NSColor*
-AdjustedColor(NSColor* aFillColor, VibrancyType aType)
-{
+static NSColor* AdjustedColor(NSColor* aFillColor, VibrancyType aType) {
   if (aType == VibrancyType::MENU && [aFillColor alphaComponent] == 1.0) {
     // The opaque fill color that's used for the menu background when "Reduce
     // vibrancy" is checked in the system accessibility prefs is too dark.
@@ -61,9 +53,7 @@ AdjustedColor(NSColor* aFillColor, VibrancyType aType)
   return aFillColor;
 }
 
-NSColor*
-VibrancyManager::VibrancyFillColorForType(VibrancyType aType)
-{
+NSColor* VibrancyManager::VibrancyFillColorForType(VibrancyType aType) {
   NSView* view = mVibrantRegions.LookupOrAdd(uint32_t(aType))->GetAnyView();
 
   if (view && [view respondsToSelector:@selector(_currentFillColor)]) {
@@ -75,9 +65,7 @@ VibrancyManager::VibrancyFillColorForType(VibrancyType aType)
   return [NSColor whiteColor];
 }
 
-static void
-DrawRectNothing(id self, SEL _cmd, NSRect aRect)
-{
+static void DrawRectNothing(id self, SEL _cmd, NSRect aRect) {
   // The super implementation would clear the background.
   // That's fine for views that are placed below their content, but our
   // setup is different: Our drawn content is drawn to mContainerView, which
@@ -88,35 +76,28 @@ DrawRectNothing(id self, SEL _cmd, NSRect aRect)
   // return true from NeedToClearBackgroundBehindWidget for vibrant widgets.
 }
 
-static NSView*
-HitTestNil(id self, SEL _cmd, NSPoint aPoint)
-{
+static NSView* HitTestNil(id self, SEL _cmd, NSPoint aPoint) {
   // This view must be transparent to mouse events.
   return nil;
 }
 
-static BOOL
-AllowsVibrancyYes(id self, SEL _cmd)
-{
+static BOOL AllowsVibrancyYes(id self, SEL _cmd) {
   // Means that the foreground is blended using a vibrant blend mode.
   return YES;
 }
 
-static Class
-CreateEffectViewClass(BOOL aForegroundVibrancy, BOOL aIsContainer)
-{
+static Class CreateEffectViewClass(BOOL aForegroundVibrancy, BOOL aIsContainer) {
   // Create a class called EffectView that inherits from NSVisualEffectView
   // and overrides the methods -[NSVisualEffectView drawRect:] and
   // -[NSView hitTest:].
   Class NSVisualEffectViewClass = NSClassFromString(@"NSVisualEffectView");
-  const char* className = aForegroundVibrancy
-    ? "EffectViewWithForegroundVibrancy" : "EffectViewWithoutForegroundVibrancy";
+  const char* className = aForegroundVibrancy ? "EffectViewWithForegroundVibrancy"
+                                              : "EffectViewWithoutForegroundVibrancy";
   Class EffectViewClass = objc_allocateClassPair(NSVisualEffectViewClass, className, 0);
   class_addMethod(EffectViewClass, @selector(drawRect:), (IMP)DrawRectNothing,
                   "v@:{CGRect={CGPoint=dd}{CGSize=dd}}");
   if (!aIsContainer) {
-    class_addMethod(EffectViewClass, @selector(hitTest:), (IMP)HitTestNil,
-                    "@@:{CGPoint=dd}");
+    class_addMethod(EffectViewClass, @selector(hitTest:), (IMP)HitTestNil, "@@:{CGPoint=dd}");
   }
   if (aForegroundVibrancy) {
     // Also override the -[NSView allowsVibrancy] method to return YES.
@@ -125,9 +106,7 @@ CreateEffectViewClass(BOOL aForegroundVibrancy, BOOL aIsContainer)
   return EffectViewClass;
 }
 
-static id
-AppearanceForVibrancyType(VibrancyType aType)
-{
+static id AppearanceForVibrancyType(VibrancyType aType) {
   Class NSAppearanceClass = NSClassFromString(@"NSAppearance");
   switch (aType) {
     case VibrancyType::LIGHT:
@@ -153,21 +132,14 @@ enum {
   NSVisualEffectStateInactive
 };
 
-enum {
-  NSVisualEffectMaterialTitlebar = 3
-};
+enum { NSVisualEffectMaterialTitlebar = 3 };
 #endif
 
 #if !defined(MAC_OS_X_VERSION_10_11) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_11
-enum {
-  NSVisualEffectMaterialMenu = 5,
-  NSVisualEffectMaterialSidebar = 7
-};
+enum { NSVisualEffectMaterialMenu = 5, NSVisualEffectMaterialSidebar = 7 };
 #endif
 
-static NSUInteger
-VisualEffectStateForVibrancyType(VibrancyType aType)
-{
+static NSUInteger VisualEffectStateForVibrancyType(VibrancyType aType) {
   switch (aType) {
     case VibrancyType::TOOLTIP:
     case VibrancyType::MENU:
@@ -182,9 +154,7 @@ VisualEffectStateForVibrancyType(VibrancyType aType)
   }
 }
 
-static BOOL
-HasVibrantForeground(VibrancyType aType)
-{
+static BOOL HasVibrantForeground(VibrancyType aType) {
   switch (aType) {
     case VibrancyType::MENU:
       return YES;
@@ -194,24 +164,19 @@ HasVibrantForeground(VibrancyType aType)
 }
 
 #if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
-enum {
-  NSVisualEffectMaterialSelection = 4
-};
+enum { NSVisualEffectMaterialSelection = 4 };
 #endif
 
-@interface NSView(NSVisualEffectViewMethods)
+@interface NSView (NSVisualEffectViewMethods)
 - (void)setState:(NSUInteger)state;
 - (void)setMaterial:(NSUInteger)material;
 - (void)setEmphasized:(BOOL)emphasized;
 @end
 
-/* static */ NSView*
-VibrancyManager::CreateEffectView(VibrancyType aType, BOOL aIsContainer)
-{
+/* static */ NSView* VibrancyManager::CreateEffectView(VibrancyType aType, BOOL aIsContainer) {
   static Class EffectViewClasses[2][2] = {
-    { CreateEffectViewClass(NO, NO), CreateEffectViewClass(NO, YES) },
-    { CreateEffectViewClass(YES, NO), CreateEffectViewClass(YES, YES) }
-  };
+      {CreateEffectViewClass(NO, NO), CreateEffectViewClass(NO, YES)},
+      {CreateEffectViewClass(YES, NO), CreateEffectViewClass(YES, YES)}};
 
   Class EffectViewClass = EffectViewClasses[HasVibrantForeground(aType)][aIsContainer];
   NSView* effectView = [[EffectViewClass alloc] initWithFrame:NSZeroRect];
@@ -241,21 +206,16 @@ VibrancyManager::CreateEffectView(VibrancyType aType, BOOL aIsContainer)
   return effectView;
 }
 
-static bool
-ComputeSystemSupportsVibrancy()
-{
+static bool ComputeSystemSupportsVibrancy() {
 #ifdef __x86_64__
-  return NSClassFromString(@"NSAppearance") &&
-      NSClassFromString(@"NSVisualEffectView");
+  return NSClassFromString(@"NSAppearance") && NSClassFromString(@"NSVisualEffectView");
 #else
   // objc_allocateClassPair doesn't work in 32 bit mode, so turn off vibrancy.
   return false;
 #endif
 }
 
-/* static */ bool
-VibrancyManager::SystemSupportsVibrancy()
-{
+/* static */ bool VibrancyManager::SystemSupportsVibrancy() {
   static bool supportsVibrancy = ComputeSystemSupportsVibrancy();
   return supportsVibrancy;
 }

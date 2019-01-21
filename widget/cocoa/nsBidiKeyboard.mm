@@ -16,35 +16,23 @@ using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS(nsBidiKeyboard, nsIBidiKeyboard)
 
-nsBidiKeyboard::nsBidiKeyboard() : nsIBidiKeyboard()
-{
-  Reset();
-}
+nsBidiKeyboard::nsBidiKeyboard() : nsIBidiKeyboard() { Reset(); }
 
-nsBidiKeyboard::~nsBidiKeyboard()
-{
-}
+nsBidiKeyboard::~nsBidiKeyboard() {}
 
-NS_IMETHODIMP nsBidiKeyboard::Reset()
-{
-  return NS_OK;
-}
+NS_IMETHODIMP nsBidiKeyboard::Reset() { return NS_OK; }
 
-NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(bool *aIsRTL)
-{
+NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(bool* aIsRTL) {
   *aIsRTL = TISInputSourceWrapper::CurrentInputSource().IsForRTLLanguage();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(bool* aResult)
-{
+NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(bool* aResult) {
   // not implemented yet
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // static
-already_AddRefed<nsIBidiKeyboard>
-nsIWidget::CreateBidiKeyboardInner()
-{
+already_AddRefed<nsIBidiKeyboard> nsIWidget::CreateBidiKeyboardInner() {
   return do_AddRef(new nsBidiKeyboard());
 }

@@ -12,24 +12,15 @@ NS_IMPL_ISUPPORTS(nsMacPreferencesReader, nsIMacPreferencesReader)
 
 using namespace mozilla;
 
-struct StringWriteFunc : public JSONWriteFunc
-{
+struct StringWriteFunc : public JSONWriteFunc {
   nsAString& mString;
-  explicit StringWriteFunc(nsAString& aStr) : mString(aStr)
-  {
-  }
-  void Write(const char* aStr) override
-  {
-    mString.Append(NS_ConvertUTF8toUTF16(aStr));
-  }
+  explicit StringWriteFunc(nsAString& aStr) : mString(aStr) {}
+  void Write(const char* aStr) override { mString.Append(NS_ConvertUTF8toUTF16(aStr)); }
 };
 
-static void
-EvaluateDict(JSONWriter* aWriter, NSDictionary<NSString*, id>* aDict);
+static void EvaluateDict(JSONWriter* aWriter, NSDictionary<NSString*, id>* aDict);
 
-static void
-EvaluateArray(JSONWriter* aWriter, NSArray* aArray)
-{
+static void EvaluateArray(JSONWriter* aWriter, NSArray* aArray) {
   for (id elem in aArray) {
     if ([elem isKindOfClass:[NSString class]]) {
       aWriter->StringElement([elem UTF8String]);
@@ -47,9 +38,7 @@ EvaluateArray(JSONWriter* aWriter, NSArray* aArray)
   }
 }
 
-static void
-EvaluateDict(JSONWriter* aWriter, NSDictionary<NSString*, id>* aDict)
-{
+static void EvaluateDict(JSONWriter* aWriter, NSDictionary<NSString*, id>* aDict) {
   for (NSString* key in aDict) {
     id value = aDict[key];
     if ([value isKindOfClass:[NSString class]]) {
@@ -69,24 +58,18 @@ EvaluateDict(JSONWriter* aWriter, NSDictionary<NSString*, id>* aDict)
 }
 
 NS_IMETHODIMP
-nsMacPreferencesReader::PoliciesEnabled(bool* aPoliciesEnabled)
-{
-  NSString* policiesEnabledStr =
-    [NSString stringWithUTF8String:ENTERPRISE_POLICIES_ENABLED_KEY];
-  *aPoliciesEnabled = [[NSUserDefaults standardUserDefaults]
-                         boolForKey:policiesEnabledStr] == YES;
+nsMacPreferencesReader::PoliciesEnabled(bool* aPoliciesEnabled) {
+  NSString* policiesEnabledStr = [NSString stringWithUTF8String:ENTERPRISE_POLICIES_ENABLED_KEY];
+  *aPoliciesEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:policiesEnabledStr] == YES;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMacPreferencesReader::ReadPreferences(JSContext* aCx,
-                                        JS::MutableHandle<JS::Value> aResult)
-{
+nsMacPreferencesReader::ReadPreferences(JSContext* aCx, JS::MutableHandle<JS::Value> aResult) {
   nsAutoString jsonStr;
   JSONWriter w(MakeUnique<StringWriteFunc>(jsonStr));
   w.Start();
-  EvaluateDict(&w, [[NSUserDefaults standardUserDefaults]
-                     dictionaryRepresentation]);
+  EvaluateDict(&w, [[NSUserDefaults standardUserDefaults] dictionaryRepresentation]);
   w.End();
 
   auto json = static_cast<const char16_t*>(jsonStr.get());

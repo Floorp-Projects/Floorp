@@ -17,17 +17,16 @@
 #include "nsWifiMonitor.h"
 #include "nsWifiAccessPoint.h"
 
-nsresult
-GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
-{
+nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   accessPoints.Clear();
 
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
 
   @try {
-    NSBundle * bundle = [[[NSBundle alloc] initWithPath:@"/System/Library/Frameworks/CoreWLAN.framework"] autorelease];
+    NSBundle* bundle = [[[NSBundle alloc]
+        initWithPath:@"/System/Library/Frameworks/CoreWLAN.framework"] autorelease];
     if (!bundle) {
       [pool release];
       return NS_ERROR_NOT_AVAILABLE;
@@ -46,7 +45,7 @@ GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
     }
 
     NSArray* scan = [NSMutableArray arrayWithArray:scanResult];
-    NSEnumerator *enumerator = [scan objectEnumerator];
+    NSEnumerator* enumerator = [scan objectEnumerator];
 
     while (id anObject = [enumerator nextObject]) {
       auto* ap = new nsWifiAccessPoint();
@@ -74,7 +73,7 @@ GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
             if (![scanner scanHexInt:&data]) {
               data = 0;
             }
-            macData[i] = (unsigned char) data;
+            macData[i] = (unsigned char)data;
           }
         }
       }
@@ -83,7 +82,7 @@ GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
       // [CWInterface rssi] is deprecated).
       int signal = 0;
       if ([anObject respondsToSelector:@selector(rssiValue)]) {
-        signal = (int) ((NSInteger) [anObject rssiValue]);
+        signal = (int)((NSInteger)[anObject rssiValue]);
       } else {
         signal = [[anObject rssi] intValue];
       }
@@ -94,8 +93,7 @@ GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
 
       accessPoints.AppendObject(ap);
     }
-  }
-  @catch(NSException*) {
+  } @catch (NSException*) {
     [pool release];
     return NS_ERROR_NOT_AVAILABLE;
   }
