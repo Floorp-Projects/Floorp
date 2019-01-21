@@ -341,31 +341,6 @@ def chunk_locales(config, jobs):
             yield job
 
 
-@transforms.add
-def mh_config_replace_project(config, jobs):
-    """ Replaces {project} in mh config entries with the current project """
-    for job in jobs:
-        job['mozharness'].setdefault('extra-config', {})['branch'] = config.params['project']
-        # XXXCallek This is a bad pattern but exists to satisfy ease-of-porting for buildbot
-        job['mozharness']['config'] = map(
-            lambda x: x.format(project=config.params['project']),
-            job['mozharness']['config']
-            )
-        yield job
-
-
-@transforms.add
-def mh_options_replace_project(config, jobs):
-    """ Replaces {project} in mh option entries with the current project """
-    # XXXCallek This is a bad pattern but exists to satisfy ease-of-porting for buildbot
-    for job in jobs:
-        job['mozharness']['options'] = map(
-            lambda x: x.format(project=config.params['project']),
-            job['mozharness']['options']
-            )
-        yield job
-
-
 transforms.add_validate(l10n_description_schema)
 
 
@@ -380,10 +355,11 @@ def stub_installer(config, jobs):
 
 
 @transforms.add
-def update_channel(config, jobs):
+def set_extra_config(config, jobs):
     for job in jobs:
+        job['mozharness'].setdefault('extra-config', {})['branch'] = config.params['project']
         if 'update-channel' in job['attributes']:
-            job['mozharness'].setdefault('extra-config', {})['update_channel'] = (
+            job['mozharness']['extra-config']['update_channel'] = (
                 job['attributes']['update-channel']
             )
         yield job

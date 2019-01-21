@@ -74,6 +74,7 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
             ],
             'config': {
                 "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
+                "log_name": "single_locale",
             },
         }
         LocalesMixin.__init__(self)
