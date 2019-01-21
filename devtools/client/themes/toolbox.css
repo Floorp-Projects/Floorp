@@ -165,7 +165,7 @@
   vertical-align: text-top;
   flex-shrink: 0;
   -moz-context-properties: fill;
-  fill: var(--theme-toolbar-icon-color);
+  fill: var(--theme-icon-color);
 }
 
 .devtools-tab.selected > img {

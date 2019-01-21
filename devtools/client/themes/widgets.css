@@ -473,26 +473,19 @@
   background-size: 15px;
   background-repeat: no-repeat;
   -moz-context-properties: fill;
-  fill: #d7d7d7;
+  fill: var(--theme-icon-dimmed-color);
 }
 
 .variables-view-delete:hover,
 .variables-view-edit:hover,
 .variables-view-open-inspector:hover {
-  fill: var(--theme-toolbar-checked-color);
+  fill: var(--theme-icon-color);
 }
 
 .variables-view-delete:active,
 .variables-view-edit:active,
 .variables-view-open-inspector:active {
-  fill: var(--theme-toolbar-checked-color);
-  filter: brightness(0.9);
-}
-
-.variable-or-property:focus > .title > .variables-view-delete,
-.variable-or-property:focus > .title > .variables-view-edit,
-.variable-or-property:focus > .title > .variables-view-open-inspector {
-  filter: none;
+  fill: var(--theme-icon-checked-color);
 }
 
 .variables-view-delete {
@@ -500,13 +493,7 @@
 }
 
 .variables-view-edit {
-  background-image: url("chrome://devtools/skin/images/vview-edit.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .variables-view-edit {
-    background-image: url("chrome://devtools/skin/images/vview-edit@2x.png");
-  }
+  background-image: url("chrome://devtools/skin/images/vview-edit.svg");
 }
 
 .variables-view-open-inspector {
@@ -952,7 +939,7 @@
   background-repeat: no-repeat;
   background-size: 10px;
   -moz-context-properties: fill;
-  fill: var(--theme-twisty-fill);
+  fill: var(--theme-icon-dimmed-color);
   cursor: pointer;
   transition: transform 125ms ease;
   transform: rotate(-90deg);
