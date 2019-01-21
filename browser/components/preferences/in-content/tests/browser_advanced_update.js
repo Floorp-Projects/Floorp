@@ -156,7 +156,7 @@ add_task(async function() {
         selector: ".update-status-label",
         id: "update-status",
         args: { status: updateData.statusText },
-      }
+      },
     ];
 
     for (let {selector, id, args} of testcases) {
