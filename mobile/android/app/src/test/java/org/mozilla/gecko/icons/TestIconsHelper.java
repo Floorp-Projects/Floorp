@@ -42,7 +42,7 @@ public class TestIconsHelper {
 
         // Non http(s) URLS
 
-        final String jarUrl = GeckoJarReader.getJarURL(RuntimeEnvironment.application, "chrome/chrome/content/branding/favicon64.png");
+        final String jarUrl = GeckoJarReader.getJarURL(RuntimeEnvironment.application, "chrome/geckoview/content/branding/favicon64.png");
         Assert.assertEquals(jarUrl, IconsHelper.guessDefaultFaviconURL(jarUrl));
 
         Assert.assertNull(IconsHelper.guessDefaultFaviconURL("content://some.random.provider/icons"));
