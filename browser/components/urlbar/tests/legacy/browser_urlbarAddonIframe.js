@@ -169,6 +169,7 @@ function promiseIframeLoad() {
 /**
  * Returns a single promise that's resolved when the content JS has called the
  * function.
+ * @returns {Promise}
  */
 function promiseUrlbarFunctionCall(...args) {
   return promiseMessage("function", args)[0];
@@ -178,6 +179,9 @@ function promiseUrlbarFunctionCall(...args) {
  * Returns two promises in an array.  The first is resolved when the content JS
  * has added its event listener.  The second is resolved when the content JS
  * has received the event.
+ *
+ * @param {string} type
+ * @returns {Promise}
  */
 function promiseEvent(type) {
   return promiseMessage("event", type, 2);
@@ -188,6 +192,11 @@ let gNextMessageID = 1;
 /**
  * Returns an array of promises, one per ack.  Each is resolved when the content
  * JS acks the message.  numExpectedAcks is the number of acks you expect.
+ *
+ * @param {string} type
+ * @param {string} data
+ * @param {number} [numExpectedAcks]
+ * @returns {Promise}
  */
 function promiseMessage(type, data, numExpectedAcks = 1) {
   let testMsgName = "TestMessage";

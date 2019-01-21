@@ -18,16 +18,18 @@ SearchTestUtils.init(Assert, registerCleanupFunction);
  * of the document is compared against aExpectedURL.  The load is then stopped
  * before it actually starts.
  *
- * @param aExpectedURL
+ * @param {string} aExpectedURL
  *        The URL of the document that is expected to load.
- * @param aStopFromProgressListener
+ * @param {object} [aBrowser]
+ *        The browser to wait for.
+ * @param {boolean} [aStopFromProgressListener]
  *        Whether to cancel the load directly from the progress listener. Defaults to true.
  *        If you're using this method to avoid hitting the network, you want the default (true).
  *        However, the browser UI will behave differently for loads stopped directly from
  *        the progress listener (effectively in the middle of a call to loadURI) and so there
  *        are cases where you may want to avoid stopping the load directly from within the
  *        progress listener callback.
- * @return promise
+ * @returns {Promise}
  */
 function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrowser, aStopFromProgressListener = true) {
   function content_script(contentStopFromProgressListener) {

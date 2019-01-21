@@ -99,8 +99,8 @@ add_task(async function searchSuggestionKeyboard() {
  * clickCallback, gets telemetry/FHR counts again to compare them to the old
  * counts.
  *
- * @param clickCallback Use this to open the urlbar popup and choose and click a
- *        result.
+ * @param {function} clickCallback Use this to open the urlbar popup and choose
+ *   and click a result.
  */
 async function compareCounts(clickCallback) {
   // Search events triggered by clicks (not the Return key in the urlbar) are
@@ -150,8 +150,8 @@ async function compareCounts(clickCallback) {
  * Returns the "action" object at the given index in the urlbar results:
  * { type, params: {}}
  *
- * @param index The index in the urlbar results.
- * @return An action object, or null if index >= number of results.
+ * @param {number} index The index in the urlbar results.
+ * @returns {object|null} An action object, or null if index >= number of results.
  */
 function getActionAtIndex(index) {
   let controller = gURLBar.popup.input.controller;
@@ -175,7 +175,7 @@ function getActionAtIndex(index) {
 /**
  * Returns the index of the first search suggestion in the urlbar results.
  *
- * @return An index, or -1 if there are no search suggestions.
+ * @returns {number} An index, or -1 if there are no search suggestions.
  */
 function getFirstSuggestionIndex() {
   let controller = gURLBar.popup.input.controller;
