@@ -2496,11 +2496,13 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
 
   void CreateProxyObject(JSContext* aCx, const js::Class* aClass,
                          const DOMProxyHandler* aHandler,
-                         JS::Handle<JSObject*> aProto, T* aNative,
-                         JS::Handle<JS::Value> aExpandoValue,
+                         JS::Handle<JSObject*> aProto, bool aLazyProto,
+                         T* aNative, JS::Handle<JS::Value> aExpandoValue,
                          JS::MutableHandle<JSObject*> aReflector) {
     js::ProxyOptions options;
     options.setClass(aClass);
+    options.setLazyProto(aLazyProto);
+
     aReflector.set(
         js::NewProxyObject(aCx, aHandler, aExpandoValue, aProto, options));
     if (aReflector) {
