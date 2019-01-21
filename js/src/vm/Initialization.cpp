@@ -17,7 +17,6 @@
 #include "builtin/AtomicsObject.h"
 #include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Statistics.h"
-#include "jit/AtomicOperations.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/Ion.h"
 #include "jit/JitCommon.h"
@@ -128,8 +127,6 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   RETURN_IF_FAIL(js::vtune::Initialize());
 #endif
 
-  RETURN_IF_FAIL(js::jit::AtomicOperations::Initialize());
-
 #if EXPOSE_INTL_API
   UErrorCode err = U_ZERO_ERROR;
   u_init(&err);
@@ -177,8 +174,6 @@ JS_PUBLIC_API void JS_ShutDown(void) {
 #ifdef JS_SIMULATOR
   js::jit::SimulatorProcess::destroy();
 #endif
-
-  js::jit::AtomicOperations::ShutDown();
 
 #ifdef JS_TRACE_LOGGING
   js::DestroyTraceLoggerThreadState();
