@@ -80,6 +80,7 @@ function convert_srcs_to_project_files {
 
   # Remove include-only asm files (no object code emitted)
   source_list=$(echo "$source_list" | grep -v 'x86_abi_support\.asm')
+  source_list=$(echo "$source_list" | grep -v 'config\.asm')
 
   # The actual ARM files end in .asm. We have rules to translate them to .S
   source_list=$(echo "$source_list" | sed s/\.asm\.s$/.asm/)
