@@ -299,9 +299,6 @@ interface nsIContentViewer : nsISupports
   void getContentSizeConstrained(in long maxWidth, in long maxHeight,
                                  out long width, out long height);
 
-  /** The minimum font size  */
-  attribute long minFontSize;
-
   /**
    * Append |this| and all of its descendants to the given array,
    * in depth-first pre-order traversal.
