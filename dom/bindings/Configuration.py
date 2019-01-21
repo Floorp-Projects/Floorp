@@ -442,6 +442,7 @@ class Descriptor(DescriptorProvider):
 
         if self.concrete:
             self.proxy = False
+            self.hasCrossOriginMembers = False
             iface = self.interface
             for m in iface.members:
                 # Don't worry about inheriting legacycallers either: in
@@ -456,8 +457,16 @@ class Descriptor(DescriptorProvider):
                     addOperation('LegacyCaller', m)
             while iface:
                 for m in iface.members:
+                    if (m.isAttr() and
+                        (m.getExtendedAttribute("CrossOriginReadable") or
+                         m.getExtendedAttribute("CrossOriginWritable"))):
+                        self.hasCrossOriginMembers = True
+
                     if not m.isMethod():
                         continue
+
+                    if m.getExtendedAttribute("CrossOriginCallable"):
+                        self.hasCrossOriginMembers = True
 
                     def addIndexedOrNamedOperation(operation, m):
                         if m.isIndexed():
@@ -484,7 +493,7 @@ class Descriptor(DescriptorProvider):
             self.proxy = (self.supportsIndexedProperties() or
                           (self.supportsNamedProperties() and
                            not self.hasNamedPropertiesObject) or
-                          self.hasNonOrdinaryGetPrototypeOf())
+                          self.isMaybeCrossOriginObject())
 
             if self.proxy:
                 if (not self.operations['IndexedGetter'] and
@@ -708,8 +717,10 @@ class Descriptor(DescriptorProvider):
         namedGetter = self.operations['NamedGetter']
         return namedGetter.getExtendedAttribute("NeedsCallerType")
 
-    def hasNonOrdinaryGetPrototypeOf(self):
-        return self.interface.getExtendedAttribute("NonOrdinaryGetPrototypeOf")
+    def isMaybeCrossOriginObject(self):
+        # If we're isGlobal and have cross-origin members, we're a Window, and
+        # that's not a cross-origin object.  The WindowProxy is.
+        return self.hasCrossOriginMembers and not self.isGlobal()
 
     def needsHeaderInclude(self):
         """
