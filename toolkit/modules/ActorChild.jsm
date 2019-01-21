@@ -16,7 +16,7 @@ var EXPORTED_SYMBOLS = ["ActorChild"];
  * the `content` property of this class will be bound to a specific subframe.
  * Otherwise, the `content` is always the top-level content tied to the `mm`.
  */
-this.ActorChild = class ActorChild {
+class ActorChild {
   constructor(dispatcher) {
     this._dispatcher = dispatcher;
     this.mm = dispatcher.mm;
@@ -47,4 +47,4 @@ this.ActorChild = class ActorChild {
   cleanup() {
     this._dispatcher = null;
   }
-};
+}
