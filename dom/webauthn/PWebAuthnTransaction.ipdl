@@ -21,10 +21,15 @@ using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 namespace mozilla {
 namespace dom {
 
+union WebAuthnMaybeAuthenticatorAttachment {
+  uint8_t;
+  null_t;
+};
+
 struct WebAuthnAuthenticatorSelection {
   bool requireResidentKey;
-  bool requireUserVerification;
-  bool requirePlatformAttachment;
+  uint8_t userVerificationRequirement;
+  WebAuthnMaybeAuthenticatorAttachment authenticatorAttachment;
 };
 
 struct WebAuthnScopedCredential {
@@ -34,6 +39,7 @@ struct WebAuthnScopedCredential {
 
 struct WebAuthnExtensionAppId {
   uint8_t[] AppId;
+  nsString appIdentifier;
 };
 
 union WebAuthnExtension {
@@ -48,10 +54,29 @@ union WebAuthnExtensionResult {
   WebAuthnExtensionResultAppId;
 };
 
+struct WebAuthnMakeCredentialRpInfo {
+  nsString Name;
+  nsString Icon;
+};
+
+struct WebAuthnMakeCredentialUserInfo {
+  uint8_t[] Id;
+  nsString Name;
+  nsString Icon;
+  nsString DisplayName;
+};
+
+struct CoseAlg {
+  long alg;
+};
+
 struct WebAuthnMakeCredentialExtraInfo {
+  WebAuthnMakeCredentialRpInfo Rp;
+  WebAuthnMakeCredentialUserInfo User;
+  CoseAlg[] coseAlgs;
   WebAuthnExtension[] Extensions;
   WebAuthnAuthenticatorSelection AuthenticatorSelection;
-  bool RequestDirectAttestation;
+  uint8_t attestationConveyancePreference;
 };
 
 union WebAuthnMaybeMakeCredentialExtraInfo {
@@ -79,7 +104,7 @@ struct WebAuthnMakeCredentialResult {
 
 struct WebAuthnGetAssertionExtraInfo {
   WebAuthnExtension[] Extensions;
-  bool RequireUserVerification;
+  uint8_t userVerificationRequirement;
 };
 
 union WebAuthnMaybeGetAssertionExtraInfo {

@@ -32,6 +32,7 @@ EXPORTS.mozilla.dom += [
     'WebAuthnTransactionChild.h',
     'WebAuthnTransactionParent.h',
     'WebAuthnUtil.h',
+    'winwebauthn/webauthn.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -65,6 +66,14 @@ LOCAL_INCLUDES += [
 if CONFIG['OS_ARCH'] == 'WINNT':
     OS_LIBS += [
         'hid',
+    ]
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    EXPORTS.mozilla.dom += [
+        'WinWebAuthnManager.h',
+    ]
+    UNIFIED_SOURCES += [
+        'WinWebAuthnManager.cpp',
     ]
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
