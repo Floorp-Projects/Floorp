@@ -5,8 +5,8 @@
 /* Animation-inspector specific theme variables */
 
 :root {
-  --animation-item-hover-color: var(--grey-30-a40);
-  --animation-item-selected-color: var(--grey-30-a90);
+  --animation-item-hover-color: rgba(215, 215, 219, 0.4);
+  --animation-item-selected-color: rgba(215, 215, 219, 0.9);
   --cssanimation-color: var(--purple-50);
   --csstransition-color: var(--blue-55);
   --devtools-toolbar-height: 24px;
@@ -25,7 +25,7 @@
 }
 
 :root.theme-dark {
-  --animation-item-hover-color: var(--grey-60-a50);
+  --animation-item-hover-color: rgba(74, 74, 79, 0.5);
   --animation-item-selected-color: var(--grey-60);
   --csstransition-color: var(--blue-50);
   --keyframe-marker-shadow-color: #818181;
