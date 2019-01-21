@@ -12395,7 +12395,7 @@ namespace dbg {
       // reasons this data is stored and replicated on each slice. Each
       // slice used to have its own GCReason, but now they are all the
       // same.
-      data->reason = gcreason::ExplainReason(slice.reason);
+      data->reason = ExplainGCReason(slice.reason);
       MOZ_ASSERT(data->reason);
     }
 
