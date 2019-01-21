@@ -411,18 +411,16 @@ WebConsoleClient.prototype = {
    *
    * @param array preferences
    *        An array with the preferences you want to retrieve.
-   * @param function [onResponse]
-   *        Optional function to invoke when the response is received.
    * @return request
    *         Request object that implements both Promise and EventEmitter interfaces
    */
-  getPreferences: function(preferences, onResponse) {
+  getPreferences: function(preferences) {
     const packet = {
       to: this.actorID,
       type: "getPreferences",
       preferences: preferences,
     };
-    return this._client.request(packet, onResponse);
+    return this._client.request(packet);
   },
 
   /**
@@ -430,18 +428,16 @@ WebConsoleClient.prototype = {
    *
    * @param object preferences
    *        An object with the preferences you want to change.
-   * @param function [onResponse]
-   *        Optional function to invoke when the response is received.
    * @return request
    *         Request object that implements both Promise and EventEmitter interfaces
    */
-  setPreferences: function(preferences, onResponse) {
+  setPreferences: function(preferences) {
     const packet = {
       to: this.actorID,
       type: "setPreferences",
       preferences: preferences,
     };
-    return this._client.request(packet, onResponse);
+    return this._client.request(packet);
   },
 
   /**
@@ -629,18 +625,16 @@ WebConsoleClient.prototype = {
    *
    * @param string data
    *        The details of the HTTP request.
-   * @param function onResponse
-   *        The function invoked when the response is received.
    * @return request
    *         Request object that implements both Promise and EventEmitter interfaces
    */
-  sendHTTPRequest: function(data, onResponse) {
+  sendHTTPRequest: function(data) {
     const packet = {
       to: this.actorID,
       type: "sendHTTPRequest",
       request: data,
     };
-    return this._client.request(packet, onResponse);
+    return this._client.request(packet);
   },
 
   /**
@@ -650,18 +644,16 @@ WebConsoleClient.prototype = {
    * @param array listeners
    *        Array of listeners you want to start. See this.LISTENERS for
    *        known listeners.
-   * @param function onResponse
-   *        Function to invoke when the server response is received.
    * @return request
    *         Request object that implements both Promise and EventEmitter interfaces
    */
-  startListeners: function(listeners, onResponse) {
+  startListeners: function(listeners) {
     const packet = {
       to: this.actorID,
       type: "startListeners",
       listeners: listeners,
     };
-    return this._client.request(packet, onResponse);
+    return this._client.request(packet);
   },
 
   /**
