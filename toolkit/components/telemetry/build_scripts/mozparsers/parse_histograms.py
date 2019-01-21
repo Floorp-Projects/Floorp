@@ -547,7 +547,7 @@ the histogram."""
         if not self._strict_type_checks:
             # This handles some old non-numeric expressions.
             EXPRESSIONS = {
-                "JS::gcreason::NUM_TELEMETRY_REASONS": 101,
+                "JS::GCReason::NUM_TELEMETRY_REASONS": 101,
                 "mozilla::StartupTimeline::MAX_EVENT_ID": 12,
             }
 

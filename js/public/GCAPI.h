@@ -406,10 +406,7 @@ namespace JS {
   D(DOCSHELL, 54)                          \
   D(HTML_PARSER, 55)
 
-namespace gcreason {
-
-/* GCReasons will end up looking like JSGC_MAYBEGC */
-enum Reason {
+enum class GCReason {
 #define MAKE_REASON(name, val) name = val,
   GCREASONS(MAKE_REASON)
 #undef MAKE_REASON
@@ -418,9 +415,8 @@ enum Reason {
 
   /*
    * For telemetry, we want to keep a fixed max bucket size over time so we
-   * don't have to switch histograms. 100 is conservative; as of this writing
-   * there are 52. But the cost of extra buckets seems to be low while the
-   * cost of switching histograms is high.
+   * don't have to switch histograms. 100 is conservative; but the cost of extra
+   * buckets seems to be low while the cost of switching histograms is high.
    */
   NUM_TELEMETRY_REASONS = 100
 };
@@ -428,9 +424,7 @@ enum Reason {
 /**
  * Get a statically allocated C string explaining the given GC reason.
  */
-extern JS_PUBLIC_API const char* ExplainReason(JS::gcreason::Reason reason);
-
-} /* namespace gcreason */
+extern JS_PUBLIC_API const char* ExplainGCReason(JS::GCReason reason);
 
 /*
  * Zone GC:
@@ -492,7 +486,7 @@ extern JS_PUBLIC_API void SkipZoneForGC(Zone* zone);
  */
 extern JS_PUBLIC_API void NonIncrementalGC(JSContext* cx,
                                            JSGCInvocationKind gckind,
-                                           gcreason::Reason reason);
+                                           GCReason reason);
 
 /*
  * Incremental GC:
@@ -525,7 +519,7 @@ extern JS_PUBLIC_API void NonIncrementalGC(JSContext* cx,
  */
 extern JS_PUBLIC_API void StartIncrementalGC(JSContext* cx,
                                              JSGCInvocationKind gckind,
-                                             gcreason::Reason reason,
+                                             GCReason reason,
                                              int64_t millis = 0);
 
 /**
@@ -536,8 +530,7 @@ extern JS_PUBLIC_API void StartIncrementalGC(JSContext* cx,
  * Note: SpiderMonkey's GC is not realtime. Slices in practice may be longer or
  *       shorter than the requested interval.
  */
-extern JS_PUBLIC_API void IncrementalGCSlice(JSContext* cx,
-                                             gcreason::Reason reason,
+extern JS_PUBLIC_API void IncrementalGCSlice(JSContext* cx, GCReason reason,
                                              int64_t millis = 0);
 
 /**
@@ -546,8 +539,7 @@ extern JS_PUBLIC_API void IncrementalGCSlice(JSContext* cx,
  * this is equivalent to NonIncrementalGC. When this function returns,
  * IsIncrementalGCInProgress(cx) will always be false.
  */
-extern JS_PUBLIC_API void FinishIncrementalGC(JSContext* cx,
-                                              gcreason::Reason reason);
+extern JS_PUBLIC_API void FinishIncrementalGC(JSContext* cx, GCReason reason);
 
 /**
  * If IsIncrementalGCInProgress(cx), this call aborts the ongoing collection and
@@ -623,10 +615,10 @@ struct JS_PUBLIC_API GCDescription {
   bool isZone_;
   bool isComplete_;
   JSGCInvocationKind invocationKind_;
-  gcreason::Reason reason_;
+  GCReason reason_;
 
   GCDescription(bool isZone, bool isComplete, JSGCInvocationKind kind,
-                gcreason::Reason reason)
+                GCReason reason)
       : isZone_(isZone),
         isComplete_(isComplete),
         invocationKind_(kind),
@@ -681,7 +673,7 @@ enum class GCNurseryProgress {
  */
 using GCNurseryCollectionCallback = void (*)(JSContext* cx,
                                              GCNurseryProgress progress,
-                                             gcreason::Reason reason);
+                                             GCReason reason);
 
 /**
  * Set the nursery collection callback for the given runtime. When set, it will

@@ -163,7 +163,7 @@ struct Statistics {
   void resumePhases();
 
   void beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
-                  SliceBudget budget, JS::gcreason::Reason reason);
+                  SliceBudget budget, JS::GCReason reason);
   void endSlice();
 
   MOZ_MUST_USE bool startTimingMutator();
@@ -223,8 +223,8 @@ struct Statistics {
     return &allocsSinceMinorGC.nursery;
   }
 
-  void beginNurseryCollection(JS::gcreason::Reason reason);
-  void endNurseryCollection(JS::gcreason::Reason reason);
+  void beginNurseryCollection(JS::GCReason reason);
+  void endNurseryCollection(JS::GCReason reason);
 
   TimeStamp beginSCC();
   void endSCC(unsigned scc, TimeStamp start);
@@ -245,7 +245,7 @@ struct Statistics {
   static const size_t MAX_SUSPENDED_PHASES = MAX_PHASE_NESTING * 3;
 
   struct SliceData {
-    SliceData(SliceBudget budget, JS::gcreason::Reason reason, TimeStamp start,
+    SliceData(SliceBudget budget, JS::GCReason reason, TimeStamp start,
               size_t startFaults, gc::State initialState)
         : budget(budget),
           reason(reason),
@@ -257,7 +257,7 @@ struct Statistics {
           endFaults(0) {}
 
     SliceBudget budget;
-    JS::gcreason::Reason reason;
+    JS::GCReason reason;
     gc::State initialState, finalState;
     gc::AbortReason resetReason;
     TimeStamp start, end;
@@ -457,7 +457,7 @@ struct Statistics {
 struct MOZ_RAII AutoGCSlice {
   AutoGCSlice(Statistics& stats, const ZoneGCStats& zoneStats,
               JSGCInvocationKind gckind, SliceBudget budget,
-              JS::gcreason::Reason reason)
+              JS::GCReason reason)
       : stats(stats) {
     stats.beginSlice(zoneStats, gckind, budget, reason);
   }
