@@ -212,6 +212,10 @@ projects:
     path: components/lib/jexl
     description: 'Javascript Expression Language: Powerful context-based expression parser and evaluator.'
     publish: true
+  lib-publicsuffixlist:
+    path: components/lib/publicsuffixlist
+    description: 'A library for reading and using the public suffix list.'
+    publish: true
   tooling-lint:
     path: components/tooling/lint
     description: 'Custom Lint checks for using and writing components.'
