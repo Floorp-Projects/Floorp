@@ -677,7 +677,9 @@ class nsDisplayListBuilder {
   /**
    * Call this if we're doing painting for WebRender
    */
-  void SetPaintingForWebRender(bool aForWebRender) { mIsPaintingForWebRender = true; }
+  void SetPaintingForWebRender(bool aForWebRender) {
+    mIsPaintingForWebRender = true;
+  }
   bool IsPaintingForWebRender() const { return mIsPaintingForWebRender; }
   /**
    * Call this to prevent descending into subdocuments.
