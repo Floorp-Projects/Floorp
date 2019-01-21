@@ -32,6 +32,7 @@
   background-size: 12px 12px;
   background-position: 10px 2px;
   -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
 }
 
 .reverse-search input:focus {
@@ -40,7 +41,7 @@
 }
 
 .reverse-search:not(.no-result) input:focus {
-  fill: var(--console-input-icon-focused);
+  fill: var(--theme-icon-checked-color);
 }
 
 .reverse-search-info {

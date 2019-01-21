@@ -58,12 +58,12 @@
 }
 
 .side-menu-widget-item:not(.selected) .checkbox-check {
-  fill: var(--theme-toolbar-color);
+  fill: var(--theme-icon-color);
 }
 
 /* Make sure icon is white when the item is selected */
 .side-menu-widget-item.selected .checkbox-check {
-  fill: var(--theme-toolbar-selected-color);
+  fill: var(--theme-selection-color);
 }
 
 /* Shader source editors */

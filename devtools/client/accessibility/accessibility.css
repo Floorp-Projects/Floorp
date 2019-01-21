@@ -14,7 +14,7 @@
   --accessibility-arrow-horizontal-padding: 4px;
   --accessibility-tree-row-height: 21px;
   --accessibility-unfocused-tree-focused-node-background: var(--grey-20);
-  --accessibility-unfocused-tree-focused-node-twisty-fill: var(--theme-twisty-fill);
+  --accessibility-unfocused-tree-focused-node-twisty-fill: var(--theme-icon-dimmed-color);
   --accessibility-link-color: var(--blue-60);
   --accessibility-link-color-active: var(--blue-70);
   --accessible-role-active-background-color: var(--blue-50);
@@ -26,7 +26,7 @@
 
 :root.theme-dark {
   --accessibility-unfocused-tree-focused-node-background: var(--grey-70);
-  --accessibility-unfocused-tree-focused-node-twisty-fill: var(--theme-twisty-selected-fill);
+  --accessibility-unfocused-tree-focused-node-twisty-fill: var(--theme-selection-color);
   --accessibility-link-color: var(--theme-highlight-blue);
   --accessibility-link-color-active: var(--blue-40);
   --accessible-role-active-background-color: var(--blue-60);
@@ -57,7 +57,7 @@ body {
 
 .accessible .tree .node.focused .theme-twisty,
 .treeTable .treeRow.selected .theme-twisty {
-  fill: var(--theme-twisty-selected-fill);
+  fill: var(--theme-selection-color);
 }
 
 .mainFrame .main-panel {

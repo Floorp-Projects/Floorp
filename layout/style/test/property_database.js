@@ -4386,7 +4386,12 @@ var gCSSProperties = {
     other_values: [ "auto", "scroll", "hidden", "-moz-hidden-unscrollable",
                     "auto auto", "auto scroll", "hidden scroll", "auto hidden",
                     "-moz-hidden-unscrollable -moz-hidden-unscrollable" ],
-    invalid_values: [ "-moz-hidden-unscrollable -moz-scrollbars-none" ]
+    invalid_values: [
+      "-moz-hidden-unscrollable -moz-scrollbars-none",
+      "-moz-scrollbars-none",
+      "-moz-scrollbars-horizontal",
+      "-moz-scrollbars-vertical",
+    ],
   },
   "overflow-x": {
     domProp: "overflowX",
@@ -8530,17 +8535,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.step-position-jump.enabled")) {
     "steps(1, jump-none)",
     "steps(0, jump-both)",
   );
-}
-
-const OVERFLOW_MOZKWS = [
-  "-moz-scrollbars-none",
-  "-moz-scrollbars-horizontal",
-  "-moz-scrollbars-vertical",
-];
-if (IsCSSPropertyPrefEnabled("layout.css.overflow.moz-scrollbars.enabled")) {
-  gCSSProperties["overflow"].other_values.push(...OVERFLOW_MOZKWS);
-} else {
-  gCSSProperties["overflow"].invalid_values.push(...OVERFLOW_MOZKWS);
 }
 
 // Copy aliased properties' fields from their alias targets. Keep this logic
