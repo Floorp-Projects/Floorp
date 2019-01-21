@@ -130,8 +130,26 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
   // case.
   // We can lift this restriction once we have added support for primitive
   // subregions to WebRender's filters.
+  for (uint32_t i = 0; i < instance.mFilterDescription.mPrimitives.Length();
+       i++) {
+    const auto& primitive = instance.mFilterDescription.mPrimitives[i];
 
-  for (const auto& primitive : instance.mFilterDescription.mPrimitives) {
+    // WebRender only supports filters with one input.
+    if (primitive.NumberOfInputs() != 1) {
+      return false;
+    }
+    // The first primitive must have the source graphic as the input, all
+    // other primitives must have the prior primitive as the input, otherwise
+    // it's not supported by WebRender.
+    if (i == 0) {
+      if (primitive.InputPrimitiveIndex(0) !=
+          FilterPrimitiveDescription::kPrimitiveIndexSourceGraphic) {
+        return false;
+      }
+    } else if (primitive.InputPrimitiveIndex(0) != int32_t(i - 1)) {
+      return false;
+    }
+
     bool primIsSrgb = primitive.OutputColorSpace() == gfx::ColorSpace::SRGB;
     if (srgb && !primIsSrgb) {
       aWrFilters.AppendElement(wr::FilterOp::SrgbToLinear());
