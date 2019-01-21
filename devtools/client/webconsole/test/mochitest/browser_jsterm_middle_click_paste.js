@@ -5,8 +5,6 @@
 
 "use strict";
 
-await pushPref("devtools.selfxss.count", 5);
-
 const TEST_URI = `data:text/html;charset=utf-8,Web Console test paste on middle-click`;
 
 add_task(async function() {
