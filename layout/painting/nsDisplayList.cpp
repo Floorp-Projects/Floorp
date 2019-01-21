@@ -9347,12 +9347,13 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(
   return true;
 }
 
-bool nsDisplayFilters::CanCreateWebRenderCommands(nsDisplayListBuilder* aBuilder) {
+bool nsDisplayFilters::CanCreateWebRenderCommands(
+    nsDisplayListBuilder* aBuilder) {
   nsTArray<mozilla::wr::FilterOp> wrFilters;
   Maybe<nsRect> filterClip;
   if (!CreateWebRenderCSSFilters(wrFilters) &&
-      !nsSVGIntegrationUtils::BuildWebRenderFilters(
-          mFrame, wrFilters, filterClip)) {
+      !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, wrFilters,
+                                                    filterClip)) {
     return false;
   }
   return true;
