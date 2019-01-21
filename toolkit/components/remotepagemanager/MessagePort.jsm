@@ -25,8 +25,7 @@ let RPMAccessManager = {
       // "sendAsyncMessage": handled within AboutPrivateBrowsingHandler.jsm
       // "setBoolPref": handled within AsyncPrefs.jsm and uses the pref
       //                ["privacy.trackingprotection.pbmode.enabled"],
-      "getBoolPref": ["privacy.trackingprotection.pbmode.enabled",
-                      "browser.privatebrowsing.searchUI"],
+      "getBoolPref": ["privacy.trackingprotection.pbmode.enabled"],
       "getFormatURLPref": ["privacy.trackingprotection.introURL",
                            "app.support.baseURL"],
       "isWindowPrivate": ["yes"],
