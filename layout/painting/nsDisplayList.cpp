@@ -9347,6 +9347,17 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(
   return true;
 }
 
+bool nsDisplayFilters::CanCreateWebRenderCommands(nsDisplayListBuilder* aBuilder) {
+  nsTArray<mozilla::wr::FilterOp> wrFilters;
+  Maybe<nsRect> filterClip;
+  if (!CreateWebRenderCSSFilters(wrFilters) &&
+      !nsSVGIntegrationUtils::BuildWebRenderFilters(
+          mFrame, wrFilters, filterClip)) {
+    return false;
+  }
+  return true;
+}
+
 bool nsDisplayFilters::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
