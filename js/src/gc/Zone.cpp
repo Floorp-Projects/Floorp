@@ -489,7 +489,7 @@ void JS::Zone::maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter,
     return;
   }
 
-  if (!rt->gc.triggerZoneGC(this, JS::gcreason::TOO_MUCH_MALLOC,
+  if (!rt->gc.triggerZoneGC(this, JS::GCReason::TOO_MUCH_MALLOC,
                             counter.bytes(), counter.maxBytes())) {
     return;
   }

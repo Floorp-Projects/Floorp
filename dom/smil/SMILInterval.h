@@ -10,8 +10,10 @@
 #include "nsSMILInstanceTime.h"
 #include "nsTArray.h"
 
+namespace mozilla {
+
 //----------------------------------------------------------------------
-// nsSMILInterval class
+// SMILInterval class
 //
 // A structure consisting of a begin and end time. The begin time must be
 // resolved (i.e. not indefinite or unresolved).
@@ -19,11 +21,11 @@
 // For an overview of how this class is related to other SMIL time classes see
 // the documentation in nsSMILTimeValue.h
 
-class nsSMILInterval {
+class SMILInterval {
  public:
-  nsSMILInterval();
-  nsSMILInterval(const nsSMILInterval& aOther);
-  ~nsSMILInterval();
+  SMILInterval();
+  SMILInterval(const SMILInterval& aOther);
+  ~SMILInterval();
   void Unlink(bool aFiltered = false);
 
   const nsSMILInstanceTime* Begin() const {
@@ -78,5 +80,7 @@ class nsSMILInterval {
   bool mBeginFixed;
   bool mEndFixed;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILINTERVAL_H_
