@@ -61,24 +61,8 @@ class GeckoPromptDelegateTest {
         var promptRequestSingleChoice: PromptRequest = MultipleChoice(arrayOf()) {}
         var confirmWasCalled = false
 
-        val callback = object : GeckoSession.PromptDelegate.ChoiceCallback {
-            override fun confirm(id: String?) {}
-
-            override fun confirm(items: Array<out GeckoSession.PromptDelegate.Choice>?) {}
-
-            override fun dismiss() {}
-
-            override fun getCheckboxValue() = false
-
-            override fun setCheckboxValue(value: Boolean) {}
-
-            override fun hasCheckbox() = false
-
-            override fun getCheckboxMessage() = ""
-
-            override fun confirm(ids: Array<out String>?) {}
-
-            override fun confirm(item: GeckoChoice?) {
+        val callback = object : DefaultGeckoChoiceCallback() {
+            override fun confirm(id: String?) {
                 confirmWasCalled = true
             }
         }
@@ -106,26 +90,10 @@ class GeckoPromptDelegateTest {
         var promptRequestSingleChoice: PromptRequest = SingleChoice(arrayOf()) {}
         var confirmWasCalled = false
 
-        val callback = object : GeckoSession.PromptDelegate.ChoiceCallback {
-            override fun confirm(id: String?) {}
-
-            override fun confirm(items: Array<out GeckoSession.PromptDelegate.Choice>?) {}
-
-            override fun dismiss() {}
-
-            override fun getCheckboxValue() = false
-
-            override fun setCheckboxValue(value: Boolean) {}
-
-            override fun hasCheckbox() = false
-
-            override fun getCheckboxMessage() = ""
-
-            override fun confirm(ids: Array<out String>?) {
+        val callback = object : DefaultGeckoChoiceCallback() {
+            override fun confirm(ids: Array<out String>) {
                 confirmWasCalled = true
             }
-
-            override fun confirm(item: GeckoChoice?) {}
         }
 
         val gecko = GeckoPromptDelegate(mockSession)
@@ -151,21 +119,11 @@ class GeckoPromptDelegateTest {
         var promptRequestSingleChoice: PromptRequest = PromptRequest.MenuChoice(arrayOf()) {}
         var confirmWasCalled = false
 
-        val callback = object : GeckoSession.PromptDelegate.ChoiceCallback {
-            override fun confirm(id: String?) = Unit
-            override fun confirm(items: Array<out GeckoSession.PromptDelegate.Choice>?) = Unit
-            override fun dismiss() = Unit
-            override fun getCheckboxValue() = false
-            override fun setCheckboxValue(value: Boolean) = Unit
-            override fun hasCheckbox() = false
-            override fun getCheckboxMessage() = ""
-            override fun confirm(ids: Array<out String>?) = Unit
-
-            override fun confirm(item: GeckoChoice?) {
+        val callback = object : DefaultGeckoChoiceCallback() {
+            override fun confirm(id: String?) {
                 confirmWasCalled = true
             }
         }
-
         val gecko = GeckoPromptDelegate(mockSession)
         val geckoChoices = arrayOf<GeckoChoice>()
 
@@ -185,6 +143,19 @@ class GeckoPromptDelegateTest {
 
         (promptRequestSingleChoice as PromptRequest.MenuChoice).onConfirm(mock())
         assertTrue(confirmWasCalled)
+    }
+
+    @Test(expected = InvalidParameterException::class)
+    fun `calling onChoicePrompt with invalid Gecko ChoiceType will throw an exception`() {
+        val promptDelegate = GeckoPromptDelegate(mock())
+        promptDelegate.onChoicePrompt(
+            mock(),
+            "title",
+            "message",
+            -1,
+            arrayOf(),
+            mock()
+        )
     }
 
     @Test
@@ -896,5 +867,17 @@ class GeckoPromptDelegateTest {
             assertTrue(setCheckboxValueWasCalled)
             assertTrue(confirmWasCalled)
         }
+    }
+
+    open class DefaultGeckoChoiceCallback : GeckoSession.PromptDelegate.ChoiceCallback {
+        override fun confirm(items: Array<out GeckoChoice>?) = Unit
+        override fun dismiss() {}
+        override fun getCheckboxValue() = false
+        override fun setCheckboxValue(value: Boolean) = Unit
+        override fun hasCheckbox() = false
+        override fun getCheckboxMessage() = ""
+        override fun confirm(ids: Array<out String>) = Unit
+        override fun confirm(item: GeckoChoice) = Unit
+        override fun confirm(id: String?) = Unit
     }
 }

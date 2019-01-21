@@ -65,41 +65,24 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         geckoChoices: Array<out GeckoChoice>,
         callback: ChoiceCallback
     ) {
+        val choices = convertToChoices(geckoChoices)
+        val onConfirmSingleChoice: (Choice) -> Unit = { selectedChoice ->
+            callback.confirm(selectedChoice.id)
+        }
+        val onConfirmMultipleSelection: (Array<Choice>) -> Unit = { selectedChoices ->
+            val ids = selectedChoices.toIdsArray()
+            callback.confirm(ids)
+        }
 
-        val pair = convertToChoices(geckoChoices)
-        // An array of all the GeckoChoices transformed as local Choices object.
-        val choices = pair.first
-        // A map that contains all local choices and map to GeckoChoices
-        val mapChoicesToGeckoChoices = pair.second
+        val promptRequest = when (type) {
+            CHOICE_TYPE_SINGLE -> SingleChoice(choices, onConfirmSingleChoice)
+            CHOICE_TYPE_MENU -> MenuChoice(choices, onConfirmSingleChoice)
+            CHOICE_TYPE_MULTIPLE -> MultipleChoice(choices, onConfirmMultipleSelection)
+            else -> throw InvalidParameterException("$type is not a valid Gecko @Choice.ChoiceType")
+        }
 
-        when (type) {
-
-            CHOICE_TYPE_SINGLE -> {
-                geckoEngineSession.notifyObservers {
-                    onPromptRequest(SingleChoice(choices) { selectedChoice ->
-                        val geckoChoice = mapChoicesToGeckoChoices[selectedChoice]
-                        callback.confirm(geckoChoice)
-                    })
-                }
-            }
-
-            CHOICE_TYPE_MENU -> {
-                geckoEngineSession.notifyObservers {
-                    onPromptRequest(MenuChoice(choices) { selectedChoice ->
-                        val geckoChoice = mapChoicesToGeckoChoices[selectedChoice]
-                        callback.confirm(geckoChoice)
-                    })
-                }
-            }
-
-            CHOICE_TYPE_MULTIPLE -> {
-                geckoEngineSession.notifyObservers {
-                    onPromptRequest(MultipleChoice(choices) { choices ->
-                        val ids = choices.toIdsArray()
-                        callback.confirm(ids)
-                    })
-                }
-            }
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(promptRequest)
         }
     }
 
@@ -308,25 +291,17 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     }
 
     /**
-     * Convert an array of [GeckoChoice] to [Choice].
-     *
-     * @property geckoChoices The ID of the option or group.
-     * @return A [Pair] with all the [GeckoChoice] converted to [Choice]
-     * and a map where you find is [GeckoChoice] representation .
+     * Convert an array of [GeckoChoice] to Choice array.
+     * @return array of Choice
      */
     private fun convertToChoices(
         geckoChoices: Array<out GeckoChoice>
-    ): Pair<Array<Choice>, HashMap<Choice, GeckoChoice>> {
+    ): Array<Choice> {
 
-        val mapChoicesToGeckoChoices = HashMap<Choice, GeckoChoice>()
-
-        val arrayOfChoices = geckoChoices.map { geckoChoice ->
+        return geckoChoices.map { geckoChoice ->
             val choice = geckoChoice.toChoice()
-            mapChoicesToGeckoChoices[choice] = geckoChoice
             choice
         }.toTypedArray()
-
-        return Pair(arrayOfChoices, mapChoicesToGeckoChoices)
     }
 
     @Suppress("LongParameterList")

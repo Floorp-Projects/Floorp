@@ -35,6 +35,7 @@ internal class ChoiceAdapter(
     override fun getItemViewType(position: Int): Int {
         val item = choices[position]
         return when {
+            fragment.isSingleChoice and item.isGroupType -> TYPE_GROUP
             fragment.isSingleChoice -> TYPE_SINGLE
             fragment.isMenuChoice -> if (item.isASeparator) TYPE_MENU_SEPARATOR else TYPE_MENU
             item.isGroupType -> TYPE_GROUP

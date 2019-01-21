@@ -33,6 +33,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNotNull
 import org.mockito.Mockito.doNothing
@@ -386,6 +387,57 @@ class ChoiceDialogFragmentTest {
         positiveButton.performClick()
 
         verify(mockFeature).onConfirm("sessionId", fragment.mapSelectChoice.keys.toTypedArray())
+    }
+
+    @Test
+    fun `single choice item with multiple sub-menu groups`() {
+
+        val mockFeature: PromptFeature = mock()
+        val choices = arrayOf(
+            Choice(
+                id = "group1",
+                label = "group1",
+                children = arrayOf(Choice(id = "item_group_1", label = "item group 1"))
+            ),
+            Choice(
+                id = "group2",
+                label = "group2",
+                children = arrayOf(Choice(id = "item_group_2", label = "item group 2"))
+            )
+        )
+
+        val fragment = spy(newInstance(choices, "sessionId", SINGLE_CHOICE_DIALOG_TYPE))
+        fragment.feature = mockFeature
+        doReturn(context).`when`(fragment).requireContext()
+        doNothing().`when`(fragment).dismiss()
+
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val adapter = dialog.findViewById<RecyclerView>(R.id.recyclerView).adapter as ChoiceAdapter
+
+        val groupViewHolder = adapter.onCreateViewHolder(LinearLayout(context), adapter.getItemViewType(0))
+            as GroupViewHolder
+
+        adapter.bindViewHolder(groupViewHolder, 0)
+
+        assertFalse(groupViewHolder.labelView.isEnabled)
+        assertEquals(groupViewHolder.labelView.text, "group1")
+
+        val singleViewHolder =
+            adapter.onCreateViewHolder(LinearLayout(context), adapter.getItemViewType(1)) as SingleViewHolder
+
+        adapter.bindViewHolder(singleViewHolder, 1)
+
+        with(singleViewHolder) {
+            assertTrue(labelView.isEnabled)
+
+            val choiceGroup1 = choices[0].children!![0]
+            assertEquals(labelView.text, choiceGroup1.label)
+
+            itemView.performClick()
+            verify(mockFeature).onConfirm("sessionId", choiceGroup1)
+        }
     }
 
     @Test
