@@ -103,3 +103,148 @@ a.button:hover:active {
   color: inherit;
   background-color: #6000a1;
 }
+
+.logo-and-wordmark {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 50px;
+}
+
+.search-ui .container {
+  max-width: 768px;
+}
+
+.logo {
+  background: url("chrome://branding/content/icon128.png") no-repeat center center;
+  background-size: 97px;
+  display: inline-block;
+  height: 97px;
+  width: 97px;
+}
+
+.wordmark {
+  background: url("resource://activity-stream/data/content/assets/firefox-wordmark.svg") no-repeat center center;
+  background-size: 175px;
+  -moz-context-properties: fill;
+  display: inline-block;
+  fill: #fff;
+  height: 97px;
+  margin-inline-start: 15px;
+  width: 175px;
+}
+
+.search-inner-wrapper {
+  display: flex;
+  height: 48px;
+  margin-bottom: 64px;
+  padding: 0 22px;
+}
+
+.search-handoff-button {
+  background: #fff var(--newtab-search-icon) 12px center no-repeat;
+  background-size: 24px;
+  border: solid 1px rgba(249, 249, 250, 0.2);
+  border-radius: 3px;
+  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.15);
+  cursor: text;
+  font-size: 15px;
+  margin: 0;
+  padding: 0;
+  padding-inline-end: 48px;
+  padding-inline-start: 46px;
+  position: relative;
+  opacity: 1;
+  transition: opacity 500ms;
+  width: 100%;
+}
+
+.search-handoff-button.focused {
+  border: solid 1px #0060df;
+  box-shadow: 0 0 0 1px #0060df, 0 0 0 4px rgba(0, 96, 223, 0.3);
+}
+
+.search-handoff-button.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.search-handoff-button:dir(rtl) {
+  background-position-x: right 12px;
+}
+
+.search-inner-wrapper .search-handoff-button:hover {
+  background-color: #fff;
+}
+
+.search-handoff-button.focused .fake-caret {
+  display: block;
+}
+
+.fake-editable:focus {
+  outline: none;
+  caret-color: transparent;
+}
+
+.fake-editable {
+  color: transparent;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.fake-textbox {
+  color: rgb(12, 12, 13);
+  opacity: 0.54;
+  text-align: start;
+}
+
+@keyframes caret-animation {
+  to {
+    visibility: hidden;
+  }
+}
+
+.fake-caret {
+  animation: caret-animation 1.3s steps(5, start) infinite;
+  background: rgb(12, 12, 13);
+  display: none;
+  inset-inline-start: 47px;
+  height: 17px;
+  position: absolute;
+  top: 16px;
+  width: 1px;
+}
+
+.dummy-input {
+  display: none;
+}
+
+.info {
+  background-color: rgba(0, 0, 0, 0.2);
+  background-image: url("chrome://browser/skin/privatebrowsing/private-browsing.svg");
+  background-position: left 32px top 20px;
+  background-repeat: no-repeat;
+  background-size: 32px;
+  border-radius: 6px;
+  letter-spacing: -0.2px;
+  padding: 20px;
+  padding-inline-start: 76px;
+}
+
+.info:dir(rtl) {
+  background-position: right 32px top 20px;
+}
+
+.info h1 {
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 28px;
+}
+
+.info p {
+  font-size: 15px;
+  line-height: 25px;
+}
