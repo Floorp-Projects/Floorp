@@ -23,7 +23,7 @@ class MarMixin(object):
         dst_dir = self._mar_tool_dir()
         self.mkdir_p(dst_dir)
         config = self.config
-        url = config['mar_tools_url']
+        url = os.environ['MAR_TOOLS_URL']
         binaries = (config['mar'], config['mbsdiff'])
         for binary in binaries:
             from_url = "/".join((url, binary))

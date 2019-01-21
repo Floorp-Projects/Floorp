@@ -133,27 +133,22 @@ job-template:
         config:
             by-build-platform:
                 linux:
-                    - single_locale/{project}.py
                     - single_locale/linux32.py
                     - single_locale/tc_common.py
                     - single_locale/tc_linux32.py
                 linux64:
-                    - single_locale/{project}.py
                     - single_locale/linux64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_linux64.py
                 macosx64:
-                    - single_locale/{project}.py
                     - single_locale/macosx64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_macosx64.py
                 win32:
-                    - single_locale/{project}.py
                     - single_locale/win32.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win32.py
                 win64:
-                    - single_locale/{project}.py
                     - single_locale/win64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win64.py

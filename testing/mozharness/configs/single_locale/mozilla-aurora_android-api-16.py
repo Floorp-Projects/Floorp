@@ -9,14 +9,12 @@ config = {
     "branch": BRANCH,
     "log_name": "single_locale",
     "objdir": OBJDIR,
-    "is_automation": True,
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
     },
-    "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/%s" % BRANCH,
     "hg_l10n_tag": "default",
     'vcs_share_base': HG_SHARE_BASE_DIR,
 
