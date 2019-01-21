@@ -1,5 +1,7 @@
 html.private .showNormal,
 html.normal .showPrivate,
+html.search-ui .dontShowSearch,
+html.no-search-ui .showSearch,
 body[tpEnabled] .showTpDisabled,
 body:not([tpEnabled]) .showTpEnabled {
   display: none !important;
