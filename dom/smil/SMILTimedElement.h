@@ -10,11 +10,11 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/Move.h"
 #include "mozilla/SMILMilestone.h"
+#include "mozilla/SMILInterval.h"
+#include "mozilla/SMILRepeatCount.h"
 #include "mozilla/UniquePtr.h"
-#include "nsSMILInterval.h"
 #include "nsSMILInstanceTime.h"
 #include "nsSMILTimeValueSpec.h"
-#include "nsSMILRepeatCount.h"
 #include "nsSMILTypes.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
@@ -348,7 +348,7 @@ class SMILTimedElement {
   // Typedefs
   typedef nsTArray<UniquePtr<nsSMILTimeValueSpec>> TimeValueSpecList;
   typedef nsTArray<RefPtr<nsSMILInstanceTime>> InstanceTimeList;
-  typedef nsTArray<UniquePtr<nsSMILInterval>> IntervalList;
+  typedef nsTArray<UniquePtr<SMILInterval>> IntervalList;
   typedef nsPtrHashKey<nsSMILTimeValueSpec> TimeValueSpecPtrKey;
   typedef nsTHashtable<TimeValueSpecPtrKey> TimeValueSpecHashSet;
 
@@ -459,13 +459,13 @@ class SMILTimedElement {
 
   /**
    * Helper function to iterate through this element's accumulated timing
-   * information (specifically old nsSMILIntervals and nsSMILTimeInstanceTimes)
+   * information (specifically old SMILIntervals and nsSMILTimeInstanceTimes)
    * and discard items that are no longer needed or exceed some threshold of
    * accumulated state.
    */
   void FilterHistory();
 
-  // Helper functions for FilterHistory to clear old nsSMILIntervals and
+  // Helper functions for FilterHistory to clear old SMILIntervals and
   // nsSMILInstanceTimes respectively.
   void FilterIntervals();
   void FilterInstanceTimes(InstanceTimeList& aList);
@@ -492,10 +492,10 @@ class SMILTimedElement {
    *                        returned).
    * @return  true if a suitable interval was found, false otherwise.
    */
-  bool GetNextInterval(const nsSMILInterval* aPrevInterval,
-                       const nsSMILInterval* aReplacedInterval,
+  bool GetNextInterval(const SMILInterval* aPrevInterval,
+                       const SMILInterval* aReplacedInterval,
                        const nsSMILInstanceTime* aFixedBeginTime,
-                       nsSMILInterval& aResult) const;
+                       SMILInterval& aResult) const;
   nsSMILInstanceTime* GetNextGreater(const InstanceTimeList& aList,
                                      const nsSMILTimeValue& aBase,
                                      int32_t& aPosition) const;
@@ -525,12 +525,12 @@ class SMILTimedElement {
   // (ii) after calling these methods we must assume that the state of the
   //      element may have changed.
   void NotifyNewInterval();
-  void NotifyChangedInterval(nsSMILInterval* aInterval,
-                             bool aBeginObjectChanged, bool aEndObjectChanged);
+  void NotifyChangedInterval(SMILInterval* aInterval, bool aBeginObjectChanged,
+                             bool aEndObjectChanged);
 
   void FireTimeEventAsync(EventMessage aMsg, int32_t aDetail);
   const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
-  const nsSMILInterval* GetPreviousInterval() const;
+  const SMILInterval* GetPreviousInterval() const;
   bool HasPlayed() const { return !mOldIntervals.IsEmpty(); }
   bool HasClientInFillRange() const;
   bool EndHasEventConditions() const;
@@ -557,7 +557,7 @@ class SMILTimedElement {
 
   nsSMILTimeValue mSimpleDur;
 
-  nsSMILRepeatCount mRepeatCount;
+  SMILRepeatCount mRepeatCount;
   nsSMILTimeValue mRepeatDur;
 
   nsSMILTimeValue mMin;
@@ -580,7 +580,7 @@ class SMILTimedElement {
   uint32_t mInstanceSerialIndex;
 
   SMILAnimationFunction* mClient;
-  UniquePtr<nsSMILInterval> mCurrentInterval;
+  UniquePtr<SMILInterval> mCurrentInterval;
   IntervalList mOldIntervals;
   uint32_t mCurrentRepeatIteration;
   SMILMilestone mPrevRegisteredMilestone;

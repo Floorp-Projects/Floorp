@@ -72,7 +72,7 @@ class nsJSContext : public nsIScriptContext {
   // Setup all the statics etc - safe to call multiple times after Startup().
   static void EnsureStatics();
 
-  static void GarbageCollectNow(JS::gcreason::Reason reason,
+  static void GarbageCollectNow(JS::GCReason reason,
                                 IsIncremental aIncremental = NonIncrementalGC,
                                 IsShrinking aShrinking = NonShrinkingGC,
                                 int64_t aSliceMillis = 0);
@@ -97,17 +97,16 @@ class nsJSContext : public nsIScriptContext {
 
   // If there is some pending CC or GC timer/runner, this will run it.
   static void RunNextCollectorTimer(
-      JS::gcreason::Reason aReason,
+      JS::GCReason aReason,
       mozilla::TimeStamp aDeadline = mozilla::TimeStamp());
   // If user has been idle and aDocShell is for an iframe being loaded in an
   // already loaded top level docshell, this will run a CC or GC
   // timer/runner if there is such pending.
   static void MaybeRunNextCollectorSlice(nsIDocShell *aDocShell,
-                                         JS::gcreason::Reason aReason);
+                                         JS::GCReason aReason);
 
   // The GC should probably run soon, in the zone of object aObj (if given).
-  static void PokeGC(JS::gcreason::Reason aReason, JSObject *aObj,
-                     int aDelay = 0);
+  static void PokeGC(JS::GCReason aReason, JSObject *aObj, int aDelay = 0);
   static void KillGCTimer();
 
   static void PokeShrinkingGC();

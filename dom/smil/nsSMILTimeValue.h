@@ -23,7 +23,7 @@
  * nsSMILInstanceTime  -- an nsSMILTimeValue used for constructing intervals. It
  *                        contains additional fields to govern reset behavior
  *                        and track timing dependencies (e.g. syncbase timing).
- * nsSMILInterval      -- a pair of nsSMILInstanceTimes that defines a begin and
+ * SMILInterval        -- a pair of nsSMILInstanceTimes that defines a begin and
  *                        an end time for animation.
  * nsSMILTimeValueSpec -- a component of a begin or end attribute, such as the
  *                        '5s' or 'a.end+2m' in begin="5s; a.end+2m". Acts as
