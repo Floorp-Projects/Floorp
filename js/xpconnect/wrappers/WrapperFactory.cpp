@@ -396,13 +396,7 @@ static const Wrapper* SelectWrapper(bool securityWrapper, XrayType xrayType,
 
   // This is a security wrapper. Use the security versions and filter.
   if (xrayType == XrayForDOMObject &&
-      IdentifyCrossOriginObject(obj) == CrossOriginLocation) {
-    return &FilteringWrapper<CrossOriginXrayWrapper,
-                             CrossOriginAccessiblePropertiesOnly>::singleton;
-  }
-
-  if (xrayType == XrayForDOMObject &&
-      IdentifyCrossOriginObject(obj) == CrossOriginWindow) {
+      IdentifyCrossOriginObject(obj) != CrossOriginOpaque) {
     return &CrossOriginObjectWrapper::singleton;
   }
 

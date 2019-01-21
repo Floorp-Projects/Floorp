@@ -60,8 +60,7 @@ class WrapperFactory {
   }
 
   static bool IsCrossOriginWrapper(JSObject* obj) {
-    return IsXrayWrapper(obj) ||
-           (js::IsProxy(obj) &&
+    return (js::IsProxy(obj) &&
             js::GetProxyHandler(obj) == &CrossOriginObjectWrapper::singleton);
   }
 
