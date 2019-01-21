@@ -150,11 +150,22 @@ addTest(function() {
     assert_throws(new TypeError, function() { protoSetter.call(C, new Object()); }, "proto setter |call| on cross-origin Window");
     assert_throws(new TypeError, function() { protoSetter.call(C.location, new Object()); }, "proto setter |call| on cross-origin Location");
   });
+  // Hack to avoid "duplicate test name" harness issues.
+  setters.forEach(function(protoSetter) {
+    test(function() { protoSetter.call(C, null); },
+         "proto setter |call| on cross-origin Window with null (" + protoSetter + ")");
+    test(function() { protoSetter.call(C.location, null); },
+         "proto setter |call| on cross-origin Location with null (" + protoSetter + ")");
+  });
   if (Reflect.setPrototypeOf) {
     assert_false(Reflect.setPrototypeOf(C, new Object()),
                  "Reflect.setPrototypeOf on cross-origin Window");
+    assert_true(Reflect.setPrototypeOf(C, null),
+                "Reflect.setPrototypeOf on cross-origin Window with null");
     assert_false(Reflect.setPrototypeOf(C.location, new Object()),
                 "Reflect.setPrototypeOf on cross-origin Location");
+    assert_true(Reflect.setPrototypeOf(C.location, null),
+                "Reflect.setPrototypeOf on cross-origin Location with null");
   }
 }, "[[SetPrototypeOf]] should return false");
 
@@ -229,6 +240,19 @@ addTest(function() {
 addTest(function() {
   assert_equals(typeof D.then, "object");
 }, "[[GetOwnProperty]] - Subframe named 'then' should shadow the default 'then' value");
+
+addTest(function() {
+  assert_equals(typeof D.close, "function");
+  assert_equals(typeof D.open, "object");
+}, "[[GetOwnProperty]] - Subframes should be visible cross-origin only if their names don't match the names of cross-origin-exposed IDL properties");
+
+addTest(function() {
+  assert_equals(typeof Object.getOwnPropertyDescriptor(C, '0').value, "object");
+  assert_equals(typeof Object.getOwnPropertyDescriptor(C, '1').value, "object");
+  assert_throws("SecurityError", function() {
+    Object.getOwnPropertyDescriptor(C, '2');
+  });
+}, "[[GetOwnProperty]] - Should be able to get a property descriptor for an indexed property only if it corresponds to a child window.");
 
 /*
  * [[Delete]]
