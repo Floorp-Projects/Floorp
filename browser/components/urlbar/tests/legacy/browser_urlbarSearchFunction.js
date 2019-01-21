@@ -84,8 +84,8 @@ add_task(async function searchEngineAlias() {
  * Makes sure the search-suggestions notification will be shown the next several
  * times the popup opens.
  *
- * @return  A function that you should call when you're done that resets the
- *          state of the notification.
+ * @returns {function} A function that you should call when you're done that
+ *   resets the state state of the notification.
  */
 function enableSearchSuggestionsNotification() {
   let which = gURLBar._whichSearchSuggestionsNotification || undefined;
@@ -104,7 +104,7 @@ function enableSearchSuggestionsNotification() {
 /**
  * Asserts that the search-suggestion notification is or isn't visible.
  *
- * @param visible
+ * @param {boolean} visible
  *        True if it should be visible, false if not.
  */
 function assertSearchSuggestionsNotificationVisible(visible) {
@@ -121,7 +121,7 @@ function assertSearchSuggestionsNotificationVisible(visible) {
 /**
  * Asserts that the one-off search buttons are or aren't visible.
  *
- * @param visible
+ * @param {boolean} visible
  *        True if they should be visible, false if not.
  */
 function assertOneOffButtonsVisible(visible) {
@@ -137,7 +137,7 @@ function assertOneOffButtonsVisible(visible) {
  * the first (heuristic) result in the popup is a search suggestion whose search
  * query is the given value.
  *
- * @param value
+ * @param {string} value
  *        The urlbar's expected value.
  */
 function assertUrlbarValue(value) {
