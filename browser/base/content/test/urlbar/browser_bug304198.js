@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const TEST_PATH = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://example.com");
+const TEST_URL = `${TEST_PATH}dummy_page.html`;
+
 add_task(async function() {
   let charsToDelete, deletedURLTab, fullURLTab, partialURLTab, testPartialURL, testURL;
 
@@ -9,7 +13,7 @@ add_task(async function() {
   deletedURLTab = BrowserTestUtils.addTab(gBrowser);
   fullURLTab = BrowserTestUtils.addTab(gBrowser);
   partialURLTab = BrowserTestUtils.addTab(gBrowser);
-  testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
+  testURL = TEST_URL;
 
   let loaded1 = BrowserTestUtils.browserLoaded(deletedURLTab.linkedBrowser, false, testURL);
   let loaded2 = BrowserTestUtils.browserLoaded(fullURLTab.linkedBrowser, false, testURL);

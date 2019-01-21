@@ -1,8 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const REDIRECT_FROM = "https://example.com/browser/browser/base/content/test/urlbar/" +
-                      "redirect_bug623155.sjs";
+const TEST_PATH = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://example.com");
+const REDIRECT_FROM = `${TEST_PATH}redirect_bug623155.sjs`;
 
 const REDIRECT_TO = "https://www.bank1.com/"; // Bad-cert host.
 
@@ -19,9 +20,7 @@ function isRedirectedURI(aURI) {
 /*
    Test.
 
-1. Load
-https://example.com/browser/browser/base/content/test/urlbar/redirect_bug623155.sjs#BG
-   in a background tab.
+1. Load redirect_bug623155.sjs#BG in a background tab.
 
 2. The redirected URI is <https://www.bank1.com/#BG>, which displayes a cert
    error page.
@@ -30,9 +29,7 @@ https://example.com/browser/browser/base/content/test/urlbar/redirect_bug623155.
 
 4. Check the URLbar's value, expecting <https://www.bank1.com/#BG>
 
-5. Load
-https://example.com/browser/browser/base/content/test/urlbar/redirect_bug623155.sjs#FG
-   in the foreground tab.
+5. Load redirect_bug623155.sjs#FG in the foreground tab.
 
 6. The redirected URI is <https://www.bank1.com/#FG>. And this is also
    a cert-error page.

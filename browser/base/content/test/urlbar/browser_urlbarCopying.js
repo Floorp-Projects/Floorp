@@ -5,8 +5,12 @@ const trimPref = "browser.urlbar.trimURLs";
 const phishyUserPassPref = "network.http.phishy-userpass-length";
 const decodeURLpref = "browser.urlbar.decodeURLsOnCopy";
 
-function test() {
+function getUrl(hostname, file) {
+  return getRootDirectory(gTestPath)
+    .replace("chrome://mochitests/content", hostname) + file;
+}
 
+function test() {
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   registerCleanupFunction(function() {
@@ -96,9 +100,9 @@ var tests = [
 
   // Test that userPass is stripped out
   {
-    loadURL: "http://user:pass@mochi.test:8888/browser/browser/base/content/test/urlbar/authenticate.sjs?user=user&pass=pass",
-    expectedURL: "mochi.test:8888/browser/browser/base/content/test/urlbar/authenticate.sjs?user=user&pass=pass",
-    copyExpected: "http://mochi.test:8888/browser/browser/base/content/test/urlbar/authenticate.sjs?user=user&pass=pass",
+    loadURL: getUrl("http://user:pass@mochi.test:8888", "authenticate.sjs?user=user&pass=pass"),
+    expectedURL: getUrl("mochi.test:8888", "authenticate.sjs?user=user&pass=pass"),
+    copyExpected: getUrl("http://mochi.test:8888", "authenticate.sjs?user=user&pass=pass"),
   },
 
   // Test escaping

@@ -1,8 +1,11 @@
+const TEST_PATH = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://example.org");
+const TEST_URL = `${TEST_PATH}dummy_page.html`;
+
 add_task(async function test_remotetab_opens() {
-  const url = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
   await BrowserTestUtils.withNewTab({url: "about:robots", gBrowser}, async function() {
     // Set the urlbar to include the moz-action
-    gURLBar.value = "moz-action:remotetab," + JSON.stringify({ url });
+    gURLBar.value = "moz-action:remotetab," + JSON.stringify({ url: TEST_URL });
     // Focus the urlbar so we can press enter
     gURLBar.focus();
 
@@ -11,6 +14,6 @@ add_task(async function test_remotetab_opens() {
     EventUtils.synthesizeKey("KEY_Enter");
     await promiseTabLoaded;
 
-    Assert.equal(gBrowser.selectedTab.linkedBrowser.currentURI.spec, url, "correct URL loaded");
+    Assert.equal(gBrowser.selectedTab.linkedBrowser.currentURI.spec, TEST_URL, "correct URL loaded");
   });
 });

@@ -1,5 +1,9 @@
 "use strict";
 
+const TEST_PATH = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://www.example.com");
+const TEST_URL = `${TEST_PATH}file_urlbar_edit_dos.html`;
+
 async function checkURLBarValueStays(browser) {
   gURLBar.select();
   EventUtils.sendString("a");
@@ -25,7 +29,7 @@ async function checkURLBarValueStays(browser) {
 add_task(async function() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: "http://example.com/browser/browser/base/content/test/urlbar/file_urlbar_edit_dos.html",
+    url: TEST_URL,
   }, async function(browser) {
     await ContentTask.spawn(browser, "", function() {
       content.wrappedJSObject.dos_hash();
@@ -38,4 +42,3 @@ add_task(async function() {
     await checkURLBarValueStays(browser);
   });
 });
-
