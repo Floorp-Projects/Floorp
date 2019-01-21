@@ -1,7 +1,6 @@
 import os
 
 config = {
-    "nightly_build": True,
     "branch": "jamun",
     "update_channel": "nightly-jamun",
 

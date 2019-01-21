@@ -1,7 +1,6 @@
 import os
 
 config = {
-    "nightly_build": False,
     "branch": "try",
     "update_channel": "nightly-try",
 

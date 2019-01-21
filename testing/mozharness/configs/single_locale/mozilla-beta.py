@@ -1,7 +1,6 @@
 import os
 
 config = {
-    "nightly_build": True,
     "branch": "mozilla-beta",
     "update_channel": "beta",
 
