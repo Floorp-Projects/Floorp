@@ -6359,6 +6359,7 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
       const StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
+  bool CanCreateWebRenderCommands(nsDisplayListBuilder* aBuilder);
 
   bool CreateWebRenderCSSFilters(nsTArray<mozilla::wr::FilterOp>& wrFilters);
 
