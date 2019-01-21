@@ -7894,9 +7894,9 @@ bool nsDisplayTransform::CreateWebRenderCommands(
   StackingContextHelper sc(
       aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder, filters,
       LayoutDeviceRect(position, LayoutDeviceSize()), &newTransformMatrix,
-      animationsId ? &prop : nullptr, nullptr, transformForSC, 
-      wr::ReferenceFrameKind::Transform, gfx::CompositionOp::OP_OVER, 
-      !BackfaceIsHidden(), preserve3D, deferredTransformItem, 
+      animationsId ? &prop : nullptr, nullptr, transformForSC,
+      wr::ReferenceFrameKind::Transform, gfx::CompositionOp::OP_OVER,
+      !BackfaceIsHidden(), preserve3D, deferredTransformItem,
       wr::WrStackingContextClip::None(), animated);
 
   return mStoredList.CreateWebRenderCommands(aBuilder, aResources, sc, aManager,

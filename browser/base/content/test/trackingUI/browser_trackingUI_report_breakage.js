@@ -158,7 +158,7 @@ add_task(async function testReportBreakage() {
     await viewShown;
 
     let submitButton = document.getElementById("identity-popup-breakageReportView-submit");
-    let reportURL = document.getElementById("identity-popup-breakageReportView-collection-url").textContent;
+    let reportURL = document.getElementById("identity-popup-breakageReportView-collection-url").value;
 
     is(reportURL, TRACKING_PAGE, "Shows the correct URL in the report UI.");
 
