@@ -150,14 +150,14 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
       return false;
     }
 
-    bool primIsSrgb = primitive.OutputColorSpace() == gfx::ColorSpace::SRGB;
-    if (srgb && !primIsSrgb) {
+    bool previousSrgb = srgb;
+    bool primNeedsSrgb = primitive.InputColorSpace(0) == gfx::ColorSpace::SRGB;
+    if (srgb && !primNeedsSrgb) {
       aWrFilters.AppendElement(wr::FilterOp::SrgbToLinear());
-      srgb = false;
-    } else if (!srgb && primIsSrgb) {
+    } else if (!srgb && primNeedsSrgb) {
       aWrFilters.AppendElement(wr::FilterOp::LinearToSrgb());
-      srgb = true;
     }
+    srgb = primitive.OutputColorSpace() == gfx::ColorSpace::SRGB;
 
     const PrimitiveAttributes& attr = primitive.Attributes();
 
@@ -237,8 +237,14 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
       wr::LayoutVector2D offset = {(float)shadow.mOffset.x,
                                    (float)shadow.mOffset.y};
       float radius = stdDev.width;
-      wr::FilterOp filterOp =
-          wr::FilterOp::DropShadow(offset, radius, wr::ToColorF(shadow.mColor));
+      Color color = shadow.mColor;
+      if (!primNeedsSrgb) {
+        color = Color(gsRGBToLinearRGBMap[uint8_t(color.r * 255)],
+                      gsRGBToLinearRGBMap[uint8_t(color.g * 255)],
+                      gsRGBToLinearRGBMap[uint8_t(color.b * 255)], color.a);
+      }
+      wr::FilterOp filterOp = wr::FilterOp::DropShadow(
+          offset, radius, wr::ToColorF(ToDeviceColor(color)));
 
       aWrFilters.AppendElement(filterOp);
     } else {
@@ -256,7 +262,7 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
       // sRGB->linear->no-op->sRGB roundtrip introduces a slight error and we
       // cannot add fuzziness to the test.
       Unused << aWrFilters.PopLastElement();
-      srgb = !srgb;
+      srgb = previousSrgb;
     }
 
     if (!filterIsNoop) {
