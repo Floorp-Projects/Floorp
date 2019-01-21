@@ -1,6 +1,9 @@
+const TEST_PATH = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://example.org");
+const TEST_URL = `${TEST_PATH}dummy_page.html#test%7C1`;
+
 add_task(async function test_switchtab_decodeuri() {
   info("Opening first tab");
-  const TEST_URL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html#test%7C1";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   info("Opening and selecting second tab");

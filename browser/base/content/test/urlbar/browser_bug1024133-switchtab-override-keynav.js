@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-add_task(async function test_switchtab_override_keynav() {
-  let testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
+const TEST_PATH = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://example.org");
+const TEST_URL = `${TEST_PATH}dummy_page.html`;
 
+add_task(async function test_switchtab_override_keynav() {
   info("Opening first tab");
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, testURL);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   info("Opening and selecting second tab");
   let secondTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);

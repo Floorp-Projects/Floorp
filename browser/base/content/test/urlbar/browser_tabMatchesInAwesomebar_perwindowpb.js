@@ -1,4 +1,6 @@
-let testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
+const TEST_PATH = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://example.com");
+const TEST_URL = `${TEST_PATH}dummy_page.html`;
 
 add_task(async function() {
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow();
@@ -23,7 +25,7 @@ add_task(async function() {
 });
 
 async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
-  await BrowserTestUtils.openNewForegroundTab(aSourceWindow.gBrowser, testURL);
+  await BrowserTestUtils.openNewForegroundTab(aSourceWindow.gBrowser, TEST_URL);
   let testTab = await BrowserTestUtils.openNewForegroundTab(aDestWindow.gBrowser);
 
   info("waiting for focus on the window");
@@ -54,7 +56,7 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
      "The test tab doesn't have the busy attribute");
 
   // Wait for the Awesomebar popup to appear.
-  await promiseAutocompleteResultPopup(testURL, aDestWindow);
+  await promiseAutocompleteResultPopup(TEST_URL, aDestWindow);
 
   info(`awesomebar popup appeared. aExpectSwitch: ${aExpectSwitch}`);
   // Make sure the last match is selected.

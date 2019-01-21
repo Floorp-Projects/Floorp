@@ -1,8 +1,10 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
-const SLOW_PAGE = "http://www.example.com/browser/browser/base/content/test/urlbar/slow-page.sjs";
-const SLOW_PAGE2 = "http://mochi.test:8888/browser/browser/base/content/test/urlbar/slow-page.sjs?faster";
+const SLOW_PAGE = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://www.example.com") + "slow-page.sjs";
+const SLOW_PAGE2 = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://mochi.test:8888") + "slow-page.sjs?faster";
 
 /**
  * Check that if we:
@@ -136,4 +138,3 @@ add_task(async function() {
   BrowserTestUtils.removeTab(newTab);
   BrowserTestUtils.removeTab(tab);
 });
-
