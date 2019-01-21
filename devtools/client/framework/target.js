@@ -642,13 +642,9 @@ class Target extends EventEmitter {
     // Send any stored event payload (DOMWindow or nsIRequest) for backwards
     // compatibility with non-remotable tools.
     if (packet.state == "start") {
-      event._navPayload = this._navRequest;
       this.emit("will-navigate", event);
-      this._navRequest = null;
     } else {
-      event._navPayload = this._navWindow;
       this.emit("navigate", event);
-      this._navWindow = null;
     }
   }
 
