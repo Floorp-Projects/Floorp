@@ -6006,7 +6006,7 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
         nsJSUtils::ExecutionContext exec(aes.cx(), global);
         rv = exec.Compile(options, handler->GetHandlerText());
 
-        JSScript* script = exec.MaybeGetScript();
+        JS::Rooted<JSScript*> script(aes.cx(), exec.MaybeGetScript());
         if (script) {
           LoadedScript* initiatingScript = handler->GetInitiatingScript();
           if (initiatingScript) {
