@@ -8,6 +8,7 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 
 class Declaration extends PureComponent {
@@ -118,15 +119,16 @@ class Declaration extends PureComponent {
   }
 
   render() {
-    const { declaration } = this.props;
     const {
       computedProperties,
+      isDeclarationValid,
       isEnabled,
       isKnownProperty,
+      isNameValid,
       isOverridden,
       name,
       value,
-    } = declaration;
+    } = this.props.declaration;
 
     return (
       dom.li(
@@ -155,7 +157,18 @@ class Declaration extends PureComponent {
           dom.span({ className: "ruleview-propertyvaluecontainer" },
             dom.span({ className: "ruleview-propertyvalue theme-fg-color1" }, value),
             ";"
-          )
+          ),
+          dom.div({
+            className: "ruleview-warning" +
+                       (isDeclarationValid ? " hidden" : ""),
+            title: isNameValid ?
+                   getStr("rule.warningName.title") : getStr("rule.warning.title"),
+          }),
+          dom.div({
+            className: "ruleview-overridden-rule-filter" +
+                       (!isDeclarationValid || !isOverridden ? " hidden" : ""),
+            title: getStr("rule.filterProperty.title"),
+          })
         ),
         this.renderComputedPropertyList(),
         this.renderShorthandOverriddenList()
