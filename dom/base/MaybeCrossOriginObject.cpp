@@ -429,5 +429,8 @@ JSObject* MaybeCrossOriginObject<Base>::enumerate(
   return js::BaseProxyHandler::enumerate(cx, proxy);
 }
 
+// Force instantiations of the out-of-line template methods we need.
+template class MaybeCrossOriginObject<js::Wrapper>;
+
 }  // namespace dom
 }  // namespace mozilla
