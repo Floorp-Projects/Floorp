@@ -17,8 +17,7 @@
         role="dialog"
         onbeforeaccept="return gConnectionsDialog.beforeAccept();"
         onload="gConnectionsDialog.checkForSystemProxy();"
-        helpTopic="prefs-connection-settings"
-        ondialoghelp="openPrefsHelp()">
+        helpTopic="prefs-connection-settings">
 
   <!-- Used for extension-controlled lockdown message -->
   <linkset>
