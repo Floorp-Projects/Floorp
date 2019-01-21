@@ -1874,8 +1874,7 @@ template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::getPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
     JS::MutableHandle<PropertyDescriptor> desc) const {
-  // CrossOriginXrayWrapper::getOwnPropertyDescriptor calls this.
-
+  // FIXME: This method is unused.  Will get sorted out in bug 1160757.
   assertEnteredPolicy(cx, wrapper, id,
                       BaseProxyHandler::GET | BaseProxyHandler::SET |
                           BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
@@ -2376,7 +2375,6 @@ const xpc::XrayWrapper<Base, Traits> xpc::XrayWrapper<Base, Traits>::singleton(
     0);
 
 template class PermissiveXrayDOM;
-template class SecurityXrayDOM;
 template class PermissiveXrayJS;
 template class PermissiveXrayOpaque;
 
