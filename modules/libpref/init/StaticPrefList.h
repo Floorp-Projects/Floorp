@@ -883,7 +883,7 @@ VARCACHE_PREF(
 )
 
 // Pref to control enabling scroll anchoring.
-#ifdef NIGHTLY_BUILD
+#ifndef ANDROID
 #define PREF_VALUE true
 #else
 #define PREF_VALUE false
