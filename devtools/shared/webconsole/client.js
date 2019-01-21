@@ -253,8 +253,6 @@ WebConsoleClient.prototype = {
    *
    * @param string string
    *        The code you want to evaluate.
-   * @param function onResponse
-   *        The function invoked when the response is received.
    * @param object [options={}]
    *        Options for evaluation:
    *
@@ -287,7 +285,7 @@ WebConsoleClient.prototype = {
    * @return request
    *         Request object that implements both Promise and EventEmitter interfaces
    */
-  evaluateJS: function(string, onResponse, options = {}) {
+  evaluateJS: function(string, options = {}) {
     const packet = {
       to: this.actorID,
       type: "evaluateJS",
@@ -298,14 +296,14 @@ WebConsoleClient.prototype = {
       selectedNodeActor: options.selectedNodeActor,
       selectedObjectActor: options.selectedObjectActor,
     };
-    return this._client.request(packet, onResponse);
+    return this._client.request(packet);
   },
 
   /**
    * Evaluate a JavaScript expression asynchronously.
    * See evaluateJS for parameter and response information.
    */
-  evaluateJSAsync: function(string, onResponse, options = {}) {
+  evaluateJSAsync: function(string, options = {}) {
     const packet = {
       to: this.actorID,
       type: "evaluateJSAsync",
@@ -324,9 +322,6 @@ WebConsoleClient.prototype = {
         // for a response.
         if (this.pendingEvaluationResults) {
           this.pendingEvaluationResults.set(response.resultID, resp => {
-            if (onResponse) {
-              onResponse(resp);
-            }
             if (resp.error) {
               reject(resp);
             } else {
