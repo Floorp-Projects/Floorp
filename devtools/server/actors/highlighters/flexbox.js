@@ -191,6 +191,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     return this.options.color || DEFAULT_COLOR;
   }
 
+  get container() {
+    return this.currentNode;
+  }
+
   get ctx() {
     return this.canvas.getCanvasContext("2d");
   }
@@ -302,10 +306,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const hasMoved = AutoRefreshHighlighter.prototype._hasMoved.call(this);
 
     if (!this.computedStyle) {
-      this.computedStyle = getComputedStyle(this.currentNode);
+      this.computedStyle = getComputedStyle(this.container);
     }
 
-    const flex = this.currentNode.getAsFlexContainer();
+    const flex = this.container.getAsFlexContainer();
 
     const oldCrossAxisDirection = this.crossAxisDirection;
     this.crossAxisDirection = flex ? flex.crossAxisDirection : null;
@@ -319,7 +323,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.axes = `${this.mainAxisDirection} ${this.crossAxisDirection}`;
 
     const oldFlexData = this.flexData;
-    this.flexData = getFlexData(this.currentNode);
+    this.flexData = getFlexData(this.container);
     const hasFlexDataChanged = compareFlexData(oldFlexData, this.flexData);
 
     const oldAlignItems = this.alignItemsValue;
@@ -515,7 +519,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     const { devicePixelRatio } = this.win;
-    const containerQuad = getUntransformedQuad(this.currentNode, "content");
+    const containerQuad = getUntransformedQuad(this.container, "content");
     const { width, height } = containerQuad.getBounds();
 
     this.setupCanvas({
@@ -571,7 +575,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const lineWidth = getDisplayPixelRatio(this.win);
     const options = { matrix: this.currentMatrix };
     const { width: containerWidth, height: containerHeight } =
-      getUntransformedQuad(this.currentNode, "content").getBounds();
+      getUntransformedQuad(this.container, "content").getBounds();
 
     this.setupCanvas({
       useContainerScrollOffsets: true,
@@ -653,7 +657,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     const { width: containerWidth, height: containerHeight } =
-      getUntransformedQuad(this.currentNode, "content").getBounds();
+      getUntransformedQuad(this.container, "content").getBounds();
 
     this.setupCanvas({
       lineDash: FLEXBOX_LINES_PROPERTIES.alignItems.lineDash,
@@ -763,21 +767,21 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const { devicePixelRatio } = this.win;
     const lineWidth = getDisplayPixelRatio(this.win);
     const zoom = getCurrentZoom(this.win);
-    const style = getComputedStyle(this.currentNode);
+    const style = getComputedStyle(this.container);
     const position = style.position;
     let offsetX = this._canvasPosition.x;
     let offsetY = this._canvasPosition.y;
 
     if (useContainerScrollOffsets) {
-      offsetX += this.currentNode.scrollLeft / zoom;
-      offsetY += this.currentNode.scrollTop / zoom;
+      offsetX += this.container.scrollLeft / zoom;
+      offsetY += this.container.scrollTop / zoom;
     }
 
     // If the flexbox container is position:fixed we need to subtract the scroll
     // positions of all ancestral elements.
     if (position === "fixed") {
       const { scrollLeft, scrollTop } =
-        getAbsoluteScrollOffsetsForNode(this.currentNode);
+        getAbsoluteScrollOffsetsForNode(this.container);
       offsetX -= scrollLeft / zoom;
       offsetY -= scrollTop / zoom;
     }
@@ -816,7 +820,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
     // Update the current matrix used in our canvas' rendering
     const { currentMatrix, hasNodeTransformations } =
-      getCurrentMatrix(this.currentNode, this.win, {
+      getCurrentMatrix(this.container, this.win, {
         ignoreWritingModeAndTextDirection: true,
       });
     this.currentMatrix = currentMatrix;
