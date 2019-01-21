@@ -14,13 +14,10 @@
 
 using namespace mozilla::a11y;
 
-static id <mozAccessible, mozView>
-getNativeViewFromRootAccessible(Accessible* aAccessible)
-{
-  RootAccessibleWrap* root =
-    static_cast<RootAccessibleWrap*>(aAccessible->AsRoot());
-  id <mozAccessible, mozView> nativeView = nil;
-  root->GetNativeWidget ((void**)&nativeView);
+static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aAccessible) {
+  RootAccessibleWrap* root = static_cast<RootAccessibleWrap*>(aAccessible->AsRoot());
+  id<mozAccessible, mozView> nativeView = nil;
+  root->GetNativeWidget((void**)&nativeView);
   return nativeView;
 }
 
@@ -28,13 +25,11 @@ getNativeViewFromRootAccessible(Accessible* aAccessible)
 
 @implementation mozRootAccessible
 
-- (NSArray*)accessibilityAttributeNames
-{
+- (NSArray*)accessibilityAttributeNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   // if we're expired, we don't support any attributes.
-  if (![self getGeckoAccessible])
-    return [NSArray array];
+  if (![self getGeckoAccessible]) return [NSArray array];
 
   // standard attributes that are shared and supported by root accessible (AXMain) elements.
   static NSMutableArray* attributes = nil;
@@ -50,8 +45,7 @@ getNativeViewFromRootAccessible(Accessible* aAccessible)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (id)accessibilityAttributeValue:(NSString *)attribute
-{
+- (id)accessibilityAttributeValue:(NSString*)attribute {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ([attribute isEqualToString:NSAccessibilityMainAttribute])
@@ -64,14 +58,11 @@ getNativeViewFromRootAccessible(Accessible* aAccessible)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 // return the AXParent that our parallell NSView tells us about.
-- (id)parent
-{
+- (id)parent {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (!mParallelView)
-    mParallelView = (id<mozView, mozAccessible>)[self representedView];
+  if (!mParallelView) mParallelView = (id<mozView, mozAccessible>)[self representedView];
 
   if (mParallelView)
     return [mParallelView accessibilityAttributeValue:NSAccessibilityParentAttribute];
@@ -82,20 +73,17 @@ getNativeViewFromRootAccessible(Accessible* aAccessible)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (BOOL)hasRepresentedView
-{
+- (BOOL)hasRepresentedView {
   return YES;
 }
 
 // this will return our parallell NSView. see mozDocAccessible.h
-- (id)representedView
-{
+- (id)representedView {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (mParallelView)
-    return (id)mParallelView;
+  if (mParallelView) return (id)mParallelView;
 
-  mParallelView = getNativeViewFromRootAccessible ([self getGeckoAccessible]);
+  mParallelView = getNativeViewFromRootAccessible([self getGeckoAccessible]);
 
   NSAssert(mParallelView, @"can't return root accessible's native parallel view.");
   return mParallelView;
@@ -103,8 +91,7 @@ getNativeViewFromRootAccessible(Accessible* aAccessible)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (BOOL)isRoot
-{
+- (BOOL)isRoot {
   return YES;
 }
 
