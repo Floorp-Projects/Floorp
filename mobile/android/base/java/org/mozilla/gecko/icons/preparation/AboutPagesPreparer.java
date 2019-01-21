@@ -27,7 +27,7 @@ public class AboutPagesPreparer implements Preparer {
     @Override
     public void prepare(IconRequest request) {
         if (aboutUrls.contains(request.getPageUrl())) {
-            final String iconUrl = GeckoJarReader.getJarURL(request.getContext(), "chrome/chrome/content/branding/favicon64.png");
+            final String iconUrl = GeckoJarReader.getJarURL(request.getContext(), "chrome/geckoview/content/branding/favicon64.png");
 
             request.modify()
                     .icon(IconDescriptor.createLookupIcon(iconUrl))
