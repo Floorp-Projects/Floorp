@@ -740,7 +740,7 @@ struct JSContext : public JS::RootingContext,
       AllowCrossRealm allowCrossRealm = AllowCrossRealm::DontAllow) const;
 
   inline js::Nursery& nursery();
-  inline void minorGC(JS::gcreason::Reason reason);
+  inline void minorGC(JS::GCReason reason);
 
  public:
   bool isExceptionPending() const { return throwing; }

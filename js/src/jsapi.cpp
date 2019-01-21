@@ -1167,14 +1167,14 @@ JS_PUBLIC_API bool JS::IsIdleGCTaskNeeded(JSRuntime* rt) {
 JS_PUBLIC_API void JS::RunIdleTimeGCTask(JSRuntime* rt) {
   gc::GCRuntime& gc = rt->gc;
   if (gc.nursery().needIdleTimeCollection()) {
-    gc.minorGC(JS::gcreason::IDLE_TIME_COLLECTION);
+    gc.minorGC(JS::GCReason::IDLE_TIME_COLLECTION);
   }
 }
 
 JS_PUBLIC_API void JS_GC(JSContext* cx) {
   AssertHeapIsIdle();
   JS::PrepareForFullGC(cx);
-  cx->runtime()->gc.gc(GC_NORMAL, JS::gcreason::API);
+  cx->runtime()->gc.gc(GC_NORMAL, JS::GCReason::API);
 }
 
 JS_PUBLIC_API void JS_MaybeGC(JSContext* cx) {

@@ -548,14 +548,14 @@ void SMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly) {
 
     switch (mElementState) {
       case STATE_STARTUP: {
-        nsSMILInterval firstInterval;
+        SMILInterval firstInterval;
         mElementState =
             GetNextInterval(nullptr, nullptr, nullptr, firstInterval)
                 ? STATE_WAITING
                 : STATE_POSTACTIVE;
         stateChanged = true;
         if (mElementState == STATE_WAITING) {
-          mCurrentInterval = MakeUnique<nsSMILInterval>(firstInterval);
+          mCurrentInterval = MakeUnique<SMILInterval>(firstInterval);
           NotifyNewInterval();
         }
       } break;
@@ -592,7 +592,7 @@ void SMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly) {
         bool didApplyEarlyEnd = ApplyEarlyEnd(sampleTime);
 
         if (mCurrentInterval->End()->Time() <= sampleTime) {
-          nsSMILInterval newInterval;
+          SMILInterval newInterval;
           mElementState = GetNextInterval(mCurrentInterval.get(), nullptr,
                                           nullptr, newInterval)
                               ? STATE_WAITING
@@ -608,7 +608,7 @@ void SMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly) {
           mOldIntervals.AppendElement(std::move(mCurrentInterval));
           SampleFillValue();
           if (mElementState == STATE_WAITING) {
-            mCurrentInterval = MakeUnique<nsSMILInterval>(newInterval);
+            mCurrentInterval = MakeUnique<SMILInterval>(newInterval);
           }
           // We are now in a consistent state to dispatch notifications
           if (didApplyEarlyEnd) {
@@ -950,7 +950,7 @@ nsresult SMILTimedElement::SetRepeatCount(const nsAString& aRepeatCountSpec) {
   // Update the current interval before returning
   AutoIntervalUpdater updater(*this);
 
-  nsSMILRepeatCount newRepeatCount;
+  SMILRepeatCount newRepeatCount;
 
   if (SMILParserUtils::ParseRepeatCount(aRepeatCountSpec, newRepeatCount)) {
     mRepeatCount = newRepeatCount;
@@ -1354,7 +1354,7 @@ void SMILTimedElement::DoPostSeek() {
 }
 
 void SMILTimedElement::UnpreserveInstanceTimes(InstanceTimeList& aList) {
-  const nsSMILInterval* prevInterval = GetPreviousInterval();
+  const SMILInterval* prevInterval = GetPreviousInterval();
   const nsSMILInstanceTime* cutoff =
       mCurrentInterval ? mCurrentInterval->Begin()
                        : prevInterval ? prevInterval->Begin() : nullptr;
@@ -1409,7 +1409,7 @@ void SMILTimedElement::FilterIntervals() {
                            : 0;
   IntervalList filteredList;
   for (uint32_t i = 0; i < mOldIntervals.Length(); ++i) {
-    nsSMILInterval* interval = mOldIntervals[i].get();
+    SMILInterval* interval = mOldIntervals[i].get();
     if (i != 0 &&                         /*skip first interval*/
         i + 1 < mOldIntervals.Length() && /*skip previous interval*/
         (i < threshold || !interval->IsDependencyChainLink())) {
@@ -1477,7 +1477,7 @@ void SMILTimedElement::FilterInstanceTimes(InstanceTimeList& aList) {
     if (mCurrentInterval) {
       timesToKeep.AppendElement(mCurrentInterval->Begin());
     }
-    const nsSMILInterval* prevInterval = GetPreviousInterval();
+    const SMILInterval* prevInterval = GetPreviousInterval();
     if (prevInterval) {
       timesToKeep.AppendElement(prevInterval->End());
     }
@@ -1496,9 +1496,8 @@ void SMILTimedElement::FilterInstanceTimes(InstanceTimeList& aList) {
 // http://www.w3.org/TR/2001/REC-smil-animation-20010904/#Timing-BeginEnd-LC-Start
 //
 bool SMILTimedElement::GetNextInterval(
-    const nsSMILInterval* aPrevInterval,
-    const nsSMILInterval* aReplacedInterval,
-    const nsSMILInstanceTime* aFixedBeginTime, nsSMILInterval& aResult) const {
+    const SMILInterval* aPrevInterval, const SMILInterval* aReplacedInterval,
+    const nsSMILInstanceTime* aFixedBeginTime, SMILInterval& aResult) const {
   MOZ_ASSERT(!aFixedBeginTime || aFixedBeginTime->Time().IsDefinite(),
              "Unresolved or indefinite begin time given for interval start");
   static const nsSMILTimeValue zeroTime(0L);
@@ -1860,13 +1859,13 @@ void SMILTimedElement::UpdateCurrentInterval(bool aForceChangeNotice) {
   // If the interval is active the begin time is fixed.
   const nsSMILInstanceTime* beginTime =
       mElementState == STATE_ACTIVE ? mCurrentInterval->Begin() : nullptr;
-  nsSMILInterval updatedInterval;
+  SMILInterval updatedInterval;
   if (GetNextInterval(GetPreviousInterval(), mCurrentInterval.get(), beginTime,
                       updatedInterval)) {
     if (mElementState == STATE_POSTACTIVE) {
       MOZ_ASSERT(!mCurrentInterval,
                  "In postactive state but the interval has been set");
-      mCurrentInterval = MakeUnique<nsSMILInterval>(updatedInterval);
+      mCurrentInterval = MakeUnique<SMILInterval>(updatedInterval);
       mElementState = STATE_WAITING;
       NotifyNewInterval();
 
@@ -1930,7 +1929,7 @@ void SMILTimedElement::SampleFillValue() {
   nsSMILTime activeTime;
 
   if (mElementState == STATE_WAITING || mElementState == STATE_POSTACTIVE) {
-    const nsSMILInterval* prevInterval = GetPreviousInterval();
+    const SMILInterval* prevInterval = GetPreviousInterval();
     MOZ_ASSERT(prevInterval,
                "Attempting to sample fill value but there is no previous "
                "interval");
@@ -2091,7 +2090,7 @@ void SMILTimedElement::NotifyNewInterval() {
   }
 
   for (auto iter = mTimeDependents.Iter(); !iter.Done(); iter.Next()) {
-    nsSMILInterval* interval = mCurrentInterval.get();
+    SMILInterval* interval = mCurrentInterval.get();
     // It's possible that in notifying one new time dependent of a new interval
     // that a chain reaction is triggered which results in the original
     // interval disappearing. If that's the case we can skip sending further
@@ -2104,7 +2103,7 @@ void SMILTimedElement::NotifyNewInterval() {
   }
 }
 
-void SMILTimedElement::NotifyChangedInterval(nsSMILInterval* aInterval,
+void SMILTimedElement::NotifyChangedInterval(SMILInterval* aInterval,
                                              bool aBeginObjectChanged,
                                              bool aEndObjectChanged) {
   MOZ_ASSERT(aInterval, "Null interval for change notification");
@@ -2144,14 +2143,14 @@ const nsSMILInstanceTime* SMILTimedElement::GetEffectiveBeginInstance() const {
 
     case STATE_WAITING:
     case STATE_POSTACTIVE: {
-      const nsSMILInterval* prevInterval = GetPreviousInterval();
+      const SMILInterval* prevInterval = GetPreviousInterval();
       return prevInterval ? prevInterval->Begin() : nullptr;
     }
   }
   MOZ_CRASH("Invalid element state");
 }
 
-const nsSMILInterval* SMILTimedElement::GetPreviousInterval() const {
+const SMILInterval* SMILTimedElement::GetPreviousInterval() const {
   return mOldIntervals.IsEmpty()
              ? nullptr
              : mOldIntervals[mOldIntervals.Length() - 1].get();
