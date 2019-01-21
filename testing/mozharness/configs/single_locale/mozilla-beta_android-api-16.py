@@ -1,6 +1,5 @@
 import os
 BRANCH = "mozilla-beta"
-MOZ_UPDATE_CHANNEL = "beta"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-firefox"
 EN_US_BINARY_URL = None
@@ -28,6 +27,5 @@ config = {
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
         "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
         "MOZ_OBJDIR": OBJDIR,
-        "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
 }

@@ -23,6 +23,4 @@ config = {
     # use mozmake?
     "enable_mozmake": True,
     'exes': {},
-
-    "update_channel": "aurora",
 }
