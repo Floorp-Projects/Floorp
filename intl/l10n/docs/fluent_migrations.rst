@@ -222,9 +222,9 @@ placeholders or entities that need to be replaced to adapt to Fluent syntax.
 Consider for example the following string:
 
 
-.. code-block:: properties
+.. code-block:: XML
 
-  siteUsage = %1$S %2$S (Persistent)
+  <!ENTITY aboutSupport.featuresTitle "&brandShortName; Features">
 
 
 Which needs to be migrated to:
@@ -232,39 +232,37 @@ Which needs to be migrated to:
 
 .. code-block:: properties
 
-  site-usage = { $value } { $unit } (Persistent)
+  features-title = { -brand-short-name } Features
 
 
-:js:`%1$S` (and :js:`%S`) don’t match the format used in Fluent for variables,
-so they need to be replaced within the migration process. This is how the
-Transform is defined:
+The entity :js:`&brandShortName;` needs to be replaced with a term reference:
 
 
 .. code-block:: python
 
   FTL.Message(
-      id=FTL.Identifier("site-usage-pattern"),
+      id=FTL.Identifier("features-title"),
       value=REPLACE(
-          "browser/chrome/browser/preferences/preferences.properties",
-          "siteUsage",
+          "toolkit/chrome/global/aboutSupport.dtd",
+          "aboutSupport.featuresTitle",
           {
-              "%1$S": VARIABLE_REFERENCE(
-                  "value"
-              ),
-              "%2$S": VARIABLE_REFERENCE(
-                  "unit"
-              )
-          }
+              "&brandShortName;": TERM_REFERENCE("brand-short-name"),
+          },
       )
-  )
+  ),
 
 
 This creates an :python:`FTL.Message`, taking the value from the legacy string
-:js:`siteUsage`, but replacing specified placeholders with Fluent variables.
+:js:`aboutSupport.featuresTitle`, but replacing the specified text with a
+Fluent term reference.
+
+.. note::
+  :python:`REPLACE` replaces all occurrences of the specified text.
+
 
 It’s also possible to replace content with a specific text: in that case, it
 needs to be defined as a :python:`TextElement`. For example, to replace
-:js:`%S` with some HTML markup:
+:js:`example.com` with HTML markup:
 
 
 .. code-block:: python
@@ -273,9 +271,78 @@ needs to be defined as a :python:`TextElement`. For example, to replace
       "browser/chrome/browser/preferences/preferences.properties",
       "searchResults.sorryMessageWin",
       {
-          "%S": FTL.TextElement('<span data-l10n-name="query"></span>')
+          "example.com": FTL.TextElement('<span data-l10n-name="example"></span>')
       }
   )
+
+
+The situation is more complex when a migration recipe needs to replace
+:js:`printf` arguments like :js:`%S`. In fact, the format used for localized
+and source strings doesn’t need to match, and the two following strings using
+unordered and ordered argument are perfectly equivalent:
+
+
+.. code-block:: properties
+
+  btn-quit = Quit %S
+  btn-quit = Quit %1$S
+
+
+In this scenario, replacing :js:`%S` would work on the first version, but not
+on the second, and there’s no guarantee that the localized string uses the
+same format as the source string.
+
+Consider also the following string that uses :js:`%S` for two different
+variables, implicitly relying on the order in which the arguments appear:
+
+
+.. code-block:: properties
+
+  updateFullName = %S (%S)
+
+
+And the target Fluent string:
+
+
+.. code-block:: properties
+
+  update-full-name = { $name } ({ $buildID })
+
+
+As indicated, :python:`REPLACE` would replace all occurrences of :js:`%S`, so
+only one variable could be set. The string needs to be normalized and treated
+like:
+
+
+.. code-block:: properties
+
+  updateFullName = %1$S (%2$S)
+
+
+This can be obtained by calling :python:`REPLACE` with
+:python:`normalize_printf=True`:
+
+
+.. code-block:: python
+
+  FTL.Message(
+      id=FTL.Identifier("update-full-name"),
+      value=REPLACE(
+          "toolkit/chrome/mozapps/update/updates.properties",
+          "updateFullName",
+          {
+              "%1$S": VARIABLE_REFERENCE("name"),
+              "%2$S": VARIABLE_REFERENCE("buildID"),
+          },
+          normalize_printf=True
+      )
+  )
+
+
+.. attention::
+
+  To avoid any issues :python:`normalize_printf=True` should always be used when
+  replacing :js:`printf` arguments.
 
 
 .. note::
@@ -297,6 +364,65 @@ needs to be defined as a :python:`TextElement`. For example, to replace
   :python:`from fluent.migrate.helpers import VARIABLE_REFERENCE`
 
   __ https://projectfluent.org/fluent/guide/terms.html
+
+
+Removing Unnecessary Whitespaces in Translations
+------------------------------------------------
+
+It’s not uncommon to have lines with unnecessary leading or trailing spaces in
+DTDs. These are not meaningful, don’t have practical results on the way the
+string is displayed in products, and are added only for formatting reasons. For
+example, consider this string:
+
+
+.. code-block:: XML
+
+  <!ENTITY aboutAbout.note   "This is a list of “about” pages for your convenience.<br/>
+                              Some of them might be confusing. Some are for diagnostic purposes only.<br/>
+                              And some are omitted because they require query strings.">
+
+
+If migrated as is, it would result in:
+
+
+.. code-block:: properties
+
+  about-about-note =
+      This is a list of “about” pages for your convenience.<br/>
+                                  Some of them might be confusing. Some are for diagnostic purposes only.<br/>
+                                  And some are omitted because they require query strings.
+
+
+This can be avoided by trimming the migrated string, with :python:`trim:"True`
+or :python:`trim=True`, depending on the context:
+
+
+.. code-block:: properties
+
+  transforms_from(
+  """
+  about-about-note = { COPY("toolkit/chrome/global/aboutAbout.dtd", "aboutAbout.note", trim:"True") }
+  """)
+
+  FTL.Message(
+      id=FTL.Identifier("discover-description"),
+      value=REPLACE(
+          "toolkit/chrome/mozapps/extensions/extensions.dtd",
+          "discover.description2",
+          {
+              "&brandShortName;": TERM_REFERENCE("-brand-short-name")
+          },
+          trim=True
+      )
+  ),
+
+
+.. attention::
+
+  Trimming whitespaces should only be done when migrating strings from DTDs,
+  not for other file formats, and when it’s clear that the context makes
+  whitespaces irrelevant. A counter example would be the use of a string in
+  combination with :js:`white-space: pre`.
 
 
 Concatenating Strings
@@ -351,7 +477,7 @@ concatenate their values with HTML markup. Here’s how the Transform is defined
                       "browser/chrome/browser/preferences/preferences.properties",
                       "searchResults.needHelpSupportLink",
                       {
-                          "%S": TERM_REFERENCE("-brand-short-name"),
+                          "%S": TERM_REFERENCE("brand-short-name"),
                       }
                   ),
                   FTL.TextElement("</a>")
