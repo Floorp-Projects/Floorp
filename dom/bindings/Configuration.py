@@ -496,6 +496,16 @@ class Descriptor(DescriptorProvider):
                           self.isMaybeCrossOriginObject())
 
             if self.proxy:
+                if (self.isMaybeCrossOriginObject() and
+                    (self.supportsIndexedProperties() or
+                     self.supportsNamedProperties())):
+                    raise TypeError("We don't support named or indexed "
+                                    "properties on maybe-cross-origin objects. "
+                                    "This lets us assume that their proxy "
+                                    "hooks are never called via Xrays.  "
+                                    "Fix %s.\n%s" %
+                                    (self.interface, self.interface.location))
+                    
                 if (not self.operations['IndexedGetter'] and
                     (self.operations['IndexedSetter'] or
                      self.operations['IndexedDeleter'])):

@@ -252,6 +252,13 @@ class MaybeCrossOriginObject : public Base,
                       JS::ObjectOpResult& result) const final;
 
   /**
+   * Some of our base classes define _another_ virtual defineProperty, and we
+   * get overloaded-virtual warnings as a result due to us hiding it, if we
+   * don't pull it in here.
+   */
+  using Base::defineProperty;
+
+  /**
    * Hook for handling the same-origin case in defineProperty.
    *
    * "proxy" is the WindowProxy or Location object involved.  It will be
