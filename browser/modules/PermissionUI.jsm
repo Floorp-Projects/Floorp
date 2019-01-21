@@ -863,7 +863,6 @@ StorageAccessPermissionPrompt.prototype = {
       displayURI: false,
       name: this.prettifyHostPort(this.principal.URI),
       secondName: this.prettifyHostPort(this.topLevelPrincipal.URI),
-      escAction: "buttoncommand",
     };
   },
 
