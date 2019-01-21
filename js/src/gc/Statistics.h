@@ -286,10 +286,7 @@ struct Statistics {
   // Print total profile times on shutdown.
   void printTotalProfileTimes();
 
-  enum JSONUse {
-    TELEMETRY,
-    PROFILER
-  };
+  enum JSONUse { TELEMETRY, PROFILER };
 
   // Return JSON for a whole major GC.  If use == PROFILER then
   // detailed per-slice data and some other fields will be included.
