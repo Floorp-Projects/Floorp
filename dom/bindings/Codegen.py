@@ -4230,48 +4230,6 @@ class CGCrossOriginProperties(CGThing):
             methodSpecs=",\n".join(self.methodSpecs))
 
 
-class CGIsPermittedMethod(CGAbstractMethod):
-    """
-    crossOriginGetters/Setters/Methods are sets of names of the relevant members.
-    """
-    def __init__(self, descriptor, crossOriginGetters, crossOriginSetters,
-                 crossOriginMethods):
-        self.crossOriginGetters = crossOriginGetters
-        self.crossOriginSetters = crossOriginSetters
-        self.crossOriginMethods = crossOriginMethods
-        args = [Argument("JSFlatString*", "prop"),
-                Argument("char16_t", "propFirstChar"),
-                Argument("bool", "set")]
-        CGAbstractMethod.__init__(self, descriptor, "IsPermitted", "bool", args,
-                                  inline=True)
-
-    def definition_body(self):
-        allNames = self.crossOriginGetters | self.crossOriginSetters | self.crossOriginMethods
-        readwrite = self.crossOriginGetters & self.crossOriginSetters
-        readonly = (self.crossOriginGetters - self.crossOriginSetters) | self.crossOriginMethods
-        writeonly = self.crossOriginSetters - self.crossOriginGetters
-        cases = {}
-        for name in sorted(allNames):
-            cond = 'JS_FlatStringEqualsAscii(prop, "%s")' % name
-            if name in readonly:
-                cond = "!set && %s" % cond
-            elif name in writeonly:
-                cond = "set && %s" % cond
-            else:
-                assert name in readwrite
-            firstLetter = name[0]
-            case = cases.get(firstLetter, CGList([]))
-            case.append(CGGeneric("if (%s) {\n"
-                                  "  return true;\n"
-                                  "}\n" % cond))
-            cases[firstLetter] = case
-        caseList = []
-        for firstLetter in sorted(cases.keys()):
-            caseList.append(CGCase("'%s'" % firstLetter, cases[firstLetter]))
-        switch = CGSwitch("propFirstChar", caseList)
-        return switch.define() + "\nreturn false;\n"
-
-
 class CGCycleCollectionTraverseForOwningUnionMethod(CGAbstractMethod):
     """
     ImplCycleCollectionUnlink for owning union type.
@@ -13037,7 +12995,7 @@ class CGDescriptor(CGThing):
                                       toBindingNamespace(descriptor.parentPrototypeName)))
 
         defaultToJSONMethod = None
-        crossOriginMethods, crossOriginGetters, crossOriginSetters = set(), set(), set()
+        needCrossOriginPropertyArrays = False
         unscopableNames = list()
         for n in descriptor.interface.namedConstructors:
             cgThings.append(CGClassConstructor(descriptor, n,
@@ -13067,7 +13025,7 @@ class CGDescriptor(CGThing):
                             cgThings.append(CGMethodPromiseWrapper(descriptor, specializedMethod))
                         cgThings.append(CGMemberJITInfo(descriptor, m))
                         if props.isCrossOriginMethod:
-                            crossOriginMethods.add(m.identifier.name)
+                            needCrossOriginPropertyArrays = True
             # If we've hit the maplike/setlike member itself, go ahead and
             # generate its convenience functions.
             elif m.isMaplikeOrSetlike():
@@ -13091,7 +13049,7 @@ class CGDescriptor(CGThing):
                     if m.type.isPromise():
                         cgThings.append(CGGetterPromiseWrapper(descriptor, specializedGetter))
                     if props.isCrossOriginGetter:
-                        crossOriginGetters.add(m.identifier.name)
+                        needCrossOriginPropertyArrays = True
                 if not m.readonly:
                     if m.isStatic():
                         assert descriptor.interface.hasInterfaceObject()
@@ -13099,11 +13057,11 @@ class CGDescriptor(CGThing):
                     elif descriptor.interface.hasInterfacePrototypeObject():
                         cgThings.append(CGSpecializedSetter(descriptor, m))
                         if props.isCrossOriginSetter:
-                            crossOriginSetters.add(m.identifier.name)
+                            needCrossOriginPropertyArrays = True
                 elif m.getExtendedAttribute("PutForwards"):
                     cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
                     if props.isCrossOriginSetter:
-                        crossOriginSetters.add(m.identifier.name)
+                        needCrossOriginPropertyArrays = True
                 elif m.getExtendedAttribute("Replaceable"):
                     cgThings.append(CGSpecializedReplaceableSetter(descriptor, m))
                 elif m.getExtendedAttribute("LenientSetter"):
@@ -13255,13 +13213,9 @@ class CGDescriptor(CGThing):
             cgThings.append(CGGetConstructorObjectHandleMethod(descriptor))
             cgThings.append(CGGetConstructorObjectMethod(descriptor))
 
-        # See whether we need we need to generate an IsPermitted method
-        if crossOriginGetters or crossOriginSetters or crossOriginMethods:
+        # See whether we need to generate cross-origin property arrays.
+        if needCrossOriginPropertyArrays:
             cgThings.append(CGCrossOriginProperties(descriptor))
-            cgThings.append(CGIsPermittedMethod(descriptor,
-                                                crossOriginGetters,
-                                                crossOriginSetters,
-                                                crossOriginMethods))
 
         cgThings = CGList((CGIndenter(t, declareOnly=True) for t in cgThings), "\n")
         cgThings = CGWrapper(cgThings, pre='\n', post='\n')
