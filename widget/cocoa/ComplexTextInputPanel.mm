@@ -20,7 +20,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Modified by Josh Aas of Mozilla Corporation.
  */
@@ -40,7 +40,7 @@ extern "C" OSStatus TSMProcessRawKeyEvent(EventRef anEvent);
 #define kInputWindowHeight 20
 
 @interface ComplexTextInputPanelImpl : NSPanel {
-  NSTextView *mInputTextView;
+  NSTextView* mInputTextView;
 }
 
 + (ComplexTextInputPanelImpl*)sharedComplexTextInputPanelImpl;
@@ -58,31 +58,33 @@ extern "C" OSStatus TSMProcessRawKeyEvent(EventRef anEvent);
 
 @implementation ComplexTextInputPanelImpl
 
-+ (ComplexTextInputPanelImpl*)sharedComplexTextInputPanelImpl
-{
-  static ComplexTextInputPanelImpl *sComplexTextInputPanelImpl;
++ (ComplexTextInputPanelImpl*)sharedComplexTextInputPanelImpl {
+  static ComplexTextInputPanelImpl* sComplexTextInputPanelImpl;
   if (!sComplexTextInputPanelImpl)
     sComplexTextInputPanelImpl = [[ComplexTextInputPanelImpl alloc] init];
   return sComplexTextInputPanelImpl;
 }
 
-- (id)init
-{
+- (id)init {
   // In the original Apple code the style mask is given by a function which is not open source.
   // What could possibly be worth hiding in that function, I do not know.
   // Courtesy of gdb: stylemask: 011000011111, 0x61f
-  self = [super initWithContentRect:NSZeroRect styleMask:0x61f backing:NSBackingStoreBuffered defer:YES];
-  if (!self)
-    return nil;
+  self = [super initWithContentRect:NSZeroRect
+                          styleMask:0x61f
+                            backing:NSBackingStoreBuffered
+                              defer:YES];
+  if (!self) return nil;
 
   // Set the frame size.
   NSRect visibleFrame = [[NSScreen mainScreen] visibleFrame];
-  NSRect frame = NSMakeRect(visibleFrame.origin.x, visibleFrame.origin.y, visibleFrame.size.width, kInputWindowHeight);
+  NSRect frame = NSMakeRect(visibleFrame.origin.x, visibleFrame.origin.y, visibleFrame.size.width,
+                            kInputWindowHeight);
 
   [self setFrame:frame display:NO];
 
-  mInputTextView = [[NSTextView alloc] initWithFrame:[self.contentView frame]];        
-  mInputTextView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable | NSViewMaxXMargin | NSViewMinXMargin | NSViewMaxYMargin | NSViewMinYMargin;
+  mInputTextView = [[NSTextView alloc] initWithFrame:[self.contentView frame]];
+  mInputTextView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable | NSViewMaxXMargin |
+                                    NSViewMinXMargin | NSViewMaxYMargin | NSViewMinYMargin;
 
   NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:[self.contentView frame]];
   scrollView.documentView = mInputTextView;
@@ -91,33 +93,31 @@ extern "C" OSStatus TSMProcessRawKeyEvent(EventRef anEvent);
 
   [self setFloatingPanel:YES];
 
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(keyboardInputSourceChanged:)
-                                               name:NSTextInputContextKeyboardSelectionDidChangeNotification
-                                             object:nil];
+  [[NSNotificationCenter defaultCenter]
+      addObserver:self
+         selector:@selector(keyboardInputSourceChanged:)
+             name:NSTextInputContextKeyboardSelectionDidChangeNotification
+           object:nil];
 
   return self;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-  
+
   [mInputTextView release];
-  
+
   [super dealloc];
 }
 
-- (void)keyboardInputSourceChanged:(NSNotification *)notification
-{
+- (void)keyboardInputSourceChanged:(NSNotification*)notification {
   static int8_t sDoCancel = -1;
   if (!sDoCancel || ![self inComposition]) {
     return;
   }
   if (sDoCancel < 0) {
     bool cancelComposition = false;
-    static const char* kPrefName =
-      "ui.plugin.cancel_composition_at_input_source_changed";
+    static const char* kPrefName = "ui.plugin.cancel_composition_at_input_source_changed";
     nsresult rv = Preferences::GetBool(kPrefName, &cancelComposition);
     NS_ENSURE_SUCCESS(rv, );
     sDoCancel = cancelComposition ? 1 : 0;
@@ -127,8 +127,7 @@ extern "C" OSStatus TSMProcessRawKeyEvent(EventRef anEvent);
   }
 }
 
-- (void)interpretKeyEvent:(NSEvent*)event string:(NSString**)string
-{
+- (void)interpretKeyEvent:(NSEvent*)event string:(NSString**)string {
   *string = nil;
 
   if (![[mInputTextView inputContext] handleEvent:event]) {
@@ -144,7 +143,7 @@ extern "C" OSStatus TSMProcessRawKeyEvent(EventRef anEvent);
   } else {
     [self orderOut:nil];
 
-    NSString *text = [[mInputTextView textStorage] string];
+    NSString* text = [[mInputTextView textStorage] string];
     if ([text length] > 0) {
       *string = [[text copy] autorelease];
     }
@@ -153,29 +152,22 @@ extern "C" OSStatus TSMProcessRawKeyEvent(EventRef anEvent);
   [mInputTextView setString:@""];
 }
 
-- (NSTextInputContext*)inputContext
-{
+- (NSTextInputContext*)inputContext {
   return [mInputTextView inputContext];
 }
 
-- (void)cancelComposition
-{
+- (void)cancelComposition {
   [mInputTextView setString:@""];
   [self orderOut:nil];
 }
 
-- (BOOL)inComposition
-{
+- (BOOL)inComposition {
   return [mInputTextView hasMarkedText];
 }
 
-- (void)adjustTo:(NSPoint)point
-{
+- (void)adjustTo:(NSPoint)point {
   NSRect selfRect = [self frame];
-  NSRect rect = NSMakeRect(point.x,
-                           point.y - selfRect.size.height,
-                           500,
-                           selfRect.size.height);
+  NSRect rect = NSMakeRect(point.x, point.y - selfRect.size.height, 500, selfRect.size.height);
 
   // Adjust to screen.
   NSRect screenRect = [[NSScreen mainScreen] visibleFrame];
@@ -201,9 +193,8 @@ extern "C" OSStatus TSMProcessRawKeyEvent(EventRef anEvent);
 
 @end
 
-class ComplexTextInputPanelPrivate : public ComplexTextInputPanel
-{
-public:
+class ComplexTextInputPanelPrivate : public ComplexTextInputPanel {
+ public:
   ComplexTextInputPanelPrivate();
 
   virtual void InterpretKeyEvent(void* aEvent, nsAString& aOutText);
@@ -212,34 +203,26 @@ public:
   virtual void* GetInputContext() { return [mPanel inputContext]; }
   virtual void CancelComposition() { [mPanel cancelComposition]; }
 
-private:
+ private:
   ~ComplexTextInputPanelPrivate();
   ComplexTextInputPanelImpl* mPanel;
 };
 
-ComplexTextInputPanelPrivate::ComplexTextInputPanelPrivate()
-{
+ComplexTextInputPanelPrivate::ComplexTextInputPanelPrivate() {
   mPanel = [[ComplexTextInputPanelImpl alloc] init];
 }
 
-ComplexTextInputPanelPrivate::~ComplexTextInputPanelPrivate()
-{
-  [mPanel release];
-}
+ComplexTextInputPanelPrivate::~ComplexTextInputPanelPrivate() { [mPanel release]; }
 
-ComplexTextInputPanel*
-ComplexTextInputPanel::GetSharedComplexTextInputPanel()
-{
-  static ComplexTextInputPanelPrivate *sComplexTextInputPanelPrivate;
+ComplexTextInputPanel* ComplexTextInputPanel::GetSharedComplexTextInputPanel() {
+  static ComplexTextInputPanelPrivate* sComplexTextInputPanelPrivate;
   if (!sComplexTextInputPanelPrivate) {
     sComplexTextInputPanelPrivate = new ComplexTextInputPanelPrivate();
   }
   return sComplexTextInputPanelPrivate;
 }
 
-void
-ComplexTextInputPanelPrivate::InterpretKeyEvent(void* aEvent, nsAString& aOutText)
-{
+void ComplexTextInputPanelPrivate::InterpretKeyEvent(void* aEvent, nsAString& aOutText) {
   NSString* textString = nil;
   [mPanel interpretKeyEvent:(NSEvent*)aEvent string:&textString];
 
@@ -248,14 +231,8 @@ ComplexTextInputPanelPrivate::InterpretKeyEvent(void* aEvent, nsAString& aOutTex
   }
 }
 
-bool
-ComplexTextInputPanelPrivate::IsInComposition()
-{
-  return !![mPanel inComposition];
-}
+bool ComplexTextInputPanelPrivate::IsInComposition() { return !![mPanel inComposition]; }
 
-void
-ComplexTextInputPanelPrivate::PlacePanel(int32_t x, int32_t y)
-{
+void ComplexTextInputPanelPrivate::PlacePanel(int32_t x, int32_t y) {
   [mPanel adjustTo:NSMakePoint(x, y)];
 }
