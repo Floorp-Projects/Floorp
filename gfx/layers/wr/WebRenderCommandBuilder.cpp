@@ -2028,9 +2028,17 @@ WebRenderCommandBuilder::GenerateFallbackData(
                         gfx::FuzzyEqual(scale.height, oldScale.height, 1e-6f);
 
   LayoutDeviceToLayerScale2D layerScale(scale.width, scale.height);
-  auto scaledBounds = bounds * layerScale;
-  auto dtRect = RoundedOut(scaledBounds);
+
+  auto trans =
+      ViewAs<LayerPixel>(aSc.GetSnappingSurfaceTransform().GetTranslation());
+  auto snappedTrans = LayerIntPoint::Floor(trans);
+  LayerPoint residualOffset = trans - snappedTrans;
+
+  auto dtRect = LayerIntRect::FromUnknownRect(
+      ScaleToOutsidePixelsOffset(paintBounds, scale.width, scale.height,
+                                 appUnitsPerDevPixel, residualOffset));
   auto dtSize = dtRect.Size();
+
   if (dtSize.IsEmpty()) {
     return nullptr;
   }
