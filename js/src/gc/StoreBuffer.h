@@ -237,7 +237,7 @@ class StoreBuffer {
       }
 
       if (isAboutToOverflow()) {
-        owner->setAboutToOverflow(JS::gcreason::FULL_GENERIC_BUFFER);
+        owner->setAboutToOverflow(JS::GCReason::FULL_GENERIC_BUFFER);
       }
     }
 
@@ -292,7 +292,7 @@ class StoreBuffer {
 
     typedef PointerEdgeHasher<CellPtrEdge> Hasher;
 
-    static const auto FullBufferReason = JS::gcreason::FULL_CELL_PTR_BUFFER;
+    static const auto FullBufferReason = JS::GCReason::FULL_CELL_PTR_BUFFER;
   };
 
   struct ValueEdge {
@@ -327,7 +327,7 @@ class StoreBuffer {
 
     typedef PointerEdgeHasher<ValueEdge> Hasher;
 
-    static const auto FullBufferReason = JS::gcreason::FULL_VALUE_BUFFER;
+    static const auto FullBufferReason = JS::GCReason::FULL_VALUE_BUFFER;
   };
 
   struct SlotsEdge {
@@ -410,7 +410,7 @@ class StoreBuffer {
       static bool match(const SlotsEdge& k, const Lookup& l) { return k == l; }
     } Hasher;
 
-    static const auto FullBufferReason = JS::gcreason::FULL_SLOT_BUFFER;
+    static const auto FullBufferReason = JS::GCReason::FULL_SLOT_BUFFER;
   };
 
   template <typename Buffer, typename Edge>
@@ -520,7 +520,7 @@ class StoreBuffer {
   void traceGenericEntries(JSTracer* trc) { bufferGeneric.trace(this, trc); }
 
   /* For use by our owned buffers and for testing. */
-  void setAboutToOverflow(JS::gcreason::Reason);
+  void setAboutToOverflow(JS::GCReason);
 
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               JS::GCSizes* sizes);

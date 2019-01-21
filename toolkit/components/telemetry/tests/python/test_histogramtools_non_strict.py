@@ -52,7 +52,7 @@ class TestParser(unittest.TestCase):
             "TEST_NON_NUMERIC_HISTOGRAM": {
                 "kind": "linear",
                 "description": "sample",
-                "n_buckets": "JS::gcreason::NUM_TELEMETRY_REASONS",
+                "n_buckets": "JS::GCReason::NUM_TELEMETRY_REASONS",
                 "high": "mozilla::StartupTimeline::MAX_EVENT_ID"
                 }}
 

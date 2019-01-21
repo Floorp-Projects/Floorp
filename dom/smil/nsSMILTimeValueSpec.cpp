@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/SMILInterval.h"
 #include "mozilla/SMILParserUtils.h"
 #include "mozilla/SMILTimeContainer.h"
 #include "mozilla/SMILTimedElement.h"
@@ -12,7 +13,6 @@
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/TimeEvent.h"
 #include "nsSMILTimeValueSpec.h"
-#include "nsSMILInterval.h"
 #include "nsSMILTimeValue.h"
 #include "nsSMILInstanceTime.h"
 #include "nsString.h"
@@ -108,7 +108,7 @@ bool nsSMILTimeValueSpec::IsEventBased() const {
 }
 
 void nsSMILTimeValueSpec::HandleNewInterval(
-    nsSMILInterval& aInterval, const SMILTimeContainer* aSrcContainer) {
+    SMILInterval& aInterval, const SMILTimeContainer* aSrcContainer) {
   const nsSMILInstanceTime& baseInstance =
       mParams.mSyncBegin ? *aInterval.Begin() : *aInterval.End();
   nsSMILTimeValue newTime =

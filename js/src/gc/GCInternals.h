@@ -282,9 +282,9 @@ class MOZ_RAII AutoEmptyNursery : public AutoAssertEmptyNursery {
 
 extern void DelayCrossCompartmentGrayMarking(JSObject* src);
 
-inline bool IsOOMReason(JS::gcreason::Reason reason) {
-  return reason == JS::gcreason::LAST_DITCH ||
-         reason == JS::gcreason::MEM_PRESSURE;
+inline bool IsOOMReason(JS::GCReason reason) {
+  return reason == JS::GCReason::LAST_DITCH ||
+         reason == JS::GCReason::MEM_PRESSURE;
 }
 
 TenuredCell* AllocateCellInGC(JS::Zone* zone, AllocKind thingKind);
