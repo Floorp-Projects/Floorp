@@ -425,7 +425,7 @@ raptor-speedometer-fennec:
     run-on-projects:
         by-test-platform:
             android-hw.*: built-projects
-    tier: 2
+    tier: 3
     max-run-time: 900
     mozharness:
         extra-options:
