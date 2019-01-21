@@ -216,18 +216,16 @@ WebConsoleClient.prototype = {
    * @param array types
    *        The array of message types you want from the server. See
    *        this.CACHED_MESSAGES for known types.
-   * @param function onResponse
-   *        The function invoked when the response is received.
    * @return request
    *         Request object that implements both Promise and EventEmitter interfaces
    */
-  getCachedMessages: function(types, onResponse) {
+  getCachedMessages: function(types) {
     const packet = {
       to: this.actorID,
       type: "getCachedMessages",
       messageTypes: types,
     };
-    return this._client.request(packet, onResponse);
+    return this._client.request(packet);
   },
 
   /**
