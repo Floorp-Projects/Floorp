@@ -90,7 +90,7 @@ class PrefRow {
 
   _setupElement() {
     this.element.textContent = "";
-    let nameCell = document.createElement("td");
+    let nameCell = document.createElement("th");
     this.element.append(
       nameCell,
       this.valueCell = document.createElement("td"),
@@ -102,7 +102,7 @@ class PrefRow {
     );
     delete this.resetButton;
 
-    nameCell.className = "cell-name";
+    nameCell.setAttribute("scope", "row");
     this.valueCell.className = "cell-value";
     this.editCell.className = "cell-edit";
 
@@ -125,8 +125,18 @@ class PrefRow {
       // text copied to the clipboard includes all whitespace.
       let span = document.createElement("span");
       span.textContent = this.value;
+      // We additionally need to wrap this with another "span" element to convey
+      // the state to screen readers without affecting the visual presentation.
+      span.setAttribute("aria-hidden", "true");
+      let outerSpan = document.createElement("span");
+      let spanL10nId = this.hasUserValue
+                       ? "about-config-pref-accessible-value-custom"
+                       : "about-config-pref-accessible-value-default";
+      document.l10n.setAttributes(outerSpan, spanL10nId,
+                                  { value: "" + this.value });
+      outerSpan.appendChild(span);
       this.valueCell.textContent = "";
-      this.valueCell.append(span);
+      this.valueCell.append(outerSpan);
       if (this.type == "Boolean") {
         document.l10n.setAttributes(this.editButton, "about-config-pref-toggle");
         this.editButton.className = "button-toggle";
