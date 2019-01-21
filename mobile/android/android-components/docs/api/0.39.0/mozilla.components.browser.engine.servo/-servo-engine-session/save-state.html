@@ -1,0 +1,21 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ServoEngineSession.saveState - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.servo</a>&nbsp;/&nbsp;<a href="index.html">ServoEngineSession</a>&nbsp;/&nbsp;<a href="./save-state.html">saveState</a><br/>
+<br/>
+<h1>saveState</h1>
+<a name="mozilla.components.browser.engine.servo.ServoEngineSession$saveState()"></a>
+<code><span class="keyword">fun </span><span class="identifier">saveState</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine/-engine-session-state/index.html"><span class="identifier">EngineSessionState</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-servo/src/main/java/mozilla/components/browser/engine/servo/ServoEngineSession.kt#L107">(source)</a>
+<p>Overrides <a href="../../mozilla.components.concept.engine/-engine-session/save-state.html">EngineSession.saveState</a></p>
+<p>Saves and returns the engine state. Engine implementations are not required
+to persist the state anywhere else than in the returned map. Engines that
+already provide a serialized state can use a single entry in this map to
+provide this state. The only requirement is that the same map can be used
+to restore the original state. See <a href="restore-state.html">restoreState</a> and the specific
+engine implementation for details.</p>
+</BODY>
+</HTML>

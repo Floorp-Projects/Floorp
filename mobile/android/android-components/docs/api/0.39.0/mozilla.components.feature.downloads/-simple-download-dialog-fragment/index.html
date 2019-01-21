@@ -1,0 +1,129 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SimpleDownloadDialogFragment - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.downloads</a>&nbsp;/&nbsp;<a href="./index.html">SimpleDownloadDialogFragment</a><br/>
+<br/>
+<h1>SimpleDownloadDialogFragment</h1>
+<code><span class="keyword">class </span><span class="identifier">SimpleDownloadDialogFragment</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-download-dialog-fragment/index.html"><span class="identifier">DownloadDialogFragment</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/SimpleDownloadDialogFragment.kt#L26">(source)</a>
+<p>A confirmation dialog to be called before a download is triggered.
+Meant to be used in collaboration with <a href="../-downloads-feature/index.html">DownloadsFeature</a></p>
+<p><a href="./index.html">SimpleDownloadDialogFragment</a> is the default dialog use by DownloadsFeature if you don't provide a value.
+It is composed by a title, a negative and a positive bottoms. When the positive button is clicked
+the download it triggered.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SimpleDownloadDialogFragment</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>A confirmation dialog to be called before a download is triggered.
+Meant to be used in collaboration with <a href="../-downloads-feature/index.html">DownloadsFeature</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-download-dialog-fragment/on-start-download.html">onStartDownload</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">onStartDownload</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>A callback to trigger a download, call it when you are ready to start a download. For instance,
+a valid use case can be in confirmation dialog, after the positive button is clicked,
+this callback must be called.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-create-dialog.html">onCreateDialog</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onCreateDialog</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.downloads.SimpleDownloadDialogFragment$onCreateDialog(android.os.Bundle)/savedInstanceState">savedInstanceState</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/os/Bundle.html"><span class="identifier">Bundle</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/app/Dialog.html"><span class="identifier">Dialog</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-download-dialog-fragment/set-download.html">setDownload</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setDownload</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.downloads.DownloadDialogFragment$setDownload(mozilla.components.browser.session.Download)/download">download</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-download/index.html"><span class="identifier">Download</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>add the metadata of this download object to the arguments of this fragment.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-k-e-y_-c-a-n-c-e-l-a-b-l-e.html">KEY_CANCELABLE</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">KEY_CANCELABLE</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-k-e-y_-n-e-g-a-t-i-v-e_-t-e-x-t.html">KEY_NEGATIVE_TEXT</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">KEY_NEGATIVE_TEXT</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-k-e-y_-p-o-s-i-t-i-v-e_-t-e-x-t.html">KEY_POSITIVE_TEXT</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">KEY_POSITIVE_TEXT</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-k-e-y_-t-h-e-m-e_-i-d.html">KEY_THEME_ID</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">KEY_THEME_ID</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-k-e-y_-t-i-t-l-e_-t-e-x-t.html">KEY_TITLE_TEXT</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">KEY_TITLE_TEXT</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="new-instance.html">newInstance</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">newInstance</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.downloads.SimpleDownloadDialogFragment.Companion$newInstance(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Boolean)/dialogTitleText">dialogTitleText</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;mozac_feature_downloads_dialog_download<span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.downloads.SimpleDownloadDialogFragment.Companion$newInstance(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Boolean)/positiveButtonText">positiveButtonText</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;mozac_feature_downloads_dialog_download<span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.downloads.SimpleDownloadDialogFragment.Companion$newInstance(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Boolean)/negativeButtonText">negativeButtonText</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;mozac_feature_downloads_dialog_cancel<span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.downloads.SimpleDownloadDialogFragment.Companion$newInstance(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Boolean)/themeResId">themeResId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;0<span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.downloads.SimpleDownloadDialogFragment.Companion$newInstance(kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Boolean)/cancelable">cancelable</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">SimpleDownloadDialogFragment</span></a></code>
+<p>A builder method for creating a <a href="./index.html">SimpleDownloadDialogFragment</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

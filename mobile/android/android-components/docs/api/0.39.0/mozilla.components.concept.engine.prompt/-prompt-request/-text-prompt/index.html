@@ -1,0 +1,87 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>PromptRequest.TextPrompt - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.concept.engine.prompt</a>&nbsp;/&nbsp;<a href="../index.html">PromptRequest</a>&nbsp;/&nbsp;<a href="./index.html">TextPrompt</a><br/>
+<br/>
+<h1>TextPrompt</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">TextPrompt</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../index.html"><span class="identifier">PromptRequest</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L61">(source)</a>
+<p>Value type that represents a request for an alert prompt to enter a message.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">TextPrompt</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Boolean, kotlin.Function0((kotlin.Unit)), kotlin.Function2((kotlin.Boolean, kotlin.String, kotlin.Unit)))/title">title</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Boolean, kotlin.Function0((kotlin.Unit)), kotlin.Function2((kotlin.Boolean, kotlin.String, kotlin.Unit)))/inputLabel">inputLabel</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Boolean, kotlin.Function0((kotlin.Unit)), kotlin.Function2((kotlin.Boolean, kotlin.String, kotlin.Unit)))/inputValue">inputValue</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Boolean, kotlin.Function0((kotlin.Unit)), kotlin.Function2((kotlin.Boolean, kotlin.String, kotlin.Unit)))/hasShownManyDialogs">hasShownManyDialogs</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Boolean, kotlin.Function0((kotlin.Unit)), kotlin.Function2((kotlin.Boolean, kotlin.String, kotlin.Unit)))/onDismiss">onDismiss</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Boolean, kotlin.Function0((kotlin.Unit)), kotlin.Function2((kotlin.Boolean, kotlin.String, kotlin.Unit)))/onConfirm">onConfirm</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span></code>
+<p>Value type that represents a request for an alert prompt to enter a message.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="has-shown-many-dialogs.html">hasShownManyDialogs</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">hasShownManyDialogs</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>tells if this page has shown multiple prompts within a short period of time.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="input-label.html">inputLabel</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">inputLabel</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>the label of the field the user should fill.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="input-value.html">inputValue</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">inputValue</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>the default value of the field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-confirm.html">onConfirm</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">onConfirm</span><span class="symbol">: </span><span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>tells the web page if it should continue showing alerts or not.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-dismiss.html">onDismiss</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">onDismiss</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>callback to let the page know the user dismissed the dialog.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="title.html">title</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">title</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>title of the dialog.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

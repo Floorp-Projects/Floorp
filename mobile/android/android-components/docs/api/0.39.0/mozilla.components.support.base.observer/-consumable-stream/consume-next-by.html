@@ -1,0 +1,21 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ConsumableStream.consumeNextBy - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.base.observer</a>&nbsp;/&nbsp;<a href="index.html">ConsumableStream</a>&nbsp;/&nbsp;<a href="./consume-next-by.html">consumeNextBy</a><br/>
+<br/>
+<h1>consumeNextBy</h1>
+<a name="mozilla.components.support.base.observer.ConsumableStream$consumeNextBy(kotlin.collections.List((kotlin.Function1((mozilla.components.support.base.observer.ConsumableStream.T, kotlin.Boolean)))))"></a>
+<code><span class="identifier">@Synchronized</span> <span class="keyword">fun </span><span class="identifier">consumeNextBy</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.ConsumableStream$consumeNextBy(kotlin.collections.List((kotlin.Function1((mozilla.components.support.base.observer.ConsumableStream.T, kotlin.Boolean)))))/consumers">consumers</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><span class="symbol">(</span><a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L109">(source)</a>
+<p>Invokes the given list of lambdas with the next consumable value and marks the
+value as consumed if at least one lambda returns true.</p>
+<h3>Parameters</h3>
+<p><a name="consumers"></a>
+<code>consumers</code> - the lambdas accepting the next consumable value.</p>
+<p><strong>Return</strong><br/>
+true if the consumable was consumed, otherwise false.</p>
+</BODY>
+</HTML>

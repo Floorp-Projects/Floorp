@@ -5,6 +5,7 @@ permalink: /reference/
 ---
 
 <!-- MARKER -->
+## [0.39.0](../api/0.39.0/index)
 ## [0.38.0](../api/0.38.0/index)
 ## [0.37.0](../api/0.37.0/index)
 ## [0.36.0](../api/0.36.0/index)
