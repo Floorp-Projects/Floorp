@@ -13,5 +13,5 @@ the following fields:
 | `device` | String | Manufacturer and model |
 | `architecture` | String | The architecture of the device (e.g. "arm", "x86") |
 | `timezone` | Number | The timezone of the device, as an offset from UTC |
-| `a11y_services` | StringList | List of accessibility services enabled on the device |
+| `a11y_services` | StringList | List of the ids of the accessibility services enabled on the device |
 | `locale` | String | The locale of the application |

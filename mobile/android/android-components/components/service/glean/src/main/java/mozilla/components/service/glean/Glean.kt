@@ -8,7 +8,6 @@ import android.view.accessibility.AccessibilityManager
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.arch.lifecycle.ProcessLifecycleOwner
 import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Build
 import android.support.annotation.VisibleForTesting
 import android.support.v4.view.accessibility.AccessibilityManagerCompat.getEnabledAccessibilityServiceList
@@ -178,14 +177,11 @@ open class GleanInternalAPI {
      * https://developer.android.com/reference/android/view/accessibility/AccessibilityManager.html
      * @param accessibilityManager The system's [AccessibilityManager] as
      * returned from applicationContext.getSystemService
-     * @param packageManager The system's [PackageManager], as from
-     * applicationContext.packageManager
-     * @returns services A list of strings describing the enabled services. If
+     * @returns services A list of ids of the enabled accessibility services. If
      *     the accessibility manager is disabled, returns null.
      */
     internal fun getEnabledAccessibilityServices(
-        accessibilityManager: AccessibilityManager,
-        packageManager: PackageManager
+        accessibilityManager: AccessibilityManager
     ): List<String>? {
         if (!accessibilityManager.isEnabled) {
             logger.info("AccessibilityManager is disabled")
@@ -193,8 +189,10 @@ open class GleanInternalAPI {
         }
         return accessibilityManager.getEnabledAccessibilityServiceList(
             AccessibilityServiceInfo.FEEDBACK_ALL_MASK
-        ).map {
-            it.loadDescription(packageManager)
+        ).mapNotNull {
+            // Note that any reference in java code can be null, so we'd better
+            // check for null values here as well.
+            it.id
         }
     }
 
@@ -247,8 +245,7 @@ open class GleanInternalAPI {
 
         // Set the enabled accessibility services
         getEnabledAccessibilityServices(
-            applicationContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager,
-            applicationContext.packageManager
+            applicationContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
         ) ?.let {
             Baseline.a11yServices.set(it)
         }
