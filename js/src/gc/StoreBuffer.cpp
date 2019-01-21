@@ -81,7 +81,7 @@ void StoreBuffer::clear() {
   bufferGeneric.clear();
 }
 
-void StoreBuffer::setAboutToOverflow(JS::gcreason::Reason reason) {
+void StoreBuffer::setAboutToOverflow(JS::GCReason reason) {
   if (!aboutToOverflow_) {
     aboutToOverflow_ = true;
     runtime_->gc.stats().count(gcstats::COUNT_STOREBUFFER_OVERFLOW);
@@ -132,7 +132,7 @@ ArenaCellSet* StoreBuffer::WholeCellBuffer::allocateCellSet(Arena* arena) {
 
   if (isAboutToOverflow()) {
     rt->gc.storeBuffer().setAboutToOverflow(
-        JS::gcreason::FULL_WHOLE_CELL_BUFFER);
+        JS::GCReason::FULL_WHOLE_CELL_BUFFER);
   }
 
   return cells;
