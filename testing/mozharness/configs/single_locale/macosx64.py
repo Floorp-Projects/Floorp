@@ -14,7 +14,6 @@ config = {
     "ignore_locales": ["en-US", "ja"],
     "l10n_dir": "l10n",
     "locales_dir": "browser/locales",
-    "hg_l10n_tag": "default",
 
     # MAR
     "local_mar_tool_dir": "dist/host/bin",

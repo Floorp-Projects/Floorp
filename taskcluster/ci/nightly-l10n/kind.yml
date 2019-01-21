@@ -213,7 +213,6 @@ job-template:
                     - taskcluster_nightly.py
                 android-api-16-nightly:
                     - taskcluster_nightly.py
-                    - single_locale/{project}_android-api-16.py
                     - single_locale/tc_common.py
                     - single_locale/tc_android-api-16.py
         # no default, so we fail on new entries
