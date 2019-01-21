@@ -1325,9 +1325,10 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
 
       // This frame doesn't have a cache entry, despite its hasCachedSavedFrame
       // flag being set. If this was due to a pc mismatch, we can clear the flag
-      // here and set things right. If the cache was emptied due to a realm mismatch,
-      // we should clear all the frames' flags as we walk to the bottom of the stack,
-      // so that they are all clear before we start pushing any new entries.
+      // here and set things right. If the cache was emptied due to a realm
+      // mismatch, we should clear all the frames' flags as we walk to the
+      // bottom of the stack, so that they are all clear before we start pushing
+      // any new entries.
       framePtr->clearHasCachedSavedFrame();
     }
 

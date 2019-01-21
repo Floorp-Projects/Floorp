@@ -791,7 +791,7 @@ var ContentBlocking = {
     // they see in the report breakage dialog.
     this.reportURI = gBrowser.currentURI;
     let urlWithoutQuery = this.reportURI.asciiSpec.replace("?" + this.reportURI.query, "");
-    this.reportBreakageURL.textContent = urlWithoutQuery;
+    this.reportBreakageURL.value = urlWithoutQuery;
     this.identityPopupMultiView.showSubView("identity-popup-breakageReportView");
   },
 
