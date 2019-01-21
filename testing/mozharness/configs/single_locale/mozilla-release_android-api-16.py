@@ -1,6 +1,5 @@
 import os
 BRANCH = "mozilla-release"
-MOZ_UPDATE_CHANNEL = "release"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-firefox"
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
@@ -27,6 +26,5 @@ config = {
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
         "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
         "MOZ_OBJDIR": OBJDIR,
-        "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
 }
