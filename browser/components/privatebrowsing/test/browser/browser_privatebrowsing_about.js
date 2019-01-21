@@ -72,3 +72,95 @@ add_task(async function test_links() {
   await BrowserTestUtils.closeWindow(win);
 });
 
+/**
+ * Tests the private-browsing-myths link in "about:privatebrowsing".
+ */
+add_task(async function test_myths_link() {
+  Services.prefs.setCharPref("app.support.baseURL", "https://example.com/");
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("app.support.baseURL");
+  });
+
+  let { win, tab } = await openAboutPrivateBrowsing();
+
+  await testLinkOpensUrl({ win, tab,
+    elementId: "private-browsing-myths",
+    expectedUrl: "https://example.com/private-browsing-myths",
+  });
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+function urlBarHasHiddenFocus(win) {
+  return win.gURLBar.hasAttribute("focused") && win.gURLBar.classList.contains("hidden-focus");
+}
+
+function urlBarHasNormalFocus(win) {
+  return win.gURLBar.hasAttribute("focused") && !win.gURLBar.classList.contains("hidden-focus");
+}
+
+/**
+ * Tests the search hand-off on character keydown in "about:privatebrowsing".
+ */
+add_task(async function test_search_handoff_on_keydown() {
+  let { win, tab } = await openAboutPrivateBrowsing();
+
+  await ContentTask.spawn(tab, null, async function() {
+    let btn = content.document.getElementById("search-handoff-button");
+    btn.click();
+    ok(btn.classList.contains("focused"), "in-content search has focus styles");
+  });
+  ok(urlBarHasHiddenFocus(win), "url bar has hidden focused");
+  await new Promise(r => EventUtils.synthesizeKey("f", {}, win, r));
+  await ContentTask.spawn(tab, null, async function() {
+    ok(content.document.getElementById("search-handoff-button").classList.contains("hidden"),
+      "in-content search is hidden");
+  });
+  ok(urlBarHasNormalFocus(win), "url bar has normal focused");
+  is(win.gURLBar.value, "@google f", "url bar has search text");
+
+  // Hitting ESC should reshow the in-content search
+  await new Promise(r => EventUtils.synthesizeKey("KEY_Escape", {}, win, r));
+  await ContentTask.spawn(tab, null, async function() {
+    ok(!content.document.getElementById("search-handoff-button").classList.contains("hidden"),
+      "in-content search is not");
+  });
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+/**
+ * Tests the search hand-off on composition start in "about:privatebrowsing".
+ */
+add_task(async function test_search_handoff_on_composition_start() {
+  let { win, tab } = await openAboutPrivateBrowsing();
+
+  await ContentTask.spawn(tab, null, async function() {
+    content.document.getElementById("search-handoff-button").click();
+  });
+  ok(urlBarHasHiddenFocus(win), "url bar has hidden focused");
+  await new Promise(r => EventUtils.synthesizeComposition({type: "compositionstart"}, win, r));
+  ok(urlBarHasNormalFocus(win), "url bar has normal focused");
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+/**
+* Tests the search hand-off on paste in "about:privatebrowsing".
+*/
+add_task(async function test_search_handoff_on_paste() {
+  let { win, tab } = await openAboutPrivateBrowsing();
+
+  await ContentTask.spawn(tab, null, async function() {
+    content.document.getElementById("search-handoff-button").click();
+  });
+  ok(urlBarHasHiddenFocus(win), "url bar has hidden focused");
+  var helper = SpecialPowers.Cc["@mozilla.org/widget/clipboardhelper;1"]
+     .getService(SpecialPowers.Ci.nsIClipboardHelper);
+  helper.copyString("words");
+  await new Promise(r => EventUtils.synthesizeKey("v", {accelKey: true}, win, r));
+  ok(urlBarHasNormalFocus(win), "url bar has normal focused");
+  is(win.gURLBar.value, "@google words", "url bar has search text");
+
+  await BrowserTestUtils.closeWindow(win);
+});
