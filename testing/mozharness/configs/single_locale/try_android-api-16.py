@@ -7,14 +7,12 @@ config = {
     "branch": "try",
     "log_name": "single_locale",
     "objdir": "obj-firefox",
-    "is_automation": True,
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
     },
-    "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "hg_l10n_tag": "default",
     'vcs_share_base': "/builds/hg-shared",
 
