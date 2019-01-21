@@ -87,6 +87,11 @@ class BasicCompositor : public Compositor {
     mRenderTarget = static_cast<BasicCompositingRenderTarget*>(aSource);
     mRenderTarget->BindRenderTarget();
   }
+
+  virtual CompositingRenderTarget* GetWindowRenderTarget() const override {
+    return mFullWindowRenderTarget;
+  }
+
   virtual CompositingRenderTarget* GetCurrentRenderTarget() const override {
     return mRenderTarget;
   }
@@ -161,6 +166,11 @@ class BasicCompositor : public Compositor {
 
   uint32_t mMaxTextureSize;
   bool mIsPendingEndRemoteDrawing;
+
+  // mDrawTarget will not be the full window on all platforms. We therefore need
+  // to keep a full window render target around when we are capturing
+  // screenshots on those platforms.
+  RefPtr<BasicCompositingRenderTarget> mFullWindowRenderTarget;
 };
 
 BasicCompositor* AssertBasicCompositor(Compositor* aCompositor);
