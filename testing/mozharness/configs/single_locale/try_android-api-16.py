@@ -14,7 +14,6 @@ config = {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
     },
-    "nightly_build": True,
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "hg_l10n_tag": "default",
     'vcs_share_base': "/builds/hg-shared",

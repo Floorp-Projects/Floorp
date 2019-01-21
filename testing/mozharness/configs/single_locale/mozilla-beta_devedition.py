@@ -1,5 +1,4 @@
 config = {
-    "nightly_build": True,
     "branch": "mozilla-beta",
     "update_channel": "aurora",  # devedition uses aurora based branding
 
