@@ -8,6 +8,7 @@
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/RemoteObjectProxy.h"
 #include "js/Proxy.h"
 #include "js/RootingAPI.h"
@@ -431,6 +432,7 @@ JSObject* MaybeCrossOriginObject<Base>::enumerate(
 
 // Force instantiations of the out-of-line template methods we need.
 template class MaybeCrossOriginObject<js::Wrapper>;
+template class MaybeCrossOriginObject<DOMProxyHandler>;
 
 }  // namespace dom
 }  // namespace mozilla
