@@ -92,7 +92,7 @@ let ACTORS = {
     child: {
       module: "resource:///actors/ContentSearchChild.jsm",
       group: "browsers",
-      matches: ["about:home", "about:newtab", "about:welcome",
+      matches: ["about:home", "about:newtab", "about:welcome", "about:privatebrowsing",
                 "chrome://mochitests/content/*"],
       events: {
         "ContentSearchClient": {capture: true, wantUntrusted: true},
