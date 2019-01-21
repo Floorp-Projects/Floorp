@@ -14,6 +14,7 @@ import android.support.v4.content.ContextCompat
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSession
+import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -48,6 +49,8 @@ class CustomTabsToolbarFeature(
             updateToolbarColor(config.toolbarColor)
             // Add navigation close action
             addCloseButton(config.closeButtonIcon)
+            // Add action button
+            addActionButton(config.actionButtonConfig)
             // Show share button
             if (config.showShareMenuItem) addShareButton(session)
             return true
@@ -79,6 +82,18 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
+    internal fun addActionButton(buttonConfig: CustomTabActionButtonConfig?) {
+        buttonConfig?.let { config ->
+            val button = Toolbar.ActionButton(
+                BitmapDrawable(context.resources, config.icon),
+                config.description
+            ) { config.pendingIntent.send() }
+
+            toolbar.addBrowserAction(button)
+        }
+    }
+
+    @VisibleForTesting
     internal fun addShareButton(session: Session) {
         val button = Toolbar.ActionButton(
             ContextCompat.getDrawable(context, R.drawable.mozac_ic_share),
@@ -87,6 +102,7 @@ class CustomTabsToolbarFeature(
             val listener = shareListener ?: { context.share(session.url) }
             listener.invoke()
         }
+
         toolbar.addBrowserAction(button)
     }
 

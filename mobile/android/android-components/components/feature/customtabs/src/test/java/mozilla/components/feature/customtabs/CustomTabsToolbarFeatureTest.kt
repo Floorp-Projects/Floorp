@@ -6,13 +6,17 @@
 
 package mozilla.components.feature.customtabs
 
+import android.app.PendingIntent
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.widget.FrameLayout
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -194,6 +198,52 @@ class CustomTabsToolbarFeatureTest {
         val button = captor.firstValue.createView(FrameLayout(RuntimeEnvironment.application))
         button.performClick()
         assertTrue(clicked)
+    }
+
+    @Test
+    fun `initialize calls addActionButton`() {
+        val session: Session = mock()
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        `when`(session.customTabConfig).thenReturn(mock())
+
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
+
+        feature.initialize(session)
+
+        verify(feature).addActionButton(null)
+    }
+
+    @Test
+    fun `add action button is invoked`() {
+        val session: Session = mock()
+        val toolbar = spy(BrowserToolbar(RuntimeEnvironment.application))
+        val captor = argumentCaptor<Toolbar.ActionButton>()
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
+        val customTabConfig: CustomTabConfig = mock()
+        val actionConfig: CustomTabActionButtonConfig = mock()
+        val size = 24
+        val closeButtonIcon = Bitmap.createBitmap(IntArray(size * size), size, size, Bitmap.Config.ARGB_8888)
+        val pendingIntent: PendingIntent = mock()
+
+        `when`(session.customTabConfig).thenReturn(customTabConfig)
+
+        feature.addActionButton(null)
+
+        verify(toolbar, never()).addBrowserAction(any())
+
+        // Show action button only when CustomTabActionButtonConfig is not null
+        `when`(customTabConfig.actionButtonConfig).thenReturn(actionConfig)
+        `when`(actionConfig.description).thenReturn("test desc")
+        `when`(actionConfig.pendingIntent).thenReturn(pendingIntent)
+        `when`(actionConfig.icon).thenReturn(closeButtonIcon)
+
+        feature.addActionButton(actionConfig)
+
+        verify(toolbar).addBrowserAction(captor.capture())
+
+        val button = captor.firstValue.createView(FrameLayout(RuntimeEnvironment.application))
+        button.performClick()
+        verify(pendingIntent).send()
     }
 
     @Test
