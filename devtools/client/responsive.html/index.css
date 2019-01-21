@@ -152,7 +152,7 @@ body,
 }
 
 #screenshot-button:disabled::before {
-  fill: var(--theme-toolbar-checked-color);
+  fill: var(--theme-icon-checked-color);
 }
 
 #device-selector {

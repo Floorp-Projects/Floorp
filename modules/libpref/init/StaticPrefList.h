@@ -847,13 +847,6 @@ VARCACHE_PREF(
   bool, false
 )
 
-// Is overflow: -moz-scrollbars-* value enabled?
-VARCACHE_PREF(
-  "layout.css.overflow.moz-scrollbars.enabled",
-   layout_css_overflow_moz_scrollbars_enabled,
-  bool, false
-)
-
 // Does arbitrary ::-webkit-* pseudo-element parsed?
 VARCACHE_PREF(
   "layout.css.unknown-webkit-pseudo-element",
@@ -890,7 +883,7 @@ VARCACHE_PREF(
 )
 
 // Pref to control enabling scroll anchoring.
-#ifdef NIGHTLY_BUILD
+#ifndef ANDROID
 #define PREF_VALUE true
 #else
 #define PREF_VALUE false

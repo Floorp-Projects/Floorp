@@ -232,9 +232,9 @@
 #filter-container .remove-button,
 #toggle-presets {
   -moz-context-properties: fill;
-  fill: var(--theme-toolbar-color);
+  fill: var(--theme-icon-color);
 }
 
 .show-presets #toggle-presets {
-  fill: var(--theme-toolbar-checked-color);
+  fill: var(--theme-icon-checked-color);
 }
