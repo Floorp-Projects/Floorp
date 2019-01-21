@@ -84,7 +84,6 @@ void CUIDraw(CUIRendererRef r, CGRect rect, CGContextRef ctx, CFDictionaryRef op
 @interface CellDrawView : NSView
 
 @end
-;
 
 @implementation CellDrawView
 
@@ -107,16 +106,16 @@ void CUIDraw(CUIRendererRef r, CGRect rect, CGContextRef ctx, CFDictionaryRef op
 // -[NSButtonCell buttonType] method.
 @interface RadioButtonCell : NSButtonCell
 @end
-;
+
 @implementation RadioButtonCell
 @end
-;
+
 @interface CheckboxCell : NSButtonCell
 @end
-;
+
 @implementation CheckboxCell
 @end
-;
+
 
 static void DrawFocusRingForCellIfNeeded(NSCell* aCell, NSRect aWithFrame, NSView* aInView) {
   if ([aCell showsFirstResponder]) {
