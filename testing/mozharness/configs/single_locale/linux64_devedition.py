@@ -15,6 +15,4 @@ config = {
     "local_mar_tool_dir": "dist/host/bin",
     "mar": "mar",
     "mbsdiff": "mbsdiff",
-
-    "update_channel": "aurora",
 }

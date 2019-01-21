@@ -2,7 +2,6 @@ import os
 
 config = {
     "branch": "mozilla-central",
-    "update_channel": "nightly",
 
     # l10n
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",

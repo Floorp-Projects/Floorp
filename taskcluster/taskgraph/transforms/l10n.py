@@ -379,6 +379,16 @@ def stub_installer(config, jobs):
 
 
 @transforms.add
+def update_channel(config, jobs):
+    for job in jobs:
+        if 'update-channel' in job['attributes']:
+            job['mozharness'].setdefault('extra-config', {})['update_channel'] = (
+                job['attributes']['update-channel']
+            )
+        yield job
+
+
+@transforms.add
 def make_job_description(config, jobs):
     for job in jobs:
         job['mozharness'].update({

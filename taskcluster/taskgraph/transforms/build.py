@@ -64,6 +64,7 @@ def update_channel(config, jobs):
         update_channel = job['run'].pop('update-channel', None)
         if update_channel:
             job['run'].setdefault('extra-config', {})['update_channel'] = update_channel
+            job['attributes']['update-channel'] = update_channel
         yield job
 
 

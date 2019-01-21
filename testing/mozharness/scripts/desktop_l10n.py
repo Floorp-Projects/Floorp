@@ -43,10 +43,6 @@ SUCCESS_STR = "Success"
 FAILURE_STR = "Failed"
 
 
-# mandatory configuration options, without them, this script will not work
-# it's a list of values that are already known before starting a build
-configuration_tokens = ('branch', 'update_channel')
-
 # some other values such as "%(version)s", ...
 # are defined at run time and they cannot be enforced in the _pre_config_lock
 # phase
@@ -124,33 +120,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         """replaces 'configuration_tokens' with their values, before the
            configuration gets locked. If some of the configuration_tokens
            are not present, stops the execution of the script"""
-        # since values as branch, platform are mandatory, can replace them in
-        # in the configuration before it is locked down
-        # mandatory tokens
-        for token in configuration_tokens:
-            if token not in self.config:
-                self.fatal('No %s in configuration!' % token)
-
-        # all the important tokens are present in our configuration
-        for token in configuration_tokens:
-            # token_string '%(branch)s'
-            token_string = ''.join(('%(', token, ')s'))
-            # token_value => ash
-            token_value = self.config[token]
-            for element in self.config:
-                # old_value =>  https://hg.mozilla.org/projects/%(branch)s
-                old_value = self.config[element]
-                # new_value => https://hg.mozilla.org/projects/ash
-                new_value = self.__detokenise_element(self.config[element],
-                                                      token_string,
-                                                      token_value)
-                if new_value and new_value != old_value:
-                    msg = "%s: replacing %s with %s" % (element,
-                                                        old_value,
-                                                        new_value)
-                    self.debug(msg)
-                    self.config[element] = new_value
-
         # now, only runtime_config_tokens should be present in config
         # we should parse self.config and fail if any other  we spot any
         # other token
@@ -250,6 +219,15 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
             bootstrap_env[name] = binary_path
         if self.query_is_nightly():
             bootstrap_env["IS_NIGHTLY"] = "yes"
+            # we might set update_channel explicitly
+            if config.get('update_channel'):
+                update_channel = config['update_channel']
+            else:  # Let's just give the generic channel based on branch.
+                update_channel = "nightly-%s" % (config['branch'],)
+            if isinstance(update_channel, unicode):
+                update_channel = update_channel.encode("utf-8")
+            bootstrap_env["MOZ_UPDATE_CHANNEL"] = update_channel
+            self.info("Update channel set to: {}".format(bootstrap_env["MOZ_UPDATE_CHANNEL"]))
         self.bootstrap_env = bootstrap_env
         return self.bootstrap_env
 

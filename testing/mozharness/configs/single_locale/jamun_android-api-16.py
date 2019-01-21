@@ -24,7 +24,6 @@ config = {
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
         "MOZ_OBJDIR": "obj-firefox",
         "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
-        "MOZ_UPDATE_CHANNEL": "nightly-jamun",
     },
 
     # Balrog
