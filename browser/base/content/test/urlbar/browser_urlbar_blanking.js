@@ -1,5 +1,9 @@
 "use strict";
 
+const TEST_PATH = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://www.example.com");
+const TEST_URL = `${TEST_PATH}file_blank_but_not_blank.html`;
+
 add_task(async function() {
   for (let page of gInitialPages) {
     if (page == "about:newtab") {
@@ -13,9 +17,8 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  const URI = "http://www.example.com/browser/browser/base/content/test/urlbar/file_blank_but_not_blank.html";
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URI);
-  is(gURLBar.value, URI, "The URL bar should match the URI");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+  is(gURLBar.value, TEST_URL, "The URL bar should match the URI");
   let browserLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   ContentTask.spawn(tab.linkedBrowser, null, function() {
     content.document.querySelector("a").click();

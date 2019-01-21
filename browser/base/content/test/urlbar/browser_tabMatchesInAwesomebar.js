@@ -6,9 +6,11 @@
 
 requestLongerTimeout(2);
 
+const TEST_PATH = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://example.com");
 const TEST_URL_BASES = [
-  "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html#tabmatch",
-  "http://example.org/browser/browser/base/content/test/urlbar/moz.png#tabmatch",
+  `${TEST_PATH}dummy_page.html#tabmatch`,
+  `${TEST_PATH}moz.png#tabmatch`,
 ];
 
 const RESTRICT_TOKEN_OPENPAGE = "%";
@@ -137,7 +139,7 @@ function loadTab(tab, url) {
 }
 
 function ensure_opentabs_match_db() {
-  var tabs = {};
+  let tabs = {};
 
   for (let browserWin of Services.wm.getEnumerator("navigator:browser")) {
     // skip closed-but-not-destroyed windows

@@ -5,7 +5,9 @@ async function promise_first_result(inputText) {
   return firstResult;
 }
 
-const TEST_URL = "http://mochi.test:8888/browser/browser/base/content/test/urlbar/print_postdata.sjs";
+const TEST_PATH = getRootDirectory(gTestPath)
+  .replace("chrome://mochitests/content", "http://mochi.test:8888");
+const TEST_URL = `${TEST_PATH}print_postdata.sjs`;
 
 add_task(async function setup() {
   await PlacesUtils.keywords.insert({ keyword: "get",
