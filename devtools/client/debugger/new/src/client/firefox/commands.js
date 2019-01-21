@@ -270,9 +270,7 @@ function evaluate(
     return Promise.resolve({});
   }
 
-  return new Promise(resolve => {
-    console.evaluateJSAsync(script, result => resolve(result), params);
-  });
+  return console.evaluateJSAsync(script, params);
 }
 
 function autocomplete(

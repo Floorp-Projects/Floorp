@@ -26,23 +26,21 @@ function onAttach(aState, aResponse)
 
   let falsyValues = ["-0", "null", "undefined", "Infinity", "-Infinity", "NaN"];
   falsyValues.forEach(function(value) {
-    tests.push(function() {
-      aState.client.evaluateJS("throw " + value + ";", function(aResponse) {
-        let type = aResponse.exception.type;
-        is(type, value, "exception.type for throw " + value);
-        nextTest();
-      });
+    tests.push(async function() {
+      const aResponse = await aState.client.evaluateJS("throw " + value + ";")
+      let type = aResponse.exception.type;
+      is(type, value, "exception.type for throw " + value);
+      nextTest();
     });
   });
 
   let identityTestValues = [false, 0];
   identityTestValues.forEach(function(value) {
-    tests.push(function() {
-      aState.client.evaluateJS("throw " + value + ";", function(aResponse) {
-        let exception = aResponse.exception;
-        is(exception, value, "response.exception for throw " + value);
-        nextTest();
-      });
+    tests.push(async function() {
+      const aResponse = await aState.client.evaluateJS("throw " + value + ";")
+      let exception = aResponse.exception;
+      is(exception, value, "response.exception for throw " + value);
+      nextTest();
     });
   });
 
@@ -50,16 +48,15 @@ function onAttach(aState, aResponse)
       shortedString = longString.substring(0,
                         DebuggerServer.LONG_STRING_INITIAL_LENGTH
                       );
-  tests.push(function() {
-    aState.client.evaluateJS("throw '" + longString + "';", function(aResponse) {
-      is(aResponse.exception.initial, shortedString,
-        "exception.initial for throw longString"
-      );
-      is(aResponse.exceptionMessage.initial, shortedString,
-        "exceptionMessage.initial for throw longString"
-      );
-      nextTest();
-    });
+  tests.push(async function() {
+    const aResponse = await aState.client.evaluateJS("throw '" + longString + "';")
+    is(aResponse.exception.initial, shortedString,
+      "exception.initial for throw longString"
+    );
+    is(aResponse.exceptionMessage.initial, shortedString,
+      "exceptionMessage.initial for throw longString"
+    );
+    nextTest();
   });
 
   let symbolTestValues = [
@@ -68,12 +65,11 @@ function onAttach(aState, aResponse)
     ["Symbol()", "Symbol()"],
   ];
   symbolTestValues.forEach(function([expr, message]) {
-    tests.push(function() {
-      aState.client.evaluateJS("throw " + expr + ";", function(aResponse) {
-        is(aResponse.exceptionMessage, message,
-           "response.exception for throw " + expr);
-        nextTest();
-      });
+    tests.push(async function() {
+      const aResponse = await aState.client.evaluateJS("throw " + expr + ";");
+      is(aResponse.exceptionMessage, message,
+         "response.exception for throw " + expr);
+      nextTest();
     });
   });
 

@@ -17,15 +17,8 @@
 SimpleTest.waitForExplicitFinish();
 let gState;
 
-function evaluateJS(input, callback) {
-  return new Promise((resolve, reject) => {
-    gState.client.evaluateJSAsync(input, response => {
-      if (callback) {
-        callback(response);
-      }
-      resolve(response);
-    });
-  });
+function evaluateJS(input) {
+  return gState.client.evaluateJSAsync(input);
 }
 
 function startTest()
