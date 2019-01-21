@@ -2903,7 +2903,7 @@ struct CrossOriginThisPolicy : public MaybeGlobalThisPolicy {
   // We want the ExtractThisObject of MaybeGlobalThisPolicy.
 
   static MOZ_ALWAYS_INLINE JSObject* MaybeUnwrapThisObject(JSObject* aObj) {
-    if (xpc::WrapperFactory::IsXrayWrapper(aObj)) {
+    if (xpc::WrapperFactory::IsCrossOriginWrapper(aObj)) {
       return js::UncheckedUnwrap(aObj);
     }
 
