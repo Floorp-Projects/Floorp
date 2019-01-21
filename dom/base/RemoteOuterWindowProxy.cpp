@@ -121,8 +121,7 @@ bool RemoteOuterWindowProxy::getOwnPropertyDescriptor(
     return ReportCrossOriginDenial(aCx, aId, NS_LITERAL_CSTRING("access"));
   }
 
-  bool ok = RemoteObjectProxy::getOwnPropertyDescriptorInternal(aCx, aProxy,
-                                                                aId, aDesc);
+  bool ok = CrossOriginGetOwnPropertyHelper(aCx, aProxy, aId, aDesc);
   if (!ok || aDesc.object()) {
     return ok;
   }
@@ -140,7 +139,7 @@ bool RemoteOuterWindowProxy::getOwnPropertyDescriptor(
     }
   }
 
-  return getOwnPropertyDescriptorTail(aCx, aProxy, aId, aDesc);
+  return CrossOriginPropertyFallback(aCx, aProxy, aId, aDesc);
 }
 
 bool AppendIndexedPropertyNames(JSContext* aCx, BrowsingContext* aContext,

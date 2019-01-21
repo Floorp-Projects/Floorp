@@ -20,12 +20,12 @@ const js::Class RemoteObjectProxyClass =
 bool RemoteObjectProxyBase::getOwnPropertyDescriptor(
     JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
     JS::MutableHandle<JS::PropertyDescriptor> aDesc) const {
-  bool ok = getOwnPropertyDescriptorInternal(aCx, aProxy, aId, aDesc);
+  bool ok = CrossOriginGetOwnPropertyHelper(aCx, aProxy, aId, aDesc);
   if (!ok || aDesc.object()) {
     return ok;
   }
 
-  return getOwnPropertyDescriptorTail(aCx, aProxy, aId, aDesc);
+  return CrossOriginPropertyFallback(aCx, aProxy, aId, aDesc);
 }
 
 bool RemoteObjectProxyBase::defineProperty(
@@ -137,24 +137,7 @@ bool RemoteObjectProxyBase::get(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                                 JS::Handle<JS::Value> aReceiver,
                                 JS::Handle<jsid> aId,
                                 JS::MutableHandle<JS::Value> aVp) const {
-  Rooted<PropertyDescriptor> desc(aCx);
-  if (!getOwnPropertyDescriptor(aCx, aProxy, aId, &desc)) {
-    return false;
-  }
-
-  MOZ_ASSERT(desc.object());
-
-  if (desc.isDataDescriptor()) {
-    aVp.set(desc.value());
-    return true;
-  }
-
-  JS::Rooted<JSObject*> getter(aCx);
-  if (!desc.hasGetterObject() || !(getter = desc.getterObject())) {
-    return ReportCrossOriginDenial(aCx, aId, NS_LITERAL_CSTRING("get"));
-  }
-
-  return JS::Call(aCx, aReceiver, getter, JS::HandleValueArray::empty(), aVp);
+  return CrossOriginGet(aCx, aProxy, aReceiver, aId, aVp);
 }
 
 bool RemoteObjectProxyBase::set(JSContext* aCx, JS::Handle<JSObject*> aProxy,
@@ -162,21 +145,7 @@ bool RemoteObjectProxyBase::set(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                                 JS::Handle<JS::Value> aValue,
                                 JS::Handle<JS::Value> aReceiver,
                                 JS::ObjectOpResult& aResult) const {
-  Rooted<PropertyDescriptor> desc(aCx);
-  if (!getOwnPropertyDescriptor(aCx, aProxy, aId, &desc)) {
-    return false;
-  }
-
-  MOZ_ASSERT(desc.object());
-
-  JS::Rooted<JSObject*> setter(aCx);
-  if (!desc.hasSetterObject() || !(setter = desc.setterObject())) {
-    return ReportCrossOriginDenial(aCx, aId, NS_LITERAL_CSTRING("set"));
-  }
-
-  JS::Rooted<JS::Value> rv(aCx);
-  return JS::Call(aCx, aReceiver, setter, JS::HandleValueArray(aValue), &rv) &&
-         aResult.succeed();
+  return CrossOriginSet(aCx, aProxy, aId, aValue, aReceiver, aResult);
 }
 
 bool RemoteObjectProxyBase::hasOwn(JSContext* aCx, JS::Handle<JSObject*> aProxy,
@@ -206,32 +175,6 @@ JSObject* RemoteObjectProxyBase::CreateProxyObject(
   options.setClass(aClasp);
   JS::Rooted<JS::Value> native(aCx, JS::PrivateValue(aNative));
   return js::NewProxyObject(aCx, this, native, nullptr, options);
-}
-
-/* static */
-bool RemoteObjectProxyBase::getOwnPropertyDescriptorTail(
-    JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
-    JS::MutableHandle<JS::PropertyDescriptor> aDesc) {
-  if (xpc::IsCrossOriginWhitelistedProp(aCx, aId)) {
-    // https://html.spec.whatwg.org/multipage/browsers.html#crossorigingetownpropertyhelper-(-o,-p-)
-    // step 3 says to return PropertyDescriptor {
-    //   [[Value]]: undefined, [[Writable]]: false, [[Enumerable]]: false,
-    //   [[Configurable]]: true
-    // }.
-    //
-    aDesc.setDataDescriptor(JS::UndefinedHandleValue, JSPROP_READONLY);
-    aDesc.object().set(aProxy);
-    return true;
-  }
-
-  return ReportCrossOriginDenial(aCx, aId, NS_LITERAL_CSTRING("access"));
-}
-
-/* static */
-bool RemoteObjectProxyBase::ReportCrossOriginDenial(
-    JSContext* aCx, JS::Handle<jsid> aId, const nsACString& aAccessType) {
-  xpc::AccessCheck::reportCrossOriginDenial(aCx, aId, aAccessType);
-  return false;
 }
 
 const char RemoteObjectProxyBase::sCrossOriginProxyFamily = 0;

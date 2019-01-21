@@ -8,6 +8,7 @@
 #define mozilla_dom_RemoteObjectProxy_h
 
 #include "js/Proxy.h"
+#include "mozilla/dom/MaybeCrossOriginObject.h"
 #include "mozilla/dom/PrototypeList.h"
 #include "xpcpublic.h"
 
@@ -19,7 +20,8 @@ namespace dom {
  * don't depend on properties/methods of the specific WebIDL interface that this
  * proxy implements.
  */
-class RemoteObjectProxyBase : public js::BaseProxyHandler {
+class RemoteObjectProxyBase : public js::BaseProxyHandler,
+                              public MaybeCrossOriginObjectMixins {
  protected:
   explicit constexpr RemoteObjectProxyBase(prototypes::ID aPrototypeID)
       : BaseProxyHandler(&sCrossOriginProxyFamily, false),
@@ -77,8 +79,9 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler {
   }
 
   /**
-   * Returns true if aProxy represents an object implementing the WebIDL
-   * interface for aProtoID. aProxy should be a proxy object.
+   * Returns true if aProxy is a cross-process proxy that represents
+   * an object implementing the WebIDL interface for aProtoID. aProxy
+   * should be a proxy object.
    */
   static inline bool IsRemoteObjectProxy(JSObject* aProxy,
                                          prototypes::ID aProtoID) {
@@ -88,61 +91,18 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler {
                aProtoID;
   }
 
- protected:
-  bool getOwnPropertyDescriptorInternal(
-      JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
-      JS::MutableHandle<JS::PropertyDescriptor> aDesc) const {
-    JS::Rooted<JSObject*> holder(aCx);
-    if (!EnsureHolder(aCx, aProxy, &holder) ||
-        !JS_GetOwnPropertyDescriptorById(aCx, holder, aId, aDesc)) {
-      return false;
-    }
-
-    if (aDesc.object()) {
-      aDesc.object().set(aProxy);
-    }
-
-    return true;
+  /**
+   * Returns true if aProxy is a cross-process proxy, no matter which
+   * interface it represents.  aProxy should be a proxy object.
+   */
+  static inline bool IsRemoteObjectProxy(JSObject* aProxy) {
+    const js::BaseProxyHandler* handler = js::GetProxyHandler(aProxy);
+    return handler->family() == &sCrossOriginProxyFamily;
   }
 
+ protected:
   JSObject* CreateProxyObject(JSContext* aCx, void* aNative,
                               const js::Class* aClasp) const;
-
-  /**
-   * Implements the tail of getOwnPropertyDescriptor, dealing in particular with
-   * properties that are whitelisted by xpc::IsCrossOriginWhitelistedProp.
-   */
-  static bool getOwnPropertyDescriptorTail(
-      JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
-      JS::MutableHandle<JS::PropertyDescriptor> aDesc);
-  static bool ReportCrossOriginDenial(JSContext* aCx, JS::Handle<jsid> aId,
-                                      const nsACString& aAccessType);
-
-  /**
-   * This gets a cached, or creates and caches, a holder object that contains
-   * the WebIDL properties for this proxy.
-   */
-  bool EnsureHolder(JSContext* aCx, JS::Handle<JSObject*> aProxy,
-                    JS::MutableHandle<JSObject*> aHolder) const {
-    // FIXME Need to have a holder per realm, should store a weakmap in the
-    //       reserved slot.
-    JS::Value v = js::GetProxyReservedSlot(aProxy, 0);
-    if (v.isObject()) {
-      aHolder.set(&v.toObject());
-      return true;
-    }
-
-    aHolder.set(JS_NewObjectWithGivenProto(aCx, nullptr, nullptr));
-    if (!aHolder || !DefinePropertiesAndFunctions(aCx, aHolder)) {
-      return false;
-    }
-
-    js::SetProxyReservedSlot(aProxy, 0, JS::ObjectValue(*aHolder));
-    return true;
-  }
-
-  virtual bool DefinePropertiesAndFunctions(
-      JSContext* aCx, JS::Handle<JSObject*> aHolder) const = 0;
 
   const prototypes::ID mPrototypeID;
 
@@ -175,16 +135,17 @@ class RemoteObjectProxy : public RemoteObjectProxyBase {
   using RemoteObjectProxyBase::RemoteObjectProxyBase;
 
  private:
-  bool DefinePropertiesAndFunctions(JSContext* aCx,
-                                    JS::Handle<JSObject*> aHolder) const final {
-    return JS_DefineProperties(aCx, aHolder, P) &&
-           JS_DefineFunctions(aCx, aHolder, F);
+  bool EnsureHolder(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+                    JS::MutableHandle<JSObject*> aHolder) const final {
+    return MaybeCrossOriginObjectMixins::EnsureHolder(
+        aCx, aProxy, /* slot = */ 0, P, F, aHolder);
   }
 };
 
 /**
- * Returns true if aObj is a proxy object that represents an object implementing
- * the WebIDL interface for aProtoID.
+ * Returns true if aObj is a cross-process proxy object that
+ * represents an object implementing the WebIDL interface for
+ * aProtoID.
  */
 static inline bool IsRemoteObjectProxy(JSObject* aObj,
                                        prototypes::ID aProtoID) {
@@ -192,6 +153,17 @@ static inline bool IsRemoteObjectProxy(JSObject* aObj,
     return false;
   }
   return RemoteObjectProxyBase::IsRemoteObjectProxy(aObj, aProtoID);
+}
+
+/**
+ * Returns true if aObj is a cross-process proxy object, no matter
+ * which WebIDL interface it corresponds to.
+ */
+static inline bool IsRemoteObjectProxy(JSObject* aObj) {
+  if (!js::IsProxy(aObj)) {
+    return false;
+  }
+  return RemoteObjectProxyBase::IsRemoteObjectProxy(aObj);
 }
 
 }  // namespace dom
