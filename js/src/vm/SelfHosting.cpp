@@ -2043,6 +2043,11 @@ static bool intrinsic_WarnDeprecatedStringMethod(JSContext* cx, unsigned argc,
                                         nameChars, nameChars)) {
       return false;
     }
+
+    if (!cx->realm()->isProbablySystemCode()) {
+      cx->runtime()->addTelemetry(JS_TELEMETRY_DEPRECATED_STRING_GENERICS, id);
+    }
+
     cx->realm()->warnedAboutStringGenericsMethods |= mask;
   }
 
