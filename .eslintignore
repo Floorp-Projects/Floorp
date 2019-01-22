@@ -208,7 +208,7 @@ dom/security/test/sri/**
 dom/serviceworkers/**
 dom/smil/**
 dom/svg/**
-dom/tests/browser/**
+
 dom/tests/html/**
 dom/tests/mochitest/**
 dom/u2f/**

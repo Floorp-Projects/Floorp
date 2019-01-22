@@ -273,6 +273,7 @@ async function newTabTest(location) {
         async function(browser) {
           await ContentTask.spawn(browser, { location, testInDocument_: testInDocument.toSource() },
             async function({ location, testInDocument_ }) {
+              // eslint-disable-next-line no-eval
               let testInDocument = eval(`(() => (${testInDocument_}))()`);
               testInDocument(content.document, location);
             });

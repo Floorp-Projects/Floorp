@@ -6,7 +6,7 @@ const TEST_URI = "http://example.com/browser/dom/tests/browser/test_largeAllocat
 const TEST_URI_2 = "http://example.com/browser/dom/tests/browser/test_largeAllocation2.html";
 
 function expectProcessCreated() {
-  let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+  let os = Services.obs;
   let kill; // A kill function which will disable the promise.
   let promise = new Promise((resolve, reject) => {
     let topic = "ipc:content-created";
@@ -27,7 +27,7 @@ function expectProcessCreated() {
 }
 
 function expectNoProcess() {
-  let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+  let os = Services.obs;
   let topic = "ipc:content-created";
   function observer() {
     ok(false, "A process was created!");
@@ -40,9 +40,7 @@ function expectNoProcess() {
 
 function getPID(aBrowser) {
   return ContentTask.spawn(aBrowser, null, () => {
-    const appinfo = Cc["@mozilla.org/xre/app-info;1"]
-            .getService(Ci.nsIXULRuntime);
-    return appinfo.processID;
+    return Services.appinfo.processID;
   });
 }
 
@@ -103,6 +101,7 @@ async function largeAllocSuccessTests() {
     let stopExpectNoProcess = expectNoProcess();
 
     await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+      // eslint-disable-next-line no-unsanitized/property
       content.document.body.innerHTML = `<iframe src='${TEST_URI}'></iframe>`;
 
       return new Promise(resolve => {
@@ -182,7 +181,6 @@ async function largeAllocSuccessTests() {
 
     await BrowserTestUtils.browserLoaded(aBrowser);
 
-    let pid3 = await getPID(aBrowser);
 
     // We should have been kicked out of the large-allocation process by the
     // load, meaning we're back in a non-fresh process

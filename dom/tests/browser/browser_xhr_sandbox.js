@@ -23,8 +23,7 @@ var sandboxCode = (function() {
 
 function test() {
   waitForExplicitFinish();
-  let appShell = Cc["@mozilla.org/appshell/appShellService;1"]
-                  .getService(Ci.nsIAppShellService);
+  let appShell = Services.appShell;
   let doc = appShell.hiddenDOMWindow.document;
   let frame = doc.createElement("iframe");
   frame.setAttribute("type", "content");

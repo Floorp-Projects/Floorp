@@ -12,7 +12,7 @@ add_task(async function() {
       ["dom.ipc.processCount.webLargeAllocation", 20],
     ],
   });
-
+  /* global largeAllocSuccessTests */
   await largeAllocSuccessTests();
 });
 
