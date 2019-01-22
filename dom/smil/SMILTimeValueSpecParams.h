@@ -7,18 +7,20 @@
 #ifndef NS_SMILTIMEVALUESPECPARAMS_H_
 #define NS_SMILTIMEVALUESPECPARAMS_H_
 
-#include "nsSMILTimeValue.h"
+#include "mozilla/SMILTimeValue.h"
 #include "nsAtom.h"
 
+namespace mozilla {
+
 //----------------------------------------------------------------------
-// nsSMILTimeValueSpecParams
+// SMILTimeValueSpecParams
 //
 // A simple data type for storing the result of parsing a single begin or end
 // value (e.g. the '5s' in begin="5s; indefinite; a.begin+2s").
 
-class nsSMILTimeValueSpecParams {
+class SMILTimeValueSpecParams {
  public:
-  nsSMILTimeValueSpecParams()
+  SMILTimeValueSpecParams()
       : mType(INDEFINITE), mSyncBegin(false), mRepeatIteration(0) {}
 
   // The type of value this specification describes
@@ -30,7 +32,7 @@ class nsSMILTimeValueSpecParams {
   // - type EVENT: the event time
   // - type REPEAT: the repeat time
   // It is not used for WALLCLOCK or INDEFINITE times
-  nsSMILTimeValue mOffset;
+  SMILTimeValue mOffset;
 
   // The base element that this specification refers to.
   // For SYNCBASE types, this is the timebase
@@ -50,5 +52,7 @@ class nsSMILTimeValueSpecParams {
   // Only used for mType=REPEAT.
   uint32_t mRepeatIteration;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILTIMEVALUESPECPARAMS_H_
