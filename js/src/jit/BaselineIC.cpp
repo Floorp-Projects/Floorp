@@ -3294,8 +3294,7 @@ static bool TryAttachFunCallStub(JSContext* cx, ICCall_Fallback* stub,
 
 static bool GetTemplateObjectForNative(JSContext* cx, HandleFunction target,
                                        const CallArgs& args,
-                                       MutableHandleObject res,
-                                       bool* skipAttach) {
+                                       MutableHandleObject res) {
   Native native = target->native();
 
   // Check for natives to which template objects can be attached. This is
@@ -3314,16 +3313,6 @@ static bool GetTemplateObjectForNative(JSContext* cx, HandleFunction target,
     }
 
     if (count <= ArrayObject::EagerAllocationMaxLength) {
-      ObjectGroup* group =
-          ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array);
-      if (!group) {
-        return false;
-      }
-      if (group->maybePreliminaryObjectsDontCheckGeneration()) {
-        *skipAttach = true;
-        return true;
-      }
-
       // With this and other array templates, analyze the group so that
       // we don't end up with a template whose structure might change later.
       res.set(NewFullyAllocatedArrayForCallingAllocationSite(cx, count,
@@ -3351,10 +3340,6 @@ static bool GetTemplateObjectForNative(JSContext* cx, HandleFunction target,
     if (args.thisv().isObject()) {
       RootedObject obj(cx, &args.thisv().toObject());
       if (!obj->isSingleton()) {
-        if (obj->group()->maybePreliminaryObjectsDontCheckGeneration()) {
-          *skipAttach = true;
-          return true;
-        }
         res.set(NewFullyAllocatedArrayTryReuseGroup(cx, obj, 0, TenuredObject));
         return !!res;
       }
@@ -3694,15 +3679,9 @@ static bool TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub,
 
     RootedObject templateObject(cx);
     if (MOZ_LIKELY(!isSpread && !isSuper && !isCrossRealm)) {
-      bool skipAttach = false;
       CallArgs args = CallArgsFromVp(argc, vp);
-      if (!GetTemplateObjectForNative(cx, fun, args, &templateObject,
-                                      &skipAttach)) {
+      if (!GetTemplateObjectForNative(cx, fun, args, &templateObject)) {
         return false;
-      }
-      if (skipAttach) {
-        *handled = true;
-        return true;
       }
       MOZ_ASSERT_IF(templateObject,
                     !templateObject->group()
@@ -6072,8 +6051,7 @@ static bool DoNewArray(JSContext* cx, BaselineFrame* frame,
       return false;
     }
 
-    if (!obj->isSingleton() &&
-        !obj->group()->maybePreliminaryObjectsDontCheckGeneration()) {
+    if (!obj->isSingleton()) {
       JSObject* templateObject =
           NewArrayOperation(cx, script, pc, length, TenuredObject);
       if (!templateObject) {
