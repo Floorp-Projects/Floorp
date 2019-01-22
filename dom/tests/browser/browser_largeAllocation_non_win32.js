@@ -1,4 +1,5 @@
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
+/* import-globals-from helper_largeAllocation.js */
 Services.scriptloader.loadSubScript(testDir + "/helper_largeAllocation.js", this);
 
 // Force-enabling the Large-Allocation header

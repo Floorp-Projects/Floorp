@@ -41,6 +41,7 @@ SpecialPowers.pushPrefEnv(
  * Test navigation from a content page to a chrome page. Also check that only
  * one beforeunload event is fired.
  */
+/* global messageManager */
 add_task(async function() {
   let beforeUnloadCount = 0;
   messageManager.addMessageListener("Test:OnBeforeUnloadReceived", function() {

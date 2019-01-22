@@ -70,7 +70,6 @@ add_task(async function test() {
     let isTopLevel = false;
     let aboutMemoryFound = false;
     let parentProcessEvent = false;
-    let workerEvent = false;
     let subFrameIds = [];
     let topLevelIds = [];
     let sharedWorker = false;
@@ -108,7 +107,6 @@ add_task(async function test() {
           parentProcessEvent = true;
         }
         if (entry.isWorker) {
-          workerEvent = true;
           workerDuration += entry.duration;
         } else {
           duration += entry.duration;

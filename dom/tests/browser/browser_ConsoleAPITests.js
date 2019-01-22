@@ -101,6 +101,8 @@ async function consoleAPISanityTest(browser) {
   });
 }
 
+// These globals are all defined in spawnWithObserver in a sub-process.
+/* global gWindow, gArgs:true, gLevel:true, gStyle:true, expect, resolve */
 function testConsoleData(aMessageObject) {
   let messageWindow = Services.wm.getOuterWindowWithId(aMessageObject.ID);
   is(messageWindow, gWindow, "found correct window by window ID");
