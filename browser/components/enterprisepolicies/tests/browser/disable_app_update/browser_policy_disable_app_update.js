@@ -24,3 +24,47 @@ add_task(async function test_update_preferences_ui() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_update_about_ui() {
+  let aboutDialog = await waitForAboutDialog();
+  let panelId = "policyDisabled";
+
+  await BrowserTestUtils.waitForCondition(() =>
+    (aboutDialog.document.getElementById("updateDeck").selectedPanel &&
+     aboutDialog.document.getElementById("updateDeck").selectedPanel.id == panelId),
+    "Waiting for expected panel ID - expected \"" + panelId + "\"");
+  is(aboutDialog.document.getElementById("updateDeck").selectedPanel.id, panelId,
+     "The About Dialog panel Id should equal " + panelId);
+
+  aboutDialog.close();
+});
+
+/**
+ * Waits for the About Dialog to load.
+ *
+ * @return A promise that returns the domWindow for the About Dialog and
+ *         resolves when the About Dialog loads.
+ */
+function waitForAboutDialog() {
+  return new Promise(resolve => {
+    var listener = {
+      onOpenWindow: aXULWindow => {
+        Services.wm.removeListener(listener);
+
+         async function aboutDialogOnLoad() {
+          domwindow.removeEventListener("load", aboutDialogOnLoad, true);
+          let chromeURI = "chrome://browser/content/aboutDialog.xul";
+          is(domwindow.document.location.href, chromeURI, "About dialog appeared");
+          resolve(domwindow);
+        }
+
+        var domwindow = aXULWindow.docShell.domWindow;
+        domwindow.addEventListener("load", aboutDialogOnLoad, true);
+      },
+      onCloseWindow: aXULWindow => {},
+    };
+
+    Services.wm.addListener(listener);
+    openAboutDialog();
+  });
+}

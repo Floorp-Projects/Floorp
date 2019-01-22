@@ -45,6 +45,7 @@ function one_test(delay, continuation) {
       onLocationChange() {},
       onStatusChange() {},
       onSecurityChange() {},
+      onContentBlockingEvent() {},
       onStateChange(_wbp, _req, state, _status) {
         if ((state & Ci.nsIWebProgressListener.STATE_STOP) == 0) {
           return;

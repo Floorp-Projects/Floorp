@@ -245,7 +245,12 @@ NS_IMETHODIMP nsPrintProgress::OnStatusChange(nsIWebProgress *aWebProgress,
 
 NS_IMETHODIMP nsPrintProgress::OnSecurityChange(nsIWebProgress *aWebProgress,
                                                 nsIRequest *aRequest,
-                                                uint32_t state) {
+                                                uint32_t aState) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrintProgress::OnContentBlockingEvent(
+    nsIWebProgress *aWebProgress, nsIRequest *aRequest, uint32_t aEvent) {
   return NS_OK;
 }
 
