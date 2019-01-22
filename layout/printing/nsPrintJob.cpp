@@ -655,7 +655,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     if (viewer) {
       viewer->SetTextZoom(1.0f);
       viewer->SetFullZoom(1.0f);
-      viewer->SetMinFontSize(0);
     }
   }
 

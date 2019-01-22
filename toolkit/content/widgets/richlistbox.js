@@ -112,7 +112,7 @@ MozElements.RichListBox = class RichListBox extends MozElements.BaseControl {
             this.selectItem(currentItem);
           }
         } else {
-          this.currentItem._fireEvent("DOMMenuItemActive");
+          this._fireEvent(this.currentItem, "DOMMenuItemActive");
         }
       }
       this._lastKeyTime = 0;
@@ -217,11 +217,20 @@ MozElements.RichListBox = class RichListBox extends MozElements.BaseControl {
 
     if (this._currentItem) {
       this._currentItem.current = false;
+      if (!val && !this.suppressMenuItemEvent) {
+        // An item is losing focus and there is no new item to focus.
+        // Notify a11y that there is no focused item.
+        this._fireEvent(this._currentItem, "DOMMenuItemInactive");
+      }
     }
     this._currentItem = val;
 
     if (val) {
       val.current = true;
+      if (!this.suppressMenuItemEvent) {
+        // Notify a11y that this item got focus.
+        this._fireEvent(val, "DOMMenuItemActive");
+      }
     }
 
     return val;
@@ -814,6 +823,12 @@ MozElements.RichListBox = class RichListBox extends MozElements.BaseControl {
    */
   ensureSelectedElementIsVisible() {
     return this.ensureElementIsVisible(this.selectedItem);
+  }
+
+  _fireEvent(aTarget, aName) {
+    let event = document.createEvent("Events");
+    event.initEvent(aName, true, true);
+    aTarget.dispatchEvent(event);
   }
 };
 

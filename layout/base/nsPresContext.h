@@ -571,31 +571,7 @@ class nsPresContext : public nsISupports,
     if (aNeedsToCache && *aNeedsToCache) {
       return 0;
     }
-    return std::max(mBaseMinFontSize, prefs->mMinimumFontSize);
-  }
-
-  /**
-   * Get the per-presentation base minimum font size.  This size is
-   * independent of the language-specific global preference.
-   */
-  int32_t BaseMinFontSize() const { return mBaseMinFontSize; }
-
-  /**
-   * Set the per-presentation base minimum font size.  This size is
-   * independent of the language-specific global preference.
-   */
-  void SetBaseMinFontSize(int32_t aMinFontSize) {
-    if (aMinFontSize == mBaseMinFontSize) {
-      return;
-    }
-
-    mBaseMinFontSize = aMinFontSize;
-
-    // Media queries could have changed, since we changed the meaning
-    // of 'em' units in them.
-    MediaFeatureValuesChanged(
-        {eRestyle_ForceDescendants, NS_STYLE_HINT_REFLOW,
-         mozilla::MediaFeatureChangeReason::MinFontSizeChange});
+    return prefs->mMinimumFontSize;
   }
 
   float GetFullZoom() { return mFullZoom; }
@@ -1238,9 +1214,6 @@ class nsPresContext : public nsISupports,
  protected:
   mozilla::WeakPtr<nsDocShell> mContainer;
 
-  // Base minimum font size, independent of the language-specific global
-  // preference. Defaults to 0
-  int32_t mBaseMinFontSize;
   float mSystemFontScale;    // Internal text zoom factor, defaults to 1.0
   float mTextZoom;           // Text zoom, defaults to 1.0
   float mEffectiveTextZoom;  // Text zoom * system font scale
