@@ -46,7 +46,7 @@ typedef struct _MacSandboxInfo {
         hasSandboxedProfile(false),
         hasAudio(false),
         hasWindowServer(false),
-        shouldLog(true) {}
+        shouldLog(false) {}
   _MacSandboxInfo(const struct _MacSandboxInfo& other) = default;
 
   MacSandboxType type;
