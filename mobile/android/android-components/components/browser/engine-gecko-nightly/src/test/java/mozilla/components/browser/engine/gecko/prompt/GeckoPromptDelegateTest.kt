@@ -37,6 +37,8 @@ import org.robolectric.RobolectricTestRunner
 import mozilla.components.support.ktx.kotlin.toDate
 import org.junit.Assert
 import org.junit.Assert.assertNotNull
+import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL
@@ -873,6 +875,47 @@ class GeckoPromptDelegateTest {
             assertTrue(setCheckboxValueWasCalled)
             assertTrue(confirmWasCalled)
         }
+    }
+
+    @Test
+    fun `onPopupRequest must provide a Popup PromptRequest`() {
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var request: PromptRequest.Popup? = null
+        var onAllowWasCalled = false
+        var onDenyWasCalled = false
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest as PromptRequest.Popup
+            }
+        })
+
+        var geckoCallback = promptDelegate.onPopupRequest(mock(), "www.popuptest.com/")
+
+        val geckoThen: (AllowOrDeny?) -> GeckoResult<AllowOrDeny> = {
+            when (it!!) {
+                AllowOrDeny.ALLOW -> { onAllowWasCalled = true }
+                AllowOrDeny.DENY -> { onDenyWasCalled = true }
+            }
+            geckoCallback
+        }
+
+        geckoCallback.then(geckoThen)
+
+        with(request!!) {
+            assertEquals(targetUri, "www.popuptest.com/")
+
+            onAllow()
+            assertTrue(onAllowWasCalled)
+        }
+
+        geckoCallback = promptDelegate.onPopupRequest(mock(), "www.popuptest.com/")
+        geckoCallback.then(geckoThen)
+
+        request!!.onDeny()
+        assertTrue(onDenyWasCalled)
     }
 
     open class DefaultGeckoChoiceCallback : GeckoSession.PromptDelegate.ChoiceCallback {

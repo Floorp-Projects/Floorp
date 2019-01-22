@@ -28,6 +28,9 @@ permalink: /changelog/
 * **lib-publicsuffixlist**
   * The public suffix list shipping with this component is now updated automatically in the repository every day (if there are changes).
 
+* **feature-prompts**, **browser-engine-gecko***
+  * Added support for [Pop-up windows dialog](https://support.mozilla.org/en-US/kb/pop-blocker-settings-exceptions-troubleshooting#w_what-are-pop-ups).
+
 # 0.39.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.38.0...v0.39.0)

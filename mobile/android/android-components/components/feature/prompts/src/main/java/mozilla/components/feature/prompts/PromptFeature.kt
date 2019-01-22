@@ -255,6 +255,7 @@ class PromptFeature(
                 is Authentication -> it.onDismiss()
                 is Color -> it.onDismiss()
                 is TextPrompt -> it.onDismiss()
+                is PromptRequest.Popup -> it.onDeny()
             }
             true
         }
@@ -266,8 +267,8 @@ class PromptFeature(
      * @param sessionId that requested to show the dialog.
      * @param value an optional value provided by the dialog as a result of confirming the action.
      */
-    @Suppress("UNCHECKED_CAST")
-    internal fun onConfirm(sessionId: String, value: Any) {
+    @Suppress("UNCHECKED_CAST", "ComplexMethod")
+    internal fun onConfirm(sessionId: String, value: Any? = null) {
         val session = sessionManager.findSessionById(sessionId) ?: return
         session.promptRequest.consume {
             when (it) {
@@ -276,6 +277,7 @@ class PromptFeature(
                 is Alert -> it.onConfirm(value as Boolean)
                 is SingleChoice -> it.onConfirm(value as Choice)
                 is MenuChoice -> it.onConfirm(value as Choice)
+                is PromptRequest.Popup -> it.onAllow()
 
                 is MultipleChoice -> {
                     it.onConfirm(value as Array<Choice>)
@@ -433,6 +435,22 @@ class PromptFeature(
             is PromptRequest.Color -> {
                 with(promptRequest) {
                     ColorPickerDialogFragment.newInstance(session.id, defaultColor)
+                }
+            }
+
+            is PromptRequest.Popup -> {
+                val title = context.getString(R.string.mozac_feature_prompts_popup_dialog_title)
+                val positiveLabel = context.getString(R.string.mozac_feature_prompts_allow)
+                val negativeLabel = context.getString(R.string.mozac_feature_prompts_deny)
+
+                with(promptRequest) {
+                    ConfirmDialogFragment.newInstance(
+                        sessionId = session.id,
+                        title = title,
+                        message = targetUri,
+                        positiveButtonText = positiveLabel,
+                        negativeButtonText = negativeLabel
+                    )
                 }
             }
 

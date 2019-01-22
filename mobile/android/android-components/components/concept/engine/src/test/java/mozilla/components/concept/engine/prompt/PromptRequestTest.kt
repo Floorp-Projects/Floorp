@@ -116,5 +116,11 @@ class PromptRequestTest {
 
         colorRequest.onConfirm("")
         colorRequest.onDismiss()
+
+        val popupRequest = PromptRequest.Popup("http://mozilla.slack.com/", {}, {})
+
+        assertEquals(popupRequest.targetUri, "http://mozilla.slack.com/")
+        popupRequest.onAllow()
+        popupRequest.onDeny()
     }
 }

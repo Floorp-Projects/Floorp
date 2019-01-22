@@ -275,17 +275,26 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
     }
 
+    override fun onPopupRequest(session: GeckoSession, targetUri: String?): GeckoResult<AllowOrDeny> {
+        val geckoResult = GeckoResult<AllowOrDeny>()
+        val onAllow: () -> Unit = { geckoResult.complete(AllowOrDeny.ALLOW) }
+        val onDeny: () -> Unit = { geckoResult.complete(AllowOrDeny.DENY) }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.Popup(targetUri ?: "", onAllow, onDeny)
+            )
+        }
+        return geckoResult
+    }
+
     override fun onButtonPrompt(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         msg: String?,
         btnMsg: Array<out String>?,
-        callback: ButtonCallback?
+        callback: ButtonCallback
     ) = Unit
-
-    override fun onPopupRequest(session: GeckoSession?, targetUri: String?): GeckoResult<AllowOrDeny> {
-        return GeckoResult()
-    } // Related issue: https://github.com/mozilla-mobile/android-components/issues/1473
 
     private fun GeckoChoice.toChoice(): Choice {
         val choiceChildren = items?.map { it.toChoice() }?.toTypedArray()

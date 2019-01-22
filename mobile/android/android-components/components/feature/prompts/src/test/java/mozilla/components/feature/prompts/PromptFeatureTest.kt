@@ -860,6 +860,51 @@ class PromptFeatureTest {
         assertTrue(onDismissWasCalled)
     }
 
+    @Test
+    fun `calling onConfirm for a Popup request will consume promptRequest`() {
+        val session = getSelectedSession()
+        var onConfirmWasCalled = false
+
+        val promptRequest = PromptRequest.Popup(
+            "http://www.popuptest.com/",
+            { onConfirmWasCalled = true }
+        ) {}
+
+        stubContext()
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onConfirm(session.id)
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onConfirmWasCalled)
+    }
+
+    @Test
+    fun `calling onCancel with a Popup request will consume promptRequest`() {
+        val session = getSelectedSession()
+        var onCancelWasCalled = false
+
+        val promptRequest = PromptRequest.Popup("http://www.popuptest.com/", { }) {
+            onCancelWasCalled = true
+        }
+
+        stubContext()
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel(session.id)
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onCancelWasCalled)
+
+        session.promptRequest = Consumable.from(promptRequest)
+    }
+
     private fun getSelectedSession(): Session {
         val session = Session("")
         mockSessionManager.add(session)

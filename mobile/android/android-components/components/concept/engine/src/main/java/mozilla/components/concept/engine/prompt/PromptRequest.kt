@@ -158,4 +158,19 @@ sealed class PromptRequest {
         val onConfirm: (String) -> Unit,
         val onDismiss: () -> Unit
     ) : PromptRequest()
+
+    /**
+     * Value type that represents a request for showing a pop-pup prompt.
+     * This occurs when content attempts to open a new window,
+     * in a way that doesn't appear to be the result of user input.
+     *
+     * @property targetUri the uri that the page is trying to open.
+     * @property onAllow callback to notify that the user wants to open the [targetUri].
+     * @property onDeny callback to notify that the user doesn't want to open the [targetUri].
+     */
+    data class Popup(
+        val targetUri: String,
+        val onAllow: () -> Unit,
+        val onDeny: () -> Unit
+    ) : PromptRequest()
 }
