@@ -2966,9 +2966,9 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
   return true;
 }
 
-static bool EmitMemOrTableDrop(FunctionCompiler& f, bool isMem) {
+static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
   uint32_t segIndexVal = 0;
-  if (!f.iter().readMemOrTableDrop(isMem, &segIndexVal)) {
+  if (!f.iter().readDataOrElemDrop(isData, &segIndexVal)) {
     return false;
   }
 
@@ -2998,7 +2998,7 @@ static bool EmitMemOrTableDrop(FunctionCompiler& f, bool isMem) {
   }
 
   SymbolicAddress callee =
-      isMem ? SymbolicAddress::MemDrop : SymbolicAddress::TableDrop;
+      isData ? SymbolicAddress::DataDrop : SymbolicAddress::ElemDrop;
   MDefinition* ret;
   if (!f.builtinInstanceMethodCall(callee, args, ValType::I32, &ret)) {
     return false;
@@ -3692,16 +3692,16 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 #ifdef ENABLE_WASM_BULKMEM_OPS
           case uint16_t(MiscOp::MemCopy):
             CHECK(EmitMemOrTableCopy(f, /*isMem=*/true));
-          case uint16_t(MiscOp::MemDrop):
-            CHECK(EmitMemOrTableDrop(f, /*isMem=*/true));
+          case uint16_t(MiscOp::DataDrop):
+            CHECK(EmitDataOrElemDrop(f, /*isData=*/true));
           case uint16_t(MiscOp::MemFill):
             CHECK(EmitMemFill(f));
           case uint16_t(MiscOp::MemInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/true));
           case uint16_t(MiscOp::TableCopy):
             CHECK(EmitMemOrTableCopy(f, /*isMem=*/false));
-          case uint16_t(MiscOp::TableDrop):
-            CHECK(EmitMemOrTableDrop(f, /*isMem=*/false));
+          case uint16_t(MiscOp::ElemDrop):
+            CHECK(EmitDataOrElemDrop(f, /*isData=*/false));
           case uint16_t(MiscOp::TableInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
 #endif

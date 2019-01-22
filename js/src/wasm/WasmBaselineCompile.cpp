@@ -6866,7 +6866,7 @@ class BaseCompiler final : public BaseCompilerInterface {
                         WantResult wantResult);
 #ifdef ENABLE_WASM_BULKMEM_OPS
   MOZ_MUST_USE bool emitMemOrTableCopy(bool isMem);
-  MOZ_MUST_USE bool emitMemOrTableDrop(bool isMem);
+  MOZ_MUST_USE bool emitDataOrElemDrop(bool isData);
   MOZ_MUST_USE bool emitMemFill();
   MOZ_MUST_USE bool emitMemOrTableInit(bool isMem);
 #endif
@@ -10227,11 +10227,11 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
   return true;
 }
 
-bool BaseCompiler::emitMemOrTableDrop(bool isMem) {
+bool BaseCompiler::emitDataOrElemDrop(bool isData) {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   uint32_t segIndex = 0;
-  if (!iter_.readMemOrTableDrop(isMem, &segIndex)) {
+  if (!iter_.readDataOrElemDrop(isData, &segIndex)) {
     return false;
   }
 
@@ -10244,7 +10244,7 @@ bool BaseCompiler::emitMemOrTableDrop(bool isMem) {
   // Returns -1 on trap, otherwise 0.
   pushI32(int32_t(segIndex));
   SymbolicAddress callee =
-      isMem ? SymbolicAddress::MemDrop : SymbolicAddress::TableDrop;
+      isData ? SymbolicAddress::DataDrop : SymbolicAddress::ElemDrop;
   if (!emitInstanceCall(lineOrBytecode, SigPI_, ExprType::Void, callee)) {
     return false;
   }
@@ -11533,16 +11533,16 @@ bool BaseCompiler::emitBody() {
 #ifdef ENABLE_WASM_BULKMEM_OPS
           case uint16_t(MiscOp::MemCopy):
             CHECK_NEXT(emitMemOrTableCopy(/*isMem=*/true));
-          case uint16_t(MiscOp::MemDrop):
-            CHECK_NEXT(emitMemOrTableDrop(/*isMem=*/true));
+          case uint16_t(MiscOp::DataDrop):
+            CHECK_NEXT(emitDataOrElemDrop(/*isData=*/true));
           case uint16_t(MiscOp::MemFill):
             CHECK_NEXT(emitMemFill());
           case uint16_t(MiscOp::MemInit):
             CHECK_NEXT(emitMemOrTableInit(/*isMem=*/true));
           case uint16_t(MiscOp::TableCopy):
             CHECK_NEXT(emitMemOrTableCopy(/*isMem=*/false));
-          case uint16_t(MiscOp::TableDrop):
-            CHECK_NEXT(emitMemOrTableDrop(/*isMem=*/false));
+          case uint16_t(MiscOp::ElemDrop):
+            CHECK_NEXT(emitDataOrElemDrop(/*isData=*/false));
           case uint16_t(MiscOp::TableInit):
             CHECK_NEXT(emitMemOrTableInit(/*isMem=*/false));
 #endif  // ENABLE_WASM_BULKMEM_OPS
