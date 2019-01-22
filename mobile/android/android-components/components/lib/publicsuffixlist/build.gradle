@@ -5,6 +5,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: plugins.PublicSuffixListPlugin
 
 android {
     compileSdkVersion config.compileSdkVersion

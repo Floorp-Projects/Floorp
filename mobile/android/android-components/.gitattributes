@@ -6,3 +6,7 @@
 # our diffs.
 docs/api/**/* -text -diff linguist-generated=true
 
+# Treat the public suffix list file as text
+**/publicsuffixes diff
+
+

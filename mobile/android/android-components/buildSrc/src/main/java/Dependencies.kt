@@ -27,7 +27,7 @@ object Versions {
     const val lint = "26.2.1"
 
     const val sentry = "1.7.14"
-    const val okhttp = "3.12.0"
+    const val okhttp = "3.12.1"
 
     const val mozilla_fxa = "0.13.3"
     const val mozilla_sync_logins = "0.13.3"

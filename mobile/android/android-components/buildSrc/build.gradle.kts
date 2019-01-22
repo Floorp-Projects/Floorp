@@ -10,3 +10,7 @@ repositories {
     jcenter()
 }
 
+dependencies {
+    compile("com.squareup.okhttp3:okhttp:3.12.1")
+    compile("com.squareup.okio:okio:1.17.2@jar")
+}
