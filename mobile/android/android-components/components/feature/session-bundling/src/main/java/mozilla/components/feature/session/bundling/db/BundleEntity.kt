@@ -20,7 +20,7 @@ import java.io.IOException
  */
 @Entity(tableName = "bundles")
 internal data class BundleEntity(
-    @PrimaryKey(autoGenerate = true) var id: Long?,
+    @PrimaryKey(autoGenerate = true) override var id: Long?,
     var state: String,
     @ColumnInfo(name = "saved_at") var savedAt: Long
 ) : SessionBundle {
