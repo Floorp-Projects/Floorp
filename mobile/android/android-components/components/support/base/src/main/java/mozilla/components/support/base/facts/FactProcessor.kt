@@ -5,7 +5,7 @@
 package mozilla.components.support.base.facts
 
 /**
- * A [FactProcessor] receives [Fact] instances from the [Facts] singleton to process them further.
+ * A [FactProcessor] receives [Fact] instances to process them further.
  */
 interface FactProcessor {
     /**
