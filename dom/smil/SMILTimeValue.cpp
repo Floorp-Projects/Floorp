@@ -4,19 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSMILTimeValue.h"
+#include "SMILTimeValue.h"
 
-const nsSMILTime nsSMILTimeValue::kUnresolvedMillis =
+namespace mozilla {
+
+const nsSMILTime SMILTimeValue::kUnresolvedMillis =
     std::numeric_limits<nsSMILTime>::max();
 
 //----------------------------------------------------------------------
-// nsSMILTimeValue methods:
+// SMILTimeValue methods:
 
 static inline int8_t Cmp(int64_t aA, int64_t aB) {
   return aA == aB ? 0 : (aA > aB ? 1 : -1);
 }
 
-int8_t nsSMILTimeValue::CompareTo(const nsSMILTimeValue& aOther) const {
+int8_t SMILTimeValue::CompareTo(const SMILTimeValue& aOther) const {
   int8_t result;
 
   if (mState == STATE_DEFINITE) {
@@ -36,3 +38,5 @@ int8_t nsSMILTimeValue::CompareTo(const nsSMILTimeValue& aOther) const {
 
   return result;
 }
+
+}  // namespace mozilla
