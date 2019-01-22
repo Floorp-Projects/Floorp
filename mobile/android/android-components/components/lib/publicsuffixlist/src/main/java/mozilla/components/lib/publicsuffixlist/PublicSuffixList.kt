@@ -18,6 +18,8 @@ import kotlinx.coroutines.async
  * > examples of public suffixes are .com, .co.uk and pvt.k12.ma.us. The Public Suffix List is a list of all known
  * > public suffixes.
  *
+ * Note that this implementation applies the rules of the public suffix list only and does not validate domains.
+ *
  * https://publicsuffix.org/
  * https://github.com/publicsuffix/list
  */
@@ -47,7 +49,7 @@ class PublicSuffixList(
      * ```
      *
      * Note that this method ignores the default "prevailing rule" described in the formal public suffix list algorithm:
-     * If a
+     * If no rule matches then the passed [domain] is assumed to *not* be a public suffix.
      */
     fun isPublicSuffix(domain: String): Deferred<Boolean> = scope.async {
         when (data.getPublicSuffixOffset(domain)) {
