@@ -3015,10 +3015,9 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
     nsIContent* aOwner, nsIContent* aStartContent,
     nsIContent* aOriginalStartContent, bool aForward, int32_t aCurrentTabIndex,
     bool aIgnoreTabIndex, bool aForDocumentNavigation, bool aSkipOwner) {
-  // Return shadow host at first for forward navigation if its tabindex
-  // is non-negative
-  bool skipOwner = aSkipOwner || !aOwner->GetShadowRoot();
-  if (!skipOwner && (aForward && aOwner == aStartContent)) {
+  MOZ_ASSERT(IsHostOrSlot(aOwner), "Scope owner should be host or slot");
+
+  if (!aSkipOwner && (aForward && aOwner == aStartContent)) {
     int32_t tabIndex = -1;
     nsIFrame* frame = aOwner->GetPrimaryFrame();
     if (frame && frame->IsFocusable(&tabIndex, false) && tabIndex >= 0) {
@@ -3120,9 +3119,9 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
     contentTraversal.Reset();
   }
 
-  // Return shadow host at last for backward navigation if its tabindex
+  // Return scope owner at last for backward navigation if its tabindex
   // is non-negative
-  if (!skipOwner && !aForward) {
+  if (!aSkipOwner && !aForward) {
     int32_t tabIndex = -1;
     nsIFrame* frame = aOwner->GetPrimaryFrame();
     if (frame && frame->IsFocusable(&tabIndex, false) && tabIndex >= 0) {
