@@ -13,6 +13,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.session.bundling.SessionBundle
 import org.json.JSONException
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 /**
  * Internal entity representing a session bundle as it gets saved to the database. This class implements [SessionBundle]
@@ -44,5 +45,13 @@ internal data class BundleEntity(
         } catch (e: JSONException) {
             null
         }
+    }
+
+    override fun lastSavedAt(unit: TimeUnit): Long {
+        if (unit == TimeUnit.MILLISECONDS) {
+            return savedAt
+        }
+
+        return unit.convert(savedAt, TimeUnit.MILLISECONDS)
     }
 }

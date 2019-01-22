@@ -6,6 +6,7 @@ package mozilla.components.feature.session.bundling
 
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
+import java.util.concurrent.TimeUnit
 
 /**
  * A bundle of sessions and their state.
@@ -21,4 +22,10 @@ interface SessionBundle {
      * restore the sessions and their state.
      */
     fun restoreSnapshot(engine: Engine): SessionManager.Snapshot?
+
+    /**
+     * Returns the timestamp of the last time this bundle was saved in the provided [TimeUnit]. By default returns
+     * milliseconds.
+     */
+    fun lastSavedAt(unit: TimeUnit = TimeUnit.MILLISECONDS): Long
 }
