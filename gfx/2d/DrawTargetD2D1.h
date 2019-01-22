@@ -34,6 +34,7 @@ class DrawTargetD2D1 : public DrawTarget {
   DrawTargetD2D1();
   virtual ~DrawTargetD2D1();
 
+  virtual bool IsValid() const override;
   virtual DrawTargetType GetType() const override {
     return DrawTargetType::HARDWARE_RASTER;
   }
