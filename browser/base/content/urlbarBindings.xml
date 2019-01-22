@@ -1698,6 +1698,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="typeRestrictToken">
         <parameter name="char"/>
         <body><![CDATA[
+          focusAndSelectUrlBar();
+
           this.inputField.value = char + " ";
 
           let event = this.document.createEvent("UIEvents");
