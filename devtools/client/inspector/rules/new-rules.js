@@ -31,6 +31,7 @@ const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 loader.lazyRequireGetter(this, "ClassList", "devtools/client/inspector/rules/models/class-list");
+loader.lazyRequireGetter(this, "InplaceEditor", "devtools/client/shared/inplace-editor", true);
 
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 
@@ -54,6 +55,7 @@ class RulesView {
     this.onToggleDeclaration = this.onToggleDeclaration.bind(this);
     this.onTogglePseudoClass = this.onTogglePseudoClass.bind(this);
     this.onToggleSelectorHighlighter = this.onToggleSelectorHighlighter.bind(this);
+    this.showSelectorEditor = this.showSelectorEditor.bind(this);
     this.updateClassList = this.updateClassList.bind(this);
     this.updateRules = this.updateRules.bind(this);
 
@@ -78,6 +80,7 @@ class RulesView {
       onToggleDeclaration: this.onToggleDeclaration,
       onTogglePseudoClass: this.onTogglePseudoClass,
       onToggleSelectorHighlighter: this.onToggleSelectorHighlighter,
+      showSelectorEditor: this.showSelectorEditor,
     });
 
     const provider = createElement(Provider, {
@@ -322,6 +325,35 @@ class RulesView {
       // This event is emitted for testing purposes.
       this.emit("ruleview-selectorhighlighter-toggled", false);
     }
+  }
+
+  /**
+   * Shows the inplace editor for the a selector.
+   *
+   * @param  {DOMNode} element
+   *         The selector's span element to show the inplace editor.
+   * @param  {String} ruleId
+   *         The id of the Rule to be modified.
+   */
+  showSelectorEditor(element, ruleId) {
+    new InplaceEditor({
+      element,
+      done: async (value, commit) => {
+        if (!value || !commit) {
+          return;
+        }
+
+        // Hide the selector highlighter if it matches the selector being edited.
+        if (this.highlighters.selectorHighlighterShown) {
+          const selector = await this.elementStyle.getRule(ruleId).getUniqueSelector();
+          if (this.highlighters.selectorHighlighterShown === selector) {
+            this.onToggleSelectorHighlighter(this.highlighters.selectorHighlighterShown);
+          }
+        }
+
+        await this.elementStyle.modifySelector(ruleId, value);
+      },
+    });
   }
 
   /**
