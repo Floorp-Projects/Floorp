@@ -3437,7 +3437,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [NSGraphicsContext setCurrentContext:oldContext];
 }
 
-<<<<<<< dest
 - (void)viewWillDraw {
   if (!NS_IsMainThread()) {
     // In the presence of CoreAnimation, this method can sometimes be called on
@@ -3446,9 +3445,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
-=======
-- (void)viewWillDraw {
->>>>>>> source
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   if (mGeckoChild) {
