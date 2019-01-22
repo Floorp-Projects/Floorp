@@ -6,12 +6,10 @@ use api::{DeviceRect, FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, P
 use api::{DeviceIntRect, DevicePoint, LayoutRect, PictureToRasterTransform, LayoutPixel, PropertyBinding, PropertyBindingId};
 use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, DirtyRect, WorldSize, ClipMode, LayoutSize};
 use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, ImageFormat, ImageDescriptor, WorldVector2D, LayoutPoint};
-#[cfg(feature = "debug_renderer")]
 use api::{DebugFlags, DeviceVector2D};
 use box_shadow::{BLUR_SAMPLE_SCALE};
 use clip::{ClipStore, ClipChainId, ClipChainNode, ClipItem};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, CoordinateSystemId};
-#[cfg(feature = "debug_renderer")]
 use debug_colors;
 use device::TextureFilter;
 use euclid::{TypedScale, vec3, TypedRect, TypedPoint2D, TypedSize2D};
@@ -1382,37 +1380,31 @@ impl TileCache {
                 tile.consider_for_dirty_rect = false;
                 self.tiles_to_draw.push(TileIndex(i));
 
-                #[cfg(feature = "debug_renderer")]
-                {
-                    if frame_context.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
-                        let tile_device_rect = tile.world_rect * frame_context.device_pixel_scale;
-                        let mut label_pos = tile_device_rect.origin + DeviceVector2D::new(20.0, 30.0);
-                        _scratch.push_debug_rect(
-                            tile_device_rect,
-                            debug_colors::GREEN,
-                        );
-                        _scratch.push_debug_string(
-                            label_pos,
-                            debug_colors::RED,
-                            format!("{:?} {:?} {:?}", tile.id, tile.handle, tile.world_rect),
-                        );
-                        label_pos.y += 20.0;
-                        _scratch.push_debug_string(
-                            label_pos,
-                            debug_colors::RED,
-                            format!("same: {} frames", tile.same_frames),
-                        );
-                    }
+                if frame_context.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
+                    let tile_device_rect = tile.world_rect * frame_context.device_pixel_scale;
+                    let mut label_pos = tile_device_rect.origin + DeviceVector2D::new(20.0, 30.0);
+                    _scratch.push_debug_rect(
+                        tile_device_rect,
+                        debug_colors::GREEN,
+                    );
+                    _scratch.push_debug_string(
+                        label_pos,
+                        debug_colors::RED,
+                        format!("{:?} {:?} {:?}", tile.id, tile.handle, tile.world_rect),
+                    );
+                    label_pos.y += 20.0;
+                    _scratch.push_debug_string(
+                        label_pos,
+                        debug_colors::RED,
+                        format!("same: {} frames", tile.same_frames),
+                    );
                 }
             } else {
-                #[cfg(feature = "debug_renderer")]
-                {
-                    if frame_context.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
-                        _scratch.push_debug_rect(
-                            visible_rect * frame_context.device_pixel_scale,
-                            debug_colors::RED,
-                        );
-                    }
+                if frame_context.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
+                    _scratch.push_debug_rect(
+                        visible_rect * frame_context.device_pixel_scale,
+                        debug_colors::RED,
+                    );
                 }
 
                 // Only cache tiles that have had the same content for at least two

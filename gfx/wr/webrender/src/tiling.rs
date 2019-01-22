@@ -8,7 +8,6 @@ use api::{MixBlendMode, PipelineId, DeviceRect, LayoutSize};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::ClipStore;
 use clip_scroll_tree::{ClipScrollTree};
-#[cfg(feature = "debug_renderer")]
 use debug_render::DebugItem;
 use device::{Texture};
 #[cfg(feature = "pathfinder")]
@@ -1118,7 +1117,6 @@ pub struct Frame {
     pub has_been_rendered: bool,
 
     /// Debugging information to overlay for this frame.
-    #[cfg(feature = "debug_renderer")]
     pub debug_items: Vec<DebugItem>,
 }
 

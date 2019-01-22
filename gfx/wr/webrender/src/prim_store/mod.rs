@@ -10,16 +10,13 @@ use api::{PremultipliedColorF, PropertyBinding, Shadow};
 use api::{WorldPixel, BoxShadowClipMode, WorldRect, LayoutToWorldScale};
 use api::{PicturePixel, RasterPixel, LineStyle, LineOrientation, AuHelpers};
 use api::{LayoutPrimitiveInfo};
-#[cfg(feature = "debug_renderer")]
 use api::DevicePoint;
 use border::{get_max_scale_for_border, build_border_instances};
 use border::BorderSegmentCacheKey;
 use clip::{ClipStore};
 use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex, ROOT_SPATIAL_NODE_INDEX};
 use clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem};
-#[cfg(feature = "debug_renderer")]
 use debug_colors;
-#[cfg(feature = "debug_renderer")]
 use debug_render::DebugItem;
 use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use euclid::{SideOffsets2D, TypedTransform3D, TypedRect, TypedScale, TypedSize2D};
@@ -1555,7 +1552,6 @@ pub struct PrimitiveScratchBuffer {
     /// List of the visibility information for currently visible primitives.
     pub prim_info: Vec<PrimitiveVisibility>,
 
-    #[cfg(feature = "debug_renderer")]
     pub debug_items: Vec<DebugItem>,
 }
 
@@ -1568,7 +1564,6 @@ impl PrimitiveScratchBuffer {
             segments: SegmentStorage::new(0),
             segment_instances: SegmentInstanceStorage::new(0),
             gradient_tiles: GradientTileStorage::new(0),
-            #[cfg(feature = "debug_renderer")]
             debug_items: Vec::new(),
             prim_info: Vec::new(),
         }
@@ -1582,7 +1577,6 @@ impl PrimitiveScratchBuffer {
         self.segments.recycle(recycler);
         self.segment_instances.recycle(recycler);
         self.gradient_tiles.recycle(recycler);
-        #[cfg(feature = "debug_renderer")]
         recycler.recycle_vec(&mut self.debug_items);
     }
 
@@ -1603,12 +1597,10 @@ impl PrimitiveScratchBuffer {
 
         self.prim_info.clear();
 
-        #[cfg(feature = "debug_renderer")]
         self.debug_items.clear();
     }
 
     #[allow(dead_code)]
-    #[cfg(feature = "debug_renderer")]
     pub fn push_debug_rect(
         &mut self,
         rect: DeviceRect,
@@ -1621,7 +1613,6 @@ impl PrimitiveScratchBuffer {
     }
 
     #[allow(dead_code)]
-    #[cfg(feature = "debug_renderer")]
     pub fn push_debug_string(
         &mut self,
         position: DevicePoint,
@@ -1996,25 +1987,22 @@ impl PrimitiveStore {
 
                 // When the debug display is enabled, paint a colored rectangle around each
                 // primitive.
-                #[cfg(feature = "debug_renderer")]
-                {
-                    if frame_context.debug_flags.contains(::api::DebugFlags::PRIMITIVE_DBG) {
-                        let debug_color = match prim_instance.kind {
-                            PrimitiveInstanceKind::Picture { .. } => debug_colors::GREEN,
-                            PrimitiveInstanceKind::TextRun { .. } => debug_colors::RED,
-                            PrimitiveInstanceKind::LineDecoration { .. } => debug_colors::PURPLE,
-                            PrimitiveInstanceKind::NormalBorder { .. } |
-                            PrimitiveInstanceKind::ImageBorder { .. } => debug_colors::ORANGE,
-                            PrimitiveInstanceKind::Rectangle { .. } => ColorF { r: 0.8, g: 0.8, b: 0.8, a: 0.5 },
-                            PrimitiveInstanceKind::YuvImage { .. } => debug_colors::BLUE,
-                            PrimitiveInstanceKind::Image { .. } => debug_colors::BLUE,
-                            PrimitiveInstanceKind::LinearGradient { .. } => debug_colors::PINK,
-                            PrimitiveInstanceKind::RadialGradient { .. } => debug_colors::PINK,
-                            PrimitiveInstanceKind::Clear { .. } => debug_colors::CYAN,
-                        };
-                        let debug_rect = clipped_world_rect * frame_context.device_pixel_scale;
-                        frame_state.scratch.push_debug_rect(debug_rect, debug_color);
-                    }
+                if frame_context.debug_flags.contains(::api::DebugFlags::PRIMITIVE_DBG) {
+                    let debug_color = match prim_instance.kind {
+                        PrimitiveInstanceKind::Picture { .. } => debug_colors::GREEN,
+                        PrimitiveInstanceKind::TextRun { .. } => debug_colors::RED,
+                        PrimitiveInstanceKind::LineDecoration { .. } => debug_colors::PURPLE,
+                        PrimitiveInstanceKind::NormalBorder { .. } |
+                        PrimitiveInstanceKind::ImageBorder { .. } => debug_colors::ORANGE,
+                        PrimitiveInstanceKind::Rectangle { .. } => ColorF { r: 0.8, g: 0.8, b: 0.8, a: 0.5 },
+                        PrimitiveInstanceKind::YuvImage { .. } => debug_colors::BLUE,
+                        PrimitiveInstanceKind::Image { .. } => debug_colors::BLUE,
+                        PrimitiveInstanceKind::LinearGradient { .. } => debug_colors::PINK,
+                        PrimitiveInstanceKind::RadialGradient { .. } => debug_colors::PINK,
+                        PrimitiveInstanceKind::Clear { .. } => debug_colors::CYAN,
+                    };
+                    let debug_rect = clipped_world_rect * frame_context.device_pixel_scale;
+                    frame_state.scratch.push_debug_rect(debug_rect, debug_color);
                 }
 
                 let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.prim_info.len() as u32);
