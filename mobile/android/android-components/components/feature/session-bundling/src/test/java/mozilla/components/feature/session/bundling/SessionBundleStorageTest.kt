@@ -11,6 +11,7 @@ import android.arch.persistence.room.DatabaseConfiguration
 import android.arch.persistence.room.InvalidationTracker
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.feature.session.bundling.adapter.SessionBundleAdapter
 import mozilla.components.feature.session.bundling.db.BundleDao
 import mozilla.components.feature.session.bundling.db.BundleDatabase
 import mozilla.components.feature.session.bundling.db.BundleEntity
@@ -19,13 +20,17 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.TimeUnit
 
+@RunWith(RobolectricTestRunner::class)
 class SessionBundleStorageTest {
     @Test
     fun `restore loads last bundle using lifetime`() {
@@ -63,8 +68,9 @@ class SessionBundleStorageTest {
         })
 
         assertNull(storage.current())
-        assertEquals(bundle, storage.restore())
-        assertEquals(bundle, storage.current())
+
+        assertEquals(bundle, (storage.restore() as SessionBundleAdapter).actual)
+        assertEquals(bundle, (storage.current() as SessionBundleAdapter).actual)
     }
 
     @Test
@@ -130,7 +136,7 @@ class SessionBundleStorageTest {
 
         assertNotNull(storage.current())
 
-        storage.remove(bundle)
+        storage.remove(SessionBundleAdapter(bundle))
 
         assertNull(storage.current())
 
@@ -175,13 +181,17 @@ class SessionBundleStorageTest {
 
         storage.restore()
 
-        assertEquals(bundle, storage.current())
+        val current = storage.current()
+        assertTrue(current is SessionBundleAdapter)
+        assertEquals(bundle, (current as SessionBundleAdapter).actual)
 
         val newBundle: BundleEntity = mock()
 
-        storage.use(newBundle)
+        storage.use(SessionBundleAdapter(newBundle))
 
-        assertEquals(newBundle, storage.current())
+        val updated = storage.current()
+        assertTrue(updated is SessionBundleAdapter)
+        assertEquals(newBundle, (updated as SessionBundleAdapter).actual)
 
         val snapshot = SessionManager.Snapshot(
             listOf(SessionManager.Snapshot.Item(session = Session("https://www.mozilla.org"))),

@@ -13,9 +13,11 @@ import android.support.annotation.VisibleForTesting
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.AutoSave
+import mozilla.components.feature.session.bundling.adapter.SessionBundleAdapter
 import mozilla.components.feature.session.bundling.db.BundleDatabase
 import mozilla.components.feature.session.bundling.db.BundleEntity
 import mozilla.components.feature.session.bundling.ext.toBundleEntity
+import java.lang.IllegalArgumentException
 import java.util.concurrent.TimeUnit
 
 /**
@@ -43,10 +45,12 @@ class SessionBundleStorage(
     fun restore(): SessionBundle? {
         val since = now() - bundleLifetime.second.toMillis(bundleLifetime.first)
 
-        return database
+        val entity = database
             .bundleDao()
             .getLastBundle(since)
             .also { lastBundle = it }
+
+        return entity?.let { SessionBundleAdapter(it) }
     }
 
     /**
@@ -74,12 +78,15 @@ class SessionBundleStorage(
      */
     @Synchronized
     fun remove(bundle: SessionBundle) {
-        if (bundle == lastBundle) {
+        if (bundle !is SessionBundleAdapter) {
+            throw IllegalArgumentException("Unexpected bundle type")
+        }
+
+        if (bundle.actual == lastBundle) {
             lastBundle = null
         }
 
-        val entity = bundle as? BundleEntity
-        entity?.let { database.bundleDao().deleteBundle(it) }
+        bundle.actual.let { database.bundleDao().deleteBundle(it) }
     }
 
     /**
@@ -97,7 +104,7 @@ class SessionBundleStorage(
      */
     @Synchronized
     fun current(): SessionBundle? {
-        return lastBundle
+        return lastBundle?.let { SessionBundleAdapter(it) }
     }
 
     /**
@@ -105,7 +112,11 @@ class SessionBundleStorage(
      */
     @Synchronized
     fun use(bundle: SessionBundle) {
-        lastBundle = bundle as BundleEntity
+        if (bundle !is SessionBundleAdapter) {
+            throw IllegalArgumentException("Unexpected bundle type")
+        }
+
+        lastBundle = bundle.actual
     }
 
     /**
@@ -117,7 +128,7 @@ class SessionBundleStorage(
             .bundleDao()
             .getBundles(limit)
         ) { list ->
-            list.map { it as SessionBundle }
+            list.map { SessionBundleAdapter(it) }
         }
     }
 
@@ -134,7 +145,7 @@ class SessionBundleStorage(
         return database
             .bundleDao()
             .getBundlesPaged()
-            .map { entity -> entity as SessionBundle }
+            .map { entity -> SessionBundleAdapter(entity) }
     }
 
     /**

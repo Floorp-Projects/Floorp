@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "66b0ab6f143f2da6517902e22ef3c3b2",
+    "identityHash": "f599c2323843a80d2e5f7bfdf77c99d1",
     "entities": [
       {
         "tableName": "bundles",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `state` TEXT NOT NULL, `saved_at` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `state` TEXT NOT NULL, `saved_at` INTEGER NOT NULL, `urls` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -25,6 +25,12 @@
             "columnName": "saved_at",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "urls",
+            "columnName": "urls",
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -39,7 +45,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"66b0ab6f143f2da6517902e22ef3c3b2\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"f599c2323843a80d2e5f7bfdf77c99d1\")"
     ]
   }
 }

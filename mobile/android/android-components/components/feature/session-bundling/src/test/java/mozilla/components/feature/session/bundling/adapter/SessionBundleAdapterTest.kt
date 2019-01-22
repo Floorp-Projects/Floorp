@@ -2,21 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.session.bundling.db
+package mozilla.components.feature.session.bundling.adapter
 
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import org.json.JSONObject
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import mozilla.components.feature.session.bundling.db.BundleEntity
+import mozilla.components.feature.session.bundling.db.UrlList
+import mozilla.components.support.test.mock
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class BundleEntityTest {
+class SessionBundleAdapterTest {
     @Test
-    fun `updateFrom updates state and time`() {
+    fun `restoreSnapshot restores snapshot from state`() {
         val bundle = BundleEntity(0, "", 0, UrlList(listOf()))
 
         val snapshot = SessionManager.Snapshot(
@@ -25,17 +26,12 @@ class BundleEntityTest {
 
         bundle.updateFrom(snapshot)
 
-        assertTrue(bundle.savedAt > 0)
+        val restoredSnapshot = SessionBundleAdapter(bundle).restoreSnapshot(mock())
 
-        assertEquals(1, bundle.urls.entries.size)
-        assertEquals("https://www.mozilla.org", bundle.urls.entries[0])
+        assertNotNull(restoredSnapshot!!)
 
-        val json = JSONObject(bundle.state)
-
-        assertEquals(1, json.get("version"))
-        assertEquals(0, json.get("selectedSessionIndex"))
-
-        val sessions = json.getJSONArray("sessionStateTuples")
-        assertEquals(1, sessions.length())
+        assertFalse(restoredSnapshot.isEmpty())
+        assertEquals(1, restoredSnapshot.sessions.size)
+        assertEquals("https://www.mozilla.org", restoredSnapshot.sessions[0].session.url)
     }
 }

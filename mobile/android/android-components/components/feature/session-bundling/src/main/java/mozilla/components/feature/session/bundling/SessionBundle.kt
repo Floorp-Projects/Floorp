@@ -17,6 +17,8 @@ interface SessionBundle {
      */
     val id: Long?
 
+    val urls: List<String>
+
     /**
      * Restore a [SessionManager.Snapshot] from this bundle. The returned snapshot can be used with [SessionManager] to
      * restore the sessions and their state.
