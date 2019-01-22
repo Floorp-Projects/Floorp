@@ -567,7 +567,7 @@ this.ExtensionStorageIDB = {
               ...parentResult,
               // In the child process, we need to deserialize the storagePrincipal
               // from the StructuredCloneHolder used to send it across the processes.
-              storagePrincipal: parentResult.storagePrincipal.deserialize(this),
+              storagePrincipal: parentResult.storagePrincipal.deserialize(this, true),
             };
           }
 
