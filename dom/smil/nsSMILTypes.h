@@ -19,7 +19,7 @@
 //   wallclock time -- "real" time -- offset since the epoch
 //
 // For an overview of how this class is related to other SMIL time classes see
-// the documentstation in nsSMILTimeValue.h
+// the documentation in SMILTimeValue.h
 //
 typedef int64_t nsSMILTime;
 

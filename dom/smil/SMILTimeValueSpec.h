@@ -8,27 +8,26 @@
 #define NS_SMILTIMEVALUESPEC_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SMILTimeValueSpecParams.h"
 #include "mozilla/dom/IDTracker.h"
-#include "nsSMILTimeValueSpecParams.h"
 #include "nsStringFwd.h"
 #include "nsIDOMEventListener.h"
 
-class nsSMILTimeValue;
-class nsSMILInstanceTime;
-
 namespace mozilla {
+
+class EventListenerManager;
+class SMILInstanceTime;
 class SMILInterval;
 class SMILTimeContainer;
 class SMILTimedElement;
+class SMILTimeValue;
+
 namespace dom {
 class Event;
 }  // namespace dom
 
-class EventListenerManager;
-}  // namespace mozilla
-
 //----------------------------------------------------------------------
-// nsSMILTimeValueSpec class
+// SMILTimeValueSpec class
 //
 // An individual element of a 'begin' or 'end' attribute, e.g. '5s', 'a.end'.
 // This class handles the parsing of such specifications and performs the
@@ -36,19 +35,16 @@ class EventListenerManager;
 // and synchronisation (for syncbase specifications).
 //
 // For an overview of how this class is related to other SMIL time classes see
-// the documentation in nsSMILTimeValue.h
+// the documentation in SMILTimeValue.h
 
-class nsSMILTimeValueSpec {
+class SMILTimeValueSpec {
  public:
-  typedef mozilla::SMILInterval SMILInterval;
-  typedef mozilla::SMILTimeContainer SMILTimeContainer;
-  typedef mozilla::SMILTimedElement SMILTimedElement;
   typedef mozilla::dom::Element Element;
   typedef mozilla::dom::Event Event;
   typedef mozilla::dom::IDTracker IDTracker;
 
-  nsSMILTimeValueSpec(SMILTimedElement& aOwner, bool aIsBegin);
-  ~nsSMILTimeValueSpec();
+  SMILTimeValueSpec(SMILTimedElement& aOwner, bool aIsBegin);
+  ~SMILTimeValueSpec();
 
   nsresult SetSpec(const nsAString& aStringSpec, Element& aContextElement);
   void ResolveReferences(Element& aContextElement);
@@ -58,13 +54,13 @@ class nsSMILTimeValueSpec {
                          const SMILTimeContainer* aSrcContainer);
   void HandleTargetElementChange(Element* aNewTarget);
 
-  // For created nsSMILInstanceTime objects
+  // For created SMILInstanceTime objects
   bool DependsOnBegin() const;
-  void HandleChangedInstanceTime(const nsSMILInstanceTime& aBaseTime,
+  void HandleChangedInstanceTime(const SMILInstanceTime& aBaseTime,
                                  const SMILTimeContainer* aSrcContainer,
-                                 nsSMILInstanceTime& aInstanceTimeToUpdate,
+                                 SMILInstanceTime& aInstanceTimeToUpdate,
                                  bool aObjectChanged);
-  void HandleDeletedInstanceTime(nsSMILInstanceTime& aInstanceTime);
+  void HandleDeletedInstanceTime(SMILInstanceTime& aInstanceTime);
 
   // Cycle-collection support
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
@@ -79,9 +75,9 @@ class nsSMILTimeValueSpec {
   void UnregisterEventListener(Element* aElement);
   void HandleEvent(Event* aEvent);
   bool CheckRepeatEventDetail(Event* aEvent);
-  nsSMILTimeValue ConvertBetweenTimeContainers(
-      const nsSMILTimeValue& aSrcTime, const SMILTimeContainer* aSrcContainer);
-  bool ApplyOffset(nsSMILTimeValue& aTime) const;
+  SMILTimeValue ConvertBetweenTimeContainers(
+      const SMILTimeValue& aSrcTime, const SMILTimeContainer* aSrcContainer);
+  bool ApplyOffset(SMILTimeValue& aTime) const;
 
   SMILTimedElement* mOwner;
   bool mIsBegin;  // Indicates if *we* are a begin spec,
@@ -89,22 +85,21 @@ class nsSMILTimeValueSpec {
                   // mParams.mSyncBegin which indicates
                   // if we're synced with the begin of
                   // the target.
-  nsSMILTimeValueSpecParams mParams;
+  SMILTimeValueSpecParams mParams;
 
   /**
-   * If our nsSMILTimeValueSpec exists for a 'begin' or 'end' attribute with a
+   * If our SMILTimeValueSpec exists for a 'begin' or 'end' attribute with a
    * value that specifies a time that is relative to the animation of some
    * other element, it will create an instance of this class to reference and
-   * track that other element.  For example, if the nsSMILTimeValueSpec is for
+   * track that other element.  For example, if the SMILTimeValueSpec is for
    * end='a.end+2s', an instance of this class will be created to track the
    * element associated with the element ID "a".  This class will notify the
-   * nsSMILTimeValueSpec if the element that that ID identifies changes to a
+   * SMILTimeValueSpec if the element that that ID identifies changes to a
    * different element (or none).
    */
   class TimeReferenceTracker final : public IDTracker {
    public:
-    explicit TimeReferenceTracker(nsSMILTimeValueSpec* aOwner)
-        : mSpec(aOwner) {}
+    explicit TimeReferenceTracker(SMILTimeValueSpec* aOwner) : mSpec(aOwner) {}
     void ResetWithElement(Element* aTo) {
       RefPtr<Element> from = get();
       Unlink();
@@ -119,7 +114,7 @@ class nsSMILTimeValueSpec {
     virtual bool IsPersistent() override { return true; }
 
    private:
-    nsSMILTimeValueSpec* mSpec;
+    SMILTimeValueSpec* mSpec;
   };
 
   TimeReferenceTracker mReferencedElement;
@@ -128,16 +123,18 @@ class nsSMILTimeValueSpec {
     ~EventListener() {}
 
    public:
-    explicit EventListener(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) {}
+    explicit EventListener(SMILTimeValueSpec* aOwner) : mSpec(aOwner) {}
     void Disconnect() { mSpec = nullptr; }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOMEVENTLISTENER
 
    private:
-    nsSMILTimeValueSpec* mSpec;
+    SMILTimeValueSpec* mSpec;
   };
   RefPtr<EventListener> mEventListener;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILTIMEVALUESPEC_H_
