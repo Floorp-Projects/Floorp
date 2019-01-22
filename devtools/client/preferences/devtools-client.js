@@ -279,6 +279,9 @@ pref("devtools.webconsole.sidebarToggle", false);
 // Enable CodeMirror in the JsTerm
 pref("devtools.webconsole.jsterm.codeMirror", true);
 
+// Enable editor mode in the console.
+pref("devtools.webconsole.input.editor", false);
+
 // Disable the new performance recording panel by default
 pref("devtools.performance.new-panel-enabled", false);
 
