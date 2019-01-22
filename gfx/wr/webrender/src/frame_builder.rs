@@ -590,7 +590,6 @@ impl FrameBuilder {
             has_been_rendered: false,
             has_texture_cache_tasks,
             prim_headers,
-            #[cfg(feature = "debug_renderer")]
             debug_items: mem::replace(&mut scratch.debug_items, Vec::new()),
         }
     }
