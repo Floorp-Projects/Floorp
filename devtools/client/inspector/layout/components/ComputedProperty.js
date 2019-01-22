@@ -86,7 +86,7 @@ class ComputedProperty extends PureComponent {
         dom.div({ className: "computed-property-name-container" },
           dom.div(
             {
-              className: "computed-property-name theme-fg-color5",
+              className: "computed-property-name theme-fg-color3",
               tabIndex: "",
               title: name,
               onClick: this.onFocus,

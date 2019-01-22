@@ -442,14 +442,14 @@ ElementEditor.prototype = {
 
     const name = this.doc.createElement("span");
     name.classList.add("attr-name");
-    name.classList.add("theme-fg-color2");
+    name.classList.add("theme-fg-color1");
     inner.appendChild(name);
 
     inner.appendChild(this.doc.createTextNode('="'));
 
     const val = this.doc.createElement("span");
     val.classList.add("attr-value");
-    val.classList.add("theme-fg-color4");
+    val.classList.add("theme-fg-color2");
     inner.appendChild(val);
 
     inner.appendChild(this.doc.createTextNode('"'));
