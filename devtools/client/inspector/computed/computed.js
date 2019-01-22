@@ -975,7 +975,7 @@ PropertyView.prototype = {
 
     // Build the style name element
     this.nameNode = doc.createElementNS(HTML_NS, "span");
-    this.nameNode.classList.add("computed-property-name", "theme-fg-color5");
+    this.nameNode.classList.add("computed-property-name", "theme-fg-color3");
     // Reset its tabindex attribute otherwise, if an ellipsis is applied
     // it will be reachable via TABing
     this.nameNode.setAttribute("tabindex", "");

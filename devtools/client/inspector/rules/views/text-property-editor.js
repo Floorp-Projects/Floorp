@@ -142,7 +142,7 @@ TextPropertyEditor.prototype = {
     // Property name, editable when focused.  Property name
     // is committed when the editor is unfocused.
     this.nameSpan = createChild(this.nameContainer, "span", {
-      class: "ruleview-propertyname theme-fg-color5",
+      class: "ruleview-propertyname theme-fg-color3",
       tabindex: this.ruleEditor.isEditable ? "0" : "-1",
     });
 
@@ -709,7 +709,7 @@ TextPropertyEditor.prototype = {
     });
 
     createChild(nameContainer, "span", {
-      class: "ruleview-propertyname theme-fg-color5",
+      class: "ruleview-propertyname theme-fg-color3",
       textContent: computed.name,
     });
     appendText(nameContainer, ": ");
