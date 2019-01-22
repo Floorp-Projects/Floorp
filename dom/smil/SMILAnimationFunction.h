@@ -7,12 +7,12 @@
 #ifndef NS_SMILANIMATIONFUNCTION_H_
 #define NS_SMILANIMATIONFUNCTION_H_
 
+#include "mozilla/SMILKeySpline.h"
 #include "mozilla/SMILTargetIdentifier.h"
+#include "mozilla/SMILTimeValue.h"
 #include "nsAttrValue.h"
 #include "nsGkAtoms.h"
 #include "nsISMILAttr.h"
-#include "SMILKeySpline.h"
-#include "nsSMILTimeValue.h"
 #include "nsSMILTypes.h"
 #include "nsSMILValue.h"
 #include "nsString.h"
@@ -79,7 +79,7 @@ class SMILAnimationFunction {
    * @param aRepeatIteration  The repeat iteration for this sample. The first
    *                          iteration has a value of 0.
    */
-  void SampleAt(nsSMILTime aSampleTime, const nsSMILTimeValue& aSimpleDuration,
+  void SampleAt(nsSMILTime aSampleTime, const SMILTimeValue& aSimpleDuration,
                 uint32_t aRepeatIteration);
 
   /**
@@ -409,7 +409,7 @@ class SMILAnimationFunction {
   // to the animation value and allows the compositor to filter out functions
   // that it determines will not contribute to the final result.
   nsSMILTime mSampleTime;  // sample time within simple dur
-  nsSMILTimeValue mSimpleDuration;
+  SMILTimeValue mSimpleDuration;
   uint32_t mRepeatIteration;
 
   nsSMILTime mBeginTime;  // document time
