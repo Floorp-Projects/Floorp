@@ -368,8 +368,8 @@ void LifoAlloc::transferFrom(LifoAlloc* other) {
   incrementCurSize(other->curSize_);
   oversizeSize_ += other->oversizeSize_;
   appendUnused(std::move(other->unused_));
-  appendUsed(std::move(other->chunks_));
-  oversize_.appendAll(std::move(other->oversize_));
+  chunks_.prependAll(std::move(other->chunks_));
+  oversize_.prependAll(std::move(other->oversize_));
   other->curSize_ = 0;
   other->oversizeSize_ = 0;
 }
