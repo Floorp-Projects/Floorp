@@ -3003,6 +3003,13 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
 
 #endif
 
+#if !defined(MAC_OS_X_VERSION_10_12_2) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
+@interface NSView(NSTouchBarProvider)
+- (NSTouchBar*)makeTouchBar;
+@end
+#endif
+
 @interface NSView(NSVisualEffectViewSetMaskImage)
 - (void)setMaskImage:(NSImage*)image;
 @end
@@ -3104,6 +3111,7 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   mDrawTitle = NO;
   mBrightTitlebarForeground = NO;
   mUseMenuStyle = NO;
+  mTouchBar = nil;
   [self updateTrackingArea];
 
   return self;
@@ -3159,6 +3167,12 @@ GetMenuMaskImage()
   mUseMenuStyle = aValue;
 }
 
+- (NSTouchBar*)makeTouchBar
+{
+  mTouchBar = [[nsTouchBar alloc] init];
+  return mTouchBar;
+}
+
 - (void)setBeingShown:(BOOL)aValue
 {
   mBeingShown = aValue;
@@ -3186,6 +3200,7 @@ GetMenuMaskImage()
 
 - (void)dealloc
 {
+  [mTouchBar release];
   [self removeTrackingArea];
   ChildViewMouseTracker::OnDestroyWindow(self);
   [super dealloc];

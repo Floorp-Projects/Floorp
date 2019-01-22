@@ -14,6 +14,7 @@
 #include "nsBaseWidget.h"
 #include "nsPIWidgetCocoa.h"
 #include "nsCocoaUtils.h"
+#include "nsTouchBar.h"
 
 class nsCocoaWindow;
 class nsChildView;
@@ -49,6 +50,8 @@ typedef struct _nsCocoaWindowList {
   BOOL mDrawTitle;
   BOOL mBrightTitlebarForeground;
   BOOL mUseMenuStyle;
+
+  nsTouchBar* mTouchBar;
 }
 
 - (void)importState:(NSDictionary*)aState;

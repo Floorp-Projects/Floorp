@@ -1488,8 +1488,10 @@ var BookmarkingUI = {
       }
       if (starred) {
         element.setAttribute("starred", "true");
+        Services.obs.notifyObservers(null, "bookmark-icon-updated", "starred");
       } else {
         element.removeAttribute("starred");
+        Services.obs.notifyObservers(null, "bookmark-icon-updated", "unstarred");
       }
     }
 

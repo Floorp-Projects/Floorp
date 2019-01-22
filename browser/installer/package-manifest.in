@@ -277,6 +277,8 @@
 #endif
 #ifdef XP_MACOSX
 @RESPATH@/browser/components/SafariProfileMigrator.js
+@RESPATH@/browser/components/MacTouchBar.manifest
+@RESPATH@/browser/components/MacTouchBar.js
 #endif
 @RESPATH@/components/nsPrompter.manifest
 @RESPATH@/components/nsPrompter.js
@@ -484,6 +486,7 @@
 @RESPATH@/res/grabber.gif
 #ifdef XP_MACOSX
 @RESPATH@/res/cursors/*
+@RESPATH@/res/touchbar/*
 #endif
 @RESPATH@/res/fonts/*
 @RESPATH@/res/dtd/*
