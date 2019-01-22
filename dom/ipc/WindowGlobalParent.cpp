@@ -128,13 +128,6 @@ IPCResult WindowGlobalParent::RecvBecomeCurrentWindowGlobal() {
   return IPC_OK();
 }
 
-IPCResult WindowGlobalParent::RecvDestroy() {
-  if (!mIPCClosed) {
-    Unused << Send__delete__(this);
-  }
-  return IPC_OK();
-}
-
 bool WindowGlobalParent::IsCurrentGlobal() {
   return !mIPCClosed && mBrowsingContext->GetCurrentWindowGlobal() == this;
 }
