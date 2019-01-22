@@ -68,24 +68,6 @@ void ProxyAccessibleBase<Derived>::ClearChildDoc(
 }
 
 template <class Derived>
-bool ProxyAccessibleBase<Derived>::MustPruneChildren() const {
-  // this is the equivalent to nsAccUtils::MustPrune for proxies and should be
-  // kept in sync with that.
-  if (mRole != roles::MENUITEM && mRole != roles::COMBOBOX_OPTION &&
-      mRole != roles::OPTION && mRole != roles::ENTRY &&
-      mRole != roles::FLAT_EQUATION && mRole != roles::PASSWORD_TEXT &&
-      mRole != roles::PUSHBUTTON && mRole != roles::TOGGLE_BUTTON &&
-      mRole != roles::GRAPHIC && mRole != roles::SLIDER &&
-      mRole != roles::PROGRESSBAR && mRole != roles::SEPARATOR)
-    return false;
-
-  if (mChildren.Length() != 1) return false;
-
-  return mChildren[0]->Role() == roles::TEXT_LEAF ||
-         mChildren[0]->Role() == roles::STATICTEXT;
-}
-
-template <class Derived>
 uint32_t ProxyAccessibleBase<Derived>::EmbeddedChildCount() const {
   size_t count = 0, kids = mChildren.Length();
   for (size_t i = 0; i < kids; i++) {
