@@ -173,11 +173,7 @@ function expandRow(panel, labelText) {
 }
 
 function evaluateJSAsync(panel, expression) {
-  return new Promise(resolve => {
-    panel.target.activeConsole.evaluateJSAsync(expression, res => {
-      resolve(res);
-    });
-  });
+  return panel.target.activeConsole.evaluateJSAsync(expression);
 }
 
 function refreshPanel(panel) {

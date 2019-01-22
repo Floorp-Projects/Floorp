@@ -28,13 +28,31 @@ $item-line-height: 20;
 
 .ds-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-row-gap: 18px;
+  grid-row-gap: 24px;
   grid-column-gap: 24px;
 
   // reset some stuff from <ul>.  Should maybe be hoisted when we have better
   // regression detection?
   padding-inline-start: 0;
+
+  // "2/3 width layout"
+  .ds-column-5 &,
+  .ds-column-6 &,
+  .ds-column-7 &,
+  .ds-column-8 & {
+    grid-template-columns: repeat(2, 1fr);
+    grid-row-gap: 24px;
+  }
+
+  // "Full width layout"
+  .ds-column-9 &,
+  .ds-column-10 &,
+  .ds-column-11 &,
+  .ds-column-12 & {
+    grid-template-columns: repeat(3, 1fr);
+    grid-row-gap: 18px;
+  }
+
 }
 
 // XXX this is gross, and attaches the bottom-border to the item above.

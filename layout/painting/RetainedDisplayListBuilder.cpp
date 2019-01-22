@@ -19,10 +19,10 @@
  * Code for doing display list building for a modified subset of the window,
  * and then merging it into the existing display list (for the full window).
  *
- * The approach primarily hinges on the observation that the ‘true’ ordering of
- * display items is represented by a DAG (only items that intersect in 2d space
- * have a defined ordering). Our display list is just one of a many possible
- * linear representations of this ordering.
+ * The approach primarily hinges on the observation that the 'true' ordering
+ * of display items is represented by a DAG (only items that intersect in 2d
+ * space have a defined ordering). Our display list is just one of a many
+ * possible linear representations of this ordering.
  *
  * Each time a frame changes (gets a new ComputedStyle, or has a size/position
  * change), we schedule a paint (as we do currently), but also reord the frame
