@@ -33,7 +33,7 @@ class EntriesCallbackRunnable final : public Runnable {
       }
     }
 
-    mCallback->HandleEvent(entries);
+    mCallback->Call(entries);
     return NS_OK;
   }
 

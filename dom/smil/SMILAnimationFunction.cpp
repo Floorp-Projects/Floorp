@@ -131,7 +131,7 @@ bool SMILAnimationFunction::UnsetAttr(nsAtom* aAttribute) {
 }
 
 void SMILAnimationFunction::SampleAt(nsSMILTime aSampleTime,
-                                     const nsSMILTimeValue& aSimpleDuration,
+                                     const SMILTimeValue& aSimpleDuration,
                                      uint32_t aRepeatIteration) {
   // * Update mHasChanged ("Might this sample be different from prev one?")
   // Were we previously sampling a fill="freeze" final val? (We're not anymore.)

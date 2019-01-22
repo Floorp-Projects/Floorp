@@ -147,6 +147,13 @@ class AtomicOperations {
                                          size_t nbytes);
 
  public:
+  // On some platforms we generate code for the atomics at run-time; that
+  // happens here.
+  static bool Initialize();
+
+  // Deallocate the code segment for generated atomics functions.
+  static void ShutDown();
+
   // Test lock-freedom for any int32 value.  This implements the
   // Atomics::isLockFree() operation in the ECMAScript Shared Memory and
   // Atomics specification, as follows:
@@ -272,24 +279,6 @@ class AtomicOperations {
                                   size_t nelem) {
     memmoveSafeWhenRacy(dest, src, nelem * sizeof(T));
   }
-
-#ifdef DEBUG
-  // Constraints that must hold for atomic operations on all tier-1 platforms:
-  //
-  // - atomic cells can be 1, 2, 4, or 8 bytes
-  // - all atomic operations are lock-free, including 8-byte operations
-  // - atomic operations can only be performed on naturally aligned cells
-  //
-  // (Tier-2 and tier-3 platforms need not support 8-byte atomics, and if they
-  // do, they need not be lock-free.)
-
-  template <typename T>
-  static bool tier1Constraints(const T* addr) {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    return (sizeof(T) < 8 || (hasAtomic8() && isLockfree8())) &&
-           !(uintptr_t(addr) & (sizeof(T) - 1));
-  }
-#endif
 };
 
 inline bool AtomicOperations::isLockfreeJS(int32_t size) {
@@ -333,7 +322,7 @@ inline bool AtomicOperations::isLockfreeJS(int32_t size) {
 //  - write your own support code for the platform+compiler and create a new
 //    case below
 //
-//  - include jit/none/AtomicOperations-feeling-lucky.h in a case for the
+//  - include jit/shared/AtomicOperations-feeling-lucky.h in a case for the
 //    platform below, if you have a gcc-compatible compiler and truly feel
 //    lucky.  You may have to add a little code to that file, too.
 //
@@ -351,52 +340,38 @@ inline bool AtomicOperations::isLockfreeJS(int32_t size) {
 #  if defined(__clang__) || defined(__GNUC__)
 #    include "jit/mips-shared/AtomicOperations-mips-shared.h"
 #  else
-#    error "No AtomicOperations support for this platform+compiler combination"
+#    error "AtomicOperations on MIPS-32 for unknown compiler"
 #  endif
 #elif defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || \
     defined(_M_IX86)
-#  if defined(__clang__) || defined(__GNUC__)
-#    include "jit/x86-shared/AtomicOperations-x86-shared-gcc.h"
-#  elif defined(_MSC_VER)
-#    include "jit/x86-shared/AtomicOperations-x86-shared-msvc.h"
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+#    include "jit/shared/AtomicOperations-shared-jit.h"
 #  else
-#    error "No AtomicOperations support for this platform+compiler combination"
+#    include "jit/shared/AtomicOperations-feeling-lucky.h"
 #  endif
 #elif defined(__arm__)
-#  if defined(__clang__) || defined(__GNUC__)
-#    include "jit/arm/AtomicOperations-arm.h"
+#  if defined(JS_CODEGEN_ARM)
+#    include "jit/shared/AtomicOperations-shared-jit.h"
 #  else
-#    error "No AtomicOperations support for this platform+compiler combination"
+#    include "jit/shared/AtomicOperations-feeling-lucky.h"
 #  endif
 #elif defined(__aarch64__) || defined(_M_ARM64)
-#  if defined(__clang__) || defined(__GNUC__)
-#    include "jit/arm64/AtomicOperations-arm64-gcc.h"
-#  elif defined(_MSC_VER)
-#    include "jit/arm64/AtomicOperations-arm64-msvc.h"
+#  if defined(JS_CODEGEN_ARM64)
+#    include "jit/shared/AtomicOperations-shared-jit.h"
 #  else
-#    error "No AtomicOperations support for this platform+compiler combination"
+#    include "jit/shared/AtomicOperations-feeling-lucky.h"
 #  endif
 #elif defined(__mips__)
 #  if defined(__clang__) || defined(__GNUC__)
 #    include "jit/mips-shared/AtomicOperations-mips-shared.h"
 #  else
-#    error "No AtomicOperations support for this platform+compiler combination"
+#    error "AtomicOperations on MIPS for an unknown compiler"
 #  endif
-#elif defined(__ppc__) || defined(__PPC__)
-#  include "jit/none/AtomicOperations-feeling-lucky.h"
-#elif defined(__sparc__)
-#  include "jit/none/AtomicOperations-feeling-lucky.h"
-#elif defined(__ppc64__) || defined(__PPC64__) || defined(__ppc64le__) || \
-    defined(__PPC64LE__)
-#  include "jit/none/AtomicOperations-feeling-lucky.h"
-#elif defined(__alpha__)
-#  include "jit/none/AtomicOperations-feeling-lucky.h"
-#elif defined(__hppa__)
-#  include "jit/none/AtomicOperations-feeling-lucky.h"
-#elif defined(__sh__)
-#  include "jit/none/AtomicOperations-feeling-lucky.h"
-#elif defined(__s390__) || defined(__s390x__)
-#  include "jit/none/AtomicOperations-feeling-lucky.h"
+#elif defined(__ppc__) || defined(__PPC__) || defined(__sparc__) ||     \
+    defined(__ppc64__) || defined(__PPC64__) || defined(__ppc64le__) || \
+    defined(__PPC64LE__) || defined(__alpha__) || defined(__hppa__) ||  \
+    defined(__sh__) || defined(__s390__) || defined(__s390x__)
+#  include "jit/shared/AtomicOperations-feeling-lucky.h"
 #else
 #  error "No AtomicOperations support provided for this platform"
 #endif

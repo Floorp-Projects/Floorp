@@ -8,7 +8,7 @@
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/SMILTimedElement.h"
-#include "nsSMILTimeValue.h"
+#include "mozilla/SMILTimeValue.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -33,22 +33,22 @@ SMILTimeContainer::~SMILTimeContainer() {
   }
 }
 
-nsSMILTimeValue SMILTimeContainer::ContainerToParentTime(
+SMILTimeValue SMILTimeContainer::ContainerToParentTime(
     nsSMILTime aContainerTime) const {
   // If we're paused, then future times are indefinite
   if (IsPaused() && aContainerTime > mCurrentTime)
-    return nsSMILTimeValue::Indefinite();
+    return SMILTimeValue::Indefinite();
 
-  return nsSMILTimeValue(aContainerTime + mParentOffset);
+  return SMILTimeValue(aContainerTime + mParentOffset);
 }
 
-nsSMILTimeValue SMILTimeContainer::ParentToContainerTime(
+SMILTimeValue SMILTimeContainer::ParentToContainerTime(
     nsSMILTime aParentTime) const {
   // If we're paused, then any time after when we paused is indefinite
   if (IsPaused() && aParentTime > mPauseStart)
-    return nsSMILTimeValue::Indefinite();
+    return SMILTimeValue::Indefinite();
 
-  return nsSMILTimeValue(aParentTime - mParentOffset);
+  return SMILTimeValue(aParentTime - mParentOffset);
 }
 
 void SMILTimeContainer::Begin() {
@@ -205,7 +205,7 @@ bool SMILTimeContainer::GetNextMilestoneInParentTime(
     SMILMilestone& aNextMilestone) const {
   if (mMilestoneEntries.IsEmpty()) return false;
 
-  nsSMILTimeValue parentTime =
+  SMILTimeValue parentTime =
       ContainerToParentTime(mMilestoneEntries.Top().mMilestone.mTime);
   if (!parentTime.IsDefinite()) return false;
 
@@ -219,7 +219,7 @@ bool SMILTimeContainer::PopMilestoneElementsAtMilestone(
     const SMILMilestone& aMilestone, AnimElemArray& aMatchedElements) {
   if (mMilestoneEntries.IsEmpty()) return false;
 
-  nsSMILTimeValue containerTime = ParentToContainerTime(aMilestone.mTime);
+  SMILTimeValue containerTime = ParentToContainerTime(aMilestone.mTime);
   if (!containerTime.IsDefinite()) return false;
 
   SMILMilestone containerMilestone(containerTime.GetMillis(),
