@@ -179,9 +179,15 @@ job-template:
                     - single_locale/tc_common.py
                     - single_locale/tc_win32.py
                     - taskcluster_nightly.py
-                win64(|-aarch64-msvc)-nightly:
+                win64-nightly:
                     - single_locale/firefox.py
                     - single_locale/win64.py
+                    - single_locale/tc_common.py
+                    - single_locale/tc_win64.py
+                    - taskcluster_nightly.py
+                win64-aarch64-msvc-nightly:
+                    - single_locale/firefox.py
+                    - single_locale/win64-aarch64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win64.py
                     - taskcluster_nightly.py
