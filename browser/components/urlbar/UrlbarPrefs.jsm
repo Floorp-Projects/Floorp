@@ -44,6 +44,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // on systems that support it.
   ["clickSelectsAll", false],
 
+  // Whether using `ctrl` when hitting return/enter in the URL bar
+  // (or clicking 'go') should prefix 'www.' and suffix
+  // browser.fixup.alternate.suffix to the URL bar value prior to
+  // navigating.
+  ["ctrlCanonizesURLs", true],
+
   // Whether copying the entire URL from the location bar will put a human
   // readable (percent-decoded) URL on the clipboard.
   ["decodeURLsOnCopy", false],
