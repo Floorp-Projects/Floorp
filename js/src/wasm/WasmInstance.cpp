@@ -447,7 +447,7 @@ Instance::memCopy(Instance* instance, uint32_t dstByteOffset,
 }
 
 /* static */ int32_t /* -1 to signal trap; 0 for ok */
-Instance::memDrop(Instance* instance, uint32_t segIndex) {
+Instance::dataDrop(Instance* instance, uint32_t segIndex) {
   MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
                      "ensured by validation");
 
@@ -593,7 +593,7 @@ Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 }
 
 /* static */ int32_t /* -1 to signal trap; 0 for ok */
-Instance::tableDrop(Instance* instance, uint32_t segIndex) {
+Instance::elemDrop(Instance* instance, uint32_t segIndex) {
   MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
                      "ensured by validation");
 

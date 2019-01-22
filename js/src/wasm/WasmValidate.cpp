@@ -885,9 +885,9 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                           &nothing, &unusedSrcMemIndex,
                                           &nothing, &nothing));
           }
-          case uint16_t(MiscOp::MemDrop): {
+          case uint16_t(MiscOp::DataDrop): {
             uint32_t unusedSegIndex;
-            CHECK(iter.readMemOrTableDrop(/*isMem=*/true, &unusedSegIndex));
+            CHECK(iter.readDataOrElemDrop(/*isData=*/true, &unusedSegIndex));
           }
           case uint16_t(MiscOp::MemFill):
             CHECK(iter.readMemFill(&nothing, &nothing, &nothing));
@@ -905,9 +905,9 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                 /*isMem=*/false, &unusedDestTableIndex, &nothing,
                 &unusedSrcTableIndex, &nothing, &nothing));
           }
-          case uint16_t(MiscOp::TableDrop): {
+          case uint16_t(MiscOp::ElemDrop): {
             uint32_t unusedSegIndex;
-            CHECK(iter.readMemOrTableDrop(/*isMem=*/false, &unusedSegIndex));
+            CHECK(iter.readDataOrElemDrop(/*isData=*/false, &unusedSegIndex));
           }
           case uint16_t(MiscOp::TableInit): {
             uint32_t unusedSegIndex;

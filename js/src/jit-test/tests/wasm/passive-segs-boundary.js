@@ -103,7 +103,7 @@ function tab_test_nofail(insn1, insn2) {
 //---- memory.{drop,init} -------------------------------------------------
 
 // drop with no memory
-mem_test("memory.drop 3", "",
+mem_test("data.drop 3", "",
          WebAssembly.CompileError, /can't touch memory without memory/,
          false);
 
@@ -113,7 +113,7 @@ mem_test("(memory.init 1 (i32.const 1234) (i32.const 1) (i32.const 1))", "",
          false);
 
 // drop with data seg ix out of range
-mem_test("memory.drop 4", "",
+mem_test("data.drop 4", "",
          WebAssembly.CompileError, /memory.{drop,init} index out of range/);
 
 // init with data seg ix out of range
@@ -121,7 +121,7 @@ mem_test("(memory.init 4 (i32.const 1234) (i32.const 1) (i32.const 1))", "",
          WebAssembly.CompileError, /memory.{drop,init} index out of range/);
 
 // drop with data seg ix indicating an active segment
-mem_test("memory.drop 2", "",
+mem_test("data.drop 2", "",
          WebAssembly.RuntimeError, /use of invalid passive data segment/);
 
 // init with data seg ix indicating an active segment
@@ -134,12 +134,12 @@ mem_test_nofail(
     "(memory.init 1 (i32.const 4321) (i32.const 1) (i32.const 1))");
 
 // drop, then drop
-mem_test("memory.drop 1",
-         "memory.drop 1",
+mem_test("data.drop 1",
+         "data.drop 1",
          WebAssembly.RuntimeError, /use of invalid passive data segment/);
 
 // drop, then init
-mem_test("memory.drop 1",
+mem_test("data.drop 1",
          "(memory.init 1 (i32.const 1234) (i32.const 1) (i32.const 1))",
          WebAssembly.RuntimeError, /use of invalid passive data segment/);
 
@@ -169,7 +169,7 @@ mem_test("",
          WebAssembly.RuntimeError, /index out of bounds/);
 
 // drop: too many args
-mem_test("memory.drop 1 (i32.const 42)", "",
+mem_test("data.drop 1 (i32.const 42)", "",
          WebAssembly.CompileError,
          /unused values not explicitly dropped by end of block/);
 
@@ -201,8 +201,8 @@ mem_test("(memory.init 1 (i32.const 1) (i32.const 1))", "",
 //---- table.{drop,init} --------------------------------------------------
 
 // drop with no table
-tab_test("table.drop 3", "",
-         WebAssembly.CompileError, /can't table.drop without a table/,
+tab_test("elem.drop 3", "",
+         WebAssembly.CompileError, /can't elem.drop without a table/,
          false);
 
 // init with no table
@@ -211,15 +211,15 @@ tab_test("(table.init 1 (i32.const 12) (i32.const 1) (i32.const 1))", "",
          false);
 
 // drop with elem seg ix out of range
-tab_test("table.drop 4", "",
-         WebAssembly.CompileError, /element segment index out of range for table.drop/);
+tab_test("elem.drop 4", "",
+         WebAssembly.CompileError, /element segment index out of range for elem.drop/);
 
 // init with elem seg ix out of range
 tab_test("(table.init 4 (i32.const 12) (i32.const 1) (i32.const 1))", "",
          WebAssembly.CompileError, /table.init segment index out of range/);
 
 // drop with elem seg ix indicating an active segment
-tab_test("table.drop 2", "",
+tab_test("elem.drop 2", "",
          WebAssembly.RuntimeError, /use of invalid passive element segment/);
 
 // init with elem seg ix indicating an active segment
@@ -232,12 +232,12 @@ tab_test_nofail(
     "(table.init 1 (i32.const 21) (i32.const 1) (i32.const 1))");
 
 // drop, then drop
-tab_test("table.drop 1",
-         "table.drop 1",
+tab_test("elem.drop 1",
+         "elem.drop 1",
          WebAssembly.RuntimeError, /use of invalid passive element segment/);
 
 // drop, then init
-tab_test("table.drop 1",
+tab_test("elem.drop 1",
          "(table.init 1 (i32.const 12) (i32.const 1) (i32.const 1))",
          WebAssembly.RuntimeError, /use of invalid passive element segment/);
 
@@ -267,7 +267,7 @@ tab_test("",
          WebAssembly.RuntimeError, /index out of bounds/);
 
 // drop: too many args
-tab_test("table.drop 1 (i32.const 42)", "",
+tab_test("elem.drop 1 (i32.const 42)", "",
          WebAssembly.CompileError,
          /unused values not explicitly dropped by end of block/);
 
