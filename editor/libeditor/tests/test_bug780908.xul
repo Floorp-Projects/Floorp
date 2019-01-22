@@ -95,6 +95,10 @@ adapted from test_bug607584.xul by Kent James <kent@caspia.com>
       {
       },
   
+    onContentBlockingEvent : function(aWebProgress, aRequest, aEvent)
+      {
+      },
+  
       mEditor: null
   };
 

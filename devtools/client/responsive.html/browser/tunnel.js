@@ -422,6 +422,7 @@ MessageManagerTunnel.prototype = {
     "Content:SecurityChange",
     "Content:StateChange",
     "Content:StatusChange",
+    "Content:ContentBlockingEvent",
     // Messages sent to browser.js
     "DOMTitleChanged",
     "ImageDocumentLoaded",

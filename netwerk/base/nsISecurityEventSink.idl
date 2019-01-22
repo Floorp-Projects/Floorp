@@ -19,6 +19,15 @@ interface nsISecurityEventSink : nsISupports
       */
 
     void onSecurityChange(in nsISupports i_Context, in unsigned long state);
+
+    /**
+      * Fired when a content blocking event occurs during the time
+      * when a document is alive.  This interface should be called
+      * by Gecko to notify nsIWebProgressListeners that there is a
+      * new content blocking event.  Content blocking events are in
+      * nsIWebProgressListeners.idl.
+      */
+    void onContentBlockingEvent(in nsISupports i_Context, in unsigned long event);
 };
 
 
