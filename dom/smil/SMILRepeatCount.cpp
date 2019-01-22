@@ -12,4 +12,3 @@ namespace mozilla {
 /*static*/ const double SMILRepeatCount::kIndefinite = -2.0;
 
 }  // namespace mozilla
-

@@ -142,7 +142,9 @@ treechildren::-moz-tree-column(insertafter) {
 /* ::::: column picker :::::  */
 
 .tree-columnpicker-icon {
-  list-style-image: url("chrome://global/skin/tree/columnpicker.gif");
+  list-style-image: url("chrome://global/skin/icons/columnpicker.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 /* ::::: tree icons ::::: */
