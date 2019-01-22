@@ -1,6 +1,0 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg data-name="usb" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-  <path fill="context-fill" d="M13.5 4h-2a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h.44c-.17.63-.69.8-1.56 1A4.76 4.76 0 0 0 9 8.53V4h1.07a.46.46 0 0 0 .37-.74L8.37.5a.46.46 0 0 0-.74 0L5.56 3.26a.46.46 0 0 0 .37.74H7v6.53A4.76 4.76 0 0 0 5.62 10C4.71 9.79 4.17 9.61 4 8.9a1.5 1.5 0 1 0-2-1.4 1.49 1.49 0 0 0 1 1.42c.2 1.51 1.42 1.84 2.34 2.07s1.53.43 1.6 1.3a2 2 0 1 0 2 0V10.5C9 9.44 9.56 9.25 10.62 9s2.1-.54 2.33-2h.55a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5z" />
-</svg>

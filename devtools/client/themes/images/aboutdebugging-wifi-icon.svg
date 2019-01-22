@@ -1,9 +1,0 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg data-name="wifi" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-  <path fill="context-fill" d="M15 6.24a1 1 0 0 1-.58-.18 10.94 10.94 0 0 0-12.78 0A1 1 0 0 1 .45 4.43a12.94 12.94 0 0 1 15.1 0 1 1 0 0 1 .23 1.4 1 1 0 0 1-.78.41z"/>
-  <path fill="context-fill" d="M9.74 13.56a1 1 0 0 1-.58-.18 2 2 0 0 0-2.32 0 1 1 0 0 1-1.16-1.63 4 4 0 0 1 4.64 0 1 1 0 0 1 .23 1.4 1 1 0 0 1-.81.41z"/>
-  <path fill="context-fill" d="M11.48 11.12a1 1 0 0 1-.58-.19 5.05 5.05 0 0 0-5.8 0 1 1 0 1 1-1.17-1.62 7.1 7.1 0 0 1 8.14 0 1 1 0 0 1 .23 1.4 1 1 0 0 1-.82.41z"/>
-  <path fill="context-fill" d="M13.23 8.68a1 1 0 0 1-.59-.18 8.06 8.06 0 0 0-9.28 0A1 1 0 0 1 2 8.26a1 1 0 0 1 .23-1.39 10 10 0 0 1 11.62 0A1 1 0 0 1 14 8.26a1 1 0 0 1-.77.42z"/>
-</svg>
