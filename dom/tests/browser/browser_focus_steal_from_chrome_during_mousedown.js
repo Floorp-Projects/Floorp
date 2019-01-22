@@ -30,7 +30,7 @@ add_task(async function test() {
     isnot(fm.focusedElement, document.getElementById("urlbar").inputField,
        "Failed to move focus away from search bar: button=" + button);
 
-    await ContentTask.spawn(tab.linkedBrowser, button, async function (button) {
+    await ContentTask.spawn(tab.linkedBrowser, button, async function(button) {
       let fm = Cc["@mozilla.org/focus-manager;1"].
           getService(Ci.nsIFocusManager);
 
