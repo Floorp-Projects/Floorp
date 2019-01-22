@@ -45,23 +45,24 @@ struct ScriptedCaller {
 struct CompileArgs : ShareableBase<CompileArgs> {
   ScriptedCaller scriptedCaller;
   UniqueChars sourceMapURL;
+
   bool baselineEnabled;
-  bool forceCranelift;
-  bool debugEnabled;
   bool ionEnabled;
+  bool craneliftEnabled;
+  bool debugEnabled;
   bool sharedMemoryEnabled;
-  bool gcTypesConfigured;
-  bool testTiering;
+  bool forceTiering;
+  bool gcEnabled;
 
   explicit CompileArgs(ScriptedCaller&& scriptedCaller)
       : scriptedCaller(std::move(scriptedCaller)),
         baselineEnabled(false),
-        forceCranelift(false),
-        debugEnabled(false),
         ionEnabled(false),
+        craneliftEnabled(false),
+        debugEnabled(false),
         sharedMemoryEnabled(false),
-        gcTypesConfigured(false),
-        testTiering(false) {}
+        forceTiering(false),
+        gcEnabled(false) {}
 
   CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller);
 };
