@@ -3169,20 +3169,23 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
   return nullptr;
 }
 
-static nsIContent* GetTopLevelHost(nsIContent* aContent) {
-  nsIContent* topLevelhost = nullptr;
+static nsIContent* GetTopLevelScopeOwner(nsIContent* aContent) {
+  nsIContent* topLevelScopeOwner = nullptr;
   while (aContent) {
     if (HTMLSlotElement* slot = aContent->GetAssignedSlot()) {
       aContent = slot;
     } else if (ShadowRoot* shadowRoot = aContent->GetContainingShadow()) {
       aContent = shadowRoot->Host();
-      topLevelhost = aContent;
+      topLevelScopeOwner = aContent;
     } else {
+      if (HTMLSlotElement::FromNode(aContent)) {
+        topLevelScopeOwner = aContent;
+      }
       aContent = aContent->GetParent();
     }
   }
 
-  return topLevelhost;
+  return topLevelScopeOwner;
 }
 
 nsresult nsFocusManager::GetNextTabbableContent(
@@ -3195,7 +3198,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
   nsCOMPtr<nsIContent> startContent = aStartContent;
   if (!startContent) return NS_OK;
 
-  nsIContent* currentTopLevelHost = GetTopLevelHost(aStartContent);
+  nsIContent* currentTopLevelScopeOwner = GetTopLevelScopeOwner(aStartContent);
 
   LOGCONTENTNAVIGATION("GetNextTabbable: %s", aStartContent);
   LOGFOCUSNAVIGATION(("  tabindex: %d", aCurrentTabIndex));
@@ -3316,18 +3319,18 @@ nsresult nsFocusManager::GetNextTabbableContent(
 
     // Walk frames to find something tabbable matching aCurrentTabIndex
     while (frame) {
-      // Try to find the topmost Shadow DOM host, since we want to
-      // skip Shadow DOM in frame traversal.
+      // Try to find the topmost scope owner, since we want to skip the node
+      // that is not owned by document in frame traversal.
       nsIContent* currentContent = frame->GetContent();
-      nsIContent* oldTopLevelHost = currentTopLevelHost;
-      if (oldTopLevelHost != currentContent) {
-        currentTopLevelHost = GetTopLevelHost(currentContent);
+      nsIContent* oldTopLevelScopeOwner = currentTopLevelScopeOwner;
+      if (oldTopLevelScopeOwner != currentContent) {
+        currentTopLevelScopeOwner = GetTopLevelScopeOwner(currentContent);
       } else {
-        currentTopLevelHost = currentContent;
+        currentTopLevelScopeOwner = currentContent;
       }
-      if (currentTopLevelHost) {
-        if (currentTopLevelHost == oldTopLevelHost) {
-          // We're within Shadow DOM, continue.
+      if (currentTopLevelScopeOwner) {
+        if (currentTopLevelScopeOwner == oldTopLevelScopeOwner) {
+          // We're within non-document scope, continue.
           do {
             if (aForward) {
               frameTraversal->Next();
@@ -3340,7 +3343,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
           } while (frame && frame->GetPrevContinuation());
           continue;
         }
-        currentContent = currentTopLevelHost;
+        currentContent = currentTopLevelScopeOwner;
       }
 
       // For document navigation, check if this element is an open panel. Since
