@@ -155,6 +155,7 @@ var tabStateListener = {
   onLocationChange: () => {},
   onSecurityChange: () => {},
   onProgressChange: () => {},
+  onContentBlockingEvent: () => {},
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener])
 };
 

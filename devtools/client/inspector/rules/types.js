@@ -25,11 +25,18 @@ const declaration = exports.declaration = {
   // An unique CSS declaration id.
   id: PropTypes.string,
 
+  // Whether or not the declaration is valid. (Does it make sense for this value
+  // to be assigned to this property name?)
+  isDeclarationValid: PropTypes.bool,
+
   // Whether or not the declaration is enabled.
   isEnabled: PropTypes.bool,
 
   // Whether or not the declaration's property name is known.
   isKnownProperty: PropTypes.bool,
+
+  // Whether or not the property name is valid.
+  isNameValid: PropTypes.bool,
 
   // Whether or not the the declaration is overridden.
   isOverridden: PropTypes.bool,
