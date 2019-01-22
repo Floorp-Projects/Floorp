@@ -54,7 +54,7 @@ add_task(async function testShieldHistogram() {
 
   await promiseTabLoadEvent(tab, TRACKING_PAGE);
   // Note that right now the shield histogram is not measuring what
-  // you might think.  Since onSecurityChange fires twice for a tracking page,
+  // you might think.  Since onContentBlockingEvent fires twice for a tracking page,
   // the total page loads count is double counting, and the shield count
   // (which is meant to measure times when the shield wasn't shown) fires even
   // when tracking elements exist on the page.

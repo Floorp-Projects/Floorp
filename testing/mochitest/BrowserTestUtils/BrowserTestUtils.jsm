@@ -434,6 +434,7 @@ var BrowserTestUtils = {
         onSecurityChange() {},
         onStatusChange() {},
         onLocationChange() {},
+        onContentBlockingEvent() {},
         QueryInterface: ChromeUtils.generateQI([
           Ci.nsIWebProgressListener,
           Ci.nsIWebProgressListener2,

@@ -700,6 +700,13 @@ nsDocShellTreeOwner::OnSecurityChange(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocShellTreeOwner::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
+                                            nsIRequest* aRequest,
+                                            uint32_t aEvent) {
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsDocShellTreeOwner: Accessors
 //*****************************************************************************

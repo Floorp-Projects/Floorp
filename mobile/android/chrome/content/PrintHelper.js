@@ -62,6 +62,7 @@ var PrintHelper = {
         onLocationChange: function() {},
         onStatusChange: function() {},
         onSecurityChange: function() {},
+        onContentBlockingEvent: function() {},
       });
     });
   },

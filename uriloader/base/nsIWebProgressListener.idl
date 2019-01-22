@@ -210,28 +210,6 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_BLOCKED_MIXED_DISPLAY_CONTENT = 0x00000100;
   const unsigned long STATE_LOADED_MIXED_DISPLAY_CONTENT  = 0x00000200;
 
-   /**
-   *  Safe Browsing blocking content flags
-   *
-   * NOTE: IF YOU ARE ADDING MORE OF THESE FLAGS, MAKE SURE TO EDIT
-   * nsSecureBrowserUIImpl::CheckForBlockedContent().
-   *
-   * May be set in addition to the State security Flags, to indicate that
-   * tracking or unsafe content has been encountered.
-   *
-   * STATE_BLOCKED_TRACKING_CONTENT
-   *   Tracking content has been blocked from loading.
-   *
-   * STATE_LOADED_TRACKING_CONTENT
-   *   Tracking content has been loaded.
-   *
-   * STATE_BLOCKED_UNSAFE_CONTENT
-   *   Content which againts SafeBrowsing list has been blocked from loading.
-   */
-  const unsigned long STATE_BLOCKED_TRACKING_CONTENT         = 0x00001000;
-  const unsigned long STATE_LOADED_TRACKING_CONTENT          = 0x00002000;
-  const unsigned long STATE_BLOCKED_UNSAFE_CONTENT           = 0x00004000;
-
   /**
    * Diagnostic flags
    *
@@ -279,12 +257,21 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_CERT_USER_OVERRIDDEN      = 0x04000000;
 
   /**
-   * Cookie Jar blocking
+   * Content Blocking Event flags
    *
    * NOTE: IF YOU ARE ADDING MORE OF THESE FLAGS, MAKE SURE TO EDIT
    * nsSecureBrowserUIImpl::CheckForBlockedContent().
    *
    * These flags describe the reason of cookie jar rejection.
+   *
+   * STATE_BLOCKED_TRACKING_CONTENT
+   *   Tracking content has been blocked from loading.
+   *
+   * STATE_LOADED_TRACKING_CONTENT
+   *   Tracking content has been loaded.
+   *
+   * STATE_BLOCKED_UNSAFE_CONTENT
+   *   Content which againts SafeBrowsing list has been blocked from loading.
    *
    * STATE_COOKIES_BLOCKED_BY_PERMISSION
    *   Rejected for custom site permission.
@@ -299,6 +286,9 @@ interface nsIWebProgressListener : nsISupports
    * STATE_COOKIES_BLOCKED_FOREIGN
    *   Rejected because cookie policy blocks 3rd party cookies.
    */
+  const unsigned long STATE_BLOCKED_TRACKING_CONTENT      = 0x00001000;
+  const unsigned long STATE_LOADED_TRACKING_CONTENT       = 0x00002000;
+  const unsigned long STATE_BLOCKED_UNSAFE_CONTENT        = 0x00004000;
   const unsigned long STATE_COOKIES_LOADED                = 0x00008000;
   const unsigned long STATE_COOKIES_BLOCKED_BY_PERMISSION = 0x10000000;
   const unsigned long STATE_COOKIES_BLOCKED_TRACKER       = 0x20000000;
@@ -462,4 +452,21 @@ interface nsIWebProgressListener : nsISupports
   void onSecurityChange(in nsIWebProgress aWebProgress,
                         in nsIRequest aRequest,
                         in unsigned long aState);
+
+  /**
+   * Notification called for content blocking events.  This method will be
+   * called when content gets allowed/blocked for various reasons per the
+   * Content Blocking rules.
+   *
+   * @param aWebProgress
+   *        The nsIWebProgress instance that fired the notification.
+   * @param aRequest
+   *        The nsIRequest that has new security state.
+   * @param aEvent
+   *        A value composed of the Content Blocking Event Flags listed above.
+   *        Any undefined bits are reserved for future use.
+   */
+  void onContentBlockingEvent(in nsIWebProgress aWebProgress,
+                              in nsIRequest aRequest,
+                              in unsigned long aEvent);
 };
