@@ -70,16 +70,19 @@ body.config-warning {
   background-size: 16px 16px;
 }
 
-#prefs > tr > td {
+#prefs > tr > td,
+#prefs > tr > th {
   padding: 4px;
   width: 50%;
+  font-weight: inherit;
 }
 
-#prefs > tr > td.cell-name {
+#prefs > tr > th {
+  text-align: unset;
   padding-inline-start: 30px;
 }
 
-#prefs > tr.deleted > td.cell-name {
+#prefs > tr.deleted > th {
   font-weight: bold;
   opacity: 0.4;
 }

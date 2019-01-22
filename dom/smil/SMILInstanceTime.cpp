@@ -4,19 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSMILInstanceTime.h"
+#include "SMILInstanceTime.h"
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/SMILInterval.h"
-#include "nsSMILTimeValueSpec.h"
+#include "mozilla/SMILTimeValueSpec.h"
+
+namespace mozilla {
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsSMILInstanceTime::nsSMILInstanceTime(const nsSMILTimeValue& aTime,
-                                       nsSMILInstanceTimeSource aSource,
-                                       nsSMILTimeValueSpec* aCreator,
-                                       SMILInterval* aBaseInterval)
+SMILInstanceTime::SMILInstanceTime(const SMILTimeValue& aTime,
+                                   SMILInstanceTimeSource aSource,
+                                   SMILTimeValueSpec* aCreator,
+                                   SMILInterval* aBaseInterval)
     : mTime(aTime),
       mFlags(0),
       mVisited(false),
@@ -47,7 +49,7 @@ nsSMILInstanceTime::nsSMILInstanceTime(const nsSMILTimeValue& aTime,
   SetBaseInterval(aBaseInterval);
 }
 
-nsSMILInstanceTime::~nsSMILInstanceTime() {
+SMILInstanceTime::~SMILInstanceTime() {
   MOZ_ASSERT(!mBaseInterval,
              "Destroying instance time without first calling Unlink()");
   MOZ_ASSERT(mFixedEndpointRefCnt == 0,
@@ -55,8 +57,8 @@ nsSMILInstanceTime::~nsSMILInstanceTime() {
              "endpoint of an interval");
 }
 
-void nsSMILInstanceTime::Unlink() {
-  RefPtr<nsSMILInstanceTime> deathGrip(this);
+void SMILInstanceTime::Unlink() {
+  RefPtr<SMILInstanceTime> deathGrip(this);
   if (mBaseInterval) {
     mBaseInterval->RemoveDependentTime(*this);
     mBaseInterval = nullptr;
@@ -64,7 +66,7 @@ void nsSMILInstanceTime::Unlink() {
   mCreator = nullptr;
 }
 
-void nsSMILInstanceTime::HandleChangedInterval(
+void SMILInstanceTime::HandleChangedInterval(
     const SMILTimeContainer* aSrcContainer, bool aBeginObjectChanged,
     bool aEndObjectChanged) {
   // It's possible a sequence of notifications might cause our base interval to
@@ -84,7 +86,7 @@ void nsSMILInstanceTime::HandleChangedInterval(
   bool objectChanged =
       mCreator->DependsOnBegin() ? aBeginObjectChanged : aEndObjectChanged;
 
-  RefPtr<nsSMILInstanceTime> deathGrip(this);
+  RefPtr<SMILInstanceTime> deathGrip(this);
   mozilla::AutoRestore<bool> setVisited(mVisited);
   mVisited = true;
 
@@ -92,7 +94,7 @@ void nsSMILInstanceTime::HandleChangedInterval(
                                       objectChanged);
 }
 
-void nsSMILInstanceTime::HandleDeletedInterval() {
+void SMILInstanceTime::HandleDeletedInterval() {
   MOZ_ASSERT(mBaseInterval,
              "Got call to HandleDeletedInterval on an independent instance "
              "time");
@@ -101,12 +103,12 @@ void nsSMILInstanceTime::HandleDeletedInterval() {
   mBaseInterval = nullptr;
   mFlags &= ~kMayUpdate;  // Can't update without a base interval
 
-  RefPtr<nsSMILInstanceTime> deathGrip(this);
+  RefPtr<SMILInstanceTime> deathGrip(this);
   mCreator->HandleDeletedInstanceTime(*this);
   mCreator = nullptr;
 }
 
-void nsSMILInstanceTime::HandleFilteredInterval() {
+void SMILInstanceTime::HandleFilteredInterval() {
   MOZ_ASSERT(mBaseInterval,
              "Got call to HandleFilteredInterval on an independent instance "
              "time");
@@ -116,22 +118,22 @@ void nsSMILInstanceTime::HandleFilteredInterval() {
   mCreator = nullptr;
 }
 
-bool nsSMILInstanceTime::ShouldPreserve() const {
+bool SMILInstanceTime::ShouldPreserve() const {
   return mFixedEndpointRefCnt > 0 || (mFlags & kWasDynamicEndpoint);
 }
 
-void nsSMILInstanceTime::UnmarkShouldPreserve() {
+void SMILInstanceTime::UnmarkShouldPreserve() {
   mFlags &= ~kWasDynamicEndpoint;
 }
 
-void nsSMILInstanceTime::AddRefFixedEndpoint() {
+void SMILInstanceTime::AddRefFixedEndpoint() {
   MOZ_ASSERT(mFixedEndpointRefCnt < UINT16_MAX,
              "Fixed endpoint reference count upper limit reached");
   ++mFixedEndpointRefCnt;
   mFlags &= ~kMayUpdate;  // Once fixed, always fixed
 }
 
-void nsSMILInstanceTime::ReleaseFixedEndpoint() {
+void SMILInstanceTime::ReleaseFixedEndpoint() {
   MOZ_ASSERT(mFixedEndpointRefCnt > 0, "Duplicate release");
   --mFixedEndpointRefCnt;
   if (mFixedEndpointRefCnt == 0 && IsDynamic()) {
@@ -139,10 +141,10 @@ void nsSMILInstanceTime::ReleaseFixedEndpoint() {
   }
 }
 
-bool nsSMILInstanceTime::IsDependentOn(const nsSMILInstanceTime& aOther) const {
+bool SMILInstanceTime::IsDependentOn(const SMILInstanceTime& aOther) const {
   if (mVisited) return false;
 
-  const nsSMILInstanceTime* myBaseTime = GetBaseTime();
+  const SMILInstanceTime* myBaseTime = GetBaseTime();
   if (!myBaseTime) return false;
 
   if (myBaseTime == &aOther) return true;
@@ -152,7 +154,7 @@ bool nsSMILInstanceTime::IsDependentOn(const nsSMILInstanceTime& aOther) const {
   return myBaseTime->IsDependentOn(aOther);
 }
 
-const nsSMILInstanceTime* nsSMILInstanceTime::GetBaseTime() const {
+const SMILInstanceTime* SMILInstanceTime::GetBaseTime() const {
   if (!mBaseInterval) {
     return nullptr;
   }
@@ -166,7 +168,7 @@ const nsSMILInstanceTime* nsSMILInstanceTime::GetBaseTime() const {
                                     : mBaseInterval->End();
 }
 
-void nsSMILInstanceTime::SetBaseInterval(SMILInterval* aBaseInterval) {
+void SMILInstanceTime::SetBaseInterval(SMILInterval* aBaseInterval) {
   MOZ_ASSERT(!mBaseInterval,
              "Attempting to reassociate an instance time with a different "
              "interval.");
@@ -174,7 +176,7 @@ void nsSMILInstanceTime::SetBaseInterval(SMILInterval* aBaseInterval) {
   if (aBaseInterval) {
     MOZ_ASSERT(mCreator,
                "Attempting to create a dependent instance time without "
-               "reference to the creating nsSMILTimeValueSpec object.");
+               "reference to the creating SMILTimeValueSpec object.");
     if (!mCreator) return;
 
     aBaseInterval->AddDependentTime(*this);
@@ -182,3 +184,5 @@ void nsSMILInstanceTime::SetBaseInterval(SMILInterval* aBaseInterval) {
 
   mBaseInterval = aBaseInterval;
 }
+
+}  // namespace mozilla
