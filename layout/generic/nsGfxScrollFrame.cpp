@@ -3977,21 +3977,10 @@ nsSize ScrollFrameHelper::GetVisualViewportSize() const {
 
 nsPoint ScrollFrameHelper::GetVisualViewportOffset() const {
   nsIPresShell* presShell = mOuter->PresShell();
-  if (mIsRoot && presShell->IsVisualViewportOffsetSet()) {
+  if (mIsRoot && presShell->IsVisualViewportSizeSet()) {
     return presShell->GetVisualViewportOffset();
   }
   return GetScrollPosition();
-}
-
-nsRect ScrollFrameHelper::GetVisualOptimalViewingRect() const {
-  nsIPresShell* presShell = mOuter->PresShell();
-
-  if (mIsRoot && presShell->IsVisualViewportSizeSet() &&
-      presShell->IsVisualViewportOffsetSet()) {
-    return nsRect(presShell->GetVisualViewportOffset(),
-                  presShell->GetVisualViewportSize());
-  }
-  return mScrollPort;
 }
 
 static void AdjustForWholeDelta(int32_t aDelta, nscoord* aCoord) {
