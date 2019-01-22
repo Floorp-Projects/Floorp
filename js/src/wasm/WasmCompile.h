@@ -50,7 +50,7 @@ struct CompileArgs : ShareableBase<CompileArgs> {
   bool debugEnabled;
   bool ionEnabled;
   bool sharedMemoryEnabled;
-  HasGcTypes gcTypesConfigured;
+  bool gcTypesConfigured;
   bool testTiering;
 
   explicit CompileArgs(ScriptedCaller&& scriptedCaller)
@@ -60,7 +60,7 @@ struct CompileArgs : ShareableBase<CompileArgs> {
         debugEnabled(false),
         ionEnabled(false),
         sharedMemoryEnabled(false),
-        gcTypesConfigured(HasGcTypes::False),
+        gcTypesConfigured(false),
         testTiering(false) {}
 
   CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller);
