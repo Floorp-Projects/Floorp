@@ -7,6 +7,7 @@
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const SearchBox = createFactory(require("./SearchBox"));
 
@@ -22,6 +23,10 @@ const { getStr } = require("../utils/l10n");
 class Toolbar extends PureComponent {
   static get propTypes() {
     return {
+      isClassPanelExpanded: PropTypes.bool.isRequired,
+      onAddClass: PropTypes.func.isRequired,
+      onSetClassState: PropTypes.func.isRequired,
+      onToggleClassPanelExpanded: PropTypes.func.isRequired,
       onTogglePseudoClass: PropTypes.func.isRequired,
     };
   }
@@ -30,8 +35,6 @@ class Toolbar extends PureComponent {
     super(props);
 
     this.state = {
-      // Whether or not the class panel is expanded.
-      isClassPanelExpanded: false,
       // Whether or not the pseudo class panel is expanded.
       isPseudoClassPanelExpanded: false,
     };
@@ -43,14 +46,13 @@ class Toolbar extends PureComponent {
   onClassPanelToggle(event) {
     event.stopPropagation();
 
+    const isClassPanelExpanded = !this.props.isClassPanelExpanded;
+    this.props.onToggleClassPanelExpanded(isClassPanelExpanded);
     this.setState(prevState => {
-      const isClassPanelExpanded = !prevState.isClassPanelExpanded;
-      const isPseudoClassPanelExpanded = isClassPanelExpanded ?
-        false : prevState.isPseudoClassPanelExpanded;
-
       return {
-        isClassPanelExpanded,
-        isPseudoClassPanelExpanded,
+        isPseudoClassPanelExpanded: isClassPanelExpanded ?
+                                    false :
+                                    prevState.isPseudoClassPanelExpanded,
       };
     });
   }
@@ -58,23 +60,18 @@ class Toolbar extends PureComponent {
   onPseudoClassPanelToggle(event) {
     event.stopPropagation();
 
-    this.setState(prevState => {
-      const isPseudoClassPanelExpanded = !prevState.isPseudoClassPanelExpanded;
-      const isClassPanelExpanded = isPseudoClassPanelExpanded ?
-        false : prevState.isClassPanelExpanded;
+    const isPseudoClassPanelExpanded = !this.state.isPseudoClassPanelExpanded;
 
-      return {
-        isClassPanelExpanded,
-        isPseudoClassPanelExpanded,
-      };
-    });
+    if (isPseudoClassPanelExpanded) {
+      this.props.onToggleClassPanelExpanded(false);
+    }
+
+    this.setState({ isPseudoClassPanelExpanded });
   }
 
   render() {
-    const {
-      isClassPanelExpanded,
-      isPseudoClassPanelExpanded,
-    } = this.state;
+    const { isClassPanelExpanded } = this.props;
+    const { isPseudoClassPanelExpanded } = this.state;
 
     return (
       dom.div(
@@ -107,7 +104,10 @@ class Toolbar extends PureComponent {
           )
         ),
         isClassPanelExpanded ?
-          ClassListPanel({})
+          ClassListPanel({
+            onAddClass: this.props.onAddClass,
+            onSetClassState: this.props.onSetClassState,
+          })
           :
           null,
         isPseudoClassPanelExpanded ?
@@ -121,4 +121,10 @@ class Toolbar extends PureComponent {
   }
 }
 
-module.exports = Toolbar;
+const mapStateToProps = state => {
+  return {
+    isClassPanelExpanded: state.classList.isClassPanelExpanded,
+  };
+};
+
+module.exports = connect(mapStateToProps)(Toolbar);

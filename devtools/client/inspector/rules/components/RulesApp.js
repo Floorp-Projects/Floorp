@@ -28,6 +28,9 @@ const SHOW_PSEUDO_ELEMENTS_PREF = "devtools.inspector.show_pseudo_elements";
 class RulesApp extends PureComponent {
   static get propTypes() {
     return {
+      onAddClass: PropTypes.func.isRequired,
+      onSetClassState: PropTypes.func.isRequired,
+      onToggleClassPanelExpanded: PropTypes.func.isRequired,
       onToggleDeclaration: PropTypes.func.isRequired,
       onTogglePseudoClass: PropTypes.func.isRequired,
       onToggleSelectorHighlighter: PropTypes.func.isRequired,
@@ -162,6 +165,9 @@ class RulesApp extends PureComponent {
           className: "theme-sidebar inspector-tabpanel",
         },
         Toolbar({
+          onAddClass: this.props.onAddClass,
+          onSetClassState: this.props.onSetClassState,
+          onToggleClassPanelExpanded: this.props.onToggleClassPanelExpanded,
           onTogglePseudoClass: this.props.onTogglePseudoClass,
         }),
         dom.div(
