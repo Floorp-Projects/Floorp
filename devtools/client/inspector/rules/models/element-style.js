@@ -333,6 +333,73 @@ ElementStyle.prototype = {
   },
 
   /**
+   * Modifies the existing rule's selector to the new given value.
+   *
+   * @param {String} ruleId
+   *        The id of the Rule to be modified.
+   * @param {String} selector
+   *        The new selector value.
+   */
+  modifySelector: async function(ruleId, selector) {
+    try {
+      const rule = this.getRule(ruleId);
+      if (!rule) {
+        return;
+      }
+
+      const response = await rule.domRule.modifySelector(this.element, selector);
+      const { ruleProps, isMatching } = response;
+
+      if (!ruleProps) {
+        // Notify for changes, even when nothing changes, just to allow tests
+        // being able to track end of this request.
+        this.ruleView.emit("ruleview-invalid-selector");
+        return;
+      }
+
+      const newRule = new Rule(this, {
+        ...ruleProps,
+        isUnmatched: !isMatching,
+      });
+
+      // Recompute the list of applied styles because editing a
+      // selector might cause this rule's position to change.
+      const appliedStyles = await this.pageStyle.getApplied(this.element, {
+        inherited: true,
+        matchedSelectors: true,
+        filter: this.showUserAgentStyles ? "ua" : undefined,
+      });
+      const newIndex = appliedStyles.findIndex(r => r.rule == ruleProps.rule);
+      const oldIndex = this.rules.indexOf(rule);
+
+      // Remove the old rule and insert the new rule according to where it appears
+      // in the list of applied styles.
+      this.rules.splice(oldIndex, 1);
+      // If the selector no longer matches, then we leave the rule in
+      // the same relative position.
+      this.rules.splice(newIndex === -1 ? oldIndex : newIndex, 0, newRule);
+
+      // Mark any properties that are overridden according to the new list of rules.
+      this.markOverriddenAll();
+
+      // In order to keep the new rule in place of the old in the rules view, we need
+      // to remove the rule again if the rule was inserted to its new index according
+      // to the list of applied styles.
+      // Note: you might think we would replicate the list-modification logic above,
+      // but that is complicated due to the way the UI installs pseudo-element rules
+      // and the like.
+      if (newIndex !== -1) {
+        this.rules.splice(newIndex, 1);
+        this.rules.splice(oldIndex, 0, newRule);
+      }
+
+      this._changed();
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  /**
    * Toggles the enabled state of the given CSS declaration.
    *
    * @param {String} ruleId

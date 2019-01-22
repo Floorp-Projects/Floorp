@@ -35,6 +35,15 @@ class RulesApp extends PureComponent {
       onTogglePseudoClass: PropTypes.func.isRequired,
       onToggleSelectorHighlighter: PropTypes.func.isRequired,
       rules: PropTypes.arrayOf(PropTypes.shape(Types.rule)).isRequired,
+      showSelectorEditor: PropTypes.func.isRequired,
+    };
+  }
+
+  getRuleProps() {
+    return {
+      onToggleDeclaration: this.props.onToggleDeclaration,
+      onToggleSelectorHighlighter: this.props.onToggleSelectorHighlighter,
+      showSelectorEditor: this.props.showSelectorEditor,
     };
   }
 
@@ -56,8 +65,7 @@ class RulesApp extends PureComponent {
       }
 
       output.push(Rule({
-        onToggleDeclaration: this.props.onToggleDeclaration,
-        onToggleSelectorHighlighter: this.props.onToggleSelectorHighlighter,
+        ...this.getRuleProps(),
         rule,
       }));
     }
@@ -84,8 +92,7 @@ class RulesApp extends PureComponent {
         {
           component: Rules,
           componentProps: {
-            onToggleDeclaration: this.props.onToggleDeclaration,
-            onToggleSelectorHighlighter: this.props.onToggleSelectorHighlighter,
+            ...this.getRuleProps(),
             rules: rules.filter(r => r.keyframesRule.id === lastKeyframes),
           },
           header: rule.keyframesRule.keyframesName,
@@ -105,8 +112,7 @@ class RulesApp extends PureComponent {
     }
 
     return Rules({
-      onToggleDeclaration: this.props.onToggleDeclaration,
-      onToggleSelectorHighlighter: this.props.onToggleSelectorHighlighter,
+      ...this.getRuleProps(),
       rules,
     });
   }
@@ -120,8 +126,7 @@ class RulesApp extends PureComponent {
       {
         component: Rules,
         componentProps: {
-          onToggleDeclaration: this.props.onToggleDeclaration,
-          onToggleSelectorHighlighter: this.props.onToggleSelectorHighlighter,
+          ...this.getRuleProps(),
           rules,
         },
         header: getStr("rule.pseudoElement"),
