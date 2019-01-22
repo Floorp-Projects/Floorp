@@ -16,10 +16,5 @@ config = {
     "tooltool_url": 'http://relengapi/tooltool/',
 
     "vcs_share_base": "/builds/hg-shared",
-
-    # MAR
-    "local_mar_tool_dir": "dist/host/bin",
-    "mar": "mar",
-    "mbsdiff": "mbsdiff",
 }
 
