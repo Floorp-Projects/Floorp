@@ -99,7 +99,7 @@
   font-size: 1.05em;
 }
 
-.urlbarView-title::after {
+.urlbarView-secondary::before {
   content: "\2014";
   color: var(--panel-disabled-color);
   margin: 0 .4em;
@@ -115,13 +115,31 @@
 }
 
 .urlbarView-title > strong,
-.urlbarView-url > strong {
+.urlbarView-url > strong,
+.urlbarView-tag > strong {
   font-weight: 600;
 }
 
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-title::after,
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-secondary {
   color: inherit;
+}
+
+.urlbarView-tags {
+  display: inline-block;
+}
+
+.urlbarView-tag {
+  background-color: var(--arrowpanel-dimmed);
+  border-radius: 2px;
+  border: 1px solid var(--panel-separator-color);
+  padding: 0 1px;
+  margin-inline-start: .4em;
+}
+
+.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-tags > .urlbarView-tag {
+  background-color: var(--autocomplete-popup-highlight-color);
+  color: var(--autocomplete-popup-highlight-background);
 }
 
 /* legacy URL bar styles below */
