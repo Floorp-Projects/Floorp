@@ -26,7 +26,6 @@ from mozharness.mozilla.building.buildbase import (
     get_mozconfig_path,
 )
 from mozharness.mozilla.l10n.locales import LocalesMixin
-from mozharness.mozilla.mar import MarMixin
 
 try:
     import simplejson as json
@@ -52,7 +51,7 @@ runtime_config_tokens = ('version', 'locale', 'abs_objdir',
 
 # DesktopSingleLocale {{{1
 class DesktopSingleLocale(LocalesMixin, AutomationMixin,
-                          VCSMixin, BaseScript, MarMixin):
+                          VCSMixin, BaseScript):
     """Manages desktop repacks"""
     config_options = [[
         ['--locale', ],
@@ -209,15 +208,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
 
         bootstrap_env = self.query_env(partial_env=config.get("bootstrap_env"),
                                        replace_dict=replace_dict)
-        for binary in self._mar_binaries():
-            # "mar -> MAR" and 'mar.exe -> MAR' (windows)
-            name = binary.replace('.exe', '')
-            name = name.upper()
-            binary_path = os.path.join(self._mar_tool_dir(), binary)
-            # windows fix...
-            if binary.endswith('.exe'):
-                binary_path = binary_path.replace('\\', '\\\\\\\\')
-            bootstrap_env[name] = binary_path
         if self.query_is_nightly():
             bootstrap_env["IS_NIGHTLY"] = "yes"
             # we might set update_channel explicitly
@@ -302,7 +292,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         self._run_make_in_config_dir()
         self.make_wget_en_US()
         self.make_unpack_en_US()
-        self.download_mar_tools()
 
     def _run_make_in_config_dir(self):
         """this step creates nsinstall, needed my make_wget_en_US()
@@ -428,7 +417,7 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
                        glob.glob(os.path.join(upload_target, 'setup.exe')) +
                        glob.glob(os.path.join(upload_target, 'setup-stub.exe')))
             targets_exts = ["tar.bz2", "dmg", "langpack.xpi",
-                            "complete.mar", "checksums", "zip",
+                            "checksums", "zip",
                             "installer.exe", "installer-stub.exe"]
             targets = [(".%s" % (ext,), "target.%s" % (ext,)) for ext in targets_exts]
             targets.extend([(f, f) for f in 'setup.exe', 'setup-stub.exe'])
@@ -530,11 +519,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
                 abs_dirs[key] = dirs[key]
         self.abs_dirs = abs_dirs
         return self.abs_dirs
-
-    def _mar_binaries(self):
-        """returns a tuple with mar and mbsdiff paths"""
-        config = self.config
-        return (config['mar'], config['mbsdiff'])
 
     # TODO: replace with ToolToolMixin
     def _get_tooltool_auth_file(self):

@@ -109,22 +109,16 @@ job-template:
                 EN_US_PACKAGE_NAME: target.tar.bz2
                 EN_US_BINARY_URL:
                     artifact-reference: <build-signing/{artifact_prefix}>
-                MAR_TOOLS_URL:
-                    artifact-reference: <build/{artifact_prefix}/host/bin>
             macosx64:
                 EN_US_PACKAGE_NAME: target.dmg
                 EN_US_BINARY_URL:
                     artifact-reference: <repackage/{artifact_prefix}>
-                MAR_TOOLS_URL:
-                    artifact-reference: <build/{artifact_prefix}/host/bin>
             win.*:
                 EN_US_PACKAGE_NAME: target.zip
                 EN_US_BINARY_URL:
                     artifact-reference: <build-signing/{artifact_prefix}>
                 EN_US_INSTALLER_BINARY_URL:
                     artifact-reference: <repackage-signing/{artifact_prefix}>
-                MAR_TOOLS_URL:
-                    artifact-reference: <build/{artifact_prefix}/host/bin>
             android-api-16:
                 EN_US_PACKAGE_NAME: target.apk
                 EN_US_BINARY_URL:
