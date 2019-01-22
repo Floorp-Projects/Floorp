@@ -174,6 +174,17 @@ class SingleLinkedList {
     assertInvariants();
     list.assertInvariants();
   }
+  void steal(SingleLinkedList&& list) {
+    head_ = std::move(list.head_);
+    last_ = list.last_;
+    list.last_ = nullptr;
+    assertInvariants();
+    list.assertInvariants();
+  }
+  void prependAll(SingleLinkedList&& list) {
+    list.appendAll(std::move(*this));
+    steal(std::move(list));
+  }
   UniquePtr<T, D> popFirst() {
     MOZ_ASSERT(head_);
     UniquePtr<T, D> result = std::move(head_);
