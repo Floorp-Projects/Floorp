@@ -74,25 +74,26 @@ uint32_t wasm::ObservedCPUFeatures() {
 
 CompileArgs::CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller)
     : scriptedCaller(std::move(scriptedCaller)) {
-  bool gcEnabled = HasReftypesSupport(cx);
-
   baselineEnabled = cx->options().wasmBaseline();
   ionEnabled = cx->options().wasmIon();
 #ifdef ENABLE_WASM_CRANELIFT
-  forceCranelift = cx->options().wasmForceCranelift();
+  craneliftEnabled = cx->options().wasmForceCranelift();
 #else
-  forceCranelift = false;
+  craneliftEnabled = false;
 #endif
-  sharedMemoryEnabled =
-      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-  gcTypesConfigured = gcEnabled;
-  testTiering = cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
 
   // Debug information such as source view or debug traps will require
   // additional memory and permanently stay in baseline code, so we try to
   // only enable it when a developer actually cares: when the debugger tab
   // is open.
   debugEnabled = cx->realm()->debuggerObservesAsmJS();
+
+  sharedMemoryEnabled =
+      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
+  forceTiering =
+      cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
+
+  gcEnabled = HasReftypesSupport(cx);
 }
 
 // Classify the current system as one of a set of recognizable classes.  This
@@ -410,10 +411,21 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
     return;
   }
 
-  bool gcEnabled = args_->gcTypesConfigured && gcFeatureOptIn;
-  bool argBaselineEnabled = args_->baselineEnabled || gcEnabled;
-  bool argIonEnabled = args_->ionEnabled && !gcEnabled;
-  bool argDebugEnabled = args_->debugEnabled;
+  bool gcEnabled = args_->gcEnabled && gcFeatureOptIn;
+  bool baselineFlag = args_->baselineEnabled || gcEnabled;
+  bool ionFlag = args_->ionEnabled && !gcEnabled;
+  bool debugFlag = args_->debugEnabled;
+#ifdef ENABLE_WASM_CRANELIFT
+  bool craneliftFlag = args_->craneliftEnabled;
+#endif
+
+  // Attempt to default to ion if baseline is disabled.
+  bool baselineEnabled = BaselineCanCompile() && baselineFlag;
+  bool debugEnabled = BaselineCanCompile() && debugFlag;
+  bool ionEnabled = IonCanCompile() && (ionFlag || !baselineEnabled);
+
+  // HasCompilerSupport() should prevent failure here
+  MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled);
 
   uint32_t codeSectionSize = 0;
 
@@ -422,19 +434,8 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
     codeSectionSize = range.size;
   }
 
-  // Attempt to default to ion if baseline is disabled.
-  bool baselineEnabled = BaselineCanCompile() && argBaselineEnabled;
-  bool debugEnabled = BaselineCanCompile() && argDebugEnabled;
-  bool ionEnabled = IonCanCompile() && (argIonEnabled || !baselineEnabled);
-#ifdef ENABLE_WASM_CRANELIFT
-  bool forceCranelift = args_->forceCranelift;
-#endif
-
-  // HasCompilerSupport() should prevent failure here
-  MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled);
-
   if (baselineEnabled && ionEnabled && !debugEnabled && CanUseExtraThreads() &&
-      (TieringBeneficial(codeSectionSize) || args_->testTiering)) {
+      (TieringBeneficial(codeSectionSize) || args_->forceTiering)) {
     mode_ = CompileMode::Tier1;
     tier_ = Tier::Baseline;
   } else {
@@ -444,7 +445,7 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
 
   optimizedBackend_ = OptimizedBackend::Ion;
 #ifdef ENABLE_WASM_CRANELIFT
-  if (forceCranelift) {
+  if (craneliftFlag) {
     optimizedBackend_ = OptimizedBackend::Cranelift;
   }
 #endif
@@ -522,7 +523,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
 
   CompilerEnvironment compilerEnv(args);
   ModuleEnvironment env(
-      args.gcTypesConfigured, &compilerEnv,
+      args.gcEnabled, &compilerEnv,
       args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
   if (!DecodeModuleEnvironment(d, &env)) {
     return nullptr;
@@ -551,7 +552,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
 
   bool gcTypesConfigured = false;  // No optimized backend support yet
   OptimizedBackend optimizedBackend =
-      args.forceCranelift ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
+      args.craneliftEnabled ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
 
   CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized,
                                   optimizedBackend, DebugEnabled::False,
@@ -674,7 +675,7 @@ SharedModule wasm::CompileStreaming(
   {
     Decoder d(envBytes, 0, error, warnings);
 
-    env.emplace(args.gcTypesConfigured, &compilerEnv,
+    env.emplace(args.gcEnabled, &compilerEnv,
                 args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
     if (!DecodeModuleEnvironment(d, env.ptr())) {
       return nullptr;
