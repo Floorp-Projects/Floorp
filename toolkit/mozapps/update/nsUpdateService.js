@@ -534,20 +534,6 @@ function LOG(string) {
 }
 
 /**
- * Convert a string containing binary values to hex.
- */
-function binaryToHex(input) {
-  var result = "";
-  for (var i = 0; i < input.length; ++i) {
-    var hex = input.charCodeAt(i).toString(16);
-    if (hex.length == 1)
-      hex = "0" + hex;
-    result += hex;
-  }
-  return result;
-}
-
-/**
  * Gets the specified directory at the specified hierarchy under the
  * update root directory and creates it if it doesn't exist.
  * @param   pathArray
