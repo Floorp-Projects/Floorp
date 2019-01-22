@@ -425,70 +425,6 @@ static ArgResult CheckArgExists(const char* aArg) {
   return CheckArg(aArg, nullptr, CheckArgFlag::None);
 }
 
-#if defined(XP_WIN)
-/**
- * Check for a commandline flag from the windows shell and remove it from the
- * argv used when restarting. Flags MUST be in the form -arg.
- *
- * @param aArg the parameter to check. Must be lowercase.
- */
-static ArgResult CheckArgShell(const char* aArg) {
-  char** curarg = gRestartArgv + 1;  // skip argv[0]
-
-  while (*curarg) {
-    char* arg = curarg[0];
-
-    if (arg[0] == '-') {
-      ++arg;
-
-      if (strimatch(aArg, arg)) {
-        do {
-          *curarg = *(curarg + 1);
-          ++curarg;
-        } while (*curarg);
-
-        --gRestartArgc;
-
-        return ARG_FOUND;
-      }
-    }
-
-    ++curarg;
-  }
-
-  return ARG_NONE;
-}
-
-/**
- * Enabled Native App Support to process DDE messages when the app needs to
- * restart and the app has been launched by the Windows shell to open an url.
- * When aWait is false this will process the DDE events manually. This prevents
- * Windows from displaying an error message due to the DDE message not being
- * acknowledged.
- */
-static void ProcessDDE(nsINativeAppSupport* aNative, bool aWait) {
-  // When the app is launched by the windows shell the windows shell
-  // expects the app to be available for DDE messages and if it isn't
-  // windows displays an error dialog. To prevent the error the DDE server
-  // is enabled and pending events are processed when the app needs to
-  // restart after it was launched by the shell with the requestpending
-  // argument. The requestpending pending argument is removed to
-  // differentiate it from being launched when an app restart is not
-  // required.
-  ArgResult ar;
-  ar = CheckArgShell("requestpending");
-  if (ar == ARG_FOUND) {
-    aNative->Enable();  // enable win32 DDE responses
-    if (aWait) {
-      // This is just a guesstimate based on testing different values.
-      // If count is 8 or less windows will display an error dialog.
-      int32_t count = 20;
-      SpinEventLoopUntil([&]() { return --count < 0; });
-    }
-  }
-}
-#endif
-
 bool gSafeMode = false;
 
 /**
@@ -1644,7 +1580,7 @@ static void SetupLauncherProcessPref() {
 // it was initially started with.
 static nsresult LaunchChild(nsINativeAppSupport* aNative,
                             bool aBlankCommandLine = false) {
-  aNative->Quit();  // release DDE mutex, if we're holding it
+  aNative->Quit();  // destroy message window
 
   // Restart this process by exec'ing it into the current process
   // if supported by the platform.  Otherwise, use NSPR.
@@ -1911,12 +1847,6 @@ static ReturnAbortOnError ShowProfileManager(
 #ifdef XP_MACOSX
     CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv,
                                                true);
-#endif
-
-#ifdef XP_WIN
-    // we don't have to wait here because profile manager window will pump
-    // and DDE message will be handled
-    ProcessDDE(aNative, false);
 #endif
 
     {  // extra scoping is needed so we release these components before xpcom
