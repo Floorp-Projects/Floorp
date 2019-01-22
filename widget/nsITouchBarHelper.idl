@@ -1,0 +1,36 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIArray.idl"
+#include "nsISupports.idl"
+#include "nsITouchBarInput.idl"
+
+/**
+ * Back-to-frontend communication for the Touch Bar
+ */
+[scriptable, uuid(ea109912-3acc-48de-b679-c23b6a122da5)]
+interface nsITouchBarHelper : nsISupports
+{
+  /**
+   * Returns the active browser's URL.
+   */
+  readonly attribute AString activeUrl;
+
+  /**
+   * Return the active browser's page title.
+   */
+  readonly attribute AString activeTitle;
+
+  /**
+   * Returns the layout for the Touch Bar in an nsIArray
+   * of nsITouchBarInput objects.
+   */
+  attribute nsIArray layout;
+
+  /**
+   * Returns the requested TouchBarInput.
+   * Exposed for testing.
+   */
+  nsITouchBarInput getTouchBarInput(in string aInputName);
+};
