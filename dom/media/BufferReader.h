@@ -148,6 +148,7 @@ class MOZ_RAII BufferReader {
 
   const uint8_t* Read(size_t aCount) {
     if (aCount > mRemaining) {
+      mPtr += mRemaining;
       mRemaining = 0;
       return nullptr;
     }
