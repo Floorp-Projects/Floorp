@@ -54,7 +54,6 @@
 #include "nsComputedDOMStyle.h"
 #include "nsIPresShell.h"
 #include "nsCSSProps.h"
-#include "nsTArrayHelpers.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -2956,12 +2955,7 @@ nsDOMWindowUtils::GetPlugins(JSContext* cx,
   nsTArray<nsIObjectLoadingContent*> plugins;
   doc->GetPlugins(plugins);
 
-  JS::Rooted<JSObject*> jsPlugins(cx);
-  nsresult rv = nsTArrayToJSArray(cx, plugins, &jsPlugins);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aPlugins.setObject(*jsPlugins);
-  return NS_OK;
+  return ToJSValue(cx, plugins, aPlugins) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
