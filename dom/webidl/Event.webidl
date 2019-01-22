@@ -81,6 +81,7 @@ partial interface Event {
    */
   readonly attribute EventTarget? explicitOriginalTarget;
   [ChromeOnly] readonly attribute EventTarget? composedTarget;
+  [ChromeOnly] void preventMultipleActions();
   [ChromeOnly] readonly attribute boolean multipleActionsPrevented;
   [ChromeOnly] readonly attribute boolean isSynthesized;
 };
