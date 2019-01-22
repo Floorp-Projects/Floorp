@@ -130,11 +130,11 @@ nsStyleFont::nsStyleFont(const nsPresContext* aContext)
       mLanguage(aContext->Document()->GetLanguageForStyle()) {
   MOZ_COUNT_CTOR(nsStyleFont);
   MOZ_ASSERT(NS_IsMainThread());
-  nscoord minimumFontSize = aContext->MinFontSize(mLanguage);
-  if (minimumFontSize > 0 && !aContext->IsChrome()) {
+  mFont.size = mSize;
+  if (!aContext->IsChrome()) {
+    nscoord minimumFontSize =
+        aContext->Document()->GetFontPrefsForLang(mLanguage)->mMinimumFontSize;
     mFont.size = std::max(mSize, minimumFontSize);
-  } else {
-    mFont.size = mSize;
   }
 }
 
