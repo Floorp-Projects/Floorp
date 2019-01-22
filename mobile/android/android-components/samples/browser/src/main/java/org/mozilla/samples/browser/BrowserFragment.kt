@@ -6,8 +6,6 @@ package org.mozilla.samples.browser
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Intent
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -27,6 +25,7 @@ import mozilla.components.feature.session.WindowFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
+import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import org.mozilla.samples.browser.ext.components
 
@@ -183,6 +182,4 @@ class BrowserFragment : Fragment(), BackHandler {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         promptFeature.onActivityResult(requestCode, resultCode, data)
     }
-
-    private fun Lifecycle.addObservers(vararg observers: LifecycleObserver) = observers.forEach { addObserver(it) }
 }
