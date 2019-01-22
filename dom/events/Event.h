@@ -228,6 +228,10 @@ class Event : public nsISupports, public nsWrapperCache {
     return mEvent->mFlags.mDefaultPreventedByContent;
   }
 
+  void PreventMultipleActions() {
+    mEvent->mFlags.mMultipleActionsPrevented = true;
+  }
+
   bool MultipleActionsPrevented() const {
     return mEvent->mFlags.mMultipleActionsPrevented;
   }
