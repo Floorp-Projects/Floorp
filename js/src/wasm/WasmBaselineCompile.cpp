@@ -11449,7 +11449,7 @@ bool BaseCompiler::emitBody() {
 
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefEq):
-        if (env_.gcTypesEnabled() == HasGcTypes::False) {
+        if (!env_.gcTypesEnabled()) {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(
@@ -11457,13 +11457,13 @@ bool BaseCompiler::emitBody() {
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefNull):
-        if (env_.gcTypesEnabled() == HasGcTypes::False) {
+        if (!env_.gcTypesEnabled()) {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(emitRefNull());
         break;
       case uint16_t(Op::RefIsNull):
-        if (env_.gcTypesEnabled() == HasGcTypes::False) {
+        if (!env_.gcTypesEnabled()) {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(
@@ -11558,22 +11558,22 @@ bool BaseCompiler::emitBody() {
 #endif
 #ifdef ENABLE_WASM_GC
           case uint16_t(MiscOp::StructNew):
-            if (env_.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env_.gcTypesEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(emitStructNew());
           case uint16_t(MiscOp::StructGet):
-            if (env_.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env_.gcTypesEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(emitStructGet());
           case uint16_t(MiscOp::StructSet):
-            if (env_.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env_.gcTypesEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(emitStructSet());
           case uint16_t(MiscOp::StructNarrow):
-            if (env_.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env_.gcTypesEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(emitStructNarrow());

@@ -85,7 +85,7 @@ CompileArgs::CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller)
 #endif
   sharedMemoryEnabled =
       cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-  gcTypesConfigured = gcEnabled ? HasGcTypes::True : HasGcTypes::False;
+  gcTypesConfigured = gcEnabled;
   testTiering = cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
 
   // Debug information such as source view or debug traps will require
@@ -385,7 +385,7 @@ CompilerEnvironment::CompilerEnvironment(const CompileArgs& args)
 CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
                                          OptimizedBackend optimizedBackend,
                                          DebugEnabled debugEnabled,
-                                         HasGcTypes gcTypesConfigured)
+                                         bool gcTypesConfigured)
     : state_(InitialWithModeTierDebug),
       mode_(mode),
       tier_(tier),
@@ -393,17 +393,16 @@ CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
       debug_(debugEnabled),
       gcTypes_(gcTypesConfigured) {}
 
-void CompilerEnvironment::computeParameters(HasGcTypes gcFeatureOptIn) {
+void CompilerEnvironment::computeParameters(bool gcFeatureOptIn) {
   MOZ_ASSERT(state_ == InitialWithModeTierDebug);
 
-  if (gcTypes_ == HasGcTypes::True) {
+  if (gcTypes_) {
     gcTypes_ = gcFeatureOptIn;
   }
   state_ = Computed;
 }
 
-void CompilerEnvironment::computeParameters(Decoder& d,
-                                            HasGcTypes gcFeatureOptIn) {
+void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
   MOZ_ASSERT(!isComputed());
 
   if (state_ == InitialWithModeTierDebug) {
@@ -411,8 +410,7 @@ void CompilerEnvironment::computeParameters(Decoder& d,
     return;
   }
 
-  bool gcEnabled = args_->gcTypesConfigured == HasGcTypes::True &&
-                   gcFeatureOptIn == HasGcTypes::True;
+  bool gcEnabled = args_->gcTypesConfigured && gcFeatureOptIn;
   bool argBaselineEnabled = args_->baselineEnabled || gcEnabled;
   bool argIonEnabled = args_->ionEnabled && !gcEnabled;
   bool argDebugEnabled = args_->debugEnabled;
@@ -452,7 +450,7 @@ void CompilerEnvironment::computeParameters(Decoder& d,
 #endif
 
   debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
-  gcTypes_ = gcEnabled ? HasGcTypes::True : HasGcTypes::False;
+  gcTypes_ = gcEnabled;
   state_ = Computed;
 }
 
@@ -551,8 +549,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   UniqueChars error;
   Decoder d(bytecode, 0, &error);
 
-  HasGcTypes gcTypesConfigured =
-      HasGcTypes::False;  // No optimized backend support yet
+  bool gcTypesConfigured = false;  // No optimized backend support yet
   OptimizedBackend optimizedBackend =
       args.forceCranelift ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
 
@@ -567,8 +564,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
     return;
   }
 
-  MOZ_ASSERT(env.gcTypesEnabled() == HasGcTypes::False,
-             "can't ion-compile with gc types yet");
+  MOZ_ASSERT(!env.gcTypesEnabled(), "can't ion-compile with gc types yet");
 
   ModuleGenerator mg(args, &env, cancelled, &error);
   if (!mg.init()) {

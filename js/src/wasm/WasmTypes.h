@@ -666,8 +666,6 @@ enum ModuleKind { Wasm, AsmJS };
 
 enum class Shareable { False, True };
 
-enum class HasGcTypes { False, True };
-
 // The LitVal class represents a single WebAssembly value of a given value
 // type, mostly for the purpose of numeric literals and initializers. A LitVal
 // does not directly map to a JS value since there is not (currently) a precise
