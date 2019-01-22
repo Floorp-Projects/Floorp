@@ -237,7 +237,7 @@
 #include "mozilla/Encoding.h"
 #include "nsXULElement.h"
 #include "mozilla/RecordReplay.h"
-
+#include "nsThreadManager.h"
 #include "nsIBidiKeyboard.h"
 
 #if defined(XP_WIN)
@@ -10433,6 +10433,20 @@ static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
                  false);
   aOutStr = serializedValue;
   return true;
+}
+
+/* static */
+bool nsContentUtils::HighPriorityEventPendingForTopLevelDocumentBeforeContentfulPaint(
+    Document* aDocument) {
+  if (!aDocument) {
+    return false;
+  }
+
+  Document* topLevel = aDocument->GetTopLevelContentDocument();
+  return topLevel && topLevel->GetShell() &&
+         topLevel->GetShell()->GetPresContext() &&
+         !topLevel->GetShell()->GetPresContext()->HadContentfulPaint() &&
+         nsThreadManager::MainThreadHasPendingHighPriorityEvents();
 }
 
 /* static */ bool nsContentUtils::IsURIInPrefList(nsIURI* aURI,
