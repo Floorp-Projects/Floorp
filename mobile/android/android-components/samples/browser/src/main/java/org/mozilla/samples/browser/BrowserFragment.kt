@@ -109,7 +109,8 @@ class BrowserFragment : Fragment(), BackHandler {
         customTabsToolbarFeature = CustomTabsToolbarFeature(
             components.sessionManager,
             layout.toolbar,
-            sessionId
+            sessionId,
+            components.menuBuilder
         ) { activity?.finish() }
 
         // Observe the lifecycle for supported features

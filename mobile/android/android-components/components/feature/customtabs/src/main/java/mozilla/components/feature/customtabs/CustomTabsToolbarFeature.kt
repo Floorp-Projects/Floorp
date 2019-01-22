@@ -11,10 +11,13 @@ import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.support.annotation.VisibleForTesting
 import android.support.v4.content.ContextCompat
+import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSession
 import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
+import mozilla.components.browser.session.tab.CustomTabMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -27,6 +30,7 @@ class CustomTabsToolbarFeature(
     private val sessionManager: SessionManager,
     private val toolbar: BrowserToolbar,
     private val sessionId: String? = null,
+    private val menuBuilder: BrowserMenuBuilder? = null,
     private val shareListener: (() -> Unit)? = null,
     private val closeListener: () -> Unit
 ) : LifecycleAwareFeature {
@@ -53,6 +57,8 @@ class CustomTabsToolbarFeature(
             addActionButton(config.actionButtonConfig)
             // Show share button
             if (config.showShareMenuItem) addShareButton(session)
+            // Add menu items
+            if (config.menuItems.isNotEmpty()) addMenuItems(config.menuItems)
             return true
         }
         return false
@@ -104,6 +110,21 @@ class CustomTabsToolbarFeature(
         }
 
         toolbar.addBrowserAction(button)
+    }
+
+    @VisibleForTesting
+    internal fun addMenuItems(menuItems: List<CustomTabMenuItem>) {
+        menuItems.map {
+            SimpleBrowserMenuItem(it.name) { it.pendingIntent.send() }
+        }.also {
+            val items = if (menuBuilder != null) {
+                menuBuilder.items + it
+            } else {
+                it
+            }
+
+            toolbar.setMenuBuilder(BrowserMenuBuilder(items))
+        }
     }
 
     override fun stop() {}

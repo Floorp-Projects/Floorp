@@ -24,7 +24,7 @@ class KArgumentCaptor<out T : Any?>(
      * The first captured value of the argument.
      * @throws IndexOutOfBoundsException if the value is not available.
      */
-    val firstValue: T
+    val value: T
         get() = captor.value
 
     val allValues: List<T>

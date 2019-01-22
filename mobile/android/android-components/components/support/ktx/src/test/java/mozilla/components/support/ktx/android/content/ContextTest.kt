@@ -80,6 +80,6 @@ class ContextTest {
         verify(context).startActivity(argCaptor.capture())
 
         assertTrue(result)
-        assertEquals(FLAG_ACTIVITY_NEW_TASK, argCaptor.firstValue.flags)
+        assertEquals(FLAG_ACTIVITY_NEW_TASK, argCaptor.value.flags)
     }
 }

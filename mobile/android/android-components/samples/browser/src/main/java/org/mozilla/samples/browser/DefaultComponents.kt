@@ -105,9 +105,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 SimpleBrowserMenuItem("Settings") {
                     Toast.makeText(applicationContext, "Settings", Toast.LENGTH_SHORT).show()
                 },
-
                 BrowserMenuDivider(),
-
                 SimpleBrowserMenuItem("Clear Data") {
                     sessionUseCases.clearData.invoke()
                 },

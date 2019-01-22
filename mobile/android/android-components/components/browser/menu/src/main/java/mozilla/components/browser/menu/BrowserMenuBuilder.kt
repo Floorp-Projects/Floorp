@@ -12,7 +12,7 @@ import android.content.Context
  * @param items List of BrowserMenuItem objects to compose the menu from.
  */
 class BrowserMenuBuilder(
-    private val items: List<BrowserMenuItem>
+    val items: List<BrowserMenuItem>
 ) {
     fun build(context: Context): BrowserMenu {
         val adapter = BrowserMenuAdapter(context, items)
