@@ -10115,12 +10115,6 @@ void nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
     if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
       window->VisualViewport()->PostResizeEvent();
     }
-
-    if (nsIScrollableFrame* rootScrollFrame =
-            GetRootScrollFrameAsScrollable()) {
-      ScrollAnchorContainer* container = rootScrollFrame->GetAnchor();
-      container->UserScrolled();
-    }
   }
 }
 
@@ -10135,12 +10129,6 @@ bool nsIPresShell::SetVisualViewportOffset(
     if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
       window->VisualViewport()->PostScrollEvent(prevOffset,
                                                 aPrevLayoutScrollPos);
-    }
-
-    if (nsIScrollableFrame* rootScrollFrame =
-            GetRootScrollFrameAsScrollable()) {
-      ScrollAnchorContainer* container = rootScrollFrame->GetAnchor();
-      container->UserScrolled();
     }
   }
   return didChange;
