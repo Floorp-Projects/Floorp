@@ -588,6 +588,71 @@
         input2.remove();
       }
 
+      function testTabbingThroughFocusableSlotInLightDOM() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
+
+        var slot0 = document.createElement("slot");
+        slot0.tabIndex = 0;
+        slot0.setAttribute("style", "display: inline;");
+        slot0.onfocus = focusLogger;
+        document.body.appendChild(slot0);
+
+        var slot00 = document.createElement("slot");
+        slot00.tabIndex = 0;
+        slot00.setAttribute("style", "display: inline;");
+        slot00.onfocus = focusLogger;
+        slot0.appendChild(slot00);
+
+        var input000 = document.createElement("input");
+        input000.onfocus = focusLogger;
+        slot00.appendChild(input000);
+
+        var input01 = document.createElement("input");
+        input01.onfocus = focusLogger;
+        slot0.appendChild(input01);
+
+        var input1 = document.createElement("input");
+        input1.onfocus = focusLogger;
+        document.body.appendChild(input1);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, slot0, "Should have focused slot element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, slot00, "Should have focused slot element. (2)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input000, "Should have focused input element in slot. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input01, "Should have focused input element in slot. (4)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input1, "Should have focused input element. (5)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input01, "Should have focused input element in slot. (6)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input000, "Should have focused input element in slot. (7)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, slot00, "Should have focused slot element. (8)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, slot0, "Should have focused slot element. (9)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        slot0.remove();
+        input1.remove();
+      }
+
       function runTest() {
 
         testTabbingThroughShadowDOMWithTabIndexes();
@@ -599,6 +664,7 @@
         testShiftTabbingThroughFocusableHost();
         testTabbingThroughNestedSlot();
         testTabbingThroughSlotInLightDOM();
+        testTabbingThroughFocusableSlotInLightDOM();
 
         opener.didRunTests();
         window.close();
