@@ -15,7 +15,7 @@ var sandboxCode = (function() {
       } else {
         result = "ok";
       }
-      postMessage({result: result}, "*");
+      postMessage({result}, "*");
     }
   };
   req.send(null);
@@ -30,7 +30,7 @@ function test() {
   frame.setAttribute("type", "content");
   frame.setAttribute("src", "http://mochi.test:8888/browser/dom/tests/browser/browser_xhr_sandbox.js");
 
-  frame.addEventListener("load", function () {
+  frame.addEventListener("load", function() {
     let workerWindow = frame.contentWindow;
     workerWindow.addEventListener("message", function(evt) {
       is(evt.data.result, "ok", "check the sandbox code was happy");

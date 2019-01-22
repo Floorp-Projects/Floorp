@@ -106,7 +106,7 @@ registerCleanupFunction(function() {
  */
 function prepareForResult(aBrowser, aExpectation) {
   let expectedSpec = kContentDoc.replace(/[^\/]*$/, "dummy.html");
-  switch(aExpectation) {
+  switch (aExpectation) {
     case kSameTab:
       return (async function() {
         await BrowserTestUtils.browserLoaded(aBrowser);
@@ -133,7 +133,7 @@ function prepareForResult(aBrowser, aExpectation) {
       })();
       break;
     default:
-      ok(false, "prepareForResult can't handle an expectation of " + aExpectation)
+      ok(false, "prepareForResult can't handle an expectation of " + aExpectation);
       return;
   }
 

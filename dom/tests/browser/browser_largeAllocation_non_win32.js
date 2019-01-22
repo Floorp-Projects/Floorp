@@ -13,8 +13,8 @@ add_task(async function() {
       ["dom.largeAllocation.forceEnable", true],
       // Increase processCount.webLargeAllocation to avoid any races where
       // processes aren't being cleaned up quickly enough.
-      ["dom.ipc.processCount.webLargeAllocation", 20]
-    ]
+      ["dom.ipc.processCount.webLargeAllocation", 20],
+    ],
   });
 
   await largeAllocSuccessTests();
@@ -31,8 +31,8 @@ add_task(async function() {
       ["dom.largeAllocation.forceEnable", false],
       // Increase processCount.webLargeAllocation to avoid any races where
       // processes aren't being cleaned up quickly enough.
-      ["dom.ipc.processCount.webLargeAllocation", 20]
-    ]
+      ["dom.ipc.processCount.webLargeAllocation", 20],
+    ],
   });
 
   await largeAllocFailTests();
