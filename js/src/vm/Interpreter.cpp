@@ -5176,9 +5176,7 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   }
 
   if (newKind == SingletonObject) {
-    if (!JSObject::setSingleton(cx, obj)) {
-      return nullptr;
-    }
+    MOZ_ASSERT(obj->isSingleton());
   } else {
     obj->setGroup(group);
 
