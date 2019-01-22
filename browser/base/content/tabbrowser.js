@@ -2307,6 +2307,7 @@ window._gBrowser = {
     sameProcessAsFrameLoader,
     skipAnimation,
     skipBackgroundNotify,
+    title,
     triggeringPrincipal,
     userContextId,
     recordExecution,
@@ -2551,6 +2552,13 @@ window._gBrowser = {
                                                       userContextId);
           b.registeredOpenURI = lazyBrowserURI;
         }
+        SessionStore.setTabState(t, {
+          entries: [{
+            url: lazyBrowserURI ? lazyBrowserURI.spec : "about:blank",
+            title,
+            triggeringPrincipal_base64: Utils.serializePrincipal(triggeringPrincipal),
+          }],
+        });
       } else {
         this._insertBrowser(t, true);
       }
@@ -3805,12 +3813,15 @@ window._gBrowser = {
     // the same remote type and process as the one we're swapping in.
     // This makes sure we don't get a short-lived process for the new tab.
     let linkedBrowser = aTab.linkedBrowser;
+    let createLazyBrowser = !aTab.linkedPanel;
     let params = {
       eventDetail: { adoptedTab: aTab },
       preferredRemoteType: linkedBrowser.remoteType,
       sameProcessAsFrameLoader: linkedBrowser.frameLoader,
       skipAnimation: true,
       index: aIndex,
+      createLazyBrowser,
+      allowInheritPrincipal: createLazyBrowser,
     };
 
     let numPinned = this._numPinnedTabs;
@@ -3827,10 +3838,12 @@ window._gBrowser = {
 
     aTab.parentNode._finishAnimateTabMove();
 
-    // Stop the about:blank load.
-    newBrowser.stop();
-    // Make sure it has a docshell.
-    newBrowser.docShell;
+    if (!createLazyBrowser) {
+      // Stop the about:blank load.
+      newBrowser.stop();
+      // Make sure it has a docshell.
+      newBrowser.docShell;
+    }
 
     if (!this.swapBrowsersAndCloseOther(newTab, aTab)) {
       // Swapping wasn't permitted. Bail out.
