@@ -107,9 +107,9 @@ class ScalarType:
         }
 
         OPTIONAL_FIELDS = {
-            'cpp_guard': basestring,
             'release_channel_collection': basestring,
             'keyed': bool,
+            'operating_systems': list,
             'products': list,
             'record_into_store': list,
         }
@@ -120,6 +120,7 @@ class ScalarType:
             'notification_emails': basestring,
             'record_in_processes': basestring,
             'products': basestring,
+            'operating_systems': basestring,
             'record_into_store': basestring,
         }
 
@@ -195,11 +196,13 @@ class ScalarType:
             ParserError(self._name + ' - unknown collection policy: ' + collection_policy +
                         '.\nSee: {}#optional-fields'.format(BASE_DOC_URL)).handle_later()
 
-        # Validate the cpp_guard.
-        cpp_guard = definition.get('cpp_guard')
-        if cpp_guard and re.match(r'\W', cpp_guard):
-            ParserError(self._name + ' - invalid cpp_guard: ' + cpp_guard +
-                        '.\nSee: {}#optional-fields'.format(BASE_DOC_URL)).handle_later()
+        # Validate operating_systems.
+        operating_systems = definition.get('operating_systems', [])
+        for operating_system in operating_systems:
+            if not utils.is_valid_os(operating_system):
+                ParserError(self._name + ' - invalid entry in operating_systems: ' +
+                            operating_system +
+                            '.\nSee: {}#optional-fields'.format(BASE_DOC_URL)).handle_later()
 
         # Validate record_in_processes.
         record_in_processes = definition.get('record_in_processes', [])
@@ -327,9 +330,22 @@ class ScalarType:
         return self._definition.get('release_channel_collection', 'opt-in')
 
     @property
-    def cpp_guard(self):
-        """Get the cpp guard for this scalar"""
-        return self._definition.get('cpp_guard')
+    def operating_systems(self):
+        """Get the list of operating systems to record data on"""
+        return self._definition.get('operating_systems', ['all'])
+
+    def record_on_os(self, target_os):
+        """Check if this probe should be recorded on the passed os."""
+        os = self.operating_systems
+        if "all" in os:
+            return True
+
+        canonical_os = utils.canonical_os(target_os)
+
+        if "unix" in os and canonical_os in utils.UNIX_LIKE_OS:
+            return True
+
+        return canonical_os in os
 
     @property
     def record_into_store(self):
