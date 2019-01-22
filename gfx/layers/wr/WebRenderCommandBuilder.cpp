@@ -2009,7 +2009,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
   // e.g.: nsDisplayBoxShadowInner uses mPaintRect in Paint() and mPaintRect is
   // computed in nsDisplayBoxShadowInner::ComputeVisibility().
   nsRegion visibleRegion(paintBounds);
-  aItem->SetPaintRect(paintBounds);
+  aItem->SetPaintRect(aItem->GetBuildingRect().Intersect(paintBounds));
   aItem->ComputeVisibility(aDisplayListBuilder, &visibleRegion);
 
   const int32_t appUnitsPerDevPixel =
