@@ -281,13 +281,13 @@ checkbox:-moz-focusring {
 .devtools-button {
   -moz-appearance: none;
   background: transparent;
-  border: 1px solid var(--toolbarbutton-border-color);
+  border: none;
   border-radius: 2px;
   color: var(--theme-body-color);
   transition: background-color 0.05s ease-in-out;
   -moz-box-align: center;
   text-shadow: none;
-  padding: 1px;
+  padding: 2px;
   margin: 1px;
 
   /* Button text should not wrap on multiple lines */
@@ -383,7 +383,6 @@ checkbox:-moz-focusring {
 .devtools-toolbarbutton:not([label]):-moz-any([checked],[open],:hover:active),
 .devtools-button[aria-haspopup="menu"][aria-expanded="true"] {
   background-color: var(--toolbarbutton-hover-background);
-  border-color: var(--toolbarbutton-hover-border-color);
 }
 
 .devtools-button:not(:empty):not(.checked):not(:disabled):hover:active,
@@ -403,7 +402,6 @@ checkbox:-moz-focusring {
 .devtools-toolbarbutton:not([disabled])[label][open],
 .devtools-button:not(:empty).checked {
   background: var(--toolbarbutton-checked-background);
-  border-color: var(--toolbarbutton-checked-border-color);
   color: var(--toolbarbutton-checked-color);
 }
 
