@@ -9,7 +9,9 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.session.bundling.db.BundleEntity
 import mozilla.components.feature.session.bundling.db.UrlList
 import mozilla.components.support.test.mock
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -33,5 +35,36 @@ class SessionBundleAdapterTest {
         assertFalse(restoredSnapshot.isEmpty())
         assertEquals(1, restoredSnapshot.sessions.size)
         assertEquals("https://www.mozilla.org", restoredSnapshot.sessions[0].session.url)
+    }
+
+    @Test
+    fun `Accessing id through adapter`() {
+        val bundle = BundleEntity(42, "", 0, UrlList(listOf()))
+        val adapter = SessionBundleAdapter(bundle)
+
+        assertEquals(42L, adapter.id)
+    }
+
+    @Test
+    fun `Accessing list of URLs through adapter`() {
+        val bundle = BundleEntity(42, "", 0, UrlList(listOf(
+            "https://www.mozilla.org",
+            "https://www.firefox.com"
+        )))
+
+        val adapter = SessionBundleAdapter(bundle)
+
+        assertEquals(2, adapter.urls.size)
+        assertEquals("https://www.mozilla.org", adapter.urls[0])
+        assertEquals("https://www.firefox.com", adapter.urls[1])
+    }
+
+    @Test
+    fun `Accessing last save date through adapter`() {
+        val bundle = BundleEntity(42, "", 1548165508982, UrlList(listOf()))
+
+        val adapter = SessionBundleAdapter(bundle)
+
+        assertEquals(1548165508982, adapter.lastSavedAt)
     }
 }

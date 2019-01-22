@@ -9,11 +9,7 @@ import android.arch.persistence.room.Entity
 import android.arch.persistence.room.PrimaryKey
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SnapshotSerializer
-import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.session.bundling.SessionBundle
-import org.json.JSONException
-import java.io.IOException
-import java.util.concurrent.TimeUnit
 
 /**
  * Internal entity representing a session bundle as it gets saved to the database. This class implements [SessionBundle]
