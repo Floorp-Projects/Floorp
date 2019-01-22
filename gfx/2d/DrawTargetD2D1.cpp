@@ -87,6 +87,15 @@ DrawTargetD2D1::~DrawTargetD2D1() {
   }
 }
 
+bool DrawTargetD2D1::IsValid() const {
+  if (NS_IsMainThread()) {
+    // Uninitialized DTs are considered valid.
+    return !mIsInitialized || mDC;
+  } else {
+    return const_cast<DrawTargetD2D1 *>(this)->EnsureInitialized();
+  }
+}
+
 already_AddRefed<SourceSurface> DrawTargetD2D1::Snapshot() {
   if (!EnsureInitialized()) {
     return nullptr;
@@ -1307,8 +1316,11 @@ void DrawTargetD2D1::FlushInternal(bool aHasDependencyMutex /* = false */) {
 
 bool DrawTargetD2D1::EnsureInitialized() {
   if (mIsInitialized) {
-    return true;
+    return !!mDC;
   }
+
+  // Don't retry.
+  mIsInitialized = true;
 
   HRESULT hr;
 
@@ -1387,8 +1399,6 @@ bool DrawTargetD2D1::EnsureInitialized() {
   if (!mSurface) {
     mDC->Clear();
   }
-
-  mIsInitialized = true;
 
   return true;
 }
