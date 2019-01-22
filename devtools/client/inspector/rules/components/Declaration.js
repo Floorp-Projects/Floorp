@@ -67,7 +67,7 @@ class Declaration extends PureComponent {
                            (isOverridden ? " ruleview-overridden" : ""),
               },
               dom.span({ className: "ruleview-namecontainer" },
-                dom.span({ className: "ruleview-propertyname theme-fg-color5" }, name),
+                dom.span({ className: "ruleview-propertyname theme-fg-color3" }, name),
                 ": "
               ),
               dom.span({ className: "ruleview-propertyvaluecontainer" },
@@ -103,7 +103,7 @@ class Declaration extends PureComponent {
                 className: "ruleview-overridden-item ruleview-overridden",
               },
               dom.span({ className: "ruleview-namecontainer" },
-                dom.span({ className: "ruleview-propertyname theme-fg-color5" }, name),
+                dom.span({ className: "ruleview-propertyname theme-fg-color3" }, name),
                 ": "
               ),
               dom.span({ className: "ruleview-propertyvaluecontainer" },
@@ -144,7 +144,7 @@ class Declaration extends PureComponent {
             tabIndex: -1,
           }),
           dom.span({ className: "ruleview-namecontainer" },
-            dom.span({ className: "ruleview-propertyname theme-fg-color5" }, name),
+            dom.span({ className: "ruleview-propertyname theme-fg-color3" }, name),
             ": "
           ),
           dom.span({
