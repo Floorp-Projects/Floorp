@@ -10,26 +10,28 @@
 #include "nsSMILTypes.h"
 #include "nsDebug.h"
 
+namespace mozilla {
+
 /*----------------------------------------------------------------------
- * nsSMILTimeValue class
+ * SMILTimeValue class
  *
  * A tri-state time value.
  *
  * First a quick overview of the SMIL time data types:
  *
- * nsSMILTime          -- a timestamp in milliseconds.
- * nsSMILTimeValue     -- (this class) a timestamp that can take the additional
- *                        states 'indefinite' and 'unresolved'
- * nsSMILInstanceTime  -- an nsSMILTimeValue used for constructing intervals. It
- *                        contains additional fields to govern reset behavior
- *                        and track timing dependencies (e.g. syncbase timing).
- * SMILInterval        -- a pair of nsSMILInstanceTimes that defines a begin and
- *                        an end time for animation.
- * nsSMILTimeValueSpec -- a component of a begin or end attribute, such as the
- *                        '5s' or 'a.end+2m' in begin="5s; a.end+2m". Acts as
- *                        a broker between an SMILTimedElement and its
- *                        nsSMILInstanceTimes by generating new instance times
- *                        and handling changes to existing times.
+ * nsSMILTime        -- a timestamp in milliseconds.
+ * SMILTimeValue     -- (this class) a timestamp that can take the additional
+ *                      states 'indefinite' and 'unresolved'
+ * SMILInstanceTime  -- an SMILTimeValue used for constructing intervals. It
+ *                      contains additional fields to govern reset behavior
+ *                      and track timing dependencies (e.g. syncbase timing).
+ * SMILInterval      -- a pair of SMILInstanceTimes that defines a begin and
+ *                      an end time for animation.
+ * SMILTimeValueSpec -- a component of a begin or end attribute, such as the
+ *                      '5s' or 'a.end+2m' in begin="5s; a.end+2m". Acts as
+ *                      a broker between an SMILTimedElement and its
+ *                      SMILInstanceTimes by generating new instance times
+ *                      and handling changes to existing times.
  *
  * Objects of this class may be in one of three states:
  *
@@ -39,29 +41,29 @@
  *
  * In summary:
  *
- * State      | GetMillis       | IsDefinite | IsIndefinite | IsResolved
- * -----------+-----------------+------------+--------------+------------
- * Definite   | nsSMILTimeValue | true       | false        | true
- * -----------+-----------------+------------+--------------+------------
- * Indefinite | --              | false      | true         | true
- * -----------+-----------------+------------+--------------+------------
- * Unresolved | --              | false      | false        | false
+ * State      | GetMillis     | IsDefinite | IsIndefinite | IsResolved
+ * -----------+---------------+------------+--------------+------------
+ * Definite   | SMILTimeValue | true       | false        | true
+ * -----------+---------------+------------+--------------+------------
+ * Indefinite | --            | false      | true         | true
+ * -----------+---------------+------------+--------------+------------
+ * Unresolved | --            | false      | false        | false
  *
  */
 
-class nsSMILTimeValue {
+class SMILTimeValue {
  public:
   // Creates an unresolved time value
-  nsSMILTimeValue()
+  SMILTimeValue()
       : mMilliseconds(kUnresolvedMillis), mState(STATE_UNRESOLVED) {}
 
   // Creates a resolved time value
-  explicit nsSMILTimeValue(nsSMILTime aMillis)
+  explicit SMILTimeValue(nsSMILTime aMillis)
       : mMilliseconds(aMillis), mState(STATE_DEFINITE) {}
 
   // Named constructor to create an indefinite time value
-  static nsSMILTimeValue Indefinite() {
-    nsSMILTimeValue value;
+  static SMILTimeValue Indefinite() {
+    SMILTimeValue value;
     value.SetIndefinite();
     return value;
   }
@@ -91,29 +93,29 @@ class nsSMILTimeValue {
     mMilliseconds = aMillis;
   }
 
-  int8_t CompareTo(const nsSMILTimeValue& aOther) const;
+  int8_t CompareTo(const SMILTimeValue& aOther) const;
 
-  bool operator==(const nsSMILTimeValue& aOther) const {
+  bool operator==(const SMILTimeValue& aOther) const {
     return CompareTo(aOther) == 0;
   }
 
-  bool operator!=(const nsSMILTimeValue& aOther) const {
+  bool operator!=(const SMILTimeValue& aOther) const {
     return CompareTo(aOther) != 0;
   }
 
-  bool operator<(const nsSMILTimeValue& aOther) const {
+  bool operator<(const SMILTimeValue& aOther) const {
     return CompareTo(aOther) < 0;
   }
 
-  bool operator>(const nsSMILTimeValue& aOther) const {
+  bool operator>(const SMILTimeValue& aOther) const {
     return CompareTo(aOther) > 0;
   }
 
-  bool operator<=(const nsSMILTimeValue& aOther) const {
+  bool operator<=(const SMILTimeValue& aOther) const {
     return CompareTo(aOther) <= 0;
   }
 
-  bool operator>=(const nsSMILTimeValue& aOther) const {
+  bool operator>=(const SMILTimeValue& aOther) const {
     return CompareTo(aOther) >= 0;
   }
 
@@ -123,5 +125,7 @@ class nsSMILTimeValue {
   nsSMILTime mMilliseconds;
   enum { STATE_DEFINITE, STATE_INDEFINITE, STATE_UNRESOLVED } mState;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILTIMEVALUE_H_

@@ -13,9 +13,9 @@
 #include "nsSMILTypes.h"
 #include "nsTPriorityQueue.h"
 
-class nsSMILTimeValue;
-
 namespace mozilla {
+
+class SMILTimeValue;
 
 //----------------------------------------------------------------------
 // SMILTimeContainer
@@ -107,7 +107,7 @@ class SMILTimeContainer {
    * @return  The equivalent parent time or indefinite if the container is
    *          paused and the time is in the future.
    */
-  nsSMILTimeValue ContainerToParentTime(nsSMILTime aContainerTime) const;
+  SMILTimeValue ContainerToParentTime(nsSMILTime aContainerTime) const;
 
   /*
    * Convert from parent time to container time.
@@ -116,7 +116,7 @@ class SMILTimeContainer {
    * @return  The equivalent container time or indefinite if the container is
    *          paused and aParentTime is after the time when the pause began.
    */
-  nsSMILTimeValue ParentToContainerTime(nsSMILTime aParentTime) const;
+  SMILTimeValue ParentToContainerTime(nsSMILTime aParentTime) const;
 
   /*
    * If the container is paused, causes the pause time to be updated to the
