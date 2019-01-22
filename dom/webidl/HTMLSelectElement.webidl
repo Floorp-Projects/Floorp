@@ -43,7 +43,7 @@ interface HTMLSelectElement : HTMLElement {
   setter void (unsigned long index, HTMLOptionElement? option);
 
   readonly attribute HTMLCollection selectedOptions;
-  [SetterThrows, Pure]
+  [Pure]
   attribute long selectedIndex;
   [Pure]
   attribute DOMString value;
