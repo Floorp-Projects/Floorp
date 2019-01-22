@@ -54,8 +54,27 @@ add_task(async function testMainViewVisible() {
     let labels = permissionsList.querySelectorAll(".identity-popup-permission-label");
     is(labels.length, 1, "One permission visible in main view");
     is(labels[0].textContent, labelText, "Correct value");
+
+    let menulist = document.getElementById("identity-popup-popup-menulist");
+    Assert.equal(menulist.label, "Block");
+
+    await EventUtils.synthesizeMouseAtCenter(menulist, { type: "mousedown" });
+    await BrowserTestUtils.waitForCondition(() => {
+      return menulist.getElementsByTagName("menuitem")[0].label === "Allow";
+    });
+
+    let menuitem = menulist.getElementsByTagName("menuitem")[0];
+    Assert.equal(menuitem.getAttribute("label"), "Allow");
+
+    menuitem.click();
+    menulist.menupopup.hidePopup();
     await closeIdentityPopup();
+
+    let uri = Services.io.newURI(AUTOPLAY_PAGE);
+    let state = SitePermissions.get(uri, "autoplay-media").state;
+    Assert.equal(state, SitePermissions.ALLOW);
   });
 
+  Services.perms.removeAll();
   Services.prefs.clearUserPref("media.autoplay.default");
 });

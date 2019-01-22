@@ -1055,7 +1055,8 @@ var gIdentityHandler = {
       SitePermissions.SCOPE_POLICY, SitePermissions.SCOPE_GLOBAL,
     ].includes(aPermission.scope);
 
-    if (aPermission.id == "popup" && !isPolicyPermission) {
+    if ((aPermission.id == "popup" && !isPolicyPermission) ||
+        aPermission.id == "autoplay-media") {
       let menulist = document.createXULElement("menulist");
       let menupopup = document.createXULElement("menupopup");
       let block = document.createXULElement("vbox");
