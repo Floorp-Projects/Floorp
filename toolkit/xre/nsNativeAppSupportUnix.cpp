@@ -135,7 +135,6 @@ class nsNativeAppSupportUnix : public nsNativeAppSupportBase {
   void DisconnectFromSM();
 #endif
   NS_IMETHOD Start(bool *aRetVal) override;
-  NS_IMETHOD Stop(bool *aResult) override;
   NS_IMETHOD Enable() override;
 
  private:
@@ -648,13 +647,6 @@ nsNativeAppSupportUnix::Start(bool *aRetVal) {
   g_free(client_id);
 #endif /* MOZ_X11 */
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNativeAppSupportUnix::Stop(bool *aResult) {
-  NS_ENSURE_ARG(aResult);
-  *aResult = true;
   return NS_OK;
 }
 
