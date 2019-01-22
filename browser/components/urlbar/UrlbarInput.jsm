@@ -393,6 +393,8 @@ class UrlbarInput {
   }
 
   typeRestrictToken(char) {
+    this.window.focusAndSelectUrlBar();
+
     this.inputField.value = char + " ";
 
     let event = this.document.createEvent("UIEvents");
