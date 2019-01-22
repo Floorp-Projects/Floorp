@@ -196,14 +196,11 @@
   --theme-focus-box-shadow-textbox: 0 0 0 1px var(--theme-textbox-box-shadow);
 
   --toolbarbutton-background: var(--theme-toolbar-hover);
-  --toolbarbutton-border-color: transparent;
   --toolbarbutton-hover-background: var(--theme-toolbar-hover);
-  --toolbarbutton-hover-border-color: var(--toolbarbutton-border-color);
   --toolbarbutton-focus-background: var(--theme-selection-focus-background);
   --toolbarbutton-focus-color: var(--theme-selection-focus-color);
   --toolbarbutton-checked-background: var(--theme-selection-background);
   --toolbarbutton-checked-color: var(--theme-selection-color);
-  --toolbarbutton-checked-border-color: var(--toolbarbutton-border-color);
   --toolbarbutton-checked-focus-background: var(--blue-60);
 
   /* The photon animation curve */
