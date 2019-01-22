@@ -76,7 +76,7 @@ subprojects {
 
                 lintOptions {
                     warningsAsErrors true
-                    abortOnError true
+                    abortOnError (project.name != "support-test")
                 }
             }
 
