@@ -1919,6 +1919,23 @@ impl PrimitiveStore {
                     }
                 };
 
+                if let Some(ref mut tile_cache) = frame_state.tile_cache {
+                    if !tile_cache.update_prim_dependencies(
+                        prim_instance,
+                        prim_local_rect,
+                        frame_context.clip_scroll_tree,
+                        frame_state.data_stores,
+                        &frame_state.clip_store.clip_chain_nodes,
+                        &self.pictures,
+                        frame_state.resource_cache,
+                        &self.opacity_bindings,
+                        &self.images,
+                    ) {
+                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                        continue;
+                    }
+                }
+
                 let clip_chain = frame_state
                     .clip_store
                     .build_clip_chain_instance(
@@ -1936,19 +1953,6 @@ impl PrimitiveStore {
                         clip_node_collector.as_ref(),
                         &mut frame_state.data_stores.clip,
                     );
-
-                if let Some(ref mut tile_cache) = frame_state.tile_cache {
-                    tile_cache.update_prim_dependencies(
-                        prim_instance,
-                        frame_context.clip_scroll_tree,
-                        frame_state.data_stores,
-                        &frame_state.clip_store.clip_chain_nodes,
-                        &self.pictures,
-                        frame_state.resource_cache,
-                        &self.opacity_bindings,
-                        &self.images,
-                    );
-                }
 
                 let clip_chain = match clip_chain {
                     Some(clip_chain) => clip_chain,
