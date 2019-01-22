@@ -499,7 +499,7 @@
 @RESPATH@/res/svg.css
 
 ; [Layout Debugger]
-#ifdef MOZ_DEBUG
+#ifdef MOZ_LAYOUT_DEBUGGER
 @RESPATH@/chrome/layoutdebug@JAREXT@
 @RESPATH@/chrome/layoutdebug.manifest
 #endif
