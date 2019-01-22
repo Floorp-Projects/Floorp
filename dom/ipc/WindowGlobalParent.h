@@ -90,7 +90,6 @@ class WindowGlobalParent final : public nsISupports,
   // IPC messages
   mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI) override;
   mozilla::ipc::IPCResult RecvBecomeCurrentWindowGlobal() override;
-  mozilla::ipc::IPCResult RecvDestroy() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
