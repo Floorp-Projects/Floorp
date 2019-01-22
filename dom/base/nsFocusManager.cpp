@@ -2949,7 +2949,11 @@ void ScopedContentTraversal::Prev() {
   SetCurrent(parent == mOwner ? nullptr : parent);
 }
 
-nsIContent* nsFocusManager::FindOwner(nsIContent* aContent) {
+/**
+ * Returns scope owner of aContent.
+ * A scope owner is either a document root, shadow host, or slot.
+ */
+static nsIContent* FindOwner(nsIContent* aContent) {
   nsIContent* currentContent = aContent;
   while (currentContent) {
     nsIContent* parent = currentContent->GetFlattenedTreeParent();
@@ -2974,8 +2978,14 @@ nsIContent* nsFocusManager::FindOwner(nsIContent* aContent) {
   return nullptr;
 }
 
-int32_t nsFocusManager::HostOrSlotTabIndexValue(nsIContent* aContent,
-                                                bool* aIsFocusable) {
+/**
+ * Host and Slot elements need to be handled as if they had tabindex 0 even
+ * when they don't have the attribute. This is a helper method to get the
+ * right value for focus navigation. If aIsFocusable is passed, it is set to
+ * true if the element itself is focusable.
+ */
+static int32_t HostOrSlotTabIndexValue(const nsIContent* aContent,
+                                       bool* aIsFocusable = nullptr) {
   MOZ_ASSERT(IsHostOrSlot(aContent));
 
   if (aIsFocusable) {
@@ -3124,14 +3134,15 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
 }
 
 nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
-    nsIContent** aStartContent, nsIContent* aOriginalStartContent,
-    bool aForward, int32_t* aCurrentTabIndex, bool aIgnoreTabIndex,
-    bool aForDocumentNavigation) {
-  nsIContent* startContent = *aStartContent;
-  nsIContent* owner = FindOwner(startContent);
-  MOZ_ASSERT(owner, "focus navigation scope owner not in document");
-  MOZ_ASSERT(IsHostOrSlot(owner), "scope owner should be host or slot");
+    nsIContent* aStartOwner, nsIContent** aStartContent,
+    nsIContent* aOriginalStartContent, bool aForward, int32_t* aCurrentTabIndex,
+    bool aIgnoreTabIndex, bool aForDocumentNavigation) {
+  MOZ_ASSERT(aStartOwner == FindOwner(*aStartContent),
+             "aStartOWner should be the scope owner of aStartContent");
+  MOZ_ASSERT(IsHostOrSlot(aStartOwner), "scope owner should be host or slot");
 
+  nsIContent* owner = aStartOwner;
+  nsIContent* startContent = *aStartContent;
   while (IsHostOrSlot(owner)) {
     int32_t tabIndex = 0;
     if (IsHostOrSlot(startContent)) {
@@ -3209,8 +3220,8 @@ nsresult nsFocusManager::GetNextTabbableContent(
   nsIContent* owner = FindOwner(aStartContent);
   if (owner && rootElement != owner) {
     nsIContent* contentToFocus = GetNextTabbableContentInAncestorScopes(
-        &aStartContent, aOriginalStartContent, aForward, &aCurrentTabIndex,
-        aIgnoreTabIndex, aForDocumentNavigation);
+        owner, &aStartContent, aOriginalStartContent, aForward,
+        &aCurrentTabIndex, aIgnoreTabIndex, aForDocumentNavigation);
     if (contentToFocus) {
       NS_ADDREF(*aResultContent = contentToFocus);
       return NS_OK;
