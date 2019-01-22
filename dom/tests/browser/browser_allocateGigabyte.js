@@ -5,7 +5,7 @@
 const TEST_URI = "http://example.com/browser/dom/tests/browser/test_largeAllocation.html";
 
 function expectProcessCreated() {
-  let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+  let os = Services.obs;
   return new Promise(resolve => {
     let topic = "ipc:content-created";
     function observer() {

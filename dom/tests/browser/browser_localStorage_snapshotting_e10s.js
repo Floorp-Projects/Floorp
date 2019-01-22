@@ -2,6 +2,8 @@ const HELPER_PAGE_URL =
   "http://example.com/browser/dom/tests/browser/page_localstorage_snapshotting_e10s.html";
 const HELPER_PAGE_ORIGIN = "http://example.com/";
 
+/* import-globals-from helper_localStorage_e10s.js */
+
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "/helper_localStorage_e10s.js",
                                     this);
@@ -94,7 +96,7 @@ add_task(async function() {
       // Enable LocalStorage's testing API so we can explicitly create
       // snapshots when needed.
       ["dom.storage.testing", true],
-    ]
+    ],
   });
 
   // Ensure that there is no localstorage data by forcing the origin to be
@@ -120,7 +122,7 @@ add_task(async function() {
     ["key5", "initial5"],
     ["key6", "initial6"],
     ["key7", "initial7"],
-    ["key8", "initial8"]
+    ["key8", "initial8"],
   ];
 
   const initialState = {
@@ -130,11 +132,10 @@ add_task(async function() {
     key5: "initial5",
     key6: "initial6",
     key7: "initial7",
-    key8: "initial8"
+    key8: "initial8",
   };
 
-  function getPartialPrefill()
-  {
+  function getPartialPrefill() {
     let size = 0;
     let entries = Object.entries(initialState);
     for (let i = 0; i < entries.length / 2; i++) {
@@ -147,7 +148,7 @@ add_task(async function() {
   const prefillValues = [
     0,                   // no prefill
     getPartialPrefill(), // partial prefill
-    -1                   // full prefill
+    -1,                  // full prefill
   ];
 
   for (let prefillValue of prefillValues) {
@@ -155,8 +156,8 @@ add_task(async function() {
 
     await SpecialPowers.pushPrefEnv({
       set: [
-        ["dom.storage.snapshot_prefill", prefillValue]
-      ]
+        ["dom.storage.snapshot_prefill", prefillValue],
+      ],
     });
 
     info("Stage 1");
@@ -171,7 +172,7 @@ add_task(async function() {
       ["key6", "setRemove16"],
       ["key7", "setRemove17"],
       ["key8", null],
-      ["key9", "setRemove19"]
+      ["key9", "setRemove19"],
     ];
 
     const setRemoveState1 = {
@@ -182,7 +183,7 @@ add_task(async function() {
       key5: "setRemove15",
       key6: "setRemove16",
       key7: "setRemove17",
-      key9: "setRemove19"
+      key9: "setRemove19",
     };
 
     const setRemoveMutations2 = [
@@ -195,7 +196,7 @@ add_task(async function() {
       ["key6", "setRemove26"],
       ["key7", null],
       ["key8", "setRemove28"],
-      ["key9", "setRemove29"]
+      ["key9", "setRemove29"],
     ];
 
     const setRemoveState2 = {
@@ -206,7 +207,7 @@ add_task(async function() {
       key5: "setRemove25",
       key6: "setRemove26",
       key8: "setRemove28",
-      key9: "setRemove29"
+      key9: "setRemove29",
     };
 
     // Apply initial mutations using an explicit snapshot. The explicit
@@ -259,7 +260,7 @@ add_task(async function() {
     const setRemoveClearMutations1 = [
       ["key0", "setRemoveClear10"],
       ["key1", null],
-      [null, null]
+      [null, null],
     ];
 
     const setRemoveClearState1 = {
@@ -268,7 +269,7 @@ add_task(async function() {
     const setRemoveClearMutations2 = [
       ["key8", null],
       ["key9", "setRemoveClear29"],
-      [null, null]
+      [null, null],
     ];
 
     const setRemoveClearState2 = {
@@ -318,7 +319,7 @@ add_task(async function() {
       ["key5", "initial5"],
       ["key3", "initial3"],
       ["key2", "initial2"],
-      ["key1", "initial1"]
+      ["key1", "initial1"],
     ];
 
     // Apply initial mutations using an explicit snapshot. The explicit

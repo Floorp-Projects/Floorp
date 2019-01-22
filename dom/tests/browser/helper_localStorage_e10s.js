@@ -40,10 +40,10 @@ class KnownTabs {
  * StorageDBParent will send the set of origins when it is constructed.)
  */
 async function openTestTabInOwnProcess(helperPageUrl, name, knownTabs) {
-  let realUrl = helperPageUrl + '?' + encodeURIComponent(name);
+  let realUrl = helperPageUrl + "?" + encodeURIComponent(name);
   // Load and wait for about:blank.
   let tab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser, opening: 'about:blank', forceNewProcess: true
+    gBrowser, opening: "about:blank", forceNewProcess: true,
   });
   let pid = tab.linkedBrowser.frameLoader.tabParent.osPid;
   ok(!knownTabs.byName.has(name), "tab needs its own name: " + name);
