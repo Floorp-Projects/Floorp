@@ -75,6 +75,14 @@
   list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media-blocked.svg);
 }
 
+.image-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/images.svg);
+}
+
+.image-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/images-blocked.svg);
+}
+
 .storage-access-notification-content {
   color: var(--panel-disabled-color);
   font-style: italic;
