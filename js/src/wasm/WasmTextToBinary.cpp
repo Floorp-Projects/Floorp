@@ -105,7 +105,7 @@ class WasmToken {
     Loop,
 #ifdef ENABLE_WASM_BULKMEM_OPS
     MemCopy,
-    MemDrop,
+    DataDrop,
     MemFill,
     MemInit,
 #endif
@@ -139,7 +139,7 @@ class WasmToken {
     Table,
 #ifdef ENABLE_WASM_BULKMEM_OPS
     TableCopy,
-    TableDrop,
+    ElemDrop,
     TableInit,
 #endif
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
@@ -317,7 +317,7 @@ class WasmToken {
       case Loop:
 #ifdef ENABLE_WASM_BULKMEM_OPS
       case MemCopy:
-      case MemDrop:
+      case DataDrop:
       case MemFill:
       case MemInit:
 #endif
@@ -335,7 +335,7 @@ class WasmToken {
       case Store:
 #ifdef ENABLE_WASM_BULKMEM_OPS
       case TableCopy:
-      case TableDrop:
+      case ElemDrop:
       case TableInit:
 #endif
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
@@ -984,6 +984,9 @@ WasmToken WasmTokenStream::next() {
 
     case 'd':
       if (consume(u"data")) {
+        if (consume(u".drop")) {
+          return WasmToken(WasmToken::DataDrop, begin, cur_);
+        }
         return WasmToken(WasmToken::Data, begin, cur_);
       }
       if (consume(u"drop")) {
@@ -993,6 +996,9 @@ WasmToken WasmTokenStream::next() {
 
     case 'e':
       if (consume(u"elem")) {
+        if (consume(u".drop")) {
+          return WasmToken(WasmToken::ElemDrop, begin, cur_);
+        }
         return WasmToken(WasmToken::Elem, begin, cur_);
       }
       if (consume(u"else")) {
@@ -2099,9 +2105,6 @@ WasmToken WasmTokenStream::next() {
         if (consume(u"copy")) {
           return WasmToken(WasmToken::MemCopy, begin, cur_);
         }
-        if (consume(u"drop")) {
-          return WasmToken(WasmToken::MemDrop, begin, cur_);
-        }
         if (consume(u"fill")) {
           return WasmToken(WasmToken::MemFill, begin, cur_);
         }
@@ -2215,9 +2218,6 @@ WasmToken WasmTokenStream::next() {
 #ifdef ENABLE_WASM_BULKMEM_OPS
         if (consume(u"copy")) {
           return WasmToken(WasmToken::TableCopy, begin, cur_);
-        }
-        if (consume(u"drop")) {
-          return WasmToken(WasmToken::TableDrop, begin, cur_);
         }
         if (consume(u"init")) {
           return WasmToken(WasmToken::TableInit, begin, cur_);
@@ -3659,13 +3659,13 @@ static AstMemOrTableCopy* ParseMemOrTableCopy(WasmParseContext& c,
                                         memOrTableSource, src, len);
 }
 
-static AstMemOrTableDrop* ParseMemOrTableDrop(WasmParseContext& c, bool isMem) {
+static AstDataOrElemDrop* ParseDataOrElemDrop(WasmParseContext& c, bool isData) {
   WasmToken segIndexTok;
   if (!c.ts.getIf(WasmToken::Index, &segIndexTok)) {
     return nullptr;
   }
 
-  return new (c.lifo) AstMemOrTableDrop(isMem, segIndexTok.index());
+  return new (c.lifo) AstDataOrElemDrop(isData, segIndexTok.index());
 }
 
 static AstMemFill* ParseMemFill(WasmParseContext& c, bool inParens) {
@@ -3980,16 +3980,16 @@ static AstExpr* ParseExprBody(WasmParseContext& c, WasmToken token,
 #ifdef ENABLE_WASM_BULKMEM_OPS
     case WasmToken::MemCopy:
       return ParseMemOrTableCopy(c, inParens, /*isMem=*/true);
-    case WasmToken::MemDrop:
-      return ParseMemOrTableDrop(c, /*isMem=*/true);
+    case WasmToken::DataDrop:
+      return ParseDataOrElemDrop(c, /*isData=*/true);
     case WasmToken::MemFill:
       return ParseMemFill(c, inParens);
     case WasmToken::MemInit:
       return ParseMemOrTableInit(c, inParens, /*isMem=*/true);
     case WasmToken::TableCopy:
       return ParseMemOrTableCopy(c, inParens, /*isMem=*/false);
-    case WasmToken::TableDrop:
-      return ParseMemOrTableDrop(c, /*isMem=*/false);
+    case WasmToken::ElemDrop:
+      return ParseDataOrElemDrop(c, /*isData=*/false);
     case WasmToken::TableInit:
       return ParseMemOrTableInit(c, inParens, /*isMem=*/false);
 #endif
@@ -5714,7 +5714,7 @@ static bool ResolveExpr(Resolver& r, AstExpr& expr) {
 #ifdef ENABLE_WASM_BULKMEM_OPS
     case AstExprKind::MemOrTableCopy:
       return ResolveMemOrTableCopy(r, expr.as<AstMemOrTableCopy>());
-    case AstExprKind::MemOrTableDrop:
+    case AstExprKind::DataOrElemDrop:
       return true;
     case AstExprKind::MemFill:
       return ResolveMemFill(r, expr.as<AstMemFill>());
@@ -6333,8 +6333,8 @@ static bool EncodeMemOrTableCopy(Encoder& e, AstMemOrTableCopy& s) {
   return result;
 }
 
-static bool EncodeMemOrTableDrop(Encoder& e, AstMemOrTableDrop& s) {
-  return e.writeOp(s.isMem() ? MiscOp::MemDrop : MiscOp::TableDrop) &&
+static bool EncodeDataOrElemDrop(Encoder& e, AstDataOrElemDrop& s) {
+  return e.writeOp(s.isData() ? MiscOp::DataDrop : MiscOp::ElemDrop) &&
          e.writeVarU32(s.segIndex());
 }
 
@@ -6526,8 +6526,8 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
 #ifdef ENABLE_WASM_BULKMEM_OPS
     case AstExprKind::MemOrTableCopy:
       return EncodeMemOrTableCopy(e, expr.as<AstMemOrTableCopy>());
-    case AstExprKind::MemOrTableDrop:
-      return EncodeMemOrTableDrop(e, expr.as<AstMemOrTableDrop>());
+    case AstExprKind::DataOrElemDrop:
+      return EncodeDataOrElemDrop(e, expr.as<AstDataOrElemDrop>());
     case AstExprKind::MemFill:
       return EncodeMemFill(e, expr.as<AstMemFill>());
     case AstExprKind::MemOrTableInit:

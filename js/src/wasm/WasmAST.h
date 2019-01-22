@@ -407,7 +407,7 @@ enum class AstExprKind {
   Load,
 #ifdef ENABLE_WASM_BULKMEM_OPS
   MemOrTableCopy,
-  MemOrTableDrop,
+  DataOrElemDrop,
   MemFill,
   MemOrTableInit,
 #endif
@@ -841,16 +841,16 @@ class AstMemOrTableCopy : public AstExpr {
   AstExpr& len() const { return *len_; }
 };
 
-class AstMemOrTableDrop : public AstExpr {
-  bool isMem_;
+class AstDataOrElemDrop : public AstExpr {
+  bool isData_;
   uint32_t segIndex_;
 
  public:
-  static const AstExprKind Kind = AstExprKind::MemOrTableDrop;
-  explicit AstMemOrTableDrop(bool isMem, uint32_t segIndex)
-      : AstExpr(Kind, ExprType::Void), isMem_(isMem), segIndex_(segIndex) {}
+  static const AstExprKind Kind = AstExprKind::DataOrElemDrop;
+  explicit AstDataOrElemDrop(bool isData, uint32_t segIndex)
+      : AstExpr(Kind, ExprType::Void), isData_(isData), segIndex_(segIndex) {}
 
-  bool isMem() const { return isMem_; }
+  bool isData() const { return isData_; }
   uint32_t segIndex() const { return segIndex_; }
 };
 

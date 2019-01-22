@@ -373,11 +373,11 @@ enum class MiscOp {
   // Bulk memory operations.  Note, these are unofficial, but in accordance
   // with the proposal as of June 2018.
   MemInit = 0x08,
-  MemDrop = 0x09,
+  DataDrop = 0x09,
   MemCopy = 0x0a,
   MemFill = 0x0b,
   TableInit = 0x0c,
-  TableDrop = 0x0d,
+  ElemDrop = 0x0d,
   TableCopy = 0x0e,
 
   // Generalized tables (reftypes proposal).  Note, these are unofficial.

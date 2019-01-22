@@ -164,7 +164,7 @@ enum class OpKind {
   Shuffle,
   Splat,
   MemOrTableCopy,
-  MemOrTableDrop,
+  DataOrElemDrop,
   MemFill,
   MemOrTableInit,
   TableGet,
@@ -518,7 +518,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readMemOrTableCopy(bool isMem, uint32_t* dstMemOrTableIndex,
                                        Value* dst, uint32_t* srcMemOrTableIndex,
                                        Value* src, Value* len);
-  MOZ_MUST_USE bool readMemOrTableDrop(bool isMem, uint32_t* segIndex);
+  MOZ_MUST_USE bool readDataOrElemDrop(bool isData, uint32_t* segIndex);
   MOZ_MUST_USE bool readMemFill(Value* start, Value* val, Value* len);
   MOZ_MUST_USE bool readMemOrTableInit(bool isMem, uint32_t* segIndex,
                                        uint32_t* dstTableIndex, Value* dst,
@@ -1927,16 +1927,16 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readMemOrTableDrop(bool isMem, uint32_t* segIndex) {
-  MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableDrop);
+inline bool OpIter<Policy>::readDataOrElemDrop(bool isData, uint32_t* segIndex) {
+  MOZ_ASSERT(Classify(op_) == OpKind::DataOrElemDrop);
 
-  if (isMem) {
+  if (isData) {
     if (!env_.usesMemory()) {
       return fail("can't touch memory without memory");
     }
   } else {
     if (env_.tables.length() == 0) {
-      return fail("can't table.drop without a table");
+      return fail("can't elem.drop without a table");
     }
   }
 
@@ -1944,14 +1944,14 @@ inline bool OpIter<Policy>::readMemOrTableDrop(bool isMem, uint32_t* segIndex) {
     return false;
   }
 
-  if (isMem) {
+  if (isData) {
     // We can't range-check *segIndex at this point since we don't yet
     // know how many data segments the module has.  So note the index, but
     // defer the actual check for now.
     dvs_.lock()->notifyDataSegmentIndex(*segIndex, d_.currentOffset());
   } else {
     if (*segIndex >= env_.elemSegments.length()) {
-      return fail("element segment index out of range for table.drop");
+      return fail("element segment index out of range for elem.drop");
     }
   }
 
@@ -2042,7 +2042,7 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
   }
 
   if (isMem) {
-    // Same comment as for readMemOrTableDrop.
+    // Same comment as for readDataOrElemDrop.
     dvs_.lock()->notifyDataSegmentIndex(*segIndex, d_.currentOffset());
   } else {
     // Element segments must carry functions exclusively and anyfunc is not
