@@ -42,10 +42,6 @@ class WindowGlobalChild : public nsWrapperCache, public PWindowGlobalChild {
 
   // Has this actor been shut down
   bool IsClosed() { return mIPCClosed; }
-  void Destroy() {
-    mIPCClosed = true;
-    SendDestroy();
-  }
 
   // Check if this actor is managed by PInProcess, as-in the document is loaded
   // in the chrome process.
