@@ -947,6 +947,7 @@ pulse_stream_init(cubeb * context,
   }
 
   *stream = stm;
+  LOG("Cubeb stream (%p) init successful.", *stream);
 
   return CUBEB_OK;
 }
@@ -978,6 +979,7 @@ pulse_stream_destroy(cubeb_stream * stm)
   }
   WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
 
+  LOG("Cubeb stream (%p) destroyed successfully.", stm);
   free(stm);
 }
 
@@ -1009,6 +1011,7 @@ pulse_stream_start(cubeb_stream * stm)
     WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
   }
 
+  LOG("Cubeb stream (%p) started successfully.", stm);
   return CUBEB_OK;
 }
 
@@ -1024,6 +1027,7 @@ pulse_stream_stop(cubeb_stream * stm)
   WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
 
   stream_cork(stm, CORK | NOTIFY);
+  LOG("Cubeb stream (%p) stopped successfully.", stm);
   return CUBEB_OK;
 }
 
