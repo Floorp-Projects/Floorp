@@ -861,6 +861,8 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
     if (mHasStyles)
         return;
 
+    AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("gfxMacFontFamily::FindStyleVariations", LAYOUT, mName);
+
     nsAutoreleasePool localPool;
 
     NSString *family = GetNSStringForString(NS_ConvertUTF8toUTF16(mName));
