@@ -6145,9 +6145,20 @@ class _PrerenderData {
         return result.concat(next.oneOf);
       } else if (next && next.indexedDB) {
         return result.concat(next.indexedDB);
+      } else if (next && next.jsonPrefs) {
+        return result.concat(next.jsonPrefs);
       }
       throw new Error("Your validation configuration is not properly configured");
     }, []);
+  }
+
+  _isPrefEnabled(prefObj) {
+    try {
+      let data = JSON.parse(prefObj);
+      return data && data.enabled;
+    } catch (e) {
+      return null;
+    }
   }
 
   arePrefsValid(getPref, indexedDBPrefs) {
@@ -6160,6 +6171,12 @@ class _PrerenderData {
       } else if (indexedDBPrefs && prefs && prefs.indexedDB) {
         const anyModifiedPrefs = prefs.indexedDB.some(prefName => indexedDBPrefs.some(pref => pref && pref[prefName]));
         if (anyModifiedPrefs) {
+          return false;
+        }
+        // {jsonPrefs: ["foo", "bar"]}
+      } else if (prefs && prefs.jsonPrefs) {
+        const isPrefModified = prefs.jsonPrefs.some(name => this._isPrefEnabled(getPref(name)) !== this.initialPrefs[name].enabled);
+        if (isPrefModified) {
           return false;
         }
         // "foo"
@@ -6179,7 +6196,8 @@ var PrerenderData = new _PrerenderData({
     "feeds.section.topstories": true,
     "feeds.section.highlights": true,
     "sectionOrder": "topsites,topstories,highlights",
-    "collapsed": false
+    "collapsed": false,
+    "discoverystream.config": { "enabled": false }
   },
   // Prefs listed as invalidating will prevent the prerendered version
   // of AS from being used if their value is something other than what is listed
@@ -6193,7 +6211,10 @@ var PrerenderData = new _PrerenderData({
   { oneOf: ["feeds.section.topstories", "feeds.section.highlights"] },
   // If any component has the following preference set to `true` it will
   // invalidate the prerendered version.
-  { indexedDB: ["collapsed"] }],
+  { indexedDB: ["collapsed"] },
+  // For below prefs, parse value to check enabled property. If enabled property
+  // differs from initial prefs enabled value, prerendering cannot be used
+  { jsonPrefs: ["discoverystream.config"] }],
   initialSections: [{
     enabled: true,
     icon: "pocket",
@@ -7726,12 +7747,13 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
       case "HorizontalRule":
         return external_React_default.a.createElement(HorizontalRule_HorizontalRule, null);
       case "List":
-        rows = this.extractRows(component, MAX_ROWS_LIST);
+        rows = this.extractRows(component, Math.min(component.properties.items, MAX_ROWS_LIST));
         return external_React_default.a.createElement(
           ImpressionStats["ImpressionStats"],
           { rows: rows, dispatch: this.props.dispatch, source: component.type },
           external_React_default.a.createElement(List, {
             feed: component.feed,
+            items: component.properties.items,
             type: component.type,
             header: component.header })
         );

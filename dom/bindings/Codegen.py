@@ -2586,22 +2586,6 @@ class MethodDefiner(PropertyDefiner):
             self.condition, functools.partial(self.specData, unforgeable=self.unforgeable))
 
 
-def isCrossOriginWritable(attr, descriptor):
-    """
-    Return whether the IDLAttribute in question is cross-origin writable on the
-    interface represented by descriptor.  This is needed to handle the fact that
-    some, but not all, interfaces implementing URLUtils want a cross-origin
-    writable .href.
-    """
-    crossOriginWritable = attr.getExtendedAttribute("CrossOriginWritable")
-    if not crossOriginWritable:
-        return False
-    if crossOriginWritable is True:
-        return True
-    assert (isinstance(crossOriginWritable, list) and
-            len(crossOriginWritable) == 1)
-    return crossOriginWritable[0] == descriptor.interface.identifier.name
-
 def isNonExposedNavigatorObjectGetter(attr, descriptor):
     return (attr.navigatorObjectGetter and
             not descriptor.getDescriptor(attr.type.inner.identifier.name).register)
@@ -2617,7 +2601,7 @@ class AttrDefiner(PropertyDefiner):
                         m.isAttr() and m.isStatic() == static and
                         MemberIsUnforgeable(m, descriptor) == unforgeable and
                         (not crossOriginOnly or m.getExtendedAttribute("CrossOriginReadable") or
-                         isCrossOriginWritable(m, descriptor)) and
+                         m.getExtendedAttribute("CrossOriginWritable")) and
                         not isNonExposedNavigatorObjectGetter(m, descriptor)]
         else:
             idlAttrs = []
@@ -2699,20 +2683,20 @@ class AttrDefiner(PropertyDefiner):
                 attr.getExtendedAttribute("Replaceable") is None and
                 attr.getExtendedAttribute("LenientSetter") is None):
                 return "nullptr, nullptr"
-            if crossOriginOnly and not isCrossOriginWritable(attr, descriptor):
+            if crossOriginOnly and not attr.getExtendedAttribute("CrossOriginWritable"):
                 return "nullptr, nullptr"
             if static:
                 accessor = 'set_' + IDLToCIdentifier(attr.identifier.name)
                 jitinfo = "nullptr"
             else:
                 if attr.hasLenientThis():
-                    if isCrossOriginWritable(attr, descriptor):
+                    if attr.getExtendedAttribute("CrossOriginWritable"):
                         raise TypeError("Can't handle lenient cross-origin "
                                         "writable attribute %s.%s" %
                                         (descriptor.name,
                                          attr.identifier.name))
                     accessor = "GenericSetter<LenientThisPolicy>"
-                elif isCrossOriginWritable(attr, descriptor):
+                elif attr.getExtendedAttribute("CrossOriginWritable"):
                     accessor = "GenericSetter<CrossOriginThisPolicy>"
                 elif descriptor.interface.isOnGlobalProtoChain():
                     accessor = "GenericSetter<MaybeGlobalThisPolicy>"
@@ -4164,7 +4148,8 @@ class CGCrossOriginProperties(CGThing):
         attrs = []
         methods = []
         for m in descriptor.interface.members:
-            if m.isAttr() and (m.getExtendedAttribute("CrossOriginReadable") or isCrossOriginWritable(m, descriptor)):
+            if m.isAttr() and (m.getExtendedAttribute("CrossOriginReadable") or
+                               m.getExtendedAttribute("CrossOriginWritable")):
                 if m.isStatic():
                     raise TypeError("Don't know how to deal with static method %s" %
                                     m.identifier.name)
@@ -12964,14 +12949,14 @@ def memberProperties(m, descriptor):
                 props.isCrossOriginGetter = True
         if not m.readonly:
             if not m.isStatic() and descriptor.interface.hasInterfacePrototypeObject():
-                if isCrossOriginWritable(m, descriptor):
+                if m.getExtendedAttribute("CrossOriginWritable"):
                     props.isCrossOriginSetter = True
         elif m.getExtendedAttribute("PutForwards"):
-            if isCrossOriginWritable(m, descriptor):
+            if m.getExtendedAttribute("CrossOriginWritable"):
                 props.isCrossOriginSetter = True
         elif (m.getExtendedAttribute("Replaceable") or
               m.getExtendedAttribute("LenientSetter")):
-            if isCrossOriginWritable(m, descriptor):
+            if m.getExtendedAttribute("CrossOriginWritable"):
                 props.isCrossOriginSetter = True
 
     return props
