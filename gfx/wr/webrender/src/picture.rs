@@ -2755,7 +2755,11 @@ impl PicturePrimitive {
                                 ClearMode::Transparent,
                             );
 
-                            render_tasks.add(blur_render_task)
+                            let render_task_id = render_tasks.add(blur_render_task);
+
+                            surfaces[surface_index.0].tasks.push(render_task_id);
+
+                            render_task_id
                         }
                     );
 
