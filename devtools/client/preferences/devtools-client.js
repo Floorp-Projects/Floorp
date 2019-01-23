@@ -63,6 +63,12 @@ pref("devtools.inspector.new-rulesview.enabled", false);
 pref("devtools.inspector.flexboxHighlighter.enabled", true);
 pref("devtools.flexboxinspector.enabled", true);
 
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
+pref("devtools.inspector.flexboxHighlighter.combine", true);
+#else
+pref("devtools.inspector.flexboxHighlighter.combine", false);
+#endif
+
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);
 pref("devtools.gridinspector.gridOutlineMaxRows", 50);

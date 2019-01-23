@@ -367,7 +367,9 @@ class Raptor(object):
                 chrome_args = [
                     '--proxy-server="http=127.0.0.1:8080;' +
                     'https=127.0.0.1:8080;ssl=127.0.0.1:8080"',
-                    '--ignore-certificate-errors'
+                    '--ignore-certificate-errors',
+                    '--no-default-browser-check',
+                    'disable-sync'
                 ]
                 if self.config['host'] not in ('localhost', '127.0.0.1'):
                     chrome_args[0] = chrome_args[0].replace('127.0.0.1', self.config['host'])
