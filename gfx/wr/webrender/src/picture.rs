@@ -1298,7 +1298,7 @@ impl TileCache {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         frame_context: &FrameVisibilityContext,
-        _scratch: &mut PrimitiveScratchBuffer,
+        scratch: &mut PrimitiveScratchBuffer,
     ) -> LayoutRect {
         self.dirty_region.clear();
         self.pending_blits.clear();
@@ -1399,30 +1399,38 @@ impl TileCache {
                 self.tiles_to_draw.push(TileIndex(i));
 
                 if frame_context.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
-                    let tile_device_rect = tile.world_rect * frame_context.device_pixel_scale;
-                    let mut label_pos = tile_device_rect.origin + DeviceVector2D::new(20.0, 30.0);
-                    _scratch.push_debug_rect(
-                        tile_device_rect,
-                        debug_colors::GREEN,
-                    );
-                    _scratch.push_debug_string(
-                        label_pos,
-                        debug_colors::RED,
-                        format!("{:?} {:?} {:?}", tile.id, tile.handle, tile.world_rect),
-                    );
-                    label_pos.y += 20.0;
-                    _scratch.push_debug_string(
-                        label_pos,
-                        debug_colors::RED,
-                        format!("same: {} frames", tile.same_frames),
-                    );
+                    if let Some(world_rect) = tile.world_rect.intersection(&self.world_bounding_rect) {
+                        let tile_device_rect = world_rect * frame_context.device_pixel_scale;
+                        let mut label_offset = DeviceVector2D::new(20.0, 30.0);
+                        scratch.push_debug_rect(
+                            tile_device_rect,
+                            debug_colors::GREEN,
+                        );
+                        if tile_device_rect.size.height >= label_offset.y {
+                            scratch.push_debug_string(
+                                tile_device_rect.origin + label_offset,
+                                debug_colors::RED,
+                                format!("{:?} {:?} {:?}", tile.id, tile.handle, tile.world_rect),
+                            );
+                        }
+                        label_offset.y += 20.0;
+                        if tile_device_rect.size.height >= label_offset.y {
+                            scratch.push_debug_string(
+                                tile_device_rect.origin + label_offset,
+                                debug_colors::RED,
+                                format!("same: {} frames", tile.same_frames),
+                            );
+                        }
+                    }
                 }
             } else {
                 if frame_context.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
-                    _scratch.push_debug_rect(
-                        visible_rect * frame_context.device_pixel_scale,
-                        debug_colors::RED,
-                    );
+                    if let Some(world_rect) = visible_rect.intersection(&self.world_bounding_rect) {
+                        scratch.push_debug_rect(
+                            world_rect * frame_context.device_pixel_scale,
+                            debug_colors::RED,
+                        );
+                    }
                 }
 
                 // Only cache tiles that have had the same content for at least two
