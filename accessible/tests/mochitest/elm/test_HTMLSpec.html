@@ -1251,6 +1251,13 @@
       ok(!isAccessible("span"), "span element is not accessible");
 
       // ////////////////////////////////////////////////////////////////////////
+      // html:span with a title attribute, which should make it accessible.
+      obj = {
+        role: ROLE_TEXT,
+      };
+      testElm("span_explicit", obj);
+
+      // ////////////////////////////////////////////////////////////////////////
       // HTML:strong contained by paragraph
 
       obj = {
@@ -1762,6 +1769,7 @@
   <section id="named_section" aria-label="foo">named section</section>
   <p id="small_container">normal<small>small</small></p>
   <span id="span"></span>
+  <span id="span_explicit" title="explicit"></span>
   <p id="strong_container">normal<strong>strong</strong></p>
   <p id="sub_container">normal<sub>sub</sub></p>
   <p id="sup_container">normal<sup>sup</sup></p>
