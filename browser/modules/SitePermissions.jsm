@@ -322,10 +322,11 @@ var SitePermissions = {
    *           - scope: a constant representing how long the permission will
    *             be kept.
    *           - label: the localized label, or null if none is available.
+   *           - isPromptable: would permission prompt user or not
    */
   getAllPermissionDetailsForBrowser(browser) {
     return this.getAllForBrowser(browser).map(({id, scope, state}) =>
-      ({id, scope, state, label: this.getPermissionLabel(id)}));
+      ({id, scope, state, label: this.getPermissionLabel(id), isPromptable: this.getIsPromptable(id)}));
   },
 
   /**
@@ -621,6 +622,28 @@ var SitePermissions = {
   },
 
   /**
+   * Returns a boolean value which indicates whether this permission would
+   * prompt user. If permission doesn't mention it explicitly, it would be
+   * promptable.
+   *
+   * @param {string} permissionID
+   *        The permission to get the label for.
+   *
+   * @return {boolean} the value of `isPromptable` attribute of permission.
+   */
+   getIsPromptable(permissionID) {
+    if (!(permissionID in gPermissionObject)) {
+      // Permission can't be found.
+      return false;
+    }
+    if (!("isPromptable" in gPermissionObject[permissionID])) {
+      // 'isPromptable' is true by default, if permission doesn't mention it.
+      return true;
+    }
+    return gPermissionObject[permissionID].isPromptable;
+  },
+
+  /**
    * Returns the localized label for the given permission state, to be used in
    * a UI for managing permissions.
    *
@@ -710,10 +733,15 @@ var gPermissionObject = {
    *    Defaults to ALLOW, BLOCK and the default state (see getDefault).
    *    The PROMPT_HIDE state is deliberately excluded from "plugin:flash" since we
    *    don't want to expose a "Hide Prompt" button to the user through pageinfo.
+   *
+   * - isPromptable
+   *   indicates whether the permission would prompt user for the approval, it
+   *   would be true by default if permission doesn't explicitly mention.
    */
 
   "autoplay-media": {
     exactHostMatch: true,
+    isPromptable: false,
     getDefault() {
       let state = Services.prefs.getIntPref("media.autoplay.default",
                                             Ci.nsIAutoplay.BLOCKED);
