@@ -38,7 +38,8 @@ async function runURLBarSearchTest({valueToOpen, expectSearch, expectNotificatio
     expectedURI = Services.search.defaultEngine.getSubmission(valueToOpen, null, "keyword").uri.spec;
   }
   aWindow.gURLBar.focus();
-  let docLoadPromise = waitForDocLoadAndStopIt(expectedURI, aWindow.gBrowser.selectedBrowser);
+  let docLoadPromise =
+    BrowserTestUtils.waitForDocLoadAndStopIt(expectedURI, aWindow.gBrowser.selectedBrowser);
   EventUtils.synthesizeKey("VK_RETURN", {}, aWindow);
 
   await Promise.all([
@@ -140,7 +141,8 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
 
     let notificationBox = browser.getNotificationBox(tab.linkedBrowser);
     let notification = notificationBox.getNotificationWithValue("keyword-uri-fixup");
-    let docLoadPromise = waitForDocLoadAndStopIt("http://" + hostName + "/", tab.linkedBrowser);
+    let docLoadPromise =
+      BrowserTestUtils.waitForDocLoadAndStopIt("http://" + hostName + "/", tab.linkedBrowser);
     notification.querySelector("button").click();
 
     // check pref value
