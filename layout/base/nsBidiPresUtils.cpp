@@ -748,7 +748,7 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
       frameCount, runCount);
 #    ifdef REALLY_NOISY_BIDI
   printf(" block frame tree=:\n");
-  aBpd->mCurrentBlock->List(stdout, 0);
+  aBpd->mCurrentBlock->List(stdout);
 #    endif
 #  endif
 #endif
@@ -981,7 +981,7 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
 #ifdef DEBUG
 #  ifdef REALLY_NOISY_BIDI
   printf("---\nAfter Resolve(), frameTree =:\n");
-  aBpd->mCurrentBlock->List(stdout, 0);
+  aBpd->mCurrentBlock->List(stdout);
   printf("===\n");
 #  endif
 #endif
