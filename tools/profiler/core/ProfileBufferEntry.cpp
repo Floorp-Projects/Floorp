@@ -176,9 +176,12 @@ class MOZ_RAII AutoArraySchemaWriter {
 
   ~AutoArraySchemaWriter() { mJSONWriter.EndArray(); }
 
-  void IntElement(uint64_t aIndex, uint64_t aValue) {
+  template <typename T>
+  void IntElement(uint32_t aIndex, T aValue) {
+    static_assert(!IsSame<T, uint64_t>::value,
+                  "Narrowing uint64 -> int64 conversion not allowed");
     FillUpTo(aIndex);
-    mJSONWriter.IntElement(aValue);
+    mJSONWriter.IntElement(static_cast<int64_t>(aValue));
   }
 
   void DoubleElement(uint32_t aIndex, double aValue) {
@@ -775,6 +778,12 @@ class EntryGetter {
 //   | CollectionEnd
 //   | Pause
 //   | Resume
+//   | ( ProfilerOverheadTime /* Sampling start timestamp */
+//       ProfilerOverheadDuration /* Lock acquisition */
+//       ProfilerOverheadDuration /* Expired markers cleaning */
+//       ProfilerOverheadDuration /* Counters */
+//       ProfilerOverheadDuration /* Threads */
+//     )
 // )*
 //
 // The most complicated part is the stack entry sequence that begins with
@@ -1159,6 +1168,138 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
   }
 }
 
+void ProfileBuffer::StreamProfilerOverheadToJSON(
+    SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime,
+    double aSinceTime) const {
+  enum Schema : uint32_t {
+    TIME = 0,
+    LOCKING = 1,
+    MARKER_CLEANING = 2,
+    COUNTERS = 3,
+    THREADS = 4
+  };
+
+  EntryGetter e(*this);
+
+  aWriter.StartObjectProperty("profilerOverhead_UNSTABLE");
+  // Stream all sampling overhead data. We skip other entries, because we
+  // process them in StreamSamplesToJSON()/etc.
+  {
+    JSONSchemaWriter schema(aWriter);
+    schema.WriteField("time");
+    schema.WriteField("locking");
+    schema.WriteField("expiredMarkerCleaning");
+    schema.WriteField("counters");
+    schema.WriteField("threads");
+  }
+
+  aWriter.StartArrayProperty("data");
+  double firstTime = 0.0;
+  double lastTime = 0.0;
+  struct Stats {
+    unsigned n = 0;
+    double sum = 0;
+    double min = std::numeric_limits<double>::max();
+    double max = 0;
+    void Count(double v) {
+      ++n;
+      sum += v;
+      if (v < min) {
+        min = v;
+      }
+      if (v > max) {
+        max = v;
+      }
+    }
+  };
+  Stats intervals, overheads, lockings, cleanings, counters, threads;
+  while (e.Has()) {
+    // valid sequence: ProfilerOverheadTime, ProfilerOverheadDuration * 4
+    if (e.Get().IsProfilerOverheadTime()) {
+      double time = e.Get().u.mDouble;
+      if (time >= aSinceTime) {
+        e.Next();
+        if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
+          ERROR_AND_CONTINUE(
+              "expected a ProfilerOverheadDuration entry after "
+              "ProfilerOverheadTime");
+        }
+        double locking = e.Get().u.mDouble;
+        e.Next();
+        if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
+          ERROR_AND_CONTINUE(
+              "expected a ProfilerOverheadDuration entry after "
+              "ProfilerOverheadTime,ProfilerOverheadDuration");
+        }
+        double cleaning = e.Get().u.mDouble;
+        e.Next();
+        if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
+          ERROR_AND_CONTINUE(
+              "expected a ProfilerOverheadDuration entry after "
+              "ProfilerOverheadTime,ProfilerOverheadDuration*2");
+        }
+        double counter = e.Get().u.mDouble;
+        e.Next();
+        if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
+          ERROR_AND_CONTINUE(
+              "expected a ProfilerOverheadDuration entry after "
+              "ProfilerOverheadTime,ProfilerOverheadDuration*3");
+        }
+        double thread = e.Get().u.mDouble;
+
+        if (firstTime == 0.0) {
+          firstTime = time;
+        } else {
+          // Note that we'll have 1 fewer interval than other numbers (because
+          // we need both ends of an interval to know its duration). The final
+          // difference should be insignificant over the expected many thousands
+          // of iterations.
+          intervals.Count(time - lastTime);
+        }
+        lastTime = time;
+        overheads.Count(locking + cleaning + counter + thread);
+        lockings.Count(locking);
+        cleanings.Count(cleaning);
+        counters.Count(counter);
+        threads.Count(thread);
+
+        AutoArraySchemaWriter writer(aWriter);
+        writer.DoubleElement(TIME, time);
+        writer.DoubleElement(LOCKING, locking);
+        writer.DoubleElement(MARKER_CLEANING, cleaning);
+        writer.DoubleElement(COUNTERS, counter);
+        writer.DoubleElement(THREADS, thread);
+      }
+    }
+    e.Next();
+  }
+  aWriter.EndArray();  // data
+
+  // Only output statistics if there is at least one full interval (and
+  // therefore at least two samplings.)
+  if (intervals.n > 0) {
+    aWriter.StartObjectProperty("statistics");
+    aWriter.DoubleProperty("profiledDuration", lastTime - firstTime);
+    aWriter.IntProperty("samplingCount", overheads.n);
+    aWriter.DoubleProperty("overheadDurations", overheads.sum);
+    aWriter.DoubleProperty("overheadPercentage",
+                           overheads.sum / (lastTime - firstTime));
+#define PROFILER_STATS(name, var)                           \
+  aWriter.DoubleProperty("mean" name, (var).sum / (var).n); \
+  aWriter.DoubleProperty("min" name, (var).min);            \
+  aWriter.DoubleProperty("max" name, (var).max);
+    PROFILER_STATS("Interval", intervals);
+    PROFILER_STATS("Overhead", overheads);
+    PROFILER_STATS("Lockings", lockings);
+    PROFILER_STATS("Cleaning", cleanings);
+    PROFILER_STATS("Counter", counters);
+    PROFILER_STATS("Thread", threads);
+#undef PROFILER_STATS
+    aWriter.EndObject();  // statistics
+  }
+  aWriter.EndObject();  // profilerOverhead
+}
+
 struct CounterKeyedSample {
   double mTime;
   uint64_t mNumber;
@@ -1304,12 +1445,14 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
           }
           MOZ_ASSERT(i == 0 || samples[i].mTime >= samples[i - 1].mTime);
           MOZ_ASSERT(samples[i].mNumber >= previousNumber);
+          MOZ_ASSERT(samples[i].mNumber - previousNumber <=
+                     uint64_t(std::numeric_limits<int64_t>::max()));
 
-          aWriter.StartArrayElement(SpliceableJSONWriter::SingleLineStyle);
-          aWriter.DoubleElement(samples[i].mTime);
-          aWriter.IntElement(samples[i].mNumber - previousNumber);  // uint64_t
-          aWriter.IntElement(samples[i].mCount - previousCount);    // int64_t
-          aWriter.EndArray();
+          AutoArraySchemaWriter writer(aWriter);
+          writer.DoubleElement(TIME, samples[i].mTime);
+          writer.IntElement(NUMBER, static_cast<int64_t>(samples[i].mNumber -
+                                                         previousNumber));
+          writer.IntElement(COUNT, samples[i].mCount - previousCount);
           previousNumber = samples[i].mNumber;
           previousCount = samples[i].mCount;
         }
@@ -1363,13 +1506,12 @@ void ProfileBuffer::StreamMemoryToJSON(SpliceableJSONWriter& aWriter,
           double time = e.Get().u.mDouble;
           if (time >= aSinceTime &&
               (previous_rss != rss || previous_uss != uss)) {
-            aWriter.StartArrayElement(SpliceableJSONWriter::SingleLineStyle);
-            aWriter.DoubleElement(time);
-            aWriter.IntElement(rss);  // int64_t
+            AutoArraySchemaWriter writer(aWriter);
+            writer.DoubleElement(TIME, time);
+            writer.IntElement(RSS, rss);
             if (uss != 0) {
-              aWriter.IntElement(uss);  // int64_t
+              writer.IntElement(USS, uss);
             }
-            aWriter.EndArray();
             previous_rss = rss;
             previous_uss = uss;
           }
@@ -1497,6 +1639,35 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
           continue;
         }
         // we've skipped Time
+        break;
+      case ProfileBufferEntry::Kind::ProfilerOverheadTime:
+        // ProfilerOverheadTime is normally followed by
+        // ProfilerOverheadDuration*4 - if so, we'd like to skip it. Don't
+        // duplicate, as we are in the middle of a sampling and will soon
+        // capture its own overhead.
+        e.Next();
+        // A missing Time would only happen if there was an invalid sequence
+        // in the buffer. Don't skip unexpected entry.
+        if (e.Has() && e.Get().GetKind() !=
+                           ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
+          continue;
+        }
+        e.Next();
+        if (e.Has() && e.Get().GetKind() !=
+                           ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
+          continue;
+        }
+        e.Next();
+        if (e.Has() && e.Get().GetKind() !=
+                           ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
+          continue;
+        }
+        e.Next();
+        if (e.Has() && e.Get().GetKind() !=
+                           ProfileBufferEntry::Kind::ProfilerOverheadDuration) {
+          continue;
+        }
+        // we've skipped ProfilerOverheadTime and ProfilerOverheadDuration*4.
         break;
       default: {
         // Copy anything else we don't know about.
