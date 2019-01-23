@@ -1451,9 +1451,16 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
       mZoomProp->id = AnimationHelper::GetNextCompositorAnimationsId();
     }
 
+    nsPresContext* presContext =
+        aDisplayListBuilder->RootReferenceFrame()->PresContext();
+    bool isTopLevelContent =
+        presContext->Document()->IsTopLevelContentDocument();
+
     wr::StackingContextParams params;
     params.mFilters = std::move(aFilters);
     params.animation = mZoomProp.ptrOr(nullptr);
+    params.cache_tiles = isTopLevelContent;
+
     StackingContextHelper pageRootSc(sc, nullptr, nullptr, nullptr, aBuilder,
                                      params);
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
