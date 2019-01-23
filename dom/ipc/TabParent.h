@@ -316,6 +316,15 @@ class TabParent final : public PBrowserParent,
   virtual mozilla::ipc::IPCResult RecvPWindowGlobalConstructor(
       PWindowGlobalParent* aActor, const WindowGlobalInit& aInit) override;
 
+  PRemoteFrameParent* AllocPRemoteFrameParent(const nsString& aPresentationURL,
+                                              const nsString& aRemoteType);
+
+  bool DeallocPRemoteFrameParent(PRemoteFrameParent* aActor);
+
+  virtual mozilla::ipc::IPCResult RecvPRemoteFrameConstructor(
+      PRemoteFrameParent* aActor, const nsString& aPresentationURL,
+      const nsString& aRemoteType) override;
+
   void LoadURL(nsIURI* aURI);
 
   void InitRendering();
