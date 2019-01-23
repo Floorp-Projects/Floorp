@@ -11,12 +11,12 @@
     android:clickable="true"
     android:focusable="true">
 
-    <View
-        android:id="@+id/iconView"
+    <ImageView
+        android:id="@+id/mozac_browser_awesomebar_icon"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_marginStart="16dp"
-        android:background="#ffcccccc"
+        android:importantForAccessibility="no"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -32,7 +32,7 @@
         android:lines="1"
         android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/iconView"
+        app:layout_constraintStart_toEndOf="@+id/mozac_browser_awesomebar_icon"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Android Components" />
 
@@ -49,7 +49,7 @@
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/iconView"
+        app:layout_constraintStart_toEndOf="@+id/mozac_browser_awesomebar_icon"
         app:layout_constraintTop_toBottomOf="@+id/mozac_browser_awesomebar_title"
         tools:text="https://github.com/mozilla-mobile/android-components" />
 </android.support.constraint.ConstraintLayout>

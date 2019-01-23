@@ -19,7 +19,8 @@ import java.net.URL
  */
 class SearchSuggestionProvider(
     private val searchEngine: SearchEngine,
-    private val searchUseCase: SearchUseCases.DefaultSearchUseCase
+    private val searchUseCase: SearchUseCases.DefaultSearchUseCase,
+    private val mode: Mode = Mode.SINGLE_SUGGESTION
 ) : AwesomeBar.SuggestionProvider {
     private val client = if (searchEngine.canProvideSearchSuggestions) {
         SearchSuggestionClient(searchEngine) {
@@ -35,40 +36,72 @@ class SearchSuggestionProvider(
             return emptyList()
         }
 
-        if (client == null) {
-            // This search engine doesn't support suggestions. Let's only return a default suggestion
-            // for the entered text.
-            return createSuggestion(listOf(AwesomeBar.Suggestion.Chip(text)))
-        }
+        val suggestions = fetchSuggestions(text)
 
-        try {
-            val chips = mutableListOf<AwesomeBar.Suggestion.Chip>()
-
-            val suggestions = client.getSuggestions(text)
-            if (suggestions == null || !suggestions.contains(text)) {
-                // Add the entered text as first suggestion if needed
-                chips.add(AwesomeBar.Suggestion.Chip(text))
-            }
-
-            suggestions?.forEach { title ->
-                chips.add(AwesomeBar.Suggestion.Chip(title))
-            }
-
-            return createSuggestion(chips)
-        } catch (e: SearchSuggestionClient.FetchException) {
-            Logger.info("Could not fetch search suggestions from search engine", e)
-
-            // If we can't fetch search suggestions then just continue with a single suggestion for the entered text
-            return createSuggestion(listOf(AwesomeBar.Suggestion.Chip(text)))
-        } catch (e: SearchSuggestionClient.ResponseParserException) {
-            Logger.warn("Could not parse search suggestions from search engine", e)
-
-            // If parsing failed then just continue with a single suggestion for the entered text
-            return createSuggestion(listOf(AwesomeBar.Suggestion.Chip(text)))
+        return if (mode == Mode.SINGLE_SUGGESTION) {
+            createSingleSearchSuggestion(text, suggestions)
+        } else {
+            createMultipleSuggestions(text, suggestions)
         }
     }
 
-    private fun createSuggestion(chips: List<AwesomeBar.Suggestion.Chip>): List<AwesomeBar.Suggestion> {
+    private suspend fun fetchSuggestions(text: String): List<String>? {
+        if (client == null) {
+            // This search engine doesn't support suggestions. Let's only return a default suggestion
+            // for the entered text.
+            return emptyList()
+        }
+
+        return try {
+            client.getSuggestions(text)
+        } catch (e: SearchSuggestionClient.FetchException) {
+            Logger.info("Could not fetch search suggestions from search engine", e)
+            // If we can't fetch search suggestions then just continue with a single suggestion for the entered text
+            emptyList()
+        } catch (e: SearchSuggestionClient.ResponseParserException) {
+            Logger.warn("Could not parse search suggestions from search engine", e)
+            // If parsing failed then just continue with a single suggestion for the entered text
+            emptyList()
+        }
+    }
+
+    private fun createMultipleSuggestions(text: String, result: List<String>?): List<AwesomeBar.Suggestion> {
+        val suggestions = mutableListOf<AwesomeBar.Suggestion>()
+
+        val list = (result ?: listOf(text)).toMutableList()
+        if (!list.contains(text)) {
+            list.add(0, text)
+        }
+
+        list.forEachIndexed { index, item ->
+            suggestions.add(AwesomeBar.Suggestion(
+                title = item,
+                description = searchEngine.name,
+                icon = { _, _ ->
+                    searchEngine.icon
+                },
+                score = Int.MAX_VALUE - index,
+                onSuggestionClicked = {
+                    searchUseCase.invoke(item)
+                }
+            ))
+        }
+
+        return suggestions
+    }
+
+    private fun createSingleSearchSuggestion(text: String, result: List<String>?): List<AwesomeBar.Suggestion> {
+        val chips = mutableListOf<AwesomeBar.Suggestion.Chip>()
+
+        if (result == null || result.isEmpty() || !result.contains(text)) {
+            // Add the entered text as first suggestion if needed
+            chips.add(AwesomeBar.Suggestion.Chip(text))
+        }
+
+        result?.forEach { title ->
+            chips.add(AwesomeBar.Suggestion.Chip(title))
+        }
+
         return listOf(AwesomeBar.Suggestion(
             id = "mozac-browser-search-" + searchEngine.identifier,
             title = searchEngine.name,
@@ -86,6 +119,11 @@ class SearchSuggestionProvider(
     override val shouldClearSuggestions: Boolean
         // We do not want the suggestion of this provider to disappear and re-appear when text changes.
         get() = false
+
+    enum class Mode {
+        SINGLE_SUGGESTION,
+        MULTIPLE_SUGGESTIONS
+    }
 }
 
 private const val READ_TIMEOUT = 2000

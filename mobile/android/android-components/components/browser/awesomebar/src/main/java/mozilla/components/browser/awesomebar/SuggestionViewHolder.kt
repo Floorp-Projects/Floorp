@@ -37,9 +37,13 @@ internal sealed class SuggestionViewHolder(
         private val descriptionView = itemView.findViewById<TextView>(R.id.mozac_browser_awesomebar_description).apply {
             setTextColor(awesomeBar.styling.descriptionTextColor)
         }
+        private val iconView = itemView.findViewById<ImageView>(R.id.mozac_browser_awesomebar_icon)
 
         override fun bind(suggestion: AwesomeBar.Suggestion) {
             val title = if (suggestion.title.isNullOrEmpty()) suggestion.description else suggestion.title
+
+            val icon = suggestion.icon.invoke(iconView.measuredWidth, iconView.measuredHeight)
+            iconView.setImageBitmap(icon)
 
             titleView.text = title
             descriptionView.text = suggestion.description

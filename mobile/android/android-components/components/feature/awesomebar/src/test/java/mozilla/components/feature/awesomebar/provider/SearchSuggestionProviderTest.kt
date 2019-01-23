@@ -89,6 +89,65 @@ class SearchSuggestionProviderTest {
     }
 
     @Test
+    fun `Provider returns multiple suggestions in MULTIPLE mode`() {
+        runBlocking {
+            val server = MockWebServer()
+            server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
+            server.start()
+
+            val searchEngine: SearchEngine = mock()
+            doReturn(server.url("/").toString())
+                .`when`(searchEngine).buildSuggestionsURL("fire")
+            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
+            doReturn("google").`when`(searchEngine).name
+
+            val searchEngineManager: SearchEngineManager = mock()
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
+
+            val useCase = spy(SearchUseCases(
+                RuntimeEnvironment.application,
+                searchEngineManager,
+                SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
+            ).defaultSearch)
+            doNothing().`when`(useCase).invoke(anyString(), any<Session>())
+
+            val provider = SearchSuggestionProvider(
+                searchEngine,
+                useCase,
+                SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
+            )
+
+            try {
+                val suggestions = provider.onInputChanged("fire")
+
+                println(suggestions)
+
+                assertEquals(11, suggestions.size)
+
+                assertEquals("fire", suggestions[0].title)
+                assertEquals("firefox", suggestions[1].title)
+                assertEquals("firefox for mac", suggestions[2].title)
+                assertEquals("firefox quantum", suggestions[3].title)
+                assertEquals("firefox update", suggestions[4].title)
+                assertEquals("firefox esr", suggestions[5].title)
+                assertEquals("firefox focus", suggestions[6].title)
+                assertEquals("firefox addons", suggestions[7].title)
+                assertEquals("firefox extensions", suggestions[8].title)
+                assertEquals("firefox nightly", suggestions[9].title)
+                assertEquals("firefox clear cache", suggestions[10].title)
+
+                verify(useCase, never()).invoke(anyString(), any<Session>())
+
+                suggestions[6].onSuggestionClicked!!.invoke()
+
+                verify(useCase).invoke(eq("firefox focus"), any<Session>())
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
     fun `Provider should not clear suggestions`() {
         val provider = SearchSuggestionProvider(mock(), mock())
         assertFalse(provider.shouldClearSuggestions)
