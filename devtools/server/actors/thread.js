@@ -483,7 +483,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       }
 
       packet.frame.where = {
-        source: generatedSourceActor.form(),
+        actor: generatedSourceActor.actorID,
         line: generatedLine,
         column: generatedColumn,
       };
@@ -1191,19 +1191,17 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
       const frameSourceActor = this.sources.createSourceActor(frame.script.source);
       if (frameSourceActor) {
-        const sourceForm = frameSourceActor.form();
         form.where = {
-          source: sourceForm,
+          actor: frameSourceActor.actorID,
           line: form.where.line,
           column: form.where.column,
         };
-        form.source = sourceForm;
         frameItem = form;
       }
       frames.push(frameItem);
     }
 
-    // Filter null values because sourcemapping may have failed.
+    // Filter null values because createSourceActor can be falsey
     return { frames: frames.filter(x => !!x) };
   },
 
