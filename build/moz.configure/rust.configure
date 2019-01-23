@@ -27,6 +27,7 @@ def rustc_info(rustc):
         host=info['host'],
     )
 
+set_config('RUSTC_VERSION', depends(rustc_info)(lambda info: str(info.version)))
 
 @depends_if(cargo)
 @checking('cargo version', lambda info: info.version)
