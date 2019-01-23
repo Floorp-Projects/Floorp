@@ -487,8 +487,8 @@ static Truthiness Boolish(ParseNode* pn) {
 
 #ifdef ENABLE_BIGINT
     case ParseNodeKind::BigIntExpr:
-      return (pn->as<BigIntLiteral>().box()->value()->toBoolean()) ? Truthy
-                                                                   : Falsy;
+      return (pn->as<BigIntLiteral>().box()->value()->isZero()) ? Falsy
+                                                                : Truthy;
 #endif
 
     case ParseNodeKind::StringExpr:
