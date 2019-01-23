@@ -118,15 +118,13 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
     }
   }
 
-  mozilla::layout::RenderFrame* GetRenderFrame() const;
+  nsFrameLoader* FrameLoader() const;
 
  protected:
   friend class AsyncFrameInit;
 
   // Helper method to look up the HTML marginwidth & marginheight attributes.
   mozilla::CSSIntSize GetMarginAttributes();
-
-  nsFrameLoader* FrameLoader() const;
 
   bool IsInline() { return mIsInline; }
 

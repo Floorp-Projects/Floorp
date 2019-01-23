@@ -2607,11 +2607,15 @@ mozilla::dom::PBrowserParent* nsFrameLoader::GetRemoteBrowser() const {
   return mRemoteBrowser;
 }
 
-RenderFrame* nsFrameLoader::GetCurrentRenderFrame() const {
+mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
+  MOZ_ASSERT(mRemoteFrame);
   if (mRemoteBrowser) {
-    return mRemoteBrowser->GetRenderFrame();
+    return mRemoteBrowser->GetRenderFrame()->GetLayersId();
   }
-  return nullptr;
+  if (mRemoteFrameChild) {
+    return mRemoteFrameChild->GetLayersId();
+  }
+  return mozilla::layers::LayersId{};
 }
 
 void nsFrameLoader::ActivateRemoteFrame(ErrorResult& aRv) {

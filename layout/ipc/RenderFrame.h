@@ -128,10 +128,10 @@ class nsDisplayRemote final : public nsDisplayItem {
   NS_DISPLAY_DECL_NAME("Remote", TYPE_REMOTE)
 
  private:
-  LayersId GetRemoteLayersId() const;
-  RenderFrame* GetRenderFrame() const;
+  nsFrameLoader* GetFrameLoader() const;
 
   TabId mTabId;
+  LayersId mLayersId;
   LayoutDeviceIntPoint mOffset;
   EventRegionsOverride mEventRegionsOverride;
 };
