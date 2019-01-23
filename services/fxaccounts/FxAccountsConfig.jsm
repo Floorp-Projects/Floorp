@@ -122,7 +122,7 @@ var FxAccountsConfig = {
     }
     let rootURL = Services.urlFormatter.formatURL(pref);
     if (rootURL.endsWith("/")) {
-      rootURL = rootURL.slice(0, -1);
+      rootURL.slice(0, -1);
     }
     return rootURL;
   },
