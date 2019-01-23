@@ -8,6 +8,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 
@@ -45,41 +46,14 @@ function promisePopupHidden(popup) {
 }
 
 function promiseSearchComplete(win = window, dontAnimate = false) {
-  return promisePopupShown(win.gURLBar.popup).then(() => {
-    function searchIsComplete() {
-      let isComplete = win.gURLBar.controller.searchStatus >=
-                       Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
-      if (isComplete) {
-        info(`Restore popup dontAnimate value to ${dontAnimate}`);
-        win.gURLBar.popup.setAttribute("dontanimate", dontAnimate);
-      }
-      return isComplete;
-    }
-
-    // Wait until there are at least two matches.
-    return BrowserTestUtils.waitForCondition(searchIsComplete, "waiting urlbar search to complete");
-  });
+  return UrlbarTestUtils.promiseSearchComplete(win, dontAnimate);
 }
 
 function promiseAutocompleteResultPopup(inputText,
                                         win = window,
                                         fireInputEvent = false) {
-  let dontAnimate = !!win.gURLBar.popup.getAttribute("dontanimate");
-  waitForFocus(() => {
-    info(`Disable popup animation. Change dontAnimate value from ${dontAnimate} to true.`);
-    win.gURLBar.popup.setAttribute("dontanimate", "true");
-    win.gURLBar.focus();
-    win.gURLBar.value = inputText;
-    if (fireInputEvent) {
-      // This is necessary to get the urlbar to set gBrowser.userTypedValue.
-      let event = document.createEvent("Events");
-      event.initEvent("input", true, true);
-      win.gURLBar.dispatchEvent(event);
-    }
-    win.gURLBar.controller.startSearch(inputText);
-  }, win);
-
-  return promiseSearchComplete(win, dontAnimate);
+  return UrlbarTestUtils.promiseAutocompleteResultPopup(inputText,
+    win, waitForFocus, fireInputEvent);
 }
 
 function promisePageActionPanelOpen() {
@@ -201,43 +175,17 @@ function promiseNodeVisible(node) {
 }
 
 function promiseSpeculativeConnection(httpserver) {
-  return BrowserTestUtils.waitForCondition(() => {
-    if (httpserver) {
-      return httpserver.connectionNumber == 1;
-    }
-    return false;
-  }, "Waiting for connection setup");
+  return UrlbarTestUtils.promiseSpeculativeConnection(httpserver);
 }
 
 async function waitForAutocompleteResultAt(index) {
-  let searchString = gURLBar.controller.searchString;
-  await BrowserTestUtils.waitForCondition(
-    () => gURLBar.popup.richlistbox.itemChildren.length > index &&
-          gURLBar.popup.richlistbox.itemChildren[index].getAttribute("ac-text") == searchString.trim(),
-    `Waiting for the autocomplete result for "${searchString}" at [${index}] to appear`);
-  // Ensure the addition is complete, for proper mouse events on the entries.
-  await new Promise(resolve => window.requestIdleCallback(resolve, {timeout: 1000}));
-  return gURLBar.popup.richlistbox.itemChildren[index];
+  return UrlbarTestUtils.waitForAutocompleteResultAt(window, index);
 }
 
 function promiseSuggestionsPresent(msg = "") {
-  return TestUtils.waitForCondition(suggestionsPresent,
-                                    msg || "Waiting for suggestions");
+  return UrlbarTestUtils.promiseSuggestionsPresent(window, msg);
 }
 
 function suggestionsPresent() {
-  let controller = gURLBar.popup.input.controller;
-  let matchCount = controller.matchCount;
-  for (let i = 0; i < matchCount; i++) {
-    let url = controller.getValueAt(i);
-    let mozActionMatch = url.match(/^moz-action:([^,]+),(.*)$/);
-    if (mozActionMatch) {
-      let [, type, paramStr] = mozActionMatch;
-      let params = JSON.parse(paramStr);
-      if (type == "searchengine" && "searchSuggestion" in params) {
-        return true;
-      }
-    }
-  }
-  return false;
+  return UrlbarTestUtils.suggestionsPresent(window);
 }
