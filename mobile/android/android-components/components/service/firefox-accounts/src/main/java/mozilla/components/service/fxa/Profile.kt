@@ -4,9 +4,32 @@
 
 package mozilla.components.service.fxa
 
+import org.mozilla.fxaclient.internal.Profile as InternalProfile
+
+data class Avatar(
+    val url: String,
+    val isDefault: Boolean
+)
+
 data class Profile(
     val uid: String?,
     val email: String?,
-    val avatar: String?,
+    val avatar: Avatar?,
     val displayName: String?
-)
+) {
+    companion object {
+        internal fun fromInternal(p: InternalProfile): Profile {
+            return Profile(
+                uid = p.uid,
+                email = p.email,
+                avatar = p.avatar?.let {
+                    Avatar(
+                        url = it,
+                        isDefault = p.avatarDefault
+                    )
+                },
+                displayName = p.displayName
+            )
+        }
+    }
+}

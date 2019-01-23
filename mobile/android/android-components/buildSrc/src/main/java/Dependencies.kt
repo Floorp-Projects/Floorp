@@ -29,7 +29,7 @@ object Versions {
     const val sentry = "1.7.14"
     const val okhttp = "3.12.1"
 
-    const val mozilla_appservices = "0.14.0"
+    const val mozilla_appservices = "0.15.0"
     const val servo = "0.0.1.20181017.aa95911"
 }
 

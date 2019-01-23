@@ -75,13 +75,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : F
      */
     override fun getProfile(ignoreCache: Boolean): Deferred<Profile> {
         return scope.async {
-            val internalProfile = inner.getProfile(ignoreCache)
-            Profile(
-                    uid = internalProfile.uid,
-                    email = internalProfile.email,
-                    avatar = internalProfile.avatar,
-                    displayName = internalProfile.displayName
-            )
+            Profile.fromInternal(inner.getProfile(ignoreCache))
         }
     }
 
