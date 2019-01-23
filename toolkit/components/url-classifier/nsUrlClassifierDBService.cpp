@@ -51,6 +51,7 @@
 #include "mozilla/net/UrlClassifierFeatureResult.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/SyncRunnable.h"
+#include "nsProxyRelease.h"
 #include "UrlClassifierTelemetryUtils.h"
 #include "nsIURLFormatter.h"
 #include "nsIUploadChannel.h"
@@ -166,7 +167,7 @@ class FeatureHolder final {
     NS_ENSURE_SUCCESS(rv, rv);
 
     for (TableData* tableData : mTableData) {
-      rv = aWorker->DoSingleLocalLookupWithURIFragments(
+      nsresult rv = aWorker->DoSingleLocalLookupWithURIFragments(
           fragments, tableData->mTable, tableData->mResults);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -2448,15 +2449,6 @@ nsIThread* nsUrlClassifierDBService::BackgroundThread() {
 // static
 bool nsUrlClassifierDBService::ShutdownHasStarted() {
   return gShuttingDownThread;
-}
-
-// static
-nsUrlClassifierDBServiceWorker* nsUrlClassifierDBService::GetWorker() {
-  if (!sUrlClassifierDBService) {
-    return nullptr;
-  }
-
-  return sUrlClassifierDBService->mWorker;
 }
 
 NS_IMETHODIMP
