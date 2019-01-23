@@ -116,6 +116,9 @@ awesomeBar.layout = CustomSuggestionLayout()
 * Mozilla App Services library updated to 0.14.0. See [release notes](https://github.com/mozilla/application-services/releases/tag/v0.14.0) for details.
   * Important: Users consuming megazords must also update the application-services gradle plugin to version 0.3.0.
 
+* **feature-findinpage**
+  * 🆕 A new feature component for [finding text in a web page](https://support.mozilla.org/en-US/kb/search-contents-current-page-text-or-links). [Documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/README.md).
+
 * **service-firefox-accounts**
   * Added `FxaAccountManager`, which encapsulates a lower level accounts API and provides an observable interface for consumers that wish to be notified of account and profile changes.
   * Background-worker friendly.

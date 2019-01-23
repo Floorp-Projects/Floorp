@@ -8,16 +8,24 @@ import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
+import android.support.design.widget.AppBarLayout
+import android.support.design.widget.AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
+import android.support.design.widget.AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
+import android.support.design.widget.AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
+import android.support.design.widget.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.view.*
+import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.feature.downloads.DownloadsFeature
+import mozilla.components.feature.findinpage.FindInPageFeature
+import mozilla.components.feature.findinpage.FindInPageView
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
@@ -40,6 +48,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private lateinit var promptFeature: PromptFeature
     private lateinit var windowFeature: WindowFeature
     private lateinit var customTabsToolbarFeature: CustomTabsToolbarFeature
+    private lateinit var findInPageFeature: FindInPageFeature
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val layout = inflater.inflate(R.layout.fragment_browser, container, false)
@@ -88,6 +97,8 @@ class BrowserFragment : Fragment(), BackHandler {
 
         scrollFeature = CoordinateScrollingFeature(components.sessionManager, layout.engineView, layout.toolbar)
 
+        initFindInPage(layout)
+
         contextMenuFeature = ContextMenuFeature(
             requireFragmentManager(),
             components.sessionManager,
@@ -122,7 +133,8 @@ class BrowserFragment : Fragment(), BackHandler {
             contextMenuFeature,
             promptFeature,
             windowFeature,
-            customTabsToolbarFeature
+            customTabsToolbarFeature,
+            findInPageFeature
         )
 
         return layout
@@ -137,21 +149,45 @@ class BrowserFragment : Fragment(), BackHandler {
         }
     }
 
-    @Suppress("ReturnCount")
+    private fun initFindInPage(layout: View) {
+        val findInPageView = layout.findViewById<FindInPageView>(R.id.find_in_page)
+
+        findInPageView.onCloseButtonPressListener = {
+            enableToolBarScroll(layout.toolbar)
+            layout.toolbar.visibility = View.VISIBLE
+        }
+
+        components.onFindPageClicked = {
+            disableToolBarScroll(layout.toolbar)
+            layout.toolbar.visibility = View.GONE
+            findInPageView.show()
+        }
+
+        findInPageFeature = FindInPageFeature(
+            sessionManager = components.sessionManager,
+            findInPageView = findInPageView
+        )
+    }
+
+    private fun disableToolBarScroll(toolbar: BrowserToolbar) {
+        val layoutParams = toolbar.layoutParams as (AppBarLayout.LayoutParams)
+        layoutParams.scrollFlags = 0
+    }
+
+    private fun enableToolBarScroll(toolbar: BrowserToolbar) {
+        val layoutParams = toolbar.layoutParams as (AppBarLayout.LayoutParams)
+        layoutParams.scrollFlags = SCROLL_FLAG_ENTER_ALWAYS or SCROLL_FLAG_SCROLL or
+            SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or SCROLL_FLAG_SNAP
+    }
+
     override fun onBackPressed(): Boolean {
-        if (toolbarFeature.handleBackPressed()) {
-            return true
+        return when {
+            findInPageFeature.onBackPressed() -> true
+            toolbarFeature.handleBackPressed() -> true
+            sessionFeature.handleBackPressed() -> true
+            customTabsToolbarFeature.onBackPressed() -> true
+            else -> false
         }
-
-        if (sessionFeature.handleBackPressed()) {
-            return true
-        }
-
-        if (customTabsToolbarFeature.onBackPressed()) {
-            return true
-        }
-
-        return false
     }
 
     private fun isStoragePermissionAvailable() = requireContext().isPermissionGranted(WRITE_EXTERNAL_STORAGE)

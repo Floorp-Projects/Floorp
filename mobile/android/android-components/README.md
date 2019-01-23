@@ -126,6 +126,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Prompts**](components/feature/prompts/README.md) - A component that will handle all the common prompt dialogs from web content.
 
+* 🔴 [**Find In Page**](components/feature/findinpage/README.md) - A component that provides an UI widget for [find in page functionality](https://support.mozilla.org/en-US/kb/search-contents-current-page-text-or-links).
+
 ## UI
 
 _Generic low-level UI components for building apps._

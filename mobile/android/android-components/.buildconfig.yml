@@ -76,6 +76,10 @@ projects:
     path: components/feature/prompts
     description: 'Feature that will subscribe to the selected session and will handle all the common prompt dialogs from web content.'
     publish: true
+  feature-findinpage:
+      path: components/feature/findinpage
+      description: 'Feature that will subscribe to the selected session and shows a UI based on the data Session.findResults.'
+      publish: true
   browser-awesomebar:
     path: components/browser/awesomebar
     description: 'A customizable awesomebar component for browsers.'

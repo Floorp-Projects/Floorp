@@ -131,6 +131,7 @@ dependencies {
     implementation project(':feature-toolbar')
     implementation project(':feature-tabs')
     implementation project(':feature-prompts')
+    implementation project(':feature-findinpage')
 
     implementation project(':ui-autocomplete')
 

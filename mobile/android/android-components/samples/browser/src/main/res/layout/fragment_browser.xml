@@ -7,7 +7,6 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
-        xmlns:mozac="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".BrowserActivity">
@@ -21,6 +20,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:background="#aaaaaa"/>
+
+        <mozilla.components.feature.findinpage.FindInPageView
+                android:id="@+id/find_in_page"
+                android:layout_width="match_parent"
+                android:background="#FFFFFFFF"
+                android:elevation="10dp"
+                android:layout_height="56dp"
+                android:padding="4dp" />
 
     </android.support.design.widget.AppBarLayout>
 

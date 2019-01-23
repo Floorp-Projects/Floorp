@@ -105,6 +105,9 @@ open class DefaultComponents(private val applicationContext: Context) {
                 SimpleBrowserMenuItem("Settings") {
                     Toast.makeText(applicationContext, "Settings", Toast.LENGTH_SHORT).show()
                 },
+                SimpleBrowserMenuItem("Find In Page") {
+                    onFindPageClicked?.invoke()
+                },
                 BrowserMenuDivider(),
                 SimpleBrowserMenuItem("Clear Data") {
                     sessionUseCases.clearData.invoke()
@@ -116,6 +119,8 @@ open class DefaultComponents(private val applicationContext: Context) {
                 }
         )
     }
+
+    var onFindPageClicked: (() -> Unit)? = null
 
     private val menuToolbar by lazy {
         val forward = BrowserMenuItemToolbar.Button(
