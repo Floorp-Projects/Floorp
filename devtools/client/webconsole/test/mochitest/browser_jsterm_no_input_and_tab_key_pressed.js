@@ -7,7 +7,7 @@
 
 // See Bug 583816.
 
-const TEST_URI = "data:text/html,Testing jsterm with no input";
+const TEST_URI = "data:text/html,<meta charset=utf8>Testing jsterm with no input";
 
 add_task(async function() {
   // Run test with legacy JsTerm
@@ -15,24 +15,47 @@ add_task(async function() {
   await performTests();
   // And then run it with the CodeMirror-powered one.
   await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
+  await performTests(true);
 });
 
-async function performTests() {
+async function performTests(codeMirror) {
   const hud = await openNewTabAndConsole(TEST_URI);
   const jsterm = hud.jsterm;
 
-  // With empty input, tab through
+  info("Check that hitting Tab when input is empty insert blur the input");
+  jsterm.focus();
   jsterm.setInputValue("");
   EventUtils.synthesizeKey("KEY_Tab");
   is(jsterm.getInputValue(), "", "inputnode is empty - matched");
   ok(!isJstermFocused(jsterm), "input isn't focused anymore");
+
+  info("Check that hitting Shift+Tab when input is not empty insert a tab");
+  jsterm.focus();
+  EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
+  is(jsterm.getInputValue(), "", "inputnode is empty - matched");
+  ok(!isJstermFocused(jsterm), "input isn't focused anymore");
+  ok(hasFocus(hud.ui.outputNode.querySelector(".filter-checkbox input")),
+    `The "Persist Logs" checkbox is now focused`);
+
+  info("Check that hitting Tab when input is not empty insert a tab");
   jsterm.focus();
 
-  // With non-empty input, insert a tab
-  jsterm.setInputValue("window.Bug583816");
+  const testString = "window.Bug583816";
+  await setInputValueForAutocompletion(jsterm, testString, 0);
+  checkJsTermValueAndCursor(jsterm, `|${testString}`,
+    "cursor is at the start of the input");
+
   EventUtils.synthesizeKey("KEY_Tab");
-  is(jsterm.getInputValue(), "window.Bug583816\t",
-     "input content - matched");
+  checkJsTermValueAndCursor(jsterm, `\t|${testString}`,
+    "a tab char was added at the start of the input after hitting Tab");
   ok(isJstermFocused(jsterm), "input is still focused");
+
+  // We only check the 'unindent' feature for CodeMirror JsTerm.
+  if (codeMirror) {
+    info("Check that hitting Shift+Tab when input is not empty removed leading tabs");
+    EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
+    checkJsTermValueAndCursor(jsterm, `|${testString}`,
+      "The tab char at the the start of the input was removed after hitting Shift+Tab");
+    ok(isJstermFocused(jsterm), "input is still focused");
+  }
 }
