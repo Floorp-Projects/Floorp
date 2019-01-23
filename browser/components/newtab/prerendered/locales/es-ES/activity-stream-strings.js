@@ -42,7 +42,7 @@ window.gActivityStreamStrings = {
   "prefs_home_description": "Seleccione el contenido que desea en la pantalla de inicio de Firefox.",
   "prefs_content_discovery_header": "Página de inicio de Firefox",
   "prefs_content_discovery_description": "Content Discovery en la página de inicio de Firefox le permite descubrir artículos relevantes de alta calidad en toda la web.",
-  "prefs_content_discovery_button": "Deshabilitar Content Discovery",
+  "prefs_content_discovery_button": "Desactivar Content Discovery",
   "prefs_section_rows_option": "{num} fila;{num} filas",
   "prefs_search_header": "Búsqueda web",
   "prefs_topsites_description": "Los sitios que más visita",

@@ -68,7 +68,7 @@ class DiscoveryStreamAdmin extends React.PureComponent {
         </Row>
         <Row>
           <td className="min">Data last fetched</td>
-          <td>{relativeTime(feeds[feed.url].lastUpdated) || "(no data)"}</td>
+          <td>{relativeTime(feeds[feed.url] ? feeds[feed.url].lastUpdated : null) || "(no data)"}</td>
         </Row>
       </React.Fragment>
     );
