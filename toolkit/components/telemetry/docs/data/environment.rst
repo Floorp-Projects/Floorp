@@ -49,6 +49,14 @@ Structure:
         e10sEnabled: <bool>, // whether e10s is on, i.e. browser tabs open by default in a different process
         telemetryEnabled: <bool>, // false on failure
         locale: <string>, // e.g. "it", null on failure
+        intl: {
+          requestedLocales: [ <string>, ... ], // The locales that are being requested.
+          availableLocales: [ <string>, ... ], // The locales that are available for use.
+          appLocales: [ <string>, ... ], // The negotiated locales that are being used.
+          systemLocales: [ <string>, ... ], // The locales for the OS.
+          regionalPrefsLocales: [ <string>, ... ], // The regional preferences for the OS.
+          acceptLanguages: [ <string>, ... ], // The languages for the Accept-Languages header.
+        },
         update: {
           channel: <string>, // e.g. "release", null on failure
           enabled: <bool>, // true on failure
@@ -461,3 +469,4 @@ Version History
 - Firefox 61:
 
   - Removed empty ``addons.activeExperiment`` (`bug 1452935 <https://bugzilla.mozilla.org/show_bug.cgi?id=1452935>`_).
+
