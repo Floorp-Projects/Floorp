@@ -319,6 +319,7 @@ struct MOZ_STACK_CLASS StackingContextParams : public WrStackingContextParams {
                                 wr::TransformStyle::Flat,
                                 wr::ReferenceFrameKind::Transform,
                                 /* is_backface_visible = */ true,
+                                /* cache_tiles = */ false,
                                 wr::MixBlendMode::Normal} {}
 
   void SetPreserve3D(bool aPreserve) {
