@@ -962,12 +962,11 @@ pref("security.alternate_certificate_error_page", "certerror");
 // Enable the new certificate error pages.
 #ifdef EARLY_BETA_OR_EARLIER
 pref("browser.security.newcerterrorpage.enabled", true);
-pref("browser.security.newcerterrorpage.mitm.enabled", true);
 #else
 pref("browser.security.newcerterrorpage.enabled", false);
-pref("browser.security.newcerterrorpage.mitm.enabled", false);
 #endif
 
+pref("browser.security.newcerterrorpage.mitm.enabled", true);
 pref("security.certerrors.recordEventTelemetry", true);
 pref("security.certerrors.permanentOverride", true);
 
