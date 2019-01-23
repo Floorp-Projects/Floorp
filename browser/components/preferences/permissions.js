@@ -131,13 +131,8 @@ var gPermissionManager = {
       this.buildPermissionsList();
     } else if (data == "changed") {
       let p = this._permissions.get(permission.principal.origin);
-      // Maybe this item has been excluded before because it had an invalid capability.
-      if (p) {
-        p.capability = permission.capability;
-        this._handleCapabilityChange(p);
-      } else {
-        this._addPermissionToList(permission);
-      }
+      p.capability = permission.capability;
+      this._handleCapabilityChange(p);
       this.buildPermissionsList();
     } else if (data == "deleted") {
       this._removePermissionFromList(permission.principal.origin);
@@ -149,12 +144,6 @@ var gPermissionManager = {
     document.l10n.setAttributes(permissionlistitem.querySelector(".website-capability-value"), this._getCapabilityL10nId(perm.capability));
   },
 
-  _isCapabilitySupported(capability) {
-     return capability == Ci.nsIPermissionManager.ALLOW_ACTION ||
-            capability == Ci.nsIPermissionManager.DENY_ACTION ||
-            capability == Ci.nsICookiePermission.ACCESS_SESSION;
-  },
-
   _getCapabilityL10nId(capability) {
     let stringKey = null;
     switch (capability) {
@@ -163,6 +152,9 @@ var gPermissionManager = {
       break;
     case Ci.nsIPermissionManager.DENY_ACTION:
       stringKey = "permissions-capabilities-listitem-block";
+      break;
+    case Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY:
+      stringKey = "permissions-capabilities-listitem-allow-first-party";
       break;
     case Ci.nsICookiePermission.ACCESS_SESSION:
       stringKey = "permissions-capabilities-listitem-allow-session";
@@ -176,9 +168,6 @@ var gPermissionManager = {
   _addPermissionToList(perm) {
     if (perm.type !== this._type)
       return;
-    if (!this._isCapabilitySupported(perm.capability))
-      return;
-
     let p = new Permission(perm.principal, perm.type, perm.capability);
     this._permissions.set(p.origin, p);
   },

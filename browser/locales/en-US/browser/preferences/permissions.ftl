@@ -60,6 +60,8 @@ permissions-capabilities-listitem-allow =
     .value = Allow
 permissions-capabilities-listitem-block =
     .value = Block
+permissions-capabilities-listitem-allow-first-party =
+    .value = Allow first party only
 permissions-capabilities-listitem-allow-session =
     .value = Allow for Session
 

@@ -8188,6 +8188,22 @@ void nsContentUtils::GetCookieLifetimePolicyForPrincipal(
     case nsICookiePermission::ACCESS_SESSION:
       *aLifetimePolicy = nsICookieService::ACCEPT_SESSION;
       break;
+    case nsICookiePermission::ACCESS_ALLOW_FIRST_PARTY_ONLY:
+      // NOTE: The decision was made here to override the lifetime policy to be
+      // ACCEPT_NORMALLY for consistency with ACCESS_ALLOW, but this does
+      // prevent us from expressing BEHAVIOR_REJECT_FOREIGN/ACCEPT_SESSION for a
+      // specific domain. As BEHAVIOR_REJECT_FOREIGN isn't visible in our UI,
+      // this is probably not an issue.
+      *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
+      break;
+    case nsICookiePermission::ACCESS_LIMIT_THIRD_PARTY:
+      // NOTE: The decision was made here to override the lifetime policy to be
+      // ACCEPT_NORMALLY for consistency with ACCESS_ALLOW, but this does
+      // prevent us from expressing BEHAVIOR_REJECT_FOREIGN/ACCEPT_SESSION for a
+      // specific domain. As BEHAVIOR_LIMIT_FOREIGN isn't visible in our UI,
+      // this is probably not an issue.
+      *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
+      break;
   }
 }
 
