@@ -21,6 +21,7 @@ use winapi::um::dwrite::{IDWriteFontFace, IDWriteFontFile, IDWriteFontFileStream
 use winapi::um::dwrite::{IDWriteFontFileLoader, IDWriteLocalFontFileLoader};
 use winapi::um::dwrite::{DWRITE_FONT_SIMULATIONS, DWRITE_FONT_FACE_TYPE_UNKNOWN};
 use winapi::um::dwrite::{DWRITE_FONT_FACE_TYPE, DWRITE_FONT_FILE_TYPE_UNKNOWN};
+use winapi::um::winnt::HRESULT;
 
 use font_file_loader_impl::DataFontHelper;
 use font_face::FontFace;
@@ -47,12 +48,18 @@ impl FontFile {
                 return None
             }
 
-            Some(FontFile {
+            let mut ff = FontFile {
                 native: UnsafeCell::new(font_file),
                 stream: UnsafeCell::new(None),
                 data_key: 0,
                 face_type: DWRITE_FONT_FACE_TYPE_UNKNOWN,
-            })
+            };
+
+            if ff.analyze() == 0 {
+                None
+            } else {
+                Some(ff)
+            }
         }
     }
 
@@ -204,14 +211,20 @@ impl FontFile {
         }
     }
 
-    pub fn create_face(&self, face_index: u32, simulations: DWRITE_FONT_SIMULATIONS) -> FontFace {
+    pub fn create_face(&self,
+                       face_index: u32,
+                       simulations: DWRITE_FONT_SIMULATIONS,
+    ) -> Result<FontFace, HRESULT> {
         unsafe {
             let mut face: ComPtr<IDWriteFontFace> = ComPtr::new();
             let ptr = self.as_com_ptr();
             let hr = (*DWriteFactory()).CreateFontFace(self.face_type, 1, &ptr.as_ptr(),
                                                        face_index, simulations, face.getter_addrefs());
-            assert!(hr == 0);
-            FontFace::take(face)
+            if hr != 0 {
+                Err(hr)
+            } else {
+                Ok(FontFace::take(face))
+            }
         }
     }
 }
