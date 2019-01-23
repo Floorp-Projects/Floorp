@@ -800,8 +800,7 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
   // immediately.
   let p = Services.perms.testPermissionFromPrincipal(principal, "cookie");
   if (p == Ci.nsICookiePermission.ACCESS_ALLOW ||
-      p == Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY ||
-      p == Ci.nsICookiePermission.ACCESS_LIMIT_THIRD_PARTY) {
+      p == Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY) {
     return true;
   }
 
