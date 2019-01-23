@@ -1158,14 +1158,27 @@ impl TileCache {
                                 // local clip rect.
                                 if clip_chain_node.spatial_node_index == prim_instance.spatial_node_index {
                                     culling_rect = culling_rect.intersection(&local_clip_rect).unwrap_or(LayoutRect::zero());
-                                } else {
+
+                                    false
+                                } else if !clip_scroll_tree.is_same_or_child_of(
+                                    clip_chain_node.spatial_node_index,
+                                    self.spatial_node_index,
+                                ) {
+                                    // If the clip node is *not* a child of the main scroll root,
+                                    // add it to the list of potential world clips to be checked later.
+                                    // If it *is* a child of the main scroll root, then just track
+                                    // it as a normal clip dependency, since it likely moves in
+                                    // the same way as the primitive when scrolling (and if it doesn't,
+                                    // we want to invalidate and rasterize).
                                     world_clips.push((
                                         clip_world_rect.into(),
                                         clip_chain_node.spatial_node_index,
                                     ));
-                                }
 
-                                false
+                                    false
+                                } else {
+                                    true
+                                }
                             }
                             None => {
                                 true
