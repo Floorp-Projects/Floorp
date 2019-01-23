@@ -72,28 +72,36 @@ uint32_t wasm::ObservedCPUFeatures() {
 #endif
 }
 
-CompileArgs::CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller)
-    : scriptedCaller(std::move(scriptedCaller)) {
-  baselineEnabled = cx->options().wasmBaseline();
-  ionEnabled = cx->options().wasmIon();
+SharedCompileArgs
+CompileArgs::build(JSContext* cx, ScriptedCaller&& scriptedCaller)
+{
+  CompileArgs* target = cx->new_<CompileArgs>(std::move(scriptedCaller));
+  if (!target) {
+    return nullptr;
+  }
+
+  target->baselineEnabled = cx->options().wasmBaseline();
+  target->ionEnabled = cx->options().wasmIon();
 #ifdef ENABLE_WASM_CRANELIFT
-  craneliftEnabled = cx->options().wasmCranelift();
+  target->craneliftEnabled = cx->options().wasmCranelift();
 #else
-  craneliftEnabled = false;
+  target->craneliftEnabled = false;
 #endif
 
   // Debug information such as source view or debug traps will require
   // additional memory and permanently stay in baseline code, so we try to
   // only enable it when a developer actually cares: when the debugger tab
   // is open.
-  debugEnabled = cx->realm()->debuggerObservesAsmJS();
+  target->debugEnabled = cx->realm()->debuggerObservesAsmJS();
 
-  sharedMemoryEnabled =
+  target->sharedMemoryEnabled =
       cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-  forceTiering =
+  target->forceTiering =
       cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
 
-  gcEnabled = HasReftypesSupport(cx);
+  target->gcEnabled = HasReftypesSupport(cx);
+
+  return target;
 }
 
 // Classify the current system as one of a set of recognizable classes.  This
