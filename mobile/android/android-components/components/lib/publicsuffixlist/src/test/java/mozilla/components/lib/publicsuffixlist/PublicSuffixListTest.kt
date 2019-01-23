@@ -285,7 +285,6 @@ class PublicSuffixListTest {
             "食狮.com.cn",
             publicSuffixList.getPublicSuffixPlusOne("食狮.com.cn").await())
         // https://github.com/mozilla-mobile/android-components/issues/1777
-        /*
         assertEquals(
             "食狮.公司.cn",
             publicSuffixList.getPublicSuffixPlusOne("食狮.公司.cn").await())
@@ -296,7 +295,6 @@ class PublicSuffixListTest {
             "shishi.公司.cn",
             publicSuffixList.getPublicSuffixPlusOne("shishi.公司.cn").await())
         assertNull(publicSuffixList.getPublicSuffixPlusOne("公司.cn").await())
-        */
         assertEquals(
             "食狮.中国",
             publicSuffixList.getPublicSuffixPlusOne("食狮.中国").await())
@@ -313,7 +311,6 @@ class PublicSuffixListTest {
             "xn--85x722f.com.cn",
             publicSuffixList.getPublicSuffixPlusOne("xn--85x722f.com.cn").await())
         // https://github.com/mozilla-mobile/android-components/issues/1777
-        /*
         assertEquals(
             "xn--85x722f.xn--55qx5d.cn",
             publicSuffixList.getPublicSuffixPlusOne("xn--85x722f.xn--55qx5d.cn").await())
@@ -324,7 +321,6 @@ class PublicSuffixListTest {
             "shishi.xn--55qx5d.cn",
             publicSuffixList.getPublicSuffixPlusOne("shishi.xn--55qx5d.cn").await())
         assertNull(publicSuffixList.getPublicSuffixPlusOne("xn--55qx5d.cn").await())
-        */
         assertEquals(
             "xn--85x722f.xn--fiqs8s",
             publicSuffixList.getPublicSuffixPlusOne("xn--85x722f.xn--fiqs8s").await())

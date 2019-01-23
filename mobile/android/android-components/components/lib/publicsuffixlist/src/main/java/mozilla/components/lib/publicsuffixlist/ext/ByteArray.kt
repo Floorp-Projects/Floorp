@@ -27,9 +27,6 @@ internal fun ByteArray.binarySearch(labels: List<ByteArray>, labelIndex: Int): S
 
         val publicSuffixLength = start + end - start
 
-        // Compare the bytes. Note that the file stores UTF-8 encoded bytes, so we must compare the
-        // unsigned bytes.
-
         var compareResult: Int
         var currentLabelIndex = labelIndex
         var currentLabelByteIndex = 0
@@ -37,7 +34,7 @@ internal fun ByteArray.binarySearch(labels: List<ByteArray>, labelIndex: Int): S
 
         var expectDot = false
         while (true) {
-            val byte0: Byte = if (expectDot) {
+            val byte0 = if (expectDot) {
                 expectDot = false
                 '.'.toByte()
             } else {
@@ -46,7 +43,10 @@ internal fun ByteArray.binarySearch(labels: List<ByteArray>, labelIndex: Int): S
 
             val byte1 = this[start + publicSuffixByteIndex] and BITMASK
 
-            compareResult = byte0 - byte1
+            // Compare the bytes. Note that the file stores UTF-8 encoded bytes, so we must compare the
+            // unsigned bytes.
+            @Suppress("EXPERIMENTAL_API_USAGE")
+            compareResult = (byte0.toUByte() - byte1.toUByte()).toInt()
             if (compareResult != 0) {
                 break
             }
