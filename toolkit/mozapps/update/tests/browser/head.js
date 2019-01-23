@@ -103,7 +103,7 @@ async function continueFileHandler(leafName) {
  * @throws If the function is called on a platform other than Windows.
  */
 function lockWriteTestFile() {
-  if (AppConstants.platform != "win") {
+  if (!IS_WIN) {
     throw new Error("Windows only test function called");
   }
   let file = getUpdatesRootDir();
@@ -122,6 +122,17 @@ function lockWriteTestFile() {
     file.fileAttributesWin |= file.WFA_READWRITE;
     file.fileAttributesWin &= ~file.WFA_READONLY;
     file.remove(false);
+  });
+}
+
+function setOtherInstanceHandlingUpdates() {
+  if (!IS_WIN) {
+    throw new Error("Windows only test function called");
+  }
+  gAUS.observe(null, "test-close-handle-update-mutex", "");
+  let handle = createMutex(getPerInstallationMutexName());
+  registerCleanupFunction(() => {
+    closeHandle(handle);
   });
 }
 
