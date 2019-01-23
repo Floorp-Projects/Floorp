@@ -9,13 +9,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
 import kotlinx.android.synthetic.main.fragment_browser.*
-import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.support.utils.SafeIntent
+import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 
@@ -52,5 +49,3 @@ class BrowserFragment : Fragment() {
         lifecycle.addObservers(sessionFeature)
     }
 }
-
-private fun Lifecycle.addObservers(vararg observers: LifecycleObserver) = observers.forEach { addObserver(it) }

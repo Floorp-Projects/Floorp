@@ -79,6 +79,8 @@ dependencies {
     implementation Deps.mozilla_feature_intent
     implementation Deps.mozilla_feature_session
 
+    implementation Deps.mozilla_support_ktx
+
     testImplementation Deps.junit
     androidTestImplementation Deps.tools_test_runner
     androidTestImplementation Deps.tools_espresso_core
