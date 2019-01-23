@@ -25,7 +25,7 @@ import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
-import mozilla.components.service.glean.metrics.Baseline
+import mozilla.components.service.glean.metrics.GleanBaseline
 import mozilla.components.service.glean.utils.StringUtils
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
@@ -234,11 +234,11 @@ open class GleanInternalAPI {
         }
 
         // Set the OS type
-        Baseline.os.set("Android")
+        GleanBaseline.os.set("Android")
 
         // Set the OS version
         // https://developer.android.com/reference/android/os/Build.VERSION
-        Baseline.osVersion.set(Build.VERSION.SDK_INT.toString())
+        GleanBaseline.osVersion.set(Build.VERSION.SDK_INT.toString())
 
         // Set the device string
         // https://developer.android.com/reference/android/os/Build
@@ -247,20 +247,20 @@ open class GleanInternalAPI {
         // similar names than we are for a manufacturer to have two devices with the similar names
         // (e.g. Galaxy S6 vs. Galaxy Note 6).
         @Suppress("MagicNumber")
-        Baseline.device.set(
+        GleanBaseline.device.set(
             StringUtils.safeSubstring(Build.MANUFACTURER, 0, 12) +
             '-' +
             StringUtils.safeSubstring(Build.MODEL, 0, 19)
         )
 
         // Set the CPU architecture
-        Baseline.architecture.set(Build.SUPPORTED_ABIS[0])
+        GleanBaseline.architecture.set(Build.SUPPORTED_ABIS[0])
 
         // Set the enabled accessibility services
         getEnabledAccessibilityServices(
             applicationContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
         ) ?.let {
-            Baseline.a11yServices.set(it)
+            GleanBaseline.a11yServices.set(it)
         }
     }
 

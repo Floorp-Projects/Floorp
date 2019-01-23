@@ -220,10 +220,10 @@ class GleanTest {
             checkPingSchema(baselineJson)
 
             val expectedBaselineStringMetrics = arrayOf(
-                "baseline.os",
-                "baseline.os_version",
-                "baseline.device",
-                "baseline.architecture"
+                "glean.baseline.os",
+                "glean.baseline.os_version",
+                "glean.baseline.device",
+                "glean.baseline.architecture"
             )
             val baselineMetricsObject = baselineJson.getJSONObject("metrics")!!
             val baselineStringMetrics = baselineMetricsObject.getJSONObject("string")!!
@@ -234,7 +234,7 @@ class GleanTest {
 
             val baselineTimespanMetrics = baselineMetricsObject.getJSONObject("timespan")!!
             assertEquals(1, baselineTimespanMetrics.length())
-            assertNotNull(baselineTimespanMetrics.get("baseline.duration"))
+            assertNotNull(baselineTimespanMetrics.get("glean.baseline.duration"))
         } finally {
             server.shutdown()
             lifecycleRegistry.removeObserver(gleanLifecycleObserver)

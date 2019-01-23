@@ -4,7 +4,7 @@
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
-baseline:
+glean.baseline:
   ## TODO: Some metrics are commented out below until we implement them as part
   ## of 1497894 and its dependent bugs
 
