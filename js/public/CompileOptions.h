@@ -116,6 +116,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool allowHTMLComments = true;
   bool isProbablySystemCode = false;
   bool hideScriptFromDebugger = false;
+  bool bigIntEnabledOption = false;
 
   /**
    * |introductionType| is a statically allocated C string: one of "eval",
