@@ -1297,6 +1297,7 @@ class AstModule : public AstNode {
 #ifdef ENABLE_WASM_REFTYPES
   uint32_t gcFeatureOptIn_;
 #endif
+  Maybe<uint32_t> dataCount_;
   ExportVector exports_;
   Maybe<AstStartFunc> startFunc_;
   FuncVector funcs_;
@@ -1337,6 +1338,12 @@ class AstModule : public AstNode {
   }
   uint32_t gcFeatureOptIn() const { return gcFeatureOptIn_; }
 #endif
+  bool initDataCount(uint32_t dataCount) {
+    MOZ_ASSERT(dataCount_.isNothing());
+    dataCount_.emplace(dataCount);
+    return true;
+  }
+  Maybe<uint32_t> dataCount() const { return dataCount_; }
   bool addTable(AstName name, const Limits& table, TableKind tableKind) {
     return tables_.append(AstTable(table, tableKind, false, name));
   }

@@ -2567,8 +2567,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   BaseCompiler(const ModuleEnvironment& env, const FuncCompileInput& input,
                const ValTypeVector& locals, const MachineState& trapExitLayout,
                size_t trapExitLayoutNumWords, Decoder& decoder,
-               ExclusiveDeferredValidationState& dvs, TempAllocator* alloc,
-               MacroAssembler* masm, StackMaps* stackMaps);
+               TempAllocator* alloc, MacroAssembler* masm,
+               StackMaps* stackMaps);
 
   MOZ_MUST_USE bool init();
 
@@ -11817,11 +11817,10 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            const ValTypeVector& locals,
                            const MachineState& trapExitLayout,
                            size_t trapExitLayoutNumWords, Decoder& decoder,
-                           ExclusiveDeferredValidationState& dvs,
                            TempAllocator* alloc, MacroAssembler* masm,
                            StackMaps* stackMaps)
     : env_(env),
-      iter_(env, decoder, dvs),
+      iter_(env, decoder),
       func_(func),
       lastReadCallSite_(0),
       alloc_(*alloc),
@@ -11945,7 +11944,6 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
                                         LifoAlloc& lifo,
                                         const FuncCompileInputVector& inputs,
                                         CompiledCode* code,
-                                        ExclusiveDeferredValidationState& dvs,
                                         UniqueChars* error) {
   MOZ_ASSERT(env.tier() == Tier::Baseline);
   MOZ_ASSERT(env.kind == ModuleKind::Wasm);
@@ -11985,7 +11983,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
     // One-pass baseline compilation.
 
     BaseCompiler f(env, func, locals, trapExitLayout, trapExitLayoutNumWords, d,
-                   dvs, &alloc, &masm, &code->stackMaps);
+                   &alloc, &masm, &code->stackMaps);
     if (!f.init()) {
       return false;
     }
