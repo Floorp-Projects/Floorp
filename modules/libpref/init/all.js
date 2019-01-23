@@ -3373,12 +3373,6 @@ pref("dom.ipc.useNativeEventProcessing.content", false);
 pref("dom.ipc.useNativeEventProcessing.content", true);
 #endif
 
-// Quantum DOM scheduling:
-pref("dom.ipc.scheduler.useMultipleQueues", true);
-pref("dom.ipc.scheduler.preemption", false);
-pref("dom.ipc.scheduler.threadCount", 2);
-pref("dom.ipc.scheduler.chaoticScheduling", false);
-
 // Disable support for SVG
 pref("svg.disabled", false);
 
