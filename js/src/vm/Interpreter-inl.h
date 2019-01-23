@@ -361,7 +361,10 @@ inline void InitGlobalLexicalOperation(JSContext* cx,
   Rooted<LexicalEnvironmentObject*> lexicalEnv(cx, lexicalEnvArg);
   RootedShape shape(cx, lexicalEnv->lookup(cx, script->getName(pc)));
   MOZ_ASSERT(shape);
-  lexicalEnv->setSlotWithType(cx, shape, value);
+  MOZ_ASSERT(IsUninitializedLexical(lexicalEnv->getSlot(shape->slot())));
+
+  // Don't treat the initial assignment to global lexicals as overwrites.
+  lexicalEnv->setSlotWithType(cx, shape, value, /* overwriting = */ false);
 }
 
 inline bool InitPropertyOperation(JSContext* cx, JSOp op, HandleObject obj,

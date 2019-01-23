@@ -17,19 +17,15 @@ namespace file_util {
 bool GetTempDir(FilePath* path) {
   base::ScopedNSAutoreleasePool autorelease_pool;
   NSString* tmp = NSTemporaryDirectory();
-  if (tmp == nil)
-    return false;
+  if (tmp == nil) return false;
   *path = FilePath([tmp fileSystemRepresentation]);
   return true;
 }
 
-bool GetShmemTempDir(FilePath* path) {
-  return GetTempDir(path);
-}
+bool GetShmemTempDir(FilePath* path) { return GetTempDir(path); }
 
 bool CopyFile(const FilePath& from_path, const FilePath& to_path) {
-  return (copyfile(from_path.value().c_str(),
-                   to_path.value().c_str(), NULL, COPYFILE_ALL) == 0);
+  return (copyfile(from_path.value().c_str(), to_path.value().c_str(), NULL, COPYFILE_ALL) == 0);
 }
 
 }  // namespace

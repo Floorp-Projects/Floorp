@@ -13,93 +13,75 @@
 #include "gfxFont.h"
 #include "gfxFontConstants.h"
 
-nsLookAndFeel::nsLookAndFeel()
-    : nsXPLookAndFeel()
-    , mInitialized(false)
-{
+nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel(), mInitialized(false) {}
+
+nsLookAndFeel::~nsLookAndFeel() {}
+
+static nscolor GetColorFromUIColor(UIColor *aColor) {
+  CGColorRef cgColor = [aColor CGColor];
+  CGColorSpaceModel model = CGColorSpaceGetModel(CGColorGetColorSpace(cgColor));
+  const CGFloat *components = CGColorGetComponents(cgColor);
+  if (model == kCGColorSpaceModelRGB) {
+    return NS_RGB((unsigned int)(components[0] * 255.0), (unsigned int)(components[1] * 255.0),
+                  (unsigned int)(components[2] * 255.0));
+  } else if (model == kCGColorSpaceModelMonochrome) {
+    unsigned int val = (unsigned int)(components[0] * 255.0);
+    return NS_RGBA(val, val, val, (unsigned int)(components[1] * 255.0));
+  }
+  MOZ_ASSERT_UNREACHABLE("Unhandled color space!");
+  return 0;
 }
 
-nsLookAndFeel::~nsLookAndFeel()
-{
-}
+void nsLookAndFeel::NativeInit() { EnsureInit(); }
 
-static nscolor GetColorFromUIColor(UIColor* aColor)
-{
-    CGColorRef cgColor = [aColor CGColor];
-    CGColorSpaceModel model = CGColorSpaceGetModel(CGColorGetColorSpace(cgColor));
-    const CGFloat* components = CGColorGetComponents(cgColor);
-    if (model == kCGColorSpaceModelRGB) {
-        return NS_RGB((unsigned int)(components[0] * 255.0),
-                      (unsigned int)(components[1] * 255.0),
-                      (unsigned int)(components[2] * 255.0));
-    }
-    else if (model == kCGColorSpaceModelMonochrome) {
-        unsigned int val = (unsigned int)(components[0] * 255.0);
-        return NS_RGBA(val, val, val,
-                       (unsigned int)(components[1] * 255.0));
-    }
-    MOZ_ASSERT_UNREACHABLE("Unhandled color space!");
-    return 0;
-}
-
-void
-nsLookAndFeel::NativeInit()
-{
-  EnsureInit();
-}
-
-void
-nsLookAndFeel::RefreshImpl()
-{
+void nsLookAndFeel::RefreshImpl() {
   nsXPLookAndFeel::RefreshImpl();
 
   mInitialized = false;
 }
 
-nsresult
-nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult)
-{
+nsresult nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult) {
   EnsureInit();
 
   nsresult res = NS_OK;
 
   switch (aID) {
     case eColorID_WindowBackground:
-      aResult = NS_RGB(0xff,0xff,0xff);
+      aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
     case eColorID_WindowForeground:
-      aResult = NS_RGB(0x00,0x00,0x00);
+      aResult = NS_RGB(0x00, 0x00, 0x00);
       break;
     case eColorID_WidgetBackground:
-      aResult = NS_RGB(0xdd,0xdd,0xdd);
+      aResult = NS_RGB(0xdd, 0xdd, 0xdd);
       break;
     case eColorID_WidgetForeground:
-      aResult = NS_RGB(0x00,0x00,0x00);
+      aResult = NS_RGB(0x00, 0x00, 0x00);
       break;
     case eColorID_WidgetSelectBackground:
-      aResult = NS_RGB(0x80,0x80,0x80);
+      aResult = NS_RGB(0x80, 0x80, 0x80);
       break;
     case eColorID_WidgetSelectForeground:
-      aResult = NS_RGB(0x00,0x00,0x80);
+      aResult = NS_RGB(0x00, 0x00, 0x80);
       break;
     case eColorID_Widget3DHighlight:
-      aResult = NS_RGB(0xa0,0xa0,0xa0);
+      aResult = NS_RGB(0xa0, 0xa0, 0xa0);
       break;
     case eColorID_Widget3DShadow:
-      aResult = NS_RGB(0x40,0x40,0x40);
+      aResult = NS_RGB(0x40, 0x40, 0x40);
       break;
     case eColorID_TextBackground:
-      aResult = NS_RGB(0xff,0xff,0xff);
+      aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
     case eColorID_TextForeground:
-      aResult = NS_RGB(0x00,0x00,0x00);
+      aResult = NS_RGB(0x00, 0x00, 0x00);
       break;
     case eColorID_TextSelectBackground:
-    case eColorID_highlight: // CSS2 color
-      aResult = NS_RGB(0xaa,0xaa,0xaa);
+    case eColorID_highlight:  // CSS2 color
+      aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case eColorID__moz_menuhover:
-      aResult = NS_RGB(0xee,0xee,0xee);
+      aResult = NS_RGB(0xee, 0xee, 0xee);
       break;
     case eColorID_TextSelectForeground:
     case eColorID_highlighttext:  // CSS2 color
@@ -143,77 +125,77 @@ nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult)
       aResult = mColorDarkText;
       break;
     case eColorID_activecaption:
-      aResult = NS_RGB(0xff,0xff,0xff);
+      aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
     case eColorID_activeborder:
-      aResult = NS_RGB(0x00,0x00,0x00);
+      aResult = NS_RGB(0x00, 0x00, 0x00);
       break;
-     case eColorID_appworkspace:
-      aResult = NS_RGB(0xFF,0xFF,0xFF);
+    case eColorID_appworkspace:
+      aResult = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
     case eColorID_background:
-      aResult = NS_RGB(0x63,0x63,0xCE);
+      aResult = NS_RGB(0x63, 0x63, 0xCE);
       break;
     case eColorID_buttonface:
     case eColorID__moz_buttonhoverface:
-      aResult = NS_RGB(0xF0,0xF0,0xF0);
+      aResult = NS_RGB(0xF0, 0xF0, 0xF0);
       break;
     case eColorID_buttonhighlight:
-      aResult = NS_RGB(0xFF,0xFF,0xFF);
+      aResult = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
     case eColorID_buttonshadow:
-      aResult = NS_RGB(0xDC,0xDC,0xDC);
+      aResult = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
     case eColorID_graytext:
-      aResult = NS_RGB(0x44,0x44,0x44);
+      aResult = NS_RGB(0x44, 0x44, 0x44);
       break;
     case eColorID_inactiveborder:
-      aResult = NS_RGB(0xff,0xff,0xff);
+      aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
     case eColorID_inactivecaption:
-      aResult = NS_RGB(0xaa,0xaa,0xaa);
+      aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case eColorID_inactivecaptiontext:
-      aResult = NS_RGB(0x45,0x45,0x45);
+      aResult = NS_RGB(0x45, 0x45, 0x45);
       break;
     case eColorID_scrollbar:
-      aResult = NS_RGB(0,0,0); //XXX
+      aResult = NS_RGB(0, 0, 0);  // XXX
       break;
     case eColorID_threeddarkshadow:
-      aResult = NS_RGB(0xDC,0xDC,0xDC);
+      aResult = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
     case eColorID_threedshadow:
-      aResult = NS_RGB(0xE0,0xE0,0xE0);
+      aResult = NS_RGB(0xE0, 0xE0, 0xE0);
       break;
     case eColorID_threedface:
-      aResult = NS_RGB(0xF0,0xF0,0xF0);
+      aResult = NS_RGB(0xF0, 0xF0, 0xF0);
       break;
     case eColorID_threedhighlight:
-      aResult = NS_RGB(0xff,0xff,0xff);
+      aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
     case eColorID_threedlightshadow:
-      aResult = NS_RGB(0xDA,0xDA,0xDA);
+      aResult = NS_RGB(0xDA, 0xDA, 0xDA);
       break;
     case eColorID_menu:
-      aResult = NS_RGB(0xff,0xff,0xff);
+      aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
     case eColorID_infobackground:
-      aResult = NS_RGB(0xFF,0xFF,0xC7);
+      aResult = NS_RGB(0xFF, 0xFF, 0xC7);
       break;
     case eColorID_windowframe:
-      aResult = NS_RGB(0xaa,0xaa,0xaa);
+      aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case eColorID_window:
     case eColorID__moz_field:
     case eColorID__moz_combobox:
-      aResult = NS_RGB(0xff,0xff,0xff);
+      aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
     case eColorID__moz_fieldtext:
     case eColorID__moz_comboboxtext:
       aResult = mColorDarkText;
       break;
     case eColorID__moz_dialog:
-      aResult = NS_RGB(0xaa,0xaa,0xaa);
+      aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case eColorID__moz_dialogtext:
     case eColorID__moz_cellhighlighttext:
@@ -223,38 +205,38 @@ nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult)
     case eColorID__moz_dragtargetzone:
     case eColorID__moz_mac_chrome_active:
     case eColorID__moz_mac_chrome_inactive:
-      aResult = NS_RGB(0xaa,0xaa,0xaa);
+      aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case eColorID__moz_mac_focusring:
-      aResult = NS_RGB(0x3F,0x98,0xDD);
+      aResult = NS_RGB(0x3F, 0x98, 0xDD);
       break;
     case eColorID__moz_mac_menushadow:
-      aResult = NS_RGB(0xA3,0xA3,0xA3);
+      aResult = NS_RGB(0xA3, 0xA3, 0xA3);
       break;
     case eColorID__moz_mac_menutextdisable:
-      aResult = NS_RGB(0x88,0x88,0x88);
+      aResult = NS_RGB(0x88, 0x88, 0x88);
       break;
     case eColorID__moz_mac_menutextselect:
-      aResult = NS_RGB(0xaa,0xaa,0xaa);
+      aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case eColorID__moz_mac_disabledtoolbartext:
-      aResult = NS_RGB(0x3F,0x3F,0x3F);
+      aResult = NS_RGB(0x3F, 0x3F, 0x3F);
       break;
     case eColorID__moz_mac_menuselect:
-      aResult = NS_RGB(0xaa,0xaa,0xaa);
+      aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case eColorID__moz_buttondefault:
-      aResult = NS_RGB(0xDC,0xDC,0xDC);
+      aResult = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
     case eColorID__moz_cellhighlight:
     case eColorID__moz_html_cellhighlight:
     case eColorID__moz_mac_secondaryhighlight:
       // For inactive list selection
-      aResult = NS_RGB(0xaa,0xaa,0xaa);
+      aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case eColorID__moz_eventreerow:
       // Background color of even list rows.
-      aResult = NS_RGB(0xff,0xff,0xff);
+      aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
     case eColorID__moz_oddtreerow:
       // Background color of odd list rows.
@@ -262,24 +244,22 @@ nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult)
       break;
     case eColorID__moz_nativehyperlinktext:
       // There appears to be no available system defined color. HARDCODING to the appropriate color.
-      aResult = NS_RGB(0x14,0x4F,0xAE);
+      aResult = NS_RGB(0x14, 0x4F, 0xAE);
       break;
     default:
       NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
-      aResult = NS_RGB(0xff,0xff,0xff);
+      aResult = NS_RGB(0xff, 0xff, 0xff);
       res = NS_ERROR_FAILURE;
       break;
-    }
+  }
 
   return res;
 }
 
 NS_IMETHODIMP
-nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
-{
+nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult) {
   nsresult res = nsXPLookAndFeel::GetIntImpl(aID, aResult);
-  if (NS_SUCCEEDED(res))
-    return res;
+  if (NS_SUCCEEDED(res)) return res;
   res = NS_OK;
 
   switch (aID) {
@@ -343,7 +323,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       aResult = 0;
       break;
     case eIntID_TabFocusModel:
-      aResult = 1;    // default to just textboxes
+      aResult = 1;  // default to just textboxes
       break;
     case eIntID_ScrollToClick:
       aResult = 0;
@@ -372,11 +352,9 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
 }
 
 NS_IMETHODIMP
-nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
-{
+nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult) {
   nsresult res = nsXPLookAndFeel::GetFloatImpl(aID, aResult);
-  if (NS_SUCCEEDED(res))
-    return res;
+  if (NS_SUCCEEDED(res)) return res;
   res = NS_OK;
 
   switch (aID) {
@@ -394,30 +372,25 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
   return res;
 }
 
-bool
-nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName,
-                           gfxFontStyle &aFontStyle,
-                           float aDevPixPerCSSPixel)
-{
-    // hack for now
-    if (aID == eFont_Window || aID == eFont_Document) {
-        aFontStyle.style      = FontSlantStyle::Normal();
-        aFontStyle.weight     = FontWeight::Normal();
-        aFontStyle.stretch    = FontStretch::Normal();
-        aFontStyle.size       = 14 * aDevPixPerCSSPixel;
-        aFontStyle.systemFont = true;
+bool nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName, gfxFontStyle &aFontStyle,
+                                float aDevPixPerCSSPixel) {
+  // hack for now
+  if (aID == eFont_Window || aID == eFont_Document) {
+    aFontStyle.style = FontSlantStyle::Normal();
+    aFontStyle.weight = FontWeight::Normal();
+    aFontStyle.stretch = FontStretch::Normal();
+    aFontStyle.size = 14 * aDevPixPerCSSPixel;
+    aFontStyle.systemFont = true;
 
-        aFontName.AssignLiteral("sans-serif");
-        return true;
-    }
+    aFontName.AssignLiteral("sans-serif");
+    return true;
+  }
 
-    //TODO: implement more here?
-    return false;
+  // TODO: implement more here?
+  return false;
 }
 
-void
-nsLookAndFeel::EnsureInit()
-{
+void nsLookAndFeel::EnsureInit() {
   if (mInitialized) {
     return;
   }
@@ -426,7 +399,7 @@ nsLookAndFeel::EnsureInit()
   nscolor color;
   GetColor(eColorID_TextSelectBackground, color);
   if (color == 0x000000) {
-    mColorTextSelectForeground = NS_RGB(0xff,0xff,0xff);
+    mColorTextSelectForeground = NS_RGB(0xff, 0xff, 0xff);
   } else {
     mColorTextSelectForeground = NS_DONT_CHANGE_COLOR;
   }

@@ -45,7 +45,6 @@
 #include "ProfilerIOInterposeObserver.h"
 #include "mozilla/AutoProfilerLabel.h"
 #include "mozilla/ExtensionPolicyService.h"
-#include "mozilla/Scheduler.h"
 #include "mozilla/StackWalk.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SystemGroup.h"
@@ -3423,7 +3422,6 @@ ProfilingStack* profiler_register_thread(const char* aName,
                                          void* aGuessStackTop) {
   DEBUG_LOG("profiler_register_thread(%s)", aName);
 
-  MOZ_ASSERT_IF(NS_IsMainThread(), Scheduler::IsCooperativeThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   // Make sure we have a nsThread wrapper for the current thread, and that NSPR
@@ -3438,8 +3436,6 @@ ProfilingStack* profiler_register_thread(const char* aName,
 }
 
 void profiler_unregister_thread() {
-  MOZ_ASSERT_IF(NS_IsMainThread(), Scheduler::IsCooperativeThread());
-
   if (!CorePS::Exists()) {
     // This function can be called after the main thread has already shut down.
     return;
