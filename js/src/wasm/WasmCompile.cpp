@@ -24,6 +24,7 @@
 #include "jit/ProcessExecutableMemory.h"
 #include "util/Text.h"
 #include "wasm/WasmBaselineCompile.h"
+#include "wasm/WasmCraneliftCompile.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmOpIter.h"
@@ -75,31 +76,55 @@ uint32_t wasm::ObservedCPUFeatures() {
 SharedCompileArgs
 CompileArgs::build(JSContext* cx, ScriptedCaller&& scriptedCaller)
 {
-  CompileArgs* target = cx->new_<CompileArgs>(std::move(scriptedCaller));
-  if (!target) {
-    return nullptr;
-  }
-
-  target->baselineEnabled = cx->options().wasmBaseline();
-  target->ionEnabled = cx->options().wasmIon();
+  bool baseline = BaselineCanCompile() && cx->options().wasmBaseline();
+  bool ion = IonCanCompile() && cx->options().wasmIon();
 #ifdef ENABLE_WASM_CRANELIFT
-  target->craneliftEnabled = cx->options().wasmCranelift();
+  bool cranelift = CraneliftCanCompile() && cx->options().wasmCranelift();
 #else
-  target->craneliftEnabled = false;
+  bool cranelift = false;
 #endif
 
   // Debug information such as source view or debug traps will require
   // additional memory and permanently stay in baseline code, so we try to
   // only enable it when a developer actually cares: when the debugger tab
   // is open.
-  target->debugEnabled = cx->realm()->debuggerObservesAsmJS();
+  bool debug = cx->realm()->debuggerObservesAsmJS();
+  bool gc = cx->options().wasmGc();
 
-  target->sharedMemoryEnabled =
-      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-  target->forceTiering =
-      cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
+  bool sharedMemory = cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
+  bool forceTiering = cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
 
-  target->gcEnabled = HasReftypesSupport(cx);
+  if (debug || gc) {
+    if (!baseline) {
+      JS_ReportErrorASCII(cx, "can't use wasm debug/gc without baseline");
+      return nullptr;
+    }
+    ion = false;
+    cranelift = false;
+  }
+
+  if (forceTiering && (!baseline || (!cranelift && !ion))) {
+    // This can happen only in testing, and in this case we don't have a
+    // proper way to signal the error, so just silently override the default,
+    // instead of adding a skip-if directive to every test using debug/gc.
+    forceTiering = false;
+  }
+
+  // HasCompilerSupport() should prevent failure here.
+  MOZ_RELEASE_ASSERT(baseline || ion || cranelift);
+
+  CompileArgs* target = cx->new_<CompileArgs>(std::move(scriptedCaller));
+  if (!target) {
+    return nullptr;
+  }
+
+  target->baselineEnabled = baseline;
+  target->ionEnabled = ion;
+  target->craneliftEnabled = cranelift;
+  target->debugEnabled = debug;
+  target->sharedMemoryEnabled = sharedMemory;
+  target->forceTiering = forceTiering;
+  target->gcEnabled = gc;
 
   return target;
 }
@@ -420,20 +445,18 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
   }
 
   bool gcEnabled = args_->gcEnabled && gcFeatureOptIn;
-  bool baselineFlag = args_->baselineEnabled || gcEnabled;
-  bool ionFlag = args_->ionEnabled && !gcEnabled;
-  bool debugFlag = args_->debugEnabled;
-#ifdef ENABLE_WASM_CRANELIFT
-  bool craneliftFlag = args_->craneliftEnabled;
-#endif
+  bool baselineEnabled = args_->baselineEnabled;
+  bool ionEnabled = args_->ionEnabled;
+  bool debugEnabled = args_->debugEnabled;
+  bool craneliftEnabled = args_->craneliftEnabled;
+  bool forceTiering = args_->forceTiering;
 
-  // Attempt to default to ion if baseline is disabled.
-  bool baselineEnabled = BaselineCanCompile() && baselineFlag;
-  bool debugEnabled = BaselineCanCompile() && debugFlag;
-  bool ionEnabled = IonCanCompile() && (ionFlag || !baselineEnabled);
+  bool hasSecondTier = ionEnabled || craneliftEnabled;
+  MOZ_ASSERT_IF(gcEnabled || debugEnabled, baselineEnabled);
+  MOZ_ASSERT_IF(forceTiering, baselineEnabled && hasSecondTier);
 
   // HasCompilerSupport() should prevent failure here
-  MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled);
+  MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled || craneliftEnabled);
 
   uint32_t codeSectionSize = 0;
 
@@ -442,21 +465,16 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
     codeSectionSize = range.size;
   }
 
-  if (baselineEnabled && ionEnabled && !debugEnabled && CanUseExtraThreads() &&
-      (TieringBeneficial(codeSectionSize) || args_->forceTiering)) {
+  if (baselineEnabled && hasSecondTier && CanUseExtraThreads() &&
+      (TieringBeneficial(codeSectionSize) || forceTiering)) {
     mode_ = CompileMode::Tier1;
     tier_ = Tier::Baseline;
   } else {
     mode_ = CompileMode::Once;
-    tier_ = debugEnabled || !ionEnabled ? Tier::Baseline : Tier::Optimized;
+    tier_ = hasSecondTier ? Tier::Optimized : Tier::Baseline;
   }
 
-  optimizedBackend_ = OptimizedBackend::Ion;
-#ifdef ENABLE_WASM_CRANELIFT
-  if (craneliftFlag) {
-    optimizedBackend_ = OptimizedBackend::Cranelift;
-  }
-#endif
+  optimizedBackend_ = craneliftEnabled ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
 
   debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
   gcTypes_ = gcEnabled;
