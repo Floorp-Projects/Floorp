@@ -30,7 +30,16 @@ class RemoteFrameChild : public PRemoteFrameChild {
   static already_AddRefed<RemoteFrameChild> Create(nsFrameLoader* aFrameLoader,
                                                    const TabContext& aContext,
                                                    const nsString& aRemoteType);
+
+  void UpdateDimensions(const nsIntRect& aRect,
+                        const mozilla::ScreenIntSize& aSize);
+
  protected:
+  friend class PRemoteFrameChild;
+
+  mozilla::ipc::IPCResult RecvSetLayersId(
+      const mozilla::layers::LayersId& aLayersId);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
