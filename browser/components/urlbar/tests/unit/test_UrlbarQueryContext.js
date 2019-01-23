@@ -4,43 +4,43 @@
 "use strict";
 
 add_task(function test_constructor() {
-  Assert.throws(() => new QueryContext(),
-    /Missing or empty enableAutofill provided to QueryContext/,
+  Assert.throws(() => new UrlbarQueryContext(),
+    /Missing or empty enableAutofill provided to UrlbarQueryContext/,
     "Should throw with no arguments");
 
-  Assert.throws(() => new QueryContext({
+  Assert.throws(() => new UrlbarQueryContext({
     enableAutofill: true,
     isPrivate: false,
     maxResults: 1,
     searchString: "foo",
-  }), /Missing or empty lastKey provided to QueryContext/,
+  }), /Missing or empty lastKey provided to UrlbarQueryContext/,
     "Should throw with a missing lastKey parameter");
 
-  Assert.throws(() => new QueryContext({
+  Assert.throws(() => new UrlbarQueryContext({
     enableAutofill: true,
     isPrivate: false,
     lastKey: "b",
     searchString: "foo",
-  }), /Missing or empty maxResults provided to QueryContext/,
+  }), /Missing or empty maxResults provided to UrlbarQueryContext/,
     "Should throw with a missing maxResults parameter");
 
-  Assert.throws(() => new QueryContext({
+  Assert.throws(() => new UrlbarQueryContext({
     enableAutofill: true,
     lastKey: "b",
     maxResults: 1,
     searchString: "foo",
-  }), /Missing or empty isPrivate provided to QueryContext/,
+  }), /Missing or empty isPrivate provided to UrlbarQueryContext/,
     "Should throw with a missing isPrivate parameter");
 
-  Assert.throws(() => new QueryContext({
+  Assert.throws(() => new UrlbarQueryContext({
     isPrivate: false,
     lastKey: "b",
     maxResults: 1,
     searchString: "foo",
-  }), /Missing or empty enableAutofill provided to QueryContext/,
+  }), /Missing or empty enableAutofill provided to UrlbarQueryContext/,
     "Should throw with a missing enableAutofill parameter");
 
-  let qc = new QueryContext({
+  let qc = new UrlbarQueryContext({
     enableAutofill: false,
     isPrivate: true,
     lastKey: "b",

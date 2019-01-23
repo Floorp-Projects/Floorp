@@ -10,9 +10,9 @@
  */
 
 var EXPORTED_SYMBOLS = [
-  "QueryContext",
   "UrlbarMuxer",
   "UrlbarProvider",
+  "UrlbarQueryContext",
   "UrlbarUtils",
 ];
 
@@ -232,16 +232,16 @@ var UrlbarUtils = {
 };
 
 /**
- * QueryContext defines a user's autocomplete input from within the Address Bar.
+ * UrlbarQueryContext defines a user's autocomplete input from within the urlbar.
  * It supplements it with details of how the search results should be obtained
  * and what they consist of.
  */
-class QueryContext {
+class UrlbarQueryContext {
   /**
-   * Constructs the QueryContext instance.
+   * Constructs the UrlbarQueryContext instance.
    *
    * @param {object} options
-   *   The initial options for QueryContext.
+   *   The initial options for UrlbarQueryContext.
    * @param {string} options.searchString
    *   The string the user entered in autocomplete. Could be the empty string
    *   in the case of the user opening the popup via the mouse.
@@ -265,7 +265,7 @@ class QueryContext {
     ]);
 
     if (isNaN(parseInt(options.maxResults))) {
-      throw new Error(`Invalid maxResults property provided to QueryContext`);
+      throw new Error(`Invalid maxResults property provided to UrlbarQueryContext`);
     }
 
     if (options.providers &&
@@ -289,7 +289,7 @@ class QueryContext {
   _checkRequiredOptions(options, optionNames) {
     for (let optionName of optionNames) {
       if (!(optionName in options)) {
-        throw new Error(`Missing or empty ${optionName} provided to QueryContext`);
+        throw new Error(`Missing or empty ${optionName} provided to UrlbarQueryContext`);
       }
       this[optionName] = options[optionName];
     }
@@ -311,7 +311,7 @@ class UrlbarMuxer {
   }
   /**
    * Sorts queryContext matches in-place.
-   * @param {object} queryContext the context to sort matches for.
+   * @param {UrlbarQueryContext} queryContext the context to sort matches for.
    * @abstract
    */
   sort(queryContext) {
@@ -349,7 +349,7 @@ class UrlbarProvider {
   }
   /**
    * Starts querying.
-   * @param {object} queryContext The query context object
+   * @param {UrlbarQueryContext} queryContext The query context object
    * @param {function} addCallback Callback invoked by the provider to add a new
    *        match. A UrlbarMatch should be passed to it.
    * @note Extended classes should return a Promise resolved when the provider
@@ -361,7 +361,8 @@ class UrlbarProvider {
   }
   /**
    * Cancels a running query,
-   * @param {object} queryContext the QueryContext object to cancel query for.
+   * @param {UrlbarQueryContext} queryContext the query context object to cancel
+   *        query for.
    * @abstract
    */
   cancelQuery(queryContext) {

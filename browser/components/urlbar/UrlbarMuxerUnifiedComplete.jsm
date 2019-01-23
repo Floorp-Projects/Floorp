@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * This module exports a component used to sort matches in a QueryContext.
+ * This module exports a component used to sort matches in a UrlbarQueryContext.
  */
 
 var EXPORTED_SYMBOLS = ["UrlbarMuxerUnifiedComplete"];
@@ -32,7 +32,7 @@ const MATCH_TYPE_TO_GROUP = new Map([
 
 /**
  * Class used to create a muxer.
- * The muxer receives and sorts matches in a QueryContext.
+ * The muxer receives and sorts matches in a UrlbarQueryContext.
  */
 class MuxerUnifiedComplete extends UrlbarMuxer {
   constructor() {
@@ -44,8 +44,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
   }
 
   /**
-   * Sorts matches in the given QueryContext.
-   * @param {object} context a QueryContext
+   * Sorts matches in the given UrlbarQueryContext.
+   * @param {UrlbarQueryContext} context The query context.
    */
   sort(context) {
     if (!context.results.length) {

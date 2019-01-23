@@ -159,7 +159,7 @@ var UrlbarProviderUnifiedComplete = new ProviderUnifiedComplete();
  * In any case at least we're sure there's just one heuristic result and it
  * comes first.
  *
- * @param {object} context the QueryContext
+ * @param {UrlbarQueryContext} context the query context.
  * @param {object} result an nsIAutocompleteResult
  * @param {set} urls a Set containing all the found urls, used to discard
  *        already added matches.
