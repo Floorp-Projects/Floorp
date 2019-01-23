@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/ChromeTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript">
+"use strict";
+/* eslint-env mozilla/frame-script */
+
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [["browser.fission.oopif.attribute", true]]});
+
+  // This iframe should be loaded out of process. Unfortunately as of the time
+  // of this test's creation, many different events which we could use to detect
+  // this load have not been implemented yet.
+  let contentCreated = ChromeTask.spawn(null, async function() {
+    let wgp = await new Promise(resolve => {
+      function observer(parent) {
+        info("WGP with origin: " + parent.documentPrincipal.origin);
+        if (parent.documentPrincipal.origin !== "http://mochi.test:8888") {
+          return;
+        }
+
+        Services.obs.removeObserver(observer, "window-global-created");
+        resolve(parent);
+      }
+      Services.obs.addObserver(observer, "window-global-created");
+    });
+
+    is(wgp.isInProcess, false, "not in-process");
+    ok(wgp.rootFrameLoader, "Has frameloader");
+    ok(wgp.documentPrincipal, "Has document principal");
+  });
+
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("fission", "true");
+  iframe.setAttribute("src", "file_dummy.html");
+  document.body.appendChild(iframe);
+
+  // Check that this isn't loaded in-process, or using a nested tabParent object.
+  let frameLoader = SpecialPowers.wrap(iframe).frameLoader;
+  is(frameLoader.docShell, null);
+  is(frameLoader.tabParent, null);
+
+  await contentCreated;
+});
+
+</script>
+</body>
+</html>
