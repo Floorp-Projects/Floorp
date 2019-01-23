@@ -3798,7 +3798,7 @@ void HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
     // So if we didn't get it, we send it here in order to prevent any leaks.
     // Ocasionally we will get the OnStopRequest message after this, in which
     // case we just ignore it as we've already cleared the listener.
-    if (!mOnStopRequestCalled) {
+    if (!mOnStopRequestCalled && mListener) {
       DoPreOnStopRequest(NS_ERROR_ABORT);
       DoOnStopRequest(this, NS_ERROR_ABORT, mListenerContext);
     }
