@@ -285,7 +285,13 @@ void U2FTokenManager::Register(
       WebAuthnMaybeMakeCredentialExtraInfo::TWebAuthnMakeCredentialExtraInfo) {
     const auto& extra =
         aTransactionInfo.Extra().get_WebAuthnMakeCredentialExtraInfo();
-    directAttestationRequested = extra.RequestDirectAttestation();
+
+    AttestationConveyancePreference attestation =
+        static_cast<AttestationConveyancePreference>(
+            extra.attestationConveyancePreference());
+
+    directAttestationRequested =
+        attestation == AttestationConveyancePreference::Direct;
   }
 
   // Start a register request immediately if direct attestation
