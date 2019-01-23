@@ -1090,6 +1090,7 @@ pub enum RenderTaskCacheKeyKind {
     Image(ImageCacheKey),
     #[allow(dead_code)]
     Glyph(GpuGlyphCacheKey),
+    #[allow(dead_code)]
     Picture(SurfaceCacheKey),
     BorderSegment(BorderSegmentCacheKey),
     LineDecoration(LineDecorationCacheKey),
