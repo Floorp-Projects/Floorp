@@ -381,9 +381,6 @@ static void CalculateToolbarButtonSpacing(WidgetNodeType aAppearance,
     aMetrics->buttonMargin.right += buttonSpacing;
   }
 
-  aMetrics->iconXPosition += aMetrics->buttonMargin.left;
-  aMetrics->iconYPosition += aMetrics->buttonMargin.top;
-
   aMetrics->minSizeWithBorderMargin.width +=
       aMetrics->buttonMargin.right + aMetrics->buttonMargin.left;
   aMetrics->minSizeWithBorderMargin.height +=
