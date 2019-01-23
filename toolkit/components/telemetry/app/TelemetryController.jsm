@@ -529,8 +529,12 @@ var Impl = {
     }
 
     try {
-      await TelemetryStorage.addPendingPing(ping);
-      await TelemetryArchive.promiseArchivePing(ping);
+      // Previous aborted-session might have been with a canary client ID.
+      // Don't send it.
+      if (ping.clientId != Utils.knownClientID) {
+        await TelemetryStorage.addPendingPing(ping);
+        await TelemetryArchive.promiseArchivePing(ping);
+      }
     } catch (e) {
       this._log.error("checkAbortedSessionPing - Unable to add the pending ping", e);
     } finally {
