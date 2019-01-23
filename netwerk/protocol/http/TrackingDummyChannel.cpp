@@ -13,7 +13,6 @@
 #include "mozilla/Preferences.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
-#include "nsProxyRelease.h"
 
 namespace mozilla {
 namespace net {
@@ -85,14 +84,7 @@ TrackingDummyChannel::TrackingDummyChannel(nsIURI* aURI, nsIURI* aTopWindowURI,
   SetLoadInfo(aLoadInfo);
 }
 
-TrackingDummyChannel::~TrackingDummyChannel() {
-  NS_ReleaseOnMainThreadSystemGroup("TrackingDummyChannel::mLoadInfo",
-                                    mLoadInfo.forget());
-  NS_ReleaseOnMainThreadSystemGroup("TrackingDummyChannel::mURI",
-                                    mURI.forget());
-  NS_ReleaseOnMainThreadSystemGroup("TrackingDummyChannel::mTopWindowURI",
-                                    mTopWindowURI.forget());
-}
+TrackingDummyChannel::~TrackingDummyChannel() = default;
 
 bool TrackingDummyChannel::IsTrackingResource() const {
   return mIsTrackingResource;
