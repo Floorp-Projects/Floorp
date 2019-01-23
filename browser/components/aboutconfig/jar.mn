@@ -8,6 +8,3 @@ browser.jar:
   content/browser/aboutconfig/aboutconfig.html    (content/aboutconfig.html)
   content/browser/aboutconfig/aboutconfig.js      (content/aboutconfig.js)
   content/browser/aboutconfig/background.svg      (content/background.svg)
-
-[localization] @AB_CD@.jar:
-  browser/aboutConfig.ftl                         (content/aboutconfig.notftl)
