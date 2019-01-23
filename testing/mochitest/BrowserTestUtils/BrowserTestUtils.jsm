@@ -1100,6 +1100,103 @@ var BrowserTestUtils = {
   },
 
   /**
+   * Waits for the next top-level document load in the current browser.  The URI
+   * of the document is compared against aExpectedURL.  The load is then stopped
+   * before it actually starts.
+   *
+   * @param {string} expectedURL
+   *        The URL of the document that is expected to load.
+   * @param {object} browser
+   *        The browser to wait for.
+   * @param {boolean} [stopFromProgressListener]
+   *        Whether to cancel the load directly from the progress listener. Defaults to true.
+   *        If you're using this method to avoid hitting the network, you want the default (true).
+   *        However, the browser UI will behave differently for loads stopped directly from
+   *        the progress listener (effectively in the middle of a call to loadURI) and so there
+   *        are cases where you may want to avoid stopping the load directly from within the
+   *        progress listener callback.
+   * @returns {Promise}
+   */
+  waitForDocLoadAndStopIt(expectedURL, browser, stopFromProgressListener = true) {
+    function content_script(contentStopFromProgressListener) {
+      /* eslint-env mozilla/frame-script */
+      let wp = docShell.QueryInterface(Ci.nsIWebProgress);
+
+      function stopContent(now, uri) {
+        if (now) {
+          /* Hammer time. */
+          content.stop();
+
+          /* Let the parent know we're done. */
+          sendAsyncMessage("Test:WaitForDocLoadAndStopIt", { uri });
+        } else {
+          /* eslint-disable-next-line no-undef */
+          setTimeout(stopContent.bind(null, true, uri), 0);
+        }
+      }
+
+      let progressListener = {
+        onStateChange(webProgress, req, flags, status) {
+          dump(`waitForDocLoadAndStopIt: onStateChange ${flags.toString(16)}:${req.name}\n`);
+
+          if (webProgress.isTopLevel &&
+              flags & Ci.nsIWebProgressListener.STATE_START) {
+            wp.removeProgressListener(progressListener);
+            let chan = req.QueryInterface(Ci.nsIChannel);
+            dump(`waitForDocLoadAndStopIt: Document start: ${chan.URI.spec}\n`);
+            stopContent(contentStopFromProgressListener, chan.originalURI.spec);
+          }
+        },
+        QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
+      };
+      wp.addProgressListener(progressListener, wp.NOTIFY_STATE_WINDOW);
+
+      /**
+       * As |this| is undefined and we can't extend |docShell|, adding an unload
+       * event handler is the easiest way to ensure the weakly referenced
+       * progress listener is kept alive as long as necessary.
+       */
+      addEventListener("unload", function() {
+        try {
+          wp.removeProgressListener(progressListener);
+        } catch (e) { /* Will most likely fail. */ }
+      });
+    }
+
+    let stoppedDocLoadPromise = () => {
+      return new Promise((resolve, reject) => {
+        function complete({ data }) {
+          if (data.uri != expectedURL) {
+            reject(new Error(`An expected URL was loaded: ${data.uri}`));
+          }
+          mm.removeMessageListener("Test:WaitForDocLoadAndStopIt", complete);
+          resolve();
+        }
+
+        let mm = browser.messageManager;
+        mm.loadFrameScript(`data:,(${content_script.toString()})(${stopFromProgressListener});`, true);
+        mm.addMessageListener("Test:WaitForDocLoadAndStopIt", complete);
+        dump(`waitForDocLoadAndStopIt: Waiting for URL: ${expectedURL}\n`);
+      });
+    };
+
+    let win = browser.ownerGlobal;
+    let tab = win.gBrowser.getTabForBrowser(browser);
+    let { mustChangeProcess } = E10SUtils.shouldLoadURIInBrowser(browser, expectedURL);
+    if (!tab ||
+        !win.gMultiProcessBrowser ||
+        !mustChangeProcess) {
+      return stoppedDocLoadPromise();
+    }
+
+    return new Promise((resolve, reject) => {
+      tab.addEventListener("TabRemotenessChange", function() {
+        stoppedDocLoadPromise().then(resolve, reject);
+      }, {once: true});
+    });
+  },
+
+  /**
    *  Versions of EventUtils.jsm synthesizeMouse functions that synthesize a
    *  mouse event in a child process and return promises that resolve when the
    *  event has fired and completed. Instead of a window, a browser is required

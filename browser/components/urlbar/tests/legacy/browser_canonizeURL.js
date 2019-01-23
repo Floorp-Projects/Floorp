@@ -31,7 +31,8 @@ add_task(async function checkCtrlWorks() {
   ]});
 
   for (let [inputValue, expectedURL, options] of testcases) {
-    let promiseLoad = waitForDocLoadAndStopIt(expectedURL);
+    let promiseLoad =
+      BrowserTestUtils.waitForDocLoadAndStopIt(expectedURL, gBrowser.selectedBrowser);
     gURLBar.focus();
     gURLBar.inputField.value = inputValue.slice(0, -1);
     EventUtils.sendString(inputValue.slice(-1));
