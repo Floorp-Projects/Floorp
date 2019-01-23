@@ -558,6 +558,8 @@ class TabParent final : public PBrowserParent,
 
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
+  ShowInfo GetShowInfo();
+
  protected:
   bool ReceiveMessage(
       const nsString& aMessage, bool aSync, ipc::StructuredCloneData* aData,
@@ -725,8 +727,6 @@ class TabParent final : public PBrowserParent,
 #ifdef DEBUG
   int32_t mActiveSupressDisplayportCount;
 #endif
-
-  ShowInfo GetShowInfo();
 
  private:
   // This is used when APZ needs to find the TabParent associated with a layer
