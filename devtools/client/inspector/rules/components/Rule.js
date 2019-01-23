@@ -21,6 +21,7 @@ class Rule extends PureComponent {
       onToggleDeclaration: PropTypes.func.isRequired,
       onToggleSelectorHighlighter: PropTypes.func.isRequired,
       rule: PropTypes.shape(Types.rule).isRequired,
+      showDeclarationNameEditor: PropTypes.func.isRequired,
       showSelectorEditor: PropTypes.func.isRequired,
     };
   }
@@ -30,6 +31,7 @@ class Rule extends PureComponent {
       onToggleDeclaration,
       onToggleSelectorHighlighter,
       rule,
+      showDeclarationNameEditor,
       showSelectorEditor,
     } = this.props;
     const {
@@ -70,7 +72,9 @@ class Rule extends PureComponent {
           ),
           Declarations({
             declarations,
+            isUserAgentStyle,
             onToggleDeclaration,
+            showDeclarationNameEditor,
           }),
           dom.div({ className: "ruleview-ruleclose" }, "}")
         )
