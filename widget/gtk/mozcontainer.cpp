@@ -312,8 +312,12 @@ void moz_container_realize(GtkWidget *widget) {
     attributes.width = allocation.width;
     attributes.height = allocation.height;
     attributes.wclass = GDK_INPUT_OUTPUT;
-    attributes.visual = gtk_widget_get_visual(widget);
     attributes.window_type = GDK_WINDOW_CHILD;
+    MozContainer *container = MOZ_CONTAINER(widget);
+    attributes.visual =
+        container->force_default_visual
+            ? gdk_screen_get_system_visual(gtk_widget_get_screen(widget))
+            : gtk_widget_get_visual(widget);
 
     window = gdk_window_new(parent, &attributes, attributes_mask);
     gdk_window_set_user_data(window, widget);
@@ -549,3 +553,7 @@ gboolean moz_container_surface_needs_clear(MozContainer *container) {
   return state;
 }
 #endif
+
+void moz_container_force_default_visual(MozContainer *container) {
+  container->force_default_visual = true;
+}

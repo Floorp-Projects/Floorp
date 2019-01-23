@@ -308,6 +308,7 @@ class nsWindow final : public nsBaseWidget {
   nsresult UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                 uint8_t* aAlphas,
                                                 int32_t aStride);
+  void UpdateTitlebarTransparencyBitmap();
 
   virtual void ReparentNativeWidget(nsIWidget* aNewParent) override;
 
@@ -474,9 +475,6 @@ class nsWindow final : public nsBaseWidget {
   uint32_t mHasMappedToplevel : 1, mIsFullyObscured : 1, mRetryPointerGrab : 1;
   nsSizeMode mSizeState;
 
-  int32_t mTransparencyBitmapWidth;
-  int32_t mTransparencyBitmapHeight;
-
   nsIntPoint mClientOffset;
 
 #if GTK_CHECK_VERSION(3, 4, 0)
@@ -565,6 +563,12 @@ class nsWindow final : public nsBaseWidget {
   // full translucency at this time; each pixel is either fully opaque
   // or fully transparent.
   gchar* mTransparencyBitmap;
+  int32_t mTransparencyBitmapWidth;
+  int32_t mTransparencyBitmapHeight;
+  // The transparency bitmap is used instead of ARGB visual for toplevel
+  // window to draw titlebar.
+  bool mTransparencyBitmapForTitlebar;
+
   // True when we're on compositing window manager and this
   // window is using visual with alpha channel.
   bool mHasAlphaVisual;
