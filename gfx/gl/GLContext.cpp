@@ -329,7 +329,8 @@ bool GLContext::InitWithPrefix(const char* prefix, bool trygl) {
 static bool LoadGLSymbols(GLContext* gl, const char* prefix, bool trygl,
                           const GLLibraryLoader::SymLoadStruct* list,
                           const char* desc) {
-  if (gl->LoadSymbols(list, trygl, prefix)) return true;
+  const auto warnOnFailure = bool(desc);
+  if (gl->LoadSymbols(list, trygl, prefix, warnOnFailure)) return true;
 
   ClearSymbols(list);
 
