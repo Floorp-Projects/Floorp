@@ -5233,9 +5233,13 @@ JSObject* js::NewArrayOperation(JSContext* cx, HandleScript script,
     if (!group) {
       return nullptr;
     }
-
     AutoSweepObjectGroup sweep(group);
-    if (group->shouldPreTenure(sweep)) {
+    if (group->maybePreliminaryObjects(sweep)) {
+      group->maybePreliminaryObjects(sweep)->maybeAnalyze(cx, group);
+    }
+
+    if (group->shouldPreTenure(sweep) ||
+        group->maybePreliminaryObjects(sweep)) {
       newKind = TenuredObject;
     }
   }

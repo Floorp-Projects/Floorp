@@ -521,6 +521,8 @@ class ObjectGroup : public gc::TenuredCell {
   // Whether to make a singleton object at an allocation site.
   static bool useSingletonForAllocationSite(JSScript* script, jsbytecode* pc,
                                             JSProtoKey key);
+  static bool useSingletonForAllocationSite(JSScript* script, jsbytecode* pc,
+                                            const Class* clasp);
 
   // Static accessors for ObjectGroupRealm NewTable.
 
