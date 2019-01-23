@@ -19,6 +19,7 @@ include protocol PFileDescriptorSet;
 include protocol PIPCBlobInputStream;
 include protocol PPaymentRequest;
 include protocol PWindowGlobal;
+include protocol PRemoteFrame;
 
 include DOMTypes;
 include IPCBlob;
@@ -142,6 +143,7 @@ nested(upto inside_cpow) sync protocol PBrowser
     manages PPluginWidget;
     manages PPaymentRequest;
     manages PWindowGlobal;
+    manages PRemoteFrame;
 
 both:
     async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
@@ -173,6 +175,11 @@ parent:
      * BrowsingContext and with the given principal.
      */
     async PWindowGlobal(WindowGlobalInit init);
+
+    /**
+     * Construct a new Remote iframe actor.
+     */
+    async PRemoteFrame(nsString aPresentationURL, nsString aRemoteType);
 
     /**
      * Sends an NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW to be adopted by the
