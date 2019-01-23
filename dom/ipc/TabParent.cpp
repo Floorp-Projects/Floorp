@@ -304,6 +304,10 @@ void TabParent::SetOwnerElement(Element* aElement) {
       Unused << SendSetWidgetNativeData(widgetNativeData);
     }
   }
+
+  if (mRenderFrame.IsInitialized()) {
+    mRenderFrame.OwnerContentChanged();
+  }
 }
 
 NS_IMETHODIMP TabParent::GetOwnerElement(Element** aElement) {
@@ -617,16 +621,8 @@ void TabParent::LoadURL(nsIURI* aURI) {
 }
 
 void TabParent::InitRendering() {
-  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-
   MOZ_ASSERT(!mRenderFrame.IsInitialized());
-  MOZ_ASSERT(frameLoader);
-
-  if (!frameLoader) {
-    return;
-  }
-
-  mRenderFrame.Initialize(frameLoader);
+  mRenderFrame.Initialize(this);
   MOZ_ASSERT(mRenderFrame.IsInitialized());
 
   layers::LayersId layersId = mRenderFrame.GetLayersId();

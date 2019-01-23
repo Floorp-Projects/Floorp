@@ -1758,10 +1758,6 @@ void nsFrameLoader::SetOwnerContent(Element* aContent) {
     UpdateReflectorGlobal(jsapi.cx(), wrapper, rv);
     Unused << NS_WARN_IF(rv.Failed());
   }
-
-  if (RenderFrame* rfp = GetCurrentRenderFrame()) {
-    rfp->OwnerContentChanged(aContent);
-  }
 }
 
 bool nsFrameLoader::OwnerIsMozBrowserFrame() {
