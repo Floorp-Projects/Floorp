@@ -60,7 +60,7 @@
   flex: 1;
 }
 
-.popup-notification-primary-button:not([alone]) {
+.popup-notification-primary-button {
   flex: 0 50%;
 }
 
