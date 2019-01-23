@@ -2365,7 +2365,7 @@ impl<'a> DisplayListFlattener<'a> {
             TextRun {
                 glyphs: Arc::new(glyphs),
                 font,
-                offset,
+                offset: prim_offset,
                 shadow: false,
             }
         };
