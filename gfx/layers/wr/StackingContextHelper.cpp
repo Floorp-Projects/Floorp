@@ -24,25 +24,19 @@ StackingContextHelper::StackingContextHelper()
 StackingContextHelper::StackingContextHelper(
     const StackingContextHelper& aParentSC, const ActiveScrolledRoot* aAsr,
     nsIFrame* aContainerFrame, nsDisplayItem* aContainerItem,
-    wr::DisplayListBuilder& aBuilder, const nsTArray<wr::FilterOp>& aFilters,
-    const LayoutDeviceRect& aBounds, const gfx::Matrix4x4* aBoundTransform,
-    const wr::WrAnimationProperty* aAnimation, const float* aOpacityPtr,
-    const gfx::Matrix4x4* aTransformPtr,
-    wr::ReferenceFrameKind aReferenceFrameKind,
-    const gfx::CompositionOp& aMixBlendMode, bool aBackfaceVisible,
-    bool aIsPreserve3D,
-    const Maybe<nsDisplayTransform*>& aDeferredTransformItem,
-    const wr::WrStackingContextClip& aClip, bool aAnimated)
+    wr::DisplayListBuilder& aBuilder, const wr::StackingContextParams& aParams,
+    const LayoutDeviceRect& aBounds)
     : mBuilder(&aBuilder),
       mScale(1.0f, 1.0f),
-      mDeferredTransformItem(aDeferredTransformItem),
-      mIsPreserve3D(aIsPreserve3D),
-      mRasterizeLocally(aAnimated || aParentSC.mRasterizeLocally) {
+      mDeferredTransformItem(aParams.mDeferredTransformItem),
+      mIsPreserve3D(aParams.transform_style == wr::TransformStyle::Preserve3D),
+      mRasterizeLocally(aParams.mAnimated || aParentSC.mRasterizeLocally) {
   // Compute scale for fallback rendering. We don't try to guess a scale for 3d
   // transformed items
   gfx::Matrix transform2d;
-  if (aBoundTransform && aBoundTransform->CanDraw2D(&transform2d) &&
-      aReferenceFrameKind != wr::ReferenceFrameKind::Perspective &&
+  if (aParams.mBoundTransform &&
+      aParams.mBoundTransform->CanDraw2D(&transform2d) &&
+      aParams.reference_frame_kind != wr::ReferenceFrameKind::Perspective &&
       !aParentSC.mIsPreserve3D) {
     mInheritedTransform = transform2d * aParentSC.mInheritedTransform;
 
@@ -52,7 +46,7 @@ StackingContextHelper::StackingContextHelper(
                                             1.f, 1.f, mInheritedTransform,
                                             /* aCanDraw2D = */ true);
 
-    if (aAnimated) {
+    if (aParams.mAnimated) {
       mSnappingSurfaceTransform =
           gfx::Matrix::Scaling(mScale.width, mScale.height);
     } else {
@@ -70,10 +64,7 @@ StackingContextHelper::StackingContextHelper(
           : wr::RasterSpace::Screen();
 
   mReferenceFrameId = mBuilder->PushStackingContext(
-      wr::ToLayoutRect(aBounds), aClip, aAnimation, aOpacityPtr, aTransformPtr,
-      aIsPreserve3D ? wr::TransformStyle::Preserve3D : wr::TransformStyle::Flat,
-      aReferenceFrameKind, wr::ToMixBlendMode(aMixBlendMode), aFilters,
-      aBackfaceVisible, rasterSpace);
+      aParams, wr::ToLayoutRect(aBounds), rasterSpace);
 
   if (mReferenceFrameId) {
     mSpaceAndClipChainHelper.emplace(aBuilder, mReferenceFrameId.ref());
