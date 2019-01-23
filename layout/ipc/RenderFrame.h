@@ -129,7 +129,7 @@ class nsDisplayRemote final : public nsDisplayItem {
 
  private:
   LayersId GetRemoteLayersId() const;
-  RenderFrame* GetRenderFrame() const;
+  nsFrameLoader* GetFrameLoader() const;
 
   TabId mTabId;
   LayoutDeviceIntPoint mOffset;
