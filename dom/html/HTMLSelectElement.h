@@ -180,9 +180,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormElementWithState,
   nsIHTMLCollection* SelectedOptions();
 
   int32_t SelectedIndex() const { return mSelectedIndex; }
-  void SetSelectedIndex(int32_t aIdx, ErrorResult& aRv) {
-    aRv = SetSelectedIndexInternal(aIdx, true);
-  }
+  void SetSelectedIndex(int32_t aIdx) { SetSelectedIndexInternal(aIdx, true); }
   void GetValue(DOMString& aValue);
   void SetValue(const nsAString& aValue);
 
@@ -454,7 +452,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormElementWithState,
   void VerifyOptionsArray();
 #endif
 
-  nsresult SetSelectedIndexInternal(int32_t aIndex, bool aNotify);
+  void SetSelectedIndexInternal(int32_t aIndex, bool aNotify);
 
   void SetSelectionChanged(bool aValue, bool aNotify);
 

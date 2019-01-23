@@ -174,6 +174,9 @@ struct DBState final {
   nsCOMPtr<mozIStorageCompletionCallback> closeListener;
 };
 
+// these constants represent an operation being performed on cookies
+enum CookieOperation { OPERATION_READ, OPERATION_WRITE };
+
 // these constants represent a decision about a cookie based on user prefs.
 enum CookieStatus {
   STATUS_ACCEPTED,
@@ -263,10 +266,10 @@ class nsCookieService final : public nsICookieService,
       const int aNumOfCookies, const OriginAttributes &aOriginAttrs,
       uint32_t *aRejectedReason);
   static int64_t ParseServerTime(const nsCString &aServerTime);
-  void GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign,
+  void GetCookiesForURI(nsIURI *aHostURI, nsIChannel *aChannel, bool aIsForeign,
                         bool aIsTrackingResource,
                         bool aFirstPartyStorageAccessGranted,
-                        bool aIsSafeTopLevelNav, bool aIsTopLevelForeign,
+                        bool aIsSafeTopLevelNav, bool aIsSameSiteForeign,
                         bool aHttpBound, const OriginAttributes &aOriginAttrs,
                         nsTArray<nsCookie *> &aCookieList);
 
@@ -296,10 +299,10 @@ class nsCookieService final : public nsICookieService,
   nsresult NormalizeHost(nsCString &aHost);
   nsresult GetCookieStringCommon(nsIURI *aHostURI, nsIChannel *aChannel,
                                  bool aHttpBound, char **aCookie);
-  void GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign,
-                               bool aIsTrackingResource,
+  void GetCookieStringInternal(nsIURI *aHostURI, nsIChannel *aChannel,
+                               bool aIsForeign, bool aIsTrackingResource,
                                bool aFirstPartyStorageAccessGranted,
-                               bool aIsSafeTopLevelNav, bool aIsTopLevelForeign,
+                               bool aIsSafeTopLevelNav, bool aIsSameSiteForeign,
                                bool aHttpBound,
                                const OriginAttributes &aOriginAttrs,
                                nsCString &aCookie);
@@ -356,7 +359,7 @@ class nsCookieService final : public nsICookieService,
                                        int64_t oldestCookieTime);
   void NotifyAccepted(nsIChannel *aChannel);
   void NotifyRejected(nsIURI *aHostURI, nsIChannel *aChannel,
-                      uint32_t aRejectedReason);
+                      uint32_t aRejectedReason, CookieOperation aOperation);
   void NotifyThirdParty(nsIURI *aHostURI, bool aAccepted, nsIChannel *aChannel);
   void NotifyChanged(nsISupports *aSubject, const char16_t *aData,
                      bool aOldCookieIsSession = false, bool aFromHttp = false);

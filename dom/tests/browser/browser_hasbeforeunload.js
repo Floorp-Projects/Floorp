@@ -55,7 +55,7 @@ function addOuterBeforeUnloadListeners(browser, howMany = 1, frameDepth = 1) {
   if (frameDepth == 0) {
     throw new Error("When adding a beforeunload listener on an outer " +
                     "window, the frame you're targeting needs to be at " +
-                    "depth > 0.")
+                    "depth > 0.");
   }
 
   return controlFrameAt(browser, frameDepth, {
@@ -115,7 +115,7 @@ function removeOuterBeforeUnloadListeners(browser, howMany = 1, frameDepth = 1) 
   if (frameDepth == 0) {
     throw new Error("When removing a beforeunload listener from an outer " +
                     "window, the frame you're targeting needs to be at " +
-                    "depth > 0.")
+                    "depth > 0.");
   }
 
   return controlFrameAt(browser, frameDepth, {
@@ -445,8 +445,8 @@ add_task(async function test_inner_window_scenarios() {
     //      |--> <iframe at PAGE_URL> (BOTTOM)
     //
     await prepareSubframes(browser, [
-      { sandboxAttributes: null, },
-      { sandboxAttributes: null, },
+      { sandboxAttributes: null },
+      { sandboxAttributes: null },
     ]);
     // These constants are just to make it easier to know which
     // frame we're referring to without having to remember the
@@ -488,8 +488,8 @@ add_task(async function test_inner_window_scenarios() {
 
     // Reset our window structure now.
     await prepareSubframes(browser, [
-      { sandboxAttributes: null, },
-      { sandboxAttributes: null, },
+      { sandboxAttributes: null },
+      { sandboxAttributes: null },
     ]);
 
     // This time, add beforeunload event listeners to both the
@@ -505,8 +505,8 @@ add_task(async function test_inner_window_scenarios() {
     // event listeners, and if we remove the BOTTOM <iframe> and the
     // MIDDLE <iframe>, that hasBeforeUnload is set to false.
     await prepareSubframes(browser, [
-      { sandboxAttributes: null, },
-      { sandboxAttributes: null, },
+      { sandboxAttributes: null },
+      { sandboxAttributes: null },
     ]);
     await addBeforeUnloadListeners(browser, 3, MIDDLE);
     await addBeforeUnloadListeners(browser, 1, BOTTOM);
@@ -520,8 +520,8 @@ add_task(async function test_inner_window_scenarios() {
     // event listeners, and if we remove just the MIDDLE <iframe>, that
     // hasBeforeUnload is set to false.
     await prepareSubframes(browser, [
-      { sandboxAttributes: null, },
-      { sandboxAttributes: null, },
+      { sandboxAttributes: null },
+      { sandboxAttributes: null },
     ]);
     await addBeforeUnloadListeners(browser, 3, MIDDLE);
     await addBeforeUnloadListeners(browser, 1, BOTTOM);
@@ -533,8 +533,8 @@ add_task(async function test_inner_window_scenarios() {
     // permission, do not result in the hasBeforeUnload attribute
     // being set to true when beforeunload event listeners are added.
     await prepareSubframes(browser, [
-      { sandboxAttributes: "allow-scripts", },
-      { sandboxAttributes: "allow-scripts", },
+      { sandboxAttributes: "allow-scripts" },
+      { sandboxAttributes: "allow-scripts" },
     ]);
 
     await addBeforeUnloadListeners(browser, 3, MIDDLE);
@@ -549,8 +549,8 @@ add_task(async function test_inner_window_scenarios() {
     // permission, cause the hasBeforeUnload attribute to be set
     // to true when beforeunload event listeners are added.
     await prepareSubframes(browser, [
-      { sandboxAttributes: "allow-scripts allow-modals", },
-      { sandboxAttributes: "allow-scripts allow-modals", },
+      { sandboxAttributes: "allow-scripts allow-modals" },
+      { sandboxAttributes: "allow-scripts allow-modals" },
     ]);
 
     await addBeforeUnloadListeners(browser, 3, MIDDLE);
@@ -591,8 +591,8 @@ add_task(async function test_outer_window_scenarios() {
     //      |--> <iframe at PAGE_URL> (BOTTOM)
     //
     await prepareSubframes(browser, [
-      { sandboxAttributes: null, },
-      { sandboxAttributes: null, },
+      { sandboxAttributes: null },
+      { sandboxAttributes: null },
     ]);
 
     // These constants are just to make it easier to know which
@@ -641,8 +641,8 @@ add_task(async function test_outer_window_scenarios() {
     assertHasBeforeUnload(browser, false);
 
     await prepareSubframes(browser, [
-      { sandboxAttributes: null, },
-      { sandboxAttributes: null, },
+      { sandboxAttributes: null },
+      { sandboxAttributes: null },
     ]);
 
     // Tests that if there are beforeunload event listeners on
@@ -674,8 +674,8 @@ add_task(async function test_outer_window_scenarios() {
 
     // Reset our window structure now.
     await prepareSubframes(browser, [
-      { sandboxAttributes: null, },
-      { sandboxAttributes: null, },
+      { sandboxAttributes: null },
+      { sandboxAttributes: null },
     ]);
 
     // This time, add beforeunload event listeners to the outer
@@ -691,8 +691,8 @@ add_task(async function test_outer_window_scenarios() {
     // MIDDLE and BOTOTM, and then removes those iframes. Removing
     // both iframes should set hasBeforeUnload to false.
     await prepareSubframes(browser, [
-      { sandboxAttributes: null, },
-      { sandboxAttributes: null, },
+      { sandboxAttributes: null },
+      { sandboxAttributes: null },
     ]);
     await addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
     await addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
@@ -707,8 +707,8 @@ add_task(async function test_outer_window_scenarios() {
     // take the bottom one with it). This should set hasBeforeUnload to
     // false.
     await prepareSubframes(browser, [
-      { sandboxAttributes: null, },
-      { sandboxAttributes: null, },
+      { sandboxAttributes: null },
+      { sandboxAttributes: null },
     ]);
     await addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
     await addOuterBeforeUnloadListeners(browser, 1, BOTTOM);
@@ -723,8 +723,8 @@ add_task(async function test_outer_window_scenarios() {
     // allow-same-origin permission, otherwise a cross-origin
     // security exception is thrown.
     await prepareSubframes(browser, [
-      { sandboxAttributes: "allow-same-origin allow-scripts", },
-      { sandboxAttributes: "allow-same-origin allow-scripts", },
+      { sandboxAttributes: "allow-same-origin allow-scripts" },
+      { sandboxAttributes: "allow-same-origin allow-scripts" },
     ]);
 
     await addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
@@ -741,8 +741,8 @@ add_task(async function test_outer_window_scenarios() {
     // that this requires the allow-same-origin permission,
     // otherwise a cross-origin security exception is thrown.
     await prepareSubframes(browser, [
-      { sandboxAttributes: "allow-same-origin allow-scripts allow-modals", },
-      { sandboxAttributes: "allow-same-origin allow-scripts allow-modals", },
+      { sandboxAttributes: "allow-same-origin allow-scripts allow-modals" },
+      { sandboxAttributes: "allow-same-origin allow-scripts allow-modals" },
     ]);
 
     await addOuterBeforeUnloadListeners(browser, 3, MIDDLE);
@@ -781,8 +781,8 @@ add_task(async function test_mixed_inner_and_outer_window_scenarios() {
     //      |--> <iframe at PAGE_URL> (BOTTOM)
     //
     await prepareSubframes(browser, [
-      { sandboxAttributes: null, },
-      { sandboxAttributes: null, },
+      { sandboxAttributes: null },
+      { sandboxAttributes: null },
     ]);
 
     // These constants are just to make it easier to know which

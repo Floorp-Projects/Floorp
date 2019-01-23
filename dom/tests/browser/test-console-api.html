@@ -4,11 +4,12 @@
     <script type="text/javascript">
       window.foobar585956c = function(a) {
         console.trace();
-        return a+"c";
+        return a + "c";
       };
 
+      /* global foobar585956c */
       function foobar585956b(a) {
-        return foobar585956c(a+"b");
+        return foobar585956c(a + "b");
       }
 
       function foobar585956a(omg) {
@@ -33,7 +34,7 @@
       }
 
       function test() {
-        var str = "Test Message."
+        var str = "Test Message.";
         console.foobar(str); // if this throws, we don't execute following funcs
         console.log(str);
         console.info(str);

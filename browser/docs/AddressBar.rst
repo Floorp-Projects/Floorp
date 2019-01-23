@@ -34,27 +34,27 @@ The *Address Bar* is implemented as a *Model-View-Controller* (MVC) system. One 
 the scopes of this architecture is to allow easy replacement of its components,
 for easier experimentation.
 
-Each search is represented by a unique object, the *QueryContext*. This object,
-created by the *View*, describes the search and is passed through all of the
-components, along the way it gets augmented with additional information.
-The *QueryContext* is passed to the *Controller*, and finally to the *Model*.
-The model appends matches to a property of *QueryContext* in chunks, it sorts
-them through a *Muxer* and then notifies the *Controller*.
+Each search is represented by a unique object, the *UrlbarQueryContext*. This
+object, created by the *View*, describes the search and is passed through all of
+the components, along the way it gets augmented with additional information.
+The *UrlbarQueryContext* is passed to the *Controller*, and finally to the
+*Model*.  The model appends matches to a property of *UrlbarQueryContext* in
+chunks, it sorts them through a *Muxer* and then notifies the *Controller*.
 
 See the specific components below, for additional details about each one's tasks
 and responsibilities.
 
 
-The QueryContext
+The UrlbarQueryContext
 ================
 
-The *QueryContext* object describes a single instance of a search.
+The *UrlbarQueryContext* object describes a single instance of a search.
 It is augmented as it progresses through the system, with various information:
 
 .. highlight:: JavaScript
 .. code::
 
-  QueryContext {
+  UrlbarQueryContext {
     enableAutofill; // {boolean} Whether or not to include autofill results.
     isPrivate; // {boolean} Whether the search started in a private context.
     lastKey; // {string} The last key pressed by the user. This can affect the
@@ -146,7 +146,7 @@ implementation details may vary deeply among different providers.
 .. important::
 
   Providers are singleton, and must track concurrent searches internally, for
-  example mapping them by QueryContext.
+  example mapping them by UrlbarQueryContext.
 
 .. note::
 
@@ -182,22 +182,23 @@ class UrlbarProvider {
   }
   /**
    * Starts querying.
-   * @param {object} QueryContext The query context object
-   * @param {function} AddCallback Callback invoked by the provider to add a new
+   * @param {UrlbarQueryContext} queryContext The query context object
+   * @param {function} addCallback Callback invoked by the provider to add a new
    *        match. A UrlbarMatch should be passed to it.
    * @note Extended classes should return a Promise resolved when the provider
    *       is done searching AND returning matches.
    * @abstract
    */
-  startQuery(QueryContext, AddCallback) {
+  startQuery(queryContext, addCallback) {
     throw new Error("Trying to access the base class, must be overridden");
   }
   /**
    * Cancels a running query,
-   * @param {object} QueryContext the QueryContext object to cancel query for.
+   * @param {UrlbarQueryContext} queryContext The query context object to cancel
+   *        query for.
    * @abstract
    */
-  cancelQuery(QueryContext) {
+  cancelQuery(queryContext) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 }
@@ -206,8 +207,8 @@ UrlbarMuxer
 -----------
 
 The *Muxer* is responsible for sorting matches based on their importance and
-additional rules that depend on the QueryContext. The muxer to use is indicated
-by the QueryContext.muxer property.
+additional rules that depend on the UrlbarQueryContext. The muxer to use is
+indicated by the UrlbarQueryContext.muxer property.
 
 .. caution::
 
@@ -227,11 +228,11 @@ class UrlbarMuxer {
     return "UrlbarMuxerBase";
   }
   /**
-   * Sorts QueryContext matches in-place.
-   * @param {object} QueryContext the context to sort matches for.
+   * Sorts UrlbarQueryContext matches in-place.
+   * @param {UrlbarQueryContext} queryContext the context to sort matches for.
    * @abstract
    */
-  sort(QueryContext) {
+  sort(queryContext) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 }
@@ -253,7 +254,7 @@ View (e.g. showing/hiding a panel). It is also responsible for reporting Telemet
 .. code::
 
   UrlbarController {
-    async startQuery(QueryContext);
+    async startQuery(queryContext);
     cancelQuery(queryContext);
     // Invoked by the ProvidersManager when matches are available.
     receiveResults(queryContext);
