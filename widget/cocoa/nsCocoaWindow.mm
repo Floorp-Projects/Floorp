@@ -2817,32 +2817,32 @@ static NSImage* GetMenuMaskImage() {
   }
   mUseMenuStyle = aValue;
 }
-    ​
+
 - (NSTouchBar*)makeTouchBar {
   mTouchBar = [[nsTouchBar alloc] init];
   return mTouchBar;
 }
-    ​
+
 - (void)setBeingShown:(BOOL)aValue {
   mBeingShown = aValue;
 }
-  ​
+
 - (BOOL)isBeingShown {
   return mBeingShown;
 }
-   ​
+
 - (BOOL)isVisibleOrBeingShown {
   return [super isVisible] || mBeingShown;
 }
- ​
+
 - (void)disableSetNeedsDisplay {
   mDisabledNeedsDisplay = YES;
 }
-​
+
 - (void)enableSetNeedsDisplay {
   mDisabledNeedsDisplay = NO;
 }
-​
+
 - (void)dealloc {
   [mTouchBar release];
   [self removeTrackingArea];
