@@ -307,6 +307,12 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 | Set default browser tip tapped  | action   | click | tip | default_browser_tip    |        |
 | Autocomplete URL tip tapped | action   | click | tip | add_autocomplete_url_tip    |        |
 | Homescreen tips enabled/disabled | action   | click | tip | add_to_homescreen_tip    |        |
+| Survey tip displayed | action   | show | tip | survey_tip    |        |
+| Survey tip tapped | action   | click | tip | survey_tip    |        |
+| Survey (es) tip displayed | action   | show | tip | survey_tip_es    |        |
+| Survey (es) tip tapped | action   | click | tip | survey_tip_es    |        |
+| Survey (fr) tip displayed | action   | show | tip | survey_tip_fr    |        |
+| Survey (fr) tip tapped | action   | click | tip | survey_tip_fr    |        |
 
 ### SSL Errors
 
