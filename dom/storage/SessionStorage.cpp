@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
+#include "nsIWebProgressListener.h"
 #include "nsPIDOMWindow.h"
 
 #define DATASET                                          \
@@ -161,6 +162,12 @@ bool SessionStorage::IsForkOf(const Storage* aOther) const {
   }
 
   return mCache == static_cast<const SessionStorage*>(aOther)->mCache;
+}
+
+bool SessionStorage::ShouldThrowWhenStorageAccessDenied(
+    uint32_t aRejectedReason) {
+  return aRejectedReason !=
+         nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
 }
 
 }  // namespace dom
