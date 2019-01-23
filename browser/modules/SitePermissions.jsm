@@ -724,7 +724,7 @@ var gPermissionObject = {
       }
       return SitePermissions.UNKNOWN;
     },
-    labelID: "autoplay-media",
+    labelID: "autoplay-media2",
     states: [ SitePermissions.ALLOW, SitePermissions.BLOCK ],
   },
 
