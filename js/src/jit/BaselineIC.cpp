@@ -258,9 +258,7 @@ void ICEntry::trace(JSTracer* trc) {
       case JSOP_INITPROP:
       case JSOP_INITLOCKEDPROP:
       case JSOP_INITHIDDENPROP:
-      case JSOP_SETALIASEDVAR:
       case JSOP_INITGLEXICAL:
-      case JSOP_INITALIASEDLEXICAL:
       case JSOP_SETPROP:
       case JSOP_STRICTSETPROP:
       case JSOP_SETNAME:
@@ -2999,16 +2997,9 @@ static bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
              op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
              op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME ||
              op == JSOP_INITPROP || op == JSOP_INITLOCKEDPROP ||
-             op == JSOP_INITHIDDENPROP || op == JSOP_SETALIASEDVAR ||
-             op == JSOP_INITALIASEDLEXICAL || op == JSOP_INITGLEXICAL);
+             op == JSOP_INITHIDDENPROP || op == JSOP_INITGLEXICAL);
 
-  RootedPropertyName name(cx);
-  if (op == JSOP_SETALIASEDVAR || op == JSOP_INITALIASEDLEXICAL) {
-    name = EnvironmentCoordinateName(cx->caches().envCoordinateNameCache,
-                                     script, pc);
-  } else {
-    name = script->getName(pc);
-  }
+  RootedPropertyName name(cx, script->getName(pc));
   RootedId id(cx, NameToId(name));
 
   RootedObject obj(cx, ToObjectFromStack(cx, lhs));
@@ -3073,9 +3064,6 @@ static bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     if (!SetNameOperation(cx, script, pc, obj, rhs)) {
       return false;
     }
-  } else if (op == JSOP_SETALIASEDVAR || op == JSOP_INITALIASEDLEXICAL) {
-    obj->as<EnvironmentObject>().setAliasedBinding(
-        cx, EnvironmentCoordinate(pc), name, rhs);
   } else if (op == JSOP_INITGLEXICAL) {
     RootedValue v(cx, rhs);
     LexicalEnvironmentObject* lexicalEnv;
