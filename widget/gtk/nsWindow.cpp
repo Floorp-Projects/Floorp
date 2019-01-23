@@ -425,6 +425,7 @@ nsWindow::nsWindow() {
 
   mIsTransparent = false;
   mTransparencyBitmap = nullptr;
+  mTransparencyBitmapForTitlebar = false;
 
   mTransparencyBitmapWidth = 0;
   mTransparencyBitmapHeight = 0;
@@ -1925,12 +1926,17 @@ gboolean nsWindow::OnExposeEvent(cairo_t *cr) {
 
   bool shaped = false;
   if (eTransparencyTransparent == GetTransparencyMode()) {
-    if (mHasAlphaVisual) {
-      // Remove possible shape mask from when window manger was not
-      // previously compositing.
-      static_cast<nsWindow *>(GetTopLevelWidget())->ClearTransparencyBitmap();
+    if (mTransparencyBitmapForTitlebar) {
+      static_cast<nsWindow *>(GetTopLevelWidget())
+          ->UpdateTitlebarTransparencyBitmap();
     } else {
-      shaped = true;
+      if (mHasAlphaVisual) {
+        // Remove possible shape mask from when window manger was not
+        // previously compositing.
+        static_cast<nsWindow *>(GetTopLevelWidget())->ClearTransparencyBitmap();
+      } else {
+        shaped = true;
+      }
     }
   }
 
@@ -3265,15 +3271,24 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
       bool shouldAccelerate = ComputeShouldAccelerate();
       MOZ_ASSERT(shouldAccelerate | !useWebRender);
 
-      // Some Gtk+ themes use non-rectangular toplevel windows. To fully support
-      // such themes we need to make toplevel window transparent with ARGB
-      // visual. It may cause performanance issue so make it configurable and
-      // enable it by default for selected window managers. Also disable it for
-      // X11 SW rendering (Bug 1516224) by default.
-      if (mWindowType == eWindowType_toplevel &&
-          (shouldAccelerate || !mIsX11Display ||
-           Preferences::HasUserValue("mozilla.widget.use-argb-visuals"))) {
+      if (mWindowType == eWindowType_toplevel) {
+        // We enable titlebar rendering for toplevel windows only.
+        mCSDSupportLevel = GetSystemCSDSupportLevel();
+
+        // Some Gtk+ themes use non-rectangular toplevel windows. To fully
+        // support such themes we need to make toplevel window transparent
+        // with ARGB visual.
+        // It may cause performanance issue so make it configurable
+        // and enable it by default for selected window managers.
         needsAlphaVisual = TopLevelWindowUseARGBVisual();
+        if (needsAlphaVisual && mIsX11Display && !shouldAccelerate) {
+          // We want to draw a transparent titlebar but we can't use
+          // ARGB visual due to Bug 1516224.
+          // We use ARGB visual for mShell only and shape mask
+          // for mContainer where is all our content drawn.
+          mTransparencyBitmapForTitlebar = true;
+          mCSDSupportLevel = CSD_SUPPORT_CLIENT;
+        }
       }
 
       bool isSetVisual = false;
@@ -3404,9 +3419,6 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
         GtkWindowGroup *group = gtk_window_group_new();
         gtk_window_group_add_window(group, GTK_WINDOW(mShell));
         g_object_unref(group);
-
-        // We enable titlebar rendering for toplevel windows only.
-        mCSDSupportLevel = GetSystemCSDSupportLevel();
       }
 
       // Create a container to hold child windows and child GtkWidgets.
@@ -3441,6 +3453,9 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
       if (drawToContainer) {
         gtk_widget_add_events(mShell, GDK_PROPERTY_CHANGE_MASK);
         gtk_widget_set_app_paintable(mShell, TRUE);
+      }
+      if (mTransparencyBitmapForTitlebar) {
+        moz_container_force_default_visual(mContainer);
       }
 
       // If we draw to mContainer window then configure it now because
@@ -4295,6 +4310,8 @@ nsresult nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect &aRect,
   }
 
   NS_ASSERTION(mIsTransparent, "Window is not transparent");
+  NS_ASSERTION(!mTransparencyBitmapForTitlebar,
+               "Transparency bitmap is already used for titlebar rendering");
 
   if (mTransparencyBitmap == nullptr) {
     int32_t size = GetBitmapStride(mBounds.width) * mBounds.height;
@@ -4322,6 +4339,91 @@ nsresult nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect &aRect,
     ApplyTransparencyBitmap();
   }
   return NS_OK;
+}
+
+// We need to shape only a few pixels of the titlebar as we care about
+// the corners only
+#define TITLEBAR_SHAPE_MASK_HEIGHT 10
+
+void nsWindow::UpdateTitlebarTransparencyBitmap() {
+  NS_ASSERTION(mTransparencyBitmapForTitlebar,
+               "Transparency bitmap is already used to draw window shape");
+
+  if (!mDrawInTitlebar || (mBounds.width == mTransparencyBitmapWidth &&
+                           mBounds.height == mTransparencyBitmapHeight)) {
+    return;
+  }
+
+  bool maskCreate =
+      !mTransparencyBitmap || mBounds.width > mTransparencyBitmapWidth;
+
+  bool maskUpdate =
+      !mTransparencyBitmap || mBounds.width != mTransparencyBitmapWidth;
+
+  if (maskCreate) {
+    if (mTransparencyBitmap) {
+      delete[] mTransparencyBitmap;
+    }
+    int32_t size = GetBitmapStride(mBounds.width) * TITLEBAR_SHAPE_MASK_HEIGHT;
+    mTransparencyBitmap = new gchar[size];
+    mTransparencyBitmapWidth = mBounds.width;
+  } else {
+    mTransparencyBitmapWidth = mBounds.width;
+  }
+  mTransparencyBitmapHeight = mBounds.height;
+
+  if (maskUpdate) {
+    cairo_surface_t *surface = cairo_image_surface_create(
+        CAIRO_FORMAT_A8, mTransparencyBitmapWidth, TITLEBAR_SHAPE_MASK_HEIGHT);
+    if (!surface) return;
+
+    cairo_t *cr = cairo_create(surface);
+
+    GtkWidgetState state;
+    memset((void *)&state, 0, sizeof(state));
+    GdkRectangle rect = {0, 0, mTransparencyBitmapWidth,
+                         TITLEBAR_SHAPE_MASK_HEIGHT};
+
+    moz_gtk_widget_paint(MOZ_GTK_HEADER_BAR, cr, &rect, &state, 0,
+                         GTK_TEXT_DIR_NONE);
+
+    cairo_destroy(cr);
+    cairo_surface_mark_dirty(surface);
+    cairo_surface_flush(surface);
+
+    UpdateMaskBits(
+        mTransparencyBitmap, mTransparencyBitmapWidth,
+        TITLEBAR_SHAPE_MASK_HEIGHT,
+        nsIntRect(0, 0, mTransparencyBitmapWidth, TITLEBAR_SHAPE_MASK_HEIGHT),
+        cairo_image_surface_get_data(surface),
+        cairo_format_stride_for_width(CAIRO_FORMAT_A8,
+                                      mTransparencyBitmapWidth));
+
+    cairo_surface_destroy(surface);
+  }
+
+  if (!mNeedsShow) {
+    Display *xDisplay = GDK_WINDOW_XDISPLAY(mGdkWindow);
+    Window xDrawable = GDK_WINDOW_XID(mGdkWindow);
+
+    Pixmap maskPixmap = XCreateBitmapFromData(
+        xDisplay, xDrawable, mTransparencyBitmap, mTransparencyBitmapWidth,
+        TITLEBAR_SHAPE_MASK_HEIGHT);
+
+    XShapeCombineMask(xDisplay, xDrawable, ShapeBounding, 0, 0, maskPixmap,
+                      ShapeSet);
+
+    if (mTransparencyBitmapHeight > TITLEBAR_SHAPE_MASK_HEIGHT) {
+      XRectangle rect = {0, 0, (unsigned short)mTransparencyBitmapWidth,
+                         (unsigned short)(mTransparencyBitmapHeight -
+                                          TITLEBAR_SHAPE_MASK_HEIGHT)};
+      XShapeCombineRectangles(xDisplay, xDrawable, ShapeBounding, 0,
+                              TITLEBAR_SHAPE_MASK_HEIGHT, &rect, 1, ShapeUnion,
+                              0);
+    }
+
+    XFreePixmap(xDisplay, maskPixmap);
+  }
 }
 
 void nsWindow::GrabPointer(guint32 aTime) {
@@ -6027,6 +6129,14 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
   }
 
   mDrawInTitlebar = aState;
+
+  if (mTransparencyBitmapForTitlebar) {
+    if (mDrawInTitlebar) {
+      UpdateTitlebarTransparencyBitmap();
+    } else {
+      ClearTransparencyBitmap();
+    }
+  }
 }
 
 gint nsWindow::GdkScaleFactor() {
@@ -6367,6 +6477,11 @@ bool nsWindow::HideTitlebarByDefault() {
     return hideTitlebar;
   }
 
+  if (!Preferences::GetBool("widget.default-hidden-titlebar", false)) {
+    hideTitlebar = false;
+    return hideTitlebar;
+  }
+
   const char *currentDesktop = getenv("XDG_CURRENT_DESKTOP");
   hideTitlebar =
       (currentDesktop && GetSystemCSDSupportLevel() != CSD_SUPPORT_NONE);
@@ -6384,6 +6499,11 @@ bool nsWindow::TopLevelWindowUseARGBVisual() {
   static int useARGBVisual = -1;
   if (useARGBVisual != -1) {
     return useARGBVisual;
+  }
+
+  GdkScreen *screen = gdk_screen_get_default();
+  if (!gdk_screen_is_composited(screen)) {
+    useARGBVisual = false;
   }
 
   if (Preferences::HasUserValue("mozilla.widget.use-argb-visuals")) {
