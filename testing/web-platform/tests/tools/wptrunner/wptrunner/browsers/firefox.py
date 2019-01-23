@@ -38,7 +38,8 @@ __wptrunner__ = {"product": "firefox",
                  "env_extras": "env_extras",
                  "env_options": "env_options",
                  "run_info_extras": "run_info_extras",
-                 "update_properties": "update_properties"}
+                 "update_properties": "update_properties",
+                 "timeout_multiplier": "get_timeout_multiplier"}
 
 
 def get_timeout_multiplier(test_type, run_info_data, **kwargs):
@@ -99,6 +100,8 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
                                                                    **kwargs)
     executor_kwargs["e10s"] = run_info_data["e10s"]
     capabilities = {}
+    if test_type == "testharness":
+        capabilities["pageLoadStrategy"] = "eager"
     if test_type == "reftest":
         executor_kwargs["reftest_internal"] = kwargs["reftest_internal"]
         executor_kwargs["reftest_screenshot"] = kwargs["reftest_screenshot"]
@@ -355,10 +358,13 @@ class FirefoxBrowser(Browser):
         if self.lsan_handler:
             self.lsan_handler.process()
         if self.leak_report_file is not None:
+            # We have to ignore missing leaks in the tab because it can happen that the
+            # content process crashed and in that case we don't want the test to fail.
+            # Ideally we would record which content process crashed and just skip those.
             mozleak.process_leak_log(
                 self.leak_report_file,
                 leak_thresholds=self.mozleak_thresholds,
-                ignore_missing_leaks=["gmplugin"],
+                ignore_missing_leaks=["tab", "gmplugin"],
                 log=self.logger,
                 stack_fixer=self.stack_fixer,
                 scope=self.group_metadata.get("scope"),
@@ -404,12 +410,16 @@ class FirefoxBrowser(Browser):
     def check_crash(self, process, test):
         dump_dir = os.path.join(self.profile.profile, "minidumps")
 
-        return bool(mozcrash.log_crashes(self.logger,
-                                         dump_dir,
-                                         symbols_path=self.symbols_path,
-                                         stackwalk_binary=self.stackwalk_binary,
-                                         process=process,
-                                         test=test))
+        try:
+            return bool(mozcrash.log_crashes(self.logger,
+                                             dump_dir,
+                                             symbols_path=self.symbols_path,
+                                             stackwalk_binary=self.stackwalk_binary,
+                                             process=process,
+                                             test=test))
+        except IOError:
+            self.logger.warning("Looking for crash dump files failed")
+            return False
 
     def setup_ssl(self):
         """Create a certificate database to use in the test profile. This is configured

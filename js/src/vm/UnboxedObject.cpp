@@ -1462,9 +1462,7 @@ bool js::TryConvertToUnboxedLayout(JSContext* cx, AutoEnterAnalysis& enter,
   size_t layoutSize = 0;
   if (objectCount <= 1) {
     // If only one of the objects has been created, it is more likely
-    // to have new properties added later. This heuristic is not used
-    // for array objects, where we might want an unboxed representation
-    // even if there is only one large array.
+    // to have new properties added later.
     return true;
   }
 

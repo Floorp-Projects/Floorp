@@ -16,11 +16,13 @@
     <link id="redirect-crossorigin-to-sameorigin"
           href="http://www1.{{host}}:{{ports[http][1]}}/common/redirect.py?location=http://{{host}}:{{ports[http][0]}}/css/cssom/stylesheet-same-origin.css"
           rel="stylesheet">
+    <link id="loaderror" href="support/malformed-http-response.asis" rel="stylesheet">
 
     <script>
         var crossorigin = document.getElementById("crossorigin").sheet;
         var redirectSameOriginToCrossOrigin = document.getElementById("redirect-sameorigin-to-crossorigin").sheet;
         var redirectCrossOriginToSameOrigin = document.getElementById("redirect-crossorigin-to-sameorigin").sheet;
+        var loadError = document.getElementById("loaderror").sheet;
         var sameorigin = document.getElementById("sameorigin").sheet;
         var sameorigindata = document.getElementById("sameorigindata").sheet;
 
@@ -62,6 +64,10 @@
         test(function() {
             doOriginDirtyCheck(redirectCrossOriginToSameOrigin);
         }, "Origin-clean check in cross-origin CSSOM Stylesheets (redirect from cross-origin to same-origin)");
+
+       test(function() {
+            doOriginDirtyCheck(loadError);
+        }, "Origin-clean check in loading error CSSOM Stylesheets");
 
         test(function() {
             doOriginCleanCheck(sameorigin, "Same-origin");

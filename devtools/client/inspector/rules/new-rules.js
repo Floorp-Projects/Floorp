@@ -31,6 +31,7 @@ const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 loader.lazyRequireGetter(this, "ClassList", "devtools/client/inspector/rules/models/class-list");
+loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup");
 loader.lazyRequireGetter(this, "InplaceEditor", "devtools/client/shared/inplace-editor", true);
 
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
@@ -55,6 +56,7 @@ class RulesView {
     this.onToggleDeclaration = this.onToggleDeclaration.bind(this);
     this.onTogglePseudoClass = this.onTogglePseudoClass.bind(this);
     this.onToggleSelectorHighlighter = this.onToggleSelectorHighlighter.bind(this);
+    this.showDeclarationNameEditor = this.showDeclarationNameEditor.bind(this);
     this.showSelectorEditor = this.showSelectorEditor.bind(this);
     this.updateClassList = this.updateClassList.bind(this);
     this.updateRules = this.updateRules.bind(this);
@@ -80,6 +82,7 @@ class RulesView {
       onToggleDeclaration: this.onToggleDeclaration,
       onTogglePseudoClass: this.onTogglePseudoClass,
       onToggleSelectorHighlighter: this.onToggleSelectorHighlighter,
+      showDeclarationNameEditor: this.showDeclarationNameEditor,
       showSelectorEditor: this.showSelectorEditor,
     });
 
@@ -98,6 +101,11 @@ class RulesView {
     this.inspector.sidebar.off("select", this.onSelection);
     this.selection.off("detached-front", this.onSelection);
     this.selection.off("new-node-front", this.onSelection);
+
+    if (this._autocompletePopup) {
+      this._autocompletePopup.destroy();
+      this._autocompletePopup = null;
+    }
 
     if (this._classList) {
       this._classList.off("current-node-class-changed", this.refreshClassList);
@@ -125,6 +133,22 @@ class RulesView {
     this.store = null;
     this.telemetry = null;
     this.toolbox = null;
+  }
+
+  /**
+   * Get an instance of the AutocompletePopup.
+   *
+   * @return {AutocompletePopup}
+   */
+  get autocompletePopup() {
+    if (!this._autocompletePopup) {
+      this._autocompletePopup = new AutocompletePopup(this.doc, {
+        autoSelect: true,
+        theme: "auto",
+      });
+    }
+
+    return this._autocompletePopup;
   }
 
   /**
@@ -325,6 +349,37 @@ class RulesView {
       // This event is emitted for testing purposes.
       this.emit("ruleview-selectorhighlighter-toggled", false);
     }
+  }
+
+  /**
+   * Handler for showing the inplace editor when an editable property name is clicked in
+   * the rules view.
+   *
+   * @param  {DOMNode} element
+   *         The declaration name span element to be edited.
+   * @param  {String} ruleId
+   *         The id of the Rule object to be edited.
+   * @param  {String} declarationId
+   *         The id of the TextProperty object to be edited.
+   */
+  showDeclarationNameEditor(element, ruleId, declarationId) {
+    new InplaceEditor({
+      advanceChars: ":",
+      contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
+      cssProperties: this.cssProperties,
+      done: (name, commit) => {
+        if (!commit) {
+          return;
+        }
+
+        this.elementStyle.modifyDeclarationName(ruleId, declarationId, name);
+        this.telemetry.recordEvent("edit_rule", "ruleview", null, {
+          "session_id": this.toolbox.sessionId,
+        });
+      },
+      element,
+      popup: this.autocompletePopup,
+    });
   }
 
   /**
