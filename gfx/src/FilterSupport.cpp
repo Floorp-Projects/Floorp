@@ -1602,9 +1602,6 @@ nsIntRegion FilterSupport::PostFilterExtentsForPrimitive(
     }
 
     nsIntRegion match(const OpacityAttributes& aOpacity) {
-      if (aOpacity.mOpacity == 0.0f) {
-        return IntRect();
-      }
       return ResultChangeRegionForPrimitive(mDescription, mInputExtents);
     }
 
