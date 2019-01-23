@@ -1469,9 +1469,10 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
     return;
   }
 
+  nsCOMPtr<nsIURI> uriBeingLoaded = MaybeGetDocumentURIBeingLoaded(aChannel);
   nsCOMPtr<mozIDOMWindowProxy> win;
-  nsresult rv =
-      thirdPartyUtil->GetTopWindowForChannel(aChannel, getter_AddRefs(win));
+  nsresult rv = thirdPartyUtil->GetTopWindowForChannel(aChannel, uriBeingLoaded,
+                                                       getter_AddRefs(win));
   NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCOMPtr<nsPIDOMWindowOuter> pwin = nsPIDOMWindowOuter::From(win);
@@ -1602,4 +1603,25 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   }
 
   return result == nsIPermissionManager::ALLOW_ACTION;
+}
+
+/* static */ already_AddRefed<nsIURI>
+AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(nsIChannel* aChannel) {
+  nsCOMPtr<nsIURI> uriBeingLoaded;
+  nsLoadFlags loadFlags = 0;
+  nsresult rv = aChannel->GetLoadFlags(&loadFlags);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+  if (loadFlags & nsIChannel::LOAD_DOCUMENT_URI) {
+    // If the channel being loaded is a document channel, this call may be
+    // coming from an OnStopRequest notification, which might mean that our
+    // document may still be in the loading process, so we may need to pass in
+    // the uriBeingLoaded argument explicitly.
+    rv = aChannel->GetURI(getter_AddRefs(uriBeingLoaded));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+  }
+  return uriBeingLoaded.forget();
 }
