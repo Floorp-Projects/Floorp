@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/RemoteFrameChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayerTransactionParent.h"
@@ -172,10 +173,14 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
     mEventRegionsOverride |= EventRegionsOverride::ForceDispatchToContent;
   }
 
-  nsFrameLoader* frameLoader = GetRenderFrame()->GetFrameLoader();
-  if (frameLoader) {
-    TabParent* browser = TabParent::GetFrom(frameLoader);
-    if (browser) {
+  nsFrameLoader* frameLoader = GetFrameLoader();
+  MOZ_ASSERT(frameLoader && frameLoader->IsRemoteFrame());
+  mLayersId = frameLoader->GetLayersId();
+
+  if (nsFrameLoader* frameLoader = GetFrameLoader()) {
+    // TODO: We need to handle acquiring a TabId in the remote sub-frame case
+    // for fission.
+    if (TabParent* browser = TabParent::GetFrom(frameLoader)) {
       mTabId = browser->GetTabId();
     }
   }
@@ -192,13 +197,12 @@ mozilla::LayerState nsDisplayRemote::GetLayerState(
 
 bool nsDisplayRemote::HasDeletedFrame() const {
   // RenderFrame might change without invalidating nsSubDocumentFrame.
-  return !GetRenderFrame() || nsDisplayItem::HasDeletedFrame();
+  return !GetFrameLoader() || nsDisplayItem::HasDeletedFrame();
 }
 
 already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
-  MOZ_ASSERT(GetRenderFrame());
   MOZ_ASSERT(mFrame, "Makes no sense to have a shadow tree without a frame");
 
   if (IsTempLayerManager(aManager)) {
@@ -214,9 +218,7 @@ already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
     return nullptr;
   }
 
-  LayersId remoteId = GetRenderFrame()->GetLayersId();
-
-  if (!remoteId.IsValid()) {
+  if (!mLayersId.IsValid()) {
     return nullptr;
   }
 
@@ -233,7 +235,7 @@ already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
     return nullptr;
   }
 
-  static_cast<RefLayer*>(layer.get())->SetReferentId(remoteId);
+  static_cast<RefLayer*>(layer.get())->SetReferentId(mLayersId);
   LayoutDeviceIntPoint offset = GetContentRectLayerOffset(Frame(), aBuilder);
   // We can only have an offset if we're a child of an inactive
   // container, but our display item is LAYER_ACTIVE_FORCE which
@@ -271,6 +273,10 @@ bool nsDisplayRemote::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
+  if (!mLayersId.IsValid()) {
+    return true;
+  }
+
   mOffset = GetContentRectLayerOffset(mFrame, aDisplayListBuilder);
 
   LayoutDeviceRect rect = LayoutDeviceRect::FromAppUnits(
@@ -279,8 +285,7 @@ bool nsDisplayRemote::CreateWebRenderCommands(
   rect += mOffset;
 
   aBuilder.PushIFrame(mozilla::wr::ToRoundedLayoutRect(rect),
-                      !BackfaceIsHidden(),
-                      mozilla::wr::AsPipelineId(GetRemoteLayersId()),
+                      !BackfaceIsHidden(), mozilla::wr::AsPipelineId(mLayersId),
                       /*ignoreMissingPipelines*/ true);
 
   return true;
@@ -289,8 +294,12 @@ bool nsDisplayRemote::CreateWebRenderCommands(
 bool nsDisplayRemote::UpdateScrollData(
     mozilla::layers::WebRenderScrollData* aData,
     mozilla::layers::WebRenderLayerScrollData* aLayerData) {
+  if (!mLayersId.IsValid()) {
+    return true;
+  }
+
   if (aLayerData) {
-    aLayerData->SetReferentId(GetRemoteLayersId());
+    aLayerData->SetReferentId(mLayersId);
     aLayerData->SetTransform(
         mozilla::gfx::Matrix4x4::Translation(mOffset.x, mOffset.y, 0.0));
     aLayerData->SetEventRegionsOverride(mEventRegionsOverride);
@@ -298,12 +307,7 @@ bool nsDisplayRemote::UpdateScrollData(
   return true;
 }
 
-LayersId nsDisplayRemote::GetRemoteLayersId() const {
-  MOZ_ASSERT(GetRenderFrame());
-  return GetRenderFrame()->GetLayersId();
-}
-
-mozilla::layout::RenderFrame* nsDisplayRemote::GetRenderFrame() const {
-  return mFrame ? static_cast<nsSubDocumentFrame*>(mFrame)->GetRenderFrame()
+nsFrameLoader* nsDisplayRemote::GetFrameLoader() const {
+  return mFrame ? static_cast<nsSubDocumentFrame*>(mFrame)->FrameLoader()
                 : nullptr;
 }

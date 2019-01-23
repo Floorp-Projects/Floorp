@@ -24,6 +24,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ParentSHistory.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "nsStubMutationObserver.h"
 #include "Units.h"
 #include "nsIFrame.h"
@@ -286,20 +287,11 @@ class nsFrameLoader final : public nsStubMutationObserver,
   PBrowserParent* GetRemoteBrowser() const;
 
   /**
-   * The "current" render frame is the one on which the most recent
-   * remote layer-tree transaction was executed.  If no content has
-   * been drawn yet, or the remote browser doesn't have any drawn
-   * content for whatever reason, return nullptr.  The returned render
-   * frame has an associated shadow layer tree.
+   * Returns the layers ID that this remote frame is using to render.
    *
-   * Note that the returned render frame might not be a frame
-   * constructed for this->GetURL().  This can happen, e.g., if the
-   * <browser> was just navigated to a new URL, but hasn't painted the
-   * new page yet.  A render frame for the previous page may be
-   * returned.  (In-process <browser> behaves similarly, and this
-   * behavior seems desirable.)
+   * This must only be called if this is a remote frame.
    */
-  RenderFrame* GetCurrentRenderFrame() const;
+  mozilla::layers::LayersId GetLayersId() const;
 
   mozilla::dom::ChromeMessageSender* GetFrameMessageManager() {
     return mMessageManager;
