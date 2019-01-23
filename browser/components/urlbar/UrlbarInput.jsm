@@ -411,6 +411,23 @@ class UrlbarInput {
     this.inputField.dispatchEvent(event);
   }
 
+  /**
+   * Focus without the focus styles.
+   * This is used by Activity Stream and about:privatebrowsing for search hand-off.
+   */
+  setHiddenFocus() {
+    this.textbox.classList.add("hidden-focus");
+    this.focus();
+  }
+
+  /**
+   * Remove the hidden focus styles.
+   * This is used by Activity Stream and about:privatebrowsing for search hand-off.
+   */
+  removeHiddenFocus() {
+    this.textbox.classList.remove("hidden-focus");
+  }
+
   // Getters and Setters below.
 
   get focused() {
