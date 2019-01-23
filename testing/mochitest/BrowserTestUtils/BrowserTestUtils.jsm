@@ -957,6 +957,25 @@ var BrowserTestUtils = {
   },
 
   /**
+   * Like waitForEvent, but acts on a popup. It ensures the popup is not already
+   * in the expected state.
+   *
+   * @param {Element} popup
+   *        The popup element that should receive the event.
+   * @param {string} eventSuffix
+   *        The event suffix expected to be received, one of "shown" or "hidden".
+   * @returns {Promise}
+   */
+  waitForPopupEvent(popup, eventSuffix) {
+    let endState = {shown: "open", hidden: "closed"}[eventSuffix];
+
+    if (popup.state == endState) {
+      return Promise.resolve();
+    }
+    return this.waitForEvent(popup, "popup" + eventSuffix);
+  },
+
+  /**
    * Adds a content event listener on the given browser
    * element. Similar to waitForContentEvent, but the listener will
    * fire until it is removed. A callable object is returned that,
