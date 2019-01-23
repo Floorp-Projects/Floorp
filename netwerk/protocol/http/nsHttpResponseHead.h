@@ -11,6 +11,14 @@
 #include "nsString.h"
 #include "mozilla/RecursiveMutex.h"
 
+#ifdef Status
+/* Xlib headers insist on this for some reason... Nuke it because
+   it'll override our member name */
+typedef Status __StatusTmp;
+#undef Status
+typedef __StatusTmp Status;
+#endif
+
 class nsIHttpHeaderVisitor;
 
 // This needs to be forward declared here so we can include only this header
@@ -49,8 +57,6 @@ class nsHttpResponseHead {
   void Exit() { mRecursiveMutex.Unlock(); }
 
   HttpVersion Version();
-// X11's Xlib.h #defines 'Status' to 'int' on some systems!
-#undef Status
   uint16_t Status();
   void StatusText(nsACString &aStatusText);
   int64_t ContentLength();

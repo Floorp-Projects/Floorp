@@ -64,17 +64,6 @@ static LazyLogModule gPrefetchLog("nsPrefetch");
 #define AGGRESSIVE_PREF "network.prefetch-next.aggressive"
 
 //-----------------------------------------------------------------------------
-// helpers
-//-----------------------------------------------------------------------------
-
-static inline uint32_t PRTimeToSeconds(PRTime t_usec) {
-  PRTime usec_per_sec = PR_USEC_PER_SEC;
-  return uint32_t(t_usec /= usec_per_sec);
-}
-
-#define NowInSeconds() PRTimeToSeconds(PR_Now())
-
-//-----------------------------------------------------------------------------
 // nsPrefetchNode <public>
 //-----------------------------------------------------------------------------
 

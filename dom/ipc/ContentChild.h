@@ -695,6 +695,12 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvSaveRecording(
       const FileDescriptor& aFile) override;
 
+  virtual mozilla::ipc::IPCResult RecvCrossProcessRedirect(
+      const uint32_t& aRegistrarId, nsIURI* aURI, const uint32_t& aNewLoadFlags,
+      const OptionalLoadInfoArgs& aLoadInfoForwarder,
+      const uint64_t& aChannelId, nsIURI* aOriginalURI,
+      const uint64_t& aIdentifier) override;
+
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.
   //
