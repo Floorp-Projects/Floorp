@@ -30,3 +30,6 @@ wr_malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of" }
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"
 core-graphics = "0.17.1"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+dwrote = "0.7"
