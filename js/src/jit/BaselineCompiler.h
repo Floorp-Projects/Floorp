@@ -188,7 +188,6 @@ namespace jit {
   _(JSOP_EXCEPTION)             \
   _(JSOP_DEBUGGER)              \
   _(JSOP_ARGUMENTS)             \
-  _(JSOP_RUNONCE)               \
   _(JSOP_REST)                  \
   _(JSOP_TOASYNC)               \
   _(JSOP_TOASYNCGEN)            \
