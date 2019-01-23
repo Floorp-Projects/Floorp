@@ -678,8 +678,11 @@ void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
   // the timestamp may be set to the future. As the encoding pipeline assumes
   // capture time to be less than present time, we should reset the capture
   // timestamps here. Otherwise there may be issues with RTP send stream.
-  if (incoming_frame.timestamp_us() > current_time_us)
-    incoming_frame.set_timestamp_us(current_time_us);
+
+  // Mozilla: Because we don't set timestamps earlier, we need to always set
+  // them here. We should do this in VideoConduit, see Bug 1522238.
+  //if (incoming_frame.timestamp_us() > current_time_us)
+  incoming_frame.set_timestamp_us(current_time_us);
 
   // Capture time may come from clock with an offset and drift from clock_.
   int64_t capture_ntp_time_ms;
