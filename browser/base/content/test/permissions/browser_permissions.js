@@ -89,12 +89,8 @@ add_task(async function testCancelPermission() {
     let permissionsList = document.getElementById("identity-popup-permission-list");
     let emptyLabel = permissionsList.nextElementSibling.nextElementSibling;
 
-    await SpecialPowers.pushPrefEnv({set: [
-      ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
-    ]});
-
     SitePermissions.set(gBrowser.currentURI, "geo", SitePermissions.ALLOW);
-    SitePermissions.set(gBrowser.currentURI, "autoplay-media", SitePermissions.ALLOW);
+    SitePermissions.set(gBrowser.currentURI, "camera", SitePermissions.BLOCK);
 
     await openIdentityPopup();
 
@@ -106,19 +102,11 @@ add_task(async function testCancelPermission() {
     cancelButtons[0].click();
     let labels = permissionsList.querySelectorAll(".identity-popup-permission-label");
     is(labels.length, 1, "One permission should be removed");
-    is(cancelButtons[0].getAttribute("tooltiptext"),
-       gBrowserBundle.GetStringFromName("permissions.remove.tooltip"),
-       "tooltip text for promptable permission is correct");
-
     cancelButtons[1].click();
     labels = permissionsList.querySelectorAll(".identity-popup-permission-label");
     is(labels.length, 0, "One permission should be removed");
-    is(cancelButtons[1].getAttribute("tooltiptext"),
-       gBrowserBundle.GetStringFromName("permissions.remove.tooltip.noPrompt"),
-       "tooltip text for non-promptable is correct");
 
     await closeIdentityPopup();
-    await SpecialPowers.popPrefEnv();
   });
 });
 

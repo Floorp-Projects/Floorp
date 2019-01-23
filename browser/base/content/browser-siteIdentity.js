@@ -1130,9 +1130,7 @@ var gIdentityHandler = {
 
     let button = document.createXULElement("button");
     button.setAttribute("class", "identity-popup-permission-remove-button");
-    let tooltiptext = aPermission.isPromptable ?
-      gNavigatorBundle.getString("permissions.remove.tooltip") :
-      gNavigatorBundle.getString("permissions.remove.tooltip.noPrompt");
+    let tooltiptext = gNavigatorBundle.getString("permissions.remove.tooltip");
     button.setAttribute("tooltiptext", tooltiptext);
     button.addEventListener("command", () => {
       let browser = gBrowser.selectedBrowser;
