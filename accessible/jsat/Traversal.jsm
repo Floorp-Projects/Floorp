@@ -166,15 +166,15 @@ var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
 
 var gSimplePreFilter = Prefilters.DEFUNCT |
   Prefilters.INVISIBLE |
-  Prefilters.TRANSPARENT |
-  Prefilters.PLATFORM_PRUNED;
+  Prefilters.TRANSPARENT;
 
 var TraversalRules = { // jshint ignore:line
   Simple: new BaseTraversalRule(gSimpleTraversalRoles, gSimpleMatchFunc),
 
   SimpleOnScreen: new BaseTraversalRule(
     gSimpleTraversalRoles, gSimpleMatchFunc,
-    gSimplePreFilter | Prefilters.OFFSCREEN),
+    Prefilters.DEFUNCT | Prefilters.INVISIBLE |
+    Prefilters.TRANSPARENT | Prefilters.OFFSCREEN),
 
   Anchor: new BaseTraversalRule(
     [Roles.LINK],

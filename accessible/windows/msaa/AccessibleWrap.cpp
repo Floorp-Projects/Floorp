@@ -903,7 +903,7 @@ AccessibleWrap::accNavigate(
   switch (navDir) {
     case NAVDIR_FIRSTCHILD:
       if (IsProxy()) {
-        if (!nsAccUtils::MustPrune(Proxy())) {
+        if (!Proxy()->MustPruneChildren()) {
           navAccessible = WrapperFor(Proxy()->FirstChild());
         }
       } else {
@@ -912,7 +912,7 @@ AccessibleWrap::accNavigate(
       break;
     case NAVDIR_LASTCHILD:
       if (IsProxy()) {
-        if (!nsAccUtils::MustPrune(Proxy())) {
+        if (!Proxy()->MustPruneChildren()) {
           navAccessible = WrapperFor(Proxy()->LastChild());
         }
       } else {
@@ -1387,7 +1387,7 @@ already_AddRefed<IAccessible> AccessibleWrap::GetIAccessibleFor(
   }
 
   if (varChild.ulVal != GetExistingID() &&
-      (IsProxy() ? nsAccUtils::MustPrune(Proxy())
+      (IsProxy() ? Proxy()->MustPruneChildren()
                  : nsAccUtils::MustPrune(this))) {
     // This accessible should have no subtree in platform, return null for its
     // children.
