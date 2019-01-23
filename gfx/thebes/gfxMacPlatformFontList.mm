@@ -762,7 +762,7 @@ static inline int GetWeightOverride(const nsAString& aPSName) {
   return Preferences::GetInt(prefName.get(), 0);
 }
 
-void gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData) {
+void gfxMacFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
   if (mHasStyles) return;
 
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("gfxMacFontFamily::FindStyleVariations", LAYOUT, mName);
