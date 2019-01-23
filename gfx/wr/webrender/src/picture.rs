@@ -349,7 +349,6 @@ impl TileDescriptor {
 #[derive(Debug, Clone)]
 pub struct DirtyRegionRect {
     pub world_rect: WorldRect,
-    pub device_rect: DeviceIntRect,
 }
 
 /// Represents the dirty region of a tile cache picture.
@@ -369,7 +368,6 @@ impl DirtyRegion {
             dirty_rects: Vec::with_capacity(MAX_DIRTY_RECTS),
             combined: DirtyRegionRect {
                 world_rect: WorldRect::zero(),
-                device_rect: DeviceIntRect::zero(),
             },
         }
     }
@@ -379,7 +377,6 @@ impl DirtyRegion {
         self.dirty_rects.clear();
         self.combined = DirtyRegionRect {
             world_rect: WorldRect::zero(),
-            device_rect: DeviceIntRect::zero(),
         }
     }
 
@@ -387,18 +384,13 @@ impl DirtyRegion {
     pub fn push(
         &mut self,
         rect: WorldRect,
-        device_pixel_scale: DevicePixelScale,
     ) {
-        let device_rect = (rect * device_pixel_scale).round().to_i32();
-
         // Include this in the overall dirty rect
         self.combined.world_rect = self.combined.world_rect.union(&rect);
-        self.combined.device_rect = self.combined.device_rect.union(&device_rect);
 
         // Store the individual dirty rect.
         self.dirty_rects.push(DirtyRegionRect {
             world_rect: rect,
-            device_rect,
         });
     }
 
@@ -412,6 +404,29 @@ impl DirtyRegion {
         self.dirty_rects.clear();
         self.dirty_rects.push(self.combined.clone());
     }
+
+    pub fn inflate(
+        &self,
+        inflate_amount: f32,
+    ) -> DirtyRegion {
+        let mut dirty_rects = Vec::with_capacity(self.dirty_rects.len());
+        let mut combined = DirtyRegionRect {
+            world_rect: WorldRect::zero(),
+        };
+
+        for rect in &self.dirty_rects {
+            let world_rect = rect.world_rect.inflate(inflate_amount, inflate_amount);
+            combined.world_rect = combined.world_rect.union(&world_rect);
+            dirty_rects.push(DirtyRegionRect {
+                world_rect,
+            });
+        }
+
+        DirtyRegion {
+            dirty_rects,
+            combined,
+        }
+    }
 }
 
 /// A helper struct to build a (roughly) minimal set of dirty rectangles
@@ -420,19 +435,16 @@ impl DirtyRegion {
 struct DirtyRegionBuilder<'a> {
     tiles: &'a mut [Tile],
     tile_count: TileSize,
-    device_pixel_scale: DevicePixelScale,
 }
 
 impl<'a> DirtyRegionBuilder<'a> {
     fn new(
         tiles: &'a mut [Tile],
         tile_count: TileSize,
-        device_pixel_scale: DevicePixelScale,
     ) -> Self {
         DirtyRegionBuilder {
             tiles,
             tile_count,
-            device_pixel_scale,
         }
     }
 
@@ -490,7 +502,7 @@ impl<'a> DirtyRegionBuilder<'a> {
             }
         }
 
-        dirty_region.push(dirty_world_rect, self.device_pixel_scale);
+        dirty_region.push(dirty_world_rect);
     }
 
     /// Simple sweep through the tile grid to try and coalesce individual
@@ -1460,7 +1472,6 @@ impl TileCache {
         let mut builder = DirtyRegionBuilder::new(
             &mut self.tiles,
             self.tile_count,
-            frame_context.device_pixel_scale,
         );
 
         builder.build(&mut self.dirty_region);
@@ -2087,14 +2098,24 @@ impl PicturePrimitive {
         // Extract the raster and surface spatial nodes from the raster
         // config, if this picture establishes a surface. Otherwise just
         // pass in the spatial node indices from the parent context.
-        let (raster_spatial_node_index, surface_spatial_node_index, surface_index) = match self.raster_config {
+        let (raster_spatial_node_index, surface_spatial_node_index, surface_index, inflation_factor) = match self.raster_config {
             Some(ref raster_config) => {
                 let surface = &frame_state.surfaces[raster_config.surface_index.0];
 
-                (surface.raster_spatial_node_index, self.spatial_node_index, raster_config.surface_index)
+                (
+                    surface.raster_spatial_node_index,
+                    self.spatial_node_index,
+                    raster_config.surface_index,
+                    surface.inflation_factor,
+                )
             }
             None => {
-                (raster_spatial_node_index, surface_spatial_node_index, surface_index)
+                (
+                    raster_spatial_node_index,
+                    surface_spatial_node_index,
+                    surface_index,
+                    0.0,
+                )
             }
         };
 
@@ -2160,6 +2181,21 @@ impl PicturePrimitive {
         // Still disable subpixel AA if parent forbids it
         let allow_subpixel_aa = parent_allows_subpixel_aa && allow_subpixel_aa;
 
+        let mut dirty_region_count = 0;
+
+        // If this is a picture cache, push the dirty region to ensure any
+        // child primitives are culled and clipped to the dirty rect(s).
+        if let Some(ref tile_cache) = self.tile_cache {
+            frame_state.push_dirty_region(tile_cache.dirty_region.clone());
+            dirty_region_count += 1;
+        }
+
+        if inflation_factor > 0.0 {
+            let inflated_region = frame_state.current_dirty_region().inflate(inflation_factor);
+            frame_state.push_dirty_region(inflated_region);
+            dirty_region_count += 1;
+        }
+
         let context = PictureContext {
             pic_index,
             pipeline_id: self.pipeline_id,
@@ -2170,13 +2206,8 @@ impl PicturePrimitive {
             raster_spatial_node_index,
             surface_spatial_node_index,
             surface_index,
+            dirty_region_count,
         };
-
-        // If this is a picture cache, push the dirty region to ensure any
-        // child primitives are culled and clipped to the dirty rect(s).
-        if let Some(ref tile_cache) = self.tile_cache {
-            frame_state.push_dirty_region(tile_cache.dirty_region.clone());
-        }
 
         let prim_list = mem::replace(&mut self.prim_list, PrimitiveList::empty());
 
@@ -2190,8 +2221,8 @@ impl PicturePrimitive {
         state: PictureState,
         frame_state: &mut FrameBuildingState,
     ) {
-        // Pop the dirty region for this picture cache
-        if self.tile_cache.is_some() {
+        // Pop any dirty regions this picture set
+        for _ in 0 .. context.dirty_region_count {
             frame_state.pop_dirty_region();
         }
 
