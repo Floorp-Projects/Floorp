@@ -4438,6 +4438,10 @@ public class GeckoSession implements Parcelable {
             ThreadUtils.assertOnUiThread();
         }
 
+        if (!mAttachedCompositor) {
+            return;
+        }
+
         mCompositorReady = true;
 
         if (mController != null) {
