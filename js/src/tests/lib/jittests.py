@@ -304,12 +304,12 @@ class JitTest:
                     elif name == 'test-also-noasmjs':
                         if options.asmjs_enabled:
                             test.test_also.append(['--no-asmjs'])
-                    elif name == 'test-also-no-wasm-baseline':
+                    elif name == 'test-also-wasm-compiler-ion':
                         if options.wasm_enabled:
-                            test.test_also.append(['--no-wasm-baseline'])
-                    elif name == 'test-also-no-wasm-ion':
+                            test.test_also.append(['--wasm-compiler=ion'])
+                    elif name == 'test-also-wasm-compiler-baseline':
                         if options.wasm_enabled:
-                            test.test_also.append(['--no-wasm-ion'])
+                            test.test_also.append(['--wasm-compiler=baseline'])
                     elif name == 'test-also-wasm-tiering':
                         if options.wasm_enabled:
                             test.test_also.append(['--test-wasm-await-tier2'])

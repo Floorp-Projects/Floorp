@@ -646,7 +646,7 @@ static bool WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   bool isSupported = wasm::HasSupport(cx);
 #ifdef ENABLE_WASM_CRANELIFT
-  if (cx->options().wasmForceCranelift()) {
+  if (cx->options().wasmCranelift()) {
     isSupported = false;
   }
 #endif
@@ -659,7 +659,7 @@ static bool WasmBulkMemSupported(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef ENABLE_WASM_BULKMEM_OPS
   bool isSupported = true;
 #  ifdef ENABLE_WASM_CRANELIFT
-  if (cx->options().wasmForceCranelift()) {
+  if (cx->options().wasmCranelift()) {
     isSupported = false;
   }
 #  endif
