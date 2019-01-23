@@ -31,6 +31,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIThreadRetargetableStreamListener.h"
+#include "nsIChildChannel.h"
 
 #include "nsString.h"
 #include "nsThreadUtils.h"
@@ -828,6 +829,18 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel* channel, uint32_t aFlags,
                             getter_AddRefs(loader));
 
   if (NS_SUCCEEDED(rv)) {
+    if (aFlags & nsIURILoader::REDIRECTED_CHANNEL) {
+      // Our channel was redirected from another process, so doesn't need to be
+      // opened again. However, it does need its listener hooked up correctly.
+      nsCOMPtr<nsIChildChannel> childChannel = do_QueryInterface(channel);
+      MOZ_ASSERT(childChannel);
+      if (!childChannel) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      return childChannel->CompleteRedirectSetup(loader, nullptr);
+    }
+
     // this method is not complete!!! Eventually, we should first go
     // to the content listener and ask them for a protocol handler...
     // if they don't give us one, we need to go to the registry and get
