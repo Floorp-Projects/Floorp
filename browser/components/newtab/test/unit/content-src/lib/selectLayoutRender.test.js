@@ -5,7 +5,7 @@ import {reducers} from "common/Reducers.jsm";
 import {selectLayoutRender} from "content-src/lib/selectLayoutRender";
 
 const FAKE_LAYOUT = [{width: 3, components: [{type: "foo", feed: {url: "foo.com"}}]}];
-const FAKE_FEEDS = {"foo.com": {data: ["foo", "bar"]}};
+const FAKE_FEEDS = {"foo.com": {data: {recommendations: ["foo", "bar"]}}};
 
 describe("selectLayoutRender", () => {
   let store;
@@ -33,7 +33,7 @@ describe("selectLayoutRender", () => {
 
     assert.lengthOf(result, 1);
     assert.propertyVal(result[0], "width", 3);
-    assert.deepEqual(result[0].components[0], {type: "foo", feed: {url: "foo.com"}, data: ["foo", "bar"]});
+    assert.deepEqual(result[0].components[0], {type: "foo", feed: {url: "foo.com"}, data: {recommendations: ["foo", "bar"]}});
   });
 
   it("should return layout property without data if feed isn't available", () => {
@@ -50,7 +50,7 @@ describe("selectLayoutRender", () => {
   it("should return spoc result for rolls below the probability", () => {
     const fakeSpocConfig = {positions: [{index: 0}, {index: 1}], probability: 0.5};
     const fakeLayout = [{width: 3, components: [{type: "foo", feed: {url: "foo.com"}, spocs: fakeSpocConfig}]}];
-    const fakeSpocsData = {lastUpdated: 0, spocs: {spocs: ["foo", "bar"]}};
+    const fakeSpocsData = {lastUpdated: 0, spocs: {spocs: ["fooSpoc", "barSpoc"]}};
 
     store.dispatch({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: fakeLayout}});
     store.dispatch({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: FAKE_FEEDS});
@@ -60,14 +60,16 @@ describe("selectLayoutRender", () => {
     const result = selectLayoutRender(store.getState());
 
     assert.lengthOf(result, 1);
-    assert.deepEqual(result[0].components[0].spocs.positions[0], {index: 0, result: "foo"});
-    assert.deepEqual(result[0].components[0].spocs.positions[1], {index: 1, result: "bar"});
+    assert.deepEqual(result[0].components[0].data.recommendations[0], "fooSpoc");
+    assert.deepEqual(result[0].components[0].data.recommendations[1], "barSpoc");
+    assert.deepEqual(result[0].components[0].data.recommendations[2], "foo");
+    assert.deepEqual(result[0].components[0].data.recommendations[3], "bar");
   });
 
   it("should not return spoc result for rolls above the probability", () => {
     const fakeSpocConfig = {positions: [{index: 0}, {index: 1}], probability: 0.5};
     const fakeLayout = [{width: 3, components: [{type: "foo", feed: {url: "foo.com"}, spocs: fakeSpocConfig}]}];
-    const fakeSpocsData = {lastUpdated: 0, spocs: {spocs: ["foo", "bar"]}};
+    const fakeSpocsData = {lastUpdated: 0, spocs: {spocs: ["fooSpoc", "barSpoc"]}};
 
     store.dispatch({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: fakeLayout}});
     store.dispatch({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: FAKE_FEEDS});
@@ -77,7 +79,7 @@ describe("selectLayoutRender", () => {
     const result = selectLayoutRender(store.getState());
 
     assert.lengthOf(result, 1);
-    assert.deepEqual(result[0].components[0].spocs.positions[0], {index: 0});
-    assert.deepEqual(result[0].components[0].spocs.positions[1], {index: 1});
+    assert.deepEqual(result[0].components[0].data.recommendations[0], "foo");
+    assert.deepEqual(result[0].components[0].data.recommendations[1], "bar");
   });
 });

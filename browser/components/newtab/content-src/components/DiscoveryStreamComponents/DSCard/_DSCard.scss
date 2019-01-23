@@ -11,6 +11,16 @@ $excerpt-line-height: 20;
     border: 5px solid $grey-30;
     box-shadow: 0 1px 4px $grey-30;
     border-radius: 4px;
+
+    header {
+      color: $blue-60;
+    }
+  }
+
+  &:active {
+    header {
+      color: $blue-70;
+    }
   }
 
   .img-wrapper {
@@ -45,13 +55,6 @@ $excerpt-line-height: 20;
     font-size: $header-font-size * 1px;
     color: $grey-90;
 
-    &:hover {
-      color: $blue-60;
-    }
-
-    &:active {
-      color: $blue-70;
-    }
   }
 
   p {
@@ -59,5 +62,9 @@ $excerpt-line-height: 20;
     line-height: $excerpt-line-height * 1px;
     color: $grey-50;
     margin: 8px 0;
+  }
+
+  .context {
+    color: $teal-70;
   }
 }
