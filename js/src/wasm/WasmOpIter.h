@@ -1966,12 +1966,15 @@ inline bool OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len) {
     return fail("can't touch memory without memory");
   }
 
-  uint32_t memoryFlags;
-  if (!readVarU32(&memoryFlags)) {
-    return fail("unable to read memory flags");
+  uint32_t memoryIndex;
+  if (!readVarU32(&memoryIndex)) {
+    return false;
   }
-  if (memoryFlags != uint32_t(MemoryTableFlags::Default)) {
-    return fail("unrecognized memory flags");
+  if (!env_.usesMemory()) {
+    return fail("can't touch memory without memory");
+  }
+  if (memoryIndex != 0) {
+    return fail("memory index must be zero");
   }
 
   if (!popWithType(ValType::I32, len)) {

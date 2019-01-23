@@ -6341,9 +6341,11 @@ static bool EncodeDataOrElemDrop(Encoder& e, AstDataOrElemDrop& s) {
 }
 
 static bool EncodeMemFill(Encoder& e, AstMemFill& s) {
-  return EncodeExpr(e, s.start()) && EncodeExpr(e, s.val()) &&
-         EncodeExpr(e, s.len()) && e.writeOp(MiscOp::MemFill) &&
-         e.writeVarU32(uint32_t(MemoryTableFlags::Default));
+  return EncodeExpr(e, s.start()) &&
+         EncodeExpr(e, s.val()) &&
+         EncodeExpr(e, s.len()) &&
+         e.writeOp(MiscOp::MemFill) &&
+         e.writeVarU32(/* memory index */0);
 }
 
 static bool EncodeMemOrTableInit(Encoder& e, AstMemOrTableInit& s) {
