@@ -10,15 +10,15 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  QueryContext: "resource:///modules/UrlbarUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
-  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "ClipboardHelper",
@@ -390,7 +390,7 @@ class UrlbarInput {
       return;
     }
 
-    this.controller.startQuery(new QueryContext({
+    this.controller.startQuery(new UrlbarQueryContext({
       enableAutofill: UrlbarPrefs.get("autoFill"),
       isPrivate: this.isPrivate,
       lastKey,
