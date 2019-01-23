@@ -42,6 +42,10 @@ struct ScriptedCaller {
 
 // Describes all the parameters that control wasm compilation.
 
+struct CompileArgs;
+typedef RefPtr<CompileArgs> MutableCompileArgs;
+typedef RefPtr<const CompileArgs> SharedCompileArgs;
+
 struct CompileArgs : ShareableBase<CompileArgs> {
   ScriptedCaller scriptedCaller;
   UniqueChars sourceMapURL;
@@ -54,6 +58,17 @@ struct CompileArgs : ShareableBase<CompileArgs> {
   bool forceTiering;
   bool gcEnabled;
 
+  // CompileArgs has two constructors:
+  //
+  // - one through a factory function `build`, which checks that flags are
+  // consistent with each other.
+  // - one that gives complete access to underlying fields.
+  //
+  // You should use the first one in general, unless you have a very good
+  // reason (i.e. no JSContext around and you know which flags have been used).
+
+  static SharedCompileArgs build(JSContext* cx, ScriptedCaller&& scriptedCaller);
+
   explicit CompileArgs(ScriptedCaller&& scriptedCaller)
       : scriptedCaller(std::move(scriptedCaller)),
         baselineEnabled(false),
@@ -63,12 +78,7 @@ struct CompileArgs : ShareableBase<CompileArgs> {
         sharedMemoryEnabled(false),
         forceTiering(false),
         gcEnabled(false) {}
-
-  CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller);
 };
-
-typedef RefPtr<CompileArgs> MutableCompileArgs;
-typedef RefPtr<const CompileArgs> SharedCompileArgs;
 
 // Return the estimated compiled (machine) code size for the given bytecode size
 // compiled at the given tier.

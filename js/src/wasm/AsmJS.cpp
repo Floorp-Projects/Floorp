@@ -2137,8 +2137,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
       }
     }
 
-    MutableCompileArgs args =
-        cx_->new_<CompileArgs>(cx_, std::move(scriptedCaller));
+    SharedCompileArgs args = CompileArgs::build(cx_, std::move(scriptedCaller));
     if (!args) {
       return nullptr;
     }
