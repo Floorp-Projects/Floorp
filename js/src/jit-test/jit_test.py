@@ -225,7 +225,7 @@ def main(argv):
     if all(['--no-asmjs' in flags for flags in test_flags]):
         options.asmjs_enabled = False
         options.wasm_enabled = False
-    if all(['--no-wasm' in flags for flags in test_flags]):
+    if all(['--wasm-compiler=none' in flags for flags in test_flags]):
         options.asmjs_enabled = False
         options.wasm_enabled = False
 

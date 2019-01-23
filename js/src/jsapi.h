@@ -396,7 +396,7 @@ class JS_PUBLIC_API ContextOptions {
         wasmBaseline_(true),
         wasmIon_(true),
 #ifdef ENABLE_WASM_CRANELIFT
-        wasmForceCranelift_(false),
+        wasmCranelift_(false),
 #endif
 #ifdef ENABLE_WASM_REFTYPES
         wasmGc_(false),
@@ -476,9 +476,9 @@ class JS_PUBLIC_API ContextOptions {
   }
 
 #ifdef ENABLE_WASM_CRANELIFT
-  bool wasmForceCranelift() const { return wasmForceCranelift_; }
-  ContextOptions& setWasmForceCranelift(bool flag) {
-    wasmForceCranelift_ = flag;
+  bool wasmCranelift() const { return wasmCranelift_; }
+  ContextOptions& setWasmCranelift(bool flag) {
+    wasmCranelift_ = flag;
     return *this;
   }
 #endif
@@ -595,7 +595,7 @@ class JS_PUBLIC_API ContextOptions {
   bool wasmBaseline_ : 1;
   bool wasmIon_ : 1;
 #ifdef ENABLE_WASM_CRANELIFT
-  bool wasmForceCranelift_ : 1;
+  bool wasmCranelift_ : 1;
 #endif
 #ifdef ENABLE_WASM_REFTYPES
   bool wasmGc_ : 1;

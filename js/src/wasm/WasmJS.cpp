@@ -59,7 +59,7 @@ extern mozilla::Atomic<bool> fuzzingSafe;
 
 bool wasm::HasReftypesSupport(JSContext* cx) {
 #ifdef ENABLE_WASM_CRANELIFT
-  if (cx->options().wasmForceCranelift()) {
+  if (cx->options().wasmCranelift()) {
     return false;
   }
 #endif

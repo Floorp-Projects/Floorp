@@ -77,7 +77,7 @@ CompileArgs::CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller)
   baselineEnabled = cx->options().wasmBaseline();
   ionEnabled = cx->options().wasmIon();
 #ifdef ENABLE_WASM_CRANELIFT
-  craneliftEnabled = cx->options().wasmForceCranelift();
+  craneliftEnabled = cx->options().wasmCranelift();
 #else
   craneliftEnabled = false;
 #endif
