@@ -45,7 +45,8 @@ add_task(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     let tab = gBrowser.tabs[gBrowser.tabs.length - 1];
     gBrowser.removeTab(tab, { animate: true, byMouse: true });
-    await BrowserTestUtils.waitForEvent(tab, "TabAnimationEnd");
+    await BrowserTestUtils.waitForEvent(tab, "transitionend",
+      false, e => e.propertyName === "max-width");
     await switchDone;
   }, {expectedReflows: EXPECTED_REFLOWS,
       frames: {
