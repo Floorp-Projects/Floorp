@@ -420,6 +420,11 @@ function checkSettingsSection(data) {
                  f + " must have the correct type.");
   }
 
+  // This property is not always present, but when it is, it must be a number.
+  if ("launcherProcessState" in data.settings) {
+    Assert.equal(typeof data.settings.launcherProcessState, "number");
+  }
+
   // Check "addonCompatibilityCheckEnabled" separately.
   Assert.equal(data.settings.addonCompatibilityCheckEnabled, AddonManager.checkCompatibility);
 

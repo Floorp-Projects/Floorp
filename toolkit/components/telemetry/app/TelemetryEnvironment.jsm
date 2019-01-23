@@ -1424,6 +1424,12 @@ EnvironmentCache.prototype = {
       sandbox: this._getSandboxData(),
     };
 
+    // Services.appinfo.launcherProcessState is not available in all build
+    // configurations, in which case an exception may be thrown.
+    try {
+      this._currentEnvironment.settings.launcherProcessState = Services.appinfo.launcherProcessState;
+    } catch (e) {}
+
     this._currentEnvironment.settings.addonCompatibilityCheckEnabled =
       AddonManager.checkCompatibility;
 

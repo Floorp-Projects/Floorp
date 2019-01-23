@@ -45,6 +45,7 @@ Structure:
           submissionURL: <string> // set for default engines or well known search domains
         },
         searchCohort: <string>, // optional, contains an identifier for any active search A/B experiments
+        launcherProcessState: <integer>, // optional, values correspond to values of mozilla::LauncherRegistryInfo::EnabledState enum
         e10sEnabled: <bool>, // whether e10s is on, i.e. browser tabs open by default in a different process
         telemetryEnabled: <bool>, // false on failure
         locale: <string>, // e.g. "it", null on failure
