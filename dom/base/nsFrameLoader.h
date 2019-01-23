@@ -58,6 +58,7 @@ class ProcessMessageManager;
 class Promise;
 class TabParent;
 class MutableTabContext;
+class RemoteFrameChild;
 
 namespace ipc {
 class StructuredCloneData;
@@ -270,6 +271,18 @@ class nsFrameLoader final : public nsStubMutationObserver,
     return mOwnerContent ? mOwnerContent->OwnerDoc() : nullptr;
   }
 
+  /**
+   * Returns whether this frame is a remote frame.
+   *
+   * This is true for either a top-level remote browser in the parent process,
+   * or a remote subframe in the child process.
+   */
+  bool IsRemoteFrame();
+
+  /**
+   * Returns the IPDL actor used if this is a top-level remote browser, or null
+   * otherwise.
+   */
   PBrowserParent* GetRemoteBrowser() const;
 
   /**
@@ -357,11 +370,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void SetOwnerContent(mozilla::dom::Element* aContent);
 
   bool ShouldUseRemoteProcess();
-
-  /**
-   * Return true if the frame is a remote frame. Return false otherwise
-   */
-  bool IsRemoteFrame();
 
   bool IsForJSPlugin() { return mJSPluginID != nsFakePluginTag::NOT_JSPLUGIN; }
 
@@ -455,6 +463,9 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   TabParent* mRemoteBrowser;
   uint64_t mChildID;
+
+  // This is used when this refers to a remote sub frame
+  RefPtr<mozilla::dom::RemoteFrameChild> mRemoteFrameChild;
 
   int32_t mJSPluginID;
 
