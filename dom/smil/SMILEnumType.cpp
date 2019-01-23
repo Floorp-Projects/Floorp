@@ -5,49 +5,49 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SMILEnumType.h"
-#include "nsSMILValue.h"
+
+#include "mozilla/SMILValue.h"
 #include "nsDebug.h"
 #include <math.h>
 
 namespace mozilla {
 
-void SMILEnumType::Init(nsSMILValue& aValue) const {
+void SMILEnumType::Init(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
   aValue.mU.mUint = 0;
   aValue.mType = this;
 }
 
-void SMILEnumType::Destroy(nsSMILValue& aValue) const {
+void SMILEnumType::Destroy(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value");
   aValue.mU.mUint = 0;
   aValue.mType = SMILNullType::Singleton();
 }
 
-nsresult SMILEnumType::Assign(nsSMILValue& aDest,
-                              const nsSMILValue& aSrc) const {
+nsresult SMILEnumType::Assign(SMILValue& aDest, const SMILValue& aSrc) const {
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value");
   aDest.mU.mUint = aSrc.mU.mUint;
   return NS_OK;
 }
 
-bool SMILEnumType::IsEqual(const nsSMILValue& aLeft,
-                           const nsSMILValue& aRight) const {
+bool SMILEnumType::IsEqual(const SMILValue& aLeft,
+                           const SMILValue& aRight) const {
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
   return aLeft.mU.mUint == aRight.mU.mUint;
 }
 
-nsresult SMILEnumType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+nsresult SMILEnumType::Add(SMILValue& aDest, const SMILValue& aValueToAdd,
                            uint32_t aCount) const {
   MOZ_ASSERT(aValueToAdd.mType == aDest.mType, "Trying to add invalid types");
   MOZ_ASSERT(aValueToAdd.mType == this, "Unexpected source type");
   return NS_ERROR_FAILURE;  // enum values can't be added to each other
 }
 
-nsresult SMILEnumType::ComputeDistance(const nsSMILValue& aFrom,
-                                       const nsSMILValue& aTo,
+nsresult SMILEnumType::ComputeDistance(const SMILValue& aFrom,
+                                       const SMILValue& aTo,
                                        double& aDistance) const {
   MOZ_ASSERT(aFrom.mType == aTo.mType, "Trying to compare different types");
   MOZ_ASSERT(aFrom.mType == this, "Unexpected source type");
@@ -55,10 +55,10 @@ nsresult SMILEnumType::ComputeDistance(const nsSMILValue& aFrom,
                             // values
 }
 
-nsresult SMILEnumType::Interpolate(const nsSMILValue& aStartVal,
-                                   const nsSMILValue& aEndVal,
+nsresult SMILEnumType::Interpolate(const SMILValue& aStartVal,
+                                   const SMILValue& aEndVal,
                                    double aUnitDistance,
-                                   nsSMILValue& aResult) const {
+                                   SMILValue& aResult) const {
   MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
              "Trying to interpolate different types");
   MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");

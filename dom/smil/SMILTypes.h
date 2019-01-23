@@ -9,6 +9,8 @@
 
 #include <stdint.h>
 
+namespace mozilla {
+
 // A timestamp in milliseconds
 //
 // A time may represent:
@@ -22,5 +24,7 @@
 // the documentation in SMILTimeValue.h
 //
 typedef int64_t nsSMILTime;
+
+}  // namespace mozilla
 
 #endif  // NS_SMILTYPES_H_

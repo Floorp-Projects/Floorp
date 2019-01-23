@@ -10,23 +10,23 @@
 #include "mozilla/Attributes.h"
 #include "nscore.h"
 
-class nsSMILValue;
-
 namespace mozilla {
+
+class SMILValue;
 
 //////////////////////////////////////////////////////////////////////////////
 // SMILType: Interface for defining the basic operations needed for animating
 // a particular kind of data (e.g. lengths, colors, transformation matrices).
 //
-// This interface is never used directly but always through an nsSMILValue that
+// This interface is never used directly but always through a SMILValue that
 // bundles together a pointer to a concrete implementation of this interface and
 // the data upon which it should operate.
 //
 // We keep the data and type separate rather than just providing different
-// subclasses of nsSMILValue. This is so that sizeof(nsSMILValue) is the same
+// subclasses of SMILValue. This is so that sizeof(SMILValue) is the same
 // for all value types, allowing us to have a type-agnostic nsTArray of
-// nsSMILValue objects (actual objects, not pointers). It also allows most
-// nsSMILValues (except those that need to allocate extra memory for their
+// SMILValue objects (actual objects, not pointers). It also allows most
+// SMILValues (except those that need to allocate extra memory for their
 // data) to be allocated on the stack and directly assigned to one another
 // provided performance benefits for the animation code.
 //
@@ -49,9 +49,9 @@ namespace mozilla {
 
 class SMILType {
   /**
-   * Only give the nsSMILValue class access to this interface.
+   * Only give the SMILValue class access to this interface.
    */
-  friend class ::nsSMILValue;
+  friend class SMILValue;
 
  protected:
   /**
@@ -61,7 +61,7 @@ class SMILType {
    * @pre  aValue.IsNull()
    * @post aValue.mType == this
    */
-  virtual void Init(nsSMILValue& aValue) const = 0;
+  virtual void Init(SMILValue& aValue) const = 0;
 
   /**
    * Destroys any data associated with a value of this type.
@@ -69,7 +69,7 @@ class SMILType {
    * @pre  aValue.mType == this
    * @post aValue.IsNull()
    */
-  virtual void Destroy(nsSMILValue& aValue) const = 0;
+  virtual void Destroy(SMILValue& aValue) const = 0;
 
   /**
    * Assign this object the value of another. Think of this as the assignment
@@ -82,11 +82,10 @@ class SMILType {
    *
    * @pre aDest.mType == aSrc.mType == this
    */
-  virtual nsresult Assign(nsSMILValue& aDest,
-                          const nsSMILValue& aSrc) const = 0;
+  virtual nsresult Assign(SMILValue& aDest, const SMILValue& aSrc) const = 0;
 
   /**
-   * Test two nsSMILValue objects (of this SMILType) for equality.
+   * Test two SMILValue objects (of this SMILType) for equality.
    *
    * A return value of true represents a guarantee that aLeft and aRight are
    * equal. (That is, they would behave identically if passed to the methods
@@ -105,8 +104,8 @@ class SMILType {
    *
    * @pre aDest.mType == aSrc.mType == this
    */
-  virtual bool IsEqual(const nsSMILValue& aLeft,
-                       const nsSMILValue& aRight) const = 0;
+  virtual bool IsEqual(const SMILValue& aLeft,
+                       const SMILValue& aRight) const = 0;
 
   /**
    * Adds two values.
@@ -141,7 +140,7 @@ class SMILType {
    *
    * @pre aValueToAdd.mType == aDest.mType == this
    */
-  virtual nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+  virtual nsresult Add(SMILValue& aDest, const SMILValue& aValueToAdd,
                        uint32_t aCount) const = 0;
 
   /**
@@ -162,8 +161,8 @@ class SMILType {
    *
    * @pre aValueToAdd.mType == aDest.mType == this
    */
-  virtual nsresult SandwichAdd(nsSMILValue& aDest,
-                               const nsSMILValue& aValueToAdd) const {
+  virtual nsresult SandwichAdd(SMILValue& aDest,
+                               const SMILValue& aValueToAdd) const {
     return Add(aDest, aValueToAdd, 1);
   }
 
@@ -182,8 +181,7 @@ class SMILType {
    *
    * @pre aFrom.mType == aTo.mType == this
    */
-  virtual nsresult ComputeDistance(const nsSMILValue& aFrom,
-                                   const nsSMILValue& aTo,
+  virtual nsresult ComputeDistance(const SMILValue& aFrom, const SMILValue& aTo,
                                    double& aDistance) const = 0;
 
   /**
@@ -204,9 +202,9 @@ class SMILType {
    *
    * @pre aStartVal.mType == aEndVal.mType == aResult.mType == this
    */
-  virtual nsresult Interpolate(const nsSMILValue& aStartVal,
-                               const nsSMILValue& aEndVal, double aUnitDistance,
-                               nsSMILValue& aResult) const = 0;
+  virtual nsresult Interpolate(const SMILValue& aStartVal,
+                               const SMILValue& aEndVal, double aUnitDistance,
+                               SMILValue& aResult) const = 0;
 };
 
 }  // namespace mozilla
