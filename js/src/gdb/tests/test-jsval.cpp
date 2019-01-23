@@ -24,7 +24,7 @@ FRAGMENT(jsval, simple) {
   RootedValue friendly_string(cx, StringValue(hello));
   RootedValue symbol(cx, SymbolValue(GetSymbolFor(cx, hello)));
 #ifdef ENABLE_BIGINT
-  RootedValue bi(cx, BigIntValue(BigInt::create(cx)));
+  RootedValue bi(cx, BigIntValue(BigInt::zero(cx)));
 #endif
 
   RootedValue global(cx);
