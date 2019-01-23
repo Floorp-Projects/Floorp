@@ -12,6 +12,7 @@
         data-l10n-id="blocklist-window"
         data-l10n-attrs="title, style"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         onload="gBlocklistManager.onLoad();"
         onunload="gBlocklistManager.uninit();"
         persist="screenX screenY width height"
@@ -29,7 +30,9 @@
   </keyset>
 
   <vbox class="contentPane">
-    <description id="blocklistsText" data-l10n-id="blocklist-desc" control="url"/>
+    <description id="blocklistsText" data-l10n-id="blocklist-description" control="url">
+      <html:a target="_blank" class="text-link" data-l10n-name="disconnect-link" href="https://disconnect.me/"/>
+    </description>
     <separator class="thin"/>
     <tree id="blocklistsTree" flex="1" style="height: 18em;"
           hidecolumnpicker="true"
