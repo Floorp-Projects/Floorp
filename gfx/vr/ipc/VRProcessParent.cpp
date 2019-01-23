@@ -29,10 +29,12 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace gfx {
 
-VRProcessParent::VRProcessParent()
+VRProcessParent::VRProcessParent(Listener* aListener)
     : GeckoChildProcessHost(GeckoProcessType_VR),
       mTaskFactory(this),
-      mChannelClosed(false) {
+      mListener(aListener),
+      mChannelClosed(false),
+      mShutdownRequested(false) {
   MOZ_COUNT_CTOR(VRProcessParent);
 }
 
@@ -61,11 +63,17 @@ bool VRProcessParent::Launch() {
 }
 
 void VRProcessParent::Shutdown() {
+  MOZ_ASSERT(!mShutdownRequested);
+  mListener = nullptr;
+
   if (mVRChild) {
     // The channel might already be closed if we got here unexpectedly.
     if (!mChannelClosed) {
       mVRChild->Close();
     }
+    // OnChannelClosed uses this to check if the shutdown was expected or
+    // unexpected.
+    mShutdownRequested = true;
 
 #ifndef NS_FREE_PERMANENT_DATA
     // No need to communicate shutdown, the VR process doesn't need to
@@ -106,6 +114,10 @@ void VRProcessParent::InitAfterConnect(bool aSucceeded) {
     MOZ_ASSERT(rv);
 
     mVRChild->Init();
+
+    if (mListener) {
+      mListener->OnProcessLaunchComplete(this);
+    }
 
     // Make vr-gpu process connection
     GPUChild* gpuChild = GPUProcessManager::Get()->GetGPUChild();
@@ -158,7 +170,12 @@ void VRProcessParent::OnChannelErrorTask() {
 
 void VRProcessParent::OnChannelClosed() {
   mChannelClosed = true;
-  DestroyProcess();
+  if (!mShutdownRequested && mListener) {
+    // This is an unclean shutdown. Notify we're going away.
+    mListener->OnProcessUnexpectedShutdown(this);
+  } else {
+    DestroyProcess();
+  }
 
   // Release the actor.
   VRChild::Destroy(std::move(mVRChild));
@@ -166,6 +183,8 @@ void VRProcessParent::OnChannelClosed() {
 }
 
 base::ProcessId VRProcessParent::OtherPid() { return mVRChild->OtherPid(); }
+
+bool VRProcessParent::IsConnected() const { return !!mVRChild; }
 
 }  // namespace gfx
 }  // namespace mozilla

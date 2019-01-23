@@ -803,6 +803,11 @@ Version:
     Product version.
   type: string
 
+VRProcessStatus:
+  description: >
+    Status of the VR process, can be set to "Running" or "Destroyed"
+  type: string
+
 Winsock_LSP:
   description: >
     Information on winsock LSPs injected in our networking stack.
