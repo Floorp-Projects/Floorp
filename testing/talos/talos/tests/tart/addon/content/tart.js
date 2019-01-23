@@ -42,15 +42,15 @@ Tart.prototype = {
 
   tabDetector: {
     arm(handler, win) {
-      win.gBrowser.tabContainer.addEventListener("transitionend", handler);
+      win.gBrowser.tabContainer.addEventListener("TabAnimationEnd", handler);
     },
 
     measureNow(e) {
-      return (e.type == "transitionend" && e.propertyName == "max-width");
+      return (e.type == "TabAnimationEnd");
     },
 
     cleanup(handler, win) {
-      win.gBrowser.tabContainer.removeEventListener("transitionend", handler);
+      win.gBrowser.tabContainer.removeEventListener("TabAnimationEnd", handler);
     },
   },
 

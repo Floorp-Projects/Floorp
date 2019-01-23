@@ -23,13 +23,10 @@ function checkAnimationState() {
 
   info("tab didn't close immediately, so the tab opening animation must have started moving");
   info("waiting for the tab to close asynchronously");
-  tab.addEventListener("transitionend", function listener(event) {
-    if (event.propertyName == "max-width") {
-      tab.removeEventListener("transitionend", listener);
-      executeSoon(function() {
-        ok(!tab.parentNode, "tab removed asynchronously");
-        finish();
-      });
-    }
-  });
+  tab.addEventListener("TabAnimationEnd", function listener() {
+    executeSoon(function() {
+      ok(!tab.parentNode, "tab removed asynchronously");
+      finish();
+    });
+  }, {once: true});
 }
