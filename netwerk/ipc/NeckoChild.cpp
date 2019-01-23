@@ -35,7 +35,6 @@
 #include "nsINetworkPredictor.h"
 #include "nsINetworkPredictorVerifier.h"
 #include "nsINetworkLinkService.h"
-#include "nsIRedirectProcessChooser.h"
 #include "nsQueryObject.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsNetUtil.h"

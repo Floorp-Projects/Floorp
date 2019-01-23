@@ -445,6 +445,19 @@ interface nsIHttpChannel : nsIChannel
     [must_use] void redirectTo(in nsIURI aTargetURI);
 
     /**
+     * Instructs the channel to be loaded in a new process. Like 'redirectTo'
+     * this can only be used on channels that have not yet called their
+     * listener's OnStartRequest().
+     *
+     * @param aTabPromise   a promise which resolves to a nsITabParent object
+     *                      which the load will proceed in.
+     * @param aIdentifier   a 64-bit ID which will be provided to the
+     *                      ChildProcessChannelListener.
+     */
+    [must_use] void switchProcessTo(in Promise aTabPromise,
+                                    in unsigned long long aIdentifier);
+
+    /**
      * Flags a channel to be upgraded to HTTPS.
      *
      * Upgrading to a secure channel must happen before or during

@@ -118,7 +118,6 @@
 #include "nsIMultiplexInputStream.h"
 #include "../../cache2/CacheFileUtils.h"
 #include "nsINetworkLinkService.h"
-#include "nsIRedirectProcessChooser.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
@@ -2415,7 +2414,7 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     }
     if (mCanceled) return CallOnStartRequest();
 
-    // reset the authentication's current continuation state because our
+    // reset the authentication's current continuation state because ourvr
     // last authentication attempt has been completed successfully
     rv = mAuthProvider->Disconnect(NS_ERROR_ABORT);
     if (NS_FAILED(rv)) {
@@ -2423,6 +2422,29 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     }
     mAuthProvider = nullptr;
     LOG(("  continuation state has been reset"));
+  }
+
+  rv = NS_OK;
+  if (mRedirectTabPromise && !mCanceled) {
+    MOZ_ASSERT(!mOnStartRequestCalled);
+
+    PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse1_5);
+    rv = StartCrossProcessRedirect();
+    if (NS_SUCCEEDED(rv)) {
+      return NS_OK;
+    }
+    PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse1_5);
+  }
+
+  // No process switch needed, continue as normal.
+  return ContinueProcessResponse1_5(rv);
+}
+
+nsresult nsHttpChannel::ContinueProcessResponse1_5(nsresult rv) {
+  if (NS_FAILED(rv) && !mCanceled) {
+    // The process switch failed, cancel this channel.
+    Cancel(rv);
+    return CallOnStartRequest();
   }
 
   if (mAPIRedirectToURI && !mCanceled) {
@@ -2446,7 +2468,7 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
 }
 
 nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
-  LOG(("nsHttpChannel::ContinueProcessResponse1 [this=%p, rv=%" PRIx32 "]",
+  LOG(("nsHttpChannel::ContinueProcessResponse2 [this=%p, rv=%" PRIx32 "]",
        this, static_cast<uint32_t>(rv)));
 
   if (NS_SUCCEEDED(rv)) {
@@ -7049,8 +7071,6 @@ nsHttpChannel::GetRequestMethod(nsACString &aMethod) {
 //-----------------------------------------------------------------------------
 
 // This class is used to convert from a DOM promise to a MozPromise.
-// Once we have a native implementation of nsIRedirectProcessChooser we can
-// remove it and use MozPromises directly.
 class DomPromiseListener final : dom::PromiseNativeHandler {
   NS_DECL_ISUPPORTS
 
@@ -7092,8 +7112,26 @@ class DomPromiseListener final : dom::PromiseNativeHandler {
 
 NS_IMPL_ISUPPORTS0(DomPromiseListener)
 
+NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(dom::Promise *aTabPromise,
+                                             uint64_t aIdentifier) {
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG(aTabPromise);
+
+  LOG(("nsHttpChannel::SwitchProcessTo [this=%p]", this));
+  LogCallingScriptLocation(this);
+
+  // We cannot do this after OnStartRequest of the listener has been called.
+  NS_ENSURE_FALSE(mOnStartRequestCalled, NS_ERROR_NOT_AVAILABLE);
+
+  mRedirectTabPromise = DomPromiseListener::Create(aTabPromise);
+  mCrossProcessRedirectIdentifier = aIdentifier;
+  return NS_OK;
+}
+
 nsresult nsHttpChannel::StartCrossProcessRedirect() {
-  nsresult rv = CheckRedirectLimit(nsIChannelEventSink::REDIRECT_INTERNAL);
+  nsresult rv;
+
+  rv = CheckRedirectLimit(nsIChannelEventSink::REDIRECT_INTERNAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<HttpChannelParentListener> listener = do_QueryObject(mCallbacks);
@@ -7220,38 +7258,35 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     if (NS_SUCCEEDED(rv)) return NS_OK;
   }
 
-  // Check if the channel should be redirected to another process.
-  // If so, trigger a redirect, and the HttpChannelParentListener will
-  // redirect to the correct process
-  nsCOMPtr<nsIRedirectProcessChooser> requestChooser =
-      do_GetClassObject("@mozilla.org/network/processChooser");
-  if (requestChooser) {
-    nsCOMPtr<nsITabParent> tp;
-    nsCOMPtr<nsIParentChannel> parentChannel;
-    NS_QueryNotificationCallbacks(this, parentChannel);
-
-    RefPtr<dom::Promise> tabPromise;
-    rv = requestChooser->GetChannelRedirectTarget(
-        this, parentChannel, &mCrossProcessRedirectIdentifier,
-        getter_AddRefs(tabPromise));
-
-    if (NS_SUCCEEDED(rv) && tabPromise) {
-      // The promise will be handled in AsyncOnChannelRedirect.
-      mRedirectTabPromise = DomPromiseListener::Create(tabPromise);
-
-      PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
-      rv = StartCrossProcessRedirect();
-      if (NS_SUCCEEDED(rv)) {
-        return NS_OK;
-      }
-      PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
-    }
-  }
-
   // avoid crashing if mListener happens to be null...
   if (!mListener) {
     MOZ_ASSERT_UNREACHABLE("mListener is null");
     return NS_OK;
+  }
+
+  // before we check for redirects, check if the load should be shifted into a
+  // new process.
+  rv = NS_OK;
+  if (mRedirectTabPromise && !mCanceled) {
+    PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest0);
+    rv = StartCrossProcessRedirect();
+    if (NS_SUCCEEDED(rv)) {
+      return NS_OK;
+    }
+    PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest0);
+  }
+
+  // No process change is needed, so continue on to ContinueOnStartRequest0.
+  return ContinueOnStartRequest0(rv);
+}
+
+nsresult nsHttpChannel::ContinueOnStartRequest0(nsresult result) {
+  nsresult rv;
+
+  // if process selection failed, cancel this load.
+  if (NS_FAILED(result) && !mCanceled) {
+    Cancel(result);
+    return CallOnStartRequest();
   }
 
   // before we start any content load, check for redirectTo being called
