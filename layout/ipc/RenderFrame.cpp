@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/RemoteFrameChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayerTransactionParent.h"
@@ -168,10 +169,10 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
     mEventRegionsOverride |= EventRegionsOverride::ForceDispatchToContent;
   }
 
-  nsFrameLoader* frameLoader = GetRenderFrame()->GetFrameLoader();
-  if (frameLoader) {
-    TabParent* browser = TabParent::GetFrom(frameLoader);
-    if (browser) {
+  if (nsFrameLoader* frameLoader = GetFrameLoader()) {
+    // TODO: We need to handle acquiring a TabId in the remote sub-frame case
+    // for fission.
+    if (TabParent* browser = TabParent::GetFrom(frameLoader)) {
       mTabId = browser->GetTabId();
     }
   }
@@ -188,13 +189,12 @@ mozilla::LayerState nsDisplayRemote::GetLayerState(
 
 bool nsDisplayRemote::HasDeletedFrame() const {
   // RenderFrame might change without invalidating nsSubDocumentFrame.
-  return !GetRenderFrame() || nsDisplayItem::HasDeletedFrame();
+  return !GetFrameLoader() || nsDisplayItem::HasDeletedFrame();
 }
 
 already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
-  MOZ_ASSERT(GetRenderFrame());
   MOZ_ASSERT(mFrame, "Makes no sense to have a shadow tree without a frame");
 
   if (IsTempLayerManager(aManager)) {
@@ -210,7 +210,7 @@ already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
     return nullptr;
   }
 
-  LayersId remoteId = GetRenderFrame()->GetLayersId();
+  LayersId remoteId = GetRemoteLayersId();
 
   if (!remoteId.IsValid()) {
     return nullptr;
@@ -295,11 +295,12 @@ bool nsDisplayRemote::UpdateScrollData(
 }
 
 LayersId nsDisplayRemote::GetRemoteLayersId() const {
-  MOZ_ASSERT(GetRenderFrame());
-  return GetRenderFrame()->GetLayersId();
+  nsFrameLoader* frameLoader = GetFrameLoader();
+  MOZ_ASSERT(frameLoader && frameLoader->IsRemoteFrame());
+  return frameLoader->GetLayersId();
 }
 
-mozilla::layout::RenderFrame* nsDisplayRemote::GetRenderFrame() const {
-  return mFrame ? static_cast<nsSubDocumentFrame*>(mFrame)->GetRenderFrame()
+nsFrameLoader* nsDisplayRemote::GetFrameLoader() const {
+  return mFrame ? static_cast<nsSubDocumentFrame*>(mFrame)->FrameLoader()
                 : nullptr;
 }
