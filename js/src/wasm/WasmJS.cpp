@@ -36,6 +36,7 @@
 #include "vm/StringType.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
+#include "wasm/WasmCraneliftCompile.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmModule.h"
@@ -102,14 +103,19 @@ bool wasm::HasCompilerSupport(JSContext* cx) {
   }
 #endif
 
-  return BaselineCanCompile() || IonCanCompile();
+  return BaselineCanCompile() || IonCanCompile() || CraneliftCanCompile();
+}
+
+bool wasm::HasOptimizedCompilerTier(JSContext* cx) {
+  return (cx->options().wasmIon() && IonCanCompile()) ||
+         (cx->options().wasmCranelift() && CraneliftCanCompile());
 }
 
 // Return whether wasm compilation is allowed by prefs.  This check
 // only makes sense if HasCompilerSupport() is true.
 static bool HasAvailableCompilerTier(JSContext* cx) {
   return (cx->options().wasmBaseline() && BaselineCanCompile()) ||
-         (cx->options().wasmIon() && IonCanCompile());
+         HasOptimizedCompilerTier(cx);
 }
 
 bool wasm::HasSupport(JSContext* cx) {
@@ -119,7 +125,6 @@ bool wasm::HasSupport(JSContext* cx) {
 
 bool wasm::HasStreamingSupport(JSContext* cx) {
   // This should match EnsureStreamSupport().
-
   return HasSupport(cx) &&
          cx->runtime()->offThreadPromiseState.ref().initialized() &&
          CanUseExtraThreads() && cx->runtime()->consumeStreamCallback &&
@@ -127,7 +132,7 @@ bool wasm::HasStreamingSupport(JSContext* cx) {
 }
 
 bool wasm::HasCachingSupport(JSContext* cx) {
-  return HasStreamingSupport(cx) && cx->options().wasmIon() && IonCanCompile();
+  return HasStreamingSupport(cx) && HasOptimizedCompilerTier(cx);
 }
 
 static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
