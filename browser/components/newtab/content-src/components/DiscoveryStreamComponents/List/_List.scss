@@ -2,6 +2,21 @@
 $item-font-size: 13;
 $item-line-height: 20;
 
+.ds-list-title {
+  color: $grey-90;
+
+  // reset these, which come from the browser's <hr> implementation
+  margin-block-start: 0;
+  margin-block-end: 0;
+
+  // Since we don't have a border, we use padding instead of margin in order to
+  // defeat margin collapsing.
+  padding: 8px 0;
+
+  line-height: 24px;
+  font-size: 17px;
+}
+
 .ds-list-border {
   border: 1px solid $grey-40-36;
 
@@ -38,49 +53,6 @@ $item-line-height: 20;
     grid-row-gap: 18px;
   }
 
-  a {
-    // XXX note that this only looks right in the light theme
-    color: $grey-90;
-  }
-}
-
-.ds-list-images {
-  .ds-list-item .ds-list-image {
-    display: block;
-  }
-}
-
-.ds-list-numbers {
-  $counter-whitespace: ($item-line-height - $item-font-size) * 1px;
-  $counter-size: ($item-font-size) * 2px + $counter-whitespace;
-  $counter-padded-size: $counter-size + $counter-whitespace * 1.5;
-
-  .ds-list-item {
-    counter-increment: list;
-  }
-
-  .ds-list-item-link {
-    padding-inline-start: $counter-padded-size;
-
-    &::before {
-      background-color: var(--newtab-link-secondary-color);
-      border-radius: $counter-size;
-      color: $white;
-      content: counter(list);
-      font-size: 1.2em;
-      height: $counter-size;
-      line-height: $counter-size;
-      margin-inline-start: -$counter-padded-size;
-      margin-top: $counter-whitespace / 2;
-      position: absolute;
-      text-align: center;
-      width: $counter-size;
-    }
-
-    &:hover::before {
-      background-color: var(--newtab-link-primary-color);
-    }
-  }
 }
 
 // XXX this is gross, and attaches the bottom-border to the item above.
@@ -134,7 +106,6 @@ $item-line-height: 20;
   }
 
   .ds-list-image {
-    display: none;
     width: 72px;
     height: 72px;
     object-fit: cover;

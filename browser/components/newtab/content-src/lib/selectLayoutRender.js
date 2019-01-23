@@ -14,25 +14,17 @@ export const selectLayoutRender = createSelector(
   function layoutRender(layout, feeds, spocs) {
     let spocIndex = 0;
 
-    function maybeInjectSpocs(data, spocsConfig) {
-      if (data &&
-          spocsConfig && spocsConfig.positions && spocsConfig.positions.length &&
-          spocs.data.spocs && spocs.data.spocs.length) {
-        const recommendations = [...data.recommendations];
-        for (let position of spocsConfig.positions) {
-          let rickRoll = Math.random();
-          if (spocs.data.spocs[spocIndex] && rickRoll <= spocsConfig.probability) {
-            recommendations.splice(position.index, 0, spocs.data.spocs[spocIndex++]);
-          }
+    function calculateSpocs(component) {
+      return component.spocs.positions.map(position => {
+        const rickRoll = Math.random();
+        if (spocs.data.spocs[spocIndex] && rickRoll <= component.spocs.probability) {
+          return {
+            ...position,
+            result: spocs.data.spocs[spocIndex++],
+          };
         }
-
-        return {
-          ...data,
-          recommendations,
-        };
-      }
-
-      return data;
+        return position;
+      });
     }
 
     return layout.map(row => ({
@@ -45,7 +37,15 @@ export const selectLayoutRender = createSelector(
           return component;
         }
 
-        return {...component, data: maybeInjectSpocs(feeds[component.feed.url].data, component.spocs)};
+        // Calculate if we should display a spoc or not.
+        if (component.spocs && spocs.data.spocs && spocs.data.spocs.length) {
+          component.spocs = {
+            ...component.spocs,
+            positions: calculateSpocs(component),
+          };
+        }
+
+        return {...component, data: feeds[component.feed.url].data};
       }),
     }));
   }

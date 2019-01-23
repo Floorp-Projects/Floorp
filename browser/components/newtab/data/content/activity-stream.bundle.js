@@ -2567,7 +2567,7 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
         react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
           "td",
           null,
-          relativeTime(feeds[feed.url] ? feeds[feed.url].lastUpdated : null) || "(no data)"
+          relativeTime(feeds[feed.url].lastUpdated) || "(no data)"
         )
       )
     );
@@ -7090,11 +7090,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
           { className: "excerpt" },
           this.props.excerpt
         ),
-        this.props.context ? external_React_default.a.createElement(
-          "p",
-          { className: "context" },
-          this.props.context
-        ) : external_React_default.a.createElement(
+        external_React_default.a.createElement(
           "p",
           { className: "source" },
           this.props.source
@@ -7120,36 +7116,18 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
       key: `dscard-${index}`,
       image_src: rec.image_src,
       title: rec.title,
-      excerpt: rec.excerpt,
+      excerpt: rec.title,
       url: rec.url,
       id: rec.id,
       index: index,
       type: this.props.type,
-      context: rec.context,
       dispatch: this.props.dispatch,
       source: rec.domain }));
 
-    let divisibility = ``;
-
-    if (this.props.items % 4 === 0) {
-      divisibility = `divisible-by-4`;
-    } else if (this.props.items % 3 === 0) {
-      divisibility = `divisible-by-3`;
-    }
-
     return external_React_default.a.createElement(
       "div",
-      null,
-      external_React_default.a.createElement(
-        "div",
-        { className: "ds-header" },
-        this.props.title
-      ),
-      external_React_default.a.createElement(
-        "div",
-        { className: `ds-card-grid ds-card-grid-${divisibility}` },
-        cards
-      )
+      { className: "ds-card-grid" },
+      cards
     );
   }
 }
@@ -7210,7 +7188,6 @@ class Hero_Hero extends external_React_default.a.PureComponent {
       index: index + 1,
       type: this.props.type,
       dispatch: this.props.dispatch,
-      context: truncateText(rec.context || "", 22),
       source: truncateText(`TODO: SOURCE`, 22) }));
 
     return external_React_default.a.createElement(
@@ -7245,11 +7222,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
               null,
               truncateText(heroRec.excerpt, 114)
             ),
-            heroRec.context ? external_React_default.a.createElement(
-              "p",
-              { className: "context" },
-              truncateText(heroRec.context, 22)
-            ) : external_React_default.a.createElement(
+            external_React_default.a.createElement(
               "p",
               null,
               truncateText(`TODO: SOURCE`, 22)
@@ -7361,35 +7334,32 @@ function _List(props) {
 
   let recMarkup = recs.slice(0, props.items).map((rec, index) => external_React_default.a.createElement(List_ListItem, _extends({}, rec, { key: `ds-list-item-${index}`, index: index, type: props.type, dispatch: props.dispatch })));
 
-  const listStyles = ["ds-list", props.hasImages ? "ds-list-images" : "", props.hasNumbers ? "ds-list-numbers" : ""];
   return external_React_default.a.createElement(
     "div",
     null,
-    props.header && props.header.title ? external_React_default.a.createElement(
-      "div",
-      { className: "ds-header" },
-      props.header.title
-    ) : null,
+    external_React_default.a.createElement(
+      "h3",
+      { className: "ds-list-title" },
+      props.header && props.header.title
+    ),
     external_React_default.a.createElement("hr", { className: "ds-list-border" }),
     external_React_default.a.createElement(
       "ul",
-      { className: listStyles.join(" ") },
+      { className: "ds-list" },
       recMarkup
     )
   );
 }
 
 _List.defaultProps = {
-  hasImages: false, // Display images for each item
-  hasNumbers: false, // Display numbers for each item
   items: 6 // Number of stories to display.  TODO: get from endpoint
 };
 
 const List = Object(external_ReactRedux_["connect"])(state => ({ DiscoveryStream: state.DiscoveryStream }))(_List);
-// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/Navigation/Navigation.jsx
+// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle.jsx
 
 
-class Navigation_Topic extends external_React_default.a.PureComponent {
+class SectionTitle_Topic extends external_React_default.a.PureComponent {
   render() {
     const { url, name } = this.props;
     return external_React_default.a.createElement(
@@ -7404,40 +7374,26 @@ class Navigation_Topic extends external_React_default.a.PureComponent {
   }
 }
 
-class Navigation_Navigation extends external_React_default.a.PureComponent {
+class SectionTitle_SectionTitle extends external_React_default.a.PureComponent {
   render() {
-    const { links } = this.props || [];
-    const { alignment } = this.props || "centered";
+    const { topics } = this.props;
     return external_React_default.a.createElement(
       "span",
-      { className: `ds-navigation ds-navigation-${alignment}` },
+      { className: "ds-section-title" },
       external_React_default.a.createElement(
         "ul",
         null,
-        links && links.map(t => external_React_default.a.createElement(Navigation_Topic, { key: t.name, url: t.url, name: t.name }))
+        topics && topics.map(t => external_React_default.a.createElement(SectionTitle_Topic, { key: t.name, url: t.url, name: t.name })),
+        external_React_default.a.createElement(
+          "li",
+          null,
+          external_React_default.a.createElement(
+            "a",
+            { className: "ds-more-recommendations" },
+            "More Recommendations"
+          )
+        )
       )
-    );
-  }
-}
-// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle.jsx
-
-
-class SectionTitle_SectionTitle extends external_React_default.a.PureComponent {
-  render() {
-    const { header: { title, subtitle } } = this.props;
-    return external_React_default.a.createElement(
-      "div",
-      { className: "ds-section-title" },
-      external_React_default.a.createElement(
-        "div",
-        { className: "title" },
-        title
-      ),
-      subtitle ? external_React_default.a.createElement(
-        "div",
-        { className: "subtitle" },
-        subtitle
-      ) : null
     );
   }
 }
@@ -7575,22 +7531,16 @@ const selectLayoutRender = createSelector(
 function layoutRender(layout, feeds, spocs) {
   let spocIndex = 0;
 
-  function maybeInjectSpocs(data, spocsConfig) {
-    if (data && spocsConfig && spocsConfig.positions && spocsConfig.positions.length && spocs.data.spocs && spocs.data.spocs.length) {
-      const recommendations = [...data.recommendations];
-      for (let position of spocsConfig.positions) {
-        let rickRoll = Math.random();
-        if (spocs.data.spocs[spocIndex] && rickRoll <= spocsConfig.probability) {
-          recommendations.splice(position.index, 0, spocs.data.spocs[spocIndex++]);
-        }
+  function calculateSpocs(component) {
+    return component.spocs.positions.map(position => {
+      const rickRoll = Math.random();
+      if (spocs.data.spocs[spocIndex] && rickRoll <= component.spocs.probability) {
+        return Object.assign({}, position, {
+          result: spocs.data.spocs[spocIndex++]
+        });
       }
-
-      return Object.assign({}, data, {
-        recommendations
-      });
-    }
-
-    return data;
+      return position;
+    });
   }
 
   return layout.map(row => Object.assign({}, row, {
@@ -7602,7 +7552,14 @@ function layoutRender(layout, feeds, spocs) {
         return component;
       }
 
-      return Object.assign({}, component, { data: maybeInjectSpocs(feeds[component.feed.url].data, component.spocs) });
+      // Calculate if we should display a spoc or not.
+      if (component.spocs && spocs.data.spocs && spocs.data.spocs.length) {
+        component.spocs = Object.assign({}, component.spocs, {
+          positions: calculateSpocs(component)
+        });
+      }
+
+      return Object.assign({}, component, { data: feeds[component.feed.url].data });
     })
   }));
 });
@@ -7616,20 +7573,9 @@ var TopSites = __webpack_require__(30);
 
 class TopSites_TopSites extends external_React_default.a.PureComponent {
   render() {
-    const header = this.props.header || {};
     return external_React_default.a.createElement(
       "div",
       { className: "ds-top-sites" },
-      header.title ? external_React_default.a.createElement(
-        "div",
-        { className: "ds-header" },
-        external_React_default.a.createElement("span", { className: "icon icon-small-spacer icon-topsites" }),
-        external_React_default.a.createElement(
-          "span",
-          null,
-          header.title
-        )
-      ) : null,
       external_React_default.a.createElement(TopSites["TopSites"], null)
     );
   }
@@ -7640,7 +7586,6 @@ const TopSites_TopSites_TopSites = Object(external_ReactRedux_["connect"])(state
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isAllowedCSS", function() { return isAllowedCSS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_DiscoveryStreamBase", function() { return DiscoveryStreamBase_DiscoveryStreamBase; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DiscoveryStreamBase", function() { return DiscoveryStreamBase; });
-
 
 
 
@@ -7681,22 +7626,32 @@ function isAllowedCSS(property, value) {
   return !urls || urls.every(url => ALLOWED_CSS_URL_PREFIXES.some(prefix => url.slice(5).startsWith(prefix)));
 }
 
+function maybeInjectSpocs(data, spocs) {
+  if (!data || !spocs || !spocs.positions || !spocs.positions.length) {
+    return data;
+  }
+
+  const recommendations = [...data.recommendations];
+
+  for (let position of spocs.positions) {
+    const { result } = position;
+    if (result) {
+      // Insert spoc into the desired index.
+      recommendations.splice(position.index, 0, result);
+    }
+  }
+
+  return Object.assign({}, data, {
+    recommendations
+  });
+}
+
 class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onStyleMount = this.onStyleMount.bind(this);
   }
 
-  /**
-   * Extracts the recommendation rows from component for the impression ping.
-   * If `component.data.recommendations` is unset, returns an empty array.
-   *
-   * The row size is determined by the following rules:
-   *   - Use `component.properties.items` from the endpoint if it's specified
-   *   - Otherwise, use the length of recommendation array
-   *   - The row size is capped by the argument `limit`, which could be one of
-   *     [`MAX_ROW_HERO`, `MAX_ROWS_LIST`, `MAX_ROWS_CARDGRID`]
-   */
   extractRows(component, limit) {
     if (component.data && component.data.recommendations) {
       const items = Math.min(limit, component.properties.items || component.data.recommendations.length);
@@ -7738,7 +7693,7 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
           });
 
           // Set the actual desired selectors scoped to the component
-          const prefix = `.ds-layout > .ds-column:nth-child(${rowIndex + 1}) .ds-column-grid > :nth-child(${componentIndex + 1})`;
+          const prefix = `.ds-layout > .ds-column:nth-child(${rowIndex + 1}) > :nth-child(${componentIndex + 1})`;
           // NB: Splitting on "," doesn't work with strings with commas, but
           // we're okay with not supporting those selectors
           rule.selectorText = selectors.split(",").map(selector => prefix + (
@@ -7759,14 +7714,9 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
 
     switch (component.type) {
       case "TopSites":
-        return external_React_default.a.createElement(TopSites_TopSites_TopSites, { header: component.header });
+        return external_React_default.a.createElement(TopSites_TopSites_TopSites, null);
       case "SectionTitle":
-        return external_React_default.a.createElement(SectionTitle_SectionTitle, {
-          header: component.header });
-      case "Navigation":
-        return external_React_default.a.createElement(Navigation_Navigation, {
-          links: component.properties.links,
-          alignment: component.properties.alignment });
+        return external_React_default.a.createElement(SectionTitle_SectionTitle, null);
       case "CardGrid":
         rows = this.extractRows(component, MAX_ROWS_CARDGRID);
         return external_React_default.a.createElement(
@@ -7774,7 +7724,7 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
           { rows: rows, dispatch: this.props.dispatch, source: component.type },
           external_React_default.a.createElement(CardGrid_CardGrid, {
             title: component.header && component.header.title,
-            data: component.data,
+            data: maybeInjectSpocs(component.data, component.spocs),
             feed: component.feed,
             border: component.properties.border,
             type: component.type,
@@ -7788,7 +7738,7 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
           { rows: rows, dispatch: this.props.dispatch, source: component.type },
           external_React_default.a.createElement(Hero_Hero, {
             title: component.header && component.header.title,
-            data: component.data,
+            data: maybeInjectSpocs(component.data, component.spocs),
             border: component.properties.border,
             type: component.type,
             dispatch: this.props.dispatch,
@@ -7797,14 +7747,12 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
       case "HorizontalRule":
         return external_React_default.a.createElement(HorizontalRule_HorizontalRule, null);
       case "List":
-        rows = this.extractRows(component, MAX_ROWS_LIST);
+        rows = this.extractRows(component, Math.min(component.properties.items, MAX_ROWS_LIST));
         return external_React_default.a.createElement(
           ImpressionStats["ImpressionStats"],
           { rows: rows, dispatch: this.props.dispatch, source: component.type },
           external_React_default.a.createElement(List, {
             feed: component.feed,
-            hasImages: component.properties.has_images,
-            hasNumbers: component.properties.has_numbers,
             items: component.properties.items,
             type: component.type,
             header: component.header })
@@ -7834,18 +7782,14 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
       layoutRender.map((row, rowIndex) => external_React_default.a.createElement(
         "div",
         { key: `row-${rowIndex}`, className: `ds-column ds-column-${row.width}` },
-        external_React_default.a.createElement(
-          "div",
-          { className: "ds-column-grid" },
-          row.components.map((component, componentIndex) => {
-            styles[rowIndex] = [...(styles[rowIndex] || []), component.styles];
-            return external_React_default.a.createElement(
-              "div",
-              { key: `component-${componentIndex}` },
-              this.renderComponent(component)
-            );
-          })
-        )
+        row.components.map((component, componentIndex) => {
+          styles[rowIndex] = [...(styles[rowIndex] || []), component.styles];
+          return external_React_default.a.createElement(
+            "div",
+            { key: `component-${componentIndex}` },
+            this.renderComponent(component)
+          );
+        })
       )),
       this.renderStyles(styles)
     );

@@ -110,5 +110,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Aviso de privacidade",
   "firstrun_continue_to_login": "Continuar",
   "firstrun_skip_login": "Saltar este passo",
-  "context_menu_title": "Abrir menu"
+  "context_menu_title": "Abrir menu",
+  "pocket_learn_more": "Saiba mais"
 };
