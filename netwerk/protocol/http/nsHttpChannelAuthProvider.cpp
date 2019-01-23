@@ -1542,15 +1542,15 @@ void nsHttpChannelAuthProvider::SetAuthorizationHeader(
   // or a webserver
   nsISupports **continuationState;
 
+  nsAutoCString suffix;
   if (header == nsHttp::Proxy_Authorization) {
     continuationState = &mProxyAuthContinuationState;
   } else {
     continuationState = &mAuthContinuationState;
-  }
 
-  nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
-  nsAutoCString suffix;
-  GetOriginAttributesSuffix(chan, suffix);
+    nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
+    GetOriginAttributesSuffix(chan, suffix);
+  }
 
   rv = authCache->GetAuthEntryForPath(scheme, host, port, path, suffix, &entry);
   if (NS_SUCCEEDED(rv)) {

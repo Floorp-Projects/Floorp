@@ -342,15 +342,18 @@ def run_command(command, check=False, **kwargs):
     return stdout, stderr, status
 
 
+# Replacement strings in environment variables.
+REPLACEMENTS = {
+    'DIR': DIR.scripts,
+    'TOOLTOOL_CHECKOUT': DIR.tooltool,
+    'MOZ_UPLOAD_DIR': env['MOZ_UPLOAD_DIR'],
+    'OUTDIR': OUTDIR,
+}
+
 # Add in environment variable settings for this variant. Normally used to
 # modify the flags passed to the shell or to set the GC zeal mode.
 for k, v in variant.get('env', {}).items():
-    env[k.encode('ascii')] = v.encode('ascii').format(
-        DIR=DIR.scripts,
-        TOOLTOOL_CHECKOUT=DIR.tooltool,
-        MOZ_UPLOAD_DIR=env['MOZ_UPLOAD_DIR'],
-        OUTDIR=OUTDIR,
-    )
+    env[k.encode('ascii')] = v.encode('ascii').format(**REPLACEMENTS)
 
 if AUTOMATION:
     # Currently only supported on linux64.
@@ -459,6 +462,10 @@ elif platform.system() == 'Darwin':
     variant_platform = 'macosx64'
 else:
     variant_platform = 'other'
+
+# Override environment variant settings conditionally.
+for k, v in variant.get('conditional-env', {}).get(variant_platform, {}).items():
+    env[k.encode('ascii')] = v.encode('ascii').format(**REPLACEMENTS)
 
 # Skip any tests that are not run on this platform (or the 'all' platform).
 test_suites -= set(normalize_tests(variant.get('skip-tests', {}).get(variant_platform, [])))

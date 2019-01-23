@@ -25,10 +25,8 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 
 namespace base {
 
-bool LaunchApp(const std::vector<std::string>& argv,
-               const LaunchOptions& options,
-               ProcessHandle* process_handle)
-{
+bool LaunchApp(const std::vector<std::string>& argv, const LaunchOptions& options,
+               ProcessHandle* process_handle) {
   bool retval = true;
 
   char* argv_copy[argv.size() + 1];
@@ -43,9 +41,8 @@ bool LaunchApp(const std::vector<std::string>& argv,
   if (posix_spawn_file_actions_init(&file_actions) != 0) {
     return false;
   }
-  auto file_actions_guard = mozilla::MakeScopeExit([&file_actions] {
-    posix_spawn_file_actions_destroy(&file_actions);
-  });
+  auto file_actions_guard =
+      mozilla::MakeScopeExit([&file_actions] { posix_spawn_file_actions_destroy(&file_actions); });
 
   // Turn fds_to_remap array into a set of dup2 calls.
   mozilla::ipc::FileDescriptorShuffle shuffle;
@@ -66,9 +63,8 @@ bool LaunchApp(const std::vector<std::string>& argv,
   if (posix_spawnattr_init(&spawnattr) != 0) {
     return false;
   }
-  auto spawnattr_guard = mozilla::MakeScopeExit([&spawnattr] {
-    posix_spawnattr_destroy(&spawnattr);
-  });
+  auto spawnattr_guard =
+      mozilla::MakeScopeExit([&spawnattr] { posix_spawnattr_destroy(&spawnattr); });
 
   // Prevent the child process from inheriting any file descriptors
   // that aren't named in `file_actions`.  (This is an Apple-specific
@@ -85,32 +81,23 @@ bool LaunchApp(const std::vector<std::string>& argv,
   }
 
   int pid = 0;
-  int spawn_succeeded = (posix_spawnp(&pid,
-                                      argv_copy[0],
-                                      &file_actions,
-                                      &spawnattr,
-                                      argv_copy,
-                                      vars.get()) == 0);
+  int spawn_succeeded =
+      (posix_spawnp(&pid, argv_copy[0], &file_actions, &spawnattr, argv_copy, vars.get()) == 0);
 
   bool process_handle_valid = pid > 0;
   if (!spawn_succeeded || !process_handle_valid) {
     retval = false;
   } else {
-    gProcessLog.print("==> process %d launched child process %d\n",
-                      GetCurrentProcId(), pid);
-    if (options.wait)
-      HANDLE_EINTR(waitpid(pid, 0, 0));
+    gProcessLog.print("==> process %d launched child process %d\n", GetCurrentProcId(), pid);
+    if (options.wait) HANDLE_EINTR(waitpid(pid, 0, 0));
 
-    if (process_handle)
-      *process_handle = pid;
+    if (process_handle) *process_handle = pid;
   }
 
   return retval;
 }
 
-bool LaunchApp(const CommandLine& cl,
-               const LaunchOptions& options,
-               ProcessHandle* process_handle) {
+bool LaunchApp(const CommandLine& cl, const LaunchOptions& options, ProcessHandle* process_handle) {
   return LaunchApp(cl.argv(), options, process_handle);
 }
 

@@ -6,7 +6,6 @@
 
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/EventQueue.h"
-#include "LabeledEventQueue.h"
 
 #include "LeakRefPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -290,5 +289,4 @@ void ThreadEventQueue<InnerQueueT>::SetObserver(nsIThreadObserver* aObserver) {
 namespace mozilla {
 template class ThreadEventQueue<EventQueue>;
 template class ThreadEventQueue<PrioritizedEventQueue<EventQueue>>;
-template class ThreadEventQueue<PrioritizedEventQueue<LabeledEventQueue>>;
 }  // namespace mozilla

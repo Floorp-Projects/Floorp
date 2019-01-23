@@ -11,9 +11,7 @@
 
 namespace mozilla {
 
-nsresult
-CopyCocoaStringToXPCOMString(NSString* aFrom, nsAString& aTo)
-{
+nsresult CopyCocoaStringToXPCOMString(NSString* aFrom, nsAString& aTo) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NSUInteger len = [aFrom length];
@@ -32,4 +30,4 @@ CopyCocoaStringToXPCOMString(NSString* aFrom, nsAString& aTo)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-} // namespace Mozilla
+}  // namespace Mozilla

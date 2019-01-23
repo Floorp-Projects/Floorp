@@ -10,8 +10,7 @@
 #include "mozilla/MacStringHelpers.h"
 #include "mozilla/Unused.h"
 
-void GetObjCExceptionInfo(void* inException, nsACString& outString)
-{
+void GetObjCExceptionInfo(void* inException, nsACString& outString) {
   NSException* e = (NSException*)inException;
 
   NSString* name = [e name];
