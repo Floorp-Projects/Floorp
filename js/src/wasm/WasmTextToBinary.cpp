@@ -3622,6 +3622,9 @@ static AstMemOrTableCopy* ParseMemOrTableCopy(WasmParseContext& c,
   // (table.copy dest-table dest src-table src len)
   // (table.copy dest src len)
   // (memory.copy dest src len)
+  //
+  // Note that while the instruction *encoding* has src-table before dest-table,
+  // we use the normal (dest, src) order in text.
 
   AstRef targetMemOrTable = AstRef(0);
   bool requireSource = false;
@@ -5553,9 +5556,11 @@ static bool ResolveWake(Resolver& r, AstWake& s) {
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
 static bool ResolveMemOrTableCopy(Resolver& r, AstMemOrTableCopy& s) {
-  return ResolveExpr(r, s.dest()) && ResolveExpr(r, s.src()) &&
-         ResolveExpr(r, s.len()) && r.resolveTable(s.destTable()) &&
-         r.resolveTable(s.srcTable());
+  return ResolveExpr(r, s.dest()) &&
+         ResolveExpr(r, s.src()) &&
+         ResolveExpr(r, s.len()) &&
+         (s.isMem() || r.resolveTable(s.destTable())) &&
+         (s.isMem() || r.resolveTable(s.srcTable()));
 }
 
 static bool ResolveMemFill(Resolver& r, AstMemFill& s) {
@@ -6321,18 +6326,12 @@ static bool EncodeWake(Encoder& e, AstWake& s) {
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
 static bool EncodeMemOrTableCopy(Encoder& e, AstMemOrTableCopy& s) {
-  bool result = EncodeExpr(e, s.dest()) && EncodeExpr(e, s.src()) &&
-                EncodeExpr(e, s.len()) &&
-                e.writeOp(s.isMem() ? MiscOp::MemCopy : MiscOp::TableCopy);
-  if (s.destTable().index() == 0 && s.srcTable().index() == 0) {
-    result = result && e.writeVarU32(uint32_t(MemoryTableFlags::Default));
-  } else {
-    result = result &&
-             e.writeVarU32(uint32_t(MemoryTableFlags::HasTableIndex)) &&
-             e.writeVarU32(s.destTable().index()) &&
-             e.writeVarU32(s.srcTable().index());
-  }
-  return result;
+  return EncodeExpr(e, s.dest()) &&
+         EncodeExpr(e, s.src()) &&
+         EncodeExpr(e, s.len()) &&
+         e.writeOp(s.isMem() ? MiscOp::MemCopy : MiscOp::TableCopy) &&
+         e.writeVarU32(s.isMem() ? 0 : s.srcTable().index()) &&
+         e.writeVarU32(s.isMem() ? 0 : s.destTable().index());
 }
 
 static bool EncodeDataOrElemDrop(Encoder& e, AstDataOrElemDrop& s) {
