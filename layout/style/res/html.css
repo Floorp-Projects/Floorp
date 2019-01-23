@@ -817,25 +817,23 @@ details > summary:first-of-type > *|* {
 
 /* <dialog> element styles */
 
-@supports -moz-bool-pref("dom.dialog_element.enabled") {
-  dialog {
-    position: absolute;
-    inset-inline-start: 0;
-    inset-inline-end: 0;
-    color: black;
-    margin: auto;
-    border-width: initial;
-    border-style: solid;
-    border-color: initial;
-    border-image: initial;
-    padding: 1em;
-    background: white;
-    width: -moz-fit-content;
-  }
+dialog {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  color: black;
+  margin: auto;
+  border-width: initial;
+  border-style: solid;
+  border-color: initial;
+  border-image: initial;
+  padding: 1em;
+  background: white;
+  width: -moz-fit-content;
+}
 
-  dialog:not([open]) {
-    display: none;
-  }
+dialog:not([open]) {
+  display: none;
 }
 
 /* emulation of non-standard HTML <marquee> tag */
