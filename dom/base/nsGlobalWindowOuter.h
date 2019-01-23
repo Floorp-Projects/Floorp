@@ -360,6 +360,12 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   already_AddRefed<nsPIDOMWindowOuter> IndexedGetterOuter(uint32_t aIndex);
 
   already_AddRefed<nsPIDOMWindowOuter> GetTop() override;
+  // Similar to GetTop() except that it stops at content frames that an
+  // extension has permission to access.  This is used by the third-party util
+  // service in order to determine the top window for a channel which is used
+  // in third-partiness checks.
+  already_AddRefed<nsPIDOMWindowOuter>
+  GetTopExcludingExtensionAccessibleContentFrames(nsIURI* aURIBeingLoaded);
   nsPIDOMWindowOuter* GetScriptableTop() override;
   inline nsGlobalWindowOuter* GetTopInternal();
 

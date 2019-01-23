@@ -451,6 +451,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   }
 
  protected:
+  nsresult GetTopWindowURI(nsIURI *aURIBeingLoaded, nsIURI **aTopWindowURI);
+
   // Handle notifying listener, removing from loadgroup if request failed.
   void DoNotifyListener();
   virtual void DoNotifyListenerCleanup() = 0;
