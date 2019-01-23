@@ -338,10 +338,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   MOZ_MUST_USE nsresult ProcessResponse();
   void AsyncContinueProcessResponse();
   MOZ_MUST_USE nsresult ContinueProcessResponse1();
-  MOZ_MUST_USE nsresult ContinueProcessResponse1_5(nsresult);
   MOZ_MUST_USE nsresult ContinueProcessResponse2(nsresult);
   void UpdateCacheDisposition(bool aSuccessfulReval, bool aPartialContentUsed);
   MOZ_MUST_USE nsresult ContinueProcessResponse3(nsresult);
+  MOZ_MUST_USE nsresult ContinueProcessResponse4(nsresult);
   MOZ_MUST_USE nsresult ProcessNormal();
   MOZ_MUST_USE nsresult ContinueProcessNormal(nsresult);
   void ProcessAltService();
@@ -362,10 +362,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   void ProcessSSLInformation();
   bool IsHTTPS();
 
-  MOZ_MUST_USE nsresult ContinueOnStartRequest0(nsresult);
   MOZ_MUST_USE nsresult ContinueOnStartRequest1(nsresult);
   MOZ_MUST_USE nsresult ContinueOnStartRequest2(nsresult);
   MOZ_MUST_USE nsresult ContinueOnStartRequest3(nsresult);
+  MOZ_MUST_USE nsresult ContinueOnStartRequest4(nsresult);
 
   void OnClassOfServiceUpdated();
 
