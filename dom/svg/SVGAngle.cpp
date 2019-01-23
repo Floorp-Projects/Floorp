@@ -13,7 +13,7 @@
 #include "mozilla/dom/SVGAnimatedAngle.h"
 #include "mozilla/dom/SVGMarkerElement.h"
 #include "nsContentUtils.h"
-#include "nsSVGAttrTearoffTable.h"
+#include "SVGAttrTearoffTable.h"
 #include "SVGOrientSMILType.h"
 #include "nsTextFormatter.h"
 
@@ -28,10 +28,10 @@ static const nsStaticAtom* const angleUnitMap[] = {
     nullptr, /* SVG_ANGLETYPE_UNSPECIFIED */
     nsGkAtoms::deg, nsGkAtoms::rad, nsGkAtoms::grad};
 
-static nsSVGAttrTearoffTable<SVGAngle, SVGAnimatedAngle>
+static SVGAttrTearoffTable<SVGAngle, SVGAnimatedAngle>
     sSVGAnimatedAngleTearoffTable;
-static nsSVGAttrTearoffTable<SVGAngle, DOMSVGAngle> sBaseSVGAngleTearoffTable;
-static nsSVGAttrTearoffTable<SVGAngle, DOMSVGAngle> sAnimSVGAngleTearoffTable;
+static SVGAttrTearoffTable<SVGAngle, DOMSVGAngle> sBaseSVGAngleTearoffTable;
+static SVGAttrTearoffTable<SVGAngle, DOMSVGAngle> sAnimSVGAngleTearoffTable;
 
 /* Helper functions */
 

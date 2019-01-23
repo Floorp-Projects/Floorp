@@ -11,13 +11,13 @@
 #include "nsAtom.h"
 #include "nsError.h"
 #include "SMILEnumType.h"
-#include "nsSVGAttrTearoffTable.h"
+#include "SVGAttrTearoffTable.h"
 
 using namespace mozilla::dom;
 
 namespace mozilla {
 
-static nsSVGAttrTearoffTable<SVGEnum, SVGEnum::DOMAnimatedEnum>
+static SVGAttrTearoffTable<SVGEnum, SVGEnum::DOMAnimatedEnum>
     sSVGAnimatedEnumTearoffTable;
 
 const SVGEnumMapping* SVGEnum::GetMapping(SVGElement* aSVGElement) {

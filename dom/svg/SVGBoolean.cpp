@@ -8,7 +8,7 @@
 
 #include "nsError.h"
 #include "SMILBoolType.h"
-#include "nsSVGAttrTearoffTable.h"
+#include "SVGAttrTearoffTable.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/dom/SVGAnimatedBoolean.h"
 
@@ -18,9 +18,9 @@ namespace mozilla {
 
 /* Implementation */
 
-static inline nsSVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>&
+static inline SVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>&
 SVGAnimatedBooleanTearoffTable() {
-  static nsSVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>
+  static SVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>
       sSVGAnimatedBooleanTearoffTable;
   return sSVGAnimatedBooleanTearoffTable;
 }

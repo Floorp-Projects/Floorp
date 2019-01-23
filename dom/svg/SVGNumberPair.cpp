@@ -7,7 +7,7 @@
 #include "SVGNumberPair.h"
 
 #include "nsCharSeparatedTokenizer.h"
-#include "nsSVGAttrTearoffTable.h"
+#include "SVGAttrTearoffTable.h"
 #include "SVGNumberPairSMILType.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
@@ -16,9 +16,9 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-static nsSVGAttrTearoffTable<SVGNumberPair, SVGNumberPair::DOMAnimatedNumber>
+static SVGAttrTearoffTable<SVGNumberPair, SVGNumberPair::DOMAnimatedNumber>
     sSVGFirstAnimatedNumberTearoffTable;
-static nsSVGAttrTearoffTable<SVGNumberPair, SVGNumberPair::DOMAnimatedNumber>
+static SVGAttrTearoffTable<SVGNumberPair, SVGNumberPair::DOMAnimatedNumber>
     sSVGSecondAnimatedNumberTearoffTable;
 
 static nsresult ParseNumberOptionalNumber(const nsAString& aValue,

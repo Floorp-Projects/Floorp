@@ -11,13 +11,13 @@
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGViewportElement.h"
 #include "nsContentUtils.h"
-#include "nsIFrame.h"
-#include "SMILFloatType.h"
-#include "nsSVGAttrTearoffTable.h"
-#include "nsSVGIntegrationUtils.h"
 #include "DOMSVGLength.h"
-#include "nsTextFormatter.h"
+#include "nsIFrame.h"
 #include "LayoutLogging.h"
+#include "SMILFloatType.h"
+#include "SVGAttrTearoffTable.h"
+#include "nsSVGIntegrationUtils.h"
+#include "nsTextFormatter.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -35,7 +35,7 @@ static const nsStaticAtom* const unitMap[] = {
     nsGkAtoms::pt,
     nsGkAtoms::pc};
 
-static nsSVGAttrTearoffTable<nsSVGLength2, SVGAnimatedLength>
+static SVGAttrTearoffTable<nsSVGLength2, SVGAnimatedLength>
     sSVGAnimatedLengthTearoffTable;
 
 /* Helper functions */
