@@ -4068,18 +4068,6 @@ CookieStatus nsCookieService::CheckPrefs(
 
         case nsICookiePermission::ACCESS_ALLOW:
           return STATUS_ACCEPTED;
-
-        case nsICookiePermission::ACCESS_ALLOW_FIRST_PARTY_ONLY:
-          if (aIsForeign) {
-            COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI,
-                              aCookieHeader,
-                              "third party cookies are blocked "
-                              "for this site");
-            *aRejectedReason =
-                nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION;
-            return STATUS_REJECTED;
-          }
-          return STATUS_ACCEPTED;
       }
     }
   }
