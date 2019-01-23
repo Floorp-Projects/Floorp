@@ -18,7 +18,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 
 function invalidCode(code, methodName) {
   let message = `{Array/String}.${methodName} doesn't modify the instance in-place`;
-  return {code, errors: [{message, type: "ExpressionStatement"}]};
+  return {code, errors: [{message, type: "MemberExpression"}]};
 }
 
 ruleTester.run("use-returnValue", rule, {
@@ -28,6 +28,7 @@ ruleTester.run("use-returnValue", rule, {
     "c = baz.concat()",
     "d = qux.join(' ')",
     "e = quux.slice(1)",
+    "Int64.join(-0x80000001, 0)",
   ],
   invalid: [
     invalidCode("foo.concat(bar)", "concat"),
