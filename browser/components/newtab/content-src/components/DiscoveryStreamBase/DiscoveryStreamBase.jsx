@@ -4,7 +4,6 @@ import {Hero} from "content-src/components/DiscoveryStreamComponents/Hero/Hero";
 import {HorizontalRule} from "content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule";
 import {ImpressionStats} from "content-src/components/DiscoveryStreamImpressionStats/ImpressionStats";
 import {List} from "content-src/components/DiscoveryStreamComponents/List/List";
-import {Navigation} from "content-src/components/DiscoveryStreamComponents/Navigation/Navigation";
 import React from "react";
 import {SectionTitle} from "content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle";
 import {selectLayoutRender} from "content-src/lib/selectLayoutRender";
@@ -40,22 +39,33 @@ export function isAllowedCSS(property, value) {
     url.slice(5).startsWith(prefix)));
 }
 
+function maybeInjectSpocs(data, spocs) {
+  if (!data || !spocs || !spocs.positions || !spocs.positions.length) {
+    return data;
+  }
+
+  const recommendations = [...data.recommendations];
+
+  for (let position of spocs.positions) {
+    const {result} = position;
+    if (result) {
+      // Insert spoc into the desired index.
+      recommendations.splice(position.index, 0, result);
+    }
+  }
+
+  return {
+    ...data,
+    recommendations,
+  };
+}
+
 export class _DiscoveryStreamBase extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onStyleMount = this.onStyleMount.bind(this);
   }
 
-  /**
-   * Extracts the recommendation rows from component for the impression ping.
-   * If `component.data.recommendations` is unset, returns an empty array.
-   *
-   * The row size is determined by the following rules:
-   *   - Use `component.properties.items` from the endpoint if it's specified
-   *   - Otherwise, use the length of recommendation array
-   *   - The row size is capped by the argument `limit`, which could be one of
-   *     [`MAX_ROW_HERO`, `MAX_ROWS_LIST`, `MAX_ROWS_CARDGRID`]
-   */
   extractRows(component, limit) {
     if (component.data && component.data.recommendations) {
       const items = Math.min(limit, component.properties.items || component.data.recommendations.length);
@@ -97,7 +107,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
           });
 
           // Set the actual desired selectors scoped to the component
-          const prefix = `.ds-layout > .ds-column:nth-child(${rowIndex + 1}) .ds-column-grid > :nth-child(${componentIndex + 1})`;
+          const prefix = `.ds-layout > .ds-column:nth-child(${rowIndex + 1}) > :nth-child(${componentIndex + 1})`;
           // NB: Splitting on "," doesn't work with strings with commas, but
           // we're okay with not supporting those selectors
           rule.selectorText = selectors.split(",").map(selector => prefix +
@@ -118,25 +128,16 @@ export class _DiscoveryStreamBase extends React.PureComponent {
 
     switch (component.type) {
       case "TopSites":
-        return (<TopSites header={component.header} />);
+        return (<TopSites />);
       case "SectionTitle":
-        return (
-          <SectionTitle
-            header={component.header} />
-        );
-      case "Navigation":
-        return (
-          <Navigation
-            links={component.properties.links}
-            alignment={component.properties.alignment} />
-        );
+        return (<SectionTitle />);
       case "CardGrid":
         rows = this.extractRows(component, MAX_ROWS_CARDGRID);
         return (
           <ImpressionStats rows={rows} dispatch={this.props.dispatch} source={component.type}>
             <CardGrid
               title={component.header && component.header.title}
-              data={component.data}
+              data={maybeInjectSpocs(component.data, component.spocs)}
               feed={component.feed}
               border={component.properties.border}
               type={component.type}
@@ -150,7 +151,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
           <ImpressionStats rows={rows} dispatch={this.props.dispatch} source={component.type}>
             <Hero
               title={component.header && component.header.title}
-              data={component.data}
+              data={maybeInjectSpocs(component.data, component.spocs)}
               border={component.properties.border}
               type={component.type}
               dispatch={this.props.dispatch}
@@ -160,13 +161,12 @@ export class _DiscoveryStreamBase extends React.PureComponent {
       case "HorizontalRule":
         return (<HorizontalRule />);
       case "List":
-        rows = this.extractRows(component, MAX_ROWS_LIST);
+        rows = this.extractRows(component,
+          Math.min(component.properties.items, MAX_ROWS_LIST));
         return (
           <ImpressionStats rows={rows} dispatch={this.props.dispatch} source={component.type}>
             <List
               feed={component.feed}
-              hasImages={component.properties.has_images}
-              hasNumbers={component.properties.has_numbers}
               items={component.properties.items}
               type={component.type}
               header={component.header} />
@@ -191,14 +191,12 @@ export class _DiscoveryStreamBase extends React.PureComponent {
       <div className="discovery-stream ds-layout">
         {layoutRender.map((row, rowIndex) => (
           <div key={`row-${rowIndex}`} className={`ds-column ds-column-${row.width}`}>
-            <div className="ds-column-grid">
-              {row.components.map((component, componentIndex) => {
-                styles[rowIndex] = [...styles[rowIndex] || [], component.styles];
-                return (<div key={`component-${componentIndex}`}>
-                  {this.renderComponent(component)}
-                </div>);
-              })}
-            </div>
+            {row.components.map((component, componentIndex) => {
+              styles[rowIndex] = [...styles[rowIndex] || [], component.styles];
+              return (<div key={`component-${componentIndex}`}>
+                {this.renderComponent(component)}
+              </div>);
+            })}
           </div>
         ))}
         {this.renderStyles(styles)}
