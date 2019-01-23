@@ -52,34 +52,6 @@ add_task(async function checkReturnToAboutHome() {
   }
 });
 
-add_task(async function checkExceptionDialogButton() {
-  Services.prefs.setBoolPref(PREF_NEW_CERT_ERRORS, true);
-  info("Loading a bad cert page and making sure the exceptionDialogButton directly adds an exception");
-  let tab = await openErrorPage(BAD_CERT);
-  let browser = tab.linkedBrowser;
-  let loaded = BrowserTestUtils.browserLoaded(browser, false, BAD_CERT);
-  info("Clicking the exceptionDialogButton in advanced panel");
-  await ContentTask.spawn(browser, null, async function() {
-    let doc = content.document;
-    let exceptionButton = doc.getElementById("exceptionDialogButton");
-    exceptionButton.click();
-  });
-
-  info("Loading the url after adding exception");
-  await loaded;
-
-  await ContentTask.spawn(browser, null, async function() {
-    let doc = content.document;
-    ok(!doc.documentURI.startsWith("about:certerror"), "Exception has been added");
-  });
-
-  let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
-                              .getService(Ci.nsICertOverrideService);
-  certOverrideService.clearValidityOverride("expired.example.com", -1);
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  Services.prefs.clearUserPref(PREF_NEW_CERT_ERRORS);
-});
-
 add_task(async function checkReturnToPreviousPage() {
   info("Loading a bad cert page and making sure 'return to previous page' goes back");
   for (let useFrame of [false, true]) {
@@ -123,43 +95,6 @@ add_task(async function checkReturnToPreviousPage() {
     is(browser.webNavigation.canGoBack, false, "!webNavigation.canGoBack");
     is(browser.webNavigation.canGoForward, true, "webNavigation.canGoForward");
     is(gBrowser.currentURI.spec, GOOD_PAGE, "Went back");
-
-    BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
-});
-
-add_task(async function checkBadStsCert() {
-  info("Loading a badStsCert and making sure exception button doesn't show up");
-
-  for (let useFrame of [false, true]) {
-    let tab = await openErrorPage(BAD_STS_CERT, useFrame);
-    let browser = tab.linkedBrowser;
-
-    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
-      let exceptionButton = doc.getElementById("exceptionDialogButton");
-      ok(ContentTaskUtils.is_hidden(exceptionButton), "Exception button is hidden.");
-    });
-
-    let message = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
-      let advancedButton = doc.getElementById("advancedButton");
-      advancedButton.click();
-      return doc.getElementById("badCertTechnicalInfo").textContent;
-    });
-    if (Services.prefs.getBoolPref(PREF_NEW_CERT_ERRORS)) {
-      ok(message.includes("SSL_ERROR_BAD_CERT_DOMAIN"), "Didn't find SSL_ERROR_BAD_CERT_DOMAIN.");
-      ok(message.includes("The certificate is only valid for"), "Didn't find error message.");
-      ok(message.includes("a certificate that is not valid for"), "Didn't find error message.");
-      ok(message.includes("badchain.include-subdomains.pinning.example.com"), "Didn't find domain in error message.");
-
-      BrowserTestUtils.removeTab(gBrowser.selectedTab);
-      return;
-    }
-    ok(message.includes("SSL_ERROR_BAD_CERT_DOMAIN"), "Didn't find SSL_ERROR_BAD_CERT_DOMAIN.");
-    ok(message.includes("The certificate is only valid for"), "Didn't find error message.");
-    ok(message.includes("uses an invalid security certificate"), "Didn't find error message.");
-    ok(message.includes("badchain.include-subdomains.pinning.example.com"), "Didn't find domain in error message.");
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
@@ -238,41 +173,6 @@ add_task(async function checkAdvancedDetails() {
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
-});
-
-add_task(async function checkhideAddExceptionButtonViaPref() {
-  info("Loading a bad cert page and verifying the pref security.certerror.hideAddException");
-  Services.prefs.setBoolPref("security.certerror.hideAddException", true);
-
-  for (let useFrame of [false, true]) {
-    let tab = await openErrorPage(BAD_CERT, useFrame);
-    let browser = tab.linkedBrowser;
-
-    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
-      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
-
-      let exceptionButton = doc.querySelector(".exceptionDialogButtonContainer");
-      ok(ContentTaskUtils.is_hidden(exceptionButton), "Exception button is hidden.");
-    });
-
-    BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
-
-  Services.prefs.clearUserPref("security.certerror.hideAddException");
-});
-
-add_task(async function checkhideAddExceptionButtonInFrames() {
-  info("Loading a bad cert page in a frame and verifying it's hidden.");
-  let tab = await openErrorPage(BAD_CERT, true);
-  let browser = tab.linkedBrowser;
-
-  await ContentTask.spawn(browser, null, async function() {
-    let doc = content.document.querySelector("iframe").contentDocument;
-    let exceptionButton = doc.getElementById("exceptionDialogButton");
-    ok(ContentTaskUtils.is_hidden(exceptionButton), "Exception button is hidden.");
-  });
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function checkAdvancedDetailsForHSTS() {
@@ -412,35 +312,3 @@ add_task(async function checkViewCertificate() {
   }
   Services.prefs.clearUserPref(PREF_NEW_CERT_ERRORS);
 });
-
-function getCertChain(securityInfoAsString) {
-  let certChain = "";
-  const serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
-                       .getService(Ci.nsISerializationHelper);
-  let securityInfo = serhelper.deserializeObject(securityInfoAsString);
-  securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-  for (let cert of securityInfo.failedCertChain.getEnumerator()) {
-    certChain += getPEMString(cert);
-  }
-  return certChain;
-}
-
-function getDERString(cert) {
-  var length = {};
-  var derArray = cert.getRawDER(length);
-  var derString = "";
-  for (var i = 0; i < derArray.length; i++) {
-    derString += String.fromCharCode(derArray[i]);
-  }
-  return derString;
-}
-
-function getPEMString(cert) {
-  var derb64 = btoa(getDERString(cert));
-  // Wrap the Base64 string into lines of 64 characters,
-  // with CRLF line breaks (as specified in RFC 1421).
-  var wrapped = derb64.replace(/(\S{64}(?!$))/g, "$1\r\n");
-  return "-----BEGIN CERTIFICATE-----\r\n"
-         + wrapped
-         + "\r\n-----END CERTIFICATE-----\r\n";
-}
