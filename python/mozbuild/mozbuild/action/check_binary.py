@@ -172,7 +172,7 @@ def check_nsmodules(target, binary):
     if target is HOST or not is_libxul(binary):
         raise Skip()
     symbols = []
-    if buildconfig.substs.get('_MSC_VER'):
+    if buildconfig.substs.get('CC_TYPE') in ('msvc', 'clang-cl'):
         for line in get_output('dumpbin.exe', '-exports', binary):
             data = line.split(None, 3)
             if data and len(data) == 4 and data[0].isdigit() and \
@@ -240,7 +240,7 @@ def check_nsmodules(target, binary):
     # MSVC linker, when doing incremental linking, adds padding when
     # merging sections. Allow there to be more space between the NSModule
     # symbols, as long as they are in the right order.
-    test_msvc = (buildconfig.substs.get('_MSC_VER') and \
+    test_msvc = (buildconfig.substs.get('CC_TYPE') in ('msvc', 'clang-cl') and \
         buildconfig.substs.get('DEVELOPER_OPTIONS'))
     test_clang = (buildconfig.substs.get('CC_TYPE') == 'clang' and \
         buildconfig.substs.get('OS_ARCH') == 'WINNT')
