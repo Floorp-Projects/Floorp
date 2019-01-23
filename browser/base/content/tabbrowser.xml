@@ -1234,19 +1234,11 @@
       ]]></handler>
 
       <handler event="transitionend"><![CDATA[
-        if (event.propertyName != "max-width" &&
-            event.propertyName != "transform") {
+        if (event.propertyName != "max-width") {
           return;
         }
 
-        if (gBrowser.tabAnimationsInProgress == 0) {
-          return;
-        }
-
-        let tab = event.originalTarget;
-        if (tab.nodeName != "tab") {
-          return;
-        }
+        var tab = event.target;
 
         if (tab.getAttribute("fadein") == "true") {
           if (tab._fullyOpen) {
@@ -1257,9 +1249,6 @@
         } else if (tab.closing) {
           gBrowser._endRemoveTab(tab);
         }
-
-        let evt = new CustomEvent("TabAnimationEnd", { bubbles: true });
-        tab.dispatchEvent(evt);
       ]]></handler>
 
       <handler event="dblclick"><![CDATA[
