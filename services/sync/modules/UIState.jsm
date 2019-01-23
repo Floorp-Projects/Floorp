@@ -163,6 +163,7 @@ const UIStateInternal = {
       } else {
         status = STATUS_SIGNED_IN;
       }
+      state.uid = userData.uid;
       state.email = userData.email;
     }
     state.status = status;
