@@ -4,6 +4,43 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
 });
 
+function getSecurityInfo(securityInfoAsString) {
+  const serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
+                       .getService(Ci.nsISerializationHelper);
+  let securityInfo = serhelper.deserializeObject(securityInfoAsString);
+  securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+  return securityInfo;
+}
+
+function getCertChain(securityInfoAsString) {
+  let certChain = "";
+  let securityInfo = getSecurityInfo(securityInfoAsString);
+  for (let cert of securityInfo.failedCertChain.getEnumerator()) {
+    certChain += getPEMString(cert);
+  }
+  return certChain;
+}
+
+function getDERString(cert) {
+  var length = {};
+  var derArray = cert.getRawDER(length);
+  var derString = "";
+  for (var i = 0; i < derArray.length; i++) {
+    derString += String.fromCharCode(derArray[i]);
+  }
+  return derString;
+}
+
+function getPEMString(cert) {
+  var derb64 = btoa(getDERString(cert));
+  // Wrap the Base64 string into lines of 64 characters,
+  // with CRLF line breaks (as specified in RFC 1421).
+  var wrapped = derb64.replace(/(\S{64}(?!$))/g, "$1\r\n");
+  return "-----BEGIN CERTIFICATE-----\r\n"
+         + wrapped
+         + "\r\n-----END CERTIFICATE-----\r\n";
+}
+
 function injectErrorPageFrame(tab, src) {
   return ContentTask.spawn(tab.linkedBrowser, {frameSrc: src}, async function({frameSrc}) {
     let loaded = ContentTaskUtils.waitForEvent(content.wrappedJSObject, "DOMFrameContentLoaded");
