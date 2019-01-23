@@ -451,6 +451,7 @@ impl<'a> DisplayListFlattener<'a> {
             TransformStyle::Flat,
             true,
             true,
+            false,
             ROOT_SPATIAL_NODE_INDEX,
             ClipChainId::NONE,
             RasterSpace::Screen,
@@ -641,6 +642,7 @@ impl<'a> DisplayListFlattener<'a> {
             stacking_context.transform_style,
             is_backface_visible,
             false,
+            stacking_context.cache_tiles,
             spatial_node_index,
             clip_chain_id,
             stacking_context.raster_space,
@@ -1212,6 +1214,7 @@ impl<'a> DisplayListFlattener<'a> {
         transform_style: TransformStyle,
         is_backface_visible: bool,
         is_pipeline_root: bool,
+        create_tile_cache: bool,
         spatial_node_index: SpatialNodeIndex,
         clip_chain_id: ClipChainId,
         requested_raster_space: RasterSpace,
@@ -1223,9 +1226,6 @@ impl<'a> DisplayListFlattener<'a> {
         } else {
             None
         };
-
-        let create_tile_cache = is_pipeline_root &&
-                                self.sc_stack.len() == 2;
 
         // Get the transform-style of the parent stacking context,
         // which determines if we *might* need to draw this on
@@ -2572,8 +2572,8 @@ impl FlattenedStackingContext {
             return false;
         }
 
-        // If the pipelines are different, we care for purposes of selecting tile caches
-        if self.pipeline_id != parent.pipeline_id {
+        // If this stacking context gets picture caching, we need it.
+        if self.create_tile_cache {
             return false;
         }
 
