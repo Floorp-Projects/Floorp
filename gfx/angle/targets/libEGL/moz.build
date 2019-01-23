@@ -33,6 +33,7 @@ DEFINES['_CRT_RAND_S'] = True
 DEFINES['_CRT_SECURE_NO_DEPRECATE'] = True
 #DEFINES['_DEBUG'] = True
 DEFINES['_HAS_EXCEPTIONS'] = '0'
+#DEFINES['_HAS_ITERATOR_DEBUGGING'] = '0'
 DEFINES['_SCL_SECURE_NO_DEPRECATE'] = True
 DEFINES['_SECURE_ATL'] = True
 DEFINES['_UNICODE'] = True
@@ -68,13 +69,21 @@ LOCAL_INCLUDES += [
 #    '/wd4117',
 #    '/wd4121',
 #    '/wd4127',
+#    '/wd4200',
+#    '/wd4201',
+#    '/wd4204',
+#    '/wd4221',
 #    '/wd4244',
+#    '/wd4245',
 #    '/wd4251',
+#    '/wd4267',
 #    '/wd4275',
+#    '/wd4305',
 #    '/wd4312',
 #    '/wd4324',
 #    '/wd4351',
 #    '/wd4355',
+#    '/wd4389',
 #    '/wd4456',
 #    '/wd4457',
 #    '/wd4458',
@@ -87,7 +96,12 @@ LOCAL_INCLUDES += [
 #    '/wd4589',
 #    '/wd4610',
 #    '/wd4611',
+#    '/wd4661',
+#    '/wd4701',
 #    '/wd4702',
+#    '/wd4703',
+#    '/wd4706',
+#    '/wd4715',
 #    '/wd4838',
 #    '/wd4995',
 #    '/wd4996',
@@ -149,6 +163,7 @@ OS_LIBS += [
 #    '/INCREMENTAL',
 #    '/MACHINE:X64',
 #    '/NXCOMPAT',
+#    '/pdbaltpath:%_PDB%',
 #    '/SUBSYSTEM:CONSOLE,5.02',
 #    '/WX',
 #]

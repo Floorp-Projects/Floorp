@@ -392,14 +392,7 @@ class JSObject : public js::gc::Cell {
 
   /* Set a new prototype for an object with a singleton type. */
   static bool splicePrototype(JSContext* cx, js::HandleObject obj,
-                              const js::Class* clasp,
                               js::Handle<js::TaggedProto> proto);
-
-  /*
-   * For bootstrapping, whether to splice a prototype for Function.prototype
-   * or the global object.
-   */
-  bool shouldSplicePrototype();
 
   /*
    * Environment chains.
