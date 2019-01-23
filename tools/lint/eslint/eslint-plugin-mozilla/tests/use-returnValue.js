@@ -21,7 +21,7 @@ function invalidCode(code, methodName) {
   return {code, errors: [{message, type: "MemberExpression"}]};
 }
 
-ruleTester.run("use-returnValue", rule, {
+ruleTester.run("use-ownerGlobal", rule, {
   valid: [
     "a = foo.concat(bar)",
     "b = bar.concat([1,3,4])",
@@ -31,10 +31,10 @@ ruleTester.run("use-returnValue", rule, {
     "Int64.join(-0x80000001, 0)",
   ],
   invalid: [
-    invalidCode("foo.concat(bar)", "concat"),
-    invalidCode("bar.concat([1,3,4])", "concat"),
-    invalidCode("baz.concat()", "concat"),
-    invalidCode("qux.join(' ')", "join"),
-    invalidCode("quux.slice(1)", "slice"),
+    invalidCode("foo.concat(bar)"),
+    invalidCode("bar.concat([1,3,4])"),
+    invalidCode("baz.concat()"),
+    invalidCode("qux.join(' ')"),
+    invalidCode("quux.slice(1)"),
   ],
 });
