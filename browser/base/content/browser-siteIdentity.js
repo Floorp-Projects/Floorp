@@ -900,7 +900,11 @@ var gIdentityHandler = {
   },
 
   observe(subject, topic, data) {
-    if (topic == "perm-changed") {
+    // Exclude permissions which do not appear in the UI in order to avoid
+    // doing extra work here.
+    if (topic == "perm-changed" && subject &&
+        SitePermissions.listPermissions().includes(
+          subject.QueryInterface(Ci.nsIPermission).type)) {
       this.refreshIdentityBlock();
     }
   },
