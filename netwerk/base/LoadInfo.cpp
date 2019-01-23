@@ -12,6 +12,7 @@
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsFrameLoader.h"
@@ -78,6 +79,7 @@ LoadInfo::LoadInfo(
       mParentOuterWindowID(0),
       mTopOuterWindowID(0),
       mFrameOuterWindowID(0),
+      mBrowsingContextID(0),
       mEnforceSecurity(false),
       mInitialSecurityCheckDone(false),
       mIsThirdPartyContext(false),
@@ -160,6 +162,8 @@ LoadInfo::LoadInfo(
       nsCOMPtr<nsPIDOMWindowOuter> parent = contextOuter->GetScriptableParent();
       mParentOuterWindowID = parent ? parent->WindowID() : mOuterWindowID;
       mTopOuterWindowID = FindTopOuterWindowID(contextOuter);
+      RefPtr<dom::BrowsingContext> bc = contextOuter->GetBrowsingContext();
+      mBrowsingContextID = bc ? bc->Id() : 0;
 
       nsGlobalWindowInner* innerWindow =
           nsGlobalWindowInner::Cast(contextOuter->GetCurrentInnerWindow());
@@ -358,10 +362,10 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mParentOuterWindowID(0),
       mTopOuterWindowID(0),
       mFrameOuterWindowID(0),
+      mBrowsingContextID(0),
       mEnforceSecurity(false),
       mInitialSecurityCheckDone(false),
-      mIsThirdPartyContext(false)  // NB: TYPE_DOCUMENT implies not third-party.
-      ,
+      mIsThirdPartyContext(false),  // NB: TYPE_DOCUMENT implies !third-party.
       mIsDocshellReload(false),
       mSendCSPViolationEvents(true),
       mForcePreflight(false),
@@ -385,6 +389,8 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
 
   // NB: Ignore the current inner window since we're navigating away from it.
   mOuterWindowID = aOuterWindow->WindowID();
+  RefPtr<BrowsingContext> bc = aOuterWindow->GetBrowsingContext();
+  mBrowsingContextID = bc ? bc->Id() : 0;
 
   // TODO We can have a parent without a frame element in some cases dealing
   // with the hidden window.
@@ -426,11 +432,10 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mTopLevelPrincipal(rhs.mTopLevelPrincipal),
       mTopLevelStorageAreaPrincipal(rhs.mTopLevelStorageAreaPrincipal),
       mResultPrincipalURI(rhs.mResultPrincipalURI),
-      mClientInfo(rhs.mClientInfo)
+      mClientInfo(rhs.mClientInfo),
       // mReservedClientSource must be handled specially during redirect
       // mReservedClientInfo must be handled specially during redirect
       // mInitialClientInfo must be handled specially during redirect
-      ,
       mController(rhs.mController),
       mPerformanceStorage(rhs.mPerformanceStorage),
       mLoadingContext(rhs.mLoadingContext),
@@ -455,6 +460,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mParentOuterWindowID(rhs.mParentOuterWindowID),
       mTopOuterWindowID(rhs.mTopOuterWindowID),
       mFrameOuterWindowID(rhs.mFrameOuterWindowID),
+      mBrowsingContextID(rhs.mBrowsingContextID),
       mEnforceSecurity(rhs.mEnforceSecurity),
       mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone),
       mIsThirdPartyContext(rhs.mIsThirdPartyContext),
@@ -469,10 +475,9 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders),
       mForcePreflight(rhs.mForcePreflight),
       mIsPreflight(rhs.mIsPreflight),
-      mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal)
+      mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal),
       // mServiceWorkerTaintingSynthesized must be handled specially during
       // redirect
-      ,
       mServiceWorkerTaintingSynthesized(false),
       mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted),
       mDocumentHasLoaded(rhs.mDocumentHasLoaded),
@@ -497,9 +502,10 @@ LoadInfo::LoadInfo(
     bool aForceInheritPrincipalDropped, uint64_t aInnerWindowID,
     uint64_t aOuterWindowID, uint64_t aParentOuterWindowID,
     uint64_t aTopOuterWindowID, uint64_t aFrameOuterWindowID,
-    bool aEnforceSecurity, bool aInitialSecurityCheckDone,
-    bool aIsThirdPartyContext, bool aIsDocshellReload,
-    bool aSendCSPViolationEvents, const OriginAttributes& aOriginAttributes,
+    uint64_t aBrowsingContextID, bool aEnforceSecurity,
+    bool aInitialSecurityCheckDone, bool aIsThirdPartyContext,
+    bool aIsDocshellReload, bool aSendCSPViolationEvents,
+    const OriginAttributes& aOriginAttributes,
     RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
     RedirectHistoryArray& aRedirectChain,
     nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
@@ -538,6 +544,7 @@ LoadInfo::LoadInfo(
       mParentOuterWindowID(aParentOuterWindowID),
       mTopOuterWindowID(aTopOuterWindowID),
       mFrameOuterWindowID(aFrameOuterWindowID),
+      mBrowsingContextID(aBrowsingContextID),
       mEnforceSecurity(aEnforceSecurity),
       mInitialSecurityCheckDone(aInitialSecurityCheckDone),
       mIsThirdPartyContext(aIsThirdPartyContext),
@@ -981,6 +988,18 @@ LoadInfo::GetTopOuterWindowID(uint64_t* aResult) {
 NS_IMETHODIMP
 LoadInfo::GetFrameOuterWindowID(uint64_t* aResult) {
   *aResult = mFrameOuterWindowID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetBrowsingContextID(uint64_t* aResult) {
+  *aResult = mBrowsingContextID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetBrowsingContext(dom::BrowsingContext** aResult) {
+  *aResult = BrowsingContext::Get(mBrowsingContextID).take();
   return NS_OK;
 }
 
