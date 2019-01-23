@@ -368,9 +368,9 @@ function checkMiscPrefixed(opcode, expect_failure) {
 //-----------------------------------------------------------
 // Verification cases for memory.copy/fill opcode encodings
 
-checkMiscPrefixed([0x0a, 0x00], false); // memory.copy, flags=0
-checkMiscPrefixed([0x0b, 0x00], false); // memory.fill, flags=0
-checkMiscPrefixed([0x0b, 0x80, 0x00], false); // memory.fill, flags=0 (long encoding)
+checkMiscPrefixed([0x0a, 0x00, 0x00], false); // memory.copy src=0 dest=0
+checkMiscPrefixed([0x0b, 0x00], false); // memory.fill mem=0
+checkMiscPrefixed([0x0b, 0x80, 0x00], false); // memory.fill, mem=0 (long encoding)
 checkMiscPrefixed([0x13], true);        // table.size+1, which is currently unassigned
 
 //-----------------------------------------------------------

@@ -834,9 +834,9 @@ class AstMemOrTableCopy : public AstExpr {
         len_(len) {}
 
   bool isMem() const { return isMem_; }
-  AstRef& destTable() { return destTable_; }
+  AstRef& destTable() { MOZ_ASSERT(!isMem()); return destTable_; }
   AstExpr& dest() const { return *dest_; }
-  AstRef& srcTable() { return srcTable_; }
+  AstRef& srcTable() { MOZ_ASSERT(!isMem()); return srcTable_; }
   AstExpr& src() const { return *src_; }
   AstExpr& len() const { return *len_; }
 };
