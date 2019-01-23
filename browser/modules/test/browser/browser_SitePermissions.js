@@ -32,7 +32,6 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
   SitePermissions.set(uri, "popup", SitePermissions.BLOCK);
   SitePermissions.set(uri, "geo", SitePermissions.ALLOW, SitePermissions.SCOPE_SESSION);
   SitePermissions.set(uri, "shortcuts", SitePermissions.ALLOW);
-  SitePermissions.set(uri, "autoplay-media", SitePermissions.BLOCK);
 
   let permissions = SitePermissions.getAllPermissionDetailsForBrowser(tab.linkedBrowser);
 
@@ -42,7 +41,6 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     label: "Use the Camera",
     state: SitePermissions.ALLOW,
     scope: SitePermissions.SCOPE_PERSISTENT,
-    isPromptable: true,
   });
 
   // Check that removed permissions (State.UNKNOWN) are skipped.
@@ -58,7 +56,6 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     label: "Set Cookies",
     state: SitePermissions.ALLOW_COOKIES_FOR_SESSION,
     scope: SitePermissions.SCOPE_PERSISTENT,
-    isPromptable: true,
   });
 
   let popup = permissions.find(({id}) => id === "popup");
@@ -67,7 +64,6 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     label: "Open Pop-up Windows",
     state: SitePermissions.BLOCK,
     scope: SitePermissions.SCOPE_PERSISTENT,
-    isPromptable: true,
   });
 
   let geo = permissions.find(({id}) => id === "geo");
@@ -76,7 +72,6 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     label: "Access Your Location",
     state: SitePermissions.ALLOW,
     scope: SitePermissions.SCOPE_SESSION,
-    isPromptable: true,
   });
 
   let shortcuts = permissions.find(({id}) => id === "shortcuts");
@@ -85,24 +80,12 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     label: "Override Keyboard Shortcuts",
     state: SitePermissions.ALLOW,
     scope: SitePermissions.SCOPE_PERSISTENT,
-    isPromptable: true,
   });
-
-  let autoplay = permissions.find(({id}) => id === "autoplay-media");
-  Assert.deepEqual(autoplay, {
-    id: "autoplay-media",
-    label: "Automatically Play Media with Sound",
-    state: SitePermissions.BLOCK,
-    scope: SitePermissions.SCOPE_PERSISTENT,
-    isPromptable: false,
-  });
-
 
   SitePermissions.remove(uri, "cookie");
   SitePermissions.remove(uri, "popup");
   SitePermissions.remove(uri, "geo");
   SitePermissions.remove(uri, "shortcuts");
-  SitePermissions.remove(uri, "autoplay-media");
 
   Services.prefs.clearUserPref("permissions.default.shortcuts");
 
