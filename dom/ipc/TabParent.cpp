@@ -22,6 +22,7 @@
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/PaymentRequestParent.h"
+#include "mozilla/dom/RemoteFrameParent.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -1012,6 +1013,25 @@ PWindowGlobalParent* TabParent::AllocPWindowGlobalParent(
 bool TabParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) {
   // Free reference from AllocPWindowGlobalParent.
   static_cast<WindowGlobalParent*>(aActor)->Release();
+  return true;
+}
+
+IPCResult TabParent::RecvPRemoteFrameConstructor(PRemoteFrameParent* aActor,
+                                                 const nsString& aName,
+                                                 const nsString& aRemoteType) {
+  static_cast<RemoteFrameParent*>(aActor)->Init(aName, aRemoteType);
+  return IPC_OK();
+}
+
+PRemoteFrameParent* TabParent::AllocPRemoteFrameParent(
+    const nsString& aName, const nsString& aRemoteType) {
+  // Reference freed in DeallocPRemoteFrameParent.
+  return do_AddRef(new RemoteFrameParent()).take();
+}
+
+bool TabParent::DeallocPRemoteFrameParent(PRemoteFrameParent* aActor) {
+  // Free reference from AllocPRemoteFrameParent.
+  static_cast<RemoteFrameParent*>(aActor)->Release();
   return true;
 }
 
