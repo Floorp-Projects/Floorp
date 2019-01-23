@@ -1407,7 +1407,8 @@ pref("content.sink.pending_event_mode", 0);
 //   3 = openAbused
 pref("privacy.popups.disable_from_plugins", 3);
 
-// Enable Paritioned LocalStorage for a list of hosts.
+// Enable Paritioned LocalStorage for a list of hosts when detected as trackers
+// (See nsICookieService::BEHAVIOR_REJECT_TRACKER cookie behavior)
 pref("privacy.restrict3rdpartystorage.partitionedHosts", "accounts.google.com/o/oauth2/");
 
 // If a host is contained in this pref list, user-interaction is required
@@ -1440,7 +1441,7 @@ pref("privacy.firstparty.isolate",                        false);
 pref("privacy.firstparty.isolate.restrict_opener_access", true);
 // We automatically decline canvas permission requests if they are not initiated
 // from user input. Just in case that breaks something, we allow the user to revert
-// this behaior with this obscure pref. We do not intend to support this long term.
+// this behavior with this obscure pref. We do not intend to support this long term.
 // If you do set it, to work around some broken website, please file a bug with
 // information so we can understand why it is needed.
 pref("privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts", true);
