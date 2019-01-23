@@ -1806,6 +1806,15 @@ UpdateService.prototype = {
         Cc["@mozilla.org/updates/update-checker;1"].
           createInstance(Ci.nsIUpdateChecker).stopCurrentCheck();
         break;
+      case "test-close-handle-update-mutex":
+        if (Cu.isInAutomation) {
+          if (AppConstants.platform == "win" && gUpdateMutexHandle) {
+            LOG("UpdateService:observe - closing mutex handle for testing");
+            closeHandle(gUpdateMutexHandle);
+            gUpdateMutexHandle = null;
+          }
+        }
+        break;
     }
   },
 
