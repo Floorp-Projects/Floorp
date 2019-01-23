@@ -29,7 +29,10 @@ const SOURCE_URL = "http://example.com/source.js";
 
 const testSameBreakpoint = async function() {
   const packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
-  const source = gThreadClient.source(packet.frame.where.source);
+  const source = await getSourceById(
+    gThreadClient,
+    packet.frame.where.actor
+  );
 
   // Whole line
   const wholeLineLocation = {
