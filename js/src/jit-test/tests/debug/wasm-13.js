@@ -1,4 +1,4 @@
-// |jit-test| test-also-no-wasm-baseline
+// |jit-test| test-also-wasm-compiler-ion
 // Tests that wasm module scripts has inspectable globals and memory.
 
 load(libdir + "wasm.js");

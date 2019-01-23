@@ -1,4 +1,4 @@
-// |jit-test| test-also-no-wasm-baseline
+// |jit-test| test-also-wasm-compiler-ion
 // Tests that JS can be evaluated on wasm module scripts frames.
 
 load(libdir + "wasm.js");
