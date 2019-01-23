@@ -10,17 +10,9 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.feature.intent.IntentProcessor
-import mozilla.components.support.utils.SafeIntent
-import org.mozilla.fenix.components.Core
+import org.mozilla.fenix.ext.components
 
 class HomeActivity : AppCompatActivity() {
-
-    val core by lazy { Core(this) }
-    val sessionId by lazy {
-        SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -28,7 +20,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreateView(parent: View?, name: String?, context: Context, attrs: AttributeSet?): View? =
         when (name) {
-            EngineView::class.java.name -> core.engine.createView(context, attrs).asView()
+            EngineView::class.java.name -> components.core.engine.createView(context, attrs).asView()
             else -> super.onCreateView(parent, name, context, attrs)
         }
 }

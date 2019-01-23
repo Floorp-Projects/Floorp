@@ -46,7 +46,7 @@ class HomeFragment : Fragment() {
             val extras = FragmentNavigator.Extras.Builder().addSharedElement(
                 toolbar, ViewCompat.getTransitionName(toolbar)!!
             ).build()
-            Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_browserFragment, null, null, extras)
+            Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_searchFragment, null, null, extras)
         }
 
         session_list.apply {

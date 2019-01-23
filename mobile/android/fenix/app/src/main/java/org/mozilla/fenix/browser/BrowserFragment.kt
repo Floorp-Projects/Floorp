@@ -13,8 +13,8 @@ import kotlinx.android.synthetic.main.fragment_browser.*
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.requireComponents
 
 class BrowserFragment : Fragment() {
 
@@ -37,8 +37,8 @@ class BrowserFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
 
-        val sessionManager = (activity as HomeActivity).core.sessionManager
-        val sessionId = (activity as HomeActivity).sessionId
+        val sessionManager = requireComponents.core.sessionManager
+        val sessionId = "1"
 
         sessionFeature = SessionFeature(
             sessionManager,
