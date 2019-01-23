@@ -8,21 +8,23 @@
 #define __NS_SVGLENGTH2_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SVGContentUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SVGLengthBinding.h"
+#include "mozilla/dom/SVGElement.h"
+#include "mozilla/gfx/Rect.h"
 #include "nsCoord.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "nsISMILAttr.h"
 #include "nsMathUtils.h"
-#include "SVGElement.h"
-#include "SVGContentUtils.h"
-#include "mozilla/gfx/Rect.h"
 
 class nsIFrame;
-class nsSMILValue;
 
 namespace mozilla {
+
+class SMILValue;
+
 namespace dom {
 class DOMSVGLength;
 class SVGAnimatedLength;
@@ -210,11 +212,11 @@ class nsSVGLength2 {
     // nsISMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement,
-        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-    virtual nsSMILValue GetBaseValue() const override;
+        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
+        bool& aPreventCachingOfSandwich) const override;
+    virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 };
 

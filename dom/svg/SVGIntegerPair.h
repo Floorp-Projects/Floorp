@@ -14,9 +14,10 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SVGAnimatedInteger.h"
 
-class nsSMILValue;
-
 namespace mozilla {
+
+class SMILValue;
+
 namespace dom {
 class SVGAnimationElement;
 class SVGElement;
@@ -107,11 +108,11 @@ class SVGIntegerPair {
     // nsISMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement,
-        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-    virtual nsSMILValue GetBaseValue() const override;
+        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
+        bool& aPreventCachingOfSandwich) const override;
+    virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 };
 

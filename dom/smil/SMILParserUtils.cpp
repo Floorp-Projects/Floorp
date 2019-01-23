@@ -10,11 +10,11 @@
 #include "mozilla/SMILRepeatCount.h"
 #include "mozilla/SMILTimeValue.h"
 #include "mozilla/SMILTimeValueSpecParams.h"
+#include "mozilla/SMILTypes.h"
+#include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/TextUtils.h"
 #include "nsISMILAttr.h"
-#include "nsSMILValue.h"
-#include "nsSMILTypes.h"
 #include "nsContentUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 
@@ -492,7 +492,7 @@ class MOZ_STACK_CLASS SMILValueParser
  public:
   SMILValueParser(const SVGAnimationElement* aSrcElement,
                   const nsISMILAttr* aSMILAttr,
-                  FallibleTArray<nsSMILValue>* aValuesArray,
+                  FallibleTArray<SMILValue>* aValuesArray,
                   bool* aPreventCachingOfSandwich)
       : mSrcElement(aSrcElement),
         mSMILAttr(aSMILAttr),
@@ -500,7 +500,7 @@ class MOZ_STACK_CLASS SMILValueParser
         mPreventCachingOfSandwich(aPreventCachingOfSandwich) {}
 
   virtual bool Parse(const nsAString& aValueStr) override {
-    nsSMILValue newValue;
+    SMILValue newValue;
     bool tmpPreventCachingOfSandwich = false;
     if (NS_FAILED(mSMILAttr->ValueFromString(aValueStr, mSrcElement, newValue,
                                              tmpPreventCachingOfSandwich)))
@@ -518,14 +518,14 @@ class MOZ_STACK_CLASS SMILValueParser
  protected:
   const SVGAnimationElement* mSrcElement;
   const nsISMILAttr* mSMILAttr;
-  FallibleTArray<nsSMILValue>* mValuesArray;
+  FallibleTArray<SMILValue>* mValuesArray;
   bool* mPreventCachingOfSandwich;
 };
 
 bool SMILParserUtils::ParseValues(const nsAString& aSpec,
                                   const SVGAnimationElement* aSrcElement,
                                   const nsISMILAttr& aAttribute,
-                                  FallibleTArray<nsSMILValue>& aValuesArray,
+                                  FallibleTArray<SMILValue>& aValuesArray,
                                   bool& aPreventCachingOfSandwich) {
   // Assume all results can be cached, until we find one that can't.
   aPreventCachingOfSandwich = false;
