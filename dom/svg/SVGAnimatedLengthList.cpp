@@ -11,7 +11,6 @@
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "DOMSVGAnimatedLengthList.h"
-#include "nsSVGAttrTearoffTable.h"
 #include "SVGLengthListSMILType.h"
 
 namespace mozilla {

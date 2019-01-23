@@ -11,7 +11,7 @@
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/dom/SVGAnimatedPreserveAspectRatioBinding.h"
 #include "SMILEnumType.h"
-#include "nsSVGAttrTearoffTable.h"
+#include "SVGAttrTearoffTable.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -36,14 +36,14 @@ JSObject* DOMSVGAnimatedPreserveAspectRatio::WrapObject(
 
 /* Implementation */
 
-static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
-                             DOMSVGAnimatedPreserveAspectRatio>
+static SVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
+                           DOMSVGAnimatedPreserveAspectRatio>
     sSVGAnimatedPAspectRatioTearoffTable;
-static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
-                             DOMSVGPreserveAspectRatio>
+static SVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
+                           DOMSVGPreserveAspectRatio>
     sBaseSVGPAspectRatioTearoffTable;
-static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
-                             DOMSVGPreserveAspectRatio>
+static SVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
+                           DOMSVGPreserveAspectRatio>
     sAnimSVGPAspectRatioTearoffTable;
 
 already_AddRefed<DOMSVGPreserveAspectRatio>

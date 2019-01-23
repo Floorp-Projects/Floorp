@@ -10,9 +10,9 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
+#include "SVGAttrTearoffTable.h"
 #include "mozilla/Attributes.h"
 #include "nsISMILAttr.h"
-#include "nsSVGAttrTearoffTable.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SVGAnimatedRect.h"
 #include "mozilla/dom/SVGIRect.h"
@@ -204,7 +204,7 @@ class SVGViewBox {
     virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 
-  static nsSVGAttrTearoffTable<SVGViewBox, mozilla::dom::SVGAnimatedRect>
+  static SVGAttrTearoffTable<SVGViewBox, mozilla::dom::SVGAnimatedRect>
       sSVGAnimatedRectTearoffTable;
 };
 

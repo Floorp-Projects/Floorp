@@ -82,11 +82,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGViewBox::DOMAnimVal)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-static nsSVGAttrTearoffTable<SVGViewBox, SVGViewBox::DOMBaseVal>
+static SVGAttrTearoffTable<SVGViewBox, SVGViewBox::DOMBaseVal>
     sBaseSVGViewBoxTearoffTable;
-static nsSVGAttrTearoffTable<SVGViewBox, SVGViewBox::DOMAnimVal>
+static SVGAttrTearoffTable<SVGViewBox, SVGViewBox::DOMAnimVal>
     sAnimSVGViewBoxTearoffTable;
-nsSVGAttrTearoffTable<SVGViewBox, dom::SVGAnimatedRect>
+SVGAttrTearoffTable<SVGViewBox, dom::SVGAnimatedRect>
     SVGViewBox::sSVGAnimatedRectTearoffTable;
 
 /* Implementation of SVGViewBox methods */

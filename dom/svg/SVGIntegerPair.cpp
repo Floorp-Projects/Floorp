@@ -6,10 +6,10 @@
 
 #include "SVGIntegerPair.h"
 
-#include "nsSVGAttrTearoffTable.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsError.h"
 #include "nsMathUtils.h"
+#include "SVGAttrTearoffTable.h"
 #include "SVGIntegerPairSMILType.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
@@ -18,9 +18,9 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-static nsSVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
+static SVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
     sSVGFirstAnimatedIntegerTearoffTable;
-static nsSVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
+static SVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
     sSVGSecondAnimatedIntegerTearoffTable;
 
 /* Implementation */

@@ -8,8 +8,8 @@
 
 #include "mozilla/Move.h"
 #include "mozilla/SMILValue.h"
-#include "nsSVGAttrTearoffTable.h"
 #include "SMILStringType.h"
+#include "SVGAttrTearoffTable.h"
 
 using namespace mozilla::dom;
 
@@ -26,9 +26,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGString::DOMAnimatedString)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-static inline nsSVGAttrTearoffTable<SVGString, SVGString::DOMAnimatedString>&
+static inline SVGAttrTearoffTable<SVGString, SVGString::DOMAnimatedString>&
 SVGAnimatedStringTearoffTable() {
-  static nsSVGAttrTearoffTable<SVGString, SVGString::DOMAnimatedString>
+  static SVGAttrTearoffTable<SVGString, SVGString::DOMAnimatedString>
       sSVGAnimatedStringTearoffTable;
   return sSVGAnimatedStringTearoffTable;
 }

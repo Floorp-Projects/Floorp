@@ -10,7 +10,6 @@
 #include "mozilla/SMILValue.h"
 #include "mozilla/dom/SVGElement.h"
 #include "DOMSVGPathSegList.h"
-#include "nsSVGAttrTearoffTable.h"
 #include "SVGPathSegListSMILType.h"
 
 using namespace mozilla::dom;
