@@ -774,6 +774,18 @@ be temporary, and you can try again later.</li>
         Allowlist disables Tracking Protection for sites you know and trust.
     </string>
 
+    <!-- Tip for taking Focus survey en-->
+    <string name="tip_take_survey">Please help us by taking a short survey.\n
+         Click here.</string>
+
+    <!-- Tip for taking Focus survey es-->
+    <string name="tip_take_survey_es">Por favor ayúdanos haciendo una breve encuesta.\n
+        Haz clic aquí.</string>
+
+    <!-- Tip for taking Focus survey fr -->
+    <string name="tip_take_survey_fr">Aidez-nous à améliorer en remplissant ce court questionnaire.\n
+        Remplir le questionnaire.</string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">New tab opened</string>
 

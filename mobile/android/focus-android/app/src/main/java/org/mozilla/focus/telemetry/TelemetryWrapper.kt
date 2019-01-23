@@ -177,6 +177,9 @@ object TelemetryWrapper {
         val AUTOCOMPLETE_URL_TIP = "autocomplete_url_tip"
         val OPEN_IN_NEW_TAB_TIP = "open_in_new_tab_tip"
         val DISABLE_TIPS_TIP = "disable_tips_tip"
+        val SURVEY_TIP = "survey_tip"
+        val SURVEY_TIP_ES = "survey_tip_es"
+        val SURVEY_TIP_FR = "survey_tip_fr"
         val CLOSE_TAB = "close_tab"
     }
 
@@ -947,6 +950,7 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
+    @Suppress("ComplexMethod") // Not actually complex
     fun displayTipEvent(tipId: Int) {
 
         val telemetryValue = when (tipId) {
@@ -956,6 +960,9 @@ object TelemetryWrapper {
             R.string.tip_set_default_browser -> Value.DEFAULT_BROWSER_TIP
             R.string.tip_autocomplete_url -> Value.AUTOCOMPLETE_URL_TIP
             R.string.tip_disable_tips2 -> Value.DISABLE_TIPS_TIP
+            R.string.tip_take_survey -> Value.SURVEY_TIP
+            R.string.tip_take_survey_es -> Value.SURVEY_TIP_ES
+            R.string.tip_take_survey_fr -> Value.SURVEY_TIP_FR
             else -> {
                 // Unknown tip, fail silently rather than crashing.
                 return
@@ -974,6 +981,9 @@ object TelemetryWrapper {
             R.string.tip_set_default_browser -> Value.DEFAULT_BROWSER_TIP
             R.string.tip_autocomplete_url -> Value.AUTOCOMPLETE_URL_TIP
             R.string.tip_disable_tips2 -> Value.DISABLE_TIPS_TIP
+            R.string.tip_take_survey -> Value.SURVEY_TIP
+            R.string.tip_take_survey_es -> Value.SURVEY_TIP_ES
+            R.string.tip_take_survey_fr -> Value.SURVEY_TIP_FR
             else -> {
                 // Unknown tip, fail silently rather than crashing.
                 return
