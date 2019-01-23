@@ -323,6 +323,12 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     void unlinkGhostWindows();
 
+    /*
+     * In an NS_FREE_PERMANENT_DATA build, intentionally leak a C++ object. This
+     * is needed to test leak checking.
+     */
+    void intentionallyLeak();
+
     [implicit_jscontext]
     jsval getJSTestingFunctions();
 
