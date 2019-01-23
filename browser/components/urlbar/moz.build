@@ -20,6 +20,9 @@ EXTRA_JS_MODULES += [
     'UrlbarView.jsm',
 ]
 
+TESTING_JS_MODULES += [
+    'tests/UrlbarTestUtils.jsm',
+]
 BROWSER_CHROME_MANIFESTS += [
     'tests/browser/browser.ini',
     'tests/legacy/browser.ini',
