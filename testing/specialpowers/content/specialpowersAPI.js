@@ -802,8 +802,6 @@ SpecialPowersAPI.prototype = {
           originalValue = Ci.nsIPermissionManager.PROMPT_ACTION;
         } else if (this.testPermission(permission.type, Ci.nsICookiePermission.ACCESS_SESSION, context)) {
           originalValue = Ci.nsICookiePermission.ACCESS_SESSION;
-        } else if (this.testPermission(permission.type, Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY, context)) {
-          originalValue = Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY;
         }
 
         let principal = this._getPrincipalFromArg(context);
