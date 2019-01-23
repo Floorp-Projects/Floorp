@@ -14,9 +14,10 @@
 #include "SVGTransformList.h"
 
 class nsAtom;
-class nsSMILValue;
 
 namespace mozilla {
+
+class SMILValue;
 
 namespace dom {
 class SVGAnimationElement;
@@ -130,14 +131,14 @@ class SVGAnimatedTransformList {
     // nsISMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
-        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-    virtual nsSMILValue GetBaseValue() const override;
+        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
+    virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
 
    protected:
     static void ParseValue(const nsAString& aSpec, const nsAtom* aTransformType,
-                           nsSMILValue& aResult);
+                           SMILValue& aResult);
     static int32_t ParseParameterList(const nsAString& aSpec, float* aVars,
                                       int32_t aNVars);
 

@@ -7,7 +7,7 @@
 #ifndef NS_SMILMILESTONE_H_
 #define NS_SMILMILESTONE_H_
 
-#include "nsSMILTypes.h"
+#include "mozilla/SMILTypes.h"
 
 namespace mozilla {
 

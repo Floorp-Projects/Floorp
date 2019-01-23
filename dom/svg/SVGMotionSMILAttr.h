@@ -13,9 +13,10 @@
 #include "nsISMILAttr.h"
 
 class nsIContent;
-class nsSMILValue;
 
 namespace mozilla {
+
+class SMILValue;
 
 namespace dom {
 class SVGAnimationElement;
@@ -37,9 +38,9 @@ class SVGMotionSMILAttr : public nsISMILAttr {
   // nsISMILAttr methods
   virtual nsresult ValueFromString(
       const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
-      nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-  virtual nsSMILValue GetBaseValue() const override;
-  virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+      SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
+  virtual SMILValue GetBaseValue() const override;
+  virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   virtual void ClearAnimValue() override;
   virtual const nsIContent* GetTargetNode() const override;
 

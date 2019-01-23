@@ -7,7 +7,7 @@
 #ifndef NS_SMILTIMEVALUE_H_
 #define NS_SMILTIMEVALUE_H_
 
-#include "nsSMILTypes.h"
+#include "mozilla/SMILTypes.h"
 #include "nsDebug.h"
 
 namespace mozilla {

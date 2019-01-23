@@ -10,10 +10,12 @@
 #include "nscore.h"
 #include "nsStringFwd.h"
 
-class nsSMILValue;
 class nsIContent;
 
 namespace mozilla {
+
+class SMILValue;
+
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
@@ -30,8 +32,9 @@ class SVGAnimationElement;
 
 class nsISMILAttr {
  public:
+  typedef mozilla::SMILValue SMILValue;
   /**
-   * Creates a new nsSMILValue for this attribute from a string. The string is
+   * Creates a new SMILValue for this attribute from a string. The string is
    * parsed in the context of this attribute so that context-dependent values
    * such as em-based units can be resolved into a canonical form suitable for
    * animation (including interpolation etc.).
@@ -51,16 +54,16 @@ class nsISMILAttr {
    */
   virtual nsresult ValueFromString(
       const nsAString& aStr,
-      const mozilla::dom::SVGAnimationElement* aSrcElement, nsSMILValue& aValue,
+      const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
       bool& aPreventCachingOfSandwich) const = 0;
 
   /**
    * Gets the underlying value of this attribute.
    *
-   * @return an nsSMILValue object. returned_object.IsNull() will be true if an
+   * @return a SMILValue object. returned_object.IsNull() will be true if an
    * error occurred.
    */
-  virtual nsSMILValue GetBaseValue() const = 0;
+  virtual SMILValue GetBaseValue() const = 0;
 
   /**
    * Clears the animated value of this attribute.
@@ -76,7 +79,7 @@ class nsISMILAttr {
    * @param aValue  The value to set.
    * @return NS_OK on success or an error code if setting failed.
    */
-  virtual nsresult SetAnimValue(const nsSMILValue& aValue) = 0;
+  virtual nsresult SetAnimValue(const SMILValue& aValue) = 0;
 
   /**
    * Returns the targeted content node, for any nsISMILAttr implementations
