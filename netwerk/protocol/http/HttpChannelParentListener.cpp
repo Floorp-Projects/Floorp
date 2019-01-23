@@ -198,15 +198,13 @@ nsresult HttpChannelParentListener::TriggerCrossProcessRedirect(
 
         dom::TabParent* tabParent = dom::TabParent::GetFrom(tp);
         ContentParent* cp = tabParent->Manager()->AsContentParent();
-        PNeckoParent* neckoParent =
-            SingleManagedOrNull(cp->ManagedPNeckoParent());
 
         RefPtr<HttpChannelParent> channelParent =
             do_QueryObject(self->mNextListener);
         MOZ_ASSERT(channelParent);
         channelParent->SetCrossProcessRedirect();
 
-        auto result = neckoParent->SendCrossProcessRedirect(
+        auto result = cp->SendCrossProcessRedirect(
             self->mRedirectChannelId, uri, newLoadFlags, loadInfoArgs,
             channelId, originalURI, aIdentifier);
 

@@ -61,6 +61,7 @@ include MemoryReportTypes;
 include ClientIPCTypes;
 include HangTypes;
 include PrefsTypes;
+include NeckoChannelParams;
 
 // Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
 // are put into different UnifiedProtocolsXX.cpp files.
@@ -741,6 +742,18 @@ child:
 
     /* Save the execution up to the current point in a recording process. */
     async SaveRecording(FileDescriptor file);
+
+    // This message is sent to content processes, and triggers the creation of a
+    // new HttpChannelChild that will be connected to the parent channel
+    // represented by registrarId.
+    // This is on PContent not PNecko, as PNecko may not be initialized yet.
+    async CrossProcessRedirect(uint32_t aRegistrarId,
+                               nsIURI aURI,
+                               uint32_t aNewLoadFlags,
+                               OptionalLoadInfoArgs aLoadInfo,
+                               uint64_t aChannelId,
+                               nsIURI aOriginalURI,
+                               uint64_t aIdentifier);
 
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
