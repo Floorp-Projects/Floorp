@@ -1147,7 +1147,9 @@ impl AlphaBatchBuilder {
                                             .dirty_region
                                             .dirty_rects
                                             .iter()
-                                            .map(|dirty_rect| dirty_rect.device_rect)
+                                            .map(|dirty_rect| {
+                                                (dirty_rect.world_rect * ctx.device_pixel_scale).round().to_i32()
+                                            })
                                             .collect();
 
                                         self.push_new_batch_list(
