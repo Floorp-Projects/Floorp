@@ -276,11 +276,6 @@ use-includes-instead-of-indexOf
 
 Use .includes instead of .indexOf to check if something is in an array or string.
 
-use-returnValue
----------------
-
-Warn when idempotent methods are called and their return value is unused.
-
 use-services
 ------------
 

@@ -42,7 +42,7 @@ var flagInputs = [
   Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS,
 ];
 
-flagInputs = flagInputs.concat([
+flagInputs.concat([
   flagInputs[0] | flagInputs[1],
   flagInputs[1] | flagInputs[2],
   flagInputs[0] | flagInputs[2],
