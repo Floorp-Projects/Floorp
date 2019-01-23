@@ -238,7 +238,8 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
     case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
       const webgl::FormatUsageInfo* usage;
       uint32_t width, height;
-      if (!BindCurFBForColorRead(&usage, &width, &height))
+      if (!BindCurFBForColorRead(&usage, &width, &height,
+                                 LOCAL_GL_INVALID_OPERATION))
         return JS::NullValue();
 
       const auto implPI = ValidImplementationColorReadPI(usage);
