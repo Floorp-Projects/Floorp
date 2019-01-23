@@ -31,7 +31,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "mozilla/Scheduler.h"
 #include "nsZipArchive.h"
 #include "nsWindowMemoryReporter.h"
 #include "nsICycleCollectorListener.h"
@@ -2402,19 +2401,6 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::Now(double* aRetval) {
   TimeStamp start = TimeStamp::ProcessCreation();
   *aRetval = (TimeStamp::Now() - start).ToMilliseconds();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::BlockThreadedExecution(
-    nsIBlockThreadedExecutionCallback* aCallback) {
-  Scheduler::BlockThreadedExecution(aCallback);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::UnblockThreadedExecution() {
-  Scheduler::UnblockThreadedExecution();
   return NS_OK;
 }
 

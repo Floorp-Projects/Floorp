@@ -39,34 +39,25 @@ try {
       const prefix = msg.data.prefix;
       const addonId = msg.data.addonId;
 
-      // Using the JS debugger causes problems when we're trying to
-      // schedule those zone groups across different threads. Calling
-      // blockThreadedExecution causes Gecko to switch to a simpler
-      // single-threaded model until unblockThreadedExecution is
-      // called later. We cannot start the debugger until the callback
-      // passed to blockThreadedExecution has run, signaling that
-      // we're running single-threaded.
-      Cu.blockThreadedExecution(() => {
-        const conn = DebuggerServer.connectToParent(prefix, mm);
-        conn.parentMessageManager = mm;
-        connections.set(prefix, conn);
+      const conn = DebuggerServer.connectToParent(prefix, mm);
+      conn.parentMessageManager = mm;
+      connections.set(prefix, conn);
 
-        let actor;
+      let actor;
 
-        if (addonId) {
-          const { WebExtensionTargetActor } = require("devtools/server/actors/targets/webextension");
-          actor = new WebExtensionTargetActor(conn, chromeGlobal, prefix, addonId);
-        } else {
-          const { FrameTargetActor } = require("devtools/server/actors/targets/frame");
-          actor = new FrameTargetActor(conn, chromeGlobal);
-        }
+      if (addonId) {
+        const { WebExtensionTargetActor } = require("devtools/server/actors/targets/webextension");
+        actor = new WebExtensionTargetActor(conn, chromeGlobal, prefix, addonId);
+      } else {
+        const { FrameTargetActor } = require("devtools/server/actors/targets/frame");
+        actor = new FrameTargetActor(conn, chromeGlobal);
+      }
 
-        const actorPool = new ActorPool(conn);
-        actorPool.addActor(actor);
-        conn.addActorPool(actorPool);
+      const actorPool = new ActorPool(conn);
+      actorPool.addActor(actor);
+      conn.addActorPool(actorPool);
 
-        sendAsyncMessage("debug:actor", {actor: actor.form(), prefix: prefix});
-      });
+      sendAsyncMessage("debug:actor", {actor: actor.form(), prefix: prefix});
     });
 
     addMessageListener("debug:connect", onConnect);
@@ -112,8 +103,6 @@ try {
         // request doesn't match a connection known here, ignore it.
         return;
       }
-
-      Cu.unblockThreadedExecution();
 
       removeMessageListener("debug:disconnect", onDisconnect);
       // Call DebuggerServerConnection.close to destroy all child actors. It should end up

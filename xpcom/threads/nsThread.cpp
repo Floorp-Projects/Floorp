@@ -30,7 +30,6 @@
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Scheduler.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs.h"
@@ -1052,10 +1051,8 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
   // yet.
   bool reallyWait = aMayWait && (mNestedEventLoopDepth > 0 || !ShuttingDown());
 
-  Maybe<Scheduler::EventLoopActivation> activation;
   if (IsMainThread()) {
     DoMainThreadSpecificProcessing(reallyWait);
-    activation.emplace();
   }
 
   ++mNestedEventLoopDepth;
@@ -1089,10 +1086,6 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     // also do work.
     EventPriority priority;
     nsCOMPtr<nsIRunnable> event = mEvents->GetEvent(reallyWait, &priority);
-
-    if (activation.isSome()) {
-      activation.ref().SetEvent(event, priority);
-    }
 
     *aResult = (event.get() != nullptr);
 
