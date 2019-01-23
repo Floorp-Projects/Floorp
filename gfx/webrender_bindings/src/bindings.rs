@@ -1,10 +1,4 @@
 use std::ffi::{CStr, CString};
-#[cfg(not(target_os = "macos"))]
-use std::ffi::OsString;
-#[cfg(target_os = "windows")]
-use std::os::windows::ffi::OsStringExt;
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
-use std::os::unix::ffi::OsStringExt;
 use std::io::Cursor;
 use std::{mem, slice, ptr, env};
 use std::path::PathBuf;
@@ -33,6 +27,9 @@ use app_units::Au;
 use rayon;
 use euclid::SideOffsets2D;
 use nsstring::nsAString;
+
+#[cfg(target_os = "windows")]
+use dwrote::{FontDescriptor, FontWeight, FontStretch, FontStyle};
 
 #[cfg(target_os = "macos")]
 use core_foundation::string::CFString;
@@ -1716,9 +1713,11 @@ fn read_font_descriptor(
     index: u32
 ) -> NativeFontHandle {
     let wchars = bytes.convert_into_vec::<u16>();
-    NativeFontHandle {
-        path: PathBuf::from(OsString::from_wide(&wchars)),
-        index,
+    FontDescriptor {
+        family_name: String::from_utf16(&wchars).unwrap(),
+        weight: FontWeight::from_u32(index & 0xffff),
+        stretch: FontStretch::from_u32((index >> 16) & 0xff),
+        style: FontStyle::from_u32((index >> 24) & 0xff),
     }
 }
 
@@ -1738,9 +1737,9 @@ fn read_font_descriptor(
     bytes: &mut WrVecU8,
     index: u32
 ) -> NativeFontHandle {
-    let chars = bytes.flush_into_vec();
+    let cstr = CString::new(bytes.flush_into_vec()).unwrap();
     NativeFontHandle {
-        path: PathBuf::from(OsString::from_vec(chars)),
+        pathname: String::from(cstr.to_str().unwrap()),
         index,
     }
 }

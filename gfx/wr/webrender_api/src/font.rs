@@ -7,22 +7,22 @@ use app_units::Au;
 use core_foundation::string::CFString;
 #[cfg(target_os = "macos")]
 use core_graphics::font::CGFont;
+#[cfg(target_os = "windows")]
+pub use dwrote::FontDescriptor as NativeFontHandle;
 #[cfg(target_os = "macos")]
 use serde::de::{self, Deserialize, Deserializer};
 #[cfg(target_os = "macos")]
 use serde::ser::{Serialize, Serializer};
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
-#[cfg(not(target_os = "macos"))]
-use std::path::PathBuf;
 use std::sync::Arc;
 use {ColorU, IdNamespace, LayoutPoint};
 
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NativeFontHandle {
-    pub path: PathBuf,
+    pub pathname: String,
     pub index: u32,
 }
 
