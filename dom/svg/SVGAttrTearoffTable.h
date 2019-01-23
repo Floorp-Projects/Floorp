@@ -11,6 +11,8 @@
 #include "nsDebug.h"
 #include "nsHashKeys.h"
 
+namespace mozilla {
+
 /**
  * Global hashmap to associate internal SVG data types (e.g. nsSVGLength2) with
  * DOM tear-off objects (e.g. DOMSVGLength). This allows us to always return
@@ -20,10 +22,10 @@
  * responsible for removing themselves from this table when they die.
  */
 template <class SimpleType, class TearoffType>
-class nsSVGAttrTearoffTable {
+class SVGAttrTearoffTable {
  public:
 #ifdef DEBUG
-  ~nsSVGAttrTearoffTable() {
+  ~SVGAttrTearoffTable() {
     MOZ_ASSERT(!mTable, "Tear-off objects remain in hashtable at shutdown.");
   }
 #endif
@@ -42,7 +44,7 @@ class nsSVGAttrTearoffTable {
 };
 
 template <class SimpleType, class TearoffType>
-TearoffType* nsSVGAttrTearoffTable<SimpleType, TearoffType>::GetTearoff(
+TearoffType* SVGAttrTearoffTable<SimpleType, TearoffType>::GetTearoff(
     SimpleType* aSimple) {
   if (!mTable) return nullptr;
 
@@ -59,7 +61,7 @@ TearoffType* nsSVGAttrTearoffTable<SimpleType, TearoffType>::GetTearoff(
 }
 
 template <class SimpleType, class TearoffType>
-void nsSVGAttrTearoffTable<SimpleType, TearoffType>::AddTearoff(
+void SVGAttrTearoffTable<SimpleType, TearoffType>::AddTearoff(
     SimpleType* aSimple, TearoffType* aTearoff) {
   if (!mTable) {
     mTable = new TearoffTable;
@@ -76,7 +78,7 @@ void nsSVGAttrTearoffTable<SimpleType, TearoffType>::AddTearoff(
 }
 
 template <class SimpleType, class TearoffType>
-void nsSVGAttrTearoffTable<SimpleType, TearoffType>::RemoveTearoff(
+void SVGAttrTearoffTable<SimpleType, TearoffType>::RemoveTearoff(
     SimpleType* aSimple) {
   if (!mTable) {
     // Perhaps something happened in between creating the SimpleType object and
@@ -90,5 +92,7 @@ void nsSVGAttrTearoffTable<SimpleType, TearoffType>::RemoveTearoff(
     mTable = nullptr;
   }
 }
+
+}  // namespace mozilla
 
 #endif  // NS_SVGATTRTEAROFFTABLE_H_

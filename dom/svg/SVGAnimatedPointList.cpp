@@ -9,7 +9,6 @@
 #include "mozilla/Move.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/dom/SVGElement.h"
-#include "nsSVGAttrTearoffTable.h"
 #include "DOMSVGPointList.h"
 #include "SVGPointListSMILType.h"
 

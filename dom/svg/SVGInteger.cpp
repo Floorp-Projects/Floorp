@@ -7,10 +7,10 @@
 #include "SVGInteger.h"
 
 #include "nsError.h"
-#include "nsSVGAttrTearoffTable.h"
+#include "SMILIntegerType.h"
+#include "SVGAttrTearoffTable.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
-#include "SMILIntegerType.h"
 
 using namespace mozilla::dom;
 
@@ -18,7 +18,7 @@ namespace mozilla {
 
 /* Implementation */
 
-static nsSVGAttrTearoffTable<SVGInteger, SVGInteger::DOMAnimatedInteger>
+static SVGAttrTearoffTable<SVGInteger, SVGInteger::DOMAnimatedInteger>
     sSVGAnimatedIntegerTearoffTable;
 
 nsresult SVGInteger::SetBaseValueString(const nsAString &aValueAsString,

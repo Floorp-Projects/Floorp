@@ -10,7 +10,6 @@
 #include "mozilla/Move.h"
 #include "mozilla/SMILValue.h"
 #include "DOMSVGAnimatedNumberList.h"
-#include "nsSVGAttrTearoffTable.h"
 #include "SVGNumberListSMILType.h"
 
 using namespace mozilla::dom;

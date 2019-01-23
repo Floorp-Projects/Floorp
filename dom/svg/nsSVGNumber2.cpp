@@ -11,14 +11,14 @@
 #include "mozilla/SVGContentUtils.h"
 #include "nsContentUtils.h"
 #include "SMILFloatType.h"
-#include "nsSVGAttrTearoffTable.h"
+#include "SVGAttrTearoffTable.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
 /* Implementation */
 
-static nsSVGAttrTearoffTable<nsSVGNumber2, nsSVGNumber2::DOMAnimatedNumber>
+static SVGAttrTearoffTable<nsSVGNumber2, nsSVGNumber2::DOMAnimatedNumber>
     sSVGAnimatedNumberTearoffTable;
 
 static bool GetValueFromString(const nsAString& aString,
