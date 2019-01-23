@@ -32,7 +32,11 @@ interface nsICookiePermission : nsISupports
    */
   const nsCookieAccess ACCESS_SESSION = 8;
   const nsCookieAccess ACCESS_ALLOW_FIRST_PARTY_ONLY = 9;
-  const nsCookieAccess ACCESS_LIMIT_THIRD_PARTY = 10;
+
+  /**
+   * Don't use value 10! It used to be ACCESS_LIMIT_THIRD_PARTY, now removed,
+   * but maybe still stored in some ancient user profiles.
+   */
 
   /**
    * setAccess
