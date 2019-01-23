@@ -117,14 +117,13 @@ typedef ExclusiveWaitableData<CompileTaskState> ExclusiveCompileTaskState;
 struct CompileTask {
   const ModuleEnvironment& env;
   ExclusiveCompileTaskState& state;
-  ExclusiveDeferredValidationState& dvs;
   LifoAlloc lifo;
   FuncCompileInputVector inputs;
   CompiledCode output;
 
   CompileTask(const ModuleEnvironment& env, ExclusiveCompileTaskState& state,
-              ExclusiveDeferredValidationState& dvs, size_t defaultChunkSize)
-      : env(env), state(state), dvs(dvs), lifo(defaultChunkSize) {}
+              size_t defaultChunkSize)
+      : env(env), state(state), lifo(defaultChunkSize) {}
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
@@ -163,9 +162,6 @@ class MOZ_STACK_CLASS ModuleGenerator {
   uint32_t lastPatchedCallSite_;
   uint32_t startOfUnpatchedCallsites_;
   CodeOffsetVector debugTrapFarJumps_;
-
-  // Data accumulated for deferred validation.  Is shared and mutable.
-  ExclusiveDeferredValidationState deferredValidationState_;
 
   // Parallel compilation
   bool parallel_;
@@ -227,10 +223,6 @@ class MOZ_STACK_CLASS ModuleGenerator {
       JS::OptimizedEncodingListener* maybeTier2Listener = nullptr,
       UniqueLinkData* maybeLinkData = nullptr);
   MOZ_MUST_USE bool finishTier2(const Module& module);
-
-  ExclusiveDeferredValidationState& deferredValidationState() {
-    return deferredValidationState_;
-  }
 };
 
 }  // namespace wasm

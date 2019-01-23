@@ -313,7 +313,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 
   Decoder& d_;
   const ModuleEnvironment& env_;
-  ExclusiveDeferredValidationState& dvs_;
 
   Vector<TypeAndValue<Value>, 8, SystemAllocPolicy> valueStack_;
   Vector<ControlStackEntry<ControlItem>, 8, SystemAllocPolicy> controlStack_;
@@ -391,17 +390,14 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   typedef Vector<Value, 8, SystemAllocPolicy> ValueVector;
 
 #ifdef DEBUG
-  explicit OpIter(const ModuleEnvironment& env, Decoder& decoder,
-                  ExclusiveDeferredValidationState& dvs)
+  explicit OpIter(const ModuleEnvironment& env, Decoder& decoder)
       : d_(decoder),
         env_(env),
-        dvs_(dvs),
         op_(OpBytes(Op::Limit)),
         offsetOfLastReadOp_(0) {}
 #else
-  explicit OpIter(const ModuleEnvironment& env, Decoder& decoder,
-                  ExclusiveDeferredValidationState& dvs)
-      : d_(decoder), env_(env), dvs_(dvs), offsetOfLastReadOp_(0) {}
+  explicit OpIter(const ModuleEnvironment& env, Decoder& decoder)
+      : d_(decoder), env_(env), offsetOfLastReadOp_(0) {}
 #endif
 
   // Return the decoding byte offset.
@@ -1935,10 +1931,12 @@ inline bool OpIter<Policy>::readDataOrElemDrop(bool isData, uint32_t* segIndex) 
   }
 
   if (isData) {
-    // We can't range-check *segIndex at this point since we don't yet
-    // know how many data segments the module has.  So note the index, but
-    // defer the actual check for now.
-    dvs_.lock()->notifyDataSegmentIndex(*segIndex, d_.currentOffset());
+    if (env_.dataCount.isNothing()) {
+      return fail("data.drop requires a DataCount section");
+    }
+    if (*segIndex >= *env_.dataCount) {
+      return fail("data.drop segment index out of range");
+    }
   } else {
     if (*segIndex >= env_.elemSegments.length()) {
       return fail("element segment index out of range for elem.drop");
@@ -2017,9 +2015,12 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     if (memOrTableIndex != 0) {
       return fail("memory index must be zero");
     }
-
-    // Same comment as for readDataOrElemDrop re range checking.
-    dvs_.lock()->notifyDataSegmentIndex(*segIndex, d_.currentOffset());
+    if (env_.dataCount.isNothing()) {
+      return fail("memory.init requires a DataCount section");
+    }
+    if (*segIndex >= *env_.dataCount) {
+      return fail("memory.init segment index out of range");
+    }
   } else {
     if (memOrTableIndex >= env_.tables.length()) {
       return fail("table index out of range for table.init");

@@ -38,6 +38,7 @@ enum class SectionId {
   Elem = 9,
   Code = 10,
   Data = 11,
+  DataCount = 12,
   GcFeatureOptIn = 42  // Arbitrary, but fits in 7 bits
 };
 
