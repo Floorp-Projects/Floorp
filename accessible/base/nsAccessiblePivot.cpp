@@ -847,11 +847,6 @@ nsresult RuleCache::ApplyFilter(Accessible* aAccessible, uint16_t* aResult) {
   if (mPreFilter) {
     uint64_t state = aAccessible->State();
 
-    if ((nsIAccessibleTraversalRule::PREFILTER_PLATFORM_PRUNED & mPreFilter) &&
-        nsAccUtils::MustPrune(aAccessible)) {
-      *aResult |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-    }
-
     if ((nsIAccessibleTraversalRule::PREFILTER_INVISIBLE & mPreFilter) &&
         (state & states::INVISIBLE))
       return NS_OK;
@@ -884,10 +879,5 @@ nsresult RuleCache::ApplyFilter(Accessible* aAccessible, uint16_t* aResult) {
     if (!matchesRole) return NS_OK;
   }
 
-  uint16_t matchResult = nsIAccessibleTraversalRule::FILTER_IGNORE;
-  nsresult rv = mRule->Match(ToXPC(aAccessible), &matchResult);
-  if (NS_SUCCEEDED(rv)) {
-    *aResult |= matchResult;
-  }
-  return rv;
+  return mRule->Match(ToXPC(aAccessible), aResult);
 }

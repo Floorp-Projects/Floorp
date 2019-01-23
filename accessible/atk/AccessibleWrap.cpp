@@ -726,7 +726,7 @@ gint getChildCountCB(AtkObject* aAtkObj) {
   }
 
   ProxyAccessible* proxy = GetProxy(aAtkObj);
-  if (proxy && !nsAccUtils::MustPrune(proxy)) {
+  if (proxy && !proxy->MustPruneChildren()) {
     return proxy->EmbeddedChildCount();
   }
 
@@ -757,9 +757,7 @@ AtkObject* refChildCB(AtkObject* aAtkObj, gint aChildIndex) {
       }
     }
   } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
-    if (nsAccUtils::MustPrune(proxy)) {
-      return nullptr;
-    }
+    if (proxy->MustPruneChildren()) return nullptr;
 
     ProxyAccessible* child = proxy->EmbeddedChildAt(aChildIndex);
     if (child) childAtkObj = GetWrapperFor(child);
