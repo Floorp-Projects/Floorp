@@ -10438,7 +10438,7 @@ static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
 /* static */
 bool nsContentUtils::HighPriorityEventPendingForTopLevelDocumentBeforeContentfulPaint(
     Document* aDocument) {
-  if (!aDocument) {
+  if (!aDocument || aDocument->IsLoadedAsData()) {
     return false;
   }
 
