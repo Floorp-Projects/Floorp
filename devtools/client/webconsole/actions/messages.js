@@ -98,7 +98,6 @@ function messageTableDataGet(id, client, dataType) {
 
     fetchObjectActorData(enumResponse => {
       const {iterator} = enumResponse;
-      // eslint-disable-next-line mozilla/use-returnValue
       iterator.slice(0, iterator.count, sliceResponse => {
         const {ownProperties} = sliceResponse;
         dispatch(messageTableDataReceive(id, ownProperties));
