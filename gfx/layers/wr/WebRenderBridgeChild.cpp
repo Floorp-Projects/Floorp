@@ -226,16 +226,6 @@ static void WriteFontDescriptor(const uint8_t* aData, uint32_t aLength,
 
   *sink->mFontKey = sink->mWrBridge->GetNextFontKey();
 
-#ifdef XP_WIN
-  // FIXME: Debugging kluge for bug 1455848. Remove once debugged!
-  nsTArray<uint8_t> data;
-  data.AppendElements(aData, aLength);
-  sink->mWrBridge->SendValidateFontDescriptor(data);
-  aLength =
-      uint32_t(wcsnlen_s((const wchar_t*)aData, aLength / sizeof(wchar_t)) *
-               sizeof(wchar_t));
-#endif
-
   sink->mResources->AddFontDescriptor(
       *sink->mFontKey, Range<uint8_t>(const_cast<uint8_t*>(aData), aLength),
       aIndex);
