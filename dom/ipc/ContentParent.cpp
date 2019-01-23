@@ -99,7 +99,6 @@
 #include "mozilla/ProcessHangMonitorIPC.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/recordreplay/ParentIPC.h"
-#include "mozilla/Scheduler.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/Services.h"
@@ -2186,12 +2185,6 @@ void ContentParent::LaunchSubprocessInternal(
   extraArgs.push_back(formatPtrArg(prefSerializer.GetPrefLength()).get());
   extraArgs.push_back("-prefMapSize");
   extraArgs.push_back(formatPtrArg(prefSerializer.GetPrefMapSize()).get());
-
-  // Scheduler prefs need to be handled differently because the scheduler needs
-  // to start up in the content process before the normal preferences service.
-  nsPrintfCString schedulerPrefs = Scheduler::GetPrefs();
-  extraArgs.push_back("-schedulerPrefs");
-  extraArgs.push_back(schedulerPrefs.get());
 
   if (gSafeMode) {
     extraArgs.push_back("-safeMode");

@@ -8,7 +8,6 @@
 #define mozilla_PrioritizedEventQueue_h
 
 #include "mozilla/AbstractEventQueue.h"
-#include "LabeledEventQueue.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
@@ -145,7 +144,6 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
 
 class EventQueue;
 extern template class PrioritizedEventQueue<EventQueue>;
-extern template class PrioritizedEventQueue<LabeledEventQueue>;
 
 }  // namespace mozilla
 

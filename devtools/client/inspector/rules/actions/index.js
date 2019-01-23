@@ -19,6 +19,12 @@ createEnum([
   // Toggles on or off the given pseudo class value for the current selected element.
   "TOGGLE_PSEUDO_CLASS",
 
+  // Updates the entire class list state with the new list of classes.
+  "UPDATE_CLASSES",
+
+  // Updates whether or not the class list panel is expanded.
+  "UPDATE_CLASS_PANEL_EXPANDED",
+
   // Updates the highlighted selector.
   "UPDATE_HIGHLIGHTED_SELECTOR",
 

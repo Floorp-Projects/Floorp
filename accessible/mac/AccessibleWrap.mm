@@ -20,20 +20,12 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-AccessibleWrap::
-  AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-  Accessible(aContent, aDoc), mNativeObject(nil),
-  mNativeInited(false)
-{
-}
+AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
+    : Accessible(aContent, aDoc), mNativeObject(nil), mNativeInited(false) {}
 
-AccessibleWrap::~AccessibleWrap()
-{
-}
+AccessibleWrap::~AccessibleWrap() {}
 
-mozAccessible*
-AccessibleWrap::GetNativeObject()
-{
+mozAccessible* AccessibleWrap::GetNativeObject() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if (!mNativeInited && !mNativeObject && !IsDefunct() && !AncestorIsFlat()) {
@@ -48,30 +40,22 @@ AccessibleWrap::GetNativeObject()
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-void
-AccessibleWrap::GetNativeInterface(void** aOutInterface)
-{
+void AccessibleWrap::GetNativeInterface(void** aOutInterface) {
   *aOutInterface = static_cast<void*>(GetNativeObject());
 }
 
 // overridden in subclasses to create the right kind of object. by default we create a generic
 // 'mozAccessible' node.
-Class
-AccessibleWrap::GetNativeType ()
-{
+Class AccessibleWrap::GetNativeType() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (IsXULTabpanels())
-    return [mozPaneAccessible class];
+  if (IsXULTabpanels()) return [mozPaneAccessible class];
 
-  if (IsTable())
-    return [mozTableAccessible class];
+  if (IsTable()) return [mozTableAccessible class];
 
-  if (IsTableRow())
-    return [mozTableRowAccessible class];
+  if (IsTableRow()) return [mozTableRowAccessible class];
 
-  if (IsTableCell())
-    return [mozTableCellAccessible class];
+  if (IsTableCell()) return [mozTableCellAccessible class];
 
   return GetTypeFromRole(Role());
 
@@ -81,9 +65,7 @@ AccessibleWrap::GetNativeType ()
 // this method is very important. it is fired when an accessible object "dies". after this point
 // the object might still be around (because some 3rd party still has a ref to it), but it is
 // in fact 'dead'.
-void
-AccessibleWrap::Shutdown ()
-{
+void AccessibleWrap::Shutdown() {
   // this ensure we will not try to re-create the native object.
   mNativeInited = true;
 
@@ -97,9 +79,7 @@ AccessibleWrap::Shutdown ()
   Accessible::Shutdown();
 }
 
-nsresult
-AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
-{
+nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsresult rv = Accessible::HandleAccEvent(aEvent);
@@ -124,10 +104,9 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   Accessible* accessible = aEvent->GetAccessible();
   NS_ENSURE_STATE(accessible);
 
-  mozAccessible *nativeAcc = nil;
+  mozAccessible* nativeAcc = nil;
   accessible->GetNativeInterface((void**)&nativeAcc);
-  if (!nativeAcc)
-    return NS_ERROR_FAILURE;
+  if (!nativeAcc) return NS_ERROR_FAILURE;
 
   FireNativeEvent(nativeAcc, eventType);
 
@@ -136,23 +115,17 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-bool
-AccessibleWrap::InsertChildAt(uint32_t aIdx, Accessible* aAccessible)
-{
+bool AccessibleWrap::InsertChildAt(uint32_t aIdx, Accessible* aAccessible) {
   bool inserted = Accessible::InsertChildAt(aIdx, aAccessible);
-  if (inserted && mNativeObject)
-    [mNativeObject appendChild:aAccessible];
+  if (inserted && mNativeObject) [mNativeObject appendChild:aAccessible];
 
   return inserted;
 }
 
-bool
-AccessibleWrap::RemoveChild(Accessible* aAccessible)
-{
+bool AccessibleWrap::RemoveChild(Accessible* aAccessible) {
   bool removed = Accessible::RemoveChild(aAccessible);
 
-  if (removed && mNativeObject)
-    [mNativeObject invalidateChildren];
+  if (removed && mNativeObject) [mNativeObject invalidateChildren];
 
   return removed;
 }
@@ -160,9 +133,7 @@ AccessibleWrap::RemoveChild(Accessible* aAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 // AccessibleWrap protected
 
-bool
-AccessibleWrap::AncestorIsFlat()
-{
+bool AccessibleWrap::AncestorIsFlat() {
   // We don't create a native object if we're child of a "flat" accessible;
   // for example, on OS X buttons shouldn't have any children, because that
   // makes the OS confused.
@@ -173,8 +144,7 @@ AccessibleWrap::AncestorIsFlat()
 
   Accessible* parent = Parent();
   while (parent) {
-    if (nsAccUtils::MustPrune(parent))
-      return true;
+    if (nsAccUtils::MustPrune(parent)) return true;
 
     parent = parent->Parent();
   }
@@ -182,9 +152,7 @@ AccessibleWrap::AncestorIsFlat()
   return false;
 }
 
-void
-a11y::FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType)
-{
+void a11y::FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Under headless mode we don't have access to a native window, so we skip
@@ -213,18 +181,15 @@ a11y::FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-Class
-a11y::GetTypeFromRole(roles::Role aRole)
-{
+Class a11y::GetTypeFromRole(roles::Role aRole) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   switch (aRole) {
     case roles::COMBOBOX:
     case roles::PUSHBUTTON:
     case roles::SPLITBUTTON:
-    case roles::TOGGLE_BUTTON:
-    {
-        return [mozButtonAccessible class];
+    case roles::TOGGLE_BUTTON: {
+      return [mozButtonAccessible class];
     }
 
     case roles::PAGETAB:

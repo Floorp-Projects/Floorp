@@ -19,12 +19,10 @@ bool AmIBundled() {
   ProcessSerialNumber psn = {0, kCurrentProcess};
 
   FSRef fsref;
-  if (GetProcessBundleLocation(&psn, &fsref) != noErr)
-    return false;
+  if (GetProcessBundleLocation(&psn, &fsref) != noErr) return false;
 
   FSCatalogInfo info;
-  if (FSGetCatalogInfo(&fsref, kFSCatInfoNodeFlags, &info,
-                       NULL, NULL, NULL) != noErr) {
+  if (FSGetCatalogInfo(&fsref, kFSCatInfoNodeFlags, &info, NULL, NULL, NULL) != noErr) {
     return false;
   }
 

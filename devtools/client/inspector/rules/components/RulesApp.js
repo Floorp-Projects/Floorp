@@ -28,10 +28,22 @@ const SHOW_PSEUDO_ELEMENTS_PREF = "devtools.inspector.show_pseudo_elements";
 class RulesApp extends PureComponent {
   static get propTypes() {
     return {
+      onAddClass: PropTypes.func.isRequired,
+      onSetClassState: PropTypes.func.isRequired,
+      onToggleClassPanelExpanded: PropTypes.func.isRequired,
       onToggleDeclaration: PropTypes.func.isRequired,
       onTogglePseudoClass: PropTypes.func.isRequired,
       onToggleSelectorHighlighter: PropTypes.func.isRequired,
       rules: PropTypes.arrayOf(PropTypes.shape(Types.rule)).isRequired,
+      showSelectorEditor: PropTypes.func.isRequired,
+    };
+  }
+
+  getRuleProps() {
+    return {
+      onToggleDeclaration: this.props.onToggleDeclaration,
+      onToggleSelectorHighlighter: this.props.onToggleSelectorHighlighter,
+      showSelectorEditor: this.props.showSelectorEditor,
     };
   }
 
@@ -53,8 +65,7 @@ class RulesApp extends PureComponent {
       }
 
       output.push(Rule({
-        onToggleDeclaration: this.props.onToggleDeclaration,
-        onToggleSelectorHighlighter: this.props.onToggleSelectorHighlighter,
+        ...this.getRuleProps(),
         rule,
       }));
     }
@@ -81,8 +92,7 @@ class RulesApp extends PureComponent {
         {
           component: Rules,
           componentProps: {
-            onToggleDeclaration: this.props.onToggleDeclaration,
-            onToggleSelectorHighlighter: this.props.onToggleSelectorHighlighter,
+            ...this.getRuleProps(),
             rules: rules.filter(r => r.keyframesRule.id === lastKeyframes),
           },
           header: rule.keyframesRule.keyframesName,
@@ -102,8 +112,7 @@ class RulesApp extends PureComponent {
     }
 
     return Rules({
-      onToggleDeclaration: this.props.onToggleDeclaration,
-      onToggleSelectorHighlighter: this.props.onToggleSelectorHighlighter,
+      ...this.getRuleProps(),
       rules,
     });
   }
@@ -117,8 +126,7 @@ class RulesApp extends PureComponent {
       {
         component: Rules,
         componentProps: {
-          onToggleDeclaration: this.props.onToggleDeclaration,
-          onToggleSelectorHighlighter: this.props.onToggleSelectorHighlighter,
+          ...this.getRuleProps(),
           rules,
         },
         header: getStr("rule.pseudoElement"),
@@ -162,6 +170,9 @@ class RulesApp extends PureComponent {
           className: "theme-sidebar inspector-tabpanel",
         },
         Toolbar({
+          onAddClass: this.props.onAddClass,
+          onSetClassState: this.props.onSetClassState,
+          onToggleClassPanelExpanded: this.props.onToggleClassPanelExpanded,
           onTogglePseudoClass: this.props.onTogglePseudoClass,
         }),
         dom.div(

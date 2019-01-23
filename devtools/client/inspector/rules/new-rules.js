@@ -11,6 +11,10 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const {
+  updateClasses,
+  updateClassPanelExpanded,
+} = require("./actions/class-list");
+const {
   disableAllPseudoClasses,
   setPseudoClassLocks,
   togglePseudoClass,
@@ -25,6 +29,9 @@ const RulesApp = createFactory(require("./components/RulesApp"));
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
+
+loader.lazyRequireGetter(this, "ClassList", "devtools/client/inspector/rules/models/class-list");
+loader.lazyRequireGetter(this, "InplaceEditor", "devtools/client/shared/inplace-editor", true);
 
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 
@@ -41,10 +48,15 @@ class RulesView {
 
     this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
 
+    this.onAddClass = this.onAddClass.bind(this);
     this.onSelection = this.onSelection.bind(this);
+    this.onSetClassState = this.onSetClassState.bind(this);
+    this.onToggleClassPanelExpanded = this.onToggleClassPanelExpanded.bind(this);
     this.onToggleDeclaration = this.onToggleDeclaration.bind(this);
     this.onTogglePseudoClass = this.onTogglePseudoClass.bind(this);
     this.onToggleSelectorHighlighter = this.onToggleSelectorHighlighter.bind(this);
+    this.showSelectorEditor = this.showSelectorEditor.bind(this);
+    this.updateClassList = this.updateClassList.bind(this);
     this.updateRules = this.updateRules.bind(this);
 
     this.inspector.sidebar.on("select", this.onSelection);
@@ -62,9 +74,13 @@ class RulesView {
     }
 
     const rulesApp = RulesApp({
+      onAddClass: this.onAddClass,
+      onSetClassState: this.onSetClassState,
+      onToggleClassPanelExpanded: this.onToggleClassPanelExpanded,
       onToggleDeclaration: this.onToggleDeclaration,
       onTogglePseudoClass: this.onTogglePseudoClass,
       onToggleSelectorHighlighter: this.onToggleSelectorHighlighter,
+      showSelectorEditor: this.showSelectorEditor,
     });
 
     const provider = createElement(Provider, {
@@ -82,6 +98,12 @@ class RulesView {
     this.inspector.sidebar.off("select", this.onSelection);
     this.selection.off("detached-front", this.onSelection);
     this.selection.off("new-node-front", this.onSelection);
+
+    if (this._classList) {
+      this._classList.off("current-node-class-changed", this.refreshClassList);
+      this._classList.destroy();
+      this._classList = null;
+    }
 
     if (this._selectHighlighter) {
       this._selectorHighlighter.finalize();
@@ -105,6 +127,19 @@ class RulesView {
     this.toolbox = null;
   }
 
+  /**
+   * Get an instance of the ClassList model used to manage the list of CSS classes
+   * applied to the element.
+   *
+   * @return {ClassList} used to manage the list of CSS classes applied to the element.
+   */
+  get classList() {
+    if (!this._classList) {
+      this._classList = new ClassList(this.inspector);
+    }
+
+    return this._classList;
+  }
   /**
    * Creates a dummy element in the document that helps get the computed style in
    * TextProperty.
@@ -167,6 +202,17 @@ class RulesView {
   }
 
   /**
+   * Handler for adding the given CSS class value to the current element's class list.
+   *
+   * @param  {String} value
+   *         The string that contains all classes.
+   */
+  async onAddClass(value) {
+    await this.classList.addClassName(value);
+    this.updateClassList();
+  }
+
+  /**
    * Handler for selection events "detached-front" and "new-node-front" and inspector
    * sidbar "select" event. Updates the rules view with the selected node if the panel
    * is visible.
@@ -183,6 +229,36 @@ class RulesView {
     }
 
     this.update(this.selection.nodeFront);
+  }
+
+  /**
+   * Handler for toggling a CSS class from the current element's class list. Sets the
+   * state of given CSS class name to the given checked value.
+   *
+   * @param  {String} name
+   *         The CSS class name.
+   * @param  {Boolean} checked
+   *         Whether or not the given CSS class is checked.
+   */
+  async onSetClassState(name, checked) {
+    await this.classList.setClassState(name, checked);
+    this.updateClassList();
+  }
+
+  /**
+   * Handler for toggling the expanded property of the class list panel.
+   *
+   * @param  {Boolean} isClassPanelExpanded
+   *         Whether or not the class list panel is expanded.
+   */
+  onToggleClassPanelExpanded(isClassPanelExpanded) {
+    if (isClassPanelExpanded) {
+      this.classList.on("current-node-class-changed", this.updateClassList);
+    } else {
+      this.classList.off("current-node-class-changed", this.updateClassList);
+    }
+
+    this.store.dispatch(updateClassPanelExpanded(isClassPanelExpanded));
   }
 
   /**
@@ -252,6 +328,35 @@ class RulesView {
   }
 
   /**
+   * Shows the inplace editor for the a selector.
+   *
+   * @param  {DOMNode} element
+   *         The selector's span element to show the inplace editor.
+   * @param  {String} ruleId
+   *         The id of the Rule to be modified.
+   */
+  showSelectorEditor(element, ruleId) {
+    new InplaceEditor({
+      element,
+      done: async (value, commit) => {
+        if (!value || !commit) {
+          return;
+        }
+
+        // Hide the selector highlighter if it matches the selector being edited.
+        if (this.highlighters.selectorHighlighterShown) {
+          const selector = await this.elementStyle.getRule(ruleId).getUniqueSelector();
+          if (this.highlighters.selectorHighlighterShown === selector) {
+            this.onToggleSelectorHighlighter(this.highlighters.selectorHighlighterShown);
+          }
+        }
+
+        await this.elementStyle.modifySelector(ruleId, value);
+      },
+    });
+  }
+
+  /**
    * Updates the rules view by dispatching the new rules data of the newly selected
    * element. This is called when the rules view becomes visible or upon new node
    * selection.
@@ -262,6 +367,7 @@ class RulesView {
   async update(element) {
     if (!element) {
       this.store.dispatch(disableAllPseudoClasses());
+      this.store.dispatch(updateClasses([]));
       this.store.dispatch(updateRules([]));
       return;
     }
@@ -272,7 +378,15 @@ class RulesView {
     await this.elementStyle.populate();
 
     this.store.dispatch(setPseudoClassLocks(this.elementStyle.element.pseudoClassLocks));
+    this.updateClassList();
     this.updateRules();
+  }
+
+  /**
+   * Updates the class list panel with the current list of CSS classes.
+   */
+  updateClassList() {
+    this.store.dispatch(updateClasses(this.classList.currentClasses));
   }
 
   /**

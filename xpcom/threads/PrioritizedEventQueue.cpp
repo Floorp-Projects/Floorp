@@ -330,5 +330,4 @@ void PrioritizedEventQueue<InnerQueueT>::ResumeInputEventPrioritization(
 
 namespace mozilla {
 template class PrioritizedEventQueue<EventQueue>;
-template class PrioritizedEventQueue<LabeledEventQueue>;
 }  // namespace mozilla
