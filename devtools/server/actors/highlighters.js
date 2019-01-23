@@ -411,9 +411,9 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   _startPickerListeners: function() {
     const target = this._highlighterEnv.pageListenerTarget;
     target.addEventListener("mousemove", this._onHovered, true);
-    target.addEventListener("click", this._onPick, true);
+    target.addEventListener("mouseup", this._onPick, true);
     target.addEventListener("mousedown", this._preventContentEvent, true);
-    target.addEventListener("mouseup", this._preventContentEvent, true);
+    target.addEventListener("click", this._preventContentEvent, true);
     target.addEventListener("dblclick", this._preventContentEvent, true);
     target.addEventListener("keydown", this._onKey, true);
     target.addEventListener("keyup", this._preventContentEvent, true);
