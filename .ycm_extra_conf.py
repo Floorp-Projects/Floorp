@@ -24,6 +24,16 @@ mach_module = imp.load_module('_mach', open(path), path, ('', 'r', imp.PY_SOURCE
 
 sys.dont_write_bytecode = old_bytecode
 
+def _is_likely_cpp_header(filename):
+    if not filename.endswith('.h'):
+        return False
+
+    if filename.endswith('Inlines.h') or filename.endswith('-inl.h'):
+        return True
+
+    cpp_file = filename[:-1] + 'cpp'
+    return os.path.exists(cpp_file)
+
 def FlagsForFile(filename):
     mach = mach_module.get_mach()
     out = StringIO()
@@ -40,6 +50,9 @@ def FlagsForFile(filename):
     # Removing this flag is a workaround until ycmd starts to handle this flag properly.
     # https://github.com/Valloric/YouCompleteMe/issues/1490
     final_flags = [x for x in flag_list if not x.startswith('-march=armv')]
+
+    if _is_likely_cpp_header(filename):
+        final_flags += ["-x", "c++"]
 
     return {
         'flags': final_flags,
