@@ -14435,6 +14435,16 @@
     "n_buckets": 50,
     "description": "WebRender render time in milliseconds"
   },
+  "TOUCHBAR_BUTTON_PRESSES": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["mdeboer@mozilla.com"],
+    "bug_numbers": [1313429],
+    "expires_in_version": "71",
+    "kind": "categorical",
+    "labels": ["Back", "Forward", "Reload", "Home",  "Fullscreen", "Find", "NewTab", "ReaderView", "AddBookmark", "OpenLocation", "Focus", "Share", "Sidebar"],
+    "releaseChannelCollection": "opt-out",
+    "description": "What buttons are pressed most often on the Mac Touch Bar?"
+  },
   "AUDIO_TRACK_SILENCE_PROPORTION": {
     "record_in_processes": ["main", "content"],
     "alert_emails": [
@@ -14479,6 +14489,19 @@
     "labels": ["NeverBlocked", "AllowedAfterBlocked", "NeverAllowed"],
     "bug_numbers": [1512277],
     "description": "The number of times an AudioContext is allowed to start after being blocked, or the number of AudioContexts attempting to start which were never blocked or never allowed.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "AUTOPLAY_SITES_SETTING_CHANGE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": [
+      "alwu@mozilla.com",
+      "cpearce@mozilla.com"
+    ],
+    "expires_in_version": "71",
+    "kind": "categorical",
+    "labels": ["AddAllow", "RemoveAllow", "AddBlock", "RemoveBlock"],
+    "bug_numbers": [1520361],
+    "description": "The number of times the user adds a site to the allow list, removes a site from the allow list, adds a site to the block list and removes a site from the block list.",
     "releaseChannelCollection": "opt-out"
   },
   "QM_REPOSITORIES_INITIALIZATION_TIME": {

@@ -5845,11 +5845,11 @@ nsresult nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin) {
   nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
   NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
 
-  nsCString host;
+  nsAutoCString host;
   rv = uri->GetAsciiHost(host);
 
   if (NS_SUCCEEDED(rv) && !host.IsEmpty()) {
-    nsCString scheme;
+    nsAutoCString scheme;
     rv = uri->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5857,7 +5857,7 @@ nsresult nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin) {
     uri->GetPort(&port);
     if (port != -1 && port == NS_GetDefaultPort(scheme.get())) port = -1;
 
-    nsCString hostPort;
+    nsAutoCString hostPort;
     rv = NS_GenerateHostPort(host, port, hostPort);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5932,11 +5932,11 @@ nsresult nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin) {
   nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
   NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
 
-  nsCString host;
+  nsAutoCString host;
   rv = uri->GetHost(host);
 
   if (NS_SUCCEEDED(rv) && !host.IsEmpty()) {
-    nsCString scheme;
+    nsAutoCString scheme;
     rv = uri->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5944,7 +5944,7 @@ nsresult nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin) {
     uri->GetPort(&port);
     if (port != -1 && port == NS_GetDefaultPort(scheme.get())) port = -1;
 
-    nsCString hostPort;
+    nsAutoCString hostPort;
     rv = NS_GenerateHostPort(host, port, hostPort);
     NS_ENSURE_SUCCESS(rv, rv);
 
