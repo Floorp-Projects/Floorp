@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-   License, v. 2.0. If a copy of the MPL was not distributed with this
-   file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.fenix.components
 
@@ -20,8 +20,18 @@ class UseCases(
     private val sessionManager: SessionManager,
     private val searchEngineManager: SearchEngineManager
 ) {
+    /**
+     * Use cases that provide engine interactions for a given browser session.
+     */
+    val sessionUseCases by lazy { SessionUseCases(sessionManager) }
 
+    /**
+     * Use cases that provide tab management.
+     */
+    val tabsUseCases: TabsUseCases by lazy { TabsUseCases(sessionManager) }
+
+    /**
+     * Use cases that provide search engine integration.
+     */
     val searchUseCases by lazy { SearchUseCases(context, searchEngineManager, sessionManager) }
-    val sessionUseCases by lazy { SessionUseCases(sessionManager) };
-    val tabsUseCases by lazy { TabsUseCases(sessionManager) }
 }

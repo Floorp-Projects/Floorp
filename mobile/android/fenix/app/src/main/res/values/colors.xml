@@ -9,4 +9,6 @@
 
     <color name="searchStroke">#331b215e</color>
     <color name="searchText">#0C0C0D</color>
+    <color name="offwhite">#f9f9fa</color>
+    <color name="icons">#0C0C0D</color>
 </resources>

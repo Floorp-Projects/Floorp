@@ -6,4 +6,13 @@
     <string name="app_name">Fenix</string>
 
     <string name="search_hint">Search the Web or enter address</string>
+    <string name="menu_share_with">Share with…</string>
+    <string name="browser_menu_help">Help</string>
+    <string name="browser_menu_settings">Settings</string>
+    <string name="browser_menu_library">Your Library</string>
+    <string name="browser_menu_desktop_site">Desktop Site</string>
+    <string name="browser_menu_find_in_page">Find in Page</string>
+    <string name="browser_menu_private_tab">Private Tab</string>
+    <string name="browser_menu_new_tab">New Tab</string>
+    <string name="browser_menu_report_issue">Report Issue</string>
 </resources>

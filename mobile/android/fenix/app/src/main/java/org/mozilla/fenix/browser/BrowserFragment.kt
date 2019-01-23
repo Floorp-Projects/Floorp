@@ -14,6 +14,7 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.requireComponents
 
 class BrowserFragment : Fragment() {
@@ -41,7 +42,16 @@ class BrowserFragment : Fragment() {
         sessionFeature = SessionFeature(
             sessionManager,
             SessionUseCases(sessionManager),
-            engineView)
+            engineView
+        )
+
+        lifecycle.addObserver(
+            ToolbarIntegration(
+                requireContext(),
+                toolbar,
+                requireComponents.toolbar.shippedDomainsProvider
+            )
+        )
 
         lifecycle.addObservers(sessionFeature)
     }
