@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ok, rozumím",
   "prefs_home_header": "Obsah domovské stránky Firefoxu",
   "prefs_home_description": "Vyberte obsah, který chcete mít na výchozí domovské stránce Firefoxu.",
-  "prefs_content_discovery_header": "Domovská stránka Firefoxu",
+  "prefs_content_discovery_header": "Firefox Home",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
   "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} řádek;{num} řádky;{num} řádků",

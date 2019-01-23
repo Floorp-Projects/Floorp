@@ -49,7 +49,6 @@ export class Hero extends React.PureComponent {
         index={index + 1}
         type={this.props.type}
         dispatch={this.props.dispatch}
-        context={truncateText(rec.context || "", 22)}
         source={truncateText(`TODO: SOURCE`, 22)} />
     ));
 
@@ -64,11 +63,7 @@ export class Hero extends React.PureComponent {
             <div className="meta">
               <header>{truncateText(heroRec.title, 28)}</header>
               <p>{truncateText(heroRec.excerpt, 114)}</p>
-              {heroRec.context ? (
-                <p className="context">{truncateText(heroRec.context, 22)}</p>
-              ) : (
-                <p>{truncateText(`TODO: SOURCE`, 22)}</p>
-              )}
+              <p>{truncateText(`TODO: SOURCE`, 22)}</p>
             </div>
           </a>
           <div className="cards">

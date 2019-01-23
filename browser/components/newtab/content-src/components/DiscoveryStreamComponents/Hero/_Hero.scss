@@ -1,3 +1,10 @@
+.ds-header {
+  font-size: 17px;
+  line-height: 24px;
+  color: $grey-90;
+  margin: 16px 0;
+}
+
 .ds-hero {
   .img {
     border: 0.5px solid $black-10;
@@ -59,10 +66,6 @@
 
       p {
         font-size: 13px;
-
-        &.context {
-          color: $teal-70;
-        }
       }
     }
   }
@@ -82,6 +85,7 @@
         padding-top: 100%; // 1:1 aspect ratio
       }
     }
+
 
     .cards {
       display: grid;
