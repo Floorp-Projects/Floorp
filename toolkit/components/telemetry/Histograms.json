@@ -11630,6 +11630,8 @@
       "gmplugin-hang",
       "gpu-crash",
       "gpu-hang",
+      "vr-crash",
+      "vr-hang",
       "rdd-crash",
       "rdd-hang",
       "socket-crash",
