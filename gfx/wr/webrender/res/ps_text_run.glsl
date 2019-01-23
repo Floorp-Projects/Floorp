@@ -160,13 +160,14 @@ void main(void) {
     PictureTask task = fetch_picture_task(ph.render_task_index);
 
     TextRun text = fetch_text_run(ph.specific_prim_address);
+    vec2 text_offset = ph.local_rect.p0 - text.offset;
 
     if (color_mode == COLOR_MODE_FROM_PASS) {
         color_mode = uMode;
     }
 
     Glyph glyph = fetch_glyph(ph.specific_prim_address, glyph_index);
-    glyph.offset += ph.local_rect.p0 - text.offset;
+    glyph.offset += text.offset;
 
     GlyphResource res = fetch_glyph_resource(resource_address);
 
@@ -175,7 +176,7 @@ void main(void) {
     mat2 glyph_transform = mat2(transform.m) * task.common_data.device_pixel_scale;
 
     // Compute the glyph rect in glyph space.
-    RectWithSize glyph_rect = RectWithSize(res.offset + glyph_transform * (text.offset + glyph.offset),
+    RectWithSize glyph_rect = RectWithSize(res.offset + glyph_transform * (text_offset + glyph.offset),
                                            res.uv_rect.zw - res.uv_rect.xy);
 
 #else
@@ -183,7 +184,7 @@ void main(void) {
     float scale = res.scale / task.common_data.device_pixel_scale;
 
     // Compute the glyph rect in local space.
-    RectWithSize glyph_rect = RectWithSize(scale * res.offset + text.offset + glyph.offset,
+    RectWithSize glyph_rect = RectWithSize(scale * res.offset + text_offset + glyph.offset,
                                            scale * (res.uv_rect.zw - res.uv_rect.xy));
 #endif
 
@@ -216,7 +217,7 @@ void main(void) {
                                       ph.z,
                                       transform,
                                       task,
-                                      text.offset,
+                                      text_offset,
                                       glyph.offset,
                                       glyph_rect,
                                       snap_bias);

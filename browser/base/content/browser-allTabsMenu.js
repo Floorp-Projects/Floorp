@@ -134,7 +134,6 @@ var gTabsPanel = {
   },
 
   searchTabs() {
-    focusAndSelectUrlBar();
     gURLBar.typeRestrictToken(UrlbarTokenizer.RESTRICT.OPENPAGE);
   },
 };

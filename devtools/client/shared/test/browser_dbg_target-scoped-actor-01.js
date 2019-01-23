@@ -10,7 +10,7 @@
  */
 
 const ACTORS_URL = EXAMPLE_URL + "testactors.js";
-const TAB_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
+const TAB_URL = TEST_URI_ROOT + "doc_empty-tab-01.html";
 
 add_task(async function test() {
   const tab = await addTab(TAB_URL);

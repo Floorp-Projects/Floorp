@@ -5,7 +5,11 @@
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 CONFIG_DIR = instgen
-SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
+ifeq ($(CPU_ARCH), aarch64)
+SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.ARM64.sfx
+else
+SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.Win32.sfx
+endif
 
 INSTALLER_FILES = \
 	app.tag \

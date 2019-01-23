@@ -179,6 +179,9 @@ CrashService.prototype = Object.freeze({
     case Ci.nsICrashService.PROCESS_TYPE_GPU:
       processType = Services.crashmanager.PROCESS_TYPE_GPU;
       break;
+    case Ci.nsICrashService.PROCESS_TYPE_VR:
+      processType = Services.crashmanager.PROCESS_TYPE_VR;
+      break;
     case Ci.nsICrashService.PROCESS_TYPE_RDD:
       processType = Services.crashmanager.PROCESS_TYPE_RDD;
       break;

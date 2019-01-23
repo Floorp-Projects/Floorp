@@ -65,7 +65,7 @@ function spawnWithObserver(browser, observerFunc, func) {
     // Call the initialization function (if present)
     func ? ("(" + func.toString() + ")();") : "",
     "});",
-  ].join('\n');
+  ].join("\n");
 
   return ContentTask.spawn(browser, null, new Function(source));
 }
@@ -101,6 +101,8 @@ async function consoleAPISanityTest(browser) {
   });
 }
 
+// These globals are all defined in spawnWithObserver in a sub-process.
+/* global gWindow, gArgs:true, gLevel:true, gStyle:true, expect, resolve */
 function testConsoleData(aMessageObject) {
   let messageWindow = Services.wm.getOuterWindowWithId(aMessageObject.ID);
   is(messageWindow, gWindow, "found correct window by window ID");
@@ -122,7 +124,7 @@ function testConsoleData(aMessageObject) {
   }
   default: {
     is(aMessageObject.arguments.length, gArgs.length, "arguments.length matches");
-    gArgs.forEach(function (a, i) {
+    gArgs.forEach(function(a, i) {
       // Waive Xray so that we don't get messed up by Xray ToString.
       //
       // It'd be nice to just use XPCNativeWrapper.unwrap here, but there are
@@ -270,7 +272,7 @@ async function startTraceTest(browser) {
       {columnNumber: 9, filename: TEST_URI, functionName: "window.foobar585956c", lineNumber: 6},
       {columnNumber: 16, filename: TEST_URI, functionName: "foobar585956b", lineNumber: 11},
       {columnNumber: 16, filename: TEST_URI, functionName: "foobar585956a", lineNumber: 15},
-      {columnNumber: 1, filename: TEST_URI, functionName: "onclick", lineNumber: 1}
+      {columnNumber: 1, filename: TEST_URI, functionName: "onclick", lineNumber: 1},
     ];
 
   });
@@ -290,7 +292,7 @@ function testLocationData(aMessageObject) {
   is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
   is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
   is(aMessageObject.arguments.length, gArgs[0].arguments.length, "arguments.length matches");
-  gArgs[0].arguments.forEach(function (a, i) {
+  gArgs[0].arguments.forEach(function(a, i) {
     is(aMessageObject.arguments[i], a, "correct arg " + i);
   });
 
@@ -301,7 +303,7 @@ async function startLocationTest(browser) {
   await spawnWithObserver(browser, testLocationData, function(opts) {
     gLevel = "log";
     gArgs = [
-      {filename: TEST_URI, functionName: "foobar646025", arguments: ["omg", "o", "d"], lineNumber: 19}
+      {filename: TEST_URI, functionName: "foobar646025", arguments: ["omg", "o", "d"], lineNumber: 19},
     ];
   });
 
@@ -341,13 +343,11 @@ function testConsoleGroup(aMessageObject) {
     is(aMessageObject.groupName, "a group", "groupCollapsed groupName matches");
     is(aMessageObject.arguments[0], "a", "groupCollapsed arguments[0] matches");
     is(aMessageObject.arguments[1], "group", "groupCollapsed arguments[0] matches");
-  }
-  else if (aMessageObject.level == "group") {
+  } else if (aMessageObject.level == "group") {
     is(aMessageObject.groupName, "b group", "group groupName matches");
     is(aMessageObject.arguments[0], "b", "group arguments[0] matches");
     is(aMessageObject.arguments[1], "group", "group arguments[1] matches");
-  }
-  else if (aMessageObject.level == "groupEnd") {
+  } else if (aMessageObject.level == "groupEnd") {
     is(aMessageObject.groupName, "b group", "groupEnd groupName matches");
   }
 
@@ -374,7 +374,7 @@ function testConsoleTime(aMessageObject) {
   is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
   is(aMessageObject.timer.name, gArgs[0].timer.name, "timer.name matches");
 
-  gArgs[0].arguments.forEach(function (a, i) {
+  gArgs[0].arguments.forEach(function(a, i) {
     is(aMessageObject.arguments[i], a, "correct arg " + i);
   });
 
@@ -388,7 +388,7 @@ async function startTimeTest(browser) {
       {filename: TEST_URI, lineNumber: 23, functionName: "startTimer",
        arguments: ["foo"],
        timer: { name: "foo" },
-      }
+      },
     ];
   });
 
@@ -412,7 +412,7 @@ function testConsoleTimeEnd(aMessageObject) {
   info("timer duration: " + aMessageObject.timer.duration);
   ok(aMessageObject.timer.duration >= 0, "timer duration is positive");
 
-  gArgs[0].arguments.forEach(function (a, i) {
+  gArgs[0].arguments.forEach(function(a, i) {
     is(aMessageObject.arguments[i], a, "correct arg " + i);
   });
 
@@ -445,7 +445,7 @@ function testConsoleTimeStamp(aMessageObject) {
   is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
   ok(aMessageObject.timeStamp > 0, "timeStamp is a positive value");
 
-  gArgs[0].arguments.forEach(function (a, i) {
+  gArgs[0].arguments.forEach(function(a, i) {
     is(aMessageObject.arguments[i], a, "correct arg " + i);
   });
 
@@ -457,8 +457,8 @@ async function startTimeStampTest(browser) {
     gLevel = "timeStamp";
     gArgs = [
       {filename: TEST_URI, lineNumber: 58, functionName: "timeStamp",
-       arguments: ["!!!"]
-      }
+       arguments: ["!!!"],
+      },
     ];
   });
 
@@ -486,8 +486,8 @@ async function startEmptyTimeStampTest(browser) {
     gLevel = "timeStamp";
     gArgs = [
       {filename: TEST_URI, lineNumber: 58, functionName: "timeStamp",
-       arguments: []
-      }
+       arguments: [],
+      },
     ];
   });
 

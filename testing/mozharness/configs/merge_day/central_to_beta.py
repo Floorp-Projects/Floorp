@@ -26,6 +26,7 @@ config = {
                   "browser/config/mozconfigs/linux64/l10n-mozconfig",
                   "browser/config/mozconfigs/win32/l10n-mozconfig",
                   "browser/config/mozconfigs/win64/l10n-mozconfig",
+                  "browser/config/mozconfigs/win64-aarch64/l10n-mozconfig",
                   "browser/config/mozconfigs/macosx64/l10n-mozconfig"]
     ] + [
         # File, from, to

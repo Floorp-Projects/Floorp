@@ -1,4 +1,15 @@
 config = {
+    "l10n_dir": "l10n-central",
+    "locales_dir": "mobile/android/locales",
+    "ignore_locales": ["en-US"],
+
+    "objdir": "obj-firefox",
+    "repack_env": {
+        "MOZ_OBJDIR": "obj-firefox",
+    },
+
+    'vcs_share_base': "/builds/hg-shared",
+
     "mozconfig": "src/mobile/android/config/mozconfigs/android-api-16/l10n-nightly",
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",

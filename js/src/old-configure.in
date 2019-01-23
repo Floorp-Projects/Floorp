@@ -159,21 +159,17 @@ case "$target" in
         _MSVC_VER_FILTER='s|.*[^!-~]([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?).*|\1|p'
         changequote([,])
 
-        _MSC_VER=`echo ${CC_VERSION} | cut -c 1-2,4-5`
-
         AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
         AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         AC_DEFINE(_USE_MATH_DEFINES) # Otherwise MSVC's math.h doesn't #define M_PI.
 
-        if test "$_MSC_VER" -ge "1910"; then # VS2017+
-            # C5038: Enable initializer list order warnings
-            # The -w1#### flag treats warning C#### as if it was a warning level
-            # 1 warning, and thus enables it because we enable /W3 warnings. We
-            # don't use -we#### because it would enable warning C#### but treat
-            # it as an error, even in third-party code.
-            # https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level
-            CXXFLAGS="$CXXFLAGS -w15038"
-        fi
+        # C5038: Enable initializer list order warnings
+        # The -w1#### flag treats warning C#### as if it was a warning level
+        # 1 warning, and thus enables it because we enable /W3 warnings. We
+        # don't use -we#### because it would enable warning C#### but treat
+        # it as an error, even in third-party code.
+        # https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level
+        CXXFLAGS="$CXXFLAGS -w15038"
 
         _CC_SUITE=14
         MSVC_C_RUNTIME_DLL=vcruntime140.dll
@@ -265,8 +261,6 @@ if test -n "$SBCONF"; then
     fi
 fi
 AC_SUBST(QEMU_CANT_RUN_JS_SHELL)
-
-AC_SUBST(_MSC_VER)
 
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
@@ -1678,7 +1672,6 @@ AC_SUBST_LIST(DSO_PIC_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
 AC_SUBST(BIN_SUFFIX)
 AC_SUBST(USE_N32)
-AC_SUBST(CC_VERSION)
 AC_SUBST(MOZ_LINKER)
 AC_SUBST(WIN32_CONSOLE_EXE_LDFLAGS)
 AC_SUBST(WIN32_GUI_EXE_LDFLAGS)

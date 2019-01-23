@@ -2583,6 +2583,10 @@ var gListView = {
     if (aIsInstall && aObj.existingAddon)
       return;
 
+    if (aObj.addon && aObj.addon.hidden) {
+      return;
+    }
+
     let prop = aIsInstall ? "mInstall" : "mAddon";
     for (let item of this._listBox.childNodes) {
       if (item[prop] == aObj)

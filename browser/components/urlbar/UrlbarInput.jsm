@@ -10,15 +10,15 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  QueryContext: "resource:///modules/UrlbarUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
-  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "ClipboardHelper",
@@ -242,7 +242,7 @@ class UrlbarInput {
     // BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(
     //   event, this.userSelectionBehavior);
 
-    url = url.trim();
+    url = this._maybeCanonizeURL(event, url) || url.trim();
 
     try {
       new URL(url);
@@ -294,6 +294,9 @@ class UrlbarInput {
       allowInheritPrincipal: false,
     };
 
+    // TODO bug 1521702: Call _maybeCanonizeURL for autofilled results with the
+    // typed string (not the autofilled one).
+
     let url = result.payload.url;
 
     switch (result.type) {
@@ -316,6 +319,12 @@ class UrlbarInput {
         return;
       }
       case UrlbarUtils.MATCH_TYPE.SEARCH: {
+        url = this._maybeCanonizeURL(event,
+                result.payload.suggestion || result.payload.query);
+        if (url) {
+          break;
+        }
+
         const actionDetails = {
           isSuggestion: !!result.payload.suggestion,
           alias: result.payload.keyword,
@@ -381,7 +390,7 @@ class UrlbarInput {
       return;
     }
 
-    this.controller.startQuery(new QueryContext({
+    this.controller.startQuery(new UrlbarQueryContext({
       enableAutofill: UrlbarPrefs.get("autoFill"),
       isPrivate: this.isPrivate,
       lastKey,
@@ -393,6 +402,8 @@ class UrlbarInput {
   }
 
   typeRestrictToken(char) {
+    this.window.focusAndSelectUrlBar();
+
     this.inputField.value = char + " ";
 
     let event = this.document.createEvent("UIEvents");
@@ -595,6 +606,50 @@ class UrlbarInput {
   }
 
   /**
+   * If appropriate, this prefixes a search string with 'www.' and suffixes it
+   * with browser.fixup.alternate.suffix prior to navigating.
+   *
+   * @param {Event} event
+   *   The event that triggered this query.
+   * @param {string} value
+   *   The search string that should be canonized.
+   * @returns {string}
+   *   Returns the canonized URL if available and null otherwise.
+   */
+  _maybeCanonizeURL(event, value) {
+    // Only add the suffix when the URL bar value isn't already "URL-like",
+    // and only if we get a keyboard event, to match user expectations.
+    if (!(event instanceof KeyboardEvent) ||
+        !event.ctrlKey ||
+        !UrlbarPrefs.get("ctrlCanonizesURLs") ||
+        !/^\s*[^.:\/\s]+(?:\/.*|\s*)$/i.test(value)) {
+      return null;
+    }
+
+    let suffix = Services.prefs.getCharPref("browser.fixup.alternate.suffix");
+    if (!suffix.endsWith("/")) {
+      suffix += "/";
+    }
+
+    // trim leading/trailing spaces (bug 233205)
+    value = value.trim();
+
+    // Tack www. and suffix on.  If user has appended directories, insert
+    // suffix before them (bug 279035).  Be careful not to get two slashes.
+    let firstSlash = value.indexOf("/");
+    if (firstSlash >= 0) {
+      value = value.substring(0, firstSlash) + suffix +
+              value.substring(firstSlash + 1);
+    } else {
+      value = value + suffix;
+    }
+    value = "http://www." + value;
+
+    this.value = value;
+    return value;
+  }
+
+  /**
    * Loads the url in the appropriate place.
    *
    * @param {string} url
@@ -679,7 +734,8 @@ class UrlbarInput {
       // We support using 'alt' to open in a tab, because ctrl/shift
       // might be used for canonizing URLs:
       where = event.shiftKey ? "tabshifted" : "tab";
-    } else if (!isMouseEvent && this._ctrlCanonizesURLs && event && event.ctrlKey) {
+    } else if (!isMouseEvent && event && event.ctrlKey &&
+               UrlbarPrefs.get("ctrlCanonizesURLs")) {
       // If we're allowing canonization, and this is a key event with ctrl
       // pressed, open in current tab to allow ctrl-enter to canonize URL.
       where = "current";

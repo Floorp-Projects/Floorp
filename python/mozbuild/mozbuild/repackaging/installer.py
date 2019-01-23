@@ -11,7 +11,7 @@ from mozbuild.action.exe_7z_archive import archive_exe
 from mozbuild.util import ensureParentDir
 
 
-def repackage_installer(topsrcdir, tag, setupexe, package, output, package_name, sfx_stub):
+def repackage_installer(topsrcdir, tag, setupexe, package, output, package_name, sfx_stub, use_upx):
     if package and not zipfile.is_zipfile(package):
         raise Exception("Package file %s is not a valid .zip file." % package)
     if package is not None and package_name is None:
@@ -42,7 +42,7 @@ def repackage_installer(topsrcdir, tag, setupexe, package, output, package_name,
 
         sfx_package = mozpath.join(topsrcdir, sfx_stub)
 
-        archive_exe(package_name, tag, sfx_package, output)
+        archive_exe(package_name, tag, sfx_package, output, use_upx)
 
     finally:
         os.chdir(old_cwd)

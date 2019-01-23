@@ -1171,8 +1171,8 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             '%s_TYPE' % var, valid_compiler.type)
         add_old_configure_assignment(
             '%s_TYPE' % var, valid_compiler.type)
-        add_old_configure_assignment(
-            '%s_VERSION' % var, valid_compiler.version)
+        set_config(
+            '%s_VERSION' % var, depends(valid_compiler.version)(lambda v: str(v)))
 
     valid_compiler = compiler_class(valid_compiler, host_or_target)
 

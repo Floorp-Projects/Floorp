@@ -542,7 +542,6 @@ var PlacesCommandHook = {
   },
 
   searchBookmarks() {
-    focusAndSelectUrlBar();
     gURLBar.typeRestrictToken(UrlbarTokenizer.RESTRICT.BOOKMARK);
   },
 };
