@@ -16,13 +16,13 @@ permalink: /changelog/
 * **support-ktx**
   * Added `Lifecycle.addObservers` to observe the lifecycle for multiple classes.
   ```kotlin
-  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-    lifecycle.addObservers(
-      fullscreenFeature,
-      sessionFeature,
-      customTabsToolbarFeature
-    )
-  }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+      lifecycle.addObservers(
+        fullscreenFeature,
+        sessionFeature,
+        customTabsToolbarFeature
+      )
+    }
   ```
 
 # 0.39.0
@@ -50,7 +50,7 @@ permalink: /changelog/
   * Added [BrowserMenuImageText](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/README.md#BrowserMenuImageText) for show an icon next to text in menus.
   * Added support for showing a menu with DOWN and UP orientation (e.g. for supporting menus in bottom toolbars).
 
-* **concept-engine**, **browser-engine-gecko-**
+* **concept-engine**, **browser-engine-gecko-***
   * Added support for enabling tracking protection for specific session type:
   ```kotlin
   val engine = GeckoEngine(runtime, DefaultSettings(
@@ -239,7 +239,7 @@ permalink: /changelog/
 * **feature-customtabs**
   * Added support for opening speculative connections for a likely future navigation to a URL (`mayLaunchUrl`)
 
-* **feature-prompts**, **engine-gecko-**, **engine-system**
+* **feature-prompts**, **engine-gecko-***, **engine-system**
   * Added support for file picker requests.
 
     There some requests that are not handled with dialogs, instead they are delegated to other apps
@@ -947,7 +947,7 @@ Release date: 2018-10-23
   * Added `HistoryTrackingDelegate` interface for integrating engine implementations with history storage backends. Intended to be used via engine settings.
 * **browser-engine**
   * `Download.fileName` cannot be `null` anymore. All engine implementations are guaranteed to return a proposed file name for Downloads now.
-* **browser-engine-gecko-**, **browser-engine-system**
+* **browser-engine-gecko-***, **browser-engine-system**
   * Added support for `HistoryTrackingDelegate`, if it's specified in engine settings.
 * **browser-engine-servo**
   * Added a new experimental *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
