@@ -6578,29 +6578,6 @@ void CodeGenerator::visitNewCallObject(LNewCallObject* lir) {
   masm.bind(ool->rejoin());
 }
 
-typedef JSObject* (*NewSingletonCallObjectFn)(JSContext*, HandleShape);
-static const VMFunction NewSingletonCallObjectInfo =
-    FunctionInfo<NewSingletonCallObjectFn>(NewSingletonCallObject,
-                                           "NewSingletonCallObject");
-
-void CodeGenerator::visitNewSingletonCallObject(LNewSingletonCallObject* lir) {
-  Register objReg = ToRegister(lir->output());
-
-  JSObject* templateObj = lir->mir()->templateObject();
-
-  OutOfLineCode* ool;
-  ool =
-      oolCallVM(NewSingletonCallObjectInfo, lir,
-                ArgList(ImmGCPtr(templateObj->as<CallObject>().lastProperty())),
-                StoreRegisterTo(objReg));
-
-  // Objects can only be given singleton types in VM calls.  We make the call
-  // out of line to not bloat inline code, even if (naively) this seems like
-  // extra work.
-  masm.jump(ool->entry());
-  masm.bind(ool->rejoin());
-}
-
 typedef JSObject* (*NewStringObjectFn)(JSContext*, HandleString);
 static const VMFunction NewStringObjectInfo =
     FunctionInfo<NewStringObjectFn>(NewStringObject, "NewStringObject");
@@ -10111,16 +10088,6 @@ void CodeGenerator::visitSetFrameArgumentV(LSetFrameArgumentV* lir) {
   size_t argOffset = frameSize() + JitFrameLayout::offsetOfActualArgs() +
                      (sizeof(Value) * lir->mir()->argno());
   masm.storeValue(val, Address(masm.getStackPointer(), argOffset));
-}
-
-typedef bool (*RunOnceScriptPrologueFn)(JSContext*, HandleScript);
-static const VMFunction RunOnceScriptPrologueInfo =
-    FunctionInfo<RunOnceScriptPrologueFn>(js::RunOnceScriptPrologue,
-                                          "RunOnceScriptPrologue");
-
-void CodeGenerator::visitRunOncePrologue(LRunOncePrologue* lir) {
-  pushArg(ImmGCPtr(lir->mir()->block()->info().script()));
-  callVM(RunOnceScriptPrologueInfo, lir);
 }
 
 typedef JSObject* (*InitRestParameterFn)(JSContext*, uint32_t, Value*,

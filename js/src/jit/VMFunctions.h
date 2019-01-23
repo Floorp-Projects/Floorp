@@ -976,7 +976,6 @@ MOZ_MUST_USE bool InterruptCheck(JSContext* cx);
 void* MallocWrapper(JS::Zone* zone, size_t nbytes);
 JSObject* NewCallObject(JSContext* cx, HandleShape shape,
                         HandleObjectGroup group);
-JSObject* NewSingletonCallObject(JSContext* cx, HandleShape shape);
 JSObject* NewStringObject(JSContext* cx, HandleString str);
 
 bool OperatorIn(JSContext* cx, HandleValue key, HandleObject obj, bool* out);

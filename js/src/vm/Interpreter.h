@@ -508,8 +508,6 @@ bool DeleteNameOperation(JSContext* cx, HandlePropertyName name,
 bool ImplicitThisOperation(JSContext* cx, HandleObject scopeObj,
                            HandlePropertyName name, MutableHandleValue res);
 
-bool RunOnceScriptPrologue(JSContext* cx, HandleScript script);
-
 bool InitGetterSetterOperation(JSContext* cx, jsbytecode* pc, HandleObject obj,
                                HandleId id, HandleObject val);
 
