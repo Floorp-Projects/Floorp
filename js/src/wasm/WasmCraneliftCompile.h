@@ -26,6 +26,8 @@
 namespace js {
 namespace wasm {
 
+MOZ_MUST_USE bool CraneliftCanCompile();
+
 // Generates code with Cranelift.
 MOZ_MUST_USE bool CraneliftCompileFunctions(
     const ModuleEnvironment& env, LifoAlloc& lifo,

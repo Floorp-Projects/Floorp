@@ -10214,14 +10214,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 
 #ifdef ENABLE_WASM_REFTYPES
   enableWasmGc = op.getBoolOption("wasm-gc");
-#  ifdef ENABLE_WASM_CRANELIFT
-  if (enableWasmGc && enableWasmCranelift) {
-    fprintf(stderr,
-            "Do not combine --wasm-gc and --wasm-compiler=cranelift, they are "
-            "incompatible.\n");
-  }
-  enableWasmGc = enableWasmGc && !enableWasmCranelift;
-#  endif
 #endif
   enableWasmVerbose = op.getBoolOption("wasm-verbose");
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
