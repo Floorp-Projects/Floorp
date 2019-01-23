@@ -4,9 +4,10 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { editableItem } = require("devtools/client/shared/inplace-editor");
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
@@ -15,7 +16,9 @@ class Declaration extends PureComponent {
   static get propTypes() {
     return {
       declaration: PropTypes.shape(Types.declaration).isRequired,
+      isUserAgentStyle: PropTypes.bool.isRequired,
       onToggleDeclaration: PropTypes.func.isRequired,
+      showDeclarationNameEditor: PropTypes.func.isRequired,
     };
   }
 
@@ -27,8 +30,26 @@ class Declaration extends PureComponent {
       isComputedListExpanded: false,
     };
 
+    this.nameSpanRef = createRef();
+
     this.onComputedExpanderClick = this.onComputedExpanderClick.bind(this);
     this.onToggleDeclarationClick = this.onToggleDeclarationClick.bind(this);
+  }
+
+  componentDidMount() {
+    if (this.props.isUserAgentStyle) {
+      // Declaration is not editable.
+      return;
+    }
+
+    const { declaration } = this.props;
+
+    editableItem({
+      element: this.nameSpanRef.current,
+    }, element => {
+      this.props.showDeclarationNameEditor(element, declaration.ruleId,
+        declaration.id);
+    });
   }
 
   onComputedExpanderClick(event) {
@@ -144,7 +165,14 @@ class Declaration extends PureComponent {
             tabIndex: -1,
           }),
           dom.span({ className: "ruleview-namecontainer" },
-            dom.span({ className: "ruleview-propertyname theme-fg-color3" }, name),
+            dom.span(
+              {
+                className: "ruleview-propertyname theme-fg-color3",
+                ref: this.nameSpanRef,
+                tabIndex: 0,
+              },
+              name
+            ),
             ": "
           ),
           dom.span({

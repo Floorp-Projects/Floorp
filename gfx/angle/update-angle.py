@@ -234,6 +234,7 @@ IGNORED_INCLUDES = {
     'libANGLE/renderer/vulkan/android/DisplayVkAndroid.h',
     'libANGLE/renderer/vulkan/win32/DisplayVkWin32.h',
     'libANGLE/renderer/vulkan/xcb/DisplayVkXcb.h',
+    'kernel/image.h',
 }
 
 IGNORED_INCLUDE_PREFIXES = {
@@ -302,6 +303,7 @@ REGISTERED_DEFINES = {
     '_CRT_SECURE_NO_DEPRECATE': True,
     '_DEBUG': False,
     '_HAS_EXCEPTIONS': True,
+    '_HAS_ITERATOR_DEBUGGING': False,
     '_SCL_SECURE_NO_DEPRECATE': True,
     '_SECURE_ATL': True,
     '_UNICODE': True,
@@ -480,7 +482,7 @@ def export_target(root):
         (b, e) = x.rsplit('.', 1)
         if e in ['h', 'y', 'l', 'inc', 'inl']:
             continue
-        elif e in ['cpp', 'cc']:
+        elif e in ['cpp', 'cc', 'c']:
             if b.endswith('_win'):
                 config = "CONFIG['OS_ARCH'] == 'WINNT'"
             elif b.endswith('_linux'):
