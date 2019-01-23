@@ -1316,9 +1316,13 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
   LOG(("HttpChannelParent::OnStartRequest [this=%p, aRequest=%p]\n", this,
        aRequest));
   MOZ_ASSERT(NS_IsMainThread());
-
   MOZ_RELEASE_ASSERT(!mDivertingFromChild,
                      "Cannot call OnStartRequest if diverting is set!");
+
+  if (mDoingCrossProcessRedirect) {
+    LOG(("Child was cancelled for cross-process redirect. Bail."));
+    return NS_OK;
+  }
 
   RefPtr<HttpBaseChannel> chan = do_QueryObject(aRequest);
   if (!chan) {
@@ -1483,6 +1487,11 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
        this, aRequest, static_cast<uint32_t>(aStatusCode)));
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (mDoingCrossProcessRedirect) {
+    LOG(("Child was cancelled for cross-process redirect. Bail."));
+    return NS_OK;
+  }
+
   MOZ_RELEASE_ASSERT(!mDivertingFromChild,
                      "Cannot call OnStopRequest if diverting is set!");
   ResourceTimingStruct timing;
@@ -1594,7 +1603,7 @@ HttpChannelParent::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
     // is ready to send OnTransportAndData.
     MOZ_ASSERT(mIPCClosed || mBgParent);
 
-    if (mIPCClosed || !mBgParent ||
+    if (mIPCClosed || !mBgParent || mDoingCrossProcessRedirect ||
         !mBgParent->OnTransportAndData(channelStatus, transportStatus, aOffset,
                                        toRead, data)) {
       return NS_ERROR_UNEXPECTED;
@@ -1990,17 +1999,23 @@ HttpChannelParent::StartRedirect(uint32_t registrarId, nsIChannel* newChannel,
   return NS_OK;
 }
 
+void HttpChannelParent::CancelChildCrossProcessRedirect() {
+  MOZ_ASSERT(!mDoingCrossProcessRedirect, "Already redirected");
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mDoingCrossProcessRedirect = true;
+  if (!mIPCClosed) {
+    Unused << SendCancelRedirected();
+  }
+}
+
 NS_IMETHODIMP
 HttpChannelParent::CompleteRedirect(bool succeeded) {
   LOG(("HttpChannelParent::CompleteRedirect [this=%p succeeded=%d]\n", this,
        succeeded));
 
-  // The channel was redirected to another process, and the channel parent
-  // is about to be deleted. We send a CancelRedirected message in order to
-  // inform the listener that this child is going away.
-  if (mDoingCrossProcessRedirect && !mIPCClosed) {
-    MOZ_ASSERT(!mRedirectChannel);
-    Unused << SendCancelRedirected();
+  if (mDoingCrossProcessRedirect) {
+    LOG(("Child was cancelled for cross-process redirect. Bail."));
     return NS_OK;
   }
 

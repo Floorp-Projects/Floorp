@@ -2226,6 +2226,12 @@ HttpBaseChannel::RedirectTo(nsIURI* targetURI) {
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::SwitchProcessTo(mozilla::dom::Promise *aTabParent,
+                                 uint64_t aIdentifier) {
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::UpgradeToSecure() {
   // Upgrades are handled internally between http-on-modify-request and
   // http-on-before-connect, which means upgrades are only possible during

@@ -162,6 +162,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD AsyncOpen2(nsIStreamListener *aListener) override;
   // nsIHttpChannel
   NS_IMETHOD GetEncodedBodySize(uint64_t *aEncodedBodySize) override;
+  NS_IMETHOD SwitchProcessTo(mozilla::dom::Promise *aTabParent,
+                             uint64_t aIdentifier) override;
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey) override;
   NS_IMETHOD SetChannelIsForDownload(bool aChannelIsForDownload) override;
@@ -336,6 +338,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   MOZ_MUST_USE nsresult ProcessResponse();
   void AsyncContinueProcessResponse();
   MOZ_MUST_USE nsresult ContinueProcessResponse1();
+  MOZ_MUST_USE nsresult ContinueProcessResponse1_5(nsresult);
   MOZ_MUST_USE nsresult ContinueProcessResponse2(nsresult);
   void UpdateCacheDisposition(bool aSuccessfulReval, bool aPartialContentUsed);
   MOZ_MUST_USE nsresult ContinueProcessResponse3(nsresult);
@@ -359,6 +362,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   void ProcessSSLInformation();
   bool IsHTTPS();
 
+  MOZ_MUST_USE nsresult ContinueOnStartRequest0(nsresult);
   MOZ_MUST_USE nsresult ContinueOnStartRequest1(nsresult);
   MOZ_MUST_USE nsresult ContinueOnStartRequest2(nsresult);
   MOZ_MUST_USE nsresult ContinueOnStartRequest3(nsresult);
