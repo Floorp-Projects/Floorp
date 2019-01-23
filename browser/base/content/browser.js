@@ -190,9 +190,6 @@ XPCOMUtils.defineLazyGetter(this, "gURLBar", () => {
     return element;
   }
 
-  // Disable the legacy XBL binding.
-  element.setAttribute("quantumbar", "true");
-
   // Re-focus the input field if it was focused before switching bindings.
   if (element.hasAttribute("focused")) {
     element.inputField.focus();
