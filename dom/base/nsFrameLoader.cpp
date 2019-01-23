@@ -356,8 +356,14 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
       return NS_ERROR_FAILURE;
     }
 
-    // FIXME get error codes from child
-    mRemoteBrowser->LoadURL(mURIToLoad);
+    if (mRemoteFrameChild) {
+      nsAutoCString spec;
+      mURIToLoad->GetSpec(spec);
+      Unused << mRemoteFrameChild->SendLoadURL(spec);
+    } else {
+      // FIXME get error codes from child
+      mRemoteBrowser->LoadURL(mURIToLoad);
+    }
 
     if (!mRemoteBrowserShown) {
       // This can fail if it's too early to show the frame, we will retry later.
@@ -811,12 +817,25 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       return false;
     }
 
-    RenderFrame* rf = GetCurrentRenderFrame();
-    if (!rf) {
-      return false;
+    if (mRemoteFrameChild) {
+      nsCOMPtr<nsISupports> container =
+          mOwnerContent->OwnerDoc()->GetContainer();
+      nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
+      nsCOMPtr<nsIWidget> mainWidget;
+      baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+      nsSizeMode sizeMode =
+          mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
+
+      Unused << mRemoteFrameChild->SendShow(
+          size, ParentWindowIsActive(mOwnerContent->OwnerDoc()), sizeMode);
+      mRemoteBrowserShown = true;
+      return true;
     }
 
-    if (!rf->AttachLayerManager()) {
+    RenderFrame* rf =
+        mRemoteBrowser ? mRemoteBrowser->GetRenderFrame() : nullptr;
+
+    if (!rf || !rf->AttachLayerManager()) {
       // This is just not going to work.
       return false;
     }
@@ -834,7 +853,11 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
 
     // Don't show remote iframe if we are waiting for the completion of reflow.
     if (!aFrame || !(aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-      mRemoteBrowser->UpdateDimensions(dimensions, size);
+      if (mRemoteBrowser) {
+        mRemoteBrowser->UpdateDimensions(dimensions, size);
+      } else if (mRemoteFrameChild) {
+        mRemoteFrameChild->UpdateDimensions(dimensions, size);
+      }
     }
   }
 
@@ -920,6 +943,11 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   nsIPresShell* ourShell = ourDoc->GetShell();
   nsIPresShell* otherShell = otherDoc->GetShell();
   if (!ourShell || !otherShell) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  // FIXME: Consider supporting FrameLoader swapping for remote sub frames.
+  if (mRemoteFrameChild) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -2270,7 +2298,7 @@ nsresult nsFrameLoader::GetWindowDimensions(nsIntRect& aRect) {
 
 nsresult nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame* aIFrame) {
   if (IsRemoteFrame()) {
-    if (mRemoteBrowser) {
+    if (mRemoteBrowser || mRemoteFrameChild) {
       ScreenIntSize size = aIFrame->GetSubdocumentSize();
       // If we were not able to show remote frame before, we should probably
       // retry now to send correct showInfo.
@@ -2280,7 +2308,11 @@ nsresult nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame* aIFrame) {
       nsIntRect dimensions;
       NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), NS_ERROR_FAILURE);
       mLazySize = size;
-      mRemoteBrowser->UpdateDimensions(dimensions, size);
+      if (mRemoteBrowser) {
+        mRemoteBrowser->UpdateDimensions(dimensions, size);
+      } else if (mRemoteFrameChild) {
+        mRemoteFrameChild->UpdateDimensions(dimensions, size);
+      }
     }
     return NS_OK;
   }

@@ -31,6 +31,18 @@ class RemoteFrameParent : public PRemoteFrameParent {
   }
 
  protected:
+  friend class PRemoteFrameParent;
+
+  mozilla::ipc::IPCResult RecvShow(const ScreenIntSize& aSize,
+                                   const bool& aParentIsActive,
+                                   const nsSizeMode& aSizeMode);
+  mozilla::ipc::IPCResult RecvLoadURL(const nsCString& aUrl);
+  mozilla::ipc::IPCResult RecvUpdateDimensions(
+      const DimensionInfo& aDimensions);
+  mozilla::ipc::IPCResult RecvRenderLayers(const bool& aEnabled,
+                                           const bool& aForceRepaint,
+                                           const LayersObserverEpoch& aEpoch);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
