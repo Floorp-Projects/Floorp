@@ -64,7 +64,7 @@ High-level components for building browser(-like) apps.
 
 * ⚪ [**Engine-System**](components/browser/engine-system/README.md) - *Engine* implementation based on the system's WebView.
 
-* ⚪ [**Errorpages**](components/browser/errorpages/README.md) - Responsive browser error pages for Android apps.
+* 🔵 [**Errorpages**](components/browser/errorpages/README.md) - Responsive browser error pages for Android apps.
 
 * 🔴 [**Menu**](components/browser/menu/README.md) - A generic menu with customizable items primarily for browser toolbars.
 
