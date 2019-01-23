@@ -1878,31 +1878,21 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
   MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableCopy);
   MOZ_ASSERT(dstMemOrTableIndex != srcMemOrTableIndex);
 
-  *dstMemOrTableIndex = 0;
-  *srcMemOrTableIndex = 0;
-
-  uint32_t memOrTableFlags;
-  if (!readVarU32(&memOrTableFlags)) {
-    return fail(isMem ? "unable to read memory flags"
-                      : "unable to read table flags");
+  // We use (dest, src) everywhere in code but the spec requires (src, dest)
+  // encoding order for the immediates.
+  if (!readVarU32(srcMemOrTableIndex)) {
+    return false;
   }
-  if (!isMem && (memOrTableFlags & uint32_t(MemoryTableFlags::HasTableIndex))) {
-    if (!readVarU32(dstMemOrTableIndex)) {
-      return false;
-    }
-    if (!readVarU32(srcMemOrTableIndex)) {
-      return false;
-    }
-    memOrTableFlags ^= uint32_t(MemoryTableFlags::HasTableIndex);
-  }
-  if (memOrTableFlags != uint32_t(MemoryTableFlags::Default)) {
-    return fail(isMem ? "unrecognized memory flags"
-                      : "unrecognized table flags");
+  if (!readVarU32(dstMemOrTableIndex)) {
+    return false;
   }
 
   if (isMem) {
     if (!env_.usesMemory()) {
       return fail("can't touch memory without memory");
+    }
+    if (*srcMemOrTableIndex != 0 || *dstMemOrTableIndex != 0) {
+      return fail("memory index out of range for memory.copy");
     }
   } else {
     if (*dstMemOrTableIndex >= env_.tables.length() ||
