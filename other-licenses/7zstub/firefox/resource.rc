@@ -1,0 +1,53 @@
+#include <windows.h>
+#include "../src/CPP/7zip/Bundles/SFXSetup/resource.h"
+#include "../src/C/7zVersion.rc"
+
+LANGUAGE 9, 1
+1 VERSIONINFO
+  FILEVERSION MY_VER
+  PRODUCTVERSION MY_VER
+  FILEFLAGSMASK MY_VS_FFI_FILEFLAGSMASK
+  FILEFLAGS DBG_FL
+  FILEOS MY_VOS_NT_WINDOWS32
+  FILETYPE MY_VFT_APP
+  FILESUBTYPE 0x0L
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+      BLOCK "040904b0"
+      BEGIN
+          VALUE "CompanyName", "Mozilla"
+          VALUE "FileDescription", "Firefox"
+          VALUE "FileVersion", MY_VERSION
+          VALUE "InternalName", "7zSD.sfx"
+          VALUE "LegalCopyright", "Mozilla"
+          VALUE "OriginalFilename", "7zSD.sfx"
+          VALUE "ProductName", "Firefox"
+          VALUE "ProductVersion", MY_VERSION
+      END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+      VALUE "Translation", 0x409, 1200
+  END
+END
+
+#ifdef _ARM64_
+1 RT_MANIFEST "7zSD.arm64.manifest"
+#else
+1 RT_MANIFEST "7zSD.win32.manifest"
+#endif
+
+IDI_ICON ICON "setup.ico"
+
+STRINGTABLE
+BEGIN
+  IDS_EXTRACTION_ERROR_TITLE  "Extraction Failed"
+  IDS_EXTRACTION_ERROR_MESSAGE  "File is corrupt"
+  IDS_CANNOT_CREATE_FOLDER  "Cannot create folder '{0}'"
+  IDS_PROGRESS_EXTRACTING  "Extracting"
+  IDS_MIN_OS_TITLE  "Setup Error"
+  IDS_MIN_OS_TEXT  "Microsoft Windows 7 or newer is required."
+END
+
+#include "../src/CPP/7zip/UI/FileManager/ProgressDialog.rc"

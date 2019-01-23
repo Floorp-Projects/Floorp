@@ -31,10 +31,16 @@ job-template:
                - repackage/osx_partner.py
             win32-.*:
                - repackage/base.py
-               - repackage/win32_partner.py
-            win64-.*:
+               - repackage/win32_sfx_stub.py
+               - repackage/win32_signed.py
+            win64-(?!aarch64).*:
                - repackage/base.py
-               - repackage/win64_partner.py
+               - repackage/win32_sfx_stub.py
+               - repackage/win64_signed.py
+            win64-aarch64-.*:
+               - repackage/base.py
+               - repackage/win64-aarch64_sfx_stub.py
+               - repackage/win64_signed.py
    package-formats:
       by-build-platform:
          macosx64\b.*: [dmg]

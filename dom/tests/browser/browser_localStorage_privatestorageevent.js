@@ -1,14 +1,14 @@
 add_task(async function() {
   var privWin = OpenBrowserWindow({private: true});
   await new privWin.Promise(resolve => {
-    privWin.addEventListener('load', function() {
+    privWin.addEventListener("load", function() {
       resolve();
     }, {once: true});
   });
 
   var pubWin = OpenBrowserWindow({private: false});
   await new pubWin.Promise(resolve => {
-    pubWin.addEventListener('load', function() {
+    pubWin.addEventListener("load", function() {
       resolve();
     }, {once: true});
   });
@@ -26,13 +26,13 @@ add_task(async function() {
   // Check if pubWin can see privWin's storage events
   await ContentTask.spawn(pubBrowser, null, function(opts) {
     content.window.gotStorageEvent = false;
-    content.window.addEventListener('storage', ev => {
+    content.window.addEventListener("storage", ev => {
       content.window.gotStorageEvent = true;
     });
   });
 
   await ContentTask.spawn(privBrowser, null, function(opts) {
-    content.window.localStorage['key'] = 'ablooabloo';
+    content.window.localStorage.key = "ablooabloo";
   });
 
   let pubSaw = await ContentTask.spawn(pubBrowser, null, function(opts) {
@@ -43,7 +43,7 @@ add_task(async function() {
 
   await ContentTask.spawn(privBrowser, null, function(opts) {
     content.window.gotStorageEvent = false;
-    content.window.addEventListener('storage', ev => {
+    content.window.addEventListener("storage", ev => {
       content.window.gotStorageEvent = true;
     });
   });
@@ -51,13 +51,13 @@ add_task(async function() {
   // Check if privWin can see pubWin's storage events
   await ContentTask.spawn(privBrowser, null, function(opts) {
     content.window.gotStorageEvent = false;
-    content.window.addEventListener('storage', ev => {
+    content.window.addEventListener("storage", ev => {
       content.window.gotStorageEvent = true;
     });
   });
 
   await ContentTask.spawn(pubBrowser, null, function(opts) {
-    content.window.localStorage['key'] = 'ablooabloo';
+    content.window.localStorage.key = "ablooabloo";
   });
 
   let privSaw = await ContentTask.spawn(privBrowser, null, function(opts) {

@@ -843,19 +843,11 @@ macro_rules! enumerate_interners {
 macro_rules! declare_interning_memory_report {
     ( $( $name: ident, )+ ) => {
         #[repr(C)]
-        #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+        #[derive(AddAssign, Clone, Debug, Default, Deserialize, Serialize)]
         pub struct InternerSubReport {
             $(
                 pub $name: usize,
             )+
-        }
-
-        impl ::std::ops::AddAssign for InternerSubReport {
-            fn add_assign(&mut self, other: InternerSubReport) {
-                $(
-                    self.$name += other.$name;
-                )+
-            }
         }
     }
 }
@@ -881,7 +873,7 @@ impl ::std::ops::AddAssign for InterningMemoryReport {
 /// Collection of heap sizes, in bytes.
 /// cbindgen:derive-eq=false
 #[repr(C)]
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(AddAssign, Clone, Debug, Default, Deserialize, Serialize)]
 pub struct MemoryReport {
     //
     // CPU Memory.
@@ -906,28 +898,6 @@ pub struct MemoryReport {
     pub texture_cache_textures: usize,
     pub depth_target_textures: usize,
     pub swap_chain: usize,
-}
-
-impl ::std::ops::AddAssign for MemoryReport {
-    fn add_assign(&mut self, other: MemoryReport) {
-        self.clip_stores += other.clip_stores;
-        self.gpu_cache_metadata += other.gpu_cache_metadata;
-        self.gpu_cache_cpu_mirror += other.gpu_cache_cpu_mirror;
-        self.render_tasks += other.render_tasks;
-        self.hit_testers += other.hit_testers;
-        self.fonts += other.fonts;
-        self.images += other.images;
-        self.rasterized_blobs += other.rasterized_blobs;
-        self.shader_cache += other.shader_cache;
-        self.interning += other.interning;
-
-        self.gpu_cache_textures += other.gpu_cache_textures;
-        self.vertex_data_textures += other.vertex_data_textures;
-        self.render_target_textures += other.render_target_textures;
-        self.texture_cache_textures += other.texture_cache_textures;
-        self.depth_target_textures += other.depth_target_textures;
-        self.swap_chain += other.swap_chain;
-    }
 }
 
 /// A C function that takes a pointer to a heap allocation and returns its size.
