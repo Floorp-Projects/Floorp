@@ -21,6 +21,10 @@ class nsSubDocumentFrame;
 
 namespace mozilla {
 
+namespace dom {
+class TabParent;
+}  // namespace dom
+
 namespace layers {
 struct TextureFactoryIdentifier;
 }  // namespace layers
@@ -41,14 +45,13 @@ class RenderFrame final {
   RenderFrame();
   virtual ~RenderFrame();
 
-  bool Initialize(nsFrameLoader* aFrameLoader);
+  bool Initialize(dom::TabParent* aTabParent);
   void Destroy();
 
   void EnsureLayersConnected(CompositorOptions* aCompositorOptions);
   LayerManager* AttachLayerManager();
-  void OwnerContentChanged(nsIContent* aContent);
+  void OwnerContentChanged();
 
-  nsFrameLoader* GetFrameLoader() const { return mFrameLoader; }
   LayersId GetLayersId() const { return mLayersId; }
   CompositorOptions GetCompositorOptions() const { return mCompositorOptions; }
 
@@ -69,7 +72,7 @@ class RenderFrame final {
   // mLayersConnected is true).
   CompositorOptions mCompositorOptions;
 
-  RefPtr<nsFrameLoader> mFrameLoader;
+  dom::TabParent* mTabParent;
   RefPtr<LayerManager> mLayerManager;
 
   bool mInitialized;
