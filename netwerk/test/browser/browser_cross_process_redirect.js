@@ -181,7 +181,7 @@ add_task(async function() {
         registrar.unregisterFactory(childListener.classID, childListener);
       }
       registrar.registerFactory(childListener.classID, "",
-                              "@mozilla.org/network/childProcessChannelListener",
+                              "@mozilla.org/network/childProcessChannelListener;1",
                               childListener);
     });
   });
