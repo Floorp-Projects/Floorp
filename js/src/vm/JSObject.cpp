@@ -1001,8 +1001,8 @@ bool js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj) {
   RootedScript script(cx, cx->currentScript(&pc));
   gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
   NewObjectKind newKind = GenericObject;
-  if (script &&
-      ObjectGroup::useSingletonForAllocationSite(script, pc, JSProto_Object)) {
+  if (script && ObjectGroup::useSingletonForAllocationSite(
+                    script, pc, &PlainObject::class_)) {
     newKind = SingletonObject;
   }
   RootedObject obj(
@@ -1066,7 +1066,7 @@ static inline JSObject* CreateThisForFunctionWithGroup(JSContext* cx,
       if (newKind == SingletonObject) {
         Rooted<TaggedProto> proto(
             cx, TaggedProto(templateObject->staticPrototype()));
-        if (!JSObject::splicePrototype(cx, res, proto)) {
+        if (!JSObject::splicePrototype(cx, res, &PlainObject::class_, proto)) {
           return nullptr;
         }
       } else {
@@ -2113,7 +2113,7 @@ static NativeObject* DefineConstructorAndPrototype(
     /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
     Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
     if (ctor->getClass() == clasp &&
-        !JSObject::splicePrototype(cx, ctor, tagged)) {
+        !JSObject::splicePrototype(cx, ctor, clasp, tagged)) {
       goto bad;
     }
   }
@@ -2256,8 +2256,9 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
   return true;
 }
 
-static bool SetProto(JSContext* cx, HandleObject obj,
-                     Handle<js::TaggedProto> proto) {
+static bool SetClassAndProto(JSContext* cx, HandleObject obj,
+                             const Class* clasp,
+                             Handle<js::TaggedProto> proto) {
   // Regenerate object shape (and possibly prototype shape) to invalidate JIT
   // code that is affected by a prototype mutation.
   if (!ReshapeForProtoMutation(cx, obj)) {
@@ -2276,7 +2277,7 @@ static bool SetProto(JSContext* cx, HandleObject obj,
      * Just splice the prototype, but mark the properties as unknown for
      * consistent behavior.
      */
-    if (!JSObject::splicePrototype(cx, obj, proto)) {
+    if (!JSObject::splicePrototype(cx, obj, clasp, proto)) {
       return false;
     }
     MarkObjectGroupUnknownProperties(cx, obj->group());
@@ -2298,7 +2299,7 @@ static bool SetProto(JSContext* cx, HandleObject obj,
     }
     newGroup->setInterpretedFunction(oldGroup->maybeInterpretedFunction());
   } else {
-    newGroup = ObjectGroup::defaultNewGroup(cx, obj->getClass(), proto);
+    newGroup = ObjectGroup::defaultNewGroup(cx, clasp, proto);
     if (!newGroup) {
       return false;
     }
@@ -2944,7 +2945,7 @@ bool js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto,
   }
 
   Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
-  if (!SetProto(cx, obj, taggedProto)) {
+  if (!SetClassAndProto(cx, obj, obj->getClass(), taggedProto)) {
     return false;
   }
 
