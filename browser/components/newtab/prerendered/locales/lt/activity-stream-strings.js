@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Gerai, supratau",
   "prefs_home_header": "„Firefox“ pradžios turinys",
   "prefs_home_description": "Pasirinkite, kokį turinį norite matyti „Firefox“ pradžios ekrane",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "„Firefox“ pradžios tinklalapis",
+  "prefs_content_discovery_description": "„Firefox“ turinio atradimas pradžios tinklalapyje leidžia atrasti aukštos kokybės ir jums galimai įdomius straipsnius iš interneto.",
+  "prefs_content_discovery_button": "Išjungti turinio atradimą",
   "prefs_section_rows_option": "{num} eilutė;{num} eilutės;{num} eilučių",
   "prefs_search_header": "Paieška internete",
   "prefs_topsites_description": "Dažniausiai lankomos svetainės",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privatumo pranešimu",
   "firstrun_continue_to_login": "Tęsti",
   "firstrun_skip_login": "Praleisti šį žingsnį",
-  "context_menu_title": "Atverti meniu",
-  "pocket_learn_more": "Sužinoti daugiau"
+  "context_menu_title": "Atverti meniu"
 };
