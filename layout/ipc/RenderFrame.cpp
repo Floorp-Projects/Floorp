@@ -28,43 +28,36 @@ using namespace mozilla::layers;
 namespace mozilla {
 namespace layout {
 
-static already_AddRefed<LayerManager> GetLayerManager(
-    nsFrameLoader* aFrameLoader) {
-  if (nsIContent* content = aFrameLoader->GetOwnerContent()) {
-    RefPtr<LayerManager> lm = nsContentUtils::LayerManagerForContent(content);
-    if (lm) {
+static already_AddRefed<LayerManager> GetLayerManager(TabParent* aTabParent) {
+  if (Element* element = aTabParent->GetOwnerElement()) {
+    if (RefPtr<LayerManager> lm =
+            nsContentUtils::LayerManagerForContent(element)) {
       return lm.forget();
     }
+    return nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
   }
-
-  Document* doc = aFrameLoader->GetOwnerDoc();
-  if (!doc) {
-    return nullptr;
-  }
-  return nsContentUtils::LayerManagerForDocument(doc);
+  return nullptr;
 }
 
 RenderFrame::RenderFrame()
     : mLayersId{0},
-      mFrameLoader(nullptr),
+      mTabParent(nullptr),
       mLayerManager(nullptr),
       mInitialized(false),
       mLayersConnected(false) {}
 
 RenderFrame::~RenderFrame() {}
 
-bool RenderFrame::Initialize(nsFrameLoader* aFrameLoader) {
-  if (mInitialized || !aFrameLoader) {
+bool RenderFrame::Initialize(TabParent* aTabParent) {
+  if (mInitialized || !aTabParent) {
     return false;
   }
 
-  mFrameLoader = aFrameLoader;
-  RefPtr<LayerManager> lm = GetLayerManager(mFrameLoader);
+  mTabParent = aTabParent;
+  RefPtr<LayerManager> lm = GetLayerManager(mTabParent);
   PCompositorBridgeChild* compositor =
       lm ? lm->GetCompositorBridgeChild() : nullptr;
-
-  TabParent* browser = TabParent::GetFrom(aFrameLoader);
-  mTabProcessId = browser->Manager()->AsContentParent()->OtherPid();
+  mTabProcessId = mTabParent->Manager()->AsContentParent()->OtherPid();
 
   // Our remote frame will push layers updates to the compositor,
   // and we'll keep an indirect reference to that tree.
@@ -81,12 +74,12 @@ void RenderFrame::Destroy() {
     GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, mTabProcessId);
   }
 
-  mFrameLoader = nullptr;
+  mTabParent = nullptr;
   mLayerManager = nullptr;
 }
 
 void RenderFrame::EnsureLayersConnected(CompositorOptions* aCompositorOptions) {
-  RefPtr<LayerManager> lm = GetLayerManager(mFrameLoader);
+  RefPtr<LayerManager> lm = GetLayerManager(mTabParent);
   if (!lm) {
     return;
   }
@@ -102,8 +95,8 @@ void RenderFrame::EnsureLayersConnected(CompositorOptions* aCompositorOptions) {
 
 LayerManager* RenderFrame::AttachLayerManager() {
   RefPtr<LayerManager> lm;
-  if (mFrameLoader) {
-    lm = GetLayerManager(mFrameLoader);
+  if (mTabParent) {
+    lm = GetLayerManager(mTabParent);
   }
 
   // Perhaps the document containing this frame currently has no presentation?
@@ -117,17 +110,11 @@ LayerManager* RenderFrame::AttachLayerManager() {
   return mLayerManager;
 }
 
-void RenderFrame::OwnerContentChanged(nsIContent* aContent) {
-  MOZ_ASSERT(!mFrameLoader || mFrameLoader->GetOwnerContent() == aContent,
-             "Don't build new map if owner is same!");
-
-  Unused << AttachLayerManager();
-}
+void RenderFrame::OwnerContentChanged() { Unused << AttachLayerManager(); }
 
 void RenderFrame::GetTextureFactoryIdentifier(
     TextureFactoryIdentifier* aTextureFactoryIdentifier) const {
-  RefPtr<LayerManager> lm =
-      mFrameLoader ? GetLayerManager(mFrameLoader) : nullptr;
+  RefPtr<LayerManager> lm = mTabParent ? GetLayerManager(mTabParent) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
   if (lm) {
     *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
