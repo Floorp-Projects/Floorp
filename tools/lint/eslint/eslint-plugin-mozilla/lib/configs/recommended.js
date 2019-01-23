@@ -183,6 +183,7 @@ module.exports = {
     "mozilla/use-default-preference-values": "error",
     "mozilla/use-includes-instead-of-indexOf": "error",
     "mozilla/use-ownerGlobal": "error",
+    "mozilla/use-returnValue": "error",
     "mozilla/use-services": "error",
 
     // Always require parenthesis for new calls
