@@ -12,6 +12,7 @@ import mozilla.components.service.fxa.FirefoxAccountShaped
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
+import java.lang.Exception
 
 /**
  * An interface for consumers that wish to observer "sync lifecycle" events.
@@ -26,6 +27,12 @@ interface SyncStatusObserver {
      * Gets called at the end of a sync, after every configured syncable has been synchronized.
      */
     fun onIdle()
+
+    /**
+     * Gets called if sync encounters an error that's worthy of processing by status observers.
+     * @param error Optional relevant exception.
+     */
+    fun onError(error: Exception?)
 }
 
 val registry = ObserverRegistry<SyncStatusObserver>()

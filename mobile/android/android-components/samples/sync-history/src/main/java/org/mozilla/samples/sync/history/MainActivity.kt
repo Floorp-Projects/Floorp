@@ -178,5 +178,11 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
                 historySyncStatus?.text = getString(R.string.sync_idle)
             }
         }
+
+        override fun onError(error: Exception?) {
+            CoroutineScope(Dispatchers.Main).launch {
+                historySyncStatus?.text = getString(R.string.sync_error, error)
+            }
+        }
     }
 }
