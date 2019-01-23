@@ -7,9 +7,12 @@ use api::{ColorU, GlyphDimensions, NativeFontHandle};
 use dwrote;
 use gamma_lut::ColorLut;
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
-use internal_types::{FastHashMap, ResourceCacheError};
+use internal_types::{FastHashMap, FastHashSet, ResourceCacheError};
+use std::borrow::Borrow;
 use std::collections::hash_map::Entry;
-use std::sync::Arc;
+use std::hash::{Hash, Hasher};
+use std::path::Path;
+use std::sync::{Arc, Mutex};
 
 cfg_if! {
     if #[cfg(feature = "pathfinder")] {
@@ -31,7 +34,43 @@ lazy_static! {
     };
 }
 
+type CachedFontKey = Arc<Path>;
+
+// A cached dwrote font file that is shared among all faces.
+// Each face holds a CachedFontKey to keep track of how many users of the font there are.
+struct CachedFont {
+    key: CachedFontKey,
+    file: dwrote::FontFile,
+}
+
+impl PartialEq for CachedFont {
+    fn eq(&self, other: &CachedFont) -> bool {
+        self.key == other.key
+    }
+}
+impl Eq for CachedFont {}
+
+impl Hash for CachedFont {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.key.hash(state);
+    }
+}
+
+impl Borrow<Path> for CachedFont {
+    fn borrow(&self) -> &Path {
+        &*self.key
+    }
+}
+
+lazy_static! {
+    // This is effectively a weak map of dwrote FontFiles. CachedFonts are entered into the
+    // cache when there are any FontFaces using them. CachedFonts are removed from the cache
+    // when there are no more FontFaces using them at all.
+    static ref FONT_CACHE: Mutex<FastHashSet<CachedFont>> = Mutex::new(FastHashSet::default());
+}
+
 struct FontFace {
+    cached: Option<CachedFontKey>,
     file: dwrote::FontFile,
     index: u32,
     face: dwrote::FontFace,
@@ -123,7 +162,7 @@ impl FontContext {
             let face = font.create_font_face();
             let file = face.get_files().pop().unwrap();
             let index = face.get_index();
-            self.fonts.insert(*font_key, FontFace { file, index, face });
+            self.fonts.insert(*font_key, FontFace { cached: None, file, index, face });
         }
     }
 
@@ -134,7 +173,7 @@ impl FontContext {
 
         if let Some(file) = dwrote::FontFile::new_from_data(data) {
             if let Ok(face) = file.create_face(index, dwrote::DWRITE_FONT_SIMULATIONS_NONE) {
-                self.fonts.insert(*font_key, FontFace { file, index, face });
+                self.fonts.insert(*font_key, FontFace { cached: None, file, index, face });
                 return;
             }
         }
@@ -147,21 +186,49 @@ impl FontContext {
         if self.fonts.contains_key(font_key) {
             return;
         }
-        if let Some(file) = dwrote::FontFile::new_from_path(font_handle.pathname) {
-            let index = font_handle.index;
-            if let Ok(face) = file.create_face(index, dwrote::DWRITE_FONT_SIMULATIONS_NONE) {
-                self.fonts.insert(*font_key, FontFace { file, index, face });
+
+        let index = font_handle.index;
+        let mut cache = FONT_CACHE.lock().unwrap();
+        // Check to see if the font is already in the cache. If so, reuse it.
+        if let Some(font) = cache.get(font_handle.path.as_path()) {
+            if let Ok(face) = font.file.create_face(index, dwrote::DWRITE_FONT_SIMULATIONS_NONE) {
+                self.fonts.insert(
+                    *font_key,
+                    FontFace { cached: Some(font.key.clone()), file: font.file.clone(), index, face },
+                );
                 return;
             }
         }
+        if let Some(file) = dwrote::FontFile::new_from_path(&font_handle.path) {
+            // The font is not in the cache yet, so try to create the font and insert it in the cache.
+            if let Ok(face) = file.create_face(index, dwrote::DWRITE_FONT_SIMULATIONS_NONE) {
+                let key: CachedFontKey = font_handle.path.into();
+                self.fonts.insert(
+                    *font_key,
+                    FontFace { cached: Some(key.clone()), file: file.clone(), index, face },
+                );
+                cache.insert(CachedFont { key, file });
+                return;
+            }
+        }
+
         // XXX add_native_font needs to have a way to return an error
         debug!("DWrite WR failed to load font from path, using Arial instead");
         self.add_font_descriptor(font_key, &DEFAULT_FONT_DESCRIPTOR);
     }
 
     pub fn delete_font(&mut self, font_key: &FontKey) {
-        if let Some(_) = self.fonts.remove(font_key) {
+        if let Some(face) = self.fonts.remove(font_key) {
             self.variations.retain(|k, _| k.0 != *font_key);
+            // Check if this was a cached font.
+            if let Some(key) = face.cached {
+                let mut cache = FONT_CACHE.lock().unwrap();
+                // If there are only two references left, that means only this face and
+                // the cache are using the font. So remove it from the cache.
+                if Arc::strong_count(&key) == 2 {
+                    cache.remove(&*key);
+                }
+            }
         }
     }
 
@@ -535,7 +602,7 @@ impl FontContext {
 #[cfg(feature = "pathfinder")]
 impl<'a> From<NativeFontHandleWrapper<'a>> for PathfinderComPtr<IDWriteFontFace> {
     fn from(font_handle: NativeFontHandleWrapper<'a>) -> Self {
-        if let Some(file) = dwrote::FontFile::new_from_path(font_handle.0.pathname) {
+        if let Some(file) = dwrote::FontFile::new_from_path(font_handle.0.path) {
             let index = font_handle.0.index;
             if let Ok(face) = file.create_face(index, dwrote::DWRITE_FONT_SIMULATIONS_NONE) {
                 return unsafe { PathfinderComPtr::new(face.as_ptr()) };
