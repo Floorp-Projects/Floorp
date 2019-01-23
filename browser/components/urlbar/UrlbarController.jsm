@@ -4,7 +4,9 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["QueryContext", "UrlbarController"];
+var EXPORTED_SYMBOLS = [
+  "UrlbarController",
+];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -82,7 +84,7 @@ class UrlbarController {
   /**
    * Takes a query context and starts the query based on the user input.
    *
-   * @param {QueryContext} queryContext The query details.
+   * @param {UrlbarQueryContext} queryContext The query details.
    */
   async startQuery(queryContext) {
     // Cancel any running query.
@@ -104,7 +106,7 @@ class UrlbarController {
    * Cancels an in-progress query. Note, queries may continue running if they
    * can't be canceled.
    *
-   * @param {QueryContext} queryContext The query details.
+   * @param {UrlbarQueryContext} queryContext The query details.
    */
   cancelQuery(queryContext) {
     if (queryContext === this._lastQueryContext) {
@@ -121,7 +123,7 @@ class UrlbarController {
   /**
    * Receives results from a query.
    *
-   * @param {QueryContext} queryContext The query details.
+   * @param {UrlbarQueryContext} queryContext The query details.
    */
   receiveResults(queryContext) {
     if (queryContext.lastTelemetryResultCount < 1 &&
