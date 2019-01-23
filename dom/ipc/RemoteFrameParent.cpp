@@ -20,6 +20,55 @@ RemoteFrameParent::~RemoteFrameParent() {}
 
 nsresult RemoteFrameParent::Init(const nsString& aPresentationURL,
                                  const nsString& aRemoteType) {
+  mIPCOpen = true;
+
+  // FIXME: This should actually use a non-bogus TabContext, probably inherited
+  // from our Manager().
+  OriginAttributes attrs;
+  attrs.mInIsolatedMozBrowser = false;
+  attrs.mAppId = nsIScriptSecurityManager::NO_APP_ID;
+  attrs.SyncAttributesWithPrivateBrowsing(false);
+  MutableTabContext tabContext;
+  tabContext.SetTabContext(false, 0, UIStateChangeType_Set,
+                           UIStateChangeType_Set, attrs, aPresentationURL);
+
+  ProcessPriority initialPriority = PROCESS_PRIORITY_FOREGROUND;
+
+  // Get our ConstructorSender object.
+  RefPtr<nsIContentParent> constructorSender =
+      ContentParent::GetNewOrUsedBrowserProcess(
+          nullptr, aRemoteType, initialPriority, nullptr, false);
+  if (NS_WARN_IF(!constructorSender)) {
+    MOZ_ASSERT(false, "Unable to allocate content process!");
+    return NS_ERROR_FAILURE;
+  }
+
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  TabId tabId(nsContentUtils::GenerateTabId());
+  cpm->RegisterRemoteFrame(tabId, ContentParentId(0), TabId(0),
+                           tabContext.AsIPCTabContext(),
+                           constructorSender->ChildID());
+
+  // Construct the TabParent object for our subframe.
+  uint32_t chromeFlags = 0;
+  RefPtr<TabParent> tabParent(
+      new TabParent(constructorSender, tabId, tabContext, chromeFlags));
+
+  PBrowserParent* browser = constructorSender->SendPBrowserConstructor(
+      // DeallocPBrowserParent() releases this ref.
+      tabParent.forget().take(), tabId, TabId(0), tabContext.AsIPCTabContext(),
+      chromeFlags, constructorSender->ChildID(),
+      constructorSender->IsForBrowser());
+  if (NS_WARN_IF(!browser)) {
+    MOZ_ASSERT(false, "Browser Constructor Failed");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Set our TabParent object to the newly created browser.
+  mTabParent = TabParent::GetFrom(browser);
+  mTabParent->SetOwnerElement(Manager()->GetOwnerElement());
+  mTabParent->InitRendering();
+
   return NS_OK;
 }
 
