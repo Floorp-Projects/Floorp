@@ -17,7 +17,6 @@
     locale/browser/aboutPrivateBrowsing.dtd        (%chrome/browser/aboutPrivateBrowsing.dtd)
     locale/browser/aboutRobots.dtd                 (%chrome/browser/aboutRobots.dtd)
     locale/browser/accounts.properties             (%chrome/browser/accounts.properties)
-    locale/browser/aboutTabCrashed.dtd             (%chrome/browser/aboutTabCrashed.dtd)
     locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)

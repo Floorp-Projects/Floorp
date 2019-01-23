@@ -4,20 +4,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE html [
-  <!ENTITY % htmlDTD
-    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-    "DTD/xhtml1-strict.dtd">
-  %htmlDTD;
-  <!ENTITY % globalDTD
-    SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-  %brandDTD;
-  <!ENTITY % tabCrashedDTD
-    SYSTEM "chrome://browser/locale/aboutTabCrashed.dtd">
-  %tabCrashedDTD;
-]>
+<!DOCTYPE html >
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
@@ -28,71 +15,69 @@
           href="chrome://browser/content/aboutTabCrashed.css"/>
     <link rel="stylesheet" type="text/css" media="all"
           href="chrome://browser/skin/aboutTabCrashed.css"/>
+    <link rel="localization" href="browser/aboutTabCrashed.ftl"/>
 
-    <title>&tabCrashed.title;</title>
+    <title data-l10n-id="crashed-title"></title>
   </head>
 
-  <body dir="&locale.dir;">
+  <body>
     <div id="main" class="container" multiple="false">
 
       <div class="title">
-        <h1 class="title-text">&tabCrashed.header2;</h1>
+        <h1 class="title-text" data-l10n-id="crashed-header"></h1>
       </div>
 
       <div class="offers">
-        <h2>&tabCrashed.offerHelp2;</h2>
-        <p id="offerHelpMessageSingle">&tabCrashed.single.offerHelpMessage2;</p>
-        <p id="offerHelpMessageMultiple">&tabCrashed.multiple.offerHelpMessage2;</p>
+        <h2 data-l10n-id="crashed-offer-help"></h2>
+        <p id="offerHelpMessageSingle" data-l10n-id="crashed-single-offer-help-message"></p>
+        <p id="offerHelpMessageMultiple" data-l10n-id="crashed-multiple-offer-help-message"></p>
       </div>
 
       <div id="reportBox">
-        <h2>&tabCrashed.requestHelp;</h2>
-        <p>&tabCrashed.requestHelpMessage;</p>
+        <h2 data-l10n-id="crashed-request-help"></h2>
+        <p data-l10n-id="crashed-request-help-message"></p>
 
-        <h2>&tabCrashed.requestReport;</h2>
+        <h2 data-l10n-id="crashed-request-report-title"></h2>
 
         <div class="checkbox-with-label">
           <input type="checkbox" id="sendReport" role="checkbox"/>
-          <label for="sendReport">&tabCrashed.sendReport3;</label>
+          <label for="sendReport" data-l10n-id="crashed-send-report"></label>
         </div>
 
         <ul id="options">
           <li>
-            <textarea id="comments" placeholder="&tabCrashed.commentPlaceholder2;" rows="4"></textarea>
+            <textarea id="comments" data-l10n-id="crashed-comment-placeholder;" rows="4"></textarea>
           </li>
 
           <li class="checkbox-with-label">
             <input type="checkbox" id="includeURL" role="checkbox"/>
-            <label for="includeURL">&tabCrashed.includeURL3;</label>
+            <label for="includeURL" data-l10n-id="crashed-include-URL"></label>
           </li>
 
           <li id="requestEmail" hidden="true">
             <div class="checkbox-with-label">
               <input type="checkbox" id="emailMe" role="checkbox"/>
-              <label for="emailMe">&tabCrashed.emailMe;</label>
+              <label for="emailMe" data-l10n-id="crashed-email-me"></label>
             </div>
-            <input type="text" id="email" placeholder="&tabCrashed.emailPlaceholder;"/>
+            <input type="text" id="email" data-l10n-id="crashed-email-placeholder"/>
           </li>
         </ul>
 
         <div id="requestAutoSubmit" hidden="true">
-          <h2>&tabCrashed.requestAutoSubmit2;</h2>
+          <h2 data-l10n-id="crashed-request-auto-submit-title"></h2>
           <div class="checkbox-with-label">
             <input type="checkbox" id="autoSubmit" role="checkbox"/>
-            <label for="autoSubmit">&tabCrashed.autoSubmit3;</label>
+            <label for="autoSubmit" data-l10n-id="crashed-auto-submit-checkbox"></label>
           </div>
         </div>
       </div>
 
-      <p id="reportSent">&tabCrashed.reportSent;</p>
+      <p id="reportSent" data-l10n-id="crashed-report-sent"></p>
 
       <div class="button-container">
-        <button id="closeTab">
-          &tabCrashed.closeTab2;</button>
-        <button id="restoreTab" class="primary">
-          &tabCrashed.restoreTab;</button>
-        <button id="restoreAll" autofocus="true" class="primary">
-          &tabCrashed.restoreAll;</button>
+        <button id="closeTab" data-l10n-id="crashed-close-tab-button"></button>
+        <button id="restoreTab" class="primary" data-l10n-id="crashed-restore-tab-button"></button>
+        <button id="restoreAll" autofocus="true" class="primary" data-l10n-id="crashed-restore-all-button"></button>
       </div>
     </div>
   </body>
