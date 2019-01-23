@@ -508,9 +508,8 @@ typedef OpIter<ValidatingPolicy> ValidatingOpIter;
 static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                     const FuncType& funcType,
                                     const ValTypeVector& locals,
-                                    ExclusiveDeferredValidationState& dvs,
                                     const uint8_t* bodyEnd, Decoder* d) {
-  ValidatingOpIter iter(env, *d, dvs);
+  ValidatingOpIter iter(env, *d);
 
   if (!iter.readFunctionStart(funcType.ret())) {
     return false;
@@ -1184,8 +1183,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 
 bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
                                 uint32_t funcIndex, uint32_t bodySize,
-                                Decoder& d,
-                                ExclusiveDeferredValidationState& dvs) {
+                                Decoder& d) {
   const FuncType& funcType = *env.funcTypes[funcIndex];
 
   ValTypeVector locals;
@@ -1200,7 +1198,7 @@ bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
     return false;
   }
 
-  if (!DecodeFunctionBodyExprs(env, funcType, locals, dvs, bodyBegin + bodySize,
+  if (!DecodeFunctionBodyExprs(env, funcType, locals, bodyBegin + bodySize,
                                &d)) {
     return false;
   }
@@ -1418,7 +1416,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
 #ifdef ENABLE_WASM_REFTYPES
 static bool DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env) {
   MaybeSectionRange range;
-  if (!d.startSection(SectionId::GcFeatureOptIn, env, &range, "type")) {
+  if (!d.startSection(SectionId::GcFeatureOptIn, env, &range, "gcfeatureoptin")) {
     return false;
   }
   if (!range) {
@@ -2382,6 +2380,27 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
   return d.finishSection(*range, "elem");
 }
 
+#ifdef ENABLE_WASM_BULKMEM_OPS
+static bool DecodeDataCountSection(Decoder& d, ModuleEnvironment* env) {
+  MaybeSectionRange range;
+  if (!d.startSection(SectionId::DataCount, env, &range, "datacount")) {
+    return false;
+  }
+  if (!range) {
+    return true;
+  }
+
+  uint32_t dataCount;
+  if (!d.readVarU32(&dataCount)) {
+    return d.fail("expected data segment count");
+  }
+
+  env->dataCount.emplace(dataCount);
+
+  return d.finishSection(*range, "datacount");
+}
+#endif
+
 bool wasm::StartsCodeSection(const uint8_t* begin, const uint8_t* end,
                              SectionRange* codeSection) {
   UniqueChars unused;
@@ -2463,6 +2482,12 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
 
+#ifdef ENABLE_WASM_BULKMEM_OPS
+  if (!DecodeDataCountSection(d, env)) {
+    return false;
+  }
+#endif
+
   if (!d.startSection(SectionId::Code, env, &env->codeSection, "code")) {
     return false;
   }
@@ -2475,7 +2500,6 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
 }
 
 static bool DecodeFunctionBody(Decoder& d, const ModuleEnvironment& env,
-                               ExclusiveDeferredValidationState& dvs,
                                uint32_t funcIndex) {
   uint32_t bodySize;
   if (!d.readVarU32(&bodySize)) {
@@ -2490,15 +2514,14 @@ static bool DecodeFunctionBody(Decoder& d, const ModuleEnvironment& env,
     return d.fail("function body length too big");
   }
 
-  if (!ValidateFunctionBody(env, funcIndex, bodySize, d, dvs)) {
+  if (!ValidateFunctionBody(env, funcIndex, bodySize, d)) {
     return false;
   }
 
   return true;
 }
 
-static bool DecodeCodeSection(Decoder& d, ModuleEnvironment* env,
-                              ExclusiveDeferredValidationState& dvs) {
+static bool DecodeCodeSection(Decoder& d, ModuleEnvironment* env) {
   if (!env->codeSection) {
     if (env->numFuncDefs() != 0) {
       return d.fail("expected code section");
@@ -2517,8 +2540,7 @@ static bool DecodeCodeSection(Decoder& d, ModuleEnvironment* env,
   }
 
   for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
-    if (!DecodeFunctionBody(d, *env, dvs,
-                            env->numFuncImports() + funcDefIndex)) {
+    if (!DecodeFunctionBody(d, *env, env->numFuncImports() + funcDefIndex)) {
       return false;
     }
   }
@@ -2532,6 +2554,9 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
   if (!range) {
+    if (env->dataCount.isSome() && *env->dataCount > 0) {
+      return d.fail("number of data segments does not match declared count");
+    }
     return true;
   }
 
@@ -2542,6 +2567,10 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
 
   if (numSegments > MaxDataSegments) {
     return d.fail("too many data segments");
+  }
+
+  if (env->dataCount.isSome() && numSegments != *env->dataCount) {
+    return d.fail("number of data segments does not match declared count");
   }
 
   for (uint32_t i = 0; i < numSegments; i++) {
@@ -2733,36 +2762,7 @@ finish:
   return true;
 }
 
-void DeferredValidationState::notifyDataSegmentIndex(uint32_t segIndex,
-                                                     size_t offsetInModule) {
-  // If |segIndex| is larger than any previously observed use, or this is
-  // the first index use to be notified, make a note of it and the module
-  // offset it appeared at.  That way, if we have to report it later as an
-  // error, we can at least report a correct offset.
-  if (!haveHighestDataSegIndex || segIndex > highestDataSegIndex) {
-    highestDataSegIndex = segIndex;
-    highestDataSegIndexOffset = offsetInModule;
-  }
-
-  haveHighestDataSegIndex = true;
-}
-
-bool DeferredValidationState::performDeferredValidation(
-    const ModuleEnvironment& env, UniqueChars* error) {
-  if (haveHighestDataSegIndex &&
-      highestDataSegIndex >= env.dataSegments.length()) {
-    UniqueChars str(
-        JS_smprintf("at offset %zu: memory.{drop,init} index out of range",
-                    highestDataSegIndexOffset));
-    *error = std::move(str);
-    return false;
-  }
-
-  return true;
-}
-
-bool wasm::DecodeModuleTail(Decoder& d, ModuleEnvironment* env,
-                            ExclusiveDeferredValidationState& dvs) {
+bool wasm::DecodeModuleTail(Decoder& d, ModuleEnvironment* env) {
   if (!DecodeDataSection(d, env)) {
     return false;
   }
@@ -2781,7 +2781,7 @@ bool wasm::DecodeModuleTail(Decoder& d, ModuleEnvironment* env,
     }
   }
 
-  return dvs.lock()->performDeferredValidation(*env, d.error());
+  return true;
 }
 
 // Validate algorithm.
@@ -2808,13 +2808,11 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
     return false;
   }
 
-  ExclusiveDeferredValidationState dvs(mutexid::WasmDeferredValidation);
-
-  if (!DecodeCodeSection(d, &env, dvs)) {
+  if (!DecodeCodeSection(d, &env)) {
     return false;
   }
 
-  if (!DecodeModuleTail(d, &env, dvs)) {
+  if (!DecodeModuleTail(d, &env)) {
     return false;
   }
 

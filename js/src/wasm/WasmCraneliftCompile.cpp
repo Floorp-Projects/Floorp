@@ -280,7 +280,6 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
                                      LifoAlloc& lifo,
                                      const FuncCompileInputVector& inputs,
                                      CompiledCode* code,
-                                     ExclusiveDeferredValidationState& dvs,
                                      UniqueChars* error) {
 
   MOZ_RELEASE_ASSERT(CraneliftCanCompile());
@@ -307,7 +306,7 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
 
   for (const FuncCompileInput& func : inputs) {
     Decoder d(func.begin, func.end, func.lineOrBytecode, error);
-    if (!ValidateFunctionBody(env, func.index, func.end - func.begin, d, dvs)) {
+    if (!ValidateFunctionBody(env, func.index, func.end - func.begin, d)) {
       return false;
     }
 

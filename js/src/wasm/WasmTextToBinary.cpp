@@ -76,6 +76,9 @@ class WasmToken {
     ConversionOpcode,
     CurrentMemory,
     Data,
+#ifdef ENABLE_WASM_BULKMEM_OPS
+    DataCount,
+#endif
     Drop,
     Elem,
     Else,
@@ -355,6 +358,9 @@ class WasmToken {
       case AnyFunc:
       case CloseParen:
       case Data:
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      case DataCount:
+#endif
       case Elem:
       case Else:
       case EndOfFile:
@@ -984,6 +990,9 @@ WasmToken WasmTokenStream::next() {
 
     case 'd':
       if (consume(u"data")) {
+        if (consume(u"count")) {
+          return WasmToken(WasmToken::DataCount, begin, cur_);
+        }
         if (consume(u".drop")) {
           return WasmToken(WasmToken::DataDrop, begin, cur_);
         }
@@ -2278,6 +2287,7 @@ struct WasmParseContext {
   DtoaState* dtoaState;
   uintptr_t stackLimit;
   uint32_t nextSym;
+  bool requiresDataCount;
 
   WasmParseContext(const char16_t* text, uintptr_t stackLimit, LifoAlloc& lifo,
                    UniqueChars* error)
@@ -2286,7 +2296,8 @@ struct WasmParseContext {
         error(error),
         dtoaState(NewDtoaState()),
         stackLimit(stackLimit),
-        nextSym(0) {}
+        nextSym(0),
+        requiresDataCount(false) {}
 
   ~WasmParseContext() { DestroyDtoaState(dtoaState); }
 
@@ -3668,6 +3679,10 @@ static AstDataOrElemDrop* ParseDataOrElemDrop(WasmParseContext& c, bool isData) 
     return nullptr;
   }
 
+  if (isData) {
+    c.requiresDataCount = true;
+  }
+
   return new (c.lifo) AstDataOrElemDrop(isData, segIndexTok.index());
 }
 
@@ -3705,6 +3720,7 @@ static AstMemOrTableInit* ParseMemOrTableInit(WasmParseContext& c,
       return nullptr;
     }
     segIndex = segIndexTok.index();
+    c.requiresDataCount = true;
   } else {
     // Slightly hairy to parse this for tables because the element index "0"
     // could just as well be the table index "0".
@@ -4414,6 +4430,18 @@ static AstDataSegment* ParseDataSegment(WasmParseContext& c) {
   return new (c.lifo) AstDataSegment(offsetIfActive, std::move(fragments));
 }
 
+#ifdef ENABLE_WASM_BULKMEM_OPS
+static bool ParseDataCount(WasmParseContext& c, AstModule* module) {
+  WasmToken token;
+  if (!c.ts.getIf(WasmToken::Index, &token)) {
+    c.ts.generateError(token, "Literal data segment count required", c.error);
+    return false;
+  }
+
+  return module->initDataCount(token.index());
+}
+#endif
+
 static bool ParseLimits(WasmParseContext& c, Limits* limits,
                         Shareable allowShared) {
   WasmToken initial;
@@ -5100,6 +5128,14 @@ static AstModule* ParseModule(const char16_t* text, uintptr_t stackLimit,
         }
         break;
       }
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      case WasmToken::DataCount: {
+        if (!ParseDataCount(c, module)) {
+          return nullptr;
+        }
+        break;
+      }
+#endif
       case WasmToken::Import: {
         AstImport* imp = ParseImport(c, module);
         if (!imp || !module->append(imp)) {
@@ -5148,6 +5184,10 @@ static AstModule* ParseModule(const char16_t* text, uintptr_t stackLimit,
   }
   if (!c.ts.match(WasmToken::EndOfFile, c.error)) {
     return nullptr;
+  }
+
+  if (c.requiresDataCount && module->dataCount().isNothing()) {
+    module->initDataCount(module->dataSegments().length());
   }
 
   return module;
@@ -7106,6 +7146,26 @@ static bool EncodeDataSection(Encoder& e, AstModule& module) {
   return true;
 }
 
+#ifdef ENABLE_WASM_BULKMEM_OPS
+static bool EncodeDataCountSection(Encoder& e, AstModule& module) {
+  if (module.dataCount().isNothing()) {
+    return true;
+  }
+
+  size_t offset;
+  if (!e.startSection(SectionId::DataCount, &offset)) {
+    return false;
+  }
+
+  if (!e.writeVarU32(*module.dataCount())) {
+    return false;
+  }
+
+  e.finishSection(offset);
+  return true;
+}
+#endif
+
 static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
   if (!EncodeDestinationOffsetOrFlags(e, segment.targetTable().index(),
                                       segment.offsetIfActive())) {
@@ -7202,6 +7262,12 @@ static bool EncodeModule(AstModule& module, Uint32Vector* offsets,
   if (!EncodeElemSection(e, module)) {
     return false;
   }
+
+#ifdef ENABLE_WASM_BULKMEM_OPS
+  if (!EncodeDataCountSection(e, module)) {
+    return false;
+  }
+#endif
 
   if (!EncodeCodeSection(e, offsets, module)) {
     return false;

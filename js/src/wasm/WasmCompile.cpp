@@ -564,7 +564,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
     return nullptr;
   }
 
-  if (!DecodeModuleTail(d, &env, mg.deferredValidationState())) {
+  if (!DecodeModuleTail(d, &env)) {
     return nullptr;
   }
 
@@ -602,7 +602,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
     return;
   }
 
-  if (!DecodeModuleTail(d, &env, mg.deferredValidationState())) {
+  if (!DecodeModuleTail(d, &env)) {
     return;
   }
 
@@ -743,7 +743,7 @@ SharedModule wasm::CompileStreaming(
   {
     Decoder d(tailBytes, env->codeSection->end(), error, warnings);
 
-    if (!DecodeModuleTail(d, env.ptr(), mg.deferredValidationState())) {
+    if (!DecodeModuleTail(d, env.ptr())) {
       return nullptr;
     }
 
