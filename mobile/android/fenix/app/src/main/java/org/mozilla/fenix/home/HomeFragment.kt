@@ -44,7 +44,7 @@ class HomeFragment : Fragment() {
         toolbar_wrapper.clipToOutline = false
         toolbar.setOnClickListener { it ->
             val extras = FragmentNavigator.Extras.Builder().addSharedElement(
-                toolbar_wrapper, ViewCompat.getTransitionName(toolbar_wrapper)!!
+                toolbar, ViewCompat.getTransitionName(toolbar)!!
             ).build()
             Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_browserFragment, null, null, extras)
         }

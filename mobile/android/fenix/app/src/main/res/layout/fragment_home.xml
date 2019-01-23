@@ -12,7 +12,6 @@
     app:layoutDescription="@xml/home_scene"
     tools:context=".home.HomeFragment">
 
-
     <ImageButton
         android:id="@+id/menuButton"
         android:layout_width="@dimen/glyph_button_height"
@@ -53,7 +52,6 @@
         android:clipToPadding="false"
         android:elevation="5dp"
         android:outlineProvider="paddedBounds"
-        android:transitionName="firstTransitionName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/wordmark">
@@ -69,7 +67,8 @@
             android:gravity="center_vertical"
             android:text="@string/search_hint"
             android:textColor="@color/searchText"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:transitionName="firstTransitionName" />
     </FrameLayout>
 
     <androidx.recyclerview.widget.RecyclerView
