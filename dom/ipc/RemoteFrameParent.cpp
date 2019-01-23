@@ -69,7 +69,46 @@ nsresult RemoteFrameParent::Init(const nsString& aPresentationURL,
   mTabParent->SetOwnerElement(Manager()->GetOwnerElement());
   mTabParent->InitRendering();
 
+  RenderFrame* rf = mTabParent->GetRenderFrame();
+  if (NS_WARN_IF(!rf)) {
+    MOZ_ASSERT(false, "No RenderFrame");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Send the newly created layers ID back into content.
+  Unused << SendSetLayersId(rf->GetLayersId());
   return NS_OK;
+}
+
+IPCResult RemoteFrameParent::RecvShow(const ScreenIntSize& aSize,
+                                      const bool& aParentIsActive,
+                                      const nsSizeMode& aSizeMode) {
+  RenderFrame* rf = mTabParent->GetRenderFrame();
+  if (!rf->AttachLayerManager()) {
+    MOZ_CRASH();
+  }
+
+  Unused << mTabParent->SendShow(aSize, mTabParent->GetShowInfo(),
+                                 aParentIsActive, aSizeMode);
+  return IPC_OK();
+}
+
+IPCResult RemoteFrameParent::RecvLoadURL(const nsCString& aUrl) {
+  Unused << mTabParent->SendLoadURL(aUrl, mTabParent->GetShowInfo());
+  return IPC_OK();
+}
+
+IPCResult RemoteFrameParent::RecvUpdateDimensions(
+    const DimensionInfo& aDimensions) {
+  Unused << mTabParent->SendUpdateDimensions(aDimensions);
+  return IPC_OK();
+}
+
+IPCResult RemoteFrameParent::RecvRenderLayers(
+    const bool& aEnabled, const bool& aForceRepaint,
+    const layers::LayersObserverEpoch& aEpoch) {
+  Unused << mTabParent->SendRenderLayers(aEnabled, aForceRepaint, aEpoch);
+  return IPC_OK();
 }
 
 void RemoteFrameParent::ActorDestroy(ActorDestroyReason aWhy) {
