@@ -26,8 +26,6 @@ class nsMIMEInfoUIKit final : public nsMIMEInfoImpl {
     return NS_ERROR_UNEXPECTED;
   }
 #endif
-  static nsresult OpenApplicationWithURI(nsIFile* aApplication,
-                                         const nsCString& aURI);
 };
 
 #endif
