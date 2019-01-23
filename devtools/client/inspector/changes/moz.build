@@ -13,6 +13,7 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'ChangesContextMenu.js',
     'ChangesView.js',
 )
 
