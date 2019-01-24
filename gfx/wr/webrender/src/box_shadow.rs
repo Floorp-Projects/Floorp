@@ -169,7 +169,7 @@ impl<'a> DisplayListFlattener<'a> {
             );
         } else {
             // Normal path for box-shadows with a valid blur radius.
-            let blur_offset = BLUR_SAMPLE_SCALE * blur_radius;
+            let blur_offset = (BLUR_SAMPLE_SCALE * blur_radius).ceil();
             let mut extra_clips = vec![];
 
             // Add a normal clip mask to clip out the contents
