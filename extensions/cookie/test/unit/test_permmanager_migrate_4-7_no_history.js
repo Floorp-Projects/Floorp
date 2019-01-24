@@ -23,12 +23,11 @@ var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenera
 var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID = registrar.contractIDToCID(CONTRACT_ID);
 var oldFactory = Components.manager.getClassObject(Cc[CONTRACT_ID], Ci.nsIFactory);
-registrar.unregisterFactory(oldClassID, oldFactory);
 registrar.registerFactory(newClassID, "", CONTRACT_ID, factory);
 
 function cleanupFactory() {
   registrar.unregisterFactory(newClassID, factory);
-  registrar.registerFactory(oldClassID, "", CONTRACT_ID, oldFactory);
+  registrar.registerFactory(oldClassID, "", CONTRACT_ID, null);
 }
 
 function GetPermissionsFile(profile)
