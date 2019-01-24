@@ -365,7 +365,6 @@ impl<'a> DisplayListFlattener<'a> {
             prim_list,
             main_scroll_root,
             LayoutRect::max_rect(),
-            &self.clip_store,
             Some(tile_cache),
         ));
 
@@ -1238,7 +1237,6 @@ impl<'a> DisplayListFlattener<'a> {
                 let extra_instance = sc.cut_flat_item_sequence(
                     &mut self.prim_store,
                     &mut self.interners,
-                    &self.clip_store,
                 );
                 (sc.is_3d(), extra_instance)
             },
@@ -1389,7 +1387,6 @@ impl<'a> DisplayListFlattener<'a> {
                 ),
                 stacking_context.spatial_node_index,
                 max_clip,
-                &self.clip_store,
                 None,
             ))
         );
@@ -1436,7 +1433,6 @@ impl<'a> DisplayListFlattener<'a> {
                     ),
                     stacking_context.spatial_node_index,
                     max_clip,
-                    &self.clip_store,
                     None,
                 ))
             );
@@ -1471,7 +1467,6 @@ impl<'a> DisplayListFlattener<'a> {
                     ),
                     stacking_context.spatial_node_index,
                     max_clip,
-                    &self.clip_store,
                     None,
                 ))
             );
@@ -1514,7 +1509,6 @@ impl<'a> DisplayListFlattener<'a> {
                     ),
                     stacking_context.spatial_node_index,
                     max_clip,
-                    &self.clip_store,
                     None,
                 ))
             );
@@ -1850,7 +1844,6 @@ impl<'a> DisplayListFlattener<'a> {
                                 ),
                                 pending_shadow.clip_and_scroll.spatial_node_index,
                                 max_clip,
-                                &self.clip_store,
                                 None,
                             ))
                         );
@@ -2594,7 +2587,6 @@ impl FlattenedStackingContext {
         &mut self,
         prim_store: &mut PrimitiveStore,
         interners: &mut Interners,
-        clip_store: &ClipStore,
     ) -> Option<PrimitiveInstance> {
         if !self.is_3d() || self.primitives.is_empty() {
             return None
@@ -2622,7 +2614,6 @@ impl FlattenedStackingContext {
                 ),
                 self.spatial_node_index,
                 LayoutRect::max_rect(),
-                clip_store,
                 None,
             ))
         );
