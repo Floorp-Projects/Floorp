@@ -179,6 +179,10 @@ const GPU_TAG_BLIT: GpuProfileTag = GpuProfileTag {
     label: "Blit",
     color: debug_colors::LIME,
 };
+const GPU_TAG_SCALE: GpuProfileTag = GpuProfileTag {
+    label: "Scale",
+    color: debug_colors::GHOSTWHITE,
+};
 
 const GPU_SAMPLER_TAG_ALPHA: GpuProfileTag = GpuProfileTag {
     label: "Alpha Targets",
@@ -3089,6 +3093,8 @@ impl Renderer {
             return
         }
 
+        let _timer = self.gpu_profile.start_timer(GPU_TAG_SCALE);
+
         match source {
             TextureSource::PrevPassColor => {
                 self.shaders.borrow_mut().cs_scale_rgba8.bind(&mut self.device,
@@ -4059,7 +4065,7 @@ impl Renderer {
         self.texture_resolver.begin_frame();
 
         for (pass_index, pass) in frame.passes.iter_mut().enumerate() {
-            self.gpu_profile.place_marker(&format!("pass {}", pass_index));
+            let _gm = self.gpu_profile.start_marker(&format!("pass {}", pass_index));
 
             self.texture_resolver.bind(
                 &TextureSource::PrevPassAlpha,
