@@ -1871,10 +1871,8 @@ nsresult nsPermissionManager::AddInternal(
     }
 
     case eOperationAdding: {
-      UpdateAutoplayTelemetry(aType,
-                              nsIPermissionManager::UNKNOWN_ACTION,
-                              aPermission,
-                              aExpireType);
+      UpdateAutoplayTelemetry(aType, nsIPermissionManager::UNKNOWN_ACTION,
+                              aPermission, aExpireType);
       if (aDBOperation == eWriteToDB) {
         // we'll be writing to the database - generate a known unique id
         id = ++mLargestID;
@@ -1918,8 +1916,7 @@ nsresult nsPermissionManager::AddInternal(
         break;
       }
 
-      UpdateAutoplayTelemetry(aType,
-                              oldPermissionEntry.mPermission,
+      UpdateAutoplayTelemetry(aType, oldPermissionEntry.mPermission,
                               nsIPermissionManager::UNKNOWN_ACTION,
                               aExpireType);
       entry->GetPermissions().RemoveElementAt(index);
@@ -1961,10 +1958,8 @@ nsresult nsPermissionManager::AddInternal(
         break;
       }
 
-      UpdateAutoplayTelemetry(aType,
-                              entry->GetPermissions()[index].mPermission,
-                              aPermission,
-                              aExpireType);
+      UpdateAutoplayTelemetry(aType, entry->GetPermissions()[index].mPermission,
+                              aPermission, aExpireType);
 
       // If the new expireType is EXPIRE_SESSION, then we have to keep a
       // copy of the previous permission/expireType values. This cached value
