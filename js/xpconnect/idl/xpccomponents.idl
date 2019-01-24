@@ -329,6 +329,12 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     void intentionallyLeak();
 
+    /*
+     * In a debug build, make XPCOM not print out a bloat log in this process.
+     * This is needed to test leak checking.
+     */
+    void disableDumpStatistics();
+
     [implicit_jscontext]
     jsval getJSTestingFunctions();
 
