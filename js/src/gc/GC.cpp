@@ -6939,8 +6939,6 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
 
   bool destroyingRuntime = (reason == JS::GCReason::DESTROY_RUNTIME);
 
-  number++;
-
   initialState = incrementalState;
 
 #ifdef JS_GC_ZEAL
@@ -7391,6 +7389,8 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
 
   if (shouldCollectNurseryForSlice(nonincrementalByAPI, budget)) {
     minorGC(reason, gcstats::PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC);
+  } else {
+    ++number; // This otherwise happens in minorGC().
   }
 
   AutoGCSession session(rt, JS::HeapState::MajorCollecting);
@@ -7480,6 +7480,9 @@ static bool IsDeterministicGCReason(JS::GCReason reason) {
     case JS::GCReason::CC_FORCED:
     case JS::GCReason::SHUTDOWN_CC:
     case JS::GCReason::ABORT_GC:
+    case JS::GCReason::DISABLE_GENERATIONAL_GC:
+    case JS::GCReason::FINISH_GC:
+    case JS::GCReason::PREPARE_FOR_TRACING:
       return true;
 
     default:
@@ -7850,7 +7853,7 @@ void GCRuntime::startBackgroundFreeAfterMinorGC() {
 JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSContext* cx)
     : cx(cx) {
   if (!cx->generationalDisabled) {
-    cx->runtime()->gc.evictNursery(JS::GCReason::API);
+    cx->runtime()->gc.evictNursery(JS::GCReason::DISABLE_GENERATIONAL_GC);
     cx->nursery().disable();
   }
   ++cx->generationalDisabled;
@@ -7893,10 +7896,10 @@ bool GCRuntime::gcIfRequested() {
   return false;
 }
 
-void js::gc::FinishGC(JSContext* cx) {
+void js::gc::FinishGC(JSContext* cx, JS::GCReason reason) {
   if (JS::IsIncrementalGCInProgress(cx)) {
     JS::PrepareForIncrementalGC(cx);
-    JS::FinishIncrementalGC(cx, JS::GCReason::API);
+    JS::FinishIncrementalGC(cx, reason);
   }
 
   cx->runtime()->gc.waitBackgroundFreeEnd();
