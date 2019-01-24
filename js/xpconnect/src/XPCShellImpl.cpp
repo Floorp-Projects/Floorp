@@ -9,6 +9,7 @@
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
+#include "js/ContextOptions.h"
 #include "js/Printf.h"
 #include "js/PropertySpec.h"
 #include "mozilla/ChaosMode.h"
