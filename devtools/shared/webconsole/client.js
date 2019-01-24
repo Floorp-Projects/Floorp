@@ -668,13 +668,13 @@ WebConsoleClient.prototype = {
    * @return request
    *         Request object that implements both Promise and EventEmitter interfaces
    */
-  stopListeners: function(listeners, onResponse) {
+  stopListeners: function(listeners) {
     const packet = {
       to: this.actorID,
       type: "stopListeners",
       listeners: listeners,
     };
-    return this._client.request(packet, onResponse);
+    return this._client.request(packet);
   },
 
   /**
