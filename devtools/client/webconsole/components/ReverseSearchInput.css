@@ -29,7 +29,7 @@
   color: currentColor;
   background-image: url(chrome://devtools/skin/images/search.svg);
   background-repeat: no-repeat;
-  background-size: 12px 12px;
+  background-size: 12px;
   background-position: 10px 2px;
   -moz-context-properties: fill;
   fill: var(--theme-icon-dimmed-color);
