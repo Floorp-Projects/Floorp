@@ -9281,6 +9281,14 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(
   // All CSS filters are supported by WebRender. SVG filters are not fully
   // supported, those use NS_STYLE_FILTER_URL and are handled separately.
   const nsTArray<nsStyleFilter>& filters = mFrame->StyleEffects()->mFilters;
+
+  // If there are too many filters to render, then just pretend that we
+  // succeeded, and don't render any of them.
+  if (filters.Length() > gfxPrefs::WebRenderMaxFilterOpsPerChain()) {
+    return true;
+  }
+  wrFilters.SetCapacity(filters.Length());
+
   for (const nsStyleFilter& filter : filters) {
     switch (filter.GetType()) {
       case NS_STYLE_FILTER_BRIGHTNESS:
