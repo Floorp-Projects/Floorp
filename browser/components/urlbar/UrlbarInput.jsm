@@ -62,7 +62,7 @@ class UrlbarInput {
     // Forward textbox methods and properties.
     const METHODS = ["addEventListener", "removeEventListener",
       "setAttribute", "hasAttribute", "removeAttribute", "getAttribute",
-      "focus", "blur", "select"];
+      "select"];
     const READ_ONLY_PROPERTIES = ["inputField", "editor"];
     const READ_WRITE_PROPERTIES = ["placeholder", "readOnly",
       "selectionStart", "selectionEnd"];
@@ -139,6 +139,14 @@ class UrlbarInput {
   closePopup() {
     this.controller.cancelQuery();
     this.view.close();
+  }
+
+  focus() {
+    this.inputField.focus();
+  }
+
+  blur() {
+    this.inputField.blur();
   }
 
   /**
