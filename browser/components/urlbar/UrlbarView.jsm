@@ -60,7 +60,7 @@ class UrlbarView {
   }
 
   /**
-   * @returns {UrlbarMatch}
+   * @returns {UrlbarResult}
    *   The currently selected result.
    */
   get selectedResult() {

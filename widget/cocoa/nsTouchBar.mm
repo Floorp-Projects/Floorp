@@ -12,17 +12,15 @@
 
 @implementation nsTouchBar
 
-static NSTouchBarItemIdentifier CustomButtonIdentifier =
-    @"com.mozilla.firefox.touchbar.button";
+static NSTouchBarItemIdentifier CustomButtonIdentifier = @"com.mozilla.firefox.touchbar.button";
 static NSTouchBarItemIdentifier CustomMainButtonIdentifier =
     @"com.mozilla.firefox.touchbar.mainbutton";
-static NSTouchBarItemIdentifier ScrubberIdentifier =
-    @"com.mozilla.firefox.touchbar.scrubber";
+static NSTouchBarItemIdentifier ScrubberIdentifier = @"com.mozilla.firefox.touchbar.scrubber";
 
 // Non-JS scrubber implemention for the Share Scrubber,
 // since it is defined by an Apple API.
 static NSTouchBarItemIdentifier ShareScrubberIdentifier =
-  [ScrubberIdentifier stringByAppendingPathExtension:@"share"];
+    [ScrubberIdentifier stringByAppendingPathExtension:@"share"];
 
 // Used to tie action strings to buttons.
 static char sIdentifierAssociationKey;
@@ -32,8 +30,7 @@ static char sIdentifierAssociationKey;
 
 #pragma mark - NSTouchBarDelegate
 
-- (instancetype)init
-{
+- (instancetype)init {
   if ((self = [super init])) {
     mTouchBarHelper = do_GetService(NS_TOUCHBARHELPER_CID);
     if (!mTouchBarHelper) {
@@ -51,18 +48,16 @@ static char sIdentifierAssociationKey;
 
     uint32_t itemCount = 0;
     layoutItems->GetLength(&itemCount);
-    // This is copied to self.defaultItemIdentifiers. Required since 
+    // This is copied to self.defaultItemIdentifiers. Required since
     // [self.mappedLayoutItems allKeys] does not preserve order.
-    NSMutableArray* orderedLayoutIdentifiers = 
-      [NSMutableArray arrayWithCapacity:itemCount];
+    NSMutableArray* orderedLayoutIdentifiers = [NSMutableArray arrayWithCapacity:itemCount];
     for (uint32_t i = 0; i < itemCount; ++i) {
       nsCOMPtr<nsITouchBarInput> input = do_QueryElementAt(layoutItems, i);
       if (!input) {
         continue;
       }
 
-      TouchBarInput* convertedInput =
-        [[TouchBarInput alloc] initWithXPCOM:input];
+      TouchBarInput* convertedInput = [[TouchBarInput alloc] initWithXPCOM:input];
 
       // Add new input to dictionary for lookup of properties in delegate.
       self.mappedLayoutItems[[convertedInput nativeIdentifier]] = convertedInput;
@@ -75,8 +70,7 @@ static char sIdentifierAssociationKey;
   return self;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
   for (NSTouchBarItemIdentifier identifier in self.mappedLayoutItems) {
     NSTouchBarItem* item = [self itemForIdentifier:identifier];
     [item release];
@@ -90,8 +84,7 @@ static char sIdentifierAssociationKey;
 }
 
 - (NSTouchBarItem*)touchBar:(NSTouchBar*)aTouchBar
-      makeItemForIdentifier:(NSTouchBarItemIdentifier)aIdentifier
-{
+      makeItemForIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
   if ([aIdentifier hasPrefix:ScrubberIdentifier]) {
     if (![aIdentifier isEqualToString:ShareScrubberIdentifier]) {
       // We're only supporting the Share scrubber for now.
@@ -101,11 +94,8 @@ static char sIdentifierAssociationKey;
   }
 
   // The cases of a button or main button require the same setup.
-  NSButton* button = [NSButton buttonWithTitle:@""
-                                        target:self
-                                        action:@selector(touchBarAction:)];
-  NSCustomTouchBarItem* item = [[NSCustomTouchBarItem alloc]
-                                  initWithIdentifier:aIdentifier];
+  NSButton* button = [NSButton buttonWithTitle:@"" target:self action:@selector(touchBarAction:)];
+  NSCustomTouchBarItem* item = [[NSCustomTouchBarItem alloc] initWithIdentifier:aIdentifier];
   item.view = button;
 
   TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
@@ -118,27 +108,22 @@ static char sIdentifierAssociationKey;
   return nil;
 }
 
-- (void)updateItem:(TouchBarInput*)aInput
-{
+- (void)updateItem:(TouchBarInput*)aInput {
   NSTouchBarItem* item = [self itemForIdentifier:[aInput nativeIdentifier]];
   if (!item) {
     return;
   }
   if ([[aInput nativeIdentifier] hasPrefix:CustomButtonIdentifier]) {
-    [self updateButton:(NSCustomTouchBarItem*)item
-                 input:aInput];
+    [self updateButton:(NSCustomTouchBarItem*)item input:aInput];
   } else if ([[aInput nativeIdentifier] hasPrefix:CustomMainButtonIdentifier]) {
-    [self updateMainButton:(NSCustomTouchBarItem*)item
-                     input:aInput];
+    [self updateMainButton:(NSCustomTouchBarItem*)item input:aInput];
   }
 
   [self.mappedLayoutItems[[aInput nativeIdentifier]] release];
   self.mappedLayoutItems[[aInput nativeIdentifier]] = aInput;
 }
 
-- (NSTouchBarItem*)updateButton:(NSCustomTouchBarItem*)aButton
-                          input:(TouchBarInput*)aInput
-{
+- (NSTouchBarItem*)updateButton:(NSCustomTouchBarItem*)aButton input:(TouchBarInput*)aInput {
   NSButton* button = (NSButton*)aButton.view;
   if (!button) {
     return nil;
@@ -156,9 +141,8 @@ static char sIdentifierAssociationKey;
     button.bezelColor = [aInput color];
   }
 
-  objc_setAssociatedObject(button,
-    &sIdentifierAssociationKey,
-    [aInput nativeIdentifier], OBJC_ASSOCIATION_RETAIN);
+  objc_setAssociatedObject(button, &sIdentifierAssociationKey, [aInput nativeIdentifier],
+                           OBJC_ASSOCIATION_RETAIN);
 
   aButton.customizationLabel = [aInput title];
 
@@ -166,10 +150,8 @@ static char sIdentifierAssociationKey;
 }
 
 - (NSTouchBarItem*)updateMainButton:(NSCustomTouchBarItem*)aMainButton
-                              input:(TouchBarInput*)aInput
-{
-  aMainButton = (NSCustomTouchBarItem*)[self updateButton:aMainButton
-                                                    input:aInput];
+                              input:(TouchBarInput*)aInput {
+  aMainButton = (NSCustomTouchBarItem*)[self updateButton:aMainButton input:aInput];
   NSButton* button = (NSButton*)aMainButton.view;
   button.imageHugsTitle = YES;
   // If empty, string is still being localized. Display a blank input instead.
@@ -179,31 +161,25 @@ static char sIdentifierAssociationKey;
     [button setImagePosition:NSImageLeft];
   }
 
-  [button.widthAnchor
-    constraintGreaterThanOrEqualToConstant:MAIN_BUTTON_WIDTH].active = YES;
-  [button setContentHuggingPriority:1.0
-                      forOrientation:NSLayoutConstraintOrientationHorizontal];
+  [button.widthAnchor constraintGreaterThanOrEqualToConstant:MAIN_BUTTON_WIDTH].active = YES;
+  [button setContentHuggingPriority:1.0 forOrientation:NSLayoutConstraintOrientationHorizontal];
   return aMainButton;
 }
 
-- (NSTouchBarItem*)makeShareScrubberForIdentifier:
-                        (NSTouchBarItemIdentifier)aIdentifier 
-{
+- (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
   TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
   // System-default share menu
   NSSharingServicePickerTouchBarItem* servicesItem =
-      [[NSSharingServicePickerTouchBarItem alloc]
-        initWithIdentifier:aIdentifier];
+      [[NSSharingServicePickerTouchBarItem alloc] initWithIdentifier:aIdentifier];
   servicesItem.buttonImage = [input image];
   servicesItem.delegate = self;
   return servicesItem;
 }
 
-- (void)touchBarAction:(id)aSender
-{
+- (void)touchBarAction:(id)aSender {
   NSTouchBarItemIdentifier identifier =
-    objc_getAssociatedObject(aSender, &sIdentifierAssociationKey);
-  if (!identifier || [identifier isEqualToString: @""]) {
+      objc_getAssociatedObject(aSender, &sIdentifierAssociationKey);
+  if (!identifier || [identifier isEqualToString:@""]) {
     return;
   }
 
@@ -218,8 +194,7 @@ static char sIdentifierAssociationKey;
 
 #pragma mark - TouchBar Utilities
 
-+ (NSImage*)getTouchBarIconNamed:(NSString*)aImageName
-{
++ (NSImage*)getTouchBarIconNamed:(NSString*)aImageName {
   nsCOMPtr<nsIFile> resDir;
   nsAutoCString resPath;
   NSString* pathToImage;
@@ -229,15 +204,14 @@ static char sIdentifierAssociationKey;
   resDir->AppendNative(NS_LITERAL_CSTRING("touchbar"));
 
   rv = resDir->GetNativePath(resPath);
-  
+
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nil;
   }
 
   pathToImage = [NSString stringWithUTF8String:(const char*)resPath.get()];
   pathToImage = [pathToImage stringByAppendingPathComponent:aImageName];
-  NSImage* image = [[[NSImage alloc]
-                      initWithContentsOfFile:pathToImage] autorelease];
+  NSImage* image = [[[NSImage alloc] initWithContentsOfFile:pathToImage] autorelease];
   // A nil image will fail gracefully to a labelled button
 
   return image;
@@ -246,8 +220,7 @@ static char sIdentifierAssociationKey;
 #pragma mark - NSSharingServicePickerTouchBarItemDelegate
 
 - (NSArray*)itemsForSharingServicePickerTouchBarItem:
-                (NSSharingServicePickerTouchBarItem*)aPickerTouchBarItem
-{
+    (NSSharingServicePickerTouchBarItem*)aPickerTouchBarItem {
   NSURL* urlToShare = nil;
   NSString* titleToShare = @"";
   nsAutoString url;
@@ -272,27 +245,22 @@ static char sIdentifierAssociationKey;
 
   // If the user has gotten this far, they have clicked the share button so it
   // is logged.
-  Telemetry::AccumulateCategorical(
-    Telemetry::LABELS_TOUCHBAR_BUTTON_PRESSES::Share);
+  Telemetry::AccumulateCategorical(Telemetry::LABELS_TOUCHBAR_BUTTON_PRESSES::Share);
 
-  return @[urlToShare, titleToShare];
+  return @[ urlToShare, titleToShare ];
 }
 
-- (NSArray<NSSharingService*>*)sharingServicePicker:
-                           (NSSharingServicePicker*)aSharingServicePicker
-                            sharingServicesForItems:
-                                          (NSArray*)aItems
-                            proposedSharingServices:
-                       (NSArray<NSSharingService*>*)aProposedServices
-{
+- (NSArray<NSSharingService*>*)sharingServicePicker:(NSSharingServicePicker*)aSharingServicePicker
+                            sharingServicesForItems:(NSArray*)aItems
+                            proposedSharingServices:(NSArray<NSSharingService*>*)aProposedServices {
   // redundant services
   NSArray* excludedServices = @[
     @"com.apple.share.System.add-to-safari-reading-list",
   ];
 
   NSArray* sharingServices = [aProposedServices
-    filteredArrayUsingPredicate:
-      [NSPredicate predicateWithFormat:@"NOT (name IN %@)", excludedServices]];
+      filteredArrayUsingPredicate:[NSPredicate
+                                      predicateWithFormat:@"NOT (name IN %@)", excludedServices]];
 
   return sharingServices;
 }
@@ -300,71 +268,81 @@ static char sIdentifierAssociationKey;
 @end
 
 @implementation TouchBarInput
-- (NSString*)key { return mKey; }
-- (NSString*)title { return mTitle; }
-- (NSImage*)image { return mImage; }
-- (NSString*)type { return mType; }
-- (NSColor*)color { return mColor; }
-- (BOOL)isDisabled { return mDisabled; }
-- (NSTouchBarItemIdentifier)nativeIdentifier { return mNativeIdentifier; }
-- (nsCOMPtr<nsITouchBarInputCallback>)callback { return mCallback; }
-- (void)setKey:(NSString*)aKey
-{
+- (NSString*)key {
+  return mKey;
+}
+- (NSString*)title {
+  return mTitle;
+}
+- (NSImage*)image {
+  return mImage;
+}
+- (NSString*)type {
+  return mType;
+}
+- (NSColor*)color {
+  return mColor;
+}
+- (BOOL)isDisabled {
+  return mDisabled;
+}
+- (NSTouchBarItemIdentifier)nativeIdentifier {
+  return mNativeIdentifier;
+}
+- (nsCOMPtr<nsITouchBarInputCallback>)callback {
+  return mCallback;
+}
+- (void)setKey:(NSString*)aKey {
   [aKey retain];
   [mKey release];
   mKey = aKey;
 }
 
-- (void)setTitle:(NSString*)aTitle
-{
+- (void)setTitle:(NSString*)aTitle {
   [aTitle retain];
   [mTitle release];
   mTitle = aTitle;
 }
 
-- (void)setImage:(NSImage*)aImage
-{
+- (void)setImage:(NSImage*)aImage {
   [aImage retain];
   [mImage release];
   mImage = aImage;
 }
 
-- (void)setType:(NSString*)aType
-{
+- (void)setType:(NSString*)aType {
   [aType retain];
   [mType release];
   mType = aType;
 }
 
-- (void)setColor:(NSColor*)aColor
-{
+- (void)setColor:(NSColor*)aColor {
   [aColor retain];
   [mColor release];
   mColor = aColor;
 }
 
-- (void)setDisabled:(BOOL)aDisabled { mDisabled = aDisabled; }
+- (void)setDisabled:(BOOL)aDisabled {
+  mDisabled = aDisabled;
+}
 
-- (void)setNativeIdentifier:(NSTouchBarItemIdentifier)aNativeIdentifier
-{
+- (void)setNativeIdentifier:(NSTouchBarItemIdentifier)aNativeIdentifier {
   [aNativeIdentifier retain];
   [mNativeIdentifier release];
   mNativeIdentifier = aNativeIdentifier;
 }
 
-- (void)setCallback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback
-{
+- (void)setCallback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback {
   mCallback = aCallback;
 }
 
 - (id)initWithKey:(NSString*)aKey
             title:(NSString*)aTitle
             image:(NSString*)aImage
-            type:(NSString*)aType
-        callback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback
-           color:(uint32_t)aColor
-        disabled:(BOOL)aDisabled
-{
+             type:(NSString*)aType
+         callback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback
+            color:(uint32_t)aColor
+         disabled:(BOOL)aDisabled {
   if (self = [super init]) {
     [self setKey:aKey];
     [self setTitle:aTitle];
@@ -372,10 +350,10 @@ static char sIdentifierAssociationKey;
     [self setType:aType];
     [self setCallback:aCallback];
     if (aColor) {
-      [self setColor:[NSColor colorWithDisplayP3Red:((aColor>>16)&0xFF)/255.0
-                                            green:((aColor>>8)&0xFF)/255.0
-                                             blue:((aColor)&0xFF)/255.0
-                                            alpha:1.0]];
+      [self setColor:[NSColor colorWithDisplayP3Red:((aColor >> 16) & 0xFF) / 255.0
+                                              green:((aColor >> 8) & 0xFF) / 255.0
+                                               blue:((aColor)&0xFF) / 255.0
+                                              alpha:1.0]];
     }
     [self setDisabled:aDisabled];
 
@@ -391,19 +369,16 @@ static char sIdentifierAssociationKey;
     if (!aKey) {
       [self setNativeIdentifier:TypeIdentifier];
     } else if ([aKey isEqualToString:@"share"]) {
-      [self setNativeIdentifier:
-        [TypeIdentifier stringByAppendingPathExtension:aKey]];
+      [self setNativeIdentifier:[TypeIdentifier stringByAppendingPathExtension:aKey]];
     } else {
-      [self setNativeIdentifier:
-        [TypeIdentifier stringByAppendingPathExtension:aKey]];
+      [self setNativeIdentifier:[TypeIdentifier stringByAppendingPathExtension:aKey]];
     }
   }
 
   return self;
 }
 
-- (TouchBarInput*)initWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput
-{
+- (TouchBarInput*)initWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput {
   nsAutoString keyStr;
   nsresult rv = aInput->GetKey(keyStr);
   if (NS_FAILED(rv)) {
@@ -455,8 +430,7 @@ static char sIdentifierAssociationKey;
                   disabled:(BOOL)disabled];
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
   [mKey release];
   [mTitle release];
   [mImage release];

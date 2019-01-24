@@ -510,7 +510,9 @@ nsresult imgFrame::Optimize(DrawTarget* aTarget) {
   if (!gfxVars::UseWebRender()) {
     mOptSurface = aTarget->OptimizeSourceSurface(mLockedSurface);
   } else {
-    mOptSurface = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->OptimizeSourceSurface(mLockedSurface);
+    mOptSurface = gfxPlatform::GetPlatform()
+                      ->ScreenReferenceDrawTarget()
+                      ->OptimizeSourceSurface(mLockedSurface);
   }
   if (mOptSurface == mLockedSurface) {
     mOptSurface = nullptr;

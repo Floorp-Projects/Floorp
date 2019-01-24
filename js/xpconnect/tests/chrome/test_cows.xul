@@ -22,6 +22,9 @@ var sandbox = new Cu.Sandbox("about:blank");
 
 var test_utils = window.windowUtils;
 
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                    true]]});
+
 function getCOW(x) {
   if (typeof x != 'object' && typeof x != 'function')
     return x;

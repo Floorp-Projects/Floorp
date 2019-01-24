@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
-  UrlbarMatch: "resource:///modules/UrlbarMatch.jsm",
+  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });

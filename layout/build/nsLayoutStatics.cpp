@@ -112,7 +112,7 @@
 #include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/U2FTokenManager.h"
 #ifdef OS_WIN
-#include "mozilla/dom/WinWebAuthnManager.h"
+#  include "mozilla/dom/WinWebAuthnManager.h"
 #endif
 #include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/RemoteWorkerService.h"
