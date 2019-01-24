@@ -469,6 +469,14 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Any how many seconds we allow external protocol URLs in iframe when not in
+// single events
+VARCACHE_PREF(
+  "dom.delay.block_external_protocol_in_iframes",
+   dom_delay_block_external_protocol_in_iframes,
+  uint32_t, 10 // in seconds
+)
+
 // Block multiple window.open() per single event.
 VARCACHE_PREF(
   "dom.block_multiple_popups",
