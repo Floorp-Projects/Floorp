@@ -6,7 +6,6 @@
  *          getBrowserActionWidget
  *          clickBrowserAction clickPageAction
  *          getBrowserActionPopup getPageActionPopup getPageActionButton
- *          openBrowserActionPanel
  *          closeBrowserAction closePageAction
  *          promisePopupShown promisePopupHidden
  *          toggleBookmarksToolbar
@@ -287,12 +286,6 @@ function closeBrowserAction(extension, win = window) {
   CustomizableUI.hidePanelForNode(node);
 
   return Promise.resolve();
-}
-
-function openBrowserActionPanel(extension, win = window, awaitLoad = false) {
-  clickBrowserAction(extension, win);
-
-  return awaitExtensionPanel(extension, win, awaitLoad);
 }
 
 async function toggleBookmarksToolbar(visible = true) {
