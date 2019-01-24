@@ -4600,6 +4600,8 @@ void HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify) {
 }
 
 void HTMLInputElement::SanitizeValue(nsAString& aValue) {
+  NS_ASSERTION(mDoneCreating, "The element creation should be finished!");
+
   switch (mType) {
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_SEARCH:
