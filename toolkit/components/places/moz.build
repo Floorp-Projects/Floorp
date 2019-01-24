@@ -44,7 +44,6 @@ if CONFIG['MOZ_PLACES']:
         'nsNavHistory.cpp',
         'nsNavHistoryQuery.cpp',
         'nsNavHistoryResult.cpp',
-        'nsPlacesModule.cpp',
         'PlaceInfo.cpp',
         'Shutdown.cpp',
         'SQLFunctions.cpp',
@@ -82,6 +81,10 @@ if CONFIG['MOZ_PLACES']:
         'PlacesCategoriesStarter.js',
         'toolkitplaces.manifest',
         'UnifiedComplete.js',
+    ]
+
+    XPCOM_MANIFESTS += [
+        'components.conf',
     ]
 
     FINAL_LIBRARY = 'xul'
