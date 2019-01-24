@@ -872,8 +872,7 @@ JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
   JSProtoKey key = stdnm ? stdnm->key : JSProto_Null;
   if (key != JSProto_Null) {
     const Class* clasp = ProtoKeyToClass(key);
-    if (!clasp || (!(clasp->flags & JSCLASS_IS_ANONYMOUS) &&
-                   clasp->specShouldDefineConstructor())) {
+    if (!clasp || clasp->specShouldDefineConstructor()) {
       if (!GlobalObject::ensureConstructor(cx, global, key)) {
         return false;
       }
@@ -948,9 +947,6 @@ static bool EnumerateStandardClassesInTable(JSContext* cx,
     }
 
     if (const Class* clasp = ProtoKeyToClass(key)) {
-      if (clasp->flags & JSCLASS_IS_ANONYMOUS) {
-        continue;
-      }
       if (!clasp->specShouldDefineConstructor()) {
         continue;
       }
