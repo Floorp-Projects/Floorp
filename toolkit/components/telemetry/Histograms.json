@@ -14679,7 +14679,8 @@
           "IDB_InitDirectory",
           "IDB_GetFileSize",
           "IDB_GetWalFileSize",
-          "IDB_GetUsage"
+          "IDB_GetUsage",
+          "IDB_RemoveDBFiles"
       ],
       "keyed": true,
       "description": "Getting the number of errors in QuotaManager initialization."

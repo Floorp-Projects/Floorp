@@ -15867,6 +15867,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
         // If we somehow running into here, it probably means we are in a
         // serious situation. e.g. Filesystem corruption.
         // Will handle this in bug 1521541.
+        REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_RemoveDBFiles);
         return NS_ERROR_UNEXPECTED;
       }
 
