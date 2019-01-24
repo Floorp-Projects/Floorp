@@ -41,6 +41,8 @@ class UrlbarView {
     this._rows.addEventListener("overflow", this);
     this._rows.addEventListener("underflow", this);
 
+    this.panel.addEventListener("popuphiding", this);
+
     this.controller.setView(this);
     this.controller.addQueryListener(this);
   }
@@ -399,5 +401,9 @@ class UrlbarView {
     if (event.target.classList.contains("urlbarView-row-inner")) {
       event.target.toggleAttribute("overflow", false);
     }
+  }
+
+  _on_popuphiding(event) {
+    this.controller.cancelQuery();
   }
 }
