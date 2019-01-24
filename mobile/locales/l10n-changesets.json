@@ -225,7 +225,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "9c02266ebf06"
+        "revision": "77161dcd560d"
     },
     "gu-IN": {
         "platforms": [
@@ -507,7 +507,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "d771bd419a05"
+        "revision": "ec4404e682b1"
     },
     "tr": {
         "platforms": [
