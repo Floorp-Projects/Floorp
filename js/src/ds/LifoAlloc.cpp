@@ -183,10 +183,9 @@ LifoAlloc::UniqueBumpChunk LifoAlloc::newChunkWithCapacity(size_t n,
   // used for small allocations. This excludes unused chunks, oversized chunks,
   // and chunks transferred in from another LifoAlloc.
   MOZ_ASSERT(curSize_ >= smallAllocsSize_);
-  const size_t chunkSize =
-      (oversize || minSize > defaultChunkSize_)
-          ? MallocGoodSize(minSize)
-          : NextSize(defaultChunkSize_, smallAllocsSize_);
+  const size_t chunkSize = (oversize || minSize > defaultChunkSize_)
+                               ? MallocGoodSize(minSize)
+                               : NextSize(defaultChunkSize_, smallAllocsSize_);
 
   // Create a new BumpChunk, and allocate space for it.
   UniqueBumpChunk result = detail::BumpChunk::newWithCapacity(chunkSize);

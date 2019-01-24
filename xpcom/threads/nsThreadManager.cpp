@@ -217,8 +217,8 @@ nsresult nsThreadManager::Init() {
   nsCOMPtr<nsIIdlePeriod> idlePeriod = new MainThreadIdlePeriod();
 
   mMainThread =
-    CreateMainThread<ThreadEventQueue<PrioritizedEventQueue<EventQueue>>,
-                     EventQueue>(idlePeriod);
+      CreateMainThread<ThreadEventQueue<PrioritizedEventQueue<EventQueue>>,
+                       EventQueue>(idlePeriod);
 
   nsresult rv = mMainThread->InitCurrentThread();
   if (NS_FAILED(rv)) {
