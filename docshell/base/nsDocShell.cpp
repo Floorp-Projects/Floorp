@@ -9640,29 +9640,32 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                    aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_FRAME,
                "DoURILoad thinks this is a frame and InternalLoad does not");
 
-    // Only allow URLs able to return data in iframes.
-    bool doesNotReturnData = false;
-    NS_URIChainHasFlags(aLoadState->URI(),
-                        nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
-                        &doesNotReturnData);
-    if (doesNotReturnData) {
-      bool popupBlocked = true;
+    if (StaticPrefs::dom_block_external_protocol_in_iframes()) {
+      // Only allow URLs able to return data in iframes.
+      bool doesNotReturnData = false;
+      NS_URIChainHasFlags(aLoadState->URI(),
+                          nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+                          &doesNotReturnData);
+      if (doesNotReturnData) {
+        bool popupBlocked = true;
 
-      // Let's consider external protocols as popups and let's check if the page
-      // is allowed to open them without abuse regardless of allowed events
-      if (PopupBlocker::GetPopupControlState() <= PopupBlocker::openBlocked) {
-        popupBlocked = !PopupBlocker::TryUsePopupOpeningToken();
-      } else {
-        nsCOMPtr<nsINode> loadingNode =
-            mScriptGlobal->AsOuter()->GetFrameElementInternal();
-        if (loadingNode) {
-          popupBlocked = !PopupBlocker::CanShowPopupByPermission(
-              loadingNode->NodePrincipal());
+        // Let's consider external protocols as popups and let's check if the
+        // page is allowed to open them without abuse regardless of allowed
+        // events
+        if (PopupBlocker::GetPopupControlState() <= PopupBlocker::openBlocked) {
+          popupBlocked = !PopupBlocker::TryUsePopupOpeningToken();
+        } else {
+          nsCOMPtr<nsINode> loadingNode =
+              mScriptGlobal->AsOuter()->GetFrameElementInternal();
+          if (loadingNode) {
+            popupBlocked = !PopupBlocker::CanShowPopupByPermission(
+                loadingNode->NodePrincipal());
+          }
         }
-      }
 
-      if (popupBlocked) {
-        return NS_ERROR_UNKNOWN_PROTOCOL;
+        if (popupBlocked) {
+          return NS_ERROR_UNKNOWN_PROTOCOL;
+        }
       }
     }
 
