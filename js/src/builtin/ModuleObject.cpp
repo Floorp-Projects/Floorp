@@ -1684,7 +1684,7 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx,
   RootedValue referencingPrivate(cx);
   if (referencingScriptSource) {
     ScriptSourceObject* sso =
-      &UncheckedUnwrap(referencingScriptSource)->as<ScriptSourceObject>();
+        &UncheckedUnwrap(referencingScriptSource)->as<ScriptSourceObject>();
     referencingPrivate = sso->canonicalPrivate();
   }
 

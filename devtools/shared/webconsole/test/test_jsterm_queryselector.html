@@ -17,7 +17,7 @@ let gState;
 let gWin;
 
 function evaluateJS(input) {
-  return new Promise((resolve) => gState.client.evaluateJS(input, resolve));
+  return gState.client.evaluateJS(input);
 }
 
 function startTest() {

@@ -249,7 +249,7 @@ bool SweepCacheAndFinishGC(JSContext* cx, const Cache& cache) {
   CHECK(IsIncrementalGCInProgress(cx));
 
   PrepareForIncrementalGC(cx);
-  IncrementalGCSlice(cx, JS::gcreason::API);
+  IncrementalGCSlice(cx, JS::GCReason::API);
 
   JS::Zone* zone = JS::GetObjectZone(global);
   CHECK(!IsIncrementalGCInProgress(cx));

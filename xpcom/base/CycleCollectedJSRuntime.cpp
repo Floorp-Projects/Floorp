@@ -814,12 +814,12 @@ void CycleCollectedJSRuntime::TraverseNativeRoots(
 
   if (aProgress == JS::GC_CYCLE_END &&
       JS::dbg::FireOnGarbageCollectionHookRequired(aContext)) {
-    JS::gcreason::Reason reason = aDesc.reason_;
+    JS::GCReason reason = aDesc.reason_;
     Unused << NS_WARN_IF(
         NS_FAILED(DebuggerOnGCRunnable::Enqueue(aContext, aDesc)) &&
-        reason != JS::gcreason::SHUTDOWN_CC &&
-        reason != JS::gcreason::DESTROY_RUNTIME &&
-        reason != JS::gcreason::XPCONNECT_SHUTDOWN);
+        reason != JS::GCReason::SHUTDOWN_CC &&
+        reason != JS::GCReason::DESTROY_RUNTIME &&
+        reason != JS::GCReason::XPCONNECT_SHUTDOWN);
   }
 
   if (self->mPrevGCSliceCallback) {
@@ -829,17 +829,17 @@ void CycleCollectedJSRuntime::TraverseNativeRoots(
 
 class MinorGCMarker : public TimelineMarker {
  private:
-  JS::gcreason::Reason mReason;
+  JS::GCReason mReason;
 
  public:
-  MinorGCMarker(MarkerTracingType aTracingType, JS::gcreason::Reason aReason)
+  MinorGCMarker(MarkerTracingType aTracingType, JS::GCReason aReason)
       : TimelineMarker("MinorGC", aTracingType, MarkerStackRequest::NO_STACK),
         mReason(aReason) {
     MOZ_ASSERT(aTracingType == MarkerTracingType::START ||
                aTracingType == MarkerTracingType::END);
   }
 
-  MinorGCMarker(JS::GCNurseryProgress aProgress, JS::gcreason::Reason aReason)
+  MinorGCMarker(JS::GCNurseryProgress aProgress, JS::GCReason aReason)
       : TimelineMarker(
             "MinorGC",
             aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START
@@ -853,7 +853,7 @@ class MinorGCMarker : public TimelineMarker {
     TimelineMarker::AddDetails(aCx, aMarker);
 
     if (GetTracingType() == MarkerTracingType::START) {
-      auto reason = JS::gcreason::ExplainReason(mReason);
+      auto reason = JS::ExplainGCReason(mReason);
       aMarker.mCauseName.Construct(NS_ConvertUTF8toUTF16(reason));
     }
   }
@@ -867,7 +867,7 @@ class MinorGCMarker : public TimelineMarker {
 
 /* static */ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
     JSContext* aContext, JS::GCNurseryProgress aProgress,
-    JS::gcreason::Reason aReason) {
+    JS::GCReason aReason) {
   CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
   MOZ_ASSERT(NS_IsMainThread());
@@ -1125,13 +1125,10 @@ bool CycleCollectedJSRuntime::AreGCGrayBitsValid() const {
   return js::AreGCGrayBitsValid(mJSRuntime);
 }
 
-void CycleCollectedJSRuntime::GarbageCollect(uint32_t aReason) const {
-  MOZ_ASSERT(aReason < JS::gcreason::NUM_REASONS);
-  JS::gcreason::Reason gcreason = static_cast<JS::gcreason::Reason>(aReason);
-
+void CycleCollectedJSRuntime::GarbageCollect(JS::GCReason aReason) const {
   JSContext* cx = CycleCollectedJSContext::Get()->Context();
   JS::PrepareForFullGC(cx);
-  JS::NonIncrementalGC(cx, GC_NORMAL, gcreason);
+  JS::NonIncrementalGC(cx, GC_NORMAL, aReason);
 }
 
 void CycleCollectedJSRuntime::JSObjectsTenured() {

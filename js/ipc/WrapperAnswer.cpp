@@ -39,7 +39,7 @@ static void MaybeForceDebugGC() {
   if (sDebugGCs) {
     JSContext* cx = XPCJSContext::Get()->Context();
     PrepareForFullGC(cx);
-    NonIncrementalGC(cx, GC_NORMAL, gcreason::COMPONENT_UTILS);
+    NonIncrementalGC(cx, GC_NORMAL, GCReason::COMPONENT_UTILS);
   }
 }
 

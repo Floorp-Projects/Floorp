@@ -27,7 +27,6 @@
     locale/browser/pageInfo.dtd                    (%chrome/browser/pageInfo.dtd)
     locale/browser/pageInfo.properties             (%chrome/browser/pageInfo.properties)
     locale/browser/pocket.properties               (%chrome/browser/pocket.properties)
-    locale/browser/safeMode.dtd                    (%chrome/browser/safeMode.dtd)
     locale/browser/search.properties               (%chrome/browser/search.properties)
     locale/browser/siteData.properties             (%chrome/browser/siteData.properties)
     locale/browser/sitePermissions.properties      (%chrome/browser/sitePermissions.properties)

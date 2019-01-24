@@ -32,6 +32,8 @@ class Rule extends PureComponent {
     } = this.props;
     const {
       declarations,
+      isUnmatched,
+      isUserAgentStyle,
       selector,
       sourceLink,
       type,
@@ -39,7 +41,11 @@ class Rule extends PureComponent {
 
     return (
       dom.div(
-        { className: "ruleview-rule devtools-monospace" },
+        {
+          className: "ruleview-rule devtools-monospace" +
+                     (isUnmatched ? " unmatched" : "") +
+                     (isUserAgentStyle ? " uneditable" : ""),
+        },
         SourceLink({ sourceLink }),
         dom.div({ className: "ruleview-code" },
           dom.div({},

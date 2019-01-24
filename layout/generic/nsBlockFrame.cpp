@@ -6515,14 +6515,14 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  // Pick up the resulting text-overflow markers.  We append them to
-  // PositionedDescendants just before we append the lines' display items,
-  // so that our text-overflow markers will appear on top of this block's
-  // normal content but below any of its its' positioned children.
-  if (textOverflow.isSome()) {
-    aLists.PositionedDescendants()->AppendToTop(&textOverflow->GetMarkers());
-  }
   linesDisplayListCollection.MoveTo(aLists);
+
+  if (textOverflow.isSome()) {
+    // Put any text-overflow:ellipsis markers on top of the non-positioned
+    // content of the block's lines. (If we ever start sorting the Content()
+    // list this will end up in the wrong place.)
+    aLists.Content()->AppendToTop(&textOverflow->GetMarkers());
+  }
 
   if (HasOutsideBullet()) {
     // Display outside bullets manually

@@ -191,6 +191,14 @@ void gfxAndroidPlatform::GetCommonFallbackFonts(
       case 0x13:
         aFontList.AppendElement("Droid Sans Ethiopic");
         break;
+      case 0x21:
+      case 0x23:
+      case 0x24:
+      case 0x26:
+      case 0x27:
+      case 0x29:
+        aFontList.AppendElement("Noto Sans Symbols");
+        break;
       case 0xf9:
       case 0xfa:
         if (IsJapaneseLocale()) {

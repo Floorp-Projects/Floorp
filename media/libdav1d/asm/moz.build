@@ -26,7 +26,6 @@ CFLAGS += [
 # Attaching config.asm file
 if CONFIG['CPU_ARCH'] == 'x86':
     ASFLAGS += ['-I%s/media/libdav1d/asm/x86_32/' % TOPSRCDIR]
-    SOURCES += ['x86_32/config.asm']
 
 if CONFIG['CPU_ARCH'] == 'x86_64':
     # Change the default stack aligment (16) to 32
@@ -37,10 +36,8 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
 
     if CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/osx/' % TOPSRCDIR]
-        SOURCES += ['x86_64/osx/config.asm']
     else:
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/' % TOPSRCDIR]
-        SOURCES += ['x86_64/config.asm']
 
 if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
     SOURCES += [

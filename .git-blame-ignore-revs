@@ -1,29 +1,44 @@
-# Bug 1204606 - Reformat of dom/media r=jya
+# Bug 1204606 - Reformat of dom/media
 # https://hg.mozilla.org/mozilla-central/rev/0ceae9db9ec0be18daa1a279511ad305723185d4
 abd6d77c618998827e5ffc3dab12f1a34d6ed03d # cinnabar
 804b8b8883ba2a6795b0fcf65ebcb18306b6416b # gecko-dev
 
-# Bug 1511181 - Reformat everything to the Google coding style r=ehsan
+# Bug 1511181 - Reformat everything to the Google coding style
 # https://hg.mozilla.org/mozilla-central/rev/6f3709b3878117466168c40affa7bca0b60cf75b
 0e0308d10a5fd4a8dcf0601978776342a2abf2df # cinnabar
 265e6721798a455604328ed5262f430cfcc37c2f # gecko-dev
 
-# Bug 1516555 - Reformat everything to the Google coding style r=Ehsan
+# Bug 1516555 - Reformat everything to the Google coding style
 # https://hg.mozilla.org/mozilla-central/rev/d57dde190f67
 cf6442a0664caf8eb39eb75b77963f648597cbd8 # cinnabar
 cccdda3c2aec019cc138d410fc0e4aa3e307b6ab # gecko-dev
 
-# Bug 1512961 - Reformat recent changes to the Google coding style r=Ehsan
+# Bug 1512961 - Reformat recent changes to the Google coding style
 # https://hg.mozilla.org/integration/autoland/rev/8869368a3f30
 20061c7bfce850ba0158c7b8a439ac3ecc62a262 # cinnabar
 ad75e912fbc1d64ed63c1d0a51d7157566de1887 # gecko-dev
 
 # Bug 1513205 - Also update the tests to match the Google coding style
 # https://hg.mozilla.org/integration/autoland/rev/09c71a7cf75a
-13452f36fb36ad09d81f6b53eaf7928ee63f05e3 # cinnabar
+13452f36fb36ad09d81f6b53eaf7928ee63f05e3 # cinnabar
 6f45c666bc7f98c3e3250a7c2cf8dc3fb95d12d7 # gecko-dev
 
+# Bug 1519636 - Reformat everything to the Google coding style
+# https://hg.mozilla.org/mozilla-central/rev/d54846d01280026138135bde6e0bb1bcfe58feae
+abc28896717209d5f0ed2a6b0a46f8e03880ad19 # cinnabar
+47a5dd1fb80fa5bbe608c32db426f1ed29b7fd79 # gecko-dev
+
+# Bug 1521000 - Part 1: Reformat the tree to ensure everything is forma…
+# https://hg.mozilla.org/mozilla-central/rev/9916e7d6e327
+4205caa5c71ba3b111ac494d32d46ff76882b795 # cinnabar
+06c3d29113e60ab1a316fbd5a16c667202d012fb # gecko-dev
+
+# Bug 1521000 - Part 2: Adjust our clang-format rules to include spaces…
+# https://hg.mozilla.org/mozilla-central/rev/5f4630838d46
+d25e4032d4d15e732a78082505d62b6d6ffa1445 # cinnabar
+e5e885ae3128a6878d08df4ff6baaf3fc4a4b9e8 # gecko-dev
 # Bug 1513205 - Ride along, update some code to match the Google coding style
 # https://hg.mozilla.org/integration/autoland/rev/039a7c0c18fb
-1ce955dcb2e09fd9ce19c1ec6c470f75db486bd2 # cinnabar
+1ce955dcb2e09fd9ce19c1ec6c470f75db486bd2 # cinnabar
 7cf43b9bc01d650f87deceb65f336cdac7c0e78f # gecko-dev
+

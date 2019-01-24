@@ -53,8 +53,10 @@ EXTN(jpeg_simd_cpu_support):
     mov         rax, 1
     xor         rcx, rcx
     cpuid
-    test        rcx, 1<<27
+    test        rcx, 1<<26
     jz          short .return           ; O/S does not support XSAVE
+    test        rcx, 1<<27
+    jz          short .return           ; O/S does not support OSXSAVE
     test        rcx, 1<<28
     jz          short .return           ; CPU does not support AVX2
 

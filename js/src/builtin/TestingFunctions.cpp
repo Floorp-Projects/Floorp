@@ -428,7 +428,7 @@ static bool GC(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   JSGCInvocationKind gckind = shrinking ? GC_SHRINK : GC_NORMAL;
-  JS::NonIncrementalGC(cx, gckind, JS::gcreason::API);
+  JS::NonIncrementalGC(cx, gckind, JS::GCReason::API);
 
   char buf[256] = {'\0'};
 #ifndef JS_MORE_DETERMINISTIC
@@ -442,10 +442,10 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.get(0) == BooleanValue(true)) {
     cx->runtime()->gc.storeBuffer().setAboutToOverflow(
-        JS::gcreason::FULL_GENERIC_BUFFER);
+        JS::GCReason::FULL_GENERIC_BUFFER);
   }
 
-  cx->minorGC(JS::gcreason::API);
+  cx->minorGC(JS::GCReason::API);
   args.rval().setUndefined();
   return true;
 }
@@ -591,7 +591,7 @@ static bool RelazifyFunctions(JSContext* cx, unsigned argc, Value* vp) {
   SetAllowRelazification(cx, true);
 
   JS::PrepareForFullGC(cx);
-  JS::NonIncrementalGC(cx, GC_SHRINK, JS::gcreason::API);
+  JS::NonIncrementalGC(cx, GC_SHRINK, JS::GCReason::API);
 
   SetAllowRelazification(cx, false);
   args.rval().setUndefined();
@@ -4186,7 +4186,7 @@ static void majorGC(JSContext* cx, JSGCStatus status, void* data) {
   if (info->depth > 0) {
     info->depth--;
     JS::PrepareForFullGC(cx);
-    JS::NonIncrementalGC(cx, GC_NORMAL, JS::gcreason::API);
+    JS::NonIncrementalGC(cx, GC_NORMAL, JS::GCReason::API);
     info->depth++;
   }
 }
@@ -4205,7 +4205,7 @@ static void minorGC(JSContext* cx, JSGCStatus status, void* data) {
   if (info->active) {
     info->active = false;
     if (cx->zone() && !cx->zone()->isAtomsZone()) {
-      cx->runtime()->gc.evictNursery(JS::gcreason::DEBUG_GC);
+      cx->runtime()->gc.evictNursery(JS::GCReason::DEBUG_GC);
     }
     info->active = true;
   }

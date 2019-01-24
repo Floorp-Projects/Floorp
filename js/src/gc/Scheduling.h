@@ -90,13 +90,13 @@
  *
  *  While code generally takes the above factors into account in only an ad-hoc
  *  fashion, the API forces the user to pick a "reason" for the GC. We have a
- *  bunch of JS::gcreason reasons in GCAPI.h. These fall into a few categories
+ *  bunch of JS::GCReason reasons in GCAPI.h. These fall into a few categories
  *  that generally coincide with one or more of the above factors.
  *
  *  Embedding reasons:
  *
  *   1) Do a GC now because the embedding knows something useful about the
- *      zone's memory retention state. These are gcreasons like LOAD_END,
+ *      zone's memory retention state. These are GCReasons like LOAD_END,
  *      PAGE_HIDE, SET_NEW_DOCUMENT, DOM_UTILS. Mostly, Gecko uses these to
  *      indicate that a significant fraction of the scheduled zone's memory is
  *      probably reclaimable.

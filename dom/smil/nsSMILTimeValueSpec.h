@@ -15,9 +15,9 @@
 
 class nsSMILTimeValue;
 class nsSMILInstanceTime;
-class nsSMILInterval;
 
 namespace mozilla {
+class SMILInterval;
 class SMILTimeContainer;
 class SMILTimedElement;
 namespace dom {
@@ -40,6 +40,7 @@ class EventListenerManager;
 
 class nsSMILTimeValueSpec {
  public:
+  typedef mozilla::SMILInterval SMILInterval;
   typedef mozilla::SMILTimeContainer SMILTimeContainer;
   typedef mozilla::SMILTimedElement SMILTimedElement;
   typedef mozilla::dom::Element Element;
@@ -53,7 +54,7 @@ class nsSMILTimeValueSpec {
   void ResolveReferences(Element& aContextElement);
   bool IsEventBased() const;
 
-  void HandleNewInterval(nsSMILInterval& aInterval,
+  void HandleNewInterval(SMILInterval& aInterval,
                          const SMILTimeContainer* aSrcContainer);
   void HandleTargetElementChange(Element* aNewTarget);
 

@@ -54,7 +54,7 @@ let testCachedMessages = async function (state) {
       checkConsoleAPICalls(consoleCalls, expectedCachedConsoleCalls);
       resolve();
     };
-    state.client.getCachedMessages(["ConsoleAPI"], onCachedConsoleAPI);
+    state.client.getCachedMessages(["ConsoleAPI"]).then(onCachedConsoleAPI);
   })
 };
 

@@ -189,6 +189,13 @@ nsMacShellService::OnSecurityChange(nsIWebProgress* aWebProgress,
 }
 
 NS_IMETHODIMP
+nsMacShellService::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
+                                          nsIRequest* aRequest,
+                                          uint32_t aEvent) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMacShellService::OnStateChange(nsIWebProgress* aWebProgress,
                                  nsIRequest* aRequest, uint32_t aStateFlags,
                                  nsresult aStatus) {

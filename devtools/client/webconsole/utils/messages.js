@@ -44,7 +44,7 @@ function transformPacket(packet) {
       return transformConsoleAPICallPacket(packet);
     }
 
-    case "navigationMessage": {
+    case "will-navigate": {
       return transformNavigationMessagePacket(packet);
     }
 
@@ -194,14 +194,12 @@ function transformConsoleAPICallPacket(packet) {
 }
 
 function transformNavigationMessagePacket(packet) {
-  const { message } = packet;
+  const { url } = packet;
   return new ConsoleMessage({
     source: MESSAGE_SOURCE.CONSOLE_API,
     type: MESSAGE_TYPE.NAVIGATION_MARKER,
     level: MESSAGE_LEVEL.LOG,
-    messageText: l10n.getFormatStr("webconsole.navigated", [message.url]),
-    timeStamp: message.timeStamp,
-    private: message.private,
+    messageText: l10n.getFormatStr("webconsole.navigated", [url]),
   });
 }
 
@@ -346,9 +344,6 @@ function convertCachedPacket(packet) {
   } else if (packet._type === "PageError") {
     convertPacket.pageError = packet;
     convertPacket.type = "pageError";
-  } else if ("_navPayload" in packet) {
-    convertPacket.type = "navigationMessage";
-    convertPacket.message = packet;
   } else if (packet._type === "NetworkEvent") {
     convertPacket.networkEvent = packet;
     convertPacket.type = "networkEvent";

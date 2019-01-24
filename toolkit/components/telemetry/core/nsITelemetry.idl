@@ -64,56 +64,76 @@ interface nsITelemetry : nsISupports
    *   range - A 2-item array of minimum and maximum bucket size
    *   values - Map from bucket to the bucket's count
    *
-   * @param aStoreName The name of the store to snapshot. Something like "main".
+   * @param aStoreName The name of the store to snapshot.
+   *                   Defaults to "main".
+   *                   Custom stores are available when probes have them defined.
+   *                   See the `record_into_store` attribute on histograms.
+   *                   @see https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/histograms.html#record-into-store
    * @param aClearStore Whether to clear out the histograms in the named store after snapshotting.
+   *                    Defaults to false.
    * @param aFilterTest If true, `TELEMETRY_TEST_` histograms will be filtered out.
                         Filtered histograms are still cleared if `aClearStore` is true.
    *                    Defaults to false.
    */
   [implicit_jscontext]
-  jsval getSnapshotForHistograms(in ACString aStoreName, in boolean aClearStore, [optional] in boolean aFilterTest);
+  jsval getSnapshotForHistograms([optional] in ACString aStoreName, [optional] in boolean aClearStore, [optional] in boolean aFilterTest);
 
   /**
    * Serializes the keyed histograms from the given store to a JSON-style object.
    * The returned structure looks like:
    *   { "process": { "name1": { "key_1": histogramData1, "key_2": histogramData2 }, ...}, ... }
    *
-   * @param aStoreName The name of the store to snapshot. Something like "main".
+   * @param aStoreName The name of the store to snapshot.
+   *                   Defaults to "main".
+   *                   Custom stores are available when probes have them defined.
+   *                   See the `record_into_store` attribute on histograms.
+   *                   @see https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/histograms.html#record-into-store
    * @param aClearStore Whether to clear out the keyed histograms in the named store after snapshotting.
+   *                    Defaults to false.
    * @param aFilterTest If true, `TELEMETRY_TEST_` histograms will be filtered out.
                         Filtered histograms are still cleared if `aClearStore` is true.
    *                    Defaults to false.
    */
   [implicit_jscontext]
-  jsval getSnapshotForKeyedHistograms(in ACString aStoreName, in boolean aClearStore, [optional] in boolean aFilterTest);
+  jsval getSnapshotForKeyedHistograms([optional] in ACString aStoreName, [optional] in boolean aClearStore, [optional] in boolean aFilterTest);
 
   /**
    * Serializes the scalars from the given store to a JSON-style object.
    * The returned structure looks like:
    *   { "process": { "category1.probe": 1,"category1.other_probe": false, ... }, ... }.
    *
-   * @param aStoreName The name of the store to snapshot. Something like "main".
+   * @param aStoreName The name of the store to snapshot.
+   *                   Defaults to "main".
+   *                   Custom stores are available when probes have them defined.
+   *                   See the `record_into_store` attribute on scalars.
+   *                   @see https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/scalars.html#optional-fields
    * @param aClearStore Whether to clear out the scalars in the named store after snapshotting.
+   *                    Defaults to false.
    * @param aFilterTest If true, `telemetry.test` scalars will be filtered out.
                         Filtered scalars are still cleared if `aClearStore` is true.
    *                    Defaults to false.
    */
   [implicit_jscontext]
-  jsval getSnapshotForScalars(in ACString aStoreName, in boolean aClearStore, [optional] in boolean aFilterTest);
+  jsval getSnapshotForScalars([optional] in ACString aStoreName, [optional] in boolean aClearStore, [optional] in boolean aFilterTest);
 
   /**
    * Serializes the keyed scalars from the given store to a JSON-style object.
    * The returned structure looks like:
    *   { "process": { "category1.probe": { "key_1": 2, "key_2": 1, ... }, ... }, ... }
    *
-   * @param aStoreName The name of the store to snapshot. Something like "main".
+   * @param aStoreName The name of the store to snapshot.
+   *                   Defaults to "main".
+   *                   Custom stores are available when probes have them defined.
+   *                   See the `record_into_store` attribute on scalars.
+   *                   @see https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/scalars.html#optional-fields
    * @param aClearStore Whether to clear out the keyed scalars in the named store after snapshotting.
+   *                    Defaults to false.
    * @param aFilterTest If true, `telemetry.test` scalars will be filtered out.
                         Filtered scalars are still cleared if `aClearStore` is true.
    *                    Defaults to false.
    */
   [implicit_jscontext]
-  jsval getSnapshotForKeyedScalars(in ACString aStoreName, in boolean aClearStore, [optional] in boolean aFilterTest);
+  jsval getSnapshotForKeyedScalars([optional] in ACString aStoreName, [optional] in boolean aClearStore, [optional] in boolean aFilterTest);
 
   /**
    * The amount of time, in milliseconds, that the last session took

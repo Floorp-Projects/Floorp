@@ -530,9 +530,6 @@ class Target extends EventEmitter {
    * See DebuggerClient.attachTarget and DebuggerClient.attachConsole for more info.
    * It also starts listenings to events the target actor will start emitting
    * after being attached, like `tabDetached` and `frameUpdate`
-   *
-   * For webextension, it also preliminary converts addonTargetActor to a
-   * WebExtensionTargetActor.
    */
   attach() {
     if (this._attach) {
@@ -571,18 +568,6 @@ class Target extends EventEmitter {
     };
 
     this._attach = (async () => {
-      if (this.form.isWebExtension &&
-          this.client.mainRoot.traits.webExtensionAddonConnect) {
-        // The addonTargetActor form is related to a WebExtensionActor instance,
-        // which isn't a target actor on its own, it is an actor living in the parent
-        // process with access to the addon metadata, it can control the addon (e.g.
-        // reloading it) and listen to the AddonManager events related to the lifecycle of
-        // the addon (e.g. when the addon is disabled or uninstalled).
-        // To retrieve the target actor instance, we call its "connect" method, (which
-        // fetches the target actor form from a WebExtensionTargetActor instance).
-        this.activeTab = await this.activeTab.connect();
-      }
-
       // AddonTargetActor and ContentProcessTargetActor don't inherit from
       // BrowsingContextTargetActor (i.e. this.isBrowsingContext=false) and don't need
       // to be attached via DebuggerClient.attachTarget.
@@ -657,13 +642,9 @@ class Target extends EventEmitter {
     // Send any stored event payload (DOMWindow or nsIRequest) for backwards
     // compatibility with non-remotable tools.
     if (packet.state == "start") {
-      event._navPayload = this._navRequest;
       this.emit("will-navigate", event);
-      this._navRequest = null;
     } else {
-      event._navPayload = this._navWindow;
       this.emit("navigate", event);
-      this._navWindow = null;
     }
   }
 

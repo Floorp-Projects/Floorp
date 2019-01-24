@@ -166,7 +166,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mMediaEmulated(mMedium),
       mLinkHandler(nullptr),
       mInflationDisabledForShrinkWrap(false),
-      mBaseMinFontSize(0),
       mSystemFontScale(1.0),
       mTextZoom(1.0),
       mEffectiveTextZoom(1.0),

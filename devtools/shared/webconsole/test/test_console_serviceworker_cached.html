@@ -62,7 +62,7 @@ let startTest = async function () {
   await new Promise(resolve => {
     info("Attaching console to tab 1");
     attachConsoleToTab(["ConsoleAPI"], function(state) {
-      state.client.getCachedMessages(["ConsoleAPI"], function(calls) {
+      state.client.getCachedMessages(["ConsoleAPI"]).then(function(calls) {
         checkConsoleAPICalls(calls.messages, firstTabExpectedCalls);
         closeDebugger(state, resolve);
       });
@@ -77,7 +77,7 @@ let startTest = async function () {
   await new Promise(resolve => {
     info("Attaching console to tab 2");
     attachConsoleToTab(["ConsoleAPI"], function(state) {
-      state.client.getCachedMessages(["ConsoleAPI"], function(calls) {
+      state.client.getCachedMessages(["ConsoleAPI"]).then(function(calls) {
         checkConsoleAPICalls(calls.messages, secondTabExpectedCalls);
         closeDebugger(state, resolve);
       });

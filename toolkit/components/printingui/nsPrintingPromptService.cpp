@@ -205,11 +205,24 @@ nsPrintingPromptService::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 nsPrintingPromptService::OnSecurityChange(nsIWebProgress* aWebProgress,
                                           nsIRequest* aRequest,
-                                          uint32_t state) {
+                                          uint32_t aState) {
 #if !defined(XP_MACOSX)
   if (mWebProgressListener) {
     return mWebProgressListener->OnSecurityChange(aWebProgress, aRequest,
-                                                  state);
+                                                  aState);
+  }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintingPromptService::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
+                                                nsIRequest* aRequest,
+                                                uint32_t aEvent) {
+#if !defined(XP_MACOSX)
+  if (mWebProgressListener) {
+    return mWebProgressListener->OnContentBlockingEvent(aWebProgress, aRequest,
+                                                        aEvent);
   }
 #endif
   return NS_OK;

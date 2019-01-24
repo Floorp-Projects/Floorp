@@ -49,17 +49,17 @@
 #  define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, category, \
                                            ctx, flags)
 
-#define PROFILER_ADD_MARKER(markerName, category)
-#define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end, \
-                                    count, cache, timings, redirect)
+#  define PROFILER_ADD_MARKER(markerName, category)
+#  define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end, \
+                                      count, cache, timings, redirect)
 
-#define DECLARE_DOCSHELL_AND_HISTORY_ID(docShell)
-#define PROFILER_TRACING(categoryString, markerName, category, kind)
-#define PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, kind, \
-                                  docshell)
-#define AUTO_PROFILER_TRACING(categoryString, markerName, category)
-#define AUTO_PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, \
-                                       docShell)
+#  define DECLARE_DOCSHELL_AND_HISTORY_ID(docShell)
+#  define PROFILER_TRACING(categoryString, markerName, category, kind)
+#  define PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, \
+                                    kind, docshell)
+#  define AUTO_PROFILER_TRACING(categoryString, markerName, category)
+#  define AUTO_PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, \
+                                         docShell)
 
 #else  // !MOZ_GECKO_PROFILER
 
@@ -613,8 +613,8 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // certain length of time. A no-op if the profiler is inactive or in privacy
 // mode.
 
-#define PROFILER_ADD_MARKER(markerName, category) \
-  profiler_add_marker(markerName, js::ProfilingStackFrame::Category::category)
+#  define PROFILER_ADD_MARKER(markerName, category) \
+    profiler_add_marker(markerName, js::ProfilingStackFrame::Category::category)
 
 void profiler_add_marker(const char* aMarkerName,
                          js::ProfilingStackFrame::Category aCategory);
@@ -670,15 +670,15 @@ enum TracingKind {
 // Adds a tracing marker to the profile. A no-op if the profiler is inactive or
 // in privacy mode.
 
-#define PROFILER_TRACING(categoryString, markerName, category, kind) \
-  profiler_tracing(categoryString, markerName,                       \
-                   js::ProfilingStackFrame::Category::category, kind)
-#define PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, kind, \
-                                  docShell)                                   \
-  DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);                                  \
-  profiler_tracing(categoryString, markerName,                                \
-                   js::ProfilingStackFrame::Category::category, kind,         \
-                   docShellId, docShellHistoryId)
+#  define PROFILER_TRACING(categoryString, markerName, category, kind) \
+    profiler_tracing(categoryString, markerName,                       \
+                     js::ProfilingStackFrame::Category::category, kind)
+#  define PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, \
+                                    kind, docShell)                       \
+    DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);                            \
+    profiler_tracing(categoryString, markerName,                          \
+                     js::ProfilingStackFrame::Category::category, kind,   \
+                     docShellId, docShellHistoryId)
 
 void profiler_tracing(
     const char* aCategoryString, const char* aMarkerName,
@@ -693,16 +693,18 @@ void profiler_tracing(
     const mozilla::Maybe<uint32_t>& aDocShellHistoryId = mozilla::Nothing());
 
 // Adds a START/END pair of tracing markers.
-#define AUTO_PROFILER_TRACING(categoryString, markerName, category)            \
-  mozilla::AutoProfilerTracing PROFILER_RAII(                                  \
-      categoryString, markerName, js::ProfilingStackFrame::Category::category, \
-      mozilla::Nothing(), mozilla::Nothing())
-#define AUTO_PROFILER_TRACING_DOCSHELL(categoryString, markerName, category,   \
-                                       docShell)                               \
-  DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);                                   \
-  mozilla::AutoProfilerTracing PROFILER_RAII(                                  \
-      categoryString, markerName, js::ProfilingStackFrame::Category::category, \
-      docShellId, docShellHistoryId)
+#  define AUTO_PROFILER_TRACING(categoryString, markerName, category)    \
+    mozilla::AutoProfilerTracing PROFILER_RAII(                          \
+        categoryString, markerName,                                      \
+        js::ProfilingStackFrame::Category::category, mozilla::Nothing(), \
+        mozilla::Nothing())
+#  define AUTO_PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, \
+                                         docShell)                             \
+    DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);                                 \
+    mozilla::AutoProfilerTracing PROFILER_RAII(                                \
+        categoryString, markerName,                                            \
+        js::ProfilingStackFrame::Category::category, docShellId,               \
+        docShellHistoryId)
 
 //---------------------------------------------------------------------------
 // Output profiles

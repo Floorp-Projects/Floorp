@@ -25,7 +25,10 @@ updateheader {
 
 /* Update History Window */
 richlistitem.update {
-  -moz-binding: url("chrome://mozapps/content/update/updates.xml#update");
   display: -moz-box;
   -moz-box-orient: vertical;
+}
+
+.update-name {
+  -moz-box-flex: 1;
 }

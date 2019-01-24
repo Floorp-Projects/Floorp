@@ -81,6 +81,11 @@ elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_TARGET'] == 'WINNT':
     SOURCES += files['GENERIC_SOURCES']
     ASFLAGS += [ '-I%s/media/libvpx/config/win/aarch64/' % TOPSRCDIR ]
     LOCAL_INCLUDES += [ '/media/libvpx/config/win/aarch64/' ]
+elif CONFIG['CPU_ARCH'] == 'aarch64':
+    EXPORTS.vpx += files['ARM64_EXPORTS']
+    SOURCES += files['ARM64_SOURCES']
+    ASFLAGS += [ '-I%s/media/libvpx/config/linux/arm64/' % TOPSRCDIR ]
+    LOCAL_INCLUDES += [ '/media/libvpx/config/linux/arm64/' ]
 else:
     # Generic C-only configuration
     EXPORTS.vpx += files['GENERIC_EXPORTS']

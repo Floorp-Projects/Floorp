@@ -2678,6 +2678,7 @@ this.DownloadPDFSaver.prototype = {
           onLocationChange() {},
           onStatusChange() {},
           onSecurityChange() {},
+          onContentBlockingEvent() {},
         });
       });
     } finally {

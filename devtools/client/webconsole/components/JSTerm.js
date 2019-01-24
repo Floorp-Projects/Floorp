@@ -619,7 +619,7 @@ class JSTerm extends Component {
       "lines": str.split(/\n/).length,
     });
 
-    return this.webConsoleClient.evaluateJSAsync(str, null, {
+    return this.webConsoleClient.evaluateJSAsync(str, {
       frameActor: this.props.serviceContainer.getFrameActor(options.frame),
       ...options,
     });
@@ -636,8 +636,7 @@ class JSTerm extends Component {
    *         received.
    */
   copyObject(evalString, evalOptions) {
-    return this.webConsoleClient.evaluateJSAsync(`copy(${evalString})`,
-      null, evalOptions);
+    return this.webConsoleClient.evaluateJSAsync(`copy(${evalString})`, evalOptions);
   }
 
   /**

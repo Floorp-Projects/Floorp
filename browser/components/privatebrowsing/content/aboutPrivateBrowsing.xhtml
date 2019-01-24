@@ -17,13 +17,14 @@
   %aboutPrivateBrowsingDTD;
 ]>
 
-<html xmlns="http://www.w3.org/1999/xhtml" class="private">
+<html xmlns="http://www.w3.org/1999/xhtml" class="private no-search-ui">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src chrome:"/>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome: blob:"/>
     <link rel="icon" type="image/png" href="chrome://browser/skin/privatebrowsing/favicon.svg"/>
     <link rel="stylesheet" href="chrome://browser/content/aboutPrivateBrowsing.css" type="text/css" media="all"/>
     <link rel="stylesheet" href="chrome://browser/skin/privatebrowsing/aboutPrivateBrowsing.css" type="text/css" media="all"/>
     <script type="application/javascript" src="chrome://browser/content/aboutPrivateBrowsing.js"></script>
+    <script type="application/javascript" src="chrome://browser/content/contentSearchUI.js"></script>
   </head>
 
   <body dir="&locale.dir;">
@@ -31,7 +32,7 @@
     <button id="startPrivateBrowsing"
             class="showNormal"
             accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;">&privatebrowsingpage.openPrivateWindow.label;</button>
-    <div class="showPrivate container">
+    <div class="showPrivate dontShowSearch container">
       <h1 class="title">
         <span id="title">&privateBrowsing.title;</span>
       </h1>
@@ -66,6 +67,28 @@
       <section class="section-main">
         <p class="about-info">&aboutPrivateBrowsing.learnMore3.before;<a id="learnMore" target="_blank">&aboutPrivateBrowsing.learnMore3.title;</a>&aboutPrivateBrowsing.learnMore3.after;</p>
       </section>
+    </div>
+    <div class="showPrivate showSearch container">
+      <div class="logo-and-wordmark">
+        <div class="logo" />
+        <div class="wordmark" />
+      </div>
+      <div class="search-inner-wrapper">
+        <button id="search-handoff-button" class="search-handoff-button" title="&aboutPrivateBrowsing.search.placeholder;" tabindex="-1">
+          <div class="fake-textbox">&aboutPrivateBrowsing.search.placeholder;</div>
+          <div id="fake-editable" class="fake-editable" tabindex="-1" aria-hidden="true" contenteditable="" />
+          <div class="fake-caret" />
+        </button>
+        <input id="dummy-input" class="dummy-input" type="search" />
+      </div>
+      <div class="info">
+        <h1>&aboutPrivateBrowsing.info.title;</h1>
+        <p>
+          &aboutPrivateBrowsing.info.description;
+          <br/>
+          <a id="private-browsing-myths">&aboutPrivateBrowsing.info.myths;</a>
+        </p>
+      </div>
     </div>
   </body>
 </html>

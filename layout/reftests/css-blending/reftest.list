@@ -41,7 +41,7 @@ fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-40000) == background-blending-image-col
 fuzzy(0-65,0-53) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
 
 fuzzy-if(d3d11,0-49,0-200) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
-fuzzy-if(d3d11,0-1,0-5) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
+fuzzy-if(webrender,9-9,2531-2716) fuzzy-if(d3d11,0-1,0-5) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
 
 fuzzy(0-2,0-14400) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
 

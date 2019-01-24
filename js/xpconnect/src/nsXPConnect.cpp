@@ -91,7 +91,7 @@ nsXPConnect::~nsXPConnect() {
   // XPConnect, to clean the stuff we forcibly disconnected. The forced
   // shutdown code defaults to leaking in a number of situations, so we can't
   // get by with only the second GC. :-(
-  mRuntime->GarbageCollect(JS::gcreason::XPCONNECT_SHUTDOWN);
+  mRuntime->GarbageCollect(JS::GCReason::XPCONNECT_SHUTDOWN);
 
   mShuttingDown = true;
   XPCWrappedNativeScope::SystemIsBeingShutDown();
@@ -101,7 +101,7 @@ nsXPConnect::~nsXPConnect() {
   // after which point we need to GC to clean everything up. We need to do
   // this before deleting the XPCJSContext, because doing so destroys the
   // maps that our finalize callback depends on.
-  mRuntime->GarbageCollect(JS::gcreason::XPCONNECT_SHUTDOWN);
+  mRuntime->GarbageCollect(JS::GCReason::XPCONNECT_SHUTDOWN);
 
   NS_RELEASE(gSystemPrincipal);
   gScriptSecurityManager = nullptr;

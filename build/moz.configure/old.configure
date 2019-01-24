@@ -76,17 +76,8 @@ def prepare_mozconfig(mozconfig):
         return items
 
 
-@dependable
-@imports('logging')
-def config_log():
-    logger = logging.getLogger('moz.configure')
-    for handler in logger.handlers:
-        if isinstance(handler, logging.FileHandler):
-            return handler
-
-
 @depends('OLD_CONFIGURE', prepare_mozconfig, autoconf, check_build_environment,
-         shell, old_configure_assignments, build_project, config_log)
+         shell, old_configure_assignments, build_project)
 @imports(_from='__builtin__', _import='open')
 @imports(_from='__builtin__', _import='print')
 @imports(_from='__builtin__', _import='sorted')
@@ -98,7 +89,7 @@ def config_log():
 @imports(_from='os.path', _import='exists')
 @imports(_from='mozbuild.shellutil', _import='quote')
 def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
-                      old_configure_assignments, build_project, config_log):
+                      old_configure_assignments, build_project):
     # os.path.abspath in the sandbox will ensure forward slashes on Windows,
     # which is actually necessary because this path actually ends up literally
     # as $0, and backslashes there breaks autoconf's detection of the source
@@ -136,11 +127,7 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
 
         # Make old-configure append to config.log, where we put our own log.
         # This could be done with a m4 macro, but it's way easier this way
-        if config_log:
-            path = config_log.baseFilename
-        else:
-            path = '/dev/null'
-        script = script.replace('>./config.log', '>>%s' % quote(normsep(path)))
+        script = script.replace('>./config.log', '>>${CONFIG_LOG=./config.log}')
 
         with open(old_configure, 'wb') as fh:
             fh.write(script)
@@ -309,7 +296,7 @@ def prepare_configure_options(extra_old_configure_args, all_options, *options):
     return namespace(options=options, extra_env=extra_env, all_options=all_options)
 
 
-@depends(prepare_configure, prepare_configure_options, config_log)
+@depends(prepare_configure, prepare_configure_options)
 @imports(_from='__builtin__', _import='compile')
 @imports(_from='__builtin__', _import='open')
 @imports('logging')
@@ -320,7 +307,7 @@ def prepare_configure_options(extra_old_configure_args, all_options, *options):
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.shellutil', _import='split')
 @imports(_from='mozbuild.util', _import='encode')
-def old_configure(prepare_configure, prepare_configure_options, config_log):
+def old_configure(prepare_configure, prepare_configure_options):
     cmd = prepare_configure + prepare_configure_options.options
     extra_env = prepare_configure_options.extra_env
 
@@ -337,11 +324,15 @@ def old_configure(prepare_configure, prepare_configure_options, config_log):
     # Our logging goes to config.log, the same file old.configure uses.
     # We can't share the handle on the file, so close it.
     logger = logging.getLogger('moz.configure')
-    if config_log:
-        config_log.close()
-        logger.removeHandler(config_log)
-
-        log_size = os.path.getsize(config_log.baseFilename)
+    config_log = None
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            config_log = handler
+            config_log.close()
+            logger.removeHandler(config_log)
+            env['CONFIG_LOG'] = config_log.baseFilename
+            log_size = os.path.getsize(config_log.baseFilename)
+            break
 
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             env=encode(env))

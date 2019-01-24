@@ -151,7 +151,7 @@ static inline void GetterSetterWriteBarrierPost(AccessorShape* shape) {
   if (nurseryShapes.length() == 1) {
     sb->putGeneric(NurseryShapesRef(shape->zone()));
   } else if (nurseryShapes.length() == MaxShapeVectorLength) {
-    sb->setAboutToOverflow(JS::gcreason::FULL_SHAPE_BUFFER);
+    sb->setAboutToOverflow(JS::GCReason::FULL_SHAPE_BUFFER);
   }
 }
 

@@ -3772,7 +3772,8 @@ Tab.prototype = {
 
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
                 Ci.nsIWebProgress.NOTIFY_LOCATION |
-                Ci.nsIWebProgress.NOTIFY_SECURITY;
+                Ci.nsIWebProgress.NOTIFY_SECURITY |
+                Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING;
     this.filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"].createInstance(Ci.nsIWebProgress);
     this.filter.addProgressListener(this, flags)
     this.browser.addProgressListener(this.filter, flags);
@@ -4751,6 +4752,26 @@ Tab.prototype = {
       type: "Content:SecurityChange",
       tabID: this.id,
       identity: identity
+    };
+
+    GlobalEventDispatcher.sendRequest(message);
+  },
+
+  // Cache last tracking event to limit firings and only propagate changes
+  _tracking: null,
+
+  onContentBlockingEvent: function(aWebProgress, aRequest, aState) {
+    let trackingMode = IdentityHandler.getTrackingMode(aState, this.browser);
+    if (this._tracking == trackingMode) {
+        return;
+    } else {
+        this._tracking = trackingMode;
+    }
+
+    let message = {
+      type: "Content:ContentBlockingEvent",
+      tabID: this.id,
+      tracking: trackingMode
     };
 
     GlobalEventDispatcher.sendRequest(message);
@@ -5815,14 +5836,12 @@ var IdentityHandler = {
     let identityMode = this.getIdentityMode(aState, this._uri);
     let mixedDisplay = this.getMixedDisplayMode(aState);
     let mixedActive = this.getMixedActiveMode(aState);
-    let trackingMode = this.getTrackingMode(aState, aBrowser);
     let result = {
       origin: locationObj.origin,
       mode: {
         identity: identityMode,
         mixed_display: mixedDisplay,
         mixed_active: mixedActive,
-        tracking: trackingMode
       }
     };
 

@@ -422,4 +422,5 @@ PrintingListener.prototype = {
   onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {},
   onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {},
   onSecurityChange(aWebProgress, aRequest, aState) {},
+  onContentBlockingEvent(aWebProgress, aRequest, aEvent) {},
 };

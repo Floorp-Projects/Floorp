@@ -13679,7 +13679,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_dynamic_import() {
 
   MDefinition* specifier = current->pop();
 
-  MDynamicImport* ins = MDynamicImport::New(alloc(), referencingScriptSource, specifier);
+  MDynamicImport* ins =
+      MDynamicImport::New(alloc(), referencingScriptSource, specifier);
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins);

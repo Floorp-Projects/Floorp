@@ -464,7 +464,7 @@ bool TestCCWs() {
   CHECK(GetCrossCompartmentWrapper(target) == wrapper);
   CHECK(IsMarkedBlack(wrapper));
 
-  JS::FinishIncrementalGC(cx, JS::gcreason::API);
+  JS::FinishIncrementalGC(cx, JS::GCReason::API);
 
   // Test behaviour of gray CCWs marked black by a barrier during incremental
   // GC.
@@ -500,7 +500,7 @@ bool TestCCWs() {
   CHECK(!JS::ObjectIsMarkedGray(target));
 
   // Final state: source and target are black.
-  JS::FinishIncrementalGC(cx, JS::gcreason::API);
+  JS::FinishIncrementalGC(cx, JS::GCReason::API);
   CHECK(IsMarkedBlack(wrapper));
   CHECK(IsMarkedBlack(target));
 
@@ -739,7 +739,7 @@ bool ZoneGC(JS::Zone* zone) {
   uint32_t oldMode = JS_GetGCParameter(cx, JSGC_MODE);
   JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE);
   JS::PrepareZoneForGC(zone);
-  cx->runtime()->gc.gc(GC_NORMAL, JS::gcreason::API);
+  cx->runtime()->gc.gc(GC_NORMAL, JS::GCReason::API);
   CHECK(!cx->runtime()->gc.isFullGc());
   JS_SetGCParameter(cx, JSGC_MODE, oldMode);
   return true;

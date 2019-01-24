@@ -14,7 +14,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
 public class testTrackingProtection extends JavascriptTest implements BundleEventListener {
-    private String mLastTracking;
+    private String mLastTracking = "unknown";   // Default value if no events received yet
 
     public testTrackingProtection() {
         super("testTrackingProtection.js");
@@ -23,16 +23,14 @@ public class testTrackingProtection extends JavascriptTest implements BundleEven
     @Override // BundleEventListener
     public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
-        if ("Content:SecurityChange".equals(event)) {
-            final GeckoBundle identity = message.getBundle("identity");
-            final GeckoBundle mode = identity.getBundle("mode");
-            mLastTracking = mode.getString("tracking");
+        if ("Content:ContentBlockingEvent".equals(event)) {
+            mLastTracking = message.getString("tracking");
             mAsserter.dumpLog("Security change (tracking): " + mLastTracking);
 
         } else if ("Test:Expected".equals(event)) {
             final String expected = message.getString("expected");
+            mAsserter.dumpLog("Testing (tracking): 2" + mLastTracking + " = " + expected);
             mAsserter.is(mLastTracking, expected, "Tracking matched expectation");
-            mAsserter.dumpLog("Testing (tracking): " + mLastTracking + " = " + expected);
         }
     }
 
@@ -41,7 +39,7 @@ public class testTrackingProtection extends JavascriptTest implements BundleEven
         super.setUp();
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
-                                                               "Content:SecurityChange",
+                                                               "Content:ContentBlockingEvent",
                                                                "Test:Expected");
     }
 
@@ -50,7 +48,7 @@ public class testTrackingProtection extends JavascriptTest implements BundleEven
         super.tearDown();
 
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
-                                                                 "Content:SecurityChange",
+                                                                 "Content:ContentBlockingEvent",
                                                                  "Test:Expected");
     }
 }

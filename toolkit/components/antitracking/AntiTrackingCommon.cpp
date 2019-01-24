@@ -623,7 +623,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     nsIChannel* channel =
         pwin->GetCurrentInnerWindow()->GetExtantDoc()->GetChannel();
 
-    pwin->NotifyContentBlockingState(blockReason, channel, false, trackingURI);
+    pwin->NotifyContentBlockingEvent(blockReason, channel, false, trackingURI);
 
     ReportUnblockingConsole(parentWindow, NS_ConvertUTF8toUTF16(trackingOrigin),
                             NS_ConvertUTF8toUTF16(origin), aReason);
@@ -1483,12 +1483,12 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   aChannel->GetURI(getter_AddRefs(uri));
 
   if (aDecision == BlockingDecision::eBlock) {
-    pwin->NotifyContentBlockingState(aRejectedReason, aChannel, true, uri);
+    pwin->NotifyContentBlockingEvent(aRejectedReason, aChannel, true, uri);
 
     ReportBlockingToConsole(pwin, uri, aRejectedReason);
   }
 
-  pwin->NotifyContentBlockingState(nsIWebProgressListener::STATE_COOKIES_LOADED,
+  pwin->NotifyContentBlockingEvent(nsIWebProgressListener::STATE_COOKIES_LOADED,
                                    aChannel, false, uri);
 }
 
@@ -1532,12 +1532,12 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   nsIURI* uri = document->GetDocumentURI();
 
   if (aDecision == BlockingDecision::eBlock) {
-    pwin->NotifyContentBlockingState(aRejectedReason, channel, true, uri);
+    pwin->NotifyContentBlockingEvent(aRejectedReason, channel, true, uri);
 
     ReportBlockingToConsole(pwin, uri, aRejectedReason);
   }
 
-  pwin->NotifyContentBlockingState(nsIWebProgressListener::STATE_COOKIES_LOADED,
+  pwin->NotifyContentBlockingEvent(nsIWebProgressListener::STATE_COOKIES_LOADED,
                                    channel, false, uri);
 }
 

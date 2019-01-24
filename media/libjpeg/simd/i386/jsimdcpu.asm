@@ -87,8 +87,10 @@ EXTN(jpeg_simd_cpu_support):
     mov         eax, 1
     xor         ecx, ecx
     cpuid
-    test        ecx, 1<<27
+    test        ecx, 1<<26
     jz          short .no_avx2          ; O/S does not support XSAVE
+    test        ecx, 1<<27
+    jz          short .no_avx2          ; O/S does not support OSXSAVE
     test        ecx, 1<<28
     jz          short .no_avx2          ; CPU does not support AVX2
 

@@ -69,19 +69,21 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
 
   info("Reload tracking cookies tab");
-  securityChanged = waitForSecurityChange(2, tabbrowser.ownerGlobal);
+  securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
+  let contentBlockingEvent = waitForContentBlockingEvent(2, tabbrowser.ownerGlobal);
   tabbrowser.reload();
-  await securityChanged;
+  await Promise.all([securityChanged, contentBlockingEvent]);
 
   ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
   ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");
   await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
 
   info("Reload tracking tab");
-  securityChanged = waitForSecurityChange(3, tabbrowser.ownerGlobal);
+  securityChanged = waitForSecurityChange(2, tabbrowser.ownerGlobal);
+  contentBlockingEvent = waitForContentBlockingEvent(3, tabbrowser.ownerGlobal);
   tabbrowser.selectedTab = trackingTab;
   tabbrowser.reload();
-  await securityChanged;
+  await Promise.all([securityChanged, contentBlockingEvent]);
 
   ok(ContentBlocking.iconBox.hasAttribute("active"), "iconBox active");
   ok(ContentBlocking.iconBox.hasAttribute("animate"), "iconBox animating");

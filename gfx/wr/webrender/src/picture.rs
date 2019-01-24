@@ -535,12 +535,6 @@ pub struct TileCache {
     opacity_bindings: FastHashMap<PropertyBindingId, OpacityBindingInfo>,
     /// The current dirty region tracker for this picture.
     pub dirty_region: DirtyRegion,
-    /// If true, we need to update the prim dependencies, due
-    /// to relative transforms changing. The dependencies are
-    /// stored in each tile, and are a list of things that
-    /// force the tile to re-rasterize if they change (e.g.
-    /// images, transforms).
-    needs_update: bool,
     /// The current world reference point that tiles are created around.
     world_origin: WorldPoint,
     /// Current size of tiles in world units.
@@ -680,7 +674,6 @@ impl TileCache {
             tiles_to_draw: Vec::new(),
             opacity_bindings: FastHashMap::default(),
             dirty_region: DirtyRegion::new(),
-            needs_update: true,
             world_origin: WorldPoint::zero(),
             world_tile_size: WorldSize::zero(),
             tile_count: TileSize::zero(),
@@ -926,10 +919,6 @@ impl TileCache {
             // TODO(gw): Should we explicitly drop the tile texture cache handles here?
         }
 
-        // TODO(gw): We don't actually need to update the prim dependencies each frame.
-        //           For common cases, such as only being one main scroll root, we could
-        //           detect this and skip the dependency update on scroll frames.
-        self.needs_update = true;
         self.world_bounding_rect = WorldRect::zero();
         self.root_clip_rect = WorldRect::max_rect();
 
@@ -981,11 +970,9 @@ impl TileCache {
                 }
             }
 
-            if self.needs_update {
-                // Clear any dependencies so that when we rebuild them we
-                // can compare if the tile has the same content.
-                tile.clear();
-            }
+            // Clear any dependencies so that when we rebuild them we
+            // can compare if the tile has the same content.
+            tile.clear();
         }
     }
 
@@ -993,6 +980,7 @@ impl TileCache {
     pub fn update_prim_dependencies(
         &mut self,
         prim_instance: &PrimitiveInstance,
+        prim_rect: LayoutRect,
         clip_scroll_tree: &ClipScrollTree,
         data_stores: &DataStores,
         clip_chain_nodes: &[ClipChainNode],
@@ -1000,47 +988,31 @@ impl TileCache {
         resource_cache: &ResourceCache,
         opacity_binding_store: &OpacityBindingStorage,
         image_instances: &ImageInstanceStorage,
-    ) {
-        if !self.needs_update {
-            return;
-        }
-
+    ) -> bool {
         self.map_local_to_world.set_target_spatial_node(
             prim_instance.spatial_node_index,
             clip_scroll_tree,
         );
 
-        let prim_data = &data_stores.as_common_data(&prim_instance);
-
-        let prim_rect = match prim_instance.kind {
-            PrimitiveInstanceKind::Picture { pic_index, .. } => {
-                let pic = &pictures[pic_index.0];
-                pic.local_rect
-            }
-            _ => {
-                LayoutRect::new(
-                    prim_instance.prim_origin,
-                    prim_data.prim_size,
-                )
-            }
-        };
-
         // Map the primitive local rect into world space.
         let world_rect = match self.map_local_to_world.map(&prim_rect) {
             Some(rect) => rect,
-            None => {
-                return;
-            }
+            None => return false,
         };
 
         // If the rect is invalid, no need to create dependencies.
-        // TODO(gw): Need to handle pictures with filters here.
         if world_rect.size.width <= 0.0 || world_rect.size.height <= 0.0 {
-            return;
+            return false;
         }
 
         // Get the tile coordinates in the picture space.
         let (p0, p1) = self.get_tile_coords_for_rect(&world_rect);
+
+        // If the primitive is outside the tiling rects, it's known to not
+        // be visible.
+        if p0.x == p1.x || p0.y == p1.y {
+            return false;
+        }
 
         // Build the list of resources that this primitive has dependencies on.
         let mut opacity_bindings: SmallVec<[OpacityBinding; 4]> = SmallVec::new();
@@ -1298,6 +1270,8 @@ impl TileCache {
                 }
             }
         }
+
+        true
     }
 
     /// Apply any updates after prim dependency updates. This applies

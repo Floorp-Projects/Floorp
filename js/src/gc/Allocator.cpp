@@ -108,7 +108,7 @@ JSObject* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
   }
 
   if (allowGC && !cx->suppressGC) {
-    cx->runtime()->gc.minorGC(JS::gcreason::OUT_OF_NURSERY);
+    cx->runtime()->gc.minorGC(JS::GCReason::OUT_OF_NURSERY);
 
     // Exceeding gcMaxBytes while tenuring can disable the Nursery.
     if (cx->nursery().isEnabled()) {
@@ -164,7 +164,7 @@ JSString* GCRuntime::tryNewNurseryString(JSContext* cx, size_t thingSize,
   }
 
   if (allowGC && !cx->suppressGC) {
-    cx->runtime()->gc.minorGC(JS::gcreason::OUT_OF_NURSERY);
+    cx->runtime()->gc.minorGC(JS::GCReason::OUT_OF_NURSERY);
 
     // Exceeding gcMaxBytes while tenuring can disable the Nursery, and
     // other heuristics can disable nursery strings for this zone.
@@ -276,7 +276,7 @@ template <typename T, AllowGC allowGC>
         // all-compartments, non-incremental, shrinking GC and wait for
         // sweeping to finish.
         JS::PrepareForFullGC(cx);
-        cx->runtime()->gc.gc(GC_SHRINK, JS::gcreason::LAST_DITCH);
+        cx->runtime()->gc.gc(GC_SHRINK, JS::GCReason::LAST_DITCH);
         cx->runtime()->gc.waitBackgroundSweepOrAllocEnd();
 
         t = tryNewTenuredThing<T, NoGC>(cx, kind, thingSize);
@@ -351,7 +351,7 @@ bool GCRuntime::gcIfNeededAtAllocation(JSContext* cx) {
   if (isIncrementalGCInProgress() &&
       cx->zone()->zoneSize.gcBytes() > cx->zone()->threshold.gcTriggerBytes()) {
     PrepareZoneForGC(cx->zone());
-    gc(GC_NORMAL, JS::gcreason::INCREMENTAL_TOO_SLOW);
+    gc(GC_NORMAL, JS::GCReason::INCREMENTAL_TOO_SLOW);
   }
 
   return true;

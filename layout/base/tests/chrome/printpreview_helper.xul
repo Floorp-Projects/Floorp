@@ -33,6 +33,7 @@ function printpreview() {
     onSecurityChange: function(webProgress, request, state) { },
     onStateChange: function(webProgress, request, stateFlags, status) { },
     onStatusChange: function(webProgress, request, status, message) { },
+    onContentBlockingEvent: function(webProgress, request, event) { },
     QueryInterface: function(iid) {
       if (iid.equals(Ci.nsIWebProgressListener) ||
           iid.equals(Ci.nsISupportsWeakReference))

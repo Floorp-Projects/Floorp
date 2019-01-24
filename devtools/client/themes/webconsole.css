@@ -70,6 +70,12 @@ a {
   position: relative;
 }
 
+@media (min-width: 1000px) {
+  .message {
+    padding-inline-end: 12px;
+  }
+}
+
 /*
  * By default, prevent any element in message to overflow.
  * This makes console reflows faster (See Bug 1487457).
@@ -260,37 +266,27 @@ a {
   max-width: 40vw;
   flex-shrink: 0;
   color: var(--frame-link-source);
-  margin-inline-start: 5px;
-  margin-inline-end: 10px;
+  margin-inline-start: 1ch;
 }
 
-.stack-trace {
-  /* The markup contains extra whitespace to improve formatting of clipboard text.
-     Make sure this whitespace doesn't affect the HTML rendering */
-  white-space: normal;
+.message-location:empty {
+  display: none;
 }
 
-.message-location,
-.stack-trace .frame-link-source {
+.message-location .frame-link-source {
   /* Makes the file name truncated (and ellipsis shown) on the left side */
   direction: rtl;
+  display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: end;
 }
 
-.stack-trace .frame-link-source-inner,
 .message-location .frame-link-source-inner {
   /* Enforce LTR direction for the file name - fixes bug 1290056 */
   direction: ltr;
   unicode-bidi: embed;
-}
-
-.stack-trace .frame-link-function-display-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .message-flex-body {
@@ -342,7 +338,7 @@ a {
 
 .message.network .status {
   flex: none;
-  margin-inline-start: 6px;
+  margin-inline-start: 1ch;
   cursor: default;
 }
 
@@ -353,7 +349,7 @@ a {
 
 .message .learn-more-link {
   color: var(--theme-highlight-blue);
-  margin: 0 6px;
+  margin: 0 1ch;
 }
 
 .message.network .xhr {
@@ -697,7 +693,7 @@ a.learn-more-link.webconsole-learn-more-link {
 /* Network Messages */
 
 .webconsole-output-wrapper .message.network .method {
-  margin-inline-end: 5px;
+  margin-inline-end: 1ch;
 }
 
 .webconsole-output-wrapper .message.network .xhr {

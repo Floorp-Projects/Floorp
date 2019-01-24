@@ -4411,7 +4411,7 @@ void JSScript::traceChildren(JSTracer* trc) {
   jit::TraceJitScripts(trc, this);
 
   if (trc->isMarkingTracer()) {
-    return GCMarker::fromTracer(trc)->markImplicitEdges(this);
+    GCMarker::fromTracer(trc)->markImplicitEdges(this);
   }
 }
 

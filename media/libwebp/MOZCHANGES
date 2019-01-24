@@ -1,5 +1,7 @@
 Changes made to pristine libwebp source by mozilla.org developers.
 
+2018/01/21  -- Synced with libwebp-1.0.2 (bug 1521478).
+
 2018/11/26  -- Synced with libwebp-1.0.1 (bug 1509878).
 
 2018/10/04  -- Synced with libwebp-1.0.0 (bug #1294490).

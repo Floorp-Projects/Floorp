@@ -81,6 +81,10 @@ nsLDBBrowserContentListener.prototype = {
     {
     },
 
+  onContentBlockingEvent : function(aWebProgress, aRequest, aEvent)
+    {
+    },
+
   // non-interface methods
   setButtonEnabled : function(aButtonElement, aEnabled)
     {

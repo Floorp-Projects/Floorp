@@ -246,6 +246,8 @@ class nsContentSink : public nsICSSLoaderObserver,
 
   static void NotifyDocElementCreated(Document* aDoc);
 
+  Document* GetDocument() { return mDocument; }
+
  protected:
   void FavorPerformanceHint(bool perfOverStarvation, uint32_t starvationDelay);
 

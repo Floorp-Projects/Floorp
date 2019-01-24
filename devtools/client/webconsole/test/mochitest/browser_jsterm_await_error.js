@@ -89,4 +89,9 @@ async function performTests() {
   info("Check that there's no result message");
   is(hud.ui.outputNode.querySelectorAll(".message.result").length, 0,
     "There is no result messages");
+
+  info("Check that malformed await expressions displays a meaningful error");
+  res = await executeAndWaitForErrorMessage(
+    `await new Promise())`, `SyntaxError: unexpected token: ')'`);
+  ok(res.node, "awaiting for a malformed expression displays a meaningful error");
 }

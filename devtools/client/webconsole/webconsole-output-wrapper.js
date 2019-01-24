@@ -483,8 +483,9 @@ WebConsoleOutputWrapper.prototype = {
     // but we don't want to reset console history and just switch to
     // the next available window.
     if (ui.persistLogs || this.hud.isBrowserConsole) {
-      // Add a _type to hit convertCachedPacket.
-      packet._type = true;
+      // Add a type in order for this event packet to be identified by
+      // utils/messages.js's `transformPacket`
+      packet.type = "will-navigate";
       this.dispatchMessageAdd(packet);
     } else {
       this.hud.webConsoleClient.clearNetworkRequests();

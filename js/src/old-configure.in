@@ -13,7 +13,7 @@ AC_CANONICAL_SYSTEM
 
 dnl ========================================================
 dnl =
-dnl = Don't change the following lines.  Doing so breaks:
+dnl = Don't change the following lines. Doing so breaks:
 dnl =
 dnl = CFLAGS="-foo" ./configure
 dnl =

@@ -126,6 +126,13 @@ class NavigateLoadListener final : public nsIWebProgressListener,
     return NS_OK;
   }
 
+  NS_IMETHOD
+  OnContentBlockingEvent(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
+                         uint32_t aEvent) override {
+    MOZ_CRASH("Unexpected notification.");
+    return NS_OK;
+  }
+
   NS_DECL_ISUPPORTS
 };
 

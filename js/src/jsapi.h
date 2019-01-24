@@ -2585,9 +2585,8 @@ using ScriptPrivateReferenceHook = void (*)(const JS::Value&);
  * Set the script private finalize hook for the runtime to the given function.
  */
 extern JS_PUBLIC_API void SetScriptPrivateReferenceHooks(
-  JSRuntime* rt,
-  ScriptPrivateReferenceHook addRefHook,
-  ScriptPrivateReferenceHook releaseHook);
+    JSRuntime* rt, ScriptPrivateReferenceHook addRefHook,
+    ScriptPrivateReferenceHook releaseHook);
 
 /*
  * Perform the ModuleInstantiate operation on the given source text module

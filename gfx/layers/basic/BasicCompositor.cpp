@@ -6,6 +6,7 @@
 
 #include "BasicCompositor.h"
 #include "BasicLayersImpl.h"  // for FillRectWithMask
+#include "GeckoProfiler.h"
 #include "TextureHostBasic.h"
 #include "mozilla/layers/Effects.h"
 #include "nsIWidget.h"
@@ -13,10 +14,12 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/gfx/Swizzle.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/ssse3-scaler.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/SSE.h"
+#include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "YCbCrUtils.h"
 #include <algorithm>
@@ -177,9 +180,42 @@ class WrappingTextureSourceYCbCrBasic : public DataTextureSource,
   bool mNeedsUpdate;
 };
 
+class BasicAsyncReadbackBuffer final : public AsyncReadbackBuffer {
+ public:
+  explicit BasicAsyncReadbackBuffer(const IntSize& aSize)
+      : AsyncReadbackBuffer(aSize) {}
+
+  bool MapAndCopyInto(DataSourceSurface* aSurface,
+                      const IntSize& aReadSize) const override;
+
+  void TakeSurface(SourceSurface* aSurface) { mSurface = aSurface; }
+
+ private:
+  RefPtr<SourceSurface> mSurface;
+};
+
+bool BasicAsyncReadbackBuffer::MapAndCopyInto(DataSourceSurface* aSurface,
+                                              const IntSize& aReadSize) const {
+  if (!mSurface) {
+    return false;
+  }
+
+  MOZ_RELEASE_ASSERT(aReadSize <= aSurface->GetSize());
+  RefPtr<DataSourceSurface> source = mSurface->GetDataSurface();
+
+  DataSourceSurface::ScopedMap sourceMap(source, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap destMap(aSurface, DataSourceSurface::WRITE);
+
+  return SwizzleData(sourceMap.GetData(), sourceMap.GetStride(),
+                     mSurface->GetFormat(), destMap.GetData(),
+                     destMap.GetStride(), aSurface->GetFormat(), aReadSize);
+}
+
 BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent,
                                  widget::CompositorWidget* aWidget)
-    : Compositor(aWidget, aParent), mIsPendingEndRemoteDrawing(false) {
+    : Compositor(aWidget, aParent),
+      mIsPendingEndRemoteDrawing(false),
+      mFullWindowRenderTarget(nullptr) {
   MOZ_COUNT_CTOR(BasicCompositor);
 
   mMaxTextureSize = Factory::GetMaxSurfaceSize(gfxVars::ContentBackend());
@@ -281,6 +317,10 @@ BasicCompositor::CreateRenderTargetForWindow(
     if (!aClearRect.IsEmpty()) {
       IntRect clearRect = aClearRect.ToUnknownRect();
       mDrawTarget->ClearRect(Rect(clearRect - rt->GetOrigin()));
+
+      if (mFullWindowRenderTarget) {
+        mFullWindowRenderTarget->mDrawTarget->ClearRect(Rect(clearRect));
+      }
     }
   }
 
@@ -807,6 +847,36 @@ void BasicCompositor::DrawGeometry(
 
 void BasicCompositor::ClearRect(const gfx::Rect& aRect) {
   mRenderTarget->mDrawTarget->ClearRect(aRect);
+
+  if (mFullWindowRenderTarget) {
+    mFullWindowRenderTarget->mDrawTarget->ClearRect(aRect);
+  }
+}
+
+bool BasicCompositor::ReadbackRenderTarget(CompositingRenderTarget* aSource,
+                                           AsyncReadbackBuffer* aDest) {
+  RefPtr<SourceSurface> snapshot =
+      static_cast<BasicCompositingRenderTarget*>(aSource)
+          ->mDrawTarget->Snapshot();
+  static_cast<BasicAsyncReadbackBuffer*>(aDest)->TakeSurface(snapshot);
+  return true;
+}
+
+already_AddRefed<AsyncReadbackBuffer>
+BasicCompositor::CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) {
+  return MakeAndAddRef<BasicAsyncReadbackBuffer>(aSize);
+}
+
+bool BasicCompositor::BlitRenderTarget(CompositingRenderTarget* aSource,
+                                       const gfx::IntSize& aSourceSize,
+                                       const gfx::IntSize& aDestSize) {
+  RefPtr<SourceSurface> surface =
+      static_cast<BasicCompositingRenderTarget*>(aSource)
+          ->mDrawTarget->Snapshot();
+  mRenderTarget->mDrawTarget->DrawSurface(
+      surface, Rect(Point(), Size(aDestSize)), Rect(Point(), Size(aSourceSize)),
+      DrawSurfaceOptions(), DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+  return true;
 }
 
 void BasicCompositor::BeginFrame(
@@ -823,12 +893,27 @@ void BasicCompositor::BeginFrame(
   LayoutDeviceIntRect intRect(LayoutDeviceIntPoint(), mWidget->GetClientSize());
   IntRect rect = IntRect(0, 0, intRect.Width(), intRect.Height());
 
-  LayoutDeviceIntRegion invalidRegionSafe;
-  // Sometimes the invalid region is larger than we want to draw.
-  invalidRegionSafe.And(
-      LayoutDeviceIntRegion::FromUnknownRegion(aInvalidRegion), intRect);
+#ifdef MOZ_GECKO_PROFILER
+  const bool shouldInvalidateWindow =
+      (profiler_feature_active(ProfilerFeature::Screenshots) &&
+       (!mFullWindowRenderTarget ||
+        mFullWindowRenderTarget->mDrawTarget->GetSize() !=
+            rect.ToUnknownRect().Size()));
+#else
+  const bool shouldInvalidateWindow = false;
+#endif  // MOZ_GECKO_PROFILER
 
-  mInvalidRegion = invalidRegionSafe;
+  if (shouldInvalidateWindow) {
+    mInvalidRegion = intRect;
+  } else {
+    LayoutDeviceIntRegion invalidRegionSafe;
+    // Sometimes the invalid region is larger than we want to draw.
+    invalidRegionSafe.And(
+        LayoutDeviceIntRegion::FromUnknownRegion(aInvalidRegion), intRect);
+
+    mInvalidRegion = invalidRegionSafe;
+  }
+
   mInvalidRect = mInvalidRegion.GetBounds();
 
   if (aRenderBoundsOut) {
@@ -878,6 +963,27 @@ void BasicCompositor::BeginFrame(
   // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
   RefPtr<CompositingRenderTarget> target =
       CreateRenderTargetForWindow(mInvalidRect, clearRect, bufferMode);
+
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_feature_active(ProfilerFeature::Screenshots)) {
+    IntSize windowSize = rect.ToUnknownRect().Size();
+
+    // On some platforms (notably Linux with X11) we do not always have a
+    // full-size draw target. While capturing profiles with screenshots, we need
+    // access to a full-size target so we can record the contents.
+    if (!mFullWindowRenderTarget ||
+        mFullWindowRenderTarget->mDrawTarget->GetSize() != windowSize) {
+      // We have either (1) just started recording and not yet allocated a
+      // buffer or (2) are already recording and have resized the window. In
+      // either case, we need a new render target.
+      RefPtr<gfx::DrawTarget> drawTarget = mDrawTarget->CreateSimilarDrawTarget(
+          windowSize, mDrawTarget->GetFormat());
+
+      mFullWindowRenderTarget =
+          new BasicCompositingRenderTarget(drawTarget, rect);
+    }
+  }
+#endif  // MOZ_GECKO_PROFILER
 
   mDrawTarget->PopClip();
 
@@ -931,6 +1037,15 @@ void BasicCompositor::EndFrame() {
   mRenderTarget->mDrawTarget->PopClip();
 
   TryToEndRemoteDrawing();
+
+#ifdef MOZ_GECKO_PROFILER
+  // If we are no longer recording a profile, we can drop the render target if
+  // it exists.
+  if (mFullWindowRenderTarget &&
+      !profiler_feature_active(ProfilerFeature::Screenshots)) {
+    mFullWindowRenderTarget = nullptr;
+  }
+#endif  // MOZ_GECKO_PROFILER
 }
 
 void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
@@ -951,21 +1066,37 @@ void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
     return;
   }
 
-  if (mRenderTarget->mDrawTarget != mDrawTarget) {
-    // Note: Most platforms require us to buffer drawing to the widget surface.
-    // That's why we don't draw to mDrawTarget directly.
-    RefPtr<SourceSurface> source = mWidget->EndBackBufferDrawing();
+  if (mRenderTarget->mDrawTarget != mDrawTarget || mFullWindowRenderTarget) {
+    RefPtr<SourceSurface> source;
 
-    nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
+    if (mRenderTarget->mDrawTarget != mDrawTarget) {
+      source = mWidget->EndBackBufferDrawing();
 
-    // The source DrawTarget is clipped to the invalidation region, so we have
-    // to copy the individual rectangles in the region or else we'll draw blank
-    // pixels.
-    for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
-      const LayoutDeviceIntRect& r = iter.Get();
-      mDrawTarget->CopySurface(source,
-                               r.ToUnknownRect() - mRenderTarget->GetOrigin(),
-                               r.TopLeft().ToUnknownPoint() - offset);
+      // Note: Most platforms require us to buffer drawing to the widget
+      // surface. That's why we don't draw to mDrawTarget directly.
+      nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
+
+      // The source DrawTarget is clipped to the invalidation region, so we have
+      // to copy the individual rectangles in the region or else we'll draw
+      // blank pixels.
+      for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+        const LayoutDeviceIntRect& r = iter.Get();
+        mDrawTarget->CopySurface(source,
+                                 r.ToUnknownRect() - mRenderTarget->GetOrigin(),
+                                 r.TopLeft().ToUnknownPoint() - offset);
+      }
+    } else {
+      source = mRenderTarget->mDrawTarget->Snapshot();
+    }
+
+    if (mFullWindowRenderTarget) {
+      for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+        const LayoutDeviceIntRect& r = iter.Get();
+        mFullWindowRenderTarget->mDrawTarget->CopySurface(
+            source, r.ToUnknownRect(), r.TopLeft().ToUnknownPoint());
+      }
+
+      mFullWindowRenderTarget->mDrawTarget->Flush();
     }
   }
 

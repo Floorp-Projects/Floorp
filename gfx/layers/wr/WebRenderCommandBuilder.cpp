@@ -1091,6 +1091,10 @@ static bool IsItemProbablyActive(nsDisplayItem* aItem,
       }
       return false;
     }
+    case DisplayItemType::TYPE_FILTER: {
+      nsDisplayFilters* filters = static_cast<nsDisplayFilters*>(aItem);
+      return filters->CanCreateWebRenderCommands(aDisplayListBuilder);
+    }
     default:
       // TODO: handle other items?
       return false;
@@ -2009,7 +2013,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
   // e.g.: nsDisplayBoxShadowInner uses mPaintRect in Paint() and mPaintRect is
   // computed in nsDisplayBoxShadowInner::ComputeVisibility().
   nsRegion visibleRegion(paintBounds);
-  aItem->SetPaintRect(paintBounds);
+  aItem->SetPaintRect(aItem->GetBuildingRect().Intersect(paintBounds));
   aItem->ComputeVisibility(aDisplayListBuilder, &visibleRegion);
 
   const int32_t appUnitsPerDevPixel =
@@ -2028,9 +2032,25 @@ WebRenderCommandBuilder::GenerateFallbackData(
                         gfx::FuzzyEqual(scale.height, oldScale.height, 1e-6f);
 
   LayoutDeviceToLayerScale2D layerScale(scale.width, scale.height);
-  auto scaledBounds = bounds * layerScale;
-  auto dtRect = RoundedOut(scaledBounds);
+
+  auto trans =
+      ViewAs<LayerPixel>(aSc.GetSnappingSurfaceTransform().GetTranslation());
+  auto snappedTrans = LayerIntPoint::Floor(trans);
+  LayerPoint residualOffset = trans - snappedTrans;
+
+  auto dtRect = LayerIntRect::FromUnknownRect(
+      ScaleToOutsidePixelsOffset(paintBounds, scale.width, scale.height,
+                                 appUnitsPerDevPixel, residualOffset));
   auto dtSize = dtRect.Size();
+
+  auto visibleRect = LayerIntRect::FromUnknownRect(
+                         ScaleToOutsidePixelsOffset(
+                             aItem->GetBuildingRect(), scale.width,
+                             scale.height, appUnitsPerDevPixel, residualOffset))
+                         .Intersect(dtRect);
+  // visibleRect is relative to the blob origin so adjust for that
+  visibleRect -= dtRect.TopLeft();
+
   if (dtSize.IsEmpty()) {
     return nullptr;
   }
@@ -2138,6 +2158,10 @@ WebRenderCommandBuilder::GenerateFallbackData(
           return nullptr;
         }
       }
+      aResources.SetBlobImageVisibleArea(
+          fallbackData->GetBlobImageKey().value(),
+          ViewAs<ImagePixel>(visibleRect,
+                             PixelCastJustification::LayerIsImage));
     } else {
       fallbackData->CreateImageClientIfNeeded();
       RefPtr<ImageClient> imageClient = fallbackData->GetImageClient();

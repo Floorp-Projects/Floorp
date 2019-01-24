@@ -284,6 +284,19 @@ class UrlbarView {
       title, result.title, result.titleHighlights);
     content.appendChild(title);
 
+    if (result.payload.tags && result.payload.tags.length > 0) {
+      const tagsContainer = this._createElement("div");
+      tagsContainer.className = "urlbarView-tags";
+      tagsContainer.append(...result.payload.tags.map((tag, i) => {
+        const element = this._createElement("span");
+        element.className = "urlbarView-tag";
+        this._addTextContentWithHighlights(
+          element, tag, result.payloadHighlights.tags[i]);
+        return element;
+      }));
+      content.appendChild(tagsContainer);
+    }
+
     let secondary = this._createElement("span");
     secondary.className = "urlbarView-secondary";
     switch (result.type) {

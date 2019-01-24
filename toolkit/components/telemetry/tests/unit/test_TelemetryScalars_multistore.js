@@ -221,3 +221,54 @@ add_task(async function test_empty_absence_keyed() {
                `${MULTIPLE_STORES_KEYED}[${key}] should have the correct value.`);
 
 });
+
+add_task(async function test_multistore_default_values() {
+  Telemetry.clearScalars();
+
+  const expectedUint = 3785;
+  const expectedKey = "some key";
+  Telemetry.scalarSet(MAIN_ONLY, expectedUint);
+  Telemetry.scalarSet(SYNC_ONLY, expectedUint);
+  Telemetry.scalarSet(MULTIPLE_STORES, expectedUint);
+  Telemetry.keyedScalarSet(MULTIPLE_STORES_KEYED, expectedKey, expectedUint);
+
+  let mainScalars;
+  let mainKeyedScalars;
+
+  // Getting snapshot and NOT clearing (using default values for optional parameters)
+  mainScalars = Telemetry.getSnapshotForScalars().parent;
+  mainKeyedScalars = Telemetry.getSnapshotForKeyedScalars().parent;
+
+  Assert.equal(mainScalars[MAIN_ONLY], expectedUint,
+               `Main-store scalar ${MAIN_ONLY} must have correct value.`);
+  Assert.ok(!(SYNC_ONLY in mainScalars),
+            `Sync-store scalar ${SYNC_ONLY} must not be in main snapshot.`);
+  Assert.equal(mainScalars[MULTIPLE_STORES], expectedUint,
+               `Multi-store scalar ${MULTIPLE_STORES} must have correct value in main store.`);
+  Assert.equal(mainKeyedScalars[MULTIPLE_STORES_KEYED][expectedKey], expectedUint,
+               `Multi-store scalar ${MULTIPLE_STORES_KEYED} must have correct value in main store.`);
+
+  // Getting snapshot and clearing
+  mainScalars = Telemetry.getSnapshotForScalars("main", true).parent;
+  mainKeyedScalars = Telemetry.getSnapshotForKeyedScalars("main", true).parent;
+
+  Assert.equal(mainScalars[MAIN_ONLY], expectedUint,
+               `Main-store scalar ${MAIN_ONLY} must have correct value.`);
+  Assert.ok(!(SYNC_ONLY in mainScalars),
+            `Sync-store scalar ${SYNC_ONLY} must not be in main snapshot.`);
+  Assert.equal(mainScalars[MULTIPLE_STORES], expectedUint,
+               `Multi-store scalar ${MULTIPLE_STORES} must have correct value in main store.`);
+  Assert.equal(mainKeyedScalars[MULTIPLE_STORES_KEYED][expectedKey], expectedUint,
+               `Multi-store scalar ${MULTIPLE_STORES_KEYED} must have correct value in main store.`);
+
+  // Getting snapshot (with default values), should be empty now
+  mainScalars = Telemetry.getSnapshotForScalars().parent || {};
+  mainKeyedScalars = Telemetry.getSnapshotForKeyedScalars().parent || {};
+
+  Assert.ok(!(MAIN_ONLY in mainScalars),
+               `Main-store scalar ${MAIN_ONLY} must not be in main snapshot.`);
+  Assert.ok(!(MULTIPLE_STORES in mainScalars),
+               `Multi-store scalar ${MULTIPLE_STORES} must not be in main snapshot.`);
+  Assert.ok(!(MULTIPLE_STORES_KEYED in mainKeyedScalars),
+               `Multi-store scalar ${MULTIPLE_STORES_KEYED} must not be in main snapshot.`);
+});

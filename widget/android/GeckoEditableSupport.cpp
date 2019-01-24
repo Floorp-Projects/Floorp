@@ -1449,9 +1449,8 @@ nsresult GeckoEditableSupport::NotifyIME(
         // update yet on non-e10s case since IME event is posted before updating
         // it. So we have to delay handling of this event.
         RefPtr<GeckoEditableSupport> self(this);
-        nsAppShell::PostEvent([this, self] {
-          OnNotifyIMEOfCompositionEventHandled();
-        });
+        nsAppShell::PostEvent(
+            [this, self] { OnNotifyIMEOfCompositionEventHandled(); });
       }
       break;
     }
@@ -1462,8 +1461,7 @@ nsresult GeckoEditableSupport::NotifyIME(
   return NS_OK;
 }
 
-void GeckoEditableSupport::OnNotifyIMEOfCompositionEventHandled()
-{
+void GeckoEditableSupport::OnNotifyIMEOfCompositionEventHandled() {
   // NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED may be merged with multiple events,
   // so reset count.
   mIMEActiveCompositionCount = 0;

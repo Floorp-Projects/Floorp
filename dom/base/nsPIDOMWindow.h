@@ -1023,7 +1023,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
                                      const nsAString& aPopupWindowName,
                                      const nsAString& aPopupWindowFeatures) = 0;
 
-  virtual void NotifyContentBlockingState(unsigned aState, nsIChannel* aChannel,
+  virtual void NotifyContentBlockingEvent(unsigned aEvent, nsIChannel* aChannel,
                                           bool aBlocked, nsIURI* aURIHint) = 0;
 
   // WebIDL-ish APIs

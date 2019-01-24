@@ -80,6 +80,7 @@ function convert_srcs_to_project_files {
 
   # Remove include-only asm files (no object code emitted)
   source_list=$(echo "$source_list" | grep -v 'x86_abi_support\.asm')
+  source_list=$(echo "$source_list" | grep -v 'config\.asm')
 
   # The actual ARM files end in .asm. We have rules to translate them to .S
   source_list=$(echo "$source_list" | sed s/\.asm\.s$/.asm/)
@@ -199,6 +200,7 @@ all_platforms="${all_platforms} --enable-multi-res-encoding --size-limit=8192x46
 all_platforms="${all_platforms} --disable-avx512"
 x86_platforms="--enable-postproc --enable-vp9-postproc --as=yasm"
 arm_platforms="--enable-runtime-cpu-detect --enable-realtime-only"
+arm64_platforms="--enable-realtime-only"
 
 gen_config_files linux/x64 "--target=x86_64-linux-gcc ${all_platforms} ${x86_platforms}"
 gen_config_files linux/ia32 "--target=x86-linux-gcc ${all_platforms} ${x86_platforms}"
@@ -210,6 +212,7 @@ gen_config_files win/mingw32 "--target=x86-win32-gcc ${all_platforms} ${x86_plat
 gen_config_files win/aarch64 "--target=aarch64-win64-vs12 ${all_platforms}"
 
 gen_config_files linux/arm "--target=armv7-linux-gcc ${all_platforms} ${arm_platforms}"
+gen_config_files linux/arm64 "--target=arm64-linux-gcc ${all_platforms} ${arm64_platforms}"
 
 gen_config_files generic "--target=generic-gnu ${all_platforms}"
 
@@ -238,6 +241,7 @@ gen_rtcd_header win/aarch64 aarch64
 
 
 gen_rtcd_header linux/arm armv7
+gen_rtcd_header linux/arm64 arm64
 
 gen_rtcd_header generic generic
 
@@ -270,6 +274,12 @@ config=$(print_config linux/arm)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
 convert_srcs_to_project_files libvpx_srcs.txt ARM
+
+echo "Generate ARM64 source list."
+config=$(print_config linux/arm64)
+make_clean
+make libvpx_srcs.txt target=libs $config > /dev/null
+convert_srcs_to_project_files libvpx_srcs.txt ARM64
 
 echo "Generate generic source list."
 config=$(print_config generic)
