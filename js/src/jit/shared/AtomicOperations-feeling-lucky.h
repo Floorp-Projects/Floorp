@@ -8,12 +8,11 @@
 #define jit_shared_AtomicOperations_feeling_lucky_h
 
 #if defined(__clang__) || defined(__GNUC__)
-# include "jit/shared/AtomicOperations-feeling-lucky-gcc.h"
+#  include "jit/shared/AtomicOperations-feeling-lucky-gcc.h"
 #elif defined(_MSC_VER)
-# include "jit/shared/AtomicOperations-feeling-lucky-msvc.h"
+#  include "jit/shared/AtomicOperations-feeling-lucky-msvc.h"
 #else
-# error "No AtomicOperations support for this platform+compiler combination"
+#  error "No AtomicOperations support for this platform+compiler combination"
 #endif
 
-#endif // jit_shared_AtomicOperations_feeling_lucky_h
-
+#endif  // jit_shared_AtomicOperations_feeling_lucky_h
