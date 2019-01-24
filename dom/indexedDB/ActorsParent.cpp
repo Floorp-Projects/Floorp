@@ -8639,6 +8639,41 @@ nsresult DeleteFile(nsIFile* aDirectory, const nsAString& aFilename,
   return NS_OK;
 }
 
+nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aDirectory);
+  MOZ_ASSERT(!aFilename.IsEmpty());
+
+  // The current using function hasn't initialzed the origin, so in here we
+  // don't update the size of origin. Adding this assertion for preventing from
+  // misusing.
+  DebugOnly<QuotaManager*> quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(!quotaManager->IsTemporaryStorageInitialized());
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aDirectory->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = file->Append(aFilename);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = file->Remove(true);
+  if (rv == NS_ERROR_FILE_NOT_FOUND ||
+      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    return NS_OK;
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 // CreateMarkerFile and RemoveMarkerFile are a pair of functions to indicate
 // whether having removed all the files successfully. The marker file should
 // be checked before executing the next operation or initialization.
@@ -15814,8 +15849,14 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     // The directory must have the correct suffix.
     nsDependentSubstring subdirNameBase;
     if (NS_WARN_IF(!GetBaseFilename(subdirName, filesSuffix, subdirNameBase))) {
-      REPORT_TELEMETRY_INIT_ERR(kInternalError, IDB_GetBaseFilename);
-      return NS_ERROR_UNEXPECTED;
+      // If there is an unexpected directory in the idb directory, trying to
+      // delete at first instead of breaking the whole initialization.
+      if (NS_WARN_IF(NS_FAILED(DeleteFilesNoQuota(directory, subdirName)))) {
+        REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_GetBaseFilename);
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      continue;
     }
 
     if (obsoleteFilenames.Contains(subdirNameBase)) {
@@ -15834,8 +15875,11 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     }
 
     // The directory base must exist in databaseFilenames.
-    if (NS_WARN_IF(!databaseFilenames.GetEntry(subdirNameBase))) {
-      REPORT_TELEMETRY_INIT_ERR(kInternalError, IDB_GetEntry);
+    // If there is an unexpected directory in the idb directory, trying to
+    // delete at first instead of breaking the whole initialization.
+    if (NS_WARN_IF(!databaseFilenames.GetEntry(subdirNameBase)) &&
+        NS_WARN_IF(NS_FAILED(DeleteFilesNoQuota(directory, subdirName)))) {
+      REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_GetEntry);
       return NS_ERROR_UNEXPECTED;
     }
   }
