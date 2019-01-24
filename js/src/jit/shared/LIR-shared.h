@@ -459,23 +459,6 @@ class LNewCallObject : public LInstructionHelper<1, 0, 1> {
   MNewCallObject* mir() const { return mir_->toNewCallObject(); }
 };
 
-// Performs a callVM to allocate a new CallObject with singleton type.
-class LNewSingletonCallObject : public LInstructionHelper<1, 0, 1> {
- public:
-  LIR_HEADER(NewSingletonCallObject)
-
-  explicit LNewSingletonCallObject(const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setTemp(0, temp);
-  }
-
-  const LDefinition* temp() { return getTemp(0); }
-
-  MNewSingletonCallObject* mir() const {
-    return mir_->toNewSingletonCallObject();
-  }
-};
-
 class LNewDerivedTypedObject : public LCallInstructionHelper<1, 3, 0> {
  public:
   LIR_HEADER(NewDerivedTypedObject);
@@ -5629,15 +5612,6 @@ class LSetFrameArgumentV : public LInstructionHelper<0, BOX_PIECES, 0> {
   static const size_t Input = 0;
 
   MSetFrameArgument* mir() const { return mir_->toSetFrameArgument(); }
-};
-
-class LRunOncePrologue : public LCallInstructionHelper<0, 0, 0> {
- public:
-  LIR_HEADER(RunOncePrologue)
-
-  MRunOncePrologue* mir() const { return mir_->toRunOncePrologue(); }
-
-  LRunOncePrologue() : LCallInstructionHelper(classOpcode) {}
 };
 
 // Create the rest parameter.

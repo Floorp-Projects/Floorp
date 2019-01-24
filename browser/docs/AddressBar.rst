@@ -38,7 +38,7 @@ Each search is represented by a unique object, the *UrlbarQueryContext*. This
 object, created by the *View*, describes the search and is passed through all of
 the components, along the way it gets augmented with additional information.
 The *UrlbarQueryContext* is passed to the *Controller*, and finally to the
-*Model*.  The model appends matches to a property of *UrlbarQueryContext* in
+*Model*.  The model appends results to a property of *UrlbarQueryContext* in
 chunks, it sorts them through a *Muxer* and then notifies the *Controller*.
 
 See the specific components below, for additional details about each one's tasks
@@ -77,8 +77,8 @@ It is augmented as it progresses through the system, with various information:
     // Properties added by the Model.
     autofillValue; // {string} the text value that should be autofilled in the
                    // input, if any.
-    preselected; // {boolean} whether the first match should be preselected.
-    results; // {array} list of UrlbarMatch objects.
+    preselected; // {boolean} whether the first result should be preselected.
+    results; // {array} list of UrlbarResult objects.
     tokens; // {array} tokens extracted from the searchString, each token is an
             // object in the form {type, value}.
   }
@@ -100,7 +100,7 @@ separate *Query* objects.
 
 The *Controller* starts and stops queries through the *UrlbarProvidersManager*.
 It's possible to wait for the promise returned by *startQuery* to know when no
-more matches will be returned, it is not mandatory though.
+more results will be returned, it is not mandatory though.
 Queries can be canceled.
 
 .. note::
@@ -111,7 +111,7 @@ Queries can be canceled.
 
 The *searchString* gets tokenized by the `UrlbarTokenizer <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/UrlbarTokenizer.jsm>`_
 component into tokens, some of these tokens have a special meaning and can be
-used by the user to restrict the search to specific type of matches (See the
+used by the user to restrict the search to specific match type (See the
 *UrlbarTokenizer::TYPE* enum).
 
 .. caution::
@@ -136,7 +136,7 @@ used by the user to restrict the search to specific type of matches (See the
 UrlbarProvider
 --------------
 
-A provider is specialized into searching and returning matches from different
+A provider is specialized into searching and returning results from different
 information sources. Internal providers are usually implemented in separate
 *jsm* modules with a *UrlbarProvider* name prefix. External providers can be
 registered as *Objects* through the *UrlbarProvidersManager*.
@@ -184,9 +184,9 @@ class UrlbarProvider {
    * Starts querying.
    * @param {UrlbarQueryContext} queryContext The query context object
    * @param {function} addCallback Callback invoked by the provider to add a new
-   *        match. A UrlbarMatch should be passed to it.
+   *        result. A UrlbarResult should be passed to it.
    * @note Extended classes should return a Promise resolved when the provider
-   *       is done searching AND returning matches.
+   *       is done searching AND returning results.
    * @abstract
    */
   startQuery(queryContext, addCallback) {
@@ -206,7 +206,7 @@ class UrlbarProvider {
 UrlbarMuxer
 -----------
 
-The *Muxer* is responsible for sorting matches based on their importance and
+The *Muxer* is responsible for sorting results based on their importance and
 additional rules that depend on the UrlbarQueryContext. The muxer to use is
 indicated by the UrlbarQueryContext.muxer property.
 
@@ -220,7 +220,7 @@ indicated by the UrlbarQueryContext.muxer property.
 
 class UrlbarMuxer {
   /**
-   * Unique name for the muxer, used by the context to sort matches.
+   * Unique name for the muxer, used by the context to sort results.
    * Not using a unique name will cause the newest registration to win.
    * @abstract
    */
@@ -228,8 +228,8 @@ class UrlbarMuxer {
     return "UrlbarMuxerBase";
   }
   /**
-   * Sorts UrlbarQueryContext matches in-place.
-   * @param {UrlbarQueryContext} queryContext the context to sort matches for.
+   * Sorts UrlbarQueryContext results in-place.
+   * @param {UrlbarQueryContext} queryContext the context to sort results for.
    * @abstract
    */
   sort(queryContext) {
@@ -256,9 +256,9 @@ View (e.g. showing/hiding a panel). It is also responsible for reporting Telemet
   UrlbarController {
     async startQuery(queryContext);
     cancelQuery(queryContext);
-    // Invoked by the ProvidersManager when matches are available.
+    // Invoked by the ProvidersManager when results are available.
     receiveResults(queryContext);
-    // Used by the View to listen for matches.
+    // Used by the View to listen for results.
     addQueryListener(listener);
     removeQueryListener(listener);
     // Used to indicate the View context changed, as such any cached information
@@ -343,7 +343,7 @@ Represents the base *View* implementation, communicates with the *Controller*.
     close();
     // Invoked when the query starts.
     onQueryStarted(queryContext);
-    // Invoked when new matches are available.
+    // Invoked when new results are available.
     onQueryResults(queryContext);
     // Invoked when the query has been canceled.
     onQueryCancelled(queryContext);
@@ -351,14 +351,14 @@ Represents the base *View* implementation, communicates with the *Controller*.
     onQueryFinished(queryContext);
   }
 
-UrlbarMatch
+UrlbarResult
 ===========
 
-An `UrlbarMatch <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/UrlbarMatch.jsm>`_
-instance represents a single match (search result) with a match type, that
+An `UrlbarResult <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/UrlbarResult.jsm>`_
+instance represents a single search result with a match type, that
 identifies specific kind of results.
 Each kind has its own properties, that the *View* may support, and a few common
-properties, supported by all of the matches.
+properties, supported by all of the results.
 
 .. note::
 
@@ -367,7 +367,7 @@ properties, supported by all of the matches.
 .. highlight:: JavaScript
 .. code::
 
-  UrlbarMatch {
+  UrlbarResult {
     constructor(matchType, payload);
 
     type: {integer} One of UrlbarUtils.MATCH_TYPE.

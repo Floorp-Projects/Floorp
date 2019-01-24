@@ -2884,28 +2884,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GETALIASEDVAR() {
 
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_SETALIASEDVAR() {
-  jsbytecode* pc = handler.pc();
-  JSScript* outerScript = EnvironmentCoordinateFunctionScript(script, pc);
-  if (outerScript && outerScript->treatAsRunOnce()) {
-    // Type updates for this operation might need to be tracked, so treat
-    // this as a SETPROP.
-
-    // Load rhs into R1.
-    frame.syncStack(0);
-    masm.loadValue(frame.addressOfStackValue(-1), R1);
-
-    // Load and box lhs into R0.
-    getEnvironmentCoordinateObject(R2.scratchReg());
-    masm.tagValue(JSVAL_TYPE_OBJECT, R2.scratchReg(), R0);
-
-    // Call SETPROP IC.
-    if (!emitNextIC()) {
-      return false;
-    }
-
-    return true;
-  }
-
   // Keep rvalue in R0.
   frame.popRegsAndSync(1);
   Register objReg = R2.scratchReg();
@@ -4724,23 +4702,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ARGUMENTS() {
   return true;
 }
 
-typedef bool (*RunOnceScriptPrologueFn)(JSContext*, HandleScript);
-static const VMFunction RunOnceScriptPrologueInfo =
-    FunctionInfo<RunOnceScriptPrologueFn>(js::RunOnceScriptPrologue,
-                                          "RunOnceScriptPrologue");
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_JSOP_RUNONCE() {
-  frame.syncStack(0);
-
-  prepareVMCall();
-
-  masm.movePtr(ImmGCPtr(script), R0.scratchReg());
-  pushArg(R0.scratchReg());
-
-  return callVM(RunOnceScriptPrologueInfo);
-}
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_REST() {
   frame.syncStack(0);
@@ -5648,6 +5609,7 @@ MethodStatus BaselineCompiler::emitBody() {
         // Intentionally not implemented.
       case JSOP_SETINTRINSIC:
         // Run-once opcode during self-hosting initialization.
+      case JSOP_UNUSED71:
       case JSOP_UNUSED151:
       case JSOP_LIMIT:
         // === !! WARNING WARNING WARNING !! ===

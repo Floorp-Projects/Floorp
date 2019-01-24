@@ -71,7 +71,7 @@ inline void js::jit::AtomicOperations::fenceSeqCst() {
   // This expression is the expansion of MemoryBarrier.
   __dmb(_ARM64_BARRIER_SY);
 #else
-#error "Unknown hardware for MSVC"
+#  error "Unknown hardware for MSVC"
 #endif
 }
 

@@ -12,19 +12,16 @@
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 
-#if !defined(MAC_OS_X_VERSION_10_12_2) || \
-    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
-@interface BaseWindow(NSTouchBarProvider)
-@property (strong) NSTouchBar* touchBar;
+#if !defined(MAC_OS_X_VERSION_10_12_2) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
+@interface BaseWindow (NSTouchBarProvider)
+@property(strong) NSTouchBar* touchBar;
 @end
 #endif
 
 NS_IMPL_ISUPPORTS(nsTouchBarUpdater, nsITouchBarUpdater);
 
 NS_IMETHODIMP
-nsTouchBarUpdater::UpdateTouchBarInput(nsIBaseWindow* aWindow,
-                                       nsITouchBarInput* aInput)
-{
+nsTouchBarUpdater::UpdateTouchBarInput(nsIBaseWindow* aWindow, nsITouchBarInput* aInput) {
   nsCOMPtr<nsIWidget> widget = nullptr;
   aWindow->GetMainWidget(getter_AddRefs(widget));
   if (!widget) {
@@ -36,10 +33,9 @@ nsTouchBarUpdater::UpdateTouchBarInput(nsIBaseWindow* aWindow,
   }
 
   if ([cocoaWin respondsToSelector:@selector(touchBar)]) {
-    TouchBarInput* convertedInput =
-      [[TouchBarInput alloc] initWithXPCOM:aInput];
+    TouchBarInput* convertedInput = [[TouchBarInput alloc] initWithXPCOM:aInput];
     [(nsTouchBar*)cocoaWin.touchBar updateItem:convertedInput];
   }
-  
+
   return NS_OK;
 }
