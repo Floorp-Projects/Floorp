@@ -4,8 +4,8 @@
 //! are different rules for comparing integers and floating point numbers, so they use different
 //! condition codes.
 
-use core::fmt::{self, Display, Formatter};
-use core::str::FromStr;
+use std::fmt::{self, Display, Formatter};
+use std::str::FromStr;
 
 /// Common traits of condition codes.
 pub trait CondCode: Copy {

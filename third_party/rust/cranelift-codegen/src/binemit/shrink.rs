@@ -5,12 +5,11 @@
 //! flexibility. However, once register allocation is done, this is no longer important, and we
 //! can switch to smaller encodings when possible.
 
-use crate::ir::instructions::InstructionData;
-use crate::ir::Function;
-use crate::isa::TargetIsa;
-use crate::regalloc::RegDiversions;
-use crate::timing;
-use log::debug;
+use ir::instructions::InstructionData;
+use ir::Function;
+use isa::TargetIsa;
+use regalloc::RegDiversions;
+use timing;
 
 /// Pick the smallest valid encodings for instructions.
 pub fn shrink_instructions(func: &mut Function, isa: &TargetIsa) {

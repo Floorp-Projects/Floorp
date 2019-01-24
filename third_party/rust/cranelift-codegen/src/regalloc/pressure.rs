@@ -36,11 +36,11 @@
 // Remove once we're using the pressure tracker.
 #![allow(dead_code)]
 
-use crate::isa::registers::{RegClass, RegClassMask, RegInfo, MAX_TRACKED_TOPRCS};
-use crate::regalloc::RegisterSet;
-use core::cmp::min;
-use core::fmt;
-use core::iter::ExactSizeIterator;
+use isa::registers::{RegClass, RegClassMask, RegInfo, MAX_TRACKED_TOPRCS};
+use regalloc::RegisterSet;
+use std::cmp::min;
+use std::fmt;
+use std::iter::ExactSizeIterator;
 
 /// Information per top-level register class.
 ///
@@ -273,17 +273,17 @@ impl fmt::Display for Pressure {
 #[cfg(build_arm32)]
 mod tests {
     use super::Pressure;
-    use crate::isa::{RegClass, TargetIsa};
-    use crate::regalloc::RegisterSet;
-    use core::borrow::Borrow;
-    use core::str::FromStr;
+    use isa::{RegClass, TargetIsa};
+    use regalloc::RegisterSet;
+    use std::borrow::Borrow;
     use std::boxed::Box;
-    use target_lexicon::triple;
+    use std::str::FromStr;
+    use target_lexicon;
 
     // Make an arm32 `TargetIsa`, if possible.
     fn arm32() -> Option<Box<TargetIsa>> {
-        use crate::isa;
-        use crate::settings;
+        use isa;
+        use settings;
 
         let shared_builder = settings::builder();
         let shared_flags = settings::Flags::new(shared_builder);

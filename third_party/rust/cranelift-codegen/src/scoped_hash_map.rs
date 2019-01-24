@@ -1,12 +1,13 @@
 //! `ScopedHashMap`
 //!
-//! This module defines a struct `ScopedHashMap<K, V>` which defines a `FxHashMap`-like
+//! This module defines a struct `ScopedHashMap<K, V>` which defines a `HashMap`-like
 //! container that has a concept of scopes that can be entered and exited, such that
 //! values inserted while inside a scope aren't visible outside the scope.
 
-use crate::fx::FxHashMap;
-use core::hash::Hash;
-use core::mem;
+use fx::FxHashMap;
+use std::collections::hash_map;
+use std::hash::Hash;
+use std::mem;
 
 struct Val<K, V> {
     value: V,
@@ -16,7 +17,7 @@ struct Val<K, V> {
 
 /// A view into an occupied entry in a `ScopedHashMap`. It is part of the `Entry` enum.
 pub struct OccupiedEntry<'a, K: 'a, V: 'a> {
-    entry: super::hash_map::OccupiedEntry<'a, K, Val<K, V>>,
+    entry: hash_map::OccupiedEntry<'a, K, Val<K, V>>,
 }
 
 impl<'a, K, V> OccupiedEntry<'a, K, V> {
@@ -28,7 +29,7 @@ impl<'a, K, V> OccupiedEntry<'a, K, V> {
 
 /// A view into a vacant entry in a `ScopedHashMap`. It is part of the `Entry` enum.
 pub struct VacantEntry<'a, K: 'a, V: 'a> {
-    entry: super::hash_map::VacantEntry<'a, K, Val<K, V>>,
+    entry: hash_map::VacantEntry<'a, K, Val<K, V>>,
     next_key: Option<K>,
     depth: usize,
 }
@@ -52,7 +53,7 @@ pub enum Entry<'a, K: 'a, V: 'a> {
     Vacant(VacantEntry<'a, K, V>),
 }
 
-/// A wrapper around a `FxHashMap` which adds the concept of scopes. Items inserted
+/// A wrapper around a `HashMap` which adds the concept of scopes. Items inserted
 /// within a scope are removed when the scope is exited.
 ///
 /// Shadowing, where one scope has entries with the same keys as a containing scope,
@@ -76,10 +77,10 @@ where
         }
     }
 
-    /// Similar to `FxHashMap::entry`, gets the given key's corresponding entry in the map for
+    /// Similar to `HashMap::entry`, gets the given key's corresponding entry in the map for
     /// in-place manipulation.
     pub fn entry(&mut self, key: K) -> Entry<K, V> {
-        use super::hash_map::Entry::*;
+        use self::hash_map::Entry::*;
         match self.map.entry(key) {
             Occupied(entry) => Entry::Occupied(OccupiedEntry { entry }),
             Vacant(entry) => {
@@ -103,7 +104,7 @@ where
     pub fn decrement_depth(&mut self) {
         // Remove all elements inserted at the current depth.
         while let Some(key) = self.last_insert.clone() {
-            use crate::hash_map::Entry::*;
+            use self::hash_map::Entry::*;
             match self.map.entry(key) {
                 Occupied(entry) => {
                     if entry.get().depth != self.current_depth {

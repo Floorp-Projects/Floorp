@@ -3,7 +3,7 @@
 //! Cranelift tracks the original source location of each instruction, and preserves the source
 //! location when instructions are transformed.
 
-use core::fmt;
+use std::fmt;
 
 /// A source location.
 ///
@@ -50,7 +50,7 @@ impl fmt::Display for SourceLoc {
 
 #[cfg(test)]
 mod tests {
-    use crate::ir::SourceLoc;
+    use ir::SourceLoc;
     use std::string::ToString;
 
     #[test]

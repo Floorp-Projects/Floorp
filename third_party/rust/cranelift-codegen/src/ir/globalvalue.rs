@@ -1,9 +1,9 @@
 //! Global values.
 
-use crate::ir::immediates::{Imm64, Offset32};
-use crate::ir::{ExternalName, GlobalValue, Type};
-use crate::isa::TargetIsa;
-use core::fmt;
+use ir::immediates::{Imm64, Offset32};
+use ir::{ExternalName, GlobalValue, Type};
+use isa::TargetIsa;
+use std::fmt;
 
 /// Information about a global value declaration.
 #[derive(Clone)]
@@ -27,8 +27,7 @@ pub enum GlobalValueData {
         /// Type of the loaded value.
         global_type: Type,
 
-        /// Specifies whether the memory that this refers to is readonly, allowing for the
-        /// elimination of redundant loads.
+        /// Specifies whether the memory that this refers to is readonly, allowing for the elimination of redundant loads.
         readonly: bool,
     },
 

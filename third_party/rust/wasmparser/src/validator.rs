@@ -1259,14 +1259,10 @@ impl OperatorValidator {
 #[derive(Copy, Clone)]
 pub struct ValidatingParserConfig {
     pub operator_config: OperatorValidatorConfig,
-
-    pub mutable_global_imports: bool,
 }
 
 const DEFAULT_VALIDATING_PARSER_CONFIG: ValidatingParserConfig = ValidatingParserConfig {
     operator_config: DEFAULT_OPERATOR_VALIDATOR_CONFIG,
-
-    mutable_global_imports: false,
 };
 
 pub struct ValidatingParser<'a> {
@@ -1447,7 +1443,7 @@ impl<'a> ValidatingParser<'a> {
                 if self.globals.len() >= MAX_WASM_GLOBALS {
                     return self.create_error("functions count out of bounds");
                 }
-                if global_type.mutable && !self.config.mutable_global_imports {
+                if global_type.mutable {
                     return self.create_error("global imports are required to be immutable");
                 }
                 self.check_global_type(global_type)
@@ -1510,7 +1506,7 @@ impl<'a> ValidatingParser<'a> {
                     return self.create_error("exported global index out of bounds");
                 }
                 let global = &self.globals[index as usize];
-                if global.mutable && !self.config.mutable_global_imports {
+                if global.mutable {
                     return self.create_error("exported global must be const");
                 }
             }

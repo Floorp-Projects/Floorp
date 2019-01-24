@@ -233,7 +233,7 @@ class TestTypeVar(TestCase):
             intersect = ts1.copy()
             intersect &= ts2
 
-            # Propagate intersections backward
+            # Propagate instersections backward
             ts1_src = reduce(lambda ts, func:   ts.preimage(func),
                              reversed(i1),
                              intersect)

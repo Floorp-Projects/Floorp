@@ -5,7 +5,7 @@
 
 use std::fmt;
 
-use crate::base::types as base_types;
+use base::types as base_types;
 
 // Numbering scheme for value types:
 //

@@ -1,4 +1,4 @@
-use crate::cdsl::settings::{SettingGroup, SettingGroupBuilder};
+use cdsl::settings::{SettingGroup, SettingGroupBuilder};
 
 pub fn generate() -> SettingGroup {
     let mut settings = SettingGroupBuilder::new("shared");
