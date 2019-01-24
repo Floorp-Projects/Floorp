@@ -32,11 +32,14 @@ UNIFIED_SOURCES += [
     'PaymentRequest.cpp',
     'PaymentRequestData.cpp',
     'PaymentRequestManager.cpp',
-    'PaymentRequestModule.cpp',
     'PaymentRequestService.cpp',
     'PaymentRequestUpdateEvent.cpp',
     'PaymentRequestUtils.cpp',
     'PaymentResponse.cpp',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
