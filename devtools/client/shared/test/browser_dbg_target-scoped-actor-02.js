@@ -44,10 +44,13 @@ async function testTargetScopedActor(client, form) {
 }
 
 async function closeTab(client, form) {
-  await removeTab(gBrowser.selectedTab);
-  await Assert.rejects(
+  // We need to start listening for the rejection before removing the tab
+  /* eslint-disable-next-line mozilla/rejects-requires-await*/
+  const onReject = Assert.rejects(
     client.request({ to: form.testOneActor, type: "ping" }),
     err => err.message === `'ping' active request packet to '${form.testOneActor}' ` +
                            `can't be sent as the connection just closed.`,
     "testOneActor went away.");
+  await removeTab(gBrowser.selectedTab);
+  await onReject;
 }
