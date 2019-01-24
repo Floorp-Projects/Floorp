@@ -587,8 +587,7 @@ inline bool OpIter<Policy>::Join(StackType one, StackType two,
     return true;
   }
 
-  if (env_.gcTypesEnabled() == HasGcTypes::True && one.isReference() &&
-      two.isReference()) {
+  if (env_.gcTypesEnabled() && one.isReference() && two.isReference()) {
     if (env_.isRefSubtypeOf(NonAnyToValType(two), NonAnyToValType(one))) {
       *result = one;
       return true;
@@ -709,8 +708,8 @@ inline bool OpIter<Policy>::popWithType(StackType expectedType, Value* value) {
   StackType observedType = tv.type();
   if (!(MOZ_LIKELY(observedType == expectedType) ||
         observedType == StackType::TVar || expectedType == StackType::TVar ||
-        (env_.gcTypesEnabled() == HasGcTypes::True &&
-         observedType.isReference() && expectedType.isReference() &&
+        (env_.gcTypesEnabled() && observedType.isReference() &&
+         expectedType.isReference() &&
          env_.isRefSubtypeOf(NonAnyToValType(observedType),
                              NonAnyToValType(expectedType))))) {
     return typeMismatch(observedType, expectedType);
@@ -768,7 +767,7 @@ inline bool OpIter<Policy>::topWithType(ValType expectedType, Value* value) {
 
   if (!MOZ_UNLIKELY(observed == expected)) {
     if (observed == StackType::TVar ||
-        (env_.gcTypesEnabled() == HasGcTypes::True && observed.isReference() &&
+        (env_.gcTypesEnabled() && observed.isReference() &&
          expected.isReference() &&
          env_.isRefSubtypeOf(NonAnyToValType(observed), expectedType))) {
       tv.typeRef() = expected;
@@ -844,12 +843,11 @@ inline bool OpIter<Policy>::readBlockType(ExprType* type) {
       known = true;
       break;
     case uint8_t(ExprType::Ref):
-      known = env_.gcTypesEnabled() == HasGcTypes::True &&
-              uncheckedRefTypeIndex < MaxTypes &&
+      known = env_.gcTypesEnabled() && uncheckedRefTypeIndex < MaxTypes &&
               uncheckedRefTypeIndex < env_.types.length();
       break;
     case uint8_t(ExprType::AnyRef):
-      known = env_.gcTypesEnabled() == HasGcTypes::True;
+      known = env_.gcTypesEnabled();
       break;
     case uint8_t(ExprType::Limit):
       break;
@@ -2090,7 +2088,7 @@ inline bool OpIter<Policy>::readTableGet(uint32_t* tableIndex, Value* index) {
   if (env_.tables[*tableIndex].kind != TableKind::AnyRef) {
     return fail("table.get only on tables of anyref");
   }
-  if (env_.gcTypesEnabled() == HasGcTypes::False) {
+  if (!env_.gcTypesEnabled()) {
     return fail("anyref support not enabled");
   }
 
@@ -2132,7 +2130,7 @@ inline bool OpIter<Policy>::readTableGrow(uint32_t* tableIndex, Value* delta,
   if (env_.tables[*tableIndex].kind != TableKind::AnyRef) {
     return fail("table.grow only on tables of anyref");
   }
-  if (env_.gcTypesEnabled() == HasGcTypes::False) {
+  if (!env_.gcTypesEnabled()) {
     return fail("anyref support not enabled");
   }
 
@@ -2174,7 +2172,7 @@ inline bool OpIter<Policy>::readTableSet(uint32_t* tableIndex, Value* index,
   if (env_.tables[*tableIndex].kind != TableKind::AnyRef) {
     return fail("table.set only on tables of anyref");
   }
-  if (env_.gcTypesEnabled() == HasGcTypes::False) {
+  if (!env_.gcTypesEnabled()) {
     return fail("anyref support not enabled");
   }
 
