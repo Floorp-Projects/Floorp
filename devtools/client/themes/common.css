@@ -473,8 +473,8 @@ checkbox:-moz-focusring {
   padding: 0;
   padding-inline-start: 22px;
   padding-inline-end: 4px;
-  background-position: 8px center;
-  background-size: 11px;
+  background-position: 7px center;
+  background-size: 12px;
   background-repeat: no-repeat;
   font-size: inherit;
   -moz-context-properties: fill;
@@ -495,14 +495,14 @@ checkbox:-moz-focusring {
 }
 
 .devtools-filterinput {
-  background-image: url(chrome://devtools/skin/images/filter.svg);
+  background-image: url(chrome://devtools/skin/images/filter-small.svg);
 }
 
 .devtools-searchinput:-moz-locale-dir(rtl),
 .devtools-searchinput:dir(rtl),
 .devtools-filterinput:-moz-locale-dir(rtl),
 .devtools-filterinput:dir(rtl) {
-  background-position-x: right 8px;
+  background-position-x: right 7px;
 }
 
 .devtools-searchinput .textbox-input::placeholder,
