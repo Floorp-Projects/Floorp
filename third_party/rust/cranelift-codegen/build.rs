@@ -18,9 +18,9 @@
 // The build script expects to be run from the directory where this build.rs file lives. The
 // current directory is used to find the sources.
 
-use cranelift_codegen_meta as meta;
+extern crate cranelift_codegen_meta as meta;
 
-use crate::meta::isa::Isa;
+use meta::isa::Isa;
 use std::env;
 use std::process;
 use std::time::Instant;

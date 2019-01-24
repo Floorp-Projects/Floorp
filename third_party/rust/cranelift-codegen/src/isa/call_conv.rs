@@ -1,5 +1,5 @@
-use core::fmt;
-use core::str;
+use std::fmt;
+use std::str;
 use target_lexicon::{CallingConvention, Triple};
 
 /// Calling convention identifiers.

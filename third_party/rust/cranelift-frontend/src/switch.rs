@@ -1,8 +1,7 @@
-use super::HashMap;
-use crate::frontend::FunctionBuilder;
 use cranelift_codegen::ir::condcodes::IntCC;
 use cranelift_codegen::ir::*;
-use log::debug;
+use frontend::FunctionBuilder;
+use std::collections::HashMap;
 use std::vec::Vec;
 
 type EntryIndex = u64;
@@ -201,8 +200,8 @@ impl ContiguousCaseRange {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::frontend::FunctionBuilderContext;
     use cranelift_codegen::ir::Function;
+    use frontend::FunctionBuilderContext;
     use std::string::ToString;
 
     macro_rules! setup {
@@ -223,8 +222,8 @@ mod tests {
             }
             func
                 .to_string()
-                .trim_start_matches("function u0:0() fast {\n")
-                .trim_end_matches("\n}\n")
+                .trim_left_matches("function u0:0() fast {\n")
+                .trim_right_matches("\n}\n")
                 .to_string()
         }};
     }
@@ -334,7 +333,7 @@ ebb10:
 
     #[test]
     fn switch_min_index_value() {
-        let func = setup!(0, [::core::i64::MIN as u64, 1,]);
+        let func = setup!(0, [::std::i64::MIN as u64, 1,]);
         assert_eq!(
             func,
             "ebb0:
@@ -350,7 +349,7 @@ ebb10:
 
     #[test]
     fn switch_max_index_value() {
-        let func = setup!(0, [::core::i64::MAX as u64, 1,]);
+        let func = setup!(0, [::std::i64::MAX as u64, 1,]);
         assert_eq!(
             func,
             "ebb0:

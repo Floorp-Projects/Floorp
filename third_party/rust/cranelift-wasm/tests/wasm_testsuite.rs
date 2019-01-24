@@ -1,3 +1,9 @@
+extern crate cranelift_codegen;
+extern crate cranelift_wasm;
+#[macro_use]
+extern crate target_lexicon;
+extern crate wabt;
+
 use cranelift_codegen::isa;
 use cranelift_codegen::print_errors::pretty_verifier_error;
 use cranelift_codegen::settings::{self, Flags};
@@ -9,7 +15,6 @@ use std::io;
 use std::io::prelude::*;
 use std::path::Path;
 use std::str::FromStr;
-use target_lexicon::triple;
 use wabt::wat2wasm;
 
 #[test]

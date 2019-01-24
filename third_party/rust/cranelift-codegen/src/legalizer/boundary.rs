@@ -17,17 +17,16 @@
 //! Between the two phases, preamble signatures and call/return arguments don't match. This
 //! intermediate state doesn't type check.
 
-use crate::abi::{legalize_abi_value, ValueConversion};
-use crate::cursor::{Cursor, FuncCursor};
-use crate::flowgraph::ControlFlowGraph;
-use crate::ir::instructions::CallInfo;
-use crate::ir::{
+use abi::{legalize_abi_value, ValueConversion};
+use cursor::{Cursor, FuncCursor};
+use flowgraph::ControlFlowGraph;
+use ir::instructions::CallInfo;
+use ir::{
     AbiParam, ArgumentLoc, ArgumentPurpose, DataFlowGraph, Ebb, Function, Inst, InstBuilder,
     SigRef, Signature, Type, Value, ValueLoc,
 };
-use crate::isa::TargetIsa;
-use crate::legalizer::split::{isplit, vsplit};
-use log::debug;
+use isa::TargetIsa;
+use legalizer::split::{isplit, vsplit};
 use std::vec::Vec;
 
 /// Legalize all the function signatures in `func`.
