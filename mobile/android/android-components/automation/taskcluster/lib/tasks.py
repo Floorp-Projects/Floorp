@@ -8,6 +8,8 @@ import datetime
 import json
 import taskcluster
 
+DEFAULT_EXPIRES_IN = '1 year'
+
 
 class TaskBuilder(object):
     def __init__(self, task_id, repo_url, branch, commit, owner, source, scheduler_id, build_worker_type, beetmover_worker_type, tasks_priority='lowest'):
@@ -22,7 +24,133 @@ class TaskBuilder(object):
         self.beetmover_worker_type = beetmover_worker_type
         self.tasks_priority = tasks_priority
 
-    def craft_build_ish_task(
+    def craft_build_task(self, module_name, gradle_tasks, subtitle='', run_coverage=False, is_snapshot=False, artifact_info=None):
+        artifacts = {} if artifact_info is None else {
+            artifact_info['artifact']: {
+                'type': 'file',
+                'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
+                'path': artifact_info['path']
+            }
+        }
+
+        scopes = [
+            "secrets:get:project/mobile/android-components/public-tokens"
+        ] if run_coverage else []
+
+        checkout_command = (
+            "export TERM=dumb && git fetch {} {} --tags && "
+            "git config advice.detachedHead false && "
+            "git checkout {}".format(
+                self.repo_url, self.branch, self.commit
+            )
+        )
+
+        snapshot_flag = '-Psnapshot ' if is_snapshot else ''
+        coverage_flag = '-Pcoverage ' if run_coverage else ''
+        gradle_command = (
+            './gradlew --no-daemon clean ' + coverage_flag + snapshot_flag + gradle_tasks
+        )
+
+        post_gradle_command = 'automation/taskcluster/action/upload_coverage_report.sh' if run_coverage else ''
+
+        full_command = ' && '.join(
+            command for command in (checkout_command, gradle_command, post_gradle_command)
+            if command
+        )
+
+        features = {}
+        if artifact_info is not None:
+            features['chainOfTrust'] = True
+        elif any(scope.startswith('secrets:') for scope in scopes):
+            features['taskclusterProxy'] = True
+
+        return self._craft_build_ish_task(
+            name='Android Components - Module {} {}'.format(module_name, subtitle),
+            description='Execure Gradle tasks for module {}'.format(module_name),
+            command=full_command,
+            features=features,
+            scopes=scopes,
+            artifacts=artifacts
+        )
+
+    def craft_wait_on_builds_task(self, dependencies):
+        return self._craft_build_ish_task(
+            name='Android Components - Wait on all builds to be completed',
+            description='Dummy tasks that ensures all builds are correctly done before publishing them',
+            dependencies=dependencies,
+            command="exit 0"
+        )
+
+    def craft_detekt_task(self):
+        return self._craft_build_ish_task(
+            name='Android Components - detekt',
+            description='Running detekt over all modules',
+            command='./gradlew --no-daemon clean detekt'
+        )
+
+    def craft_ktlint_task(self):
+        return self._craft_build_ish_task(
+            name='Android Components - ktlint',
+            description='Running ktlint over all modules',
+            command='./gradlew --no-daemon clean ktlint'
+        )
+
+    def craft_compare_locales_task(self):
+        return self._craft_build_ish_task(
+            name='Android Components - compare-locales',
+            description='Validate strings.xml with compare-locales',
+            command='pip install "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
+        )
+
+    def craft_beetmover_task(
+        self, build_task_id, wait_on_builds_task_id, version, artifact, artifact_name, is_snapshot, is_staging
+    ):
+        if is_snapshot:
+            if is_staging:
+                bucket_name = 'maven-snapshot-staging'
+                bucket_public_url = 'https://maven-snapshots.stage.mozaws.net/'
+            else:
+                bucket_name = 'maven-snapshot-production'
+                bucket_public_url = 'https://snapshots.maven.mozilla.org/'
+        else:
+            if is_staging:
+                bucket_name = 'maven-staging'
+                bucket_public_url = 'https://maven-default.stage.mozaws.net/'
+            else:
+                bucket_name = 'maven-production'
+                bucket_public_url = 'https://maven.mozilla.org/'
+
+        version = version.lstrip('v')
+        payload = {
+            "maxRunTime": 600,
+            "upstreamArtifacts": [{
+                'paths': [artifact],
+                'taskId': build_task_id,
+                'taskType': 'build',
+                'zipExtract': True,
+            }],
+            "releaseProperties": {
+                "appName": "snapshot_components" if is_snapshot else "components",
+            },
+            "version": "{}-SNAPSHOT".format(version) if is_snapshot else version,
+            "artifact_id": artifact_name
+        }
+
+        return self._craft_default_task_definition(
+            self.beetmover_worker_type,
+            'scriptworker-prov-v1',
+            dependencies=[build_task_id, wait_on_builds_task_id],
+            routes=[],
+            scopes=[
+                "project:mobile:android-components:releng:beetmover:bucket:{}".format(bucket_name),
+                "project:mobile:android-components:releng:beetmover:action:push-to-maven",
+            ],
+            name="Android Components - Publish Module :{} via beetmover".format(artifact_name),
+            description="Publish release module {} to {}".format(artifact_name, bucket_public_url),
+            payload=payload
+        )
+
+    def _craft_build_ish_task(
         self, name, description, command, dependencies=None, artifacts=None, scopes=None,
         routes=None, features=None
     ):
@@ -56,41 +184,12 @@ class TaskBuilder(object):
             payload
         )
 
-    def craft_beetmover_task(
-        self, name, description, version, artifact_id, dependencies=None, upstreamArtifacts=None,
-        scopes=None, is_snapshot=False
-    ):
-        dependencies = [] if dependencies is None else dependencies
-        upstreamArtifacts = [] if upstreamArtifacts is None else upstreamArtifacts
-        scopes = [] if scopes is None else scopes
-
-        payload = {
-            "maxRunTime": 600,
-            "upstreamArtifacts": upstreamArtifacts,
-            "releaseProperties": {
-                "appName": "snapshot_components" if is_snapshot else "components",
-            },
-            "version": "{}-SNAPSHOT".format(version) if is_snapshot else version,
-            "artifact_id": artifact_id
-        }
-
-        return self._craft_default_task_definition(
-            self.beetmover_worker_type,
-            'scriptworker-prov-v1',
-            dependencies,
-            [],
-            scopes,
-            name,
-            description,
-            payload
-        )
-
     def _craft_default_task_definition(
         self, worker_type, provisioner_id, dependencies, routes, scopes, name, description, payload
     ):
         created = datetime.datetime.now()
         deadline = taskcluster.fromNow('1 day')
-        expires = taskcluster.fromNow('1 year')
+        expires = taskcluster.fromNow(DEFAULT_EXPIRES_IN)
 
         return {
             "provisionerId": provisioner_id,
