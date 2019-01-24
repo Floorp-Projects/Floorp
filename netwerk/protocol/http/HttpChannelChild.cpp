@@ -1187,32 +1187,29 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIsPending);
 
-  auto checkForBlockedContent = [&]() {
-    // NB: We use aChannelStatus here instead of mStatus because if there was an
-    // nsCORSListenerProxy on this request, it will override the tracking
-    // protection's return value.
-    if (aChannelStatus == NS_ERROR_TRACKING_URI ||
-        aChannelStatus == NS_ERROR_MALWARE_URI ||
-        aChannelStatus == NS_ERROR_UNWANTED_URI ||
-        aChannelStatus == NS_ERROR_BLOCKED_URI ||
-        aChannelStatus == NS_ERROR_HARMFUL_URI ||
-        aChannelStatus == NS_ERROR_PHISHING_URI) {
-      nsCString list, provider, fullhash;
+  // NB: We use aChannelStatus here instead of mStatus because if there was an
+  // nsCORSListenerProxy on this request, it will override the tracking
+  // protection's return value.
+  if (aChannelStatus == NS_ERROR_TRACKING_URI ||
+      aChannelStatus == NS_ERROR_MALWARE_URI ||
+      aChannelStatus == NS_ERROR_UNWANTED_URI ||
+      aChannelStatus == NS_ERROR_BLOCKED_URI ||
+      aChannelStatus == NS_ERROR_HARMFUL_URI ||
+      aChannelStatus == NS_ERROR_PHISHING_URI) {
+    nsCString list, provider, fullhash;
 
-      nsresult rv = GetMatchedList(list);
-      NS_ENSURE_SUCCESS_VOID(rv);
+    nsresult rv = GetMatchedList(list);
+    NS_ENSURE_SUCCESS_VOID(rv);
 
-      rv = GetMatchedProvider(provider);
-      NS_ENSURE_SUCCESS_VOID(rv);
+    rv = GetMatchedProvider(provider);
+    NS_ENSURE_SUCCESS_VOID(rv);
 
-      rv = GetMatchedFullHash(fullhash);
-      NS_ENSURE_SUCCESS_VOID(rv);
+    rv = GetMatchedFullHash(fullhash);
+    NS_ENSURE_SUCCESS_VOID(rv);
 
-      UrlClassifierCommon::SetBlockedContent(this, aChannelStatus, list,
-                                             provider, fullhash);
-    }
-  };
-  checkForBlockedContent();
+    UrlClassifierCommon::SetBlockedContent(this, aChannelStatus, list, provider,
+                                           fullhash);
+  }
 
   MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
 
