@@ -4,7 +4,7 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-String GLEAN_PARSER_VERSION = "0.10.0"
+String GLEAN_PARSER_VERSION = "0.11.0"
 
 /* This script runs a given Python module as a "main" module, like
  * `python -m module`. However, it first checks that the installed
@@ -84,6 +84,13 @@ ext.gleanGenerateMetricsAPI = {
             args "-s"
             args "namespace=$namespace"
             args "$projectDir/metrics.yaml"
+
+            // If we're building the Glean library itself (rather than an
+            // application using Glean) pass the --allow-reserved flag so we can
+            // use metrics in the "glean..." category
+            if (project.name == 'service-glean') {
+                args "--allow-reserved"
+            }
 
             // Only show the output if something went wrong.
             ignoreExitValue = true
