@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 PLATFORM_RENAMES = {
     'windows2012-32': 'win32',
     'windows2012-64': 'win64',
-    'windows2012-aarch64': 'win64-aarch64-msvc',
+    'windows2012-aarch64': 'win64-aarch64',
     'osx-cross': 'macosx64',
 }
 
@@ -48,7 +48,7 @@ BALROG_PLATFORM_MAP = {
     "win64-asan-reporter": [
         "WINNT_x86_64-msvc-x64-asan"
     ],
-    "win64-aarch64-msvc": [
+    "win64-aarch64": [
         "WINNT_aarch64-msvc-aarch64",
     ],
 }
