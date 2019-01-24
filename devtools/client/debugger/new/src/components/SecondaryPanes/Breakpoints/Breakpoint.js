@@ -9,6 +9,7 @@ import { connect } from "../../../utils/connect";
 import { createSelector } from "reselect";
 import classnames from "classnames";
 import actions from "../../../actions";
+import { memoize } from "lodash";
 
 import showContextMenu from "./BreakpointsContextMenu";
 import { CloseButton } from "../../shared/Button";
@@ -124,22 +125,25 @@ class Breakpoint extends PureComponent<Props> {
     return breakpoint.condition || getSelectedText(breakpoint, selectedSource);
   }
 
-  highlightText() {
-    const text = this.getBreakpointText() || "";
-    const editor = getEditor();
+  highlightText = memoize(
+    (text = "", editor) => {
+      if (!editor.CodeMirror) {
+        return { __html: text };
+      }
 
-    if (!editor.CodeMirror) {
-      return { __html: text };
-    }
-
-    const node = document.createElement("div");
-    editor.CodeMirror.runMode(text, "application/javascript", node);
-    return { __html: node.innerHTML };
-  }
+      const node = document.createElement("div");
+      editor.CodeMirror.runMode(text, "application/javascript", node);
+      return { __html: node.innerHTML };
+    },
+    (text, editor) => `${text} - ${editor ? "editor" : ""}`
+  );
 
   /* eslint-disable react/no-danger */
   render() {
     const { breakpoint } = this.props;
+    const text = this.getBreakpointText();
+    const editor = getEditor();
+
     return (
       <div
         className={classnames({
@@ -165,9 +169,9 @@ class Breakpoint extends PureComponent<Props> {
           htmlFor={breakpoint.id}
           className="breakpoint-label cm-s-mozilla"
           onClick={this.selectBreakpoint}
-          title={this.getBreakpointText()}
+          title={text}
         >
-          <span dangerouslySetInnerHTML={this.highlightText()} />
+          <span dangerouslySetInnerHTML={this.highlightText(text, editor)} />
         </label>
         <div className="breakpoint-line-close">
           <div className="breakpoint-line">{this.getBreakpointLocation()}</div>
