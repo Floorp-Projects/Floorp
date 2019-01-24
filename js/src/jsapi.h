@@ -4104,11 +4104,7 @@ extern JS_PUBLIC_API bool IsUnwrappedSavedFrame(JSObject* obj);
 
 } /* namespace JS */
 
-/* Stopwatch-based performance monitoring. */
-
 namespace js {
-
-class AutoStopwatch;
 
 /**
  * Hint that we expect a crash. Currently, the only thing that cares is the
