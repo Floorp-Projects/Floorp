@@ -28,7 +28,6 @@ use prim_store::line_dec::LineDecorationCacheKey;
 use print_tree::{PrintTreePrinter};
 use render_backend::FrameId;
 use resource_cache::{CacheItem, ResourceCache};
-use surface::SurfaceCacheKey;
 use std::{ops, mem, usize, f32, i32, u32};
 use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use tiling::{RenderPass, RenderTargetIndex};
@@ -1090,8 +1089,6 @@ pub enum RenderTaskCacheKeyKind {
     Image(ImageCacheKey),
     #[allow(dead_code)]
     Glyph(GpuGlyphCacheKey),
-    #[allow(dead_code)]
-    Picture(SurfaceCacheKey),
     BorderSegment(BorderSegmentCacheKey),
     LineDecoration(LineDecorationCacheKey),
 }
