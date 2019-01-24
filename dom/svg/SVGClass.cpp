@@ -7,9 +7,9 @@
 #include "SVGClass.h"
 
 #include "mozilla/dom/SVGAnimatedString.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/Move.h"
-#include "SVGElement.h"
-#include "nsSMILValue.h"
+#include "mozilla/SMILValue.h"
 #include "SMILStringType.h"
 
 namespace mozilla {
@@ -107,8 +107,8 @@ UniquePtr<nsISMILAttr> SVGClass::ToSMILAttr(SVGElement* aSVGElement) {
 
 nsresult SVGClass::SMILString::ValueFromString(
     const nsAString& aStr, const dom::SVGAnimationElement* /*aSrcElement*/,
-    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
-  nsSMILValue val(SMILStringType::Singleton());
+    SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
+  SMILValue val(SMILStringType::Singleton());
 
   *static_cast<nsAString*>(val.mU.mPtr) = aStr;
   aValue = std::move(val);
@@ -116,8 +116,8 @@ nsresult SVGClass::SMILString::ValueFromString(
   return NS_OK;
 }
 
-nsSMILValue SVGClass::SMILString::GetBaseValue() const {
-  nsSMILValue val(SMILStringType::Singleton());
+SMILValue SVGClass::SMILString::GetBaseValue() const {
+  SMILValue val(SMILStringType::Singleton());
   mSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                        *static_cast<nsAString*>(val.mU.mPtr));
   return val;
@@ -130,7 +130,7 @@ void SVGClass::SMILString::ClearAnimValue() {
   }
 }
 
-nsresult SVGClass::SMILString::SetAnimValue(const nsSMILValue& aValue) {
+nsresult SVGClass::SMILString::SetAnimValue(const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILStringType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILStringType::Singleton()) {

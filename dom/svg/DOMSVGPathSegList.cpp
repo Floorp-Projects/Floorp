@@ -5,11 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DOMSVGPathSegList.h"
+
+#include "nsCOMPtr.h"
 #include "DOMSVGPathSeg.h"
 #include "nsError.h"
 #include "SVGAnimatedPathSegList.h"
-#include "nsCOMPtr.h"
-#include "nsSVGAttrTearoffTable.h"
+#include "SVGAttrTearoffTable.h"
 #include "SVGPathSegUtils.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGPathSegListBinding.h"
@@ -20,9 +21,9 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-static inline nsSVGAttrTearoffTable<void, DOMSVGPathSegList>&
+static inline SVGAttrTearoffTable<void, DOMSVGPathSegList>&
 SVGPathSegListTearoffTable() {
-  static nsSVGAttrTearoffTable<void, DOMSVGPathSegList>
+  static SVGAttrTearoffTable<void, DOMSVGPathSegList>
       sSVGPathSegListTearoffTable;
   return sSVGPathSegListTearoffTable;
 }

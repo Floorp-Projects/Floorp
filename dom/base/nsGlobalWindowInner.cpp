@@ -4399,6 +4399,22 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
 
   nsContentUtils::StorageAccess access =
       nsContentUtils::StorageAllowedForWindow(this);
+
+  // We allow partitioned localStorage only to some hosts.
+  if (access == nsContentUtils::StorageAccess::ePartitionedOrDeny) {
+    if (!mDoc) {
+      access = nsContentUtils::StorageAccess::eDeny;
+    } else {
+      nsCOMPtr<nsIURI> uri;
+      Unused << mDoc->NodePrincipal()->GetURI(getter_AddRefs(uri));
+      static const char* kPrefName =
+          "privacy.restrict3rdpartystorage.partitionedHosts";
+      if (!uri || !nsContentUtils::IsURIInPrefList(uri, kPrefName)) {
+        access = nsContentUtils::StorageAccess::eDeny;
+      }
+    }
+  }
+
   if (access == nsContentUtils::StorageAccess::eDeny) {
     aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;

@@ -158,7 +158,6 @@ nsCookiePermission::CanSetCookie(nsIURI *aURI, nsIChannel *aChannel,
 
   uint32_t perm;
   mPermMgr->TestPermission(aURI, kPermissionType, &perm);
-  bool isThirdParty = false;
   switch (perm) {
     case nsICookiePermission::ACCESS_SESSION:
       *aIsSession = true;
@@ -172,36 +171,8 @@ nsCookiePermission::CanSetCookie(nsIURI *aURI, nsIChannel *aChannel,
       *aResult = false;
       break;
 
-    case nsICookiePermission::ACCESS_ALLOW_FIRST_PARTY_ONLY:
-      mThirdPartyUtil->IsThirdPartyChannel(aChannel, aURI, &isThirdParty);
-      // If it's third party, we can't set the cookie
-      if (isThirdParty) *aResult = false;
-      break;
-
-    case nsICookiePermission::ACCESS_LIMIT_THIRD_PARTY:
-      mThirdPartyUtil->IsThirdPartyChannel(aChannel, aURI, &isThirdParty);
-      // If it's third party, check whether cookies are already set
-      if (isThirdParty) {
-        nsresult rv;
-        nsCOMPtr<nsICookieManager> cookieManager =
-            do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) {
-          *aResult = false;
-          break;
-        }
-        uint32_t priorCookieCount = 0;
-        nsAutoCString hostFromURI;
-        aURI->GetHost(hostFromURI);
-        cookieManager->CountCookiesFromHost(hostFromURI, &priorCookieCount);
-        *aResult = priorCookieCount != 0;
-      }
-      break;
-
     default:
-      // the permission manager has nothing to say about this cookie -
-      // so, we apply the default prefs to it.
-      NS_ASSERTION(perm == nsIPermissionManager::UNKNOWN_ACTION,
-                   "unknown permission");
+      // Here we can have any legacy permission value.
 
       // now we need to figure out what type of accept policy we're dealing with
       // if we accept cookies normally, just bail and return
