@@ -19,6 +19,7 @@ class Declarations extends PureComponent {
       isUserAgentStyle: PropTypes.bool.isRequired,
       onToggleDeclaration: PropTypes.func.isRequired,
       showDeclarationNameEditor: PropTypes.func.isRequired,
+      showDeclarationValueEditor: PropTypes.func.isRequired,
     };
   }
 
@@ -28,6 +29,7 @@ class Declarations extends PureComponent {
       isUserAgentStyle,
       onToggleDeclaration,
       showDeclarationNameEditor,
+      showDeclarationValueEditor,
     } = this.props;
 
     if (!declarations.length) {
@@ -43,6 +45,7 @@ class Declarations extends PureComponent {
             isUserAgentStyle,
             onToggleDeclaration,
             showDeclarationNameEditor,
+            showDeclarationValueEditor,
           });
         })
       )
