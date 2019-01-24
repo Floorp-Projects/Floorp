@@ -66,6 +66,48 @@ permalink: /changelog/
 * Mozilla App Services library updated to 0.14.0. See [release notes](https://github.com/mozilla/application-services/releases/tag/v0.14.0) for details.
   * Important: Users consuming megazords must also update the application-services gradle plugin to version 0.3.0.
 
+* **service-firefox-accounts**
+  * Added `FxaAccountManager`, which encapsulates a lower level accounts API and provides an observable interface for consumers that wish to be notified of account and profile changes.
+  * Background-worker friendly.
+  ```kotlin
+  // Long-lived instance, pinned on an application.
+  val accountManager = FxaAccountManager(context, Config.release(CLIENT_ID, REDIRECT_URL), arrayOf("profile"))
+  launch { accountManager.init() }
+
+  // Somewhere in a fragment that cares about account state...
+  accountManager.register(object : AccountObserver {
+      override fun onLoggedOut() {
+        ...
+      }
+
+      override fun onAuthenticated(account: FirefoxAccountShaped) {
+        ...
+      }
+
+      override fun onProfileUpdated(profile: Profile) {
+        ...
+      }
+
+      override fun onError(error: FxaException) {
+        ...
+      }
+  }
+
+  // Reacting to a "sign-in" user action:
+  launch {
+    val authUrl = try {
+        accountManager.beginAuthentication().await()
+    } catch (error: FxaException) {
+        // ... display error ui...
+        return@launch
+    }
+    openWebView(authUrl)
+  }
+
+  ```
+
+* **feature-accounts** 🆕
+  * Added a new `FirefoxAccountsAuthFeature`, which ties together the **FxaAccountManager** with a session manager via **feature-tabs**.
 
 # 0.39.0
 
