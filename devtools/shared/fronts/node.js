@@ -359,6 +359,10 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.isDisplayed;
   }
 
+  get isScrollable() {
+    return this._form.isScrollable;
+  }
+
   get isTreeDisplayed() {
     let parent = this;
     while (parent) {

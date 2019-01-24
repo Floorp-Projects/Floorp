@@ -596,7 +596,8 @@ static nsresult AddTabThreatSources(ThreatHit& aHit, nsIChannel* aChannel) {
       do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = thirdPartyUtil->GetTopWindowForChannel(aChannel, getter_AddRefs(win));
+  rv = thirdPartyUtil->GetTopWindowForChannel(aChannel, nullptr,
+                                              getter_AddRefs(win));
   NS_ENSURE_SUCCESS(rv, rv);
 
   auto* pwin = nsPIDOMWindowOuter::From(win);

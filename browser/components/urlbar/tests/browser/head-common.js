@@ -8,89 +8,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 
 SearchTestUtils.init(Assert, registerCleanupFunction);
-
-/**
- * Waits for the next top-level document load in the current browser.  The URI
- * of the document is compared against aExpectedURL.  The load is then stopped
- * before it actually starts.
- *
- * @param {string} aExpectedURL
- *        The URL of the document that is expected to load.
- * @param {object} [aBrowser]
- *        The browser to wait for.
- * @param {boolean} [aStopFromProgressListener]
- *        Whether to cancel the load directly from the progress listener. Defaults to true.
- *        If you're using this method to avoid hitting the network, you want the default (true).
- *        However, the browser UI will behave differently for loads stopped directly from
- *        the progress listener (effectively in the middle of a call to loadURI) and so there
- *        are cases where you may want to avoid stopping the load directly from within the
- *        progress listener callback.
- * @returns {Promise}
- */
-function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrowser, aStopFromProgressListener = true) {
-  function content_script(contentStopFromProgressListener) {
-    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-    let wp = docShell.QueryInterface(Ci.nsIWebProgress);
-
-    function stopContent(now, uri) {
-      if (now) {
-        /* Hammer time. */
-        content.stop();
-
-        /* Let the parent know we're done. */
-        sendAsyncMessage("Test:WaitForDocLoadAndStopIt", { uri });
-      } else {
-        setTimeout(stopContent.bind(null, true, uri), 0);
-      }
-    }
-
-    let progressListener = {
-      onStateChange(webProgress, req, flags, status) {
-        dump("waitForDocLoadAndStopIt: onStateChange " + flags.toString(16) + ": " + req.name + "\n");
-
-        if (webProgress.isTopLevel &&
-            flags & Ci.nsIWebProgressListener.STATE_START) {
-          wp.removeProgressListener(progressListener);
-
-          let chan = req.QueryInterface(Ci.nsIChannel);
-          dump(`waitForDocLoadAndStopIt: Document start: ${chan.URI.spec}\n`);
-
-          stopContent(contentStopFromProgressListener, chan.originalURI.spec);
-        }
-      },
-      QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
-    };
-    wp.addProgressListener(progressListener, wp.NOTIFY_STATE_WINDOW);
-
-    /**
-     * As |this| is undefined and we can't extend |docShell|, adding an unload
-     * event handler is the easiest way to ensure the weakly referenced
-     * progress listener is kept alive as long as necessary.
-     */
-    addEventListener("unload", function() {
-      try {
-        wp.removeProgressListener(progressListener);
-      } catch (e) { /* Will most likely fail. */ }
-    });
-  }
-
-  return new Promise((resolve, reject) => {
-    function complete({ data }) {
-      is(data.uri, aExpectedURL, "waitForDocLoadAndStopIt: The expected URL was loaded");
-      mm.removeMessageListener("Test:WaitForDocLoadAndStopIt", complete);
-      resolve();
-    }
-
-    let mm = aBrowser.messageManager;
-    mm.loadFrameScript("data:,(" + content_script.toString() + ")(" + aStopFromProgressListener + ");", true);
-    mm.addMessageListener("Test:WaitForDocLoadAndStopIt", complete);
-    info("waitForDocLoadAndStopIt: Waiting for URL: " + aExpectedURL);
-  });
-}
 
 function is_element_visible(element, msg) {
   isnot(element, null, "Element should not be null, when checking visibility");
@@ -115,65 +37,23 @@ function runHttpServer(scheme, host, port = -1) {
   return httpserver;
 }
 
-function promisePopupEvent(popup, eventSuffix) {
-  let endState = {shown: "open", hidden: "closed"}[eventSuffix];
-
-  if (popup.state == endState)
-    return Promise.resolve();
-
-  let eventType = "popup" + eventSuffix;
-  return new Promise(resolve => {
-    popup.addEventListener(eventType, function(event) {
-      resolve();
-    }, {once: true});
-
-  });
-}
-
 function promisePopupShown(popup) {
-  return promisePopupEvent(popup, "shown");
+  return BrowserTestUtils.waitForPopupEvent(popup, "shown");
 }
 
 function promisePopupHidden(popup) {
-  return promisePopupEvent(popup, "hidden");
+  return BrowserTestUtils.waitForPopupEvent(popup, "hidden");
 }
 
 function promiseSearchComplete(win = window, dontAnimate = false) {
-  return promisePopupShown(win.gURLBar.popup).then(() => {
-    function searchIsComplete() {
-      let isComplete = win.gURLBar.controller.searchStatus >=
-                       Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
-      if (isComplete) {
-        info(`Restore popup dontAnimate value to ${dontAnimate}`);
-        win.gURLBar.popup.setAttribute("dontanimate", dontAnimate);
-      }
-      return isComplete;
-    }
-
-    // Wait until there are at least two matches.
-    return BrowserTestUtils.waitForCondition(searchIsComplete, "waiting urlbar search to complete");
-  });
+  return UrlbarTestUtils.promiseSearchComplete(win, dontAnimate);
 }
 
 function promiseAutocompleteResultPopup(inputText,
                                         win = window,
                                         fireInputEvent = false) {
-  let dontAnimate = !!win.gURLBar.popup.getAttribute("dontanimate");
-  waitForFocus(() => {
-    info(`Disable popup animation. Change dontAnimate value from ${dontAnimate} to true.`);
-    win.gURLBar.popup.setAttribute("dontanimate", "true");
-    win.gURLBar.focus();
-    win.gURLBar.value = inputText;
-    if (fireInputEvent) {
-      // This is necessary to get the urlbar to set gBrowser.userTypedValue.
-      let event = document.createEvent("Events");
-      event.initEvent("input", true, true);
-      win.gURLBar.dispatchEvent(event);
-    }
-    win.gURLBar.controller.startSearch(inputText);
-  }, win);
-
-  return promiseSearchComplete(win, dontAnimate);
+  return UrlbarTestUtils.promiseAutocompleteResultPopup(inputText,
+    win, waitForFocus, fireInputEvent);
 }
 
 function promisePageActionPanelOpen() {
@@ -295,43 +175,17 @@ function promiseNodeVisible(node) {
 }
 
 function promiseSpeculativeConnection(httpserver) {
-  return BrowserTestUtils.waitForCondition(() => {
-    if (httpserver) {
-      return httpserver.connectionNumber == 1;
-    }
-    return false;
-  }, "Waiting for connection setup");
+  return UrlbarTestUtils.promiseSpeculativeConnection(httpserver);
 }
 
 async function waitForAutocompleteResultAt(index) {
-  let searchString = gURLBar.controller.searchString;
-  await BrowserTestUtils.waitForCondition(
-    () => gURLBar.popup.richlistbox.itemChildren.length > index &&
-          gURLBar.popup.richlistbox.itemChildren[index].getAttribute("ac-text") == searchString.trim(),
-    `Waiting for the autocomplete result for "${searchString}" at [${index}] to appear`);
-  // Ensure the addition is complete, for proper mouse events on the entries.
-  await new Promise(resolve => window.requestIdleCallback(resolve, {timeout: 1000}));
-  return gURLBar.popup.richlistbox.itemChildren[index];
+  return UrlbarTestUtils.waitForAutocompleteResultAt(window, index);
 }
 
 function promiseSuggestionsPresent(msg = "") {
-  return TestUtils.waitForCondition(suggestionsPresent,
-                                    msg || "Waiting for suggestions");
+  return UrlbarTestUtils.promiseSuggestionsPresent(window, msg);
 }
 
 function suggestionsPresent() {
-  let controller = gURLBar.popup.input.controller;
-  let matchCount = controller.matchCount;
-  for (let i = 0; i < matchCount; i++) {
-    let url = controller.getValueAt(i);
-    let mozActionMatch = url.match(/^moz-action:([^,]+),(.*)$/);
-    if (mozActionMatch) {
-      let [, type, paramStr] = mozActionMatch;
-      let params = JSON.parse(paramStr);
-      if (type == "searchengine" && "searchSuggestion" in params) {
-        return true;
-      }
-    }
-  }
-  return false;
+  return UrlbarTestUtils.suggestionsPresent(window);
 }

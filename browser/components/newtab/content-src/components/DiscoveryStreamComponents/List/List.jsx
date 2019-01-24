@@ -66,16 +66,23 @@ export function _List(props) {
     <ListItem {...rec} key={`ds-list-item-${index}`} index={index} type={props.type} dispatch={props.dispatch} />)
   );
 
+  const listStyles = [
+    "ds-list",
+    props.hasImages ? "ds-list-images" : "",
+    props.hasNumbers ? "ds-list-numbers" : "",
+  ];
   return (
     <div>
-      <h3 className="ds-list-title">{props.header && props.header.title}</h3>
+      {props.header && props.header.title ? <div className="ds-header">{props.header.title}</div> : null }
       <hr className="ds-list-border" />
-      <ul className="ds-list">{recMarkup}</ul>
+      <ul className={listStyles.join(" ")}>{recMarkup}</ul>
     </div>
   );
 }
 
 _List.defaultProps = {
+  hasImages: false, // Display images for each item
+  hasNumbers: false, // Display numbers for each item
   items: 6, // Number of stories to display.  TODO: get from endpoint
 };
 

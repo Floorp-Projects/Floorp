@@ -52,7 +52,7 @@ var AboutPrivateBrowsingHandler = {
         let isFirstChange = true;
 
         if (!aMessage.data || !aMessage.data.text) {
-          urlBar.hiddenFocus();
+          urlBar.setHiddenFocus();
         } else {
           // Pass the provided text to the awesomebar. Prepend the @engine shortcut.
           urlBar.search(`${searchAlias}${aMessage.data.text}`);

@@ -24,5 +24,9 @@
   .ds-column-12 & {
     grid-template-columns: repeat(4, 1fr);
     grid-gap: 24px;
+
+    &.ds-card-grid-divisible-by-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 }

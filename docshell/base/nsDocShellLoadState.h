@@ -17,11 +17,12 @@ class nsIInputStream;
 class nsISHEntry;
 class nsIURI;
 class nsIDocShell;
+class nsIChildChannel;
 class OriginAttibutes;
 namespace mozilla {
 namespace dom {
 class DocShellLoadStateInit;
-}
+}  // namespace dom
 }  // namespace mozilla
 
 /**
@@ -34,6 +35,9 @@ class nsDocShellLoadState final {
 
   explicit nsDocShellLoadState(nsIURI* aURI);
   explicit nsDocShellLoadState(mozilla::dom::DocShellLoadStateInit& aLoadState);
+
+  static nsresult CreateFromPendingChannel(nsIChildChannel* aPendingChannel,
+                                           nsDocShellLoadState** aResult);
 
   // Getters and Setters
 
@@ -182,6 +186,10 @@ class nsDocShellLoadState final {
     return mIsFromProcessingFrameAttributes;
   }
 
+  nsIChildChannel* GetPendingRedirectedChannel() {
+    return mPendingRedirectedChannel;
+  }
+
   // When loading a document through nsDocShell::LoadURI(), a special set of
   // flags needs to be set based on other values in nsDocShellLoadState. This
   // function calculates those flags, before the LoadState is passed to
@@ -320,6 +328,10 @@ class nsDocShellLoadState final {
   // This will be true if this load is triggered by attribute changes.
   // See nsILoadInfo.isFromProcessingFrameAttributes
   bool mIsFromProcessingFrameAttributes;
+
+  // If set, a pending cross-process redirected channel should be used to
+  // perform the load. The channel will be stored in this value.
+  nsCOMPtr<nsIChildChannel> mPendingRedirectedChannel;
 };
 
 #endif /* nsDocShellLoadState_h__ */

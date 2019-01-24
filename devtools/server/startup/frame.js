@@ -122,6 +122,19 @@ try {
       }
       connections.clear();
     });
+
+    // Destroy the server once its last connection closes. Note that multiple frame
+    // scripts may be running in parallel and reuse the same server.
+    function destroyServer() {
+      // Only destroy the server if there is no more connections to it. It may be used
+      // to debug another tab running in the same process.
+      if (DebuggerServer.hasConnection()) {
+        return;
+      }
+      DebuggerServer.off("connectionchange", destroyServer);
+      DebuggerServer.destroy();
+    }
+    DebuggerServer.on("connectionchange", destroyServer);
   })();
 } catch (e) {
   dump(`Exception in DevTools frame startup: ${e}\n`);
