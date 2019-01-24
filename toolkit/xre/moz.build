@@ -158,6 +158,10 @@ if CONFIG['MOZ_PDF_PRINTING']:
         '../components/printingui',
     ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
