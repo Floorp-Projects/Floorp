@@ -9,7 +9,7 @@
 {
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-class MozAutocompleteRichlistitem extends MozElements.MozRichlistitem {
+MozElements.MozAutocompleteRichlistitem = class MozAutocompleteRichlistitem extends MozElements.MozRichlistitem {
   constructor() {
     super();
 
@@ -61,8 +61,6 @@ class MozAutocompleteRichlistitem extends MozElements.MozRichlistitem {
 
     this.textContent = "";
     this.appendChild(MozXULElement.parseXULToFragment(this._markup));
-
-    this.setAttribute("align", "center");
 
     this._boundaryCutoff = null;
     this._inOverflow = false;
@@ -908,14 +906,14 @@ class MozAutocompleteRichlistitem extends MozElements.MozRichlistitem {
 
     return action;
   }
-}
+};
 
 MozXULElement.implementCustomInterface(
-  MozAutocompleteRichlistitem,
+  MozElements.MozAutocompleteRichlistitem,
   [Ci.nsIDOMXULSelectControlItemElement]
 );
 
-class MozAutocompleteRichlistitemInsecureWarning extends MozAutocompleteRichlistitem {
+class MozAutocompleteRichlistitemInsecureWarning extends MozElements.MozAutocompleteRichlistitem {
   constructor() {
     super();
 
@@ -1018,6 +1016,10 @@ class MozAutocompleteRichlistitemInsecureWarning extends MozAutocompleteRichlist
     return [this._learnMoreString.toLowerCase()];
   }
 }
+
+customElements.define("autocomplete-richlistitem", MozElements.MozAutocompleteRichlistitem, {
+  extends: "richlistitem",
+});
 
 customElements.define("autocomplete-richlistitem-insecure-warning", MozAutocompleteRichlistitemInsecureWarning, {
   extends: "richlistitem",

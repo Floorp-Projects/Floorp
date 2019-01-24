@@ -206,6 +206,16 @@ function notifySelectedIndex(expectedIndex, then = null) {
   });
 }
 
+function testMenuEntry(index, statement) {
+  return new Promise(resolve => {
+    gChromeScript.sendAsyncMessage("waitForMenuEntryTest", { index, statement });
+    gChromeScript.addMessageListener("menuEntryTested", function changed() {
+      gChromeScript.removeMessageListener("menuEntryTested", changed);
+      resolve();
+    });
+  });
+}
+
 function getPopupState(then = null) {
   return new Promise(resolve => {
     gChromeScript.sendAsyncMessage("getPopupState");
