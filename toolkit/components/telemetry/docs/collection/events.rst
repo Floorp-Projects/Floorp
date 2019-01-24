@@ -212,6 +212,8 @@ Example:
   Even if your event category isn't enabled, counts of events that attempted to be recorded will
   be :ref:`summarized <events.event-summary>`.
 
+.. _registerevents:
+
 ``registerEvents()``
 ~~~~~~~~~~~~~~~~~~~~
 
