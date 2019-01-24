@@ -17,15 +17,15 @@ describe("sources-tree", () => {
     it("alphabetically sorts children", () => {
       const source1 = createSource({
         url: "http://example.com/source1.js",
-        actor: "actor1"
+        id: "actor1"
       });
       const source2 = createSource({
         url: "http://example.com/foo/b_source2.js",
-        actor: "actor2"
+        id: "actor2"
       });
       const source3 = createSource({
         url: "http://example.com/foo/a_source3.js",
-        actor: "actor3"
+        id: "actor3"
       });
       const _tree = createDirectoryNode("root", "", []);
 
@@ -54,27 +54,27 @@ describe("sources-tree", () => {
       const sources = [
         createSource({
           url: "http://example.com/a.js",
-          actor: "actor1"
+          id: "actor1"
         }),
         createSource({
           url: "http://example.com/b.js/b_source.js",
-          actor: "actor2"
+          id: "actor2"
         }),
         createSource({
           url: "http://example.com/c.js",
-          actor: "actor1"
+          id: "actor3"
         }),
         createSource({
           url: "http://example.com",
-          actor: "actor1"
+          id: "actor4"
         }),
         createSource({
           url: "http://example.com/d/d_source.js",
-          actor: "actor3"
+          id: "actor5"
         }),
         createSource({
           url: "http://example.com/b2",
-          actor: "actor2"
+          id: "actor6"
         })
       ];
 
@@ -116,15 +116,15 @@ describe("sources-tree", () => {
       const sources = [
         createSource({
           url: "http://example.com/folder/a.js",
-          actor: "actor1"
+          id: "actor1"
         }),
         createSource({
           url: "http://example.com/folder/b/b.js",
-          actor: "actor2"
+          id: "actor2"
         }),
         createSource({
           url: "http://example.com/folder/c/",
-          actor: "actor1"
+          id: "actor3"
         })
       ];
 
@@ -155,15 +155,15 @@ describe("sources-tree", () => {
       const sources = [
         createSource({
           url: "http://api.example.com/a.js",
-          actor: "actor1"
+          id: "actor1"
         }),
         createSource({
           url: "http://example.com/b.js",
-          actor: "actor2"
+          id: "actor2"
         }),
         createSource({
           url: "http://demo.com/c.js",
-          actor: "actor3"
+          id: "actor3"
         })
       ];
 
