@@ -453,7 +453,7 @@ Instance::dataDrop(Instance* instance, uint32_t segIndex) {
 
   if (!instance->passiveDataSegments_[segIndex]) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
-                              JSMSG_WASM_INVALID_PASSIVE_DATA_SEG);
+                              JSMSG_WASM_DROPPED_DATA_SEG);
     return -1;
   }
 
@@ -501,7 +501,7 @@ Instance::memInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 
   if (!instance->passiveDataSegments_[segIndex]) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
-                              JSMSG_WASM_INVALID_PASSIVE_DATA_SEG);
+                              JSMSG_WASM_DROPPED_DATA_SEG);
     return -1;
   }
 
@@ -599,7 +599,7 @@ Instance::elemDrop(Instance* instance, uint32_t segIndex) {
 
   if (!instance->passiveElemSegments_[segIndex]) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
-                              JSMSG_WASM_INVALID_PASSIVE_ELEM_SEG);
+                              JSMSG_WASM_DROPPED_ELEM_SEG);
     return -1;
   }
 
@@ -665,7 +665,7 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 
   if (!instance->passiveElemSegments_[segIndex]) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
-                              JSMSG_WASM_INVALID_PASSIVE_ELEM_SEG);
+                              JSMSG_WASM_DROPPED_ELEM_SEG);
     return -1;
   }
 

@@ -122,11 +122,11 @@ mem_test("(memory.init 4 (i32.const 1234) (i32.const 1) (i32.const 1))", "",
 
 // drop with data seg ix indicating an active segment
 mem_test("data.drop 2", "",
-         WebAssembly.RuntimeError, /use of invalid passive data segment/);
+         WebAssembly.RuntimeError, /use of dropped data segment/);
 
 // init with data seg ix indicating an active segment
 mem_test("(memory.init 2 (i32.const 1234) (i32.const 1) (i32.const 1))", "",
-         WebAssembly.RuntimeError, /use of invalid passive data segment/);
+         WebAssembly.RuntimeError, /use of dropped data segment/);
 
 // init, using a data seg ix more than once is OK
 mem_test_nofail(
@@ -136,12 +136,12 @@ mem_test_nofail(
 // drop, then drop
 mem_test("data.drop 1",
          "data.drop 1",
-         WebAssembly.RuntimeError, /use of invalid passive data segment/);
+         WebAssembly.RuntimeError, /use of dropped data segment/);
 
 // drop, then init
 mem_test("data.drop 1",
          "(memory.init 1 (i32.const 1234) (i32.const 1) (i32.const 1))",
-         WebAssembly.RuntimeError, /use of invalid passive data segment/);
+         WebAssembly.RuntimeError, /use of dropped data segment/);
 
 // init: seg ix is valid passive, but length to copy > len of seg
 mem_test("",
@@ -220,11 +220,11 @@ tab_test("(table.init 4 (i32.const 12) (i32.const 1) (i32.const 1))", "",
 
 // drop with elem seg ix indicating an active segment
 tab_test("elem.drop 2", "",
-         WebAssembly.RuntimeError, /use of invalid passive element segment/);
+         WebAssembly.RuntimeError, /use of dropped element segment/);
 
 // init with elem seg ix indicating an active segment
 tab_test("(table.init 2 (i32.const 12) (i32.const 1) (i32.const 1))", "",
-         WebAssembly.RuntimeError, /use of invalid passive element segment/);
+         WebAssembly.RuntimeError, /use of dropped element segment/);
 
 // init, using an elem seg ix more than once is OK
 tab_test_nofail(
@@ -234,12 +234,12 @@ tab_test_nofail(
 // drop, then drop
 tab_test("elem.drop 1",
          "elem.drop 1",
-         WebAssembly.RuntimeError, /use of invalid passive element segment/);
+         WebAssembly.RuntimeError, /use of dropped element segment/);
 
 // drop, then init
 tab_test("elem.drop 1",
          "(table.init 1 (i32.const 12) (i32.const 1) (i32.const 1))",
-         WebAssembly.RuntimeError, /use of invalid passive element segment/);
+         WebAssembly.RuntimeError, /use of dropped element segment/);
 
 // init: seg ix is valid passive, but length to copy > len of seg
 tab_test("",
