@@ -37,13 +37,11 @@ class BrowserFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val sessionManager = requireComponents.core.sessionManager
-        val sessionId = "1"
 
         sessionFeature = SessionFeature(
             sessionManager,
             SessionUseCases(sessionManager),
-            engineView,
-            sessionId)
+            engineView)
 
         lifecycle.addObservers(sessionFeature)
     }
