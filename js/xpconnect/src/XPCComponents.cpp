@@ -1759,6 +1759,16 @@ nsXPCComponents_Utils::IntentionallyLeak() {
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::IntentionallyLeakNegatively() {
+#ifdef DEBUG
+  MOZ_COUNT_DTOR(IntentionallyLeakedObject);
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::DisableDumpStatistics() {
 #ifdef DEBUG
   nsTraceRefcnt::DisableDumpStatistics();
