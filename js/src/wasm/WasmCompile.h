@@ -42,32 +42,43 @@ struct ScriptedCaller {
 
 // Describes all the parameters that control wasm compilation.
 
+struct CompileArgs;
+typedef RefPtr<CompileArgs> MutableCompileArgs;
+typedef RefPtr<const CompileArgs> SharedCompileArgs;
+
 struct CompileArgs : ShareableBase<CompileArgs> {
   ScriptedCaller scriptedCaller;
   UniqueChars sourceMapURL;
+
   bool baselineEnabled;
-  bool forceCranelift;
-  bool debugEnabled;
   bool ionEnabled;
+  bool craneliftEnabled;
+  bool debugEnabled;
   bool sharedMemoryEnabled;
-  HasGcTypes gcTypesConfigured;
-  bool testTiering;
+  bool forceTiering;
+  bool gcEnabled;
+
+  // CompileArgs has two constructors:
+  //
+  // - one through a factory function `build`, which checks that flags are
+  // consistent with each other.
+  // - one that gives complete access to underlying fields.
+  //
+  // You should use the first one in general, unless you have a very good
+  // reason (i.e. no JSContext around and you know which flags have been used).
+
+  static SharedCompileArgs build(JSContext* cx, ScriptedCaller&& scriptedCaller);
 
   explicit CompileArgs(ScriptedCaller&& scriptedCaller)
       : scriptedCaller(std::move(scriptedCaller)),
         baselineEnabled(false),
-        forceCranelift(false),
-        debugEnabled(false),
         ionEnabled(false),
+        craneliftEnabled(false),
+        debugEnabled(false),
         sharedMemoryEnabled(false),
-        gcTypesConfigured(HasGcTypes::False),
-        testTiering(false) {}
-
-  CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller);
+        forceTiering(false),
+        gcEnabled(false) {}
 };
-
-typedef RefPtr<CompileArgs> MutableCompileArgs;
-typedef RefPtr<const CompileArgs> SharedCompileArgs;
 
 // Return the estimated compiled (machine) code size for the given bytecode size
 // compiled at the given tier.

@@ -73,6 +73,7 @@
 #include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 #include "wasm/AsmJS.h"
+#include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmSignalHandlers.h"
@@ -646,7 +647,7 @@ static bool WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   bool isSupported = wasm::HasSupport(cx);
 #ifdef ENABLE_WASM_CRANELIFT
-  if (cx->options().wasmForceCranelift()) {
+  if (cx->options().wasmCranelift()) {
     isSupported = false;
   }
 #endif
@@ -659,7 +660,7 @@ static bool WasmBulkMemSupported(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef ENABLE_WASM_BULKMEM_OPS
   bool isSupported = true;
 #  ifdef ENABLE_WASM_CRANELIFT
-  if (cx->options().wasmForceCranelift()) {
+  if (cx->options().wasmCranelift()) {
     isSupported = false;
   }
 #  endif
@@ -686,6 +687,12 @@ static bool WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool WasmDebugSupport(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(cx->options().wasmBaseline() && wasm::BaselineCanCompile());
+  return true;
+}
+
 static bool WasmGeneralizedTables(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
@@ -702,14 +709,26 @@ static bool WasmGeneralizedTables(JSContext* cx, unsigned argc, Value* vp) {
 static bool WasmCompileMode(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
+  bool baseline = cx->options().wasmBaseline();
+  bool ion = cx->options().wasmIon();
+#ifdef ENABLE_WASM_CRANELIFT
+  bool cranelift = cx->options().wasmCranelift();
+#else
+  bool cranelift = false;
+#endif
+
   // We default to ion if nothing is enabled, as does the Wasm compiler.
   JSString* result;
   if (!wasm::HasSupport(cx)) {
-    result = JS_NewStringCopyZ(cx, "disabled");
-  } else if (cx->options().wasmBaseline() && cx->options().wasmIon()) {
-    result = JS_NewStringCopyZ(cx, "baseline-or-ion");
-  } else if (cx->options().wasmBaseline()) {
+    result = JS_NewStringCopyZ(cx, "none");
+  } else if (baseline && ion) {
+    result = JS_NewStringCopyZ(cx, "baseline+ion");
+  } else if (baseline && cranelift) {
+    result = JS_NewStringCopyZ(cx, "baseline+cranelift");
+  } else if (baseline) {
     result = JS_NewStringCopyZ(cx, "baseline");
+  } else if (cranelift) {
+    result = JS_NewStringCopyZ(cx, "cranelift");
   } else {
     result = JS_NewStringCopyZ(cx, "ion");
   }
@@ -5974,6 +5993,10 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmGcEnabled", WasmGcEnabled, 1, 0,
 "wasmGcEnabled(bool)",
 "  Returns a boolean indicating whether the WebAssembly GC types proposal is enabled."),
+
+    JS_FN_HELP("wasmDebugSupport", WasmDebugSupport, 1, 0,
+"wasmDebugSupport(bool)",
+"  Returns a boolean indicating whether the WebAssembly compilers support debugging."),
 
     JS_FN_HELP("wasmGeneralizedTables", WasmGeneralizedTables, 1, 0,
 "wasmGeneralizedTables(bool)",
