@@ -197,7 +197,7 @@ macro_rules! trace {
 /// # fn expensive_call() -> Data { Data { x: 0, y: 0 } }
 /// # fn main() {}
 /// ```
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! log_enabled {
     (target: $target:expr, $lvl:expr) => {{
         let lvl = $lvl;
