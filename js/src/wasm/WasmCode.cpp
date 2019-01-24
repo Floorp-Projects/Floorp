@@ -648,8 +648,7 @@ struct ProjectLazyFuncIndex {
 
 static constexpr unsigned LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE = 8 * 1024;
 
-bool LazyStubTier::createMany(HasGcTypes gcTypesConfigured,
-                              const Uint32Vector& funcExportIndices,
+bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
                               const CodeTier& codeTier,
                               size_t* stubSegmentIndex) {
   MOZ_ASSERT(funcExportIndices.length());
@@ -673,8 +672,7 @@ bool LazyStubTier::createMany(HasGcTypes gcTypesConfigured,
     Maybe<ImmPtr> callee;
     callee.emplace(calleePtr, ImmPtr::NoCheckToken());
     if (!GenerateEntryStubs(masm, funcExportIndex, fe, callee,
-                            /* asmjs */ false, gcTypesConfigured,
-                            &codeRanges)) {
+                            /* asmjs */ false, &codeRanges)) {
       return false;
     }
   }
@@ -769,8 +767,7 @@ bool LazyStubTier::createOne(uint32_t funcExportIndex,
   }
 
   size_t stubSegmentIndex;
-  if (!createMany(codeTier.code().metadata().temporaryGcTypesConfigured,
-                  funcExportIndexes, codeTier, &stubSegmentIndex)) {
+  if (!createMany(funcExportIndexes, codeTier, &stubSegmentIndex)) {
     return false;
   }
 
@@ -797,8 +794,7 @@ bool LazyStubTier::createOne(uint32_t funcExportIndex,
   return true;
 }
 
-bool LazyStubTier::createTier2(HasGcTypes gcTypesConfigured,
-                               const Uint32Vector& funcExportIndices,
+bool LazyStubTier::createTier2(const Uint32Vector& funcExportIndices,
                                const CodeTier& codeTier,
                                Maybe<size_t>* outStubSegmentIndex) {
   if (!funcExportIndices.length()) {
@@ -806,8 +802,7 @@ bool LazyStubTier::createTier2(HasGcTypes gcTypesConfigured,
   }
 
   size_t stubSegmentIndex;
-  if (!createMany(gcTypesConfigured, funcExportIndices, codeTier,
-                  &stubSegmentIndex)) {
+  if (!createMany(funcExportIndices, codeTier, &stubSegmentIndex)) {
     return false;
   }
 

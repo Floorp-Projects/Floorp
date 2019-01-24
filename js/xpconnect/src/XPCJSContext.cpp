@@ -865,7 +865,7 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
       .setWasmIon(useWasmIon)
       .setWasmBaseline(useWasmBaseline)
 #ifdef ENABLE_WASM_CRANELIFT
-      .setWasmForceCranelift(useWasmCranelift)
+      .setWasmCranelift(useWasmCranelift)
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       .setWasmGc(useWasmGc)
