@@ -74,7 +74,8 @@ class Breakpoint extends PureComponent<Props> {
     }
   };
 
-  selectBreakpoint = () => {
+  selectBreakpoint = event => {
+    event.preventDefault();
     const { selectSpecificLocation } = this.props;
     selectSpecificLocation(this.selectedLocation);
   };
@@ -163,6 +164,7 @@ class Breakpoint extends PureComponent<Props> {
         <label
           htmlFor={breakpoint.id}
           className="breakpoint-label cm-s-mozilla"
+          onClick={this.selectBreakpoint}
           title={this.getBreakpointText()}
         >
           <span dangerouslySetInnerHTML={this.highlightText()} />
