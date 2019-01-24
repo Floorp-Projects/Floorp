@@ -4057,16 +4057,18 @@ static const VMFunction DebugLeaveThenPopLexicalEnvInfo =
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_POPLEXICALENV() {
-  prepareVMCall();
+  frame.syncStack(0);
 
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
   auto ifDebuggee = [this]() {
+    prepareVMCall();
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
     return callVM(DebugLeaveThenPopLexicalEnvInfo);
   };
   auto ifNotDebuggee = [this]() {
+    prepareVMCall();
     pushArg(R0.scratchReg());
     return callVM(PopLexicalEnvInfo);
   };
@@ -4087,16 +4089,18 @@ static const VMFunction DebugLeaveThenFreshenLexicalEnvInfo =
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_FRESHENLEXICALENV() {
-  prepareVMCall();
+  frame.syncStack(0);
 
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
   auto ifDebuggee = [this]() {
+    prepareVMCall();
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
     return callVM(DebugLeaveThenFreshenLexicalEnvInfo);
   };
   auto ifNotDebuggee = [this]() {
+    prepareVMCall();
     pushArg(R0.scratchReg());
     return callVM(FreshenLexicalEnvInfo);
   };
@@ -4117,16 +4121,18 @@ static const VMFunction DebugLeaveThenRecreateLexicalEnvInfo =
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_RECREATELEXICALENV() {
-  prepareVMCall();
+  frame.syncStack(0);
 
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
   auto ifDebuggee = [this]() {
+    prepareVMCall();
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
     return callVM(DebugLeaveThenRecreateLexicalEnvInfo);
   };
   auto ifNotDebuggee = [this]() {
+    prepareVMCall();
     pushArg(R0.scratchReg());
     return callVM(RecreateLexicalEnvInfo);
   };
