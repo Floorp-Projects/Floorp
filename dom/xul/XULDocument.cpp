@@ -449,11 +449,6 @@ void XULDocument::AddElementToDocumentPost(Element* aElement) {
   }
 }
 
-void XULDocument::InitialDocumentTranslationCompleted() {
-  mPendingInitialTranslation = false;
-  MaybeDoneWalking();
-}
-
 void XULDocument::AddSubtreeToDocument(nsIContent* aContent) {
   MOZ_ASSERT(aContent->GetComposedDoc() == this, "Element not in doc!");
 
@@ -963,26 +958,15 @@ nsresult XULDocument::ResumeWalk() {
   mXULPersist->Init();
 
   mStillWalking = false;
-  return MaybeDoneWalking();
-}
-
-nsresult XULDocument::MaybeDoneWalking() {
-  if (mPendingSheets > 0 || mStillWalking) {
-    return NS_OK;
+  if (mPendingSheets == 0) {
+    rv = DoneWalking();
   }
-
-  if (mPendingInitialTranslation) {
-    TriggerInitialDocumentTranslation();
-    return NS_OK;
-  }
-
-  return DoneWalking();
+  return rv;
 }
 
 nsresult XULDocument::DoneWalking() {
   MOZ_ASSERT(mPendingSheets == 0, "there are sheets to be loaded");
   MOZ_ASSERT(!mStillWalking, "walk not done");
-  MOZ_ASSERT(!mPendingInitialTranslation, "translation pending");
 
   // XXXldb This is where we should really be setting the chromehidden
   // attribute.
@@ -999,10 +983,18 @@ nsresult XULDocument::DoneWalking() {
 
     NotifyPossibleTitleChange(false);
 
+    // For performance reasons, we want to trigger the DocumentL10n's
+    // `TriggerInitialDocumentTranslation` within the same microtask that will
+    // be created for a `MozBeforeInitialXULLayout` event listener.
+    AddEventListener(NS_LITERAL_STRING("MozBeforeInitialXULLayout"),
+                     mDocumentL10n, true, false);
+
     nsContentUtils::DispatchTrustedEvent(
         this, ToSupports(this), NS_LITERAL_STRING("MozBeforeInitialXULLayout"),
         CanBubble::eYes, Cancelable::eNo);
 
+    RemoveEventListener(NS_LITERAL_STRING("MozBeforeInitialXULLayout"),
+                        mDocumentL10n, true);
 
     // Before starting layout, check whether we're a toplevel chrome
     // window.  If we are, setup some state so that we don't have to restyle
@@ -1047,7 +1039,9 @@ XULDocument::StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
 
     --mPendingSheets;
 
-    return MaybeDoneWalking();
+    if (!mStillWalking && mPendingSheets == 0) {
+      return DoneWalking();
+    }
   }
 
   return NS_OK;

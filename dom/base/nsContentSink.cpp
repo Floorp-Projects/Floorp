@@ -1170,9 +1170,8 @@ void nsContentSink::StartLayout(bool aIgnorePendingSheets) {
 
   mDeferredLayoutStart = true;
 
-  if (!aIgnorePendingSheets &&
-      (WaitForPendingSheets() || mDocument->HasPendingInitialTranslation())) {
-    // Bail out; we'll start layout when the sheets and l10n load
+  if (!aIgnorePendingSheets && WaitForPendingSheets()) {
+    // Bail out; we'll start layout when the sheets load
     return;
   }
 

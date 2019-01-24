@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "nsIDOMEventListener.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/Document.h"
@@ -52,10 +53,11 @@ enum class DocumentL10nState { Initialized = 0, InitialTranslationTriggered };
  * instance of mozIDOMLocalization and maintains a single promise
  * which gets resolved the first time the document gets translated.
  */
-class DocumentL10n final : public nsWrapperCache {
+class DocumentL10n final : public nsIDOMEventListener, public nsWrapperCache {
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DocumentL10n)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DocumentL10n)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DocumentL10n)
+  NS_DECL_NSIDOMEVENTLISTENER
 
  public:
   explicit DocumentL10n(Document* aDocument);

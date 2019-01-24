@@ -170,7 +170,6 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated) {
     }
 
     if (!destroying) {
-      mDocument->TriggerInitialDocumentTranslation();
       nsContentSink::StartLayout(false);
     }
   }
@@ -227,10 +226,6 @@ NS_IMETHODIMP
 nsHtml5TreeOpExecutor::SetParser(nsParserBase* aParser) {
   mParser = aParser;
   return NS_OK;
-}
-
-void nsHtml5TreeOpExecutor::InitialDocumentTranslationCompleted() {
-  nsContentSink::StartLayout(false);
 }
 
 void nsHtml5TreeOpExecutor::FlushPendingNotifications(FlushType aType) {
