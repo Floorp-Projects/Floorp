@@ -17,9 +17,10 @@ class nsAttrValue;
 class nsAtom;
 class nsIContent;
 class nsISMILAttr;
-class nsSMILValue;
 
 namespace mozilla {
+
+class SMILValue;
 
 namespace dom {
 class SVGMPathElement;
@@ -62,7 +63,7 @@ class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
 
   virtual nsSMILCalcMode GetCalcMode() const override;
   virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
-                             nsSMILValueArray& aResult) override;
+                             SMILValueArray& aResult) override;
   virtual void CheckValueListDependentAttrs(uint32_t aNumValues) override;
 
   virtual bool IsToAnimation() const override;
@@ -81,7 +82,7 @@ class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
   void RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem);
   bool GenerateValuesForPathAndPoints(Path* aPath, bool aIsKeyPoints,
                                       FallibleTArray<double>& aPointDistances,
-                                      nsSMILValueArray& aResult);
+                                      SMILValueArray& aResult);
 
   // Members
   // -------

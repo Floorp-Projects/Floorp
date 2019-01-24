@@ -307,6 +307,7 @@ class TouchBarHelper {
           delete kBuiltInInputs[inputName].localTitle;
           this._updateTouchBarInput(inputName);
         }
+        break;
       case "quit-application":
         this.destructor();
         break;

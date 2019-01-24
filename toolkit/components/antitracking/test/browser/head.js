@@ -27,6 +27,7 @@ const TEST_4TH_PARTY_PAGE = TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 const TEST_ANOTHER_3RD_PARTY_PAGE = TEST_ANOTHER_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 
 const BEHAVIOR_ACCEPT         = Ci.nsICookieService.BEHAVIOR_ACCEPT;
+const BEHAVIOR_REJECT         = Ci.nsICookieService.BEHAVIOR_REJECT;
 const BEHAVIOR_LIMIT_FOREIGN  = Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN;
 const BEHAVIOR_REJECT_FOREIGN = Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
 const BEHAVIOR_REJECT_TRACKER = Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
@@ -147,6 +148,21 @@ this.AntiTracking = {
           blockingByContentBlockingRTUI: false,
           allowList: false,
           callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: 0,
+          runInPrivateWindow,
+          iframeSandbox,
+          accessRemoval: null, // only passed with non-blocking callback
+          callbackAfterRemoval: null,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT,
+          blockingByContentBlockingRTUI: true,
+          allowList: false,
+          callback: callbackTracking,
           extraPrefs: [],
           expectedBlockingNotifications: 0,
           runInPrivateWindow,
