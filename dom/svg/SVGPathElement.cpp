@@ -15,7 +15,6 @@
 #include "mozilla/dom/SVGPathElementBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
-#include "nsCOMPtr.h"
 #include "nsComputedDOMStyle.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"

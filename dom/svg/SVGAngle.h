@@ -7,9 +7,9 @@
 #ifndef __NS_SVGANGLE_H__
 #define __NS_SVGANGLE_H__
 
-#include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsISMILAttr.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAngleBinding.h"
 #include "mozilla/UniquePtr.h"
