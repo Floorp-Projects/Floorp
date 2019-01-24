@@ -1031,10 +1031,6 @@ void HttpChannelChild::OnStopRequest(
        static_cast<uint32_t>(channelStatus)));
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mOnStopRequestCalled && !mIPCOpen) {
-    return;
-  }
-
   if (mDivertingToParent) {
     MOZ_RELEASE_ASSERT(
         !mFlushedForDiversion,
@@ -3794,15 +3790,6 @@ void HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
   // and BackgroundChild might have pending IPC messages.
   // Clean up BackgroundChild at this time to prevent memleak.
   if (aWhy != Deletion) {
-    // The actor tree might get destroyed before we get the OnStopRequest.
-    // So if we didn't get it, we send it here in order to prevent any leaks.
-    // Ocasionally we will get the OnStopRequest message after this, in which
-    // case we just ignore it as we've already cleared the listener.
-    if (!mOnStopRequestCalled && mListener) {
-      DoPreOnStopRequest(NS_ERROR_ABORT);
-      DoOnStopRequest(this, NS_ERROR_ABORT, mListenerContext);
-    }
-
     CleanupBackgroundChannel();
   }
 }
