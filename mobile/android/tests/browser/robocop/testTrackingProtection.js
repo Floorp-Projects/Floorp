@@ -36,7 +36,7 @@ function promiseLoadEvent(browser, url, eventType = "load", runBeforeLoad) {
 }
 
 // Test that the Tracking Protection is active and has the correct state when
-// tracking content is blocked (Bug 1063831)
+// tracking content is blocked (Bug 1063831 + Bug 1520520)
 
 // Code is mostly stolen from:
 // http://dxr.mozilla.org/mozilla-central/source/browser/base/content/test/general/browser_trackingUI.js

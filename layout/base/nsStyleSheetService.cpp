@@ -95,9 +95,6 @@ int32_t nsStyleSheetService::FindSheetByURI(uint32_t aSheetType,
 }
 
 nsresult nsStyleSheetService::Init() {
-  // If you make changes here, consider whether
-  // SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded should be updated too.
-
   // Child processes get their style sheets from the ContentParent.
   if (XRE_IsContentProcess()) {
     return NS_OK;

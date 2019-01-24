@@ -42,6 +42,12 @@ describe("PrefsFeed", () => {
     overrider.restore();
     sandbox.restore();
   });
+
+  function setFakePrefsWithInitialValue() {
+    Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name,
+        typeof(initialPrefs[name]) === "object" ? JSON.stringify(initialPrefs[name]) : initialPrefs[name]));
+  }
+
   it("should set a pref when a SET_PREF action is received", () => {
     feed.onAction(ac.SetPref("foo", 2));
     assert.calledWith(feed._prefs.set, "foo", 2);
@@ -84,14 +90,13 @@ describe("PrefsFeed", () => {
       assert.calledOnce(feed._setPrerenderPref);
     });
     it("should set prerender pref to true if prefs match initial values", async () => {
-      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
-
+      setFakePrefsWithInitialValue();
       await feed._setPrerenderPref();
 
       assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, true);
     });
     it("should set prerender pref to false if a pref does not match its initial value", async () => {
-      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      setFakePrefsWithInitialValue();
       FAKE_PREFS.set("showSearch", false);
 
       await feed._setPrerenderPref();
@@ -99,7 +104,7 @@ describe("PrefsFeed", () => {
       assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, false);
     });
     it("should set prerender pref to true if indexedDB prefs are unchanged", async () => {
-      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      setFakePrefsWithInitialValue();
       feed._storage.getAll.resolves([{collapsed: false}, {collapsed: false}]);
 
       await feed._setPrerenderPref();
@@ -107,7 +112,7 @@ describe("PrefsFeed", () => {
       assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, true);
     });
     it("should set prerender pref to false if a indexedDB pref changed value", async () => {
-      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      setFakePrefsWithInitialValue();
       FAKE_PREFS.set("showSearch", false);
       feed._storage.getAll.resolves([{collapsed: false}, {collapsed: true}]);
 
@@ -154,7 +159,7 @@ describe("PrefsFeed", () => {
     });
     it("should set the prerender pref to false if a pref in invalidatingPrefs is changed from its original value", () => {
       sandbox.stub(feed, "_setPrerenderPref");
-      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      setFakePrefsWithInitialValue();
 
       feed._prefs.set("showSearch", false);
       feed.onPrefChanged("showSearch", false);
@@ -162,7 +167,7 @@ describe("PrefsFeed", () => {
     });
     it("should set the prerender pref back to true if the invalidatingPrefs are changed back to their original values", () => {
       sandbox.stub(feed, "_setPrerenderPref");
-      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      setFakePrefsWithInitialValue();
       FAKE_PREFS.set("showSearch", false);
 
       feed._prefs.set("showSearch", true);
@@ -170,7 +175,7 @@ describe("PrefsFeed", () => {
       assert.calledOnce(feed._setPrerenderPref);
     });
     it("should set the prerendered pref to true", async () => {
-      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      setFakePrefsWithInitialValue();
       FAKE_PREFS.set("showSearch", false);
       feed._prefs.set("showSearch", true);
       feed.onPrefChanged("showSearch", true);
@@ -180,7 +185,7 @@ describe("PrefsFeed", () => {
       assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, true);
     });
     it("should set the prerendered pref to false", async () => {
-      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      setFakePrefsWithInitialValue();
       FAKE_PREFS.set("showSearch", false);
       feed._prefs.set("showSearch", false);
       feed.onPrefChanged("showSearch", false);

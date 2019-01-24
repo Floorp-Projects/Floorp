@@ -1637,7 +1637,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::ForceGC() {
   JSContext* cx = XPCJSContext::Get()->Context();
   PrepareForFullGC(cx);
-  NonIncrementalGC(cx, GC_NORMAL, gcreason::COMPONENT_UTILS);
+  NonIncrementalGC(cx, GC_NORMAL, GCReason::COMPONENT_UTILS);
   return NS_OK;
 }
 
@@ -1683,7 +1683,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::ForceShrinkingGC() {
   JSContext* cx = dom::danger::GetJSContext();
   PrepareForFullGC(cx);
-  NonIncrementalGC(cx, GC_SHRINK, gcreason::COMPONENT_UTILS);
+  NonIncrementalGC(cx, GC_SHRINK, GCReason::COMPONENT_UTILS);
   return NS_OK;
 }
 
@@ -1696,7 +1696,7 @@ class PreciseGCRunnable : public Runnable {
 
   NS_IMETHOD Run() override {
     nsJSContext::GarbageCollectNow(
-        gcreason::COMPONENT_UTILS, nsJSContext::NonIncrementalGC,
+        GCReason::COMPONENT_UTILS, nsJSContext::NonIncrementalGC,
         mShrinking ? nsJSContext::ShrinkingGC : nsJSContext::NonShrinkingGC);
 
     mCallback->Callback();

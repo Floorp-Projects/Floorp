@@ -280,11 +280,11 @@
         </vbox>
         <vbox id="identity-popup-breakageReportView-body" class="panel-view-body-unscrollable">
           <vbox class="identity-popup-breakageReportView-collection-section">
-            <label class="identity-popup-breakageReportView-collection-label">&contentBlocking.breakageReportView.collection.url.label;</label>
-            <label id="identity-popup-breakageReportView-collection-url"/>
+            <label>&contentBlocking.breakageReportView.collection.url.label;</label>
+            <textbox readonly="true" id="identity-popup-breakageReportView-collection-url"/>
           </vbox>
           <vbox class="identity-popup-breakageReportView-collection-section">
-            <label class="identity-popup-breakageReportView-collection-label">&contentBlocking.breakageReportView.collection.comments.label;</label>
+            <label>&contentBlocking.breakageReportView.collection.comments.label;</label>
             <textbox multiline="true" id="identity-popup-breakageReportView-collection-comments"/>
           </vbox>
         </vbox>

@@ -14,7 +14,7 @@ euclid = "0.19"
 gleam = "0.6.2"
 glutin = "0.17"
 app_units = "0.7"
-image = "0.20"
+image = "0.21"
 clap = { version = "2", features = ["yaml"] }
 lazy_static = "1"
 log = "0.4"

@@ -191,6 +191,8 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
                                    const uint8_t* aString) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  DropChannel();
+
   if (!mFontFaceSet) {
     // We've been canceled
     return aStatus;
@@ -298,6 +300,7 @@ NS_IMETHODIMP
 nsFontFaceLoader::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                                 nsresult aStatusCode) {
   MOZ_ASSERT(NS_IsMainThread());
+  DropChannel();
   return NS_OK;
 }
 
@@ -308,7 +311,8 @@ void nsFontFaceLoader::Cancel() {
     mLoadTimer->Cancel();
     mLoadTimer = nullptr;
   }
-  mChannel->Cancel(NS_BINDING_ABORTED);
+  nsCOMPtr<nsIChannel> channel = mChannel.forget();
+  channel->Cancel(NS_BINDING_ABORTED);
 }
 
 StyleFontDisplay nsFontFaceLoader::GetFontDisplay() {

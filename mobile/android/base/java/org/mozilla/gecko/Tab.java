@@ -504,6 +504,10 @@ public class Tab {
         mSiteIdentity.update(identityData);
     }
 
+    public void updateTracking(String statusCode) {
+        mSiteIdentity.updateTrackingMode(statusCode);
+    }
+
     public void setSiteLogins(SiteLogins siteLogins) {
         mSiteLogins = siteLogins;
     }

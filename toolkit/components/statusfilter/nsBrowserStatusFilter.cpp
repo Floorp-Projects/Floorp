@@ -241,6 +241,15 @@ nsBrowserStatusFilter::OnSecurityChange(nsIWebProgress *aWebProgress,
   return mListener->OnSecurityChange(aWebProgress, aRequest, aState);
 }
 
+NS_IMETHODIMP
+nsBrowserStatusFilter::OnContentBlockingEvent(nsIWebProgress *aWebProgress,
+                                              nsIRequest *aRequest,
+                                              uint32_t aEvent) {
+  if (!mListener) return NS_OK;
+
+  return mListener->OnContentBlockingEvent(aWebProgress, aRequest, aEvent);
+}
+
 //-----------------------------------------------------------------------------
 // nsBrowserStatusFilter::nsIWebProgressListener2
 //-----------------------------------------------------------------------------

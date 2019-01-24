@@ -172,7 +172,9 @@
 .ruleview-computedlist,
 .ruleview-expandable-container[hidden],
 .ruleview-overridden-items[hidden],
+.ruleview-overridden-rule-filter.hidden,
 .ruleview-overridden-rule-filter[hidden],
+.ruleview-warning.hidden,
 .ruleview-warning[hidden],
 .ruleview-overridden .ruleview-grid {
   display: none;
@@ -257,31 +259,41 @@
  * Display rules that don't match the current selected element and uneditable
  * user agent styles differently
  */
+.ruleview-rule.unmatched,
+.ruleview-rule.uneditable,
 .ruleview-rule[unmatched=true],
 .ruleview-rule[uneditable=true] {
   background: var(--theme-tab-toolbar-background);
 }
 
+.ruleview-rule.unmatched,
 .ruleview-rule[unmatched=true] {
   opacity: 0.5;
 }
 
+.ruleview-rule.uneditable :focus,
 .ruleview-rule[uneditable=true] :focus {
   outline: none;
 }
 
+.ruleview-rule.uneditable .theme-link,
 .ruleview-rule[uneditable=true] .theme-link {
   color: var(--theme-highlight-bluegrey);
 }
 
+.ruleview-rule.uneditable .ruleview-enableproperty,
 .ruleview-rule[uneditable=true] .ruleview-enableproperty {
   visibility: hidden;
 }
 
+.ruleview-rule.uneditable .ruleview-swatch,
 .ruleview-rule[uneditable=true] .ruleview-swatch {
   cursor: default;
 }
 
+.ruleview-rule.uneditable .ruleview-namecontainer > .ruleview-propertyname,
+.ruleview-rule.uneditable .ruleview-propertyvaluecontainer >
+.ruleview-propertyvalue,
 .ruleview-rule[uneditable=true] .ruleview-namecontainer > .ruleview-propertyname,
 .ruleview-rule[uneditable=true] .ruleview-propertyvaluecontainer >
 .ruleview-propertyvalue {

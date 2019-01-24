@@ -92,7 +92,7 @@ let ACTORS = {
     child: {
       module: "resource:///actors/ContentSearchChild.jsm",
       group: "browsers",
-      matches: ["about:home", "about:newtab", "about:welcome",
+      matches: ["about:home", "about:newtab", "about:welcome", "about:privatebrowsing",
                 "chrome://mochitests/content/*"],
       events: {
         "ContentSearchClient": {capture: true, wantUntrusted: true},
@@ -1007,6 +1007,14 @@ BrowserGlue.prototype = {
       PdfJs.earlyInit();
     }
 
+    // Initialize the default l10n resource sources for L10nRegistry.
+    let locales = Services.locale.packagedLocales;
+    const greSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
+    L10nRegistry.registerSource(greSource);
+
+    const appSource = new FileSource("app", locales, "resource://app/localization/{locale}/");
+    L10nRegistry.registerSource(appSource);
+
     // check if we're in safe mode
     if (Services.appinfo.inSafeMode) {
       Services.ww.openWindow(null, "chrome://browser/content/safeMode.xul",
@@ -1072,14 +1080,6 @@ BrowserGlue.prototype = {
     });
 
     Normandy.init();
-
-    // Initialize the default l10n resource sources for L10nRegistry.
-    let locales = Services.locale.packagedLocales;
-    const greSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
-    L10nRegistry.registerSource(greSource);
-
-    const appSource = new FileSource("app", locales, "resource://app/localization/{locale}/");
-    L10nRegistry.registerSource(appSource);
 
     SaveToPocket.init();
     Services.obs.notifyObservers(null, "browser-ui-startup-complete");

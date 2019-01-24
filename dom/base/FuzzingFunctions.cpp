@@ -22,7 +22,7 @@ namespace mozilla {
 namespace dom {
 
 /* static */ void FuzzingFunctions::GarbageCollect(const GlobalObject&) {
-  nsJSContext::GarbageCollectNow(JS::gcreason::COMPONENT_UTILS,
+  nsJSContext::GarbageCollectNow(JS::GCReason::COMPONENT_UTILS,
                                  nsJSContext::NonIncrementalGC,
                                  nsJSContext::NonShrinkingGC);
 }

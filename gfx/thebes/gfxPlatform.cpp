@@ -689,7 +689,7 @@ static void FinishAsyncMemoryReport() {
                 "interning/" #id "/interners");
 // clang-format on
 
-#define REPORT_DATA_STORE(id)                      \
+#define REPORT_DATA_STORE(id)                     \
   helper.Report(aReport.interning.data_stores.id, \
                 "interning/" #id "/data-stores");
 

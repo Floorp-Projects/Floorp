@@ -2990,7 +2990,7 @@ dependencies = [
 
 [[package]]
 name = "webrender"
-version = "0.58.0"
+version = "0.59.0"
 dependencies = [
  "app_units 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3060,7 +3060,7 @@ dependencies = [
  "rayon 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "thread_profiler 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender 0.58.0",
+ "webrender 0.59.0",
 ]
 
 [[package]]

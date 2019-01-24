@@ -35,7 +35,7 @@ static int testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
 
   auto gcGuard = mozilla::MakeScopeExit([&] {
     JS::PrepareForFullGC(gCx);
-    JS::NonIncrementalGC(gCx, GC_NORMAL, JS::gcreason::API);
+    JS::NonIncrementalGC(gCx, GC_NORMAL, JS::GCReason::API);
   });
 
   if (!size) return 0;

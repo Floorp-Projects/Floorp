@@ -24,9 +24,6 @@ class AccessCheck {
                                                    JS::Compartment* b);
   static bool isChrome(JS::Compartment* compartment);
   static bool isChrome(JSObject* obj);
-  static bool isCrossOriginAccessPermitted(JSContext* cx, JS::HandleObject obj,
-                                           JS::HandleId id,
-                                           js::Wrapper::Action act);
   static bool checkPassToPrivilegedCode(JSContext* cx, JS::HandleObject wrapper,
                                         JS::HandleValue value);
   static bool checkPassToPrivilegedCode(JSContext* cx, JS::HandleObject wrapper,
@@ -86,31 +83,6 @@ struct OpaqueWithCall : public Policy {
   static bool checkCall(JSContext* cx, JS::HandleObject wrapper,
                         const JS::CallArgs& args) {
     return AccessCheck::checkPassToPrivilegedCode(cx, wrapper, args);
-  }
-};
-
-// This policy only permits access to properties that are safe to be used
-// across origins.
-struct CrossOriginAccessiblePropertiesOnly : public Policy {
-  static bool check(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
-                    js::Wrapper::Action act) {
-    return AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act);
-  }
-  static bool deny(JSContext* cx, js::Wrapper::Action act, JS::HandleId id,
-                   bool mayThrow) {
-    // Silently fail for enumerate-like operations.
-    if (act == js::Wrapper::ENUMERATE) {
-      return true;
-    }
-    if (mayThrow) {
-      AccessCheck::reportCrossOriginDenial(cx, id,
-                                           NS_LITERAL_CSTRING("access"));
-    }
-    return false;
-  }
-  static bool allowNativeCall(JSContext* cx, JS::IsAcceptableThis test,
-                              JS::NativeImpl impl) {
-    return false;
   }
 };
 

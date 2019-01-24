@@ -23,7 +23,7 @@ function startTest()
 function onAttach(aState, aResponse)
 {
   onEvaluate = onEvaluate.bind(null, aState);
-  aState.client.evaluateJS("document.__proto__", onEvaluate);
+  aState.client.evaluateJS("document.__proto__").then(onEvaluate);
 }
 
 function onEvaluate(aState, aResponse)

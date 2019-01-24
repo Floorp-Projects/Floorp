@@ -56,7 +56,8 @@ void LoadedScript::AssociateWithScript(JSScript* aScript) {
   JS::SetScriptPrivate(aScript, JS::PrivateValue(this));
 }
 
-inline void CheckModuleScriptPrivate(LoadedScript* script, const JS::Value& aPrivate) {
+inline void CheckModuleScriptPrivate(LoadedScript* script,
+                                     const JS::Value& aPrivate) {
 #ifdef DEBUG
   if (script->IsModuleScript()) {
     JSObject* module = script->AsModuleScript()->mModuleRecord.unbarrieredGet();

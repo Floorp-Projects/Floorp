@@ -41,6 +41,7 @@ iframe.onload = function iframe_onload1() {
     onLocationChange() {},
     onStatusChange() {},
     onSecurityChange() {},
+    onContentBlockingEvent() {},
     onStateChange: function wbp_stateChange(_wbp, _req, state, status) {
       if ((state & Ci.nsIWebProgressListener.STATE_STOP) == 0) {
         return;

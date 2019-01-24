@@ -91,6 +91,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=434998
     {
     },
 
+    onContentBlockingEvent : function(aWebProgress, aRequest, aEvent)
+    {
+    },
+
     mEditor: null
   };
 

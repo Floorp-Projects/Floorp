@@ -7,10 +7,6 @@ if (location.search === '?broken') {
   var s = document.createElement('script');
   s.src = 'http://example.com/dom/browser-element/mochitest/file_empty_script.js';
   document.head.appendChild(s);
-} else if (location.search === '?tracking') {
-  var img = document.createElement('img');
-  img.src = 'http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg';
-  document.body.appendChild(img);
 }
 </script>
 </head>

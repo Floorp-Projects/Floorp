@@ -593,11 +593,13 @@ TelemetryImpl::GetSnapshotForHistograms(const nsACString& aStoreName,
                                         bool aClearStore, bool aFilterTest,
                                         JSContext* aCx,
                                         JS::MutableHandleValue aResult) {
+  NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN
                              : nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
   return TelemetryHistogram::CreateHistogramSnapshots(
-      aCx, aResult, aStoreName, dataset, aClearStore, aFilterTest);
+      aCx, aResult, aStoreName.IsVoid() ? defaultStore : aStoreName, dataset,
+      aClearStore, aFilterTest);
 }
 
 NS_IMETHODIMP
@@ -605,11 +607,13 @@ TelemetryImpl::GetSnapshotForKeyedHistograms(const nsACString& aStoreName,
                                              bool aClearStore, bool aFilterTest,
                                              JSContext* aCx,
                                              JS::MutableHandleValue aResult) {
+  NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN
                              : nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
   return TelemetryHistogram::GetKeyedHistogramSnapshots(
-      aCx, aResult, aStoreName, dataset, aClearStore, aFilterTest);
+      aCx, aResult, aStoreName.IsVoid() ? defaultStore : aStoreName, dataset,
+      aClearStore, aFilterTest);
 }
 
 NS_IMETHODIMP
@@ -617,11 +621,13 @@ TelemetryImpl::GetSnapshotForScalars(const nsACString& aStoreName,
                                      bool aClearStore, bool aFilterTest,
                                      JSContext* aCx,
                                      JS::MutableHandleValue aResult) {
+  NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN
                              : nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
-  return TelemetryScalar::CreateSnapshots(dataset, aClearStore, aCx, 1, aResult,
-                                          aFilterTest, aStoreName);
+  return TelemetryScalar::CreateSnapshots(
+      dataset, aClearStore, aCx, 1, aResult, aFilterTest,
+      aStoreName.IsVoid() ? defaultStore : aStoreName);
 }
 
 NS_IMETHODIMP
@@ -629,11 +635,13 @@ TelemetryImpl::GetSnapshotForKeyedScalars(const nsACString& aStoreName,
                                           bool aClearStore, bool aFilterTest,
                                           JSContext* aCx,
                                           JS::MutableHandleValue aResult) {
+  NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN
                              : nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
   return TelemetryScalar::CreateKeyedSnapshots(
-      dataset, aClearStore, aCx, 1, aResult, aFilterTest, aStoreName);
+      dataset, aClearStore, aCx, 1, aResult, aFilterTest,
+      aStoreName.IsVoid() ? defaultStore : aStoreName);
 }
 
 bool TelemetryImpl::GetSQLStats(JSContext* cx, JS::MutableHandle<JS::Value> ret,

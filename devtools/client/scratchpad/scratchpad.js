@@ -482,7 +482,7 @@ var Scratchpad = {
     const { debuggerClient, webConsoleClient } = await connection;
     this.debuggerClient = debuggerClient;
     this.webConsoleClient = webConsoleClient;
-    const response = await webConsoleClient.evaluateJSAsync(string, null, evalOptions);
+    const response = await webConsoleClient.evaluateJSAsync(string, evalOptions);
 
     if (response.error) {
       throw new Error(response.error);

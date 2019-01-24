@@ -250,6 +250,7 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
 nsresult TransportSecurityInfo::ReadSSLStatus(nsIObjectInputStream* aStream) {
   bool nsISSLStatusPresent;
   nsresult rv = aStream->ReadBoolean(&nsISSLStatusPresent);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
   if (!nsISSLStatusPresent) {
     return NS_OK;
@@ -259,8 +260,10 @@ nsresult TransportSecurityInfo::ReadSSLStatus(nsIObjectInputStream* aStream) {
   nsCID cid;
   nsIID iid;
   rv = aStream->ReadID(&cid);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->ReadID(&iid);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
 
   static const nsIID nsSSLStatusIID = {
@@ -269,21 +272,26 @@ nsresult TransportSecurityInfo::ReadSSLStatus(nsIObjectInputStream* aStream) {
       0x498a,
       {0xb8, 0x89, 0x7c, 0x79, 0xcf, 0x28, 0xfe, 0xe8}};
   if (!iid.Equals(nsSSLStatusIID)) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Deserialization should not fail");
     return NS_ERROR_UNEXPECTED;
   }
 
   nsCOMPtr<nsISupports> cert;
   rv = aStream->ReadObject(true, getter_AddRefs(cert));
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (cert) {
     mServerCert = do_QueryInterface(cert);
     if (!mServerCert) {
+      MOZ_DIAGNOSTIC_ASSERT(false,
+                            "Deserialization should not fail");
       return NS_NOINTERFACE;
     }
   }
 
   rv = aStream->Read16(&mCipherSuite);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The code below is a workaround to allow serializing new fields
@@ -294,39 +302,50 @@ nsresult TransportSecurityInfo::ReadSSLStatus(nsIObjectInputStream* aStream) {
   // These bits are now used for stream versioning.
   uint16_t protocolVersionAndStreamFormatVersion;
   rv = aStream->Read16(&protocolVersionAndStreamFormatVersion);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
   mProtocolVersion = protocolVersionAndStreamFormatVersion & 0xFF;
   const uint8_t streamFormatVersion =
       (protocolVersionAndStreamFormatVersion >> 8) & 0xFF;
 
   rv = aStream->ReadBoolean(&mIsDomainMismatch);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->ReadBoolean(&mIsNotValidAtThisTime);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->ReadBoolean(&mIsUntrusted);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->ReadBoolean(&mIsEV);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aStream->ReadBoolean(&mHasIsEVStatus);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->ReadBoolean(&mHaveCipherSuiteAndProtocol);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->ReadBoolean(&mHaveCertErrorBits);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Added in version 1 (see bug 1305289).
   if (streamFormatVersion >= 1) {
     rv = aStream->Read16(&mCertificateTransparencyStatus);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Added in version 2 (see bug 1304923).
   if (streamFormatVersion >= 2) {
     rv = aStream->ReadCString(mKeaGroup);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aStream->ReadCString(mSignatureSchemeName);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -335,6 +354,7 @@ nsresult TransportSecurityInfo::ReadSSLStatus(nsIObjectInputStream* aStream) {
     nsCOMPtr<nsISupports> succeededCertChainSupports;
     rv = NS_ReadOptionalObject(aStream, true,
                                getter_AddRefs(succeededCertChainSupports));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -344,6 +364,7 @@ nsresult TransportSecurityInfo::ReadSSLStatus(nsIObjectInputStream* aStream) {
     nsCOMPtr<nsISupports> failedCertChainSupports;
     rv = NS_ReadOptionalObject(aStream, true,
                                getter_AddRefs(failedCertChainSupports));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -355,33 +376,39 @@ NS_IMETHODIMP
 TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   nsID id;
   nsresult rv = aStream->ReadID(&id);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
   }
   if (!id.Equals(kTransportSecurityInfoMagic)) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Deserialization should not fail");
     return NS_ERROR_UNEXPECTED;
   }
 
   MutexAutoLock lock(mMutex);
 
   rv = aStream->Read32(&mSecurityState);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
   }
   // mSubRequestsBrokenSecurity was removed in bug 748809
   uint32_t unusedSubRequestsBrokenSecurity;
   rv = aStream->Read32(&unusedSubRequestsBrokenSecurity);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
   }
   // mSubRequestsNoSecurity was removed in bug 748809
   uint32_t unusedSubRequestsNoSecurity;
   rv = aStream->Read32(&unusedSubRequestsNoSecurity);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
   }
   uint32_t errorCode;
   rv = aStream->Read32(&errorCode);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -398,6 +425,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   // serialization.
   nsAutoString serVersion;
   rv = aStream->ReadString(serVersion);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -406,53 +434,70 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   if (!serVersion.EqualsASCII("1")) {
     // nsISSLStatus may be present
     rv = ReadSSLStatus(aStream);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     nsCOMPtr<nsISupports> cert;
     rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(cert));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (cert != nullptr) {
       mServerCert = do_QueryInterface(cert);
       if (!mServerCert) {
+        MOZ_DIAGNOSTIC_ASSERT(false,
+                              "Deserialization should not fail");
         return NS_NOINTERFACE;
       }
     }
 
     rv = aStream->Read16(&mCipherSuite);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aStream->Read16(&mProtocolVersion);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aStream->ReadBoolean(&mIsDomainMismatch);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aStream->ReadBoolean(&mIsNotValidAtThisTime);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aStream->ReadBoolean(&mIsUntrusted);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aStream->ReadBoolean(&mIsEV);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aStream->ReadBoolean(&mHasIsEVStatus);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aStream->ReadBoolean(&mHaveCipherSuiteAndProtocol);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aStream->ReadBoolean(&mHaveCertErrorBits);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aStream->Read16(&mCertificateTransparencyStatus);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aStream->ReadCString(mKeaGroup);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aStream->ReadCString(mSignatureSchemeName);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISupports> succeededCertChainSupports;
     rv = NS_ReadOptionalObject(aStream, true,
                                getter_AddRefs(succeededCertChainSupports));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -463,6 +508,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   nsCOMPtr<nsISupports> failedCertChainSupports;
   rv = NS_ReadOptionalObject(aStream, true,
                              getter_AddRefs(failedCertChainSupports));
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
   }

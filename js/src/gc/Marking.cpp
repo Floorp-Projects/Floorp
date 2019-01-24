@@ -95,20 +95,20 @@ using mozilla::PodCopy;
 //                       '---------'   '----------'         '-----------------'                 //
 //                            |                                                                 //
 //                            |                                                                 //
-//                        .--------.                                                            //
-//      o---------------->|traverse| .                                                          //
-//     /_\                '--------'   ' .                                                      //
-//      |                     .     .      ' .                                                  //
-//      |                     .       .        ' .                                              //
-//      |                     .         .          ' .                                          //
-//      |             .-----------.    .-----------.   ' .     .--------------------.           //
-//      |             |markAndScan|    |markAndPush|       ' - |markAndTraceChildren|---->      //
-//      |             '-----------'    '-----------'           '--------------------'           //
-//      |                   |                  \                                                //
-//      |                   |                   \                                               //
-//      |       .----------------------.     .----------------.                                 //
-//      |       |T::eagerlyMarkChildren|     |pushMarkStackTop|<===Oo                           //
-//      |       '----------------------'     '----------------'    ||                           //
+//                     .-----------.                                                            //
+//      o------------->|traverse(T)| .                                                          //
+//     /_\             '-----------'   ' .                                                      //
+//      |                   .       .      ' .                                                  //
+//      |                   .         .        ' .                                              //
+//      |                   .           .          ' .                                          //
+//      |          .--------------.  .--------------.  ' .     .-----------------------.        //
+//      |          |markAndScan(T)|  |markAndPush(T)|      ' - |markAndTraceChildren(T)|        //
+//      |          '--------------'  '--------------'          '-----------------------'        //
+//      |                   |                  \                               |                //
+//      |                   |                   \                              |                //
+//      |       .----------------------.     .----------------.         .------------------.    //
+//      |       |eagerlyMarkChildren(T)|     |pushMarkStackTop|<===Oo   |T::traceChildren()|--> //
+//      |       '----------------------'     '----------------'    ||   '------------------'    //
 //      |                  |                         ||            ||                           //
 //      |                  |                         ||            ||                           //
 //      |                  |                         ||            ||                           //
@@ -847,7 +847,6 @@ void GCMarker::traverse(JSString* thing) {
 template <>
 void GCMarker::traverse(LazyScript* thing) {
   markAndScan(thing);
-  markImplicitEdges(thing);
 }
 template <>
 void GCMarker::traverse(Shape* thing) {
@@ -1032,7 +1031,7 @@ void LazyScript::traceChildren(JSTracer* trc) {
   }
 
   if (trc->isMarkingTracer()) {
-    return GCMarker::fromTracer(trc)->markImplicitEdges(this);
+    GCMarker::fromTracer(trc)->markImplicitEdges(this);
   }
 }
 inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
@@ -1068,6 +1067,8 @@ inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
   for (auto i : IntegerRange(thing->numInnerFunctions())) {
     traverseEdge(thing, static_cast<JSObject*>(innerFunctions[i]));
   }
+
+  markImplicitEdges(thing);
 }
 
 void Shape::traceChildren(JSTracer* trc) {
@@ -1101,7 +1102,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Shape* shape) {
 
     traverseEdge(shape, shape->propidRef().get());
 
-    // When triggered between slices on belhalf of a barrier, these
+    // When triggered between slices on behalf of a barrier, these
     // objects may reside in the nursery, so require an extra check.
     // FIXME: Bug 1157967 - remove the isTenured checks.
     if (shape->hasGetterObject() && shape->getterObject()->isTenured()) {

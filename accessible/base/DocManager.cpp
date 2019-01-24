@@ -308,6 +308,13 @@ DocManager::OnSecurityChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DocManager::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
+                                   nsIRequest* aRequest, uint32_t aEvent) {
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIDOMEventListener
 

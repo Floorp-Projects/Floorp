@@ -4898,13 +4898,40 @@ var XULBrowserWindow = {
   // Properties used to cache security state used to update the UI
   _state: null,
   _lastLocation: null,
+  _event: null,
+  _lastLocationForEvent: null,
+
+  // This is called in multiple ways:
+  //  1. Due to the nsIWebProgressListener.onContentBlockingEvent notification.
+  //  2. Called by tabbrowser.xml when updating the current browser.
+  //  3. Called directly during this object's initializations.
+  //  4. Due to the nsIWebProgressListener.onLocationChange notification.
+  // aRequest will be null always in case 2 and 3, and sometimes in case 1 (for
+  // instance, there won't be a request when STATE_BLOCKED_TRACKING_CONTENT is observed).
+  onContentBlockingEvent(aWebProgress, aRequest, aEvent, aIsSimulated) {
+    // Don't need to do anything if the data we use to update the UI hasn't
+    // changed
+    let uri = gBrowser.currentURI;
+    let spec = uri.spec;
+    if (this._event == aEvent &&
+        this._lastLocationForEvent == spec) {
+      return;
+    }
+    this._event = aEvent;
+    this._lastLocationForEvent = spec;
+
+    if (typeof(aIsSimulated) != "boolean" && typeof(aIsSimulated) != "undefined") {
+      throw "onContentBlockingEvent: aIsSimulated receieved an unexpected type";
+    }
+
+    ContentBlocking.onContentBlockingEvent(this._event, aWebProgress, aIsSimulated);
+  },
 
   // This is called in multiple ways:
   //  1. Due to the nsIWebProgressListener.onSecurityChange notification.
   //  2. Called by tabbrowser.xml when updating the current browser.
   //  3. Called directly during this object's initializations.
-  // aRequest will be null always in case 2 and 3, and sometimes in case 1 (for
-  // instance, there won't be a request when STATE_BLOCKED_TRACKING_CONTENT is observed).
+  // aRequest will be null always in case 2 and 3, and sometimes in case 1.
   onSecurityChange(aWebProgress, aRequest, aState, aIsSimulated) {
     // Don't need to do anything if the data we use to update the UI hasn't
     // changed
@@ -4920,10 +4947,6 @@ var XULBrowserWindow = {
     this._state = aState;
     this._lastLocation = spec;
 
-    if (typeof(aIsSimulated) != "boolean" && typeof(aIsSimulated) != "undefined") {
-      throw "onSecurityChange: aIsSimulated receieved an unexpected type";
-    }
-
     // Make sure the "https" part of the URL is striked out or not,
     // depending on the current mixed active content blocking state.
     gURLBar.formatValue();
@@ -4932,7 +4955,6 @@ var XULBrowserWindow = {
       uri = Services.uriFixup.createExposableURI(uri);
     } catch (e) {}
     gIdentityHandler.updateIdentity(this._state, uri);
-    ContentBlocking.onSecurityChange(this._state, aWebProgress, aIsSimulated);
   },
 
   // simulate all change notifications after switching tabs

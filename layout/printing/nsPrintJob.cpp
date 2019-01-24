@@ -655,7 +655,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     if (viewer) {
       viewer->SetTextZoom(1.0f);
       viewer->SetFullZoom(1.0f);
-      viewer->SetMinFontSize(0);
     }
   }
 
@@ -2017,6 +2016,13 @@ nsPrintJob::OnStatusChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
 NS_IMETHODIMP
 nsPrintJob::OnSecurityChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
                              uint32_t aState) {
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintJob::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
+                                   nsIRequest* aRequest, uint32_t aEvent) {
   MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }

@@ -2225,6 +2225,8 @@ var gDiscoverView = {
     aRequest.cancel(Cr.NS_BINDING_ABORTED);
   },
 
+  onContentBlockingEvent(aWebProgress, aRequest, aEvent) {},
+
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     let transferStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
                         Ci.nsIWebProgressListener.STATE_IS_REQUEST |

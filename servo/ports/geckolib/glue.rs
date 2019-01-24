@@ -809,7 +809,7 @@ pub extern "C" fn Servo_AnimationValue_GetColor(
             let computed: ComputedColor = ToAnimatedValue::from_animated_value(color);
             let foreground_color = convert_nscolor_to_rgba(foreground_color);
             convert_rgba_to_nscolor(&computed.to_rgba(foreground_color))
-        }
+        },
         _ => panic!("Other color properties are not supported yet"),
     }
 }
@@ -832,7 +832,7 @@ pub extern "C" fn Servo_AnimationValue_Opacity(opacity: f32) -> RawServoAnimatio
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValue_Color(
     color_property: nsCSSPropertyID,
-    color: structs::nscolor
+    color: structs::nscolor,
 ) -> RawServoAnimationValueStrong {
     use style::gecko::values::convert_nscolor_to_rgba;
     use style::values::animated::color::RGBA as AnimatedRGBA;
@@ -842,13 +842,16 @@ pub extern "C" fn Servo_AnimationValue_Color(
 
     let rgba = convert_nscolor_to_rgba(color);
 
-    let animatedRGBA = AnimatedRGBA::new(rgba.red_f32(),
-                                         rgba.green_f32(),
-                                         rgba.blue_f32(),
-                                         rgba.alpha_f32());
+    let animatedRGBA = AnimatedRGBA::new(
+        rgba.red_f32(),
+        rgba.green_f32(),
+        rgba.blue_f32(),
+        rgba.alpha_f32(),
+    );
     match property {
-        LonghandId::BackgroundColor =>
-            Arc::new(AnimationValue::BackgroundColor(animatedRGBA.into())).into_strong(),
+        LonghandId::BackgroundColor => {
+            Arc::new(AnimationValue::BackgroundColor(animatedRGBA.into())).into_strong()
+        },
         _ => panic!("Should be background-color property"),
     }
 }
@@ -3572,12 +3575,7 @@ pub extern "C" fn Servo_StyleSet_Drop(data: RawServoStyleSetOwned) {
 #[no_mangle]
 pub unsafe extern "C" fn Servo_StyleSet_CompatModeChanged(raw_data: RawServoStyleSetBorrowed) {
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
-    let doc = &*data
-        .stylist
-        .device()
-        .pres_context()
-        .mDocument
-        .mRawPtr;
+    let doc = &*data.stylist.device().pres_context().mDocument.mRawPtr;
     data.stylist
         .set_quirks_mode(QuirksMode::from(doc.mCompatMode));
 }
@@ -4450,10 +4448,11 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
 ) {
     use style::properties::longhands::border_spacing::SpecifiedValue as BorderSpacing;
     use style::properties::{LonghandId, PropertyDeclaration};
-    use style::values::generics::NonNegative;
     use style::values::generics::length::MozLength;
-    use style::values::specified::length::{NoCalcLength, NonNegativeLength, NonNegativeLengthPercentage};
-    use style::values::specified::length::{LengthPercentageOrAuto, LengthPercentage};
+    use style::values::generics::NonNegative;
+    use style::values::specified::length::NonNegativeLengthPercentage;
+    use style::values::specified::length::{LengthPercentage, LengthPercentageOrAuto};
+    use style::values::specified::length::{NoCalcLength, NonNegativeLength};
     use style::values::specified::{BorderCornerRadius, BorderSideWidth};
 
     let long = get_longhand_from_id!(property);
@@ -4511,8 +4510,9 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     use style::properties::longhands::_moz_script_min_size::SpecifiedValue as MozScriptMinSize;
     use style::properties::{LonghandId, PropertyDeclaration};
     use style::values::generics::length::MozLength;
+    use style::values::specified::length::NoCalcLength;
     use style::values::specified::length::{AbsoluteLength, FontRelativeLength};
-    use style::values::specified::length::{LengthPercentage, LengthPercentageOrAuto, NoCalcLength};
+    use style::values::specified::length::{LengthPercentage, LengthPercentageOrAuto};
 
     let long = get_longhand_from_id!(property);
     let nocalc = match unit {
@@ -4579,12 +4579,11 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
     use style::properties::{LonghandId, PropertyDeclaration};
     use style::values::computed::Percentage;
     use style::values::generics::length::MozLength;
-    use style::values::specified::length::{LengthPercentageOrAuto, LengthPercentage};
+    use style::values::specified::length::{LengthPercentage, LengthPercentageOrAuto};
 
     let long = get_longhand_from_id!(property);
     let pc = Percentage(value);
-    let lp_or_auto =
-        LengthPercentageOrAuto::LengthPercentage(LengthPercentage::Percentage(pc));
+    let lp_or_auto = LengthPercentageOrAuto::LengthPercentage(LengthPercentage::Percentage(pc));
 
     let prop = match_wrap_declared! { long,
         Height => MozLength::LengthPercentageOrAuto(lp_or_auto),

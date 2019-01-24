@@ -246,14 +246,14 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
                         Some(cstr!("PEColorNotColor")),
                         cstr!("PEValueParsingError"),
                         Action::Drop,
-                    )
+                    );
                 },
                 StyleParseErrorKind::InvalidFilter(_, _) => {
                     return (
                         Some(cstr!("PEExpectedNoneOrURLOrFilterFunction")),
                         cstr!("PEValueParsingError"),
                         Action::Drop,
-                    )
+                    );
                 },
                 StyleParseErrorKind::OtherInvalidValue(_) => {
                     (cstr!("PEValueParsingError"), Action::Drop)

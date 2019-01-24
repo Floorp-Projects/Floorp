@@ -20,7 +20,7 @@ static void NonIncrementalGCSliceCallback(JSContext* cx,
   MOZ_RELEASE_ASSERT(progress == expect[gSliceCallbackCount++]);
   MOZ_RELEASE_ASSERT(desc.isZone_ == false);
   MOZ_RELEASE_ASSERT(desc.invocationKind_ == GC_NORMAL);
-  MOZ_RELEASE_ASSERT(desc.reason_ == JS::gcreason::API);
+  MOZ_RELEASE_ASSERT(desc.reason_ == JS::GCReason::API);
   if (progress == GC_CYCLE_END) {
     mozilla::UniquePtr<char16_t> summary(desc.formatSummaryMessage(cx));
     mozilla::UniquePtr<char16_t> message(desc.formatSliceMessage(cx));
@@ -41,16 +41,17 @@ END_TEST(testGCSliceCallback)
 static void RootsRemovedGCSliceCallback(JSContext* cx, JS::GCProgress progress,
                                         const JS::GCDescription& desc) {
   using namespace JS;
-  using namespace JS::gcreason;
 
   static GCProgress expectProgress[] = {
       GC_CYCLE_BEGIN, GC_SLICE_BEGIN, GC_SLICE_END,   GC_SLICE_BEGIN,
       GC_SLICE_END,   GC_CYCLE_END,   GC_CYCLE_BEGIN, GC_SLICE_BEGIN,
       GC_SLICE_END,   GC_CYCLE_END};
 
-  static Reason expectReasons[] = {
-      DEBUG_GC, DEBUG_GC,      DEBUG_GC,      DEBUG_GC,      DEBUG_GC,
-      DEBUG_GC, ROOTS_REMOVED, ROOTS_REMOVED, ROOTS_REMOVED, ROOTS_REMOVED};
+  static GCReason expectReasons[] = {
+      GCReason::DEBUG_GC,      GCReason::DEBUG_GC,      GCReason::DEBUG_GC,
+      GCReason::DEBUG_GC,      GCReason::DEBUG_GC,      GCReason::DEBUG_GC,
+      GCReason::ROOTS_REMOVED, GCReason::ROOTS_REMOVED, GCReason::ROOTS_REMOVED,
+      GCReason::ROOTS_REMOVED};
 
   static_assert(
       mozilla::ArrayLength(expectProgress) ==
@@ -87,7 +88,7 @@ BEGIN_TEST(testGCRootsRemoved) {
   // Trigger another GC after the current one in shrinking / shutdown GCs.
   cx->runtime()->gc.notifyRootsRemoved();
 
-  JS::FinishIncrementalGC(cx, JS::gcreason::DEBUG_GC);
+  JS::FinishIncrementalGC(cx, JS::GCReason::DEBUG_GC);
   CHECK(!JS::IsIncrementalGCInProgress(cx));
 
   JS::SetGCSliceCallback(cx, nullptr);

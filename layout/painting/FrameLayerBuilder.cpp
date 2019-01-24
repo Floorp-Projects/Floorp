@@ -4416,6 +4416,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
   // AGR and ASR for the container item that was flattened.
   AnimatedGeometryRoot* containerAGR = nullptr;
   const ActiveScrolledRoot* containerASR = nullptr;
+  nsIFrame* containerReferenceFrame = nullptr;
   RefPtr<TransformClipNode> transformNode = nullptr;
 
   const auto InTransform = [&]() { return transformNode; };
@@ -5044,7 +5045,8 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
         if (!paintedLayerData->mLayer) {
           // Try to recycle the old layer of this display item.
           RefPtr<PaintedLayer> layer = AttemptToRecyclePaintedLayer(
-              itemAGR, item, topLeft, referenceFrame);
+              itemAGR, item, topLeft,
+              inEffect ? containerReferenceFrame : referenceFrame);
           if (layer) {
             paintedLayerData->mLayer = layer;
 
@@ -5066,14 +5068,16 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
           selectedLayer = nullptr;
           containerAGR = nullptr;
           containerASR = nullptr;
+          containerReferenceFrame = nullptr;
         }
       };
 
       const auto SelectLayerIfNeeded = [&]() {
         if (!selectedLayer) {
           selectedLayer = paintedLayerData;
-          containerAGR = item->GetAnimatedGeometryRoot();
-          containerASR = item->GetActiveScrolledRoot();
+          containerAGR = itemAGR;
+          containerASR = itemASR;
+          containerReferenceFrame = const_cast<nsIFrame*>(referenceFrame);
         }
       };
 

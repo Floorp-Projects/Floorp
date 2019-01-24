@@ -361,6 +361,8 @@ static void DEBUG_CheckUnwrapSafety(HandleObject obj,
     {}
 #endif
 
+const CrossOriginObjectWrapper CrossOriginObjectWrapper::singleton;
+
 static const Wrapper* SelectWrapper(bool securityWrapper, XrayType xrayType,
                                     bool waiveXrays, JSObject* obj) {
   // Waived Xray uses a modified CCW that has transparent behavior but
@@ -395,8 +397,7 @@ static const Wrapper* SelectWrapper(bool securityWrapper, XrayType xrayType,
   // This is a security wrapper. Use the security versions and filter.
   if (xrayType == XrayForDOMObject &&
       IdentifyCrossOriginObject(obj) != CrossOriginOpaque) {
-    return &FilteringWrapper<CrossOriginXrayWrapper,
-                             CrossOriginAccessiblePropertiesOnly>::singleton;
+    return &CrossOriginObjectWrapper::singleton;
   }
 
   // There's never any reason to expose other objects to non-subsuming actors.

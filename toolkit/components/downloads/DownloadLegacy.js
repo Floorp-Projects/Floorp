@@ -167,6 +167,8 @@ DownloadLegacyTransfer.prototype = {
 
   onSecurityChange() { },
 
+  onContentBlockingEvent() { },
+
   // nsIWebProgressListener2
   onProgressChange64: function DLT_onProgressChange64(aWebProgress, aRequest,
                                                       aCurSelfProgress,

@@ -194,12 +194,19 @@ class WebProgressChild {
     json.state = aState;
     json.secInfo = this.getSecInfoAsString();
 
+    this._send("Content:SecurityChange", json);
+  }
+
+  onContentBlockingEvent(aWebProgress, aRequest, aEvent) {
+    let json = this._setupJSON(aWebProgress, aRequest);
+
+    json.event = aEvent;
     json.matchedList = null;
     if (aRequest && aRequest instanceof Ci.nsIClassifiedChannel) {
       json.matchedList = aRequest.matchedList;
     }
 
-    this._send("Content:SecurityChange", json);
+    this._send("Content:ContentBlockingEvent", json);
   }
 
   onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {

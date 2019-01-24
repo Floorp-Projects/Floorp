@@ -40,8 +40,8 @@ using mozilla::TimeStamp;
  * larger-numbered reasons to pile up in the last telemetry bucket, or switch
  * to GC_REASON_3 and bump the max value.
  */
-JS_STATIC_ASSERT(JS::gcreason::NUM_TELEMETRY_REASONS >=
-                 JS::gcreason::NUM_REASONS);
+JS_STATIC_ASSERT(JS::GCReason::NUM_TELEMETRY_REASONS >=
+                 JS::GCReason::NUM_REASONS);
 
 using PhaseKindRange =
     decltype(mozilla::MakeEnumeratedRange(PhaseKind::FIRST, PhaseKind::LIMIT));
@@ -64,11 +64,10 @@ const char* js::gcstats::ExplainInvocationKind(JSGCInvocationKind gckind) {
   }
 }
 
-JS_PUBLIC_API const char* JS::gcreason::ExplainReason(
-    JS::gcreason::Reason reason) {
+JS_PUBLIC_API const char* JS::ExplainGCReason(JS::GCReason reason) {
   switch (reason) {
 #define SWITCH_REASON(name, _) \
-  case JS::gcreason::name:     \
+  case JS::GCReason::name:     \
     return #name;
     GCREASONS(SWITCH_REASON)
 
@@ -279,7 +278,8 @@ UniqueChars Statistics::formatCompactSliceMessage() const {
       "%s%s; Times: ";
   char buffer[1024];
   SprintfLiteral(buffer, format, index, t(slice.duration()), budgetDescription,
-                 t(slice.start - slices_[0].start), ExplainReason(slice.reason),
+                 t(slice.start - slices_[0].start),
+                 ExplainGCReason(slice.reason),
                  slice.wasReset() ? "yes - " : "no",
                  slice.wasReset() ? ExplainAbortReason(slice.resetReason) : "");
 
@@ -442,7 +442,7 @@ UniqueChars Statistics::formatDetailedDescription() const {
   char buffer[1024];
   SprintfLiteral(
       buffer, format, ExplainInvocationKind(gckind),
-      ExplainReason(slices_[0].reason), nonincremental() ? "no - " : "yes",
+      ExplainGCReason(slices_[0].reason), nonincremental() ? "no - " : "yes",
       nonincremental() ? ExplainAbortReason(nonincrementalReason_) : "",
       zoneStats.collectedZoneCount, zoneStats.zoneCount,
       zoneStats.sweptZoneCount, zoneStats.collectedCompartmentCount,
@@ -475,7 +475,7 @@ UniqueChars Statistics::formatDetailedSliceDescription(
 ";
   char buffer[1024];
   SprintfLiteral(
-      buffer, format, i, ExplainReason(slice.reason),
+      buffer, format, i, ExplainGCReason(slice.reason),
       slice.wasReset() ? "yes - " : "no",
       slice.wasReset() ? ExplainAbortReason(slice.resetReason) : "",
       gc::StateName(slice.initialState), gc::StateName(slice.finalState),
@@ -585,7 +585,8 @@ void Statistics::writeLogMessage(const char* fmt, ...) {
 }
 #endif
 
-UniqueChars Statistics::renderJsonMessage(uint64_t timestamp, Statistics::JSONUse use) const {
+UniqueChars Statistics::renderJsonMessage(uint64_t timestamp,
+                                          Statistics::JSONUse use) const {
   /*
    * The format of the JSON message is specified by the GCMajorMarkerPayload
    * type in perf.html
@@ -605,7 +606,7 @@ UniqueChars Statistics::renderJsonMessage(uint64_t timestamp, Statistics::JSONUs
   JSONPrinter json(printer);
 
   json.beginObject();
-  json.property("status", "completed");    // JSON Key #1
+  json.property("status", "completed");         // JSON Key #1
   formatJsonDescription(timestamp, json, use);  // #2-22
 
   if (use == Statistics::JSONUse::TELEMETRY) {
@@ -625,8 +626,7 @@ UniqueChars Statistics::renderJsonMessage(uint64_t timestamp, Statistics::JSONUs
   return printer.release();
 }
 
-void Statistics::formatJsonDescription(uint64_t timestamp,
-                                       JSONPrinter& json,
+void Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json,
                                        JSONUse use) const {
   // If you change JSON properties here, please update:
   // Telemetry ping code:
@@ -650,7 +650,7 @@ void Statistics::formatJsonDescription(uint64_t timestamp,
   json.property("total_time", total, JSONPrinter::MILLISECONDS);   // #4
   // We might be able to omit reason if perf.html was able to retrive it
   // from the first slice.  But it doesn't do this yet.
-  json.property("reason", ExplainReason(slices_[0].reason));        // #5
+  json.property("reason", ExplainGCReason(slices_[0].reason));      // #5
   json.property("zones_collected", zoneStats.collectedZoneCount);   // #6
   json.property("total_zones", zoneStats.zoneCount);                // #7
   json.property("total_compartments", zoneStats.compartmentCount);  // #8
@@ -713,7 +713,7 @@ void Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice,
 
   json.property("slice", i);  // JSON Property #1
   json.property("pause", slice.duration(), JSONPrinter::MILLISECONDS);  // #2
-  json.property("reason", ExplainReason(slice.reason));                 // #3
+  json.property("reason", ExplainGCReason(slice.reason));               // #3
   json.property("initial_state", gc::StateName(slice.initialState));    // #4
   json.property("final_state", gc::StateName(slice.finalState));        // #5
   json.property("budget", budgetDescription);                           // #6
@@ -1024,7 +1024,7 @@ void Statistics::endGC() {
   thresholdTriggered = false;
 }
 
-void Statistics::beginNurseryCollection(JS::gcreason::Reason reason) {
+void Statistics::beginNurseryCollection(JS::GCReason reason) {
   count(COUNT_MINOR_GC);
   startingMinorGCNumber = runtime->gc.minorGCCount();
   if (nurseryCollectionCallback) {
@@ -1034,7 +1034,7 @@ void Statistics::beginNurseryCollection(JS::gcreason::Reason reason) {
   }
 }
 
-void Statistics::endNurseryCollection(JS::gcreason::Reason reason) {
+void Statistics::endNurseryCollection(JS::GCReason reason) {
   if (nurseryCollectionCallback) {
     (*nurseryCollectionCallback)(
         runtime->mainContextFromOwnThread(),
@@ -1046,7 +1046,7 @@ void Statistics::endNurseryCollection(JS::gcreason::Reason reason) {
 
 void Statistics::beginSlice(const ZoneGCStats& zoneStats,
                             JSGCInvocationKind gckind, SliceBudget budget,
-                            JS::gcreason::Reason reason) {
+                            JS::GCReason reason) {
   MOZ_ASSERT(phaseStack.empty() ||
              (phaseStack.length() == 1 && phaseStack[0] == Phase::MUTATOR));
 
@@ -1064,7 +1064,7 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats,
     return;
   }
 
-  runtime->addTelemetry(JS_TELEMETRY_GC_REASON, reason);
+  runtime->addTelemetry(JS_TELEMETRY_GC_REASON, uint32_t(reason));
 
   // Slice callbacks should only fire for the outermost level.
   bool wasFullGC = zoneStats.isFullCollection();
@@ -1485,7 +1485,7 @@ void Statistics::printSliceProfile() {
   bool full = zoneStats.isFullCollection();
 
   fprintf(stderr, "MajorGC: %20s %1d -> %1d %1s%1s%1s%1s ",
-          ExplainReason(slice.reason), int(slice.initialState),
+          ExplainGCReason(slice.reason), int(slice.initialState),
           int(slice.finalState), full ? "F" : "", shrinking ? "S" : "",
           nonIncremental ? "N" : "", reset ? "R" : "");
 

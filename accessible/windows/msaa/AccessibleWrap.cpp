@@ -740,17 +740,25 @@ AccessibleWrap::get_accSelection(VARIANT __RPC_FAR* pvarChildren) {
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-  if (IsSelect()) {
-    AutoTArray<Accessible*, 10> selectedItems;
-    SelectedItems(&selectedItems);
+  if (!IsSelect()) {
+    return S_OK;
+  }
 
-    // 1) Create and initialize the enumeration
+  AutoTArray<Accessible*, 10> selectedItems;
+  SelectedItems(&selectedItems);
+  uint32_t count = selectedItems.Length();
+  if (count == 1) {
+    pvarChildren->vt = VT_DISPATCH;
+    pvarChildren->pdispVal = NativeAccessible(selectedItems[0]);
+  } else if (count > 1) {
     RefPtr<AccessibleEnumerator> pEnum =
         new AccessibleEnumerator(selectedItems);
     pvarChildren->vt =
         VT_UNKNOWN;  // this must be VT_UNKNOWN for an IEnumVARIANT
     NS_ADDREF(pvarChildren->punkVal = pEnum);
   }
+  // If count == 0, vt is already VT_EMPTY, so there's nothing else to do.
+
   return S_OK;
 }
 

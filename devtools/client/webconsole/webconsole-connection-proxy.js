@@ -174,7 +174,7 @@ WebConsoleConnectionProxy.prototype = {
    *        The WebConsoleClient instance for the attached console, for the
    *        specific tab we work with.
    */
-  _onAttachConsole: function(response) {
+  _onAttachConsole: async function(response) {
     let saveBodies = Services.prefs.getBoolPref(
       "devtools.netmonitor.saveRequestAndResponseBodies");
 
@@ -190,7 +190,8 @@ WebConsoleConnectionProxy.prototype = {
     this.webConsoleClient.on("networkEventUpdate", this._onNetworkEventUpdate);
 
     const msgs = ["PageError", "ConsoleAPI"];
-    this.webConsoleClient.getCachedMessages(msgs, this._onCachedMessages);
+    const cachedMessages = await this.webConsoleClient.getCachedMessages(msgs);
+    this._onCachedMessages(cachedMessages);
 
     this.webConsoleFrame._onUpdateListeners();
   },

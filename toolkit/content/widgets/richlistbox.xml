@@ -105,26 +105,9 @@
             this.setAttribute("current", "true");
           else
             this.removeAttribute("current");
-
-          let control = this.control;
-          if (!control || !control.suppressMenuItemEvent) {
-            this._fireEvent(val ? "DOMMenuItemActive" : "DOMMenuItemInactive");
-          }
-
           return val;
         ]]></setter>
       </property>
-
-      <method name="_fireEvent">
-        <parameter name="name"/>
-        <body>
-        <![CDATA[
-          var event = document.createEvent("Events");
-          event.initEvent(name, true, true);
-          this.dispatchEvent(event);
-        ]]>
-        </body>
-      </method>
     </implementation>
 
     <handlers>

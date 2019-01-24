@@ -1412,6 +1412,26 @@ NS_IMETHODIMP nsDocLoader::OnSecurityChange(nsISupports* aContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDocLoader::OnContentBlockingEvent(nsISupports* aContext,
+                                                  uint32_t aEvent) {
+  //
+  // Fire progress notifications out to any registered nsIWebProgressListeners.
+  //
+
+  nsCOMPtr<nsIRequest> request = do_QueryInterface(aContext);
+  nsIWebProgress* webProgress = static_cast<nsIWebProgress*>(this);
+
+  NOTIFY_LISTENERS(
+      nsIWebProgress::NOTIFY_CONTENT_BLOCKING,
+      listener->OnContentBlockingEvent(webProgress, request, aEvent););
+
+  // Pass the notification up to the parent...
+  if (mParent) {
+    mParent->OnContentBlockingEvent(aContext, aEvent);
+  }
+  return NS_OK;
+}
+
 /*
  * Implementation of nsISupportsPriority methods...
  *

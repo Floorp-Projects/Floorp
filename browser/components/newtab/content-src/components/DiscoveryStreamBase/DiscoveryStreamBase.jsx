@@ -161,11 +161,13 @@ export class _DiscoveryStreamBase extends React.PureComponent {
       case "HorizontalRule":
         return (<HorizontalRule />);
       case "List":
-        rows = this.extractRows(component, MAX_ROWS_LIST);
+        rows = this.extractRows(component,
+          Math.min(component.properties.items, MAX_ROWS_LIST));
         return (
           <ImpressionStats rows={rows} dispatch={this.props.dispatch} source={component.type}>
             <List
               feed={component.feed}
+              items={component.properties.items}
               type={component.type}
               header={component.header} />
           </ImpressionStats>

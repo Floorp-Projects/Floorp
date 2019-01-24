@@ -42,7 +42,7 @@ window.gActivityStreamStrings = {
   "prefs_home_description": "Välj vilket innehåll du vill ha på din startskärm i Firefox.",
   "prefs_content_discovery_header": "Firefox startsida",
   "prefs_content_discovery_description": "Content Discovery på Firefox startsida låter dig upptäcka högkvalitativa, relevanta artiklar från hela webben.",
-  "prefs_content_discovery_button": "Stäng av innehållsupptäckt",
+  "prefs_content_discovery_button": "Stäng av Content Discovery",
   "prefs_section_rows_option": "{num} rad;{num} rader",
   "prefs_search_header": "Webbsök",
   "prefs_topsites_description": "Sidorna du besöker mest",

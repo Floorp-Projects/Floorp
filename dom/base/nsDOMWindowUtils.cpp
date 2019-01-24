@@ -1037,7 +1037,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener* aListener) {
   AUTO_PROFILER_LABEL("nsDOMWindowUtils::GarbageCollect", GCCC);
 
-  nsJSContext::GarbageCollectNow(JS::gcreason::DOM_UTILS);
+  nsJSContext::GarbageCollectNow(JS::GCReason::DOM_UTILS);
   nsJSContext::CycleCollectNow(aListener);
 
   return NS_OK;
@@ -1051,7 +1051,7 @@ nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener* aListener) {
 
 NS_IMETHODIMP
 nsDOMWindowUtils::RunNextCollectorTimer() {
-  nsJSContext::RunNextCollectorTimer(JS::gcreason::DOM_WINDOW_UTILS);
+  nsJSContext::RunNextCollectorTimer(JS::GCReason::DOM_WINDOW_UTILS);
 
   return NS_OK;
 }

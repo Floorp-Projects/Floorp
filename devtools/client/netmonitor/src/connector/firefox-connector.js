@@ -229,7 +229,7 @@ class FirefoxConnector {
    * @param {function} callback callback will be invoked after the request finished
    */
   sendHTTPRequest(data, callback) {
-    this.webConsoleClient.sendHTTPRequest(data, callback);
+    this.webConsoleClient.sendHTTPRequest(data).then(callback);
   }
 
   /**
@@ -238,8 +238,8 @@ class FirefoxConnector {
    * @param {object} request request payload would like to sent to backend
    * @param {function} callback callback will be invoked after the request finished
    */
-  setPreferences(request, callback) {
-    this.webConsoleClient.setPreferences(request, callback);
+  setPreferences(request) {
+    return this.webConsoleClient.setPreferences(request);
   }
 
   /**

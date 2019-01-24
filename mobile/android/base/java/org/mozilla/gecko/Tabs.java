@@ -154,6 +154,7 @@ public class Tabs implements BundleEventListener {
             "Content:LocationChange",
             "Content:SubframeNavigation",
             "Content:SecurityChange",
+            "Content:ContentBlockingEvent",
             "Content:StateChange",
             "Content:LoadError",
             "Content:DOMContentLoaded",
@@ -620,6 +621,10 @@ public class Tabs implements BundleEventListener {
             tab.updatePageAction();
             notifyListeners(tab, TabEvents.SECURITY_CHANGE);
 
+        } else if ("Content:ContentBlockingEvent".equals(event)) {
+            tab.updateTracking(message.getString("tracking"));
+            notifyListeners(tab, TabEvents.TRACKING_CHANGE);
+
         } else if ("Content:StateChange".equals(event)) {
             final int state = message.getInt("state");
             if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) == 0) {
@@ -764,6 +769,7 @@ public class Tabs implements BundleEventListener {
         PAGE_SHOW,
         LINK_FEED,
         SECURITY_CHANGE,
+        TRACKING_CHANGE,
         DESKTOP_MODE_CHANGE,
         RECORDING_CHANGE,
         BOOKMARK_ADDED,

@@ -93,6 +93,8 @@ for (const src of ${JSON.stringify(scripts, null, 2)}) {
   script.src = src;
 }
     </script>`;
+  // Comment to indicate if prerendered version of html is used. See Bug 1516034
+  const isPrerenderedStatus = "<!-- Prerendered version html not shown -->";
   return `<!doctype html>
 <html lang="${options.locale}" dir="${options.direction}">
   <head>
@@ -108,6 +110,7 @@ for (const src of ${JSON.stringify(scripts, null, 2)}) {
     <div id="snippets-container">
       <div id="snippets"></div>
     </div>${options.noscripts ? "" : scriptTag}
+    ${isPrerendered ? "" : isPrerenderedStatus}
   </body>
 </html>
 `;

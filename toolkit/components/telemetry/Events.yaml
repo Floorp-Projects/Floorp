@@ -26,6 +26,7 @@ activity_stream:
       "SEARCH_EDIT_ADD",
       "SEARCH_EDIT_CLOSE",
       "SEARCH_EDIT_DELETE",
+      "SEARCH_HANDOFF",
       "SKIPPED_SIGNIN",
       "SUBMIT_EMAIL",
       "DISCLAIMER_ACKED",
@@ -45,10 +46,11 @@ activity_stream:
     record_in_processes: ["main"]
     description: >
       This is recorded with every user interaction on Activity Stream elements.
-    bug_numbers: [1429497, 1429489]
+    bug_numbers: [1429497, 1429489, 1514732]
     notification_emails:
       - "najiang@mozilla.com"
       - "msamuel@mozilla.com"
+      - "rrosario@mozilla.com"
     expiry_version: never
     extra_keys:
       addon_version: The Activity Stream addon version.

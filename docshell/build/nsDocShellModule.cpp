@@ -189,13 +189,14 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
     // clang-format on
 };
 
-static const mozilla::Module kDocShellModule = {mozilla::Module::kVersion,
-                                                kDocShellCIDs,
-                                                kDocShellContracts,
-                                                nullptr,
-                                                nullptr,
-                                                Initialize,
-                                                Shutdown,
-                                                mozilla::Module::ALLOW_IN_SOCKET_PROCESS};
+static const mozilla::Module kDocShellModule = {
+    mozilla::Module::kVersion,
+    kDocShellCIDs,
+    kDocShellContracts,
+    nullptr,
+    nullptr,
+    Initialize,
+    Shutdown,
+    mozilla::Module::ALLOW_IN_SOCKET_PROCESS};
 
 NSMODULE_DEFN(docshell_provider) = &kDocShellModule;

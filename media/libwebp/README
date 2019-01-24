@@ -4,7 +4,7 @@
           \__\__/\____/\_____/__/ ____  ___
                 / _/ /    \    \ /  _ \/ _/
                /  \_/   / /   \ \   __/  \__
-               \____/____/\_____/_____/____/v1.0.1
+               \____/____/\_____/_____/____/v1.0.2
 
 Description:
 ============
@@ -135,6 +135,8 @@ CMake, e.g.:
 cmake -DWEBP_BUILD_CWEBP=ON -DWEBP_BUILD_DWEBP=ON ../
 
 or through your favorite interface (like ccmake or cmake-qt-gui).
+
+Use option -DWEBP_UNICODE=ON for Unicode support on Windows (with chcp 65001).
 
 Finally, once installed, you can also use WebP in your CMake project by doing:
 

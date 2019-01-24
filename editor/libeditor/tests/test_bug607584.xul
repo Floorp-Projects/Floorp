@@ -96,6 +96,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
     onSecurityChange : function(aWebProgress, aRequest, aState)
       {
       },
+
+    onContentBlockingEvent : function(aWebProgress, aRequest, aEvent)
+      {
+      },
   
       mEditor: null
   };

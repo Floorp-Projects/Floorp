@@ -2076,9 +2076,11 @@ nsUrlClassifierDBService::Lookup(nsIPrincipal* aPrincipal,
   return LookupURI(aPrincipal, tables, c, true, &dummy);
 }
 
-nsresult nsUrlClassifierDBService::LookupURI(
-    nsIPrincipal* aPrincipal, const nsACString& tables,
-    nsIUrlClassifierCallback* c, bool forceLookup, bool* didLookup) {
+nsresult nsUrlClassifierDBService::LookupURI(nsIPrincipal* aPrincipal,
+                                             const nsACString& tables,
+                                             nsIUrlClassifierCallback* c,
+                                             bool forceLookup,
+                                             bool* didLookup) {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG(aPrincipal);
 

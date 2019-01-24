@@ -30,6 +30,7 @@
 #include "mozilla/dom/LSObject.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/IdleRequest.h"
+#include "mozilla/dom/MaybeCrossOriginObject.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
@@ -340,54 +341,165 @@ nsPIDOMWindowOuter* nsPIDOMWindowOuter::GetFromCurrentInner(
 // nsOuterWindowProxy: Outer Window Proxy
 //*****************************************************************************
 
-class nsOuterWindowProxy : public js::Wrapper {
+// Give OuterWindowProxyClass 2 reserved slots, like the other wrappers, so
+// JSObject::swap can swap it with CrossCompartmentWrappers without requiring
+// malloc.
+//
+// We store the nsGlobalWindowOuter* in our first slot.
+//
+// We store our holder weakmap in the second slot.
+const js::Class OuterWindowProxyClass = PROXY_CLASS_DEF(
+    "Proxy", JSCLASS_HAS_RESERVED_SLOTS(2)); /* additional class flags */
+
+static const size_t OUTER_WINDOW_SLOT = 0;
+static const size_t HOLDER_WEAKMAP_SLOT = 1;
+
+class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
+  typedef MaybeCrossOriginObject<js::Wrapper> Base;
+
  public:
-  constexpr nsOuterWindowProxy() : js::Wrapper(0) {}
+  constexpr nsOuterWindowProxy() : Base(0) {}
 
   bool finalizeInBackground(const JS::Value& priv) const override {
     return false;
   }
 
   // Standard internal methods
+  /**
+   * Implementation of [[GetOwnProperty]] as defined at
+   * https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-getownproperty
+   *
+   * "proxy" is the WindowProxy object involved.  It may not be same-compartment
+   * with cx.
+   */
   bool getOwnPropertyDescriptor(
       JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
       JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
-  bool defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy,
-                      JS::Handle<jsid> id,
-                      JS::Handle<JS::PropertyDescriptor> desc,
-                      JS::ObjectOpResult& result) const override;
+
+  /*
+   * Implementation of the same-origin case of
+   * <https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-getownproperty>.
+   */
+  bool definePropertySameOrigin(JSContext* cx, JS::Handle<JSObject*> proxy,
+                                JS::Handle<jsid> id,
+                                JS::Handle<JS::PropertyDescriptor> desc,
+                                JS::ObjectOpResult& result) const override;
+
+  /**
+   * Implementation of [[OwnPropertyKeys]] as defined at
+   *
+   * https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-ownpropertykeys
+   *
+   * "proxy" is the WindowProxy object involved.  It may not be same-compartment
+   * with cx.
+   */
   bool ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
                        JS::AutoIdVector& props) const override;
+  /**
+   * Implementation of [[Delete]] as defined at
+   * https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-delete
+   *
+   * "proxy" is the WindowProxy object involved.  It may not be same-compartment
+   * with cx.
+   */
   bool delete_(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                JS::ObjectOpResult& result) const override;
 
-  bool getPrototypeIfOrdinary(
-      JSContext* cx, JS::Handle<JSObject*> proxy, bool* isOrdinary,
-      JS::MutableHandle<JSObject*> protop) const override;
+  /**
+   * Implementaton of hook for superclass getPrototype() method.
+   */
+  JSObject* getSameOriginPrototype(JSContext* cx) const override;
 
-  JSObject* enumerate(JSContext* cx,
-                      JS::Handle<JSObject*> proxy) const override;
-  bool preventExtensions(JSContext* cx, JS::Handle<JSObject*> proxy,
-                         JS::ObjectOpResult& result) const override;
-  bool isExtensible(JSContext* cx, JS::Handle<JSObject*> proxy,
-                    bool* extensible) const override;
+  /**
+   * Implementation of [[HasProperty]] internal method as defined at
+   * https://tc39.github.io/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-hasproperty-p
+   *
+   * "proxy" is the WindowProxy object involved.  It may not be same-compartment
+   * with cx.
+   *
+   * Note that the HTML spec does not define an override for this internal
+   * method, so we just want the "normal object" behavior.  We have to override
+   * it, because js::Wrapper also overrides, with "not normal" behavior.
+   */
   bool has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
            bool* bp) const override;
+
+  /**
+   * Implementation of [[Get]] internal method as defined at
+   * <https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-get>.
+   *
+   * "proxy" is the WindowProxy object involved.  It may or may not be
+   * same-compartment with "cx".
+   *
+   * "receiver" is the receiver ("this") for the get.  It will be
+   * same-compartment with "cx".
+   *
+   * "vp" is the return value.  It will be same-compartment with "cx".
+   */
   bool get(JSContext* cx, JS::Handle<JSObject*> proxy,
            JS::Handle<JS::Value> receiver, JS::Handle<jsid> id,
            JS::MutableHandle<JS::Value> vp) const override;
+
+  /**
+   * Implementation of [[Set]] internal method as defined at
+   * <https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-set>.
+   *
+   * "proxy" is the WindowProxy object involved.  It may or may not be
+   * same-compartment with "cx".
+   *
+   * "v" is the value being set.  It will be same-compartment with "cx".
+   *
+   * "receiver" is the receiver ("this") for the set.  It will be
+   * same-compartment with "cx".
+   */
   bool set(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
            JS::Handle<JS::Value> v, JS::Handle<JS::Value> receiver,
            JS::ObjectOpResult& result) const override;
 
   // SpiderMonkey extensions
+  /**
+   * Non-standard method we want to get rid of.
+   *
+   * "proxy" is the WindowProxy object involved.  It may not be same-compartment
+   * with cx.
+   *
+   * The only reason we implement this is because js::Wrapper does and we want
+   * different behavior from the js::Wrapper implementation.
+   */
   bool getPropertyDescriptor(
       JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
       JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
+
+  /**
+   * Implementation of SpiderMonkey extension which just checks whether this
+   * object has the property.  Basically Object.getOwnPropertyDescriptor(obj,
+   * prop) !== undefined. but does not require reifying the descriptor.
+   *
+   * We have to override this because js::Wrapper overrides it, but we want
+   * different behavior from js::Wrapper.
+   *
+   * "proxy" is the WindowProxy object involved.  It may not be same-compartment
+   * with cx.
+   */
   bool hasOwn(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
               bool* bp) const override;
+
+  /**
+   * Implementation of SpiderMonkey extension which is used as a fast path for
+   * enumerating.
+   *
+   * We have to override this because js::Wrapper overrides it, but we want
+   * different behavior from js::Wrapper.
+   *
+   * "proxy" is the WindowProxy object involved.  It may not be same-compartment
+   * with cx.
+   */
   bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
                                     JS::AutoIdVector& props) const override;
+
+  /**
+   * Hook used by SpiderMonkey to implement Object.prototype.toString.
+   */
   const char* className(JSContext* cx,
                         JS::Handle<JSObject*> wrapper) const override;
 
@@ -403,7 +515,7 @@ class nsOuterWindowProxy : public js::Wrapper {
   static nsGlobalWindowOuter* GetOuterWindow(JSObject* proxy) {
     nsGlobalWindowOuter* outerWindow =
         nsGlobalWindowOuter::FromSupports(static_cast<nsISupports*>(
-            js::GetProxyReservedSlot(proxy, 0).toPrivate()));
+            js::GetProxyReservedSlot(proxy, OUTER_WINDOW_SLOT).toPrivate()));
     return outerWindow;
   }
 
@@ -418,19 +530,21 @@ class nsOuterWindowProxy : public js::Wrapper {
   already_AddRefed<nsPIDOMWindowOuter> GetSubframeWindow(
       JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id) const;
 
-  bool AppendIndexedPropertyNames(JSContext* cx, JSObject* proxy,
+  bool AppendIndexedPropertyNames(JSObject* proxy,
                                   JS::AutoIdVector& props) const;
-};
 
-// Give OuterWindowProxyClass 2 reserved slots, like the other wrappers, so
-// JSObject::swap can swap it with CrossCompartmentWrappers without requiring
-// malloc.
-const js::Class OuterWindowProxyClass = PROXY_CLASS_DEF(
-    "Proxy", JSCLASS_HAS_RESERVED_SLOTS(2)); /* additional class flags */
+  using MaybeCrossOriginObjectMixins::EnsureHolder;
+  bool EnsureHolder(JSContext* cx, JS::Handle<JSObject*> proxy,
+                    JS::MutableHandle<JSObject*> holder) const override;
+};
 
 const char* nsOuterWindowProxy::className(JSContext* cx,
                                           JS::Handle<JSObject*> proxy) const {
   MOZ_ASSERT(js::IsProxy(proxy));
+
+  if (!IsPlatformObjectSameOrigin(cx, proxy)) {
+    return "Object";
+  }
 
   return "Window";
 }
@@ -455,9 +569,13 @@ void nsOuterWindowProxy::finalize(JSFreeOp* fop, JSObject* proxy) const {
 bool nsOuterWindowProxy::getPropertyDescriptor(
     JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
     JS::MutableHandle<JS::PropertyDescriptor> desc) const {
-  // The only thing we can do differently from js::Wrapper is shadow stuff with
-  // our indexed properties, so we can just try getOwnPropertyDescriptor and if
-  // that gives us nothing call on through to js::Wrapper.
+  // In the same-origin case the only thing we can do differently from
+  // js::Wrapper is shadow stuff with our indexed properties, so we can just try
+  // getOwnPropertyDescriptor and if that gives us nothing call on through to
+  // js::Wrapper.
+  //
+  // In the cross-origin case, we can only have own properties, so don't even
+  // need to worry about the js::Proxy bit.
   desc.object().set(nullptr);
   if (!getOwnPropertyDescriptor(cx, proxy, id, desc)) {
     return false;
@@ -467,7 +585,22 @@ bool nsOuterWindowProxy::getPropertyDescriptor(
     return true;
   }
 
-  return js::Wrapper::getPropertyDescriptor(cx, proxy, id, desc);
+  if (!IsPlatformObjectSameOrigin(cx, proxy)) {
+    return true;
+  }
+
+  // When forwarding to js::Wrapper, we should just enter the Realm of proxy
+  // for now.  That's what js::Wrapper expects, and since we're same-origin
+  // anyway this is not changing any security behavior.
+  {
+    JSAutoRealm ar(cx, proxy);
+    JS_MarkCrossZoneId(cx, id);
+    if (!js::Wrapper::getPropertyDescriptor(cx, proxy, id, desc)) {
+      return false;
+    }
+  }
+
+  return JS_WrapPropertyDescriptor(cx, desc);
 }
 
 /**
@@ -495,35 +628,95 @@ static bool IsNonConfigurableReadonlyPrimitiveGlobalProp(JSContext* cx,
 bool nsOuterWindowProxy::getOwnPropertyDescriptor(
     JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
     JS::MutableHandle<JS::PropertyDescriptor> desc) const {
+  // First check for indexed access.  This is
+  // https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-getownproperty
+  // step 2, mostly.
   bool found;
   if (!GetSubframeWindow(cx, proxy, id, desc.value(), found)) {
     return false;
   }
   if (found) {
+    // Step 2.4.
     FillPropertyDescriptor(desc, proxy, true);
     return true;
   }
-  // else fall through to js::Wrapper
 
-  bool ok = js::Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc);
-  if (!ok) {
+  bool isSameOrigin = IsPlatformObjectSameOrigin(cx, proxy);
+
+  // If we did not find a subframe, we could still have an indexed property
+  // access.  In that case we should throw a SecurityError in the cross-origin
+  // case.
+  if (!isSameOrigin && IsArrayIndex(GetArrayIndexFromId(id))) {
+    // Step 2.5.2.
+    return ReportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("access"));
+  }
+
+  // Step 2.5.1 is handled via the forwarding to js::Wrapper; it saves us an
+  // IsArrayIndex(GetArrayIndexFromId(id)) here.  We'll never have a property on
+  // the Window whose name is an index, because our defineProperty doesn't pass
+  // those on to the Window.
+
+  // Step 3.
+  if (isSameOrigin) {
+    // Fall through to js::Wrapper.
+    {  // Scope for JSAutoRealm while we are dealing with js::Wrapper.
+      // When forwarding to js::Wrapper, we should just enter the Realm of proxy
+      // for now.  That's what js::Wrapper expects, and since we're same-origin
+      // anyway this is not changing any security behavior.
+      JSAutoRealm ar(cx, proxy);
+      JS_MarkCrossZoneId(cx, id);
+      bool ok = js::Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc);
+      if (!ok) {
+        return false;
+      }
+
+#ifndef RELEASE_OR_BETA  // To be turned on in bug 1496510.
+      if (!IsNonConfigurableReadonlyPrimitiveGlobalProp(cx, id)) {
+        desc.setConfigurable(true);
+      }
+#endif
+    }
+
+    // Now wrap our descriptor back into the Realm that asked for it.
+    return JS_WrapPropertyDescriptor(cx, desc);
+  }
+
+  // Step 4.
+  if (!CrossOriginGetOwnPropertyHelper(cx, proxy, id, desc)) {
     return false;
   }
 
-#ifndef RELEASE_OR_BETA  // To be turned on in bug 1496510.
-  if (!IsNonConfigurableReadonlyPrimitiveGlobalProp(cx, id)) {
-    desc.setConfigurable(true);
+  // Step 5
+  if (desc.object()) {
+    return true;
   }
-#endif
 
-  return true;
+  // Step 6 -- check for named subframes.
+  if (JSID_IS_STRING(id)) {
+    nsAutoJSString name;
+    if (!name.init(cx, JSID_TO_STRING(id))) {
+      return false;
+    }
+    nsGlobalWindowOuter* win = GetOuterWindow(proxy);
+    if (RefPtr<BrowsingContext> childDOMWin = win->GetChildWindow(name)) {
+      JS::Rooted<JS::Value> childValue(cx);
+      if (!ToJSValue(cx, WindowProxyHolder(childDOMWin), &childValue)) {
+        return false;
+      }
+      FillPropertyDescriptor(desc, proxy, childValue,
+                             /* readonly = */ true,
+                             /* enumerable = */ false);
+      return true;
+    }
+  }
+
+  // And step 7.
+  return CrossOriginPropertyFallback(cx, proxy, id, desc);
 }
 
-bool nsOuterWindowProxy::defineProperty(JSContext* cx,
-                                        JS::Handle<JSObject*> proxy,
-                                        JS::Handle<jsid> id,
-                                        JS::Handle<JS::PropertyDescriptor> desc,
-                                        JS::ObjectOpResult& result) const {
+bool nsOuterWindowProxy::definePropertySameOrigin(
+    JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
+    JS::Handle<JS::PropertyDescriptor> desc, JS::ObjectOpResult& result) const {
   if (IsArrayIndex(GetArrayIndexFromId(id))) {
     // Spec says to Reject whether this is a supported index or not,
     // since we have no indexed setter or indexed creator.  It is up
@@ -599,20 +792,52 @@ bool nsOuterWindowProxy::ownPropertyKeys(JSContext* cx,
                                          JS::Handle<JSObject*> proxy,
                                          JS::AutoIdVector& props) const {
   // Just our indexed stuff followed by our "normal" own property names.
-  if (!AppendIndexedPropertyNames(cx, proxy, props)) {
+  if (!AppendIndexedPropertyNames(proxy, props)) {
     return false;
   }
 
-  JS::AutoIdVector innerProps(cx);
-  if (!js::Wrapper::ownPropertyKeys(cx, proxy, innerProps)) {
+  if (IsPlatformObjectSameOrigin(cx, proxy)) {
+    // When forwarding to js::Wrapper, we should just enter the Realm of proxy
+    // for now.  That's what js::Wrapper expects, and since we're same-origin
+    // anyway this is not changing any security behavior.
+    JS::AutoIdVector innerProps(cx);
+    {  // Scope for JSAutoRealm so we can mark the ids once we exit it
+      JSAutoRealm ar(cx, proxy);
+      if (!js::Wrapper::ownPropertyKeys(cx, proxy, innerProps)) {
+        return false;
+      }
+    }
+    for (auto& id : innerProps) {
+      JS_MarkCrossZoneId(cx, id);
+    }
+    return js::AppendUnique(cx, props, innerProps);
+  }
+
+  // In the cross-origin case we purposefully exclude subframe names from the
+  // list of property names we report here.
+  JS::Rooted<JSObject*> holder(cx);
+  if (!EnsureHolder(cx, proxy, &holder)) {
     return false;
   }
-  return js::AppendUnique(cx, props, innerProps);
+
+  JS::AutoIdVector crossOriginProps(cx);
+  if (!js::GetPropertyKeys(cx, holder,
+                           JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS,
+                           &crossOriginProps) ||
+      !js::AppendUnique(cx, props, crossOriginProps)) {
+    return false;
+  }
+
+  return xpc::AppendCrossOriginWhitelistedPropNames(cx, props);
 }
 
 bool nsOuterWindowProxy::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
                                  JS::Handle<jsid> id,
                                  JS::ObjectOpResult& result) const {
+  if (!IsPlatformObjectSameOrigin(cx, proxy)) {
+    return ReportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("delete"));
+  }
+
   if (nsCOMPtr<nsPIDOMWindowOuter> frame = GetSubframeWindow(cx, proxy, id)) {
     // Fail (which means throw if strict, else return false).
     return result.failCantDeleteWindowElement();
@@ -623,62 +848,72 @@ bool nsOuterWindowProxy::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
     return result.succeed();
   }
 
+  // We're same-origin, so it should be safe to enter the Realm of "proxy".
+  // Let's do that, just in case, to avoid cross-compartment issues in our
+  // js::Wrapper caller..
+  JSAutoRealm ar(cx, proxy);
+  JS_MarkCrossZoneId(cx, id);
   return js::Wrapper::delete_(cx, proxy, id, result);
 }
 
-bool nsOuterWindowProxy::getPrototypeIfOrdinary(
-    JSContext* cx, JS::Handle<JSObject*> proxy, bool* isOrdinary,
-    JS::MutableHandle<JSObject*> protop) const {
-  // Window's [[GetPrototypeOf]] trap isn't the ordinary definition:
-  //
-  //   https://html.spec.whatwg.org/multipage/browsers.html#windowproxy-getprototypeof
-  //
-  // We nonetheless can implement it with a static [[Prototype]], because
-  // wrapper-class handlers (particularly, XOW in FilteringWrapper.cpp) supply
-  // all non-ordinary behavior.
-  //
-  // But from a spec point of view, it's the exact same object in both cases --
-  // only the observer's changed.  So this getPrototypeIfOrdinary trap on the
-  // non-wrapper object *must* report non-ordinary, even if static [[Prototype]]
-  // usually means ordinary.
-  *isOrdinary = false;
-  return true;
-}
-
-bool nsOuterWindowProxy::preventExtensions(JSContext* cx,
-                                           JS::Handle<JSObject*> proxy,
-                                           JS::ObjectOpResult& result) const {
-  // If [[Extensible]] could be false, then navigating a window could navigate
-  // to a window that's [[Extensible]] after being at one that wasn't: an
-  // invariant violation.  So never change a window's extensibility.
-  return result.failCantPreventExtensions();
-}
-
-bool nsOuterWindowProxy::isExtensible(JSContext* cx,
-                                      JS::Handle<JSObject*> proxy,
-                                      bool* extensible) const {
-  // See above.
-  *extensible = true;
-  return true;
+JSObject* nsOuterWindowProxy::getSameOriginPrototype(JSContext* cx) const {
+  return Window_Binding::GetProtoObjectHandle(cx);
 }
 
 bool nsOuterWindowProxy::has(JSContext* cx, JS::Handle<JSObject*> proxy,
                              JS::Handle<jsid> id, bool* bp) const {
+  // We could just directly forward this method to js::BaseProxyHandler, but
+  // that involves reifying the actual property descriptor, which might be more
+  // work than we have to do for has() on the Window.
+
+  if (!IsPlatformObjectSameOrigin(cx, proxy)) {
+    // In the cross-origin case we only have own properties.  Just call hasOwn
+    // directly.
+    return hasOwn(cx, proxy, id, bp);
+  }
+
   if (nsCOMPtr<nsPIDOMWindowOuter> frame = GetSubframeWindow(cx, proxy, id)) {
     *bp = true;
     return true;
   }
 
+  // Just to be safe in terms of compartment asserts, enter the Realm of
+  // "proxy".  We're same-origin with it, so this should be safe.
+  JSAutoRealm ar(cx, proxy);
+  JS_MarkCrossZoneId(cx, id);
   return js::Wrapper::has(cx, proxy, id, bp);
 }
 
 bool nsOuterWindowProxy::hasOwn(JSContext* cx, JS::Handle<JSObject*> proxy,
                                 JS::Handle<jsid> id, bool* bp) const {
+  // We could just directly forward this method to js::BaseProxyHandler, but
+  // that involves reifying the actual property descriptor, which might be more
+  // work than we have to do for hasOwn() on the Window.
+
+  if (!IsPlatformObjectSameOrigin(cx, proxy)) {
+    // Avoiding reifying the property descriptor here would require duplicating
+    // a bunch of "is this property exposed cross-origin" logic, which is
+    // probably not worth it.  Just forward this along to the base
+    // implementation.
+    //
+    // It's very important to not forward this to js::Wrapper, because that will
+    // not do the right security and cross-origin checks and will pass through
+    // the call to the Window.
+    //
+    // The BaseProxyHandler code is OK with this happening without entering the
+    // compartment of "proxy".
+    return js::BaseProxyHandler::hasOwn(cx, proxy, id, bp);
+  }
+
   if (nsCOMPtr<nsPIDOMWindowOuter> frame = GetSubframeWindow(cx, proxy, id)) {
     *bp = true;
     return true;
   }
 
+  // Just to be safe in terms of compartment asserts, enter the Realm of
+  // "proxy".  We're same-origin with it, so this should be safe.
+  JSAutoRealm ar(cx, proxy);
+  JS_MarkCrossZoneId(cx, id);
   return js::Wrapper::hasOwn(cx, proxy, id, bp);
 }
 
@@ -689,58 +924,110 @@ bool nsOuterWindowProxy::get(JSContext* cx, JS::Handle<JSObject*> proxy,
   if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_WRAPPED_JSOBJECT) &&
       xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
     vp.set(JS::ObjectValue(*proxy));
-    return true;
+    return MaybeWrapValue(cx, vp);
+  }
+
+  if (!IsPlatformObjectSameOrigin(cx, proxy)) {
+    return CrossOriginGet(cx, proxy, receiver, id, vp);
   }
 
   bool found;
   if (!GetSubframeWindow(cx, proxy, id, vp, found)) {
     return false;
   }
+
   if (found) {
     return true;
   }
-  // Else fall through to js::Wrapper
 
-  return js::Wrapper::get(cx, proxy, receiver, id, vp);
+  {  // Scope for JSAutoRealm
+    // Enter "proxy"'s Realm.  We're in the same-origin case, so this should be
+    // safe.
+    JSAutoRealm ar(cx, proxy);
+
+    JS_MarkCrossZoneId(cx, id);
+
+    JS::Rooted<JS::Value> wrappedReceiver(cx, receiver);
+    if (!MaybeWrapValue(cx, &wrappedReceiver)) {
+      return false;
+    }
+
+    // Fall through to js::Wrapper.
+    if (!js::Wrapper::get(cx, proxy, wrappedReceiver, id, vp)) {
+      return false;
+    }
+  }
+
+  // Make sure our return value is in the caller compartment.
+  return MaybeWrapValue(cx, vp);
 }
 
 bool nsOuterWindowProxy::set(JSContext* cx, JS::Handle<JSObject*> proxy,
                              JS::Handle<jsid> id, JS::Handle<JS::Value> v,
                              JS::Handle<JS::Value> receiver,
                              JS::ObjectOpResult& result) const {
+  if (!IsPlatformObjectSameOrigin(cx, proxy)) {
+    return CrossOriginSet(cx, proxy, id, v, receiver, result);
+  }
+
   if (IsArrayIndex(GetArrayIndexFromId(id))) {
     // Reject the set.  It's up to the caller to decide whether to throw a
     // TypeError.  If the caller is strict mode JS code, it'll throw.
     return result.failReadOnly();
   }
 
-  return js::Wrapper::set(cx, proxy, id, v, receiver, result);
+  // Do the rest in the Realm of "proxy", since we're in the same-origin case.
+  JSAutoRealm ar(cx, proxy);
+  JS::Rooted<JS::Value> wrappedArg(cx, v);
+  if (!MaybeWrapValue(cx, &wrappedArg)) {
+    return false;
+  }
+  JS::Rooted<JS::Value> wrappedReceiver(cx, receiver);
+  if (!MaybeWrapValue(cx, &wrappedReceiver)) {
+    return false;
+  }
+
+  JS_MarkCrossZoneId(cx, id);
+
+  return js::Wrapper::set(cx, proxy, id, wrappedArg, wrappedReceiver, result);
 }
 
 bool nsOuterWindowProxy::getOwnEnumerablePropertyKeys(
     JSContext* cx, JS::Handle<JSObject*> proxy, JS::AutoIdVector& props) const {
+  // We could just stop overring getOwnEnumerablePropertyKeys and let our
+  // superclasses deal (by falling back on the BaseProxyHandler implementation
+  // that uses a combination of ownPropertyKeys and getOwnPropertyDescriptor to
+  // only return the enumerable ones.  But maybe there's value in having
+  // somewhat faster for-in iteration on Window objects...
+
   // Like ownPropertyKeys, our indexed stuff followed by our "normal" enumerable
   // own property names.
-  //
-  // Note that this does not match current spec per
-  // https://github.com/whatwg/html/issues/2753 but as that issue says I believe
-  // the spec is wrong.
-  if (!AppendIndexedPropertyNames(cx, proxy, props)) {
+  if (!AppendIndexedPropertyNames(proxy, props)) {
     return false;
   }
 
+  if (!IsPlatformObjectSameOrigin(cx, proxy)) {
+    // All the cross-origin properties other than the indexed props are
+    // non-enumerable, so we're done here.
+    return true;
+  }
+
+  // When forwarding to js::Wrapper, we should just enter the Realm of proxy
+  // for now.  That's what js::Wrapper expects, and since we're same-origin
+  // anyway this is not changing any security behavior.
   JS::AutoIdVector innerProps(cx);
-  if (!js::Wrapper::getOwnEnumerablePropertyKeys(cx, proxy, innerProps)) {
-    return false;
+  {  // Scope for JSAutoRealm so we can mark the ids once we exit it.
+    JSAutoRealm ar(cx, proxy);
+    if (!js::Wrapper::getOwnEnumerablePropertyKeys(cx, proxy, innerProps)) {
+      return false;
+    }
   }
-  return js::AppendUnique(cx, props, innerProps);
-}
 
-JSObject* nsOuterWindowProxy::enumerate(JSContext* cx,
-                                        JS::Handle<JSObject*> proxy) const {
-  // BaseProxyHandler::enumerate seems to do what we want here: fall
-  // back on the property names returned from js::GetPropertyKeys()
-  return js::BaseProxyHandler::enumerate(cx, proxy);
+  for (auto& id : innerProps) {
+    JS_MarkCrossZoneId(cx, id);
+  }
+
+  return js::AppendUnique(cx, props, innerProps);
 }
 
 bool nsOuterWindowProxy::GetSubframeWindow(JSContext* cx,
@@ -782,7 +1069,7 @@ already_AddRefed<nsPIDOMWindowOuter> nsOuterWindowProxy::GetSubframeWindow(
 }
 
 bool nsOuterWindowProxy::AppendIndexedPropertyNames(
-    JSContext* cx, JSObject* proxy, JS::AutoIdVector& props) const {
+    JSObject* proxy, JS::AutoIdVector& props) const {
   uint32_t length = GetOuterWindow(proxy)->Length();
   MOZ_ASSERT(int32_t(length) >= 0);
   if (!props.reserve(props.length() + length)) {
@@ -795,6 +1082,14 @@ bool nsOuterWindowProxy::AppendIndexedPropertyNames(
   }
 
   return true;
+}
+
+bool nsOuterWindowProxy::EnsureHolder(
+    JSContext* cx, JS::Handle<JSObject*> proxy,
+    JS::MutableHandle<JSObject*> holder) const {
+  return EnsureHolder(cx, proxy, HOLDER_WEAKMAP_SLOT,
+                      Window_Binding::sCrossOriginAttributes,
+                      Window_Binding::sCrossOriginMethods, holder);
 }
 
 size_t nsOuterWindowProxy::objectMoved(JSObject* obj, JSObject* old) const {
@@ -986,7 +1281,8 @@ nsGlobalWindowOuter::~nsGlobalWindowOuter() {
     if (mBrowsingContext) {
       mBrowsingContext->ClearWindowProxy();
     }
-    js::SetProxyReservedSlot(proxy, 0, js::PrivateValue(nullptr));
+    js::SetProxyReservedSlot(proxy, OUTER_WINDOW_SLOT,
+                             js::PrivateValue(nullptr));
   }
 
   // An outer window is destroyed with inner windows still possibly
@@ -1813,7 +2109,8 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
           cx, NewOuterWindowProxy(cx, newInnerGlobal, thisChrome));
       NS_ENSURE_TRUE(outer, NS_ERROR_FAILURE);
 
-      js::SetProxyReservedSlot(outer, 0, js::PrivateValue(ToSupports(this)));
+      js::SetProxyReservedSlot(outer, OUTER_WINDOW_SLOT,
+                               js::PrivateValue(ToSupports(this)));
 
       // Inform the nsJSContext, which is the canonical holder of the outer.
       mContext->SetWindowProxy(outer);
@@ -1831,8 +2128,10 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
       JS::Rooted<JSObject*> obj(cx, GetWrapperPreserveColor());
 
-      js::SetProxyReservedSlot(obj, 0, js::PrivateValue(nullptr));
-      js::SetProxyReservedSlot(outerObject, 0, js::PrivateValue(nullptr));
+      js::SetProxyReservedSlot(obj, OUTER_WINDOW_SLOT,
+                               js::PrivateValue(nullptr));
+      js::SetProxyReservedSlot(outerObject, OUTER_WINDOW_SLOT,
+                               js::PrivateValue(nullptr));
 
       outerObject = xpc::TransplantObject(cx, obj, outerObject);
       if (!outerObject) {
@@ -1841,7 +2140,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
         return NS_ERROR_FAILURE;
       }
 
-      js::SetProxyReservedSlot(outerObject, 0,
+      js::SetProxyReservedSlot(outerObject, OUTER_WINDOW_SLOT,
                                js::PrivateValue(ToSupports(this)));
 
       SetWrapper(outerObject);
@@ -2196,7 +2495,7 @@ void nsGlobalWindowOuter::DetachFromDocShell() {
     // When we're about to destroy a top level content window
     // (for example a tab), we trigger a full GC by passing null as the last
     // param. We also trigger a full GC for chrome windows.
-    nsJSContext::PokeGC(JS::gcreason::SET_DOC_SHELL,
+    nsJSContext::PokeGC(JS::GCReason::SET_DOC_SHELL,
                         (mTopLevelOuterContentWindow || mIsChrome)
                             ? nullptr
                             : GetWrapperPreserveColor());
@@ -5039,7 +5338,7 @@ void nsGlobalWindowOuter::FirePopupBlockedEvent(
   aDoc->DispatchEvent(*event);
 }
 
-void nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
+void nsGlobalWindowOuter::NotifyContentBlockingEvent(unsigned aEvent,
                                                      nsIChannel* aChannel,
                                                      bool aBlocked,
                                                      nsIURI* aURIHint) {
@@ -5057,59 +5356,59 @@ void nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
   // check that the loading URI for the channel is the same as the URI currently
   // loaded in the document.
   if (!SameLoadingURI(doc, aChannel) &&
-      aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
+      aEvent == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
     return;
   }
 
-  // Notify nsIWebProgressListeners of this security event.
+  // Notify nsIWebProgressListeners of this content blocking event.
   // Can be used to change the UI state.
   nsresult rv = NS_OK;
   nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell, &rv);
   NS_ENSURE_SUCCESS_VOID(rv);
-  uint32_t state = 0;
+  uint32_t event = 0;
   nsCOMPtr<nsISecureBrowserUI> securityUI;
   docShell->GetSecurityUI(getter_AddRefs(securityUI));
   if (!securityUI) {
     return;
   }
-  securityUI->GetState(&state);
+  securityUI->GetContentBlockingEvent(&event);
   nsAutoCString origin;
   nsContentUtils::GetASCIIOrigin(aURIHint, origin);
 
   bool blockedValue = aBlocked;
   bool unblocked = false;
-  if (aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
+  if (aEvent == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
     doc->SetHasTrackingContentBlocked(aBlocked, origin);
     if (!aBlocked) {
       unblocked = !doc->GetHasTrackingContentBlocked();
     }
-  } else if (aState == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
+  } else if (aEvent == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
     doc->SetHasTrackingContentLoaded(aBlocked, origin);
     if (!aBlocked) {
       unblocked = !doc->GetHasTrackingContentLoaded();
     }
-  } else if (aState ==
+  } else if (aEvent ==
              nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION) {
     doc->SetHasCookiesBlockedByPermission(aBlocked, origin);
     if (!aBlocked) {
       unblocked = !doc->GetHasCookiesBlockedByPermission();
     }
-  } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
+  } else if (aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
     doc->SetHasTrackingCookiesBlocked(aBlocked, origin);
     if (!aBlocked) {
       unblocked = !doc->GetHasTrackingCookiesBlocked();
     }
-  } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) {
+  } else if (aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) {
     doc->SetHasAllCookiesBlocked(aBlocked, origin);
     if (!aBlocked) {
       unblocked = !doc->GetHasAllCookiesBlocked();
     }
-  } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN) {
+  } else if (aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN) {
     doc->SetHasForeignCookiesBlocked(aBlocked, origin);
     if (!aBlocked) {
       unblocked = !doc->GetHasForeignCookiesBlocked();
     }
-  } else if (aState == nsIWebProgressListener::STATE_COOKIES_LOADED) {
+  } else if (aEvent == nsIWebProgressListener::STATE_COOKIES_LOADED) {
     MOZ_ASSERT(!aBlocked,
                "We don't expected to see blocked STATE_COOKIES_LOADED");
     // Note that the logic in this branch is the logical negation of the logic
@@ -5123,14 +5422,14 @@ void nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
   } else {
     // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
   }
-  const uint32_t oldState = state;
+  const uint32_t oldEvent = event;
   if (blockedValue) {
-    state |= aState;
+    event |= aEvent;
   } else if (unblocked) {
-    state &= ~aState;
+    event &= ~aEvent;
   }
 
-  if (state == oldState
+  if (event == oldEvent
 #ifdef ANDROID
       // GeckoView always needs to notify about blocked trackers, since the
       // GeckoView API always needs to report the URI and type of any blocked
@@ -5138,14 +5437,14 @@ void nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
       // We use a platform-dependent code path here because reporting this
       // notification on desktop platforms isn't necessary and doing so can have
       // a big performance cost.
-      && aState != nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT
+      && aEvent != nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT
 #endif
   ) {
     // Avoid dispatching repeated notifications when nothing has changed
     return;
   }
 
-  eventSink->OnSecurityChange(aChannel, state);
+  eventSink->OnContentBlockingEvent(aChannel, event);
 }
 
 // static

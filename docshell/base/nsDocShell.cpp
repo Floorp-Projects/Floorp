@@ -6548,6 +6548,13 @@ nsDocShell::OnSecurityChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocShell::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
+                                   nsIRequest* aRequest, uint32_t aEvent) {
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
+  return NS_OK;
+}
+
 nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                                  nsIChannel* aChannel, nsresult aStatus) {
   if (!aChannel) {
@@ -7526,14 +7533,12 @@ nsresult nsDocShell::RestoreFromHistory() {
 
   nsCOMPtr<nsIContentViewer> oldCv(mContentViewer);
   nsCOMPtr<nsIContentViewer> newCv(viewer);
-  int32_t minFontSize = 0;
   float textZoom = 1.0f;
   float pageZoom = 1.0f;
   float overrideDPPX = 0.0f;
 
   bool styleDisabled = false;
   if (oldCv && newCv) {
-    oldCv->GetMinFontSize(&minFontSize);
     oldCv->GetTextZoom(&textZoom);
     oldCv->GetFullZoom(&pageZoom);
     oldCv->GetOverrideDPPX(&overrideDPPX);
@@ -7764,7 +7769,6 @@ nsresult nsDocShell::RestoreFromHistory() {
   }
 
   if (oldCv && newCv) {
-    newCv->SetMinFontSize(minFontSize);
     newCv->SetTextZoom(textZoom);
     newCv->SetFullZoom(pageZoom);
     newCv->SetOverrideDPPX(overrideDPPX);
@@ -8263,7 +8267,6 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer) {
   const Encoding* forceCharset = nullptr;
   const Encoding* hintCharset = nullptr;
   int32_t hintCharsetSource;
-  int32_t minFontSize;
   float textZoom;
   float pageZoom;
   float overrideDPPX;
@@ -8299,8 +8302,6 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer) {
         forceCharset = oldCv->GetForceCharset();
         hintCharset = oldCv->GetHintCharset();
         NS_ENSURE_SUCCESS(oldCv->GetHintCharacterSetSource(&hintCharsetSource),
-                          NS_ERROR_FAILURE);
-        NS_ENSURE_SUCCESS(oldCv->GetMinFontSize(&minFontSize),
                           NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(oldCv->GetTextZoom(&textZoom), NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(oldCv->GetFullZoom(&pageZoom), NS_ERROR_FAILURE);
@@ -8367,7 +8368,6 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer) {
     newCv->SetHintCharset(hintCharset);
     NS_ENSURE_SUCCESS(newCv->SetHintCharacterSetSource(hintCharsetSource),
                       NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(newCv->SetMinFontSize(minFontSize), NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(newCv->SetTextZoom(textZoom), NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(newCv->SetFullZoom(pageZoom), NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(newCv->SetOverrideDPPX(overrideDPPX), NS_ERROR_FAILURE);
@@ -10381,7 +10381,7 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
   // We're about to load a new page and it may take time before necko
   // gives back any data, so main thread might have a chance to process a
   // collector slice
-  nsJSContext::MaybeRunNextCollectorSlice(this, JS::gcreason::DOCSHELL);
+  nsJSContext::MaybeRunNextCollectorSlice(this, JS::GCReason::DOCSHELL);
 
   // Success.  Keep the initial ClientSource if it exists.
   cleanupInitialClient.release();

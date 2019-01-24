@@ -112,7 +112,7 @@ js::Nursery::Nursery(JSRuntime* rt)
       enableProfiling_(false),
       canAllocateStrings_(false),
       reportTenurings_(0),
-      minorGCTriggerReason_(JS::gcreason::NO_REASON)
+      minorGCTriggerReason_(JS::GCReason::NO_REASON)
 #ifdef JS_GC_ZEAL
       ,
       lastCanary_(nullptr)
@@ -588,7 +588,7 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
     return;
   }
 
-  if (previousGC.reason == JS::gcreason::NO_REASON) {
+  if (previousGC.reason == JS::GCReason::NO_REASON) {
     // If the nursery was empty when the last minorGC was requested, then
     // no nursery collection will have been performed but JSON may still be
     // requested. (And as a public API, this function should not crash in
@@ -603,7 +603,7 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
 
   json.property("status", "complete");
 
-  json.property("reason", JS::gcreason::ExplainReason(previousGC.reason));
+  json.property("reason", JS::ExplainGCReason(previousGC.reason));
   json.property("bytes_tenured", previousGC.tenuredBytes);
   json.property("cells_tenured", previousGC.tenuredCells);
   json.property("strings_tenured",
@@ -702,16 +702,16 @@ bool js::Nursery::needIdleTimeCollection() const {
   return minorGCRequested() || freeSpace() < threshold;
 }
 
-static inline bool IsFullStoreBufferReason(JS::gcreason::Reason reason) {
-  return reason == JS::gcreason::FULL_WHOLE_CELL_BUFFER ||
-         reason == JS::gcreason::FULL_GENERIC_BUFFER ||
-         reason == JS::gcreason::FULL_VALUE_BUFFER ||
-         reason == JS::gcreason::FULL_CELL_PTR_BUFFER ||
-         reason == JS::gcreason::FULL_SLOT_BUFFER ||
-         reason == JS::gcreason::FULL_SHAPE_BUFFER;
+static inline bool IsFullStoreBufferReason(JS::GCReason reason) {
+  return reason == JS::GCReason::FULL_WHOLE_CELL_BUFFER ||
+         reason == JS::GCReason::FULL_GENERIC_BUFFER ||
+         reason == JS::GCReason::FULL_VALUE_BUFFER ||
+         reason == JS::GCReason::FULL_CELL_PTR_BUFFER ||
+         reason == JS::GCReason::FULL_SLOT_BUFFER ||
+         reason == JS::GCReason::FULL_SHAPE_BUFFER;
 }
 
-void js::Nursery::collect(JS::gcreason::Reason reason) {
+void js::Nursery::collect(JS::GCReason reason) {
   JSRuntime* rt = runtime();
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
@@ -750,7 +750,7 @@ void js::Nursery::collect(JS::gcreason::Reason reason) {
   MOZ_ASSERT(!IsNurseryAllocable(AllocKind::OBJECT_GROUP));
 
   TenureCountCache tenureCounts;
-  previousGC.reason = JS::gcreason::NO_REASON;
+  previousGC.reason = JS::GCReason::NO_REASON;
   if (!isEmpty()) {
     doCollection(reason, tenureCounts);
   } else {
@@ -843,9 +843,9 @@ void js::Nursery::collect(JS::gcreason::Reason reason) {
 
   TimeDuration totalTime = profileDurations_[ProfileKey::Total];
   rt->addTelemetry(JS_TELEMETRY_GC_MINOR_US, totalTime.ToMicroseconds());
-  rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON, reason);
+  rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON, uint32_t(reason));
   if (totalTime.ToMilliseconds() > 1.0) {
-    rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, reason);
+    rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, uint32_t(reason));
   }
   rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, sizeOfHeapCommitted());
   rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
@@ -859,8 +859,7 @@ void js::Nursery::collect(JS::gcreason::Reason reason) {
     stats().maybePrintProfileHeaders();
 
     fprintf(stderr, "MinorGC: %20s %5.1f%% %4u        ",
-            JS::gcreason::ExplainReason(reason), promotionRate * 100,
-            maxChunkCount());
+            JS::ExplainGCReason(reason), promotionRate * 100, maxChunkCount());
     printProfileDurations(profileDurations_);
 
     if (reportTenurings_) {
@@ -875,7 +874,7 @@ void js::Nursery::collect(JS::gcreason::Reason reason) {
   }
 }
 
-void js::Nursery::doCollection(JS::gcreason::Reason reason,
+void js::Nursery::doCollection(JS::GCReason reason,
                                TenureCountCache& tenureCounts) {
   JSRuntime* rt = runtime();
   AutoGCSession session(rt, JS::HeapState::MinorCollecting);
@@ -1119,7 +1118,7 @@ MOZ_ALWAYS_INLINE void js::Nursery::setStartPosition() {
   currentStartPosition_ = position();
 }
 
-void js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason) {
+void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   static const double GrowThreshold = 0.03;
   static const double ShrinkThreshold = 0.01;
   unsigned newMaxNurseryChunks;

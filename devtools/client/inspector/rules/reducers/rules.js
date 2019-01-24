@@ -32,10 +32,15 @@ function getDeclarationState(declaration, ruleId) {
     computedProperties: declaration.computedProperties,
     // An unique CSS declaration id.
     id: declaration.id,
+    // Whether or not the declaration is valid. (Does it make sense for this value
+    // to be assigned to this property name?)
+    isDeclarationValid: declaration.isValid(),
     // Whether or not the declaration is enabled.
     isEnabled: declaration.enabled,
     // Whether or not the declaration's property name is known.
     isKnownProperty: declaration.isKnownProperty,
+    // Whether or not the property name is valid.
+    isNameValid: declaration.isNameValid(),
     // Whether or not the the declaration is overridden.
     isOverridden: !!declaration.overridden,
     // The declaration's property name.

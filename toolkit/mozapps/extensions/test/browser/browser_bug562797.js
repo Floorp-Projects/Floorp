@@ -29,6 +29,7 @@ var gProgressListener = {
   onSecurityChange() { },
   onProgressChange() { },
   onStatusChange() { },
+  onContentBlockingEvent() { },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
                                           Ci.nsISupportsWeakReference]),

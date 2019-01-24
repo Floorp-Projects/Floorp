@@ -5,9 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSMILInstanceTime.h"
-#include "nsSMILInterval.h"
-#include "nsSMILTimeValueSpec.h"
+
 #include "mozilla/AutoRestore.h"
+#include "mozilla/SMILInterval.h"
+#include "nsSMILTimeValueSpec.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -15,7 +16,7 @@
 nsSMILInstanceTime::nsSMILInstanceTime(const nsSMILTimeValue& aTime,
                                        nsSMILInstanceTimeSource aSource,
                                        nsSMILTimeValueSpec* aCreator,
-                                       nsSMILInterval* aBaseInterval)
+                                       SMILInterval* aBaseInterval)
     : mTime(aTime),
       mFlags(0),
       mVisited(false),
@@ -165,7 +166,7 @@ const nsSMILInstanceTime* nsSMILInstanceTime::GetBaseTime() const {
                                     : mBaseInterval->End();
 }
 
-void nsSMILInstanceTime::SetBaseInterval(nsSMILInterval* aBaseInterval) {
+void nsSMILInstanceTime::SetBaseInterval(SMILInterval* aBaseInterval) {
   MOZ_ASSERT(!mBaseInterval,
              "Attempting to reassociate an instance time with a different "
              "interval.");

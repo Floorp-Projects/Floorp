@@ -18,6 +18,7 @@
         <children/>
         <html:input anonid="input" class="textbox-input"
                     allowevents="true"
+                    autocomplete="off"
                     xbl:inherits="value,type=inputtype,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint"/>
       </xul:moz-input-box>
       <children includes="hbox"/>

@@ -27,7 +27,10 @@ window.gActivityStreamPrerenderedState = {
       "feeds.section.topstories": true,
       "feeds.section.highlights": true,
       "sectionOrder": "topsites,topstories,highlights",
-      "collapsed": false
+      "collapsed": false,
+      "discoverystream.config": {
+        "enabled": false
+      }
     }
   },
   "Dialog": {

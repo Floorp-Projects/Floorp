@@ -212,7 +212,14 @@ nsOfflineCachePendingUpdate::OnStatusChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP
 nsOfflineCachePendingUpdate::OnSecurityChange(nsIWebProgress *aWebProgress,
                                               nsIRequest *aRequest,
-                                              uint32_t state) {
+                                              uint32_t aState) {
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOfflineCachePendingUpdate::OnContentBlockingEvent(
+    nsIWebProgress *aWebProgress, nsIRequest *aRequest, uint32_t aEvent) {
   MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }

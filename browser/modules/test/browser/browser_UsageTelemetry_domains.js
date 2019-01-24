@@ -24,6 +24,7 @@ function browserLocationChanged(browser) {
       onStateChange() {},
       onSecurityChange() {},
       onStatusChange() {},
+      onContentBlockingEvent() {},
       onLocationChange(aWebProgress, aRequest, aURI, aFlags) {
         if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE)) {
           browser.webProgress.removeProgressListener(filter);

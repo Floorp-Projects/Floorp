@@ -1,3 +1,11 @@
+- 1/14/2019: version 1.0.2
+  This is a binary compatible release.
+  * (Windows) unicode file support in the tools (linux and mac already had
+    support, issue #398)
+  * lossless encoder speedups
+  * lossy encoder speedup on ARM
+  * lossless multi-threaded security fix (chromium:917029)
+
 - 11/2/2018: version 1.0.1
   This is a binary compatible release.
   * lossless encoder speedups

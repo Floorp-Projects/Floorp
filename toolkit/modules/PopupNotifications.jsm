@@ -253,7 +253,8 @@ function PopupNotifications(tabbrowser, panel,
         // Ignore focused elements inside the notification.
         getNotificationFromElement(focusedElement) == notification ||
         notification.contains(focusedElement)) {
-      this._onButtonEvent(aEvent, "secondarybuttoncommand", "esc-press", notification);
+      let escAction = notification.notification.options.escAction;
+      this._onButtonEvent(aEvent, escAction, "esc-press", notification);
     }
   };
 
@@ -467,6 +468,11 @@ PopupNotifications.prototype = {
    *                     notification description header text. Usually a host name or
    *                     addon name. This is similar to name, and only used in case
    *                     where message contains two "<>" placeholders.
+   *        escAction:
+   *                     An optional string indicating the action to take when the
+   *                     Esc key is pressed. This should be set to the name of the
+   *                     command to run. If not provided, "secondarybuttoncommand"
+   *                     will be used.
    * @returns the Notification object corresponding to the added notification.
    */
   show: function PopupNotifications_show(browser, id, message, anchorID,
@@ -486,6 +492,15 @@ PopupNotifications.prototype = {
 
     let notification = new Notification(id, message, anchorID, mainAction,
                                         secondaryActions, browser, this, options);
+
+    if (options) {
+      let escAction = options.escAction;
+      if (escAction != "buttoncommand" &&
+          escAction != "secondarybuttoncommand") {
+        escAction = "secondarybuttoncommand";
+      }
+      notification.options.escAction = escAction;
+    }
 
     if (options && options.dismissed)
       notification.dismissed = true;
@@ -831,7 +846,7 @@ PopupNotifications.prototype = {
       popupnotification.setAttribute("popupid", n.id);
       popupnotification.setAttribute("oncommand", "PopupNotifications._onCommand(event);");
       if (Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton")) {
-        popupnotification.setAttribute("closebuttoncommand", "PopupNotifications._onButtonEvent(event, 'secondarybuttoncommand', 'esc-press');");
+        popupnotification.setAttribute("closebuttoncommand", "PopupNotifications._onButtonEvent(event, '" + n.options.escAction + "', 'esc-press');");
       } else {
         popupnotification.setAttribute("closebuttoncommand", `PopupNotifications._dismiss(event, ${TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON});`);
       }
