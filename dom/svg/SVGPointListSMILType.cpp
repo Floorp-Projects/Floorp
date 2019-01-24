@@ -5,10 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGPointListSMILType.h"
-#include "nsSMILValue.h"
-#include "SVGPointList.h"
-#include "nsMathUtils.h"
+
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/SMILValue.h"
+#include "nsMathUtils.h"
+#include "SVGPointList.h"
 #include <math.h>
 
 namespace mozilla {
@@ -18,7 +19,7 @@ namespace mozilla {
 //----------------------------------------------------------------------
 // nsISMILType implementation
 
-void SVGPointListSMILType::Init(nsSMILValue& aValue) const {
+void SVGPointListSMILType::Init(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
 
   SVGPointListAndInfo* pointList = new SVGPointListAndInfo();
@@ -27,15 +28,15 @@ void SVGPointListSMILType::Init(nsSMILValue& aValue) const {
   aValue.mType = this;
 }
 
-void SVGPointListSMILType::Destroy(nsSMILValue& aValue) const {
+void SVGPointListSMILType::Destroy(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value type");
   delete static_cast<SVGPointListAndInfo*>(aValue.mU.mPtr);
   aValue.mU.mPtr = nullptr;
   aValue.mType = SMILNullType::Singleton();
 }
 
-nsresult SVGPointListSMILType::Assign(nsSMILValue& aDest,
-                                      const nsSMILValue& aSrc) const {
+nsresult SVGPointListSMILType::Assign(SMILValue& aDest,
+                                      const SMILValue& aSrc) const {
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value");
 
@@ -46,8 +47,8 @@ nsresult SVGPointListSMILType::Assign(nsSMILValue& aDest,
   return dest->CopyFrom(*src);
 }
 
-bool SVGPointListSMILType::IsEqual(const nsSMILValue& aLeft,
-                                   const nsSMILValue& aRight) const {
+bool SVGPointListSMILType::IsEqual(const SMILValue& aLeft,
+                                   const SMILValue& aRight) const {
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
@@ -55,8 +56,8 @@ bool SVGPointListSMILType::IsEqual(const nsSMILValue& aLeft,
          *static_cast<const SVGPointListAndInfo*>(aRight.mU.mPtr);
 }
 
-nsresult SVGPointListSMILType::Add(nsSMILValue& aDest,
-                                   const nsSMILValue& aValueToAdd,
+nsresult SVGPointListSMILType::Add(SMILValue& aDest,
+                                   const SMILValue& aValueToAdd,
                                    uint32_t aCount) const {
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL type");
   MOZ_ASSERT(aValueToAdd.mType == this, "Incompatible SMIL type");
@@ -95,8 +96,8 @@ nsresult SVGPointListSMILType::Add(nsSMILValue& aDest,
   return NS_OK;
 }
 
-nsresult SVGPointListSMILType::ComputeDistance(const nsSMILValue& aFrom,
-                                               const nsSMILValue& aTo,
+nsresult SVGPointListSMILType::ComputeDistance(const SMILValue& aFrom,
+                                               const SMILValue& aTo,
                                                double& aDistance) const {
   MOZ_ASSERT(aFrom.mType == this, "Unexpected SMIL type");
   MOZ_ASSERT(aTo.mType == this, "Incompatible SMIL type");
@@ -131,10 +132,10 @@ nsresult SVGPointListSMILType::ComputeDistance(const nsSMILValue& aFrom,
   return NS_OK;
 }
 
-nsresult SVGPointListSMILType::Interpolate(const nsSMILValue& aStartVal,
-                                           const nsSMILValue& aEndVal,
+nsresult SVGPointListSMILType::Interpolate(const SMILValue& aStartVal,
+                                           const SMILValue& aEndVal,
                                            double aUnitDistance,
-                                           nsSMILValue& aResult) const {
+                                           SMILValue& aResult) const {
   MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
              "Trying to interpolate different types");
   MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");
