@@ -395,7 +395,7 @@ bool wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals) {
 }
 
 static bool DecodeValType(Decoder& d, ModuleKind kind, uint32_t numTypes,
-                          HasGcTypes gcTypesEnabled, ValType* type) {
+                          bool gcTypesEnabled, ValType* type) {
   uint8_t uncheckedCode;
   uint32_t uncheckedRefTypeIndex;
   if (!d.readValType(&uncheckedCode, &uncheckedRefTypeIndex)) {
@@ -410,13 +410,13 @@ static bool DecodeValType(Decoder& d, ModuleKind kind, uint32_t numTypes,
       *type = ValType(ValType::Code(uncheckedCode));
       return true;
     case uint8_t(ValType::AnyRef):
-      if (gcTypesEnabled == HasGcTypes::False) {
+      if (!gcTypesEnabled) {
         return d.fail("reference types not enabled");
       }
       *type = ValType(ValType::Code(uncheckedCode));
       return true;
     case uint8_t(ValType::Ref): {
-      if (gcTypesEnabled == HasGcTypes::False) {
+      if (!gcTypesEnabled) {
         return d.fail("reference types not enabled");
       }
       if (uncheckedRefTypeIndex >= numTypes) {
@@ -441,8 +441,7 @@ static bool ValidateRefType(Decoder& d, const TypeDefVector& types,
 }
 
 bool wasm::DecodeLocalEntries(Decoder& d, ModuleKind kind,
-                              const TypeDefVector& types,
-                              HasGcTypes gcTypesEnabled,
+                              const TypeDefVector& types, bool gcTypesEnabled,
                               ValTypeVector* locals) {
   uint32_t numLocalEntries;
   if (!d.readVarU32(&numLocalEntries)) {
@@ -938,7 +937,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 #endif
 #ifdef ENABLE_WASM_GC
           case uint16_t(MiscOp::StructNew): {
-            if (env.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env.gcTypesEnabled()) {
               return iter.unrecognizedOpcode(&op);
             }
             uint32_t unusedUint;
@@ -946,14 +945,14 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readStructNew(&unusedUint, &unusedArgs));
           }
           case uint16_t(MiscOp::StructGet): {
-            if (env.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env.gcTypesEnabled()) {
               return iter.unrecognizedOpcode(&op);
             }
             uint32_t unusedUint1, unusedUint2;
             CHECK(iter.readStructGet(&unusedUint1, &unusedUint2, &nothing));
           }
           case uint16_t(MiscOp::StructSet): {
-            if (env.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env.gcTypesEnabled()) {
               return iter.unrecognizedOpcode(&op);
             }
             uint32_t unusedUint1, unusedUint2;
@@ -961,7 +960,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                      &nothing));
           }
           case uint16_t(MiscOp::StructNarrow): {
-            if (env.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env.gcTypesEnabled()) {
               return iter.unrecognizedOpcode(&op);
             }
             ValType unusedTy, unusedTy2;
@@ -975,7 +974,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
       }
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefEq): {
-        if (env.gcTypesEnabled() == HasGcTypes::False) {
+        if (!env.gcTypesEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
         CHECK(iter.readComparison(ValType::AnyRef, &nothing, &nothing));
@@ -984,14 +983,14 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefNull): {
-        if (env.gcTypesEnabled() == HasGcTypes::False) {
+        if (!env.gcTypesEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
         CHECK(iter.readRefNull());
         break;
       }
       case uint16_t(Op::RefIsNull): {
-        if (env.gcTypesEnabled() == HasGcTypes::False) {
+        if (!env.gcTypesEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
         CHECK(iter.readConversion(ValType::AnyRef, ValType::I32, &nothing));
@@ -1325,7 +1324,7 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
 
 static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
                              TypeStateVector* typeState, uint32_t typeIndex) {
-  if (env->gcTypesEnabled() == HasGcTypes::False) {
+  if (!env->gcTypesEnabled()) {
     return d.fail("Structure types not enabled");
   }
 
@@ -1451,7 +1450,7 @@ static bool DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env) {
           "The current version is 2.");
   }
 
-  env->gcFeatureOptIn = HasGcTypes::True;
+  env->gcFeatureOptIn = true;
   return d.finishSection(*range, "gcfeatureoptin");
 }
 #endif
@@ -1607,7 +1606,7 @@ static bool DecodeLimits(Decoder& d, Limits* limits,
   return true;
 }
 
-static bool DecodeTableTypeAndLimits(Decoder& d, HasGcTypes gcTypesEnabled,
+static bool DecodeTableTypeAndLimits(Decoder& d, bool gcTypesEnabled,
                                      TableDescVector* tables) {
   uint8_t elementType;
   if (!d.readFixedU8(&elementType)) {
@@ -1619,7 +1618,7 @@ static bool DecodeTableTypeAndLimits(Decoder& d, HasGcTypes gcTypesEnabled,
     tableKind = TableKind::AnyFunction;
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
   } else if (elementType == uint8_t(TypeCode::AnyRef)) {
-    if (gcTypesEnabled == HasGcTypes::False) {
+    if (!gcTypesEnabled) {
       return d.fail("reference types not enabled");
     }
     tableKind = TableKind::AnyRef;
@@ -1672,7 +1671,7 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable) {
 }
 
 static bool DecodeGlobalType(Decoder& d, const TypeDefVector& types,
-                             HasGcTypes gcTypesEnabled, ValType* type,
+                             bool gcTypesEnabled, ValType* type,
                              bool* isMutable) {
   if (!DecodeValType(d, ModuleKind::Wasm, types.length(), gcTypesEnabled,
                      type)) {
@@ -1993,7 +1992,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       break;
     }
     case uint16_t(Op::RefNull): {
-      if (env->gcTypesEnabled() == HasGcTypes::False) {
+      if (!env->gcTypesEnabled()) {
         return d.fail("unexpected initializer expression");
       }
       if (!expected.isReference()) {
@@ -2022,8 +2021,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
             "initializer expression must reference a global immutable import");
       }
       if (expected.isReference()) {
-        if (!(env->gcTypesEnabled() == HasGcTypes::True &&
-              globals[i].type().isReference() &&
+        if (!(env->gcTypesEnabled() && globals[i].type().isReference() &&
               env->isRefSubtypeOf(globals[i].type(), expected))) {
           return d.fail(
               "type mismatch: initializer type and expected type don't match");
@@ -2422,9 +2420,9 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
   if (!DecodeGCFeatureOptInSection(d, env)) {
     return false;
   }
-  HasGcTypes gcFeatureOptIn = env->gcFeatureOptIn;
+  bool gcFeatureOptIn = env->gcFeatureOptIn;
 #else
-  HasGcTypes gcFeatureOptIn = HasGcTypes::False;
+  bool gcFeatureOptIn = false;
 #endif
 
   env->compilerEnv->computeParameters(d, gcFeatureOptIn);
@@ -2793,10 +2791,9 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
   Decoder d(bytecode.bytes, 0, error);
 
 #ifdef ENABLE_WASM_REFTYPES
-  HasGcTypes gcTypesConfigured =
-      HasReftypesSupport(cx) ? HasGcTypes::True : HasGcTypes::False;
+  bool gcTypesConfigured = HasReftypesSupport(cx);
 #else
-  HasGcTypes gcTypesConfigured = HasGcTypes::False;
+  bool gcTypesConfigured = false;
 #endif
 
   CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized,

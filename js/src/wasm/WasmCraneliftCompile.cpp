@@ -30,6 +30,14 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
+bool wasm::CraneliftCanCompile() {
+#ifdef JS_CODEGEN_X64
+  return true;
+#else
+  return false;
+#endif
+}
+
 static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
   switch (bd) {
     case BD_SymbolicAddress::GrowMemory:
@@ -274,6 +282,9 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
                                      CompiledCode* code,
                                      ExclusiveDeferredValidationState& dvs,
                                      UniqueChars* error) {
+
+  MOZ_RELEASE_ASSERT(CraneliftCanCompile());
+
   MOZ_ASSERT(env.tier() == Tier::Optimized);
   MOZ_ASSERT(env.optimizedBackend() == OptimizedBackend::Cranelift);
   MOZ_ASSERT(!env.isAsmJS());

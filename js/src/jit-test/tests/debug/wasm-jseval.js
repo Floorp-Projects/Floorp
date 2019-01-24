@@ -1,4 +1,4 @@
-// |jit-test| test-also-no-wasm-baseline
+// |jit-test| skip-if: !wasmDebugSupport()
 // Tests that JS can be evaluated on wasm module scripts frames.
 
 load(libdir + "wasm.js");
