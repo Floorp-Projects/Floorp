@@ -6,19 +6,19 @@
 //! A large part of this module is auto-generated from the instruction descriptions in the meta
 //! directory.
 
-use std::fmt::{self, Display, Formatter};
-use std::ops::{Deref, DerefMut};
-use std::str::FromStr;
+use core::fmt::{self, Display, Formatter};
+use core::ops::{Deref, DerefMut};
+use core::str::FromStr;
 use std::vec::Vec;
 
-use ir;
-use ir::types;
-use ir::{Ebb, FuncRef, JumpTable, SigRef, Type, Value};
-use isa;
+use crate::ir;
+use crate::ir::types;
+use crate::ir::{Ebb, FuncRef, JumpTable, SigRef, Type, Value};
+use crate::isa;
 
-use bitset::BitSet;
-use entity;
-use ref_slice::{ref_slice, ref_slice_mut};
+use crate::bitset::BitSet;
+use crate::entity;
+use crate::ref_slice::{ref_slice, ref_slice_mut};
 
 /// Some instructions use an external list of argument values because there is not enough space in
 /// the 16-byte `InstructionData` struct. These value lists are stored in a memory pool in
@@ -73,7 +73,7 @@ impl FromStr for Opcode {
 
     /// Parse an Opcode name from a string.
     fn from_str(s: &str) -> Result<Self, &'static str> {
-        use constant_hash::{probe, simple_hash, Table};
+        use crate::constant_hash::{probe, simple_hash, Table};
 
         impl<'a> Table<&'a str> for [Option<Opcode>] {
             fn len(&self) -> usize {
@@ -335,8 +335,8 @@ pub struct OpcodeConstraints {
     typeset_offset: u8,
 
     /// Offset into `OPERAND_CONSTRAINT` table of the descriptors for this opcode. The first
-    /// `num_fixed_results()` entries describe the result constraints, then follows constraints for the
-    /// fixed `Value` input operands. (`num_fixed_value_arguments()` of them).
+    /// `num_fixed_results()` entries describe the result constraints, then follows constraints for
+    /// the fixed `Value` input operands. (`num_fixed_value_arguments()` of them).
     constraint_offset: u16,
 }
 
@@ -561,7 +561,7 @@ mod tests {
 
     #[test]
     fn opcodes() {
-        use std::mem;
+        use core::mem;
 
         let x = Opcode::Iadd;
         let mut y = Opcode::Isub;
@@ -590,7 +590,7 @@ mod tests {
 
     #[test]
     fn instruction_data() {
-        use std::mem;
+        use core::mem;
         // The size of the `InstructionData` enum is important for performance. It should not
         // exceed 16 bytes. Use `Box<FooData>` out-of-line payloads for instruction formats that
         // require more space than that. It would be fine with a data structure smaller than 16
@@ -645,7 +645,7 @@ mod tests {
 
     #[test]
     fn value_set() {
-        use ir::types::*;
+        use crate::ir::types::*;
 
         let vts = ValueTypeSet {
             lanes: BitSet16::from_range(0, 8),

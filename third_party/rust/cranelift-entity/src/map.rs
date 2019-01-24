@@ -1,18 +1,18 @@
 //! Densely numbered entity references as mapping keys.
 
-use iter::{Iter, IterMut};
-use keys::Keys;
-use std::marker::PhantomData;
-use std::ops::{Index, IndexMut};
-use std::slice;
+use crate::iter::{Iter, IterMut};
+use crate::keys::Keys;
+use crate::EntityRef;
+use core::marker::PhantomData;
+use core::ops::{Index, IndexMut};
+use core::slice;
 use std::vec::Vec;
-use EntityRef;
 
 /// A mapping `K -> V` for densely indexed entity references.
 ///
 /// The `SecondaryMap` data structure uses the dense index space to implement a map with a vector.
-/// Unlike `PrimaryMap`, an `SecondaryMap` can't be used to allocate entity references. It is used to
-/// associate secondary information with entities.
+/// Unlike `PrimaryMap`, an `SecondaryMap` can't be used to allocate entity references. It is used
+/// to associate secondary information with entities.
 ///
 /// The map does not track if an entry for a key has been inserted or not. Instead it behaves as if
 /// all keys have a default entry from the beginning.
@@ -97,6 +97,7 @@ where
     }
 
     /// Resize the map to have `n` entries by adding default entries as needed.
+    #[inline]
     pub fn resize(&mut self, n: usize) {
         self.elems.resize(n, self.default.clone());
     }
@@ -125,6 +126,7 @@ where
     K: EntityRef,
     V: Clone,
 {
+    #[inline]
     fn index_mut(&mut self, k: K) -> &mut V {
         let i = k.index();
         if i >= self.elems.len() {
