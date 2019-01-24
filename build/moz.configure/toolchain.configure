@@ -843,11 +843,7 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
     def default_c_compilers(host_or_target, target, toolchain_prefix,
                             android_clang_compiler, *other_c_compiler):
         if host_or_target.kernel == 'WINNT':
-            # Prefer MSVC for aarch64 for now.
-            if host_or_target.cpu == 'aarch64':
-                supported = types = ('msvc', 'clang-cl', 'gcc', 'clang')
-            else:
-                supported = types = ('clang-cl', 'msvc', 'gcc', 'clang')
+            supported = types = ('clang-cl', 'msvc', 'gcc', 'clang')
         elif host_or_target.kernel == 'Darwin':
             types = ('clang',)
             supported = ('clang', 'gcc')
@@ -1605,6 +1601,8 @@ def lto(value, pgo, c_compiler):
                 cflags.append("-flto")
             else:
                 cflags.append("-flto=thin")
+                # Workaround for https://bugs.llvm.org/show_bug.cgi?id=40414
+                cflags.append("-fsplit-lto-unit")
             # With clang-cl, -flto can only be used with -c or -fuse-ld=lld.
             # AC_TRY_LINKs during configure don't have -c, so pass -fuse-ld=lld.
             cflags.append("-fuse-ld=lld");

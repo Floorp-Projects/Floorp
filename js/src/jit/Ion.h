@@ -69,13 +69,25 @@ class JitContext {
   // Wrappers with information about the current runtime/realm for use
   // during compilation.
   CompileRuntime* runtime;
-  CompileRealm* realm;
-  CompileZone* zone;
 
   int getNextAssemblerId() { return assemblerCount_++; }
 
+  CompileRealm* maybeRealm() const { return realm_; }
+  CompileRealm* realm() const {
+    MOZ_ASSERT(maybeRealm());
+    return maybeRealm();
+  }
+
+#ifdef DEBUG
+  bool isCompilingWasm() { return isCompilingWasm_; }
+#endif
+
  private:
   JitContext* prev_;
+  CompileRealm* realm_;
+#ifdef DEBUG
+  bool isCompilingWasm_;
+#endif
   int assemblerCount_;
 };
 

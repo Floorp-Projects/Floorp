@@ -5738,7 +5738,7 @@ gfxFloat nsTextFrame::ComputeSelectionUnderlineHeight(
               ->GetDefaultFont(kPresContext_DefaultVariableFont_ID)
               ->size;
       int32_t zoomedFontSize = aPresContext->AppUnitsToDevPixels(
-          nsStyleFont::ZoomText(aPresContext, defaultFontSize));
+          nsStyleFont::ZoomText(*aPresContext->Document(), defaultFontSize));
       gfxFloat fontSize =
           std::min(gfxFloat(zoomedFontSize), aFontMetrics.emHeight);
       fontSize = std::max(fontSize, 1.0);

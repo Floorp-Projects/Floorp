@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "WebAuthnCoseIdentifiers.h"
 #include "mozilla/dom/U2FHIDTokenManager.h"
 #include "mozilla/dom/WebAuthnUtil.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -139,6 +140,31 @@ RefPtr<U2FRegisterPromise> U2FHIDTokenManager::Register(
     }
     if (requirePlatformAttachment) {
       registerFlags |= U2F_FLAG_REQUIRE_PLATFORM_ATTACHMENT;
+    }
+
+    nsTArray<CoseAlg> coseAlgos;
+    for (const auto& coseAlg : extra.coseAlgs()) {
+      switch (static_cast<CoseAlgorithmIdentifier>(coseAlg.alg())) {
+        case CoseAlgorithmIdentifier::ES256:
+          coseAlgos.AppendElement(coseAlg);
+          break;
+        default:
+          continue;
+      }
+    }
+
+    // Only if no algorithms were specified, default to the only CTAP 1 / U2F
+    // protocol-supported algorithm. Ultimately this logic must move into
+    // u2f-hid-rs in a fashion that doesn't break the tests.
+    if (extra.coseAlgs().IsEmpty()) {
+      coseAlgos.AppendElement(
+          static_cast<int32_t>(CoseAlgorithmIdentifier::ES256));
+    }
+
+    // If there are no acceptable/supported algorithms, reject the promise.
+    if (coseAlgos.IsEmpty()) {
+      return U2FRegisterPromise::CreateAndReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                                                 __func__);
     }
   }
 

@@ -190,11 +190,6 @@ XPCOMUtils.defineLazyGetter(this, "gURLBar", () => {
     return element;
   }
 
-  // Re-focus the input field if it was focused before switching bindings.
-  if (element.hasAttribute("focused")) {
-    element.inputField.focus();
-  }
-
   return new UrlbarInput({
     textbox: element,
     panel: document.getElementById("urlbar-results"),

@@ -1401,6 +1401,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
                            Label* label);
 
   inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
+  inline void branchTestNeedsIncrementalBarrierAnyZone(Condition cond,
+                                                       Label* label,
+                                                       Register scratch);
 
   // Perform a type-test on a tag of a Value (32bits boxing), or the tagged
   // value (64bits boxing).
@@ -2592,12 +2595,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void storeCallResultValue(TypedOrValueRegister dest);
 
+ private:
   template <typename T>
-  void guardedCallPreBarrier(const T& address, MIRType type) {
+  void unguardedCallPreBarrier(const T& address, MIRType type) {
     Label done;
-
-    branchTestNeedsIncrementalBarrier(Assembler::Zero, &done);
-
     if (type == MIRType::Value) {
       branchTestGCThing(Assembler::NotEqual, address, &done);
     } else if (type == MIRType::Object || type == MIRType::String) {
@@ -2612,7 +2613,27 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
     call(preBarrier);
     Pop(PreBarrierReg);
+    bind(&done);
+  }
 
+ public:
+  template <typename T>
+  void guardedCallPreBarrier(const T& address, MIRType type) {
+    Label done;
+    branchTestNeedsIncrementalBarrier(Assembler::Zero, &done);
+    unguardedCallPreBarrier(address, type);
+    bind(&done);
+  }
+
+  // Like guardedCallPreBarrier, but unlike guardedCallPreBarrier this can be
+  // called from runtime-wide trampolines because it loads cx->zone (instead of
+  // baking in the current Zone) if JitContext::realm is nullptr.
+  template <typename T>
+  void guardedCallPreBarrierAnyZone(const T& address, MIRType type,
+                                    Register scratch) {
+    Label done;
+    branchTestNeedsIncrementalBarrierAnyZone(Assembler::Zero, &done, scratch);
+    unguardedCallPreBarrier(address, type);
     bind(&done);
   }
 

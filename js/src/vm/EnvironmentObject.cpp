@@ -3619,6 +3619,8 @@ static bool CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
 bool js::CheckGlobalOrEvalDeclarationConflicts(JSContext* cx,
                                                HandleObject envChain,
                                                HandleScript script) {
+  MOZ_ASSERT(script->isGlobalCode() || script->isForEval());
+
   RootedObject varObj(cx, &GetVariablesObject(envChain));
 
   if (script->isForEval()) {
