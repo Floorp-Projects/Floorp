@@ -9663,8 +9663,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
           }
         }
 
+        // No error must be returned when iframes are blocked.
         if (popupBlocked) {
-          return NS_ERROR_UNKNOWN_PROTOCOL;
+          return NS_OK;
         }
       }
     }
