@@ -111,7 +111,6 @@ namespace SessionStoreUtils {
    *         Form data encoded in an object.
    */
   CollectedFormData collectFormData(Document document);
-  boolean restoreFormData(Document document, optional CollectedFormData data);
 };
 
 dictionary SSScrollPositionDict {
