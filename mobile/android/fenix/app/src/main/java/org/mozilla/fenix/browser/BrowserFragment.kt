@@ -36,7 +36,6 @@ class BrowserFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         val sessionManager = requireComponents.core.sessionManager
         val sessionId = "1"
 

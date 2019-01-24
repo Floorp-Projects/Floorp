@@ -5,6 +5,7 @@ import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 
 /**
  * Component group for all use cases. Use cases are provided by feature
@@ -17,5 +18,6 @@ class UseCases(
 ) {
 
     val searchUseCases by lazy { SearchUseCases(context, searchEngineManager, sessionManager) }
-    val sessionUseCases by lazy { SessionUseCases(sessionManager) }
+    val sessionUseCases by lazy { SessionUseCases(sessionManager) };
+    val tabsUseCases by lazy { TabsUseCases(sessionManager) }
 }

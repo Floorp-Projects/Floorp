@@ -77,6 +77,7 @@ dependencies {
     implementation Deps.mozilla_browser_session
     implementation Deps.mozilla_browser_toolbar
 
+    implementation Deps.mozilla_feature_awesomebar
     implementation Deps.mozilla_feature_intent
     implementation Deps.mozilla_feature_session
     implementation Deps.mozilla_feature_toolbar

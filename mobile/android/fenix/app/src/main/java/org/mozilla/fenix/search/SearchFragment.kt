@@ -9,11 +9,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.Navigation
+import androidx.navigation.fragment.FragmentNavigator
 import kotlinx.android.synthetic.main.fragment_search.*
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
+import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
+import org.mozilla.fenix.ext.requireComponents
 
 class SearchFragment : Fragment() {
     override fun onCreateView(
@@ -44,6 +49,15 @@ class SearchFragment : Fragment() {
             "1")
         )
 
+        AwesomeBarFeature(awesomeBar, toolbar, null, onEditComplete = ::didActivateSearch)
+            .addSearchProvider(
+                requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()),
+                requireComponents.useCases.searchUseCases.defaultSearch)
+            .addSessionProvider(
+                requireComponents.core.sessionManager,
+                requireComponents.useCases.tabsUseCases.selectTab)
+
+
         toolbar_wrapper.clipToOutline = false
         toolbar.apply {
             textColor = ContextCompat.getColor(context, R.color.searchText)
@@ -51,5 +65,12 @@ class SearchFragment : Fragment() {
             hint = context.getString(R.string.search_hint)
             hintColor = ContextCompat.getColor(context, R.color.searchText)
         }
+    }
+
+    private fun didActivateSearch() {
+        val extras = FragmentNavigator.Extras.Builder().addSharedElement(
+            toolbar_wrapper, ViewCompat.getTransitionName(toolbar_wrapper)!!
+        ).build()
+        Navigation.findNavController(toolbar).navigate(R.id.action_searchFragment_to_browserFragment, null, null, extras)
     }
 }
