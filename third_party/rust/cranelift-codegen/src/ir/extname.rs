@@ -4,10 +4,10 @@
 //! function. The name of an external declaration doesn't have any meaning to
 //! Cranelift, which compiles functions independently.
 
-use crate::ir::LibCall;
-use core::cmp;
-use core::fmt::{self, Write};
-use core::str::FromStr;
+use ir::LibCall;
+use std::cmp;
+use std::fmt::{self, Write};
+use std::str::FromStr;
 
 const TESTCASE_NAME_LENGTH: usize = 16;
 
@@ -119,9 +119,9 @@ impl FromStr for ExternalName {
 #[cfg(test)]
 mod tests {
     use super::ExternalName;
-    use crate::ir::LibCall;
-    use core::u32;
+    use ir::LibCall;
     use std::string::ToString;
+    use std::u32;
 
     #[test]
     fn display_testcase() {

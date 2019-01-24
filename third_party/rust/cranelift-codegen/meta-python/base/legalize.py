@@ -500,7 +500,7 @@ for inst_imm,      inst in [
         (urem_imm, urem),
         (band_imm, band),
         (bor_imm, bor),
-        (bxor_imm, bxor),
+        (bxor_imm, bor),
         (ifcmp_imm, ifcmp)]:
     expand.legalize(
             a << inst_imm(x, y),

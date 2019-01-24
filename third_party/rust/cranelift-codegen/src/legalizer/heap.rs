@@ -3,11 +3,11 @@
 //! This module exports the `expand_heap_addr` function which transforms a `heap_addr`
 //! instruction into code that depends on the kind of heap referenced.
 
-use crate::cursor::{Cursor, FuncCursor};
-use crate::flowgraph::ControlFlowGraph;
-use crate::ir::condcodes::IntCC;
-use crate::ir::{self, InstBuilder};
-use crate::isa::TargetIsa;
+use cursor::{Cursor, FuncCursor};
+use flowgraph::ControlFlowGraph;
+use ir::condcodes::IntCC;
+use ir::{self, InstBuilder};
+use isa::TargetIsa;
 
 /// Expand a `heap_addr` instruction according to the definition of the heap.
 pub fn expand_heap_addr(
@@ -117,7 +117,7 @@ fn static_addr(
     }
 
     // Check `offset > limit` which is now known non-negative.
-    let limit = bound - access_size;
+    let limit = bound - u64::from(access_size);
 
     // We may be able to omit the check entirely for 32-bit offsets if the heap bound is 4 GB or
     // more.

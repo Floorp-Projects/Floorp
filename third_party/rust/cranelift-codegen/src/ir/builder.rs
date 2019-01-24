@@ -3,11 +3,11 @@
 //! A `Builder` provides a convenient interface for inserting instructions into a Cranelift
 //! function. Many of its methods are generated from the meta language instruction definitions.
 
-use crate::ir;
-use crate::ir::types;
-use crate::ir::{DataFlowGraph, InstructionData};
-use crate::ir::{Inst, Opcode, Type, Value};
-use crate::isa;
+use ir;
+use ir::types;
+use ir::{DataFlowGraph, InstructionData};
+use ir::{Inst, Opcode, Type, Value};
+use isa;
 
 /// Base trait for instruction builders.
 ///
@@ -59,7 +59,7 @@ pub trait InstInserterBase<'f>: Sized {
     fn insert_built_inst(self, inst: Inst, ctrl_typevar: Type) -> &'f mut DataFlowGraph;
 }
 
-use core::marker::PhantomData;
+use std::marker::PhantomData;
 
 /// Builder that inserts an instruction at the current position.
 ///
@@ -162,7 +162,7 @@ where
         {
             let dfg = self.inserter.data_flow_graph_mut();
             inst = dfg.make_inst(data);
-            // Make an `Iterator<Item = Option<Value>>`.
+            // Make an `Interator<Item = Option<Value>>`.
             let ru = self.reuse.as_ref().iter().cloned();
             dfg.make_inst_results_reusing(inst, ctrl_typevar, ru);
         }
@@ -215,10 +215,10 @@ impl<'f> InstBuilderBase<'f> for ReplaceBuilder<'f> {
 
 #[cfg(test)]
 mod tests {
-    use crate::cursor::{Cursor, FuncCursor};
-    use crate::ir::condcodes::*;
-    use crate::ir::types::*;
-    use crate::ir::{Function, InstBuilder, ValueDef};
+    use cursor::{Cursor, FuncCursor};
+    use ir::condcodes::*;
+    use ir::types::*;
+    use ir::{Function, InstBuilder, ValueDef};
 
     #[test]
     fn types() {

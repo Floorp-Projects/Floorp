@@ -1,11 +1,11 @@
 //! Verify value locations.
 
-use crate::ir;
-use crate::isa;
-use crate::regalloc::liveness::Liveness;
-use crate::regalloc::RegDiversions;
-use crate::timing;
-use crate::verifier::{VerifierErrors, VerifierStepResult};
+use ir;
+use isa;
+use regalloc::liveness::Liveness;
+use regalloc::RegDiversions;
+use timing;
+use verifier::{VerifierErrors, VerifierStepResult};
 
 /// Verify value locations for `func`.
 ///
@@ -303,7 +303,7 @@ impl<'a> LocationVerifier<'a> {
         divert: &RegDiversions,
         errors: &mut VerifierErrors,
     ) -> VerifierStepResult<()> {
-        use crate::ir::instructions::BranchInfo::*;
+        use ir::instructions::BranchInfo::*;
 
         // We can only check CFG edges if we have a liveness analysis.
         let liveness = match self.liveness {
@@ -318,14 +318,14 @@ impl<'a> LocationVerifier<'a> {
                 dfg.display_inst(inst, self.isa)
             ),
             SingleDest(ebb, _) => {
-                for (&value, d) in divert.iter() {
-                    let lr = &liveness[value];
+                for d in divert.all() {
+                    let lr = &liveness[d.value];
                     if lr.is_livein(ebb, liveness.context(&self.func.layout)) {
                         return fatal!(
                             errors,
                             inst,
                             "{} is diverted to {} and live in to {}",
-                            value,
+                            d.value,
                             d.to.display(&self.reginfo),
                             ebb
                         );
@@ -333,15 +333,15 @@ impl<'a> LocationVerifier<'a> {
                 }
             }
             Table(jt, ebb) => {
-                for (&value, d) in divert.iter() {
-                    let lr = &liveness[value];
+                for d in divert.all() {
+                    let lr = &liveness[d.value];
                     if let Some(ebb) = ebb {
                         if lr.is_livein(ebb, liveness.context(&self.func.layout)) {
                             return fatal!(
                                 errors,
                                 inst,
                                 "{} is diverted to {} and live in to {}",
-                                value,
+                                d.value,
                                 d.to.display(&self.reginfo),
                                 ebb
                             );
@@ -353,7 +353,7 @@ impl<'a> LocationVerifier<'a> {
                                 errors,
                                 inst,
                                 "{} is diverted to {} and live in to {}",
-                                value,
+                                d.value,
                                 d.to.display(&self.reginfo),
                                 ebb
                             );

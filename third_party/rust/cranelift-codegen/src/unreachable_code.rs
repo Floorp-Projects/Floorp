@@ -1,11 +1,10 @@
 //! Unreachable code elimination.
 
-use crate::cursor::{Cursor, FuncCursor};
-use crate::dominator_tree::DominatorTree;
-use crate::flowgraph::ControlFlowGraph;
-use crate::ir;
-use crate::timing;
-use log::debug;
+use cursor::{Cursor, FuncCursor};
+use dominator_tree::DominatorTree;
+use flowgraph::ControlFlowGraph;
+use ir;
+use timing;
 
 /// Eliminate unreachable code.
 ///

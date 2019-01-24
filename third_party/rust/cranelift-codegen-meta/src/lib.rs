@@ -1,4 +1,7 @@
 #[macro_use]
+extern crate cranelift_entity;
+
+#[macro_use]
 mod cdsl;
 
 pub mod error;

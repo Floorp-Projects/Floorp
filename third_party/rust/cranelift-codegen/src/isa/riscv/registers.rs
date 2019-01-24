@@ -1,13 +1,13 @@
 //! RISC-V register descriptions.
 
-use crate::isa::registers::{RegBank, RegClass, RegClassData, RegInfo, RegUnit};
+use isa::registers::{RegBank, RegClass, RegClassData, RegInfo, RegUnit};
 
 include!(concat!(env!("OUT_DIR"), "/registers-riscv.rs"));
 
 #[cfg(test)]
 mod tests {
     use super::{FPR, GPR, INFO};
-    use crate::isa::RegUnit;
+    use isa::RegUnit;
     use std::string::{String, ToString};
 
     #[test]

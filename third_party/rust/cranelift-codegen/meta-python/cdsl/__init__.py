@@ -2,7 +2,7 @@
 Cranelift DSL classes.
 
 This module defines the classes that are used to define Cranelift instructions
-and other entities.
+and other entitties.
 """
 from __future__ import absolute_import
 import re

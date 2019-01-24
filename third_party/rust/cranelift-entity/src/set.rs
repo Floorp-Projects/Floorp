@@ -1,9 +1,9 @@
 //! Densely numbered entity references as set keys.
 
-use crate::keys::Keys;
-use crate::EntityRef;
-use core::marker::PhantomData;
+use keys::Keys;
+use std::marker::PhantomData;
 use std::vec::Vec;
+use EntityRef;
 
 /// A set of `K` for densely indexed entity references.
 ///
@@ -80,7 +80,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use core::u32;
+    use std::u32;
 
     // `EntityRef` impl for testing.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]

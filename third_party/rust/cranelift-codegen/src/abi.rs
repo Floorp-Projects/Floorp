@@ -3,8 +3,8 @@
 //! This module provides functions and data structures that are useful for implementing the
 //! `TargetIsa::legalize_signature()` method.
 
-use crate::ir::{AbiParam, ArgumentExtension, ArgumentLoc, Type};
-use core::cmp::Ordering;
+use ir::{AbiParam, ArgumentExtension, ArgumentLoc, Type};
+use std::cmp::Ordering;
 use std::vec::Vec;
 
 /// Legalization action to perform on a single argument or return value when converting a
@@ -182,8 +182,8 @@ pub fn legalize_abi_value(have: Type, arg: &AbiParam) -> ValueConversion {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ir::types;
-    use crate::ir::AbiParam;
+    use ir::types;
+    use ir::AbiParam;
 
     #[test]
     fn legalize() {

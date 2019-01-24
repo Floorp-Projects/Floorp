@@ -28,7 +28,6 @@ mod simple_tests {
             enable_threads: true,
             enable_reference_types: true,
         },
-        mutable_global_imports: true,
     });
 
     fn read_file_data(path: &PathBuf) -> Vec<u8> {

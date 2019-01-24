@@ -1,7 +1,7 @@
 //! Common types for the Cranelift code generator.
 
-use core::default::Default;
-use core::fmt::{self, Debug, Display, Formatter};
+use std::default::Default;
+use std::fmt::{self, Debug, Display, Formatter};
 use target_lexicon::{PointerWidth, Triple};
 
 /// The type of an SSA value.
