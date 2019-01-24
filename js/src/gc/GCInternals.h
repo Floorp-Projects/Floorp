@@ -85,7 +85,9 @@ class MOZ_RAII AutoTraceSession : public AutoLockAllAtoms,
 };
 
 struct MOZ_RAII AutoFinishGC {
-  explicit AutoFinishGC(JSContext* cx) { FinishGC(cx); }
+  explicit AutoFinishGC(JSContext* cx, JS::GCReason reason) {
+    FinishGC(cx, reason);
+  }
 };
 
 // This class should be used by any code that needs exclusive access to the heap
@@ -94,7 +96,8 @@ class MOZ_RAII AutoPrepareForTracing : private AutoFinishGC,
                                        public AutoTraceSession {
  public:
   explicit AutoPrepareForTracing(JSContext* cx)
-      : AutoFinishGC(cx), AutoTraceSession(cx->runtime()) {}
+      : AutoFinishGC(cx, JS::GCReason::PREPARE_FOR_TRACING),
+        AutoTraceSession(cx->runtime()) {}
 };
 
 AbortReason IsIncrementalGCUnsafe(JSRuntime* rt);
