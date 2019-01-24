@@ -13,7 +13,7 @@ add_task(async function findBarDisabledOnSomePages() {
   ok(!gFindBar.hidden, "Find bar should be visible");
 
   let urls = [
-    "about:config",
+    "about:preferences",
     "about:addons",
   ];
 
