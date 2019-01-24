@@ -24,18 +24,18 @@
  */
 .message {
   background-color: var(--message-background-color);
-  border-radius: var(--base-distance);
+  border-radius: var(--base-unit);
   color: var(--message-color);
   display: grid;
   fill: var(--message-color);
-  grid-column-gap: var(--base-distance);
-  grid-template-columns: calc(var(--base-distance) * 6) 1fr;
-  margin: calc(var(--base-distance) * 2) 0;
-  padding: var(--base-distance);
+  grid-column-gap: var(--base-unit);
+  grid-template-columns: calc(var(--base-unit) * 6) 1fr;
+  margin: calc(var(--base-unit) * 2) 0;
+  padding: var(--base-unit);
 
   -moz-context-properties: fill;
 }
 
 .message__icon {
-  margin: var(--base-distance);
+  margin: var(--base-unit);
 }
