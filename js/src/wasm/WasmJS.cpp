@@ -107,8 +107,11 @@ bool wasm::HasCompilerSupport(JSContext* cx) {
 }
 
 bool wasm::HasOptimizedCompilerTier(JSContext* cx) {
-  return (cx->options().wasmIon() && IonCanCompile()) ||
-         (cx->options().wasmCranelift() && CraneliftCanCompile());
+  return (cx->options().wasmIon() && IonCanCompile())
+#ifdef ENABLE_WASM_CRANELIFT
+         || (cx->options().wasmCranelift() && CraneliftCanCompile())
+#endif
+  ;
 }
 
 // Return whether wasm compilation is allowed by prefs.  This check
