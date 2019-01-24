@@ -170,7 +170,8 @@ class GeckoMigration(MercurialScript, VirtualenvMixin,
             return ['-r', '.']
 
     def set_push_to_ssh(self):
-        for cwd in self.query_push_dirs():
+        push_dirs = [d for d in self.query_push_dirs() if d is not None]
+        for cwd in push_dirs:
             repo_url = self.read_repo_hg_rc(cwd).get('paths', 'default')
             username = self.config.get('ssh_user', '')
             # Add a trailing @ to the username if it exists, otherwise it gets
