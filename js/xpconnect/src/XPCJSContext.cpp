@@ -38,6 +38,7 @@
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollector.h"
 #include "jsapi.h"
+#include "js/ContextOptions.h"
 #include "js/MemoryMetrics.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"

@@ -13,6 +13,7 @@
 
 #include "ds/TraceableFifo.h"
 #include "js/CharacterEncoding.h"
+#include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/GCVector.h"
 #include "js/Promise.h"
 #include "js/Result.h"
