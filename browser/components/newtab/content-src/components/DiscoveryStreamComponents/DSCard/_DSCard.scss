@@ -25,15 +25,12 @@ $excerpt-line-height: 20;
 
   .img-wrapper {
     width: 100%;
-    border: 0.5px solid $black-10;
-    border-radius: 4px;
   }
 
   .img {
+    @include image-as-background;
     height: 0;
     padding-top: 50%; // 2:1 aspect ratio
-    background-repeat: no-repeat;
-    background-size: cover;
   }
 
   .meta {
