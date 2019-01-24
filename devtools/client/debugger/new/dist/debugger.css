@@ -1554,6 +1554,14 @@ span.img.marko {
   transition: transform 0.18s ease;
 }
 
+/* overrides tree component */
+.tree-node button.arrow {
+  background: none;
+  mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
+  background: var(--disclosure-arrow);
+  mask-size: 100%;
+}
+
 html[dir="rtl"] .img.arrow {
   transform: rotate(90deg);
 }
