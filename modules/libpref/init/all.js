@@ -5566,10 +5566,10 @@ pref("urlclassifier.trackingAnnotationWhitelistTable", "test-trackwhite-simple,m
 pref("urlclassifier.trackingTable", "test-track-simple,base-track-digest256");
 pref("urlclassifier.trackingWhitelistTable", "test-trackwhite-simple,mozstd-trackwhite-digest256");
 
-pref("urlclassifier.features.fingerprinting.blacklistTables", "");
-pref("urlclassifier.features.fingerprinting.whitelistTables", "");
-pref("urlclassifier.features.cryptomining.blacklistTables", "");
-pref("urlclassifier.features.cryptomining.whitelistTables", "");
+pref("urlclassifier.features.fingerprinting.blacklistTables", "base-fingerprinting-track-digest256");
+pref("urlclassifier.features.fingerprinting.whitelistTables", "mozstd-trackwhite-digest256");
+pref("urlclassifier.features.cryptomining.blacklistTables", "base-cryptomining-track-digest256");
+pref("urlclassifier.features.cryptomining.whitelistTables", "mozstd-trackwhite-digest256");
 
 // These tables will never trigger a gethash call.
 pref("urlclassifier.disallow_completions", "test-malware-simple,test-harmful-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-block-simple,goog-downloadwhite-digest256,base-track-digest256,mozstd-trackwhite-digest256,content-track-digest256,mozplugin-block-digest256,mozplugin2-block-digest256,block-flash-digest256,except-flash-digest256,allow-flashallow-digest256,except-flashallow-digest256,block-flashsubdoc-digest256,except-flashsubdoc-digest256,goog-passwordwhite-proto,ads-track-digest256,social-track-digest256,analytics-track-digest256,base-fingerprinting-track-digest256,content-fingerprinting-track-digest256,base-cryptomining-track-digest256,content-cryptomining-track-digest256,fanboy-annoyance-digest256,fanboy-social-digest256,easylist-digest256,easyprivacy-digest256,adguard-digest256");
