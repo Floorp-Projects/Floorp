@@ -1031,10 +1031,6 @@ void HttpChannelChild::OnStopRequest(
        static_cast<uint32_t>(channelStatus)));
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mOnStopRequestCalled && !mIPCOpen) {
-    return;
-  }
-
   if (mDivertingToParent) {
     MOZ_RELEASE_ASSERT(
         !mFlushedForDiversion,
@@ -1191,32 +1187,29 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIsPending);
 
-  auto checkForBlockedContent = [&]() {
-    // NB: We use aChannelStatus here instead of mStatus because if there was an
-    // nsCORSListenerProxy on this request, it will override the tracking
-    // protection's return value.
-    if (aChannelStatus == NS_ERROR_TRACKING_URI ||
-        aChannelStatus == NS_ERROR_MALWARE_URI ||
-        aChannelStatus == NS_ERROR_UNWANTED_URI ||
-        aChannelStatus == NS_ERROR_BLOCKED_URI ||
-        aChannelStatus == NS_ERROR_HARMFUL_URI ||
-        aChannelStatus == NS_ERROR_PHISHING_URI) {
-      nsCString list, provider, fullhash;
+  // NB: We use aChannelStatus here instead of mStatus because if there was an
+  // nsCORSListenerProxy on this request, it will override the tracking
+  // protection's return value.
+  if (aChannelStatus == NS_ERROR_TRACKING_URI ||
+      aChannelStatus == NS_ERROR_MALWARE_URI ||
+      aChannelStatus == NS_ERROR_UNWANTED_URI ||
+      aChannelStatus == NS_ERROR_BLOCKED_URI ||
+      aChannelStatus == NS_ERROR_HARMFUL_URI ||
+      aChannelStatus == NS_ERROR_PHISHING_URI) {
+    nsCString list, provider, fullhash;
 
-      nsresult rv = GetMatchedList(list);
-      NS_ENSURE_SUCCESS_VOID(rv);
+    nsresult rv = GetMatchedList(list);
+    NS_ENSURE_SUCCESS_VOID(rv);
 
-      rv = GetMatchedProvider(provider);
-      NS_ENSURE_SUCCESS_VOID(rv);
+    rv = GetMatchedProvider(provider);
+    NS_ENSURE_SUCCESS_VOID(rv);
 
-      rv = GetMatchedFullHash(fullhash);
-      NS_ENSURE_SUCCESS_VOID(rv);
+    rv = GetMatchedFullHash(fullhash);
+    NS_ENSURE_SUCCESS_VOID(rv);
 
-      UrlClassifierCommon::SetBlockedContent(this, aChannelStatus, list,
-                                             provider, fullhash);
-    }
-  };
-  checkForBlockedContent();
+    UrlClassifierCommon::SetBlockedContent(this, aChannelStatus, list, provider,
+                                           fullhash);
+  }
 
   MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
 
@@ -3794,15 +3787,6 @@ void HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
   // and BackgroundChild might have pending IPC messages.
   // Clean up BackgroundChild at this time to prevent memleak.
   if (aWhy != Deletion) {
-    // The actor tree might get destroyed before we get the OnStopRequest.
-    // So if we didn't get it, we send it here in order to prevent any leaks.
-    // Ocasionally we will get the OnStopRequest message after this, in which
-    // case we just ignore it as we've already cleared the listener.
-    if (!mOnStopRequestCalled && mListener) {
-      DoPreOnStopRequest(NS_ERROR_ABORT);
-      DoOnStopRequest(this, NS_ERROR_ABORT, mListenerContext);
-    }
-
     CleanupBackgroundChannel();
   }
 }
