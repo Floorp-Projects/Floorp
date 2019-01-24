@@ -325,11 +325,14 @@ function loadPrefs() {
   [...document.styleSheets].find(s => s.title == "infop").disabled = true;
 
   document.body.textContent = "";
+  let searchContainer = document.createElement("div");
+  searchContainer.id = "search-container";
   let search = document.createElement("input");
   search.type = "text";
   search.id = "search";
   document.l10n.setAttributes(search, "about-config-search");
-  document.body.appendChild(search);
+  searchContainer.appendChild(search);
+  document.body.appendChild(searchContainer);
   search.focus();
 
   let prefs = document.createElement("table");
