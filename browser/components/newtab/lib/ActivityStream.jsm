@@ -218,7 +218,7 @@ const PREFS_CONFIG = new Map([
     value: JSON.stringify({
       enabled: false,
       // This is currently an exmple layout used for dev purposes.
-      layout_endpoint: "https://getpocket.com/v3/newtab/layout?version=1&consumer_key=40249-e88c401e1b1f2242d9e441c4&layout_variant=control",
+      layout_endpoint: "https://getpocket.com/v3/newtab/layout?version=1&consumer_key=40249-e88c401e1b1f2242d9e441c4&layout_variant=basic",
     }),
   }],
 ]);

@@ -3,7 +3,10 @@ $item-font-size: 13;
 $item-line-height: 20;
 
 .ds-list-border {
-  border: 1px solid $grey-40-36;
+  border: 0;
+  border-top: $border-secondary;
+
+  padding-top: 1px;
 
   // Instead of using margin, we need to use these to override stuff that comes
   // by default from <hr>.
@@ -80,6 +83,10 @@ $item-line-height: 20;
     &:hover::before {
       background-color: var(--newtab-link-primary-color);
     }
+
+    &:active::before {
+      background-color: $blue-70;
+    }
   }
 }
 
@@ -88,8 +95,8 @@ $item-line-height: 20;
 // Unfortunately the border needs to go _above_ the row gap as currently
 // set up, which means that some refactoring will be required to do this.
 .ds-list-item:nth-child(-n+3) { // all but the last three items
-  border-bottom: 2px solid $grey-40-36;
-  margin-bottom: -2px;  // cancel out the 2 pixels we used for the border
+  border-bottom: $border-secondary;
+  margin-bottom: -1px;  // cancel out the pixel we used for the border
 
   padding-bottom: 2px;
 }
@@ -134,13 +141,26 @@ $item-line-height: 20;
   }
 
   .ds-list-image {
-    display: none;
-    width: 72px;
-    height: 72px;
-    object-fit: cover;
+    $image-size: 72px;
 
-    border: 0.5px solid $black-12;
-    box-sizing: border-box;
-    border-radius: 4px;
+    @include image-as-background;
+    display: none;
+    height: $image-size;
+    margin-inline-start: $item-font-size * 1px;
+    min-height: $image-size;
+    min-width: $image-size;
+    width: $image-size;
+  }
+
+  &:hover {
+    .ds-list-item-title {
+      color: var(--newtab-link-primary-color);
+    }
+  }
+
+  &:active {
+    .ds-list-item-title {
+      color: $blue-70;
+    }
   }
 }

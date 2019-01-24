@@ -211,7 +211,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // }
 const actionTypes = {};
 
-for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_UPDATE", "DOWNLOAD_CHANGED", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_UPDATE", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 }
 
@@ -1107,6 +1107,8 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
       case "CLEAR_MESSAGE":
         if (action.data.id === this.state.message.id) {
           this.setState({ message: {} });
+          // Remove any styles related to the RTAMO message
+          document.body.classList.remove("welcome", "hide-main", "amo");
         }
         break;
       case "CLEAR_PROVIDER":
@@ -1766,8 +1768,6 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
 
   onClickAddExtension() {
     this.props.onAction(this.props.content.primary_button.action);
-    this.props.onBlock();
-    document.body.classList.remove("welcome", "hide-main", "amo");
   }
 
   onBlockButton() {
@@ -6236,7 +6236,7 @@ var PrerenderData = new _PrerenderData({
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_Search", function() { return _Search; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_Search", function() { return _Search; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Search", function() { return Search; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
@@ -6260,11 +6260,10 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
     super(props);
     this.onSearchClick = this.onSearchClick.bind(this);
     this.onSearchHandoffClick = this.onSearchHandoffClick.bind(this);
-    this.onSearchHandoffKeyDown = this.onSearchHandoffKeyDown.bind(this);
     this.onSearchHandoffPaste = this.onSearchHandoffPaste.bind(this);
+    this.onSearchHandoffDrop = this.onSearchHandoffDrop.bind(this);
     this.onInputMount = this.onInputMount.bind(this);
     this.onSearchHandoffButtonMount = this.onSearchHandoffButtonMount.bind(this);
-    this.cancelEvent = this.cancelEvent.bind(this);
   }
 
   handleEvent(event) {
@@ -6280,63 +6279,36 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
 
   doSearchHandoff(text) {
     this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].HANDOFF_SEARCH_TO_AWESOMEBAR, data: { text } }));
+    this.props.dispatch({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].FAKE_FOCUS_SEARCH });
     this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({ event: "SEARCH_HANDOFF" }));
     if (text) {
-      // We don't hide the in-content search if there is no text (user hit <Enter>)
       this.props.dispatch({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].HIDE_SEARCH });
     }
   }
 
   onSearchHandoffClick(event) {
     // When search hand-off is enabled, we render a big button that is styled to
-    // look like a search textbox. If the button is clicked with the mouse, we
-    // focus it. If the user types, transfer focus to awesomebar.
-    // If the button is clicked from the keyboard, we focus the awesomebar normally.
-    // This is to minimize confusion with users navigating with the keyboard and
-    // users using assistive technologoy.
+    // look like a search textbox. If the button is clicked, we style
+    // the button as if it was a focused search box and show a fake cursor but
+    // really focus the awesomebar without the focus styles ("hidden focus").
     event.preventDefault();
-    const isKeyboardClick = event.clientX === 0 && event.clientY === 0;
-    if (isKeyboardClick) {
-      this.doSearchHandoff();
-    } else {
-      this._searchHandoffButton.focus();
-    }
-  }
-
-  onSearchHandoffKeyDown(event) {
-    if (event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
-      // We only care about key strokes that will produce a character.
-      this.doSearchHandoff(event.key);
-    }
+    this.doSearchHandoff();
   }
 
   onSearchHandoffPaste(event) {
-    if (!this._searchHandoffButton || !this._searchHandoffButton.contains(global.document.activeElement)) {
-      // Don't handle every paste on the document. Filter out those that are
-      // not on the Search Hand-off button.
-      return;
-    }
     event.preventDefault();
     this.doSearchHandoff(event.clipboardData.getData("Text"));
   }
 
-  cancelEvent(event) {
+  onSearchHandoffDrop(event) {
     event.preventDefault();
-  }
-
-  componentWillMount() {
-    if (global.document) {
-      // We need to listen to paste events that bubble up from the Search Hand-off
-      // button. Adding the paste listener to the button itself or it's parent
-      // doesn't work consistently until the page is clicked on.
-      global.document.addEventListener("paste", this.onSearchHandoffPaste);
+    let text = event.dataTransfer.getData("text");
+    if (text) {
+      this.doSearchHandoff(text);
     }
   }
 
   componentWillUnmount() {
-    if (global.document) {
-      global.document.removeEventListener("paste", this.onDocumentPaste);
-    }
     delete window.gContentSearchController;
   }
 
@@ -6378,7 +6350,7 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
    * in order to execute searches in various tests
    */
   render() {
-    const wrapperClassName = ["search-wrapper", this.props.hide && "search-hidden"].filter(v => v).join(" ");
+    const wrapperClassName = ["search-wrapper", this.props.hide && "search-hidden", this.props.fakeFocus && "fake-focus"].filter(v => v).join(" ");
 
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
       "div",
@@ -6431,14 +6403,14 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
             className: "search-handoff-button",
             ref: this.onSearchHandoffButtonMount,
             onClick: this.onSearchHandoffClick,
-            onKeyDown: this.onSearchHandoffKeyDown,
+            tabIndex: "-1",
             title: this.props.intl.formatMessage({ id: "search_web_placeholder" }) },
           react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
             "div",
             { className: "fake-textbox" },
             this.props.intl.formatMessage({ id: "search_web_placeholder" })
           ),
-          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: "fake-editable", tabIndex: "-1", "aria-hidden": "true", contentEditable: "", onDrop: this.cancelEvent }),
+          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: "fake-editable", tabIndex: "-1", "aria-hidden": "true", contentEditable: "", onDrop: this.onSearchHandoffDrop, onPaste: this.onSearchHandoffPaste }),
           react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: "fake-caret" })
         ),
         react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
@@ -6451,7 +6423,6 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
 }
 
 const Search = Object(react_redux__WEBPACK_IMPORTED_MODULE_2__["connect"])()(Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["injectIntl"])(_Search));
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
 /* 47 */
@@ -7276,7 +7247,7 @@ Hero_Hero.defaultProps = {
 
 class HorizontalRule_HorizontalRule extends external_React_default.a.PureComponent {
   render() {
-    return external_React_default.a.createElement("hr", null);
+    return external_React_default.a.createElement("hr", { className: "ds-hr" });
   }
 }
 // EXTERNAL MODULE: ./content-src/components/DiscoveryStreamImpressionStats/ImpressionStats.jsx
@@ -7338,10 +7309,10 @@ class List_ListItem extends external_React_default.a.PureComponent {
           external_React_default.a.createElement(
             "div",
             { className: "ds-list-item-info" },
-            `${this.props.domain} · TODO:Topic`
+            this.props.domain
           )
         ),
-        external_React_default.a.createElement("img", { className: "ds-list-image", src: this.props.image_src })
+        external_React_default.a.createElement("div", { className: "ds-list-image", style: { backgroundImage: `url(${this.props.image_src})` } })
       )
     );
   }
@@ -7756,6 +7727,14 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
 
   renderComponent(component) {
     let rows;
+    const { spocs } = this.props.DiscoveryStream;
+
+    // TODO: Can we make this a bit better visually while it loads?
+    // If this component expects spocs,
+    // wait until spocs are loaded before attempting to use it.
+    if (component.spocs && !spocs.loaded) {
+      return null;
+    }
 
     switch (component.type) {
       case "TopSites":
@@ -11365,12 +11344,16 @@ const INITIAL_STATE = {
     spocs: {
       spocs_endpoint: "",
       lastUpdated: null,
-      data: {} // {spocs: []}
+      data: {}, // {spocs: []}
+      loaded: false
     }
   },
   Search: {
-    // Pretend the search box is focused after handing off to AwesomeBar.
-    focus: false,
+    // When search hand-off is enabled, we render a big button that is styled to
+    // look like a search textbox. If the button is clicked, we style
+    // the button as if it was a focused search box and show a fake cursor but
+    // really focus the awesomebar without the focus styles ("hidden focus").
+    fakeFocus: false,
     // Hide the search box after handing off to AwesomeBar and user starts typing.
     hide: false
   }
@@ -11780,7 +11763,8 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         return Object.assign({}, prevState, {
           spocs: Object.assign({}, prevState.spocs, {
             lastUpdated: action.data.lastUpdated,
-            data: action.data.spocs
+            data: action.data.spocs,
+            loaded: true
           })
         });
       }
@@ -11794,8 +11778,10 @@ function Search(prevState = INITIAL_STATE.Search, action) {
   switch (action.type) {
     case Actions["actionTypes"].HIDE_SEARCH:
       return Object.assign(Object.assign({}, prevState, { hide: true }));
+    case Actions["actionTypes"].FAKE_FOCUS_SEARCH:
+      return Object.assign(Object.assign({}, prevState, { fakeFocus: true }));
     case Actions["actionTypes"].SHOW_SEARCH:
-      return Object.assign(Object.assign({}, prevState, { hide: false }));
+      return Object.assign(Object.assign({}, prevState, { hide: false, fakeFocus: false }));
     default:
       return prevState;
   }
