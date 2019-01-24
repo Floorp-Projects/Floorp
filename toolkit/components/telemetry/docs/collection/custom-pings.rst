@@ -1,3 +1,5 @@
+.. _submitting-customping:
+
 =======================
 Submitting custom pings
 =======================

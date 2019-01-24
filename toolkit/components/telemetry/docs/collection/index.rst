@@ -23,6 +23,7 @@ The current data collection possibilities include:
 * :doc:`Experiment annotations <experiments>`
 * :doc:`Remote content uptake <uptake>`
 * :doc:`Hybrid Content Telemetry <hybrid-content>` allows recording telemetry from semi-privileged hosted content
+* :doc:`WebExtension API <webextension-api>` can be used in privileged webextensions
 
 .. toctree::
    :maxdepth: 2
