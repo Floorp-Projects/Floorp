@@ -46,12 +46,6 @@ class ObserverRegistry<T> : Observable<T> {
     }
 
     override fun register(observer: T, view: View) {
-        if (!view.isAttachedToWindow) {
-            return
-        }
-
-        register(observer)
-
         val viewObserver = ViewBoundObserver(
                 view,
                 registry = this,
@@ -60,6 +54,10 @@ class ObserverRegistry<T> : Observable<T> {
         viewObservers[observer] = viewObserver
 
         view.addOnAttachStateChangeListener(viewObserver)
+
+        if (view.isAttachedToWindow) {
+            register(observer)
+        }
     }
 
     override fun unregister(observer: T) {
@@ -161,6 +159,8 @@ class ObserverRegistry<T> : Observable<T> {
             view.removeOnAttachStateChangeListener(this)
         }
 
-        override fun onViewAttachedToWindow(view: View) = Unit
+        override fun onViewAttachedToWindow(view: View) {
+            registry.register(observer)
+        }
     }
 }

@@ -234,6 +234,33 @@ class ObserverRegistryTest {
     }
 
     @Test
+    fun `observer will get added once view is attached`() {
+        val activity = Robolectric.buildActivity(Activity::class.java).create().get()
+        val view = View(RuntimeEnvironment.application)
+
+        val registry = ObserverRegistry<TestObserver>()
+        val observer = TestObserver()
+
+        assertFalse(view.isAttachedToWindow)
+        registry.register(observer, view)
+
+        registry.notifyObservers {
+            somethingChanged()
+        }
+
+        assertFalse(observer.notified)
+
+        activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
+        assertTrue(view.isAttachedToWindow)
+
+        registry.notifyObservers {
+            somethingChanged()
+        }
+
+        assertTrue(observer.notified)
+    }
+
+    @Test
     fun `observer will get unregistered if view gets detached`() {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()
         val view = View(RuntimeEnvironment.application)

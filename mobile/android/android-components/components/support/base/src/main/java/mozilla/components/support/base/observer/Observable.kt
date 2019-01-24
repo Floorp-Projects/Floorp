@@ -39,7 +39,8 @@ interface Observable<T> {
     /**
      * Registers an observer to get notified about changes.
      *
-     * The observer will automatically unsubscribe if the provided view gets detached.
+     * The observer will only be notified if the view is attached and will be unregistered/
+     * registered if the attached state changes.
      *
      * @param observer the observer to register.
      * @param view the view the provided observer is bound to.
