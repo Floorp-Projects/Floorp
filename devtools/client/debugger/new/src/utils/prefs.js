@@ -69,7 +69,7 @@ if (isDevelopment()) {
 }
 
 export const prefs = new PrefsHelper("devtools", {
-  logging: ["Bool", "debugger.alphabetize-outline"],
+  logging: ["Bool", "debugger.logging"],
   alphabetizeOutline: ["Bool", "debugger.alphabetize-outline"],
   autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
   clientSourceMapsEnabled: ["Bool", "source-map.client-service.enabled"],
