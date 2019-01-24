@@ -388,10 +388,10 @@ namespace JS {
   D(CC_WAITING, 36)                        \
   D(CC_FORCED, 37)                         \
   D(LOAD_END, 38)                          \
-  D(POST_COMPARTMENT, 39)                  \
+  D(UNUSED3, 39)                           \
   D(PAGE_HIDE, 40)                         \
   D(NSJSCONTEXT_DESTROY, 41)               \
-  D(SET_NEW_DOCUMENT, 42)                  \
+  D(UNUSED4, 42)                           \
   D(SET_DOC_SHELL, 43)                     \
   D(DOM_UTILS, 44)                         \
   D(DOM_IPC, 45)                           \
