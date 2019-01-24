@@ -8,6 +8,7 @@ const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/te
 const TP_PREF = "privacy.trackingprotection.enabled";
 const COOKIE_PREF = "network.cookie.cookieBehavior";
 const ANIMATIONS_PREF = "toolkit.cosmeticAnimations.enabled";
+const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 
 // Check that the shield icon is always hidden when all content blocking
 // categories are turned off, even when content blocking is on.
@@ -15,6 +16,7 @@ add_task(async function testContentBlockingAllDisabled() {
   await SpecialPowers.pushPrefEnv({set: [
     [TP_PREF, false],
     [COOKIE_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT],
+    [DTSCBN_PREF, true],
   ]});
   await UrlClassifierTestUtils.addTestTrackers();
 
@@ -30,7 +32,8 @@ add_task(async function testContentBlockingAllDisabled() {
   let animationIcon = document.getElementById("tracking-protection-icon-animatable-image");
   let noAnimationIcon = document.getElementById("tracking-protection-icon");
 
-  await promiseTabLoadEvent(tab, TRACKING_PAGE);
+  await Promise.all([promiseTabLoadEvent(tab, TRACKING_PAGE),
+                     waitForContentBlockingEvent(2, tab.ownerGlobal)]);
   ok(BrowserTestUtils.is_hidden(noAnimationIcon), "the default icon is hidden");
   ok(BrowserTestUtils.is_hidden(animationIcon), "the animated icon is hidden");
 
@@ -47,6 +50,7 @@ add_task(async function testContentBlockingAllDisabled() {
   await SpecialPowers.pushPrefEnv({set: [
     [TP_PREF, true],
   ]});
-  await promiseTabLoadEvent(tab, TRACKING_PAGE);
+  await Promise.all([promiseTabLoadEvent(tab, TRACKING_PAGE),
+                     waitForContentBlockingEvent(2, tab.ownerGlobal)]);
   ok(BrowserTestUtils.is_visible(noAnimationIcon), "the default icon is shown");
 });
