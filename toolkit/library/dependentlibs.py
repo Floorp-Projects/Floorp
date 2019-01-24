@@ -51,13 +51,14 @@ def dependentlibs_readelf(lib):
     proc.wait()
     return deps
 
-def dependentlibs_otool(lib):
+def dependentlibs_mac_objdump(lib):
     '''Returns the list of dependencies declared in the given MACH-O dylib'''
-    proc = subprocess.Popen([substs['OTOOL'], '-l', lib], stdout = subprocess.PIPE)
-    deps= []
+    proc = subprocess.Popen([substs['LLVM_OBJDUMP'], '--private-headers', lib], stdout = subprocess.PIPE)
+    deps = []
     cmd = None
     for line in proc.stdout:
-        # otool -l output contains many different things. The interesting data
+        # llvm-objdump --private-headers output contains many different
+        # things. The interesting data
         # is under "Load command n" sections, with the content:
         #           cmd LC_LOAD_DYLIB
         #       cmdsize 56
@@ -100,7 +101,7 @@ def gen_list(output, lib):
     if binary_type == ELF:
         func = dependentlibs_readelf
     elif binary_type == MACHO:
-        func = dependentlibs_otool
+        func = dependentlibs_mac_objdump
     else:
         ext = os.path.splitext(lib)[1]
         assert(ext == '.dll')
