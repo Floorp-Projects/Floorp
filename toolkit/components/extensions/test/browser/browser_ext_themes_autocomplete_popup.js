@@ -150,12 +150,12 @@ add_task(async function test_popup_url() {
 
   results[1].removeAttribute("selected");
 
-  let urlText = document.getAnonymousElementByAttribute(results[1], "anonid", "url-text");
+  let urlText = results[1]._urlText;
   Assert.equal(window.getComputedStyle(urlText).color,
                `rgb(${hexToRGB(POPUP_URL_COLOR_DARK).join(", ")})`,
                `Urlbar popup url color should be set to ${POPUP_URL_COLOR_DARK}`);
 
-  let actionText = document.getAnonymousElementByAttribute(results[1], "anonid", "action-text");
+  let actionText = results[1]._actionText;
   Assert.equal(window.getComputedStyle(actionText).color,
                `rgb(${hexToRGB(POPUP_ACTION_COLOR_DARK).join(", ")})`,
                `Urlbar popup action color should be set to ${POPUP_ACTION_COLOR_DARK}`);
@@ -203,19 +203,19 @@ add_task(async function test_popup_url() {
                `rgb(${hexToRGB(POPUP_TEXT_COLOR_BRIGHT).join(", ")})`,
                `Popup color should be set to ${POPUP_TEXT_COLOR_BRIGHT}`);
 
-  urlText = document.getAnonymousElementByAttribute(results[1], "anonid", "url-text");
+  urlText = results[1]._urlText;
   Assert.equal(window.getComputedStyle(urlText).color,
                `rgb(${hexToRGB(POPUP_URL_COLOR_BRIGHT).join(", ")})`,
                `Urlbar popup url color should be set to ${POPUP_URL_COLOR_BRIGHT}`);
 
-  actionText = document.getAnonymousElementByAttribute(results[1], "anonid", "action-text");
+  actionText = results[1]._actionText;
   Assert.equal(window.getComputedStyle(actionText).color,
                `rgb(${hexToRGB(POPUP_ACTION_COLOR_BRIGHT).join(", ")})`,
                `Urlbar popup action color should be set to ${POPUP_ACTION_COLOR_BRIGHT}`);
 
   // Since brighttext is enabled, the seperator color should be
   // POPUP_TEXT_COLOR_BRIGHT with added alpha.
-  let separator = document.getAnonymousElementByAttribute(results[1], "anonid", "separator");
+  let separator = results[1]._separator;
   Assert.equal(window.getComputedStyle(separator).color,
                `rgba(${hexToRGB(POPUP_TEXT_COLOR_BRIGHT).join(", ")}, 0.5)`,
                `Urlbar popup separator color should be set to ${POPUP_TEXT_COLOR_BRIGHT} with alpha`);
@@ -245,7 +245,7 @@ add_task(async function test_popup_url() {
   let GRAY_TEXT = window.getComputedStyle(span).color;
   span.remove();
 
-  separator = document.getAnonymousElementByAttribute(results[1], "anonid", "separator");
+  separator = results[1]._separator;
   Assert.equal(window.getComputedStyle(separator).color,
                GRAY_TEXT,
                `Urlbar popup separator color should be set to ${GRAY_TEXT}`);
