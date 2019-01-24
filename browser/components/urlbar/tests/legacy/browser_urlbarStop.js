@@ -24,7 +24,8 @@ async function typeAndSubmitAndStop(url) {
   await promiseAutocompleteResultPopup(url, window, true);
   is(gURLBar.textValue, gURLBar.trimValue(url), "location bar reflects loading page");
 
-  let promise = waitForDocLoadAndStopIt(url, gBrowser.selectedBrowser, false);
+  let promise =
+    BrowserTestUtils.waitForDocLoadAndStopIt(url, gBrowser.selectedBrowser, false);
   gURLBar.handleCommand();
   await promise;
 }

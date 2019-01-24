@@ -507,5 +507,6 @@ apiLint {
     // TODO: Change this to `org` after hiding org.mozilla.gecko
     packageFilter = 'org.mozilla.geckoview'
     changelogFileName = 'src/main/java/org/mozilla/geckoview/doc-files/CHANGELOG.md'
+    skipClassesRegex = ['^org.mozilla.geckoview.BuildConfig$']
     lintFilters = ['GV']
 }

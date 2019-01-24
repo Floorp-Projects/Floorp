@@ -118,7 +118,6 @@
 #include "nsIMultiplexInputStream.h"
 #include "../../cache2/CacheFileUtils.h"
 #include "nsINetworkLinkService.h"
-#include "nsIRedirectProcessChooser.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
@@ -2415,7 +2414,7 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     }
     if (mCanceled) return CallOnStartRequest();
 
-    // reset the authentication's current continuation state because our
+    // reset the authentication's current continuation state because ourvr
     // last authentication attempt has been completed successfully
     rv = mAuthProvider->Disconnect(NS_ERROR_ABORT);
     if (NS_FAILED(rv)) {
@@ -2425,28 +2424,51 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     LOG(("  continuation state has been reset"));
   }
 
-  if (mAPIRedirectToURI && !mCanceled) {
+  rv = NS_OK;
+  if (mRedirectTabPromise && !mCanceled) {
     MOZ_ASSERT(!mOnStartRequestCalled);
-    nsCOMPtr<nsIURI> redirectTo;
-    mAPIRedirectToURI.swap(redirectTo);
 
     PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
-    rv = StartRedirectChannelToURI(redirectTo,
-                                   nsIChannelEventSink::REDIRECT_TEMPORARY);
+    rv = StartCrossProcessRedirect();
     if (NS_SUCCEEDED(rv)) {
       return NS_OK;
     }
     PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
   }
 
-  // Hack: ContinueProcessResponse2 uses NS_OK to detect successful
-  // redirects, so we distinguish this codepath (a non-redirect that's
-  // processing normally) by passing in a bogus error code.
-  return ContinueProcessResponse2(NS_BINDING_FAILED);
+  // No process switch needed, continue as normal.
+  return ContinueProcessResponse2(rv);
 }
 
 nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
-  LOG(("nsHttpChannel::ContinueProcessResponse1 [this=%p, rv=%" PRIx32 "]",
+  if (NS_FAILED(rv) && !mCanceled) {
+    // The process switch failed, cancel this channel.
+    Cancel(rv);
+    return CallOnStartRequest();
+  }
+
+  if (mAPIRedirectToURI && !mCanceled) {
+    MOZ_ASSERT(!mOnStartRequestCalled);
+    nsCOMPtr<nsIURI> redirectTo;
+    mAPIRedirectToURI.swap(redirectTo);
+
+    PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse3);
+    rv = StartRedirectChannelToURI(redirectTo,
+                                   nsIChannelEventSink::REDIRECT_TEMPORARY);
+    if (NS_SUCCEEDED(rv)) {
+      return NS_OK;
+    }
+    PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse3);
+  }
+
+  // Hack: ContinueProcessResponse3 uses NS_OK to detect successful
+  // redirects, so we distinguish this codepath (a non-redirect that's
+  // processing normally) by passing in a bogus error code.
+  return ContinueProcessResponse3(NS_BINDING_FAILED);
+}
+
+nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
+  LOG(("nsHttpChannel::ContinueProcessResponse3 [this=%p, rv=%" PRIx32 "]",
        this, static_cast<uint32_t>(rv)));
 
   if (NS_SUCCEEDED(rv)) {
@@ -2509,10 +2531,10 @@ nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
 #endif
       // don't store the response body for redirects
       MaybeInvalidateCacheEntryForSubsequentGet();
-      PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse3);
+      PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse4);
       rv = AsyncProcessRedirection(httpStatus);
       if (NS_FAILED(rv)) {
-        PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse3);
+        PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse4);
         LOG(("AsyncProcessRedirection failed [rv=%" PRIx32 "]\n",
              static_cast<uint32_t>(rv)));
         // don't cache failed redirect responses.
@@ -2521,7 +2543,7 @@ nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
           mStatus = rv;
           DoNotifyListener();
         } else {
-          rv = ContinueProcessResponse3(rv);
+          rv = ContinueProcessResponse4(rv);
         }
       }
       break;
@@ -2708,7 +2730,7 @@ void nsHttpChannel::UpdateCacheDisposition(bool aSuccessfulReval,
   }
 }
 
-nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
+nsresult nsHttpChannel::ContinueProcessResponse4(nsresult rv) {
   bool doNotRender = DoNotRender3xxBody(rv);
 
   if (rv == NS_ERROR_DOM_BAD_URI && mRedirectURI) {
@@ -2722,7 +2744,7 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
       // redirecting to another protocol (perhaps javascript:)
       // In that case we want to throw an error instead of displaying the
       // non-redirected response body.
-      LOG(("ContinueProcessResponse3 detected rejected Non-HTTP Redirection"));
+      LOG(("ContinueProcessResponse4 detected rejected Non-HTTP Redirection"));
       doNotRender = true;
       rv = NS_ERROR_CORRUPTED_CONTENT;
     }
@@ -2740,7 +2762,7 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
     rv = InitCacheEntry();
     if (NS_FAILED(rv)) {
       LOG(
-          ("ContinueProcessResponse3 "
+          ("ContinueProcessResponse4 "
            "failed to init cache entry [rv=%x]\n",
            static_cast<uint32_t>(rv)));
     }
@@ -2754,7 +2776,7 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
     return NS_OK;
   }
 
-  LOG(("ContinueProcessResponse3 got failure result [rv=%" PRIx32 "]\n",
+  LOG(("ContinueProcessResponse4 got failure result [rv=%" PRIx32 "]\n",
        static_cast<uint32_t>(rv)));
   if (mTransaction && mTransaction->ProxyConnectFailed()) {
     return ProcessFailedProxyConnect(mRedirectType);
@@ -7049,8 +7071,6 @@ nsHttpChannel::GetRequestMethod(nsACString &aMethod) {
 //-----------------------------------------------------------------------------
 
 // This class is used to convert from a DOM promise to a MozPromise.
-// Once we have a native implementation of nsIRedirectProcessChooser we can
-// remove it and use MozPromises directly.
 class DomPromiseListener final : dom::PromiseNativeHandler {
   NS_DECL_ISUPPORTS
 
@@ -7092,8 +7112,26 @@ class DomPromiseListener final : dom::PromiseNativeHandler {
 
 NS_IMPL_ISUPPORTS0(DomPromiseListener)
 
+NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(dom::Promise *aTabPromise,
+                                             uint64_t aIdentifier) {
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG(aTabPromise);
+
+  LOG(("nsHttpChannel::SwitchProcessTo [this=%p]", this));
+  LogCallingScriptLocation(this);
+
+  // We cannot do this after OnStartRequest of the listener has been called.
+  NS_ENSURE_FALSE(mOnStartRequestCalled, NS_ERROR_NOT_AVAILABLE);
+
+  mRedirectTabPromise = DomPromiseListener::Create(aTabPromise);
+  mCrossProcessRedirectIdentifier = aIdentifier;
+  return NS_OK;
+}
+
 nsresult nsHttpChannel::StartCrossProcessRedirect() {
-  nsresult rv = CheckRedirectLimit(nsIChannelEventSink::REDIRECT_INTERNAL);
+  nsresult rv;
+
+  rv = CheckRedirectLimit(nsIChannelEventSink::REDIRECT_INTERNAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<HttpChannelParentListener> listener = do_QueryObject(mCallbacks);
@@ -7220,38 +7258,35 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     if (NS_SUCCEEDED(rv)) return NS_OK;
   }
 
-  // Check if the channel should be redirected to another process.
-  // If so, trigger a redirect, and the HttpChannelParentListener will
-  // redirect to the correct process
-  nsCOMPtr<nsIRedirectProcessChooser> requestChooser =
-      do_GetClassObject("@mozilla.org/network/processChooser");
-  if (requestChooser) {
-    nsCOMPtr<nsITabParent> tp;
-    nsCOMPtr<nsIParentChannel> parentChannel;
-    NS_QueryNotificationCallbacks(this, parentChannel);
-
-    RefPtr<dom::Promise> tabPromise;
-    rv = requestChooser->GetChannelRedirectTarget(
-        this, parentChannel, &mCrossProcessRedirectIdentifier,
-        getter_AddRefs(tabPromise));
-
-    if (NS_SUCCEEDED(rv) && tabPromise) {
-      // The promise will be handled in AsyncOnChannelRedirect.
-      mRedirectTabPromise = DomPromiseListener::Create(tabPromise);
-
-      PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
-      rv = StartCrossProcessRedirect();
-      if (NS_SUCCEEDED(rv)) {
-        return NS_OK;
-      }
-      PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
-    }
-  }
-
   // avoid crashing if mListener happens to be null...
   if (!mListener) {
     MOZ_ASSERT_UNREACHABLE("mListener is null");
     return NS_OK;
+  }
+
+  // before we check for redirects, check if the load should be shifted into a
+  // new process.
+  rv = NS_OK;
+  if (mRedirectTabPromise && !mCanceled) {
+    PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
+    rv = StartCrossProcessRedirect();
+    if (NS_SUCCEEDED(rv)) {
+      return NS_OK;
+    }
+    PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
+  }
+
+  // No process change is needed, so continue on to ContinueOnStartRequest1.
+  return ContinueOnStartRequest1(rv);
+}
+
+nsresult nsHttpChannel::ContinueOnStartRequest1(nsresult result) {
+  nsresult rv;
+
+  // if process selection failed, cancel this load.
+  if (NS_FAILED(result) && !mCanceled) {
+    Cancel(result);
+    return CallOnStartRequest();
   }
 
   // before we start any content load, check for redirectTo being called
@@ -7266,36 +7301,12 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     nsCOMPtr<nsIURI> redirectTo;
     mAPIRedirectToURI.swap(redirectTo);
 
-    PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
+    PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest2);
     rv = StartRedirectChannelToURI(redirectTo,
                                    nsIChannelEventSink::REDIRECT_TEMPORARY);
     if (NS_SUCCEEDED(rv)) {
       return NS_OK;
     }
-    PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
-  }
-
-  // Hack: ContinueOnStartRequest1 uses NS_OK to detect successful redirects,
-  // so we distinguish this codepath (a non-redirect that's processing
-  // normally) by passing in a bogus error code.
-  return ContinueOnStartRequest1(NS_BINDING_FAILED);
-}
-
-nsresult nsHttpChannel::ContinueOnStartRequest1(nsresult result) {
-  if (NS_SUCCEEDED(result)) {
-    // Redirect has passed through, we don't want to go on with this
-    // channel.  It will now be canceled by the redirect handling code
-    // that called this function.
-    return NS_OK;
-  }
-
-  // on proxy errors, try to failover
-  if (mConnectionInfo->ProxyInfo() &&
-      (mStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
-       mStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
-       mStatus == NS_ERROR_NET_TIMEOUT)) {
-    PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest2);
-    if (NS_SUCCEEDED(ProxyFailover())) return NS_OK;
     PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest2);
   }
 
@@ -7313,20 +7324,44 @@ nsresult nsHttpChannel::ContinueOnStartRequest2(nsresult result) {
     return NS_OK;
   }
 
-  // on other request errors, try to fall back
-  if (NS_FAILED(mStatus)) {
+  // on proxy errors, try to failover
+  if (mConnectionInfo->ProxyInfo() &&
+      (mStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
+       mStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
+       mStatus == NS_ERROR_NET_TIMEOUT)) {
     PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
-    bool waitingForRedirectCallback;
-    Unused << ProcessFallback(&waitingForRedirectCallback);
-    if (waitingForRedirectCallback) return NS_OK;
+    if (NS_SUCCEEDED(ProxyFailover())) return NS_OK;
     PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
   }
 
-  return ContinueOnStartRequest3(NS_OK);
+  // Hack: ContinueOnStartRequest3 uses NS_OK to detect successful redirects,
+  // so we distinguish this codepath (a non-redirect that's processing
+  // normally) by passing in a bogus error code.
+  return ContinueOnStartRequest3(NS_BINDING_FAILED);
 }
 
 nsresult nsHttpChannel::ContinueOnStartRequest3(nsresult result) {
-  LOG(("nsHttpChannel::ContinueOnStartRequest3 [this=%p]", this));
+  if (NS_SUCCEEDED(result)) {
+    // Redirect has passed through, we don't want to go on with this
+    // channel.  It will now be canceled by the redirect handling code
+    // that called this function.
+    return NS_OK;
+  }
+
+  // on other request errors, try to fall back
+  if (NS_FAILED(mStatus)) {
+    PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest4);
+    bool waitingForRedirectCallback;
+    Unused << ProcessFallback(&waitingForRedirectCallback);
+    if (waitingForRedirectCallback) return NS_OK;
+    PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest4);
+  }
+
+  return ContinueOnStartRequest4(NS_OK);
+}
+
+nsresult nsHttpChannel::ContinueOnStartRequest4(nsresult result) {
+  LOG(("nsHttpChannel::ContinueOnStartRequest4 [this=%p]", this));
 
   if (mFallingBack) return NS_OK;
 

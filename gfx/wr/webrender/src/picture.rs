@@ -27,7 +27,7 @@ use prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingInde
 use print_tree::PrintTreePrinter;
 use render_backend::DataStores;
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle, TileBlit};
-use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
+use render_task::{RenderTaskId, RenderTaskLocation};
 use resource_cache::ResourceCache;
 use scene::{FilterOpHelpers, SceneProperties};
 use scene_builder::Interners;
@@ -100,12 +100,6 @@ pub const TILE_SIZE_HEIGHT: i32 = 256;
 const FRAMES_BEFORE_CACHING: usize = 2;
 const MAX_DIRTY_RECTS: usize = 3;
 
-/// The maximum size per axis of texture cache item,
-///  in WorldPixel coordinates.
-// TODO(gw): This size is quite arbitrary - we should do some
-//           profiling / telemetry to see when it makes sense
-//           to cache a picture.
-const MAX_CACHE_SIZE: f32 = 2048.0;
 /// The maximum size per axis of a surface,
 ///  in WorldPixel coordinates.
 const MAX_SURFACE_SIZE: f32 = 4096.0;
@@ -1681,6 +1675,7 @@ pub enum PictureCompositeMode {
 #[derive(Debug)]
 pub enum PictureSurface {
     RenderTask(RenderTaskId),
+    #[allow(dead_code)]
     TextureCache(RenderTaskCacheEntryHandle),
 }
 
@@ -2669,138 +2664,53 @@ impl PicturePrimitive {
                 let blur_std_deviation = blur_radius * frame_context.device_pixel_scale.0;
                 let blur_range = (blur_std_deviation * BLUR_SAMPLE_SCALE).ceil() as i32;
 
-                // We need to choose whether to cache this picture, or draw
-                // it into a temporary render target each frame. If we draw
-                // it into a persistently cached texture, then we want to
-                // draw the whole picture, without clipping it to the screen
-                // dimensions, so that it can be reused as it scrolls into
-                // view etc. However, if the unclipped size of the surface is
-                // too big, then it will be very expensive to draw, and may
-                // even be bigger than the maximum hardware render target
-                // size. In these cases, it's probably best to not cache the
-                // picture, and just draw a minimal portion of the picture
-                // (clipped to screen bounds) to a temporary target each frame.
+                // The clipped field is the part of the picture that is visible
+                // on screen. The unclipped field is the screen-space rect of
+                // the complete picture, if no screen / clip-chain was applied
+                // (this includes the extra space for blur region). To ensure
+                // that we draw a large enough part of the picture to get correct
+                // blur results, inflate that clipped area by the blur range, and
+                // then intersect with the total screen rect, to minimize the
+                // allocation size.
+                let device_rect = clipped
+                    .inflate(blur_range, blur_range)
+                    .intersection(&unclipped.to_i32())
+                    .unwrap();
 
-                let too_big_to_cache = unclipped.size.width > MAX_CACHE_SIZE ||
-                                       unclipped.size.height > MAX_CACHE_SIZE;
+                let uv_rect_kind = calculate_uv_rect_kind(
+                    &pic_rect,
+                    &transform,
+                    &device_rect,
+                    frame_context.device_pixel_scale,
+                    true,
+                );
 
-                // If we can't create a valid cache key for this descriptor (e.g.
-                // due to it referencing old non-interned style primitives), then
-                // don't try to cache it.
-                let has_valid_cache_key = self.surface_desc.is_some();
+                let picture_task = RenderTask::new_picture(
+                    RenderTaskLocation::Dynamic(None, device_rect.size),
+                    unclipped.size,
+                    pic_index,
+                    device_rect.origin,
+                    child_tasks,
+                    uv_rect_kind,
+                    pic_context.raster_spatial_node_index,
+                    None,
+                );
 
-                if !has_valid_cache_key ||
-                   too_big_to_cache ||
-                   !pic_state_for_children.is_cacheable {
-                    // The clipped field is the part of the picture that is visible
-                    // on screen. The unclipped field is the screen-space rect of
-                    // the complete picture, if no screen / clip-chain was applied
-                    // (this includes the extra space for blur region). To ensure
-                    // that we draw a large enough part of the picture to get correct
-                    // blur results, inflate that clipped area by the blur range, and
-                    // then intersect with the total screen rect, to minimize the
-                    // allocation size.
-                    let device_rect = clipped
-                        .inflate(blur_range, blur_range)
-                        .intersection(&unclipped.to_i32())
-                        .unwrap();
+                let picture_task_id = frame_state.render_tasks.add(picture_task);
 
-                    let uv_rect_kind = calculate_uv_rect_kind(
-                        &pic_rect,
-                        &transform,
-                        &device_rect,
-                        frame_context.device_pixel_scale,
-                        true,
-                    );
+                let blur_render_task = RenderTask::new_blur(
+                    blur_std_deviation,
+                    picture_task_id,
+                    frame_state.render_tasks,
+                    RenderTargetKind::Color,
+                    ClearMode::Transparent,
+                );
 
-                    let picture_task = RenderTask::new_picture(
-                        RenderTaskLocation::Dynamic(None, device_rect.size),
-                        unclipped.size,
-                        pic_index,
-                        device_rect.origin,
-                        child_tasks,
-                        uv_rect_kind,
-                        pic_context.raster_spatial_node_index,
-                        None,
-                    );
+                let render_task_id = frame_state.render_tasks.add(blur_render_task);
 
-                    let picture_task_id = frame_state.render_tasks.add(picture_task);
+                surfaces[surface_index.0].tasks.push(render_task_id);
 
-                    let blur_render_task = RenderTask::new_blur(
-                        blur_std_deviation,
-                        picture_task_id,
-                        frame_state.render_tasks,
-                        RenderTargetKind::Color,
-                        ClearMode::Transparent,
-                    );
-
-                    let render_task_id = frame_state.render_tasks.add(blur_render_task);
-
-                    surfaces[surface_index.0].tasks.push(render_task_id);
-
-                    PictureSurface::RenderTask(render_task_id)
-                } else {
-                    // Request a render task that will cache the output in the
-                    // texture cache.
-                    let device_rect = unclipped.to_i32();
-
-                    let uv_rect_kind = calculate_uv_rect_kind(
-                        &pic_rect,
-                        &transform,
-                        &device_rect,
-                        frame_context.device_pixel_scale,
-                        true,
-                    );
-
-                    // TODO(gw): Probably worth changing the render task caching API
-                    //           so that we don't need to always clone the key.
-                    let cache_key = self.surface_desc
-                        .as_ref()
-                        .expect("bug: no cache key for surface")
-                        .cache_key
-                        .clone();
-
-                    let cache_item = frame_state.resource_cache.request_render_task(
-                        RenderTaskCacheKey {
-                            size: device_rect.size,
-                            kind: RenderTaskCacheKeyKind::Picture(cache_key),
-                        },
-                        frame_state.gpu_cache,
-                        frame_state.render_tasks,
-                        None,
-                        false,
-                        |render_tasks| {
-                            let picture_task = RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, device_rect.size),
-                                unclipped.size,
-                                pic_index,
-                                device_rect.origin,
-                                child_tasks,
-                                uv_rect_kind,
-                                pic_context.raster_spatial_node_index,
-                                None,
-                            );
-
-                            let picture_task_id = render_tasks.add(picture_task);
-
-                            let blur_render_task = RenderTask::new_blur(
-                                blur_std_deviation,
-                                picture_task_id,
-                                render_tasks,
-                                RenderTargetKind::Color,
-                                ClearMode::Transparent,
-                            );
-
-                            let render_task_id = render_tasks.add(blur_render_task);
-
-                            surfaces[surface_index.0].tasks.push(render_task_id);
-
-                            render_task_id
-                        }
-                    );
-
-                    PictureSurface::TextureCache(cache_item)
-                }
+                PictureSurface::RenderTask(render_task_id)
             }
             PictureCompositeMode::Filter(FilterOp::DropShadow(offset, blur_radius, color)) => {
                 let blur_std_deviation = blur_radius * frame_context.device_pixel_scale.0;

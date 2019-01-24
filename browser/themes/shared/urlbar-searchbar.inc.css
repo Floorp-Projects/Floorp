@@ -318,8 +318,10 @@
 }
 
 /* Avoid re-opening the popup when the dropmarker is clicked while the popup is still open. */
-#urlbar:not([quantumbar]) > .urlbar-history-dropmarker[open] {
-  pointer-events: none;
+@supports not -moz-bool-pref("browser.urlbar.quantumbar") {
+  .urlbar-history-dropmarker[open] {
+    pointer-events: none;
+  }
 }
 
 #urlbar[switchingtabs] > .urlbar-history-dropmarker {

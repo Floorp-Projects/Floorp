@@ -22,6 +22,7 @@ add_task(async function test_setup() {
   // Telemetry needs the AddonManager.
   loadAddonManager();
   finishAddonManagerStartup();
+  fakeIntlReady();
   // Make profile available for |TelemetryController.testShutdown()|.
   do_get_profile();
 

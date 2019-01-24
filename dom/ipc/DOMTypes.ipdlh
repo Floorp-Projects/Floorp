@@ -226,6 +226,7 @@ struct DocShellLoadStateInit
   // nsString mSrcdocData; // useless without sourcedocshell
   // nsIInputStream PostDataStream; // will be used after IPC transaction
   // nsIInputStream HeadersStream; // will be used after IPC transaction
+  // nsIChannel pendingRedirectedChannel; // sent through other mechanism
 };
 
 } // namespace dom

@@ -310,7 +310,7 @@ struct SCOutput {
   MOZ_MUST_USE bool writeChars(const char16_t* p, size_t nchars);
 
   template <class T>
-  MOZ_MUST_USE bool writeArray(const T* p, size_t nbytes);
+  MOZ_MUST_USE bool writeArray(const T* p, size_t nelems);
 
   void setCallbacks(const JSStructuredCloneCallbacks* callbacks, void* closure,
                     OwnTransferablePolicy policy) {
@@ -1143,24 +1143,18 @@ bool JSStructuredCloneWriter::writeString(uint32_t tag, JSString* str) {
 
 #ifdef ENABLE_BIGINT
 bool JSStructuredCloneWriter::writeBigInt(uint32_t tag, BigInt* bi) {
-  bool signBit = bi->sign() < 1;
-  size_t length = BigInt::byteLength(bi);
+  bool signBit = bi->isNegative();
+  size_t length = bi->digitLength();
   // The length must fit in 31 bits to leave room for a sign bit.
   if (length > size_t(INT32_MAX)) {
     return false;
   }
   uint32_t lengthAndSign = length | (static_cast<uint32_t>(signBit) << 31);
 
-  js::UniquePtr<uint8_t> buf(js_pod_malloc<uint8_t>(length));
-  if (!buf) {
-    return false;
-  }
-
-  BigInt::writeBytes(bi, RangedPtr<uint8_t>(buf.get(), length));
   if (!out.writePair(tag, lengthAndSign)) {
     return false;
   }
-  return out.writeBytes(buf.get(), length);
+  return out.writeArray(bi->digits().data(), length);
 }
 #endif
 
@@ -2070,22 +2064,19 @@ JSString* JSStructuredCloneReader::readString(uint32_t data) {
 
 #ifdef ENABLE_BIGINT
 BigInt* JSStructuredCloneReader::readBigInt(uint32_t data) {
-  size_t nbytes = data & JS_BITMASK(31);
+  size_t length = data & JS_BITMASK(31);
   bool isNegative = data & (1 << 31);
-
-  if (nbytes == 0) {
-    return BigInt::create(context());
+  if (length == 0) {
+    return BigInt::zero(context());
   }
-
-  UniquePtr<uint8_t> buf(js_pod_malloc<uint8_t>(nbytes));
-  if (!buf) {
+  BigInt* result = BigInt::createUninitialized(context(), length, isNegative);
+  if (!result) {
     return nullptr;
   }
-  if (!in.readBytes(buf.get(), nbytes)) {
+  if (!in.readArray(result->digits().data(), length)) {
     return nullptr;
   }
-  return BigInt::createFromBytes(context(), isNegative ? -1 : 1, buf.get(),
-                                 nbytes);
+  return result;
 }
 #endif
 

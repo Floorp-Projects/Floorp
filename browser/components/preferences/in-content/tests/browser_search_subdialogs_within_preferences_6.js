@@ -15,7 +15,7 @@ add_task(async function() {
 add_task(async function() {
   async function doTest() {
     await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-    await evaluateSearchResults("block Web elements", "trackingGroup");
+    await evaluateSearchResults("block online trackers", "trackingGroup");
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
   await doTest();
