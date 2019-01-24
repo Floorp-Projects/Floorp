@@ -1,27 +1,22 @@
 {
-    "llvm_revision": "349247",
+    "llvm_revision": "352000",
     "stages": "3",
     "build_libcxx": false,
     "build_type": "Release",
     "assertions": false,
-    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_701/final",
-    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_701/final",
-    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_701/final",
-    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_701/final",
-    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_701/final",
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_800/rc1",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_800/rc1",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_800/rc1",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_800/rc1",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_800/rc1",
     "python_path": "c:/mozilla-build/python/python.exe",
     "cc": "cl.exe",
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
       "workaround-issue38586.patch",
-      "r342649-hotpatch-8-byte-nops.patch",
-      "r342652-unpoison-thread-stacks.patch",
-      "r343123-pin-asan-dll.patch",
-      "aarch64-vastart-checking.patch",
+      "unpoison-thread-stacks.patch",
       "downgrade-mangling-error.patch",
-      "r346300-compiler-rt-windows-mmap.patch",
-      "loosen-msvc-detection.patch",
-      "r350774.patch"
+      "loosen-msvc-detection.patch"
     ]
 }

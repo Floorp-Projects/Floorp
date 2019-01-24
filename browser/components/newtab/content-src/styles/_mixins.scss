@@ -1,3 +1,14 @@
+// Shared styling of article images shown as background
+@mixin image-as-background {
+  background-color: var(--newtab-card-placeholder-color);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border-radius: 4px;
+  border: 0.5px solid $black-10;
+  box-sizing: border-box;
+}
+
 // Note: lineHeight and fontSize should be unitless but can be derived from pixel values
 @mixin limit-visibile-lines($line-count, $line-height, $font-size) {
   max-height: 1em * $line-count * $line-height / $font-size;

@@ -115,7 +115,6 @@ mod segment;
 mod shade;
 mod spatial_node;
 mod storage;
-mod surface;
 mod texture_allocator;
 mod texture_cache;
 mod tiling;

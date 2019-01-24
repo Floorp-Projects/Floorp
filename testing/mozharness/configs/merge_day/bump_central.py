@@ -11,8 +11,6 @@ config = {
     ],
 
     "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
-    "tools_repo_url": "https://hg.mozilla.org/build/tools",
-    "tools_repo_branch": "default",
     "to_repo_url": "https://hg.mozilla.org/mozilla-central",
 
     "end_tag": "FIREFOX_NIGHTLY_%(major_version)s_END",

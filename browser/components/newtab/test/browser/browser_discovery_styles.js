@@ -25,7 +25,7 @@ test_newtab({
   },
   test: async function test_hr_override() {
     const hr = await ContentTaskUtils.waitForCondition(() => content.document.querySelector("hr"));
-    ok(content.getComputedStyle(hr).borderBottomWidth.match(/11.?\d*px/), "applied and normalized hr component width override");
+    ok(content.getComputedStyle(hr).borderTopWidth.match(/11.?\d*px/), "applied and normalized hr component width override");
   },
 });
 

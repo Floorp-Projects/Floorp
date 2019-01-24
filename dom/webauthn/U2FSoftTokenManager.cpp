@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "WebAuthnCoseIdentifiers.h"
 #include "mozilla/dom/U2FSoftTokenManager.h"
 #include "CryptoBuffer.h"
 #include "mozilla/Base64.h"
@@ -600,6 +601,30 @@ RefPtr<U2FRegisterPromise> U2FSoftTokenManager::Register(
     if (sel.requireResidentKey() || requireUserVerification ||
         requirePlatformAttachment) {
       return U2FRegisterPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR,
+                                                 __func__);
+    }
+
+    nsTArray<CoseAlg> coseAlgos;
+    for (const auto& coseAlg : extra.coseAlgs()) {
+      switch (static_cast<CoseAlgorithmIdentifier>(coseAlg.alg())) {
+        case CoseAlgorithmIdentifier::ES256:
+          coseAlgos.AppendElement(coseAlg);
+          break;
+        default:
+          continue;
+      }
+    }
+
+    // Only if no algorithms were specified, default to the one the soft token
+    // supports.
+    if (extra.coseAlgs().IsEmpty()) {
+      coseAlgos.AppendElement(
+          static_cast<int32_t>(CoseAlgorithmIdentifier::ES256));
+    }
+
+    // If there are no acceptable/supported algorithms, reject the promise.
+    if (coseAlgos.IsEmpty()) {
+      return U2FRegisterPromise::CreateAndReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
                                                  __func__);
     }
   }

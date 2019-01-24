@@ -1614,7 +1614,9 @@ class JSScript : public js::gc::TenuredCell {
 
   // Immutable flags should not be modified after this script has been
   // initialized. These flags should likely be preserved when serializing
-  // (XDR) or copying (CopyScript) this script.
+  // (XDR) or copying (CopyScript) this script. This is only public for the
+  // JITs.
+ public:
   enum class ImmutableFlags : uint32_t {
     // No need for result value of last expression statement.
     NoScriptRval = 1 << 0,
@@ -1687,6 +1689,8 @@ class JSScript : public js::gc::TenuredCell {
     // should be updated as this script runs.
     TrackRecordReplayProgress = 1 << 23,
   };
+
+ private:
   // Note: don't make this a bitfield! It makes it hard to read these flags
   // from JIT code.
   uint32_t immutableFlags_ = 0;
@@ -1855,9 +1859,12 @@ class JSScript : public js::gc::TenuredCell {
 
   // ImmutableFlags accessors.
 
+ public:
   MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
     return immutableFlags_ & uint32_t(flag);
   }
+
+ private:
   void setFlag(ImmutableFlags flag) { immutableFlags_ |= uint32_t(flag); }
   void setFlag(ImmutableFlags flag, bool b) {
     if (b) {
@@ -2201,6 +2208,9 @@ class JSScript : public js::gc::TenuredCell {
 
   static constexpr size_t offsetOfMutableFlags() {
     return offsetof(JSScript, mutableFlags_);
+  }
+  static size_t offsetOfImmutableFlags() {
+    return offsetof(JSScript, immutableFlags_);
   }
 
   bool hasAnyIonScript() const { return hasIonScript(); }

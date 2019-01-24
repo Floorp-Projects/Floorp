@@ -1,8 +1,6 @@
 .ds-hero {
   .img {
-    border: 0.5px solid $black-10;
-    box-sizing: border-box;
-    border-radius: 4px;
+    @include image-as-background;
   }
 
   .ds-card {
@@ -28,8 +26,16 @@
     color: $grey-50;
     margin: 18px 0;
     padding: 20px 0;
-    border-top: 1px solid transparentize($grey-40, 0.64);
-    border-bottom: 1px solid transparentize($grey-40, 0.64);
+    border-top: $border-secondary;
+    border-bottom: $border-secondary;
+
+    &:hover .meta header {
+      color: $blue-60;
+    }
+
+    &:active .meta header {
+      color: $blue-70;
+    }
 
     .img-wrapper {
       width: 100%;
@@ -38,23 +44,12 @@
     .img {
       height: 0;
       padding-top: 50%; // 2:1 aspect ratio
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-color: $grey-30;
     }
 
     .meta {
       header {
         font-size: 22px;
         color: $grey-90;
-
-        &:hover {
-          color: $blue-60;
-        }
-
-        &:active {
-          color: $blue-70;
-        }
       }
 
       p {
