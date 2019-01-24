@@ -92,5 +92,4 @@ dependencies {
     x86Implementation Deps.geckoview_nightly_x86
     implementation Deps.androidx_legacy
     implementation Deps.android_arch_navigation
-    implementation 'android.arch.navigation:navigation-fragment:1.0.0-alpha09'
 }
