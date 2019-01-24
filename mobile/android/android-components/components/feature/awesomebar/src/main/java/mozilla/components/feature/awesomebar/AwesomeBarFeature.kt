@@ -26,15 +26,24 @@ import mozilla.components.feature.tabs.TabsUseCases
 class AwesomeBarFeature(
     private val awesomeBar: AwesomeBar,
     private val toolbar: Toolbar,
-    private val engineView: EngineView? = null
+    private val engineView: EngineView? = null,
+    private val onEditStart: (() -> Unit)? = null,
+    private val onEditComplete: (() -> Unit)? = null
+
 ) {
     init {
         toolbar.setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
             override fun onTextChanged(text: String) = awesomeBar.onInputChanged(text)
 
-            override fun onStartEditing() = showAwesomeBar()
+            override fun onStartEditing() {
+                onEditStart?.invoke() ?: showAwesomeBar()
+                awesomeBar.onInputStarted()
+            }
 
-            override fun onStopEditing() = hideAwesomeBar()
+            override fun onStopEditing() {
+                onEditComplete?.invoke() ?: hideAwesomeBar()
+                awesomeBar.onInputCancelled()
+            }
         })
 
         awesomeBar.setOnStopListener { toolbar.displayMode() }
@@ -86,12 +95,10 @@ class AwesomeBarFeature(
     private fun showAwesomeBar() {
         awesomeBar.asView().visibility = View.VISIBLE
         engineView?.asView()?.visibility = View.GONE
-        awesomeBar.onInputStarted()
     }
 
     private fun hideAwesomeBar() {
         awesomeBar.asView().visibility = View.GONE
         engineView?.asView()?.visibility = View.VISIBLE
-        awesomeBar.onInputCancelled()
     }
 }

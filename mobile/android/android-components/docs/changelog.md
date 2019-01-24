@@ -26,6 +26,7 @@ permalink: /changelog/
   ```
 * **feature-awesomebar**
   * Added ability to show one item per search suggestion ([#1779](https://github.com/mozilla-mobile/android-components/issues/1779))
+  * Added ability to define custom hooks to be invoked when editing starts or is completed.
 
 * **lib-publicsuffixlist**
   * The public suffix list shipping with this component is now updated automatically in the repository every day (if there are changes).

@@ -9,7 +9,9 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -122,5 +124,41 @@ class AwesomeBarFeatureTest {
         feature.addClipboardProvider(RuntimeEnvironment.application, mock())
 
         verify(awesomeBar).addProviders(any())
+    }
+
+    @Test
+    fun `Feature invokes custom start and complete hooks`() {
+        val toolbar: Toolbar = mock()
+        val awesomeBar: AwesomeBar = mock()
+
+        var startInvoked = false
+        var completeInvoked = false
+
+        var listener: Toolbar.OnEditListener? = null
+
+        `when`(toolbar.setOnEditListener(any())).thenAnswer { invocation ->
+            listener = invocation.getArgument<Toolbar.OnEditListener>(0)
+            Unit
+        }
+
+        AwesomeBarFeature(
+            awesomeBar,
+            toolbar,
+            onEditStart = { startInvoked = true },
+            onEditComplete = { completeInvoked = true })
+
+        assertFalse(startInvoked)
+        assertFalse(completeInvoked)
+
+        listener!!.onStartEditing()
+
+        assertTrue(startInvoked)
+        assertFalse(completeInvoked)
+        startInvoked = false
+
+        listener!!.onStopEditing()
+
+        assertFalse(startInvoked)
+        assertTrue(completeInvoked)
     }
 }
