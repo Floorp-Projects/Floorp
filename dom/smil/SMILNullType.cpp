@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SMILNullType.h"
-#include "nsSMILValue.h"
+
+#include "mozilla/SMILValue.h"
 #include "nsDebug.h"
 
 namespace mozilla {
@@ -15,8 +16,7 @@ namespace mozilla {
   return &sSingleton;
 }
 
-nsresult SMILNullType::Assign(nsSMILValue& aDest,
-                              const nsSMILValue& aSrc) const {
+nsresult SMILNullType::Assign(SMILValue& aDest, const SMILValue& aSrc) const {
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aSrc.mType == this, "Unexpected source type");
   aDest.mU = aSrc.mU;
@@ -24,31 +24,31 @@ nsresult SMILNullType::Assign(nsSMILValue& aDest,
   return NS_OK;
 }
 
-bool SMILNullType::IsEqual(const nsSMILValue& aLeft,
-                           const nsSMILValue& aRight) const {
+bool SMILNullType::IsEqual(const SMILValue& aLeft,
+                           const SMILValue& aRight) const {
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
   return true;  // All null-typed values are equivalent.
 }
 
-nsresult SMILNullType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+nsresult SMILNullType::Add(SMILValue& aDest, const SMILValue& aValueToAdd,
                            uint32_t aCount) const {
   MOZ_ASSERT_UNREACHABLE("Adding NULL type");
   return NS_ERROR_FAILURE;
 }
 
-nsresult SMILNullType::ComputeDistance(const nsSMILValue& aFrom,
-                                       const nsSMILValue& aTo,
+nsresult SMILNullType::ComputeDistance(const SMILValue& aFrom,
+                                       const SMILValue& aTo,
                                        double& aDistance) const {
   MOZ_ASSERT_UNREACHABLE("Computing distance for NULL type");
   return NS_ERROR_FAILURE;
 }
 
-nsresult SMILNullType::Interpolate(const nsSMILValue& aStartVal,
-                                   const nsSMILValue& aEndVal,
+nsresult SMILNullType::Interpolate(const SMILValue& aStartVal,
+                                   const SMILValue& aEndVal,
                                    double aUnitDistance,
-                                   nsSMILValue& aResult) const {
+                                   SMILValue& aResult) const {
   MOZ_ASSERT_UNREACHABLE("Interpolating NULL type");
   return NS_ERROR_FAILURE;
 }

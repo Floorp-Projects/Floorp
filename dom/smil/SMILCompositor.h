@@ -99,7 +99,7 @@ class SMILCompositor : public PLDHashEntryHdr {
 
   // If the passed-in base value differs from our cached base value, this
   // method updates the cached value (and toggles the 'mForceCompositing' flag)
-  void UpdateCachedBaseValue(const nsSMILValue& aBaseValue);
+  void UpdateCachedBaseValue(const SMILValue& aBaseValue);
 
   // The hash key (tuple of element and attributeName)
   KeyType mKey;
@@ -117,7 +117,7 @@ class SMILCompositor : public PLDHashEntryHdr {
   // from one sample to the next. (SMILAnimationController moves this
   // forward from the previous sample's compositor by calling
   // StealCachedBaseValue.)
-  nsSMILValue mCachedBaseValue;
+  SMILValue mCachedBaseValue;
 };
 
 }  // namespace mozilla

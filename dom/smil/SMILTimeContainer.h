@@ -9,8 +9,8 @@
 
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/SMILMilestone.h"
+#include "mozilla/SMILTypes.h"
 #include "nscore.h"
-#include "nsSMILTypes.h"
 #include "nsTPriorityQueue.h"
 
 namespace mozilla {
