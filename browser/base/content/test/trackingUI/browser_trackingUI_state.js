@@ -17,6 +17,7 @@
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
+const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 const COOKIE_PAGE = "http://not-tracking.example.com/browser/browser/base/content/test/trackingUI/cookiePage.html";
@@ -33,6 +34,7 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(TP_PB_PREF);
   Services.prefs.clearUserPref(TPC_PREF);
+  Services.prefs.clearUserPref(DTSCBN_PREF);
 });
 
 // This is a special version of "hidden" that doesn't check for item
@@ -106,8 +108,8 @@ function testTrackingPage(window) {
   ok(ContentBlocking.content.hasAttribute("detected"), "trackers are detected");
   ok(!ContentBlocking.content.hasAttribute("hasException"), "content shows no exception");
 
-  let isPrivateBrowsing = PrivateBrowsingUtils.isWindowPrivate(window);
-  let blockedByTP = areTrackersBlocked(isPrivateBrowsing);
+  let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
+  let blockedByTP = areTrackersBlocked(isWindowPrivate);
   is(BrowserTestUtils.is_visible(ContentBlocking.iconBox), blockedByTP,
      "icon box is" + (blockedByTP ? "" : " not") + " visible");
   is(ContentBlocking.iconBox.hasAttribute("active"), blockedByTP,
@@ -119,7 +121,6 @@ function testTrackingPage(window) {
 
   ok(hidden("#tracking-action-block"), "blockButton is hidden");
 
-  let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
   if (isWindowPrivate) {
     ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
     is(!hidden("#tracking-action-unblock-private"), blockedByTP,
@@ -217,6 +218,8 @@ async function testContentBlocking(tab) {
 
 add_task(async function testNormalBrowsing() {
   await UrlClassifierTestUtils.addTestTrackers();
+
+  Services.prefs.setBoolPref(DTSCBN_PREF, true);
 
   tabbrowser = gBrowser;
   let tab = tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser);

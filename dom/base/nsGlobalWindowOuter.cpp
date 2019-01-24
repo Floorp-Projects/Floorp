@@ -319,6 +319,8 @@ static LazyLogModule gDOMLeakPRLogOuter("DOMLeakOuter");
 
 static int32_t gOpenPopupSpamCount = 0;
 
+static bool gSyncContentBlockingNotifications = false;
+
 nsGlobalWindowOuter::OuterWindowByIdTable*
     nsGlobalWindowOuter::sOuterWindowsById = nullptr;
 
@@ -5405,100 +5407,130 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(unsigned aEvent,
   nsCOMPtr<Document> doc = docShell->GetDocument();
   NS_ENSURE_TRUE_VOID(doc);
 
-  // This event might come after the user has navigated to another page.
-  // To prevent showing the TrackingProtection UI on the wrong page, we need to
-  // check that the loading URI for the channel is the same as the URI currently
-  // loaded in the document.
-  if (!SameLoadingURI(doc, aChannel) &&
-      aEvent == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
-    return;
+  nsCOMPtr<nsIURI> uri(aURIHint);
+  nsCOMPtr<nsIChannel> channel(aChannel);
+
+  static bool prefInitialized = false;
+  if (!prefInitialized) {
+    Preferences::AddBoolVarCache(
+        &gSyncContentBlockingNotifications,
+        "dom.testing.sync-content-blocking-notifications", false);
+    prefInitialized = true;
   }
 
-  // Notify nsIWebProgressListeners of this content blocking event.
-  // Can be used to change the UI state.
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell, &rv);
-  NS_ENSURE_SUCCESS_VOID(rv);
-  uint32_t event = 0;
-  nsCOMPtr<nsISecureBrowserUI> securityUI;
-  docShell->GetSecurityUI(getter_AddRefs(securityUI));
-  if (!securityUI) {
-    return;
-  }
-  securityUI->GetContentBlockingEvent(&event);
-  nsAutoCString origin;
-  nsContentUtils::GetASCIIOrigin(aURIHint, origin);
+  nsCOMPtr<nsIRunnable> func = NS_NewRunnableFunction(
+      "NotifyContentBlockingEventDelayed",
+      [doc, docShell, uri, channel, aEvent, aBlocked]() {
+        // This event might come after the user has navigated to another
+        // page. To prevent showing the TrackingProtection UI on the wrong
+        // page, we need to check that the loading URI for the channel is
+        // the same as the URI currently loaded in the document.
+        if (!SameLoadingURI(doc, channel) &&
+            aEvent == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
+          return;
+        }
 
-  bool blockedValue = aBlocked;
-  bool unblocked = false;
-  if (aEvent == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
-    doc->SetHasTrackingContentBlocked(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasTrackingContentBlocked();
-    }
-  } else if (aEvent == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
-    doc->SetHasTrackingContentLoaded(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasTrackingContentLoaded();
-    }
-  } else if (aEvent ==
-             nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION) {
-    doc->SetHasCookiesBlockedByPermission(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasCookiesBlockedByPermission();
-    }
-  } else if (aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
-    doc->SetHasTrackingCookiesBlocked(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasTrackingCookiesBlocked();
-    }
-  } else if (aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) {
-    doc->SetHasAllCookiesBlocked(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasAllCookiesBlocked();
-    }
-  } else if (aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN) {
-    doc->SetHasForeignCookiesBlocked(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasForeignCookiesBlocked();
-    }
-  } else if (aEvent == nsIWebProgressListener::STATE_COOKIES_LOADED) {
-    MOZ_ASSERT(!aBlocked,
-               "We don't expected to see blocked STATE_COOKIES_LOADED");
-    // Note that the logic in this branch is the logical negation of the logic
-    // in other branches, since the Document API we have is phrased in
-    // "loaded" terms as opposed to "blocked" terms.
-    blockedValue = !aBlocked;
-    doc->SetHasCookiesLoaded(blockedValue, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasCookiesLoaded();
-    }
-  } else {
-    // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
-  }
-  const uint32_t oldEvent = event;
-  if (blockedValue) {
-    event |= aEvent;
-  } else if (unblocked) {
-    event &= ~aEvent;
-  }
+        // Notify nsIWebProgressListeners of this content blocking event.
+        // Can be used to change the UI state.
+        nsresult rv = NS_OK;
+        nsCOMPtr<nsISecurityEventSink> eventSink =
+            do_QueryInterface(docShell, &rv);
+        NS_ENSURE_SUCCESS_VOID(rv);
+        uint32_t event = 0;
+        nsCOMPtr<nsISecureBrowserUI> securityUI;
+        docShell->GetSecurityUI(getter_AddRefs(securityUI));
+        if (!securityUI) {
+          return;
+        }
+        securityUI->GetContentBlockingEvent(&event);
+        nsAutoCString origin;
+        nsContentUtils::GetASCIIOrigin(uri, origin);
 
-  if (event == oldEvent
+        bool blockedValue = aBlocked;
+        bool unblocked = false;
+        if (aEvent == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
+          doc->SetHasTrackingContentBlocked(aBlocked, origin);
+          if (!aBlocked) {
+            unblocked = !doc->GetHasTrackingContentBlocked();
+          }
+        } else if (aEvent ==
+                   nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
+          doc->SetHasTrackingContentLoaded(aBlocked, origin);
+          if (!aBlocked) {
+            unblocked = !doc->GetHasTrackingContentLoaded();
+          }
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_COOKIES_BLOCKED_BY_PERMISSION) {
+          doc->SetHasCookiesBlockedByPermission(aBlocked, origin);
+          if (!aBlocked) {
+            unblocked = !doc->GetHasCookiesBlockedByPermission();
+          }
+        } else if (aEvent ==
+                   nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
+          doc->SetHasTrackingCookiesBlocked(aBlocked, origin);
+          if (!aBlocked) {
+            unblocked = !doc->GetHasTrackingCookiesBlocked();
+          }
+        } else if (aEvent ==
+                   nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) {
+          doc->SetHasAllCookiesBlocked(aBlocked, origin);
+          if (!aBlocked) {
+            unblocked = !doc->GetHasAllCookiesBlocked();
+          }
+        } else if (aEvent ==
+                   nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN) {
+          doc->SetHasForeignCookiesBlocked(aBlocked, origin);
+          if (!aBlocked) {
+            unblocked = !doc->GetHasForeignCookiesBlocked();
+          }
+        } else if (aEvent == nsIWebProgressListener::STATE_COOKIES_LOADED) {
+          MOZ_ASSERT(!aBlocked,
+                     "We don't expected to see blocked STATE_COOKIES_LOADED");
+          // Note that the logic in this branch is the logical negation of
+          // the logic in other branches, since the Document API we have is
+          // phrased in "loaded" terms as opposed to "blocked" terms.
+          blockedValue = !aBlocked;
+          doc->SetHasCookiesLoaded(blockedValue, origin);
+          if (!aBlocked) {
+            unblocked = !doc->GetHasCookiesLoaded();
+          }
+        } else {
+          // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
+        }
+        const uint32_t oldEvent = event;
+        if (blockedValue) {
+          event |= aEvent;
+        } else if (unblocked) {
+          event &= ~aEvent;
+        }
+
+        if (event == oldEvent
 #ifdef ANDROID
-      // GeckoView always needs to notify about blocked trackers, since the
-      // GeckoView API always needs to report the URI and type of any blocked
-      // tracker.
-      // We use a platform-dependent code path here because reporting this
-      // notification on desktop platforms isn't necessary and doing so can have
-      // a big performance cost.
-      && aEvent != nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT
+            // GeckoView always needs to notify about blocked trackers,
+            // since the GeckoView API always needs to report the URI and
+            // type of any blocked tracker. We use a platform-dependent code
+            // path here because reporting this notification on desktop
+            // platforms isn't necessary and doing so can have a big
+            // performance cost.
+            && aEvent != nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT
 #endif
-  ) {
-    // Avoid dispatching repeated notifications when nothing has changed
+        ) {
+          // Avoid dispatching repeated notifications when nothing has
+          // changed
+          return;
+        }
+
+        eventSink->OnContentBlockingEvent(channel, event);
+      });
+  nsresult rv;
+  if (gSyncContentBlockingNotifications) {
+    rv = func->Run();
+  } else {
+    rv = NS_IdleDispatchToCurrentThread(func.forget(), 100);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
-
-  eventSink->OnContentBlockingEvent(aChannel, event);
 }
 
 // static
