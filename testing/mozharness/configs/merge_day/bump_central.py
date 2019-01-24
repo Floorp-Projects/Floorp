@@ -28,6 +28,7 @@ config = {
     "default_actions": [
         "clean-repos",
         "pull",
+        "set_push_to_ssh",
         "bump_and_tag_central"
     ],
 }
