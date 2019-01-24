@@ -268,16 +268,10 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
     return promise.forget();
   }
 
-  // TODO: Move this logic into U2FTokenManager in Bug 1409220.
-
   // Process each element of mPubKeyCredParams using the following steps, to
   // produce a new sequence coseAlgos.
-  nsTArray<PublicKeyCredentialParameters> acceptableParams;
   nsTArray<CoseAlg> coseAlgos;
   for (size_t a = 0; a < aOptions.mPubKeyCredParams.Length(); ++a) {
-    // Let current be the currently selected element of
-    // mPubKeyCredParams.
-
     // If current.type does not contain a PublicKeyCredentialType
     // supported by this implementation, then stop processing current and move
     // on to the next element in mPubKeyCredParams.
@@ -286,24 +280,12 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
       continue;
     }
 
-    nsString algName;
-    if (NS_FAILED(CoseAlgorithmToWebCryptoId(aOptions.mPubKeyCredParams[a].mAlg,
-                                             algName))) {
-      continue;
-    }
-
-    if (!acceptableParams.AppendElement(aOptions.mPubKeyCredParams[a],
-                                        mozilla::fallible)) {
-      promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-      return promise.forget();
-    }
     coseAlgos.AppendElement(aOptions.mPubKeyCredParams[a].mAlg);
   }
 
-  // If acceptableParams is empty and mPubKeyCredParams was not empty, cancel
-  // the timer started in step 2, reject promise with a DOMException whose name
-  // is "NotSupportedError", and terminate this algorithm.
-  if (acceptableParams.IsEmpty() && !aOptions.mPubKeyCredParams.IsEmpty()) {
+  // If there are algorithms specified, but none are Public_key algorithms,
+  // reject the promise.
+  if (coseAlgos.IsEmpty() && !aOptions.mPubKeyCredParams.IsEmpty()) {
     promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return promise.forget();
   }
