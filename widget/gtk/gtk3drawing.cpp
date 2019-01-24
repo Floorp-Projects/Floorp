@@ -407,9 +407,14 @@ int GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout,
     decorationLayout = "menu:minimize,maximize,close";
   }
 
-  // "minimize,maximize,close:menu" layout means buttons are on the opposite
-  // titlebar side.
-  bool reversedButtonsPlacement = strstr(decorationLayout, ":menu") != nullptr;
+  // "minimize,maximize,close:" layout means buttons are on the opposite
+  // titlebar side. close button is always there.
+  bool reversedButtonsPlacement = false;
+  const char *closeButton = strstr(decorationLayout, "close");
+  const char *separator = strchr(decorationLayout, ':');
+  if (closeButton != nullptr && separator != nullptr) {
+    reversedButtonsPlacement = closeButton < separator;
+  }
 
   // We support only default button order now:
   // minimize/maximize/close for right placement
