@@ -223,7 +223,8 @@ class GleanTest {
             val expectedBaselineStringMetrics = arrayOf(
                 "glean.baseline.os",
                 "glean.baseline.os_version",
-                "glean.baseline.device",
+                "glean.baseline.device_manufacturer",
+                "glean.baseline.device_model",
                 "glean.baseline.architecture"
             )
             val baselineMetricsObject = baselineJson.getJSONObject("metrics")!!

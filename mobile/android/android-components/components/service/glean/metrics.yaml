@@ -50,15 +50,29 @@ glean.baseline:
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
-  device:
+  device_manufacturer:
     type: string
     lifetime: application
     send_in_pings:
       - baseline
     description: |
-      The manufacturer and model of the device.
+      The manufacturer of the device the application is running on.
     bugs:
-      - 1497894
+      - 1522552
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+
+  device_model:
+    type: string
+    lifetime: application
+    send_in_pings:
+      - baseline
+    description: |
+      The model of the device the application is running on.
+    bugs:
+      - 1522552
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
