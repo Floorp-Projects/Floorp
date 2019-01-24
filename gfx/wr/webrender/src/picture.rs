@@ -8,7 +8,7 @@ use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, DirtyRect
 use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, ImageFormat, ImageDescriptor, WorldVector2D, LayoutPoint};
 use api::{DebugFlags, DeviceVector2D};
 use box_shadow::{BLUR_SAMPLE_SCALE};
-use clip::{ClipStore, ClipChainId, ClipChainNode, ClipItem};
+use clip::{ClipChainId, ClipChainNode, ClipItem};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, CoordinateSystemId};
 use debug_colors;
 use device::TextureFilter;
@@ -32,7 +32,6 @@ use resource_cache::ResourceCache;
 use scene::{FilterOpHelpers, SceneProperties};
 use scene_builder::Interners;
 use smallvec::SmallVec;
-use surface::{SurfaceDescriptor};
 use std::{mem, u16};
 use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 use texture_cache::{Eviction, TextureCacheHandle};
@@ -1959,9 +1958,6 @@ pub struct PicturePrimitive {
     /// Local clip rect for this picture.
     pub local_clip_rect: LayoutRect,
 
-    /// A descriptor for this surface that can be used as a cache key.
-    surface_desc: Option<SurfaceDescriptor>,
-
     pub gpu_location: GpuCacheHandle,
 
     /// If Some(..) the tile cache that is associated with this picture.
@@ -2051,33 +2047,9 @@ impl PicturePrimitive {
         prim_list: PrimitiveList,
         spatial_node_index: SpatialNodeIndex,
         local_clip_rect: LayoutRect,
-        clip_store: &ClipStore,
         tile_cache: Option<TileCache>,
     ) -> Self {
-        // For now, only create a cache descriptor for blur filters (which
-        // includes text shadows). We can incrementally expand this to
-        // handle more composite modes.
-        let create_cache_descriptor = match requested_composite_mode {
-            Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
-                blur_radius > 0.0
-            }
-            Some(_) | None => {
-                false
-            }
-        };
-
-        let surface_desc = if create_cache_descriptor {
-            SurfaceDescriptor::new(
-                &prim_list.prim_instances,
-                spatial_node_index,
-                clip_store,
-            )
-        } else {
-            None
-        };
-
         PicturePrimitive {
-            surface_desc,
             prim_list,
             state: None,
             secondary_render_task_id: None,
@@ -2391,12 +2363,6 @@ impl PicturePrimitive {
             let parent_raster_spatial_node_index = state.current_surface().raster_spatial_node_index;
             let surface_spatial_node_index = self.spatial_node_index;
 
-            // TODO(gw): For now, we always raster in screen space. Soon,
-            //           we will be able to respect the requested raster
-            //           space, and/or override the requested raster root
-            //           if it makes sense to.
-            let raster_space = RasterSpace::Screen;
-
             let inflation_factor = match composite_mode {
                 PictureCompositeMode::Filter(FilterOp::Blur(blur_radius)) => {
                     // The amount of extra space needed for primitives inside
@@ -2443,17 +2409,6 @@ impl PicturePrimitive {
                     &frame_context.clip_scroll_tree,
                 );
             };
-
-            // If we have a cache key / descriptor for this surface,
-            // update any transforms it cares about.
-            if let Some(ref mut surface_desc) = self.surface_desc {
-                surface_desc.update(
-                    surface_spatial_node_index,
-                    surface.raster_spatial_node_index,
-                    frame_context.clip_scroll_tree,
-                    raster_space,
-                );
-            }
 
             self.raster_config = Some(RasterConfig {
                 composite_mode,
