@@ -1,12 +1,14 @@
-use base;
-use cdsl::camel_case;
-use cdsl::isa::TargetIsa;
-use cdsl::settings::{BoolSetting, Predicate, Preset, Setting, SettingGroup, SpecificSetting};
-use constant_hash::{generate_table, simple_hash};
-use error;
-use srcgen::{Formatter, Match};
+use crate::base;
+use crate::cdsl::camel_case;
+use crate::cdsl::isa::TargetIsa;
+use crate::cdsl::settings::{
+    BoolSetting, Predicate, Preset, Setting, SettingGroup, SpecificSetting,
+};
+use crate::constant_hash::{generate_table, simple_hash};
+use crate::error;
+use crate::srcgen::{Formatter, Match};
+use crate::unique_table::UniqueTable;
 use std::collections::HashMap;
-use unique_table::UniqueTable;
 
 enum ParentGroup {
     None,
@@ -224,7 +226,7 @@ enum SettingOrPreset<'a> {
 
 impl<'a> SettingOrPreset<'a> {
     fn name(&self) -> &str {
-        match self {
+        match *self {
             SettingOrPreset::Setting(s) => s.name,
             SettingOrPreset::Preset(p) => p.name,
         }
@@ -248,14 +250,14 @@ fn gen_descriptors(group: &SettingGroup, fmt: &mut Formatter) {
             fmt.indent(|fmt| {
                 fmt.line(&format!("name: \"{}\",", setting.name));
                 fmt.line(&format!("offset: {},", setting.byte_offset));
-                match &setting.specific {
+                match setting.specific {
                     SpecificSetting::Bool(BoolSetting { bit_offset, .. }) => {
                         fmt.line(&format!(
                             "detail: detail::Detail::Bool {{ bit: {} }},",
                             bit_offset
                         ));
                     }
-                    SpecificSetting::Enum(values) => {
+                    SpecificSetting::Enum(ref values) => {
                         let offset = enum_table.add(values);
                         fmt.line(&format!(
                             "detail: detail::Detail::Enum {{ last: {}, enumerators: {} }},",
@@ -322,7 +324,7 @@ fn gen_descriptors(group: &SettingGroup, fmt: &mut Formatter) {
     ));
     fmt.indent(|fmt| {
         for h in &hash_table {
-            match h {
+            match *h {
                 Some(setting_or_preset) => fmt.line(&format!(
                     "{},",
                     &descriptor_index_map
@@ -353,8 +355,7 @@ fn gen_descriptors(group: &SettingGroup, fmt: &mut Formatter) {
 }
 
 fn gen_template(group: &SettingGroup, fmt: &mut Formatter) {
-    let mut default_bytes: Vec<u8> = Vec::new();
-    default_bytes.resize(group.settings_size as usize, 0);
+    let mut default_bytes: Vec<u8> = vec![0; group.settings_size as usize];
     for setting in &group.settings {
         *default_bytes.get_mut(setting.byte_offset as usize).unwrap() |= setting.default_byte();
     }

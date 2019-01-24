@@ -1,6 +1,16 @@
 //! "Dummy" implementations of `ModuleEnvironment` and `FuncEnvironment` for testing
-//! wasm translation.
+//! wasm translation. For complete implementations of `ModuleEnvironment` and
+//! `FuncEnvironment`, see [wasmtime-environ] in [Wasmtime].
+//!
+//! [wasmtime-environ]: https://crates.io/crates/wasmtime-environ
+//! [Wasmtime]: https://github.com/CraneStation/wasmtime
 
+use crate::environ::{FuncEnvironment, GlobalVariable, ModuleEnvironment, ReturnMode, WasmResult};
+use crate::func_translator::FuncTranslator;
+use crate::translation_utils::{
+    DefinedFuncIndex, FuncIndex, Global, GlobalIndex, Memory, MemoryIndex, SignatureIndex, Table,
+    TableIndex,
+};
 use cast;
 use cranelift_codegen::cursor::FuncCursor;
 use cranelift_codegen::ir::immediates::{Offset32, Uimm64};
@@ -8,14 +18,9 @@ use cranelift_codegen::ir::types::*;
 use cranelift_codegen::ir::{self, InstBuilder};
 use cranelift_codegen::isa::TargetFrontendConfig;
 use cranelift_entity::{EntityRef, PrimaryMap};
-use environ::{FuncEnvironment, GlobalVariable, ModuleEnvironment, ReturnMode, WasmResult};
-use func_translator::FuncTranslator;
+use std::boxed::Box;
 use std::string::String;
 use std::vec::Vec;
-use translation_utils::{
-    DefinedFuncIndex, FuncIndex, Global, GlobalIndex, Memory, MemoryIndex, SignatureIndex, Table,
-    TableIndex,
-};
 
 /// Compute a `ir::ExternalName` for a given wasm function index.
 fn get_func_name(func_index: FuncIndex) -> ir::ExternalName {
@@ -134,6 +139,15 @@ impl DummyEnvironment {
     pub fn func_env(&self) -> DummyFuncEnvironment {
         DummyFuncEnvironment::new(&self.info, self.return_mode)
     }
+
+    fn get_func_type(&self, func_index: FuncIndex) -> SignatureIndex {
+        self.info.functions[func_index].entity
+    }
+
+    /// Return the number of imported functions within this `DummyEnvironment`.
+    pub fn get_num_func_imports(&self) -> usize {
+        self.info.imported_funcs.len()
+    }
 }
 
 /// The `FuncEnvironment` implementation for use by the `DummyEnvironment`.
@@ -174,7 +188,7 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
         let vmctx = func.create_global_value(ir::GlobalValueData::VMContext {});
         GlobalVariable::Memory {
             gv: vmctx,
-            offset: offset,
+            offset,
             ty: self.mod_info.globals[index].entity.ty,
         }
     }
@@ -337,12 +351,8 @@ impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
         self.info.config
     }
 
-    fn declare_signature(&mut self, sig: &ir::Signature) {
-        self.info.signatures.push(sig.clone());
-    }
-
-    fn get_signature(&self, sig_index: SignatureIndex) -> &ir::Signature {
-        &self.info.signatures[sig_index]
+    fn declare_signature(&mut self, sig: ir::Signature) {
+        self.info.signatures.push(sig);
     }
 
     fn declare_func_import(
@@ -362,16 +372,8 @@ impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
             .push((String::from(module), String::from(field)));
     }
 
-    fn get_num_func_imports(&self) -> usize {
-        self.info.imported_funcs.len()
-    }
-
     fn declare_func_type(&mut self, sig_index: SignatureIndex) {
         self.info.functions.push(Exportable::new(sig_index));
-    }
-
-    fn get_func_type(&self, func_index: FuncIndex) -> SignatureIndex {
-        self.info.functions[func_index].entity
     }
 
     fn declare_global(&mut self, global: Global) {
@@ -383,10 +385,6 @@ impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
         self.info
             .imported_globals
             .push((String::from(module), String::from(field)));
-    }
-
-    fn get_global(&self, global_index: GlobalIndex) -> &Global {
-        &self.info.globals[global_index].entity
     }
 
     fn declare_table(&mut self, table: Table) {
@@ -405,7 +403,7 @@ impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
         _table_index: TableIndex,
         _base: Option<GlobalIndex>,
         _offset: usize,
-        _elements: Vec<FuncIndex>,
+        _elements: Box<[FuncIndex]>,
     ) {
         // We do nothing
     }

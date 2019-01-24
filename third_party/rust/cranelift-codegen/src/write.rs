@@ -3,12 +3,12 @@
 //! The `write` module provides the `write_function` function which converts an IR `Function` to an
 //! equivalent textual form. This textual form can be read back by the `cranelift-reader` crate.
 
-use entity::SecondaryMap;
-use ir::entities::AnyEntity;
-use ir::{DataFlowGraph, Ebb, Function, Inst, SigRef, Type, Value, ValueDef};
-use isa::{RegInfo, TargetIsa};
-use packed_option::ReservedValue;
-use std::fmt::{self, Write};
+use crate::entity::SecondaryMap;
+use crate::ir::entities::AnyEntity;
+use crate::ir::{DataFlowGraph, Ebb, Function, Inst, SigRef, Type, Value, ValueDef};
+use crate::isa::{RegInfo, TargetIsa};
+use crate::packed_option::ReservedValue;
+use core::fmt::{self, Write};
 use std::string::String;
 use std::vec::Vec;
 
@@ -37,6 +37,16 @@ pub trait FuncWriter {
 
     /// Write the preamble to `w`. By default, this uses `write_entity_definition`.
     fn write_preamble(
+        &mut self,
+        w: &mut Write,
+        func: &Function,
+        regs: Option<&RegInfo>,
+    ) -> Result<bool, fmt::Error> {
+        self.super_preamble(w, func, regs)
+    }
+
+    /// Default impl of `write_preamble`
+    fn super_preamble(
         &mut self,
         w: &mut Write,
         func: &Function,
@@ -91,8 +101,19 @@ pub trait FuncWriter {
     }
 
     /// Write an entity definition defined in the preamble to `w`.
-    #[allow(unused_variables)]
     fn write_entity_definition(
+        &mut self,
+        w: &mut Write,
+        func: &Function,
+        entity: AnyEntity,
+        value: &fmt::Display,
+    ) -> fmt::Result {
+        self.super_entity_definition(w, func, entity, value)
+    }
+
+    /// Default impl of `write_entity_definition`
+    #[allow(unused_variables)]
+    fn super_entity_definition(
         &mut self,
         w: &mut Write,
         func: &Function,
@@ -377,7 +398,7 @@ fn write_instruction(
     write_operands(w, &func.dfg, isa, inst)?;
     writeln!(w)?;
 
-    // Value aliases come out on lines after the instruction defining the referrent.
+    // Value aliases come out on lines after the instruction defining the referent.
     for r in func.dfg.inst_results(inst) {
         write_value_aliases(w, aliases, *r, indent)?;
     }
@@ -392,7 +413,7 @@ pub fn write_operands(
     inst: Inst,
 ) -> fmt::Result {
     let pool = &dfg.value_lists;
-    use ir::instructions::InstructionData::*;
+    use crate::ir::instructions::InstructionData::*;
     match dfg[inst] {
         Unary { arg, .. } => write!(w, " {}", arg),
         UnaryImm { imm, .. } => write!(w, " {}", imm),
@@ -642,9 +663,9 @@ impl<'a> fmt::Display for DisplayValuesWithDelimiter<'a> {
 
 #[cfg(test)]
 mod tests {
-    use cursor::{Cursor, CursorPosition, FuncCursor};
-    use ir::types;
-    use ir::{ExternalName, Function, InstBuilder, StackSlotData, StackSlotKind};
+    use crate::cursor::{Cursor, CursorPosition, FuncCursor};
+    use crate::ir::types;
+    use crate::ir::{ExternalName, Function, InstBuilder, StackSlotData, StackSlotKind};
     use std::string::ToString;
 
     #[test]
@@ -693,7 +714,7 @@ mod tests {
 
     #[test]
     fn aliases() {
-        use ir::InstBuilder;
+        use crate::ir::InstBuilder;
 
         let mut func = Function::new();
         {
