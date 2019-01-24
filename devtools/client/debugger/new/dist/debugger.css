@@ -1536,6 +1536,11 @@ span.img.marko {
   margin-inline-end: 5px;
 }
 
+.img.refresh {
+  mask: url("resource://devtools/client/debugger/new/images/reload.svg");
+  mask-size: 100%;
+}
+
 .img.arrow {
   mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
   margin-inline-end: 4px;
