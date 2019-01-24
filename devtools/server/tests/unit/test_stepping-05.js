@@ -4,6 +4,12 @@
 
 "use strict";
 
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 /**
  * Make sure that stepping in the last statement of the last frame doesn't
  * cause an unexpected pause, when another JS frame is pushed on the stack
