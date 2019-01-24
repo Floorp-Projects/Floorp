@@ -330,6 +330,12 @@ interface nsIXPCComponents_Utils : nsISupports
     void intentionallyLeak();
 
     /*
+     * In a debug build, cause the XPCOM leak checker to report a negative leak.
+     * This is needed to test leak checking.
+     */
+    void intentionallyLeakNegatively();
+
+    /*
      * In a debug build, make XPCOM not print out a bloat log in this process.
      * This is needed to test leak checking.
      */
