@@ -330,6 +330,11 @@ span.img.marko {
   margin-inline-end: 5px;
 }
 
+.img.refresh {
+  mask: url(/images/reload.svg);
+  mask-size: 100%;
+}
+
 .img.arrow {
   mask: url(/images/arrow.svg);
   margin-inline-end: 4px;
