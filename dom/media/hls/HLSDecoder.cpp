@@ -52,6 +52,7 @@ HLSResourceCallbacksSupport::HLSResourceCallbacksSupport(HLSDecoder* aDecoder)
 }
 
 void HLSResourceCallbacksSupport::Detach() {
+  MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mMutex);
   mDecoder = nullptr;
 }
@@ -65,7 +66,6 @@ void HLSResourceCallbacksSupport::OnDataArrived() {
   RefPtr<HLSResourceCallbacksSupport> self = this;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "HLSResourceCallbacksSupport::OnDataArrived", [self]() -> void {
-        MutexAutoLock lock(self->mMutex);
         if (self->mDecoder) {
           self->mDecoder->NotifyDataArrived();
         }
@@ -80,8 +80,7 @@ void HLSResourceCallbacksSupport::OnError(int aErrorCode) {
   }
   RefPtr<HLSResourceCallbacksSupport> self = this;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "HLSResourceCallbacksSupport::OnDataArrived", [self]() -> void {
-        MutexAutoLock lock(self->mMutex);
+      "HLSResourceCallbacksSupport::OnError", [self]() -> void {
         if (self->mDecoder) {
           // Since HLS source should be from the Internet, we treat all resource
           // errors from GeckoHlsPlayer as network errors.

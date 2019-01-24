@@ -9022,7 +9022,7 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   const auto& chars = tokenStream.getCharBuffer();
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
 
-  BigInt* b = js::StringToBigInt(context, source);
+  BigInt* b = js::ParseBigIntLiteral(context, source);
   if (!b) {
     return null();
   }

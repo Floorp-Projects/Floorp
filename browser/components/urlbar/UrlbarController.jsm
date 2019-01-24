@@ -93,7 +93,7 @@ class UrlbarController {
     }
     this._lastQueryContext = queryContext;
 
-    queryContext.lastTelemetryResultCount = 0;
+    queryContext.lastResultCount = 0;
     TelemetryStopwatch.start(TELEMETRY_1ST_RESULT, queryContext);
     TelemetryStopwatch.start(TELEMETRY_6_FIRST_RESULTS, queryContext);
 
@@ -126,15 +126,18 @@ class UrlbarController {
    * @param {UrlbarQueryContext} queryContext The query details.
    */
   receiveResults(queryContext) {
-    if (queryContext.lastTelemetryResultCount < 1 &&
-        queryContext.results.length >= 1) {
+    if (queryContext.lastResultCount < 1 && queryContext.results.length >= 1) {
       TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, queryContext);
     }
-    if (queryContext.lastTelemetryResultCount < 6 &&
-        queryContext.results.length >= 6) {
+    if (queryContext.lastResultCount < 6 && queryContext.results.length >= 6) {
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, queryContext);
     }
-    queryContext.lastTelemetryResultCount = queryContext.results.length;
+
+    if (queryContext.lastResultCount == 0 && queryContext.autofillValue) {
+      this.input.autofill(queryContext.autofillValue);
+    }
+
+    queryContext.lastResultCount = queryContext.results.length;
 
     this._notify("onQueryResults", queryContext);
   }
@@ -199,7 +202,6 @@ class UrlbarController {
           // Prevent beep on Mac.
           event.preventDefault();
         }
-        // TODO: We may have an autofill entry, so we should use that instead.
         // TODO: We should have an input bufferrer so that we can use search results
         // if appropriate.
         this.input.handleCommand(event);

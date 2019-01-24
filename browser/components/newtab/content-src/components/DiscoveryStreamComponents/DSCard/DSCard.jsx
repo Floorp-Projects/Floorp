@@ -32,7 +32,11 @@ export class DSCard extends React.PureComponent {
         <div className="meta">
           <header className="title">{this.props.title}</header>
           <p className="excerpt">{this.props.excerpt}</p>
-          <p className="source">{this.props.source}</p>
+          {this.props.context ? (
+            <p className="context">{this.props.context}</p>
+          ) : (
+            <p className="source">{this.props.source}</p>
+          )}
         </div>
       </a>
     );

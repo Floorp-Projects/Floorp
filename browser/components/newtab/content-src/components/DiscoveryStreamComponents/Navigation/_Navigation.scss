@@ -1,0 +1,45 @@
+.ds-navigation {
+
+  &.ds-navigation-centered {
+    text-align: center;
+  }
+
+  &.ds-navigation-right-aligned {
+    text-align: end;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+  }
+
+  ul li {
+    display: inline-block;
+
+    &::after {
+      content: '•';
+      padding: 8px;
+    }
+
+    &:last-child::after {
+      content: none;
+    }
+
+    a {
+      &:hover {
+        // text-decoration: underline; didn't quite match comps.
+        border-bottom: 1px solid var(--newtab-link-primary-color);
+
+        &:active,
+        &:visited {
+          border-bottom: 1px solid $blue-70;
+        }
+      }
+
+      &:active,
+      &:visited {
+        color: $blue-70;
+      }
+    }
+  }
+}

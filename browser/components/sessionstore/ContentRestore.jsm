@@ -186,6 +186,13 @@ ContentRestoreInternal.prototype = {
 
     try {
       if (loadArguments) {
+        // If the load was started in another process, and the in-flight channel
+        // was redirected into this process, resume that load within our process.
+        if (loadArguments.redirectLoadSwitchId) {
+          webNavigation.resumeRedirectedLoad(loadArguments.redirectLoadSwitchId);
+          return true;
+        }
+
         // A load has been redirected to a new process so get history into the
         // same state it was before the load started then trigger the load.
         let referrer = loadArguments.referrer ?

@@ -9,6 +9,7 @@ with Files('**'):
 
 XPIDL_SOURCES += [
     'nsIBackgroundChannelRegistrar.idl',
+    'nsIChildProcessChannelListener.idl',
     'nsIHttpActivityObserver.idl',
     'nsIHttpAuthenticableChannel.idl',
     'nsIHttpAuthenticator.idl',
@@ -20,7 +21,6 @@ XPIDL_SOURCES += [
     'nsIHttpHeaderVisitor.idl',
     'nsIHttpProtocolHandler.idl',
     'nsIRaceCacheWithNetwork.idl',
-    'nsIRedirectProcessChooser.idl',
     'nsIWellKnownOpportunisticUtils.idl',
 ]
 

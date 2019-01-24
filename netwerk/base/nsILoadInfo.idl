@@ -14,6 +14,7 @@ interface nsIPrincipal;
 interface nsIRedirectHistoryEntry;
 interface nsIURI;
 webidl Document;
+webidl BrowsingContext;
 native LoadContextRef(already_AddRefed<nsISupports>);
 %{C++
 #include "nsTArray.h"
@@ -626,6 +627,12 @@ interface nsILoadInfo : nsISupports
    * Note: For other cases, frameOuterWindowID is 0.
    */
   [infallible] readonly attribute unsigned long long frameOuterWindowID;
+
+  /**
+   * The BrowsingContext performing the load for this nsILoadInfo object.
+   */
+  [infallible] readonly attribute unsigned long long browsingContextID;
+  readonly attribute BrowsingContext browsingContext;
 
   /**
    * Resets the PrincipalToInherit to a freshly created NullPrincipal

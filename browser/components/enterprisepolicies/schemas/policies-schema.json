@@ -145,21 +145,6 @@
       }
     },
 
-    "DNSOverHTTPS": {
-      "type": "object",
-      "properties": {
-        "Enabled": {
-          "type": "boolean"
-        },
-        "ProviderURL": {
-          "type": "URLorEmpty"
-        },
-        "Locked": {
-          "type": "boolean"
-        }
-      }
-    },
-
     "DisableAppUpdate": {
       "type": "boolean"
     },
@@ -251,6 +236,21 @@
 
     "DisplayMenuBar": {
       "type": "boolean"
+    },
+
+    "DNSOverHTTPS": {
+      "type": "object",
+      "properties": {
+        "Enabled": {
+          "type": "boolean"
+        },
+        "ProviderURL": {
+          "type": "URLorEmpty"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      }
     },
 
     "DontCheckDefaultBrowser": {

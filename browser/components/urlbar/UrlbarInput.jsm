@@ -390,15 +390,26 @@ class UrlbarInput {
       return;
     }
 
+    let searchString = this.textValue;
+
+    // If the user has deleted text at the end of the input since the last
+    // query, then we don't want to autofill because doing so would autofill the
+    // very text the user just deleted.
+    let enableAutofill =
+      UrlbarPrefs.get("autoFill") &&
+      (!this._lastSearchString ||
+       !this._lastSearchString.startsWith(searchString));
+
     this.controller.startQuery(new UrlbarQueryContext({
-      enableAutofill: UrlbarPrefs.get("autoFill"),
+      enableAutofill,
       isPrivate: this.isPrivate,
       lastKey,
       maxResults: UrlbarPrefs.get("maxRichResults"),
       muxer: "UnifiedComplete",
       providers: ["UnifiedComplete"],
-      searchString: this.textValue,
+      searchString,
     }));
+    this._lastSearchString = searchString;
   }
 
   typeRestrictToken(char) {
@@ -409,6 +420,44 @@ class UrlbarInput {
     let event = this.document.createEvent("UIEvents");
     event.initUIEvent("input", true, false, this.window, 0);
     this.inputField.dispatchEvent(event);
+  }
+
+  /**
+   * Focus without the focus styles.
+   * This is used by Activity Stream and about:privatebrowsing for search hand-off.
+   */
+  setHiddenFocus() {
+    this.textbox.classList.add("hidden-focus");
+    this.focus();
+  }
+
+  /**
+   * Remove the hidden focus styles.
+   * This is used by Activity Stream and about:privatebrowsing for search hand-off.
+   */
+  removeHiddenFocus() {
+    this.textbox.classList.remove("hidden-focus");
+  }
+
+  /**
+   * Autofills the given value into the input.  That is, sets the input's value
+   * to the given value and selects the portion of the new value that comes
+   * after the current value.  The given value should therefore start with the
+   * input's current value.  If it doesn't, then this method doesn't do
+   * anything.
+   *
+   * @param {string} value
+   *   The value to autofill.
+   */
+  autofill(value) {
+    if (!value.toLocaleLowerCase()
+        .startsWith(this.textValue.toLocaleLowerCase())) {
+      return;
+    }
+    let len = this.textValue.length;
+    this.value = this.textValue + value.substring(len);
+    this.selectionStart = len;
+    this.selectionEnd = value.length;
   }
 
   // Getters and Setters below.

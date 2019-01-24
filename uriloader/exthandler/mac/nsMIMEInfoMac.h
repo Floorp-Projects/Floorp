@@ -26,9 +26,6 @@ class nsMIMEInfoMac : public nsMIMEInfoImpl {
     return NS_ERROR_UNEXPECTED;
   }
 #endif
-  static MOZ_MUST_USE nsresult OpenApplicationWithURI(nsIFile* aApplication,
-                                                      const nsCString& aURI);
-
   NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription) override;
 };
 

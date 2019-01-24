@@ -149,7 +149,7 @@
                 <label id="changeBlockListLink"
                        data-l10n-id="content-blocking-tracking-protection-change-block-list"
                        class="text-link"
-                       search-l10n-ids="blocklist-window.title, blocklist-desc, blocklist-button-cancel.label, blocklist-button-ok.label"/>
+                       search-l10n-ids="blocklist-window.title, blocklist-description, blocklist-button-cancel.label, blocklist-button-ok.label"/>
                 <hbox class="reject-trackers-ui custom-option">
                   <checkbox id="contentBlockingBlockCookiesCheckbox"
                             class="content-blocking-checkbox" flex="1"
@@ -558,7 +558,7 @@
 
   <hbox align="start" id="autoplayMediaCheckboxWrapper">
     <checkbox id="autoplayMediaCheckbox"
-              data-l10n-id="permissions-block-autoplay-media"
+              data-l10n-id="permissions-block-autoplay-media2"
               flex="1" />
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>

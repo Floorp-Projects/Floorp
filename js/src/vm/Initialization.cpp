@@ -80,7 +80,7 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 
   MOZ_ASSERT(libraryInitState == InitState::Uninitialized,
              "must call JS_Init once before any JSAPI operation except "
-             "JS_SetICUMemoryFunctions or JS::SetGMPMemoryFunctions");
+             "JS_SetICUMemoryFunctions");
   MOZ_ASSERT(!JSRuntime::hasLiveRuntimes(),
              "how do we have live runtimes before JS_Init?");
 
@@ -144,10 +144,6 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 
 #ifdef JS_SIMULATOR
   RETURN_IF_FAIL(js::jit::SimulatorProcess::initialize());
-#endif
-
-#ifdef ENABLE_BIGINT
-  JS::BigInt::init();
 #endif
 
   libraryInitState = InitState::Running;
