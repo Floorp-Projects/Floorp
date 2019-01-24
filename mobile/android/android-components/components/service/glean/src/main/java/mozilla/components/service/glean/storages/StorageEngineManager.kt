@@ -14,6 +14,7 @@ import org.json.JSONObject
  */
 internal class StorageEngineManager(
     private val storageEngines: Map<String, StorageEngine> = mapOf(
+        "boolean" to BooleansStorageEngine,
         "counter" to CountersStorageEngine,
         "events" to EventsStorageEngine,
         "string" to StringsStorageEngine,
