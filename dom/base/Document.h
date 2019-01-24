@@ -3425,12 +3425,13 @@ class Document : public nsINode,
    */
   void LocalizationLinkRemoved(Element* aLinkElement);
 
+ protected:
   /**
-   * This method should be called as soon as the
+   * This method should be collect as soon as the
    * parsing of the document is completed.
    *
-   * In HTML/XHTML this happens when we finish parsing
-   * the document element.
+   * In HTML this happens when readyState becomes
+   * `interactive`.
    * In XUL it happens at `DoneWalking`, during
    * `MozBeforeInitialXULLayout`.
    *
@@ -3439,18 +3440,6 @@ class Document : public nsINode,
    */
   void TriggerInitialDocumentTranslation();
 
-  /**
-   * This method is called when the initial translation
-   * of the document is completed.
-   *
-   * It unblocks the layout.
-   *
-   * This method is virtual so that XULDocument can
-   * override it.
-   */
-  virtual void InitialDocumentTranslationCompleted();
-
- protected:
   RefPtr<mozilla::dom::DocumentL10n> mDocumentL10n;
 
  private:
@@ -4524,13 +4513,9 @@ class Document : public nsINode,
   // Pres shell resolution saved before entering fullscreen mode.
   float mSavedResolution;
 
-  bool mPendingInitialTranslation;
-
  public:
   // Needs to be public because the bindings code pokes at it.
   js::ExpandoAndGeneration mExpandoAndGeneration;
-
-  bool HasPendingInitialTranslation() { return mPendingInitialTranslation; }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Document, NS_IDOCUMENT_IID)
