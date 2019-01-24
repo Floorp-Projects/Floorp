@@ -38,12 +38,8 @@ class PrefRow {
   constructor(name) {
     this.name = name;
     this.value = true;
-    this.refreshValue();
-
     this.editing = false;
-    this.element = document.createElement("tr");
-    this._setupElement();
-    gElementToPrefMap.set(this.element, this);
+    this.refreshValue();
   }
 
   refreshValue() {
@@ -88,10 +84,20 @@ class PrefRow {
     return !gFilterString || this.name.toLowerCase().includes(gFilterString);
   }
 
-  _setupElement() {
-    this.element.textContent = "";
+  /**
+   * Returns a reference to the table row element to be added to the document,
+   * constructing and initializing it the first time this method is called.
+   */
+  getElement() {
+    if (this._element) {
+      return this._element;
+    }
+
+    this._element = document.createElement("tr");
+    gElementToPrefMap.set(this._element, this);
+
     let nameCell = document.createElement("th");
-    this.element.append(
+    this._element.append(
       nameCell,
       this.valueCell = document.createElement("td"),
       this.editCell = document.createElement("td"),
@@ -114,12 +120,19 @@ class PrefRow {
     nameCell.append(parts[parts.length - 1]);
 
     this.refreshElement();
+
+    return this._element;
   }
 
   refreshElement() {
-    this.element.classList.toggle("has-user-value", !!this.hasUserValue);
-    this.element.classList.toggle("locked", !!this.isLocked);
-    this.element.classList.toggle("deleted", !this.exists);
+    if (!this._element) {
+      // No need to update if this preference was never added to the table.
+      return;
+    }
+
+    this._element.classList.toggle("has-user-value", !!this.hasUserValue);
+    this._element.classList.toggle("locked", !!this.isLocked);
+    this._element.classList.toggle("deleted", !this.exists);
     if (this.exists && !this.editing) {
       // We need to place the text inside a "span" element to ensure that the
       // text copied to the clipboard includes all whitespace.
@@ -267,7 +280,7 @@ let gPrefObserver = {
 
     let newPref = new PrefRow(data);
     if (newPref.matchesFilter) {
-      document.getElementById("prefs").appendChild(newPref.element);
+      document.getElementById("prefs").appendChild(newPref.getElement());
     }
   },
 };
@@ -374,7 +387,7 @@ function filterPrefs() {
   prefsElement.textContent = "";
   let fragment = document.createDocumentFragment();
   for (let pref of prefArray) {
-    fragment.appendChild(pref.element);
+    fragment.appendChild(pref.getElement());
   }
   prefsElement.appendChild(fragment);
 
