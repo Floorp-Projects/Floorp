@@ -38,9 +38,9 @@ if (AppConstants.DEBUG ||
 EXPECTED_REFLOWS_FIRST_OPEN.push(
   {
     stack: [
-      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
-      "handleOverUnderflow@chrome://global/content/bindings/autocomplete.xml",
-      "_reuseAcItem@chrome://global/content/bindings/autocomplete.xml",
+      "_handleOverflow@chrome://global/content/elements/autocomplete-richlistitem.js",
+      "handleOverUnderflow@chrome://global/content/elements/autocomplete-richlistitem.js",
+      "_reuseAcItem@chrome://global/content/elements/autocomplete-richlistitem.js",
       "_appendCurrentResult@chrome://global/content/bindings/autocomplete.xml",
       "_invalidate@chrome://global/content/bindings/autocomplete.xml",
       "invalidate@chrome://global/content/bindings/autocomplete.xml",
@@ -50,8 +50,8 @@ EXPECTED_REFLOWS_FIRST_OPEN.push(
 
   {
     stack: [
-      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
-      "handleOverUnderflow@chrome://global/content/bindings/autocomplete.xml",
+      "_handleOverflow@chrome://global/content/elements/autocomplete-richlistitem.js",
+      "handleOverUnderflow@chrome://global/content/elements/autocomplete-richlistitem.js",
       "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openPopup@chrome://global/content/bindings/autocomplete.xml",
@@ -75,9 +75,9 @@ EXPECTED_REFLOWS_FIRST_OPEN.push(
 const EXPECTED_REFLOWS_SECOND_OPEN = [
   {
     stack: [
-      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
-      "handleOverUnderflow@chrome://global/content/bindings/autocomplete.xml",
-      "_reuseAcItem@chrome://global/content/bindings/autocomplete.xml",
+      "_handleOverflow@chrome://global/content/elements/autocomplete-richlistitem.js",
+      "handleOverUnderflow@chrome://global/content/elements/autocomplete-richlistitem.js",
+      "_reuseAcItem@chrome://global/content/elements/autocomplete-richlistitem.js",
       "_appendCurrentResult@chrome://global/content/bindings/autocomplete.xml",
       "_invalidate@chrome://global/content/bindings/autocomplete.xml",
       "invalidate@chrome://global/content/bindings/autocomplete.xml",
