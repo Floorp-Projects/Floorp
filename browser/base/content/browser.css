@@ -709,7 +709,7 @@ html|input.urlbar-input {
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
-  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistitem-insecure-field");
+  -moz-binding: none;
   height: auto;
 }
 
