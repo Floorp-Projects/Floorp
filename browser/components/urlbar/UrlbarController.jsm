@@ -105,19 +105,18 @@ class UrlbarController {
   /**
    * Cancels an in-progress query. Note, queries may continue running if they
    * can't be canceled.
-   *
-   * @param {UrlbarQueryContext} queryContext The query details.
    */
-  cancelQuery(queryContext) {
-    if (queryContext === this._lastQueryContext) {
-      delete this._lastQueryContext;
+  cancelQuery() {
+    if (!this._lastQueryContext) {
+      return;
     }
 
-    TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, queryContext);
-    TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, queryContext);
+    TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, this._lastQueryContext);
+    TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, this._lastQueryContext);
 
-    this.manager.cancelQuery(queryContext);
-    this._notify("onQueryCancelled", queryContext);
+    this.manager.cancelQuery(this._lastQueryContext);
+    this._notify("onQueryCancelled", this._lastQueryContext);
+    delete this._lastQueryContext;
   }
 
   /**
