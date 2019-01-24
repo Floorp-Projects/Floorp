@@ -45,7 +45,7 @@ DrawTargetD2D1::DrawTargetD2D1()
       mTransformedGlyphsSinceLastPurge(0),
       mComplexBlendsWithListInList(0),
       mDeviceSeq(0),
-      mIsInitialized(false) {}
+      mInitState(InitState::Uninitialized) {}
 
 DrawTargetD2D1::~DrawTargetD2D1() {
   PopAllClips();
@@ -90,7 +90,7 @@ DrawTargetD2D1::~DrawTargetD2D1() {
 bool DrawTargetD2D1::IsValid() const {
   if (NS_IsMainThread()) {
     // Uninitialized DTs are considered valid.
-    return !mIsInitialized || mDC;
+    return mInitState != InitState::Failure;
   } else {
     return const_cast<DrawTargetD2D1 *>(this)->EnsureInitialized();
   }
@@ -1315,12 +1315,12 @@ void DrawTargetD2D1::FlushInternal(bool aHasDependencyMutex /* = false */) {
 }
 
 bool DrawTargetD2D1::EnsureInitialized() {
-  if (mIsInitialized) {
-    return !!mDC;
+  if (mInitState != InitState::Uninitialized) {
+    return mInitState == InitState::Success;
   }
 
   // Don't retry.
-  mIsInitialized = true;
+  mInitState = InitState::Failure;
 
   HRESULT hr;
 
@@ -1399,6 +1399,8 @@ bool DrawTargetD2D1::EnsureInitialized() {
   if (!mSurface) {
     mDC->Clear();
   }
+
+  mInitState = InitState::Success;
 
   return true;
 }
