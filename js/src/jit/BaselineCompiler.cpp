@@ -896,14 +896,10 @@ bool BaselineCompiler::initEnvironmentChain() {
         return false;
       }
     }
-  } else if (handler.module()) {
-    // Modules use a pre-created scope object.
-    Register scope = R1.scratchReg();
-    masm.movePtr(ImmGCPtr(&handler.module()->initialEnvironment()), scope);
-    masm.storePtr(scope, frame.addressOfEnvironmentChain());
-  } else {
+  } else if (!handler.module()) {
     // EnvironmentChain pointer in BaselineFrame has already been initialized
-    // in prologue, but we need to check for redeclaration errors.
+    // in prologue, but we need to check for redeclaration errors in global and
+    // eval scripts.
 
     prepareVMCall();
 
@@ -5551,7 +5547,7 @@ bool BaselineInterpreterCodeGen::emit_JSOP_IMPORTMETA() {
   MOZ_CRASH("NYI: interpreter JSOP_IMPORTMETA");
 }
 
-typedef JSObject* (*StartDynamicModuleImportFn)(JSContext*, HandleObject,
+typedef JSObject* (*StartDynamicModuleImportFn)(JSContext*, HandleScript,
                                                 HandleValue);
 static const VMFunction StartDynamicModuleImportInfo =
     FunctionInfo<StartDynamicModuleImportFn>(js::StartDynamicModuleImport,
@@ -5559,15 +5555,12 @@ static const VMFunction StartDynamicModuleImportInfo =
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_DYNAMIC_IMPORT() {
-  JSScript* script = handler.script();
-  RootedObject referencingScriptSource(cx, script->sourceObject());
-
   // Put specifier value in R0.
   frame.popRegsAndSync(1);
 
   prepareVMCall();
   pushArg(R0);
-  pushArg(ImmGCPtr(referencingScriptSource));
+  pushScriptArg();
   if (!callVM(StartDynamicModuleImportInfo)) {
     return false;
   }
@@ -5575,11 +5568,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DYNAMIC_IMPORT() {
   masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
   frame.push(R0);
   return true;
-}
-
-template <>
-bool BaselineInterpreterCodeGen::emit_JSOP_DYNAMIC_IMPORT() {
-  MOZ_CRASH("NYI: interpreter JSOP_DYNAMIC_IMPORT");
 }
 
 bool BaselineCompiler::emitPrologue() {

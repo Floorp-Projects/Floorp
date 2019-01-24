@@ -1678,15 +1678,10 @@ JSObject* js::CallModuleResolveHook(JSContext* cx,
   return result;
 }
 
-JSObject* js::StartDynamicModuleImport(JSContext* cx,
-                                       HandleObject referencingScriptSource,
+JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                        HandleValue specifierArg) {
-  RootedValue referencingPrivate(cx);
-  if (referencingScriptSource) {
-    ScriptSourceObject* sso =
-        &UncheckedUnwrap(referencingScriptSource)->as<ScriptSourceObject>();
-    referencingPrivate = sso->canonicalPrivate();
-  }
+  RootedValue referencingPrivate(cx,
+                                 script->sourceObject()->canonicalPrivate());
 
   RootedObject promiseConstructor(cx, JS::GetPromiseConstructor(cx));
   if (!promiseConstructor) {
