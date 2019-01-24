@@ -271,6 +271,10 @@ class Zone : public JS::shadow::Zone,
     return &needsIncrementalBarrier_;
   }
 
+  static constexpr size_t offsetOfNeedsIncrementalBarrier() {
+    return offsetof(Zone, needsIncrementalBarrier_);
+  }
+
   js::jit::JitZone* getJitZone(JSContext* cx) {
     return jitZone_ ? jitZone_ : createJitZone(cx);
   }

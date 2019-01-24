@@ -3460,13 +3460,12 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
     masm.loadValue(argAddr, R0);
     frame.push(R0);
   } else {
-    masm.guardedCallPreBarrier(argAddr, MIRType::Value);
+    Register temp = R1.scratchReg();
+    masm.guardedCallPreBarrierAnyZone(argAddr, MIRType::Value, temp);
     masm.loadValue(frame.addressOfStackValue(-1), R0);
     masm.storeValue(R0, argAddr);
 
     MOZ_ASSERT(frame.numUnsyncedSlots() == 0);
-
-    Register temp = R1.scratchReg();
 
     // Reload the arguments object
     Register reg = R2.scratchReg();
@@ -4922,12 +4921,12 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITIALYIELD() {
                   Address(genObj, GeneratorObject::offsetOfResumeIndexSlot()));
 
   Register envObj = R0.scratchReg();
+  Register temp = R1.scratchReg();
   Address envChainSlot(genObj, GeneratorObject::offsetOfEnvironmentChainSlot());
   masm.loadPtr(frame.addressOfEnvironmentChain(), envObj);
-  masm.guardedCallPreBarrier(envChainSlot, MIRType::Value);
+  masm.guardedCallPreBarrierAnyZone(envChainSlot, MIRType::Value, temp);
   masm.storeValue(JSVAL_TYPE_OBJECT, envObj, envChainSlot);
 
-  Register temp = R1.scratchReg();
   Label skipBarrier;
   masm.branchPtrInNurseryChunk(Assembler::Equal, genObj, temp, &skipBarrier);
   masm.branchPtrInNurseryChunk(Assembler::NotEqual, envObj, temp, &skipBarrier);
@@ -5401,11 +5400,11 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITHOMEOBJECT() {
   masm.unboxObject(frame.addressOfStackValue(-1), func);
 
   // Set HOMEOBJECT_SLOT
+  Register temp = R1.scratchReg();
   Address addr(func, FunctionExtended::offsetOfMethodHomeObjectSlot());
-  masm.guardedCallPreBarrier(addr, MIRType::Value);
+  masm.guardedCallPreBarrierAnyZone(addr, MIRType::Value, temp);
   masm.storeValue(R0, addr);
 
-  Register temp = R1.scratchReg();
   Label skipBarrier;
   masm.branchPtrInNurseryChunk(Assembler::Equal, func, temp, &skipBarrier);
   masm.branchValueIsNurseryObject(Assembler::NotEqual, R0, temp, &skipBarrier);

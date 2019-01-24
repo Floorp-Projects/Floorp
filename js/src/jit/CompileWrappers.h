@@ -50,6 +50,7 @@ class CompileRuntime {
   uint32_t* addressOfTenuredAllocCount();
   const void* addressOfJitStackLimit();
   const void* addressOfInterruptBits();
+  const void* addressOfZone();
 
 #ifdef DEBUG
   bool isInsideNursery(gc::Cell* cell);

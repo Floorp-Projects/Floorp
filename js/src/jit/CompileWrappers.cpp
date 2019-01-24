@@ -81,6 +81,10 @@ const void* CompileRuntime::addressOfInterruptBits() {
   return runtime()->mainContextFromAnyThread()->addressOfInterruptBits();
 }
 
+const void* CompileRuntime::addressOfZone() {
+  return runtime()->mainContextFromAnyThread()->addressOfZone();
+}
+
 #ifdef DEBUG
 bool CompileRuntime::isInsideNursery(gc::Cell* cell) {
   return UninlinedIsInsideNursery(cell);
