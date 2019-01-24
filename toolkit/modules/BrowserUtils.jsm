@@ -319,7 +319,6 @@ var BrowserUtils = {
    */
   canFindInPage(location) {
     return !location.startsWith("about:addons") &&
-           !location.startsWith("about:config") &&
            !location.startsWith("about:preferences");
   },
 

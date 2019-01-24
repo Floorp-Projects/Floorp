@@ -42,8 +42,10 @@ var gExceptionPaths = [
   // Exclude all search-plugins because they aren't referenced by filename
   "resource://search-plugins/",
 
-  // This is only in Nightly, and accessed using a direct chrome URL
-  "chrome://browser/content/aboutconfig/",
+  // Previous version of "about:config" kept for risk mitigation as a hidden
+  // page accessed using a direct chrome URL, will be removed in the future.
+  "chrome://global/content/config.js",
+  "chrome://global/content/config.xul",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
