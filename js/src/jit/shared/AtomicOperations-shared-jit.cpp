@@ -97,14 +97,12 @@ static constexpr Register64 AtomicReturnReg64 = ReturnReg64;
 // Save LR because it's the second scratch register.  The first scratch register
 // is r12 (IP).  The atomics implementation in the MacroAssembler uses both.
 
-static const LiveRegisterSet AtomicNonVolatileRegs =
-  LiveRegisterSet(GeneralRegisterSet((uint32_t(1) << Registers::r4) |
-                                     (uint32_t(1) << Registers::r5) |
-                                     (uint32_t(1) << Registers::r6) |
-                                     (uint32_t(1) << Registers::r7) |
-                                     (uint32_t(1) << Registers::r8) |
-                                     (uint32_t(1) << Registers::lr)),
-                  FloatRegisterSet(0));
+static const LiveRegisterSet AtomicNonVolatileRegs = LiveRegisterSet(
+    GeneralRegisterSet(
+        (uint32_t(1) << Registers::r4) | (uint32_t(1) << Registers::r5) |
+        (uint32_t(1) << Registers::r6) | (uint32_t(1) << Registers::r7) |
+        (uint32_t(1) << Registers::r8) | (uint32_t(1) << Registers::lr)),
+    FloatRegisterSet(0));
 
 static constexpr Register AtomicPtrReg = r8;
 static constexpr Register AtomicPtr2Reg = r6;
@@ -120,10 +118,9 @@ static constexpr Register64 AtomicReturnReg64 = ReturnReg64;
 
 // There are no argument registers.
 
-static const LiveRegisterSet AtomicNonVolatileRegs =
-  LiveRegisterSet(GeneralRegisterSet((1 << X86Encoding::rbx) |
-                                     (1 << X86Encoding::rsi)),
-                  FloatRegisterSet(0));
+static const LiveRegisterSet AtomicNonVolatileRegs = LiveRegisterSet(
+    GeneralRegisterSet((1 << X86Encoding::rbx) | (1 << X86Encoding::rsi)),
+    FloatRegisterSet(0));
 
 static constexpr Register AtomicPtrReg = esi;
 static constexpr Register AtomicPtr2Reg = ebx;
@@ -169,18 +166,19 @@ static constexpr Scalar::Type SIZEWORD = SIZE32;
 // Blocks and words can be aligned or unaligned; specific (generated) copying
 // functions handle this in platform-specific ways.
 
-static constexpr size_t WORDSIZE = sizeof(uintptr_t); // Also see SIZEWORD above
-static constexpr size_t BLOCKSIZE = 8 * WORDSIZE;     // Must be a power of 2
+static constexpr size_t WORDSIZE =
+    sizeof(uintptr_t);                             // Also see SIZEWORD above
+static constexpr size_t BLOCKSIZE = 8 * WORDSIZE;  // Must be a power of 2
 
-static_assert(BLOCKSIZE % WORDSIZE == 0, "A block is an integral number of words");
+static_assert(BLOCKSIZE % WORDSIZE == 0,
+              "A block is an integral number of words");
 
 static constexpr size_t WORDMASK = WORDSIZE - 1;
 static constexpr size_t BLOCKMASK = BLOCKSIZE - 1;
 
-struct ArgIterator
-{
-    ABIArgGenerator abi;
-    unsigned argBase = 0;
+struct ArgIterator {
+  ABIArgGenerator abi;
+  unsigned argBase = 0;
 };
 
 static void GenGprArg(MacroAssembler& masm, MIRType t, ArgIterator* iter,
@@ -200,9 +198,7 @@ static void GenGprArg(MacroAssembler& masm, MIRType t, ArgIterator* iter,
       masm.loadPtr(src, reg);
       break;
     }
-    default: {
-      MOZ_CRASH("Not possible");
-    }
+    default: { MOZ_CRASH("Not possible"); }
   }
 }
 
@@ -236,9 +232,7 @@ static void GenGpr64Arg(MacroAssembler& masm, ArgIterator* iter,
       break;
     }
 #endif
-    default: {
-      MOZ_CRASH("Not possible");
-    }
+    default: { MOZ_CRASH("Not possible"); }
   }
 }
 
@@ -363,8 +357,8 @@ static uint32_t GenStore(MacroAssembler& masm, Scalar::Type size,
 }
 
 enum class CopyDir {
-  DOWN,                       // Move data down, ie, iterate toward higher addresses
-  UP                          // The other way
+  DOWN,  // Move data down, ie, iterate toward higher addresses
+  UP     // The other way
 };
 
 static uint32_t GenCopy(MacroAssembler& masm, Scalar::Type size,
@@ -378,7 +372,7 @@ static uint32_t GenCopy(MacroAssembler& masm, Scalar::Type size,
   GenGprArg(masm, MIRType::Pointer, &iter, dest);
   GenGprArg(masm, MIRType::Pointer, &iter, src);
 
-  uint32_t offset = direction == CopyDir::DOWN ? 0 : unroll-1;
+  uint32_t offset = direction == CopyDir::DOWN ? 0 : unroll - 1;
   for (uint32_t i = 0; i < unroll; i++) {
     switch (size) {
       case SIZE8:
@@ -386,17 +380,17 @@ static uint32_t GenCopy(MacroAssembler& masm, Scalar::Type size,
         masm.store8(AtomicTemp, Address(dest, offset));
         break;
       case SIZE16:
-        masm.load16ZeroExtend(Address(src, offset*2), AtomicTemp);
-        masm.store16(AtomicTemp, Address(dest, offset*2));
+        masm.load16ZeroExtend(Address(src, offset * 2), AtomicTemp);
+        masm.store16(AtomicTemp, Address(dest, offset * 2));
         break;
       case SIZE32:
-        masm.load32(Address(src, offset*4), AtomicTemp);
-        masm.store32(AtomicTemp, Address(dest, offset*4));
+        masm.load32(Address(src, offset * 4), AtomicTemp);
+        masm.store32(AtomicTemp, Address(dest, offset * 4));
         break;
       case SIZE64:
 #if defined(JS_64BIT)
-        masm.load64(Address(src, offset*8), AtomicTemp64);
-        masm.store64(AtomicTemp64, Address(dest, offset*8));
+        masm.load64(Address(src, offset * 8), AtomicTemp64);
+        masm.store64(AtomicTemp64, Address(dest, offset * 8));
         break;
 #else
         MOZ_CRASH("64-bit atomic load/store not available on this platform");
@@ -479,9 +473,8 @@ static uint32_t GenExchange(MacroAssembler& masm, Scalar::Type size,
   return start;
 }
 
-static uint32_t
-GenFetchOp(MacroAssembler& masm, Scalar::Type size, AtomicOp op,
-           Synchronization sync) {
+static uint32_t GenFetchOp(MacroAssembler& masm, Scalar::Type size, AtomicOp op,
+                           Synchronization sync) {
   ArgIterator iter;
   uint32_t start = GenPrologue(masm, &iter);
   GenGprArg(masm, MIRType::Pointer, &iter, AtomicPtrReg);
@@ -493,22 +486,21 @@ GenFetchOp(MacroAssembler& masm, Scalar::Type size, AtomicOp op,
     case SIZE32: {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
       Register tmp = op == AtomicFetchAddOp || op == AtomicFetchSubOp
-        ? Register::Invalid()
-        : AtomicTemp;
+                         ? Register::Invalid()
+                         : AtomicTemp;
 #else
       Register tmp = AtomicTemp;
 #endif
       GenGprArg(masm, MIRType::Int32, &iter, AtomicValReg);
-      masm.atomicFetchOp(size, sync, op, AtomicValReg, addr, tmp,
-                         ReturnReg);
+      masm.atomicFetchOp(size, sync, op, AtomicValReg, addr, tmp, ReturnReg);
       break;
     }
     case SIZE64: {
 #if defined(JS_64BIT)
 #  if defined(JS_CODEGEN_X64)
       Register64 tmp = op == AtomicFetchAddOp || op == AtomicFetchSubOp
-        ? Register64::Invalid()
-        : AtomicTemp64;
+                           ? Register64::Invalid()
+                           : AtomicTemp64;
 #  else
       Register64 tmp = AtomicTemp64;
 #  endif
@@ -573,20 +565,29 @@ uint64_t (*AtomicStore64Unsynchronized)(uint64_t* addr, uint64_t val);
 // src and dest point to the lower addresses of the respective data areas
 // irrespective of "up" or "down".
 
-static void (*AtomicCopyUnalignedBlockDownUnsynchronized)(uint8_t* dest, const uint8_t* src);
-static void (*AtomicCopyUnalignedBlockUpUnsynchronized)(uint8_t* dest, const uint8_t* src);
-static void (*AtomicCopyUnalignedWordDownUnsynchronized)(uint8_t* dest, const uint8_t* src);
-static void (*AtomicCopyUnalignedWordUpUnsynchronized)(uint8_t* dest, const uint8_t* src);
+static void (*AtomicCopyUnalignedBlockDownUnsynchronized)(uint8_t* dest,
+                                                          const uint8_t* src);
+static void (*AtomicCopyUnalignedBlockUpUnsynchronized)(uint8_t* dest,
+                                                        const uint8_t* src);
+static void (*AtomicCopyUnalignedWordDownUnsynchronized)(uint8_t* dest,
+                                                         const uint8_t* src);
+static void (*AtomicCopyUnalignedWordUpUnsynchronized)(uint8_t* dest,
+                                                       const uint8_t* src);
 
-static void (*AtomicCopyBlockDownUnsynchronized)(uint8_t* dest, const uint8_t* src);
-static void (*AtomicCopyBlockUpUnsynchronized)(uint8_t* dest, const uint8_t* src);
+static void (*AtomicCopyBlockDownUnsynchronized)(uint8_t* dest,
+                                                 const uint8_t* src);
+static void (*AtomicCopyBlockUpUnsynchronized)(uint8_t* dest,
+                                               const uint8_t* src);
 static void (*AtomicCopyWordUnsynchronized)(uint8_t* dest, const uint8_t* src);
 static void (*AtomicCopyByteUnsynchronized)(uint8_t* dest, const uint8_t* src);
 
 uint8_t (*AtomicCmpXchg8SeqCst)(uint8_t* addr, uint8_t oldval, uint8_t newval);
-uint16_t (*AtomicCmpXchg16SeqCst)(uint16_t* addr, uint16_t oldval, uint16_t newval);
-uint32_t (*AtomicCmpXchg32SeqCst)(uint32_t* addr, uint32_t oldval, uint32_t newval);
-uint64_t (*AtomicCmpXchg64SeqCst)(uint64_t* addr, uint64_t oldval, uint64_t newval);
+uint16_t (*AtomicCmpXchg16SeqCst)(uint16_t* addr, uint16_t oldval,
+                                  uint16_t newval);
+uint32_t (*AtomicCmpXchg32SeqCst)(uint32_t* addr, uint32_t oldval,
+                                  uint32_t newval);
+uint64_t (*AtomicCmpXchg64SeqCst)(uint64_t* addr, uint64_t oldval,
+                                  uint64_t newval);
 
 uint8_t (*AtomicExchange8SeqCst)(uint8_t* addr, uint8_t val);
 uint16_t (*AtomicExchange16SeqCst)(uint16_t* addr, uint16_t val);
@@ -626,8 +627,7 @@ uint64_t (*AtomicXor64SeqCst)(uint64_t* addr, uint64_t val);
 static bool UnalignedAccessesAreOK() {
 #ifdef DEBUG
   const char* flag = getenv("JS_NO_UNALIGNED_MEMCPY");
-  if (flag && *flag == '1')
-    return false;
+  if (flag && *flag == '1') return false;
 #endif
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   return true;
@@ -651,20 +651,19 @@ void AtomicMemcpyDownUnsynchronized(uint8_t* dest, const uint8_t* src,
   // that supports it.
 
   if (nbytes >= WORDSIZE) {
-    void (*copyBlock)(uint8_t* dest, const uint8_t* src);
-    void (*copyWord)(uint8_t* dest, const uint8_t* src);
+    void (*copyBlock)(uint8_t * dest, const uint8_t* src);
+    void (*copyWord)(uint8_t * dest, const uint8_t* src);
 
     if (((uintptr_t(dest) ^ uintptr_t(src)) & WORDMASK) == 0) {
-      const uint8_t* cutoff = (const uint8_t*)JS_ROUNDUP(uintptr_t(src),
-                                                         WORDSIZE);
-      MOZ_ASSERT(cutoff <= lim); // because nbytes >= WORDSIZE
+      const uint8_t* cutoff =
+          (const uint8_t*)JS_ROUNDUP(uintptr_t(src), WORDSIZE);
+      MOZ_ASSERT(cutoff <= lim);  // because nbytes >= WORDSIZE
       while (src < cutoff) {
         AtomicCopyByteUnsynchronized(dest++, src++);
       }
       copyBlock = AtomicCopyBlockDownUnsynchronized;
       copyWord = AtomicCopyWordUnsynchronized;
-    }
-    else if (UnalignedAccessesAreOK()) {
+    } else if (UnalignedAccessesAreOK()) {
       copyBlock = AtomicCopyBlockDownUnsynchronized;
       copyWord = AtomicCopyWordUnsynchronized;
     } else {
@@ -704,19 +703,18 @@ void AtomicMemcpyUpUnsynchronized(uint8_t* dest, const uint8_t* src,
   dest += nbytes;
 
   if (nbytes >= WORDSIZE) {
-    void (*copyBlock)(uint8_t* dest, const uint8_t* src);
-    void (*copyWord)(uint8_t* dest, const uint8_t* src);
+    void (*copyBlock)(uint8_t * dest, const uint8_t* src);
+    void (*copyWord)(uint8_t * dest, const uint8_t* src);
 
     if (((uintptr_t(dest) ^ uintptr_t(src)) & WORDMASK) == 0) {
       const uint8_t* cutoff = (const uint8_t*)(uintptr_t(src) & ~WORDMASK);
-      MOZ_ASSERT(cutoff >= lim); // Because nbytes >= WORDSIZE
+      MOZ_ASSERT(cutoff >= lim);  // Because nbytes >= WORDSIZE
       while (src > cutoff) {
         AtomicCopyByteUnsynchronized(--dest, --src);
       }
       copyBlock = AtomicCopyBlockUpUnsynchronized;
       copyWord = AtomicCopyWordUnsynchronized;
-    }
-    else if (UnalignedAccessesAreOK()) {
+    } else if (UnalignedAccessesAreOK()) {
       copyBlock = AtomicCopyBlockUpUnsynchronized;
       copyWord = AtomicCopyWordUnsynchronized;
     } else {
@@ -797,18 +795,18 @@ bool InitializeJittedAtomics() {
 #endif
 
   uint32_t copyUnalignedBlockDownUnsynchronized =
-    GenCopy(masm, SIZE8, BLOCKSIZE, CopyDir::DOWN);
+      GenCopy(masm, SIZE8, BLOCKSIZE, CopyDir::DOWN);
   uint32_t copyUnalignedBlockUpUnsynchronized =
-    GenCopy(masm, SIZE8, BLOCKSIZE, CopyDir::UP);
+      GenCopy(masm, SIZE8, BLOCKSIZE, CopyDir::UP);
   uint32_t copyUnalignedWordDownUnsynchronized =
-    GenCopy(masm, SIZE8, WORDSIZE, CopyDir::DOWN);
+      GenCopy(masm, SIZE8, WORDSIZE, CopyDir::DOWN);
   uint32_t copyUnalignedWordUpUnsynchronized =
-    GenCopy(masm, SIZE8, WORDSIZE, CopyDir::UP);
+      GenCopy(masm, SIZE8, WORDSIZE, CopyDir::UP);
 
   uint32_t copyBlockDownUnsynchronized =
-    GenCopy(masm, SIZEWORD, BLOCKSIZE/WORDSIZE, CopyDir::DOWN);
+      GenCopy(masm, SIZEWORD, BLOCKSIZE / WORDSIZE, CopyDir::DOWN);
   uint32_t copyBlockUpUnsynchronized =
-    GenCopy(masm, SIZEWORD, BLOCKSIZE/WORDSIZE, CopyDir::UP);
+      GenCopy(masm, SIZEWORD, BLOCKSIZE / WORDSIZE, CopyDir::UP);
   uint32_t copyWordUnsynchronized = GenCopy(masm, SIZEWORD, 1, CopyDir::DOWN);
   uint32_t copyByteUnsynchronized = GenCopy(masm, SIZE8, 1, CopyDir::DOWN);
 
@@ -860,10 +858,9 @@ bool InitializeJittedAtomics() {
   // Allocate executable memory.
   uint32_t codeLength = masm.bytesNeeded();
   size_t roundedCodeLength = JS_ROUNDUP(codeLength, ExecutableCodePageSize);
-  uint8_t* code =
-    (uint8_t*)AllocateExecutableMemory(roundedCodeLength,
-                                       ProtectionSetting::Writable,
-                                       MemCheckKind::MakeUndefined);
+  uint8_t* code = (uint8_t*)AllocateExecutableMemory(
+      roundedCodeLength, ProtectionSetting::Writable,
+      MemCheckKind::MakeUndefined);
   if (!code) {
     return false;
   }
@@ -886,10 +883,10 @@ bool InitializeJittedAtomics() {
 
   // Create the function pointers.
 
-  AtomicFenceSeqCst = (void(*)())(code + fenceSeqCst);
+  AtomicFenceSeqCst = (void (*)())(code + fenceSeqCst);
 
 #ifndef JS_64BIT
-  AtomicCompilerFence = (void(*)())(code + nop);
+  AtomicCompilerFence = (void (*)())(code + nop);
 #endif
 
   AtomicLoad8SeqCst = (uint8_t(*)(const uint8_t* addr))(code + load8SeqCst);
@@ -900,128 +897,124 @@ bool InitializeJittedAtomics() {
 #endif
 
   AtomicLoad8Unsynchronized =
-    (uint8_t(*)(const uint8_t* addr))(code + load8Unsynchronized);
+      (uint8_t(*)(const uint8_t* addr))(code + load8Unsynchronized);
   AtomicLoad16Unsynchronized =
-    (uint16_t(*)(const uint16_t* addr))(code + load16Unsynchronized);
+      (uint16_t(*)(const uint16_t* addr))(code + load16Unsynchronized);
   AtomicLoad32Unsynchronized =
-    (uint32_t(*)(const uint32_t* addr))(code + load32Unsynchronized);
+      (uint32_t(*)(const uint32_t* addr))(code + load32Unsynchronized);
 #ifdef JS_64BIT
   AtomicLoad64Unsynchronized =
-    (uint64_t(*)(const uint64_t* addr))(code + load64Unsynchronized);
+      (uint64_t(*)(const uint64_t* addr))(code + load64Unsynchronized);
 #endif
 
   AtomicStore8SeqCst =
-    (uint8_t(*)(uint8_t* addr, uint8_t val))(code + store8SeqCst);
+      (uint8_t(*)(uint8_t * addr, uint8_t val))(code + store8SeqCst);
   AtomicStore16SeqCst =
-    (uint16_t(*)(uint16_t* addr, uint16_t val))(code + store16SeqCst);
+      (uint16_t(*)(uint16_t * addr, uint16_t val))(code + store16SeqCst);
   AtomicStore32SeqCst =
-    (uint32_t(*)(uint32_t* addr, uint32_t val))(code + store32SeqCst);
+      (uint32_t(*)(uint32_t * addr, uint32_t val))(code + store32SeqCst);
 #ifdef JS_64BIT
   AtomicStore64SeqCst =
-    (uint64_t(*)(uint64_t* addr, uint64_t val))(code + store64SeqCst);
+      (uint64_t(*)(uint64_t * addr, uint64_t val))(code + store64SeqCst);
 #endif
 
   AtomicStore8Unsynchronized =
-    (uint8_t(*)(uint8_t* addr, uint8_t val))(code + store8Unsynchronized);
-  AtomicStore16Unsynchronized =
-    (uint16_t(*)(uint16_t* addr, uint16_t val))(code + store16Unsynchronized);
-  AtomicStore32Unsynchronized =
-    (uint32_t(*)(uint32_t* addr, uint32_t val))(code + store32Unsynchronized);
+      (uint8_t(*)(uint8_t * addr, uint8_t val))(code + store8Unsynchronized);
+  AtomicStore16Unsynchronized = (uint16_t(*)(uint16_t * addr, uint16_t val))(
+      code + store16Unsynchronized);
+  AtomicStore32Unsynchronized = (uint32_t(*)(uint32_t * addr, uint32_t val))(
+      code + store32Unsynchronized);
 #ifdef JS_64BIT
-  AtomicStore64Unsynchronized =
-    (uint64_t(*)(uint64_t* addr, uint64_t val))(code + store64Unsynchronized);
+  AtomicStore64Unsynchronized = (uint64_t(*)(uint64_t * addr, uint64_t val))(
+      code + store64Unsynchronized);
 #endif
 
   AtomicCopyUnalignedBlockDownUnsynchronized =
-    (void(*)(uint8_t* dest, const uint8_t* src))(
-      code + copyUnalignedBlockDownUnsynchronized);
+      (void (*)(uint8_t * dest, const uint8_t* src))(
+          code + copyUnalignedBlockDownUnsynchronized);
   AtomicCopyUnalignedBlockUpUnsynchronized =
-    (void(*)(uint8_t* dest, const uint8_t* src))(
-      code + copyUnalignedBlockUpUnsynchronized);
+      (void (*)(uint8_t * dest, const uint8_t* src))(
+          code + copyUnalignedBlockUpUnsynchronized);
   AtomicCopyUnalignedWordDownUnsynchronized =
-    (void(*)(uint8_t* dest, const uint8_t* src))(
-      code + copyUnalignedWordDownUnsynchronized);
+      (void (*)(uint8_t * dest, const uint8_t* src))(
+          code + copyUnalignedWordDownUnsynchronized);
   AtomicCopyUnalignedWordUpUnsynchronized =
-    (void(*)(uint8_t* dest, const uint8_t* src))(
-      code + copyUnalignedWordUpUnsynchronized);
+      (void (*)(uint8_t * dest, const uint8_t* src))(
+          code + copyUnalignedWordUpUnsynchronized);
 
-  AtomicCopyBlockDownUnsynchronized =
-    (void(*)(uint8_t* dest, const uint8_t* src))(
-      code + copyBlockDownUnsynchronized);
-  AtomicCopyBlockUpUnsynchronized =
-    (void(*)(uint8_t* dest, const uint8_t* src))(
-      code + copyBlockUpUnsynchronized);
-  AtomicCopyWordUnsynchronized =
-    (void(*)(uint8_t* dest, const uint8_t* src))(code + copyWordUnsynchronized);
-  AtomicCopyByteUnsynchronized =
-    (void(*)(uint8_t* dest, const uint8_t* src))(code + copyByteUnsynchronized);
+  AtomicCopyBlockDownUnsynchronized = (void (*)(
+      uint8_t * dest, const uint8_t* src))(code + copyBlockDownUnsynchronized);
+  AtomicCopyBlockUpUnsynchronized = (void (*)(
+      uint8_t * dest, const uint8_t* src))(code + copyBlockUpUnsynchronized);
+  AtomicCopyWordUnsynchronized = (void (*)(uint8_t * dest, const uint8_t* src))(
+      code + copyWordUnsynchronized);
+  AtomicCopyByteUnsynchronized = (void (*)(uint8_t * dest, const uint8_t* src))(
+      code + copyByteUnsynchronized);
 
-  AtomicCmpXchg8SeqCst =
-    (uint8_t(*)(uint8_t* addr, uint8_t oldval, uint8_t newval))(
-      code + cmpxchg8SeqCst);
+  AtomicCmpXchg8SeqCst = (uint8_t(*)(uint8_t * addr, uint8_t oldval,
+                                     uint8_t newval))(code + cmpxchg8SeqCst);
   AtomicCmpXchg16SeqCst =
-    (uint16_t(*)(uint16_t* addr, uint16_t oldval, uint16_t newval))(
-      code + cmpxchg16SeqCst);
+      (uint16_t(*)(uint16_t * addr, uint16_t oldval, uint16_t newval))(
+          code + cmpxchg16SeqCst);
   AtomicCmpXchg32SeqCst =
-    (uint32_t(*)(uint32_t* addr, uint32_t oldval, uint32_t newval))(
-      code + cmpxchg32SeqCst);
+      (uint32_t(*)(uint32_t * addr, uint32_t oldval, uint32_t newval))(
+          code + cmpxchg32SeqCst);
   AtomicCmpXchg64SeqCst =
-    (uint64_t(*)(uint64_t* addr, uint64_t oldval, uint64_t newval))(
-      code + cmpxchg64SeqCst);
+      (uint64_t(*)(uint64_t * addr, uint64_t oldval, uint64_t newval))(
+          code + cmpxchg64SeqCst);
 
-  AtomicExchange8SeqCst = (uint8_t(*)(uint8_t* addr, uint8_t val))(
-    code + exchange8SeqCst);
-  AtomicExchange16SeqCst = (uint16_t(*)(uint16_t* addr, uint16_t val))(
-    code + exchange16SeqCst);
-  AtomicExchange32SeqCst = (uint32_t(*)(uint32_t* addr, uint32_t val))(
-    code + exchange32SeqCst);
+  AtomicExchange8SeqCst =
+      (uint8_t(*)(uint8_t * addr, uint8_t val))(code + exchange8SeqCst);
+  AtomicExchange16SeqCst =
+      (uint16_t(*)(uint16_t * addr, uint16_t val))(code + exchange16SeqCst);
+  AtomicExchange32SeqCst =
+      (uint32_t(*)(uint32_t * addr, uint32_t val))(code + exchange32SeqCst);
 #ifdef JS_64BIT
-  AtomicExchange64SeqCst = (uint64_t(*)(uint64_t* addr, uint64_t val))(
-    code + exchange64SeqCst);
+  AtomicExchange64SeqCst =
+      (uint64_t(*)(uint64_t * addr, uint64_t val))(code + exchange64SeqCst);
 #endif
 
   AtomicAdd8SeqCst =
-    (uint8_t(*)(uint8_t* addr, uint8_t val))(code + add8SeqCst);
+      (uint8_t(*)(uint8_t * addr, uint8_t val))(code + add8SeqCst);
   AtomicAdd16SeqCst =
-    (uint16_t(*)(uint16_t* addr, uint16_t val))(code + add16SeqCst);
+      (uint16_t(*)(uint16_t * addr, uint16_t val))(code + add16SeqCst);
   AtomicAdd32SeqCst =
-    (uint32_t(*)(uint32_t* addr, uint32_t val))(code + add32SeqCst);
+      (uint32_t(*)(uint32_t * addr, uint32_t val))(code + add32SeqCst);
 #ifdef JS_64BIT
   AtomicAdd64SeqCst =
-    (uint64_t(*)(uint64_t* addr, uint64_t val))(code + add64SeqCst);
+      (uint64_t(*)(uint64_t * addr, uint64_t val))(code + add64SeqCst);
 #endif
 
   AtomicAnd8SeqCst =
-    (uint8_t(*)(uint8_t* addr, uint8_t val))(code + and8SeqCst);
+      (uint8_t(*)(uint8_t * addr, uint8_t val))(code + and8SeqCst);
   AtomicAnd16SeqCst =
-    (uint16_t(*)(uint16_t* addr, uint16_t val))(code + and16SeqCst);
+      (uint16_t(*)(uint16_t * addr, uint16_t val))(code + and16SeqCst);
   AtomicAnd32SeqCst =
-    (uint32_t(*)(uint32_t* addr, uint32_t val))(code + and32SeqCst);
+      (uint32_t(*)(uint32_t * addr, uint32_t val))(code + and32SeqCst);
 #ifdef JS_64BIT
   AtomicAnd64SeqCst =
-    (uint64_t(*)(uint64_t* addr, uint64_t val))(code + and64SeqCst);
+      (uint64_t(*)(uint64_t * addr, uint64_t val))(code + and64SeqCst);
 #endif
 
-  AtomicOr8SeqCst =
-    (uint8_t(*)(uint8_t* addr, uint8_t val))(code + or8SeqCst);
+  AtomicOr8SeqCst = (uint8_t(*)(uint8_t * addr, uint8_t val))(code + or8SeqCst);
   AtomicOr16SeqCst =
-    (uint16_t(*)(uint16_t* addr, uint16_t val))(code + or16SeqCst);
+      (uint16_t(*)(uint16_t * addr, uint16_t val))(code + or16SeqCst);
   AtomicOr32SeqCst =
-    (uint32_t(*)(uint32_t* addr, uint32_t val))(code + or32SeqCst);
+      (uint32_t(*)(uint32_t * addr, uint32_t val))(code + or32SeqCst);
 #ifdef JS_64BIT
   AtomicOr64SeqCst =
-    (uint64_t(*)(uint64_t* addr, uint64_t val))(code + or64SeqCst);
+      (uint64_t(*)(uint64_t * addr, uint64_t val))(code + or64SeqCst);
 #endif
 
   AtomicXor8SeqCst =
-    (uint8_t(*)(uint8_t* addr, uint8_t val))(code + xor8SeqCst);
+      (uint8_t(*)(uint8_t * addr, uint8_t val))(code + xor8SeqCst);
   AtomicXor16SeqCst =
-    (uint16_t(*)(uint16_t* addr, uint16_t val))(code + xor16SeqCst);
+      (uint16_t(*)(uint16_t * addr, uint16_t val))(code + xor16SeqCst);
   AtomicXor32SeqCst =
-    (uint32_t(*)(uint32_t* addr, uint32_t val))(code + xor32SeqCst);
+      (uint32_t(*)(uint32_t * addr, uint32_t val))(code + xor32SeqCst);
 #ifdef JS_64BIT
   AtomicXor64SeqCst =
-    (uint64_t(*)(uint64_t* addr, uint64_t val))(code + xor64SeqCst);
+      (uint64_t(*)(uint64_t * addr, uint64_t val))(code + xor64SeqCst);
 #endif
 
   codeSegment = code;
@@ -1039,5 +1032,5 @@ void ShutDownJittedAtomics() {
   codeSegmentSize = 0;
 }
 
-} // jit
-} // js
+}  // namespace jit
+}  // namespace js

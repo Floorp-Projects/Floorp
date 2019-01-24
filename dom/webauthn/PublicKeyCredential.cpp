@@ -10,7 +10,7 @@
 #include "nsCycleCollectionParticipant.h"
 
 #ifdef OS_WIN
-#include "WinWebAuthnManager.h"
+#  include "WinWebAuthnManager.h"
 #endif
 
 namespace mozilla {
