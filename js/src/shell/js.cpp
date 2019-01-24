@@ -491,9 +491,7 @@ static bool enableNativeRegExp = false;
 static bool enableSharedMemory = SHARED_MEMORY_DEFAULT;
 static bool enableWasmBaseline = false;
 static bool enableWasmIon = false;
-#ifdef ENABLE_WASM_CRANELIFT
-static bool wasmForceCranelift = false;
-#endif
+static bool enableWasmCranelift = false;
 #ifdef ENABLE_WASM_REFTYPES
 static bool enableWasmGc = false;
 #endif
@@ -10184,23 +10182,38 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableBaseline = !op.getBoolOption("no-baseline");
   enableIon = !op.getBoolOption("no-ion");
   enableAsmJS = !op.getBoolOption("no-asmjs");
-  enableWasm = !op.getBoolOption("no-wasm");
   enableNativeRegExp = !op.getBoolOption("no-native-regexp");
-  enableWasmBaseline = !op.getBoolOption("no-wasm-baseline");
-  enableWasmIon = !op.getBoolOption("no-wasm-ion");
-#ifdef ENABLE_WASM_CRANELIFT
-  wasmForceCranelift = op.getBoolOption("wasm-force-cranelift");
-#endif
+
+  // Default values for wasm.
+  enableWasm = true;
+  enableWasmBaseline = true;
+  enableWasmIon = true;
+  if (const char* str = op.getStringOption("wasm-compiler")) {
+    if (strcmp(str, "none") == 0) {
+      enableWasm = false;
+    } else if (strcmp(str, "baseline") == 0) {
+      // Baseline is enabled by default.
+      enableWasmIon = false;
+    } else if (strcmp(str, "ion") == 0) {
+      // Ion is enabled by default.
+      enableWasmBaseline = false;
+    } else if (strcmp(str, "cranelift") == 0) {
+      enableWasmBaseline = false;
+      enableWasmIon = false;
+      enableWasmCranelift = true;
+    } else if (strcmp(str, "baseline+ion") == 0) {
+      // Default.
+    } else if (strcmp(str, "baseline+cranelift") == 0) {
+      // Baseline is enabled by default.
+      enableWasmIon = false;
+      enableWasmCranelift = true;
+    } else {
+      return OptionFailure("wasm-compiler", str);
+    }
+  }
+
 #ifdef ENABLE_WASM_REFTYPES
   enableWasmGc = op.getBoolOption("wasm-gc");
-#  ifdef ENABLE_WASM_CRANELIFT
-  if (enableWasmGc && wasmForceCranelift) {
-    fprintf(stderr,
-            "Do not combine --wasm-gc and --wasm-force-cranelift, they are "
-            "incompatible.\n");
-  }
-  enableWasmGc = enableWasmGc && !wasmForceCranelift;
-#  endif
 #endif
   enableWasmVerbose = op.getBoolOption("wasm-verbose");
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
@@ -10218,7 +10231,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setWasmBaseline(enableWasmBaseline)
       .setWasmIon(enableWasmIon)
 #ifdef ENABLE_WASM_CRANELIFT
-      .setWasmForceCranelift(wasmForceCranelift)
+      .setWasmCranelift(enableWasmCranelift)
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       .setWasmGc(enableWasmGc)
@@ -10535,7 +10548,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
       .setWasmBaseline(enableWasmBaseline)
       .setWasmIon(enableWasmIon)
 #ifdef ENABLE_WASM_CRANELIFT
-      .setWasmForceCranelift(wasmForceCranelift)
+      .setWasmCranelift(enableWasmCranelift)
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       .setWasmGc(enableWasmGc)
@@ -10932,16 +10945,12 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "ion", "Enable IonMonkey (default)") ||
       !op.addBoolOption('\0', "no-ion", "Disable IonMonkey") ||
       !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation") ||
-      !op.addBoolOption('\0', "no-wasm", "Disable WebAssembly compilation") ||
-      !op.addBoolOption('\0', "no-wasm-baseline",
-                        "Disable wasm baseline compiler") ||
-      !op.addBoolOption('\0', "no-wasm-ion", "Disable wasm ion compiler")
-#ifdef ENABLE_WASM_CRANELIFT
-      || !op.addBoolOption('\0', "wasm-force-cranelift",
-                           "Enable wasm Cranelift compiler")
-#endif
-      || !op.addBoolOption('\0', "wasm-verbose",
-                           "Enable WebAssembly verbose logging") ||
+      !op.addStringOption(
+          '\0', "wasm-compiler", "[option]",
+          "Choose to enable a subset of the wasm compilers (valid options are "
+          "none/baseline/ion/cranelift/baseline+ion/baseline+cranelift)") ||
+      !op.addBoolOption('\0', "wasm-verbose",
+                        "Enable WebAssembly verbose logging") ||
       !op.addBoolOption('\0', "test-wasm-await-tier2",
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2")
