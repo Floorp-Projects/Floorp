@@ -117,6 +117,7 @@ static unsigned gActivityTLS = BAD_TLS_INDEX;
 
 static bool gInitialized;
 static nsrefcnt gInitCount;
+static bool gDisableDumpStatistics = false;
 
 static FILE* gBloatLog = nullptr;
 static FILE* gRefcntsLog = nullptr;
@@ -398,6 +399,10 @@ nsresult nsTraceRefcnt::DumpStatistics() {
              "Calling DumpStatistics more than once may result in "
              "bogus positive or negative leaks being reported");
   gDumpedStatistics = true;
+
+  if (gDisableDumpStatistics) {
+    return NS_OK;
+  }
 
   // Don't try to log while we hold the lock, we'd deadlock.
   AutoRestore<LoggingType> saveLogging(gLogging);
@@ -1163,3 +1168,5 @@ void nsTraceRefcnt::SetActivityIsLegal(bool aLegal) {
 
   PR_SetThreadPrivate(gActivityTLS, reinterpret_cast<void*>(!aLegal));
 }
+
+void nsTraceRefcnt::DisableDumpStatistics() { gDisableDumpStatistics = true; }
