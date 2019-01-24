@@ -16,12 +16,13 @@ import androidx.navigation.fragment.FragmentNavigator
 import kotlinx.android.synthetic.main.fragment_search.*
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.requireComponents
 
 class SearchFragment : Fragment() {
+    private lateinit var awesomeBarFeature: AwesomeBarFeature
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -49,7 +50,7 @@ class SearchFragment : Fragment() {
             ShippedDomainsProvider().also { it.initialize(requireContext()) })
         )
 
-        AwesomeBarFeature(awesomeBar, toolbar, null, onEditComplete = ::didActivateSearch)
+        awesomeBarFeature = AwesomeBarFeature(awesomeBar, toolbar, null, onEditComplete = ::userDidSearch)
             .addSearchProvider(
                 requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()),
                 requireComponents.useCases.searchUseCases.defaultSearch)
@@ -67,7 +68,7 @@ class SearchFragment : Fragment() {
         }
     }
 
-    private fun didActivateSearch() {
+    private fun userDidSearch() {
         val extras = FragmentNavigator.Extras.Builder().addSharedElement(
             toolbar_wrapper, ViewCompat.getTransitionName(toolbar_wrapper)!!
         ).build()
