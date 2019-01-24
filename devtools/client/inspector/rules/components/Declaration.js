@@ -19,6 +19,7 @@ class Declaration extends PureComponent {
       isUserAgentStyle: PropTypes.bool.isRequired,
       onToggleDeclaration: PropTypes.func.isRequired,
       showDeclarationNameEditor: PropTypes.func.isRequired,
+      showDeclarationValueEditor: PropTypes.func.isRequired,
     };
   }
 
@@ -31,6 +32,7 @@ class Declaration extends PureComponent {
     };
 
     this.nameSpanRef = createRef();
+    this.valueSpanRef = createRef();
 
     this.onComputedExpanderClick = this.onComputedExpanderClick.bind(this);
     this.onToggleDeclarationClick = this.onToggleDeclarationClick.bind(this);
@@ -42,13 +44,18 @@ class Declaration extends PureComponent {
       return;
     }
 
-    const { declaration } = this.props;
+    const { ruleId, id } = this.props.declaration;
 
     editableItem({
       element: this.nameSpanRef.current,
     }, element => {
-      this.props.showDeclarationNameEditor(element, declaration.ruleId,
-        declaration.id);
+      this.props.showDeclarationNameEditor(element, ruleId, id);
+    });
+
+    editableItem({
+      element: this.valueSpanRef.current,
+    }, element => {
+      this.props.showDeclarationValueEditor(element, ruleId, id);
     });
   }
 
@@ -182,7 +189,14 @@ class Declaration extends PureComponent {
             style: { display: computedProperties.length ? "inline-block" : "none" },
           }),
           dom.span({ className: "ruleview-propertyvaluecontainer" },
-            dom.span({ className: "ruleview-propertyvalue theme-fg-color1" }, value),
+            dom.span(
+              {
+                className: "ruleview-propertyvalue theme-fg-color1",
+                ref: this.valueSpanRef,
+                tabIndex: 0,
+              },
+              value
+            ),
             ";"
           ),
           dom.div({

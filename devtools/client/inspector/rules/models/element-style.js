@@ -11,6 +11,7 @@ const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 
 loader.lazyRequireGetter(this, "promiseWarn", "devtools/client/inspector/shared/utils", true);
 loader.lazyRequireGetter(this, "parseDeclarations", "devtools/shared/css/parsing-utils", true);
+loader.lazyRequireGetter(this, "parseSingleValue", "devtools/shared/css/parsing-utils", true);
 loader.lazyRequireGetter(this, "isCssVariable", "devtools/shared/fronts/css-properties", true);
 
 /**
@@ -366,6 +367,100 @@ ElementStyle.prototype = {
 
     if (!declaration.enabled) {
       await declaration.setEnabled(true);
+    }
+  },
+
+  /**
+   * Parse a value string and break it into pieces, starting with the
+   * first value, and into an array of additional declarations (if any).
+   *
+   * Example: Calling with "red; width: 100px" would return
+   * { firstValue: "red", propertiesToAdd: [{ name: "width", value: "100px" }] }
+   *
+   * @param  {String} value
+   *         The string to parse.
+   * @return {Object} An object with the following properties:
+   *         firstValue: A string containing a simple value, like
+   *                     "red" or "100px!important"
+   *         declarationsToAdd: An array with additional declarations, following the
+   *                            parseDeclarations format of { name, value, priority }
+   */
+  _getValueAndExtraProperties: function(value) {
+    // The inplace editor will prevent manual typing of multiple declarations,
+    // but we need to deal with the case during a paste event.
+    // Adding multiple declarations inside of value editor sets value with the
+    // first, then adds any more onto the declaration list (below this declarations).
+    let firstValue = value;
+    let declarationsToAdd = [];
+
+    const declarations = parseDeclarations(this.cssProperties.isKnown, value);
+
+    // Check to see if the input string can be parsed as multiple declarations
+    if (declarations.length) {
+      // Get the first property value (if any), and any remaining
+      // declarations (if any)
+      if (!declarations[0].name && declarations[0].value) {
+        firstValue = declarations[0].value;
+        declarationsToAdd = declarations.slice(1);
+      } else if (declarations[0].name && declarations[0].value) {
+        // In some cases, the value could be a property:value pair
+        // itself.  Join them as one value string and append
+        // potentially following declarations
+        firstValue = declarations[0].name + ": " + declarations[0].value;
+        declarationsToAdd = declarations.slice(1);
+      }
+    }
+
+    return {
+      declarationsToAdd,
+      firstValue,
+    };
+  },
+
+  /**
+   * Given the id of the rule and the new declaration value, modifies the existing
+   * declaration value to the new given value.
+   *
+   * @param  {String} ruleId
+   *         The Rule id of the given CSS declaration.
+   * @param  {String} declarationId
+   *         The TextProperty id for the CSS declaration.
+   * @param  {String} value
+   *         The new declaration value.
+   */
+  modifyDeclarationValue: async function(ruleId, declarationId, value) {
+    const rule = this.getRule(ruleId);
+    if (!rule) {
+      return;
+    }
+
+    const declaration = rule.getDeclaration(declarationId);
+    if (!declaration) {
+      return;
+    }
+
+    const { declarationsToAdd, firstValue} = this._getValueAndExtraProperties(value);
+    const parsedValue = parseSingleValue(this.cssProperties.isKnown, firstValue);
+
+    if (!declarationsToAdd.length &&
+        declaration.value === parsedValue.value &&
+        declaration.priority === parsedValue.priority) {
+      return;
+    }
+
+    // First, set this declaration value (common case, only modified a property)
+    await declaration.setValue(parsedValue.value, parsedValue.priority);
+
+    if (!declaration.enabled) {
+      await declaration.setEnabled(true);
+    }
+
+    let siblingDeclaration = declaration;
+    for (const { commentOffsets, name, value: val, priority } of declarationsToAdd) {
+      const isCommented = Boolean(commentOffsets);
+      const enabled = !isCommented;
+      siblingDeclaration = rule.createProperty(name, val, priority, enabled,
+        siblingDeclaration);
     }
   },
 
