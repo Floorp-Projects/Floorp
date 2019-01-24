@@ -581,15 +581,20 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
     }
   }
 
-  auto childCount = ChildCount();
-  nsTArray<int32_t> children(childCount);
-  for (uint32_t i = 0; i < childCount; i++) {
-    auto child = static_cast<AccessibleWrap*>(GetChildAt(i));
-    children.AppendElement(child->VirtualViewID());
+  bool mustPrune =
+      IsProxy() ? nsAccUtils::MustPrune(Proxy()) : nsAccUtils::MustPrune(this);
+  if (!mustPrune) {
+    auto childCount = ChildCount();
+    nsTArray<int32_t> children(childCount);
+    for (uint32_t i = 0; i < childCount; i++) {
+      auto child = static_cast<AccessibleWrap*>(GetChildAt(i));
+      children.AppendElement(child->VirtualViewID());
+    }
+
+    GECKOBUNDLE_PUT(nodeInfo, "children",
+                    jni::IntArray::New(children.Elements(), children.Length()));
   }
 
-  GECKOBUNDLE_PUT(nodeInfo, "children",
-                  jni::IntArray::New(children.Elements(), children.Length()));
   GECKOBUNDLE_FINISH(nodeInfo);
 
   return nodeInfo;
