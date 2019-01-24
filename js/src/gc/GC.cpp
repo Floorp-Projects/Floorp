@@ -7480,6 +7480,9 @@ static bool IsDeterministicGCReason(JS::GCReason reason) {
     case JS::GCReason::CC_FORCED:
     case JS::GCReason::SHUTDOWN_CC:
     case JS::GCReason::ABORT_GC:
+    case JS::GCReason::DISABLE_GENERATIONAL_GC:
+    case JS::GCReason::FINISH_GC:
+    case JS::GCReason::PREPARE_FOR_TRACING:
       return true;
 
     default:
@@ -7850,7 +7853,7 @@ void GCRuntime::startBackgroundFreeAfterMinorGC() {
 JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSContext* cx)
     : cx(cx) {
   if (!cx->generationalDisabled) {
-    cx->runtime()->gc.evictNursery(JS::GCReason::API);
+    cx->runtime()->gc.evictNursery(JS::GCReason::DISABLE_GENERATIONAL_GC);
     cx->nursery().disable();
   }
   ++cx->generationalDisabled;
@@ -7893,10 +7896,10 @@ bool GCRuntime::gcIfRequested() {
   return false;
 }
 
-void js::gc::FinishGC(JSContext* cx) {
+void js::gc::FinishGC(JSContext* cx, JS::GCReason reason) {
   if (JS::IsIncrementalGCInProgress(cx)) {
     JS::PrepareForIncrementalGC(cx);
-    JS::FinishIncrementalGC(cx, JS::GCReason::API);
+    JS::FinishIncrementalGC(cx, reason);
   }
 
   cx->runtime()->gc.waitBackgroundFreeEnd();
