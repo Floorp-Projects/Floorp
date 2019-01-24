@@ -137,5 +137,15 @@ def test_output_no_leak_log(runtests):
     assert log_level == WARNING
 
 
+@pytest.mark.skip_mozinfo("!debug")
+def test_output_negative_leaks(runtests):
+    status, lines = runtests('test_negative_leaks.html')
+    assert status == 0
+
+    tbpl_status, log_level, summary = get_mozharness_status(lines, status)
+    assert tbpl_status == TBPL_FAILURE
+    assert log_level == ERROR
+
+
 if __name__ == '__main__':
     mozunit.main()
