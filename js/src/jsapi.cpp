@@ -704,6 +704,10 @@ JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
     AutoRealmUnchecked ar(cx, origobj->nonCCWRealm());
     JSObject::swap(cx, origobj, target);
     newIdentity = origobj;
+
+    // |origobj| might be gray so unmark it to avoid returning a possibly-gray
+    // object.
+    JS::ExposeObjectToActiveJS(newIdentity);
   } else if (WrapperMap::Ptr p = destination->lookupWrapper(origv)) {
     // There might already be a wrapper for the original object in
     // the new compartment. If there is, we use its identity and swap
