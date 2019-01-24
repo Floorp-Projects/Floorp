@@ -19,6 +19,7 @@ config = {
     "default_actions": [
         "clean-repos",
         "pull",
+        "set_push_to_ssh",
         "bump_second_digit"
     ],
 }
