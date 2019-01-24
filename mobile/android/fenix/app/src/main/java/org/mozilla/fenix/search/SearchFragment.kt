@@ -16,6 +16,7 @@ import androidx.navigation.fragment.FragmentNavigator
 import kotlinx.android.synthetic.main.fragment_search.*
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
+import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.requireComponents
@@ -53,7 +54,8 @@ class SearchFragment : Fragment() {
         awesomeBarFeature = AwesomeBarFeature(awesomeBar, toolbar, null, onEditComplete = ::userDidSearch)
             .addSearchProvider(
                 requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()),
-                requireComponents.useCases.searchUseCases.defaultSearch)
+                requireComponents.useCases.searchUseCases.defaultSearch,
+                SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS)
             .addSessionProvider(
                 requireComponents.core.sessionManager,
                 requireComponents.useCases.tabsUseCases.selectTab)

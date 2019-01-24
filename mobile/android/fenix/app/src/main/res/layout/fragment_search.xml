@@ -48,8 +48,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        mozac:awesomeBarTitleTextColor="#ffffff"
-        mozac:awesomeBarDescriptionTextColor="#dddddd"
+        mozac:awesomeBarTitleTextColor="#212121"
+        mozac:awesomeBarDescriptionTextColor="#6b6b6b"
         mozac:awesomeBarChipTextColor="#ffffff"
         mozac:awesomeBarChipBackgroundColor="#444444" />
 </androidx.constraintlayout.widget.ConstraintLayout>
