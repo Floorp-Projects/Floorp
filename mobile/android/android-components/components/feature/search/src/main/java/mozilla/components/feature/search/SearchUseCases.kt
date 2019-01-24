@@ -11,17 +11,25 @@ import mozilla.components.browser.session.SessionManager
 
 /**
  * Contains use cases related to the search feature.
+ *
+ * @param onNoSession When invoking a use case that requires a (selected) [Session] and when no [Session] is available
+ * this (optional) lambda will be invoked to create a [Session]. The default implementation creates a [Session] and adds
+ * it to the [SessionManager].
  */
 class SearchUseCases(
-    private val context: Context,
-    private val searchEngineManager: SearchEngineManager,
-    private val sessionManager: SessionManager
+    context: Context,
+    searchEngineManager: SearchEngineManager,
+    sessionManager: SessionManager,
+    onNoSession: (String) -> Session = { url ->
+        Session(url).apply { sessionManager.add(this) }
+    }
 ) {
 
     class DefaultSearchUseCase(
         private val context: Context,
         private val searchEngineManager: SearchEngineManager,
-        private val sessionManager: SessionManager
+        private val sessionManager: SessionManager,
+        private val onNoSession: (String) -> Session
     ) {
 
         /**
@@ -31,12 +39,14 @@ class SearchUseCases(
          * @param session the session to use, or the currently selected session if none
          * is provided.
          */
-        fun invoke(searchTerms: String, session: Session = sessionManager.selectedSessionOrThrow) {
+        fun invoke(searchTerms: String, session: Session? = sessionManager.selectedSession) {
             val searchUrl = searchEngineManager.getDefaultSearchEngine(context).buildSearchUrl(searchTerms)
 
-            session.searchTerms = searchTerms
+            val searchSession = session ?: onNoSession.invoke(searchUrl)
 
-            sessionManager.getOrCreateEngineSession(session).loadUrl(searchUrl)
+            searchSession.searchTerms = searchTerms
+
+            sessionManager.getOrCreateEngineSession(searchSession).loadUrl(searchUrl)
         }
 
         /**
@@ -64,6 +74,6 @@ class SearchUseCases(
     }
 
     val defaultSearch: DefaultSearchUseCase by lazy {
-        DefaultSearchUseCase(context, searchEngineManager, sessionManager)
+        DefaultSearchUseCase(context, searchEngineManager, sessionManager, onNoSession)
     }
 }

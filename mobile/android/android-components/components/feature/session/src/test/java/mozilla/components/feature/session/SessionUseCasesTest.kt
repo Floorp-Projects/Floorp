@@ -7,6 +7,10 @@ package mozilla.components.feature.session
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +29,7 @@ class SessionUseCasesTest {
     @Before
     fun setup() {
         `when`(sessionManager.selectedSessionOrThrow).thenReturn(selectedSession)
+        `when`(sessionManager.selectedSession).thenReturn(selectedSession)
         `when`(sessionManager.getOrCreateEngineSession()).thenReturn(selectedEngineSession)
     }
 
@@ -129,5 +134,48 @@ class SessionUseCasesTest {
         `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.clearData.invoke()
         verify(selectedEngineSession).clearData()
+    }
+
+    @Test
+    fun `LoadUrlUseCase will invoke onNoSession lambda if no selected session exists`() {
+        var createdSession: Session? = null
+        var sessionCreatedForUrl: String? = null
+
+        `when`(sessionManager.selectedSession).thenReturn(null)
+        `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(mock())
+
+        val loadUseCase = SessionUseCases.LoadUrlUseCase(sessionManager) { url ->
+            sessionCreatedForUrl = url
+            Session(url).also { createdSession = it }
+        }
+
+        loadUseCase.invoke("https://www.example.com")
+
+        assertEquals("https://www.example.com", sessionCreatedForUrl)
+        assertNotNull(createdSession)
+        verify(sessionManager).getOrCreateEngineSession(createdSession!!)
+    }
+
+    @Test
+    fun `LoadDataUseCase will invoke onNoSession lambda if no selected session exists`() {
+        var createdSession: Session? = null
+        var sessionCreatedForUrl: String? = null
+
+        val engineSession: EngineSession = mock()
+
+        `when`(sessionManager.selectedSession).thenReturn(null)
+        `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
+
+        val loadUseCase = SessionUseCases.LoadDataUseCase(sessionManager) { url ->
+            sessionCreatedForUrl = url
+            Session(url).also { createdSession = it }
+        }
+
+        loadUseCase.invoke("Hello", mimeType = "plain/text", encoding = "UTF-8")
+
+        assertEquals("about:blank", sessionCreatedForUrl)
+        assertNotNull(createdSession)
+        verify(sessionManager).getOrCreateEngineSession(createdSession!!)
+        verify(engineSession).loadData("Hello", mimeType = "plain/text", encoding = "UTF-8")
     }
 }

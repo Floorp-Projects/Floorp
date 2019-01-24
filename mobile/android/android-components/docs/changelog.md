@@ -39,6 +39,9 @@ permalink: /changelog/
 * **browser-engine-system**
   * Preventing JavaScript `confirm()` and `prompt()` until providing proper implementation #1816.
 
+* **feature-search**, **feature-session**
+  * `SessionUseCases` and `SearchUseCases` now take an optional `onNoSession: String -> Session` lambda parameter. This function will be invoked when executing a use case that requires a (selected) `Session` and no such session is available. This makes using the use cases and feature components useable in browsers that may not always have sessions. The default implementation creates a new `Session` and adds it to the `SessionManager`.
+
 * **support-rustlog**
   * 🆕 New component: This component allows consumers of [megazorded](https://mozilla.github.io/application-services/docs/applications/consuming-megazord-libraries.html) Rust libraries produced by application-services to redirect their log output to the base component's log system as follows:
   ```kotlin
@@ -62,6 +65,7 @@ permalink: /changelog/
 
 * Mozilla App Services library updated to 0.14.0. See [release notes](https://github.com/mozilla/application-services/releases/tag/v0.14.0) for details.
   * Important: Users consuming megazords must also update the application-services gradle plugin to version 0.3.0.
+
 
 # 0.39.0
 

@@ -22,7 +22,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -88,6 +88,18 @@ class ClipboardSuggestionProviderTest {
         assertClipboardYieldsUrl("My IP is 192.168.0.1.", "192.168.0.1")
     }
 
+    private fun getInt() = 1
+
+    internal var foo = {
+        val someInteger = getInt()
+        someInteger / 5
+    }()
+
+    @Test
+    fun `print foo`() {
+        println(foo)
+    }
+
     @Test
     fun `provider should return no suggestions if clipboard doesn not contain a url`() {
         assertClipboardYieldsNothing("Hello World")
@@ -103,11 +115,11 @@ class ClipboardSuggestionProviderTest {
             "Label",
             "Hello Mozilla, https://www.mozilla.org")
 
-        val selectedEngineSession = Mockito.mock(EngineSession::class.java)
-        val selectedSession = Mockito.mock(Session::class.java)
+        val selectedEngineSession: EngineSession = mock()
+        val selectedSession: Session = mock()
         val sessionManager: SessionManager = mock()
-        Mockito.`when`(sessionManager.selectedSessionOrThrow).thenReturn(selectedSession)
-        Mockito.`when`(sessionManager.getOrCreateEngineSession()).thenReturn(selectedEngineSession)
+        `when`(sessionManager.selectedSession).thenReturn(selectedSession)
+        `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
 
         val useCase = spy(SessionUseCases(sessionManager).loadUrl)
 
