@@ -17,6 +17,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.DownloadListener
+import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.PermissionRequest
 import android.webkit.SslErrorHandler
@@ -308,7 +309,7 @@ class SystemEngineView @JvmOverloads constructor(
         }
 
         override fun onJsAlert(view: WebView, url: String?, message: String?, result: JsResult): Boolean {
-            val session = session ?: return super.onJsAlert(view, url, message, result)
+            val session = session ?: return applyDefaultJsDialogBehavior(result)
 
             // When an alert is triggered from a iframe, url is equals to about:blank, using currentUrl as a fallback.
             val safeUrl = if (url.isNullOrBlank()) {
@@ -343,6 +344,22 @@ class SystemEngineView @JvmOverloads constructor(
 
             updateJSDialogAbusedState()
             return true
+        }
+
+        // Related Issue: https://github.com/mozilla-mobile/android-components/issues/1815
+        override fun onJsPrompt(
+            view: WebView?,
+            url: String?,
+            message: String?,
+            defaultValue: String?,
+            result: JsPromptResult?
+        ): Boolean {
+            return applyDefaultJsDialogBehavior(result)
+        }
+
+        // Related Issue: https://github.com/mozilla-mobile/android-components/issues/1814
+        override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
+            return applyDefaultJsDialogBehavior(result)
         }
 
         override fun onShowFileChooser(
@@ -497,6 +514,11 @@ class SystemEngineView @JvmOverloads constructor(
     private fun resetJSAlertAbuseState() {
         jsAlertCount = 0
         shouldShowMoreDialogs = true
+    }
+
+    private fun applyDefaultJsDialogBehavior(result: JsResult?): Boolean {
+        result?.cancel()
+        return true
     }
 
     internal fun updateJSDialogAbusedState() {

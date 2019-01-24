@@ -34,6 +34,9 @@ permalink: /changelog/
 * **feature-prompts**, **browser-engine-gecko***
   * Added support for [Pop-up windows dialog](https://support.mozilla.org/en-US/kb/pop-blocker-settings-exceptions-troubleshooting#w_what-are-pop-ups).
 
+* **browser-engine-system**
+  * Preventing JavaScript `confirm()` and `prompt()` until providing proper implementation #1816.
+
 # 0.39.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.38.0...v0.39.0)
