@@ -26,7 +26,11 @@
 namespace js {
 namespace wasm {
 
+#ifdef ENABLE_WASM_CRANELIFT
 MOZ_MUST_USE bool CraneliftCanCompile();
+#else
+MOZ_MUST_USE inline bool CraneliftCanCompile() { return false; }
+#endif
 
 // Generates code with Cranelift.
 MOZ_MUST_USE bool CraneliftCompileFunctions(
