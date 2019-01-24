@@ -11,6 +11,7 @@ const NCB_PREF = "network.cookie.cookieBehavior";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 const COOKIE_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/cookiePage.html";
+const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 
 requestLongerTimeout(2);
 
@@ -19,10 +20,13 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(TP_PB_PREF);
   Services.prefs.clearUserPref(NCB_PREF);
+  Services.prefs.clearUserPref(DTSCBN_PREF);
   Services.prefs.clearUserPref(ContentBlocking.prefIntroCount);
 });
 
 async function testTrackingProtectionAnimation(tabbrowser) {
+  Services.prefs.setBoolPref(DTSCBN_PREF, true);
+
   info("Load a test page not containing tracking elements");
   let benignTab = await BrowserTestUtils.openNewForegroundTab(tabbrowser, BENIGN_PAGE);
   let ContentBlocking = tabbrowser.ownerGlobal.ContentBlocking;
