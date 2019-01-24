@@ -677,7 +677,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "9c02266ebf06"
+        "revision": "77161dcd560d"
     },
     "gu-IN": {
         "platforms": [
@@ -1532,7 +1532,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "d771bd419a05"
+        "revision": "ec4404e682b1"
     },
     "tr": {
         "platforms": [
