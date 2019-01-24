@@ -70,7 +70,7 @@ class SearchFragment : Fragment() {
 
     private fun userDidSearch() {
         val extras = FragmentNavigator.Extras.Builder().addSharedElement(
-            toolbar_wrapper, ViewCompat.getTransitionName(toolbar_wrapper)!!
+            toolbar, ViewCompat.getTransitionName(toolbar)!!
         ).build()
         Navigation.findNavController(toolbar).navigate(R.id.action_searchFragment_to_browserFragment, null, null, extras)
     }

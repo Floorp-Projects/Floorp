@@ -21,7 +21,6 @@
         android:clipToPadding="false"
         android:elevation="5dp"
         android:outlineProvider="paddedBounds"
-        android:transitionName="firstTransitionName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -34,7 +33,8 @@
             android:background="@android:color/white"
             android:clickable="true"
             android:focusable="true"
-            android:focusableInTouchMode="true" />
+            android:focusableInTouchMode="true"
+            android:transitionName="firstTransitionName" />
     </FrameLayout>
 
     <mozilla.components.browser.awesomebar.BrowserAwesomeBar
