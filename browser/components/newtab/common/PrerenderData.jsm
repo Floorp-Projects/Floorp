@@ -28,9 +28,20 @@ class _PrerenderData {
         return result.concat(next.oneOf);
       } else if (next && next.indexedDB) {
         return result.concat(next.indexedDB);
+      } else if (next && next.jsonPrefs) {
+        return result.concat(next.jsonPrefs);
       }
       throw new Error("Your validation configuration is not properly configured");
     }, []);
+  }
+
+  _isPrefEnabled(prefObj) {
+    try {
+      let data = JSON.parse(prefObj);
+      return data && data.enabled;
+    } catch (e) {
+      return null;
+    }
   }
 
   arePrefsValid(getPref, indexedDBPrefs) {
@@ -43,6 +54,13 @@ class _PrerenderData {
       } else if (indexedDBPrefs && prefs && prefs.indexedDB) {
         const anyModifiedPrefs = prefs.indexedDB.some(prefName => indexedDBPrefs.some(pref => pref && pref[prefName]));
         if (anyModifiedPrefs) {
+          return false;
+        }
+        // {jsonPrefs: ["foo", "bar"]}
+      } else if (prefs && prefs.jsonPrefs) {
+        const isPrefModified =
+          prefs.jsonPrefs.some(name => this._isPrefEnabled(getPref(name)) !== this.initialPrefs[name].enabled);
+        if (isPrefModified) {
           return false;
         }
         // "foo"
@@ -64,6 +82,7 @@ this.PrerenderData = new _PrerenderData({
     "feeds.section.highlights": true,
     "sectionOrder": "topsites,topstories,highlights",
     "collapsed": false,
+    "discoverystream.config": {"enabled": false},
   },
   // Prefs listed as invalidating will prevent the prerendered version
   // of AS from being used if their value is something other than what is listed
@@ -82,6 +101,9 @@ this.PrerenderData = new _PrerenderData({
     // If any component has the following preference set to `true` it will
     // invalidate the prerendered version.
     {indexedDB: ["collapsed"]},
+    // For below prefs, parse value to check enabled property. If enabled property
+    // differs from initial prefs enabled value, prerendering cannot be used
+    {jsonPrefs: ["discoverystream.config"]},
   ],
   initialSections: [
     {

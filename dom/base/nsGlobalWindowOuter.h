@@ -458,7 +458,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
       Document* aDoc, nsIURI* aPopupURI, const nsAString& aPopupWindowName,
       const nsAString& aPopupWindowFeatures) override;
 
-  virtual void NotifyContentBlockingState(unsigned aState, nsIChannel* aChannel,
+  virtual void NotifyContentBlockingEvent(unsigned aEvent, nsIChannel* aChannel,
                                           bool aBlocked,
                                           nsIURI* aURIHint) override;
 

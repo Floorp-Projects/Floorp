@@ -39,11 +39,7 @@ async function throttleTest(actuallyThrottle) {
   };
 
   info("sending throttle request");
-  await new Promise((resolve) => {
-    setPreferences(request, response => {
-      resolve(response);
-    });
-  });
+  await setPreferences(request);
 
   const wait = waitForNetworkEvents(monitor, 1);
   await triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED);

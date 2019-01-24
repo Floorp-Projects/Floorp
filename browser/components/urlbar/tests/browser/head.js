@@ -19,6 +19,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
+/* import-globals-from head-common.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-common.js",
+  this);
+
 /* global sinon */
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
 

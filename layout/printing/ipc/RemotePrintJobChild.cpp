@@ -144,6 +144,13 @@ RemotePrintJobChild::OnSecurityChange(nsIWebProgress* aProgress,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+RemotePrintJobChild::OnContentBlockingEvent(nsIWebProgress* aProgress,
+                                            nsIRequest* aRequest,
+                                            uint32_t aEvent) {
+  return NS_OK;
+}
+
 // End of nsIWebProgressListener
 
 RemotePrintJobChild::~RemotePrintJobChild() {}

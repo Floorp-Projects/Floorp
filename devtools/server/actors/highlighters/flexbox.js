@@ -22,6 +22,7 @@ const {
   getComputedStyle,
 } = require("./utils/markup");
 const {
+  getAbsoluteScrollOffsetsForNode,
   getCurrentZoom,
   getDisplayPixelRatio,
   getUntransformedQuad,
@@ -190,6 +191,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     return this.options.color || DEFAULT_COLOR;
   }
 
+  get container() {
+    return this.currentNode;
+  }
+
   get ctx() {
     return this.canvas.getCanvasContext("2d");
   }
@@ -301,10 +306,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const hasMoved = AutoRefreshHighlighter.prototype._hasMoved.call(this);
 
     if (!this.computedStyle) {
-      this.computedStyle = getComputedStyle(this.currentNode);
+      this.computedStyle = getComputedStyle(this.container);
     }
 
-    const flex = this.currentNode.getAsFlexContainer();
+    const flex = this.container.getAsFlexContainer();
 
     const oldCrossAxisDirection = this.crossAxisDirection;
     this.crossAxisDirection = flex ? flex.crossAxisDirection : null;
@@ -318,7 +323,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.axes = `${this.mainAxisDirection} ${this.crossAxisDirection}`;
 
     const oldFlexData = this.flexData;
-    this.flexData = getFlexData(this.currentNode);
+    this.flexData = getFlexData(this.container);
     const hasFlexDataChanged = compareFlexData(oldFlexData, this.flexData);
 
     const oldAlignItems = this.alignItemsValue;
@@ -514,7 +519,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     const { devicePixelRatio } = this.win;
-    const containerQuad = getUntransformedQuad(this.currentNode, "content");
+    const containerQuad = getUntransformedQuad(this.container, "content");
     const { width, height } = containerQuad.getBounds();
 
     this.setupCanvas({
@@ -570,10 +575,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const lineWidth = getDisplayPixelRatio(this.win);
     const options = { matrix: this.currentMatrix };
     const { width: containerWidth, height: containerHeight } =
-      getUntransformedQuad(this.currentNode, "content").getBounds();
+      getUntransformedQuad(this.container, "content").getBounds();
 
     this.setupCanvas({
-      useScrollOffsets: true,
+      useContainerScrollOffsets: true,
     });
 
     for (const flexLine of this.flexData.lines) {
@@ -652,13 +657,13 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     const { width: containerWidth, height: containerHeight } =
-      getUntransformedQuad(this.currentNode, "content").getBounds();
+      getUntransformedQuad(this.container, "content").getBounds();
 
     this.setupCanvas({
       lineDash: FLEXBOX_LINES_PROPERTIES.alignItems.lineDash,
       offset: (getDisplayPixelRatio(this.win) / 2) % 1,
       skipLineAndStroke: true,
-      useScrollOffsets: true,
+      useContainerScrollOffsets: true,
     });
 
     for (const flexLine of this.flexData.lines) {
@@ -748,27 +753,37 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
    *        The single line width used to obtain a crisp line.
    * @param {Boolean} [options.skipLineAndStroke = false]
    *        Skip the setting of lineWidth and strokeStyle.
-   * @param {Boolean} [options.useScrollOffsets = false]
-   *        Take scroll and zoom offsets into account. This is often needed
-   *        when working purely with mainStart, mainSize, crossStart and
-   *        crossSize because they do not take the scroll position into account.
+   * @param {Boolean} [options.useContainerScrollOffsets = false]
+   *        Take the flexbox container's scroll and zoom offsets into account.
+   *        This is needed for drawing flex lines and justify content when the
+   *        flexbox container itself is display:scroll.
    */
   setupCanvas({
       lineDash = null,
       lineWidthMultiplier = 1,
       offset = (getDisplayPixelRatio(this.win) / 2) % 1,
       skipLineAndStroke = false,
-      useScrollOffsets = false }) {
+      useContainerScrollOffsets = false }) {
     const { devicePixelRatio } = this.win;
     const lineWidth = getDisplayPixelRatio(this.win);
     const zoom = getCurrentZoom(this.win);
-
+    const style = getComputedStyle(this.container);
+    const position = style.position;
     let offsetX = this._canvasPosition.x;
     let offsetY = this._canvasPosition.y;
 
-    if (useScrollOffsets) {
-      offsetX += this.currentNode.scrollLeft / zoom;
-      offsetY += this.currentNode.scrollTop / zoom;
+    if (useContainerScrollOffsets) {
+      offsetX += this.container.scrollLeft / zoom;
+      offsetY += this.container.scrollTop / zoom;
+    }
+
+    // If the flexbox container is position:fixed we need to subtract the scroll
+    // positions of all ancestral elements.
+    if (position === "fixed") {
+      const { scrollLeft, scrollTop } =
+        getAbsoluteScrollOffsetsForNode(this.container);
+      offsetX -= scrollLeft / zoom;
+      offsetY -= scrollTop / zoom;
     }
 
     const canvasX = Math.round(offsetX * devicePixelRatio * zoom);
@@ -805,7 +820,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
     // Update the current matrix used in our canvas' rendering
     const { currentMatrix, hasNodeTransformations } =
-      getCurrentMatrix(this.currentNode, this.win, {
+      getCurrentMatrix(this.container, this.win, {
         ignoreWritingModeAndTextDirection: true,
       });
     this.currentMatrix = currentMatrix;

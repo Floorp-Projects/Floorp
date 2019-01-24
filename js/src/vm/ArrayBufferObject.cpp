@@ -846,12 +846,12 @@ static bool CreateBuffer(
   // See MaximumLiveMappedBuffers comment above.
   if (liveBufferCount > StartSyncFullGCAtLiveBufferCount) {
     JS::PrepareForFullGC(cx);
-    JS::NonIncrementalGC(cx, GC_NORMAL, JS::gcreason::TOO_MUCH_WASM_MEMORY);
+    JS::NonIncrementalGC(cx, GC_NORMAL, JS::GCReason::TOO_MUCH_WASM_MEMORY);
     allocatedSinceLastTrigger = 0;
   } else if (liveBufferCount > StartTriggeringAtLiveBufferCount) {
     allocatedSinceLastTrigger++;
     if (allocatedSinceLastTrigger > AllocatedBuffersPerTrigger) {
-      Unused << cx->runtime()->gc.triggerGC(JS::gcreason::TOO_MUCH_WASM_MEMORY);
+      Unused << cx->runtime()->gc.triggerGC(JS::GCReason::TOO_MUCH_WASM_MEMORY);
       allocatedSinceLastTrigger = 0;
     }
   } else {

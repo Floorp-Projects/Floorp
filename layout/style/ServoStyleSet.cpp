@@ -226,9 +226,6 @@ void ServoStyleSet::InvalidateStyleForDocumentStateChanges(
 static const MediaFeatureChangeReason kMediaFeaturesAffectingDefaultStyle =
     // Zoom changes change the meaning of em units.
     MediaFeatureChangeReason::ZoomChange |
-    // Changes the meaning of em units, depending on which one is the actual
-    // min-font-size.
-    MediaFeatureChangeReason::MinFontSizeChange |
     // A resolution change changes the app-units-per-dev-pixels ratio, which
     // some structs (Border, Outline, Column) store for clamping. We should
     // arguably not do that, maybe doing it on layout directly, to try to avoid

@@ -284,13 +284,13 @@
                 button.setAttribute("label", this.getAttribute("buttonlabel" + dlgtype));
                 if (this.hasAttribute("buttonaccesskey" + dlgtype))
                   button.setAttribute("accesskey", this.getAttribute("buttonaccesskey" + dlgtype));
+              } else if (this.hasAttribute("buttonid" + dlgtype)) {
+                document.l10n.setAttributes(button, this.getAttribute("buttonid" + dlgtype));
               } else if (dlgtype != "extra1" && dlgtype != "extra2") {
                 button.setAttribute("label", this.mStrBundle.GetStringFromName("button-" + dlgtype));
                 var accessKey = this.mStrBundle.GetStringFromName("accesskey-" + dlgtype);
                 if (accessKey)
                   button.setAttribute("accesskey", accessKey);
-              } else if (this.hasAttribute("buttonid" + dlgtype)) {
-                document.l10n.setAttributes(button, this.getAttribute("buttonid" + dlgtype));
               }
             }
             // allow specifying alternate icons in the dialog header

@@ -1118,7 +1118,7 @@ void DumpHeapTracer::onChild(const JS::GCCellPtr& thing) {
 void js::DumpHeap(JSContext* cx, FILE* fp,
                   js::DumpHeapNurseryBehaviour nurseryBehaviour) {
   if (nurseryBehaviour == js::CollectNurseryBeforeDump) {
-    cx->runtime()->gc.evictNursery(JS::gcreason::API);
+    cx->runtime()->gc.evictNursery(JS::GCReason::API);
   }
 
   DumpHeapTracer dtrc(fp, cx);

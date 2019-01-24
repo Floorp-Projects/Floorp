@@ -21,6 +21,12 @@ const RELATIONS_TO_IGNORE = new Set([
   nsIAccessibleRelation.RELATION_SUBWINDOW_OF,
 ]);
 
+const nsIAccessibleRole = Ci.nsIAccessibleRole;
+const TEXT_ROLES = new Set([
+  nsIAccessibleRole.ROLE_TEXT_LEAF,
+  nsIAccessibleRole.ROLE_STATICTEXT,
+]);
+
 const STATE_DEFUNCT = Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT;
 const CSS_TEXT_SELECTOR = "#text";
 
@@ -369,12 +375,8 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
 
   _isValidTextLeaf(rawAccessible) {
     return !isDefunct(rawAccessible) &&
-           rawAccessible.role === Ci.nsIAccessibleRole.ROLE_TEXT_LEAF &&
+           TEXT_ROLES.has(rawAccessible.role) &&
            rawAccessible.name && rawAccessible.name.trim().length > 0;
-  },
-
-  get _nonEmptyTextLeafs() {
-    return this.children().filter(child => this._isValidTextLeaf(child.rawAccessible));
   },
 
   /**

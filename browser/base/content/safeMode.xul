@@ -4,46 +4,43 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE prefwindow [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-%brandDTD;
-<!ENTITY % safeModeDTD SYSTEM "chrome://browser/locale/safeMode.dtd" >
-%safeModeDTD;
-<!ENTITY % resetProfileDTD SYSTEM "chrome://global/locale/resetProfile.dtd" >
-%resetProfileDTD;
-]>
-
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/content/safeMode.css"?>
 
 <dialog id="safeModeDialog"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            title="&safeModeDialog.title;"
+            data-l10n-id="safe-mode-window"
+            data-l10n-attrs="title,style"
             buttons="accept,extra1"
-            buttonlabelaccept="&startSafeMode.label;"
-            buttonlabelextra1="&refreshProfile.label;"
-            maxwidth="&window.maxWidth;"
+            buttonidaccept="start-safe-mode"
+            buttonidextra1="refresh-profile"
             ondialogaccept="return onDefaultButton()"
             ondialogcancel="onCancel();"
             ondialogextra1="return onExtra1()"
             onload="onLoad()">
 
+  <linkset>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="browser/safeMode.ftl"/>
+  </linkset>
+
   <script type="application/javascript" src="chrome://browser/content/safeMode.js"/>
 
+
   <vbox id="autoSafeMode" hidden="true">
-    <description>&autoSafeModeDescription3.label;</description>
+    <description data-l10n-id="auto-safe-mode-description"/>
   </vbox>
 
   <vbox id="safeMode">
-    <label>&safeModeDescription3.label;</label>
+    <label data-l10n-id="safe-mode-description" />
     <separator class="thin"/>
-    <label>&safeModeDescription5.label;</label>
+    <label data-l10n-id="safe-mode-description-details" />
     <separator class="thin"/>
-    <label id="resetProfileInstead">&refreshProfileInstead.label;</label>
+    <label id="resetProfileInstead" data-l10n-id="refresh-profile-instead"/>
   </vbox>
 
   <vbox id="resetProfile" hidden="true">
-    <label id="resetProfileInstead">&refreshProfileInstead.label;</label>
+    <label data-l10n-id="refresh-profile-instead" />
   </vbox>
 
   <separator class="thin"/>

@@ -140,14 +140,38 @@ add_task(async function() {
   for (let i = 0; i < updates.length; ++i) {
     update = updates[i];
     updateData = mockUpdateManager.getUpdateAt(i);
-    const l10nAttrs = frameDoc.l10n.getAttributes(update);
-    Assert.deepEqual(l10nAttrs, {
-      id: "update-full-name",
-      args: { name: updateData.name, buildID: updateData.buildID },
-    }, "Wrong update name");
-    is(update.installDate, formatInstallDate(updateData.installDate), "Wrong update installDate");
-    is(update.detailsURL, updateData.detailsURL, "Wrong update detailsURL");
-    is(update.status, updateData.statusText, "Wrong update status");
+
+    let testcases = [
+      {
+        selector: ".update-name",
+        id: "update-full-build-name",
+        args: { name: updateData.name, buildID: updateData.buildID },
+      },
+      {
+        selector: ".update-installedOn-label",
+        id: "update-installed-on",
+        args: { date: formatInstallDate(updateData.installDate) },
+      },
+      {
+        selector: ".update-status-label",
+        id: "update-status",
+        args: { status: updateData.statusText },
+      },
+    ];
+
+    for (let {selector, id, args} of testcases) {
+      const element = update.querySelector(selector);
+      const l10nAttrs = frameDoc.l10n.getAttributes(element);
+      Assert.deepEqual(l10nAttrs, {
+        id,
+        args,
+      }, "Wrong " + id);
+    }
+
+    if (update.detailsURL) {
+      is(update.detailsURL, update.querySelector(".text-link").href,
+         "Wrong detailsURL");
+    }
   }
 
   // Test the dialog window closes

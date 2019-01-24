@@ -7,8 +7,8 @@
 #include "ErrorHandler.h"
 
 #if defined(MOZ_LAUNCHER_PROCESS)
-#include "mozilla/LauncherRegistryInfo.h"
-#include "mozilla/Unused.h"
+#  include "mozilla/LauncherRegistryInfo.h"
+#  include "mozilla/Unused.h"
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
 namespace mozilla {

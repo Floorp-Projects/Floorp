@@ -870,7 +870,7 @@ set_config('SKIA_INCLUDES', skia_includes)
 option('--with-system-webp',
        help='Use system libwebp (located with pkgconfig)')
 
-system_webp = pkg_check_modules('MOZ_WEBP', 'libwebp >= 1.0.1 libwebpdemux >= 1.0.1',
+system_webp = pkg_check_modules('MOZ_WEBP', 'libwebp >= 1.0.2 libwebpdemux >= 1.0.2',
                                 when='--with-system-webp')
 
 set_config('MOZ_SYSTEM_WEBP', depends(when=system_webp)(lambda: True))

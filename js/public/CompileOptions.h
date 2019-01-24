@@ -251,9 +251,7 @@ class JS_PUBLIC_API OwningCompileOptions final : public ReadOnlyCompileOptions {
   JSScript* introductionScript() const override {
     return introductionScriptRoot;
   }
-  JSScript* scriptOrModule() const override {
-    return scriptOrModuleRoot;
-  }
+  JSScript* scriptOrModule() const override { return scriptOrModuleRoot; }
 
   /** Set this to a copy of |rhs|.  Return false on OOM. */
   bool copy(JSContext* cx, const ReadOnlyCompileOptions& rhs);
@@ -429,9 +427,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return introductionScriptRoot;
   }
 
-  JSScript* scriptOrModule() const override {
-    return scriptOrModuleRoot;
-  }
+  JSScript* scriptOrModule() const override { return scriptOrModuleRoot; }
 
   CompileOptions& setFile(const char* f) {
     filename_ = f;

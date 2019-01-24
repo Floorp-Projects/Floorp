@@ -506,7 +506,13 @@ nsHTMLDNSPrefetch::nsDeferrals::OnStatusChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP
 nsHTMLDNSPrefetch::nsDeferrals::OnSecurityChange(nsIWebProgress *aWebProgress,
                                                  nsIRequest *aRequest,
-                                                 uint32_t state) {
+                                                 uint32_t aState) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDNSPrefetch::nsDeferrals::OnContentBlockingEvent(
+    nsIWebProgress *aWebProgress, nsIRequest *aRequest, uint32_t aEvent) {
   return NS_OK;
 }
 

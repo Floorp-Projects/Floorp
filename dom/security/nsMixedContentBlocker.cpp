@@ -366,7 +366,7 @@ nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
   nsCOMPtr<nsIPrincipal> requestPrincipal = aLoadInfo->TriggeringPrincipal();
   nsCOMPtr<nsIURI> requestingLocation;
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
-  if (loadingPrincipal && loadingPrincipal->GetIsCodebasePrincipal()) {
+  if (loadingPrincipal) {
     loadingPrincipal->GetURI(getter_AddRefs(requestingLocation));
   }
 

@@ -21,10 +21,10 @@ BEGIN_TEST(testGCFinalizeCallback) {
   /* Full GC, incremental. */
   FinalizeCalls = 0;
   JS::PrepareForFullGC(cx);
-  JS::StartIncrementalGC(cx, GC_NORMAL, JS::gcreason::API, 1000000);
+  JS::StartIncrementalGC(cx, GC_NORMAL, JS::GCReason::API, 1000000);
   while (cx->runtime()->gc.isIncrementalGCInProgress()) {
     JS::PrepareForFullGC(cx);
-    JS::IncrementalGCSlice(cx, JS::gcreason::API, 1000000);
+    JS::IncrementalGCSlice(cx, JS::GCReason::API, 1000000);
   }
   CHECK(!cx->runtime()->gc.isIncrementalGCInProgress());
   CHECK(cx->runtime()->gc.isFullGc());
@@ -47,7 +47,7 @@ BEGIN_TEST(testGCFinalizeCallback) {
   /* Zone GC, non-incremental, single zone. */
   FinalizeCalls = 0;
   JS::PrepareZoneForGC(global1->zone());
-  JS::NonIncrementalGC(cx, GC_NORMAL, JS::gcreason::API);
+  JS::NonIncrementalGC(cx, GC_NORMAL, JS::GCReason::API);
   CHECK(!cx->runtime()->gc.isFullGc());
   CHECK(checkSingleGroup());
   CHECK(checkFinalizeStatus());
@@ -57,7 +57,7 @@ BEGIN_TEST(testGCFinalizeCallback) {
   JS::PrepareZoneForGC(global1->zone());
   JS::PrepareZoneForGC(global2->zone());
   JS::PrepareZoneForGC(global3->zone());
-  JS::NonIncrementalGC(cx, GC_NORMAL, JS::gcreason::API);
+  JS::NonIncrementalGC(cx, GC_NORMAL, JS::GCReason::API);
   CHECK(!cx->runtime()->gc.isFullGc());
   CHECK(checkSingleGroup());
   CHECK(checkFinalizeStatus());
@@ -65,10 +65,10 @@ BEGIN_TEST(testGCFinalizeCallback) {
   /* Zone GC, incremental, single zone. */
   FinalizeCalls = 0;
   JS::PrepareZoneForGC(global1->zone());
-  JS::StartIncrementalGC(cx, GC_NORMAL, JS::gcreason::API, 1000000);
+  JS::StartIncrementalGC(cx, GC_NORMAL, JS::GCReason::API, 1000000);
   while (cx->runtime()->gc.isIncrementalGCInProgress()) {
     JS::PrepareZoneForGC(global1->zone());
-    JS::IncrementalGCSlice(cx, JS::gcreason::API, 1000000);
+    JS::IncrementalGCSlice(cx, JS::GCReason::API, 1000000);
   }
   CHECK(!cx->runtime()->gc.isIncrementalGCInProgress());
   CHECK(!cx->runtime()->gc.isFullGc());
@@ -80,12 +80,12 @@ BEGIN_TEST(testGCFinalizeCallback) {
   JS::PrepareZoneForGC(global1->zone());
   JS::PrepareZoneForGC(global2->zone());
   JS::PrepareZoneForGC(global3->zone());
-  JS::StartIncrementalGC(cx, GC_NORMAL, JS::gcreason::API, 1000000);
+  JS::StartIncrementalGC(cx, GC_NORMAL, JS::GCReason::API, 1000000);
   while (cx->runtime()->gc.isIncrementalGCInProgress()) {
     JS::PrepareZoneForGC(global1->zone());
     JS::PrepareZoneForGC(global2->zone());
     JS::PrepareZoneForGC(global3->zone());
-    JS::IncrementalGCSlice(cx, JS::gcreason::API, 1000000);
+    JS::IncrementalGCSlice(cx, JS::GCReason::API, 1000000);
   }
   CHECK(!cx->runtime()->gc.isIncrementalGCInProgress());
   CHECK(!cx->runtime()->gc.isFullGc());

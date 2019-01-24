@@ -706,6 +706,16 @@ nsWebBrowser::OnSecurityChange(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWebBrowser::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
+                                     nsIRequest* aRequest, uint32_t aEvent) {
+  if (mProgressListener) {
+    return mProgressListener->OnContentBlockingEvent(aWebProgress, aRequest,
+                                                     aEvent);
+  }
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsWebBrowser::nsIWebBrowserPersist
 //*****************************************************************************

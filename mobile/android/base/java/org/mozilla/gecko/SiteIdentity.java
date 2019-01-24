@@ -91,8 +91,6 @@ public class SiteIdentity {
                 MixedMode.class, mode.getString("mixed_display"), MixedMode.UNKNOWN);
         mMixedModeActive = getEnumValue(
                 MixedMode.class, mode.getString("mixed_active"), MixedMode.UNKNOWN);
-        mTrackingMode = getEnumValue(
-                TrackingMode.class, mode.getString("tracking"), TrackingMode.UNKNOWN);
 
         if (!mode.containsKey("identity") || !identityData.containsKey("origin")) {
             resetIdentity();
@@ -110,6 +108,10 @@ public class SiteIdentity {
         mVerifier = identityData.getString("verifier");
         mSecure = identityData.getBoolean("secure");
         mSecurityException = identityData.getBoolean("securityException");
+    }
+
+    /* package */ void updateTrackingMode(final String trackingEvent) {
+        mTrackingMode = getEnumValue(TrackingMode.class, trackingEvent, TrackingMode.UNKNOWN);
     }
 
     public SecurityMode getSecurityMode() {

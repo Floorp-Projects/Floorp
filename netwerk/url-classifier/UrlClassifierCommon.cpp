@@ -84,7 +84,7 @@ LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
 
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
-  pwin->NotifyContentBlockingState(aBlockedReason, aChannel, true, uri);
+  pwin->NotifyContentBlockingEvent(aBlockedReason, aChannel, true, uri);
 }
 
 /* static */ bool UrlClassifierCommon::ShouldEnableClassifier(

@@ -2545,6 +2545,13 @@ static bool FrameParticipatesIn3DContext(nsIFrame* aAncestor,
 static bool ItemParticipatesIn3DContext(nsIFrame* aAncestor,
                                         nsDisplayItem* aItem) {
   auto type = aItem->GetType();
+
+  if (type == DisplayItemType::TYPE_WRAP_LIST &&
+      aItem->GetChildren()->Count() == 1) {
+    // If the wraplist has only one child item, use the type of that item.
+    type = aItem->GetChildren()->GetBottom()->GetType();
+  }
+
   if (type != DisplayItemType::TYPE_TRANSFORM &&
       type != DisplayItemType::TYPE_PERSPECTIVE) {
     return false;

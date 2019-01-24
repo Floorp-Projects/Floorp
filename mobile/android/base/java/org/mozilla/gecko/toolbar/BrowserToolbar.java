@@ -525,6 +525,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                     break;
 
                 case SECURITY_CHANGE:
+                case TRACKING_CHANGE:
                     flags.add(UpdateFlags.SITE_IDENTITY);
                     break;
             }

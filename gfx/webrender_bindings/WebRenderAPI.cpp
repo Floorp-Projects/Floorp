@@ -676,7 +676,8 @@ Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(
     const wr::LayoutRect& aBounds, const wr::WrStackingContextClip& aClip,
     const WrAnimationProperty* aAnimation, const float* aOpacity,
     const gfx::Matrix4x4* aTransform, wr::TransformStyle aTransformStyle,
-    const wr::ReferenceFrameKind aReferenceFrameKind, const wr::MixBlendMode& aMixBlendMode,
+    const wr::ReferenceFrameKind aReferenceFrameKind,
+    const wr::MixBlendMode& aMixBlendMode,
     const nsTArray<wr::FilterOp>& aFilters, bool aIsBackfaceVisible,
     const wr::RasterSpace& aRasterSpace) {
   MOZ_ASSERT(mClipChainLeaf.isNothing(),

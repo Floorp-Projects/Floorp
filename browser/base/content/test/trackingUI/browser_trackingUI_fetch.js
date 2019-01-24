@@ -6,13 +6,13 @@ add_task(async function test_fetch() {
   ]});
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(newTabBrowser) {
-    let securityChange = waitForSecurityChange();
+    let contentBlockingEvent = waitForContentBlockingEvent();
     await ContentTask.spawn(newTabBrowser, null, async function() {
       await content.wrappedJSObject.test_fetch()
                    .then(response => Assert.ok(false, "should have denied the request"))
                    .catch(e => Assert.ok(true, `Caught exception: ${e}`));
     });
-    await securityChange;
+    await contentBlockingEvent;
 
     let ContentBlocking = newTabBrowser.ownerGlobal.ContentBlocking;
     ok(ContentBlocking, "got CB object");

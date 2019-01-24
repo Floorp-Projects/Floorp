@@ -122,6 +122,13 @@ class WebProgressListener final : public nsIWebProgressListener,
     return NS_OK;
   }
 
+  NS_IMETHOD
+  OnContentBlockingEvent(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
+                         uint32_t aEvent) override {
+    MOZ_ASSERT(false, "Unexpected notification.");
+    return NS_OK;
+  }
+
  private:
   ~WebProgressListener() {
     if (mPromise) {

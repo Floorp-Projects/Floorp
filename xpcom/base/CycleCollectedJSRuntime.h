@@ -157,7 +157,7 @@ class CycleCollectedJSRuntime {
                               const JS::GCDescription& aDesc);
   static void GCNurseryCollectionCallback(JSContext* aContext,
                                           JS::GCNurseryProgress aProgress,
-                                          JS::gcreason::Reason aReason);
+                                          JS::GCReason aReason);
   static void OutOfMemoryCallback(JSContext* aContext, void* aData);
   /**
    * Callback for reporting external string memory.
@@ -264,7 +264,7 @@ class CycleCollectedJSRuntime {
   void FixWeakMappingGrayBits() const;
   void CheckGrayBits() const;
   bool AreGCGrayBitsValid() const;
-  void GarbageCollect(uint32_t aReason) const;
+  void GarbageCollect(JS::GCReason aReason) const;
 
   // This needs to be an nsWrapperCache, not a JSObject, because we need to know
   // when our object gets moved.  But we can't trace it (and hence update our

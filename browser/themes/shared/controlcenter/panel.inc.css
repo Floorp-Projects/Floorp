@@ -345,14 +345,6 @@ description#identity-popup-content-verifier,
   font-size: 110%;
 }
 
-.identity-popup-breakageReportView-collection-label {
-  color: graytext;
-}
-
-#identity-popup-breakageReportView-collection-url {
-  word-wrap: break-word;
-}
-
 .identity-popup-breakageReportView-collection-section {
   margin-bottom: 16px;
 }

@@ -124,27 +124,18 @@ JSTerm.prototype = {
    *         received.
    */
   requestEvaluation(str, options = {}) {
-    return new Promise((resolve, reject) => {
-      let frameActor = null;
-      if ("frame" in options) {
-        frameActor = this.getFrameActor(options.frame);
-      }
-      const evalOptions = {
-        bindObjectActor: options.bindObjectActor,
-        frameActor: frameActor,
-        selectedNodeActor: options.selectedNodeActor,
-        selectedObjectActor: options.selectedObjectActor,
-      };
-      const onResponse = response => {
-        if (!response.error) {
-          resolve(response);
-        } else {
-          reject(response);
-        }
-      };
+    let frameActor = null;
+    if ("frame" in options) {
+      frameActor = this.getFrameActor(options.frame);
+    }
+    const evalOptions = {
+      bindObjectActor: options.bindObjectActor,
+      frameActor: frameActor,
+      selectedNodeActor: options.selectedNodeActor,
+      selectedObjectActor: options.selectedObjectActor,
+    };
 
-      this.webConsoleClient.evaluateJSAsync(str, onResponse, evalOptions);
-    });
+    return this.webConsoleClient.evaluateJSAsync(str, evalOptions);
   },
 
   /**

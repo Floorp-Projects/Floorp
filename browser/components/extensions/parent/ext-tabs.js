@@ -1244,6 +1244,7 @@ this.tabs = class extends ExtensionAPI {
                   onLocationChange(webProgress, request, location, flags) { },
                   onProgressChange(webProgress, request, curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress) { },
                   onSecurityChange(webProgress, request, state) { },
+                  onContentBlockingEvent(webProgress, request, event) { },
                   onStateChange(webProgress, request, flags, status) {
                     if ((flags & Ci.nsIWebProgressListener.STATE_STOP) && (flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT)) {
                       resolve(retval == 0 ? "saved" : "replaced");

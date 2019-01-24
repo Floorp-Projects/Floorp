@@ -56,10 +56,21 @@ class AddonTargetFront extends FrontClassWithSpec(addonTargetSpec) {
    * the final target actor to use.
    */
   async connect() {
-    const { form } = await super.connect();
-    const front = new BrowsingContextTargetFront(this.client, form);
-    this.manage(front);
-    return front;
+    if (this.isWebExtension &&
+        this.client.mainRoot.traits.webExtensionAddonConnect) {
+      // The AddonTargetFront form is related to a WebExtensionActor instance,
+      // which isn't a target actor on its own, it is an actor living in the parent
+      // process with access to the addon metadata, it can control the addon (e.g.
+      // reloading it) and listen to the AddonManager events related to the lifecycle of
+      // the addon (e.g. when the addon is disabled or uninstalled).
+      // To retrieve the target actor instance, we call its "connect" method, (which
+      // fetches the target actor targetForm from a WebExtensionTargetActor instance).
+      const { form } = await super.connect();
+      const front = new BrowsingContextTargetFront(this.client, form);
+      this.manage(front);
+      return front;
+    }
+    return this;
   }
 
   async attach() {

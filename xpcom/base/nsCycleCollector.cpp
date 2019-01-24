@@ -3272,8 +3272,8 @@ void nsCycleCollector::FixGrayBits(bool aForceGC, TimeLog& aTimeLog) {
 
   uint32_t count = 0;
   do {
-    mCCJSRuntime->GarbageCollect(aForceGC ? JS::gcreason::SHUTDOWN_CC
-                                          : JS::gcreason::CC_FORCED);
+    mCCJSRuntime->GarbageCollect(aForceGC ? JS::GCReason::SHUTDOWN_CC
+                                          : JS::GCReason::CC_FORCED);
 
     mCCJSRuntime->FixWeakMappingGrayBits();
 
@@ -3296,7 +3296,7 @@ void nsCycleCollector::FinishAnyIncrementalGCInProgress() {
     NS_WARNING("Finishing incremental GC in progress during CC");
     JSContext* cx = CycleCollectedJSContext::Get()->Context();
     JS::PrepareForIncrementalGC(cx);
-    JS::FinishIncrementalGC(cx, JS::gcreason::CC_FORCED);
+    JS::FinishIncrementalGC(cx, JS::GCReason::CC_FORCED);
   }
 }
 

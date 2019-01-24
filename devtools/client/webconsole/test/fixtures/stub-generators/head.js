@@ -399,9 +399,8 @@ async function generateEvaluationResultStubs() {
   const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
 
   for (const [key, code] of evaluationResult) {
-    const packet = await new Promise(resolve => {
-      toolbox.target.activeConsole.evaluateJS(code, resolve);
-    });
+    const packet = await toolbox.target.activeConsole.evaluateJS(code);
+
     stubs.packets.push(formatPacket(key, packet));
     stubs.preparedMessages.push(formatStub(key, packet));
   }

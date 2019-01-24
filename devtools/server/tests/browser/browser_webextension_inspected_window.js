@@ -57,12 +57,6 @@ function waitForNextTabNavigated(targetFront) {
   });
 }
 
-function consoleEvalJS(consoleClient, jsCode) {
-  return new Promise(resolve => {
-    consoleClient.evaluateJS(jsCode, resolve);
-  });
-}
-
 // Script used as the injectedScript option in the inspectedWindow.reload tests.
 function injectedScript() {
   if (!window.pageScriptExecutedFirst) {
@@ -240,8 +234,7 @@ add_task(async function test_exception_inspectedWindowReload() {
 
   await waitForNoBypassCacheReload;
 
-  const noBypassCacheEval = await consoleEvalJS(consoleClient,
-                                                "document.body.textContent");
+  const noBypassCacheEval = await consoleClient.evaluateJS("document.body.textContent");
 
   is(noBypassCacheEval.result, "empty cache headers",
      "Got the expected result with reload forceBypassCache=false");
@@ -253,8 +246,8 @@ add_task(async function test_exception_inspectedWindowReload() {
 
   await waitForForceBypassCacheReload;
 
-  const forceBypassCacheEval = await consoleEvalJS(consoleClient,
-                                                   "document.body.textContent");
+  const forceBypassCacheEval =
+    await consoleClient.evaluateJS("document.body.textContent");
 
   is(forceBypassCacheEval.result, "no-cache:no-cache",
      "Got the expected result with reload forceBypassCache=true");
@@ -276,8 +269,7 @@ add_task(async function test_exception_inspectedWindowReload_customUserAgent() {
 
   await waitForCustomUserAgentReload;
 
-  const customUserAgentEval = await consoleEvalJS(consoleClient,
-                                                  "document.body.textContent");
+  const customUserAgentEval = await consoleClient.evaluateJS("document.body.textContent");
 
   is(customUserAgentEval.result, "Customized User Agent",
      "Got the expected result on reload with a customized userAgent");
@@ -289,8 +281,8 @@ add_task(async function test_exception_inspectedWindowReload_customUserAgent() {
 
   await waitForNoCustomUserAgentReload;
 
-  const noCustomUserAgentEval = await consoleEvalJS(consoleClient,
-                                                    "document.body.textContent");
+  const noCustomUserAgentEval =
+    await consoleClient.evaluateJS("document.body.textContent");
 
   is(noCustomUserAgentEval.result, window.navigator.userAgent,
      "Got the expected result with reload without a customized userAgent");
@@ -311,8 +303,7 @@ add_task(async function test_exception_inspectedWindowReload_injectedScript() {
                                     {injectedScript: `new ${injectedScript}`});
   await waitForInjectedScriptReload;
 
-  const injectedScriptEval = await consoleEvalJS(consoleClient,
-                                                 `(${collectEvalResults})()`);
+  const injectedScriptEval = await consoleClient.evaluateJS(`(${collectEvalResults})()`);
 
   const expectedResult = (new Array(5)).fill("injected script executed first");
 
@@ -325,8 +316,8 @@ add_task(async function test_exception_inspectedWindowReload_injectedScript() {
   await inspectedWindowFront.reload(fakeExtCallerInfo, {});
   await waitForNoInjectedScriptReload;
 
-  const noInjectedScriptEval = await consoleEvalJS(consoleClient,
-                                                   `(${collectEvalResults})()`);
+  const noInjectedScriptEval =
+    await consoleClient.evaluateJS(`(${collectEvalResults})()`);
 
   const newExpectedResult = (new Array(5)).fill("injected script NOT executed");
 
@@ -352,8 +343,7 @@ add_task(async function test_exception_inspectedWindowReload_multiple_calls() {
 
   await waitForCustomUserAgentReload;
 
-  const customUserAgentEval = await consoleEvalJS(consoleClient,
-                                                  "document.body.textContent");
+  const customUserAgentEval = await consoleClient.evaluateJS("document.body.textContent");
 
   is(customUserAgentEval.result, "Customized User Agent 1",
      "Got the expected result on reload with a customized userAgent");
@@ -365,8 +355,8 @@ add_task(async function test_exception_inspectedWindowReload_multiple_calls() {
 
   await waitForNoCustomUserAgentReload;
 
-  const noCustomUserAgentEval = await consoleEvalJS(consoleClient,
-                                                    "document.body.textContent");
+  const noCustomUserAgentEval =
+    await consoleClient.evaluateJS("document.body.textContent");
 
   is(noCustomUserAgentEval.result, window.navigator.userAgent,
      "Got the expected result with reload without a customized userAgent");
@@ -395,8 +385,8 @@ add_task(async function test_exception_inspectedWindowReload_stopped() {
                                     {injectedScript: `new ${injectedScript}`});
   await waitForInjectedScriptReload;
 
-  const injectedScriptEval = await consoleEvalJS(consoleClient,
-                                                 `(${collectEvalResults})()`);
+  const injectedScriptEval =
+    await consoleClient.evaluateJS(`(${collectEvalResults})()`);
 
   // The page should have stopped during the reload and only one injected script
   // is expected.
@@ -412,8 +402,8 @@ add_task(async function test_exception_inspectedWindowReload_stopped() {
   await inspectedWindowFront.reload(fakeExtCallerInfo, {});
   await waitForNoInjectedScriptReload;
 
-  const noInjectedScriptEval = await consoleEvalJS(consoleClient,
-                                                   `(${collectEvalResults})()`);
+  const noInjectedScriptEval =
+    await consoleClient.evaluateJS(`(${collectEvalResults})()`);
 
   // The page should have stopped during the reload and no injected script should
   // have been executed during this second reload (or it would mean that the previous

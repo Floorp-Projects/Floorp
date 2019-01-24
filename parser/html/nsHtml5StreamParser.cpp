@@ -863,7 +863,7 @@ class MaybeRunCollector : public Runnable {
 
   NS_IMETHOD Run() override {
     nsJSContext::MaybeRunNextCollectorSlice(mDocShell,
-                                            JS::gcreason::HTML_PARSER);
+                                            JS::GCReason::HTML_PARSER);
     return NS_OK;
   }
 

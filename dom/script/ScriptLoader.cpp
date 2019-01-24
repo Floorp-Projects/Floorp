@@ -966,8 +966,7 @@ void ScriptLoader::EnsureModuleHooksInitialized() {
 
   JS::SetModuleResolveHook(rt, HostResolveImportedModule);
   JS::SetModuleMetadataHook(rt, HostPopulateImportMeta);
-  JS::SetScriptPrivateReferenceHooks(rt,
-                                     HostAddRefTopLevelScript,
+  JS::SetScriptPrivateReferenceHooks(rt, HostAddRefTopLevelScript,
                                      HostReleaseTopLevelScript);
 
   Preferences::RegisterCallbackAndCall(DynamicImportPrefChangedCallback,
@@ -2445,7 +2444,7 @@ class MOZ_RAII AutoSetProcessingScriptTag {
 static nsresult ExecuteCompiledScript(JSContext* aCx,
                                       ScriptLoadRequest* aRequest,
                                       nsJSUtils::ExecutionContext& aExec) {
-  JS::Rooted<JSScript*> script(aCx, aExec.GetScript());
+  JS::Rooted<JSScript*> script(aCx, aExec.MaybeGetScript());
   if (!script) {
     // Compilation succeeds without producing a script if scripting is
     // disabled for the global.

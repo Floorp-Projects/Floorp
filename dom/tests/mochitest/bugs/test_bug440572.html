@@ -27,9 +27,11 @@ window.addEventListener("message", receiveMessage);
 
 function runtests()
 {
-  is(messages.size, 2, "received the right number of messages.");
+  is(messages.size, 4, "received the right number of messages.");
   is(messages.get("test"), "success", "test in frame failed.");
-  isnot(messages.get("dump"), "success", "parent[\"dump\"] should be the WebIDL property of Window.");
+  is(messages.get("dump"), "success", '"dump" in frame failed.');
+  is(messages.get("open"), "success", '"open" in frame failed.');
+  isnot(messages.get("close"), "success", "parent[\"close\"] should be the WebIDL property of Window.");
 
   SimpleTest.finish();
 }
@@ -40,6 +42,10 @@ SimpleTest.waitForExplicitFinish();
 <iframe name="test" src="http://example.org:80/tests/dom/tests/mochitest/bugs/iframe_bug440572.html"></iframe>
 <br>
 <iframe name="dump" src="http://example.org:80/tests/dom/tests/mochitest/bugs/iframe_bug440572.html"></iframe>
+<br>
+<iframe name="open" src="http://example.org:80/tests/dom/tests/mochitest/bugs/iframe_bug440572.html"></iframe>
+<br>
+<iframe name="close" src="http://example.org:80/tests/dom/tests/mochitest/bugs/iframe_bug440572.html"></iframe>
 </body>
 </html>
 

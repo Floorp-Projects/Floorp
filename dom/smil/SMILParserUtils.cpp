@@ -5,15 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SMILParserUtils.h"
+
+#include "mozilla/SMILKeySpline.h"
+#include "mozilla/SMILRepeatCount.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/TextUtils.h"
-#include "SMILKeySpline.h"
 #include "nsISMILAttr.h"
 #include "nsSMILValue.h"
 #include "nsSMILTimeValue.h"
 #include "nsSMILTimeValueSpecParams.h"
 #include "nsSMILTypes.h"
-#include "nsSMILRepeatCount.h"
 #include "nsContentUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 
@@ -551,7 +552,7 @@ bool SMILParserUtils::ParseValuesGeneric(const nsAString& aSpec,
 }
 
 bool SMILParserUtils::ParseRepeatCount(const nsAString& aSpec,
-                                       nsSMILRepeatCount& aResult) {
+                                       SMILRepeatCount& aResult) {
   const nsAString& spec = SMILParserUtils::TrimWhitespace(aSpec);
 
   if (spec.EqualsLiteral("indefinite")) {

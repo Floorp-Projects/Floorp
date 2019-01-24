@@ -341,7 +341,7 @@ BEGIN_TEST(testIncrementalRoots) {
 
   // Tenure everything so intentionally unrooted objects don't move before we
   // can use them.
-  cx->runtime()->gc.minorGC(JS::gcreason::API);
+  cx->runtime()->gc.minorGC(JS::GCReason::API);
 
   // Release all roots except for the AutoObjectVector.
   obj = root = nullptr;

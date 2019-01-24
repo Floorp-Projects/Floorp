@@ -1,0 +1,41 @@
+# HG changeset patch
+# User Tom Ritter <tom@mozilla.com>
+# Date 1526498300 18000
+#      Wed May 16 14:18:20 2018 -0500
+# Node ID dd3f4940aeb0c4e00e8bcf1c238f2355ad793489
+# Parent  cf646c80b9545db7ab548f88a482378734ee2f78
+Bug 1462100 Cast to void* to avoid conversion errors on MinGW, which does not do the automatic conversion like msvc r?bobowen
+
+MozReview-Commit-ID: 8fO9Nu9gaxh
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/interception.h b/security/sandbox/chromium/sandbox/win/src/interception.h
+--- a/security/sandbox/chromium/sandbox/win/src/interception.h
++++ b/security/sandbox/chromium/sandbox/win/src/interception.h
+@@ -264,25 +264,25 @@ class InterceptionManager {
+ #define MAKE_SERVICE_NAME(service) &Target##service##64
+ #else
+ #define MAKE_SERVICE_NAME(service) &Target##service
+ #endif
+ 
+ #define ADD_NT_INTERCEPTION(service, id, num_params) \
+   AddToPatchedFunctions(kNtdllName, #service, \
+                         sandbox::INTERCEPTION_SERVICE_CALL, \
+-                        MAKE_SERVICE_NAME(service), id)
++                        (void*)MAKE_SERVICE_NAME(service), id)
+ 
+ #define INTERCEPT_NT(manager, service, id, num_params) \
+   manager->ADD_NT_INTERCEPTION(service, id, num_params)
+ 
+ // When intercepting the EAT it is important that the patched version of the
+ // function not call any functions imported from system libraries unless
+ // |TargetServices::InitCalled()| returns true, because it is only then that
+ // we are guaranteed that our IAT has been initialized.
+ #define INTERCEPT_EAT(manager, dll, function, id, num_params) \
+   manager->AddToPatchedFunctions(dll, #function, sandbox::INTERCEPTION_EAT, \
+-                                 MAKE_SERVICE_NAME(function), id)
++                                 (void*)MAKE_SERVICE_NAME(function), id)
+ #endif  // SANDBOX_EXPORTS
+ 
+ }  // namespace sandbox
+ 
+ #endif  // SANDBOX_SRC_INTERCEPTION_H_

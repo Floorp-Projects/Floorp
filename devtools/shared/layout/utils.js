@@ -987,3 +987,48 @@ function isNodeAFlexItemInContainer(supposedItem, container) {
   return false;
 }
 exports.isNodeAFlexItemInContainer = isNodeAFlexItemInContainer;
+
+/**
+ * Calculate the total of the node and all of its ancestor's scrollTop and
+ * scrollLeft values.
+ *
+ * @param  {DOMNode} node
+ *         The node for which the absolute scroll offsets should be calculated.
+ * @return {Object} object
+ *         An object containing scrollTop and scrollLeft values.
+ * @return {Number} object.scrollLeft
+ *         The total scrollLeft values of the node and all of its ancestors.
+ * @return {Number} object.scrollTop
+ *         The total scrollTop values of the node and all of its ancestors.
+ */
+function getAbsoluteScrollOffsetsForNode(node) {
+  const doc = node.ownerDocument;
+
+  // Our walker will only iterate up to document.body so we start by saving the
+  // scroll values for `document.documentElement`.
+  let scrollTop = doc.documentElement.scrollTop;
+  let scrollLeft = doc.documentElement.scrollLeft;
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT);
+  walker.currentNode = node;
+  let currentNode = walker.currentNode;
+
+  // Iterate from `node` up the tree to `document.body` adding scroll offsets
+  // as we go.
+  while (currentNode) {
+    const nodeScrollTop = currentNode.scrollTop;
+    const nodeScrollLeft = currentNode.scrollLeft;
+
+    if (nodeScrollTop || nodeScrollLeft) {
+      scrollTop += nodeScrollTop;
+      scrollLeft += nodeScrollLeft;
+    }
+
+    currentNode = walker.parentNode();
+  }
+
+  return {
+    scrollLeft,
+    scrollTop,
+  };
+}
+exports.getAbsoluteScrollOffsetsForNode = getAbsoluteScrollOffsetsForNode;

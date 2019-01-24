@@ -33,6 +33,7 @@
 #include "nsComputedDOMStyle.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static const int32_t kLongLineLen = 128;
 
@@ -419,7 +420,7 @@ bool nsXHTMLContentSerializer::CheckElementStart(Element* aElement,
   return true;
 }
 
-bool nsXHTMLContentSerializer::CheckElementEnd(dom::Element* aElement,
+bool nsXHTMLContentSerializer::CheckElementEnd(Element* aElement,
                                                bool& aForceFormat,
                                                nsAString& aStr) {
   NS_ASSERTION(!mIsHTMLSerializer,

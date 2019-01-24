@@ -277,6 +277,7 @@ function printToPdf(callback) {
         onLocationChange: function () {},
         onStatusChange: function () {},
         onSecurityChange: function () {},
+        onContentBlockingEvent: function () {},
     });
 }
 

@@ -23,20 +23,11 @@ function test_last_request_and_continue(query, expected) {
 }
 
 function test_iframe() {
-  let observer = new PerformanceObserver(function(list, obj) {
-    list.getEntries().forEach(entry => info(entry.name));
-    list.getEntries().forEach(entry => {
-      if (entry.name.endsWith("test_accept_header.sjs?iframe")) {
-        obj.disconnect();
-        test_last_request_and_continue("iframe", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-      }
-    });
-  });
-
-  observer.observe({entryTypes: ["resource"]});
-
   let ifr = document.createElement("iframe");
   ifr.src = "test_accept_header.sjs?iframe";
+  ifr.onload = () => {
+    test_last_request_and_continue("iframe", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+  };
   document.body.appendChild(ifr);
 }
 
@@ -50,23 +41,14 @@ function test_image() {
 }
 
 function test_style() {
-  let observer = new PerformanceObserver(function(list, obj) {
-    list.getEntries().forEach(entry => info(entry.name));
-    list.getEntries().forEach(entry => {
-      if (entry.name.endsWith("test_accept_header.sjs?style")) {
-        obj.disconnect();
-        test_last_request_and_continue("style", "text/css,*/*;q=0.1");
-      }
-    });
-  });
-
-  observer.observe({entryTypes: ["resource"]});
-
   let head = document.getElementsByTagName("head")[0];
   let link = document.createElement("link");
   link.rel = "stylesheet";
   link.type = "text/css";
   link.href = "test_accept_header.sjs?style";
+  link.onload = () => {
+    test_last_request_and_continue("style", "text/css,*/*;q=0.1");
+  };
   head.appendChild(link);
 }
 

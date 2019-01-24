@@ -423,7 +423,6 @@ class nsDocumentViewer final : public nsIContentViewer,
   float mTextZoom;  // Text zoom, defaults to 1.0
   float mPageZoom;
   float mOverrideDPPX;  // DPPX overrided, defaults to 0.0
-  int mMinFontSize;
 
   int16_t mNumURLStarts;
   int16_t mDestroyBlockedCount;
@@ -561,7 +560,6 @@ nsDocumentViewer::nsDocumentViewer()
       mTextZoom(1.0),
       mPageZoom(1.0),
       mOverrideDPPX(0.0),
-      mMinFontSize(0),
       mNumURLStarts(0),
       mDestroyBlockedCount(0),
       mStopped(false),
@@ -768,7 +766,6 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
   mPresContext->SetTextZoom(mTextZoom);
   mPresContext->SetFullZoom(mPageZoom);
   mPresContext->SetOverrideDPPX(mOverrideDPPX);
-  mPresContext->SetBaseMinFontSize(mMinFontSize);
 
   p2a = mPresContext->AppUnitsPerDevPixel();  // zoom may have changed it
   width = p2a * mBounds.width;
@@ -1156,7 +1153,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
 
   // It's probably a good idea to GC soon since we have finished loading.
   nsJSContext::PokeGC(
-      JS::gcreason::LOAD_END,
+      JS::GCReason::LOAD_END,
       mDocument ? mDocument->GetWrapperPreserveColor() : nullptr);
 
 #ifdef NS_PRINTING
@@ -1412,7 +1409,7 @@ nsDocumentViewer::PageHide(bool aIsUnload) {
 
   if (aIsUnload) {
     // Poke the GC. The window might be collectable garbage now.
-    nsJSContext::PokeGC(JS::gcreason::PAGE_HIDE,
+    nsJSContext::PokeGC(JS::GCReason::PAGE_HIDE,
                         mDocument->GetWrapperPreserveColor(), NS_GC_DELAY * 2);
   }
 
@@ -2361,7 +2358,7 @@ UniquePtr<ServoStyleSet> nsDocumentViewer::CreateStyleSet(Document* aDocument) {
 NS_IMETHODIMP
 nsDocumentViewer::ClearHistoryEntry() {
   if (mDocument) {
-    nsJSContext::PokeGC(JS::gcreason::PAGE_HIDE,
+    nsJSContext::PokeGC(JS::GCReason::PAGE_HIDE,
                         mDocument->GetWrapperPreserveColor(), NS_GC_DELAY * 2);
   }
 
@@ -2738,10 +2735,6 @@ static void SetChildTextZoom(nsIContentViewer* aChild, void* aClosure) {
   aChild->SetTextZoom(ZoomInfo->mZoom);
 }
 
-static void SetChildMinFontSize(nsIContentViewer* aChild, void* aClosure) {
-  aChild->SetMinFontSize(NS_PTR_TO_INT32(aClosure));
-}
-
 static void SetChildFullZoom(nsIContentViewer* aChild, void* aClosure) {
   struct ZoomInfo* ZoomInfo = (struct ZoomInfo*)aClosure;
   aChild->SetFullZoom(ZoomInfo->mZoom);
@@ -2758,15 +2751,6 @@ static bool SetExtResourceTextZoom(Document* aDocument, void* aClosure) {
   if (ctxt) {
     struct ZoomInfo* ZoomInfo = static_cast<struct ZoomInfo*>(aClosure);
     ctxt->SetTextZoom(ZoomInfo->mZoom);
-  }
-
-  return true;
-}
-
-static bool SetExtResourceMinFontSize(Document* aDocument, void* aClosure) {
-  nsPresContext* ctxt = aDocument->GetPresContext();
-  if (ctxt) {
-    ctxt->SetBaseMinFontSize(NS_PTR_TO_INT32(aClosure));
   }
 
   return true;
@@ -2846,47 +2830,6 @@ nsDocumentViewer::GetEffectiveTextZoom(float* aEffectiveTextZoom) {
   NS_ENSURE_ARG_POINTER(aEffectiveTextZoom);
   nsPresContext* pc = GetPresContext();
   *aEffectiveTextZoom = pc ? pc->EffectiveTextZoom() : 1.0f;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::SetMinFontSize(int32_t aMinFontSize) {
-  // If we don't have a document, then we need to bail.
-  if (!mDocument) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (GetIsPrintPreview()) {
-    return NS_OK;
-  }
-
-  mMinFontSize = aMinFontSize;
-
-  // Set the min font on all children of mContainer (even if our min font didn't
-  // change, our children's min font may be different, though it would be
-  // unusual). Do this first, in case kids are auto-sizing and post reflow
-  // commands on our presshell (which should be subsumed into our own style
-  // change reflow).
-  CallChildren(SetChildMinFontSize, NS_INT32_TO_PTR(aMinFontSize));
-
-  // Now change our own min font
-  nsPresContext* pc = GetPresContext();
-  if (pc && aMinFontSize != mPresContext->MinFontSize(nullptr)) {
-    pc->SetBaseMinFontSize(aMinFontSize);
-  }
-
-  // And do the external resources
-  mDocument->EnumerateExternalResources(SetExtResourceMinFontSize,
-                                        NS_INT32_TO_PTR(aMinFontSize));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::GetMinFontSize(int32_t* aMinFontSize) {
-  NS_ENSURE_ARG_POINTER(aMinFontSize);
-  nsPresContext* pc = GetPresContext();
-  *aMinFontSize = pc ? pc->BaseMinFontSize() : 0;
   return NS_OK;
 }
 
@@ -4178,7 +4121,6 @@ void nsDocumentViewer::ReturnToGalleyPresentation() {
   SetTextZoom(mTextZoom);
   SetFullZoom(mPageZoom);
   SetOverrideDPPX(mOverrideDPPX);
-  SetMinFontSize(mMinFontSize);
   Show();
 
 #endif  // NS_PRINTING && NS_PRINT_PREVIEW

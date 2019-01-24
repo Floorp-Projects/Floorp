@@ -245,7 +245,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
       // running everything from the same cx and without returning to JS, there
       // is nothing to deallocate the ASTs.
       JS::PrepareForFullGC(cx);
-      cx->runtime()->gc.gc(GC_NORMAL, JS::gcreason::NO_REASON);
+      cx->runtime()->gc.gc(GC_NORMAL, JS::GCReason::NO_REASON);
     }
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
 

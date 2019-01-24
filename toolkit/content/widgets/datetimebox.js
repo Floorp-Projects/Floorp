@@ -308,7 +308,7 @@ this.DateTimeInputBaseImplWidget = class {
 
   updateResetButtonVisibility() {
     if (this.isAnyFieldAvailable(false)) {
-      this.mResetButton.style.visibility = "visible";
+      this.mResetButton.style.visibility = "";
     } else {
       this.mResetButton.style.visibility = "hidden";
     }
