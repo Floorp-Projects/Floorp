@@ -951,6 +951,22 @@ media:
       - main
       - content
 
+  autoplay_default_blocked:
+    bug_numbers:
+      - 1521947
+    description: >
+      Whether the user blocked autoplay by default. Recorded when the preference is toggled.
+    expires: "72"
+    kind: boolean
+    notification_emails:
+      - cpearce@mozilla.com
+      - alwu@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+      - content
+
 # The following section contains content process base counters.
 dom.contentprocess:
   buildID_mismatch:
