@@ -135,7 +135,7 @@ class Breakpoint extends PureComponent<Props> {
       editor.CodeMirror.runMode(text, "application/javascript", node);
       return { __html: node.innerHTML };
     },
-    (text, editor) => `${text} - ${editor ? "editor" : ""}`
+    (text, editor) => `${text} - ${editor.CodeMirror ? "editor" : ""}`
   );
 
   /* eslint-disable react/no-danger */
