@@ -8083,7 +8083,14 @@ bool nsContentUtils::IsNonSubresourceInternalPolicyType(
 
 // static, public
 nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForWindow(
-    nsPIDOMWindowInner* aWindow) {
+    nsPIDOMWindowInner* aWindow, uint32_t* aRejectedReason) {
+  uint32_t rejectedReason;
+  if (!aRejectedReason) {
+    aRejectedReason = &rejectedReason;
+  }
+
+  *aRejectedReason = 0;
+
   if (Document* document = aWindow->GetExtantDoc()) {
     nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
     // Note that GetChannel() below may return null, but that's OK, since the
@@ -8091,9 +8098,10 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForWindow(
     // will only fail to notify the UI in case storage gets blocked.
     nsIChannel* channel = document->GetChannel();
     return InternalStorageAllowedForPrincipal(principal, aWindow, nullptr,
-                                              channel);
+                                              channel, *aRejectedReason);
   }
 
+  // No document? Let's return a generic rejected reason.
   return StorageAccess::eDeny;
 }
 
@@ -8108,8 +8116,10 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForDocument(
     // callee is able to deal with a null channel argument, and if passed null,
     // will only fail to notify the UI in case storage gets blocked.
     nsIChannel* channel = aDoc->GetChannel();
+
+    uint32_t rejectedReason = 0;
     return InternalStorageAllowedForPrincipal(principal, inner, nullptr,
-                                              channel);
+                                              channel, rejectedReason);
   }
 
   return StorageAccess::eDeny;
@@ -8122,7 +8132,9 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForNewWindow(
   MOZ_ASSERT(aURI);
   // parent may be nullptr
 
-  return InternalStorageAllowedForPrincipal(aPrincipal, aParent, aURI, nullptr);
+  uint32_t rejectedReason = 0;
+  return InternalStorageAllowedForPrincipal(aPrincipal, aParent, aURI, nullptr,
+                                            rejectedReason);
 }
 
 // static, public
@@ -8136,8 +8148,9 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForChannel(
       aChannel, getter_AddRefs(principal));
   NS_ENSURE_TRUE(principal, nsContentUtils::StorageAccess::eDeny);
 
-  nsContentUtils::StorageAccess result =
-      InternalStorageAllowedForPrincipal(principal, nullptr, nullptr, aChannel);
+  uint32_t rejectedReason = 0;
+  nsContentUtils::StorageAccess result = InternalStorageAllowedForPrincipal(
+      principal, nullptr, nullptr, aChannel, rejectedReason);
 
   return result;
 }
@@ -8145,8 +8158,9 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForChannel(
 // static, public
 nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForPrincipal(
     nsIPrincipal* aPrincipal) {
+  uint32_t rejectedReason = 0;
   return InternalStorageAllowedForPrincipal(aPrincipal, nullptr, nullptr,
-                                            nullptr);
+                                            nullptr, rejectedReason);
 }
 
 // static, private
@@ -8173,22 +8187,6 @@ void nsContentUtils::GetCookieLifetimePolicyForPrincipal(
       break;
     case nsICookiePermission::ACCESS_SESSION:
       *aLifetimePolicy = nsICookieService::ACCEPT_SESSION;
-      break;
-    case nsICookiePermission::ACCESS_ALLOW_FIRST_PARTY_ONLY:
-      // NOTE: The decision was made here to override the lifetime policy to be
-      // ACCEPT_NORMALLY for consistency with ACCESS_ALLOW, but this does
-      // prevent us from expressing BEHAVIOR_REJECT_FOREIGN/ACCEPT_SESSION for a
-      // specific domain. As BEHAVIOR_REJECT_FOREIGN isn't visible in our UI,
-      // this is probably not an issue.
-      *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
-      break;
-    case nsICookiePermission::ACCESS_LIMIT_THIRD_PARTY:
-      // NOTE: The decision was made here to override the lifetime policy to be
-      // ACCEPT_NORMALLY for consistency with ACCESS_ALLOW, but this does
-      // prevent us from expressing BEHAVIOR_REJECT_FOREIGN/ACCEPT_SESSION for a
-      // specific domain. As BEHAVIOR_LIMIT_FOREIGN isn't visible in our UI,
-      // this is probably not an issue.
-      *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
       break;
   }
 }
@@ -8295,14 +8293,14 @@ static bool StorageDisabledByAntiTrackingInternal(nsPIDOMWindowInner* aWindow,
                                                   nsIChannel* aChannel,
                                                   nsIPrincipal* aPrincipal,
                                                   nsIURI* aURI,
-                                                  uint32_t* aRejectedReason) {
+                                                  uint32_t& aRejectedReason) {
   MOZ_ASSERT(aWindow || aChannel || aPrincipal);
 
   if (aWindow) {
     nsIURI* documentURI = aURI ? aURI : aWindow->GetDocumentURI();
     return !documentURI ||
            !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-               aWindow, documentURI, aRejectedReason);
+               aWindow, documentURI, &aRejectedReason);
   }
 
   if (aChannel) {
@@ -8318,7 +8316,7 @@ static bool StorageDisabledByAntiTrackingInternal(nsPIDOMWindowInner* aWindow,
     }
 
     return !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-        httpChannel, uri, aRejectedReason);
+        httpChannel, uri, &aRejectedReason);
   }
 
   MOZ_ASSERT(aPrincipal);
@@ -8329,23 +8327,23 @@ static bool StorageDisabledByAntiTrackingInternal(nsPIDOMWindowInner* aWindow,
 bool nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                                    nsIChannel* aChannel,
                                                    nsIPrincipal* aPrincipal,
-                                                   nsIURI* aURI) {
-  uint32_t rejectedReason = 0;
+                                                   nsIURI* aURI,
+                                                   uint32_t& aRejectedReason) {
   bool disabled = StorageDisabledByAntiTrackingInternal(
-      aWindow, aChannel, aPrincipal, aURI, &rejectedReason);
+      aWindow, aChannel, aPrincipal, aURI, aRejectedReason);
   if (sAntiTrackingControlCenterUIEnabled) {
     if (aWindow) {
       AntiTrackingCommon::NotifyBlockingDecision(
           aWindow,
           disabled ? AntiTrackingCommon::BlockingDecision::eBlock
                    : AntiTrackingCommon::BlockingDecision::eAllow,
-          rejectedReason);
+          aRejectedReason);
     } else if (aChannel) {
       AntiTrackingCommon::NotifyBlockingDecision(
           aChannel,
           disabled ? AntiTrackingCommon::BlockingDecision::eBlock
                    : AntiTrackingCommon::BlockingDecision::eAllow,
-          rejectedReason);
+          aRejectedReason);
     }
   }
   return disabled;
@@ -8356,8 +8354,11 @@ nsContentUtils::StorageAccess
 nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
                                                    nsPIDOMWindowInner* aWindow,
                                                    nsIURI* aURI,
-                                                   nsIChannel* aChannel) {
+                                                   nsIChannel* aChannel,
+                                                   uint32_t& aRejectedReason) {
   MOZ_ASSERT(aPrincipal);
+
+  aRejectedReason = 0;
 
   StorageAccess access = StorageAccess::eAllow;
 
@@ -8437,13 +8438,14 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
     }
   }
 
-  if (!StorageDisabledByAntiTracking(aWindow, aChannel, aPrincipal, aURI)) {
+  if (!StorageDisabledByAntiTracking(aWindow, aChannel, aPrincipal, aURI,
+                                     aRejectedReason)) {
     return access;
   }
 
-  static const char* kPrefName =
-      "privacy.restrict3rdpartystorage.partitionedHosts";
-  if (IsURIInPrefList(uri, kPrefName)) {
+  // We want to have a partitioned storage only for trackers.
+  if (aRejectedReason ==
+      nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
     return StorageAccess::ePartitionedOrDeny;
   }
 
@@ -10438,7 +10440,7 @@ static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
 /* static */
 bool nsContentUtils::HighPriorityEventPendingForTopLevelDocumentBeforeContentfulPaint(
     Document* aDocument) {
-  if (!aDocument) {
+  if (!aDocument || aDocument->IsLoadedAsData()) {
     return false;
   }
 
