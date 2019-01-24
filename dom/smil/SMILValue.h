@@ -10,44 +10,43 @@
 #include "mozilla/SMILNullType.h"
 #include "mozilla/SMILType.h"
 
+namespace mozilla {
+
 /**
  * Although objects of this type are generally only created on the stack and
  * only exist during the taking of a new time sample, that's not always the
- * case. The nsSMILValue objects obtained from attributes' base values are
+ * case. The SMILValue objects obtained from attributes' base values are
  * cached so that the SMIL engine can make certain optimizations during a
  * sample if the base value has not changed since the last sample (potentially
- * avoiding recomposing). These nsSMILValue objects typically live much longer
+ * avoiding recomposing). These SMILValue objects typically live much longer
  * than a single sample.
  */
-class nsSMILValue {
+class SMILValue {
  public:
-  typedef mozilla::SMILNullType SMILNullType;
-  typedef mozilla::SMILType SMILType;
+  SMILValue() : mU(), mType(SMILNullType::Singleton()) {}
+  explicit SMILValue(const SMILType* aType);
+  SMILValue(const SMILValue& aVal);
 
-  nsSMILValue() : mU(), mType(SMILNullType::Singleton()) {}
-  explicit nsSMILValue(const SMILType* aType);
-  nsSMILValue(const nsSMILValue& aVal);
+  ~SMILValue() { mType->Destroy(*this); }
 
-  ~nsSMILValue() { mType->Destroy(*this); }
-
-  const nsSMILValue& operator=(const nsSMILValue& aVal);
+  const SMILValue& operator=(const SMILValue& aVal);
 
   // Move constructor / reassignment operator:
-  nsSMILValue(nsSMILValue&& aVal);
-  nsSMILValue& operator=(nsSMILValue&& aVal);
+  SMILValue(SMILValue&& aVal);
+  SMILValue& operator=(SMILValue&& aVal);
 
   // Equality operators. These are allowed to be conservative (return false
   // more than you'd expect) - see comment above SMILType::IsEqual.
-  bool operator==(const nsSMILValue& aVal) const;
-  bool operator!=(const nsSMILValue& aVal) const { return !(*this == aVal); }
+  bool operator==(const SMILValue& aVal) const;
+  bool operator!=(const SMILValue& aVal) const { return !(*this == aVal); }
 
   bool IsNull() const { return (mType == SMILNullType::Singleton()); }
 
-  nsresult Add(const nsSMILValue& aValueToAdd, uint32_t aCount = 1);
-  nsresult SandwichAdd(const nsSMILValue& aValueToAdd);
-  nsresult ComputeDistance(const nsSMILValue& aTo, double& aDistance) const;
-  nsresult Interpolate(const nsSMILValue& aEndVal, double aUnitDistance,
-                       nsSMILValue& aResult) const;
+  nsresult Add(const SMILValue& aValueToAdd, uint32_t aCount = 1);
+  nsresult SandwichAdd(const SMILValue& aValueToAdd);
+  nsresult ComputeDistance(const SMILValue& aTo, double& aDistance) const;
+  nsresult Interpolate(const SMILValue& aEndVal, double aUnitDistance,
+                       SMILValue& aResult) const;
 
   union {
     bool mBool;
@@ -70,5 +69,7 @@ class nsSMILValue {
   void DestroyAndCheckPostcondition();
   void DestroyAndReinit(const SMILType* aNewType);
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILVALUE_H_

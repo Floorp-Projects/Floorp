@@ -34,7 +34,7 @@ class SMILCSSProperty : public nsISMILAttr {
    * @param  aElement  The element whose CSS property is being animated.
    * @param  aBaseComputedStyle  The ComputedStyle to use when getting the base
    *                             value. If this is nullptr and GetBaseValue is
-   *                             called, an empty nsSMILValue initialized with
+   *                             called, an empty SMILValue initialized with
    *                             the SMILCSSValueType will be returned.
    */
   SMILCSSProperty(nsCSSPropertyID aPropID, dom::Element* aElement,
@@ -43,9 +43,9 @@ class SMILCSSProperty : public nsISMILAttr {
   // nsISMILAttr methods
   virtual nsresult ValueFromString(
       const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
-      nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-  virtual nsSMILValue GetBaseValue() const override;
-  virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+      SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
+  virtual SMILValue GetBaseValue() const override;
+  virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   virtual void ClearAnimValue() override;
 
   /**
