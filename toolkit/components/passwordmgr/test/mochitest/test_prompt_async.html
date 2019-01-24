@@ -13,6 +13,9 @@
     <script class="testbody" type="text/javascript">
       const { NetUtil } = SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm");
       const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
+      const EXAMPLE_COM = "http://example.com/tests/toolkit/components/passwordmgr/test/mochitest/";
+      const EXAMPLE_ORG = "http://example.org/tests/toolkit/components/passwordmgr/test/mochitest/";
+      let mozproxyOrigin;
 
       // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
       // Used by prompt_common.js.
@@ -23,7 +26,7 @@
       /**
        * Add a listener to add some logins to be autofilled in the HTTP/proxy auth. prompts later.
        */
-      let prompterParent = runInParent(() => {
+      let pwmgrParent = runInParent(() => {
         ChromeUtils.import("resource://gre/modules/Services.jsm");
 
         Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
@@ -78,17 +81,13 @@
         }, "Waiting for proxyConnectFailure documentURI");
       }
 
-      var exampleCom = "http://example.com/tests/toolkit/components/passwordmgr/test/mochitest/";
-      var exampleOrg = "http://example.org/tests/toolkit/components/passwordmgr/test/mochitest/";
-      var mozproxyOrigin;
-
       /**
        * Make a channel to get the ProxyInfo used by the test harness so that we
        * can add logins for the correct proxy origin.
        */
       add_task(async function setup_getProxyInfoForHarness() {
         await new Promise(resolve => {
-          var resolveCallback = SpecialPowers.wrapCallbackObject({
+          let resolveCallback = SpecialPowers.wrapCallbackObject({
             // eslint-disable-next-line mozilla/use-chromeutils-generateqi
             QueryInterface(iid) {
               const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
@@ -104,18 +103,18 @@
               mozproxyOrigin = "moz-proxy://" + SpecialPowers.wrap(pi).host + ":" +
                 SpecialPowers.wrap(pi).port;
 
-              prompterParent.sendSyncMessage("initLogins", {mozproxyOrigin});
+              pwmgrParent.sendSyncMessage("initLogins", {mozproxyOrigin});
               resolve();
             },
           });
 
           // Need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
-          var channel = NetUtil.newChannel({
+          let channel = NetUtil.newChannel({
             uri: "http://example.com",
             loadUsingSystemPrincipal: true,
           });
 
-          var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"]
+          let pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"]
                                  .getService();
 
           pps.asyncResolve(channel, 0, resolveCallback);
@@ -132,7 +131,7 @@
         let iframe2aDocPromise = promiseLoadedContentDoc(iframe2a);
         let iframe2bDocPromise = promiseLoadedContentDoc(iframe2b);
 
-        iframe1.src = exampleCom + "authenticate.sjs?" +
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
           "r=1&" +
           "user=user1name&" +
           "pass=user1pass&" +
@@ -140,7 +139,7 @@
           "proxy_user=proxy_user&" +
           "proxy_pass=proxy_pass&" +
           "proxy_realm=proxy_realm";
-        iframe2a.src = exampleOrg + "authenticate.sjs?" +
+        iframe2a.src = EXAMPLE_ORG + "authenticate.sjs?" +
           "r=2&" +
           "user=user2name&" +
           "pass=user2pass&" +
@@ -148,7 +147,7 @@
           "proxy_user=proxy_user&" +
           "proxy_pass=proxy_pass&" +
           "proxy_realm=proxy_realm";
-        iframe2b.src = exampleOrg + "authenticate.sjs?" +
+        iframe2b.src = EXAMPLE_ORG + "authenticate.sjs?" +
           "r=3&" +
           "user=user2name&" +
           "pass=user2pass&" +
@@ -198,11 +197,11 @@
         authok1 = iframe1Doc.getElementById("ok").textContent;
         proxyok1 = iframe1Doc.getElementById("proxy").textContent;
 
-        var authok2a = iframe2aDoc.getElementById("ok").textContent;
-        var proxyok2a = iframe2aDoc.getElementById("proxy").textContent;
+        let authok2a = iframe2aDoc.getElementById("ok").textContent;
+        let proxyok2a = iframe2aDoc.getElementById("proxy").textContent;
 
-        var authok2b = iframe2bDoc.getElementById("ok").textContent;
-        var proxyok2b = iframe2bDoc.getElementById("proxy").textContent;
+        let authok2b = iframe2bDoc.getElementById("ok").textContent;
+        let proxyok2b = iframe2bDoc.getElementById("proxy").textContent;
 
         is(authok1, "PASS", "WWW Authorization OK, frame1");
         is(authok2a, "PASS", "WWW Authorization OK, frame2a");
@@ -221,7 +220,7 @@
         let iframe2aDocPromise = promiseLoadedContentDoc(iframe2a);
         let iframe2bDocPromise = promiseLoadedContentDoc(iframe2b);
 
-        iframe1.src = exampleCom + "subtst_prompt_async.html";
+        iframe1.src = EXAMPLE_COM + "subtst_prompt_async.html";
         iframe2a.src = "about:blank";
         iframe2b.src = "about:blank";
 
@@ -255,10 +254,10 @@
         let iframe1Doc = await iframe1DocPromise;
 
         function checkIframe(frame) {
-          var doc = SpecialPowers.wrap(frame).contentDocument;
+          let doc = SpecialPowers.wrap(frame).contentDocument;
 
-          var authok = doc.getElementById("ok").textContent;
-          var proxyok = doc.getElementById("proxy").textContent;
+          let authok = doc.getElementById("ok").textContent;
+          let proxyok = doc.getElementById("proxy").textContent;
 
           is(authok, "PASS", "WWW Authorization OK, " + frame.id);
           is(proxyok, "PASS", "Proxy Authorization OK, " + frame.id);
@@ -274,7 +273,7 @@
         // and discard the proxy authentication. We expect to see
         // unauthenticated page content and just a single dialog.
 
-        iframe1.src = exampleCom + "authenticate.sjs?" +
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
           "user=user4name&" +
           "pass=user4pass&" +
           "realm=mochirealm4&" +
@@ -311,7 +310,7 @@
         // content as a result.
         let iframe1DocPromise = promiseLoadedContentDoc(iframe1);
 
-        iframe1.src = exampleCom + "authenticate.sjs?" +
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
           "user=user4name&" +
           "pass=user4pass&" +
           "realm=mochirealm4&" +
@@ -364,7 +363,7 @@
         // case when auth dialog is canceled or accepted before unauthenticated
         // content data is load from the server. (This would be better to
         // implement using delay of server response).
-        iframe1.src = exampleCom + "authenticate.sjs?" +
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
           "user=user5name&" +
           "pass=user5pass&" +
           "realm=mochirealm5&" +
@@ -402,7 +401,7 @@
         // and an unauthenticated page content load.
 
         let iframe1DocPromise = promiseLoadedContentDoc(iframe1);
-        iframe1.src = exampleCom + "authenticate.sjs?" +
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
           "user=user5name&" +
           "pass=user5pass&" +
           "realm=mochirealm5&" +
@@ -497,7 +496,7 @@
         // user cancels prompts
         let iframe1DocPromise = promiseLoadedContentDoc(iframe1);
         expectedDialogs = 5;
-        iframe1.src = exampleCom + "authenticate.sjs?" +
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
           "user=user6name&" +
           "pass=user6pass&" +
           "realm=mochirealm6&" +
