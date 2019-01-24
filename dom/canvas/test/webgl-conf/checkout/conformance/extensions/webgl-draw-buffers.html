@@ -546,7 +546,7 @@ function runDrawTests() {
 
   debug("test that gl_FragColor does not broadcast unless extension is enabled in fragment shader");
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-  ext.drawBuffersWEBGL(bufs);
+  ext.drawBuffersWEBGL([gl.COLOR_ATTACHMENT0]); // While the WG debates whether how to handle this.
   gl.useProgram(redProgram);
   wtu.drawUnitQuad(gl);
 
