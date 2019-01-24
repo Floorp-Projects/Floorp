@@ -159,6 +159,7 @@ devtools.jar:
     skin/components-h-split-box.css (themes/components-h-split-box.css)
     skin/jit-optimizations.css (themes/jit-optimizations.css)
     skin/images/filter.svg (themes/images/filter.svg)
+    skin/images/filter-small.svg (themes/images/filter-small.svg)
     skin/images/search.svg (themes/images/search.svg)
     skin/images/item-toggle.svg (themes/images/item-toggle.svg)
     skin/images/item-arrow-dark-rtl.svg (themes/images/item-arrow-dark-rtl.svg)

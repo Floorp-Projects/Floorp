@@ -34,7 +34,7 @@ window.gActivityStreamStrings = {
   "menu_action_remove_download": "Remover do histórico",
   "search_button": "Pesquisar",
   "search_header": "Pesquisa {search_engine_name}",
-  "search_web_placeholder": "Pesquisar na Web",
+  "search_web_placeholder": "Pesquisar na web",
   "section_disclaimer_topstories": "As histórias mais interessantes na web, selecionadas baseadas no que você lê. Do Pocket, agora parte da Mozilla.",
   "section_disclaimer_topstories_linktext": "Saiba como funciona.",
   "section_disclaimer_topstories_buttontext": "Ok, entendi",

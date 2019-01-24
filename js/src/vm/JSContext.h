@@ -843,6 +843,7 @@ struct JSContext : public JS::RootingContext,
   void* addressOfJitStackLimitNoInterrupt() {
     return &jitStackLimitNoInterrupt;
   }
+  void* addressOfZone() { return &zone_; }
 
   // Futex state, used by Atomics.wait() and Atomics.wake() on the Atomics
   // object.

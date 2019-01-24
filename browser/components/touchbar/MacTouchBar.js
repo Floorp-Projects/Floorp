@@ -120,7 +120,7 @@ const kBuiltInInputs = {
     callback: () => execCommand("Browser:OpenLocation", "OpenLocation"),
   },
   Focus: {
-    title: "focus",
+    title: "close-window",
     image: "private-browsing.pdf",
     type: "mainButton",
     callback: () => execCommand("cmd_closeWindow", "Focus"),

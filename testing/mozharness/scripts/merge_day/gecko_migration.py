@@ -112,12 +112,6 @@ class GeckoMigration(MercurialScript, VirtualenvMixin,
         if self.abs_dirs:
             return self.abs_dirs
         dirs = super(GeckoMigration, self).query_abs_dirs()
-        self.abs_dirs['abs_tools_dir'] = os.path.join(
-            dirs['abs_work_dir'], 'tools'
-        )
-        self.abs_dirs['abs_tools_lib_dir'] = os.path.join(
-            dirs['abs_work_dir'], 'tools', 'lib', 'python'
-        )
         for k in ('from', 'to'):
             url = self.config.get("%s_repo_url" % k)
             if url:
@@ -445,14 +439,8 @@ class GeckoMigration(MercurialScript, VirtualenvMixin,
         self.touch_clobber_file(dirs['abs_to_dir'])
 
     def pull(self):
-        """ Pull tools first, then clone the gecko repos
-            """
-        repos = [{
-            "repo": self.config["tools_repo_url"],
-            "branch": self.config["tools_repo_branch"],
-            "dest": "tools",
-            "vcs": "hg",
-        }] + self.query_repos()
+        """Clone the gecko repos"""
+        repos = self.query_repos()
         super(GeckoMigration, self).pull(repos=repos)
 
     def migrate(self):

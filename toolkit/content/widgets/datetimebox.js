@@ -1504,7 +1504,7 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
 
       let n = Number(buffer);
       let max = targetField.getAttribute("max");
-      let maxLength = targetField.getAttribute("maxLength");
+      let maxLength = targetField.getAttribute("maxlength");
       if (buffer.length >= maxLength || n * 10 > max) {
         buffer = "";
         this.advanceToNextField();

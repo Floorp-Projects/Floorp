@@ -406,8 +406,7 @@ JSObject* GetOrCreateModuleMetaObject(JSContext* cx, HandleObject module);
 JSObject* CallModuleResolveHook(JSContext* cx, HandleValue referencingPrivate,
                                 HandleString specifier);
 
-JSObject* StartDynamicModuleImport(JSContext* cx,
-                                   HandleObject referencingScriptSource,
+JSObject* StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                    HandleValue specifier);
 
 bool FinishDynamicModuleImport(JSContext* cx, HandleValue referencingPrivate,

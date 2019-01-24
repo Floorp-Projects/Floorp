@@ -60,11 +60,15 @@ const INITIAL_STATE = {
       spocs_endpoint: "",
       lastUpdated: null,
       data: {}, // {spocs: []}
+      loaded: false,
     },
   },
   Search: {
-    // Pretend the search box is focused after handing off to AwesomeBar.
-    focus: false,
+    // When search hand-off is enabled, we render a big button that is styled to
+    // look like a search textbox. If the button is clicked, we style
+    // the button as if it was a focused search box and show a fake cursor but
+    // really focus the awesomebar without the focus styles ("hidden focus").
+    fakeFocus: false,
     // Hide the search box after handing off to AwesomeBar and user starts typing.
     hide: false,
   },
@@ -478,6 +482,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
             ...prevState.spocs,
             lastUpdated: action.data.lastUpdated,
             data: action.data.spocs,
+            loaded: true,
           },
         };
       }
@@ -491,8 +496,10 @@ function Search(prevState = INITIAL_STATE.Search, action) {
   switch (action.type) {
     case at.HIDE_SEARCH:
       return Object.assign({...prevState, hide: true});
+    case at.FAKE_FOCUS_SEARCH:
+      return Object.assign({...prevState, fakeFocus: true});
     case at.SHOW_SEARCH:
-      return Object.assign({...prevState, hide: false});
+      return Object.assign({...prevState, hide: false, fakeFocus: false});
     default:
       return prevState;
   }

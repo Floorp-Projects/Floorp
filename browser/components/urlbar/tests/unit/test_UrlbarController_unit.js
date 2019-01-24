@@ -172,8 +172,13 @@ add_task(function test_handle_query_starts_search_sets_enableAutofill() {
 });
 
 add_task(function test_cancel_query() {
+  // Ensure the controller doesn't have any previous queries.
+  delete controller._lastQueryContext;
+
   const context = createContext();
-  controller.cancelQuery(context);
+  controller.startQuery(context);
+
+  controller.cancelQuery();
 
   Assert.equal(fPM.cancelQuery.callCount, 1,
     "Should have called cancelQuery once");

@@ -39,11 +39,9 @@ export class ListItem extends React.PureComponent {
                 {this.props.title}
               </b>
             </div>
-            <div className="ds-list-item-info">
-              {`${this.props.domain} · TODO:Topic`}
-            </div>
+            <div className="ds-list-item-info">{this.props.domain}</div>
           </div>
-          <img className="ds-list-image" src={this.props.image_src} />
+          <div className="ds-list-image" style={{backgroundImage: `url(${this.props.image_src})`}} />
         </a>
       </li>
     );

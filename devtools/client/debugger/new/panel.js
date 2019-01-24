@@ -50,7 +50,8 @@ DebuggerPanel.prototype = {
             .setNodeFront(front, { reason: "debugger" });
 
           return Promise.all([onNodeFrontSet, onInspectorUpdated]);
-        }.bind(this)
+        }.bind(this),
+        onReload: this.onReload.bind(this)
       }
     });
 
@@ -122,6 +123,10 @@ DebuggerPanel.prototype = {
 
   getSource(sourceURL) {
     return this._selectors.getSourceByURL(this._getState(), sourceURL);
+  },
+
+  onReload: function() {
+    this.emit("reloaded");
   },
 
   destroy: function() {
