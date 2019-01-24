@@ -5,14 +5,14 @@
 "use strict";
 
 /**
- * This module exports a urlbar match class, each representing a single match.
- * A match is a single search result found by a provider, that can be passed
- * from the model to the view, through the controller. It is mainly defined by
- * a type of the match, and a payload, containing the data. A few getters allow
- * to retrieve information common to all the match types.
+ * This module exports a urlbar result class, each representing a single result
+ * found by a provider that can be passed from the model to the view through
+ * the controller. It is mainly defined by a match type, and a payload,
+ * containing the data. A few getters allow to retrieve information common to all
+ * the match types.
  */
 
-var EXPORTED_SYMBOLS = ["UrlbarMatch"];
+var EXPORTED_SYMBOLS = ["UrlbarResult"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -20,11 +20,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 /**
- * Class used to create a match.
+ * Class used to create a single result.
  */
-class UrlbarMatch {
+class UrlbarResult {
   /**
-   * Creates a match.
+   * Creates a result.
    * @param {integer} matchType one of UrlbarUtils.MATCH_TYPE.* values
    * @param {integer} matchSource one of UrlbarUtils.MATCH_SOURCE.* values
    * @param {object} payload data for this match. A payload should always
@@ -125,7 +125,7 @@ class UrlbarMatch {
    * function when the highlighting required by your payload is based on simple
    * substring matching, as done by UrlbarUtils.getTokenMatches().  Pass the
    * return values as the `payload` and `payloadHighlights` params of the
-   * UrlbarMatch constructor.
+   * UrlbarResult constructor.
    *
    * @param {array} tokens The tokens that should be highlighted in each of the
    *        payload properties.

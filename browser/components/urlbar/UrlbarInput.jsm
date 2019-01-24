@@ -225,7 +225,7 @@ class UrlbarInput {
       return;
     }
 
-    // Use the current value if we don't have a UrlbarMatch e.g. because the
+    // Use the current value if we don't have a UrlbarResult e.g. because the
     // view is closed.
     let url = this.value;
     if (!url) {
@@ -276,7 +276,7 @@ class UrlbarInput {
    * Called by the view when a result is picked.
    *
    * @param {Event} event The event that picked the result.
-   * @param {UrlbarMatch} result The result that was picked.
+   * @param {UrlbarResult} result The result that was picked.
    */
   pickResult(event, result) {
     this.setValueFromResult(result);
@@ -350,7 +350,7 @@ class UrlbarInput {
   /**
    * Called by the view when moving through results with the keyboard.
    *
-   * @param {UrlbarMatch} result The result that was selected.
+   * @param {UrlbarResult} result The result that was selected.
    */
   setValueFromResult(result) {
     let val;
