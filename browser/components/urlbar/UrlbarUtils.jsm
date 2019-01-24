@@ -66,7 +66,7 @@ var UrlbarUtils = {
     EXTENSION: 4,
   },
 
-  // Defines UrlbarMatch types.
+  // Defines UrlbarResult types.
   MATCH_TYPE: {
     // An open tab.
     // Payload: { icon, url, userContextId }
@@ -351,9 +351,9 @@ class UrlbarProvider {
    * Starts querying.
    * @param {UrlbarQueryContext} queryContext The query context object
    * @param {function} addCallback Callback invoked by the provider to add a new
-   *        match. A UrlbarMatch should be passed to it.
+   *        result. A UrlbarResult should be passed to it.
    * @note Extended classes should return a Promise resolved when the provider
-   *       is done searching AND returning matches.
+   *       is done searching AND returning results.
    * @abstract
    */
   startQuery(queryContext, addCallback) {
