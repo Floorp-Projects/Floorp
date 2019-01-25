@@ -3031,11 +3031,17 @@ GeckoDriver.prototype.minimizeWindow = async function() {
   const win = assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  if (WindowState.from(win.windowState) != WindowState.Minimized) {
-    if (WindowState.from(win.windowState) == WindowState.Fullscreen) {
+  switch (WindowState.from(win.windowState)) {
+    case WindowState.Fullscreen:
       await exitFullscreen(win);
-    }
+      break;
 
+    case WindowState.Maximized:
+      await restoreWindow(win);
+      break;
+  }
+
+  if (WindowState.from(win.windowState) != WindowState.Minimized) {
     let cb;
     let observer = new WebElementEventTarget(this.curBrowser.messageManager);
     // Use a timed promise to abort if no window manager is present
@@ -3122,8 +3128,11 @@ GeckoDriver.prototype.fullscreenWindow = async function() {
   const win = assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  if (WindowState.from(win.windowState) == WindowState.Minimized) {
-    await restoreWindow(win);
+  switch (WindowState.from(win.windowState)) {
+    case WindowState.Maximized:
+    case WindowState.Minimized:
+      await restoreWindow(win);
+      break;
   }
 
   if (WindowState.from(win.windowState) != WindowState.Fullscreen) {
@@ -3628,22 +3637,22 @@ function getOuterWindowId(win) {
   return win.windowUtils.outerWindowID;
 }
 
-async function exitFullscreen(window) {
+async function exitFullscreen(win) {
   let cb;
   // Use a timed promise to abort if no window manager is present
   await new TimedPromise(resolve => {
     cb = new DebounceCallback(resolve);
-    window.addEventListener("sizemodechange", cb);
-    window.fullScreen = false;
+    win.addEventListener("sizemodechange", cb);
+    win.fullScreen = false;
   }, {throws: null, timeout: TIMEOUT_NO_WINDOW_MANAGER});
-  window.removeEventListener("sizemodechange", cb);
+  win.removeEventListener("sizemodechange", cb);
 }
 
-async function restoreWindow(window) {
-  window.restore();
+async function restoreWindow(win) {
+  win.restore();
   // Use a poll promise to abort if no window manager is present
   await new PollPromise((resolve, reject) => {
-    if (WindowState.from(window.windowState) != WindowState.Minimized) {
+    if (WindowState.from(win.windowState) == WindowState.Normal) {
       resolve();
     } else {
       reject();
