@@ -19,6 +19,7 @@ namespace dom {
 
 class BrowsingContext;
 class WindowGlobalParent;
+class JSWindowActorChild;
 
 /**
  * Actor for a single nsGlobalWindowInner. This actor is used to communicate
@@ -57,6 +58,10 @@ class WindowGlobalChild : public nsWrapperCache, public PWindowGlobalChild {
   // |nullptr| if the actor has been torn down, or is not in-process.
   already_AddRefed<WindowGlobalParent> GetParentActor();
 
+  // Get a JS actor object by name.
+  already_AddRefed<JSWindowActorChild> GetActor(const nsAString& aName,
+                                                ErrorResult& aRv);
+
   // Create and initialize the WindowGlobalChild object.
   static already_AddRefed<WindowGlobalChild> Create(
       nsGlobalWindowInner* aWindow);
@@ -74,6 +79,7 @@ class WindowGlobalChild : public nsWrapperCache, public PWindowGlobalChild {
 
   RefPtr<nsGlobalWindowInner> mWindowGlobal;
   RefPtr<dom::BrowsingContext> mBrowsingContext;
+  nsRefPtrHashtable<nsStringHashKey, JSWindowActorChild> mWindowActors;
   uint64_t mInnerWindowId;
   uint64_t mOuterWindowId;
   bool mIPCClosed;
