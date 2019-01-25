@@ -68,9 +68,6 @@ VRService::VRService()
       mTargetShmemFile(0),
       mLastHapticState{},
       mFrameStartTime{},
-#if !defined(MOZ_WIDGET_ANDROID)
-      mMutex("VRService::mMutex"),
-#endif
       mVRProcessEnabled(gfxPrefs::VRProcessEnabled()) {
   // When we have the VR process, we map the memory
   // of mAPIShmem from GPU process.
@@ -459,10 +456,6 @@ void VRService::PullState(mozilla::gfx::VRBrowserState& aState) {
     pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->browserMutex));
   }
 #else
-  // We need this MutexAutoLock to avoid mAPIShmem happens deadlock issue
-  // when both of VRService and VRSubmitFrame threads are writing/reading
-  // it from the memory.
-  MutexAutoLock lock(mMutex);
   VRExternalShmem tmp;
   if (mAPIShmem->browserGenerationA != mBrowserGeneration) {
     memcpy(&tmp, mAPIShmem, sizeof(VRExternalShmem));

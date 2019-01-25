@@ -63,9 +63,6 @@ class VRService {
   base::ProcessHandle mTargetShmemFile;
   VRHapticState mLastHapticState[kVRHapticsMaxCount];
   TimeStamp mFrameStartTime[kVRFrameTimingHistoryDepth];
-#if !defined(MOZ_WIDGET_ANDROID)
-  Mutex mMutex;
-#endif
   // We store the value of gfxPrefs::VRProcessEnabled() in mVRProcessEnabled.
   // This allows us to read the value in the VRService destructor, after
   // gfxPrefs has been shut down.  We should investigate why gfxPrefs
