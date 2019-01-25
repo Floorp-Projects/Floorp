@@ -254,6 +254,7 @@ button.warning {
   -moz-context-properties: fill;
   fill: currentColor;
   min-width: auto;
+  margin-inline-end: 0;
 }
 
 #header-utils-btn > .button-box > hbox > .button-icon {
