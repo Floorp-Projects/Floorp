@@ -6,8 +6,8 @@
 
 /* representation of a SMIL-animatable CSS property on an element */
 
-#ifndef NS_SMILCSSPROPERTY_H_
-#define NS_SMILCSSPROPERTY_H_
+#ifndef mozilla_SMILCSSProperty_h
+#define mozilla_SMILCSSProperty_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
@@ -79,4 +79,4 @@ class SMILCSSProperty : public SMILAttr {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILCSSPROPERTY_H_
+#endif  // mozilla_SMILCSSProperty_h
