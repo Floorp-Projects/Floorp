@@ -127,5 +127,15 @@ def test_output_leak(runtests):
     assert found_leaks, "At least one process should have leaked"
 
 
+@pytest.mark.skip_mozinfo("!debug")
+def test_output_no_leak_log(runtests):
+    status, lines = runtests('test_no_leak_log.html')
+    assert status == 0
+
+    tbpl_status, log_level, summary = get_mozharness_status(lines, status)
+    assert tbpl_status == TBPL_WARNING
+    assert log_level == WARNING
+
+
 if __name__ == '__main__':
     mozunit.main()
