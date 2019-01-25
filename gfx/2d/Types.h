@@ -34,7 +34,8 @@ enum class SurfaceType : int8_t {
   TILED,                  /* Surface from a tiled DrawTarget */
   DATA_SHARED,            /* Data surface using shared memory */
   CAPTURE,                /* Data from a DrawTargetCapture */
-  DATA_RECYCLING_SHARED   /* Data surface using shared memory */
+  DATA_RECYCLING_SHARED,  /* Data surface using shared memory */
+  OFFSET,                 /* Offset */
 };
 
 enum class SurfaceFormat : int8_t {
