@@ -160,6 +160,10 @@ class TabParent final : public PBrowserParent,
       const nsString& aScheme, nsIURI* aHandlerURI, const nsString& aTitle,
       nsIURI* aDocURI) override;
 
+  virtual mozilla::ipc::IPCResult RecvOnContentBlockingEvent(
+      const OptionalWebProgressData& aWebProgressData,
+      const RequestData& aRequestData, const uint32_t& aEvent) override;
+
   virtual mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(
       PBrowserParent* aOpener, const nsString& aURL, const nsString& aName,
       const nsString& aFeatures,
