@@ -23,7 +23,6 @@ EXTRA_JS_MODULES += [
 ]
 
 UNIFIED_SOURCES += [
-    'nsPageThumbsModule.cpp',
     'PageThumbsProtocol.cpp'
 ]
 
@@ -33,6 +32,10 @@ XPIDL_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/netwerk/base'
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 XPIDL_MODULE = 'thumbnails'
