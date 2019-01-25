@@ -447,6 +447,11 @@ class MergeState {
       return true;
     }
 
+    if (type == DisplayItemType::TYPE_TRANSFORM) {
+      // Prerendering of transforms can change without frame invalidation.
+      return true;
+    }
+
     return false;
   }
 
