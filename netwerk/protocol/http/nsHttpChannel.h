@@ -169,7 +169,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD SetChannelIsForDownload(bool aChannelIsForDownload) override;
   NS_IMETHOD GetNavigationStartTimeStamp(TimeStamp *aTimeStamp) override;
   NS_IMETHOD SetNavigationStartTimeStamp(TimeStamp aTimeStamp) override;
-  NS_IMETHOD CancelForTrackingProtection() override;
+  NS_IMETHOD CancelByChannelClassifier(nsresult aErrorCode) override;
   // nsISupportsPriority
   NS_IMETHOD SetPriority(int32_t value) override;
   // nsIClassOfService
@@ -310,9 +310,9 @@ class nsHttpChannel final : public HttpBaseChannel,
       const std::function<nsresult(nsHttpChannel *)> &aFunc);
 
   bool RequestIsConditional();
-  void HandleContinueCancelledByTrackingProtection();
+  void HandleContinueCancellingByChannelClassifier(nsresult aErrorCode);
   nsresult CancelInternal(nsresult status);
-  void ContinueCancelledByTrackingProtection();
+  void ContinueCancellingByChannelClassifier(nsresult aErrorCode);
 
   // Connections will only be established in this function.
   // (including DNS prefetch and speculative connection.)
