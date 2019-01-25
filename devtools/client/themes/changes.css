@@ -75,7 +75,6 @@
   padding-bottom: 3px;
   padding-left: calc(var(--diff-level-min-offset) +
                      var(--diff-level-offset) * var(--diff-level));
-  position: relative;
 }
 
 #sidebar-panel-changes .selector {
@@ -98,10 +97,10 @@
 .diff-add,
 .diff-remove {
   --diff-level-min-offset: 15px;
+  position: relative;
 }
 
-.diff-add::before,
-.diff-remove::before {
+.diff-marker {
   position: absolute;
   left: 5px;
 }
@@ -110,8 +109,7 @@
   background-color: var(--diff-add-background-color);
 }
 
-.diff-add::before {
-  content: "+";
+.diff-add .diff-marker {
   color: var(--diff-add-text-color);
 }
 
@@ -119,8 +117,7 @@
   background-color: var(--diff-remove-background-color);
 }
 
-.diff-remove::before{
-  content: "-";
+.diff-remove .diff-marker{
   color: var(--diff-remove-text-color);
 }
 
