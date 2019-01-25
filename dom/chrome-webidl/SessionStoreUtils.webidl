@@ -112,6 +112,27 @@ namespace SessionStoreUtils {
    */
   CollectedFormData collectFormData(Document document);
   boolean restoreFormData(Document document, optional CollectedFormData data);
+
+  /**
+   * Updates all sessionStorage "super cookies"
+   * @param content
+   *        A tab's global, i.e. the root frame we want to collect for.
+   * @return Returns a nested object that will have hosts as keys and per-origin
+   *         session storage data as strings. For example:
+   *         {"https://example.com^userContextId=1": {"key": "value", "my_number": "123"}}
+   */
+  record<DOMString, record<DOMString, DOMString>> collectSessionStorage(WindowProxy window);
+
+  /**
+   * Restores all sessionStorage "super cookies".
+   * @param aDocShell
+   *        A tab's docshell (containing the sessionStorage)
+   * @param aStorageData
+   *        A nested object with storage data to be restored that has hosts as
+   *        keys and per-origin session storage data as strings. For example:
+   *        {"https://example.com^userContextId=1": {"key": "value", "my_number": "123"}}
+   */
+   void restoreSessionStorage(nsIDocShell docShell, record<DOMString, record<DOMString, DOMString>> data);
 };
 
 dictionary SSScrollPositionDict {
