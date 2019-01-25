@@ -121,7 +121,8 @@ nsresult nsGNOMEShellService::Init() {
   return appPath->GetNativePath(mAppPath);
 }
 
-NS_IMPL_ISUPPORTS(nsGNOMEShellService, nsIGNOMEShellService, nsIShellService)
+NS_IMPL_ISUPPORTS(nsGNOMEShellService, nsIGNOMEShellService, nsIShellService,
+                  nsIToolkitShellService)
 
 bool nsGNOMEShellService::GetAppPathFromLauncher() {
   gchar *tmp;
