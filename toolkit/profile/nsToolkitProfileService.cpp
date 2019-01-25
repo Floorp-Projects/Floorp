@@ -45,6 +45,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIToolkitShellService.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 
@@ -302,7 +303,8 @@ nsToolkitProfileService::nsToolkitProfileService()
 #else
       mUseDedicatedProfile(false),
 #endif
-      mCreatedAlternateProfile(false) {
+      mCreatedAlternateProfile(false),
+      mStartupReason(NS_LITERAL_STRING("unknown")) {
 #ifdef MOZ_DEV_EDITION
   mUseDevEditionProfile = true;
 #endif
@@ -310,6 +312,15 @@ nsToolkitProfileService::nsToolkitProfileService()
 }
 
 nsToolkitProfileService::~nsToolkitProfileService() { gService = nullptr; }
+
+void nsToolkitProfileService::RecordStartupTelemetry() {
+  if (!mStartupProfileSelected) {
+    return;
+  }
+
+  ScalarSet(mozilla::Telemetry::ScalarID::STARTUP_PROFILE_SELECTION_REASON,
+            mStartupReason);
+}
 
 // Tests whether the passed profile was last used by this install.
 bool nsToolkitProfileService::IsProfileForCurrentInstall(
@@ -804,6 +815,12 @@ nsToolkitProfileService::SelectStartupProfile(
   nsresult rv = SelectStartupProfile(&argc, argv.get(), aIsResetting, aRootDir,
                                      aLocalDir, aProfile, aDidCreate);
 
+  // Since we were called outside of the normal startup path record the
+  // telemetry now.
+  if (NS_SUCCEEDED(rv)) {
+    RecordStartupTelemetry();
+  }
+
   return rv;
 }
 
@@ -846,6 +863,14 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
     nsCOMPtr<nsIFile> localDir = GetFileFromEnv("XRE_PROFILE_LOCAL_PATH");
     if (!localDir) {
       localDir = lf;
+    }
+
+    if (EnvHasValue("XRE_RESTARTED_BY_PROFILE_MANAGER")) {
+      mStartupReason = NS_LITERAL_STRING("profile-manager");
+    } else if (aIsResetting) {
+      mStartupReason = NS_LITERAL_STRING("profile-reset");
+    } else {
+      mStartupReason = NS_LITERAL_STRING("restart");
     }
 
     // Clear out flags that we handled (or should have handled!) last startup.
@@ -892,6 +917,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
         return NS_ERROR_FAILURE;
       }
     }
+
+    mStartupReason = NS_LITERAL_STRING("argument-profile");
 
     // If a profile path is specified directly on the command line, then
     // assume that the temp directory is the same as the given directory.
@@ -968,6 +995,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
     rv = GetProfileByName(nsDependentCString(arg), getter_AddRefs(mCurrent));
     if (NS_SUCCEEDED(rv)) {
+      mStartupReason = NS_LITERAL_STRING("argument-p");
+
       mCurrent->GetRootDir(aRootDir);
       mCurrent->GetLocalDir(aLocalDir);
 
@@ -1011,6 +1040,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
       }
 
       if (profile && MaybeMakeDefaultDedicatedProfile(profile)) {
+        mStartupReason = NS_LITERAL_STRING("firstrun-claimed-default");
+
         mCurrent = profile;
         profile->GetRootDir(aRootDir);
         profile->GetLocalDir(aLocalDir);
@@ -1057,6 +1088,12 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
       Flush();
 
+      if (mCreatedAlternateProfile) {
+        mStartupReason = NS_LITERAL_STRING("firstrun-skipped-default");
+      } else {
+        mStartupReason = NS_LITERAL_STRING("firstrun-created-default");
+      }
+
       // Use the new profile.
       mCurrent->GetRootDir(aRootDir);
       mCurrent->GetLocalDir(aLocalDir);
@@ -1079,6 +1116,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
   if (!mCurrent) {
     return NS_ERROR_SHOW_PROFILE_MANAGER;
   }
+
+  mStartupReason = NS_LITERAL_STRING("default");
 
   // Use the selected profile.
   mCurrent->GetRootDir(aRootDir);

@@ -33,6 +33,7 @@ add_task(async () => {
   env.set("XRE_PROFILE_LOCAL_PATH", local.path);
 
   let { rootDir, localDir, profile, didCreate } = selectStartupProfile(["-P", "Profile3"]);
+  checkStartupReason("restart");
 
   Assert.ok(!didCreate, "Should not have created a new profile.");
   Assert.ok(rootDir.equals(root), "Should have selected the right root dir.");

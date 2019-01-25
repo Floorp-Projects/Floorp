@@ -22,6 +22,7 @@ add_task(async () => {
 
   let service = getProfileService();
   let { profile: selectedProfile, didCreate } = selectStartupProfile();
+  checkStartupReason("firstrun-skipped-default");
 
   let profileData = readProfilesIni();
   let installData = readInstallsIni();
