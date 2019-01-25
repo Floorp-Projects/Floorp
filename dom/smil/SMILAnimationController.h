@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILANIMATIONCONTROLLER_H_
-#define NS_SMILANIMATIONCONTROLLER_H_
+#ifndef mozilla_SMILAnimationController_h
+#define mozilla_SMILAnimationController_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILCompositorTable.h"
@@ -207,4 +207,4 @@ class SMILAnimationController final : public SMILTimeContainer,
 
 }  // namespace mozilla
 
-#endif  // NS_SMILANIMATIONCONTROLLER_H_
+#endif  // mozilla_SMILAnimationController_h

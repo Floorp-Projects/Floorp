@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILTARGETIDENTIFIER_H_
-#define NS_SMILTARGETIDENTIFIER_H_
+#ifndef mozilla_SMILTargetIdentifier_h
+#define mozilla_SMILTargetIdentifier_h
 
 #include "mozilla/dom/Element.h"
 
@@ -76,4 +76,4 @@ class SMILWeakTargetIdentifier {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILTARGETIDENTIFIER_H_
+#endif  // mozilla_SMILTargetIdentifier_h

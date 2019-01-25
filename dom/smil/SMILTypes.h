@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILTYPES_H_
-#define NS_SMILTYPES_H_
+#ifndef mozilla_SMILTypes_h
+#define mozilla_SMILTypes_h
 
 #include <stdint.h>
 
@@ -27,4 +27,4 @@ typedef int64_t SMILTime;
 
 }  // namespace mozilla
 
-#endif  // NS_SMILTYPES_H_
+#endif  // mozilla_SMILTypes_h
