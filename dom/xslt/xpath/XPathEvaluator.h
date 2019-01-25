@@ -48,6 +48,9 @@ class XPathEvaluator final : public NonRefcountedDOMObject {
                                     ErrorResult& rv);
   XPathExpression* CreateExpression(const nsAString& aExpression,
                                     nsINode* aResolver, ErrorResult& aRv);
+  XPathExpression* CreateExpression(const nsAString& aExpression,
+                                    txIParseContext* aContext,
+                                    Document* aDocument, ErrorResult& aRv);
   nsINode* CreateNSResolver(nsINode& aNodeResolver) { return &aNodeResolver; }
   already_AddRefed<XPathResult> Evaluate(
       JSContext* aCx, const nsAString& aExpression, nsINode& aContextNode,
@@ -55,10 +58,6 @@ class XPathEvaluator final : public NonRefcountedDOMObject {
       ErrorResult& rv);
 
  private:
-  XPathExpression* CreateExpression(const nsAString& aExpression,
-                                    txIParseContext* aContext,
-                                    Document* aDocument, ErrorResult& aRv);
-
   nsWeakPtr mDocument;
   RefPtr<txResultRecycler> mRecycler;
 };
