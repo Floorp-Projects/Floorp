@@ -127,6 +127,7 @@ EXPORTS += [
     'GfxInfoBase.h',
     'GfxInfoCollector.h',
     'InputData.h',
+    'nsBaseAppShell.h',
     'nsBaseDragService.h',
     'nsBaseFilePicker.h',
     'nsBaseScreen.h',
