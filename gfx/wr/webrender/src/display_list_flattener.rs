@@ -1380,7 +1380,7 @@ impl<'a> DisplayListFlattener<'a> {
             leaf_pic_index,
             leaf_composite_mode.into(),
             stacking_context.is_backface_visible,
-            ClipChainId::NONE,
+            stacking_context.clip_chain_id,
             stacking_context.spatial_node_index,
             &mut self.interners,
         );
@@ -1388,8 +1388,6 @@ impl<'a> DisplayListFlattener<'a> {
         if cur_instance.is_chased() {
             println!("\tis a leaf primitive for a stacking context");
         }
-
-        let mut clip_chain = Some(stacking_context.clip_chain_id);
 
         // If establishing a 3d context, the `cur_instance` represents
         // a picture with all the *trailing* immediate children elements.
@@ -1422,21 +1420,11 @@ impl<'a> DisplayListFlattener<'a> {
                 ))
             );
 
-            // If this is going to be the last picture for the stacking context,
-            // then put the clip onto the leaf picture, since this one uses
-            // PictureCompositeKey::Identity and won't have a surface to be
-            // clipped.
-            if stacking_context.composite_ops.filters.is_empty() &&
-               stacking_context.composite_ops.mix_blend_mode.is_none() {
-                cur_instance.clip_chain_id = clip_chain.take().unwrap();
-            }
-
-
             cur_instance = create_prim_instance(
                 current_pic_index,
                 PictureCompositeKey::Identity,
                 stacking_context.is_backface_visible,
-                ClipChainId::NONE,
+                stacking_context.clip_chain_id,
                 stacking_context.spatial_node_index,
                 &mut self.interners,
             );
@@ -1473,7 +1461,7 @@ impl<'a> DisplayListFlattener<'a> {
                 current_pic_index,
                 composite_mode.into(),
                 stacking_context.is_backface_visible,
-                ClipChainId::NONE,
+                stacking_context.clip_chain_id,
                 stacking_context.spatial_node_index,
                 &mut self.interners,
             );
@@ -1517,7 +1505,7 @@ impl<'a> DisplayListFlattener<'a> {
                 blend_pic_index,
                 composite_mode.into(),
                 stacking_context.is_backface_visible,
-                ClipChainId::NONE,
+                stacking_context.clip_chain_id,
                 stacking_context.spatial_node_index,
                 &mut self.interners,
             );
@@ -1526,10 +1514,6 @@ impl<'a> DisplayListFlattener<'a> {
                 println!("\tis a mix-blend picture for a stacking context with {:?}", mix_blend_mode);
             }
         }
-
-        // Set the stacking context clip on the outermost picture in the chain,
-        // unless we already set it on the leaf picture.
-        cur_instance.clip_chain_id = clip_chain.unwrap_or(ClipChainId::NONE);
 
         let has_mix_blend_on_secondary_framebuffer =
             stacking_context.composite_ops.mix_blend_mode.is_some() &&
