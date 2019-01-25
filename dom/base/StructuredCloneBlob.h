@@ -13,14 +13,14 @@
 
 #include "jsapi.h"
 
+#include "mozilla/Maybe.h"
 #include "nsIMemoryReporter.h"
 #include "nsISupports.h"
 
 namespace mozilla {
 namespace dom {
 
-class StructuredCloneBlob final : public nsIMemoryReporter,
-                                  public StructuredCloneHolder {
+class StructuredCloneBlob final : public nsIMemoryReporter {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
  public:
@@ -38,7 +38,8 @@ class StructuredCloneBlob final : public nsIMemoryReporter,
       JS::HandleObject aTargetGlobal, ErrorResult& aRv);
 
   void Deserialize(JSContext* aCx, JS::HandleObject aTargetScope,
-                   JS::MutableHandleValue aResult, ErrorResult& aRv);
+                   bool aKeepData, JS::MutableHandleValue aResult,
+                   ErrorResult& aRv);
 
   nsISupports* GetParentObject() const { return nullptr; }
   JSObject* GetWrapper() const { return nullptr; }
@@ -52,15 +53,25 @@ class StructuredCloneBlob final : public nsIMemoryReporter,
  private:
   explicit StructuredCloneBlob();
 
+  class Holder : public StructuredCloneHolder {
+  public:
+    using StructuredCloneHolder::StructuredCloneHolder;
+
+    bool ReadStructuredCloneInternal(JSContext* aCx,
+                                     JSStructuredCloneReader* aReader,
+                                     StructuredCloneHolder* aHolder);
+
+    bool WriteStructuredClone(JSContext* aCx, JSStructuredCloneWriter* aWriter,
+                              StructuredCloneHolder* aHolder);
+  };
+
+  Maybe<Holder> mHolder;
+
   static already_AddRefed<StructuredCloneBlob> Create() {
     RefPtr<StructuredCloneBlob> holder = new StructuredCloneBlob();
     RegisterWeakMemoryReporter(holder);
     return holder.forget();
   }
-
-  bool ReadStructuredCloneInternal(JSContext* aCx,
-                                   JSStructuredCloneReader* aReader,
-                                   StructuredCloneHolder* aHolder);
 };
 
 }  // namespace dom

@@ -11,6 +11,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/PropertyDescriptor.h"  // JS::FromPropertyDescriptor
 #include "vm/EqualityOperations.h"  // js::SameValue
+#include "vm/JSObject.h"
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -992,15 +993,7 @@ bool ScriptedProxyHandler::delete_(JSContext* cx, HandleObject proxy,
 
   // Step 12.
   if (desc.object() && !desc.configurable()) {
-    UniqueChars bytes =
-        IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
-    if (!bytes) {
-      return false;
-    }
-
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_CANT_DELETE,
-                             bytes.get());
-    return false;
+    return Throw(cx, id, JSMSG_CANT_DELETE);
   }
 
   // Steps 11,13.

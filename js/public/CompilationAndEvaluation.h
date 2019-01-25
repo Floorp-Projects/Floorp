@@ -141,19 +141,6 @@ extern JS_PUBLIC_API bool EvaluateUtf8(JSContext* cx,
                                        MutableHandle<Value> rval);
 
 /**
- * Evaluate the provided Latin-1 data (i.e. each byte directly corresponds to
- * the same Unicode code point) in the scope of the current global of |cx|, and
- * return the completion value in |rval|.
- *
- * This function may eventually be removed, such that *only* bytes containing
- * UTF-8 source text may be directly compiled.  Avoid using it if you can.
- */
-extern JS_PUBLIC_API bool EvaluateLatin1(JSContext* cx,
-                                         const ReadOnlyCompileOptions& options,
-                                         const char* bytes, size_t length,
-                                         MutableHandle<Value> rval);
-
-/**
  * Evaluate the UTF-8 contents of the file at the given path, and return the
  * completion value in |rval|.  (The path itself is in the system encoding, not
  * [necessarily] UTF-8.)  If the contents contain any malformed UTF-8, an error
