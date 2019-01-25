@@ -1221,7 +1221,7 @@ LoginManagerPrompter.prototype = {
       newLoginWithUsername.init(aNewLogin.hostname,
                                 aNewLogin.formSubmitURL, aNewLogin.httpRealm,
                                 selectedLogin.username, aNewLogin.password,
-                                selectedLogin.userNameField, aNewLogin.passwordField);
+                                selectedLogin.usernameField, aNewLogin.passwordField);
       this._updateLogin(selectedLogin, newLoginWithUsername);
     }
   },
