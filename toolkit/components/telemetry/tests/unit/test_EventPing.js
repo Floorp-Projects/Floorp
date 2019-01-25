@@ -161,22 +161,6 @@ add_task(async function test_timers() {
 
 });
 
-add_task(async function test_shutdown() {
-  Telemetry.clearEvents();
-  TelemetryEventPing.testReset();
-
-  recordEvents(999);
-  fakePolicy(pass, pass, (type, payload, options) => {
-    Assert.ok(options.addClientId, "Adds the client id.");
-    Assert.ok(options.addEnvironment, "Adds the environment.");
-    Assert.ok(options.usePingSender, "Asks for pingsender.");
-    Assert.equal(payload.reason, TelemetryEventPing.Reason.SHUTDOWN, "Sending because we are shutting down");
-    Assert.equal(payload.events.parent.length, 999, "Has 999 events");
-    Assert.equal(payload.lostEventsCount, 0, "No lost events");
-  });
-  TelemetryEventPing.observe(null, "profile-before-change", null);
-});
-
 add_task(async function test_periodic() {
   Telemetry.clearEvents();
   TelemetryEventPing.testReset();
@@ -197,4 +181,21 @@ add_task(async function test_periodic() {
 
   recordEvents(1);
   TelemetryEventPing._startTimer();
+});
+
+// Ensure this is the final test in the suite, as it shuts things down.
+add_task(async function test_shutdown() {
+  Telemetry.clearEvents();
+  TelemetryEventPing.testReset();
+
+  recordEvents(999);
+  fakePolicy(pass, pass, (type, payload, options) => {
+    Assert.ok(options.addClientId, "Adds the client id.");
+    Assert.ok(options.addEnvironment, "Adds the environment.");
+    Assert.ok(options.usePingSender, "Asks for pingsender.");
+    Assert.equal(payload.reason, TelemetryEventPing.Reason.SHUTDOWN, "Sending because we are shutting down");
+    Assert.equal(payload.events.parent.length, 999, "Has 999 events");
+    Assert.equal(payload.lostEventsCount, 0, "No lost events");
+  });
+  TelemetryEventPing.shutdown();
 });

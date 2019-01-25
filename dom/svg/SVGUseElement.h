@@ -9,8 +9,10 @@
 
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/dom/IDTracker.h"
-#include "nsStubMutationObserver.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
+#include "mozilla/RefPtr.h"
+#include "nsCOMPtr.h"
+#include "nsStubMutationObserver.h"
 #include "nsSVGLength2.h"
 #include "SVGString.h"
 #include "nsTArray.h"

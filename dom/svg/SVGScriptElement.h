@@ -8,8 +8,8 @@
 #define mozilla_dom_SVGScriptElement_h
 
 #include "SVGElement.h"
-#include "nsCOMPtr.h"
 #include "SVGString.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/ScriptElement.h"
 
 nsresult NS_NewSVGScriptElement(
