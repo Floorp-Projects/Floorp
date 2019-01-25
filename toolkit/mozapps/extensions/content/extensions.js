@@ -26,6 +26,8 @@ ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 ChromeUtils.defineModuleGetter(this, "ClientID",
                                "resource://gre/modules/ClientID.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       "extensions.webextPermissionPrompts", false);
@@ -1996,7 +1998,8 @@ var gDiscoverView = {
   get clientIdDiscoveryEnabled() {
     // These prefs match Discovery.jsm for enabling clientId cookies.
     return Services.prefs.getBoolPref("datareporting.healthreport.uploadEnabled", false) &&
-           Services.prefs.getBoolPref("browser.discovery.enabled", false);
+           Services.prefs.getBoolPref("browser.discovery.enabled", false) &&
+           !PrivateBrowsingUtils.isContentWindowPrivate(window);
   },
 
   async getClientHeader() {
