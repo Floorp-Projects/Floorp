@@ -222,6 +222,10 @@ class BrowserToolbar @JvmOverloads constructor(
                     R.styleable.BrowserToolbar_browserToolbarTextSize,
                     textSize
                 ) / resources.displayMetrics.density
+                displayToolbar.menuViewColor = getColor(
+                    R.styleable.BrowserToolbar_browserToolbarMenuColor,
+                    displayToolbar.menuViewColor
+                )
                 val inSecure = getColor(
                     R.styleable.BrowserToolbar_browserToolbarInsecureColor,
                     displayToolbar.securityIconColor.first

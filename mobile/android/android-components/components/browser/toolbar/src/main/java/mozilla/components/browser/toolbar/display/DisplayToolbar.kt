@@ -161,6 +161,12 @@ internal class DisplayToolbar(
 
     internal var securityIconColor = Pair(defaultColor, defaultColor)
 
+    internal var menuViewColor = defaultColor
+        set(value) {
+            field = value
+            menuView.setColorFilter(value)
+        }
+
     init {
         addView(siteSecurityIconView)
         addView(urlView)

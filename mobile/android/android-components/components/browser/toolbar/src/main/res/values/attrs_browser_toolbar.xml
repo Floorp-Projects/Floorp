@@ -10,5 +10,6 @@
     <attr name="browserToolbarTextSize" format="dimension"/>
     <attr name="browserToolbarSecureColor" format="color"/>
     <attr name="browserToolbarInsecureColor" format="color"/>
+    <attr name="browserToolbarMenuColor" format="color"/>
   </declare-styleable>
 </resources>
