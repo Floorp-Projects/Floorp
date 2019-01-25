@@ -181,6 +181,8 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
   .fake-editable {
     color: transparent;
+    height: 100%;
+    opacity: 0;
     position: absolute;
     top: 0;
     left: 0;
