@@ -7,11 +7,11 @@
 #include "DOMSVGPoint.h"
 
 #include "DOMSVGPointList.h"
-#include "SVGPoint.h"
 #include "gfx2DGlue.h"
-#include "SVGElement.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
+#include "SVGPoint.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGMatrix.h"
 
 // See the architecture comment in DOMSVGPointList.h.
