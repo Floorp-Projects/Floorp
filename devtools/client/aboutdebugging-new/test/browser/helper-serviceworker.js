@@ -61,6 +61,15 @@ async function waitForServiceWorkerRunning(workerText, document) {
 }
 /* exported waitForServiceWorkerRunning */
 
+async function waitForRegistration(tab) {
+  info("Wait until the registration appears on the window");
+  const swBrowser = tab.linkedBrowser;
+  await asyncWaitUntil(async () => ContentTask.spawn(swBrowser, {}, function() {
+    return content.wrappedJSObject.getRegistration();
+  }));
+}
+/* exported waitForRegistration */
+
 /**
  * Helper to listen once on a message sent using postMessage from the provided tab.
  *

@@ -32,11 +32,7 @@ add_task(async function() {
 
   // Wait for the registration to make sure service worker has been started, and that we
   // are not just reading STOPPED as the initial state.
-  info("Wait until the registration appears on the window");
-  const swBrowser = swTab.linkedBrowser;
-  await asyncWaitUntil(async () => ContentTask.spawn(swBrowser, {}, function() {
-    return content.wrappedJSObject.getRegistration();
-  }));
+  await waitForRegistration(swTab);
 
   info("Wait until the service worker stops");
   const targetElement = await waitForServiceWorkerStopped(SW_URL, document);
