@@ -1469,7 +1469,11 @@ pref("javascript.options.strict.debug",     false);
 pref("javascript.options.baselinejit",      true);
 //Duplicated in JitOptions - ensure both match.
 pref("javascript.options.baselinejit.threshold", 10);
+#ifdef _ARM64_
+pref("javascript.options.ion",              false);
+#else
 pref("javascript.options.ion",              true);
+#endif
 //Duplicated in JitOptions - ensure both match.
 pref("javascript.options.ion.threshold",    1000);
 //Duplicated in JitOptions - ensure both match.
