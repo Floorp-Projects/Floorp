@@ -111,12 +111,6 @@ bool OpaqueCrossCompartmentWrapper::construct(JSContext* cx,
   return false;
 }
 
-bool OpaqueCrossCompartmentWrapper::getPropertyDescriptor(
-    JSContext* cx, HandleObject wrapper, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) const {
-  return BaseProxyHandler::getPropertyDescriptor(cx, wrapper, id, desc);
-}
-
 bool OpaqueCrossCompartmentWrapper::hasOwn(JSContext* cx, HandleObject wrapper,
                                            HandleId id, bool* bp) const {
   return BaseProxyHandler::hasOwn(cx, wrapper, id, bp);

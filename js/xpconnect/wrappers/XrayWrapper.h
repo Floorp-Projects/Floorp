@@ -421,9 +421,6 @@ class XrayWrapper : public Base {
                          const JS::CallArgs& args) const override;
 
   /* SpiderMonkey extensions. */
-  virtual bool getPropertyDescriptor(
-      JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
   virtual bool hasOwn(JSContext* cx, JS::Handle<JSObject*> wrapper,
                       JS::Handle<jsid> id, bool* bp) const override;
   virtual bool getOwnEnumerablePropertyKeys(
