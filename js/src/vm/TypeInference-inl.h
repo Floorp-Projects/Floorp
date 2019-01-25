@@ -629,8 +629,10 @@ extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
 
 /* static */ inline StackTypeSet* TypeScript::ThisTypes(JSScript* script) {
   AutoSweepTypeScript sweep(script);
-  TypeScript* types = script->types(sweep);
-  return types ? types->typeArray() + script->nTypeSets() : nullptr;
+  if (TypeScript* types = script->types(sweep)) {
+    return types->typeArray() + script->numBytecodeTypeSets();
+  }
+  return nullptr;
 }
 
 /*
@@ -643,8 +645,10 @@ extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
                                                        unsigned i) {
   MOZ_ASSERT(i < script->functionNonDelazifying()->nargs());
   AutoSweepTypeScript sweep(script);
-  TypeScript* types = script->types(sweep);
-  return types ? types->typeArray() + script->nTypeSets() + 1 + i : nullptr;
+  if (TypeScript* types = script->types(sweep)) {
+    return types->typeArray() + script->numBytecodeTypeSets() + 1 + i;
+  }
+  return nullptr;
 }
 
 template <typename TYPESET>
@@ -657,7 +661,8 @@ template <typename TYPESET>
   uint32_t offset = script->pcToOffset(pc);
 
   // See if this pc is the next typeset opcode after the last one looked up.
-  if ((*hint + 1) < script->nTypeSets() && bytecodeMap[*hint + 1] == offset) {
+  size_t numBytecodeTypeSets = script->numBytecodeTypeSets();
+  if ((*hint + 1) < numBytecodeTypeSets && bytecodeMap[*hint + 1] == offset) {
     (*hint)++;
     return typeArray + *hint;
   }
@@ -674,7 +679,7 @@ template <typename TYPESET>
 #ifdef DEBUG
   bool found =
 #endif
-      mozilla::BinarySearch(bytecodeMap, 0, script->nTypeSets() - 1, offset,
+      mozilla::BinarySearch(bytecodeMap, 0, numBytecodeTypeSets - 1, offset,
                             &loc);
 
   MOZ_ASSERT_IF(found, bytecodeMap[loc] == offset);
@@ -690,7 +695,7 @@ template <typename TYPESET>
   if (!types) {
     return nullptr;
   }
-  uint32_t* hint = types->bytecodeTypeMap() + script->nTypeSets();
+  uint32_t* hint = types->bytecodeTypeMap() + script->numBytecodeTypeSets();
   return BytecodeTypes(script, pc, types->bytecodeTypeMap(), hint,
                        types->typeArray());
 }
