@@ -447,11 +447,6 @@ if (this.addMessageListener) {
   });
 } else {
   // Code to only run in the mochitest pages (not in the chrome script).
-  SpecialPowers.pushPrefEnv({"set": [["signon.rememberSignons", true],
-                                     ["signon.autofillForms.http", true],
-                                     ["security.insecure_field_warning.contextual.enabled", false],
-                                     ["network.auth.non-web-content-triggered-resources-http-auth-allow", true]],
-  });
   SimpleTest.registerCleanupFunction(() => {
     SpecialPowers.popPrefEnv();
     runInParent(function cleanupParent() {
