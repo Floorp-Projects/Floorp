@@ -64,6 +64,14 @@ interface nsIIdleService : nsISupports
      * just as many times.
      */
     void removeIdleObserver(in nsIObserver observer, in unsigned long time);
+
+    /**
+     * If true, the idle service is temporarily disabled, and all idle events
+     * will be ignored.
+     *
+     * This should only be used in automation.
+     */
+    attribute boolean disabled;
 };
 
 %{C++  

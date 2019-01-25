@@ -195,6 +195,12 @@ class nsIdleService : public nsIIdleServiceInternal {
   uint32_t mDeltaToNextIdleSwitchInS;
 
   /**
+   * If true, the idle service is temporarily disabled, and all idle events
+   * will be ignored.
+   */
+  bool mDisabled = false;
+
+  /**
    * Absolute value for when the last user interaction took place.
    */
   mozilla::TimeStamp mLastUserInteraction;
