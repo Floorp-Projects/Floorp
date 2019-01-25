@@ -12,17 +12,10 @@
 
 namespace mozilla {
 namespace dom {
-class FunctionStringCallback;
-
 class HTMLMarqueeElement final : public nsGenericHTMLElement {
  public:
   explicit HTMLMarqueeElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
       : nsGenericHTMLElement(std::move(aNodeInfo)) {}
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLMarqueeElement,
-                                           nsGenericHTMLElement)
 
   nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent) override;
@@ -33,8 +26,6 @@ class HTMLMarqueeElement final : public nsGenericHTMLElement {
   static const int kDefaultScrollDelayMS = 85;
 
   bool IsEventAttributeNameInternal(nsAtom* aName) override;
-
-  void SetStartStopCallback(FunctionStringCallback* aCallback);
 
   void GetBehavior(nsAString& aValue);
   void SetBehavior(const nsAString& aValue, ErrorResult& aError) {
@@ -126,7 +117,6 @@ class HTMLMarqueeElement final : public nsGenericHTMLElement {
                      JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  RefPtr<FunctionStringCallback> mStartStopCallback;
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);
 
