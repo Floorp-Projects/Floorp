@@ -4699,6 +4699,12 @@ static bool DisplaySystemMenu(HWND hWnd, nsSizeMode sizeMode, bool isRtl,
       case nsSizeMode_Normal:
         SetMenuItemInfo(hMenu, SC_RESTORE, FALSE, &mii);
         break;
+      case nsSizeMode_Invalid:
+        NS_ASSERTION(false, "Did the argument come from invalid IPC?");
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unhnalded nsSizeMode value detected");
+        break;
     }
     LPARAM cmd = TrackPopupMenu(
         hMenu,
