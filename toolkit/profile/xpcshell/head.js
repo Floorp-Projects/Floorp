@@ -7,6 +7,7 @@ const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { TelemetryTestUtils } = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
 const NS_ERROR_START_PROFILE_MANAGER = 0x805800c9;
 
@@ -117,6 +118,7 @@ function testStartsProfileManager(args = [], isResetting = false) {
   try {
     selectStartupProfile(args, isResetting);
     Assert.ok(false, "Should have started the profile manager");
+    checkStartupReason();
   } catch (e) {
     Assert.equal(e.result, NS_ERROR_START_PROFILE_MANAGER, "Should have started the profile manager");
   }
@@ -360,4 +362,20 @@ async function readFile(file) {
   let decoder = new TextDecoder();
   let data = await OS.File.read(file.path);
   return decoder.decode(data);
+}
+
+function checkStartupReason(expected = undefined) {
+  const tId = "startup.profile_selection_reason";
+  let scalars = TelemetryTestUtils.getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT);
+
+  if (expected === undefined) {
+    Assert.ok(!(tId in scalars), "Startup telemetry should not have been recorded.");
+    return;
+  }
+
+  if (tId in scalars) {
+    Assert.equal(scalars[tId], expected, "Should have seen the right startup reason.");
+  } else {
+    Assert.ok(false, "Startup telemetry should have been recorded.");
+  }
 }

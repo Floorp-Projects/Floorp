@@ -6,6 +6,8 @@ add_task(async () => {
   let service = getProfileService();
   let { profile, didCreate } = selectStartupProfile();
 
+  checkStartupReason("firstrun-created-default");
+
   let profileData = readProfilesIni();
   let installData = readInstallsIni();
   checkProfileService(profileData, installData);
