@@ -12,8 +12,7 @@ INTEGRATION_PROJECTS = {
     'autoland',
 }
 
-# Oak is central-like
-TRUNK_PROJECTS = INTEGRATION_PROJECTS | {'mozilla-central', 'comm-central', 'oak'}
+TRUNK_PROJECTS = INTEGRATION_PROJECTS | {'mozilla-central', 'comm-central'}
 
 RELEASE_PROJECTS = {
     'mozilla-central',
@@ -23,7 +22,7 @@ RELEASE_PROJECTS = {
     'comm-central',
     'comm-beta',
     'comm-esr60',
-    'oak',  # Oak needs to handle nightlies
+    'oak',
 }
 
 RELEASE_PROMOTION_PROJECTS = {
