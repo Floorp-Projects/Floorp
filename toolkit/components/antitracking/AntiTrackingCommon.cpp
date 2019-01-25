@@ -1342,13 +1342,15 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  nsCOMPtr<nsIURI> parentPrincipalURI;
-  Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
-  LOG_SPEC(
-      ("Testing permission type %s for %s resulted in %d (%s)", type.get(),
-       _spec, int(result),
-       result == nsIPermissionManager::ALLOW_ACTION ? "success" : "failure"),
-      parentPrincipalURI);
+  if (MOZ_LOG_TEST(gAntiTrackingLog, LogLevel::Debug)) {
+    nsCOMPtr<nsIURI> parentPrincipalURI;
+    Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
+    LOG_SPEC(
+        ("Testing permission type %s for %s resulted in %d (%s)", type.get(),
+         _spec, int(result),
+         result == nsIPermissionManager::ALLOW_ACTION ? "success" : "failure"),
+        parentPrincipalURI);
+  }
 
   return result == nsIPermissionManager::ALLOW_ACTION;
 }
