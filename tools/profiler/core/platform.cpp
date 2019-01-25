@@ -445,6 +445,7 @@ class ActivePS {
       mFilters[i] = aFilters[i];
     }
 
+#if !defined(RELEASE_OR_BETA)
     if (mInterposeObserver) {
       // We need to register the observer on the main thread, because we want
       // to observe IO that happens on the main thread.
@@ -462,9 +463,11 @@ class ActivePS {
             }));
       }
     }
+#endif
   }
 
   ~ActivePS() {
+#if !defined(RELEASE_OR_BETA)
     if (mInterposeObserver) {
       // We need to unregister the observer on the main thread, because that's
       // where we've registered it.
@@ -479,6 +482,7 @@ class ActivePS {
             }));
       }
     }
+#endif
   }
 
   bool ThreadSelected(const char* aThreadName) {
