@@ -32,8 +32,5 @@ interface HTMLMarqueeElement : HTMLElement {
 
   void start();
   void stop();
-
-  [Func="IsChromeOrXBL"]
-  void setStartStopCallback(FunctionStringCallback? callback);
 };
 
