@@ -18,6 +18,7 @@ add_task(async () => {
   });
 
   let { profile: selectedProfile, didCreate } = selectStartupProfile();
+  checkStartupReason("firstrun-claimed-default");
 
   let hash = xreDirProvider.getInstallHash();
   let profileData = readProfilesIni();

@@ -37,6 +37,7 @@ add_task(async () => {
   });
 
   let { profile: selectedProfile, didCreate } = selectStartupProfile();
+  checkStartupReason("default");
 
   let profileData = readProfilesIni();
   let installData = readInstallsIni();
