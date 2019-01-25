@@ -49,13 +49,13 @@ add_task(async function test_unifiedComplete() {
   Assert.equal(context.results.length, 6, "Found the expected number of matches");
 
   Assert.deepEqual([
-    UrlbarUtils.MATCH_TYPE.SEARCH,
-    UrlbarUtils.MATCH_TYPE.SEARCH,
-    UrlbarUtils.MATCH_TYPE.SEARCH,
-    UrlbarUtils.MATCH_TYPE.URL,
-    UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-    UrlbarUtils.MATCH_TYPE.URL,
-  ], context.results.map(m => m.type), "Check match types");
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_TYPE.URL,
+    UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+    UrlbarUtils.RESULT_TYPE.URL,
+  ], context.results.map(m => m.type), "Check result types");
 
   Assert.deepEqual([
     "moz",

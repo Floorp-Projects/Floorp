@@ -147,11 +147,11 @@ const PREF_TYPES = new Map([
   ["number", "Int"],
 ]);
 
-// Buckets for match insertion.
-// Every time a new match is returned, we go through each bucket in array order,
-// and look for the first one having available space for the given match type.
+// Buckets for result insertion.
+// Every time a new result is returned, we go through each bucket in array order,
+// and look for the first one having available space for the given result type.
 // Each bucket is an array containing the following indices:
-//   0: The match type of the acceptable entries.
+//   0: The result type of the acceptable entries.
 //   1: available number of slots in this bucket.
 // There are different matchBuckets definition for different contexts, currently
 // a general one (matchBuckets) and a search one (matchBucketsSearch).

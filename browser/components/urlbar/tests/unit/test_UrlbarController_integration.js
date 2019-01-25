@@ -10,7 +10,7 @@
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
 const TEST_URL = "http://example.com";
-const match = new UrlbarResult(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+const match = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
                                UrlbarUtils.MATCH_SOURCE.TABS,
                                { url: TEST_URL });
 let controller;
