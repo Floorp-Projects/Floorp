@@ -1986,6 +1986,7 @@ class JSScript : public js::gc::TenuredCell {
     return scope->as<js::FunctionScope>().hasParameterExprs();
   }
 
+  static constexpr size_t NumTypeSetsBits = sizeof(nTypeSets_) * CHAR_BIT;
   size_t nTypeSets() const { return nTypeSets_; }
 
   size_t funLength() const { return funLength_; }
