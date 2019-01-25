@@ -1150,7 +1150,7 @@ typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 
 // When a ElemSegment is "passive" it is shared between a wasm::Module and its
 // wasm::Instances. To allow each segment to be released as soon as the last
-// Instance table.drops it and the Module is destroyed, each ElemSegment is
+// Instance elem.drops it and the Module is destroyed, each ElemSegment is
 // individually atomically ref-counted.
 
 struct ElemSegment : AtomicRefCounted<ElemSegment> {
@@ -2067,11 +2067,11 @@ enum class SymbolicAddress {
   WaitI64,
   Wake,
   MemCopy,
-  MemDrop,
+  DataDrop,
   MemFill,
   MemInit,
   TableCopy,
-  TableDrop,
+  ElemDrop,
   TableGet,
   TableGrow,
   TableInit,

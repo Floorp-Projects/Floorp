@@ -141,8 +141,7 @@ bool SVGAnimatedPathSegList::IsRendered() const {
   return mAnimVal ? !mAnimVal->IsEmpty() : !mBaseVal.IsEmpty();
 }
 
-UniquePtr<nsISMILAttr> SVGAnimatedPathSegList::ToSMILAttr(
-    SVGElement *aElement) {
+UniquePtr<SMILAttr> SVGAnimatedPathSegList::ToSMILAttr(SVGElement *aElement) {
   return MakeUnique<SMILAnimatedPathSegList>(this, aElement);
 }
 

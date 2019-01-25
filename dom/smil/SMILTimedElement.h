@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILTIMEDELEMENT_H_
-#define NS_SMILTIMEDELEMENT_H_
+#ifndef mozilla_SMILTimedElement_h
+#define mozilla_SMILTimedElement_h
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/Move.h"
@@ -204,7 +204,7 @@ class SMILTimedElement {
    *
    * @param aContainerTime The container time at which to sample.
    */
-  void SampleAt(nsSMILTime aContainerTime);
+  void SampleAt(SMILTime aContainerTime);
 
   /**
    * Performs a special sample for the end of an interval. Such a sample should
@@ -218,7 +218,7 @@ class SMILTimedElement {
    *
    * @param aContainerTime The container time at which to sample.
    */
-  void SampleEndAt(nsSMILTime aContainerTime);
+  void SampleEndAt(SMILTime aContainerTime);
 
   /**
    * Informs the timed element that its time container has changed time
@@ -398,7 +398,7 @@ class SMILTimedElement {
   void ClearSpecs(TimeValueSpecList& aSpecs, InstanceTimeList& aInstances,
                   RemovalTestFunction aRemove);
   void ClearIntervals();
-  void DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly);
+  void DoSampleAt(SMILTime aContainerTime, bool aEndOnly);
 
   /**
    * Helper function to check for an early end and, if necessary, update the
@@ -461,7 +461,7 @@ class SMILTimedElement {
 
   /**
    * Helper function to iterate through this element's accumulated timing
-   * information (specifically old SMILIntervals and nsSMILTimeInstanceTimes)
+   * information (specifically old SMILIntervals and SMILTimeInstanceTimes)
    * and discard items that are no longer needed or exceed some threshold of
    * accumulated state.
    */
@@ -508,13 +508,13 @@ class SMILTimedElement {
                               const SMILTimeValue& aEnd) const;
   SMILTimeValue GetRepeatDuration() const;
   SMILTimeValue ApplyMinAndMax(const SMILTimeValue& aDuration) const;
-  nsSMILTime ActiveTimeToSimpleTime(nsSMILTime aActiveTime,
-                                    uint32_t& aRepeatIteration);
+  SMILTime ActiveTimeToSimpleTime(SMILTime aActiveTime,
+                                  uint32_t& aRepeatIteration);
   SMILInstanceTime* CheckForEarlyEnd(const SMILTimeValue& aContainerTime) const;
   void UpdateCurrentInterval(bool aForceChangeNotice = false);
-  void SampleSimpleTime(nsSMILTime aActiveTime);
+  void SampleSimpleTime(SMILTime aActiveTime);
   void SampleFillValue();
-  nsresult AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
+  nsresult AddInstanceTimeFromCurrentTime(SMILTime aCurrentTime,
                                           double aOffsetSeconds, bool aIsBegin);
   void RegisterMilestone();
   bool GetNextMilestone(SMILMilestone& aNextMilestone) const;
@@ -564,16 +564,16 @@ class SMILTimedElement {
   SMILTimeValue mMin;
   SMILTimeValue mMax;
 
-  enum nsSMILFillMode : uint8_t { FILL_REMOVE, FILL_FREEZE };
-  nsSMILFillMode mFillMode;
+  enum SMILFillMode : uint8_t { FILL_REMOVE, FILL_FREEZE };
+  SMILFillMode mFillMode;
   static const nsAttrValue::EnumTable sFillModeTable[];
 
-  enum nsSMILRestartMode : uint8_t {
+  enum SMILRestartMode : uint8_t {
     RESTART_ALWAYS,
     RESTART_WHENNOTACTIVE,
     RESTART_NEVER
   };
-  nsSMILRestartMode mRestartMode;
+  SMILRestartMode mRestartMode;
   static const nsAttrValue::EnumTable sRestartModeTable[];
 
   InstanceTimeList mBeginInstances;
@@ -601,22 +601,22 @@ class SMILTimedElement {
    * The state of the element in its life-cycle. These states are based on the
    * element life-cycle described in SMILANIM 3.6.8
    */
-  enum nsSMILElementState {
+  enum SMILElementState {
     STATE_STARTUP,
     STATE_WAITING,
     STATE_ACTIVE,
     STATE_POSTACTIVE
   };
-  nsSMILElementState mElementState;
+  SMILElementState mElementState;
 
-  enum nsSMILSeekState {
+  enum SMILSeekState {
     SEEK_NOT_SEEKING,
     SEEK_FORWARD_FROM_ACTIVE,
     SEEK_FORWARD_FROM_INACTIVE,
     SEEK_BACKWARD_FROM_ACTIVE,
     SEEK_BACKWARD_FROM_INACTIVE
   };
-  nsSMILSeekState mSeekState;
+  SMILSeekState mSeekState;
 
   // Used to batch updates to the timing model
   class AutoIntervalUpdateBatcher;
@@ -646,4 +646,4 @@ inline void ImplCycleCollectionTraverse(
 
 }  // namespace mozilla
 
-#endif  // NS_SMILTIMEDELEMENT_H_
+#endif  // mozilla_SMILTimedElement_h

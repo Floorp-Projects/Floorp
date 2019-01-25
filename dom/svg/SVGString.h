@@ -50,7 +50,7 @@ class SVGString {
   already_AddRefed<mozilla::dom::SVGAnimatedString> ToDOMAnimatedString(
       SVGElement* aSVGElement);
 
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   nsAutoPtr<nsString> mAnimVal;
@@ -83,18 +83,18 @@ class SVGString {
    private:
     virtual ~DOMAnimatedString();
   };
-  struct SMILString : public nsISMILAttr {
+  struct SMILString : public SMILAttr {
    public:
     SMILString(SVGString* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
-    // These will stay alive because a nsISMILAttr only lives as long
+    // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     SVGString* mVal;
     SVGElement* mSVGElement;
 
-    // nsISMILAttr methods
+    // SMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr,
         const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,

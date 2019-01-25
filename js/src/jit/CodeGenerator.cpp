@@ -11660,6 +11660,12 @@ template <SwitchTableType tableType>
 void CodeGenerator::visitOutOfLineSwitch(
     OutOfLineSwitch<tableType>* jumpTable) {
   jumpTable->setOutOfLine();
+  auto& labels = jumpTable->labels();
+#if defined(JS_CODEGEN_ARM64)
+  AutoForbidPools afp(&masm, (labels.length() + 1) * (sizeof(void*) / vixl::kInstructionSize));
+#endif
+
+
   if (tableType == SwitchTableType::OutOfLine) {
 #if defined(JS_CODEGEN_ARM)
     MOZ_CRASH("NYI: SwitchTableType::OutOfLine");
@@ -11673,7 +11679,6 @@ void CodeGenerator::visitOutOfLineSwitch(
   }
 
   // Add table entries if the table is inlined.
-  auto& labels = jumpTable->labels();
   for (size_t i = 0, e = labels.length(); i < e; i++) {
     jumpTable->addTableEntry(masm);
   }

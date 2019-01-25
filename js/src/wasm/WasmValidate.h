@@ -116,10 +116,8 @@ struct CompilerEnvironment {
 };
 
 // ModuleEnvironment contains all the state necessary to process or render
-// functions, and all of the state necessary to validate aspects of the
-// functions that do not require looking forwards in the bytecode stream.
-// The remaining validation state is accumulated in DeferredValidationState
-// and is checked at the end of a module's bytecode.
+// functions, and all of the state necessary to validate all aspects of the
+// functions.
 //
 // A ModuleEnvironment is created by decoding all the sections before the wasm
 // code section and then used immutably during. When compiling a module using a
@@ -146,6 +144,7 @@ struct ModuleEnvironment {
   // during validation.
   bool gcFeatureOptIn;
 #endif
+  Maybe<uint32_t> dataCount;
   MemoryUsage memoryUsage;
   uint32_t minMemoryLength;
   Maybe<uint32_t> maxMemoryLength;
@@ -406,43 +405,6 @@ class Encoder {
                        bytes_.length() - offset - varU32ByteLength(offset));
   }
 };
-
-// DeferredValidationState holds mutable state shared between threads that
-// compile a module.  The state accumulates information needed to complete
-// validation at the end of compilation of a module.
-
-struct DeferredValidationState {
-  // These three fields keep track of the highest data segment index
-  // mentioned in the code section, if any, and the associated section
-  // offset, so as to facilitate error message creation.  The use of
-  // |haveHighestDataSegIndex| avoids the difficulty of having to
-  // special-case one of the |highestDataSegIndex| values to mean "we
-  // haven't seen any data segments (yet)."
-
-  bool haveHighestDataSegIndex;
-  uint32_t highestDataSegIndex;
-  size_t highestDataSegIndexOffset;
-
-  DeferredValidationState() { init(); }
-
-  void init() {
-    haveHighestDataSegIndex = false;
-    highestDataSegIndex = 0;
-    highestDataSegIndexOffset = 0;
-  }
-
-  // Call here to notify the use of the data segment index with value
-  // |segIndex| at module offset |offsetInModule| whilst iterating through
-  // the code segment.
-  void notifyDataSegmentIndex(uint32_t segIndex, size_t offsetInModule);
-
-  // Call here to perform all final validation actions once the module tail
-  // has been processed.  Returns |true| if there are no errors.
-  bool performDeferredValidation(const ModuleEnvironment& env,
-                                 UniqueChars* error);
-};
-
-typedef ExclusiveData<DeferredValidationState> ExclusiveDeferredValidationState;
 
 // The Decoder class decodes the bytes in the range it is given during
 // construction. The client is responsible for keeping the byte range alive as
@@ -806,11 +768,9 @@ MOZ_MUST_USE bool DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env);
 
 MOZ_MUST_USE bool ValidateFunctionBody(const ModuleEnvironment& env,
                                        uint32_t funcIndex, uint32_t bodySize,
-                                       Decoder& d,
-                                       ExclusiveDeferredValidationState& dvs);
+                                       Decoder& d);
 
-MOZ_MUST_USE bool DecodeModuleTail(Decoder& d, ModuleEnvironment* env,
-                                   ExclusiveDeferredValidationState& dvs);
+MOZ_MUST_USE bool DecodeModuleTail(Decoder& d, ModuleEnvironment* env);
 
 void ConvertMemoryPagesToBytes(Limits* memory);
 

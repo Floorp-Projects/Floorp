@@ -101,7 +101,7 @@ void DOMAnimatedString::GetAnimVal(nsAString& aResult) {
   mVal->GetAnimValue(aResult, mSVGElement);
 }
 
-UniquePtr<nsISMILAttr> SVGClass::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGClass::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILString>(this, aSVGElement);
 }
 

@@ -84,12 +84,17 @@ CompileArgs::build(JSContext* cx, ScriptedCaller&& scriptedCaller)
   bool cranelift = false;
 #endif
 
+#ifdef ENABLE_WASM_REFTYPES
+  bool gc = cx->options().wasmGc();
+#else
+  bool gc = false;
+#endif
+
   // Debug information such as source view or debug traps will require
   // additional memory and permanently stay in baseline code, so we try to
   // only enable it when a developer actually cares: when the debugger tab
   // is open.
   bool debug = cx->realm()->debuggerObservesAsmJS();
-  bool gc = cx->options().wasmGc();
 
   bool sharedMemory = cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
   bool forceTiering = cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
@@ -564,7 +569,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
     return nullptr;
   }
 
-  if (!DecodeModuleTail(d, &env, mg.deferredValidationState())) {
+  if (!DecodeModuleTail(d, &env)) {
     return nullptr;
   }
 
@@ -602,7 +607,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
     return;
   }
 
-  if (!DecodeModuleTail(d, &env, mg.deferredValidationState())) {
+  if (!DecodeModuleTail(d, &env)) {
     return;
   }
 
@@ -743,7 +748,7 @@ SharedModule wasm::CompileStreaming(
   {
     Decoder d(tailBytes, env->codeSection->end(), error, warnings);
 
-    if (!DecodeModuleTail(d, env.ptr(), mg.deferredValidationState())) {
+    if (!DecodeModuleTail(d, env.ptr())) {
       return nullptr;
     }
 
