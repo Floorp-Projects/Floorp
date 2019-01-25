@@ -695,6 +695,10 @@ CssComputedView.prototype = {
    * Context menu handler.
    */
   _onContextMenu: function(event) {
+    // Call stopPropagation() and preventDefault() here so that avoid to show default
+    // context menu in about:devtools-toolbox. See Bug 1515265.
+    event.stopPropagation();
+    event.preventDefault();
     this.contextMenu.show(event);
   },
 
