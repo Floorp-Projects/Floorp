@@ -31,6 +31,7 @@ const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 loader.lazyRequireGetter(this, "ClassList", "devtools/client/inspector/rules/models/class-list");
+loader.lazyRequireGetter(this, "advanceValidate", "devtools/client/inspector/shared/utils", true);
 loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup");
 loader.lazyRequireGetter(this, "InplaceEditor", "devtools/client/shared/inplace-editor", true);
 
@@ -57,6 +58,7 @@ class RulesView {
     this.onTogglePseudoClass = this.onTogglePseudoClass.bind(this);
     this.onToggleSelectorHighlighter = this.onToggleSelectorHighlighter.bind(this);
     this.showDeclarationNameEditor = this.showDeclarationNameEditor.bind(this);
+    this.showDeclarationValueEditor = this.showDeclarationValueEditor.bind(this);
     this.showSelectorEditor = this.showSelectorEditor.bind(this);
     this.updateClassList = this.updateClassList.bind(this);
     this.updateRules = this.updateRules.bind(this);
@@ -83,6 +85,7 @@ class RulesView {
       onTogglePseudoClass: this.onTogglePseudoClass,
       onToggleSelectorHighlighter: this.onToggleSelectorHighlighter,
       showDeclarationNameEditor: this.showDeclarationNameEditor,
+      showDeclarationValueEditor: this.showDeclarationValueEditor,
       showSelectorEditor: this.showSelectorEditor,
     });
 
@@ -188,6 +191,36 @@ class RulesView {
    */
   get highlighters() {
     return this.inspector.highlighters;
+  }
+
+  /**
+   * Returns the grid line names of the grid that the currently selected element is
+   * contained in.
+   *
+   * @return {Object} that contains the names of the cols and rows as arrays
+   * { cols: [], rows: [] }.
+   */
+  async getGridlineNames() {
+    const gridLineNames = { cols: [], rows: [] };
+    const layoutInspector = await this.inspector.walker.getLayoutInspector();
+    const gridFront = await layoutInspector.getCurrentGrid(this.selection.nodeFront);
+
+    if (gridFront) {
+      const gridFragments = gridFront.gridFragments;
+
+      for (const gridFragment of gridFragments) {
+        for (const rowLine of gridFragment.rows.lines) {
+          gridLineNames.rows = gridLineNames.rows.concat(rowLine.names);
+        }
+        for (const colLine of gridFragment.cols.lines) {
+          gridLineNames.cols = gridLineNames.cols.concat(colLine.names);
+        }
+      }
+    }
+
+    // This event is emitted for testing purposes.
+    this.inspector.emit("grid-line-names-updated");
+    return gridLineNames;
   }
 
   /**
@@ -367,18 +400,69 @@ class RulesView {
       advanceChars: ":",
       contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
       cssProperties: this.cssProperties,
-      done: (name, commit) => {
+      done: async (name, commit) => {
         if (!commit) {
           return;
         }
 
-        this.elementStyle.modifyDeclarationName(ruleId, declarationId, name);
+        await this.elementStyle.modifyDeclarationName(ruleId, declarationId, name);
         this.telemetry.recordEvent("edit_rule", "ruleview", null, {
           "session_id": this.toolbox.sessionId,
         });
       },
       element,
       popup: this.autocompletePopup,
+    });
+  }
+
+  /**
+   * Handler for showing the inplace editor when an editable property value is clicked
+   * in the rules view.
+   *
+   * @param  {DOMNode} element
+   *         The declaration value span element to be edited.
+   * @param  {String} ruleId
+   *         The id of the Rule object to be edited.
+   * @param  {String} declarationId
+   *         The id of the TextProperty object to be edited.
+   */
+  showDeclarationValueEditor(element, ruleId, declarationId) {
+    const rule = this.elementStyle.getRule(ruleId);
+    if (!rule) {
+      return;
+    }
+
+    const declaration = rule.getDeclaration(declarationId);
+    if (!declaration) {
+      return;
+    }
+
+    new InplaceEditor({
+      advanceChars: advanceValidate,
+      contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
+      cssProperties: this.cssProperties,
+      cssVariables: this.elementStyle.variables,
+      defaultIncrement: declaration.name === "opacity" ? 0.1 : 1,
+      done: async (value, commit) => {
+        if (!commit || !value || !value.trim()) {
+          return;
+        }
+
+        await this.elementStyle.modifyDeclarationValue(ruleId, declarationId, value);
+        this.telemetry.recordEvent("edit_rule", "ruleview", null, {
+          "session_id": this.toolbox.sessionId,
+        });
+      },
+      element,
+      getGridLineNames: this.getGridlineNames,
+      maxWidth: () => {
+        // Return the width of the closest declaration container element.
+        const containerElement = element.closest(".ruleview-propertycontainer");
+        return containerElement.getBoundingClientRect().width;
+      },
+      multiline: true,
+      popup: this.autocompletePopup,
+      property: declaration,
     });
   }
 

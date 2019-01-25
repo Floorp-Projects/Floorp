@@ -330,6 +330,11 @@ span.img.marko {
   margin-inline-end: 5px;
 }
 
+.img.refresh {
+  mask: url(/images/reload.svg);
+  mask-size: 100%;
+}
+
 .img.arrow {
   mask: url(/images/arrow.svg);
   margin-inline-end: 4px;
@@ -341,6 +346,14 @@ span.img.marko {
   display: inline-block;
   transform: rotate(-90deg);
   transition: transform 0.18s ease;
+}
+
+/* overrides tree component */
+.tree-node button.arrow {
+  background: none;
+  mask: url(/images/arrow.svg);
+  background: var(--disclosure-arrow);
+  mask-size: 100%;
 }
 
 html[dir="rtl"] .img.arrow {
