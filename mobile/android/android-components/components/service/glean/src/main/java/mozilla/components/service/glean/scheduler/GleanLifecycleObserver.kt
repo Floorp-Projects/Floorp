@@ -24,6 +24,10 @@ internal class GleanLifecycleObserver : LifecycleObserver {
         // on foreground.
         GleanBaseline.duration.stopAndSum()
         Glean.handleEvent(Glean.PingEvent.Background)
+
+        // This will check the metrics ping schedule to determine whether it's time to send a new
+        // metrics ping or not
+        Glean.handleEvent(Glean.PingEvent.Default)
     }
 
     /**

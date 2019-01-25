@@ -17,6 +17,7 @@ import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
+import mozilla.components.service.glean.scheduler.MetricsPingScheduler
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
@@ -235,6 +236,72 @@ class GleanTest {
             val baselineTimespanMetrics = baselineMetricsObject.getJSONObject("timespan")!!
             assertEquals(1, baselineTimespanMetrics.length())
             assertNotNull(baselineTimespanMetrics.get("glean.baseline.duration"))
+        } finally {
+            server.shutdown()
+            lifecycleRegistry.removeObserver(gleanLifecycleObserver)
+        }
+    }
+
+    @Test
+    fun `test sending of metrics ping`() {
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setBody("OK"))
+
+        StringsStorageEngine.clearAllStores()
+        val metricToSend = StringMetricType(
+                disabled = false,
+                category = "telemetry",
+                lifetime = Lifetime.Ping,
+                name = "metrics_ping",
+                sendInPings = listOf("default")
+        )
+
+        val metricsPingScheduler = MetricsPingScheduler(getContextWithMockedInfo())
+        metricsPingScheduler.clearSchedulerData()
+
+        // Store a ping timestamp from 25 hours ago to compare to so that the ping will get sent
+        metricsPingScheduler.updateSentTimestamp(
+                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(25))
+
+        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
+                serverEndpoint = "http://" + server.hostName + ":" + server.port,
+                logPings = true
+        ))
+
+        // Fake calling the lifecycle observer.
+        val lifecycleRegistry = LifecycleRegistry(mock(LifecycleOwner::class.java))
+        val gleanLifecycleObserver = GleanLifecycleObserver()
+        lifecycleRegistry.addObserver(gleanLifecycleObserver)
+
+        try {
+            // Simulate the first foreground event after the application starts.
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+
+            // Write a value to the metric to check later
+            metricToSend.set("Test metrics ping")
+
+            // Simulate going to background so that the metrics ping schedule will be checked
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+
+            val requests: MutableMap<String, String> = mutableMapOf()
+            for (i in 0..1) {
+                val request = server.takeRequest()
+                val docType = request.path.split("/")[3]
+                requests[docType] = request.body.readUtf8()
+            }
+
+            val metricsJson = JSONObject(requests["metrics"])
+            checkPingSchema(metricsJson)
+
+            // Check ping type
+            val pingInfo = metricsJson.getJSONObject("ping_info")!!
+            assertEquals(pingInfo["ping_type"], "metrics")
+
+            // Retrieve the string metric that was stored
+            val metricsObject = metricsJson.getJSONObject("metrics")!!
+            val stringMetrics = metricsObject.getJSONObject("string")!!
+
+            assertEquals(stringMetrics["telemetry.metrics_ping"], "Test metrics ping")
         } finally {
             server.shutdown()
             lifecycleRegistry.removeObserver(gleanLifecycleObserver)

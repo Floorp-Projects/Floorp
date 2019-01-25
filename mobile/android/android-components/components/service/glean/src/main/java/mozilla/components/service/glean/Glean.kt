@@ -26,6 +26,7 @@ import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.service.glean.metrics.GleanBaseline
+import mozilla.components.service.glean.scheduler.MetricsPingScheduler
 import mozilla.components.service.glean.utils.StringUtils
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
@@ -50,6 +51,10 @@ open class GleanInternalAPI {
     // The application id detected by glean to be used as part of the submission
     // endpoint.
     internal lateinit var applicationId: String
+
+    // This object holds data related to persistent information about the metrics ping, such as
+    // the last time it was sent
+    internal lateinit var metricsPingScheduler: MetricsPingScheduler
 
     /**
      * Initialize glean.
@@ -233,6 +238,8 @@ open class GleanInternalAPI {
             throw AssertionError("Could not get own package info, aborting init")
         }
 
+        metricsPingScheduler = MetricsPingScheduler(applicationContext)
+
         // Set the OS type
         GleanBaseline.os.set("Android")
 
@@ -298,7 +305,12 @@ open class GleanInternalAPI {
                 sendPing("baseline", "baseline")
                 sendPing("events", "events")
             }
-            Glean.PingEvent.Default -> sendPing("metrics", "metrics")
+            Glean.PingEvent.Default -> {
+                if (metricsPingScheduler.canSendPing()) {
+                    sendPing(MetricsPingScheduler.STORE_NAME, MetricsPingScheduler.STORE_NAME)
+                    metricsPingScheduler.updateSentTimestamp()
+                }
+            }
         }
     }
 }

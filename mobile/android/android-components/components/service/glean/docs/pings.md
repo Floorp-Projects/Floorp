@@ -8,7 +8,7 @@ The following is a list of the pings along with the conditions that triggers the
 
 - [`baseline` ping](baseline.md)
 - [`events` ping](events.md)
-- `metrics` ping (TBD)
+- [`metrics` ping](metrics.md)
 
 ## The `ping_info` section
 The following fields are always included in the `ping_info` section, for every ping.
