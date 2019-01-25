@@ -9,6 +9,8 @@
 
 #include "mozilla/Types.h"
 
+#include <string.h>
+
 #include "vm/SharedMem.h"
 
 namespace js {
@@ -266,6 +268,26 @@ class AtomicOperations {
                                   size_t nbytes) {
     memmoveSafeWhenRacy(dest.template cast<void*>().unwrap(),
                         src.template cast<void*>().unwrap(), nbytes);
+  }
+
+  static void memsetSafeWhenRacy(SharedMem<uint8_t*> dest, int value,
+                                 size_t nbytes) {
+    uint8_t buf[1024];
+    size_t iterations = nbytes / sizeof(buf);
+    size_t tail = nbytes % sizeof(buf);
+    size_t offs = 0;
+    if (iterations > 0) {
+      memset(buf, value, sizeof(buf));
+      while (iterations--) {
+        memcpySafeWhenRacy(dest + offs, SharedMem<uint8_t*>::unshared(buf),
+                           sizeof(buf));
+        offs += sizeof(buf);
+      }
+    } else {
+      memset(buf, value, tail);
+    }
+    memcpySafeWhenRacy(dest + offs, SharedMem<uint8_t*>::unshared(buf),
+                       tail);
   }
 
   template <typename T>
