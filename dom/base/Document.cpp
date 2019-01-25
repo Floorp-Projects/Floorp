@@ -1339,7 +1339,8 @@ Document::Document(const char* aContentType)
       mThrowOnDynamicMarkupInsertionCounter(0),
       mIgnoreOpensDuringUnloadCounter(0),
       mDocLWTheme(Doc_Theme_Uninitialized),
-      mSavedResolution(1.0f) {
+      mSavedResolution(1.0f),
+      mPendingInitialTranslation(false) {
   MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug, ("DOCUMENT %p created", this));
 
   SetIsInDocument();
@@ -3131,6 +3132,8 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
     // will be resolved once the end of l10n resource
     // container is reached.
     mL10nResources.AppendElement(href);
+
+    mPendingInitialTranslation = true;
   }
 }
 
@@ -3173,9 +3176,18 @@ void Document::OnL10nResourceContainerParsed() {
 }
 
 void Document::TriggerInitialDocumentTranslation() {
+  // Let's call it again, in case the resource
+  // container has not been closed, and only
+  // now we're closing the document.
+  OnL10nResourceContainerParsed();
+
   if (mDocumentL10n) {
     mDocumentL10n->TriggerInitialDocumentTranslation();
   }
+}
+
+void Document::InitialDocumentTranslationCompleted() {
+  mPendingInitialTranslation = false;
 }
 
 bool Document::IsWebAnimationsEnabled(JSContext* aCx, JSObject* /*unused*/) {
@@ -8141,7 +8153,6 @@ void Document::SetReadyStateInternal(ReadyState rs) {
         mXULPersist->Init();
       }
     }
-    TriggerInitialDocumentTranslation();
   }
 
   RecordNavigationTiming(rs);
