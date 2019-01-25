@@ -266,21 +266,17 @@ a {
   max-width: 40vw;
   flex-shrink: 0;
   color: var(--frame-link-source);
-  margin-inline-start: 1ch;
-}
-
-.message-location:empty {
-  display: none;
-}
-
-.message-location .frame-link-source {
+  margin-left: 1ch;
   /* Makes the file name truncated (and ellipsis shown) on the left side */
   direction: rtl;
-  display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: end;
+}
+
+.message-location:empty {
+  display: none;
 }
 
 .message-location .frame-link-source-inner {
@@ -338,7 +334,8 @@ a {
 
 .message.network .status {
   flex: none;
-  margin-inline-start: 1ch;
+  cursor: default;
+  margin-left: 1ch;
   cursor: default;
 }
 
