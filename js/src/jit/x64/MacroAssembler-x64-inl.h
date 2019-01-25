@@ -53,6 +53,13 @@ void MacroAssembler::move32To64SignExtend(Register src, Register64 dest) {
   movslq(src, dest.reg);
 }
 
+// ===============================================================
+// Load instructions
+
+void MacroAssembler::load32SignExtendToPtr(const Address& src, Register dest) {
+  movslq(Operand(src), dest);
+}
+
 void MacroAssembler::andPtr(Register src, Register dest) { andq(src, dest); }
 
 void MacroAssembler::andPtr(Imm32 imm, Register dest) { andq(imm, dest); }

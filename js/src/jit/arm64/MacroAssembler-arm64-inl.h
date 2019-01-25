@@ -67,6 +67,14 @@ void MacroAssembler::move32To64SignExtend(Register src, Register64 dest) {
 }
 
 // ===============================================================
+// Load instructions
+
+void MacroAssembler::load32SignExtendToPtr(const Address& src, Register dest) {
+  load32(src, dest);
+  move32To64SignExtend(dest, Register64(dest));
+}
+
+// ===============================================================
 // Logical instructions
 
 void MacroAssembler::not32(Register reg) {
