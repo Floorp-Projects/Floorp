@@ -1662,6 +1662,15 @@ option('--enable-hardening', env='MOZ_SECURITY_HARDENING',
        help='Enables security hardening compiler options')
 
 
+# This function is a bit confusing. It adds or removes hardening flags in
+# three stuations: if --enable-hardening is passed; if --disable-hardening
+# is passed, and if no flag is passed.
+#
+# At time of this comment writing, all flags are actually added in the
+# default no-flag case; making --enable-hardening the same as omitting the
+# flag. --disable-hardening will omit the security flags. (However, not all
+# possible security flags will be omitted by --disable-hardening, as many are
+# compiler-default options we do not explicitly enable.)
 @depends('--enable-hardening', '--enable-address-sanitizer',
          '--enable-optimize', c_compiler, target)
 def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target):
@@ -1672,6 +1681,7 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
     js_flags = []
     js_ldflags = []
 
+    # ----------------------------------------------------------
     # If hardening is explicitly enabled, or not explicitly disabled
     if hardening_flag.origin == "default" or hardening_flag:
         # FORTIFY_SOURCE ------------------------------------
@@ -1700,7 +1710,17 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
             ldflags.append("-Wl,--dynamicbase")
             js_ldflags.append("-Wl,--dynamicbase")
 
-    # If ASAN _is_ on, undefine FOTIFY_SOURCE just to be safe
+        # Control Flow Guard (CFG) ----------------------------
+        if c_compiler.type == 'clang-cl' and c_compiler.version >= '8':
+            flags.append("-guard:cf")
+            js_flags.append("-guard:cf")
+            # nolongjmp is needed because clang doesn't emit the CFG tables of
+            # setjmp return addresses https://bugs.llvm.org/show_bug.cgi?id=40057
+            ldflags.append("-guard:cf,nolongjmp")
+            js_ldflags.append("-guard:cf,nolongjmp")
+
+    # ----------------------------------------------------------
+    # If ASAN _is_ on, undefine FORTIFY_SOURCE just to be safe
     if asan:
         flags.append("-U_FORTIFY_SOURCE")
         js_flags.append("-U_FORTIFY_SOURCE")
