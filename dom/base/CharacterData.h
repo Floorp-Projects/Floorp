@@ -20,7 +20,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsCycleCollectionParticipant.h"
 
-#include "nsISMILAttr.h"
 #include "mozilla/dom/ShadowRoot.h"
 
 namespace mozilla {

@@ -297,7 +297,7 @@ SVGAnimatedAngle::~SVGAnimatedAngle() {
   sSVGAnimatedAngleTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> SVGAngle::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGAngle::ToSMILAttr(SVGElement* aSVGElement) {
   if (aSVGElement->NodeInfo()->Equals(nsGkAtoms::marker, kNameSpaceID_SVG)) {
     SVGMarkerElement* marker = static_cast<SVGMarkerElement*>(aSVGElement);
     return MakeUnique<SMILOrient>(marker->GetOrientType(), this, aSVGElement);

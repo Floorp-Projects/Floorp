@@ -199,7 +199,7 @@ const nsAttrValue::EnumTable SMILTimedElement::sRestartModeTable[] = {
     {nullptr, 0}};
 
 const SMILMilestone SMILTimedElement::sMaxMilestone(
-    std::numeric_limits<nsSMILTime>::max(), false);
+    std::numeric_limits<SMILTime>::max(), false);
 
 // The thresholds at which point we start filtering intervals and instance times
 // indiscriminately.
@@ -298,7 +298,7 @@ nsresult SMILTimedElement::BeginElementAt(double aOffsetSeconds) {
   SMILTimeContainer* container = GetTimeContainer();
   if (!container) return NS_ERROR_FAILURE;
 
-  nsSMILTime currentTime = container->GetCurrentTimeAsSMILTime();
+  SMILTime currentTime = container->GetCurrentTimeAsSMILTime();
   return AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, true);
 }
 
@@ -306,7 +306,7 @@ nsresult SMILTimedElement::EndElementAt(double aOffsetSeconds) {
   SMILTimeContainer* container = GetTimeContainer();
   if (!container) return NS_ERROR_FAILURE;
 
-  nsSMILTime currentTime = container->GetCurrentTimeAsSMILTime();
+  SMILTime currentTime = container->GetCurrentTimeAsSMILTime();
   return AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, false);
 }
 
@@ -459,7 +459,7 @@ void SMILTimedElement::SetTimeClient(SMILAnimationFunction* aClient) {
   mClient = aClient;
 }
 
-void SMILTimedElement::SampleAt(nsSMILTime aContainerTime) {
+void SMILTimedElement::SampleAt(SMILTime aContainerTime) {
   if (mIsDisabled) return;
 
   // Milestones are cleared before a sample
@@ -468,7 +468,7 @@ void SMILTimedElement::SampleAt(nsSMILTime aContainerTime) {
   DoSampleAt(aContainerTime, false);
 }
 
-void SMILTimedElement::SampleEndAt(nsSMILTime aContainerTime) {
+void SMILTimedElement::SampleEndAt(SMILTime aContainerTime) {
   if (mIsDisabled) return;
 
   // Milestones are cleared before a sample
@@ -492,7 +492,7 @@ void SMILTimedElement::SampleEndAt(nsSMILTime aContainerTime) {
   }
 }
 
-void SMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly) {
+void SMILTimedElement::DoSampleAt(SMILTime aContainerTime, bool aEndOnly) {
   MOZ_ASSERT(mAnimationElement,
              "Got sample before being registered with an animation element");
   MOZ_ASSERT(GetTimeContainer(),
@@ -622,8 +622,8 @@ void SMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly) {
           stateChanged = true;
         } else if (mCurrentInterval->Begin()->Time() <= sampleTime) {
           MOZ_ASSERT(!didApplyEarlyEnd, "We got an early end, but didn't end");
-          nsSMILTime beginTime = mCurrentInterval->Begin()->Time().GetMillis();
-          nsSMILTime activeTime = aContainerTime - beginTime;
+          SMILTime beginTime = mCurrentInterval->Begin()->Time().GetMillis();
+          SMILTime activeTime = aContainerTime - beginTime;
 
           // The 'min' attribute can cause the active interval to be longer than
           // the 'repeating interval'.
@@ -936,7 +936,7 @@ nsresult SMILTimedElement::SetRestart(const nsAString& aRestartSpec) {
   nsAttrValue temp;
   bool parseResult = temp.ParseEnumValue(aRestartSpec, sRestartModeTable, true);
   mRestartMode =
-      parseResult ? nsSMILRestartMode(temp.GetEnumValue()) : RESTART_ALWAYS;
+      parseResult ? SMILRestartMode(temp.GetEnumValue()) : RESTART_ALWAYS;
   UpdateCurrentInterval();
   return parseResult ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -997,7 +997,7 @@ nsresult SMILTimedElement::SetFillMode(const nsAString& aFillModeSpec) {
 
   nsAttrValue temp;
   bool parseResult = temp.ParseEnumValue(aFillModeSpec, sFillModeTable, true);
-  mFillMode = parseResult ? nsSMILFillMode(temp.GetEnumValue()) : FILL_REMOVE;
+  mFillMode = parseResult ? SMILFillMode(temp.GetEnumValue()) : FILL_REMOVE;
 
   // Update fill mode of client
   if (mFillMode != previousFillMode && HasClientInFillRange()) {
@@ -1691,7 +1691,7 @@ SMILTimeValue SMILTimedElement::CalcActiveEnd(const SMILTimeValue& aBegin,
   result = GetRepeatDuration();
 
   if (aEnd.IsDefinite()) {
-    nsSMILTime activeDur = aEnd.GetMillis() - aBegin.GetMillis();
+    SMILTime activeDur = aEnd.GetMillis() - aBegin.GetMillis();
 
     if (result.IsDefinite()) {
       result.SetMillis(std::min(result.GetMillis(), activeDur));
@@ -1703,7 +1703,7 @@ SMILTimeValue SMILTimedElement::CalcActiveEnd(const SMILTimeValue& aBegin,
   result = ApplyMinAndMax(result);
 
   if (result.IsDefinite()) {
-    nsSMILTime activeEnd = result.GetMillis() + aBegin.GetMillis();
+    SMILTime activeEnd = result.GetMillis() + aBegin.GetMillis();
     result.SetMillis(activeEnd);
   }
 
@@ -1714,9 +1714,9 @@ SMILTimeValue SMILTimedElement::GetRepeatDuration() const {
   SMILTimeValue multipliedDuration;
   if (mRepeatCount.IsDefinite() && mSimpleDur.IsDefinite()) {
     if (mRepeatCount * double(mSimpleDur.GetMillis()) <=
-        std::numeric_limits<nsSMILTime>::max()) {
+        std::numeric_limits<SMILTime>::max()) {
       multipliedDuration.SetMillis(
-          nsSMILTime(mRepeatCount * mSimpleDur.GetMillis()));
+          SMILTime(mRepeatCount * mSimpleDur.GetMillis()));
     }
   } else {
     multipliedDuration.SetIndefinite();
@@ -1758,9 +1758,9 @@ SMILTimeValue SMILTimedElement::ApplyMinAndMax(
   return result;
 }
 
-nsSMILTime SMILTimedElement::ActiveTimeToSimpleTime(
-    nsSMILTime aActiveTime, uint32_t& aRepeatIteration) {
-  nsSMILTime result;
+SMILTime SMILTimedElement::ActiveTimeToSimpleTime(SMILTime aActiveTime,
+                                                  uint32_t& aRepeatIteration) {
+  SMILTime result;
 
   MOZ_ASSERT(mSimpleDur.IsResolved(),
              "Unresolved simple duration in ActiveTimeToSimpleTime");
@@ -1914,11 +1914,10 @@ void SMILTimedElement::UpdateCurrentInterval(bool aForceChangeNotice) {
   }
 }
 
-void SMILTimedElement::SampleSimpleTime(nsSMILTime aActiveTime) {
+void SMILTimedElement::SampleSimpleTime(SMILTime aActiveTime) {
   if (mClient) {
     uint32_t repeatIteration;
-    nsSMILTime simpleTime =
-        ActiveTimeToSimpleTime(aActiveTime, repeatIteration);
+    SMILTime simpleTime = ActiveTimeToSimpleTime(aActiveTime, repeatIteration);
     mClient->SampleAt(simpleTime, mSimpleDur, repeatIteration);
   }
 }
@@ -1926,7 +1925,7 @@ void SMILTimedElement::SampleSimpleTime(nsSMILTime aActiveTime) {
 void SMILTimedElement::SampleFillValue() {
   if (mFillMode != FILL_FREEZE || !mClient) return;
 
-  nsSMILTime activeTime;
+  SMILTime activeTime;
 
   if (mElementState == STATE_WAITING || mElementState == STATE_POSTACTIVE) {
     const SMILInterval* prevInterval = GetPreviousInterval();
@@ -1963,7 +1962,7 @@ void SMILTimedElement::SampleFillValue() {
   }
 
   uint32_t repeatIteration;
-  nsSMILTime simpleTime = ActiveTimeToSimpleTime(activeTime, repeatIteration);
+  SMILTime simpleTime = ActiveTimeToSimpleTime(activeTime, repeatIteration);
 
   if (simpleTime == 0L && repeatIteration) {
     mClient->SampleLastValue(--repeatIteration);
@@ -1972,12 +1971,13 @@ void SMILTimedElement::SampleFillValue() {
   }
 }
 
-nsresult SMILTimedElement::AddInstanceTimeFromCurrentTime(
-    nsSMILTime aCurrentTime, double aOffsetSeconds, bool aIsBegin) {
+nsresult SMILTimedElement::AddInstanceTimeFromCurrentTime(SMILTime aCurrentTime,
+                                                          double aOffsetSeconds,
+                                                          bool aIsBegin) {
   double offset = NS_round(aOffsetSeconds * PR_MSEC_PER_SEC);
 
-  // Check we won't overflow the range of nsSMILTime
-  if (aCurrentTime + offset > std::numeric_limits<nsSMILTime>::max())
+  // Check we won't overflow the range of SMILTime
+  if (aCurrentTime + offset > std::numeric_limits<SMILTime>::max())
     return NS_ERROR_ILLEGAL_VALUE;
 
   SMILTimeValue timeVal(aCurrentTime + int64_t(offset));
@@ -2044,7 +2044,7 @@ bool SMILTimedElement::GetNextMilestone(SMILMilestone& aNextMilestone) const {
       // Work out what comes next: the interval end or the next repeat iteration
       SMILTimeValue nextRepeat;
       if (mSeekState == SEEK_NOT_SEEKING && mSimpleDur.IsDefinite()) {
-        nsSMILTime nextRepeatActiveTime =
+        SMILTime nextRepeatActiveTime =
             (mCurrentRepeatIteration + 1) * mSimpleDur.GetMillis();
         // Check that the repeat fits within the repeat duration
         if (SMILTimeValue(nextRepeatActiveTime) < GetRepeatDuration()) {

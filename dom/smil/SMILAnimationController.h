@@ -48,10 +48,10 @@ class SMILAnimationController final : public SMILTimeContainer,
   // going away)
   void Disconnect();
 
-  // nsSMILContainer
+  // SMILContainer
   virtual void Pause(uint32_t aType) override;
   virtual void Resume(uint32_t aType) override;
-  virtual nsSMILTime GetParentTime() const override;
+  virtual SMILTime GetParentTime() const override;
 
   // nsARefreshObserver
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
@@ -179,7 +179,7 @@ class SMILAnimationController final : public SMILTimeContainer,
   // This behaviour does not affect pausing (since we're not *expecting* any
   // samples then) nor seeking (where the SMIL model behaves somewhat
   // differently such as not dispatching events).
-  nsSMILTime mAvgTimeBetweenSamples;
+  SMILTime mAvgTimeBetweenSamples;
 
   bool mResampleNeeded;
   // If we're told to start sampling but there are no animation elements we just

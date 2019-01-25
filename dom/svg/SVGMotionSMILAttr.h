@@ -10,7 +10,7 @@
 #define MOZILLA_SVGMOTIONSMILATTR_H_
 
 #include "mozilla/Attributes.h"
-#include "nsISMILAttr.h"
+#include "mozilla/SMILAttr.h"
 
 class nsIContent;
 
@@ -24,18 +24,18 @@ class SVGElement;
 }  // namespace dom
 
 /**
- * SVGMotionSMILAttr: Implements the nsISMILAttr interface for SMIL animations
+ * SVGMotionSMILAttr: Implements the SMILAttr interface for SMIL animations
  * from <animateMotion>.
  *
  * NOTE: Even though there's technically no "motion" attribute, we behave in
  * many ways as if there were, for simplicity.
  */
-class SVGMotionSMILAttr : public nsISMILAttr {
+class SVGMotionSMILAttr : public SMILAttr {
  public:
   explicit SVGMotionSMILAttr(dom::SVGElement* aSVGElement)
       : mSVGElement(aSVGElement) {}
 
-  // nsISMILAttr methods
+  // SMILAttr methods
   virtual nsresult ValueFromString(
       const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
       SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;

@@ -277,8 +277,8 @@ class SVGElement : public SVGElementBase  // nsIContent
     return nullptr;
   }
 
-  mozilla::UniquePtr<nsISMILAttr> GetAnimatedAttr(int32_t aNamespaceID,
-                                                  nsAtom* aName) override;
+  mozilla::UniquePtr<SMILAttr> GetAnimatedAttr(int32_t aNamespaceID,
+                                               nsAtom* aName) override;
   void AnimationNeedsResample();
   void FlushAnimations();
 

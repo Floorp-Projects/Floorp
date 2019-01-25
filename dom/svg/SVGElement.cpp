@@ -2145,8 +2145,8 @@ void SVGElement::RecompileScriptEventListeners() {
   }
 }
 
-UniquePtr<nsISMILAttr> SVGElement::GetAnimatedAttr(int32_t aNamespaceID,
-                                                   nsAtom* aName) {
+UniquePtr<SMILAttr> SVGElement::GetAnimatedAttr(int32_t aNamespaceID,
+                                                nsAtom* aName) {
   if (aNamespaceID == kNameSpaceID_None) {
     // Transforms:
     if (GetTransformListAttrName() == aName) {
