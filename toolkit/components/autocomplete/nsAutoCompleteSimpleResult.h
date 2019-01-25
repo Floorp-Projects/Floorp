@@ -13,7 +13,27 @@
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 
-struct AutoCompleteSimpleResultMatch;
+struct AutoCompleteSimpleResultMatch {
+  AutoCompleteSimpleResultMatch(const nsAString& aValue,
+                                const nsAString& aComment,
+                                const nsAString& aImage,
+                                const nsAString& aStyle,
+                                const nsAString& aFinalCompleteValue,
+                                const nsAString& aLabel)
+      : mValue(aValue),
+        mComment(aComment),
+        mImage(aImage),
+        mStyle(aStyle),
+        mFinalCompleteValue(aFinalCompleteValue),
+        mLabel(aLabel) {}
+
+  nsString mValue;
+  nsString mComment;
+  nsString mImage;
+  nsString mStyle;
+  nsString mFinalCompleteValue;
+  nsString mLabel;
+};
 
 class nsAutoCompleteSimpleResult final : public nsIAutoCompleteSimpleResult {
  public:

@@ -34,7 +34,6 @@
 #include "nsIPresShell.h"
 #include "nsRect.h"
 #include "nsILoginManager.h"
-#include "mozilla/ModuleUtils.h"
 #include "nsToolkitCompsCID.h"
 #include "nsEmbedCID.h"
 #include "nsContentUtils.h"
@@ -1348,23 +1347,3 @@ int32_t nsFormFillController::GetIndexOfDocShell(nsIDocShell* aDocShell) {
 
   return -1;
 }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
-
-NS_DEFINE_NAMED_CID(NS_FORMFILLCONTROLLER_CID);
-
-static const mozilla::Module::CIDEntry kSatchelCIDs[] = {
-    {&kNS_FORMFILLCONTROLLER_CID, false, nullptr,
-     nsFormFillControllerConstructor},
-    {nullptr}};
-
-static const mozilla::Module::ContractIDEntry kSatchelContracts[] = {
-    {"@mozilla.org/satchel/form-fill-controller;1",
-     &kNS_FORMFILLCONTROLLER_CID},
-    {NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID, &kNS_FORMFILLCONTROLLER_CID},
-    {nullptr}};
-
-static const mozilla::Module kSatchelModule = {mozilla::Module::kVersion,
-                                               kSatchelCIDs, kSatchelContracts};
-
-NSMODULE_DEFN(satchel) = &kSatchelModule;

@@ -93,6 +93,10 @@ if CONFIG['MOZ_GECKO_PROFILER']:
       'other/KeyedStackCapturer.cpp'
     ]
 
+XPCOM_MANIFESTS += [
+    'core/components.conf',
+]
+
 EXTRA_COMPONENTS += [
     'TelemetryStartup.js',
     'TelemetryStartup.manifest'

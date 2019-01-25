@@ -40,6 +40,10 @@ EXTRA_JS_MODULES += [
     'nsFormAutoCompleteResult.jsm',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 FINAL_LIBRARY = 'xul'
 
 JAR_MANIFESTS += ['jar.mn']

@@ -44,6 +44,11 @@ struct EventExtraEntry;
 void Init();
 
 /**
+ * Shutdown the Telemetry service.
+ */
+void ShutdownTelemetry();
+
+/**
  * Adds sample to a histogram defined in TelemetryHistogramEnums.h
  *
  * @param id - histogram id
