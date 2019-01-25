@@ -294,3 +294,6 @@ shortcuts-modifier-other = Include Ctrl or Alt
 shortcuts-invalid = Invalid combination
 shortcuts-letter = Type a letter
 shortcuts-system = Can’t override a { -brand-short-name } shortcut
+
+go-back-button =
+    .tooltiptext = Go back
