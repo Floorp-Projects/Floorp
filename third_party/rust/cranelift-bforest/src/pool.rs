@@ -3,10 +3,10 @@
 #[cfg(test)]
 use super::Comparator;
 use super::{Forest, Node, NodeData};
-use entity::PrimaryMap;
+use crate::entity::PrimaryMap;
 #[cfg(test)]
-use std::fmt;
-use std::ops::{Index, IndexMut};
+use core::fmt;
+use core::ops::{Index, IndexMut};
 
 /// A pool of nodes, including a free list.
 pub(super) struct NodePool<F: Forest> {
@@ -63,7 +63,7 @@ impl<F: Forest> NodePool<F> {
     pub fn free_tree(&mut self, node: Node) {
         if let NodeData::Inner { size, tree, .. } = self[node] {
             // Note that we have to capture `tree` by value to avoid borrow checker trouble.
-            #[cfg_attr(feature = "cargo-clippy", allow(needless_range_loop))]
+            #[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_range_loop))]
             for i in 0..usize::from(size + 1) {
                 // Recursively free sub-trees. This recursion can never be deeper than `MAX_PATH`,
                 // and since most trees have less than a handful of nodes, it is worthwhile to
@@ -83,9 +83,9 @@ impl<F: Forest> NodePool<F> {
         NodeData<F>: fmt::Display,
         F::Key: fmt::Display,
     {
-        use entity::SparseSet;
-        use std::borrow::Borrow;
-        use std::cmp::Ordering;
+        use crate::entity::SparseSet;
+        use core::borrow::Borrow;
+        use core::cmp::Ordering;
         use std::vec::Vec;
 
         // The root node can't be an inner node with just a single sub-tree. It should have been
