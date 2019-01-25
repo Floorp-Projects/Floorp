@@ -162,7 +162,7 @@ class ProviderOpenTabs extends UrlbarProvider {
         cancel();
         return;
       }
-      addCallback(this, new UrlbarResult(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+      addCallback(this, new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
                                          UrlbarUtils.MATCH_SOURCE.TABS, {
         url: row.getResultByName("url"),
         userContextId: row.getResultByName("userContextId"),

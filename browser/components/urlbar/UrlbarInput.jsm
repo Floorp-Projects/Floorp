@@ -310,7 +310,7 @@ class UrlbarInput {
     let url = result.payload.url;
 
     switch (result.type) {
-      case UrlbarUtils.MATCH_TYPE.TAB_SWITCH: {
+      case UrlbarUtils.RESULT_TYPE.TAB_SWITCH: {
         if (this._overrideDefaultAction(event)) {
           where = "current";
           break;
@@ -328,7 +328,7 @@ class UrlbarInput {
         }
         return;
       }
-      case UrlbarUtils.MATCH_TYPE.SEARCH: {
+      case UrlbarUtils.RESULT_TYPE.SEARCH: {
         url = this._maybeCanonizeURL(event,
                 result.payload.suggestion || result.payload.query);
         if (url) {
@@ -346,7 +346,7 @@ class UrlbarInput {
         this._recordSearch(engine, event, actionDetails);
         break;
       }
-      case UrlbarUtils.MATCH_TYPE.OMNIBOX:
+      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
         // Give the extension control of handling the command.
         ExtensionSearchHandler.handleInputEntered(result.payload.keyword,
                                                   result.payload.content,
@@ -366,7 +366,7 @@ class UrlbarInput {
     let val;
 
     switch (result.type) {
-      case UrlbarUtils.MATCH_TYPE.SEARCH:
+      case UrlbarUtils.RESULT_TYPE.SEARCH:
         val = result.payload.suggestion || result.payload.query;
         break;
       default: {

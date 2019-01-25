@@ -272,8 +272,8 @@ class UrlbarView {
 
     let favicon = this._createElement("img");
     favicon.className = "urlbarView-favicon";
-    if (result.type == UrlbarUtils.MATCH_TYPE.SEARCH ||
-        result.type == UrlbarUtils.MATCH_TYPE.KEYWORD) {
+    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH ||
+        result.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
       favicon.src = "chrome://browser/skin/search-glass.svg";
     } else {
       favicon.src = result.payload.icon || "chrome://mozapps/skin/places/defaultFavicon.svg";
@@ -302,11 +302,11 @@ class UrlbarView {
     let secondary = this._createElement("span");
     secondary.className = "urlbarView-secondary";
     switch (result.type) {
-      case UrlbarUtils.MATCH_TYPE.TAB_SWITCH:
+      case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
         secondary.classList.add("urlbarView-action");
         secondary.textContent = bundle.GetStringFromName("switchToTab2");
         break;
-      case UrlbarUtils.MATCH_TYPE.SEARCH:
+      case UrlbarUtils.RESULT_TYPE.SEARCH:
         secondary.classList.add("urlbarView-action");
         secondary.textContent =
           bundle.formatStringFromName("searchWithEngine",
