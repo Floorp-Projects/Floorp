@@ -104,6 +104,27 @@ struct ShowInfo
   double defaultScale;
 };
 
+struct WebProgressData
+{
+  bool isTopLevel;
+  bool isLoadingDocument;
+  uint32_t loadType;
+  uint64_t DOMWindowID;
+};
+
+union OptionalWebProgressData
+{
+  void_t;
+  WebProgressData;
+};
+
+struct RequestData
+{
+  nsIURI requestURI;
+  nsIURI originalRequestURI;
+  nsCString matchedList;
+};
+
 union OptionalShmem
 {
   void_t;
@@ -523,6 +544,9 @@ parent:
 
     async RegisterProtocolHandler(nsString scheme, nsIURI handlerURI, nsString title,
                                   nsIURI documentURI);
+
+    async OnContentBlockingEvent(OptionalWebProgressData aWebProgressData,
+                                 RequestData aRequestData, uint32_t aEvent);
 
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);

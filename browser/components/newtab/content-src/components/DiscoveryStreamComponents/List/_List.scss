@@ -1,17 +1,44 @@
 // Type sizes
 $item-font-size: 13;
+$item-image-size: 72px;
 $item-line-height: 20;
 
-.ds-list-border {
-  border: 0;
-  border-top: $border-secondary;
+// XXX this is gross, and attaches the bottom-border to the item above.
+// Ideally, we'd attach the top-border to the item that needs it.
+// Unfortunately the border needs to go _above_ the row gap as currently
+// set up, which means that some refactoring will be required to do this.
+@mixin bottom-border-except-last-grid-row($columns) {
+  .ds-list-item:not(:nth-last-child(-n+#{$columns})) {
+    border-bottom: $border-secondary;
+    margin-bottom: -1px;  // cancel out the pixel we used for the border
 
-  padding-top: 1px;
+    padding-bottom: 2px;
+  }
+}
 
-  // Instead of using margin, we need to use these to override stuff that comes
-  // by default from <hr>.
-  margin-block-start: 8px;
-  margin-block-end: 8px;
+@mixin set-item-sizes($font-size, $line-height, $image-size) {
+  .ds-list-item {
+    // XXX see if we really want absolute units, maybe hoist somewhere central?
+    font-size: $font-size * 1px;
+    line-height: $line-height * 1px;
+  }
+
+  .ds-list-item-excerpt {
+    @include limit-visibile-lines(2, $line-height, $font-size);
+  }
+
+  .ds-list-item-info {
+    @include limit-visibile-lines(1, $line-height, $font-size);
+  }
+
+  .ds-list-item-title {
+    @include limit-visibile-lines(2, $line-height, $font-size);
+  }
+
+  .ds-list-image {
+    min-width: $image-size;
+    width: $image-size;
+  }
 }
 
 .ds-list {
@@ -23,33 +50,40 @@ $item-line-height: 20;
   // regression detection?
   padding-inline-start: 0;
 
-  // "2/3 width layout"
-  .ds-column-5 &,
-  .ds-column-6 &,
-  .ds-column-7 &,
-  .ds-column-8 & {
-    grid-template-columns: repeat(2, 1fr);
-    grid-row-gap: 24px;
+  &:not(.ds-list-full-width) {
+    @include set-item-sizes($item-font-size, $item-line-height, $item-image-size);
+
+    // "2/3 width layout"
+    .ds-column-5 &,
+    .ds-column-6 &,
+    .ds-column-7 &,
+    .ds-column-8 & {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    // "Full width layout"
+    .ds-column-9 &,
+    .ds-column-10 &,
+    .ds-column-11 &,
+    .ds-column-12 & {
+      grid-template-columns: repeat(3, 1fr);
+      grid-row-gap: 18px;
+    }
+
+    .ds-list-item-excerpt {
+      display: none;
+    }
   }
 
-  // "Full width layout"
-  .ds-column-9 &,
-  .ds-column-10 &,
-  .ds-column-11 &,
-  .ds-column-12 & {
-    grid-template-columns: repeat(3, 1fr);
-    grid-row-gap: 18px;
+  &:not(.ds-list-images) {
+    .ds-list-image {
+      display: none;
+    }
   }
 
   a {
     // XXX note that this only looks right in the light theme
     color: $grey-90;
-  }
-}
-
-.ds-list-images {
-  .ds-list-item .ds-list-image {
-    display: block;
   }
 }
 
@@ -90,22 +124,42 @@ $item-line-height: 20;
   }
 }
 
-// XXX this is gross, and attaches the bottom-border to the item above.
-// Ideally, we'd attach the top-border to the item that needs it.
-// Unfortunately the border needs to go _above_ the row gap as currently
-// set up, which means that some refactoring will be required to do this.
-.ds-list-item:nth-child(-n+3) { // all but the last three items
-  border-bottom: $border-secondary;
-  margin-bottom: -1px;  // cancel out the pixel we used for the border
+.ds-list-borders {
+  border-top: $border-secondary;
+  padding-top: $item-line-height * 1px;
 
-  padding-bottom: 2px;
+  &.ds-list-full-width,
+  .ds-column-1 &,
+  .ds-column-2 &,
+  .ds-column-3 &,
+  .ds-column-4 & {
+    @include bottom-border-except-last-grid-row(1);
+  }
+
+  &:not(.ds-list-full-width) {
+    // "2/3 width layout"
+    .ds-column-5 &,
+    .ds-column-6 &,
+    .ds-column-7 &,
+    .ds-column-8 & {
+      @include bottom-border-except-last-grid-row(2);
+    }
+
+    // "Full width layout"
+    .ds-column-9 &,
+    .ds-column-10 &,
+    .ds-column-11 &,
+    .ds-column-12 & {
+      @include bottom-border-except-last-grid-row(3);
+    }
+  }
+}
+
+.ds-list-full-width {
+  @include set-item-sizes(17, 24, $item-image-size * 2);
 }
 
 .ds-list-item {
-  // XXX see if we really want absolute units, maybe hoist somewhere central?
-  line-height: $item-line-height * 1px;
-  font-size: $item-font-size * 1px;
-
   // reset some stuff from <li>.  Should maybe be hoisted when we have better
   // regression detection?
   display: block;
@@ -120,18 +174,17 @@ $item-line-height: 20;
     justify-content: space-between;
   }
 
+  .ds-list-item-excerpt {
+    color: var(--newtab-text-secondary-color);
+    margin-bottom: 8px;
+  }
+
   .ds-list-item-info {
-    @include limit-visibile-lines(1, $item-line-height, $item-font-size);
-
-    color: $grey-50;
-
-    overflow: hidden;
+    color: var(--newtab-text-secondary-color);
     text-overflow: ellipsis;
   }
 
   .ds-list-item-title {
-    @include limit-visibile-lines(2, $item-line-height, $item-font-size);
-
     margin-bottom: 8px;
   }
 
@@ -141,15 +194,10 @@ $item-line-height: 20;
   }
 
   .ds-list-image {
-    $image-size: 72px;
-
     @include image-as-background;
-    display: none;
-    height: $image-size;
+    height: $item-image-size;
     margin-inline-start: $item-font-size * 1px;
-    min-height: $image-size;
-    min-width: $image-size;
-    width: $image-size;
+    min-height: $item-image-size;
   }
 
   &:hover {

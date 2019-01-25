@@ -15,7 +15,6 @@
 #include "nsISizeOf.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
-#include "nsIIPCSerializableURI.h"
 #include "mozilla/MemoryReporting.h"
 #include "NullPrincipal.h"
 #include "nsID.h"
@@ -33,13 +32,10 @@ namespace mozilla {
 
 class Encoding;
 
-class NullPrincipalURI final : public nsIURI,
-                               public nsISizeOf,
-                               public nsIIPCSerializableURI {
+class NullPrincipalURI final : public nsIURI, public nsISizeOf {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURI
-  NS_DECL_NSIIPCSERIALIZABLEURI
 
   // nsISizeOf
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;

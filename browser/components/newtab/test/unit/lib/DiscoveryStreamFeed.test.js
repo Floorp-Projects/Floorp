@@ -18,7 +18,7 @@ describe("DiscoveryStreamFeed", () => {
     sandbox = sinon.createSandbox();
     configPrefStub = sandbox.stub(global.Services.prefs, "getStringPref")
       .withArgs(CONFIG_PREF_NAME)
-      .returns(JSON.stringify({enabled: false, layout_endpoint: "foo.com"}));
+      .returns(JSON.stringify({enabled: false, show_spocs: false, layout_endpoint: "foo.com"}));
 
     // Fetch
     fetchStub = sandbox.stub(global, "fetch");
@@ -38,11 +38,11 @@ describe("DiscoveryStreamFeed", () => {
 
   describe("#observe", () => {
     it("should update state.DiscoveryStream.config when the pref changes", async () => {
-      configPrefStub.returns(JSON.stringify({enabled: true, layout_endpoint: "foo"}));
+      configPrefStub.returns(JSON.stringify({enabled: true, show_spocs: false, layout_endpoint: "foo"}));
 
       feed.observe(null, null, CONFIG_PREF_NAME);
 
-      assert.deepEqual(feed.store.getState().DiscoveryStream.config, {enabled: true, layout_endpoint: "foo"});
+      assert.deepEqual(feed.store.getState().DiscoveryStream.config, {enabled: true, show_spocs: false, layout_endpoint: "foo"});
     });
   });
 
@@ -173,6 +173,9 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#loadSpocs", () => {
+    beforeEach(() => {
+      Object.defineProperty(feed, "showSpocs", {get: () => true});
+    });
     it("should fetch fresh data if cache is empty", async () => {
       sandbox.stub(feed.cache, "get").returns(Promise.resolve());
       sandbox.stub(feed, "fetchSpocs").returns(Promise.resolve("data"));
@@ -210,6 +213,19 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#fetchSpocs", () => {
+    beforeEach(() => {
+      Object.defineProperty(feed, "showSpocs", {get: () => true});
+    });
+    it("should return null for fetchSpocs with no spocs_endpoint", async () => {
+      feed.store.dispatch(ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_SPOCS_ENDPOINT,
+        data: "",
+      }));
+
+      const result = await feed.fetchSpocs();
+
+      assert.isNull(result);
+    });
     it("should return old spocs if fetch failed", async () => {
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
       feed.store.dispatch(ac.BroadcastToContent({
@@ -239,6 +255,37 @@ describe("DiscoveryStreamFeed", () => {
       await feed.loadSpocs();
 
       assert.equal(feed.store.getState().DiscoveryStream.spocs.data, "new data");
+    });
+  });
+  describe("#showSpocs", () => {
+    it("should return false from showSpocs if user pref showSponsored is false", async () => {
+      feed.store.getState = () => ({
+        Prefs: {values: {showSponsored: false}},
+      });
+      Object.defineProperty(feed, "config", {get: () => ({show_spocs: true})});
+
+      assert.isFalse(feed.showSpocs);
+    });
+    it("should return false from showSpocs if DiscoveryStrea pref show_spocs is false", async () => {
+      feed.store.getState = () => ({
+        Prefs: {values: {showSponsored: true}},
+      });
+      Object.defineProperty(feed, "config", {get: () => ({show_spocs: false})});
+
+      assert.isFalse(feed.showSpocs);
+    });
+    it("should return true from showSpocs if both prefs are true", async () => {
+      feed.store.getState = () => ({
+        Prefs: {values: {showSponsored: true}},
+      });
+      Object.defineProperty(feed, "config", {get: () => ({show_spocs: true})});
+
+      assert.isTrue(feed.showSpocs);
+    });
+    it("should fire loadSpocs is showSponsored pref changes", async () => {
+      sandbox.stub(feed, "loadSpocs").returns(Promise.resolve());
+      await feed.onAction({type: at.PREF_CHANGED, data: {name: "showSponsored"}});
+      assert.calledOnce(feed.loadSpocs);
     });
   });
 

@@ -42,6 +42,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return this._prefCache.config;
   }
 
+  get showSpocs() {
+    // showSponsored is generally a use set spoc opt out,
+    // show_spocs is generally a mozilla set value.
+    return this.store.getState().Prefs.values.showSponsored && this.config.show_spocs;
+  }
+
   setupPrefs() {
     Services.prefs.addObserver(CONFIG_PREF_NAME, this);
     // Send the initial state of the pref on our reducer
@@ -157,31 +163,40 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
   async loadSpocs() {
     const cachedData = await this.cache.get() || {};
-    let {spocs} = cachedData;
-    if (!spocs || !(Date.now() - spocs.lastUpdated < SPOCS_FEEDS_UPDATE_TIME)) {
-      const spocsResponse = await this.fetchSpocs();
-      if (spocsResponse) {
-        spocs = {
-          lastUpdated: Date.now(),
-          data: spocsResponse,
-        };
-        await this.cache.set("spocs", spocs);
-      } else {
-        Cu.reportError("No response for spocs_endpoint prop");
-        // Use old data if we have it, otherwise nothing.
-        spocs = spocs || {};
+    let spocs;
+
+    if (this.showSpocs) {
+      spocs = cachedData.spocs;
+      if (!spocs || !(Date.now() - spocs.lastUpdated < SPOCS_FEEDS_UPDATE_TIME)) {
+        const spocsResponse = await this.fetchSpocs();
+        if (spocsResponse) {
+          spocs = {
+            lastUpdated: Date.now(),
+            data: spocsResponse,
+          };
+          await this.cache.set("spocs", spocs);
+        } else {
+          Cu.reportError("No response for spocs_endpoint prop");
+        }
       }
     }
 
-    if (spocs) {
-      this.store.dispatch(ac.BroadcastToContent({
-        type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
-        data: {
-          lastUpdated: spocs.lastUpdated,
-          spocs: spocs.data,
-        },
-      }));
-    }
+    // Use good data if we have it, otherwise nothing.
+    // We can have no data if spocs set to off.
+    // We can have no data if request fails and there is no good cache.
+    // We want to send an update spocs or not, so client can render something.
+    spocs = spocs || {
+      lastUpdated: Date.now(),
+      data: {},
+    };
+
+    this.store.dispatch(ac.BroadcastToContent({
+      type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
+      data: {
+        lastUpdated: spocs.lastUpdated,
+        spocs: spocs.data,
+      },
+    }));
   }
 
   async getComponentFeed(feedUrl) {
@@ -274,6 +289,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case at.UNINIT:
         // When this feed is shutting down:
         this.uninitPrefs();
+        break;
+      case at.PREF_CHANGED:
+        // Check if spocs was disabled. Remove them if they were.
+        if (action.data.name === "showSponsored") {
+          await this.loadSpocs();
+        }
         break;
     }
   }
