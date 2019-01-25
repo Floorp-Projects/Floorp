@@ -19,12 +19,22 @@
   document.addEventListener("DOMContentLoaded", async function() {
     await document.l10n.ready;
 
+    // Test for initial localization applied.
     let desc = document.getElementById("main-desc");
     is(desc.textContent.length > 0, true);
 
     // Test for manual value formatting
     let msg = await document.l10n.formatValue("id-heading");
     is(msg.length > 0, true);
+
+    // Test for mutations applied.
+    let verifyL10n = () => {
+      if (label.textContent.length > 0) {
+        window.removeEventListener("MozAfterPaint", verifyL10n);
+        SimpleTest.finish();
+      }
+    };
+    window.addEventListener("MozAfterPaint", verifyL10n);
 
     let label = document.getElementById("label1");
     document.l10n.setAttributes(
@@ -39,14 +49,6 @@
     let l10nArgs = document.l10n.getAttributes(label);
     is(l10nArgs.id, "date-crashed-heading");
     is(l10nArgs.args.name, "John");
-
-    let verifyL10n = () => {
-      if (label.textContent.length > 0) {
-        window.removeEventListener("MozAfterPaint", verifyL10n);
-        SimpleTest.finish();
-      }
-    };
-    window.addEventListener("MozAfterPaint", verifyL10n);
   }, { once: true});
   </script>
 </head>
