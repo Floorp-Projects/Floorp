@@ -9,14 +9,12 @@
 #include "nsAutoPtr.h"
 #include "nsNetCID.h"
 #include "nsIIOService.h"
-#include "nsToolkitCompsCID.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
-#include "mozilla/ModuleUtils.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/Event.h"
@@ -1758,26 +1756,3 @@ nsresult nsAutoCompleteController::MatchIndexToSearch(int32_t aMatchIndex,
 
   return NS_OK;
 }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteController)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteSimpleResult)
-
-NS_DEFINE_NAMED_CID(NS_AUTOCOMPLETECONTROLLER_CID);
-NS_DEFINE_NAMED_CID(NS_AUTOCOMPLETESIMPLERESULT_CID);
-
-static const mozilla::Module::CIDEntry kAutoCompleteCIDs[] = {
-    {&kNS_AUTOCOMPLETECONTROLLER_CID, false, nullptr,
-     nsAutoCompleteControllerConstructor},
-    {&kNS_AUTOCOMPLETESIMPLERESULT_CID, false, nullptr,
-     nsAutoCompleteSimpleResultConstructor},
-    {nullptr}};
-
-static const mozilla::Module::ContractIDEntry kAutoCompleteContracts[] = {
-    {NS_AUTOCOMPLETECONTROLLER_CONTRACTID, &kNS_AUTOCOMPLETECONTROLLER_CID},
-    {NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID, &kNS_AUTOCOMPLETESIMPLERESULT_CID},
-    {nullptr}};
-
-static const mozilla::Module kAutoCompleteModule = {
-    mozilla::Module::kVersion, kAutoCompleteCIDs, kAutoCompleteContracts};
-
-NSMODULE_DEFN(tkAutoCompleteModule) = &kAutoCompleteModule;

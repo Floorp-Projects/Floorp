@@ -25,4 +25,8 @@ EXTRA_COMPONENTS += [
     'mozIntl.manifest',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 FINAL_LIBRARY = 'xul'
