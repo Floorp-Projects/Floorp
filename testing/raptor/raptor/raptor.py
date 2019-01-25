@@ -214,6 +214,11 @@ class Raptor(object):
                 self.log.info("preferences were configured for the test, \
                               but we do not install them on non Firefox browsers.")
 
+        # if 'alert_on' was provided in the test INI, we must add that to our config
+        # for use in our results.py and output.py
+        # test['alert_on'] has already been converted to a list and stripped of spaces
+        self.config['subtest_alert_on'] = test.get('alert_on', None)
+
         # on firefox we can get an addon id; chrome addon actually is just cmd line arg
         if self.config['app'] in ['firefox', 'geckoview', 'fennec']:
             webext_id = self.profile.addons.addon_details(raptor_webext)['id']
