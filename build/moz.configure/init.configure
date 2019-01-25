@@ -764,8 +764,18 @@ def config_sub(shell, triplet):
 
 @depends('--host', shell)
 @checking('for host system type', lambda h: h.alias)
+@imports('os')
 @imports('subprocess')
+@imports('sys')
 def real_host(value, shell):
+    if not value and sys.platform == 'win32':
+        arch = (os.environ.get('PROCESSOR_ARCHITEW6432') or
+                os.environ.get('PROCESSOR_ARCHITECTURE'))
+        if arch == 'AMD64':
+            return split_triplet('x86_64-pc-mingw32')
+        elif arch == 'x86':
+            return split_triplet('i686-pc-mingw32')
+
     if not value:
         config_guess = os.path.join(os.path.dirname(__file__), '..',
                                     'autoconf', 'config.guess')
