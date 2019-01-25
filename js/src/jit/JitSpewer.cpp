@@ -245,9 +245,15 @@ void GraphSpewer::beginFunction(JSScript* function) {
   if (!isSpewing()) {
     return;
   }
-
   jsonSpewer_.beginFunction(function);
+  ionspewer.beginFunction();
+}
 
+void GraphSpewer::beginWasmFunction(unsigned funcIndex) {
+  if (!isSpewing()) {
+    return;
+  }
+  jsonSpewer_.beginWasmFunction(funcIndex);
   ionspewer.beginFunction();
 }
 
@@ -319,6 +325,12 @@ void jit::SpewBeginFunction(MIRGenerator* mir, JSScript* function) {
   MIRGraph* graph = &mir->graph();
   mir->graphSpewer().init(graph, function);
   mir->graphSpewer().beginFunction(function);
+}
+
+void jit::SpewBeginWasmFunction(MIRGenerator* mir, unsigned funcIndex) {
+  MIRGraph* graph = &mir->graph();
+  mir->graphSpewer().init(graph, nullptr);
+  mir->graphSpewer().beginWasmFunction(funcIndex);
 }
 
 AutoSpewEndFunction::~AutoSpewEndFunction() {
