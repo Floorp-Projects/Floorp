@@ -66,7 +66,7 @@ def filter_release_tasks(task, parameters):
     if platform in (
             'linux', 'linux64',
             'macosx64',
-            'win32', 'win64',
+            'win32', 'win64', 'win64-aarch64',
             ):
         if task.attributes['kind'] == 'l10n':
             # This is on-change l10n
