@@ -367,7 +367,8 @@ MSG_DEF(JSMSG_BAD_CODE_UNITS,          1, JSEXN_NOTE, "the code units comprising
 // asm.js
 MSG_DEF(JSMSG_USE_ASM_TYPE_FAIL,       1, JSEXN_TYPEERR, "asm.js type error: {0}")
 MSG_DEF(JSMSG_USE_ASM_LINK_FAIL,       1, JSEXN_TYPEERR, "asm.js link error: {0}")
-MSG_DEF(JSMSG_USE_ASM_TYPE_OK,         1, JSEXN_WARN,    "Successfully compiled asm.js code ({0})")
+MSG_DEF(JSMSG_USE_ASM_TYPE_OK,         1, JSEXN_WARN,    "Successfully compiled asm.js code (total compilation time {0}ms)")
+MSG_DEF(JSMSG_USE_ASM_TYPE_OK_NO_TIME, 0, JSEXN_WARN,    "Successfully compiled asm.js code ()")
 
 // wasm
 MSG_DEF(JSMSG_WASM_VERBOSE,            1, JSEXN_WARN,    "WebAssembly verbose: {0}")

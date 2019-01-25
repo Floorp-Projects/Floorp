@@ -42,6 +42,7 @@ class FilePickerParent : public PFilePickerParent {
       const nsString& aDefaultFile, const nsString& aDefaultExtension,
       InfallibleTArray<nsString>&& aFilters,
       InfallibleTArray<nsString>&& aFilterNames,
+      InfallibleTArray<nsString>&& aRawFilters,
       const nsString& aDisplayDirectory,
       const nsString& aDisplaySpecialDirectory,
       const nsString& aOkButtonLabel) override;

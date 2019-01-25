@@ -88,6 +88,16 @@ interface nsIFilePicker : nsISupports
   void appendFilter(in AString title,
                     in AString filter);
 
+  /**
+   * Add a raw filter (eg, add a MIME type without transforming it to a list of
+   * extensions).
+   *
+   * @param     filter   a filter taken directly from the accept attribute
+   *                     without processing
+   *
+   */
+  void appendRawFilter(in AString filter);
+
  /**
   * The filename that should be suggested to the user as a default. This should
   * include the extension.

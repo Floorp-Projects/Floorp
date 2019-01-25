@@ -18,6 +18,7 @@ class Rules extends PureComponent {
       onToggleSelectorHighlighter: PropTypes.func.isRequired,
       rules: PropTypes.arrayOf(PropTypes.shape(Types.rule)).isRequired,
       showDeclarationNameEditor: PropTypes.func.isRequired,
+      showDeclarationValueEditor: PropTypes.func.isRequired,
       showSelectorEditor: PropTypes.func.isRequired,
     };
   }
@@ -28,6 +29,7 @@ class Rules extends PureComponent {
       onToggleSelectorHighlighter,
       rules,
       showDeclarationNameEditor,
+      showDeclarationValueEditor,
       showSelectorEditor,
     } = this.props;
 
@@ -38,6 +40,7 @@ class Rules extends PureComponent {
         onToggleSelectorHighlighter,
         rule,
         showDeclarationNameEditor,
+        showDeclarationValueEditor,
         showSelectorEditor,
       });
     });
