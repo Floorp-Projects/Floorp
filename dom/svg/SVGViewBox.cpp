@@ -267,7 +267,7 @@ void SVGViewBox::DOMBaseVal::SetHeight(float aHeight, ErrorResult& aRv) {
   mVal->SetBaseValue(rect, mSVGElement);
 }
 
-UniquePtr<nsISMILAttr> SVGViewBox::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGViewBox::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILViewBox>(this, aSVGElement);
 }
 

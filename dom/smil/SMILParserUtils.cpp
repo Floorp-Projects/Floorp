@@ -6,6 +6,7 @@
 
 #include "SMILParserUtils.h"
 
+#include "mozilla/SMILAttr.h"
 #include "mozilla/SMILKeySpline.h"
 #include "mozilla/SMILRepeatCount.h"
 #include "mozilla/SMILTimeValue.h"
@@ -14,7 +15,6 @@
 #include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/TextUtils.h"
-#include "nsISMILAttr.h"
 #include "nsContentUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 
@@ -186,7 +186,7 @@ bool ParseClockValue(RangedPtr<const char16_t>& aIter,
                                                iter, aEnd, fraction))) {
         return false;
       }
-      aResult->SetMillis(nsSMILTime(hours) * MSEC_PER_HOUR +
+      aResult->SetMillis(SMILTime(hours) * MSEC_PER_HOUR +
                          minutes * MSEC_PER_MIN + seconds * MSEC_PER_SEC +
                          NS_round(fraction * MSEC_PER_SEC));
       aIter = iter;
@@ -202,7 +202,7 @@ bool ParseClockValue(RangedPtr<const char16_t>& aIter,
       if (!ParseClockMetric(iter, aEnd, multiplier)) {
         return false;
       }
-      aResult->SetMillis(nsSMILTime(timecount) * multiplier +
+      aResult->SetMillis(SMILTime(timecount) * multiplier +
                          NS_round(fraction * multiplier));
       aIter = iter;
       return true;
@@ -491,7 +491,7 @@ class MOZ_STACK_CLASS SMILValueParser
     : public SMILParserUtils::GenericValueParser {
  public:
   SMILValueParser(const SVGAnimationElement* aSrcElement,
-                  const nsISMILAttr* aSMILAttr,
+                  const SMILAttr* aSMILAttr,
                   FallibleTArray<SMILValue>* aValuesArray,
                   bool* aPreventCachingOfSandwich)
       : mSrcElement(aSrcElement),
@@ -517,14 +517,14 @@ class MOZ_STACK_CLASS SMILValueParser
 
  protected:
   const SVGAnimationElement* mSrcElement;
-  const nsISMILAttr* mSMILAttr;
+  const SMILAttr* mSMILAttr;
   FallibleTArray<SMILValue>* mValuesArray;
   bool* mPreventCachingOfSandwich;
 };
 
 bool SMILParserUtils::ParseValues(const nsAString& aSpec,
                                   const SVGAnimationElement* aSrcElement,
-                                  const nsISMILAttr& aAttribute,
+                                  const SMILAttr& aAttribute,
                                   FallibleTArray<SMILValue>& aValuesArray,
                                   bool& aPreventCachingOfSandwich) {
   // Assume all results can be cached, until we find one that can't.

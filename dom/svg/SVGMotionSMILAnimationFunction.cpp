@@ -104,14 +104,14 @@ bool SVGMotionSMILAnimationFunction::UnsetAttr(nsAtom* aAttribute) {
   return true;
 }
 
-SMILAnimationFunction::nsSMILCalcMode
+SMILAnimationFunction::SMILCalcMode
 SVGMotionSMILAnimationFunction::GetCalcMode() const {
   const nsAttrValue* value = GetAttr(nsGkAtoms::calcMode);
   if (!value) {
     return CALC_PACED;  // animateMotion defaults to calcMode="paced"
   }
 
-  return nsSMILCalcMode(value->GetEnumValue());
+  return SMILCalcMode(value->GetEnumValue());
 }
 
 //----------------------------------------------------------------------
@@ -292,7 +292,7 @@ bool SVGMotionSMILAnimationFunction::GenerateValuesForPathAndPoints(
   return true;
 }
 
-nsresult SVGMotionSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
+nsresult SVGMotionSMILAnimationFunction::GetValues(const SMILAttr& aSMILAttr,
                                                    SMILValueArray& aResult) {
   if (mIsPathStale) {
     RebuildPathAndVertices(aSMILAttr.GetTargetNode());

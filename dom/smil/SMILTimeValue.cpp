@@ -8,8 +8,8 @@
 
 namespace mozilla {
 
-const nsSMILTime SMILTimeValue::kUnresolvedMillis =
-    std::numeric_limits<nsSMILTime>::max();
+const SMILTime SMILTimeValue::kUnresolvedMillis =
+    std::numeric_limits<SMILTime>::max();
 
 //----------------------------------------------------------------------
 // SMILTimeValue methods:

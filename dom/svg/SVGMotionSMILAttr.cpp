@@ -21,7 +21,7 @@ nsresult SVGMotionSMILAttr::ValueFromString(
     const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
     SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   MOZ_ASSERT_UNREACHABLE(
-      "Shouldn't using nsISMILAttr::ValueFromString for "
+      "Shouldn't using SMILAttr::ValueFromString for "
       "parsing animateMotion's SMIL values.");
   return NS_ERROR_FAILURE;
 }

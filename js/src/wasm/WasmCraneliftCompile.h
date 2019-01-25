@@ -36,7 +36,7 @@ MOZ_MUST_USE inline bool CraneliftCanCompile() { return false; }
 MOZ_MUST_USE bool CraneliftCompileFunctions(
     const ModuleEnvironment& env, LifoAlloc& lifo,
     const FuncCompileInputVector& inputs, CompiledCode* code,
-    ExclusiveDeferredValidationState& dvs, UniqueChars* error);
+    UniqueChars* error);
 
 }  // namespace wasm
 }  // namespace js

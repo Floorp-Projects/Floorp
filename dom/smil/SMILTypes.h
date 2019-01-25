@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILTYPES_H_
-#define NS_SMILTYPES_H_
+#ifndef mozilla_SMILTypes_h
+#define mozilla_SMILTypes_h
 
 #include <stdint.h>
 
@@ -23,8 +23,8 @@ namespace mozilla {
 // For an overview of how this class is related to other SMIL time classes see
 // the documentation in SMILTimeValue.h
 //
-typedef int64_t nsSMILTime;
+typedef int64_t SMILTime;
 
 }  // namespace mozilla
 
-#endif  // NS_SMILTYPES_H_
+#endif  // mozilla_SMILTypes_h
