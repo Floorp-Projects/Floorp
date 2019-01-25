@@ -675,13 +675,6 @@ class ConstraintTypeSet : public TypeSet {
  public:
   ConstraintTypeSet() = default;
 
-#ifdef JS_CRASH_DIAGNOSTICS
-  void initMagic() {
-    MOZ_ASSERT(!magic_);
-    magic_ = ConstraintTypeSetMagic;
-  }
-#endif
-
   void checkMagic() const {
 #ifdef JS_CRASH_DIAGNOSTICS
     if (MOZ_UNLIKELY(magic_ != ConstraintTypeSetMagic)) {
