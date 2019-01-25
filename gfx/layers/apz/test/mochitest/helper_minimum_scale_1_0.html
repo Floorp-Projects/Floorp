@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=200, minimum-scale=1.0, initial-scale=2.0">
+  <title>Tests that the layout viewport is expanted to the minimum scale size (minimim-scale >= 1.0)</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    html,body {
+      overflow-x: hidden;
+      margin: 0;
+    }
+    div {
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+  <div style="width: 200%; height: 200%; background-color: green"></div>
+  <div style="width: 100%; height: 100%; background-color: blue"></div>
+  <script type="application/javascript">
+    async function test(testDriver) {
+      SpecialPowers.getDOMWindowUtils(window).scrollToVisual(100, 0);
+
+      const promiseForVisualViewportScroll = new Promise(resolve => {
+        window.visualViewport.addEventListener("scroll", () => {
+          resolve();
+        }, { once: true });
+      });
+
+      await waitUntilApzStable();
+
+      await promiseForVisualViewportScroll;
+
+      is(visualViewport.offsetLeft, 100,
+         "The visual viewport offset should be moved");
+    }
+
+    waitUntilApzStable().then(test).then(subtestDone);
+  </script>
+</body>
+</html>
+

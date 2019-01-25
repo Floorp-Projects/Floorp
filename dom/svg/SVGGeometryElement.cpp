@@ -6,16 +6,16 @@
 
 #include "SVGGeometryElement.h"
 
-#include "nsCOMPtr.h"
 #include "DOMSVGPoint.h"
 #include "gfxPlatform.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/dom/SVGLengthBinding.h"
-#include "mozilla/RefPtr.h"
+#include "nsCOMPtr.h"
 #include "nsComputedDOMStyle.h"
-#include "nsSVGUtils.h"
 #include "nsSVGLength2.h"
-#include "SVGContentUtils.h"
+#include "nsSVGUtils.h"
+#include "mozilla/dom/SVGLengthBinding.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/SVGContentUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

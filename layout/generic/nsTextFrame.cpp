@@ -6129,6 +6129,10 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   if (auto* textDrawer = aParams.context->GetTextDrawer()) {
     wr::Shadow wrShadow;
 
+    // Gecko already inflates the bounding rect of text shadows,
+    // so tell WR not to inflate again.
+    wrShadow.should_inflate = false;
+
     wrShadow.offset = {
         PresContext()->AppUnitsToFloatDevPixels(aShadowDetails->mXOffset),
         PresContext()->AppUnitsToFloatDevPixels(aShadowDetails->mYOffset)};
