@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILTIMECONTAINER_H_
-#define NS_SMILTIMECONTAINER_H_
+#ifndef mozilla_SMILTimeContainer_h
+#define mozilla_SMILTimeContainer_h
 
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/SMILMilestone.h"
@@ -297,4 +297,4 @@ class SMILTimeContainer {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILTIMECONTAINER_H_
+#endif  // mozilla_SMILTimeContainer_h

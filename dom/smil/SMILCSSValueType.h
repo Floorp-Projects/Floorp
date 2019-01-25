@@ -6,8 +6,8 @@
 
 /* representation of a value for a SMIL-animated CSS property */
 
-#ifndef NS_SMILCSSVALUETYPE_H_
-#define NS_SMILCSSVALUETYPE_H_
+#ifndef mozilla_SMILCSSValueType_h
+#define mozilla_SMILCSSValueType_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILType.h"
@@ -130,4 +130,4 @@ class SMILCSSValueType : public SMILType {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILCSSVALUETYPE_H_
+#endif  // mozilla_SMILCSSValueType_h

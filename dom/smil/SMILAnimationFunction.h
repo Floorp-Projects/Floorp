@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILANIMATIONFUNCTION_H_
-#define NS_SMILANIMATIONFUNCTION_H_
+#ifndef mozilla_SMILAnimationFunction_h
+#define mozilla_SMILAnimationFunction_h
 
 #include "mozilla/SMILAttr.h"
 #include "mozilla/SMILKeySpline.h"
@@ -439,4 +439,4 @@ class SMILAnimationFunction {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILANIMATIONFUNCTION_H_
+#endif  // mozilla_SMILAnimationFunction_h

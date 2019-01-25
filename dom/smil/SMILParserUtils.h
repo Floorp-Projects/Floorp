@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILPARSERUTILS_H_
-#define NS_SMILPARSERUTILS_H_
+#ifndef mozilla_SMILParserUtils_h
+#define mozilla_SMILParserUtils_h
 
 #include "nsTArray.h"
 #include "nsStringFwd.h"
@@ -86,4 +86,4 @@ class SMILParserUtils {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILPARSERUTILS_H_
+#endif  // mozilla_SMILParserUtils_h
