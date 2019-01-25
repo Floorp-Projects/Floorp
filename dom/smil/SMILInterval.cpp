@@ -6,6 +6,8 @@
 
 #include "SMILInterval.h"
 
+#include "mozilla/DebugOnly.h"
+
 namespace mozilla {
 
 SMILInterval::SMILInterval() : mBeginFixed(false), mEndFixed(false) {}
@@ -111,10 +113,7 @@ void SMILInterval::AddDependentTime(SMILInstanceTime& aTime) {
 }
 
 void SMILInterval::RemoveDependentTime(const SMILInstanceTime& aTime) {
-#ifdef DEBUG
-  bool found =
-#endif
-      mDependentTimes.RemoveElementSorted(&aTime);
+  DebugOnly<bool> found = mDependentTimes.RemoveElementSorted(&aTime);
   MOZ_ASSERT(found, "Couldn't find instance time to delete.");
 }
 

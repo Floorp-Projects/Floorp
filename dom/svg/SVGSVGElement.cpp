@@ -526,10 +526,8 @@ SVGElement::EnumAttributesInfo SVGSVGElement::GetEnumInfo() {
 
 void SVGSVGElement::SetImageOverridePreserveAspectRatio(
     const SVGPreserveAspectRatio& aPAR) {
-#ifdef DEBUG
   MOZ_ASSERT(OwnerDoc()->IsBeingUsedAsImage(),
              "should only override preserveAspectRatio in images");
-#endif
 
   bool hasViewBoxRect = HasViewBoxRect();
   if (!hasViewBoxRect && ShouldSynthesizeViewBox()) {
@@ -549,10 +547,8 @@ void SVGSVGElement::SetImageOverridePreserveAspectRatio(
 }
 
 void SVGSVGElement::ClearImageOverridePreserveAspectRatio() {
-#ifdef DEBUG
   MOZ_ASSERT(OwnerDoc()->IsBeingUsedAsImage(),
              "should only override image preserveAspectRatio in images");
-#endif
 
   if (!HasViewBoxRect() && ShouldSynthesizeViewBox()) {
     // My non-<svg:image> clients will want to paint me with a synthesized
