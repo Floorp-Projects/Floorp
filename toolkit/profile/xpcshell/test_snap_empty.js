@@ -7,6 +7,7 @@ add_task(async () => {
 
   let service = getProfileService();
   let { profile, didCreate } = selectStartupProfile();
+  checkStartupReason("firstrun-created-default");
 
   Assert.ok(didCreate, "Should have created a new profile.");
   Assert.equal(profile.name, PROFILE_DEFAULT, "Should have used the normal name.");
