@@ -52,6 +52,7 @@ class SearchFragment : Fragment() {
         )
 
         awesomeBarFeature = AwesomeBarFeature(awesomeBar, toolbar, null, onEditComplete = ::userDidSearch)
+            .addClipboardProvider(requireContext(), requireComponents.useCases.sessionUseCases.loadUrl)
             .addSearchProvider(
                 requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()),
                 requireComponents.useCases.searchUseCases.defaultSearch,
