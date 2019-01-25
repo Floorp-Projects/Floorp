@@ -97,6 +97,9 @@ following files.
 If a test is known to fail in BinAST for some reasons, putting that path in
 `jit-test.ignore` file in this directory skips encoding the file.
 
+For more details about the BinAST encoded jit-test, see
+js/src/jit-test/tests/binast/README.md file.
+
 
 # web-platform test
 
