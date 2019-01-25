@@ -17,7 +17,7 @@ private object Versions {
     const val espresso_core = "2.2.2"
 
     const val androidx_legacy = "1.0.0"
-    const val android_arch_navigation = "1.0.0-alpha09"
+    const val android_arch_navigation = "1.0.0-alpha11"
 }
 
 @Suppress("unused")
