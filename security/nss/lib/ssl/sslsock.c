@@ -3644,6 +3644,7 @@ ssl_SetDefaultsFromEnvironment(void)
         char *ev;
         firsttime = 0;
 #ifdef DEBUG
+        ssl_trace_iob = NULL;
         ev = PR_GetEnvSecure("SSLDEBUGFILE");
         if (ev && ev[0]) {
             ssl_trace_iob = fopen(ev, "w");
@@ -3665,6 +3666,7 @@ ssl_SetDefaultsFromEnvironment(void)
         }
 #endif /* DEBUG */
 #ifdef NSS_ALLOW_SSLKEYLOGFILE
+        ssl_keylog_iob = NULL;
         ev = PR_GetEnvSecure("SSLKEYLOGFILE");
         if (ev && ev[0]) {
             ssl_keylog_iob = fopen(ev, "a");
