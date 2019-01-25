@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -161,7 +162,7 @@ class UrlbarInput {
   makeURIReadable(uri) {
     // Avoid copying 'about:reader?url=', and always provide the original URI:
     // Reader mode ensures we call createExposableURI itself.
-    let readerStrippedURI = this.window.ReaderMode.getOriginalUrlObjectForDisplay(uri.displaySpec);
+    let readerStrippedURI = ReaderMode.getOriginalUrlObjectForDisplay(uri.displaySpec);
     if (readerStrippedURI) {
       return readerStrippedURI;
     }
@@ -490,6 +491,11 @@ class UrlbarInput {
 
   set value(val) {
     this._untrimmedValue = val;
+
+    let originalUrl = ReaderMode.getOriginalUrlObjectForDisplay(val);
+    if (originalUrl) {
+      val = originalUrl.displaySpec;
+    }
 
     val = this.trimValue(val);
 
