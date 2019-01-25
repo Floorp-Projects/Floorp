@@ -548,14 +548,19 @@
 
 #ifdef MOZ_UPDATER
   <description id="updateAllowDescription" data-l10n-id="update-application-allow-description"></description>
-  <radiogroup id="updateRadioGroup">
-    <radio id="autoDesktop"
-           value="true"
-           data-l10n-id="update-application-auto"/>
-    <radio id="manualDesktop"
-           value="false"
-           data-l10n-id="update-application-check-choose"/>
-  </radiogroup>
+  <vbox id="updateSettingsContainer">
+    <radiogroup id="updateRadioGroup">
+      <radio id="autoDesktop"
+             value="true"
+             data-l10n-id="update-application-auto"/>
+      <radio id="manualDesktop"
+             value="false"
+             data-l10n-id="update-application-check-choose"/>
+    </radiogroup>
+    <description id="updateSettingCrossUserWarning" hidden="true"
+                 data-l10n-id="update-application-warning-cross-user-setting">
+    </description>
+  </vbox>
 #ifdef MOZ_MAINTENANCE_SERVICE
   <checkbox id="useService"
             data-l10n-id="update-application-use-service"

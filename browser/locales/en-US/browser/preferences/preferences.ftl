@@ -355,6 +355,8 @@ update-application-manual =
     .label = Never check for updates (not recommended)
     .accesskey = N
 
+update-application-warning-cross-user-setting = This setting will apply to all Windows accounts and { -brand-short-name } profiles using this installation of { -brand-short-name }.
+
 update-application-use-service =
     .label = Use a background service to install updates
     .accesskey = b
