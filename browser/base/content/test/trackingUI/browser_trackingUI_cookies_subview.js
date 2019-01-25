@@ -11,11 +11,15 @@ const CONTAINER_PAGE = "http://not-tracking.example.com/browser/browser/base/con
 const TPC_PREF = "network.cookie.cookieBehavior";
 
 add_task(async function setup() {
+  let oldCanRecord = Services.telemetry.canRecordExtended;
+  Services.telemetry.canRecordExtended = true;
+
   // Avoid the content blocking tour interfering with our tests by popping up.
   await SpecialPowers.pushPrefEnv({set: [[ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS]]});
   await UrlClassifierTestUtils.addTestTrackers();
 
   registerCleanupFunction(() => {
+    Services.telemetry.canRecordExtended = oldCanRecord;
     UrlClassifierTestUtils.cleanupTestTrackers();
   });
 });
@@ -38,6 +42,8 @@ async function assertSitesListed(trackersBlocked, thirdPartyBlocked, firstPartyB
 
   await openIdentityPopup();
 
+  Services.telemetry.clearEvents();
+
   let categoryItem =
     document.getElementById("identity-popup-content-blocking-category-cookies");
   ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
@@ -47,6 +53,11 @@ async function assertSitesListed(trackersBlocked, thirdPartyBlocked, firstPartyB
   await viewShown;
 
   ok(true, "Cookies view was shown");
+
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN).parent;
+  let buttonEvents = events.filter(
+    e => e[1] == "security.ui.identitypopup" && e[2] == "click" && e[3] == "cookies_subview_btn");
+  is(buttonEvents.length, 1, "recorded telemetry for the button click");
 
   let listHeaders = cookiesView.querySelectorAll(".identity-popup-cookiesView-list-header");
   is(listHeaders.length, 3, "We have 3 list headers");
