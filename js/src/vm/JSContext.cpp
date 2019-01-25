@@ -38,6 +38,7 @@
 #include "jit/Ion.h"
 #include "jit/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
+#include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/Printf.h"
 #ifdef JS_SIMULATOR_ARM64
 #  include "jit/arm64/vixl/Simulator-vixl.h"
