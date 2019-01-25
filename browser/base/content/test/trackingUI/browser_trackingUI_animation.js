@@ -20,8 +20,7 @@ add_task(async function testShieldAnimation() {
   let noAnimationIcon = document.getElementById("tracking-protection-icon");
 
   Services.prefs.setBoolPref(ANIMATIONS_PREF, true);
-  await Promise.all([promiseTabLoadEvent(tab, TRACKING_PAGE),
-                     waitForContentBlockingEvent(2, tab.linkedBrowser.ownerGlobal)]);
+  await promiseTabLoadEvent(tab, TRACKING_PAGE);
   ok(BrowserTestUtils.is_hidden(noAnimationIcon), "the default icon is hidden when animations are enabled");
   ok(BrowserTestUtils.is_visible(animationIcon), "the animated icon is shown when animations are enabled");
 
@@ -30,8 +29,7 @@ add_task(async function testShieldAnimation() {
   ok(BrowserTestUtils.is_hidden(noAnimationIcon), "the default icon is hidden");
 
   Services.prefs.setBoolPref(ANIMATIONS_PREF, false);
-  await Promise.all([promiseTabLoadEvent(tab, TRACKING_PAGE),
-                     waitForContentBlockingEvent(2, tab.linkedBrowser.ownerGlobal)]);
+  await promiseTabLoadEvent(tab, TRACKING_PAGE);
   ok(BrowserTestUtils.is_visible(noAnimationIcon), "the default icon is shown when animations are disabled");
   ok(BrowserTestUtils.is_hidden(animationIcon), "the animated icon is hidden when animations are disabled");
 

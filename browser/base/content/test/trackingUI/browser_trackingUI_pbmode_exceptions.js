@@ -92,8 +92,7 @@ add_task(async function testExceptionAddition() {
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
 
   info("Load a test page containing tracking elements");
-  await Promise.all([promiseTabLoadEvent(tab, TRACKING_PAGE),
-                     waitForContentBlockingEvent(2, tab.ownerGlobal)]);
+  await promiseTabLoadEvent(tab, TRACKING_PAGE);
 
   testTrackingPage(tab.ownerGlobal);
 
@@ -129,8 +128,7 @@ add_task(async function testExceptionPersistence() {
   ok(TrackingProtection.enabled, "TP is still enabled");
 
   info("Load a test page containing tracking elements");
-  await Promise.all([promiseTabLoadEvent(tab, TRACKING_PAGE),
-                     waitForContentBlockingEvent(2, tab.ownerGlobal)]);
+  await promiseTabLoadEvent(tab, TRACKING_PAGE);
 
   testTrackingPage(tab.ownerGlobal);
 
@@ -139,8 +137,7 @@ add_task(async function testExceptionPersistence() {
   clickButton("#tracking-action-unblock");
   is(identityPopupState(), "closed", "Identity popup is closed");
 
-  await Promise.all([tabReloadPromise,
-                     waitForContentBlockingEvent(2, tab.ownerGlobal)]);
+  await tabReloadPromise;
   testTrackingPageUnblocked();
 
   privateWin.close();

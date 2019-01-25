@@ -30,8 +30,7 @@ add_task(async function testContentBlockingAllDisabled() {
   let animationIcon = document.getElementById("tracking-protection-icon-animatable-image");
   let noAnimationIcon = document.getElementById("tracking-protection-icon");
 
-  await Promise.all([promiseTabLoadEvent(tab, TRACKING_PAGE),
-                     waitForContentBlockingEvent(2, tab.ownerGlobal)]);
+  await promiseTabLoadEvent(tab, TRACKING_PAGE);
   ok(BrowserTestUtils.is_hidden(noAnimationIcon), "the default icon is hidden");
   ok(BrowserTestUtils.is_hidden(animationIcon), "the animated icon is hidden");
 
@@ -48,7 +47,6 @@ add_task(async function testContentBlockingAllDisabled() {
   await SpecialPowers.pushPrefEnv({set: [
     [TP_PREF, true],
   ]});
-  await Promise.all([promiseTabLoadEvent(tab, TRACKING_PAGE),
-                     waitForContentBlockingEvent(2, tab.ownerGlobal)]);
+  await promiseTabLoadEvent(tab, TRACKING_PAGE);
   ok(BrowserTestUtils.is_visible(noAnimationIcon), "the default icon is shown");
 });
