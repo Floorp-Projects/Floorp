@@ -3172,6 +3172,24 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GETINTRINSIC() {
   return true;
 }
 
+typedef bool (*SetIntrinsicFn)(JSContext*, JSScript*, jsbytecode*, HandleValue);
+static const VMFunction SetIntrinsicInfo = FunctionInfo<SetIntrinsicFn>(
+    SetIntrinsicOperation, "SetIntrinsicOperation");
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_SETINTRINSIC() {
+  frame.syncStack(0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
+
+  prepareVMCall();
+
+  pushArg(R0);
+  pushBytecodePCArg();
+  pushScriptArg();
+
+  return callVM(SetIntrinsicInfo);
+}
+
 typedef bool (*DefVarFn)(JSContext*, HandleObject, HandleScript, jsbytecode*);
 static const VMFunction DefVarInfo =
     FunctionInfo<DefVarFn>(DefVarOperation, "DefVarOperation");
@@ -5775,14 +5793,12 @@ MethodStatus BaselineCompiler::emitBody() {
       // ===== NOT Yet Implemented =====
       case JSOP_FORCEINTERPRETER:
         // Intentionally not implemented.
-      case JSOP_SETINTRINSIC:
-        // Run-once opcode during self-hosting initialization.
       case JSOP_UNUSED71:
       case JSOP_UNUSED151:
       case JSOP_LIMIT:
         // === !! WARNING WARNING WARNING !! ===
-        // Do you really want to sacrifice performance by not implementing
-        // this operation in the BaselineCompiler?
+        // DO NOT add new ops to this list! All bytecode ops MUST have Baseline
+        // support. Follow-up bugs are not acceptable.
         JitSpew(JitSpew_BaselineAbort, "Unhandled op: %s", CodeName[op]);
         return Method_CantCompile;
 
