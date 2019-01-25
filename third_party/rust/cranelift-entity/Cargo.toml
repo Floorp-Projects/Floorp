@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "cranelift-entity"
-version = "0.26.0"
+version = "0.28.0"
 authors = ["The Cranelift Project Developers"]
 description = "Data structures using entity references as mapping keys"
 documentation = "https://cranelift.readthedocs.io/"
@@ -23,6 +24,7 @@ license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/CraneStation/cranelift"
 
 [features]
+core = []
 default = ["std"]
 std = []
 [badges.maintenance]
