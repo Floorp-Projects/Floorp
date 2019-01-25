@@ -40,7 +40,6 @@ WEBIDL_FILES = [
     'HeapSnapshot.webidl',
     'InspectorUtils.webidl',
     'IteratorResult.webidl',
-    'JSWindowActor.webidl',
     'MatchGlob.webidl',
     'MatchPattern.webidl',
     'MessageManager.webidl',

@@ -50,7 +50,6 @@
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/GeolocationBinding.h"
-#include "mozilla/dom/JSWindowActorService.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/Notification.h"
@@ -2717,14 +2716,6 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
 
       Unused << SendInitBlobURLs(registrations);
     }
-  }
-
-  // Send down WindowActorOptions at startup to content process.
-  RefPtr<JSWindowActorService> actorSvc = JSWindowActorService::GetSingleton();
-  if (actorSvc) {
-    nsTArray<JSWindowActorInfo> infos;
-    actorSvc->GetJSWindowActorInfos(infos);
-    Unused << SendInitJSWindowActorInfos(infos);
   }
 
   // Start up nsPluginHost and run FindPlugins to cache the plugin list.
