@@ -23,7 +23,6 @@ if [ -d "${VSPATH}" ]; then
 fi
 
 ac_add_options --target=i686-pc-mingw32
-ac_add_options --host=x86_64-pc-mingw32
 
 . $topsrcdir/build/mozconfig.vs-common
 

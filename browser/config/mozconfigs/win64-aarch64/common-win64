@@ -1,4 +1,3 @@
 # This file is used by all AArch64 Win64 builds
 
 ac_add_options --target=aarch64-windows-mingw32
-ac_add_options --host=x86_64-pc-mingw32

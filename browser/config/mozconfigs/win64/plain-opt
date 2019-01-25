@@ -11,6 +11,5 @@ CBINDGEN="${TOOLTOOL_DIR}/cbindgen/cbindgen"
 NODEJS="${TOOLTOOL_DIR}/node/node.exe"
 
 ac_add_options --target=x86_64-pc-mingw32
-ac_add_options --host=x86_64-pc-mingw32
 
 . $topsrcdir/build/win64/mozconfig.vs-latest
