@@ -441,9 +441,6 @@ class ContentChild final : public PContentChild,
   virtual mozilla::ipc::IPCResult RecvInitBlobURLs(
       nsTArray<BlobURLRegistrationData>&& aRegistations) override;
 
-  virtual mozilla::ipc::IPCResult RecvInitJSWindowActorInfos(
-      nsTArray<JSWindowActorInfo>&& aInfos) override;
-
   virtual mozilla::ipc::IPCResult RecvLastPrivateDocShellDestroyed() override;
 
   virtual mozilla::ipc::IPCResult RecvNotifyProcessPriorityChanged(

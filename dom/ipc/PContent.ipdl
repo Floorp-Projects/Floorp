@@ -227,12 +227,6 @@ struct BlobURLRegistrationData
   bool revoked;
 };
 
-struct JSWindowActorInfo
-{
-  nsString name;
-  nsCString url;
-};
-
 struct GMPAPITags
 {
     nsCString api;
@@ -533,11 +527,6 @@ child:
      * Send BlobURLRegistrationData to child process.
      */
     async InitBlobURLs(BlobURLRegistrationData[] registrations);
-
-    /**
-     * Send JSWindowActorInfos to child process.
-     */
-    async InitJSWindowActorInfos(JSWindowActorInfo[] aInfos);
 
     async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit,
                                     StructuredCloneData initialData,

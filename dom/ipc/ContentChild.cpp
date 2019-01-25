@@ -42,7 +42,6 @@
 #include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/IPCBlobUtils.h"
-#include "mozilla/dom/JSWindowActorService.h"
 #include "mozilla/dom/LSObject.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/PLoginReputationChild.h"
@@ -2564,13 +2563,6 @@ mozilla::ipc::IPCResult ContentChild::RecvInitBlobURLs(
     }
   }
 
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvInitJSWindowActorInfos(
-    nsTArray<JSWindowActorInfo>&& aInfos) {
-  RefPtr<JSWindowActorService> actSvc = JSWindowActorService::GetSingleton();
-  actSvc->LoadJSWindowActorInfos(aInfos);
   return IPC_OK();
 }
 
