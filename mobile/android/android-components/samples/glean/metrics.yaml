@@ -11,6 +11,8 @@ browser.engagement:
       Just testing events
     bugs:
       - 123456789
+    data_reviews:
+      - N/A 
     notification_emails:
       - telemetry-client-dev@mozilla.com
     objects:
@@ -27,6 +29,8 @@ basic:
       The name of the os
     bugs:
       - 123456789
+    data_reviews:
+      - N/A 
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
@@ -40,6 +44,8 @@ test:
     lifetime: user
     bugs:
       - 1234567890
+    data_reviews:
+      - N/A 
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
@@ -52,6 +58,8 @@ test:
     lifetime: user
     bugs:
       - 1234567890
+    data_reviews:
+      - N/A 
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
@@ -63,5 +71,7 @@ test:
     lifetime: application
     bugs:
       - 1508948
+    data_reviews:
+      - N/A 
     notification_emails:
       - telemetry-client-dev@mozilla.com
