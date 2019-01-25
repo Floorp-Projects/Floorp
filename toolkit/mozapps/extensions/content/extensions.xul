@@ -231,6 +231,10 @@
 
           <hbox id="heading">
             <hbox class="heading-inner" align="stretch">
+              <hbox id="go-back-wrapper">
+                <button id="go-back" command="cmd_back" data-l10n-id="go-back-button" hidden="true"/>
+              </hbox>
+
               <label id="heading-name" class="header-name" flex="1"/>
 
               <hbox id="updates-container" align="center">
