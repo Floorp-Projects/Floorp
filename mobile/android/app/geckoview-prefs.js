@@ -35,9 +35,5 @@ pref("dom.push.enabled", false);
 // in gfxPrefs.h from whether or not WR is enabled.
 pref("layout.scroll.root-frame-containers", 2);
 
-// Scroll anchoring is disabled in Fennec but not GeckoView because of
-// regressions involving the dynamic toolbar. See bug 1520666 for more details.
-pref("layout.css.scroll-anchoring.enabled", true);
-
 // Inherit locale from the OS, used for multi-locale builds
 pref("intl.locale.requested", "");
