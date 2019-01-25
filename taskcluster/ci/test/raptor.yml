@@ -243,6 +243,18 @@ raptor-tp6-7-firefox:
         extra-options:
             - --test=raptor-tp6-7
 
+raptor-tp6-7-firefox-profiling:
+    description: "Raptor tp6-7 on Firefox with Gecko Profiling"
+    try-name: raptor-tp6-7-firefox-profiling
+    treeherder-symbol: Rap-Prof(tp6-7)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-7
+            - --gecko-profile
+
 raptor-tp6-7-chrome:
     description: "Raptor tp6-7 on Chrome"
     try-name: raptor-tp6-7-chrome
@@ -263,6 +275,18 @@ raptor-tp6-8-firefox:
     mozharness:
         extra-options:
             - --test=raptor-tp6-8
+
+raptor-tp6-8-firefox-profiling:
+    description: "Raptor tp6-8 on Firefox with Gecko Profiling"
+    try-name: raptor-tp6-8-firefox-profiling
+    treeherder-symbol: Rap-Prof(tp6-8)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-8
+            - --gecko-profile
 
 raptor-tp6-8-chrome:
     description: "Raptor tp6-8 on Chrome"
@@ -285,6 +309,18 @@ raptor-tp6-9-firefox:
         extra-options:
             - --test=raptor-tp6-9
 
+raptor-tp6-9-firefox-profiling:
+    description: "Raptor tp6-9 on Firefox with Gecko Profiling"
+    try-name: raptor-tp6-9-firefox-profiling
+    treeherder-symbol: Rap-Prof(tp6-9)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-9
+            - --gecko-profile
+
 raptor-tp6-9-chrome:
     description: "Raptor tp6-9 on Chrome"
     try-name: raptor-tp6-9-chrome
@@ -305,6 +341,18 @@ raptor-tp6-10-firefox:
     mozharness:
         extra-options:
             - --test=raptor-tp6-10
+
+raptor-tp6-10-firefox-profiling:
+    description: "Raptor tp6-10 on Firefox with Gecko Profiling"
+    try-name: raptor-tp6-10-firefox-profiling
+    treeherder-symbol: Rap-Prof(tp6-10)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 900
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-10
+            - --gecko-profile
 
 raptor-tp6-10-chrome:
     description: "Raptor tp6-10 on Chrome"
