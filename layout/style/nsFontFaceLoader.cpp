@@ -12,6 +12,7 @@
 #include "nsFontFaceLoader.h"
 
 #include "nsError.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
@@ -59,6 +60,8 @@ nsFontFaceLoader::nsFontFaceLoader(gfxUserFontEntry* aUserFontEntry,
 }
 
 nsFontFaceLoader::~nsFontFaceLoader() {
+  MOZ_DIAGNOSTIC_ASSERT(!mInLoadTimerCallback);
+  MOZ_DIAGNOSTIC_ASSERT(!mInStreamComplete);
   if (mUserFontEntry) {
     mUserFontEntry->mLoader = nullptr;
   }
@@ -95,6 +98,11 @@ void nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader) {
 /* static */ void nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer,
                                                       void* aClosure) {
   nsFontFaceLoader* loader = static_cast<nsFontFaceLoader*>(aClosure);
+
+  MOZ_DIAGNOSTIC_ASSERT(!loader->mInLoadTimerCallback);
+  MOZ_DIAGNOSTIC_ASSERT(!loader->mInStreamComplete);
+  AutoRestore<bool> scope { loader->mInLoadTimerCallback };
+  loader->mInLoadTimerCallback = true;
 
   if (!loader->mFontFaceSet) {
     // We've been canceled
@@ -190,6 +198,11 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
                                    uint32_t aStringLen,
                                    const uint8_t* aString) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!mInLoadTimerCallback);
+  MOZ_DIAGNOSTIC_ASSERT(!mInStreamComplete);
+
+  AutoRestore<bool> scope { mInStreamComplete };
+  mInStreamComplete = true;
 
   DropChannel();
 
@@ -197,8 +210,6 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     // We've been canceled
     return aStatus;
   }
-
-  mFontFaceSet->RemoveLoader(this);
 
   TimeStamp doneTime = TimeStamp::Now();
   TimeDuration downloadTime = doneTime - mStartTime;
@@ -272,6 +283,8 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     }
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(mFontFaceSet);
+  mFontFaceSet->RemoveLoader(this);
   // done with font set
   mFontFaceSet = nullptr;
   if (mLoadTimer) {
@@ -305,6 +318,10 @@ nsFontFaceLoader::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
 }
 
 void nsFontFaceLoader::Cancel() {
+  MOZ_DIAGNOSTIC_ASSERT(!mInLoadTimerCallback);
+  MOZ_DIAGNOSTIC_ASSERT(!mInStreamComplete);
+  MOZ_DIAGNOSTIC_ASSERT(mFontFaceSet);
+
   mUserFontEntry->LoadCanceled();
   mFontFaceSet = nullptr;
   if (mLoadTimer) {
