@@ -919,17 +919,11 @@ VARCACHE_PREF(
 )
 
 // Pref to control enabling scroll anchoring.
-#ifndef ANDROID
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   "layout.css.scroll-anchoring.enabled",
    layout_css_scroll_anchoring_enabled,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 VARCACHE_PREF(
   "layout.css.scroll-anchoring.highlight",
