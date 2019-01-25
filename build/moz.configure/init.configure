@@ -771,9 +771,9 @@ def real_host(value, shell):
                                     'autoconf', 'config.guess')
         host = subprocess.check_output([shell, config_guess]).strip()
     else:
-        host = value[0]
+        host = config_sub(shell, value[0])
 
-    return split_triplet(config_sub(shell, host))
+    return split_triplet(host)
 
 
 host = help_host_target | real_host
@@ -789,7 +789,8 @@ def real_target(value, host, shell):
     target = value[0]
     if '-' not in target:
         cpu, rest = host.alias.split('-', 1)
-        target = '-'.join((target, rest))
+        return split_triplet('-'.join((target, rest)))
+
     return split_triplet(config_sub(shell, target))
 
 
