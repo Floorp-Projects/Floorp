@@ -174,7 +174,6 @@
 #identity-popup-content-blocking-report-breakage,
 .identity-popup-content-blocking-category-label,
 .identity-popup-content-blocking-category-state-label,
-.identity-popup-content-blocking-category-add-blocking,
 .identity-popup-permission-label,
 .identity-popup-permission-state-label,
 .identity-popup-security-content > description,
@@ -676,7 +675,6 @@ description#identity-popup-content-verifier,
 }
 
 .identity-popup-content-blocking-category-state-label,
-.identity-popup-content-blocking-category-add-blocking,
 .identity-popup-permission-state-label {
   margin-inline-end: 5px;
   text-align: end;

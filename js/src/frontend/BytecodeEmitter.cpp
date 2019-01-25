@@ -541,7 +541,7 @@ Maybe<uint32_t> BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn) {
 
 void BytecodeEmitter::checkTypeSet(JSOp op) {
   if (CodeSpec[op].format & JOF_TYPESET) {
-    if (typesetCount < UINT16_MAX) {
+    if (typesetCount < JSScript::MaxBytecodeTypeSets) {
       typesetCount++;
     }
   }

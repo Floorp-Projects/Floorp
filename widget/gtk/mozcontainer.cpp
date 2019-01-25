@@ -505,7 +505,6 @@ struct wl_surface *moz_container_get_wl_surface(MozContainer *container) {
     container->subsurface = wl_subcompositor_get_subsurface(
         waylandDisplay->GetSubcompositor(), container->surface,
         moz_container_get_gtk_container_surface(container));
-    WaylandDisplayRelease(waylandDisplay);
 
     GdkWindow *window = gtk_widget_get_window(GTK_WIDGET(container));
     gint x, y;
@@ -521,6 +520,10 @@ struct wl_surface *moz_container_get_wl_surface(MozContainer *container) {
 
     wl_surface_set_buffer_scale(container->surface,
                                 moz_container_get_scale(container));
+
+    wl_surface_commit(container->surface);
+    wl_display_flush(waylandDisplay->GetDisplay());
+    WaylandDisplayRelease(waylandDisplay);
   }
 
   return container->surface;

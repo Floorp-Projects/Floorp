@@ -51,7 +51,7 @@ class ServiceWorkerAction extends PureComponent {
     if (!isRunning) {
       const startLabel = this.props.getString("about-debugging-worker-action-start");
       return this._renderButton({
-        className: "default-button",
+        className: "default-button js-start-button",
         disabled: isMultiE10s,
         label: startLabel,
         onClick: this.start.bind(this),

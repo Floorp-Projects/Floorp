@@ -198,6 +198,7 @@
 
   -moz-user-select: none;
   margin-bottom: 2px;
+  margin-left: 1ch;
 }
 
 .ruleview-rule-source-label {

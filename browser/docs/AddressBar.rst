@@ -111,7 +111,7 @@ Queries can be canceled.
 
 The *searchString* gets tokenized by the `UrlbarTokenizer <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/UrlbarTokenizer.jsm>`_
 component into tokens, some of these tokens have a special meaning and can be
-used by the user to restrict the search to specific match type (See the
+used by the user to restrict the search to specific result type (See the
 *UrlbarTokenizer::TYPE* enum).
 
 .. caution::
@@ -355,29 +355,29 @@ UrlbarResult
 ===========
 
 An `UrlbarResult <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/UrlbarResult.jsm>`_
-instance represents a single search result with a match type, that
+instance represents a single search result with a result type, that
 identifies specific kind of results.
 Each kind has its own properties, that the *View* may support, and a few common
 properties, supported by all of the results.
 
 .. note::
 
-  Match types are also enumerated by *UrlbarUtils.MATCH_TYPE*.
+  Result types are also enumerated by *UrlbarUtils.RESULT_TYPE*.
 
 .. highlight:: JavaScript
 .. code::
 
   UrlbarResult {
-    constructor(matchType, payload);
+    constructor(resultType, payload);
 
-    type: {integer} One of UrlbarUtils.MATCH_TYPE.
+    type: {integer} One of UrlbarUtils.RESULT_TYPE.
     source: {integer} One of UrlbarUtils.MATCH_SOURCE.
-    title: {string} A title that may be used as a label for this match.
-    icon: {string} Url of an icon for this match.
-    payload: {object} Object containing properties for the specific MATCH_TYPE.
+    title: {string} A title that may be used as a label for this result.
+    icon: {string} Url of an icon for this result.
+    payload: {object} Object containing properties for the specific RESULT_TYPE.
   }
 
-The following MATCH_TYPEs are supported:
+The following RESULT_TYPEs are supported:
 
 .. highlight:: JavaScript
 .. code::

@@ -34,6 +34,8 @@ These functions can throw if, for example, an operation is performed on a scalar
 (e.g. calling scalarSetMaximum on a scalar of the string kind). Please look at the `code documentation <https://dxr.mozilla.org/mozilla-central/search?q=regexp%3ATelemetryScalar%3A%3A(Set%7CAdd)+file%3ATelemetryScalar.cpp&redirect=false>`_ for
 additional information.
 
+.. _registerscalars:
+
 ``registerScalars()``
 ~~~~~~~~~~~~~~~~~~~~~
 

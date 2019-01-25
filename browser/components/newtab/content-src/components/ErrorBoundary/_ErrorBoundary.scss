@@ -10,6 +10,10 @@
   justify-items: center;
   line-height: $error-fallback-line-height;
 
+  &.borderless-error {
+    box-shadow: none;
+  }
+
   a {
     color: var(--newtab-text-conditional-color);
     text-decoration: underline;
