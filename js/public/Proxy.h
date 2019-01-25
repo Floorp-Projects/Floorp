@@ -184,11 +184,10 @@ class JS_FRIEND_API BaseProxyHandler {
    * treatment from the JS engine:
    *
    *   - When mHasPrototype is true, the engine never calls these methods:
-   *     getPropertyDescriptor, has, set, enumerate, iterate.  Instead, for
-   *     these operations, it calls the "own" methods like
-   *     getOwnPropertyDescriptor, hasOwn, defineProperty,
-   *     getOwnEnumerablePropertyKeys, etc., and consults the prototype chain
-   *     if needed.
+   *     has, set, enumerate, iterate.  Instead, for these operations,
+   *     it calls the "own" methods like getOwnPropertyDescriptor, hasOwn,
+   *     defineProperty, getOwnEnumerablePropertyKeys, etc.,
+   *     and consults the prototype chain if needed.
    *
    *   - When mHasPrototype is true, the engine calls handler->get() only if
    *     handler->hasOwn() says an own property exists on the proxy. If not,
@@ -307,7 +306,9 @@ class JS_FRIEND_API BaseProxyHandler {
    * These standard internal methods are implemented, as a convenience, so
    * that ProxyHandler subclasses don't have to provide every single method.
    *
-   * The base-class implementations work by calling getPropertyDescriptor().
+   * The base-class implementations work by calling getOwnPropertyDescriptor()
+   * and going up the [[Prototype]] chain if necessary. The algorithm for this
+   * follows what is defined for Ordinary Objects in the ES spec.
    * They do not follow any standard. When in doubt, override them.
    */
   virtual bool has(JSContext* cx, HandleObject proxy, HandleId id,
@@ -337,9 +338,6 @@ class JS_FRIEND_API BaseProxyHandler {
 
   /* SpiderMonkey extensions. */
   virtual JSObject* enumerate(JSContext* cx, HandleObject proxy) const;
-  virtual bool getPropertyDescriptor(
-      JSContext* cx, HandleObject proxy, HandleId id,
-      MutableHandle<PropertyDescriptor> desc) const;
   virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id,
                       bool* bp) const;
   virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,

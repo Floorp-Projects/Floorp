@@ -171,7 +171,6 @@
         "getOwnPropertyDescriptor")                                            \
   MACRO(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames")       \
   MACRO(getPrefix, getPrefix, "get ")                                          \
-  MACRO(getPropertyDescriptor, getPropertyDescriptor, "getPropertyDescriptor") \
   MACRO(getPropertySuper, getPropertySuper, "getPropertySuper")                \
   MACRO(getPrototypeOf, getPrototypeOf, "getPrototypeOf")                      \
   MACRO(GetTypeError, GetTypeError, "GetTypeError")                            \

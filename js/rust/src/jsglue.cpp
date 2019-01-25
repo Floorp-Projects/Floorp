@@ -63,9 +63,6 @@ struct ProxyTraps {
   bool (*construct)(JSContext* cx, JS::HandleObject proxy,
                     const JS::CallArgs& args);
 
-  bool (*getPropertyDescriptor)(JSContext* cx, JS::HandleObject proxy,
-                                JS::HandleId id,
-                                JS::MutableHandle<JS::PropertyDescriptor> desc);
   bool (*hasOwn)(JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
                  bool* bp);
   bool (*getOwnEnumerablePropertyKeys)(JSContext* cx, JS::HandleObject proxy,
@@ -267,14 +264,6 @@ class WrapperProxyHandler : public js::Wrapper {
                ? mTraps.isExtensible(cx, proxy, succeeded)
                : js::Wrapper::isExtensible(cx, proxy, succeeded);
   }
-
-  virtual bool getPropertyDescriptor(
-      JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const override {
-    return mTraps.getPropertyDescriptor
-               ? mTraps.getPropertyDescriptor(cx, proxy, id, desc)
-               : js::Wrapper::getPropertyDescriptor(cx, proxy, id, desc);
-  }
 };
 
 class RustJSPrincipal : public JSPrincipals {
@@ -355,12 +344,6 @@ class ForwardingProxyHandler : public js::BaseProxyHandler {
   virtual bool isExtensible(JSContext* cx, JS::HandleObject proxy,
                             bool* succeeded) const override {
     return mTraps.isExtensible(cx, proxy, succeeded);
-  }
-
-  virtual bool getPropertyDescriptor(
-      JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const override {
-    return mTraps.getPropertyDescriptor(cx, proxy, id, desc);
   }
 };
 
