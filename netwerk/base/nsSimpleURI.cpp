@@ -18,7 +18,6 @@
 #include "nsIObjectOutputStream.h"
 #include "nsEscape.h"
 #include "nsError.h"
-#include "nsIIPCSerializableURI.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsIURIMutator.h"
@@ -51,8 +50,7 @@ nsSimpleURI::nsSimpleURI() : mIsRefValid(false), mIsQueryValid(false) {}
 NS_IMPL_ADDREF(nsSimpleURI)
 NS_IMPL_RELEASE(nsSimpleURI)
 NS_INTERFACE_TABLE_HEAD(nsSimpleURI)
-  NS_INTERFACE_TABLE(nsSimpleURI, nsIURI, nsISerializable, nsIClassInfo,
-                     nsIIPCSerializableURI)
+  NS_INTERFACE_TABLE(nsSimpleURI, nsIURI, nsISerializable, nsIClassInfo)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
   if (aIID.Equals(kThisSimpleURIImplementationCID))
     foundInterface = static_cast<nsIURI *>(this);
@@ -141,9 +139,6 @@ nsSimpleURI::Write(nsIObjectOutputStream *aStream) {
 
   return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIIPCSerializableURI methods:
 
 void nsSimpleURI::Serialize(URIParams &aParams) {
   SimpleURIParams params;
