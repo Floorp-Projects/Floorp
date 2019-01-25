@@ -89,7 +89,7 @@ SVGString::DOMAnimatedString::~DOMAnimatedString() {
   SVGAnimatedStringTearoffTable().RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> SVGString::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGString::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILString>(this, aSVGElement);
 }
 

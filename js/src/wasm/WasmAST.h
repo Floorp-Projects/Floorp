@@ -407,7 +407,7 @@ enum class AstExprKind {
   Load,
 #ifdef ENABLE_WASM_BULKMEM_OPS
   MemOrTableCopy,
-  MemOrTableDrop,
+  DataOrElemDrop,
   MemFill,
   MemOrTableInit,
 #endif
@@ -834,23 +834,23 @@ class AstMemOrTableCopy : public AstExpr {
         len_(len) {}
 
   bool isMem() const { return isMem_; }
-  AstRef& destTable() { return destTable_; }
+  AstRef& destTable() { MOZ_ASSERT(!isMem()); return destTable_; }
   AstExpr& dest() const { return *dest_; }
-  AstRef& srcTable() { return srcTable_; }
+  AstRef& srcTable() { MOZ_ASSERT(!isMem()); return srcTable_; }
   AstExpr& src() const { return *src_; }
   AstExpr& len() const { return *len_; }
 };
 
-class AstMemOrTableDrop : public AstExpr {
-  bool isMem_;
+class AstDataOrElemDrop : public AstExpr {
+  bool isData_;
   uint32_t segIndex_;
 
  public:
-  static const AstExprKind Kind = AstExprKind::MemOrTableDrop;
-  explicit AstMemOrTableDrop(bool isMem, uint32_t segIndex)
-      : AstExpr(Kind, ExprType::Void), isMem_(isMem), segIndex_(segIndex) {}
+  static const AstExprKind Kind = AstExprKind::DataOrElemDrop;
+  explicit AstDataOrElemDrop(bool isData, uint32_t segIndex)
+      : AstExpr(Kind, ExprType::Void), isData_(isData), segIndex_(segIndex) {}
 
-  bool isMem() const { return isMem_; }
+  bool isData() const { return isData_; }
   uint32_t segIndex() const { return segIndex_; }
 };
 
@@ -872,26 +872,28 @@ class AstMemFill : public AstExpr {
 class AstMemOrTableInit : public AstExpr {
   bool isMem_;
   uint32_t segIndex_;
-  AstRef targetTable_;
+  AstRef target_;
   AstExpr* dst_;
   AstExpr* src_;
   AstExpr* len_;
 
  public:
   static const AstExprKind Kind = AstExprKind::MemOrTableInit;
-  explicit AstMemOrTableInit(bool isMem, uint32_t segIndex, AstRef targetTable,
+  explicit AstMemOrTableInit(bool isMem, uint32_t segIndex, AstRef target,
                              AstExpr* dst, AstExpr* src, AstExpr* len)
       : AstExpr(Kind, ExprType::Void),
         isMem_(isMem),
         segIndex_(segIndex),
-        targetTable_(targetTable),
+        target_(target),
         dst_(dst),
         src_(src),
         len_(len) {}
 
   bool isMem() const { return isMem_; }
   uint32_t segIndex() const { return segIndex_; }
-  AstRef& targetTable() { return targetTable_; }
+  AstRef& target() { return target_; }
+  AstRef& targetTable() { MOZ_ASSERT(!isMem()); return target_; }
+  AstRef& targetMemory() { MOZ_ASSERT(isMem()); return target_; }
   AstExpr& dst() const { return *dst_; }
   AstExpr& src() const { return *src_; }
   AstExpr& len() const { return *len_; }
@@ -1295,6 +1297,7 @@ class AstModule : public AstNode {
 #ifdef ENABLE_WASM_REFTYPES
   uint32_t gcFeatureOptIn_;
 #endif
+  Maybe<uint32_t> dataCount_;
   ExportVector exports_;
   Maybe<AstStartFunc> startFunc_;
   FuncVector funcs_;
@@ -1335,6 +1338,12 @@ class AstModule : public AstNode {
   }
   uint32_t gcFeatureOptIn() const { return gcFeatureOptIn_; }
 #endif
+  bool initDataCount(uint32_t dataCount) {
+    MOZ_ASSERT(dataCount_.isNothing());
+    dataCount_.emplace(dataCount);
+    return true;
+  }
+  Maybe<uint32_t> dataCount() const { return dataCount_; }
   bool addTable(AstName name, const Limits& table, TableKind tableKind) {
     return tables_.append(AstTable(table, tableKind, false, name));
   }

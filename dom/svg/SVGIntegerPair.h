@@ -9,8 +9,8 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "nsISMILAttr.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SVGAnimatedInteger.h"
 
@@ -60,7 +60,7 @@ class SVGIntegerPair {
 
   already_AddRefed<mozilla::dom::SVGAnimatedInteger> ToDOMAnimatedInteger(
       PairIndex aIndex, SVGElement* aSVGElement);
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   int32_t mAnimVal[2];
@@ -94,18 +94,18 @@ class SVGIntegerPair {
     }
   };
 
-  struct SMILIntegerPair : public nsISMILAttr {
+  struct SMILIntegerPair : public SMILAttr {
    public:
     SMILIntegerPair(SVGIntegerPair* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
-    // These will stay alive because a nsISMILAttr only lives as long
+    // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     SVGIntegerPair* mVal;
     SVGElement* mSVGElement;
 
-    // nsISMILAttr methods
+    // SMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr,
         const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,

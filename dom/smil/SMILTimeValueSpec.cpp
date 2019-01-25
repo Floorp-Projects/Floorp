@@ -116,7 +116,7 @@ void SMILTimeValueSpec::HandleNewInterval(
 
   // Apply offset
   if (!ApplyOffset(newTime)) {
-    NS_WARNING("New time overflows nsSMILTime, ignoring");
+    NS_WARNING("New time overflows SMILTime, ignoring");
     return;
   }
 
@@ -144,7 +144,7 @@ void SMILTimeValueSpec::HandleChangedInstanceTime(
 
   // Apply offset
   if (!ApplyOffset(updatedTime)) {
-    NS_WARNING("Updated time overflows nsSMILTime, ignoring");
+    NS_WARNING("Updated time overflows SMILTime, ignoring");
     return;
   }
 
@@ -300,10 +300,10 @@ void SMILTimeValueSpec::HandleEvent(Event* aEvent) {
     return;
   }
 
-  nsSMILTime currentTime = container->GetCurrentTimeAsSMILTime();
+  SMILTime currentTime = container->GetCurrentTimeAsSMILTime();
   SMILTimeValue newTime(currentTime);
   if (!ApplyOffset(newTime)) {
-    NS_WARNING("New time generated from event overflows nsSMILTime, ignoring");
+    NS_WARNING("New time generated from event overflows SMILTime, ignoring");
     return;
   }
 
@@ -359,8 +359,8 @@ bool SMILTimeValueSpec::ApplyOffset(SMILTimeValue& aTime) const {
 
   double resultAsDouble =
       (double)aTime.GetMillis() + mParams.mOffset.GetMillis();
-  if (resultAsDouble > std::numeric_limits<nsSMILTime>::max() ||
-      resultAsDouble < std::numeric_limits<nsSMILTime>::min()) {
+  if (resultAsDouble > std::numeric_limits<SMILTime>::max() ||
+      resultAsDouble < std::numeric_limits<SMILTime>::min()) {
     return false;
   }
   aTime.SetMillis(aTime.GetMillis() + mParams.mOffset.GetMillis());

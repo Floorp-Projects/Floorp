@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_ISMILTYPE_H_
-#define NS_ISMILTYPE_H_
+#ifndef mozilla_SMILType_h
+#define mozilla_SMILType_h
 
 #include "mozilla/Attributes.h"
 #include "nscore.h"
@@ -209,4 +209,4 @@ class SMILType {
 
 }  // namespace mozilla
 
-#endif  // NS_ISMILTYPE_H_
+#endif  // mozilla_SMILType_h

@@ -168,7 +168,7 @@ DOMSVGAnimatedPreserveAspectRatio::~DOMSVGAnimatedPreserveAspectRatio() {
   sSVGAnimatedPAspectRatioTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> SVGAnimatedPreserveAspectRatio::ToSMILAttr(
+UniquePtr<SMILAttr> SVGAnimatedPreserveAspectRatio::ToSMILAttr(
     SVGElement* aSVGElement) {
   return MakeUnique<SMILPreserveAspectRatio>(this, aSVGElement);
 }

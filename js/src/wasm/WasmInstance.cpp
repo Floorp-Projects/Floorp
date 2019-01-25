@@ -447,13 +447,13 @@ Instance::memCopy(Instance* instance, uint32_t dstByteOffset,
 }
 
 /* static */ int32_t /* -1 to signal trap; 0 for ok */
-Instance::memDrop(Instance* instance, uint32_t segIndex) {
+Instance::dataDrop(Instance* instance, uint32_t segIndex) {
   MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
                      "ensured by validation");
 
   if (!instance->passiveDataSegments_[segIndex]) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
-                              JSMSG_WASM_INVALID_PASSIVE_DATA_SEG);
+                              JSMSG_WASM_DROPPED_DATA_SEG);
     return -1;
   }
 
@@ -501,7 +501,7 @@ Instance::memInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 
   if (!instance->passiveDataSegments_[segIndex]) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
-                              JSMSG_WASM_INVALID_PASSIVE_DATA_SEG);
+                              JSMSG_WASM_DROPPED_DATA_SEG);
     return -1;
   }
 
@@ -593,13 +593,13 @@ Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 }
 
 /* static */ int32_t /* -1 to signal trap; 0 for ok */
-Instance::tableDrop(Instance* instance, uint32_t segIndex) {
+Instance::elemDrop(Instance* instance, uint32_t segIndex) {
   MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
                      "ensured by validation");
 
   if (!instance->passiveElemSegments_[segIndex]) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
-                              JSMSG_WASM_INVALID_PASSIVE_ELEM_SEG);
+                              JSMSG_WASM_DROPPED_ELEM_SEG);
     return -1;
   }
 
@@ -665,7 +665,7 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 
   if (!instance->passiveElemSegments_[segIndex]) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
-                              JSMSG_WASM_INVALID_PASSIVE_ELEM_SEG);
+                              JSMSG_WASM_DROPPED_ELEM_SEG);
     return -1;
   }
 

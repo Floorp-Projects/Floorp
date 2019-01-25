@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILTIMEVALUESPECPARAMS_H_
-#define NS_SMILTIMEVALUESPECPARAMS_H_
+#ifndef mozilla_SMILTimeValueSpecParams_h
+#define mozilla_SMILTimeValueSpecParams_h
 
 #include "mozilla/SMILTimeValue.h"
 #include "nsAtom.h"
@@ -55,4 +55,4 @@ class SMILTimeValueSpecParams {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILTIMEVALUESPECPARAMS_H_
+#endif  // mozilla_SMILTimeValueSpecParams_h

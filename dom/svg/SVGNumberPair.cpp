@@ -154,7 +154,7 @@ SVGNumberPair::DOMAnimatedNumber::~DOMAnimatedNumber() {
   }
 }
 
-UniquePtr<nsISMILAttr> SVGNumberPair::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGNumberPair::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILNumberPair>(this, aSVGElement);
 }
 

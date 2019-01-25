@@ -114,8 +114,8 @@ void SVGAnimatedNumberList::ClearAnimValue(SVGElement *aElement,
   aElement->DidAnimateNumberList(aAttrEnum);
 }
 
-UniquePtr<nsISMILAttr> SVGAnimatedNumberList::ToSMILAttr(
-    SVGElement *aSVGElement, uint8_t aAttrEnum) {
+UniquePtr<SMILAttr> SVGAnimatedNumberList::ToSMILAttr(SVGElement *aSVGElement,
+                                                      uint8_t aAttrEnum) {
   return MakeUnique<SMILAnimatedNumberList>(this, aSVGElement, aAttrEnum);
 }
 

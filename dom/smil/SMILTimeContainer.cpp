@@ -34,7 +34,7 @@ SMILTimeContainer::~SMILTimeContainer() {
 }
 
 SMILTimeValue SMILTimeContainer::ContainerToParentTime(
-    nsSMILTime aContainerTime) const {
+    SMILTime aContainerTime) const {
   // If we're paused, then future times are indefinite
   if (IsPaused() && aContainerTime > mCurrentTime)
     return SMILTimeValue::Indefinite();
@@ -43,7 +43,7 @@ SMILTimeValue SMILTimeContainer::ContainerToParentTime(
 }
 
 SMILTimeValue SMILTimeContainer::ParentToContainerTime(
-    nsSMILTime aParentTime) const {
+    SMILTime aParentTime) const {
   // If we're paused, then any time after when we paused is indefinite
   if (IsPaused() && aParentTime > mPauseStart)
     return SMILTimeValue::Indefinite();
@@ -89,13 +89,13 @@ void SMILTimeContainer::Resume(uint32_t aType) {
   mPauseState &= ~aType;
 
   if (!mPauseState) {
-    nsSMILTime extraOffset = GetParentTime() - mPauseStart;
+    SMILTime extraOffset = GetParentTime() - mPauseStart;
     mParentOffset += extraOffset;
     NotifyTimeChange();
   }
 }
 
-nsSMILTime SMILTimeContainer::GetCurrentTimeAsSMILTime() const {
+SMILTime SMILTimeContainer::GetCurrentTimeAsSMILTime() const {
   // The following behaviour is consistent with:
   // http://www.w3.org/2003/01/REC-SVG11-20030114-errata
   //  #getCurrentTime_setCurrentTime_undefined_before_document_timeline_begin
@@ -106,17 +106,17 @@ nsSMILTime SMILTimeContainer::GetCurrentTimeAsSMILTime() const {
   return mCurrentTime;
 }
 
-void SMILTimeContainer::SetCurrentTime(nsSMILTime aSeekTo) {
+void SMILTimeContainer::SetCurrentTime(SMILTime aSeekTo) {
   // SVG 1.1 doesn't specify what to do for negative times so we adopt SVGT1.2's
   // behaviour of clamping negative times to 0.
-  aSeekTo = std::max<nsSMILTime>(0, aSeekTo);
+  aSeekTo = std::max<SMILTime>(0, aSeekTo);
 
   // The following behaviour is consistent with:
   // http://www.w3.org/2003/01/REC-SVG11-20030114-errata
   //  #getCurrentTime_setCurrentTime_undefined_before_document_timeline_begin
   // which says that if SetCurrentTime is called before the document timeline
   // has begun we should still adjust the offset.
-  nsSMILTime parentTime = GetParentTime();
+  SMILTime parentTime = GetParentTime();
   mParentOffset = parentTime - aSeekTo;
   mIsSeeking = true;
 
@@ -138,7 +138,7 @@ void SMILTimeContainer::SetCurrentTime(nsSMILTime aSeekTo) {
   NotifyTimeChange();
 }
 
-nsSMILTime SMILTimeContainer::GetParentTime() const {
+SMILTime SMILTimeContainer::GetParentTime() const {
   if (mParent) return mParent->GetCurrentTimeAsSMILTime();
 
   return 0L;
@@ -146,8 +146,8 @@ nsSMILTime SMILTimeContainer::GetParentTime() const {
 
 void SMILTimeContainer::SyncPauseTime() {
   if (IsPaused()) {
-    nsSMILTime parentTime = GetParentTime();
-    nsSMILTime extraOffset = parentTime - mPauseStart;
+    SMILTime parentTime = GetParentTime();
+    SMILTime extraOffset = parentTime - mPauseStart;
     mParentOffset += extraOffset;
     mPauseStart = parentTime;
   }
@@ -261,7 +261,7 @@ void SMILTimeContainer::Unlink() {
 }
 
 void SMILTimeContainer::UpdateCurrentTime() {
-  nsSMILTime now = IsPaused() ? mPauseStart : GetParentTime();
+  SMILTime now = IsPaused() ? mPauseStart : GetParentTime();
   mCurrentTime = now - mParentOffset;
   MOZ_ASSERT(mCurrentTime >= 0, "Container has negative time");
 }

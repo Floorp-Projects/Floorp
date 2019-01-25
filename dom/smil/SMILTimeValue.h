@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILTIMEVALUE_H_
-#define NS_SMILTIMEVALUE_H_
+#ifndef mozilla_SMILTimeValue_h
+#define mozilla_SMILTimeValue_h
 
 #include "mozilla/SMILTypes.h"
 #include "nsDebug.h"
@@ -19,7 +19,7 @@ namespace mozilla {
  *
  * First a quick overview of the SMIL time data types:
  *
- * nsSMILTime        -- a timestamp in milliseconds.
+ * SMILTime          -- a timestamp in milliseconds.
  * SMILTimeValue     -- (this class) a timestamp that can take the additional
  *                      states 'indefinite' and 'unresolved'
  * SMILInstanceTime  -- an SMILTimeValue used for constructing intervals. It
@@ -58,7 +58,7 @@ class SMILTimeValue {
       : mMilliseconds(kUnresolvedMillis), mState(STATE_UNRESOLVED) {}
 
   // Creates a resolved time value
-  explicit SMILTimeValue(nsSMILTime aMillis)
+  explicit SMILTimeValue(SMILTime aMillis)
       : mMilliseconds(aMillis), mState(STATE_DEFINITE) {}
 
   // Named constructor to create an indefinite time value
@@ -81,14 +81,14 @@ class SMILTimeValue {
   }
 
   bool IsDefinite() const { return mState == STATE_DEFINITE; }
-  nsSMILTime GetMillis() const {
+  SMILTime GetMillis() const {
     MOZ_ASSERT(mState == STATE_DEFINITE,
                "GetMillis() called for unresolved or indefinite time");
 
     return mState == STATE_DEFINITE ? mMilliseconds : kUnresolvedMillis;
   }
 
-  void SetMillis(nsSMILTime aMillis) {
+  void SetMillis(SMILTime aMillis) {
     mState = STATE_DEFINITE;
     mMilliseconds = aMillis;
   }
@@ -120,12 +120,12 @@ class SMILTimeValue {
   }
 
  private:
-  static const nsSMILTime kUnresolvedMillis;
+  static const SMILTime kUnresolvedMillis;
 
-  nsSMILTime mMilliseconds;
+  SMILTime mMilliseconds;
   enum { STATE_DEFINITE, STATE_INDEFINITE, STATE_UNRESOLVED } mState;
 };
 
 }  // namespace mozilla
 
-#endif  // NS_SMILTIMEVALUE_H_
+#endif  // mozilla_SMILTimeValue_h

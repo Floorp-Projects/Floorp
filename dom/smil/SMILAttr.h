@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_ISMILATTR_H_
-#define NS_ISMILATTR_H_
+#ifndef mozilla_SMILAttr_h
+#define mozilla_SMILAttr_h
 
 #include "nscore.h"
 #include "nsStringFwd.h"
@@ -19,10 +19,9 @@ class SMILValue;
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
-}  // namespace mozilla
 
 ////////////////////////////////////////////////////////////////////////
-// nsISMILAttr: A variable targeted by SMIL for animation and can therefore have
+// SMILAttr: A variable targeted by SMIL for animation and can therefore have
 // an underlying (base) value and an animated value For example, an attribute of
 // a particular SVG element.
 //
@@ -30,9 +29,8 @@ class SVGAnimationElement;
 // calculations. They have a single owner who is responsible for deleting the
 // object.
 
-class nsISMILAttr {
+class SMILAttr {
  public:
-  typedef mozilla::SMILValue SMILValue;
   /**
    * Creates a new SMILValue for this attribute from a string. The string is
    * parsed in the context of this attribute so that context-dependent values
@@ -82,11 +80,11 @@ class nsISMILAttr {
   virtual nsresult SetAnimValue(const SMILValue& aValue) = 0;
 
   /**
-   * Returns the targeted content node, for any nsISMILAttr implementations
+   * Returns the targeted content node, for any SMILAttr implementations
    * that want to expose that to the animation logic.  Otherwise, returns
    * null.
    *
-   * @return the targeted content node, if this nsISMILAttr implementation
+   * @return the targeted content node, if this SMILAttr implementation
    * wishes to make it avaiable.  Otherwise, nullptr.
    */
   virtual const nsIContent* GetTargetNode() const { return nullptr; }
@@ -94,7 +92,9 @@ class nsISMILAttr {
   /**
    * Virtual destructor, to make sure subclasses can clean themselves up.
    */
-  virtual ~nsISMILAttr() {}
+  virtual ~SMILAttr() {}
 };
 
-#endif  // NS_ISMILATTR_H_
+}  // namespace mozilla
+
+#endif  // mozilla_SMILAttr_h
