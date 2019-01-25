@@ -3514,10 +3514,6 @@ static void FillBytecodeTypeMap(JSScript* script, uint32_t* bytecodeMap) {
     }
   }
   MOZ_ASSERT(added == script->numBytecodeTypeSets());
-
-  // The last entry in the last index found, and is used to avoid binary
-  // searches for the sought entry when queries are in linear order.
-  bytecodeMap[script->numBytecodeTypeSets()] = 0;
 }
 
 void js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
@@ -3590,7 +3586,9 @@ static size_t NumTypeSets(JSScript* script) {
 
 TypeScript::TypeScript(JSScript* script, ICScriptPtr&& icScript,
                        uint32_t numTypeSets)
-    : icScript_(std::move(icScript)), numTypeSets_(numTypeSets) {
+    : icScript_(std::move(icScript)),
+      numTypeSets_(numTypeSets),
+      bytecodeTypeMapHint_(0) {
   StackTypeSet* array = typeArray();
   for (unsigned i = 0; i < numTypeSets; i++) {
     new (&array[i]) StackTypeSet();
@@ -3615,10 +3613,7 @@ bool JSScript::makeTypes(JSContext* cx) {
       [&] { icScript->prepareForDestruction(cx->zone()); });
 
   size_t numTypeSets = NumTypeSets(this);
-
-  // Note: There is an extra entry in the bytecode type map for the search
-  // hint, see FillBytecodeTypeMap.
-  size_t bytecodeTypeMapEntries = numBytecodeTypeSets() + 1;
+  size_t bytecodeTypeMapEntries = numBytecodeTypeSets();
 
   // Calculate allocation size. This cannot overflow, see comment in
   // NumTypeSets.

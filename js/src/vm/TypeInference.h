@@ -216,6 +216,10 @@ class TypeScript {
   // Number of TypeSets in typeArray_.
   uint32_t numTypeSets_;
 
+  // This field is used to avoid binary searches for the sought entry when
+  // bytecode map queries are in linear order.
+  uint32_t bytecodeTypeMapHint_;
+
   // Variable-size array. This is followed by the bytecode type map.
   StackTypeSet typeArray_[1];
 
@@ -231,6 +235,8 @@ class TypeScript {
   }
 
   uint32_t numTypeSets() const { return numTypeSets_; }
+
+  uint32_t* bytecodeTypeMapHint() { return &bytecodeTypeMapHint_; }
 
   jit::ICScript* icScript() const {
     MOZ_ASSERT(icScript_);

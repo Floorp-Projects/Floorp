@@ -695,7 +695,7 @@ template <typename TYPESET>
   if (!types) {
     return nullptr;
   }
-  uint32_t* hint = types->bytecodeTypeMap() + script->numBytecodeTypeSets();
+  uint32_t* hint = types->bytecodeTypeMapHint();
   return BytecodeTypes(script, pc, types->bytecodeTypeMap(), hint,
                        types->typeArray());
 }
