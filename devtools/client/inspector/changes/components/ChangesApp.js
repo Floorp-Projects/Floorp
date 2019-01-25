@@ -19,6 +19,8 @@ class ChangesApp extends PureComponent {
     return {
       // Nested CSS rule tree structure of CSS changes grouped by source (stylesheet)
       changesTree: PropTypes.object.isRequired,
+      // Event handler for "contextmenu" event
+      onContextMenu: PropTypes.func.isRequired,
     };
   }
 
@@ -140,6 +142,7 @@ class ChangesApp extends PureComponent {
       {
         className: "theme-sidebar inspector-tabpanel",
         id: "sidebar-panel-changes",
+        onContextMenu: this.props.onContextMenu,
       },
       !hasChanges && this.renderEmptyState(),
       hasChanges && this.renderDiff(this.props.changesTree)
