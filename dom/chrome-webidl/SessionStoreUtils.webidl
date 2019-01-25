@@ -111,6 +111,7 @@ namespace SessionStoreUtils {
    *         Form data encoded in an object.
    */
   CollectedFormData collectFormData(Document document);
+  boolean restoreFormData(Document document, optional CollectedFormData data);
 };
 
 dictionary SSScrollPositionDict {
@@ -130,7 +131,7 @@ dictionary CollectedNonMultipleSelectValue
 };
 
 // object contains either a CollectedFileListValue or a CollectedNonMultipleSelectValue or Sequence<DOMString>
-typedef (DOMString or boolean or long or object) CollectedFormDataValue;
+typedef (DOMString or boolean or object) CollectedFormDataValue;
 
 dictionary CollectedFormData
 {

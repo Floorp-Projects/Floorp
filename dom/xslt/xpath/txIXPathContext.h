@@ -6,7 +6,9 @@
 #ifndef __TX_I_XPATH_CONTEXT
 #define __TX_I_XPATH_CONTEXT
 
-#include "txCore.h"
+#include "nscore.h"
+#include "nsISupportsImpl.h"
+#include "nsStringFwd.h"
 
 class FunctionCall;
 class nsAtom;
