@@ -8,9 +8,9 @@
 #define MOZILLA_SVGANIMATEDLENGTHLIST_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
-#include "nsISMILAttr.h"
 #include "SVGLengthList.h"
 
 namespace mozilla {
@@ -68,9 +68,9 @@ class SVGAnimatedLengthList {
 
   bool IsAnimating() const { return !!mAnimVal; }
 
-  UniquePtr<nsISMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement,
-                                    uint8_t aAttrEnum, uint8_t aAxis,
-                                    bool aCanZeroPadList);
+  UniquePtr<SMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement,
+                                 uint8_t aAttrEnum, uint8_t aAxis,
+                                 bool aCanZeroPadList);
 
  private:
   // mAnimVal is a pointer to allow us to determine if we're being animated or
@@ -81,7 +81,7 @@ class SVGAnimatedLengthList {
   SVGLengthList mBaseVal;
   nsAutoPtr<SVGLengthList> mAnimVal;
 
-  struct SMILAnimatedLengthList : public nsISMILAttr {
+  struct SMILAnimatedLengthList : public SMILAttr {
    public:
     SMILAnimatedLengthList(SVGAnimatedLengthList* aVal,
                            dom::SVGElement* aSVGElement, uint8_t aAttrEnum,
@@ -92,7 +92,7 @@ class SVGAnimatedLengthList {
           mAxis(aAxis),
           mCanZeroPadList(aCanZeroPadList) {}
 
-    // These will stay alive because a nsISMILAttr only lives as long
+    // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     SVGAnimatedLengthList* mVal;
@@ -101,7 +101,7 @@ class SVGAnimatedLengthList {
     uint8_t mAxis;
     bool mCanZeroPadList;  // See SVGLengthListAndInfo::CanZeroPadList
 
-    // nsISMILAttr methods
+    // SMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
         SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;

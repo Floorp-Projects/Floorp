@@ -72,11 +72,11 @@ class SMILCompositor : public PLDHashEntryHdr {
   }
 
  private:
-  // Create a nsISMILAttr for my target, on the heap.
+  // Create a SMILAttr for my target, on the heap.
   //
   // @param aBaseComputedStyle  An optional ComputedStyle which, if set, will be
   //                           used when fetching the base style.
-  UniquePtr<nsISMILAttr> CreateSMILAttr(ComputedStyle* aBaseComputedStyle);
+  UniquePtr<SMILAttr> CreateSMILAttr(ComputedStyle* aBaseComputedStyle);
 
   // Returns the CSS property this compositor should animate, or
   // eCSSProperty_UNKNOWN if this compositor does not animate a CSS property.

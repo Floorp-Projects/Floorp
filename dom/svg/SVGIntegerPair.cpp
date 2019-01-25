@@ -162,7 +162,7 @@ SVGIntegerPair::DOMAnimatedInteger::~DOMAnimatedInteger() {
   }
 }
 
-UniquePtr<nsISMILAttr> SVGIntegerPair::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGIntegerPair::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILIntegerPair>(this, aSVGElement);
 }
 

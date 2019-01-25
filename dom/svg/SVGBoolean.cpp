@@ -114,7 +114,7 @@ SVGAnimatedBoolean::~SVGAnimatedBoolean() {
   SVGAnimatedBooleanTearoffTable().RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> SVGBoolean::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGBoolean::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILBool>(this, aSVGElement);
 }
 
