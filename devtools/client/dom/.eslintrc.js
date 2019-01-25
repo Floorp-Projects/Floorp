@@ -9,9 +9,5 @@ module.exports = {
     "document": true,
     "dispatchEvent": true,
     "MessageEvent": true
-  },
-  "rules": {
-    "indent-legacy": "off",
-    "padded-blocks": "off",
   }
 };
