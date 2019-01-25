@@ -126,6 +126,7 @@ TC_PLATFORM_PER_FTP = {
     'mac': 'macosx64-nightly',
     'win32': 'win32-nightly',
     'win64': 'win64-nightly',
+    'win64-aarch64': 'win64-aarch64-nightly',
 }
 
 TASKCLUSTER_PROXY_SECRET_ROOT = 'http://taskcluster/secrets/v1/secret'
@@ -240,7 +241,7 @@ def parse_config(data):
             l = str(l)
             key, value = l.split('=', 2)
             value = value.strip('\'"').rstrip('\'"')
-            if key in ('linux-i686', 'linux-x86_64', 'mac', 'win32', 'win64'):
+            if key in TC_PLATFORM_PER_FTP.keys():
                 if value.lower() == 'true':
                     config['platforms'].append(TC_PLATFORM_PER_FTP[key])
                 continue
@@ -367,6 +368,8 @@ def fix_partner_config(orig_config):
 def get_ftp_platform(platform):
     if platform.startswith('win32'):
         return 'win32'
+    elif platform.startswith('win64-aarch64'):
+        return 'win64-aarch64'
     elif platform.startswith('win64'):
         return 'win64'
     elif platform.startswith('macosx'):
