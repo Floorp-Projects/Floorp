@@ -61,6 +61,8 @@ class nsFontFaceLoader final : public nsIStreamLoaderObserver,
   nsCOMPtr<nsITimer> mLoadTimer;
   mozilla::TimeStamp mStartTime;
   nsIStreamLoader* mStreamLoader;
+  bool mInStreamComplete = false;
+  bool mInLoadTimerCallback = false;
 };
 
 #endif /* !defined(nsFontFaceLoader_h_) */
