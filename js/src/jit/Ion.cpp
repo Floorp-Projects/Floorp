@@ -2161,7 +2161,7 @@ static bool CanIonCompileOrInlineScript(JSScript* script, const char** reason) {
     return false;
   }
 
-  if (script->nTypeSets() >= UINT16_MAX) {
+  if (script->numBytecodeTypeSets() >= UINT16_MAX) {
     // In this case multiple bytecode ops can share a single observed
     // TypeSet (see bug 1303710).
     *reason = "too many typesets";
