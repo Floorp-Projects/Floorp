@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "cranelift-wasm"
-version = "0.26.0"
+version = "0.28.0"
 authors = ["The Cranelift Project Developers"]
 description = "Translator from WebAssembly to Cranelift IR"
 readme = "README.md"
@@ -22,17 +23,18 @@ license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/CraneStation/cranelift"
 [dependencies.cast]
 version = "0.2.2"
+default-features = false
 
 [dependencies.cranelift-codegen]
-version = "0.26.0"
+version = "0.28.0"
 default-features = false
 
 [dependencies.cranelift-entity]
-version = "0.26.0"
+version = "0.28.0"
 default-features = false
 
 [dependencies.cranelift-frontend]
-version = "0.26.0"
+version = "0.28.0"
 default-features = false
 
 [dependencies.failure]
@@ -49,11 +51,11 @@ version = "0.1.9"
 optional = true
 
 [dependencies.log]
-version = "0.4.4"
+version = "0.4.6"
 default-features = false
 
 [dependencies.wasmparser]
-version = "0.22.0"
+version = "0.23.0"
 default-features = false
 [dev-dependencies.target-lexicon]
 version = "0.2.0"
