@@ -7,6 +7,7 @@ package mozilla.components.feature.awesomebar.provider
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
@@ -107,6 +108,23 @@ class ClipboardSuggestionProviderTest {
         assertClipboardYieldsNothing("Is this mozilla org")
 
         assertClipboardYieldsNothing("192.168.")
+    }
+
+    @Test
+    fun `provider should allow customization of title and icon on suggestion`() {
+        clipboardManager.primaryClip = ClipData.newPlainText("Test label", "http://mozilla.org")
+        val bitmap = Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888)
+        val provider = ClipboardSuggestionProvider(context, mock(), title = "My test title", icon = bitmap)
+
+        val suggestion = runBlocking {
+            provider.onInputStarted()
+            val suggestions = provider.onInputChanged("Hello")
+
+            suggestions.firstOrNull()
+        }
+
+        assertEquals(bitmap, suggestion?.icon?.invoke(2, 2))
+        assertEquals("My test title", suggestion?.title)
     }
 
     @Test

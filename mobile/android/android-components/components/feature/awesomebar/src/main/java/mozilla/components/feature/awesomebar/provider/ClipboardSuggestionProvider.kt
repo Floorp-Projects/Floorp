@@ -7,6 +7,7 @@ package mozilla.components.feature.awesomebar.provider
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.Bitmap
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.WebURLFinder
@@ -19,7 +20,9 @@ private const val MIME_TYPE_TEXT_PLAIN = "text/plain"
  */
 class ClipboardSuggestionProvider(
     context: Context,
-    private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase
+    private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
+    private val icon: Bitmap? = null,
+    private val title: String? = null
 ) : AwesomeBar.SuggestionProvider {
     private val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
@@ -32,6 +35,8 @@ class ClipboardSuggestionProvider(
             id = "mozac-feature-awesomebar-clipboard",
             description = url,
             flags = setOf(AwesomeBar.Suggestion.Flag.CLIPBOARD),
+            icon = { _, _ -> icon },
+            title = title,
             onSuggestionClicked = {
                 loadUrlUseCase.invoke(url)
             }
