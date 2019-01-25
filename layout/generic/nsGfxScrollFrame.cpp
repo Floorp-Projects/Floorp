@@ -5511,13 +5511,6 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
   }
 
   nsViewportInfo viewportInfo = doc->GetViewportInfo(displaySize);
-  // FIXME: Bug 1520081 - Drop this check. We should use the minimum-scale size
-  // even if the minimum-scale size is greater than 1.0.
-  if (viewportInfo.GetMinZoom() >=
-      pc->CSSToDevPixelScale() * LayoutDeviceToScreenScale(1.0f)) {
-    return;
-  }
-
   nsSize maximumPossibleSize =
       CSSSize::ToAppUnits(ScreenSize(displaySize) / viewportInfo.GetMinZoom());
 

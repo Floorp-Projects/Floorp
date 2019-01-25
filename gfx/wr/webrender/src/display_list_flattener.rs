@@ -21,7 +21,7 @@ use hit_test::{HitTestingItem, HitTestingRun};
 use image::simplify_repeated_primitive;
 use intern::{Handle, Internable, InternDebug};
 use internal_types::{FastHashMap, FastHashSet};
-use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PrimitiveList, TileCache};
+use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions, PrimitiveList, TileCache};
 use prim_store::{PrimitiveInstance, PrimitiveKeyKind, PrimitiveSceneData};
 use prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
 use prim_store::{PrimitiveStoreStats, ScrollNodeAndClipChain, PictureIndex};
@@ -392,6 +392,7 @@ impl<'a> DisplayListFlattener<'a> {
             LayoutRect::max_rect(),
             &self.clip_store,
             Some(tile_cache),
+            PictureOptions::default(),
         ));
 
         let instance = PrimitiveInstance::new(
@@ -1367,6 +1368,7 @@ impl<'a> DisplayListFlattener<'a> {
                 max_clip,
                 &self.clip_store,
                 None,
+                PictureOptions::default(),
             ))
         );
 
@@ -1414,6 +1416,7 @@ impl<'a> DisplayListFlattener<'a> {
                     max_clip,
                     &self.clip_store,
                     None,
+                    PictureOptions::default(),
                 ))
             );
 
@@ -1449,6 +1452,7 @@ impl<'a> DisplayListFlattener<'a> {
                     max_clip,
                     &self.clip_store,
                     None,
+                    PictureOptions::default(),
                 ))
             );
 
@@ -1492,6 +1496,7 @@ impl<'a> DisplayListFlattener<'a> {
                     max_clip,
                     &self.clip_store,
                     None,
+                    PictureOptions::default(),
                 ))
             );
 
@@ -1810,6 +1815,12 @@ impl<'a> DisplayListFlattener<'a> {
                         let composite_mode = PictureCompositeMode::Filter(blur_filter);
                         let composite_mode_key = Some(composite_mode).into();
 
+                        // Pass through configuration information about whether WR should
+                        // do the bounding rect inflation for text shadows.
+                        let options = PictureOptions {
+                            inflate_if_required: pending_shadow.shadow.should_inflate,
+                        };
+
                         // Create the primitive to draw the shadow picture into the scene.
                         let shadow_pic_index = PictureIndex(self.prim_store.pictures
                             .alloc()
@@ -1828,6 +1839,7 @@ impl<'a> DisplayListFlattener<'a> {
                                 max_clip,
                                 &self.clip_store,
                                 None,
+                                options,
                             ))
                         );
 
@@ -2600,6 +2612,7 @@ impl FlattenedStackingContext {
                 LayoutRect::max_rect(),
                 clip_store,
                 None,
+                PictureOptions::default(),
             ))
         );
 
