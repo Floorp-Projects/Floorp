@@ -314,7 +314,11 @@ function makeUrlbarResult(tokens, info) {
     if (hasTags) {
       // Split title and tags.
       [comment, tags] = info.comment.split(TITLE_TAGS_SEPARATOR);
-      tags = tags.split(",").map(t => t.trim());
+      // Tags are separated by a comma and in a random order.
+      // We should also just include tags that match the searchString.
+      tags = tags.split(",").map(t => t.trim()).filter(tag => {
+        return tokens.some(token => tag.includes(token.value));
+      }).sort();
     }
   } else if (info.style.includes("preloaded-top-sites")) {
     source = UrlbarUtils.MATCH_SOURCE.OTHER_LOCAL;
