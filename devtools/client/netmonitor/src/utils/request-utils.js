@@ -431,8 +431,25 @@ function getFormattedProtocol(item) {
   const protocol = [httpVersion];
   responseHeaders.headers.some(h => {
     if (h.hasOwnProperty("name") && h.name.toLowerCase() === "x-firefox-spdy") {
-      protocol.push(h.value);
-      return true;
+      /**
+       * First we make sure h.value is defined and not an empty string.
+       * Then check that HTTP version and x-firefox-spdy == "http/1.1".
+       * If not, check that HTTP version and x-firefox-spdy have the same
+       * numeric value when of the forms "http/<x>" and "h<x>" respectively.
+       * If not, will push to protocol the non-standard x-firefox-spdy value.
+       *
+       * @see https://bugzilla.mozilla.org/show_bug.cgi?id=1501357
+       */
+      if (h.value !== undefined && h.value.length > 0) {
+        if (h.value.toLowerCase() !== "http/1.1" ||
+            protocol[0].toLowerCase() !== "http/1.1") {
+          if (parseFloat(h.value.toLowerCase().split("")[1]) !==
+            parseFloat(protocol[0].toLowerCase().split("/")[1])) {
+            protocol.push(h.value);
+            return true;
+          }
+        }
+      }
     }
     return false;
   });
