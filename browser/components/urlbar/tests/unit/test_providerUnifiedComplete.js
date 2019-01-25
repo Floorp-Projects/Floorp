@@ -29,7 +29,7 @@ add_task(async function test_unifiedComplete() {
       },
     },
   });
-  let context = createContext("moz", {isPrivate: false});
+  let context = createContext("moz org", {isPrivate: false});
 
   // Add entries from multiple sources.
   await PlacesUtils.bookmarks.insert({
@@ -37,6 +37,8 @@ add_task(async function test_unifiedComplete() {
     title: "Test bookmark",
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
+  PlacesUtils.tagging.tagURI(Services.io.newURI("https://bookmark.mozilla.org/"),
+                             ["mozilla", "org", "ham", "moz", "bacon"]);
   await PlacesTestUtils.addVisits([
     {uri: "https://history.mozilla.org/", title: "Test history"},
     {uri: "https://tab.mozilla.org/", title: "Test tab"},
@@ -58,11 +60,14 @@ add_task(async function test_unifiedComplete() {
   ], context.results.map(m => m.type), "Check result types");
 
   Assert.deepEqual([
-    "moz",
-    "moz foo",
-    "moz bar",
+    "moz org",
+    "moz org foo",
+    "moz org bar",
     "Test bookmark",
     "Test tab",
     "Test history",
   ], context.results.map(m => m.title), "Check match titles");
+
+  Assert.deepEqual(context.results[3].payload.tags, ["moz", "mozilla", "org"],
+                   "Check tags");
 });
