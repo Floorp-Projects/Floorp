@@ -461,6 +461,7 @@ pub struct Shadow {
     pub offset: LayoutVector2D,
     pub color: ColorF,
     pub blur_radius: f32,
+    pub should_inflate: bool,
 }
 
 #[repr(u8)]
