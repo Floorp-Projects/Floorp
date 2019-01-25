@@ -12,6 +12,7 @@
 #include "vm/AsyncFunction.h"
 #include "vm/GlobalObject.h"
 #include "vm/Iteration.h"
+#include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"
