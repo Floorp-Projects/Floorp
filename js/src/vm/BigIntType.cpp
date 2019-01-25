@@ -282,7 +282,7 @@ BigInt::Digit BigInt::digitDiv(Digit high, Digit low, Digit divisor,
   *remainder = rem;
   return quotient;
 #else
-  static constexpr Digit halfDigitBase = 1ull << HalfDigitBits;
+  static constexpr Digit HalfDigitBase = 1ull << HalfDigitBits;
   // Adapted from Warren, Hacker's Delight, p. 152.
   unsigned s = DigitLeadingZeroes(divisor);
   // If `s` is DigitBits here, it causes an undefined behavior.
@@ -1179,7 +1179,7 @@ struct RadixInfo {
   constexpr RadixInfo(BigInt::Digit maxPower, uint8_t maxExponent)
       : maxPowerInDigit(maxPower), maxExponentInDigit(maxExponent) {}
 
-  constexpr RadixInfo(uint8_t radix)
+  explicit constexpr RadixInfo(uint8_t radix)
       : RadixInfo(MaxPowerInDigit(radix), MaxExponentInDigit(radix)) {}
 };
 
@@ -1584,7 +1584,7 @@ BigInt* BigInt::createFromInt64(JSContext* cx, int64_t n) {
   if (n < 0) {
     res->lengthSignAndReservedBits_ |= SignBit;
   }
-  MOZ_ASSERT(res->isNegative() == n < 0);
+  MOZ_ASSERT(res->isNegative() == (n < 0));
 
   return res;
 }
@@ -2182,7 +2182,7 @@ uint64_t BigInt::toUint64(BigInt* x) {
   uint64_t digit = x->digit(0);
 
   if (DigitBits == 32 && x->digitLength() >= 1) {
-    digit |= x->digit(1) << 32;
+    digit |= static_cast<uint64_t>(x->digit(1)) << 32;
   }
 
   // Return the two's complement if x is negative.

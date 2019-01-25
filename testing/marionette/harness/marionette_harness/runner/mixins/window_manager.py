@@ -161,16 +161,16 @@ class WindowManagerMixin(object):
                   (async function() {
                     // Open a window, wait for it to receive focus
                     let win = window.openDialog(url, null, "chrome,centerscreen");
+                    let focused = waitForFocus(win);
 
                     // Bug 1509380 - Missing focus/activate event when Firefox is not
                     // the top-most application. As such wait for the next tick, and
                     // manually focus the newly opened window.
                     win.setTimeout(() => win.focus(), 0);
-
-                    await waitForFocus(win);
+                    await focused;
 
                     // Now refocus our original window and wait for that to happen.
-                    let focused = waitForFocus(window);
+                    focused = waitForFocus(window);
                     window.focus();
                     await focused;
 

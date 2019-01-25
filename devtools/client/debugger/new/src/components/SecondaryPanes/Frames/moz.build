@@ -9,6 +9,7 @@ DIRS += [
 
 DebuggerModules(
     'Frame.js',
+    'FrameIndent.js',
     'FrameMenu.js',
     'Group.js',
     'index.js',

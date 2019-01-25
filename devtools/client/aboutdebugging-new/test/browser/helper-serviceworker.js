@@ -40,16 +40,35 @@ function onTabMessage(tab, message) {
 }
 /* exported onTabMessage */
 
-async function waitForServiceWorkerRunning(workerText, document) {
+async function _waitForServiceWorkerStatus(workerText, status, document) {
   await waitUntil(() => {
     const target = findDebugTargetByText(workerText, document);
-    const status = target && target.querySelector(".js-worker-status");
-    return status && status.textContent === "Running";
+    const statusElement = target && target.querySelector(".js-worker-status");
+    return statusElement && statusElement.textContent === status;
   });
 
   return findDebugTargetByText(workerText, document);
 }
 /* exported waitForServiceWorkerRunning */
+
+async function waitForServiceWorkerStopped(workerText, document) {
+  return _waitForServiceWorkerStatus(workerText, "Stopped", document);
+}
+/* exported waitForServiceWorkerStopped */
+
+async function waitForServiceWorkerRunning(workerText, document) {
+  return _waitForServiceWorkerStatus(workerText, "Running", document);
+}
+/* exported waitForServiceWorkerRunning */
+
+async function waitForRegistration(tab) {
+  info("Wait until the registration appears on the window");
+  const swBrowser = tab.linkedBrowser;
+  await asyncWaitUntil(async () => ContentTask.spawn(swBrowser, {}, function() {
+    return content.wrappedJSObject.getRegistration();
+  }));
+}
+/* exported waitForRegistration */
 
 /**
  * Helper to listen once on a message sent using postMessage from the provided tab.

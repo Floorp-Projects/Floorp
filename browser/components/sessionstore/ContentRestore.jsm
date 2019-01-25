@@ -8,12 +8,8 @@ var EXPORTED_SYMBOLS = ["ContentRestore"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "FormData",
-  "resource://gre/modules/FormData.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionHistory",
   "resource://gre/modules/sessionstore/SessionHistory.jsm");
-ChromeUtils.defineModuleGetter(this, "SessionStorage",
-  "resource:///modules/sessionstore/SessionStorage.jsm");
 ChromeUtils.defineModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
 
@@ -141,7 +137,7 @@ ContentRestoreInternal.prototype = {
 
 
     if (tabData.storage && this.docShell instanceof Ci.nsIDocShell) {
-      SessionStorage.restore(this.docShell, tabData.storage);
+      SessionStoreUtils.restoreSessionStorage(this.docShell, tabData.storage);
       delete tabData.storage;
     }
 
@@ -303,7 +299,7 @@ ContentRestoreInternal.prototype = {
       // restore() will return false, and thus abort restoration for the
       // current |frame| and its descendants, if |data.url| is given but
       // doesn't match the loaded document's URL.
-      return FormData.restore(frame, data);
+      return SessionStoreUtils.restoreFormData(frame.document, data);
     });
 
     // Restore scroll data.

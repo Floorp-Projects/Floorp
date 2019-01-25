@@ -17,7 +17,7 @@ parser.add_option('--binjsdir', dest='binjsdir',
                   help='cwd when running binjs_encode')
 parser.add_option('--binjs_encode', dest='binjs_encode',
                   help='path to binjs_encode commad')
-(options, args) = parser.parse_args()
+(options, filters) = parser.parse_args()
 
 
 def ensure_dir(path, name):
@@ -58,6 +58,21 @@ jittest_dir = os.path.join(options.topsrcdir, 'js', 'src', 'jit-test', 'tests')
 ensure_dir(jittest_dir, 'jit-test')
 
 
+def check_filter(outfile_path):
+    """ Check if the output file is the target.
+
+    :return (bool)
+            True if the file is target and should be written.
+    """
+    if len(filters) == 0:
+        return True
+
+    for pattern in filters:
+        if pattern in outfile_path:
+            return True
+    return False
+
+
 def encode(infile_path, outfile_path, binjs_encode_args=[],
            dir_path=None, ignore_fail=False):
     """ Encodes the given .js file into .binjs.
@@ -77,8 +92,12 @@ def encode(infile_path, outfile_path, binjs_encode_args=[],
             If false, exit if binjs_encode command exits with non-zero
             status.
     """
-    print(infile_path)
-    print(outfile_path)
+
+    if not check_filter(outfile_path):
+        return
+
+    print('encoding', infile_path)
+    print('      to', outfile_path)
 
     if dir_path:
         COOKIE = '|jit-test|'
@@ -152,6 +171,23 @@ def match_ignore(path, ignore_list):
     return False
 
 
+def copy_directive_file(dir_path, to_dir_path):
+    """ Copy single directives.txt file
+
+    :param dir_path (string)
+           The path to the source directives.txt file.
+    :param to_dir_path (string)
+           The path to the destination directives.txt file.
+    """
+
+    if not check_filter(to_dir_path):
+        return
+
+    print('copying', dir_path)
+    print('     to', to_dir_path)
+    shutil.copyfile(dir_path, to_dir_path)
+
+
 def encode_dir_impl(fromdir, get_todir,
                     ignore_list=None,
                     copy_jit_test_directive=False, **kwargs):
@@ -194,9 +230,7 @@ def encode_dir_impl(fromdir, get_todir,
                         dir_path = os.path.join(root, dir_filename)
                         if os.path.exists(dir_path):
                             to_dir_path = os.path.join(todir, dir_filename)
-                            print(dir_path)
-                            print(to_dir_path)
-                            shutil.copyfile(dir_path, to_dir_path)
+                            copy_directive_file(dir_path, to_dir_path)
                             copied_dir.add(todir)
 
 

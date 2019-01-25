@@ -269,20 +269,17 @@ MethodStatus BaselineCompiler::compile() {
     return Method_Error;
   }
 
-  // Note: There is an extra entry in the bytecode type map for the search
-  // hint, see below.
-  size_t bytecodeTypeMapEntries = script->nTypeSets() + 1;
   size_t resumeEntries =
       script->hasResumeOffsets() ? script->resumeOffsets().size() : 0;
   UniquePtr<BaselineScript> baselineScript(
-      BaselineScript::New(
-          script, bailoutPrologueOffset_.offset(),
-          debugOsrPrologueOffset_.offset(), debugOsrEpilogueOffset_.offset(),
-          profilerEnterFrameToggleOffset_.offset(),
-          profilerExitFrameToggleOffset_.offset(),
-          handler.retAddrEntries().length(), pcMappingIndexEntries.length(),
-          pcEntries.length(), bytecodeTypeMapEntries, resumeEntries,
-          traceLoggerToggleOffsets_.length()),
+      BaselineScript::New(script, bailoutPrologueOffset_.offset(),
+                          debugOsrPrologueOffset_.offset(),
+                          debugOsrEpilogueOffset_.offset(),
+                          profilerEnterFrameToggleOffset_.offset(),
+                          profilerExitFrameToggleOffset_.offset(),
+                          handler.retAddrEntries().length(),
+                          pcMappingIndexEntries.length(), pcEntries.length(),
+                          resumeEntries, traceLoggerToggleOffsets_.length()),
       JS::DeletePolicy<BaselineScript>(cx->runtime()));
   if (!baselineScript) {
     ReportOutOfMemory(cx);
@@ -326,13 +323,6 @@ MethodStatus BaselineCompiler::compile() {
   // Initialize the tracelogger instrumentation.
   baselineScript->initTraceLogger(script, traceLoggerToggleOffsets_);
 #endif
-
-  uint32_t* bytecodeMap = baselineScript->bytecodeTypeMap();
-  FillBytecodeTypeMap(script, bytecodeMap);
-
-  // The last entry in the last index found, and is used to avoid binary
-  // searches for the sought entry when queries are in linear order.
-  bytecodeMap[script->nTypeSets()] = 0;
 
   // Compute yield/await native resume addresses.
   baselineScript->computeResumeNativeOffsets(script);
@@ -3182,6 +3172,24 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GETINTRINSIC() {
   return true;
 }
 
+typedef bool (*SetIntrinsicFn)(JSContext*, JSScript*, jsbytecode*, HandleValue);
+static const VMFunction SetIntrinsicInfo = FunctionInfo<SetIntrinsicFn>(
+    SetIntrinsicOperation, "SetIntrinsicOperation");
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_SETINTRINSIC() {
+  frame.syncStack(0);
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
+
+  prepareVMCall();
+
+  pushArg(R0);
+  pushBytecodePCArg();
+  pushScriptArg();
+
+  return callVM(SetIntrinsicInfo);
+}
+
 typedef bool (*DefVarFn)(JSContext*, HandleObject, HandleScript, jsbytecode*);
 static const VMFunction DefVarInfo =
     FunctionInfo<DefVarFn>(DefVarOperation, "DefVarOperation");
@@ -5785,14 +5793,12 @@ MethodStatus BaselineCompiler::emitBody() {
       // ===== NOT Yet Implemented =====
       case JSOP_FORCEINTERPRETER:
         // Intentionally not implemented.
-      case JSOP_SETINTRINSIC:
-        // Run-once opcode during self-hosting initialization.
       case JSOP_UNUSED71:
       case JSOP_UNUSED151:
       case JSOP_LIMIT:
         // === !! WARNING WARNING WARNING !! ===
-        // Do you really want to sacrifice performance by not implementing
-        // this operation in the BaselineCompiler?
+        // DO NOT add new ops to this list! All bytecode ops MUST have Baseline
+        // support. Follow-up bugs are not acceptable.
         JitSpew(JitSpew_BaselineAbort, "Unhandled op: %s", CodeName[op]);
         return Method_CantCompile;
 

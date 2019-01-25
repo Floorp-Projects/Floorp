@@ -7,9 +7,9 @@
 /**
  * This module exports a urlbar result class, each representing a single result
  * found by a provider that can be passed from the model to the view through
- * the controller. It is mainly defined by a match type, and a payload,
+ * the controller. It is mainly defined by a result type, and a payload,
  * containing the data. A few getters allow to retrieve information common to all
- * the match types.
+ * the result types.
  */
 
 var EXPORTED_SYMBOLS = ["UrlbarResult"];
@@ -25,9 +25,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class UrlbarResult {
   /**
    * Creates a result.
-   * @param {integer} matchType one of UrlbarUtils.MATCH_TYPE.* values
+   * @param {integer} resultType one of UrlbarUtils.RESULT_TYPE.* values
    * @param {integer} matchSource one of UrlbarUtils.MATCH_SOURCE.* values
-   * @param {object} payload data for this match. A payload should always
+   * @param {object} payload data for this result. A payload should always
    *        contain a way to extract a final url to visit. The url getter
    *        should have a case for each of the types.
    * @param {object} [payloadHighlights] payload highlights, if any. Each
@@ -36,13 +36,13 @@ class UrlbarResult {
    *        length] tuples. Each tuple indicates a substring in the correspoding
    *        payload property.
    */
-  constructor(matchType, matchSource, payload, payloadHighlights = {}) {
+  constructor(resultType, matchSource, payload, payloadHighlights = {}) {
     // Type describes the payload and visualization that should be used for
-    // this match.
-    if (!Object.values(UrlbarUtils.MATCH_TYPE).includes(matchType)) {
-      throw new Error("Invalid match type");
+    // this result.
+    if (!Object.values(UrlbarUtils.RESULT_TYPE).includes(resultType)) {
+      throw new Error("Invalid result type");
     }
-    this.type = matchType;
+    this.type = resultType;
 
     // Source describes which data has been used to derive this match. In case
     // multiple sources are involved, use the more privacy restricted.
@@ -51,15 +51,15 @@ class UrlbarResult {
     }
     this.source = matchSource;
 
-    // The payload contains match data. Some of the data is common across
+    // The payload contains result data. Some of the data is common across
     // multiple types, but most of it will vary.
     if (!payload || (typeof payload != "object")) {
-      throw new Error("Invalid match payload");
+      throw new Error("Invalid result payload");
     }
     this.payload = payload;
 
     if (!payloadHighlights || (typeof payloadHighlights != "object")) {
-      throw new Error("Invalid match payload highlights");
+      throw new Error("Invalid result payload highlights");
     }
     this.payloadHighlights = payloadHighlights;
 
@@ -74,7 +74,7 @@ class UrlbarResult {
   }
 
   /**
-   * Returns a title that could be used as a label for this match.
+   * Returns a title that could be used as a label for this result.
    * @returns {string} The label to show in a simplified title / url view.
    */
   get title() {
@@ -95,14 +95,14 @@ class UrlbarResult {
    */
   get _titleAndHighlights() {
     switch (this.type) {
-      case UrlbarUtils.MATCH_TYPE.TAB_SWITCH:
-      case UrlbarUtils.MATCH_TYPE.URL:
-      case UrlbarUtils.MATCH_TYPE.OMNIBOX:
-      case UrlbarUtils.MATCH_TYPE.REMOTE_TAB:
+      case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+      case UrlbarUtils.RESULT_TYPE.URL:
+      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+      case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
         return this.payload.title ?
                [this.payload.title, this.payloadHighlights.title] :
                [this.payload.url || "", this.payloadHighlights.url || []];
-      case UrlbarUtils.MATCH_TYPE.SEARCH:
+      case UrlbarUtils.RESULT_TYPE.SEARCH:
         return this.payload.suggestion ?
                [this.payload.suggestion, this.payloadHighlights.suggestion] :
                [this.payload.query, this.payloadHighlights.query];

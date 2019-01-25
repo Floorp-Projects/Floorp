@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.frames ul {
+.frames [role="list"]l {
   list-style: none;
-  margin: 0;
+  margin-top: 4px;
   padding: 0;
 }
 
-.frames ul li {
-  padding: 7px 10px 7px 21px;
+.frames [role="list"] [role="listitem"] {
+  padding: 2px 10px 2px 20px;
   overflow: hidden;
   display: flex;
   justify-content: space-between;
@@ -21,7 +21,7 @@
   flex-wrap: wrap;
 }
 
-.frames ul li * {
+.frames [role="list"] [role="listitem"] * {
   -moz-user-select: none;
   user-select: none;
 }
@@ -58,26 +58,26 @@
   overflow: hidden;
 }
 
-.frames ul li:hover,
-.frames ul li:focus {
+[role="list"] [role="listitem"]hover,
+[role="list"] [role="listitem"]focus {
   background-color: var(--theme-toolbar-background-alt);
 }
 
-.theme-dark .frames ul li:focus {
+.theme-dark [role="list"] [role="listitem"]focus {
   background-color: var(--theme-tab-toolbar-background);
 }
 
-.frames ul li.selected {
+.frames [role="list"] [role="listitem"].selected {
   background-color: var(--theme-selection-background);
   color: white;
 }
 
-.frames ul li.selected i.annotation-logo svg path {
+.frames [role="list"] [role="listitem"].selected i.annotation-logo svg path {
   fill: white;
 }
 
-:root.theme-light .frames ul li.selected .location,
-:root.theme-dark .frames ul li.selected .location {
+:root.theme-light .frames [role="list"] [role="listitem"].selected .location,
+:root.theme-dark .frames [role="list"] [role="listitem"].selected .location {
   color: white;
 }
 
@@ -106,9 +106,17 @@
   mask-size: 100%;
   display: inline-block;
   width: 12px;
-  margin-inline-start: 4px;
 }
 
 :root.theme-dark .annotation-logo:not(.angular) svg path {
   fill: var(--theme-highlight-blue);
+}
+
+/* Some elements are added to the DOM only to be printed into the clipboard
+   when the user copy some elements. We don't want those elements to mess with
+   the layout so we put them outside of the screen
+*/
+.clipboard-only {
+  position: absolute;
+  left: -9999px;
 }

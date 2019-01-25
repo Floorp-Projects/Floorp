@@ -286,7 +286,7 @@ interface nsIURIMutator : nsIURISetters
 {
   /**
    * Initalizes the URI by reading IPC URIParams.
-   * See nsIIPCSerializableURI.
+   * See nsIURI.
    */
   [noscript, notxpcom, must_use]
   nsresult deserialize(in const_URIParams_ref aParams);

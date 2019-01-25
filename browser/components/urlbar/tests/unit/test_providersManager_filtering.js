@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(async function test_filtering() {
-  let match = new UrlbarResult(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+  let match = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
                                UrlbarUtils.MATCH_SOURCE.TABS,
                                { url: "http://mozilla.org/foo/" });
   let providerName = registerBasicTestProvider([match]);
@@ -29,7 +29,7 @@ add_task(async function test_filtering() {
 
   let matches = [
     match,
-    new UrlbarResult(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
                      UrlbarUtils.MATCH_SOURCE.HISTORY,
                      { url: "http://mozilla.org/foo/" }),
   ];
@@ -67,10 +67,10 @@ add_task(async function test_filter_javascript() {
       },
     },
   });
-  let match = new UrlbarResult(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+  let match = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
                                UrlbarUtils.MATCH_SOURCE.TABS,
                                { url: "http://mozilla.org/foo/" });
-  let jsMatch = new UrlbarResult(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+  let jsMatch = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
                                  UrlbarUtils.MATCH_SOURCE.HISTORY,
                                  { url: "javascript:foo" });
   let providerName = registerBasicTestProvider([match, jsMatch]);
@@ -110,10 +110,10 @@ add_task(async function test_filter_sources() {
   });
 
   let goodMatches = [
-    new UrlbarResult(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
                      UrlbarUtils.MATCH_SOURCE.TABS,
                      { url: "http://mozilla.org/foo/" }),
-    new UrlbarResult(UrlbarUtils.MATCH_TYPE.URL,
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.URL,
                      UrlbarUtils.MATCH_SOURCE.HISTORY,
                      { url: "http://mozilla.org/foo/" }),
   ];
@@ -144,7 +144,7 @@ add_task(async function test_filter_sources() {
   UrlbarProvidersManager.registerProvider(new TestProvider());
 
   let badMatches = [
-    new UrlbarResult(UrlbarUtils.MATCH_TYPE.URL,
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.URL,
                      UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
                      { url: "http://mozilla.org/foo/" }),
   ];

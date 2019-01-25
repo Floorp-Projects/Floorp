@@ -19,6 +19,11 @@ add_task(async function() {
     this.lastName = lastName;
   }
 
+  const holeyArray = [];
+  holeyArray[1] = "apples";
+  holeyArray[3] = "oranges";
+  holeyArray[6] = "bananas";
+
   const testCases = [{
     info: "Testing when data argument is an array",
     input: ["apples", "oranges", "bananas"],
@@ -28,6 +33,21 @@ add_task(async function() {
         ["0", "apples"],
         ["1", "oranges"],
         ["2", "bananas"],
+      ],
+    },
+  }, {
+    info: "Testing when data argument is an holey array",
+    input: holeyArray,
+    expected: {
+      columns: ["(index)", "Values"],
+      rows: [
+        ["0", "undefined"],
+        ["1", "apples"],
+        ["2", "undefined"],
+        ["3", "oranges"],
+        ["4", "undefined"],
+        ["5", "undefined"],
+        ["6", "bananas"],
       ],
     },
   }, {

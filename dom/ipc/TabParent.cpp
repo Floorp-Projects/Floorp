@@ -2118,6 +2118,36 @@ mozilla::ipc::IPCResult TabParent::RecvRegisterProtocolHandler(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult TabParent::RecvOnContentBlockingEvent(
+    const OptionalWebProgressData& aWebProgressData,
+    const RequestData& aRequestData, const uint32_t& aEvent) {
+  nsCOMPtr<nsIBrowser> browser =
+      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
+  if (browser) {
+    MOZ_ASSERT(aWebProgressData.type() != OptionalWebProgressData::T__None);
+
+    if (aWebProgressData.type() == OptionalWebProgressData::Tvoid_t) {
+      Unused << browser->CallWebProgressContentBlockingEventListeners(
+          false, false, false, 0, 0, aRequestData.requestURI(),
+          aRequestData.originalRequestURI(), aRequestData.matchedList(),
+          aEvent);
+    } else {
+      if (aWebProgressData.get_WebProgressData().isTopLevel()) {
+        Unused << browser->UpdateSecurityUIForContentBlockingEvent(aEvent);
+      }
+      Unused << browser->CallWebProgressContentBlockingEventListeners(
+          true, aWebProgressData.get_WebProgressData().isTopLevel(),
+          aWebProgressData.get_WebProgressData().isLoadingDocument(),
+          aWebProgressData.get_WebProgressData().loadType(),
+          aWebProgressData.get_WebProgressData().DOMWindowID(),
+          aRequestData.requestURI(), aRequestData.originalRequestURI(),
+          aRequestData.matchedList(), aEvent);
+    }
+  }
+
+  return IPC_OK();
+}
+
 bool TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {

@@ -41,7 +41,7 @@
   }
 }
 
-[lwt-newtab-brighttext] {
+[lwt-newtab-brighttext]:not(.force-light-theme) {
   .secondary {
     background-color: $grey-10-10;
 
