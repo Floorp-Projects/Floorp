@@ -75,3 +75,10 @@ jobs:
          build_type: opt
          artifact_prefix: releng/partner
          nightly: true
+
+   win64-aarch64-nightly:
+      attributes:
+         build_platform: win64-aarch64-nightly
+         build_type: opt
+         artifact_prefix: releng/partner
+         nightly: true
