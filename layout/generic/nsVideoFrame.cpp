@@ -129,18 +129,6 @@ nsresult nsVideoFrame::CreateAnonymousContent(
     UpdateTextTrack();
   }
 
-  // Set up "videocontrols" XUL element which will be XBL-bound to the
-  // actual controls.
-  nodeInfo =
-      nodeInfoManager->GetNodeInfo(nsGkAtoms::videocontrols, nullptr,
-                                   kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
-
-  if (!nsContentUtils::IsUAWidgetEnabled()) {
-    NS_TrustedNewXULElement(getter_AddRefs(mVideoControls), nodeInfo.forget());
-    if (!aElements.AppendElement(mVideoControls)) return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   return NS_OK;
 }
 
@@ -150,34 +138,27 @@ void nsVideoFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
     aElements.AppendElement(mPosterImage);
   }
 
-  if (mVideoControls) {
-    aElements.AppendElement(mVideoControls);
-  }
-
   if (mCaptionDiv) {
     aElements.AppendElement(mCaptionDiv);
   }
 }
 
 nsIContent* nsVideoFrame::GetVideoControls() {
-  if (mVideoControls) {
-    return mVideoControls;
+  if (!mContent->GetShadowRoot()) {
+    return nullptr;
   }
-  if (mContent->GetShadowRoot()) {
-    // The video controls <div> is the only child of the UA Widget Shadow Root
-    // if it is present. It is only lazily inserted into the DOM when
-    // the controls attribute is set.
-    MOZ_ASSERT(mContent->GetShadowRoot()->IsUAWidget());
-    MOZ_ASSERT(1 >= mContent->GetShadowRoot()->GetChildCount());
-    return mContent->GetShadowRoot()->GetFirstChild();
-  }
-  return nullptr;
+
+  // The video controls <div> is the only child of the UA Widget Shadow Root
+  // if it is present. It is only lazily inserted into the DOM when
+  // the controls attribute is set.
+  MOZ_ASSERT(mContent->GetShadowRoot()->IsUAWidget());
+  MOZ_ASSERT(1 >= mContent->GetShadowRoot()->GetChildCount());
+  return mContent->GetShadowRoot()->GetFirstChild();
 }
 
 void nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                PostDestroyData& aPostDestroyData) {
   aPostDestroyData.AddAnonymousContent(mCaptionDiv.forget());
-  aPostDestroyData.AddAnonymousContent(mVideoControls.forget());
   aPostDestroyData.AddAnonymousContent(mPosterImage.forget());
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
@@ -403,21 +384,6 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 
   MOZ_ASSERT(aStatus.IsEmpty(), "This type of frame can't be split.");
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
-}
-
-/**
- * nsVideoFrame should be a non-leaf frame when UA Widget is enabled,
- * so the videocontrols container element inserted under the Shadow Root can be
- * picked up. No frames will be generated from elements from the web content,
- * given that they have been replaced by the Shadow Root without and <slots>
- * element in the DOM tree.
- *
- * When the UA Widget is disabled, i.e. the videocontrols is bound as anonymous
- * content with XBL, nsVideoFrame has to be a leaf so no frames from web content
- * element will be generated.
- */
-bool nsVideoFrame::IsLeafDynamic() const {
-  return !nsContentUtils::IsUAWidgetEnabled();
 }
 
 class nsDisplayVideo : public nsDisplayItem {
