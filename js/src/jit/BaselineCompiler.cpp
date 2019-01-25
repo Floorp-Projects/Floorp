@@ -269,20 +269,17 @@ MethodStatus BaselineCompiler::compile() {
     return Method_Error;
   }
 
-  // Note: There is an extra entry in the bytecode type map for the search
-  // hint, see below.
-  size_t bytecodeTypeMapEntries = script->nTypeSets() + 1;
   size_t resumeEntries =
       script->hasResumeOffsets() ? script->resumeOffsets().size() : 0;
   UniquePtr<BaselineScript> baselineScript(
-      BaselineScript::New(
-          script, bailoutPrologueOffset_.offset(),
-          debugOsrPrologueOffset_.offset(), debugOsrEpilogueOffset_.offset(),
-          profilerEnterFrameToggleOffset_.offset(),
-          profilerExitFrameToggleOffset_.offset(),
-          handler.retAddrEntries().length(), pcMappingIndexEntries.length(),
-          pcEntries.length(), bytecodeTypeMapEntries, resumeEntries,
-          traceLoggerToggleOffsets_.length()),
+      BaselineScript::New(script, bailoutPrologueOffset_.offset(),
+                          debugOsrPrologueOffset_.offset(),
+                          debugOsrEpilogueOffset_.offset(),
+                          profilerEnterFrameToggleOffset_.offset(),
+                          profilerExitFrameToggleOffset_.offset(),
+                          handler.retAddrEntries().length(),
+                          pcMappingIndexEntries.length(), pcEntries.length(),
+                          resumeEntries, traceLoggerToggleOffsets_.length()),
       JS::DeletePolicy<BaselineScript>(cx->runtime()));
   if (!baselineScript) {
     ReportOutOfMemory(cx);
@@ -326,13 +323,6 @@ MethodStatus BaselineCompiler::compile() {
   // Initialize the tracelogger instrumentation.
   baselineScript->initTraceLogger(script, traceLoggerToggleOffsets_);
 #endif
-
-  uint32_t* bytecodeMap = baselineScript->bytecodeTypeMap();
-  FillBytecodeTypeMap(script, bytecodeMap);
-
-  // The last entry in the last index found, and is used to avoid binary
-  // searches for the sought entry when queries are in linear order.
-  bytecodeMap[script->nTypeSets()] = 0;
 
   // Compute yield/await native resume addresses.
   baselineScript->computeResumeNativeOffsets(script);

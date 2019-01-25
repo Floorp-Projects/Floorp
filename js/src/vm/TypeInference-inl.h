@@ -627,14 +627,6 @@ extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
 // Script interface functions
 /////////////////////////////////////////////////////////////////////
 
-/* static */ inline unsigned TypeScript::NumTypeSets(JSScript* script) {
-  size_t num = script->nTypeSets() + 1 /* this */;
-  if (JSFunction* fun = script->functionNonDelazifying()) {
-    num += fun->nargs();
-  }
-  return num;
-}
-
 /* static */ inline StackTypeSet* TypeScript::ThisTypes(JSScript* script) {
   AutoSweepTypeScript sweep(script);
   TypeScript* types = script->types(sweep);
@@ -698,10 +690,9 @@ template <typename TYPESET>
   if (!types) {
     return nullptr;
   }
-  uint32_t* hint =
-      script->baselineScript()->bytecodeTypeMap() + script->nTypeSets();
-  return BytecodeTypes(script, pc, script->baselineScript()->bytecodeTypeMap(),
-                       hint, types->typeArray());
+  uint32_t* hint = types->bytecodeTypeMap() + script->nTypeSets();
+  return BytecodeTypes(script, pc, types->bytecodeTypeMap(), hint,
+                       types->typeArray());
 }
 
 /* static */ inline void TypeScript::Monitor(JSContext* cx, JSScript* script,
