@@ -7,6 +7,7 @@
 #include "SMILAnimationFunction.h"
 
 #include "mozilla/dom/SVGAnimationElement.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/SMILCSSValueType.h"
@@ -523,9 +524,7 @@ nsresult SMILAnimationFunction::ComputePacedPosition(
 
     double curIntervalDist;
 
-#ifdef DEBUG
-    nsresult rv =
-#endif
+    DebugOnly<nsresult> rv =
         aValues[i].ComputeDistance(aValues[i + 1], curIntervalDist);
     MOZ_ASSERT(NS_SUCCEEDED(rv),
                "If we got through ComputePacedTotalDistance, we should "
