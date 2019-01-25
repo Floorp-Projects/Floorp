@@ -42,6 +42,7 @@ class WindowGlobalChild : public nsWrapperCache, public PWindowGlobalChild {
 
   // Has this actor been shut down
   bool IsClosed() { return mIPCClosed; }
+  void Destroy();
 
   // Check if this actor is managed by PInProcess, as-in the document is loaded
   // in the chrome process.
@@ -56,6 +57,10 @@ class WindowGlobalChild : public nsWrapperCache, public PWindowGlobalChild {
   // Get the other side of this actor if it is an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is not in-process.
   already_AddRefed<WindowGlobalParent> GetParentActor();
+
+  // Get this actor's manager if it is not an in-process actor. Returns
+  // |nullptr| if the actor has been torn down, or is in-process.
+  already_AddRefed<TabChild> GetTabChild();
 
   // Create and initialize the WindowGlobalChild object.
   static already_AddRefed<WindowGlobalChild> Create(
