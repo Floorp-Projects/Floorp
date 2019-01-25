@@ -134,7 +134,6 @@ class VRSystemManagerExternal : public VRSystemManager {
 
   volatile VRExternalShmem* mExternalShmem;
 #if !defined(MOZ_WIDGET_ANDROID)
-  Mutex mMutex;
   bool mSameProcess;
 #endif
   TimeStamp mEarliestRestartTime;

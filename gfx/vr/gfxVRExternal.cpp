@@ -426,8 +426,8 @@ VRSystemManagerExternal::VRSystemManagerExternal(
     VRExternalShmem* aAPIShmem /* = nullptr*/)
     : mExternalShmem(aAPIShmem)
 #if !defined(MOZ_WIDGET_ANDROID)
-    , mMutex("VRSystemManagerExternal::mMutex")
-    , mSameProcess(aAPIShmem != nullptr)
+      ,
+      mSameProcess(aAPIShmem != nullptr)
 #endif
 {
 #if defined(XP_MACOSX)
@@ -844,10 +844,6 @@ void VRSystemManagerExternal::PushState(VRBrowserState* aBrowserState,
       pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->browserMutex));
     }
 #else
-    // We need this MutexAutoLock to avoid mAPIShmem happens deadlock issue
-    // when both of VRService and VRSubmitFrame threads are writing/reading
-    // it from the memory.
-    MutexAutoLock lock(mMutex);
     mExternalShmem->browserGenerationA++;
     memcpy((void*)&(mExternalShmem->browserState), (void*)aBrowserState,
            sizeof(VRBrowserState));
