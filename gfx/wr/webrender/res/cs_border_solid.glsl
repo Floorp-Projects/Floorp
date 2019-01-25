@@ -29,12 +29,6 @@ flat varying vec4 vClipCenter_Sign;
 // corner clipping.
 flat varying vec4 vClipRadii;
 
-// Position, scale, and radii of horizontally and vertically adjacent corner clips.
-flat varying vec4 vHorizontalClipCenter_Sign;
-flat varying vec2 vHorizontalClipRadii;
-flat varying vec4 vVerticalClipCenter_Sign;
-flat varying vec2 vVerticalClipRadii;
-
 // Local space position
 varying vec2 vPos;
 
@@ -52,8 +46,6 @@ in vec4 aColor1;
 in int aFlags;
 in vec2 aWidths;
 in vec2 aRadii;
-in vec4 aHorizontallyAdjacentCorner;
-in vec4 aVerticallyAdjacentCorner;
 
 vec2 get_outer_corner_scale(int segment) {
     vec2 p;
@@ -110,18 +102,6 @@ void main(void) {
     vClipRadii = vec4(aRadii, max(aRadii - aWidths, 0.0));
     vColorLine = vec4(outer, aWidths.y * -clip_sign.y, aWidths.x * clip_sign.x);
 
-    vec2 horizontal_clip_sign = vec2(-clip_sign.x, clip_sign.y);
-    vHorizontalClipCenter_Sign = vec4(aHorizontallyAdjacentCorner.xy +
-                                      horizontal_clip_sign * aHorizontallyAdjacentCorner.zw,
-                                      horizontal_clip_sign);
-    vHorizontalClipRadii = aHorizontallyAdjacentCorner.zw;
-
-    vec2 vertical_clip_sign = vec2(clip_sign.x, -clip_sign.y);
-    vVerticalClipCenter_Sign = vec4(aVerticallyAdjacentCorner.xy +
-                                    vertical_clip_sign * aVerticallyAdjacentCorner.zw,
-                                    vertical_clip_sign);
-    vVerticalClipRadii = aVerticallyAdjacentCorner.zw;
-
     gl_Position = uTransform * vec4(aTaskOrigin + aRect.xy + vPos, 0.0, 1.0);
 }
 #endif
@@ -141,7 +121,7 @@ void main(void) {
         }
     }
 
-    // Check if inside main corner clip-region
+    // Check if inside corner clip-region
     vec2 clip_relative_pos = vPos - vClipCenter_Sign.xy;
     bool in_clip_region = all(lessThan(vClipCenter_Sign.zw * clip_relative_pos, vec2(0.0)));
 
@@ -150,22 +130,6 @@ void main(void) {
         float d_radii_a = distance_to_ellipse(clip_relative_pos, vClipRadii.xy, aa_range);
         float d_radii_b = distance_to_ellipse(clip_relative_pos, vClipRadii.zw, aa_range);
         d = max(d_radii_a, -d_radii_b);
-    }
-
-    // And again for horizontally-adjacent corner
-    clip_relative_pos = vPos - vHorizontalClipCenter_Sign.xy;
-    in_clip_region = all(lessThan(vHorizontalClipCenter_Sign.zw * clip_relative_pos, vec2(0.0)));
-    if (in_clip_region) {
-        float d_radii = distance_to_ellipse(clip_relative_pos, vHorizontalClipRadii.xy, aa_range);
-        d = max(d_radii, d);
-    }
-
-    // And finally for vertically-adjacent corner
-    clip_relative_pos = vPos - vVerticalClipCenter_Sign.xy;
-    in_clip_region = all(lessThan(vVerticalClipCenter_Sign.zw * clip_relative_pos, vec2(0.0)));
-    if (in_clip_region) {
-        float d_radii = distance_to_ellipse(clip_relative_pos, vVerticalClipRadii.xy, aa_range);
-        d = max(d_radii, d);
     }
 
     float alpha = do_aa ? distance_aa(aa_range, d) : 1.0;
