@@ -246,7 +246,9 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(job, dependencies, platform, locale=None, project=None):
+def generate_upstream_artifacts(
+    config, job, dependencies, platform, locale=None, project=None
+):
 
     build_mapping = UPSTREAM_ARTIFACT_UNSIGNED_PATHS
     build_signing_mapping = UPSTREAM_ARTIFACT_SIGNED_PATHS
@@ -266,6 +268,12 @@ def generate_upstream_artifacts(job, dependencies, platform, locale=None, projec
         ("build", build_mapping),
         ("signing", build_signing_mapping),
     ]:
+        # Bug 1522380: We want to build but not publish win64-aarch64 builds on release branches
+        if (
+            platform.startswith("win64-aarch64-nightly")
+            and config.params["release_type"] != "nightly"
+        ):
+            continue
         platform_was_previously_matched_by_regex = None
         for platform_regex, paths in mapping.iteritems():
             if platform_regex.match(platform) is not None:
@@ -300,6 +308,14 @@ def generate_upstream_artifacts(job, dependencies, platform, locale=None, projec
         ('mar-signing', 'signing', mar_signing_mapping),
     ]:
         if task_type not in dependencies:
+            continue
+
+        # Bug 1522380: We want to build but not publish win64-aarch64 builds on release branches
+        if (
+            platform.startswith("win64-aarch64-nightly")
+            and config.params["release_type"] != "nightly"
+            and task_type != "mar-signing"
+        ):
             continue
 
         paths = ["{}/{}".format(artifact_prefix, path) for path in paths]
@@ -356,7 +372,7 @@ def make_task_worker(config, jobs):
         platform = job["attributes"]["build_platform"]
 
         upstream_artifacts = generate_upstream_artifacts(
-            job, job['dependencies'], platform, locale,
+            config, job, job['dependencies'], platform, locale,
             project=config.params['project']
         )
 
