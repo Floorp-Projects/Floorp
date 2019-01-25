@@ -487,9 +487,7 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
     MOZ_ASSERT(
         // pluginProblem
         tag == nsGkAtoms::embed || tag == nsGkAtoms::applet ||
-            tag == nsGkAtoms::object ||
-            // xbl-marquee
-            tag == nsGkAtoms::marquee,
+            tag == nsGkAtoms::object,
         "Unexpected XBL binding used in the content process");
   }
 #endif

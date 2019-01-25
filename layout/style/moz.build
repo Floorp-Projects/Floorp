@@ -34,7 +34,6 @@ with Files('nsTransitionManager.*'):
 with Files('StyleAnimationValue.*'):
     BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
 
-DIRS += ['xbl-marquee']
 TEST_DIRS += ['test']
 
 EXPORTS += [
