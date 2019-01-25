@@ -45,7 +45,7 @@ var UrlbarUtils = {
   MAXIMUM_ALLOWED_EXTENSION_MATCHES: 6,
 
   // This is used by UnifiedComplete, the new implementation will use
-  // PROVIDER_TYPE and MATCH_TYPE
+  // PROVIDER_TYPE and RESULT_TYPE
   MATCH_GROUP: {
     HEURISTIC: "heuristic",
     GENERAL: "general",
@@ -67,7 +67,7 @@ var UrlbarUtils = {
   },
 
   // Defines UrlbarResult types.
-  MATCH_TYPE: {
+  RESULT_TYPE: {
     // An open tab.
     // Payload: { icon, url, userContextId }
     TAB_SWITCH: 1,
