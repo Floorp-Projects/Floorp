@@ -229,6 +229,16 @@ def main(argv):
         options.asmjs_enabled = False
         options.wasm_enabled = False
 
+    if options.run_binast:
+        code = 'print(getBuildConfiguration().binast)'
+        is_binast_enabled = subprocess.check_output([js_shell, '-e', code])
+        if not is_binast_enabled.startswith('true'):
+            print("While --run-binast is specified, BinAST is not enabled.",
+                  file=sys.stderr)
+            print("BinAST testcases will be skipped.",
+                  file=sys.stderr)
+            options.run_binast = False
+
     if test_args:
         read_all = False
         for arg in test_args:
