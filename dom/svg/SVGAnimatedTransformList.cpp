@@ -161,7 +161,7 @@ bool SVGAnimatedTransformList::IsExplicitlySet() const {
   return mIsAttrSet || !mBaseVal.IsEmpty() || mAnimVal;
 }
 
-UniquePtr<nsISMILAttr> SVGAnimatedTransformList::ToSMILAttr(
+UniquePtr<SMILAttr> SVGAnimatedTransformList::ToSMILAttr(
     SVGElement* aSVGElement) {
   return MakeUnique<SMILAnimatedTransformList>(this, aSVGElement);
 }

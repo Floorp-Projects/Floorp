@@ -38,7 +38,7 @@ namespace mozilla {
  */
 class SMILMilestone {
  public:
-  SMILMilestone(nsSMILTime aTime, bool aIsEnd) : mTime(aTime), mIsEnd(aIsEnd) {}
+  SMILMilestone(SMILTime aTime, bool aIsEnd) : mTime(aTime), mIsEnd(aIsEnd) {}
 
   SMILMilestone() : mTime(0), mIsEnd(false) {}
 
@@ -64,7 +64,7 @@ class SMILMilestone {
     return !(*this < aOther);
   }
 
-  nsSMILTime mTime;  // The milestone time. This may be in container time or
+  SMILTime mTime;    // The milestone time. This may be in container time or
                      // parent container time depending on where it is used.
   bool mIsEnd;       // true if this milestone corresponds to an interval
                      // end, false otherwise.

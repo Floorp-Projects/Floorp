@@ -9,13 +9,10 @@ with Files("**"):
 
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
-EXPORTS += [
-    'nsISMILAttr.h',
-]
-
 EXPORTS.mozilla += [
     'SMILAnimationController.h',
     'SMILAnimationFunction.h',
+    'SMILAttr.h',
     'SMILCompositorTable.h',
     'SMILCSSValueType.h',
     'SMILInstanceTime.h',

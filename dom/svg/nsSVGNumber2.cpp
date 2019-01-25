@@ -111,7 +111,7 @@ nsSVGNumber2::DOMAnimatedNumber::~DOMAnimatedNumber() {
   sSVGAnimatedNumberTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> nsSVGNumber2::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> nsSVGNumber2::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILNumber>(this, aSVGElement);
 }
 

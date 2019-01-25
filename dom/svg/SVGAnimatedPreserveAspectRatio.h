@@ -9,11 +9,11 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "nsISMILAttr.h"
-#include "SVGElement.h"
 #include "SVGPreserveAspectRatio.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/SVGElement.h"
 
 namespace mozilla {
 
@@ -69,7 +69,7 @@ class SVGAnimatedPreserveAspectRatio final {
 
   already_AddRefed<mozilla::dom::DOMSVGAnimatedPreserveAspectRatio>
   ToDOMAnimatedPreserveAspectRatio(dom::SVGElement* aSVGElement);
-  UniquePtr<nsISMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement);
+  UniquePtr<SMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement);
 
  private:
   SVGPreserveAspectRatio mAnimVal;
@@ -78,19 +78,19 @@ class SVGAnimatedPreserveAspectRatio final {
   bool mIsBaseSet;
 
  public:
-  struct SMILPreserveAspectRatio final : public nsISMILAttr {
+  struct SMILPreserveAspectRatio final : public SMILAttr {
    public:
     SMILPreserveAspectRatio(SVGAnimatedPreserveAspectRatio* aVal,
                             dom::SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
-    // These will stay alive because a nsISMILAttr only lives as long
+    // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     SVGAnimatedPreserveAspectRatio* mVal;
     dom::SVGElement* mSVGElement;
 
-    // nsISMILAttr methods
+    // SMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
         SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
