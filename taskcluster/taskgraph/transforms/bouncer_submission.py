@@ -28,6 +28,7 @@ FTP_PLATFORMS_PER_BOUNCER_PLATFORM = {
     'osx': 'mac',
     'win': 'win32',
     'win64': 'win64',
+    'win64-aarch64': 'win64-aarch64'
 }
 
 # :lang is interpolated by bouncer at runtime

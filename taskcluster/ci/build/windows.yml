@@ -1100,7 +1100,6 @@ win64-aarch64/debug:
         extra-config:
             mozconfig_platform: win64-aarch64
         mozconfig-variant: debug
-    run-on-projects: ['mozilla-central', 'trunk', 'try']
     toolchains:
         - win64-clang-cl
         - win64-aarch64-rust
@@ -1136,7 +1135,6 @@ win64-aarch64/opt:
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
-    run-on-projects: ['mozilla-central', 'trunk', 'try']
     toolchains:
         - win64-clang-cl
         - win64-aarch64-rust
@@ -1153,6 +1151,7 @@ win64-aarch64-nightly/opt:
     attributes:
         nightly: true
         enable-full-crashsymbols: true
+    shipping-phase: build
     shipping-product: firefox
     treeherder:
         platform: windows2012-aarch64/opt
@@ -1176,7 +1175,6 @@ win64-aarch64-nightly/opt:
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
-    run-on-projects: ['mozilla-central', 'trunk', 'try']
     toolchains:
         - win64-clang-cl
         - win64-aarch64-rust
