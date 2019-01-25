@@ -68,7 +68,12 @@ class StatusHandler(object):
                 self.unexpected_statuses["FAIL"] += 1
 
         if action == "mozleak_total":
-            if data.get("bytes", 0) > data.get("threshold", 0):
+            data_bytes = data["bytes"]
+            if data_bytes is None:
+                if not (data.get("induced_crash", False) or
+                        data.get("ignore_missing", False)):
+                    self.unexpected_statuses["FAIL"] += 1
+            elif data_bytes > data.get("threshold", 0):
                 self.unexpected_statuses["FAIL"] += 1
 
     def summarize(self):
