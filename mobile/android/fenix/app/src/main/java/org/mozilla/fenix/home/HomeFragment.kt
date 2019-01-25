@@ -39,6 +39,10 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Hide buttons that aren't used yet to prevent confusion
+        menuButton.visibility = View.GONE
+        privateBrowsingButton.visibility = View.GONE
+
         sessionsAdapter = SessionsAdapter(requireContext())
 
         toolbar_wrapper.clipToOutline = false
