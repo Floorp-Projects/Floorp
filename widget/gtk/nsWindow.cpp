@@ -2571,7 +2571,9 @@ void nsWindow::OnButtonPressEvent(GdkEventButton *aEvent) {
 
   nsEventStatus eventStatus = DispatchInputEvent(&event);
 
-  if (mDraggableRegion.Contains(aEvent->x, aEvent->y) &&
+  LayoutDeviceIntPoint refPoint =
+      GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
+  if (mDraggableRegion.Contains(refPoint.x, refPoint.y) &&
       domButton == WidgetMouseEvent::eLeftButton &&
       eventStatus != nsEventStatus_eConsumeNoDefault) {
     mWindowShouldStartDragging = true;

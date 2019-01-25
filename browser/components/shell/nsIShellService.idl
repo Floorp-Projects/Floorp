@@ -17,15 +17,11 @@ interface nsIShellService : nsISupports
    * This is simply whether or not Firefox is registered to handle
    * http links.
    *
-   * @param aStartupCheck true if this is the check being performed
-   *                      by the first browser window at startup,
-   *                      false otherwise.
    * @param aForAllTypes  true if the check should be made for HTTP and HTML.
    *                      false if the check should be made for HTTP only.
    *                      This parameter may be ignored on some platforms.
    */
-  boolean isDefaultBrowser(in boolean aStartupCheck,
-                           [optional] in boolean aForAllTypes);
+  boolean isDefaultBrowser([optional] in boolean aForAllTypes);
 
   /**
    * Registers Firefox as the "Default Browser."

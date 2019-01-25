@@ -10,8 +10,8 @@
 #include "DOMSVGNumber.h"
 #include "nsError.h"
 #include "SVGAnimatedNumberList.h"
-#include "nsCOMPtr.h"
 #include "mozilla/dom/SVGNumberListBinding.h"
+#include "mozilla/RefPtr.h"
 #include <algorithm>
 
 // See the comment in this file's header.

@@ -113,14 +113,9 @@ impl App {
             document.content_rect.size,
         );
 
-        builder.push_stacking_context(
+        builder.push_simple_stacking_context(
             &info,
             space_and_clip.spatial_id,
-            None,
-            TransformStyle::Flat,
-            MixBlendMode::Normal,
-            &[],
-            RasterSpace::Screen,
         );
 
         builder.push_rect(&info, &space_and_clip, ColorF::new(1.0, 1.0, 0.0, 1.0));
@@ -159,14 +154,9 @@ impl Example for App {
         let info = LayoutPrimitiveInfo::new((100, 100).to(200, 200));
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
-        builder.push_stacking_context(
+        builder.push_simple_stacking_context(
             &info,
             space_and_clip.spatial_id,
-            None,
-            TransformStyle::Flat,
-            MixBlendMode::Normal,
-            &[],
-            RasterSpace::Screen,
         );
 
         builder.push_image(

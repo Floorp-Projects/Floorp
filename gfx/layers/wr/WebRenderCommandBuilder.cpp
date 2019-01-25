@@ -1433,7 +1433,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
     wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResourceUpdates, nsDisplayList* aDisplayList,
     nsDisplayListBuilder* aDisplayListBuilder, WebRenderScrollData& aScrollData,
-    wr::LayoutSize& aContentSize, const nsTArray<wr::FilterOp>& aFilters) {
+    wr::LayoutSize& aContentSize, nsTArray<wr::FilterOp>&& aFilters) {
   StackingContextHelper sc;
   aScrollData = WebRenderScrollData(mManager);
   MOZ_ASSERT(mLayerScrollData.empty());
@@ -1451,9 +1451,18 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
       mZoomProp->id = AnimationHelper::GetNextCompositorAnimationsId();
     }
 
+    nsPresContext* presContext =
+        aDisplayListBuilder->RootReferenceFrame()->PresContext();
+    bool isTopLevelContent =
+        presContext->Document()->IsTopLevelContentDocument();
+
+    wr::StackingContextParams params;
+    params.mFilters = std::move(aFilters);
+    params.animation = mZoomProp.ptrOr(nullptr);
+    params.cache_tiles = isTopLevelContent;
+
     StackingContextHelper pageRootSc(sc, nullptr, nullptr, nullptr, aBuilder,
-                                     aFilters, LayoutDeviceRect(), nullptr,
-                                     mZoomProp.ptrOr(nullptr));
+                                     params);
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
       mBuilderDumpIndex =
           aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());

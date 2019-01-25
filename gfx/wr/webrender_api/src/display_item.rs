@@ -552,6 +552,8 @@ pub struct StackingContext {
     pub mix_blend_mode: MixBlendMode,
     pub clip_id: Option<ClipId>,
     pub raster_space: RasterSpace,
+    /// True if picture caching should be used on this stacking context.
+    pub cache_tiles: bool,
 } // IMPLICIT: filters: Vec<FilterOp>
 
 

@@ -31,18 +31,9 @@ class MOZ_RAII StackingContextHelper {
       const StackingContextHelper& aParentSC, const ActiveScrolledRoot* aAsr,
       nsIFrame* aContainerFrame, nsDisplayItem* aContainerItem,
       wr::DisplayListBuilder& aBuilder,
-      const nsTArray<wr::FilterOp>& aFilters = nsTArray<wr::FilterOp>(),
-      const LayoutDeviceRect& aBounds = LayoutDeviceRect(),
-      const gfx::Matrix4x4* aBoundTransform = nullptr,
-      const wr::WrAnimationProperty* aAnimation = nullptr,
-      const float* aOpacityPtr = nullptr,
-      const gfx::Matrix4x4* aTransformPtr = nullptr,
-      const wr::ReferenceFrameKind = wr::ReferenceFrameKind::Transform,
-      const gfx::CompositionOp& aMixBlendMode = gfx::CompositionOp::OP_OVER,
-      bool aBackfaceVisible = true, bool aIsPreserve3D = false,
-      const Maybe<nsDisplayTransform*>& aDeferredTransformItem = Nothing(),
-      const wr::WrStackingContextClip& = wr::WrStackingContextClip::None(),
-      bool aAnimated = false);
+      const wr::StackingContextParams& aParams = wr::StackingContextParams(),
+      const LayoutDeviceRect& aBounds = LayoutDeviceRect());
+
   // This version of the constructor should only be used at the root level
   // of the tree, so that we have a StackingContextHelper to pass down into
   // the RenderLayer traversal, but don't actually want it to push a stacking

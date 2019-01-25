@@ -47,7 +47,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
-  ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   ReaderParent: "resource:///modules/ReaderParent.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
@@ -79,6 +78,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 if (AppConstants.MOZ_CRASHREPORTER) {
   ChromeUtils.defineModuleGetter(this, "PluginCrashReporter",
     "resource:///modules/ContentCrashHandlers.jsm");
+}
+
+if (!Services.prefs.getBoolPref("browser.urlbar.quantumbar", false)) {
+  ChromeUtils.defineModuleGetter(this, "ReaderMode",
+    "resource://gre/modules/ReaderMode.jsm");
 }
 
 XPCOMUtils.defineLazyScriptGetter(this, "PlacesTreeView",
