@@ -99,10 +99,6 @@
   color: inherit;
 }
 
-.sources-list .tree .img.arrow.expanded {
-  transform: rotate(0deg);
-}
-
 .theme-dark .source-list .tree .node.focused {
   background-color: var(--theme-tab-toolbar-background);
 }
