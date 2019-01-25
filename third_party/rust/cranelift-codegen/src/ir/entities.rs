@@ -19,8 +19,9 @@
 //! The entity references all implement the `Display` trait in a way that matches the textual IR
 //! format.
 
-use std::fmt;
-use std::u32;
+use crate::entity::entity_impl;
+use core::fmt;
+use core::u32;
 
 /// An opaque reference to an extended basic block in a function.
 #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -304,8 +305,8 @@ impl From<Table> for AnyEntity {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use core::u32;
     use std::string::ToString;
-    use std::u32;
 
     #[test]
     fn value_with_number() {
@@ -318,8 +319,8 @@ mod tests {
 
     #[test]
     fn memory() {
-        use packed_option::PackedOption;
-        use std::mem;
+        use crate::packed_option::PackedOption;
+        use core::mem;
         // This is the whole point of `PackedOption`.
         assert_eq!(
             mem::size_of::<Value>(),

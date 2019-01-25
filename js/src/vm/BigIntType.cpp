@@ -2347,10 +2347,15 @@ BigInt* BigInt::asIntN(JSContext* cx, HandleBigInt x, uint64_t bits) {
 
   // Step 4: If `mod >= 2**(bits - 1)`, return `mod - 2**bits`; otherwise,
   // return `mod`.
-  if (mod->digitLength() == CeilDiv(bits, DigitBits) &&
-      (mod->digit(mod->digitLength() - 1) & signBit) != 0) {
-    bool resultNegative = true;
-    return truncateAndSubFromPowerOfTwo(cx, mod, bits, resultNegative);
+  if (mod->digitLength() == CeilDiv(bits, DigitBits)) {
+    MOZ_ASSERT(!mod->isZero(),
+               "nonzero bits implies nonzero digit length which implies "
+               "nonzero overall");
+
+    if ((mod->digit(mod->digitLength() - 1) & signBit) != 0) {
+      bool resultNegative = true;
+      return truncateAndSubFromPowerOfTwo(cx, mod, bits, resultNegative);
+    }
   }
 
   return mod;

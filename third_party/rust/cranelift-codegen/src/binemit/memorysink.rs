@@ -15,8 +15,8 @@
 //! `CodeSink::put*` methods, so the performance impact of the virtual callbacks is less severe.
 
 use super::{Addend, CodeOffset, CodeSink, Reloc};
-use ir::{ExternalName, JumpTable, SourceLoc, TrapCode};
-use std::ptr::write_unaligned;
+use crate::ir::{ExternalName, JumpTable, SourceLoc, TrapCode};
+use core::ptr::write_unaligned;
 
 /// A `CodeSink` that writes binary machine code directly into memory.
 ///
@@ -57,13 +57,13 @@ impl<'a> MemoryCodeSink<'a> {
 /// A trait for receiving relocations for code that is emitted directly into memory.
 pub trait RelocSink {
     /// Add a relocation referencing an EBB at the current offset.
-    fn reloc_ebb(&mut self, CodeOffset, Reloc, CodeOffset);
+    fn reloc_ebb(&mut self, _: CodeOffset, _: Reloc, _: CodeOffset);
 
     /// Add a relocation referencing an external symbol at the current offset.
-    fn reloc_external(&mut self, CodeOffset, Reloc, &ExternalName, Addend);
+    fn reloc_external(&mut self, _: CodeOffset, _: Reloc, _: &ExternalName, _: Addend);
 
     /// Add a relocation referencing a jump table.
-    fn reloc_jt(&mut self, CodeOffset, Reloc, JumpTable);
+    fn reloc_jt(&mut self, _: CodeOffset, _: Reloc, _: JumpTable);
 }
 
 /// A trait for receiving trap codes and offsets.
@@ -72,7 +72,7 @@ pub trait RelocSink {
 /// [`NullTrapSink`](binemit/trait.TrapSink.html) implementation.
 pub trait TrapSink {
     /// Add trap information for a specific offset.
-    fn trap(&mut self, CodeOffset, SourceLoc, TrapCode);
+    fn trap(&mut self, _: CodeOffset, _: SourceLoc, _: TrapCode);
 }
 
 impl<'a> CodeSink for MemoryCodeSink<'a> {
@@ -89,7 +89,7 @@ impl<'a> CodeSink for MemoryCodeSink<'a> {
 
     fn put2(&mut self, x: u16) {
         unsafe {
-            #[cfg_attr(feature = "cargo-clippy", allow(cast_ptr_alignment))]
+            #[cfg_attr(feature = "cargo-clippy", allow(clippy::cast_ptr_alignment))]
             write_unaligned(self.data.offset(self.offset) as *mut u16, x);
         }
         self.offset += 2;
@@ -97,7 +97,7 @@ impl<'a> CodeSink for MemoryCodeSink<'a> {
 
     fn put4(&mut self, x: u32) {
         unsafe {
-            #[cfg_attr(feature = "cargo-clippy", allow(cast_ptr_alignment))]
+            #[cfg_attr(feature = "cargo-clippy", allow(clippy::cast_ptr_alignment))]
             write_unaligned(self.data.offset(self.offset) as *mut u32, x);
         }
         self.offset += 4;
@@ -105,7 +105,7 @@ impl<'a> CodeSink for MemoryCodeSink<'a> {
 
     fn put8(&mut self, x: u64) {
         unsafe {
-            #[cfg_attr(feature = "cargo-clippy", allow(cast_ptr_alignment))]
+            #[cfg_attr(feature = "cargo-clippy", allow(clippy::cast_ptr_alignment))]
             write_unaligned(self.data.offset(self.offset) as *mut u64, x);
         }
         self.offset += 8;
