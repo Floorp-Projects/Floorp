@@ -38,6 +38,7 @@ add_task(async () => {
   checkProfileService(profileData, installData);
 
   let { profile: selectedProfile, didCreate } = selectStartupProfile();
+  checkStartupReason("firstrun-skipped-default");
   Assert.ok(didCreate, "Should have created a new profile.");
   Assert.ok(service.createdAlternateProfile, "Should have created an alternate profile.");
   Assert.ok(!selectedProfile.rootDir.equals(defaultProfile), "Should be using the right directory.");
