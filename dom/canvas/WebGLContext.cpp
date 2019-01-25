@@ -1720,8 +1720,9 @@ gfx::IntSize WebGLContext::DrawingBufferSize() {
   return mDefaultFB->mSize;
 }
 
-bool WebGLContext::ValidateAndInitFB(const WebGLFramebuffer* const fb) {
-  if (fb) return fb->ValidateAndInitAttachments();
+bool WebGLContext::ValidateAndInitFB(const WebGLFramebuffer* const fb,
+                                     const GLenum incompleteFbError) {
+  if (fb) return fb->ValidateAndInitAttachments(incompleteFbError);
 
   if (!EnsureDefaultFB()) return false;
 
@@ -1758,11 +1759,11 @@ bool WebGLContext::BindCurFBForDraw() {
 
 bool WebGLContext::BindCurFBForColorRead(
     const webgl::FormatUsageInfo** const out_format, uint32_t* const out_width,
-    uint32_t* const out_height) {
+    uint32_t* const out_height, const GLenum incompleteFbError) {
   const auto& fb = mBoundReadFramebuffer;
 
   if (fb) {
-    if (!ValidateAndInitFB(fb)) return false;
+    if (!ValidateAndInitFB(fb, incompleteFbError)) return false;
     if (!fb->ValidateForColorRead(out_format, out_width, out_height))
       return false;
 

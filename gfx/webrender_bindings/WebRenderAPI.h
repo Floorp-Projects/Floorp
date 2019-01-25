@@ -23,6 +23,7 @@
 #include "Units.h"
 
 class nsDisplayItem;
+class nsDisplayTransform;
 
 namespace mozilla {
 
@@ -307,6 +308,33 @@ class MOZ_RAII AutoTransactionSender {
   TransactionBuilder* mTxn;
 };
 
+/**
+ * A set of optional parameters for stacking context creation.
+ */
+struct MOZ_STACK_CLASS StackingContextParams : public WrStackingContextParams {
+  StackingContextParams()
+      : WrStackingContextParams{WrStackingContextClip::None(),
+                                nullptr,
+                                nullptr,
+                                wr::TransformStyle::Flat,
+                                wr::ReferenceFrameKind::Transform,
+                                /* is_backface_visible = */ true,
+                                /* cache_tiles = */ false,
+                                wr::MixBlendMode::Normal} {}
+
+  void SetPreserve3D(bool aPreserve) {
+    transform_style =
+        aPreserve ? wr::TransformStyle::Preserve3D : wr::TransformStyle::Flat;
+  }
+
+  nsTArray<wr::FilterOp> mFilters;
+  wr::LayoutRect mBounds = wr::ToLayoutRect(LayoutDeviceRect());
+  const gfx::Matrix4x4* mBoundTransform = nullptr;
+  const gfx::Matrix4x4* mTransformPtr = nullptr;
+  Maybe<nsDisplayTransform*> mDeferredTransformItem;
+  bool mAnimated = false;
+};
+
 /// This is a simple C++ wrapper around WrState defined in the rust bindings.
 /// We may want to turn this into a direct wrapper on top of
 /// WebRenderFrameBuilder instead, so the interface may change a bit.
@@ -329,12 +357,7 @@ class DisplayListBuilder {
                 wr::BuiltDisplayList& aOutDisplayList);
 
   Maybe<wr::WrSpatialId> PushStackingContext(
-      // TODO: We should work with strongly typed rects
-      const wr::LayoutRect& aBounds, const wr::WrStackingContextClip& aClip,
-      const wr::WrAnimationProperty* aAnimation, const float* aOpacity,
-      const gfx::Matrix4x4* aTransform, wr::TransformStyle aTransformStyle,
-      const wr::ReferenceFrameKind, const wr::MixBlendMode& aMixBlendMode,
-      const nsTArray<wr::FilterOp>& aFilters, bool aIsBackfaceVisible,
+      const StackingContextParams& aParams, const wr::LayoutRect& aBounds,
       const wr::RasterSpace& aRasterSpace);
   void PopStackingContext(bool aIsReferenceFrame);
 

@@ -1895,21 +1895,30 @@ pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
     state.frame_builder.dl_builder.clear_save();
 }
 
+/// IMPORTANT: If you add fields to this struct, you need to also add initializers
+/// for those fields in WebRenderAPI.h.
+#[repr(C)]
+pub struct WrStackingContextParams {
+    pub clip: WrStackingContextClip,
+    pub animation: *const WrAnimationProperty,
+    pub opacity: *const f32,
+    pub transform_style: TransformStyle,
+    pub reference_frame_kind: ReferenceFrameKind,
+    pub is_backface_visible: bool,
+    /// True if picture caching should be enabled for this stacking context.
+    pub cache_tiles: bool,
+    pub mix_blend_mode: MixBlendMode,
+}
+
 #[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(
     state: &mut WrState,
     mut bounds: LayoutRect,
     spatial_id: WrSpatialId,
-    clip: &WrStackingContextClip,
-    animation: *const WrAnimationProperty,
-    opacity: *const f32,
+    params: &WrStackingContextParams,
     transform: *const LayoutTransform,
-    transform_style: TransformStyle,
-    reference_frame_kind: ReferenceFrameKind,
-    mix_blend_mode: MixBlendMode,
     filters: *const FilterOp,
     filter_count: usize,
-    is_backface_visible: bool,
     glyph_raster_space: RasterSpace,
 ) -> WrSpatialId {
     debug_assert!(unsafe { !is_in_render_thread() });
@@ -1921,13 +1930,13 @@ pub extern "C" fn wr_dp_push_stacking_context(
 
     let transform_ref = unsafe { transform.as_ref() };
     let mut transform_binding = match transform_ref {
-        Some(transform) => Some(PropertyBinding::Value(transform.clone())),
+        Some(t) => Some(PropertyBinding::Value(t.clone())),
         None => None,
     };
 
-    let opacity_ref = unsafe { opacity.as_ref() };
+    let opacity_ref = unsafe { params.opacity.as_ref() };
     let mut has_opacity_animation = false;
-    let anim = unsafe { animation.as_ref() };
+    let anim = unsafe { params.animation.as_ref() };
     if let Some(anim) = anim {
         debug_assert!(anim.id > 0);
         match anim.effect_type {
@@ -1957,7 +1966,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
     }
 
     let mut wr_spatial_id = spatial_id.to_webrender(state.pipeline_id);
-    let wr_clip_id = clip.to_webrender(state.pipeline_id);
+    let wr_clip_id = params.clip.to_webrender(state.pipeline_id);
 
     // Note: 0 has special meaning in WR land, standing for ROOT_REFERENCE_FRAME.
     // However, it is never returned by `push_reference_frame`, and we need to return
@@ -1968,9 +1977,9 @@ pub extern "C" fn wr_dp_push_stacking_context(
         wr_spatial_id = state.frame_builder.dl_builder.push_reference_frame(
             &bounds,
             wr_spatial_id,
-            transform_style,
+            params.transform_style,
             transform_binding,
-            reference_frame_kind,
+            params.reference_frame_kind,
         );
 
         bounds.origin = LayoutPoint::zero();
@@ -1979,7 +1988,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
     }
 
     let prim_info = LayoutPrimitiveInfo {
-        is_backface_visible,
+        is_backface_visible: params.is_backface_visible,
         tag: state.current_tag,
         .. LayoutPrimitiveInfo::new(bounds)
     };
@@ -1989,10 +1998,11 @@ pub extern "C" fn wr_dp_push_stacking_context(
          .push_stacking_context(&prim_info,
                                 wr_spatial_id,
                                 wr_clip_id,
-                                transform_style,
-                                mix_blend_mode,
+                                params.transform_style,
+                                params.mix_blend_mode,
                                 &filters,
-                                glyph_raster_space);
+                                glyph_raster_space,
+                                params.cache_tiles);
 
     result
 }

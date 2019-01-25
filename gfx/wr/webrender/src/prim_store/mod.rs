@@ -1989,7 +1989,7 @@ impl PrimitiveStore {
                 // primitive.
                 if frame_context.debug_flags.contains(::api::DebugFlags::PRIMITIVE_DBG) {
                     let debug_color = match prim_instance.kind {
-                        PrimitiveInstanceKind::Picture { .. } => debug_colors::GREEN,
+                        PrimitiveInstanceKind::Picture { .. } => ColorF::TRANSPARENT,
                         PrimitiveInstanceKind::TextRun { .. } => debug_colors::RED,
                         PrimitiveInstanceKind::LineDecoration { .. } => debug_colors::PURPLE,
                         PrimitiveInstanceKind::NormalBorder { .. } |
@@ -2001,8 +2001,10 @@ impl PrimitiveStore {
                         PrimitiveInstanceKind::RadialGradient { .. } => debug_colors::PINK,
                         PrimitiveInstanceKind::Clear { .. } => debug_colors::CYAN,
                     };
-                    let debug_rect = clipped_world_rect * frame_context.device_pixel_scale;
-                    frame_state.scratch.push_debug_rect(debug_rect, debug_color);
+                    if debug_color.a != 0.0 {
+                        let debug_rect = clipped_world_rect * frame_context.device_pixel_scale;
+                        frame_state.scratch.push_debug_rect(debug_rect, debug_color);
+                    }
                 }
 
                 let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.prim_info.len() as u32);

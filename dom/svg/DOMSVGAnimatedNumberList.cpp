@@ -6,12 +6,12 @@
 
 #include "DOMSVGAnimatedNumberList.h"
 
-#include "nsCOMPtr.h"
 #include "DOMSVGNumberList.h"
 #include "SVGAnimatedNumberList.h"
 #include "SVGAttrTearoffTable.h"
 #include "mozilla/dom/SVGAnimatedNumberListBinding.h"
 #include "mozilla/dom/SVGElement.h"
+#include "mozilla/RefPtr.h"
 
 // See the architecture comment in this file's header.
 
