@@ -6,12 +6,14 @@
 #ifndef nsmacshellservice_h____
 #define nsmacshellservice_h____
 
+#include "nsToolkitShellService.h"
 #include "nsIMacShellService.h"
 #include "nsIWebProgressListener.h"
 #include "nsIFile.h"
 #include "nsCOMPtr.h"
 
 class nsMacShellService : public nsIMacShellService,
+                          public nsToolkitShellService,
                           public nsIWebProgressListener {
  public:
   nsMacShellService(){};

@@ -8,12 +8,14 @@
 
 #include "nscore.h"
 #include "nsString.h"
+#include "nsToolkitShellService.h"
 #include "nsIShellService.h"
 
 #include <windows.h>
 #include <ole2.h>
 
-class nsWindowsShellService : public nsIShellService {
+class nsWindowsShellService : public nsIShellService,
+                              public nsToolkitShellService {
   virtual ~nsWindowsShellService();
 
  public:
