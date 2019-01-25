@@ -402,6 +402,8 @@ static already_AddRefed<DataSourceSurface> GetDataSurfaceInRect(
   }
 
   IntRect intersect = sourceRect.Intersect(aDestRect);
+
+  // create rects that are in surface local space.
   IntRect intersectInSourceSpace = intersect - sourceRect.TopLeft();
   IntRect intersectInDestSpace = intersect - aDestRect.TopLeft();
   SurfaceFormat format =
@@ -726,7 +728,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(
 #ifdef DEBUG_DUMP_SURFACES
     printf("input from input surface:\n");
 #endif
-    surfaceRect = IntRect(IntPoint(0, 0), surface->GetSize());
+    surfaceRect = surface->GetRect();
   } else {
     // Input from input filter
 #ifdef DEBUG_DUMP_SURFACES
@@ -829,8 +831,7 @@ IntRect FilterNodeSoftware::GetInputRectInRect(uint32_t aInputEnumIndex,
     return IntRect();
   }
   if (mInputSurfaces[inputIndex]) {
-    return aInRect.Intersect(
-        IntRect(IntPoint(0, 0), mInputSurfaces[inputIndex]->GetSize()));
+    return aInRect.Intersect(mInputSurfaces[inputIndex]->GetRect());
   }
   RefPtr<FilterNodeSoftware> filter = mInputFilters[inputIndex];
   MOZ_ASSERT(filter, "missing input");
