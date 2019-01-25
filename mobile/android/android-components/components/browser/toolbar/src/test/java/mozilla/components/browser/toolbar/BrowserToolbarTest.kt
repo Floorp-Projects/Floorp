@@ -648,13 +648,13 @@ class BrowserToolbarTest {
     @Test
     fun `displaySiteSecurityIcon getter and setter`() {
         val toolbar = BrowserToolbar(RuntimeEnvironment.application)
-        assertEquals(toolbar.displayToolbar.iconView.isVisible(), toolbar.displaySiteSecurityIcon)
+        assertEquals(toolbar.displayToolbar.siteSecurityIconView.isVisible(), toolbar.displaySiteSecurityIcon)
 
         toolbar.displaySiteSecurityIcon = false
-        assertEquals(View.GONE, toolbar.displayToolbar.iconView.visibility)
+        assertEquals(View.GONE, toolbar.displayToolbar.siteSecurityIconView.visibility)
 
         toolbar.displaySiteSecurityIcon = true
-        assertEquals(View.VISIBLE, toolbar.displayToolbar.iconView.visibility)
+        assertEquals(View.VISIBLE, toolbar.displayToolbar.siteSecurityIconView.visibility)
     }
 
     @Test

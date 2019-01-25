@@ -8,5 +8,7 @@
     <attr name="browserToolbarHintColor" format="color"/>
     <attr name="browserToolbarTextColor" format="color"/>
     <attr name="browserToolbarTextSize" format="dimension"/>
+    <attr name="browserToolbarSecureColor" format="color"/>
+    <attr name="browserToolbarInsecureColor" format="color"/>
   </declare-styleable>
 </resources>

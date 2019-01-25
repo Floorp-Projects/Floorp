@@ -19,7 +19,8 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:background="#aaaaaa"/>
+                android:background="#aaaaaa"
+                app:browserToolbarSecureColor="@color/photonGreen50" />
 
         <mozilla.components.feature.findinpage.view.FindInPageBar
                 android:id="@+id/findInPage"

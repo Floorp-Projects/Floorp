@@ -6,6 +6,7 @@ package mozilla.components.browser.toolbar.display
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.support.v4.content.ContextCompat
 import android.support.v7.widget.AppCompatImageButton
 import android.support.v7.widget.AppCompatImageView
 import android.support.v7.widget.AppCompatTextView
@@ -71,7 +72,7 @@ internal class DisplayToolbar(
             menuView.visibility = if (value == null) View.GONE else View.VISIBLE
         }
 
-    internal val iconView = AppCompatImageView(context).apply {
+    internal val siteSecurityIconView = AppCompatImageView(context).apply {
         val padding = resources.pxToDp(ICON_PADDING_DP)
         setPadding(padding, padding, padding, padding)
 
@@ -156,8 +157,12 @@ internal class DisplayToolbar(
     // Callback to determine whether to open edit mode or not.
     internal var onUrlClicked: () -> Boolean = { true }
 
+    private val defaultColor = ContextCompat.getColor(context, R.color.photonWhite)
+
+    internal var securityIconColor = Pair(defaultColor, defaultColor)
+
     init {
-        addView(iconView)
+        addView(siteSecurityIconView)
         addView(urlView)
         addView(menuView)
         addView(progressView)
@@ -231,11 +236,14 @@ internal class DisplayToolbar(
      * Sets the site's security icon as secure if true, else the regular globe.
      */
     fun setSiteSecurity(secure: SiteSecurity) {
-        val image = when (secure) {
-            SiteSecurity.SECURE -> mozac_ic_lock
-            SiteSecurity.INSECURE -> mozac_ic_globe
+        val (image, color) = when (secure) {
+            SiteSecurity.INSECURE -> Pair(mozac_ic_globe, securityIconColor.first)
+            SiteSecurity.SECURE -> Pair(mozac_ic_lock, securityIconColor.second)
         }
-        iconView.setImageResource(image)
+        siteSecurityIconView.apply {
+            setImageResource(image)
+            setColorFilter(color)
+        }
     }
 
     /**
@@ -277,7 +285,7 @@ internal class DisplayToolbar(
         // The icon and menu fill the whole height and have a square shape
         val iconSize = height
         val squareSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-        iconView.measure(squareSpec, squareSpec)
+        siteSecurityIconView.measure(squareSpec, squareSpec)
         menuView.measure(squareSpec, squareSpec)
 
         // Measure all actions and use the available height for determining the size (square shape)
@@ -354,7 +362,12 @@ internal class DisplayToolbar(
         //   |   actions   |      |                                         |
         //   +-------------+------+-----------------------------------------+
 
-        iconView.layout(navigationActionsWidth, 0, navigationActionsWidth + iconView.measuredWidth, measuredHeight)
+        siteSecurityIconView.layout(
+            navigationActionsWidth,
+            0,
+            navigationActionsWidth + siteSecurityIconView.measuredWidth,
+            measuredHeight
+        )
 
         // The menu is always on the far right side of the toolbar:
         //   +-------------+------+----------------------------------+------+
@@ -409,7 +422,7 @@ internal class DisplayToolbar(
         //   |   actions   |      |           [ actions ] | actions  |      |
         //   +-------------+------+-----------------------+----------+------+
 
-        val iconWidth = if (iconView.isVisible()) iconView.measuredWidth else 0
+        val iconWidth = if (siteSecurityIconView.isVisible()) siteSecurityIconView.measuredWidth else 0
         val urlLeft = navigationActionsWidth + iconWidth + urlBoxMargin
         urlView.layout(urlLeft, 0, urlLeft + urlView.measuredWidth, measuredHeight)
 

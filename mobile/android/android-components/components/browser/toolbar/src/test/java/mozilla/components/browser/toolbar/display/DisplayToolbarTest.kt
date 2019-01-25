@@ -19,7 +19,7 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.test.mock
-import mozilla.components.ui.icons.R
+import mozilla.components.browser.toolbar.R
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -34,6 +34,7 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
@@ -564,7 +565,7 @@ class DisplayToolbarTest {
 
         val menuView = extractMenuView(displayToolbar)
         val browserActionView = extractActionView(displayToolbar, "Tabs")!!
-        val iconView = displayToolbar.iconView
+        val iconView = displayToolbar.siteSecurityIconView
         val urlView = displayToolbar.urlView
 
         val viewRect = Rect(view.left, view.top, view.right, view.bottom)
@@ -611,19 +612,30 @@ class DisplayToolbarTest {
     @Test
     fun `iconView changes image resource when site security changes`() {
         val toolbar = mock(BrowserToolbar::class.java)
-        val displayToolbar = DisplayToolbar(context, toolbar)
-        var shadowDrawable = shadowOf(displayToolbar.iconView.drawable)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+        var shadowDrawable = shadowOf(displayToolbar.siteSecurityIconView.drawable)
         assertEquals(R.drawable.mozac_ic_globe, shadowDrawable.createdFromResId)
 
         displayToolbar.setSiteSecurity(SiteSecurity.SECURE)
 
-        shadowDrawable = shadowOf(displayToolbar.iconView.drawable)
+        shadowDrawable = shadowOf(displayToolbar.siteSecurityIconView.drawable)
         assertEquals(R.drawable.mozac_ic_lock, shadowDrawable.createdFromResId)
 
         displayToolbar.setSiteSecurity(SiteSecurity.INSECURE)
 
-        shadowDrawable = shadowOf(displayToolbar.iconView.drawable)
+        shadowDrawable = shadowOf(displayToolbar.siteSecurityIconView.drawable)
         assertEquals(R.drawable.mozac_ic_globe, shadowDrawable.createdFromResId)
+    }
+
+    @Test
+    fun `iconView changes image color filter on update`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        displayToolbar.securityIconColor = Pair(R.color.photonBlue40, R.color.photonBlue40)
+
+        assertEquals(R.color.photonBlue40, displayToolbar.securityIconColor.first)
+        assertEquals(R.color.photonBlue40, displayToolbar.securityIconColor.second)
     }
 
     companion object {

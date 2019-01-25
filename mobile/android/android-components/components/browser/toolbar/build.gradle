@@ -28,6 +28,7 @@ dependencies {
 
     implementation project(':browser-menu')
     implementation project(':ui-icons')
+    implementation project(':ui-colors')
     implementation project(':support-ktx')
 
     implementation Dependencies.support_appcompat

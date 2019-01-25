@@ -59,9 +59,9 @@ class BrowserToolbar @JvmOverloads constructor(
      * Set/Get whether a site security icon (usually a lock or globe icon) should be next to the URL.
      */
     var displaySiteSecurityIcon: Boolean
-        get() = displayToolbar.iconView.isVisible()
+        get() = displayToolbar.siteSecurityIconView.isVisible()
         set(value) {
-            displayToolbar.iconView.visibility = if (value) View.VISIBLE else View.GONE
+            displayToolbar.siteSecurityIconView.visibility = if (value) View.VISIBLE else View.GONE
         }
 
     /**
@@ -208,7 +208,7 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     init {
-        context.obtainStyledAttributes(attrs, R.styleable.BrowserToolbar, defStyleAttr, 0).apply {
+        context.obtainStyledAttributes(attrs, R.styleable.BrowserToolbar, defStyleAttr, 0).run {
             attrs?.let {
                 hintColor = getColor(
                     R.styleable.BrowserToolbar_browserToolbarHintColor,
@@ -222,6 +222,15 @@ class BrowserToolbar @JvmOverloads constructor(
                     R.styleable.BrowserToolbar_browserToolbarTextSize,
                     textSize
                 ) / resources.displayMetrics.density
+                val inSecure = getColor(
+                    R.styleable.BrowserToolbar_browserToolbarInsecureColor,
+                    displayToolbar.securityIconColor.first
+                )
+                val secure = getColor(
+                    R.styleable.BrowserToolbar_browserToolbarSecureColor,
+                    displayToolbar.securityIconColor.second
+                )
+                displayToolbar.securityIconColor = Pair(inSecure, secure)
             }
             recycle()
         }
