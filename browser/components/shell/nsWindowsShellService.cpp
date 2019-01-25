@@ -199,10 +199,8 @@ static nsresult GetAppRegName(nsAutoString& aAppRegName) {
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck, bool aForAllTypes,
+nsWindowsShellService::IsDefaultBrowser(bool aForAllTypes,
                                         bool* aIsDefaultBrowser) {
-  mozilla::Unused << aStartupCheck;
-
   *aIsDefaultBrowser = false;
 
   RefPtr<IApplicationAssociationRegistration> pAAR;

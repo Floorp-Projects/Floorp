@@ -7,7 +7,6 @@
 #ifndef MOZILLA_DOMSVGPOINTLIST_H__
 #define MOZILLA_DOMSVGPOINTLIST_H__
 
-#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "SVGElement.h"
@@ -15,6 +14,7 @@
 #include "SVGPointList.h"  // IWYU pragma: keep
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 

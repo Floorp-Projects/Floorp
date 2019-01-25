@@ -218,7 +218,7 @@ class WebGLFramebuffer final : public nsWrapperCache,
  public:
   void DetachTexture(const WebGLTexture* tex);
   void DetachRenderbuffer(const WebGLRenderbuffer* rb);
-  bool ValidateAndInitAttachments() const;
+  bool ValidateAndInitAttachments(GLenum incompleteFbError) const;
   bool ValidateClearBufferType(GLenum buffer, uint32_t drawBuffer,
                                GLenum funcType) const;
 

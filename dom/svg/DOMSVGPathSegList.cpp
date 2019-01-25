@@ -6,7 +6,6 @@
 
 #include "DOMSVGPathSegList.h"
 
-#include "nsCOMPtr.h"
 #include "DOMSVGPathSeg.h"
 #include "nsError.h"
 #include "SVGAnimatedPathSegList.h"
@@ -14,6 +13,7 @@
 #include "SVGPathSegUtils.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGPathSegListBinding.h"
+#include "mozilla/RefPtr.h"
 
 using namespace mozilla::dom;
 

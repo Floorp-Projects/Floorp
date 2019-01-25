@@ -222,14 +222,9 @@ impl Example for App {
         let bounds = api::LayoutRect::new(api::LayoutPoint::zero(), builder.content_size());
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
-        builder.push_stacking_context(
+        builder.push_simple_stacking_context(
             &api::LayoutPrimitiveInfo::new(bounds),
             space_and_clip.spatial_id,
-            None,
-            api::TransformStyle::Flat,
-            api::MixBlendMode::Normal,
-            &[],
-            api::RasterSpace::Screen,
         );
 
         builder.push_image(

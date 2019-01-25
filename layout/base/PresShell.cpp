@@ -6100,7 +6100,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
 
     MaybeSetupTransactionIdAllocator(layerManager, presContext);
     layerManager->AsWebRenderLayerManager()->EndTransactionWithoutLayer(
-        nullptr, nullptr, wrFilters, &data);
+        nullptr, nullptr, std::move(wrFilters), &data);
     return;
   }
 
