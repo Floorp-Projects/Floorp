@@ -3979,8 +3979,7 @@ nsresult HTMLMediaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (mDecoder) {
         mDecoder->SetLooping(!!aValue);
       }
-    } else if (nsContentUtils::IsUAWidgetEnabled() &&
-               aName == nsGkAtoms::controls && IsInComposedDoc()) {
+    } else if (aName == nsGkAtoms::controls && IsInComposedDoc()) {
       NotifyUAWidgetSetupOrChange();
     }
   }
@@ -4018,7 +4017,7 @@ nsresult HTMLMediaElement::BindToTree(Document* aDocument, nsIContent* aParent,
   nsresult rv =
       nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
 
-  if (nsContentUtils::IsUAWidgetEnabled() && IsInComposedDoc()) {
+  if (IsInComposedDoc()) {
     // Construct Shadow Root so web content can be hidden in the DOM.
     AttachAndSetUAShadowRoot();
 #ifdef ANDROID
@@ -4252,7 +4251,7 @@ void HTMLMediaElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   mUnboundFromTree = true;
   mVisibilityState = Visibility::UNTRACKED;
 
-  if (nsContentUtils::IsUAWidgetEnabled() && IsInComposedDoc()) {
+  if (IsInComposedDoc()) {
     NotifyUAWidgetTeardown();
   }
 

@@ -487,8 +487,6 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
     MOZ_ASSERT(
         // datetimebox
         tag == nsGkAtoms::datetimebox ||
-            // videocontrols
-            tag == nsGkAtoms::videocontrols ||
             // pluginProblem
             tag == nsGkAtoms::embed || tag == nsGkAtoms::applet ||
             tag == nsGkAtoms::object ||
