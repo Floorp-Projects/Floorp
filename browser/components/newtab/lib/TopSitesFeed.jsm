@@ -163,7 +163,7 @@ this.TopSitesFeed = class TopSitesFeed {
       const shouldPin = this.store.getState().Prefs.values[SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF]
         .split(",")
         .map(getSearchProvider)
-        .filter(s => s);
+        .filter(s => s && s.shortURL !== this._currentSearchHostname);
 
       // If we've previously inserted all search shortcuts return early
       if (shouldPin.every(shortcut => prevInsertedShortcuts.includes(shortcut.shortURL))) {

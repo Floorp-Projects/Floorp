@@ -146,7 +146,7 @@ export class _Search extends React.PureComponent {
             tabIndex="-1"
             title={this.props.intl.formatMessage({id: "search_web_placeholder"})}>
             <div className="fake-textbox">{this.props.intl.formatMessage({id: "search_web_placeholder"})}</div>
-            <div className="fake-editable" tabIndex="-1" aria-hidden="true" contentEditable="" onDrop={this.onSearchHandoffDrop} onPaste={this.onSearchHandoffPaste} />
+            <input type="search" className="fake-editable" tabIndex="-1" aria-hidden="true" onDrop={this.onSearchHandoffDrop} onPaste={this.onSearchHandoffPaste} />
             <div className="fake-caret" />
           </button>
           {/*
