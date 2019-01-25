@@ -1986,8 +1986,13 @@ class JSScript : public js::gc::TenuredCell {
     return scope->as<js::FunctionScope>().hasParameterExprs();
   }
 
-  static constexpr size_t NumBytecodeTypeSetsBits =
-      sizeof(numBytecodeTypeSets_) * CHAR_BIT;
+  // If there are more than MaxBytecodeTypeSets JOF_TYPESET ops in the script,
+  // the first MaxBytecodeTypeSets - 1 JOF_TYPESET ops have their own TypeSet
+  // and all other JOF_TYPESET ops share the last TypeSet.
+  static constexpr size_t MaxBytecodeTypeSets = UINT16_MAX;
+  static_assert(sizeof(numBytecodeTypeSets_) == 2,
+                "MaxBytecodeTypeSets must match sizeof(numBytecodeTypeSets_)");
+
   size_t numBytecodeTypeSets() const { return numBytecodeTypeSets_; }
 
   size_t funLength() const { return funLength_; }

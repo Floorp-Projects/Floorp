@@ -676,13 +676,15 @@ template <typename TYPESET>
   // there are more JOF_TYPESET opcodes than nTypeSets in the script (as can
   // happen if the script is very long) and we'll use the last location.
   size_t loc;
-#ifdef DEBUG
   bool found =
-#endif
-      mozilla::BinarySearch(bytecodeMap, 0, numBytecodeTypeSets - 1, offset,
-                            &loc);
+      mozilla::BinarySearch(bytecodeMap, 0, numBytecodeTypeSets, offset, &loc);
+  if (found) {
+    MOZ_ASSERT(bytecodeMap[loc] == offset);
+  } else {
+    MOZ_ASSERT(numBytecodeTypeSets == JSScript::MaxBytecodeTypeSets);
+    loc = numBytecodeTypeSets - 1;
+  }
 
-  MOZ_ASSERT_IF(found, bytecodeMap[loc] == offset);
   *hint = mozilla::AssertedCast<uint32_t>(loc);
   return typeArray + *hint;
 }
