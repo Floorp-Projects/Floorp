@@ -7,9 +7,9 @@
 #ifndef __NS_SVGBOOLEAN_H__
 #define __NS_SVGBOOLEAN_H__
 
-#include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsISMILAttr.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 

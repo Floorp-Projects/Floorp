@@ -34,7 +34,7 @@ use prim_store::picture::{Picture, PictureCompositeKey, PictureKey};
 use prim_store::text_run::TextRun;
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
-use scene::{Scene, ScenePipeline, StackingContextHelpers};
+use scene::{Scene, StackingContextHelpers};
 use scene_builder::{InternerMut, Interners};
 use spatial_node::{StickyFrameInfo, ScrollFrameKind, SpatialNodeType};
 use std::{f32, mem, usize};
@@ -190,10 +190,35 @@ impl<'a> DisplayListFlattener<'a> {
             &root_pipeline.content_size,
         );
 
-        flattener.flatten_root(
-            root_pipeline,
-            &root_pipeline.viewport_size,
+        // In order to ensure we have a single root stacking context for the
+        // entire display list, we push one here. Gecko _almost_ wraps its
+        // entire display list within a single stacking context, but sometimes
+        // appends a few extra items in AddWindowOverlayWebRenderCommands. We
+        // could fix it there, but it's easier and more robust for WebRender
+        // to just ensure there's a context on the stack whenever we append
+        // primitives (since otherwise we'd panic).
+        //
+        // Note that we don't do this for iframes, even if they're pipeline
+        // roots, because they should be entirely contained within a stacking
+        // context, and we probably wouldn't crash if they weren't.
+        flattener.push_stacking_context(
+            root_pipeline.pipeline_id,
+            CompositeOps::default(),
+            TransformStyle::Flat,
+            /* is_backface_visible = */ true,
+            /* create_tile_cache = */ false,
+            ROOT_SPATIAL_NODE_INDEX,
+            ClipChainId::NONE,
+            RasterSpace::Screen,
         );
+
+        flattener.flatten_items(
+            &mut root_pipeline.display_list.iter(),
+            root_pipeline.pipeline_id,
+            LayoutVector2D::zero(),
+        );
+
+        flattener.pop_stacking_context();
 
         debug_assert!(flattener.sc_stack.is_empty());
 
@@ -439,55 +464,6 @@ impl<'a> DisplayListFlattener<'a> {
             .get(items)
     }
 
-    fn flatten_root(
-        &mut self,
-        pipeline: &'a ScenePipeline,
-        frame_size: &LayoutSize,
-    ) {
-        let pipeline_id = pipeline.pipeline_id;
-
-        self.push_stacking_context(
-            pipeline_id,
-            CompositeOps::default(),
-            TransformStyle::Flat,
-            true,
-            true,
-            ROOT_SPATIAL_NODE_INDEX,
-            ClipChainId::NONE,
-            RasterSpace::Screen,
-        );
-
-        // For the root pipeline, there's no need to add a full screen rectangle
-        // here, as it's handled by the framebuffer clear.
-        // TODO(gw): In future, we can probably remove this code completely and handle
-        //           it as part of the tile cache background color clearing.
-        if self.scene.root_pipeline_id != Some(pipeline_id) {
-            if let Some(pipeline) = self.scene.pipelines.get(&pipeline_id) {
-                if let Some(bg_color) = pipeline.background_color {
-                    let reference_frame_info = ScrollNodeAndClipChain::new(
-                        self.id_to_index_mapper.get_spatial_node_index(SpatialId::root_reference_frame(pipeline_id)),
-                        ClipChainId::NONE,
-                    );
-                    let root_bounds = LayoutRect::new(LayoutPoint::zero(), *frame_size);
-                    let info = LayoutPrimitiveInfo::new(root_bounds);
-                    self.add_solid_rectangle(
-                        reference_frame_info,
-                        &info,
-                        bg_color,
-                    );
-                }
-            }
-        }
-
-        self.flatten_items(
-            &mut pipeline.display_list.iter(),
-            pipeline_id,
-            LayoutVector2D::zero(),
-        );
-
-        self.pop_stacking_context();
-    }
-
     fn flatten_items(
         &mut self,
         traversal: &mut BuiltDisplayListIter<'a>,
@@ -641,7 +617,7 @@ impl<'a> DisplayListFlattener<'a> {
             composition_operations,
             stacking_context.transform_style,
             is_backface_visible,
-            false,
+            stacking_context.cache_tiles,
             spatial_node_index,
             clip_chain_id,
             stacking_context.raster_space,
@@ -706,9 +682,10 @@ impl<'a> DisplayListFlattener<'a> {
             ScrollFrameKind::PipelineRoot,
         );
 
-        self.flatten_root(
-            pipeline,
-            &iframe_rect.size,
+        self.flatten_items(
+            &mut pipeline.display_list.iter(),
+            pipeline.pipeline_id,
+            LayoutVector2D::zero(),
         );
 
         self.pipeline_clip_chain_stack.pop();
@@ -1212,21 +1189,20 @@ impl<'a> DisplayListFlattener<'a> {
         composite_ops: CompositeOps,
         transform_style: TransformStyle,
         is_backface_visible: bool,
-        is_pipeline_root: bool,
+        create_tile_cache: bool,
         spatial_node_index: SpatialNodeIndex,
         clip_chain_id: ClipChainId,
         requested_raster_space: RasterSpace,
     ) {
         // Check if this stacking context is the root of a pipeline, and the caller
         // has requested it as an output frame.
+        let is_pipeline_root =
+            self.sc_stack.last().map_or(true, |sc| sc.pipeline_id != pipeline_id);
         let frame_output_pipeline_id = if is_pipeline_root && self.output_pipelines.contains(&pipeline_id) {
             Some(pipeline_id)
         } else {
             None
         };
-
-        let create_tile_cache = is_pipeline_root &&
-                                self.sc_stack.len() == 2;
 
         // Get the transform-style of the parent stacking context,
         // which determines if we *might* need to draw this on
@@ -2579,8 +2555,8 @@ impl FlattenedStackingContext {
             return false;
         }
 
-        // If the pipelines are different, we care for purposes of selecting tile caches
-        if self.pipeline_id != parent.pipeline_id {
+        // If this stacking context gets picture caching, we need it.
+        if self.create_tile_cache {
             return false;
         }
 

@@ -6,10 +6,12 @@
 
 #include "SVGGeometryElement.h"
 
+#include "nsCOMPtr.h"
 #include "DOMSVGPoint.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/dom/SVGLengthBinding.h"
+#include "mozilla/RefPtr.h"
 #include "nsComputedDOMStyle.h"
 #include "nsSVGUtils.h"
 #include "nsSVGLength2.h"

@@ -34,28 +34,18 @@ impl Example for App {
             LayoutRect::new(LayoutPoint::zero(), builder.content_size())
         );
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
-        builder.push_stacking_context(
+        builder.push_simple_stacking_context(
             &info,
             root_space_and_clip.spatial_id,
-            None,
-            TransformStyle::Flat,
-            MixBlendMode::Normal,
-            &[],
-            RasterSpace::Screen,
         );
 
         if true {
             // scrolling and clips stuff
             // let's make a scrollbox
             let scrollbox = (0, 0).to(300, 400);
-            builder.push_stacking_context(
+            builder.push_simple_stacking_context(
                 &LayoutPrimitiveInfo::new((10, 10).by(0, 0)),
                 root_space_and_clip.spatial_id,
-                None,
-                TransformStyle::Flat,
-                MixBlendMode::Normal,
-                &[],
-                RasterSpace::Screen,
             );
             // set the scrolling clip
             let space_and_clip1 = builder.define_scroll_frame(
