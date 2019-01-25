@@ -2033,6 +2033,7 @@ static ReturnAbortOnError ShowProfileManager(
 
   SaveFileToEnv("XRE_PROFILE_PATH", profD);
   SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", profLD);
+  SaveToEnv("XRE_RESTARTED_BY_PROFILE_MANAGER=1");
 
   if (offline) {
     SaveToEnv("XRE_START_OFFLINE=1");
@@ -4204,6 +4205,7 @@ nsresult XREMain::XRE_mainRun() {
   SaveToEnv("XRE_START_OFFLINE=");
   SaveToEnv("XUL_APP_FILE=");
   SaveToEnv("XRE_BINARY_PATH=");
+  SaveToEnv("XRE_RESTARTED_BY_PROFILE_MANAGER=");
 
   if (!mShuttingDown) {
     rv = appStartup->CreateHiddenWindow();
@@ -4311,6 +4313,8 @@ nsresult XREMain::XRE_mainRun() {
 #if defined(MOZ_CONTENT_SANDBOX)
   AddSandboxAnnotations();
 #endif /* MOZ_CONTENT_SANDBOX */
+
+  static_cast<nsToolkitProfileService*>(mProfileSvc.get())->RecordStartupTelemetry();
 
   {
     rv = appStartup->Run();

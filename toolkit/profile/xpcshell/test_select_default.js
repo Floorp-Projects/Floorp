@@ -46,6 +46,7 @@ add_task(async () => {
   writeInstallsIni(installData);
 
   let { profile, didCreate } = selectStartupProfile();
+  checkStartupReason("default");
 
   let service = getProfileService();
   checkProfileService(profileData);
