@@ -84,6 +84,23 @@ permalink: /changelog/
 * **browser-storage-sync**
   * Implementations of `concept-storage`/`BookmarksStorage` expose the newly added APIs.
 
+  * **feature-qr**
+  * 🆕 New component/feature that provides functionality for scanning QR codes.
+    ```kotlin
+      val qrFeature = QrFeature(
+          context,
+          fragmentManager = supportFragmentManager,
+          onNeedToRequestPermissions = { permissions ->
+              requestPermissions(this, permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
+          },
+          onScanResult = { qrScanResult ->
+              // qrScanResult is a String (e.g. a URL) returned by the QR scanner
+          }
+      )
+      // When ready to scan simply call
+      qrFeature.scan()
+    ```
+
 # 0.47.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.46.0...v0.47.0)

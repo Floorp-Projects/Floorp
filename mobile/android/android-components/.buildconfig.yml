@@ -89,12 +89,16 @@ projects:
     description: 'Feature implementation for Progressive Web Apps (PWA).'
     publish: true
   feature-findinpage:
-      path: components/feature/findinpage
-      description: 'Feature that will subscribe to the selected session and show an UI for results of find in page.'
-      publish: true
+    path: components/feature/findinpage
+    description: 'Feature that will subscribe to the selected session and show an UI for results of find in page.'
+    publish: true
   feature-sitepermissions:
     path: components/feature/sitepermissions
     description: 'A feature for showing site permission request prompts.'
+    publish: true
+  feature-qr:
+    path: components/feature/qr
+    description: 'A feature that provides functionality for scanning QR codes.'
     publish: true
   browser-awesomebar:
     path: components/browser/awesomebar

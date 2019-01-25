@@ -118,6 +118,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Progressive Web Apps (PWA)**](components/feature/pwa/README.md) - A component that provides functionality for supporting Progressive Web Apps (PWA).
 
+* ⚪ [**QR**](components/feature/qr/README.md) - A component that provides functionality for scanning QR codes.
+
 * 🔴 [**Search**](components/feature/search/README.md) - A component that connects an (concept) engine implementation with the browser search module.
 
 * ⚪ [**Session**](components/feature/session/README.md) - A component that connects an (concept) engine implementation with the browser session and storage modules.
