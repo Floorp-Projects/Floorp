@@ -10,7 +10,8 @@ the following fields:
 | `duration` | Timespan | The duration, in seconds, of the last foreground session |
 | `os` | String | The name of the operating system (e.g. "linux", "android", "ios") |
 | `os_version` | String | The version of the operating system |
-| `device` | String | Manufacturer and model |
+| `device_manufacturer` | String | The manufacturer of the device |
+| `device_model` | String | The model name of the device |
 | `architecture` | String | The architecture of the device (e.g. "arm", "x86") |
 | `timezone` | Number | The timezone of the device, as an offset from UTC |
 | `a11y_services` | StringList | List of the ids of the accessibility services enabled on the device |
