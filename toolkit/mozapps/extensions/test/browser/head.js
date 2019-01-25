@@ -368,7 +368,7 @@ function wait_for_manager_load(aManagerWindow, aCallback) {
   return log_callback(p, aCallback);
 }
 
-function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
+function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout, aWin = window) {
   let p = new Promise((resolve, reject) => {
 
     async function setup_manager(aManagerWindow) {
@@ -399,8 +399,8 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
       setup_manager(aSubject);
     }, "EM-loaded");
 
-    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-    switchToTabHavingURI(MANAGER_URI, true, {
+    aWin.gBrowser.selectedTab = BrowserTestUtils.addTab(aWin.gBrowser);
+    aWin.switchToTabHavingURI(MANAGER_URI, true, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
   });
