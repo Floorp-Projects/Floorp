@@ -1019,3 +1019,11 @@ body {
 .sidebar-contents .object-inspector {
   min-width: 100%;
 }
+
+/** Utils **/
+.clipboard-only {
+  position: absolute;
+  left: -9999px;
+  width: 0;
+  height: 0;
+}

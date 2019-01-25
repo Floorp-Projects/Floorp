@@ -221,6 +221,7 @@ class SmartTrace extends Component {
       disableContextMenu: true,
       frameworkGroupingOn: true,
       displayFullUrl: !this.state || !this.state.isSourceMapped,
+      selectable: true,
     });
   }
 }
