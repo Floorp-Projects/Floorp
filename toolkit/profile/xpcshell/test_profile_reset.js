@@ -11,4 +11,5 @@ add_task(async () => {
   Assert.ok(!didCreate, "Should not have created a new profile.");
   Assert.ok(!profile, "Should not be a returned profile.");
   Assert.equal(service.profileCount, 0, "Still should be no profiles.");
+  Assert.ok(!service.createdAlternateProfile, "Should not have created an alternate profile.");
 });

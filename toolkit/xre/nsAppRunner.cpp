@@ -2050,41 +2050,6 @@ static ReturnAbortOnError ShowProfileManager(
   return LaunchChild(aNative);
 }
 
-/**
- * Get the currently running profile using its root directory.
- *
- * @param aProfileSvc         The profile service
- * @param aCurrentProfileRoot The root directory of the current profile.
- * @param aProfile            Out-param that returns the profile object.
- * @return an error if aCurrentProfileRoot is not found
- */
-static nsresult GetCurrentProfile(nsIToolkitProfileService* aProfileSvc,
-                                  nsIFile* aCurrentProfileRoot,
-                                  nsIToolkitProfile** aProfile) {
-  NS_ENSURE_ARG_POINTER(aProfileSvc);
-  NS_ENSURE_ARG_POINTER(aProfile);
-
-  nsCOMPtr<nsISimpleEnumerator> profiles;
-  nsresult rv = aProfileSvc->GetProfiles(getter_AddRefs(profiles));
-  if (NS_FAILED(rv)) return rv;
-
-  bool foundMatchingProfile = false;
-  nsCOMPtr<nsISupports> supports;
-  rv = profiles->GetNext(getter_AddRefs(supports));
-  while (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIToolkitProfile> profile = do_QueryInterface(supports);
-    nsCOMPtr<nsIFile> profileRoot;
-    profile->GetRootDir(getter_AddRefs(profileRoot));
-    profileRoot->Equals(aCurrentProfileRoot, &foundMatchingProfile);
-    if (foundMatchingProfile) {
-      profile.forget(aProfile);
-      return NS_OK;
-    }
-    rv = profiles->GetNext(getter_AddRefs(supports));
-  }
-  return rv;
-}
-
 static bool gDoMigration = false;
 static bool gDoProfileReset = false;
 static nsCOMPtr<nsIToolkitProfile> gResetOldProfile;
@@ -4130,18 +4095,6 @@ nsresult XREMain::XRE_mainRun() {
   }
 
   {
-    bool profileWasDefault = false;
-    if (gDoProfileReset) {
-      nsCOMPtr<nsIToolkitProfile> defaultProfile;
-      // This can fail if there is no default profile.
-      // That shouldn't stop reset from proceeding.
-      nsresult gotDefault =
-          mProfileSvc->GetDefaultProfile(getter_AddRefs(defaultProfile));
-      if (NS_SUCCEEDED(gotDefault)) {
-        profileWasDefault = defaultProfile == gResetOldProfile;
-      }
-    }
-
     // Profile Migration
     if (mAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR && gDoMigration) {
       gDoMigration = false;
@@ -4161,33 +4114,11 @@ nsresult XREMain::XRE_mainRun() {
     }
 
     if (gDoProfileReset) {
-      nsresult backupCreated = ProfileResetCleanup(gResetOldProfile);
+      nsresult backupCreated = ProfileResetCleanup(
+          static_cast<nsToolkitProfileService*>(mProfileSvc.get()),
+          gResetOldProfile);
       if (NS_FAILED(backupCreated))
         NS_WARNING("Could not cleanup the profile that was reset");
-
-      nsCOMPtr<nsIToolkitProfile> newProfile;
-      rv = GetCurrentProfile(mProfileSvc, mProfD, getter_AddRefs(newProfile));
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoCString name;
-        gResetOldProfile->GetName(name);
-        newProfile->SetName(name);
-        mProfileName.Assign(name);
-        // Set the new profile as the default after we're done cleaning up the
-        // old profile, iff that profile was already the default
-        if (profileWasDefault) {
-          rv = mProfileSvc->SetDefaultProfile(newProfile);
-          if (NS_FAILED(rv))
-            NS_WARNING("Could not set current profile as the default");
-        }
-      } else {
-        NS_WARNING(
-            "Could not find current profile to set as default / change name.");
-      }
-
-      // Need to write out the fact that the profile has been removed, the new
-      // profile renamed, and potentially that the selected/default profile
-      // changed.
-      mProfileSvc->Flush();
     }
   }
 
