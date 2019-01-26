@@ -285,9 +285,8 @@ void DOMIntersectionObserver::Update(Document* aDocument,
   NS_FOR_CSS_SIDES(side) {
     nscoord basis = side == eSideTop || side == eSideBottom ? rootRect.Height()
                                                             : rootRect.Width();
-    nsStyleCoord coord = mRootMargin.Get(side);
     rootMargin.Side(side) =
-        nsLayoutUtils::ComputeCBDependentValue(basis, coord);
+        nsLayoutUtils::ComputeCBDependentValue(basis, mRootMargin.Get(side));
   }
 
   for (size_t i = 0; i < mObservationTargets.Length(); ++i) {

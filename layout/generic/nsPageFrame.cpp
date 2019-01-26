@@ -94,9 +94,9 @@ void nsPageFrame::Reflow(nsPresContext* aPresContext,
     // Use the margins given in the @page rule.
     // If a margin is 'auto', use the margin from the print settings for that
     // side.
-    const nsStyleSides& marginStyle = kidReflowInput.mStyleMargin->mMargin;
+    const auto& marginStyle = kidReflowInput.mStyleMargin->mMargin;
     NS_FOR_CSS_SIDES(side) {
-      if (marginStyle.GetUnit(side) == eStyleUnit_Auto) {
+      if (marginStyle.Get(side).IsAuto()) {
         mPageContentMargin.Side(side) = mPD->mReflowMargin.Side(side);
       } else {
         mPageContentMargin.Side(side) =

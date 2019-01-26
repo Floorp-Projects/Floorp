@@ -182,10 +182,15 @@ nscoord nsStyleFont::ZoomText(const Document& aDocument, nscoord aSize) {
   return NSToCoordTruncClamped(float(aSize) * textZoom);
 }
 
-nsStyleMargin::nsStyleMargin(const Document& aDocument) {
+template <typename T>
+static StyleRect<T> StyleRectWithAllSides(const T& aSide) {
+  return {aSide, aSide, aSide, aSide};
+}
+
+nsStyleMargin::nsStyleMargin(const Document& aDocument)
+    : mMargin(StyleRectWithAllSides(
+          LengthPercentageOrAuto::LengthPercentage(LengthPercentage::Zero()))) {
   MOZ_COUNT_CTOR(nsStyleMargin);
-  nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
-  NS_FOR_CSS_SIDES(side) { mMargin.Set(side, zero); }
 }
 
 nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
@@ -204,10 +209,9 @@ nsChangeHint nsStyleMargin::CalcDifference(
          nsChangeHint_ClearAncestorIntrinsics;
 }
 
-nsStylePadding::nsStylePadding(const Document& aDocument) {
+nsStylePadding::nsStylePadding(const Document& aDocument)
+    : mPadding(StyleRectWithAllSides(LengthPercentage::Zero())) {
   MOZ_COUNT_CTOR(nsStylePadding);
-  nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
-  NS_FOR_CSS_SIDES(side) { mPadding.Set(side, zero); }
 }
 
 nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
@@ -1291,7 +1295,8 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const {
 // nsStylePosition
 //
 nsStylePosition::nsStylePosition(const Document& aDocument)
-    : mWidth(eStyleUnit_Auto),
+    : mOffset(StyleRectWithAllSides(LengthPercentageOrAuto::Auto())),
+      mWidth(eStyleUnit_Auto),
       mMinWidth(eStyleUnit_Auto),
       mMaxWidth(eStyleUnit_None),
       mHeight(eStyleUnit_Auto),
@@ -1325,9 +1330,6 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
   // positioning values not inherited
 
   mObjectPosition.SetInitialPercentValues(0.5f);
-
-  nsStyleCoord autoCoord(eStyleUnit_Auto);
-  NS_FOR_CSS_SIDES(side) { mOffset.Set(side, autoCoord); }
 
   // The initial value of grid-auto-columns and grid-auto-rows is 'auto',
   // which computes to 'minmax(auto, auto)'.
@@ -1390,11 +1392,10 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   }
 }
 
-static bool IsAutonessEqual(const nsStyleSides& aSides1,
-                            const nsStyleSides& aSides2) {
+static bool IsAutonessEqual(const StyleRect<LengthPercentageOrAuto>& aSides1,
+                            const StyleRect<LengthPercentageOrAuto>& aSides2) {
   NS_FOR_CSS_SIDES(side) {
-    if ((aSides1.GetUnit(side) == eStyleUnit_Auto) !=
-        (aSides2.GetUnit(side) == eStyleUnit_Auto)) {
+    if (aSides1.Get(side).IsAuto() != aSides2.Get(side).IsAuto()) {
       return false;
     }
   }

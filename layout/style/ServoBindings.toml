@@ -415,6 +415,10 @@ cbindgen-types = [
     { gecko = "StyleOverflow", servo = "values::computed::Overflow" },
     { gecko = "StyleOverflowAnchor", servo = "values::computed::OverflowAnchor" },
     { gecko = "StyleLengthPercentage", servo = "values::computed::LengthPercentage" },
+    { gecko = "StyleNonNegativeLengthPercentage", servo = "values::computed::NonNegativeLengthPercentage" },
+    { gecko = "StyleLengthPercentageOrAuto", servo = "values::computed::LengthPercentageOrAuto" },
+    { gecko = "StyleRect", servo = "values::generics::rect::Rect" },
+    { gecko = "StyleIntersectionObserverRootMargin", servo = "values::specified::gecko::IntersectionObserverRootMargin" },
 ]
 
 mapped-generic-types = [
@@ -474,6 +478,7 @@ structs-types = [
     "mozilla::StyleMotion",
     "mozilla::UniquePtr",
     "mozilla::StyleDisplayMode",
+    "mozilla::StyleIntersectionObserverRootMargin",
     "mozilla::StyleComputedFontStretchRange",
     "mozilla::StyleComputedFontStyleDescriptor",
     "mozilla::StyleComputedFontWeightRange",
