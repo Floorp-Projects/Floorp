@@ -21,9 +21,9 @@
 
 #include <string.h>
 
-struct nsSVGMark;
-
 namespace mozilla {
+
+struct SVGMark;
 
 class SVGPathDataParser;  // IWYU pragma: keep
 
@@ -137,7 +137,7 @@ class SVGPathData {
 
   uint32_t GetPathSegAtLength(float aLength) const;
 
-  void GetMarkerPositioningData(nsTArray<nsSVGMark>* aMarks) const;
+  void GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const;
 
   /**
    * Returns true, except on OOM, in which case returns false.
