@@ -31,10 +31,12 @@ static const char kProfileProperties[] =
     "chrome://mozapps/locale/profile/profileSelection.properties";
 
 /**
- * Delete the profile directory being reset after a backup and delete the local
- * profile directory.
+ * Spin up a thread to backup the old profile's main directory and delete the
+ * profile's local directory. Once complete have the profile service remove the
+ * old profile and if necessary make the new profile the default.
  */
-nsresult ProfileResetCleanup(nsIToolkitProfile* aOldProfile) {
+nsresult ProfileResetCleanup(nsToolkitProfileService* aService,
+                             nsIToolkitProfile* aOldProfile) {
   nsresult rv;
   nsCOMPtr<nsIFile> profileDir;
   rv = aOldProfile->GetRootDir(getter_AddRefs(profileDir));
@@ -142,10 +144,5 @@ nsresult ProfileResetCleanup(nsIToolkitProfile* aOldProfile) {
   auto* piWindow = nsPIDOMWindowOuter::From(progressWindow);
   piWindow->Close();
 
-  // Delete the old profile from profiles.ini. The folder was already deleted by
-  // the thread above.
-  rv = aOldProfile->Remove(false);
-  if (NS_FAILED(rv)) NS_WARNING("Could not remove the profile");
-
-  return rv;
+  return aService->ApplyResetProfile(aOldProfile);
 }
