@@ -2033,7 +2033,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   float mShapeImageThreshold = 0.0f;
 
   // The margin around a shape-outside: <image>.
-  nsStyleCoord mShapeMargin;
+  mozilla::LengthPercentage mShapeMargin;
 
   mozilla::StyleShapeSource mShapeOutside;
 

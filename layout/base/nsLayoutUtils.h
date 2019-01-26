@@ -146,6 +146,7 @@ enum class ReparentingDirection {
  */
 class nsLayoutUtils {
   typedef mozilla::ComputedStyle ComputedStyle;
+  typedef mozilla::LengthPercentage LengthPercentage;
   typedef mozilla::dom::DOMRectList DOMRectList;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::StackingContextHelper StackingContextHelper;
@@ -2986,6 +2987,18 @@ class nsLayoutUtils {
    * need to create a MobileViewportManager.
    */
   static bool ShouldHandleMetaViewport(mozilla::dom::Document*);
+
+  /**
+   * Resolve a CSS <length-percentage> value to a definite size.
+   */
+  template <bool clampNegativeResultToZero>
+  static nscoord ResolveToLength(const LengthPercentage& aLengthPercentage,
+                                 nscoord aPercentageBasis) {
+    nscoord value = (aPercentageBasis == NS_UNCONSTRAINEDSIZE)
+                        ? aLengthPercentage.Resolve(0)
+                        : aLengthPercentage.Resolve(aPercentageBasis);
+    return clampNegativeResultToZero ? std::max(0, value) : value;
+  }
 
   /**
    * Resolve a CSS <length-percentage> value to a definite size.
