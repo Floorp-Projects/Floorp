@@ -7,9 +7,10 @@ package org.mozilla.fenix.components.toolbar
 import android.content.Context
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.item.BrowserMenuDivider
+import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuSwitch
-import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.R
@@ -65,18 +66,34 @@ class Toolbar(
 
     private val menuItems by lazy {
         listOf(
-            menuToolbar,
-            SimpleBrowserMenuItem(context.getString(R.string.browser_menu_help)) {
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_help),
+                R.drawable.ic_help,
+                context.getString(R.string.browser_menu_help),
+                R.color.icons
+            ) {
                 // TODO Help
             },
 
-            SimpleBrowserMenuItem(context.getString(R.string.browser_menu_settings)) {
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_settings),
+                R.drawable.ic_settings,
+                context.getString(R.string.browser_menu_settings),
+                R.color.icons
+            ) {
                 openSettingsActivity()
             },
 
-            SimpleBrowserMenuItem(context.getString(R.string.browser_menu_library)) {
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_library),
+                R.drawable.ic_library,
+                context.getString(R.string.browser_menu_library),
+                R.color.icons
+            ) {
                 // TODO Your Library
             },
+
+            BrowserMenuDivider(),
 
             BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site), {
                 sessionManager.selectedSessionOrThrow.desktopMode
@@ -86,17 +103,36 @@ class Toolbar(
                 visible = { sessionManager.selectedSession != null }
             },
 
-            SimpleBrowserMenuItem(context.getString(R.string.browser_menu_find_in_page)) {
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_find_in_page),
+                R.drawable.mozac_ic_search,
+                context.getString(R.string.browser_menu_find_in_page),
+                R.color.icons
+            ) {
                 // TODO Find in Page
             },
 
-            SimpleBrowserMenuItem(context.getString(R.string.browser_menu_private_tab)) {
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_private_tab),
+                R.drawable.ic_private_browsing,
+                context.getString(R.string.browser_menu_private_tab),
+                R.color.icons
+            ) {
                 // TODO Private Tab
             },
 
-            SimpleBrowserMenuItem(context.getString(R.string.browser_menu_new_tab)) {
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_new_tab),
+                R.drawable.ic_new,
+                context.getString(R.string.browser_menu_new_tab),
+                R.color.icons
+            ) {
                 // TODO New Tab
-            }
+            },
+
+            BrowserMenuDivider(),
+
+            menuToolbar
         )
     }
 

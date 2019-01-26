@@ -5,4 +5,5 @@
 <resources>
     <dimen name="glyph_button_height">48dp</dimen>
     <dimen name="glyph_button_width">48dp</dimen>
+    <dimen name="mozac_browser_menu_corner_radius">14dp</dimen>
 </resources>
