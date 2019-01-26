@@ -3041,10 +3041,14 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
                                    nsIPresShell::ScrollAxis aVertical,
                                    nsIPresShell::ScrollAxis aHorizontal,
                                    int32_t aFlags) {
-  if (!mFrameSelection) return NS_OK;  // nothing to do
+  if (!mFrameSelection) {
+    return NS_OK;
+  }
 
   nsIPresShell* presShell = mFrameSelection->GetShell();
-  if (!presShell) return NS_OK;
+  if (!presShell || !presShell->GetDocument()) {
+    return NS_OK;
+  }
 
   if (mFrameSelection->GetBatching()) return NS_OK;
 
@@ -3063,7 +3067,7 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
   // either manually flush if they're in a safe position for it or use the
   // async version of this method.
   if (aFlags & Selection::SCROLL_DO_FLUSH) {
-    presShell->FlushPendingNotifications(FlushType::Layout);
+    presShell->GetDocument()->FlushPendingNotifications(FlushType::Layout);
 
     // Reget the presshell, since it might have been Destroy'ed.
     presShell = mFrameSelection ? mFrameSelection->GetShell() : nullptr;
