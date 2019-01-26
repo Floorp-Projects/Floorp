@@ -13,6 +13,7 @@
 
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/gfx/Types.h"
+#include "Units.h"
 #include "nsCoord.h"
 #include "nsISupportsImpl.h"
 #include "nsStyleConsts.h"
@@ -37,6 +38,63 @@ enum LogicalCorner {
   eLogicalCornerBEndIEnd = 2,
   eLogicalCornerBEndIStart = 3
 };
+
+using LengthPercentage = StyleLengthPercentage;
+
+LengthPercentage LengthPercentage::Zero() {
+  return {{0.}, {0.}, StyleAllowedNumericType::All, false, false};
+}
+
+bool LengthPercentage::HasPercent() const { return has_percentage; }
+
+bool LengthPercentage::ConvertsToLength() const { return !HasPercent(); }
+
+nscoord LengthPercentage::ToLength() const {
+  MOZ_ASSERT(ConvertsToLength());
+  return CSSPixel::ToAppUnits(length._0);
+}
+
+bool LengthPercentage::ConvertsToPercentage() const {
+  return has_percentage && length._0 == 0.0f;
+}
+
+float LengthPercentage::ToPercentage() const {
+  MOZ_ASSERT(ConvertsToPercentage());
+  return Percentage();
+}
+
+CSSCoord LengthPercentage::LengthInCSSPixels() const { return length._0; }
+
+float LengthPercentage::Percentage() const { return percentage._0; }
+
+CSSCoord LengthPercentage::ResolveToCSSPixels(CSSCoord aPercentageBasis) const {
+  return LengthInCSSPixels() + Percentage() * aPercentageBasis;
+}
+
+template <typename T>
+CSSCoord LengthPercentage::ResolveToCSSPixelsWith(T aPercentageGetter) const {
+  static_assert(std::is_same<decltype(aPercentageGetter()), CSSCoord>::value,
+                "Should return CSS pixels");
+  if (ConvertsToLength()) {
+    return LengthInCSSPixels();
+  }
+  return ResolveToCSSPixels(aPercentageGetter());
+}
+
+nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
+  return CSSPixel::ToAppUnits(LengthInCSSPixels()) +
+         NSToCoordFloorClamped(aPercentageBasis * Percentage());
+}
+
+template <typename T>
+nscoord LengthPercentage::ResolveWith(T aPercentageGetter) const {
+  static_assert(std::is_same<decltype(aPercentageGetter()), nscoord>::value,
+                "Should return app units");
+  if (ConvertsToLength()) {
+    return ToLength();
+  }
+  return Resolve(aPercentageGetter());
+}
 
 }  // namespace mozilla
 
