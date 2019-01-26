@@ -7,6 +7,7 @@ ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  FormData: "resource://gre/modules/FormData.jsm",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
   GeckoViewAutoFill: "resource://gre/modules/GeckoViewAutoFill.jsm",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
@@ -202,7 +203,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
                 // restore() will return false, and thus abort restoration for the
                 // current |frame| and its descendants, if |data.url| is given but
                 // doesn't match the loaded document's URL.
-                return SessionStoreUtils.restoreFormData(frame.document, data);
+                return FormData.restore(frame, data);
               });
             }
           }, {capture: true, mozSystemGroup: true, once: true});

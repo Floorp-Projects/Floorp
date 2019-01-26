@@ -116,13 +116,6 @@ already_AddRefed<WindowGlobalChild> WindowGlobalParent::GetChildActor() {
   return do_AddRef(static_cast<WindowGlobalChild*>(otherSide));
 }
 
-already_AddRefed<TabParent> WindowGlobalParent::GetTabParent() {
-  if (IsInProcess() || mIPCClosed) {
-    return nullptr;
-  }
-  return do_AddRef(static_cast<TabParent*>(Manager()));
-}
-
 IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
   // XXX(nika): Assert that the URI change was one which makes sense (either
   // about:blank -> a real URI, or a legal push/popstate URI change?)
@@ -132,16 +125,6 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
 
 IPCResult WindowGlobalParent::RecvBecomeCurrentWindowGlobal() {
   mBrowsingContext->SetCurrentWindowGlobal(this);
-  return IPC_OK();
-}
-
-IPCResult WindowGlobalParent::RecvDestroy() {
-  if (!mIPCClosed) {
-    RefPtr<TabParent> tabParent = GetTabParent();
-    if (!tabParent || !tabParent->IsDestroyed()) {
-      Unused << Send__delete__(this);
-    }
-  }
   return IPC_OK();
 }
 
