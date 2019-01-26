@@ -3009,11 +3009,6 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
     return;
   }
 
-  // Select scroll anchors for frames that have been scrolled. Do this
-  // before restyling so that anchor nodes are correctly marked for
-  // scroll anchor update suppressions.
-  presContext->PresShell()->FlushPendingScrollAnchorSelections();
-
   // Create a AnimationsWithDestroyedFrame during restyling process to
   // stop animations and transitions on elements that have no frame at the end
   // of the restyling process.
@@ -3040,6 +3035,11 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
 
   while (styleSet->StyleDocument(aFlags)) {
     ClearSnapshots();
+
+    // Select scroll anchors for frames that have been scrolled. Do this
+    // before processing restyled frames so that anchor nodes are correctly
+    // marked when directly moving frames with RecomputePosition.
+    presContext->PresShell()->FlushPendingScrollAnchorSelections();
 
     nsStyleChangeList currentChanges;
     bool anyStyleChanged = false;
