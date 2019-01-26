@@ -60,7 +60,7 @@ export class Hero extends React.PureComponent {
         feed={this.props.feed}
         hasImages={true}
         hasBorders={this.props.border === `border`}
-        items={this.props.items}
+        items={this.props.items - 1}
         type={`Hero`} />
     );
 
@@ -78,7 +78,7 @@ export class Hero extends React.PureComponent {
               {heroRec.context ? (
                 <p className="context">{truncateText(heroRec.context, 22)}</p>
               ) : (
-                <p>{truncateText(heroRec.domain, 22)}</p>
+                <p className="source">{truncateText(heroRec.domain, 22)}</p>
               )}
             </div>
           </a>

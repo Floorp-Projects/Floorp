@@ -1,4 +1,5 @@
 // Type sizes
+$bordered-spacing: 16px;
 $item-font-size: 13;
 $item-image-size: 72px;
 $item-line-height: 20;
@@ -11,8 +12,7 @@ $item-line-height: 20;
   .ds-list-item:not(:nth-last-child(-n+#{$columns})) {
     border-bottom: $border-secondary;
     margin-bottom: -1px;  // cancel out the pixel we used for the border
-
-    padding-bottom: 2px;
+    padding-bottom: $bordered-spacing;
   }
 }
 
@@ -21,14 +21,6 @@ $item-line-height: 20;
     // XXX see if we really want absolute units, maybe hoist somewhere central?
     font-size: $font-size * 1px;
     line-height: $line-height * 1px;
-  }
-
-  .ds-list-item-excerpt {
-    @include limit-visibile-lines(2, $line-height, $font-size);
-  }
-
-  .ds-list-item-info {
-    @include limit-visibile-lines(1, $line-height, $font-size);
   }
 
   .ds-list-item-title {
@@ -67,7 +59,6 @@ $item-line-height: 20;
     .ds-column-11 &,
     .ds-column-12 & {
       grid-template-columns: repeat(3, 1fr);
-      grid-row-gap: 18px;
     }
 
     .ds-list-item-excerpt {
@@ -89,7 +80,7 @@ $item-line-height: 20;
 
 .ds-list-numbers {
   $counter-whitespace: ($item-line-height - $item-font-size) * 1px;
-  $counter-size: ($item-font-size) * 2px + $counter-whitespace;
+  $counter-size: 32px;
   $counter-padded-size: $counter-size + $counter-whitespace * 1.5;
 
   .ds-list-item {
@@ -104,7 +95,7 @@ $item-line-height: 20;
       border-radius: $counter-size;
       color: $white;
       content: counter(list);
-      font-size: 1.2em;
+      font-size: 17px;
       height: $counter-size;
       line-height: $counter-size;
       margin-inline-start: -$counter-padded-size;
@@ -126,7 +117,8 @@ $item-line-height: 20;
 
 .ds-list-borders {
   border-top: $border-secondary;
-  padding-top: $item-line-height * 1px;
+  grid-row-gap: $bordered-spacing;
+  padding-top: $bordered-spacing;
 
   &.ds-list-full-width,
   .ds-column-1 &,
@@ -168,23 +160,24 @@ $item-line-height: 20;
   .ds-list-item-link {
     mix-blend-mode: normal;
 
-    padding-bottom: 16px;
-
     display: flex;
     justify-content: space-between;
   }
 
   .ds-list-item-excerpt {
+    @include limit-visibile-lines(2, $item-line-height, $item-font-size);
     color: var(--newtab-text-secondary-color);
     margin-bottom: 8px;
   }
 
   .ds-list-item-info {
+    @include limit-visibile-lines(1, $item-line-height, $item-font-size);
     color: var(--newtab-text-secondary-color);
     text-overflow: ellipsis;
   }
 
   .ds-list-item-title {
+    font-weight: 600;
     margin-bottom: 8px;
   }
 
