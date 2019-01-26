@@ -210,10 +210,7 @@ function testOnWindow(aTestData) {
   });
 }
 SpecialPowers.pushPrefEnv(
-  {"set": [
-    ["browser.safebrowsing.phishing.enabled", true],
-    ["dom.testing.sync-content-blocking-notifications", true],
-  ]},
+  {"set": [["browser.safebrowsing.phishing.enabled", true]]},
   test);
 
 function test() {
