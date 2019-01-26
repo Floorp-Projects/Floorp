@@ -75,9 +75,9 @@ void nsInlineFrame::InvalidateFrameWithRect(const nsRect& aRect,
                                             aRebuildDisplayItems);
 }
 
-static inline bool IsMarginZero(const nsStyleCoord& aCoord) {
-  return aCoord.GetUnit() == eStyleUnit_Auto ||
-         nsLayoutUtils::IsMarginZero(aCoord);
+static inline bool IsMarginZero(const LengthPercentageOrAuto& aLength) {
+  return aLength.IsAuto() ||
+         nsLayoutUtils::IsMarginZero(aLength.AsLengthPercentage());
 }
 
 /* virtual */ bool nsInlineFrame::IsSelfEmpty() {
@@ -96,23 +96,21 @@ static inline bool IsMarginZero(const nsStyleCoord& aCoord) {
   // ZeroEffectiveSpanBox, anymore, so what should this really be?
   WritingMode wm = GetWritingMode();
   bool haveStart, haveEnd;
+
+  auto HaveSide = [&](mozilla::Side aSide) -> bool {
+    return border->GetComputedBorderWidth(aSide) != 0 ||
+           !nsLayoutUtils::IsPaddingZero(padding->mPadding.Get(aSide)) ||
+           !IsMarginZero(margin->mMargin.Get(aSide));
+  };
   // Initially set up haveStart and haveEnd in terms of visual (LTR/TTB)
   // coordinates; we'll exchange them later if bidi-RTL is in effect to
   // get logical start and end flags.
   if (wm.IsVertical()) {
-    haveStart = border->GetComputedBorderWidth(eSideTop) != 0 ||
-                !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetTop()) ||
-                !IsMarginZero(margin->mMargin.GetTop());
-    haveEnd = border->GetComputedBorderWidth(eSideBottom) != 0 ||
-              !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetBottom()) ||
-              !IsMarginZero(margin->mMargin.GetBottom());
+    haveStart = HaveSide(eSideTop);
+    haveEnd = HaveSide(eSideBottom);
   } else {
-    haveStart = border->GetComputedBorderWidth(eSideLeft) != 0 ||
-                !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetLeft()) ||
-                !IsMarginZero(margin->mMargin.GetLeft());
-    haveEnd = border->GetComputedBorderWidth(eSideRight) != 0 ||
-              !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetRight()) ||
-              !IsMarginZero(margin->mMargin.GetRight());
+    haveStart = HaveSide(eSideLeft);
+    haveEnd = HaveSide(eSideRight);
   }
   if (haveStart || haveEnd) {
     // We skip this block and return false for box-decoration-break:clone since

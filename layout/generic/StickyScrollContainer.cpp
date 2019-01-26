@@ -92,14 +92,14 @@ StickyScrollContainer::GetStickyScrollContainerForScrollFrame(
   return aFrame->GetProperty(StickyScrollContainerProperty());
 }
 
-static nscoord ComputeStickySideOffset(Side aSide, const nsStyleSides& aOffset,
-                                       nscoord aPercentBasis) {
-  if (eStyleUnit_Auto == aOffset.GetUnit(aSide)) {
+static nscoord ComputeStickySideOffset(
+    Side aSide, const StyleRect<LengthPercentageOrAuto>& aOffset,
+    nscoord aPercentBasis) {
+  auto& side = aOffset.Get(aSide);
+  if (side.IsAuto()) {
     return NS_AUTOOFFSET;
-  } else {
-    return nsLayoutUtils::ComputeCBDependentValue(aPercentBasis,
-                                                  aOffset.Get(aSide));
   }
+  return nsLayoutUtils::ComputeCBDependentValue(aPercentBasis, side);
 }
 
 // static

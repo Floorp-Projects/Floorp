@@ -201,9 +201,8 @@ use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::{self, Context, QuotePair, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
-use style::values::generics::rect::Rect;
 use style::values::specified;
-use style::values::specified::gecko::{IntersectionObserverRootMargin, PixelOrPercentage};
+use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
 use style::values::{CustomIdent, KeyframesName};
 use style_traits::{CssType, CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
@@ -6002,7 +6001,7 @@ pub extern "C" fn Servo_ComputeColor(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_Parse(
     value: *const nsAString,
-    result: *mut structs::nsStyleSides,
+    result: *mut IntersectionObserverRootMargin,
 ) -> bool {
     let value = value.as_ref().unwrap().to_string();
     let result = result.as_mut().unwrap();
@@ -6024,7 +6023,7 @@ pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_Parse(
     let margin = parser.parse_entirely(|p| IntersectionObserverRootMargin::parse(&context, p));
     match margin {
         Ok(margin) => {
-            margin.0.to_gecko_rect(result);
+            *result = margin;
             true
         },
         Err(..) => false,
@@ -6033,13 +6032,11 @@ pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_Parse(
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_ToString(
-    rect: *const structs::nsStyleSides,
+    root_margin: *const IntersectionObserverRootMargin,
     result: *mut nsAString,
 ) {
-    let rect = Rect::<PixelOrPercentage>::from_gecko_rect(rect.as_ref().unwrap()).unwrap();
-    let root_margin = IntersectionObserverRootMargin(rect);
-    let mut writer = CssWriter::new(result.as_mut().unwrap());
-    root_margin.to_css(&mut writer).unwrap();
+    let mut writer = CssWriter::new(&mut *result);
+    (*root_margin).to_css(&mut writer).unwrap();
 }
 
 #[no_mangle]

@@ -1104,8 +1104,7 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
     }
 
     if (mInScrollAnchorChain) {
-      const nsStylePosition* oldPosition =
-          aOldComputedStyle->StylePosition();
+      const nsStylePosition* oldPosition = aOldComputedStyle->StylePosition();
       if (oldPosition->mOffset != StylePosition()->mOffset ||
           oldPosition->mWidth != StylePosition()->mWidth ||
           oldPosition->mMinWidth != StylePosition()->mMinWidth ||
@@ -5256,15 +5255,16 @@ void nsIFrame::InlinePrefISizeData::ForceBreak(StyleClear aBreakType) {
   mLineIsEmpty = true;
 }
 
-static nscoord ResolveMargin(const nsStyleCoord& aStyle,
+static nscoord ResolveMargin(const LengthPercentageOrAuto& aStyle,
                              nscoord aPercentageBasis) {
-  if (aStyle.GetUnit() == eStyleUnit_Auto) {
+  if (aStyle.IsAuto()) {
     return nscoord(0);
   }
-  return nsLayoutUtils::ResolveToLength<false>(aStyle, aPercentageBasis);
+  return nsLayoutUtils::ResolveToLength<false>(aStyle.AsLengthPercentage(),
+                                               aPercentageBasis);
 }
 
-static nscoord ResolvePadding(const nsStyleCoord& aStyle,
+static nscoord ResolvePadding(const LengthPercentage& aStyle,
                               nscoord aPercentageBasis) {
   return nsLayoutUtils::ResolveToLength<true>(aStyle, aPercentageBasis);
 }
@@ -5276,20 +5276,22 @@ static nsIFrame::IntrinsicISizeOffsetData IntrinsicSizeOffsets(
   const auto& margin = aFrame->StyleMargin()->mMargin;
   bool verticalAxis = aForISize == wm.IsVertical();
   if (verticalAxis) {
-    result.hMargin += ResolveMargin(margin.GetTop(), aPercentageBasis);
-    result.hMargin += ResolveMargin(margin.GetBottom(), aPercentageBasis);
+    result.hMargin += ResolveMargin(margin.Get(eSideTop), aPercentageBasis);
+    result.hMargin += ResolveMargin(margin.Get(eSideBottom), aPercentageBasis);
   } else {
-    result.hMargin += ResolveMargin(margin.GetLeft(), aPercentageBasis);
-    result.hMargin += ResolveMargin(margin.GetRight(), aPercentageBasis);
+    result.hMargin += ResolveMargin(margin.Get(eSideLeft), aPercentageBasis);
+    result.hMargin += ResolveMargin(margin.Get(eSideRight), aPercentageBasis);
   }
 
   const auto& padding = aFrame->StylePadding()->mPadding;
   if (verticalAxis) {
-    result.hPadding += ResolvePadding(padding.GetTop(), aPercentageBasis);
-    result.hPadding += ResolvePadding(padding.GetBottom(), aPercentageBasis);
+    result.hPadding += ResolvePadding(padding.Get(eSideTop), aPercentageBasis);
+    result.hPadding +=
+        ResolvePadding(padding.Get(eSideBottom), aPercentageBasis);
   } else {
-    result.hPadding += ResolvePadding(padding.GetLeft(), aPercentageBasis);
-    result.hPadding += ResolvePadding(padding.GetRight(), aPercentageBasis);
+    result.hPadding += ResolvePadding(padding.Get(eSideLeft), aPercentageBasis);
+    result.hPadding +=
+        ResolvePadding(padding.Get(eSideRight), aPercentageBasis);
   }
 
   const nsStyleBorder* styleBorder = aFrame->StyleBorder();
