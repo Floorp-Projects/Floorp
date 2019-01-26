@@ -6,12 +6,6 @@
 
 #ifdef WR_VERTEX_SHADER
 
-#define SEGMENT_ALL         0
-#define SEGMENT_CORNER_TL   1
-#define SEGMENT_CORNER_TR   2
-#define SEGMENT_CORNER_BL   3
-#define SEGMENT_CORNER_BR   4
-
 in int aClipRenderTaskAddress;
 in int aClipTransformId;
 in int aPrimTransformId;
@@ -19,16 +13,17 @@ in int aClipSegment;
 in ivec4 aClipDataResourceAddress;
 in vec2 aClipLocalPos;
 in vec4 aClipTileRect;
+in vec4 aClipDeviceArea;
 
 struct ClipMaskInstance {
     int render_task_address;
     int clip_transform_id;
     int prim_transform_id;
-    int segment;
     ivec2 clip_data_address;
     ivec2 resource_address;
     vec2 local_pos;
     RectWithSize tile_rect;
+    RectWithSize sub_rect;
 };
 
 ClipMaskInstance fetch_clip_item() {
@@ -37,11 +32,11 @@ ClipMaskInstance fetch_clip_item() {
     cmi.render_task_address = aClipRenderTaskAddress;
     cmi.clip_transform_id = aClipTransformId;
     cmi.prim_transform_id = aPrimTransformId;
-    cmi.segment = aClipSegment;
     cmi.clip_data_address = aClipDataResourceAddress.xy;
     cmi.resource_address = aClipDataResourceAddress.zw;
     cmi.local_pos = aClipLocalPos;
     cmi.tile_rect = RectWithSize(aClipTileRect.xy, aClipTileRect.zw);
+    cmi.sub_rect = RectWithSize(aClipDeviceArea.xy, aClipDeviceArea.zw);
 
     return cmi;
 }
@@ -61,9 +56,10 @@ RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
 ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
                                       Transform prim_transform,
                                       Transform clip_transform,
-                                      ClipArea area) {
-    vec2 device_pos = area.screen_origin +
-                      aPosition.xy * area.common_data.task_rect.size;
+                                      ClipArea area,
+                                      RectWithSize sub_rect) {
+    vec2 device_pos = area.screen_origin + sub_rect.p0 +
+                      aPosition.xy * sub_rect.size;
 
     if (clip_transform.is_axis_aligned && prim_transform.is_axis_aligned) {
         mat4 snap_mat = clip_transform.m * prim_transform.inv_m;
@@ -91,7 +87,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
     vec3 local_pos = p.xyw * pos.w;
 
     vec4 vertex_pos = vec4(
-        area.common_data.task_rect.p0 + aPosition.xy * area.common_data.task_rect.size,
+        area.common_data.task_rect.p0 + sub_rect.p0 + aPosition.xy * sub_rect.size,
         0.0,
         1.0
     );

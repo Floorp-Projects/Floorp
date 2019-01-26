@@ -236,7 +236,7 @@ impl RenderTaskLocation {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CacheMaskTask {
-    actual_rect: DeviceIntRect,
+    pub actual_rect: DeviceIntRect,
     pub root_spatial_node_index: SpatialNodeIndex,
     pub clip_node_range: ClipNodeRange,
 }
