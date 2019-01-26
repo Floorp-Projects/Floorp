@@ -1274,7 +1274,7 @@ void nsGlobalWindowInner::FreeInnerObjects(bool aForDocumentOpen) {
   }
 
   if (mWindowGlobalChild && !mWindowGlobalChild->IsClosed()) {
-    mWindowGlobalChild->Destroy();
+    mWindowGlobalChild->Send__delete__(mWindowGlobalChild);
   }
   mWindowGlobalChild = nullptr;
 

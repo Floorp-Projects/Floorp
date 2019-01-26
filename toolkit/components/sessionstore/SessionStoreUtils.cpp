@@ -3,16 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/JSON.h"
-#include "jsapi.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/SessionStoreUtils.h"
-#include "mozilla/dom/txIXPathContext.h"
 #include "mozilla/dom/WindowProxyHolder.h"
-#include "mozilla/dom/XPathResult.h"
-#include "mozilla/dom/XPathEvaluator.h"
-#include "mozilla/dom/XPathExpression.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
@@ -327,11 +322,11 @@ static bool IsValidCCNumber(nsAString& aValue) {
 static const uint16_t kMaxTraversedXPaths = 100;
 
 // A helper function to append a element into mId or mXpath of CollectedFormData
-static Record<nsString, OwningStringOrBooleanOrObject>::EntryType*
+static Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType*
 AppendEntryToCollectedData(nsINode* aNode, const nsAString& aId,
                            uint16_t& aGeneratedCount,
                            CollectedFormData& aRetVal) {
-  Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry;
+  Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry;
   if (!aId.IsEmpty()) {
     if (!aRetVal.mId.WasPassed()) {
       aRetVal.mId.Construct();
@@ -391,7 +386,7 @@ static void CollectFromTextAreaElement(Document& aDocument,
                               eCaseMatters)) {
       continue;
     }
-    Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+    Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
         AppendEntryToCollectedData(textArea, id, aGeneratedCount, aRetVal);
     entry->mValue.SetAsString() = value;
   }
@@ -446,7 +441,7 @@ static void CollectFromInputElement(JSContext* aCx, Document& aDocument,
       if (checked == input->DefaultChecked()) {
         continue;
       }
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
           AppendEntryToCollectedData(input, id, aGeneratedCount, aRetVal);
       entry->mValue.SetAsBoolean() = checked;
     } else if (input->ControlType() == NS_FORM_INPUT_FILE) {
@@ -465,7 +460,7 @@ static void CollectFromInputElement(JSContext* aCx, Document& aDocument,
         JS_ClearPendingException(aCx);
         continue;
       }
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
           AppendEntryToCollectedData(input, id, aGeneratedCount, aRetVal);
       entry->mValue.SetAsObject() = &jsval.toObject();
     } else {
@@ -491,7 +486,7 @@ static void CollectFromInputElement(JSContext* aCx, Document& aDocument,
             JS::Rooted<JS::Value> jsval(aCx);
             if (JS_ParseJSON(aCx, value.get(), value.Length(), &jsval) &&
                 jsval.isObject()) {
-              Record<nsString, OwningStringOrBooleanOrObject>::EntryType*
+              Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType*
                   entry = AppendEntryToCollectedData(input, id, aGeneratedCount,
                                                      aRetVal);
               entry->mValue.SetAsObject() = &jsval.toObject();
@@ -502,7 +497,7 @@ static void CollectFromInputElement(JSContext* aCx, Document& aDocument,
           }
         }
       }
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
           AppendEntryToCollectedData(input, id, aGeneratedCount, aRetVal);
       entry->mValue.SetAsString() = value;
     }
@@ -553,7 +548,7 @@ static void CollectFromSelectElement(JSContext* aCx, Document& aDocument,
         JS_ClearPendingException(aCx);
         continue;
       }
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
           AppendEntryToCollectedData(select, id, aGeneratedCount, aRetVal);
       entry->mValue.SetAsObject() = &jsval.toObject();
     } else {
@@ -565,8 +560,8 @@ static void CollectFromSelectElement(JSContext* aCx, Document& aDocument,
       }
       bool hasDefaultValue = true;
       nsTArray<nsString> selectslist;
-      uint32_t numOptions = options->Length();
-      for (uint32_t idx = 0; idx < numOptions; idx++) {
+      int numOptions = options->Length();
+      for (int idx = 0; idx < numOptions; idx++) {
         HTMLOptionElement* option = options->ItemAsOption(idx);
         bool selected = option->Selected();
         if (!selected) {
@@ -586,7 +581,7 @@ static void CollectFromSelectElement(JSContext* aCx, Document& aDocument,
         JS_ClearPendingException(aCx);
         continue;
       }
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
           AppendEntryToCollectedData(select, id, aGeneratedCount, aRetVal);
       entry->mValue.SetAsObject() = &jsval.toObject();
     }
@@ -635,7 +630,7 @@ static void CollectFromXULTextbox(Document& aDocument,
         continue;
       }
       uint16_t generatedCount = 0;
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+      Record<nsString, OwningStringOrBooleanOrLongOrObject>::EntryType* entry =
           AppendEntryToCollectedData(input, id, generatedCount, aRetVal);
       entry->mValue.SetAsString() = value;
       return;
@@ -671,476 +666,5 @@ static void CollectFromXULTextbox(Document& aDocument,
   nsIURI* uri = aDocument.GetDocumentURI();
   if (uri) {
     uri->GetSpecIgnoringRef(aRetVal.mUrl.Construct());
-  }
-}
-
-MOZ_CAN_RUN_SCRIPT
-static void SetElementAsString(Element* aElement, const nsAString& aValue) {
-  IgnoredErrorResult rv;
-  HTMLTextAreaElement* textArea = HTMLTextAreaElement::FromNodeOrNull(aElement);
-  if (textArea) {
-    textArea->SetValue(aValue, rv);
-    if (!rv.Failed()) {
-      nsContentUtils::DispatchInputEvent(aElement);
-    }
-    return;
-  }
-  HTMLInputElement* input = HTMLInputElement::FromNodeOrNull(aElement);
-  if (input) {
-    input->SetValue(aValue, CallerType::NonSystem, rv);
-    if (!rv.Failed()) {
-      nsContentUtils::DispatchInputEvent(aElement);
-      return;
-    }
-  }
-  input = HTMLInputElement::FromNodeOrNull(nsFocusManager::GetRedirectedFocus(aElement));
-  if (input) {
-    input->SetValue(aValue, CallerType::NonSystem, rv);
-    if (!rv.Failed()) {
-      nsContentUtils::DispatchInputEvent(aElement);
-    }
-  }
-}
-
-MOZ_CAN_RUN_SCRIPT
-static void SetElementAsBool(Element* aElement, bool aValue) {
-  HTMLInputElement* input = HTMLInputElement::FromNodeOrNull(aElement);
-  if (input) {
-    bool checked = input->Checked();
-    if (aValue != checked) {
-      input->SetChecked(aValue);
-      nsContentUtils::DispatchInputEvent(aElement);
-    }
-  }
-}
-
-MOZ_CAN_RUN_SCRIPT
-static void SetElementAsFiles(HTMLInputElement* aElement,
-                              const CollectedFileListValue& aValue) {
-  nsTArray<nsString> fileList;
-  IgnoredErrorResult rv;
-  aElement->MozSetFileNameArray(aValue.mFileList, rv);
-  if (rv.Failed()) {
-    return;
-  }
-  nsContentUtils::DispatchInputEvent(aElement);
-}
-
-MOZ_CAN_RUN_SCRIPT
-static void SetElementAsSelect(HTMLSelectElement* aElement,
-                               const CollectedNonMultipleSelectValue& aValue) {
-  HTMLOptionsCollection* options = aElement->GetOptions();
-  if (!options) {
-    return;
-  }
-  int32_t selectIdx = options->SelectedIndex();
-  if (selectIdx >= 0) {
-    nsAutoString selectOptionVal;
-    options->ItemAsOption(selectIdx)->GetValue(selectOptionVal);
-    if (aValue.mValue.Equals(selectOptionVal)) {
-      return;
-    }
-  }
-  uint32_t numOptions = options->Length();
-  for (uint32_t idx = 0; idx < numOptions; idx++) {
-    HTMLOptionElement* option = options->ItemAsOption(idx);
-    nsAutoString optionValue;
-    option->GetValue(optionValue);
-    if (aValue.mValue.Equals(optionValue)) {
-      aElement->SetSelectedIndex(idx);
-      nsContentUtils::DispatchInputEvent(aElement);
-    }
-  }
-}
-
-MOZ_CAN_RUN_SCRIPT
-static void SetElementAsMultiSelect(HTMLSelectElement* aElement,
-                                    const nsTArray<nsString>& aValueArray) {
-  bool fireEvent = false;
-  HTMLOptionsCollection* options = aElement->GetOptions();
-  if (!options) {
-    return;
-  }
-  uint32_t numOptions = options->Length();
-  for (uint32_t idx = 0; idx < numOptions; idx++) {
-    HTMLOptionElement* option = options->ItemAsOption(idx);
-    nsAutoString optionValue;
-    option->GetValue(optionValue);
-    for (uint32_t i = 0, l = aValueArray.Length(); i < l; ++i) {
-      if (optionValue.Equals(aValueArray[i])) {
-        option->SetSelected(true);
-        if (!option->DefaultSelected()) {
-          fireEvent = true;
-        }
-      }
-    }
-  }
-  if (fireEvent) {
-    nsContentUtils::DispatchInputEvent(aElement);
-  }
-}
-
-MOZ_CAN_RUN_SCRIPT
-static void SetElementAsObject(JSContext* aCx, Element* aElement,
-                               JS::Handle<JS::Value> aObject) {
-  RefPtr<HTMLInputElement> input = HTMLInputElement::FromNodeOrNull(aElement);
-  if (input) {
-    if (input->ControlType() == NS_FORM_INPUT_FILE) {
-      CollectedFileListValue value;
-      if (value.Init(aCx, aObject)) {
-        SetElementAsFiles(input, value);
-      } else {
-        JS_ClearPendingException(aCx);
-      }
-    }
-    return;
-  }
-  RefPtr<HTMLSelectElement> select = HTMLSelectElement::FromNodeOrNull(aElement);
-  if (select) {
-    // For Single Select Element
-    if (!select->Multiple()) {
-      CollectedNonMultipleSelectValue value;
-      if (value.Init(aCx, aObject)) {
-        SetElementAsSelect(select, value);
-      } else {
-        JS_ClearPendingException(aCx);
-      }
-      return;
-    }
-
-    // For Multiple Selects Element
-    bool isArray = false;
-    JS_IsArrayObject(aCx, aObject, &isArray);
-    if (!isArray) {
-      return;
-    }
-    JS::Rooted<JSObject*> arrayObj(aCx, &aObject.toObject());
-    uint32_t arrayLength = 0;
-    if (!JS_GetArrayLength(aCx, arrayObj, &arrayLength)) {
-      JS_ClearPendingException(aCx);
-      return;
-    }
-    nsTArray<nsString> array(arrayLength);
-    for (uint32_t arrayIdx = 0; arrayIdx < arrayLength; arrayIdx++) {
-      JS::Rooted<JS::Value> element(aCx);
-      if (!JS_GetElement(aCx, arrayObj, arrayIdx, &element)) {
-        JS_ClearPendingException(aCx);
-        return;
-      }
-      if (!element.isString()) {
-        return;
-      }
-      nsAutoJSString value;
-      if (!value.init(aCx, element)) {
-        JS_ClearPendingException(aCx);
-        return;
-      }
-      array.AppendElement(value);
-    }
-    SetElementAsMultiSelect(select, array);
-  }
-}
-
-MOZ_CAN_RUN_SCRIPT
-static void SetRestoreData(JSContext* aCx, Element* aElement,
-                           JS::MutableHandle<JS::Value> aObject) {
-  nsAutoString data;
-  if (nsContentUtils::StringifyJSON(aCx, aObject, data)) {
-    SetElementAsString(aElement, data);
-  } else {
-    JS_ClearPendingException(aCx);
-  }
-}
-
-MOZ_CAN_RUN_SCRIPT
-static void SetInnerHTML(Document& aDocument, const CollectedFormData& aData) {
-  RefPtr<Element> bodyElement = aDocument.GetBody();
-  if (aDocument.HasFlag(NODE_IS_EDITABLE) && bodyElement) {
-    IgnoredErrorResult rv;
-    bodyElement->SetInnerHTML(aData.mInnerHTML.Value(),
-                              aDocument.NodePrincipal(), rv);
-    if (!rv.Failed()) {
-      nsContentUtils::DispatchInputEvent(bodyElement);
-    }
-  }
-}
-
-class FormDataParseContext : public txIParseContext {
- public:
-  explicit FormDataParseContext(bool aCaseInsensitive)
-      : mIsCaseInsensitive(aCaseInsensitive) {}
-
-  nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) override {
-    if (aPrefix == nsGkAtoms::xul) {
-      aID = kNameSpaceID_XUL;
-    } else {
-      MOZ_ASSERT(nsDependentAtomString(aPrefix).EqualsLiteral("xhtml"));
-      aID = kNameSpaceID_XHTML;
-    }
-    return NS_OK;
-  }
-
-  nsresult resolveFunctionCall(nsAtom* aName, int32_t aID,
-                               FunctionCall** aFunction) override {
-    return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
-  }
-
-  bool caseInsensitiveNameTests() override { return mIsCaseInsensitive; }
-
-  void SetErrorOffset(uint32_t aOffset) override {}
-
- private:
-  bool mIsCaseInsensitive;
-};
-
-static Element* FindNodeByXPath(JSContext* aCx, Document& aDocument,
-                                const nsAString& aExpression) {
-  FormDataParseContext parsingContext(aDocument.IsHTMLDocument());
-  IgnoredErrorResult rv;
-  nsAutoPtr<XPathExpression> expression(
-      aDocument.XPathEvaluator()->CreateExpression(aExpression, &parsingContext,
-                                                   &aDocument, rv));
-  if (rv.Failed()) {
-    return nullptr;
-  }
-  RefPtr<XPathResult> result = expression->Evaluate(
-      aCx, aDocument, XPathResult::FIRST_ORDERED_NODE_TYPE, nullptr, rv);
-  if (rv.Failed()) {
-    return nullptr;
-  }
-  return Element::FromNodeOrNull(result->GetSingleNodeValue(rv));
-}
-
-MOZ_CAN_RUN_SCRIPT_BOUNDARY
-/* static */ bool SessionStoreUtils::RestoreFormData(
-    const GlobalObject& aGlobal, Document& aDocument,
-    const CollectedFormData& aData) {
-  if (!aData.mUrl.WasPassed()) {
-    return true;
-  }
-  // Don't restore any data for the given frame if the URL
-  // stored in the form data doesn't match its current URL.
-  nsAutoCString url;
-  Unused << aDocument.GetDocumentURI()->GetSpecIgnoringRef(url);
-  if (!aData.mUrl.Value().Equals(url)) {
-    return false;
-  }
-  if (aData.mInnerHTML.WasPassed()) {
-    SetInnerHTML(aDocument, aData);
-  }
-  if (aData.mId.WasPassed()) {
-    for (auto& entry : aData.mId.Value().Entries()) {
-      RefPtr<Element> node = aDocument.GetElementById(entry.mKey);
-      if (entry.mValue.IsString()) {
-        SetElementAsString(node, entry.mValue.GetAsString());
-      } else if (entry.mValue.IsBoolean()) {
-        SetElementAsBool(node, entry.mValue.GetAsBoolean());
-      } else {
-        // For about:{sessionrestore,welcomeback} we saved the field as JSON to
-        // avoid nested instances causing humongous sessionstore.js files.
-        // cf. bug 467409
-        JSContext* cx = aGlobal.Context();
-        if (entry.mKey.EqualsLiteral("sessionData")) {
-          nsAutoCString url;
-          Unused << aDocument.GetDocumentURI()->GetSpecIgnoringRef(url);
-          if (url.EqualsLiteral("about:sessionrestore") ||
-              url.EqualsLiteral("about:welcomeback")) {
-            JS::Rooted<JS::Value> object(
-                cx, JS::ObjectValue(*entry.mValue.GetAsObject()));
-            SetRestoreData(cx, node, &object);
-            continue;
-          }
-        }
-        JS::Rooted<JS::Value> object(
-            cx, JS::ObjectValue(*entry.mValue.GetAsObject()));
-        SetElementAsObject(cx, node, object);
-      }
-    }
-  }
-  if (aData.mXpath.WasPassed()) {
-    for (auto& entry : aData.mXpath.Value().Entries()) {
-      RefPtr<Element> node = FindNodeByXPath(aGlobal.Context(), aDocument, entry.mKey);
-      if (entry.mValue.IsString()) {
-        SetElementAsString(node, entry.mValue.GetAsString());
-      } else if (entry.mValue.IsBoolean()) {
-        SetElementAsBool(node, entry.mValue.GetAsBoolean());
-      } else {
-        JS::Rooted<JS::Value> object(
-            aGlobal.Context(), JS::ObjectValue(*entry.mValue.GetAsObject()));
-        SetElementAsObject(aGlobal.Context(), node, object);
-      }
-    }
-  }
-  return true;
-}
-
-/* Read entries in the session storage data contained in a tab's history. */
-static void ReadAllEntriesFromStorage(
-    nsPIDOMWindowOuter* aWindow,
-    nsTHashtable<nsCStringHashKey>& aVisitedOrigins,
-    Record<nsString, Record<nsString, nsString>>& aRetVal) {
-  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
-  if (!docShell) {
-    return;
-  }
-
-  Document* doc = aWindow->GetDoc();
-  if (!doc) {
-    return;
-  }
-  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
-  if (!principal) {
-    return;
-  }
-
-  nsAutoCString origin;
-  nsresult rv = principal->GetOrigin(origin);
-  if (NS_FAILED(rv) || aVisitedOrigins.Contains(origin)) {
-    // Don't read a host twice.
-    return;
-  }
-
-  /* Completed checking for recursion and is about to read storage*/
-  nsCOMPtr<nsIDOMStorageManager> storageManager = do_QueryInterface(docShell);
-  if (!storageManager) {
-    return;
-  }
-  RefPtr<Storage> storage;
-  storageManager->GetStorage(aWindow->GetCurrentInnerWindow(), principal, false,
-                             getter_AddRefs(storage));
-  if (!storage) {
-    return;
-  }
-  mozilla::IgnoredErrorResult result;
-  uint32_t len = storage->GetLength(*principal, result);
-  if (result.Failed() || len == 0) {
-    return;
-  }
-  int64_t storageUsage = storage->GetOriginQuotaUsage();
-  if (storageUsage > StaticPrefs::browser_sessionstore_dom_storage_limit()) {
-    return;
-  }
-
-  Record<nsString, Record<nsString, nsString>>::EntryType* recordEntry = nullptr;
-  for (uint32_t i = 0; i < len; i++) {
-    Record<nsString, nsString>::EntryType entry;
-    mozilla::IgnoredErrorResult res;
-    storage->Key(i, entry.mKey, *principal, res);
-    if (res.Failed()) {
-      continue;
-    }
-
-    storage->GetItem(entry.mKey, entry.mValue, *principal, res);
-    if (res.Failed()) {
-      continue;
-    }
-
-    if (!recordEntry) {
-      recordEntry = aRetVal.Entries().AppendElement();
-      recordEntry->mKey = NS_ConvertUTF8toUTF16(origin);
-      aVisitedOrigins.PutEntry(origin);
-    }
-    recordEntry->mValue.Entries().AppendElement(std::move(entry));
-  }
-}
-
-/* Collect Collect session storage from current frame and all child frame */
-static void CollectedSessionStorageInternal(
-    JSContext* aCx, BrowsingContext* aBrowsingContext,
-    nsTHashtable<nsCStringHashKey>& aVisitedOrigins,
-    Record<nsString, Record<nsString, nsString>>& aRetVal) {
-  /* Collect session store from current frame */
-  nsPIDOMWindowOuter* window = aBrowsingContext->GetDOMWindow();
-  if (!window) {
-    return;
-  }
-  ReadAllEntriesFromStorage(window, aVisitedOrigins, aRetVal);
-
-  /* Collect session storage from all child frame */
-  nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
-  if (!docShell) {
-    return;
-  }
-  int32_t length;
-  nsresult rv = docShell->GetChildCount(&length);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  for (int32_t i = 0; i < length; ++i) {
-    nsCOMPtr<nsIDocShellTreeItem> item;
-    docShell->GetChildAt(i, getter_AddRefs(item));
-    if (!item) {
-      return;
-    }
-    nsCOMPtr<nsIDocShell> childDocShell(do_QueryInterface(item));
-    if (!childDocShell) {
-      return;
-    }
-    bool isDynamic = false;
-    rv = childDocShell->GetCreatedDynamically(&isDynamic);
-    if (NS_SUCCEEDED(rv) && isDynamic) {
-      continue;
-    }
-    CollectedSessionStorageInternal(
-        aCx, nsDocShell::Cast(childDocShell)->GetBrowsingContext(),
-        aVisitedOrigins, aRetVal);
-  }
-}
-
-/* static */ void SessionStoreUtils::CollectSessionStorage(
-    const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
-    Record<nsString, Record<nsString, nsString>>& aRetVal) {
-  nsTHashtable<nsCStringHashKey> visitedOrigins;
-  CollectedSessionStorageInternal(aGlobal.Context(), aWindow.get(),
-                                  visitedOrigins, aRetVal);
-}
-
-/* static */ void SessionStoreUtils::RestoreSessionStorage(
-    const GlobalObject& aGlobal, nsIDocShell* aDocShell,
-    const Record<nsString, Record<nsString, nsString>>& aData) {
-  for (auto& entry : aData.Entries()) {
-    // NOTE: In capture() we record the full origin for the URI which the
-    // sessionStorage is being captured for. As of bug 1235657 this code
-    // stopped parsing any origins which have originattributes correctly, as
-    // it decided to use the origin attributes from the docshell, and try to
-    // interpret the origin as a URI. Since bug 1353844 this code now correctly
-    // parses the full origin, and then discards the origin attributes, to
-    // make the behavior line up with the original intentions in bug 1235657
-    // while preserving the ability to read all session storage from
-    // previous versions. In the future, if this behavior is desired, we may
-    // want to use the spec instead of the origin as the key, and avoid
-    // transmitting origin attribute information which we then discard when
-    // restoring.
-    //
-    // If changing this logic, make sure to also change the principal
-    // computation logic in SessionStore::_sendRestoreHistory.
-
-    // OriginAttributes are always after a '^' character
-    int32_t pos = entry.mKey.RFindChar('^');
-    nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateCodebasePrincipal(
-        NS_ConvertUTF16toUTF8(Substring(entry.mKey, 0, pos)));
-    nsresult rv;
-    nsCOMPtr<nsIDOMStorageManager> storageManager = do_QueryInterface(aDocShell, &rv);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    RefPtr<Storage> storage;
-    // There is no need to pass documentURI, it's only used to fill documentURI
-    // property of domstorage event, which in this case has no consumer.
-    // Prevention of events in case of missing documentURI will be solved in a
-    // followup bug to bug 600307.
-    // Null window because the current window doesn't match the principal yet
-    // and loads about:blank.
-    storageManager->CreateStorage(nullptr, principal, EmptyString(), false, getter_AddRefs(storage));
-    if (!storage) {
-      continue;
-    }
-    for (auto& InnerEntry : entry.mValue.Entries()) {
-      IgnoredErrorResult result;
-      storage->SetItem(InnerEntry.mKey, InnerEntry.mValue, *principal, result);
-      if (result.Failed()) {
-        NS_WARNING("storage set item failed!");
-      }
-    }
   }
 }

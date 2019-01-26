@@ -51,10 +51,6 @@ class WindowGlobalParent final : public nsISupports,
   // |nullptr| if the actor has been torn down, or is not in-process.
   already_AddRefed<WindowGlobalChild> GetChildActor();
 
-  // Get this actor's manager if it is not an in-process actor. Returns
-  // |nullptr| if the actor has been torn down, or is in-process.
-  already_AddRefed<TabParent> GetTabParent();
-
   // The principal of this WindowGlobal. This value will not change over the
   // lifetime of the WindowGlobal object, even to reflect changes in
   // |document.domain|.
@@ -94,7 +90,6 @@ class WindowGlobalParent final : public nsISupports,
   // IPC messages
   mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI) override;
   mozilla::ipc::IPCResult RecvBecomeCurrentWindowGlobal() override;
-  mozilla::ipc::IPCResult RecvDestroy() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
