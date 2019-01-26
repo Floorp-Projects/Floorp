@@ -410,26 +410,6 @@ var gMainPane = {
       // of the pane hiding/showing code potentially interfering:
       document.getElementById("drmGroup").setAttribute("style", "display: none !important");
     }
-
-    if (AppConstants.MOZ_DEV_EDITION) {
-      let uAppData = OS.Constants.Path.userApplicationDataDir;
-      let ignoreSeparateProfile = OS.Path.join(uAppData, "ignore-dev-edition-profile");
-
-      setEventListener("separateProfileMode", "command", gMainPane.separateProfileModeChange);
-      let separateProfileModeCheckbox = document.getElementById("separateProfileMode");
-      setEventListener("getStarted", "click", gMainPane.onGetStarted);
-
-      OS.File.stat(ignoreSeparateProfile).then(() => separateProfileModeCheckbox.checked = false,
-        () => separateProfileModeCheckbox.checked = true);
-
-      if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
-        document.getElementById("sync-dev-edition-root").hidden = false;
-        fxAccounts.getSignedInUser().then(data => {
-          document.getElementById("getStarted").selectedIndex = data ? 1 : 0;
-        }).catch(Cu.reportError);
-      }
-    }
-
     // Initialize the Firefox Updates section.
     let version = AppConstants.MOZ_APP_VERSION_DISPLAY;
 
