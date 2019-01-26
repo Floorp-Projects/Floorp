@@ -22,6 +22,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "xpcpublic.h"
+#include "mozilla/AbstractEventQueue.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
@@ -113,34 +114,35 @@ extern nsresult NS_DelayedDispatchToCurrentThread(
     already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs);
 
 /**
- * Dispatch the given event to the idle queue of the current thread.
- *
- * @param aEvent
- *   The event to dispatch.
- *
- * @returns NS_ERROR_INVALID_ARG
- *   If event is null.
- * @returns NS_ERROR_UNEXPECTED
- *   If the thread is shutting down.
- */
-extern nsresult NS_IdleDispatchToCurrentThread(
-    already_AddRefed<nsIRunnable>&& aEvent);
-
-/**
- * Dispatch the given event to the idle queue of the main thread.
+ * Dispatch the given event to the specified queue of the current thread.
  *
  * @param aEvent The event to dispatch.
+ * @param aQueue The event queue for the thread to use
  *
  * @returns NS_ERROR_INVALID_ARG
  *   If event is null.
  * @returns NS_ERROR_UNEXPECTED
  *   If the thread is shutting down.
  */
-extern nsresult NS_IdleDispatchToMainThread(
-    already_AddRefed<nsIRunnable>&& aEvent);
+extern nsresult NS_DispatchToCurrentThreadQueue(
+    already_AddRefed<nsIRunnable>&& aEvent, mozilla::EventQueuePriority aQueue);
 
 /**
- * Dispatch the given event to the idle queue of the current thread.
+ * Dispatch the given event to the specified queue of the main thread.
+ *
+ * @param aEvent The event to dispatch.
+ * @param aQueue The event queue for the thread to use
+ *
+ * @returns NS_ERROR_INVALID_ARG
+ *   If event is null.
+ * @returns NS_ERROR_UNEXPECTED
+ *   If the thread is shutting down.
+ */
+extern nsresult NS_DispatchToMainThreadQueue(
+    already_AddRefed<nsIRunnable>&& aEvent, mozilla::EventQueuePriority aQueue);
+
+/**
+ * Dispatch the given event to an idle queue of the current thread.
  *
  * @param aEvent The event to dispatch. If the event implements
  *   nsIIdleRunnable, it will receive a call on
@@ -148,36 +150,42 @@ extern nsresult NS_IdleDispatchToMainThread(
  *   aTimeout.
  *
  * @param aTimeout The time in milliseconds until the event should be
- *   moved from the idle queue to the regular queue, if it hasn't been
+ *   moved from an idle queue to the regular queue, if it hasn't been
  *   executed. If aEvent is also an nsIIdleRunnable, it is expected
  *   that it should handle the timeout itself, after a call to
  *   nsIIdleRunnable::SetTimer.
  *
+ * @param aQueue
+ *   The event queue for the thread to use.  Must be an idle queue
+ *   (Idle or DeferredTimers)
+ *
  * @returns NS_ERROR_INVALID_ARG
  *   If event is null.
  * @returns NS_ERROR_UNEXPECTED
  *   If the thread is shutting down.
  */
-extern nsresult NS_IdleDispatchToCurrentThread(
-    already_AddRefed<nsIRunnable>&& aEvent, uint32_t aTimeout);
+extern nsresult NS_DispatchToCurrentThreadQueue(
+    already_AddRefed<nsIRunnable>&& aEvent, uint32_t aTimeout,
+    mozilla::EventQueuePriority aQueue);
 
 /**
- * Dispatch the given event to the idle queue of a thread.
+ * Dispatch the given event to a queue of a thread.
  *
  * @param aEvent The event to dispatch.
- *
  * @param aThread The target thread for the dispatch.
+ * @param aQueue The event queue for the thread to use.
  *
  * @returns NS_ERROR_INVALID_ARG
  *   If event is null.
  * @returns NS_ERROR_UNEXPECTED
  *   If the thread is shutting down.
  */
-extern nsresult NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
-                                        nsIThread* aThread);
+extern nsresult NS_DispatchToThreadQueue(already_AddRefed<nsIRunnable>&& aEvent,
+                                         nsIThread* aThread,
+                                         mozilla::EventQueuePriority aQueue);
 
 /**
- * Dispatch the given event to the idle queue of a thread.
+ * Dispatch the given event to an idle queue of a thread.
  *
  * @param aEvent The event to dispatch. If the event implements
  *   nsIIdleRunnable, it will receive a call on
@@ -185,20 +193,25 @@ extern nsresult NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
  *   aTimeout.
  *
  * @param aTimeout The time in milliseconds until the event should be
- *   moved from the idle queue to the regular queue, if it hasn't been
+ *   moved from an idle queue to the regular queue, if it hasn't been
  *   executed. If aEvent is also an nsIIdleRunnable, it is expected
  *   that it should handle the timeout itself, after a call to
  *   nsIIdleRunnable::SetTimer.
  *
  * @param aThread The target thread for the dispatch.
  *
+ * @param aQueue
+ *   The event queue for the thread to use.  Must be an idle queue
+ *   (Idle or DeferredTimers)
+ *
  * @returns NS_ERROR_INVALID_ARG
  *   If event is null.
  * @returns NS_ERROR_UNEXPECTED
  *   If the thread is shutting down.
  */
-extern nsresult NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
-                                        uint32_t aTimeout, nsIThread* aThread);
+extern nsresult NS_DispatchToThreadQueue(already_AddRefed<nsIRunnable>&& aEvent,
+                                         uint32_t aTimeout, nsIThread* aThread,
+                                         mozilla::EventQueuePriority aQueue);
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**

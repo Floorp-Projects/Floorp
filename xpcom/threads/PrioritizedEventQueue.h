@@ -43,6 +43,7 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   PrioritizedEventQueue(UniquePtr<InnerQueueT> aHighQueue,
                         UniquePtr<InnerQueueT> aInputQueue,
                         UniquePtr<InnerQueueT> aNormalQueue,
+                        UniquePtr<InnerQueueT> aDeferredTimersQueue,
                         UniquePtr<InnerQueueT> aIdleQueue,
                         already_AddRefed<nsIIdlePeriod> aIdlePeriod);
 
@@ -84,6 +85,7 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
     n += mHighQueue->SizeOfIncludingThis(aMallocSizeOf);
     n += mInputQueue->SizeOfIncludingThis(aMallocSizeOf);
     n += mNormalQueue->SizeOfIncludingThis(aMallocSizeOf);
+    n += mDeferredTimersQueue->SizeOfIncludingThis(aMallocSizeOf);
     n += mIdleQueue->SizeOfIncludingThis(aMallocSizeOf);
 
     if (mIdlePeriod) {
@@ -103,6 +105,7 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   UniquePtr<InnerQueueT> mHighQueue;
   UniquePtr<InnerQueueT> mInputQueue;
   UniquePtr<InnerQueueT> mNormalQueue;
+  UniquePtr<InnerQueueT> mDeferredTimersQueue;
   UniquePtr<InnerQueueT> mIdleQueue;
 
   // We need to drop the queue mutex when checking the idle deadline, so we keep
