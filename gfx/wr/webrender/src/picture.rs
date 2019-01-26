@@ -2689,7 +2689,6 @@ impl PicturePrimitive {
                     child_tasks,
                     uv_rect_kind,
                     pic_context.raster_spatial_node_index,
-                    None,
                 );
 
                 let picture_task_id = frame_state.render_tasks.add(picture_task);
@@ -2741,7 +2740,6 @@ impl PicturePrimitive {
                     child_tasks,
                     uv_rect_kind,
                     pic_context.raster_spatial_node_index,
-                    None,
                 );
                 picture_task.mark_for_saving();
 
@@ -2807,7 +2805,6 @@ impl PicturePrimitive {
                     child_tasks,
                     uv_rect_kind,
                     pic_context.raster_spatial_node_index,
-                    None,
                 );
 
                 let readback_task_id = frame_state.render_tasks.add(
@@ -2846,7 +2843,6 @@ impl PicturePrimitive {
                     child_tasks,
                     uv_rect_kind,
                     pic_context.raster_spatial_node_index,
-                    None,
                 );
 
                 let render_task_id = frame_state.render_tasks.add(picture_task);
@@ -2877,7 +2873,6 @@ impl PicturePrimitive {
                     child_tasks,
                     uv_rect_kind,
                     pic_context.raster_spatial_node_index,
-                    None,
                 );
 
                 let render_task_id = frame_state.render_tasks.add(picture_task);
