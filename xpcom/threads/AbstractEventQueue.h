@@ -19,6 +19,7 @@ enum class EventQueuePriority {
   High,
   Input,
   Normal,
+  DeferredTimers,
   Idle,
 
   Count
