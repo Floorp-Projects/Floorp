@@ -25,12 +25,6 @@ class nsTraceRefcnt {
    * activity that occurs because of static constructors or destructors.
    */
   static void SetActivityIsLegal(bool aLegal);
-
-  /**
-   * Disable bloat log output at shutdown. This is used to test that the
-   * test harness handles a missing log properly.
-   */
-  static void DisableDumpStatistics();
 };
 
 #endif  // nsTraceRefcnt_h
