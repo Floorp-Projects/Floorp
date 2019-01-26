@@ -13,19 +13,12 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm");
 // before they are called.
 const progressListeners = new Map();
 
-function loadContentWindow(webNavigation, url, principal) {
-  let uri;
-  try {
-    uri = Services.io.newURI(url);
-  } catch (e) {
-    Cu.reportError(`Invalid URL passed to loadContentWindow(): ${url}`);
-    return;
-  }
+function loadContentWindow(webNavigation, uri, principal) {
   return new Promise((resolve, reject) => {
     let loadURIOptions = {
       triggeringPrincipal: principal,
     };
-    webNavigation.loadURI(uri.spec, loadURIOptions);
+    webNavigation.loadURI(uri, loadURIOptions);
     let docShell = webNavigation.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDocShell);
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -41,7 +34,7 @@ function loadContentWindow(webNavigation, url, principal) {
           return;
         }
         // Ignore the initial about:blank
-        if (uri.spec != location.spec) {
+        if (uri != location.spec) {
           return;
         }
         let contentWindow = docShell.domWindow;
