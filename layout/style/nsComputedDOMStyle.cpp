@@ -2614,6 +2614,32 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetOffsetWidthFor(
       return nullptr;
   }
 }
+// FIXME(emilio): Remove these when nsStyleCoord is gone.
+static nsStyleCoord ToCoord(const LengthPercentage& aLength) {
+  nsStyleCoord ret;
+  if (aLength.was_calc) {
+    auto* calc = new nsStyleCoord::Calc();
+    calc->mLength = CSSPixel::ToAppUnits(aLength.LengthInCSSPixels());
+    calc->mPercent = aLength.Percentage();
+    calc->mHasPercent = aLength.HasPercent();
+    ret.SetCalcValue(calc);  // takes ownership.
+    return ret;
+  }
+
+  if (aLength.HasPercent()) {
+    ret.SetPercentValue(aLength.Percentage());
+  } else {
+    ret.SetCoordValue(aLength.ToLength());
+  }
+  return ret;
+}
+
+static nsStyleCoord ToCoord(const LengthPercentageOrAuto& aLength) {
+  if (aLength.IsAuto()) {
+    return nsStyleCoord(eStyleUnit_Auto);
+  }
+  return ToCoord(aLength.AsLengthPercentage());
+}
 
 static_assert(eSideTop == 0 && eSideRight == 1 && eSideBottom == 2 &&
                   eSideLeft == 3,
@@ -2627,14 +2653,9 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetNonStaticPositionOffset(
 
   const nsStylePosition* positionData = StylePosition();
   int32_t sign = 1;
-  nsStyleCoord coord = positionData->mOffset.Get(aSide);
+  LengthPercentageOrAuto coord = positionData->mOffset.Get(aSide);
 
-  NS_ASSERTION(coord.GetUnit() == eStyleUnit_Coord ||
-                   coord.GetUnit() == eStyleUnit_Percent ||
-                   coord.GetUnit() == eStyleUnit_Auto || coord.IsCalcUnit(),
-               "Unexpected unit");
-
-  if (coord.GetUnit() == eStyleUnit_Auto) {
+  if (coord.IsAuto()) {
     if (!aResolveAuto) {
       val->SetIdent(eCSSKeyword_auto);
       return val.forget();
@@ -2647,18 +2668,18 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetNonStaticPositionOffset(
                                         ? aWidthGetter
                                         : aHeightGetter;
 
-  val->SetAppUnits(sign * StyleCoordToNSCoord(coord, baseGetter, 0, false));
+  val->SetAppUnits(sign *
+                   StyleCoordToNSCoord(ToCoord(coord), baseGetter, 0, false));
   return val.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetAbsoluteOffset(
     mozilla::Side aSide) {
   const auto& offset = StylePosition()->mOffset;
-  const nsStyleCoord& coord = offset.Get(aSide);
-  const nsStyleCoord& oppositeCoord = offset.Get(NS_OPPOSITE_SIDE(aSide));
+  const auto& coord = offset.Get(aSide);
+  const auto& oppositeCoord = offset.Get(NS_OPPOSITE_SIDE(aSide));
 
-  if (coord.GetUnit() == eStyleUnit_Auto ||
-      oppositeCoord.GetUnit() == eStyleUnit_Auto) {
+  if (coord.IsAuto() || oppositeCoord.IsAuto()) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     val->SetAppUnits(GetUsedAbsoluteOffset(aSide));
     return val.forget();
@@ -2728,7 +2749,7 @@ nscoord nsComputedDOMStyle::GetUsedAbsoluteOffset(mozilla::Side aSide) {
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetStaticOffset(
     mozilla::Side aSide) {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StylePosition()->mOffset.Get(aSide), false);
+  SetValueToCoord(val, ToCoord(StylePosition()->mOffset.Get(aSide)), false);
   return val.forget();
 }
 
@@ -2737,7 +2758,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetPaddingWidthFor(
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
   if (!mInnerFrame) {
-    SetValueToCoord(val, StylePadding()->mPadding.Get(aSide), true);
+    SetValueToCoord(val, ToCoord(StylePadding()->mPadding.Get(aSide)), true);
   } else {
     AssertFlushedPendingReflows();
 
@@ -2812,7 +2833,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetMarginWidthFor(
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
   if (!mInnerFrame) {
-    SetValueToCoord(val, StyleMargin()->mMargin.Get(aSide), false);
+    SetValueToCoord(val, ToCoord(StyleMargin()->mMargin.Get(aSide)), false);
   } else {
     AssertFlushedPendingReflows();
 

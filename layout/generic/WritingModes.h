@@ -1896,6 +1896,32 @@ class LogicalRect {
   nscoord mBSize;   // block-size
 };
 
+template <typename T>
+const T& StyleRect<T>::Get(mozilla::WritingMode aWM,
+                           mozilla::LogicalSide aSide) const {
+  return Get(aWM.PhysicalSide(aSide));
+}
+
+template <typename T>
+const T& StyleRect<T>::GetIStart(mozilla::WritingMode aWM) const {
+  return Get(aWM, mozilla::eLogicalSideIStart);
+}
+
+template <typename T>
+const T& StyleRect<T>::GetBStart(mozilla::WritingMode aWM) const {
+  return Get(aWM, mozilla::eLogicalSideBStart);
+}
+
+template <typename T>
+const T& StyleRect<T>::GetIEnd(mozilla::WritingMode aWM) const {
+  return Get(aWM, mozilla::eLogicalSideIEnd);
+}
+
+template <typename T>
+const T& StyleRect<T>::GetBEnd(mozilla::WritingMode aWM) const {
+  return Get(aWM, mozilla::eLogicalSideBEnd);
+}
+
 }  // namespace mozilla
 
 // Definitions of inline methods for nsStyleSides, declared in nsStyleCoord.h
@@ -2043,10 +2069,11 @@ inline bool nsStylePosition::MaxBSizeDependsOnContainer(
 }
 
 inline bool nsStyleMargin::HasBlockAxisAuto(mozilla::WritingMode aWM) const {
-  return mMargin.HasBlockAxisAuto(aWM);
+  return mMargin.GetBStart(aWM).IsAuto() || mMargin.GetBEnd(aWM).IsAuto();
 }
+
 inline bool nsStyleMargin::HasInlineAxisAuto(mozilla::WritingMode aWM) const {
-  return mMargin.HasInlineAxisAuto(aWM);
+  return mMargin.GetIStart(aWM).IsAuto() || mMargin.GetIEnd(aWM).IsAuto();
 }
 
 #endif  // WritingModes_h_
