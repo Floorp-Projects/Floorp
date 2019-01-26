@@ -15,6 +15,7 @@
 #include "mozilla/gfx/Types.h"
 #include "Units.h"
 #include "nsCoord.h"
+#include "LayoutConstants.h"
 #include "nsISupportsImpl.h"
 #include "nsStyleConsts.h"
 
@@ -82,6 +83,9 @@ CSSCoord LengthPercentage::ResolveToCSSPixelsWith(T aPercentageGetter) const {
 }
 
 nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
+  NS_WARNING_ASSERTION(aPercentageBasis >= 0, "nscoord overflow?");
+  NS_WARNING_ASSERTION(aPercentageBasis != NS_UNCONSTRAINEDSIZE,
+                       "Should handle that somewhere else");
   return CSSPixel::ToAppUnits(LengthInCSSPixels()) +
          NSToCoordFloorClamped(aPercentageBasis * Percentage());
 }
