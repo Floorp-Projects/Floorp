@@ -212,8 +212,7 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
 
   if (0 == mLineNumber && !HasPrevInFlow(mBlockReflowInput->mFrame)) {
     nscoord pctBasis = mBlockReflowInput->ComputedISize();
-    mTextIndent = nsLayoutUtils::ResolveToLength<false>(mStyleText->mTextIndent,
-                                                        pctBasis);
+    mTextIndent = mStyleText->mTextIndent.Resolve(pctBasis);
     psd->mICoord += mTextIndent;
   }
 

@@ -1525,7 +1525,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   nsStyleCoord mWordSpacing;       // coord, percent, calc
   nsStyleCoord mLetterSpacing;     // coord, normal
   nsStyleCoord mLineHeight;        // coord, factor, normal
-  nsStyleCoord mTextIndent;        // coord, percent, calc
+  mozilla::LengthPercentage mTextIndent;
   nscoord mWebkitTextStrokeWidth;  // coord
 
   RefPtr<nsCSSShadowArray> mTextShadow;  // nullptr in case of a zero-length
