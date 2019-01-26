@@ -23,7 +23,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIChannelEventSink.h"
-#include "nsISecurityEventSink.h"
 #include "nsISupportsPriority.h"
 #include "nsCOMPtr.h"
 #include "PLDHashTable.h"
@@ -50,7 +49,6 @@ class nsDocLoader : public nsIDocumentLoader,
                     public nsIWebProgress,
                     public nsIInterfaceRequestor,
                     public nsIChannelEventSink,
-                    public nsISecurityEventSink,
                     public nsISupportsPriority {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_THIS_DOCLOADER_IMPL_CID)
@@ -76,8 +74,6 @@ class nsDocLoader : public nsIDocumentLoader,
 
   // nsIProgressEventSink
   NS_DECL_NSIPROGRESSEVENTSINK
-
-  NS_DECL_NSISECURITYEVENTSINK
 
   // nsIRequestObserver methods: (for observing the load group)
   NS_DECL_NSIREQUESTOBSERVER
@@ -107,6 +103,23 @@ class nsDocLoader : public nsIDocumentLoader,
     // Mask indicating which notifications the listener wants to receive.
     unsigned long mNotifyMask;
   };
+
+  /**
+   * Fired when a security change occurs due to page transitions,
+   * or end document load. This interface should be called by
+   * a security package (eg Netscape Personal Security Manager)
+   * to notify nsIWebProgressListeners that security state has
+   * changed. State flags are in nsIWebProgressListener.idl
+   */
+  void OnSecurityChange(nsISupports* aContext, uint32_t aState);
+  /**
+   * Fired when a content blocking event occurs during the time
+   * when a document is alive.  This interface should be called
+   * by Gecko to notify nsIWebProgressListeners that there is a
+   * new content blocking event.  Content blocking events are in
+   * nsIWebProgressListeners.idl.
+   */
+  void OnContentBlockingEvent(nsISupports* aContext, uint32_t aEvent);
 
  protected:
   virtual ~nsDocLoader();
