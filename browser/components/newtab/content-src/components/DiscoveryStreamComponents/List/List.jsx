@@ -35,11 +35,7 @@ export class ListItem extends React.PureComponent {
       <li className="ds-list-item">
         <a className="ds-list-item-link" href={this.props.url} onClick={this.onLinkClick}>
           <div className="ds-list-item-text">
-            <div className="ds-list-item-title">
-              <b>
-                {this.props.title}
-              </b>
-            </div>
+            <div className="ds-list-item-title">{this.props.title}</div>
             {this.props.excerpt && <div className="ds-list-item-excerpt">{truncateText(this.props.excerpt, 90)}</div>}
             <div className="ds-list-item-info">{this.props.domain}</div>
           </div>
@@ -62,8 +58,18 @@ export function _List(props) {
 
   const recs = feed.data.recommendations;
 
-  let recMarkup = recs.slice(props.recStartingPoint, props.items).map((rec, index) => (
-    <ListItem {...rec} key={`ds-list-item-${index}`} index={index} type={props.type} dispatch={props.dispatch} />)
+  let recMarkup = recs.slice(props.recStartingPoint,
+                             props.recStartingPoint + props.items).map((rec, index) => (
+    <ListItem key={`ds-list-item-${index}`}
+      dispatch={props.dispatch}
+      domain={rec.domain}
+      excerpt={rec.excerpt}
+      id={rec.id}
+      image_src={rec.image_src}
+      index={index}
+      title={rec.title}
+      type={props.type}
+      url={rec.url} />)
   );
 
   const listStyles = [

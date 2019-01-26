@@ -7069,23 +7069,37 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
         "div",
         { className: "meta" },
         external_React_default.a.createElement(
-          "header",
-          { className: "title" },
-          this.props.title
+          "div",
+          { className: "info-wrap" },
+          external_React_default.a.createElement(
+            "header",
+            { className: "title" },
+            this.props.title
+          ),
+          this.props.excerpt && external_React_default.a.createElement(
+            "p",
+            { className: "excerpt" },
+            this.props.excerpt
+          )
         ),
-        this.props.excerpt && external_React_default.a.createElement(
+        external_React_default.a.createElement(
           "p",
-          { className: "excerpt" },
-          this.props.excerpt
-        ),
-        this.props.context ? external_React_default.a.createElement(
-          "p",
-          { className: "context" },
-          this.props.context
-        ) : external_React_default.a.createElement(
-          "p",
-          { className: "source" },
-          this.props.source
+          null,
+          this.props.context && external_React_default.a.createElement(
+            "span",
+            null,
+            external_React_default.a.createElement(
+              "span",
+              { className: "context" },
+              this.props.context
+            ),
+            external_React_default.a.createElement("br", null)
+          ),
+          external_React_default.a.createElement(
+            "span",
+            { className: "source" },
+            this.props.source
+          )
         )
       )
     );
@@ -7135,7 +7149,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
       ),
       external_React_default.a.createElement(
         "div",
-        { className: `ds-card-grid ds-card-grid-${divisibility}` },
+        { className: `ds-card-grid ds-card-grid-${this.props.border} ds-card-grid-${divisibility}` },
         cards
       )
     );
@@ -7154,8 +7168,6 @@ function truncateText(text = "", cap) {
   return text.substring(0, cap).trim() + (text.length > cap ? "…" : "");
 }
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/List/List.jsx
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 
 
 
@@ -7201,11 +7213,7 @@ class List_ListItem extends external_React_default.a.PureComponent {
           external_React_default.a.createElement(
             "div",
             { className: "ds-list-item-title" },
-            external_React_default.a.createElement(
-              "b",
-              null,
-              this.props.title
-            )
+            this.props.title
           ),
           this.props.excerpt && external_React_default.a.createElement(
             "div",
@@ -7236,7 +7244,16 @@ function _List(props) {
 
   const recs = feed.data.recommendations;
 
-  let recMarkup = recs.slice(props.recStartingPoint, props.items).map((rec, index) => external_React_default.a.createElement(List_ListItem, _extends({}, rec, { key: `ds-list-item-${index}`, index: index, type: props.type, dispatch: props.dispatch })));
+  let recMarkup = recs.slice(props.recStartingPoint, props.recStartingPoint + props.items).map((rec, index) => external_React_default.a.createElement(List_ListItem, { key: `ds-list-item-${index}`,
+    dispatch: props.dispatch,
+    domain: rec.domain,
+    excerpt: rec.excerpt,
+    id: rec.id,
+    image_src: rec.image_src,
+    index: index,
+    title: rec.title,
+    type: props.type,
+    url: rec.url }));
 
   const listStyles = ["ds-list", props.fullWidth ? "ds-list-full-width" : "", props.hasBorders ? "ds-list-borders" : "", props.hasImages ? "ds-list-images" : "", props.hasNumbers ? "ds-list-numbers" : ""];
   return external_React_default.a.createElement(
@@ -7323,7 +7340,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
       feed: this.props.feed,
       hasImages: true,
       hasBorders: this.props.border === `border`,
-      items: this.props.items,
+      items: this.props.items - 1,
       type: `Hero` });
 
     return external_React_default.a.createElement(
@@ -7364,7 +7381,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
               truncateText(heroRec.context, 22)
             ) : external_React_default.a.createElement(
               "p",
-              null,
+              { className: "source" },
               truncateText(heroRec.domain, 22)
             )
           )
@@ -7417,13 +7434,23 @@ class Navigation_Navigation extends external_React_default.a.PureComponent {
   render() {
     const { links } = this.props || [];
     const { alignment } = this.props || "centered";
+    const header = this.props.header || {};
     return external_React_default.a.createElement(
-      "span",
+      "div",
       { className: `ds-navigation ds-navigation-${alignment}` },
+      header.title ? external_React_default.a.createElement(
+        "div",
+        { className: "ds-header" },
+        header.title
+      ) : null,
       external_React_default.a.createElement(
-        "ul",
+        "div",
         null,
-        links && links.map(t => external_React_default.a.createElement(Navigation_Topic, { key: t.name, url: t.url, name: t.name }))
+        external_React_default.a.createElement(
+          "ul",
+          null,
+          links && links.map(t => external_React_default.a.createElement(Navigation_Topic, { key: t.name, url: t.url, name: t.name }))
+        )
       )
     );
   }
@@ -7635,7 +7662,7 @@ class TopSites_TopSites extends external_React_default.a.PureComponent {
         external_React_default.a.createElement("span", { className: "icon icon-small-spacer icon-topsites" }),
         external_React_default.a.createElement(
           "span",
-          null,
+          { className: "ds-header-title" },
           header.title
         )
       ) : null,
@@ -7783,7 +7810,8 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
       case "Navigation":
         return external_React_default.a.createElement(Navigation_Navigation, {
           links: component.properties.links,
-          alignment: component.properties.alignment });
+          alignment: component.properties.alignment,
+          header: component.header });
       case "CardGrid":
         rows = this.extractRows(component, MAX_ROWS_CARDGRID);
         return external_React_default.a.createElement(

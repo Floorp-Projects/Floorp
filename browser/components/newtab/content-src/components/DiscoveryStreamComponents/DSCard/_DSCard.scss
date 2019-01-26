@@ -5,13 +5,10 @@ $excerpt-font-size: 13;
 $excerpt-line-height: 20;
 
 .ds-card {
-  border: 5px solid transparent;
+  display: flex;
+  flex-direction: column;
 
   &:hover {
-    border: 5px solid $grey-30;
-    box-shadow: 0 1px 4px $grey-30;
-    border-radius: 4px;
-
     header {
       color: $blue-60;
     }
@@ -34,11 +31,19 @@ $excerpt-line-height: 20;
   }
 
   .meta {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
     padding: 16px;
+
+    .info-wrap {
+      flex-grow: 1;
+    }
 
     .title {
       // show only 2 lines of copy
       @include limit-visibile-lines(2, $header-line-height, $header-font-size);
+      font-weight: 600;
     }
 
     .excerpt {
@@ -58,7 +63,7 @@ $excerpt-line-height: 20;
     font-size: $excerpt-font-size * 1px;
     line-height: $excerpt-line-height * 1px;
     color: $grey-50;
-    margin: 8px 0;
+    margin: 8px 0 0;
   }
 
   .context {

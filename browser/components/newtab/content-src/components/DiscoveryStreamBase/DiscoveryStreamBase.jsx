@@ -136,7 +136,8 @@ export class _DiscoveryStreamBase extends React.PureComponent {
         return (
           <Navigation
             links={component.properties.links}
-            alignment={component.properties.alignment} />
+            alignment={component.properties.alignment}
+            header={component.header} />
         );
       case "CardGrid":
         rows = this.extractRows(component, MAX_ROWS_CARDGRID);
