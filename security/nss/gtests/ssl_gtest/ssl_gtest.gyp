@@ -21,6 +21,7 @@
         'ssl_ciphersuite_unittest.cc',
         'ssl_custext_unittest.cc',
         'ssl_damage_unittest.cc',
+        'ssl_debug_env_unittest.cc',
         'ssl_dhe_unittest.cc',
         'ssl_drop_unittest.cc',
         'ssl_ecdh_unittest.cc',
@@ -32,7 +33,6 @@
         'ssl_gather_unittest.cc',
         'ssl_gtest.cc',
         'ssl_hrr_unittest.cc',
-        'ssl_keylog_unittest.cc',
         'ssl_keyupdate_unittest.cc',
         'ssl_loopback_unittest.cc',
         'ssl_misc_unittest.cc',
@@ -91,6 +91,14 @@
             '<(DEPTH)/lib/dbm/src/src.gyp:dbm',
           ],
         }],
+        [ 'enable_sslkeylogfile==1', {
+          'sources': [
+            'ssl_keylog_unittest.cc',
+          ],
+          'defines': [
+            'NSS_ALLOW_SSLKEYLOGFILE',
+          ],
+        }],
       ],
     }
   ],
@@ -99,7 +107,7 @@
       '../../lib/ssl'
     ],
     'defines': [
-      'NSS_USE_STATIC_LIBS'
+      'NSS_USE_STATIC_LIBS',
     ],
   },
   'variables': {

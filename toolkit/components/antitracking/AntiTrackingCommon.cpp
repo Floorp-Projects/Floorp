@@ -330,12 +330,6 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
             NS_ENSURE_SUCCESS_VOID(rv);
 
             NS_ConvertUTF8toUTF16 spec(exposableURI->GetSpecOrDefault());
-            bool overflows = spec.Length() > sMaxSpecLength;
-            spec.Truncate(std::min(spec.Length(), sMaxSpecLength));
-            if (overflows) {
-              NS_NAMED_LITERAL_STRING(kEllipsis, u"\x2026");
-              spec.Append(kEllipsis);
-            }
             const char16_t* params[] = {spec.get()};
 
             nsContentUtils::ReportToConsole(
