@@ -5,7 +5,7 @@ whitelist = {
     'nightly': {},
     }
 
-all_platforms = ['win64', 'win32', 'linux32', 'linux64', 'macosx64']
+all_platforms = ['win64', 'win64-aarch64', 'win32', 'linux32', 'linux64', 'macosx64']
 
 for platform in all_platforms:
     whitelist['nightly'][platform] = [

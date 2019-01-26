@@ -1,0 +1,20 @@
+# This make file should be identical to the beta mozconfig, apart from the
+# safeguard below
+
+. "$topsrcdir/build/mozconfig.win-common"
+. "$topsrcdir/browser/config/mozconfigs/win64-aarch64/common-win64"
+. "$topsrcdir/browser/config/mozconfigs/win64-aarch64/common-opt"
+
+ac_add_options --enable-official-branding
+ac_add_options --enable-verify-mar
+
+ac_add_options --enable-lto
+
+unset ENABLE_CLANG_PLUGIN
+
+# safeguard against someone forgetting to re-set EARLY_BETA_OR_EARLIER in
+# defines.sh during the beta cycle
+export BUILDING_RELEASE=1
+
+. "$topsrcdir/build/mozconfig.common.override"
+
