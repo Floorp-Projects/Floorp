@@ -4,7 +4,7 @@
 
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceSize, DeviceIntSideOffsets};
 use api::{DevicePixelScale, ImageDescriptor, ImageFormat, LayoutPoint};
-use api::{LineStyle, LineOrientation, LayoutSize, ColorF, DirtyRect};
+use api::{LineStyle, LineOrientation, LayoutSize, DirtyRect};
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
 use border::BorderSegmentCacheKey;
@@ -390,7 +390,6 @@ pub enum ClearMode {
 
     // Applicable to color targets only.
     Transparent,
-    Color(ColorF),
 }
 
 #[derive(Debug)]
@@ -431,7 +430,6 @@ impl RenderTask {
         children: Vec<RenderTaskId>,
         uv_rect_kind: UvRectKind,
         root_spatial_node_index: SpatialNodeIndex,
-        clear_color: Option<ColorF>,
     ) -> Self {
         let size = match location {
             RenderTaskLocation::Dynamic(_, size) => size,
@@ -444,11 +442,6 @@ impl RenderTask {
         let can_merge = size.width as f32 >= unclipped_size.width &&
                         size.height as f32 >= unclipped_size.height;
 
-        let clear_mode = match clear_color {
-            Some(color) => ClearMode::Color(color),
-            None => ClearMode::Transparent,
-        };
-
         RenderTask {
             location,
             children,
@@ -460,7 +453,7 @@ impl RenderTask {
                 uv_rect_kind,
                 root_spatial_node_index,
             }),
-            clear_mode,
+            clear_mode: ClearMode::Transparent,
             saved_index: None,
         }
     }
