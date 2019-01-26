@@ -46,7 +46,6 @@
 #include "nsCommandLine.h"
 #include "nsCommandParams.h"
 #include "nsPersistentProperties.h"
-#include "nsTraceRefcnt.h"
 #include "nsIDocumentEncoder.h"
 
 using namespace mozilla;
@@ -1752,26 +1751,6 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::IntentionallyLeak() {
 #ifdef NS_FREE_PERMANENT_DATA
   Unused << new IntentionallyLeakedObject();
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::IntentionallyLeakNegatively() {
-#ifdef DEBUG
-  MOZ_COUNT_DTOR(IntentionallyLeakedObject);
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::DisableDumpStatistics() {
-#ifdef DEBUG
-  nsTraceRefcnt::DisableDumpStatistics();
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
