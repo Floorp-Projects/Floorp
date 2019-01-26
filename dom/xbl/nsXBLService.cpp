@@ -472,7 +472,6 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
   // If the conditions are met, assert that:
   //
   // a) The binding is XMLPrettyPrint (since it may be bound to any XML)
-  // b) The binding is bound to one of the whitelisted element.
   //
   // The assertion might not catch all violations because (2) is needed
   // for the current test setup. Someone may unknownly using a binding
@@ -483,12 +482,7 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
       !aElement->OwnerDoc()->AllowXULXBL() &&
       !aURL->GetSpecOrDefault().EqualsLiteral(
           "chrome://global/content/xml/XMLPrettyPrint.xml#prettyprint")) {
-    nsAtom* tag = aElement->NodeInfo()->NameAtom();
-    MOZ_ASSERT(
-        // pluginProblem
-        tag == nsGkAtoms::embed || tag == nsGkAtoms::applet ||
-            tag == nsGkAtoms::object,
-        "Unexpected XBL binding used in the content process");
+    MOZ_ASSERT(false, "Unexpected XBL binding used in the content process");
   }
 #endif
 
