@@ -1,0 +1,12 @@
+. "$topsrcdir/build/mozconfig.win-common"
+. "$topsrcdir/browser/config/mozconfigs/win64-aarch64/common-win64"
+. "$topsrcdir/browser/config/mozconfigs/win64-aarch64/common-opt"
+
+ac_add_options --enable-official-branding
+ac_add_options --enable-verify-mar
+
+ac_add_options --enable-lto
+
+unset ENABLE_CLANG_PLUGIN
+
+. "$topsrcdir/build/mozconfig.common.override"
