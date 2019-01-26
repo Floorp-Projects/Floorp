@@ -344,7 +344,6 @@ pub struct ColorRenderTarget {
     pub blits: Vec<BlitJob>,
     // List of frame buffer outputs for this render target.
     pub outputs: Vec<FrameOutput>,
-    pub color_clears: Vec<RenderTaskId>,
     alpha_tasks: Vec<RenderTaskId>,
     screen_size: DeviceIntSize,
     // Track the used rect of the render target, so that
@@ -364,7 +363,6 @@ impl RenderTarget for ColorRenderTarget {
             blits: Vec::new(),
             outputs: Vec::new(),
             alpha_tasks: Vec::new(),
-            color_clears: Vec::new(),
             screen_size,
             used_rect: DeviceIntRect::zero(),
         }
@@ -391,9 +389,6 @@ impl RenderTarget for ColorRenderTarget {
                     panic!("bug: invalid clear mode for color task");
                 }
                 ClearMode::Transparent => {}
-                ClearMode::Color(..) => {
-                    self.color_clears.push(*task_id);
-                }
             }
 
             match task.kind {
@@ -615,7 +610,6 @@ impl RenderTarget for AlphaRenderTarget {
                 self.zero_clears.push(task_id);
             }
             ClearMode::One => {}
-            ClearMode::Color(..) |
             ClearMode::Transparent => {
                 panic!("bug: invalid clear mode for alpha task");
             }

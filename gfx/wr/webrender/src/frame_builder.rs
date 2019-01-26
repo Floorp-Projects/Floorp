@@ -422,7 +422,6 @@ impl FrameBuilder {
             child_tasks,
             UvRectKind::Rect,
             root_spatial_node_index,
-            None,
         );
 
         let render_task_id = frame_state.render_tasks.add(root_render_task);
