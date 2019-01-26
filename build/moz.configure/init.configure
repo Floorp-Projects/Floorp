@@ -9,9 +9,6 @@ include('checks.configure')
 
 # Make `toolkit` available when toolkit/moz.configure is not included.
 toolkit = dependable(None)
-# Likewise with `bindgen_config_paths` when
-# build/moz.configure/bindgen.configure is not included.
-bindgen_config_paths = dependable(None)
 
 option(env='DIST', nargs=1, help='DIST directory')
 
