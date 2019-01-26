@@ -900,14 +900,15 @@ nsThread::HasPendingHighPriorityEvents(bool* aResult) {
 }
 
 NS_IMETHODIMP
-nsThread::IdleDispatch(already_AddRefed<nsIRunnable> aEvent) {
+nsThread::DispatchToQueue(already_AddRefed<nsIRunnable> aEvent,
+                          EventQueuePriority aQueue) {
   nsCOMPtr<nsIRunnable> event = aEvent;
 
   if (NS_WARN_IF(!event)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (!mEvents->PutEvent(event.forget(), EventQueuePriority::Idle)) {
+  if (!mEvents->PutEvent(event.forget(), aQueue)) {
     NS_WARNING(
         "An idle event was posted to a thread that will never run it "
         "(rejected)");
