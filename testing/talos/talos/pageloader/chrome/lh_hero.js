@@ -23,15 +23,12 @@ function _contentHeroHandler(isload) {
     } catch (err) {
       sendAsyncMessage("PageLoader:Error", {"msg": err.message});
     }
-  } else {
+  } else if (isload) {
     // If the hero element is added from a settimeout handler, it might not run before 'load'
-    dumpLine("no hero, isload = " + isload);
-    if (isload) {
-      setTimeout(function() {_contentHeroHandler(false); }, 5000);
-    } else {
-      var err = "Could not find a tag with an elmenttiming attr on the page";
-      sendAsyncMessage("PageLoader:Error", {"msg": err});
-    }
+    setTimeout(function() { _contentHeroHandler(false); }, 5000);
+  } else {
+    var err = "Could not find a tag with an elmenttiming attr on the page";
+    sendAsyncMessage("PageLoader:Error", {"msg": err});
   }
   return obs;
 }
