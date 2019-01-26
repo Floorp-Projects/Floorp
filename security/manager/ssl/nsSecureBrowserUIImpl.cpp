@@ -11,10 +11,9 @@
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
-#include "nsIDocShell.h"
+#include "nsDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsISecurityEventSink.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIWebProgress.h"
 
@@ -416,14 +415,12 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   }
 
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
-  nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
-  if (eventSink) {
+  if (docShell) {
     MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
             ("  calling OnSecurityChange %p %x", aRequest, mState));
-    Unused << eventSink->OnSecurityChange(aRequest, mState);
+    nsDocShell::Cast(docShell)->nsDocLoader::OnSecurityChange(aRequest, mState);
   } else {
-    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
-            ("  no docShell or couldn't QI it to nsISecurityEventSink?"));
+    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("  no docShell?"));
   }
 
   return NS_OK;

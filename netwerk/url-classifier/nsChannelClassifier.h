@@ -57,7 +57,7 @@ class nsChannelClassifier final : public nsIURIClassifierCallback,
 
  public:
   // If we are blocking content, update the corresponding flag in the respective
-  // docshell and call nsISecurityEventSink::onSecurityChange.
+  // docshell and call nsDocLoader::OnSecurityChange.
   static nsresult SetBlockedContent(nsIChannel* channel, nsresult aErrorCode,
                                     const nsACString& aList,
                                     const nsACString& aProvider,
