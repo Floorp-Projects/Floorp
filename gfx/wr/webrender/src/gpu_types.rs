@@ -137,11 +137,11 @@ pub struct ClipMaskInstance {
     pub render_task_address: RenderTaskAddress,
     pub clip_transform_id: TransformPaletteId,
     pub prim_transform_id: TransformPaletteId,
-    pub segment: i32,
     pub clip_data_address: GpuCacheAddress,
     pub resource_address: GpuCacheAddress,
     pub local_pos: LayoutPoint,
     pub tile_rect: LayoutRect,
+    pub sub_rect: DeviceRect,
 }
 
 /// A border corner dot or dash drawn into the clipping mask.
