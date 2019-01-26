@@ -64,14 +64,14 @@ bool SVGPolyElement::AttributeDefinesGeometry(const nsAtom* aName) {
   return false;
 }
 
-void SVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark>* aMarks) {
+void SVGPolyElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
   const SVGPointList& points = mPoints.GetAnimValue();
 
   if (!points.Length()) return;
 
   float px = points[0].mX, py = points[0].mY, prevAngle = 0.0;
 
-  aMarks->AppendElement(nsSVGMark(px, py, 0, nsSVGMark::eStart));
+  aMarks->AppendElement(SVGMark(px, py, 0, SVGMark::eStart));
 
   for (uint32_t i = 1; i < points.Length(); ++i) {
     float x = points[i].mX;
@@ -86,7 +86,7 @@ void SVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark>* aMarks) {
           SVGContentUtils::AngleBisect(prevAngle, angle);
     }
 
-    aMarks->AppendElement(nsSVGMark(x, y, 0, nsSVGMark::eMid));
+    aMarks->AppendElement(SVGMark(x, y, 0, SVGMark::eMid));
 
     prevAngle = angle;
     px = x;
@@ -94,7 +94,7 @@ void SVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark>* aMarks) {
   }
 
   aMarks->LastElement().angle = prevAngle;
-  aMarks->LastElement().type = nsSVGMark::eEnd;
+  aMarks->LastElement().type = SVGMark::eEnd;
 }
 
 bool SVGPolyElement::GetGeometryBounds(Rect* aBounds,

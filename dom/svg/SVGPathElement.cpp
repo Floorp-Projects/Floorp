@@ -244,7 +244,7 @@ bool SVGPathElement::AttributeDefinesGeometry(const nsAtom* aName) {
 
 bool SVGPathElement::IsMarkable() { return true; }
 
-void SVGPathElement::GetMarkPoints(nsTArray<nsSVGMark>* aMarks) {
+void SVGPathElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
   mD.GetAnimValue().GetMarkerPositioningData(aMarks);
 }
 
