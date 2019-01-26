@@ -2493,9 +2493,6 @@ var gListView = {
         }
       }
 
-      // Only show the manage shortcuts button for extensions.
-      document.getElementById("manage-shortcuts").hidden = this._type != "extension";
-
       this.filterDisabledUnsigned(showOnlyDisabledUnsigned);
       let legacyNotice = document.getElementById("legacy-extensions-notice");
       if (showLegacyInfo) {
@@ -2522,7 +2519,6 @@ var gListView = {
   hide() {
     gEventManager.unregisterInstallListener(this);
     doPendingUninstalls(this._listBox);
-    document.getElementById("manage-shortcuts").hidden = true;
   },
 
   filterDisabledUnsigned(aFilter = true) {
@@ -3549,10 +3545,6 @@ var gShortcutsView = {
     await this.loaded;
     await this.node.contentWindow.render();
     gViewController.notifyViewChanged();
-  },
-
-  refresh() {
-    return this.show();
   },
 
   hide() {},
