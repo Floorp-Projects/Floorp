@@ -253,6 +253,7 @@ impl FrameBuilder {
     /// primitives in screen space.
     fn build_layer_screen_rects_and_cull_layers(
         &mut self,
+        screen_world_rect: WorldRect,
         clip_scroll_tree: &ClipScrollTree,
         pipelines: &FastHashMap<PipelineId, Arc<ScenePipeline>>,
         resource_cache: &mut ResourceCache,
@@ -278,8 +279,6 @@ impl FrameBuilder {
         let root_spatial_node_index = clip_scroll_tree.root_reference_frame_index();
 
         const MAX_CLIP_COORD: f32 = 1.0e9;
-
-        let screen_world_rect = (self.screen_rect.to_f32() / device_pixel_scale).round_out();
 
         let frame_context = FrameBuildingContext {
             device_pixel_scale,
@@ -476,8 +475,10 @@ impl FrameBuilder {
         let mut surfaces = Vec::new();
 
         let screen_size = self.screen_rect.size.to_i32();
+        let screen_world_rect = (self.screen_rect.to_f32() / device_pixel_scale).round_out();
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
+            screen_world_rect,
             clip_scroll_tree,
             pipelines,
             resource_cache,
@@ -544,6 +545,7 @@ impl FrameBuilder {
                 data_stores,
                 surfaces: &surfaces,
                 scratch,
+                screen_world_rect,
             };
 
             pass.build(

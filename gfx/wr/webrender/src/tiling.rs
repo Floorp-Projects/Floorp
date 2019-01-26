@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, BorderStyle, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
-use api::{DocumentLayer, FilterOp, ImageFormat};
-use api::{MixBlendMode, PipelineId, DeviceRect, LayoutSize};
+use api::{DocumentLayer, FilterOp, ImageFormat, DevicePoint};
+use api::{MixBlendMode, PipelineId, DeviceRect, LayoutSize, WorldRect};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::ClipStore;
 use clip_scroll_tree::{ClipScrollTree};
@@ -57,6 +57,7 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub data_stores: &'a DataStores,
     pub surfaces: &'a [SurfaceInfo],
     pub scratch: &'a PrimitiveScratchBuffer,
+    pub screen_world_rect: WorldRect,
 }
 
 /// Represents a number of rendering operations on a surface.
@@ -652,14 +653,22 @@ impl RenderTarget for AlphaRenderTarget {
                     ctx.clip_scroll_tree,
                     transforms,
                     &ctx.data_stores.clip,
+                    task_info.actual_rect,
+                    &ctx.screen_world_rect,
+                    ctx.device_pixel_scale,
                 );
             }
-            RenderTaskKind::ClipRegion(ref task) => {
+            RenderTaskKind::ClipRegion(ref region_task) => {
                 let task_address = render_tasks.get_task_address(task_id);
+                let device_rect = DeviceRect::new(
+                    DevicePoint::zero(),
+                    task.get_dynamic_size().to_f32(),
+                );
                 self.clip_batcher.add_clip_region(
                     task_address,
-                    task.clip_data_address,
-                    task.local_pos,
+                    region_task.clip_data_address,
+                    region_task.local_pos,
+                    device_rect,
                 );
             }
             RenderTaskKind::Scaling(ref info) => {
