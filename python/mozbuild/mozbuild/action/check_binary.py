@@ -6,7 +6,6 @@ from __future__ import print_function, unicode_literals
 
 import argparse
 import os
-import re
 import subprocess
 import sys
 
@@ -18,7 +17,6 @@ from mozpack.executables import (
     get_type,
     ELF,
     MACHO,
-    UNKNOWN,
 )
 
 
@@ -31,6 +29,7 @@ HOST = {
         buildconfig.substs.get('MOZ_LIBSTDCXX_HOST_VERSION'),
     'platform': buildconfig.substs['HOST_OS_ARCH'],
     'readelf': 'readelf',
+    'nm': 'nm',
 }
 
 TARGET = {
@@ -39,9 +38,9 @@ TARGET = {
     'platform': buildconfig.substs['OS_TARGET'],
     'readelf': '{}readelf'.format(
         buildconfig.substs.get('TOOLCHAIN_PREFIX', '')),
+    'nm': '{}nm'.format(buildconfig.substs.get('TOOLCHAIN_PREFIX', '')),
+    'readobj': '{}readobj'.format(buildconfig.substs.get('TOOLCHAIN_PREFIX', '')),
 }
-
-ADDR_RE = re.compile(r'[0-9a-f]{8,16}')
 
 if buildconfig.substs.get('HAVE_64BIT_BUILD'):
     GUESSED_NSMODULE_SIZE = 8
@@ -76,35 +75,11 @@ def at_least_one(iter):
         raise Empty()
 
 
-# Iterates the symbol table on ELF and MACHO, and the export table on
-# COFF/PE.
-def iter_symbols(binary):
-    ty = get_type(binary)
-    # XXX: Static libraries on ELF, MACHO and COFF/PE systems are all
-    # ar archives. So technically speaking, the following is wrong
-    # but is enough for now. llvm-objdump -t can actually be used on all
-    # platforms for static libraries, but its format is different for
-    # Windows .obj files, so the following won't work for them, but
-    # it currently doesn't matter.
-    if ty == UNKNOWN and open(binary).read(8) == '!<arch>\n':
-        ty = ELF
-    if ty in (ELF, MACHO):
-        for line in get_output(buildconfig.substs['LLVM_OBJDUMP'], '-t',
-                               binary):
-            m = ADDR_RE.match(line)
-            if not m:
-                continue
-            addr = int(m.group(0), 16)
-            # The second "column" is 7 one-character items that can be
-            # whitespaces. We don't have use for their value, so just skip
-            # those.
-            rest = line[m.end() + 9:].split()
-            # The number of remaining colums will vary between ELF and MACHO.
-            # On ELF, we have:
-            #   Section Size .hidden? Name
-            # On Macho, the size is skipped.
-            # In every case, the symbol name is last.
-            name = rest[-1]
+def iter_readelf_symbols(target, binary):
+    for line in get_output(target['readelf'], '-sW', binary):
+        data = line.split()
+        if len(data) >= 8 and data[0].endswith(':') and data[0][:-1].isdigit():
+            n, addr, size, type, bind, vis, index, name = data[:8]
             if '@' in name:
                 name, ver = name.rsplit('@', 1)
                 while name.endswith('@'):
@@ -112,37 +87,16 @@ def iter_symbols(binary):
             else:
                 ver = None
             yield {
-                'addr': addr,
-                'size': int(rest[1], 16) if ty == ELF else 0,
+                'addr': int(addr, 16),
+                # readelf output may contain decimal values or hexadecimal
+                # values prefixed with 0x for the size. Let python autodetect.
+                'size': int(size, 0),
+                'type': type,
+                'binding': bind,
+                'visibility': vis,
+                'index': index,
                 'name': name,
-                'version': ver or None,
-            }
-    else:
-        export_table = False
-        for line in get_output(buildconfig.substs['LLVM_OBJDUMP'], '-p',
-                               binary):
-            if line.strip() == 'Export Table:':
-                export_table = True
-                continue
-            elif not export_table:
-                continue
-
-            cols = line.split()
-            # The data we're interested in comes in 3 columns, and the first
-            # column is a number.
-            if len(cols) != 3 or not cols[0].isdigit():
-                continue
-            _, rva, name = cols
-            # - The MSVC mangling has some type info following `@@`
-            # - Any namespacing that can happen on the symbol appears as a
-            #   suffix, after a `@`.
-            # - Mangled symbols are prefixed with `?`.
-            name = name.split('@@')[0].split('@')[0].lstrip('?')
-            yield {
-                'addr': int(rva, 16),
-                'size': 0,
-                'name': name,
-                'version': None,
+                'version': ver,
             }
 
 
@@ -159,14 +113,14 @@ def check_dep_versions(target, binary, lib, prefix, max_version):
     unwanted = []
     prefix = prefix + '_'
     try:
-        for sym in at_least_one(iter_symbols(binary)):
-            if sym['addr'] == 0 and sym['version'] and \
+        for sym in at_least_one(iter_readelf_symbols(target, binary)):
+            if sym['index'] == 'UND' and sym['version'] and \
                     sym['version'].startswith(prefix):
                 version = Version(sym['version'][len(prefix):])
                 if version > max_version:
                     unwanted.append(sym)
     except Empty:
-        raise RuntimeError('Could not parse llvm-objdump output?')
+        raise RuntimeError('Could not parse readelf output?')
     if unwanted:
         raise RuntimeError('\n'.join([
             'We do not want these {} symbol versions to be used:'.format(lib)
@@ -218,23 +172,62 @@ def check_nsmodules(target, binary):
     if target is HOST or not is_libxul(binary):
         raise Skip()
     symbols = []
-    for sym in iter_symbols(binary):
-        if sym['addr'] == 0:
-            continue
-        name = sym['name']
-        # NSModules symbols end with _NSModule or _NSModuleE when C++-mangled.
-        if name.endswith(('_NSModule', '_NSModuleE')):
-            # We don't have a valid size in the symbol list for macho and coff.
-            # Use our guesstimate.
-            size = sym['size'] or GUESSED_NSMODULE_SIZE
-            symbols.append((sym['addr'], size, name))
-        elif name in ('__start_kPStaticModules', '__stop_kPStaticModules'):
-            # For coff, these symbols have a size.
-            if get_type(binary) not in (ELF, MACHO):
-                size = GUESSED_NSMODULE_SIZE
-            else:
-                size = 0
-            symbols.append((sym['addr'], size, name))
+    if buildconfig.substs.get('CC_TYPE') in ('msvc', 'clang-cl'):
+        for line in get_output('dumpbin.exe', '-exports', binary):
+            data = line.split(None, 3)
+            if data and len(data) == 4 and data[0].isdigit() and \
+                    ishex(data[1]) and ishex(data[2]):
+                # - Some symbols in the table can be aliases, and appear as
+                #   `foo = bar`.
+                # - The MSVC mangling has some type info following `@@`
+                # - Any namespacing that can happen on the symbol appears as a
+                #   suffix, after a `@`.
+                # - Mangled symbols are prefixed with `?`.
+                name = data[3].split(' = ')[0].split('@@')[0].split('@')[0] \
+                              .lstrip('?')
+                if name.endswith('_NSModule') or name in (
+                        '__start_kPStaticModules',
+                        '__stop_kPStaticModules'):
+                    symbols.append((int(data[2], 16), GUESSED_NSMODULE_SIZE,
+                                    name))
+    else:
+        # MinGW-Clang, when building pdbs, doesn't include the symbol table into
+        # the final module. To get the NSModule info, we can look at the exported
+        # symbols. (#1475562)
+        if buildconfig.substs['OS_ARCH'] == 'WINNT' and \
+           buildconfig.substs['HOST_OS_ARCH'] != 'WINNT':
+            readobj_output = get_output(target['readobj'], '-coff-exports', binary)
+            # Transform the output of readobj into nm-like output
+            output = []
+            for line in readobj_output:
+                if "Name" in line:
+                    name = line.replace("Name:", "").strip()
+                elif "RVA" in line:
+                    rva = line.replace("RVA:", "").strip()
+                    output.append("%s r %s" % (name, rva))
+        else:
+            output = get_output(target['nm'], '-P', binary)
+
+        for line in output:
+            data = line.split()
+            # Some symbols may not have a size listed at all.
+            if len(data) == 3:
+                data.append('0')
+            if len(data) == 4:
+                sym, _, addr, size = data
+                # NSModules symbols end with _NSModule or _NSModuleE when
+                # C++-mangled.
+                if sym.endswith(('_NSModule', '_NSModuleE')):
+                    # On mac, nm doesn't actually print anything other than 0
+                    # for the size. So take our best guess.
+                    size = int(size, 16) or GUESSED_NSMODULE_SIZE
+                    symbols.append((int(addr, 16), size, sym))
+                elif sym.endswith(('__start_kPStaticModules',
+                                   '__stop_kPStaticModules')):
+                    # On ELF and mac systems, these symbols have no size, such
+                    # that the first actual NSModule has the same address as
+                    # the start symbol.
+                    symbols.append((int(addr, 16), 0, sym))
     if not symbols:
         raise RuntimeError('Could not find NSModules')
 
