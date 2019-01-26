@@ -23,14 +23,15 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   Assert.equal(why.actors[0], breakpointClient.actor);
   let frame = packet.frame;
   let where = frame.where;
-  Assert.equal(where.source.actor, source.actor);
+  Assert.equal(where.actor, source.actor);
   Assert.equal(where.line, location.line);
   let variables = frame.environment.bindings.variables;
   Assert.equal(variables.i.value.type, "undefined");
 
-  packet = await executeOnNextTickAndWaitForPause(function() {
-    resume(threadClient);
-  }, client);
+  packet = await executeOnNextTickAndWaitForPause(
+    () => resume(threadClient),
+    client
+  );
   Assert.equal(packet.type, "paused");
   why = packet.why;
   Assert.equal(why.type, "breakpoint");
@@ -38,7 +39,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   Assert.equal(why.actors[0], breakpointClient.actor);
   frame = packet.frame;
   where = frame.where;
-  Assert.equal(where.source.actor, source.actor);
+  Assert.equal(where.actor, source.actor);
   Assert.equal(where.line, location.line);
   variables = frame.environment.bindings.variables;
   Assert.equal(variables.i.value, 0);
