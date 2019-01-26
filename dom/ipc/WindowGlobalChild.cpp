@@ -90,24 +90,6 @@ already_AddRefed<WindowGlobalParent> WindowGlobalChild::GetParentActor() {
   return do_AddRef(static_cast<WindowGlobalParent*>(otherSide));
 }
 
-already_AddRefed<TabChild> WindowGlobalChild::GetTabChild() {
-  if (IsInProcess() || mIPCClosed) {
-    return nullptr;
-  }
-  return do_AddRef(static_cast<TabChild*>(Manager()));
-}
-
-void WindowGlobalChild::Destroy() {
-  // Perform async IPC shutdown unless we're not in-process, and our TabChild is
-  // in the process of being destroyed, which will destroy us as well.
-  RefPtr<TabChild> tabChild = GetTabChild();
-  if (!tabChild || !tabChild->IsDestroyed()) {
-    SendDestroy();
-  }
-
-  mIPCClosed = true;
-}
-
 void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCClosed = true;
   gWindowGlobalChildById->Remove(mInnerWindowId);
