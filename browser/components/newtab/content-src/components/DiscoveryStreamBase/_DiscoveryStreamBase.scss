@@ -22,11 +22,12 @@
     display: grid;
     grid-row-gap: var(--gridRowGap);
   }
+}
 
-  .ds-header {
-    font-size: 17px;
-    line-height: 24px;
-    color: $grey-90;
-    margin: 16px 0;
-  }
+.ds-header {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 24px;
+  color: $grey-90;
+  margin: 16px 0;
 }

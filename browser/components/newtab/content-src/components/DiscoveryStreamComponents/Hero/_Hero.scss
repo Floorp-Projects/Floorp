@@ -34,8 +34,6 @@ $card-header-in-hero-line-height: 20;
       .title {
         // show only 2 lines of copy
         @include limit-visibile-lines(2, $card-header-in-hero-line-height, $card-header-in-hero-font-size);
-        font-size: $card-header-in-hero-font-size * 1px;
-        line-height: $card-header-in-hero-line-height * 1px;
       }
     }
 
@@ -51,14 +49,16 @@ $card-header-in-hero-line-height: 20;
   // "1/3 width layout" (aka "Mobile First")
   .wrapper {
     color: $grey-50;
-    margin: 18px 0;
-    padding: 20px 0;
+    display: block;
+    margin: 16px 0 24px;
+    padding: 24px 0;
     border-top: $border-secondary;
     border-bottom: $border-secondary;
 
     @at-root .ds-hero-no-border .wrapper {
       border-top: 0;
       border-bottom: 0;
+      padding: 0;
     }
 
     &:hover .meta header {
@@ -90,6 +90,10 @@ $card-header-in-hero-line-height: 20;
         &.context {
           color: $teal-70;
         }
+      }
+
+      .source {
+        margin-bottom: 0;
       }
     }
   }

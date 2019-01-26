@@ -1,4 +1,8 @@
 .ds-navigation {
+  line-height: 32px;
+  padding: 4px 0;
+  font-size: 13px;
+  font-weight: 600;
 
   &.ds-navigation-centered {
     text-align: center;
@@ -17,8 +21,9 @@
     display: inline-block;
 
     &::after {
-      content: '•';
+      content: '·';
       padding: 8px;
+      color: $grey-50;
     }
 
     &:last-child::after {
@@ -30,16 +35,18 @@
         // text-decoration: underline; didn't quite match comps.
         border-bottom: 1px solid var(--newtab-link-primary-color);
 
-        &:active,
-        &:visited {
+        &:active {
           border-bottom: 1px solid $blue-70;
         }
       }
 
-      &:active,
-      &:visited {
+      &:active {
         color: $blue-70;
       }
     }
+  }
+
+  .ds-header {
+    margin-bottom: 8px;
   }
 }

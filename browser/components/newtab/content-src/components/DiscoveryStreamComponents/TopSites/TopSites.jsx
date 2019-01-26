@@ -10,7 +10,7 @@ export class _TopSites extends React.PureComponent {
         {header.title ? (
           <div className="ds-header">
             <span className="icon icon-small-spacer icon-topsites" />
-            <span>{header.title}</span>
+            <span className="ds-header-title">{header.title}</span>
           </div>
         ) : null}
         <OldTopSites />
