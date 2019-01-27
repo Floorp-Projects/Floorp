@@ -99,16 +99,20 @@ nscoord LengthPercentage::ResolveWith(T aPercentageGetter) const {
   return Resolve(aPercentageGetter());
 }
 
-const LengthPercentage& LengthPercentageOrAuto::AsLengthPercentage() const {
+template <>
+inline const LengthPercentage& LengthPercentageOrAuto::AsLengthPercentage()
+    const {
   MOZ_ASSERT(IsLengthPercentage());
   return length_percentage._0;
 }
 
-bool LengthPercentageOrAuto::ConvertsToLength() const {
+template <>
+inline bool LengthPercentageOrAuto::ConvertsToLength() const {
   return IsLengthPercentage() && AsLengthPercentage().ConvertsToLength();
 }
 
-bool LengthPercentageOrAuto::HasPercent() const {
+template <>
+inline bool LengthPercentageOrAuto::HasPercent() const {
   return IsLengthPercentage() && AsLengthPercentage().HasPercent();
 }
 

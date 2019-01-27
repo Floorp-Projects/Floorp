@@ -1184,6 +1184,9 @@ impl Type {
                     name = interface.rust_name();
                     TypeKind::ObjCInterface(interface)
                 }
+                CXType_Dependent => {
+                    return Err(ParseError::Continue);
+                }
                 _ => {
                     error!(
                         "unsupported type: kind = {:?}; ty = {:?}; at {:?}",

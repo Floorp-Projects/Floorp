@@ -431,7 +431,7 @@ impl Builder {
         //Temporary placeholder for below 4 options
         let mut options: Vec<String> = Vec::new();
         if self.options.codegen_config.functions() {
-            options.push("function".into());
+            options.push("functions".into());
         }
         if self.options.codegen_config.types() {
             options.push("types".into());
@@ -2053,7 +2053,7 @@ fn commandline_flag_unit_test_function() {
         "--rust-target",
         "--no-derive-default",
         "--generate",
-        "function,types,vars,methods,constructors,destructors",
+        "functions,types,vars,methods,constructors,destructors",
     ].iter()
         .map(|&x| x.into())
         .collect::<Vec<String>>();
@@ -2074,7 +2074,7 @@ fn commandline_flag_unit_test_function() {
         "input_header",
         "--no-derive-default",
         "--generate",
-        "function,types,vars,methods,constructors,destructors",
+        "functions,types,vars,methods,constructors,destructors",
         "--whitelist-type",
         "Distinct_Type",
         "--whitelist-function",

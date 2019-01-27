@@ -2160,16 +2160,21 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             ::clang_sys::CXCursor_Namespace,
             "Be a nice person"
         );
+
+        let mut module_name = None;
+        let spelling = cursor.spelling();
+        if !spelling.is_empty()
+        {
+            module_name = Some(spelling)
+        }
+
         let tokens = match cursor.tokens() {
             Some(tokens) => tokens,
-            None => return (None, ModuleKind::Normal),
+            None => return (module_name, ModuleKind::Normal),
         };
-
         let mut iter = tokens.iter();
         let mut kind = ModuleKind::Normal;
         let mut found_namespace_keyword = false;
-        let mut module_name = None;
-
         while let Some(token) = iter.next() {
             match &*token.spelling {
                 "inline" => {
@@ -2195,7 +2200,9 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                     break;
                 }
                 name if found_namespace_keyword => {
-                    module_name = Some(name.to_owned());
+                    if module_name.is_none() {
+                        module_name = Some(name.to_owned());
+                    }
                     break;
                 }
                 _ => {
