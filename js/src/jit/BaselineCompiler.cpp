@@ -45,31 +45,31 @@ using mozilla::Maybe;
 namespace js {
 namespace jit {
 
-BaselineCompilerHandler::BaselineCompilerHandler(MacroAssembler& masm,
+BaselineCompilerHandler::BaselineCompilerHandler(JSContext* cx,
+                                                 MacroAssembler& masm,
                                                  TempAllocator& alloc,
                                                  JSScript* script)
     : frame_(script, masm),
       alloc_(alloc),
+      analysis_(alloc, script),
       script_(script),
       pc_(script->code()),
-      compileDebugInstrumentation_(script->isDebuggee()) {}
+      icEntryIndex_(0),
+      compileDebugInstrumentation_(script->isDebuggee()),
+      ionCompileable_(jit::IsIonEnabled(cx) &&
+                      CanIonCompileScript(cx, script)) {}
 
-BaselineInterpreterHandler::BaselineInterpreterHandler(MacroAssembler& masm)
+BaselineInterpreterHandler::BaselineInterpreterHandler(JSContext* cx,
+                                                       MacroAssembler& masm)
     : frame_(masm) {}
 
 template <typename Handler>
 template <typename... HandlerArgs>
-BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc,
-                                          JSScript* script,
-                                          HandlerArgs&&... args)
-    : handler(masm, std::forward<HandlerArgs>(args)...),
+BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, HandlerArgs&&... args)
+    : handler(cx, masm, std::forward<HandlerArgs>(args)...),
       cx(cx),
-      ionCompileable_(jit::IsIonEnabled(cx) && CanIonCompileScript(cx, script)),
-      alloc_(alloc),
-      analysis_(alloc, script),
       frame(handler.frame()),
       traceLoggerToggleOffsets_(cx),
-      icEntryIndex_(0),
       pushedBeforeCall_(0),
 #ifdef DEBUG
       inCall_(false),
@@ -79,8 +79,7 @@ BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc,
 
 BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc,
                                    JSScript* script)
-    : BaselineCodeGen(cx, alloc, script,
-                      /* HandlerArgs = */ alloc, script),
+    : BaselineCodeGen(cx, /* HandlerArgs = */ alloc, script),
       pcMappingEntries_(),
       profilerPushToggleOffset_(),
       profilerEnterFrameToggleOffset_(),
@@ -91,12 +90,14 @@ BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc,
 #endif
 }
 
-BaselineInterpreterGenerator::BaselineInterpreterGenerator(JSContext* cx,
-                                                           TempAllocator& alloc)
-    // Note: the nullptr script here is temporary. See bug 1519378.
-    : BaselineCodeGen(cx, alloc, /* script = */ nullptr) {}
+BaselineInterpreterGenerator::BaselineInterpreterGenerator(JSContext* cx)
+    : BaselineCodeGen(cx /* no handlerArgs */) {}
 
-bool BaselineCompilerHandler::init() {
+bool BaselineCompilerHandler::init(JSContext* cx) {
+  if (!analysis_.init(alloc_, cx->caches().gsnCache)) {
+    return false;
+  }
+
   uint32_t len = script_->length();
 
   if (!labels_.init(alloc_, len)) {
@@ -107,19 +108,15 @@ bool BaselineCompilerHandler::init() {
     new (&labels_[i]) Label();
   }
 
+  if (!frame_.init(alloc_)) {
+    return false;
+  }
+
   return true;
 }
 
 bool BaselineCompiler::init() {
-  if (!analysis_.init(alloc_, cx->caches().gsnCache)) {
-    return false;
-  }
-
-  if (!handler.init()) {
-    return false;
-  }
-
-  if (!frame.init(alloc_)) {
+  if (!handler.init(cx)) {
     return false;
   }
 
@@ -315,7 +312,7 @@ MethodStatus BaselineCompiler::compile() {
   if (modifiesArguments_) {
     baselineScript->setModifiesArguments();
   }
-  if (analysis_.usesEnvironmentChain()) {
+  if (handler.analysis().usesEnvironmentChain()) {
     baselineScript->setUsesEnvironmentChain();
   }
 
@@ -461,8 +458,8 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   // to loop until we find an ICEntry for the current pc.
   const ICEntry* entry;
   do {
-    entry = &script->icScript()->icEntry(icEntryIndex_);
-    icEntryIndex_++;
+    entry = &script->icScript()->icEntry(handler.icEntryIndex());
+    handler.moveToNextICEntry();
   } while (entry->pcOffset() < pcOffset);
 
   MOZ_RELEASE_ASSERT(entry->pcOffset() == pcOffset);
@@ -937,7 +934,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   // Emit no warm-up counter increments or bailouts if Ion is not
   // enabled, or if the script will never be Ion-compileable
 
-  if (!ionCompileable_) {
+  if (!handler.maybeIonCompileable()) {
     return true;
   }
 
@@ -957,7 +954,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   if (JSOp(*pc) == JSOP_LOOPENTRY) {
     // If this is a loop inside a catch or finally block, increment the warmup
     // counter but don't attempt OSR (Ion only compiles the try block).
-    if (analysis_.info(pc).loopEntryInCatchOrFinally) {
+    if (handler.analysis().info(pc).loopEntryInCatchOrFinally) {
       return true;
     }
 
@@ -2983,7 +2980,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GETALIASEDVAR() {
   Address address = getEnvironmentCoordinateAddress(R0.scratchReg());
   masm.loadValue(address, R0);
 
-  if (ionCompileable_) {
+  if (handler.maybeIonCompileable()) {
     // No need to monitor types if we know Ion can't compile this script.
     if (!emitNextIC()) {
       return false;
@@ -3144,7 +3141,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_GETIMPORT() {
     }
   }
 
-  if (ionCompileable_) {
+  if (handler.maybeIonCompileable()) {
     // No need to monitor types if we know Ion can't compile this script.
     if (!emitNextIC()) {
       return false;
@@ -5737,7 +5734,7 @@ MethodStatus BaselineCompiler::emitBody() {
     JitSpew(JitSpew_BaselineOp, "Compiling op @ %d: %s",
             int(script->pcToOffset(handler.pc())), CodeName[op]);
 
-    BytecodeInfo* info = analysis_.maybeInfo(handler.pc());
+    BytecodeInfo* info = handler.analysis().maybeInfo(handler.pc());
 
     // Skip unreachable ops.
     if (!info) {
