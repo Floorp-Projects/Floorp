@@ -22,6 +22,7 @@ namespace mozilla {
 
 namespace dom {
 class SVGElement;
+class SVGSVGElement;
 
 /**
  * Class DOMSVGNumber
@@ -62,8 +63,12 @@ class DOMSVGNumber final : public nsISupports, public nsWrapperCache {
    * Ctor for creating the objects returned by SVGSVGElement.createSVGNumber(),
    * which do not initially belong to an attribute.
    */
+  explicit DOMSVGNumber(SVGSVGElement* aParent);
+
+ private:
   explicit DOMSVGNumber(nsISupports* aParent);
 
+ public:
   /**
    * Create an unowned copy. The caller is responsible for the first AddRef().
    */

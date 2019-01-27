@@ -252,13 +252,11 @@ void SVGSVGElement::DeselectAll() {
 }
 
 already_AddRefed<DOMSVGNumber> SVGSVGElement::CreateSVGNumber() {
-  RefPtr<DOMSVGNumber> number = new DOMSVGNumber(ToSupports(this));
-  return number.forget();
+  return do_AddRef(new DOMSVGNumber(this));
 }
 
 already_AddRefed<DOMSVGLength> SVGSVGElement::CreateSVGLength() {
-  nsCOMPtr<DOMSVGLength> length = new DOMSVGLength();
-  return length.forget();
+  return do_AddRef(new DOMSVGLength());
 }
 
 already_AddRefed<DOMSVGAngle> SVGSVGElement::CreateSVGAngle() {
@@ -266,13 +264,11 @@ already_AddRefed<DOMSVGAngle> SVGSVGElement::CreateSVGAngle() {
 }
 
 already_AddRefed<nsISVGPoint> SVGSVGElement::CreateSVGPoint() {
-  nsCOMPtr<nsISVGPoint> point = new DOMSVGPoint(0, 0);
-  return point.forget();
+  return do_AddRef(new DOMSVGPoint(0, 0));
 }
 
 already_AddRefed<SVGMatrix> SVGSVGElement::CreateSVGMatrix() {
-  RefPtr<SVGMatrix> matrix = new SVGMatrix();
-  return matrix.forget();
+  return do_AddRef(new SVGMatrix());
 }
 
 already_AddRefed<SVGIRect> SVGSVGElement::CreateSVGRect() {
@@ -280,14 +276,12 @@ already_AddRefed<SVGIRect> SVGSVGElement::CreateSVGRect() {
 }
 
 already_AddRefed<DOMSVGTransform> SVGSVGElement::CreateSVGTransform() {
-  RefPtr<DOMSVGTransform> transform = new DOMSVGTransform();
-  return transform.forget();
+  return do_AddRef(new DOMSVGTransform());
 }
 
 already_AddRefed<DOMSVGTransform> SVGSVGElement::CreateSVGTransformFromMatrix(
     SVGMatrix& matrix) {
-  RefPtr<DOMSVGTransform> transform = new DOMSVGTransform(matrix.GetMatrix());
-  return transform.forget();
+  return do_AddRef(new DOMSVGTransform(matrix.GetMatrix()));
 }
 
 //----------------------------------------------------------------------
