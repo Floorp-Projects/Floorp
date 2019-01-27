@@ -3339,7 +3339,7 @@ class Document : public nsINode,
     }
   }
 
-  gfxUserFontSet* GetUserFontSet(bool aFlushUserFontSet = true);
+  gfxUserFontSet* GetUserFontSet();
   void FlushUserFontSet();
   void MarkUserFontSetDirty();
   mozilla::dom::FontFaceSet* GetFonts() { return mFontFaceSet; }
@@ -4064,9 +4064,6 @@ class Document : public nsINode,
 
   // Is the current mFontFaceSet valid?
   bool mFontFaceSetDirty : 1;
-
-  // Has GetUserFontSet() been called?
-  bool mGetUserFontSetCalled : 1;
 
   // True if we have fired the DOMContentLoaded event, or don't plan to fire one
   // (e.g. we're not being parsed at all).
