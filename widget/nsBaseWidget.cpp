@@ -2080,11 +2080,11 @@ void nsBaseWidget::UnregisterPluginWindowForRemoteUpdates() {
 
 nsresult nsBaseWidget::AsyncEnableDragDrop(bool aEnable) {
   RefPtr<nsBaseWidget> kungFuDeathGrip = this;
-  return NS_IdleDispatchToCurrentThread(
+  return NS_DispatchToCurrentThreadQueue(
       NS_NewRunnableFunction(
           "AsyncEnableDragDropFn",
           [this, aEnable, kungFuDeathGrip]() { EnableDragDrop(aEnable); }),
-      kAsyncDragDropTimeout);
+      kAsyncDragDropTimeout, EventQueuePriority::Idle);
 }
 
 // static

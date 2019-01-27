@@ -91,7 +91,7 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
       spawnThread = true;
     }
 
-    mEvents.PutEvent(std::move(aEvent), EventPriority::Normal, lock);
+    mEvents.PutEvent(std::move(aEvent), EventQueuePriority::Normal, lock);
     mEventsAvailable.Notify();
     stackSize = mStackSize;
   }

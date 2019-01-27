@@ -3674,13 +3674,16 @@ void nsContentUtils::AsyncPrecreateStringBundles() {
 
   for (uint32_t bundleIndex = 0; bundleIndex < PropertiesFile_COUNT;
        ++bundleIndex) {
-    nsresult rv = NS_IdleDispatchToCurrentThread(
-        NS_NewRunnableFunction("AsyncPrecreateStringBundles", [bundleIndex]() {
-          PropertiesFile file = static_cast<PropertiesFile>(bundleIndex);
-          EnsureStringBundle(file);
-          nsIStringBundle* bundle = sStringBundles[file];
-          bundle->AsyncPreload();
-        }));
+    nsresult rv = NS_DispatchToCurrentThreadQueue(
+        NS_NewRunnableFunction("AsyncPrecreateStringBundles",
+                               [bundleIndex]() {
+                                 PropertiesFile file =
+                                     static_cast<PropertiesFile>(bundleIndex);
+                                 EnsureStringBundle(file);
+                                 nsIStringBundle* bundle = sStringBundles[file];
+                                 bundle->AsyncPreload();
+                               }),
+        EventQueuePriority::Idle);
     Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 }
