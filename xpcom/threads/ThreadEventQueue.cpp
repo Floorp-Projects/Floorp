@@ -23,7 +23,7 @@ class ThreadEventQueue<InnerQueueT>::NestedSink : public ThreadTargetSink {
       : mQueue(aQueue), mOwner(aOwner) {}
 
   bool PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                EventPriority aPriority) final {
+                EventQueuePriority aPriority) final {
     return mOwner->PutEventInternal(std::move(aEvent), aPriority, this);
   }
 
@@ -61,13 +61,13 @@ ThreadEventQueue<InnerQueueT>::~ThreadEventQueue() {
 
 template <class InnerQueueT>
 bool ThreadEventQueue<InnerQueueT>::PutEvent(
-    already_AddRefed<nsIRunnable>&& aEvent, EventPriority aPriority) {
+    already_AddRefed<nsIRunnable>&& aEvent, EventQueuePriority aPriority) {
   return PutEventInternal(std::move(aEvent), aPriority, nullptr);
 }
 
 template <class InnerQueueT>
 bool ThreadEventQueue<InnerQueueT>::PutEventInternal(
-    already_AddRefed<nsIRunnable>&& aEvent, EventPriority aPriority,
+    already_AddRefed<nsIRunnable>&& aEvent, EventQueuePriority aPriority,
     NestedSink* aSink) {
   // We want to leak the reference when we fail to dispatch it, so that
   // we won't release the event in a wrong thread.
@@ -84,9 +84,9 @@ bool ThreadEventQueue<InnerQueueT>::PutEventInternal(
         uint32_t prio = nsIRunnablePriority::PRIORITY_NORMAL;
         runnablePrio->GetPriority(&prio);
         if (prio == nsIRunnablePriority::PRIORITY_HIGH) {
-          aPriority = EventPriority::High;
+          aPriority = EventQueuePriority::High;
         } else if (prio == nsIRunnablePriority::PRIORITY_INPUT) {
-          aPriority = EventPriority::Input;
+          aPriority = EventQueuePriority::Input;
         }
       }
     }
@@ -125,7 +125,7 @@ bool ThreadEventQueue<InnerQueueT>::PutEventInternal(
 
 template <class InnerQueueT>
 already_AddRefed<nsIRunnable> ThreadEventQueue<InnerQueueT>::GetEvent(
-    bool aMayWait, EventPriority* aPriority) {
+    bool aMayWait, EventQueuePriority* aPriority) {
   MutexAutoLock lock(mLock);
 
   nsCOMPtr<nsIRunnable> event;
@@ -244,7 +244,7 @@ void ThreadEventQueue<InnerQueueT>::PopEventQueue(nsIEventTarget* aTarget) {
 
   // Move events from the old queue to the new one.
   nsCOMPtr<nsIRunnable> event;
-  EventPriority prio;
+  EventQueuePriority prio;
   while ((event = item.mQueue->GetEvent(&prio, lock))) {
     prevQueue->PutEvent(event.forget(), prio, lock);
   }

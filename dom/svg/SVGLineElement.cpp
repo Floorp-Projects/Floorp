@@ -99,15 +99,15 @@ SVGElement::LengthAttributesInfo SVGLineElement::GetLengthInfo() {
 //----------------------------------------------------------------------
 // SVGGeometryElement methods
 
-void SVGLineElement::GetMarkPoints(nsTArray<nsSVGMark>* aMarks) {
+void SVGLineElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
   float x1, y1, x2, y2;
 
   GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);
 
   float angle = atan2(y2 - y1, x2 - x1);
 
-  aMarks->AppendElement(nsSVGMark(x1, y1, angle, nsSVGMark::eStart));
-  aMarks->AppendElement(nsSVGMark(x2, y2, angle, nsSVGMark::eEnd));
+  aMarks->AppendElement(SVGMark(x1, y1, angle, SVGMark::eStart));
+  aMarks->AppendElement(SVGMark(x2, y2, angle, SVGMark::eEnd));
 }
 
 void SVGLineElement::GetAsSimplePath(SimplePath* aSimplePath) {

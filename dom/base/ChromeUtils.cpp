@@ -370,10 +370,11 @@ NS_IMPL_ISUPPORTS_INHERITED(IdleDispatchRunnable, IdleRunnable,
   auto runnable = MakeRefPtr<IdleDispatchRunnable>(global, aCallback);
 
   if (aOptions.mTimeout.WasPassed()) {
-    aRv = NS_IdleDispatchToCurrentThread(runnable.forget(),
-                                         aOptions.mTimeout.Value());
+    aRv = NS_DispatchToCurrentThreadQueue(
+        runnable.forget(), aOptions.mTimeout.Value(), EventQueuePriority::Idle);
   } else {
-    aRv = NS_IdleDispatchToCurrentThread(runnable.forget());
+    aRv = NS_DispatchToCurrentThreadQueue(runnable.forget(),
+                                          EventQueuePriority::Idle);
   }
 }
 
