@@ -45,31 +45,33 @@ using mozilla::Maybe;
 namespace js {
 namespace jit {
 
-BaselineCompilerHandler::BaselineCompilerHandler(MacroAssembler& masm,
+BaselineCompilerHandler::BaselineCompilerHandler(JSContext* cx,
+                                                 MacroAssembler& masm,
                                                  TempAllocator& alloc,
                                                  JSScript* script)
     : frame_(script, masm),
       alloc_(alloc),
+      analysis_(alloc, script),
       script_(script),
       pc_(script->code()),
-      compileDebugInstrumentation_(script->isDebuggee()) {}
+      icEntryIndex_(0),
+      compileDebugInstrumentation_(script->isDebuggee()),
+      ionCompileable_(jit::IsIonEnabled(cx) &&
+                      CanIonCompileScript(cx, script)) {}
 
-BaselineInterpreterHandler::BaselineInterpreterHandler(MacroAssembler& masm)
+BaselineInterpreterHandler::BaselineInterpreterHandler(JSContext* cx,
+                                                       MacroAssembler& masm)
     : frame_(masm) {}
 
 template <typename Handler>
 template <typename... HandlerArgs>
-BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc,
-                                          JSScript* script,
-                                          HandlerArgs&&... args)
-    : handler(masm, std::forward<HandlerArgs>(args)...),
+BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, HandlerArgs&&... args)
+    : handler(cx, masm, std::forward<HandlerArgs>(args)...),
       cx(cx),
-      ionCompileable_(jit::IsIonEnabled(cx) && CanIonCompileScript(cx, script)),
-      alloc_(alloc),
-      analysis_(alloc, script),
       frame(handler.frame()),
       traceLoggerToggleOffsets_(cx),
-      icEntryIndex_(0),
+      profilerEnterFrameToggleOffset_(),
+      profilerExitFrameToggleOffset_(),
       pushedBeforeCall_(0),
 #ifdef DEBUG
       inCall_(false),
@@ -79,24 +81,23 @@ BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc,
 
 BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc,
                                    JSScript* script)
-    : BaselineCodeGen(cx, alloc, script,
-                      /* HandlerArgs = */ alloc, script),
+    : BaselineCodeGen(cx, /* HandlerArgs = */ alloc, script),
       pcMappingEntries_(),
       profilerPushToggleOffset_(),
-      profilerEnterFrameToggleOffset_(),
-      profilerExitFrameToggleOffset_(),
       traceLoggerScriptTextIdOffset_() {
 #ifdef JS_CODEGEN_NONE
   MOZ_CRASH();
 #endif
 }
 
-BaselineInterpreterGenerator::BaselineInterpreterGenerator(JSContext* cx,
-                                                           TempAllocator& alloc)
-    // Note: the nullptr script here is temporary. See bug 1519378.
-    : BaselineCodeGen(cx, alloc, /* script = */ nullptr) {}
+BaselineInterpreterGenerator::BaselineInterpreterGenerator(JSContext* cx)
+    : BaselineCodeGen(cx /* no handlerArgs */) {}
 
-bool BaselineCompilerHandler::init() {
+bool BaselineCompilerHandler::init(JSContext* cx) {
+  if (!analysis_.init(alloc_, cx->caches().gsnCache)) {
+    return false;
+  }
+
   uint32_t len = script_->length();
 
   if (!labels_.init(alloc_, len)) {
@@ -107,19 +108,15 @@ bool BaselineCompilerHandler::init() {
     new (&labels_[i]) Label();
   }
 
+  if (!frame_.init(alloc_)) {
+    return false;
+  }
+
   return true;
 }
 
 bool BaselineCompiler::init() {
-  if (!analysis_.init(alloc_, cx->caches().gsnCache)) {
-    return false;
-  }
-
-  if (!handler.init()) {
-    return false;
-  }
-
-  if (!frame.init(alloc_)) {
+  if (!handler.init(cx)) {
     return false;
   }
 
@@ -315,7 +312,7 @@ MethodStatus BaselineCompiler::compile() {
   if (modifiesArguments_) {
     baselineScript->setModifiesArguments();
   }
-  if (analysis_.usesEnvironmentChain()) {
+  if (handler.analysis().usesEnvironmentChain()) {
     baselineScript->setUsesEnvironmentChain();
   }
 
@@ -374,7 +371,8 @@ MethodStatus BaselineCompiler::compile() {
   return Method_Compiled;
 }
 
-void BaselineCompiler::emitInitializeLocals() {
+template <>
+void BaselineCompilerCodeGen::emitInitializeLocals() {
   // Initialize all locals to |undefined|. Lexical bindings are temporal
   // dead zoned in bytecode.
 
@@ -413,13 +411,19 @@ void BaselineCompiler::emitInitializeLocals() {
   }
 }
 
+template <>
+void BaselineInterpreterCodeGen::emitInitializeLocals() {
+  MOZ_CRASH("NYI: interpreter emitInitializeLocals");
+}
+
 // On input:
 //  R2.scratchReg() contains object being written to.
 //  Called with the baseline stack synced, except for R0 which is preserved.
 //  All other registers are usable as scratch.
 // This calls:
 //    void PostWriteBarrier(JSRuntime* rt, JSObject* obj);
-bool BaselineCompiler::emitOutOfLinePostBarrierSlot() {
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
   masm.bind(&postBarrierSlot_);
 
   Register objReg = R2.scratchReg();
@@ -461,8 +465,8 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   // to loop until we find an ICEntry for the current pc.
   const ICEntry* entry;
   do {
-    entry = &script->icScript()->icEntry(icEntryIndex_);
-    icEntryIndex_++;
+    entry = &script->icScript()->icEntry(handler.icEntryIndex());
+    handler.moveToNextICEntry();
   } while (entry->pcOffset() < pcOffset);
 
   MOZ_RELEASE_ASSERT(entry->pcOffset() == pcOffset);
@@ -618,7 +622,8 @@ static const VMFunction CheckOverRecursedBaselineInfo =
     FunctionInfo<CheckOverRecursedBaselineFn>(CheckOverRecursedBaseline,
                                               "CheckOverRecursedBaseline");
 
-bool BaselineCompiler::emitStackCheck() {
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitStackCheck() {
   // If this is the late stack check for a frame which contains an early stack
   // check, then the early stack check might have failed and skipped past the
   // pushing of locals on the stack.
@@ -627,7 +632,7 @@ bool BaselineCompiler::emitStackCheck() {
   // and the VMCall to CheckOverRecursedBaseline done unconditionally if it's
   // set.
   Label forceCall;
-  if (needsEarlyStackCheck()) {
+  if (handler.needsEarlyStackCheck()) {
     masm.branchTest32(Assembler::NonZero, frame.addressOfFlags(),
                       Imm32(BaselineFrame::OVER_RECURSED), &forceCall);
   }
@@ -637,7 +642,7 @@ bool BaselineCompiler::emitStackCheck() {
                          AbsoluteAddress(cx->addressOfJitStackLimit()),
                          &skipCall);
 
-  if (needsEarlyStackCheck()) {
+  if (handler.needsEarlyStackCheck()) {
     masm.bind(&forceCall);
   }
 
@@ -646,7 +651,7 @@ bool BaselineCompiler::emitStackCheck() {
   pushArg(R1.scratchReg());
 
   CallVMPhase phase = POST_INITIALIZE;
-  if (needsEarlyStackCheck()) {
+  if (handler.needsEarlyStackCheck()) {
     phase = CHECK_OVER_RECURSED;
   }
 
@@ -660,8 +665,9 @@ bool BaselineCompiler::emitStackCheck() {
   return true;
 }
 
-void BaselineCompiler::emitIsDebuggeeCheck() {
-  if (compileDebugInstrumentation()) {
+template <>
+void BaselineCompilerCodeGen::emitIsDebuggeeCheck() {
+  if (handler.compileDebugInstrumentation()) {
     masm.Push(BaselineFrameReg);
     masm.setupUnalignedABICall(R0.scratchReg());
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
@@ -672,6 +678,11 @@ void BaselineCompiler::emitIsDebuggeeCheck() {
 }
 
 template <>
+void BaselineInterpreterCodeGen::emitIsDebuggeeCheck() {
+  MOZ_CRASH("NYI: interpreter emitIsDebuggeeCheck");
+}
+
+template <>
 void BaselineCompilerCodeGen::loadScript(Register dest) {
   masm.movePtr(ImmGCPtr(handler.script()), dest);
 }
@@ -679,6 +690,19 @@ void BaselineCompilerCodeGen::loadScript(Register dest) {
 template <>
 void BaselineInterpreterCodeGen::loadScript(Register dest) {
   MOZ_CRASH("NYI: interpreter loadScript");
+}
+
+template <>
+void BaselineCompilerCodeGen::subtractScriptSlotsSize(Register reg,
+                                                      Register scratch) {
+  uint32_t slotsSize = handler.script()->nslots() * sizeof(Value);
+  masm.subPtr(Imm32(slotsSize), reg);
+}
+
+template <>
+void BaselineInterpreterCodeGen::subtractScriptSlotsSize(Register reg,
+                                                         Register scratch) {
+  MOZ_CRASH("NYI: interpreter subtractScriptSlotsSize");
 }
 
 template <>
@@ -814,8 +838,9 @@ typedef bool (*DebugPrologueFn)(JSContext*, BaselineFrame*, jsbytecode*, bool*);
 static const VMFunction DebugPrologueInfo =
     FunctionInfo<DebugPrologueFn>(jit::DebugPrologue, "DebugPrologue");
 
-bool BaselineCompiler::emitDebugPrologue() {
-  if (compileDebugInstrumentation()) {
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitDebugPrologue() {
+  auto ifDebuggee = [this]() {
     // Load pointer to BaselineFrame in R0.
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
@@ -838,6 +863,10 @@ bool BaselineCompiler::emitDebugPrologue() {
       masm.jump(&return_);
     }
     masm.bind(&done);
+    return true;
+  };
+  if (!emitDebugInstrumentation(ifDebuggee)) {
+    return false;
   }
 
   debugOsrPrologueOffset_ = CodeOffset(masm.currentOffset());
@@ -858,9 +887,26 @@ static const VMFunction InitFunctionEnvironmentObjectsInfo =
     FunctionInfo<InitFunctionEnvironmentObjectsFn>(
         jit::InitFunctionEnvironmentObjects, "InitFunctionEnvironmentObjects");
 
-bool BaselineCompiler::initEnvironmentChain() {
+template <>
+void BaselineCompilerCodeGen::emitPreInitEnvironmentChain(
+    Register nonFunctionEnv) {
+  if (handler.function()) {
+    masm.storePtr(ImmPtr(nullptr), frame.addressOfEnvironmentChain());
+  } else {
+    masm.storePtr(nonFunctionEnv, frame.addressOfEnvironmentChain());
+  }
+}
+
+template <>
+void BaselineInterpreterCodeGen::emitPreInitEnvironmentChain(
+    Register nonFunctionEnv) {
+  MOZ_CRASH("NYI: interpreter emitPreInitEnvironmentChain");
+}
+
+template <>
+bool BaselineCompilerCodeGen::initEnvironmentChain() {
   CallVMPhase phase = POST_INITIALIZE;
-  if (needsEarlyStackCheck()) {
+  if (handler.needsEarlyStackCheck()) {
     phase = CHECK_OVER_RECURSED;
   }
 
@@ -905,6 +951,11 @@ bool BaselineCompiler::initEnvironmentChain() {
   return true;
 }
 
+template <>
+bool BaselineInterpreterCodeGen::initEnvironmentChain() {
+  MOZ_CRASH("NYI: interpreter initEnvironmentChain");
+}
+
 typedef bool (*InterruptCheckFn)(JSContext*);
 static const VMFunction InterruptCheckInfo =
     FunctionInfo<InterruptCheckFn>(InterruptCheck, "InterruptCheck");
@@ -937,7 +988,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   // Emit no warm-up counter increments or bailouts if Ion is not
   // enabled, or if the script will never be Ion-compileable
 
-  if (!ionCompileable_) {
+  if (!handler.maybeIonCompileable()) {
     return true;
   }
 
@@ -957,7 +1008,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   if (JSOp(*pc) == JSOP_LOOPENTRY) {
     // If this is a loop inside a catch or finally block, increment the warmup
     // counter but don't attempt OSR (Ion only compiles the try block).
-    if (analysis_.info(pc).loopEntryInCatchOrFinally) {
+    if (handler.analysis().info(pc).loopEntryInCatchOrFinally) {
       return true;
     }
 
@@ -1012,7 +1063,8 @@ bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
   MOZ_CRASH("NYI: interpreter emitWarmUpCounterIncrement");
 }
 
-bool BaselineCompiler::emitArgumentTypeChecks() {
+template <>
+bool BaselineCompilerCodeGen::emitArgumentTypeChecks() {
   if (!handler.function()) {
     return true;
   }
@@ -1036,6 +1088,11 @@ bool BaselineCompiler::emitArgumentTypeChecks() {
   }
 
   return true;
+}
+
+template <>
+bool BaselineInterpreterCodeGen::emitArgumentTypeChecks() {
+  MOZ_CRASH("NYI: interpreter emitArgumentTypeChecks");
 }
 
 bool BaselineCompiler::emitDebugTrap() {
@@ -1074,7 +1131,8 @@ bool BaselineCompiler::emitDebugTrap() {
 }
 
 #ifdef JS_TRACE_LOGGING
-bool BaselineCompiler::emitTraceLoggerEnter() {
+template <>
+bool BaselineCompilerCodeGen::emitTraceLoggerEnter() {
   AllocatableRegisterSet regs(RegisterSet::Volatile());
   Register loggerReg = regs.takeAnyGeneral();
   Register scriptReg = regs.takeAnyGeneral();
@@ -1109,7 +1167,13 @@ bool BaselineCompiler::emitTraceLoggerEnter() {
   return true;
 }
 
-bool BaselineCompiler::emitTraceLoggerExit() {
+template <>
+bool BaselineInterpreterCodeGen::emitTraceLoggerEnter() {
+  MOZ_CRASH("NYI: interpreter emitTraceLoggerEnter");
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitTraceLoggerExit() {
   AllocatableRegisterSet regs(RegisterSet::Volatile());
   Register loggerReg = regs.takeAnyGeneral();
 
@@ -1159,7 +1223,8 @@ bool BaselineCodeGen<Handler>::emitTraceLoggerResume(
 }
 #endif
 
-void BaselineCompiler::emitProfilerEnterFrame() {
+template <typename Handler>
+void BaselineCodeGen<Handler>::emitProfilerEnterFrame() {
   // Store stack position to lastProfilingFrame variable, guarded by a toggled
   // jump. Starts off initially disabled.
   Label noInstrument;
@@ -1172,7 +1237,8 @@ void BaselineCompiler::emitProfilerEnterFrame() {
   profilerEnterFrameToggleOffset_ = toggleOffset;
 }
 
-void BaselineCompiler::emitProfilerExitFrame() {
+template <typename Handler>
+void BaselineCodeGen<Handler>::emitProfilerExitFrame() {
   // Store previous frame to lastProfilingFrame variable, guarded by a toggled
   // jump. Starts off initially disabled.
   Label noInstrument;
@@ -2983,7 +3049,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GETALIASEDVAR() {
   Address address = getEnvironmentCoordinateAddress(R0.scratchReg());
   masm.loadValue(address, R0);
 
-  if (ionCompileable_) {
+  if (handler.maybeIonCompileable()) {
     // No need to monitor types if we know Ion can't compile this script.
     if (!emitNextIC()) {
       return false;
@@ -3144,7 +3210,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_GETIMPORT() {
     }
   }
 
-  if (ionCompileable_) {
+  if (handler.maybeIonCompileable()) {
     // No need to monitor types if we know Ion can't compile this script.
     if (!emitNextIC()) {
       return false;
@@ -5583,19 +5649,14 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DYNAMIC_IMPORT() {
   return true;
 }
 
-bool BaselineCompiler::emitPrologue() {
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitPrologue() {
 #ifdef JS_USE_LINK_REGISTER
   // Push link register from generateEnterJIT()'s BLR.
   masm.pushReturnAddress();
   masm.checkStackAlignment();
 #endif
   emitProfilerEnterFrame();
-
-  JSScript* script = handler.script();
-  if (script->trackRecordReplayProgress()) {
-    masm.inc64(
-        AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
-  }
 
   masm.push(BaselineFrameReg);
   masm.moveStackPtrTo(BaselineFrameReg);
@@ -5612,10 +5673,16 @@ bool BaselineCompiler::emitPrologue() {
   // chain is in R1.  For function scripts, the env chain is in
   // the callee, nullptr is stored for now so that GC doesn't choke
   // on a bogus EnvironmentChain value in the frame.
-  if (handler.function()) {
-    masm.storePtr(ImmPtr(nullptr), frame.addressOfEnvironmentChain());
-  } else {
-    masm.storePtr(R1.scratchReg(), frame.addressOfEnvironmentChain());
+  emitPreInitEnvironmentChain(R1.scratchReg());
+
+  auto incCounter = [this]() {
+    masm.inc64(
+        AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
+    return true;
+  };
+  if (!emitTestScriptFlag(JSScript::ImmutableFlags::TrackRecordReplayProgress,
+                          true, incCounter, R2.scratchReg())) {
+    return false;
   }
 
   // Functions with a large number of locals require two stack checks.
@@ -5632,12 +5699,11 @@ bool BaselineCompiler::emitPrologue() {
   // of the locals, and directly to env chain initialization followed by the
   // actual stack check, which will throw the correct exception.
   Label earlyStackCheckFailed;
-  if (needsEarlyStackCheck()) {
+  if (handler.needsEarlyStackCheck()) {
     // Subtract the size of script->nslots() from the stack pointer.
-    uint32_t slotsSize = script->nslots() * sizeof(Value);
     Register scratch = R1.scratchReg();
     masm.moveStackPtrTo(scratch);
-    masm.subPtr(Imm32(slotsSize), scratch);
+    subtractScriptSlotsSize(scratch, R2.scratchReg());
 
     // Set the OVER_RECURSED flag on the frame if the computed stack pointer
     // overflows the stack limit. We have to use the actual (*NoInterrupt)
@@ -5656,7 +5722,7 @@ bool BaselineCompiler::emitPrologue() {
 
   emitInitializeLocals();
 
-  if (needsEarlyStackCheck()) {
+  if (handler.needsEarlyStackCheck()) {
     masm.bind(&earlyStackCheckFailed);
   }
 
@@ -5681,7 +5747,10 @@ bool BaselineCompiler::emitPrologue() {
   }
 
   frame.assertSyncedStack();
-  masm.debugAssertContextRealm(script->realm(), R1.scratchReg());
+
+  if (JSScript* script = handler.maybeScript()) {
+    masm.debugAssertContextRealm(script->realm(), R1.scratchReg());
+  }
 
   if (!emitStackCheck()) {
     return false;
@@ -5702,7 +5771,8 @@ bool BaselineCompiler::emitPrologue() {
   return true;
 }
 
-bool BaselineCompiler::emitEpilogue() {
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitEpilogue() {
   // Record the offset of the epilogue, so we can do early return from
   // Debugger handlers during on-stack recompile.
   debugOsrEpilogueOffset_ = CodeOffset(masm.currentOffset());
@@ -5737,7 +5807,7 @@ MethodStatus BaselineCompiler::emitBody() {
     JitSpew(JitSpew_BaselineOp, "Compiling op @ %d: %s",
             int(script->pcToOffset(handler.pc())), CodeName[op]);
 
-    BytecodeInfo* info = analysis_.maybeInfo(handler.pc());
+    BytecodeInfo* info = handler.analysis().maybeInfo(handler.pc());
 
     // Skip unreachable ops.
     if (!info) {
