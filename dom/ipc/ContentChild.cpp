@@ -1718,7 +1718,8 @@ mozilla::ipc::IPCResult ContentChild::RecvPBrowserConstructor(
     RefPtr<CancelableRunnable> firstIdleTask =
         NewCancelableRunnableFunction("FirstIdleRunnable", FirstIdle);
     gFirstIdleTask = firstIdleTask;
-    if (NS_FAILED(NS_IdleDispatchToCurrentThread(firstIdleTask.forget()))) {
+    if (NS_FAILED(NS_DispatchToCurrentThreadQueue(firstIdleTask.forget(),
+                                                  EventQueuePriority::Idle))) {
       gFirstIdleTask = nullptr;
       hasRunOnce = false;
     }

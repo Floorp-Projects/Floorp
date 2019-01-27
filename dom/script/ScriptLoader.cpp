@@ -2755,7 +2755,8 @@ void ScriptLoader::MaybeTriggerBytecodeEncoding() {
   // give-up on encoding the bytecode.
   nsCOMPtr<nsIRunnable> encoder = NewRunnableMethod(
       "ScriptLoader::EncodeBytecode", this, &ScriptLoader::EncodeBytecode);
-  if (NS_FAILED(NS_IdleDispatchToCurrentThread(encoder.forget()))) {
+  if (NS_FAILED(NS_DispatchToCurrentThreadQueue(encoder.forget(),
+                                                EventQueuePriority::Idle))) {
     GiveUpBytecodeEncoding();
     return;
   }

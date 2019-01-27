@@ -617,7 +617,7 @@ void IdleRequestExecutor::ScheduleDispatch() {
   MOZ_ASSERT(mWindow);
   mDelayedExecutorHandle = Nothing();
   RefPtr<IdleRequestExecutor> request = this;
-  NS_IdleDispatchToCurrentThread(request.forget());
+  NS_DispatchToCurrentThreadQueue(request.forget(), EventQueuePriority::Idle);
 }
 
 void IdleRequestExecutor::DelayedDispatch(uint32_t aDelay) {
@@ -886,7 +886,8 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow)
   // add this inner window to the outer window list of inners.
   PR_INSERT_AFTER(this, aOuterWindow);
 
-  mTimeoutManager = MakeUnique<dom::TimeoutManager>(*this);
+  mTimeoutManager = MakeUnique<dom::TimeoutManager>(
+      *this, StaticPrefs::dom_timeout_max_idle_defer_ms());
 
   mObserver = new nsGlobalWindowObserver(this);
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -2538,6 +2539,12 @@ void nsPIDOMWindowInner::SetAudioCapture(bool aCapture) {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
     service->SetWindowAudioCaptured(GetOuterWindow(), mWindowID, aCapture);
+  }
+}
+
+void nsPIDOMWindowInner::SetActiveLoadingState(bool aIsLoading) /* const? */ {
+  if (!nsGlobalWindowInner::Cast(this)->IsChromeWindow()) {
+    mTimeoutManager->SetLoading(aIsLoading);
   }
 }
 

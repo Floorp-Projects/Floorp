@@ -244,6 +244,21 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// Should we defer timeouts and intervals while loading a page.  Released
+// on Idle or when the page is loaded.
+VARCACHE_PREF(
+  "dom.timeout.defer_during_load",
+  dom_timeout_defer_during_load,
+  bool, true
+)
+
+// Maximum deferral time for setTimeout/Interval in milliseconds
+VARCACHE_PREF(
+  "dom.timeout.max_idle_defer_ms",
+  dom_timeout_max_idle_defer_ms,
+  uint32_t, 10*1000
+)
+
 VARCACHE_PREF(
   "dom.performance.children_results_ipc_timeout",
   dom_performance_children_results_ipc_timeout,

@@ -1259,7 +1259,8 @@ class ContentUnbinder : public Runnable {
         sContentUnbinder = next;
         next->mLast = mLast;
         mLast = nullptr;
-        NS_IdleDispatchToCurrentThread(next.forget());
+        NS_DispatchToCurrentThreadQueue(next.forget(),
+                                        EventQueuePriority::Idle);
       }
     }
     return NS_OK;
@@ -1278,7 +1279,7 @@ class ContentUnbinder : public Runnable {
     if (!sContentUnbinder) {
       sContentUnbinder = new ContentUnbinder();
       nsCOMPtr<nsIRunnable> e = sContentUnbinder;
-      NS_IdleDispatchToCurrentThread(e.forget());
+      NS_DispatchToCurrentThreadQueue(e.forget(), EventQueuePriority::Idle);
     }
 
     if (sContentUnbinder->mLast->mSubtreeRoots.Length() >=

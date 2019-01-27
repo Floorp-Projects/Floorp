@@ -83,7 +83,7 @@ bool SVGGeometryElement::GeometryDependsOnCoordCtx() {
 
 bool SVGGeometryElement::IsMarkable() { return false; }
 
-void SVGGeometryElement::GetMarkPoints(nsTArray<nsSVGMark>* aMarks) {}
+void SVGGeometryElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {}
 
 already_AddRefed<Path> SVGGeometryElement::GetOrBuildPath(
     const DrawTarget* aDrawTarget, FillRule aFillRule) {
