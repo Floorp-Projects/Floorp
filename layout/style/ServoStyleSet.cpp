@@ -351,9 +351,7 @@ void ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled) {
 already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleFor(
     Element* aElement, LazyComputeBehavior aMayCompute) {
   if (aMayCompute == LazyComputeBehavior::Allow) {
-    PreTraverseSync();
-    return ResolveStyleLazilyInternal(aElement,
-                                      CSSPseudoElementType::NotPseudo);
+    return ResolveStyleLazily(aElement, CSSPseudoElementType::NotPseudo);
   }
 
   return ResolveServoStyle(*aElement);
@@ -377,6 +375,12 @@ void ServoStyleSet::PreTraverseSync() {
   // calling into the (potentially-parallel) Servo traversal, where a cache hit
   // is necessary to avoid a data race when updating the cache.
   mozilla::Unused << mDocument->GetRootElement();
+
+  // FIXME(emilio): This shouldn't be needed in theory, the call to the same
+  // function in PresShell should do the work, but as it turns out we
+  // ProcessPendingRestyles() twice, and runnables from frames just constructed
+  // can end up doing editing stuff, which adds stylesheets etc...
+  mDocument->FlushUserFontSet();
 
   ResolveMappedAttrDeclarationBlocks();
 
@@ -536,7 +540,6 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
     Element* aElement, CSSPseudoElementType aPseudoType,
     StyleRuleInclusion aRuleInclusion) {
   PreTraverseSync();
-
   return ResolveStyleLazilyInternal(aElement, aPseudoType, aRuleInclusion);
 }
 
