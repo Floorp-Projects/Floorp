@@ -10,10 +10,12 @@
 #include "mozilla/AlreadyAddRefed.h"
 namespace mozilla {
 class TimeStamp;
+enum class EventQueuePriority;
 }
 %}
 
 [ptr] native PRThread(PRThread);
+native EventQueuePriority(mozilla::EventQueuePriority);
 
 native nsIEventTargetPtr(nsIEventTarget*);
 native nsISerialEventTargetPtr(nsISerialEventTarget*);
@@ -130,12 +132,16 @@ interface nsIThread : nsISerialEventTarget
   void asyncShutdown();
 
   /**
-   * Dispatch an event to the thread's idle queue.  This function may be called
-   * from any thread, and it may be called re-entrantly.
+   * Dispatch an event to a specified queue for the thread.  This function
+   * may be called from any thread, and it may be called re-entrantly.
+   * Most users should use the NS_Dispatch*() functions in nsThreadUtils instead
+   * of calling this directly.
    *
    * @param event
    *   The alreadyAddRefed<> event to dispatch.
    *   NOTE that the event will be leaked if it fails to dispatch.
+   * @param queue
+   *   Which event priority queue this should be added to
    *
    * @throws NS_ERROR_INVALID_ARG
    *   Indicates that event is null.
@@ -143,7 +149,8 @@ interface nsIThread : nsISerialEventTarget
    *   Indicates that the thread is shutting down and has finished processing
    * events, so this event would never run and has not been dispatched.
    */
-  [noscript] void idleDispatch(in alreadyAddRefed_nsIRunnable event);
+  [noscript] void dispatchToQueue(in alreadyAddRefed_nsIRunnable event,
+                                  in EventQueuePriority queue);
 
   /**
    * Use this attribute to dispatch runnables to the thread. Eventually, the
