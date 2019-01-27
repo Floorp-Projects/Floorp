@@ -967,10 +967,6 @@ skip script test262/language/expressions/postfix-increment/bigint.js
 skip script test262/language/expressions/postfix-decrement/bigint.js
 skip script test262/language/expressions/prefix-decrement/bigint.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1522433
-skip script test262/built-ins/JSON/stringify/bigint-order.js
-skip script test262/built-ins/JSON/stringify/bigint-tojson.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317405
 skip script test262/language/computed-property-names/class/static/method-number.js
 skip script test262/language/computed-property-names/class/static/method-string.js
