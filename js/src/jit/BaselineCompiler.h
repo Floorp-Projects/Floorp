@@ -263,19 +263,13 @@ class BaselineCodeGen {
 
   JSContext* cx;
   StackMacroAssembler masm;
-  bool ionCompileable_;
 
-  TempAllocator& alloc_;
-  BytecodeAnalysis analysis_;
   typename Handler::FrameInfoT& frame;
 
   js::Vector<CodeOffset> traceLoggerToggleOffsets_;
 
   NonAssertingLabel return_;
   NonAssertingLabel postBarrierSlot_;
-
-  // Index of the current ICEntry in the script's ICScript.
-  uint32_t icEntryIndex_;
 
   uint32_t pushedBeforeCall_;
 #ifdef DEBUG
@@ -286,8 +280,7 @@ class BaselineCodeGen {
   bool modifiesArguments_;
 
   template <typename... HandlerArgs>
-  BaselineCodeGen(JSContext* cx, TempAllocator& alloc, JSScript* script,
-                  HandlerArgs&&... args);
+  explicit BaselineCodeGen(JSContext* cx, HandlerArgs&&... args);
 
   template <typename T>
   void pushArg(const T& t) {
@@ -449,19 +442,25 @@ using RetAddrEntryVector = js::Vector<RetAddrEntry, 16, SystemAllocPolicy>;
 class BaselineCompilerHandler {
   CompilerFrameInfo frame_;
   TempAllocator& alloc_;
+  BytecodeAnalysis analysis_;
   FixedList<Label> labels_;
   RetAddrEntryVector retAddrEntries_;
   JSScript* script_;
   jsbytecode* pc_;
+
+  // Index of the current ICEntry in the script's ICScript.
+  uint32_t icEntryIndex_;
+
   bool compileDebugInstrumentation_;
+  bool ionCompileable_;
 
  public:
   using FrameInfoT = CompilerFrameInfo;
 
-  BaselineCompilerHandler(MacroAssembler& masm, TempAllocator& alloc,
-                          JSScript* script);
+  BaselineCompilerHandler(JSContext* cx, MacroAssembler& masm,
+                          TempAllocator& alloc, JSScript* script);
 
-  MOZ_MUST_USE bool init();
+  MOZ_MUST_USE bool init(JSContext* cx);
 
   CompilerFrameInfo& frame() { return frame_; }
 
@@ -489,6 +488,13 @@ class BaselineCompilerHandler {
   bool compileDebugInstrumentation() const {
     return compileDebugInstrumentation_;
   }
+
+  bool maybeIonCompileable() const { return ionCompileable_; }
+
+  uint32_t icEntryIndex() const { return icEntryIndex_; }
+  void moveToNextICEntry() { icEntryIndex_++; }
+
+  BytecodeAnalysis& analysis() { return analysis_; }
 
   RetAddrEntryVector& retAddrEntries() { return retAddrEntries_; }
 
@@ -579,8 +585,6 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
     }
   }
 
-  BytecodeAnalysis& analysis() { return analysis_; }
-
   MethodStatus emitBody();
 
   void emitInitializeLocals();
@@ -610,7 +614,7 @@ class BaselineInterpreterHandler {
  public:
   using FrameInfoT = InterpreterFrameInfo;
 
-  explicit BaselineInterpreterHandler(MacroAssembler& masm);
+  explicit BaselineInterpreterHandler(JSContext* cx, MacroAssembler& masm);
 
   InterpreterFrameInfo& frame() { return frame_; }
 
@@ -627,13 +631,15 @@ class BaselineInterpreterHandler {
     return true;
   }
   void markLastRetAddrEntryKind(RetAddrEntry::Kind) {}
+
+  bool maybeIonCompileable() const { return true; }
 };
 
 using BaselineInterpreterCodeGen = BaselineCodeGen<BaselineInterpreterHandler>;
 
 class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
  public:
-  BaselineInterpreterGenerator(JSContext* cx, TempAllocator& alloc);
+  explicit BaselineInterpreterGenerator(JSContext* cx);
 };
 
 extern const VMFunction NewArrayCopyOnWriteInfo;
