@@ -304,6 +304,10 @@ class DrawTargetRecording : public DrawTarget {
       const IntSize &aMaxSize, const Matrix &aTransform,
       SurfaceFormat aFormat) const override;
 
+  virtual already_AddRefed<DrawTarget> CreateSimilarDrawTargetForFilter(
+      const IntSize &aSize, SurfaceFormat aFormat, FilterNode *aFilter,
+      FilterNode *aSource, const Rect &aSourceRect,
+      const Point &aDestPoint) override;
   /*
    * Create a path builder with the specified fillmode.
    *
