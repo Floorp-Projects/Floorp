@@ -1861,8 +1861,8 @@ bool nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
                                        aRuleTypeMask, UseDocumentColors());
 }
 
-gfxUserFontSet* nsPresContext::GetUserFontSet(bool aFlushUserFontSet) {
-  return mDocument->GetUserFontSet(aFlushUserFontSet);
+gfxUserFontSet* nsPresContext::GetUserFontSet() {
+  return mDocument->GetUserFontSet();
 }
 
 void nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont) {
