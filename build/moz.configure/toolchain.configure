@@ -619,13 +619,6 @@ def check_compiler(compiler, language, target):
         elif info.type == 'clang-cl' and info.language_version != cxx14_version:
             append_flag('-std=c++14')
 
-    # We force clang-cl to emulate Visual C++ 2017 version 15.8.4
-    msvc_version = '19.15.26726'
-    if info.type == 'clang-cl' and info.version != msvc_version:
-        # This flag is a direct clang-cl flag that doesn't need -Xclang,
-        # add it directly.
-        flags.append('-fms-compatibility-version=%s' % msvc_version)
-
     # Check compiler target
     # --------------------------------------------------------------------
     if not info.cpu or info.cpu != target.cpu:
