@@ -55,4 +55,9 @@ pub trait ParseCallbacks: fmt::Debug + UnwindSafe {
     ) -> Option<String> {
         None
     }
+
+    /// Allows to rename an item, replacing `_original_item_name`.
+    fn item_name(&self, _original_item_name: &str) -> Option<String> {
+        None
+    }
 }
