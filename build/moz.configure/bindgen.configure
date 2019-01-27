@@ -325,8 +325,6 @@ def basic_bindgen_cflags(host, target, is_unix, compiler_info, android_cflags):
             'compiler': {
                 'msvc': {
                     'default': [
-                        # For compatibility with MSVC 2015
-                        '-fms-compatibility-version=19',
                         # To enable the builtin __builtin_offsetof so that CRT wouldn't
                         # use reinterpret_cast in offsetof() which is not allowed inside
                         # static_assert().
