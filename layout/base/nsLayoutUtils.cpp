@@ -9569,8 +9569,7 @@ static nsRect ComputeHTMLReferenceRect(nsIFrame* aFrame,
 /* static */
 already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
     nsPresContext* aPresContext, bool aIsVertical,
-    const nsStyleFont* aStyleFont, nscoord aFontSize, bool aUseUserFontSet,
-    FlushUserFontSet aFlushUserFontSet) {
+    const nsStyleFont* aStyleFont, nscoord aFontSize, bool aUseUserFontSet) {
   nsFont font = aStyleFont->mFont;
   font.size = aFontSize;
   gfxFont::Orientation orientation =
@@ -9579,10 +9578,8 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
   params.language = aStyleFont->mLanguage;
   params.explicitLanguage = aStyleFont->mExplicitLanguage;
   params.orientation = orientation;
-  params.userFontSet = aUseUserFontSet
-                           ? aPresContext->GetUserFontSet(aFlushUserFontSet ==
-                                                          FlushUserFontSet::Yes)
-                           : nullptr;
+  params.userFontSet =
+      aUseUserFontSet ? aPresContext->GetUserFontSet() : nullptr;
   params.textPerf = aPresContext->GetTextPerfMetrics();
   return aPresContext->DeviceContext()->GetMetricsFor(font, params);
 }
