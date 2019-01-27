@@ -287,7 +287,7 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
 
   nsCOMPtr<nsIURI> uri(aURI);
 
-  nsresult rv = NS_IdleDispatchToCurrentThread(
+  nsresult rv = NS_DispatchToCurrentThreadQueue(
       NS_NewRunnableFunction(
           "ReportBlockingToConsoleDelayed",
           [doc, sourceLine, lineNumber, columnNumber, uri, aRejectedReason]() {
@@ -338,7 +338,7 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
                 ArrayLength(params), nullptr, sourceLine, lineNumber,
                 columnNumber);
           }),
-      kMaxConsoleOutputDelayMs);
+      kMaxConsoleOutputDelayMs, EventQueuePriority::Idle);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -374,7 +374,7 @@ void ReportUnblockingToConsole(
     nsJSUtils::GetCallingLocation(cx, sourceLine, &lineNumber, &columnNumber);
   }
 
-  nsresult rv = NS_IdleDispatchToCurrentThread(
+  nsresult rv = NS_DispatchToCurrentThreadQueue(
       NS_NewRunnableFunction(
           "ReportUnblockingToConsoleDelayed",
           [doc, principal, trackingOrigin, grantedOrigin, sourceLine,
@@ -422,7 +422,7 @@ void ReportUnblockingToConsole(
                   params, 3, nullptr, sourceLine, lineNumber, columnNumber);
             }
           }),
-      kMaxConsoleOutputDelayMs);
+      kMaxConsoleOutputDelayMs, EventQueuePriority::Idle);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }

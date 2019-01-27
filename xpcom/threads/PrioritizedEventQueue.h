@@ -18,9 +18,9 @@ class nsIRunnable;
 
 namespace mozilla {
 
-// This AbstractEventQueue implementation has one queue for each EventPriority.
-// The type of queue used for each priority is determined by the template
-// parameter.
+// This AbstractEventQueue implementation has one queue for each
+// EventQueuePriority. The type of queue used for each priority is determined by
+// the template parameter.
 //
 // When an event is pushed, its priority is determined by QIing the runnable to
 // nsIRunnablePriority, or by falling back to the aPriority parameter if the QI
@@ -43,13 +43,15 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   PrioritizedEventQueue(UniquePtr<InnerQueueT> aHighQueue,
                         UniquePtr<InnerQueueT> aInputQueue,
                         UniquePtr<InnerQueueT> aNormalQueue,
+                        UniquePtr<InnerQueueT> aDeferredTimersQueue,
                         UniquePtr<InnerQueueT> aIdleQueue,
                         already_AddRefed<nsIIdlePeriod> aIdlePeriod);
 
-  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent, EventPriority aPriority,
+  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
+                EventQueuePriority aPriority,
                 const MutexAutoLock& aProofOfLock) final;
   already_AddRefed<nsIRunnable> GetEvent(
-      EventPriority* aPriority, const MutexAutoLock& aProofOfLock) final;
+      EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock) final;
 
   bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
   size_t Count(const MutexAutoLock& aProofOfLock) const final;
@@ -83,6 +85,7 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
     n += mHighQueue->SizeOfIncludingThis(aMallocSizeOf);
     n += mInputQueue->SizeOfIncludingThis(aMallocSizeOf);
     n += mNormalQueue->SizeOfIncludingThis(aMallocSizeOf);
+    n += mDeferredTimersQueue->SizeOfIncludingThis(aMallocSizeOf);
     n += mIdleQueue->SizeOfIncludingThis(aMallocSizeOf);
 
     if (mIdlePeriod) {
@@ -93,8 +96,8 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   }
 
  private:
-  EventPriority SelectQueue(bool aUpdateState,
-                            const MutexAutoLock& aProofOfLock);
+  EventQueuePriority SelectQueue(bool aUpdateState,
+                                 const MutexAutoLock& aProofOfLock);
 
   // Returns a null TimeStamp if we're not in the idle period.
   mozilla::TimeStamp GetIdleDeadline();
@@ -102,6 +105,7 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   UniquePtr<InnerQueueT> mHighQueue;
   UniquePtr<InnerQueueT> mInputQueue;
   UniquePtr<InnerQueueT> mNormalQueue;
+  UniquePtr<InnerQueueT> mDeferredTimersQueue;
   UniquePtr<InnerQueueT> mIdleQueue;
 
   // We need to drop the queue mutex when checking the idle deadline, so we keep

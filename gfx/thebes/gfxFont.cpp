@@ -3061,6 +3061,9 @@ bool gfxFont::SplitAndInitTextRun(
             flags | gfx::ShapedTextFlags::TEXT_IS_8BIT, rounding, tp);
         if (sw) {
           aTextRun->CopyGlyphDataFrom(sw, aRunStart + i);
+          if (boundary == ' ') {
+            aTextRun->GetCharacterGlyphs()[aRunStart + i].SetIsSpace();
+          }
         } else {
           return false;
         }

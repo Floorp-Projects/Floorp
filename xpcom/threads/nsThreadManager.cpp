@@ -580,16 +580,18 @@ bool nsThreadManager::MainThreadHasPendingHighPriorityEvents() {
 NS_IMETHODIMP
 nsThreadManager::IdleDispatchToMainThread(nsIRunnable* aEvent,
                                           uint32_t aTimeout) {
-  // Note: C++ callers should instead use NS_IdleDispatchToThread or
-  // NS_IdleDispatchToCurrentThread.
+  // Note: C++ callers should instead use NS_DispatchToThreadQueue or
+  // NS_DispatchToCurrentThreadQueue.
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIRunnable> event(aEvent);
   if (aTimeout) {
-    return NS_IdleDispatchToThread(event.forget(), aTimeout, mMainThread);
+    return NS_DispatchToThreadQueue(event.forget(), aTimeout, mMainThread,
+                                    EventQueuePriority::Idle);
   }
 
-  return NS_IdleDispatchToThread(event.forget(), mMainThread);
+  return NS_DispatchToThreadQueue(event.forget(), mMainThread,
+                                  EventQueuePriority::Idle);
 }
 
 namespace mozilla {
