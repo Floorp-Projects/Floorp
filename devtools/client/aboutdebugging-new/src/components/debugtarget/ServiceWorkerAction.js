@@ -53,6 +53,7 @@ class ServiceWorkerAction extends PureComponent {
       return this._renderButton({
         className: "default-button js-start-button",
         disabled: isMultiE10s,
+        key: "service-worker-start-button",
         label: startLabel,
         onClick: this.start.bind(this),
       });
@@ -68,18 +69,27 @@ class ServiceWorkerAction extends PureComponent {
       this._renderButton({
         className: "default-button js-push-button",
         disabled: isMultiE10s,
+        key: "service-worker-push-button",
         label: pushLabel,
         onClick: this.push.bind(this),
       }),
-      InspectAction({ disabled: isMultiE10s, dispatch, target }),
+      InspectAction(
+        {
+          disabled: isMultiE10s,
+          dispatch,
+          key: "service-worker-inspect-action",
+          target,
+        }
+      ),
     ];
   }
 
-  _renderButton({ className, disabled, label, onClick }) {
+  _renderButton({ className, disabled, key, label, onClick }) {
     return dom.button(
       {
         className,
         disabled,
+        key,
         onClick: e => onClick(),
       },
       label,
