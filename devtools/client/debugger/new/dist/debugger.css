@@ -3912,12 +3912,12 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   overflow: hidden;
 }
 
-.frames [role="list"] [role="listitem"]hover,
-.frames [role="list"] [role="listitem"]focus {
+.frames [role="list"] [role="listitem"]:hover,
+.frames [role="list"] [role="listitem"]:focus {
   background-color: var(--theme-toolbar-background-alt);
 }
 
-.theme-dark .frames [role="list"] [role="listitem"]focus {
+.theme-dark .frames [role="list"] [role="listitem"]:focus {
   background-color: var(--theme-tab-toolbar-background);
 }
 
