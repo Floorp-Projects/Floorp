@@ -5,7 +5,7 @@
 use api::{
     AuHelpers, LayoutPrimitiveInfo, LayoutSideOffsets,
     LayoutSideOffsetsAu, LayoutSize, NormalBorder, PremultipliedColorF,
-    Shadow, LayoutVector2D,
+    Shadow
 };
 use border::create_border_segments;
 use border::NormalBorderAu;
@@ -56,7 +56,6 @@ impl AsInstanceKind<NormalBorderDataHandle> for NormalBorderKey {
         &self,
         data_handle: NormalBorderDataHandle,
         _: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::NormalBorder {
             data_handle,
@@ -232,7 +231,6 @@ impl AsInstanceKind<ImageBorderDataHandle> for ImageBorderKey {
         &self,
         data_handle: ImageBorderDataHandle,
         _: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::ImageBorder {
             data_handle

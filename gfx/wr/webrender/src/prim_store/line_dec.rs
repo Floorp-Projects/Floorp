@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    ColorF, ColorU, LayoutPrimitiveInfo, LayoutSizeAu, LayoutVector2D,
+    ColorF, ColorU, LayoutPrimitiveInfo, LayoutSizeAu,
     LineOrientation, LineStyle, PremultipliedColorF, Shadow,
 };
 use app_units::Au;
@@ -66,7 +66,6 @@ impl AsInstanceKind<LineDecorationDataHandle> for LineDecorationKey {
         &self,
         data_handle: LineDecorationDataHandle,
         _: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::LineDecoration {
             data_handle,
