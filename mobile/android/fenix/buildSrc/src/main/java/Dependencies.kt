@@ -5,7 +5,7 @@
 private object Versions {
     const val kotlin = "1.3.11"
     const val android_gradle_plugin = "3.2.1"
-    const val geckoNightly = "66.0.20190111093148"
+    const val geckoNightly = "66.0.20190128092811"
 
     const val androidx_appcompat = "1.0.2"
     const val androidx_constraint_layout = "2.0.0-alpha3"
