@@ -31,6 +31,7 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "prcmon.h"
+#include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "prthread.h"
 #include "private/pprthred.h"
@@ -1403,6 +1404,14 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     }
 
     SafeMutexAutoUnlock unlockPending(mLock);
+
+    // If the current thread doesn't have an associated nsThread, then it's a
+    // thread that doesn't have an event loop to process, so we'll just try
+    // to yield to another thread in an attempt to make progress.
+    if (!nsThreadManager::get().IsNSThread()) {
+      PR_Sleep(PR_INTERVAL_NO_WAIT);
+      continue;
+    }
 
     if (!currentThread) {
       currentThread = NS_GetCurrentThread();
