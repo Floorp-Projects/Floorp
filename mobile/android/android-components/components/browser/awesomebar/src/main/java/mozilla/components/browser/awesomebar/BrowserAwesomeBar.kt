@@ -14,6 +14,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
+import mozilla.components.browser.awesomebar.layout.SuggestionLayout
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.ktx.android.content.res.pxToDp
 
@@ -40,6 +41,13 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     internal var job: Job? = null
     internal var listener: (() -> Unit)? = null
     internal val styling: BrowserAwesomeBarStyling
+
+    /**
+     * The [SuggestionLayout] implementation controls layout inflation and view binding for suggestions.
+     */
+    var layout: SuggestionLayout
+        get() = suggestionsAdapter.layout
+        set(value) { suggestionsAdapter.layout = value }
 
     init {
         layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)

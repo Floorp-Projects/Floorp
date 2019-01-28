@@ -5,10 +5,16 @@
 package mozilla.components.browser.awesomebar
 
 import android.content.Context
+import android.content.res.Resources
+import android.view.View
 import android.widget.LinearLayout
 import androidx.test.core.app.ApplicationProvider
+import mozilla.components.browser.awesomebar.layout.DefaultSuggestionViewHolder
+import mozilla.components.browser.awesomebar.layout.SuggestionLayout
+import mozilla.components.browser.awesomebar.layout.SuggestionViewHolder
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -19,7 +25,6 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import java.lang.IllegalArgumentException
 
 @RunWith(RobolectricTestRunner::class)
 class SuggestionsAdapterTest {
@@ -118,10 +123,10 @@ class SuggestionsAdapterTest {
 
         assertEquals(2, adapter.itemCount)
 
-        assertEquals(SuggestionViewHolder.DefaultSuggestionViewHolder.LAYOUT_ID,
+        assertEquals(DefaultSuggestionViewHolder.Default.LAYOUT_ID,
             adapter.getItemViewType(0))
 
-        assertEquals(SuggestionViewHolder.ChipsSuggestionViewHolder.LAYOUT_ID,
+        assertEquals(DefaultSuggestionViewHolder.Chips.LAYOUT_ID,
             adapter.getItemViewType(1))
     }
 
@@ -131,14 +136,14 @@ class SuggestionsAdapterTest {
 
         val parent = LinearLayout(context)
 
-        assertTrue(adapter.createViewHolder(parent, SuggestionViewHolder.DefaultSuggestionViewHolder.LAYOUT_ID)
-            is SuggestionViewHolder.DefaultSuggestionViewHolder)
+        assertTrue(adapter.createViewHolder(parent, DefaultSuggestionViewHolder.Default.LAYOUT_ID).actual
+            is DefaultSuggestionViewHolder.Default)
 
-        assertTrue(adapter.createViewHolder(parent, SuggestionViewHolder.ChipsSuggestionViewHolder.LAYOUT_ID)
-            is SuggestionViewHolder.ChipsSuggestionViewHolder)
+        assertTrue(adapter.createViewHolder(parent, DefaultSuggestionViewHolder.Chips.LAYOUT_ID).actual
+            is DefaultSuggestionViewHolder.Chips)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = Resources.NotFoundException::class)
     fun `onCreateViewHolder() will throw for unknown id`() {
         val adapter = SuggestionsAdapter(mock())
 
@@ -154,13 +159,54 @@ class SuggestionsAdapterTest {
         val suggestion: AwesomeBar.Suggestion = mock()
 
         val viewHolder: SuggestionViewHolder = mock()
-        doReturn(viewHolder).`when`(adapter).onCreateViewHolder(any(), anyInt())
+        val wrapper = ViewHolderWrapper(viewHolder, mock())
+        doReturn(wrapper).`when`(adapter).onCreateViewHolder(any(), anyInt())
 
         adapter.addSuggestions(mockProvider(), listOf(suggestion))
 
-        adapter.onBindViewHolder(viewHolder, 0)
+        adapter.onBindViewHolder(wrapper, 0)
 
-        verify(viewHolder).bind(suggestion)
+        verify(viewHolder).bind(eq(suggestion), any())
+    }
+
+    @Test
+    fun `Adapter will ask SuggestionLayout for view type`() {
+        val suggestion: AwesomeBar.Suggestion = mock()
+
+        val layout: SuggestionLayout = mock()
+        doReturn(42).`when`(layout).getLayoutResource(suggestion)
+
+        val adapter = SuggestionsAdapter(mock())
+        adapter.suggestions = listOf(suggestion)
+        adapter.layout = layout
+
+        val viewType = adapter.getItemViewType(0)
+
+        assertEquals(42, viewType)
+        verify(layout).getLayoutResource(suggestion)
+    }
+
+    @Test
+    fun `Adapter will wrap ViewHolder from SuggestionLayout`() {
+        val suggestion: AwesomeBar.Suggestion = mock()
+
+        val holder = spy(object : SuggestionViewHolder(View(context)) {
+            override fun bind(suggestion: AwesomeBar.Suggestion, selectionListener: () -> Unit) = Unit
+        })
+
+        val layout: SuggestionLayout = mock()
+        doReturn(holder).`when`(layout).createViewHolder(any(), any(), eq(R.layout.mozac_browser_awesomebar_item_generic))
+
+        val adapter = SuggestionsAdapter(mock())
+        adapter.suggestions = listOf(suggestion)
+        adapter.layout = layout
+
+        val viewHolder = adapter.createViewHolder(
+            LinearLayout(context),
+            R.layout.mozac_browser_awesomebar_item_generic)
+
+        verify(layout).createViewHolder(any(), any(), eq(R.layout.mozac_browser_awesomebar_item_generic))
+        assertEquals(holder, viewHolder.actual)
     }
 
     private fun mockProvider(

@@ -9,7 +9,11 @@ import android.support.annotation.VisibleForTesting
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import mozilla.components.browser.awesomebar.layout.DefaultSuggestionLayout
+import mozilla.components.browser.awesomebar.layout.SuggestionLayout
+import mozilla.components.browser.awesomebar.layout.SuggestionViewHolder
 import mozilla.components.concept.awesomebar.AwesomeBar
 
 /**
@@ -17,7 +21,9 @@ import mozilla.components.concept.awesomebar.AwesomeBar
  */
 internal class SuggestionsAdapter(
     private val awesomeBar: BrowserAwesomeBar
-) : RecyclerView.Adapter<SuggestionViewHolder>() {
+) : RecyclerView.Adapter<ViewHolderWrapper>() {
+    internal var layout: SuggestionLayout = DefaultSuggestionLayout()
+
     /**
      * List of suggestions to be displayed by this adapter.
      */
@@ -84,30 +90,14 @@ internal class SuggestionsAdapter(
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): SuggestionViewHolder = synchronized(suggestions) {
-        return when (viewType) {
-            SuggestionViewHolder.DefaultSuggestionViewHolder.LAYOUT_ID -> {
-                val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
-                SuggestionViewHolder.DefaultSuggestionViewHolder(awesomeBar, view)
-            }
-
-            SuggestionViewHolder.ChipsSuggestionViewHolder.LAYOUT_ID -> {
-                val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
-                SuggestionViewHolder.ChipsSuggestionViewHolder(awesomeBar, view)
-            }
-
-            else -> throw IllegalArgumentException("Unknown view type: $viewType")
-        }
+    ): ViewHolderWrapper = synchronized(suggestions) {
+        val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+        return ViewHolderWrapper(layout.createViewHolder(awesomeBar, view, viewType), view)
     }
 
     override fun getItemViewType(position: Int): Int = synchronized(suggestions) {
         val suggestion = suggestions.get(position)
-
-        return if (suggestion.chips.isNotEmpty()) {
-            SuggestionViewHolder.ChipsSuggestionViewHolder.LAYOUT_ID
-        } else {
-            SuggestionViewHolder.DefaultSuggestionViewHolder.LAYOUT_ID
-        }
+        return layout.getLayoutResource(suggestion)
     }
 
     override fun getItemCount(): Int = synchronized(suggestions) {
@@ -115,11 +105,11 @@ internal class SuggestionsAdapter(
     }
 
     override fun onBindViewHolder(
-        holder: SuggestionViewHolder,
+        holder: ViewHolderWrapper,
         position: Int
     ) = synchronized(suggestions) {
         val suggestion = suggestions[position]
-        holder.bind(suggestion)
+        holder.actual.bind(suggestion) { awesomeBar.listener?.invoke() }
     }
 }
 
@@ -137,3 +127,8 @@ internal class SuggestionDiffCallback(
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
         suggestions[oldItemPosition].areContentsTheSame(updatedSuggestions[newItemPosition])
 }
+
+internal class ViewHolderWrapper(
+    val actual: SuggestionViewHolder,
+    view: View
+) : RecyclerView.ViewHolder(view)

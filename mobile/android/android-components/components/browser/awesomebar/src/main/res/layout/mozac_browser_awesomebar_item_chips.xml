@@ -20,7 +20,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <mozilla.components.browser.awesomebar.layout.FlowLayout
+    <mozilla.components.browser.awesomebar.widget.FlowLayout
         android:id="@+id/mozac_browser_awesomebar_chips"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

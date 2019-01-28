@@ -29,6 +29,9 @@ permalink: /changelog/
   * Added ability to show one item per search suggestion ([#1779](https://github.com/mozilla-mobile/android-components/issues/1779))
   * Added ability to define custom hooks to be invoked when editing starts or is completed.
 
+* **browser-awesomebar**
+ * Added ability to let consumers define the layouting of suggestions by implementing `SuggestionLayout` in order to control layout inflation and view binding.
+
 * **lib-publicsuffixlist**
   * The public suffix list shipping with this component is now updated automatically in the repository every day (if there are changes).
   * Fixed an issue when comparing domain labels against the public suffix list ([#1777](https://github.com/mozilla-mobile/android-components/issues/1777))
