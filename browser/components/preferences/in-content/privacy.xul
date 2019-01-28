@@ -8,7 +8,7 @@
         src="chrome://browser/content/preferences/in-content/privacy.js"/>
 <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 <stringbundle id="signonBundle" src="chrome://passwordmgr/locale/passwordmgr.properties"/>
-
+<box id="template-panePrivacy" hidden="true"><![CDATA[
 <hbox id="browserPrivacyCategory"
       class="subcategory"
       hidden="true"
@@ -322,7 +322,7 @@
      after the form autofill extension has initialized. -->
 <groupbox id="formAutofillGroupBox"
           data-category="panePrivacy"
-          data-subcategory="form-autofill"></groupbox>
+          data-subcategory="form-autofill" hidden="true"></groupbox>
 
 <!-- History -->
 <groupbox id="historyGroup" data-category="panePrivacy" hidden="true">
@@ -795,3 +795,4 @@
     </vbox>
   </hbox>
 </groupbox>
+]]></box>
