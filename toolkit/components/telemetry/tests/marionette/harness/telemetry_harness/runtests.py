@@ -7,9 +7,8 @@ from runner import TelemetryTestRunner
 
 
 def cli(args=None):
-    mn_cli(runner_class=TelemetryTestRunner,
-           args=args)
+    mn_cli(runner_class=TelemetryTestRunner, args=args)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()
