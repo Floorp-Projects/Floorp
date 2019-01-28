@@ -250,10 +250,6 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, c_compiler):
 @depends(c_compiler, toolchain_search_path)
 @imports('os')
 def vc_path(c_compiler, toolchain_search_path):
-    vc_path_env = os.environ.get('VC_PATH')
-    if vc_path_env:
-        return os.path.normpath(vc_path_env)
-
     if c_compiler.type not in ('msvc', 'clang-cl'):
         return
 
