@@ -690,6 +690,8 @@
 
     <implementation>
       <constructor><![CDATA[
+        window.customElements.upgrade(this._stateMenulist);
+
         this._installStatus = document.getAnonymousElementByAttribute(this, "anonid", "install-status");
         this._installStatus.mControl = this;
 
