@@ -46,8 +46,8 @@ class PerformanceRecordingFront extends FrontClassWithSpec(performanceRecordingS
     }
   }
 
-  constructor(client, form, config) {
-    super(client, form);
+  constructor(client) {
+    super(client);
     this._markers = [];
     this._frames = [];
     this._memory = [];

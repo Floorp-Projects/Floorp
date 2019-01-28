@@ -20,8 +20,8 @@ loader.lazyRequireGetter(this, "getIndentationFromString",
  * Corresponding client-side front for a MediaRuleActor.
  */
 class MediaRuleFront extends FrontClassWithSpec(mediaRuleSpec) {
-  constructor(client, form) {
-    super(client, form);
+  constructor(client) {
+    super(client);
 
     this._onMatchesChange = this._onMatchesChange.bind(this);
     this.on("matches-change", this._onMatchesChange);

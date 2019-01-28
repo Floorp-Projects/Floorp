@@ -7,8 +7,8 @@ const {contentProcessTargetSpec} = require("devtools/shared/specs/targets/conten
 const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 
 class ContentProcessTargetFront extends FrontClassWithSpec(contentProcessTargetSpec) {
-  constructor(client, form) {
-    super(client, form);
+  constructor(client) {
+    super(client);
 
     this.client = client;
 

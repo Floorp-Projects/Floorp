@@ -29,11 +29,22 @@ add_task(async function() {
   const { client } = target;
   const form = targetFront.targetForm;
 
-  const inContentFront = new InContentFront(client, form);
+  // As this Front isn't instantiated by protocol.js, we have to manually
+  // set its actor ID and manage it:
+  const inContentFront = new InContentFront(client);
+  inContentFront.actorID = form.inContentActor;
+  inContentFront.manage(inContentFront);
+
   const isInContent = await inContentFront.isInContent();
   ok(isInContent, "ContentActor really runs in the content process");
   const formSpawn = await inContentFront.spawnInParent(ACTOR_URL);
+
+  // As this Front isn't instantiated by protocol.js, we have to manually
+  // set its actor ID and manage it:
   const inParentFront = new InParentFront(client, formSpawn);
+  inParentFront.actorID = formSpawn.inParentActor;
+  inParentFront.manage(inParentFront);
+
   const {
     args,
     isInParent,
