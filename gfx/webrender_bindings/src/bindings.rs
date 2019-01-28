@@ -1895,6 +1895,13 @@ pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
     state.frame_builder.dl_builder.clear_save();
 }
 
+#[repr(u8)]
+#[derive(PartialEq, Eq, Debug)]
+pub enum WrReferenceFrameKind {
+    Transform,
+    Perspective,
+}
+
 /// IMPORTANT: If you add fields to this struct, you need to also add initializers
 /// for those fields in WebRenderAPI.h.
 #[repr(C)]
@@ -1903,7 +1910,8 @@ pub struct WrStackingContextParams {
     pub animation: *const WrAnimationProperty,
     pub opacity: *const f32,
     pub transform_style: TransformStyle,
-    pub reference_frame_kind: ReferenceFrameKind,
+    pub reference_frame_kind: WrReferenceFrameKind,
+    pub scrolling_relative_to: *const u64,
     pub is_backface_visible: bool,
     /// True if picture caching should be enabled for this stacking context.
     pub cache_tiles: bool,
@@ -1974,12 +1982,26 @@ pub extern "C" fn wr_dp_push_stacking_context(
     // This is resolved into proper `Maybe<WrSpatialId>` inside `WebRenderAPI::PushStackingContext`.
     let mut result = WrSpatialId { id: 0 };
     if let Some(transform_binding) = transform_binding {
+        let scrolling_relative_to = match unsafe { params.scrolling_relative_to.as_ref() } {
+            Some(scroll_id) => {
+                debug_assert_eq!(params.reference_frame_kind, WrReferenceFrameKind::Perspective);
+                Some(ExternalScrollId(*scroll_id, state.pipeline_id))
+            }
+            None => None,
+        };
+
+        let reference_frame_kind = match params.reference_frame_kind {
+            WrReferenceFrameKind::Transform => ReferenceFrameKind::Transform,
+            WrReferenceFrameKind::Perspective => ReferenceFrameKind::Perspective {
+                scrolling_relative_to,
+            },
+        };
         wr_spatial_id = state.frame_builder.dl_builder.push_reference_frame(
             &bounds,
             wr_spatial_id,
             params.transform_style,
             transform_binding,
-            params.reference_frame_kind,
+            reference_frame_kind,
         );
 
         bounds.origin = LayoutPoint::zero();
