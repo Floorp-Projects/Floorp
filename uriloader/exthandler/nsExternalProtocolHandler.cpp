@@ -399,7 +399,7 @@ NS_IMETHODIMP nsExtProtocolChannel::NotifyCookieAllowed() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::NotifyTrackingCookieBlocked(
+NS_IMETHODIMP nsExtProtocolChannel::NotifyCookieBlocked(
     uint32_t aRejectedReason) {
   // nothing to do
   return NS_OK;
