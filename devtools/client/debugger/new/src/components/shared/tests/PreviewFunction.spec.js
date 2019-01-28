@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow } from "enzyme";
 import PreviewFunction from "../PreviewFunction";
@@ -12,27 +14,27 @@ function render(props) {
 
 describe("PreviewFunction", () => {
   it("should return a span", () => {
-    const item = {};
+    const item = { name: "" };
     const returnedSpan = render({ func: item });
     expect(returnedSpan).toMatchSnapshot();
     expect(returnedSpan.name()).toEqual("span");
   });
 
   it('should return a span with a class of "function-signature"', () => {
-    const item = {};
+    const item = { name: "" };
     const returnedSpan = render({ func: item });
     expect(returnedSpan.hasClass("function-signature")).toBe(true);
   });
 
   it("should return a span with 3 children", () => {
-    const item = {};
+    const item = { name: "" };
     const returnedSpan = render({ func: item });
     expect(returnedSpan.children()).toHaveLength(3);
   });
 
   describe("function name", () => {
     it("should be a span", () => {
-      const item = {};
+      const item = { name: "" };
       const returnedSpan = render({ func: item });
       expect(
         returnedSpan
@@ -43,7 +45,7 @@ describe("PreviewFunction", () => {
     });
 
     it('should have a "function-name" class', () => {
-      const item = {};
+      const item = { name: "" };
       const returnedSpan = render({ func: item });
       expect(
         returnedSpan
@@ -55,6 +57,7 @@ describe("PreviewFunction", () => {
 
     it("should be be set to userDisplayName if defined", () => {
       const item = {
+        name: "",
         userDisplayName: "chuck",
         displayName: "norris"
       };
@@ -103,7 +106,7 @@ describe("PreviewFunction", () => {
     let rightParen;
 
     beforeAll(() => {
-      const item = {};
+      const item = { name: "" };
       const returnedSpan = render({ func: item });
       const children = returnedSpan.children();
       leftParen = returnedSpan.childAt(1);
@@ -130,6 +133,7 @@ describe("PreviewFunction", () => {
 
     beforeAll(() => {
       const item = {
+        name: "",
         parameterNames: ["one", "two", "three"]
       };
       returnedSpan = render({ func: item });

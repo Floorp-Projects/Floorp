@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { mount, shallow } from "enzyme";
 import { ProjectSearch } from "../ProjectSearch";
@@ -83,6 +85,7 @@ function render(overrides = {}, mounted = false) {
     updateSearchStatus: jest.fn(),
     selectSpecificLocation: jest.fn(),
     doSearchForHighlight: jest.fn(),
+    setActiveSearch: jest.fn(),
     ...overrides
   };
 
@@ -98,7 +101,7 @@ describe("ProjectSearch", () => {
   });
 
   it("renders nothing when disabled", () => {
-    const component = render({ activeSearch: null });
+    const component = render({ activeSearch: "" });
     expect(component).toMatchSnapshot();
   });
 

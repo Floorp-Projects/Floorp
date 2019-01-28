@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow } from "enzyme";
 import Group from "../Group.js";
@@ -17,7 +19,10 @@ function render(overrides = {}) {
     toggleFrameworkGrouping: jest.fn(),
     selectFrame: jest.fn(),
     copyStackTrace: jest.fn(),
-    toggleBlackBox: jest.fn()
+    toggleBlackBox: jest.fn(),
+    disableContextMenu: false,
+    displayFullUrl: false,
+    selectable: true
   };
 
   const props = { ...defaultProps, ...overrides };
