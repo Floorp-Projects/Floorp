@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nspr.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/Logging.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
@@ -40,6 +41,7 @@
 
 using mozilla::DebugOnly;
 using mozilla::LogLevel;
+using mozilla::dom::Document;
 
 //
 // Log module for nsIDocumentLoader logging...
@@ -1342,12 +1344,19 @@ NS_IMETHODIMP nsDocLoader::AsyncOnChannelRedirect(
     }
 
     nsCOMPtr<nsIURI> newURI;
+    nsCOMPtr<nsILoadInfo> info;
     if (delegate) {
       // No point in getting the URI if we don't have a LoadURIDelegate.
       aNewChannel->GetURI(getter_AddRefs(newURI));
+      aNewChannel->GetLoadInfo(getter_AddRefs(info));
     }
 
-    if (newURI) {
+    RefPtr<Document> loadingDoc;
+    if (info) {
+      info->GetLoadingDocument(getter_AddRefs(loadingDoc));
+    }
+
+    if (newURI && info && !loadingDoc) {
       const int where = nsIBrowserDOMWindow::OPEN_CURRENTWINDOW;
       bool loadURIHandled = false;
       nsresult rv = delegate->LoadURI(
