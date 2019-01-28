@@ -19,6 +19,10 @@ if (mozconfig.substs.MOZILLA_OFFICIAL) {
 android {
     compileSdkVersion project.ext.compileSdkVersion
 
+    useLibrary 'android.test.runner'
+    useLibrary 'android.test.base'
+    useLibrary 'android.test.mock'
+
     defaultConfig {
         targetSdkVersion project.ext.targetSdkVersion
         minSdkVersion project.ext.minSdkVersion

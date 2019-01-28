@@ -14,7 +14,8 @@
             android:label="@string/app_name"
             android:supportsRtl="true"
             android:usesCleartextTraffic="true">
-        <uses-library android:name="android.test.runner"/>
+        <uses-library android:name="android.test.runner"
+                      android:required="false"/>
 
         <activity
                 android:name=".GeckoViewActivity"
