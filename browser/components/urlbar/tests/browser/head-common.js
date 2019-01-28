@@ -51,7 +51,7 @@ async function withHttpServer(details = { scheme: "http", host: "localhost", por
   } finally {
     server.identity.remove(details.scheme, details.host, details.port);
     try {
-      server.stop(() => {});
+      await new Promise(resolve => server.stop(resolve));
     } catch (ex) {}
     server = null;
   }
