@@ -199,10 +199,6 @@ class nsDocShell final : public nsDocLoader,
 
   NS_FORWARD_SAFE_NSIDOMSTORAGEMANAGER(TopSessionStorageManager())
 
-  // Need to implement (and forward) nsISecurityEventSink, because
-  // nsIWebProgressListener has methods with identical names...
-  NS_FORWARD_NSISECURITYEVENTSINK(nsDocLoader::)
-
   // Create a new nsDocShell object, initializing it.
   static already_AddRefed<nsDocShell> Create(
       mozilla::dom::BrowsingContext* aBrowsingContext);
