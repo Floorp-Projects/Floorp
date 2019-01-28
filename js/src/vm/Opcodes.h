@@ -1119,14 +1119,13 @@
      * Another no-op.
      *
      * This opcode is the target of the backwards jump for some loop.
-     * See JSOP_JUMPTARGET for the icIndex operand.
      *
      *   Category: Statements
      *   Type: Jumps
-     *   Operands: uint32_t icIndex
+     *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_LOOPHEAD, 109, "loophead", NULL, 5, 0, 0, JOF_ICINDEX) \
+    MACRO(JSOP_LOOPHEAD, 109, "loophead", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Looks up name on the environment chain and pushes the environment which
      * contains the name onto the stack. If not found, pushes global lexical
@@ -2439,14 +2438,14 @@
      * loop depth. This value starts at 1 and is just a hint: deeply nested
      * loops all have the same value. The upper bit is set if Ion should be
      * able to OSR at this point, which is true unless there is non-loop state
-     * on the stack. See JSOP_JUMPTARGET for the icIndex argument.
+     * on the stack.
      *
      *   Category: Statements
      *   Type: Jumps
-     *   Operands: uint32_t icIndex, uint8_t BITFIELD
+     *   Operands: uint8_t BITFIELD
      *   Stack: =>
      */ \
-    MACRO(JSOP_LOOPENTRY, 227, "loopentry", NULL, 6, 0, 0, JOF_LOOPENTRY|JOF_IC) \
+    MACRO(JSOP_LOOPENTRY, 227, "loopentry", NULL, 2, 0, 0, JOF_UINT8|JOF_IC) \
     /*
      * Converts the value on the top of the stack to a String.
      *
@@ -2466,14 +2465,15 @@
     MACRO(JSOP_NOP_DESTRUCTURING, 229, "nop-destructuring", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * This opcode is a no-op and it indicates the location of a jump
-     * instruction target. Some other opcodes act as jump targets as well, see
-     * BytecodeIsJumpTarget. The IC index is used by the Baseline interpreter.
+     * instruction target. Some other opcodes act as jump targets, such as
+     * LOOPENTRY, as well as all which are matched by BytecodeIsJumpTarget
+     * function.
      *
      *   Category: Other
-     *   Operands: uint32_t icIndex
+     *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_JUMPTARGET, 230, "jumptarget", NULL, 5, 0, 0, JOF_ICINDEX) \
+    MACRO(JSOP_JUMPTARGET, 230, "jumptarget", NULL, 1, 0, 0, JOF_BYTE)\
     /*
      * Like JSOP_CALL, but tells the function that the return value is ignored.
      * stack.

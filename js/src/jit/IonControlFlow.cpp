@@ -1676,7 +1676,8 @@ ControlFlowGenerator::ControlStatus ControlFlowGenerator::processContinue(
   CFGState* found = nullptr;
   jsbytecode* target = pc + GetJumpOffset(pc);
   for (size_t i = loops_.length() - 1;; i--) {
-    if (loops_[i].continuepc == target + JSOP_JUMPTARGET_LENGTH ||
+    // +1 to skip JSOP_JUMPTARGET.
+    if (loops_[i].continuepc == target + 1 ||
         EffectiveContinue(loops_[i].continuepc) == target) {
       found = &cfgStack_[loops_[i].cfgEntry];
       break;
