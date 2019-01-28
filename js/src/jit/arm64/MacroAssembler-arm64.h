@@ -1479,6 +1479,13 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     cmpTag(tag, ImmTag(JSVAL_TAG_SYMBOL));
     return cond;
   }
+#ifdef ENABLE_BIGINT
+  Condition testBigInt(Condition cond, Register tag) {
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    cmpTag(tag, ImmTag(JSVAL_TAG_BIGINT));
+    return cond;
+  }
+#endif
   Condition testObject(Condition cond, Register tag) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     cmpTag(tag, ImmTag(JSVAL_TAG_OBJECT));
@@ -1569,6 +1576,15 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     splitSignExtTag(value, scratch);
     return testSymbol(cond, scratch);
   }
+#ifdef ENABLE_BIGINT
+  Condition testBigInt(Condition cond, const ValueOperand& value) {
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(value.valueReg() != scratch);
+    splitSignExtTag(value, scratch);
+    return testBigInt(cond, scratch);
+  }
+#endif
   Condition testObject(Condition cond, const ValueOperand& value) {
     vixl::UseScratchRegisterScope temps(this);
     const Register scratch = temps.AcquireX().asUnsized();
@@ -1665,6 +1681,15 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     splitSignExtTag(address, scratch);
     return testSymbol(cond, scratch);
   }
+#ifdef ENABLE_BIGINT
+  Condition testBigInt(Condition cond, const Address& address) {
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(address.base != scratch);
+    splitSignExtTag(address, scratch);
+    return testBigInt(cond, scratch);
+  }
+#endif
   Condition testObject(Condition cond, const Address& address) {
     vixl::UseScratchRegisterScope temps(this);
     const Register scratch = temps.AcquireX().asUnsized();
@@ -1721,6 +1746,16 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     splitSignExtTag(src, scratch);
     return testSymbol(cond, scratch);
   }
+#ifdef ENABLE_BIGINT
+  Condition testBigInt(Condition cond, const BaseIndex& src) {
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(src.base != scratch);
+    MOZ_ASSERT(src.index != scratch);
+    splitSignExtTag(src, scratch);
+    return testBigInt(cond, scratch);
+  }
+#endif
   Condition testInt32(Condition cond, const BaseIndex& src) {
     vixl::UseScratchRegisterScope temps(this);
     const Register scratch = temps.AcquireX().asUnsized();
@@ -1842,6 +1877,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   // load: offset to the load instruction obtained by movePatchablePtr().
   void writeDataRelocation(ImmGCPtr ptr, BufferOffset load) {
     if (ptr.value) {
+      if (gc::IsInsideNursery(ptr.value)) {
+        embedsNurseryPointers_ = true;
+      }
       dataRelocations_.writeUnsigned(load.getOffset());
     }
   }

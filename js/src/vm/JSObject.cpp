@@ -3046,14 +3046,6 @@ bool js::GetPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
   RootedObject pobj(cx);
 
   for (pobj = obj; pobj;) {
-    if (pobj->is<ProxyObject>()) {
-      bool ok = Proxy::getPropertyDescriptor(cx, pobj, id, desc);
-      if (ok) {
-        desc.assertCompleteIfFound();
-      }
-      return ok;
-    }
-
     if (!GetOwnPropertyDescriptor(cx, pobj, id, desc)) {
       return false;
     }

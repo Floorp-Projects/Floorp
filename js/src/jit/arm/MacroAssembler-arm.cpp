@@ -2419,6 +2419,13 @@ Assembler::Condition MacroAssemblerARMCompat::testSymbol(
   return testSymbol(cond, value.typeReg());
 }
 
+#ifdef ENABLE_BIGINT
+Assembler::Condition MacroAssemblerARMCompat::testBigInt(
+    Assembler::Condition cond, const ValueOperand& value) {
+  return testBigInt(cond, value.typeReg());
+}
+#endif
+
 Assembler::Condition MacroAssemblerARMCompat::testObject(
     Assembler::Condition cond, const ValueOperand& value) {
   return testObject(cond, value.typeReg());
@@ -2481,6 +2488,15 @@ Assembler::Condition MacroAssemblerARMCompat::testSymbol(
   ma_cmp(tag, ImmTag(JSVAL_TAG_SYMBOL));
   return cond;
 }
+
+#ifdef ENABLE_BIGINT
+Assembler::Condition MacroAssemblerARMCompat::testBigInt(
+    Assembler::Condition cond, Register tag) {
+  MOZ_ASSERT(cond == Equal || cond == NotEqual);
+  ma_cmp(tag, ImmTag(JSVAL_TAG_BIGINT));
+  return cond;
+}
+#endif
 
 Assembler::Condition MacroAssemblerARMCompat::testObject(
     Assembler::Condition cond, Register tag) {
@@ -2578,6 +2594,16 @@ Assembler::Condition MacroAssemblerARMCompat::testSymbol(
   return testSymbol(cond, tag);
 }
 
+#ifdef ENABLE_BIGINT
+Assembler::Condition MacroAssemblerARMCompat::testBigInt(
+    Condition cond, const Address& address) {
+  MOZ_ASSERT(cond == Equal || cond == NotEqual);
+  ScratchRegisterScope scratch(asMasm());
+  Register tag = extractTag(address, scratch);
+  return testBigInt(cond, tag);
+}
+#endif
+
 Assembler::Condition MacroAssemblerARMCompat::testObject(
     Condition cond, const Address& address) {
   MOZ_ASSERT(cond == Equal || cond == NotEqual);
@@ -2653,6 +2679,17 @@ Assembler::Condition MacroAssemblerARMCompat::testSymbol(Condition cond,
   ma_cmp(tag, ImmTag(JSVAL_TAG_SYMBOL));
   return cond;
 }
+
+#ifdef ENABLE_BIGINT
+Assembler::Condition MacroAssemblerARMCompat::testBigInt(Condition cond,
+                                                         const BaseIndex& src) {
+  MOZ_ASSERT(cond == Equal || cond == NotEqual);
+  ScratchRegisterScope scratch(asMasm());
+  Register tag = extractTag(src, scratch);
+  ma_cmp(tag, ImmTag(JSVAL_TAG_BIGINT));
+  return cond;
+}
+#endif
 
 Assembler::Condition MacroAssemblerARMCompat::testInt32(Condition cond,
                                                         const BaseIndex& src) {

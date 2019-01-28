@@ -16,4 +16,5 @@ DevToolsModules(
     'RuntimeInfo.js',
     'RuntimePage.css',
     'RuntimePage.js',
+    'ServiceWorkersWarning.js',
 )

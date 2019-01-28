@@ -43,7 +43,7 @@ class ExtensionDetail extends PureComponent {
           },
           dom.p(
             {
-              className: "extension-details__warning technical-text",
+              className: "technical-text",
             },
             warning
           )

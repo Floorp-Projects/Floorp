@@ -35,6 +35,7 @@ class UrlbarView {
     this._rows = this.panel.querySelector(".urlbarView-results");
 
     this._rows.addEventListener("mouseup", this);
+    this._rows.addEventListener("mousedown", this);
 
     // For the horizontal fade-out effect, set the overflow attribute on result
     // rows when they overflow.
@@ -141,6 +142,9 @@ class UrlbarView {
     if (queryContext.preselected) {
       this._selected = this._rows.firstElementChild;
       this._selected.toggleAttribute("selected", true);
+    } else if (queryContext.lastResultCount == 0) {
+      // Clear the selection when we get a new set of results.
+      this._selected = null;
     }
 
     this._openPanel();
@@ -372,6 +376,25 @@ class UrlbarView {
     } else {
       throw new Error("Unrecognized UrlbarView event: " + event.type);
     }
+  }
+
+  _on_mousedown(event) {
+    if (event.button == 2) {
+      // Ignore right clicks.
+      return;
+    }
+
+    let row = event.target;
+    while (!row.classList.contains("urlbarView-row")) {
+      row = row.parentNode;
+    }
+    let resultIndex = row.getAttribute("resultIndex");
+    if (this._selected) {
+      this._selected.toggleAttribute("selected", false);
+    }
+    this._selected = this._rows.children[resultIndex];
+    this._selected.toggleAttribute("selected", true);
+    this.controller.speculativeConnect(this._queryContext, resultIndex, "mousedown");
   }
 
   _on_mouseup(event) {
