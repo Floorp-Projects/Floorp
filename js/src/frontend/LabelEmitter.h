@@ -34,7 +34,7 @@ class MOZ_STACK_CLASS LabelEmitter {
   BytecodeEmitter* bce_;
 
   // The offset of the JSOP_LABEL.
-  JumpList top_;
+  ptrdiff_t top_ = 0;
 
   mozilla::Maybe<LabelControl> controlInfo_;
 

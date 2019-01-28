@@ -1086,7 +1086,7 @@
      *   Operands: int32_t offset
      *   Stack: =>
      */ \
-    MACRO(JSOP_LABEL, 106, "label", NULL, 5, 0, 0, JOF_JUMP) \
+    MACRO(JSOP_LABEL, 106, "label", NULL, 5, 0, 0, JOF_CODE_OFFSET) \
     /*
      * Pops the top three values on the stack as 'val', 'obj' and 'receiver',
      * and performs 'obj.prop = val', pushing 'val' back onto the stack.
