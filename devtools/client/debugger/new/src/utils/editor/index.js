@@ -187,7 +187,7 @@ export function getLocationsInViewport({ codeMirror }: Object) {
 
 export function markText(
   { codeMirror }: Object,
-  className: String,
+  className: string,
   { start, end }: EditorRange
 ) {
   return codeMirror.markText(

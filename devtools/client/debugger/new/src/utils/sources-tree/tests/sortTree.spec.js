@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { createSource } from "../../../reducers/sources";
 
 import {
@@ -29,9 +31,9 @@ describe("sources-tree", () => {
       });
       const _tree = createDirectoryNode("root", "", []);
 
-      addToTree(_tree, source1, "http://example.com/");
-      addToTree(_tree, source2, "http://example.com/");
-      addToTree(_tree, source3, "http://example.com/");
+      addToTree(_tree, source1, "http://example.com/", "");
+      addToTree(_tree, source2, "http://example.com/", "");
+      addToTree(_tree, source3, "http://example.com/", "");
       const tree = sortEntireTree(_tree);
 
       const base = tree.contents[0];
@@ -80,7 +82,7 @@ describe("sources-tree", () => {
 
       const _tree = createDirectoryNode("root", "", []);
       sources.forEach(source =>
-        addToTree(_tree, source, "http://example.com/")
+        addToTree(_tree, source, "http://example.com/", "")
       );
       const tree = sortEntireTree(_tree);
       const domain = tree.contents[0];
@@ -130,7 +132,7 @@ describe("sources-tree", () => {
 
       const _tree = createDirectoryNode("root", "", []);
       sources.forEach(source =>
-        addToTree(_tree, source, "http://example.com/")
+        addToTree(_tree, source, "http://example.com/", "")
       );
       const tree = sortEntireTree(_tree);
       const [
@@ -172,8 +174,8 @@ describe("sources-tree", () => {
       const _treeA = createDirectoryNode("root", "", []);
       const _treeB = createDirectoryNode("root", "", []);
       sources.forEach(source => {
-        addToTree(_treeA, source, rootA);
-        addToTree(_treeB, source, rootB);
+        addToTree(_treeA, source, rootA, "");
+        addToTree(_treeB, source, rootB, "");
       });
       const treeA = sortEntireTree(_treeA, rootA);
       const treeB = sortEntireTree(_treeB, rootB);

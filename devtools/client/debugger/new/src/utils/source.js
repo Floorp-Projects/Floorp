@@ -317,7 +317,7 @@ export function getSourceLineCount(source: Source) {
 export function getMode(
   source: Source,
   symbols?: SymbolDeclarations
-): { name: string } {
+): { name: string, base?: Object } {
   if (source.isWasm) {
     return { name: "text" };
   }
