@@ -52,7 +52,7 @@ PATTERNS = [
         ],
     },
     {
-        'srcdir': '%(vs_path)s/VC/Tools/MSVC/14.15.26726',
+        'srcdir': '%(vs_path)s/VC/Tools/MSVC/14.16.27023',
         'dstdir': 'VC',
         'files': [
             # ATL is needed by Breakpad.
@@ -60,10 +60,17 @@ PATTERNS = [
                 'pattern': 'atlmfc/include/**',
             },
             {
-                'pattern': 'atlmfc/lib/x86/atls.*',
+                'pattern': 'atlmfc/lib/arm64/atls.*',
             },
             {
                 'pattern': 'atlmfc/lib/x64/atls.*',
+            },
+            {
+                'pattern': 'atlmfc/lib/x86/atls.*',
+            },
+            # ARM64 PGO-instrumented builds require ARM64 pgort140.dll.
+            {
+                'pattern': 'bin/arm64/pgort140.dll',
             },
             {
                 'pattern': 'bin/Hostx64/**',
@@ -78,6 +85,7 @@ PATTERNS = [
             {
                 'pattern': 'lib/**',
                 'ignore': (
+                    'lib/arm64/store/**',
                     'lib/onecore/**',
                     'lib/x64/store/**',
                     'lib/x86/store/**',
@@ -86,9 +94,12 @@ PATTERNS = [
         ],
     },
     {
-        'srcdir': '%(vs_path)s/VC/Redist/MSVC/14.15.26706',
+        'srcdir': '%(vs_path)s/VC/Redist/MSVC/14.16.27012',
         'dstdir': 'VC/redist',
         'files': [
+            {
+                'pattern': 'arm64/Microsoft.VC141.CRT/**',
+            },
             {
                 'pattern': 'x64/Microsoft.VC141.CRT/**',
             },
@@ -108,10 +119,16 @@ PATTERNS = [
                 'pattern': 'Include/%s/**' % SDK_RELEASE,
             },
             {
+                'pattern': 'Lib/%s/ucrt/arm64/**' % SDK_RELEASE,
+            },
+            {
                 'pattern': 'Lib/%s/ucrt/x64/**' % SDK_RELEASE,
             },
             {
                 'pattern': 'Lib/%s/ucrt/x86/**' % SDK_RELEASE,
+            },
+            {
+                'pattern': 'Lib/%s/um/arm64/**' % SDK_RELEASE,
             },
             {
                 'pattern': 'Lib/%s/um/x64/**' % SDK_RELEASE,
