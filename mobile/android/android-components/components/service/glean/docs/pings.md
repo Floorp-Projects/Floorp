@@ -67,12 +67,23 @@ This object contains experiments keyed by the experiment `id`. Each listed exper
 The pings glean generates are submitted to the Mozilla servers at specific paths, in order to provide
 additional metadata without the need of unpacking the ping payload. A typical submission URL looks like
 `"<server-address>/submit/<application-id>/<doc-type>/<glean-schema-version>/<ping-uuid>"`, with:
- 
+
 - `<server-address>`: the address of the server that receives the pings;
 - `<application-id>`: a unique application id, automatically detected by glean; this is the value returned by [`Context.getPackageName()`](http://developer.android.com/reference/android/content/Context.html#getPackageName());
 - `<doc-type>`: the name of the ping; this can be one of the pings available out of the box with glean, or a custom ping;
 - `<glean-schema-version>`: the version of the glean ping schema;
 - `<ping-uuid>`: a unique identifier for this ping.
+
+### Submitted headers
+A pre-defined set of headers is additionally sent along with the submitted ping:
+
+| Header | Value | Description |
+|--------|-------|-------------|
+| `Content-Type` | `application/json; charset=utf-8` | Describes the data sent to the server |
+| `User-Agent` | Defaults to e.g. `Glean/0.40.0 (Android)`, where `0.40.0` is the glean version number and `Android` is the platform name. It can be overriden by user through [configuration](https://github.com/mozilla-mobile/android-components/blob/8441728f156847a58dcb25d29254512a1801b266/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L23) | Describes the application sending the ping using glean |
+| `Date` | e.g. `Mon, 23 Jan 2019 10:10:10 GMT+00:00` | Submission date/time in GMT/UTC+0 offset |
+| `X-Client-Type` | `Glean` | Custom header to support handling of glean pings in the legacy pipeline |
+| `X-Client-Version` | e.g. `0.40.0` | The glean version, sent as a custom header to support handling of glean pings in the legacy pipeline |
 
 ## A note about string length
 In order to ensure that pings don't become accidentally large, most string
