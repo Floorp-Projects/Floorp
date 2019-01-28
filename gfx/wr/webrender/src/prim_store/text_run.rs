@@ -12,7 +12,7 @@ use gpu_cache::GpuCache;
 use intern;
 use intern_types;
 use prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
-use prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
+use prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData, VectorKey};
 use render_task::{RenderTaskTree};
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ResourceCache};
@@ -30,6 +30,7 @@ use util::PrimaryArc;
 pub struct TextRunKey {
     pub common: PrimKeyCommonData,
     pub font: FontInstance,
+    pub offset: VectorKey,
     pub glyphs: PrimaryArc<Vec<GlyphInstance>>,
     pub shadow: bool,
 }
@@ -44,6 +45,7 @@ impl TextRunKey {
                 info,
             ),
             font: text_run.font,
+            offset: text_run.offset.into(),
             glyphs: PrimaryArc(text_run.glyphs),
             shadow: text_run.shadow,
         }
@@ -59,13 +61,11 @@ impl AsInstanceKind<TextRunDataHandle> for TextRunKey {
         &self,
         data_handle: TextRunDataHandle,
         prim_store: &mut PrimitiveStore,
-        reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         let run_index = prim_store.text_runs.push(TextRunPrimitive {
             used_font: self.font.clone(),
             glyph_keys_range: storage::Range::empty(),
             shadow: self.shadow,
-            reference_frame_relative_offset,
         });
 
         PrimitiveInstanceKind::TextRun{ data_handle, run_index }
@@ -78,6 +78,7 @@ impl AsInstanceKind<TextRunDataHandle> for TextRunKey {
 pub struct TextRunTemplate {
     pub common: PrimTemplateCommonData,
     pub font: FontInstance,
+    pub offset: LayoutVector2D,
     #[ignore_malloc_size_of = "Measured via PrimaryArc"]
     pub glyphs: Arc<Vec<GlyphInstance>>,
 }
@@ -101,6 +102,7 @@ impl From<TextRunKey> for TextRunTemplate {
         TextRunTemplate {
             common,
             font: item.font,
+            offset: item.offset.into(),
             glyphs: item.glyphs.0,
         }
     }
@@ -128,6 +130,12 @@ impl TextRunTemplate {
             // this is the only case where we need to provide plain color to GPU
             let bg_color = ColorF::from(self.font.bg_color);
             request.push([bg_color.r, bg_color.g, bg_color.b, 1.0]);
+            request.push([
+                self.offset.x,
+                self.offset.y,
+                0.0,
+                0.0,
+            ]);
 
             let mut gpu_block = [0.0; 4];
             for (i, src) in self.glyphs.iter().enumerate() {
@@ -158,6 +166,7 @@ pub use intern_types::text_run::Handle as TextRunDataHandle;
 
 pub struct TextRun {
     pub font: FontInstance,
+    pub offset: LayoutVector2D,
     pub glyphs: Arc<Vec<GlyphInstance>>,
     pub shadow: bool,
 }
@@ -193,6 +202,7 @@ impl CreateShadow for TextRun {
         TextRun {
             font,
             glyphs: self.glyphs.clone(),
+            offset: self.offset + shadow.offset,
             shadow: true
         }
     }
@@ -208,7 +218,6 @@ impl IsVisible for TextRun {
 pub struct TextRunPrimitive {
     pub used_font: FontInstance,
     pub glyph_keys_range: storage::Range<GlyphKey>,
-    pub reference_frame_relative_offset: LayoutVector2D,
     pub shadow: bool,
 }
 
