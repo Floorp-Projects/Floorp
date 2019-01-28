@@ -590,7 +590,36 @@ nsBufferedInputStream::GetUnbufferedStream(nsISupports** aStream) {
 }
 
 void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
-                                      FileDescriptorArray& aFileDescriptors) {
+                                      FileDescriptorArray& aFileDescriptors,
+                                      bool aDelayedStart,
+                                      mozilla::dom::nsIContentChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
+                                      FileDescriptorArray& aFileDescriptors,
+                                      bool aDelayedStart,
+                                      PBackgroundChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void nsBufferedInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, mozilla::dom::nsIContentParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
+                                      FileDescriptorArray& aFileDescriptors,
+                                      bool aDelayedStart,
+                                      PBackgroundParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+template <typename M>
+void nsBufferedInputStream::SerializeInternal(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, M* aManager) {
   BufferedInputStreamParams params;
 
   if (mStream) {
@@ -598,8 +627,8 @@ void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
     MOZ_ASSERT(stream);
 
     InputStreamParams wrappedParams;
-    InputStreamHelper::SerializeInputStream(stream, wrappedParams,
-                                            aFileDescriptors);
+    InputStreamHelper::SerializeInputStream(
+        stream, wrappedParams, aFileDescriptors, aDelayedStart, aManager);
 
     params.optionalStream() = wrappedParams;
   } else {
@@ -640,14 +669,6 @@ bool nsBufferedInputStream::Deserialize(
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;
-}
-
-Maybe<uint64_t> nsBufferedInputStream::ExpectedSerializedLength() {
-  nsCOMPtr<nsIIPCSerializableInputStream> stream = do_QueryInterface(mStream);
-  if (stream) {
-    return stream->ExpectedSerializedLength();
-  }
-  return Nothing();
 }
 
 NS_IMETHODIMP

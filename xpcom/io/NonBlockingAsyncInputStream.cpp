@@ -318,10 +318,39 @@ NonBlockingAsyncInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 
 void NonBlockingAsyncInputStream::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors) {
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    mozilla::dom::nsIContentChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void NonBlockingAsyncInputStream::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    mozilla::ipc::PBackgroundChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void NonBlockingAsyncInputStream::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    mozilla::dom::nsIContentParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void NonBlockingAsyncInputStream::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    mozilla::ipc::PBackgroundParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+template <typename M>
+void NonBlockingAsyncInputStream::SerializeInternal(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart, M* aManager) {
   MOZ_ASSERT(mWeakIPCSerializableInputStream);
-  InputStreamHelper::SerializeInputStream(mInputStream, aParams,
-                                          aFileDescriptors);
+  InputStreamHelper::SerializeInputStream(
+      mInputStream, aParams, aFileDescriptors, aDelayedStart, aManager);
 }
 
 bool NonBlockingAsyncInputStream::Deserialize(
@@ -329,11 +358,6 @@ bool NonBlockingAsyncInputStream::Deserialize(
     const FileDescriptorArray& aFileDescriptors) {
   MOZ_CRASH("NonBlockingAsyncInputStream cannot be deserialized!");
   return true;
-}
-
-Maybe<uint64_t> NonBlockingAsyncInputStream::ExpectedSerializedLength() {
-  NS_ENSURE_TRUE(mWeakIPCSerializableInputStream, Nothing());
-  return mWeakIPCSerializableInputStream->ExpectedSerializedLength();
 }
 
 // nsISeekableStream

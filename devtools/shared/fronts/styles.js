@@ -37,10 +37,6 @@ class PageStyleFront extends FrontClassWithSpec(pageStyleSpec) {
     return this.inspector.walker;
   }
 
-  get supportsAuthoredStyles() {
-    return this._form.traits && this._form.traits.authoredStyles;
-  }
-
   get supportsFontStretchLevel4() {
     return this._form.traits && this._form.traits.fontStretchLevel4;
   }
@@ -76,13 +72,7 @@ class PageStyleFront extends FrontClassWithSpec(pageStyleSpec) {
   }
 
   addNewRule(node, pseudoClasses) {
-    let addPromise;
-    if (this.supportsAuthoredStyles) {
-      addPromise = super.addNewRule(node, pseudoClasses, true);
-    } else {
-      addPromise = super.addNewRule(node, pseudoClasses);
-    }
-    return addPromise.then(ret => {
+    return super.addNewRule(node, pseudoClasses).then(ret => {
       return ret.entries[0];
     });
   }

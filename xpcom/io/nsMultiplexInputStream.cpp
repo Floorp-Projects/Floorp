@@ -109,6 +109,11 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
     bool mDone;
   };
 
+  template <typename M>
+  void SerializeInternal(InputStreamParams& aParams,
+                         FileDescriptorArray& aFileDescriptors,
+                         bool aDelayedStart, M* aManager);
+
   static nsresult ReadSegCb(nsIInputStream* aIn, void* aClosure,
                             const char* aFromRawSegment, uint32_t aToOffset,
                             uint32_t aCount, uint32_t* aWriteCount);
@@ -983,8 +988,36 @@ nsresult nsMultiplexInputStreamConstructor(nsISupports* aOuter, REFNSIID aIID,
   return inst->QueryInterface(aIID, aResult);
 }
 
+void nsMultiplexInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, mozilla::dom::nsIContentChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
 void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
-                                       FileDescriptorArray& aFileDescriptors) {
+                                       FileDescriptorArray& aFileDescriptors,
+                                       bool aDelayedStart,
+                                       PBackgroundChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void nsMultiplexInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, mozilla::dom::nsIContentParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
+                                       FileDescriptorArray& aFileDescriptors,
+                                       bool aDelayedStart,
+                                       PBackgroundParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+template <typename M>
+void nsMultiplexInputStream::SerializeInternal(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, M* aManager) {
   MutexAutoLock lock(mLock);
 
   MultiplexInputStreamParams params;
@@ -998,7 +1031,8 @@ void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
     for (uint32_t index = 0; index < streamCount; index++) {
       InputStreamParams childStreamParams;
       InputStreamHelper::SerializeInputStream(
-          mStreams[index].mStream, childStreamParams, aFileDescriptors);
+          mStreams[index].mStream, childStreamParams, aFileDescriptors,
+          aDelayedStart, aManager);
 
       streams.AppendElement(childStreamParams);
     }
@@ -1044,28 +1078,6 @@ bool nsMultiplexInputStream::Deserialize(
   mStartedReadingCurrent = params.startedReadingCurrent();
 
   return true;
-}
-
-Maybe<uint64_t> nsMultiplexInputStream::ExpectedSerializedLength() {
-  MutexAutoLock lock(mLock);
-
-  bool lengthValueExists = false;
-  uint64_t expectedLength = 0;
-  uint32_t streamCount = mStreams.Length();
-  for (uint32_t index = 0; index < streamCount; index++) {
-    nsCOMPtr<nsIIPCSerializableInputStream> stream =
-        do_QueryInterface(mStreams[index].mStream);
-    if (!stream) {
-      continue;
-    }
-    Maybe<uint64_t> length = stream->ExpectedSerializedLength();
-    if (length.isNothing()) {
-      continue;
-    }
-    lengthValueExists = true;
-    expectedLength += length.value();
-  }
-  return lengthValueExists ? Some(expectedLength) : Nothing();
 }
 
 NS_IMETHODIMP
