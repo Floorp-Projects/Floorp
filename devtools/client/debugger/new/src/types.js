@@ -416,3 +416,5 @@ export type Cancellable = {
 };
 
 export type EventListenerBreakpoints = string[];
+
+export type SourceDocuments = { [string]: Object };
