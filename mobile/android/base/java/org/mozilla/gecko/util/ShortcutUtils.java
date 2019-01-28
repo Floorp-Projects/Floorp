@@ -9,6 +9,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.pm.ShortcutInfo;
+import android.content.pm.ShortcutManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Icon;
@@ -65,52 +67,22 @@ public class ShortcutUtils {
     @TargetApi(26)
     private static void createHomescreenIcon26(final Context context, final Intent shortcutIntent,
                                                final String aTitle, final String aURI, final Bitmap aIcon) {
-        try {
-            final Class<?> mgrCls = Class.forName("android.content.pm.ShortcutManager");
-            final Object mgr = context.getSystemService(mgrCls);
+        final ShortcutManager mgr = context.getSystemService(ShortcutManager.class);
 
-            final Class<?> builderCls = Class.forName("android.content.pm.ShortcutInfo$Builder");
-            final Constructor<?> builderCtor = builderCls.getDeclaredConstructor(Context.class, String.class);
+        final ShortcutInfo info = new ShortcutInfo.Builder(context, aURI)
+             .setIcon(Icon.createWithBitmap(getLauncherIcon(aIcon, GeckoAppShell.getPreferredIconSize())))
+             .setIntent(shortcutIntent)
+             .setShortLabel(aTitle != null ? aTitle : aURI)
+             .build();
 
-            final Object builder = builderCtor.newInstance(context, aURI);
+        final Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_HOME);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        final IntentSender intentSender = pendingIntent.getIntentSender();
 
-
-            builderCls.getDeclaredMethod("setIcon", Icon.class)
-                .invoke(builder, Icon.createWithBitmap(getLauncherIcon(aIcon, GeckoAppShell.getPreferredIconSize())));
-
-            builderCls.getDeclaredMethod("setIntent", Intent.class)
-                .invoke(builder, shortcutIntent);
-
-            builderCls.getDeclaredMethod("setShortLabel", CharSequence.class)
-                .invoke(builder, aTitle != null ? aTitle : aURI);
-
-            Object info = builderCls.getDeclaredMethod("build")
-                .invoke(builder);
-
-            final Intent intent = new Intent(Intent.ACTION_MAIN);
-            intent.addCategory(Intent.CATEGORY_HOME);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-            final IntentSender intentSender = pendingIntent.getIntentSender();
-            mgrCls.getDeclaredMethod("requestPinShortcut",
-                                     info.getClass(),
-                                     IntentSender.class)
-                .invoke(mgr, info, intentSender);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Failed to pin shortcut: ", e);
-        }
-
-        // Use this when we can build against SDK 26
-        //
-        // final ShortcutManager mgr = context.getSystemService(ShortcutManager.class);
-
-        // final ShortcutInfo info = new ShortcutInfo.Builder(context, aURI)
-        //     .setIcon(Icon.createWithBitmap(getLauncherIcon(aIcon, GeckoAppShell.getPreferredIconSize())))
-        //     .setIntent(shortcutIntent)
-        //     .setShortLabel(aTitle != null ? aTitle : aURI)
-        //     .build();
-
-        // mgr.requestPinShortcut(info, null);
+        mgr.requestPinShortcut(info, intentSender);
     }
 
     public static boolean isPinShortcutSupported() {
@@ -123,17 +95,8 @@ public class ShortcutUtils {
     @TargetApi(26)
     private static boolean isPinShortcutSupported26() {
         final Context context = GeckoAppShell.getApplicationContext();
-        try {
-            final Class<?> mgrCls = Class.forName("android.content.pm.ShortcutManager");
-            final Object mgr = context.getSystemService(mgrCls);
-
-            final boolean supported = (boolean)
-                mgrCls.getDeclaredMethod("isRequestPinShortcutSupported")
-                .invoke(mgr);
-            return supported;
-        } catch (final Exception e) {
-            return false;
-        }
+        final ShortcutManager mgr = context.getSystemService(ShortcutManager.class);
+        return mgr.isRequestPinShortcutSupported();
     }
 
     private static Bitmap getLauncherIcon(Bitmap aSource, int size) {
