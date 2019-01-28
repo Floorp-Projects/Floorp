@@ -202,6 +202,9 @@ about-debugging-worker-action-push = Push
 # This string is displayed as a label of the button that starts a service worker.
 about-debugging-worker-action-start = Start
 
+# This string is displayed as a label of the button that unregisters a service worker.
+about-debugging-worker-action-unregister = Unregister
+
 # Displayed for service workers in runtime pages,
 # "Fetch" is an event type and should not be localized.
 # The status is used to indicate whether the service worker is currently listening
