@@ -14,6 +14,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EndianUtils.h"
 
+#include <algorithm>
+
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
@@ -57,8 +59,10 @@ enum {
   JOF_REGEXP = 16,      /* uint32_t regexp index */
   JOF_DOUBLE = 17,      /* uint32_t index for double value */
   JOF_SCOPE = 18,       /* uint32_t scope index */
+  JOF_ICINDEX = 19,     /* uint32_t IC index */
+  JOF_LOOPENTRY = 20,   /* JSOP_LOOPENTRY, combines JOF_ICINDEX and JOF_UINT8 */
 #ifdef ENABLE_BIGINT
-  JOF_BIGINT = 19, /* uint32_t index for BigInt value */
+  JOF_BIGINT = 21, /* uint32_t index for BigInt value */
 #endif
   JOF_TYPEMASK = 0x001f, /* mask for above immediate types */
 
@@ -251,20 +255,30 @@ static inline void SET_RESUMEINDEX(jsbytecode* pc, uint32_t resumeIndex) {
   SET_UINT24(pc, resumeIndex);
 }
 
+static inline uint32_t GET_ICINDEX(const jsbytecode* pc) {
+  return GET_UINT32(pc);
+}
+
+static inline void SET_ICINDEX(jsbytecode* pc, uint32_t icIndex) {
+  SET_UINT32(pc, icIndex);
+}
+
 static inline unsigned LoopEntryDepthHint(jsbytecode* pc) {
   MOZ_ASSERT(*pc == JSOP_LOOPENTRY);
-  return GET_UINT8(pc) & 0x7f;
+  return GET_UINT8(pc + 4) & 0x7f;
 }
 
 static inline bool LoopEntryCanIonOsr(jsbytecode* pc) {
   MOZ_ASSERT(*pc == JSOP_LOOPENTRY);
-  return GET_UINT8(pc) & 0x80;
+  return GET_UINT8(pc + 4) & 0x80;
 }
 
-static inline uint8_t PackLoopEntryDepthHintAndFlags(unsigned loopDepth,
-                                                     bool canIonOsr) {
-  return (loopDepth < 0x80 ? uint8_t(loopDepth) : 0x7f) |
-         (canIonOsr ? 0x80 : 0);
+static inline void SetLoopEntryDepthHintAndFlags(jsbytecode* pc,
+                                                 unsigned loopDepth,
+                                                 bool canIonOsr) {
+  MOZ_ASSERT(*pc == JSOP_LOOPENTRY);
+  uint8_t data = std::min(loopDepth, unsigned(0x7f)) | (canIonOsr ? 0x80 : 0);
+  SET_UINT8(pc + 4, data);
 }
 
 /*
