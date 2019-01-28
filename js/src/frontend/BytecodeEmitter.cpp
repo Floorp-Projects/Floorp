@@ -6229,7 +6229,11 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  JumpTarget tryStart{offset()};
+  JumpTarget tryStart;
+  if (!emitJumpTarget(&tryStart)) {
+    return false;
+  }
+
   if (!tryCatch.emitTry()) {
     //              [stack] NEXT ITER RESULT
     return false;

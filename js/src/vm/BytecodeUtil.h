@@ -356,7 +356,6 @@ static inline bool BytecodeIsJumpTarget(JSOp op) {
     case JSOP_JUMPTARGET:
     case JSOP_LOOPHEAD:
     case JSOP_LOOPENTRY:
-    case JSOP_TRY:
       return true;
     default:
       return false;
