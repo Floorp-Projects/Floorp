@@ -1,13 +1,13 @@
 if [ -z "${VSPATH}" ]; then
     TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
-    VSPATH="$(cd ${TOOLTOOL_DIR} && pwd)/vs2017_15.9.0p5"
+    VSPATH="$(cd ${TOOLTOOL_DIR} && pwd)/vs2017_15.9.6"
 fi
 
 if [ -d "${VSPATH}" ]; then
     VSWINPATH="$(cd ${VSPATH} && pwd -W)"
 
     export WINDOWSSDKDIR="${VSWINPATH}/SDK"
-    export WIN32_REDIST_DIR=${VSPATH}/VC/redist/onecore/arm64/Microsoft.VC141.CRT
+    export WIN32_REDIST_DIR=${VSPATH}/VC/redist/arm64/Microsoft.VC141.CRT
     export WIN_DIA_SDK_BIN_DIR="${VSPATH}/DIA SDK/bin/amd64"
 
     win_sdk_version="10.0.17134.0"
