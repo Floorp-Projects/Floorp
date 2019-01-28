@@ -40,7 +40,7 @@ class Toolbar(
         val back = BrowserMenuItemToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_back,
             iconTintColorResource = R.color.icons,
-            contentDescription = "Back"
+            contentDescription = context.getString(R.string.browser_menu_back)
         ) {
             sessionUseCases.goBack.invoke()
         }
@@ -48,7 +48,7 @@ class Toolbar(
         val forward = BrowserMenuItemToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
             iconTintColorResource = R.color.icons,
-            contentDescription = "Forward"
+            contentDescription = context.getString(R.string.browser_menu_forward)
         ) {
             sessionUseCases.goForward.invoke()
         }
@@ -56,7 +56,7 @@ class Toolbar(
         val refresh = BrowserMenuItemToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
             iconTintColorResource = R.color.icons,
-            contentDescription = "Refresh"
+            contentDescription = context.getString(R.string.browser_menu_refresh)
         ) {
             sessionUseCases.reload.invoke()
         }

@@ -32,8 +32,7 @@ class ToolbarIntegration(
             context.resources.getDrawable(
                 R.drawable.ic_home,
                 context.application.theme
-            ),
-            "Home"
+            ), context.getString(R.string.browser_home_button)
         ) {
             Navigation.findNavController(toolbar).navigate(R.id.action_browserFragment_to_homeFragment)
         }

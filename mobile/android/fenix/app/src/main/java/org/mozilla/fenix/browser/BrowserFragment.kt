@@ -3,11 +3,13 @@
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.fenix.browser
 
+import android.content.Context
 import android.os.Bundle
 import android.transition.TransitionInflater
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityManager
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_browser.*
 import mozilla.components.feature.session.SessionFeature
@@ -16,6 +18,7 @@ import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.requireComponents
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 
 class BrowserFragment : Fragment() {
 
@@ -54,5 +57,12 @@ class BrowserFragment : Fragment() {
         )
 
         lifecycle.addObservers(sessionFeature)
+
+        // Stop toolbar from collapsing if TalkBack is enabled
+        val accessibilityManager = context?.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+        if (accessibilityManager.isEnabled) {
+            val layoutParams = toolbar.layoutParams as CoordinatorLayout.LayoutParams
+            layoutParams.behavior = null
+        }
     }
 }
