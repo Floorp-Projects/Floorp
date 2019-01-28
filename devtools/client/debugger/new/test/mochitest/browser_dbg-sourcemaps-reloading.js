@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 requestLongerTimeout(2);
 
 async function waitForBreakpointCount(dbg, count) {
@@ -41,8 +42,8 @@ add_task(async function() {
 
   await addBreakpoint(dbg, entrySrc, 5);
 
-  await addBreakpoint(dbg, entrySrc, 15);
-  await disableBreakpoint(dbg, entrySrc, 15);
+  await addBreakpoint(dbg, entrySrc, 15, 0);
+  await disableBreakpoint(dbg, entrySrc, 15, 0);
 
   // Test reloading the debugger
   await reload(dbg, "opts.js");

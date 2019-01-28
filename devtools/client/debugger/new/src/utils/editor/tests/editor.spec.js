@@ -200,9 +200,9 @@ describe("lineAtHeight", () => {
 
 describe("getSourceLocationFromMouseEvent", () => {
   it("calls codemirror API coordsChar & returns location", () => {
-    const loc = { sourceId: "test-123" };
+    const source = { id: "test-123" };
     const e = { clientX: 30, clientY: 60 };
-    expect(getSourceLocationFromMouseEvent(editor, loc, e)).toEqual({
+    expect(getSourceLocationFromMouseEvent(editor, source, e)).toEqual({
       sourceId: "test-123",
       line: 7,
       column: 31

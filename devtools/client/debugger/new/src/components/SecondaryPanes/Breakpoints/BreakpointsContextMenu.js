@@ -5,7 +5,6 @@
 // @flow
 
 import { buildMenu, showMenu } from "devtools-contextmenu";
-
 import { getSelectedLocation } from "../../../utils/source-maps";
 import actions from "../../../actions";
 import type { Breakpoint, Source } from "../../../types";
@@ -113,7 +112,9 @@ export default function showContextMenu(props: Props) {
     label: deleteSelfLabel,
     accesskey: deleteSelfKey,
     disabled: false,
-    click: () => removeBreakpoint(selectedLocation)
+    click: () => {
+      removeBreakpoint(breakpoint);
+    }
   };
 
   const deleteAllItem = {
@@ -137,7 +138,9 @@ export default function showContextMenu(props: Props) {
     label: enableSelfLabel,
     accesskey: enableSelfKey,
     disabled: false,
-    click: () => toggleDisabledBreakpoint(selectedLocation.line)
+    click: () => {
+      toggleDisabledBreakpoint(breakpoint);
+    }
   };
 
   const enableAllItem = {
@@ -161,7 +164,9 @@ export default function showContextMenu(props: Props) {
     label: disableSelfLabel,
     accesskey: disableSelfKey,
     disabled: false,
-    click: () => toggleDisabledBreakpoint(selectedLocation.line)
+    click: () => {
+      toggleDisabledBreakpoint(breakpoint);
+    }
   };
 
   const disableAllItem = {

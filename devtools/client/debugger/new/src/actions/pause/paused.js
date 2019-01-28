@@ -4,7 +4,7 @@
 
 // @flow
 import {
-  getHiddenBreakpointLocation,
+  getHiddenBreakpoint,
   isEvaluatingExpression,
   getSelectedFrame,
   getSources
@@ -64,9 +64,9 @@ export function paused(pauseInfo: Pause) {
       loadedObjects: loadedObjects || []
     });
 
-    const hiddenBreakpointLocation = getHiddenBreakpointLocation(getState());
-    if (hiddenBreakpointLocation) {
-      dispatch(removeBreakpoint(hiddenBreakpointLocation));
+    const hiddenBreakpoint = getHiddenBreakpoint(getState());
+    if (hiddenBreakpoint) {
+      dispatch(removeBreakpoint(hiddenBreakpoint));
     }
 
     await dispatch(mapFrames());

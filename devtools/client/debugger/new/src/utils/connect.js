@@ -8,7 +8,7 @@ import * as React from "react";
 
 export function connect<Config, RSP: {}, MDP: {}>(
   mapStateToProps: (state: any, props: any) => RSP,
-  mapDispatchToProps?: (() => MDP) | MDP
+  mapDispatchToProps?: (Function => MDP) | MDP
 ): (
   Component: React.AbstractComponent<Config>
 ) => React.AbstractComponent<$Diff<Config, RSP & MDP>> {

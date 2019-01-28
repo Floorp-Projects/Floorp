@@ -30,9 +30,9 @@ describe("Breakpoint", () => {
 
   it("paused at an original location", () => {
     const { component } = render({
+      selectedSource: makeOriginalSource("foo"),
       frame: { selectedLocation: location },
-      breakpoint: { location },
-      selectedSource: makeOriginalSource("foo")
+      breakpoint: { location }
     });
 
     expect(component).toMatchSnapshot();
