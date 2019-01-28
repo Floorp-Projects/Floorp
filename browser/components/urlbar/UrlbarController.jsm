@@ -8,11 +8,13 @@ var EXPORTED_SYMBOLS = [
   "UrlbarController",
 ];
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   // BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -100,6 +102,7 @@ class UrlbarController {
     this._notify("onQueryStarted", queryContext);
     await this.manager.startQuery(queryContext, this);
     this._notify("onQueryFinished", queryContext);
+    return queryContext;
   }
 
   /**
@@ -136,9 +139,14 @@ class UrlbarController {
       this.input.autofill(queryContext.autofillValue);
     }
 
-    queryContext.lastResultCount = queryContext.results.length;
+    // The first time we receive results try to connect to the heuristic result.
+    if (queryContext.lastResultCount == 0) {
+      this.speculativeConnect(queryContext, 0, "resultsadded");
+    }
 
     this._notify("onQueryResults", queryContext);
+    // Update lastResultCount after notifying, so the view can use it.
+    queryContext.lastResultCount = queryContext.results.length;
   }
 
   /**
@@ -237,6 +245,58 @@ class UrlbarController {
           event.preventDefault();
         }
         break;
+    }
+  }
+
+  /**
+   * Tries to initialize a speculative connection on a result.
+   * Speculative connections are only supported for a subset of all the results.
+   * @param {UrlbarQueryContext} context The queryContext
+   * @param {number} resultIndex index of the result to speculative connect to.
+   * @param {string} reason Reason for the speculative connect request.
+   * @note speculative connect to:
+   *  - Search engine heuristic results
+   *  - autofill results
+   *  - http/https results
+   */
+  speculativeConnect(context, resultIndex, reason) {
+    // Never speculative connect in private contexts.
+    if (!this.input || context.isPrivate || context.results.length == 0) {
+      return;
+    }
+    let result = context.results[resultIndex];
+    let {url} = UrlbarUtils.getUrlFromResult(result);
+    if (!url) {
+      return;
+    }
+
+    switch (reason) {
+      case "resultsadded": {
+        // We should connect to an heuristic result, if it exists.
+        if (resultIndex == 0 && (context.preselected || context.autofillValue)) {
+          if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+            // Speculative connect only if search suggestions are enabled.
+            if (UrlbarPrefs.get("suggest.searches") &&
+                UrlbarPrefs.get("browser.search.suggest.enabled")) {
+              let engine = Services.search.defaultEngine;
+              UrlbarUtils.setupSpeculativeConnection(engine, this.browserWindow);
+            }
+          } else if (context.autofillValue) {
+            UrlbarUtils.setupSpeculativeConnection(url, this.browserWindow);
+          }
+        }
+        return;
+      }
+      case "mousedown": {
+        // On mousedown, connect only to http/https urls.
+        if (url.startsWith("http")) {
+          UrlbarUtils.setupSpeculativeConnection(url, this.browserWindow);
+        }
+        return;
+      }
+      default: {
+        throw new Error("Invalid speculative connection reason");
+      }
     }
   }
 
