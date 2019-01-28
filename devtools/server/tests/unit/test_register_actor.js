@@ -49,7 +49,13 @@ function test_lazy_api() {
     Assert.ok("lazyActor" in response);
 
     const {LazyFront} = require("xpcshell-test/registertestactors-lazy");
-    const front = new LazyFront(client, response);
+    const front = new LazyFront(client);
+    // As this Front isn't instantiated by protocol.js, we have to manually
+    // set its actor ID and manage it:
+    front.actorID = response.lazyActor;
+    client.addActorPool(front);
+    front.manage(front);
+
     front.hello().then(onRequest);
   }
   function onRequest(response) {

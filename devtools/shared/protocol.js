@@ -1269,12 +1269,10 @@ exports.ActorClassWithSpec = ActorClassWithSpec;
  *   Either a DebuggerServerConnection or a DebuggerClient.  Must have
  *   addActorPool, removeActorPool, and poolFor.
  *   conn can be null if the subclass provides a conn property.
- * @param optional form
- *   The json form provided by the server.
  * @constructor
  */
 class Front extends Pool {
-  constructor(conn = null, form = null) {
+  constructor(conn = null) {
     super(conn);
     this.actorID = null;
     this._requests = [];
@@ -1288,14 +1286,6 @@ class Front extends Pool {
     // These listeners are register via Front.before function.
     // Map(Event Name[string] => Event Listener[function])
     this._beforeListeners = new Map();
-
-    // protocol.js no longer uses this data in the constructor, only external
-    // uses do.  External usage of manually-constructed fronts will be
-    // drastically reduced if we convert the root and target actors to
-    // protocol.js, in which case this can probably go away.
-    if (form) {
-      this.actorID = form.actor;
-    }
   }
 
   destroy() {

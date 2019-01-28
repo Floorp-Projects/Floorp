@@ -161,8 +161,8 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
 });
 
 class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
-  constructor(client, form) {
-    super(client, form);
+  constructor(client) {
+    super(client);
 
     this.before("event1", this.onEvent1.bind(this));
     this.before("event2", this.onEvent2a.bind(this));
