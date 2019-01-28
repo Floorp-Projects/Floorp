@@ -161,12 +161,13 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     // which is a ParentProcessTargetActor, but not in xpcshell, which uses a
     // ContentProcessTargetActor. So select the right front based on the actor ID.
     if (form.actor.includes("contentProcessTarget")) {
-      front = new ContentProcessTargetFront(this._client, form);
+      front = new ContentProcessTargetFront(this._client, { actor: form.actor });
     } else {
       // ParentProcessTargetActor doesn't have a specific front, instead it uses
       // BrowsingContextTargetFront on the client side.
-      front = new BrowsingContextTargetFront(this._client, form);
+      front = new BrowsingContextTargetFront(this._client, { actor: form.actor });
     }
+    front.form(form);
     this.manage(front);
 
     return front;
