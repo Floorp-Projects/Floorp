@@ -7,6 +7,9 @@ description: GeckoView API Changelog.
 <h1> GeckoView API Changelog. </h1>
 
 ## v66
+- Added `baseUri` to [`ContentDelegate.ContextElement`][65.21] and changed
+  `linkUri` to absolute form.
+
 - Removed redundant field `GeckoSession.ProgressDelegate.SecurityInformation.trackingMode`.
   Use `GeckoSession.TrackingProtectionDelegate.onTrackerBlocked` for
   notification of blocked elements during page load.
@@ -115,4 +118,4 @@ description: GeckoView API Changelog.
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 45d1d8774e913a3077d7c489274184fd301f14fc
+[api-version]: 8b68d674a0ddb2498df59e0cf8b2edad6f0b3a8e
