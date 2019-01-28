@@ -12,7 +12,6 @@ function generateDefaults(overrides) {
     toggleBreakpoint: jest.fn(),
     updateViewport: jest.fn(),
     toggleDisabledBreakpoint: jest.fn(),
-    addOrToggleDisabledBreakpoint: jest.fn(),
     ...overrides
   };
 }

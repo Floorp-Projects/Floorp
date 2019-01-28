@@ -34,7 +34,7 @@ Object {
     "name": undefined,
     "offset": Object {
       "line": 7,
-      "sourceId": "foo.js",
+      "sourceId": "foo.js/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo.js",
     },
   },
@@ -61,7 +61,7 @@ Object {
     "name": undefined,
     "offset": Object {
       "line": 5,
-      "sourceId": "foo.js",
+      "sourceId": "foo.js/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo.js",
     },
   },
@@ -88,7 +88,7 @@ Object {
     "name": undefined,
     "offset": Object {
       "line": 5,
-      "sourceId": "foo",
+      "sourceId": "foo/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo",
     },
   },
@@ -115,7 +115,7 @@ Object {
     "name": undefined,
     "offset": Object {
       "line": 5,
-      "sourceId": "foo2",
+      "sourceId": "foo2/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo2",
     },
   },

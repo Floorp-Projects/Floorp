@@ -92,6 +92,10 @@ html[dir="rtl"] .editor-mount {
   );
 }
 
+.new-breakpoint .CodeMirror-linenumber {
+  pointer-events: none;
+}
+
 :not(.empty-line):not(.new-breakpoint)
   > .CodeMirror-gutter-wrapper:hover
   > .CodeMirror-linenumber::after {

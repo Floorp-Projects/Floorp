@@ -4,6 +4,12 @@
 
 .column-breakpoint {
   display: inline;
+  padding: 0;
+  margin-inline-end: 4px;
+}
+
+.column-breakpoint:hover {
+  background-color: transparent;
 }
 
 .column-breakpoint svg {
