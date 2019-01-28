@@ -7,11 +7,13 @@
 #ifndef mozilla_dom_JSWindowActorService_h
 #define mozilla_dom_JSWindowActorService_h
 
-#include "nsDataHashtable.h"
+#include "nsClassHashtable.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {
 struct WindowActorOptions;
+class JSWindowActorInfo;
 
 class JSWindowActorService final {
  public:
@@ -23,11 +25,24 @@ class JSWindowActorService final {
                            const WindowActorOptions& aOptions,
                            ErrorResult& aRv);
 
+  // Register child's Window Actor from JSWindowActorInfos for content process.
+  void LoadJSWindowActorInfos(nsTArray<JSWindowActorInfo>& aInfos);
+
+  // Get the named of Window Actor and the child's WindowActorOptions
+  // from mDescriptors to JSWindowActorInfos.
+  void GetJSWindowActorInfos(nsTArray<JSWindowActorInfo>& aInfos);
+
+  // Load the module for the named Window Actor and contruct it.
+  // This method will not initialize the actor or set its manager,
+  // which is handled by callers.
+  void ConstructActor(const nsAString& aName, bool aParentSide,
+                      JS::MutableHandleObject aActor, ErrorResult& aRv);
+
  private:
   JSWindowActorService();
   ~JSWindowActorService();
 
-  nsDataHashtable<nsStringHashKey, const WindowActorOptions*> mDescriptors;
+  nsClassHashtable<nsStringHashKey, WindowActorOptions> mDescriptors;
 };
 
 }  // namespace dom
