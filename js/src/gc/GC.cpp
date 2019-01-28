@@ -5003,7 +5003,7 @@ void GCRuntime::getNextSweepGroup() {
       zone->setNeedsIncrementalBarrier(false);
       zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
       zone->arenas.unmarkPreMarkedFreeCells();
-      zone->gcGrayRoots().clearAndFree();
+      zone->gcGrayRoots().Clear();
     }
 
     for (SweepGroupCompartmentsIter comp(rt); !comp.done(); comp.next()) {

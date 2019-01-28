@@ -2716,7 +2716,7 @@ void GCMarker::checkZone(void* p) {
 size_t GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
   size_t size = stack.sizeOfExcludingThis(mallocSizeOf);
   for (ZonesIter zone(runtime(), WithAtoms); !zone.done(); zone.next()) {
-    size += zone->gcGrayRoots().sizeOfExcludingThis(mallocSizeOf);
+    size += zone->gcGrayRoots().SizeOfExcludingThis(mallocSizeOf);
   }
   return size;
 }
