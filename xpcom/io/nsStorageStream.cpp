@@ -581,8 +581,13 @@ void nsStorageInputStream::SerializeInternal(InputStreamParams& aParams,
   nsresult rv = Available(&remaining);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  if (remaining > 0) {
-    // TODO
+  // If the string is known to be larger than 1MB, prefer sending it in chunks.
+  const uint64_t kTooLargeStream = 1024 * 1024;
+
+  if (remaining > kTooLargeStream) {
+    InputStreamHelper::SerializeInputStreamAsPipe(this, aParams, aDelayedStart,
+                                                  aManager);
+    return;
   }
 
   nsCString combined;
