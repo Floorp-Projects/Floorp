@@ -526,10 +526,11 @@ pub struct CacheMarkerDisplayItem {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-#[repr(u8)]
 pub enum ReferenceFrameKind {
     Transform,
-    Perspective,
+    Perspective {
+        scrolling_relative_to: Option<ExternalScrollId>,
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -949,6 +950,7 @@ impl SpatialId {
 /// When setting display lists with the `preserve_frame_state` this id is used to preserve scroll
 /// offsets between different sets of ClipScrollNodes which are ScrollFrames.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[repr(C)]
 pub struct ExternalScrollId(pub u64, pub PipelineId);
 
 impl ExternalScrollId {

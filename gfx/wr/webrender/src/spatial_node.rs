@@ -69,6 +69,36 @@ pub struct SpatialNode {
     pub coordinate_system_relative_scale_offset: ScaleOffset,
 }
 
+fn compute_offset_from(
+    mut current: Option<SpatialNodeIndex>,
+    external_id: ExternalScrollId,
+    previous_spatial_nodes: &[SpatialNode],
+) -> LayoutVector2D {
+    let mut offset = LayoutVector2D::zero();
+    while let Some(parent_index) = current {
+        let ancestor = &previous_spatial_nodes[parent_index.0 as usize];
+        match ancestor.node_type {
+            SpatialNodeType::ReferenceFrame(..) => {
+                // FIXME(emilio, bug 1523436): Breaking here is technically
+                // wrong and can happen if the perspective frame is transformed
+                // as well.
+                break;
+            },
+            SpatialNodeType::ScrollFrame(ref info) => {
+                if info.external_id == Some(external_id) {
+                    break;
+                }
+                offset += info.offset;
+            },
+            SpatialNodeType::StickyFrame(ref info) => {
+                offset += info.current_offset;
+            },
+        }
+        current = ancestor.parent;
+    }
+    offset
+}
+
 impl SpatialNode {
     pub fn new(
         pipeline_id: PipelineId,
@@ -221,6 +251,7 @@ impl SpatialNode {
         state: &mut TransformUpdateState,
         coord_systems: &mut Vec<CoordinateSystem>,
         scene_properties: &SceneProperties,
+        previous_spatial_nodes: &[SpatialNode],
     ) {
         // If any of our parents was not rendered, we are not rendered either and can just
         // quit here.
@@ -229,7 +260,7 @@ impl SpatialNode {
             return;
         }
 
-        self.update_transform(state, coord_systems, scene_properties);
+        self.update_transform(state, coord_systems, scene_properties, previous_spatial_nodes);
         self.transform_kind = self.world_content_transform.kind();
 
         // If this node is a reference frame, we check if it has a non-invertible matrix.
@@ -249,6 +280,7 @@ impl SpatialNode {
         state: &mut TransformUpdateState,
         coord_systems: &mut Vec<CoordinateSystem>,
         scene_properties: &SceneProperties,
+        previous_spatial_nodes: &[SpatialNode],
     ) {
         match self.node_type {
             SpatialNodeType::ReferenceFrame(ref mut info) => {
@@ -260,13 +292,20 @@ impl SpatialNode {
                 // Do a change-basis operation on the perspective matrix using
                 // the scroll offset.
                 let source_transform = match info.kind {
-                    ReferenceFrameKind::Perspective => {
-                        // Do a change-basis operation on the perspective matrix
-                        // using the scroll offset.
+                    ReferenceFrameKind::Perspective { scrolling_relative_to: Some(external_id) } => {
+                        let scroll_offset = compute_offset_from(
+                            self.parent,
+                            external_id,
+                            previous_spatial_nodes,
+                        );
+
+                        // Do a change-basis operation on the
+                        // perspective matrix using the scroll offset.
                         source_transform
-                            .pre_translate(&state.parent_accumulated_scroll_offset)
-                            .post_translate(-state.parent_accumulated_scroll_offset)
+                            .pre_translate(&scroll_offset)
+                            .post_translate(-scroll_offset)
                     }
+                    ReferenceFrameKind::Perspective { scrolling_relative_to: None } |
                     ReferenceFrameKind::Transform => source_transform,
                 };
 
