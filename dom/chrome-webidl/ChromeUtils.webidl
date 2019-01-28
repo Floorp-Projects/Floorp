@@ -538,7 +538,7 @@ dictionary WindowActorOptions {
 
 dictionary WindowActorSidedOptions {
   /** The module path which should be loaded for the actor on this side. */
-  required DOMString moduleURI;
+  required ByteString moduleURI;
 };
 
 enum Base64URLDecodePadding {
