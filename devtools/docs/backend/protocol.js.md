@@ -433,31 +433,6 @@ Now our response will look like:
 
     { from: <childActorID>, self: { actor: <childActorID>, greeting: <id>, a: <a>, b: <b>, c: "hello", d: <d> }
 
-But that's wasteful.  Only c changed.  So we can provide a *detail* to the type using `#`:
-
-    response: { self: RetVal("childActor#changec") }
-
-and update our form methods to make use of that data:
-
-    // In ChildActor:
-    form: function (detail) {
-        if (detail === "changec") {
-            return { actor: this.actorID, c: this.c }
-        }
-        // ... the rest of the form method stays the same.
-    }
-
-    // In ChildFront:
-    form: function (form, detail) {
-        if (detail === "changec") {
-            this.actorID = form.actor;
-            this.c = form.c;
-            return;
-        }
-        // ... the rest of the form method stays the same.
-    }
-
-Now the packet looks like a much more reasonable `{ from: <childActorID>, self: { actor: <childActorID>, c: "hello" } }`
 
 Lifetimes
 ---------
