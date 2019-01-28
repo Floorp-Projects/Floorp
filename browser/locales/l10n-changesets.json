@@ -10,8 +10,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -27,8 +27,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -44,8 +44,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -61,8 +61,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -78,8 +78,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -95,8 +95,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -112,8 +112,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -129,8 +129,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -146,8 +146,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -163,8 +163,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -180,8 +180,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -197,8 +197,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -214,8 +214,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -231,8 +231,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -248,8 +248,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -265,8 +265,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -282,8 +282,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -299,8 +299,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -316,8 +316,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -333,8 +333,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -350,8 +350,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -367,8 +367,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -384,8 +384,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -401,8 +401,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -418,8 +418,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -435,8 +435,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -452,8 +452,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -469,8 +469,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -486,8 +486,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -503,8 +503,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -520,8 +520,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -537,8 +537,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -554,8 +554,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -571,8 +571,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -588,8 +588,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -605,8 +605,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -622,8 +622,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -639,8 +639,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -656,8 +656,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -673,8 +673,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -690,8 +690,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -707,8 +707,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -724,8 +724,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -741,8 +741,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -758,8 +758,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -775,8 +775,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -792,8 +792,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -809,8 +809,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -826,8 +826,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -843,8 +843,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -860,8 +860,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -877,8 +877,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -892,8 +892,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -916,8 +916,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -933,8 +933,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -950,8 +950,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -967,8 +967,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -984,8 +984,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1001,8 +1001,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1018,8 +1018,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1035,8 +1035,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1052,8 +1052,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1069,8 +1069,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1086,8 +1086,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1103,8 +1103,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1120,8 +1120,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1137,8 +1137,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1154,8 +1154,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1171,8 +1171,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1188,8 +1188,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1205,8 +1205,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1222,8 +1222,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1239,8 +1239,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1256,8 +1256,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1273,8 +1273,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1290,8 +1290,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1307,8 +1307,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1324,8 +1324,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1341,8 +1341,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1358,8 +1358,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1375,8 +1375,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1392,8 +1392,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1409,8 +1409,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1426,8 +1426,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1443,8 +1443,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1460,8 +1460,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1477,8 +1477,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1494,8 +1494,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1511,8 +1511,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1528,8 +1528,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1545,8 +1545,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1562,8 +1562,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1579,8 +1579,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1596,8 +1596,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1613,8 +1613,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1630,8 +1630,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1647,8 +1647,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1664,8 +1664,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1681,8 +1681,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1698,8 +1698,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1715,8 +1715,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1732,8 +1732,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1749,8 +1749,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
@@ -1766,8 +1766,8 @@
             "win32",
             "win32-devedition",
             "win64",
-            "win64-aarch64-msvc",
-            "win64-aarch64-msvc-devedition",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
             "win64-devedition"
         ],
         "revision": "default"
