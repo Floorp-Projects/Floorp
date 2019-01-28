@@ -5522,8 +5522,8 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(unsigned aEvent,
           return;
         }
 
-        nsDocShell::Cast(docShell)->nsDocLoader::OnContentBlockingEvent(
-            aChannel, event);
+        nsDocShell::Cast(docShell)->nsDocLoader::OnContentBlockingEvent(channel,
+                                                                        event);
       });
   nsresult rv;
   if (gSyncContentBlockingNotifications) {
