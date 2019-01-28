@@ -82,13 +82,27 @@ function connectRuntime(id) {
       const { isMultiE10s } = info;
       delete info.isMultiE10s;
 
-      const promptPrefName = RUNTIME_PREFERENCE.CONNECTION_PROMPT;
-      const connectionPromptEnabled = await clientWrapper.getPreference(promptPrefName);
+      const {
+        CONNECTION_PROMPT,
+        PERMANENT_PRIVATE_BROWSING,
+        SERVICE_WORKERS_ENABLED,
+      } = RUNTIME_PREFERENCE;
+
+      const connectionPromptEnabled =
+        await clientWrapper.getPreference(CONNECTION_PROMPT, false);
+
+      const privateBrowsing =
+        await clientWrapper.getPreference(PERMANENT_PRIVATE_BROWSING, false);
+      const serviceWorkersEnabled =
+        await clientWrapper.getPreference(SERVICE_WORKERS_ENABLED, true);
+      const serviceWorkersAvailable = serviceWorkersEnabled && !privateBrowsing;
+
       const runtimeDetails = {
         clientWrapper,
         connectionPromptEnabled,
         info,
         isMultiE10s,
+        serviceWorkersAvailable,
       };
 
       const deviceFront = await clientWrapper.getFront("device");
@@ -168,7 +182,8 @@ function updateConnectionPromptSetting(connectionPromptEnabled) {
       const promptPrefName = RUNTIME_PREFERENCE.CONNECTION_PROMPT;
       await clientWrapper.setPreference(promptPrefName, connectionPromptEnabled);
       // Re-get actual value from the runtime.
-      connectionPromptEnabled = await clientWrapper.getPreference(promptPrefName);
+      connectionPromptEnabled =
+        await clientWrapper.getPreference(promptPrefName, connectionPromptEnabled);
 
       dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
                  runtime, connectionPromptEnabled });

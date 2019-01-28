@@ -98,6 +98,11 @@ a:active {
   color: var(--link-color-active);
 }
 
+p {
+  /* reset for the default <p> styles */
+  margin: initial;
+}
+
 
 /*
 * Utils

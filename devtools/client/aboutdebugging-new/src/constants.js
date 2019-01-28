@@ -90,6 +90,8 @@ const PREFERENCES = {
 
 const RUNTIME_PREFERENCE = {
   CONNECTION_PROMPT: "devtools.debugger.prompt-connection",
+  PERMANENT_PRIVATE_BROWSING: "browser.privatebrowsing.autostart",
+  SERVICE_WORKERS_ENABLED: "dom.serviceWorkers.enabled",
 };
 
 const RUNTIMES = {
