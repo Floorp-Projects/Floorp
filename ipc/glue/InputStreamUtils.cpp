@@ -70,6 +70,49 @@ void SerializeInputStreamInternal(nsIInputStream* aInputStream,
   }
 }
 
+template <typename M>
+void SerializeInputStreamAsPipeInternal(nsIInputStream* aInputStream,
+                                        InputStreamParams& aParams,
+                                        bool aDelayedStart, M* aManager) {
+  MOZ_ASSERT(aInputStream);
+  MOZ_ASSERT(aManager);
+
+  // Let's try to take the length using InputStreamLengthHelper. If the length
+  // cannot be taken synchronously, and its length is needed, the stream needs
+  // to be fully copied in memory on the deserialization side.
+  int64_t length;
+  if (!InputStreamLengthHelper::GetSyncLength(aInputStream, &length)) {
+    length = -1;
+  }
+
+  // As a fallback, attempt to stream the data across using a IPCStream
+  // actor. For blocking streams, create a nonblocking pipe instead,
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aInputStream);
+  if (!asyncStream) {
+    const uint32_t kBufferSize = 32768;  // matches IPCStream buffer size.
+    nsCOMPtr<nsIAsyncOutputStream> sink;
+    nsresult rv = NS_NewPipe2(getter_AddRefs(asyncStream), getter_AddRefs(sink),
+                              true, false, kBufferSize, UINT32_MAX);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    nsCOMPtr<nsIEventTarget> target =
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+
+    rv = NS_AsyncCopy(aInputStream, sink, target, NS_ASYNCCOPY_VIA_READSEGMENTS,
+                      kBufferSize);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+  }
+
+  MOZ_ASSERT(asyncStream);
+
+  aParams = IPCRemoteStreamParams(
+      aDelayedStart, IPCStreamSource::Create(asyncStream, aManager), length);
+}
+
 }  // namespace
 
 void InputStreamHelper::SerializeInputStream(
