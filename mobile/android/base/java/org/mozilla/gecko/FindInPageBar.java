@@ -23,7 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class FindInPageBar extends LinearLayout
-        implements TextWatcher, View.OnClickListener, BundleEventListener {
+        implements TextWatcher, View.OnClickListener, BundleEventListener, View.OnKeyListener {
     private static final String LOGTAG = "GeckoFindInPageBar";
     private static final String REQUEST_ID = "FindInPageBar";
 
@@ -53,6 +53,7 @@ public class FindInPageBar extends LinearLayout
 
         mFindText = (CustomEditText) content.findViewById(R.id.find_text);
         mFindText.addTextChangedListener(this);
+        mFindText.setOnKeyListener(this);
         mFindText.setOnKeyPreImeListener(new CustomEditText.OnKeyPreImeListener() {
             @Override
             public boolean onKeyPreIme(View v, int keyCode, KeyEvent event) {
@@ -122,7 +123,7 @@ public class FindInPageBar extends LinearLayout
     private InputMethodManager getInputMethodManager(View view) {
         Context context = view.getContext();
         return (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-     }
+    }
 
     public void onDestroy() {
         if (!mInflated) {
@@ -179,13 +180,13 @@ public class FindInPageBar extends LinearLayout
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, extras);
 
         if (viewId == R.id.find_prev) {
-            sendRequestToFinderHelper("FindInPage:Prev", mFindText.getText().toString());
+            findPrevInPage();
             getInputMethodManager(mFindText).hideSoftInputFromWindow(mFindText.getWindowToken(), 0);
             return;
         }
 
         if (viewId == R.id.find_next) {
-            sendRequestToFinderHelper("FindInPage:Next", mFindText.getText().toString());
+            findNextInPage();
             getInputMethodManager(mFindText).hideSoftInputFromWindow(mFindText.getWindowToken(), 0);
             return;
         }
@@ -228,9 +229,33 @@ public class FindInPageBar extends LinearLayout
 
                     mFindText.setOnWindowFocusChangeListener(null);
                     getInputMethodManager(mFindText).showSoftInput(mFindText, 0);
-               }
+                }
             });
         }
+    }
+
+    @Override
+    public boolean onKey(View v, int keyCode, KeyEvent event) {
+        if (event == null) return false;
+
+        if (event.getAction() == KeyEvent.ACTION_DOWN &&
+                event.getKeyCode() == KeyEvent.KEYCODE_ENTER &&
+                event.isShiftPressed()) {
+            //  Consume Shift+Enter which would otherwise insert a newline character in the search box
+            return true;
+        }
+
+        if (event.getAction() == KeyEvent.ACTION_UP &&
+                event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+            if (event.isShiftPressed()) {
+                findPrevInPage();
+            } else {
+                findNextInPage();
+            }
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -240,5 +265,17 @@ public class FindInPageBar extends LinearLayout
         final GeckoBundle data = new GeckoBundle(1);
         data.putString("searchString", searchString);
         EventDispatcher.getInstance().dispatch(request, data);
+    }
+
+    private void findNextInPage() {
+        sendRequestToFinderHelper("FindInPage:Next", getSearchedForText());
+    }
+
+    private void findPrevInPage() {
+        sendRequestToFinderHelper("FindInPage:Prev", getSearchedForText());
+    }
+
+    private String getSearchedForText() {
+        return mFindText.getText().toString();
     }
 }

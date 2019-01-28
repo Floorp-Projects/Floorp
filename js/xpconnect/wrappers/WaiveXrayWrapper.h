@@ -41,9 +41,6 @@ class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
                           const JS::CallArgs& args) const override;
   virtual bool hasInstance(JSContext* cx, JS::HandleObject wrapper,
                            JS::MutableHandleValue v, bool* bp) const override;
-  virtual bool getPropertyDescriptor(
-      JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
 
   static const WaiveXrayWrapper singleton;
 };

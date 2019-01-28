@@ -57,6 +57,7 @@ class UrlbarInput {
     this.valueIsTyped = false;
     this.userInitiatedFocus = false;
     this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.window);
+    this.lastQueryContextPromise = Promise.resolve();
     this._untrimmedValue = "";
     this._suppressStartQuery = false;
 
@@ -299,15 +300,14 @@ class UrlbarInput {
     //   event, this.userSelectionBehavior);
 
     let where = this._whereToOpen(event);
+    let {url, postData} = UrlbarUtils.getUrlFromResult(result);
     let openParams = {
-      postData: null,
+      postData,
       allowInheritPrincipal: false,
     };
 
     // TODO bug 1521702: Call _maybeCanonizeURL for autofilled results with the
     // typed string (not the autofilled one).
-
-    let url = result.payload.url;
 
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH: {
@@ -322,7 +322,7 @@ class UrlbarInput {
           adoptIntoActiveWindow: UrlbarPrefs.get("switchTabs.adoptIntoActiveWindow"),
         };
 
-        if (this.window.switchToTabHavingURI(Services.io.newURI(result.payload.url), false, loadOpts) &&
+        if (this.window.switchToTabHavingURI(Services.io.newURI(url), false, loadOpts) &&
             prevTab.isEmpty) {
           this.window.gBrowser.removeTab(prevTab);
         }
@@ -334,26 +334,26 @@ class UrlbarInput {
         if (url) {
           break;
         }
-
         const actionDetails = {
           isSuggestion: !!result.payload.suggestion,
           alias: result.payload.keyword,
         };
         const engine = Services.search.getEngineByName(result.payload.engine);
-
-        [url, openParams.postData] = this._getSearchQueryUrl(
-          engine, result.payload.suggestion || result.payload.query);
         this._recordSearch(engine, event, actionDetails);
         break;
       }
-      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+      case UrlbarUtils.RESULT_TYPE.OMNIBOX: {
         // Give the extension control of handling the command.
         ExtensionSearchHandler.handleInputEntered(result.payload.keyword,
                                                   result.payload.content,
                                                   where);
         return;
+      }
     }
 
+    if (!url) {
+      throw new Error(`Invalid url for result ${JSON.stringify(result)}`);
+    }
     this._loadURL(url, where, openParams);
   }
 
@@ -409,8 +409,12 @@ class UrlbarInput {
       UrlbarPrefs.get("autoFill") &&
       (!this._lastSearchString ||
        !this._lastSearchString.startsWith(searchString));
+    this._lastSearchString = searchString;
 
-    this.controller.startQuery(new UrlbarQueryContext({
+    // TODO (Bug 1522902): This promise is necessary for tests, because some
+    // tests are not listening for completion when starting a query through
+    // other methods than startQuery (input events for example).
+    this.lastQueryContextPromise = this.controller.startQuery(new UrlbarQueryContext({
       enableAutofill,
       isPrivate: this.isPrivate,
       lastKey,
@@ -419,7 +423,6 @@ class UrlbarInput {
       providers: ["UnifiedComplete"],
       searchString,
     }));
-    this._lastSearchString = searchString;
   }
 
   typeRestrictToken(char) {
@@ -620,22 +623,6 @@ class UrlbarInput {
               event.metaKey : event.ctrlKey);
   }
 
-  /**
-   * Get the url to load for the search query and records in telemetry that it
-   * is being loaded.
-   *
-   * @param {nsISearchEngine} engine
-   *   The engine to generate the query for.
-   * @param {string} query
-   *   The query string to search for.
-   * @returns {array}
-   *   Returns an array containing the query url (string) and the
-   *    post data (object).
-   */
-  _getSearchQueryUrl(engine, query) {
-    let submission = engine.getSubmission(query, null, "keyword");
-    return [submission.uri.spec, submission.postData];
-  }
 
   /**
    * Get the url to load for the search query and records in telemetry that it

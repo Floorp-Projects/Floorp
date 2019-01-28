@@ -3967,10 +3967,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_THROW() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TRY() {
-  if (!emit_JSOP_JUMPTARGET()) {
-    return false;
-  }
-
   // Ionmonkey can't inline function with JSOP_TRY.
   if (JSScript* script = handler.maybeScript()) {
     script->setUninlineable();
@@ -4735,9 +4731,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ISNOITER() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_ENDITER() {
-  if (!emit_JSOP_JUMPTARGET()) {
-    return false;
-  }
   frame.popRegsAndSync(1);
 
   if (!emitNextIC()) {

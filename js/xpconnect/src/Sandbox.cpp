@@ -507,9 +507,6 @@ class SandboxProxyHandler : public js::Wrapper {
                    JS::Handle<JS::Value> receiver,
                    JS::ObjectOpResult& result) const override;
 
-  virtual bool getPropertyDescriptor(
-      JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
   virtual bool hasOwn(JSContext* cx, JS::Handle<JSObject*> proxy,
                       JS::Handle<jsid> id, bool* bp) const override;
   virtual bool getOwnEnumerablePropertyKeys(
@@ -723,12 +720,6 @@ bool SandboxProxyHandler::getPropertyDescriptorImpl(
   return true;
 }
 
-bool SandboxProxyHandler::getPropertyDescriptor(
-    JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-    JS::MutableHandle<PropertyDescriptor> desc) const {
-  return getPropertyDescriptorImpl(cx, proxy, id, /* getOwn = */ false, desc);
-}
-
 bool SandboxProxyHandler::getOwnPropertyDescriptor(
     JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
     JS::MutableHandle<PropertyDescriptor> desc) const {
@@ -742,10 +733,9 @@ bool SandboxProxyHandler::getOwnPropertyDescriptor(
 
 bool SandboxProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy,
                               JS::Handle<jsid> id, bool* bp) const {
-  // This uses getPropertyDescriptor for backward compatibility with
-  // the old BaseProxyHandler::has implementation.
+  // This uses JS_GetPropertyDescriptorById for backward compatibility.
   Rooted<PropertyDescriptor> desc(cx);
-  if (!getPropertyDescriptor(cx, proxy, id, &desc)) {
+  if (!getPropertyDescriptorImpl(cx, proxy, id, /* getOwn = */ false, &desc)) {
     return false;
   }
 
@@ -761,10 +751,9 @@ bool SandboxProxyHandler::get(JSContext* cx, JS::Handle<JSObject*> proxy,
                               JS::Handle<JS::Value> receiver,
                               JS::Handle<jsid> id,
                               JS::MutableHandle<Value> vp) const {
-  // This uses getPropertyDescriptor for backward compatibility with
-  // the old BaseProxyHandler::get implementation.
+  // This uses JS_GetPropertyDescriptorById for backward compatibility.
   Rooted<PropertyDescriptor> desc(cx);
-  if (!getPropertyDescriptor(cx, proxy, id, &desc)) {
+  if (!getPropertyDescriptorImpl(cx, proxy, id, /* getOwn = */ false, &desc)) {
     return false;
   }
   desc.assertCompleteIfFound();

@@ -35,6 +35,11 @@ const runtimeDetails = {
   // True if this runtime supports multiple content processes
   // This might be undefined when connecting to runtimes older than Fx 66
   isMultiE10s: PropTypes.bool,
+
+  // True if service workers should be available in the target runtime. Service workers
+  // can be disabled via preferences or if the runtime runs in fully private browsing
+  // mode.
+  serviceWorkersAvailable: PropTypes.bool.isRequired,
 };
 exports.runtimeDetails = PropTypes.shape(runtimeDetails);
 

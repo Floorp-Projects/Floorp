@@ -1479,6 +1479,12 @@ bool ICTypeMonitor_PrimitiveSet::Compiler::generateStubCode(
     masm.branchTestSymbol(Assembler::Equal, R0, &success);
   }
 
+#ifdef ENABLE_BIGINT
+  if (flags_ & TypeToFlag(JSVAL_TYPE_BIGINT)) {
+    masm.branchTestBigInt(Assembler::Equal, R0, &success);
+  }
+#endif
+
   if (flags_ & TypeToFlag(JSVAL_TYPE_OBJECT)) {
     masm.branchTestObject(Assembler::Equal, R0, &success);
   }
@@ -1818,6 +1824,12 @@ bool ICTypeUpdate_PrimitiveSet::Compiler::generateStubCode(
   if (flags_ & TypeToFlag(JSVAL_TYPE_SYMBOL)) {
     masm.branchTestSymbol(Assembler::Equal, R0, &success);
   }
+
+#ifdef ENABLE_BIGINT
+  if (flags_ & TypeToFlag(JSVAL_TYPE_BIGINT)) {
+    masm.branchTestBigInt(Assembler::Equal, R0, &success);
+  }
+#endif
 
   if (flags_ & TypeToFlag(JSVAL_TYPE_OBJECT)) {
     masm.branchTestObject(Assembler::Equal, R0, &success);

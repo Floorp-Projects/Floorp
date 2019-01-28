@@ -69,6 +69,15 @@
 }
 
 /**
+ * For text that needs to be cut with an ellipsis …
+ */
+.devtools-ellipsis-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/**
  * Override wrong system font from forms.css
  * Bug 1458224: buttons use a wrong default font-size on Linux
  */
