@@ -17,9 +17,9 @@ internal fun checkPingSchema(content: JSONObject) {
     val os = System.getProperty("os.name")?.toLowerCase()
     val pythonExecutable =
         if (os?.indexOf("win")?.compareTo(0) == 0)
-            "./build/bootstrap/Miniconda3/python"
+            "${BuildConfig.GLEAN_MINICONDA_DIR}/python"
         else
-            "./build/bootstrap/Miniconda3/bin/python"
+            "${BuildConfig.GLEAN_MINICONDA_DIR}/bin/python"
 
     val proc = ProcessBuilder(
         listOf(

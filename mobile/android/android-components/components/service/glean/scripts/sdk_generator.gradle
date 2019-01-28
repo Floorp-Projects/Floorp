@@ -4,7 +4,34 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
+// This installs a Miniconda3 environment into the gradle user home directory
+// so that it will be shared between all libraries that use glean.  This is
+// important because it is approximately 300MB in installed size.
+
 String GLEAN_PARSER_VERSION = "0.12.0"
+// The version of Miniconda is explicitly specified.
+// Miniconda3-4.5.12 is known to not work on Windows.
+String MINICONDA_VERSION = "4.5.11"
+File GLEAN_BOOTSTRAP_DIR = new File(
+    project.getGradle().gradleUserHomeDir,
+    "glean/bootstrap-${MINICONDA_VERSION}"
+)
+File GLEAN_MINICONDA_DIR = new File(
+    GLEAN_BOOTSTRAP_DIR,
+    "Miniconda3"
+)
+
+// Define the path to the Miniconda3 installation as a buildConfig variable so
+// that tests that need to run JSON through our JSON schema can do so.
+android {
+    defaultConfig {
+        buildConfigField(
+            "String",
+            "GLEAN_MINICONDA_DIR",
+            "\"" + GLEAN_MINICONDA_DIR + "\""
+        )
+    }
+}
 
 /* This script runs a given Python module as a "main" module, like
  * `python -m module`. However, it first checks that the installed
@@ -44,16 +71,38 @@ subprocess.check_call([
 
 // Configure the Python environments
 envs {
-    bootstrapDirectory = new File(buildDir, 'bootstrap')
-    envsDirectory = new File(buildDir, 'envs')
+    bootstrapDirectory = GLEAN_BOOTSTRAP_DIR
     pipInstallOptions = "--trusted-host pypi.python.org --no-cache-dir"
 
     // Setup a miniconda environment. conda is used because it works
     // non-interactively on Windows, unlike the other options
-    conda "Miniconda3", "Miniconda3-4.5.11", "64", ["glean_parser==${GLEAN_PARSER_VERSION}"]
+    conda "Miniconda3", "Miniconda3-${MINICONDA_VERSION}", "64", ["glean_parser==${GLEAN_PARSER_VERSION}"]
 }
 
+// Even though we are installing the Miniconda environment to the gradle user
+// home directory, the gradle-python-envs plugin is hardcoded to download the
+// installer to the project's build directory. Doing so will fail if the
+// project's build directory doesn't already exist. This task ensures that
+// the project's build directory exists before downloading and installing the
+// Miniconda environment.
+// See https://github.com/JetBrains/gradle-python-envs/issues/26
+task createBuildDir {
+    description = "Make sure the build dir exists before creating the Python Environments"
+    onlyIf {
+        !file(buildDir).exists()
+    }
+    doLast {
+        println "Creating build directory:" + buildDir.getPath()
+        buildDir.mkdir()
+    }
+}
+
+preBuild.dependsOn(createBuildDir)
 preBuild.finalizedBy("build_envs")
+
+clean {
+    delete GLEAN_BOOTSTRAP_DIR
+}
 
 // Generate the Metrics API
 ext.gleanGenerateMetricsAPI = {
@@ -67,9 +116,9 @@ ext.gleanGenerateMetricsAPI = {
             workingDir  rootDir
             // Note that the command line is OS dependant: on linux/mac is Miniconda3/bin/python.
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                commandLine "$buildDir/bootstrap/Miniconda3/python"
+                commandLine new File(GLEAN_MINICONDA_DIR, "python")
             } else {
-                commandLine "$buildDir/bootstrap/Miniconda3/bin/python"
+                commandLine new File(GLEAN_MINICONDA_DIR, "bin/python")
             }
 
             args "-c"
