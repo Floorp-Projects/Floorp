@@ -1750,6 +1750,7 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
         if (msg.data.id != id) {
           return;
         }
+        mm.removeMessageListener("InPermitUnload", listener);
         aCallback(msg.data.inPermitUnload);
       });
       return;
