@@ -2685,6 +2685,9 @@ toolbar#nav-bar {
         try:
             self.startServers(options, debuggerInfo)
 
+            if options.jsconsole:
+                options.browserArgs.extend(['--jsconsole'])
+
             if options.jsdebugger:
                 options.browserArgs.extend(['-jsdebugger', '-wait-for-jsdebugger'])
 
