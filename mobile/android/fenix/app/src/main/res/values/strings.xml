@@ -23,4 +23,6 @@
     <string name="sessions_intro_description">Fenix will collect your browsing sessions\n on your Home Screen for you to
         retrieve\n later.
     </string>
+    <string name="search_scan_button">Scan</string>
+    <string name="search_shortcuts_button">Shortcuts</string>
 </resources>

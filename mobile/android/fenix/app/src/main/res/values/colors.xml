@@ -15,4 +15,6 @@
     <color name="session_list_empty_bg">#1A665BFD</color>
     <color name="session_list_empty_fg">#665BFD</color>
     <color name="session_list_header">#6D6D6E</color>
+
+    <color name="searchPillText">#202340</color>
 </resources>
