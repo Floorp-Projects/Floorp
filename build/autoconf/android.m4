@@ -91,9 +91,8 @@ AC_SUBST_LIST([STLPORT_LIBS])
 
 
 dnl Configure an Android SDK.
-dnl Arg 1: compile SDK version, like 23.
-dnl Arg 2: target SDK version, like 23.
-dnl Arg 3: list of build-tools versions, like "23.0.3 23.0.1".
+dnl Arg 1: target SDK version, like 23.
+dnl Arg 2: list of build-tools versions, like "23.0.3 23.0.1".
 AC_DEFUN([MOZ_ANDROID_SDK],
 [
 
@@ -117,11 +116,11 @@ case "$target" in
         AC_MSG_ERROR([Including platforms/android-* in --with-android-sdk arguments is deprecated.  Use --with-android-sdk=$android_sdk_root.])
     fi
 
-    android_target_sdk=$2
+    android_target_sdk=$1
 
     AC_MSG_CHECKING([for Android build-tools])
     android_build_tools_base="$android_sdk_root"/build-tools
-    for version in $3; do
+    for version in $2; do
         android_build_tools="$android_build_tools_base"/$version
         if test -d "$android_build_tools" -a -f "$android_build_tools/zipalign"; then
             AC_MSG_RESULT([$android_build_tools])
