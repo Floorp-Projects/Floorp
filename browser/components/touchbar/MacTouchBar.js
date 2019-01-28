@@ -232,15 +232,20 @@ class TouchBarHelper {
   }
 
   getTouchBarInput(inputName) {
+    // inputName might be undefined if an input's context() returns undefined.
+    if (!inputName || !kBuiltInInputs.hasOwnProperty(inputName)) {
+      return null;
+    }
+
     if (typeof kBuiltInInputs[inputName].context == "function") {
       inputName = kBuiltInInputs[inputName].context();
     }
 
-    let inputData = kBuiltInInputs[inputName];
-
-    if (!inputData) {
+    if (!inputName || !kBuiltInInputs.hasOwnProperty(inputName)) {
       return null;
     }
+
+    let inputData = kBuiltInInputs[inputName];
 
     let item = new TouchBarInput(inputData);
 

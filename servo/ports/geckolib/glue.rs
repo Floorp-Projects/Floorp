@@ -4356,37 +4356,24 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     use style::values::specified::Display;
     use style::values::specified::{Clear, Float};
 
+    fn get_from_computed<T>(value: u32) -> T
+    where
+        T: ToComputedValue,
+        T::ComputedValue: FromPrimitive,
+    {
+        T::from_computed_value(&T::ComputedValue::from_u32(value).unwrap())
+    }
+
+
     let long = get_longhand_from_id!(property);
     let value = value as u32;
 
     let prop = match_wrap_declared! { long,
         MozUserModify => longhands::_moz_user_modify::SpecifiedValue::from_gecko_keyword(value),
         Direction => longhands::direction::SpecifiedValue::from_gecko_keyword(value),
-        Display => Display::from_u32(value).unwrap(),
-        Float => {
-            const LEFT: u32 = structs::StyleFloat::Left as u32;
-            const RIGHT: u32 = structs::StyleFloat::Right as u32;
-            const NONE: u32 = structs::StyleFloat::None as u32;
-            match value {
-                LEFT => Float::Left,
-                RIGHT => Float::Right,
-                NONE => Float::None,
-                _ => unreachable!(),
-            }
-        },
-        Clear => {
-            const LEFT: u32 = structs::StyleClear::Left as u32;
-            const RIGHT: u32 = structs::StyleClear::Right as u32;
-            const NONE: u32 = structs::StyleClear::None as u32;
-            const BOTH: u32 = structs::StyleClear::Both as u32;
-            match value {
-                LEFT => Clear::Left,
-                RIGHT => Clear::Right,
-                NONE => Clear::None,
-                BOTH => Clear::Both,
-                _ => unreachable!(),
-            }
-        },
+        Display => get_from_computed::<Display>(value),
+        Float => get_from_computed::<Float>(value),
+        Clear => get_from_computed::<Clear>(value),
         VerticalAlign => longhands::vertical_align::SpecifiedValue::from_gecko_keyword(value),
         TextAlign => longhands::text_align::SpecifiedValue::from_gecko_keyword(value),
         TextEmphasisPosition => longhands::text_emphasis_position::SpecifiedValue::from_gecko_keyword(value),
@@ -4409,10 +4396,10 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
         MozMathVariant => longhands::_moz_math_variant::SpecifiedValue::from_gecko_keyword(value),
         WhiteSpace => longhands::white_space::SpecifiedValue::from_gecko_keyword(value),
         CaptionSide => longhands::caption_side::SpecifiedValue::from_gecko_keyword(value),
-        BorderTopStyle => BorderStyle::from_gecko_keyword(value),
-        BorderRightStyle => BorderStyle::from_gecko_keyword(value),
-        BorderBottomStyle => BorderStyle::from_gecko_keyword(value),
-        BorderLeftStyle => BorderStyle::from_gecko_keyword(value),
+        BorderTopStyle => get_from_computed::<BorderStyle>(value),
+        BorderRightStyle => get_from_computed::<BorderStyle>(value),
+        BorderBottomStyle => get_from_computed::<BorderStyle>(value),
+        BorderLeftStyle => get_from_computed::<BorderStyle>(value),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
