@@ -1639,6 +1639,19 @@ exports.dumpProtocolSpec = function() {
   return ret;
 };
 
+/**
+ * Instantiate a global (preference, device) or target-scoped (webconsole, inspector)
+ * front of the given type by picking its actor ID out of either the target or root
+ * front's form.
+ *
+ * @param DebuggerClient client
+ *    The DebuggerClient instance to use.
+ * @param string typeName
+ *    The type name of the front to instantiate. This is defined in its specifiation.
+ * @param json form
+ *    If we want to instantiate a global actor's front, this is the root front's form,
+ *    otherwise we are instantiating a target-scoped front from the target front's form.
+ */
 function getFront(client, typeName, form) {
   const type = types.getType(typeName);
   if (!type) {
@@ -1650,9 +1663,25 @@ function getFront(client, typeName, form) {
   // Use intermediate Class variable to please eslint requiring
   // a capital letter for all constructors.
   const Class = type.frontClass;
-  const instance = new Class(client, form);
+  const instance = new Class(client);
+  const { formAttributeName } = instance;
+  if (!formAttributeName) {
+    throw new Error(`Can't find the form attribute name for ${typeName}`);
+  }
+  // Retrive the actor ID from root or target actor's form
+  instance.actorID = form[formAttributeName];
+  if (!instance.actorID) {
+    throw new Error(`Can't find the actor ID for ${typeName} from root or target` +
+      ` actor's form.`);
+  }
+  // Historically, all global and target scoped front were the first protocol.js in the
+  // hierarchy of fronts. So that they have to self-own themself. But now, Root and Target
+  // are fronts and should own them. The only issue here is that we should manage the
+  // front *before* calling initialize which is going to try managing child fronts.
+  instance.manage(instance);
+
   if (typeof (instance.initialize) == "function") {
-    return instance.initialize(client, form).then(() => instance);
+    return instance.initialize().then(() => instance);
   }
   return instance;
 }
