@@ -28,8 +28,8 @@ function generateDefaults(editor, overrides) {
     pauseInfo: {
       why: { type: "breakpoint" }
     },
-    selectedFrame: null,
-    selectedSource: makeSource("foo"),
+    frame: null,
+    source: makeSource("foo"),
     ...overrides
   };
 }
@@ -50,7 +50,7 @@ function render(overrides = {}) {
   const props = generateDefaults(editor, overrides);
 
   const doc = createMockDocument(clear);
-  setDocument(props.selectedSource.id, doc);
+  setDocument(props.source.id, doc);
 
   const component = shallow(<DebugLine.WrappedComponent {...props} />, {
     lifecycleExperimental: true
@@ -62,12 +62,12 @@ describe("DebugLine Component", () => {
   describe("pausing at the first location", () => {
     it("should show a new debug line", async () => {
       const { component, props, doc } = render({
-        selectedSource: makeSource("foo", { loadedState: "loaded" })
+        source: makeSource("foo", { loadedState: "loaded" })
       });
       const line = 2;
-      const selectedFrame = createFrame(line);
+      const frame = createFrame(line);
 
-      component.setProps({ ...props, selectedFrame });
+      component.setProps({ ...props, frame });
 
       expect(doc.removeLineClass.mock.calls).toEqual([]);
       expect(doc.addLineClass.mock.calls).toEqual([
@@ -78,17 +78,17 @@ describe("DebugLine Component", () => {
     describe("pausing at a new location", () => {
       it("should replace the first debug line", async () => {
         const { props, component, clear, doc } = render({
-          selectedSource: makeSource("foo", { loadedState: "loaded" })
+          source: makeSource("foo", { loadedState: "loaded" })
         });
 
         component.instance().debugExpression = { clear: jest.fn() };
         const firstLine = 2;
         const secondLine = 2;
 
-        component.setProps({ ...props, selectedFrame: createFrame(firstLine) });
+        component.setProps({ ...props, frame: createFrame(firstLine) });
         component.setProps({
           ...props,
-          selectedFrame: createFrame(secondLine)
+          frame: createFrame(secondLine)
         });
 
         expect(doc.removeLineClass.mock.calls).toEqual([
@@ -119,11 +119,11 @@ describe("DebugLine Component", () => {
 
     describe("when there is no selected frame", () => {
       it("should not set the debug line", () => {
-        const { component, props, doc } = render({ selectedFrame: null });
+        const { component, props, doc } = render({ frame: null });
         const line = 2;
-        const selectedFrame = createFrame(line);
+        const frame = createFrame(line);
 
-        component.setProps({ ...props, selectedFrame });
+        component.setProps({ ...props, frame });
         expect(doc.removeLineClass).not.toHaveBeenCalled();
       });
     });
@@ -134,7 +134,7 @@ describe("DebugLine Component", () => {
         const newSelectedFrame = { location: { sourceId: "bar" } };
         expect(doc.removeLineClass).not.toHaveBeenCalled();
 
-        component.setProps({ selectedFrame: newSelectedFrame });
+        component.setProps({ frame: newSelectedFrame });
         expect(doc.removeLineClass).not.toHaveBeenCalled();
       });
     });
