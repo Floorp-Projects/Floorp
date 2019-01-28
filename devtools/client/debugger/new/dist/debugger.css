@@ -548,10 +548,6 @@ html[dir="rtl"] .tree-node button.arrow {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-:root {
-  --icon-size: 13px;
-}
-
 :root.theme-light,
 :root .theme-light {
   --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
@@ -4840,8 +4836,8 @@ html[dir="rtl"] .img.more-tabs {
 }
 
 .dropdown-icon {
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: 13px;
+  height: 13px;
   margin-right: 5px;
   vertical-align: middle;
   display: inline-block;
