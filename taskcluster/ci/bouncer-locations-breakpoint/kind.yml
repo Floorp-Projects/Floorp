@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.bouncer_locations_breakpoint:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+   description: nightly bouncer locations breakpoint job
+   attributes:
+      build_platform: linux64-nightly
+      nightly: true
+   worker-type:
+      by-project:
+         mozilla-central: null-provisioner/human-breakpoint
+         default: invalid/invalid
+   worker:
+      implementation: bouncer-locations-breakpoint
+   run-on-projects: ['mozilla-central']
+   treeherder:
+      symbol: BncLoc-Br
+      kind: other
+      tier: 2
+
+jobs:
+   firefox:
+      treeherder:
+         platform: firefox-release/opt
