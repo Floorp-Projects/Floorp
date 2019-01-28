@@ -836,7 +836,15 @@ impl AlphaBatchBuilder {
                             }
                         };
 
-                        let prim_header_index = prim_headers.push(&prim_header, z_id, [0; 3]);
+                        let prim_header_index = prim_headers.push(
+                            &prim_header,
+                            z_id,
+                            [
+                                (run.reference_frame_relative_offset.x * 256.0) as i32,
+                                (run.reference_frame_relative_offset.y * 256.0) as i32,
+                                0,
+                            ],
+                        );
                         let key = BatchKey::new(kind, blend_mode, textures);
                         let base_instance = GlyphInstance::new(
                             prim_header_index,
