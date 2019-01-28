@@ -341,7 +341,7 @@ types.addActorType = function(name) {
         ctx.marshallPool().manage(front);
       }
 
-      v = type.formType(detail).read(v, front, detail);
+      v = identityWrite(v);
       front.form(v, detail, ctx);
 
       return front;
@@ -353,27 +353,11 @@ types.addActorType = function(name) {
         if (!v.actorID) {
           ctx.marshallPool().manage(v);
         }
-        return type.formType(detail).write(v.form(detail), ctx, detail);
+        return identityWrite(v.form(detail));
       }
 
       // Writing a request from the client side, just send the actor id.
       return v.actorID;
-    },
-    formType: (detail) => {
-      if (!("formType" in type.actorSpec)) {
-        return types.Primitive;
-      }
-
-      let formAttr = "formType";
-      if (detail) {
-        formAttr += "#" + detail;
-      }
-
-      if (!(formAttr in type.actorSpec)) {
-        throw new Error("No type defined for " + formAttr);
-      }
-
-      return type.actorSpec[formAttr];
     },
   });
   return type;
@@ -1118,17 +1102,6 @@ var generateActorSpec = function(actorDesc) {
       continue;
     }
 
-    if (name.startsWith("formType")) {
-      if (typeof (desc.value) === "string") {
-        actorSpec[name] = types.getType(desc.value);
-      } else if (desc.value.name && registeredTypes.has(desc.value.name)) {
-        actorSpec[name] = desc.value;
-      } else {
-        // Shorthand for a newly-registered DictType.
-        actorSpec[name] = types.addDictType(actorDesc.typeName + "__" + name, desc.value);
-      }
-    }
-
     if (desc.value._methodSpec) {
       const methodSpec = desc.value._methodSpec;
       const spec = {};
@@ -1312,7 +1285,7 @@ class Front extends Pool {
     // protocol.js, in which case this can probably go away.
     if (form) {
       this.actorID = form.actor;
-      form = types.getType(this.typeName).formType(detail).read(form, this, detail);
+      form = identityWrite(form);
       this.form(form, detail, context);
     }
   }
