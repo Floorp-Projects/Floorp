@@ -234,6 +234,16 @@ function startServiceWorker(registrationFront) {
   };
 }
 
+function unregisterServiceWorker(registrationFront) {
+  return async (_, getState) => {
+    try {
+      await registrationFront.unregister();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+}
+
 module.exports = {
   inspectDebugTarget,
   installTemporaryExtension,
@@ -244,4 +254,5 @@ module.exports = {
   requestExtensions,
   requestWorkers,
   startServiceWorker,
+  unregisterServiceWorker,
 };
