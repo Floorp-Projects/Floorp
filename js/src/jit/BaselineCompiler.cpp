@@ -3967,10 +3967,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_THROW() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TRY() {
-  if (!emit_JSOP_JUMPTARGET()) {
-    return false;
-  }
-
   // Ionmonkey can't inline function with JSOP_TRY.
   if (JSScript* script = handler.maybeScript()) {
     script->setUninlineable();
