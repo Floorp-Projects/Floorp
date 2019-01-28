@@ -21,6 +21,7 @@ namespace dom {
 
 class ChromeBrowsingContext;
 class WindowGlobalChild;
+class JSWindowActorParent;
 
 /**
  * A handle in the parent process to a specific nsGlobalWindowInner object.
@@ -50,6 +51,10 @@ class WindowGlobalParent final : public nsISupports,
   // Get the other side of this actor if it is an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is not in-process.
   already_AddRefed<WindowGlobalChild> GetChildActor();
+
+  // Get a JS actor object by name.
+  already_AddRefed<JSWindowActorParent> GetActor(const nsAString& aName,
+                                                 ErrorResult& aRv);
 
   // Get this actor's manager if it is not an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is in-process.
@@ -107,6 +112,7 @@ class WindowGlobalParent final : public nsISupports,
   nsCOMPtr<nsIURI> mDocumentURI;
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<ChromeBrowsingContext> mBrowsingContext;
+  nsRefPtrHashtable<nsStringHashKey, JSWindowActorParent> mWindowActors;
   uint64_t mInnerWindowId;
   uint64_t mOuterWindowId;
   bool mInProcess;

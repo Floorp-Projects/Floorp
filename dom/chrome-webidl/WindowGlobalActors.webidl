@@ -27,6 +27,9 @@ interface WindowGlobalParent {
   readonly attribute URI? documentURI;
 
   static WindowGlobalParent? getByInnerWindowId(unsigned long long innerWindowId);
+
+  [Throws]
+  JSWindowActorParent getActor(DOMString name);
 };
 
 [Exposed=Window, ChromeOnly]
@@ -43,4 +46,7 @@ interface WindowGlobalChild {
   readonly attribute WindowGlobalParent? parentActor; // in-process only
 
   static WindowGlobalChild? getByInnerWindowId(unsigned long long innerWIndowId);
+
+  [Throws]
+  JSWindowActorChild getActor(DOMString name);
 };
