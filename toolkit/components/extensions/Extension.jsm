@@ -274,6 +274,8 @@ var UninstallObserver = {
       Services.perms.removeFromPrincipal(principal, "persistent-storage");
     }
 
+    ExtensionPermissions.removeAll(addon.id);
+
     if (!Services.prefs.getBoolPref(LEAVE_UUID_PREF, false)) {
       // Clear the entry in the UUID map
       UUIDMap.remove(addon.id);
@@ -671,7 +673,7 @@ class ExtensionData {
         originPermissions.add(matcher.pattern);
 
         // Apply optional permissions
-        let perms = await ExtensionPermissions.get(this);
+        let perms = await ExtensionPermissions.get(this.id);
         for (let perm of perms.permissions) {
           permissions.add(perm);
         }
