@@ -15,6 +15,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import mozilla.components.browser.awesomebar.layout.SuggestionLayout
+import mozilla.components.browser.awesomebar.transform.SuggestionTransformer
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.ktx.android.content.res.pxToDp
 
@@ -35,8 +36,8 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : RecyclerView(context, attrs, defStyleAttr), AwesomeBar {
     private val jobDispatcher = newFixedThreadPoolContext(PROVIDER_QUERY_THREADS, "AwesomeBarProviders")
-    private val suggestionsAdapter = SuggestionsAdapter(this)
     private val providers: MutableList<AwesomeBar.SuggestionProvider> = mutableListOf()
+    internal var suggestionsAdapter = SuggestionsAdapter(this)
     internal var scope = CoroutineScope(Dispatchers.Main)
     internal var job: Job? = null
     internal var listener: (() -> Unit)? = null
@@ -48,6 +49,12 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     var layout: SuggestionLayout
         get() = suggestionsAdapter.layout
         set(value) { suggestionsAdapter.layout = value }
+
+    /**
+     * An optional [SuggestionTransformer] that receives [AwesomeBar.Suggestion] objects from a
+     * [AwesomeBar.SuggestionProvider] and returns a new list of transformed [AwesomeBar.Suggestion] objects.
+     */
+    var transformer: SuggestionTransformer? = null
 
     init {
         layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
@@ -84,8 +91,14 @@ class BrowserAwesomeBar @JvmOverloads constructor(
         job = scope.launch {
             providers.forEach { provider ->
                 launch {
-                    val suggestions = async(jobDispatcher) { provider.onInputChanged(text) }
-                    suggestionsAdapter.addSuggestions(provider, suggestions.await())
+                    val suggestions = async(jobDispatcher) {
+                        provider.onInputChanged(text)
+                    }
+
+                    suggestionsAdapter.addSuggestions(
+                        provider,
+                        transformer?.transform(provider, suggestions.await()) ?: suggestions.await()
+                    )
                 }
             }
         }

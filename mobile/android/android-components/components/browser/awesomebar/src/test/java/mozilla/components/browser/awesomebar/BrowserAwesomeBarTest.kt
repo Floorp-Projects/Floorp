@@ -4,10 +4,13 @@
 
 package mozilla.components.browser.awesomebar
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.awesomebar.transform.SuggestionTransformer
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -18,12 +21,14 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserAwesomeBarTest {
     private val testMainScope = CoroutineScope(newSingleThreadContext("Test"))
+
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `BrowserAwesomeBar forwards input to providers`() {
@@ -32,7 +37,7 @@ class BrowserAwesomeBarTest {
             val provider2 = mockProvider()
             val provider3 = mockProvider()
 
-            val awesomeBar = BrowserAwesomeBar(RuntimeEnvironment.application)
+            val awesomeBar = BrowserAwesomeBar(context)
             awesomeBar.scope = testMainScope
             awesomeBar.addProviders(provider1, provider2)
             awesomeBar.addProviders(provider3)
@@ -53,7 +58,7 @@ class BrowserAwesomeBarTest {
         val provider2: AwesomeBar.SuggestionProvider = mock()
         val provider3: AwesomeBar.SuggestionProvider = mock()
 
-        val awesomeBar = BrowserAwesomeBar(RuntimeEnvironment.application)
+        val awesomeBar = BrowserAwesomeBar(context)
         awesomeBar.addProviders(provider1, provider2)
         awesomeBar.addProviders(provider3)
 
@@ -70,7 +75,7 @@ class BrowserAwesomeBarTest {
         val provider2: AwesomeBar.SuggestionProvider = mock()
         val provider3: AwesomeBar.SuggestionProvider = mock()
 
-        val awesomeBar = BrowserAwesomeBar(RuntimeEnvironment.application)
+        val awesomeBar = BrowserAwesomeBar(context)
         awesomeBar.addProviders(provider1, provider2)
         awesomeBar.addProviders(provider3)
 
@@ -106,7 +111,7 @@ class BrowserAwesomeBarTest {
                 }
             }
 
-            val awesomeBar = BrowserAwesomeBar(RuntimeEnvironment.application)
+            val awesomeBar = BrowserAwesomeBar(context)
             awesomeBar.scope = testMainScope
             awesomeBar.addProviders(blockingProvider)
 
@@ -146,7 +151,7 @@ class BrowserAwesomeBarTest {
                 }
             }
 
-            val awesomeBar = BrowserAwesomeBar(RuntimeEnvironment.application)
+            val awesomeBar = BrowserAwesomeBar(context)
             awesomeBar.scope = testMainScope
             awesomeBar.addProviders(blockingProvider)
 
@@ -199,7 +204,7 @@ class BrowserAwesomeBarTest {
                 }
             }
 
-            val awesomeBar = BrowserAwesomeBar(RuntimeEnvironment.application)
+            val awesomeBar = BrowserAwesomeBar(context)
             awesomeBar.scope = testMainScope
             awesomeBar.addProviders(provider)
 
@@ -218,10 +223,55 @@ class BrowserAwesomeBarTest {
     }
 
     @Test
+    fun `BrowserAwesomeBar will use optional transformer before passing suggestions to adapter`() {
+        runBlocking(testMainScope.coroutineContext) {
+            val awesomeBar = BrowserAwesomeBar(context)
+            awesomeBar.scope = testMainScope
+
+            val inputSuggestions = listOf(AwesomeBar.Suggestion(title = "Tetst"))
+            val provider = object : AwesomeBar.SuggestionProvider {
+                override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
+                    return inputSuggestions
+                }
+            }
+            awesomeBar.addProviders(provider)
+
+            val adapter: SuggestionsAdapter = mock()
+            awesomeBar.suggestionsAdapter = adapter
+
+            val transformedSuggestions = listOf(
+                AwesomeBar.Suggestion(title = "Hello"),
+                AwesomeBar.Suggestion(title = "World")
+            )
+
+            val transformer = spy(object : SuggestionTransformer {
+                override fun transform(
+                    provider: AwesomeBar.SuggestionProvider,
+                    suggestions: List<AwesomeBar.Suggestion>
+                ): List<AwesomeBar.Suggestion> {
+                    return transformedSuggestions
+                }
+            })
+            awesomeBar.transformer = transformer
+
+            awesomeBar.onInputChanged("Hello!")
+
+            // Give the jobs some time to start
+            delay(50)
+
+            awesomeBar.job!!.start()
+            awesomeBar.job!!.join()
+
+            verify(transformer).transform(provider, inputSuggestions)
+            verify(adapter).addSuggestions(provider, transformedSuggestions)
+        }
+    }
+
+    @Test
     fun `onStopListener is accessible internally`() {
         var stopped = false
 
-        val awesomeBar = BrowserAwesomeBar(RuntimeEnvironment.application)
+        val awesomeBar = BrowserAwesomeBar(context)
         awesomeBar.setOnStopListener {
             stopped = true
         }

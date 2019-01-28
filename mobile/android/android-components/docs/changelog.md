@@ -30,7 +30,21 @@ permalink: /changelog/
   * Added ability to define custom hooks to be invoked when editing starts or is completed.
 
 * **browser-awesomebar**
- * Added ability to let consumers define the layouting of suggestions by implementing `SuggestionLayout` in order to control layout inflation and view binding.
+  * Added ability to let consumers define the layouting of suggestions by implementing `SuggestionLayout` in order to control layout inflation and view binding.
+  * Added ability to transform suggestions returned by provider (adding data, removing data, filtering suggestions, ...)
+
+ ```Kotlin
+awesomeBar.transformer = object : SuggestionTransformer {
+    override fun transform(
+        provider: AwesomeBar.SuggestionProvider,
+        suggestions: List<AwesomeBar.Suggestion>
+    ): List<AwesomeBar.Suggestion> {
+        return suggestions.map { suggestion ->
+            suggestion.copy(title = "Awesome!")
+        }
+    }
+}
+ ```
 
 * **lib-publicsuffixlist**
   * The public suffix list shipping with this component is now updated automatically in the repository every day (if there are changes).
