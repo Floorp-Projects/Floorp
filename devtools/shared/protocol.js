@@ -1295,8 +1295,6 @@ class Front extends Pool {
     // protocol.js, in which case this can probably go away.
     if (form) {
       this.actorID = form.actor;
-      form = identityWrite(form);
-      this.form(form);
     }
   }
 

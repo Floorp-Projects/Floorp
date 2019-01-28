@@ -66,7 +66,8 @@ class AddonTargetFront extends FrontClassWithSpec(addonTargetSpec) {
       // To retrieve the target actor instance, we call its "connect" method, (which
       // fetches the target actor targetForm from a WebExtensionTargetActor instance).
       const { form } = await super.connect();
-      const front = new BrowsingContextTargetFront(this.client, form);
+      const front = new BrowsingContextTargetFront(this.client, { actor: form.actor });
+      front.form(form);
       this.manage(front);
       return front;
     }
