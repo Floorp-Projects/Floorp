@@ -4,7 +4,7 @@
 
 use api::{
     ColorF, ColorU,ExtendMode, GradientStop, LayoutPoint, LayoutSize,
-    LayoutPrimitiveInfo, PremultipliedColorF
+    LayoutPrimitiveInfo, PremultipliedColorF, LayoutVector2D,
 };
 use display_list_flattener::{AsInstanceKind, IsVisible};
 use frame_builder::FrameBuildingState;
@@ -84,6 +84,7 @@ impl AsInstanceKind<LinearGradientDataHandle> for LinearGradientKey {
         &self,
         data_handle: LinearGradientDataHandle,
         _prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::LinearGradient {
             data_handle,
@@ -332,6 +333,7 @@ impl AsInstanceKind<RadialGradientDataHandle> for RadialGradientKey {
         &self,
         data_handle: RadialGradientDataHandle,
         _prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::RadialGradient {
             data_handle,
