@@ -546,6 +546,15 @@ void MacroAssembler::branchTestSymbol(Condition cond, const ValueOperand& value,
   branchTestSymbol(cond, scratch2, label);
 }
 
+#ifdef ENABLE_BIGINT
+void MacroAssembler::branchTestBigInt(Condition cond, const ValueOperand& value,
+                                      Label* label) {
+  SecondScratchRegisterScope scratch2(*this);
+  splitTag(value, scratch2);
+  branchTestBigInt(cond, scratch2, label);
+}
+#endif
+
 void MacroAssembler::branchTestNull(Condition cond, const ValueOperand& value,
                                     Label* label) {
   SecondScratchRegisterScope scratch2(*this);

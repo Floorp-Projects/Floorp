@@ -64,6 +64,11 @@ static void EmitTypeCheck(MacroAssembler& masm, Assembler::Condition cond,
     case JSVAL_TYPE_SYMBOL:
       masm.branchTestSymbol(cond, src, label);
       break;
+#ifdef ENABLE_BIGINT
+    case JSVAL_TYPE_BIGINT:
+      masm.branchTestBigInt(cond, src, label);
+      break;
+#endif
     case JSVAL_TYPE_NULL:
       masm.branchTestNull(cond, src, label);
       break;
@@ -96,10 +101,17 @@ void MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types,
   MOZ_ASSERT(!types->unknown());
 
   Label matched;
-  TypeSet::Type tests[8] = {TypeSet::Int32Type(),    TypeSet::UndefinedType(),
-                            TypeSet::BooleanType(),  TypeSet::StringType(),
-                            TypeSet::SymbolType(),   TypeSet::NullType(),
-                            TypeSet::MagicArgType(), TypeSet::AnyObjectType()};
+  TypeSet::Type tests[] = {TypeSet::Int32Type(),
+                           TypeSet::UndefinedType(),
+                           TypeSet::BooleanType(),
+                           TypeSet::StringType(),
+                           TypeSet::SymbolType(),
+#ifdef ENABLE_BIGINT
+                           TypeSet::BigIntType(),
+#endif
+                           TypeSet::NullType(),
+                           TypeSet::MagicArgType(),
+                           TypeSet::AnyObjectType()};
 
   // The double type also implies Int32.
   // So replace the int32 test with the double one.
