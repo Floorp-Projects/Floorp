@@ -744,15 +744,19 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvDeleteCompositorAnimations(
 void WebRenderBridgeParent::RemoveEpochDataPriorTo(
     const wr::Epoch& aRenderedEpoch) {
   while (!mCompositorAnimationsToDelete.empty()) {
-    if (mCompositorAnimationsToDelete.front().mEpoch.mHandle >
-        aRenderedEpoch.mHandle) {
+    if (aRenderedEpoch < mCompositorAnimationsToDelete.front().mEpoch) {
       break;
     }
     for (uint64_t id : mCompositorAnimationsToDelete.front().mIds) {
-      if (mActiveAnimations.erase(id) > 0) {
-        mAnimStorage->ClearById(id);
-      } else {
+      const auto activeAnim = mActiveAnimations.find(id);
+      if (activeAnim == mActiveAnimations.end()) {
         NS_ERROR("Tried to delete invalid animation");
+        continue;
+      }
+      // Check if animation delete request is still valid.
+      if (activeAnim->second <= mCompositorAnimationsToDelete.front().mEpoch) {
+        mAnimStorage->ClearById(id);
+        mActiveAnimations.erase(activeAnim);
       }
     }
     mCompositorAnimationsToDelete.pop();
@@ -1191,7 +1195,13 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
         }
         if (data.animations().Length()) {
           mAnimStorage->SetAnimations(data.id(), data.animations());
-          mActiveAnimations.insert(data.id());
+          const auto activeAnim = mActiveAnimations.find(data.id());
+          if (activeAnim == mActiveAnimations.end()) {
+            mActiveAnimations.emplace(data.id(), mWrEpoch);
+          } else {
+            // Update wr::Epoch if the animation already exists.
+            activeAnim->second = mWrEpoch;
+          }
         }
         break;
       }
@@ -1444,7 +1454,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
   ScheduleGenerateFrame();
   // Remove animations.
   for (const auto& id : mActiveAnimations) {
-    mAnimStorage->ClearById(id);
+    mAnimStorage->ClearById(id.first);
   }
   mActiveAnimations.clear();
   std::queue<CompositorAnimationIdsForEpoch>().swap(
@@ -2016,7 +2026,7 @@ void WebRenderBridgeParent::ClearResources() {
   mApi->SendTransaction(txn);
 
   for (const auto& id : mActiveAnimations) {
-    mAnimStorage->ClearById(id);
+    mAnimStorage->ClearById(id.first);
   }
   mActiveAnimations.clear();
   std::queue<CompositorAnimationIdsForEpoch>().swap(
