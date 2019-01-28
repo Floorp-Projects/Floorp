@@ -20,6 +20,7 @@
 #include <objbase.h>
 
 #include <dxgi.h>
+#include <dxgi1_6.h>
 
 // This header is available in the June 2010 SDK and in the Win8 SDK
 #include <d3dcommon.h>
@@ -80,6 +81,9 @@ class DeviceManagerDx final {
   // Intel devices on older windows versions seem to occasionally have
   // stability issues when supplying InitData to CreateTexture2D.
   bool HasCrashyInitData();
+
+  // Enumerate and return all outputs on the current adapter.
+  nsTArray<DXGI_OUTPUT_DESC1> EnumerateOutputs();
 
   bool CreateCompositorDevices();
   void CreateContentDevices();

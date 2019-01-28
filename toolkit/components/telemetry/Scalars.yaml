@@ -1862,6 +1862,24 @@ gfx.omtp:
     record_in_processes:
       - 'content'
 
+gfx.hdr:
+  windows_display_colorspace_bitfield:
+    bug_numbers:
+      - 1514840
+    description: >
+      A bitfield representation of the available DXGI color spaces of the connected displays on Windows.
+      See (https://docs.microsoft.com/en-us/windows/desktop/api/dxgicommon/ne-dxgicommon-dxgi_color_space_type)
+      for definitions of color spaces. Each N'th bit of this scalar indicates whether the DXGI color space with
+      index 'N' is available on at least one connected monitor.
+    keyed: false
+    kind: uint
+    expires: "70"
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - rhunt@mozilla.com
+    record_in_processes:
+      - 'main'
+
 # The following section contains the form autofill related scalars.
 formautofill:
   availability:
