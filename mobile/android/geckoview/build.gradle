@@ -415,7 +415,9 @@ task("generateSDKBindings", type: JavaExec) {
     ]
 
     main = 'org.mozilla.gecko.annotationProcessors.SDKProcessor'
-    args android.bootClasspath
+    // We only want to generate bindings for the main framework JAR,
+    // but not any of the additional android.test libraries.
+    args android.bootClasspath.findAll { !it.getName().startsWith('android.test.') }
     args 16
     args "${topobjdir}/widget/android/bindings"
 
