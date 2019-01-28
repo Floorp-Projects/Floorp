@@ -4,6 +4,9 @@
 
 "use strict";
 
+const { CONNECTION_TYPES } =
+  require("devtools/client/shared/remote-debugging/remote-client-manager");
+
 const actionTypes = {
   ADB_ADDON_INSTALL_START: "ADB_ADDON_INSTALL_START",
   ADB_ADDON_INSTALL_SUCCESS: "ADB_ADDON_INSTALL_SUCCESS",
@@ -95,9 +98,9 @@ const RUNTIME_PREFERENCE = {
 };
 
 const RUNTIMES = {
-  NETWORK: "network",
-  THIS_FIREFOX: "this-firefox",
-  USB: "usb",
+  NETWORK: CONNECTION_TYPES.NETWORK,
+  THIS_FIREFOX: CONNECTION_TYPES.THIS_FIREFOX,
+  USB: CONNECTION_TYPES.USB,
 };
 
 const SERVICE_WORKER_FETCH_STATES = {
