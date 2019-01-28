@@ -115,10 +115,6 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
   },
 
   form: function(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
     // We need to use CSS from the inspected window in order to use CSS.supports() and
     // detect the right platform features from there.
     const CSS = this.inspector.targetActor.window.CSS;

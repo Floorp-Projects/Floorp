@@ -31,11 +31,7 @@ class MediaRuleFront extends FrontClassWithSpec(mediaRuleSpec) {
     this._form.matches = matches;
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this.actorID = form.actor;
     this._form = form;
   }
@@ -83,11 +79,7 @@ class StyleSheetFront extends FrontClassWithSpec(styleSheetSpec) {
     this._form[property] = value;
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this.actorID = form.actor;
     this._form = form;
   }

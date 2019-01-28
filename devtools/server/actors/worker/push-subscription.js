@@ -14,10 +14,7 @@ const PushSubscriptionActor = protocol.ActorClassWithSpec(pushSubscriptionSpec, 
     this._subscription = subscription;
   },
 
-  form(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
+  form() {
     const subscription = this._subscription;
     return {
       actor: this.actorID,

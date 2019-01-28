@@ -1264,7 +1264,7 @@ exports.ActorClassWithSpec = ActorClassWithSpec;
  * @constructor
  */
 class Front extends Pool {
-  constructor(conn = null, form = null, detail = null, context = null) {
+  constructor(conn = null, form = null) {
     super(conn);
     this.actorID = null;
     this._requests = [];
@@ -1286,7 +1286,7 @@ class Front extends Pool {
     if (form) {
       this.actorID = form.actor;
       form = identityWrite(form);
-      this.form(form, detail, context);
+      this.form(form);
     }
   }
 

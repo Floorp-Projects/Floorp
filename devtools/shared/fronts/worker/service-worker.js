@@ -19,12 +19,7 @@ class ServiceWorkerFront extends FrontClassWithSpec(serviceWorkerSpec) {
     return this._form.state;
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-
+  form(form) {
     this.actorID = form.actor;
     this._form = form;
   }

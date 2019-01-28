@@ -131,10 +131,6 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   release: function() {},
 
   form: function(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
     const data = this.getCurrentState();
     data.actor = this.actorID;
 
