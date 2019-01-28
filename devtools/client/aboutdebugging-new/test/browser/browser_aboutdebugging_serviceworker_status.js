@@ -29,7 +29,8 @@ add_task(async function() {
   await waitForServiceWorkerRegistering(SW_URL, document);
 
   // Check that the buttons are displayed as expected.
-  checkButtons({ inspect: true, push: false, start: false }, SW_URL, document);
+  checkButtons({ inspect: true, push: false, start: false, unregister: false },
+    SW_URL, document);
 
   info("Install the service worker");
   ContentTask.spawn(swTab.linkedBrowser, {},
@@ -38,7 +39,8 @@ add_task(async function() {
   info("Wait until the service worker is running");
   await waitForServiceWorkerRunning(SW_URL, document);
 
-  checkButtons({ inspect: true, push: true, start: false }, SW_URL, document);
+  checkButtons({ inspect: true, push: true, start: false, unregister: true },
+    SW_URL, document);
 
   info("Unregister service worker");
   await unregisterServiceWorker(swTab);
@@ -51,12 +53,13 @@ add_task(async function() {
   await removeTab(tab);
 });
 
-function checkButtons({ inspect, push, start }, workerText, document) {
+function checkButtons({ inspect, push, start, unregister }, workerText, document) {
   const targetElement = findDebugTargetByText(SW_URL, document);
 
   const inspectButton = targetElement.querySelector(".js-debug-target-inspect-button");
   const pushButton = targetElement.querySelector(".js-push-button");
   const startButton = targetElement.querySelector(".js-start-button");
+  const unregisterButton = targetElement.querySelector(".js-unregister-button");
 
   is(!!inspectButton, inspect,
     "Inspect button should be " + (inspect ? "visible" : "hidden"));
@@ -64,4 +67,6 @@ function checkButtons({ inspect, push, start }, workerText, document) {
     "Push button should be " + (push ? "visible" : "hidden"));
   is(!!startButton, start,
     "Start button should be " + (start ? "visible" : "hidden"));
+  is(!!unregisterButton, unregister,
+    "Unregister button should be " + (unregister ? "visible" : "hidden"));
 }
