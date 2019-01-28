@@ -51,6 +51,10 @@ class UrlbarResult {
     }
     this.source = matchSource;
 
+    // May be used to indicate an heuristic result. Heuristic results can bypass
+    // source filters in the ProvidersManager, that otherwise may skip them.
+    this.heuristic = false;
+
     // The payload contains result data. Some of the data is common across
     // multiple types, but most of it will vary.
     if (!payload || (typeof payload != "object")) {
