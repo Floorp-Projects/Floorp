@@ -2539,19 +2539,36 @@ bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
   if (mFinished) {
     return false;
   }
+  bool streamPullingEnabled = false;
+  for (const TrackData& track : mUpdateTracks) {
+    if (!(track.mCommands & TrackEventCommand::TRACK_EVENT_ENDED) &&
+        track.mPullingEnabled) {
+      // At least one track in this stream is pulled. We want to consume it in
+      // real-time (i.e., not block the stream).
+      streamPullingEnabled = true;
+      break;
+    }
+  }
   // Compute how much stream time we'll need assuming we don't block
   // the stream at all.
   StreamTime t = GraphTimeToStreamTime(aDesiredUpToTime);
-  StreamTime current = mTracks.GetEarliestTrackEnd();
   for (const TrackData& track : mUpdateTracks) {
-    if (!track.mPullingEnabled) {
-      continue;
-    }
     if (track.mCommands & TrackEventCommand::TRACK_EVENT_ENDED) {
       continue;
     }
-    current = track.mEndOfFlushedData + track.mData->GetDuration();
+    StreamTime current = track.mEndOfFlushedData + track.mData->GetDuration();
     if (t <= current) {
+      continue;
+    }
+    if (!track.mPullingEnabled) {
+      if (streamPullingEnabled) {
+        LOG(LogLevel::Verbose,
+            ("%p: Pulling disabled for track but enabled for stream, append "
+             "null data; stream=%p track=%d t=%f current end=%f",
+             GraphImpl(), this, track.mID, GraphImpl()->MediaTimeToSeconds(t),
+             GraphImpl()->MediaTimeToSeconds(current)));
+        track.mData->AppendNullData(t - current);
+      }
       continue;
     }
     LOG(LogLevel::Verbose,
