@@ -17,7 +17,7 @@ import { selectSource } from "./sources";
 import {
   getSourcesByURLs,
   getSourceTabs,
-  getSourceFromId,
+  getSource,
   getNewSelectedSourceId,
   removeSourceFromTabList,
   removeSourcesFromTabList
@@ -104,8 +104,9 @@ export function closeTabsForMissingThreads(workers: Worker[]) {
     const removed = [];
     for (const { sourceId } of oldTabs) {
       if (sourceId) {
-        const source = getSourceFromId(getState(), sourceId);
+        const source = getSource(getState(), sourceId);
         if (
+          source &&
           source.thread != mainThread.actor &&
           !workers.some(({ actor }) => actor == source.thread)
         ) {
