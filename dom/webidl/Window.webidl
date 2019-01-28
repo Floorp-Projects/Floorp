@@ -370,6 +370,9 @@ partial interface Window {
 
   [ChromeOnly]
   readonly attribute boolean hasOpenerForInitialContentBrowser;
+
+  [ChromeOnly]
+  WindowGlobalChild getWindowGlobalChild();
 };
 
 Window implements TouchEventHandlers;
