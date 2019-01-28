@@ -11,20 +11,17 @@ DIRS += ['input']
 
 MOCHITEST_MANIFESTS += [
     'test/forms/mochitest.ini',
-    'test/forms/xbl/mochitest.ini',
     'test/mochitest.ini',
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
     'test/chrome.ini',
     'test/forms/chrome.ini',
-    'test/forms/xbl/chrome.ini',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 XPIDL_SOURCES += [
-    'nsIDateTimeInputArea.idl',
     'nsIFormSubmitObserver.idl',
     'nsIImageDocument.idl',
     'nsIMenuBuilder.idl',
