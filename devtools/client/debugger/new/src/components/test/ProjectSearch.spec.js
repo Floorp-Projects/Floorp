@@ -195,7 +195,7 @@ describe("ProjectSearch", () => {
       },
       true
     );
-    component.instance().focusedItem = {};
+    component.instance().focusedItem = null;
     shortcuts.dispatch("Enter");
     expect(selectSpecificLocation).not.toHaveBeenCalled();
   });
@@ -209,7 +209,7 @@ describe("ProjectSearch", () => {
       },
       true
     );
-    component.instance().focusedItem = { match: testMatch };
+    component.instance().focusedItem = { match: testMatch, expanded: null };
     shortcuts.dispatch("Enter");
     expect(selectSpecificLocation).toHaveBeenCalledWith({
       sourceId: "some-target/source42",
