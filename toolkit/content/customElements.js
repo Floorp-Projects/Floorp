@@ -4,7 +4,7 @@
 
  // This file defines these globals on the window object.
  // Define them here so that ESLint can find them:
-/* globals MozElementMixin, MozXULElement, MozElements */
+/* globals BaseControlMixin, MozElementMixin, MozXULElement, MozElements */
 
 "use strict";
 
@@ -256,36 +256,41 @@ function getInterfaceProxy(obj) {
   return obj._customInterfaceProxy;
 }
 
-MozElements.BaseControl = class BaseControl extends MozXULElement {
-  get disabled() {
-    return this.getAttribute("disabled") == "true";
-  }
+const BaseControlMixin = Base => {
+  class BaseControl extends Base {
+    get disabled() {
+      return this.getAttribute("disabled") == "true";
+    }
 
-  set disabled(val) {
-    if (val) {
-      this.setAttribute("disabled", "true");
-    } else {
-      this.removeAttribute("disabled");
+    set disabled(val) {
+      if (val) {
+        this.setAttribute("disabled", "true");
+      } else {
+        this.removeAttribute("disabled");
+      }
+    }
+
+    get tabIndex() {
+      return parseInt(this.getAttribute("tabindex")) || 0;
+    }
+
+    set tabIndex(val) {
+      if (val) {
+        this.setAttribute("tabindex", val);
+      } else {
+        this.removeAttribute("tabindex");
+      }
     }
   }
 
-  get tabIndex() {
-    return parseInt(this.getAttribute("tabindex")) || 0;
-  }
-
-  set tabIndex(val) {
-    if (val) {
-      this.setAttribute("tabindex", val);
-    } else {
-      this.removeAttribute("tabindex");
-    }
-  }
+  Base.implementCustomInterface(BaseControl,
+                                [Ci.nsIDOMXULControlElement]);
+  return BaseControl;
 };
-
-MozXULElement.implementCustomInterface(MozElements.BaseControl,
-                                       [Ci.nsIDOMXULControlElement]);
+MozElements.BaseControl = BaseControlMixin(MozXULElement);
 
 // Attach the base class to the window so other scripts can use it:
+window.BaseControlMixin = BaseControlMixin;
 window.MozElementMixin = MozElementMixin;
 window.MozXULElement = MozXULElement;
 window.MozElements = MozElements;

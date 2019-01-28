@@ -27,6 +27,8 @@
   async function runTests() {
     ok(MozXULElement, "MozXULElement defined on the window");
     testMixin();
+    testBaseControl();
+    testBaseControlMixin();
     testParseXULToFragment();
     testInherits();
     await testCustomInterface();
@@ -46,6 +48,19 @@
     ok(MozElementMixin, "Mixin exists");
     let MixedHTMLElement = MozElementMixin(HTMLElement);
     ok(MixedHTMLElement.insertFTLIfNeeded, "Mixed in class contains helper functions");
+  }
+
+  function testBaseControl() {
+    ok(MozElements.BaseControl, "BaseControl exists");
+    ok("disabled" in MozElements.BaseControl.prototype,
+      "BaseControl prototype contains base control attributes");
+  }
+
+  function testBaseControlMixin() {
+    ok(BaseControlMixin, "Mixin exists");
+    let MixedHTMLSpanElement = MozElementMixin(HTMLSpanElement);
+    let HTMLSpanBaseControl = BaseControlMixin(MixedHTMLSpanElement);
+    ok("disabled" in HTMLSpanBaseControl.prototype, "Mixed in class prototype contains base control attributes");
   }
 
   function testParseXULToFragment() {
