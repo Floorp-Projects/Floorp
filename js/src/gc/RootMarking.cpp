@@ -565,9 +565,8 @@ void GCRuntime::markBufferedGrayRoots(JS::Zone* zone) {
     auto addr = uintptr_t(cell);
     if (addr < ChunkSize || addr % CellAlignBytes != 0) {
       MOZ_CRASH_UNSAFE_PRINTF(
-          "Bad GC thing pointer in gray root buffer: %p at index %zu of %zu, "
-          "address %p",
-          cell, i, roots.length(), &roots[i]);
+          "Bad GC thing pointer in gray root buffer: %p at address %p",
+          cell, &iter.Get());
     }
 #else
     MOZ_ASSERT(IsCellPointerValid(cell));
