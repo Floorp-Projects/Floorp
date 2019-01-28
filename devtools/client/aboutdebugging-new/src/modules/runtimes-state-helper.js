@@ -16,18 +16,6 @@ function getCurrentClient(runtimesState) {
 }
 exports.getCurrentClient = getCurrentClient;
 
-function getCurrentRuntimeInfo(runtimesState) {
-  const runtimeDetails = getCurrentRuntimeDetails(runtimesState);
-  return runtimeDetails ? runtimeDetails.info : null;
-}
-exports.getCurrentRuntimeInfo = getCurrentRuntimeInfo;
-
-function getCurrentConnectionPromptSetting(runtimesState) {
-  const runtimeDetails = getCurrentRuntimeDetails(runtimesState);
-  return runtimeDetails ? runtimeDetails.connectionPromptEnabled : false;
-}
-exports.getCurrentConnectionPromptSetting = getCurrentConnectionPromptSetting;
-
 function findRuntimeById(id, runtimesState) {
   return getAllRuntimes(runtimesState).find(r => r.id === id);
 }
