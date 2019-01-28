@@ -234,6 +234,8 @@ static const TestFileData testFiles[] = {
      false, 0},
     {"test_case_1410565.mp4", false, 0, false, 0, 0, 0, 0, 0, false, 955100,
      true, true, 2},  // negative 'timescale'
+    {"test_case_1519617-video-has-track_id-0.mp4", true, 1, true, 10032000, 400,
+     300, 1, 10032000, false, 0, true, true, 2},  // Uses bad track id 0
 };
 
 TEST(MP4Metadata, test_case_mp4) {
@@ -476,6 +478,59 @@ TEST(MoofParser, test_case_sample_description_entries) {
       EXPECT_EQ(1u, numEncryptedEntries) << tests[test].mFilename;
     }
   }
+}
+
+// We should gracefully handle track_id 0 since Bug 1519617. We'd previously
+// used id 0 to trigger special handling in the MoofParser to read multiple
+// track metadata, but since muxers use track id 0 in the wild, we want to
+// make sure they can't accidentally trigger such handling.
+TEST(MoofParser, test_case_track_id_0_does_not_read_multitracks) {
+  const char* zeroTrackIdFileName =
+      "test_case_1519617-video-has-track_id-0.mp4";
+  nsTArray<uint8_t> buffer = ReadTestFile(zeroTrackIdFileName);
+
+  ASSERT_FALSE(buffer.IsEmpty());
+  RefPtr<ByteStream> stream =
+      new TestStream(buffer.Elements(), buffer.Length());
+
+  // Parse track id 0. We expect to only get metadata from that track, not the
+  // other track with id 2.
+  const uint32_t videoTrackId = 0;
+  MoofParser parser(stream, videoTrackId, false);
+
+  // Explicitly don't call parser.Metadata() so that the parser itself will
+  // read the metadata as if we're in a fragmented case. Otherwise we won't
+  // read the trak data.
+
+  const MediaByteRangeSet byteRanges(
+      MediaByteRange(0, int64_t(buffer.Length())));
+  EXPECT_TRUE(parser.RebuildFragmentedIndex(byteRanges))
+      << "MoofParser should find a valid moof as the file contains one!";
+
+  // Verify we only have data from track 0, if we parsed multiple tracks we'd
+  // find some of the audio track metadata here. Only check for values that
+  // differ between tracks.
+  const uint32_t videoTimescale = 90000;
+  const uint32_t videoSampleDuration = 3000;
+  const uint32_t videoSampleFlags = 0x10000;
+  const uint32_t videoNumSampleDescriptionEntries = 1;
+  EXPECT_EQ(videoTimescale, parser.mMdhd.mTimescale)
+      << "Wrong timescale for video track! If value is 22050, we've read from "
+         "the audio track!";
+  EXPECT_EQ(videoTrackId, parser.mTrex.mTrackId)
+      << "Wrong track id for video track! If value is 2, we've read from the "
+         "audio track!";
+  EXPECT_EQ(videoSampleDuration, parser.mTrex.mDefaultSampleDuration)
+      << "Wrong sample duration for video track! If value is 1024, we've read "
+         "from the audio track!";
+  EXPECT_EQ(videoSampleFlags, parser.mTrex.mDefaultSampleFlags)
+      << "Wrong sample flags for video track! If value is 0x2000000 (note "
+         "that's hex), we've read from the audio track!";
+  EXPECT_EQ(videoNumSampleDescriptionEntries,
+            parser.mSampleDescriptions.Length())
+      << "Wrong number of sample descriptions for video track! If value is 2, "
+         "then we've read sample description information from video and audio "
+         "tracks!";
 }
 
 // This test was disabled by Bug 1224019 for producing way too much output.
