@@ -48,7 +48,7 @@ class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps> {
 //
 // Note: LSafepoints are 1:1 with LOsiPoints, so it holds a reference to the
 // corresponding LSafepoint to inform it of the LOsiPoint's masm offset when it
-// gets CG'd.
+// gets GC'd.
 class LOsiPoint : public LInstructionHelper<0, 0, 0> {
   LSafepoint* safepoint_;
 
