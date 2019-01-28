@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1515822 - restore scroll position for display: contents children</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <style>
+    #shell {
+      display: contents;
+    }
+    #outer {
+      width: 200px;
+      height: 200px;
+      overflow: scroll;
+    }
+    #inner {
+      width: 400px;
+      height: 400px;
+      background: linear-gradient(to right bottom, white, black);
+    }
+  </style>
+</head>
+<body>
+<div id="shell">
+  <div id="outer">
+    <div id="inner">
+    </div>
+  </div>
+</div>
+<script>
+const outer = document.querySelector('#outer');
+
+outer.scrollTop = 100;
+outer.scrollLeft = 100;
+document.body.offsetTop; // flush layout
+is(outer.scrollTop, 100, 'scroll position should be moved');
+is(outer.scrollLeft, 100, 'scroll position should be moved');
+
+outer.parentElement.style.display = 'none';
+document.body.offsetTop; // flush layout
+is(outer.scrollTop, 0, 'scroll position should be zero');
+is(outer.scrollLeft, 0, 'scroll position should be zero');
+
+outer.parentElement.style.display = "";
+document.body.offsetTop; // flush layout
+is(outer.scrollTop, 100, 'scroll position should be restored');
+is(outer.scrollLeft, 100, 'scroll position should be restored');
+</script>
