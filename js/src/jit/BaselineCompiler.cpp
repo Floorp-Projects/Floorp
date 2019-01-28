@@ -4735,9 +4735,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ISNOITER() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_ENDITER() {
-  if (!emit_JSOP_JUMPTARGET()) {
-    return false;
-  }
   frame.popRegsAndSync(1);
 
   if (!emitNextIC()) {
