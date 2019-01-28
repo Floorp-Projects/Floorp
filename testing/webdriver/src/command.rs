@@ -1251,8 +1251,27 @@ mod tests {
     }
 
     #[test]
-    fn test_json_timeout_parameters_with_optional_null_field() {
-        let json = r#"{"implicit":null,"pageLoad":null,"script":null}"#;
+    fn test_json_timeout_parameters_with_only_null_script_timeout() {
+        let json = r#"{"script":null}"#;
+        let data = TimeoutsParameters {
+            implicit: None,
+            page_load: None,
+            script: Some(None),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_timeout_parameters_with_only_null_implicit_timeout() {
+        let json = r#"{"implicit":null}"#;
+
+        assert!(serde_json::from_str::<TimeoutsParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_timeout_parameters_with_only_null_pageload_timeout() {
+        let json = r#"{"pageLoad":null}"#;
 
         assert!(serde_json::from_str::<TimeoutsParameters>(&json).is_err());
     }
