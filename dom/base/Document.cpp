@@ -1047,7 +1047,6 @@ NS_IMPL_ISUPPORTS(ExternalResourceMap::LoadgroupCallbacks,
 IMPL_SHIM(nsILoadContext)
 IMPL_SHIM(nsIProgressEventSink)
 IMPL_SHIM(nsIChannelEventSink)
-IMPL_SHIM(nsISecurityEventSink)
 IMPL_SHIM(nsIApplicationCacheContainer)
 
 #undef IMPL_SHIM
@@ -1080,7 +1079,6 @@ ExternalResourceMap::LoadgroupCallbacks::GetInterface(const nsIID& aIID,
   TRY_SHIM(nsILoadContext);
   TRY_SHIM(nsIProgressEventSink);
   TRY_SHIM(nsIChannelEventSink);
-  TRY_SHIM(nsISecurityEventSink);
   TRY_SHIM(nsIApplicationCacheContainer);
 
   return NS_NOINTERFACE;

@@ -11,8 +11,7 @@
 #include "nsThreadUtils.h"
 #include "nsINode.h"
 #include "nsCOMPtr.h"
-#include "nsIDocShell.h"
-#include "nsISecurityEventSink.h"
+#include "nsDocShell.h"
 #include "nsIWebProgressListener.h"
 #include "nsContentUtils.h"
 #include "nsIRequest.h"
@@ -81,9 +80,7 @@ class nsMixedContentEvent : public Runnable {
                  "You can't call this runnable without a requesting context");
 
     // To update the security UI in the tab with the blocked mixed content, call
-    // nsISecurityEventSink::OnSecurityChange.  You can get to the event sink by
-    // calling NS_CP_GetDocShellFromContext on the context, and QI'ing to
-    // nsISecurityEventSink.
+    // nsDocLoader::OnSecurityChange.
 
     // Mixed content was allowed and is about to load; get the document and
     // set the approriate flag to true if we are about to load Mixed Active
@@ -103,9 +100,7 @@ class nsMixedContentEvent : public Runnable {
     NS_ASSERTION(rootDoc,
                  "No root document from document shell root tree item.");
 
-    // Get eventSink and the current security state from the docShell
-    nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
-    NS_ASSERTION(eventSink, "No eventSink from docShell.");
+    nsDocShell* nativeDocShell = nsDocShell::Cast(docShell);
     nsCOMPtr<nsIDocShell> rootShell = do_GetInterface(sameTypeRoot);
     NS_ASSERTION(rootShell,
                  "No root docshell from document shell root tree item.");
@@ -144,14 +139,14 @@ class nsMixedContentEvent : public Runnable {
             state |= nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
           }
 
-          eventSink->OnSecurityChange(
+          nativeDocShell->nsDocLoader::OnSecurityChange(
               mContext,
               (state |
                nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
         } else {
           // root not secure, mixed active content loaded in an https subframe
           if (NS_SUCCEEDED(stateRV)) {
-            eventSink->OnSecurityChange(
+            nativeDocShell->nsDocLoader::OnSecurityChange(
                 mContext,
                 (state |
                  nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
@@ -184,14 +179,14 @@ class nsMixedContentEvent : public Runnable {
             state |= nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
           }
 
-          eventSink->OnSecurityChange(
+          nativeDocShell->nsDocLoader::OnSecurityChange(
               mContext,
               (state |
                nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
         } else {
           // root not secure, mixed display content loaded in an https subframe
           if (NS_SUCCEEDED(stateRV)) {
-            eventSink->OnSecurityChange(
+            nativeDocShell->nsDocLoader::OnSecurityChange(
                 mContext,
                 (state |
                  nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
@@ -896,9 +891,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   nsCOMPtr<Document> rootDoc = sameTypeRoot->GetDocument();
   NS_ASSERTION(rootDoc, "No root document from document shell root tree item.");
 
-  // Get eventSink and the current security state from the docShell
-  nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
-  NS_ASSERTION(eventSink, "No eventSink from docShell.");
+  nsDocShell* nativeDocShell = nsDocShell::Cast(docShell);
   nsCOMPtr<nsIDocShell> rootShell = do_GetInterface(sameTypeRoot);
   NS_ASSERTION(rootShell,
                "No root docshell from document shell root tree item.");
@@ -984,7 +977,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
           state |= nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
         }
 
-        eventSink->OnSecurityChange(
+        nativeDocShell->nsDocLoader::OnSecurityChange(
             aRequestingContext,
             (state |
              nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
@@ -992,7 +985,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
         // User has overriden the pref and the root is not https;
         // mixed display content was allowed on an https subframe.
         if (NS_SUCCEEDED(stateRV)) {
-          eventSink->OnSecurityChange(
+          nativeDocShell->nsDocLoader::OnSecurityChange(
               aRequestingContext,
               (state |
                nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
@@ -1005,7 +998,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
       if (!rootDoc->GetHasMixedDisplayContentBlocked() &&
           NS_SUCCEEDED(stateRV)) {
         rootDoc->SetHasMixedDisplayContentBlocked(true);
-        eventSink->OnSecurityChange(
+        nativeDocShell->nsDocLoader::OnSecurityChange(
             aRequestingContext,
             (state |
              nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT));
@@ -1039,7 +1032,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
           state |= nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
         }
 
-        eventSink->OnSecurityChange(
+        nativeDocShell->nsDocLoader::OnSecurityChange(
             aRequestingContext,
             (state |
              nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
@@ -1049,7 +1042,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
         // User has already overriden the pref and the root is not https;
         // mixed active content was allowed on an https subframe.
         if (NS_SUCCEEDED(stateRV)) {
-          eventSink->OnSecurityChange(
+          nativeDocShell->nsDocLoader::OnSecurityChange(
               aRequestingContext,
               (state |
                nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT));
@@ -1070,9 +1063,9 @@ nsresult nsMixedContentBlocker::ShouldLoad(
       rootDoc->SetHasMixedActiveContentBlocked(true);
 
       // The user has not overriden the pref, so make sure they still have an
-      // option by calling eventSink which will invoke the doorhanger
+      // option by calling nativeDocShell which will invoke the doorhanger
       if (NS_SUCCEEDED(stateRV)) {
-        eventSink->OnSecurityChange(
+        nativeDocShell->nsDocLoader::OnSecurityChange(
             aRequestingContext,
             (state |
              nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT));
