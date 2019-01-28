@@ -724,11 +724,11 @@ js_option(env='VC_PATH', nargs=1, when=host_is_windows,
           help='Path to the Microsoft Visual C/C++ compiler')
 
 
-@depends(vs_major_version, check_build_environment, 'VC_PATH',
+@depends(host, vs_major_version, check_build_environment, 'VC_PATH',
          '--with-visual-studio-version', when=host_is_windows)
 @imports(_from='__builtin__', _import='sorted')
 @imports(_from='operator', _import='itemgetter')
-def vc_compiler_paths_for_version(vs_major_version, env, vc_path, vs_release_name):
+def vc_compiler_paths_for_version(host, vs_major_version, env, vc_path, vs_release_name):
     if vc_path and vs_release_name:
         die('VC_PATH and --with-visual-studio-version cannot be used together.')
     if vc_path:
@@ -747,13 +747,18 @@ def vc_compiler_paths_for_version(vs_major_version, env, vc_path, vs_release_nam
     else:
         # Choose the newest version.
         path = all_versions[-1][1]
-    path = os.path.join(path, 'bin', 'HostX64')
-    return {
-        'x64': [os.path.join(path, 'x64')],
-        # The cross toolchains require DLLs from the native x64 toolchain.
-        'x86': [os.path.join(path, 'x86'), os.path.join(path, 'x64')],
-        'arm64': [os.path.join(path, 'arm64'), os.path.join(path, 'x64')],
-    }
+    host_dir = {
+        'x86_64': 'HostX64',
+        'x86': 'HostX86',
+    }.get(host.cpu)
+    if host_dir:
+        path = os.path.join(path, 'bin', host_dir)
+        return {
+            'x64': [os.path.join(path, 'x64')],
+            # The cross toolchains require DLLs from the native x64 toolchain.
+            'x86': [os.path.join(path, 'x86'), os.path.join(path, 'x64')],
+            'arm64': [os.path.join(path, 'arm64'), os.path.join(path, 'x64')],
+        }
 
 
 @template
