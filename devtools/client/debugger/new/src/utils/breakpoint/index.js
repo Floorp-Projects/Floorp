@@ -7,10 +7,11 @@
 import { sortBy } from "lodash";
 
 import { getBreakpoint } from "../../selectors";
+import { isGenerated } from "../source";
+
 import assert from "../assert";
 import { features } from "../prefs";
 import { getSelectedLocation } from "../source-maps";
-import { isGenerated } from "../source";
 
 export { getASTLocation, findScopeByName } from "./astBreakpointLocation";
 

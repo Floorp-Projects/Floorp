@@ -2962,6 +2962,12 @@ menuseparator {
 
 .column-breakpoint {
   display: inline;
+  padding: 0;
+  margin-inline-end: 4px;
+}
+
+.column-breakpoint:hover {
+  background-color: transparent;
 }
 
 .column-breakpoint svg {
@@ -3133,6 +3139,10 @@ html[dir="rtl"] .editor-mount {
     transparent 1px,
     var(--gutter-hover-background-color) 0
   );
+}
+
+.new-breakpoint .CodeMirror-linenumber {
+  pointer-events: none;
 }
 
 :not(.empty-line):not(.new-breakpoint)

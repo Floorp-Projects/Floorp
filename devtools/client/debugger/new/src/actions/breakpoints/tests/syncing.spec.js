@@ -248,22 +248,14 @@ describe("reloading debuggee", () => {
 
     const reloadedSource = makeSource("magic.js");
     await dispatch(actions.newSource(reloadedSource));
+    const location = {
+      sourceId: reloadedSource.id,
+      line: 3,
+      column: undefined
+    };
 
-    await dispatch(
-      actions.addBreakpoint({
-        sourceId: reloadedSource.id,
-        line: 3,
-        column: undefined
-      })
-    );
-
-    await dispatch(
-      actions.disableBreakpoint({
-        sourceId: reloadedSource.id,
-        line: 3,
-        column: undefined
-      })
-    );
+    const { breakpoint } = await dispatch(actions.addBreakpoint(location));
+    await dispatch(actions.disableBreakpoint(breakpoint));
 
     getGeneratedLocation.mockImplementationOnce(() => newGeneratedLocation(1));
 

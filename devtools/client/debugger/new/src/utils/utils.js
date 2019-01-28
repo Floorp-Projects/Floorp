@@ -4,6 +4,8 @@
 
 // @flow
 
+import type { Source } from "../types";
+
 /**
  * Utils for utils, by utils
  * @module utils/utils
@@ -53,7 +55,12 @@ export function waitForMs(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function downloadFile(data: string, fileName: string) {
+export function downloadFile(source: Source, fileName: string) {
+  if (source.isWasm) {
+    return;
+  }
+
+  const data = source.text;
   const { body } = document;
   if (!body) {
     return;
