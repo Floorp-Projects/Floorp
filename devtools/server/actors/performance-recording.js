@@ -20,11 +20,7 @@ loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
  */
 const PerformanceRecordingActor = ActorClassWithSpec(performanceRecordingSpec,
 Object.assign({
-  form: function(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
+  form: function() {
     const form = {
       // actorID is set when this is added to a pool
       actor: this.actorID,

@@ -53,12 +53,7 @@ class ServiceWorkerRegistrationFront extends
     return types.getType("serviceWorker").read(workerForm, this);
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-
+  form(form) {
     this.actorID = form.actor;
     this._form = form;
   }

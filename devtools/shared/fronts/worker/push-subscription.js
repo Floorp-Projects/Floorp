@@ -24,12 +24,7 @@ class PushSubscriptionFront extends FrontClassWithSpec(pushSubscriptionSpec) {
     return this._form.quota;
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-
+  form(form) {
     this.actorID = form.actor;
     this._form = form;
   }
