@@ -12,39 +12,13 @@ include ProtocolTypes;
 namespace mozilla {
 namespace ipc {
 
-// Do not use this directly.  See IPCStream below.
-struct InputStreamParamsWithFds
-{
-  InputStreamParams stream;
-  OptionalFileDescriptorSet optionalFds;
-};
-
-union IPCRemoteStreamType
-{
-  PChildToParentStream;
-  PParentToChildStream;
-};
-
-struct IPCRemoteStream
-{
-  // If this is true, the stream will send data only when the first operation
-  // is done on the destination side. The benefit of this is that we do not
-  // send data if not needed. On the other hand, it could have a performance
-  // issue.
-  bool delayedStart;
-
-  IPCRemoteStreamType stream;
-
-  int64_t length;
-};
-
 // Use IPCStream or OptionalIPCStream in your ipdl to represent serialized
 // nsIInputStreams.  Then use AutoIPCStream from IPCStreamUtils.h to perform
 // the serialization.
-union IPCStream
+struct IPCStream
 {
-  InputStreamParamsWithFds;
-  IPCRemoteStream;
+  InputStreamParams stream;
+  OptionalFileDescriptorSet optionalFds;
 };
 
 union OptionalIPCStream
