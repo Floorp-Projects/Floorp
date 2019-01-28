@@ -34,27 +34,6 @@
   padding: 0 3px;
 }
 
-.devtools-toolbar checkbox {
-  margin: 0 2px;
-  padding: 0;
-  line-height: -moz-block-height;
-}
-
-.devtools-toolbar checkbox .checkbox-check {
-  margin: 0;
-  padding: 0;
-  vertical-align: bottom;
-}
-
-.devtools-toolbar checkbox .checkbox-label-box {
-  border: none !important; /* overrides .checkbox-label-box from checkbox.css */
-}
-
-.devtools-toolbar checkbox .checkbox-label-box .checkbox-label {
-  margin: 0 6px !important; /* overrides .checkbox-label from checkbox.css */
-  padding: 0;
-}
-
 .devtools-toolbar-bottom {
   border-top-width: 1px;
   border-bottom: none;
