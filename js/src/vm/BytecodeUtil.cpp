@@ -1566,6 +1566,19 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       }
       break;
 
+    case JOF_ICINDEX:
+      if (!sp->jsprintf(" (ic: %u)", GET_ICINDEX(pc))) {
+        return 0;
+      }
+      break;
+
+    case JOF_LOOPENTRY:
+      if (!sp->jsprintf(" (ic: %u, data: %u,%u)", GET_ICINDEX(pc),
+                        LoopEntryCanIonOsr(pc), LoopEntryDepthHint(pc))) {
+        return 0;
+      }
+      break;
+
     case JOF_ARGC:
     case JOF_UINT16:
       i = (int)GET_UINT16(pc);
