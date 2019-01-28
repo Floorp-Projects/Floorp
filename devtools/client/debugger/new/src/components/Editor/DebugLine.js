@@ -18,15 +18,15 @@ import { connect } from "../../utils/connect";
 import {
   getVisibleSelectedFrame,
   getPauseReason,
-  getSelectedSource
+  getSourceFromId
 } from "../../selectors";
 
 import type { Frame, Why, Source } from "../../types";
 
 type Props = {
-  selectedFrame: Frame,
+  frame: Frame,
   why: Why,
-  selectedSource: Source
+  source: Source
 };
 
 type TextClasses = {
@@ -34,43 +34,35 @@ type TextClasses = {
   lineClass: string
 };
 
-function isDocumentReady(selectedSource, selectedFrame) {
-  return (
-    selectedFrame &&
-    isLoaded(selectedSource) &&
-    hasDocument(selectedFrame.location.sourceId)
-  );
+function isDocumentReady(source, frame) {
+  return frame && isLoaded(source) && hasDocument(frame.location.sourceId);
 }
 
 export class DebugLine extends Component<Props> {
   debugExpression: null;
 
   componentDidUpdate(prevProps: Props) {
-    const { why, selectedFrame, selectedSource } = this.props;
+    const { why, frame, source } = this.props;
 
     startOperation();
-    this.clearDebugLine(
-      prevProps.selectedFrame,
-      prevProps.selectedSource,
-      prevProps.why
-    );
-    this.setDebugLine(why, selectedFrame, selectedSource);
+    this.clearDebugLine(prevProps.why, prevProps.frame, prevProps.source);
+    this.setDebugLine(why, frame, source);
     endOperation();
   }
 
   componentDidMount() {
-    const { why, selectedFrame, selectedSource } = this.props;
-    this.setDebugLine(why, selectedFrame, selectedSource);
+    const { why, frame, source } = this.props;
+    this.setDebugLine(why, frame, source);
   }
 
-  setDebugLine(why: Why, selectedFrame: Frame, selectedSource: Source) {
-    if (!isDocumentReady(selectedSource, selectedFrame)) {
+  setDebugLine(why: Why, frame: Frame, source: Source) {
+    if (!isDocumentReady(source, frame)) {
       return;
     }
-    const sourceId = selectedFrame.location.sourceId;
+    const sourceId = frame.location.sourceId;
     const doc = getDocument(sourceId);
 
-    let { line, column } = toEditorPosition(selectedFrame.location);
+    let { line, column } = toEditorPosition(frame.location);
     const { markTextClass, lineClass } = this.getTextClasses(why);
     doc.addLineClass(line, "line", lineClass);
 
@@ -84,8 +76,8 @@ export class DebugLine extends Component<Props> {
     );
   }
 
-  clearDebugLine(selectedFrame: Frame, selectedSource: Source, why: Why) {
-    if (!isDocumentReady(selectedSource, selectedFrame)) {
+  clearDebugLine(why: Why, frame: Frame, source: Source) {
+    if (!isDocumentReady(source, frame)) {
       return;
     }
 
@@ -93,8 +85,8 @@ export class DebugLine extends Component<Props> {
       this.debugExpression.clear();
     }
 
-    const sourceId = selectedFrame.location.sourceId;
-    const { line } = toEditorPosition(selectedFrame.location);
+    const sourceId = frame.location.sourceId;
+    const { line } = toEditorPosition(frame.location);
     const doc = getDocument(sourceId);
     const { lineClass } = this.getTextClasses(why);
     doc.removeLineClass(line, "line", lineClass);
@@ -116,10 +108,13 @@ export class DebugLine extends Component<Props> {
   }
 }
 
-const mapStateToProps = state => ({
-  selectedFrame: getVisibleSelectedFrame(state),
-  selectedSource: getSelectedSource(state),
-  why: getPauseReason(state)
-});
+const mapStateToProps = state => {
+  const frame = getVisibleSelectedFrame(state);
+  return {
+    frame,
+    source: frame && getSourceFromId(state, frame.location.sourceId),
+    why: getPauseReason(state)
+  };
+};
 
 export default connect(mapStateToProps)(DebugLine);
