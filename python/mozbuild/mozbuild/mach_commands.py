@@ -1648,7 +1648,7 @@ class StaticAnalysis(MachCommandBase):
     """Utilities for running C++ static analysis checks and format."""
 
     # List of file extension to consider (should start with dot)
-    _format_include_extensions = ('.cpp', '.c', '.cc', '.h')
+    _format_include_extensions = ('.cpp', '.c', '.cc', '.h', '.m', '.mm')
     # File contaning all paths to exclude from formatting
     _format_ignore_file = '.clang-format-ignore'
 
@@ -3054,7 +3054,9 @@ class Repackage(MachCommandBase):
         help='Name of the package being rebuilt')
     @CommandArgument('--sfx-stub', type=str, required=True,
         help='Path to the self-extraction stub.')
-    def repackage_installer(self, tag, setupexe, package, output, package_name, sfx_stub):
+    @CommandArgument('--use-upx', required=False, action='store_true',
+        help='Run UPX on the self-extraction stub.')
+    def repackage_installer(self, tag, setupexe, package, output, package_name, sfx_stub, use_upx):
         from mozbuild.repackaging.installer import repackage_installer
         repackage_installer(
             topsrcdir=self.topsrcdir,
@@ -3064,6 +3066,7 @@ class Repackage(MachCommandBase):
             output=output,
             package_name=package_name,
             sfx_stub=sfx_stub,
+            use_upx=use_upx,
         )
 
     @SubCommand('repackage', 'msi',

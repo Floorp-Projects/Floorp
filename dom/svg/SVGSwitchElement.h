@@ -8,6 +8,7 @@
 #define mozilla_dom_SVGSwitchElement_h
 
 #include "mozilla/dom/SVGGraphicsElement.h"
+#include "nsCOMPtr.h"
 
 class nsSVGSwitchFrame;
 

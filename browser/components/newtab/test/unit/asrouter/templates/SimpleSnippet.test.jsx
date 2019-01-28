@@ -69,6 +69,38 @@ describe("SimpleSnippet", () => {
     assert.calledOnce(wrapper.props().onAction);
     assert.calledWithExactly(wrapper.props().onAction, {type: "OPEN_APPLICATIONS_MENU", data: {args: "appMenu"}});
   });
+  it("should not wrap the main content if a section header is not present", () => {
+    const wrapper = mountAndCheckProps({text: "bar"});
+    assert.lengthOf(wrapper.find(".innerContentWrapper"), 0);
+  });
+  it("should wrap the main content if a section header is present", () => {
+    const wrapper = mountAndCheckProps({
+      section_title_icon: "data:image/gif;base64,R0lGODl",
+      section_title_text: "Messages from Mozilla",
+    });
+
+    assert.lengthOf(wrapper.find(".innerContentWrapper"), 1);
+  });
+  it("should render a section header if text and icon are specified", () => {
+    const wrapper = mountAndCheckProps({
+      section_title_icon: "data:image/gif;base64,R0lGODl",
+      section_title_text: "Messages from Mozilla",
+    });
+
+    assert.equal(wrapper.find(".section-title .icon").prop("style").backgroundImage, 'url("data:image/gif;base64,R0lGODl")');
+    assert.equal(wrapper.find(".section-title-text").text().trim(), "Messages from Mozilla");
+    // ensure there is no <a> when a section_title_url is not specified
+    assert.lengthOf(wrapper.find(".section-title a"), 0);
+  });
+  it("should render a section header wrapped in an <a> tag if a url is provided", () => {
+    const wrapper = mountAndCheckProps({
+      section_title_icon: "data:image/gif;base64,R0lGODl",
+      section_title_text: "Messages from Mozilla",
+      section_title_url: "https://www.mozilla.org",
+    });
+
+    assert.equal(wrapper.find(".section-title a").prop("href"), "https://www.mozilla.org");
+  });
   it("should send an OPEN_URL action when button_url is defined and button is clicked", () => {
     const wrapper = mountAndCheckProps({
       button_label: "Button",

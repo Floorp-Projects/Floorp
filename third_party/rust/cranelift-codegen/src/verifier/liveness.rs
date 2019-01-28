@@ -1,14 +1,14 @@
 //! Liveness verifier.
 
-use flowgraph::{BasicBlock, ControlFlowGraph};
-use ir::entities::AnyEntity;
-use ir::{ExpandedProgramPoint, Function, Inst, ProgramOrder, ProgramPoint, Value};
-use isa::TargetIsa;
-use regalloc::liveness::Liveness;
-use regalloc::liverange::LiveRange;
-use std::cmp::Ordering;
-use timing;
-use verifier::{VerifierErrors, VerifierStepResult};
+use crate::flowgraph::{BasicBlock, ControlFlowGraph};
+use crate::ir::entities::AnyEntity;
+use crate::ir::{ExpandedProgramPoint, Function, Inst, ProgramOrder, ProgramPoint, Value};
+use crate::isa::TargetIsa;
+use crate::regalloc::liveness::Liveness;
+use crate::regalloc::liverange::LiveRange;
+use crate::timing;
+use crate::verifier::{VerifierErrors, VerifierStepResult};
+use core::cmp::Ordering;
 
 /// Verify liveness information for `func`.
 ///
@@ -186,7 +186,7 @@ impl<'a> LivenessVerifier<'a> {
                     "Def local range for {} can't end at {}",
                     val,
                     e
-                )
+                );
             }
             ExpandedProgramPoint::Inst(i) => {
                 if self.func.layout.inst_ebb(i) != Some(def_ebb) {
@@ -216,7 +216,7 @@ impl<'a> LivenessVerifier<'a> {
                         val,
                         ebb,
                         end
-                    )
+                    );
                 }
             };
 
@@ -247,7 +247,7 @@ impl<'a> LivenessVerifier<'a> {
                             "end of {} livein ({}) never reached",
                             val,
                             end_ebb
-                        )
+                        );
                     }
                 };
             }

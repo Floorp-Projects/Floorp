@@ -287,6 +287,8 @@ def make_job_description(config, jobs):
             command['args'] = [
                 arg.format(**substs) for arg in command['args']
             ]
+            if 'installer' in format and 'aarch64' not in build_platform:
+                command['args'].append('--use-upx')
             repackage_config.append(command)
 
         run = job.get('mozharness', {})

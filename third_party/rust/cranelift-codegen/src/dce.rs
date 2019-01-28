@@ -3,13 +3,12 @@
 //! Dead code here means instructions that have no side effects and have no
 //! result values used by other instructions.
 
-use cursor::{Cursor, FuncCursor};
-use dominator_tree::DominatorTree;
-use entity::EntityRef;
-use ir::instructions::InstructionData;
-use ir::{DataFlowGraph, Function, Inst, Opcode};
-use std::vec::Vec;
-use timing;
+use crate::cursor::{Cursor, FuncCursor};
+use crate::dominator_tree::DominatorTree;
+use crate::entity::EntityRef;
+use crate::ir::instructions::InstructionData;
+use crate::ir::{DataFlowGraph, Function, Inst, Opcode};
+use crate::timing;
 
 /// Test whether the given opcode is unsafe to even consider for DCE.
 fn trivially_unsafe_for_dce(opcode: Opcode) -> bool {
@@ -46,9 +45,7 @@ pub fn do_dce(func: &mut Function, domtree: &mut DominatorTree) {
     let _tt = timing::dce();
     debug_assert!(domtree.is_valid());
 
-    let mut live = Vec::with_capacity(func.dfg.num_values());
-    live.resize(func.dfg.num_values(), false);
-
+    let mut live = vec![false; func.dfg.num_values()];
     for &ebb in domtree.cfg_postorder() {
         let mut pos = FuncCursor::new(func).at_bottom(ebb);
         while let Some(inst) = pos.prev_inst() {

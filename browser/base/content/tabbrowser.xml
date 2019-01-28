@@ -1333,22 +1333,14 @@
             byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE,
           });
         } else if (event.originalTarget.localName == "scrollbox") {
-          // The user middleclicked an open space on the tabstrip. This could
-          // be because they intend to open a new tab, but it could also be
-          // because they just removed a tab and they now middleclicked on the
-          // resulting space while that tab is closing. In that case, we don't
-          // want to open a tab. So if we're removing one or more tabs, and
-          // the tab click is before the end of the last visible tab, we do
-          // nothing.
-          if (gBrowser._removingTabs.length) {
-            let visibleTabs = this._getVisibleTabs();
-            let lastTab = visibleTabs[visibleTabs.length - 1];
-            let endOfTab = lastTab.getBoundingClientRect()[RTL_UI ? "left" : "right"];
-            if ((!RTL_UI && event.clientX > endOfTab) ||
-                (RTL_UI && event.clientX < endOfTab)) {
-              BrowserOpenTab();
-            }
-          } else {
+          // The user middleclicked on the tabstrip. Check whether the click
+          // was dispatched on the open space of it.
+          let visibleTabs = this._getVisibleTabs();
+          let lastTab = visibleTabs[visibleTabs.length - 1];
+          let winUtils = window.windowUtils;
+          let endOfTab = winUtils.getBoundsWithoutFlushing(lastTab)[RTL_UI ? "left" : "right"];
+          if ((!RTL_UI && event.clientX > endOfTab) ||
+              (RTL_UI && event.clientX < endOfTab)) {
             BrowserOpenTab();
           }
         } else {

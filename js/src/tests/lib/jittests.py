@@ -304,12 +304,12 @@ class JitTest:
                     elif name == 'test-also-noasmjs':
                         if options.asmjs_enabled:
                             test.test_also.append(['--no-asmjs'])
-                    elif name == 'test-also-no-wasm-baseline':
+                    elif name == 'test-also-wasm-compiler-ion':
                         if options.wasm_enabled:
-                            test.test_also.append(['--no-wasm-baseline'])
-                    elif name == 'test-also-no-wasm-ion':
+                            test.test_also.append(['--wasm-compiler=ion'])
+                    elif name == 'test-also-wasm-compiler-baseline':
                         if options.wasm_enabled:
-                            test.test_also.append(['--no-wasm-ion'])
+                            test.test_also.append(['--wasm-compiler=baseline'])
                     elif name == 'test-also-wasm-tiering':
                         if options.wasm_enabled:
                             test.test_also.append(['--test-wasm-await-tier2'])
@@ -399,13 +399,20 @@ class JitTest:
         return self.command(prefix, LIB_DIR, MODULE_DIR)
 
 
-def find_tests(substring=None):
+def find_tests(substring=None, run_binast=False):
     ans = []
     for dirpath, dirnames, filenames in os.walk(TEST_DIR):
         dirnames.sort()
         filenames.sort()
         if dirpath == '.':
             continue
+
+        if not run_binast:
+            if os.path.join('binast', 'lazy') in dirpath:
+                continue
+            if os.path.join('binast', 'nonlazy') in dirpath:
+                continue
+
         for filename in filenames:
             if not (filename.endswith('.js') or filename.endswith('.binjs')):
                 continue

@@ -1188,7 +1188,6 @@ NS_INTERFACE_MAP_BEGIN(nsStandardURL)
   NS_INTERFACE_MAP_ENTRY(nsIStandardURL)
   NS_INTERFACE_MAP_ENTRY(nsISerializable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableURI)
   NS_INTERFACE_MAP_ENTRY(nsISensitiveInfoHiddenURI)
   // see nsStandardURL::Equals
   if (aIID.Equals(kThisImplCID))
@@ -3309,10 +3308,6 @@ nsStandardURL::Write(nsIObjectOutputStream *stream) {
 
   return NS_OK;
 }
-
-//---------------------------------------------------------------------------
-// nsStandardURL::nsIIPCSerializableURI
-//---------------------------------------------------------------------------
 
 inline ipc::StandardURLSegment ToIPCSegment(
     const nsStandardURL::URLSegment &aSegment) {

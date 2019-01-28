@@ -10,11 +10,17 @@
 
 use std::error::Error;
 use std::fmt;
+use std::result;
 use std::str;
 
 use Version;
 use version::Identifier;
 use semver_parser;
+
+#[cfg(feature = "serde")]
+use serde::ser::{Serialize, Serializer};
+#[cfg(feature = "serde")]
+use serde::de::{self, Deserialize, Deserializer, Visitor};
 
 use self::Op::{Ex, Gt, GtEq, Lt, LtEq, Tilde, Compatible, Wildcard};
 use self::WildcardVersion::{Major, Minor, Patch};
@@ -23,7 +29,7 @@ use self::ReqParseError::*;
 /// A `VersionReq` is a struct containing a list of predicates that can apply to ranges of version
 /// numbers. Matching operations can then be done with the `VersionReq` against a particular
 /// version to see if it satisfies some or all of the constraints.
-#[derive(PartialEq,Clone,Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct VersionReq {
     predicates: Vec<Predicate>,
 }
@@ -34,14 +40,50 @@ impl From<semver_parser::range::VersionReq> for VersionReq {
     }
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[cfg(feature = "serde")]
+impl Serialize for VersionReq {
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        // Serialize VersionReq as a string.
+        serializer.collect_str(self)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for VersionReq {
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        struct VersionReqVisitor;
+
+        /// Deserialize `VersionReq` from a string.
+        impl<'de> Visitor<'de> for VersionReqVisitor {
+            type Value = VersionReq;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a SemVer version requirement as a string")
+            }
+
+            fn visit_str<E>(self, v: &str) -> result::Result<Self::Value, E>
+                where E: de::Error
+            {
+                VersionReq::parse(v).map_err(de::Error::custom)
+            }
+        }
+
+        deserializer.deserialize_str(VersionReqVisitor)
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 enum WildcardVersion {
     Major,
     Minor,
     Patch,
 }
 
-#[derive(PartialEq,Clone,Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 enum Op {
     Ex, // Exact
     Gt, // Greater than
@@ -75,7 +117,7 @@ impl From<semver_parser::range::Op> for Op {
     }
 }
 
-#[derive(PartialEq,Clone,Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 struct Predicate {
     op: Op,
     major: u64,
@@ -168,7 +210,7 @@ impl VersionReq {
         VersionReq { predicates: vec![] }
     }
 
-    /// `parse()` is the main constructor of a `VersionReq`. It turns a string like `"^1.2.3"`
+    /// `parse()` is the main constructor of a `VersionReq`. It takes a string like `"^1.2.3"`
     /// and turns it into a `VersionReq` that matches that particular constraint.
     ///
     /// A `Result` is returned which contains a `ReqParseError` if there was a problem parsing the
@@ -184,6 +226,7 @@ impl VersionReq {
     /// let version = VersionReq::parse("<1.2.3");
     /// let version = VersionReq::parse("~1.2.3");
     /// let version = VersionReq::parse("^1.2.3");
+    /// let version = VersionReq::parse("1.2.3"); // synonym for ^1.2.3
     /// let version = VersionReq::parse("<=1.2.3");
     /// let version = VersionReq::parse(">=1.2.3");
     /// ```
@@ -523,6 +566,7 @@ impl fmt::Display for Op {
 mod test {
     use super::{VersionReq, Op};
     use super::super::version::Version;
+    use std::hash::{Hash, Hasher};
 
     fn req(s: &str) -> VersionReq {
         VersionReq::parse(s).unwrap()
@@ -545,6 +589,14 @@ mod test {
         for ver in vers.iter() {
             assert!(!req.matches(&version(*ver)), "matched {}", ver);
         }
+    }
+
+    fn calculate_hash<T: Hash>(t: T) -> u64 {
+        use std::collections::hash_map::DefaultHasher;
+
+        let mut s = DefaultHasher::new();
+        t.hash(&mut s);
+        s.finish()
     }
 
     #[test]
@@ -820,5 +872,24 @@ mod test {
 
         let r = req("0.*.*");
         assert_match(&r, &["0.5.0"]);
+    }
+
+    #[test]
+    fn test_eq_hash() {
+        assert!(req("^1") == req("^1"));
+        assert!(calculate_hash(req("^1")) == calculate_hash(req("^1")));
+        assert!(req("^1") != req("^2"));
+    }
+
+    #[test]
+    fn test_ordering() {
+        assert!(req("=1") < req("*"));
+        assert!(req(">1") < req("*"));
+        assert!(req(">=1") < req("*"));
+        assert!(req("<1") < req("*"));
+        assert!(req("<=1") < req("*"));
+        assert!(req("~1") < req("*"));
+        assert!(req("^1") < req("*"));
+        assert!(req("*") == req("*"));
     }
 }

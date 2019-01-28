@@ -80,47 +80,60 @@ function runTests() {
     DebuggerServer.registerAllActors();
   }
 
-  function firstClient() {
+  async function firstClient() {
     // Fake a first connection to an iframe
     const transport = DebuggerServer.connectPipe();
     const conn = transport._serverConnection;
     const client = new DebuggerClient(transport);
-    DebuggerServer.connectToFrame(conn, iframe).then(actor => {
-      ok(actor.testActor, "Got the test actor");
+    const actor = await DebuggerServer.connectToFrame(conn, iframe);
+    ok(actor.testActor, "Got the test actor");
 
-      // Ensure sending at least one request to our actor,
-      // otherwise it won't be instantiated, nor be destroyed...
-      client.request({
-        to: actor.testActor,
-        type: "hello",
-      }, function(response) {
-        // Then close the client. That should end up cleaning our test actor
-        client.close();
+    // Ensure sending at least one request to our actor,
+    // otherwise it won't be instantiated, nor be destroyed...
+    await client.request({
+      to: actor.testActor,
+      type: "hello",
+    });
 
-        // Ensure that our test actor got cleaned up;
-        // its destroy method should be called
-        mm.addMessageListener("test-actor-destroyed", function listener() {
-          mm.removeMessageListener("test-actor-destroyed", listener);
-          ok(true, "Actor is cleaned up");
+    // Connect a second client in parallel to asser that it received a distinct set of
+    // target actors
+    await secondClient(actor.testActor);
 
-          secondClient(actor.testActor);
-        });
+    ok(DebuggerServer.initialized,
+      "DebuggerServer isn't destroyed until all clients are disconnected");
+
+    // Ensure that our test actor got cleaned up;
+    // its destroy method should be called
+    const onActorDestroyed = new Promise(resolve => {
+      mm.addMessageListener("test-actor-destroyed", function listener() {
+        mm.removeMessageListener("test-actor-destroyed", listener);
+        ok(true, "Actor is cleaned up");
+        resolve();
       });
     });
+
+    // Then close the client. That should end up cleaning our test actor
+    await client.close();
+
+    await onActorDestroyed;
+
+    // This test loads a frame in the parent process, so that we end up sharing the same
+    // DebuggerServer instance
+    ok(!DebuggerServer.initialized,
+      "DebuggerServer is destroyed when all clients are disconnected");
+    cleanup();
   }
 
-  function secondClient(firstActor) {
+  async function secondClient(firstActor) {
     // Then fake a second one, that should spawn a new set of target-scoped actors
     const transport = DebuggerServer.connectPipe();
     const conn = transport._serverConnection;
     const client = new DebuggerClient(transport);
-    DebuggerServer.connectToFrame(conn, iframe).then(actor => {
-      ok(actor.testActor, "Got a test actor for the second connection");
-      isnot(actor.testActor, firstActor,
-            "We get different actor instances between two connections");
-
-      client.close(cleanup);
-    });
+    const actor = await DebuggerServer.connectToFrame(conn, iframe);
+    ok(actor.testActor, "Got a test actor for the second connection");
+    isnot(actor.testActor, firstActor,
+          "We get different actor instances between two connections");
+    return client.close();
   }
 
   function cleanup() {

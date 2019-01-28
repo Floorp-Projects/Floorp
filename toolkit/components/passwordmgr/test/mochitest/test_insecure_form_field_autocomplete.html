@@ -23,73 +23,72 @@ var setupScript = runInParent(function setup() {
                                            Ci.nsILoginInfo, "init");
   assert.ok(nsLoginInfo != null, "nsLoginInfo constructor");
 
+  let logins = {};
   // login0 has no username, so should be filtered out from the autocomplete list.
-  var login0 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
-                               "", "user0pass", "", "pword");
+  logins.login0 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+                                  "", "user0pass", "", "pword");
 
-  var login1 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
-                               "tempuser1", "temppass1", "uname", "pword");
+  logins.login1 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+                                  "tempuser1", "temppass1", "uname", "pword");
 
-  var login2 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
-                               "testuser2", "testpass2", "uname", "pword");
+  logins.login2 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+                                  "testuser2", "testpass2", "uname", "pword");
 
-  var login3 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
-                               "testuser3", "testpass3", "uname", "pword");
+  logins.login3 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+                                  "testuser3", "testpass3", "uname", "pword");
 
-  var login4 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
-                               "zzzuser4", "zzzpass4", "uname", "pword");
+  logins.login4 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+                                  "zzzuser4", "zzzpass4", "uname", "pword");
 
   // login 5 only used in the single-user forms
-  var login5 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete2", null,
-                               "singleuser5", "singlepass5", "uname", "pword");
+  logins.login5 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete2", null,
+                                  "singleuser5", "singlepass5", "uname", "pword");
 
-  var login6A = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete3", null,
-                                "form7user1", "form7pass1", "uname", "pword");
-  var login6B = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete3", null,
-                                "form7user2", "form7pass2", "uname", "pword");
+  logins.login6A = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete3", null,
+                                   "form7user1", "form7pass1", "uname", "pword");
+  logins.login6B = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete3", null,
+                                   "form7user2", "form7pass2", "uname", "pword");
 
-  var login7  = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete4", null,
-                                "form8user", "form8pass", "uname", "pword");
+  logins.login7  = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete4", null,
+                                   "form8user", "form8pass", "uname", "pword");
 
-  var login8A = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
-                                "form9userAB", "form9pass", "uname", "pword");
-  var login8B = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
-                                "form9userAAB", "form9pass", "uname", "pword");
-  var login8C = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
-                                "form9userAABzz", "form9pass", "uname", "pword");
+  logins.login8A = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
+                                   "form9userAB", "form9pass", "uname", "pword");
+  logins.login8B = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
+                                   "form9userAAB", "form9pass", "uname", "pword");
+  logins.login8C = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
+                                   "form9userAABzz", "form9pass", "uname", "pword");
 
-  var login10 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete7", null,
-                                "testuser10", "testpass10", "uname", "pword");
+  logins.login10 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete7", null,
+                                   "testuser10", "testpass10", "uname", "pword");
 
 
   // try/catch in case someone runs the tests manually, twice.
   try {
-    Services.logins.addLogin(login0);
-    Services.logins.addLogin(login1);
-    Services.logins.addLogin(login2);
-    Services.logins.addLogin(login3);
-    Services.logins.addLogin(login4);
-    Services.logins.addLogin(login5);
-    Services.logins.addLogin(login6A);
-    Services.logins.addLogin(login6B);
-    Services.logins.addLogin(login7);
-    Services.logins.addLogin(login8A);
-    Services.logins.addLogin(login8B);
+    Services.logins.addLogin(logins.login0);
+    Services.logins.addLogin(logins.login1);
+    Services.logins.addLogin(logins.login2);
+    Services.logins.addLogin(logins.login3);
+    Services.logins.addLogin(logins.login4);
+    Services.logins.addLogin(logins.login5);
+    Services.logins.addLogin(logins.login6A);
+    Services.logins.addLogin(logins.login6B);
+    Services.logins.addLogin(logins.login7);
+    Services.logins.addLogin(logins.login8A);
+    Services.logins.addLogin(logins.login8B);
     // login8C is added later
-    Services.logins.addLogin(login10);
+    Services.logins.addLogin(logins.login10);
   } catch (e) {
     assert.ok(false, "addLogin threw: " + e);
   }
 
   addMessageListener("addLogin", loginVariableName => {
-    // eslint-disable-next-line no-eval
-    let login = eval(loginVariableName);
+    let login = logins[loginVariableName];
     assert.ok(!!login, "Login to add is defined: " + loginVariableName);
     Services.logins.addLogin(login);
   });
   addMessageListener("removeLogin", loginVariableName => {
-    // eslint-disable-next-line no-eval
-    let login = eval(loginVariableName);
+    let login = logins[loginVariableName];
     assert.ok(!!login, "Login to delete is defined: " + loginVariableName);
     Services.logins.removeLogin(login);
   });
@@ -180,6 +179,8 @@ var setupScript = runInParent(function setup() {
 
 /** Test for Login Manager: multiple login autocomplete. **/
 
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
+
 var uname = $_(1, "uname");
 var pword = $_(1, "pword");
 
@@ -208,8 +209,7 @@ function spinEventLoop() {
 }
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", true],
-                                           ["signon.autofillForms.http", true]]});
+  await SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", true]]});
   listenForUnexpectedPopupShown();
 });
 

@@ -1,6 +1,6 @@
 
 "coverage" ping
-=============
+===============
 
 This ping is not enabled by default. When enabled, a ping is generated a total of once per profile, as a diagnostic tool
 to determine whether Telemetry is working for users.

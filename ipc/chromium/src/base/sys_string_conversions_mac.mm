@@ -19,25 +19,21 @@ namespace {
 // an STL string of the template type.  Returns an empty string on failure.
 //
 // Do not assert in this function since it is used by the asssertion code!
-template<typename StringType>
+template <typename StringType>
 static StringType CFStringToSTLStringWithEncodingT(CFStringRef cfstring,
                                                    CFStringEncoding encoding) {
   CFIndex length = CFStringGetLength(cfstring);
-  if (length == 0)
-    return StringType();
+  if (length == 0) return StringType();
 
   CFRange whole_string = CFRangeMake(0, length);
   CFIndex out_size;
-  CFIndex converted = CFStringGetBytes(cfstring,
-                                       whole_string,
-                                       encoding,
+  CFIndex converted = CFStringGetBytes(cfstring, whole_string, encoding,
                                        0,      // lossByte
                                        false,  // isExternalRepresentation
                                        NULL,   // buffer
                                        0,      // maxBufLen
                                        &out_size);
-  if (converted == 0 || out_size == 0)
-    return StringType();
+  if (converted == 0 || out_size == 0) return StringType();
 
   // out_size is the number of UInt8-sized units needed in the destination.
   // A buffer allocated as UInt8 units might not be properly aligned to
@@ -48,16 +44,12 @@ static StringType CFStringToSTLStringWithEncodingT(CFStringRef cfstring,
       out_size * sizeof(UInt8) / sizeof(typename StringType::value_type) + 1;
 
   std::vector<typename StringType::value_type> out_buffer(elements);
-  converted = CFStringGetBytes(cfstring,
-                               whole_string,
-                               encoding,
+  converted = CFStringGetBytes(cfstring, whole_string, encoding,
                                0,      // lossByte
                                false,  // isExternalRepresentation
-                               reinterpret_cast<UInt8*>(&out_buffer[0]),
-                               out_size,
+                               reinterpret_cast<UInt8*>(&out_buffer[0]), out_size,
                                NULL);  // usedBufLen
-  if (converted == 0)
-    return StringType();
+  if (converted == 0) return StringType();
 
   out_buffer[elements - 1] = '\0';
   return StringType(&out_buffer[0], elements - 1);
@@ -68,45 +60,31 @@ static StringType CFStringToSTLStringWithEncodingT(CFStringRef cfstring,
 // |OutStringType| template type.  Returns an empty string on failure.
 //
 // Do not assert in this function since it is used by the asssertion code!
-template<typename InStringType, typename OutStringType>
-static OutStringType STLStringToSTLStringWithEncodingsT(
-    const InStringType& in,
-    CFStringEncoding in_encoding,
-    CFStringEncoding out_encoding) {
+template <typename InStringType, typename OutStringType>
+static OutStringType STLStringToSTLStringWithEncodingsT(const InStringType& in,
+                                                        CFStringEncoding in_encoding,
+                                                        CFStringEncoding out_encoding) {
   typename InStringType::size_type in_length = in.length();
-  if (in_length == 0)
-    return OutStringType();
+  if (in_length == 0) return OutStringType();
 
-  scoped_cftyperef<CFStringRef> cfstring(
-      CFStringCreateWithBytesNoCopy(NULL,
-                                    reinterpret_cast<const UInt8*>(in.data()),
-                                    in_length *
-                                      sizeof(typename InStringType::value_type),
-                                    in_encoding,
-                                    false,
-                                    kCFAllocatorNull));
-  if (!cfstring)
-    return OutStringType();
+  scoped_cftyperef<CFStringRef> cfstring(CFStringCreateWithBytesNoCopy(
+      NULL, reinterpret_cast<const UInt8*>(in.data()),
+      in_length * sizeof(typename InStringType::value_type), in_encoding, false, kCFAllocatorNull));
+  if (!cfstring) return OutStringType();
 
-  return CFStringToSTLStringWithEncodingT<OutStringType>(cfstring,
-                                                         out_encoding);
+  return CFStringToSTLStringWithEncodingT<OutStringType>(cfstring, out_encoding);
 }
 
 // Given an STL string |in| with an encoding specified by |in_encoding|,
 // return it as a CFStringRef.  Returns NULL on failure.
-template<typename StringType>
-static CFStringRef STLStringToCFStringWithEncodingsT(
-    const StringType& in,
-    CFStringEncoding in_encoding) {
+template <typename StringType>
+static CFStringRef STLStringToCFStringWithEncodingsT(const StringType& in,
+                                                     CFStringEncoding in_encoding) {
   typename StringType::size_type in_length = in.length();
-  if (in_length == 0)
-    return CFSTR("");
+  if (in_length == 0) return CFSTR("");
 
-  return CFStringCreateWithBytes(kCFAllocatorDefault,
-                                 reinterpret_cast<const UInt8*>(in.data()),
-                                 in_length *
-                                   sizeof(typename StringType::value_type),
-                                 in_encoding,
+  return CFStringCreateWithBytes(kCFAllocatorDefault, reinterpret_cast<const UInt8*>(in.data()),
+                                 in_length * sizeof(typename StringType::value_type), in_encoding,
                                  false);
 }
 
@@ -124,22 +102,18 @@ static const CFStringEncoding kWideStringEncoding = kCFStringEncodingUTF32LE;
 
 // Do not assert in this function since it is used by the asssertion code!
 std::string SysWideToUTF8(const std::wstring& wide) {
-  return STLStringToSTLStringWithEncodingsT<std::wstring, std::string>(
-      wide, kWideStringEncoding, kNarrowStringEncoding);
+  return STLStringToSTLStringWithEncodingsT<std::wstring, std::string>(wide, kWideStringEncoding,
+                                                                       kNarrowStringEncoding);
 }
 
 // Do not assert in this function since it is used by the asssertion code!
 std::wstring SysUTF8ToWide(const StringPiece& utf8) {
-  return STLStringToSTLStringWithEncodingsT<StringPiece, std::wstring>(
-      utf8, kNarrowStringEncoding, kWideStringEncoding);
+  return STLStringToSTLStringWithEncodingsT<StringPiece, std::wstring>(utf8, kNarrowStringEncoding,
+                                                                       kWideStringEncoding);
 }
 
-std::string SysWideToNativeMB(const std::wstring& wide) {
-  return SysWideToUTF8(wide);
-}
+std::string SysWideToNativeMB(const std::wstring& wide) { return SysWideToUTF8(wide); }
 
-std::wstring SysNativeMBToWide(const StringPiece& native_mb) {
-  return SysUTF8ToWide(native_mb);
-}
+std::wstring SysNativeMBToWide(const StringPiece& native_mb) { return SysUTF8ToWide(native_mb); }
 
 }  // namespace base

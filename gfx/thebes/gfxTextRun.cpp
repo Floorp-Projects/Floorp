@@ -1536,6 +1536,7 @@ void gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
     AddGlyphRun(aFont, gfxTextRange::MatchType::kFontGroup, aCharIndex, false,
                 aOrientation);
     CopyGlyphDataFrom(sw, aCharIndex);
+    GetCharacterGlyphs()[aCharIndex].SetIsSpace();
   }
 }
 

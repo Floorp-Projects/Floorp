@@ -1,13 +1,14 @@
 //! Densely numbered entity references as mapping keys.
-use boxed_slice::BoxedSlice;
-use iter::{Iter, IterMut};
-use keys::Keys;
-use std::iter::FromIterator;
-use std::marker::PhantomData;
-use std::ops::{Index, IndexMut};
-use std::slice;
+use crate::boxed_slice::BoxedSlice;
+use crate::iter::{Iter, IterMut};
+use crate::keys::Keys;
+use crate::EntityRef;
+use core::iter::FromIterator;
+use core::marker::PhantomData;
+use core::ops::{Index, IndexMut};
+use core::slice;
+use std::boxed::Box;
 use std::vec::Vec;
-use EntityRef;
 
 /// A primary mapping `K -> V` allocating dense entity references.
 ///
@@ -133,6 +134,11 @@ where
     /// Reserves the minimum capacity for exactly `additional` more elements to be inserted.
     pub fn reserve_exact(&mut self, additional: usize) {
         self.elems.reserve_exact(additional)
+    }
+
+    /// Shrinks the capacity of the `PrimaryMap` as much as possible.
+    pub fn shrink_to_fit(&mut self) {
+        self.elems.shrink_to_fit()
     }
 
     /// Consumes this `PrimaryMap` and produces a `BoxedSlice`.

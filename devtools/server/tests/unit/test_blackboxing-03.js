@@ -31,14 +31,12 @@ const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
 function test_black_box() {
-  gClient.addOneTimeListener("paused", function(event, packet) {
-    const source = gThreadClient.source(packet.frame.where.source);
-    source.setBreakpoint({
-      line: 4,
-    }).then(function([response, bpClient]) {
-      gBpClient = bpClient;
-      gThreadClient.resume(test_black_box_dbg_statement);
-    });
+  gClient.addOneTimeListener("paused", async function(event, packet) {
+    const source = await getSourceById(gThreadClient, packet.frame.where.actor);
+    const [, bpClient] = await source.setBreakpoint({ line: 4 });
+    gBpClient = bpClient;
+    await gThreadClient.resume();
+    test_black_box_dbg_statement();
   });
 
   /* eslint-disable no-multi-spaces, no-undef */
@@ -73,19 +71,17 @@ function test_black_box() {
 function test_black_box_dbg_statement() {
   gThreadClient.getSources(async function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
-    const sourceClient = gThreadClient.source(
-      sources.filter(s => s.url == BLACK_BOXED_URL)[0]
-    );
+    const sourceClient = await getSource(gThreadClient, BLACK_BOXED_URL);
 
     await blackBox(sourceClient);
 
-    gClient.addOneTimeListener("paused", function(event, packet) {
+    gThreadClient.addOneTimeListener("paused", async function(event, packet) {
       Assert.equal(packet.why.type, "breakpoint",
                    "We should pass over the debugger statement.");
-      gBpClient.remove(function({error}) {
-        Assert.ok(!error, "Should not get an error: " + error);
-        gThreadClient.resume(test_unblack_box_dbg_statement.bind(null, sourceClient));
-      });
+
+      await gBpClient.remove();
+      await gThreadClient.resume();
+      await test_unblack_box_dbg_statement(sourceClient);
     });
     gDebuggee.runTest();
   });

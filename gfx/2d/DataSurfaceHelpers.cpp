@@ -279,6 +279,10 @@ size_t BufferSizeFromDimensions(int32_t aWidth, int32_t aHeight, int32_t aDepth,
 /**
  * aSrcRect: Rect relative to the aSrc surface
  * aDestPoint: Point inside aDest surface
+ *
+ * aSrcRect and aDestPoint are in internal local coordinates.
+ * i.e. locations of pixels and not in the same coordinate space
+ * as aSrc->GetRect()
  */
 bool CopyRect(DataSourceSurface* aSrc, DataSourceSurface* aDest,
               IntRect aSrcRect, IntPoint aDestPoint) {

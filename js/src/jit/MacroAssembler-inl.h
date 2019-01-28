@@ -602,9 +602,24 @@ void MacroAssembler::branchTestProxyHandlerFamily(Condition cond,
 void MacroAssembler::branchTestNeedsIncrementalBarrier(Condition cond,
                                                        Label* label) {
   MOZ_ASSERT(cond == Zero || cond == NonZero);
-  CompileZone* zone = GetJitContext()->realm->zone();
+  CompileZone* zone = GetJitContext()->realm()->zone();
   const uint32_t* needsBarrierAddr = zone->addressOfNeedsIncrementalBarrier();
   branchTest32(cond, AbsoluteAddress(needsBarrierAddr), Imm32(0x1), label);
+}
+
+void MacroAssembler::branchTestNeedsIncrementalBarrierAnyZone(
+    Condition cond, Label* label, Register scratch) {
+  MOZ_ASSERT(cond == Zero || cond == NonZero);
+  if (GetJitContext()->maybeRealm()) {
+    branchTestNeedsIncrementalBarrier(cond, label);
+  } else {
+    // We are compiling the interpreter or another runtime-wide trampoline, so
+    // we have to load cx->zone.
+    loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfZone()),
+            scratch);
+    Address needsBarrierAddr(scratch, Zone::offsetOfNeedsIncrementalBarrier());
+    branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
+  }
 }
 
 void MacroAssembler::branchTestMagicValue(Condition cond,

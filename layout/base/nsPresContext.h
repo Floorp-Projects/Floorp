@@ -559,21 +559,6 @@ class nsPresContext : public nsISupports,
    */
   float EffectiveTextZoom() const { return mEffectiveTextZoom; }
 
-  /**
-   * Get the minimum font size for the specified language. If aLanguage
-   * is nullptr, then the document's language is used.  This combines
-   * the language-specific global preference with the per-presentation
-   * base minimum font size.
-   */
-  int32_t MinFontSize(nsAtom* aLanguage, bool* aNeedsToCache = nullptr) const {
-    const auto* prefs =
-        Document()->GetFontPrefsForLang(aLanguage, aNeedsToCache);
-    if (aNeedsToCache && *aNeedsToCache) {
-      return 0;
-    }
-    return prefs->mMinimumFontSize;
-  }
-
   float GetFullZoom() { return mFullZoom; }
   /**
    * Device full zoom differs from full zoom because it gets the zoom from

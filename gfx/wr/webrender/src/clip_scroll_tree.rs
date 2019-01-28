@@ -165,6 +165,27 @@ impl ClipScrollTree {
         }
     }
 
+    /// Returns true if the spatial node is the same as the parent, or is
+    /// a child of the parent.
+    pub fn is_same_or_child_of(
+        &self,
+        spatial_node_index: SpatialNodeIndex,
+        parent_spatial_node_index: SpatialNodeIndex,
+    ) -> bool {
+        let mut index = spatial_node_index;
+
+        loop {
+            if index == parent_spatial_node_index {
+                return true;
+            }
+
+            index = match self.spatial_nodes[index.0 as usize].parent {
+                Some(parent) => parent,
+                None => return false,
+            }
+        }
+    }
+
     /// The root reference frame, which is the true root of the ClipScrollTree. Initially
     /// this ID is not valid, which is indicated by ```spatial_nodes``` being empty.
     pub fn root_reference_frame_index(&self) -> SpatialNodeIndex {

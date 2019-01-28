@@ -5,27 +5,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SMILStringType.h"
-#include "nsSMILValue.h"
+
+#include "mozilla/SMILValue.h"
 #include "nsDebug.h"
 #include "nsString.h"
 
 namespace mozilla {
 
-void SMILStringType::Init(nsSMILValue& aValue) const {
+void SMILStringType::Init(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
   aValue.mU.mPtr = new nsString();
   aValue.mType = this;
 }
 
-void SMILStringType::Destroy(nsSMILValue& aValue) const {
+void SMILStringType::Destroy(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value");
   delete static_cast<nsAString*>(aValue.mU.mPtr);
   aValue.mU.mPtr = nullptr;
   aValue.mType = SMILNullType::Singleton();
 }
 
-nsresult SMILStringType::Assign(nsSMILValue& aDest,
-                                const nsSMILValue& aSrc) const {
+nsresult SMILStringType::Assign(SMILValue& aDest, const SMILValue& aSrc) const {
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value");
 
@@ -35,8 +35,8 @@ nsresult SMILStringType::Assign(nsSMILValue& aDest,
   return NS_OK;
 }
 
-bool SMILStringType::IsEqual(const nsSMILValue& aLeft,
-                             const nsSMILValue& aRight) const {
+bool SMILStringType::IsEqual(const SMILValue& aLeft,
+                             const SMILValue& aRight) const {
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
@@ -45,15 +45,15 @@ bool SMILStringType::IsEqual(const nsSMILValue& aLeft,
   return *leftString == *rightString;
 }
 
-nsresult SMILStringType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+nsresult SMILStringType::Add(SMILValue& aDest, const SMILValue& aValueToAdd,
                              uint32_t aCount) const {
   MOZ_ASSERT(aValueToAdd.mType == aDest.mType, "Trying to add invalid types");
   MOZ_ASSERT(aValueToAdd.mType == this, "Unexpected source type");
   return NS_ERROR_FAILURE;  // string values can't be added to each other
 }
 
-nsresult SMILStringType::ComputeDistance(const nsSMILValue& aFrom,
-                                         const nsSMILValue& aTo,
+nsresult SMILStringType::ComputeDistance(const SMILValue& aFrom,
+                                         const SMILValue& aTo,
                                          double& aDistance) const {
   MOZ_ASSERT(aFrom.mType == aTo.mType, "Trying to compare different types");
   MOZ_ASSERT(aFrom.mType == this, "Unexpected source type");
@@ -61,10 +61,10 @@ nsresult SMILStringType::ComputeDistance(const nsSMILValue& aFrom,
                             // values
 }
 
-nsresult SMILStringType::Interpolate(const nsSMILValue& aStartVal,
-                                     const nsSMILValue& aEndVal,
+nsresult SMILStringType::Interpolate(const SMILValue& aStartVal,
+                                     const SMILValue& aEndVal,
                                      double aUnitDistance,
-                                     nsSMILValue& aResult) const {
+                                     SMILValue& aResult) const {
   MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
              "Trying to interpolate different types");
   MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");

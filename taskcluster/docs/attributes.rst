@@ -281,3 +281,7 @@ require these signoffs. For example, ``mar-signing`` signoffs may be required
 by some releases in the future; for any releases that require ``mar-signing``
 signoffs, the kinds that also require that signoff are marked with this
 attribute.
+
+update-channel
+==============
+The update channel the build is configured to use.

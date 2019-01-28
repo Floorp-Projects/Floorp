@@ -108,7 +108,8 @@
 }
 
 .network-monitor .properties-view .devtools-searchbox,
-.network-monitor .tree-container .treeTable .tree-section {
+.network-monitor .tree-container .treeTable .tree-section,
+.network-monitor .properties-view .raw-headers-container  {
   width: 100%;
   background-color: var(--theme-toolbar-background);
 }
@@ -207,6 +208,19 @@
   color: var(--theme-selection-color);
 }
 
+.theme-dark .network-monitor .edit-and-resend-button  {
+  background-color: var(--toolbarbutton-background);
+  color: var(--theme-selection-color);
+}
+
+.summary-edit-and-resend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding-inline-end: 3px;
+}
+
 /* Headers tabpanel */
 
 .network-monitor .headers-overview {
@@ -219,29 +233,79 @@
   align-items: center;
 }
 
-.network-monitor .headers-summary .devtools-button {
-  margin-inline-end: 6px;
+.theme-light .network-monitor .edit-and-resend-button {
+  background-color: var(--grey-20);
 }
 
-.network-monitor .headers-summary .raw-headers-container {
+.network-monitor .edit-and-resend-button {
+  align-self: flex-end;
+  height: 24px;
+  padding-left: 8px;
+  padding-right: 8px;
+  width: auto;
+  border: 1px solid var(--theme-splitter-color);
+}
+
+.network-monitor .raw-headers-toggle {
   display: flex;
-  width: 100%;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  align-items: center;
 }
 
-.network-monitor .headers-summary .raw-headers {
-  width: 50%;
-  padding: 0 4px;
+.network-monitor .raw-headers-toggle .headers-summary-label {
+  color: var(--theme-toolbar-color);
 }
 
-.network-monitor .headers-summary .raw-headers textarea {
+.network-monitor .raw-headers-toggle-input > input {
+  display: inline-block;
+  align-items: center;
+  background: var(--toggle-track-color);
+  width: 2em ;
+  vertical-align: bottom;
+}
+
+.network-monitor .properties-view .tree-container .treeTable .treeValueCell .devtools-checkbox-toggle {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.network-monitor .properties-view .raw-headers-container .raw-headers {
+  display: block;
+  overflow: hidden;
   width: 100%;
-  height: 50vh;
-  font: message-box;
+  padding: 2px 12px;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+  border: none;
+}
+
+.network-monitor .properties-view .raw-headers-container td {
+  display: block;
+}
+
+.network-monitor .properties-view .raw-headers-container textarea {
+  width: 100%;
+  font-family: var(--monospace-font-family);
   font-size: var(--theme-body-font-size);
   resize: none;
 }
 
-.network-monitor .headers-summary .raw-headers .tabpanel-summary-label {
+.theme-light .network-monitor .properties-view textarea {
+  background-color: white;
+  border: 1px solid var(--grey-25);
+  color: var(--grey-90);
+}
+
+.theme-dark .network-monitor .properties-view textarea {
+  background-color: var(--grey-70);
+  border: 1px solid var(--grey-85);
+  color: white;
+}
+
+.network-monitor .properties-view .raw-headers .tabpanel-summary-label {
   padding: 0 0 4px 0;
 }
 

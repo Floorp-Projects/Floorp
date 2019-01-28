@@ -36,8 +36,18 @@ AntiTracking.runTest("SharedWorkers and Storage Access API",
     /* import-globals-from storageAccessAPIHelpers.js */
     await callRequestStorageAccess();
 
-    new SharedWorker("a.js", "foo");
-    ok(true, "SharedWorker is allowed");
+    if (SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT) {
+      try {
+        new SharedWorker("a.js", "foo");
+        ok(false, "SharedWorker cannot be used!");
+      } catch (e) {
+        ok(true, "SharedWorker cannot be used!");
+        is(e.name, "SecurityError", "We want a security error message.");
+      }
+    } else {
+      new SharedWorker("a.js", "foo");
+      ok(true, "SharedWorker is allowed");
+    }
   },
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */

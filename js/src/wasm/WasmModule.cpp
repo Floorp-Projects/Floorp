@@ -132,12 +132,10 @@ bool Module::finishTier2(const LinkData& linkData2,
       }
     }
 
-    HasGcTypes gcTypesConfigured = code().metadata().temporaryGcTypesConfigured;
     const CodeTier& tier2 = code().codeTier(Tier::Optimized);
 
     Maybe<size_t> stub2Index;
-    if (!stubs2->createTier2(gcTypesConfigured, funcExportIndices, tier2,
-                             &stub2Index)) {
+    if (!stubs2->createTier2(funcExportIndices, tier2, &stub2Index)) {
       return false;
     }
 

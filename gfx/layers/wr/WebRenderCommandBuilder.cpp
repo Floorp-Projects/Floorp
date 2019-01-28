@@ -96,17 +96,13 @@ struct BlobItemData {
 
   // properties that are used to emulate layer tree invalidation
   Matrix mMatrix;  // updated to track the current transform to device space
-  Matrix4x4Flagged mTransform;  // only used with nsDisplayTransform items to
-                                // detect transform changes
-  float mOpacity;  // only used with nsDisplayOpacity items to detect change to
-                   // opacity
   RefPtr<BasicLayerManager> mLayerManager;
 
   IntRect mImageRect;
   LayerIntPoint mGroupOffset;
 
   BlobItemData(DIGroup* aGroup, nsDisplayItem* aItem)
-      : mUsed(false), mGroup(aGroup), mOpacity(0.0) {
+      : mUsed(false), mGroup(aGroup) {
     mInvalid = false;
     mInvalidRegion = false;
     mEmpty = false;
@@ -254,34 +250,10 @@ static bool IsContainerLayerItem(nsDisplayItem* aItem) {
 
 #include <sstream>
 
-bool UpdateContainerLayerPropertiesAndDetectChange(
+bool DetectContainerLayerPropertiesBoundsChange(
     nsDisplayItem* aItem, BlobItemData* aData,
     nsDisplayItemGeometry& aGeometry) {
-  bool changed = false;
   switch (aItem->GetType()) {
-    case DisplayItemType::TYPE_TRANSFORM: {
-      auto transformItem = static_cast<nsDisplayTransform*>(aItem);
-      Matrix4x4Flagged trans = transformItem->GetTransform();
-      changed = aData->mTransform != trans;
-
-      if (changed) {
-        std::stringstream ss;
-        // ss << trans << ' ' << aData->mTransform;
-        // GP("UpdateContainerLayerPropertiesAndDetectChange Matrix %d %s\n",
-        //   changed, ss.str().c_str());
-      }
-
-      aData->mTransform = trans;
-      break;
-    }
-    case DisplayItemType::TYPE_OPACITY: {
-      auto opacityItem = static_cast<nsDisplayOpacity*>(aItem);
-      float opacity = opacityItem->GetOpacity();
-      changed = aData->mOpacity != opacity;
-      aData->mOpacity = opacity;
-      GP("UpdateContainerLayerPropertiesAndDetectChange Opacity\n");
-      break;
-    }
     case DisplayItemType::TYPE_MASK:
     case DisplayItemType::TYPE_FILTER: {
       // These two items go through BasicLayerManager composition which clips to
@@ -293,7 +265,7 @@ bool UpdateContainerLayerPropertiesAndDetectChange(
       break;
   }
 
-  return changed || !aGeometry.mBounds.IsEqualEdges(aData->mGeometry->mBounds);
+  return !aGeometry.mBounds.IsEqualEdges(aData->mGeometry->mBounds);
 }
 
 struct DIGroup {
@@ -547,7 +519,7 @@ struct DIGroup {
               aItem->AllocateGeometry(aBuilder));
           // we need to catch bounds changes of containers so that we continue
           // to have the correct bounds rects in the recording
-          if (UpdateContainerLayerPropertiesAndDetectChange(aItem, aData,
+          if (DetectContainerLayerPropertiesBoundsChange(aItem, aData,
                                                             *geometry)) {
             nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
                 geometry->ComputeInvalidationRegion());
@@ -558,7 +530,7 @@ struct DIGroup {
             InvalidateRect(aData->mRect.Intersect(mImageBounds));
             aData->mRect = transformedRect.Intersect(mClippedImageBounds);
             InvalidateRect(aData->mRect);
-            GP("UpdateContainerLayerPropertiesAndDetectChange change\n");
+            GP("DetectContainerLayerPropertiesBoundsChange change\n");
           } else if (!aData->mImageRect.IsEqualEdges(mClippedImageBounds)) {
             // Make sure we update mRect for mClippedImageBounds changes
             nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
@@ -1433,7 +1405,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
     wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResourceUpdates, nsDisplayList* aDisplayList,
     nsDisplayListBuilder* aDisplayListBuilder, WebRenderScrollData& aScrollData,
-    wr::LayoutSize& aContentSize, const nsTArray<wr::FilterOp>& aFilters) {
+    wr::LayoutSize& aContentSize, nsTArray<wr::FilterOp>&& aFilters) {
   StackingContextHelper sc;
   aScrollData = WebRenderScrollData(mManager);
   MOZ_ASSERT(mLayerScrollData.empty());
@@ -1451,9 +1423,18 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
       mZoomProp->id = AnimationHelper::GetNextCompositorAnimationsId();
     }
 
+    nsPresContext* presContext =
+        aDisplayListBuilder->RootReferenceFrame()->PresContext();
+    bool isTopLevelContent =
+        presContext->Document()->IsTopLevelContentDocument();
+
+    wr::StackingContextParams params;
+    params.mFilters = std::move(aFilters);
+    params.animation = mZoomProp.ptrOr(nullptr);
+    params.cache_tiles = isTopLevelContent;
+
     StackingContextHelper pageRootSc(sc, nullptr, nullptr, nullptr, aBuilder,
-                                     aFilters, LayoutDeviceRect(), nullptr,
-                                     mZoomProp.ptrOr(nullptr));
+                                     params);
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
       mBuilderDumpIndex =
           aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
@@ -2013,7 +1994,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
   // e.g.: nsDisplayBoxShadowInner uses mPaintRect in Paint() and mPaintRect is
   // computed in nsDisplayBoxShadowInner::ComputeVisibility().
   nsRegion visibleRegion(paintBounds);
-  aItem->SetPaintRect(aItem->GetBuildingRect().Intersect(paintBounds));
+  aItem->SetPaintRect(paintBounds);
   aItem->ComputeVisibility(aDisplayListBuilder, &visibleRegion);
 
   const int32_t appUnitsPerDevPixel =

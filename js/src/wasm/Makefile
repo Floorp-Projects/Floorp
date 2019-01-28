@@ -23,7 +23,7 @@ update:
 		--use-sync \
 		--js ../jit-test/tests/wasm/spec \
 		--html ../../../testing/web-platform/mozilla/tests/wasm
-	echo "|jit-test| test-also-no-wasm-baseline; test-also-no-wasm-ion; test-also-wasm-tiering; include:wasm-testharness.js" > ../jit-test/tests/wasm/spec/directives.txt
+	echo "|jit-test| test-also-wasm-compiler-ion; test-also-wasm-compiler-baseline; test-also-wasm-tiering; include:wasm-testharness.js" > ../jit-test/tests/wasm/spec/directives.txt
 	echo "|jit-test| skip-if:true" > ../jit-test/tests/wasm/spec/harness/directives.txt
 
 run:

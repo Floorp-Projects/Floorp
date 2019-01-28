@@ -20,6 +20,7 @@
 #define wasm_AsmJS_h
 
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include <stdint.h>  // uint32_t
 
@@ -61,6 +62,11 @@ using AsmJSParser = frontend::Parser<frontend::FullParseHandler, Unit>;
 // beginning.
 
 extern MOZ_MUST_USE bool CompileAsmJS(JSContext* cx,
+                                      AsmJSParser<mozilla::Utf8Unit>& parser,
+                                      frontend::ParseNode* stmtList,
+                                      bool* validated);
+
+extern MOZ_MUST_USE bool CompileAsmJS(JSContext* cx,
                                       AsmJSParser<char16_t>& parser,
                                       frontend::ParseNode* stmtList,
                                       bool* validated);
@@ -83,9 +89,6 @@ extern bool IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc,
                                         JS::Value* vp);
 
 extern bool IsAsmJSModule(JSContext* cx, unsigned argc, JS::Value* vp);
-
-extern bool IsAsmJSModuleLoadedFromCache(JSContext* cx, unsigned argc,
-                                         JS::Value* vp);
 
 extern bool IsAsmJSFunction(JSContext* cx, unsigned argc, JS::Value* vp);
 

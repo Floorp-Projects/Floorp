@@ -43,14 +43,22 @@ bool Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal) {
     return false;
   }
 
-  nsContentUtils::StorageAccess access =
-      nsContentUtils::StorageAllowedForPrincipal(Principal());
+  if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+    mIsSessionOnly = false;
+  } else if (mWindow) {
+    uint32_t rejectedReason = 0;
+    nsContentUtils::StorageAccess access =
+        nsContentUtils::StorageAllowedForWindow(mWindow, &rejectedReason);
 
-  if (access <= nsContentUtils::StorageAccess::eDeny) {
-    return false;
+    // Note that we allow StorageAccess::ePartitionedOrDeny because we want
+    // tracker to have access to their sessionStorage.
+    if (access == nsContentUtils::StorageAccess::eDeny &&
+        ShouldThrowWhenStorageAccessDenied(rejectedReason)) {
+      return false;
+    }
+
+    mIsSessionOnly = access <= nsContentUtils::StorageAccess::eSessionScoped;
   }
-
-  mIsSessionOnly = access <= nsContentUtils::StorageAccess::eSessionScoped;
 
   return aSubjectPrincipal.Subsumes(mPrincipal);
 }

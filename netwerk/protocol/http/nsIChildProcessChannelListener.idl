@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIChildChannel;
+
+[scriptable, uuid(50af805f-e4db-40d9-9dd8-1ae9ab12bdc2)]
+interface nsIChildProcessChannelListener : nsISupports
+{
+  /**
+   * @param aChildChannel - new child channel
+   * @param aIdentifier - returned by call to getChannelRedirectTarget. Used to
+                          identify the new channel.
+   *
+   * This method has to call aChildChannel->completeRedirectSetup(listener, context)
+   * in order to be ready for content; listener is a class that implements
+   * nsIStreamListener.
+   */
+  void onChannelReady(in nsIChildChannel aChildChannel, in unsigned long long aIdentifier);
+};
+

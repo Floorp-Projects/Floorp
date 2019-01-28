@@ -17,10 +17,7 @@
 #![warn(unused_import_braces)]
 #![cfg_attr(feature = "std", warn(unstable_features))]
 #![cfg_attr(feature = "clippy", plugin(clippy(conf_file = "../../clippy.toml")))]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(new_without_default, new_without_default_derive)
-)]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
 #![cfg_attr(
     feature = "cargo-clippy",
     warn(
@@ -34,24 +31,24 @@
         clippy::use_self
     )
 )]
-// Turns on no_std and alloc features if std is not available.
-#![cfg_attr(not(feature = "std"), no_std)]
+#![no_std]
 #![cfg_attr(not(feature = "std"), feature(alloc))]
 
-/// This replaces `std` in builds with `core`.
+#[cfg(test)]
 #[cfg(not(feature = "std"))]
-mod std {
-    extern crate alloc;
-    pub use self::alloc::{boxed, string, vec};
-    pub use core::*;
-}
+#[macro_use]
+extern crate alloc as std;
+#[cfg(test)]
+#[cfg(feature = "std")]
+#[macro_use]
+extern crate std;
 
 #[macro_use]
 extern crate cranelift_entity as entity;
-use entity::packed_option;
+use crate::entity::packed_option;
 
-use std::borrow::BorrowMut;
-use std::cmp::Ordering;
+use core::borrow::BorrowMut;
+use core::cmp::Ordering;
 
 mod map;
 mod node;
@@ -157,7 +154,7 @@ fn slice_shift<T: Copy>(s: &mut [T], n: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use entity::EntityRef;
+    use crate::entity::EntityRef;
 
     /// An opaque reference to an extended basic block in a function.
     #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]

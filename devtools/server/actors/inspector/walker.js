@@ -370,9 +370,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   _onReflows: function(reflows) {
-    // Going through the nodes the walker knows about, see which ones have
-    // had their display changed and send a display-change event if any
-    const changes = [];
+    // Going through the nodes the walker knows about, see which ones have had their
+    // display or scrollable state changed and send events if any.
+    const displayTypeChanges = [];
+    const scrollableStateChanges = [];
+
     for (const [node, actor] of this._refMap) {
       if (Cu.isDeadWrapper(node)) {
         continue;
@@ -383,16 +385,26 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
       if (displayType !== actor.currentDisplayType ||
           isDisplayed !== actor.wasDisplayed) {
-        changes.push(actor);
+        displayTypeChanges.push(actor);
 
         // Updating the original value
         actor.currentDisplayType = displayType;
         actor.wasDisplayed = isDisplayed;
       }
+
+      const isScrollable = actor.isScrollable;
+      if (isScrollable !== actor.wasScrollable) {
+        scrollableStateChanges.push(actor);
+        actor.wasScrollable = isScrollable;
+      }
     }
 
-    if (changes.length) {
-      this.emit("display-change", changes);
+    if (displayTypeChanges.length) {
+      this.emit("display-change", displayTypeChanges);
+    }
+
+    if (scrollableStateChanges.length) {
+      this.emit("scrollable-change", scrollableStateChanges);
     }
   },
 
@@ -1208,7 +1220,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       return sortA.localeCompare(sortB);
     });
 
-    result.slice(0, 25);
+    result = result.slice(0, 25);
 
     return {
       query: query,

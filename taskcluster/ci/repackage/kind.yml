@@ -32,7 +32,7 @@ only-for-build-platforms:
     - win32/opt
     - win64-nightly/opt
     - win64-devedition-nightly/opt
-    - win64-aarch64-msvc-nightly/opt
+    - win64-aarch64-nightly/opt
     - win64/opt
     - win64-asan-reporter-nightly/opt
 
@@ -51,9 +51,15 @@ job-template:
                     - repackage/osx_signed.py
                 win32\b.*:
                     - repackage/base.py
+                    - repackage/win32_sfx_stub.py
                     - repackage/win32_signed.py
-                win64\b.*:
+                win64(?!-aarch64)\b.*:
                     - repackage/base.py
+                    - repackage/win32_sfx_stub.py
+                    - repackage/win64_signed.py
+                win64-aarch64\b.*:
+                    - repackage/base.py
+                    - repackage/win64-aarch64_sfx_stub.py
                     - repackage/win64_signed.py
     package-formats:
         by-release-type:

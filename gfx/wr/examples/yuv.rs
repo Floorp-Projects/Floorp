@@ -95,14 +95,9 @@ impl Example for App {
         let info = LayoutPrimitiveInfo::new(bounds);
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
-        builder.push_stacking_context(
+        builder.push_simple_stacking_context(
             &info,
             space_and_clip.spatial_id,
-            None,
-            TransformStyle::Flat,
-            MixBlendMode::Normal,
-            &[],
-            RasterSpace::Screen,
         );
 
         let yuv_chanel1 = api.generate_image_key();

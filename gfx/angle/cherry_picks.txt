@@ -1,3 +1,15 @@
+commit eff6bfdb1db99505122a37f2911bdd3b845e19b8
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Thu Jan 3 23:38:44 2019 -0800
+
+    In PixelTransfer11, center offset should be 1/size, not 1/(size-1).
+    
+    Bug: angleproject:3039
+    Change-Id: Ie97bfb5aa3cfe7cd2c4b1d22b5b4a8d82a5e5170
+    Reviewed-on: https://chromium-review.googlesource.com/c/1407251
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>
+    Commit-Queue: Jamie Madill <jmadill@chromium.org>
+
 commit 790e8e6b417905eca335d06c16ec54c977188110
 Author: Olli Etuaho <oetuaho@nvidia.com>
 Date:   Thu Sep 20 13:20:50 2018 +0300

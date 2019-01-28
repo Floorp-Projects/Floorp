@@ -10,11 +10,10 @@ build = "build.rs"
 [features]
 default = ["freetype-lib"]
 freetype-lib = ["freetype/servo-freetype-sys"]
-profiler = ["thread_profiler/thread_profiler", "debug_renderer"]
-debugger = ["ws", "serde_json", "serde", "image", "base64", "debug_renderer"]
-capture = ["webrender_api/serialize", "ron", "serde", "debug_renderer"]
+profiler = ["thread_profiler/thread_profiler"]
+debugger = ["ws", "serde_json", "serde", "image", "base64"]
+capture = ["webrender_api/serialize", "ron", "serde"]
 replay = ["webrender_api/deserialize", "ron", "serde"]
-debug_renderer = []
 pathfinder = ["pathfinder_font_renderer", "pathfinder_gfx_utils", "pathfinder_partitioner", "pathfinder_path_utils"]
 serialize_program = ["serde", "webrender_build/serialize_program"]
 no_static_freetype = []
@@ -82,7 +81,7 @@ freetype = { version = "0.4", default-features = false }
 libc = "0.2"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.7"
+dwrote = "0.8"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"

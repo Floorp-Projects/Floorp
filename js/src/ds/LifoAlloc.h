@@ -174,6 +174,17 @@ class SingleLinkedList {
     assertInvariants();
     list.assertInvariants();
   }
+  void steal(SingleLinkedList&& list) {
+    head_ = std::move(list.head_);
+    last_ = list.last_;
+    list.last_ = nullptr;
+    assertInvariants();
+    list.assertInvariants();
+  }
+  void prependAll(SingleLinkedList&& list) {
+    list.appendAll(std::move(*this));
+    steal(std::move(list));
+  }
   UniquePtr<T, D> popFirst() {
     MOZ_ASSERT(head_);
     UniquePtr<T, D> result = std::move(head_);
@@ -505,7 +516,7 @@ class LifoAlloc {
 
   // List of chunks containing allocated data where each allocation is larger
   // than the oversize threshold. Each chunk contains exactly on allocation.
-  // This reduces wasted space in the normal chunk list.
+  // This reduces wasted space in the chunk list.
   //
   // Oversize chunks are allocated on demand and freed as soon as they are
   // released, instead of being pushed to the unused list.
@@ -517,9 +528,16 @@ class LifoAlloc {
   size_t markCount;
   size_t defaultChunkSize_;
   size_t oversizeThreshold_;
+
+  // Size of all chunks in chunks_, oversize_, unused_ lists.
   size_t curSize_;
   size_t peakSize_;
-  size_t oversizeSize_;
+
+  // Size of all chunks containing small bump allocations. This heuristic is
+  // used to compute growth rate while ignoring chunks such as oversized,
+  // now-unused, or transferred (which followed their own growth patterns).
+  size_t smallAllocsSize_;
+
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
   bool fallibleScope_;
 #endif
@@ -562,6 +580,7 @@ class LifoAlloc {
   void decrementCurSize(size_t size) {
     MOZ_ASSERT(curSize_ >= size);
     curSize_ -= size;
+    MOZ_ASSERT(curSize_ >= smallAllocsSize_);
   }
 
   void* allocImplColdPath(size_t n);
@@ -760,16 +779,22 @@ class LifoAlloc {
  public:
   void releaseAll() {
     MOZ_ASSERT(!markCount);
+
+    // When releasing all chunks, we can no longer determine which chunks were
+    // transferred and which were not, so simply clear the heuristic to zero
+    // right away.
+    smallAllocsSize_ = 0;
+
     for (detail::BumpChunk& bc : chunks_) {
       bc.release();
     }
     unused_.appendAll(std::move(chunks_));
+
     // On release, we free any oversize allocations instead of keeping them
     // in unused chunks.
     while (!oversize_.empty()) {
       UniqueBumpChunk bc = oversize_.popFirst();
       decrementCurSize(bc->computedSizeOfIncludingThis());
-      oversizeSize_ -= bc->computedSizeOfIncludingThis();
     }
   }
 

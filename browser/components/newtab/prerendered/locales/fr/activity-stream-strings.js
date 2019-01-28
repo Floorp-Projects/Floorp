@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "J’ai compris",
   "prefs_home_header": "Contenu de la page d’accueil de Firefox",
   "prefs_home_description": "Choisissez le contenu que vous souhaitez pour la page d’accueil de Firefox.",
-  "prefs_content_discovery_header": "Firefox Home",
+  "prefs_content_discovery_header": "Page d’accueil de Firefox",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_button": "Désactiver la découverte de contenu",
   "prefs_section_rows_option": "{num} ligne;{num} lignes",
   "prefs_search_header": "Recherche web",
   "prefs_topsites_description": "Les sites que vous visitez le plus",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Politique de confidentialité",
   "firstrun_continue_to_login": "Continuer",
   "firstrun_skip_login": "Ignorer cette étape",
-  "context_menu_title": "Ouvrir le menu",
-  "pocket_learn_more": "En savoir plus"
+  "context_menu_title": "Ouvrir le menu"
 };

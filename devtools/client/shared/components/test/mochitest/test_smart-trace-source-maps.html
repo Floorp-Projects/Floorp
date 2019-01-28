@@ -170,7 +170,7 @@ window.onload = function() {
 
     const groups = Array.from(traceEl.querySelectorAll(".group"));
     is(groups.length, 1, "SmartTrace has a group");
-    is(groups[0].textContent, "last2React", "A collapsed React group is displayed");
+    is(groups[0].textContent.trim(), "React 2", "A collapsed React group is displayed");
 
     is(onReadyCount, 1, "onReady was only called once");
   });

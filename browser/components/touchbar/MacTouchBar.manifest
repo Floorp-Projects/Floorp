@@ -1,0 +1,9 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+component {ea109912-3acc-48de-b679-c23b6a122da5} MacTouchBar.js
+contract @mozilla.org/widget/touchbarhelper;1 {ea109912-3acc-48de-b679-c23b6a122da5}
+
+component {77441d17-f29c-49d7-982f-f20a5ab5a900} MacTouchBar.js
+contract @mozilla.org/widget/touchbarinput;1 {77441d17-f29c-49d7-982f-f20a5ab5a900}

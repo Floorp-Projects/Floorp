@@ -392,9 +392,7 @@ ul.children + .tag-line::before {
 .theme-selected ~ .editor.comment,
 .theme-selected ~ .editor .theme-fg-color1,
 .theme-selected ~ .editor .theme-fg-color2,
-.theme-selected ~ .editor .theme-fg-color3,
-.theme-selected ~ .editor .theme-fg-color4,
-.theme-selected ~ .editor .theme-fg-color5 {
+.theme-selected ~ .editor .theme-fg-color3 {
   color: var(--theme-selection-color);
 }
 

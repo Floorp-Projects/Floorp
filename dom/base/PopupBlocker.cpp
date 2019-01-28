@@ -7,7 +7,9 @@
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/TimeStamp.h"
 #include "nsXULPopupManager.h"
 #include "nsIPermissionManager.h"
 
@@ -21,6 +23,8 @@ static char* sPopupAllowedEvents;
 static PopupBlocker::PopupControlState sPopupControlState =
     PopupBlocker::openAbused;
 static uint32_t sPopupStatePusherCount = 0;
+
+static TimeStamp sLastAllowedExternalProtocolIFrameTimeStamp;
 
 // This token is by default set to false. When a popup/filePicker is shown, it
 // is set to true.
@@ -377,6 +381,27 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
   }
 
   Preferences::UnregisterCallback(OnPrefChange, "dom.popup_allowed_events");
+}
+
+/* static */ bool PopupBlocker::ConsumeTimerTokenForExternalProtocolIframe() {
+  TimeStamp now = TimeStamp::Now();
+
+  if (sLastAllowedExternalProtocolIFrameTimeStamp.IsNull()) {
+    sLastAllowedExternalProtocolIFrameTimeStamp = now;
+    return true;
+  }
+
+  if ((now - sLastAllowedExternalProtocolIFrameTimeStamp).ToSeconds() <
+      (StaticPrefs::dom_delay_block_external_protocol_in_iframes())) {
+    return false;
+  }
+
+  sLastAllowedExternalProtocolIFrameTimeStamp = now;
+  return true;
+}
+
+/* static */ TimeStamp PopupBlocker::WhenLastExternalProtocolIframeAllowed() {
+  return sLastAllowedExternalProtocolIFrameTimeStamp;
 }
 
 }  // namespace dom

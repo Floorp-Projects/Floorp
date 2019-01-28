@@ -71,7 +71,6 @@ class ProxyAccessibleBase {
   uint32_t EmbeddedChildCount() const;
   int32_t IndexOfEmbeddedChild(const Derived* aChild);
   Derived* EmbeddedChildAt(size_t aChildIdx);
-  bool MustPruneChildren() const;
 
   void Shutdown();
 

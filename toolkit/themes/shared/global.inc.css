@@ -62,7 +62,7 @@
   color: inherit !important;
   min-width: 0;
   margin: 0;
-  padding: .9em;
+  padding: .9em 2px;
 }
 
 .panel-footer > button[disabled] {

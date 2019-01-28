@@ -26,11 +26,10 @@ using namespace mozilla::plugins::PluginUtilsOSX;
 
 @interface CGBridgeLayer : CALayer {
   DrawPluginFunc mDrawFunc;
-  void* mPluginInstance;
+  void *mPluginInstance;
   nsIntRect mUpdateRect;
 }
-- (void)setDrawFunc:(DrawPluginFunc)aFunc
-     pluginInstance:(void*)aPluginInstance;
+- (void)setDrawFunc:(DrawPluginFunc)aFunc pluginInstance:(void *)aPluginInstance;
 - (void)updateRect:(nsIntRect)aRect;
 
 @end
@@ -40,35 +39,25 @@ using namespace mozilla::plugins::PluginUtilsOSX;
 // it's used to replace the "data" in a bitmap context that was
 // originally specified in a call to CGBitmapContextCreate() or
 // CGBitmapContextCreateWithData().
-typedef void (*CGBitmapContextSetDataFunc) (CGContextRef c,
-                                            size_t x,
-                                            size_t y,
-                                            size_t width,
-                                            size_t height,
-                                            void* data,
-                                            size_t bitsPerComponent,
-                                            size_t bitsPerPixel,
-                                            size_t bytesPerRow);
+typedef void (*CGBitmapContextSetDataFunc)(CGContextRef c, size_t x, size_t y, size_t width,
+                                           size_t height, void *data, size_t bitsPerComponent,
+                                           size_t bitsPerPixel, size_t bytesPerRow);
 CGBitmapContextSetDataFunc CGBitmapContextSetDataPtr = NULL;
 
 @implementation CGBridgeLayer
-- (void) updateRect:(nsIntRect)aRect
-{
-   mUpdateRect.UnionRect(mUpdateRect, aRect);
+- (void)updateRect:(nsIntRect)aRect {
+  mUpdateRect.UnionRect(mUpdateRect, aRect);
 }
 
-- (void) setDrawFunc:(DrawPluginFunc)aFunc
-      pluginInstance:(void*)aPluginInstance
-{
+- (void)setDrawFunc:(DrawPluginFunc)aFunc pluginInstance:(void *)aPluginInstance {
   mDrawFunc = aFunc;
   mPluginInstance = aPluginInstance;
 }
 
-- (void)drawInContext:(CGContextRef)aCGContext
-{
-  ::CGContextSaveGState(aCGContext); 
+- (void)drawInContext:(CGContextRef)aCGContext {
+  ::CGContextSaveGState(aCGContext);
   ::CGContextTranslateCTM(aCGContext, 0, self.bounds.size.height);
-  ::CGContextScaleCTM(aCGContext, (CGFloat) 1, (CGFloat) -1);
+  ::CGContextScaleCTM(aCGContext, (CGFloat)1, (CGFloat)-1);
 
   mUpdateRect = nsIntRect::Truncate(0, 0, self.bounds.size.width, self.bounds.size.height);
 
@@ -81,8 +70,7 @@ CGBitmapContextSetDataFunc CGBitmapContextSetDataPtr = NULL;
 
 @end
 
-void* mozilla::plugins::PluginUtilsOSX::GetCGLayer(DrawPluginFunc aFunc, 
-                                                   void* aPluginInstance, 
+void *mozilla::plugins::PluginUtilsOSX::GetCGLayer(DrawPluginFunc aFunc, void *aPluginInstance,
                                                    double aContentsScaleFactor) {
   CGBridgeLayer *bridgeLayer = [[CGBridgeLayer alloc] init];
 
@@ -91,12 +79,9 @@ void* mozilla::plugins::PluginUtilsOSX::GetCGLayer(DrawPluginFunc aFunc,
   bridgeLayer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
   bridgeLayer.needsDisplayOnBoundsChange = YES;
   NSNull *nullValue = [NSNull null];
-  NSDictionary *actions = [NSDictionary dictionaryWithObjectsAndKeys:
-                             nullValue, @"bounds",
-                             nullValue, @"contents",
-                             nullValue, @"contentsRect",
-                             nullValue, @"position",
-                             nil];
+  NSDictionary *actions = [NSDictionary
+      dictionaryWithObjectsAndKeys:nullValue, @"bounds", nullValue, @"contents", nullValue,
+                                   @"contentsRect", nullValue, @"position", nil];
   [bridgeLayer setStyle:[NSDictionary dictionaryWithObject:actions forKey:@"actions"]];
 
   // For reasons that aren't clear (perhaps one or more OS bugs), we can only
@@ -105,25 +90,23 @@ void* mozilla::plugins::PluginUtilsOSX::GetCGLayer(DrawPluginFunc aFunc,
   // of bridgeLayer (even to the same value) causes it to stop working (go
   // blank).  This doesn't happen with objects that are members of the CALayer
   // class (as opposed to one of its subclasses).
-#if defined(MAC_OS_X_VERSION_10_7) && \
-    MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+#if defined(MAC_OS_X_VERSION_10_7) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
   if ([bridgeLayer respondsToSelector:@selector(setContentsScale:)]) {
     bridgeLayer.contentsScale = aContentsScaleFactor;
   }
 #endif
 
-  [bridgeLayer setDrawFunc:aFunc
-            pluginInstance:aPluginInstance];
+  [bridgeLayer setDrawFunc:aFunc pluginInstance:aPluginInstance];
   return bridgeLayer;
 }
 
 void mozilla::plugins::PluginUtilsOSX::ReleaseCGLayer(void *cgLayer) {
-  CGBridgeLayer *bridgeLayer = (CGBridgeLayer*)cgLayer;
+  CGBridgeLayer *bridgeLayer = (CGBridgeLayer *)cgLayer;
   [bridgeLayer release];
 }
 
 void mozilla::plugins::PluginUtilsOSX::Repaint(void *caLayer, nsIntRect aRect) {
-  CGBridgeLayer *bridgeLayer = (CGBridgeLayer*)caLayer;
+  CGBridgeLayer *bridgeLayer = (CGBridgeLayer *)caLayer;
   [CATransaction begin];
   [bridgeLayer updateRect:aRect];
   [bridgeLayer setNeedsDisplay];
@@ -132,30 +115,29 @@ void mozilla::plugins::PluginUtilsOSX::Repaint(void *caLayer, nsIntRect aRect) {
 }
 
 @interface EventProcessor : NSObject {
-  RemoteProcessEvents   aRemoteEvents;
-  void                 *aPluginModule;
+  RemoteProcessEvents aRemoteEvents;
+  void *aPluginModule;
 }
-- (void)setRemoteEvents:(RemoteProcessEvents) remoteEvents pluginModule:(void*) pluginModule;
+- (void)setRemoteEvents:(RemoteProcessEvents)remoteEvents pluginModule:(void *)pluginModule;
 - (void)onTick;
 @end
 
 @implementation EventProcessor
-- (void) onTick
-{
-    aRemoteEvents(aPluginModule);
+- (void)onTick {
+  aRemoteEvents(aPluginModule);
 }
 
-- (void)setRemoteEvents:(RemoteProcessEvents) remoteEvents pluginModule:(void*) pluginModule
-{
-    aRemoteEvents = remoteEvents;
-    aPluginModule = pluginModule;
+- (void)setRemoteEvents:(RemoteProcessEvents)remoteEvents pluginModule:(void *)pluginModule {
+  aRemoteEvents = remoteEvents;
+  aPluginModule = pluginModule;
 }
 @end
 
-#define EVENT_PROCESS_DELAY 0.05 // 50 ms
+#define EVENT_PROCESS_DELAY 0.05  // 50 ms
 
-NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int aX, int aY, void* pluginModule, RemoteProcessEvents remoteEvent) 
-{
+NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void *aMenu, int aX, int aY,
+                                                               void *pluginModule,
+                                                               RemoteProcessEvents remoteEvent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Set the native cursor to the OS default (an arrow) before displaying the
@@ -166,7 +148,7 @@ NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int 
   // change to an arrow cursor automatically -- as it does in Chrome.
   [[NSCursor arrowCursor] set];
 
-  EventProcessor* eventProcessor = nullptr;
+  EventProcessor *eventProcessor = nullptr;
   NSTimer *eventTimer = nullptr;
   if (pluginModule) {
     // Create a timer to process browser events while waiting
@@ -175,15 +157,16 @@ NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int 
     eventProcessor = [[EventProcessor alloc] init];
     [eventProcessor setRemoteEvents:remoteEvent pluginModule:pluginModule];
     eventTimer = [NSTimer timerWithTimeInterval:EVENT_PROCESS_DELAY
-                                   target:eventProcessor selector:@selector(onTick)
-                                   userInfo:nil repeats:TRUE];
+                                         target:eventProcessor
+                                       selector:@selector(onTick)
+                                       userInfo:nil
+                                        repeats:TRUE];
     // Use NSEventTrackingRunLoopMode otherwise the timer will
     // not fire during the right click menu.
-    [[NSRunLoop currentRunLoop] addTimer:eventTimer
-                                 forMode:NSEventTrackingRunLoopMode];
+    [[NSRunLoop currentRunLoop] addTimer:eventTimer forMode:NSEventTrackingRunLoopMode];
   }
 
-  NSMenu* nsmenu = reinterpret_cast<NSMenu*>(aMenu);
+  NSMenu *nsmenu = reinterpret_cast<NSMenu *>(aMenu);
   NSPoint screen_point = ::NSMakePoint(aX, aY);
 
   [nsmenu popUpMenuPositioningItem:nil atLocation:screen_point inView:nil];
@@ -198,25 +181,23 @@ NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NPERR_GENERIC_ERROR);
 }
 
-void mozilla::plugins::PluginUtilsOSX::InvokeNativeEventLoop()
-{
+void mozilla::plugins::PluginUtilsOSX::InvokeNativeEventLoop() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
   ::CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, true);
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 #define UNDOCUMENTED_SESSION_CONSTANT ((int)-2)
 namespace mozilla {
 namespace plugins {
 namespace PluginUtilsOSX {
-  static void *sApplicationASN = NULL;
-  static void *sApplicationInfoItem = NULL;
-} // namespace PluginUtilsOSX
-} // namespace plugins
-} // namespace mozilla
+static void *sApplicationASN = NULL;
+static void *sApplicationInfoItem = NULL;
+}  // namespace PluginUtilsOSX
+}  // namespace plugins
+}  // namespace mozilla
 
-bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) {
+bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char *aProcessName) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
   nsAutoreleasePool localPool;
 
@@ -224,8 +205,8 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) 
     return false;
   }
 
-  NSString *currentName = [[[NSBundle mainBundle] localizedInfoDictionary]
-                              objectForKey:(NSString *)kCFBundleNameKey];
+  NSString *currentName =
+      [[[NSBundle mainBundle] localizedInfoDictionary] objectForKey:(NSString *)kCFBundleNameKey];
 
   char formattedName[1024];
   SprintfLiteral(formattedName, "%s %s", [currentName UTF8String], aProcessName);
@@ -234,21 +215,18 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) 
 
   // This function is based on Chrome/Webkit's and relies on potentially dangerous SPI.
   typedef CFTypeRef (*LSGetASNType)();
-  typedef OSStatus (*LSSetInformationItemType)(int, CFTypeRef,
-                                               CFStringRef, 
-                                               CFStringRef,
-                                               CFDictionaryRef*);
+  typedef OSStatus (*LSSetInformationItemType)(int, CFTypeRef, CFStringRef, CFStringRef,
+                                               CFDictionaryRef *);
 
-  CFBundleRef launchServices = ::CFBundleGetBundleWithIdentifier(
-                                          CFSTR("com.apple.LaunchServices"));
+  CFBundleRef launchServices = ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.LaunchServices"));
   if (!launchServices) {
     NS_WARNING("Failed to set process name: Could not open LaunchServices bundle");
     return false;
   }
 
   if (!sApplicationASN) {
-    sApplicationASN = ::CFBundleGetFunctionPointerForName(launchServices, 
-                                            CFSTR("_LSGetCurrentApplicationASN"));
+    sApplicationASN =
+        ::CFBundleGetFunctionPointerForName(launchServices, CFSTR("_LSGetCurrentApplicationASN"));
     if (!sApplicationASN) {
       NS_WARNING("Failed to set process name: Could not get function pointer "
                  "for LaunchServices");
@@ -256,24 +234,22 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) 
     }
   }
 
-  LSGetASNType getASNFunc = reinterpret_cast<LSGetASNType>
-                                          (sApplicationASN);
+  LSGetASNType getASNFunc = reinterpret_cast<LSGetASNType>(sApplicationASN);
 
   if (!sApplicationInfoItem) {
-    sApplicationInfoItem = ::CFBundleGetFunctionPointerForName(launchServices, 
-                                            CFSTR("_LSSetApplicationInformationItem"));
+    sApplicationInfoItem = ::CFBundleGetFunctionPointerForName(
+        launchServices, CFSTR("_LSSetApplicationInformationItem"));
   }
 
-  LSSetInformationItemType setInformationItemFunc 
-                                          = reinterpret_cast<LSSetInformationItemType>
-                                          (sApplicationInfoItem);
+  LSSetInformationItemType setInformationItemFunc =
+      reinterpret_cast<LSSetInformationItemType>(sApplicationInfoItem);
 
-  void * displayNameKeyAddr = ::CFBundleGetDataPointerForName(launchServices,
-                                          CFSTR("_kLSDisplayNameKey"));
+  void *displayNameKeyAddr =
+      ::CFBundleGetDataPointerForName(launchServices, CFSTR("_kLSDisplayNameKey"));
 
   CFStringRef displayNameKey = nil;
   if (displayNameKeyAddr) {
-    displayNameKey = reinterpret_cast<CFStringRef>(*(CFStringRef*)displayNameKeyAddr);
+    displayNameKey = reinterpret_cast<CFStringRef>(*(CFStringRef *)displayNameKeyAddr);
   }
 
   // Rename will fail without this
@@ -284,23 +260,20 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) 
 
   CFTypeRef currentAsn = getASNFunc ? getASNFunc() : nullptr;
 
-  if (!getASNFunc || !setInformationItemFunc || 
-      !displayNameKey || !currentAsn) {
+  if (!getASNFunc || !setInformationItemFunc || !displayNameKey || !currentAsn) {
     NS_WARNING("Failed to set process name: Accessing launchServices failed");
     return false;
   }
 
-  CFStringRef processName = ::CFStringCreateWithCString(nil, 
-                                                        aProcessName, 
-                                                        kCFStringEncodingASCII);
+  CFStringRef processName = ::CFStringCreateWithCString(nil, aProcessName, kCFStringEncodingASCII);
   if (!processName) {
     NS_WARNING("Failed to set process name: Could not create CFStringRef");
     return false;
   }
 
-  OSErr err = setInformationItemFunc(UNDOCUMENTED_SESSION_CONSTANT, currentAsn,
-                                     displayNameKey, processName,
-                                     nil); // Optional out param
+  OSErr err =
+      setInformationItemFunc(UNDOCUMENTED_SESSION_CONSTANT, currentAsn, displayNameKey, processName,
+                             nil);  // Optional out param
   ::CFRelease(processName);
   if (err != noErr) {
     NS_WARNING("Failed to set process name: LSSetInformationItemType err");
@@ -371,21 +344,13 @@ IOSurfaceID nsDoubleBufferCARenderer::GetFrontSurfaceID() {
   return mFrontSurface->GetIOSurfaceID();
 }
 
-bool nsDoubleBufferCARenderer::HasBackSurface() {
-  return !!mBackSurface;
-}
+bool nsDoubleBufferCARenderer::HasBackSurface() { return !!mBackSurface; }
 
-bool nsDoubleBufferCARenderer::HasFrontSurface() {
-  return !!mFrontSurface;
-}
+bool nsDoubleBufferCARenderer::HasFrontSurface() { return !!mFrontSurface; }
 
-bool nsDoubleBufferCARenderer::HasCALayer() {
-  return !!mCALayer;
-}
+bool nsDoubleBufferCARenderer::HasCALayer() { return !!mCALayer; }
 
-void nsDoubleBufferCARenderer::SetCALayer(void *aCALayer) {
-  mCALayer = aCALayer;
-}
+void nsDoubleBufferCARenderer::SetCALayer(void *aCALayer) { mCALayer = aCALayer; }
 
 bool nsDoubleBufferCARenderer::InitFrontSurface(size_t aWidth, size_t aHeight,
                                                 double aContentsScaleFactor,
@@ -410,11 +375,9 @@ bool nsDoubleBufferCARenderer::InitFrontSurface(size_t aWidth, size_t aHeight,
 
     mCARenderer->AttachIOSurface(mFrontSurface);
 
-    nsresult result = mCARenderer->SetupRenderer(mCALayer,
-                        mFrontSurface->GetWidth(),
-                        mFrontSurface->GetHeight(),
-                        mContentsScaleFactor,
-                        aAllowOfflineRenderer);
+    nsresult result =
+        mCARenderer->SetupRenderer(mCALayer, mFrontSurface->GetWidth(), mFrontSurface->GetHeight(),
+                                   mContentsScaleFactor, aAllowOfflineRenderer);
 
     if (result != NS_OK) {
       mCARenderer = nullptr;
@@ -433,8 +396,8 @@ void nsDoubleBufferCARenderer::Render() {
     return;
   }
 
-  mCARenderer->Render(GetFrontSurfaceWidth(), GetFrontSurfaceHeight(),
-                      mContentsScaleFactor, nullptr);
+  mCARenderer->Render(GetFrontSurfaceWidth(), GetFrontSurfaceHeight(), mContentsScaleFactor,
+                      nullptr);
 }
 
 void nsDoubleBufferCARenderer::SwapSurfaces() {
@@ -461,7 +424,6 @@ void nsDoubleBufferCARenderer::ClearBackSurface() {
   }
 }
 
-} // namespace PluginUtilsOSX
-} // namespace plugins
-} // namespace mozilla
-
+}  // namespace PluginUtilsOSX
+}  // namespace plugins
+}  // namespace mozilla

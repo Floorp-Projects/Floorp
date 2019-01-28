@@ -25,7 +25,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   Assert.equal(why.actors[0], breakpointClient.actor);
   const frame = packet.frame;
   const where = frame.where;
-  Assert.equal(where.source.actor, source.actor);
+  Assert.equal(where.actor, source.actor);
   Assert.equal(where.line, actualLocation.line);
   const variables = frame.environment.bindings.variables;
   Assert.equal(variables.a.value, 1);

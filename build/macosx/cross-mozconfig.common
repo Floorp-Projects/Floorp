@@ -23,6 +23,8 @@ CROSS_PRIVATE_FRAMEWORKS=$CROSS_SYSROOT/System/Library/PrivateFrameworks
 
 export CC="$topsrcdir/clang/bin/clang"
 export CXX="$topsrcdir/clang/bin/clang++"
+export CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
+export CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
 export LLVMCONFIG=$topsrcdir/clang/bin/llvm-config
 export BINDGEN_CFLAGS="-isysroot $CROSS_SYSROOT"
 export DSYMUTIL=$topsrcdir/build/macosx/llvm-dsymutil

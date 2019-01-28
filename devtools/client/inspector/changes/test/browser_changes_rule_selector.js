@@ -51,16 +51,19 @@ add_task(async function() {
   is(secondSelector.title, ".test", "New selector name was tracked.");
   ok(secondSelector.classList.contains("diff-add"), "New selector was added.");
 
-  info("Checking that the two rules have identical declarations");
-  const firstDecl = rules.item(0).querySelectorAll(".declaration");
-  is(firstDecl.length, 1, "First rule has only one declaration");
-  is(firstDecl.item(0).textContent, "color:red;", "First rule has correct declaration");
-  ok(firstDecl.item(0).classList.contains("diff-remove"),
-    "First rule has declaration tracked as removed");
+  info("Get removed declarations from first rule");
+  const removeDecl = getRemovedDeclarations(doc, rules.item(0));
+  is(removeDecl.length, 1, "First rule has correct number of declarations removed");
 
-  const secondDecl = rules.item(1).querySelectorAll(".declaration");
-  is(secondDecl.length, 1, "Second rule has only one declaration");
-  is(secondDecl.item(0).textContent, "color:red;", "Second rule has correct declaration");
-  ok(secondDecl.item(0).classList.contains("diff-add"),
-    "Second rule has declaration tracked as added");
+  info("Get added declarations from second rule");
+  const addDecl = getAddedDeclarations(doc, rules.item(1));
+  is(addDecl.length, 1, "Second rule has correct number of declarations added");
+
+  info("Checking that the two rules have identical declarations");
+  for (let i = 0; i < removeDecl.length; i++) {
+    is(removeDecl[i].property, addDecl[i].property,
+      `Declaration names match at index ${i}`);
+    is(removeDecl[i].value, addDecl[i].value,
+      `Declaration values match at index ${i}`);
+  }
 });

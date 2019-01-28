@@ -9,54 +9,55 @@ modifications have been made to this copy of the source code. Those
 modifications are contained in mozilla_customizations.diff, which should be
 found in the same directory as this file.
 
-The firefox/ directory contains 7zSD.sfx, a 32-bit Windows executable built
-from the Visual C++ 6 project found in the src/CPP/7zip/Bundles/SFXSetup/
-directory. The "ReleaseD" configuration was used. Including a compiled binary
-in the source tree is certainly not preferred, but is necessary in this case
-because the code does not build cleanly under more recent compilers. Using an
-older toolchain also allows us to keep this executable running on older Windows
-versions which are no longer supported by the build system used for the main
-application; that means we can show an error message specifically informing
-users that their OS is too old, instead of the generic "not a valid Win32
-application" error that Windows would generate if we used the newer toolchain
-and that isn't very helpful to most users. Using a precompiled binary also
-allows the installer build procedure to work without a compiler toolchain
-being configured (e.g., for artifact builds).
-
-The firefox/ directory also contains an icon and a manifest which were edited
-into 7zSD.sfx's resources after build time. The icon had to be added this way
-as opposed to just replacing the included 7-zip icon because the resource
-compiler included with VC6 does not support the 128x128 PNG image included in
-our icon file. Similarly, the manifest had to be edited in because the older
-resource compiler does not support manifests (and the 7-zip build files do not
-try to use any).
-
-The version info in the compiled binary was also edited after build time. There
-isn't a technical reason why the version info changes couldn't be included at
-build time, but since the goal is just to avoid confusing users about the origin
-of the Firefox installer, not to appear to be making the claim that we wrote the
-LZMA SDK, a more targeted change is appropriate.
-
-Step-by-step instructions for generating 7zSD.sfx:
-1) Install Microsoft Visual C++ 6 Professional or Enterprise edition (the
-   Standard edition does not include the optimizing compiler, so it should
-   not be used). You'll likely want a virtual machine running Windows XP,
-   because running VC6 under more modern Windows versions is tricky.
-2) Install an appropriate Windows SDK version. The Windows XP Service Pack 2 SDK
-   is known to work well, but that particular version appears to only be
-   available from archive.org:
-https://web.archive.org/web/20080209175723/http://www.microsoft.com:80/msdownload/platformsdk/sdkupdate/XPSP2FULLInstall.htm
-3) Run the tool included with the SDK that configures Visual C++ to use it.
-4) If using a fresh copy of the LZMA SDK sources, apply the patch in
-   mozilla_customizations.diff. The copy in the Firefox source tree already
-   has these changes applied.
-5) Open the workspace file at src\CPP\7zip\Bundles\SFXSetup\SFXSetup.dsw and
-   build it using the "SFXSetup - Win32 ReleaseD" configuration. The output
-   executable should be at the path ReleaseD\7zSD.sfx relative to SFXSetup.dsw.
-6) Use Resource Hacker (available from http://angusj.com/resourcehacker/) to
-   replace the existing icon on 7zSD.sfx and to add the manifest as a new
-   resource. Also edit the version info resource to replace CompanyName and
-   LegalCopyright with "Mozilla" (or appropriate vendor name) and
-   FileDescription and ProductName with "Firefox" (or appropriate product name).
-   Be sure to recompile the resources using the green "play" button in the
-   toolbar (or by pressing F5) before saving the file.
+The firefox/ directory contains several things:
+* SFXSetup.sln and SFXSetup.vcxproj
+  These are Visual Studio 2017 conversions of the Visual C++ 6 workspace and
+  project files from the src/CPP/7zip/Bundles/SFXSetup/ directory, with
+  some changes and additions to support AArch64 and to include our resources.
+* 7zSD.arm64.manifest and 7zSD.win32.manifest
+  We need to add a manifest file to the binary for several reasons, and one
+  isn't supplied with the source package (Visual C++ 6 doesn't support them),
+  so we've written our own.
+* setup.ico
+  The icon group used for the installer package.
+* resource.rc
+  The resource script containing the above manifest and icon references, as
+  well as other resources we need. This is derived from the supplied SFXSetup
+  resource.rc, but heavily customized.
+* 7zSD.ARM64.sfx
+  AArch64 binary built using all the above files. Checking this into the tree in
+  compiled binary form means that packaging the installer does not require
+  having a compiler toolchain configured (which is the case for artifact
+  builds). To compile your own version of this file, open SFXSetup.sln and build
+  the ReleaseD configuration.
+* 7zSD.Win32.sfx
+  32-bit x86 binary built using some of the above files, but through a different
+  build procedure that uses Visual C++ 6 in order to maintain compatibility with
+  legacy Windows platforms (Firefox doesn't run on these platforms, but at least
+  we can display a helpful error message). The exact procedure that generated
+  this file was:
+  1) Install Microsoft Visual C++ 6 Professional or Enterprise edition (the
+     Standard edition does not include the optimizing compiler, so it should
+     not be used). You'll likely want a virtual machine running Windows XP,
+     because running VC6 under more modern Windows versions is tricky.
+  2) Install an appropriate Windows SDK version. The Windows XP Service Pack 2
+     SDK is known to work well, but that particular version appears to only be
+     available from archive.org:
+     https://web.archive.org/web/20080209175723/http://www.microsoft.com:80/msdownload/platformsdk/sdkupdate/XPSP2FULLInstall.htm
+  3) Run the tool included with the SDK that configures Visual C++ to use it.
+  4) If using a fresh copy of the LZMA SDK sources, apply the patch in
+     mozilla_customizations.diff. The copy in the Firefox source tree already
+     has these changes applied.
+  5) Open the workspace file at src\CPP\7zip\Bundles\SFXSetup\SFXSetup.dsw and
+     build it using the "SFXSetup - Win32 ReleaseD" configuration. The output
+     executable should be at the path ReleaseD\7zSD.sfx relative to SFXSetup.dsw.
+  6) Use Resource Hacker (available from http://angusj.com/resourcehacker/) to
+     replace the existing icon on 7zSD.sfx and to add the manifest as a new
+     resource. Also edit the version info resource to replace CompanyName and
+     LegalCopyright with "Mozilla" (or appropriate vendor name) and
+     FileDescription and ProductName with "Firefox" (or appropriate product name).
+     Be sure to recompile the resources using the green "play" button in the
+     toolbar (or by pressing F5) before saving the file.
+  In the future this file may be replaced with one built in the same manner as
+  the AArch64 version using a modern toolchain, if the loss of platform support
+  is deemed acceptable.

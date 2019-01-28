@@ -3,6 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .connection-prompt-setting {
-  margin-block-end: var(--base-distance);
+  margin-block-end: var(--base-unit);
   text-align: right;
 }

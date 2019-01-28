@@ -551,8 +551,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#legacy-urlbar);
 }
 
-#urlbar[quantumbar] {
-  -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
+@supports -moz-bool-pref("browser.urlbar.quantumbar") {
+  #urlbar {
+    -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
+  }
 }
 
 /* Display URLs left-to-right but right aligned in RTL mode. */

@@ -9,23 +9,23 @@
 #include "SMILCSSValueType.h"
 
 #include "nsComputedDOMStyle.h"
-#include "nsString.h"
-#include "nsSMILValue.h"
+#include "nsColor.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
-#include "nsColor.h"
+#include "nsDebug.h"
 #include "nsPresContext.h"
+#include "nsString.h"
+#include "nsStyleUtil.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/StyleAnimationValue.h"  // For AnimationValue
+#include "mozilla/StyleAnimationValue.h"
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/SMILParserUtils.h"
-#include "mozilla/dom/BaseKeyframeTypesBinding.h"  // For CompositeOperation
-#include "mozilla/dom/Element.h"
-#include "nsDebug.h"
-#include "nsStyleUtil.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/dom/BaseKeyframeTypesBinding.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;
 
@@ -109,31 +109,31 @@ static bool FinalizeServoAnimationValues(
   return *aValue1 && *aValue2;
 }
 
-static ValueWrapper* ExtractValueWrapper(nsSMILValue& aValue) {
+static ValueWrapper* ExtractValueWrapper(SMILValue& aValue) {
   return static_cast<ValueWrapper*>(aValue.mU.mPtr);
 }
 
-static const ValueWrapper* ExtractValueWrapper(const nsSMILValue& aValue) {
+static const ValueWrapper* ExtractValueWrapper(const SMILValue& aValue) {
   return static_cast<const ValueWrapper*>(aValue.mU.mPtr);
 }
 
 // Class methods
 // -------------
-void SMILCSSValueType::Init(nsSMILValue& aValue) const {
+void SMILCSSValueType::Init(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected SMIL value type");
 
   aValue.mU.mPtr = nullptr;
   aValue.mType = this;
 }
 
-void SMILCSSValueType::Destroy(nsSMILValue& aValue) const {
+void SMILCSSValueType::Destroy(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value type");
   delete static_cast<ValueWrapper*>(aValue.mU.mPtr);
   aValue.mType = SMILNullType::Singleton();
 }
 
-nsresult SMILCSSValueType::Assign(nsSMILValue& aDest,
-                                  const nsSMILValue& aSrc) const {
+nsresult SMILCSSValueType::Assign(SMILValue& aDest,
+                                  const SMILValue& aSrc) const {
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value type");
   const ValueWrapper* srcWrapper = ExtractValueWrapper(aSrc);
@@ -156,8 +156,8 @@ nsresult SMILCSSValueType::Assign(nsSMILValue& aDest,
   return NS_OK;
 }
 
-bool SMILCSSValueType::IsEqual(const nsSMILValue& aLeft,
-                               const nsSMILValue& aRight) const {
+bool SMILCSSValueType::IsEqual(const SMILValue& aLeft,
+                               const SMILValue& aRight) const {
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected SMIL value");
   const ValueWrapper* leftWrapper = ExtractValueWrapper(aLeft);
@@ -167,7 +167,7 @@ bool SMILCSSValueType::IsEqual(const nsSMILValue& aLeft,
     if (rightWrapper) {
       // Both non-null
       NS_WARNING_ASSERTION(leftWrapper != rightWrapper,
-                           "Two nsSMILValues with matching ValueWrapper ptr");
+                           "Two SMILValues with matching ValueWrapper ptr");
       return *leftWrapper == *rightWrapper;
     }
     // Left non-null, right null
@@ -181,7 +181,7 @@ bool SMILCSSValueType::IsEqual(const nsSMILValue& aLeft,
   return true;
 }
 
-static bool AddOrAccumulateForServo(nsSMILValue& aDest,
+static bool AddOrAccumulateForServo(SMILValue& aDest,
                                     const ValueWrapper* aValueToAddWrapper,
                                     ValueWrapper* aDestWrapper,
                                     CompositeOperation aCompositeOp,
@@ -235,7 +235,7 @@ static bool AddOrAccumulateForServo(nsSMILValue& aDest,
   return true;
 }
 
-static bool AddOrAccumulate(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+static bool AddOrAccumulate(SMILValue& aDest, const SMILValue& aValueToAdd,
                             CompositeOperation aCompositeOp, uint64_t aCount) {
   MOZ_ASSERT(aValueToAdd.mType == aDest.mType,
              "Trying to add mismatching types");
@@ -276,15 +276,14 @@ static bool AddOrAccumulate(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                                  aCompositeOp, aCount);
 }
 
-nsresult SMILCSSValueType::SandwichAdd(nsSMILValue& aDest,
-                                       const nsSMILValue& aValueToAdd) const {
+nsresult SMILCSSValueType::SandwichAdd(SMILValue& aDest,
+                                       const SMILValue& aValueToAdd) const {
   return AddOrAccumulate(aDest, aValueToAdd, CompositeOperation::Add, 1)
              ? NS_OK
              : NS_ERROR_FAILURE;
 }
 
-nsresult SMILCSSValueType::Add(nsSMILValue& aDest,
-                               const nsSMILValue& aValueToAdd,
+nsresult SMILCSSValueType::Add(SMILValue& aDest, const SMILValue& aValueToAdd,
                                uint32_t aCount) const {
   return AddOrAccumulate(aDest, aValueToAdd, CompositeOperation::Accumulate,
                          aCount)
@@ -329,8 +328,8 @@ static nsresult ComputeDistanceForServo(const ValueWrapper* aFromWrapper,
   return NS_OK;
 }
 
-nsresult SMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
-                                           const nsSMILValue& aTo,
+nsresult SMILCSSValueType::ComputeDistance(const SMILValue& aFrom,
+                                           const SMILValue& aTo,
                                            double& aDistance) const {
   MOZ_ASSERT(aFrom.mType == aTo.mType, "Trying to compare different types");
   MOZ_ASSERT(aFrom.mType == this, "Unexpected source type");
@@ -343,8 +342,7 @@ nsresult SMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
 
 static nsresult InterpolateForServo(const ValueWrapper* aStartWrapper,
                                     const ValueWrapper& aEndWrapper,
-                                    double aUnitDistance,
-                                    nsSMILValue& aResult) {
+                                    double aUnitDistance, SMILValue& aResult) {
   // For discretely-animated properties Servo_AnimationValues_Interpolate will
   // perform the discrete animation (i.e. 50% flip) and return a success result.
   // However, SMIL has its own special discrete animation behavior that it uses
@@ -389,10 +387,10 @@ static nsresult InterpolateForServo(const ValueWrapper* aStartWrapper,
   return NS_OK;
 }
 
-nsresult SMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
-                                       const nsSMILValue& aEndVal,
+nsresult SMILCSSValueType::Interpolate(const SMILValue& aStartVal,
+                                       const SMILValue& aEndVal,
                                        double aUnitDistance,
-                                       nsSMILValue& aResult) const {
+                                       SMILValue& aResult) const {
   MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
              "Trying to interpolate different types");
   MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");
@@ -441,7 +439,7 @@ static ServoAnimationValues ValueFromStringHelper(nsCSSPropertyID aPropID,
 void SMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
                                        Element* aTargetElement,
                                        const nsAString& aString,
-                                       nsSMILValue& aValue,
+                                       SMILValue& aValue,
                                        bool* aIsContextSensitive) {
   MOZ_ASSERT(aValue.IsNull(), "Outparam should be null-typed");
   nsPresContext* presContext =
@@ -479,10 +477,10 @@ void SMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
 }
 
 // static
-nsSMILValue SMILCSSValueType::ValueFromAnimationValue(
+SMILValue SMILCSSValueType::ValueFromAnimationValue(
     nsCSSPropertyID aPropID, Element* aTargetElement,
     const AnimationValue& aValue) {
-  nsSMILValue result;
+  SMILValue result;
 
   Document* doc = aTargetElement->GetComposedDoc();
   // We'd like to avoid serializing |aValue| if possible, and since the
@@ -504,7 +502,7 @@ nsSMILValue SMILCSSValueType::ValueFromAnimationValue(
 }
 
 // static
-bool SMILCSSValueType::SetPropertyValues(const nsSMILValue& aValue,
+bool SMILCSSValueType::SetPropertyValues(const SMILValue& aValue,
                                          DeclarationBlock& aDecl) {
   MOZ_ASSERT(aValue.mType == &SMILCSSValueType::sSingleton,
              "Unexpected SMIL value type");
@@ -523,7 +521,7 @@ bool SMILCSSValueType::SetPropertyValues(const nsSMILValue& aValue,
 }
 
 // static
-nsCSSPropertyID SMILCSSValueType::PropertyFromValue(const nsSMILValue& aValue) {
+nsCSSPropertyID SMILCSSValueType::PropertyFromValue(const SMILValue& aValue) {
   if (aValue.mType != &SMILCSSValueType::sSingleton) {
     return eCSSProperty_UNKNOWN;
   }
@@ -537,8 +535,8 @@ nsCSSPropertyID SMILCSSValueType::PropertyFromValue(const nsSMILValue& aValue) {
 }
 
 // static
-void SMILCSSValueType::FinalizeValue(nsSMILValue& aValue,
-                                     const nsSMILValue& aValueToMatch) {
+void SMILCSSValueType::FinalizeValue(SMILValue& aValue,
+                                     const SMILValue& aValueToMatch) {
   MOZ_ASSERT(aValue.mType == aValueToMatch.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aValue.mType == &SMILCSSValueType::sSingleton,
              "Unexpected SMIL value type");

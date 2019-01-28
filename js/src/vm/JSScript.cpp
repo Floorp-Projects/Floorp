@@ -365,7 +365,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
       nresumeoffsets;
   uint32_t prologueLength;
   uint32_t funLength = 0;
-  uint32_t nTypeSets = 0;
+  uint32_t numBytecodeTypeSets = 0;
   uint32_t scriptBits = 0;
   uint32_t bodyScopeIndex = 0;
   uint32_t immutableFlags = 0;
@@ -430,7 +430,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
       nresumeoffsets = script->resumeOffsets().size();
     }
 
-    nTypeSets = script->nTypeSets();
+    numBytecodeTypeSets = script->numBytecodeTypeSets();
     funLength = script->funLength();
 
     if (script->analyzedArgsUsage() && script->needsArgsObj()) {
@@ -457,7 +457,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   MOZ_TRY(xdr->codeUint32(&ntrynotes));
   MOZ_TRY(xdr->codeUint32(&nscopenotes));
   MOZ_TRY(xdr->codeUint32(&nresumeoffsets));
-  MOZ_TRY(xdr->codeUint32(&nTypeSets));
+  MOZ_TRY(xdr->codeUint32(&numBytecodeTypeSets));
   MOZ_TRY(xdr->codeUint32(&funLength));
   MOZ_TRY(xdr->codeUint32(&scriptBits));
   MOZ_TRY(xdr->codeUint32(&immutableFlags));
@@ -542,8 +542,8 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     script->mainOffset_ = prologueLength;
     script->funLength_ = funLength;
 
-    MOZ_ASSERT(nTypeSets <= UINT16_MAX);
-    script->nTypeSets_ = uint16_t(nTypeSets);
+    MOZ_ASSERT(numBytecodeTypeSets <= UINT16_MAX);
+    script->numBytecodeTypeSets_ = uint16_t(numBytecodeTypeSets);
 
     scriptp.set(script);
 
@@ -3288,7 +3288,7 @@ static inline uint8_t* AllocScriptData(JSContext* cx, size_t size) {
     return false;
   }
 
-  script->nTypeSets_ = 0;
+  script->numBytecodeTypeSets_ = 0;
 
   RootedScope enclosing(cx, &cx->global()->emptyGlobalScope());
   Scope* functionProtoScope = FunctionScope::create(cx, nullptr, false, false,
@@ -3402,7 +3402,7 @@ static void InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms) {
 
   MOZ_ASSERT(script->mainOffset() == 0);
   script->mainOffset_ = bce->mainOffset();
-  script->nTypeSets_ = bce->typesetCount;
+  script->numBytecodeTypeSets_ = bce->typesetCount;
   script->lineno_ = bce->firstLine;
 
   // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
@@ -4033,7 +4033,7 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
   dst->nslots_ = src->nslots();
   dst->bodyScopeIndex_ = src->bodyScopeIndex_;
   dst->funLength_ = src->funLength();
-  dst->nTypeSets_ = src->nTypeSets();
+  dst->numBytecodeTypeSets_ = src->numBytecodeTypeSets();
 
   dst->immutableFlags_ = src->immutableFlags_;
   dst->setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,

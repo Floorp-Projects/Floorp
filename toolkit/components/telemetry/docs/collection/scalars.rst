@@ -34,6 +34,8 @@ These functions can throw if, for example, an operation is performed on a scalar
 (e.g. calling scalarSetMaximum on a scalar of the string kind). Please look at the `code documentation <https://dxr.mozilla.org/mozilla-central/search?q=regexp%3ATelemetryScalar%3A%3A(Set%7CAdd)+file%3ATelemetryScalar.cpp&redirect=false>`_ for
 additional information.
 
+.. _registerscalars:
+
 ``registerScalars()``
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -163,7 +165,6 @@ Required Fields
 Optional Fields
 ---------------
 
-- ``cpp_guard``: A string that gets inserted as an ``#ifdef`` directive around the automatically generated C++ declaration. This is typically used for platform-specific scalars, e.g. ``ANDROID``.
 - ``release_channel_collection``: This can be either ``opt-in`` (default) or ``opt-out``. With the former the scalar is submitted by default on pre-release channels, unless the user has opted out. With the latter the scalar is submitted by default on release and pre-release channels, unless the user has opted out.
 - ``keyed``: A boolean that determines whether this is a keyed scalar. It defaults to ``False``.
 - ``products``: A list of products the scalar can be recorded on. It defaults to ``all``. Currently supported values are:
@@ -174,6 +175,14 @@ Optional Fields
   - ``all`` (record on all products)
 
 - ``record_into_store``: A list of stores this scalar should be recorded into. It defaults to ``[main]``.
+- ``operating_systems``: This field restricts recording to certain operating systems only. Use that in-place of previous ``cpp_guards`` to avoid inclusion on not-specified operating systems. It defaults to ``all``. Currently supported values are:
+
+   - ``mac``
+   - ``linux``
+   - ``windows``
+   - ``android``
+   - ``unix``
+   - ``all`` (record on all operating systems)
 
 String type restrictions
 ------------------------
@@ -304,3 +313,4 @@ Version History
   - Ignore re-registering existing scalars for a category instead of failing (`bug 1409323 <https://bugzilla.mozilla.org/show_bug.cgi?id=1409323>`_).
 
 - Firefox 60: Enabled support for adding scalars in artifact builds and build-faster workflows (`bug 1425909 <https://bugzilla.mozilla.org/show_bug.cgi?id=1425909>`_).
+- Firefox 66: Replace ``cpp_guard`` with ``operating_systems`` (`bug 1482912 <https://bugzilla.mozilla.org/show_bug.cgi?id=1482912>`_)`

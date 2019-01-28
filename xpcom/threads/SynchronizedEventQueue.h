@@ -36,7 +36,7 @@ class ThreadTargetSink {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ThreadTargetSink)
 
   virtual bool PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                        EventPriority aPriority) = 0;
+                        EventQueuePriority aPriority) = 0;
 
   // After this method is called, no more events can be posted.
   virtual void Disconnect(const MutexAutoLock& aProofOfLock) = 0;
@@ -54,8 +54,8 @@ class ThreadTargetSink {
 
 class SynchronizedEventQueue : public ThreadTargetSink {
  public:
-  virtual already_AddRefed<nsIRunnable> GetEvent(bool aMayWait,
-                                                 EventPriority* aPriority) = 0;
+  virtual already_AddRefed<nsIRunnable> GetEvent(
+      bool aMayWait, EventQueuePriority* aPriority) = 0;
   virtual bool HasPendingEvent() = 0;
 
   virtual bool HasPendingHighPriorityEvents() = 0;

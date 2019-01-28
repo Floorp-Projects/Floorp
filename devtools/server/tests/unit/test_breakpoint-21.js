@@ -17,7 +17,10 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   let packet = await executeOnNextTickAndWaitForPause(() => {
     evalCode(debuggee);
   }, client);
-  const source = threadClient.source(packet.frame.where.source);
+  const source = await getSourceById(
+      threadClient,
+      packet.frame.where.actor
+    );
   const location = {
     line: debuggee.line0 + 8,
   };
@@ -30,7 +33,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   Assert.equal(packet.type, "paused");
   Assert.equal(packet.why.type, "breakpoint");
   Assert.equal(packet.why.actors[0], bpClient.actor);
-  Assert.equal(packet.frame.where.source.actor, source.actor);
+  Assert.equal(packet.frame.where.actor, source.actor);
   Assert.equal(packet.frame.where.line, location.line);
 
   await resume(threadClient);

@@ -20,10 +20,10 @@ function jsonrpc(tab, method, params) {
   let messageManager = tab.linkedBrowser.messageManager;
   messageManager.sendAsyncMessage("jsonrpc", {
     id: currentId,
-    method: method,
-    params: params
+    method,
+    params,
   });
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     messageManager.addMessageListener("jsonrpc", function listener(event) {
       let { id, result, error } = event.data;
       if (id !== currentId) {
@@ -49,15 +49,15 @@ add_task(async function test() {
 
   // Load 3 pages and wait. The 3rd one has a worker
   let page1 = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser, opening: "about:about", forceNewProcess: false
+    gBrowser, opening: "about:about", forceNewProcess: false,
   });
 
   let page2 = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser, opening: "about:memory", forceNewProcess: false
+    gBrowser, opening: "about:memory", forceNewProcess: false,
   });
 
   let page3 = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser, opening: WORKER_URL
+    gBrowser, opening: WORKER_URL,
   });
   // load a 4th tab with a worker
   await BrowserTestUtils.withNewTab({ gBrowser, url: WORKER_URL2 },
@@ -70,7 +70,6 @@ add_task(async function test() {
     let isTopLevel = false;
     let aboutMemoryFound = false;
     let parentProcessEvent = false;
-    let workerEvent = false;
     let subFrameIds = [];
     let topLevelIds = [];
     let sharedWorker = false;
@@ -90,7 +89,7 @@ add_task(async function test() {
         sharedWorker = entry.host.endsWith("shared_worker.js") || sharedWorker;
         heapUsage += entry.memoryInfo.GCHeapUsage;
         mediaMemory += entry.memoryInfo.media.audioSize + entry.memoryInfo.media.resourcesSize;
-        Assert.ok(entry.host != "" || entry.windowId !=0,
+        Assert.ok(entry.host != "" || entry.windowId != 0,
                   "An entry should have a host or a windowId");
         if (entry.windowId != 0 && !entry.isToplevel && !entry.isWorker && !subFrameIds.includes(entry.windowId)) {
           subFrameIds.push(entry.windowId);
@@ -108,7 +107,6 @@ add_task(async function test() {
           parentProcessEvent = true;
         }
         if (entry.isWorker) {
-          workerEvent = true;
           workerDuration += entry.duration;
         } else {
           duration += entry.duration;

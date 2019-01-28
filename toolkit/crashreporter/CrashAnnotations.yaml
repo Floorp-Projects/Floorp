@@ -479,6 +479,13 @@ JSOutOfMemory:
     to satisfy the allocation.
   type: string
 
+LauncherProcessState:
+  description: >
+    Launcher process enabled state. The integer value of this annotation must
+    match with one of the values in the
+    mozilla::LauncherRegistryInfo::EnableState enum
+  type: integer
+
 LowCommitSpaceEvents:
   description: >
     Number of times the available memory tracker has detected a that
@@ -801,6 +808,11 @@ Vendor:
 Version:
   description: >
     Product version.
+  type: string
+
+VRProcessStatus:
+  description: >
+    Status of the VR process, can be set to "Running" or "Destroyed"
   type: string
 
 Winsock_LSP:

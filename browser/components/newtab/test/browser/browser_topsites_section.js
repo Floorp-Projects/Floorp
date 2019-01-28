@@ -126,7 +126,7 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(() => content.document.querySelector(".search-shortcut .title.pinned"), "Wait for pinned search topsites");
 
     const searchTopSites = content.document.querySelectorAll(".title.pinned");
-    ok(searchTopSites.length >= 2, "There should be at least 2 search topsites");
+    ok(searchTopSites.length >= 1, "There should be at least 2 search topsites");
 
     searchTopSites[0].click();
 

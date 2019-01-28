@@ -50,7 +50,7 @@
         <button id="identity-popup-security-expander"
                 class="identity-popup-expander"
                 when-connection="not-secure secure secure-ev secure-cert-user-overridden"
-                oncommand="gIdentityHandler.showSecuritySubView();"/>
+                oncommand="gIdentityHandler.showSecuritySubView(); gIdentityHandler.recordClick('security_subview_btn');"/>
       </hbox>
 
       <!-- Tracking Protection Section -->
@@ -75,14 +75,14 @@
 
           <vbox id="identity-popup-content-blocking-category-list">
             <toolbarbutton id="identity-popup-content-blocking-category-tracking-protection"
-                           onclick="ContentBlocking.showTrackersSubview()"
+                           onclick="ContentBlocking.showTrackersSubview(); gIdentityHandler.recordClick('trackers_subview_btn');"
                            class="identity-popup-content-blocking-category" align="center">
               <image class="identity-popup-content-blocking-category-icon tracking-protection-icon"/>
               <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.trackingProtection3.label;</label>
               <label flex="1" id="identity-popup-content-blocking-tracking-protection-state-label" class="identity-popup-content-blocking-category-state-label"/>
             </toolbarbutton>
             <toolbarbutton id="identity-popup-content-blocking-category-cookies"
-                           onclick="ContentBlocking.showCookiesSubview()"
+                           onclick="ContentBlocking.showCookiesSubview(); gIdentityHandler.recordClick('cookies_subview_btn');"
                            class="identity-popup-content-blocking-category" align="center">
               <image class="identity-popup-content-blocking-category-icon thirdpartycookies-icon"/>
               <label flex="1" id="identity-popup-content-blocking-category-label-default"
@@ -126,7 +126,7 @@
             <toolbarbutton id="identity-popup-permission-preferences-button"
                            class="identity-popup-preferences-button subviewbutton"
                            tooltiptext="&identity.permissionsPreferences.tooltip;"
-                           oncommand="gIdentityHandler.openPermissionPreferences();" />
+                           oncommand="gIdentityHandler.openPermissionPreferences(); gIdentityHandler.recordClick('permission_prefs_btn');" />
           </hbox>
           <vbox id="identity-popup-permission-list"/>
           <description id="identity-popup-permission-reload-hint">&identity.permissionsReloadHint;</description>
@@ -250,7 +250,7 @@
           <button id="identity-popup-trackersView-settings-button"
                   label="&contentBlocking.manageSettings.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
-                  oncommand="ContentBlocking.openPreferences();"/>
+                  oncommand="ContentBlocking.openPreferences(); gIdentityHandler.recordClick('trackers_prefs_btn');"/>
         </vbox>
     </panelview>
 
@@ -265,7 +265,7 @@
           <button id="identity-popup-cookiesView-settings-button"
                   label="&contentBlocking.manageSettings.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
-                  oncommand="ContentBlocking.openPreferences();"/>
+                  oncommand="ContentBlocking.openPreferences(); gIdentityHandler.recordClick('cookies_prefs_btn');"/>
         </vbox>
     </panelview>
 

@@ -579,6 +579,11 @@ nsWebBrowser::SetOriginAttributesBeforeLoading(
 }
 
 NS_IMETHODIMP
+nsWebBrowser::ResumeRedirectedLoad(uint64_t aIdentifier) {
+  return mDocShellAsNav->ResumeRedirectedLoad(aIdentifier);
+}
+
+NS_IMETHODIMP
 nsWebBrowser::Reload(uint32_t aReloadFlags) {
   NS_ENSURE_STATE(mDocShell);
 

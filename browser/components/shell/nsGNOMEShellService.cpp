@@ -121,7 +121,8 @@ nsresult nsGNOMEShellService::Init() {
   return appPath->GetNativePath(mAppPath);
 }
 
-NS_IMPL_ISUPPORTS(nsGNOMEShellService, nsIGNOMEShellService, nsIShellService)
+NS_IMPL_ISUPPORTS(nsGNOMEShellService, nsIGNOMEShellService, nsIShellService,
+                  nsIToolkitShellService)
 
 bool nsGNOMEShellService::GetAppPathFromLauncher() {
   gchar *tmp;
@@ -190,7 +191,7 @@ bool nsGNOMEShellService::CheckHandlerMatchesAppName(
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::IsDefaultBrowser(bool aStartupCheck, bool aForAllTypes,
+nsGNOMEShellService::IsDefaultBrowser(bool aForAllTypes,
                                       bool *aIsDefaultBrowser) {
   *aIsDefaultBrowser = false;
 

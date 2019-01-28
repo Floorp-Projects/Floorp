@@ -169,9 +169,13 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // Returns true if this window is the same as mTopInnerWindow
   inline bool IsTopInnerWindow() const;
 
-  // Check whether a document is currently loading
+  // Check whether a document is currently loading (really checks if the
+  // load event has completed).  May not be reset to false on errors.
   inline bool IsLoading() const;
   inline bool IsHandlingResizeEvent() const;
+
+  // Note: not related to IsLoading.  Set to false if there's an error, etc.
+  void SetActiveLoadingState(bool aIsActiveLoading);
 
   bool AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
   void RemoveAudioContext(mozilla::dom::AudioContext* aAudioContext);

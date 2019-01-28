@@ -137,8 +137,8 @@ var gBlocklistManager = {
     let branch = Services.prefs.getBranch(LISTS_PREF_BRANCH);
     let l10nKey = branch.getCharPref(id);
     let [listName, description] = await document.l10n.formatValues([
-      {id: `blocklist-item-${l10nKey}-name`},
-      {id: `blocklist-item-${l10nKey}-desc`},
+      {id: `blocklist-item-${l10nKey}-listName`},
+      {id: `blocklist-item-${l10nKey}-description`},
     ]);
     let name = await document.l10n.formatValue(
       "blocklist-item-list-template", {listName, description});

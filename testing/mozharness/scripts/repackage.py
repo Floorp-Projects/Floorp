@@ -65,7 +65,8 @@ class Repackage(BaseScript):
 
         subst = {
             'package-name': config['package-name'],
-            'sfx-stub': config['sfx-stub'],
+            # sfx-stub is only defined for Windows targets
+            'sfx-stub': config.get('sfx-stub'),
             'installer-tag': config['installer-tag'],
             'stub-installer-tag': config['stub-installer-tag'],
             'wsx-stub': config['wsx-stub'],

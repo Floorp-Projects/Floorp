@@ -160,8 +160,6 @@ case "$target" in
         _MSVC_VER_FILTER='s|.*[^!-~]([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?).*|\1|p'
         changequote([,])
 
-        _MSC_VER=`echo ${CC_VERSION} | cut -c 1-2,4-5`
-
         AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
         AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         AC_DEFINE(_USE_MATH_DEFINES) # Otherwise MSVC's math.h doesn't #define M_PI.
@@ -175,15 +173,13 @@ case "$target" in
             AC_DEFINE(MSVC_HAS_DIA_SDK)
         fi
 
-        if test "$_MSC_VER" -ge "1910"; then # VS2017+
-            # C5038: Enable initializer list order warnings
-            # The -w1#### flag treats warning C#### as if it was a warning level
-            # 1 warning, and thus enables it because we enable /W3 warnings. We
-            # don't use -we#### because it would enable warning C#### but treat
-            # it as an error, even in third-party code.
-            # https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level
-            CXXFLAGS="$CXXFLAGS -w15038"
-        fi
+        # C5038: Enable initializer list order warnings
+        # The -w1#### flag treats warning C#### as if it was a warning level
+        # 1 warning, and thus enables it because we enable /W3 warnings. We
+        # don't use -we#### because it would enable warning C#### but treat
+        # it as an error, even in third-party code.
+        # https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level
+        CXXFLAGS="$CXXFLAGS -w15038"
 
         # C5026: move constructor was implicitly defined as deleted
         CXXFLAGS="$CXXFLAGS -wd5026"
@@ -294,8 +290,6 @@ if test -n "$_WIN32_MSVC"; then
 fi
 
 fi # COMPILE_ENVIRONMENT
-
-AC_SUBST(_MSC_VER)
 
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
@@ -1637,7 +1631,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.41, [MOZ_SYSTEM_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.42, [MOZ_SYSTEM_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 NSS_CFLAGS="$NSS_CFLAGS -I${DIST}/include/nss"
@@ -3574,7 +3568,6 @@ AC_SUBST_LIST(DSO_PIC_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
 AC_SUBST(BIN_SUFFIX)
 AC_SUBST(USE_N32)
-AC_SUBST(CC_VERSION)
 AC_SUBST(NS_ENABLE_TSF)
 AC_SUBST(WIN32_CONSOLE_EXE_LDFLAGS)
 AC_SUBST(WIN32_GUI_EXE_LDFLAGS)

@@ -319,7 +319,8 @@ impl FontContext {
 
     pub fn add_native_font(&mut self, font_key: &FontKey, native_font_handle: NativeFontHandle) {
         if !self.faces.contains_key(&font_key) {
-            let file = FontFile::Pathname(CString::new(native_font_handle.pathname).unwrap());
+            let cstr = CString::new(native_font_handle.path.as_os_str().to_str().unwrap()).unwrap();
+            let file = FontFile::Pathname(cstr);
             let index = native_font_handle.index;
             if let Some(face) = new_ft_face(font_key, self.lib, &file, index) {
                 self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() });
@@ -965,6 +966,7 @@ impl Drop for FontContext {
 impl<'a> Into<pf_freetype::FontDescriptor> for NativeFontHandleWrapper<'a> {
     fn into(self) -> pf_freetype::FontDescriptor {
         let NativeFontHandleWrapper(font_handle) = self;
-        pf_freetype::FontDescriptor::new(font_handle.pathname.clone().into(), font_handle.index)
+        let str = font_handle.path.as_os_str().to_str().unwrap();
+        pf_freetype::FontDescriptor::new(str.into(), font_handle.index)
     }
 }

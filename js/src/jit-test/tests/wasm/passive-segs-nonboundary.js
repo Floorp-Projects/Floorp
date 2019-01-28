@@ -1,5 +1,10 @@
 // |jit-test| skip-if: !wasmBulkMemSupported()
 
+load(libdir + "wasm-binary.js");
+
+const v2vSig = {args:[], ret:VoidCode};
+const v2vSigSection = sigSection([v2vSig]);
+
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 
@@ -146,9 +151,9 @@ tab_test("(table.init 3 (i32.const 15) (i32.const 1) (i32.const 3))",
 
 // Perform active and passive initialisation and then multiple copies
 tab_test("(table.init 1 (i32.const 7) (i32.const 0) (i32.const 4)) \n" +
-         "table.drop 1 \n" +
+         "elem.drop 1 \n" +
          "(table.init 3 (i32.const 15) (i32.const 1) (i32.const 3)) \n" +
-         "table.drop 3 \n" +
+         "elem.drop 3 \n" +
          "(table.copy (i32.const 20) (i32.const 15) (i32.const 5)) \n" +
          "(table.copy (i32.const 21) (i32.const 29) (i32.const 1)) \n" +
          "(table.copy (i32.const 24) (i32.const 10) (i32.const 1)) \n" +
@@ -243,9 +248,9 @@ mem_test("(memory.init 3 (i32.const 15) (i32.const 1) (i32.const 3))",
 
 // Perform active and passive initialisation and then multiple copies
 mem_test("(memory.init 1 (i32.const 7) (i32.const 0) (i32.const 4)) \n" +
-         "memory.drop 1 \n" +
+         "data.drop 1 \n" +
          "(memory.init 3 (i32.const 15) (i32.const 1) (i32.const 3)) \n" +
-         "memory.drop 3 \n" +
+         "data.drop 3 \n" +
          "(memory.copy (i32.const 20) (i32.const 15) (i32.const 5)) \n" +
          "(memory.copy (i32.const 21) (i32.const 29) (i32.const 1)) \n" +
          "(memory.copy (i32.const 24) (i32.const 10) (i32.const 1)) \n" +
@@ -253,99 +258,50 @@ mem_test("(memory.init 1 (i32.const 7) (i32.const 0) (i32.const 4)) \n" +
          "(memory.copy (i32.const 19) (i32.const 20) (i32.const 5))",
          [e,e,3,1,4, 1,e,2,7,1, 8,e,7,e,7, 5,2,7,e,9, e,7,e,8,8, e,e,e,e,e]);
 
+// DataCount section is present but value is too low for the number of data segments
+assertErrorMessage(() => wasmEvalText(
+    `(module
+       (datacount 1)
+       (data passive "")
+       (data passive ""))`),
+                   WebAssembly.CompileError,
+                   /number of data segments does not match declared count/);
+
+// DataCount section is present but value is too high for the number of data segments
+assertErrorMessage(() => wasmEvalText(
+    `(module
+       (datacount 3)
+       (data passive "")
+       (data passive ""))`),
+                   WebAssembly.CompileError,
+                   /number of data segments does not match declared count/);
+
+// DataCount section is not present but memory.init or data.drop uses it
+function checkNoDataCount(body, err) {
+    let binary = moduleWithSections(
+        [v2vSigSection,
+         declSection([0]),
+         memorySection(1),
+         bodySection(
+             [funcBody({locals:[], body})])]);
+    assertErrorMessage(() => new WebAssembly.Module(binary),
+                       WebAssembly.CompileError,
+                       err);
+}
+
+checkNoDataCount([I32ConstCode, 0,
+                  I32ConstCode, 0,
+                  I32ConstCode, 0,
+                  MiscPrefix, MemoryInitCode, 0, 0],
+                /memory.init requires a DataCount section/);
+
+checkNoDataCount([MiscPrefix, DataDropCode, 0],
+                 /data.drop requires a DataCount section/);
 
 //---------------------------------------------------------------------//
 //---------------------------------------------------------------------//
 // Some further tests for memory.copy and memory.fill.  First, validation
 // tests.
-
-//-----------------------------------------------------------
-// Test helpers.  Copied and simplified from binary.js.
-
-load(libdir + "wasm-binary.js");
-
-function toU8(array) {
-    for (let b of array)
-        assertEq(b < 256, true);
-    return Uint8Array.from(array);
-}
-
-function varU32(u32) {
-    assertEq(u32 >= 0, true);
-    assertEq(u32 < Math.pow(2,32), true);
-    var bytes = [];
-    do {
-        var byte = u32 & 0x7f;
-        u32 >>>= 7;
-        if (u32 != 0)
-            byte |= 0x80;
-        bytes.push(byte);
-    } while (u32 != 0);
-    return bytes;
-}
-
-function moduleHeaderThen(...rest) {
-    return [magic0, magic1, magic2, magic3, ver0, ver1, ver2, ver3, ...rest];
-}
-
-function moduleWithSections(sectionArray) {
-    var bytes = moduleHeaderThen();
-    for (let section of sectionArray) {
-        bytes.push(section.name);
-        bytes.push(...varU32(section.body.length));
-        bytes.push(...section.body);
-    }
-    return toU8(bytes);
-}
-
-function sigSection(sigs) {
-    var body = [];
-    body.push(...varU32(sigs.length));
-    for (let sig of sigs) {
-        body.push(...varU32(FuncCode));
-        body.push(...varU32(sig.args.length));
-        for (let arg of sig.args)
-            body.push(...varU32(arg));
-        body.push(...varU32(sig.ret == VoidCode ? 0 : 1));
-        if (sig.ret != VoidCode)
-            body.push(...varU32(sig.ret));
-    }
-    return { name: typeId, body };
-}
-
-function declSection(decls) {
-    var body = [];
-    body.push(...varU32(decls.length));
-    for (let decl of decls)
-        body.push(...varU32(decl));
-    return { name: functionId, body };
-}
-
-function funcBody(func) {
-    var body = varU32(func.locals.length);
-    for (let local of func.locals)
-        body.push(...varU32(local));
-    body = body.concat(...func.body);
-    body.push(EndCode);
-    body.splice(0, 0, ...varU32(body.length));
-    return body;
-}
-
-function bodySection(bodies) {
-    var body = varU32(bodies.length).concat(...bodies);
-    return { name: codeId, body };
-}
-
-function memorySection(initialSize) {
-    var body = [];
-    body.push(...varU32(1));           // number of memories
-    body.push(...varU32(0x0));         // for now, no maximum
-    body.push(...varU32(initialSize));
-    return { name: memoryId, body };
-}
-
-const v2vSig = {args:[], ret:VoidCode};
-const v2vSigSection = sigSection([v2vSig]);
 
 // Prefixed opcodes
 
@@ -355,7 +311,9 @@ function checkMiscPrefixed(opcode, expect_failure) {
             bodySection(
                 [funcBody(
                     {locals:[],
-                     body:[0x41, 0x0, 0x41, 0x0, 0x41, 0x0, // 3 x const.i32 0
+                     body:[I32ConstCode, 0x0,
+                           I32ConstCode, 0x0,
+                           I32ConstCode, 0x0,
                            MiscPrefix, ...opcode]})])]);
     if (expect_failure) {
         assertErrorMessage(() => new WebAssembly.Module(binary),
@@ -368,9 +326,9 @@ function checkMiscPrefixed(opcode, expect_failure) {
 //-----------------------------------------------------------
 // Verification cases for memory.copy/fill opcode encodings
 
-checkMiscPrefixed([0x0a, 0x00], false); // memory.copy, flags=0
-checkMiscPrefixed([0x0b, 0x00], false); // memory.fill, flags=0
-checkMiscPrefixed([0x0b, 0x80, 0x00], false); // memory.fill, flags=0 (long encoding)
+checkMiscPrefixed([MemoryCopyCode, 0x00, 0x00], false); // memory.copy src=0 dest=0
+checkMiscPrefixed([MemoryFillCode, 0x00], false); // memory.fill mem=0
+checkMiscPrefixed([MemoryFillCode, 0x80, 0x00], false); // memory.fill, mem=0 (long encoding)
 checkMiscPrefixed([0x13], true);        // table.size+1, which is currently unassigned
 
 //-----------------------------------------------------------

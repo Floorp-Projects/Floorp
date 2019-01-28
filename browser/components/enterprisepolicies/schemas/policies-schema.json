@@ -145,21 +145,6 @@
       }
     },
 
-    "DNSOverHTTPS": {
-      "type": "object",
-      "properties": {
-        "Enabled": {
-          "type": "boolean"
-        },
-        "ProviderURL": {
-          "type": "URLorEmpty"
-        },
-        "Locked": {
-          "type": "boolean"
-        }
-      }
-    },
-
     "DisableAppUpdate": {
       "type": "boolean"
     },
@@ -251,6 +236,21 @@
 
     "DisplayMenuBar": {
       "type": "boolean"
+    },
+
+    "DNSOverHTTPS": {
+      "type": "object",
+      "properties": {
+        "Enabled": {
+          "type": "boolean"
+        },
+        "ProviderURL": {
+          "type": "URLorEmpty"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      }
     },
 
     "DontCheckDefaultBrowser": {
@@ -652,6 +652,16 @@
       "patternProperties": {
         "^.*$": { "type": "string" }
       }
+    },
+
+    "SSLVersionMax": {
+      "type": "string",
+      "enum": ["tls1", "tls1.1", "tls1.2", "tls1.3"]
+    },
+
+    "SSLVersionMin": {
+      "type": "string",
+      "enum": ["tls1", "tls1.1", "tls1.2", "tls1.3"]
     },
 
     "WebsiteFilter": {

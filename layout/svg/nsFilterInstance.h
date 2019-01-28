@@ -240,7 +240,10 @@ class nsFilterInstance {
    * Creates the SourceSurface for the SourceGraphic graph node, paints its
    * contents, and assigns it to mSourceGraphic.mSourceSurface.
    */
-  void BuildSourceImage(DrawTarget* aDest, imgDrawingParams& aImgParams);
+  void BuildSourceImage(DrawTarget* aDest, imgDrawingParams& aImgParams,
+                        mozilla::gfx::FilterNode* aFilter,
+                        mozilla::gfx::FilterNode* aSource,
+                        const mozilla::gfx::Rect& aSourceRect);
 
   /**
    * Build the list of FilterPrimitiveDescriptions that describes the filter's

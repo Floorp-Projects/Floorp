@@ -1,3 +1,0 @@
-. "$topsrcdir/browser/config/mozconfigs/win64-aarch64/debug"
-
-unset ENABLE_CLANG_PLUGIN

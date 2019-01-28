@@ -198,6 +198,51 @@ class RecordedCreateClippedDrawTarget
   MOZ_IMPLICIT RecordedCreateClippedDrawTarget(S &aStream);
 };
 
+class RecordedCreateDrawTargetForFilter
+    : public RecordedDrawingEvent<RecordedCreateDrawTargetForFilter> {
+ public:
+  RecordedCreateDrawTargetForFilter(DrawTarget *aDT, ReferencePtr aRefPtr,
+                                    const IntSize &aMaxSize,
+                                    SurfaceFormat aFormat, FilterNode *aFilter,
+                                    FilterNode *aSource,
+                                    const Rect &aSourceRect,
+                                    const Point &aDestPoint)
+      : RecordedDrawingEvent(CREATEDRAWTARGETFORFILTER, aDT),
+        mRefPtr(aRefPtr),
+        mMaxSize(aMaxSize),
+        mFormat(aFormat),
+        mFilter(aFilter),
+        mSource(aSource),
+        mSourceRect(aSourceRect),
+        mDestPoint(aDestPoint) {}
+
+  virtual bool PlayEvent(Translator *aTranslator) const override;
+
+  template <class S>
+  void Record(S &aStream) const;
+  virtual void OutputSimpleEventInfo(
+      std::stringstream &aStringStream) const override;
+
+  virtual std::string GetName() const override {
+    return "CreateSimilarDrawTargetForFilter";
+  }
+  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+
+  ReferencePtr mRefPtr;
+  IntSize mMaxSize;
+  SurfaceFormat mFormat;
+  ReferencePtr mFilter;
+  ReferencePtr mSource;
+  Rect mSourceRect;
+  Point mDestPoint;
+
+ private:
+  friend class RecordedEvent;
+
+  template <class S>
+  MOZ_IMPLICIT RecordedCreateDrawTargetForFilter(S &aStream);
+};
+
 class RecordedFillRect : public RecordedDrawingEvent<RecordedFillRect> {
  public:
   RecordedFillRect(DrawTarget *aDT, const Rect &aRect, const Pattern &aPattern,
@@ -1895,6 +1940,62 @@ inline void RecordedCreateSimilarDrawTarget::OutputSimpleEventInfo(
                 << mSize.height << ")";
 }
 
+inline bool RecordedCreateDrawTargetForFilter::PlayEvent(
+    Translator *aTranslator) const {
+  IntRect baseRect = aTranslator->LookupDrawTarget(mDT)->GetRect();
+
+  auto maxRect = IntRect(IntPoint(0, 0), mMaxSize);
+
+  auto clone = aTranslator->LookupDrawTarget(mDT)->GetTransform();
+  bool invertible = clone.Invert();
+  // mSourceRect is in filter space. The filter outputs from mSourceRect need
+  // to be drawn at mDestPoint in user space.
+  Rect userSpaceSource = Rect(mDestPoint, mSourceRect.Size());
+  if (invertible) {
+    // Try to reduce the source rect so that it's not much bigger
+    // than the draw target. The result is not minimal. Examples
+    // are left as an exercise for the reader.
+    auto destRect = IntRectToRect(baseRect);
+    Rect userSpaceBounds = clone.TransformBounds(destRect);
+    userSpaceSource = userSpaceSource.Intersect(userSpaceBounds);
+  }
+
+  // Compute how much we moved the top-left of the source rect by, and use that
+  // to compute the new dest point, and move our intersected source rect back
+  // into the (new) filter space.
+  Point shift = userSpaceSource.TopLeft() - mDestPoint;
+  Rect filterSpaceSource =
+      Rect(mSourceRect.TopLeft() + shift, userSpaceSource.Size());
+
+  baseRect = RoundedOut(filterSpaceSource);
+  IntRect transformedRect =
+      aTranslator->LookupFilterNode(mFilter)->MapRectToSource(
+          baseRect, maxRect, aTranslator->LookupFilterNode(mSource));
+
+  // Intersect with maxRect to make sure we didn't end up with something bigger
+  transformedRect = transformedRect.Intersect(maxRect);
+
+  // If we end up with an empty rect make it 1x1 so that things don't break.
+  if (transformedRect.IsEmpty()) {
+    transformedRect = IntRect(0, 0, 1, 1);
+  }
+
+  RefPtr<DrawTarget> newDT =
+      aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(
+          transformedRect.Size(), mFormat);
+  newDT =
+      gfx::Factory::CreateOffsetDrawTarget(newDT, transformedRect.TopLeft());
+
+  // If we couldn't create a DrawTarget this will probably cause us to crash
+  // with nullptr later in the playback, so return false to abort.
+  if (!newDT) {
+    return false;
+  }
+
+  aTranslator->AddDrawTarget(mRefPtr, newDT);
+  return true;
+}
+
 inline bool RecordedCreateClippedDrawTarget::PlayEvent(
     Translator *aTranslator) const {
   const IntRect baseRect = aTranslator->GetReferenceDrawTarget()->GetRect();
@@ -1946,6 +2047,35 @@ RecordedCreateClippedDrawTarget::RecordedCreateClippedDrawTarget(S &aStream)
 inline void RecordedCreateClippedDrawTarget::OutputSimpleEventInfo(
     std::stringstream &aStringStream) const {
   aStringStream << "[" << mRefPtr << "] CreateClippedDrawTarget ()";
+}
+
+template <class S>
+void RecordedCreateDrawTargetForFilter::Record(S &aStream) const {
+  RecordedDrawingEvent::Record(aStream);
+  WriteElement(aStream, mRefPtr);
+  WriteElement(aStream, mMaxSize);
+  WriteElement(aStream, mFormat);
+  WriteElement(aStream, mFilter);
+  WriteElement(aStream, mSource);
+  WriteElement(aStream, mSourceRect);
+  WriteElement(aStream, mDestPoint);
+}
+
+template <class S>
+RecordedCreateDrawTargetForFilter::RecordedCreateDrawTargetForFilter(S &aStream)
+    : RecordedDrawingEvent(CREATEDRAWTARGETFORFILTER, aStream) {
+  ReadElement(aStream, mRefPtr);
+  ReadElement(aStream, mMaxSize);
+  ReadElement(aStream, mFormat);
+  ReadElement(aStream, mFilter);
+  ReadElement(aStream, mSource);
+  ReadElement(aStream, mSourceRect);
+  ReadElement(aStream, mDestPoint);
+}
+
+inline void RecordedCreateDrawTargetForFilter::OutputSimpleEventInfo(
+    std::stringstream &aStringStream) const {
+  aStringStream << "[" << mRefPtr << "] CreateDrawTargetForFilter ()";
 }
 
 struct GenericPattern {
@@ -3419,50 +3549,51 @@ inline void RecordedFilterNodeSetInput::OutputSimpleEventInfo(
   case _typeenum:                          \
     return new _class(aStream)
 
-#define FOR_EACH_EVENT(f)                                        \
-  f(DRAWTARGETCREATION, RecordedDrawTargetCreation);             \
-  f(DRAWTARGETDESTRUCTION, RecordedDrawTargetDestruction);       \
-  f(FILLRECT, RecordedFillRect);                                 \
-  f(STROKERECT, RecordedStrokeRect);                             \
-  f(STROKELINE, RecordedStrokeLine);                             \
-  f(CLEARRECT, RecordedClearRect);                               \
-  f(COPYSURFACE, RecordedCopySurface);                           \
-  f(SETTRANSFORM, RecordedSetTransform);                         \
-  f(PUSHCLIPRECT, RecordedPushClipRect);                         \
-  f(PUSHCLIP, RecordedPushClip);                                 \
-  f(POPCLIP, RecordedPopClip);                                   \
-  f(FILL, RecordedFill);                                         \
-  f(FILLGLYPHS, RecordedFillGlyphs);                             \
-  f(MASK, RecordedMask);                                         \
-  f(STROKE, RecordedStroke);                                     \
-  f(DRAWSURFACE, RecordedDrawSurface);                           \
-  f(DRAWDEPENDENTSURFACE, RecordedDrawDependentSurface);         \
-  f(DRAWSURFACEWITHSHADOW, RecordedDrawSurfaceWithShadow);       \
-  f(DRAWFILTER, RecordedDrawFilter);                             \
-  f(PATHCREATION, RecordedPathCreation);                         \
-  f(PATHDESTRUCTION, RecordedPathDestruction);                   \
-  f(SOURCESURFACECREATION, RecordedSourceSurfaceCreation);       \
-  f(SOURCESURFACEDESTRUCTION, RecordedSourceSurfaceDestruction); \
-  f(FILTERNODECREATION, RecordedFilterNodeCreation);             \
-  f(FILTERNODEDESTRUCTION, RecordedFilterNodeDestruction);       \
-  f(GRADIENTSTOPSCREATION, RecordedGradientStopsCreation);       \
-  f(GRADIENTSTOPSDESTRUCTION, RecordedGradientStopsDestruction); \
-  f(SNAPSHOT, RecordedSnapshot);                                 \
-  f(SCALEDFONTCREATION, RecordedScaledFontCreation);             \
-  f(SCALEDFONTDESTRUCTION, RecordedScaledFontDestruction);       \
-  f(MASKSURFACE, RecordedMaskSurface);                           \
-  f(FILTERNODESETATTRIBUTE, RecordedFilterNodeSetAttribute);     \
-  f(FILTERNODESETINPUT, RecordedFilterNodeSetInput);             \
-  f(CREATESIMILARDRAWTARGET, RecordedCreateSimilarDrawTarget);   \
-  f(CREATECLIPPEDDRAWTARGET, RecordedCreateClippedDrawTarget);   \
-  f(FONTDATA, RecordedFontData);                                 \
-  f(FONTDESC, RecordedFontDescriptor);                           \
-  f(PUSHLAYER, RecordedPushLayer);                               \
-  f(PUSHLAYERWITHBLEND, RecordedPushLayerWithBlend);             \
-  f(POPLAYER, RecordedPopLayer);                                 \
-  f(UNSCALEDFONTCREATION, RecordedUnscaledFontCreation);         \
-  f(UNSCALEDFONTDESTRUCTION, RecordedUnscaledFontDestruction);   \
-  f(INTOLUMINANCE, RecordedIntoLuminanceSource);                 \
+#define FOR_EACH_EVENT(f)                                          \
+  f(DRAWTARGETCREATION, RecordedDrawTargetCreation);               \
+  f(DRAWTARGETDESTRUCTION, RecordedDrawTargetDestruction);         \
+  f(FILLRECT, RecordedFillRect);                                   \
+  f(STROKERECT, RecordedStrokeRect);                               \
+  f(STROKELINE, RecordedStrokeLine);                               \
+  f(CLEARRECT, RecordedClearRect);                                 \
+  f(COPYSURFACE, RecordedCopySurface);                             \
+  f(SETTRANSFORM, RecordedSetTransform);                           \
+  f(PUSHCLIPRECT, RecordedPushClipRect);                           \
+  f(PUSHCLIP, RecordedPushClip);                                   \
+  f(POPCLIP, RecordedPopClip);                                     \
+  f(FILL, RecordedFill);                                           \
+  f(FILLGLYPHS, RecordedFillGlyphs);                               \
+  f(MASK, RecordedMask);                                           \
+  f(STROKE, RecordedStroke);                                       \
+  f(DRAWSURFACE, RecordedDrawSurface);                             \
+  f(DRAWDEPENDENTSURFACE, RecordedDrawDependentSurface);           \
+  f(DRAWSURFACEWITHSHADOW, RecordedDrawSurfaceWithShadow);         \
+  f(DRAWFILTER, RecordedDrawFilter);                               \
+  f(PATHCREATION, RecordedPathCreation);                           \
+  f(PATHDESTRUCTION, RecordedPathDestruction);                     \
+  f(SOURCESURFACECREATION, RecordedSourceSurfaceCreation);         \
+  f(SOURCESURFACEDESTRUCTION, RecordedSourceSurfaceDestruction);   \
+  f(FILTERNODECREATION, RecordedFilterNodeCreation);               \
+  f(FILTERNODEDESTRUCTION, RecordedFilterNodeDestruction);         \
+  f(GRADIENTSTOPSCREATION, RecordedGradientStopsCreation);         \
+  f(GRADIENTSTOPSDESTRUCTION, RecordedGradientStopsDestruction);   \
+  f(SNAPSHOT, RecordedSnapshot);                                   \
+  f(SCALEDFONTCREATION, RecordedScaledFontCreation);               \
+  f(SCALEDFONTDESTRUCTION, RecordedScaledFontDestruction);         \
+  f(MASKSURFACE, RecordedMaskSurface);                             \
+  f(FILTERNODESETATTRIBUTE, RecordedFilterNodeSetAttribute);       \
+  f(FILTERNODESETINPUT, RecordedFilterNodeSetInput);               \
+  f(CREATESIMILARDRAWTARGET, RecordedCreateSimilarDrawTarget);     \
+  f(CREATECLIPPEDDRAWTARGET, RecordedCreateClippedDrawTarget);     \
+  f(CREATEDRAWTARGETFORFILTER, RecordedCreateDrawTargetForFilter); \
+  f(FONTDATA, RecordedFontData);                                   \
+  f(FONTDESC, RecordedFontDescriptor);                             \
+  f(PUSHLAYER, RecordedPushLayer);                                 \
+  f(PUSHLAYERWITHBLEND, RecordedPushLayerWithBlend);               \
+  f(POPLAYER, RecordedPopLayer);                                   \
+  f(UNSCALEDFONTCREATION, RecordedUnscaledFontCreation);           \
+  f(UNSCALEDFONTDESTRUCTION, RecordedUnscaledFontDestruction);     \
+  f(INTOLUMINANCE, RecordedIntoLuminanceSource);                   \
   f(EXTERNALSURFACECREATION, RecordedExternalSurfaceCreation);
 
 template <class S>

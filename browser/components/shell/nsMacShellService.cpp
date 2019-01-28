@@ -37,10 +37,10 @@ using mozilla::dom::Element;
 #define SAFARI_BUNDLE_IDENTIFIER "com.apple.Safari"
 
 NS_IMPL_ISUPPORTS(nsMacShellService, nsIMacShellService, nsIShellService,
-                  nsIWebProgressListener)
+                  nsIToolkitShellService, nsIWebProgressListener)
 
 NS_IMETHODIMP
-nsMacShellService::IsDefaultBrowser(bool aStartupCheck, bool aForAllTypes,
+nsMacShellService::IsDefaultBrowser(bool aForAllTypes,
                                     bool* aIsDefaultBrowser) {
   *aIsDefaultBrowser = false;
 

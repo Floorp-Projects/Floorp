@@ -61,6 +61,7 @@ DIRS += [
     'resistfingerprinting',
     'securityreporter',
     'sessionstore',
+    'shell',
     'startup',
     'statusfilter',
     'telemetry',

@@ -16,8 +16,7 @@
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
         role="dialog"
-        helpTopic="prefs-fonts-and-colors"
-        ondialoghelp="openPrefsHelp()">
+        helpTopic="prefs-fonts-and-colors">
 
   <linkset>
     <link rel="localization" href="browser/preferences/colors.ftl"/>

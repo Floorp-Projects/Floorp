@@ -6,7 +6,6 @@ config = {
         'build',
     ],
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
-    # decides whether we want to use moz_sign_cmd in env
     'secret_files': [
         {'filename': '/builds/gapi.data',
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gapi.data',
@@ -16,7 +15,6 @@ config = {
          'min_scm_level': 2, 'default': 'try-build-has-no-secrets'},
     ],
     'vcs_share_base': '/builds/hg-shared',
-    # allows triggering of dependent jobs when --artifact try syntax is detected
     #########################################################################
 
 

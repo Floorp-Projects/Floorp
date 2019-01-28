@@ -4468,7 +4468,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       // If an animation is underway, tell it about the scroll offset update.
       // Some animations can handle some scroll offset updates and continue
       // running. Those that can't will return false, and we cancel them.
-      if (!mAnimation || !mAnimation->HandleScrollOffsetUpdate(relativeDelta)) {
+      if ((!mAnimation && !CanHandleScrollOffsetUpdate(mState)) ||
+          (mAnimation &&
+           !mAnimation->HandleScrollOffsetUpdate(relativeDelta))) {
         // Cancel the animation (which might also trigger a repaint request)
         // after we update the scroll offset above. Otherwise we can be left
         // in a state where things are out of sync.
@@ -4779,6 +4781,10 @@ void AsyncPanZoomController::CancelAnimationAndGestureState() {
 
 bool AsyncPanZoomController::HasReadyTouchBlock() const {
   return GetInputQueue()->HasReadyTouchBlock();
+}
+
+bool AsyncPanZoomController::CanHandleScrollOffsetUpdate(PanZoomState aState) {
+  return aState == PAN_MOMENTUM;
 }
 
 void AsyncPanZoomController::SetState(PanZoomState aNewState) {

@@ -19,10 +19,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarInput: "resource:///modules/UrlbarInput.jsm",
-  UrlbarMatch: "resource:///modules/UrlbarMatch.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 
@@ -38,10 +38,11 @@ Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", 
 /**
  * @param {string} searchString The search string to insert into the context.
  * @param {object} properties Overrides for the default values.
- * @returns {QueryContext} Creates a dummy query context with pre-filled required options.
+ * @returns {UrlbarQueryContext} Creates a dummy query context with pre-filled
+ *          required options.
  */
 function createContext(searchString = "foo", properties = {}) {
-  let context = new QueryContext({
+  let context = new UrlbarQueryContext({
     enableAutofill: UrlbarPrefs.get("autoFill"),
     isPrivate: true,
     lastKey: searchString ? searchString[searchString.length - 1] : "",

@@ -11,7 +11,7 @@ add_task(async function test() {
     if (!browser.isRemoteBrowser) {
       // Non-e10s, access contentWindow and confirm its container is the browser:
       let windowUtils = browser.contentWindow.windowUtils;
-      is (windowUtils.containerElement, browser,
+      is(windowUtils.containerElement, browser,
           "Container element for main window is xul:browser");
 
     }
@@ -57,8 +57,8 @@ function startTests() {
 async function mozBrowserTests(browser) {
   info("Granting special powers for mozbrowser");
   SpecialPowers.addPermission("browser", true, TEST_URI);
-  SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
-  SpecialPowers.setBoolPref('network.disable.ipc.security', true);
+  SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+  SpecialPowers.setBoolPref("network.disable.ipc.security", true);
 
   await ContentTask.spawn(browser, null, function() {
     info("Checking mozbrowser iframe");
@@ -72,7 +72,7 @@ async function mozBrowserTests(browser) {
   });
 
   info("Revoking special powers for mozbrowser");
-  SpecialPowers.clearUserPref('dom.mozBrowserFramesEnabled');
-  SpecialPowers.clearUserPref('network.disable.ipc.security');
+  SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
+  SpecialPowers.clearUserPref("network.disable.ipc.security");
   SpecialPowers.removePermission("browser", TEST_URI);
 }

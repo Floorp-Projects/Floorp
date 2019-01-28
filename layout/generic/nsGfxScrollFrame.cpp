@@ -3983,6 +3983,17 @@ nsPoint ScrollFrameHelper::GetVisualViewportOffset() const {
   return GetScrollPosition();
 }
 
+nsRect ScrollFrameHelper::GetVisualOptimalViewingRect() const {
+  nsIPresShell* presShell = mOuter->PresShell();
+
+  if (mIsRoot && presShell->IsVisualViewportSizeSet() &&
+      presShell->IsVisualViewportOffsetSet()) {
+    return nsRect(presShell->GetVisualViewportOffset(),
+                  presShell->GetVisualViewportSize());
+  }
+  return mScrollPort;
+}
+
 static void AdjustForWholeDelta(int32_t aDelta, nscoord* aCoord) {
   if (aDelta < 0) {
     *aCoord = nscoord_MIN;
@@ -5500,13 +5511,6 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
   }
 
   nsViewportInfo viewportInfo = doc->GetViewportInfo(displaySize);
-  // FIXME: Bug 1520081 - Drop this check. We should use the minimum-scale size
-  // even if the minimum-scale size is greater than 1.0.
-  if (viewportInfo.GetMinZoom() >=
-      pc->CSSToDevPixelScale() * LayoutDeviceToScreenScale(1.0f)) {
-    return;
-  }
-
   nsSize maximumPossibleSize =
       CSSSize::ToAppUnits(ScreenSize(displaySize) / viewportInfo.GetMinZoom());
 

@@ -23,35 +23,29 @@
 
   <description control="pw1" data-l10n-id="master-password-description"></description>
 
-  <grid>
-    <columns>
-      <column flex="1"/>
-      <column/>
-    </columns>
-    <rows>
-      <row>
-        <label control="oldpw" data-l10n-id="set-password-old-password"></label>
-        <textbox id="oldpw" type="password"/>
-        <!-- This textbox is inserted as a workaround to the fact that making the 'type'
-              & 'disabled' property of the 'oldpw' textbox toggle between ['password' &
-              'false'] and ['text' & 'true'] - as would be necessary if the menu has more
-              than one tokens, some initialized and some not - does not work properly. So,
-              either the textbox 'oldpw' or the textbox 'message' would be displayed,
-              depending on the state of the token selected
-        -->
-        <textbox id="message" disabled="true" />
-      </row>
-      <row>
-        <label control="pw1" data-l10n-id="set-password-new-password"></label>
-        <textbox id="pw1" type="password"
-                 oninput="setPasswordStrength(); checkPasswords();"/>
-      </row>
-      <row>
-        <label control="pw2" data-l10n-id="set-password-reenter-password"></label>
-        <textbox id="pw2" type="password" oninput="checkPasswords();"/>
-      </row>
-    </rows>
-  </grid>
+  <vbox>
+    <hbox>
+      <label flex="1" control="oldpw" data-l10n-id="set-password-old-password"></label>
+      <textbox id="oldpw" type="password"/>
+      <!-- This textbox is inserted as a workaround to the fact that making the 'type'
+            & 'disabled' property of the 'oldpw' textbox toggle between ['password' &
+            'false'] and ['text' & 'true'] - as would be necessary if the menu has more
+            than one tokens, some initialized and some not - does not work properly. So,
+            either the textbox 'oldpw' or the textbox 'message' would be displayed,
+            depending on the state of the token selected
+      -->
+      <textbox id="message" disabled="true" />
+    </hbox>
+    <hbox>
+      <label flex="1" control="pw1" data-l10n-id="set-password-new-password"></label>
+      <textbox id="pw1" type="password"
+               oninput="setPasswordStrength(); checkPasswords();"/>
+    </hbox>
+    <hbox>
+      <label flex="1" control="pw2" data-l10n-id="set-password-reenter-password"></label>
+      <textbox id="pw2" type="password" oninput="checkPasswords();"/>
+    </hbox>
+  </vbox>
 
   <html:label for="pwmeter" style="display: -moz-box;" data-l10n-id="set-password-meter"></html:label>
   <html:progress id="pwmeter" value="0" max="100"/>

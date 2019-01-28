@@ -137,6 +137,34 @@ typedef enum {
 } AtkTextBoundary;
 
 /**
+ *AtkTextGranularity:
+ *@ATK_TEXT_GRANULARITY_CHAR: Granularity is defined by the boundaries between characters
+ * (including non-printing characters)
+ *@ATK_TEXT_GRANULARITY_WORD: Granularity is defined by the boundaries of a word,
+ * starting at the beginning of the current word and finishing at the beginning of
+ * the following one, if present.
+ *@ATK_TEXT_GRANULARITY_SENTENCE: Granularity is defined by the boundaries of a sentence,
+ * starting at the beginning of the current sentence and finishing at the beginning of
+ * the following one, if present.
+ *@ATK_TEXT_GRANULARITY_LINE: Granularity is defined by the boundaries of a line,
+ * starting at the beginning of the current line and finishing at the beginning of
+ * the following one, if present.
+ *@ATK_TEXT_GRANULARITY_PARAGRAPH: Granularity is defined by the boundaries of a paragraph,
+ * starting at the beginning of the current paragraph and finishing at the beginning of
+ * the following one, if present.
+ *
+ * Text granularity types used for specifying the granularity of the region of
+ * text we are interested in.
+ **/
+typedef enum {
+  ATK_TEXT_GRANULARITY_CHAR,
+  ATK_TEXT_GRANULARITY_WORD,
+  ATK_TEXT_GRANULARITY_SENTENCE,
+  ATK_TEXT_GRANULARITY_LINE,
+  ATK_TEXT_GRANULARITY_PARAGRAPH
+} AtkTextGranularity;
+
+/**
  * AtkTextRectangle:
  * @x: The horizontal coordinate of a rectangle
  * @y: The vertical coordinate of a rectangle
@@ -272,9 +300,33 @@ struct _AtkTextIface
                                                    AtkCoordType     coord_type,
                                                    AtkTextClipType  x_clip_type,
                                                    AtkTextClipType  y_clip_type);
- 
 
-  AtkFunction    pad4;
+  gchar*         (* get_string_at_offset)         (AtkText            *text,
+                                                   gint               offset,
+                                                   AtkTextGranularity granularity,
+                                                   gint               *start_offset,
+                                                   gint               *end_offset);
+  /*
+   * Scrolls this text range so it becomes visible on the screen.
+   *
+   * scroll_substring_to lets the implementation compute an appropriate target
+   * position on the screen, with type used as a positioning hint.
+   *
+   * scroll_substring_to_point lets the client specify a precise target position
+   * on the screen.
+   *
+   * Since ATK 2.32
+   */
+  gboolean       (* scroll_substring_to)          (AtkText          *text,
+                                                   gint             start_offset,
+                                                   gint             end_offset,
+                                                   AtkScrollType    type);
+  gboolean       (* scroll_substring_to_point)    (AtkText          *text,
+                                                   gint             start_offset,
+                                                   gint             end_offset,
+                                                   AtkCoordType     coords,
+                                                   gint             x,
+                                                   gint             y);
 };
 
 GType            atk_text_get_type (void);
@@ -307,6 +359,11 @@ gchar*        atk_text_get_text_before_offset             (AtkText          *tex
                                                            AtkTextBoundary  boundary_type,
 							   gint             *start_offset,
 							   gint	            *end_offset);
+gchar*        atk_text_get_string_at_offset               (AtkText            *text,
+                                                           gint               offset,
+                                                           AtkTextGranularity granularity,
+                                                           gint               *start_offset,
+                                                           gint               *end_offset);
 gint          atk_text_get_caret_offset                   (AtkText          *text);
 void          atk_text_get_character_extents              (AtkText          *text,
                                                            gint             offset,
@@ -358,6 +415,18 @@ G_CONST_RETURN gchar*  atk_text_attribute_get_name        (AtkTextAttribute attr
 AtkTextAttribute       atk_text_attribute_for_name        (const gchar      *name);
 G_CONST_RETURN gchar*  atk_text_attribute_get_value       (AtkTextAttribute attr,
                                                            gint             index_);
+
+gboolean      atk_text_scroll_substring_to                (AtkText          *text,
+                                                           gint             start_offset,
+                                                           gint             end_offset,
+                                                           AtkScrollType    type);
+
+gboolean      atk_text_scroll_substring_to_point          (AtkText          *text,
+                                                           gint             start_offset,
+                                                           gint             end_offset,
+                                                           AtkCoordType     coords,
+                                                           gint             x,
+                                                           gint             y);
 
 #ifdef __cplusplus
 }

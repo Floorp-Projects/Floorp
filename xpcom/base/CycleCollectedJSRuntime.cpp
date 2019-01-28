@@ -1326,7 +1326,8 @@ void CycleCollectedJSRuntime::FinalizeDeferredThings(
   MOZ_ASSERT(mDeferredFinalizerTable.Count() == 0);
 
   if (aType == CycleCollectedJSContext::FinalizeIncrementally) {
-    NS_IdleDispatchToCurrentThread(do_AddRef(mFinalizeRunnable), 2500);
+    NS_DispatchToCurrentThreadQueue(do_AddRef(mFinalizeRunnable), 2500,
+                                    EventQueuePriority::Idle);
   } else {
     mFinalizeRunnable->ReleaseNow(false);
     MOZ_ASSERT(!mFinalizeRunnable);

@@ -24,49 +24,45 @@ enum CheckboxValue {
 
 @implementation mozButtonAccessible
 
-- (NSArray*)accessibilityAttributeNames
-{
+- (NSArray*)accessibilityAttributeNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  static NSArray *attributes = nil;
+  static NSArray* attributes = nil;
   if (!attributes) {
-    attributes = [[NSArray alloc] initWithObjects:NSAccessibilityParentAttribute, // required
-                                                  NSAccessibilityRoleAttribute, // required
-                                                  NSAccessibilityRoleDescriptionAttribute,
-                                                  NSAccessibilityPositionAttribute, // required
-                                                  NSAccessibilitySizeAttribute, // required
-                                                  NSAccessibilityWindowAttribute, // required
-                                                  NSAccessibilityPositionAttribute, // required
-                                                  NSAccessibilityTopLevelUIElementAttribute, // required
-                                                  NSAccessibilityHelpAttribute,
-                                                  NSAccessibilityEnabledAttribute, // required
-                                                  NSAccessibilityFocusedAttribute, // required
-                                                  NSAccessibilityTitleAttribute, // required
-                                                  NSAccessibilityChildrenAttribute,
-                                                  NSAccessibilityDescriptionAttribute,
+    attributes = [[NSArray alloc]
+        initWithObjects:NSAccessibilityParentAttribute,  // required
+                        NSAccessibilityRoleAttribute,    // required
+                        NSAccessibilityRoleDescriptionAttribute,
+                        NSAccessibilityPositionAttribute,           // required
+                        NSAccessibilitySizeAttribute,               // required
+                        NSAccessibilityWindowAttribute,             // required
+                        NSAccessibilityPositionAttribute,           // required
+                        NSAccessibilityTopLevelUIElementAttribute,  // required
+                        NSAccessibilityHelpAttribute,
+                        NSAccessibilityEnabledAttribute,  // required
+                        NSAccessibilityFocusedAttribute,  // required
+                        NSAccessibilityTitleAttribute,    // required
+                        NSAccessibilityChildrenAttribute, NSAccessibilityDescriptionAttribute,
 #if DEBUG
-                                                  @"AXMozDescription",
+                        @"AXMozDescription",
 #endif
-                                                  nil];
+                        nil];
   }
   return attributes;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (id)accessibilityAttributeValue:(NSString *)attribute
-{
+- (id)accessibilityAttributeValue:(NSString*)attribute {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) {
-    if ([self hasPopup])
-      return [self children];
+    if ([self hasPopup]) return [self children];
     return nil;
   }
 
   if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute]) {
-    if ([self isTab])
-      return utils::LocalizedString(NS_LITERAL_STRING("tab"));
+    if ([self isTab]) return utils::LocalizedString(NS_LITERAL_STRING("tab"));
 
     return NSAccessibilityRoleDescription([self role], nil);
   }
@@ -76,20 +72,17 @@ enum CheckboxValue {
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (BOOL)accessibilityIsIgnored
-{
+- (BOOL)accessibilityIsIgnored {
   return ![self getGeckoAccessible] && ![self getProxyAccessible];
 }
 
-- (NSArray*)accessibilityActionNames
-{
+- (NSArray*)accessibilityActionNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ([self isEnabled]) {
     if ([self hasPopup])
-      return [NSArray arrayWithObjects:NSAccessibilityPressAction,
-              NSAccessibilityShowMenuAction,
-              nil];
+      return
+          [NSArray arrayWithObjects:NSAccessibilityPressAction, NSAccessibilityShowMenuAction, nil];
     return [NSArray arrayWithObject:NSAccessibilityPressAction];
   }
   return nil;
@@ -97,20 +90,17 @@ enum CheckboxValue {
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (NSString*)accessibilityActionDescription:(NSString*)action
-{
+- (NSString*)accessibilityActionDescription:(NSString*)action {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ([action isEqualToString:NSAccessibilityPressAction]) {
-    if ([self isTab])
-      return utils::LocalizedString(NS_LITERAL_STRING("switch"));
+    if ([self isTab]) return utils::LocalizedString(NS_LITERAL_STRING("switch"));
 
-    return @"press button"; // XXX: localize this later?
+    return @"press button";  // XXX: localize this later?
   }
 
   if ([self hasPopup]) {
-    if ([action isEqualToString:NSAccessibilityShowMenuAction])
-      return @"show menu";
+    if ([action isEqualToString:NSAccessibilityShowMenuAction]) return @"show menu";
   }
 
   return nil;
@@ -118,8 +108,7 @@ enum CheckboxValue {
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (void)accessibilityPerformAction:(NSString*)action
-{
+- (void)accessibilityPerformAction:(NSString*)action {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if ([self isEnabled] && [action isEqualToString:NSAccessibilityPressAction]) {
@@ -132,8 +121,7 @@ enum CheckboxValue {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (void)click
-{
+- (void)click {
   // both buttons and checkboxes have only one action. we should really stop using arbitrary
   // arrays with actions, and define constants for these actions.
   if (AccessibleWrap* accWrap = [self getGeckoAccessible])
@@ -142,19 +130,15 @@ enum CheckboxValue {
     proxy->DoAction(0);
 }
 
-- (BOOL)isTab
-{
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
-    return accWrap->Role() == roles::PAGETAB;
+- (BOOL)isTab {
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) return accWrap->Role() == roles::PAGETAB;
 
-  if (ProxyAccessible* proxy = [self getProxyAccessible])
-    return proxy->Role() == roles::PAGETAB;
+  if (ProxyAccessible* proxy = [self getProxyAccessible]) return proxy->Role() == roles::PAGETAB;
 
   return false;
 }
 
-- (BOOL)hasPopup
-{
+- (BOOL)hasPopup {
   if (AccessibleWrap* accWrap = [self getGeckoAccessible])
     return accWrap->NativeState() & states::HASPOPUP;
 
@@ -168,15 +152,13 @@ enum CheckboxValue {
 
 @implementation mozCheckboxAccessible
 
-- (NSString*)accessibilityActionDescription:(NSString*)action
-{
+- (NSString*)accessibilityActionDescription:(NSString*)action {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ([action isEqualToString:NSAccessibilityPressAction]) {
-    if ([self isChecked] != kUnchecked)
-      return @"uncheck checkbox"; // XXX: localize this later?
+    if ([self isChecked] != kUnchecked) return @"uncheck checkbox";  // XXX: localize this later?
 
-    return @"check checkbox"; // XXX: localize this later?
+    return @"check checkbox";  // XXX: localize this later?
   }
 
   return nil;
@@ -184,8 +166,7 @@ enum CheckboxValue {
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (int)isChecked
-{
+- (int)isChecked {
   uint64_t state = 0;
   if (AccessibleWrap* accWrap = [self getGeckoAccessible])
     state = accWrap->NativeState();
@@ -200,8 +181,7 @@ enum CheckboxValue {
   return kUnchecked;
 }
 
-- (id)value
-{
+- (id)value {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   return [NSNumber numberWithInt:[self isChecked]];
@@ -213,15 +193,13 @@ enum CheckboxValue {
 
 @implementation mozTabsAccessible
 
-- (void)dealloc
-{
+- (void)dealloc {
   [mTabs release];
 
   [super dealloc];
 }
 
-- (NSArray*)accessibilityAttributeNames
-{
+- (NSArray*)accessibilityAttributeNames {
   // standard attributes that are shared and supported by root accessible (AXMain) elements.
   static NSMutableArray* attributes = nil;
 
@@ -234,12 +212,9 @@ enum CheckboxValue {
   return attributes;
 }
 
-- (id)accessibilityAttributeValue:(NSString *)attribute
-{
-  if ([attribute isEqualToString:NSAccessibilityContentsAttribute])
-    return [super children];
-  if ([attribute isEqualToString:NSAccessibilityTabsAttribute])
-    return [self tabs];
+- (id)accessibilityAttributeValue:(NSString*)attribute {
+  if ([attribute isEqualToString:NSAccessibilityContentsAttribute]) return [super children];
+  if ([attribute isEqualToString:NSAccessibilityTabsAttribute]) return [self tabs];
 
   return [super accessibilityAttributeValue:attribute];
 }
@@ -247,8 +222,7 @@ enum CheckboxValue {
 /**
  * Returns the selected tab (the mozAccessible)
  */
-- (id)value
-{
+- (id)value {
   mozAccessible* nativeAcc = nil;
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
     if (Accessible* accTab = accWrap->GetSelectedItem(0)) {
@@ -266,10 +240,8 @@ enum CheckboxValue {
 /**
  * Return the mozAccessibles that are the tabs.
  */
-- (id)tabs
-{
-  if (mTabs)
-    return mTabs;
+- (id)tabs {
+  if (mTabs) return mTabs;
 
   NSArray* children = [self children];
   NSEnumerator* enumerator = [children objectEnumerator];
@@ -277,14 +249,12 @@ enum CheckboxValue {
 
   id obj;
   while ((obj = [enumerator nextObject]))
-    if ([obj isTab])
-      [mTabs addObject:obj];
+    if ([obj isTab]) [mTabs addObject:obj];
 
   return mTabs;
 }
 
-- (void)invalidateChildren
-{
+- (void)invalidateChildren {
   [super invalidateChildren];
 
   [mTabs release];
@@ -295,18 +265,15 @@ enum CheckboxValue {
 
 @implementation mozPaneAccessible
 
-- (NSUInteger)accessibilityArrayAttributeCount:(NSString*)attribute
-{
+- (NSUInteger)accessibilityArrayAttributeCount:(NSString*)attribute {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
-  if (!accWrap && !proxy)
-    return 0;
+  if (!accWrap && !proxy) return 0;
 
   // By default this calls -[[mozAccessible children] count].
   // Since we don't cache mChildren. This is faster.
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) {
-    if (accWrap)
-      return accWrap->ChildCount() ? 1 : 0;
+    if (accWrap) return accWrap->ChildCount() ? 1 : 0;
 
     return proxy->ChildrenCount() ? 1 : 0;
   }
@@ -314,24 +281,21 @@ enum CheckboxValue {
   return [super accessibilityArrayAttributeCount:attribute];
 }
 
-- (NSArray*)children
-{
-  if (![self getGeckoAccessible])
-    return nil;
+- (NSArray*)children {
+  if (![self getGeckoAccessible]) return nil;
 
-  nsDeckFrame* deckFrame = do_QueryFrame([self getGeckoAccessible]->GetFrame());
+  nsDeckFrame* deckFrame = do_QueryFrame([self getGeckoAccessible] -> GetFrame());
   nsIFrame* selectedFrame = deckFrame ? deckFrame->GetSelectedBox() : nullptr;
 
   Accessible* selectedAcc = nullptr;
   if (selectedFrame) {
     nsINode* node = selectedFrame->GetContent();
-    selectedAcc = [self getGeckoAccessible]->Document()->GetAccessible(node);
+    selectedAcc = [self getGeckoAccessible] -> Document() -> GetAccessible(node);
   }
 
   if (selectedAcc) {
-    mozAccessible *curNative = GetNativeFromGeckoAccessible(selectedAcc);
-    if (curNative)
-      return [NSArray arrayWithObjects:GetObjectOrRepresentedView(curNative), nil];
+    mozAccessible* curNative = GetNativeFromGeckoAccessible(selectedAcc);
+    if (curNative) return [NSArray arrayWithObjects:GetObjectOrRepresentedView(curNative), nil];
   }
 
   return nil;

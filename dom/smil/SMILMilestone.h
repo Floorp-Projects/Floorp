@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILMILESTONE_H_
-#define NS_SMILMILESTONE_H_
+#ifndef mozilla_SMILMilestone_h
+#define mozilla_SMILMilestone_h
 
-#include "nsSMILTypes.h"
+#include "mozilla/SMILTypes.h"
 
 namespace mozilla {
 
@@ -38,7 +38,7 @@ namespace mozilla {
  */
 class SMILMilestone {
  public:
-  SMILMilestone(nsSMILTime aTime, bool aIsEnd) : mTime(aTime), mIsEnd(aIsEnd) {}
+  SMILMilestone(SMILTime aTime, bool aIsEnd) : mTime(aTime), mIsEnd(aIsEnd) {}
 
   SMILMilestone() : mTime(0), mIsEnd(false) {}
 
@@ -64,7 +64,7 @@ class SMILMilestone {
     return !(*this < aOther);
   }
 
-  nsSMILTime mTime;  // The milestone time. This may be in container time or
+  SMILTime mTime;    // The milestone time. This may be in container time or
                      // parent container time depending on where it is used.
   bool mIsEnd;       // true if this milestone corresponds to an interval
                      // end, false otherwise.
@@ -72,4 +72,4 @@ class SMILMilestone {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILMILESTONE_H_
+#endif  // mozilla_SMILMilestone_h

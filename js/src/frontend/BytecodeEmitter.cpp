@@ -541,7 +541,7 @@ Maybe<uint32_t> BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn) {
 
 void BytecodeEmitter::checkTypeSet(JSOp op) {
   if (CodeSpec[op].format & JOF_TYPESET) {
-    if (typesetCount < UINT16_MAX) {
+    if (typesetCount < JSScript::MaxBytecodeTypeSets) {
       typesetCount++;
     }
   }
@@ -2414,20 +2414,12 @@ bool BytecodeEmitter::emitFunctionScript(CodeNode* funNode,
   }
 
   /*
-   * Emit a prologue for run-once scripts which will deoptimize JIT code
-   * if the script ends up running multiple times via foo.caller related
-   * shenanigans.
-   *
-   * Also mark the script so that initializers created within it may be
-   * given more precise types.
+   * Mark the script so that initializers created within it may be given more
+   * precise types.
    */
   if (isRunOnceLambda()) {
     script->setTreatAsRunOnce();
     MOZ_ASSERT(!script->hasRunOnce());
-
-    if (!emit1(JSOP_RUNONCE)) {
-      return false;
-    }
   }
 
   setFunctionBodyEndPos(body->pn_pos);

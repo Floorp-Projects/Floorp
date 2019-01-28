@@ -82,7 +82,7 @@ add_task(async function test_image_download() {
             dls.removeFinished();
             resolve(download);
           }
-        }
+        },
       });
     });
     // open the context menu.

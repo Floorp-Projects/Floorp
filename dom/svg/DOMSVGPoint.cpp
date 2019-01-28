@@ -5,11 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DOMSVGPoint.h"
+
 #include "DOMSVGPointList.h"
-#include "SVGPoint.h"
 #include "gfx2DGlue.h"
-#include "SVGElement.h"
+#include "nsCOMPtr.h"
 #include "nsError.h"
+#include "SVGPoint.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGMatrix.h"
 
 // See the architecture comment in DOMSVGPointList.h.

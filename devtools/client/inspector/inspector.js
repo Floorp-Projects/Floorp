@@ -1402,7 +1402,8 @@ Inspector.prototype = {
 
     if (this._markupFrame) {
       this._markupFrame.removeEventListener("load", this._onMarkupFrameLoad, true);
-      this._markupFrame.removeEventListener("contextmenu", this._onContextMenu);
+      this._markupFrame.contentWindow.removeEventListener("contextmenu",
+                                                          this._onContextMenu);
     }
 
     if (this._search) {
@@ -1899,7 +1900,6 @@ Inspector.prototype = {
       this._markupFrame.setAttribute("flex", "1");
       // This is needed to enable tooltips inside the iframe document.
       this._markupFrame.setAttribute("tooltip", "aHTMLTooltip");
-      this._markupFrame.addEventListener("contextmenu", this._onContextMenu);
 
       this._markupBox.style.visibility = "hidden";
       this._markupBox.appendChild(this._markupFrame);
@@ -1913,6 +1913,7 @@ Inspector.prototype = {
 
   _onMarkupFrameLoad: function() {
     this._markupFrame.removeEventListener("load", this._onMarkupFrameLoad, true);
+    this._markupFrame.contentWindow.addEventListener("contextmenu", this._onContextMenu);
     this._markupFrame.contentWindow.focus();
     this._markupBox.style.visibility = "visible";
     this.markup = new MarkupView(this, this._markupFrame, this._toolbox.win);

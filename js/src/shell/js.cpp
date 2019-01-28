@@ -88,6 +88,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
+#include "js/ContextOptions.h"  // JS::ContextOptions{,Ref}
 #include "js/Debug.h"
 #include "js/Equality.h"  // JS::SameValue
 #include "js/GCVector.h"
@@ -491,9 +492,7 @@ static bool enableNativeRegExp = false;
 static bool enableSharedMemory = SHARED_MEMORY_DEFAULT;
 static bool enableWasmBaseline = false;
 static bool enableWasmIon = false;
-#ifdef ENABLE_WASM_CRANELIFT
-static bool wasmForceCranelift = false;
-#endif
+static bool enableWasmCranelift = false;
 #ifdef ENABLE_WASM_REFTYPES
 static bool enableWasmGc = false;
 #endif
@@ -525,7 +524,6 @@ static bool OOM_printAllocationCount = false;
 #endif
 
 // Shell state this is only accessed on the main thread.
-bool jsCachingEnabled = false;
 mozilla::Atomic<bool> jsCacheOpened(false);
 
 static bool SetTimeoutValue(JSContext* cx, double t);
@@ -6501,24 +6499,6 @@ static bool WithSourceHook(JSContext* cx, unsigned argc, Value* vp) {
   return result;
 }
 
-static bool IsCachingEnabled(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(jsCachingEnabled && jsCacheAsmJSPath != nullptr);
-  return true;
-}
-
-static bool SetCachingEnabled(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (GetShellContext(cx)->isWorker) {
-    JS_ReportErrorASCII(cx, "Caching is not supported in workers");
-    return false;
-  }
-
-  jsCachingEnabled = ToBoolean(args.get(0));
-  args.rval().setUndefined();
-  return true;
-}
-
 static void PrintProfilerEvents_Callback(const char* msg) {
   fprintf(stderr, "PROFILER EVENT: %s\n", msg);
 }
@@ -8624,14 +8604,6 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "  This function implements the exact requirements of the $262.IsHTMLDDA\n"
 "  property in test262."),
 
-    JS_FN_HELP("isCachingEnabled", IsCachingEnabled, 0, 0,
-"isCachingEnabled()",
-"  Return whether JS caching is enabled."),
-
-    JS_FN_HELP("setCachingEnabled", SetCachingEnabled, 1, 0,
-"setCachingEnabled(b)",
-"  Enable or disable JS caching."),
-
     JS_FN_HELP("cacheEntry", CacheEntry, 1, 0,
 "cacheEntry(code)",
 "  Return a new opaque object which emulates a cache entry of a script.  This\n"
@@ -9659,59 +9631,7 @@ static const uint32_t asmJSCacheCookie = 0xabbadaba;
 static bool ShellOpenAsmJSCacheEntryForRead(
     HandleObject global, const char16_t* begin, const char16_t* limit,
     size_t* serializedSizeOut, const uint8_t** memoryOut, intptr_t* handleOut) {
-  if (!jsCachingEnabled || !jsCacheAsmJSPath) {
-    return false;
-  }
-
-  ScopedFileDesc fd(open(jsCacheAsmJSPath, O_RDWR), ScopedFileDesc::READ_LOCK);
-  if (fd == -1) {
-    return false;
-  }
-
-  // Get the size and make sure we can dereference at least one uint32_t.
-  off_t off = lseek(fd, 0, SEEK_END);
-  if (off == -1 || off < (off_t)sizeof(uint32_t)) {
-    return false;
-  }
-
-  // Map the file into memory.
-  void* memory;
-#ifdef XP_WIN
-  HANDLE fdOsHandle = (HANDLE)_get_osfhandle(fd);
-  HANDLE fileMapping =
-      CreateFileMapping(fdOsHandle, nullptr, PAGE_READWRITE, 0, 0, nullptr);
-  if (!fileMapping) {
-    return false;
-  }
-
-  memory = MapViewOfFile(fileMapping, FILE_MAP_READ, 0, 0, 0);
-  CloseHandle(fileMapping);
-  if (!memory) {
-    return false;
-  }
-#else
-  memory = mmap(nullptr, off, PROT_READ, MAP_SHARED, fd, 0);
-  if (memory == MAP_FAILED) {
-    return false;
-  }
-#endif
-
-  // Perform check described by asmJSCacheCookie comment.
-  if (*(uint32_t*)memory != asmJSCacheCookie) {
-#ifdef XP_WIN
-    UnmapViewOfFile(memory);
-#else
-    munmap(memory, off);
-#endif
-    return false;
-  }
-
-  // The embedding added the cookie so strip it off of the buffer returned to
-  // the JS engine.
-  *serializedSizeOut = off - sizeof(uint32_t);
-  *memoryOut = (uint8_t*)memory + sizeof(uint32_t);
-  *handleOut = fd.forget();
-  return true;
+  return false;
 }
 
 static void ShellCloseAsmJSCacheEntryForRead(size_t serializedSize,
@@ -9736,86 +9656,7 @@ static void ShellCloseAsmJSCacheEntryForRead(size_t serializedSize,
 static JS::AsmJSCacheResult ShellOpenAsmJSCacheEntryForWrite(
     HandleObject global, const char16_t* begin, const char16_t* end,
     size_t serializedSize, uint8_t** memoryOut, intptr_t* handleOut) {
-  if (!jsCachingEnabled || !jsCacheAsmJSPath) {
-    return JS::AsmJSCache_Disabled_ShellFlags;
-  }
-
-  // Create the cache directory if it doesn't already exist.
-  struct stat dirStat;
-  if (stat(jsCacheDir, &dirStat) == 0) {
-    if (!(dirStat.st_mode & S_IFDIR)) {
-      return JS::AsmJSCache_InternalError;
-    }
-  } else {
-#ifdef XP_WIN
-    if (mkdir(jsCacheDir) != 0) {
-      return JS::AsmJSCache_InternalError;
-    }
-#else
-    if (mkdir(jsCacheDir, 0777) != 0) {
-      return JS::AsmJSCache_InternalError;
-    }
-#endif
-  }
-
-  ScopedFileDesc fd(open(jsCacheAsmJSPath, O_CREAT | O_RDWR, 0660),
-                    ScopedFileDesc::WRITE_LOCK);
-  if (fd == -1) {
-    return JS::AsmJSCache_InternalError;
-  }
-
-  // Include extra space for the asmJSCacheCookie.
-  serializedSize += sizeof(uint32_t);
-
-  // Resize the file to the appropriate size after zeroing their contents.
-#ifdef XP_WIN
-  if (chsize(fd, 0)) {
-    return JS::AsmJSCache_InternalError;
-  }
-  if (chsize(fd, serializedSize)) {
-    return JS::AsmJSCache_InternalError;
-  }
-#else
-  if (ftruncate(fd, 0)) {
-    return JS::AsmJSCache_InternalError;
-  }
-  if (ftruncate(fd, serializedSize)) {
-    return JS::AsmJSCache_InternalError;
-  }
-#endif
-
-  // Map the file into memory.
-  void* memory;
-#ifdef XP_WIN
-  HANDLE fdOsHandle = (HANDLE)_get_osfhandle(fd);
-  HANDLE fileMapping =
-      CreateFileMapping(fdOsHandle, nullptr, PAGE_READWRITE, 0, 0, nullptr);
-  if (!fileMapping) {
-    return JS::AsmJSCache_InternalError;
-  }
-
-  memory = MapViewOfFile(fileMapping, FILE_MAP_WRITE, 0, 0, 0);
-  CloseHandle(fileMapping);
-  if (!memory) {
-    return JS::AsmJSCache_InternalError;
-  }
-  MOZ_ASSERT(*(uint32_t*)memory == 0);
-#else
-  memory = mmap(nullptr, serializedSize, PROT_READ, MAP_SHARED, fd, 0);
-  if (memory == MAP_FAILED) {
-    return JS::AsmJSCache_InternalError;
-  }
-  MOZ_ASSERT(*(uint32_t*)memory == 0);
-  if (mprotect(memory, serializedSize, PROT_READ | PROT_WRITE)) {
-    return JS::AsmJSCache_InternalError;
-  }
-#endif
-
-  // The embedding added the cookie so strip it off of the buffer returned to
-  // the JS engine. The asmJSCacheCookie will be written on close, below.
-  *memoryOut = (uint8_t*)memory + sizeof(uint32_t);
-  *handleOut = fd.forget();
-  return JS::AsmJSCache_Success;
+  return JS::AsmJSCache_Disabled_ShellFlags;
 }
 
 static void ShellCloseAsmJSCacheEntryForWrite(size_t serializedSize,
@@ -10123,10 +9964,8 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       JS::CompileOptions opts(cx);
       opts.setFileAndLine("-e", 1);
 
-      // This might be upgradable to UTF-8, but for now keep assuming the
-      // worst.
       RootedValue rval(cx);
-      if (!JS::EvaluateLatin1(cx, opts, code, strlen(code), &rval)) {
+      if (!JS::EvaluateUtf8(cx, opts, code, strlen(code), &rval)) {
         return false;
       }
 
@@ -10184,23 +10023,38 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableBaseline = !op.getBoolOption("no-baseline");
   enableIon = !op.getBoolOption("no-ion");
   enableAsmJS = !op.getBoolOption("no-asmjs");
-  enableWasm = !op.getBoolOption("no-wasm");
   enableNativeRegExp = !op.getBoolOption("no-native-regexp");
-  enableWasmBaseline = !op.getBoolOption("no-wasm-baseline");
-  enableWasmIon = !op.getBoolOption("no-wasm-ion");
-#ifdef ENABLE_WASM_CRANELIFT
-  wasmForceCranelift = op.getBoolOption("wasm-force-cranelift");
-#endif
+
+  // Default values for wasm.
+  enableWasm = true;
+  enableWasmBaseline = true;
+  enableWasmIon = true;
+  if (const char* str = op.getStringOption("wasm-compiler")) {
+    if (strcmp(str, "none") == 0) {
+      enableWasm = false;
+    } else if (strcmp(str, "baseline") == 0) {
+      // Baseline is enabled by default.
+      enableWasmIon = false;
+    } else if (strcmp(str, "ion") == 0) {
+      // Ion is enabled by default.
+      enableWasmBaseline = false;
+    } else if (strcmp(str, "cranelift") == 0) {
+      enableWasmBaseline = false;
+      enableWasmIon = false;
+      enableWasmCranelift = true;
+    } else if (strcmp(str, "baseline+ion") == 0) {
+      // Default.
+    } else if (strcmp(str, "baseline+cranelift") == 0) {
+      // Baseline is enabled by default.
+      enableWasmIon = false;
+      enableWasmCranelift = true;
+    } else {
+      return OptionFailure("wasm-compiler", str);
+    }
+  }
+
 #ifdef ENABLE_WASM_REFTYPES
   enableWasmGc = op.getBoolOption("wasm-gc");
-#  ifdef ENABLE_WASM_CRANELIFT
-  if (enableWasmGc && wasmForceCranelift) {
-    fprintf(stderr,
-            "Do not combine --wasm-gc and --wasm-force-cranelift, they are "
-            "incompatible.\n");
-  }
-  enableWasmGc = enableWasmGc && !wasmForceCranelift;
-#  endif
 #endif
   enableWasmVerbose = op.getBoolOption("wasm-verbose");
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
@@ -10218,7 +10072,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setWasmBaseline(enableWasmBaseline)
       .setWasmIon(enableWasmIon)
 #ifdef ENABLE_WASM_CRANELIFT
-      .setWasmForceCranelift(wasmForceCranelift)
+      .setWasmCranelift(enableWasmCranelift)
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       .setWasmGc(enableWasmGc)
@@ -10535,7 +10389,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
       .setWasmBaseline(enableWasmBaseline)
       .setWasmIon(enableWasmIon)
 #ifdef ENABLE_WASM_CRANELIFT
-      .setWasmForceCranelift(wasmForceCranelift)
+      .setWasmCranelift(enableWasmCranelift)
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       .setWasmGc(enableWasmGc)
@@ -10932,16 +10786,12 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "ion", "Enable IonMonkey (default)") ||
       !op.addBoolOption('\0', "no-ion", "Disable IonMonkey") ||
       !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation") ||
-      !op.addBoolOption('\0', "no-wasm", "Disable WebAssembly compilation") ||
-      !op.addBoolOption('\0', "no-wasm-baseline",
-                        "Disable wasm baseline compiler") ||
-      !op.addBoolOption('\0', "no-wasm-ion", "Disable wasm ion compiler")
-#ifdef ENABLE_WASM_CRANELIFT
-      || !op.addBoolOption('\0', "wasm-force-cranelift",
-                           "Enable wasm Cranelift compiler")
-#endif
-      || !op.addBoolOption('\0', "wasm-verbose",
-                           "Enable WebAssembly verbose logging") ||
+      !op.addStringOption(
+          '\0', "wasm-compiler", "[option]",
+          "Choose to enable a subset of the wasm compilers (valid options are "
+          "none/baseline/ion/cranelift/baseline+ion/baseline+cranelift)") ||
+      !op.addBoolOption('\0', "wasm-verbose",
+                        "Enable WebAssembly verbose logging") ||
       !op.addBoolOption('\0', "test-wasm-await-tier2",
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2")

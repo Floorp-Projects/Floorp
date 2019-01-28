@@ -2352,20 +2352,6 @@ public class GeckoSession implements Parcelable {
                     return;
                 }
                 String[] mimeTypes = message.getStringArray("mimeTypes");
-                final String[] extensions = message.getStringArray("extension");
-                if (extensions != null) {
-                    final ArrayList<String> combined =
-                            new ArrayList<>(mimeTypes.length + extensions.length);
-                    combined.addAll(Arrays.asList(mimeTypes));
-                    for (final String extension : extensions) {
-                        final String mimeType =
-                                URLConnection.guessContentTypeFromName(extension);
-                        if (mimeType != null) {
-                            combined.add(mimeType);
-                        }
-                    }
-                    mimeTypes = combined.toArray(new String[combined.size()]);
-                }
                 delegate.onFilePrompt(session, title, intMode, mimeTypes, cb);
                 break;
             }
@@ -3609,9 +3595,10 @@ public class GeckoSession implements Parcelable {
          * @param session GeckoSession that triggered the prompt
          * @param title Title for the prompt dialog.
          * @param type One of FILE_TYPE_* indicating the prompt type.
-         * @param mimeTypes Array of permissible MIME types for the selected files, in
-         *                  the form "type/subtype", where "type" and/or "subtype" can be
-         *                  "*" to indicate any value.
+         * @param mimeTypes Array of permissible MIME types or extensions for the selected
+         *                  files. MIME types are of the form "type/subtype", where "type"
+         *                  and/or "subtype" can be "*" to indicate any value. Extensions
+         *                  are of the form ".ext".
          * @param callback Callback interface.
          */
         @UiThread
@@ -4436,6 +4423,10 @@ public class GeckoSession implements Parcelable {
     /* package */ void onCompositorReady() {
         if (DEBUG) {
             ThreadUtils.assertOnUiThread();
+        }
+
+        if (!mAttachedCompositor) {
+            return;
         }
 
         mCompositorReady = true;

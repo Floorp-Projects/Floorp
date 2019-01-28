@@ -84,7 +84,6 @@ body {
 }
 
 .theme-fg-color1,
-.theme-fg-color2,
 .cm-s-mozilla .cm-attribute,
 .cm-s-mozilla .cm-builtin,
 .cm-s-mozilla .cm-keyword,
@@ -110,7 +109,6 @@ body {
 }
 
 .theme-fg-color3,
-.theme-fg-color5,
 .cm-s-mozilla .cm-tag,
 .cm-s-mozilla .cm-header,
 .cm-s-mozilla .cm-bracket,
@@ -123,7 +121,7 @@ body {
   background-color: var(--theme-highlight-bluegrey);
 }
 
-.theme-fg-color4,
+.theme-fg-color2,
 .cm-s-mozilla .cm-string,
 .cm-s-mozilla .cm-string-2,
 .variable-or-property .token-string,

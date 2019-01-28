@@ -455,7 +455,8 @@ class mozInlineSpellResume : public Runnable {
 
   nsresult Post() {
     nsCOMPtr<nsIRunnable> runnable(this);
-    return NS_IdleDispatchToCurrentThread(runnable.forget(), 1000);
+    return NS_DispatchToCurrentThreadQueue(runnable.forget(), 1000,
+                                           EventQueuePriority::Idle);
   }
 
   NS_IMETHOD Run() override {

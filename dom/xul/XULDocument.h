@@ -76,6 +76,8 @@ class XULDocument final : public XMLDocument,
 
   virtual void EndLoad() override;
 
+  virtual void InitialDocumentTranslationCompleted() override;
+
   // nsIMutationObserver interface
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
@@ -296,7 +298,15 @@ class XULDocument final : public XMLDocument,
   nsresult ResumeWalk();
 
   /**
-   * Called at the end of ResumeWalk() and from StyleSheetLoaded().
+   * Called at the end of ResumeWalk(), from StyleSheetLoaded(),
+   * and from DocumentL10n.
+   * If walking, stylesheets and l10n are not blocking, it
+   * will trigger `DoneWalking()`.
+   */
+  nsresult MaybeDoneWalking();
+
+  /**
+   * Called from `MaybeDoneWalking()`.
    * Expects that both the prototype document walk is complete and
    * all referenced stylesheets finished loading.
    */

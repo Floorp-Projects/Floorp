@@ -15,6 +15,7 @@
 #elif defined(MOZ_WIDGET_GTK)
 #  include "nsGNOMEShellService.h"
 #endif
+#include "nsIToolkitShellService.h"
 
 #if defined(MOZ_WIDGET_COCOA)
 #  include "nsMacAttribution.h"
@@ -51,16 +52,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEHistoryEnumerator)
 #endif
 
 NS_DEFINE_NAMED_CID(NS_BROWSERDIRECTORYPROVIDER_CID);
-#if defined(XP_WIN)
-NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
-#elif defined(MOZ_WIDGET_GTK)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
 NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_BROWSER_ABOUT_REDIRECTOR_CID);
 #if defined(XP_WIN)
 NS_DEFINE_NAMED_CID(NS_WINIEHISTORYENUMERATOR_CID);
-#elif defined(XP_MACOSX)
-NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
 #endif
 #if defined(MOZ_WIDGET_COCOA)
 NS_DEFINE_NAMED_CID(NS_MACATTRIBUTIONSERVICE_CID);
@@ -73,12 +70,12 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
     { &kNS_SHELLSERVICE_CID, false, nullptr, nsWindowsShellServiceConstructor },
 #elif defined(MOZ_WIDGET_GTK)
     { &kNS_SHELLSERVICE_CID, false, nullptr, nsGNOMEShellServiceConstructor },
+#elif defined(XP_MACOSX)
+    { &kNS_SHELLSERVICE_CID, false, nullptr, nsMacShellServiceConstructor },
 #endif
     { &kNS_BROWSER_ABOUT_REDIRECTOR_CID, false, nullptr, AboutRedirector::Create },
 #if defined(XP_WIN)
     { &kNS_WINIEHISTORYENUMERATOR_CID, false, nullptr, nsIEHistoryEnumeratorConstructor },
-#elif defined(XP_MACOSX)
-    { &kNS_SHELLSERVICE_CID, false, nullptr, nsMacShellServiceConstructor },
 #endif
 #if defined(MOZ_WIDGET_COCOA)
     { &kNS_MACATTRIBUTIONSERVICE_CID, false, nullptr, nsMacAttributionServiceConstructor },
@@ -90,10 +87,9 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
 static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
     // clang-format off
     { NS_BROWSERDIRECTORYPROVIDER_CONTRACTID, &kNS_BROWSERDIRECTORYPROVIDER_CID },
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
     { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
-#elif defined(MOZ_WIDGET_GTK)
-    { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
+    { NS_TOOLKITSHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
 #endif
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "blocked", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "certerror", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
@@ -117,8 +113,6 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "pocket-signup", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
 #if defined(XP_WIN)
     { NS_IEHISTORYENUMERATOR_CONTRACTID, &kNS_WINIEHISTORYENUMERATOR_CID },
-#elif defined(XP_MACOSX)
-    { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
 #endif
 #if defined(MOZ_WIDGET_COCOA)
     { NS_MACATTRIBUTIONSERVICE_CONTRACTID, &kNS_MACATTRIBUTIONSERVICE_CID },

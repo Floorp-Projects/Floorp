@@ -17,6 +17,10 @@ mod static_fns {
         pub fn pa_get_library_version() -> *const c_char;
         pub fn pa_channel_map_can_balance(map: *const pa_channel_map) -> c_int;
         pub fn pa_channel_map_init(m: *mut pa_channel_map) -> *mut pa_channel_map;
+        pub fn pa_channel_map_init_auto(m: *mut pa_channel_map,
+                                        ch: u32,
+                                        def: pa_channel_map_def_t)
+                                        -> *mut pa_channel_map;
         pub fn pa_context_connect(c: *mut pa_context,
                                   server: *const c_char,
                                   flags: pa_context_flags_t,
@@ -202,6 +206,13 @@ mod dynamic_fns {
             };
             PA_CHANNEL_MAP_INIT = {
                 let fp = dlsym(h, cstr!("pa_channel_map_init"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
+            PA_CHANNEL_MAP_INIT_AUTO = {
+                let fp = dlsym(h, cstr!("pa_channel_map_init_auto"));
                 if fp.is_null() {
                     return None;
                 }
@@ -743,6 +754,19 @@ mod dynamic_fns {
     #[inline]
     pub unsafe fn pa_channel_map_init(m: *mut pa_channel_map) -> *mut pa_channel_map {
         (::std::mem::transmute::<_, extern "C" fn(*mut pa_channel_map) -> *mut pa_channel_map>(PA_CHANNEL_MAP_INIT))(m)
+    }
+
+    static mut PA_CHANNEL_MAP_INIT_AUTO: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_channel_map_init_auto(m: *mut pa_channel_map,
+                                           ch: u32,
+                                           def: pa_channel_map_def_t)
+                                           -> *mut pa_channel_map {
+        (::std::mem::transmute::<_,
+                                 extern "C" fn(*mut pa_channel_map,
+                                               u32,
+                                               pa_channel_map_def_t)
+                                               -> *mut pa_channel_map>(PA_CHANNEL_MAP_INIT_AUTO))(m, ch, def)
     }
 
     static mut PA_CONTEXT_CONNECT: *mut ::libc::c_void = 0 as *mut _;

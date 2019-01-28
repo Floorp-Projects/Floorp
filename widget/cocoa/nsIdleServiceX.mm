@@ -7,25 +7,19 @@
 #include "nsIServiceManager.h"
 #import <Foundation/Foundation.h>
 
-bool
-nsIdleServiceX::PollIdleTime(uint32_t *aIdleTime)
-{
+bool nsIdleServiceX::PollIdleTime(uint32_t *aIdleTime) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   kern_return_t rval;
   mach_port_t masterPort;
 
   rval = IOMasterPort(kIOMasterPortDefault, &masterPort);
-  if (rval != KERN_SUCCESS)
-    return false;
+  if (rval != KERN_SUCCESS) return false;
 
   io_iterator_t hidItr;
-  rval = IOServiceGetMatchingServices(masterPort,
-                                      IOServiceMatching("IOHIDSystem"),
-                                      &hidItr);
+  rval = IOServiceGetMatchingServices(masterPort, IOServiceMatching("IOHIDSystem"), &hidItr);
 
-  if (rval != KERN_SUCCESS)
-    return false;
+  if (rval != KERN_SUCCESS) return false;
   NS_ASSERTION(hidItr, "Our iterator is null, but it ought not to be!");
 
   io_registry_entry_t entry = IOIteratorNext(hidItr);
@@ -34,22 +28,19 @@ nsIdleServiceX::PollIdleTime(uint32_t *aIdleTime)
   IOObjectRelease(hidItr);
 
   NSMutableDictionary *hidProps;
-  rval = IORegistryEntryCreateCFProperties(entry,
-                                           (CFMutableDictionaryRef*)&hidProps,
+  rval = IORegistryEntryCreateCFProperties(entry, (CFMutableDictionaryRef *)&hidProps,
                                            kCFAllocatorDefault, 0);
-  if (rval != KERN_SUCCESS)
-    return false;
+  if (rval != KERN_SUCCESS) return false;
   NS_ASSERTION(hidProps, "HIDProperties is null, but no error was returned.");
   [hidProps autorelease];
 
   id idleObj = [hidProps objectForKey:@"HIDIdleTime"];
-  NS_ASSERTION([idleObj isKindOfClass: [NSData class]] ||
-               [idleObj isKindOfClass: [NSNumber class]],
+  NS_ASSERTION([idleObj isKindOfClass:[NSData class]] || [idleObj isKindOfClass:[NSNumber class]],
                "What we got for the idle object is not what we expect!");
 
   uint64_t time;
-  if ([idleObj isKindOfClass: [NSData class]])
-    [idleObj getBytes: &time];
+  if ([idleObj isKindOfClass:[NSData class]])
+    [idleObj getBytes:&time];
   else
     time = [idleObj unsignedLongLongValue];
 
@@ -57,7 +48,7 @@ nsIdleServiceX::PollIdleTime(uint32_t *aIdleTime)
 
   // convert to ms from ns
   time /= 1000000;
-  if (time > UINT32_MAX) // Overflow will occur
+  if (time > UINT32_MAX)  // Overflow will occur
     return false;
 
   *aIdleTime = static_cast<uint32_t>(time);
@@ -67,9 +58,4 @@ nsIdleServiceX::PollIdleTime(uint32_t *aIdleTime)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
-bool
-nsIdleServiceX::UsePollMode()
-{
-  return true;
-}
-
+bool nsIdleServiceX::UsePollMode() { return true; }

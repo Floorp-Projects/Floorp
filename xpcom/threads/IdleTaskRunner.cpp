@@ -85,7 +85,7 @@ void IdleTaskRunner::SetDeadline(mozilla::TimeStamp aDeadline) {
 void IdleTaskRunner::SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) {
   MOZ_ASSERT(NS_IsMainThread());
   // aTarget is always the main thread event target provided from
-  // NS_IdleDispatchToCurrentThread(). We ignore aTarget here to ensure that
+  // NS_DispatchToCurrentThreadQueue(). We ignore aTarget here to ensure that
   // CollectorRunner always run specifically on SystemGroup::EventTargetFor(
   // TaskCategory::GarbageCollection) of the main thread.
   SetTimerInternal(aDelay);
@@ -127,7 +127,8 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
     if (aAllowIdleDispatch) {
       nsCOMPtr<nsIRunnable> runnable = this;
       SetTimerInternal(mDelay);
-      NS_IdleDispatchToCurrentThread(runnable.forget());
+      NS_DispatchToCurrentThreadQueue(runnable.forget(),
+                                      EventQueuePriority::Idle);
     } else {
       if (!mScheduleTimer) {
         nsIEventTarget* target = nullptr;

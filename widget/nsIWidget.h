@@ -934,13 +934,6 @@ class nsIWidget : public nsISupports {
   virtual void SetBackgroundColor(const nscolor& aColor) {}
 
   /**
-   * Set the cursor for this widget
-   *
-   * @param aCursor the new cursor for this widget
-   */
-  virtual void SetCursor(nsCursor aCursor) = 0;
-
-  /**
    * If a cursor type is currently cached locally for this widget, clear the
    * cached cursor to force an update on the next SetCursor call.
    */
@@ -948,16 +941,15 @@ class nsIWidget : public nsISupports {
   virtual void ClearCachedCursor() = 0;
 
   /**
-   * Sets an image as the cursor for this widget.
+   * Sets the cursor cursor for this widget.
    *
-   * @param aCursor the cursor to set
-   * @param aX the X coordinate of the hotspot (from left).
-   * @param aY the Y coordinate of the hotspot (from top).
-   * @retval NS_ERROR_NOT_IMPLEMENTED if setting images as cursors is not
-   *         supported
+   * @param aDefaultCursor the default cursor to be set
+   * @param aCursorImage a custom cursor, maybe null.
+   * @param aX the X coordinate of the hotspot for aCursorImage (from left).
+   * @param aY the Y coordinate of the hotspot for aCursorImage (from top).
    */
-  virtual nsresult SetCursor(imgIContainer* aCursor, uint32_t aHotspotX,
-                             uint32_t aHotspotY) = 0;
+  virtual void SetCursor(nsCursor aDefaultCursor, imgIContainer* aCursorImage,
+                         uint32_t aHotspotX, uint32_t aHotspotY) = 0;
 
   /**
    * Get the window type of this widget.

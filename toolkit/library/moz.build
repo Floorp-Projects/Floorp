@@ -74,10 +74,15 @@ def Libxul(name, output_category=None):
     if CONFIG['MOZ_NEEDS_LIBATOMIC']:
         OS_LIBS += ['atomic']
 
-    # This option should go away in bug 1290972, but we need to wait until
-    # Rust 1.12 has been released.
+    # TouchBar-related classes are only available in the 10.12.2 SDK and later.
+    # We need to weak link these classes until we've upgraded our SDK to at
+    # least 10.12.2.
     # We're also linking against libresolv to solve bug 1367932.
     if CONFIG['OS_ARCH'] == 'Darwin':
+        LDFLAGS += ['-Wl,-U,_OBJC_CLASS_$_NSTouchBar']
+        LDFLAGS += ['-Wl,-U,_OBJC_CLASS_$_NSSharingServicePickerTouchBarItem']
+        LDFLAGS += ['-Wl,-U,_OBJC_METACLASS_$_NSTouchBar']
+        LDFLAGS += ['-Wl,-U,_OBJC_CLASS_$_NSCustomTouchBarItem']
         LDFLAGS += ['-lresolv']
 
     if CONFIG['MOZ_DEBUG_SYMBOLS'] and CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):

@@ -68,7 +68,7 @@ struct CompilerEnvironment {
       Tier tier_;
       OptimizedBackend optimizedBackend_;
       DebugEnabled debug_;
-      HasGcTypes gcTypes_;
+      bool gcTypes_;
     };
   };
 
@@ -82,15 +82,15 @@ struct CompilerEnvironment {
   // value of gcTypes.
   CompilerEnvironment(CompileMode mode, Tier tier,
                       OptimizedBackend optimizedBackend,
-                      DebugEnabled debugEnabled, HasGcTypes gcTypesConfigured);
+                      DebugEnabled debugEnabled, bool gcTypesConfigured);
 
   // Compute any remaining compilation parameters.
-  void computeParameters(Decoder& d, HasGcTypes gcFeatureOptIn);
+  void computeParameters(Decoder& d, bool gcFeatureOptIn);
 
   // Compute any remaining compilation parameters.  Only use this method if
   // the CompilerEnvironment was created with values for mode, tier, and
   // debug.
-  void computeParameters(HasGcTypes gcFeatureOptIn);
+  void computeParameters(bool gcFeatureOptIn);
 
   bool isComputed() const { return state_ == Computed; }
   CompileMode mode() const {
@@ -109,17 +109,15 @@ struct CompilerEnvironment {
     MOZ_ASSERT(isComputed());
     return debug_;
   }
-  HasGcTypes gcTypes() const {
+  bool gcTypes() const {
     MOZ_ASSERT(isComputed());
     return gcTypes_;
   }
 };
 
 // ModuleEnvironment contains all the state necessary to process or render
-// functions, and all of the state necessary to validate aspects of the
-// functions that do not require looking forwards in the bytecode stream.
-// The remaining validation state is accumulated in DeferredValidationState
-// and is checked at the end of a module's bytecode.
+// functions, and all of the state necessary to validate all aspects of the
+// functions.
 //
 // A ModuleEnvironment is created by decoding all the sections before the wasm
 // code section and then used immutably during. When compiling a module using a
@@ -132,14 +130,6 @@ struct ModuleEnvironment {
   // Constant parameters for the entire compilation:
   const ModuleKind kind;
   const Shareable sharedMemoryEnabled;
-  // `gcTypesConfigured` reflects the value of the flags --wasm-gc and
-  // javascript.options.wasm_gc.  These flags will disappear eventually, thus
-  // allowing the removal of this variable and its replacement everywhere by
-  // the value HasGcTypes::True.
-  //
-  // For now, the value is used to control whether we emit code to suppress GC
-  // while wasm activations are on the stack.
-  const HasGcTypes gcTypesConfigured;
   CompilerEnvironment* const compilerEnv;
 
   // Module fields decoded from the module environment (or initialized while
@@ -147,13 +137,14 @@ struct ModuleEnvironment {
 #ifdef ENABLE_WASM_REFTYPES
   // `gcFeatureOptIn` reflects the presence in a module of a GcFeatureOptIn
   // section.  This variable will be removed eventually, allowing it to be
-  // replaced everywhere by the value HasGcTypes::True.
+  // replaced everywhere by the value true.
   //
   // The flag is used in the value of gcTypesEnabled(), which controls whether
   // ref types and struct types and associated instructions are accepted
   // during validation.
-  HasGcTypes gcFeatureOptIn;
+  bool gcFeatureOptIn;
 #endif
+  Maybe<uint32_t> dataCount;
   MemoryUsage memoryUsage;
   uint32_t minMemoryLength;
   Maybe<uint32_t> maxMemoryLength;
@@ -177,16 +168,15 @@ struct ModuleEnvironment {
   Maybe<Name> moduleName;
   NameVector funcNames;
 
-  explicit ModuleEnvironment(HasGcTypes gcTypesConfigured,
+  explicit ModuleEnvironment(bool gcTypesConfigured,
                              CompilerEnvironment* compilerEnv,
                              Shareable sharedMemoryEnabled,
                              ModuleKind kind = ModuleKind::Wasm)
       : kind(kind),
         sharedMemoryEnabled(sharedMemoryEnabled),
-        gcTypesConfigured(gcTypesConfigured),
         compilerEnv(compilerEnv),
 #ifdef ENABLE_WASM_REFTYPES
-        gcFeatureOptIn(HasGcTypes::False),
+        gcFeatureOptIn(false),
 #endif
         memoryUsage(MemoryUsage::None),
         minMemoryLength(0),
@@ -206,7 +196,7 @@ struct ModuleEnvironment {
   size_t numFuncDefs() const {
     return funcTypes.length() - funcImportGlobalDataOffsets.length();
   }
-  HasGcTypes gcTypesEnabled() const { return compilerEnv->gcTypes(); }
+  bool gcTypesEnabled() const { return compilerEnv->gcTypes(); }
   bool usesMemory() const { return memoryUsage != MemoryUsage::None; }
   bool usesSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
@@ -219,7 +209,7 @@ struct ModuleEnvironment {
   bool isRefSubtypeOf(ValType one, ValType two) const {
     MOZ_ASSERT(one.isReference());
     MOZ_ASSERT(two.isReference());
-    MOZ_ASSERT(gcTypesEnabled() == HasGcTypes::True);
+    MOZ_ASSERT(gcTypesEnabled());
     return one == two || two == ValType::AnyRef || one == ValType::NullRef ||
            (one.isRef() && two.isRef() && isStructPrefixOf(two, one));
   }
@@ -415,43 +405,6 @@ class Encoder {
                        bytes_.length() - offset - varU32ByteLength(offset));
   }
 };
-
-// DeferredValidationState holds mutable state shared between threads that
-// compile a module.  The state accumulates information needed to complete
-// validation at the end of compilation of a module.
-
-struct DeferredValidationState {
-  // These three fields keep track of the highest data segment index
-  // mentioned in the code section, if any, and the associated section
-  // offset, so as to facilitate error message creation.  The use of
-  // |haveHighestDataSegIndex| avoids the difficulty of having to
-  // special-case one of the |highestDataSegIndex| values to mean "we
-  // haven't seen any data segments (yet)."
-
-  bool haveHighestDataSegIndex;
-  uint32_t highestDataSegIndex;
-  size_t highestDataSegIndexOffset;
-
-  DeferredValidationState() { init(); }
-
-  void init() {
-    haveHighestDataSegIndex = false;
-    highestDataSegIndex = 0;
-    highestDataSegIndexOffset = 0;
-  }
-
-  // Call here to notify the use of the data segment index with value
-  // |segIndex| at module offset |offsetInModule| whilst iterating through
-  // the code segment.
-  void notifyDataSegmentIndex(uint32_t segIndex, size_t offsetInModule);
-
-  // Call here to perform all final validation actions once the module tail
-  // has been processed.  Returns |true| if there are no errors.
-  bool performDeferredValidation(const ModuleEnvironment& env,
-                                 UniqueChars* error);
-};
-
-typedef ExclusiveData<DeferredValidationState> ExclusiveDeferredValidationState;
 
 // The Decoder class decodes the bytes in the range it is given during
 // construction. The client is responsible for keeping the byte range alive as
@@ -792,7 +745,7 @@ MOZ_MUST_USE bool DecodeValidatedLocalEntries(Decoder& d,
 
 MOZ_MUST_USE bool DecodeLocalEntries(Decoder& d, ModuleKind kind,
                                      const TypeDefVector& types,
-                                     HasGcTypes gcTypesEnabled,
+                                     bool gcTypesEnabled,
                                      ValTypeVector* locals);
 
 // Returns whether the given [begin, end) prefix of a module's bytecode starts a
@@ -815,11 +768,9 @@ MOZ_MUST_USE bool DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env);
 
 MOZ_MUST_USE bool ValidateFunctionBody(const ModuleEnvironment& env,
                                        uint32_t funcIndex, uint32_t bodySize,
-                                       Decoder& d,
-                                       ExclusiveDeferredValidationState& dvs);
+                                       Decoder& d);
 
-MOZ_MUST_USE bool DecodeModuleTail(Decoder& d, ModuleEnvironment* env,
-                                   ExclusiveDeferredValidationState& dvs);
+MOZ_MUST_USE bool DecodeModuleTail(Decoder& d, ModuleEnvironment* env);
 
 void ConvertMemoryPagesToBytes(Limits* memory);
 

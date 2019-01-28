@@ -12,18 +12,18 @@
 #include "nsIContent.h"
 #include "nsINode.h"
 #include "nsIWeakReferenceUtils.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
-#include "SVGElement.h"
 #include "nsTArray.h"
 
 #include <string.h>
 
-struct nsSVGMark;
-
 namespace mozilla {
+
+struct SVGMark;
 
 class SVGPathDataParser;  // IWYU pragma: keep
 
@@ -118,7 +118,7 @@ class SVGPathData {
 
   const float& operator[](uint32_t aIndex) const { return mData[aIndex]; }
 
-  // Used by nsSMILCompositor to check if the cached base val is out of date
+  // Used by SMILCompositor to check if the cached base val is out of date
   bool operator==(const SVGPathData& rhs) const {
     // We use memcmp so that we don't need to worry that the data encoded in
     // the first float may have the same bit pattern as a NaN.
@@ -137,7 +137,7 @@ class SVGPathData {
 
   uint32_t GetPathSegAtLength(float aLength) const;
 
-  void GetMarkerPositioningData(nsTArray<nsSVGMark>* aMarks) const;
+  void GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const;
 
   /**
    * Returns true, except on OOM, in which case returns false.
@@ -277,7 +277,7 @@ class SVGPathDataAndInfo final : public SVGPathData {
 
  private:
   // We must keep a weak reference to our element because we may belong to a
-  // cached baseVal nsSMILValue. See the comments starting at:
+  // cached baseVal SMILValue. See the comments starting at:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=515116#c15
   // See also https://bugzilla.mozilla.org/show_bug.cgi?id=653497
   nsWeakPtr mElement;

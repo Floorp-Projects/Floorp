@@ -12,15 +12,13 @@
 #include "nsIFileURL.h"
 
 // We override this to make sure app bundles display their pretty name (without .app suffix)
-NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(nsAString& aDefaultDescription)
-{
+NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(nsAString &aDefaultDescription) {
   if (mDefaultApplication) {
     nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(mDefaultApplication);
     if (macFile) {
       bool isPackage;
       (void)macFile->IsPackage(&isPackage);
-      if (isPackage)
-        return macFile->GetBundleDisplayName(aDefaultDescription);
+      if (isPackage) return macFile->GetBundleDisplayName(aDefaultDescription);
     }
   }
 
@@ -28,31 +26,27 @@ NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(nsAString& aDefaultDescriptio
 }
 
 NS_IMETHODIMP
-nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile)
-{
+nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsCOMPtr<nsIFile> application;
   nsresult rv;
 
   NS_ASSERTION(mClass == eMIMEInfo, "only MIME infos are currently allowed"
-               "to pass content by value");
-  
-  if (mPreferredAction == useHelperApp) {
+                                    "to pass content by value");
 
+  if (mPreferredAction == useHelperApp) {
     // we don't yet support passing content by value (rather than reference)
-    // to web apps.  at some point, we will probably want to.  
-    nsCOMPtr<nsILocalHandlerApp> localHandlerApp =
-        do_QueryInterface(mPreferredApplication, &rv);
+    // to web apps.  at some point, we will probably want to.
+    nsCOMPtr<nsILocalHandlerApp> localHandlerApp = do_QueryInterface(mPreferredApplication, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     rv = localHandlerApp->GetExecutable(getter_AddRefs(application));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
   } else if (mPreferredAction == useSystemDefault) {
     application = mDefaultApplication;
-  }
-  else
+  } else
     return NS_ERROR_INVALID_ARG;
 
   // if we've already got an app, just QI so we have the launchWithDoc method
@@ -69,8 +63,7 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile)
     tempFile->GetFSRef(&tempFileRef);
 
     FSRef appFSRef;
-    if (::LSGetApplicationForItem(&tempFileRef, kLSRolesAll, &appFSRef, nullptr) == noErr)
-    {
+    if (::LSGetApplicationForItem(&tempFileRef, kLSRolesAll, &appFSRef, nullptr) == noErr) {
       app = (do_CreateInstance("@mozilla.org/file/local;1"));
       if (!app) return NS_ERROR_FAILURE;
       app->InitWithFSRef(&appFSRef);
@@ -83,9 +76,7 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsresult 
-nsMIMEInfoMac::LoadUriInternal(nsIURI *aURI)
-{
+nsresult nsMIMEInfoMac::LoadUriInternal(nsIURI *aURI) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NS_ENSURE_ARG_POINTER(aURI);
@@ -95,15 +86,11 @@ nsMIMEInfoMac::LoadUriInternal(nsIURI *aURI)
   nsAutoCString uri;
   aURI->GetSpec(uri);
   if (!uri.IsEmpty()) {
-    CFURLRef myURLRef = ::CFURLCreateWithBytes(kCFAllocatorDefault,
-                                               (const UInt8*)uri.get(),
-                                               strlen(uri.get()),
-                                               kCFStringEncodingUTF8,
-                                               NULL);
+    CFURLRef myURLRef = ::CFURLCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)uri.get(),
+                                               strlen(uri.get()), kCFStringEncodingUTF8, NULL);
     if (myURLRef) {
       OSStatus status = ::LSOpenCFURLRef(myURLRef, NULL);
-      if (status == noErr)
-        rv = NS_OK;
+      if (status == noErr) rv = NS_OK;
       ::CFRelease(myURLRef);
     }
   }

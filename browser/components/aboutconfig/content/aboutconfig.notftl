@@ -19,3 +19,14 @@ about-config-pref-edit = Edit
 about-config-pref-save = Save
 about-config-pref-reset = Reset
 about-config-pref-delete = Delete
+
+## Preferences with a non-default value are differentiated visually, and at the
+## same time the state is made accessible to screen readers using an aria-label
+## that won't be visible or copied to the clipboard.
+##
+## Variables:
+##   $value (String): The full value of the preference.
+about-config-pref-accessible-value-default =
+    .aria-label = { $value } (default)
+about-config-pref-accessible-value-custom =
+    .aria-label = { $value } (custom)

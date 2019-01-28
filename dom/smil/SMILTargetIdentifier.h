@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILTARGETIDENTIFIER_H_
-#define NS_SMILTARGETIDENTIFIER_H_
+#ifndef mozilla_SMILTargetIdentifier_h
+#define mozilla_SMILTargetIdentifier_h
 
 #include "mozilla/dom/Element.h"
 
@@ -42,7 +42,7 @@ struct SMILTargetIdentifier {
 };
 
 /**
- * Class: nsSMILWeakTargetIdentifier
+ * Class: SMILWeakTargetIdentifier
  *
  * Version of the above struct that uses non-owning pointers.  These are kept
  * private, to ensure that they aren't ever dereferenced (or used at all,
@@ -51,13 +51,13 @@ struct SMILTargetIdentifier {
  * This is solely for comparisons to determine if a target has changed
  * from one sample to the next.
  */
-class nsSMILWeakTargetIdentifier {
+class SMILWeakTargetIdentifier {
  public:
   // Trivial constructor
-  nsSMILWeakTargetIdentifier() : mElement(nullptr), mAttributeName(nullptr) {}
+  SMILWeakTargetIdentifier() : mElement(nullptr), mAttributeName(nullptr) {}
 
   // Allow us to update a weak identifier to match a given non-weak identifier
-  nsSMILWeakTargetIdentifier& operator=(const SMILTargetIdentifier& aOther) {
+  SMILWeakTargetIdentifier& operator=(const SMILTargetIdentifier& aOther) {
     mElement = aOther.mElement;
     mAttributeName = aOther.mAttributeName;
     return *this;
@@ -76,4 +76,4 @@ class nsSMILWeakTargetIdentifier {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILTARGETIDENTIFIER_H_
+#endif  // mozilla_SMILTargetIdentifier_h

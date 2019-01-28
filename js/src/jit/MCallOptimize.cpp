@@ -1841,10 +1841,6 @@ IonBuilder::InliningResult IonBuilder::inlineStringSplitString(
   if (!group) {
     return InliningStatus_NotInlined;
   }
-  AutoSweepObjectGroup sweep(group);
-  if (group->maybePreliminaryObjects(sweep)) {
-    return InliningStatus_NotInlined;
-  }
 
   TypeSet::ObjectKey* retKey = TypeSet::ObjectKey::get(group);
   if (retKey->unknownProperties()) {

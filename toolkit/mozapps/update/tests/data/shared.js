@@ -7,6 +7,8 @@
 
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "ctypes",
+                               "resource://gre/modules/ctypes.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils",
                                "resource://gre/modules/UpdateUtils.jsm");
 
@@ -425,7 +427,7 @@ function readFileBytes(aFile) {
       throw "Nothing read from input stream!";
     }
   }
-  data.join("");
+  data = data.join("");
   fis.close();
   return data.toString();
 }
@@ -642,6 +644,90 @@ function getUpdateConfigFile() {
   let configFile = getUpdatesRootDir();
   configFile.append(FILE_UPDATE_CONFIG);
   return configFile;
+}
+
+/**
+ * Gets the unique mutex name for the installation.
+ *
+ * @return Global mutex path.
+ * @throws If the function is called on a platform other than Windows.
+ */
+function getPerInstallationMutexName() {
+  if (!IS_WIN) {
+    throw new Error("Windows only function called by a different platform!");
+  }
+
+  let hasher = Cc["@mozilla.org/security/hash;1"].
+               createInstance(Ci.nsICryptoHash);
+  hasher.init(hasher.SHA1);
+
+  let exeFile = Services.dirsvc.get(XRE_EXECUTABLE_FILE, Ci.nsIFile);
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                  createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+  let data = converter.convertToByteArray(exeFile.path.toLowerCase());
+
+  hasher.update(data, data.length);
+  return "Global\\MozillaUpdateMutex-" + hasher.finish(true);
+}
+
+/**
+ * Closes a Win32 handle.
+ *
+ * @param  aHandle
+ *         The handle to close.
+ * @throws If the function is called on a platform other than Windows.
+ */
+function closeHandle(aHandle) {
+  if (!IS_WIN) {
+    throw new Error("Windows only function called by a different platform!");
+  }
+
+  let lib = ctypes.open("kernel32.dll");
+  let CloseHandle = lib.declare("CloseHandle",
+                                ctypes.winapi_abi,
+                                ctypes.int32_t, /* success */
+                                ctypes.void_t.ptr); /* handle */
+  CloseHandle(aHandle);
+  lib.close();
+}
+
+/**
+ * Creates a mutex.
+ *
+ * @param  aName
+ *         The name for the mutex.
+ * @return The Win32 handle to the mutex.
+ * @throws If the function is called on a platform other than Windows.
+ */
+function createMutex(aName) {
+  if (!IS_WIN) {
+    throw new Error("Windows only function called by a different platform!");
+  }
+
+  const INITIAL_OWN = 1;
+  const ERROR_ALREADY_EXISTS = 0xB7;
+  let lib = ctypes.open("kernel32.dll");
+  let CreateMutexW = lib.declare("CreateMutexW",
+                                 ctypes.winapi_abi,
+                                 ctypes.void_t.ptr, /* return handle */
+                                 ctypes.void_t.ptr, /* security attributes */
+                                 ctypes.int32_t, /* initial owner */
+                                 ctypes.char16_t.ptr); /* name */
+
+  let handle = CreateMutexW(null, INITIAL_OWN, aName);
+  lib.close();
+  let alreadyExists = ctypes.winLastError == ERROR_ALREADY_EXISTS;
+  if (handle && !handle.isNull() && alreadyExists) {
+    closeHandle(handle);
+    handle = null;
+  }
+
+  if (handle && handle.isNull()) {
+    handle = null;
+  }
+
+  return handle;
 }
 
 /**

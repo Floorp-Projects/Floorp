@@ -40,23 +40,31 @@ registerCleanupFunction(() => {
  *         Optional selector to filter rendered declaration DOM elements.
  *         One of ".diff-remove" or ".diff-add".
  *         If omitted, all declarations will be returned.
+ * @param  {DOMNode} containerNode
+ *         Optional element to restrict results to declaration DOM elements which are
+ *         descendants of this container node.
+ *         If omitted, all declarations will be returned
  * @return {Array}
  */
-function getDeclarations(panelDoc, selector = "") {
+function getDeclarations(panelDoc, selector = "", containerNode = null) {
   const els = panelDoc.querySelectorAll(`#sidebar-panel-changes .declaration${selector}`);
 
-  return [...els].map(el => {
-    return {
-      property: el.querySelector(".declaration-name").textContent,
-      value: el.querySelector(".declaration-value").textContent,
-    };
-  });
+  return [...els]
+    .filter(el => {
+      return containerNode ? containerNode.contains(el) : true;
+    })
+    .map(el => {
+      return {
+        property: el.querySelector(".declaration-name").textContent,
+        value: el.querySelector(".declaration-value").textContent,
+      };
+    });
 }
 
-function getAddedDeclarations(panelDoc) {
-  return getDeclarations(panelDoc, ".diff-add");
+function getAddedDeclarations(panelDoc, containerNode) {
+  return getDeclarations(panelDoc, ".diff-add", containerNode);
 }
 
-function getRemovedDeclarations(panelDoc) {
-  return getDeclarations(panelDoc, ".diff-remove");
+function getRemovedDeclarations(panelDoc, containerNode) {
+  return getDeclarations(panelDoc, ".diff-remove", containerNode);
 }

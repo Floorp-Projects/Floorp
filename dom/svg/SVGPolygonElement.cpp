@@ -37,25 +37,25 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPolygonElement)
 //----------------------------------------------------------------------
 // SVGGeometryElement methods
 
-void SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks) {
+void SVGPolygonElement::GetMarkPoints(nsTArray<SVGMark> *aMarks) {
   SVGPolyElement::GetMarkPoints(aMarks);
 
-  if (aMarks->IsEmpty() || aMarks->LastElement().type != nsSVGMark::eEnd) {
+  if (aMarks->IsEmpty() || aMarks->LastElement().type != SVGMark::eEnd) {
     return;
   }
 
-  nsSVGMark *endMark = &aMarks->LastElement();
-  nsSVGMark *startMark = &aMarks->ElementAt(0);
+  SVGMark *endMark = &aMarks->LastElement();
+  SVGMark *startMark = &aMarks->ElementAt(0);
   float angle = atan2(startMark->y - endMark->y, startMark->x - endMark->x);
 
-  endMark->type = nsSVGMark::eMid;
+  endMark->type = SVGMark::eMid;
   endMark->angle = SVGContentUtils::AngleBisect(angle, endMark->angle);
   startMark->angle = SVGContentUtils::AngleBisect(angle, startMark->angle);
   // for a polygon (as opposed to a polyline) there's an implicit extra point
   // co-located with the start point that SVGPolyElement::GetMarkPoints
   // doesn't return
   aMarks->AppendElement(
-      nsSVGMark(startMark->x, startMark->y, startMark->angle, nsSVGMark::eEnd));
+      SVGMark(startMark->x, startMark->y, startMark->angle, SVGMark::eEnd));
 }
 
 already_AddRefed<Path> SVGPolygonElement::BuildPath(PathBuilder *aBuilder) {

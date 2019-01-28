@@ -6,11 +6,11 @@
 
 /* representation of a SMIL-animatable CSS property on an element */
 
-#ifndef NS_SMILCSSPROPERTY_H_
-#define NS_SMILCSSPROPERTY_H_
+#ifndef mozilla_SMILCSSProperty_h
+#define mozilla_SMILCSSProperty_h
 
 #include "mozilla/Attributes.h"
-#include "nsISMILAttr.h"
+#include "mozilla/SMILAttr.h"
 #include "nsAtom.h"
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
@@ -22,11 +22,11 @@ class Element;
 }  // namespace dom
 
 /**
- * SMILCSSProperty: Implements the nsISMILAttr interface for SMIL animations
+ * SMILCSSProperty: Implements the SMILAttr interface for SMIL animations
  * that target CSS properties.  Represents a particular animation-targeted CSS
  * property on a particular element.
  */
-class SMILCSSProperty : public nsISMILAttr {
+class SMILCSSProperty : public SMILAttr {
  public:
   /**
    * Constructs a new SMILCSSProperty.
@@ -34,18 +34,18 @@ class SMILCSSProperty : public nsISMILAttr {
    * @param  aElement  The element whose CSS property is being animated.
    * @param  aBaseComputedStyle  The ComputedStyle to use when getting the base
    *                             value. If this is nullptr and GetBaseValue is
-   *                             called, an empty nsSMILValue initialized with
+   *                             called, an empty SMILValue initialized with
    *                             the SMILCSSValueType will be returned.
    */
   SMILCSSProperty(nsCSSPropertyID aPropID, dom::Element* aElement,
                   ComputedStyle* aBaseComputedStyle);
 
-  // nsISMILAttr methods
+  // SMILAttr methods
   virtual nsresult ValueFromString(
       const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
-      nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-  virtual nsSMILValue GetBaseValue() const override;
-  virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+      SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
+  virtual SMILValue GetBaseValue() const override;
+  virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   virtual void ClearAnimValue() override;
 
   /**
@@ -64,14 +64,14 @@ class SMILCSSProperty : public nsISMILAttr {
  protected:
   nsCSSPropertyID mPropID;
   // Using non-refcounted pointer for mElement -- we know mElement will stay
-  // alive for my lifetime because a nsISMILAttr (like me) only lives as long
+  // alive for my lifetime because a SMILAttr (like me) only lives as long
   // as the Compositing step, and DOM elements don't get a chance to die during
   // that time.
   dom::Element* mElement;
 
   // The style to use when fetching base styles.
   //
-  // As with mElement, since an nsISMILAttr only lives as long as the
+  // As with mElement, since a SMILAttr only lives as long as the
   // compositing step and since ComposeAttribute holds an owning reference to
   // the base ComputedStyle, we can use a non-owning reference here.
   ComputedStyle* mBaseComputedStyle;
@@ -79,4 +79,4 @@ class SMILCSSProperty : public nsISMILAttr {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILCSSPROPERTY_H_
+#endif  // mozilla_SMILCSSProperty_h

@@ -266,8 +266,9 @@ nsresult NS_DelayedDispatchToCurrentThread(
   return thread->DelayedDispatch(event.forget(), aDelayMs);
 }
 
-nsresult NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
-                                 nsIThread* aThread) {
+nsresult NS_DispatchToThreadQueue(already_AddRefed<nsIRunnable>&& aEvent,
+                                  nsIThread* aThread,
+                                  EventQueuePriority aQueue) {
   nsresult rv;
   nsCOMPtr<nsIRunnable> event(aEvent);
   NS_ENSURE_TRUE(event, NS_ERROR_INVALID_ARG);
@@ -277,7 +278,7 @@ nsresult NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
   // To keep us from leaking the runnable if dispatch method fails,
   // we grab the reference on failures and release it.
   nsIRunnable* temp = event.get();
-  rv = aThread->IdleDispatch(event.forget());
+  rv = aThread->DispatchToQueue(event.forget(), aQueue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Dispatch() leaked the reference to the event, but due to caller's
     // assumptions, we shouldn't leak here. And given we are on the same
@@ -288,17 +289,18 @@ nsresult NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
   return rv;
 }
 
-nsresult NS_IdleDispatchToCurrentThread(
-    already_AddRefed<nsIRunnable>&& aEvent) {
-  return NS_IdleDispatchToThread(std::move(aEvent), NS_GetCurrentThread());
+nsresult NS_DispatchToCurrentThreadQueue(already_AddRefed<nsIRunnable>&& aEvent,
+                                         EventQueuePriority aQueue) {
+  return NS_DispatchToThreadQueue(std::move(aEvent), NS_GetCurrentThread(),
+                                  aQueue);
 }
 
-extern nsresult NS_IdleDispatchToMainThread(
-    already_AddRefed<nsIRunnable>&& aEvent) {
+extern nsresult NS_DispatchToMainThreadQueue(
+    already_AddRefed<nsIRunnable>&& aEvent, EventQueuePriority aQueue) {
   nsCOMPtr<nsIThread> mainThread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
   if (NS_SUCCEEDED(rv)) {
-    return NS_IdleDispatchToThread(std::move(aEvent), mainThread);
+    return NS_DispatchToThreadQueue(std::move(aEvent), mainThread, aQueue);
   }
   return rv;
 }
@@ -359,10 +361,13 @@ class IdleRunnableWrapper final : public IdleRunnable {
   nsCOMPtr<nsIRunnable> mRunnable;
 };
 
-extern nsresult NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
-                                        uint32_t aTimeout, nsIThread* aThread) {
+extern nsresult NS_DispatchToThreadQueue(already_AddRefed<nsIRunnable>&& aEvent,
+                                         uint32_t aTimeout, nsIThread* aThread,
+                                         EventQueuePriority aQueue) {
   nsCOMPtr<nsIRunnable> event(std::move(aEvent));
   NS_ENSURE_TRUE(event, NS_ERROR_INVALID_ARG);
+  MOZ_ASSERT(aQueue == EventQueuePriority::Idle ||
+             aQueue == EventQueuePriority::DeferredTimers);
 
   // XXX Using current thread for now as the nsIEventTarget.
   nsIEventTarget* target = mozilla::GetCurrentThreadEventTarget();
@@ -379,13 +384,14 @@ extern nsresult NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
   }
   idleEvent->SetTimer(aTimeout, target);
 
-  return NS_IdleDispatchToThread(event.forget(), aThread);
+  return NS_DispatchToThreadQueue(event.forget(), aThread, aQueue);
 }
 
-extern nsresult NS_IdleDispatchToCurrentThread(
-    already_AddRefed<nsIRunnable>&& aEvent, uint32_t aTimeout) {
-  return NS_IdleDispatchToThread(std::move(aEvent), aTimeout,
-                                 NS_GetCurrentThread());
+extern nsresult NS_DispatchToCurrentThreadQueue(
+    already_AddRefed<nsIRunnable>&& aEvent, uint32_t aTimeout,
+    EventQueuePriority aQueue) {
+  return NS_DispatchToThreadQueue(std::move(aEvent), aTimeout,
+                                  NS_GetCurrentThread(), aQueue);
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR

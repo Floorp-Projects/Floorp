@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "בסדר, הבנתי",
   "prefs_home_header": "תוכן מסך הבית של Firefox",
   "prefs_home_description": "בחירת תוכן שיוצג במסך הבית של Firefox.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "מסך הבית של Firefox",
+  "prefs_content_discovery_description": "גילוי תוכן במסך הבית של Firefox מאפשר לך לגלות מאמרים רלוונטים ובאיכות גבוהה מכל רחבי הרשת.",
+  "prefs_content_discovery_button": "השבתת גילוי תוכן",
   "prefs_section_rows_option": "שורה אחת;{num} שורות",
   "prefs_search_header": "חיפוש ברשת",
   "prefs_topsites_description": "האתרים בהם ביקרת הכי הרבה",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "הצהרת הפרטיות",
   "firstrun_continue_to_login": "המשך",
   "firstrun_skip_login": "דילוג על שלב זה",
-  "context_menu_title": "פתיחת תפריט",
-  "pocket_learn_more": "מידע נוסף"
+  "context_menu_title": "פתיחת תפריט"
 };

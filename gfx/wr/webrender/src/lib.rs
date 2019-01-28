@@ -78,9 +78,7 @@ mod capture;
 mod clip;
 mod clip_scroll_tree;
 mod debug_colors;
-#[cfg(feature = "debug_renderer")]
 mod debug_font_data;
-#[cfg(feature = "debug_renderer")]
 mod debug_render;
 #[cfg(feature = "debugger")]
 mod debug_server;
@@ -117,7 +115,6 @@ mod segment;
 mod shade;
 mod spatial_node;
 mod storage;
-mod surface;
 mod texture_allocator;
 mod texture_cache;
 mod tiling;

@@ -293,9 +293,9 @@ OpKind wasm::Classify(OpBytes op) {
         case MiscOp::MemCopy:
         case MiscOp::TableCopy:
           WASM_BULK_OP(OpKind::MemOrTableCopy);
-        case MiscOp::MemDrop:
-        case MiscOp::TableDrop:
-          WASM_BULK_OP(OpKind::MemOrTableDrop);
+        case MiscOp::DataDrop:
+        case MiscOp::ElemDrop:
+          WASM_BULK_OP(OpKind::DataOrElemDrop);
         case MiscOp::MemFill:
           WASM_BULK_OP(OpKind::MemFill);
         case MiscOp::MemInit:

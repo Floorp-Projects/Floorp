@@ -160,7 +160,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     box-shadow: $shadow-secondary, 0 0 0 1px $black-25;
   }
 
-  &:focus {
+  .fake-focus & {
     border: $input-border-active;
     box-shadow: var(--newtab-textbox-focus-boxshadow);
 
@@ -181,6 +181,8 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
   .fake-editable {
     color: transparent;
+    height: 100%;
+    opacity: 0;
     position: absolute;
     top: 0;
     left: 0;

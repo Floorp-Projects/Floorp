@@ -674,7 +674,7 @@ endif
 $(HOST_SHARED_LIBRARY): Makefile
 	$(REPORT_BUILD)
 	$(RM) $@
-ifdef _MSC_VER
+ifneq (,$(filter msvc clang-cl,$(HOST_CC_TYPE)))
 	$(HOST_LINKER) -NOLOGO -DLL -OUT:$@ $($(notdir $@)_OBJS) $(HOST_CXX_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LINKER_LIBPATHS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 	$(HOST_CXX) $(HOST_OUTOPTION)$@ $($(notdir $@)_OBJS) $(HOST_CXX_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)

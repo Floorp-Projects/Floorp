@@ -7,6 +7,17 @@
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 /**
+ * A CSS class.
+ */
+exports.classes = {
+  // The CSS class name.
+  name: PropTypes.string,
+
+  // Whether or not the CSS class is applied.
+  isApplied: PropTypes.bool,
+};
+
+/**
  * A CSS declaration.
  */
 const declaration = exports.declaration = {

@@ -1,0 +1,40 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+// Test for about:preferences foreground check for updates
+// with an automatic download and update staging.
+add_task(async function aboutPrefs_foregroundCheck_downloadAuto_staging() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_APP_UPDATE_STAGING_ENABLED, true],
+    ],
+  });
+
+  // Since the partial should be successful specify an invalid size for the
+  // complete update.
+  let updateParams = "&invalidCompleteSize=1";
+  await runAboutPrefsUpdateTest(updateParams, false, [
+    {
+      panelId: "checkingForUpdates",
+      checkActiveUpdate: null,
+      continueFile: CONTINUE_CHECK,
+    },
+    {
+      panelId: "downloading",
+      checkActiveUpdate: {state: STATE_DOWNLOADING},
+      continueFile: CONTINUE_DOWNLOAD,
+    },
+    {
+      panelId: "applying",
+      checkActiveUpdate: {state: STATE_PENDING},
+      continueFile: CONTINUE_STAGING,
+    },
+    {
+      panelId: "apply",
+      checkActiveUpdate: {state: STATE_APPLIED},
+      continueFile: null,
+    },
+  ]);
+});

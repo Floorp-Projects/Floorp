@@ -188,6 +188,7 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1320665-cmap-format-13.ht
 skip-if(!cocoaWidget) != 1349308-1.html 1349308-notref.html # macOS-specific test for -apple-system glyph metrics
 fails-if(winWidget||gtkWidget||Android) == 1463020-letter-spacing-text-transform-1.html 1463020-letter-spacing-text-transform-1-ref.html # Linux, Win7: bug 1463161; Android, Win10: regional indicators not supported by system emoji font
 fails-if(Android) == 1463020-letter-spacing-text-transform-2.html 1463020-letter-spacing-text-transform-2-ref.html # missing font coverage on Android
+fuzzy-if(!webrender,12-66,288-1660) == 1522857-1.html 1522857-1-ref.html # antialiasing fuzz in non-webrender cases
 
 # ensure emoji chars don't render blank (bug 715798, bug 779042);
 # should at least render hexboxes if there's no font support

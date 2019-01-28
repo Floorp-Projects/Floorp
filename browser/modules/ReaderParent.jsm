@@ -78,6 +78,7 @@ var ReaderParent = {
       key.setAttribute("disabled", false);
 
       browser.setAttribute("aria-reader", "active");
+      Services.obs.notifyObservers(null, "reader-mode-available");
     } else {
       let enterText = gStringBundle.GetStringFromName("readerView.enter");
 
@@ -94,6 +95,7 @@ var ReaderParent = {
 
       if (browser.isArticle) {
         browser.setAttribute("aria-reader", "available");
+        Services.obs.notifyObservers(null, "reader-mode-available");
       } else {
         browser.removeAttribute("aria-reader");
       }

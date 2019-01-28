@@ -47,20 +47,12 @@
   <vbox>
     <description>&downloadCert.message3;</description>
     <separator/>
-    <grid>
-      <columns>
-        <column/>
-        <column/>
-      </columns>
-      <rows>
-        <row>
-          <button id="viewC-button"
-                  label="&downloadCert.viewCert.label;"
-                  oncommand="viewCert();"/>
-          <description style="margin: 4px;">&downloadCert.viewCert.text;</description>
-        </row>
-      </rows>
-    </grid>
+    <hbox>
+      <button id="viewC-button"
+              label="&downloadCert.viewCert.label;"
+              oncommand="viewCert();"/>
+      <description style="margin: 4px;">&downloadCert.viewCert.text;</description>
+    </hbox>
   </vbox>
 
 </dialog>

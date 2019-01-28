@@ -40,11 +40,10 @@ const ConsoleObserver = {
 
       finish();
     }
-  }
+  },
 };
 
-function test()
-{
+function test() {
   ConsoleObserver.init();
 
   waitForExplicitFinish();

@@ -11,6 +11,7 @@
 #include "nsDebugImpl.h"
 
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 
 #if defined(XP_WIN)
@@ -100,14 +101,21 @@ void VRParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (!mVRGPUParent->IsClosed()) {
     mVRGPUParent->Close();
   }
-
   mVRGPUParent = nullptr;
+
+#ifndef NS_FREE_PERMANENT_DATA
+  // No point in going through XPCOM shutdown because we don't keep persistent
+  // state.
+  ProcessChild::QuickExit();
+#endif
+
 #if defined(XP_WIN)
   DeviceManagerDx::Shutdown();
 #endif
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
   gfxPrefs::DestroySingleton();
+  CrashReporterClient::DestroySingleton();
   // Only calling XRE_ShutdownChildProcess() at the child process
   // instead of the main process. Otherwise, it will close all child processes
   // that are spawned from the main process.
@@ -138,6 +146,9 @@ bool VRParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
     // This can occur when an update occurred in the background.
     ProcessChild::QuickExit();
   }
+
+  // Init crash reporter support.
+  CrashReporterClient::InitSingleton(this);
 
   // Ensure gfxPrefs are initialized.
   gfxPrefs::GetSingleton();

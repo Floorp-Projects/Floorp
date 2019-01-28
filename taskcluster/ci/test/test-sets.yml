@@ -105,6 +105,10 @@ raptor-profiling:
     - raptor-tp6-4-firefox-profiling
     - raptor-tp6-5-firefox-profiling
     - raptor-tp6-6-firefox-profiling
+    - raptor-tp6-7-firefox-profiling
+    - raptor-tp6-8-firefox-profiling
+    - raptor-tp6-9-firefox-profiling
+    - raptor-tp6-10-firefox-profiling
     - raptor-speedometer-firefox-profiling
     - raptor-stylebench-firefox-profiling
     - raptor-motionmark-htmlsuite-firefox-profiling

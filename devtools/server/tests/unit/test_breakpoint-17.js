@@ -42,9 +42,12 @@ add_task(threadClientTest(({ threadClient, debuggee, client }) => {
 }));
 
 function set_breakpoints(packet, threadClient) {
-  return new Promise(resolve => {
+  return new Promise(async resolve => {
     let first, second;
-    const source = threadClient.source(packet.frame.where.source);
+    const source = await getSourceById(
+      threadClient,
+      packet.frame.where.actor
+    );
 
     source.setBreakpoint(firstLocation).then(function([{ actualLocation },
                                                        breakpointClient]) {

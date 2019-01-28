@@ -391,15 +391,12 @@ impl Wrench {
 
     #[cfg(target_os = "windows")]
     pub fn font_key_from_name(&mut self, font_name: &str) -> FontKey {
-        let system_fc = dwrote::FontCollection::system();
-        let family = system_fc.get_font_family_by_name(font_name).unwrap();
-        let font = family.get_first_matching_font(
-            dwrote::FontWeight::Regular,
-            dwrote::FontStretch::Normal,
-            dwrote::FontStyle::Normal,
-        );
-        let descriptor = font.to_descriptor();
-        self.font_key_from_native_handle(&descriptor)
+        self.font_key_from_properties(
+            font_name,
+            dwrote::FontWeight::Regular.to_u32(),
+            dwrote::FontStyle::Normal.to_u32(),
+            dwrote::FontStretch::Normal.to_u32(),
+        )
     }
 
     #[cfg(target_os = "windows")]
@@ -413,14 +410,26 @@ impl Wrench {
         let weight = dwrote::FontWeight::from_u32(weight);
         let style = dwrote::FontStyle::from_u32(style);
         let stretch = dwrote::FontStretch::from_u32(stretch);
-
         let desc = dwrote::FontDescriptor {
             family_name: family.to_owned(),
             weight,
             style,
             stretch,
         };
-        self.font_key_from_native_handle(&desc)
+        let system_fc = dwrote::FontCollection::system();
+        if let Some(font) = system_fc.get_font_from_descriptor(&desc) {
+            let face = font.create_font_face();
+            let files = face.get_files();
+            if files.len() == 1 {
+                if let Some(path) = files[0].get_font_file_path() {
+                    return self.font_key_from_native_handle(&NativeFontHandle {
+                        path,
+                        index: face.get_index(),
+                    });
+                }
+            }
+        }
+        panic!("failed loading font from properties {:?}", desc)
     }
 
     #[cfg(all(unix, not(target_os = "android")))]

@@ -4,7 +4,9 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["QueryContext", "UrlbarController"];
+var EXPORTED_SYMBOLS = [
+  "UrlbarController",
+];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -82,7 +84,7 @@ class UrlbarController {
   /**
    * Takes a query context and starts the query based on the user input.
    *
-   * @param {QueryContext} queryContext The query details.
+   * @param {UrlbarQueryContext} queryContext The query details.
    */
   async startQuery(queryContext) {
     // Cancel any running query.
@@ -91,7 +93,7 @@ class UrlbarController {
     }
     this._lastQueryContext = queryContext;
 
-    queryContext.lastTelemetryResultCount = 0;
+    queryContext.lastResultCount = 0;
     TelemetryStopwatch.start(TELEMETRY_1ST_RESULT, queryContext);
     TelemetryStopwatch.start(TELEMETRY_6_FIRST_RESULTS, queryContext);
 
@@ -103,36 +105,38 @@ class UrlbarController {
   /**
    * Cancels an in-progress query. Note, queries may continue running if they
    * can't be canceled.
-   *
-   * @param {QueryContext} queryContext The query details.
    */
-  cancelQuery(queryContext) {
-    if (queryContext === this._lastQueryContext) {
-      delete this._lastQueryContext;
+  cancelQuery() {
+    if (!this._lastQueryContext) {
+      return;
     }
 
-    TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, queryContext);
-    TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, queryContext);
+    TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, this._lastQueryContext);
+    TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, this._lastQueryContext);
 
-    this.manager.cancelQuery(queryContext);
-    this._notify("onQueryCancelled", queryContext);
+    this.manager.cancelQuery(this._lastQueryContext);
+    this._notify("onQueryCancelled", this._lastQueryContext);
+    delete this._lastQueryContext;
   }
 
   /**
    * Receives results from a query.
    *
-   * @param {QueryContext} queryContext The query details.
+   * @param {UrlbarQueryContext} queryContext The query details.
    */
   receiveResults(queryContext) {
-    if (queryContext.lastTelemetryResultCount < 1 &&
-        queryContext.results.length >= 1) {
+    if (queryContext.lastResultCount < 1 && queryContext.results.length >= 1) {
       TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, queryContext);
     }
-    if (queryContext.lastTelemetryResultCount < 6 &&
-        queryContext.results.length >= 6) {
+    if (queryContext.lastResultCount < 6 && queryContext.results.length >= 6) {
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, queryContext);
     }
-    queryContext.lastTelemetryResultCount = queryContext.results.length;
+
+    if (queryContext.lastResultCount == 0 && queryContext.autofillValue) {
+      this.input.autofill(queryContext.autofillValue);
+    }
+
+    queryContext.lastResultCount = queryContext.results.length;
 
     this._notify("onQueryResults", queryContext);
   }
@@ -197,7 +201,6 @@ class UrlbarController {
           // Prevent beep on Mac.
           event.preventDefault();
         }
-        // TODO: We may have an autofill entry, so we should use that instead.
         // TODO: We should have an input bufferrer so that we can use search results
         // if appropriate.
         this.input.handleCommand(event);

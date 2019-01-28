@@ -22,6 +22,7 @@ RELEASE_PROJECTS = {
     'comm-central',
     'comm-beta',
     'comm-esr60',
+    'oak',
 }
 
 RELEASE_PROMOTION_PROJECTS = {
@@ -41,6 +42,7 @@ _OPTIONAL_ATTRIBUTES = (
     'shipping_phase',
     'shipping_product',
     'stub-installer',
+    'update-channel',
 )
 
 

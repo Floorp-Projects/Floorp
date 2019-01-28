@@ -3677,9 +3677,13 @@ static bool ArrayFromCallArgs(JSContext* cx, CallArgs& args,
 static bool array_of(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (IsArrayConstructor(args.thisv()) || !IsConstructor(args.thisv())) {
-    // IsArrayConstructor(this) will usually be true in practice. This is
-    // the most common path.
+  bool isArrayConstructor =
+      IsArrayConstructor(args.thisv()) &&
+      args.thisv().toObject().nonCCWRealm() == cx->realm();
+
+  if (isArrayConstructor || !IsConstructor(args.thisv())) {
+    // isArrayConstructor will usually be true in practice. This is the most
+    // common path.
     return ArrayFromCallArgs(cx, args);
   }
 

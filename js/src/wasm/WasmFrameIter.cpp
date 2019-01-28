@@ -1347,16 +1347,16 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "jit call to int64 wasm function";
     case SymbolicAddress::MemCopy:
       return "call to native memory.copy function";
-    case SymbolicAddress::MemDrop:
-      return "call to native memory.drop function";
+    case SymbolicAddress::DataDrop:
+      return "call to native data.drop function";
     case SymbolicAddress::MemFill:
       return "call to native memory.fill function";
     case SymbolicAddress::MemInit:
       return "call to native memory.init function";
     case SymbolicAddress::TableCopy:
       return "call to native table.copy function";
-    case SymbolicAddress::TableDrop:
-      return "call to native table.drop function";
+    case SymbolicAddress::ElemDrop:
+      return "call to native elem.drop function";
     case SymbolicAddress::TableGet:
       return "call to native table.get function";
     case SymbolicAddress::TableGrow:

@@ -1,4 +1,4 @@
-// |jit-test| test-also-no-wasm-baseline; skip-if: !wasmDebuggingIsSupported()
+// |jit-test| test-also-wasm-compiler-ion; skip-if: !wasmDebuggingIsSupported()
 
 // Checking existence of all frame.offset references during onEnterFrame,
 // onLeaveFrame and onStep events in the source code, and that we can

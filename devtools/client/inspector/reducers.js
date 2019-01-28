@@ -10,6 +10,7 @@
 exports.animations = require("devtools/client/inspector/animation/reducers/animations");
 exports.boxModel = require("devtools/client/inspector/boxmodel/reducers/box-model");
 exports.changes = require("devtools/client/inspector/changes/reducers/changes");
+exports.classList = require("devtools/client/inspector/rules/reducers/class-list");
 exports.extensionsSidebar = require("devtools/client/inspector/extensions/reducers/sidebar");
 exports.flexbox = require("devtools/client/inspector/flexbox/reducers/flexbox");
 exports.fontOptions = require("devtools/client/inspector/fonts/reducers/font-options");

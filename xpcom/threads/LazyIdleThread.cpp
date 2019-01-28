@@ -486,7 +486,8 @@ LazyIdleThread::HasPendingHighPriorityEvents(bool* aHasPendingEvents) {
 }
 
 NS_IMETHODIMP
-LazyIdleThread::IdleDispatch(already_AddRefed<nsIRunnable> aEvent) {
+LazyIdleThread::DispatchToQueue(already_AddRefed<nsIRunnable> aEvent,
+                                EventQueuePriority aQueue) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

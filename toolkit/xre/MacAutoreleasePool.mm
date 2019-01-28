@@ -9,12 +9,9 @@
 
 using mozilla::MacAutoreleasePool;
 
-MacAutoreleasePool::MacAutoreleasePool()
-{
+MacAutoreleasePool::MacAutoreleasePool() {
   mPool = [[NSAutoreleasePool alloc] init];
   NS_ASSERTION(mPool != nullptr, "failed to create pool, objects will leak");
 }
 
-MacAutoreleasePool::~MacAutoreleasePool() {
-  [mPool release];
-}
+MacAutoreleasePool::~MacAutoreleasePool() { [mPool release]; }

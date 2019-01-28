@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ih, awi-t-id",
   "prefs_home_header": "Agbur agejdan Firefox",
   "prefs_home_description": "Fren agbur i tebɣiḍ deg ugdil agejdan Firefox.",
-  "prefs_content_discovery_header": "Firefox Home",
+  "prefs_content_discovery_header": "Asebter agejdan Firefox",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
   "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} izirig;{num} izirigen",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Tasertit n tbaḍnit",
   "firstrun_continue_to_login": "Kemmel",
   "firstrun_skip_login": "Zgel amecwaṛ-agi",
-  "context_menu_title": "Ldi umuɣ",
-  "pocket_learn_more": "Issin ugar"
+  "context_menu_title": "Ldi umuɣ"
 };

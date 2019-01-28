@@ -344,4 +344,9 @@ interface nsIWebNavigation : nsISupports
    */
   [implicit_jscontext]
   void setOriginAttributesBeforeLoading(in jsval originAttributes);
+
+  /**
+   * Resume a load which has been redirected from another process.
+   */
+  void resumeRedirectedLoad(in unsigned long long aLoadIdentifier);
 };

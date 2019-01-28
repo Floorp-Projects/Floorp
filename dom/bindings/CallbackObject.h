@@ -31,6 +31,7 @@
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
 #include "jsapi.h"
+#include "js/ContextOptions.h"
 #include "js/TracingAPI.h"
 
 namespace mozilla {

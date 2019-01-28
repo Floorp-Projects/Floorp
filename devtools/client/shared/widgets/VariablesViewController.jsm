@@ -219,6 +219,7 @@ VariablesViewController.prototype = {
     }
     // We started slicing properties, and the slice is now small enough to be displayed
     const deferred = defer();
+    // eslint-disable-next-line mozilla/use-returnValue
     aGrip.propertyIterator.slice(aGrip.start, aGrip.count,
       ({ ownProperties }) => {
         // Add all the variable properties.

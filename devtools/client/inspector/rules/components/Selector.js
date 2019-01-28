@@ -4,10 +4,10 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-
+const { editableItem } = require("devtools/client/shared/inplace-editor");
 const {
   parsePseudoClassesAndAttributes,
   SELECTOR_ATTRIBUTE,
@@ -24,9 +24,32 @@ const Types = require("../types");
 class Selector extends PureComponent {
   static get propTypes() {
     return {
+      id: PropTypes.string.isRequired,
+      isUserAgentStyle: PropTypes.bool.isRequired,
       selector: PropTypes.shape(Types.selector).isRequired,
+      showSelectorEditor: PropTypes.func.isRequired,
       type: PropTypes.number.isRequired,
     };
+  }
+
+  constructor(props) {
+    super(props);
+    this.selectorRef = createRef();
+  }
+
+  componentDidMount() {
+    if (this.props.isUserAgentStyle ||
+        this.props.type === ELEMENT_STYLE ||
+        this.props.type === CSSRule.KEYFRAME_RULE) {
+      // Selector is not editable.
+      return;
+    }
+
+    editableItem({
+      element: this.selectorRef.current,
+    }, element => {
+      this.props.showSelectorEditor(element, this.props.id);
+    });
   }
 
   renderSelector() {
@@ -87,6 +110,7 @@ class Selector extends PureComponent {
       dom.span(
         {
           className: "ruleview-selectorcontainer",
+          ref: this.selectorRef,
           tabIndex: 0,
         },
         this.renderSelector()

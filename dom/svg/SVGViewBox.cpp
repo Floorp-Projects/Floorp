@@ -7,11 +7,11 @@
 #include "SVGViewBox.h"
 
 #include "mozilla/Move.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/SVGContentUtils.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "nsSMILValue.h"
-#include "nsTextFormatter.h"
-#include "SVGContentUtils.h"
 #include "SVGViewBoxSMILType.h"
+#include "nsTextFormatter.h"
 
 namespace mozilla {
 
@@ -82,11 +82,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGViewBox::DOMAnimVal)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-static nsSVGAttrTearoffTable<SVGViewBox, SVGViewBox::DOMBaseVal>
+static SVGAttrTearoffTable<SVGViewBox, SVGViewBox::DOMBaseVal>
     sBaseSVGViewBoxTearoffTable;
-static nsSVGAttrTearoffTable<SVGViewBox, SVGViewBox::DOMAnimVal>
+static SVGAttrTearoffTable<SVGViewBox, SVGViewBox::DOMAnimVal>
     sAnimSVGViewBoxTearoffTable;
-nsSVGAttrTearoffTable<SVGViewBox, dom::SVGAnimatedRect>
+SVGAttrTearoffTable<SVGViewBox, dom::SVGAnimatedRect>
     SVGViewBox::sSVGAnimatedRectTearoffTable;
 
 /* Implementation of SVGViewBox methods */
@@ -267,19 +267,19 @@ void SVGViewBox::DOMBaseVal::SetHeight(float aHeight, ErrorResult& aRv) {
   mVal->SetBaseValue(rect, mSVGElement);
 }
 
-UniquePtr<nsISMILAttr> SVGViewBox::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGViewBox::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILViewBox>(this, aSVGElement);
 }
 
 nsresult SVGViewBox::SMILViewBox ::ValueFromString(
     const nsAString& aStr, const dom::SVGAnimationElement* /*aSrcElement*/,
-    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
+    SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   SVGViewBoxRect viewBox;
   nsresult res = SVGViewBoxRect::FromString(aStr, &viewBox);
   if (NS_FAILED(res)) {
     return res;
   }
-  nsSMILValue val(&SVGViewBoxSMILType::sSingleton);
+  SMILValue val(&SVGViewBoxSMILType::sSingleton);
   *static_cast<SVGViewBoxRect*>(val.mU.mPtr) = viewBox;
   aValue = std::move(val);
   aPreventCachingOfSandwich = false;
@@ -287,8 +287,8 @@ nsresult SVGViewBox::SMILViewBox ::ValueFromString(
   return NS_OK;
 }
 
-nsSMILValue SVGViewBox::SMILViewBox::GetBaseValue() const {
-  nsSMILValue val(&SVGViewBoxSMILType::sSingleton);
+SMILValue SVGViewBox::SMILViewBox::GetBaseValue() const {
+  SMILValue val(&SVGViewBoxSMILType::sSingleton);
   *static_cast<SVGViewBoxRect*>(val.mU.mPtr) = mVal->mBaseVal;
   return val;
 }
@@ -300,7 +300,7 @@ void SVGViewBox::SMILViewBox::ClearAnimValue() {
   }
 }
 
-nsresult SVGViewBox::SMILViewBox::SetAnimValue(const nsSMILValue& aValue) {
+nsresult SVGViewBox::SMILViewBox::SetAnimValue(const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == &SVGViewBoxSMILType::sSingleton,
                "Unexpected type to assign animated value");
   if (aValue.mType == &SVGViewBoxSMILType::sSingleton) {

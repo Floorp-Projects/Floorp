@@ -1,8 +1,8 @@
-.. _telemetry:
+.. _telemetry_obsolete:
 
-=======
+======================
 Obsolete Documentation
-=======
+======================
 
 .. toctree::
    :maxdepth: 5

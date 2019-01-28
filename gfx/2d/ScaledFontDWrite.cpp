@@ -318,112 +318,65 @@ bool UnscaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback,
   return true;
 }
 
-static bool GetDWriteName(RefPtr<IDWriteLocalizedStrings> aNames,
-                          std::vector<WCHAR>& aOutName) {
-  BOOL exists = false;
-  UINT32 index = 0;
-  HRESULT hr = aNames->FindLocaleName(L"en-us", &index, &exists);
-  if (FAILED(hr)) {
-    return false;
-  }
-  if (!exists) {
-    // No english found, use whatever is first in the list.
-    index = 0;
-  }
-
-  UINT32 length;
-  hr = aNames->GetStringLength(index, &length);
-  if (FAILED(hr)) {
-    return false;
-  }
-  aOutName.resize(length + 1);
-  hr = aNames->GetString(index, aOutName.data(), length + 1);
-  return SUCCEEDED(hr);
-}
-
-static bool GetDWriteFamilyName(const RefPtr<IDWriteFontFamily>& aFamily,
-                                std::vector<WCHAR>& aOutName) {
-  RefPtr<IDWriteLocalizedStrings> names;
-  HRESULT hr = aFamily->GetFamilyNames(getter_AddRefs(names));
-  if (FAILED(hr)) {
-    return false;
-  }
-  return GetDWriteName(names, aOutName);
-}
-
-static void GetFontFileNames(RefPtr<IDWriteFontFace> aFontFace,
-                             std::vector<WCHAR>& aFamilyName,
-                             std::vector<WCHAR>& aFileNames) {
-  MOZ_ASSERT(aFamilyName.size() >= 1 && aFamilyName.back() == 0);
-
+static bool GetFontFileName(RefPtr<IDWriteFontFace> aFontFace,
+                            std::vector<WCHAR>& aFileName) {
   UINT32 numFiles;
   HRESULT hr = aFontFace->GetFiles(&numFiles, nullptr);
   if (FAILED(hr)) {
-    gfxCriticalNote << "Failed getting file count for font \""
-                    << &aFamilyName[0] << "\"";
-    return;
-  } else if (!numFiles) {
-    gfxCriticalNote << "No files found for font \"" << &aFamilyName[0] << "\"";
-    return;
-  }
-  std::vector<RefPtr<IDWriteFontFile>> files;
-  files.resize(numFiles);
-  hr = aFontFace->GetFiles(&numFiles, getter_AddRefs(files[0]));
-  if (FAILED(hr)) {
-    gfxCriticalNote << "Failed getting files for font \"" << &aFamilyName[0]
-                    << "\"";
-    return;
+    gfxDebug() << "Failed getting file count for WR font";
+    return false;
+  } else if (numFiles != 1) {
+    gfxDebug() << "Invalid file count " << numFiles << " for WR font";
+    return false;
   }
 
-  for (auto& file : files) {
-    const void* key;
-    UINT32 keySize;
-    hr = file->GetReferenceKey(&key, &keySize);
-    if (FAILED(hr)) {
-      gfxCriticalNote << "Failed getting file ref key for font \""
-                      << &aFamilyName[0] << "\"";
-      return;
-    }
-    RefPtr<IDWriteFontFileLoader> loader;
-    hr = file->GetLoader(getter_AddRefs(loader));
-    if (FAILED(hr)) {
-      gfxCriticalNote << "Failed getting file loader for font \""
-                      << &aFamilyName[0] << "\"";
-      return;
-    }
-    RefPtr<IDWriteLocalFontFileLoader> localLoader;
-    loader->QueryInterface(__uuidof(IDWriteLocalFontFileLoader),
-                           (void**)getter_AddRefs(localLoader));
-    if (!localLoader) {
-      gfxCriticalNote << "Failed querying loader interface for font \""
-                      << &aFamilyName[0] << "\"";
-      return;
-    }
-    UINT32 pathLen;
-    hr = localLoader->GetFilePathLengthFromKey(key, keySize, &pathLen);
-    if (FAILED(hr)) {
-      gfxCriticalNote << "Failed getting path length for font \""
-                      << &aFamilyName[0] << "\"";
-      return;
-    }
-    size_t offset = aFileNames.size();
-    aFileNames.resize(offset + pathLen + 1);
-    hr = localLoader->GetFilePathFromKey(key, keySize, &aFileNames[offset],
-                                         pathLen + 1);
-    if (FAILED(hr)) {
-      aFileNames.resize(offset);
-      gfxCriticalNote << "Failed getting path for font \"" << &aFamilyName[0]
-                      << "\"";
-      return;
-    }
-    MOZ_ASSERT(aFileNames.back() == 0);
-    DWORD attribs = GetFileAttributesW(&aFileNames[offset]);
-    if (attribs == INVALID_FILE_ATTRIBUTES) {
-      gfxCriticalNote << "sending font family \"" << &aFamilyName[0]
-                      << "\" with invalid file \"" << &aFileNames[offset]
-                      << "\"";
-    }
+  RefPtr<IDWriteFontFile> file;
+  hr = aFontFace->GetFiles(&numFiles, getter_AddRefs(file));
+  if (FAILED(hr)) {
+    gfxDebug() << "Failed getting file for WR font";
+    return false;
   }
+
+  const void* key;
+  UINT32 keySize;
+  hr = file->GetReferenceKey(&key, &keySize);
+  if (FAILED(hr)) {
+    gfxDebug() << "Failed getting file ref key for WR font";
+    return false;
+  }
+  RefPtr<IDWriteFontFileLoader> loader;
+  hr = file->GetLoader(getter_AddRefs(loader));
+  if (FAILED(hr)) {
+    gfxDebug() << "Failed getting file loader for WR font";
+    return false;
+  }
+  RefPtr<IDWriteLocalFontFileLoader> localLoader;
+  loader->QueryInterface(__uuidof(IDWriteLocalFontFileLoader),
+                         (void**)getter_AddRefs(localLoader));
+  if (!localLoader) {
+    gfxDebug() << "Failed querying loader interface for WR font";
+    return false;
+  }
+  UINT32 pathLen;
+  hr = localLoader->GetFilePathLengthFromKey(key, keySize, &pathLen);
+  if (FAILED(hr)) {
+    gfxDebug() << "Failed getting path length for WR font";
+    return false;
+  }
+  aFileName.resize(pathLen + 1);
+  hr = localLoader->GetFilePathFromKey(key, keySize, aFileName.data(),
+                                       pathLen + 1);
+  if (FAILED(hr) || aFileName.back() != 0) {
+    gfxDebug() << "Failed getting path for WR font";
+    return false;
+  }
+  DWORD attribs = GetFileAttributesW(aFileName.data());
+  if (attribs == INVALID_FILE_ATTRIBUTES) {
+    gfxDebug() << "Invalid file \"" << aFileName.data() << "\" for WR font";
+    return false;
+  }
+  aFileName.pop_back();
+  return true;
 }
 
 bool UnscaledFontDWrite::GetWRFontDescriptor(WRFontDescriptorOutput aCb,
@@ -432,52 +385,14 @@ bool UnscaledFontDWrite::GetWRFontDescriptor(WRFontDescriptorOutput aCb,
     return false;
   }
 
-  RefPtr<IDWriteFontFamily> family;
-  HRESULT hr = mFont->GetFontFamily(getter_AddRefs(family));
-  if (FAILED(hr)) {
+  std::vector<WCHAR> fileName;
+  if (!GetFontFileName(mFontFace, fileName)) {
     return false;
   }
+  uint32_t index = mFontFace->GetIndex();
 
-  DWRITE_FONT_WEIGHT weight = mFont->GetWeight();
-  DWRITE_FONT_STRETCH stretch = mFont->GetStretch();
-  DWRITE_FONT_STYLE style = mFont->GetStyle();
-
-  RefPtr<IDWriteFont> match;
-  hr = family->GetFirstMatchingFont(weight, stretch, style,
-                                    getter_AddRefs(match));
-  if (FAILED(hr) || match->GetWeight() != weight ||
-      match->GetStretch() != stretch || match->GetStyle() != style) {
-    return false;
-  }
-
-  std::vector<WCHAR> familyName;
-  if (!GetDWriteFamilyName(family, familyName)) {
-    return false;
-  }
-
-  RefPtr<IDWriteFontCollection> systemFonts = Factory::GetDWriteSystemFonts();
-  if (!systemFonts) {
-    return false;
-  }
-
-  UINT32 idx;
-  BOOL exists;
-  hr = systemFonts->FindFamilyName(familyName.data(), &idx, &exists);
-  if (FAILED(hr) || !exists) {
-    return false;
-  }
-
-  // FIXME: Debugging kluge for bug 1455848. Remove once debugged!
-  GetFontFileNames(mFontFace, familyName, familyName);
-
-  // The style information that identifies the font can be encoded easily in
-  // less than 32 bits. Since the index is needed for font descriptors, only
-  // the family name and style information, pass along the style in the index
-  // data to avoid requiring a more complicated structure packing for it in
-  // the data payload.
-  uint32_t index = weight | (stretch << 16) | (style << 24);
-  aCb(reinterpret_cast<const uint8_t*>(familyName.data()),
-      familyName.size() * sizeof(WCHAR), index, aBaton);
+  aCb(reinterpret_cast<const uint8_t*>(fileName.data()),
+      fileName.size() * sizeof(WCHAR), index, aBaton);
   return true;
 }
 

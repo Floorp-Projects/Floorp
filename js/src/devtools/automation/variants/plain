@@ -3,5 +3,10 @@
     "optimize": true,
     "env": {
         "JSTESTS_EXTRA_ARGS": "--jitflags=all"
+    },
+    "conditional-env": {
+        "linux64": {
+            "JITTEST_EXTRA_ARGS": "--run-binast"
+        }
     }
 }

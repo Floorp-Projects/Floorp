@@ -6,7 +6,7 @@ const TEST_URI = "http://example.com/browser/dom/tests/browser/test_largeAllocat
 const TEST_URI_2 = "http://example.com/browser/dom/tests/browser/test_largeAllocation2.html";
 
 function expectProcessCreated() {
-  let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+  let os = Services.obs;
   let kill; // A kill function which will disable the promise.
   let promise = new Promise((resolve, reject) => {
     let topic = "ipc:content-created";
@@ -27,7 +27,7 @@ function expectProcessCreated() {
 }
 
 function expectNoProcess() {
-  let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+  let os = Services.obs;
   let topic = "ipc:content-created";
   function observer() {
     ok(false, "A process was created!");
@@ -40,9 +40,7 @@ function expectNoProcess() {
 
 function getPID(aBrowser) {
   return ContentTask.spawn(aBrowser, null, () => {
-    const appinfo = Cc["@mozilla.org/xre/app-info;1"]
-            .getService(Ci.nsIXULRuntime);
-    return appinfo.processID;
+    return Services.appinfo.processID;
   });
 }
 
@@ -68,8 +66,8 @@ async function largeAllocSuccessTests() {
       ["dom.largeAllocation.forceEnable", !isWin32],
       // Increase processCount.webLargeAllocation to avoid any races where
       // processes aren't being cleaned up quickly enough.
-      ["dom.ipc.processCount.webLargeAllocation", 20]
-    ]
+      ["dom.ipc.processCount.webLargeAllocation", 20],
+    ],
   });
 
   // A toplevel tab should be able to navigate cross process!
@@ -103,10 +101,11 @@ async function largeAllocSuccessTests() {
     let stopExpectNoProcess = expectNoProcess();
 
     await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+      // eslint-disable-next-line no-unsanitized/property
       content.document.body.innerHTML = `<iframe src='${TEST_URI}'></iframe>`;
 
       return new Promise(resolve => {
-        content.document.body.querySelector('iframe').onload = () => {
+        content.document.body.querySelector("iframe").onload = () => {
           ok(true, "Iframe finished loading");
           resolve();
         };
@@ -131,11 +130,11 @@ async function largeAllocSuccessTests() {
     let stopExpectNoProcess = expectNoProcess();
 
     let loaded = ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
-      content.document.body.innerHTML = '<button>CLICK ME</button>';
+      content.document.body.innerHTML = "<button>CLICK ME</button>";
 
       return new Promise(resolve => {
-        content.document.querySelector('button').onclick = e => {
-          let w = content.window.open(TEST_URI, '_blank');
+        content.document.querySelector("button").onclick = e => {
+          let w = content.window.open(TEST_URI, "_blank");
           w.onload = () => {
             ok(true, "Window finished loading");
             w.close();
@@ -182,7 +181,6 @@ async function largeAllocSuccessTests() {
 
     await BrowserTestUtils.browserLoaded(aBrowser);
 
-    let pid3 = await getPID(aBrowser);
 
     // We should have been kicked out of the large-allocation process by the
     // load, meaning we're back in a non-fresh process
@@ -440,7 +438,7 @@ async function largeAllocSuccessTests() {
     info("Starting test 8");
     await SpecialPowers.pushPrefEnv({
       set: [
-        ["dom.ipc.processCount.webLargeAllocation", 1]
+        ["dom.ipc.processCount.webLargeAllocation", 1],
       ],
     });
 
@@ -512,7 +510,7 @@ async function largeAllocSuccessTests() {
     info("Starting test 10");
     await SpecialPowers.pushPrefEnv({
       set: [
-        ["dom.ipc.processCount.webLargeAllocation", 1]
+        ["dom.ipc.processCount.webLargeAllocation", 1],
       ],
     });
 
@@ -576,7 +574,7 @@ async function largeAllocSuccessTests() {
       ContentTask.spawn(aBrowser, null, () => {
         content.document.querySelector("#submit").click();
       }),
-      BrowserTestUtils.browserLoaded(aBrowser)
+      BrowserTestUtils.browserLoaded(aBrowser),
     ]);
 
     let innerText = await ContentTask.spawn(aBrowser, null, () => {

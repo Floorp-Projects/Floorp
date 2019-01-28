@@ -14,15 +14,15 @@ import {
 
 const abcSource = createSource({
   url: "http://example.com/a/b/c.js",
-  actor: "actor1"
+  id: "actor1"
 });
 const abcdeSource = createSource({
   url: "http://example.com/a/b/c/d/e.js",
-  actor: "actor2"
+  id: "actor2"
 });
 const abxSource = createSource({
   url: "http://example.com/a/b/x.js",
-  actor: "actor3"
+  id: "actor3"
 });
 
 describe("sources tree", () => {

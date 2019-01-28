@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title>PaintedLayer recycling should use the right translation</title>
+<style>
+body {
+  overflow: hidden;
+  background-color: grey;
+}
+
+.fixed {
+  position: fixed;
+  width: 800px;
+  height: 800px;
+}
+
+.container {
+  position: relative;
+  top: 50px;
+  left: 50px;
+  width: 400px;
+  height: 400px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.not-transformed {
+  background-color: blue;
+  width: 200px;
+  height: 200px;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 1;
+}
+
+.transformed {
+  position: relative;
+  top: 50px;
+  left: 50px;
+  width: 200px;
+  height: 200px;
+  background: red;
+  transform: scale(1.5);
+}
+</style>
+</head>
+<body>
+  <div class="fixed">
+    <div class="container">
+      <div class="not-transformed"></div>
+      <div class="transformed"></div>
+    </div>
+  </div>
+</body>
+<script type="text/javascript">
+function end() {
+  document.documentElement.removeAttribute("class");
+}
+
+function runAfterNextPaint(cb) {
+  requestAnimationFrame(() => requestAnimationFrame(cb))
+}
+
+function change() {
+  document.querySelector(".not-transformed").style["background-color"] = "lightblue";
+  runAfterNextPaint(end);
+}
+
+function doTest() {
+  document.querySelector(".container").style.transform = "scale(1.0)";
+  runAfterNextPaint(change);
+}
+
+document.addEventListener("MozReftestInvalidate", doTest);
+
+//setTimeout(doTest, 5000);
+</script>
+</html>

@@ -127,6 +127,10 @@ TreeWidget.prototype = {
     this.root = new TreeItem(this.document);
     if (this.contextMenuId) {
       this.root.children.addEventListener("contextmenu", (event) => {
+        // Call stopPropagation() and preventDefault() here so that avoid to show default
+        // context menu in about:devtools-toolbox. See Bug 1515265.
+        event.stopPropagation();
+        event.preventDefault();
         const menu = this.document.getElementById(this.contextMenuId);
         menu.openPopupAtScreen(event.screenX, event.screenY, true);
       });

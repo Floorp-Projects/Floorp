@@ -20,6 +20,8 @@ class ProtocolFuzzerHelper {
   static mozilla::dom::ContentParent* CreateContentParent(
       mozilla::dom::ContentParent* aOpener, const nsAString& aRemoteType);
 
+  static void CompositorBridgeParentSetup();
+
   template <typename T>
   static void AddShmemToProtocol(T* aProtocol, Shmem::SharedMemory* aSegment,
                                  int32_t aId) {

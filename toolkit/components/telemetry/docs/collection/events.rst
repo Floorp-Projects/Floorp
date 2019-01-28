@@ -133,6 +133,14 @@ The following event properties are valid:
   - ``fennec``
   - ``geckoview``
   - ``all`` (record on all products)
+- ``operating_systems`` *(optional, list of strings)*: This field restricts recording to certain operating systems only. It defaults to ``all``. Currently supported values are:
+
+   - ``mac``
+   - ``linux``
+   - ``windows``
+   - ``android``
+   - ``unix``
+   - ``all`` (record on all operating systems)
 
 .. note::
 
@@ -203,6 +211,8 @@ Example:
 
   Even if your event category isn't enabled, counts of events that attempted to be recorded will
   be :ref:`summarized <events.event-summary>`.
+
+.. _registerevents:
 
 ``registerEvents()``
 ~~~~~~~~~~~~~~~~~~~~
@@ -316,3 +326,4 @@ Version History
 
    - Enabled support for adding events in artifact builds and build-faster workflows (`bug 1448945 <https://bugzilla.mozilla.org/show_bug.cgi?id=1448945>`_).
    - Added summarization of events (`bug 1440673 <https://bugzilla.mozilla.org/show_bug.cgi?id=1440673>`_).
+- Firefox 66: Replace ``cpp_guard`` with ``operating_systems`` (`bug 1482912 <https://bugzilla.mozilla.org/show_bug.cgi?id=1482912>`_)`

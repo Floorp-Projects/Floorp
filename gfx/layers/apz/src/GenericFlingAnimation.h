@@ -206,6 +206,11 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
     return true;
   }
 
+  virtual bool HandleScrollOffsetUpdate(
+      const Maybe<CSSPoint>& aRelativeDelta) override {
+    return true;
+  }
+
  private:
   static bool SameDirection(float aVelocity1, float aVelocity2) {
     return (aVelocity1 == 0.0f) || (aVelocity2 == 0.0f) ||

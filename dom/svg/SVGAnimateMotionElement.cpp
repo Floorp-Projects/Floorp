@@ -39,7 +39,7 @@ bool SVGAnimateMotionElement::GetTargetAttributeName(
     int32_t* aNamespaceID, nsAtom** aLocalName) const {
   // <animateMotion> doesn't take an attributeName, since it doesn't target an
   // 'attribute' per se.  We'll use a unique dummy attribute-name so that our
-  // nsSMILTargetIdentifier logic (which requires a attribute name) still works.
+  // SMILTargetIdentifier logic (which requires a attribute name) still works.
   *aNamespaceID = kNameSpaceID_None;
   *aLocalName = nsGkAtoms::mozAnimateMotionDummyAttr;
   return true;

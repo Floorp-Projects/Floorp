@@ -343,6 +343,8 @@ class SourceSurface : public external::AtomicRefCounted<SourceSurface> {
 
   virtual SurfaceType GetType() const = 0;
   virtual IntSize GetSize() const = 0;
+  /* GetRect is useful for when the underlying surface doesn't actually
+   * have a backing store starting at 0, 0. e.g. SourceSurfaceOffset */
   virtual IntRect GetRect() const { return IntRect(IntPoint(0, 0), GetSize()); }
   virtual SurfaceFormat GetFormat() const = 0;
 
@@ -1307,6 +1309,20 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
    */
   virtual already_AddRefed<DrawTarget> CreateSimilarDrawTarget(
       const IntSize &aSize, SurfaceFormat aFormat) const = 0;
+
+  /**
+   * Create a DrawTarget whose snapshot is optimized for use with this
+   * DrawTarget and aFilter.
+   * @param aSource is the FilterNode that that will be attached to this
+   * surface.
+   * @param aSourceRect is the source rect that will be passed to DrawFilter
+   * @param aDestPoint is the dest point that will be passed to DrawFilter.
+   */
+  virtual already_AddRefed<DrawTarget> CreateSimilarDrawTargetForFilter(
+      const IntSize &aSize, SurfaceFormat aFormat, FilterNode *aFilter,
+      FilterNode *aSource, const Rect &aSourceRect, const Point &aDestPoint) {
+    return CreateSimilarDrawTarget(aSize, aFormat);
+  }
 
   /**
    * Returns false if CreateSimilarDrawTarget would return null with the same

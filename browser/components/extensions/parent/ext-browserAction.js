@@ -201,7 +201,7 @@ this.browserAction = class extends ExtensionAPI {
             if (this.eventQueue.length) {
               ExtensionTelemetry.browserActionPreloadResult.histogramAdd({
                 category: "popupShown",
-                extension: this.extension,
+                extension,
               });
               this.eventQueue = [];
             }

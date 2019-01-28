@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941830
       var workerBlob = new Blob([workerCode], {type: "application/javascript"});
 
       var mainCode = asmjsCode;
-      mainCode += "ok(jsFuns.isAsmJSModuleLoadedFromCache(f), 'f is a cache hit')\n";
+      mainCode += "ok(jsFuns.isAsmJSModule(f), 'f is a module')\n";
       mainCode += "var g42 = f();\n";
       mainCode += "ok(jsFuns.isAsmJSFunction(g42), 'g42 is an asm.js function');\n";
       mainCode += "ok(g42() === 42, 'g42 returns the correct result');\n";

@@ -10,6 +10,12 @@ ABS_CONFIG_DIR := $(abspath $(CONFIG_DIR))
 
 SFX_MODULE ?= $(error SFX_MODULE is not defined)
 
+ifeq ($(CPU_ARCH), aarch64)
+USE_UPX := 
+else
+USE_UPX := --use-upx
+endif
+
 TOOLKIT_NSIS_FILES = \
 	common.nsh \
 	locale.nlf \
@@ -59,13 +65,15 @@ installer:: $(CONFIG_DIR)/setup.exe $(ZIP_IN)
 	  --package '$(ZIP_IN)' \
 	  --tag $(topsrcdir)/$(MOZ_BUILD_APP)/installer/windows/app.tag \
 	  --setupexe $(CONFIG_DIR)/setup.exe \
-	  --sfx-stub $(SFX_MODULE)
+	  --sfx-stub $(SFX_MODULE) \
+	  $(USE_UPX)
 ifdef MOZ_STUB_INSTALLER
 	$(MOZILLA_DIR)/mach repackage installer \
 	  -o '$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe' \
 	  --tag $(topsrcdir)/browser/installer/windows/stub.tag \
 	  --setupexe $(CONFIG_DIR)/setup-stub.exe \
-	  --sfx-stub $(SFX_MODULE)
+	  --sfx-stub $(SFX_MODULE) \
+	  $(USE_UPX)
 endif
 else
 installer::

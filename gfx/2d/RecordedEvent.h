@@ -239,6 +239,7 @@ class RecordedEvent {
     FILTERNODESETINPUT,
     CREATESIMILARDRAWTARGET,
     CREATECLIPPEDDRAWTARGET,
+    CREATEDRAWTARGETFORFILTER,
     FONTDATA,
     FONTDESC,
     PUSHLAYER,
@@ -257,12 +258,15 @@ class RecordedEvent {
   static std::string GetEventName(EventType aType);
 
   /**
-   * Play back this event using the translator. Note that derived classes should
-   * only return false when there is a fatal error, as it will probably mean the
+   * Play back this event using the translator. Note that derived classes
+   * should
+   * only return false when there is a fatal error, as it will probably mean
+   * the
    * translation will abort.
    * @param aTranslator Translator to be used for retrieving other referenced
    *                    objects and making playback decisions.
-   * @return true unless a fatal problem has occurred and playback should abort.
+   * @return true unless a fatal problem has occurred and playback should
+   * abort.
    */
   virtual bool PlayEvent(Translator *aTranslator) const { return true; }
 

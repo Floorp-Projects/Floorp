@@ -15,11 +15,11 @@ import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
     private static final String SOCIAL = "social-track-digest256";
     private static final String CONTENT = "content-track-digest256";
     private static final String[] AD_EXT = new String[] {
-        "fanboy-annoyance-digest256",
-        "fanboy-social-digest256",
-        "easylist-digest25",
-        "easyprivacy-digest25",
-        "adguard-digest25"
+        "fanboyannoyance-ads-digest256",
+        "fanboysocial-ads-digest256",
+        "easylist-ads-digest25",
+        "easyprivacy-ads-digest25",
+        "adguard-ads-digest25"
     };
 
     /* package */ static String buildPrefValue(int categories) {

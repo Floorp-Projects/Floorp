@@ -11,10 +11,9 @@
 namespace mozilla {
 namespace ipc {
 
-void SetThisProcessName(const char *aName)
-{
+void SetThisProcessName(const char *aName) {
   mozilla::plugins::PluginUtilsOSX::SetProcessName(aName);
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

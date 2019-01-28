@@ -104,6 +104,27 @@ struct ShowInfo
   double defaultScale;
 };
 
+struct WebProgressData
+{
+  bool isTopLevel;
+  bool isLoadingDocument;
+  uint32_t loadType;
+  uint64_t DOMWindowID;
+};
+
+union OptionalWebProgressData
+{
+  void_t;
+  WebProgressData;
+};
+
+struct RequestData
+{
+  nsIURI requestURI;
+  nsIURI originalRequestURI;
+  nsCString matchedList;
+};
+
 union OptionalShmem
 {
   void_t;
@@ -365,15 +386,10 @@ parent:
      * Set the native cursor.
      * @param value
      *   The widget cursor to set.
-     * @param force
-     *   Invalidate any locally cached cursor settings and force an
-     *   update.
-     */
-    async SetCursor(nsCursor value, bool force);
-
-    /**
-     * Set the native cursor using a custom image.
-     * @param cursorData
+     * @param hasCustomCursor
+     *   Whether there's any custom cursor represented by cursorData and
+     *   company.
+     * @param customCursorData
      *   Serialized image data.
      * @param width
      *   Width of the image.
@@ -391,9 +407,12 @@ parent:
      *   Invalidate any locally cached cursor settings and force an
      *   update.
      */
-    async SetCustomCursor(nsCString cursorData, uint32_t width, uint32_t height,
-                          uint32_t stride, SurfaceFormat format,
-                          uint32_t hotspotX, uint32_t hotspotY, bool force);
+    async SetCursor(nsCursor value,
+                    bool hasCustomCursor,
+                    nsCString customCursorData,
+                    uint32_t width, uint32_t height,
+                    uint32_t stride, SurfaceFormat format,
+                    uint32_t hotspotX, uint32_t hotspotY, bool force);
 
     /**
      * Used to set the current text of the status tooltip.
@@ -523,6 +542,9 @@ parent:
 
     async RegisterProtocolHandler(nsString scheme, nsIURI handlerURI, nsString title,
                                   nsIURI documentURI);
+
+    async OnContentBlockingEvent(OptionalWebProgressData aWebProgressData,
+                                 RequestData aRequestData, uint32_t aEvent);
 
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);

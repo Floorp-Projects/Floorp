@@ -12,6 +12,7 @@ from mozparsers.shared_telemetry_utils import ParserError
 from mozparsers import parse_scalars
 
 import sys
+import buildconfig
 
 banner = """/* This file is auto-generated, see gen_scalar_enum.py.  */
 """
@@ -48,12 +49,8 @@ def main(output, *filenames):
     print(file_header, file=output)
 
     for s in scalars:
-        cpp_guard = s.cpp_guard
-        if cpp_guard:
-            print("#if defined(%s)" % cpp_guard, file=output)
-        print("  %s," % s.enum_label, file=output)
-        if cpp_guard:
-            print("#endif", file=output)
+        if s.record_on_os(buildconfig.substs["OS_TARGET"]):
+            print("  %s," % s.enum_label, file=output)
 
     print("  ScalarCount,", file=output)
 

@@ -103,7 +103,7 @@ async function continueFileHandler(leafName) {
  * @throws If the function is called on a platform other than Windows.
  */
 function lockWriteTestFile() {
-  if (AppConstants.platform != "win") {
+  if (!IS_WIN) {
     throw new Error("Windows only test function called");
   }
   let file = getUpdatesRootDir();
@@ -122,6 +122,17 @@ function lockWriteTestFile() {
     file.fileAttributesWin |= file.WFA_READWRITE;
     file.fileAttributesWin &= ~file.WFA_READONLY;
     file.remove(false);
+  });
+}
+
+function setOtherInstanceHandlingUpdates() {
+  if (!IS_WIN) {
+    throw new Error("Windows only test function called");
+  }
+  gAUS.observe(null, "test-close-handle-update-mutex", "");
+  let handle = createMutex(getPerInstallationMutexName());
+  registerCleanupFunction(() => {
+    closeHandle(handle);
   });
 }
 
@@ -552,35 +563,25 @@ function waitForAboutDialog() {
  * @return A promise which will resolve once all of the steps have been run.
  */
 function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
+  // Some elements append a trailing /. After the chrome tests are removed this
+  // code can be changed so URL_HOST already has a trailing /.
+  let detailsURL = URL_HOST + "/";
   let aboutDialog;
   function processAboutDialogStep(step) {
     if (typeof(step) == "function") {
       return step();
     }
 
-    // Helper function to get the selected panel.
-    function getSelectedPanel() {
-      return aboutDialog.document.getElementById("updateDeck").selectedPanel;
-    }
-
-    // Helper function to get the selected panel's button.
-    function getSelectedPanelButton() {
-      return getSelectedPanel().querySelector("button");
-    }
-
-    // Helper function to get the selected panel's label with a class of
-    // text-link.
-    function getSelectedLabelLink() {
-      return getSelectedPanel().querySelector("label.text-link");
-    }
-
     const {panelId, checkActiveUpdate, continueFile} = step;
     return (async function() {
+      let updateDeck = aboutDialog.document.getElementById("updateDeck");
       await BrowserTestUtils.waitForCondition(() =>
-        (getSelectedPanel() && getSelectedPanel().id == panelId),
-        "Waiting for expected panel ID - expected \"" + panelId + "\"");
+        (updateDeck.selectedPanel && updateDeck.selectedPanel.id == panelId),
+        "Waiting for expected panel ID - got: \"" +
+        updateDeck.selectedPanel.id + "\", expected \"" + panelId + "\"");
+      let selectedPanel = updateDeck.selectedPanel;
+      is(selectedPanel.id, panelId, "The panel ID should equal " + panelId);
 
-      // Skip when checkActiveUpdate evaluates to false.
       if (checkActiveUpdate) {
         ok(!!gUpdateManager.activeUpdate, "There should be an active update");
         is(gUpdateManager.activeUpdate.state, checkActiveUpdate.state,
@@ -599,14 +600,14 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
         // The unsupportedSystem panel uses the update's detailsURL and the
         // downloadFailed and manualUpdate panels use the app.update.url.manual
         // preference.
-        let labelLink = getSelectedLabelLink();
-        is(labelLink.href, URL_HOST,
+        let link = selectedPanel.querySelector("label.text-link");
+        is(link.href, detailsURL,
            "The panel's link href should equal the expected value");
       }
 
       let buttonPanels = ["downloadAndInstall", "apply"];
       if (buttonPanels.includes(panelId)) {
-        let buttonEl = getSelectedPanelButton();
+        let buttonEl = selectedPanel.querySelector("button");
         await BrowserTestUtils.waitForCondition(() =>
           (aboutDialog.document.activeElement == buttonEl),
           "The button should receive focus");
@@ -625,7 +626,7 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
       set: [
         [PREF_APP_UPDATE_SERVICE_ENABLED, false],
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
-        [PREF_APP_UPDATE_URL_MANUAL, URL_HOST],
+        [PREF_APP_UPDATE_URL_MANUAL, detailsURL],
       ],
     });
     registerCleanupFunction(() => {
@@ -639,11 +640,14 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
     removeUpdateDirsAndFiles();
 
     await setupTestUpdater();
+    registerCleanupFunction(async () => {
+      await finishTestRestoreUpdaterBackup();
+    });
 
-    let url = URL_HTTP_UPDATE_SJS + "?detailsURL=" + URL_HOST +
-              updateParams + getVersionParams();
+    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + detailsURL +
+                    updateParams + getVersionParams();
     if (backgroundUpdate) {
-      setUpdateURL(url);
+      setUpdateURL(updateURL);
       if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
         // Don't wait on the deletion of the continueStaging file
         continueFileHandler(CONTINUE_STAGING);
@@ -651,17 +655,151 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
       gAUS.checkForBackgroundUpdates();
       await waitForEvent("update-downloaded");
     } else {
-      url += "&slowUpdateCheck=1&useSlowDownloadMar=1";
-      setUpdateURL(url);
+      updateURL += "&slowUpdateCheck=1&useSlowDownloadMar=1";
+      setUpdateURL(updateURL);
     }
 
     aboutDialog = await waitForAboutDialog();
+    registerCleanupFunction(() => {
+      aboutDialog.close();
+    });
 
     for (let step of steps) {
       await processAboutDialogStep(step);
     }
+  })();
+}
 
-    aboutDialog.close();
-    await finishTestRestoreUpdaterBackup();
+/**
+ * Runs an about:preferences update test. This will set various common prefs for
+ * updating and runs the provided list of steps.
+ *
+ * @param  updateParams
+ *         Params which will be sent to app_update.sjs.
+ * @param  backgroundUpdate
+ *         If true a background check will be performed before opening the About
+ *         Dialog.
+ * @param  steps
+ *         An array of test steps to perform. A step will either be an object
+ *         containing expected conditions and actions or a function to call.
+ * @return A promise which will resolve once all of the steps have been run.
+ */
+function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
+  // Some elements append a trailing /. After the chrome tests are removed this
+  // code can be changed so URL_HOST already has a trailing /.
+  let detailsURL = URL_HOST + "/";
+  let tab;
+  function processAboutPrefsStep(step) {
+    if (typeof(step) == "function") {
+      return step();
+    }
+
+    const {panelId, checkActiveUpdate, continueFile} = step;
+    return (async function() {
+      await ContentTask.spawn(tab.linkedBrowser, {panelId}, async ({panelId}) => {
+        let updateDeck = content.document.getElementById("updateDeck");
+        await ContentTaskUtils.waitForCondition(() =>
+          (updateDeck.selectedPanel && updateDeck.selectedPanel.id == panelId),
+          "Waiting for expected panel ID - got: \"" +
+          updateDeck.selectedPanel.id + "\", expected \"" + panelId + "\"");
+        is(updateDeck.selectedPanel.id, panelId,
+           "The panel ID should equal " + panelId);
+      });
+
+      if (checkActiveUpdate) {
+        ok(!!gUpdateManager.activeUpdate, "There should be an active update");
+        is(gUpdateManager.activeUpdate.state, checkActiveUpdate.state,
+           "The active update state should equal " + checkActiveUpdate.state);
+      } else {
+        ok(!gUpdateManager.activeUpdate,
+           "There should not be an active update");
+      }
+
+      if (continueFile) {
+        await continueFileHandler(continueFile);
+      }
+
+      await ContentTask.spawn(tab.linkedBrowser, {panelId, detailsURL}, async ({panelId, detailsURL}) => {
+        let linkPanels = ["downloadFailed", "manualUpdate", "unsupportedSystem"];
+        if (linkPanels.includes(panelId)) {
+          let selectedPanel =
+            content.document.getElementById("updateDeck").selectedPanel;
+          // The unsupportedSystem panel uses the update's detailsURL and the
+          // downloadFailed and manualUpdate panels use the app.update.url.manual
+          // preference.
+          let selector = "label.text-link";
+          // The downloadFailed panel in about:preferences uses an anchor
+          // instead of a label for the link.
+          if (selectedPanel.id == "downloadFailed") {
+            selector = "a.text-link";
+          }
+          let link = selectedPanel.querySelector(selector);
+          is(link.href, detailsURL,
+             "The panel's link href should equal the expected value");
+        }
+
+        let buttonPanels = ["downloadAndInstall", "apply"];
+        if (buttonPanels.includes(panelId)) {
+          let selectedPanel = content.document.getElementById("updateDeck").selectedPanel;
+          let buttonEl = selectedPanel.querySelector("button");
+          // Note: The about:preferences doesn't focus the button like the
+          // About Dialog does.
+          ok(!buttonEl.disabled, "The button should be enabled");
+          // Don't click the button on the apply panel since this will restart the
+          // application.
+          if (selectedPanel.id != "apply") {
+            buttonEl.click();
+          }
+        }
+      });
+    })();
+  }
+
+  return (async function() {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [PREF_APP_UPDATE_SERVICE_ENABLED, false],
+        [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
+        [PREF_APP_UPDATE_URL_MANUAL, detailsURL],
+      ],
+    });
+    registerCleanupFunction(() => {
+      gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "");
+      UpdateListener.reset();
+      cleanUpUpdates();
+    });
+
+    gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
+    setUpdateTimerPrefs();
+    removeUpdateDirsAndFiles();
+
+    await setupTestUpdater();
+    registerCleanupFunction(async () => {
+      await finishTestRestoreUpdaterBackup();
+    });
+
+    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + detailsURL +
+                    updateParams + getVersionParams();
+    if (backgroundUpdate) {
+      setUpdateURL(updateURL);
+      if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
+        // Don't wait on the deletion of the continueStaging file
+        continueFileHandler(CONTINUE_STAGING);
+      }
+      gAUS.checkForBackgroundUpdates();
+      await waitForEvent("update-downloaded");
+    } else {
+      updateURL += "&slowUpdateCheck=1&useSlowDownloadMar=1";
+      setUpdateURL(updateURL);
+    }
+
+    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
+    registerCleanupFunction(async () => {
+      await BrowserTestUtils.removeTab(tab);
+    });
+
+    for (let step of steps) {
+      await processAboutPrefsStep(step);
+    }
   })();
 }

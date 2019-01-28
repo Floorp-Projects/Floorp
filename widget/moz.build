@@ -64,6 +64,9 @@ elif toolkit == 'cocoa':
         'nsIStandaloneNativeMenu.idl',
         'nsISystemStatusBar.idl',
         'nsITaskbarProgress.idl',
+        'nsITouchBarHelper.idl',
+        'nsITouchBarInput.idl',
+        'nsITouchBarUpdater.idl',
     ]
     EXPORTS += [
         'nsINativeMenuService.h',

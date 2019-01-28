@@ -407,8 +407,9 @@ function checkSettingsSection(data) {
   const EXPECTED_FIELDS_TYPES = {
     blocklistEnabled: "boolean",
     e10sEnabled: "boolean",
-    telemetryEnabled: "boolean",
+    intl: "object",
     locale: "string",
+    telemetryEnabled: "boolean",
     update: "object",
     userPrefs: "object",
   };
@@ -418,6 +419,11 @@ function checkSettingsSection(data) {
   for (let f in EXPECTED_FIELDS_TYPES) {
     Assert.equal(typeof data.settings[f], EXPECTED_FIELDS_TYPES[f],
                  f + " must have the correct type.");
+  }
+
+  // This property is not always present, but when it is, it must be a number.
+  if ("launcherProcessState" in data.settings) {
+    Assert.equal(typeof data.settings.launcherProcessState, "number");
   }
 
   // Check "addonCompatibilityCheckEnabled" separately.
@@ -448,6 +454,34 @@ function checkSettingsSection(data) {
   if (gIsWindows && AppConstants.MOZ_BUILD_APP == "browser") {
     Assert.equal(typeof data.settings.attribution, "object");
     Assert.equal(data.settings.attribution.source, "google.com");
+  }
+
+  checkIntlSettings(data.settings);
+}
+
+function checkIntlSettings({intl}) {
+  let fields = [
+    "requestedLocales",
+    "availableLocales",
+    "appLocales",
+    "acceptLanguages",
+  ];
+
+  for (let field of fields) {
+    Assert.ok(Array.isArray(intl[field]), `${field} is an array`);
+  }
+
+  // These fields may be null if they aren't ready yet. This is mostly to deal
+  // with test failures on Android, but they aren't guaranteed to exist.
+  let optionalFields = [
+    "systemLocales",
+    "regionalPrefsLocales",
+  ];
+
+  for (let field of optionalFields) {
+    let isArray = Array.isArray(intl[field]);
+    let isNull = intl[field] === null;
+    Assert.ok(isArray || isNull, `${field} is an array or null`);
   }
 }
 
@@ -909,11 +943,20 @@ add_task(async function test_checkEnvironment() {
   Assert.equal(AddonManagerPrivate.isDBLoaded(), false,
                "addons database is not loaded");
 
-  checkAddonsSection(TelemetryEnvironment.currentEnvironment, false, true);
+  let data = TelemetryEnvironment.currentEnvironment;
+  checkAddonsSection(data, false, true);
+
+  // Check that settings.intl is lazily loaded.
+  Assert.equal(typeof data.settings.intl, "object", "intl is initially an object");
+  Assert.equal(Object.keys(data.settings.intl).length, 0, "intl is initially empty");
 
   // Now continue with startup.
   let initPromise = TelemetryEnvironment.onInitialized();
   finishAddonManagerStartup();
+
+  // Fake the delayed startup event for intl data to load.
+  fakeIntlReady();
+
   let environmentData = await initPromise;
   checkEnvironmentData(environmentData, {isInitial: true});
 

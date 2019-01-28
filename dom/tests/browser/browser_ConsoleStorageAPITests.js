@@ -3,14 +3,12 @@
 
 const TEST_URI_NAV = "http://example.com/browser/dom/tests/browser/";
 
-function tearDown()
-{
+function tearDown() {
   while (gBrowser.tabs.length > 1)
     gBrowser.removeCurrentTab();
 }
 
-add_task(async function()
-{
+add_task(async function() {
   // Don't cache removed tabs, so "clear console cache on tab close" triggers.
   await SpecialPowers.pushPrefEnv({ set: [[ "browser.tabs.max_tabs_undo", 0 ]] });
 
@@ -35,7 +33,7 @@ add_task(async function()
       let ConsoleObserver = {
         QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
-        observe: function(aSubject, aTopic, aData) {
+        observe(aSubject, aTopic, aData) {
           if (aTopic == "console-storage-cache-event") {
             apiCallCount++;
             if (apiCallCount == 4) {
@@ -49,7 +47,7 @@ add_task(async function()
               resolve(windowId);
             }
           }
-        }
+        },
       };
 
       Services.obs.addObserver(ConsoleObserver, "console-storage-cache-event");
@@ -85,7 +83,7 @@ add_task(async function()
   browser = gBrowser.selectedBrowser;
 
   // Spin the event loop to make sure everything is cleared.
-  await ContentTask.spawn(browser, null, function () {
+  await ContentTask.spawn(browser, null, function() {
     return Promise.resolve();
   });
 

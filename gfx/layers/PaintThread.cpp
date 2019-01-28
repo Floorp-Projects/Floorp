@@ -196,8 +196,13 @@ void PaintThread::AsyncPaintTask(CompositorBridgeChild* aBridge,
   gfx::DrawTargetCapture* capture = aTask->mCapture;
   gfx::DrawTarget* target = aTask->mTarget;
 
-  target->DrawCapturedDT(capture, Matrix());
-  target->Flush();
+  if (target->IsValid()) {
+    // Do not replay to invalid targets. This can happen on device resets and
+    // the browser will ensure the graphics stack is reinitialized on the main
+    // thread.
+    target->DrawCapturedDT(capture, Matrix());
+    target->Flush();
+  }
 
   if (gfxPrefs::LayersOMTPReleaseCaptureOnMainThread()) {
     // This should ensure the capture drawtarget, which may hold on to

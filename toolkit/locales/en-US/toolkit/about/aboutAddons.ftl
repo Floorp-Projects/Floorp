@@ -278,8 +278,9 @@ extensions-updates-update-selected =
 
 ## Extension shortcut management
 
-shortcuts-manage =
-  .label = Keyboard Shortcuts
+manage-extensions-shortcuts =
+    .label = Manage Extension Shortcuts
+    .accesskey = S
 shortcuts-empty-message = There are no shortcuts for this extension.
 shortcuts-no-addons = You don’t have any extensions enabled.
 shortcuts-input =
@@ -294,3 +295,6 @@ shortcuts-modifier-other = Include Ctrl or Alt
 shortcuts-invalid = Invalid combination
 shortcuts-letter = Type a letter
 shortcuts-system = Can’t override a { -brand-short-name } shortcut
+
+go-back-button =
+    .tooltiptext = Go back

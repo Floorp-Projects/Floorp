@@ -1,4 +1,4 @@
-// |jit-test| test-also-no-wasm-baseline; skip-if: !wasmDebuggingIsSupported()
+// |jit-test| test-also-wasm-compiler-ion; skip-if: !wasmDebuggingIsSupported()
 // Tests debugEnabled state of wasm when allowUnobservedAsmJS == true.
 
 load(libdir + "asserts.js");

@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "cranelift-codegen"
-version = "0.26.0"
+version = "0.28.0"
 authors = ["The Cranelift Project Developers"]
 build = "build.rs"
 description = "Low-level code generator library"
@@ -23,11 +24,11 @@ categories = ["no-std"]
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/CraneStation/cranelift"
 [dependencies.cranelift-bforest]
-version = "0.26.0"
+version = "0.28.0"
 default-features = false
 
 [dependencies.cranelift-entity]
-version = "0.26.0"
+version = "0.28.0"
 default-features = false
 
 [dependencies.failure]
@@ -44,14 +45,14 @@ version = "0.1.9"
 optional = true
 
 [dependencies.log]
-version = "0.4.4"
+version = "0.4.6"
 default-features = false
 
 [dependencies.target-lexicon]
 version = "0.2.0"
 default-features = false
 [build-dependencies.cranelift-codegen-meta]
-version = "0.26.0"
+version = "0.28.0"
 
 [features]
 core = ["hashmap_core"]

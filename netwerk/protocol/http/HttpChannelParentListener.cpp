@@ -16,7 +16,6 @@
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
 #include "nsIHttpHeaderVisitor.h"
-#include "nsIRedirectProcessChooser.h"
 #include "nsITabParent.h"
 #include "nsIPromptFactory.h"
 #include "nsIWindowWatcher.h"
@@ -158,7 +157,7 @@ nsresult HttpChannelParentListener::TriggerCrossProcessRedirect(
     nsIChannel* aChannel, nsILoadInfo* aLoadInfo, uint64_t aIdentifier) {
   RefPtr<HttpChannelParent> channelParent = do_QueryObject(mNextListener);
   MOZ_ASSERT(channelParent);
-  channelParent->SetCrossProcessRedirect();
+  channelParent->CancelChildCrossProcessRedirect();
 
   nsCOMPtr<nsIChannel> channel = aChannel;
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(channel);
@@ -198,15 +197,8 @@ nsresult HttpChannelParentListener::TriggerCrossProcessRedirect(
 
         dom::TabParent* tabParent = dom::TabParent::GetFrom(tp);
         ContentParent* cp = tabParent->Manager()->AsContentParent();
-        PNeckoParent* neckoParent =
-            SingleManagedOrNull(cp->ManagedPNeckoParent());
 
-        RefPtr<HttpChannelParent> channelParent =
-            do_QueryObject(self->mNextListener);
-        MOZ_ASSERT(channelParent);
-        channelParent->SetCrossProcessRedirect();
-
-        auto result = neckoParent->SendCrossProcessRedirect(
+        auto result = cp->SendCrossProcessRedirect(
             self->mRedirectChannelId, uri, newLoadFlags, loadInfoArgs,
             channelId, originalURI, aIdentifier);
 

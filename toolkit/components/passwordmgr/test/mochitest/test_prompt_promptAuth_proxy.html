@@ -84,9 +84,9 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
   QueryInterface(iid) {
     const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
-    if (!interfaces.some( function(v) {
+    if (!interfaces.some(function(v) {
       return iid.equals(v);
-    } )) {
+    })) {
       throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
     }
     return this;

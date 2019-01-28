@@ -11,8 +11,11 @@
 
 add_task(threadClientTest(({ threadClient, debuggee }) => {
   return new Promise(resolve => {
-    threadClient.addOneTimeListener("paused", function(event, packet) {
-      const source = threadClient.source(packet.frame.where.source);
+    threadClient.addOneTimeListener("paused", async function(event, packet) {
+      const source = await getSourceById(
+        threadClient,
+        packet.frame.where.actor
+      );
       const location = { line: debuggee.line0 + 2 };
 
       source.setBreakpoint(location).then(async function([response, bpClient]) {

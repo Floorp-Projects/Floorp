@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ok, chapì",
   "prefs_home_header": "Cuntegn da la pagina da partenza da Firefox",
   "prefs_home_description": "Tscherna il cuntegn che ti vuls vesair sin la pagina da partenza da Firefox.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Pagina da partenza da Firefox",
+  "prefs_content_discovery_description": "La vitrina da cuntegn pussibilitescha da scuvrir artitgels relevants da gronda qualitad en il web.",
+  "prefs_content_discovery_button": "Deactivar la vitrina da cuntegn",
   "prefs_section_rows_option": "{num} lingia;{num} lingias",
   "prefs_search_header": "Tschertga web",
   "prefs_topsites_description": "Las paginas che ti visitas il pli savens",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Infurmaziuns davart la protecziun da datas",
   "firstrun_continue_to_login": "Cuntinuar",
   "firstrun_skip_login": "Sursiglir quest pass",
-  "context_menu_title": "Avrir il menu",
-  "pocket_learn_more": "Ulteriuras infurmaziuns"
+  "context_menu_title": "Avrir il menu"
 };

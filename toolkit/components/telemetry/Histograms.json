@@ -1019,6 +1019,15 @@
     "n_buckets": 10,
     "description": "Time elapsed between the moment a function is lazy-parsed (end of parsing of the ScriptSource) and the moment it is recompiled as non-lazy (start of compilation), in milliseconds, for web code."
   },
+  "JS_DEPRECATED_STRING_GENERICS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["jdemooij@mozilla.com"],
+    "expires_in_version": "72",
+    "bug_numbers": [1339777],
+    "kind": "enumerated",
+    "n_values": 25,
+    "description": "A string generic function was called, like String.join etc. See STRING_GENERICS_* defines in SelfHostingDefines.h for the meaning of values."
+  },
   "XUL_CACHE_DISABLED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "default",
@@ -11630,6 +11639,8 @@
       "gmplugin-hang",
       "gpu-crash",
       "gpu-hang",
+      "vr-crash",
+      "vr-hang",
       "rdd-crash",
       "rdd-hang",
       "socket-crash",
@@ -14435,6 +14446,16 @@
     "n_buckets": 50,
     "description": "WebRender render time in milliseconds"
   },
+  "TOUCHBAR_BUTTON_PRESSES": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["mdeboer@mozilla.com"],
+    "bug_numbers": [1313429],
+    "expires_in_version": "71",
+    "kind": "categorical",
+    "labels": ["Back", "Forward", "Reload", "Home",  "Fullscreen", "Find", "NewTab", "ReaderView", "AddBookmark", "OpenLocation", "Focus", "Share", "Sidebar"],
+    "releaseChannelCollection": "opt-out",
+    "description": "What buttons are pressed most often on the Mac Touch Bar?"
+  },
   "AUDIO_TRACK_SILENCE_PROPORTION": {
     "record_in_processes": ["main", "content"],
     "alert_emails": [
@@ -14479,6 +14500,19 @@
     "labels": ["NeverBlocked", "AllowedAfterBlocked", "NeverAllowed"],
     "bug_numbers": [1512277],
     "description": "The number of times an AudioContext is allowed to start after being blocked, or the number of AudioContexts attempting to start which were never blocked or never allowed.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "AUTOPLAY_SITES_SETTING_CHANGE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": [
+      "alwu@mozilla.com",
+      "cpearce@mozilla.com"
+    ],
+    "expires_in_version": "71",
+    "kind": "categorical",
+    "labels": ["AddAllow", "RemoveAllow", "AddBlock", "RemoveBlock"],
+    "bug_numbers": [1520361],
+    "description": "The number of times the user adds a site to the allow list, removes a site from the allow list, adds a site to the block list and removes a site from the block list.",
     "releaseChannelCollection": "opt-out"
   },
   "QM_REPOSITORIES_INITIALIZATION_TIME": {

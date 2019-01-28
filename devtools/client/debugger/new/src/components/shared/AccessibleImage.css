@@ -7,3 +7,7 @@
   background: var(--theme-body-color);
   mask-size: 100%;
 }
+
+.img.arrow.arrow.expanded {
+  transform: rotate(0deg);
+}

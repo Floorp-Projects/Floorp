@@ -7,11 +7,13 @@ var EXPORTED_SYMBOLS = ["RemoteWebProgressManager"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-function RemoteWebProgressRequest(spec, originalSpec, matchedList) {
+function RemoteWebProgressRequest(uriOrSpec, originalURIOrSpec, matchedList) {
   this.wrappedJSObject = this;
 
-  this._uri = Services.io.newURI(spec);
-  this._originalURI = Services.io.newURI(originalSpec);
+  this._uri = uriOrSpec instanceof Ci.nsIURI ? uriOrSpec
+                                          : Services.io.newURI(uriOrSpec);
+  this._originalURI = originalURIOrSpec instanceof Ci.nsIURI ?
+                        originalURIOrSpec : Services.io.newURI(originalURIOrSpec);
   this._matchedList = matchedList;
 }
 
@@ -81,7 +83,6 @@ RemoteWebProgressManager.prototype = {
       this._messageManager.removeMessageListener("Content:StatusChange", this);
       this._messageManager.removeMessageListener("Content:ProgressChange", this);
       this._messageManager.removeMessageListener("Content:LoadURIResult", this);
-      this._messageManager.removeMessageListener("Content:ContentBlockingEvent", this);
     }
 
     this._browser = aBrowser;
@@ -92,7 +93,6 @@ RemoteWebProgressManager.prototype = {
     this._messageManager.addMessageListener("Content:StatusChange", this);
     this._messageManager.addMessageListener("Content:ProgressChange", this);
     this._messageManager.addMessageListener("Content:LoadURIResult", this);
-    this._messageManager.addMessageListener("Content:ContentBlockingEvent", this);
   },
 
   swapListeners(aOtherRemoteWebProgressManager) {
@@ -159,6 +159,58 @@ RemoteWebProgressManager.prototype = {
         }
       }
     }
+  },
+
+  callWebProgressContentBlockingEventListeners(aIsWebProgressPassed,
+                                               aIsTopLevel,
+                                               aIsLoadingDocument,
+                                               aLoadType,
+                                               aDOMWindowID,
+                                               aRequestURI,
+                                               aOriginalRequestURI,
+                                               aMatchedList,
+                                               aEvent) {
+    let [webProgress, request] =
+      this.getWebProgressAndRequest(aIsWebProgressPassed, aIsTopLevel,
+                                    aIsLoadingDocument, aLoadType,
+                                    aDOMWindowID, aRequestURI,
+                                    aOriginalRequestURI, aMatchedList);
+    this._callProgressListeners(
+      Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING, "onContentBlockingEvent",
+      webProgress, request, aEvent
+    );
+  },
+
+  getWebProgressAndRequest(aIsWebProgressPassed,
+                           aIsTopLevel,
+                           aIsLoadingDocument,
+                           aLoadType,
+                           aDOMWindowID,
+                           aRequestURI,
+                           aOriginalRequestURI,
+                           aMatchedList) {
+    let webProgress = null;
+    if (aIsWebProgressPassed) {
+      // The top-level WebProgress is always the same, but because we don't
+      // really have a concept of subframes/content we always create a new object
+      // for those.
+      webProgress = aIsTopLevel ? this._topLevelWebProgress
+                                : new RemoteWebProgress(this, false);
+
+      // Update the actual WebProgress fields.
+      webProgress._isLoadingDocument = aIsLoadingDocument;
+      webProgress._DOMWindowID = aDOMWindowID;
+      webProgress._loadType = aLoadType;
+    }
+
+    let request =
+      aRequestURI ?
+        new RemoteWebProgressRequest(aRequestURI,
+                                     aOriginalRequestURI,
+                                     aMatchedList) :
+        null;
+
+    return [webProgress, request];
   },
 
   receiveMessage(aMessage) {
@@ -260,21 +312,6 @@ RemoteWebProgressManager.prototype = {
       this._callProgressListeners(
         Ci.nsIWebProgress.NOTIFY_SECURITY, "onSecurityChange", webProgress,
         request, state
-      );
-      break;
-
-    case "Content:ContentBlockingEvent":
-      if (isTopLevel) {
-        // Invoking this getter triggers the generation of the underlying object,
-        // which we need to access with ._securityUI, because .securityUI returns
-        // a wrapper that makes _update inaccessible.
-        void this._browser.securityUI;
-        this._browser._securityUI._updateContentBlockingEvent(json.event);
-      }
-
-      this._callProgressListeners(
-        Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING, "onContentBlockingEvent",
-        webProgress, request, json.event
       );
       break;
 

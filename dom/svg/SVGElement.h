@@ -13,6 +13,7 @@
 */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
@@ -20,7 +21,6 @@
 #include "mozilla/gfx/MatrixFwd.h"
 #include "nsAutoPtr.h"
 #include "nsChangeHint.h"
-#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "nsISupportsImpl.h"
@@ -277,8 +277,8 @@ class SVGElement : public SVGElementBase  // nsIContent
     return nullptr;
   }
 
-  mozilla::UniquePtr<nsISMILAttr> GetAnimatedAttr(int32_t aNamespaceID,
-                                                  nsAtom* aName) override;
+  mozilla::UniquePtr<SMILAttr> GetAnimatedAttr(int32_t aNamespaceID,
+                                               nsAtom* aName) override;
   void AnimationNeedsResample();
   void FlushAnimations();
 

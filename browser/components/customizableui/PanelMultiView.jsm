@@ -604,6 +604,17 @@ var PanelMultiView = class extends AssociatedToNode {
    *        subview when a "title" attribute is not specified.
    */
   showSubView(viewIdOrNode, anchor) {
+    // When autoPosition is true, the popup window manager would attempt to re-position
+    // the panel as subviews are opened and it changes size. The resulting popoppositioned
+    // events triggers the binding's arrow position adjustment - and its reflow.
+    // This is not needed here, as we calculated and set maxHeight so it is known
+    // to fit the screen while open.
+    // We do need autoposition for cases where the panel's anchor moves, which can happen
+    // especially with the "page actions" button in the URL bar (see bug 1520607), so
+    // we only set this to false when showing a subview, and set it back to true after we
+    // activate the subview.
+    this._panel.autoPosition = false;
+
     this._showSubView(viewIdOrNode, anchor).catch(Cu.reportError);
   }
   async _showSubView(viewIdOrNode, anchor) {
@@ -807,6 +818,9 @@ var PanelMultiView = class extends AssociatedToNode {
         panelView.focusWhenActive = false;
       }
       panelView.dispatchCustomEvent("ViewShown");
+
+      // Re-enable panel autopositioning.
+      this._panel.autoPosition = true;
     }
   }
 
@@ -1104,15 +1118,6 @@ var PanelMultiView = class extends AssociatedToNode {
         break;
       }
       case "popuppositioned": {
-        // When autoPosition is true, the popup window manager would attempt to re-position
-        // the panel as subviews are opened and it changes size. The resulting popoppositioned
-        // events triggers the binding's arrow position adjustment - and its reflow.
-        // This is not needed here, as we calculated and set maxHeight so it is known
-        // to fit the screen while open.
-        // autoPosition gets reset after each popuppositioned event, and when the
-        // popup closes, so we must set it back to false each time.
-        this._panel.autoPosition = false;
-
         if (this._panel.state == "showing") {
           let maxHeight = this._calculateMaxHeight();
           this._viewStack.style.maxHeight = maxHeight + "px";

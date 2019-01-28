@@ -448,6 +448,7 @@ void WebGLTexture::RefreshSwizzle() const {
   const auto& swizzle = imageInfo.mFormat->textureSwizzleRGBA;
 
   if (swizzle != mCurSwizzle) {
+    const gl::ScopedBindTexture scopeBindTexture(mContext->gl, mGLName, mTarget.get());
     SetSwizzle(mContext->gl, mTarget, swizzle);
     mCurSwizzle = swizzle;
   }

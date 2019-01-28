@@ -24,13 +24,20 @@ body.config-warning {
   fill: #fcd100;
 }
 
-#search {
+#search-container {
   position: sticky;
   top: 0;
-  margin: 10px;
   box-sizing: border-box;
-  width: calc(100% - 20px);
+  width: 100%;
+  background-color: var(--in-content-page-background);
+  padding: 10px;
+  padding-bottom: 0;
   min-width: 644px;
+}
+
+#search {
+  box-sizing: border-box;
+  width: 100%;
   background-image: url("chrome://global/skin/icons/search-textbox.svg");
   background-repeat: no-repeat;
   background-position: 9px center;
@@ -70,16 +77,19 @@ body.config-warning {
   background-size: 16px 16px;
 }
 
-#prefs > tr > td {
+#prefs > tr > td,
+#prefs > tr > th {
   padding: 4px;
   width: 50%;
+  font-weight: inherit;
 }
 
-#prefs > tr > td.cell-name {
+#prefs > tr > th {
+  text-align: unset;
   padding-inline-start: 30px;
 }
 
-#prefs > tr.deleted > td.cell-name {
+#prefs > tr.deleted > th {
   font-weight: bold;
   opacity: 0.4;
 }

@@ -7,17 +7,17 @@
 #include "SVGEnum.h"
 
 #include "mozilla/dom/SVGElement.h"
+#include "mozilla/SMILValue.h"
 #include "nsAtom.h"
 #include "nsError.h"
-#include "nsSVGAttrTearoffTable.h"
 #include "SMILEnumType.h"
-#include "nsSMILValue.h"
+#include "SVGAttrTearoffTable.h"
 
 using namespace mozilla::dom;
 
 namespace mozilla {
 
-static nsSVGAttrTearoffTable<SVGEnum, SVGEnum::DOMAnimatedEnum>
+static SVGAttrTearoffTable<SVGEnum, SVGEnum::DOMAnimatedEnum>
     sSVGAnimatedEnumTearoffTable;
 
 const SVGEnumMapping* SVGEnum::GetMapping(SVGElement* aSVGElement) {
@@ -115,20 +115,20 @@ SVGEnum::DOMAnimatedEnum::~DOMAnimatedEnum() {
   sSVGAnimatedEnumTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> SVGEnum::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGEnum::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILEnum>(this, aSVGElement);
 }
 
 nsresult SVGEnum::SMILEnum::ValueFromString(
     const nsAString& aStr, const SVGAnimationElement* /*aSrcElement*/,
-    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
+    SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   nsAtom* valAtom = NS_GetStaticAtom(aStr);
   if (valAtom) {
     const SVGEnumMapping* mapping = mVal->GetMapping(mSVGElement);
 
     while (mapping && mapping->mKey) {
       if (valAtom == mapping->mKey) {
-        nsSMILValue val(SMILEnumType::Singleton());
+        SMILValue val(SMILEnumType::Singleton());
         val.mU.mUint = mapping->mVal;
         aValue = val;
         aPreventCachingOfSandwich = false;
@@ -143,8 +143,8 @@ nsresult SVGEnum::SMILEnum::ValueFromString(
   return NS_ERROR_FAILURE;
 }
 
-nsSMILValue SVGEnum::SMILEnum::GetBaseValue() const {
-  nsSMILValue val(SMILEnumType::Singleton());
+SMILValue SVGEnum::SMILEnum::GetBaseValue() const {
+  SMILValue val(SMILEnumType::Singleton());
   val.mU.mUint = mVal->mBaseVal;
   return val;
 }
@@ -157,7 +157,7 @@ void SVGEnum::SMILEnum::ClearAnimValue() {
   }
 }
 
-nsresult SVGEnum::SMILEnum::SetAnimValue(const nsSMILValue& aValue) {
+nsresult SVGEnum::SMILEnum::SetAnimValue(const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILEnumType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILEnumType::Singleton()) {

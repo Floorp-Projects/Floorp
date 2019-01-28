@@ -38,7 +38,7 @@
 #include "HeadlessScreenHelper.h"
 #include "pratom.h"
 #if !defined(RELEASE_OR_BETA) || defined(DEBUG)
-#include "nsSandboxViolationSink.h"
+#  include "nsSandboxViolationSink.h"
 #endif
 
 #include <IOKit/pwr_mgt/IOPMLib.h>
@@ -56,35 +56,32 @@ static mozilla::LazyLogModule gMacWakeLockLog("MacWakeLock");
 // don't want the screen saver to turn on.
 
 class MacWakeLockListener final : public nsIDOMMozWakeLockListener {
-public:
+ public:
   NS_DECL_ISUPPORTS;
 
-private:
+ private:
   ~MacWakeLockListener() {}
 
   IOPMAssertionID mAssertionNoDisplaySleepID = kIOPMNullAssertionID;
   IOPMAssertionID mAssertionNoIdleSleepID = kIOPMNullAssertionID;
 
   NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) override {
-    if (!aTopic.EqualsASCII("screen") &&
-        !aTopic.EqualsASCII("audio-playing") &&
+    if (!aTopic.EqualsASCII("screen") && !aTopic.EqualsASCII("audio-playing") &&
         !aTopic.EqualsASCII("video-playing")) {
       return NS_OK;
     }
 
     // we should still hold the lock for background audio.
-    if (aTopic.EqualsASCII("audio-playing") &&
-        aState.EqualsASCII("locked-background")) {
+    if (aTopic.EqualsASCII("audio-playing") && aState.EqualsASCII("locked-background")) {
       WAKE_LOCK_LOG("keep audio playing even in background");
       return NS_OK;
     }
 
-    bool shouldKeepDisplayOn = aTopic.EqualsASCII("screen") ||
-                               aTopic.EqualsASCII("video-playing");
-    CFStringRef assertionType = shouldKeepDisplayOn ?
-      kIOPMAssertionTypeNoDisplaySleep : kIOPMAssertionTypeNoIdleSleep;
-    IOPMAssertionID& assertionId = shouldKeepDisplayOn ?
-      mAssertionNoDisplaySleepID : mAssertionNoIdleSleepID;
+    bool shouldKeepDisplayOn = aTopic.EqualsASCII("screen") || aTopic.EqualsASCII("video-playing");
+    CFStringRef assertionType =
+        shouldKeepDisplayOn ? kIOPMAssertionTypeNoDisplaySleep : kIOPMAssertionTypeNoIdleSleep;
+    IOPMAssertionID& assertionId =
+        shouldKeepDisplayOn ? mAssertionNoDisplaySleepID : mAssertionNoIdleSleepID;
 
     // Note the wake lock code ensures that we're not sent duplicate
     // "locked-foreground" notifications when multiple wake locks are held.
@@ -94,16 +91,10 @@ private:
         return NS_OK;
       }
       // Prevent screen saver.
-      CFStringRef cf_topic =
-        ::CFStringCreateWithCharacters(kCFAllocatorDefault,
-                                       reinterpret_cast<const UniChar*>
-                                         (aTopic.Data()),
-                                       aTopic.Length());
-      IOReturn success =
-        ::IOPMAssertionCreateWithName(assertionType,
-                                      kIOPMAssertionLevelOn,
-                                      cf_topic,
-                                      &assertionId);
+      CFStringRef cf_topic = ::CFStringCreateWithCharacters(
+          kCFAllocatorDefault, reinterpret_cast<const UniChar*>(aTopic.Data()), aTopic.Length());
+      IOReturn success = ::IOPMAssertionCreateWithName(assertionType, kIOPMAssertionLevelOn,
+                                                       cf_topic, &assertionId);
       CFRelease(cf_topic);
       if (success != kIOReturnSuccess) {
         WAKE_LOCK_LOG("failed to disable screensaver");
@@ -122,17 +113,16 @@ private:
     }
     return NS_OK;
   }
-}; // MacWakeLockListener
+};  // MacWakeLockListener
 
 // defined in nsCocoaWindow.mm
-extern int32_t             gXULModalLevel;
+extern int32_t gXULModalLevel;
 
 static bool gAppShellMethodsSwizzled = false;
 
 @implementation GeckoNSApplication
 
-- (void)sendEvent:(NSEvent *)anEvent
-{
+- (void)sendEvent:(NSEvent*)anEvent {
   // Mark this function as non-idle because it's one of the exit points from
   // the event loop (running inside of -[GeckoNSApplication nextEventMatchingMask:...])
   // into non-idle code. So we basically unset the IDLE category from the inside.
@@ -140,16 +130,14 @@ static bool gAppShellMethodsSwizzled = false;
 
   mozilla::BackgroundHangMonitor().NotifyActivity();
 
-  if ([anEvent type] == NSApplicationDefined &&
-      [anEvent subtype] == kEventSubtypeTrace) {
+  if ([anEvent type] == NSApplicationDefined && [anEvent subtype] == kEventSubtypeTrace) {
     mozilla::SignalTracerThread();
     return;
   }
   [super sendEvent:anEvent];
 }
 
-#if defined(MAC_OS_X_VERSION_10_12) && \
-    MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12 && \
+#if defined(MAC_OS_X_VERSION_10_12) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12 && \
     __LP64__
 // 10.12 changed `mask` to NSEventMask (unsigned long long) for x86_64 builds.
 - (NSEvent*)nextEventMatchingMask:(NSEventMask)mask
@@ -158,8 +146,7 @@ static bool gAppShellMethodsSwizzled = false;
 #endif
                         untilDate:(NSDate*)expiration
                            inMode:(NSString*)mode
-                          dequeue:(BOOL)flag
-{
+                          dequeue:(BOOL)flag {
   // When we're waiting in the event loop, this is the last function under our
   // control that's on the stack, so this is the function that we mark with the
   // IDLE category.
@@ -172,13 +159,16 @@ static bool gAppShellMethodsSwizzled = false;
   // misidentify the stacks for that activity as idle because there's no Gecko
   // code on the stack that can change the stack's category to something
   // non-idle.
-  AUTO_PROFILER_LABEL("-[GeckoNSApplication nextEventMatchingMask:untilDate:inMode:dequeue:]", IDLE);
+  AUTO_PROFILER_LABEL("-[GeckoNSApplication nextEventMatchingMask:untilDate:inMode:dequeue:]",
+                      IDLE);
 
   if (expiration) {
     mozilla::BackgroundHangMonitor().NotifyWait();
   }
   NSEvent* nextEvent = [super nextEventMatchingMask:mask
-                        untilDate:expiration inMode:mode dequeue:flag];
+                                          untilDate:expiration
+                                             inMode:mode
+                                            dequeue:flag];
   if (expiration) {
     mozilla::BackgroundHangMonitor().NotifyActivity();
   }
@@ -192,10 +182,9 @@ static bool gAppShellMethodsSwizzled = false;
 // Cocoa bridge class.  An object of this class is registered to receive
 // notifications.
 //
-@interface AppShellDelegate : NSObject
-{
-  @private
-    nsAppShell* mAppShell;
+@interface AppShellDelegate : NSObject {
+ @private
+  nsAppShell* mAppShell;
 }
 
 - (id)initWithAppShell:(nsAppShell*)aAppShell;
@@ -206,12 +195,9 @@ static bool gAppShellMethodsSwizzled = false;
 // nsAppShell implementation
 
 NS_IMETHODIMP
-nsAppShell::ResumeNative(void)
-{
+nsAppShell::ResumeNative(void) {
   nsresult retval = nsBaseAppShell::ResumeNative();
-  if (NS_SUCCEEDED(retval) && (mSuspendNativeCount == 0) &&
-      mSkippedNativeCallback)
-  {
+  if (NS_SUCCEEDED(retval) && (mSuspendNativeCount == 0) && mSkippedNativeCallback) {
     mSkippedNativeCallback = false;
     ScheduleNativeEventCallback();
   }
@@ -219,32 +205,29 @@ nsAppShell::ResumeNative(void)
 }
 
 nsAppShell::nsAppShell()
-: mAutoreleasePools(nullptr)
-, mDelegate(nullptr)
-, mCFRunLoop(NULL)
-, mCFRunLoopSource(NULL)
-, mRunningEventLoop(false)
-, mStarted(false)
-, mTerminated(false)
-, mSkippedNativeCallback(false)
-, mNativeEventCallbackDepth(0)
-, mNativeEventScheduledDepth(0)
-{
+    : mAutoreleasePools(nullptr),
+      mDelegate(nullptr),
+      mCFRunLoop(NULL),
+      mCFRunLoopSource(NULL),
+      mRunningEventLoop(false),
+      mStarted(false),
+      mTerminated(false),
+      mSkippedNativeCallback(false),
+      mNativeEventCallbackDepth(0),
+      mNativeEventScheduledDepth(0) {
   // A Cocoa event loop is running here if (and only if) we've been embedded
   // by a Cocoa app.
   mRunningCocoaEmbedded = [NSApp isRunning] ? true : false;
 }
 
-nsAppShell::~nsAppShell()
-{
+nsAppShell::~nsAppShell() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   hal::Shutdown();
 
   if (mCFRunLoop) {
     if (mCFRunLoopSource) {
-      ::CFRunLoopRemoveSource(mCFRunLoop, mCFRunLoopSource,
-                              kCFRunLoopCommonModes);
+      ::CFRunLoopRemoveSource(mCFRunLoop, mCFRunLoopSource, kCFRunLoopCommonModes);
       ::CFRelease(mCFRunLoopSource);
     }
     ::CFRelease(mCFRunLoop);
@@ -264,11 +247,9 @@ nsAppShell::~nsAppShell()
 NS_IMPL_ISUPPORTS(MacWakeLockListener, nsIDOMMozWakeLockListener)
 mozilla::StaticRefPtr<MacWakeLockListener> sWakeLockListener;
 
-static void
-AddScreenWakeLockListener()
-{
-  nsCOMPtr<nsIPowerManagerService> sPowerManagerService = do_GetService(
-                                                          POWERMANAGERSERVICE_CONTRACTID);
+static void AddScreenWakeLockListener() {
+  nsCOMPtr<nsIPowerManagerService> sPowerManagerService =
+      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
   if (sPowerManagerService) {
     sWakeLockListener = new MacWakeLockListener();
     sPowerManagerService->AddWakeLockListener(sWakeLockListener);
@@ -277,11 +258,9 @@ AddScreenWakeLockListener()
   }
 }
 
-static void
-RemoveScreenWakeLockListener()
-{
-  nsCOMPtr<nsIPowerManagerService> sPowerManagerService = do_GetService(
-                                                          POWERMANAGERSERVICE_CONTRACTID);
+static void RemoveScreenWakeLockListener() {
+  nsCOMPtr<nsIPowerManagerService> sPowerManagerService =
+      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
   if (sPowerManagerService) {
     sPowerManagerService->RemoveWakeLockListener(sWakeLockListener);
     sPowerManagerService = nullptr;
@@ -299,9 +278,7 @@ extern "C" CGError CGSSetDebugOptions(int options);
 // interrupt the main native run loop.
 //
 // public
-nsresult
-nsAppShell::Init()
-{
+nsresult nsAppShell::Init() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // No event loop is running yet (unless an embedding app that uses
@@ -334,11 +311,9 @@ nsAppShell::Init()
     //    MacApplicationDelegate.mm's EnsureUseCocoaDockAPI().
     // 2) an embedding app that uses NSApplicationMain() is running -- NSApp's
     //    already been initialized and its main run loop is already running.
-    [NSBundle loadNibFile:
-                       [NSString stringWithUTF8String:(const char*)nibPath.get()]
-        externalNameTable:
-             [NSDictionary dictionaryWithObject:[GeckoNSApplication sharedApplication]
-                                         forKey:@"NSOwner"]
+    [NSBundle loadNibFile:[NSString stringWithUTF8String:(const char*)nibPath.get()]
+        externalNameTable:[NSDictionary dictionaryWithObject:[GeckoNSApplication sharedApplication]
+                                                      forKey:@"NSOwner"]
                  withZone:NSDefaultMallocZone()];
   }
 
@@ -390,8 +365,7 @@ nsAppShell::Init()
   // The bug that this works around was introduced in OS X 10.10.0
   // and fixed in OS X 10.10.2. Order these version checks so as
   // few as possible will actually end up running.
-  if (nsCocoaFeatures::OSXVersionMinor() == 10 &&
-      nsCocoaFeatures::OSXVersionBugFix() < 2 &&
+  if (nsCocoaFeatures::OSXVersionMinor() == 10 && nsCocoaFeatures::OSXVersionBugFix() < 2 &&
       nsCocoaFeatures::OSXVersionMajor() == 10) {
     // Explicitly turn off CGEvent logging.  This works around bug 1092855.
     // If there are already CGEvents in the log, turning off logging also
@@ -425,13 +399,11 @@ nsAppShell::Init()
 // methods" hasn't been suspended).  This happens in NativeEventCallback().
 //
 // protected static
-void
-nsAppShell::ProcessGeckoEvents(void* aInfo)
-{
+void nsAppShell::ProcessGeckoEvents(void* aInfo) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
   AUTO_PROFILER_LABEL("nsAppShell::ProcessGeckoEvents", OTHER);
 
-  nsAppShell* self = static_cast<nsAppShell*> (aInfo);
+  nsAppShell* self = static_cast<nsAppShell*>(aInfo);
 
   if (self->mRunningEventLoop) {
     self->mRunningEventLoop = false;
@@ -449,7 +421,7 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
     // seems to prevent the OS from ever trying to associate our bogus event
     // with a particular NSWindow object.
     [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
-                                        location:NSMakePoint(0,0)
+                                        location:NSMakePoint(0, 0)
                                    modifierFlags:0
                                        timestamp:0
                                     windowNumber:0
@@ -470,7 +442,7 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
 
   // Still needed to avoid crashes on quit in most Mochitests.
   [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
-                                      location:NSMakePoint(0,0)
+                                      location:NSMakePoint(0, 0)
                                  modifierFlags:0
                                      timestamp:0
                                   windowNumber:0
@@ -501,11 +473,10 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
   if (self->mTerminated) {
     int32_t releaseCount = 0;
     if (self->mNativeEventScheduledDepth > self->mNativeEventCallbackDepth) {
-      releaseCount = PR_ATOMIC_SET(&self->mNativeEventScheduledDepth,
-                                   self->mNativeEventCallbackDepth);
+      releaseCount =
+          PR_ATOMIC_SET(&self->mNativeEventScheduledDepth, self->mNativeEventCallbackDepth);
     }
-    while (releaseCount-- > self->mNativeEventCallbackDepth)
-      self->Release();
+    while (releaseCount-- > self->mNativeEventCallbackDepth) self->Release();
   } else {
     // As best we can tell, every call to ProcessGeckoEvents() is triggered
     // by a call to ScheduleNativeEventCallback().  But we've seen a few
@@ -532,11 +503,8 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
 // "normal" application quit.
 //
 // public
-void
-nsAppShell::WillTerminate()
-{
-  if (mTerminated)
-    return;
+void nsAppShell::WillTerminate() {
+  if (mTerminated) return;
 
   // Make sure that the nsAppExitEvent posted by nsAppStartup::Quit() (called
   // from [MacApplicationDelegate applicationShouldTerminate:]) gets run.
@@ -565,13 +533,10 @@ nsAppShell::WillTerminate()
 // ScheduleNativeEventCallback().
 //
 // protected virtual
-void
-nsAppShell::ScheduleNativeEventCallback()
-{
+void nsAppShell::ScheduleNativeEventCallback() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mTerminated)
-    return;
+  if (mTerminated) return;
 
   // Each AddRef() here is normally balanced by exactly one Release() in
   // ProcessGeckoEvents().  But there are exceptions, for which see
@@ -598,9 +563,7 @@ extern "C" EventAttributes GetEventAttributes(EventRef inEvent);
 // Returns true if more events are waiting in the native event queue.
 //
 // protected virtual
-bool
-nsAppShell::ProcessNextNativeEvent(bool aMayWait)
-{
+bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
   bool moreEvents = false;
 
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -608,14 +571,12 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
   bool eventProcessed = false;
   NSString* currentMode = nil;
 
-  if (mTerminated)
-    return false;
+  if (mTerminated) return false;
 
   bool wasRunningEventLoop = mRunningEventLoop;
   mRunningEventLoop = aMayWait;
   NSDate* waitUntil = nil;
-  if (aMayWait)
-    waitUntil = [NSDate distantFuture];
+  if (aMayWait) waitUntil = [NSDate distantFuture];
 
   NSRunLoop* currentRunLoop = [NSRunLoop currentRunLoop];
 
@@ -642,9 +603,8 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
 
     if (aMayWait) {
       currentMode = [currentRunLoop currentMode];
-      if (!currentMode)
-        currentMode = NSDefaultRunLoopMode;
-      NSEvent *nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+      if (!currentMode) currentMode = NSDefaultRunLoopMode;
+      NSEvent* nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
                                               untilDate:waitUntil
                                                  inMode:currentMode
                                                 dequeue:YES];
@@ -657,17 +617,16 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
       // AcquireFirstMatchingEventInQueue() doesn't spin the (native) event
       // loop, though it does queue up any newly available events from the
       // window server.
-      EventRef currentEvent = AcquireFirstMatchingEventInQueue(currentEventQueue, 0, NULL,
-                                                               kEventQueueOptionsNone);
+      EventRef currentEvent =
+          AcquireFirstMatchingEventInQueue(currentEventQueue, 0, NULL, kEventQueueOptionsNone);
       if (!currentEvent) {
         continue;
       }
       EventAttributes attrs = GetEventAttributes(currentEvent);
       UInt32 eventKind = GetEventKind(currentEvent);
       UInt32 eventClass = GetEventClass(currentEvent);
-      bool osCocoaEvent =
-        ((eventClass == 'appl') || (eventClass == kEventClassAppleEvent) ||
-         ((eventClass == 'cgs ') && (eventKind != NSApplicationDefined)));
+      bool osCocoaEvent = ((eventClass == 'appl') || (eventClass == kEventClassAppleEvent) ||
+                           ((eventClass == 'cgs ') && (eventKind != NSApplicationDefined)));
       // If attrs is kEventAttributeUserEvent or kEventAttributeMonitored
       // (i.e. a user input event), we shouldn't process it here while
       // aMayWait is false.  Likewise if currentEvent will eventually be
@@ -697,9 +656,8 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
   } while (mRunningEventLoop);
 
   if (eventProcessed) {
-    moreEvents =
-      (AcquireFirstMatchingEventInQueue(currentEventQueue, 0, NULL,
-                                        kEventQueueOptionsNone) != NULL);
+    moreEvents = (AcquireFirstMatchingEventInQueue(currentEventQueue, 0, NULL,
+                                                   kEventQueueOptionsNone) != NULL);
   }
 
   mRunningEventLoop = wasRunningEventLoop;
@@ -726,11 +684,9 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
 //
 // public
 NS_IMETHODIMP
-nsAppShell::Run(void)
-{
+nsAppShell::Run(void) {
   NS_ASSERTION(!mStarted, "nsAppShell::Run() called multiple times");
-  if (mStarted || mTerminated)
-    return NS_OK;
+  if (mStarted || mTerminated) return NS_OK;
 
   mStarted = true;
 
@@ -754,8 +710,7 @@ nsAppShell::Run(void)
 }
 
 NS_IMETHODIMP
-nsAppShell::Exit(void)
-{
+nsAppShell::Exit(void) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // This method is currently called more than once -- from (according to
@@ -785,10 +740,8 @@ nsAppShell::Exit(void)
   // [NSApp stop:], so we have to assume that one extra call to [NSApp stop:]
   // will do the job.)
   BOOL cocoaModal = [NSApp _isRunningModal];
-  NS_ASSERTION(!cocoaModal,
-               "Don't call nsAppShell::Exit() from a modal event loop!");
-  if (cocoaModal)
-    [NSApp stop:nullptr];
+  NS_ASSERTION(!cocoaModal, "Don't call nsAppShell::Exit() from a modal event loop!");
+  if (cocoaModal) [NSApp stop:nullptr];
   [NSApp stop:nullptr];
 
   // A call to Exit() just after a call to ScheduleNativeEventCallback()
@@ -799,8 +752,7 @@ nsAppShell::Exit(void)
   // stack, we need to take care of the problem here.
   if (!mNativeEventCallbackDepth && mNativeEventScheduledDepth) {
     int32_t releaseCount = PR_ATOMIC_SET(&mNativeEventScheduledDepth, 0);
-    while (releaseCount-- > 0)
-      NS_RELEASE_THIS();
+    while (releaseCount-- > 0) NS_RELEASE_THIS();
   }
 
   return nsBaseAppShell::Exit();
@@ -819,12 +771,10 @@ nsAppShell::Exit(void)
 //
 // public
 NS_IMETHODIMP
-nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait)
-{
+nsAppShell::OnProcessNextEvent(nsIThreadInternal* aThread, bool aMayWait) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NS_ASSERTION(mAutoreleasePools,
-               "No stack on which to store autorelease pool");
+  NS_ASSERTION(mAutoreleasePools, "No stack on which to store autorelease pool");
 
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
   ::CFArrayAppendValue(mAutoreleasePools, pool);
@@ -842,18 +792,15 @@ nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait)
 //
 // public
 NS_IMETHODIMP
-nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
-                                  bool aEventWasProcessed)
-{
+nsAppShell::AfterProcessNextEvent(nsIThreadInternal* aThread, bool aEventWasProcessed) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   CFIndex count = ::CFArrayGetCount(mAutoreleasePools);
 
-  NS_ASSERTION(mAutoreleasePools && count,
-               "Processed an event, but there's no autorelease pool?");
+  NS_ASSERTION(mAutoreleasePools && count, "Processed an event, but there's no autorelease pool?");
 
-  const NSAutoreleasePool* pool = static_cast<const NSAutoreleasePool*>
-    (::CFArrayGetValueAtIndex(mAutoreleasePools, count - 1));
+  const NSAutoreleasePool* pool =
+      static_cast<const NSAutoreleasePool*>(::CFArrayGetValueAtIndex(mAutoreleasePools, count - 1));
   ::CFArrayRemoveValueAtIndex(mAutoreleasePools, count - 1);
   [pool release];
 
@@ -862,16 +809,13 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 // AppShellDelegate implementation
-
 
 @implementation AppShellDelegate
 // initWithAppShell:
 //
 // Constructs the AppShellDelegate object
-- (id)initWithAppShell:(nsAppShell*)aAppShell
-{
+- (id)initWithAppShell:(nsAppShell*)aAppShell {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ((self = [self init])) {
@@ -885,10 +829,11 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
                                              selector:@selector(applicationDidBecomeActive:)
                                                  name:NSApplicationDidBecomeActiveNotification
                                                object:NSApp];
-    [[NSDistributedNotificationCenter defaultCenter] addObserver:self
-                                                        selector:@selector(beginMenuTracking:)
-                                                            name:@"com.apple.HIToolbox.beginMenuTrackingNotification"
-                                                          object:nil];
+    [[NSDistributedNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(beginMenuTracking:)
+               name:@"com.apple.HIToolbox.beginMenuTrackingNotification"
+             object:nil];
   }
 
   return self;
@@ -896,8 +841,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -910,8 +854,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 // applicationWillTerminate:
 //
 // Notify the nsAppShell that native event processing should be discontinued.
-- (void)applicationWillTerminate:(NSNotification*)aNotification
-{
+- (void)applicationWillTerminate:(NSNotification*)aNotification {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mAppShell->WillTerminate();
@@ -924,8 +867,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 // Make sure TextInputHandler::sLastModifierState is updated when we become
 // active (since we won't have received [ChildView flagsChanged:] messages
 // while inactive).
-- (void)applicationDidBecomeActive:(NSNotification*)aNotification
-{
+- (void)applicationDidBecomeActive:(NSNotification*)aNotification {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // [NSEvent modifierFlags] is valid on every kind of event, so we don't need
@@ -933,7 +875,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   NSEvent* currentEvent = [NSApp currentEvent];
   if (currentEvent) {
     TextInputHandler::sLastModifierState =
-      [currentEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+        [currentEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -944,16 +886,14 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 // Roll up our context menu (if any) when some other app (or the OS) opens
 // any sort of menu.  But make sure we don't do this for notifications we
 // send ourselves (whose 'sender' will be @"org.mozilla.gecko.PopupWindow").
-- (void)beginMenuTracking:(NSNotification*)aNotification
-{
+- (void)beginMenuTracking:(NSNotification*)aNotification {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSString *sender = [aNotification object];
+  NSString* sender = [aNotification object];
   if (!sender || ![sender isEqualToString:@"org.mozilla.gecko.PopupWindow"]) {
     nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
     nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
-    if (rollupWidget)
-      rollupListener->Rollup(0, true, nullptr, nullptr);
+    if (rollupWidget) rollupListener->Rollup(0, true, nullptr, nullptr);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -981,8 +921,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 // above), which means that nothing runs after the call to nsAppStartup::Run()
 // in XRE_Main(), which in particular means that ScopedXPCOMStartup's destructor
 // and NS_ShutdownXPCOM() never get called.
-- (void)nsAppShell_NSApplication_terminate:(id)sender
-{
+- (void)nsAppShell_NSApplication_terminate:(id)sender {
   [[NSNotificationCenter defaultCenter] postNotificationName:NSApplicationWillTerminateNotification
                                                       object:NSApp];
 }

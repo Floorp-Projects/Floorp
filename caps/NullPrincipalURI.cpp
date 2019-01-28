@@ -66,7 +66,6 @@ NS_INTERFACE_MAP_BEGIN(NullPrincipalURI)
   else
     NS_INTERFACE_MAP_ENTRY(nsIURI)
   NS_INTERFACE_MAP_ENTRY(nsISizeOf)
-  NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableURI)
 NS_INTERFACE_MAP_END
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -300,9 +299,6 @@ NS_IMETHODIMP
 NullPrincipalURI::GetDisplayPrePath(nsACString& aPrePath) {
   return GetPrePath(aPrePath);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-//// nsIIPCSerializableURI
 
 void NullPrincipalURI::Serialize(mozilla::ipc::URIParams& aParams) {
   aParams = mozilla::ipc::NullPrincipalURIParams();

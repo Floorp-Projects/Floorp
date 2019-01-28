@@ -43,7 +43,7 @@ JITFLAGS = {
     ],
     # Interpreter-only, for tools that cannot handle binary code generation.
     'interp': [
-        ['--no-baseline', '--no-asmjs', '--no-wasm', '--no-native-regexp']
+        ['--no-baseline', '--no-asmjs', '--wasm-compiler=none', '--no-native-regexp']
     ],
     'none': [
         []  # no flags, normal baseline and ion

@@ -5,6 +5,7 @@
 
 using mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using mozilla::gfx::OpenVRControllerType from "gfxVR.h";
+using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 
 include GraphicsMessages;
 include protocol PVRGPU;
@@ -27,6 +28,7 @@ parent:
 child:
   async OpenVRControllerActionPathToParent(nsCString aPath);
   async OpenVRControllerManifestPathToParent(OpenVRControllerType aType, nsCString aPath);
+  async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
 };
 
 } // namespace gfx

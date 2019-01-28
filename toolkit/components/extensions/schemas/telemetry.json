@@ -139,7 +139,7 @@
     {
       "name": "canUpload",
       "type": "function",
-      "description": "Checks if Telemetry is enabled.",
+      "description": "Checks if Telemetry upload is enabled.",
       "parameters": [],
       "async": true
     },

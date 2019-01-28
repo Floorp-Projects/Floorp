@@ -3,47 +3,47 @@
 "use strict";
 
 add_task(async function test_manifest() {
-  let normalized = await ExtensionTestUtils.normalizeManifest({
-    "browser_action": {
-      "default_icon": "",
-    },
-  });
-
-  equal(normalized.error,
-        `Error processing browser_action.default_icon: Value "" must either: be an object value, or match the pattern /^\\/?\\w/`,
-        "Should have an error");
-  Assert.deepEqual(normalized.errors, [], "Should not have a warning");
-
-  normalized = await ExtensionTestUtils.normalizeManifest({
-    "browser_action": {
-      "default_icon": {
-        "16": "",
+  let badpaths = ["", " ", "\t", "http://foo.com/icon.png"];
+  for (let path of badpaths) {
+    let normalized = await ExtensionTestUtils.normalizeManifest({
+      "browser_action": {
+        "default_icon": path,
       },
-    },
-  });
+    });
 
-  equal(normalized.error,
-        "Error processing browser_action.default_icon: Value must either: .16 must match the pattern /^\\/?\\w/, or be a string value",
-        "Should have an error");
-  Assert.deepEqual(normalized.errors, [], "Should not have a warning");
+    ok(/Error processing browser_action.default_icon/.test(normalized.error),
+       `Should have an error for ${JSON.stringify(path)}`);
 
-  normalized = await ExtensionTestUtils.normalizeManifest({
-    "browser_action": {
-      "default_icon": {
-        "16": "icon.png",
+    normalized = await ExtensionTestUtils.normalizeManifest({
+      "browser_action": {
+        "default_icon": {
+          "16": path,
+        },
       },
-    },
-  });
+    });
 
-  equal(normalized.error, undefined, "Should not have an error");
-  Assert.deepEqual(normalized.errors, [], "Should not have a warning");
+    ok(/Error processing browser_action.default_icon/.test(normalized.error),
+       `Should have an error for ${JSON.stringify(path)}`);
+  }
 
-  normalized = await ExtensionTestUtils.normalizeManifest({
-    "browser_action": {
-      "default_icon": "icon.png",
-    },
-  });
+  let paths = ["icon.png", "/icon.png", "./icon.png", "path to an icon.png", " icon.png"];
+  for (let path of paths) {
+    let normalized = await ExtensionTestUtils.normalizeManifest({
+      "browser_action": {
+        "default_icon": {
+          "16": path,
+        },
+      },
+    });
 
-  equal(normalized.error, undefined, "Should not have an error");
-  Assert.deepEqual(normalized.errors, [], "Should not have a warning");
+    ok(!normalized.error, `Should not have an error ${JSON.stringify(path)}`);
+
+    normalized = await ExtensionTestUtils.normalizeManifest({
+      "browser_action": {
+        "default_icon": path,
+      },
+    });
+
+    ok(!normalized.error, `Should not have an error ${JSON.stringify(path)}`);
+  }
 });

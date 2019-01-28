@@ -7,11 +7,11 @@
 
 use super::registers::{FPR, GPR};
 use super::settings;
-use abi::{legalize_args, ArgAction, ArgAssigner, ValueConversion};
-use ir::{self, AbiParam, ArgumentExtension, ArgumentLoc, ArgumentPurpose, Type};
-use isa::RegClass;
-use regalloc::RegisterSet;
-use std::i32;
+use crate::abi::{legalize_args, ArgAction, ArgAssigner, ValueConversion};
+use crate::ir::{self, AbiParam, ArgumentExtension, ArgumentLoc, ArgumentPurpose, Type};
+use crate::isa::RegClass;
+use crate::regalloc::RegisterSet;
+use core::i32;
 use target_lexicon::Triple;
 
 struct Args {

@@ -1,30 +1,17 @@
 .ds-section-title {
-  ul {
-    margin: 0;
-    padding: 0;
+  text-align: center;
+
+  .title {
+    line-height: 48px;
+    font-size: 36px;
+    font-weight: 300;
+    color: $grey-90;
   }
 
-  ul li {
-    display: inline-block;
-
-    &::after {
-      content: '•';
-      padding: 8px;
-    }
-
-    &:last-child::after {
-      content: none;
-    }
-  }
-
-  .ds-more-recommendations::after {
-    background: url('../data/content/assets/topic-show-more-12.svg') no-repeat center center;
-    content: '';
-    -moz-context-properties: fill;
-    display: inline-block;
-    height: 16px;
-    margin-inline-start: 5px;
-    vertical-align: top;
-    width: 12px;
+  .subtitle {
+    line-height: 24px;
+    font-size: 15px;
+    color: $grey-50;
+    margin-top: 4px;
   }
 }

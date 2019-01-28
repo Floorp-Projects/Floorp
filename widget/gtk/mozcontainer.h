@@ -79,6 +79,7 @@ struct _MozContainer {
   gboolean surface_needs_clear;
   gboolean ready_to_draw;
 #endif
+  gboolean force_default_visual;
 };
 
 struct _MozContainerClass {
@@ -89,6 +90,7 @@ GType moz_container_get_type(void);
 GtkWidget *moz_container_new(void);
 void moz_container_put(MozContainer *container, GtkWidget *child_widget, gint x,
                        gint y);
+void moz_container_force_default_visual(MozContainer *container);
 
 #ifdef MOZ_WAYLAND
 struct wl_surface *moz_container_get_wl_surface(MozContainer *container);

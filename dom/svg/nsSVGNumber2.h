@@ -9,17 +9,18 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "nsISMILAttr.h"
 #include "nsMathUtils.h"
-#include "SVGElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/dom/SVGAnimatedNumber.h"
+#include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
-
-class nsSMILValue;
+#include "mozilla/dom/SVGAnimatedNumber.h"
+#include "mozilla/dom/SVGElement.h"
 
 namespace mozilla {
+
+class SMILValue;
+
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
@@ -27,6 +28,8 @@ class SVGAnimationElement;
 
 class nsSVGNumber2 {
  public:
+  typedef mozilla::SMILAttr SMILAttr;
+  typedef mozilla::SMILValue SMILValue;
   typedef mozilla::dom::SVGElement SVGElement;
 
   void Init(uint8_t aAttrEnum = 0xff, float aValue = 0) {
@@ -53,7 +56,7 @@ class nsSVGNumber2 {
 
   already_AddRefed<mozilla::dom::SVGAnimatedNumber> ToDOMAnimatedNumber(
       SVGElement* aSVGElement);
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   float mAnimVal;
@@ -84,25 +87,25 @@ class nsSVGNumber2 {
     }
   };
 
-  struct SMILNumber : public nsISMILAttr {
+  struct SMILNumber : public SMILAttr {
    public:
     SMILNumber(nsSVGNumber2* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
-    // These will stay alive because a nsISMILAttr only lives as long
+    // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGNumber2* mVal;
     SVGElement* mSVGElement;
 
-    // nsISMILAttr methods
+    // SMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement,
-        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-    virtual nsSMILValue GetBaseValue() const override;
+        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
+        bool& aPreventCachingOfSandwich) const override;
+    virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 };
 

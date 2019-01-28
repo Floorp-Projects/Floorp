@@ -76,21 +76,21 @@ window.onload = function() {
       `<anonymous> http://myfile.com/mahscripts.js:55`,
       `rootReducer Redux`,
       `loadFunc http://myfile.com/loadee.js:10`,
-      `▶︎ internalReact10 React`,
+      `▶︎ React 10`,
       `onClick http://myfile.com/mahscripts.js:10`,
     ], "React frames are grouped - Redux frame is not");
 
     info("Expand React group");
     let onReactGroupExpanded = waitFor(() =>
       traceEl.querySelector(".frames-group.expanded"));
-    traceEl.querySelector(".group .location").click();
+    traceEl.querySelector(".group").click();
     await onReactGroupExpanded;
 
     isDeeply(getStacktraceText(traceEl), [
       `<anonymous> http://myfile.com/mahscripts.js:55`,
       `rootReducer Redux`,
       `loadFunc http://myfile.com/loadee.js:10`,
-      `▼ internalReact10 React`,
+      `▼ React 10`,
       `| internalReact10`,
       `| internalReact9`,
       `| internalReact8`,
@@ -107,34 +107,33 @@ window.onload = function() {
     info("Collapse React group");
     onReactGroupExpanded = waitFor(() =>
       !traceEl.querySelector(".frames-group.expanded"));
-    traceEl.querySelector(".group .location").click();
+    traceEl.querySelector(".group").click();
     await onReactGroupExpanded;
 
     isDeeply(getStacktraceText(traceEl), [
       `<anonymous> http://myfile.com/mahscripts.js:55`,
       `rootReducer Redux`,
       `loadFunc http://myfile.com/loadee.js:10`,
-      `▶︎ internalReact10 React`,
+      `▶︎ React 10`,
       `onClick http://myfile.com/mahscripts.js:10`,
     ], "React frames can be collapsed");
   });
 
   function getStacktraceText(traceElement) {
-    return Array.from(traceElement.querySelectorAll(".frame, .frames-group"))
-      .map(el => {
-        const title = el.querySelector(".title");
-        const location = el.querySelector(".location");
-
+    return Array.from(traceElement.querySelectorAll(".frame, .frames-group")).map(el => {
         // If it's a group, we want to append an arrow representing the group state
         if (el.classList.contains("frames-group")) {
           const arrow = el.classList.contains("expanded") ? "▼" : "▶︎";
-          return `${arrow} ${title.textContent} ${location.textContent}`;
+          const content = el.querySelector(".group").textContent.trim();
+          return `${arrow} ${content}`;
         }
 
+        const title = el.querySelector(".title");
         if (el.closest(".frames-group")) {
           return `| ${title.textContent}`;
         }
 
+        const location = el.querySelector(".location");
         return `${title.textContent} ${location.textContent}`;
       });
   }

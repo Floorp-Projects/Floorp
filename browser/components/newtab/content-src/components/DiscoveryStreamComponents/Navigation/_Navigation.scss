@@ -1,0 +1,52 @@
+.ds-navigation {
+  line-height: 32px;
+  padding: 4px 0;
+  font-size: 13px;
+  font-weight: 600;
+
+  &.ds-navigation-centered {
+    text-align: center;
+  }
+
+  &.ds-navigation-right-aligned {
+    text-align: end;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+  }
+
+  ul li {
+    display: inline-block;
+
+    &::after {
+      content: '·';
+      padding: 8px;
+      color: $grey-50;
+    }
+
+    &:last-child::after {
+      content: none;
+    }
+
+    a {
+      &:hover {
+        // text-decoration: underline; didn't quite match comps.
+        border-bottom: 1px solid var(--newtab-link-primary-color);
+
+        &:active {
+          border-bottom: 1px solid $blue-70;
+        }
+      }
+
+      &:active {
+        color: $blue-70;
+      }
+    }
+  }
+
+  .ds-header {
+    margin-bottom: 8px;
+  }
+}

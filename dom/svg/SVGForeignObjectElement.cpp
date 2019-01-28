@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/SVGForeignObjectElement.h"
 
-#include "nsCOMPtr.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/dom/SVGForeignObjectElementBinding.h"

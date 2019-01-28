@@ -253,7 +253,9 @@ const MessageLoaderUtils = {
                                                           null, null, null, null, amTelemetryInfo);
       await AddonManager.installAddonFromWebpage("application/x-xpinstall", browser,
         systemPrincipal, install);
-    } catch (e) {}
+    } catch (e) {
+      Cu.reportError(e);
+    }
   },
 
   /**
@@ -906,6 +908,16 @@ class _ASRouter {
     }
   }
 
+  // Ensure we switch to the Onboarding message after RTAMO addon was installed
+  _updateOnboardingState() {
+    let addonInstallObs = (subject, topic) => {
+      Services.obs.removeObserver(addonInstallObs, "webextension-install-notify");
+      this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_MESSAGE", data: {id: "RETURN_TO_AMO_1"}});
+      this.blockMessageById("RETURN_TO_AMO_1");
+    };
+    Services.obs.addObserver(addonInstallObs, "webextension-install-notify");
+  }
+
   _loadSnippetsWhitelistHosts() {
     let additionalHosts = [];
     const whitelistPrefValue = Services.prefs.getStringPref(SNIPPETS_ENDPOINT_WHITELIST, "");
@@ -1025,6 +1037,7 @@ class _ASRouter {
         UITour.showMenu(target.browser.ownerGlobal, action.data.args);
         break;
       case ra.INSTALL_ADDON_FROM_URL:
+        this._updateOnboardingState();
         await MessageLoaderUtils.installAddonFromURL(target.browser, action.data.url);
         break;
       case ra.SHOW_FIREFOX_ACCOUNTS:

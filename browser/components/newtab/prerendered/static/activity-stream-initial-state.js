@@ -80,11 +80,12 @@ window.gActivityStreamPrerenderedState = {
     "spocs": {
       "spocs_endpoint": "",
       "lastUpdated": null,
-      "data": {}
+      "data": {},
+      "loaded": false
     }
   },
   "Search": {
-    "focus": false,
+    "fakeFocus": false,
     "hide": false
   }
 };

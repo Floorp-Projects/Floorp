@@ -7,18 +7,14 @@
 
 #include <Cocoa/Cocoa.h>
 
-bool IsRecursivelyWritable(const char* aPath)
-{
+bool IsRecursivelyWritable(const char* aPath) {
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
 
   NSString* rootPath = [NSString stringWithUTF8String:aPath];
   NSFileManager* fileManager = [NSFileManager defaultManager];
   NSError* error = nil;
-  NSArray* subPaths =
-    [fileManager subpathsOfDirectoryAtPath:rootPath
-                                     error:&error];
-  NSMutableArray* paths =
-    [NSMutableArray arrayWithCapacity:[subPaths count] + 1];
+  NSArray* subPaths = [fileManager subpathsOfDirectoryAtPath:rootPath error:&error];
+  NSMutableArray* paths = [NSMutableArray arrayWithCapacity:[subPaths count] + 1];
   [paths addObject:@""];
   [paths addObjectsFromArray:subPaths];
 
@@ -30,9 +26,7 @@ bool IsRecursivelyWritable(const char* aPath)
   for (NSString* currPath in paths) {
     NSString* child = [rootPath stringByAppendingPathComponent:currPath];
 
-    NSDictionary* attributes =
-      [fileManager attributesOfItemAtPath:child
-                                    error:&error];
+    NSDictionary* attributes = [fileManager attributesOfItemAtPath:child error:&error];
     if (error) {
       [pool drain];
       return false;

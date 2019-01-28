@@ -198,6 +198,7 @@
 
   -moz-user-select: none;
   margin-bottom: 2px;
+  margin-left: 1ch;
 }
 
 .ruleview-rule-source-label {
@@ -301,12 +302,20 @@
 }
 
 .ruleview-overridden-rule-filter {
-  background-image: url(chrome://devtools/skin/images/filter.svg#filterinput);
-  background-size: 11px 11px;
-  margin-inline-start: 5px;
   display: inline-block;
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
+  margin-inline-start: 3px;
+  background-image: url(chrome://devtools/skin/images/filter-small.svg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 12px;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+}
+
+.ruleview-overridden-rule-filter:hover {
+  fill: var(--theme-icon-color);
 }
 
 .ruleview-ruleopen {
@@ -631,11 +640,4 @@
 
 #class-panel-toggle::before {
   content: ".cls";
-}
-
-.ruleview-overridden-rule-filter {
-  opacity: 0.8;
-}
-.ruleview-overridden-rule-filter:hover {
-  opacity: 1;
 }

@@ -2982,7 +2982,7 @@ void CodeGenerator::visitModuleMetadata(LModuleMetadata* lir) {
   callVM(GetOrCreateModuleMetaObjectInfo, lir);
 }
 
-typedef JSObject* (*StartDynamicModuleImportFn)(JSContext*, HandleObject,
+typedef JSObject* (*StartDynamicModuleImportFn)(JSContext*, HandleScript,
                                                 HandleValue);
 static const VMFunction StartDynamicModuleImportInfo =
     FunctionInfo<StartDynamicModuleImportFn>(js::StartDynamicModuleImport,
@@ -2990,7 +2990,7 @@ static const VMFunction StartDynamicModuleImportInfo =
 
 void CodeGenerator::visitDynamicImport(LDynamicImport* lir) {
   pushArg(ToValue(lir, LDynamicImport::SpecifierIndex));
-  pushArg(ImmGCPtr(lir->mir()->referencingScriptSource()));
+  pushArg(ImmGCPtr(current->mir()->info().script()));
   callVM(StartDynamicModuleImportInfo, lir);
 }
 
@@ -6578,29 +6578,6 @@ void CodeGenerator::visitNewCallObject(LNewCallObject* lir) {
   masm.bind(ool->rejoin());
 }
 
-typedef JSObject* (*NewSingletonCallObjectFn)(JSContext*, HandleShape);
-static const VMFunction NewSingletonCallObjectInfo =
-    FunctionInfo<NewSingletonCallObjectFn>(NewSingletonCallObject,
-                                           "NewSingletonCallObject");
-
-void CodeGenerator::visitNewSingletonCallObject(LNewSingletonCallObject* lir) {
-  Register objReg = ToRegister(lir->output());
-
-  JSObject* templateObj = lir->mir()->templateObject();
-
-  OutOfLineCode* ool;
-  ool =
-      oolCallVM(NewSingletonCallObjectInfo, lir,
-                ArgList(ImmGCPtr(templateObj->as<CallObject>().lastProperty())),
-                StoreRegisterTo(objReg));
-
-  // Objects can only be given singleton types in VM calls.  We make the call
-  // out of line to not bloat inline code, even if (naively) this seems like
-  // extra work.
-  masm.jump(ool->entry());
-  masm.bind(ool->rejoin());
-}
-
 typedef JSObject* (*NewStringObjectFn)(JSContext*, HandleString);
 static const VMFunction NewStringObjectInfo =
     FunctionInfo<NewStringObjectFn>(NewStringObject, "NewStringObject");
@@ -10113,16 +10090,6 @@ void CodeGenerator::visitSetFrameArgumentV(LSetFrameArgumentV* lir) {
   masm.storeValue(val, Address(masm.getStackPointer(), argOffset));
 }
 
-typedef bool (*RunOnceScriptPrologueFn)(JSContext*, HandleScript);
-static const VMFunction RunOnceScriptPrologueInfo =
-    FunctionInfo<RunOnceScriptPrologueFn>(js::RunOnceScriptPrologue,
-                                          "RunOnceScriptPrologue");
-
-void CodeGenerator::visitRunOncePrologue(LRunOncePrologue* lir) {
-  pushArg(ImmGCPtr(lir->mir()->block()->info().script()));
-  callVM(RunOnceScriptPrologueInfo, lir);
-}
-
 typedef JSObject* (*InitRestParameterFn)(JSContext*, uint32_t, Value*,
                                          HandleObject, HandleObject);
 static const VMFunction InitRestParameterInfo =
@@ -11693,6 +11660,12 @@ template <SwitchTableType tableType>
 void CodeGenerator::visitOutOfLineSwitch(
     OutOfLineSwitch<tableType>* jumpTable) {
   jumpTable->setOutOfLine();
+  auto& labels = jumpTable->labels();
+#if defined(JS_CODEGEN_ARM64)
+  AutoForbidPools afp(&masm, (labels.length() + 1) * (sizeof(void*) / vixl::kInstructionSize));
+#endif
+
+
   if (tableType == SwitchTableType::OutOfLine) {
 #if defined(JS_CODEGEN_ARM)
     MOZ_CRASH("NYI: SwitchTableType::OutOfLine");
@@ -11706,7 +11679,6 @@ void CodeGenerator::visitOutOfLineSwitch(
   }
 
   // Add table entries if the table is inlined.
-  auto& labels = jumpTable->labels();
   for (size_t i = 0, e = labels.length(); i < e; i++) {
     jumpTable->addTableEntry(masm);
   }

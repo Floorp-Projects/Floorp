@@ -1,5 +1,9 @@
 "use strict";
 
+XPCOMUtils.defineLazyServiceGetter(this, "authManager",
+                                   "@mozilla.org/network/http-auth-manager;1",
+                                   "nsIHttpAuthManager");
+
 const proxy = createHttpServer();
 
 // accept proxy connections for mozilla.org
@@ -76,6 +80,8 @@ add_task(async function test_webRequest_auth_proxy() {
   await handlingExt.startup();
   await handlingExt.awaitMessage("ready");
 
+  authManager.clearAll();
+
   let contentPage = await ExtensionTestUtils.loadContentPage(`http://mozilla.org/`);
 
   await handlingExt.awaitMessage("done");
@@ -112,6 +118,8 @@ add_task(async function test_webRequest_auth_proxy_system() {
   await handlingExt.startup();
   await handlingExt.awaitMessage("ready");
 
+  authManager.clearAll();
+
   function fetch(url) {
     return new Promise((resolve, reject) => {
       let xhr = new XMLHttpRequest();
@@ -119,8 +127,6 @@ add_task(async function test_webRequest_auth_proxy_system() {
       xhr.open("GET", url);
       xhr.onload = () => { resolve(xhr.responseText); };
       xhr.onerror = () => { reject(xhr.status); };
-      // use a different contextId to avoid auth cache.
-      xhr.setOriginAttributes({userContextId: 1});
       xhr.send();
     });
   }

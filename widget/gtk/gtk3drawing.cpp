@@ -381,9 +381,6 @@ static void CalculateToolbarButtonSpacing(WidgetNodeType aAppearance,
     aMetrics->buttonMargin.right += buttonSpacing;
   }
 
-  aMetrics->iconXPosition += aMetrics->buttonMargin.left;
-  aMetrics->iconYPosition += aMetrics->buttonMargin.top;
-
   aMetrics->minSizeWithBorderMargin.width +=
       aMetrics->buttonMargin.right + aMetrics->buttonMargin.left;
   aMetrics->minSizeWithBorderMargin.height +=
@@ -410,25 +407,38 @@ int GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout,
     decorationLayout = "menu:minimize,maximize,close";
   }
 
+  // "minimize,maximize,close:" layout means buttons are on the opposite
+  // titlebar side. close button is always there.
+  bool reversedButtonsPlacement = false;
+  const char *closeButton = strstr(decorationLayout, "close");
+  const char *separator = strchr(decorationLayout, ':');
+  if (closeButton != nullptr && separator != nullptr) {
+    reversedButtonsPlacement = closeButton < separator;
+  }
+
   // We support only default button order now:
-  // minimize/maximize/close
+  // minimize/maximize/close for right placement
+  // close/minimize/maximize for left placement
   int activeButtonNums = 0;
   if (aButtonLayout) {
+    if (reversedButtonsPlacement &&
+        strstr(decorationLayout, "close") != nullptr) {
+      aButtonLayout[activeButtonNums++] = MOZ_GTK_HEADER_BAR_BUTTON_CLOSE;
+    }
     if (strstr(decorationLayout, "minimize") != nullptr) {
       aButtonLayout[activeButtonNums++] = MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE;
     }
     if (strstr(decorationLayout, "maximize") != nullptr) {
       aButtonLayout[activeButtonNums++] = MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE;
     }
-    if (strstr(decorationLayout, "close") != nullptr) {
+    if (!reversedButtonsPlacement &&
+        strstr(decorationLayout, "close") != nullptr) {
       aButtonLayout[activeButtonNums++] = MOZ_GTK_HEADER_BAR_BUTTON_CLOSE;
     }
   }
 
-  // "minimize,maximize,close:menu" layout means buttons are on the opposite
-  // titlebar side.
   if (aReversedButtonsPlacement) {
-    *aReversedButtonsPlacement = strstr(decorationLayout, ":menu") != nullptr;
+    *aReversedButtonsPlacement = reversedButtonsPlacement;
   }
 
   return activeButtonNums;

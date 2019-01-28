@@ -11,6 +11,8 @@
 #include "nsIEventTarget.h"
 #include "nsString.h"
 
+extern mozilla::LazyLogModule gTimeoutLog;
+
 namespace mozilla {
 namespace dom {
 
@@ -30,8 +32,15 @@ nsresult TimeoutExecutor::ScheduleImmediate(const TimeStamp& aDeadline,
   MOZ_DIAGNOSTIC_ASSERT(mMode == Mode::None);
   MOZ_DIAGNOSTIC_ASSERT(aDeadline <= (aNow + mAllowedEarlyFiringTime));
 
-  nsresult rv =
-      mOwner->EventTarget()->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+  nsresult rv;
+  if (mIsIdleQueue) {
+    RefPtr<TimeoutExecutor> runnable(this);
+    MOZ_LOG(gTimeoutLog, LogLevel::Debug, ("Starting IdleDispatch runnable"));
+    rv = NS_DispatchToCurrentThreadQueue(runnable.forget(), mMaxIdleDeferMS,
+                                         EventQueuePriority::DeferredTimers);
+  } else {
+    rv = mOwner->EventTarget()->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   mMode = Mode::Immediate;
@@ -50,6 +59,13 @@ nsresult TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
 
   nsresult rv = NS_OK;
 
+  if (mIsIdleQueue) {
+    // Nothing goes into the idletimeouts list if it wasn't going to
+    // fire at that time, so we can always schedule idle-execution of
+    // these immediately
+    return ScheduleImmediate(aNow, aNow);
+  }
+
   if (!mTimer) {
     mTimer = NS_NewTimer(mOwner->EventTarget());
     NS_ENSURE_TRUE(mTimer, NS_ERROR_OUT_OF_MEMORY);
@@ -58,6 +74,10 @@ nsresult TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
     MOZ_ALWAYS_SUCCEEDS(
         mTimer->GetAllowedEarlyFiringMicroseconds(&earlyMicros));
     mAllowedEarlyFiringTime = TimeDuration::FromMicroseconds(earlyMicros);
+    // Re-evaluate if we should have scheduled this immediately
+    if (aDeadline <= (aNow + mAllowedEarlyFiringTime)) {
+      return ScheduleImmediate(aDeadline, aNow);
+    }
   } else {
     // Always call Cancel() in case we are re-using a timer.
     rv = mTimer->Cancel();
@@ -154,11 +174,15 @@ void TimeoutExecutor::MaybeExecute() {
 
   Cancel();
 
-  mOwner->RunTimeout(now, deadline);
+  mOwner->RunTimeout(now, deadline, mIsIdleQueue);
 }
 
-TimeoutExecutor::TimeoutExecutor(TimeoutManager* aOwner)
-    : mOwner(aOwner), mMode(Mode::None) {
+TimeoutExecutor::TimeoutExecutor(TimeoutManager* aOwner, bool aIsIdleQueue,
+                                 uint32_t aMaxIdleDeferMS)
+    : mOwner(aOwner),
+      mIsIdleQueue(aIsIdleQueue),
+      mMaxIdleDeferMS(aMaxIdleDeferMS),
+      mMode(Mode::None) {
   MOZ_DIAGNOSTIC_ASSERT(mOwner);
 }
 
@@ -201,6 +225,8 @@ NS_IMETHODIMP
 TimeoutExecutor::Run() {
   // If the executor is canceled and then rescheduled its possible to get
   // spurious executions here.  Ignore these unless our current mode matches.
+  MOZ_LOG(gTimeoutLog, LogLevel::Debug,
+          ("Running Immediate %stimers", mIsIdleQueue ? "Idle" : ""));
   if (mMode == Mode::Immediate) {
     MaybeExecute();
   }

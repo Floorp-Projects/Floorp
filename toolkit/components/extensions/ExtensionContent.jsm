@@ -312,7 +312,7 @@ class Script {
   }
 
   get requiresCleanup() {
-    return !this.removeCss && (this.css.length > 0 || this.cssCodeHash);
+    return !this.removeCSS && (this.css.length > 0 || this.cssCodeHash);
   }
 
   async addCSSCode(cssCode) {

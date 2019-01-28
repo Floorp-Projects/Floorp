@@ -34,7 +34,7 @@ class AboutConfigRowTest {
   }
 
   get nameCell() {
-    return this.querySelector("td");
+    return this.querySelector("th");
   }
 
   get name() {

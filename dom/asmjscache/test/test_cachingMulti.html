@@ -18,8 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944821
   <script>
   var jsFuns = SpecialPowers.Cu.getJSTestingFunctions();
 
-  var assertCacheHit = false;
-
   // generate four slightly different big asm.js modules and compile them async
   // so that we can hit the asm.js cache.
 
@@ -36,7 +34,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944821
     code2 += "return g" + i + ";\n";
     code2 += "}\n";
     code2 += "ok(jsFuns.isAsmJSModule(f), 'f is an asm.js module')\n";
-    code2 += "if (assertCacheHit) ok(jsFuns.isAsmJSModuleLoadedFromCache(f), 'cache hit');\n";
     code2 += "var gX = f();\n";
     code2 += "ok(jsFuns.isAsmJSFunction(gX), 'gX is an asm.js function')\n";
     code2 += "ok(gX() === " + i + ", 'gX returns the correct result')\n";
@@ -58,7 +55,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944821
     if (finishedCount < 1 || finishedCount > 2 * N) {
       throw "Huh?!";
     } else if (finishedCount == N) {
-      assertCacheHit = true;
       for (let i = 0; i < N; i++)
         evalAsync(codes[i]);
     } else if (finishedCount == 2 * N) {

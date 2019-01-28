@@ -427,7 +427,7 @@ void CycleCollectedJSContext::IsIdleGCTaskNeeded() const {
 
   if (Runtime()->IsIdleGCTaskNeeded()) {
     nsCOMPtr<nsIRunnable> gc_task = new IdleTimeGCTaskRunnable();
-    NS_IdleDispatchToCurrentThread(gc_task.forget());
+    NS_DispatchToCurrentThreadQueue(gc_task.forget(), EventQueuePriority::Idle);
     Runtime()->SetPendingIdleGCTask();
   }
 }

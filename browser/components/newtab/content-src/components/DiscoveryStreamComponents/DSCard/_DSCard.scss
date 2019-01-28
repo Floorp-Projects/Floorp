@@ -5,33 +5,45 @@ $excerpt-font-size: 13;
 $excerpt-line-height: 20;
 
 .ds-card {
-  border: 5px solid transparent;
+  display: flex;
+  flex-direction: column;
 
   &:hover {
-    border: 5px solid $grey-30;
-    box-shadow: 0 1px 4px $grey-30;
-    border-radius: 4px;
+    header {
+      color: $blue-60;
+    }
+  }
+
+  &:active {
+    header {
+      color: $blue-70;
+    }
   }
 
   .img-wrapper {
     width: 100%;
-    border: 0.5px solid $black-10;
-    border-radius: 4px;
   }
 
   .img {
+    @include image-as-background;
     height: 0;
     padding-top: 50%; // 2:1 aspect ratio
-    background-repeat: no-repeat;
-    background-size: cover;
   }
 
   .meta {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
     padding: 16px;
+
+    .info-wrap {
+      flex-grow: 1;
+    }
 
     .title {
       // show only 2 lines of copy
       @include limit-visibile-lines(2, $header-line-height, $header-font-size);
+      font-weight: 600;
     }
 
     .excerpt {
@@ -45,19 +57,16 @@ $excerpt-line-height: 20;
     font-size: $header-font-size * 1px;
     color: $grey-90;
 
-    &:hover {
-      color: $blue-60;
-    }
-
-    &:active {
-      color: $blue-70;
-    }
   }
 
   p {
     font-size: $excerpt-font-size * 1px;
     line-height: $excerpt-line-height * 1px;
     color: $grey-50;
-    margin: 8px 0;
+    margin: 8px 0 0;
+  }
+
+  .context {
+    color: $teal-70;
   }
 }

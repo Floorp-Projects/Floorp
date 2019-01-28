@@ -11,21 +11,23 @@
 #include "mozilla/UniquePtr.h"
 
 // Keep others in (case-insensitive) order:
+#include "FilterSupport.h"
 #include "ImgDrawResult.h"
+#include "SVGContentUtils.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
+#include "mozilla/Unused.h"
+#include "mozilla/gfx/Filters.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PatternHelpers.h"
-#include "nsSVGDisplayableFrame.h"
 #include "nsCSSFilterInstance.h"
+#include "nsSVGDisplayableFrame.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGUtils.h"
-#include "SVGContentUtils.h"
-#include "FilterSupport.h"
-#include "mozilla/Unused.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -118,6 +120,13 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
 
   if (!instance.IsInitialized()) {
     return false;
+  }
+
+  // If there are too many filters to render, then just pretend that we
+  // succeeded, and don't render any of them.
+  if (instance.mFilterDescription.mPrimitives.Length() >
+      gfxPrefs::WebRenderMaxFilterOpsPerChain()) {
+    return true;
   }
 
   Maybe<IntRect> finalClip;
@@ -606,7 +615,10 @@ void nsFilterInstance::BuildSourcePaints(imgDrawingParams& aImgParams) {
 }
 
 void nsFilterInstance::BuildSourceImage(DrawTarget* aDest,
-                                        imgDrawingParams& aImgParams) {
+                                        imgDrawingParams& aImgParams,
+                                        FilterNode* aFilter,
+                                        FilterNode* aSource,
+                                        const Rect& aSourceRect) {
   MOZ_ASSERT(mTargetFrame);
 
   nsIntRect neededRect = mSourceGraphic.mNeededBounds;
@@ -614,8 +626,9 @@ void nsFilterInstance::BuildSourceImage(DrawTarget* aDest,
     return;
   }
 
-  RefPtr<DrawTarget> offscreenDT = aDest->CreateSimilarDrawTarget(
-      neededRect.Size(), SurfaceFormat::B8G8R8A8);
+  RefPtr<DrawTarget> offscreenDT = aDest->CreateSimilarDrawTargetForFilter(
+      neededRect.Size(), SurfaceFormat::B8G8R8A8, aFilter, aSource, aSourceRect,
+      Point(0, 0));
   if (!offscreenDT || !offscreenDT->IsValid()) {
     return;
   }
@@ -674,15 +687,53 @@ void nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams,
 
   ComputeNeededBoxes();
 
-  BuildSourceImage(aCtx->GetDrawTarget(), aImgParams);
-  BuildSourcePaints(aImgParams);
+  Rect renderRect = IntRectToRect(filterRect);
+  RefPtr<DrawTarget> dt = aCtx->GetDrawTarget();
 
-  FilterSupport::RenderFilterDescription(
-      aCtx->GetDrawTarget(), mFilterDescription, IntRectToRect(filterRect),
-      mSourceGraphic.mSourceSurface, mSourceGraphic.mSurfaceRect,
-      mFillPaint.mSourceSurface, mFillPaint.mSurfaceRect,
-      mStrokePaint.mSourceSurface, mStrokePaint.mSurfaceRect, mInputImages,
-      Point(0, 0), DrawOptions(aOpacity));
+  BuildSourcePaints(aImgParams);
+  RefPtr<FilterNode> sourceGraphic, fillPaint, strokePaint;
+  if (mFillPaint.mSourceSurface) {
+    fillPaint = FilterWrappers::ForSurface(dt, mFillPaint.mSourceSurface,
+                                           mFillPaint.mSurfaceRect.TopLeft());
+  }
+  if (mStrokePaint.mSourceSurface) {
+    strokePaint = FilterWrappers::ForSurface(
+        dt, mStrokePaint.mSourceSurface, mStrokePaint.mSurfaceRect.TopLeft());
+  }
+
+  // We make the sourceGraphic filter but don't set its inputs until after so
+  // that we can make the sourceGraphic size depend on the filter chain
+  sourceGraphic = dt->CreateFilter(FilterType::TRANSFORM);
+  if (sourceGraphic) {
+    // Make sure we set the translation before calling BuildSourceImage
+    // so that CreateSimilarDrawTargetForFilter works properly
+    IntPoint offset = mSourceGraphic.mNeededBounds.TopLeft();
+    sourceGraphic->SetAttribute(ATT_TRANSFORM_MATRIX,
+                                Matrix::Translation(offset.x, offset.y));
+  }
+
+  RefPtr<FilterNode> resultFilter = FilterNodeGraphFromDescription(
+      aCtx->GetDrawTarget(), mFilterDescription, renderRect, sourceGraphic,
+      mSourceGraphic.mSurfaceRect, fillPaint, strokePaint, mInputImages);
+
+  if (!resultFilter) {
+    gfxWarning() << "Filter is NULL.";
+    return;
+  }
+
+  BuildSourceImage(aCtx->GetDrawTarget(), aImgParams, resultFilter,
+                   sourceGraphic, renderRect);
+  if (sourceGraphic) {
+    if (mSourceGraphic.mSourceSurface) {
+      sourceGraphic->SetInput(IN_TRANSFORM_IN, mSourceGraphic.mSourceSurface);
+    } else {
+      RefPtr<FilterNode> clear = FilterWrappers::Clear(aCtx->GetDrawTarget());
+      sourceGraphic->SetInput(IN_TRANSFORM_IN, clear);
+    }
+  }
+
+  aCtx->GetDrawTarget()->DrawFilter(resultFilter, renderRect, Point(0, 0),
+                                    DrawOptions(aOpacity));
 }
 
 nsRegion nsFilterInstance::ComputePostFilterDirtyRegion() {

@@ -169,7 +169,8 @@ bool js::ValueToStringBufferSlow(JSContext* cx, const Value& arg,
   }
 #ifdef ENABLE_BIGINT
   if (v.isBigInt()) {
-    JSLinearString* str = BigInt::toString(cx, v.toBigInt(), 10);
+    RootedBigInt i(cx, v.toBigInt());
+    JSLinearString* str = BigInt::toString(cx, i, 10);
     if (!str) {
       return false;
     }

@@ -10,8 +10,6 @@
 #include "nsIURI.h"
 
 NS_IMETHODIMP
-nsLocalHandlerAppUIKit::LaunchWithURI(nsIURI* aURI,
-                                      nsIInterfaceRequestor* aWindowContext)
-{
+nsLocalHandlerAppUIKit::LaunchWithURI(nsIURI* aURI, nsIInterfaceRequestor* aWindowContext) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -2012,7 +2012,7 @@ nsresult nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
   nsAutoCString result;
-  GetCookieStringInternal(aHostURI, isForeign, isTrackingResource,
+  GetCookieStringInternal(aHostURI, aChannel, isForeign, isTrackingResource,
                           firstPartyStorageAccessGranted, isSafeTopLevelNav,
                           isSameSiteForeign, aHttpBound, attrs, result);
   *aCookie = result.IsEmpty() ? nullptr : ToNewCString(result);
@@ -2171,7 +2171,7 @@ void nsCookieService::SetCookieStringInternal(
   // (but not if there was an error)
   switch (cookieStatus) {
     case STATUS_REJECTED:
-      NotifyRejected(aHostURI, aChannel, rejectedReason);
+      NotifyRejected(aHostURI, aChannel, rejectedReason, OPERATION_WRITE);
       if (aIsForeign) {
         NotifyThirdParty(aHostURI, false, aChannel);
       }
@@ -2206,10 +2206,15 @@ void nsCookieService::NotifyAccepted(nsIChannel *aChannel) {
 
 // notify observers that a cookie was rejected due to the users' prefs.
 void nsCookieService::NotifyRejected(nsIURI *aHostURI, nsIChannel *aChannel,
-                                     uint32_t aRejectedReason) {
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(aHostURI, "cookie-rejected", nullptr);
+                                     uint32_t aRejectedReason,
+                                     CookieOperation aOperation) {
+  if (aOperation == OPERATION_WRITE) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(aHostURI, "cookie-rejected", nullptr);
+    }
+  } else {
+    MOZ_ASSERT(aOperation == OPERATION_READ);
   }
 
   AntiTrackingCommon::NotifyBlockingDecision(
@@ -3016,13 +3021,11 @@ bool nsCookieService::PathMatches(nsCookie *aCookie, const nsACString &aPath) {
   return true;
 }
 
-void nsCookieService::GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign,
-                                       bool aIsTrackingResource,
-                                       bool aFirstPartyStorageAccessGranted,
-                                       bool aIsSafeTopLevelNav,
-                                       bool aIsSameSiteForeign, bool aHttpBound,
-                                       const OriginAttributes &aOriginAttrs,
-                                       nsTArray<nsCookie *> &aCookieList) {
+void nsCookieService::GetCookiesForURI(
+    nsIURI *aHostURI, nsIChannel *aChannel, bool aIsForeign,
+    bool aIsTrackingResource, bool aFirstPartyStorageAccessGranted,
+    bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, bool aHttpBound,
+    const OriginAttributes &aOriginAttrs, nsTArray<nsCookie *> &aCookieList) {
   NS_ASSERTION(aHostURI, "null host!");
 
   if (!mDBState) {
@@ -3054,18 +3057,22 @@ void nsCookieService::GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign,
   }
 
   // check default prefs
+  uint32_t rejectedReason = 0;
   uint32_t priorCookieCount = 0;
   CountCookiesFromHost(hostFromURI, &priorCookieCount);
   CookieStatus cookieStatus =
       CheckPrefs(mPermissionService, mCookieBehavior, mThirdPartySession,
                  mThirdPartyNonsecureSession, aHostURI, aIsForeign,
                  aIsTrackingResource, aFirstPartyStorageAccessGranted, nullptr,
-                 priorCookieCount, aOriginAttrs, nullptr);
+                 priorCookieCount, aOriginAttrs, &rejectedReason);
 
-  // for GetCookie(), we don't fire rejection notifications.
+  MOZ_ASSERT_IF(rejectedReason, cookieStatus == STATUS_REJECTED);
+
+  // for GetCookie(), we only fire acceptance/rejection notifications
+  // (but not if there was an error)
   switch (cookieStatus) {
     case STATUS_REJECTED:
-    case STATUS_REJECTED_WITH_ERROR:
+      NotifyRejected(aHostURI, aChannel, rejectedReason, OPERATION_READ);
       return;
     default:
       break;
@@ -3144,6 +3151,10 @@ void nsCookieService::GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign,
   int32_t count = aCookieList.Length();
   if (count == 0) return;
 
+  // Send a notification about the acceptance of the cookies now that we found
+  // some.
+  NotifyAccepted(aChannel);
+
   // update lastAccessed timestamps. we only do this if the timestamp is stale
   // by a certain amount, to avoid thrashing the db during pageload.
   if (stale) {
@@ -3184,12 +3195,12 @@ void nsCookieService::GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign,
 }
 
 void nsCookieService::GetCookieStringInternal(
-    nsIURI *aHostURI, bool aIsForeign, bool aIsTrackingResource,
-    bool aFirstPartyStorageAccessGranted, bool aIsSafeTopLevelNav,
-    bool aIsSameSiteForeign, bool aHttpBound,
+    nsIURI *aHostURI, nsIChannel *aChannel, bool aIsForeign,
+    bool aIsTrackingResource, bool aFirstPartyStorageAccessGranted,
+    bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, bool aHttpBound,
     const OriginAttributes &aOriginAttrs, nsCString &aCookieString) {
   AutoTArray<nsCookie *, 8> foundCookieList;
-  GetCookiesForURI(aHostURI, aIsForeign, aIsTrackingResource,
+  GetCookiesForURI(aHostURI, aChannel, aIsForeign, aIsTrackingResource,
                    aFirstPartyStorageAccessGranted, aIsSafeTopLevelNav,
                    aIsSameSiteForeign, aHttpBound, aOriginAttrs,
                    foundCookieList);
@@ -3447,7 +3458,8 @@ bool nsCookieService::SetCookieInternal(nsIURI *aHostURI,
                         "cookie rejected by permission manager");
       NotifyRejected(
           aHostURI, aChannel,
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION);
+          nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION,
+          OPERATION_WRITE);
       return newCookie;
     }
 
@@ -4067,31 +4079,6 @@ CookieStatus nsCookieService::CheckPrefs(
           return STATUS_REJECTED;
 
         case nsICookiePermission::ACCESS_ALLOW:
-          return STATUS_ACCEPTED;
-
-        case nsICookiePermission::ACCESS_ALLOW_FIRST_PARTY_ONLY:
-          if (aIsForeign) {
-            COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI,
-                              aCookieHeader,
-                              "third party cookies are blocked "
-                              "for this site");
-            *aRejectedReason =
-                nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION;
-            return STATUS_REJECTED;
-          }
-          return STATUS_ACCEPTED;
-
-        case nsICookiePermission::ACCESS_LIMIT_THIRD_PARTY:
-          if (!aIsForeign) return STATUS_ACCEPTED;
-          if (aNumOfCookies == 0) {
-            COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI,
-                              aCookieHeader,
-                              "third party cookies are blocked "
-                              "for this site");
-            *aRejectedReason =
-                nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION;
-            return STATUS_REJECTED;
-          }
           return STATUS_ACCEPTED;
       }
     }

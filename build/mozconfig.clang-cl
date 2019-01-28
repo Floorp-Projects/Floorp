@@ -13,3 +13,9 @@ fi
 export CC=clang-cl
 export CXX=clang-cl
 export ENABLE_CLANG_PLUGIN=1
+
+if [ -n "$UPLOAD_PATH" ]; then
+    DIAGNOSTICS_DIR="$(cmd.exe //e:on //c if not exist ${UPLOAD_PATH} mkdir ${UPLOAD_PATH} && cd ${UPLOAD_PATH} && pwd)"
+    export CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${DIAGNOSTICS_DIR}"
+    export CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${DIAGNOSTICS_DIR}"
+fi

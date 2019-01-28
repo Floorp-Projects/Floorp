@@ -329,6 +329,11 @@ DebuggerClient.prototype = {
         client.detach(detachClients);
         return;
       }
+      if (client.destroy) {
+        client.destroy();
+        detachClients();
+        return;
+      }
       detachClients();
     };
     detachClients();

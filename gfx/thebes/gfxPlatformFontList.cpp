@@ -401,7 +401,7 @@ void gfxPlatformFontList::InitOtherFamilyNames(
       RefPtr<mozilla::CancelableRunnable> task =
           new InitOtherFamilyNamesRunnable();
       mPendingOtherFamilyNameTask = task;
-      NS_IdleDispatchToMainThread(task.forget());
+      NS_DispatchToMainThreadQueue(task.forget(), EventQueuePriority::Idle);
     }
   } else {
     InitOtherFamilyNamesInternal(false);

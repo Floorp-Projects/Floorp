@@ -3,5 +3,10 @@
     "debug": true,
     "env": {
         "JSTESTS_EXTRA_ARGS": "--jitflags=debug"
+    },
+    "conditional-env": {
+        "linux64": {
+            "JITTEST_EXTRA_ARGS": "--run-binast"
+        }
     }
 }

@@ -549,6 +549,10 @@ class nsDocShell final : public nsDocLoader,
   nsresult DoChannelLoad(nsIChannel* aChannel, nsIURILoader* aURILoader,
                          bool aBypassClassifier);
 
+  nsresult OpenInitializedChannel(nsIChannel* aChannel,
+                                  nsIURILoader* aURILoader,
+                                  uint32_t aOpenFlags);
+
   nsresult ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
                           nsACString& aNewHash, uint32_t aLoadType);
 

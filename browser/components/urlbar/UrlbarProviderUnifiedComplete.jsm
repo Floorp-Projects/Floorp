@@ -16,8 +16,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  UrlbarMatch: "resource:///modules/UrlbarMatch.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
@@ -159,7 +159,7 @@ var UrlbarProviderUnifiedComplete = new ProviderUnifiedComplete();
  * In any case at least we're sure there's just one heuristic result and it
  * comes first.
  *
- * @param {object} context the QueryContext
+ * @param {UrlbarQueryContext} context the query context.
  * @param {object} result an nsIAutocompleteResult
  * @param {set} urls a Set containing all the found urls, used to discard
  *        already added matches.
@@ -186,7 +186,7 @@ function convertResultToMatches(context, result, urls) {
     urls.add(url);
     // Not used yet: result.getLabelAt(i)
     let style = result.getStyleAt(i);
-    let match = makeUrlbarMatch(context.tokens, {
+    let match = makeUrlbarResult(context.tokens, {
       url,
       icon: result.getImageAt(i),
       style,
@@ -212,20 +212,20 @@ function convertResultToMatches(context, result, urls) {
 }
 
 /**
- * Creates a new UrlbarMatch from the provided data.
+ * Creates a new UrlbarResult from the provided data.
  * @param {array} tokens the search tokens.
  * @param {object} info includes properties from the legacy match.
- * @returns {object} an UrlbarMatch
+ * @returns {object} an UrlbarResult
  */
-function makeUrlbarMatch(tokens, info) {
+function makeUrlbarResult(tokens, info) {
   let action = PlacesUtils.parseActionUrl(info.url);
   if (action) {
     switch (action.type) {
       case "searchengine":
-        return new UrlbarMatch(
-          UrlbarUtils.MATCH_TYPE.SEARCH,
+        return new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.SEARCH,
           UrlbarUtils.MATCH_SOURCE.SEARCH,
-          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+          ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             engine: [action.params.engineName, true],
             suggestion: [action.params.searchSuggestion, true],
             keyword: [action.params.alias, true],
@@ -234,10 +234,10 @@ function makeUrlbarMatch(tokens, info) {
           })
         );
       case "keyword":
-        return new UrlbarMatch(
-          UrlbarUtils.MATCH_TYPE.KEYWORD,
+        return new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.KEYWORD,
           UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
-          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+          ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             url: [action.params.url, true],
             keyword: [info.firstToken, true],
             postData: [action.params.postData, false],
@@ -245,10 +245,10 @@ function makeUrlbarMatch(tokens, info) {
           })
         );
       case "extension":
-        return new UrlbarMatch(
-          UrlbarUtils.MATCH_TYPE.OMNIBOX,
+        return new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.OMNIBOX,
           UrlbarUtils.MATCH_SOURCE.OTHER_NETWORK,
-          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+          ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             title: [info.comment, true],
             content: [action.params.content, true],
             keyword: [action.params.keyword, true],
@@ -256,10 +256,10 @@ function makeUrlbarMatch(tokens, info) {
           })
         );
       case "remotetab":
-        return new UrlbarMatch(
-          UrlbarUtils.MATCH_TYPE.REMOTE_TAB,
+        return new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
           UrlbarUtils.MATCH_SOURCE.TABS,
-          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+          ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             url: [action.params.url, true],
             title: [info.comment, true],
             device: [action.params.deviceName, true],
@@ -267,10 +267,10 @@ function makeUrlbarMatch(tokens, info) {
           })
         );
       case "switchtab":
-        return new UrlbarMatch(
-          UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
+        return new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
           UrlbarUtils.MATCH_SOURCE.TABS,
-          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+          ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             url: [action.params.url, true],
             title: [info.comment, true],
             device: [action.params.deviceName, true],
@@ -278,10 +278,10 @@ function makeUrlbarMatch(tokens, info) {
           })
         );
       case "visiturl":
-        return new UrlbarMatch(
-          UrlbarUtils.MATCH_TYPE.URL,
+        return new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.URL,
           UrlbarUtils.MATCH_SOURCE.OTHER_LOCAL,
-          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+          ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             title: [info.comment, true],
             url: [action.params.url, true],
             icon: [info.icon, false],
@@ -294,10 +294,10 @@ function makeUrlbarMatch(tokens, info) {
   }
 
   if (info.style.includes("priority-search")) {
-    return new UrlbarMatch(
-      UrlbarUtils.MATCH_TYPE.SEARCH,
+    return new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.SEARCH,
       UrlbarUtils.MATCH_SOURCE.SEARCH,
-      ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+      ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
         engine: [info.comment, true],
         icon: [info.icon, false],
       })
@@ -314,17 +314,21 @@ function makeUrlbarMatch(tokens, info) {
     if (hasTags) {
       // Split title and tags.
       [comment, tags] = info.comment.split(TITLE_TAGS_SEPARATOR);
-      tags = tags.split(",").map(t => t.trim());
+      // Tags are separated by a comma and in a random order.
+      // We should also just include tags that match the searchString.
+      tags = tags.split(",").map(t => t.trim()).filter(tag => {
+        return tokens.some(token => tag.includes(token.value));
+      }).sort();
     }
   } else if (info.style.includes("preloaded-top-sites")) {
     source = UrlbarUtils.MATCH_SOURCE.OTHER_LOCAL;
   } else {
     source = UrlbarUtils.MATCH_SOURCE.HISTORY;
   }
-  return new UrlbarMatch(
-    UrlbarUtils.MATCH_TYPE.URL,
+  return new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.URL,
     source,
-    ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
+    ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
       url: [info.url, true],
       icon: [info.icon, false],
       title: [comment, true],

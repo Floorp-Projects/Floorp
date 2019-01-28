@@ -35,7 +35,7 @@ class ConfirmDialog extends Component {
       autocompleteUpdate: PropTypes.func.isRequired,
       autocompleteClear: PropTypes.func.isRequired,
       // Data to be displayed in the confirm dialog.
-      getterPath: PropTypes.array.isRequired,
+      getterPath: PropTypes.array,
       serviceContainer: PropTypes.object.isRequired,
     };
   }

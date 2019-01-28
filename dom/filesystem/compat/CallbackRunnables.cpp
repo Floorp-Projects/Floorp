@@ -33,7 +33,7 @@ EntryCallbackRunnable::EntryCallbackRunnable(FileSystemEntryCallback* aCallback,
 
 NS_IMETHODIMP
 EntryCallbackRunnable::Run() {
-  mCallback->HandleEvent(*mEntry);
+  mCallback->Call(*mEntry);
   return NS_OK;
 }
 
@@ -52,7 +52,7 @@ ErrorCallbackRunnable::ErrorCallbackRunnable(nsIGlobalObject* aGlobalObject,
 NS_IMETHODIMP
 ErrorCallbackRunnable::Run() {
   RefPtr<DOMException> exception = DOMException::Create(mError);
-  mCallback->HandleEvent(*exception);
+  mCallback->Call(*exception);
   return NS_OK;
 }
 
@@ -65,7 +65,7 @@ EmptyEntriesCallbackRunnable::EmptyEntriesCallbackRunnable(
 NS_IMETHODIMP
 EmptyEntriesCallbackRunnable::Run() {
   Sequence<OwningNonNull<FileSystemEntry>> sequence;
-  mCallback->HandleEvent(sequence);
+  mCallback->Call(sequence);
   return NS_OK;
 }
 
@@ -188,7 +188,7 @@ void GetEntryHelper::CompleteOperation(JSObject* aObj) {
 
     RefPtr<FileSystemFileEntry> entry = new FileSystemFileEntry(
         mParentEntry->GetParentObject(), file, mParentEntry, mFileSystem);
-    mSuccessCallback->HandleEvent(*entry);
+    mSuccessCallback->Call(*entry);
     return;
   }
 
@@ -202,7 +202,7 @@ void GetEntryHelper::CompleteOperation(JSObject* aObj) {
 
   RefPtr<FileSystemDirectoryEntry> entry = new FileSystemDirectoryEntry(
       mParentEntry->GetParentObject(), directory, mParentEntry, mFileSystem);
-  mSuccessCallback->HandleEvent(*entry);
+  mSuccessCallback->Call(*entry);
 }
 
 void GetEntryHelper::ContinueRunning(JSObject* aObj) {

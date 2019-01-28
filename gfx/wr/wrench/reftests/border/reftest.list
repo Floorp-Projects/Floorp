@@ -7,7 +7,7 @@ platform(linux,mac) == border-radial-gradient-nine-patch.yaml border-radial-grad
 == border-none.yaml border-none-ref.yaml
 == border-invisible.yaml border-invisible-ref.yaml
 platform(linux,mac) == border-suite.yaml border-suite.png
-platform(linux,mac) fuzzy(1,57) == border-suite-2.yaml border-suite-2.png
+platform(linux,mac) fuzzy(8,8) == border-suite-2.yaml border-suite-2.png
 platform(linux,mac) == border-suite-3.yaml border-suite-3.png
 == border-double-simple.yaml border-double-simple-ref.yaml
 == border-double-simple-2.yaml border-double-simple-2-ref.yaml

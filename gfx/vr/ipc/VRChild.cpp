@@ -10,7 +10,9 @@
 
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/SystemGroup.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/VsyncDispatcher.h"
+#include "mozilla/ipc/CrashReporterHost.h"
 
 namespace mozilla {
 namespace gfx {
@@ -69,6 +71,17 @@ VRChild::VRChild(VRProcessParent* aHost) : mHost(aHost) {
 }
 
 void VRChild::ActorDestroy(ActorDestroyReason aWhy) {
+  if (aWhy == AbnormalShutdown) {
+    if (mCrashReporter) {
+      mCrashReporter->GenerateCrashReport(OtherPid());
+      mCrashReporter = nullptr;
+    }
+
+    Telemetry::Accumulate(
+        Telemetry::SUBPROCESS_ABNORMAL_ABORT,
+        nsDependentCString(XRE_ChildProcessTypeToString(GeckoProcessType_VR)),
+        1);
+  }
   gfxVars::RemoveReceiver(this);
   mHost->OnChannelClosed();
 }
@@ -141,6 +154,14 @@ mozilla::ipc::IPCResult VRChild::RecvOpenVRControllerManifestPathToParent(
     const OpenVRControllerType& aType, const nsCString& aPath) {
   sOpenVRControllerManifestManager->SetOpenVRControllerManifestPath(aType,
                                                                     aPath);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult VRChild::RecvInitCrashReporter(
+    Shmem&& aShmem, const NativeThreadId& aThreadId) {
+  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(GeckoProcessType_VR,
+                                                      aShmem, aThreadId);
+
   return IPC_OK();
 }
 

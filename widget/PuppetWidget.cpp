@@ -898,70 +898,65 @@ nsresult PuppetWidget::NotifyIMEOfPositionChange(
   return NS_OK;
 }
 
-void PuppetWidget::SetCursor(nsCursor aCursor) {
+struct CursorSurface {
+  UniquePtr<char[]> mData;
+  IntSize mSize;
+};
+
+void PuppetWidget::SetCursor(nsCursor aCursor,
+                             imgIContainer* aCursorImage,
+                             uint32_t aHotspotX,
+                             uint32_t aHotspotY) {
+  if (!mTabChild) {
+    return;
+  }
+
   // Don't cache on windows, Windowless flash breaks this via async cursor
   // updates.
 #if !defined(XP_WIN)
-  if (mCursor == aCursor && !mCustomCursor && !mUpdateCursor) {
+  if (!mUpdateCursor && mCursor == aCursor && mCustomCursor == aCursorImage &&
+      (!aCursorImage ||
+       (mCursorHotspotX == aHotspotX && mCursorHotspotY == aHotspotY))) {
     return;
   }
 #endif
 
+  bool hasCustomCursor = false;
+  UniquePtr<char[]> customCursorData;
+  size_t length = 0;
+  IntSize customCursorSize;
+  int32_t stride = 0;
+  auto format = SurfaceFormat::B8G8R8A8;
+  bool force = mUpdateCursor;
+
+  if (aCursorImage) {
+    RefPtr<SourceSurface> surface = aCursorImage->GetFrame(
+        imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
+    if (surface) {
+      if (RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface()) {
+        hasCustomCursor = true;
+        customCursorData = nsContentUtils::GetSurfaceData(
+            WrapNotNull(dataSurface), &length, &stride);
+        customCursorSize = dataSurface->GetSize();
+        format = dataSurface->GetFormat();
+      }
+    }
+  }
+
   mCustomCursor = nullptr;
 
-  if (mTabChild && !mTabChild->SendSetCursor(aCursor, mUpdateCursor)) {
+  nsDependentCString cursorData(customCursorData ? customCursorData.get() : "", length);
+  if (!mTabChild->SendSetCursor(aCursor, hasCustomCursor, cursorData,
+                                customCursorSize.width, customCursorSize.height,
+                                stride, format, aHotspotX, aHotspotY, force)) {
     return;
   }
 
   mCursor = aCursor;
-  mUpdateCursor = false;
-}
-
-nsresult PuppetWidget::SetCursor(imgIContainer* aCursor, uint32_t aHotspotX,
-                                 uint32_t aHotspotY) {
-  if (!aCursor || !mTabChild) {
-    return NS_OK;
-  }
-
-#if !defined(XP_WIN)
-  if (mCustomCursor == aCursor && mCursorHotspotX == aHotspotX &&
-      mCursorHotspotY == aHotspotY && !mUpdateCursor) {
-    return NS_OK;
-  }
-#endif
-
-  RefPtr<mozilla::gfx::SourceSurface> surface = aCursor->GetFrame(
-      imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
-  if (!surface) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
-      surface->GetDataSurface();
-  if (!dataSurface) {
-    return NS_ERROR_FAILURE;
-  }
-
-  size_t length;
-  int32_t stride;
-  mozilla::UniquePtr<char[]> surfaceData = nsContentUtils::GetSurfaceData(
-      WrapNotNull(dataSurface), &length, &stride);
-
-  nsDependentCString cursorData(surfaceData.get(), length);
-  mozilla::gfx::IntSize size = dataSurface->GetSize();
-  if (!mTabChild->SendSetCustomCursor(cursorData, size.width, size.height,
-                                      stride, dataSurface->GetFormat(),
-                                      aHotspotX, aHotspotY, mUpdateCursor)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mCursor = eCursorInvalid;
-  mCustomCursor = aCursor;
+  mCustomCursor = aCursorImage;
   mCursorHotspotX = aHotspotX;
   mCursorHotspotY = aHotspotY;
   mUpdateCursor = false;
-
-  return NS_OK;
 }
 
 void PuppetWidget::ClearCachedCursor() {

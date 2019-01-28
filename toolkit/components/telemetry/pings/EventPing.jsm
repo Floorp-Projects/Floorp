@@ -42,7 +42,6 @@ const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryEventPing::";
 
 const EVENT_LIMIT_REACHED_TOPIC = "event-telemetry-storage-limit-reached";
-const PROFILE_BEFORE_CHANGE_TOPIC = "profile-before-change";
 
 var Policy = {
   setTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
@@ -75,8 +74,8 @@ var TelemetryEventPing = {
     if (!Services.prefs.getBoolPref(Utils.Preferences.EventPingEnabled, true)) {
       return;
     }
+    this._log.trace("Starting up.");
     Services.obs.addObserver(this, EVENT_LIMIT_REACHED_TOPIC);
-    Services.obs.addObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
 
     XPCOMUtils.defineLazyPreferenceGetter(this, "maxEventsPerPing",
                                           Utils.Preferences.EventPingEventLimit,
@@ -92,12 +91,13 @@ var TelemetryEventPing = {
   },
 
   shutdown() {
+    this._log.trace("Shutting down.");
     // removeObserver may throw, which could interrupt shutdown.
     try {
       Services.obs.removeObserver(this, EVENT_LIMIT_REACHED_TOPIC);
-      Services.obs.removeObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
     } catch (ex) {}
 
+    this._submitPing(this.Reason.SHUTDOWN, true /* discardLeftovers */);
     this._clearTimer();
   },
 
@@ -115,10 +115,6 @@ var TelemetryEventPing = {
           this._log.trace("submitting ping immediately");
           this._submitPing(this.Reason.MAX);
         }
-        break;
-      case PROFILE_BEFORE_CHANGE_TOPIC:
-        this._log.trace("profile before change");
-        this._submitPing(this.Reason.SHUTDOWN, true /* discardLeftovers */);
         break;
     }
   },

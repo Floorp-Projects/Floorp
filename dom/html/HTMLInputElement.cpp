@@ -6936,6 +6936,10 @@ void HTMLInputElement::SetFilePickerFiltersFromAccept(
       continue;
     }
 
+    // At this point we're sure the token represents a valid filter, so pass
+    // it directly as a raw filter.
+    filePicker->AppendRawFilter(token);
+
     // If we arrived here, that means we have a valid filter: let's create it
     // and add it to our list, if no similar filter is already present
     nsFilePickerFilter filter;

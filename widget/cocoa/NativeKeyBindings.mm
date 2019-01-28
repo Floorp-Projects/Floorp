@@ -19,9 +19,7 @@ NativeKeyBindings* NativeKeyBindings::sInstanceForSingleLineEditor = nullptr;
 NativeKeyBindings* NativeKeyBindings::sInstanceForMultiLineEditor = nullptr;
 
 // static
-NativeKeyBindings*
-NativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
-{
+NativeKeyBindings* NativeKeyBindings::GetInstance(NativeKeyBindingsType aType) {
   switch (aType) {
     case nsIWidget::NativeKeyBindingsForSingleLineEditor:
       if (!sInstanceForSingleLineEditor) {
@@ -43,28 +41,20 @@ NativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
 }
 
 // static
-void
-NativeKeyBindings::Shutdown()
-{
+void NativeKeyBindings::Shutdown() {
   delete sInstanceForSingleLineEditor;
   sInstanceForSingleLineEditor = nullptr;
   delete sInstanceForMultiLineEditor;
   sInstanceForMultiLineEditor = nullptr;
 }
 
-NativeKeyBindings::NativeKeyBindings()
-{
-}
+NativeKeyBindings::NativeKeyBindings() {}
 
 #define SEL_TO_COMMAND(aSel, aCommand) \
-  mSelectorToCommand.Put( \
-    reinterpret_cast<struct objc_selector *>(@selector(aSel)), aCommand)
+  mSelectorToCommand.Put(reinterpret_cast<struct objc_selector*>(@selector(aSel)), aCommand)
 
-void
-NativeKeyBindings::Init(NativeKeyBindingsType aType)
-{
-  MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
-    ("%p NativeKeyBindings::Init", this));
+void NativeKeyBindings::Init(NativeKeyBindingsType aType) {
+  MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info, ("%p NativeKeyBindings::Init", this));
 
   // Many selectors have a one-to-one mapping to a Gecko command. Those mappings
   // are registered in mSelectorToCommand.
@@ -122,20 +112,16 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
   SEL_TO_COMMAND(moveForwardAndModifySelection:, CommandSelectCharNext);
   SEL_TO_COMMAND(moveLeft:, CommandCharPrevious);
   SEL_TO_COMMAND(moveLeftAndModifySelection:, CommandSelectCharPrevious);
-  SEL_TO_COMMAND(moveParagraphBackwardAndModifySelection:,
-    CommandSelectBeginLine);
+  SEL_TO_COMMAND(moveParagraphBackwardAndModifySelection:, CommandSelectBeginLine);
   SEL_TO_COMMAND(moveParagraphForwardAndModifySelection:, CommandSelectEndLine);
   SEL_TO_COMMAND(moveRight:, CommandCharNext);
   SEL_TO_COMMAND(moveRightAndModifySelection:, CommandSelectCharNext);
   SEL_TO_COMMAND(moveToBeginningOfDocument:, CommandMoveTop);
-  SEL_TO_COMMAND(moveToBeginningOfDocumentAndModifySelection:,
-    CommandSelectTop);
+  SEL_TO_COMMAND(moveToBeginningOfDocumentAndModifySelection:, CommandSelectTop);
   SEL_TO_COMMAND(moveToBeginningOfLine:, CommandBeginLine);
-  SEL_TO_COMMAND(moveToBeginningOfLineAndModifySelection:,
-    CommandSelectBeginLine);
+  SEL_TO_COMMAND(moveToBeginningOfLineAndModifySelection:, CommandSelectBeginLine);
   SEL_TO_COMMAND(moveToBeginningOfParagraph:, CommandBeginLine);
-  SEL_TO_COMMAND(moveToBeginningOfParagraphAndModifySelection:,
-    CommandSelectBeginLine);
+  SEL_TO_COMMAND(moveToBeginningOfParagraphAndModifySelection:, CommandSelectBeginLine);
   SEL_TO_COMMAND(moveToEndOfDocument:, CommandMoveBottom);
   SEL_TO_COMMAND(moveToEndOfDocumentAndModifySelection:, CommandSelectBottom);
   SEL_TO_COMMAND(moveToEndOfLine:, CommandEndLine);
@@ -143,8 +129,7 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
   SEL_TO_COMMAND(moveToEndOfParagraph:, CommandEndLine);
   SEL_TO_COMMAND(moveToEndOfParagraphAndModifySelection:, CommandSelectEndLine);
   SEL_TO_COMMAND(moveToLeftEndOfLine:, CommandBeginLine);
-  SEL_TO_COMMAND(moveToLeftEndOfLineAndModifySelection:,
-    CommandSelectBeginLine);
+  SEL_TO_COMMAND(moveToLeftEndOfLineAndModifySelection:, CommandSelectBeginLine);
   SEL_TO_COMMAND(moveToRightEndOfLine:, CommandEndLine);
   SEL_TO_COMMAND(moveToRightEndOfLineAndModifySelection:, CommandSelectEndLine);
   if (aType == nsIWidget::NativeKeyBindingsForSingleLineEditor) {
@@ -154,8 +139,7 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
   }
   SEL_TO_COMMAND(moveUpAndModifySelection:, CommandSelectLinePrevious);
   SEL_TO_COMMAND(moveWordBackward:, CommandWordPrevious);
-  SEL_TO_COMMAND(moveWordBackwardAndModifySelection:,
-    CommandSelectWordPrevious);
+  SEL_TO_COMMAND(moveWordBackwardAndModifySelection:, CommandSelectWordPrevious);
   SEL_TO_COMMAND(moveWordForward:, CommandWordNext);
   SEL_TO_COMMAND(moveWordForwardAndModifySelection:, CommandSelectWordNext);
   SEL_TO_COMMAND(moveWordLeft:, CommandWordPrevious);
@@ -194,14 +178,11 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
 
 #undef SEL_TO_COMMAND
 
-void
-NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
-                                   nsTArray<CommandInt>& aCommands)
-{
+void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
+                                        nsTArray<CommandInt>& aCommands) {
   MOZ_ASSERT(aCommands.IsEmpty());
 
-  MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
-    ("%p NativeKeyBindings::GetEditCommands", this));
+  MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info, ("%p NativeKeyBindings::GetEditCommands", this));
 
   // Recover the current event, which should always be the key down we are
   // responding to.
@@ -210,20 +191,20 @@ NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
 
   if (!cocoaEvent || [cocoaEvent type] != NSKeyDown) {
     MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
-      ("%p NativeKeyBindings::GetEditCommands, no Cocoa key down event", this));
+            ("%p NativeKeyBindings::GetEditCommands, no Cocoa key down event", this));
 
     return;
   }
 
   MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
-    ("%p NativeKeyBindings::GetEditCommands, interpreting", this));
+          ("%p NativeKeyBindings::GetEditCommands, interpreting", this));
 
   AutoTArray<KeyBindingsCommand, 2> bindingCommands;
   nsCocoaUtils::GetCommandsFromKeyEvent(cocoaEvent, bindingCommands);
 
   MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
-    ("%p NativeKeyBindings::GetEditCommands, bindingCommands=%zu",
-     this, bindingCommands.Length()));
+          ("%p NativeKeyBindings::GetEditCommands, bindingCommands=%zu", this,
+           bindingCommands.Length()));
 
   for (uint32_t i = 0; i < bindingCommands.Length(); i++) {
     SEL selector = bindingCommands[i].selector;
@@ -234,13 +215,13 @@ NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
       nsCocoaUtils::GetStringForNSString(selectorString, nsSelectorString);
 
       MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
-        ("%p NativeKeyBindings::GetEditCommands, selector=%s",
-         this, NS_LossyConvertUTF16toASCII(nsSelectorString).get()));
+              ("%p NativeKeyBindings::GetEditCommands, selector=%s", this,
+               NS_LossyConvertUTF16toASCII(nsSelectorString).get()));
     }
 
     // Try to find a simple mapping in the hashtable
     CommandInt geckoCommand =
-      mSelectorToCommand.Get(reinterpret_cast<struct objc_selector*>(selector));
+        mSelectorToCommand.Get(reinterpret_cast<struct objc_selector*>(selector));
 
     if (geckoCommand) {
       aCommands.AppendElement(geckoCommand);
@@ -265,17 +246,17 @@ NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
 
   if (aCommands.IsEmpty()) {
     MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
-      ("%p NativeKeyBindings::GetEditCommands, handled=false", this));
+            ("%p NativeKeyBindings::GetEditCommands, handled=false", this));
     return;
   }
 
   for (CommandInt commandInt : aCommands) {
     Command geckoCommand = static_cast<Command>(commandInt);
     MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
-      ("%p NativeKeyBindings::GetEditCommands, command=%s",
-       this, WidgetKeyboardEvent::GetCommandStr(geckoCommand)));
+            ("%p NativeKeyBindings::GetEditCommands, command=%s", this,
+             WidgetKeyboardEvent::GetCommandStr(geckoCommand)));
   }
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

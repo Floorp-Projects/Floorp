@@ -14,8 +14,8 @@
   font-size: 0.8em;
   align-items: center;
   display: grid;
-  grid-column-gap: var(--base-distance);
-  grid-template-columns: calc(var(--base-distance) * 6) 1fr auto;
+  grid-column-gap: var(--base-unit);
+  grid-template-columns: calc(var(--base-unit) * 6) 1fr auto;
   height: 100%;
 }
 

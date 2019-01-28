@@ -9,6 +9,8 @@
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
+loader.lazyRequireGetter(this, "ChangesContextMenu", "devtools/client/inspector/changes/ChangesContextMenu");
+
 const ChangesApp = createFactory(require("./components/ChangesApp"));
 
 const {
@@ -21,18 +23,28 @@ class ChangesView {
     this.document = window.document;
     this.inspector = inspector;
     this.store = this.inspector.store;
-    this.toolbox = this.inspector.toolbox;
 
     this.onAddChange = this.onAddChange.bind(this);
     this.onClearChanges = this.onClearChanges.bind(this);
     this.onChangesFront = this.onChangesFront.bind(this);
+    this.onContextMenu = this.onContextMenu.bind(this);
     this.destroy = this.destroy.bind(this);
 
     this.init();
   }
 
+  get contextMenu() {
+    if (!this._contextMenu) {
+      this._contextMenu = new ChangesContextMenu(this);
+    }
+
+    return this._contextMenu;
+  }
+
   init() {
-    const changesApp = ChangesApp({});
+    const changesApp = ChangesApp({
+      onContextMenu: this.onContextMenu,
+    });
 
     // listen to the front for initialization, add listeners
     // when it is ready
@@ -88,6 +100,10 @@ class ChangesView {
     this.store.dispatch(resetChanges());
   }
 
+  onContextMenu(e) {
+    this.contextMenu.show(e);
+  }
+
   /**
    * Destruction function called when the inspector is destroyed.
    */
@@ -102,7 +118,11 @@ class ChangesView {
     this.document = null;
     this.inspector = null;
     this.store = null;
-    this.toolbox = null;
+
+    if (this._contextMenu) {
+      this._contextMenu.destroy();
+      this._contextMenu = null;
+    }
   }
 }
 

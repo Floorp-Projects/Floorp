@@ -1,29 +1,36 @@
 // Type sizes
+$bordered-spacing: 16px;
 $item-font-size: 13;
+$item-image-size: 72px;
 $item-line-height: 20;
 
-.ds-list-title {
-  color: $grey-90;
-
-  // reset these, which come from the browser's <hr> implementation
-  margin-block-start: 0;
-  margin-block-end: 0;
-
-  // Since we don't have a border, we use padding instead of margin in order to
-  // defeat margin collapsing.
-  padding: 8px 0;
-
-  line-height: 24px;
-  font-size: 17px;
+// XXX this is gross, and attaches the bottom-border to the item above.
+// Ideally, we'd attach the top-border to the item that needs it.
+// Unfortunately the border needs to go _above_ the row gap as currently
+// set up, which means that some refactoring will be required to do this.
+@mixin bottom-border-except-last-grid-row($columns) {
+  .ds-list-item:not(:nth-last-child(-n+#{$columns})) {
+    border-bottom: $border-secondary;
+    margin-bottom: -1px;  // cancel out the pixel we used for the border
+    padding-bottom: $bordered-spacing;
+  }
 }
 
-.ds-list-border {
-  border: 1px solid $grey-40-36;
+@mixin set-item-sizes($font-size, $line-height, $image-size) {
+  .ds-list-item {
+    // XXX see if we really want absolute units, maybe hoist somewhere central?
+    font-size: $font-size * 1px;
+    line-height: $line-height * 1px;
+  }
 
-  // Instead of using margin, we need to use these to override stuff that comes
-  // by default from <hr>.
-  margin-block-start: 8px;
-  margin-block-end: 8px;
+  .ds-list-item-title {
+    @include limit-visibile-lines(2, $line-height, $font-size);
+  }
+
+  .ds-list-image {
+    min-width: $image-size;
+    width: $image-size;
+  }
 }
 
 .ds-list {
@@ -35,42 +42,116 @@ $item-line-height: 20;
   // regression detection?
   padding-inline-start: 0;
 
-  // "2/3 width layout"
-  .ds-column-5 &,
-  .ds-column-6 &,
-  .ds-column-7 &,
-  .ds-column-8 & {
-    grid-template-columns: repeat(2, 1fr);
-    grid-row-gap: 24px;
+  &:not(.ds-list-full-width) {
+    @include set-item-sizes($item-font-size, $item-line-height, $item-image-size);
+
+    // "2/3 width layout"
+    .ds-column-5 &,
+    .ds-column-6 &,
+    .ds-column-7 &,
+    .ds-column-8 & {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    // "Full width layout"
+    .ds-column-9 &,
+    .ds-column-10 &,
+    .ds-column-11 &,
+    .ds-column-12 & {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .ds-list-item-excerpt {
+      display: none;
+    }
   }
 
-  // "Full width layout"
-  .ds-column-9 &,
-  .ds-column-10 &,
-  .ds-column-11 &,
-  .ds-column-12 & {
-    grid-template-columns: repeat(3, 1fr);
-    grid-row-gap: 18px;
+  &:not(.ds-list-images) {
+    .ds-list-image {
+      display: none;
+    }
   }
 
+  a {
+    // XXX note that this only looks right in the light theme
+    color: $grey-90;
+  }
 }
 
-// XXX this is gross, and attaches the bottom-border to the item above.
-// Ideally, we'd attach the top-border to the item that needs it.
-// Unfortunately the border needs to go _above_ the row gap as currently
-// set up, which means that some refactoring will be required to do this.
-.ds-list-item:nth-child(-n+3) { // all but the last three items
-  border-bottom: 2px solid $grey-40-36;
-  margin-bottom: -2px;  // cancel out the 2 pixels we used for the border
+.ds-list-numbers {
+  $counter-whitespace: ($item-line-height - $item-font-size) * 1px;
+  $counter-size: 32px;
+  $counter-padded-size: $counter-size + $counter-whitespace * 1.5;
 
-  padding-bottom: 2px;
+  .ds-list-item {
+    counter-increment: list;
+  }
+
+  .ds-list-item-link {
+    padding-inline-start: $counter-padded-size;
+
+    &::before {
+      background-color: var(--newtab-link-secondary-color);
+      border-radius: $counter-size;
+      color: $white;
+      content: counter(list);
+      font-size: 17px;
+      height: $counter-size;
+      line-height: $counter-size;
+      margin-inline-start: -$counter-padded-size;
+      margin-top: $counter-whitespace / 2;
+      position: absolute;
+      text-align: center;
+      width: $counter-size;
+    }
+
+    &:hover::before {
+      background-color: var(--newtab-link-primary-color);
+    }
+
+    &:active::before {
+      background-color: $blue-70;
+    }
+  }
+}
+
+.ds-list-borders {
+  border-top: $border-secondary;
+  grid-row-gap: $bordered-spacing;
+  padding-top: $bordered-spacing;
+
+  &.ds-list-full-width,
+  .ds-column-1 &,
+  .ds-column-2 &,
+  .ds-column-3 &,
+  .ds-column-4 & {
+    @include bottom-border-except-last-grid-row(1);
+  }
+
+  &:not(.ds-list-full-width) {
+    // "2/3 width layout"
+    .ds-column-5 &,
+    .ds-column-6 &,
+    .ds-column-7 &,
+    .ds-column-8 & {
+      @include bottom-border-except-last-grid-row(2);
+    }
+
+    // "Full width layout"
+    .ds-column-9 &,
+    .ds-column-10 &,
+    .ds-column-11 &,
+    .ds-column-12 & {
+      @include bottom-border-except-last-grid-row(3);
+    }
+  }
+}
+
+.ds-list-full-width {
+  @include set-item-sizes(17, 24, $item-image-size * 2);
 }
 
 .ds-list-item {
-  // XXX see if we really want absolute units, maybe hoist somewhere central?
-  line-height: $item-line-height * 1px;
-  font-size: $item-font-size * 1px;
-
   // reset some stuff from <li>.  Should maybe be hoisted when we have better
   // regression detection?
   display: block;
@@ -79,24 +160,24 @@ $item-line-height: 20;
   .ds-list-item-link {
     mix-blend-mode: normal;
 
-    padding-bottom: 16px;
-
     display: flex;
     justify-content: space-between;
   }
 
+  .ds-list-item-excerpt {
+    @include limit-visibile-lines(2, $item-line-height, $item-font-size);
+    color: var(--newtab-text-secondary-color);
+    margin-bottom: 8px;
+  }
+
   .ds-list-item-info {
     @include limit-visibile-lines(1, $item-line-height, $item-font-size);
-
-    color: $grey-50;
-
-    overflow: hidden;
+    color: var(--newtab-text-secondary-color);
     text-overflow: ellipsis;
   }
 
   .ds-list-item-title {
-    @include limit-visibile-lines(2, $item-line-height, $item-font-size);
-
+    font-weight: 600;
     margin-bottom: 8px;
   }
 
@@ -106,12 +187,21 @@ $item-line-height: 20;
   }
 
   .ds-list-image {
-    width: 72px;
-    height: 72px;
-    object-fit: cover;
+    @include image-as-background;
+    height: $item-image-size;
+    margin-inline-start: $item-font-size * 1px;
+    min-height: $item-image-size;
+  }
 
-    border: 0.5px solid $black-12;
-    box-sizing: border-box;
-    border-radius: 4px;
+  &:hover {
+    .ds-list-item-title {
+      color: var(--newtab-link-primary-color);
+    }
+  }
+
+  &:active {
+    .ds-list-item-title {
+      color: $blue-70;
+    }
   }
 }

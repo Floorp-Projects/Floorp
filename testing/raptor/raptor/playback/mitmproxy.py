@@ -396,6 +396,7 @@ class MitmproxyAndroid(Mitmproxy):
         if self.config['run_local']:
             # when running locally, it is found in the Firefox desktop build (..obj../dist/bin)
             self.certutil = os.path.join(self.config['obj_path'], 'dist', 'bin')
+            os.environ['LD_LIBRARY_PATH'] = self.certutil
         else:
             # must download certutil inside hostutils via tooltool; use this manifest:
             # mozilla-central/testing/config/tooltool-manifests/linux64/hostutils.manifest

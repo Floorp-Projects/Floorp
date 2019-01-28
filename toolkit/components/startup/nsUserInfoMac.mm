@@ -16,58 +16,51 @@ NS_IMPL_ISUPPORTS(nsUserInfo, nsIUserInfo)
 nsUserInfo::nsUserInfo() {}
 
 NS_IMETHODIMP
-nsUserInfo::GetFullname(nsAString& aFullname)
-{
+nsUserInfo::GetFullname(nsAString& aFullname) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
-  
-  CopyUTF8toUTF16(mozilla::MakeStringSpan([NSFullUserName() UTF8String]),
-                  aFullname);
+
+  CopyUTF8toUTF16(mozilla::MakeStringSpan([NSFullUserName() UTF8String]), aFullname);
   return NS_OK;
-  
+
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
 }
 
-NS_IMETHODIMP 
-nsUserInfo::GetUsername(nsACString& aUsername)
-{
+NS_IMETHODIMP
+nsUserInfo::GetUsername(nsACString& aUsername) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
-  
+
   aUsername.Assign([NSUserName() UTF8String]);
   return NS_OK;
-  
+
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
 }
 
-nsresult 
-nsUserInfo::GetPrimaryEmailAddress(nsACString &aEmailAddress)
-{
+nsresult nsUserInfo::GetPrimaryEmailAddress(nsACString& aEmailAddress) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
-  
-  // Try to get this user's primary email from the system addressbook's "me card" 
+
+  // Try to get this user's primary email from the system addressbook's "me card"
   // (if they've filled it)
-  ABPerson *me = [[ABAddressBook sharedAddressBook] me];
-  ABMultiValue *emailAddresses = [me valueForProperty:kABEmailProperty];
+  ABPerson* me = [[ABAddressBook sharedAddressBook] me];
+  ABMultiValue* emailAddresses = [me valueForProperty:kABEmailProperty];
   if ([emailAddresses count] > 0) {
     // get the index of the primary email, in case there are more than one
     int primaryEmailIndex = [emailAddresses indexForIdentifier:[emailAddresses primaryIdentifier]];
     aEmailAddress.Assign([[emailAddresses valueAtIndex:primaryEmailIndex] UTF8String]);
     return NS_OK;
   }
-  
+
   return NS_ERROR_FAILURE;
-  
+
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
 }
 
-NS_IMETHODIMP 
-nsUserInfo::GetEmailAddress(nsACString& aEmailAddress)
-{
+NS_IMETHODIMP
+nsUserInfo::GetEmailAddress(nsACString& aEmailAddress) {
   return GetPrimaryEmailAddress(aEmailAddress);
 }
 
-NS_IMETHODIMP 
-nsUserInfo::GetDomain(nsACString& aDomain)
-{
+NS_IMETHODIMP
+nsUserInfo::GetDomain(nsACString& aDomain) {
   nsAutoCString email;
   if (NS_SUCCEEDED(GetPrimaryEmailAddress(email))) {
     int32_t index = email.FindChar('@');

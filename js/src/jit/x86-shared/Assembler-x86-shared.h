@@ -209,6 +209,19 @@ class CPUInfo {
 
   static void SetSSEVersion();
 
+  // The flags can become set at startup when we JIT non-JS code eagerly; thus
+  // we reset the flags before setting any flags explicitly during testing, so
+  // that the flags can be in a consistent state.
+
+  static void reset() {
+    maxSSEVersion = UnknownSSE;
+    maxEnabledSSEVersion = UnknownSSE;
+    avxPresent = false;
+    avxEnabled = false;
+    popcntPresent = false;
+    needAmdBugWorkaround = false;
+  }
+
  public:
   static bool IsSSE2Present() {
 #ifdef JS_CODEGEN_X64
@@ -228,14 +241,19 @@ class CPUInfo {
   static bool NeedAmdBugWorkaround() { return needAmdBugWorkaround; }
 
   static void SetSSE3Disabled() {
+    reset();
     maxEnabledSSEVersion = SSE2;
     avxEnabled = false;
   }
   static void SetSSE4Disabled() {
+    reset();
     maxEnabledSSEVersion = SSSE3;
     avxEnabled = false;
   }
-  static void SetAVXEnabled() { avxEnabled = true; }
+  static void SetAVXEnabled() {
+    reset();
+    avxEnabled = true;
+  }
 };
 
 class AssemblerX86Shared : public AssemblerShared {

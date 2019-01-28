@@ -593,6 +593,7 @@ impl CVolumeExt for CVolume {
 
 pub trait ChannelMapExt {
     fn init() -> ChannelMap;
+    fn init_auto(ch: u32, def: ffi::pa_channel_map_def_t) -> Option<ChannelMap>;
     fn can_balance(&self) -> bool;
 }
 
@@ -603,6 +604,17 @@ impl ChannelMapExt for ChannelMap {
             ffi::pa_channel_map_init(&mut cm);
         }
         cm
+    }
+    fn init_auto(ch: u32, def: ffi::pa_channel_map_def_t) -> Option<ChannelMap> {
+        let mut cm = ChannelMap::default();
+        let r: *mut ffi::pa_channel_map = unsafe {
+            ffi::pa_channel_map_init_auto(&mut cm, ch, def)
+        };
+        if r.is_null() {
+            None
+        } else {
+            Some(cm)
+        }
     }
     fn can_balance(&self) -> bool {
         unsafe { ffi::pa_channel_map_can_balance(self) > 0 }

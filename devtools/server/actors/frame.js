@@ -99,7 +99,7 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
     if (this.frame.script) {
       const generatedLocation = this.threadActor.sources.getFrameLocation(this.frame);
       form.where = {
-        source: generatedLocation.generatedSourceActor.form(),
+        actor: generatedLocation.generatedSourceActor.actorID,
         line: generatedLocation.generatedLine,
         column: generatedLocation.generatedColumn,
       };

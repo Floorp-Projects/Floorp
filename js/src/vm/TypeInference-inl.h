@@ -627,18 +627,12 @@ extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
 // Script interface functions
 /////////////////////////////////////////////////////////////////////
 
-/* static */ inline unsigned TypeScript::NumTypeSets(JSScript* script) {
-  size_t num = script->nTypeSets() + 1 /* this */;
-  if (JSFunction* fun = script->functionNonDelazifying()) {
-    num += fun->nargs();
-  }
-  return num;
-}
-
 /* static */ inline StackTypeSet* TypeScript::ThisTypes(JSScript* script) {
   AutoSweepTypeScript sweep(script);
-  TypeScript* types = script->types(sweep);
-  return types ? types->typeArray() + script->nTypeSets() : nullptr;
+  if (TypeScript* types = script->types(sweep)) {
+    return types->typeArray() + script->numBytecodeTypeSets();
+  }
+  return nullptr;
 }
 
 /*
@@ -651,8 +645,10 @@ extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
                                                        unsigned i) {
   MOZ_ASSERT(i < script->functionNonDelazifying()->nargs());
   AutoSweepTypeScript sweep(script);
-  TypeScript* types = script->types(sweep);
-  return types ? types->typeArray() + script->nTypeSets() + 1 + i : nullptr;
+  if (TypeScript* types = script->types(sweep)) {
+    return types->typeArray() + script->numBytecodeTypeSets() + 1 + i;
+  }
+  return nullptr;
 }
 
 template <typename TYPESET>
@@ -665,7 +661,8 @@ template <typename TYPESET>
   uint32_t offset = script->pcToOffset(pc);
 
   // See if this pc is the next typeset opcode after the last one looked up.
-  if ((*hint + 1) < script->nTypeSets() && bytecodeMap[*hint + 1] == offset) {
+  size_t numBytecodeTypeSets = script->numBytecodeTypeSets();
+  if ((*hint + 1) < numBytecodeTypeSets && bytecodeMap[*hint + 1] == offset) {
     (*hint)++;
     return typeArray + *hint;
   }
@@ -679,13 +676,15 @@ template <typename TYPESET>
   // there are more JOF_TYPESET opcodes than nTypeSets in the script (as can
   // happen if the script is very long) and we'll use the last location.
   size_t loc;
-#ifdef DEBUG
   bool found =
-#endif
-      mozilla::BinarySearch(bytecodeMap, 0, script->nTypeSets() - 1, offset,
-                            &loc);
+      mozilla::BinarySearch(bytecodeMap, 0, numBytecodeTypeSets, offset, &loc);
+  if (found) {
+    MOZ_ASSERT(bytecodeMap[loc] == offset);
+  } else {
+    MOZ_ASSERT(numBytecodeTypeSets == JSScript::MaxBytecodeTypeSets);
+    loc = numBytecodeTypeSets - 1;
+  }
 
-  MOZ_ASSERT_IF(found, bytecodeMap[loc] == offset);
   *hint = mozilla::AssertedCast<uint32_t>(loc);
   return typeArray + *hint;
 }
@@ -698,10 +697,9 @@ template <typename TYPESET>
   if (!types) {
     return nullptr;
   }
-  uint32_t* hint =
-      script->baselineScript()->bytecodeTypeMap() + script->nTypeSets();
-  return BytecodeTypes(script, pc, script->baselineScript()->bytecodeTypeMap(),
-                       hint, types->typeArray());
+  uint32_t* hint = types->bytecodeTypeMapHint();
+  return BytecodeTypes(script, pc, types->bytecodeTypeMap(), hint,
+                       types->typeArray());
 }
 
 /* static */ inline void TypeScript::Monitor(JSContext* cx, JSScript* script,

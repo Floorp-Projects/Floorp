@@ -32,6 +32,7 @@
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
   border: 1px solid var(--autocomplete-popup-border-color);
+  font: menu;
 }
 
 .urlbarView-body-inner {

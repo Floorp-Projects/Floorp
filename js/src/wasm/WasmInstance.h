@@ -192,7 +192,7 @@ class Instance {
   static int32_t wake(Instance* instance, uint32_t byteOffset, int32_t count);
   static int32_t memCopy(Instance* instance, uint32_t destByteOffset,
                          uint32_t srcByteOffset, uint32_t len);
-  static int32_t memDrop(Instance* instance, uint32_t segIndex);
+  static int32_t dataDrop(Instance* instance, uint32_t segIndex);
   static int32_t memFill(Instance* instance, uint32_t byteOffset,
                          uint32_t value, uint32_t len);
   static int32_t memInit(Instance* instance, uint32_t dstOffset,
@@ -200,7 +200,7 @@ class Instance {
   static int32_t tableCopy(Instance* instance, uint32_t dstOffset,
                            uint32_t srcOffset, uint32_t len,
                            uint32_t dstTableIndex, uint32_t srcTableIndex);
-  static int32_t tableDrop(Instance* instance, uint32_t segIndex);
+  static int32_t elemDrop(Instance* instance, uint32_t segIndex);
   static void* tableGet(Instance* instance, uint32_t index,
                         uint32_t tableIndex);
   static uint32_t tableGrow(Instance* instance, uint32_t delta, void* initValue,

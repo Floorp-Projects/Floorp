@@ -461,6 +461,7 @@ pub struct Shadow {
     pub offset: LayoutVector2D,
     pub color: ColorF,
     pub blur_radius: f32,
+    pub should_inflate: bool,
 }
 
 #[repr(u8)]
@@ -552,6 +553,8 @@ pub struct StackingContext {
     pub mix_blend_mode: MixBlendMode,
     pub clip_id: Option<ClipId>,
     pub raster_space: RasterSpace,
+    /// True if picture caching should be used on this stacking context.
+    pub cache_tiles: bool,
 } // IMPLICIT: filters: Vec<FilterOp>
 
 

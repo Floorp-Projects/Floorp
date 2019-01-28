@@ -69,7 +69,12 @@ AntiTracking.runTest("Cookies and Storage Access API",
 
     is(document.cookie, "", "No cookies for me");
     document.cookie = "name=value";
-    is(document.cookie, "name=value", "I have the cookies!");
+
+    if (SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT) {
+      is(document.cookie, "", "No cookies for me");
+    } else {
+      is(document.cookie, "name=value", "I have the cookies!");
+    }
   },
 
   // Non blocking callback

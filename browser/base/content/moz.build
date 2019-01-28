@@ -40,6 +40,9 @@ with Files("test/historySwipeAnimation/**"):
 with Files("test/keyboard/**"):
     BUG_COMPONENT = ("Firefox", "Keyboard Navigation")
 
+with Files("test/pageActions/**"):
+    BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
+
 with Files("test/pageinfo/**"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
 
@@ -129,6 +132,9 @@ with Files("browser-gestureSupport.js"):
 
 with Files("browser-media.js"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("browser-pageActions.js"):
+    BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
 with Files("browser-places.js"):
     BUG_COMPONENT = ("Firefox", "Bookmarks & History")

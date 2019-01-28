@@ -31,9 +31,9 @@ var observer = SpecialPowers.wrapCallbackObject({
     const interfaces = [Ci.nsIObserver,
                         Ci.nsISupports, Ci.nsISupportsWeakReference];
 
-    if (!interfaces.some( function(v) {
+    if (!interfaces.some(function(v) {
       return iid.equals(v);
-    } )) {
+    })) {
       throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
     }
     return this;

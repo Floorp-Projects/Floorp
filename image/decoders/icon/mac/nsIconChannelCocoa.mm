@@ -32,27 +32,17 @@
 #include <Cocoa/Cocoa.h>
 
 // nsIconChannel methods
-nsIconChannel::nsIconChannel()
-{
-}
+nsIconChannel::nsIconChannel() {}
 
-nsIconChannel::~nsIconChannel()
-{
+nsIconChannel::~nsIconChannel() {
   if (mLoadInfo) {
-    NS_ReleaseOnMainThreadSystemGroup(
-      "nsIconChannel::mLoadInfo", mLoadInfo.forget());
+    NS_ReleaseOnMainThreadSystemGroup("nsIconChannel::mLoadInfo", mLoadInfo.forget());
   }
 }
 
-NS_IMPL_ISUPPORTS(nsIconChannel,
-                  nsIChannel,
-                  nsIRequest,
-                  nsIRequestObserver,
-                  nsIStreamListener)
+NS_IMPL_ISUPPORTS(nsIconChannel, nsIChannel, nsIRequest, nsIRequestObserver, nsIStreamListener)
 
-nsresult
-nsIconChannel::Init(nsIURI* uri)
-{
+nsresult nsIconChannel::Init(nsIURI* uri) {
   NS_ASSERTION(uri, "no uri");
   mUrl = uri;
   mOriginalURI = uri;
@@ -65,46 +55,26 @@ nsIconChannel::Init(nsIURI* uri)
 // nsIRequest methods:
 
 NS_IMETHODIMP
-nsIconChannel::GetName(nsACString& result)
-{
-  return mUrl->GetSpec(result);
-}
+nsIconChannel::GetName(nsACString& result) { return mUrl->GetSpec(result); }
 
 NS_IMETHODIMP
-nsIconChannel::IsPending(bool* result)
-{
-  return mPump->IsPending(result);
-}
+nsIconChannel::IsPending(bool* result) { return mPump->IsPending(result); }
 
 NS_IMETHODIMP
-nsIconChannel::GetStatus(nsresult* status)
-{
-  return mPump->GetStatus(status);
-}
+nsIconChannel::GetStatus(nsresult* status) { return mPump->GetStatus(status); }
 
 NS_IMETHODIMP
-nsIconChannel::Cancel(nsresult status)
-{
-  return mPump->Cancel(status);
-}
+nsIconChannel::Cancel(nsresult status) { return mPump->Cancel(status); }
 
 NS_IMETHODIMP
-nsIconChannel::Suspend(void)
-{
-  return mPump->Suspend();
-}
+nsIconChannel::Suspend(void) { return mPump->Suspend(); }
 
 NS_IMETHODIMP
-nsIconChannel::Resume(void)
-{
-  return mPump->Resume();
-}
+nsIconChannel::Resume(void) { return mPump->Resume(); }
 
 // nsIRequestObserver methods
 NS_IMETHODIMP
-nsIconChannel::OnStartRequest(nsIRequest* aRequest,
-                                            nsISupports* aContext)
-{
+nsIconChannel::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
   if (mListener) {
     return mListener->OnStartRequest(this, aContext);
   }
@@ -112,10 +82,7 @@ nsIconChannel::OnStartRequest(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-nsIconChannel::OnStopRequest(nsIRequest* aRequest,
-                                           nsISupports* aContext,
-                                           nsresult aStatus)
-{
+nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatus) {
   if (mListener) {
     mListener->OnStopRequest(this, aContext, aStatus);
     mListener = nullptr;
@@ -131,12 +98,8 @@ nsIconChannel::OnStopRequest(nsIRequest* aRequest,
 
 // nsIStreamListener methods
 NS_IMETHODIMP
-nsIconChannel::OnDataAvailable(nsIRequest* aRequest,
-                                             nsISupports* aContext,
-                                             nsIInputStream* aStream,
-                                             uint64_t aOffset,
-                                             uint32_t aCount)
-{
+nsIconChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext, nsIInputStream* aStream,
+                               uint64_t aOffset, uint32_t aCount) {
   if (mListener) {
     return mListener->OnDataAvailable(this, aContext, aStream, aOffset, aCount);
   }
@@ -147,52 +110,42 @@ nsIconChannel::OnDataAvailable(nsIRequest* aRequest,
 // nsIChannel methods:
 
 NS_IMETHODIMP
-nsIconChannel::GetOriginalURI(nsIURI** aURI)
-{
+nsIconChannel::GetOriginalURI(nsIURI** aURI) {
   *aURI = mOriginalURI;
   NS_ADDREF(*aURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetOriginalURI(nsIURI* aURI)
-{
+nsIconChannel::SetOriginalURI(nsIURI* aURI) {
   NS_ENSURE_ARG_POINTER(aURI);
   mOriginalURI = aURI;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetURI(nsIURI** aURI)
-{
+nsIconChannel::GetURI(nsIURI** aURI) {
   *aURI = mUrl;
   NS_IF_ADDREF(*aURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::Open(nsIInputStream** _retval)
-{
-  return MakeInputStream(_retval, false);
-}
+nsIconChannel::Open(nsIInputStream** _retval) { return MakeInputStream(_retval, false); }
 
 NS_IMETHODIMP
-nsIconChannel::Open2(nsIInputStream** aStream)
-{
+nsIconChannel::Open2(nsIInputStream** aStream) {
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
   return Open(aStream);
 }
 
-nsresult
-nsIconChannel::ExtractIconInfoFromUrl(nsIFile** aLocalFile,
-                                               uint32_t* aDesiredImageSize,
+nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile** aLocalFile, uint32_t* aDesiredImageSize,
                                                nsACString& aContentType,
-                                               nsACString& aFileExtension)
-{
+                                               nsACString& aFileExtension) {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIMozIconURI> iconURI (do_QueryInterface(mUrl, &rv));
+  nsCOMPtr<nsIMozIconURI> iconURI(do_QueryInterface(mUrl, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   iconURI->GetImageSize(aDesiredImageSize);
@@ -210,7 +163,7 @@ nsIconChannel::ExtractIconInfoFromUrl(nsIFile** aLocalFile,
   rv = fileURL->GetFile(getter_AddRefs(file));
   if (NS_FAILED(rv) || !file) return NS_OK;
 
-  nsCOMPtr<nsILocalFileMac> localFileMac (do_QueryInterface(file, &rv));
+  nsCOMPtr<nsILocalFileMac> localFileMac(do_QueryInterface(file, &rv));
   if (NS_FAILED(rv) || !localFileMac) return NS_OK;
 
   *aLocalFile = file;
@@ -220,31 +173,27 @@ nsIconChannel::ExtractIconInfoFromUrl(nsIFile** aLocalFile,
 }
 
 NS_IMETHODIMP
-nsIconChannel::AsyncOpen(nsIStreamListener* aListener,
-                                       nsISupports* ctxt)
-{
-  MOZ_ASSERT(!mLoadInfo ||
-             mLoadInfo->GetSecurityMode() == 0 ||
-             mLoadInfo->GetInitialSecurityCheckDone() ||
-             (mLoadInfo->GetSecurityMode() == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
-              nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal())),
-             "security flags in loadInfo but asyncOpen2() not called");
+nsIconChannel::AsyncOpen(nsIStreamListener* aListener, nsISupports* ctxt) {
+  MOZ_ASSERT(
+      !mLoadInfo || mLoadInfo->GetSecurityMode() == 0 || mLoadInfo->GetInitialSecurityCheckDone() ||
+          (mLoadInfo->GetSecurityMode() == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
+           nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal())),
+      "security flags in loadInfo but asyncOpen2() not called");
 
   nsCOMPtr<nsIInputStream> inStream;
   nsresult rv = MakeInputStream(getter_AddRefs(inStream), true);
   if (NS_FAILED(rv)) {
-      mCallbacks = nullptr;
-      return rv;
+    mCallbacks = nullptr;
+    return rv;
   }
 
   // Init our stream pump
   nsCOMPtr<nsIEventTarget> target =
-      nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo,
-                                               mozilla::TaskCategory::Other);
+      nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo, mozilla::TaskCategory::Other);
   rv = mPump->Init(inStream, 0, 0, false, target);
   if (NS_FAILED(rv)) {
-      mCallbacks = nullptr;
-      return rv;
+    mCallbacks = nullptr;
+    return rv;
   }
 
   rv = mPump->AsyncRead(this, ctxt);
@@ -256,36 +205,32 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener,
       mLoadGroup->AddRequest(this, nullptr);
     }
   } else {
-      mCallbacks = nullptr;
+    mCallbacks = nullptr;
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsIconChannel::AsyncOpen2(nsIStreamListener* aListener)
-{
+nsIconChannel::AsyncOpen2(nsIStreamListener* aListener) {
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
   if (NS_FAILED(rv)) {
-      mCallbacks = nullptr;
-      return rv;
+    mCallbacks = nullptr;
+    return rv;
   }
   return AsyncOpen(listener, nullptr);
 }
 
-nsresult
-nsIconChannel::MakeInputStream(nsIInputStream** _retval,
-                                        bool aNonBlocking)
-{
+nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlocking) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsCString contentType;
   nsAutoCString fileExt;
-  nsCOMPtr<nsIFile> fileloc; // file we want an icon for
+  nsCOMPtr<nsIFile> fileloc;  // file we want an icon for
   uint32_t desiredImageSize;
-  nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(fileloc),
-                                       &desiredImageSize, contentType, fileExt);
+  nsresult rv =
+      ExtractIconInfoFromUrl(getter_AddRefs(fileloc), &desiredImageSize, contentType, fileExt);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool fileExists = false;
@@ -304,8 +249,7 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval,
 
     CFURLRef macURL;
     if (NS_SUCCEEDED(localFileMac->GetCFURL(&macURL))) {
-      iconImage = [[NSWorkspace sharedWorkspace]
-                   iconForFile:[(NSURL*)macURL path]];
+      iconImage = [[NSWorkspace sharedWorkspace] iconForFile:[(NSURL*)macURL path]];
       ::CFRelease(macURL);
     }
   }
@@ -318,8 +262,7 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval,
 
   // If we still don't have an icon, get the generic document icon.
   if (!iconImage) {
-    iconImage = [[NSWorkspace sharedWorkspace]
-                 iconForFileType:NSFileTypeUnknown];
+    iconImage = [[NSWorkspace sharedWorkspace] iconForFileType:NSFileTypeUnknown];
   }
 
   if (!iconImage) {
@@ -331,20 +274,18 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval,
   [iconImage setSize:desiredSizeRect.size];
 
   [iconImage lockFocus];
-  NSBitmapImageRep* bitmapRep = [[[NSBitmapImageRep alloc]
-                                  initWithFocusedViewRect:desiredSizeRect]
-                                  autorelease];
+  NSBitmapImageRep* bitmapRep =
+      [[[NSBitmapImageRep alloc] initWithFocusedViewRect:desiredSizeRect] autorelease];
   [iconImage unlockFocus];
 
   // we expect the following things to be true about our bitmapRep
   NS_ENSURE_TRUE(![bitmapRep isPlanar] &&
-                 // Not necessarily: on a HiDPI-capable system, we'll get
-                 // a 2x bitmap
-                 // (unsigned int)[bitmapRep bytesPerPlane] ==
-                 //    desiredImageSize * desiredImageSize * 4 &&
-                 [bitmapRep bitsPerPixel] == 32 &&
-                 [bitmapRep samplesPerPixel] == 4 &&
-                 [bitmapRep hasAlpha] == YES,
+                     // Not necessarily: on a HiDPI-capable system, we'll get
+                     // a 2x bitmap
+                     // (unsigned int)[bitmapRep bytesPerPlane] ==
+                     //    desiredImageSize * desiredImageSize * 4 &&
+                     [bitmapRep bitsPerPixel] == 32 && [bitmapRep samplesPerPixel] == 4 &&
+                     [bitmapRep hasAlpha] == YES,
                  NS_ERROR_UNEXPECTED);
 
   // check what size we actually got, and ensure it isn't too big to return
@@ -352,8 +293,7 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval,
   NS_ENSURE_TRUE(actualImageSize < 256, NS_ERROR_UNEXPECTED);
 
   // now we can validate the amount of data
-  NS_ENSURE_TRUE((unsigned int)[bitmapRep bytesPerPlane] ==
-                 actualImageSize * actualImageSize * 4,
+  NS_ENSURE_TRUE((unsigned int)[bitmapRep bytesPerPlane] == actualImageSize * actualImageSize * 4,
                  NS_ERROR_UNEXPECTED);
 
   // rgba, pre-multiplied data
@@ -361,8 +301,8 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval,
 
   // create our buffer
   int32_t bufferCapacity = 2 + [bitmapRep bytesPerPlane];
-  AutoTArray<uint8_t, 3 + 16 * 16 * 5> iconBuffer; // initial size is for
-                                                     // 16x16
+  AutoTArray<uint8_t, 3 + 16 * 16 * 5> iconBuffer;  // initial size is for
+                                                    // 16x16
   iconBuffer.SetLength(bufferCapacity);
 
   uint8_t* iconBufferPtr = iconBuffer.Elements();
@@ -402,13 +342,12 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval,
   // Now, create a pipe and stuff our data into it
   nsCOMPtr<nsIInputStream> inStream;
   nsCOMPtr<nsIOutputStream> outStream;
-  rv = NS_NewPipe(getter_AddRefs(inStream), getter_AddRefs(outStream),
-                  bufferCapacity, bufferCapacity, aNonBlocking);
+  rv = NS_NewPipe(getter_AddRefs(inStream), getter_AddRefs(outStream), bufferCapacity,
+                  bufferCapacity, aNonBlocking);
 
   if (NS_SUCCEEDED(rv)) {
     uint32_t written;
-    rv = outStream->Write((char*)iconBuffer.Elements(), bufferCapacity,
-                          &written);
+    rv = outStream->Write((char*)iconBuffer.Elements(), bufferCapacity, &written);
     if (NS_SUCCEEDED(rv)) {
       NS_IF_ADDREF(*_retval = inStream);
     }
@@ -423,165 +362,136 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval,
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetLoadFlags(uint32_t* aLoadAttributes)
-{
+nsIconChannel::GetLoadFlags(uint32_t* aLoadAttributes) {
   return mPump->GetLoadFlags(aLoadAttributes);
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetLoadFlags(uint32_t aLoadAttributes)
-{
+nsIconChannel::SetLoadFlags(uint32_t aLoadAttributes) {
   return mPump->SetLoadFlags(aLoadAttributes);
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetIsDocument(bool *aIsDocument)
-{
+nsIconChannel::GetIsDocument(bool* aIsDocument) {
   return NS_GetIsDocumentChannel(this, aIsDocument);
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetContentType(nsACString& aContentType)
-{
+nsIconChannel::GetContentType(nsACString& aContentType) {
   aContentType.AssignLiteral(IMAGE_ICON_MS);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetContentType(const nsACString& aContentType)
-{
-  //It doesn't make sense to set the content-type on this type
+nsIconChannel::SetContentType(const nsACString& aContentType) {
+  // It doesn't make sense to set the content-type on this type
   // of channel...
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetContentCharset(nsACString& aContentCharset)
-{
+nsIconChannel::GetContentCharset(nsACString& aContentCharset) {
   aContentCharset.AssignLiteral(IMAGE_ICON_MS);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetContentCharset(const nsACString& aContentCharset)
-{
-  //It doesn't make sense to set the content-type on this type
+nsIconChannel::SetContentCharset(const nsACString& aContentCharset) {
+  // It doesn't make sense to set the content-type on this type
   // of channel...
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetContentDisposition(uint32_t* aContentDisposition)
-{
+nsIconChannel::GetContentDisposition(uint32_t* aContentDisposition) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetContentDisposition(uint32_t aContentDisposition)
-{
+nsIconChannel::SetContentDisposition(uint32_t aContentDisposition) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsIconChannel::
-  GetContentDispositionFilename(nsAString& aContentDispositionFilename)
-{
+nsIconChannel::GetContentDispositionFilename(nsAString& aContentDispositionFilename) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsIconChannel::
-  SetContentDispositionFilename(const nsAString& aContentDispositionFilename)
-{
+nsIconChannel::SetContentDispositionFilename(const nsAString& aContentDispositionFilename) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsIconChannel::
-  GetContentDispositionHeader(nsACString& aContentDispositionHeader)
-{
+nsIconChannel::GetContentDispositionHeader(nsACString& aContentDispositionHeader) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetContentLength(int64_t* aContentLength)
-{
+nsIconChannel::GetContentLength(int64_t* aContentLength) {
   *aContentLength = 0;
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetContentLength(int64_t aContentLength)
-{
+nsIconChannel::SetContentLength(int64_t aContentLength) {
   MOZ_ASSERT_UNREACHABLE("nsIconChannel::SetContentLength");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetLoadGroup(nsILoadGroup** aLoadGroup)
-{
+nsIconChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   *aLoadGroup = mLoadGroup;
   NS_IF_ADDREF(*aLoadGroup);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
-{
+nsIconChannel::SetLoadGroup(nsILoadGroup* aLoadGroup) {
   mLoadGroup = aLoadGroup;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetOwner(nsISupports** aOwner)
-{
+nsIconChannel::GetOwner(nsISupports** aOwner) {
   *aOwner = mOwner.get();
   NS_IF_ADDREF(*aOwner);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetOwner(nsISupports* aOwner)
-{
+nsIconChannel::SetOwner(nsISupports* aOwner) {
   mOwner = aOwner;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetLoadInfo(nsILoadInfo** aLoadInfo)
-{
+nsIconChannel::GetLoadInfo(nsILoadInfo** aLoadInfo) {
   NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
-{
+nsIconChannel::SetLoadInfo(nsILoadInfo* aLoadInfo) {
   mLoadInfo = aLoadInfo;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::
-  GetNotificationCallbacks(nsIInterfaceRequestor** aNotificationCallbacks)
-{
+nsIconChannel::GetNotificationCallbacks(nsIInterfaceRequestor** aNotificationCallbacks) {
   *aNotificationCallbacks = mCallbacks.get();
   NS_IF_ADDREF(*aNotificationCallbacks);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::
-  SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
-{
+nsIconChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks) {
   mCallbacks = aNotificationCallbacks;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetSecurityInfo(nsISupports** aSecurityInfo)
-{
+nsIconChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
   *aSecurityInfo = nullptr;
   return NS_OK;
 }
-
