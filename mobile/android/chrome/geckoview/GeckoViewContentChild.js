@@ -264,8 +264,17 @@ class GeckoViewContentChild extends GeckoViewChildModule {
           return aNode && aNode.getAttribute && aNode.getAttribute(aAttribute);
         }
 
+        function createAbsoluteUri(aBaseUri, aUri) {
+          if (!aUri || !aBaseUri || !aBaseUri.displaySpec) {
+            return null;
+          }
+          return Services.io.newURI(aUri, null, aBaseUri).displaySpec;
+        }
+
         const node = aEvent.composedTarget;
-        const uri = nearestParentAttribute(node, "href");
+        const baseUri = node.ownerDocument.baseURIObject;
+        const uri = createAbsoluteUri(baseUri,
+          nearestParentAttribute(node, "href"));
         const title = nearestParentAttribute(node, "title");
         const alt = nearestParentAttribute(node, "alt");
         const elementType = ChromeUtils.getClassName(node);
@@ -279,6 +288,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
             type: "GeckoView:ContextMenu",
             screenX: aEvent.screenX,
             screenY: aEvent.screenY,
+            baseUri: (baseUri && baseUri.displaySpec) || null,
             uri,
             title,
             alt,
