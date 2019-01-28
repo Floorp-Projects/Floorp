@@ -1311,6 +1311,20 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
       const IntSize &aSize, SurfaceFormat aFormat) const = 0;
 
   /**
+   * Create a DrawTarget whose snapshot is optimized for use with this
+   * DrawTarget and aFilter.
+   * @param aSource is the FilterNode that that will be attached to this
+   * surface.
+   * @param aSourceRect is the source rect that will be passed to DrawFilter
+   * @param aDestPoint is the dest point that will be passed to DrawFilter.
+   */
+  virtual already_AddRefed<DrawTarget> CreateSimilarDrawTargetForFilter(
+      const IntSize &aSize, SurfaceFormat aFormat, FilterNode *aFilter,
+      FilterNode *aSource, const Rect &aSourceRect, const Point &aDestPoint) {
+    return CreateSimilarDrawTarget(aSize, aFormat);
+  }
+
+  /**
    * Returns false if CreateSimilarDrawTarget would return null with the same
    * parameters. May return true even in cases where CreateSimilarDrawTarget
    * return null (i.e. this function returning false has meaning, but returning

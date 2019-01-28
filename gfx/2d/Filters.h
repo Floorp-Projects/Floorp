@@ -425,6 +425,14 @@ class FilterNode : public external::AtomicRefCounted<FilterNode> {
     MOZ_CRASH("GFX: FilterNode");
   }
 
+  /** Maps a rectangle in filter space back to a rectangle in the space of
+   * aSourceNode's first input. aSourceNode should not have an input
+   * assigned when calling this function. */
+  virtual IntRect MapRectToSource(const IntRect &aRect, const IntRect &aMax,
+                                  FilterNode *aSourceNode) {
+    return aMax;
+  }
+
  protected:
   friend class Factory;
 
