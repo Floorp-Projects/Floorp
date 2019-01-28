@@ -5372,9 +5372,6 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(unsigned aEvent,
 
   // Notify nsIWebProgressListeners of this content blocking event.
   // Can be used to change the UI state.
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell, &rv);
-  NS_ENSURE_SUCCESS_VOID(rv);
   uint32_t event = 0;
   nsCOMPtr<nsISecureBrowserUI> securityUI;
   docShell->GetSecurityUI(getter_AddRefs(securityUI));
@@ -5454,7 +5451,8 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(unsigned aEvent,
     return;
   }
 
-  eventSink->OnContentBlockingEvent(aChannel, event);
+  nsDocShell::Cast(docShell)->nsDocLoader::OnContentBlockingEvent(aChannel,
+                                                                  event);
 }
 
 // static
