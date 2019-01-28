@@ -3993,7 +3993,8 @@ nsRect ScrollFrameHelper::GetVisualOptimalViewingRect() const {
 
   if (mIsRoot && presShell->IsVisualViewportSizeSet() &&
       presShell->IsVisualViewportOffsetSet()) {
-    return nsRect(presShell->GetVisualViewportOffset(),
+    return nsRect(mScrollPort.TopLeft() - GetScrollPosition() +
+                      presShell->GetVisualViewportOffset(),
                   presShell->GetVisualViewportSize());
   }
   return mScrollPort;
