@@ -34,6 +34,8 @@ The UA Widget Shadow Root is a closed shadow root, with the UA Widget flag turne
 
 The UA Widget flag enables the security feature covered in the next section.
 
+**Side note**: XML pretty print hides its transformed content inside a UA Widget Shadow DOM as well, even though there isn't any JavaScript to run. This is set in order to leverage the same security feature and behaviors there.
+
 The JavaScript sandbox
 ----------------------
 
