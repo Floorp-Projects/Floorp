@@ -111,6 +111,9 @@ types.getType = function(type) {
   // Not a collection, might be actor detail
   const pieces = type.split("#", 2);
   if (pieces.length > 1) {
+    if (pieces[1] != "actorid") {
+      throw new Error("Unsupported detail, only support 'actorid', got: " + pieces[1]);
+    }
     return types.addActorDetail(type, pieces[0], pieces[1]);
   }
 
@@ -341,8 +344,12 @@ types.addActorType = function(name) {
         ctx.marshallPool().manage(front);
       }
 
-      v = identityWrite(v);
-      front.form(v, detail, ctx);
+      // When the type `${name}#actorid` is used, `v` is a string refering to the
+      // actor ID. We only set the actorID just before and so do not need anything else.
+      if (detail != "actorid") {
+        v = identityWrite(v);
+        front.form(v, ctx);
+      }
 
       return front;
     },
@@ -352,6 +359,9 @@ types.addActorType = function(name) {
       if (v instanceof Actor) {
         if (!v.actorID) {
           ctx.marshallPool().manage(v);
+        }
+        if (detail == "actorid") {
+          return v.actorID;
         }
         return identityWrite(v.form(detail));
       }
