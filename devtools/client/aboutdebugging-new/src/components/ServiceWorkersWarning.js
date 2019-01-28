@@ -13,6 +13,7 @@ const Localized = createFactory(FluentReact.Localized);
 const Message = createFactory(require("./shared/Message"));
 
 const { MESSAGE_LEVEL } = require("../constants");
+const DOC_URL = "https://developer.mozilla.org/en-US/docs/Tools/about%3Adebugging#Service_workers_not_compatible";
 
 class ServiceWorkersWarning extends PureComponent {
   render() {
@@ -24,12 +25,14 @@ class ServiceWorkersWarning extends PureComponent {
         {
           id: "about-debugging-runtime-service-workers-not-compatible",
           a: dom.a({
-            href: "https://developer.mozilla.org/en-US/docs/Tools/about%3Adebugging#Service_workers_not_compatible",
+            href: DOC_URL,
             target: "_blank",
           }),
         },
         dom.p(
-          {},
+          {
+            className: "js-service-workers-warning",
+          },
           "about-debugging-runtime-service-workers-not-compatible",
         ),
       )
