@@ -51,6 +51,17 @@ class InputStreamHelper {
                                    bool aDelayedStart,
                                    PBackgroundParent* aManager);
 
+  // After the sending of the inputStream into the IPC pipe, some of the
+  // InputStreamParams data struct needs to be activated (IPCRemoteStream).
+  // These 2 methods do that.
+  static void PostSerializationActivation(InputStreamParams& aParams,
+                                          bool aConsumedByIPC,
+                                          bool aDelayedStart);
+
+  static void PostSerializationActivation(OptionalInputStreamParams& aParams,
+                                          bool aConsumedByIPC,
+                                          bool aDelayedStart);
+
   static already_AddRefed<nsIInputStream> DeserializeInputStream(
       const InputStreamParams& aParams,
       const nsTArray<FileDescriptor>& aFileDescriptors);

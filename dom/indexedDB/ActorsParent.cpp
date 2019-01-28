@@ -12275,12 +12275,7 @@ already_AddRefed<FileInfo> Database::GetBlob(const IPCBlob& aIPCBlob) {
 
   const IPCStream& ipcStream = stream.get_IPCStream();
 
-  if (ipcStream.type() != IPCStream::TInputStreamParamsWithFds) {
-    return nullptr;
-  }
-
-  const InputStreamParams& inputStreamParams =
-      ipcStream.get_InputStreamParamsWithFds().stream();
+  const InputStreamParams& inputStreamParams = ipcStream.stream();
   if (inputStreamParams.type() !=
       InputStreamParams::TIPCBlobInputStreamParams) {
     return nullptr;

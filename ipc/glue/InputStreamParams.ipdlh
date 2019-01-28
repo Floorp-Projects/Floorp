@@ -4,6 +4,9 @@
 
 include ProtocolTypes;
 
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+
 using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
 
@@ -52,6 +55,25 @@ struct IPCBlobInputStreamParams
   uint64_t length;
 };
 
+union IPCRemoteStreamType
+{
+  PChildToParentStream;
+  PParentToChildStream;
+};
+
+struct IPCRemoteStreamParams
+{
+  // If this is true, the stream will send data only when the first operation
+  // is done on the destination side. The benefit of this is that we do not
+  // send data if not needed. On the other hand, it could have a performance
+  // issue.
+  bool delayedStart;
+
+  IPCRemoteStreamType stream;
+
+  int64_t length;
+};
+
 union InputStreamParams
 {
   StringInputStreamParams;
@@ -62,6 +84,7 @@ union InputStreamParams
   SlicedInputStreamParams;
   IPCBlobInputStreamParams;
   InputStreamLengthWrapperParams;
+  IPCRemoteStreamParams;
 };
 
 union OptionalInputStreamParams
