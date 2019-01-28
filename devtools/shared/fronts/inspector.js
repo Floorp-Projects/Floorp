@@ -44,8 +44,8 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     });
   }
 
-  constructor(client, form) {
-    super(client, form);
+  constructor(client) {
+    super(client);
     this._createRootNodePromise();
     this._orphaned = new Set();
     this._retainedOrphans = new Set();

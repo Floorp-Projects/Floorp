@@ -88,6 +88,11 @@
 
     const { TestActorFront } = await loadFront();
 
-    return new TestActorFront(client, form, toolbox);
+    const front = new TestActorFront(client, toolbox);
+    // Since we manually instantiate this front instead of going through protocol.js,
+    // we have to manually set its actor ID and manage it.
+    front.actorID = form.testActor;
+    front.manage(front);
+    return front;
   };
 })(this);

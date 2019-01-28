@@ -15,8 +15,8 @@ const {
 const events = require("devtools/shared/event-emitter");
 
 class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
-  constructor(client, form) {
-    super(client, form);
+  constructor(client) {
+    super(client);
 
     this.before("name-change", this.nameChange.bind(this));
     this.before("value-change", this.valueChange.bind(this));
@@ -139,8 +139,8 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
 }
 
 class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
-  constructor(client, form) {
-    super(client, form);
+  constructor(client) {
+    super(client);
     this.before("accessible-destroy", this.accessibleDestroy.bind(this));
   }
 
