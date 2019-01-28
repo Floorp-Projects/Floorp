@@ -7,6 +7,7 @@
 import actions from "../../../actions";
 import { bindActionCreators } from "redux";
 import type { SourceLocation, Breakpoint } from "../../../types";
+import { features } from "../../../utils/prefs";
 
 export const addBreakpointItem = (
   location: SourceLocation,
@@ -148,23 +149,31 @@ export function breakpointItems(
   breakpoint: Breakpoint,
   breakpointActions: BreakpointItemActions
 ) {
-  return [
+  const items = [
     removeBreakpointItem(breakpoint, breakpointActions),
     toggleDisabledBreakpointItem(breakpoint, breakpointActions),
-    conditionalBreakpointItem(breakpoint, breakpointActions),
-    logPointItem(breakpoint, breakpointActions)
+    conditionalBreakpointItem(breakpoint, breakpointActions)
   ];
+
+  if (features.logPoints) {
+    items.push(logPointItem(breakpoint, breakpointActions));
+  }
+  return items;
 }
 
 export function createBreakpointItems(
   location: SourceLocation,
   breakpointActions: BreakpointItemActions
 ) {
-  return [
+  const items = [
     addBreakpointItem(location, breakpointActions),
-    createConditionalBreakpointItem(location, breakpointActions),
-    createLogBreakpointItem(location, breakpointActions)
+    createConditionalBreakpointItem(location, breakpointActions)
   ];
+
+  if (features.logPoints) {
+    items.push(createLogBreakpointItem(location, breakpointActions));
+  }
+  return items;
 }
 
 export type BreakpointItemActions = {
