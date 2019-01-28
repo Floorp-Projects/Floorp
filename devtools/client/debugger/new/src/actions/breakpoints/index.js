@@ -9,7 +9,6 @@
  * @module actions/breakpoints
  */
 
-import { isOriginalId } from "devtools-source-map";
 import { PROMISE } from "../utils/middleware/promise";
 import {
   getBreakpoint,
@@ -283,12 +282,7 @@ export function setBreakpointOptions(
       await dispatch(enableBreakpoint(bp));
     }
 
-    await client.setBreakpointOptions(
-      bp.id,
-      location,
-      options,
-      isOriginalId(bp.location.sourceId)
-    );
+    await client.setBreakpointOptions(bp.id, location, options);
 
     const newBreakpoint = { ...bp, disabled: false, options };
 

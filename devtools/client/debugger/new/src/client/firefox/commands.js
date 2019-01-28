@@ -149,7 +149,9 @@ function breakOnNext(thread: string): Promise<*> {
   return lookupThreadClient(thread).breakOnNext();
 }
 
-function sourceContents(sourceId: SourceId): Source {
+function sourceContents(
+  sourceId: SourceId
+): {| source: Source, contentType: string |} {
   const sourceThreadClient = sourceThreads[sourceId];
   const sourceClient = sourceThreadClient.source({ actor: sourceId });
   return sourceClient.source();
@@ -261,22 +263,22 @@ async function evaluateExpressions(scripts: Script[], options: EvaluateParam) {
   return Promise.all(scripts.map(script => evaluate(script, options)));
 }
 
-type EvaluateParam = { thread?: string, frameId?: FrameId };
+type EvaluateParam = { thread: string, frameId: ?FrameId };
 
 function evaluate(
   script: ?Script,
   { thread, frameId }: EvaluateParam = {}
-): Promise<mixed> {
+): Promise<{ result: ?Object }> {
   const params = { thread, frameActor: frameId };
   if (!tabTarget || !script) {
-    return Promise.resolve({});
+    return Promise.resolve({ result: null });
   }
 
   const console = thread
     ? lookupConsoleClient(thread)
     : tabTarget.activeConsole;
   if (!console) {
-    return Promise.resolve({});
+    return Promise.resolve({ result: null });
   }
 
   return console.evaluateJSAsync(script, params);
@@ -285,7 +287,7 @@ function evaluate(
 function autocomplete(
   input: string,
   cursor: number,
-  frameId: string
+  frameId: ?string
 ): Promise<mixed> {
   if (!tabTarget || !tabTarget.activeConsole || !input) {
     return Promise.resolve({});
