@@ -1786,12 +1786,17 @@ HttpChannelParent::SetParentListener(HttpChannelParentListener* aListener) {
 }
 
 NS_IMETHODIMP
-HttpChannelParent::NotifyTrackingProtectionDisabled() {
-  LOG(("HttpChannelParent::NotifyTrackingProtectionDisabled [this=%p]\n",
-       this));
+HttpChannelParent::NotifyChannelClassifierProtectionDisabled(
+    uint32_t aAcceptedReason) {
+  LOG(
+      ("HttpChannelParent::NotifyChannelClassifierProtectionDisabled [this=%p "
+       "aAcceptedReason=%" PRIu32 "]\n",
+       this, aAcceptedReason));
   if (!mIPCClosed) {
     MOZ_ASSERT(mBgParent);
-    Unused << NS_WARN_IF(!mBgParent->OnNotifyTrackingProtectionDisabled());
+    Unused << NS_WARN_IF(
+        !mBgParent->OnNotifyChannelClassifierProtectionDisabled(
+            aAcceptedReason));
   }
   return NS_OK;
 }
