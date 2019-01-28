@@ -990,12 +990,14 @@ WasmToken WasmTokenStream::next() {
 
     case 'd':
       if (consume(u"data")) {
+#ifdef ENABLE_WASM_BULKMEM_OPS
         if (consume(u"count")) {
           return WasmToken(WasmToken::DataCount, begin, cur_);
         }
         if (consume(u".drop")) {
           return WasmToken(WasmToken::DataDrop, begin, cur_);
         }
+#endif
         return WasmToken(WasmToken::Data, begin, cur_);
       }
       if (consume(u"drop")) {
@@ -1005,9 +1007,11 @@ WasmToken WasmTokenStream::next() {
 
     case 'e':
       if (consume(u"elem")) {
+#ifdef ENABLE_WASM_BULKMEM_OPS
         if (consume(u".drop")) {
           return WasmToken(WasmToken::ElemDrop, begin, cur_);
         }
+#endif
         return WasmToken(WasmToken::Elem, begin, cur_);
       }
       if (consume(u"else")) {
