@@ -1395,7 +1395,8 @@ nsDOMWindowUtils::GetScrollXYFloat(bool aFlushLayout, float* aScrollX,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY) {
+nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY,
+                                 int32_t aUpdateType) {
   nsCOMPtr<Document> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
@@ -1405,12 +1406,20 @@ nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY) {
   // This should only be called on the root content document.
   NS_ENSURE_TRUE(presContext->IsRootContentDocument(), NS_ERROR_INVALID_ARG);
 
-  // Use |eRestore| as the priority for now, as it's the conservative choice.
-  // If a JS call site needs higher priority, we can expose the update type
-  // as a parameter.
+  FrameMetrics::ScrollOffsetUpdateType updateType;
+  switch (aUpdateType) {
+    case UPDATE_TYPE_RESTORE:
+      updateType = FrameMetrics::eRestore;
+      break;
+    case UPDATE_TYPE_MAIN_THREAD:
+      updateType = FrameMetrics::eMainThread;
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
   presContext->PresShell()->SetPendingVisualScrollUpdate(
-      CSSPoint::ToAppUnits(CSSPoint(aOffsetX, aOffsetY)),
-      FrameMetrics::eRestore);
+      CSSPoint::ToAppUnits(CSSPoint(aOffsetX, aOffsetY)), updateType);
 
   return NS_OK;
 }
