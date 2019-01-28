@@ -45,7 +45,6 @@
 #include "ProfilerIOInterposeObserver.h"
 #include "mozilla/AutoProfilerLabel.h"
 #include "mozilla/ExtensionPolicyService.h"
-#include "mozilla/Scheduler.h"
 #include "mozilla/StackWalk.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SystemGroup.h"
@@ -446,22 +445,29 @@ class ActivePS {
       mFilters[i] = aFilters[i];
     }
 
+#if !defined(RELEASE_OR_BETA)
     if (mInterposeObserver) {
       // We need to register the observer on the main thread, because we want
       // to observe IO that happens on the main thread.
+      // IOInterposer needs to be initialized before calling
+      // IOInterposer::Register or our observer will be silently dropped.
       if (NS_IsMainThread()) {
+        IOInterposer::Init();
         IOInterposer::Register(IOInterposeObserver::OpAll, mInterposeObserver);
       } else {
         RefPtr<ProfilerIOInterposeObserver> observer = mInterposeObserver;
         NS_DispatchToMainThread(
             NS_NewRunnableFunction("ActivePS::ActivePS", [=]() {
+              IOInterposer::Init();
               IOInterposer::Register(IOInterposeObserver::OpAll, observer);
             }));
       }
     }
+#endif
   }
 
   ~ActivePS() {
+#if !defined(RELEASE_OR_BETA)
     if (mInterposeObserver) {
       // We need to unregister the observer on the main thread, because that's
       // where we've registered it.
@@ -476,6 +482,7 @@ class ActivePS {
             }));
       }
     }
+#endif
   }
 
   bool ThreadSelected(const char* aThreadName) {
@@ -783,7 +790,7 @@ class ActivePS {
   // The maximum number of entries in mBuffer.
   const uint32_t mCapacity;
 
-  // The maximum duration of entries in mBuffer.
+  // The maximum duration of entries in mBuffer, in seconds.
   const Maybe<double> mDuration;
 
   // The interval between samples, measured in milliseconds.
@@ -2078,11 +2085,12 @@ static void PrintUsageThenExit(int aExitCode) {
       "  If unset, the platform default is used.\n"
       "\n"
       "  MOZ_PROFILER_STARTUP_DURATION=<1..>\n"
-      "  If MOZ_PROFILER_STARTUP is set, specifies the duration of entries in\n"
-      "  the profiler's circular buffer when the profiler is first started.\n"
-      "  If unset, duration of the entries will be restricted by.\n"
-      "  MOZ_PROFILER_STARTUP_ENTRIES or its default value instead of a time "
-      "duration."
+      "  If MOZ_PROFILER_STARTUP is set, specifies the maximum life time of\n"
+      "  entries in the the profiler's circular buffer when the profiler is\n"
+      "  first started, in seconds.\n"
+      "  If unset, the life time of the entries will only be restricted by\n"
+      "  MOZ_PROFILER_STARTUP_ENTRIES (or its default value), and no\n"
+      "  additional time duration restriction will be applied.\n"
       "\n"
       "  MOZ_PROFILER_STARTUP_INTERVAL=<1..1000>\n"
       "  If MOZ_PROFILER_STARTUP is set, specifies the sample interval,\n"
@@ -2102,10 +2110,9 @@ static void PrintUsageThenExit(int aExitCode) {
       "\n"
       "  MOZ_PROFILER_STARTUP_FILTERS=<Filters>\n"
       "  If MOZ_PROFILER_STARTUP is set, specifies the thread filters, as a\n"
-      "  comma-separated list of strings. A given thread will be sampled if "
-      "any\n"
-      "  of the filters is a case-insensitive substring of the thread name.\n"
-      "  If unset, a default is used.\n"
+      "  comma-separated list of strings. A given thread will be sampled if\n"
+      "  any of the filters is a case-insensitive substring of the thread\n"
+      "  name. If unset, a default is used.\n"
       "\n"
       "  MOZ_PROFILER_SHUTDOWN\n"
       "  If set, the profiler saves a profile to the named file on shutdown.\n"
@@ -3423,7 +3430,6 @@ ProfilingStack* profiler_register_thread(const char* aName,
                                          void* aGuessStackTop) {
   DEBUG_LOG("profiler_register_thread(%s)", aName);
 
-  MOZ_ASSERT_IF(NS_IsMainThread(), Scheduler::IsCooperativeThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   // Make sure we have a nsThread wrapper for the current thread, and that NSPR
@@ -3438,8 +3444,6 @@ ProfilingStack* profiler_register_thread(const char* aName,
 }
 
 void profiler_unregister_thread() {
-  MOZ_ASSERT_IF(NS_IsMainThread(), Scheduler::IsCooperativeThread());
-
   if (!CorePS::Exists()) {
     // This function can be called after the main thread has already shut down.
     return;

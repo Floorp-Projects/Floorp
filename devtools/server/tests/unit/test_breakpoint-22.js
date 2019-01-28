@@ -16,7 +16,11 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   const packet = await executeOnNextTickAndWaitForPause(() => {
     evalCode(debuggee);
   }, client);
-  const source = threadClient.source(packet.frame.where.source);
+  const source = await getSourceById(
+    threadClient,
+    packet.frame.where.actor
+  );
+
   const location = {
     line: debuggee.line0 + 2,
   };

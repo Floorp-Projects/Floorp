@@ -761,6 +761,8 @@ static JSObject* MaybeGetDelegate(Cell* cell) {
 
 bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
                                       Cell* value) {
+  bool ok = true;
+
   DebugOnly<Zone*> zone = map->zone();
   MOZ_ASSERT(CurrentThreadCanAccessZone(zone));
   MOZ_ASSERT(zone->isGCMarking());
@@ -778,7 +780,13 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
 
   CellColor mapColor =
       map->markColor == MarkColor::Black ? CellColor::Black : CellColor::Gray;
-  MOZ_ASSERT_IF(object, GetCellColor(object) == mapColor);
+  if (object && GetCellColor(object) != mapColor) {
+    fprintf(stderr, "WeakMap object is marked differently to the map\n");
+    fprintf(stderr, "(map %p is %s, object %p is %s)\n",
+            map, CellColorName(mapColor),
+            object, CellColorName(GetCellColor(object)));
+    ok = false;
+  }
 
   CellColor keyColor = GetCellColor(key);
   CellColor valueColor =
@@ -789,7 +797,7 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
     fprintf(stderr, "(map %p is %s, key %p is %s, value %p is %s)\n", map,
             CellColorName(mapColor), key, CellColorName(keyColor), value,
             CellColorName(valueColor));
-    return false;
+    ok = false;
   }
 
   // Debugger weak maps map have keys in zones that are not or are
@@ -797,12 +805,12 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   // state of these keys.
   if (map->allowKeysInOtherZones() &&
       !(keyZone->isGCMarking() || keyZone->isGCSweeping())) {
-    return true;
+    return ok;
   }
 
   JSObject* delegate = MaybeGetDelegate(key);
   if (!delegate) {
-    return true;
+    return ok;
   }
 
   CellColor delegateColor;
@@ -818,10 +826,10 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
     fprintf(stderr, "(map %p is %s, delegate %p is %s, key %p is %s)\n", map,
             CellColorName(mapColor), delegate, CellColorName(delegateColor),
             key, CellColorName(keyColor));
-    return false;
+    ok = false;
   }
 
-  return true;
+  return ok;
 }
 
 #endif  // defined(JS_GC_ZEAL) || defined(DEBUG)

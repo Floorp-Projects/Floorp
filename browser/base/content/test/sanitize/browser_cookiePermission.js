@@ -250,6 +250,26 @@ tests.forEach(methods => {
   });
 });
 
+// Session mode, but with unsupported custom permission, data in
+// www.example.com, cookie permission set for www.example.com
+tests.forEach(methods => {
+  attributes.forEach(originAttributes => {
+    add_task(async function deleteStorageOnlyCustomPermission() {
+      info(methods.name + ": All is session only, but with unsupported custom custom permission, data in www.example.com, cookie permission set for www.example.com - OA: " + originAttributes.name);
+      await deleteOnShutdown(
+        { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
+          createData: methods.createData,
+          checkData: methods.checkData,
+          originAttributes: originAttributes.oa,
+          cookiePermission: 123, // invalid cookie permission
+          expectedForOrg: false,
+          expectedForCom: false,
+          fullHost: true,
+        });
+    });
+  });
+});
+
 add_task(async function deleteStorageInAboutURL() {
   info("Test about:newtab");
 

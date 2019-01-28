@@ -640,11 +640,10 @@ void nsBaseWidget::SetSizeMode(nsSizeMode aMode) {
 //
 //-------------------------------------------------------------------------
 
-void nsBaseWidget::SetCursor(nsCursor aCursor) { mCursor = aCursor; }
-
-nsresult nsBaseWidget::SetCursor(imgIContainer* aCursor, uint32_t aHotspotX,
-                                 uint32_t aHotspotY) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+void nsBaseWidget::SetCursor(nsCursor aCursor,
+                             imgIContainer*, uint32_t, uint32_t) {
+  // We don't support the cursor image.
+  mCursor = aCursor;
 }
 
 //-------------------------------------------------------------------------
@@ -2081,11 +2080,11 @@ void nsBaseWidget::UnregisterPluginWindowForRemoteUpdates() {
 
 nsresult nsBaseWidget::AsyncEnableDragDrop(bool aEnable) {
   RefPtr<nsBaseWidget> kungFuDeathGrip = this;
-  return NS_IdleDispatchToCurrentThread(
+  return NS_DispatchToCurrentThreadQueue(
       NS_NewRunnableFunction(
           "AsyncEnableDragDropFn",
           [this, aEnable, kungFuDeathGrip]() { EnableDragDrop(aEnable); }),
-      kAsyncDragDropTimeout);
+      kAsyncDragDropTimeout, EventQueuePriority::Idle);
 }
 
 // static

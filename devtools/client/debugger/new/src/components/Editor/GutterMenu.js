@@ -120,7 +120,11 @@ export function gutterMenu({
       : gutterItems.addConditional)
   };
 
-  let items = [toggleBreakpointItem, conditionalBreakpoint, logPoint];
+  let items = [toggleBreakpointItem, conditionalBreakpoint];
+  
+  if (features.logPoints) {
+    items.push(logPoint)
+  }
 
   if (breakpoint && breakpoint.condition) {
     const remove = breakpoint.log ? conditionalBreakpoint : logPoint;

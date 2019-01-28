@@ -12,7 +12,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "nsError.h"
 #include "SVGAnimatedTransformList.h"
-#include "nsSVGAttrTearoffTable.h"
+#include "SVGAttrTearoffTable.h"
 
 namespace {
 const double kRadPerDegree = 2.0 * M_PI / 360.0;
@@ -23,10 +23,9 @@ namespace dom {
 
 using namespace SVGTransform_Binding;
 
-static nsSVGAttrTearoffTable<DOMSVGTransform, SVGMatrix>&
+static SVGAttrTearoffTable<DOMSVGTransform, SVGMatrix>&
 SVGMatrixTearoffTable() {
-  static nsSVGAttrTearoffTable<DOMSVGTransform, SVGMatrix>
-      sSVGMatrixTearoffTable;
+  static SVGAttrTearoffTable<DOMSVGTransform, SVGMatrix> sSVGMatrixTearoffTable;
   return sSVGMatrixTearoffTable;
 }
 

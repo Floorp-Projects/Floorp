@@ -19,5 +19,5 @@
 .worker-detail {
   display: grid;
   grid-template-columns: auto 1fr;
-  grid-column-gap: calc(4 * var(--base-distance));
+  grid-column-gap: calc(4 * var(--base-unit));
 }

@@ -26,6 +26,7 @@ config = {
                   "browser/config/mozconfigs/linux64/l10n-mozconfig",
                   "browser/config/mozconfigs/win32/l10n-mozconfig",
                   "browser/config/mozconfigs/win64/l10n-mozconfig",
+                  "browser/config/mozconfigs/win64-aarch64/l10n-mozconfig",
                   "browser/config/mozconfigs/macosx64/l10n-mozconfig"]
     ] + [
         # File, from, to
@@ -47,8 +48,6 @@ config = {
 
     "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
     # "hg_share_base": None,
-    "tools_repo_url": "https://hg.mozilla.org/build/tools",
-    "tools_repo_branch": "default",
     "from_repo_url": "https://hg.mozilla.org/mozilla-central",
     "to_repo_url": "https://hg.mozilla.org/releases/mozilla-beta",
 

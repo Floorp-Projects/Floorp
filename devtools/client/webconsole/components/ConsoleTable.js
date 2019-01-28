@@ -171,9 +171,9 @@ function getTableItems(data = {}, type, headers = null) {
       [INDEX_NAME]: index,
     };
 
-    const property = data[index].value;
+    const property = data[index] ? data[index].value : undefined;
 
-    if (property.preview) {
+    if (property && property.preview) {
       const {preview} = property;
       const entries = preview.ownProperties || preview.items;
       if (entries) {

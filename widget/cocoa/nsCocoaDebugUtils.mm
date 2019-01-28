@@ -15,8 +15,7 @@
 static char gProcPath[PROC_PIDPATHINFO_MAXSIZE] = {0};
 static char gBundleID[MAXPATHLEN] = {0};
 
-static void MaybeGetPathAndID()
-{
+static void MaybeGetPathAndID() {
   if (!gProcPath[0]) {
     proc_pidpath(getpid(), gProcPath, sizeof(gProcPath));
   }
@@ -31,70 +30,57 @@ static void MaybeGetPathAndID()
     if (!bundleID) {
       strcpy(gBundleID, "com.apple.console");
     } else {
-      CFStringGetCString(bundleID, gBundleID, sizeof(gBundleID),
-                         kCFStringEncodingUTF8);
+      CFStringGetCString(bundleID, gBundleID, sizeof(gBundleID), kCFStringEncodingUTF8);
     }
   }
 }
 
-static void GetThreadName(char* aName, size_t aSize)
-{
+static void GetThreadName(char* aName, size_t aSize) {
   pthread_getname_np(pthread_self(), aName, aSize);
 }
 
-void
-nsCocoaDebugUtils::DebugLog(const char* aFormat, ...)
-{
+void nsCocoaDebugUtils::DebugLog(const char* aFormat, ...) {
   va_list args;
   va_start(args, aFormat);
   CFStringRef formatCFSTR =
-    CFStringCreateWithCString(kCFAllocatorDefault, aFormat,
-                              kCFStringEncodingUTF8);
+      CFStringCreateWithCString(kCFAllocatorDefault, aFormat, kCFStringEncodingUTF8);
   DebugLogV(true, formatCFSTR, args);
   CFRelease(formatCFSTR);
   va_end(args);
 }
 
-void
-nsCocoaDebugUtils::DebugLogInt(bool aDecorate, const char* aFormat, ...)
-{
+void nsCocoaDebugUtils::DebugLogInt(bool aDecorate, const char* aFormat, ...) {
   va_list args;
   va_start(args, aFormat);
   CFStringRef formatCFSTR =
-    CFStringCreateWithCString(kCFAllocatorDefault, aFormat,
-                              kCFStringEncodingUTF8);
+      CFStringCreateWithCString(kCFAllocatorDefault, aFormat, kCFStringEncodingUTF8);
   DebugLogV(aDecorate, formatCFSTR, args);
   CFRelease(formatCFSTR);
   va_end(args);
 }
 
-void
-nsCocoaDebugUtils::DebugLogV(bool aDecorate, CFStringRef aFormat,
-                             va_list aArgs)
-{
+void nsCocoaDebugUtils::DebugLogV(bool aDecorate, CFStringRef aFormat, va_list aArgs) {
   MaybeGetPathAndID();
 
   CFStringRef message =
-    CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, NULL,
-                                         aFormat, aArgs);
+      CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, NULL, aFormat, aArgs);
 
   int msgLength =
-    CFStringGetMaximumSizeForEncoding(CFStringGetLength(message),
-                                      kCFStringEncodingUTF8);
-  char* msgUTF8 = (char*) calloc(msgLength, 1);
+      CFStringGetMaximumSizeForEncoding(CFStringGetLength(message), kCFStringEncodingUTF8);
+  char* msgUTF8 = (char*)calloc(msgLength, 1);
   CFStringGetCString(message, msgUTF8, msgLength, kCFStringEncodingUTF8);
   CFRelease(message);
 
   int finishedLength = msgLength + PROC_PIDPATHINFO_MAXSIZE;
-  char* finished = (char*) calloc(finishedLength, 1);
+  char* finished = (char*)calloc(finishedLength, 1);
   const time_t currentTime = time(NULL);
   char timestamp[30] = {0};
   ctime_r(&currentTime, timestamp);
   if (aDecorate) {
     char threadName[MAXPATHLEN] = {0};
     GetThreadName(threadName, sizeof(threadName));
-    snprintf(finished, finishedLength, "(%s) %s[%u] %s[%p] %s\n",
-            timestamp, gProcPath, getpid(), threadName, pthread_self(), msgUTF8);
+    snprintf(finished, finishedLength, "(%s) %s[%u] %s[%p] %s\n", timestamp, gProcPath, getpid(),
+             threadName, pthread_self(), msgUTF8);
   } else {
     snprintf(finished, finishedLength, "%s\n", msgUTF8);
   }
@@ -105,7 +91,7 @@ nsCocoaDebugUtils::DebugLogV(bool aDecorate, CFStringRef aFormat,
   // Use the Apple System Log facility, as NSLog and CFLog do.
   aslclient asl = asl_open(NULL, gBundleID, ASL_OPT_NO_DELAY);
   aslmsg msg = asl_new(ASL_TYPE_MSG);
-  asl_set(msg, ASL_KEY_LEVEL, "4"); // kCFLogLevelWarning, used by NSLog()
+  asl_set(msg, ASL_KEY_LEVEL, "4");  // kCFLogLevelWarning, used by NSLog()
   asl_set(msg, ASL_KEY_MSG, finished);
   asl_send(asl, msg);
   asl_free(msg);
@@ -114,18 +100,14 @@ nsCocoaDebugUtils::DebugLogV(bool aDecorate, CFStringRef aFormat,
   free(finished);
 }
 
-CSTypeRef
-nsCocoaDebugUtils::sInitializer = {0};
+CSTypeRef nsCocoaDebugUtils::sInitializer = {0};
 
-CSSymbolicatorRef
-nsCocoaDebugUtils::sSymbolicator = {0};
+CSSymbolicatorRef nsCocoaDebugUtils::sSymbolicator = {0};
 
 #define STACK_MAX 256
 
-void
-nsCocoaDebugUtils::PrintStackTrace()
-{
-  void** addresses = (void**) calloc(STACK_MAX, sizeof(void*));
+void nsCocoaDebugUtils::PrintStackTrace() {
+  void** addresses = (void**)calloc(STACK_MAX, sizeof(void*));
   if (!addresses) {
     return;
   }
@@ -145,9 +127,7 @@ nsCocoaDebugUtils::PrintStackTrace()
   free(addresses);
 }
 
-void
-nsCocoaDebugUtils::PrintAddress(void* aAddress)
-{
+void nsCocoaDebugUtils::PrintAddress(void* aAddress) {
   const char* ownerName = "unknown";
   const char* addressString = "unknown + 0";
 
@@ -158,10 +138,8 @@ nsCocoaDebugUtils::PrintAddress(void* aAddress)
   CSSymbolicatorRef symbolicator = GetSymbolicatorRef();
 
   if (!CSIsNull(symbolicator)) {
-    owner =
-      CSSymbolicatorGetSymbolOwnerWithAddressAtTime(symbolicator,
-                                                    (unsigned long long) aAddress,
-                                                    kCSNow);
+    owner = CSSymbolicatorGetSymbolOwnerWithAddressAtTime(symbolicator,
+                                                          (unsigned long long)aAddress, kCSNow);
   }
   if (!CSIsNull(owner)) {
     ownerName = allocatedOwnerName = GetOwnerNameInt(aAddress, owner);
@@ -175,16 +153,10 @@ nsCocoaDebugUtils::PrintAddress(void* aAddress)
   ReleaseSymbolicator();
 }
 
-char*
-nsCocoaDebugUtils::GetOwnerName(void* aAddress)
-{
-  return GetOwnerNameInt(aAddress);
-}
+char* nsCocoaDebugUtils::GetOwnerName(void* aAddress) { return GetOwnerNameInt(aAddress); }
 
-char*
-nsCocoaDebugUtils::GetOwnerNameInt(void* aAddress, CSTypeRef aOwner)
-{
-  char* retval = (char*) calloc(MAXPATHLEN, 1);
+char* nsCocoaDebugUtils::GetOwnerNameInt(void* aAddress, CSTypeRef aOwner) {
+  char* retval = (char*)calloc(MAXPATHLEN, 1);
 
   const char* ownerName = "unknown";
 
@@ -192,10 +164,8 @@ nsCocoaDebugUtils::GetOwnerNameInt(void* aAddress, CSTypeRef aOwner)
   CSTypeRef owner = aOwner;
 
   if (CSIsNull(owner) && !CSIsNull(symbolicator)) {
-    owner =
-      CSSymbolicatorGetSymbolOwnerWithAddressAtTime(symbolicator,
-                                                    (unsigned long long) aAddress,
-                                                    kCSNow);
+    owner = CSSymbolicatorGetSymbolOwnerWithAddressAtTime(symbolicator,
+                                                          (unsigned long long)aAddress, kCSNow);
   }
 
   if (!CSIsNull(owner)) {
@@ -208,16 +178,10 @@ nsCocoaDebugUtils::GetOwnerNameInt(void* aAddress, CSTypeRef aOwner)
   return retval;
 }
 
-char*
-nsCocoaDebugUtils::GetAddressString(void* aAddress)
-{
-  return GetAddressStringInt(aAddress);
-}
+char* nsCocoaDebugUtils::GetAddressString(void* aAddress) { return GetAddressStringInt(aAddress); }
 
-char*
-nsCocoaDebugUtils::GetAddressStringInt(void* aAddress, CSTypeRef aOwner)
-{
-  char* retval = (char*) calloc(MAXPATHLEN, 1);
+char* nsCocoaDebugUtils::GetAddressStringInt(void* aAddress, CSTypeRef aOwner) {
+  char* retval = (char*)calloc(MAXPATHLEN, 1);
 
   const char* addressName = "unknown";
   unsigned long long addressOffset = 0;
@@ -226,36 +190,28 @@ nsCocoaDebugUtils::GetAddressStringInt(void* aAddress, CSTypeRef aOwner)
   CSTypeRef owner = aOwner;
 
   if (CSIsNull(owner) && !CSIsNull(symbolicator)) {
-    owner =
-      CSSymbolicatorGetSymbolOwnerWithAddressAtTime(symbolicator,
-                                                    (unsigned long long) aAddress,
-                                                    kCSNow);
+    owner = CSSymbolicatorGetSymbolOwnerWithAddressAtTime(symbolicator,
+                                                          (unsigned long long)aAddress, kCSNow);
   }
 
   if (!CSIsNull(owner)) {
-    CSSymbolRef symbol =
-      CSSymbolOwnerGetSymbolWithAddress(owner,
-                                        (unsigned long long) aAddress);
+    CSSymbolRef symbol = CSSymbolOwnerGetSymbolWithAddress(owner, (unsigned long long)aAddress);
     if (!CSIsNull(symbol)) {
       addressName = CSSymbolGetName(symbol);
       CSRange range = CSSymbolGetRange(symbol);
-      addressOffset = (unsigned long long) aAddress - range.location;
+      addressOffset = (unsigned long long)aAddress - range.location;
     } else {
-      addressOffset = (unsigned long long)
-        aAddress - CSSymbolOwnerGetBaseAddress(owner);
+      addressOffset = (unsigned long long)aAddress - CSSymbolOwnerGetBaseAddress(owner);
     }
   }
 
-  snprintf(retval, MAXPATHLEN, "%s + 0x%llx",
-           addressName, addressOffset);
+  snprintf(retval, MAXPATHLEN, "%s + 0x%llx", addressName, addressOffset);
   ReleaseSymbolicator();
 
   return retval;
 }
 
-CSSymbolicatorRef
-nsCocoaDebugUtils::GetSymbolicatorRef()
-{
+CSSymbolicatorRef nsCocoaDebugUtils::GetSymbolicatorRef() {
   if (CSIsNull(sSymbolicator)) {
     // 0x40e0000 is the value returned by
     // uint32_t CSSymbolicatorGetFlagsForNListOnlyData(void).  We don't use
@@ -264,9 +220,7 @@ nsCocoaDebugUtils::GetSymbolicatorRef()
     // stack trace where Dwarf debugging info is available (about 15 seconds
     // with Firefox).  This means we won't be able to get a CSSourceInfoRef,
     // or line number information.  Oh well.
-    sSymbolicator =
-      CSSymbolicatorCreateWithPidFlagsAndNotification(getpid(),
-                                                      0x40e0000, 0);
+    sSymbolicator = CSSymbolicatorCreateWithPidFlagsAndNotification(getpid(), 0x40e0000, 0);
   }
   // Retaining just after creation prevents crashes when calling symbolicator
   // code (for example from PrintStackTrace()) as Firefox is quitting.  Not
@@ -275,9 +229,7 @@ nsCocoaDebugUtils::GetSymbolicatorRef()
   return CSRetain(sSymbolicator);
 }
 
-void
-nsCocoaDebugUtils::ReleaseSymbolicator()
-{
+void nsCocoaDebugUtils::ReleaseSymbolicator() {
   if (!CSIsNull(sSymbolicator)) {
     CSRelease(sSymbolicator);
   }

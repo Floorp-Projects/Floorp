@@ -141,6 +141,7 @@ pub struct PictureContext {
     pub raster_spatial_node_index: SpatialNodeIndex,
     /// The surface that this picture will render on.
     pub surface_index: SurfaceIndex,
+    pub dirty_region_count: usize,
 }
 
 /// Mutable state of a picture that gets modified when
@@ -252,6 +253,7 @@ impl FrameBuilder {
     /// primitives in screen space.
     fn build_layer_screen_rects_and_cull_layers(
         &mut self,
+        screen_world_rect: WorldRect,
         clip_scroll_tree: &ClipScrollTree,
         pipelines: &FastHashMap<PipelineId, Arc<ScenePipeline>>,
         resource_cache: &mut ResourceCache,
@@ -277,8 +279,6 @@ impl FrameBuilder {
         let root_spatial_node_index = clip_scroll_tree.root_reference_frame_index();
 
         const MAX_CLIP_COORD: f32 = 1.0e9;
-
-        let screen_world_rect = (self.screen_rect.to_f32() / device_pixel_scale).round_out();
 
         let frame_context = FrameBuildingContext {
             device_pixel_scale,
@@ -372,7 +372,6 @@ impl FrameBuilder {
         let mut default_dirty_region = DirtyRegion::new();
         default_dirty_region.push(
             frame_context.screen_world_rect,
-            frame_context.device_pixel_scale,
         );
         frame_state.push_dirty_region(default_dirty_region);
 
@@ -422,7 +421,6 @@ impl FrameBuilder {
             child_tasks,
             UvRectKind::Rect,
             root_spatial_node_index,
-            None,
         );
 
         let render_task_id = frame_state.render_tasks.add(root_render_task);
@@ -477,8 +475,10 @@ impl FrameBuilder {
         let mut surfaces = Vec::new();
 
         let screen_size = self.screen_rect.size.to_i32();
+        let screen_world_rect = (self.screen_rect.to_f32() / device_pixel_scale).round_out();
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
+            screen_world_rect,
             clip_scroll_tree,
             pipelines,
             resource_cache,
@@ -545,6 +545,7 @@ impl FrameBuilder {
                 data_stores,
                 surfaces: &surfaces,
                 scratch,
+                screen_world_rect,
             };
 
             pass.build(
@@ -590,7 +591,6 @@ impl FrameBuilder {
             has_been_rendered: false,
             has_texture_cache_tasks,
             prim_headers,
-            #[cfg(feature = "debug_renderer")]
             debug_items: mem::replace(&mut scratch.debug_items, Vec::new()),
         }
     }

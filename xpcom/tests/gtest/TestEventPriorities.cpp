@@ -55,9 +55,9 @@ TEST(EventPriorities, IdleAfterNormal) {
   RefPtr<TestEvent> evIdle =
       new TestEvent(&idleRan, [&] { ASSERT_EQ(normalRan, 3); });
 
-  NS_IdleDispatchToCurrentThread(do_AddRef(evIdle));
-  NS_IdleDispatchToCurrentThread(do_AddRef(evIdle));
-  NS_IdleDispatchToCurrentThread(do_AddRef(evIdle));
+  NS_DispatchToCurrentThreadQueue(do_AddRef(evIdle), EventQueuePriority::Idle);
+  NS_DispatchToCurrentThreadQueue(do_AddRef(evIdle), EventQueuePriority::Idle);
+  NS_DispatchToCurrentThreadQueue(do_AddRef(evIdle), EventQueuePriority::Idle);
   NS_DispatchToMainThread(evNormal);
   NS_DispatchToMainThread(evNormal);
   NS_DispatchToMainThread(evNormal);

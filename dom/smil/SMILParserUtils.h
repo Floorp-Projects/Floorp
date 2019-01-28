@@ -4,20 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILPARSERUTILS_H_
-#define NS_SMILPARSERUTILS_H_
+#ifndef mozilla_SMILParserUtils_h
+#define mozilla_SMILParserUtils_h
 
 #include "nsTArray.h"
 #include "nsStringFwd.h"
 
-class nsISMILAttr;
-class nsSMILTimeValue;
-class nsSMILValue;
-class nsSMILTimeValueSpecParams;
-
 namespace mozilla {
+
+class SMILAttr;
 class SMILKeySpline;
 class SMILRepeatCount;
+class SMILTimeValue;
+class SMILTimeValueSpecParams;
+class SMILValue;
+
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
@@ -47,8 +48,8 @@ class SMILParserUtils {
 
   static bool ParseValues(const nsAString& aSpec,
                           const mozilla::dom::SVGAnimationElement* aSrcElement,
-                          const nsISMILAttr& aAttribute,
-                          FallibleTArray<nsSMILValue>& aValuesArray,
+                          const SMILAttr& aAttribute,
+                          FallibleTArray<SMILValue>& aValuesArray,
                           bool& aPreventCachingOfSandwich);
 
   // Generic method that will run some code on each sub-section of an animation
@@ -60,7 +61,7 @@ class SMILParserUtils {
                                SMILRepeatCount& aResult);
 
   static bool ParseTimeValueSpecParams(const nsAString& aSpec,
-                                       nsSMILTimeValueSpecParams& aResult);
+                                       SMILTimeValueSpecParams& aResult);
 
   /*
    * Parses a clock value as defined in the SMIL Animation specification.
@@ -71,7 +72,7 @@ class SMILParserUtils {
    * @param aResult  The parsed result. [OUT]
    * @return true if parsing succeeded, otherwise false.
    */
-  static bool ParseClockValue(const nsAString& aSpec, nsSMILTimeValue* aResult);
+  static bool ParseClockValue(const nsAString& aSpec, SMILTimeValue* aResult);
 
   /*
    * This method checks whether the given string looks like a negative number.
@@ -85,4 +86,4 @@ class SMILParserUtils {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILPARSERUTILS_H_
+#endif  // mozilla_SMILParserUtils_h

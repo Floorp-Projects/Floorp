@@ -33,9 +33,7 @@ jsrust_shared = { path = "../../../../js/src/rust/shared", optional = true }
 arrayvec = "0.4"
 
 [build-dependencies]
-# Use exactly version 0.2.1, which uses semver 0.6, which other crates
-# require (0.2.2 requires 0.9)
-rustc_version = "=0.2.1"
+rustc_version = "0.2"
 
 [features]
 default = []

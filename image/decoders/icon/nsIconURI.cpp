@@ -55,7 +55,6 @@ NS_INTERFACE_MAP_BEGIN(nsMozIconURI)
   NS_INTERFACE_MAP_ENTRY(nsIMozIconURI)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURI)
   NS_INTERFACE_MAP_ENTRY(nsIURI)
-  NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableURI)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsINestedURI, mIconURL)
 NS_INTERFACE_MAP_END
 
@@ -541,8 +540,6 @@ nsMozIconURI::GetIconState(nsACString& aState) {
   }
   return NS_OK;
 }
-////////////////////////////////////////////////////////////////////////////////
-// nsIIPCSerializableURI methods:
 
 void nsMozIconURI::Serialize(URIParams& aParams) {
   IconURIParams params;

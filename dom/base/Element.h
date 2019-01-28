@@ -13,37 +13,37 @@
 #ifndef mozilla_dom_Element_h__
 #define mozilla_dom_Element_h__
 
-#include "mozilla/dom/FragmentOrElement.h"  // for base class
-#include "nsChangeHint.h"                   // for enum
-#include "mozilla/EventStates.h"            // for member
-#include "mozilla/RustCell.h"
-#include "mozilla/dom/DirectionalityUtils.h"
-#include "nsILinkHandler.h"
-#include "nsINodeList.h"
-#include "nsNodeUtils.h"
 #include "AttrArray.h"
-#include "mozilla/FlushType.h"
-#include "nsDOMAttributeMap.h"
-#include "nsPresContext.h"
-#include "mozilla/CORSMode.h"
-#include "mozilla/Attributes.h"
-#include "nsIScrollableFrame.h"
-#include "mozilla/dom/Attr.h"
-#include "nsISMILAttr.h"
-#include "mozilla/dom/DOMRect.h"
+#include "DOMIntersectionObserver.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
+#include "nsChangeHint.h"
+#include "nsContentUtils.h"
+#include "nsDOMAttributeMap.h"
+#include "nsILinkHandler.h"
+#include "nsINodeList.h"
+#include "nsIScrollableFrame.h"
+#include "nsNodeUtils.h"
+#include "nsPresContext.h"
+#include "Units.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/CORSMode.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/EventStates.h"
+#include "mozilla/FlushType.h"
+#include "mozilla/RustCell.h"
+#include "mozilla/SMILAttr.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/DirectionalityUtils.h"
+#include "mozilla/dom/FragmentOrElement.h"
+#include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/DOMTokenListSupportedTokens.h"
-#include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PointerEventHandler.h"
-#include "mozilla/UniquePtr.h"
-#include "Units.h"
-#include "DOMIntersectionObserver.h"
-#include "nsContentUtils.h"
+#include "mozilla/dom/WindowBinding.h"
 
 class mozAutoDocUpdate;
 class nsIFrame;
@@ -58,7 +58,6 @@ class nsFocusManager;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
 class nsDOMCSSAttributeDeclaration;
-class nsISMILAttr;
 class nsDOMStringMap;
 struct ServoNodeData;
 
@@ -356,11 +355,11 @@ class Element : public FragmentOrElement {
                                            bool aNotify);
 
   /**
-   * Returns a new nsISMILAttr that allows the caller to animate the given
+   * Returns a new SMILAttr that allows the caller to animate the given
    * attribute on this element.
    */
-  virtual UniquePtr<nsISMILAttr> GetAnimatedAttr(int32_t aNamespaceID,
-                                                 nsAtom* aName) {
+  virtual UniquePtr<SMILAttr> GetAnimatedAttr(int32_t aNamespaceID,
+                                              nsAtom* aName) {
     return nullptr;
   }
 

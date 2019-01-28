@@ -253,7 +253,7 @@ class TbplFormatter(BaseFormatter):
             sections.append(duration_msg)
         rv.append(' | '.join(sections) + '\n')
         if screenshot_msg:
-            rv.append(screenshot_msg[1:])
+            rv.append(screenshot_msg[1:] + "\n")
         return "".join(rv)
 
     def suite_end(self, data):

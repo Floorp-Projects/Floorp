@@ -54,7 +54,8 @@ async function testPressEnterOnSuggestion(expectedUrl = null, keyModifiers = {})
     expectedUrl = Services.search.defaultEngine.getSubmission(suggestion).uri.spec;
   }
 
-  let promiseLoad = waitForDocLoadAndStopIt(expectedUrl);
+  let promiseLoad =
+    BrowserTestUtils.waitForDocLoadAndStopIt(expectedUrl, gBrowser.selectedBrowser);
 
   for (let i = 0; i < idx; ++i) {
     EventUtils.synthesizeKey("KEY_ArrowDown");

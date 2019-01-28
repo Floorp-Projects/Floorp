@@ -13,9 +13,12 @@
 #include "mozilla/dom/DocGroup.h"
 #include "nsDOMCSSDeclaration.h"
 
-class nsSMILValue;
 struct RawServoUnlockedDeclarationBlock;
+
 namespace mozilla {
+
+class SMILValue;
+
 namespace dom {
 class DomGroup;
 class Element;
@@ -25,6 +28,7 @@ class Element;
 class nsDOMCSSAttributeDeclaration final : public nsDOMCSSDeclaration {
  public:
   typedef mozilla::dom::Element Element;
+  typedef mozilla::SMILValue SMILValue;
   nsDOMCSSAttributeDeclaration(Element* aContent, bool aIsSMILOverride);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -41,7 +45,7 @@ class nsDOMCSSAttributeDeclaration final : public nsDOMCSSDeclaration {
 
   nsINode* GetParentObject() override { return mElement; }
 
-  nsresult SetSMILValue(const nsCSSPropertyID aPropID, const nsSMILValue&);
+  nsresult SetSMILValue(const nsCSSPropertyID aPropID, const SMILValue&);
 
   nsresult SetPropertyValue(const nsCSSPropertyID aPropID,
                             const nsAString& aValue,

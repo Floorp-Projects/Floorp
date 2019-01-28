@@ -86,7 +86,7 @@ class PromiseHandler final : public PromiseNativeHandler {
       sequence[i] = entry;
     }
 
-    mSuccessCallback->HandleEvent(sequence);
+    mSuccessCallback->Call(sequence);
   }
 
   virtual void RejectedCallback(JSContext* aCx,

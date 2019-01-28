@@ -409,40 +409,11 @@ function promiseAttributeMutation(aNode, aAttribute, aFilterFn) {
 }
 
 function popupShown(aPopup) {
-  return promisePopupEvent(aPopup, "shown");
+  return BrowserTestUtils.waitForPopupEvent(aPopup, "shown");
 }
 
 function popupHidden(aPopup) {
-  return promisePopupEvent(aPopup, "hidden");
-}
-
-/**
- * Returns a Promise that resolves when aPopup fires an event of type
- * aEventType. Times out and rejects after 20 seconds.
- *
- * @param aPopup the popup to monitor for events.
- * @param aEventSuffix the _suffix_ for the popup event type to watch for.
- *
- * Example usage:
- *   let popupShownPromise = promisePopupEvent(somePopup, "shown");
- *   // ... something that opens a popup
- *   yield popupShownPromise;
- *
- *  let popupHiddenPromise = promisePopupEvent(somePopup, "hidden");
- *  // ... something that hides a popup
- *  yield popupHiddenPromise;
- */
-function promisePopupEvent(aPopup, aEventSuffix) {
-  return new Promise(resolve => {
-    let eventType = "popup" + aEventSuffix;
-
-    function onPopupEvent(e) {
-      aPopup.removeEventListener(eventType, onPopupEvent);
-      resolve();
-    }
-
-    aPopup.addEventListener(eventType, onPopupEvent);
-  });
+  return BrowserTestUtils.waitForPopupEvent(aPopup, "hidden");
 }
 
 // This is a simpler version of the context menu check that

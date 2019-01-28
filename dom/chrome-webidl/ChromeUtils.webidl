@@ -386,6 +386,12 @@ partial namespace ChromeUtils {
   [ChromeOnly]
   boolean isPopupTokenUnused();
 
+  /**
+   * Milliseconds from the last iframe loading an external protocol.
+   */
+  [ChromeOnly]
+  double lastExternalProtocolIframeAllowed();
+
   [ChromeOnly, Throws]
   void registerWindowActor(DOMString aName, WindowActorOptions aOptions);
 };

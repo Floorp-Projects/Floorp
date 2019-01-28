@@ -296,7 +296,7 @@ nsresult nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
                                  Callback&& newCallback) {
   mMutex.AssertCurrentThreadOwns();
 
-  if (NS_WARN_IF(!gThread)) {
+  if (!gThread) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 

@@ -109,22 +109,16 @@ job-template:
                 EN_US_PACKAGE_NAME: target.tar.bz2
                 EN_US_BINARY_URL:
                     artifact-reference: <build-signing/{artifact_prefix}>
-                MAR_TOOLS_URL:
-                    artifact-reference: <build/{artifact_prefix}/host/bin>
             macosx64:
                 EN_US_PACKAGE_NAME: target.dmg
                 EN_US_BINARY_URL:
                     artifact-reference: <repackage/{artifact_prefix}>
-                MAR_TOOLS_URL:
-                    artifact-reference: <build/{artifact_prefix}/host/bin>
             win.*:
                 EN_US_PACKAGE_NAME: target.zip
                 EN_US_BINARY_URL:
                     artifact-reference: <build-signing/{artifact_prefix}>
                 EN_US_INSTALLER_BINARY_URL:
                     artifact-reference: <repackage-signing/{artifact_prefix}>
-                MAR_TOOLS_URL:
-                    artifact-reference: <build/{artifact_prefix}/host/bin>
             android-api-16:
                 EN_US_PACKAGE_NAME: target.apk
                 EN_US_BINARY_URL:
@@ -133,40 +127,33 @@ job-template:
         config:
             by-build-platform:
                 linux:
-                    - single_locale/{project}.py
+                    - single_locale/firefox.py
                     - single_locale/linux32.py
                     - single_locale/tc_common.py
-                    - single_locale/tc_linux32.py
-                    - single_locale/onchange.py
+                    - single_locale/tc_linux_common.py
                 linux64:
-                    - single_locale/{project}.py
+                    - single_locale/firefox.py
                     - single_locale/linux64.py
                     - single_locale/tc_common.py
-                    - single_locale/tc_linux64.py
-                    - single_locale/onchange.py
+                    - single_locale/tc_linux_common.py
                 macosx64:
-                    - single_locale/{project}.py
+                    - single_locale/firefox.py
                     - single_locale/macosx64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_macosx64.py
-                    - single_locale/onchange.py
                 win32:
-                    - single_locale/{project}.py
+                    - single_locale/firefox.py
                     - single_locale/win32.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win32.py
-                    - single_locale/onchange.py
                 win64:
-                    - single_locale/{project}.py
+                    - single_locale/firefox.py
                     - single_locale/win64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win64.py
-                    - single_locale/onchange.py
                 android-api-16:
-                    - single_locale/{project}_android-api-16.py
                     - single_locale/tc_common.py
                     - single_locale/tc_android-api-16.py
-                    - single_locale/onchange.py
         # no default, so we fail on new entries
         actions:
             by-build-platform:

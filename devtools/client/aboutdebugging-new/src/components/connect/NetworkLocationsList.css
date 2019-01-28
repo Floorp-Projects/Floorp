@@ -12,5 +12,5 @@
 .connect-page__network-location {
   display: grid;
   grid-template-columns: auto max-content;
-  margin: calc(var(--base-distance) * 2) 0;
+  margin: calc(var(--base-unit) * 2) 0;
 }

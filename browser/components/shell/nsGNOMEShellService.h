@@ -7,10 +7,12 @@
 #define nsgnomeshellservice_h____
 
 #include "nsIGNOMEShellService.h"
+#include "nsToolkitShellService.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 
-class nsGNOMEShellService final : public nsIGNOMEShellService {
+class nsGNOMEShellService final : public nsIGNOMEShellService,
+                                  public nsToolkitShellService {
  public:
   nsGNOMEShellService() : mAppIsInPath(false) {}
 

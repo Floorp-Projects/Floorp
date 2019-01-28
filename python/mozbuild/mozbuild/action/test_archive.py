@@ -591,6 +591,17 @@ if buildconfig.substs.get('MOZ_ASAN') and buildconfig.substs.get('CLANG_CL'):
     ARCHIVE_FILES['common'].append(asan_dll)
 
 
+if buildconfig.substs.get('commtopsrcdir'):
+    commtopsrcdir = buildconfig.substs.get('commtopsrcdir')
+    mozharness_comm = {
+        'source': commtopsrcdir,
+        'base': 'mozharness',
+        'pattern': '**',
+        'dest': 'mozharness/configs'
+    }
+    ARCHIVE_FILES['mozharness'].append(mozharness_comm)
+
+
 # "common" is our catch all archive and it ignores things from other archives.
 # Verify nothing sneaks into ARCHIVE_FILES without a corresponding exclusion
 # rule in the "common" archive.

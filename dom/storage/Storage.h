@@ -144,6 +144,13 @@ class Storage : public nsISupports, public nsWrapperCache {
 
   virtual void LastRelease() {}
 
+  // This method is called when StorageAccess is not granted for the owning
+  // window. aRejectedReason is one of the possible blocking states from
+  // nsIWebProgressListener.
+  virtual bool ShouldThrowWhenStorageAccessDenied(uint32_t aRejectedReason) {
+    return true;
+  }
+
  private:
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;

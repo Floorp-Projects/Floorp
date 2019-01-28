@@ -331,14 +331,12 @@ BaselineScript* BaselineScript::New(
     uint32_t debugOsrPrologueOffset, uint32_t debugOsrEpilogueOffset,
     uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
     size_t retAddrEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
-    size_t bytecodeTypeMapEntries, size_t resumeEntries,
-    size_t traceLoggerToggleOffsetEntries) {
+    size_t resumeEntries, size_t traceLoggerToggleOffsetEntries) {
   static const unsigned DataAlignment = sizeof(uintptr_t);
 
   size_t retAddrEntriesSize = retAddrEntries * sizeof(RetAddrEntry);
   size_t pcMappingIndexEntriesSize =
       pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
-  size_t bytecodeTypeMapSize = bytecodeTypeMapEntries * sizeof(uint32_t);
   size_t resumeEntriesSize = resumeEntries * sizeof(uintptr_t);
   size_t tlEntriesSize = traceLoggerToggleOffsetEntries * sizeof(uint32_t);
 
@@ -347,15 +345,12 @@ BaselineScript* BaselineScript::New(
   size_t paddedPCMappingIndexEntriesSize =
       AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
   size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
-  size_t paddedBytecodeTypesMapSize =
-      AlignBytes(bytecodeTypeMapSize, DataAlignment);
   size_t paddedResumeEntriesSize = AlignBytes(resumeEntriesSize, DataAlignment);
   size_t paddedTLEntriesSize = AlignBytes(tlEntriesSize, DataAlignment);
 
   size_t allocBytes = paddedRetAddrEntriesSize +
                       paddedPCMappingIndexEntriesSize + paddedPCMappingSize +
-                      paddedBytecodeTypesMapSize + paddedResumeEntriesSize +
-                      paddedTLEntriesSize;
+                      paddedResumeEntriesSize + paddedTLEntriesSize;
 
   BaselineScript* script =
       jsscript->zone()->pod_malloc_with_extra<BaselineScript, uint8_t>(
@@ -381,9 +376,6 @@ BaselineScript* BaselineScript::New(
   script->pcMappingOffset_ = offsetCursor;
   script->pcMappingSize_ = pcMappingSize;
   offsetCursor += paddedPCMappingSize;
-
-  script->bytecodeTypeMapOffset_ = bytecodeTypeMapEntries ? offsetCursor : 0;
-  offsetCursor += paddedBytecodeTypesMapSize;
 
   script->resumeEntriesOffset_ = resumeEntries ? offsetCursor : 0;
   offsetCursor += paddedResumeEntriesSize;

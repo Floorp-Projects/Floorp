@@ -119,7 +119,7 @@ JS_FRIEND_API bool JS_SplicePrototype(JSContext* cx, HandleObject obj,
   }
 
   Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-  return JSObject::splicePrototype(cx, obj, obj->getClass(), tagged);
+  return JSObject::splicePrototype(cx, obj, tagged);
 }
 
 JS_FRIEND_API JSObject* JS_NewObjectWithUniqueType(JSContext* cx,

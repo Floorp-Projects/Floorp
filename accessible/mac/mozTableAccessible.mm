@@ -33,15 +33,13 @@
   return false;
 }
 
-- (NSString*)role
-{
+- (NSString*)role {
   return [self isLayoutTablePart] ? NSAccessibilityGroupRole : [super role];
 }
 @end
 
 @implementation mozTableAccessible
-- (NSArray*)additionalAccessibilityAttributeNames
-{
+- (NSArray*)additionalAccessibilityAttributeNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   NSArray* additionalAttributes = [super additionalAccessibilityAttributeNames];
@@ -64,12 +62,10 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (id)accessibilityAttributeValue:(NSString*)attribute
-{
+- (id)accessibilityAttributeValue:(NSString*)attribute {
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
     TableAccessible* table = accWrap->AsTable();
-    if ([attribute isEqualToString:NSAccessibilityRowCountAttribute])
-      return @(table->RowCount());
+    if ([attribute isEqualToString:NSAccessibilityRowCountAttribute]) return @(table->RowCount());
     if ([attribute isEqualToString:NSAccessibilityColumnCountAttribute])
       return @(table->ColCount());
     if ([attribute isEqualToString:NSAccessibilityRowsAttribute]) {
@@ -78,10 +74,8 @@
       uint32_t totalCount = accWrap->ChildCount();
       for (uint32_t i = 0; i < totalCount; i++) {
         if (accWrap->GetChildAt(i)->IsTableRow()) {
-          mozAccessible* curNative =
-            GetNativeFromGeckoAccessible(accWrap->GetChildAt(i));
-          if (curNative)
-            [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+          mozAccessible* curNative = GetNativeFromGeckoAccessible(accWrap->GetChildAt(i));
+          if (curNative) [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
         }
       }
       return nativeArray;
@@ -97,10 +91,8 @@
       uint32_t totalCount = proxy->ChildrenCount();
       for (uint32_t i = 0; i < totalCount; i++) {
         if (proxy->ChildAt(i)->IsTableRow()) {
-          mozAccessible* curNative =
-            GetNativeFromProxy(proxy->ChildAt(i));
-          if (curNative)
-            [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+          mozAccessible* curNative = GetNativeFromProxy(proxy->ChildAt(i));
+          if (curNative) [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
         }
       }
       return nativeArray;
@@ -112,8 +104,7 @@
 @end
 
 @implementation mozTableRowAccessible
-- (NSArray*)additionalAccessibilityAttributeNames
-{
+- (NSArray*)additionalAccessibilityAttributeNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   NSArray* additionalAttributes = [super additionalAccessibilityAttributeNames];
@@ -134,8 +125,7 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (id)accessibilityAttributeValue:(NSString*)attribute
-{
+- (id)accessibilityAttributeValue:(NSString*)attribute {
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
     if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
       // Count the number of rows before that one to obtain the row index.
@@ -171,8 +161,7 @@
 @end
 
 @implementation mozTableCellAccessible
-- (NSArray*)additionalAccessibilityAttributeNames
-{
+- (NSArray*)additionalAccessibilityAttributeNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   NSArray* additionalAttributes = [super additionalAccessibilityAttributeNames];
@@ -196,16 +185,13 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (id)accessibilityAttributeValue:(NSString*)attribute
-{
+- (id)accessibilityAttributeValue:(NSString*)attribute {
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
     TableCellAccessible* cell = accWrap->AsTableCell();
     if ([attribute isEqualToString:NSAccessibilityRowIndexRangeAttribute])
-      return [NSValue valueWithRange:NSMakeRange(cell->RowIdx(),
-                                                 cell->RowExtent())];
+      return [NSValue valueWithRange:NSMakeRange(cell->RowIdx(), cell->RowExtent())];
     if ([attribute isEqualToString:NSAccessibilityColumnIndexRangeAttribute])
-      return [NSValue valueWithRange:NSMakeRange(cell->ColIdx(),
-                                                 cell->ColExtent())];
+      return [NSValue valueWithRange:NSMakeRange(cell->ColIdx(), cell->ColExtent())];
     if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
       AutoTArray<Accessible*, 10> headerCells;
       cell->RowHeaderCells(&headerCells);
@@ -218,11 +204,9 @@
     }
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
     if ([attribute isEqualToString:NSAccessibilityRowIndexRangeAttribute])
-      return [NSValue valueWithRange:NSMakeRange(proxy->RowIdx(),
-                                                 proxy->RowExtent())];
+      return [NSValue valueWithRange:NSMakeRange(proxy->RowIdx(), proxy->RowExtent())];
     if ([attribute isEqualToString:NSAccessibilityColumnIndexRangeAttribute])
-      return [NSValue valueWithRange:NSMakeRange(proxy->ColIdx(),
-                                                 proxy->ColExtent())];
+      return [NSValue valueWithRange:NSMakeRange(proxy->ColIdx(), proxy->ColExtent())];
     if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
       nsTArray<ProxyAccessible*> headerCells;
       proxy->RowHeaderCells(&headerCells);

@@ -86,7 +86,7 @@ let ShellServiceInternal = {
       this._checkedThisSession = true;
     }
     if (this.shellService) {
-      return this.shellService.isDefaultBrowser(startupCheck, forAllTypes);
+      return this.shellService.isDefaultBrowser(forAllTypes);
     }
     return false;
   },

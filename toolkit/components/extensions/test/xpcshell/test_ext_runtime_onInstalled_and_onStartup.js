@@ -21,7 +21,11 @@ AddonTestUtils.init(this);
 // Allow for unsigned addons.
 AddonTestUtils.overrideCertDB();
 
-createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
+
+// Ensure that the background page is automatically started after using
+// promiseStartupManager.
+Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", false);
 
 function background() {
   let onInstalledDetails = null;
@@ -169,7 +173,7 @@ add_task(async function test_should_fire_on_addon_update() {
 add_task(async function test_should_fire_on_browser_update() {
   const EXTENSION_ID = "test_runtime_on_installed_browser_update@tests.mozilla.org";
 
-  await promiseStartupManager();
+  await promiseStartupManager("1");
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
@@ -193,8 +197,8 @@ add_task(async function test_should_fire_on_browser_update() {
     onInstalledReason: "install",
   });
 
+  // Restart the browser.
   await promiseRestartManager("1");
-
   await extension.awaitStartup();
 
   await expectEvents(extension, {

@@ -481,6 +481,7 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
   border-color: currentColor;
   border-style: solid;
   border-width: 0;
+  line-height: 1;
 }
 
 .flex-outline.vertical-tb .flex-outline-point::before,

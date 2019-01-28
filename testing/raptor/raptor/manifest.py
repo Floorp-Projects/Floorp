@@ -48,17 +48,32 @@ def validate_test_ini(test_details):
             continue
         if setting not in test_details:
             valid_settings = False
-            LOG.info("setting '%s' is required but not found in %s"
-                     % (setting, test_details['manifest']))
+            LOG.error("ERROR: setting '%s' is required but not found in %s"
+                      % (setting, test_details['manifest']))
 
     # if playback is specified, we need more playback settings
     if 'playback' in test_details:
         for setting in playback_settings:
             if setting not in test_details:
                 valid_settings = False
-                LOG.info("setting '%s' is required but not found in %s"
-                         % (setting, test_details['manifest']))
+                LOG.error("ERROR: setting '%s' is required but not found in %s"
+                          % (setting, test_details['manifest']))
 
+    # if 'alert-on' is specified, we need to make sure that the value given is valid
+    # i.e. any 'alert_on' values must be values that exist in the 'measure' ini setting
+    if 'alert_on' in test_details:
+
+        # support with or without spaces, i.e. 'measure = fcp, loadtime' or '= fcp,loadtime'
+        # convert to a list; and remove any spaces
+        test_details['alert_on'] = [_item.strip() for _item in test_details['alert_on'].split(',')]
+
+        # now make sure each alert_on value provided is valid
+        for alert_on_value in test_details['alert_on']:
+            if alert_on_value not in test_details['measure']:
+                LOG.error("ERROR: The 'alert_on' value of '%s' is not valid because "
+                          "it doesn't exist in the 'measure' test setting!"
+                          % alert_on_value)
+                valid_settings = False
     return valid_settings
 
 
@@ -78,21 +93,22 @@ def write_test_settings_json(args, test_details, oskey):
 
     if test_details['type'] == "pageload":
         test_settings['raptor-options']['measure'] = {}
-        if "dcf" in test_details['measure']:
-            test_settings['raptor-options']['measure']['dcf'] = True
-        if "fnbpaint" in test_details['measure']:
-            test_settings['raptor-options']['measure']['fnbpaint'] = True
-        if "fcp" in test_details['measure']:
-            test_settings['raptor-options']['measure']['fcp'] = True
-        if "hero" in test_details['measure']:
-            test_settings['raptor-options']['measure']['hero'] = test_details['hero'].split()
-        if "ttfi" in test_details['measure']:
-            test_settings['raptor-options']['measure']['ttfi'] = True
-        if "loadtime" in test_details['measure']:
-            test_settings['raptor-options']['measure']['loadtime'] = True
+
+        for m in [m.strip() for m in test_details['measure'].split(',')]:
+            test_settings['raptor-options']['measure'][m] = True
+            if m == 'hero':
+                test_settings['raptor-options']['measure'][m] = [h.strip() for h in
+                                                                 test_details['hero'].split(',')]
+
+        if test_details.get("alert_on", None) is not None:
+            # alert_on was already converted to list above
+            test_settings['raptor-options']['alert_on'] = test_details['alert_on']
+
     if test_details.get("page_timeout", None) is not None:
         test_settings['raptor-options']['page_timeout'] = int(test_details['page_timeout'])
+
     test_settings['raptor-options']['unit'] = test_details.get("unit", "ms")
+
     if test_details.get("lower_is_better", "true") == "false":
         test_settings['raptor-options']['lower_is_better'] = False
     else:

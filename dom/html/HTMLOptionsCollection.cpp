@@ -133,13 +133,12 @@ void HTMLOptionsCollection::IndexedSetter(uint32_t aIndex,
   parent->ReplaceChild(*aOption, *refChild, aError);
 }
 
-int32_t HTMLOptionsCollection::GetSelectedIndex(ErrorResult& aError) {
+int32_t HTMLOptionsCollection::SelectedIndex() {
   return mSelect->SelectedIndex();
 }
 
-void HTMLOptionsCollection::SetSelectedIndex(int32_t aSelectedIndex,
-                                             ErrorResult& aError) {
-  mSelect->SetSelectedIndex(aSelectedIndex, aError);
+void HTMLOptionsCollection::SetSelectedIndex(int32_t aSelectedIndex) {
+  mSelect->SetSelectedIndex(aSelectedIndex);
 }
 
 Element* HTMLOptionsCollection::GetElementAt(uint32_t aIndex) {
@@ -206,9 +205,7 @@ void HTMLOptionsCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
   mSelect->Add(aElement, aBefore, aError);
 }
 
-void HTMLOptionsCollection::Remove(int32_t aIndex, ErrorResult& aError) {
-  mSelect->Remove(aIndex);
-}
+void HTMLOptionsCollection::Remove(int32_t aIndex) { mSelect->Remove(aIndex); }
 
 }  // namespace dom
 }  // namespace mozilla

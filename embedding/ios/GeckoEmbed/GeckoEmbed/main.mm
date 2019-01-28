@@ -19,24 +19,22 @@
 #include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
 
-static const nsXREAppData sAppData = {
-  sizeof(nsXREAppData),
-  nullptr, // directory
-  "Mozilla",
-  "Browser",
-  nullptr,
-  "38.0a1",
-  "201502090123",
-  "browser@mozilla.org",
-  nullptr, // copyright
-  0,
-  nullptr, // xreDirectory
-  "38.0a1",
-  "*",
-  "https://crash-reports.mozilla.com/submit",
-  nullptr,
-  "Firefox"
-};
+static const nsXREAppData sAppData = {sizeof(nsXREAppData),
+                                      nullptr,  // directory
+                                      "Mozilla",
+                                      "Browser",
+                                      nullptr,
+                                      "38.0a1",
+                                      "201502090123",
+                                      "browser@mozilla.org",
+                                      nullptr,  // copyright
+                                      0,
+                                      nullptr,  // xreDirectory
+                                      "38.0a1",
+                                      "*",
+                                      "https://crash-reports.mozilla.com/submit",
+                                      nullptr,
+                                      "Firefox"};
 
 XRE_GetFileFromPathType XRE_GetFileFromPath;
 XRE_CreateAppDataType XRE_CreateAppData;
@@ -44,17 +42,16 @@ XRE_FreeAppDataType XRE_FreeAppData;
 XRE_mainType XRE_main;
 
 static const nsDynamicFunctionLoad kXULFuncs[] = {
-    { "XRE_GetFileFromPath", (NSFuncPtr*) &XRE_GetFileFromPath },
-    { "XRE_CreateAppData", (NSFuncPtr*) &XRE_CreateAppData },
-    { "XRE_FreeAppData", (NSFuncPtr*) &XRE_FreeAppData },
-    { "XRE_main", (NSFuncPtr*) &XRE_main },
-    { nullptr, nullptr }
-};
+    {"XRE_GetFileFromPath", (NSFuncPtr*)&XRE_GetFileFromPath},
+    {"XRE_CreateAppData", (NSFuncPtr*)&XRE_CreateAppData},
+    {"XRE_FreeAppData", (NSFuncPtr*)&XRE_FreeAppData},
+    {"XRE_main", (NSFuncPtr*)&XRE_main},
+    {nullptr, nullptr}};
 
 const int MAXPATHLEN = 1024;
 const char* XPCOM_DLL = "XUL";
 
-int main(int argc, char * argv[]) {
+int main(int argc, char* argv[]) {
   char exeDir[MAXPATHLEN];
   NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
   strncpy(exeDir, [bundlePath UTF8String], MAXPATHLEN);
@@ -82,7 +79,7 @@ int main(int argc, char * argv[]) {
     printf("Couldn't find the application directory.\n");
     return 255;
   }
-    
+
   nsCOMPtr<nsIFile> appSubdir;
   greDir->Clone(getter_AddRefs(appSubdir));
   greDir->Append(NS_LITERAL_STRING("Frameworks"));

@@ -136,6 +136,15 @@ export class BaseContent extends React.PureComponent {
     this.props.dispatch(ac.UserEvent({event: "OPEN_NEWTAB_PREFS"}));
   }
 
+  disableDarkTheme() {
+    // Dark themes are not supported in discovery stream view
+    // Add force-light-theme class to body tag to disable dark mode. See Bug 1519764
+    const bodyClassNames = global.document.body.classList;
+    if (!bodyClassNames.contains("force-light-theme")) {
+      bodyClassNames.add("force-light-theme");
+    }
+  }
+
   render() {
     const {props} = this;
     const {App} = props;
@@ -146,6 +155,10 @@ export class BaseContent extends React.PureComponent {
     const noSectionsEnabled = !prefs["feeds.topsites"] && props.Sections.filter(section => section.enabled).length === 0;
     const isDiscoveryStream = props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
+
+    if (isDiscoveryStream) {
+      this.disableDarkTheme();
+    }
 
     const outerClassName = [
       "outer-wrapper",
@@ -171,7 +184,10 @@ export class BaseContent extends React.PureComponent {
                   <ManualMigration />
                 </div>
                 }
-              {isDiscoveryStream ? <DiscoveryStreamBase /> : <Sections />}
+              {isDiscoveryStream ? (
+                <ErrorBoundary className="borderless-error">
+                  <DiscoveryStreamBase />
+                </ErrorBoundary>) : <Sections />}
               <PrefsButton onClick={this.openPreferences} />
             </div>
             <ConfirmDialog />

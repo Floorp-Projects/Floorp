@@ -190,6 +190,8 @@ function dismissPrompt(ui, action) {
         clearInterval(interval);
       }, 100);
       break;
+    case "none":
+      break;
 
     default:
       throw "dismissPrompt action listed unknown button.";

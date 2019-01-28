@@ -37,9 +37,6 @@ user_pref("browser.firstrun.show.localepicker", false);
 user_pref("browser.firstrun.show.uidiscovery", false);
 user_pref("browser.newtabpage.activity-stream.default.sites", "");
 user_pref("browser.newtabpage.activity-stream.telemetry", false);
-// Background thumbnails in particular cause grief, and disabling thumbnails
-// in general can't hurt - we re-enable them when tests need them.
-user_pref("browser.pagethumbnails.capturing_disabled", true);
 // Make sure PingCentre doesn't hit the network.
 user_pref("browser.ping-centre.production.endpoint", "");
 user_pref("browser.ping-centre.staging.endpoint", "");

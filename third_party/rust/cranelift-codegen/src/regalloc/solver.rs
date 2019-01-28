@@ -99,15 +99,16 @@
 //! over.
 
 use super::RegisterSet;
-use dbg::DisplayList;
-use entity::{SparseMap, SparseMapValue};
-use ir::Value;
-use isa::{RegClass, RegUnit};
-use regalloc::register_set::RegSetIter;
-use std::cmp;
-use std::fmt;
-use std::mem;
-use std::u16;
+use crate::dbg::DisplayList;
+use crate::entity::{SparseMap, SparseMapValue};
+use crate::ir::Value;
+use crate::isa::{RegClass, RegUnit};
+use crate::regalloc::register_set::RegSetIter;
+use core::cmp;
+use core::fmt;
+use core::mem;
+use core::u16;
+use log::debug;
 use std::vec::Vec;
 
 /// A variable in the constraint problem.
@@ -294,7 +295,7 @@ impl Move {
     }
 
     /// Get the "from" register and register class, if possible.
-    #[cfg_attr(feature = "cargo-clippy", allow(wrong_self_convention))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::wrong_self_convention))]
     fn from_reg(&self) -> Option<(RegClass, RegUnit)> {
         match *self {
             Move::Reg { rc, from, .. } | Move::Spill { rc, from, .. } => Some((rc, from)),
@@ -1129,18 +1130,18 @@ impl fmt::Display for Solver {
 #[cfg(build_arm32)]
 mod tests {
     use super::{Move, Solver};
-    use entity::EntityRef;
-    use ir::Value;
-    use isa::{RegClass, RegInfo, RegUnit, TargetIsa};
-    use regalloc::RegisterSet;
+    use crate::entity::EntityRef;
+    use crate::ir::Value;
+    use crate::isa::{RegClass, RegInfo, RegUnit, TargetIsa};
+    use crate::regalloc::RegisterSet;
+    use core::str::FromStr;
     use std::boxed::Box;
-    use std::str::FromStr;
-    use target_lexicon;
+    use target_lexicon::triple;
 
     // Make an arm32 `TargetIsa`, if possible.
     fn arm32() -> Option<Box<TargetIsa>> {
-        use isa;
-        use settings;
+        use crate::isa;
+        use crate::settings;
 
         let shared_builder = settings::builder();
         let shared_flags = settings::Flags::new(shared_builder);

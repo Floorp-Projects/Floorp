@@ -6,12 +6,9 @@
 
 #include "nsILabelableRunnable.h"
 
-#include "mozilla/Scheduler.h"
 #include "mozilla/SchedulerGroup.h"
 
 bool nsILabelableRunnable::IsReadyToRun() {
-  MOZ_ASSERT(mozilla::Scheduler::AnyEventRunning());
-  MOZ_ASSERT(!mozilla::Scheduler::UnlabeledEventRunning());
   SchedulerGroupSet groups;
   if (!GetAffectedSchedulerGroups(groups)) {
     // it can not be labeled right now.

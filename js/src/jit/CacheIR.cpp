@@ -4981,12 +4981,6 @@ bool CallIRGenerator::tryAttachArrayPush() {
 
   RootedArrayObject thisarray(cx_, &thisobj->as<ArrayObject>());
 
-  // And the object group for the array is not collecting preliminary objects.
-  AutoSweepObjectGroup sweep(thisobj->group());
-  if (thisobj->group()->maybePreliminaryObjects(sweep)) {
-    return false;
-  }
-
   // Check for other indexed properties or class hooks.
   if (!CanAttachAddElement(thisarray, /* isInit = */ false)) {
     return false;

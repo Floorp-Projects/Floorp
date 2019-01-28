@@ -38,6 +38,7 @@
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollector.h"
 #include "jsapi.h"
+#include "js/ContextOptions.h"
 #include "js/MemoryMetrics.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
@@ -865,7 +866,7 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
       .setWasmIon(useWasmIon)
       .setWasmBaseline(useWasmBaseline)
 #ifdef ENABLE_WASM_CRANELIFT
-      .setWasmForceCranelift(useWasmCranelift)
+      .setWasmCranelift(useWasmCranelift)
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       .setWasmGc(useWasmGc)

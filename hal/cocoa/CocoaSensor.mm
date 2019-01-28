@@ -15,31 +15,27 @@
 using namespace mozilla::hal;
 namespace mozilla {
 namespace hal_impl {
-static nsITimer* sUpdateTimer = nullptr;
+static nsITimer *sUpdateTimer = nullptr;
 static bool sActiveSensors[NUM_SENSOR_TYPE];
 static io_connect_t sDataPort = IO_OBJECT_NULL;
 static uint64_t sLastMean = -1;
-static float
-LMUvalueToLux(uint64_t aValue)
-{
-  //Conversion formula from regression. See Bug 793728.
+static float LMUvalueToLux(uint64_t aValue) {
+  // Conversion formula from regression. See Bug 793728.
   // -3*(10^-27)*x^4 + 2.6*(10^-19)*x^3 + -3.4*(10^-12)*x^2 + 3.9*(10^-5)*x - 0.19
-  long double powerC4 = 1/pow((long double)10,27);
-  long double powerC3 = 1/pow((long double)10,19);
-  long double powerC2 = 1/pow((long double)10,12);
-  long double powerC1 = 1/pow((long double)10,5);
+  long double powerC4 = 1 / pow((long double)10, 27);
+  long double powerC3 = 1 / pow((long double)10, 19);
+  long double powerC2 = 1 / pow((long double)10, 12);
+  long double powerC1 = 1 / pow((long double)10, 5);
 
-  long double term4 = -3.0 * powerC4 * pow(aValue,4);
-  long double term3 =  2.6 * powerC3 * pow(aValue,3);
-  long double term2 = -3.4 * powerC2 * pow(aValue,2);
-  long double term1 =  3.9 * powerC1 * aValue;
+  long double term4 = -3.0 * powerC4 * pow(aValue, 4);
+  long double term3 = 2.6 * powerC3 * pow(aValue, 3);
+  long double term2 = -3.4 * powerC2 * pow(aValue, 2);
+  long double term1 = 3.9 * powerC1 * aValue;
 
   float lux = ceil(static_cast<float>(term4 + term3 + term2 + term1 - 0.19));
   return lux > 0 ? lux : 0;
 }
-void
-UpdateHandler(nsITimer *aTimer, void *aClosure)
-{
+void UpdateHandler(nsITimer *aTimer, void *aClosure) {
   for (int i = 0; i < NUM_SENSOR_TYPE; i++) {
     if (!sActiveSensors[i]) {
       continue;
@@ -71,15 +67,11 @@ UpdateHandler(nsITimer *aTimer, void *aClosure)
       }
     }
 
-    hal::SensorData sdata(sensor,
-                          PR_Now(),
-                          values);
+    hal::SensorData sdata(sensor, PR_Now(), values);
     hal::NotifySensorChange(sdata);
   }
 }
-void
-EnableSensorNotifications(SensorType aSensor)
-{
+void EnableSensorNotifications(SensorType aSensor) {
   if (aSensor == SENSOR_ACCELERATION) {
     int result = smsStartup(nil, nil);
 
@@ -92,8 +84,8 @@ EnableSensorNotifications(SensorType aSensor)
     }
   } else if (aSensor == SENSOR_LIGHT) {
     io_service_t serviceObject;
-    serviceObject = IOServiceGetMatchingService(kIOMasterPortDefault,
-                                                IOServiceMatching("AppleLMUController"));
+    serviceObject =
+        IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("AppleLMUController"));
     if (!serviceObject) {
       return;
     }
@@ -112,17 +104,13 @@ EnableSensorNotifications(SensorType aSensor)
   if (!sUpdateTimer) {
     CallCreateInstance("@mozilla.org/timer;1", &sUpdateTimer);
     if (sUpdateTimer) {
-        sUpdateTimer->InitWithNamedFuncCallback(UpdateHandler,
-                                                nullptr,
-                                                DEFAULT_SENSOR_POLL,
-                                                nsITimer::TYPE_REPEATING_SLACK,
-                                                "hal_impl::UpdateHandler");
+      sUpdateTimer->InitWithNamedFuncCallback(UpdateHandler, nullptr, DEFAULT_SENSOR_POLL,
+                                              nsITimer::TYPE_REPEATING_SLACK,
+                                              "hal_impl::UpdateHandler");
     }
   }
 }
-void
-DisableSensorNotifications(SensorType aSensor)
-{
+void DisableSensorNotifications(SensorType aSensor) {
   if (!sActiveSensors[aSensor] || (aSensor != SENSOR_ACCELERATION && aSensor != SENSOR_LIGHT)) {
     return;
   }
@@ -145,5 +133,5 @@ DisableSensorNotifications(SensorType aSensor)
     NS_RELEASE(sUpdateTimer);
   }
 }
-} // namespace hal_impl
-} // namespace mozilla
+}  // namespace hal_impl
+}  // namespace mozilla

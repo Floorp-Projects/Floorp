@@ -1582,6 +1582,7 @@ impl YamlFrameReader {
                 blur_radius,
                 offset,
                 color,
+                should_inflate: true,
             },
         );
     }
@@ -1777,6 +1778,7 @@ impl YamlFrameReader {
             mix_blend_mode,
             &filters,
             raster_space,
+            /* cache_tiles = */ false,
         );
 
         if !yaml["items"].is_badvalue() {

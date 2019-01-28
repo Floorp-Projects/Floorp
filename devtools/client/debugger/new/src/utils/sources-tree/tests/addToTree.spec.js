@@ -39,7 +39,7 @@ describe("sources-tree", () => {
     it("should provide node API", () => {
       const source = createSource({
         url: "http://example.com/a/b/c.js",
-        actor: "actor1"
+        id: "actor1"
       });
 
       const root = createDirectoryNode("root", "", [
@@ -60,7 +60,7 @@ describe("sources-tree", () => {
     it("builds a path-based tree", () => {
       const source1 = createSource({
         url: "http://example.com/foo/source1.js",
-        actor: "actor1"
+        id: "actor1"
       });
       const tree = createDirectoryNode("root", "", []);
 
@@ -85,7 +85,7 @@ describe("sources-tree", () => {
 
       const source1 = createSource({
         url: `https://example.com/foo/${sourceName}`,
-        actor: "actor1"
+        id: "actor1"
       });
 
       const tree = createDirectoryNode("root", "", []);
@@ -101,7 +101,7 @@ describe("sources-tree", () => {
 
       const source1 = createSource({
         url: `https://example.com/foo/${sourceName}`,
-        actor: "actor1"
+        id: "actor1"
       });
 
       const tree = createDirectoryNode("root", "", []);
@@ -175,15 +175,15 @@ describe("sources-tree", () => {
     it("excludes javascript: URLs from the tree", () => {
       const source1 = createSource({
         url: "javascript:alert('Hello World')",
-        actor: "actor1"
+        id: "actor1"
       });
       const source2 = createSource({
         url: "http://example.com/source1.js",
-        actor: "actor2"
+        id: "actor2"
       });
       const source3 = createSource({
         url: "javascript:let i = 10; while (i > 0) i--; console.log(i);",
-        actor: "actor3"
+        id: "actor3"
       });
       const tree = createDirectoryNode("root", "", []);
 
@@ -202,7 +202,7 @@ describe("sources-tree", () => {
     it("correctly parses file sources", () => {
       const source = createSource({
         url: "file:///a/b.js",
-        actor: "actor1"
+        id: "actor1"
       });
       const tree = createDirectoryNode("root", "", []);
 

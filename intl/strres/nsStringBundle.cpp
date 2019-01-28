@@ -317,9 +317,10 @@ nsStringBundle::~nsStringBundle() {}
 
 NS_IMETHODIMP
 nsStringBundleBase::AsyncPreload() {
-  return NS_IdleDispatchToCurrentThread(
+  return NS_DispatchToCurrentThreadQueue(
       NewIdleRunnableMethod("nsStringBundleBase::LoadProperties", this,
-                            &nsStringBundleBase::LoadProperties));
+                            &nsStringBundleBase::LoadProperties),
+      EventQueuePriority::Idle);
 }
 
 size_t nsStringBundle::SizeOfIncludingThis(

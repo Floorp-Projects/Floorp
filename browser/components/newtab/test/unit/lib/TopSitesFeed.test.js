@@ -1343,6 +1343,12 @@ describe("Top Sites Feed", () => {
         assert.deepEqual(fakeNewTabUtils.pinnedLinks.links[6], {url: "https://amazon.com", searchTopSite: true, label: "@amazon"});
       });
 
+      it("should not pin shortcuts for the current default search engine", async () => {
+        feed._currentSearchHostname = "google";
+        await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);
+        assert.deepEqual(fakeNewTabUtils.pinnedLinks.links[3], {url: "https://amazon.com", searchTopSite: true, label: "@amazon"});
+      });
+
       it("should only pin the first shortcut if there's only one available slot", async () => {
         fakeNewTabUtils.pinnedLinks.links[3] = {url: ""};
         await feed._maybeInsertSearchShortcuts(fakeNewTabUtils.pinnedLinks.links);

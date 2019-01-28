@@ -181,7 +181,7 @@ class ConsoleOutput extends Component {
       networkMessageActiveTabId,
       pausedExecutionPoint,
       getMessage: () => messages.get(messageId),
-      isPaused: pausedMessage && pausedMessage.id == messageId,
+      isPaused: !!pausedMessage && pausedMessage.id == messageId,
       maybeScrollToBottom: this.maybeScrollToBottom,
     }));
 

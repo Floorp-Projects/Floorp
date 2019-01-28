@@ -15,8 +15,7 @@
         persist="lastSelected screenX screenY"
         role="dialog"
         onload="gLanguagesDialog.onLoad();"
-        helpTopic="prefs-languages"
-        ondialoghelp="openPrefsHelp()">
+        helpTopic="prefs-languages">
 
   <linkset>
     <link rel="localization" href="browser/preferences/languages.ftl"/>

@@ -314,7 +314,7 @@ class ThrottledEventQueue::Inner final : public nsISupports {
 
     // Only add the event to the underlying queue if are able to
     // dispatch to our base target.
-    mEventQueue.PutEvent(std::move(aEvent), EventPriority::Normal, lock);
+    mEventQueue.PutEvent(std::move(aEvent), EventQueuePriority::Normal, lock);
     return NS_OK;
   }
 

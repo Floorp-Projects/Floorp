@@ -369,11 +369,11 @@ namespace JS {
   D(FULL_SLOT_BUFFER, 21)                  \
   D(FULL_SHAPE_BUFFER, 22)                 \
   D(TOO_MUCH_WASM_MEMORY, 23)              \
+  D(DISABLE_GENERATIONAL_GC, 24)           \
+  D(FINISH_GC, 25)                         \
+  D(PREPARE_FOR_TRACING, 26)               \
                                            \
   /* These are reserved for future use. */ \
-  D(RESERVED0, 24)                         \
-  D(RESERVED1, 25)                         \
-  D(RESERVED2, 26)                         \
   D(RESERVED3, 27)                         \
   D(RESERVED4, 28)                         \
   D(RESERVED5, 29)                         \
@@ -388,10 +388,10 @@ namespace JS {
   D(CC_WAITING, 36)                        \
   D(CC_FORCED, 37)                         \
   D(LOAD_END, 38)                          \
-  D(POST_COMPARTMENT, 39)                  \
+  D(UNUSED3, 39)                           \
   D(PAGE_HIDE, 40)                         \
   D(NSJSCONTEXT_DESTROY, 41)               \
-  D(SET_NEW_DOCUMENT, 42)                  \
+  D(WORKER_SHUTDOWN, 42)                   \
   D(SET_DOC_SHELL, 43)                     \
   D(DOM_UTILS, 44)                         \
   D(DOM_IPC, 45)                           \
@@ -875,7 +875,8 @@ extern JS_PUBLIC_API void JS_RemoveExtraGCRootsTracer(JSContext* cx,
                                                       JSTraceDataOp traceOp,
                                                       void* data);
 
-extern JS_PUBLIC_API void JS_GC(JSContext* cx);
+extern JS_PUBLIC_API void JS_GC(JSContext* cx,
+                                JS::GCReason reason = JS::GCReason::API);
 
 extern JS_PUBLIC_API void JS_MaybeGC(JSContext* cx);
 

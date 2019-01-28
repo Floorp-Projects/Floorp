@@ -28,8 +28,9 @@ Usage
 
    UptakeTelemetry.report(source, status);
 
-- ``source`` - a ``string`` that is an identifier for the update source (eg. ``addons-blocklist``)
-- ``status`` - one of the following status constants:
+- ``source``, a ``string`` that is an identifier for the update source (eg. ``addons-blocklist``)
+- ``status``, one of the following status constants:
+
   - ``UptakeTelemetry.STATUS.UP_TO_DATE``: Local content was already up-to-date with remote content.
   - ``UptakeTelemetry.STATUS.SUCCESS``: Local content was updated successfully.
   - ``UptakeTelemetry.STATUS.BACKOFF``: Remote server asked clients to backoff.

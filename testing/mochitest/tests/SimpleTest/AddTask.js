@@ -75,9 +75,9 @@ var add_task = (function () {
             }
           } catch (ex) {
             try {
-              ok(false, "" + ex, "Should not throw any errors", ex.stack);
+              SimpleTest.record(false, "" + ex, "Should not throw any errors", ex.stack);
             } catch (ex2) {
-              ok(false, "(The exception cannot be converted to string.)",
+              SimpleTest.record(false, "(The exception cannot be converted to string.)",
                  "Should not throw any errors", ex.stack);
             }
           }

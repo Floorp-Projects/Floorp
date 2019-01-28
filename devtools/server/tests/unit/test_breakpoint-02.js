@@ -9,9 +9,13 @@
  */
 
 add_task(threadClientTest(({ threadClient, debuggee }) => {
-  return new Promise(resolve => {
-    threadClient.addOneTimeListener("paused", function(event, packet) {
+  return new Promise((resolve) => {
+    threadClient.addOneTimeListener("paused", async function(event, packet) {
       const location = { line: debuggee.line0 + 3 };
+      const source = await getSourceById(
+        threadClient,
+        packet.frame.where.actor
+      );
 
       threadClient.resume();
 
@@ -21,7 +25,6 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
         Assert.equal(packet.why.type, "interrupted");
       });
 
-      const source = threadClient.source(packet.frame.where.source);
       source.setBreakpoint(location).then(function() {
         executeSoon(resolve);
       }, function(response) {

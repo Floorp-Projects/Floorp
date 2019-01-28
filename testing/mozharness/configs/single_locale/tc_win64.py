@@ -9,7 +9,6 @@ config = {
         # EN_US_INSTALLER_BINARY_URL falls back on EN_US_BINARY_URL
         "EN_US_INSTALLER_BINARY_URL": os.environ.get(
             "EN_US_INSTALLER_BINARY_URL", os.environ["EN_US_BINARY_URL"]),
-        "MOZ_UPDATE_CHANNEL": "%(update_channel)s",
         "DIST": "%(abs_objdir)s",
         "L10NBASEDIR": "../../l10n",
         'TOOLTOOL_CACHE': os.environ.get('TOOLTOOL_CACHE', 'c:/builds/tooltool_cache'),
@@ -22,5 +21,9 @@ config = {
 
     "tooltool_url": 'https://tooltool.mozilla-releng.net/',
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win64/releng.manifest",
+
+    # use mozmake?
+    "enable_mozmake": True,
+    'exes': {},
 }
 

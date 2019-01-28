@@ -66,7 +66,7 @@ using mozilla::IsWin8OrLater;
 using namespace mozilla;
 using namespace mozilla::widget;
 
-NS_IMPL_ISUPPORTS(nsWindowsShellService, nsIShellService)
+NS_IMPL_ISUPPORTS(nsWindowsShellService, nsIToolkitShellService, nsIShellService)
 
 static nsresult OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName,
                                   HKEY* aKey) {
@@ -199,10 +199,8 @@ static nsresult GetAppRegName(nsAutoString& aAppRegName) {
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck, bool aForAllTypes,
+nsWindowsShellService::IsDefaultBrowser(bool aForAllTypes,
                                         bool* aIsDefaultBrowser) {
-  mozilla::Unused << aStartupCheck;
-
   *aIsDefaultBrowser = false;
 
   RefPtr<IApplicationAssociationRegistration> pAAR;

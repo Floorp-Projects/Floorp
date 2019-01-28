@@ -345,7 +345,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
             ir::TrapCode::IntegerDivisionByZero => bd::Trap::IntegerDivideByZero,
             ir::TrapCode::BadConversionToInteger => bd::Trap::InvalidConversionToInteger,
             ir::TrapCode::Interrupt => bd::Trap::CheckInterrupt,
-            ir::TrapCode::User(0) => bd::Trap::Unreachable,
+            ir::TrapCode::UnreachableCodeReached => bd::Trap::Unreachable,
             ir::TrapCode::User(_) => panic!("Uncovered trap code {}", code),
         };
 

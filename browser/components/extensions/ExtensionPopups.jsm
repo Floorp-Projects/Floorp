@@ -335,6 +335,9 @@ class BasePopup {
 
   unblockParser() {
     this.browserReady.then(browser => {
+      if (this.destroyed) {
+        return;
+      }
       this.browser.messageManager.sendAsyncMessage("Extension:UnblockParser");
     });
   }
@@ -489,6 +492,9 @@ class ViewPopup extends BasePopup {
    *        should be closed, or `true` otherwise.
    */
   async attach(viewNode) {
+    if (this.destroyed) {
+      return false;
+    }
     this.viewNode.removeEventListener(this.DESTROY_EVENT, this);
     this.panel.removeEventListener("popuppositioned", this, {once: true, capture: true});
 

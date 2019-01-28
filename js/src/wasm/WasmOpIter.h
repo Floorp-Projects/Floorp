@@ -164,7 +164,7 @@ enum class OpKind {
   Shuffle,
   Splat,
   MemOrTableCopy,
-  MemOrTableDrop,
+  DataOrElemDrop,
   MemFill,
   MemOrTableInit,
   TableGet,
@@ -313,7 +313,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 
   Decoder& d_;
   const ModuleEnvironment& env_;
-  ExclusiveDeferredValidationState& dvs_;
 
   Vector<TypeAndValue<Value>, 8, SystemAllocPolicy> valueStack_;
   Vector<ControlStackEntry<ControlItem>, 8, SystemAllocPolicy> controlStack_;
@@ -391,17 +390,14 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   typedef Vector<Value, 8, SystemAllocPolicy> ValueVector;
 
 #ifdef DEBUG
-  explicit OpIter(const ModuleEnvironment& env, Decoder& decoder,
-                  ExclusiveDeferredValidationState& dvs)
+  explicit OpIter(const ModuleEnvironment& env, Decoder& decoder)
       : d_(decoder),
         env_(env),
-        dvs_(dvs),
         op_(OpBytes(Op::Limit)),
         offsetOfLastReadOp_(0) {}
 #else
-  explicit OpIter(const ModuleEnvironment& env, Decoder& decoder,
-                  ExclusiveDeferredValidationState& dvs)
-      : d_(decoder), env_(env), dvs_(dvs), offsetOfLastReadOp_(0) {}
+  explicit OpIter(const ModuleEnvironment& env, Decoder& decoder)
+      : d_(decoder), env_(env), offsetOfLastReadOp_(0) {}
 #endif
 
   // Return the decoding byte offset.
@@ -518,7 +514,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readMemOrTableCopy(bool isMem, uint32_t* dstMemOrTableIndex,
                                        Value* dst, uint32_t* srcMemOrTableIndex,
                                        Value* src, Value* len);
-  MOZ_MUST_USE bool readMemOrTableDrop(bool isMem, uint32_t* segIndex);
+  MOZ_MUST_USE bool readDataOrElemDrop(bool isData, uint32_t* segIndex);
   MOZ_MUST_USE bool readMemFill(Value* start, Value* val, Value* len);
   MOZ_MUST_USE bool readMemOrTableInit(bool isMem, uint32_t* segIndex,
                                        uint32_t* dstTableIndex, Value* dst,
@@ -587,8 +583,7 @@ inline bool OpIter<Policy>::Join(StackType one, StackType two,
     return true;
   }
 
-  if (env_.gcTypesEnabled() == HasGcTypes::True && one.isReference() &&
-      two.isReference()) {
+  if (env_.gcTypesEnabled() && one.isReference() && two.isReference()) {
     if (env_.isRefSubtypeOf(NonAnyToValType(two), NonAnyToValType(one))) {
       *result = one;
       return true;
@@ -709,8 +704,8 @@ inline bool OpIter<Policy>::popWithType(StackType expectedType, Value* value) {
   StackType observedType = tv.type();
   if (!(MOZ_LIKELY(observedType == expectedType) ||
         observedType == StackType::TVar || expectedType == StackType::TVar ||
-        (env_.gcTypesEnabled() == HasGcTypes::True &&
-         observedType.isReference() && expectedType.isReference() &&
+        (env_.gcTypesEnabled() && observedType.isReference() &&
+         expectedType.isReference() &&
          env_.isRefSubtypeOf(NonAnyToValType(observedType),
                              NonAnyToValType(expectedType))))) {
     return typeMismatch(observedType, expectedType);
@@ -768,7 +763,7 @@ inline bool OpIter<Policy>::topWithType(ValType expectedType, Value* value) {
 
   if (!MOZ_UNLIKELY(observed == expected)) {
     if (observed == StackType::TVar ||
-        (env_.gcTypesEnabled() == HasGcTypes::True && observed.isReference() &&
+        (env_.gcTypesEnabled() && observed.isReference() &&
          expected.isReference() &&
          env_.isRefSubtypeOf(NonAnyToValType(observed), expectedType))) {
       tv.typeRef() = expected;
@@ -844,12 +839,11 @@ inline bool OpIter<Policy>::readBlockType(ExprType* type) {
       known = true;
       break;
     case uint8_t(ExprType::Ref):
-      known = env_.gcTypesEnabled() == HasGcTypes::True &&
-              uncheckedRefTypeIndex < MaxTypes &&
+      known = env_.gcTypesEnabled() && uncheckedRefTypeIndex < MaxTypes &&
               uncheckedRefTypeIndex < env_.types.length();
       break;
     case uint8_t(ExprType::AnyRef):
-      known = env_.gcTypesEnabled() == HasGcTypes::True;
+      known = env_.gcTypesEnabled();
       break;
     case uint8_t(ExprType::Limit):
       break;
@@ -1880,31 +1874,21 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
   MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableCopy);
   MOZ_ASSERT(dstMemOrTableIndex != srcMemOrTableIndex);
 
-  *dstMemOrTableIndex = 0;
-  *srcMemOrTableIndex = 0;
-
-  uint32_t memOrTableFlags;
-  if (!readVarU32(&memOrTableFlags)) {
-    return fail(isMem ? "unable to read memory flags"
-                      : "unable to read table flags");
+  // We use (dest, src) everywhere in code but the spec requires (src, dest)
+  // encoding order for the immediates.
+  if (!readVarU32(srcMemOrTableIndex)) {
+    return false;
   }
-  if (!isMem && (memOrTableFlags & uint32_t(MemoryTableFlags::HasTableIndex))) {
-    if (!readVarU32(dstMemOrTableIndex)) {
-      return false;
-    }
-    if (!readVarU32(srcMemOrTableIndex)) {
-      return false;
-    }
-    memOrTableFlags ^= uint32_t(MemoryTableFlags::HasTableIndex);
-  }
-  if (memOrTableFlags != uint32_t(MemoryTableFlags::Default)) {
-    return fail(isMem ? "unrecognized memory flags"
-                      : "unrecognized table flags");
+  if (!readVarU32(dstMemOrTableIndex)) {
+    return false;
   }
 
   if (isMem) {
     if (!env_.usesMemory()) {
       return fail("can't touch memory without memory");
+    }
+    if (*srcMemOrTableIndex != 0 || *dstMemOrTableIndex != 0) {
+      return fail("memory index out of range for memory.copy");
     }
   } else {
     if (*dstMemOrTableIndex >= env_.tables.length() ||
@@ -1929,16 +1913,16 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readMemOrTableDrop(bool isMem, uint32_t* segIndex) {
-  MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableDrop);
+inline bool OpIter<Policy>::readDataOrElemDrop(bool isData, uint32_t* segIndex) {
+  MOZ_ASSERT(Classify(op_) == OpKind::DataOrElemDrop);
 
-  if (isMem) {
+  if (isData) {
     if (!env_.usesMemory()) {
       return fail("can't touch memory without memory");
     }
   } else {
     if (env_.tables.length() == 0) {
-      return fail("can't table.drop without a table");
+      return fail("can't elem.drop without a table");
     }
   }
 
@@ -1946,14 +1930,16 @@ inline bool OpIter<Policy>::readMemOrTableDrop(bool isMem, uint32_t* segIndex) {
     return false;
   }
 
-  if (isMem) {
-    // We can't range-check *segIndex at this point since we don't yet
-    // know how many data segments the module has.  So note the index, but
-    // defer the actual check for now.
-    dvs_.lock()->notifyDataSegmentIndex(*segIndex, d_.currentOffset());
+  if (isData) {
+    if (env_.dataCount.isNothing()) {
+      return fail("data.drop requires a DataCount section");
+    }
+    if (*segIndex >= *env_.dataCount) {
+      return fail("data.drop segment index out of range");
+    }
   } else {
     if (*segIndex >= env_.elemSegments.length()) {
-      return fail("element segment index out of range for table.drop");
+      return fail("element segment index out of range for elem.drop");
     }
   }
 
@@ -1968,12 +1954,15 @@ inline bool OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len) {
     return fail("can't touch memory without memory");
   }
 
-  uint32_t memoryFlags;
-  if (!readVarU32(&memoryFlags)) {
-    return fail("unable to read memory flags");
+  uint32_t memoryIndex;
+  if (!readVarU32(&memoryIndex)) {
+    return false;
   }
-  if (memoryFlags != uint32_t(MemoryTableFlags::Default)) {
-    return fail("unrecognized memory flags");
+  if (!env_.usesMemory()) {
+    return fail("can't touch memory without memory");
+  }
+  if (memoryIndex != 0) {
+    return fail("memory index must be zero");
   }
 
   if (!popWithType(ValType::I32, len)) {
@@ -2011,42 +2000,33 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     return false;
   }
 
-  *dstTableIndex = 0;
-
-  uint32_t memOrTableFlags;
-  if (!readVarU32(&memOrTableFlags)) {
-    return fail(isMem ? "unable to read memory flags"
-                      : "unable to read table flags");
-  }
-  if (!isMem && (memOrTableFlags & uint32_t(MemoryTableFlags::HasTableIndex))) {
-    if (!readVarU32(dstTableIndex)) {
-      return false;
-    }
-    memOrTableFlags ^= uint32_t(MemoryTableFlags::HasTableIndex);
-  }
-  if (memOrTableFlags != uint32_t(MemoryTableFlags::Default)) {
-    return fail(isMem ? "unrecognized memory flags"
-                      : "unrecognized table flags");
-  }
-
-  if (isMem) {
-    if (!env_.usesMemory()) {
-      return fail("can't touch memory without memory");
-    }
-  } else {
-    if (*dstTableIndex >= env_.tables.length()) {
-      return fail("table index out of range for table.init");
-    }
-  }
-
   if (!readVarU32(segIndex)) {
     return false;
   }
 
+  uint32_t memOrTableIndex = 0;
+  if (!readVarU32(&memOrTableIndex)) {
+    return false;
+  }
   if (isMem) {
-    // Same comment as for readMemOrTableDrop.
-    dvs_.lock()->notifyDataSegmentIndex(*segIndex, d_.currentOffset());
+    if (!env_.usesMemory()) {
+      return fail("can't touch memory without memory");
+    }
+    if (memOrTableIndex != 0) {
+      return fail("memory index must be zero");
+    }
+    if (env_.dataCount.isNothing()) {
+      return fail("memory.init requires a DataCount section");
+    }
+    if (*segIndex >= *env_.dataCount) {
+      return fail("memory.init segment index out of range");
+    }
   } else {
+    if (memOrTableIndex >= env_.tables.length()) {
+      return fail("table index out of range for table.init");
+    }
+    *dstTableIndex = memOrTableIndex;
+
     // Element segments must carry functions exclusively and anyfunc is not
     // yet a subtype of anyref.
     if (env_.tables[*dstTableIndex].kind != TableKind::AnyFunction) {
@@ -2090,7 +2070,7 @@ inline bool OpIter<Policy>::readTableGet(uint32_t* tableIndex, Value* index) {
   if (env_.tables[*tableIndex].kind != TableKind::AnyRef) {
     return fail("table.get only on tables of anyref");
   }
-  if (env_.gcTypesEnabled() == HasGcTypes::False) {
+  if (!env_.gcTypesEnabled()) {
     return fail("anyref support not enabled");
   }
 
@@ -2132,7 +2112,7 @@ inline bool OpIter<Policy>::readTableGrow(uint32_t* tableIndex, Value* delta,
   if (env_.tables[*tableIndex].kind != TableKind::AnyRef) {
     return fail("table.grow only on tables of anyref");
   }
-  if (env_.gcTypesEnabled() == HasGcTypes::False) {
+  if (!env_.gcTypesEnabled()) {
     return fail("anyref support not enabled");
   }
 
@@ -2174,7 +2154,7 @@ inline bool OpIter<Policy>::readTableSet(uint32_t* tableIndex, Value* index,
   if (env_.tables[*tableIndex].kind != TableKind::AnyRef) {
     return fail("table.set only on tables of anyref");
   }
-  if (env_.gcTypesEnabled() == HasGcTypes::False) {
+  if (!env_.gcTypesEnabled()) {
     return fail("anyref support not enabled");
   }
 

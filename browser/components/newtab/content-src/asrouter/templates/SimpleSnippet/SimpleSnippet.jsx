@@ -1,4 +1,5 @@
 import {Button} from "../../components/Button/Button";
+import {ConditionalWrapper} from "../../components/ConditionalWrapper/ConditionalWrapper";
 import React from "react";
 import {RichText} from "../../components/RichText/RichText";
 import {safeURI} from "../../template-utils";
@@ -67,22 +68,64 @@ export class SimpleSnippet extends React.PureComponent {
       sendClick={props.sendClick} />);
   }
 
+  wrapSectionHeader(url) {
+    return function(children) {
+      return <a href={url}>{children}</a>;
+    };
+  }
+
+  wrapSnippetContent(children) {
+    return <div className="innerContentWrapper">{children}</div>;
+  }
+
+  renderSectionHeader() {
+    const {props} = this;
+
+    // an icon and text must be specified to render the section header
+    if (props.content.section_title_icon && props.content.section_title_text) {
+      const sectionTitleIcon = safeURI(props.content.section_title_icon);
+      const sectionTitleURL = props.content.section_title_url;
+
+      return (
+        <div className="section-header">
+          <h3 className="section-title">
+            <ConditionalWrapper condition={sectionTitleURL} wrap={this.wrapSectionHeader(sectionTitleURL)}>
+              <span className="icon icon-small-spacer" style={{backgroundImage: `url("${sectionTitleIcon}")`}} />
+              <span className="section-title-text">{props.content.section_title_text}</span>
+            </ConditionalWrapper>
+          </h3>
+        </div>
+      );
+    }
+
+    return null;
+  }
+
   render() {
     const {props} = this;
+    const sectionHeader = this.renderSectionHeader();
     let className = "SimpleSnippet";
+
     if (props.className) {
       className += ` ${props.className}`;
     }
     if (props.content.tall) {
       className += " tall";
     }
+    if (sectionHeader) {
+      className += " has-section-header";
+    }
+
     return (<SnippetBase {...props} className={className} textStyle={this.props.textStyle}>
-      <img src={safeURI(props.content.icon) || DEFAULT_ICON_PATH} className="icon" />
-      <div>
-        {this.renderTitle()} <p className="body">{this.renderText()}</p>
-        {this.props.extraContent}
-      </div>
-      {<div>{this.renderButton()}</div>}
+      {sectionHeader}
+      <ConditionalWrapper condition={sectionHeader} wrap={this.wrapSnippetContent}>
+        <img src={safeURI(props.content.icon) || DEFAULT_ICON_PATH} className="icon" />
+        <div>
+          {this.renderTitle()} <p className="body">{this.renderText()}</p>
+          {this.props.extraContent}
+        </div>
+        {<div>{this.renderButton()}</div>}
+      </ConditionalWrapper>
     </SnippetBase>);
   }
 }

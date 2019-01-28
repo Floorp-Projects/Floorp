@@ -421,21 +421,6 @@ class nsFocusManager final : public nsIFocusManager,
                                        nsIContent** aNextContent);
 
   /**
-   * Returns scope owner of aContent.
-   * A scope owner is either a document root, shadow host, or slot.
-   */
-  nsIContent* FindOwner(nsIContent* aContent);
-
-  /**
-   * Host and Slot elements need to be handled as if they had tabindex 0 even
-   * when they don't have the attribute. This is a helper method to get the
-   * right value for focus navigation. If aIsFocusable is passed, it is set to
-   * true if the element itself is focusable.
-   */
-  int32_t HostOrSlotTabIndexValue(nsIContent* aContent,
-                                  bool* aIsFocusable = nullptr);
-
-  /**
    * Retrieve the next tabbable element in scope owned by aOwner, using
    * focusability and tabindex to determine the tab order.
    *
@@ -475,6 +460,8 @@ class nsFocusManager final : public nsIFocusManager,
    * and the scope's ancestor scopes, using focusability and tabindex to
    * determine the tab order.
    *
+   * aStartOwner is the scope owner of the aStartContent.
+   *
    * aStartContent an in/out paremeter. It as input is the starting point
    * for this call of this method; as output it is the shadow host in
    * light DOM if the next tabbable element is not found in shadow DOM,
@@ -502,8 +489,9 @@ class nsFocusManager final : public nsIFocusManager,
    *   the flattened subtree rooted at shadow host in light DOM.
    */
   nsIContent* GetNextTabbableContentInAncestorScopes(
-      nsIContent** aStartContent, nsIContent* aOriginalStartContent,
-      bool aForward, int32_t* aCurrentTabIndex, bool aIgnoreTabIndex,
+      nsIContent* aStartOwner, nsIContent** aStartContent,
+      nsIContent* aOriginalStartContent, bool aForward,
+      int32_t* aCurrentTabIndex, bool aIgnoreTabIndex,
       bool aForDocumentNavigation);
 
   /**

@@ -651,11 +651,6 @@ add_task(async function test_organizer_contextmenu() {
     [leftTree, bookmarkFolderContextMenuExtension],
   ];
 
-  if (AppConstants.DEBUG) {
-    // Avoid intermittent leak - bug 1520047
-    tests.pop();
-  }
-
   for (let [tree, makeExtension] of tests) {
     let extension = makeExtension();
     await extension.startup();

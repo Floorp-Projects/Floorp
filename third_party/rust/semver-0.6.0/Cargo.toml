@@ -1,0 +1,25 @@
+[package]
+
+name = "semver"
+version = "0.6.0"
+authors = ["Steve Klabnik <steve@steveklabnik.com>", "The Rust Project Developers"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/steveklabnik/semver"
+homepage = "https://docs.rs/crate/semver/"
+documentation = "https://docs.rs/crate/semver/"
+description = """
+Semantic version parsing and comparison.
+"""
+
+[dependencies]
+semver-parser = "0.7.0"
+
+[features]
+default = []
+
+# are we testing on CI?
+ci = []
+
+[dev-dependencies]
+crates-index = "0.5.0"
+tempdir = "0.3.4"

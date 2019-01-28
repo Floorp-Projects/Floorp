@@ -1071,6 +1071,10 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 .img.arrow.arrow.expanded {
   transform: rotate(0deg);
 }
+
+.img.arrow.arrow.expanded {
+  transform: rotate(0deg);
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -1536,6 +1540,11 @@ span.img.marko {
   margin-inline-end: 5px;
 }
 
+.img.refresh {
+  mask: url("resource://devtools/client/debugger/new/images/reload.svg");
+  mask-size: 100%;
+}
+
 .img.arrow {
   mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
   margin-inline-end: 4px;
@@ -1547,6 +1556,14 @@ span.img.marko {
   display: inline-block;
   transform: rotate(-90deg);
   transition: transform 0.18s ease;
+}
+
+/* overrides tree component */
+.tree-node button.arrow {
+  background: none;
+  mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
+  background: var(--disclosure-arrow);
+  mask-size: 100%;
 }
 
 html[dir="rtl"] .img.arrow {
@@ -2311,10 +2328,6 @@ menuseparator {
 
 .sources-list .tree .focused .label .suffix {
   color: inherit;
-}
-
-.sources-list .tree .img.arrow.expanded {
-  transform: rotate(0deg);
 }
 
 .theme-dark .source-list .tree .node.focused {
@@ -3736,8 +3749,8 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.frames ul .frames-group .group,
-.frames ul .frames-group .group .location {
+.frames [role="list"] .frames-group .group,
+.frames [role="list"] .frames-group .group .location {
   font-weight: 500;
   cursor: default;
   /*
@@ -3748,27 +3761,37 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   direction: ltr;
 }
 
-.frames ul .frames-group.expanded .group,
-.frames ul .frames-group.expanded .group .location {
+.frames [role="list"] .frames-group.expanded .group,
+.frames [role="list"] .frames-group.expanded .group .location {
   color: var(--theme-highlight-blue);
 }
 
-.frames ul .frames-group.expanded .react path {
+.frames [role="list"] .frames-group.expanded .react path {
   fill: var(--theme-highlight-blue);
 }
 
-.frames ul .frames-group .frames-list li {
+.frames [role="list"] .frames-group .frames-list [role="listitem"] {
   padding-left: 30px;
 }
 
-.frames ul .frames-group .frames-list {
+.frames [role="list"] .frames-group .frames-list {
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
-.frames ul .frames-group.expanded .badge {
+/* We don't want to display those as flex since only the name is displayed */
+.frames [role="list"] .frames-group .frames-list [role="listitem"] {
+  display: block;
+}
+
+.frames [role="list"] .frames-group.expanded .badge {
   color: var(--theme-highlight-blue);
 }
+
+.group-description-name {
+  padding-left: 5px;
+}
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -3826,14 +3849,14 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.frames ul {
+.frames [role="list"] {
   list-style: none;
-  margin: 0;
+  margin-top: 4px;
   padding: 0;
 }
 
-.frames ul li {
-  padding: 7px 10px 7px 21px;
+.frames [role="list"] [role="listitem"] {
+  padding: 2px 10px 2px 20px;
   overflow: hidden;
   display: flex;
   justify-content: space-between;
@@ -3845,7 +3868,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   flex-wrap: wrap;
 }
 
-.frames ul li * {
+.frames [role="list"] [role="listitem"] * {
   -moz-user-select: none;
   user-select: none;
 }
@@ -3882,26 +3905,26 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   overflow: hidden;
 }
 
-.frames ul li:hover,
-.frames ul li:focus {
+.frames [role="list"] [role="listitem"]hover,
+.frames [role="list"] [role="listitem"]focus {
   background-color: var(--theme-toolbar-background-alt);
 }
 
-.theme-dark .frames ul li:focus {
+.theme-dark .frames [role="list"] [role="listitem"]focus {
   background-color: var(--theme-tab-toolbar-background);
 }
 
-.frames ul li.selected {
+.frames [role="list"] [role="listitem"].selected {
   background-color: var(--theme-selection-background);
   color: white;
 }
 
-.frames ul li.selected i.annotation-logo svg path {
+.frames [role="list"] [role="listitem"].selected i.annotation-logo svg path {
   fill: white;
 }
 
-:root.theme-light .frames ul li.selected .location,
-:root.theme-dark .frames ul li.selected .location {
+:root.theme-light .frames [role="list"] [role="listitem"].selected .location,
+:root.theme-dark .frames [role="list"] [role="listitem"].selected .location {
   color: white;
 }
 
@@ -3930,11 +3953,19 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   mask-size: 100%;
   display: inline-block;
   width: 12px;
-  margin-inline-start: 4px;
 }
 
 :root.theme-dark .annotation-logo:not(.angular) svg path {
   fill: var(--theme-highlight-blue);
+}
+
+/* Some elements are added to the DOM only to be printed into the clipboard
+   when the user copy some elements. We don't want those elements to mess with
+   the layout so we put them outside of the screen
+*/
+.clipboard-only {
+  position: absolute;
+  left: -9999px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

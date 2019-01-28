@@ -6,13 +6,12 @@
 
 #include "SVGAnimatedLengthList.h"
 
-#include "DOMSVGAnimatedLengthList.h"
 #include "mozilla/Move.h"
-#include "SVGElement.h"
-#include "nsSVGAttrTearoffTable.h"
-#include "nsSMILValue.h"
-#include "SVGLengthListSMILType.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
+#include "DOMSVGAnimatedLengthList.h"
+#include "SVGLengthListSMILType.h"
 
 namespace mozilla {
 
@@ -114,17 +113,18 @@ void SVGAnimatedLengthList::ClearAnimValue(SVGElement *aElement,
   aElement->DidAnimateLengthList(aAttrEnum);
 }
 
-UniquePtr<nsISMILAttr> SVGAnimatedLengthList::ToSMILAttr(
-    SVGElement *aSVGElement, uint8_t aAttrEnum, uint8_t aAxis,
-    bool aCanZeroPadList) {
+UniquePtr<SMILAttr> SVGAnimatedLengthList::ToSMILAttr(SVGElement *aSVGElement,
+                                                      uint8_t aAttrEnum,
+                                                      uint8_t aAxis,
+                                                      bool aCanZeroPadList) {
   return MakeUnique<SMILAnimatedLengthList>(this, aSVGElement, aAttrEnum, aAxis,
                                             aCanZeroPadList);
 }
 
 nsresult SVGAnimatedLengthList::SMILAnimatedLengthList::ValueFromString(
     const nsAString &aStr, const dom::SVGAnimationElement * /*aSrcElement*/,
-    nsSMILValue &aValue, bool &aPreventCachingOfSandwich) const {
-  nsSMILValue val(&SVGLengthListSMILType::sSingleton);
+    SMILValue &aValue, bool &aPreventCachingOfSandwich) const {
+  SMILValue val(&SVGLengthListSMILType::sSingleton);
   SVGLengthListAndInfo *llai = static_cast<SVGLengthListAndInfo *>(val.mU.mPtr);
   nsresult rv = llai->SetValueFromString(aStr);
   if (NS_SUCCEEDED(rv)) {
@@ -159,14 +159,13 @@ nsresult SVGAnimatedLengthList::SMILAnimatedLengthList::ValueFromString(
   return rv;
 }
 
-nsSMILValue SVGAnimatedLengthList::SMILAnimatedLengthList::GetBaseValue()
-    const {
+SMILValue SVGAnimatedLengthList::SMILAnimatedLengthList::GetBaseValue() const {
   // To benefit from Return Value Optimization and avoid copy constructor calls
   // due to our use of return-by-value, we must return the exact same object
   // from ALL return points. This function must only return THIS variable:
-  nsSMILValue val;
+  SMILValue val;
 
-  nsSMILValue tmp(&SVGLengthListSMILType::sSingleton);
+  SMILValue tmp(&SVGLengthListSMILType::sSingleton);
   SVGLengthListAndInfo *llai = static_cast<SVGLengthListAndInfo *>(tmp.mU.mPtr);
   nsresult rv = llai->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
@@ -177,7 +176,7 @@ nsSMILValue SVGAnimatedLengthList::SMILAnimatedLengthList::GetBaseValue()
 }
 
 nsresult SVGAnimatedLengthList::SMILAnimatedLengthList::SetAnimValue(
-    const nsSMILValue &aValue) {
+    const SMILValue &aValue) {
   NS_ASSERTION(aValue.mType == &SVGLengthListSMILType::sSingleton,
                "Unexpected type to assign animated value");
   if (aValue.mType == &SVGLengthListSMILType::sSingleton) {

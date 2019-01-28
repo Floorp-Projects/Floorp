@@ -4,6 +4,7 @@
 #include "nsISupports.idl"
 
 interface nsIPrincipal;
+interface nsIURI;
 
 webidl FrameLoader;
 
@@ -92,4 +93,36 @@ interface nsIBrowser : nsISupports
 
   readonly attribute nsIPrincipal contentPrincipal;
 
+  /**
+   * Called by Gecko when a content blocking event needs to update the event
+   * state stored in the security UI object stored in the parent process.
+   * @param aEvent one of the content blocking event codes defined in
+   *               nsIWebProgressListener.idl.
+   */
+  void updateSecurityUIForContentBlockingEvent(in unsigned long aEvent);
+
+  /**
+   * Called by Gecko when we need to call the web progress listeners on our
+   * browser element in order to notify them about a content blocking event
+   * which happened in the content process.
+   * @param isWebProgressPassed whether we're passed a webProgress argument
+   * @param isTopLevel whether we're in the top-level document
+   * @param isLoadingDocument whether we're in the process of loading a document
+   * @param loadType the type of load in progress
+   * @param DOMWindowID the ID of the window receiving the notification
+   * @param requestURI the current URI of the request
+   * @param originalRequestURI the original URI of the request
+   * @param matchedList the matched list for the content blocking event
+   * @param eventType one of the content blocking event codes defined in
+   *                  nsIWebProgressListener.idl.
+   */
+  void callWebProgressContentBlockingEventListeners(in boolean isWebProgressPassed,
+                                                    in boolean isTopLevel,
+                                                    in boolean isLoadingDocument,
+                                                    in unsigned long loadType,
+                                                    in uint64_t DOMWindowID,
+                                                    in nsIURI requestURI,
+                                                    in nsIURI originalRequestURI,
+                                                    in ACString matchedList,
+                                                    in unsigned long eventType);
 };

@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Razumem",
   "prefs_home_header": "Vsebina domače strani Firefoxa",
   "prefs_home_description": "Izberite vsebino, ki jo želite prikazati na domači strani Firefoxa.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Domača stran Firefoxa",
+  "prefs_content_discovery_description": "Odkrivanje vsebine na Firefoxovi domači strani vam pomaga odkriti kakovostne članke na spletu, ki bi vas utegnili zanimati.",
+  "prefs_content_discovery_button": "Izklopi odkrivanje vsebine",
   "prefs_section_rows_option": "{num} vrstica;{num} vrstici;{num} vrstice;{num} vrstic",
   "prefs_search_header": "Iskanje po spletu",
   "prefs_topsites_description": "Strani, ki jih največkrat obiščete",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Obvestilom o zasebnosti",
   "firstrun_continue_to_login": "Nadaljuj",
   "firstrun_skip_login": "Preskoči ta korak",
-  "context_menu_title": "Odpri meni",
-  "pocket_learn_more": "Več o tem"
+  "context_menu_title": "Odpri meni"
 };

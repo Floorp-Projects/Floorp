@@ -6939,8 +6939,6 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
 
   bool destroyingRuntime = (reason == JS::GCReason::DESTROY_RUNTIME);
 
-  number++;
-
   initialState = incrementalState;
 
 #ifdef JS_GC_ZEAL
@@ -7284,50 +7282,43 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
   return IncrementalResult::Ok;
 }
 
-namespace {
+static void ScheduleZones(GCRuntime* gc) {
+  JSRuntime* rt = gc->rt;
 
-class AutoScheduleZonesForGC {
-  JSRuntime* rt_;
+  for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+    if (!zone->canCollect()) {
+      continue;
+    }
 
- public:
-  explicit AutoScheduleZonesForGC(GCRuntime* gc) : rt_(gc->rt) {
-    for (ZonesIter zone(rt_, WithAtoms); !zone.done(); zone.next()) {
-      if (!zone->canCollect()) {
-        continue;
-      }
+    if (gc->gcMode() == JSGC_MODE_GLOBAL) {
+      zone->scheduleGC();
+    }
 
-      if (gc->gcMode() == JSGC_MODE_GLOBAL) {
-        zone->scheduleGC();
-      }
+    // To avoid resets, continue to collect any zones that were being
+    // collected in a previous slice.
+    if (gc->isIncrementalGCInProgress() && zone->wasGCStarted()) {
+      zone->scheduleGC();
+    }
 
-      // To avoid resets, continue to collect any zones that were being
-      // collected in a previous slice.
-      if (gc->isIncrementalGCInProgress() && zone->wasGCStarted()) {
-        zone->scheduleGC();
-      }
+    // This is a heuristic to reduce the total number of collections.
+    bool inHighFrequencyMode = gc->schedulingState.inHighFrequencyGCMode();
+    if (zone->zoneSize.gcBytes() >=
+        zone->threshold.eagerAllocTrigger(inHighFrequencyMode)) {
+      zone->scheduleGC();
+    }
 
-      // This is a heuristic to reduce the total number of collections.
-      bool inHighFrequencyMode = gc->schedulingState.inHighFrequencyGCMode();
-      if (zone->zoneSize.gcBytes() >=
-          zone->threshold.eagerAllocTrigger(inHighFrequencyMode)) {
-        zone->scheduleGC();
-      }
-
-      // This ensures we collect zones that have reached the malloc limit.
-      if (zone->shouldTriggerGCForTooMuchMalloc()) {
-        zone->scheduleGC();
-      }
+    // This ensures we collect zones that have reached the malloc limit.
+    if (zone->shouldTriggerGCForTooMuchMalloc()) {
+      zone->scheduleGC();
     }
   }
+}
 
-  ~AutoScheduleZonesForGC() {
-    for (ZonesIter zone(rt_, WithAtoms); !zone.done(); zone.next()) {
-      zone->unscheduleGC();
-    }
+static void UnScheduleZones(GCRuntime* gc) {
+  for (ZonesIter zone(gc->rt, WithAtoms); !zone.done(); zone.next()) {
+    zone->unscheduleGC();
   }
-};
-
-} /* anonymous namespace */
+}
 
 class js::gc::AutoCallGCCallbacks {
   GCRuntime& gc_;
@@ -7387,6 +7378,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   // Note that GC callbacks are allowed to re-enter GC.
   AutoCallGCCallbacks callCallbacks(*this);
 
+  ScheduleZones(this);
   gcstats::AutoGCSlice agc(stats(), scanZonesBeforeGC(), invocationKind, budget,
                            reason);
 
@@ -7397,6 +7389,8 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
 
   if (shouldCollectNurseryForSlice(nonincrementalByAPI, budget)) {
     minorGC(reason, gcstats::PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC);
+  } else {
+    ++number; // This otherwise happens in minorGC().
   }
 
   AutoGCSession session(rt, JS::HeapState::MajorCollecting);
@@ -7486,6 +7480,9 @@ static bool IsDeterministicGCReason(JS::GCReason reason) {
     case JS::GCReason::CC_FORCED:
     case JS::GCReason::SHUTDOWN_CC:
     case JS::GCReason::ABORT_GC:
+    case JS::GCReason::DISABLE_GENERATIONAL_GC:
+    case JS::GCReason::FINISH_GC:
+    case JS::GCReason::PREPARE_FOR_TRACING:
       return true;
 
     default:
@@ -7595,7 +7592,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
   AutoTraceLog logGC(TraceLoggerForCurrentThread(), TraceLogger_GC);
   AutoStopVerifyingBarriers av(rt, IsShutdownGC(reason));
   AutoEnqueuePendingParseTasksAfterGC aept(*this);
-  AutoScheduleZonesForGC asz(this);
 
   bool repeat;
   do {
@@ -7655,6 +7651,8 @@ void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
   }
 #endif
   stats().writeLogMessage("GC ending in state %s", StateName(incrementalState));
+
+  UnScheduleZones(this);
 }
 
 js::AutoEnqueuePendingParseTasksAfterGC::
@@ -7855,7 +7853,7 @@ void GCRuntime::startBackgroundFreeAfterMinorGC() {
 JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSContext* cx)
     : cx(cx) {
   if (!cx->generationalDisabled) {
-    cx->runtime()->gc.evictNursery(JS::GCReason::API);
+    cx->runtime()->gc.evictNursery(JS::GCReason::DISABLE_GENERATIONAL_GC);
     cx->nursery().disable();
   }
   ++cx->generationalDisabled;
@@ -7898,10 +7896,10 @@ bool GCRuntime::gcIfRequested() {
   return false;
 }
 
-void js::gc::FinishGC(JSContext* cx) {
+void js::gc::FinishGC(JSContext* cx, JS::GCReason reason) {
   if (JS::IsIncrementalGCInProgress(cx)) {
     JS::PrepareForIncrementalGC(cx);
-    JS::FinishIncrementalGC(cx, JS::GCReason::API);
+    JS::FinishIncrementalGC(cx, reason);
   }
 
   cx->runtime()->gc.waitBackgroundFreeEnd();

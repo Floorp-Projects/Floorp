@@ -1,10 +1,10 @@
 //! A double-ended iterator over entity references.
 //!
-//! When `std::iter::Step` is stablized, `Keys` could be implemented as a wrapper around
-//! `std::ops::Range`, but for now, we implment it manually.
+//! When `core::iter::Step` is stabilized, `Keys` could be implemented as a wrapper around
+//! `core::ops::Range`, but for now, we implement it manually.
 
-use std::marker::PhantomData;
-use EntityRef;
+use crate::EntityRef;
+use core::marker::PhantomData;
 
 /// Iterate over all keys in order.
 pub struct Keys<K: EntityRef> {

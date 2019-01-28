@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsISerializable.h"
 #include "nsSimpleURI.h"
-#include "nsIIPCSerializableURI.h"
 #include "prtime.h"
 
 namespace mozilla {
@@ -28,7 +27,6 @@ class BlobURL final : public mozilla::net::nsSimpleURI {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
-  NS_DECL_NSIIPCSERIALIZABLEURI
 
   // Override CloneInternal() and EqualsInternal()
   virtual nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,
@@ -37,6 +35,7 @@ class BlobURL final : public mozilla::net::nsSimpleURI {
   virtual nsresult EqualsInternal(nsIURI* aOther,
                                   RefHandlingEnum aRefHandlingMode,
                                   bool* aResult) override;
+  NS_IMETHOD_(void) Serialize(mozilla::ipc::URIParams& aParams) override;
 
   // Override StartClone to hand back a BlobURL
   virtual mozilla::net::nsSimpleURI* StartClone(

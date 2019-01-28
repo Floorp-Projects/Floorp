@@ -39,7 +39,7 @@
 
   /* Global layout vars */
   --page-width: 664px;
-  --base-distance: 4px;
+  --base-unit: 4px;
 
   /* Global styles */
   --base-font-style: message-box;
@@ -52,12 +52,12 @@
   /*
   * Variables particular to about:debugging
   */
-  --alt-heading-icon-size: calc(var(--base-distance) * 6);
-  --alt-heading-icon-gap: var(--base-distance);
-  --main-heading-icon-size: calc(var(--base-distance) * 16);
-  --main-heading-icon-gap: calc(var(--base-distance) * 3);
-  --main-subheading-icon-size: calc(var(--base-distance) * 5);
-  --main-subheading-heading-icon-gap: calc(var(--base-distance) * 2);
+  --alt-heading-icon-size: calc(var(--base-unit) * 6);
+  --alt-heading-icon-gap: var(--base-unit);
+  --main-heading-icon-size: calc(var(--base-unit) * 16);
+  --main-heading-icon-gap: calc(var(--base-unit) * 3);
+  --main-subheading-icon-size: calc(var(--base-unit) * 5);
+  --main-subheading-heading-icon-gap: calc(var(--base-unit) * 2);
 }
 
 /*
@@ -148,7 +148,7 @@ a:active {
 *  +--------+-------------+
 */
 .main-subheading {
-  margin-block-start: calc(var(--base-distance) * 4);
+  margin-block-start: calc(var(--base-unit) * 4);
   font-weight: 600;
   font-size: 1.46em; /* import from .header-name in common.inc.css */
   line-height: 1.3em; /* import from .header-name in common.inc.css */
@@ -172,7 +172,7 @@ a:active {
   line-height: 1.2; /* odd value - from common.inc.css */
 
   margin-block-start: 0;
-  margin-block-end: calc(var(--base-distance) * 4);
+  margin-block-end: calc(var(--base-unit) * 4);
 }
 
 /* Alternative style for a subheading (i.e. h2). It features an icon */
@@ -181,7 +181,7 @@ a:active {
 *  +--------+-------------+
 */
 .alt-subheading {
-  margin-block-start: calc(var(--base-distance) * 4);
+  margin-block-start: calc(var(--base-unit) * 4);
   font-weight: 600;
   font-size: 1.14em;
   line-height: 1.4em; /* odd value - from common.inc.css */
@@ -210,13 +210,13 @@ a:active {
 
 /* adds breathing space to the separator */
 .separator--breathe {
-  margin: calc(var(--base-distance) * 4) 0;
+  margin: calc(var(--base-unit) * 4) 0;
 }
 
 /* a series of button-like elements, layed out horizontally */
 .toolbar {
   display: flex;
-  column-gap: var(--base-distance);
+  column-gap: var(--base-unit);
 }
 
 /*
@@ -235,12 +235,12 @@ Form controls
   background-color: var(--page-background);
 
   margin: 0;
-  height: calc(var(--base-distance) * 8); /* Note: this is from Photon, not common.css */
-  padding-inline-start: calc(var(--base-distance) * 5);
-  padding-inline-end: calc(var(--base-distance) * 5);
+  height: calc(var(--base-unit) * 8); /* Note: this is from Photon, not common.css */
+  padding-inline-start: calc(var(--base-unit) * 5);
+  padding-inline-end: calc(var(--base-unit) * 5);
 
   border: 1px solid var(--box-border-color);
-  border-radius: calc(var(--base-distance) / 2);
+  border-radius: calc(var(--base-unit) / 2);
 }
 
 .default-button:enabled:hover {
@@ -253,16 +253,16 @@ Form controls
 
 /* smaller size for a default button */
 .default-button--micro {
-  padding-inline-start: calc(2 * var(--base-distance));
-  padding-inline-end: calc(2 * var(--base-distance));
+  padding-inline-start: calc(2 * var(--base-unit));
+  padding-inline-end: calc(2 * var(--base-unit));
   font-size: var(--micro-font-size);
-  height: calc(var(--base-distance) * 6);
+  height: calc(var(--base-unit) * 6);
 }
 
 /* standard inputs */
 .default-input {
   line-height: unset;
-  padding: 0 calc(var(--base-distance) * 2);
+  padding: 0 calc(var(--base-unit) * 2);
   height: 100%;
 
   border: 1px solid var(--box-border-color);
@@ -282,8 +282,8 @@ Form controls
 .badge {
   font-size: var(--micro-font-size);
   background: var(--grey-30);
-  border-radius: calc(var(--base-distance) / 2);
-  padding: var(--base-distance) calc(2 * var(--base-distance));
+  border-radius: calc(var(--base-unit) / 2);
+  padding: var(--base-unit) calc(2 * var(--base-unit));
 }
 
 .badge--info {

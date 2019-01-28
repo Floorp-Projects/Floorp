@@ -930,27 +930,33 @@ void MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access,
 }
 
 template <typename T>
-static void WasmAtomicFetchOp64(MacroAssembler& masm,
-                                const wasm::MemoryAccessDesc access,
-                                AtomicOp op, Register value, const T& mem,
-                                Register temp, Register output) {
+static void AtomicFetchOp64(MacroAssembler& masm,
+                            const wasm::MemoryAccessDesc* access, AtomicOp op,
+                            Register value, const T& mem, Register temp,
+                            Register output) {
   if (op == AtomicFetchAddOp) {
     if (value != output) {
       masm.movq(value, output);
     }
-    masm.append(access, masm.size());
+    if (access) {
+      masm.append(*access, masm.size());
+    }
     masm.lock_xaddq(output, Operand(mem));
   } else if (op == AtomicFetchSubOp) {
     if (value != output) {
       masm.movq(value, output);
     }
     masm.negq(output);
-    masm.append(access, masm.size());
+    if (access) {
+      masm.append(*access, masm.size());
+    }
     masm.lock_xaddq(output, Operand(mem));
   } else {
     Label again;
     MOZ_ASSERT(output == rax);
-    masm.append(access, masm.size());
+    if (access) {
+      masm.append(*access, masm.size());
+    }
     masm.movq(Operand(mem), rax);
     masm.bind(&again);
     masm.movq(rax, temp);
@@ -976,14 +982,14 @@ void MacroAssembler::wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access,
                                          AtomicOp op, Register64 value,
                                          const Address& mem, Register64 temp,
                                          Register64 output) {
-  WasmAtomicFetchOp64(*this, access, op, value.reg, mem, temp.reg, output.reg);
+  AtomicFetchOp64(*this, &access, op, value.reg, mem, temp.reg, output.reg);
 }
 
 void MacroAssembler::wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access,
                                          AtomicOp op, Register64 value,
                                          const BaseIndex& mem, Register64 temp,
                                          Register64 output) {
-  WasmAtomicFetchOp64(*this, access, op, value.reg, mem, temp.reg, output.reg);
+  AtomicFetchOp64(*this, &access, op, value.reg, mem, temp.reg, output.reg);
 }
 
 void MacroAssembler::wasmAtomicEffectOp64(const wasm::MemoryAccessDesc& access,
@@ -1009,6 +1015,32 @@ void MacroAssembler::wasmAtomicEffectOp64(const wasm::MemoryAccessDesc& access,
     default:
       MOZ_CRASH();
   }
+}
+
+void MacroAssembler::compareExchange64(const Synchronization&,
+                                       const Address& mem, Register64 expected,
+                                       Register64 replacement,
+                                       Register64 output) {
+  MOZ_ASSERT(output.reg == rax);
+  if (expected != output) {
+    movq(expected.reg, output.reg);
+  }
+  lock_cmpxchgq(replacement.reg, Operand(mem));
+}
+
+void MacroAssembler::atomicExchange64(const Synchronization&,
+                                      const Address& mem, Register64 value,
+                                      Register64 output) {
+  if (value != output) {
+    movq(value.reg, output.reg);
+  }
+  xchgq(output.reg, Operand(mem));
+}
+
+void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+                                     Register64 value, const Address& mem,
+                                     Register64 temp, Register64 output) {
+  AtomicFetchOp64(*this, nullptr, op, value.reg, mem, temp.reg, output.reg);
 }
 
 //}}} check_macroassembler_style

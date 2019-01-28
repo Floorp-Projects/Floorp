@@ -10,30 +10,68 @@
   <div id='foo'><a href='#'>Click here to test this issue</a></div>
   <script>
 
-SimpleTest.waitForExplicitFinish();
-
-let foo = document.getElementById('foo');
-foo.addEventListener('click', _ => {
-  is(ChromeUtils.getPopupControlState(), "openAllowed", "Click events allow popups");
+function test_noUserInteraction() {
+  is(ChromeUtils.getPopupControlState(), "openAbused", "No user-interaction means: abuse state");
   ok(!ChromeUtils.isPopupTokenUnused(), "Popup token has not been used yet");
+  is(ChromeUtils.lastExternalProtocolIframeAllowed(), 0, "No iframe loaded before this test!");
 
   for (let i = 0; i < 10; ++i) {
     let ifr = document.createElement('iframe');
     ifr.src = "foo+bar:all_good";
     document.body.appendChild(ifr);
 
-    is(ChromeUtils.getPopupControlState(), "openAllowed", "Click events allow popups");
-    ok(ChromeUtils.isPopupTokenUnused(), "Popup token has been used!");
+    is(ChromeUtils.getPopupControlState(), "openAbused", "No user-interaction means: abuse state");
+    ok(!ChromeUtils.isPopupTokenUnused(), "Popup token has been used!");
+    ok(ChromeUtils.lastExternalProtocolIframeAllowed() != 0, "We have 1 iframe loaded");
   }
 
-  SimpleTest.finish();
+  next();
+}
 
-}, {once: true});
+function test_userInteraction() {
+  let foo = document.getElementById('foo');
+  foo.addEventListener('click', _ => {
+    is(ChromeUtils.getPopupControlState(), "openAllowed", "Click events allow popups");
+    ok(!ChromeUtils.isPopupTokenUnused(), "Popup token has not been used yet");
 
-setTimeout(_ => {
-  sendMouseEvent({type:'click'}, 'foo');
-}, 0);
+    for (let i = 0; i < 10; ++i) {
+      let ifr = document.createElement('iframe');
+      ifr.src = "foo+bar:all_good";
+      document.body.appendChild(ifr);
 
+      is(ChromeUtils.getPopupControlState(), "openAllowed", "Click events allow popups");
+      ok(ChromeUtils.isPopupTokenUnused(), "Popup token has been used!");
+    }
+
+    next();
+
+  }, {once: true});
+
+  setTimeout(_ => {
+    sendMouseEvent({type:'click'}, 'foo');
+  }, 0);
+}
+
+let tests = [
+  test_noUserInteraction,
+  test_userInteraction,
+];
+
+function next() {
+  if (tests.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+
+  let test = tests.shift();
+  SimpleTest.executeSoon(test);
+}
+
+SpecialPowers.pushPrefEnv({'set': [
+  ['dom.block_external_protocol_in_iframes', true],
+]}, next);
+
+SimpleTest.waitForExplicitFinish();
   </script>
 </body>
 </html>

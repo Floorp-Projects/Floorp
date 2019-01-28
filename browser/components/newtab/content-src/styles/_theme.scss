@@ -71,13 +71,14 @@ body {
   --newtab-card-active-outline-color: #{$grey-30};
   --newtab-card-background-color: #{$white};
   --newtab-card-hairline-color: #{$black-10};
+  --newtab-card-placeholder-color: #{$grey-30};
   --newtab-card-shadow: 0 1px 4px 0 #{$grey-90-10};
 
   // Snippets
   --newtab-snippets-background-color: #{$white};
   --newtab-snippets-hairline-color: transparent;
 
-  &[lwt-newtab-brighttext] {
+  &[lwt-newtab-brighttext]:not(.force-light-theme) {
     // General styles
     --newtab-background-color: #{$grey-80};
     --newtab-border-primary-color: #{$grey-10-80};
@@ -129,6 +130,7 @@ body {
     --newtab-card-active-outline-color: #{$grey-60};
     --newtab-card-background-color: #{$grey-70};
     --newtab-card-hairline-color: #{$grey-10-10};
+    --newtab-card-placeholder-color: #{$grey-60};
     --newtab-card-shadow: 0 1px 8px 0 #{$grey-90-20};
 
     // Snippets

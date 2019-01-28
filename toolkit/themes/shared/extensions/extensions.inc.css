@@ -250,10 +250,12 @@ button.warning {
   }
 }
 
+#go-back,
 #header-utils-btn {
   -moz-context-properties: fill;
   fill: currentColor;
   min-width: auto;
+  margin-inline-end: 0;
 }
 
 #header-utils-btn > .button-box > hbox > .button-icon {
@@ -268,13 +270,35 @@ button.warning {
   margin-inline-end: 1px; /* Match the 1px margin-inline-start on the icon. */
 }
 
+#go-back > .button-box > .button-text,
 #header-utils-btn > .button-box > hbox > .button-text {
   display: none;
 }
 
+#go-back {
+  margin-inline-start: 0;
+  margin-inline-end: 16px;
+}
+
+#go-back > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/icons/calendar-arrow-left.svg");
+  margin: 0;
+}
+
+#go-back > .button-box > .button-icon:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://global/skin/icons/calendar-arrow-right.svg");
+}
+
 #heading {
-  margin-top: 26px;
+  /* This should be margin-top: 26px to match preferences, but we want to lower
+   * .header-name to be closer to centre with the buttons. */
+  margin-top: 21px;
   margin-bottom: 16px;
+}
+
+.header-name {
+  /* Add some top margin to try to centre the heading next to the back button. */
+  margin-top: 5px;
 }
 
 .heading-inner {

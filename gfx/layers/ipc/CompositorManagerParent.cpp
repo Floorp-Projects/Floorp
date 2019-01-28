@@ -230,7 +230,9 @@ PCompositorBridgeParent* CompositorManagerParent::AllocPCompositorBridgeParent(
       // Note that the static mutex not only is used to protect sInstance, but
       // also mPendingCompositorBridges.
       StaticMutexAutoLock lock(sMutex);
-      MOZ_ASSERT(!mPendingCompositorBridges.IsEmpty());
+      if (mPendingCompositorBridges.IsEmpty()) {
+        break;
+      }
 
       CompositorBridgeParent* bridge = mPendingCompositorBridges[0];
       bridge->AddRef();

@@ -21,7 +21,10 @@ interface StructuredCloneHolder {
   /**
    * Deserializes the structured clone data in the scope of the given global,
    * and returns the result.
+   *
+   * If `keepData` is true, the structured clone data is preserved, and can be
+   * deserialized repeatedly. Otherwise, it is immediately discarded.
    */
   [Throws]
-  any deserialize(object global);
+  any deserialize(object global, optional boolean keepData = false);
 };

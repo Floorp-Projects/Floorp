@@ -861,7 +861,6 @@ nsDataObj::GetDib(const nsACString& inFlavor, FORMATETC& aFormat,
 
   HGLOBAL glob = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, size);
   if (!glob) {
-    DWORD err = ::GetLastError();
     return E_FAIL;
   }
 

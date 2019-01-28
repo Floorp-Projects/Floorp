@@ -257,7 +257,7 @@ Example:
   }
 
 ``Mozilla.ContentTelemetry.initPromise()``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: js
 

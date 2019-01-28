@@ -141,6 +141,8 @@ Form History test: form field autocomplete
 <script class="testbody" type="text/javascript">
 /** Test for Form History autocomplete **/
 
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
+
 var input = $_(1, "field1");
 
 function setupFormHistory(aCallback) {

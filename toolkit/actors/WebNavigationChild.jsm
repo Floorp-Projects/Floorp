@@ -105,13 +105,14 @@ class WebNavigationChild extends ActorChild {
       headers = Utils.makeInputStream(headers);
     if (baseURI)
       baseURI = Services.io.newURI(baseURI);
+    this._assert(triggeringPrincipal, "We need a triggering principal to continue loading", new Error().lineNumber);
     if (triggeringPrincipal)
       triggeringPrincipal = Utils.deserializePrincipal(triggeringPrincipal);
+    this._assert(triggeringPrincipal, "Unable to deserialize passed triggering principal", new Error().lineNumber);
     if (!triggeringPrincipal) {
-      // If we don't have a triggering principal we won't be able to continue the load.
-      let debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
-      debug.abort("WebNavigationChild.js", 112);
+      triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal({});
     }
+
     let loadURIOptions = {
       triggeringPrincipal,
       loadFlags: flags,
@@ -124,6 +125,14 @@ class WebNavigationChild extends ActorChild {
     this._wrapURIChangeCall(() => {
       return this.webNavigation.loadURI(uri, loadURIOptions);
     });
+  }
+
+  _assert(condition, msg, line = 0) {
+    let debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
+    if (!condition && debug.isDebugBuild) {
+      debug.warning(`${msg} - ${new Error().stack}`, "WebNavigationChild.js", line);
+      debug.abort("WebNavigationChild.js", line);
+    }
   }
 
   setOriginAttributes(originAttributes) {

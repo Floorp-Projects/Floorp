@@ -123,7 +123,11 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
 
   base::ProcessId OtherPid() const override;
 
-  void SetCrossProcessRedirect() { mDoingCrossProcessRedirect = true; }
+  // Calling this method will cancel the HttpChannelChild because the consumer
+  // needs to be relocated to another process.
+  // Any OnStart/Stop/DataAvailable calls that follow will not be sent to the
+  // child channel.
+  void CancelChildCrossProcessRedirect();
 
  protected:
   // used to connect redirected-to channel in parent with just created
@@ -337,6 +341,9 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   uint8_t mCacheNeedFlowControlInitialized : 1;
   uint8_t mNeedFlowControl : 1;
   uint8_t mSuspendedForFlowControl : 1;
+
+  // The child channel was cancelled, as the consumer was relocated to another
+  // process.
   uint8_t mDoingCrossProcessRedirect : 1;
 
   // Number of events to wait before actually invoking AsyncOpen on the main

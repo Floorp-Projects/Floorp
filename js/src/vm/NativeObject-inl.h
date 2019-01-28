@@ -450,39 +450,6 @@ inline Value NativeObject::getDenseOrTypedArrayElement(uint32_t idx) {
   return getDenseElement(idx);
 }
 
-/* static */ inline NativeObject* NativeObject::copy(
-    JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
-    HandleNativeObject templateObject) {
-  RootedShape shape(cx, templateObject->lastProperty());
-  RootedObjectGroup group(cx, templateObject->group());
-  MOZ_ASSERT(!templateObject->denseElementsAreCopyOnWrite());
-
-  JSObject* baseObj;
-  JS_TRY_VAR_OR_RETURN_NULL(cx, baseObj, create(cx, kind, heap, shape, group));
-
-  NativeObject* obj = &baseObj->as<NativeObject>();
-
-  size_t span = shape->slotSpan();
-  if (span) {
-    uint32_t numFixed = templateObject->numFixedSlots();
-    const Value* fixed = &templateObject->getSlot(0);
-    // Only copy elements which are registered in the shape, even if the
-    // number of fixed slots is larger.
-    if (span < numFixed) {
-      numFixed = span;
-    }
-    obj->copySlotRange(0, fixed, numFixed);
-
-    if (numFixed < span) {
-      uint32_t numSlots = span - numFixed;
-      const Value* slots = &templateObject->getSlot(numFixed);
-      obj->copySlotRange(numFixed, slots, numSlots);
-    }
-  }
-
-  return obj;
-}
-
 MOZ_ALWAYS_INLINE void NativeObject::setSlotWithType(JSContext* cx,
                                                      Shape* shape,
                                                      const Value& value,

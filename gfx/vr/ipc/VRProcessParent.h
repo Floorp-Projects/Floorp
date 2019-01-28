@@ -19,7 +19,17 @@ class VRChild;
 
 class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
  public:
-  explicit VRProcessParent();
+  class Listener {
+   public:
+    virtual void OnProcessLaunchComplete(VRProcessParent* aParent) {}
+
+    // Follow GPU and RDD process manager, adding this to avoid
+    // unexpectedly shutdown or had its connection severed.
+    // This is not called if an error occurs after calling Shutdown().
+    virtual void OnProcessUnexpectedShutdown(VRProcessParent* aParent) {}
+  };
+
+  explicit VRProcessParent(Listener* aListener);
   ~VRProcessParent();
 
   bool Launch();
@@ -32,6 +42,7 @@ class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   void OnChannelConnectedTask();
   void OnChannelErrorTask();
   void OnChannelClosed();
+  bool IsConnected() const;
 
   base::ProcessId OtherPid();
   VRChild* GetActor() const { return mVRChild.get(); }
@@ -45,7 +56,10 @@ class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   UniquePtr<VRChild> mVRChild;
   mozilla::ipc::TaskFactory<VRProcessParent> mTaskFactory;
   nsCOMPtr<nsIThread> mLaunchThread;
+  Listener* mListener;
+
   bool mChannelClosed;
+  bool mShutdownRequested;
 };
 
 }  // namespace gfx

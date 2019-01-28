@@ -4,8 +4,15 @@ import React from "react";
 
 export class _TopSites extends React.PureComponent {
   render() {
+    const header = this.props.header || {};
     return (
       <div className="ds-top-sites">
+        {header.title ? (
+          <div className="ds-header">
+            <span className="icon icon-small-spacer icon-topsites" />
+            <span className="ds-header-title">{header.title}</span>
+          </div>
+        ) : null}
         <OldTopSites />
       </div>
     );

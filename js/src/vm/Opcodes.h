@@ -710,15 +710,8 @@
      */ \
     MACRO(JSOP_TABLESWITCH, 70, "tableswitch", NULL, 16, 1, 0, JOF_TABLESWITCH|JOF_DETECTING) \
     /*
-     * Prologue emitted in scripts expected to run once, which deoptimizes code
-     * if it executes multiple times.
-     *
-     *   Category: Statements
-     *   Type: Function
-     *   Operands:
-     *   Stack: =>
      */ \
-    MACRO(JSOP_RUNONCE, 71, "runonce", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(JSOP_UNUSED71, 71, "unused71", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Pops the top two values from the stack, then pushes the result of
      * applying the operator to the two values.
@@ -1487,7 +1480,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: v => v
      */ \
-    MACRO(JSOP_SETALIASEDVAR, 137, "setaliasedvar", NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_IC) \
+    MACRO(JSOP_SETALIASEDVAR, 137, "setaliasedvar", NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPSET|JOF_DETECTING) \
     /*
      * Checks if the value of the local variable is the
      * JS_UNINITIALIZED_LEXICAL magic, throwing an error if so.
@@ -1527,7 +1520,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: v => v
      */ \
-    MACRO(JSOP_INITALIASEDLEXICAL, 141, "initaliasedlexical", NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(JSOP_INITALIASEDLEXICAL, 141, "initaliasedlexical", NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPINIT|JOF_DETECTING) \
     /*
      * Pushes a JS_UNINITIALIZED_LEXICAL value onto the stack, representing an
      * uninitialized lexical binding.

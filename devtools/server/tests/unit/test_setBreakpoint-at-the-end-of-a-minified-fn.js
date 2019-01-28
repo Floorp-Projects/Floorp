@@ -31,7 +31,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
 
   const frame = packet.frame;
   const where = frame.where;
-  Assert.equal(where.source.actor, source.actor);
+  Assert.equal(where.actor, source.actor);
   Assert.equal(where.line, location.line);
   Assert.equal(where.column, 81);
 

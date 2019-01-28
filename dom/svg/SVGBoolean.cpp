@@ -7,10 +7,10 @@
 #include "SVGBoolean.h"
 
 #include "nsError.h"
-#include "nsSVGAttrTearoffTable.h"
-#include "nsSMILValue.h"
 #include "SMILBoolType.h"
-#include "SVGAnimatedBoolean.h"
+#include "SVGAttrTearoffTable.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/dom/SVGAnimatedBoolean.h"
 
 using namespace mozilla::dom;
 
@@ -18,9 +18,9 @@ namespace mozilla {
 
 /* Implementation */
 
-static inline nsSVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>&
+static inline SVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>&
 SVGAnimatedBooleanTearoffTable() {
-  static nsSVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>
+  static SVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>
       sSVGAnimatedBooleanTearoffTable;
   return sSVGAnimatedBooleanTearoffTable;
 }
@@ -114,19 +114,19 @@ SVGAnimatedBoolean::~SVGAnimatedBoolean() {
   SVGAnimatedBooleanTearoffTable().RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> SVGBoolean::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGBoolean::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILBool>(this, aSVGElement);
 }
 
 nsresult SVGBoolean::SMILBool::ValueFromString(
     const nsAString& aStr, const SVGAnimationElement* /*aSrcElement*/,
-    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
+    SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   bool value;
   if (!GetValueFromString(aStr, value)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  nsSMILValue val(SMILBoolType::Singleton());
+  SMILValue val(SMILBoolType::Singleton());
   val.mU.mBool = value;
   aValue = val;
   aPreventCachingOfSandwich = false;
@@ -134,8 +134,8 @@ nsresult SVGBoolean::SMILBool::ValueFromString(
   return NS_OK;
 }
 
-nsSMILValue SVGBoolean::SMILBool::GetBaseValue() const {
-  nsSMILValue val(SMILBoolType::Singleton());
+SMILValue SVGBoolean::SMILBool::GetBaseValue() const {
+  SMILValue val(SMILBoolType::Singleton());
   val.mU.mBool = mVal->mBaseVal;
   return val;
 }
@@ -148,7 +148,7 @@ void SVGBoolean::SMILBool::ClearAnimValue() {
   }
 }
 
-nsresult SVGBoolean::SMILBool::SetAnimValue(const nsSMILValue& aValue) {
+nsresult SVGBoolean::SMILBool::SetAnimValue(const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILBoolType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILBoolType::Singleton()) {

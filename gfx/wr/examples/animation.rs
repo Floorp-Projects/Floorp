@@ -63,14 +63,10 @@ impl App {
             ReferenceFrameKind::Transform,
         );
 
-        builder.push_stacking_context(
+        builder.push_simple_stacking_context_with_filters(
             &LayoutPrimitiveInfo::new(LayoutRect::zero()),
             spatial_id,
-            None,
-            TransformStyle::Flat,
-            MixBlendMode::Normal,
             &filters,
-            RasterSpace::Screen,
         );
 
         let space_and_clip = SpaceAndClipInfo {

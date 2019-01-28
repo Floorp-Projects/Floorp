@@ -8,14 +8,14 @@
 #define MOZILLA_SVGANIMATEDNUMBERLIST_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
-#include "nsISMILAttr.h"
 #include "SVGNumberList.h"
 
-class nsSMILValue;
-
 namespace mozilla {
+
+class SMILValue;
 
 namespace dom {
 class SVGAnimationElement;
@@ -75,8 +75,8 @@ class SVGAnimatedNumberList {
 
   bool IsAnimating() const { return !!mAnimVal; }
 
-  UniquePtr<nsISMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement,
-                                    uint8_t aAttrEnum);
+  UniquePtr<SMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement,
+                                 uint8_t aAttrEnum);
 
  private:
   // mAnimVal is a pointer to allow us to determine if we're being animated or
@@ -88,26 +88,26 @@ class SVGAnimatedNumberList {
   nsAutoPtr<SVGNumberList> mAnimVal;
   bool mIsBaseSet;
 
-  struct SMILAnimatedNumberList : public nsISMILAttr {
+  struct SMILAnimatedNumberList : public SMILAttr {
    public:
     SMILAnimatedNumberList(SVGAnimatedNumberList* aVal,
                            dom::SVGElement* aSVGElement, uint8_t aAttrEnum)
         : mVal(aVal), mElement(aSVGElement), mAttrEnum(aAttrEnum) {}
 
-    // These will stay alive because a nsISMILAttr only lives as long
+    // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     SVGAnimatedNumberList* mVal;
     dom::SVGElement* mElement;
     uint8_t mAttrEnum;
 
-    // nsISMILAttr methods
+    // SMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
-        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-    virtual nsSMILValue GetBaseValue() const override;
+        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
+    virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 };
 

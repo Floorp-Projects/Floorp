@@ -23,28 +23,27 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     XPIDL_SOURCES += [
         'nsIMacShellService.idl',
     ]
+
+    SOURCES += [
+        'nsMacShellService.cpp',
+    ]
 elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     XPIDL_SOURCES += [
         'nsIGNOMEShellService.idl',
     ]
 
-XPIDL_MODULE = 'shellservice'
-
-if CONFIG['OS_ARCH'] == 'WINNT':
+    SOURCES += [
+        'nsGNOMEShellService.cpp',
+    ]
+elif CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'nsWindowsShellService.cpp',
     ]
     LOCAL_INCLUDES += [
         '../../../other-licenses/nsis/Contrib/CityHash/cityhash',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    SOURCES += [
-        'nsMacShellService.cpp',
-    ]
-elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
-    SOURCES += [
-        'nsGNOMEShellService.cpp',
-    ]
+
+XPIDL_MODULE = 'shellservice'
 
 if SOURCES:
     FINAL_LIBRARY = 'browsercomps'

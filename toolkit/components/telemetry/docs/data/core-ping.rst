@@ -200,11 +200,13 @@ et al (e.g. "Tue, 01 Feb 2011 14:00:00 GMT").
 Version history
 ---------------
 * v9:
- - Apr 2017: changed ``arch`` to contain device arch rather than the one we
-   built against & ``accessibilityServices``
- - Dec 2017: added ``defaultBrowser`` to know if the user has set Firefox as
-   default browser (Dec 2017)
- - May 2018: added (optional) ``displayVersion`` to distinguish Firefox beta versions easily
+
+  - Apr 2017: changed ``arch`` to contain device arch rather than the one we
+    built against & ``accessibilityServices``
+  - Dec 2017: added ``defaultBrowser`` to know if the user has set Firefox as
+    default browser (Dec 2017)
+  - May 2018: added (optional) ``displayVersion`` to distinguish Firefox beta versions easily
+
 * v8: added ``flashUsage``
 * v7: added ``sessionCount`` & ``sessionDuration``  & ``campaignId``
 * v6: added ``searches``

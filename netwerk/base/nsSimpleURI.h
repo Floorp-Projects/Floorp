@@ -12,7 +12,6 @@
 #include "nsString.h"
 #include "nsIClassInfo.h"
 #include "nsISizeOf.h"
-#include "nsIIPCSerializableURI.h"
 #include "nsIURIMutator.h"
 
 namespace mozilla {
@@ -28,8 +27,7 @@ namespace net {
 class nsSimpleURI : public nsIURI,
                     public nsISerializable,
                     public nsIClassInfo,
-                    public nsISizeOf,
-                    public nsIIPCSerializableURI {
+                    public nsISizeOf {
  protected:
   nsSimpleURI();
   virtual ~nsSimpleURI() = default;
@@ -39,7 +37,6 @@ class nsSimpleURI : public nsIURI,
   NS_DECL_NSIURI
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
-  NS_DECL_NSIIPCSERIALIZABLEURI
 
   static already_AddRefed<nsSimpleURI> From(nsIURI *aURI);
 

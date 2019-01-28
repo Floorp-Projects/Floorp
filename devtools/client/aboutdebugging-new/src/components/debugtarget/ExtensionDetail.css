@@ -17,7 +17,7 @@
 .extension-detail {
   display: grid;
   grid-template-columns: auto 1fr;
-  grid-column-gap: calc(var(--base-distance) * 2);
+  grid-column-gap: calc(var(--base-unit) * 2);
 }
 
 .extension-detail__manifest {

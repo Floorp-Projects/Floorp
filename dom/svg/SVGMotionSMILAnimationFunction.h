@@ -10,16 +10,17 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SMILAnimationFunction.h"
+#include "SVGMotionSMILType.h"
 #include "nsTArray.h"
-#include "SVGMotionSMILType.h"  // for RotateType
 
 class nsAttrValue;
 class nsAtom;
 class nsIContent;
-class nsISMILAttr;
-class nsSMILValue;
 
 namespace mozilla {
+
+class SMILAttr;
+class SMILValue;
 
 namespace dom {
 class SVGMPathElement;
@@ -60,9 +61,9 @@ class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
     ePathSourceType_Mpath
   };
 
-  virtual nsSMILCalcMode GetCalcMode() const override;
-  virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
-                             nsSMILValueArray& aResult) override;
+  virtual SMILCalcMode GetCalcMode() const override;
+  virtual nsresult GetValues(const SMILAttr& aSMILAttr,
+                             SMILValueArray& aResult) override;
   virtual void CheckValueListDependentAttrs(uint32_t aNumValues) override;
 
   virtual bool IsToAnimation() const override;
@@ -81,7 +82,7 @@ class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
   void RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem);
   bool GenerateValuesForPathAndPoints(Path* aPath, bool aIsKeyPoints,
                                       FallibleTArray<double>& aPointDistances,
-                                      nsSMILValueArray& aResult);
+                                      SMILValueArray& aResult);
 
   // Members
   // -------

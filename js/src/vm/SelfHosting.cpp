@@ -49,6 +49,7 @@
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
+#include "vm/JSObject.h"
 #include "vm/Printer.h"
 #include "vm/Realm.h"
 #include "vm/RegExpObject.h"
@@ -1996,25 +1997,6 @@ static bool intrinsic_GetBuiltinIntlConstructor(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_AddContentTelemetry(JSContext* cx, unsigned argc,
-                                          Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  MOZ_RELEASE_ASSERT(args[0].isInt32());
-
-  int id = args[0].toInt32();
-  MOZ_ASSERT(id < JS_TELEMETRY_END);
-  MOZ_ASSERT(id >= 0);
-
-  if (!cx->realm()->isProbablySystemCode()) {
-    MOZ_RELEASE_ASSERT(args[1].isInt32());
-    cx->runtime()->addTelemetry(id, args[1].toInt32());
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool intrinsic_WarnDeprecatedStringMethod(JSContext* cx, unsigned argc,
                                                  Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2043,6 +2025,11 @@ static bool intrinsic_WarnDeprecatedStringMethod(JSContext* cx, unsigned argc,
                                         nameChars, nameChars)) {
       return false;
     }
+
+    if (!cx->realm()->isProbablySystemCode()) {
+      cx->runtime()->addTelemetry(JS_TELEMETRY_DEPRECATED_STRING_GENERICS, id);
+    }
+
     cx->realm()->warnedAboutStringGenericsMethods |= mask;
   }
 
@@ -2448,7 +2435,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicFinishBoundFunctionInit),
     JS_FN("RuntimeDefaultLocale", intrinsic_RuntimeDefaultLocale, 0, 0),
     JS_FN("IsRuntimeDefaultLocale", intrinsic_IsRuntimeDefaultLocale, 1, 0),
-    JS_FN("AddContentTelemetry", intrinsic_AddContentTelemetry, 2, 0),
     JS_FN("_DefineDataProperty", intrinsic_DefineDataProperty, 4, 0),
     JS_FN("_DefineProperty", intrinsic_DefineProperty, 6, 0),
     JS_FN("CopyDataPropertiesOrGetOwnKeys",
@@ -2953,15 +2939,7 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
   }
 
   if (nameMissing) {
-    UniqueChars bytes =
-        IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
-    if (!bytes) {
-      return false;
-    }
-
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_NO_SUCH_SELF_HOSTED_PROP, bytes.get());
-    return false;
+    return Throw(cx, id, JSMSG_NO_SUCH_SELF_HOSTED_PROP);
   }
 #endif  // DEBUG
 

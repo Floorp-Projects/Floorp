@@ -590,3 +590,11 @@ if CONFIG['MOZ_ENABLE_SKIA']:
   UNIFIED_SOURCES += [
     'composite/PaintCounter.cpp',
   ]
+
+if CONFIG['FUZZING'] and CONFIG['FUZZING_INTERFACES']:
+    TEST_DIRS += [
+        'ipc/fuzztest'
+    ]
+
+# Add libFuzzer configuration directives
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

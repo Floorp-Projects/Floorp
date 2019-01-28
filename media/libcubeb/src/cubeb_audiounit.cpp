@@ -1834,6 +1834,7 @@ static void audiounit_get_available_samplerate(AudioObjectID devid, AudioObjectP
                                    uint32_t * min, uint32_t * max, uint32_t * def);
 static int
 audiounit_create_device_from_hwdev(cubeb_device_info * dev_info, AudioObjectID devid, cubeb_device_type type);
+static void audiounit_device_destroy(cubeb_device_info * device);
 
 static void
 audiounit_workaround_for_airpod(cubeb_stream * stm)
@@ -1879,6 +1880,8 @@ audiounit_workaround_for_airpod(cubeb_stream * stm)
       LOG("Non fatal error, AudioObjectSetPropertyData/kAudioDevicePropertyNominalSampleRate, rv=%d", rv);
     }
   }
+  audiounit_device_destroy(&input_device_info);
+  audiounit_device_destroy(&output_device_info);
 }
 
 /*
@@ -3101,7 +3104,7 @@ int audiounit_stream_register_device_changed_callback(cubeb_stream * stream,
   auto_lock dev_cb_lock(stream->device_changed_callback_lock);
   /* Note: second register without unregister first causes 'nope' error.
    * Current implementation requires unregister before register a new cb. */
-  assert(!stream->device_changed_callback);
+  assert(!device_changed_callback || !stream->device_changed_callback);
   stream->device_changed_callback = device_changed_callback;
   return CUBEB_OK;
 }
@@ -3378,14 +3381,20 @@ audiounit_enumerate_devices(cubeb * /* context */, cubeb_device_type type,
   return CUBEB_OK;
 }
 
+static void
+audiounit_device_destroy(cubeb_device_info * device)
+{
+  delete [] device->device_id;
+  delete [] device->friendly_name;
+  delete [] device->vendor_name;
+}
+
 static int
 audiounit_device_collection_destroy(cubeb * /* context */,
                                     cubeb_device_collection * collection)
 {
   for (size_t i = 0; i < collection->count; i++) {
-    delete [] collection->device[i].device_id;
-    delete [] collection->device[i].friendly_name;
-    delete [] collection->device[i].vendor_name;
+    audiounit_device_destroy(&collection->device[i]);
   }
   delete [] collection->device;
 

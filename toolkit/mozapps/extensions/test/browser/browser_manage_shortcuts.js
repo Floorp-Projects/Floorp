@@ -50,12 +50,9 @@ add_task(async function testUpdatingCommands() {
   await checkShortcut("commandOne", "4", {shiftKey: true, altKey: true});
   await checkShortcut("commandTwo", "4", {altKey: true});
 
-  // There should be a manage shortcuts link.
+  // Open the shortcuts view.
   let doc = gManagerWindow.document;
   let shortcutsLink = doc.getElementById("manage-shortcuts");
-  ok(!shortcutsLink.hidden, "The shortcuts link is visible");
-
-  // Open the shortcuts view.
   shortcutsLink.click();
   await wait_for_view_load(gManagerWindow);
 

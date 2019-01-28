@@ -688,7 +688,6 @@ async function sanitizeOnShutdown(progress) {
     await maybeSanitizeSessionPrincipals(principals);
   }
 
-
   // Let's see if we have to forget some particular site.
   for (let permission of Services.perms.enumerator) {
     if (permission.type != "cookie" ||
@@ -799,14 +798,17 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
   // If we have the 'cookie' permission for this principal, let's return
   // immediately.
   let p = Services.perms.testPermissionFromPrincipal(principal, "cookie");
-  if (p == Ci.nsICookiePermission.ACCESS_ALLOW ||
-      p == Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY ||
-      p == Ci.nsICookiePermission.ACCESS_LIMIT_THIRD_PARTY) {
+  if (p == Ci.nsICookiePermission.ACCESS_ALLOW) {
     return true;
   }
 
   if (p == Ci.nsICookiePermission.ACCESS_DENY ||
       p == Ci.nsICookiePermission.ACCESS_SESSION) {
+    return false;
+  }
+
+  // This is an old profile with unsupported permission values
+  if (p != Ci.nsICookiePermission.ACCESS_DEFAULT) {
     return false;
   }
 

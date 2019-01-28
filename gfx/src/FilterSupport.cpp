@@ -209,7 +209,7 @@ static already_AddRefed<FilterNode> GaussianBlur(DrawTarget* aDT,
   return nullptr;
 }
 
-static already_AddRefed<FilterNode> Clear(DrawTarget* aDT) {
+already_AddRefed<FilterNode> Clear(DrawTarget* aDT) {
   RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::FLOOD);
   if (filter) {
     filter->SetAttribute(ATT_FLOOD_COLOR, Color(0, 0, 0, 0));
@@ -218,9 +218,9 @@ static already_AddRefed<FilterNode> Clear(DrawTarget* aDT) {
   return nullptr;
 }
 
-static already_AddRefed<FilterNode> ForSurface(
-    DrawTarget* aDT, SourceSurface* aSurface,
-    const IntPoint& aSurfacePosition) {
+already_AddRefed<FilterNode> ForSurface(DrawTarget* aDT,
+                                        SourceSurface* aSurface,
+                                        const IntPoint& aSurfacePosition) {
   RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TRANSFORM);
   if (filter) {
     filter->SetAttribute(
@@ -1204,12 +1204,11 @@ static AlphaModel OutputAlphaModelForPrimitive(
 }
 
 // Returns the output FilterNode, in premultiplied sRGB space.
-static already_AddRefed<FilterNode> FilterNodeGraphFromDescription(
+already_AddRefed<FilterNode> FilterNodeGraphFromDescription(
     DrawTarget* aDT, const FilterDescription& aFilter,
-    const Rect& aResultNeededRect, SourceSurface* aSourceGraphic,
-    const IntRect& aSourceGraphicRect, SourceSurface* aFillPaint,
-    const IntRect& aFillPaintRect, SourceSurface* aStrokePaint,
-    const IntRect& aStrokePaintRect,
+    const Rect& aResultNeededRect, FilterNode* aSourceGraphic,
+    const IntRect& aSourceGraphicRect, FilterNode* aFillPaint,
+    FilterNode* aStrokePaint,
     nsTArray<RefPtr<SourceSurface>>& aAdditionalImages) {
   const nsTArray<FilterPrimitiveDescription>& primitives = aFilter.mPrimitives;
   MOZ_RELEASE_ASSERT(!primitives.IsEmpty());
@@ -1249,17 +1248,12 @@ static already_AddRefed<FilterNode> FilterNodeGraphFromDescription(
         if (!inputFilter) {
           RefPtr<FilterNode> sourceFilterNode;
 
-          nsTArray<SourceSurface*> primitiveSurfaces;
-          nsTArray<IntRect> primitiveSurfaceRects;
-          RefPtr<SourceSurface> surf =
-              ElementForIndex(inputIndex, primitiveSurfaces, aSourceGraphic,
+          nsTArray<FilterNode*> primitiveFilters;
+          RefPtr<FilterNode> filt =
+              ElementForIndex(inputIndex, primitiveFilters, aSourceGraphic,
                               aFillPaint, aStrokePaint);
-          IntRect surfaceRect = ElementForIndex(
-              inputIndex, primitiveSurfaceRects, aSourceGraphicRect,
-              aFillPaintRect, aStrokePaintRect);
-          if (surf) {
-            IntPoint offset = surfaceRect.TopLeft();
-            sourceFilterNode = FilterWrappers::ForSurface(aDT, surf, offset);
+          if (filt) {
+            sourceFilterNode = filt;
 
             // Clip the original SourceGraphic to the first filter region if the
             // surface isn't already sized appropriately.
@@ -1324,9 +1318,22 @@ void FilterSupport::RenderFilterDescription(
     SourceSurface* aStrokePaint, const IntRect& aStrokePaintRect,
     nsTArray<RefPtr<SourceSurface>>& aAdditionalImages, const Point& aDestPoint,
     const DrawOptions& aOptions) {
+  RefPtr<FilterNode> sourceGraphic, fillPaint, strokePaint;
+  if (aSourceGraphic) {
+    sourceGraphic = FilterWrappers::ForSurface(aDT, aSourceGraphic,
+                                               aSourceGraphicRect.TopLeft());
+  }
+  if (aFillPaint) {
+    fillPaint =
+        FilterWrappers::ForSurface(aDT, aFillPaint, aFillPaintRect.TopLeft());
+  }
+  if (aStrokePaint) {
+    strokePaint = FilterWrappers::ForSurface(aDT, aStrokePaint,
+                                             aStrokePaintRect.TopLeft());
+  }
   RefPtr<FilterNode> resultFilter = FilterNodeGraphFromDescription(
-      aDT, aFilter, aRenderRect, aSourceGraphic, aSourceGraphicRect, aFillPaint,
-      aFillPaintRect, aStrokePaint, aStrokePaintRect, aAdditionalImages);
+      aDT, aFilter, aRenderRect, sourceGraphic, aSourceGraphicRect, fillPaint,
+      strokePaint, aAdditionalImages);
   if (!resultFilter) {
     gfxWarning() << "Filter is NULL.";
     return;
@@ -1602,9 +1609,6 @@ nsIntRegion FilterSupport::PostFilterExtentsForPrimitive(
     }
 
     nsIntRegion match(const OpacityAttributes& aOpacity) {
-      if (aOpacity.mOpacity == 0.0f) {
-        return IntRect();
-      }
       return ResultChangeRegionForPrimitive(mDescription, mInputExtents);
     }
 

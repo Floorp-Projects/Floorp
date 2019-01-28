@@ -117,6 +117,8 @@ bool CrashReporterHost::FinalizeCrashReport() {
   // as a historical artifact.
   if (mProcessType == GeckoProcessType_GMPlugin) {
     type.AssignLiteral("plugin");
+  } else if (mProcessType == GeckoProcessType_Content) {
+    type.AssignLiteral("content");
   } else {
     // This check will pick up some cases that will never happen (e.g. IPDL
     // unit tests), but that's OK.

@@ -574,7 +574,7 @@ class AndroidEmulator(object):
                    log_path)
         self.proc = ProcessHandler(
             command, storeOutput=False, processOutputLine=outputHandler,
-            env=env, ignore_children=True)
+            stdin=subprocess.PIPE, env=env, ignore_children=True)
         self.proc.run()
         _log_debug("Emulator started with pid %d" %
                    int(self.proc.proc.pid))

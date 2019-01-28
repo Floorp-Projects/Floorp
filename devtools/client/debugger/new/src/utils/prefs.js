@@ -65,10 +65,11 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.original-blackbox", true);
   pref("devtools.debugger.features.windowless-workers", false);
   pref("devtools.debugger.features.event-listeners-breakpoints", true);
+  pref("devtools.debugger.features.log-points", true);
 }
 
 export const prefs = new PrefsHelper("devtools", {
-  logging: ["Bool", "debugger.alphabetize-outline"],
+  logging: ["Bool", "debugger.logging"],
   alphabetizeOutline: ["Bool", "debugger.alphabetize-outline"],
   autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
   clientSourceMapsEnabled: ["Bool", "source-map.client-service.enabled"],
@@ -121,7 +122,8 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   componentPane: ["Bool", "component-pane"],
   xhrBreakpoints: ["Bool", "xhr-breakpoints"],
   originalBlackbox: ["Bool", "original-blackbox"],
-  eventListenersBreakpoints: ["Bool", "event-listeners-breakpoints"]
+  eventListenersBreakpoints: ["Bool", "event-listeners-breakpoints"],
+  logPoints: ["Bool", "log-points"]
 });
 
 export const asyncStore = asyncStoreHelper("debugger", {

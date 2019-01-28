@@ -86,7 +86,8 @@ add_task(async function() {
     // Click the second suggestion.
     let expectedURL = Services.search.defaultEngine
       .getSubmission("xbar", null, "homepage").uri.spec;
-    let loadPromise = waitForDocLoadAndStopIt(expectedURL);
+    let loadPromise =
+      BrowserTestUtils.waitForDocLoadAndStopIt(expectedURL, gBrowser.selectedBrowser);
     await BrowserTestUtils.synthesizeMouseAtCenter("#TEMPID", {
       button: 0,
     }, browser);

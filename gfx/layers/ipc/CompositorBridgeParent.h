@@ -59,6 +59,9 @@ class GPUParent;
 
 namespace ipc {
 class Shmem;
+#ifdef FUZZING
+class ProtocolFuzzerHelper;
+#endif
 }  // namespace ipc
 
 namespace layers {
@@ -210,6 +213,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   friend class InProcessCompositorSession;
   friend class gfx::GPUProcessManager;
   friend class gfx::GPUParent;
+#ifdef FUZZING
+  friend class mozilla::ipc::ProtocolFuzzerHelper;
+#endif
 
  public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override {

@@ -28,5 +28,6 @@ module.exports = {
 
     "curly": ["error", "all"],
     "no-unused-vars": ["error", {"args": "none", "vars": "local", "varsIgnorePattern": "^(ids|ignored|unused)$"}],
+    "space-in-parens": ["error"],
   }
 };

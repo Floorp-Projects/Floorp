@@ -1673,6 +1673,10 @@ static void SetupLauncherProcessPref() {
         PREF_WIN_LAUNCHER_PROCESS_ENABLED,
         enabledState.unwrap() !=
             mozilla::LauncherRegistryInfo::EnabledState::ForceDisabled);
+
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::LauncherProcessState,
+        static_cast<uint32_t>(enabledState.unwrap()));
   }
 
   Preferences::RegisterCallback(&OnLauncherPrefChanged,

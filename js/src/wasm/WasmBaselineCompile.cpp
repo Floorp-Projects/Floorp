@@ -2567,8 +2567,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   BaseCompiler(const ModuleEnvironment& env, const FuncCompileInput& input,
                const ValTypeVector& locals, const MachineState& trapExitLayout,
                size_t trapExitLayoutNumWords, Decoder& decoder,
-               ExclusiveDeferredValidationState& dvs, TempAllocator* alloc,
-               MacroAssembler* masm, StackMaps* stackMaps);
+               TempAllocator* alloc, MacroAssembler* masm,
+               StackMaps* stackMaps);
 
   MOZ_MUST_USE bool init();
 
@@ -6866,7 +6866,7 @@ class BaseCompiler final : public BaseCompilerInterface {
                         WantResult wantResult);
 #ifdef ENABLE_WASM_BULKMEM_OPS
   MOZ_MUST_USE bool emitMemOrTableCopy(bool isMem);
-  MOZ_MUST_USE bool emitMemOrTableDrop(bool isMem);
+  MOZ_MUST_USE bool emitDataOrElemDrop(bool isData);
   MOZ_MUST_USE bool emitMemFill();
   MOZ_MUST_USE bool emitMemOrTableInit(bool isMem);
 #endif
@@ -10227,11 +10227,11 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
   return true;
 }
 
-bool BaseCompiler::emitMemOrTableDrop(bool isMem) {
+bool BaseCompiler::emitDataOrElemDrop(bool isData) {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   uint32_t segIndex = 0;
-  if (!iter_.readMemOrTableDrop(isMem, &segIndex)) {
+  if (!iter_.readDataOrElemDrop(isData, &segIndex)) {
     return false;
   }
 
@@ -10244,7 +10244,7 @@ bool BaseCompiler::emitMemOrTableDrop(bool isMem) {
   // Returns -1 on trap, otherwise 0.
   pushI32(int32_t(segIndex));
   SymbolicAddress callee =
-      isMem ? SymbolicAddress::MemDrop : SymbolicAddress::TableDrop;
+      isData ? SymbolicAddress::DataDrop : SymbolicAddress::ElemDrop;
   if (!emitInstanceCall(lineOrBytecode, SigPI_, ExprType::Void, callee)) {
     return false;
   }
@@ -11449,7 +11449,7 @@ bool BaseCompiler::emitBody() {
 
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefEq):
-        if (env_.gcTypesEnabled() == HasGcTypes::False) {
+        if (!env_.gcTypesEnabled()) {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(
@@ -11457,13 +11457,13 @@ bool BaseCompiler::emitBody() {
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefNull):
-        if (env_.gcTypesEnabled() == HasGcTypes::False) {
+        if (!env_.gcTypesEnabled()) {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(emitRefNull());
         break;
       case uint16_t(Op::RefIsNull):
-        if (env_.gcTypesEnabled() == HasGcTypes::False) {
+        if (!env_.gcTypesEnabled()) {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(
@@ -11533,16 +11533,16 @@ bool BaseCompiler::emitBody() {
 #ifdef ENABLE_WASM_BULKMEM_OPS
           case uint16_t(MiscOp::MemCopy):
             CHECK_NEXT(emitMemOrTableCopy(/*isMem=*/true));
-          case uint16_t(MiscOp::MemDrop):
-            CHECK_NEXT(emitMemOrTableDrop(/*isMem=*/true));
+          case uint16_t(MiscOp::DataDrop):
+            CHECK_NEXT(emitDataOrElemDrop(/*isData=*/true));
           case uint16_t(MiscOp::MemFill):
             CHECK_NEXT(emitMemFill());
           case uint16_t(MiscOp::MemInit):
             CHECK_NEXT(emitMemOrTableInit(/*isMem=*/true));
           case uint16_t(MiscOp::TableCopy):
             CHECK_NEXT(emitMemOrTableCopy(/*isMem=*/false));
-          case uint16_t(MiscOp::TableDrop):
-            CHECK_NEXT(emitMemOrTableDrop(/*isMem=*/false));
+          case uint16_t(MiscOp::ElemDrop):
+            CHECK_NEXT(emitDataOrElemDrop(/*isData=*/false));
           case uint16_t(MiscOp::TableInit):
             CHECK_NEXT(emitMemOrTableInit(/*isMem=*/false));
 #endif  // ENABLE_WASM_BULKMEM_OPS
@@ -11558,22 +11558,22 @@ bool BaseCompiler::emitBody() {
 #endif
 #ifdef ENABLE_WASM_GC
           case uint16_t(MiscOp::StructNew):
-            if (env_.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env_.gcTypesEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(emitStructNew());
           case uint16_t(MiscOp::StructGet):
-            if (env_.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env_.gcTypesEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(emitStructGet());
           case uint16_t(MiscOp::StructSet):
-            if (env_.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env_.gcTypesEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(emitStructSet());
           case uint16_t(MiscOp::StructNarrow):
-            if (env_.gcTypesEnabled() == HasGcTypes::False) {
+            if (!env_.gcTypesEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(emitStructNarrow());
@@ -11817,11 +11817,10 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            const ValTypeVector& locals,
                            const MachineState& trapExitLayout,
                            size_t trapExitLayoutNumWords, Decoder& decoder,
-                           ExclusiveDeferredValidationState& dvs,
                            TempAllocator* alloc, MacroAssembler* masm,
                            StackMaps* stackMaps)
     : env_(env),
-      iter_(env, decoder, dvs),
+      iter_(env, decoder),
       func_(func),
       lastReadCallSite_(0),
       alloc_(*alloc),
@@ -11945,7 +11944,6 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
                                         LifoAlloc& lifo,
                                         const FuncCompileInputVector& inputs,
                                         CompiledCode* code,
-                                        ExclusiveDeferredValidationState& dvs,
                                         UniqueChars* error) {
   MOZ_ASSERT(env.tier() == Tier::Baseline);
   MOZ_ASSERT(env.kind == ModuleKind::Wasm);
@@ -11985,7 +11983,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
     // One-pass baseline compilation.
 
     BaseCompiler f(env, func, locals, trapExitLayout, trapExitLayoutNumWords, d,
-                   dvs, &alloc, &masm, &code->stackMaps);
+                   &alloc, &masm, &code->stackMaps);
     if (!f.init()) {
       return false;
     }

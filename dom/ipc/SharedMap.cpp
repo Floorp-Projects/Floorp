@@ -415,8 +415,10 @@ nsresult WritableSharedMap::KeyChanged(const nsACString& aName) {
   mEntryArray.reset();
 
   if (!mPendingFlush) {
-    MOZ_TRY(NS_IdleDispatchToCurrentThread(NewRunnableMethod(
-        "WritableSharedMap::IdleFlush", this, &WritableSharedMap::IdleFlush)));
+    MOZ_TRY(NS_DispatchToCurrentThreadQueue(
+        NewRunnableMethod("WritableSharedMap::IdleFlush", this,
+                          &WritableSharedMap::IdleFlush),
+        EventQueuePriority::Idle));
     mPendingFlush = true;
   }
   return NS_OK;

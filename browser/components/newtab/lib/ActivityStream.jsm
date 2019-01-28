@@ -183,7 +183,7 @@ const PREFS_CONFIG = new Map([
       } else {
         searchShortcuts.push("google");
       }
-      if (["AT", "DE", "FR", "GB", "IT", "JP", "US"].includes(geo)) {
+      if (["DE", "FR", "GB", "IT", "JP", "US"].includes(geo)) {
         searchShortcuts.push("amazon");
       }
       return searchShortcuts.join(",");
@@ -217,8 +217,9 @@ const PREFS_CONFIG = new Map([
     title: "Configuration for the new pocket new tab",
     value: JSON.stringify({
       enabled: false,
+      show_spocs: true,
       // This is currently an exmple layout used for dev purposes.
-      layout_endpoint: "https://getpocket.com/v3/newtab/layout?version=1&consumer_key=40249-e88c401e1b1f2242d9e441c4&layout_variant=control",
+      layout_endpoint: "https://getpocket.com/v3/newtab/layout?version=1&consumer_key=40249-e88c401e1b1f2242d9e441c4&layout_variant=basic",
     }),
   }],
 ]);

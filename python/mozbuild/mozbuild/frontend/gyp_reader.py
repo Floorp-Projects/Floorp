@@ -243,7 +243,7 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
             context['UNIFIED_SOURCES'] = alphabetical_sorted(unified_sources)
 
             defines = target_conf.get('defines', [])
-            if bool(config.substs['_MSC_VER']) and no_chromium:
+            if config.substs['CC_TYPE'] in ('msvc', 'clang-cl') and no_chromium:
                 msvs_settings = gyp.msvs_emulation.MsvsSettings(spec, {})
                 defines.extend(msvs_settings.GetComputedDefines(c))
             for define in defines:
@@ -380,7 +380,7 @@ class GypProcessor(object):
         # gyp expects plain str instead of unicode. The frontend code gives us
         # unicode strings, so convert them.
         path = encode(path)
-        if bool(config.substs['_MSC_VER']):
+        if config.substs['CC_TYPE'] in ('msvc', 'clang-cl'):
             # This isn't actually used anywhere in this generator, but it's needed
             # to override the registry detection of VC++ in gyp.
             os.environ['GYP_MSVS_OVERRIDE_PATH'] = 'fake_path'

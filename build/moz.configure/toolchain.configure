@@ -843,11 +843,7 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
     def default_c_compilers(host_or_target, target, toolchain_prefix,
                             android_clang_compiler, *other_c_compiler):
         if host_or_target.kernel == 'WINNT':
-            # Prefer MSVC for aarch64 for now.
-            if host_or_target.cpu == 'aarch64':
-                supported = types = ('msvc', 'clang-cl', 'gcc', 'clang')
-            else:
-                supported = types = ('clang-cl', 'msvc', 'gcc', 'clang')
+            supported = types = ('clang-cl', 'msvc', 'gcc', 'clang')
         elif host_or_target.kernel == 'Darwin':
             types = ('clang',)
             supported = ('clang', 'gcc')
@@ -1171,8 +1167,8 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             '%s_TYPE' % var, valid_compiler.type)
         add_old_configure_assignment(
             '%s_TYPE' % var, valid_compiler.type)
-        add_old_configure_assignment(
-            '%s_VERSION' % var, valid_compiler.version)
+        set_config(
+            '%s_VERSION' % var, depends(valid_compiler.version)(lambda v: str(v)))
 
     valid_compiler = compiler_class(valid_compiler, host_or_target)
 
@@ -1243,8 +1239,7 @@ def msvs_version(info):
     # clang-cl emulates the same version scheme as cl. And MSVS_VERSION needs to
     # be set for GYP on Windows.
     if info.type in ('clang-cl', 'msvc'):
-        if info.version >= '19.10':
-            return '2017'
+        return '2017'
 
     return ''
 
@@ -1605,6 +1600,8 @@ def lto(value, pgo, c_compiler):
                 cflags.append("-flto")
             else:
                 cflags.append("-flto=thin")
+                # Workaround for https://bugs.llvm.org/show_bug.cgi?id=40414
+                cflags.append("-fsplit-lto-unit")
             # With clang-cl, -flto can only be used with -c or -fuse-ld=lld.
             # AC_TRY_LINKs during configure don't have -c, so pass -fuse-ld=lld.
             cflags.append("-fuse-ld=lld");

@@ -159,6 +159,8 @@ export class ASRouterUISurface extends React.PureComponent {
       case "CLEAR_MESSAGE":
         if (action.data.id === this.state.message.id) {
           this.setState({message: {}});
+          // Remove any styles related to the RTAMO message
+          document.body.classList.remove("welcome", "hide-main", "amo");
         }
         break;
       case "CLEAR_PROVIDER":

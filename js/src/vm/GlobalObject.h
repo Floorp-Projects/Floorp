@@ -235,35 +235,6 @@ class GlobalObject : public NativeObject {
     return inited;
   }
 
-  bool arrayClassInitialized() const {
-    return classIsInitialized(JSProto_Array);
-  }
-
-  bool booleanClassInitialized() const {
-    return classIsInitialized(JSProto_Boolean);
-  }
-  bool numberClassInitialized() const {
-    return classIsInitialized(JSProto_Number);
-  }
-  bool stringClassInitialized() const {
-    return classIsInitialized(JSProto_String);
-  }
-  bool regexpClassInitialized() const {
-    return classIsInitialized(JSProto_RegExp);
-  }
-  bool arrayBufferClassInitialized() const {
-    return classIsInitialized(JSProto_ArrayBuffer);
-  }
-  bool sharedArrayBufferClassInitialized() const {
-    return classIsInitialized(JSProto_SharedArrayBuffer);
-  }
-  bool errorClassesInitialized() const {
-    return classIsInitialized(JSProto_Error);
-  }
-  bool dataViewClassInitialized() const {
-    return classIsInitialized(JSProto_DataView);
-  }
-
   // Disallow use of unqualified JSObject::create in GlobalObject.
   static GlobalObject* create(...) = delete;
 
@@ -275,6 +246,11 @@ class GlobalObject : public NativeObject {
                             JSPrincipals* principals,
                             JS::OnNewGlobalHookOption hookOption,
                             const JS::RealmOptions& options);
+
+  /*
+   * For bootstrapping, whether to splice a prototype for the global object.
+   */
+  bool shouldSplicePrototype();
 
   /*
    * Create a constructor function with the specified name and length using
@@ -348,7 +324,7 @@ class GlobalObject : public NativeObject {
   }
 
   NativeObject* maybeGetArrayPrototype() {
-    if (arrayClassInitialized()) {
+    if (classIsInitialized(JSProto_Array)) {
       return &getPrototype(JSProto_Array).toObject().as<NativeObject>();
     }
     return nullptr;
@@ -403,7 +379,7 @@ class GlobalObject : public NativeObject {
   }
 
   JSObject* maybeGetRegExpPrototype() {
-    if (regexpClassInitialized()) {
+    if (classIsInitialized(JSProto_RegExp)) {
       return &getPrototype(JSProto_RegExp).toObject();
     }
     return nullptr;

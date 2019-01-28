@@ -839,12 +839,9 @@ class AccessibilityTest : BaseSessionTest() {
 
         val buttonNode = createNodeInfo(rootNode.getChildId(2))
         assertThat("Last node is a button", buttonNode.className.toString(), equalTo("android.widget.Button"))
-        assertThat("Button has a single text leaf", buttonNode.childCount, equalTo(1))
+        // The child text leaf is pruned, so this button is childless.
+        assertThat("Button has a single text leaf", buttonNode.childCount, equalTo(0))
         assertThat("Button has correct text", buttonNode.text.toString(), equalTo("Submit"))
-
-        val textLeaf = createNodeInfo(buttonNode.getChildId(0))
-        assertThat("First node is a label", textLeaf.className.toString(), equalTo("android.view.View"))
-        assertThat("Text leaf has correct text", textLeaf.text.toString(), equalTo("Submit"))
     }
 
     @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")

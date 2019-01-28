@@ -29,7 +29,7 @@ function test() {
   function doTest(aIsPrivateMode, aWindow, aCallback) {
     BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(() => {
       consoleObserver = {
-        observe: function(aSubject, aTopic, aData) {
+        observe(aSubject, aTopic, aData) {
           if (aTopic == "console-api-log-event") {
             afterEvents = ConsoleAPIStorage.getEvents(innerID);
             is(beforeEvents.length == afterEvents.length - 1, storageShouldOccur,
@@ -40,7 +40,7 @@ function test() {
               aCallback();
             });
           }
-        }
+        },
       };
 
       aWindow.Services.obs.addObserver(
@@ -63,7 +63,7 @@ function test() {
       // call whenNewWindowLoaded() instead of testOnWindow() on your test.
       executeSoon(() => aCallback(aWin));
     });
-  };
+  }
 
    // this function is called after calling finish() on the test.
   registerCleanupFunction(function() {

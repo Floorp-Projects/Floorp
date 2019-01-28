@@ -51,8 +51,8 @@
 
 # wasm flags
 --wasm-gc
---no-wasm-baseline
---no-wasm-ion
+--wasm-compiler=ion
+--wasm-compiler=baseline
 --test-wasm-await-tier2
 
 # CPU instruction set-related

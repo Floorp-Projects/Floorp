@@ -1071,23 +1071,23 @@ win64-msvc/opt:
         - win64-sccache
         - win64-node
 
-win64-aarch64-msvc/debug:
-    description: "AArch64 Win64 MSVC Debug"
+win64-aarch64/debug:
+    description: "AArch64 Win64 Debug"
     index:
         product: firefox
-        job-name: win64-aarch64-msvc-debug
+        job-name: win64-aarch64-debug
     attributes:
         enable-full-crashsymbols: true
     treeherder:
         platform: windows2012-aarch64/debug
-        symbol: Bmsvc
+        symbol: B
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
-            PERFHERDER_EXTRA_OPTIONS: msvc-aarch64
+            PERFHERDER_EXTRA_OPTIONS: aarch64
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -1099,32 +1099,32 @@ win64-aarch64-msvc/debug:
             - builds/taskcluster_sub_win64/debug.py
         extra-config:
             mozconfig_platform: win64-aarch64
-        mozconfig-variant: debug-msvc
+        mozconfig-variant: debug
     run-on-projects: ['mozilla-central', 'trunk', 'try']
     toolchains:
         - win64-clang-cl
-        - win64-aarch64-rust-nightly
+        - win64-aarch64-rust
         - win64-cbindgen
         - win64-sccache
         - win64-node
 
-win64-aarch64-msvc/opt:
-    description: "AArch64 Win64 MSVC Opt"
+win64-aarch64/opt:
+    description: "AArch64 Win64 Opt"
     index:
         product: firefox
-        job-name: win64-aarch64-msvc-opt
+        job-name: win64-aarch64-opt
     attributes:
         enable-full-crashsymbols: true
     treeherder:
         platform: windows2012-aarch64/opt
-        symbol: Bmsvc
+        symbol: B
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
-            PERFHERDER_EXTRA_OPTIONS: msvc-aarch64
+            PERFHERDER_EXTRA_OPTIONS: aarch64
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -1139,16 +1139,16 @@ win64-aarch64-msvc/opt:
     run-on-projects: ['mozilla-central', 'trunk', 'try']
     toolchains:
         - win64-clang-cl
-        - win64-aarch64-rust-nightly
+        - win64-aarch64-rust
         - win64-cbindgen
         - win64-sccache
         - win64-node
 
-win64-aarch64-msvc-nightly/opt:
-    description: "AArch64 Win64 MSVC Nightly"
+win64-aarch64-nightly/opt:
+    description: "AArch64 Win64 Nightly"
     index:
         product: firefox
-        job-name: win64-aarch64-msvc-opt
+        job-name: win64-aarch64-opt
         type: nightly
     attributes:
         nightly: true
@@ -1163,7 +1163,7 @@ win64-aarch64-msvc-nightly/opt:
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
-            PERFHERDER_EXTRA_OPTIONS: msvc-aarch64
+            PERFHERDER_EXTRA_OPTIONS: aarch64
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -1179,7 +1179,7 @@ win64-aarch64-msvc-nightly/opt:
     run-on-projects: ['mozilla-central', 'trunk', 'try']
     toolchains:
         - win64-clang-cl
-        - win64-aarch64-rust-nightly
+        - win64-aarch64-rust
         - win64-cbindgen
         - win64-sccache
         - win64-node

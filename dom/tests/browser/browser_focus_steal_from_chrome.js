@@ -50,6 +50,7 @@ add_task(async function() {
             function f() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
+                // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
                 setTimeout(f, 10);
               } else {
                 is(Services.focus.focusedElement, e,
@@ -68,6 +69,7 @@ add_task(async function() {
             function f() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
+                // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
                 setTimeout(f, 10);
               } else {
                 isnot(Services.focus.focusedElement, e,
@@ -110,6 +112,7 @@ add_task(async function() {
             function f() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
+                // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
                 setTimeout(f, 10);
               } else {
                 isnot(Services.focus.focusedElement, e,
@@ -128,6 +131,7 @@ add_task(async function() {
             function f() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
+                // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
                 setTimeout(f, 10);
               } else {
                 isnot(Services.focus.focusedElement, e,

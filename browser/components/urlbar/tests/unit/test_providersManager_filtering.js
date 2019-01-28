@@ -4,9 +4,9 @@
 "use strict";
 
 add_task(async function test_filtering() {
-  let match = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-                              UrlbarUtils.MATCH_SOURCE.TABS,
-                              { url: "http://mozilla.org/foo/" });
+  let match = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                               UrlbarUtils.MATCH_SOURCE.TABS,
+                               { url: "http://mozilla.org/foo/" });
   let providerName = registerBasicTestProvider([match]);
   let context = createContext(undefined, {providers: [providerName]});
   let controller = new UrlbarController({
@@ -29,9 +29,9 @@ add_task(async function test_filtering() {
 
   let matches = [
     match,
-    new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-                    UrlbarUtils.MATCH_SOURCE.HISTORY,
-                    { url: "http://mozilla.org/foo/" }),
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                     UrlbarUtils.MATCH_SOURCE.HISTORY,
+                     { url: "http://mozilla.org/foo/" }),
   ];
   providerName = registerBasicTestProvider(matches);
   context = createContext(undefined, {providers: [providerName]});
@@ -67,12 +67,12 @@ add_task(async function test_filter_javascript() {
       },
     },
   });
-  let match = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-                              UrlbarUtils.MATCH_SOURCE.TABS,
-                              { url: "http://mozilla.org/foo/" });
-  let jsMatch = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-                                UrlbarUtils.MATCH_SOURCE.HISTORY,
-                                { url: "javascript:foo" });
+  let match = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                               UrlbarUtils.MATCH_SOURCE.TABS,
+                               { url: "http://mozilla.org/foo/" });
+  let jsMatch = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                                 UrlbarUtils.MATCH_SOURCE.HISTORY,
+                                 { url: "javascript:foo" });
   let providerName = registerBasicTestProvider([match, jsMatch]);
   let context = createContext(undefined, {providers: [providerName]});
 
@@ -110,12 +110,12 @@ add_task(async function test_filter_sources() {
   });
 
   let goodMatches = [
-    new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-                    UrlbarUtils.MATCH_SOURCE.TABS,
-                    { url: "http://mozilla.org/foo/" }),
-    new UrlbarMatch(UrlbarUtils.MATCH_TYPE.URL,
-                    UrlbarUtils.MATCH_SOURCE.HISTORY,
-                    { url: "http://mozilla.org/foo/" }),
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                     UrlbarUtils.MATCH_SOURCE.TABS,
+                     { url: "http://mozilla.org/foo/" }),
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.URL,
+                     UrlbarUtils.MATCH_SOURCE.HISTORY,
+                     { url: "http://mozilla.org/foo/" }),
   ];
   /**
    * A test provider that should be invoked.
@@ -144,9 +144,9 @@ add_task(async function test_filter_sources() {
   UrlbarProvidersManager.registerProvider(new TestProvider());
 
   let badMatches = [
-    new UrlbarMatch(UrlbarUtils.MATCH_TYPE.URL,
-                    UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
-                    { url: "http://mozilla.org/foo/" }),
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.URL,
+                     UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
+                     { url: "http://mozilla.org/foo/" }),
   ];
 
   /**

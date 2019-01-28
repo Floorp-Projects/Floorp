@@ -210,12 +210,22 @@ class TypeScript {
 
   // ICScript and TypeScript have the same lifetimes, so we store a pointer to
   // ICScript here to not increase sizeof(JSScript).
-  js::UniquePtr<js::jit::ICScript> icScript_;
+  using ICScriptPtr = js::UniquePtr<js::jit::ICScript>;
+  ICScriptPtr icScript_;
 
-  // Variable-size array
+  // Number of TypeSets in typeArray_.
+  uint32_t numTypeSets_;
+
+  // This field is used to avoid binary searches for the sought entry when
+  // bytecode map queries are in linear order.
+  uint32_t bytecodeTypeMapHint_;
+
+  // Variable-size array. This is followed by the bytecode type map.
   StackTypeSet typeArray_[1];
 
  public:
+  TypeScript(JSScript* script, ICScriptPtr&& icScript, uint32_t numTypeSets);
+
   RecompileInfoVector& inlinedCompilations() { return inlinedCompilations_; }
   MOZ_MUST_USE bool addInlinedCompilation(RecompileInfo info) {
     if (!inlinedCompilations_.empty() && inlinedCompilations_.back() == info) {
@@ -223,6 +233,10 @@ class TypeScript {
     }
     return inlinedCompilations_.append(info);
   }
+
+  uint32_t numTypeSets() const { return numTypeSets_; }
+
+  uint32_t* bytecodeTypeMapHint() { return &bytecodeTypeMapHint_; }
 
   jit::ICScript* icScript() const {
     MOZ_ASSERT(icScript_);
@@ -237,14 +251,10 @@ class TypeScript {
     return const_cast<StackTypeSet*>(typeArray_);
   }
 
-  static inline size_t SizeIncludingTypeArray(size_t arraySize) {
-    // Ensure typeArray_ is the last data member of TypeScript.
-    JS_STATIC_ASSERT(sizeof(TypeScript) ==
-                     sizeof(StackTypeSet) + offsetof(TypeScript, typeArray_));
-    return offsetof(TypeScript, typeArray_) + arraySize * sizeof(StackTypeSet);
+  uint32_t* bytecodeTypeMap() {
+    MOZ_ASSERT(numTypeSets_ > 0);
+    return reinterpret_cast<uint32_t*>(typeArray_ + numTypeSets_);
   }
-
-  static inline unsigned NumTypeSets(JSScript* script);
 
   static inline StackTypeSet* ThisTypes(JSScript* script);
   static inline StackTypeSet* ArgTypes(JSScript* script, unsigned i);
@@ -322,8 +332,6 @@ class MOZ_RAII AutoKeepTypeScripts {
   explicit inline AutoKeepTypeScripts(JSContext* cx);
   inline ~AutoKeepTypeScripts();
 };
-
-void FillBytecodeTypeMap(JSScript* script, uint32_t* bytecodeMap);
 
 class RecompileInfo;
 

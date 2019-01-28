@@ -804,19 +804,26 @@ function getSourceContent(sourceClient) {
  * @param string url
  * @returns Promise<SourceClient>
  */
-function getSource(threadClient, url) {
-  const deferred = defer();
-  threadClient.getSources((res) => {
-    const source = res.sources.filter(function(s) {
-      return s.url === url;
-    });
-    if (source.length) {
-      deferred.resolve(threadClient.source(source[0]));
-    } else {
-      deferred.reject(new Error("source not found"));
-    }
-  });
-  return deferred.promise;
+async function getSource(threadClient, url) {
+  const {sources} = await threadClient.getSources();
+  const source = sources.find((s) => s.url === url);
+
+  if (source) {
+    return threadClient.source(source);
+  }
+
+  throw new Error("source not found");
+}
+
+async function getSourceById(threadClient, id) {
+  const { sources } = await threadClient.getSources();
+  const form = sources.find(source => source.actor == id);
+  return threadClient.source(form);
+}
+
+async function getSourceFormById(threadClient, id) {
+  const { sources } = await threadClient.getSources();
+  return sources.find(source => source.actor == id);
 }
 
 /**

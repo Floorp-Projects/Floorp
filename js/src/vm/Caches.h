@@ -43,21 +43,6 @@ struct GSNCache {
   void purge();
 };
 
-/*
- * EnvironmentCoordinateName cache to avoid O(n^2) growth in finding the name
- * associated with a given aliasedvar operation.
- */
-struct EnvironmentCoordinateNameCache {
-  typedef HashMap<uint32_t, jsid, DefaultHasher<uint32_t>, SystemAllocPolicy>
-      Map;
-
-  Shape* shape;
-  Map map;
-
-  EnvironmentCoordinateNameCache() : shape(nullptr) {}
-  void purge();
-};
-
 struct EvalCacheEntry {
   JSLinearString* str;
   JSScript* script;
@@ -239,7 +224,6 @@ class NewObjectCache {
 class RuntimeCaches {
  public:
   js::GSNCache gsnCache;
-  js::EnvironmentCoordinateNameCache envCoordinateNameCache;
   js::NewObjectCache newObjectCache;
   js::UncompressedSourceCache uncompressedSourceCache;
   js::EvalCache evalCache;
@@ -257,7 +241,6 @@ class RuntimeCaches {
   void purge() {
     purgeForCompaction();
     gsnCache.purge();
-    envCoordinateNameCache.purge();
     uncompressedSourceCache.purge();
   }
 };

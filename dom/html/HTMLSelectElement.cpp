@@ -622,8 +622,7 @@ nsIHTMLCollection* HTMLSelectElement::SelectedOptions() {
   return mSelectedOptions;
 }
 
-nsresult HTMLSelectElement::SetSelectedIndexInternal(int32_t aIndex,
-                                                     bool aNotify) {
+void HTMLSelectElement::SetSelectedIndexInternal(int32_t aIndex, bool aNotify) {
   int32_t oldSelectedIndex = mSelectedIndex;
   uint32_t mask = IS_SELECTED | CLEAR_ALL | SET_DISABLED;
   if (aNotify) {
@@ -632,15 +631,12 @@ nsresult HTMLSelectElement::SetSelectedIndexInternal(int32_t aIndex,
 
   SetOptionsSelectedByIndex(aIndex, aIndex, mask);
 
-  nsresult rv = NS_OK;
   nsISelectControlFrame* selectFrame = GetSelectFrame();
   if (selectFrame) {
-    rv = selectFrame->OnSetSelectedIndex(oldSelectedIndex, mSelectedIndex);
+    selectFrame->OnSetSelectedIndex(oldSelectedIndex, mSelectedIndex);
   }
 
   SetSelectionChanged(true, aNotify);
-
-  return rv;
 }
 
 bool HTMLSelectElement::IsOptionSelectedByIndex(int32_t aIndex) {
@@ -995,8 +991,7 @@ bool HTMLSelectElement::SelectSomething(bool aNotify) {
     nsresult rv = IsOptionDisabled(i, &disabled);
 
     if (NS_FAILED(rv) || !disabled) {
-      rv = SetSelectedIndexInternal(i, aNotify);
-      NS_ENSURE_SUCCESS(rv, false);
+      SetSelectedIndexInternal(i, aNotify);
 
       UpdateValueMissingValidityState();
       UpdateState(aNotify);

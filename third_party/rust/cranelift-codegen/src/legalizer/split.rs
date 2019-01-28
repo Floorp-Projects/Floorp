@@ -64,10 +64,10 @@
 //! It is possible to have circular dependencies of EBB arguments that are never used by any real
 //! instructions. These loops will remain in the program.
 
-use cursor::{Cursor, CursorPosition, FuncCursor};
-use flowgraph::{BasicBlock, ControlFlowGraph};
-use ir::{self, Ebb, Inst, InstBuilder, InstructionData, Opcode, Type, Value, ValueDef};
-use std::iter;
+use crate::cursor::{Cursor, CursorPosition, FuncCursor};
+use crate::flowgraph::{BasicBlock, ControlFlowGraph};
+use crate::ir::{self, Ebb, Inst, InstBuilder, InstructionData, Opcode, Type, Value, ValueDef};
+use core::iter;
 use std::vec::Vec;
 
 /// Split `value` into two values using the `isplit` semantics. Do this by reusing existing values

@@ -58,8 +58,8 @@ test_newtab({
   before: setDefaultTopSites,
   test: async function searchTopSites_dismiss() {
     const siteSelector = ".search-shortcut";
-    await ContentTaskUtils.waitForCondition(() => content.document.querySelectorAll(siteSelector).length === 2,
-      "2 search topsites are loaded by default");
+    await ContentTaskUtils.waitForCondition(() => content.document.querySelectorAll(siteSelector).length === 1,
+      "1 search topsites is loaded by default");
 
     const contextMenuItems = content.openContextMenuAndGetOptions(siteSelector);
     is(contextMenuItems.length, 2, "Search TopSites should only have Unpin and Dismiss");

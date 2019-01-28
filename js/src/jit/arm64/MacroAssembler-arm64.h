@@ -219,7 +219,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 
   void pop(const ValueOperand& v) { pop(v.valueReg()); }
   void pop(const FloatRegister& f) {
-    vixl::MacroAssembler::Pop(ARMRegister(f.code(), 64));
+    vixl::MacroAssembler::Pop(ARMFPRegister(f, 64));
   }
 
   void implicitPop(uint32_t args) {

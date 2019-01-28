@@ -2936,7 +2936,8 @@ class nsContentUtils {
    * persistent storage which are available to web pages. Cookies don't use
    * this logic, and security logic related to them must be updated separately.
    */
-  static StorageAccess StorageAllowedForWindow(nsPIDOMWindowInner* aWindow);
+  static StorageAccess StorageAllowedForWindow(
+      nsPIDOMWindowInner* aWindow, uint32_t* aRejectedReason = nullptr);
 
   /*
    * Checks if storage for the given document is permitted by a combination of
@@ -2976,12 +2977,13 @@ class nsContentUtils {
    * anti-tracking feature.
    */
   static bool StorageDisabledByAntiTracking(Document* aDocument, nsIURI* aURI) {
+    uint32_t rejectedReason = 0;
     // Note that GetChannel() below may return null, but that's OK, since the
     // callee is able to deal with a null channel argument, and if passed null,
     // will only fail to notify the UI in case storage gets blocked.
-    return StorageDisabledByAntiTracking(aDocument->GetInnerWindow(),
-                                         aDocument->GetChannel(),
-                                         aDocument->NodePrincipal(), aURI);
+    return StorageDisabledByAntiTracking(
+        aDocument->GetInnerWindow(), aDocument->GetChannel(),
+        aDocument->NodePrincipal(), aURI, rejectedReason);
   }
 
  private:
@@ -2995,7 +2997,8 @@ class nsContentUtils {
   static bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                             nsIChannel* aChannel,
                                             nsIPrincipal* aPrincipal,
-                                            nsIURI* aURI);
+                                            nsIURI* aURI,
+                                            uint32_t& aRejectedReason);
 
  public:
   /*
@@ -3383,7 +3386,7 @@ class nsContentUtils {
    */
   static StorageAccess InternalStorageAllowedForPrincipal(
       nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aWindow, nsIURI* aURI,
-      nsIChannel* aChannel);
+      nsIChannel* aChannel, uint32_t& aRejectedReason);
 
   static nsINode* GetCommonAncestorHelper(nsINode* aNode1, nsINode* aNode2);
   static nsIContent* GetCommonFlattenedTreeAncestorHelper(

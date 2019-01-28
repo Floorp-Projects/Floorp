@@ -214,6 +214,11 @@ class Raptor(object):
                 self.log.info("preferences were configured for the test, \
                               but we do not install them on non Firefox browsers.")
 
+        # if 'alert_on' was provided in the test INI, we must add that to our config
+        # for use in our results.py and output.py
+        # test['alert_on'] has already been converted to a list and stripped of spaces
+        self.config['subtest_alert_on'] = test.get('alert_on', None)
+
         # on firefox we can get an addon id; chrome addon actually is just cmd line arg
         if self.config['app'] in ['firefox', 'geckoview', 'fennec']:
             webext_id = self.profile.addons.addon_details(raptor_webext)['id']
@@ -314,14 +319,6 @@ class Raptor(object):
                     raise
             else:
                 # launch fennec
-
-                # when running locally the 'binary' is provided on the mach raptor-test cmd line,
-                # i.e. `org.mozilla.fennec_aurora` for fennec nightly
-                # in production the default `.fennec_aurora` comes form the tc config;
-                # if we're running in production but on beta that needs to be changed to `.fennec`
-                if not self.config['run_local'] and self.config['is_release_build']:
-                    self.config['binary'] = 'org.mozilla.fennec'
-
                 try:
                     # if fennec is already running, shut it down first
                     self.device.stop_application(self.config['binary'])
@@ -367,7 +364,9 @@ class Raptor(object):
                 chrome_args = [
                     '--proxy-server="http=127.0.0.1:8080;' +
                     'https=127.0.0.1:8080;ssl=127.0.0.1:8080"',
-                    '--ignore-certificate-errors'
+                    '--ignore-certificate-errors',
+                    '--no-default-browser-check',
+                    'disable-sync'
                 ]
                 if self.config['host'] not in ('localhost', '127.0.0.1'):
                     chrome_args[0] = chrome_args[0].replace('127.0.0.1', self.config['host'])

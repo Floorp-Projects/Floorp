@@ -2949,7 +2949,11 @@ void ScopedContentTraversal::Prev() {
   SetCurrent(parent == mOwner ? nullptr : parent);
 }
 
-nsIContent* nsFocusManager::FindOwner(nsIContent* aContent) {
+/**
+ * Returns scope owner of aContent.
+ * A scope owner is either a document root, shadow host, or slot.
+ */
+static nsIContent* FindOwner(nsIContent* aContent) {
   nsIContent* currentContent = aContent;
   while (currentContent) {
     nsIContent* parent = currentContent->GetFlattenedTreeParent();
@@ -2974,8 +2978,14 @@ nsIContent* nsFocusManager::FindOwner(nsIContent* aContent) {
   return nullptr;
 }
 
-int32_t nsFocusManager::HostOrSlotTabIndexValue(nsIContent* aContent,
-                                                bool* aIsFocusable) {
+/**
+ * Host and Slot elements need to be handled as if they had tabindex 0 even
+ * when they don't have the attribute. This is a helper method to get the
+ * right value for focus navigation. If aIsFocusable is passed, it is set to
+ * true if the element itself is focusable.
+ */
+static int32_t HostOrSlotTabIndexValue(const nsIContent* aContent,
+                                       bool* aIsFocusable = nullptr) {
   MOZ_ASSERT(IsHostOrSlot(aContent));
 
   if (aIsFocusable) {
@@ -3005,10 +3015,9 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
     nsIContent* aOwner, nsIContent* aStartContent,
     nsIContent* aOriginalStartContent, bool aForward, int32_t aCurrentTabIndex,
     bool aIgnoreTabIndex, bool aForDocumentNavigation, bool aSkipOwner) {
-  // Return shadow host at first for forward navigation if its tabindex
-  // is non-negative
-  bool skipOwner = aSkipOwner || !aOwner->GetShadowRoot();
-  if (!skipOwner && (aForward && aOwner == aStartContent)) {
+  MOZ_ASSERT(IsHostOrSlot(aOwner), "Scope owner should be host or slot");
+
+  if (!aSkipOwner && (aForward && aOwner == aStartContent)) {
     int32_t tabIndex = -1;
     nsIFrame* frame = aOwner->GetPrimaryFrame();
     if (frame && frame->IsFocusable(&tabIndex, false) && tabIndex >= 0) {
@@ -3110,9 +3119,9 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
     contentTraversal.Reset();
   }
 
-  // Return shadow host at last for backward navigation if its tabindex
+  // Return scope owner at last for backward navigation if its tabindex
   // is non-negative
-  if (!skipOwner && !aForward) {
+  if (!aSkipOwner && !aForward) {
     int32_t tabIndex = -1;
     nsIFrame* frame = aOwner->GetPrimaryFrame();
     if (frame && frame->IsFocusable(&tabIndex, false) && tabIndex >= 0) {
@@ -3124,14 +3133,15 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
 }
 
 nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
-    nsIContent** aStartContent, nsIContent* aOriginalStartContent,
-    bool aForward, int32_t* aCurrentTabIndex, bool aIgnoreTabIndex,
-    bool aForDocumentNavigation) {
-  nsIContent* startContent = *aStartContent;
-  nsIContent* owner = FindOwner(startContent);
-  MOZ_ASSERT(owner, "focus navigation scope owner not in document");
-  MOZ_ASSERT(IsHostOrSlot(owner), "scope owner should be host or slot");
+    nsIContent* aStartOwner, nsIContent** aStartContent,
+    nsIContent* aOriginalStartContent, bool aForward, int32_t* aCurrentTabIndex,
+    bool aIgnoreTabIndex, bool aForDocumentNavigation) {
+  MOZ_ASSERT(aStartOwner == FindOwner(*aStartContent),
+             "aStartOWner should be the scope owner of aStartContent");
+  MOZ_ASSERT(IsHostOrSlot(aStartOwner), "scope owner should be host or slot");
 
+  nsIContent* owner = aStartOwner;
+  nsIContent* startContent = *aStartContent;
   while (IsHostOrSlot(owner)) {
     int32_t tabIndex = 0;
     if (IsHostOrSlot(startContent)) {
@@ -3158,20 +3168,23 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
   return nullptr;
 }
 
-static nsIContent* GetTopLevelHost(nsIContent* aContent) {
-  nsIContent* topLevelhost = nullptr;
+static nsIContent* GetTopLevelScopeOwner(nsIContent* aContent) {
+  nsIContent* topLevelScopeOwner = nullptr;
   while (aContent) {
     if (HTMLSlotElement* slot = aContent->GetAssignedSlot()) {
       aContent = slot;
     } else if (ShadowRoot* shadowRoot = aContent->GetContainingShadow()) {
       aContent = shadowRoot->Host();
-      topLevelhost = aContent;
+      topLevelScopeOwner = aContent;
     } else {
+      if (HTMLSlotElement::FromNode(aContent)) {
+        topLevelScopeOwner = aContent;
+      }
       aContent = aContent->GetParent();
     }
   }
 
-  return topLevelhost;
+  return topLevelScopeOwner;
 }
 
 nsresult nsFocusManager::GetNextTabbableContent(
@@ -3184,7 +3197,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
   nsCOMPtr<nsIContent> startContent = aStartContent;
   if (!startContent) return NS_OK;
 
-  nsIContent* currentTopLevelHost = GetTopLevelHost(aStartContent);
+  nsIContent* currentTopLevelScopeOwner = GetTopLevelScopeOwner(aStartContent);
 
   LOGCONTENTNAVIGATION("GetNextTabbable: %s", aStartContent);
   LOGFOCUSNAVIGATION(("  tabindex: %d", aCurrentTabIndex));
@@ -3209,8 +3222,8 @@ nsresult nsFocusManager::GetNextTabbableContent(
   nsIContent* owner = FindOwner(aStartContent);
   if (owner && rootElement != owner) {
     nsIContent* contentToFocus = GetNextTabbableContentInAncestorScopes(
-        &aStartContent, aOriginalStartContent, aForward, &aCurrentTabIndex,
-        aIgnoreTabIndex, aForDocumentNavigation);
+        owner, &aStartContent, aOriginalStartContent, aForward,
+        &aCurrentTabIndex, aIgnoreTabIndex, aForDocumentNavigation);
     if (contentToFocus) {
       NS_ADDREF(*aResultContent = contentToFocus);
       return NS_OK;
@@ -3305,18 +3318,18 @@ nsresult nsFocusManager::GetNextTabbableContent(
 
     // Walk frames to find something tabbable matching aCurrentTabIndex
     while (frame) {
-      // Try to find the topmost Shadow DOM host, since we want to
-      // skip Shadow DOM in frame traversal.
+      // Try to find the topmost scope owner, since we want to skip the node
+      // that is not owned by document in frame traversal.
       nsIContent* currentContent = frame->GetContent();
-      nsIContent* oldTopLevelHost = currentTopLevelHost;
-      if (oldTopLevelHost != currentContent) {
-        currentTopLevelHost = GetTopLevelHost(currentContent);
+      nsIContent* oldTopLevelScopeOwner = currentTopLevelScopeOwner;
+      if (oldTopLevelScopeOwner != currentContent) {
+        currentTopLevelScopeOwner = GetTopLevelScopeOwner(currentContent);
       } else {
-        currentTopLevelHost = currentContent;
+        currentTopLevelScopeOwner = currentContent;
       }
-      if (currentTopLevelHost) {
-        if (currentTopLevelHost == oldTopLevelHost) {
-          // We're within Shadow DOM, continue.
+      if (currentTopLevelScopeOwner) {
+        if (currentTopLevelScopeOwner == oldTopLevelScopeOwner) {
+          // We're within non-document scope, continue.
           do {
             if (aForward) {
               frameTraversal->Next();
@@ -3329,7 +3342,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
           } while (frame && frame->GetPrevContinuation());
           continue;
         }
-        currentContent = currentTopLevelHost;
+        currentContent = currentTopLevelScopeOwner;
       }
 
       // For document navigation, check if this element is an open panel. Since

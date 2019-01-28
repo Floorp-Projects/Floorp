@@ -6,11 +6,10 @@
 
 #include "SVGAnimatedPointList.h"
 
-#include "DOMSVGPointList.h"
-#include "mozilla/dom/SVGElement.h"
 #include "mozilla/Move.h"
-#include "nsSVGAttrTearoffTable.h"
-#include "nsSMILValue.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/dom/SVGElement.h"
+#include "DOMSVGPointList.h"
 #include "SVGPointListSMILType.h"
 
 using namespace mozilla::dom;
@@ -141,14 +140,14 @@ void SVGAnimatedPointList::ClearAnimValue(SVGElement *aElement) {
   aElement->DidAnimatePointList();
 }
 
-UniquePtr<nsISMILAttr> SVGAnimatedPointList::ToSMILAttr(SVGElement *aElement) {
+UniquePtr<SMILAttr> SVGAnimatedPointList::ToSMILAttr(SVGElement *aElement) {
   return MakeUnique<SMILAnimatedPointList>(this, aElement);
 }
 
 nsresult SVGAnimatedPointList::SMILAnimatedPointList::ValueFromString(
     const nsAString &aStr, const dom::SVGAnimationElement * /*aSrcElement*/,
-    nsSMILValue &aValue, bool &aPreventCachingOfSandwich) const {
-  nsSMILValue val(&SVGPointListSMILType::sSingleton);
+    SMILValue &aValue, bool &aPreventCachingOfSandwich) const {
+  SMILValue val(&SVGPointListSMILType::sSingleton);
   SVGPointListAndInfo *list = static_cast<SVGPointListAndInfo *>(val.mU.mPtr);
   nsresult rv = list->SetValueFromString(aStr);
   if (NS_SUCCEEDED(rv)) {
@@ -159,13 +158,13 @@ nsresult SVGAnimatedPointList::SMILAnimatedPointList::ValueFromString(
   return rv;
 }
 
-nsSMILValue SVGAnimatedPointList::SMILAnimatedPointList::GetBaseValue() const {
+SMILValue SVGAnimatedPointList::SMILAnimatedPointList::GetBaseValue() const {
   // To benefit from Return Value Optimization and avoid copy constructor calls
   // due to our use of return-by-value, we must return the exact same object
   // from ALL return points. This function must only return THIS variable:
-  nsSMILValue val;
+  SMILValue val;
 
-  nsSMILValue tmp(&SVGPointListSMILType::sSingleton);
+  SMILValue tmp(&SVGPointListSMILType::sSingleton);
   SVGPointListAndInfo *list = static_cast<SVGPointListAndInfo *>(tmp.mU.mPtr);
   nsresult rv = list->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
@@ -176,7 +175,7 @@ nsSMILValue SVGAnimatedPointList::SMILAnimatedPointList::GetBaseValue() const {
 }
 
 nsresult SVGAnimatedPointList::SMILAnimatedPointList::SetAnimValue(
-    const nsSMILValue &aValue) {
+    const SMILValue &aValue) {
   NS_ASSERTION(aValue.mType == &SVGPointListSMILType::sSingleton,
                "Unexpected type to assign animated value");
   if (aValue.mType == &SVGPointListSMILType::sSingleton) {

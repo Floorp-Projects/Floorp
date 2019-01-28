@@ -194,14 +194,9 @@ impl Example for App {
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
         let spatial_id = root_space_and_clip.spatial_id;
 
-        builder.push_stacking_context(
+        builder.push_simple_stacking_context(
             &info,
             spatial_id,
-            None,
-            TransformStyle::Flat,
-            MixBlendMode::Normal,
-            &[],
-            RasterSpace::Screen,
         );
 
         let image_mask_key = api.generate_image_key();

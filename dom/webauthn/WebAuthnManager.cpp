@@ -18,6 +18,10 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 
+#ifdef OS_WIN
+#  include "WinWebAuthnManager.h"
+#endif
+
 using namespace mozilla::ipc;
 
 namespace mozilla {
@@ -224,13 +228,12 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   // Enforce 5.4.3 User Account Parameters for Credential Generation
   // When we add UX, we'll want to do more with this value, but for now
   // we just have to verify its correctness.
-  {
-    CryptoBuffer userId;
-    userId.Assign(aOptions.mUser.mId);
-    if (userId.Length() > 64) {
-      promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
-      return promise.forget();
-    }
+
+  CryptoBuffer userId;
+  userId.Assign(aOptions.mUser.mId);
+  if (userId.Length() > 64) {
+    promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+    return promise.forget();
   }
 
   // If timeoutSeconds was specified, check if its value lies within a
@@ -265,15 +268,10 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
     return promise.forget();
   }
 
-  // TODO: Move this logic into U2FTokenManager in Bug 1409220.
-
   // Process each element of mPubKeyCredParams using the following steps, to
-  // produce a new sequence acceptableParams.
-  nsTArray<PublicKeyCredentialParameters> acceptableParams;
+  // produce a new sequence coseAlgos.
+  nsTArray<CoseAlg> coseAlgos;
   for (size_t a = 0; a < aOptions.mPubKeyCredParams.Length(); ++a) {
-    // Let current be the currently selected element of
-    // mPubKeyCredParams.
-
     // If current.type does not contain a PublicKeyCredentialType
     // supported by this implementation, then stop processing current and move
     // on to the next element in mPubKeyCredParams.
@@ -282,23 +280,12 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
       continue;
     }
 
-    nsString algName;
-    if (NS_FAILED(CoseAlgorithmToWebCryptoId(aOptions.mPubKeyCredParams[a].mAlg,
-                                             algName))) {
-      continue;
-    }
-
-    if (!acceptableParams.AppendElement(aOptions.mPubKeyCredParams[a],
-                                        mozilla::fallible)) {
-      promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-      return promise.forget();
-    }
+    coseAlgos.AppendElement(aOptions.mPubKeyCredParams[a].mAlg);
   }
 
-  // If acceptableParams is empty and mPubKeyCredParams was not empty, cancel
-  // the timer started in step 2, reject promise with a DOMException whose name
-  // is "NotSupportedError", and terminate this algorithm.
-  if (acceptableParams.IsEmpty() && !aOptions.mPubKeyCredParams.IsEmpty()) {
+  // If there are algorithms specified, but none are Public_key algorithms,
+  // reject the promise.
+  if (coseAlgos.IsEmpty() && !aOptions.mPubKeyCredParams.IsEmpty()) {
     promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return promise.forget();
   }
@@ -354,33 +341,56 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   const auto& attachment = selection.mAuthenticatorAttachment;
   const AttestationConveyancePreference& attestation = aOptions.mAttestation;
 
-  // Does the RP require attachment == "platform"?
-  bool requirePlatformAttachment =
-      attachment.WasPassed() &&
-      attachment.Value() == AuthenticatorAttachment::Platform;
+  // Attachment
+  WebAuthnMaybeAuthenticatorAttachment authenticatorAttachment(
+      WebAuthnMaybeAuthenticatorAttachment::Tnull_t);
+  if (attachment.WasPassed()) {
+    authenticatorAttachment = WebAuthnMaybeAuthenticatorAttachment(
+        static_cast<uint8_t>(attachment.Value()));
+  }
 
-  // Does the RP require user verification?
-  bool requireUserVerification =
-      selection.mUserVerification == UserVerificationRequirement::Required;
-
-  // Does the RP desire direct attestation? Indirect attestation is not
-  // implemented, and thus is equivilent to None.
-  bool requestDirectAttestation =
-      attestation == AttestationConveyancePreference::Direct;
+  // User Verification
+  uint8_t userVerificationRequirement =
+      static_cast<uint8_t>(selection.mUserVerification);
 
   // Create and forward authenticator selection criteria.
   WebAuthnAuthenticatorSelection authSelection(selection.mRequireResidentKey,
-                                               requireUserVerification,
-                                               requirePlatformAttachment);
+                                               userVerificationRequirement,
+                                               authenticatorAttachment);
 
-  WebAuthnMakeCredentialExtraInfo extra(extensions, authSelection,
-                                        requestDirectAttestation);
+  // aOptions.mAttestation
+  uint8_t attestationConveyancePreference = static_cast<uint8_t>(attestation);
+
+  nsString rpIcon;
+  if (aOptions.mRp.mIcon.WasPassed()) {
+    rpIcon = aOptions.mRp.mIcon.Value();
+  }
+
+  nsString userIcon;
+  if (aOptions.mUser.mIcon.WasPassed()) {
+    userIcon = aOptions.mUser.mIcon.Value();
+  }
+
+  WebAuthnMakeCredentialRpInfo rpInfo(aOptions.mRp.mName, rpIcon);
+
+  WebAuthnMakeCredentialUserInfo userInfo(
+      userId, aOptions.mUser.mName, userIcon, aOptions.mUser.mDisplayName);
+
+  WebAuthnMakeCredentialExtraInfo extra(rpInfo, userInfo, coseAlgos, extensions,
+                                        authSelection,
+                                        attestationConveyancePreference);
 
   WebAuthnMakeCredentialInfo info(origin, NS_ConvertUTF8toUTF16(rpId),
                                   challenge, clientDataJSON, adjustedTimeout,
                                   excludeList, extra);
 
+#ifdef OS_WIN
+  if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
+    ListenForVisibilityEvents();
+  }
+#else
   ListenForVisibilityEvents();
+#endif
 
   AbortSignal* signal = nullptr;
   if (aSignal.WasPassed()) {
@@ -498,6 +508,9 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
           if (t == AuthenticatorTransport::Ble) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_BLE;
           }
+          if (t == AuthenticatorTransport::Internal) {
+            transports |= CTAP_AUTHENTICATOR_TRANSPORT_INTERNAL;
+          }
         }
         c.transports() = transports;
       }
@@ -511,9 +524,9 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
     return promise.forget();
   }
 
-  // Does the RP require user verification?
-  bool requireUserVerification =
-      aOptions.mUserVerification == UserVerificationRequirement::Required;
+  // User Verification
+  uint8_t userVerificationRequirement =
+      static_cast<uint8_t>(aOptions.mUserVerification);
 
   // If extensions were specified, process any extensions supported by this
   // client platform, to produce the extension data that needs to be sent to the
@@ -546,16 +559,22 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
     }
 
     // Append the hash and send it to the backend.
-    extensions.AppendElement(WebAuthnExtensionAppId(appIdHash));
+    extensions.AppendElement(WebAuthnExtensionAppId(appIdHash, appId));
   }
 
-  WebAuthnGetAssertionExtraInfo extra(extensions, requireUserVerification);
+  WebAuthnGetAssertionExtraInfo extra(extensions, userVerificationRequirement);
 
   WebAuthnGetAssertionInfo info(origin, NS_ConvertUTF8toUTF16(rpId), challenge,
                                 clientDataJSON, adjustedTimeout, allowList,
                                 extra);
 
+#ifdef OS_WIN
+  if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
+    ListenForVisibilityEvents();
+  }
+#else
   ListenForVisibilityEvents();
+#endif
 
   AbortSignal* signal = nullptr;
   if (aSignal.WasPassed()) {

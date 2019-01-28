@@ -1,3 +1,6 @@
+$section-header-height: 30px;
+$icon-width: 54px; // width of primary icon + margin
+
 .SimpleSnippet {
   &.tall {
     padding: 27px 0;
@@ -87,5 +90,46 @@
 
   .icon {
     align-self: flex-start;
+  }
+
+  &.has-section-header .innerWrapper {
+    // account for section header being 100% width
+    flex-wrap: wrap;
+    padding-top: 7px;
+  }
+
+  // wrapper div added if section-header is displayed that allows icon/text/button
+  // to squish instead of wrapping. this is effectively replicating layout behavior
+  // when section-header is *not* present.
+  .innerContentWrapper {
+    align-items: center;
+    display: flex;
+  }
+
+  .section-header {
+    flex: 0 0 100%;
+    margin-bottom: 10px;
+  }
+
+  .section-title {
+    // color should match that of 'Recommended by Pocket' and 'Highlights' in newtab page
+    color: var(--newtab-section-header-text-color);
+    display: inline-block;
+    font-size: 13px;
+    font-weight: bold;
+    margin: 0;
+
+    a {
+      color: var(--newtab-section-header-text-color);
+      font-weight: inherit;
+      text-decoration: none;
+    }
+
+    .icon {
+      height: 16px;
+      margin-inline-end: 6px;
+      margin-top: -2px;
+      width: 16px;
+    }
   }
 }

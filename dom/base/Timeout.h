@@ -45,6 +45,8 @@ class Timeout final : public LinkedListElement<RefPtr<Timeout>> {
   // Can only be called when not frozen.
   const TimeStamp& When() const;
 
+  const TimeStamp& SubmitTime() const;
+
   // Can only be called when frozen.
   const TimeDuration& TimeRemaining() const;
 
@@ -57,6 +59,11 @@ class Timeout final : public LinkedListElement<RefPtr<Timeout>> {
 
   // Remaining time to wait.  Used only when timeouts are frozen.
   TimeDuration mTimeRemaining;
+
+  // Time that the timeout started, restarted, or was frozen.  Useful for
+  // logging time from (virtual) start of a timer until the time it fires
+  // (or is cancelled, etc)
+  TimeStamp mSubmitTime;
 
   ~Timeout() = default;
 

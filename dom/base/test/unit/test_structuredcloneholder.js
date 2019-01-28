@@ -17,7 +17,7 @@ add_task(async function test_structuredCloneHolder() {
 
   // Test same-compartment deserialization
 
-  let res = holder.deserialize(global);
+  let res = holder.deserialize(global, true);
 
   notEqual(res, obj, "Deserialized result is a different object from the original");
 
@@ -35,7 +35,7 @@ add_task(async function test_structuredCloneHolder() {
 
   // Test cross-compartment deserialization
 
-  res = holder.deserialize(sandbox);
+  res = holder.deserialize(sandbox, true);
 
   notEqual(res, obj, "Cross-compartment-deserialized result is a different object from the original");
 
@@ -60,8 +60,20 @@ add_task(async function test_structuredCloneHolder() {
   ok(res.data instanceof StructuredCloneHolder,
      "Sending structured clone holders through message managers works as expected");
 
-  deepEqual(res.data.deserialize(global), obj,
+  deepEqual(res.data.deserialize(global, true), obj,
             "Sending structured clone holders through message managers works as expected");
+
+  // Test that attempting to deserialize a neutered holder throws.
+
+  deepEqual(holder.deserialize(global), obj, "Deserialized result is correct when discarding data");
+
+  Assert.throws(() => holder.deserialize(global),
+                err => err.result == Cr.NS_ERROR_NOT_INITIALIZED,
+                "Attempting to deserialize neutered holder throws");
+
+  Assert.throws(() => holder.deserialize(global, true),
+                err => err.result == Cr.NS_ERROR_NOT_INITIALIZED,
+                "Attempting to deserialize neutered holder throws");
 });
 
 // Test that X-rays passed to an exported function are serialized

@@ -497,6 +497,15 @@ var gMainPane = {
                          gMainPane.updateWritePrefs);
       }
 
+      if (AppConstants.platform == "win") {
+        // On Windows, the Application Update setting is an installation-
+        // specific preference, not a profile-specific one. Show a warning to
+        // inform users of this.
+        let updateContainer = document.getElementById("updateSettingsContainer");
+        updateContainer.classList.add("updateSettingCrossUserWarningContainer");
+        document.getElementById("updateSettingCrossUserWarning").hidden = false;
+      }
+
       if (AppConstants.MOZ_MAINTENANCE_SERVICE) {
         // Check to see if the maintenance service is installed.
         // If it isn't installed, don't show the preference at all.

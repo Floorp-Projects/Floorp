@@ -7,29 +7,29 @@
 #include "mozilla/dom/SVGViewportElement.h"
 
 #include <stdint.h>
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Likely.h"
+#include "mozilla/SMILTypes.h"
+#include "mozilla/SVGContentUtils.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGViewElement.h"
 
 #include "DOMSVGLength.h"
 #include "DOMSVGPoint.h"
-#include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsFrameSelection.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
-#include "nsISVGSVGFrame.h"  //XXX
+#include "nsISVGSVGFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleUtil.h"
-#include "nsSMILTypes.h"
-#include "SVGContentUtils.h"
 
 #include <algorithm>
 #include "prtime.h"

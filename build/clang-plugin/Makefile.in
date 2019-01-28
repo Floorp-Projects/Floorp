@@ -6,7 +6,10 @@ include $(topsrcdir)/config/config.mk
 
 HOST_LDFLAGS := $(LLVM_LDFLAGS) $(CLANG_LDFLAGS)
 
-ifneq ($(HOST_OS_ARCH),WINNT)
+ifeq ($(HOST_OS_ARCH),WINNT)
+# clang-plugin.dll needs to be deterministic for sccache hashes
+HOST_LDFLAGS += -brepro
+else
 HOST_LDFLAGS += -shared
 endif
 

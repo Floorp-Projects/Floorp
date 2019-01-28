@@ -6391,7 +6391,7 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
         nsCOMPtr<nsIWidget> mainWidget;
         GetMainWidget(getter_AddRefs(mainWidget));
         if (mainWidget) {
-          mainWidget->SetCursor(eCursor_spinning);
+          mainWidget->SetCursor(eCursor_spinning, nullptr, 0, 0);
         }
       }
     }
@@ -6407,7 +6407,7 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
       nsCOMPtr<nsIWidget> mainWidget;
       GetMainWidget(getter_AddRefs(mainWidget));
       if (mainWidget) {
-        mainWidget->SetCursor(eCursor_standard);
+        mainWidget->SetCursor(eCursor_standard, nullptr, 0, 0);
       }
     }
   }
@@ -9640,29 +9640,36 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                    aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_FRAME,
                "DoURILoad thinks this is a frame and InternalLoad does not");
 
-    // Only allow URLs able to return data in iframes.
-    bool doesNotReturnData = false;
-    NS_URIChainHasFlags(aLoadState->URI(),
-                        nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
-                        &doesNotReturnData);
-    if (doesNotReturnData) {
-      bool popupBlocked = true;
+    if (StaticPrefs::dom_block_external_protocol_in_iframes()) {
+      // Only allow URLs able to return data in iframes.
+      bool doesNotReturnData = false;
+      NS_URIChainHasFlags(aLoadState->URI(),
+                          nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+                          &doesNotReturnData);
+      if (doesNotReturnData) {
+        bool popupBlocked = true;
 
-      // Let's consider external protocols as popups and let's check if the page
-      // is allowed to open them without abuse regardless of allowed events
-      if (PopupBlocker::GetPopupControlState() <= PopupBlocker::openBlocked) {
-        popupBlocked = !PopupBlocker::TryUsePopupOpeningToken();
-      } else {
-        nsCOMPtr<nsINode> loadingNode =
-            mScriptGlobal->AsOuter()->GetFrameElementInternal();
-        if (loadingNode) {
-          popupBlocked = !PopupBlocker::CanShowPopupByPermission(
-              loadingNode->NodePrincipal());
+        // Let's consider external protocols as popups and let's check if the
+        // page is allowed to open them without abuse regardless of allowed
+        // events
+        if (PopupBlocker::GetPopupControlState() <= PopupBlocker::openBlocked) {
+          popupBlocked = !PopupBlocker::TryUsePopupOpeningToken();
+        } else if (mIsActive &&
+                   PopupBlocker::ConsumeTimerTokenForExternalProtocolIframe()) {
+          popupBlocked = false;
+        } else {
+          nsCOMPtr<nsINode> loadingNode =
+              mScriptGlobal->AsOuter()->GetFrameElementInternal();
+          if (loadingNode) {
+            popupBlocked = !PopupBlocker::CanShowPopupByPermission(
+                loadingNode->NodePrincipal());
+          }
         }
-      }
 
-      if (popupBlocked) {
-        return NS_ERROR_UNKNOWN_PROTOCOL;
+        // No error must be returned when iframes are blocked.
+        if (popupBlocked) {
+          return NS_OK;
+        }
       }
     }
 
@@ -9691,6 +9698,35 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   nsCOMPtr<nsIChannel> channel;
 
   bool isSrcdoc = !aSrcdoc.IsVoid();
+
+  // If we have a pending channel, use the channel we've already created here.
+  // We don't need to set up load flags for our channel, as it has already been
+  // created.
+  nsCOMPtr<nsIChildChannel> pendingChannel =
+      aLoadState->GetPendingRedirectedChannel();
+  if (pendingChannel) {
+    MOZ_ASSERT(!isSrcdoc, "pending channel for srcdoc load?");
+
+    channel = do_QueryInterface(pendingChannel);
+    MOZ_ASSERT(channel, "nsIChildChannel isn't a nsIChannel?");
+
+    // If we have a request outparameter, shove our channel into it.
+    if (aRequest) {
+      nsCOMPtr<nsIRequest> outRequest = channel;
+      outRequest.forget(aRequest);
+    }
+
+    rv = OpenInitializedChannel(channel, uriLoader,
+                                nsIURILoader::REDIRECTED_CHANNEL);
+
+    // If the channel load failed, we failed and nsIWebProgress just ain't
+    // gonna happen.
+    if (NS_SUCCEEDED(rv) && aDocShell) {
+      nsCOMPtr<nsIDocShell> self = this;
+      self.forget(aDocShell);
+    }
+    return rv;
+  }
 
   // There are two cases we care about:
   // * Top-level load: In this case, loadingNode is null, but loadingWindow
@@ -10256,7 +10292,6 @@ nsresult nsDocShell::AddHeadersToChannel(nsIInputStream* aHeadersData,
 nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
                                    nsIURILoader* aURILoader,
                                    bool aBypassClassifier) {
-  nsresult rv;
   // Mark the channel as being a document URI and allow content sniffing...
   nsLoadFlags loadFlags = 0;
   (void)aChannel->GetLoadFlags(&loadFlags);
@@ -10355,6 +10390,14 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
     openFlags |= nsIURILoader::DONT_RETARGET;
   }
 
+  return OpenInitializedChannel(aChannel, aURILoader, openFlags);
+}
+
+nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
+                                            nsIURILoader* aURILoader,
+                                            uint32_t aOpenFlags) {
+  nsresult rv;
+
   // If anything fails here, make sure to clear our initial ClientSource.
   auto cleanupInitialClient =
       MakeScopeExit([&] { mInitialClientSource.reset(); });
@@ -10375,7 +10418,7 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
                               win->EventTargetFor(TaskCategory::Other));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aURILoader->OpenURI(aChannel, openFlags, this);
+  rv = aURILoader->OpenURI(aChannel, aOpenFlags, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We're about to load a new page and it may take time before necko
@@ -12980,6 +13023,25 @@ nsDocShell::SetOriginAttributesBeforeLoading(
   }
 
   return SetOriginAttributes(attrs);
+}
+
+NS_IMETHODIMP
+nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier) {
+  RefPtr<nsDocShell> self = this;
+  RefPtr<ChildProcessChannelListener> cpcl =
+      ChildProcessChannelListener::GetSingleton();
+
+  // Call into InternalLoad with the pending channel when it is received.
+  cpcl->RegisterCallback(aIdentifier, [self](nsIChildChannel* aChannel) {
+    RefPtr<nsDocShellLoadState> loadState;
+    nsresult rv = nsDocShellLoadState::CreateFromPendingChannel(
+        aChannel, getter_AddRefs(loadState));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+    self->InternalLoad(loadState, nullptr, nullptr);
+  });
+  return NS_OK;
 }
 
 NS_IMETHODIMP

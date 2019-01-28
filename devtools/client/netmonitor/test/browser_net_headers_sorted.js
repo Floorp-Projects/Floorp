@@ -89,20 +89,25 @@ async function verifyRawHeaders(monitor) {
                                   "Upgrade-Insecure-Requests", "Pragma",
                                   "Cache-Control"];
 
-  // Click the 'Raw headers' button to show original headers source.
-  const rawHeadersBtn = document.querySelector(".raw-headers-button");
-  rawHeadersBtn.click();
+  // Click the 'Raw headers' toggle to show original headers source.
+  for (const rawToggleInput of document.querySelectorAll(".devtools-checkbox-toggle")) {
+    rawToggleInput.click();
+  }
 
   // Wait till raw headers are available.
+  let rawArr;
   await waitUntil(() => {
-    return document.querySelector(".raw-request-headers-textarea") &&
-      document.querySelector(".raw-response-headers-textarea");
+    rawArr = document.querySelectorAll("textarea.raw-headers");
+    // Both raw headers must be present
+    return (rawArr.length > 1);
   });
 
+  // Request headers are rendered first, so it is element with index 1
   const requestHeadersText =
-    document.querySelector(".raw-request-headers-textarea").textContent;
+    rawArr[1].textContent;
+  // Response headers are rendered first, so it is element with index 0
   const responseHeadersText =
-    document.querySelector(".raw-response-headers-textarea").textContent;
+    rawArr[0].textContent;
 
   const rawRequestHeadersArray = requestHeadersText.split("\n");
   for (let i = 0; i < rawRequestHeadersArray.length; i++) {

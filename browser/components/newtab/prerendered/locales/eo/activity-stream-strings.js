@@ -34,15 +34,15 @@ window.gActivityStreamStrings = {
   "menu_action_remove_download": "Forigi el la historio",
   "search_button": "Serĉi",
   "search_header": "Serĉo de {search_engine_name}",
-  "search_web_placeholder": "Serĉi la reton",
+  "search_web_placeholder": "Serĉi en la teksaĵo",
   "section_disclaimer_topstories": "La plej interesaj artikoloj en la reto, elektitaj surbaze de tio, kion vi legas. Hecho por Pocket, kiu estas nun parto de Mozilla.",
   "section_disclaimer_topstories_linktext": "Vidi kiel tio funkcias.",
   "section_disclaimer_topstories_buttontext": "En ordo, mi komprenis",
   "prefs_home_header": "Enhavo de la hejmekrano de Firefox",
   "prefs_home_description": "Elektu la enhavon, kiun vi volas en via hejmekrano de Firefox.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Eka paĝo de Firefox",
+  "prefs_content_discovery_description": "Malkovro de enhavo en la eka paĝo de Firefox permesas al vi trovi altkvalitajn elstarajn artikolojn el la tuta teksaĵo.",
+  "prefs_content_discovery_button": "Malaktivigi malkovron de enhavo",
   "prefs_section_rows_option": "{num} vico;{num} vicoj",
   "prefs_search_header": "Serĉo en la reto",
   "prefs_topsites_description": "Viaj plej vizititaj retejoj",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "rimarkon pri privateco",
   "firstrun_continue_to_login": "Daŭrigi",
   "firstrun_skip_login": "Pretersalti tiun ĉi paŝon",
-  "context_menu_title": "Malfermi menuon",
-  "pocket_learn_more": "Pli da informo"
+  "context_menu_title": "Malfermi menuon"
 };

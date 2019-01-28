@@ -10,7 +10,6 @@
 #include "nsIIconURI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsIIPCSerializableURI.h"
 #include "nsINestedURI.h"
 #include "nsIURIMutator.h"
 
@@ -18,14 +17,11 @@ namespace mozilla {
 class Encoding;
 }
 
-class nsMozIconURI final : public nsIMozIconURI,
-                           public nsIIPCSerializableURI,
-                           public nsINestedURI {
+class nsMozIconURI final : public nsIMozIconURI, public nsINestedURI {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURI
   NS_DECL_NSIMOZICONURI
-  NS_DECL_NSIIPCSERIALIZABLEURI
   NS_DECL_NSINESTEDURI
 
  protected:

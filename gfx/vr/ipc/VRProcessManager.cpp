@@ -52,7 +52,7 @@ void VRProcessManager::LaunchVRProcess() {
 
   // The subprocess is launched asynchronously, so we wait for a callback to
   // acquire the IPDL actor.
-  mProcess = new VRProcessParent();
+  mProcess = new VRProcessParent(this);
   if (!mProcess->Launch()) {
     DisableVRProcess("Failed to launch VR process");
   }
@@ -73,6 +73,27 @@ void VRProcessManager::DestroyProcess() {
 
   mProcess->Shutdown();
   mProcess = nullptr;
+
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::VRProcessStatus,
+                                     NS_LITERAL_CSTRING("Destroyed"));
+}
+
+void VRProcessManager::OnProcessLaunchComplete(VRProcessParent* aParent) {
+  MOZ_ASSERT(mProcess && mProcess == aParent);
+
+  if (!mProcess->IsConnected()) {
+    DestroyProcess();
+    return;
+  }
+
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::VRProcessStatus,
+                                     NS_LITERAL_CSTRING("Running"));
+}
+
+void VRProcessManager::OnProcessUnexpectedShutdown(VRProcessParent* aParent) {
+  MOZ_ASSERT(mProcess && mProcess == aParent);
+
+  DestroyProcess();
 }
 
 bool VRProcessManager::CreateGPUBridges(

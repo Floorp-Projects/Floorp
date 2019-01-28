@@ -77,6 +77,7 @@ impl<'a> DisplayListFlattener<'a> {
         spread_radius: f32,
         border_radius: BorderRadius,
         clip_mode: BoxShadowClipMode,
+        reference_frame_relative_offset: LayoutVector2D,
     ) {
         if color.a == 0.0 {
             return;
@@ -166,10 +167,11 @@ impl<'a> DisplayListFlattener<'a> {
                 PrimitiveKeyKind::Rectangle {
                     color: color.into(),
                 },
+                reference_frame_relative_offset,
             );
         } else {
             // Normal path for box-shadows with a valid blur radius.
-            let blur_offset = BLUR_SAMPLE_SCALE * blur_radius;
+            let blur_offset = (BLUR_SAMPLE_SCALE * blur_radius).ceil();
             let mut extra_clips = vec![];
 
             // Add a normal clip mask to clip out the contents
@@ -255,6 +257,7 @@ impl<'a> DisplayListFlattener<'a> {
                 &prim_info,
                 extra_clips,
                 prim,
+                reference_frame_relative_offset,
             );
         }
     }

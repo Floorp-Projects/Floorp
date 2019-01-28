@@ -76,15 +76,15 @@ function checkBookmarksPanel(phase) {
   switch (phase) {
   case 1:
   case 3:
-    return promisePopupEvent(popupElement, "shown");
+    return promisePopupShown(popupElement);
   case 2:
     initialValue = titleElement.value;
     initialRemoveHidden = removeElement.hidden;
-    return promisePopupEvent(popupElement, "hidden");
+    return promisePopupHidden(popupElement);
   case 4:
     Assert.equal(titleElement.value, initialValue, "The bookmark panel's title should be the same");
     Assert.equal(removeElement.hidden, initialRemoveHidden, "The bookmark panel's visibility should not change");
-    return promisePopupEvent(popupElement, "hidden");
+    return promisePopupHidden(popupElement);
   }
   return Promise.reject(new Error("Unknown phase"));
 }

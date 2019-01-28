@@ -1,0 +1,1 @@
+// |jit-test| allow-oom; --fuzzing-safe; --no-threads; --no-ion; allow-unhandlable-oom

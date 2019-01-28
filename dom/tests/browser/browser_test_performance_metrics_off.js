@@ -11,7 +11,7 @@ add_task(async function testNotActivated() {
   // we call requestPerformanceMetrics()
   let failed = false;
   try {
-    let promise = await ChromeUtils.requestPerformanceMetrics();
+    await ChromeUtils.requestPerformanceMetrics();
   } catch (e) {
     failed = true;
   }

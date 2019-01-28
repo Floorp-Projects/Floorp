@@ -17,6 +17,7 @@ app_units = "0.7"
 bincode = "1.0"
 bitflags = "1.0"
 byteorder = "1.2.1"
+derive_more = "0.13"
 ipc-channel = {version = "0.11.0", optional = true}
 euclid = { version = "0.19.4", features = ["serde"] }
 malloc_size_of_derive = "0.1"
@@ -29,6 +30,3 @@ wr_malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of" }
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"
 core-graphics = "0.17.1"
-
-[target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.7"

@@ -3826,9 +3826,9 @@ nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
   }
 
   // First, try the imgIContainer, if non-null
-  nsresult rv = NS_ERROR_FAILURE;
+  uint32_t hotspotX = 0;
+  uint32_t hotspotY = 0;
   if (aContainer) {
-    uint32_t hotspotX, hotspotY;
 
     // css3-ui says to use the CSS-specified hotspot if present,
     // otherwise use the intrinsic hotspot, otherwise use the top left
@@ -3859,12 +3859,9 @@ nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
         if (hotspotYWrap) hotspotYWrap->GetData(&hotspotY);
       }
     }
-
-    rv = aWidget->SetCursor(aContainer, hotspotX, hotspotY);
   }
 
-  if (NS_FAILED(rv)) aWidget->SetCursor(c);
-
+  aWidget->SetCursor(c, aContainer, hotspotX, hotspotY);
   return NS_OK;
 }
 

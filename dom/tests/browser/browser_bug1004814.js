@@ -5,23 +5,23 @@
 
 add_task(async function() {
   await BrowserTestUtils.withNewTab("about:blank", async function(aBrowser) {
-    let duration = await ContentTask.spawn(aBrowser, null, function (opts) {
+    let duration = await ContentTask.spawn(aBrowser, null, function(opts) {
       const TEST_URI = "http://example.com/browser/dom/tests/browser/test_bug1004814.html";
 
       return new Promise(resolve => {
         let ConsoleObserver = {
           QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
-          observe: function(aSubject, aTopic, aData) {
+          observe(aSubject, aTopic, aData) {
             var obj = aSubject.wrappedJSObject;
-            if (obj.arguments.length != 1 || obj.arguments[0] != 'bug1004814' ||
-                obj.level != 'timeEnd') {
+            if (obj.arguments.length != 1 || obj.arguments[0] != "bug1004814" ||
+                obj.level != "timeEnd") {
               return;
             }
 
             Services.obs.removeObserver(this, "console-api-log-event");
             resolve(obj.timer.duration);
-          }
+          },
         };
 
         Services.obs.addObserver(ConsoleObserver, "console-api-log-event");

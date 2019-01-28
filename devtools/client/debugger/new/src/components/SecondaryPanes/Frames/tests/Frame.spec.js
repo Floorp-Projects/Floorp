@@ -81,7 +81,7 @@ describe("Frame", () => {
     };
 
     const component = mount(<Frame frame={frame} />);
-    expect(component.text()).toBe("\trenderFoo foo-view.js:10\n");
+    expect(component.text()).toBe("renderFoo foo-view.js:10");
   });
 
   it("full URL", () => {
@@ -98,7 +98,7 @@ describe("Frame", () => {
     };
 
     const component = mount(<Frame frame={frame} displayFullUrl={true} />);
-    expect(component.text()).toBe(`\trenderFoo ${url}:10\n`);
+    expect(component.text()).toBe(`renderFoo ${url}:10`);
   });
 
   it("getFrameTitle", () => {

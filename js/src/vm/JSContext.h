@@ -13,6 +13,7 @@
 
 #include "ds/TraceableFifo.h"
 #include "js/CharacterEncoding.h"
+#include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/GCVector.h"
 #include "js/Promise.h"
 #include "js/Result.h"
@@ -843,6 +844,7 @@ struct JSContext : public JS::RootingContext,
   void* addressOfJitStackLimitNoInterrupt() {
     return &jitStackLimitNoInterrupt;
   }
+  void* addressOfZone() { return &zone_; }
 
   // Futex state, used by Atomics.wait() and Atomics.wake() on the Atomics
   // object.

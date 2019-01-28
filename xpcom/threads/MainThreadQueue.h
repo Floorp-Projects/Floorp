@@ -23,10 +23,12 @@ inline already_AddRefed<nsThread> CreateMainThread(
   using MainThreadQueueT = PrioritizedEventQueue<InnerQueueT>;
 
   auto queue = MakeUnique<MainThreadQueueT>(
-      MakeUnique<InnerQueueT>(EventPriority::High),
-      MakeUnique<InnerQueueT>(EventPriority::Input),
-      MakeUnique<InnerQueueT>(EventPriority::Normal),
-      MakeUnique<InnerQueueT>(EventPriority::Idle), do_AddRef(aIdlePeriod));
+      MakeUnique<InnerQueueT>(EventQueuePriority::High),
+      MakeUnique<InnerQueueT>(EventQueuePriority::Input),
+      MakeUnique<InnerQueueT>(EventQueuePriority::Normal),
+      MakeUnique<InnerQueueT>(EventQueuePriority::DeferredTimers),
+      MakeUnique<InnerQueueT>(EventQueuePriority::Idle),
+      do_AddRef(aIdlePeriod));
 
   MainThreadQueueT* prioritized = queue.get();
 

@@ -12,7 +12,7 @@ function awaitAndClosePrompt() {
     Services.obs.addObserver(onDialogShown, "tabmodal-dialog-loaded");
   });
 }
-
+/* global messageManager */
 let lastMessageReceived = "";
 function waitForMessage(message) {
   return new Promise((resolve, reject) => {

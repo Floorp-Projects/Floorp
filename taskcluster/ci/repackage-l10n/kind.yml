@@ -22,7 +22,7 @@ only-for-build-platforms:
     - macosx64-nightly/opt
     - win32-nightly/opt
     - win64-nightly/opt
-    - win64-aarch64-msvc-nightly/opt
+    - win64-aarch64-nightly/opt
     - linux-devedition-nightly/opt
     - linux64-devedition-nightly/opt
     - macosx64-devedition-nightly/opt
@@ -42,11 +42,17 @@ job-template:
                 macosx64-.*:
                     - repackage/base.py
                     - repackage/osx_signed.py
-                win32-.*:
+                win32\b.*:
                     - repackage/base.py
+                    - repackage/win32_sfx_stub.py
                     - repackage/win32_signed.py
-                win64-.*:
+                win64(?!-aarch64)\b.*:
                     - repackage/base.py
+                    - repackage/win32_sfx_stub.py
+                    - repackage/win64_signed.py
+                win64-aarch64\b.*:
+                    - repackage/base.py
+                    - repackage/win64-aarch64_sfx_stub.py
                     - repackage/win64_signed.py
     package-formats:
         by-release-type:

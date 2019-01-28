@@ -15,6 +15,7 @@ class SVGAngle;
 
 namespace mozilla {
 namespace dom {
+class SVGSVGElement;
 
 class DOMSVGAngle final : public nsWrapperCache {
  public:
@@ -33,7 +34,7 @@ class DOMSVGAngle final : public nsWrapperCache {
    * Ctor for creating the objects returned by SVGSVGElement.createSVGAngle(),
    * which do not initially belong to an attribute.
    */
-  explicit DOMSVGAngle(SVGElement* aSVGElement);
+  explicit DOMSVGAngle(SVGSVGElement* aSVGElement);
 
   // WebIDL
   SVGElement* GetParentObject() { return mSVGElement; }

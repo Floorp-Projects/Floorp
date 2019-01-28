@@ -164,10 +164,11 @@ var UrlbarTokenizer = {
   },
 
   /**
-   * Tokenizes the searchString from a QueryContext.
-   * @param {object} queryContext
-   *        The QueryContext object to tokenize
-   * @returns {object} the same QueryContext object with a new tokens property.
+   * Tokenizes the searchString from a UrlbarQueryContext.
+   * @param {UrlbarQueryContext} queryContext
+   *        The query context object to tokenize
+   * @returns {UrlbarQueryContext} the same query context object with a new
+   *          tokens property.
    */
   tokenize(queryContext) {
     logger.info("Tokenizing", queryContext);

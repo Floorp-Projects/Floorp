@@ -5,21 +5,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGIntegerPair.h"
-#include "nsSVGAttrTearoffTable.h"
+
 #include "nsCharSeparatedTokenizer.h"
 #include "nsError.h"
 #include "nsMathUtils.h"
-#include "nsSMILValue.h"
-#include "SVGContentUtils.h"
+#include "SVGAttrTearoffTable.h"
 #include "SVGIntegerPairSMILType.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/SVGContentUtils.h"
 
 using namespace mozilla::dom;
 
 namespace mozilla {
 
-static nsSVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
+static SVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
     sSVGFirstAnimatedIntegerTearoffTable;
-static nsSVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
+static SVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
     sSVGSecondAnimatedIntegerTearoffTable;
 
 /* Implementation */
@@ -161,13 +162,13 @@ SVGIntegerPair::DOMAnimatedInteger::~DOMAnimatedInteger() {
   }
 }
 
-UniquePtr<nsISMILAttr> SVGIntegerPair::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGIntegerPair::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILIntegerPair>(this, aSVGElement);
 }
 
 nsresult SVGIntegerPair::SMILIntegerPair::ValueFromString(
     const nsAString& aStr, const dom::SVGAnimationElement* /*aSrcElement*/,
-    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
+    SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   int32_t values[2];
 
   nsresult rv = ParseIntegerOptionalInteger(aStr, values);
@@ -175,7 +176,7 @@ nsresult SVGIntegerPair::SMILIntegerPair::ValueFromString(
     return rv;
   }
 
-  nsSMILValue val(SVGIntegerPairSMILType::Singleton());
+  SMILValue val(SVGIntegerPairSMILType::Singleton());
   val.mU.mIntPair[0] = values[0];
   val.mU.mIntPair[1] = values[1];
   aValue = val;
@@ -184,8 +185,8 @@ nsresult SVGIntegerPair::SMILIntegerPair::ValueFromString(
   return NS_OK;
 }
 
-nsSMILValue SVGIntegerPair::SMILIntegerPair::GetBaseValue() const {
-  nsSMILValue val(SVGIntegerPairSMILType::Singleton());
+SMILValue SVGIntegerPair::SMILIntegerPair::GetBaseValue() const {
+  SMILValue val(SVGIntegerPairSMILType::Singleton());
   val.mU.mIntPair[0] = mVal->mBaseVal[0];
   val.mU.mIntPair[1] = mVal->mBaseVal[1];
   return val;
@@ -201,7 +202,7 @@ void SVGIntegerPair::SMILIntegerPair::ClearAnimValue() {
 }
 
 nsresult SVGIntegerPair::SMILIntegerPair::SetAnimValue(
-    const nsSMILValue& aValue) {
+    const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SVGIntegerPairSMILType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SVGIntegerPairSMILType::Singleton()) {

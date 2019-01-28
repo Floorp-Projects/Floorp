@@ -29,11 +29,11 @@ function run_test()
 function run_test_number(num)
 {
   testPath = testPathBase + num;
-  httpserver.registerPathHandler(testPath, eval("handler" + num));
+  httpserver.registerPathHandler(testPath, this["handler" + num]);
 
   var channel = setupChannel(testPath);
   flags = test_flags[num];   // OK if flags undefined for test
-  channel.asyncOpen2(new ChannelListener(eval("completeTest" + num),
+  channel.asyncOpen2(new ChannelListener(this["completeTest" + num],
                                          channel, flags));
 }
 

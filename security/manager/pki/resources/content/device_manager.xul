@@ -22,56 +22,47 @@
 
 <script type="application/javascript" src="chrome://pippki/content/device_manager.js"/>
 
-<grid flex="1" style="margin:5px">
-  <columns>
-    <column flex="1"/>
-    <column flex="3"/>
-    <column/>
-  </columns>
-  <rows>
-    <row flex="1">
-      <vbox> <!-- List of devices -->
-        <tree id="device_tree" seltype="single"
-              onselect="enableButtons();" hidecolumnpicker="true"
-              flex="1" style="min-width: 15em">
-          <treecols>
-            <treecol id="deviceCol" flex="1" primary="true" data-l10n-id="devmgr-devlist"/>
-          </treecols>
-          <treechildren id="device_list"/>
-        </tree>
-      </vbox> <!-- / List of devices -->
-      <vbox> <!-- Device status -->
-        <tree id="info_tree" seltype="single" hidecolumnpicker="true"
-              flex="1" style="min-width: 10em">
-          <treecols>
-            <treecol id="title1Col" flex="5" primary="true" data-l10n-id="devmgr-header-details"/>
-            <treecol id="title2Col" flex="7" data-l10n-id="devmgr-header-value"/>
-          </treecols>
-          <treechildren id="info_list"/>
-        </tree>
-      </vbox> <!-- / Device status -->
-      <vbox> <!-- Buttons for manipulating devices -->
-        <button id="login_button"
-                data-l10n-id="devmgr-button-login"
-                oncommand="doLogin();" disabled="true"/>
-        <button id="logout_button"
-                data-l10n-id="devmgr-button-logout"
-                oncommand="doLogout();" disabled="true"/>
-        <button id="change_pw_button"
-                data-l10n-id="devmgr-button-changepw"
-                oncommand="changePassword();" disabled="true"/>
-        <button id="load_button"
-                data-l10n-id="devmgr-button-load"
-                oncommand="doLoad();"/>
-        <button id="unload_button"
-                data-l10n-id="devmgr-button-unload"
-                oncommand="doUnload();" disabled="true"/>
-        <button id="fipsbutton"
-                data-l10n-id="devmgr-button-enable-fips"
-                oncommand="toggleFIPS();"/>
-      </vbox> <!-- / Buttons for manipulating devices -->
-    </row>
-  </rows>
-</grid>
+<hbox flex="1" style="margin:5px">
+  <!-- List of devices -->
+  <tree id="device_tree" seltype="single"
+        onselect="enableButtons();" hidecolumnpicker="true"
+        flex="1" style="min-width: 15em">
+    <treecols>
+      <treecol id="deviceCol" flex="1" primary="true" data-l10n-id="devmgr-devlist"/>
+    </treecols>
+    <treechildren id="device_list"/>
+  </tree>
+  <!-- / List of devices -->
+  <!-- Device status -->
+  <tree id="info_tree" seltype="single" hidecolumnpicker="true"
+        flex="3" style="min-width: 10em">
+    <treecols>
+      <treecol id="title1Col" flex="5" primary="true" data-l10n-id="devmgr-header-details"/>
+      <treecol id="title2Col" flex="7" data-l10n-id="devmgr-header-value"/>
+    </treecols>
+    <treechildren id="info_list"/>
+  </tree>
+  <!-- / Device status -->
+  <vbox> <!-- Buttons for manipulating devices -->
+    <button id="login_button"
+            data-l10n-id="devmgr-button-login"
+            oncommand="doLogin();" disabled="true"/>
+    <button id="logout_button"
+            data-l10n-id="devmgr-button-logout"
+            oncommand="doLogout();" disabled="true"/>
+    <button id="change_pw_button"
+            data-l10n-id="devmgr-button-changepw"
+            oncommand="changePassword();" disabled="true"/>
+    <button id="load_button"
+            data-l10n-id="devmgr-button-load"
+            oncommand="doLoad();"/>
+    <button id="unload_button"
+            data-l10n-id="devmgr-button-unload"
+            oncommand="doUnload();" disabled="true"/>
+    <button id="fipsbutton"
+            data-l10n-id="devmgr-button-enable-fips"
+            oncommand="toggleFIPS();"/>
+  </vbox> <!-- / Buttons for manipulating devices -->
+</hbox>
 
 </dialog>

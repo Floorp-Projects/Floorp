@@ -1,11 +1,12 @@
 //! Boxed slices for `PrimaryMap`.
 
-use iter::{Iter, IterMut};
-use keys::Keys;
-use std::marker::PhantomData;
-use std::ops::{Index, IndexMut};
-use std::slice;
-use EntityRef;
+use crate::iter::{Iter, IterMut};
+use crate::keys::Keys;
+use crate::EntityRef;
+use core::marker::PhantomData;
+use core::ops::{Index, IndexMut};
+use core::slice;
+use std::boxed::Box;
 
 /// A slice mapping `K -> V` allocating dense entity references.
 ///
@@ -83,11 +84,6 @@ where
         IterMut::new(self.elems.iter_mut())
     }
 
-    /// Get the key that will be assigned to the next pushed value.
-    pub fn next_key(&self) -> K {
-        K::new(self.elems.len())
-    }
-
     /// Returns the last element that was inserted in the map.
     pub fn last(&self) -> Option<&V> {
         self.elems.last()
@@ -144,7 +140,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use primary::PrimaryMap;
+    use crate::primary::PrimaryMap;
+    use std::vec::Vec;
 
     // `EntityRef` impl for testing.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]

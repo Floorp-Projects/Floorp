@@ -7,16 +7,18 @@
 #ifndef __NS_SVGBOOLEAN_H__
 #define __NS_SVGBOOLEAN_H__
 
-#include "nsCOMPtr.h"
 #include "nsError.h"
-#include "nsISMILAttr.h"
+#include "mozilla/SMILAttr.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 
 class nsAtom;
-class nsSMILValue;
 
 namespace mozilla {
+
+class SMILValue;
+
 namespace dom {
 class SVGAnimationElement;
 class SVGAnimatedBoolean;
@@ -44,7 +46,7 @@ class SVGBoolean {
 
   already_AddRefed<mozilla::dom::SVGAnimatedBoolean> ToDOMAnimatedBoolean(
       SVGElement* aSVGElement);
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   bool mAnimVal;
@@ -53,25 +55,25 @@ class SVGBoolean {
   uint8_t mAttrEnum;  // element specified tracking for attribute
 
  public:
-  struct SMILBool : public nsISMILAttr {
+  struct SMILBool : public SMILAttr {
    public:
     SMILBool(SVGBoolean* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
-    // These will stay alive because a nsISMILAttr only lives as long
+    // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     SVGBoolean* mVal;
     SVGElement* mSVGElement;
 
-    // nsISMILAttr methods
+    // SMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement,
-        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-    virtual nsSMILValue GetBaseValue() const override;
+        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
+        bool& aPreventCachingOfSandwich) const override;
+    virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 };
 

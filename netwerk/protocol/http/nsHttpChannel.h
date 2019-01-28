@@ -162,6 +162,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD AsyncOpen2(nsIStreamListener *aListener) override;
   // nsIHttpChannel
   NS_IMETHOD GetEncodedBodySize(uint64_t *aEncodedBodySize) override;
+  NS_IMETHOD SwitchProcessTo(mozilla::dom::Promise *aTabParent,
+                             uint64_t aIdentifier) override;
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey) override;
   NS_IMETHOD SetChannelIsForDownload(bool aChannelIsForDownload) override;
@@ -339,6 +341,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   MOZ_MUST_USE nsresult ContinueProcessResponse2(nsresult);
   void UpdateCacheDisposition(bool aSuccessfulReval, bool aPartialContentUsed);
   MOZ_MUST_USE nsresult ContinueProcessResponse3(nsresult);
+  MOZ_MUST_USE nsresult ContinueProcessResponse4(nsresult);
   MOZ_MUST_USE nsresult ProcessNormal();
   MOZ_MUST_USE nsresult ContinueProcessNormal(nsresult);
   void ProcessAltService();
@@ -362,6 +365,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   MOZ_MUST_USE nsresult ContinueOnStartRequest1(nsresult);
   MOZ_MUST_USE nsresult ContinueOnStartRequest2(nsresult);
   MOZ_MUST_USE nsresult ContinueOnStartRequest3(nsresult);
+  MOZ_MUST_USE nsresult ContinueOnStartRequest4(nsresult);
 
   void OnClassOfServiceUpdated();
 

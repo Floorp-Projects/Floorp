@@ -53,6 +53,12 @@ class PopupBlocker final {
   static PopupBlocker::PopupControlState GetEventPopupControlState(
       WidgetEvent* aEvent, Event* aDOMEvent = nullptr);
 
+  // Returns if a external protocol iframe is allowed.
+  static bool ConsumeTimerTokenForExternalProtocolIframe();
+
+  // Returns when the last external protocol iframe has been allowed.
+  static TimeStamp WhenLastExternalProtocolIframeAllowed();
+
   static void Initialize();
   static void Shutdown();
 };

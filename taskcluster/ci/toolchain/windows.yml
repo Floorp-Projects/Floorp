@@ -159,12 +159,12 @@ win64-rust-nightly:
         ]
         toolchain-artifact: public/build/rustc.tar.bz2
 
-win64-aarch64-rust-nightly:
-    description: "rust nightly repack with aarch64 support"
+win64-aarch64-rust:
+    description: "rust repack with aarch64 support"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TW64(rust-aarch64-nightly)
+        symbol: TW64(rust-aarch64)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -176,7 +176,7 @@ win64-aarch64-rust-nightly:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', 'nightly-2018-11-08',
+            '--channel', '1.32.0',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'aarch64-pc-windows-msvc',

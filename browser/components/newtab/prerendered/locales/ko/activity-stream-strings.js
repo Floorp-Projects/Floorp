@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "알겠습니다.",
   "prefs_home_header": "Firefox 홈 콘텐츠",
   "prefs_home_description": "Firefox 홈 화면에 나올 콘텐츠를 선택하세요.",
-  "prefs_content_discovery_header": "Firefox Home",
+  "prefs_content_discovery_header": "Firefox 홈",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
   "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} 행",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "개인 정보 보호 정책",
   "firstrun_continue_to_login": "계속",
   "firstrun_skip_login": "단계 건너뛰기",
-  "context_menu_title": "메뉴 열기",
-  "pocket_learn_more": "자세히 보기"
+  "context_menu_title": "메뉴 열기"
 };

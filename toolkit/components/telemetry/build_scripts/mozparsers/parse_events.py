@@ -124,6 +124,7 @@ def type_check_event_fields(identifier, name, definition):
         'expiry_version': AtomicTypeChecker(basestring),
         'extra_keys': DictTypeChecker(basestring, basestring),
         'products': ListTypeChecker(basestring),
+        'operating_systems': ListTypeChecker(basestring),
     }
     ALL_FIELDS = REQUIRED_FIELDS.copy()
     ALL_FIELDS.update(OPTIONAL_FIELDS)
@@ -202,6 +203,13 @@ class EventData:
                 ParserError(self.identifier + ': Unknown value in products: ' +
                             product).handle_later()
 
+        # Check operating_systems.
+        operating_systems = definition.get('operating_systems', [])
+        for operating_system in operating_systems:
+            if not utils.is_valid_os(operating_system):
+                ParserError(self.identifier + ': Unknown value in operating_systems: ' +
+                            operating_system).handle_later()
+
         # Check extra_keys.
         extra_keys = definition.get('extra_keys', {})
         if len(extra_keys.keys()) > MAX_EXTRA_KEYS_COUNT:
@@ -276,8 +284,22 @@ class EventData:
         return self._definition.get('expiry_version')
 
     @property
-    def cpp_guard(self):
-        return self._definition.get('cpp_guard')
+    def operating_systems(self):
+        """Get the list of operating systems to record data on"""
+        return self._definition.get('operating_systems', ["all"])
+
+    def record_on_os(self, target_os):
+        """Check if this probe should be recorded on the passed os."""
+        os = self.operating_systems
+        if "all" in os:
+            return True
+
+        canonical_os = utils.canonical_os(target_os)
+
+        if "unix" in os and canonical_os in utils.UNIX_LIKE_OS:
+            return True
+
+        return canonical_os in os
 
     @property
     def enum_labels(self):

@@ -143,11 +143,10 @@ class FunctionCompiler {
 
  public:
   FunctionCompiler(const ModuleEnvironment& env, Decoder& decoder,
-                   ExclusiveDeferredValidationState& dvs,
                    const FuncCompileInput& func, const ValTypeVector& locals,
                    MIRGenerator& mirGen)
       : env_(env),
-        iter_(env, decoder, dvs),
+        iter_(env, decoder),
         func_(func),
         locals_(locals),
         lastReadCallSite_(0),
@@ -2966,9 +2965,9 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
   return true;
 }
 
-static bool EmitMemOrTableDrop(FunctionCompiler& f, bool isMem) {
+static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
   uint32_t segIndexVal = 0;
-  if (!f.iter().readMemOrTableDrop(isMem, &segIndexVal)) {
+  if (!f.iter().readDataOrElemDrop(isData, &segIndexVal)) {
     return false;
   }
 
@@ -2998,7 +2997,7 @@ static bool EmitMemOrTableDrop(FunctionCompiler& f, bool isMem) {
   }
 
   SymbolicAddress callee =
-      isMem ? SymbolicAddress::MemDrop : SymbolicAddress::TableDrop;
+      isData ? SymbolicAddress::DataDrop : SymbolicAddress::ElemDrop;
   MDefinition* ret;
   if (!f.builtinInstanceMethodCall(callee, args, ValType::I32, &ret)) {
     return false;
@@ -3692,16 +3691,16 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 #ifdef ENABLE_WASM_BULKMEM_OPS
           case uint16_t(MiscOp::MemCopy):
             CHECK(EmitMemOrTableCopy(f, /*isMem=*/true));
-          case uint16_t(MiscOp::MemDrop):
-            CHECK(EmitMemOrTableDrop(f, /*isMem=*/true));
+          case uint16_t(MiscOp::DataDrop):
+            CHECK(EmitDataOrElemDrop(f, /*isData=*/true));
           case uint16_t(MiscOp::MemFill):
             CHECK(EmitMemFill(f));
           case uint16_t(MiscOp::MemInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/true));
           case uint16_t(MiscOp::TableCopy):
             CHECK(EmitMemOrTableCopy(f, /*isMem=*/false));
-          case uint16_t(MiscOp::TableDrop):
-            CHECK(EmitMemOrTableDrop(f, /*isMem=*/false));
+          case uint16_t(MiscOp::ElemDrop):
+            CHECK(EmitDataOrElemDrop(f, /*isData=*/false));
           case uint16_t(MiscOp::TableInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
 #endif
@@ -4013,7 +4012,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 bool wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
                                const FuncCompileInputVector& inputs,
                                CompiledCode* code,
-                               ExclusiveDeferredValidationState& dvs,
                                UniqueChars* error) {
   MOZ_ASSERT(env.tier() == Tier::Optimized);
   MOZ_ASSERT(env.optimizedBackend() == OptimizedBackend::Ion);
@@ -4054,7 +4052,7 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
 
     // Build MIR graph
     {
-      FunctionCompiler f(env, d, dvs, func, locals, mir);
+      FunctionCompiler f(env, d, func, locals, mir);
       if (!f.init()) {
         return false;
       }

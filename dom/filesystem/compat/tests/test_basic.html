@@ -427,6 +427,61 @@ function test_webkitRelativePath() {
   });
 }
 
+function test_deprecatedCallbacks() {
+  try {
+    fileEntry.file({ handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "fileEntry.file() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "fileEntry.file() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  try {
+    fileEntry.getParent({ handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "fileEntry.getParent() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "fileEntry.getParent() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  try {
+    directoryEntry.getFile("file.txt", {}, { handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "directoryEntry.getFile() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "directoryEntry.getFile() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  try {
+    directoryEntry.getDirectory("foo", { create: true }, { handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "directoryEntry.getDirectory() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "directoryEntry.getDirectory() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  try {
+    directoryEntry.getParent({ handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "directoryEntry.getParent() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "directoryEntry.getParent() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  let reader = directoryEntry.createReader();
+  ok(reader, "We have a DirectoryReader");
+
+  try {
+    reader.readEntries({ handleEvent: _ => { ok(false, "This function should not be called!"); }});
+    ok(false, "reader.readEntries() should throw with wrong arguments");
+  } catch (e) {
+    ok(true, "reader.readEntries() should throw with wrong arguments");
+    is(e.name, "TypeError", "Correct exception");
+  }
+
+  next();
+}
+
 var tests = [
   setup_tests,
   populate_entries,
@@ -472,6 +527,8 @@ var tests = [
   test_root_getDirectory_deep,
 
   test_webkitRelativePath,
+
+  test_deprecatedCallbacks,
 
   cleanUpTestingFiles,
 ];

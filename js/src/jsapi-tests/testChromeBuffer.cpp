@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/CompilationAndEvaluation.h"
+#include "js/ContextOptions.h"
 #include "jsapi-tests/tests.h"
 
 static TestJSPrincipals system_principals(1);

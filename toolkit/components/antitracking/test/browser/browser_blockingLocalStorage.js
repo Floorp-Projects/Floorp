@@ -34,8 +34,18 @@ AntiTracking.runTest("localStorage and Storage Access API",
     /* import-globals-from storageAccessAPIHelpers.js */
     await callRequestStorageAccess();
 
-    localStorage.foo = 42;
-    ok(true, "LocalStorage is allowed");
+    if (SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT) {
+      try {
+        localStorage.foo = 42;
+        ok(false, "LocalStorage cannot be used!");
+      } catch (e) {
+        ok(true, "LocalStorage cannot be used!");
+        is(e.name, "SecurityError", "We want a security error message.");
+      }
+    } else {
+      localStorage.foo = 42;
+      ok(true, "LocalStorage is allowed");
+    }
   },
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */

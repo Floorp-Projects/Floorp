@@ -60,7 +60,7 @@
   flex: 1;
 }
 
-.popup-notification-primary-button:not([alone]) {
+.popup-notification-primary-button {
   flex: 0 50%;
 }
 
@@ -70,7 +70,7 @@
 
 .popup-notification-dropmarker {
   flex: none;
-  padding: 0 15px;
+  padding: 0 15px !important;
 }
 
 .popup-notification-dropmarker > .button-box > hbox {

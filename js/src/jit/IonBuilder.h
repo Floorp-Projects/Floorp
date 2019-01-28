@@ -235,7 +235,6 @@ class IonBuilder : public MIRGenerator,
 
   bool invalidatedIdempotentCache();
 
-  bool hasStaticEnvironmentObject(JSObject** pcall);
   AbortReasonOr<Ok> loadSlot(MDefinition* obj, size_t slot, size_t nfixed,
                              MIRType rvalType, BarrierKind barrier,
                              TemporaryTypeSet* types);
@@ -588,7 +587,6 @@ class IonBuilder : public MIRGenerator,
   bool jsop_length_fastPath();
   AbortReasonOr<Ok> jsop_arguments();
   AbortReasonOr<Ok> jsop_arguments_getelem();
-  AbortReasonOr<Ok> jsop_runonce();
   AbortReasonOr<Ok> jsop_rest();
   AbortReasonOr<Ok> jsop_not();
   AbortReasonOr<Ok> jsop_envcallee();
@@ -1030,8 +1028,6 @@ class IonBuilder : public MIRGenerator,
   TemporaryTypeSet* typeArray;
   uint32_t typeArrayHint;
   uint32_t* bytecodeTypeMap;
-
-  EnvironmentCoordinateNameCache envCoordinateNameCache;
 
   jsbytecode* pc;
   MBasicBlock* current;

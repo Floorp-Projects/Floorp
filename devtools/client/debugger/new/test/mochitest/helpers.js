@@ -1099,8 +1099,8 @@ const selectors = {
   scopeNode: i => `.scopes-list .tree-node:nth-child(${i}) .object-label`,
   scopeValue: i =>
     `.scopes-list .tree-node:nth-child(${i}) .object-delimiter + *`,
-  frame: i => `.frames ul li:nth-child(${i})`,
-  frames: ".frames ul li",
+  frame: i => `.frames [role="list"] [role="listitem"]:nth-child(${i})`,
+  frames: `.frames [role="list"] [role="listitem"]`,
   gutter: i => `.CodeMirror-code *:nth-child(${i}) .CodeMirror-linenumber`,
   // These work for bobth the breakpoint listing and gutter marker
   gutterContextMenu: {

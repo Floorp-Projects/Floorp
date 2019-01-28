@@ -42,9 +42,7 @@ void InitThreading() {
 
   static BOOL multithreaded = [NSThread isMultiThreaded];
   if (!multithreaded) {
-    [NSThread detachNewThreadSelector:@selector(noOp)
-                             toTarget:[NoOp class]
-                           withObject:nil];
+    [NSThread detachNewThreadSelector:@selector(noOp) toTarget:[NoOp class] withObject:nil];
     multithreaded = YES;
 
     DCHECK([NSThread isMultiThreaded]);
@@ -60,8 +58,7 @@ void PlatformThread::SetName(const char* name) {
   int (*dynamic_pthread_setname_np)(const char*);
   *reinterpret_cast<void**>(&dynamic_pthread_setname_np) =
       dlsym(RTLD_DEFAULT, "pthread_setname_np");
-  if (!dynamic_pthread_setname_np)
-    return;
+  if (!dynamic_pthread_setname_np) return;
 
   // Mac OS X does not expose the length limit of the name, so
   // hardcode it.
@@ -74,4 +71,3 @@ void PlatformThread::SetName(const char* name) {
   // Checked against the bionic implementation in bionic/libc/bionic/pthread.c
   dynamic_pthread_setname_np(shortened_name.c_str());
 }
-

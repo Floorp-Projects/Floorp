@@ -903,6 +903,27 @@ describe("ASRouter", () => {
         assert.calledOnce(MessageLoaderUtils.installAddonFromURL);
         assert.calledWithExactly(MessageLoaderUtils.installAddonFromURL, msg.target.browser, "foo.com");
       });
+      it("should add/remove observers for `webextension-install-notify`", async () => {
+        sandbox.spy(global.Services.obs, "addObserver");
+        sandbox.spy(global.Services.obs, "removeObserver");
+        sandbox.spy(Router, "blockMessageById");
+
+        sandbox.stub(MessageLoaderUtils, "installAddonFromURL").resolves(null);
+        const msg = fakeExecuteUserAction({type: "INSTALL_ADDON_FROM_URL", data: {url: "foo.com"}});
+
+        await Router.onMessage(msg);
+
+        assert.calledOnce(global.Services.obs.addObserver);
+
+        const [cb] = global.Services.obs.addObserver.firstCall.args;
+
+        cb();
+
+        assert.calledOnce(global.Services.obs.removeObserver);
+        assert.calledOnce(channel.sendAsyncMessage);
+        assert.calledOnce(Router.blockMessageById);
+        assert.calledWithExactly(Router.blockMessageById, "RETURN_TO_AMO_1");
+      });
     });
 
     describe("#dispatch(action, target)", () => {

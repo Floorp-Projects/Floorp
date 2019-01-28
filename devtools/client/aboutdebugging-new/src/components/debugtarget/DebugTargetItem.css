@@ -14,11 +14,11 @@
  */
 .debug-target-item {
   display: grid;
-  grid-template-columns: calc(var(--base-distance) * 9) 1fr max-content;
-  grid-column-gap: calc(var(--base-distance) * 2);
+  grid-template-columns: calc(var(--base-unit) * 9) 1fr max-content;
+  grid-column-gap: calc(var(--base-unit) * 2);
   grid-template-areas: "icon name   action"
                        ".    detail detail";
-  margin-block-end: calc(var(--base-distance) * 4);
+  margin-block-end: calc(var(--base-unit) * 4);
 }
 
 .debug-target-item__icon {
@@ -30,7 +30,7 @@
   grid-area: name;
   /* so as to ellipsis */
   min-width: 0;
-  font-size: calc(var(--base-distance) * 5);
+  font-size: calc(var(--base-unit) * 5);
 }
 
 .debug-target-item__action {

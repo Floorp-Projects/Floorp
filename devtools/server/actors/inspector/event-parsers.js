@@ -7,6 +7,7 @@
 
 "use strict";
 
+const { Cu } = require("chrome");
 const Services = require("Services");
 
 // eslint-disable-next-line
@@ -15,6 +16,60 @@ const JQUERY_LIVE_REGEX = /return typeof \w+.*.event\.triggered[\s\S]*\.event\.(
 var parsers = [
   {
     id: "jQuery events",
+    hasListeners: function(node) {
+      const global = node.ownerGlobal.wrappedJSObject;
+      const hasJQuery = global.jQuery && global.jQuery.fn && global.jQuery.fn.jquery;
+
+      if (!hasJQuery) {
+        return false;
+      }
+
+      const jQuery = global.jQuery;
+      const handlers = [];
+
+      // jQuery 1.2+
+      const data = jQuery._data || jQuery.data;
+      if (data) {
+        const eventsObj = data(node, "events");
+        for (const type in eventsObj) {
+          const events = eventsObj[type];
+          for (const key in events) {
+            const event = events[key];
+
+            if (node.wrappedJSObject == global.document && event.selector) {
+              continue;
+            }
+
+            if (typeof event === "object" || typeof event === "function") {
+              return true;
+            }
+          }
+        }
+      }
+
+      // JQuery 1.0 & 1.1
+      const entry = jQuery(node)[0];
+      if (!entry) {
+        return handlers;
+      }
+
+      for (const type in entry.events) {
+        const events = entry.events[type];
+        for (const key in events) {
+          const event = events[key];
+
+          if (node.wrappedJSObject == global.document && event.selector) {
+            continue;
+          }
+
+          if (typeof events[key] === "function") {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    },
     getListeners: function(node) {
       const global = node.ownerGlobal.wrappedJSObject;
       const hasJQuery = global.jQuery && global.jQuery.fn && global.jQuery.fn.jquery;
@@ -177,7 +232,7 @@ var parsers = [
       }
 
       for (const listener of listeners) {
-        if (listener.listenerObject && listener.type) {
+        if (isValidDOMListener(listener)) {
           return true;
         }
       }
@@ -192,18 +247,43 @@ var parsers = [
       // been passed we need the window object so we don't need to account for
       // event hoisting here as we did in hasListeners.
 
-      for (const listenerObj of listeners) {
-        const listener = listenerObj.listenerObject;
+      for (const listener of listeners) {
+        if (!isValidDOMListener(listener)) {
+          continue;
+        }
 
-        // If there is no JS event listener skip this.
-        if (!listener || JQUERY_LIVE_REGEX.test(listener.toString())) {
+        // Get the listener object, either a Function or an Object.
+        let obj = listener.listenerObject;
+
+        // Unwrap the listener in order to see content objects.
+        if (Cu.isXrayWrapper(obj)) {
+          obj = listener.listenerObject.wrappedJSObject;
+        }
+
+        let handler = null;
+
+        // An object without a valid handleEvent is not a valid listener.
+        if (typeof obj === "object") {
+          const unwrapped = Cu.isXrayWrapper(obj) ? obj.wrappedJSObject : obj;
+          if (typeof unwrapped.handleEvent === "function") {
+            handler = Cu.unwaiveXrays(unwrapped.handleEvent);
+          }
+        } else if (typeof obj === "function") {
+          // Ignore DOM events used to trigger jQuery events as they are only
+          // useful to the developers of the jQuery library.
+          if (JQUERY_LIVE_REGEX.test(obj.toString())) {
+            continue;
+          }
+          // Otherwise, the other valid listener type is function.
+          handler = obj;
+        } else {
           continue;
         }
 
         const eventInfo = {
-          capturing: listenerObj.capturing,
-          type: listenerObj.type,
-          handler: listener,
+          capturing: listener.capturing,
+          type: listener.type,
+          handler: handler,
         };
 
         handlers.push(eventInfo);
@@ -212,7 +292,6 @@ var parsers = [
       return handlers;
     },
   },
-
   {
     id: "React events",
     hasListeners: function(node) {
@@ -397,6 +476,43 @@ function jQueryLiveGetListeners(node, boolOnEventFound) {
     return false;
   }
   return handlers;
+}
+
+function isValidDOMListener(listener) {
+  // Ignore listeners without a type, e.g.
+  // node.addEventListener("", function() {})
+  if (!listener.type) {
+    return false;
+  }
+
+  // Get the listener object, either a Function or an Object.
+  let obj = listener.listenerObject;
+
+  // Ignore listeners without any listener, e.g.
+  // node.addEventListener("mouseover", null);
+  if (!obj) {
+    return false;
+  }
+
+  // Unwrap the listener in order to see content objects.
+  if (Cu.isXrayWrapper(obj)) {
+    obj = listener.listenerObject.wrappedJSObject;
+  }
+
+  // An object without a valid handleEvent is not a valid listener.
+  if (typeof obj === "object") {
+    const unwrapped = Cu.isXrayWrapper(obj) ? obj.wrappedJSObject : obj;
+    if (typeof unwrapped.handleEvent === "function") {
+      return Cu.unwaiveXrays(unwrapped.handleEvent);
+    }
+    return false;
+  } else if (typeof obj === "function") {
+    if (JQUERY_LIVE_REGEX.test(obj.toString())) {
+      return false;
+    }
+    return obj;
+  }
+  return false;
 }
 
 this.EventParsers = function EventParsers() {

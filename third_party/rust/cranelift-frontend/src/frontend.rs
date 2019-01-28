@@ -1,4 +1,6 @@
 //! A frontend for building Cranelift IR from other languages.
+use crate::ssa::{Block, SSABuilder, SideEffects};
+use crate::variable::Variable;
 use cranelift_codegen::cursor::{Cursor, FuncCursor};
 use cranelift_codegen::entity::{EntitySet, SecondaryMap};
 use cranelift_codegen::ir;
@@ -11,9 +13,7 @@ use cranelift_codegen::ir::{
 };
 use cranelift_codegen::isa::{TargetFrontendConfig, TargetIsa};
 use cranelift_codegen::packed_option::PackedOption;
-use ssa::{Block, SSABuilder, SideEffects};
 use std::vec::Vec;
-use variable::Variable;
 
 /// Structure used for translating a series of functions into Cranelift IR.
 ///
@@ -367,7 +367,10 @@ impl<'a> FunctionBuilder<'a> {
     /// Returns an object with the [`InstBuilder`](../codegen/ir/builder/trait.InstBuilder.html)
     /// trait that allows to conveniently append an instruction to the current `Ebb` being built.
     pub fn ins<'short>(&'short mut self) -> FuncInstBuilder<'short, 'a> {
-        let ebb = self.position.ebb.unwrap();
+        let ebb = self
+            .position
+            .ebb
+            .expect("Please call switch_to_block before inserting instructions");
         FuncInstBuilder::new(self, ebb)
     }
 
@@ -402,6 +405,11 @@ impl<'a> FunctionBuilder<'a> {
     /// parameters. This can be used to set up the ebb parameters for the
     /// entry block.
     pub fn append_ebb_params_for_function_params(&mut self, ebb: Ebb) {
+        debug_assert!(
+            !self.func_ctx.ssa.has_any_predecessors(ebb),
+            "ebb parameters for function parameters should only be added to the entry block"
+        );
+
         // These parameters count as "user" parameters here because they aren't
         // inserted by the SSABuilder.
         let user_param_count = &mut self.func_ctx.ebbs[ebb].user_param_count;
@@ -538,7 +546,7 @@ impl<'a> FunctionBuilder<'a> {
     ///
     /// Useful for debug purposes. Use it with `None` for standard printing.
     // Clippy thinks the lifetime that follows is needless, but rustc needs it
-    #[cfg_attr(feature = "cargo-clippy", allow(needless_lifetimes))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_lifetimes))]
     pub fn display<'b, I: Into<Option<&'b TargetIsa>>>(&'b self, isa: I) -> DisplayFunction {
         self.func.display(isa)
     }
@@ -577,7 +585,7 @@ impl<'a> FunctionBuilder<'a> {
         self.ins().call(libc_memcpy, &[dest, src, size]);
     }
 
-    /// Optimised memcpy for small copys.
+    /// Optimised memcpy for small copies.
     pub fn emit_small_memcpy(
         &mut self,
         config: TargetFrontendConfig,
@@ -590,15 +598,26 @@ impl<'a> FunctionBuilder<'a> {
         // Currently the result of guess work, not actual profiling.
         const THRESHOLD: u64 = 4;
 
+        if size == 0 {
+            return;
+        }
+
         let access_size = greatest_divisible_power_of_two(size);
         assert!(
             access_size.is_power_of_two(),
             "`size` is not a power of two"
         );
         assert!(
-            access_size >= ::std::cmp::min(src_align, dest_align) as u64,
+            access_size >= u64::from(::core::cmp::min(src_align, dest_align)),
             "`size` is smaller than `dest` and `src`'s alignment value."
         );
+
+        let (access_size, int_type) = if access_size <= 8 {
+            (access_size, Type::int((access_size * 8) as u16).unwrap())
+        } else {
+            (8, types::I64)
+        };
+
         let load_and_store_amount = size / access_size;
 
         if load_and_store_amount > THRESHOLD {
@@ -607,7 +626,6 @@ impl<'a> FunctionBuilder<'a> {
             return;
         }
 
-        let int_type = Type::int((access_size * 8) as u16).unwrap();
         let mut flags = MemFlags::new();
         flags.set_aligned();
 
@@ -661,27 +679,37 @@ impl<'a> FunctionBuilder<'a> {
         // Currently the result of guess work, not actual profiling.
         const THRESHOLD: u64 = 4;
 
+        if size == 0 {
+            return;
+        }
+
         let access_size = greatest_divisible_power_of_two(size);
         assert!(
             access_size.is_power_of_two(),
             "`size` is not a power of two"
         );
         assert!(
-            access_size >= buffer_align as u64,
+            access_size >= u64::from(buffer_align),
             "`size` is smaller than `dest` and `src`'s alignment value."
         );
+
+        let (access_size, int_type) = if access_size <= 8 {
+            (access_size, Type::int((access_size * 8) as u16).unwrap())
+        } else {
+            (8, types::I64)
+        };
+
         let load_and_store_amount = size / access_size;
 
         if load_and_store_amount > THRESHOLD {
-            let ch = self.ins().iconst(types::I32, ch as i64);
+            let ch = self.ins().iconst(types::I32, i64::from(ch));
             let size = self.ins().iconst(config.pointer_type(), size as i64);
             self.call_memset(config, buffer, ch, size);
         } else {
             let mut flags = MemFlags::new();
             flags.set_aligned();
 
-            let ch = ch as u64;
-            let int_type = Type::int((access_size * 8) as u16).unwrap();
+            let ch = u64::from(ch);
             let raw_value = if int_type == types::I64 {
                 (ch << 32) | (ch << 16) | (ch << 8) | ch
             } else if int_type == types::I32 {
@@ -749,7 +777,7 @@ impl<'a> FunctionBuilder<'a> {
             "`size` is not a power of two"
         );
         assert!(
-            access_size >= ::std::cmp::min(src_align, dest_align) as u64,
+            access_size >= u64::from(::core::cmp::min(src_align, dest_align)),
             "`size` is smaller than `dest` and `src`'s alignment value."
         );
         let load_and_store_amount = size / access_size;
@@ -819,15 +847,15 @@ impl<'a> FunctionBuilder<'a> {
 #[cfg(test)]
 mod tests {
     use super::greatest_divisible_power_of_two;
+    use crate::frontend::{FunctionBuilder, FunctionBuilderContext};
+    use crate::Variable;
     use cranelift_codegen::entity::EntityRef;
     use cranelift_codegen::ir::types::*;
     use cranelift_codegen::ir::{AbiParam, ExternalName, Function, InstBuilder, Signature};
     use cranelift_codegen::isa::CallConv;
     use cranelift_codegen::settings;
     use cranelift_codegen::verifier::verify_function;
-    use frontend::{FunctionBuilder, FunctionBuilderContext};
     use std::string::ToString;
-    use Variable;
 
     fn sample_function(lazy_seal: bool) {
         let mut sig = Signature::new(CallConv::SystemV);
@@ -934,8 +962,8 @@ mod tests {
 
     #[test]
     fn memcpy() {
+        use core::str::FromStr;
         use cranelift_codegen::{isa, settings};
-        use std::str::FromStr;
 
         let shared_builder = settings::builder();
         let shared_flags = settings::Flags::new(shared_builder);
@@ -995,8 +1023,8 @@ ebb0:
 
     #[test]
     fn small_memcpy() {
+        use core::str::FromStr;
         use cranelift_codegen::{isa, settings};
-        use std::str::FromStr;
 
         let shared_builder = settings::builder();
         let shared_flags = settings::Flags::new(shared_builder);

@@ -275,23 +275,20 @@ def vc_path(c_compiler, toolchain_search_path):
     return os.path.normpath(result)
 
 
-@depends(vc_path, c_compiler)
+@depends(vc_path)
 @checking('for the Debug Interface Access SDK', lambda x: x or 'not found')
 @imports('os')
 @imports(_from='os.path', _import='isdir')
-def dia_sdk_dir(vc_path, c_compiler):
+def dia_sdk_dir(vc_path):
     dia_sdk_dir_env = os.environ.get('DIA_SDK_PATH')
     if dia_sdk_dir_env:
         return os.path.normpath(dia_sdk_dir_env)
 
     if vc_path:
-        if c_compiler.version < '19.10':
-            path = os.path.join(os.path.dirname(vc_path), 'DIA SDK')
-        else:
-            # This would be easier if we had the installationPath that
-            # get_vc_paths works with, since 'DIA SDK' is relative to that.
-            path = os.path.normpath(os.path.join(
-                vc_path, r'..\..\..\..\DIA SDK'))
+        # This would be easier if we had the installationPath that
+        # get_vc_paths works with, since 'DIA SDK' is relative to that.
+        path = os.path.normpath(os.path.join(
+            vc_path, r'..\..\..\..\DIA SDK'))
         if isdir(path):
             return path
 
@@ -336,15 +333,10 @@ set_config('INCLUDE', include_path)
 
 @template
 def lib_path_for(host_or_target):
-    compiler = {
-        host: host_c_compiler,
-        target: c_compiler,
-    }[host_or_target]
-
-    @depends(host_or_target, dependable(host_or_target is host), compiler, vc_path,
+    @depends(host_or_target, dependable(host_or_target is host), vc_path,
              valid_windows_sdk_dir, valid_ucrt_sdk_dir, dia_sdk_dir)
     @imports('os')
-    def lib_path(target, is_host, c_compiler, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
+    def lib_path(target, is_host, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
         if not vc_path:
             return
         sdk_target = {
@@ -367,14 +359,9 @@ def lib_path_for(host_or_target):
         # interpret as a "string continues on next line" indicator, use variable
         # args.
         old_target = (old_target,) if old_target else ()
-        if c_compiler.version < '19.10':
-            # MSVC2015
-            vc_target = old_target
-        else:
-            # MSVC2017 switched to use the same target naming as the sdk.
-            vc_target = (sdk_target,)
 
-        atlmfc_dir = os.path.join(vc_path, 'atlmfc', 'lib', *vc_target)
+        # MSVC2017 switched to use the same target naming as the sdk.
+        atlmfc_dir = os.path.join(vc_path, 'atlmfc', 'lib', sdk_target)
         if not os.path.isdir(atlmfc_dir):
             die('Cannot find the ATL/MFC libraries in the Visual C++ directory '
                 '(%s). Please install them.' % vc_path)
@@ -384,7 +371,7 @@ def lib_path_for(host_or_target):
         if lib_env and not is_host:
             libs.extend(lib_env.split(os.pathsep))
         libs.extend((
-            os.path.join(vc_path, 'lib', *vc_target),
+            os.path.join(vc_path, 'lib', sdk_target),
             atlmfc_dir,
             os.path.join(windows_sdk_dir.lib, 'um', sdk_target),
             os.path.join(ucrt_sdk_dir.lib, 'ucrt', sdk_target),

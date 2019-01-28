@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILINTERVAL_H_
-#define NS_SMILINTERVAL_H_
+#ifndef mozilla_SMILInterval_h
+#define mozilla_SMILInterval_h
 
-#include "nsSMILInstanceTime.h"
+#include "mozilla/SMILInstanceTime.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -19,7 +19,7 @@ namespace mozilla {
 // resolved (i.e. not indefinite or unresolved).
 //
 // For an overview of how this class is related to other SMIL time classes see
-// the documentation in nsSMILTimeValue.h
+// the documentation in SMILTimeValue.h
 
 class SMILInterval {
  public:
@@ -28,23 +28,23 @@ class SMILInterval {
   ~SMILInterval();
   void Unlink(bool aFiltered = false);
 
-  const nsSMILInstanceTime* Begin() const {
+  const SMILInstanceTime* Begin() const {
     MOZ_ASSERT(mBegin && mEnd,
                "Requesting Begin() on un-initialized instance time");
     return mBegin;
   }
-  nsSMILInstanceTime* Begin();
+  SMILInstanceTime* Begin();
 
-  const nsSMILInstanceTime* End() const {
+  const SMILInstanceTime* End() const {
     MOZ_ASSERT(mBegin && mEnd,
                "Requesting End() on un-initialized instance time");
     return mEnd;
   }
-  nsSMILInstanceTime* End();
+  SMILInstanceTime* End();
 
-  void SetBegin(nsSMILInstanceTime& aBegin);
-  void SetEnd(nsSMILInstanceTime& aEnd);
-  void Set(nsSMILInstanceTime& aBegin, nsSMILInstanceTime& aEnd) {
+  void SetBegin(SMILInstanceTime& aBegin);
+  void SetEnd(SMILInstanceTime& aEnd);
+  void Set(SMILInstanceTime& aBegin, SMILInstanceTime& aEnd) {
     SetBegin(aBegin);
     SetEnd(aEnd);
   }
@@ -52,30 +52,30 @@ class SMILInterval {
   void FixBegin();
   void FixEnd();
 
-  typedef nsTArray<RefPtr<nsSMILInstanceTime> > InstanceTimeList;
+  typedef nsTArray<RefPtr<SMILInstanceTime> > InstanceTimeList;
 
-  void AddDependentTime(nsSMILInstanceTime& aTime);
-  void RemoveDependentTime(const nsSMILInstanceTime& aTime);
+  void AddDependentTime(SMILInstanceTime& aTime);
+  void RemoveDependentTime(const SMILInstanceTime& aTime);
   void GetDependentTimes(InstanceTimeList& aTimes);
 
   // Cue for assessing if this interval can be filtered
   bool IsDependencyChainLink() const;
 
  private:
-  RefPtr<nsSMILInstanceTime> mBegin;
-  RefPtr<nsSMILInstanceTime> mEnd;
+  RefPtr<SMILInstanceTime> mBegin;
+  RefPtr<SMILInstanceTime> mEnd;
 
-  // nsSMILInstanceTimes to notify when this interval is changed or deleted.
+  // SMILInstanceTimes to notify when this interval is changed or deleted.
   InstanceTimeList mDependentTimes;
 
   // Indicates if the end points of the interval are fixed or not.
   //
   // Note that this is not the same as having an end point whose TIME is fixed
-  // (i.e. nsSMILInstanceTime::IsFixed() returns true). This is because it is
+  // (i.e. SMILInstanceTime::IsFixed() returns true). This is because it is
   // possible to have an end point with a fixed TIME and yet still update the
-  // end point to refer to a different nsSMILInstanceTime object.
+  // end point to refer to a different SMILInstanceTime object.
   //
-  // However, if mBegin/EndFixed is true, then BOTH the nsSMILInstanceTime
+  // However, if mBegin/EndFixed is true, then BOTH the SMILInstanceTime
   // OBJECT returned for that end point and its TIME value will not change.
   bool mBeginFixed;
   bool mEndFixed;
@@ -83,4 +83,4 @@ class SMILInterval {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILINTERVAL_H_
+#endif  // mozilla_SMILInterval_h

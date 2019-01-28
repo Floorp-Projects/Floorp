@@ -37,7 +37,11 @@ MOZ_PKG_MAC_ICON=$(ABS_DIST)/branding/disk.icns
 MOZ_PKG_MAC_EXTRA=--symlink '/Applications:/ '
 endif
 
-MOZ_SFX_PACKAGE=$(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
+ifeq ($(CPU_ARCH), aarch64)
+MOZ_SFX_PACKAGE=$(topsrcdir)/other-licenses/7zstub/firefox/7zSD.ARM64.sfx
+else
+MOZ_SFX_PACKAGE=$(topsrcdir)/other-licenses/7zstub/firefox/7zSD.Win32.sfx
+endif
 
 # Required for l10n.mk - defines a list of app sub dirs that should
 # be included in langpack xpis.

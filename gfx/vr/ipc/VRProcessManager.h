@@ -6,17 +6,18 @@
 #ifndef GFX_VR_PROCESS_MANAGER_H
 #define GFX_VR_PROCESS_MANAGER_H
 
+#include "VRProcessParent.h"
+
 namespace mozilla {
 namespace gfx {
 
-class VRProcessParent;
 class VRManagerChild;
 class PVRGPUChild;
 class VRChild;
 
 // The VRProcessManager is a singleton responsible for creating VR-bound
 // objects that may live in another process.
-class VRProcessManager final {
+class VRProcessManager final : public VRProcessParent::Listener {
  public:
   static VRProcessManager* Get();
   static void Initialize();
@@ -26,11 +27,13 @@ class VRProcessManager final {
 
   // If not using a VR process, launch a new VR process asynchronously.
   void LaunchVRProcess();
-
   bool CreateGPUBridges(base::ProcessId aOtherProcess,
                         mozilla::ipc::Endpoint<PVRGPUChild>* aOutVRBridge);
 
   VRChild* GetVRChild();
+
+  virtual void OnProcessLaunchComplete(VRProcessParent* aParent) override;
+  virtual void OnProcessUnexpectedShutdown(VRProcessParent* aParent) override;
 
  private:
   VRProcessManager();

@@ -96,15 +96,6 @@ interface ScheduledGCCallback : nsISupports
 };
 
 /**
- * Interface for callback to be passed to Cu.blockThreadedExecution.
- */
-[scriptable, function, uuid(c3b85a5c-c328-47d4-aaaf-384c4ff9d77d)]
-interface nsIBlockThreadedExecutionCallback : nsISupports
-{
-    void callback();
-};
-
-/**
 * interface of Components.utils
 */
 [scriptable, builtinclass, uuid(86003fe3-ee9a-4620-91dc-eef8b1e58815)]
@@ -331,6 +322,12 @@ interface nsIXPCComponents_Utils : nsISupports
      * leaks, and can cause bad things to happen if called.
      */
     void unlinkGhostWindows();
+
+    /*
+     * In an NS_FREE_PERMANENT_DATA build, intentionally leak a C++ object. This
+     * is needed to test leak checking.
+     */
+    void intentionallyLeak();
 
     [implicit_jscontext]
     jsval getJSTestingFunctions();
@@ -671,21 +668,6 @@ interface nsIXPCComponents_Utils : nsISupports
      * same semantics of readUTF8File.
      */
     AUTF8String readUTF8URI(in nsIURI url);
-
-    /**
-     * If the main thread is using any kind of fancy cooperative
-     * scheduling (e.g., Quantum DOM scheduling),
-     * blockThreadedExecution disables it temporarily. The
-     * aBlockedCallback is called when it has been completely disabled
-     * and events are back to running sequentially on a single main
-     * thread. Calling unblockThreadedExecution will re-enable thread
-     * scheduling of the main thread. Multiple calls to
-     * blockThreadedExecution will require the same number of calls to
-     * unblockThreadedExecution in order to resume cooperative
-     * scheduling.
-     */
-    void blockThreadedExecution(in nsIBlockThreadedExecutionCallback aBlockedCallback);
-    void unblockThreadedExecution();
 
     /* Give a directive to the record/replay system. */
     void recordReplayDirective(in long directive);

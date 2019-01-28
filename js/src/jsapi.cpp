@@ -55,6 +55,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
+#include "js/ContextOptions.h"  // JS::ContextOptions{,Ref}
 #include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/Initialization.h"
@@ -704,6 +705,10 @@ JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
     AutoRealmUnchecked ar(cx, origobj->nonCCWRealm());
     JSObject::swap(cx, origobj, target);
     newIdentity = origobj;
+
+    // |origobj| might be gray so unmark it to avoid returning a possibly-gray
+    // object.
+    JS::ExposeObjectToActiveJS(newIdentity);
   } else if (WrapperMap::Ptr p = destination->lookupWrapper(origv)) {
     // There might already be a wrapper for the original object in
     // the new compartment. If there is, we use its identity and swap
@@ -1171,10 +1176,10 @@ JS_PUBLIC_API void JS::RunIdleTimeGCTask(JSRuntime* rt) {
   }
 }
 
-JS_PUBLIC_API void JS_GC(JSContext* cx) {
+JS_PUBLIC_API void JS_GC(JSContext* cx, JS::GCReason reason) {
   AssertHeapIsIdle();
   JS::PrepareForFullGC(cx);
-  cx->runtime()->gc.gc(GC_NORMAL, JS::GCReason::API);
+  cx->runtime()->gc.gc(GC_NORMAL, reason);
 }
 
 JS_PUBLIC_API void JS_MaybeGC(JSContext* cx) {
@@ -3422,6 +3427,9 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   hasIntroductionInfo = rhs.hasIntroductionInfo;
   isProbablySystemCode = rhs.isProbablySystemCode;
   hideScriptFromDebugger = rhs.hideScriptFromDebugger;
+#ifdef ENABLE_BIGINT
+  bigIntEnabledOption = rhs.bigIntEnabledOption;
+#endif
 };
 
 void JS::ReadOnlyCompileOptions::copyPODOptions(
@@ -3548,6 +3556,9 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
   }
   throwOnAsmJSValidationFailureOption =
       cx->options().throwOnAsmJSValidationFailure();
+#ifdef ENABLE_BIGINT
+  bigIntEnabledOption = cx->realm()->creationOptions().getBigIntEnabled();
+#endif
 }
 
 CompileOptions& CompileOptions::setIntroductionInfoToCaller(

@@ -69,9 +69,7 @@ nsCocoaUtils::PromiseArray nsCocoaUtils::sVideoCapturePromises;
 nsCocoaUtils::PromiseArray nsCocoaUtils::sAudioCapturePromises;
 StaticMutex nsCocoaUtils::sMediaCaptureMutex;
 
-static float
-MenuBarScreenHeight()
-{
+static float MenuBarScreenHeight() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   NSArray* allScreens = [NSScreen screens];
@@ -84,34 +82,23 @@ MenuBarScreenHeight()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0.0);
 }
 
-float
-nsCocoaUtils::FlippedScreenY(float y)
-{
-  return MenuBarScreenHeight() - y;
-}
+float nsCocoaUtils::FlippedScreenY(float y) { return MenuBarScreenHeight() - y; }
 
-NSRect nsCocoaUtils::GeckoRectToCocoaRect(const DesktopIntRect &geckoRect)
-{
+NSRect nsCocoaUtils::GeckoRectToCocoaRect(const DesktopIntRect& geckoRect) {
   // We only need to change the Y coordinate by starting with the primary screen
   // height and subtracting the gecko Y coordinate of the bottom of the rect.
-  return NSMakeRect(geckoRect.x,
-                    MenuBarScreenHeight() - geckoRect.YMost(),
-                    geckoRect.width,
+  return NSMakeRect(geckoRect.x, MenuBarScreenHeight() - geckoRect.YMost(), geckoRect.width,
                     geckoRect.height);
 }
 
-NSRect
-nsCocoaUtils::GeckoRectToCocoaRectDevPix(const LayoutDeviceIntRect &aGeckoRect,
-                                         CGFloat aBackingScale)
-{
+NSRect nsCocoaUtils::GeckoRectToCocoaRectDevPix(const LayoutDeviceIntRect& aGeckoRect,
+                                                CGFloat aBackingScale) {
   return NSMakeRect(aGeckoRect.x / aBackingScale,
                     MenuBarScreenHeight() - aGeckoRect.YMost() / aBackingScale,
-                    aGeckoRect.width / aBackingScale,
-                    aGeckoRect.height / aBackingScale);
+                    aGeckoRect.width / aBackingScale, aGeckoRect.height / aBackingScale);
 }
 
-DesktopIntRect nsCocoaUtils::CocoaRectToGeckoRect(const NSRect &cocoaRect)
-{
+DesktopIntRect nsCocoaUtils::CocoaRectToGeckoRect(const NSRect& cocoaRect) {
   // We only need to change the Y coordinate by starting with the primary screen
   // height and subtracting both the cocoa y origin and the height of the
   // cocoa rect.
@@ -123,37 +110,33 @@ DesktopIntRect nsCocoaUtils::CocoaRectToGeckoRect(const NSRect &cocoaRect)
   return rect;
 }
 
-LayoutDeviceIntRect nsCocoaUtils::CocoaRectToGeckoRectDevPix(
-  const NSRect& aCocoaRect, CGFloat aBackingScale)
-{
+LayoutDeviceIntRect nsCocoaUtils::CocoaRectToGeckoRectDevPix(const NSRect& aCocoaRect,
+                                                             CGFloat aBackingScale) {
   LayoutDeviceIntRect rect;
   rect.x = NSToIntRound(aCocoaRect.origin.x * aBackingScale);
-  rect.y = NSToIntRound(FlippedScreenY(aCocoaRect.origin.y + aCocoaRect.size.height) * aBackingScale);
+  rect.y =
+      NSToIntRound(FlippedScreenY(aCocoaRect.origin.y + aCocoaRect.size.height) * aBackingScale);
   rect.width = NSToIntRound((aCocoaRect.origin.x + aCocoaRect.size.width) * aBackingScale) - rect.x;
   rect.height = NSToIntRound(FlippedScreenY(aCocoaRect.origin.y) * aBackingScale) - rect.y;
   return rect;
 }
 
-NSPoint nsCocoaUtils::ScreenLocationForEvent(NSEvent* anEvent)
-{
+NSPoint nsCocoaUtils::ScreenLocationForEvent(NSEvent* anEvent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   // Don't trust mouse locations of mouse move events, see bug 443178.
-  if (!anEvent || [anEvent type] == NSMouseMoved)
-    return [NSEvent mouseLocation];
+  if (!anEvent || [anEvent type] == NSMouseMoved) return [NSEvent mouseLocation];
 
   // Pin momentum scroll events to the location of the last user-controlled
   // scroll event.
-  if (IsMomentumScrollEvent(anEvent))
-    return ChildViewMouseTracker::sLastScrollEventScreenLocation;
+  if (IsMomentumScrollEvent(anEvent)) return ChildViewMouseTracker::sLastScrollEventScreenLocation;
 
   return nsCocoaUtils::ConvertPointToScreen([anEvent window], [anEvent locationInWindow]);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakePoint(0.0, 0.0));
 }
 
-BOOL nsCocoaUtils::IsEventOverWindow(NSEvent* anEvent, NSWindow* aWindow)
-{
+BOOL nsCocoaUtils::IsEventOverWindow(NSEvent* anEvent, NSWindow* aWindow) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   return NSPointInRect(ScreenLocationForEvent(anEvent), [aWindow frame]);
@@ -161,8 +144,7 @@ BOOL nsCocoaUtils::IsEventOverWindow(NSEvent* anEvent, NSWindow* aWindow)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
-NSPoint nsCocoaUtils::EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow)
-{
+NSPoint nsCocoaUtils::EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   return nsCocoaUtils::ConvertPointFromScreen(aWindow, ScreenLocationForEvent(anEvent));
@@ -178,34 +160,34 @@ NSPoint nsCocoaUtils::EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow
 - (NSEventPhase)momentumPhase;
 @end
 
-NSEventPhase nsCocoaUtils::EventPhase(NSEvent* aEvent)
-{
+NSEventPhase nsCocoaUtils::EventPhase(NSEvent* aEvent) {
   if ([aEvent respondsToSelector:@selector(phase)]) {
     return [aEvent phase];
   }
   return NSEventPhaseNone;
 }
 
-NSEventPhase nsCocoaUtils::EventMomentumPhase(NSEvent* aEvent)
-{
+NSEventPhase nsCocoaUtils::EventMomentumPhase(NSEvent* aEvent) {
   if ([aEvent respondsToSelector:@selector(momentumPhase)]) {
     return [aEvent momentumPhase];
   }
   if ([aEvent respondsToSelector:@selector(_scrollPhase)]) {
     switch ([aEvent _scrollPhase]) {
-      case 1: return NSEventPhaseBegan;
-      case 2: return NSEventPhaseChanged;
-      case 3: return NSEventPhaseEnded;
-      default: return NSEventPhaseNone;
+      case 1:
+        return NSEventPhaseBegan;
+      case 2:
+        return NSEventPhaseChanged;
+      case 3:
+        return NSEventPhaseEnded;
+      default:
+        return NSEventPhaseNone;
     }
   }
   return NSEventPhaseNone;
 }
 
-BOOL nsCocoaUtils::IsMomentumScrollEvent(NSEvent* aEvent)
-{
-  return [aEvent type] == NSScrollWheel &&
-    EventMomentumPhase(aEvent) != NSEventPhaseNone;
+BOOL nsCocoaUtils::IsMomentumScrollEvent(NSEvent* aEvent) {
+  return [aEvent type] == NSScrollWheel && EventMomentumPhase(aEvent) != NSEventPhaseNone;
 }
 
 @interface NSEvent (HasPreciseScrollingDeltas)
@@ -215,8 +197,7 @@ BOOL nsCocoaUtils::IsMomentumScrollEvent(NSEvent* aEvent)
 - (EventRef)_eventRef;
 @end
 
-BOOL nsCocoaUtils::HasPreciseScrollingDeltas(NSEvent* aEvent)
-{
+BOOL nsCocoaUtils::HasPreciseScrollingDeltas(NSEvent* aEvent) {
   if ([aEvent respondsToSelector:@selector(hasPreciseScrollingDeltas)]) {
     return [aEvent hasPreciseScrollingDeltas];
   }
@@ -237,15 +218,13 @@ BOOL nsCocoaUtils::HasPreciseScrollingDeltas(NSEvent* aEvent)
 - (CGFloat)scrollingDeltaY;
 @end
 
-void nsCocoaUtils::GetScrollingDeltas(NSEvent* aEvent, CGFloat* aOutDeltaX, CGFloat* aOutDeltaY)
-{
+void nsCocoaUtils::GetScrollingDeltas(NSEvent* aEvent, CGFloat* aOutDeltaX, CGFloat* aOutDeltaY) {
   if ([aEvent respondsToSelector:@selector(scrollingDeltaX)]) {
     *aOutDeltaX = [aEvent scrollingDeltaX];
     *aOutDeltaY = [aEvent scrollingDeltaY];
     return;
   }
-  if ([aEvent respondsToSelector:@selector(deviceDeltaX)] &&
-      HasPreciseScrollingDeltas(aEvent)) {
+  if ([aEvent respondsToSelector:@selector(deviceDeltaX)] && HasPreciseScrollingDeltas(aEvent)) {
     // Calling deviceDeltaX/Y on those events that do not contain pixel
     // scrolling information triggers a Cocoa assertion and an
     // Objective-C NSInternalInconsistencyException.
@@ -261,17 +240,14 @@ void nsCocoaUtils::GetScrollingDeltas(NSEvent* aEvent, CGFloat* aOutDeltaX, CGFl
   *aOutDeltaY = [aEvent deltaY] * lineDeltaPixels;
 }
 
-BOOL nsCocoaUtils::EventHasPhaseInformation(NSEvent* aEvent)
-{
+BOOL nsCocoaUtils::EventHasPhaseInformation(NSEvent* aEvent) {
   if (![aEvent respondsToSelector:@selector(phase)]) {
     return NO;
   }
-  return EventPhase(aEvent) != NSEventPhaseNone ||
-         EventMomentumPhase(aEvent) != NSEventPhaseNone;
+  return EventPhase(aEvent) != NSEventPhaseNone || EventMomentumPhase(aEvent) != NSEventPhaseNone;
 }
 
-void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide)
-{
+void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Keep track of how many hiding requests have been made, so that they can
@@ -282,90 +258,86 @@ void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide)
   NS_ASSERTION(sHiddenCount >= 0, "Unbalanced HideMenuAndDockForWindow calls");
 
   NSApplicationPresentationOptions options =
-    sHiddenCount <= 0 ? NSApplicationPresentationDefault :
-    NSApplicationPresentationHideDock | NSApplicationPresentationHideMenuBar;
+      sHiddenCount <= 0 ? NSApplicationPresentationDefault
+                        : NSApplicationPresentationHideDock | NSApplicationPresentationHideMenuBar;
   [NSApp setPresentationOptions:options];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
-nsIWidget* nsCocoaUtils::GetHiddenWindowWidget()
-{
+nsIWidget* nsCocoaUtils::GetHiddenWindowWidget() {
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   if (!appShell) {
     NS_WARNING("Couldn't get AppShellService in order to get hidden window ref");
     return nullptr;
   }
-  
+
   nsCOMPtr<nsIXULWindow> hiddenWindow;
   appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
   if (!hiddenWindow) {
     // Don't warn, this happens during shutdown, bug 358607.
     return nullptr;
   }
-  
+
   nsCOMPtr<nsIBaseWindow> baseHiddenWindow;
   baseHiddenWindow = do_GetInterface(hiddenWindow);
   if (!baseHiddenWindow) {
     NS_WARNING("Couldn't get nsIBaseWindow from hidden window (nsIXULWindow)");
     return nullptr;
   }
-  
+
   nsCOMPtr<nsIWidget> hiddenWindowWidget;
   if (NS_FAILED(baseHiddenWindow->GetMainWidget(getter_AddRefs(hiddenWindowWidget)))) {
     NS_WARNING("Couldn't get nsIWidget from hidden window (nsIBaseWindow)");
     return nullptr;
   }
-  
+
   return hiddenWindowWidget;
 }
 
-void nsCocoaUtils::PrepareForNativeAppModalDialog()
-{
+void nsCocoaUtils::PrepareForNativeAppModalDialog() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Don't do anything if this is embedding. We'll assume that if there is no hidden
   // window we shouldn't do anything, and that should cover the embedding case.
   nsMenuBarX* hiddenWindowMenuBar = nsMenuUtilsX::GetHiddenWindowMenuBar();
-  if (!hiddenWindowMenuBar)
-    return;
+  if (!hiddenWindowMenuBar) return;
 
   // First put up the hidden window menu bar so that app menu event handling is correct.
   hiddenWindowMenuBar->Paint();
 
   NSMenu* mainMenu = [NSApp mainMenu];
-  NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
-  
+  NS_ASSERTION([mainMenu numberOfItems] > 0,
+               "Main menu does not have any items, something is terribly wrong!");
+
   // Create new menu bar for use with modal dialog
   NSMenu* newMenuBar = [[NSMenu alloc] initWithTitle:@""];
-  
+
   // Swap in our app menu. Note that the event target is whatever window is up when
   // the app modal dialog goes up.
   NSMenuItem* firstMenuItem = [[mainMenu itemAtIndex:0] retain];
   [mainMenu removeItemAtIndex:0];
   [newMenuBar insertItem:firstMenuItem atIndex:0];
   [firstMenuItem release];
-  
+
   // Add standard edit menu
   [newMenuBar addItem:nsMenuUtilsX::GetStandardEditMenuItem()];
-  
+
   // Show the new menu bar
   [NSApp setMainMenu:newMenuBar];
   [newMenuBar release];
-  
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsCocoaUtils::CleanUpAfterNativeAppModalDialog()
-{
+void nsCocoaUtils::CleanUpAfterNativeAppModalDialog() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Don't do anything if this is embedding. We'll assume that if there is no hidden
   // window we shouldn't do anything, and that should cover the embedding case.
   nsMenuBarX* hiddenWindowMenuBar = nsMenuUtilsX::GetHiddenWindowMenuBar();
-  if (!hiddenWindowMenuBar)
-    return;
+  if (!hiddenWindowMenuBar) return;
 
   NSWindow* mainWindow = [NSApp mainWindow];
   if (!mainWindow)
@@ -376,10 +348,7 @@ void nsCocoaUtils::CleanUpAfterNativeAppModalDialog()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void data_ss_release_callback(void *aDataSourceSurface,
-                              const void *data,
-                              size_t size)
-{
+void data_ss_release_callback(void* aDataSourceSurface, const void* data, size_t size) {
   if (aDataSourceSurface) {
     static_cast<DataSourceSurface*>(aDataSourceSurface)->Unmap();
     static_cast<DataSourceSurface*>(aDataSourceSurface)->Release();
@@ -387,17 +356,13 @@ void data_ss_release_callback(void *aDataSourceSurface,
 }
 
 // This function assumes little endian byte order.
-static bool
-ComputeIsEntirelyBlack(const DataSourceSurface::MappedSurface& aMap,
-                       const IntSize& aSize)
-{
+static bool ComputeIsEntirelyBlack(const DataSourceSurface::MappedSurface& aMap,
+                                   const IntSize& aSize) {
   for (int32_t y = 0; y < aSize.height; y++) {
     size_t rowStart = y * aMap.mStride;
     for (int32_t x = 0; x < aSize.width; x++) {
       size_t index = rowStart + x * 4;
-      if (aMap.mData[index + 0] != 0 ||
-          aMap.mData[index + 1] != 0 ||
-          aMap.mData[index + 2] != 0) {
+      if (aMap.mData[index + 0] != 0 || aMap.mData[index + 1] != 0 || aMap.mData[index + 2] != 0) {
         return false;
       }
     }
@@ -405,20 +370,17 @@ ComputeIsEntirelyBlack(const DataSourceSurface::MappedSurface& aMap,
   return true;
 }
 
-nsresult nsCocoaUtils::CreateCGImageFromSurface(SourceSurface* aSurface,
-                                                CGImageRef* aResult,
-                                                bool* aIsEntirelyBlack)
-{
+nsresult nsCocoaUtils::CreateCGImageFromSurface(SourceSurface* aSurface, CGImageRef* aResult,
+                                                bool* aIsEntirelyBlack) {
   RefPtr<DataSourceSurface> dataSurface;
 
-  if (aSurface->GetFormat() ==  SurfaceFormat::B8G8R8A8) {
+  if (aSurface->GetFormat() == SurfaceFormat::B8G8R8A8) {
     dataSurface = aSurface->GetDataSurface();
   } else {
     // CGImageCreate only supports 16- and 32-bit bit-depth
     // Convert format to SurfaceFormat::B8G8R8A8
-    dataSurface = gfxUtils::
-      CopySurfaceToDataSourceSurfaceWithFormat(aSurface,
-                                               SurfaceFormat::B8G8R8A8);
+    dataSurface =
+        gfxUtils::CopySurfaceToDataSourceSurfaceWithFormat(aSurface, SurfaceFormat::B8G8R8A8);
   }
 
   NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
@@ -442,29 +404,18 @@ nsresult nsCocoaUtils::CreateCGImageFromSurface(SourceSurface* aSurface,
   // Create a CGImageRef with the bits from the image, taking into account
   // the alpha ordering and endianness of the machine so we don't have to
   // touch the bits ourselves.
-  CGDataProviderRef dataProvider = ::CGDataProviderCreateWithData(dataSurface.forget().take(),
-                                                                  map.mData,
-                                                                  map.mStride * height,
-                                                                  data_ss_release_callback);
+  CGDataProviderRef dataProvider = ::CGDataProviderCreateWithData(
+      dataSurface.forget().take(), map.mData, map.mStride * height, data_ss_release_callback);
   CGColorSpaceRef colorSpace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-  *aResult = ::CGImageCreate(width,
-                             height,
-                             8,
-                             32,
-                             map.mStride,
-                             colorSpace,
+  *aResult = ::CGImageCreate(width, height, 8, 32, map.mStride, colorSpace,
                              kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst,
-                             dataProvider,
-                             NULL,
-                             0,
-                             kCGRenderingIntentDefault);
+                             dataProvider, NULL, 0, kCGRenderingIntentDefault);
   ::CGColorSpaceRelease(colorSpace);
   ::CGDataProviderRelease(dataProvider);
   return *aResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage **aResult)
-{
+nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage** aResult) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // Be very careful when creating the NSImage that the backing NSImageRep is
@@ -486,20 +437,20 @@ nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage 
   int32_t height = ::CGImageGetHeight(aInputImage);
   NSRect imageRect = ::NSMakeRect(0.0, 0.0, width, height);
 
-  NSBitmapImageRep *offscreenRep = [[NSBitmapImageRep alloc]
-    initWithBitmapDataPlanes:NULL
-    pixelsWide:width
-    pixelsHigh:height
-    bitsPerSample:8
-    samplesPerPixel:4
-    hasAlpha:YES
-    isPlanar:NO
-    colorSpaceName:NSDeviceRGBColorSpace
-    bitmapFormat:NSAlphaFirstBitmapFormat
-    bytesPerRow:0
-    bitsPerPixel:0];
+  NSBitmapImageRep* offscreenRep =
+      [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
+                                              pixelsWide:width
+                                              pixelsHigh:height
+                                           bitsPerSample:8
+                                         samplesPerPixel:4
+                                                hasAlpha:YES
+                                                isPlanar:NO
+                                          colorSpaceName:NSDeviceRGBColorSpace
+                                            bitmapFormat:NSAlphaFirstBitmapFormat
+                                             bytesPerRow:0
+                                            bitsPerPixel:0];
 
-  NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep:offscreenRep];
+  NSGraphicsContext* context = [NSGraphicsContext graphicsContextWithBitmapImageRep:offscreenRep];
   [NSGraphicsContext saveGraphicsState];
   [NSGraphicsContext setCurrentContext:context];
 
@@ -517,8 +468,8 @@ nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, uint32_t aWhichFrame, NSImage **aResult, CGFloat scaleFactor)
-{
+nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, uint32_t aWhichFrame,
+                                                       NSImage** aResult, CGFloat scaleFactor) {
   RefPtr<SourceSurface> surface;
   int32_t width = 0, height = 0;
   aImage->GetWidth(&width);
@@ -528,8 +479,8 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
   if (aImage->GetType() == imgIContainer::TYPE_VECTOR && scaleFactor != 1.0f) {
     IntSize scaledSize = IntSize::Ceil(width * scaleFactor, height * scaleFactor);
 
-    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
-      CreateOffscreenContentDrawTarget(scaledSize, SurfaceFormat::B8G8R8A8);
+    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+        scaledSize, SurfaceFormat::B8G8R8A8);
     if (!drawTarget || !drawTarget->IsValid()) {
       NS_ERROR("Failed to create valid DrawTarget");
       return NS_ERROR_FAILURE;
@@ -538,11 +489,9 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(drawTarget);
     MOZ_ASSERT(context);
 
-    mozilla::image::ImgDrawResult res =
-      aImage->Draw(context, scaledSize, ImageRegion::Create(scaledSize),
-                   aWhichFrame, SamplingFilter::POINT,
-                   /* no SVGImageContext */ Nothing(),
-                   imgIContainer::FLAG_SYNC_DECODE, 1.0);
+    mozilla::image::ImgDrawResult res = aImage->Draw(
+        context, scaledSize, ImageRegion::Create(scaledSize), aWhichFrame, SamplingFilter::POINT,
+        /* no SVGImageContext */ Nothing(), imgIContainer::FLAG_SYNC_DECODE, 1.0);
 
     if (res != mozilla::image::ImgDrawResult::SUCCESS) {
       return NS_ERROR_FAILURE;
@@ -575,9 +524,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
 }
 
 // static
-void
-nsCocoaUtils::GetStringForNSString(const NSString *aSrc, nsAString& aDist)
-{
+void nsCocoaUtils::GetStringForNSString(const NSString* aSrc, nsAString& aDist) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!aSrc) {
@@ -586,15 +533,13 @@ nsCocoaUtils::GetStringForNSString(const NSString *aSrc, nsAString& aDist)
   }
 
   aDist.SetLength([aSrc length]);
-  [aSrc getCharacters: reinterpret_cast<unichar*>(aDist.BeginWriting())];
+  [aSrc getCharacters:reinterpret_cast<unichar*>(aDist.BeginWriting())];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // static
-NSString*
-nsCocoaUtils::ToNSString(const nsAString& aString)
-{
+NSString* nsCocoaUtils::ToNSString(const nsAString& aString) {
   if (aString.IsEmpty()) {
     return [NSString string];
   }
@@ -603,10 +548,7 @@ nsCocoaUtils::ToNSString(const nsAString& aString)
 }
 
 // static
-void
-nsCocoaUtils::GeckoRectToNSRect(const nsIntRect& aGeckoRect,
-                                NSRect& aOutCocoaRect)
-{
+void nsCocoaUtils::GeckoRectToNSRect(const nsIntRect& aGeckoRect, NSRect& aOutCocoaRect) {
   aOutCocoaRect.origin.x = aGeckoRect.x;
   aOutCocoaRect.origin.y = aGeckoRect.y;
   aOutCocoaRect.size.width = aGeckoRect.width;
@@ -614,45 +556,37 @@ nsCocoaUtils::GeckoRectToNSRect(const nsIntRect& aGeckoRect,
 }
 
 // static
-void
-nsCocoaUtils::NSRectToGeckoRect(const NSRect& aCocoaRect,
-                                nsIntRect& aOutGeckoRect)
-{
+void nsCocoaUtils::NSRectToGeckoRect(const NSRect& aCocoaRect, nsIntRect& aOutGeckoRect) {
   aOutGeckoRect.x = NSToIntRound(aCocoaRect.origin.x);
   aOutGeckoRect.y = NSToIntRound(aCocoaRect.origin.y);
   aOutGeckoRect.width = NSToIntRound(aCocoaRect.origin.x + aCocoaRect.size.width) - aOutGeckoRect.x;
-  aOutGeckoRect.height = NSToIntRound(aCocoaRect.origin.y + aCocoaRect.size.height) - aOutGeckoRect.y;
+  aOutGeckoRect.height =
+      NSToIntRound(aCocoaRect.origin.y + aCocoaRect.size.height) - aOutGeckoRect.y;
 }
 
 // static
-NSEvent*
-nsCocoaUtils::MakeNewCocoaEventWithType(NSEventType aEventType, NSEvent *aEvent)
-{
+NSEvent* nsCocoaUtils::MakeNewCocoaEventWithType(NSEventType aEventType, NSEvent* aEvent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  NSEvent* newEvent =
-    [NSEvent     keyEventWithType:aEventType
-                         location:[aEvent locationInWindow] 
-                    modifierFlags:[aEvent modifierFlags]
-                        timestamp:[aEvent timestamp]
-                     windowNumber:[aEvent windowNumber]
-                          context:[aEvent context]
-                       characters:[aEvent characters]
-      charactersIgnoringModifiers:[aEvent charactersIgnoringModifiers]
-                        isARepeat:[aEvent isARepeat]
-                          keyCode:[aEvent keyCode]];
+  NSEvent* newEvent = [NSEvent keyEventWithType:aEventType
+                                       location:[aEvent locationInWindow]
+                                  modifierFlags:[aEvent modifierFlags]
+                                      timestamp:[aEvent timestamp]
+                                   windowNumber:[aEvent windowNumber]
+                                        context:[aEvent context]
+                                     characters:[aEvent characters]
+                    charactersIgnoringModifiers:[aEvent charactersIgnoringModifiers]
+                                      isARepeat:[aEvent isARepeat]
+                                        keyCode:[aEvent keyCode]];
   return newEvent;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 // static
-NSEvent*
-nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(
-                const WidgetKeyboardEvent& aKeyEvent,
-                NSInteger aWindowNumber,
-                NSGraphicsContext* aContext)
-{
+NSEvent* nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(const WidgetKeyboardEvent& aKeyEvent,
+                                                         NSInteger aWindowNumber,
+                                                         NSGraphicsContext* aContext) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   NSEventType eventType;
@@ -663,14 +597,10 @@ nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(
   }
 
   static const uint32_t sModifierFlagMap[][2] = {
-    { MODIFIER_SHIFT,    NSShiftKeyMask },
-    { MODIFIER_CONTROL,  NSControlKeyMask },
-    { MODIFIER_ALT,      NSAlternateKeyMask },
-    { MODIFIER_ALTGRAPH, NSAlternateKeyMask },
-    { MODIFIER_META,     NSCommandKeyMask },
-    { MODIFIER_CAPSLOCK, NSAlphaShiftKeyMask },
-    { MODIFIER_NUMLOCK,  NSNumericPadKeyMask }
-  };
+      {MODIFIER_SHIFT, NSShiftKeyMask},       {MODIFIER_CONTROL, NSControlKeyMask},
+      {MODIFIER_ALT, NSAlternateKeyMask},     {MODIFIER_ALTGRAPH, NSAlternateKeyMask},
+      {MODIFIER_META, NSCommandKeyMask},      {MODIFIER_CAPSLOCK, NSAlphaShiftKeyMask},
+      {MODIFIER_NUMLOCK, NSNumericPadKeyMask}};
 
   NSUInteger modifierFlags = 0;
   for (uint32_t i = 0; i < ArrayLength(sModifierFlagMap); ++i) {
@@ -681,42 +611,36 @@ nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(
 
   NSString* characters;
   if (aKeyEvent.mCharCode) {
-    characters = [NSString stringWithCharacters:
-      reinterpret_cast<const unichar*>(&(aKeyEvent.mCharCode)) length:1];
+    characters =
+        [NSString stringWithCharacters:reinterpret_cast<const unichar*>(&(aKeyEvent.mCharCode))
+                                length:1];
   } else {
-    uint32_t cocoaCharCode =
-      nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(aKeyEvent.mKeyCode);
-    characters = [NSString stringWithCharacters:
-      reinterpret_cast<const unichar*>(&cocoaCharCode) length:1];
+    uint32_t cocoaCharCode = nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(aKeyEvent.mKeyCode);
+    characters = [NSString stringWithCharacters:reinterpret_cast<const unichar*>(&cocoaCharCode)
+                                         length:1];
   }
 
-  return
-    [NSEvent     keyEventWithType:eventType
-                         location:NSMakePoint(0,0)
-                    modifierFlags:modifierFlags
-                        timestamp:0
-                     windowNumber:aWindowNumber
-                          context:aContext
-                       characters:characters
-      charactersIgnoringModifiers:characters
-                        isARepeat:NO
-                          keyCode:0]; // Native key code not currently needed
+  return [NSEvent keyEventWithType:eventType
+                          location:NSMakePoint(0, 0)
+                     modifierFlags:modifierFlags
+                         timestamp:0
+                      windowNumber:aWindowNumber
+                           context:aContext
+                        characters:characters
+       charactersIgnoringModifiers:characters
+                         isARepeat:NO
+                           keyCode:0];  // Native key code not currently needed
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 // static
-void
-nsCocoaUtils::InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent)
-{
+void nsCocoaUtils::InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent) {
   memset(aNPCocoaEvent, 0, sizeof(NPCocoaEvent));
 }
 
 // static
-void
-nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent,
-                             NSEvent* aNativeEvent)
-{
+void nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent, NSEvent* aNativeEvent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   aInputEvent.mModifiers = ModifiersForEvent(aNativeEvent);
@@ -727,11 +651,8 @@ nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent,
 }
 
 // static
-Modifiers
-nsCocoaUtils::ModifiersForEvent(NSEvent* aNativeEvent)
-{
-  NSUInteger modifiers =
-    aNativeEvent ? [aNativeEvent modifierFlags] : [NSEvent modifierFlags];
+Modifiers nsCocoaUtils::ModifiersForEvent(NSEvent* aNativeEvent) {
+  NSUInteger modifiers = aNativeEvent ? [aNativeEvent modifierFlags] : [NSEvent modifierFlags];
   Modifiers result = 0;
   if (modifiers & NSShiftKeyMask) {
     result |= MODIFIER_SHIFT;
@@ -773,9 +694,7 @@ nsCocoaUtils::ModifiersForEvent(NSEvent* aNativeEvent)
 }
 
 // static
-UInt32
-nsCocoaUtils::ConvertToCarbonModifier(NSUInteger aCocoaModifier)
-{
+UInt32 nsCocoaUtils::ConvertToCarbonModifier(NSUInteger aCocoaModifier) {
   UInt32 carbonModifier = 0;
   if (aCocoaModifier & NSAlphaShiftKeyMask) {
     carbonModifier |= alphaLock;
@@ -815,9 +734,7 @@ static bool sHiDPIEnabled = false;
 static bool sHiDPIPrefInitialized = false;
 
 // static
-bool
-nsCocoaUtils::HiDPIEnabled()
-{
+bool nsCocoaUtils::HiDPIEnabled() {
   if (!sHiDPIPrefInitialized) {
     sHiDPIPrefInitialized = true;
 
@@ -828,16 +745,16 @@ nsCocoaUtils::HiDPIEnabled()
 
     // prefSetting is at least 1, need to check attached screens...
 
-    int scaleFactors = 0; // used as a bitset to track the screen types found
-    NSEnumerator *screenEnum = [[NSScreen screens] objectEnumerator];
-    while (NSScreen *screen = [screenEnum nextObject]) {
-      NSDictionary *desc = [screen deviceDescription];
+    int scaleFactors = 0;  // used as a bitset to track the screen types found
+    NSEnumerator* screenEnum = [[NSScreen screens] objectEnumerator];
+    while (NSScreen* screen = [screenEnum nextObject]) {
+      NSDictionary* desc = [screen deviceDescription];
       if ([desc objectForKey:NSDeviceIsScreen] == nil) {
         continue;
       }
-      CGFloat scale =
-        [screen respondsToSelector:@selector(backingScaleFactor)] ?
-          [screen backingScaleFactor] : 1.0;
+      CGFloat scale = [screen respondsToSelector:@selector(backingScaleFactor)]
+                          ? [screen backingScaleFactor]
+                          : 1.0;
       // Currently, we only care about differentiating "1.0" and "2.0",
       // so we set one of the two low bits to record which.
       if (scale > 1.0) {
@@ -860,10 +777,8 @@ nsCocoaUtils::HiDPIEnabled()
   return sHiDPIEnabled;
 }
 
-void
-nsCocoaUtils::GetCommandsFromKeyEvent(NSEvent* aEvent,
-                                      nsTArray<KeyBindingsCommand>& aCommands)
-{
+void nsCocoaUtils::GetCommandsFromKeyEvent(NSEvent* aEvent,
+                                           nsTArray<KeyBindingsCommand>& aCommands) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   MOZ_ASSERT(aEvent);
@@ -876,44 +791,33 @@ nsCocoaUtils::GetCommandsFromKeyEvent(NSEvent* aEvent,
   [sNativeKeyBindingsRecorder startRecording:aCommands];
 
   // This will trigger 0 - N calls to doCommandBySelector: and insertText:
-  [sNativeKeyBindingsRecorder
-    interpretKeyEvents:[NSArray arrayWithObject:aEvent]];
+  [sNativeKeyBindingsRecorder interpretKeyEvents:[NSArray arrayWithObject:aEvent]];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @implementation NativeKeyBindingsRecorder
 
-- (void)startRecording:(nsTArray<KeyBindingsCommand>&)aCommands
-{
+- (void)startRecording:(nsTArray<KeyBindingsCommand>&)aCommands {
   mCommands = &aCommands;
   mCommands->Clear();
 }
 
-- (void)doCommandBySelector:(SEL)aSelector
-{
-  KeyBindingsCommand command = {
-    aSelector,
-    nil
-  };
+- (void)doCommandBySelector:(SEL)aSelector {
+  KeyBindingsCommand command = {aSelector, nil};
 
   mCommands->AppendElement(command);
 }
 
-- (void)insertText:(id)aString
-{
-  KeyBindingsCommand command = {
-    @selector(insertText:),
-    aString
-  };
+- (void)insertText:(id)aString {
+  KeyBindingsCommand command = {@selector(insertText:), aString};
 
   mCommands->AppendElement(command);
 }
 
-@end // NativeKeyBindingsRecorder
+@end  // NativeKeyBindingsRecorder
 
-struct KeyConversionData
-{
+struct KeyConversionData {
   const char* str;
   size_t strLength;
   uint32_t geckoKeyCode;
@@ -923,134 +827,132 @@ struct KeyConversionData
 static const KeyConversionData gKeyConversions[] = {
 
 #define KEYCODE_ENTRY(aStr, aCode) \
-  {#aStr, sizeof(#aStr) - 1, NS_##aStr, aCode}
+  { #aStr, sizeof(#aStr) - 1, NS_##aStr, aCode }
 
 // Some keycodes may have different name in KeyboardEvent from its key name.
 #define KEYCODE_ENTRY2(aStr, aNSName, aCode) \
-  {#aStr, sizeof(#aStr) - 1, NS_##aNSName, aCode}
+  { #aStr, sizeof(#aStr) - 1, NS_##aNSName, aCode }
 
-  KEYCODE_ENTRY(VK_CANCEL, 0x001B),
-  KEYCODE_ENTRY(VK_DELETE, NSDeleteFunctionKey),
-  KEYCODE_ENTRY(VK_BACK, NSBackspaceCharacter),
-  KEYCODE_ENTRY2(VK_BACK_SPACE, VK_BACK, NSBackspaceCharacter),
-  KEYCODE_ENTRY(VK_TAB, NSTabCharacter),
-  KEYCODE_ENTRY(VK_CLEAR, NSClearLineFunctionKey),
-  KEYCODE_ENTRY(VK_RETURN, NSEnterCharacter),
-  KEYCODE_ENTRY(VK_SHIFT, 0),
-  KEYCODE_ENTRY(VK_CONTROL, 0),
-  KEYCODE_ENTRY(VK_ALT, 0),
-  KEYCODE_ENTRY(VK_PAUSE, NSPauseFunctionKey),
-  KEYCODE_ENTRY(VK_CAPS_LOCK, 0),
-  KEYCODE_ENTRY(VK_ESCAPE, 0),
-  KEYCODE_ENTRY(VK_SPACE, ' '),
-  KEYCODE_ENTRY(VK_PAGE_UP, NSPageUpFunctionKey),
-  KEYCODE_ENTRY(VK_PAGE_DOWN, NSPageDownFunctionKey),
-  KEYCODE_ENTRY(VK_END, NSEndFunctionKey),
-  KEYCODE_ENTRY(VK_HOME, NSHomeFunctionKey),
-  KEYCODE_ENTRY(VK_LEFT, NSLeftArrowFunctionKey),
-  KEYCODE_ENTRY(VK_UP, NSUpArrowFunctionKey),
-  KEYCODE_ENTRY(VK_RIGHT, NSRightArrowFunctionKey),
-  KEYCODE_ENTRY(VK_DOWN, NSDownArrowFunctionKey),
-  KEYCODE_ENTRY(VK_PRINTSCREEN, NSPrintScreenFunctionKey),
-  KEYCODE_ENTRY(VK_INSERT, NSInsertFunctionKey),
-  KEYCODE_ENTRY(VK_HELP, NSHelpFunctionKey),
-  KEYCODE_ENTRY(VK_0, '0'),
-  KEYCODE_ENTRY(VK_1, '1'),
-  KEYCODE_ENTRY(VK_2, '2'),
-  KEYCODE_ENTRY(VK_3, '3'),
-  KEYCODE_ENTRY(VK_4, '4'),
-  KEYCODE_ENTRY(VK_5, '5'),
-  KEYCODE_ENTRY(VK_6, '6'),
-  KEYCODE_ENTRY(VK_7, '7'),
-  KEYCODE_ENTRY(VK_8, '8'),
-  KEYCODE_ENTRY(VK_9, '9'),
-  KEYCODE_ENTRY(VK_SEMICOLON, ':'),
-  KEYCODE_ENTRY(VK_EQUALS, '='),
-  KEYCODE_ENTRY(VK_A, 'A'),
-  KEYCODE_ENTRY(VK_B, 'B'),
-  KEYCODE_ENTRY(VK_C, 'C'),
-  KEYCODE_ENTRY(VK_D, 'D'),
-  KEYCODE_ENTRY(VK_E, 'E'),
-  KEYCODE_ENTRY(VK_F, 'F'),
-  KEYCODE_ENTRY(VK_G, 'G'),
-  KEYCODE_ENTRY(VK_H, 'H'),
-  KEYCODE_ENTRY(VK_I, 'I'),
-  KEYCODE_ENTRY(VK_J, 'J'),
-  KEYCODE_ENTRY(VK_K, 'K'),
-  KEYCODE_ENTRY(VK_L, 'L'),
-  KEYCODE_ENTRY(VK_M, 'M'),
-  KEYCODE_ENTRY(VK_N, 'N'),
-  KEYCODE_ENTRY(VK_O, 'O'),
-  KEYCODE_ENTRY(VK_P, 'P'),
-  KEYCODE_ENTRY(VK_Q, 'Q'),
-  KEYCODE_ENTRY(VK_R, 'R'),
-  KEYCODE_ENTRY(VK_S, 'S'),
-  KEYCODE_ENTRY(VK_T, 'T'),
-  KEYCODE_ENTRY(VK_U, 'U'),
-  KEYCODE_ENTRY(VK_V, 'V'),
-  KEYCODE_ENTRY(VK_W, 'W'),
-  KEYCODE_ENTRY(VK_X, 'X'),
-  KEYCODE_ENTRY(VK_Y, 'Y'),
-  KEYCODE_ENTRY(VK_Z, 'Z'),
-  KEYCODE_ENTRY(VK_CONTEXT_MENU, NSMenuFunctionKey),
-  KEYCODE_ENTRY(VK_NUMPAD0, '0'),
-  KEYCODE_ENTRY(VK_NUMPAD1, '1'),
-  KEYCODE_ENTRY(VK_NUMPAD2, '2'),
-  KEYCODE_ENTRY(VK_NUMPAD3, '3'),
-  KEYCODE_ENTRY(VK_NUMPAD4, '4'),
-  KEYCODE_ENTRY(VK_NUMPAD5, '5'),
-  KEYCODE_ENTRY(VK_NUMPAD6, '6'),
-  KEYCODE_ENTRY(VK_NUMPAD7, '7'),
-  KEYCODE_ENTRY(VK_NUMPAD8, '8'),
-  KEYCODE_ENTRY(VK_NUMPAD9, '9'),
-  KEYCODE_ENTRY(VK_MULTIPLY, '*'),
-  KEYCODE_ENTRY(VK_ADD, '+'),
-  KEYCODE_ENTRY(VK_SEPARATOR, 0),
-  KEYCODE_ENTRY(VK_SUBTRACT, '-'),
-  KEYCODE_ENTRY(VK_DECIMAL, '.'),
-  KEYCODE_ENTRY(VK_DIVIDE, '/'),
-  KEYCODE_ENTRY(VK_F1, NSF1FunctionKey),
-  KEYCODE_ENTRY(VK_F2, NSF2FunctionKey),
-  KEYCODE_ENTRY(VK_F3, NSF3FunctionKey),
-  KEYCODE_ENTRY(VK_F4, NSF4FunctionKey),
-  KEYCODE_ENTRY(VK_F5, NSF5FunctionKey),
-  KEYCODE_ENTRY(VK_F6, NSF6FunctionKey),
-  KEYCODE_ENTRY(VK_F7, NSF7FunctionKey),
-  KEYCODE_ENTRY(VK_F8, NSF8FunctionKey),
-  KEYCODE_ENTRY(VK_F9, NSF9FunctionKey),
-  KEYCODE_ENTRY(VK_F10, NSF10FunctionKey),
-  KEYCODE_ENTRY(VK_F11, NSF11FunctionKey),
-  KEYCODE_ENTRY(VK_F12, NSF12FunctionKey),
-  KEYCODE_ENTRY(VK_F13, NSF13FunctionKey),
-  KEYCODE_ENTRY(VK_F14, NSF14FunctionKey),
-  KEYCODE_ENTRY(VK_F15, NSF15FunctionKey),
-  KEYCODE_ENTRY(VK_F16, NSF16FunctionKey),
-  KEYCODE_ENTRY(VK_F17, NSF17FunctionKey),
-  KEYCODE_ENTRY(VK_F18, NSF18FunctionKey),
-  KEYCODE_ENTRY(VK_F19, NSF19FunctionKey),
-  KEYCODE_ENTRY(VK_F20, NSF20FunctionKey),
-  KEYCODE_ENTRY(VK_F21, NSF21FunctionKey),
-  KEYCODE_ENTRY(VK_F22, NSF22FunctionKey),
-  KEYCODE_ENTRY(VK_F23, NSF23FunctionKey),
-  KEYCODE_ENTRY(VK_F24, NSF24FunctionKey),
-  KEYCODE_ENTRY(VK_NUM_LOCK, NSClearLineFunctionKey),
-  KEYCODE_ENTRY(VK_SCROLL_LOCK, NSScrollLockFunctionKey),
-  KEYCODE_ENTRY(VK_COMMA, ','),
-  KEYCODE_ENTRY(VK_PERIOD, '.'),
-  KEYCODE_ENTRY(VK_SLASH, '/'),
-  KEYCODE_ENTRY(VK_BACK_QUOTE, '`'),
-  KEYCODE_ENTRY(VK_OPEN_BRACKET, '['),
-  KEYCODE_ENTRY(VK_BACK_SLASH, '\\'),
-  KEYCODE_ENTRY(VK_CLOSE_BRACKET, ']'),
-  KEYCODE_ENTRY(VK_QUOTE, '\'')
+    KEYCODE_ENTRY(VK_CANCEL, 0x001B),
+    KEYCODE_ENTRY(VK_DELETE, NSDeleteFunctionKey),
+    KEYCODE_ENTRY(VK_BACK, NSBackspaceCharacter),
+    KEYCODE_ENTRY2(VK_BACK_SPACE, VK_BACK, NSBackspaceCharacter),
+    KEYCODE_ENTRY(VK_TAB, NSTabCharacter),
+    KEYCODE_ENTRY(VK_CLEAR, NSClearLineFunctionKey),
+    KEYCODE_ENTRY(VK_RETURN, NSEnterCharacter),
+    KEYCODE_ENTRY(VK_SHIFT, 0),
+    KEYCODE_ENTRY(VK_CONTROL, 0),
+    KEYCODE_ENTRY(VK_ALT, 0),
+    KEYCODE_ENTRY(VK_PAUSE, NSPauseFunctionKey),
+    KEYCODE_ENTRY(VK_CAPS_LOCK, 0),
+    KEYCODE_ENTRY(VK_ESCAPE, 0),
+    KEYCODE_ENTRY(VK_SPACE, ' '),
+    KEYCODE_ENTRY(VK_PAGE_UP, NSPageUpFunctionKey),
+    KEYCODE_ENTRY(VK_PAGE_DOWN, NSPageDownFunctionKey),
+    KEYCODE_ENTRY(VK_END, NSEndFunctionKey),
+    KEYCODE_ENTRY(VK_HOME, NSHomeFunctionKey),
+    KEYCODE_ENTRY(VK_LEFT, NSLeftArrowFunctionKey),
+    KEYCODE_ENTRY(VK_UP, NSUpArrowFunctionKey),
+    KEYCODE_ENTRY(VK_RIGHT, NSRightArrowFunctionKey),
+    KEYCODE_ENTRY(VK_DOWN, NSDownArrowFunctionKey),
+    KEYCODE_ENTRY(VK_PRINTSCREEN, NSPrintScreenFunctionKey),
+    KEYCODE_ENTRY(VK_INSERT, NSInsertFunctionKey),
+    KEYCODE_ENTRY(VK_HELP, NSHelpFunctionKey),
+    KEYCODE_ENTRY(VK_0, '0'),
+    KEYCODE_ENTRY(VK_1, '1'),
+    KEYCODE_ENTRY(VK_2, '2'),
+    KEYCODE_ENTRY(VK_3, '3'),
+    KEYCODE_ENTRY(VK_4, '4'),
+    KEYCODE_ENTRY(VK_5, '5'),
+    KEYCODE_ENTRY(VK_6, '6'),
+    KEYCODE_ENTRY(VK_7, '7'),
+    KEYCODE_ENTRY(VK_8, '8'),
+    KEYCODE_ENTRY(VK_9, '9'),
+    KEYCODE_ENTRY(VK_SEMICOLON, ':'),
+    KEYCODE_ENTRY(VK_EQUALS, '='),
+    KEYCODE_ENTRY(VK_A, 'A'),
+    KEYCODE_ENTRY(VK_B, 'B'),
+    KEYCODE_ENTRY(VK_C, 'C'),
+    KEYCODE_ENTRY(VK_D, 'D'),
+    KEYCODE_ENTRY(VK_E, 'E'),
+    KEYCODE_ENTRY(VK_F, 'F'),
+    KEYCODE_ENTRY(VK_G, 'G'),
+    KEYCODE_ENTRY(VK_H, 'H'),
+    KEYCODE_ENTRY(VK_I, 'I'),
+    KEYCODE_ENTRY(VK_J, 'J'),
+    KEYCODE_ENTRY(VK_K, 'K'),
+    KEYCODE_ENTRY(VK_L, 'L'),
+    KEYCODE_ENTRY(VK_M, 'M'),
+    KEYCODE_ENTRY(VK_N, 'N'),
+    KEYCODE_ENTRY(VK_O, 'O'),
+    KEYCODE_ENTRY(VK_P, 'P'),
+    KEYCODE_ENTRY(VK_Q, 'Q'),
+    KEYCODE_ENTRY(VK_R, 'R'),
+    KEYCODE_ENTRY(VK_S, 'S'),
+    KEYCODE_ENTRY(VK_T, 'T'),
+    KEYCODE_ENTRY(VK_U, 'U'),
+    KEYCODE_ENTRY(VK_V, 'V'),
+    KEYCODE_ENTRY(VK_W, 'W'),
+    KEYCODE_ENTRY(VK_X, 'X'),
+    KEYCODE_ENTRY(VK_Y, 'Y'),
+    KEYCODE_ENTRY(VK_Z, 'Z'),
+    KEYCODE_ENTRY(VK_CONTEXT_MENU, NSMenuFunctionKey),
+    KEYCODE_ENTRY(VK_NUMPAD0, '0'),
+    KEYCODE_ENTRY(VK_NUMPAD1, '1'),
+    KEYCODE_ENTRY(VK_NUMPAD2, '2'),
+    KEYCODE_ENTRY(VK_NUMPAD3, '3'),
+    KEYCODE_ENTRY(VK_NUMPAD4, '4'),
+    KEYCODE_ENTRY(VK_NUMPAD5, '5'),
+    KEYCODE_ENTRY(VK_NUMPAD6, '6'),
+    KEYCODE_ENTRY(VK_NUMPAD7, '7'),
+    KEYCODE_ENTRY(VK_NUMPAD8, '8'),
+    KEYCODE_ENTRY(VK_NUMPAD9, '9'),
+    KEYCODE_ENTRY(VK_MULTIPLY, '*'),
+    KEYCODE_ENTRY(VK_ADD, '+'),
+    KEYCODE_ENTRY(VK_SEPARATOR, 0),
+    KEYCODE_ENTRY(VK_SUBTRACT, '-'),
+    KEYCODE_ENTRY(VK_DECIMAL, '.'),
+    KEYCODE_ENTRY(VK_DIVIDE, '/'),
+    KEYCODE_ENTRY(VK_F1, NSF1FunctionKey),
+    KEYCODE_ENTRY(VK_F2, NSF2FunctionKey),
+    KEYCODE_ENTRY(VK_F3, NSF3FunctionKey),
+    KEYCODE_ENTRY(VK_F4, NSF4FunctionKey),
+    KEYCODE_ENTRY(VK_F5, NSF5FunctionKey),
+    KEYCODE_ENTRY(VK_F6, NSF6FunctionKey),
+    KEYCODE_ENTRY(VK_F7, NSF7FunctionKey),
+    KEYCODE_ENTRY(VK_F8, NSF8FunctionKey),
+    KEYCODE_ENTRY(VK_F9, NSF9FunctionKey),
+    KEYCODE_ENTRY(VK_F10, NSF10FunctionKey),
+    KEYCODE_ENTRY(VK_F11, NSF11FunctionKey),
+    KEYCODE_ENTRY(VK_F12, NSF12FunctionKey),
+    KEYCODE_ENTRY(VK_F13, NSF13FunctionKey),
+    KEYCODE_ENTRY(VK_F14, NSF14FunctionKey),
+    KEYCODE_ENTRY(VK_F15, NSF15FunctionKey),
+    KEYCODE_ENTRY(VK_F16, NSF16FunctionKey),
+    KEYCODE_ENTRY(VK_F17, NSF17FunctionKey),
+    KEYCODE_ENTRY(VK_F18, NSF18FunctionKey),
+    KEYCODE_ENTRY(VK_F19, NSF19FunctionKey),
+    KEYCODE_ENTRY(VK_F20, NSF20FunctionKey),
+    KEYCODE_ENTRY(VK_F21, NSF21FunctionKey),
+    KEYCODE_ENTRY(VK_F22, NSF22FunctionKey),
+    KEYCODE_ENTRY(VK_F23, NSF23FunctionKey),
+    KEYCODE_ENTRY(VK_F24, NSF24FunctionKey),
+    KEYCODE_ENTRY(VK_NUM_LOCK, NSClearLineFunctionKey),
+    KEYCODE_ENTRY(VK_SCROLL_LOCK, NSScrollLockFunctionKey),
+    KEYCODE_ENTRY(VK_COMMA, ','),
+    KEYCODE_ENTRY(VK_PERIOD, '.'),
+    KEYCODE_ENTRY(VK_SLASH, '/'),
+    KEYCODE_ENTRY(VK_BACK_QUOTE, '`'),
+    KEYCODE_ENTRY(VK_OPEN_BRACKET, '['),
+    KEYCODE_ENTRY(VK_BACK_SLASH, '\\'),
+    KEYCODE_ENTRY(VK_CLOSE_BRACKET, ']'),
+    KEYCODE_ENTRY(VK_QUOTE, '\'')
 
 #undef KEYCODE_ENTRY
 
 };
 
-uint32_t
-nsCocoaUtils::ConvertGeckoNameToMacCharCode(const nsAString& aKeyCodeName)
-{
+uint32_t nsCocoaUtils::ConvertGeckoNameToMacCharCode(const nsAString& aKeyCodeName) {
   if (aKeyCodeName.IsEmpty()) {
     return 0;
   }
@@ -1072,9 +974,7 @@ nsCocoaUtils::ConvertGeckoNameToMacCharCode(const nsAString& aKeyCodeName)
   return 0;
 }
 
-uint32_t
-nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(uint32_t aKeyCode)
-{
+uint32_t nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(uint32_t aKeyCode) {
   if (!aKeyCode) {
     return 0;
   }
@@ -1088,19 +988,14 @@ nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(uint32_t aKeyCode)
   return 0;
 }
 
-NSMutableAttributedString*
-nsCocoaUtils::GetNSMutableAttributedString(
-                const nsAString& aText,
-                const nsTArray<mozilla::FontRange>& aFontRanges,
-                const bool aIsVertical,
-                const CGFloat aBackingScaleFactor)
-{
+NSMutableAttributedString* nsCocoaUtils::GetNSMutableAttributedString(
+    const nsAString& aText, const nsTArray<mozilla::FontRange>& aFontRanges, const bool aIsVertical,
+    const CGFloat aBackingScaleFactor) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL
 
   NSString* nsstr = nsCocoaUtils::ToNSString(aText);
   NSMutableAttributedString* attrStr =
-    [[[NSMutableAttributedString alloc] initWithString:nsstr
-                                            attributes:nil] autorelease];
+      [[[NSMutableAttributedString alloc] initWithString:nsstr attributes:nil] autorelease];
 
   int32_t lastOffset = aText.Length();
   for (auto i = aFontRanges.Length(); i > 0; --i) {
@@ -1112,16 +1007,15 @@ nsCocoaUtils::GetNSMutableAttributedString(
       font = [NSFont systemFontOfSize:fontSize];
     }
 
-    NSDictionary* attrs = @{ NSFontAttributeName: font };
-    NSRange range = NSMakeRange(fontRange.mStartOffset,
-                                lastOffset - fontRange.mStartOffset);
+    NSDictionary* attrs = @{NSFontAttributeName : font};
+    NSRange range = NSMakeRange(fontRange.mStartOffset, lastOffset - fontRange.mStartOffset);
     [attrStr setAttributes:attrs range:range];
     lastOffset = fontRange.mStartOffset;
   }
 
   if (aIsVertical) {
     [attrStr addAttribute:NSVerticalGlyphFormAttributeName
-                    value:[NSNumber numberWithInt: 1]
+                    value:[NSNumber numberWithInt:1]
                     range:NSMakeRange(0, [attrStr length])];
   }
 
@@ -1130,9 +1024,7 @@ nsCocoaUtils::GetNSMutableAttributedString(
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL
 }
 
-TimeStamp
-nsCocoaUtils::GetEventTimeStamp(NSTimeInterval aEventTime)
-{
+TimeStamp nsCocoaUtils::GetEventTimeStamp(NSTimeInterval aEventTime) {
   if (!aEventTime) {
     // If the event is generated by a 3rd party application, its timestamp
     // may be 0.  In this case, just return current timestamp.
@@ -1144,8 +1036,7 @@ nsCocoaUtils::GetEventTimeStamp(NSTimeInterval aEventTime)
   // Event timestamps are NSTimeIntervals (seconds) since boot. So the two time
   // representations already have the same base; we only need to convert
   // seconds into ticks.
-  int64_t tick =
-    BaseTimeDurationPlatformUtils::TicksFromMilliseconds(aEventTime * 1000.0);
+  int64_t tick = BaseTimeDurationPlatformUtils::TicksFromMilliseconds(aEventTime * 1000.0);
   return TimeStamp::FromSystemTime(tick);
 }
 
@@ -1162,23 +1053,21 @@ enum GeckoAVAuthorizationStatus : NSInteger {
   GeckoAVAuthorizationStatusAuthorized = 3
 };
 
-#if !defined(MAC_OS_X_VERSION_10_14) || \
-  MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
 // Define authorizationStatusForMediaType: as returning
 // GeckoAVAuthorizationStatus instead of AVAuthorizationStatus to allow
 // compilation on pre-10.14 SDK's.
-@interface AVCaptureDevice(GeckoAVAuthorizationStatus)
+@interface AVCaptureDevice (GeckoAVAuthorizationStatus)
 + (GeckoAVAuthorizationStatus)authorizationStatusForMediaType:(AVMediaType)mediaType;
 @end
 
-@interface AVCaptureDevice(WithCompletionHandler)
-+ (void)requestAccessForMediaType:(AVMediaType)mediaType completionHandler:(void (^)(BOOL granted))handler;
+@interface AVCaptureDevice (WithCompletionHandler)
++ (void)requestAccessForMediaType:(AVMediaType)mediaType
+                completionHandler:(void (^)(BOOL granted))handler;
 @end
 #endif
 
-static const char*
-AVMediaTypeToString(AVMediaType aType)
-{
+static const char* AVMediaTypeToString(AVMediaType aType) {
   if (aType == AVMediaTypeVideo) {
     return "video";
   }
@@ -1190,9 +1079,7 @@ AVMediaTypeToString(AVMediaType aType)
   return "unexpected type";
 }
 
-static void
-LogAuthorizationStatus(AVMediaType aType, int aState)
-{
+static void LogAuthorizationStatus(AVMediaType aType, int aState) {
   const char* stateString;
 
   switch (aState) {
@@ -1215,9 +1102,7 @@ LogAuthorizationStatus(AVMediaType aType, int aState)
   LOG("%s authorization status: %s\n", AVMediaTypeToString(aType), stateString);
 }
 
-static nsresult
-GetPermissionState(AVMediaType aMediaType, uint16_t& aState)
-{
+static nsresult GetPermissionState(AVMediaType aMediaType, uint16_t& aState) {
   MOZ_ASSERT(aMediaType == AVMediaTypeVideo || aMediaType == AVMediaTypeAudio);
 
   // Only attempt to check authorization status on 10.14+.
@@ -1225,8 +1110,7 @@ GetPermissionState(AVMediaType aMediaType, uint16_t& aState)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  GeckoAVAuthorizationStatus authStatus =
-    static_cast<GeckoAVAuthorizationStatus>(
+  GeckoAVAuthorizationStatus authStatus = static_cast<GeckoAVAuthorizationStatus>(
       [AVCaptureDevice authorizationStatusForMediaType:aMediaType]);
   LogAuthorizationStatus(aMediaType, authStatus);
 
@@ -1250,35 +1134,23 @@ GetPermissionState(AVMediaType aMediaType, uint16_t& aState)
   }
 }
 
-nsresult
-nsCocoaUtils::GetVideoCapturePermissionState(uint16_t& aPermissionState)
-{
+nsresult nsCocoaUtils::GetVideoCapturePermissionState(uint16_t& aPermissionState) {
   return GetPermissionState(AVMediaTypeVideo, aPermissionState);
 }
 
-nsresult
-nsCocoaUtils::GetAudioCapturePermissionState(uint16_t& aPermissionState)
-{
+nsresult nsCocoaUtils::GetAudioCapturePermissionState(uint16_t& aPermissionState) {
   return GetPermissionState(AVMediaTypeAudio, aPermissionState);
 }
 
-nsresult
-nsCocoaUtils::RequestVideoCapturePermission(RefPtr<Promise>& aPromise)
-{
+nsresult nsCocoaUtils::RequestVideoCapturePermission(RefPtr<Promise>& aPromise) {
   MOZ_ASSERT(NS_IsMainThread());
-  return nsCocoaUtils::RequestCapturePermission(AVMediaTypeVideo,
-                                                aPromise,
-                                                sVideoCapturePromises,
+  return nsCocoaUtils::RequestCapturePermission(AVMediaTypeVideo, aPromise, sVideoCapturePromises,
                                                 VideoCompletionHandler);
 }
 
-nsresult
-nsCocoaUtils::RequestAudioCapturePermission(RefPtr<Promise>& aPromise)
-{
+nsresult nsCocoaUtils::RequestAudioCapturePermission(RefPtr<Promise>& aPromise) {
   MOZ_ASSERT(NS_IsMainThread());
-  return nsCocoaUtils::RequestCapturePermission(AVMediaTypeAudio,
-                                                aPromise,
-                                                sAudioCapturePromises,
+  return nsCocoaUtils::RequestCapturePermission(AVMediaTypeAudio, aPromise, sAudioCapturePromises,
                                                 AudioCompletionHandler);
 }
 
@@ -1290,12 +1162,9 @@ nsCocoaUtils::RequestAudioCapturePermission(RefPtr<Promise>& aPromise)
 // request completes and must resolve any waiting Promises on the main
 // thread.
 //
-nsresult
-nsCocoaUtils::RequestCapturePermission(AVMediaType aType,
-                                       RefPtr<Promise>& aPromise,
-                                       PromiseArray& aPromiseList,
-                                       void (^aHandler)(BOOL granted))
-{
+nsresult nsCocoaUtils::RequestCapturePermission(AVMediaType aType, RefPtr<Promise>& aPromise,
+                                                PromiseArray& aPromiseList,
+                                                void (^aHandler)(BOOL granted)) {
   MOZ_ASSERT(aType == AVMediaTypeVideo || aType == AVMediaTypeAudio);
 #if defined(MAC_OS_X_VERSION_10_14)
   // Ensure our enum constants match. We can only do this when
@@ -1303,12 +1172,9 @@ nsCocoaUtils::RequestCapturePermission(AVMediaType aType,
   // prohibited by preprocessor checks on earlier OS versions.
   MOZ_ASSERT((int)GeckoAVAuthorizationStatusNotDetermined ==
              (int)AVAuthorizationStatusNotDetermined);
-  MOZ_ASSERT((int)GeckoAVAuthorizationStatusRestricted ==
-             (int)AVAuthorizationStatusRestricted);
-  MOZ_ASSERT((int)GeckoAVAuthorizationStatusDenied ==
-             (int)AVAuthorizationStatusDenied);
-  MOZ_ASSERT((int)GeckoAVAuthorizationStatusAuthorized ==
-             (int)AVAuthorizationStatusAuthorized);
+  MOZ_ASSERT((int)GeckoAVAuthorizationStatusRestricted == (int)AVAuthorizationStatusRestricted);
+  MOZ_ASSERT((int)GeckoAVAuthorizationStatusDenied == (int)AVAuthorizationStatusDenied);
+  MOZ_ASSERT((int)GeckoAVAuthorizationStatusAuthorized == (int)AVAuthorizationStatusAuthorized);
 #endif
   LOG("RequestCapturePermission(%s)", AVMediaTypeToString(aType));
 
@@ -1330,8 +1196,8 @@ nsCocoaUtils::RequestCapturePermission(AVMediaType aType,
 
   sMediaCaptureMutex.Unlock();
 
-  LOG("RequestCapturePermission(%s): %ld promise(s) unresolved",
-    AVMediaTypeToString(aType), nPromises);
+  LOG("RequestCapturePermission(%s): %ld promise(s) unresolved", AVMediaTypeToString(aType),
+      nPromises);
 
   // If we had one or more more existing promises waiting to be resolved
   // by the completion handler, we don't need to start another request.
@@ -1348,8 +1214,7 @@ nsCocoaUtils::RequestCapturePermission(AVMediaType aType,
 // Audio capture request completion handler. Called from an arbitrary
 // dispatch queue.
 //
-void (^nsCocoaUtils::AudioCompletionHandler)(BOOL) = ^void (BOOL granted)
-{
+void (^nsCocoaUtils::AudioCompletionHandler)(BOOL) = ^void(BOOL granted) {
   nsCocoaUtils::ResolveAudioCapturePromises(granted);
 };
 
@@ -1357,15 +1222,11 @@ void (^nsCocoaUtils::AudioCompletionHandler)(BOOL) = ^void (BOOL granted)
 // Video capture request completion handler. Called from an arbitrary
 // dispatch queue.
 //
-void (^nsCocoaUtils::VideoCompletionHandler)(BOOL) = ^void (BOOL granted)
-{
+void (^nsCocoaUtils::VideoCompletionHandler)(BOOL) = ^void(BOOL granted) {
   nsCocoaUtils::ResolveVideoCapturePromises(granted);
 };
 
-void
-nsCocoaUtils::ResolveMediaCapturePromises(bool aGranted,
-                                          PromiseArray& aPromiseList)
-{
+void nsCocoaUtils::ResolveMediaCapturePromises(bool aGranted, PromiseArray& aPromiseList) {
   StaticMutexAutoLock lock(sMediaCaptureMutex);
 
   // Remove each promise from the list and resolve it.
@@ -1375,33 +1236,24 @@ nsCocoaUtils::ResolveMediaCapturePromises(bool aGranted,
 
     // Resolve on main thread
     nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
-      "ResolveMediaAccessPromise",
-      [aGranted, aPromise = std::move(promise)]() {
-        aPromise->MaybeResolve(aGranted);
-      }));
+        "ResolveMediaAccessPromise",
+        [aGranted, aPromise = std::move(promise)]() { aPromise->MaybeResolve(aGranted); }));
     NS_DispatchToMainThread(runnable.forget());
   }
-
 }
 
-void
-nsCocoaUtils::ResolveAudioCapturePromises(bool aGranted)
-{
+void nsCocoaUtils::ResolveAudioCapturePromises(bool aGranted) {
   // Resolve on main thread
-  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
-    "ResolveAudioCapturePromise", [aGranted]() {
-      ResolveMediaCapturePromises(aGranted, sAudioCapturePromises);
-    }));
+  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction("ResolveAudioCapturePromise", [aGranted]() {
+    ResolveMediaCapturePromises(aGranted, sAudioCapturePromises);
+  }));
   NS_DispatchToMainThread(runnable.forget());
 }
 
-void
-nsCocoaUtils::ResolveVideoCapturePromises(bool aGranted)
-{
+void nsCocoaUtils::ResolveVideoCapturePromises(bool aGranted) {
   // Resolve on main thread
-  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
-    "ResolveVideoCapturePromise", [aGranted]() {
-      ResolveMediaCapturePromises(aGranted, sVideoCapturePromises);
-    }));
+  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction("ResolveVideoCapturePromise", [aGranted]() {
+    ResolveMediaCapturePromises(aGranted, sVideoCapturePromises);
+  }));
   NS_DispatchToMainThread(runnable.forget());
 }

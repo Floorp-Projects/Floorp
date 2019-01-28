@@ -37,6 +37,7 @@ async function test_socket_conn() {
   gExtraListener = new SocketListener(DebuggerServer, socketOptions);
   gExtraListener.open();
   Assert.equal(DebuggerServer.listeningSockets, 2);
+  Assert.ok(!DebuggerServer.hasConnection());
 
   info("Starting long and unicode tests at " + new Date().toTimeString());
   const unicodeString = "(╯°□°）╯︵ ┻━┻";
@@ -44,13 +45,15 @@ async function test_socket_conn() {
     host: "127.0.0.1",
     port: gPort,
   });
+  Assert.ok(DebuggerServer.hasConnection());
 
   // Assert that connection settings are available on transport object
   const settings = transport.connectionSettings;
   Assert.equal(settings.host, "127.0.0.1");
   Assert.equal(settings.port, gPort);
 
-  return new Promise((resolve) => {
+  const onDebuggerConnectionClosed = DebuggerServer.once("connectionchange");
+  await new Promise((resolve) => {
     transport.hooks = {
       onPacket: function(packet) {
         this.onPacket = function({unicode}) {
@@ -71,6 +74,9 @@ async function test_socket_conn() {
     };
     transport.ready();
   });
+  const type = await onDebuggerConnectionClosed;
+  Assert.equal(type, "closed");
+  Assert.ok(!DebuggerServer.hasConnection());
 }
 
 async function test_socket_shutdown() {

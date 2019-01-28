@@ -127,7 +127,7 @@ class SVGNumberList {
 
 /**
  * This SVGNumberList subclass is used by the SMIL code when a number list
- * is to be stored in an nsISMILValue instance. Since nsISMILValue objects may
+ * is to be stored in a SMILValue instance. Since SMILValue objects may
  * be cached, it is necessary for us to hold a strong reference to our element
  * so that it doesn't disappear out from under us if, say, the element is
  * removed from the DOM tree.
@@ -177,7 +177,7 @@ class SVGNumberListAndInfo : public SVGNumberList {
 
  private:
   // We must keep a weak reference to our element because we may belong to a
-  // cached baseVal nsSMILValue. See the comments starting at:
+  // cached baseVal SMILValue. See the comments starting at:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=515116#c15
   // See also https://bugzilla.mozilla.org/show_bug.cgi?id=653497
   nsWeakPtr mElement;

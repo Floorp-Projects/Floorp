@@ -81,6 +81,7 @@ gyp_vars['disable_tests'] = 1
 if CONFIG['NSS_DISABLE_DBM']:
     gyp_vars['disable_dbm'] = 1
 gyp_vars['disable_libpkix'] = 1
+gyp_vars['enable_sslkeylogfile'] = 1
 # pkg-config won't reliably find zlib on our builders, so just force it.
 # System zlib is only used for modutil and signtool unless
 # SSL zlib is enabled, which we are disabling immediately below this.

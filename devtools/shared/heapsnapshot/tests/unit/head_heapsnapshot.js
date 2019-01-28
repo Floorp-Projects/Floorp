@@ -31,8 +31,10 @@ const { LabelAndShallowSizeVisitor } = DominatorTreeNode;
 // the output away anyway, unless you give it the --verbose flag.
 if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
   Services.prefs.setBoolPref("devtools.debugger.log", true);
+  Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("devtools.debugger.log");
+    Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
   });
 }
 

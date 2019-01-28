@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ütz, xno' pa nuwi'",
   "prefs_home_header": "Etamab'äl pa ri Rutikirib'al Firefox",
   "prefs_home_description": "Tacha' achike etamab'äl nawajo' pa ri Rutikirib'al Firefox ruwäch.",
-  "prefs_content_discovery_header": "Firefox Home",
+  "prefs_content_discovery_header": "Rutikirib'al Firefox",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
   "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} cholaj;{num} taq cholaj",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Ichinan Na'oj",
   "firstrun_continue_to_login": "Titikïr chik el",
   "firstrun_skip_login": "Tixakalüx re jun ruxak re'",
-  "context_menu_title": "Tijaq k'utüy samaj",
-  "pocket_learn_more": "Tetamäx Ch'aqa' Chik"
+  "context_menu_title": "Tijaq k'utüy samaj"
 };

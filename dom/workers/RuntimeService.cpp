@@ -29,6 +29,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "GeckoProfiler.h"
 #include "jsfriendapi.h"
+#include "js/ContextOptions.h"
 #include "js/LocaleSensitive.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/AntiTrackingCommon.h"
@@ -283,7 +284,7 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
           GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_baselinejit")))
       .setWasmIon(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_ionjit")))
 #ifdef ENABLE_WASM_CRANELIFT
-      .setWasmForceCranelift(
+      .setWasmCranelift(
           GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_cranelift")))
 #endif
 #ifdef ENABLE_WASM_REFTYPES
@@ -2349,7 +2350,7 @@ WorkerThreadPrimaryRunnable::Run() {
 
     // Perform a full GC. This will collect the main worker global and CC,
     // which should break all cycles that touch JS.
-    JS_GC(cx);
+    JS_GC(cx, JS::GCReason::WORKER_SHUTDOWN);
 
     // Before shutting down the cycle collector we need to do one more pass
     // through the event loop to clean up any C++ objects that need deferred

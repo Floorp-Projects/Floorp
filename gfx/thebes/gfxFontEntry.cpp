@@ -1699,6 +1699,16 @@ void gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData) {
     return;
   }
 
+#ifdef MOZ_GECKO_PROFILER
+  nsCString charAndName;
+  if (profiler_is_active()) {
+    charAndName = nsPrintfCString("\\u%x %s", aMatchData->mCh, mName.get());
+  }
+
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("gfxFontFamily::FindFontForChar",
+                                        LAYOUT, charAndName);
+#endif
+
   gfxFontEntry* fe =
       FindFontForStyle(aMatchData->mStyle, /*aIgnoreSizeTolerance*/ true);
   if (!fe || fe->SkipDuringSystemFallback()) {

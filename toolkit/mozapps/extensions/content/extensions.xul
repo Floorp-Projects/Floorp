@@ -231,6 +231,10 @@
 
           <hbox id="heading">
             <hbox class="heading-inner" align="stretch">
+              <hbox id="go-back-wrapper">
+                <button id="go-back" command="cmd_back" data-l10n-id="go-back-button" hidden="true"/>
+              </hbox>
+
               <label id="heading-name" class="header-name" flex="1"/>
 
               <hbox id="updates-container" align="center">
@@ -251,8 +255,6 @@
                         data-l10n-id="extensions-updates-restart"
                         command="cmd_restartApp"/>
               </hbox>
-
-              <button id="manage-shortcuts" data-l10n-id="shortcuts-manage" command="cmd_showShortcuts" hidden="true"/>
 
               <button id="header-utils-btn" type="menu" data-l10n-id="tools-menu">
                 <menupopup id="utils-menu">
@@ -280,6 +282,10 @@
                   <menuitem id="utils-resetAddonUpdatesToManual"
                             data-l10n-id="extensions-updates-reset-updates-to-manual"
                             command="cmd_resetAddonAutoUpdate"/>
+                  <menuseparator/>
+                  <menuitem id="manage-shortcuts"
+                            data-l10n-id="manage-extensions-shortcuts"
+                            command="cmd_showShortcuts"/>
                 </menupopup>
               </button>
             </hbox>

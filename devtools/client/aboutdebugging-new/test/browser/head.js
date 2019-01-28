@@ -130,6 +130,18 @@ function waitForDispatch(store, type) {
 }
 
 /**
+ * Navigate to "This Firefox"
+ */
+async function selectThisFirefoxPage(doc, store) {
+  info("Select This Firefox page");
+  doc.location.hash = "#/runtime/this-firefox";
+  info("Wait for requests to settle");
+  await waitForRequestsToSettle(store);
+  info("Wait for runtime page to be rendered");
+  await waitUntil(() => doc.querySelector(".js-runtime-page"));
+}
+
+/**
  * Navigate to the Connect page. Resolves when the Connect page is rendered.
  */
 async function selectConnectPage(doc) {

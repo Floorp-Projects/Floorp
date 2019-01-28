@@ -600,14 +600,14 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
   // Account for markers:
   if ((aFlags & nsSVGUtils::eBBoxIncludeMarkers) != 0 &&
       element->IsMarkable()) {
-    nsSVGMarkerFrame* markerFrames[nsSVGMark::eTypeCount];
+    nsSVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
     if (SVGObserverUtils::GetAndObserveMarkers(this, &markerFrames)) {
-      nsTArray<nsSVGMark> marks;
+      nsTArray<SVGMark> marks;
       element->GetMarkPoints(&marks);
       if (uint32_t num = marks.Length()) {
         float strokeWidth = nsSVGUtils::GetStrokeWidth(this);
         for (uint32_t i = 0; i < num; i++) {
-          const nsSVGMark& mark = marks[i];
+          const SVGMark& mark = marks[i];
           nsSVGMarkerFrame* frame = markerFrames[mark.type];
           if (frame) {
             SVGBBox mbbox = frame->GetMarkBBoxContribution(
@@ -758,16 +758,16 @@ void SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
   auto element = static_cast<SVGGeometryElement*>(GetContent());
 
   if (element->IsMarkable()) {
-    nsSVGMarkerFrame* markerFrames[nsSVGMark::eTypeCount];
+    nsSVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
     if (SVGObserverUtils::GetAndObserveMarkers(this, &markerFrames)) {
-      nsTArray<nsSVGMark> marks;
+      nsTArray<SVGMark> marks;
       element->GetMarkPoints(&marks);
       if (uint32_t num = marks.Length()) {
         SVGContextPaint* contextPaint =
             SVGContextPaint::GetContextPaint(GetContent());
         float strokeWidth = nsSVGUtils::GetStrokeWidth(this, contextPaint);
         for (uint32_t i = 0; i < num; i++) {
-          const nsSVGMark& mark = marks[i];
+          const SVGMark& mark = marks[i];
           nsSVGMarkerFrame* frame = markerFrames[mark.type];
           if (frame) {
             frame->PaintMark(aContext, aTransform, this, mark, strokeWidth,

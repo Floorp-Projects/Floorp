@@ -5,41 +5,41 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SMILFloatType.h"
-#include "nsSMILValue.h"
+
+#include "mozilla/SMILValue.h"
 #include "nsDebug.h"
 #include <math.h>
 
 namespace mozilla {
 
-void SMILFloatType::Init(nsSMILValue& aValue) const {
+void SMILFloatType::Init(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
   aValue.mU.mDouble = 0.0;
   aValue.mType = this;
 }
 
-void SMILFloatType::Destroy(nsSMILValue& aValue) const {
+void SMILFloatType::Destroy(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value");
   aValue.mU.mDouble = 0.0;
   aValue.mType = SMILNullType::Singleton();
 }
 
-nsresult SMILFloatType::Assign(nsSMILValue& aDest,
-                               const nsSMILValue& aSrc) const {
+nsresult SMILFloatType::Assign(SMILValue& aDest, const SMILValue& aSrc) const {
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value");
   aDest.mU.mDouble = aSrc.mU.mDouble;
   return NS_OK;
 }
 
-bool SMILFloatType::IsEqual(const nsSMILValue& aLeft,
-                            const nsSMILValue& aRight) const {
+bool SMILFloatType::IsEqual(const SMILValue& aLeft,
+                            const SMILValue& aRight) const {
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
   return aLeft.mU.mDouble == aRight.mU.mDouble;
 }
 
-nsresult SMILFloatType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+nsresult SMILFloatType::Add(SMILValue& aDest, const SMILValue& aValueToAdd,
                             uint32_t aCount) const {
   MOZ_ASSERT(aValueToAdd.mType == aDest.mType, "Trying to add invalid types");
   MOZ_ASSERT(aValueToAdd.mType == this, "Unexpected source type");
@@ -47,8 +47,8 @@ nsresult SMILFloatType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   return NS_OK;
 }
 
-nsresult SMILFloatType::ComputeDistance(const nsSMILValue& aFrom,
-                                        const nsSMILValue& aTo,
+nsresult SMILFloatType::ComputeDistance(const SMILValue& aFrom,
+                                        const SMILValue& aTo,
                                         double& aDistance) const {
   MOZ_ASSERT(aFrom.mType == aTo.mType, "Trying to compare different types");
   MOZ_ASSERT(aFrom.mType == this, "Unexpected source type");
@@ -61,10 +61,10 @@ nsresult SMILFloatType::ComputeDistance(const nsSMILValue& aFrom,
   return NS_OK;
 }
 
-nsresult SMILFloatType::Interpolate(const nsSMILValue& aStartVal,
-                                    const nsSMILValue& aEndVal,
+nsresult SMILFloatType::Interpolate(const SMILValue& aStartVal,
+                                    const SMILValue& aEndVal,
                                     double aUnitDistance,
-                                    nsSMILValue& aResult) const {
+                                    SMILValue& aResult) const {
   MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
              "Trying to interpolate different types");
   MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");

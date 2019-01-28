@@ -24,8 +24,10 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
   return new Promise(resolve => {
     threadClient.addOneTimeListener("paused", async function(event, packet) {
       const location = { line: debuggee.line0 + 3 };
-      const source = threadClient.source(packet.frame.where.source);
-
+      const source = await getSourceById(
+        threadClient,
+        packet.frame.where.actor
+      );
       // First, make sure that we can disable sliding with the
       // `noSliding` option.
       await test_no_skip_breakpoint(source, location, debuggee);
@@ -39,7 +41,7 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
       threadClient.addOneTimeListener("paused", function(event, packet) {
         // Check the return value.
         Assert.equal(packet.type, "paused");
-        Assert.equal(packet.frame.where.source.actor, source.actor);
+        Assert.equal(packet.frame.where.actor, source.actor);
         Assert.equal(packet.frame.where.line, location.line + 1);
         Assert.equal(packet.why.type, "breakpoint");
         Assert.equal(packet.why.actors[0], bpClient.actor);

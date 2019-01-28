@@ -2,11 +2,11 @@
 
 use super::node::Removed;
 use super::{slice_insert, slice_shift, Comparator, Forest, Node, NodeData, NodePool, MAX_PATH};
-use std::borrow::Borrow;
-use std::marker::PhantomData;
+use core::borrow::Borrow;
+use core::marker::PhantomData;
 
 #[cfg(test)]
-use std::fmt;
+use core::fmt;
 
 pub(super) struct Path<F: Forest> {
     /// Number of path entries including the root and leaf nodes.
@@ -476,7 +476,7 @@ impl<F: Forest> Path<F> {
         match status {
             Removed::Healthy => {}
             Removed::Rightmost => {
-                // The rightmost entry was removed from the curent node, so move the path so it
+                // The rightmost entry was removed from the current node, so move the path so it
                 // points at the first entry of the next node at this level.
                 debug_assert_eq!(
                     usize::from(self.entry[level]),
@@ -706,7 +706,7 @@ impl<F: Forest> fmt::Display for Path<F> {
 mod tests {
     use super::super::{Forest, NodeData, NodePool};
     use super::*;
-    use std::cmp::Ordering;
+    use core::cmp::Ordering;
 
     struct TC();
 

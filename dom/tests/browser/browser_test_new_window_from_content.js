@@ -106,7 +106,7 @@ registerCleanupFunction(function() {
  */
 function prepareForResult(aBrowser, aExpectation) {
   let expectedSpec = kContentDoc.replace(/[^\/]*$/, "dummy.html");
-  switch(aExpectation) {
+  switch (aExpectation) {
     case kSameTab:
       return (async function() {
         await BrowserTestUtils.browserLoaded(aBrowser);
@@ -115,7 +115,6 @@ function prepareForResult(aBrowser, aExpectation) {
         await BrowserTestUtils.loadURI(aBrowser, kContentDoc);
         await BrowserTestUtils.browserLoaded(aBrowser);
       })();
-      break;
     case kNewWin:
       return (async function() {
         let newWin = await BrowserTestUtils.waitForNewWindow({url: expectedSpec});
@@ -123,7 +122,6 @@ function prepareForResult(aBrowser, aExpectation) {
         is(newBrowser.currentURI.spec, expectedSpec, "Should be at dummy.html");
         await BrowserTestUtils.closeWindow(newWin);
       })();
-      break;
     case kNewTab:
       return (async function() {
         let newTab = await BrowserTestUtils.waitForNewTab(gBrowser);
@@ -131,13 +129,10 @@ function prepareForResult(aBrowser, aExpectation) {
            "Should be at dummy.html");
         BrowserTestUtils.removeTab(newTab);
       })();
-      break;
     default:
-      ok(false, "prepareForResult can't handle an expectation of " + aExpectation)
-      return;
+      ok(false, "prepareForResult can't handle an expectation of " + aExpectation);
+      return Promise.resolve();
   }
-
-  return deferred.promise;
 }
 
 /**

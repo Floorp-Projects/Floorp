@@ -607,13 +607,13 @@ class IdleObject final {
 
     NS_NewTimerWithFuncCallback(getter_AddRefs(mTimer), Method4, this, 10,
                                 nsITimer::TYPE_ONE_SHOT, "IdleObject::Method3");
-    NS_IdleDispatchToCurrentThread(
+    NS_DispatchToCurrentThreadQueue(
         NewIdleRunnableMethodWithTimer("IdleObject::Method5", this,
                                        &IdleObject::Method5),
-        50);
-    NS_IdleDispatchToCurrentThread(
+        50, EventQueuePriority::Idle);
+    NS_DispatchToCurrentThreadQueue(
         NewRunnableMethod("IdleObject::Method6", this, &IdleObject::Method6),
-        100);
+        100, EventQueuePriority::Idle);
 
     PR_Sleep(PR_MillisecondsToInterval(200));
     mRunnableExecuted[3] = true;
@@ -664,23 +664,33 @@ TEST(ThreadUtils, IdleRunnableMethod) {
 
     NS_DispatchToCurrentThread(
         NewRunnableMethod("IdleObject::Method0", idle, &IdleObject::Method0));
-    NS_IdleDispatchToCurrentThread(NewIdleRunnableMethod(
-        "IdleObject::Method1", idle, &IdleObject::Method1));
-    NS_IdleDispatchToCurrentThread(
+    NS_DispatchToCurrentThreadQueue(
+        NewIdleRunnableMethod("IdleObject::Method1", idle,
+                              &IdleObject::Method1),
+        EventQueuePriority::Idle);
+    NS_DispatchToCurrentThreadQueue(
         NewIdleRunnableMethodWithTimer("IdleObject::Method2", idle,
                                        &IdleObject::Method2),
-        60000);
-    NS_IdleDispatchToCurrentThread(NewIdleRunnableMethod(
-        "IdleObject::Method7", idle, &IdleObject::Method7));
-    NS_IdleDispatchToCurrentThread(NewIdleRunnableMethod<const char*, uint32_t>(
-        "IdleObject::CheckExecutedMethods", idle,
-        &IdleObject::CheckExecutedMethods, "final", 8));
-    NS_IdleDispatchToCurrentThread(NewIdleRunnableMethod(
-        "IdleObjectWithoutSetDeadline::Method", idleNoSetDeadline,
-        &IdleObjectWithoutSetDeadline::Method));
-    NS_IdleDispatchToCurrentThread(NewIdleRunnableMethod(
-        "IdleObjectInheritedSetDeadline::Method", idleInheritedSetDeadline,
-        &IdleObjectInheritedSetDeadline::Method));
+        60000, EventQueuePriority::Idle);
+    NS_DispatchToCurrentThreadQueue(
+        NewIdleRunnableMethod("IdleObject::Method7", idle,
+                              &IdleObject::Method7),
+        EventQueuePriority::Idle);
+    NS_DispatchToCurrentThreadQueue(
+        NewIdleRunnableMethod<const char*, uint32_t>(
+            "IdleObject::CheckExecutedMethods", idle,
+            &IdleObject::CheckExecutedMethods, "final", 8),
+        EventQueuePriority::Idle);
+    NS_DispatchToCurrentThreadQueue(
+        NewIdleRunnableMethod("IdleObjectWithoutSetDeadline::Method",
+                              idleNoSetDeadline,
+                              &IdleObjectWithoutSetDeadline::Method),
+        EventQueuePriority::Idle);
+    NS_DispatchToCurrentThreadQueue(
+        NewIdleRunnableMethod("IdleObjectInheritedSetDeadline::Method",
+                              idleInheritedSetDeadline,
+                              &IdleObjectInheritedSetDeadline::Method),
+        EventQueuePriority::Idle);
 
     NS_ProcessPendingEvents(nullptr);
 

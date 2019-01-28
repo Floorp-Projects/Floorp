@@ -14,7 +14,10 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   equal(dbgStmt.frame.where.line, 3, "Should be at debugger statement on line 3");
 
   dumpn("Setting breakpoint in innerFunction");
-  const source = threadClient.source(dbgStmt.frame.where.source);
+  const source = await getSourceById(
+    threadClient,
+    dbgStmt.frame.where.actor
+  );
   await source.setBreakpoint({ line: 7 });
 
   dumpn("Step in to innerFunction");

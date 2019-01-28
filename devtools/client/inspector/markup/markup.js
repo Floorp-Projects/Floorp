@@ -41,6 +41,7 @@ const DRAG_DROP_HEIGHT_TO_SPEED_MIN = 0.5;
 const DRAG_DROP_HEIGHT_TO_SPEED_MAX = 1;
 const ATTR_COLLAPSE_ENABLED_PREF = "devtools.markup.collapseAttributes";
 const ATTR_COLLAPSE_LENGTH_PREF = "devtools.markup.collapseAttributeLength";
+const SCROLLABLE_BADGE_PREF = "devtools.inspector.scrollable-badges.enabled";
 
 /**
  * Vocabulary for the purposes of this file:
@@ -81,6 +82,7 @@ function MarkupView(inspector, frame, controllerWindow) {
 
   this.collapseAttributes = Services.prefs.getBoolPref(ATTR_COLLAPSE_ENABLED_PREF);
   this.collapseAttributeLength = Services.prefs.getIntPref(ATTR_COLLAPSE_LENGTH_PREF);
+  this.isScrollableBadgesEnabled = Services.prefs.getBoolPref(SCROLLABLE_BADGE_PREF);
 
   // Creating the popup to be used to show CSS suggestions.
   // The popup will be attached to the toolbox document.
@@ -100,7 +102,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._onBlur = this._onBlur.bind(this);
   this._onCopy = this._onCopy.bind(this);
   this._onCollapseAttributesPrefChange = this._onCollapseAttributesPrefChange.bind(this);
-  this._onDisplayChange = this._onDisplayChange.bind(this);
+  this._onWalkerNodeStatesChanged = this._onWalkerNodeStatesChanged.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._onMouseClick = this._onMouseClick.bind(this);
   this._onMouseMove = this._onMouseMove.bind(this);
@@ -117,7 +119,10 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._elt.addEventListener("mouseout", this._onMouseOut);
   this._frame.addEventListener("focus", this._onFocus);
   this.inspector.selection.on("new-node-front", this._onNewSelection);
-  this.walker.on("display-change", this._onDisplayChange);
+  this.walker.on("display-change", this._onWalkerNodeStatesChanged);
+  if (this.isScrollableBadgesEnabled) {
+    this.walker.on("scrollable-change", this._onWalkerNodeStatesChanged);
+  }
   this.walker.on("mutations", this._mutationObserver);
   this.win.addEventListener("copy", this._onCopy);
   this.win.addEventListener("mouseup", this._onMouseUp);
@@ -1165,12 +1170,14 @@ MarkupView.prototype = {
   },
 
   /**
-   * React to display-change events from the walker
+   * React to display-change and scrollable-change events from the walker. These are
+   * events that tell us when something of interest changed on a collection of nodes:
+   * whether their display type changed, or whether they became scrollable.
    *
    * @param  {Array} nodes
    *         An array of nodeFronts
    */
-  _onDisplayChange: function(nodes) {
+  _onWalkerNodeStatesChanged: function(nodes) {
     for (const node of nodes) {
       const container = this.getContainer(node);
       if (container) {
@@ -1956,7 +1963,10 @@ MarkupView.prototype = {
     this.inspector.inspector.nodePicker.off(
       "picker-node-hovered", this._onToolboxPickerHover
     );
-    this.walker.off("display-change", this._onDisplayChange);
+    this.walker.off("display-change", this._onWalkerNodeStatesChanged);
+    if (this.isScrollableBadgesEnabled) {
+      this.walker.off("scrollable-change", this._onWalkerNodeStatesChanged);
+    }
     this.walker.off("mutations", this._mutationObserver);
     this.win.removeEventListener("copy", this._onCopy);
     this.win.removeEventListener("mouseup", this._onMouseUp);

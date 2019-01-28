@@ -7,7 +7,6 @@
 #include "mozilla/dom/SVGMarkerElement.h"
 
 #include "nsGkAtoms.h"
-#include "nsCOMPtr.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsError.h"
 #include "mozilla/ArrayUtils.h"
@@ -17,6 +16,7 @@
 #include "mozilla/dom/SVGMarkerElementBinding.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/RefPtr.h"
 #include "SVGContentUtils.h"
 
 using namespace mozilla::gfx;
@@ -250,7 +250,7 @@ SVGAnimatedPreserveAspectRatio* SVGMarkerElement::GetPreserveAspectRatio() {
 // public helpers
 
 gfx::Matrix SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
-                                                 const nsSVGMark& aMark) {
+                                                 const SVGMark& aMark) {
   float scale =
       mEnumAttributes[MARKERUNITS].GetAnimValue() == SVG_MARKERUNITS_STROKEWIDTH
           ? aStrokeWidth
@@ -262,7 +262,7 @@ gfx::Matrix SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
       angle = aMark.angle;
       break;
     case SVG_MARKER_ORIENT_AUTO_START_REVERSE:
-      angle = aMark.angle + (aMark.type == nsSVGMark::eStart ? M_PI : 0.0f);
+      angle = aMark.angle + (aMark.type == SVGMark::eStart ? M_PI : 0.0f);
       break;
     default:  // SVG_MARKER_ORIENT_ANGLE
       angle = mAngleAttributes[ORIENT].GetAnimValue() * M_PI / 180.0f;

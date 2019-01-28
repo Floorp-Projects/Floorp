@@ -115,7 +115,7 @@ describe("Frames", () => {
         />
       );
       expect(component.text()).toBe(
-        "\trenderFoo http://myfile.com/mahscripts.js:55\n"
+        "renderFoo http://myfile.com/mahscripts.js:55"
       );
     });
 
@@ -263,6 +263,28 @@ describe("Frames", () => {
       const frameworkGroupingOn = true;
       const component = render({ frames, frameworkGroupingOn, selectedFrame });
 
+      expect(component).toMatchSnapshot();
+    });
+
+    it("selectable framework frames", () => {
+      const frames = [
+        { id: 1 },
+        { id: 2, library: "back" },
+        { id: 3, library: "back" },
+        { id: 8 }
+      ];
+
+      const selectedFrame = frames[0];
+
+      const component = render({
+        frames,
+        frameworkGroupingOn: false,
+        selectedFrame,
+        selectable: true
+      });
+      expect(component).toMatchSnapshot();
+
+      component.setProps({ frameworkGroupingOn: true });
       expect(component).toMatchSnapshot();
     });
   });

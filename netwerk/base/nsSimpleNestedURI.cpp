@@ -99,8 +99,8 @@ nsSimpleNestedURI::Write(nsIObjectOutputStream* aStream) {
   return rv;
 }
 
-// nsIIPCSerializableURI
-void nsSimpleNestedURI::Serialize(mozilla::ipc::URIParams& aParams) {
+NS_IMETHODIMP_(void)
+nsSimpleNestedURI::Serialize(mozilla::ipc::URIParams& aParams) {
   using namespace mozilla::ipc;
 
   SimpleNestedURIParams params;

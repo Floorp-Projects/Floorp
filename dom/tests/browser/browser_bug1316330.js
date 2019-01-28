@@ -1,6 +1,6 @@
 const URL =
   "data:text/html,<script>" +
-  "window.focus();" + 
+  "window.focus();" +
   "var down = 0; var press = 0;" +
   "onkeydown = function(e) {" +
   "  var startTime = Date.now();" +

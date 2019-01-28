@@ -19,6 +19,7 @@
 #include "nsGlobalWindow.h"
 #include "WorkerScope.h"
 #include "jsapi.h"
+#include "js/ContextOptions.h"
 #include "nsJSPrincipals.h"
 
 namespace mozilla {
