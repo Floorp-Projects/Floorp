@@ -229,7 +229,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   /**
    * Return the 'optimal viewing region' [1] as a rect suitable for use by
-   * scroll anchoring.
+   * scroll anchoring. This rect is in the same coordinate space as
+   * 'GetScrollPortRect'.
    *
    * [1] https://drafts.csswg.org/css-scroll-snap-1/#optimal-viewing-region
    */
