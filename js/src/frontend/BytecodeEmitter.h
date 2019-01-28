@@ -192,6 +192,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // code array).
   CGResumeOffsetList resumeOffsetList;
 
+  // Number of JOF_IC opcodes emitted.
+  size_t numICEntries;
+
   // Number of yield instructions emitted. Does not include JSOP_AWAIT.
   uint32_t numYields;
 
@@ -544,6 +547,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitCheckDerivedClassConstructorReturn();
 
   // Handle jump opcodes and jump targets.
+  MOZ_MUST_USE bool emitJumpTargetOp(JSOp op, ptrdiff_t* off);
   MOZ_MUST_USE bool emitJumpTarget(JumpTarget* target);
   MOZ_MUST_USE bool emitJumpNoFallthrough(JSOp op, JumpList* jump);
   MOZ_MUST_USE bool emitJump(JSOp op, JumpList* jump);
