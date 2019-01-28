@@ -2192,7 +2192,7 @@ void MediaManager::OnDeviceChange() {
         // On some Windows machine, if we call EnumerateRawDevices immediately
         // after receiving devicechange event, sometimes we would get outdated
         // devices list.
-        PR_Sleep(PR_MillisecondsToInterval(100));
+        PR_Sleep(PR_MillisecondsToInterval(200));
         auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
         self->EnumerateRawDevices(
                 0, MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
