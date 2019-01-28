@@ -1,8 +1,5 @@
-# We will be sourcing mozconfig files, which end up calling mk_add_options with
-# various settings. We only need the variable settings they create along the
-# way. Print them out, to be sucked up when running this file.
-mk_add_options() {
-  echo "$@"
+mk_export_correct_style() {
+  echo "export $1=$(cmd.exe //c echo %$1%)"
 }
 
 topsrcdir="$SOURCE"
@@ -28,6 +25,10 @@ fi
 mk_export_correct_style CC
 mk_export_correct_style CXX
 mk_export_correct_style LINKER
+mk_export_correct_style WINDOWSSDKDIR
+mk_export_correct_style PATH
+mk_export_correct_style INCLUDE
+mk_export_correct_style LIB
 
 # PATH also needs to point to mozmake.exe, which can come from either
 # newer mozilla-build or tooltool.
