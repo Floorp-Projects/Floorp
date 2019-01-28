@@ -665,6 +665,7 @@ impl AsInstanceKind<PrimitiveDataHandle> for PrimitiveKey {
         &self,
         data_handle: PrimitiveDataHandle,
         _: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         match self.kind {
             PrimitiveKeyKind::Clear => {
@@ -2507,6 +2508,7 @@ impl PrimitiveStore {
             }
             PrimitiveInstanceKind::TextRun { data_handle, run_index, .. } => {
                 let prim_data = &mut data_stores.text_run[*data_handle];
+                let run = &mut self.text_runs[*run_index];
 
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
@@ -2514,14 +2516,14 @@ impl PrimitiveStore {
 
                 // The transform only makes sense for screen space rasterization
                 let transform = prim_context.spatial_node.world_content_transform.to_transform();
+                let prim_offset = prim_instance.prim_origin.to_vector() - run.reference_frame_relative_offset;
 
                 // TODO(gw): This match is a bit untidy, but it should disappear completely
                 //           once the prepare_prims and batching are unified. When that
                 //           happens, we can use the cache handle immediately, and not need
                 //           to temporarily store it in the primitive instance.
-                let run = &mut self.text_runs[*run_index];
                 run.prepare_for_render(
-                    prim_data.offset,
+                    prim_offset,
                     &prim_data.font,
                     &prim_data.glyphs,
                     frame_context.device_pixel_scale,
