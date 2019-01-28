@@ -11,13 +11,6 @@ set -e
 
 ac_add_options() {
   for _mozconfig_opt; do
-    case "$_mozconfig_opt" in
-    --target=*)
-      echo "------BEGIN_MK_OPTION"
-      echo $_mozconfig_opt | sed s/--target/CONFIG_GUESS/
-      echo "------END_MK_OPTION"
-      ;;
-    esac
     echo "------BEGIN_AC_OPTION"
     echo $_mozconfig_opt
     echo "------END_AC_OPTION"
