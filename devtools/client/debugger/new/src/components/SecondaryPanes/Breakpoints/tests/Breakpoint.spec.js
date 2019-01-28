@@ -32,7 +32,7 @@ describe("Breakpoint", () => {
     const { component } = render({
       selectedSource: makeOriginalSource("foo"),
       frame: { selectedLocation: location },
-      breakpoint: { location }
+      breakpoint: { location, options: {} }
     });
 
     expect(component).toMatchSnapshot();
@@ -63,6 +63,7 @@ function makeBreakpoint(overrides = {}) {
     location,
     generatedLocation,
     disabled: false,
+    options: {},
     ...overrides
   };
 }

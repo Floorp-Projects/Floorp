@@ -85,7 +85,10 @@ export const conditionalBreakpointItem = (
   breakpoint: Breakpoint,
   breakpointActions: BreakpointItemActions
 ) => {
-  const { condition, location } = breakpoint;
+  const {
+    options: { condition },
+    location
+  } = breakpoint;
   return condition
     ? editConditionalBreakpointItem(location, breakpointActions)
     : addConditionalBreakpointItem(location, breakpointActions);
@@ -119,7 +122,10 @@ export const logPointItem = (
   breakpoint: Breakpoint,
   breakpointActions: BreakpointItemActions
 ) => {
-  const { condition, location } = breakpoint;
+  const {
+    options: { condition },
+    location
+  } = breakpoint;
   return condition
     ? editLogPointItem(location, breakpointActions)
     : addLogPointItem(location, breakpointActions);
