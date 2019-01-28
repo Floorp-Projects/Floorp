@@ -20,7 +20,7 @@ type Props = {
   toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
   toggleDisabledBreakpoint: typeof actions.toggleDisabledBreakpoint,
   selectSpecificLocation: typeof actions.selectSpecificLocation,
-  setBreakpointCondition: typeof actions.setBreakpointCondition,
+  setBreakpointOptions: typeof actions.setBreakpointOptions,
   openConditionalPanel: typeof actions.openConditionalPanel,
   contextMenuEvent: SyntheticEvent<HTMLElement>
 };
@@ -37,7 +37,7 @@ export default function showContextMenu(props: Props) {
     toggleAllBreakpoints,
     toggleDisabledBreakpoint,
     selectSpecificLocation,
-    setBreakpointCondition,
+    setBreakpointOptions,
     openConditionalPanel,
     contextMenuEvent
   } = props;
@@ -189,7 +189,7 @@ export default function showContextMenu(props: Props) {
     label: removeConditionLabel,
     accesskey: removeConditionKey,
     disabled: false,
-    click: () => setBreakpointCondition(selectedLocation)
+    click: () => setBreakpointOptions(selectedLocation, {})
   };
 
   const addConditionItem = {
@@ -245,15 +245,15 @@ export default function showContextMenu(props: Props) {
     },
     {
       item: addConditionItem,
-      hidden: () => breakpoint.condition
+      hidden: () => breakpoint.options.condition
     },
     {
       item: editConditionItem,
-      hidden: () => !breakpoint.condition
+      hidden: () => !breakpoint.options.condition
     },
     {
       item: removeConditionItem,
-      hidden: () => !breakpoint.condition
+      hidden: () => !breakpoint.options.condition
     }
   ];
 

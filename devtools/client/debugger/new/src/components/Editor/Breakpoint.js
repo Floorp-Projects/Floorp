@@ -116,7 +116,7 @@ class Breakpoint extends PureComponent<Props> {
     const { breakpoint, editor, selectedSource } = this.props;
 
     // Hidden Breakpoints are never rendered on the client
-    if (breakpoint.hidden) {
+    if (breakpoint.options.hidden) {
       return;
     }
 
@@ -133,12 +133,10 @@ class Breakpoint extends PureComponent<Props> {
     doc.setGutterMarker(line, "breakpoints", this.makeMarker());
 
     editor.codeMirror.addLineClass(line, "line", "new-breakpoint");
-    if (breakpoint.condition) {
-      if (breakpoint.log) {
-        editor.codeMirror.addLineClass(line, "line", "has-condition log");
-      } else {
-        editor.codeMirror.addLineClass(line, "line", "has-condition");
-      }
+    if (breakpoint.options.condition) {
+      editor.codeMirror.addLineClass(line, "line", "has-condition");
+    } else if (breakpoint.options.logValue) {
+      editor.codeMirror.addLineClass(line, "line", "has-condition log");
     } else {
       editor.codeMirror.removeLineClass(line, "line", "has-condition");
     }

@@ -57,7 +57,7 @@ export type BreakpointAction =
       +status: "done"
     |}
   | {|
-      +type: "SET_BREAKPOINT_CONDITION",
+      +type: "SET_BREAKPOINT_OPTIONS",
       +breakpoint: Breakpoint
     |}
   | PromiseAction<{|

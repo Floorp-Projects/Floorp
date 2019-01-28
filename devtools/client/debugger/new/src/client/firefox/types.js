@@ -11,6 +11,7 @@
  */
 
 import type {
+  BreakpointOptions,
   FrameId,
   ActorId,
   Script,
@@ -387,14 +388,12 @@ export type BreakpointClient = {
     actor: string,
     url: string,
     line: number,
-    column: ?number,
-    condition: string
+    column: ?number
   },
-  setCondition: (ThreadClient, boolean, boolean) => Promise<BreakpointClient>,
-  // getCondition: () => any,
-  // hasCondition: () => any,
+  setCondition: (ThreadClient, ?string) => Promise<BreakpointClient>,
   // request: any,
-  source: SourceClient
+  source: SourceClient,
+  options: BreakpointOptions
 };
 
 export type BPClients = { [id: ActorId]: BreakpointClient };

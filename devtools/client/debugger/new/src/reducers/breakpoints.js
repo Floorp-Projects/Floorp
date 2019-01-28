@@ -64,7 +64,7 @@ function update(
       return updateAllBreakpoints(state, action);
     }
 
-    case "SET_BREAKPOINT_CONDITION": {
+    case "SET_BREAKPOINT_OPTIONS": {
       return updateBreakpoint(state, action);
     }
 
@@ -323,7 +323,7 @@ export function getBreakpointForLocation(
 
 export function getHiddenBreakpoint(state: OuterState): ?Breakpoint {
   const breakpoints = getBreakpointsList(state);
-  return breakpoints.find(bp => bp.hidden);
+  return breakpoints.find(bp => bp.options.hidden);
 }
 
 export default update;

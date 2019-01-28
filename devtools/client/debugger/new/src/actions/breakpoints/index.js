@@ -36,18 +36,13 @@ import { isEmptyLineInSource } from "../../reducers/ast";
 import type { ThunkArgs, Action } from "../types";
 import type {
   Breakpoint,
+  BreakpointOptions,
   Source,
   SourceLocation,
   XHRBreakpoint
 } from "../../types";
 
 import { recordEvent } from "../../utils/telemetry";
-
-export type addBreakpointOptions = {
-  condition?: string,
-  hidden?: boolean,
-  log?: boolean
-};
 
 /**
  * Remove a single breakpoint
@@ -260,25 +255,24 @@ export function remapBreakpoints(sourceId: string) {
 }
 
 /**
- * Update the condition of a breakpoint.
+ * Update the options of a breakpoint.
  *
  * @throws {Error} "not implemented"
  * @memberof actions/breakpoints
  * @static
  * @param {SourceLocation} location
  *        @see DebuggerController.Breakpoints.addBreakpoint
- * @param {string} condition
- *        The condition to set on the breakpoint
- * @param {Boolean} $1.disabled Disable value for breakpoint value
+ * @param {Object} options
+ *        Any options to set on the breakpoint
  */
-export function setBreakpointCondition(
+export function setBreakpointOptions(
   location: SourceLocation,
-  { condition, log = false }: addBreakpointOptions = {}
+  options: BreakpointOptions = {}
 ) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const bp = getBreakpoint(getState(), location);
     if (!bp) {
-      return dispatch(addBreakpoint(location, { condition, log }));
+      return dispatch(addBreakpoint(location, options));
     }
 
     if (bp.loading) {
@@ -289,20 +283,20 @@ export function setBreakpointCondition(
       await dispatch(enableBreakpoint(bp));
     }
 
-    await client.setBreakpointCondition(
+    await client.setBreakpointOptions(
       bp.id,
       location,
-      condition,
+      options,
       isOriginalId(bp.location.sourceId)
     );
 
-    const newBreakpoint = { ...bp, disabled: false, condition, log };
+    const newBreakpoint = { ...bp, disabled: false, options };
 
     assertBreakpoint(newBreakpoint);
 
     return dispatch(
       ({
-        type: "SET_BREAKPOINT_CONDITION",
+        type: "SET_BREAKPOINT_OPTIONS",
         breakpoint: newBreakpoint
       }: Action)
     );
