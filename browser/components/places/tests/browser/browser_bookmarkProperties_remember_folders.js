@@ -47,7 +47,7 @@ async function assertRecentFolders(expectedGuids, msg) {
   let actualGuids = [];
   function getGuids() {
     actualGuids = [];
-    const folderMenuPopup = document.getElementById("editBMPanel_folderMenuList").children[0];
+    const folderMenuPopup = document.getElementById("editBMPanel_folderMenuList").menupopup;
 
     let separatorFound = false;
     // The list of folders goes from editBMPanel_foldersSeparator to the end.

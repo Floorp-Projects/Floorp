@@ -181,7 +181,7 @@ class OrderedListBox {
 class SortedItemSelectList {
   constructor({menulist, button, onSelect, onChange, compareFn}) {
     this.menulist = menulist;
-    this.popup = menulist.firstElementChild;
+    this.popup = menulist.menupopup;
     this.button = button;
     this.compareFn = compareFn;
     this.items = [];
