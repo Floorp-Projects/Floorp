@@ -327,10 +327,10 @@ IPCResult HttpBackgroundChannelChild::RecvNotifyCookieAllowed() {
   return IPC_OK();
 }
 
-IPCResult HttpBackgroundChannelChild::RecvNotifyTrackingCookieBlocked(
+IPCResult HttpBackgroundChannelChild::RecvNotifyCookieBlocked(
     const uint32_t& aRejectedReason) {
   LOG(
-      ("HttpBackgroundChannelChild::RecvNotifyTrackingCookieBlocked [this=%p "
+      ("HttpBackgroundChannelChild::RecvNotifyCookieBlocked [this=%p "
        "aRejectedReason=%" PRIu32 "]\n",
        this, aRejectedReason));
   MOZ_ASSERT(OnSocketThread());
@@ -339,7 +339,7 @@ IPCResult HttpBackgroundChannelChild::RecvNotifyTrackingCookieBlocked(
     return IPC_OK();
   }
 
-  mChannelChild->ProcessNotifyTrackingCookieBlocked(aRejectedReason);
+  mChannelChild->ProcessNotifyCookieBlocked(aRejectedReason);
 
   return IPC_OK();
 }
