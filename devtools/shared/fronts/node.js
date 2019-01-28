@@ -107,8 +107,8 @@ class AttributeModificationList {
  * to traverse children.
  */
 class NodeFront extends FrontClassWithSpec(nodeSpec) {
-  constructor(conn, form, detail, ctx) {
-    super(conn, form, detail, ctx);
+  constructor(conn, form) {
+    super(conn, form);
     // The parent node
     this._parent = null;
     // The first child of this node.

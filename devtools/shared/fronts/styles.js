@@ -25,11 +25,7 @@ class PageStyleFront extends FrontClassWithSpec(pageStyleSpec) {
     this.inspector = this.parent();
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this._form = form;
   }
 

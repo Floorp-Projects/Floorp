@@ -20,10 +20,7 @@ const ChildActor = protocol.ActorClassWithSpec(childSpec, {
     this.childID = id;
   },
 
-  form: function(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
+  form: function() {
     return {
       actor: this.actorID,
       childID: this.childID,
@@ -70,10 +67,7 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
 });
 
 class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
-  form(form, detail) {
-    if (detail === "actorid") {
-      return;
-    }
+  form(form) {
     this.childID = form.childID;
   }
 }

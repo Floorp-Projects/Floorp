@@ -13,11 +13,7 @@ const {
 } = require("devtools/shared/specs/layout");
 
 class FlexboxFront extends FrontClassWithSpec(flexboxSpec) {
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this._form = form;
   }
 
@@ -42,11 +38,7 @@ class FlexboxFront extends FrontClassWithSpec(flexboxSpec) {
 }
 
 class FlexItemFront extends FrontClassWithSpec(flexItemSpec) {
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this._form = form;
   }
 
@@ -85,11 +77,7 @@ class FlexItemFront extends FrontClassWithSpec(flexItemSpec) {
 }
 
 class GridFront extends FrontClassWithSpec(gridSpec) {
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this._form = form;
   }
 

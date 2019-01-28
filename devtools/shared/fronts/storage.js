@@ -8,12 +8,7 @@ const { childSpecs, storageSpec } = require("devtools/shared/specs/storage");
 
 for (const childSpec of Object.values(childSpecs)) {
   class ChildStorageFront extends FrontClassWithSpec(childSpec) {
-    form(form, detail) {
-      if (detail === "actorid") {
-        this.actorID = form;
-        return null;
-      }
-
+    form(form) {
       this.actorID = form.actor;
       this.hosts = form.hosts;
       return null;

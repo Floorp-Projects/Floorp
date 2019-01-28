@@ -34,10 +34,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
     this._transport = null;
   },
 
-  form(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
+  form() {
     const form = {
       actor: this.actorID,
       consoleActor: this._consoleActor,

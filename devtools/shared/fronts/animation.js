@@ -13,18 +13,14 @@ const {
 } = require("devtools/shared/specs/animation");
 
 class AnimationPlayerFront extends FrontClassWithSpec(animationPlayerSpec) {
-  constructor(conn, form, detail, ctx) {
-    super(conn, form, detail, ctx);
+  constructor(conn, form) {
+    super(conn, form);
 
     this.state = {};
     this.before("changed", this.onChanged.bind(this));
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this._form = form;
     this.state = this.initialState;
   }

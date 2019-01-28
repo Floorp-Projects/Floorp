@@ -100,11 +100,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     protocol.Actor.prototype.destroy.call(this);
   },
 
-  form: function(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
+  form: function() {
     const form = {
       actor: this.actorID,  // actorID is set when this is added to a pool
       mediaText: this.rawRule.media.mediaText,
@@ -387,11 +383,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         With properties of the underlying stylesheet, plus 'text',
    *        'styleSheetIndex' and 'parentActor' if it's @imported
    */
-  form: function(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
+  form: function() {
     let docHref;
     if (this.ownerNode) {
       if (this.ownerNode.nodeType == this.ownerNode.DOCUMENT_NODE) {
