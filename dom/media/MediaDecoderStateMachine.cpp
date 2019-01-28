@@ -2442,13 +2442,19 @@ void MediaDecoderStateMachine::DecodingState::MaybeStartBuffering() {
 void MediaDecoderStateMachine::LoopingDecodingState::HandleError(
     const MediaResult& aError) {
   SLOG("audio looping failed, aError=%s", aError.ErrorName().get());
-  // This would happen after we've closed resouce so that we won't be able to
-  // get any sample anymore.
-  if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-    SetState<CompletedState>();
-    return;
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+      HandleWaitingForAudio();
+      break;
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+      // This would happen after we've closed resouce so that we won't be able
+      // to get any sample anymore.
+      SetState<CompletedState>();
+      break;
+    default:
+      mMaster->DecodeError(aError);
+      break;
   }
-  mMaster->DecodeError(aError);
 }
 
 void MediaDecoderStateMachine::SeekingState::SeekCompleted() {

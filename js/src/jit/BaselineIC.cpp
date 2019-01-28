@@ -258,9 +258,7 @@ void ICEntry::trace(JSTracer* trc) {
       case JSOP_INITPROP:
       case JSOP_INITLOCKEDPROP:
       case JSOP_INITHIDDENPROP:
-      case JSOP_SETALIASEDVAR:
       case JSOP_INITGLEXICAL:
-      case JSOP_INITALIASEDLEXICAL:
       case JSOP_SETPROP:
       case JSOP_STRICTSETPROP:
       case JSOP_SETNAME:
@@ -2999,16 +2997,9 @@ static bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
              op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
              op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME ||
              op == JSOP_INITPROP || op == JSOP_INITLOCKEDPROP ||
-             op == JSOP_INITHIDDENPROP || op == JSOP_SETALIASEDVAR ||
-             op == JSOP_INITALIASEDLEXICAL || op == JSOP_INITGLEXICAL);
+             op == JSOP_INITHIDDENPROP || op == JSOP_INITGLEXICAL);
 
-  RootedPropertyName name(cx);
-  if (op == JSOP_SETALIASEDVAR || op == JSOP_INITALIASEDLEXICAL) {
-    name = EnvironmentCoordinateName(cx->caches().envCoordinateNameCache,
-                                     script, pc);
-  } else {
-    name = script->getName(pc);
-  }
+  RootedPropertyName name(cx, script->getName(pc));
   RootedId id(cx, NameToId(name));
 
   RootedObject obj(cx, ToObjectFromStack(cx, lhs));
@@ -3073,9 +3064,6 @@ static bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     if (!SetNameOperation(cx, script, pc, obj, rhs)) {
       return false;
     }
-  } else if (op == JSOP_SETALIASEDVAR || op == JSOP_INITALIASEDLEXICAL) {
-    obj->as<EnvironmentObject>().setAliasedBinding(
-        cx, EnvironmentCoordinate(pc), name, rhs);
   } else if (op == JSOP_INITGLEXICAL) {
     RootedValue v(cx, rhs);
     LexicalEnvironmentObject* lexicalEnv;
@@ -3294,8 +3282,7 @@ static bool TryAttachFunCallStub(JSContext* cx, ICCall_Fallback* stub,
 
 static bool GetTemplateObjectForNative(JSContext* cx, HandleFunction target,
                                        const CallArgs& args,
-                                       MutableHandleObject res,
-                                       bool* skipAttach) {
+                                       MutableHandleObject res) {
   Native native = target->native();
 
   // Check for natives to which template objects can be attached. This is
@@ -3314,16 +3301,6 @@ static bool GetTemplateObjectForNative(JSContext* cx, HandleFunction target,
     }
 
     if (count <= ArrayObject::EagerAllocationMaxLength) {
-      ObjectGroup* group =
-          ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array);
-      if (!group) {
-        return false;
-      }
-      if (group->maybePreliminaryObjectsDontCheckGeneration()) {
-        *skipAttach = true;
-        return true;
-      }
-
       // With this and other array templates, analyze the group so that
       // we don't end up with a template whose structure might change later.
       res.set(NewFullyAllocatedArrayForCallingAllocationSite(cx, count,
@@ -3351,10 +3328,6 @@ static bool GetTemplateObjectForNative(JSContext* cx, HandleFunction target,
     if (args.thisv().isObject()) {
       RootedObject obj(cx, &args.thisv().toObject());
       if (!obj->isSingleton()) {
-        if (obj->group()->maybePreliminaryObjectsDontCheckGeneration()) {
-          *skipAttach = true;
-          return true;
-        }
         res.set(NewFullyAllocatedArrayTryReuseGroup(cx, obj, 0, TenuredObject));
         return !!res;
       }
@@ -3694,15 +3667,9 @@ static bool TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub,
 
     RootedObject templateObject(cx);
     if (MOZ_LIKELY(!isSpread && !isSuper && !isCrossRealm)) {
-      bool skipAttach = false;
       CallArgs args = CallArgsFromVp(argc, vp);
-      if (!GetTemplateObjectForNative(cx, fun, args, &templateObject,
-                                      &skipAttach)) {
+      if (!GetTemplateObjectForNative(cx, fun, args, &templateObject)) {
         return false;
-      }
-      if (skipAttach) {
-        *handled = true;
-        return true;
       }
       MOZ_ASSERT_IF(templateObject,
                     !templateObject->group()
@@ -6072,8 +6039,7 @@ static bool DoNewArray(JSContext* cx, BaselineFrame* frame,
       return false;
     }
 
-    if (!obj->isSingleton() &&
-        !obj->group()->maybePreliminaryObjectsDontCheckGeneration()) {
+    if (!obj->isSingleton()) {
       JSObject* templateObject =
           NewArrayOperation(cx, script, pc, length, TenuredObject);
       if (!templateObject) {

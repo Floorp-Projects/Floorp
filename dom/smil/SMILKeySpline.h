@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILKEYSPLINE_H_
-#define NS_SMILKEYSPLINE_H_
+#ifndef mozilla_SMILKeySpline_h
+#define mozilla_SMILKeySpline_h
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
@@ -104,4 +104,4 @@ class SMILKeySpline {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILKEYSPLINE_H_
+#endif  // mozilla_SMILKeySpline_h

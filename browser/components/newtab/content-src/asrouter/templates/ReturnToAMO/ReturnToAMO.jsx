@@ -14,8 +14,6 @@ export class ReturnToAMO extends React.PureComponent {
 
   onClickAddExtension() {
     this.props.onAction(this.props.content.primary_button.action);
-    this.props.onBlock();
-    document.body.classList.remove("welcome", "hide-main", "amo");
   }
 
   onBlockButton() {

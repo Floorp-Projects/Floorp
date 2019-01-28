@@ -342,7 +342,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         parser = StructuredOutputParser(config=self.config,
                                         log_obj=self.log_obj,
                                         log_compact=True,
-                                        error_list=BaseErrorList + HarnessErrorList)
+                                        error_list=BaseErrorList + HarnessErrorList,
+                                        allow_crashes=True)
 
         env = {'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir']}
         env['RUST_BACKTRACE'] = 'full'

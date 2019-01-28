@@ -1,7 +1,16 @@
 AntiTracking.runTest("localStorage with a tracker that is whitelisted via a pref",
   async _ => {
-    localStorage.foo = 42;
-    ok(true, "LocalStorage is allowed");
+    let shouldThrow = SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT;
+
+    let hasThrown;
+    try {
+      localStorage.foo = 42;
+      hasThrown = false;
+    } catch (e) {
+      hasThrown = true;
+    }
+
+    is(hasThrown, shouldThrow, "LocalStorage is allowed");
   },
   async _ => {
     localStorage.foo = 42;
@@ -20,8 +29,17 @@ AntiTracking.runTest("localStorage with a tracker that is whitelisted via a pref
 
 AntiTracking.runTest("localStorage with a tracker that is whitelisted via a fancy pref",
   async _ => {
-    localStorage.foo = 42;
-    ok(true, "LocalStorage is allowed");
+    let shouldThrow = SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT;
+
+    let hasThrown;
+    try {
+      localStorage.foo = 42;
+      hasThrown = false;
+    } catch (e) {
+      hasThrown = true;
+    }
+
+    is(hasThrown, shouldThrow, "LocalStorage is allowed");
   },
   async _ => {
     localStorage.foo = 42;

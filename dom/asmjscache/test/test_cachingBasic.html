@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=929236
         evalAsync(code);
         break;
       case 1:
-        ok(jsFuns.isAsmJSModuleLoadedFromCache(module), "module loaded from cache");
+        ok(jsFuns.isAsmJSModule(module), "module");
         SimpleTest.finish();
         break;
       default:

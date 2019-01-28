@@ -680,14 +680,15 @@ FBStatus WebGLFramebuffer::PrecheckFramebufferStatus(
 ////////////////////////////////////////
 // Validation
 
-bool WebGLFramebuffer::ValidateAndInitAttachments() const {
+bool WebGLFramebuffer::ValidateAndInitAttachments(
+    const GLenum incompleteFbError) const {
   MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
              mContext->mBoundReadFramebuffer == this);
 
   const auto fbStatus = CheckFramebufferStatus();
   if (fbStatus == LOCAL_GL_FRAMEBUFFER_COMPLETE) return true;
 
-  mContext->ErrorInvalidFramebufferOperation("Framebuffer must be complete.");
+  mContext->GenerateError(incompleteFbError, "Framebuffer must be complete.");
   return false;
 }
 

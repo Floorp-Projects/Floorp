@@ -19,26 +19,17 @@ namespace a11y {
 // Mac a11y whitelisting
 static bool sA11yShouldBeEnabled = false;
 
-bool
-ShouldA11yBeEnabled()
-{
+bool ShouldA11yBeEnabled() {
   EPlatformDisabledState disabledState = PlatformDisabledState();
-  return (disabledState == ePlatformIsForceEnabled) || ((disabledState == ePlatformIsEnabled) && sA11yShouldBeEnabled);
+  return (disabledState == ePlatformIsForceEnabled) ||
+         ((disabledState == ePlatformIsEnabled) && sA11yShouldBeEnabled);
 }
 
-void
-PlatformInit()
-{
-}
+void PlatformInit() {}
 
-void
-PlatformShutdown()
-{
-}
+void PlatformShutdown() {}
 
-void
-ProxyCreated(ProxyAccessible* aProxy, uint32_t)
-{
+void ProxyCreated(ProxyAccessible* aProxy, uint32_t) {
   // Pass in dummy state for now as retrieving proxy state requires IPC.
   // Note that we can use ProxyAccessible::IsTable* functions here because they
   // do not use IPC calls but that might change after bug 1210477.
@@ -76,9 +67,7 @@ ProxyCreated(ProxyAccessible* aProxy, uint32_t)
   }
 }
 
-void
-ProxyDestroyed(ProxyAccessible* aProxy)
-{
+void ProxyDestroyed(ProxyAccessible* aProxy) {
   mozAccessible* nativeParent = nil;
   if (aProxy->IsDoc() && aProxy->AsDoc()->IsTopLevel()) {
     // Invalidate native parent in parent process's children on proxy destruction
@@ -108,9 +97,7 @@ ProxyDestroyed(ProxyAccessible* aProxy)
   }
 }
 
-void
-ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType)
-{
+void ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType) {
   // ignore everything but focus-changed, value-changed, caret and selection
   // events for now.
   if (aEventType != nsIAccessibleEvent::EVENT_FOCUS &&
@@ -121,50 +108,33 @@ ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType)
     return;
 
   mozAccessible* wrapper = GetNativeFromProxy(aProxy);
-  if (wrapper)
-    FireNativeEvent(wrapper, aEventType);
+  if (wrapper) FireNativeEvent(wrapper, aEventType);
 }
 
-void
-ProxyStateChangeEvent(ProxyAccessible* aProxy, uint64_t, bool)
-{
+void ProxyStateChangeEvent(ProxyAccessible* aProxy, uint64_t, bool) {
   // mac doesn't care about state change events
 }
 
-void
-ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
-{
+void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset) {
   mozAccessible* wrapper = GetNativeFromProxy(aTarget);
-  if (wrapper)
-    [wrapper selectedTextDidChange];
+  if (wrapper) [wrapper selectedTextDidChange];
 }
 
-void
-ProxyTextChangeEvent(ProxyAccessible*, const nsString&, int32_t, uint32_t,
-                     bool, bool)
-{
-}
+void ProxyTextChangeEvent(ProxyAccessible*, const nsString&, int32_t, uint32_t, bool, bool) {}
 
-void
-ProxyShowHideEvent(ProxyAccessible*, ProxyAccessible*, bool, bool)
-{
-}
+void ProxyShowHideEvent(ProxyAccessible*, ProxyAccessible*, bool, bool) {}
 
-void
-ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t)
-{
-}
-} // namespace a11y
-} // namespace mozilla
+void ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t) {}
+}  // namespace a11y
+}  // namespace mozilla
 
-@interface GeckoNSApplication(a11y)
--(void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute;
+@interface GeckoNSApplication (a11y)
+- (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute;
 @end
 
-@implementation GeckoNSApplication(a11y)
+@implementation GeckoNSApplication (a11y)
 
--(void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute
-{
+- (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute {
   if ([attribute isEqualToString:@"AXEnhancedUserInterface"])
     mozilla::a11y::sA11yShouldBeEnabled = ([value intValue] == 1);
 
@@ -172,4 +142,3 @@ ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t)
 }
 
 @end
-

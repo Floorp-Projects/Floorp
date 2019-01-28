@@ -407,7 +407,6 @@ class GCRuntime {
   uint64_t majorGCCount() const { return majorGCNumber; }
   void incMajorGcNumber() {
     ++majorGCNumber;
-    ++number;
   }
 
   int64_t defaultSliceBudget() const { return defaultTimeBudget_; }
@@ -816,7 +815,7 @@ class GCRuntime {
   /* Incremented at the start of every major GC. */
   MainThreadData<uint64_t> majorGCNumber;
 
-  /* Incremented on every GC slice. */
+  /* Incremented on every GC slice or minor collection. */
   MainThreadData<uint64_t> number;
 
   /* Whether the currently running GC can finish in multiple slices. */

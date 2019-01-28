@@ -977,13 +977,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // ===============================================================
   // Shift functions
 
-  // For shift-by-register there may be platform-specific
-  // variations, for example, x86 will perform the shift mod 32 but
-  // ARM will perform the shift mod 256.
+  // For shift-by-register there may be platform-specific variations, for
+  // example, x86 will perform the shift mod 32 but ARM will perform the shift
+  // mod 256.
   //
-  // For shift-by-immediate the platform assembler may restrict the
-  // immediate, for example, the ARM assembler requires the count
-  // for 32-bit shifts to be in the range [0,31].
+  // For shift-by-immediate the platform assembler may restrict the immediate,
+  // for example, the ARM assembler requires the count for 32-bit shifts to be
+  // in the range [0,31].
 
   inline void lshift32(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
   inline void rshift32(Imm32 shift, Register srcDest) PER_SHARED_ARCH;
@@ -1401,6 +1401,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
                            Label* label);
 
   inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
+  inline void branchTestNeedsIncrementalBarrierAnyZone(Condition cond,
+                                                       Label* label,
+                                                       Register scratch);
 
   // Perform a type-test on a tag of a Value (32bits boxing), or the tagged
   // value (64bits boxing).
@@ -1947,6 +1950,14 @@ class MacroAssembler : public MacroAssemblerSpecific {
                        Register offsetTemp, Register maskTemp, Register output)
       DEFINED_ON(mips_shared);
 
+  // x64: `output` must be rax.
+  // ARM: Registers must be distinct; `replacement` and `output` must be
+  // (even,odd) pairs.
+
+  void compareExchange64(const Synchronization& sync, const Address& mem,
+                         Register64 expected, Register64 replacement,
+                         Register64 output) DEFINED_ON(arm, arm64, x64);
+
   // Exchange with memory.  Return the value initially in memory.
   // MIPS: `valueTemp`, `offsetTemp` and `maskTemp` must be defined for 8-bit
   // and 16-bit wide operations.
@@ -1968,6 +1979,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                       const BaseIndex& mem, Register value, Register valueTemp,
                       Register offsetTemp, Register maskTemp, Register output)
       DEFINED_ON(mips_shared);
+
+  void atomicExchange64(const Synchronization& sync, const Address& mem,
+                        Register64 value, Register64 output)
+      DEFINED_ON(arm64, x64);
 
   // Read-modify-write with memory.  Return the value in memory before the
   // operation.
@@ -2009,6 +2024,15 @@ class MacroAssembler : public MacroAssemblerSpecific {
                      AtomicOp op, Register value, const BaseIndex& mem,
                      Register valueTemp, Register offsetTemp, Register maskTemp,
                      Register output) DEFINED_ON(mips_shared);
+
+  // x64:
+  //   For Add and Sub, `temp` must be invalid.
+  //   For And, Or, and Xor, `output` must be eax and `temp` must have a byte
+  //   subregister.
+
+  void atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+                       Register64 value, const Address& mem, Register64 temp,
+                       Register64 output) DEFINED_ON(arm64, x64);
 
   // ========================================================================
   // Wasm atomic operations.
@@ -2133,11 +2157,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
                         const BaseIndex& mem, Register64 temp,
                         Register64 output) DEFINED_ON(arm, mips32, x86);
 
-  // x86: `expected` must be the same as `output`, and must be edx:eax
-  // x86: `replacement` must be ecx:ebx
+  // x86: `expected` must be the same as `output`, and must be edx:eax.
+  // x86: `replacement` must be ecx:ebx.
   // x64: `output` must be rax.
   // ARM: Registers must be distinct; `replacement` and `output` must be
-  // (even,odd) pairs. MIPS: Registers must be distinct.
+  // (even,odd) pairs.
+  // ARM64: The base register in `mem` must not overlap `output`.
+  // MIPS: Registers must be distinct.
 
   void wasmCompareExchange64(const wasm::MemoryAccessDesc& access,
                              const Address& mem, Register64 expected,
@@ -2151,7 +2177,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // x86: `value` must be ecx:ebx; `output` must be edx:eax.
   // ARM: Registers must be distinct; `value` and `output` must be (even,odd)
-  // pairs. MIPS: Registers must be distinct.
+  // pairs.
+  // MIPS: Registers must be distinct.
 
   void wasmAtomicExchange64(const wasm::MemoryAccessDesc& access,
                             const Address& mem, Register64 value,
@@ -2164,7 +2191,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // x86: `output` must be edx:eax, `temp` must be ecx:ebx.
   // x64: For And, Or, and Xor `output` must be rax.
   // ARM: Registers must be distinct; `temp` and `output` must be (even,odd)
-  // pairs. MIPS: Registers must be distinct. MIPS32: `temp` should be invalid.
+  // pairs.
+  // MIPS: Registers must be distinct.
+  // MIPS32: `temp` should be invalid.
 
   void wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access, AtomicOp op,
                            Register64 value, const Address& mem,
@@ -2566,12 +2595,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void storeCallResultValue(TypedOrValueRegister dest);
 
+ private:
   template <typename T>
-  void guardedCallPreBarrier(const T& address, MIRType type) {
+  void unguardedCallPreBarrier(const T& address, MIRType type) {
     Label done;
-
-    branchTestNeedsIncrementalBarrier(Assembler::Zero, &done);
-
     if (type == MIRType::Value) {
       branchTestGCThing(Assembler::NotEqual, address, &done);
     } else if (type == MIRType::Object || type == MIRType::String) {
@@ -2586,7 +2613,27 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
     call(preBarrier);
     Pop(PreBarrierReg);
+    bind(&done);
+  }
 
+ public:
+  template <typename T>
+  void guardedCallPreBarrier(const T& address, MIRType type) {
+    Label done;
+    branchTestNeedsIncrementalBarrier(Assembler::Zero, &done);
+    unguardedCallPreBarrier(address, type);
+    bind(&done);
+  }
+
+  // Like guardedCallPreBarrier, but unlike guardedCallPreBarrier this can be
+  // called from runtime-wide trampolines because it loads cx->zone (instead of
+  // baking in the current Zone) if JitContext::realm is nullptr.
+  template <typename T>
+  void guardedCallPreBarrierAnyZone(const T& address, MIRType type,
+                                    Register scratch) {
+    Label done;
+    branchTestNeedsIncrementalBarrierAnyZone(Assembler::Zero, &done, scratch);
+    unguardedCallPreBarrier(address, type);
     bind(&done);
   }
 

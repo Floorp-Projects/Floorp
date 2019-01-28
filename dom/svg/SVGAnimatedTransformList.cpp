@@ -9,10 +9,10 @@
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/Move.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/SVGContentUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "DOMSVGAnimatedTransformList.h"
-#include "SVGContentUtils.h"
-#include "nsSMILValue.h"
 #include "SVGTransform.h"
 #include "SVGTransformListSMILType.h"
 
@@ -161,14 +161,14 @@ bool SVGAnimatedTransformList::IsExplicitlySet() const {
   return mIsAttrSet || !mBaseVal.IsEmpty() || mAnimVal;
 }
 
-UniquePtr<nsISMILAttr> SVGAnimatedTransformList::ToSMILAttr(
+UniquePtr<SMILAttr> SVGAnimatedTransformList::ToSMILAttr(
     SVGElement* aSVGElement) {
   return MakeUnique<SMILAnimatedTransformList>(this, aSVGElement);
 }
 
 nsresult SVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
     const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
-    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
+    SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   NS_ENSURE_TRUE(aSrcElement, NS_ERROR_FAILURE);
   MOZ_ASSERT(aValue.IsNull(),
              "aValue should have been cleared before calling ValueFromString");
@@ -191,8 +191,7 @@ nsresult SVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
 }
 
 void SVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
-    const nsAString& aSpec, const nsAtom* aTransformType,
-    nsSMILValue& aResult) {
+    const nsAString& aSpec, const nsAtom* aTransformType, SMILValue& aResult) {
   MOZ_ASSERT(aResult.IsNull(), "Unexpected type for SMIL value");
 
   static_assert(SVGTransformSMILData::NUM_SIMPLE_PARAMS == 3,
@@ -230,7 +229,7 @@ void SVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
     return;
   }
 
-  nsSMILValue val(SVGTransformListSMILType::Singleton());
+  SMILValue val(SVGTransformListSMILType::Singleton());
   SVGTransformSMILData transform(transformType, params);
   if (NS_FAILED(SVGTransformListSMILType::AppendTransform(transform, val))) {
     return;  // OOM
@@ -260,21 +259,21 @@ int32_t SVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
   return numArgsFound;
 }
 
-nsSMILValue SVGAnimatedTransformList::SMILAnimatedTransformList::GetBaseValue()
+SMILValue SVGAnimatedTransformList::SMILAnimatedTransformList::GetBaseValue()
     const {
   // To benefit from Return Value Optimization and avoid copy constructor calls
   // due to our use of return-by-value, we must return the exact same object
   // from ALL return points. This function must only return THIS variable:
-  nsSMILValue val(SVGTransformListSMILType::Singleton());
+  SMILValue val(SVGTransformListSMILType::Singleton());
   if (!SVGTransformListSMILType::AppendTransforms(mVal->mBaseVal, val)) {
-    val = nsSMILValue();
+    val = SMILValue();
   }
 
   return val;
 }
 
 nsresult SVGAnimatedTransformList::SMILAnimatedTransformList::SetAnimValue(
-    const nsSMILValue& aNewAnimValue) {
+    const SMILValue& aNewAnimValue) {
   MOZ_ASSERT(aNewAnimValue.mType == SVGTransformListSMILType::Singleton(),
              "Unexpected type to assign animated value");
   SVGTransformList animVal;

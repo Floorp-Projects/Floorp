@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "W pórěźe, som zrozměł",
   "prefs_home_header": "Wopśimjeśe startowego boka Firefox",
   "prefs_home_description": "Wubjeŕśo, kótare wopśimjeśe cośo na swójej startowej wobrazowce Firefox měś.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Startowy bok Firefox",
+  "prefs_content_discovery_description": "Content Discovery na startowem boku Firefox wam zmóžnja, w interneśe relewantne nastawki wusokeje kwality namakaś.",
+  "prefs_content_discovery_button": "Content Discovery znjemóžniś",
   "prefs_section_rows_option": "{num} smužka;{num} smužce;{num}smužki;{num} smužkow",
   "prefs_search_header": "Webpytanje",
   "prefs_topsites_description": "Sedła, ku kótarymž se nejcesćej woglědujośo",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Powěźeńka priwatnosći",
   "firstrun_continue_to_login": "Dalej",
   "firstrun_skip_login": "Toś ten kšac pśeskócyś",
-  "context_menu_title": "Meni wócyniś",
-  "pocket_learn_more": "Dalšne informacije"
+  "context_menu_title": "Meni wócyniś"
 };

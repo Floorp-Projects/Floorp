@@ -173,7 +173,7 @@ class SchedulerGroup : public LinkedListElement<SchedulerGroup> {
 
   using RunnableEpochQueue = Queue<EpochQueueEntry, 32>;
 
-  RunnableEpochQueue& GetQueue(mozilla::EventPriority aPriority) {
+  RunnableEpochQueue& GetQueue(mozilla::EventQueuePriority aPriority) {
     return mEventQueues[size_t(aPriority)];
   }
 
@@ -218,7 +218,7 @@ class SchedulerGroup : public LinkedListElement<SchedulerGroup> {
 
   nsCOMPtr<nsISerialEventTarget> mEventTargets[size_t(TaskCategory::Count)];
   RefPtr<AbstractThread> mAbstractThreads[size_t(TaskCategory::Count)];
-  RunnableEpochQueue mEventQueues[size_t(mozilla::EventPriority::Count)];
+  RunnableEpochQueue mEventQueues[size_t(mozilla::EventQueuePriority::Count)];
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SchedulerGroup::Runnable,

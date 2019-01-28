@@ -71,7 +71,8 @@ void main(void) {
         local_rect,
         prim_transform,
         clip_transform,
-        area
+        area,
+        cmi.sub_rect
     );
 
     vLocalPos = vi.local_pos;

@@ -20,12 +20,13 @@ class EventQueue final : public AbstractEventQueue {
   static const bool SupportsPrioritization = false;
 
   EventQueue() {}
-  explicit EventQueue(EventPriority aPriority);
+  explicit EventQueue(EventQueuePriority aPriority);
 
-  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent, EventPriority aPriority,
+  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
+                EventQueuePriority aPriority,
                 const MutexAutoLock& aProofOfLock) final;
   already_AddRefed<nsIRunnable> GetEvent(
-      EventPriority* aPriority, const MutexAutoLock& aProofOfLock) final;
+      EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock) final;
 
   bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
   bool HasReadyEvent(const MutexAutoLock& aProofOfLock) final;

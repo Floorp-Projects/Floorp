@@ -6,11 +6,10 @@
 
 #include "SVGAnimatedPathSegList.h"
 
-#include "DOMSVGPathSegList.h"
 #include "mozilla/Move.h"
-#include "SVGElement.h"
-#include "nsSVGAttrTearoffTable.h"
-#include "nsSMILValue.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/dom/SVGElement.h"
+#include "DOMSVGPathSegList.h"
 #include "SVGPathSegListSMILType.h"
 
 using namespace mozilla::dom;
@@ -142,15 +141,14 @@ bool SVGAnimatedPathSegList::IsRendered() const {
   return mAnimVal ? !mAnimVal->IsEmpty() : !mBaseVal.IsEmpty();
 }
 
-UniquePtr<nsISMILAttr> SVGAnimatedPathSegList::ToSMILAttr(
-    SVGElement *aElement) {
+UniquePtr<SMILAttr> SVGAnimatedPathSegList::ToSMILAttr(SVGElement *aElement) {
   return MakeUnique<SMILAnimatedPathSegList>(this, aElement);
 }
 
 nsresult SVGAnimatedPathSegList::SMILAnimatedPathSegList::ValueFromString(
     const nsAString &aStr, const dom::SVGAnimationElement * /*aSrcElement*/,
-    nsSMILValue &aValue, bool &aPreventCachingOfSandwich) const {
-  nsSMILValue val(SVGPathSegListSMILType::Singleton());
+    SMILValue &aValue, bool &aPreventCachingOfSandwich) const {
+  SMILValue val(SVGPathSegListSMILType::Singleton());
   SVGPathDataAndInfo *list = static_cast<SVGPathDataAndInfo *>(val.mU.mPtr);
   nsresult rv = list->SetValueFromString(aStr);
   if (NS_SUCCEEDED(rv)) {
@@ -161,14 +159,14 @@ nsresult SVGAnimatedPathSegList::SMILAnimatedPathSegList::ValueFromString(
   return rv;
 }
 
-nsSMILValue SVGAnimatedPathSegList::SMILAnimatedPathSegList::GetBaseValue()
+SMILValue SVGAnimatedPathSegList::SMILAnimatedPathSegList::GetBaseValue()
     const {
   // To benefit from Return Value Optimization and avoid copy constructor calls
   // due to our use of return-by-value, we must return the exact same object
   // from ALL return points. This function must only return THIS variable:
-  nsSMILValue val;
+  SMILValue val;
 
-  nsSMILValue tmp(SVGPathSegListSMILType::Singleton());
+  SMILValue tmp(SVGPathSegListSMILType::Singleton());
   SVGPathDataAndInfo *list = static_cast<SVGPathDataAndInfo *>(tmp.mU.mPtr);
   nsresult rv = list->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
@@ -179,7 +177,7 @@ nsSMILValue SVGAnimatedPathSegList::SMILAnimatedPathSegList::GetBaseValue()
 }
 
 nsresult SVGAnimatedPathSegList::SMILAnimatedPathSegList::SetAnimValue(
-    const nsSMILValue &aValue) {
+    const SMILValue &aValue) {
   NS_ASSERTION(aValue.mType == SVGPathSegListSMILType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SVGPathSegListSMILType::Singleton()) {

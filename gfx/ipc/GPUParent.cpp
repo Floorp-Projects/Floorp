@@ -461,6 +461,8 @@ mozilla::ipc::IPCResult GPUParent::RecvShutdownVR() {
   if (gfxPrefs::VRProcessEnabled()) {
     VRGPUChild::Shutdown();
   }
+  VRManager* vm = VRManager::Get();
+  vm->Destroy();
   return IPC_OK();
 }
 

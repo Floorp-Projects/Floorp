@@ -6,8 +6,8 @@
 
 /* representation of a value for a SMIL-animated CSS property */
 
-#ifndef NS_SMILCSSVALUETYPE_H_
-#define NS_SMILCSSVALUETYPE_H_
+#ifndef mozilla_SMILCSSValueType_h
+#define mozilla_SMILCSSValueType_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILType.h"
@@ -26,35 +26,30 @@ class Element;
  */
 class SMILCSSValueType : public SMILType {
  public:
-  typedef mozilla::dom::Element Element;
-  typedef mozilla::AnimationValue AnimationValue;
-
-  // Singleton for nsSMILValue objects to hold onto.
+  // Singleton for SMILValue objects to hold onto.
   static SMILCSSValueType sSingleton;
 
  protected:
   // SMILType Methods
   // -------------------
-  void Init(nsSMILValue& aValue) const override;
-  void Destroy(nsSMILValue&) const override;
-  nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const override;
-  bool IsEqual(const nsSMILValue& aLeft,
-               const nsSMILValue& aRight) const override;
-  nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+  void Init(SMILValue& aValue) const override;
+  void Destroy(SMILValue&) const override;
+  nsresult Assign(SMILValue& aDest, const SMILValue& aSrc) const override;
+  bool IsEqual(const SMILValue& aLeft, const SMILValue& aRight) const override;
+  nsresult Add(SMILValue& aDest, const SMILValue& aValueToAdd,
                uint32_t aCount) const override;
-  nsresult SandwichAdd(nsSMILValue& aDest,
-                       const nsSMILValue& aValueToAdd) const override;
-  nsresult ComputeDistance(const nsSMILValue& aFrom, const nsSMILValue& aTo,
+  nsresult SandwichAdd(SMILValue& aDest,
+                       const SMILValue& aValueToAdd) const override;
+  nsresult ComputeDistance(const SMILValue& aFrom, const SMILValue& aTo,
                            double& aDistance) const override;
-  nsresult Interpolate(const nsSMILValue& aStartVal, const nsSMILValue& aEndVal,
-                       double aUnitDistance,
-                       nsSMILValue& aResult) const override;
+  nsresult Interpolate(const SMILValue& aStartVal, const SMILValue& aEndVal,
+                       double aUnitDistance, SMILValue& aResult) const override;
 
  public:
   // Helper Methods
   // --------------
   /**
-   * Sets up the given nsSMILValue to represent the given string value.  The
+   * Sets up the given SMILValue to represent the given string value.  The
    * string is interpreted as a value for the given property on the given
    * element.
    *
@@ -65,7 +60,7 @@ class SMILCSSValueType : public SMILType {
    * @param       aTargetElement  The target element to whom the property/value
    *                              setting applies.
    * @param       aString         The string to be parsed as a CSS value.
-   * @param [out] aValue          The nsSMILValue to be populated. Should
+   * @param [out] aValue          The SMILValue to be populated. Should
    *                              initially be null-typed.
    * @param [out] aIsContextSensitive Set to true if |aString| may produce
    *                                  a different |aValue| depending on other
@@ -76,41 +71,42 @@ class SMILCSSValueType : public SMILType {
    * @pre  aValue.IsNull()
    * @post aValue.IsNull() || aValue.mType == SMILCSSValueType::sSingleton
    */
-  static void ValueFromString(nsCSSPropertyID aPropID, Element* aTargetElement,
-                              const nsAString& aString, nsSMILValue& aValue,
+  static void ValueFromString(nsCSSPropertyID aPropID,
+                              dom::Element* aTargetElement,
+                              const nsAString& aString, SMILValue& aValue,
                               bool* aIsContextSensitive);
 
   /**
-   * Creates an nsSMILValue to wrap the given animation value.
+   * Creates a SMILValue to wrap the given animation value.
    *
    * @param aPropID         The property that |aValue| corresponds to.
    * @param aTargetElement  The target element to which the animation value
    *                        applies.
    * @param aValue          The animation value to use.
-   * @return                A new nsSMILValue. On failure, returns an
-   *                        nsSMILValue with the null type (i.e. rv.IsNull()
+   * @return                A new SMILValue. On failure, returns a
+   *                        SMILValue with the null type (i.e. rv.IsNull()
    *                        returns true).
    */
-  static nsSMILValue ValueFromAnimationValue(nsCSSPropertyID aPropID,
-                                             Element* aTargetElement,
-                                             const AnimationValue& aValue);
+  static SMILValue ValueFromAnimationValue(nsCSSPropertyID aPropID,
+                                           dom::Element* aTargetElement,
+                                           const AnimationValue& aValue);
 
   /**
    * Sets the relevant property values in the declaration block.
    *
    * Returns whether the declaration changed.
    */
-  static bool SetPropertyValues(const nsSMILValue&, mozilla::DeclarationBlock&);
+  static bool SetPropertyValues(const SMILValue&, mozilla::DeclarationBlock&);
 
   /**
    * Return the CSS property animated by the specified value.
    *
-   * @param   aValue   The nsSMILValue to examine.
+   * @param   aValue   The SMILValue to examine.
    * @return           The nsCSSPropertyID enum value of the property animated
    *                   by |aValue|, or eCSSProperty_UNKNOWN if the type of
    *                   |aValue| is not SMILCSSValueType.
    */
-  static nsCSSPropertyID PropertyFromValue(const nsSMILValue& aValue);
+  static nsCSSPropertyID PropertyFromValue(const SMILValue& aValue);
 
   /**
    * If |aValue| is an empty value, converts it to a suitable zero value by
@@ -119,14 +115,13 @@ class SMILCSSValueType : public SMILType {
    * There is no indication if this method fails. If a suitable zero value could
    * not be created, |aValue| is simply unmodified.
    *
-   * @param aValue        The nsSMILValue (of type SMILCSSValueType) to
+   * @param aValue        The SMILValue (of type SMILCSSValueType) to
    *                      possibly update.
-   * @param aValueToMatch A nsSMILValue (of type SMILCSSValueType) for which
+   * @param aValueToMatch A SMILValue (of type SMILCSSValueType) for which
    *                      a corresponding zero value will be created if |aValue|
    *                      is empty.
    */
-  static void FinalizeValue(nsSMILValue& aValue,
-                            const nsSMILValue& aValueToMatch);
+  static void FinalizeValue(SMILValue& aValue, const SMILValue& aValueToMatch);
 
  private:
   // Private constructor: prevent instances beyond my singleton.
@@ -135,4 +130,4 @@ class SMILCSSValueType : public SMILType {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILCSSVALUETYPE_H_
+#endif  // mozilla_SMILCSSValueType_h

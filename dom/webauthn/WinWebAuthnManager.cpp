@@ -1,0 +1,582 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozilla/dom/PWebAuthnTransactionParent.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Unused.h"
+#include "nsTextFormatter.h"
+#include "winwebauthn/webauthn.h"
+
+#ifdef OS_WIN
+#  include "WinWebAuthnManager.h"
+#endif
+
+namespace mozilla {
+namespace dom {
+
+namespace {
+static mozilla::LazyLogModule gWinWebAuthnManagerLog("winwebauthnkeymanager");
+StaticAutoPtr<WinWebAuthnManager> gWinWebAuthnManager;
+static HMODULE gWinWebAuthnModule = 0;
+
+static decltype(WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable)*
+    gWinWebauthnIsUVPAA = nullptr;
+static decltype(
+    WebAuthNAuthenticatorMakeCredential)* gWinWebauthnMakeCredential = nullptr;
+static decltype(
+    WebAuthNFreeCredentialAttestation)* gWinWebauthnFreeCredentialAttestation =
+    nullptr;
+static decltype(WebAuthNAuthenticatorGetAssertion)* gWinWebauthnGetAssertion =
+    nullptr;
+static decltype(WebAuthNFreeAssertion)* gWinWebauthnFreeAssertion = nullptr;
+static decltype(WebAuthNGetCancellationId)* gWinWebauthnGetCancellationId =
+    nullptr;
+static decltype(
+    WebAuthNCancelCurrentOperation)* gWinWebauthnCancelCurrentOperation =
+    nullptr;
+static decltype(WebAuthNGetErrorName)* gWinWebauthnGetErrorName = nullptr;
+static decltype(WebAuthNGetApiVersionNumber)* gWinWebauthnGetApiVersionNumber =
+    nullptr;
+
+}  // namespace
+
+/***********************************************************************
+ * WinWebAuthnManager Implementation
+ **********************************************************************/
+
+constexpr uint32_t kMinWinWebAuthNApiVersion = WEBAUTHN_API_VERSION_1;
+
+WinWebAuthnManager::WinWebAuthnManager() {
+  // Create on the main thread to make sure ClearOnShutdown() works.
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!gWinWebAuthnModule);
+
+  gWinWebAuthnModule = LoadLibrary(L"webauthn.dll");
+
+  if (gWinWebAuthnModule) {
+    gWinWebauthnIsUVPAA = reinterpret_cast<decltype(
+        WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable)*>(
+        GetProcAddress(
+            gWinWebAuthnModule,
+            "WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable"));
+    gWinWebauthnMakeCredential =
+        reinterpret_cast<decltype(WebAuthNAuthenticatorMakeCredential)*>(
+            GetProcAddress(gWinWebAuthnModule,
+                           "WebAuthNAuthenticatorMakeCredential"));
+    gWinWebauthnFreeCredentialAttestation =
+        reinterpret_cast<decltype(WebAuthNFreeCredentialAttestation)*>(
+            GetProcAddress(gWinWebAuthnModule,
+                           "WebAuthNFreeCredentialAttestation"));
+    gWinWebauthnGetAssertion =
+        reinterpret_cast<decltype(WebAuthNAuthenticatorGetAssertion)*>(
+            GetProcAddress(gWinWebAuthnModule,
+                           "WebAuthNAuthenticatorGetAssertion"));
+    gWinWebauthnFreeAssertion =
+        reinterpret_cast<decltype(WebAuthNFreeAssertion)*>(
+            GetProcAddress(gWinWebAuthnModule, "WebAuthNFreeAssertion"));
+    gWinWebauthnGetCancellationId =
+        reinterpret_cast<decltype(WebAuthNGetCancellationId)*>(
+            GetProcAddress(gWinWebAuthnModule, "WebAuthNGetCancellationId"));
+    gWinWebauthnCancelCurrentOperation =
+        reinterpret_cast<decltype(WebAuthNCancelCurrentOperation)*>(
+            GetProcAddress(gWinWebAuthnModule,
+                           "WebAuthNCancelCurrentOperation"));
+    gWinWebauthnGetErrorName =
+        reinterpret_cast<decltype(WebAuthNGetErrorName)*>(
+            GetProcAddress(gWinWebAuthnModule, "WebAuthNGetErrorName"));
+    gWinWebauthnGetApiVersionNumber =
+        reinterpret_cast<decltype(WebAuthNGetApiVersionNumber)*>(
+            GetProcAddress(gWinWebAuthnModule, "WebAuthNGetApiVersionNumber"));
+
+    if (gWinWebauthnIsUVPAA && gWinWebauthnMakeCredential &&
+        gWinWebauthnFreeCredentialAttestation && gWinWebauthnGetAssertion &&
+        gWinWebauthnFreeAssertion && gWinWebauthnGetCancellationId &&
+        gWinWebauthnCancelCurrentOperation && gWinWebauthnGetErrorName &&
+        gWinWebauthnGetApiVersionNumber) {
+      mWinWebAuthNApiVersion = gWinWebauthnGetApiVersionNumber();
+    }
+  }
+}
+
+WinWebAuthnManager::~WinWebAuthnManager() {
+  if (gWinWebAuthnModule) {
+    FreeLibrary(gWinWebAuthnModule);
+  }
+  gWinWebAuthnModule = 0;
+}
+
+// static
+void WinWebAuthnManager::Initialize() {
+  if (!gWinWebAuthnManager) {
+    gWinWebAuthnManager = new WinWebAuthnManager();
+    ClearOnShutdown(&gWinWebAuthnManager);
+  }
+}
+
+// static
+WinWebAuthnManager* WinWebAuthnManager::Get() {
+  MOZ_ASSERT(gWinWebAuthnManager);
+  return gWinWebAuthnManager;
+}
+
+uint32_t WinWebAuthnManager::GetWebAuthNApiVersion() {
+  return mWinWebAuthNApiVersion;
+}
+
+// static
+bool WinWebAuthnManager::AreWebAuthNApisAvailable() {
+  WinWebAuthnManager* mgr = WinWebAuthnManager::Get();
+  return mgr->GetWebAuthNApiVersion() >= kMinWinWebAuthNApiVersion;
+}
+
+bool WinWebAuthnManager::
+    IsUserVerifyingPlatformAuthenticatorAvailableInternal() {
+  BOOL isUVPAA = FALSE;
+  return (gWinWebauthnIsUVPAA(&isUVPAA) == S_OK && isUVPAA == TRUE);
+}
+
+// static
+bool WinWebAuthnManager::IsUserVerifyingPlatformAuthenticatorAvailable() {
+  if (WinWebAuthnManager::AreWebAuthNApisAvailable()) {
+    return WinWebAuthnManager::Get()
+        ->IsUserVerifyingPlatformAuthenticatorAvailableInternal();
+  }
+  return false;
+}
+
+void WinWebAuthnManager::AbortTransaction(const uint64_t& aTransactionId,
+                                          const nsresult& aError) {
+  Unused << mTransactionParent->SendAbort(aTransactionId, aError);
+  ClearTransaction();
+}
+
+void WinWebAuthnManager::MaybeClearTransaction(
+    PWebAuthnTransactionParent* aParent) {
+  // Only clear if we've been requested to do so by our current transaction
+  // parent.
+  if (mTransactionParent == aParent) {
+    ClearTransaction();
+  }
+}
+
+void WinWebAuthnManager::ClearTransaction() { mTransactionParent = nullptr; }
+
+void WinWebAuthnManager::Register(
+    PWebAuthnTransactionParent* aTransactionParent,
+    const uint64_t& aTransactionId, const WebAuthnMakeCredentialInfo& aInfo) {
+  MOZ_LOG(gWinWebAuthnManagerLog, LogLevel::Debug, ("WinWebAuthNRegister"));
+
+  ClearTransaction();
+  mTransactionParent = aTransactionParent;
+
+  const auto& extra = aInfo.Extra().get_WebAuthnMakeCredentialExtraInfo();
+
+  // RP Information
+  WEBAUTHN_RP_ENTITY_INFORMATION rpInformation = {
+      WEBAUTHN_RP_ENTITY_INFORMATION_CURRENT_VERSION, aInfo.RpId().get(),
+      extra.Rp().Name().get(), extra.Rp().Icon().get()};
+
+  // User Information
+  WEBAUTHN_USER_ENTITY_INFORMATION userInformation = {
+      WEBAUTHN_USER_ENTITY_INFORMATION_CURRENT_VERSION,
+      static_cast<DWORD>(extra.User().Id().Length()),
+      const_cast<unsigned char*>(extra.User().Id().Elements()),
+      extra.User().Name().get(),
+      extra.User().Icon().get(),
+      extra.User().DisplayName().get()};
+
+  // Algorithms
+  nsTArray<WEBAUTHN_COSE_CREDENTIAL_PARAMETER> coseParams;
+  for (const auto& coseAlg : extra.coseAlgs()) {
+    WEBAUTHN_COSE_CREDENTIAL_PARAMETER coseAlgorithm = {
+        WEBAUTHN_COSE_CREDENTIAL_PARAMETER_CURRENT_VERSION,
+        WEBAUTHN_CREDENTIAL_TYPE_PUBLIC_KEY, coseAlg.alg()};
+    coseParams.AppendElement(coseAlgorithm);
+  }
+  WEBAUTHN_COSE_CREDENTIAL_PARAMETERS WebAuthNCredentialParameters = {
+      static_cast<DWORD>(coseParams.Length()), coseParams.Elements()};
+
+  // Client Data
+  WEBAUTHN_CLIENT_DATA WebAuthNClientData = {
+      WEBAUTHN_CLIENT_DATA_CURRENT_VERSION, aInfo.ClientDataJSON().Length(),
+      (BYTE*)(aInfo.ClientDataJSON().get()), WEBAUTHN_HASH_ALGORITHM_SHA_256};
+
+  const auto& sel = extra.AuthenticatorSelection();
+
+  // User Verification Requirement
+  UserVerificationRequirement userVerificationReq =
+      static_cast<UserVerificationRequirement>(
+          sel.userVerificationRequirement());
+  DWORD winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
+  switch (userVerificationReq) {
+    case UserVerificationRequirement::Required:
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
+      break;
+    case UserVerificationRequirement::Preferred:
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
+      break;
+    case UserVerificationRequirement::Discouraged:
+      winUserVerificationReq =
+          WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
+      break;
+    default:
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
+      break;
+  }
+
+  // Attachment
+  DWORD winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_ANY;
+  if (sel.authenticatorAttachment().type() ==
+      WebAuthnMaybeAuthenticatorAttachment::Tuint8_t) {
+    const AuthenticatorAttachment authenticatorAttachment =
+        static_cast<AuthenticatorAttachment>(
+            sel.authenticatorAttachment().get_uint8_t());
+    switch (authenticatorAttachment) {
+      case AuthenticatorAttachment::Platform:
+        winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM;
+        break;
+      case AuthenticatorAttachment::Cross_platform:
+        winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM;
+        break;
+      default:
+        break;
+    }
+  }
+
+  // Resident Key
+  BOOL winRequireResidentKey = sel.requireResidentKey() ? TRUE : FALSE;
+
+  // AttestationConveyance
+  AttestationConveyancePreference attestation =
+      static_cast<AttestationConveyancePreference>(
+          extra.attestationConveyancePreference());
+  DWORD winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
+  switch (attestation) {
+    case AttestationConveyancePreference::Direct:
+      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT;
+      break;
+    case AttestationConveyancePreference::Indirect:
+      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT;
+      break;
+    case AttestationConveyancePreference::None:
+      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE;
+      break;
+    default:
+      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
+      break;
+  }
+
+  // Exclude Credentials
+  nsTArray<WEBAUTHN_CREDENTIAL_EX> excludeCredentials;
+  WEBAUTHN_CREDENTIAL_EX* pExcludeCredentials = nullptr;
+  nsTArray<WEBAUTHN_CREDENTIAL_EX*> excludeCredentialsPtrs;
+  WEBAUTHN_CREDENTIAL_LIST excludeCredentialList = {0};
+  WEBAUTHN_CREDENTIAL_LIST* pExcludeCredentialList = nullptr;
+
+  for (auto& cred : aInfo.ExcludeList()) {
+    uint8_t transports = cred.transports();
+    DWORD winTransports = 0;
+    if (transports & U2F_AUTHENTICATOR_TRANSPORT_USB) {
+      winTransports |= WEBAUTHN_CTAP_TRANSPORT_USB;
+    }
+    if (transports & U2F_AUTHENTICATOR_TRANSPORT_NFC) {
+      winTransports |= WEBAUTHN_CTAP_TRANSPORT_NFC;
+    }
+    if (transports & U2F_AUTHENTICATOR_TRANSPORT_BLE) {
+      winTransports |= WEBAUTHN_CTAP_TRANSPORT_BLE;
+    }
+    if (transports & CTAP_AUTHENTICATOR_TRANSPORT_INTERNAL) {
+      winTransports |= WEBAUTHN_CTAP_TRANSPORT_INTERNAL;
+    }
+
+    WEBAUTHN_CREDENTIAL_EX credential = {
+        WEBAUTHN_CREDENTIAL_EX_CURRENT_VERSION,
+        static_cast<DWORD>(cred.id().Length()), (PBYTE)(cred.id().Elements()),
+        WEBAUTHN_CREDENTIAL_TYPE_PUBLIC_KEY, winTransports};
+    excludeCredentials.AppendElement(credential);
+  }
+
+  if (!excludeCredentials.IsEmpty()) {
+    pExcludeCredentials = excludeCredentials.Elements();
+    for (DWORD i = 0; i < excludeCredentials.Length(); i++) {
+      excludeCredentialsPtrs.AppendElement(&pExcludeCredentials[i]);
+    }
+    excludeCredentialList.cCredentials = excludeCredentials.Length();
+    excludeCredentialList.ppCredentials = excludeCredentialsPtrs.Elements();
+    pExcludeCredentialList = &excludeCredentialList;
+  }
+
+  // MakeCredentialOptions
+  WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS WebAuthNCredentialOptions = {
+      WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS_CURRENT_VERSION,
+      aInfo.TimeoutMS(),
+      {0, NULL},
+      {0, NULL},
+      winAttachment,
+      winRequireResidentKey,
+      winUserVerificationReq,
+      winAttestation,
+      0,     // Flags
+      NULL,  // CancellationId
+      pExcludeCredentialList};
+
+  GUID cancellationId = {0};
+  if (gWinWebauthnGetCancellationId(&cancellationId) == S_OK) {
+    WebAuthNCredentialOptions.pCancellationId = &cancellationId;
+    mCancellationIds.emplace(aTransactionId, &cancellationId);
+  }
+
+  WEBAUTHN_CREDENTIAL_ATTESTATION* pWebAuthNCredentialAttestation = nullptr;
+
+  // Bug 1518876: Get Window Handle from Content process for Windows WebAuthN
+  // APIs
+  HWND hWnd = GetForegroundWindow();
+
+  HRESULT hr = gWinWebauthnMakeCredential(
+      hWnd, &rpInformation, &userInformation, &WebAuthNCredentialParameters,
+      &WebAuthNClientData, &WebAuthNCredentialOptions,
+      &pWebAuthNCredentialAttestation);
+
+  mCancellationIds.erase(aTransactionId);
+
+  if (hr == S_OK) {
+    nsTArray<uint8_t> attObject;
+    attObject.AppendElements(
+        pWebAuthNCredentialAttestation->pbAttestationObject,
+        pWebAuthNCredentialAttestation->cbAttestationObject);
+
+    nsTArray<uint8_t> credentialId;
+    credentialId.AppendElements(pWebAuthNCredentialAttestation->pbCredentialId,
+                                pWebAuthNCredentialAttestation->cbCredentialId);
+
+    nsTArray<uint8_t> authenticatorData;
+    authenticatorData.AppendElements(
+        pWebAuthNCredentialAttestation->pbAuthenticatorData,
+        pWebAuthNCredentialAttestation->cbAuthenticatorData);
+
+    WebAuthnMakeCredentialResult result(aInfo.ClientDataJSON(), attObject,
+                                        credentialId, authenticatorData);
+
+    Unused << mTransactionParent->SendConfirmRegister(aTransactionId, result);
+    ClearTransaction();
+    gWinWebauthnFreeCredentialAttestation(pWebAuthNCredentialAttestation);
+
+  } else {
+    PCWSTR errorName = gWinWebauthnGetErrorName(hr);
+    nsresult aError = NS_ERROR_DOM_ABORT_ERR;
+
+    if (_wcsicmp(errorName, L"InvalidStateError") == 0) {
+      aError = NS_ERROR_DOM_INVALID_STATE_ERR;
+    } else if (_wcsicmp(errorName, L"ConstraintError") == 0 ||
+               _wcsicmp(errorName, L"UnknownError") == 0) {
+      aError = NS_ERROR_DOM_UNKNOWN_ERR;
+    } else if (_wcsicmp(errorName, L"NotSupportedError") == 0) {
+      aError = NS_ERROR_DOM_INVALID_STATE_ERR;
+    } else if (_wcsicmp(errorName, L"NotAllowedError") == 0) {
+      aError = NS_ERROR_DOM_NOT_ALLOWED_ERR;
+    }
+
+    MaybeAbortRegister(aTransactionId, aError);
+  }
+}
+
+void WinWebAuthnManager::MaybeAbortRegister(const uint64_t& aTransactionId,
+                                            const nsresult& aError) {
+  AbortTransaction(aTransactionId, aError);
+}
+
+void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
+                              const uint64_t& aTransactionId,
+                              const WebAuthnGetAssertionInfo& aInfo) {
+  MOZ_LOG(gWinWebAuthnManagerLog, LogLevel::Debug, ("WinWebAuthNSign"));
+
+  ClearTransaction();
+  mTransactionParent = aTransactionParent;
+
+  const auto& extra = aInfo.Extra().get_WebAuthnGetAssertionExtraInfo();
+
+  // AppId
+  BOOL bU2fAppIdUsed = FALSE;
+  BOOL* pbU2fAppIdUsed = nullptr;
+  PCWSTR winAppIdentifier = nullptr;
+
+  for (const WebAuthnExtension& ext : extra.Extensions()) {
+    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
+      winAppIdentifier = ext.get_WebAuthnExtensionAppId().appIdentifier().get();
+      pbU2fAppIdUsed = &bU2fAppIdUsed;
+      break;
+    }
+  }
+
+  // Client Data
+  WEBAUTHN_CLIENT_DATA WebAuthNClientData = {
+      WEBAUTHN_CLIENT_DATA_CURRENT_VERSION, aInfo.ClientDataJSON().Length(),
+      (BYTE*)(aInfo.ClientDataJSON().get()), WEBAUTHN_HASH_ALGORITHM_SHA_256};
+
+  // User Verification Requirement
+  UserVerificationRequirement userVerificationReq =
+      static_cast<UserVerificationRequirement>(
+          extra.userVerificationRequirement());
+
+  DWORD winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
+  switch (userVerificationReq) {
+    case UserVerificationRequirement::Required:
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
+      break;
+    case UserVerificationRequirement::Preferred:
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
+      break;
+    case UserVerificationRequirement::Discouraged:
+      winUserVerificationReq =
+          WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
+      break;
+    default:
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
+      break;
+  }
+
+  // allow Credentials
+  nsTArray<WEBAUTHN_CREDENTIAL_EX> allowCredentials;
+  WEBAUTHN_CREDENTIAL_EX* pAllowCredentials = nullptr;
+  nsTArray<WEBAUTHN_CREDENTIAL_EX*> allowCredentialsPtrs;
+  WEBAUTHN_CREDENTIAL_LIST allowCredentialList = {0};
+  WEBAUTHN_CREDENTIAL_LIST* pAllowCredentialList = nullptr;
+
+  for (auto& cred : aInfo.AllowList()) {
+    uint8_t transports = cred.transports();
+    DWORD winTransports = 0;
+    if (transports & U2F_AUTHENTICATOR_TRANSPORT_USB) {
+      winTransports |= WEBAUTHN_CTAP_TRANSPORT_USB;
+    }
+    if (transports & U2F_AUTHENTICATOR_TRANSPORT_NFC) {
+      winTransports |= WEBAUTHN_CTAP_TRANSPORT_NFC;
+    }
+    if (transports & U2F_AUTHENTICATOR_TRANSPORT_BLE) {
+      winTransports |= WEBAUTHN_CTAP_TRANSPORT_BLE;
+    }
+    if (transports & CTAP_AUTHENTICATOR_TRANSPORT_INTERNAL) {
+      winTransports |= WEBAUTHN_CTAP_TRANSPORT_INTERNAL;
+    }
+
+    WEBAUTHN_CREDENTIAL_EX credential = {
+        WEBAUTHN_CREDENTIAL_EX_CURRENT_VERSION,
+        static_cast<DWORD>(cred.id().Length()), (PBYTE)(cred.id().Elements()),
+        WEBAUTHN_CREDENTIAL_TYPE_PUBLIC_KEY, winTransports};
+    allowCredentials.AppendElement(credential);
+  }
+
+  if (allowCredentials.Length()) {
+    pAllowCredentials = allowCredentials.Elements();
+    for (DWORD i = 0; i < allowCredentials.Length(); i++) {
+      allowCredentialsPtrs.AppendElement(&pAllowCredentials[i]);
+    }
+    allowCredentialList.cCredentials = allowCredentials.Length();
+    allowCredentialList.ppCredentials = allowCredentialsPtrs.Elements();
+    pAllowCredentialList = &allowCredentialList;
+  }
+
+  WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS WebAuthNAssertionOptions = {
+      WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS_CURRENT_VERSION,
+      aInfo.TimeoutMS(),
+      {0, NULL},
+      {0, NULL},
+      WEBAUTHN_AUTHENTICATOR_ATTACHMENT_ANY,
+      winUserVerificationReq,
+      0,  // dwFlags
+      winAppIdentifier,
+      pbU2fAppIdUsed,
+      nullptr,  // pCancellationId
+      pAllowCredentialList,
+  };
+
+  GUID cancellationId = {0};
+  if (gWinWebauthnGetCancellationId(&cancellationId) == S_OK) {
+    WebAuthNAssertionOptions.pCancellationId = &cancellationId;
+    mCancellationIds.emplace(aTransactionId, &cancellationId);
+  }
+
+  PWEBAUTHN_ASSERTION pWebAuthNAssertion = nullptr;
+
+  // Bug 1518876: Get Window Handle from Content process for Windows WebAuthN
+  // APIs
+  HWND hWnd = GetForegroundWindow();
+
+  HRESULT hr =
+      gWinWebauthnGetAssertion(hWnd, aInfo.RpId().get(), &WebAuthNClientData,
+                               &WebAuthNAssertionOptions, &pWebAuthNAssertion);
+
+  mCancellationIds.erase(aTransactionId);
+
+  if (hr == S_OK) {
+    nsTArray<uint8_t> signature;
+    signature.AppendElements(pWebAuthNAssertion->pbSignature,
+                             pWebAuthNAssertion->cbSignature);
+
+    nsTArray<uint8_t> keyHandle;
+    keyHandle.AppendElements(pWebAuthNAssertion->Credential.pbId,
+                             pWebAuthNAssertion->Credential.cbId);
+
+    nsTArray<uint8_t> authenticatorData;
+    authenticatorData.AppendElements(pWebAuthNAssertion->pbAuthenticatorData,
+                                     pWebAuthNAssertion->cbAuthenticatorData);
+
+    nsTArray<WebAuthnExtensionResult> extensions;
+
+    if (pbU2fAppIdUsed && *pbU2fAppIdUsed) {
+      extensions.AppendElement(WebAuthnExtensionResultAppId(true));
+    }
+
+    WebAuthnGetAssertionResult result(aInfo.ClientDataJSON(), keyHandle,
+                                      signature, authenticatorData, extensions,
+                                      signature);
+
+    Unused << mTransactionParent->SendConfirmSign(aTransactionId, result);
+    ClearTransaction();
+
+    gWinWebauthnFreeAssertion(pWebAuthNAssertion);
+
+  } else {
+    PCWSTR errorName = gWinWebauthnGetErrorName(hr);
+    nsresult aError = NS_ERROR_DOM_ABORT_ERR;
+
+    if (_wcsicmp(errorName, L"InvalidStateError") == 0) {
+      aError = NS_ERROR_DOM_INVALID_STATE_ERR;
+    } else if (_wcsicmp(errorName, L"ConstraintError") == 0 ||
+               _wcsicmp(errorName, L"UnknownError") == 0) {
+      aError = NS_ERROR_DOM_UNKNOWN_ERR;
+    } else if (_wcsicmp(errorName, L"NotSupportedError") == 0) {
+      aError = NS_ERROR_DOM_INVALID_STATE_ERR;
+    } else if (_wcsicmp(errorName, L"NotAllowedError") == 0) {
+      aError = NS_ERROR_DOM_NOT_ALLOWED_ERR;
+    }
+
+    MaybeAbortSign(aTransactionId, aError);
+  }
+}
+
+void WinWebAuthnManager::MaybeAbortSign(const uint64_t& aTransactionId,
+                                        const nsresult& aError) {
+  AbortTransaction(aTransactionId, aError);
+}
+
+void WinWebAuthnManager::Cancel(PWebAuthnTransactionParent* aParent,
+                                const uint64_t& aTransactionId) {
+  if (mTransactionParent != aParent) {
+    return;
+  }
+
+  ClearTransaction();
+
+  auto iter = mCancellationIds.find(aTransactionId);
+  if (iter != mCancellationIds.end()) {
+    gWinWebauthnCancelCurrentOperation(iter->second);
+  }
+}
+
+}  // namespace dom
+}  // namespace mozilla

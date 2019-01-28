@@ -7,33 +7,34 @@
 /* representation of a dummy attribute targeted by <animateMotion> element */
 
 #include "SVGMotionSMILAttr.h"
-#include "SVGMotionSMILType.h"
+
 #include "mozilla/dom/SVGAnimationElement.h"
-#include "nsSMILValue.h"
+#include "mozilla/dom/SVGElement.h"
+#include "mozilla/SMILValue.h"
+#include "SVGMotionSMILType.h"
 #include "nsDebug.h"
-#include "SVGElement.h"
 #include "gfx2DGlue.h"
 
 namespace mozilla {
 
 nsresult SVGMotionSMILAttr::ValueFromString(
     const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
-    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
+    SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   MOZ_ASSERT_UNREACHABLE(
-      "Shouldn't using nsISMILAttr::ValueFromString for "
+      "Shouldn't using SMILAttr::ValueFromString for "
       "parsing animateMotion's SMIL values.");
   return NS_ERROR_FAILURE;
 }
 
-nsSMILValue SVGMotionSMILAttr::GetBaseValue() const {
-  return nsSMILValue(&SVGMotionSMILType::sSingleton);
+SMILValue SVGMotionSMILAttr::GetBaseValue() const {
+  return SMILValue(&SVGMotionSMILType::sSingleton);
 }
 
 void SVGMotionSMILAttr::ClearAnimValue() {
   mSVGElement->SetAnimateMotionTransform(nullptr);
 }
 
-nsresult SVGMotionSMILAttr::SetAnimValue(const nsSMILValue& aValue) {
+nsresult SVGMotionSMILAttr::SetAnimValue(const SMILValue& aValue) {
   gfx::Matrix matrix = SVGMotionSMILType::CreateMatrix(aValue);
   mSVGElement->SetAnimateMotionTransform(&matrix);
   return NS_OK;

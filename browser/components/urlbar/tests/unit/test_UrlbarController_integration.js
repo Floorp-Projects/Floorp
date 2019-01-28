@@ -10,24 +10,24 @@
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
 const TEST_URL = "http://example.com";
-const match = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-                              UrlbarUtils.MATCH_SOURCE.TABS,
-                              { url: TEST_URL });
+const match = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                               UrlbarUtils.MATCH_SOURCE.TABS,
+                               { url: TEST_URL });
 let controller;
 
 /**
  * Asserts that the query context has the expected values.
  *
- * @param {QueryContext} context
- * @param {object} expectedValues The expected values for the QueryContext.
+ * @param {UrlbarQueryContext} context
+ * @param {object} expectedValues The expected values for the UrlbarQueryContext.
  */
 function assertContextMatches(context, expectedValues) {
-  Assert.ok(context instanceof QueryContext,
-    "Should be a QueryContext");
+  Assert.ok(context instanceof UrlbarQueryContext,
+    "Should be a UrlbarQueryContext");
 
   for (let [key, value] of Object.entries(expectedValues)) {
     Assert.equal(context[key], value,
-      `Should have the expected value for ${key} in the QueryContext`);
+      `Should have the expected value for ${key} in the UrlbarQueryContext`);
   }
 }
 

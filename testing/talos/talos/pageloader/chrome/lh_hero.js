@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-function _contentHeroHandler() {
+function _contentHeroHandler(isload) {
   var obs = null;
   var el = content.window.document.querySelector("[elementtiming]");
   if (el) {
@@ -23,12 +23,18 @@ function _contentHeroHandler() {
     } catch (err) {
       sendAsyncMessage("PageLoader:Error", {"msg": err.message});
     }
+  } else if (isload) {
+    // If the hero element is added from a settimeout handler, it might not run before 'load'
+    setTimeout(function() { _contentHeroHandler(false); }, 5000);
   } else {
-      var err = "Could not find a tag with an elmenttiming attr on the page";
-      sendAsyncMessage("PageLoader:Error", {"msg": err});
+    var err = "Could not find a tag with an elmenttiming attr on the page";
+    sendAsyncMessage("PageLoader:Error", {"msg": err});
   }
   return obs;
 }
 
+function _contentHeroLoadHandler() {
+  _contentHeroHandler(true);
+}
 
-addEventListener("load", contentLoadHandlerCallback(_contentHeroHandler), true); // eslint-disable-line no-undef
+addEventListener("load", contentLoadHandlerCallback(_contentHeroLoadHandler), true); // eslint-disable-line no-undef

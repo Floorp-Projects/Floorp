@@ -53,12 +53,14 @@ extern "C" {
     output_params.format = CUBEB_SAMPLE_FLOAT32NE;
     output_params.rate = rate;
     output_params.channels = 2;
+    output_params.layout = CUBEB_LAYOUT_UNDEFINED;
     output_params.prefs = CUBEB_STREAM_PREF_NONE;
 
     cubeb_stream_params input_params;
     input_params.format = CUBEB_SAMPLE_FLOAT32NE;
     input_params.rate = rate;
     input_params.channels = 1;
+    input_params.layout = CUBEB_LAYOUT_UNDEFINED;
     input_params.prefs = CUBEB_STREAM_PREF_NONE;
 
     cubeb_stream * stm;
@@ -102,7 +104,7 @@ extern "C" {
 
       for (i = 0; i < nframes; ++i) {
         for (c = 0; c < 2; ++c) {
-          buf[i][c] = in[i];
+          out[i][c] = in[i];
         }
       }
       return nframes;

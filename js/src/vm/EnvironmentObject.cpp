@@ -12,6 +12,7 @@
 #include "vm/AsyncFunction.h"
 #include "vm/GlobalObject.h"
 #include "vm/Iteration.h"
+#include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"
@@ -50,40 +51,16 @@ Shape* js::EnvironmentCoordinateToEnvironmentShape(JSScript* script,
   return si.environmentShape();
 }
 
-static const uint32_t ENV_COORDINATE_NAME_THRESHOLD = 20;
-
-void EnvironmentCoordinateNameCache::purge() {
-  shape = nullptr;
-  map.clearAndCompact();
-}
-
-PropertyName* js::EnvironmentCoordinateName(
-    EnvironmentCoordinateNameCache& cache, JSScript* script, jsbytecode* pc) {
+PropertyName* js::EnvironmentCoordinateNameSlow(JSScript* script,
+                                                jsbytecode* pc) {
   Shape* shape = EnvironmentCoordinateToEnvironmentShape(script, pc);
-  if (shape != cache.shape && shape->slot() >= ENV_COORDINATE_NAME_THRESHOLD) {
-    cache.purge();
-    if (cache.map.reserve(shape->slot())) {
-      cache.shape = shape;
-      Shape::Range<NoGC> r(shape);
-      while (!r.empty()) {
-        cache.map.putNewInfallible(r.front().slot(), r.front().propid());
-        r.popFront();
-      }
-    }
-  }
-
-  jsid id;
   EnvironmentCoordinate ec(pc);
-  if (shape == cache.shape) {
-    EnvironmentCoordinateNameCache::Map::Ptr p = cache.map.lookup(ec.slot());
-    id = p->value();
-  } else {
-    Shape::Range<NoGC> r(shape);
-    while (r.front().slot() != ec.slot()) {
-      r.popFront();
-    }
-    id = r.front().propidRaw();
+
+  Shape::Range<NoGC> r(shape);
+  while (r.front().slot() != ec.slot()) {
+    r.popFront();
   }
+  jsid id = r.front().propidRaw();
 
   /* Beware nameless destructuring formal. */
   if (!JSID_IS_ATOM(id)) {
@@ -92,33 +69,11 @@ PropertyName* js::EnvironmentCoordinateName(
   return JSID_TO_ATOM(id)->asPropertyName();
 }
 
-JSScript* js::EnvironmentCoordinateFunctionScript(JSScript* script,
-                                                  jsbytecode* pc) {
-  MOZ_ASSERT(JOF_OPTYPE(JSOp(*pc)) == JOF_ENVCOORD);
-  ScopeIter si(script->innermostScope(pc));
-  uint32_t hops = EnvironmentCoordinate(pc).hops();
-  while (true) {
-    if (si.hasSyntacticEnvironment()) {
-      if (!hops) {
-        break;
-      }
-      hops--;
-    }
-    si++;
-  }
-  if (si.kind() != ScopeKind::Function) {
-    return nullptr;
-  }
-  return si.scope()->as<FunctionScope>().script();
-}
-
 /*****************************************************************************/
 
 CallObject* CallObject::create(JSContext* cx, HandleShape shape,
                                HandleObjectGroup group) {
-  MOZ_ASSERT(!group->singleton(),
-             "passed a singleton group to create() (use createSingleton() "
-             "instead)");
+  MOZ_ASSERT(!group->singleton());
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
   MOZ_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
@@ -127,28 +82,6 @@ CallObject* CallObject::create(JSContext* cx, HandleShape shape,
   JSObject* obj;
   JS_TRY_VAR_OR_RETURN_NULL(
       cx, obj, NativeObject::create(cx, kind, gc::DefaultHeap, shape, group));
-
-  return &obj->as<CallObject>();
-}
-
-CallObject* CallObject::createSingleton(JSContext* cx, HandleShape shape) {
-  gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
-  kind = gc::GetBackgroundAllocKind(kind);
-
-  RootedObjectGroup group(
-      cx, ObjectGroup::lazySingletonGroup(cx, /* oldGroup = */ nullptr, &class_,
-                                          TaggedProto(nullptr)));
-  if (!group) {
-    return nullptr;
-  }
-
-  JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(
-      cx, obj, NativeObject::create(cx, kind, gc::TenuredHeap, shape, group));
-
-  MOZ_ASSERT(obj->isSingleton(),
-             "group created inline above must be a singleton");
 
   return &obj->as<CallObject>();
 }
@@ -206,8 +139,7 @@ CallObject* CallObject::createTemplateObject(JSContext* cx, HandleScript script,
 CallObject* CallObject::create(JSContext* cx, HandleFunction callee,
                                HandleObject enclosing) {
   RootedScript script(cx, callee->nonLazyScript());
-  gc::InitialHeap heap =
-      script->treatAsRunOnce() ? gc::TenuredHeap : gc::DefaultHeap;
+  gc::InitialHeap heap = gc::DefaultHeap;
   CallObject* callobj =
       CallObject::createTemplateObject(cx, script, enclosing, heap);
   if (!callobj) {
@@ -215,14 +147,6 @@ CallObject* CallObject::create(JSContext* cx, HandleFunction callee,
   }
 
   callobj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
-
-  if (script->treatAsRunOnce()) {
-    Rooted<CallObject*> ncallobj(cx, callobj);
-    if (!JSObject::setSingleton(cx, ncallobj)) {
-      return nullptr;
-    }
-    return ncallobj;
-  }
 
   return callobj;
 }
@@ -350,8 +274,7 @@ const Class CallObject::class_ = {
 
   RootedScript script(cx, frame.script());
   RootedObject envChain(cx, frame.environmentChain());
-  gc::InitialHeap heap =
-      script->treatAsRunOnce() ? gc::TenuredHeap : gc::DefaultHeap;
+  gc::InitialHeap heap = gc::DefaultHeap;
   RootedShape shape(cx, scope->environmentShape());
   VarEnvironmentObject* env = create(cx, shape, envChain, heap);
   if (!env) {
@@ -450,9 +373,6 @@ const Class ModuleEnvironmentObject::class_ = {
   RootedModuleEnvironmentObject env(cx, &obj->as<ModuleEnvironmentObject>());
 
   env->initReservedSlot(MODULE_SLOT, ObjectValue(*module));
-  if (!JSObject::setSingleton(cx, env)) {
-    return nullptr;
-  }
 
   // Initialize this early so that we can manipulate the env object without
   // causing assertions.
@@ -3699,6 +3619,8 @@ static bool CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
 bool js::CheckGlobalOrEvalDeclarationConflicts(JSContext* cx,
                                                HandleObject envChain,
                                                HandleScript script) {
+  MOZ_ASSERT(script->isGlobalCode() || script->isForEval());
+
   RootedObject varObj(cx, &GetVariablesObject(envChain));
 
   if (script->isForEval()) {
@@ -3834,8 +3756,7 @@ static bool RemoveReferencedNames(JSContext* cx, HandleScript script,
 
       case JSOP_GETALIASEDVAR:
       case JSOP_SETALIASEDVAR:
-        name = EnvironmentCoordinateName(cx->caches().envCoordinateNameCache,
-                                         script, pc);
+        name = EnvironmentCoordinateNameSlow(script, pc);
         break;
 
       default:

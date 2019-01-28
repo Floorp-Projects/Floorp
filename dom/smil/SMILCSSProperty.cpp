@@ -12,9 +12,9 @@
 #include "mozilla/Move.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/SMILCSSValueType.h"
+#include "mozilla/SMILValue.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "nsDOMCSSAttrDeclaration.h"
-#include "nsSMILValue.h"
 #include "nsCSSProps.h"
 
 namespace mozilla {
@@ -30,11 +30,11 @@ SMILCSSProperty::SMILCSSProperty(nsCSSPropertyID aPropID, Element* aElement,
              "that's not supported for animation");
 }
 
-nsSMILValue SMILCSSProperty::GetBaseValue() const {
+SMILValue SMILCSSProperty::GetBaseValue() const {
   // To benefit from Return Value Optimization and avoid copy constructor calls
   // due to our use of return-by-value, we must return the exact same object
   // from ALL return points. This function must only return THIS variable:
-  nsSMILValue baseValue;
+  SMILValue baseValue;
 
   // SPECIAL CASE: (a) Shorthands
   //               (b) 'display'
@@ -54,7 +54,7 @@ nsSMILValue SMILCSSProperty::GetBaseValue() const {
     //
     // In any case, just return a dummy value (initialized with the right
     // type, so as not to indicate failure).
-    nsSMILValue tmpVal(&SMILCSSValueType::sSingleton);
+    SMILValue tmpVal(&SMILCSSValueType::sSingleton);
     Swap(baseValue, tmpVal);
     return baseValue;
   }
@@ -74,7 +74,7 @@ nsSMILValue SMILCSSProperty::GetBaseValue() const {
 
 nsresult SMILCSSProperty::ValueFromString(
     const nsAString& aStr, const SVGAnimationElement* aSrcElement,
-    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
+    SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
 
   SMILCSSValueType::ValueFromString(mPropID, mElement, aStr, aValue,
@@ -93,7 +93,7 @@ nsresult SMILCSSProperty::ValueFromString(
   return NS_OK;
 }
 
-nsresult SMILCSSProperty::SetAnimValue(const nsSMILValue& aValue) {
+nsresult SMILCSSProperty::SetAnimValue(const SMILValue& aValue) {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
   return mElement->SMILOverrideStyle()->SetSMILValue(mPropID, aValue);
 }

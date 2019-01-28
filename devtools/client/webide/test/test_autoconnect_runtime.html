@@ -67,6 +67,10 @@
           await connectionsChanged;
           is(Object.keys(DebuggerServer._connections).length, 0, "Disconnected");
 
+          // The DebuggerServer is destroyed when closing WebIDE, so re-initialize it.
+          DebuggerServer.init();
+          DebuggerServer.registerAllActors();
+
           connectionsChanged = waitForConnectionChange("opened", 2);
 
           win = await openWebIDE();

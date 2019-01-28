@@ -164,6 +164,10 @@
 
 extern crate semver_parser;
 
+// Serialization and deserialization support for version numbers
+#[cfg(feature = "serde")]
+extern crate serde;
+
 // We take the common approach of keeping our own module system private, and
 // just re-exporting the interface that we want.
 

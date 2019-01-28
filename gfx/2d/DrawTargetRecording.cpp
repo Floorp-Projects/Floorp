@@ -554,6 +554,25 @@ RefPtr<DrawTarget> DrawTargetRecording::CreateClippedDrawTarget(
   return similarDT;
 }
 
+already_AddRefed<DrawTarget>
+DrawTargetRecording::CreateSimilarDrawTargetForFilter(
+    const IntSize &aMaxSize, SurfaceFormat aFormat, FilterNode *aFilter,
+    FilterNode *aSource, const Rect &aSourceRect, const Point &aDestPoint) {
+  RefPtr<DrawTarget> similarDT;
+  if (mFinalDT->CanCreateSimilarDrawTarget(aMaxSize, aFormat)) {
+    similarDT = new DrawTargetRecording(this, aMaxSize, aFormat);
+    mRecorder->RecordEvent(RecordedCreateDrawTargetForFilter(
+        this, similarDT.get(), aMaxSize, aFormat, aFilter, aSource, aSourceRect,
+        aDestPoint));
+  } else if (XRE_IsContentProcess()) {
+    // See CreateSimilarDrawTarget
+    MOZ_CRASH(
+        "Content-process DrawTargetRecording can't create requested clipped "
+        "drawtarget");
+  }
+  return similarDT.forget();
+}
+
 already_AddRefed<PathBuilder> DrawTargetRecording::CreatePathBuilder(
     FillRule aFillRule) const {
   RefPtr<PathBuilder> builder = mFinalDT->CreatePathBuilder(aFillRule);

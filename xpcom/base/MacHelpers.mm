@@ -13,9 +13,7 @@
 
 namespace mozilla {
 
-nsresult
-GetSelectedCityInfo(nsAString& aCountryCode)
-{
+nsresult GetSelectedCityInfo(nsAString& aCountryCode) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // Can be replaced with [[NSLocale currentLocale] countryCode] once we build
@@ -31,5 +29,4 @@ GetSelectedCityInfo(nsAString& aCountryCode)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-} // namespace Mozilla
-
+}  // namespace Mozilla

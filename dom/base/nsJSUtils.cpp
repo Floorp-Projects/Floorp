@@ -377,9 +377,7 @@ JSScript* nsJSUtils::ExecutionContext::GetScript() {
   return MaybeGetScript();
 }
 
-JSScript* nsJSUtils::ExecutionContext::MaybeGetScript() {
-  return mScript;
-}
+JSScript* nsJSUtils::ExecutionContext::MaybeGetScript() { return mScript; }
 
 nsresult nsJSUtils::ExecutionContext::ExecScript() {
   if (mSkip) {

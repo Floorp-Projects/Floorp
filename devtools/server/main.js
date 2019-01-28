@@ -95,6 +95,10 @@ var DebuggerServer = {
     return this._initialized;
   },
 
+  hasConnection() {
+    return Object.keys(this._connections).length > 0;
+  },
+
   /**
    * Performs cleanup tasks before shutting down the debugger server. Such tasks
    * include clearing any actor constructors added at runtime. This method

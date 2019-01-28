@@ -162,15 +162,14 @@ TextProperty.prototype = {
     }
   },
 
-  setName: function(name) {
-    const store = this.rule.elementStyle.store;
-
-    if (name !== this.name) {
+  setName: async function(name) {
+    if (name !== this.name && this.editor) {
+      const store = this.rule.elementStyle.store;
       store.userProperties.setProperty(this.rule.domRule, name,
                                        this.editor.committed.value);
     }
 
-    this.rule.setPropertyName(this, name);
+    await this.rule.setPropertyName(this, name);
     this.updateEditor();
   },
 

@@ -7,12 +7,20 @@
  * Styles for React component at `devtools/client/shared/components/SmartTrace.js`
  */
 
-.frames ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+
+.frames-group .frame{
+  display: block;
+  padding-inline-start: 16px;
+}
+
+.img.annotation-logo{
+  background-color: var(--theme-body-color);
+}
+
+
+.frames [role="list"]{
   display: inline-grid;
-  grid-template-columns: auto auto 1fr;
+  grid-template-columns: auto 1fr;
   grid-column-gap: 8px;
 }
 
@@ -36,54 +44,55 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   direction: rtl;
+  text-align: end;
 }
 
 .frames .location .line {
   color: var(--frame-link-line-color);
 }
 
-.frames ul .frame:hover .location {
+.frames .frames-list .frame:hover .location {
   text-decoration: underline;
 }
 
 /******* Group styles *******/
-.frames .frames-group,
-.frames .frames-group .group {
-  display: contents;
+.frames-group {
+  grid-column:1 / -1;
 }
 
-.frames-group .frames-list .frame {
+.frames .frames-group .group {
+  display: flex;
+}
+
+.group-description {
+  display: flex;
+  align-items: center;
+  color: var(--console-output-color);
+}
+
+.frames .frames-group .frames-list {
+  display: block;
+}
+
+.frames .frames-group .frames-list .frame {
   padding-inline-start: 16px;
   display: block;
-  grid-column: 1 / -1;
+  text-overflow: ellipsis;
 }
 
-.frames-list {
+.frames .frames-group .frames-list {
   grid-column: 1 / -1;
   margin-block-start: 2px;
 }
 
-.frames .frames-list .frame:first-of-type {
+.frames .frames-group .frames-list .frame:first-of-type {
   border-top: 1px solid var(--theme-splitter-color);
   padding-block-start: 4px;
 }
 
-.frames .frames-list .frame:last-of-type {
+.frames .frames-group .frames-list .frame:last-of-type {
   margin-block-end: 4px;
   border-bottom: 1px solid var(--theme-splitter-color);
-}
-
-.frames ul .frames-group.expanded,
-.frames ul .frames-group.expanded .location {
-  color: var(--theme-highlight-blue);
-}
-
-.frames ul .frames-group.expanded .react path {
-  fill: var(--theme-highlight-blue);
-}
-
-.frames ul .frames-group.expanded .badge {
-  color: var(--theme-highlight-blue);
 }
 
 .badge {
@@ -95,15 +104,54 @@
   display: inline-block;
   text-align: center;
   cursor: default;
+  margin-inline-start: 4px;
 }
 
-.annotation-logo {
+.frames .frames-group.expanded .group-description,
+.frames .frames-group.expanded .badge {
+  color: var(--theme-highlight-blue);
+}
+
+/** Images **/
+
+.frames .img.annotation-logo {
+  /* FIXME: In order to display the Framework icons, we need to find a way to share CSS
+   * from the debugger, where the background images are defined.
+   * See https://github.com/devtools-html/debugger.html/issues/7782.
+   */
+  display: none;
+  /*
+  background-color:var(--theme-body-color);
   display: inline-block;
   width: 12px;
-  margin-inline-start: 4px;
+  height:12px;
   vertical-align: middle;
+  margin-inline-end:4px;
+  */
 }
 
-:root.theme-dark .annotation-logo:not(.angular) svg path {
-  fill: var(--theme-highlight-blue);
+.expanded .img.annotation-logo {
+  background-color: currentColor;
+}
+
+.group .img.arrow {
+    mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
+    mask-size: auto;
+    margin-inline-end: 4px;
+    background-color: var(--theme-icon-dimmed-color);
+    width: 10px;
+    height: 10px;
+    mask-size: 100%;
+    display: inline-block;
+    transform: rotate(-90deg);
+    transition: transform 0.18s ease;
+}
+
+.group .img.arrow.expanded {
+  transform: rotate(0);
+}
+
+/* Frameworks */
+:root.theme-dark .annotation-logo:not(.angular) {
+  background-color: var(--theme-highlight-blue);
 }

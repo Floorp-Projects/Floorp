@@ -6,7 +6,7 @@
 // 1233672.
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarMatch: "resource:///modules/UrlbarMatch.jsm",
+  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -33,9 +33,9 @@ add_task(function losslessDecode() {
   let urlNoScheme = "example.com/\u30a2\u30a4\u30a6\u30a8\u30aa";
   let url = "http://" + urlNoScheme;
   if (Services.prefs.getBoolPref("browser.urlbar.quantumbar", true)) {
-    const result = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-                                   UrlbarUtils.MATCH_SOURCE.TABS,
-                                   { url });
+    const result = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                                    UrlbarUtils.MATCH_SOURCE.TABS,
+                                    { url });
     gURLBar.setValueFromResult(result);
   } else {
     gURLBar.textValue = url;

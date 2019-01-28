@@ -10,6 +10,8 @@ const UserProperties = require("devtools/client/inspector/rules/models/user-prop
 const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 
 loader.lazyRequireGetter(this, "promiseWarn", "devtools/client/inspector/shared/utils", true);
+loader.lazyRequireGetter(this, "parseDeclarations", "devtools/shared/css/parsing-utils", true);
+loader.lazyRequireGetter(this, "parseSingleValue", "devtools/shared/css/parsing-utils", true);
 loader.lazyRequireGetter(this, "isCssVariable", "devtools/shared/fronts/css-properties", true);
 
 /**
@@ -329,6 +331,203 @@ ElementStyle.prototype = {
       if (this._updatePropertyOverridden(textProp)) {
         textProp.updateEditor();
       }
+    }
+  },
+
+  /**
+   * Given the id of the rule and the new declaration name, modifies the existing
+   * declaration name to the new given value.
+   *
+   * @param  {String} ruleID
+   *         The Rule id of the given CSS declaration.
+   * @param  {String} declarationId
+   *         The TextProperty id for the CSS declaration.
+   * @param  {String} name
+   *         The new declaration name.
+   */
+  modifyDeclarationName: async function(ruleID, declarationId, name) {
+    const rule = this.getRule(ruleID);
+    if (!rule) {
+      return;
+    }
+
+    const declaration = rule.getDeclaration(declarationId);
+    if (!declaration || declaration.name === name) {
+      return;
+    }
+
+    // Adding multiple rules inside of name field overwrites the current
+    // property with the first, then adds any more onto the property list.
+    const declarations = parseDeclarations(this.cssProperties.isKnown, name);
+    if (!declarations.length) {
+      return;
+    }
+
+    await declaration.setName(declarations[0].name);
+
+    if (!declaration.enabled) {
+      await declaration.setEnabled(true);
+    }
+  },
+
+  /**
+   * Parse a value string and break it into pieces, starting with the
+   * first value, and into an array of additional declarations (if any).
+   *
+   * Example: Calling with "red; width: 100px" would return
+   * { firstValue: "red", propertiesToAdd: [{ name: "width", value: "100px" }] }
+   *
+   * @param  {String} value
+   *         The string to parse.
+   * @return {Object} An object with the following properties:
+   *         firstValue: A string containing a simple value, like
+   *                     "red" or "100px!important"
+   *         declarationsToAdd: An array with additional declarations, following the
+   *                            parseDeclarations format of { name, value, priority }
+   */
+  _getValueAndExtraProperties: function(value) {
+    // The inplace editor will prevent manual typing of multiple declarations,
+    // but we need to deal with the case during a paste event.
+    // Adding multiple declarations inside of value editor sets value with the
+    // first, then adds any more onto the declaration list (below this declarations).
+    let firstValue = value;
+    let declarationsToAdd = [];
+
+    const declarations = parseDeclarations(this.cssProperties.isKnown, value);
+
+    // Check to see if the input string can be parsed as multiple declarations
+    if (declarations.length) {
+      // Get the first property value (if any), and any remaining
+      // declarations (if any)
+      if (!declarations[0].name && declarations[0].value) {
+        firstValue = declarations[0].value;
+        declarationsToAdd = declarations.slice(1);
+      } else if (declarations[0].name && declarations[0].value) {
+        // In some cases, the value could be a property:value pair
+        // itself.  Join them as one value string and append
+        // potentially following declarations
+        firstValue = declarations[0].name + ": " + declarations[0].value;
+        declarationsToAdd = declarations.slice(1);
+      }
+    }
+
+    return {
+      declarationsToAdd,
+      firstValue,
+    };
+  },
+
+  /**
+   * Given the id of the rule and the new declaration value, modifies the existing
+   * declaration value to the new given value.
+   *
+   * @param  {String} ruleId
+   *         The Rule id of the given CSS declaration.
+   * @param  {String} declarationId
+   *         The TextProperty id for the CSS declaration.
+   * @param  {String} value
+   *         The new declaration value.
+   */
+  modifyDeclarationValue: async function(ruleId, declarationId, value) {
+    const rule = this.getRule(ruleId);
+    if (!rule) {
+      return;
+    }
+
+    const declaration = rule.getDeclaration(declarationId);
+    if (!declaration) {
+      return;
+    }
+
+    const { declarationsToAdd, firstValue} = this._getValueAndExtraProperties(value);
+    const parsedValue = parseSingleValue(this.cssProperties.isKnown, firstValue);
+
+    if (!declarationsToAdd.length &&
+        declaration.value === parsedValue.value &&
+        declaration.priority === parsedValue.priority) {
+      return;
+    }
+
+    // First, set this declaration value (common case, only modified a property)
+    await declaration.setValue(parsedValue.value, parsedValue.priority);
+
+    if (!declaration.enabled) {
+      await declaration.setEnabled(true);
+    }
+
+    let siblingDeclaration = declaration;
+    for (const { commentOffsets, name, value: val, priority } of declarationsToAdd) {
+      const isCommented = Boolean(commentOffsets);
+      const enabled = !isCommented;
+      siblingDeclaration = rule.createProperty(name, val, priority, enabled,
+        siblingDeclaration);
+    }
+  },
+
+  /**
+   * Modifies the existing rule's selector to the new given value.
+   *
+   * @param {String} ruleId
+   *        The id of the Rule to be modified.
+   * @param {String} selector
+   *        The new selector value.
+   */
+  modifySelector: async function(ruleId, selector) {
+    try {
+      const rule = this.getRule(ruleId);
+      if (!rule) {
+        return;
+      }
+
+      const response = await rule.domRule.modifySelector(this.element, selector);
+      const { ruleProps, isMatching } = response;
+
+      if (!ruleProps) {
+        // Notify for changes, even when nothing changes, just to allow tests
+        // being able to track end of this request.
+        this.ruleView.emit("ruleview-invalid-selector");
+        return;
+      }
+
+      const newRule = new Rule(this, {
+        ...ruleProps,
+        isUnmatched: !isMatching,
+      });
+
+      // Recompute the list of applied styles because editing a
+      // selector might cause this rule's position to change.
+      const appliedStyles = await this.pageStyle.getApplied(this.element, {
+        inherited: true,
+        matchedSelectors: true,
+        filter: this.showUserAgentStyles ? "ua" : undefined,
+      });
+      const newIndex = appliedStyles.findIndex(r => r.rule == ruleProps.rule);
+      const oldIndex = this.rules.indexOf(rule);
+
+      // Remove the old rule and insert the new rule according to where it appears
+      // in the list of applied styles.
+      this.rules.splice(oldIndex, 1);
+      // If the selector no longer matches, then we leave the rule in
+      // the same relative position.
+      this.rules.splice(newIndex === -1 ? oldIndex : newIndex, 0, newRule);
+
+      // Mark any properties that are overridden according to the new list of rules.
+      this.markOverriddenAll();
+
+      // In order to keep the new rule in place of the old in the rules view, we need
+      // to remove the rule again if the rule was inserted to its new index according
+      // to the list of applied styles.
+      // Note: you might think we would replicate the list-modification logic above,
+      // but that is complicated due to the way the UI installs pseudo-element rules
+      // and the like.
+      if (newIndex !== -1) {
+        this.rules.splice(newIndex, 1);
+        this.rules.splice(oldIndex, 0, newRule);
+      }
+
+      this._changed();
+    } catch (e) {
+      console.error(e);
     }
   },
 

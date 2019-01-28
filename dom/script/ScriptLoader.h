@@ -448,6 +448,7 @@ class ScriptLoader final : public nsISupports {
 
   void ReportErrorToConsole(ScriptLoadRequest* aRequest,
                             nsresult aResult) const;
+  void ReportPreloadErrorsToConsole(ScriptLoadRequest* aRequest);
 
   nsresult AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
                                      bool* aCouldCompileOut);

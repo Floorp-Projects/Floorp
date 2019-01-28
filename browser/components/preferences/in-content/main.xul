@@ -409,21 +409,11 @@
 <!-- DRM Content -->
 <groupbox id="drmGroup" data-category="paneGeneral" data-subcategory="drm" hidden="true">
   <label><html:h2 data-l10n-id="drm-content-header"/></label>
-  <grid id="contentGrid2">
-    <columns>
-      <column flex="1"/>
-      <column/>
-    </columns>
-    <rows id="contentRows-2">
-      <row id="playDRMContentRow">
-        <hbox align="center">
-          <checkbox id="playDRMContent" preference="media.eme.enabled"
-                    class="tail-with-learn-more" data-l10n-id="play-drm-content" />
-          <label id="playDRMContentLink" class="learnMore text-link" data-l10n-id="play-drm-content-learn-more"/>
-        </hbox>
-      </row>
-    </rows>
-  </grid>
+  <hbox align="center">
+    <checkbox id="playDRMContent" preference="media.eme.enabled"
+              class="tail-with-learn-more" data-l10n-id="play-drm-content" />
+    <label id="playDRMContentLink" class="learnMore text-link" data-l10n-id="play-drm-content-learn-more"/>
+  </hbox>
 </groupbox>
 
 #ifdef HAVE_SHELL_SERVICE
@@ -558,14 +548,19 @@
 
 #ifdef MOZ_UPDATER
   <description id="updateAllowDescription" data-l10n-id="update-application-allow-description"></description>
-  <radiogroup id="updateRadioGroup">
-    <radio id="autoDesktop"
-           value="true"
-           data-l10n-id="update-application-auto"/>
-    <radio id="manualDesktop"
-           value="false"
-           data-l10n-id="update-application-check-choose"/>
-  </radiogroup>
+  <vbox id="updateSettingsContainer">
+    <radiogroup id="updateRadioGroup">
+      <radio id="autoDesktop"
+             value="true"
+             data-l10n-id="update-application-auto"/>
+      <radio id="manualDesktop"
+             value="false"
+             data-l10n-id="update-application-check-choose"/>
+    </radiogroup>
+    <description id="updateSettingCrossUserWarning" hidden="true"
+                 data-l10n-id="update-application-warning-cross-user-setting">
+    </description>
+  </vbox>
 #ifdef MOZ_MAINTENANCE_SERVICE
   <checkbox id="useService"
             data-l10n-id="update-application-use-service"

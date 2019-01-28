@@ -8,18 +8,21 @@ with Files("**"):
 EXTRA_JS_MODULES += [
     'UrlbarController.jsm',
     'UrlbarInput.jsm',
-    'UrlbarMatch.jsm',
     'UrlbarMuxerUnifiedComplete.jsm',
     'UrlbarPrefs.jsm',
     'UrlbarProviderOpenTabs.jsm',
     'UrlbarProvidersManager.jsm',
     'UrlbarProviderUnifiedComplete.jsm',
+    'UrlbarResult.jsm',
     'UrlbarTokenizer.jsm',
     'UrlbarUtils.jsm',
     'UrlbarValueFormatter.jsm',
     'UrlbarView.jsm',
 ]
 
+TESTING_JS_MODULES += [
+    'tests/UrlbarTestUtils.jsm',
+]
 BROWSER_CHROME_MANIFESTS += [
     'tests/browser/browser.ini',
     'tests/legacy/browser.ini',

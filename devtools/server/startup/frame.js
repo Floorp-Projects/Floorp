@@ -39,34 +39,25 @@ try {
       const prefix = msg.data.prefix;
       const addonId = msg.data.addonId;
 
-      // Using the JS debugger causes problems when we're trying to
-      // schedule those zone groups across different threads. Calling
-      // blockThreadedExecution causes Gecko to switch to a simpler
-      // single-threaded model until unblockThreadedExecution is
-      // called later. We cannot start the debugger until the callback
-      // passed to blockThreadedExecution has run, signaling that
-      // we're running single-threaded.
-      Cu.blockThreadedExecution(() => {
-        const conn = DebuggerServer.connectToParent(prefix, mm);
-        conn.parentMessageManager = mm;
-        connections.set(prefix, conn);
+      const conn = DebuggerServer.connectToParent(prefix, mm);
+      conn.parentMessageManager = mm;
+      connections.set(prefix, conn);
 
-        let actor;
+      let actor;
 
-        if (addonId) {
-          const { WebExtensionTargetActor } = require("devtools/server/actors/targets/webextension");
-          actor = new WebExtensionTargetActor(conn, chromeGlobal, prefix, addonId);
-        } else {
-          const { FrameTargetActor } = require("devtools/server/actors/targets/frame");
-          actor = new FrameTargetActor(conn, chromeGlobal);
-        }
+      if (addonId) {
+        const { WebExtensionTargetActor } = require("devtools/server/actors/targets/webextension");
+        actor = new WebExtensionTargetActor(conn, chromeGlobal, prefix, addonId);
+      } else {
+        const { FrameTargetActor } = require("devtools/server/actors/targets/frame");
+        actor = new FrameTargetActor(conn, chromeGlobal);
+      }
 
-        const actorPool = new ActorPool(conn);
-        actorPool.addActor(actor);
-        conn.addActorPool(actorPool);
+      const actorPool = new ActorPool(conn);
+      actorPool.addActor(actor);
+      conn.addActorPool(actorPool);
 
-        sendAsyncMessage("debug:actor", {actor: actor.form(), prefix: prefix});
-      });
+      sendAsyncMessage("debug:actor", {actor: actor.form(), prefix: prefix});
     });
 
     addMessageListener("debug:connect", onConnect);
@@ -113,8 +104,6 @@ try {
         return;
       }
 
-      Cu.unblockThreadedExecution();
-
       removeMessageListener("debug:disconnect", onDisconnect);
       // Call DebuggerServerConnection.close to destroy all child actors. It should end up
       // calling DebuggerServerConnection.onClosed that would actually cleanup all actor
@@ -133,6 +122,19 @@ try {
       }
       connections.clear();
     });
+
+    // Destroy the server once its last connection closes. Note that multiple frame
+    // scripts may be running in parallel and reuse the same server.
+    function destroyServer() {
+      // Only destroy the server if there is no more connections to it. It may be used
+      // to debug another tab running in the same process.
+      if (DebuggerServer.hasConnection()) {
+        return;
+      }
+      DebuggerServer.off("connectionchange", destroyServer);
+      DebuggerServer.destroy();
+    }
+    DebuggerServer.on("connectionchange", destroyServer);
   })();
 } catch (e) {
   dump(`Exception in DevTools frame startup: ${e}\n`);

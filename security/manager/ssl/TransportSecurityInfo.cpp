@@ -284,8 +284,7 @@ nsresult TransportSecurityInfo::ReadSSLStatus(nsIObjectInputStream* aStream) {
   if (cert) {
     mServerCert = do_QueryInterface(cert);
     if (!mServerCert) {
-      MOZ_DIAGNOSTIC_ASSERT(false,
-                            "Deserialization should not fail");
+      MOZ_DIAGNOSTIC_ASSERT(false, "Deserialization should not fail");
       return NS_NOINTERFACE;
     }
   }
@@ -445,8 +444,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
     if (cert != nullptr) {
       mServerCert = do_QueryInterface(cert);
       if (!mServerCert) {
-        MOZ_DIAGNOSTIC_ASSERT(false,
-                              "Deserialization should not fail");
+        MOZ_DIAGNOSTIC_ASSERT(false, "Deserialization should not fail");
         return NS_NOINTERFACE;
       }
     }

@@ -47,7 +47,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
-  ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   ReaderParent: "resource:///modules/ReaderParent.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
@@ -79,6 +78,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 if (AppConstants.MOZ_CRASHREPORTER) {
   ChromeUtils.defineModuleGetter(this, "PluginCrashReporter",
     "resource:///modules/ContentCrashHandlers.jsm");
+}
+
+if (!Services.prefs.getBoolPref("browser.urlbar.quantumbar", false)) {
+  ChromeUtils.defineModuleGetter(this, "ReaderMode",
+    "resource://gre/modules/ReaderMode.jsm");
 }
 
 XPCOMUtils.defineLazyScriptGetter(this, "PlacesTreeView",
@@ -188,14 +192,6 @@ XPCOMUtils.defineLazyGetter(this, "gURLBar", () => {
 
   if (!Services.prefs.getBoolPref("browser.urlbar.quantumbar", false)) {
     return element;
-  }
-
-  // Disable the legacy XBL binding.
-  element.setAttribute("quantumbar", "true");
-
-  // Re-focus the input field if it was focused before switching bindings.
-  if (element.hasAttribute("focused")) {
-    element.inputField.focus();
   }
 
   return new UrlbarInput({
@@ -2961,12 +2957,14 @@ var BrowserOnClick = {
             flags |= overrideService.ERROR_TIME;
           }
           let uri = Services.uriFixup.createFixupURI(location, 0);
+          let permanentOverride =
+            Services.prefs.getBoolPref("security.certerrors.permanentOverride");
           cert = securityInfo.serverCert;
           overrideService.rememberValidityOverride(
             uri.asciiHost, uri.port,
             cert,
             flags,
-            true);
+            !permanentOverride);
           browser.reload();
           return;
         }
@@ -4000,7 +3998,6 @@ const BrowserSearch = {
 
     let focusUrlBarIfSearchFieldIsNotActive = function(aSearchBar) {
       if (!aSearchBar || document.activeElement != aSearchBar.textbox.inputField) {
-        focusAndSelectUrlBar(true);
         // Limit the results to search suggestions, like the search bar.
         gURLBar.typeRestrictToken(UrlbarTokenizer.RESTRICT.SEARCH);
       }
@@ -4827,6 +4824,7 @@ var XULBrowserWindow = {
 
       CFRPageActions.updatePageActions(gBrowser.selectedBrowser);
     }
+    Services.obs.notifyObservers(null, "touchbar-location-change", location);
     UpdateBackForwardCommands(gBrowser.webNavigation);
     ReaderParent.updateReaderButton(gBrowser.selectedBrowser);
 

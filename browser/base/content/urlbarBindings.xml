@@ -1698,6 +1698,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="typeRestrictToken">
         <parameter name="char"/>
         <body><![CDATA[
+          focusAndSelectUrlBar();
+
           this.inputField.value = char + " ";
 
           let event = this.document.createEvent("UIEvents");
@@ -1712,7 +1714,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <method name="hiddenFocus">
+      <method name="setHiddenFocus">
         <body><![CDATA[
           this.classList.add("hidden-focus");
           this.focus();

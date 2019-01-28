@@ -802,7 +802,7 @@ var AddonTestUtils = {
 
     // Wait for all add-ons to finish starting up before resolving.
     const {XPIProvider} = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
-    await Promise.all(Array.from(XPIProvider.activeAddons,
+    await Promise.all(Array.from(XPIProvider.activeAddons.values(),
                                  addon => addon.startupPromise));
   },
 

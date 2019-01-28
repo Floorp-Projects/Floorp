@@ -18,7 +18,6 @@
 #include "nsGlobalWindow.h"
 #include "nsIFrame.h"
 #include "nsIWebVTTParserWrapper.h"
-#include "nsTArrayHelpers.h"
 #include "nsVariant.h"
 #include "nsVideoFrame.h"
 

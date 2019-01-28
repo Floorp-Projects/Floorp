@@ -112,14 +112,9 @@ impl Example for App {
                 doc.content_rect.size,
             );
 
-            builder.push_stacking_context(
+            builder.push_simple_stacking_context(
                 &LayoutPrimitiveInfo::new(doc.content_rect),
                 space_and_clip.spatial_id,
-                None,
-                TransformStyle::Flat,
-                MixBlendMode::Normal,
-                &[],
-                RasterSpace::Screen,
             );
             builder.push_rect(
                 &LayoutPrimitiveInfo::new(local_rect),

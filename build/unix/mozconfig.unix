@@ -13,6 +13,8 @@ else
     CC="$TOOLTOOL_DIR/clang/bin/clang"
     CXX="$TOOLTOOL_DIR/clang/bin/clang++"
     export ENABLE_CLANG_PLUGIN=1
+    export CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
+    export CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
 
     if [ -n "$MOZ_PGO" ]; then
         if [ -z "$USE_ARTIFACT" ]; then

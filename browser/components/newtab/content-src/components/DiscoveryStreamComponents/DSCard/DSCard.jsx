@@ -30,9 +30,19 @@ export class DSCard extends React.PureComponent {
           <div className="img" style={{backgroundImage: `url(${this.props.image_src}`}} />
         </div>
         <div className="meta">
-          <header className="title">{this.props.title}</header>
-          <p className="excerpt">{this.props.excerpt}</p>
-          <p className="source">{this.props.source}</p>
+          <div className="info-wrap">
+            <header className="title">{this.props.title}</header>
+            {this.props.excerpt && <p className="excerpt">{this.props.excerpt}</p>}
+          </div>
+          <p>
+            {this.props.context && (
+              <span>
+                <span className="context">{this.props.context}</span>
+                <br />
+              </span>
+            )}
+            <span className="source">{this.props.source}</span>
+          </p>
         </div>
       </a>
     );

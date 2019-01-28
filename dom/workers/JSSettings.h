@@ -7,7 +7,11 @@
 #ifndef mozilla_dom_workerinternals_JSSettings_h
 #define mozilla_dom_workerinternals_JSSettings_h
 
+#include <stdint.h>
+
 #include "jsapi.h"
+#include "js/ContextOptions.h"
+#include "js/GCAPI.h"
 #include "mozilla/Maybe.h"
 #include "nsString.h"
 #include "nsTArray.h"

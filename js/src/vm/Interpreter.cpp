@@ -1959,6 +1959,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_NOP)
     CASE(JSOP_NOP_DESTRUCTURING)
     CASE(JSOP_TRY_DESTRUCTURING)
+    CASE(JSOP_UNUSED71)
     CASE(JSOP_UNUSED151)
     CASE(JSOP_CONDSWITCH) {
       MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
@@ -3395,13 +3396,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(JSOP_ARGUMENTS)
 
-    CASE(JSOP_RUNONCE) {
-      if (!RunOnceScriptPrologue(cx, script)) {
-        goto error;
-      }
-    }
-    END_CASE(JSOP_RUNONCE)
-
     CASE(JSOP_REST) {
       ReservedRooted<JSObject*> rest(&rootObject0,
                                      REGS.fp()->createRestParameter(cx));
@@ -3419,8 +3413,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 #ifdef DEBUG
       // Only the .this slot can hold the TDZ MagicValue.
       if (IsUninitializedLexical(val)) {
-        PropertyName* name = EnvironmentCoordinateName(
-            cx->caches().envCoordinateNameCache, script, REGS.pc);
+        PropertyName* name = EnvironmentCoordinateNameSlow(script, REGS.pc);
         MOZ_ASSERT(name == cx->names().dotThis);
         JSOp next = JSOp(*GetNextPc(REGS.pc));
         MOZ_ASSERT(next == JSOP_CHECKTHIS || next == JSOP_CHECKRETURN ||
@@ -4259,14 +4252,10 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_IMPORTMETA)
 
     CASE(JSOP_DYNAMIC_IMPORT) {
-      ReservedRooted<JSObject*> referencingScriptSource(&rootObject0);
-      referencingScriptSource = script->sourceObject();
-
       ReservedRooted<Value> specifier(&rootValue1);
       POP_COPY_TO(specifier);
 
-      JSObject* promise =
-          StartDynamicModuleImport(cx, referencingScriptSource, specifier);
+      JSObject* promise = StartDynamicModuleImport(cx, script, specifier);
       if (!promise) goto error;
 
       PUSH_OBJECT(*promise);
@@ -4924,26 +4913,6 @@ bool js::ImplicitThisOperation(JSContext* cx, HandleObject scopeObj,
   return true;
 }
 
-bool js::RunOnceScriptPrologue(JSContext* cx, HandleScript script) {
-  MOZ_ASSERT(script->treatAsRunOnce());
-
-  if (!script->hasRunOnce()) {
-    script->setHasRunOnce();
-    return true;
-  }
-
-  // Force instantiation of the script's function's group to ensure the flag
-  // is preserved in type information.
-  RootedFunction fun(cx, script->functionNonDelazifying());
-  if (!JSObject::getGroup(cx, fun)) {
-    return false;
-  }
-
-  MarkObjectGroupFlags(cx, script->functionNonDelazifying(),
-                       OBJECT_FLAG_RUNONCE_INVALIDATED);
-  return true;
-}
-
 unsigned js::GetInitDataPropAttrs(JSOp op) {
   switch (op) {
     case JSOP_INITPROP:
@@ -5176,9 +5145,7 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   }
 
   if (newKind == SingletonObject) {
-    if (!JSObject::setSingleton(cx, obj)) {
-      return nullptr;
-    }
+    MOZ_ASSERT(obj->isSingleton());
   } else {
     obj->setGroup(group);
 
@@ -5235,13 +5202,9 @@ JSObject* js::NewArrayOperation(JSContext* cx, HandleScript script,
     if (!group) {
       return nullptr;
     }
-    AutoSweepObjectGroup sweep(group);
-    if (group->maybePreliminaryObjects(sweep)) {
-      group->maybePreliminaryObjects(sweep)->maybeAnalyze(cx, group);
-    }
 
-    if (group->shouldPreTenure(sweep) ||
-        group->maybePreliminaryObjects(sweep)) {
+    AutoSweepObjectGroup sweep(group);
+    if (group->shouldPreTenure(sweep)) {
       newKind = TenuredObject;
     }
   }
@@ -5317,8 +5280,7 @@ void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
     name = script->getName(pc);
   } else {
     MOZ_ASSERT(IsAliasedVarOp(op));
-    name = EnvironmentCoordinateName(cx->caches().envCoordinateNameCache,
-                                     script, pc);
+    name = EnvironmentCoordinateNameSlow(script, pc);
   }
 
   ReportRuntimeLexicalError(cx, errorNumber, name);

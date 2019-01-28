@@ -2437,7 +2437,10 @@ HttpChannelChild::AsyncOpen(nsIStreamListener* listener,
   // immediately
   nsresult rv;
   rv = NS_CheckPortSafety(mURI);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    ReleaseListeners();
+    return rv;
+  }
 
   nsAutoCString cookie;
   if (NS_SUCCEEDED(mRequestHead.GetHeader(nsHttp::Cookie, cookie))) {
@@ -2682,7 +2685,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
 
   // NB: This call forces us to cache mTopWindowURI if we haven't already.
   nsCOMPtr<nsIURI> uri;
-  GetTopWindowURI(getter_AddRefs(uri));
+  GetTopWindowURI(mURI, getter_AddRefs(uri));
 
   SerializeURI(mTopWindowURI, openArgs.topWindowURI());
 

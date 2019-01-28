@@ -20,15 +20,7 @@ if [ -d "${VSPATH}" ]; then
 
     # We need to declare host and target tools separately.
     arm_bin="${VSPATH}/VC/bin/Hostx64/arm64"
-    export CC="${arm_bin}/cl.exe"
-    export CXX="${arm_bin}/cl.exe"
     export AS="${arm_bin}/armasm64.exe"
-    export LINKER="${arm_bin}/link.exe"
-
-    x64_bin="${VSPATH}/VC/bin/Hostx64/x64"
-    export HOST_CC="${x64_bin}/cl.exe"
-    export HOST_CXX="${x64_bin}/cl.exe"
-    export HOST_LINKER="${x64_bin}/link.exe"
 
     # We provided LIB, above, but we also need to provide HOST_LDFLAGS so host
     # links are not completely confused.  LIBPATH wants its argument with

@@ -10,15 +10,16 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  QueryContext: "resource:///modules/UrlbarUtils.jsm",
+  ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
-  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "ClipboardHelper",
@@ -62,7 +63,7 @@ class UrlbarInput {
     // Forward textbox methods and properties.
     const METHODS = ["addEventListener", "removeEventListener",
       "setAttribute", "hasAttribute", "removeAttribute", "getAttribute",
-      "focus", "blur", "select"];
+      "select"];
     const READ_ONLY_PROPERTIES = ["inputField", "editor"];
     const READ_WRITE_PROPERTIES = ["placeholder", "readOnly",
       "selectionStart", "selectionEnd"];
@@ -137,7 +138,16 @@ class UrlbarInput {
   }
 
   closePopup() {
+    this.controller.cancelQuery();
     this.view.close();
+  }
+
+  focus() {
+    this.inputField.focus();
+  }
+
+  blur() {
+    this.inputField.blur();
   }
 
   /**
@@ -152,7 +162,7 @@ class UrlbarInput {
   makeURIReadable(uri) {
     // Avoid copying 'about:reader?url=', and always provide the original URI:
     // Reader mode ensures we call createExposableURI itself.
-    let readerStrippedURI = this.window.ReaderMode.getOriginalUrlObjectForDisplay(uri.displaySpec);
+    let readerStrippedURI = ReaderMode.getOriginalUrlObjectForDisplay(uri.displaySpec);
     if (readerStrippedURI) {
       return readerStrippedURI;
     }
@@ -225,7 +235,7 @@ class UrlbarInput {
       return;
     }
 
-    // Use the current value if we don't have a UrlbarMatch e.g. because the
+    // Use the current value if we don't have a UrlbarResult e.g. because the
     // view is closed.
     let url = this.value;
     if (!url) {
@@ -242,7 +252,7 @@ class UrlbarInput {
     // BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(
     //   event, this.userSelectionBehavior);
 
-    url = url.trim();
+    url = this._maybeCanonizeURL(event, url) || url.trim();
 
     try {
       new URL(url);
@@ -276,7 +286,7 @@ class UrlbarInput {
    * Called by the view when a result is picked.
    *
    * @param {Event} event The event that picked the result.
-   * @param {UrlbarMatch} result The result that was picked.
+   * @param {UrlbarResult} result The result that was picked.
    */
   pickResult(event, result) {
     this.setValueFromResult(result);
@@ -294,10 +304,13 @@ class UrlbarInput {
       allowInheritPrincipal: false,
     };
 
+    // TODO bug 1521702: Call _maybeCanonizeURL for autofilled results with the
+    // typed string (not the autofilled one).
+
     let url = result.payload.url;
 
     switch (result.type) {
-      case UrlbarUtils.MATCH_TYPE.TAB_SWITCH: {
+      case UrlbarUtils.RESULT_TYPE.TAB_SWITCH: {
         if (this._overrideDefaultAction(event)) {
           where = "current";
           break;
@@ -315,7 +328,13 @@ class UrlbarInput {
         }
         return;
       }
-      case UrlbarUtils.MATCH_TYPE.SEARCH: {
+      case UrlbarUtils.RESULT_TYPE.SEARCH: {
+        url = this._maybeCanonizeURL(event,
+                result.payload.suggestion || result.payload.query);
+        if (url) {
+          break;
+        }
+
         const actionDetails = {
           isSuggestion: !!result.payload.suggestion,
           alias: result.payload.keyword,
@@ -327,7 +346,7 @@ class UrlbarInput {
         this._recordSearch(engine, event, actionDetails);
         break;
       }
-      case UrlbarUtils.MATCH_TYPE.OMNIBOX:
+      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
         // Give the extension control of handling the command.
         ExtensionSearchHandler.handleInputEntered(result.payload.keyword,
                                                   result.payload.content,
@@ -341,13 +360,13 @@ class UrlbarInput {
   /**
    * Called by the view when moving through results with the keyboard.
    *
-   * @param {UrlbarMatch} result The result that was selected.
+   * @param {UrlbarResult} result The result that was selected.
    */
   setValueFromResult(result) {
     let val;
 
     switch (result.type) {
-      case UrlbarUtils.MATCH_TYPE.SEARCH:
+      case UrlbarUtils.RESULT_TYPE.SEARCH:
         val = result.payload.suggestion || result.payload.query;
         break;
       default: {
@@ -381,23 +400,74 @@ class UrlbarInput {
       return;
     }
 
-    this.controller.startQuery(new QueryContext({
-      enableAutofill: UrlbarPrefs.get("autoFill"),
+    let searchString = this.textValue;
+
+    // If the user has deleted text at the end of the input since the last
+    // query, then we don't want to autofill because doing so would autofill the
+    // very text the user just deleted.
+    let enableAutofill =
+      UrlbarPrefs.get("autoFill") &&
+      (!this._lastSearchString ||
+       !this._lastSearchString.startsWith(searchString));
+
+    this.controller.startQuery(new UrlbarQueryContext({
+      enableAutofill,
       isPrivate: this.isPrivate,
       lastKey,
       maxResults: UrlbarPrefs.get("maxRichResults"),
       muxer: "UnifiedComplete",
       providers: ["UnifiedComplete"],
-      searchString: this.textValue,
+      searchString,
     }));
+    this._lastSearchString = searchString;
   }
 
   typeRestrictToken(char) {
+    this.window.focusAndSelectUrlBar();
+
     this.inputField.value = char + " ";
 
     let event = this.document.createEvent("UIEvents");
     event.initUIEvent("input", true, false, this.window, 0);
     this.inputField.dispatchEvent(event);
+  }
+
+  /**
+   * Focus without the focus styles.
+   * This is used by Activity Stream and about:privatebrowsing for search hand-off.
+   */
+  setHiddenFocus() {
+    this.textbox.classList.add("hidden-focus");
+    this.focus();
+  }
+
+  /**
+   * Remove the hidden focus styles.
+   * This is used by Activity Stream and about:privatebrowsing for search hand-off.
+   */
+  removeHiddenFocus() {
+    this.textbox.classList.remove("hidden-focus");
+  }
+
+  /**
+   * Autofills the given value into the input.  That is, sets the input's value
+   * to the given value and selects the portion of the new value that comes
+   * after the current value.  The given value should therefore start with the
+   * input's current value.  If it doesn't, then this method doesn't do
+   * anything.
+   *
+   * @param {string} value
+   *   The value to autofill.
+   */
+  autofill(value) {
+    if (!value.toLocaleLowerCase()
+        .startsWith(this.textValue.toLocaleLowerCase())) {
+      return;
+    }
+    let len = this.textValue.length;
+    this.value = this.textValue + value.substring(len);
+    this.selectionStart = len;
+    this.selectionEnd = value.length;
   }
 
   // Getters and Setters below.
@@ -421,6 +491,11 @@ class UrlbarInput {
 
   set value(val) {
     this._untrimmedValue = val;
+
+    let originalUrl = ReaderMode.getOriginalUrlObjectForDisplay(val);
+    if (originalUrl) {
+      val = originalUrl.displaySpec;
+    }
 
     val = this.trimValue(val);
 
@@ -595,6 +670,50 @@ class UrlbarInput {
   }
 
   /**
+   * If appropriate, this prefixes a search string with 'www.' and suffixes it
+   * with browser.fixup.alternate.suffix prior to navigating.
+   *
+   * @param {Event} event
+   *   The event that triggered this query.
+   * @param {string} value
+   *   The search string that should be canonized.
+   * @returns {string}
+   *   Returns the canonized URL if available and null otherwise.
+   */
+  _maybeCanonizeURL(event, value) {
+    // Only add the suffix when the URL bar value isn't already "URL-like",
+    // and only if we get a keyboard event, to match user expectations.
+    if (!(event instanceof KeyboardEvent) ||
+        !event.ctrlKey ||
+        !UrlbarPrefs.get("ctrlCanonizesURLs") ||
+        !/^\s*[^.:\/\s]+(?:\/.*|\s*)$/i.test(value)) {
+      return null;
+    }
+
+    let suffix = Services.prefs.getCharPref("browser.fixup.alternate.suffix");
+    if (!suffix.endsWith("/")) {
+      suffix += "/";
+    }
+
+    // trim leading/trailing spaces (bug 233205)
+    value = value.trim();
+
+    // Tack www. and suffix on.  If user has appended directories, insert
+    // suffix before them (bug 279035).  Be careful not to get two slashes.
+    let firstSlash = value.indexOf("/");
+    if (firstSlash >= 0) {
+      value = value.substring(0, firstSlash) + suffix +
+              value.substring(firstSlash + 1);
+    } else {
+      value = value + suffix;
+    }
+    value = "http://www." + value;
+
+    this.value = value;
+    return value;
+  }
+
+  /**
    * Loads the url in the appropriate place.
    *
    * @param {string} url
@@ -679,7 +798,8 @@ class UrlbarInput {
       // We support using 'alt' to open in a tab, because ctrl/shift
       // might be used for canonizing URLs:
       where = event.shiftKey ? "tabshifted" : "tab";
-    } else if (!isMouseEvent && this._ctrlCanonizesURLs && event && event.ctrlKey) {
+    } else if (!isMouseEvent && event && event.ctrlKey &&
+               UrlbarPrefs.get("ctrlCanonizesURLs")) {
       // If we're allowing canonization, and this is a key event with ctrl
       // pressed, open in current tab to allow ctrl-enter to canonize URL.
       where = "current";
@@ -751,6 +871,7 @@ class UrlbarInput {
 
   _on_blur(event) {
     this.formatValue();
+    this.closePopup();
   }
 
   _on_focus(event) {

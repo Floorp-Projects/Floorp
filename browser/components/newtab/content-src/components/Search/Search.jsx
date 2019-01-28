@@ -12,11 +12,10 @@ export class _Search extends React.PureComponent {
     super(props);
     this.onSearchClick = this.onSearchClick.bind(this);
     this.onSearchHandoffClick = this.onSearchHandoffClick.bind(this);
-    this.onSearchHandoffKeyDown = this.onSearchHandoffKeyDown.bind(this);
     this.onSearchHandoffPaste = this.onSearchHandoffPaste.bind(this);
+    this.onSearchHandoffDrop = this.onSearchHandoffDrop.bind(this);
     this.onInputMount = this.onInputMount.bind(this);
     this.onSearchHandoffButtonMount = this.onSearchHandoffButtonMount.bind(this);
-    this.cancelEvent = this.cancelEvent.bind(this);
   }
 
   handleEvent(event) {
@@ -32,64 +31,36 @@ export class _Search extends React.PureComponent {
 
   doSearchHandoff(text) {
     this.props.dispatch(ac.OnlyToMain({type: at.HANDOFF_SEARCH_TO_AWESOMEBAR, data: {text}}));
+    this.props.dispatch({type: at.FAKE_FOCUS_SEARCH});
     this.props.dispatch(ac.UserEvent({event: "SEARCH_HANDOFF"}));
     if (text) {
-      // We don't hide the in-content search if there is no text (user hit <Enter>)
       this.props.dispatch({type: at.HIDE_SEARCH});
     }
   }
 
   onSearchHandoffClick(event) {
     // When search hand-off is enabled, we render a big button that is styled to
-    // look like a search textbox. If the button is clicked with the mouse, we
-    // focus it. If the user types, transfer focus to awesomebar.
-    // If the button is clicked from the keyboard, we focus the awesomebar normally.
-    // This is to minimize confusion with users navigating with the keyboard and
-    // users using assistive technologoy.
+    // look like a search textbox. If the button is clicked, we style
+    // the button as if it was a focused search box and show a fake cursor but
+    // really focus the awesomebar without the focus styles ("hidden focus").
     event.preventDefault();
-    const isKeyboardClick = event.clientX === 0 && event.clientY === 0;
-    if (isKeyboardClick) {
-      this.doSearchHandoff();
-    } else {
-      this._searchHandoffButton.focus();
-    }
-  }
-
-  onSearchHandoffKeyDown(event) {
-    if (event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
-      // We only care about key strokes that will produce a character.
-      this.doSearchHandoff(event.key);
-    }
+    this.doSearchHandoff();
   }
 
   onSearchHandoffPaste(event) {
-    if (!this._searchHandoffButton ||
-        !this._searchHandoffButton.contains(global.document.activeElement)) {
-      // Don't handle every paste on the document. Filter out those that are
-      // not on the Search Hand-off button.
-      return;
-    }
     event.preventDefault();
     this.doSearchHandoff(event.clipboardData.getData("Text"));
   }
 
-  cancelEvent(event) {
+  onSearchHandoffDrop(event) {
     event.preventDefault();
-  }
-
-  componentWillMount() {
-    if (global.document) {
-      // We need to listen to paste events that bubble up from the Search Hand-off
-      // button. Adding the paste listener to the button itself or it's parent
-      // doesn't work consistently until the page is clicked on.
-      global.document.addEventListener("paste", this.onSearchHandoffPaste);
+    let text = event.dataTransfer.getData("text");
+    if (text) {
+      this.doSearchHandoff(text);
     }
   }
 
   componentWillUnmount() {
-    if (global.document) {
-      global.document.removeEventListener("paste", this.onDocumentPaste);
-    }
     delete window.gContentSearchController;
   }
 
@@ -135,6 +106,7 @@ export class _Search extends React.PureComponent {
     const wrapperClassName = [
       "search-wrapper",
       this.props.hide && "search-hidden",
+      this.props.fakeFocus && "fake-focus",
     ].filter(v => v).join(" ");
 
     return (<div className={wrapperClassName}>
@@ -171,10 +143,10 @@ export class _Search extends React.PureComponent {
             className="search-handoff-button"
             ref={this.onSearchHandoffButtonMount}
             onClick={this.onSearchHandoffClick}
-            onKeyDown={this.onSearchHandoffKeyDown}
+            tabIndex="-1"
             title={this.props.intl.formatMessage({id: "search_web_placeholder"})}>
             <div className="fake-textbox">{this.props.intl.formatMessage({id: "search_web_placeholder"})}</div>
-            <div className="fake-editable" tabIndex="-1" aria-hidden="true" contentEditable="" onDrop={this.cancelEvent} />
+            <input type="search" className="fake-editable" tabIndex="-1" aria-hidden="true" onDrop={this.onSearchHandoffDrop} onPaste={this.onSearchHandoffPaste} />
             <div className="fake-caret" />
           </button>
           {/*

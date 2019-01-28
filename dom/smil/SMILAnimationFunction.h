@@ -4,17 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILANIMATIONFUNCTION_H_
-#define NS_SMILANIMATIONFUNCTION_H_
+#ifndef mozilla_SMILAnimationFunction_h
+#define mozilla_SMILAnimationFunction_h
 
+#include "mozilla/SMILAttr.h"
+#include "mozilla/SMILKeySpline.h"
 #include "mozilla/SMILTargetIdentifier.h"
+#include "mozilla/SMILTimeValue.h"
+#include "mozilla/SMILTypes.h"
+#include "mozilla/SMILValue.h"
 #include "nsAttrValue.h"
 #include "nsGkAtoms.h"
-#include "nsISMILAttr.h"
-#include "SMILKeySpline.h"
-#include "nsSMILTimeValue.h"
-#include "nsSMILTypes.h"
-#include "nsSMILValue.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -79,7 +79,7 @@ class SMILAnimationFunction {
    * @param aRepeatIteration  The repeat iteration for this sample. The first
    *                          iteration has a value of 0.
    */
-  void SampleAt(nsSMILTime aSampleTime, const nsSMILTimeValue& aSimpleDuration,
+  void SampleAt(SMILTime aSampleTime, const SMILTimeValue& aSimpleDuration,
                 uint32_t aRepeatIteration);
 
   /**
@@ -102,7 +102,7 @@ class SMILAnimationFunction {
    *
    * @param aBeginTime The begin time for the newly active interval.
    */
-  void Activate(nsSMILTime aBeginTime);
+  void Activate(SMILTime aBeginTime);
 
   /**
    * Indicate that this animation is no longer active. This is used to instruct
@@ -124,7 +124,7 @@ class SMILAnimationFunction {
    *
    * @param aResult   The value to compose with.
    */
-  void ComposeResult(const nsISMILAttr& aSMILAttr, nsSMILValue& aResult);
+  void ComposeResult(const SMILAttr& aSMILAttr, SMILValue& aResult);
 
   /**
    * Returns the relative priority of this animation to another. The priority is
@@ -155,7 +155,7 @@ class SMILAnimationFunction {
     /*
      * - Frozen animations should be considered active for the purposes of
      * compositing.
-     * - This function does not assume that our nsSMILValues (by/from/to/values)
+     * - This function does not assume that our SMILValues (by/from/to/values)
      * have already been parsed.
      */
     return (mIsActive || mIsFrozen);
@@ -258,10 +258,10 @@ class SMILAnimationFunction {
 
  protected:
   // Typedefs
-  typedef FallibleTArray<nsSMILValue> nsSMILValueArray;
+  typedef FallibleTArray<SMILValue> SMILValueArray;
 
   // Types
-  enum nsSMILCalcMode : uint8_t {
+  enum SMILCalcMode : uint8_t {
     CALC_LINEAR,
     CALC_DISCRETE,
     CALC_PACED,
@@ -269,12 +269,12 @@ class SMILAnimationFunction {
   };
 
   // Used for sorting SMILAnimationFunctions
-  nsSMILTime GetBeginTime() const { return mBeginTime; }
+  SMILTime GetBeginTime() const { return mBeginTime; }
 
   // Property getters
   bool GetAccumulate() const;
   bool GetAdditive() const;
-  virtual nsSMILCalcMode GetCalcMode() const;
+  virtual SMILCalcMode GetCalcMode() const;
 
   // Property setters
   nsresult SetAccumulate(const nsAString& aAccumulate, nsAttrValue& aResult);
@@ -291,24 +291,21 @@ class SMILAnimationFunction {
   void UnsetKeySplines();
 
   // Helpers
-  virtual nsresult InterpolateResult(const nsSMILValueArray& aValues,
-                                     nsSMILValue& aResult,
-                                     nsSMILValue& aBaseValue);
-  nsresult AccumulateResult(const nsSMILValueArray& aValues,
-                            nsSMILValue& aResult);
+  virtual nsresult InterpolateResult(const SMILValueArray& aValues,
+                                     SMILValue& aResult, SMILValue& aBaseValue);
+  nsresult AccumulateResult(const SMILValueArray& aValues, SMILValue& aResult);
 
-  nsresult ComputePacedPosition(const nsSMILValueArray& aValues,
+  nsresult ComputePacedPosition(const SMILValueArray& aValues,
                                 double aSimpleProgress,
                                 double& aIntervalProgress,
-                                const nsSMILValue*& aFrom,
-                                const nsSMILValue*& aTo);
-  double ComputePacedTotalDistance(const nsSMILValueArray& aValues) const;
+                                const SMILValue*& aFrom, const SMILValue*& aTo);
+  double ComputePacedTotalDistance(const SMILValueArray& aValues) const;
 
   /**
    * Adjust the simple progress, that is, the point within the simple duration,
    * by applying any keyTimes.
    */
-  double ScaleSimpleProgress(double aProgress, nsSMILCalcMode aCalcMode);
+  double ScaleSimpleProgress(double aProgress, SMILCalcMode aCalcMode);
   /**
    * Adjust the progress within an interval, that is, between two animation
    * values, by applying any keySplines.
@@ -321,11 +318,11 @@ class SMILAnimationFunction {
   virtual const nsAttrValue* GetAttr(nsAtom* aAttName) const;
   virtual bool GetAttr(nsAtom* aAttName, nsAString& aResult) const;
 
-  bool ParseAttr(nsAtom* aAttName, const nsISMILAttr& aSMILAttr,
-                 nsSMILValue& aResult, bool& aPreventCachingOfSandwich) const;
+  bool ParseAttr(nsAtom* aAttName, const SMILAttr& aSMILAttr,
+                 SMILValue& aResult, bool& aPreventCachingOfSandwich) const;
 
-  virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
-                             nsSMILValueArray& aResult);
+  virtual nsresult GetValues(const SMILAttr& aSMILAttr,
+                             SMILValueArray& aResult);
 
   virtual void CheckValueListDependentAttrs(uint32_t aNumValues);
   void CheckKeyTimes(uint32_t aNumValues);
@@ -408,11 +405,11 @@ class SMILAnimationFunction {
   // instructed by the compositor. This allows us to apply the result directly
   // to the animation value and allows the compositor to filter out functions
   // that it determines will not contribute to the final result.
-  nsSMILTime mSampleTime;  // sample time within simple dur
-  nsSMILTimeValue mSimpleDuration;
+  SMILTime mSampleTime;  // sample time within simple dur
+  SMILTimeValue mSimpleDuration;
   uint32_t mRepeatIteration;
 
-  nsSMILTime mBeginTime;  // document time
+  SMILTime mBeginTime;  // document time
 
   // The owning animation element. This is used for sorting based on document
   // position and for fetching attribute values stored in the element.
@@ -428,7 +425,7 @@ class SMILAnimationFunction {
   // Allows us to check whether an animation function has changed target from
   // sample to sample (because if neither target nor animated value have
   // changed, we don't have to do anything).
-  nsSMILWeakTargetIdentifier mLastTarget;
+  SMILWeakTargetIdentifier mLastTarget;
 
   // Boolean flags
   bool mIsActive : 1;
@@ -442,4 +439,4 @@ class SMILAnimationFunction {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILANIMATIONFUNCTION_H_
+#endif  // mozilla_SMILAnimationFunction_h

@@ -973,6 +973,8 @@ function openHelpLink(aHelpTopic, aCalledFromModal, aWhere) {
   openTrustedLinkIn(url, where);
 }
 
+window.addEventListener("dialoghelp", openPrefsHelp);
+
 function openPrefsHelp() {
   // non-instant apply prefwindows are usually modal, so we can't open in the topmost window,
   // since its probably behind the window.

@@ -1,10 +1,10 @@
 //! The `CFGPrinter` utility.
 
-use std::fmt::{Display, Formatter, Result, Write};
+use core::fmt::{Display, Formatter, Result, Write};
 
-use flowgraph::{BasicBlock, ControlFlowGraph};
-use ir::instructions::BranchInfo;
-use ir::Function;
+use crate::flowgraph::{BasicBlock, ControlFlowGraph};
+use crate::ir::instructions::BranchInfo;
+use crate::ir::Function;
 
 /// A utility for pretty-printing the CFG of a `Function`.
 pub struct CFGPrinter<'a> {

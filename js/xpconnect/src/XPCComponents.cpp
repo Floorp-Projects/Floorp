@@ -16,6 +16,7 @@
 #include "nsCycleCollector.h"
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
+#include "js/ContextOptions.h"
 #include "js/SavedFrameAPI.h"
 #include "js/StructuredClone.h"
 #include "mozilla/Attributes.h"
@@ -31,7 +32,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "mozilla/Scheduler.h"
 #include "nsZipArchive.h"
 #include "nsWindowMemoryReporter.h"
 #include "nsICycleCollectorListener.h"
@@ -1739,6 +1739,24 @@ nsXPCComponents_Utils::UnlinkGhostWindows() {
 #endif
 }
 
+#ifdef NS_FREE_PERMANENT_DATA
+struct IntentionallyLeakedObject {
+  IntentionallyLeakedObject() { MOZ_COUNT_CTOR(IntentionallyLeakedObject); }
+
+  ~IntentionallyLeakedObject() { MOZ_COUNT_DTOR(IntentionallyLeakedObject); }
+};
+#endif
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::IntentionallyLeak() {
+#ifdef NS_FREE_PERMANENT_DATA
+  Unused << new IntentionallyLeakedObject();
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetJSTestingFunctions(JSContext* cx,
                                              MutableHandleValue retval) {
@@ -2402,19 +2420,6 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::Now(double* aRetval) {
   TimeStamp start = TimeStamp::ProcessCreation();
   *aRetval = (TimeStamp::Now() - start).ToMilliseconds();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::BlockThreadedExecution(
-    nsIBlockThreadedExecutionCallback* aCallback) {
-  Scheduler::BlockThreadedExecution(aCallback);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::UnblockThreadedExecution() {
-  Scheduler::UnblockThreadedExecution();
   return NS_OK;
 }
 

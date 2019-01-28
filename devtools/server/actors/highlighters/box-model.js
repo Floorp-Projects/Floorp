@@ -5,6 +5,7 @@
 "use strict";
 
 const { AutoRefreshHighlighter } = require("./auto-refresh");
+const Services = require("Services");
 const {
   CanvasFrameAnonymousContentHelper,
   createNode,
@@ -33,6 +34,9 @@ const BOX_MODEL_SIDES = ["top", "right", "bottom", "left"];
 const GUIDE_STROKE_WIDTH = 1;
 // FIXME: add ":visited" and ":link" after bug 713106 is fixed
 const PSEUDO_CLASSES = [":hover", ":active", ":focus", ":focus-within"];
+
+const FLEXBOX_HIGHLIGHTER_ENABLED_PREF = "devtools.inspector.flexboxHighlighter.enabled";
+const FLEXBOX_HIGHLIGHTER_COMBINE_PREF = "devtools.inspector.flexboxHighlighter.combine";
 
 /**
  * The BoxModelHighlighter draws the box model regions on top of a node.
@@ -115,6 +119,22 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
     const { pageListenerTarget } = highlighterEnv;
     pageListenerTarget.addEventListener("pagehide", this.onPageHide);
+  }
+
+  /**
+   * Check whether we should show the combined flexbox highlighter. Because
+   * checking for prefs is slow and performance is paramount for the highlighter
+   * we cache the result. Because we cache the result the Toolbox needs to be
+   * closed and opened again for any pref changes to take affect.
+   */
+  get showCombinedFlexboxHighlighter() {
+    if (typeof this._showCombinedFlexboxHighlighter === "undefined") {
+      this._showCombinedFlexboxHighlighter =
+        Services.prefs.getBoolPref(FLEXBOX_HIGHLIGHTER_ENABLED_PREF) &&
+        Services.prefs.getBoolPref(FLEXBOX_HIGHLIGHTER_COMBINE_PREF);
+    }
+
+    return this._showCombinedFlexboxHighlighter;
   }
 
   _buildMarkup() {
@@ -371,7 +391,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       this._hide();
     }
 
-    this._updateFlexboxHighlighter();
+    if (this.showCombinedFlexboxHighlighter) {
+      this._updateFlexboxHighlighter();
+    }
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
 

@@ -211,7 +211,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // }
 const actionTypes = {};
 
-for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_UPDATE", "DOWNLOAD_CHANGED", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_UPDATE", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 }
 
@@ -1107,6 +1107,8 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
       case "CLEAR_MESSAGE":
         if (action.data.id === this.state.message.id) {
           this.setState({ message: {} });
+          // Remove any styles related to the RTAMO message
+          document.body.classList.remove("welcome", "hide-main", "amo");
         }
         break;
       case "CLEAR_PROVIDER":
@@ -1766,8 +1768,6 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
 
   onClickAddExtension() {
     this.props.onAction(this.props.content.primary_button.action);
-    this.props.onBlock();
-    document.body.classList.remove("welcome", "hide-main", "amo");
   }
 
   onBlockButton() {
@@ -1948,7 +1948,7 @@ module.exports = {"title":"EOYSnippet","description":"Fundraising Snippet","vers
 /* 19 */
 /***/ (function(module) {
 
-module.exports = {"title":"SimpleSnippet","description":"A simple template with an icon, text, and optional button.","version":"1.1.1","type":"object","definitions":{"plainText":{"description":"Plain text (no HTML allowed)","type":"string"},"richText":{"description":"Text with HTML subset allowed: i, b, u, strong, em, br","type":"string"},"link_url":{"description":"Target for links or buttons","type":"string","format":"uri"}},"properties":{"title":{"allOf":[{"$ref":"#/definitions/plainText"},{"description":"Snippet title displayed before snippet text"}]},"text":{"allOf":[{"$ref":"#/definitions/richText"},{"description":"Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}]},"icon":{"type":"string","description":"Snippet icon. 64x64px. SVG or PNG preferred."},"title_icon":{"type":"string","description":"Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."},"button_action":{"type":"string","description":"The type of action the button should trigger."},"button_url":{"allOf":[{"$ref":"#/definitions/link_url"},{"description":"A url, button_label links to this"}]},"button_action_args":{"type":"string","description":"Additional parameters for button action, example which specific menu the button should open"},"button_label":{"allOf":[{"$ref":"#/definitions/plainText"},{"description":"Text for a button next to main snippet text that links to button_url. Requires button_url."}]},"button_color":{"type":"string","description":"The text color of the button. Valid CSS color."},"button_background_color":{"type":"string","description":"The background color of the button. Valid CSS color."},"block_button_text":{"type":"string","description":"Tooltip text used for dismiss button.","default":"Remove this"},"tall":{"type":"boolean","description":"To be used by fundraising only, increases height to roughly 120px. Defaults to false."},"do_not_autoblock":{"type":"boolean","description":"Used to prevent blocking the snippet after the CTA (link or button) has been clicked"},"links":{"additionalProperties":{"url":{"allOf":[{"$ref":"#/definitions/link_url"},{"description":"The url where the link points to."}]},"metric":{"type":"string","description":"Custom event name sent with telemetry event."},"args":{"type":"string","description":"Additional parameters for link action, example which specific menu the button should open"}}}},"additionalProperties":false,"required":["text"],"dependencies":{"button_action":["button_label"],"button_url":["button_label"],"button_color":["button_label"],"button_background_color":["button_label"]}};
+module.exports = {"title":"SimpleSnippet","description":"A simple template with an icon, text, and optional button.","version":"1.1.1","type":"object","definitions":{"plainText":{"description":"Plain text (no HTML allowed)","type":"string"},"richText":{"description":"Text with HTML subset allowed: i, b, u, strong, em, br","type":"string"},"link_url":{"description":"Target for links or buttons","type":"string","format":"uri"}},"properties":{"title":{"allOf":[{"$ref":"#/definitions/plainText"},{"description":"Snippet title displayed before snippet text"}]},"text":{"allOf":[{"$ref":"#/definitions/richText"},{"description":"Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}]},"icon":{"type":"string","description":"Snippet icon. 64x64px. SVG or PNG preferred."},"title_icon":{"type":"string","description":"Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."},"button_action":{"type":"string","description":"The type of action the button should trigger."},"button_url":{"allOf":[{"$ref":"#/definitions/link_url"},{"description":"A url, button_label links to this"}]},"button_action_args":{"type":"string","description":"Additional parameters for button action, example which specific menu the button should open"},"button_label":{"allOf":[{"$ref":"#/definitions/plainText"},{"description":"Text for a button next to main snippet text that links to button_url. Requires button_url."}]},"button_color":{"type":"string","description":"The text color of the button. Valid CSS color."},"button_background_color":{"type":"string","description":"The background color of the button. Valid CSS color."},"block_button_text":{"type":"string","description":"Tooltip text used for dismiss button.","default":"Remove this"},"tall":{"type":"boolean","description":"To be used by fundraising only, increases height to roughly 120px. Defaults to false."},"do_not_autoblock":{"type":"boolean","description":"Used to prevent blocking the snippet after the CTA (link or button) has been clicked"},"links":{"additionalProperties":{"url":{"allOf":[{"$ref":"#/definitions/link_url"},{"description":"The url where the link points to."}]},"metric":{"type":"string","description":"Custom event name sent with telemetry event."},"args":{"type":"string","description":"Additional parameters for link action, example which specific menu the button should open"}}},"section_title_icon":{"type":"string","description":"Section title icon. 16x16px. SVG or PNG preferred. section_title_text must also be specified to display."},"section_title_text":{"type":"string","description":"Section title text. section_title_icon must also be specified to display."},"section_title_url":{"allOf":[{"$ref":"#/definitions/link_url"},{"description":"A url, section_title_text links to this"}]}},"additionalProperties":false,"required":["text"],"dependencies":{"button_action":["button_label"],"button_url":["button_label"],"button_color":["button_label"],"button_background_color":["button_label"],"section_title_url":["section_title_text"]}};
 
 /***/ }),
 /* 20 */
@@ -2372,6 +2372,15 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_9___default.a.PureCompo
     this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
   }
 
+  disableDarkTheme() {
+    // Dark themes are not supported in discovery stream view
+    // Add force-light-theme class to body tag to disable dark mode. See Bug 1519764
+    const bodyClassNames = global.document.body.classList;
+    if (!bodyClassNames.contains("force-light-theme")) {
+      bodyClassNames.add("force-light-theme");
+    }
+  }
+
   render() {
     const { props } = this;
     const { App } = props;
@@ -2382,6 +2391,10 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_9___default.a.PureCompo
     const noSectionsEnabled = !prefs["feeds.topsites"] && props.Sections.filter(section => section.enabled).length === 0;
     const isDiscoveryStream = props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
+
+    if (isDiscoveryStream) {
+      this.disableDarkTheme();
+    }
 
     const outerClassName = ["outer-wrapper", shouldBeFixedToTop && "fixed-to-top", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search"].filter(v => v).join(" ");
 
@@ -2411,7 +2424,11 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_9___default.a.PureCompo
               { className: "non-collapsible-section" },
               react__WEBPACK_IMPORTED_MODULE_9___default.a.createElement(content_src_components_ManualMigration_ManualMigration__WEBPACK_IMPORTED_MODULE_7__["ManualMigration"], null)
             ),
-            isDiscoveryStream ? react__WEBPACK_IMPORTED_MODULE_9___default.a.createElement(content_src_components_DiscoveryStreamBase_DiscoveryStreamBase__WEBPACK_IMPORTED_MODULE_5__["DiscoveryStreamBase"], null) : react__WEBPACK_IMPORTED_MODULE_9___default.a.createElement(content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_11__["Sections"], null),
+            isDiscoveryStream ? react__WEBPACK_IMPORTED_MODULE_9___default.a.createElement(
+              content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_6__["ErrorBoundary"],
+              { className: "borderless-error" },
+              react__WEBPACK_IMPORTED_MODULE_9___default.a.createElement(content_src_components_DiscoveryStreamBase_DiscoveryStreamBase__WEBPACK_IMPORTED_MODULE_5__["DiscoveryStreamBase"], null)
+            ) : react__WEBPACK_IMPORTED_MODULE_9___default.a.createElement(content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_11__["Sections"], null),
             react__WEBPACK_IMPORTED_MODULE_9___default.a.createElement(PrefsButton, { onClick: this.openPreferences })
           ),
           react__WEBPACK_IMPORTED_MODULE_9___default.a.createElement(content_src_components_ConfirmDialog_ConfirmDialog__WEBPACK_IMPORTED_MODULE_3__["ConfirmDialog"], null)
@@ -2567,7 +2584,7 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
         react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
           "td",
           null,
-          relativeTime(feeds[feed.url].lastUpdated) || "(no data)"
+          relativeTime(feeds[feed.url] ? feeds[feed.url].lastUpdated : null) || "(no data)"
         )
       )
     );
@@ -6236,7 +6253,7 @@ var PrerenderData = new _PrerenderData({
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_Search", function() { return _Search; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_Search", function() { return _Search; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Search", function() { return Search; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
@@ -6260,11 +6277,10 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
     super(props);
     this.onSearchClick = this.onSearchClick.bind(this);
     this.onSearchHandoffClick = this.onSearchHandoffClick.bind(this);
-    this.onSearchHandoffKeyDown = this.onSearchHandoffKeyDown.bind(this);
     this.onSearchHandoffPaste = this.onSearchHandoffPaste.bind(this);
+    this.onSearchHandoffDrop = this.onSearchHandoffDrop.bind(this);
     this.onInputMount = this.onInputMount.bind(this);
     this.onSearchHandoffButtonMount = this.onSearchHandoffButtonMount.bind(this);
-    this.cancelEvent = this.cancelEvent.bind(this);
   }
 
   handleEvent(event) {
@@ -6280,63 +6296,36 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
 
   doSearchHandoff(text) {
     this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].HANDOFF_SEARCH_TO_AWESOMEBAR, data: { text } }));
+    this.props.dispatch({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].FAKE_FOCUS_SEARCH });
     this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({ event: "SEARCH_HANDOFF" }));
     if (text) {
-      // We don't hide the in-content search if there is no text (user hit <Enter>)
       this.props.dispatch({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].HIDE_SEARCH });
     }
   }
 
   onSearchHandoffClick(event) {
     // When search hand-off is enabled, we render a big button that is styled to
-    // look like a search textbox. If the button is clicked with the mouse, we
-    // focus it. If the user types, transfer focus to awesomebar.
-    // If the button is clicked from the keyboard, we focus the awesomebar normally.
-    // This is to minimize confusion with users navigating with the keyboard and
-    // users using assistive technologoy.
+    // look like a search textbox. If the button is clicked, we style
+    // the button as if it was a focused search box and show a fake cursor but
+    // really focus the awesomebar without the focus styles ("hidden focus").
     event.preventDefault();
-    const isKeyboardClick = event.clientX === 0 && event.clientY === 0;
-    if (isKeyboardClick) {
-      this.doSearchHandoff();
-    } else {
-      this._searchHandoffButton.focus();
-    }
-  }
-
-  onSearchHandoffKeyDown(event) {
-    if (event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
-      // We only care about key strokes that will produce a character.
-      this.doSearchHandoff(event.key);
-    }
+    this.doSearchHandoff();
   }
 
   onSearchHandoffPaste(event) {
-    if (!this._searchHandoffButton || !this._searchHandoffButton.contains(global.document.activeElement)) {
-      // Don't handle every paste on the document. Filter out those that are
-      // not on the Search Hand-off button.
-      return;
-    }
     event.preventDefault();
     this.doSearchHandoff(event.clipboardData.getData("Text"));
   }
 
-  cancelEvent(event) {
+  onSearchHandoffDrop(event) {
     event.preventDefault();
-  }
-
-  componentWillMount() {
-    if (global.document) {
-      // We need to listen to paste events that bubble up from the Search Hand-off
-      // button. Adding the paste listener to the button itself or it's parent
-      // doesn't work consistently until the page is clicked on.
-      global.document.addEventListener("paste", this.onSearchHandoffPaste);
+    let text = event.dataTransfer.getData("text");
+    if (text) {
+      this.doSearchHandoff(text);
     }
   }
 
   componentWillUnmount() {
-    if (global.document) {
-      global.document.removeEventListener("paste", this.onDocumentPaste);
-    }
     delete window.gContentSearchController;
   }
 
@@ -6378,7 +6367,7 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
    * in order to execute searches in various tests
    */
   render() {
-    const wrapperClassName = ["search-wrapper", this.props.hide && "search-hidden"].filter(v => v).join(" ");
+    const wrapperClassName = ["search-wrapper", this.props.hide && "search-hidden", this.props.fakeFocus && "fake-focus"].filter(v => v).join(" ");
 
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
       "div",
@@ -6431,14 +6420,14 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
             className: "search-handoff-button",
             ref: this.onSearchHandoffButtonMount,
             onClick: this.onSearchHandoffClick,
-            onKeyDown: this.onSearchHandoffKeyDown,
+            tabIndex: "-1",
             title: this.props.intl.formatMessage({ id: "search_web_placeholder" }) },
           react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
             "div",
             { className: "fake-textbox" },
             this.props.intl.formatMessage({ id: "search_web_placeholder" })
           ),
-          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: "fake-editable", tabIndex: "-1", "aria-hidden": "true", contentEditable: "", onDrop: this.cancelEvent }),
+          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", { type: "search", className: "fake-editable", tabIndex: "-1", "aria-hidden": "true", onDrop: this.onSearchHandoffDrop, onPaste: this.onSearchHandoffPaste }),
           react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: "fake-caret" })
         ),
         react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
@@ -6451,7 +6440,6 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
 }
 
 const Search = Object(react_redux__WEBPACK_IMPORTED_MODULE_2__["connect"])()(Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["injectIntl"])(_Search));
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
 /* 47 */
@@ -7081,19 +7069,37 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
         "div",
         { className: "meta" },
         external_React_default.a.createElement(
-          "header",
-          { className: "title" },
-          this.props.title
+          "div",
+          { className: "info-wrap" },
+          external_React_default.a.createElement(
+            "header",
+            { className: "title" },
+            this.props.title
+          ),
+          this.props.excerpt && external_React_default.a.createElement(
+            "p",
+            { className: "excerpt" },
+            this.props.excerpt
+          )
         ),
         external_React_default.a.createElement(
           "p",
-          { className: "excerpt" },
-          this.props.excerpt
-        ),
-        external_React_default.a.createElement(
-          "p",
-          { className: "source" },
-          this.props.source
+          null,
+          this.props.context && external_React_default.a.createElement(
+            "span",
+            null,
+            external_React_default.a.createElement(
+              "span",
+              { className: "context" },
+              this.props.context
+            ),
+            external_React_default.a.createElement("br", null)
+          ),
+          external_React_default.a.createElement(
+            "span",
+            { className: "source" },
+            this.props.source
+          )
         )
       )
     );
@@ -7116,79 +7122,22 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
       key: `dscard-${index}`,
       image_src: rec.image_src,
       title: rec.title,
-      excerpt: rec.title,
+      excerpt: rec.excerpt,
       url: rec.url,
       id: rec.id,
       index: index,
       type: this.props.type,
+      context: rec.context,
       dispatch: this.props.dispatch,
       source: rec.domain }));
 
-    return external_React_default.a.createElement(
-      "div",
-      { className: "ds-card-grid" },
-      cards
-    );
-  }
-}
+    let divisibility = ``;
 
-CardGrid_CardGrid.defaultProps = {
-  border: `border`,
-  items: 4 // Number of stories to display
-};
-// EXTERNAL MODULE: external "ReactRedux"
-var external_ReactRedux_ = __webpack_require__(24);
-
-// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/Hero/Hero.jsx
-
-
-
-
-class Hero_Hero extends external_React_default.a.PureComponent {
-  constructor(props) {
-    super(props);
-    this.onLinkClick = this.onLinkClick.bind(this);
-  }
-
-  onLinkClick(event) {
-    if (this.props.dispatch) {
-      this.props.dispatch(Actions["actionCreators"].UserEvent({
-        event: "CLICK",
-        source: this.props.type.toUpperCase(),
-        action_position: 0
-      }));
-
-      this.props.dispatch(Actions["actionCreators"].ImpressionStats({
-        source: this.props.type.toUpperCase(),
-        click: 0,
-        tiles: [{ id: this.heroRec.id, pos: 0 }]
-      }));
+    if (this.props.items % 4 === 0) {
+      divisibility = `divisible-by-4`;
+    } else if (this.props.items % 3 === 0) {
+      divisibility = `divisible-by-3`;
     }
-  }
-
-  render() {
-    const { data } = this.props;
-
-    // Handle a render before feed has been fetched by displaying nothing
-    if (!data || !data.recommendations) {
-      return external_React_default.a.createElement("div", null);
-    }
-
-    let [heroRec, ...otherRecs] = data.recommendations.slice(0, this.props.items);
-    this.heroRec = heroRec;
-    let truncateText = (text, cap) => `${text.substring(0, cap)}${text.length > cap ? `...` : ``}`;
-
-    // Note that `{index + 1}` is necessary below for telemetry since we treat heroRec as index 0.
-    let cards = otherRecs.map((rec, index) => external_React_default.a.createElement(DSCard_DSCard, {
-      key: `dscard-${index}`,
-      image_src: rec.image_src,
-      title: truncateText(rec.title, 44),
-      url: rec.url,
-      id: rec.id,
-      index: index + 1,
-      type: this.props.type,
-      dispatch: this.props.dispatch,
-      source: truncateText(`TODO: SOURCE`, 22) }));
 
     return external_React_default.a.createElement(
       "div",
@@ -7200,63 +7149,25 @@ class Hero_Hero extends external_React_default.a.PureComponent {
       ),
       external_React_default.a.createElement(
         "div",
-        { className: `ds-hero ds-hero-${this.props.border}` },
-        external_React_default.a.createElement(
-          "a",
-          { href: heroRec.url, className: "wrapper", onClick: this.onLinkClick },
-          external_React_default.a.createElement(
-            "div",
-            { className: "img-wrapper" },
-            external_React_default.a.createElement("div", { className: "img", style: { backgroundImage: `url(${heroRec.image_src})` } })
-          ),
-          external_React_default.a.createElement(
-            "div",
-            { className: "meta" },
-            external_React_default.a.createElement(
-              "header",
-              null,
-              truncateText(heroRec.title, 28)
-            ),
-            external_React_default.a.createElement(
-              "p",
-              null,
-              truncateText(heroRec.excerpt, 114)
-            ),
-            external_React_default.a.createElement(
-              "p",
-              null,
-              truncateText(`TODO: SOURCE`, 22)
-            )
-          )
-        ),
-        external_React_default.a.createElement(
-          "div",
-          { className: "cards" },
-          cards
-        )
+        { className: `ds-card-grid ds-card-grid-${this.props.border} ds-card-grid-${divisibility}` },
+        cards
       )
     );
   }
 }
 
-Hero_Hero.defaultProps = {
-  data: {},
+CardGrid_CardGrid.defaultProps = {
   border: `border`,
-  items: 1 // Number of stories to display
+  items: 4 // Number of stories to display
 };
-// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule.jsx
+// EXTERNAL MODULE: external "ReactRedux"
+var external_ReactRedux_ = __webpack_require__(24);
 
-
-class HorizontalRule_HorizontalRule extends external_React_default.a.PureComponent {
-  render() {
-    return external_React_default.a.createElement("hr", null);
-  }
+// CONCATENATED MODULE: ./content-src/lib/truncate-text.js
+function truncateText(text = "", cap) {
+  return text.substring(0, cap).trim() + (text.length > cap ? "…" : "");
 }
-// EXTERNAL MODULE: ./content-src/components/DiscoveryStreamImpressionStats/ImpressionStats.jsx
-var ImpressionStats = __webpack_require__(29);
-
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/List/List.jsx
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
 
@@ -7302,19 +7213,20 @@ class List_ListItem extends external_React_default.a.PureComponent {
           external_React_default.a.createElement(
             "div",
             { className: "ds-list-item-title" },
-            external_React_default.a.createElement(
-              "b",
-              null,
-              this.props.title
-            )
+            this.props.title
+          ),
+          this.props.excerpt && external_React_default.a.createElement(
+            "div",
+            { className: "ds-list-item-excerpt" },
+            truncateText(this.props.excerpt, 90)
           ),
           external_React_default.a.createElement(
             "div",
             { className: "ds-list-item-info" },
-            `${this.props.domain} · TODO:Topic`
+            this.props.domain
           )
         ),
-        external_React_default.a.createElement("img", { className: "ds-list-image", src: this.props.image_src })
+        external_React_default.a.createElement("div", { className: "ds-list-image", style: { backgroundImage: `url(${this.props.image_src})` } })
       )
     );
   }
@@ -7332,34 +7244,178 @@ function _List(props) {
 
   const recs = feed.data.recommendations;
 
-  let recMarkup = recs.slice(0, props.items).map((rec, index) => external_React_default.a.createElement(List_ListItem, _extends({}, rec, { key: `ds-list-item-${index}`, index: index, type: props.type, dispatch: props.dispatch })));
+  let recMarkup = recs.slice(props.recStartingPoint, props.recStartingPoint + props.items).map((rec, index) => external_React_default.a.createElement(List_ListItem, { key: `ds-list-item-${index}`,
+    dispatch: props.dispatch,
+    domain: rec.domain,
+    excerpt: rec.excerpt,
+    id: rec.id,
+    image_src: rec.image_src,
+    index: index,
+    title: rec.title,
+    type: props.type,
+    url: rec.url }));
 
+  const listStyles = ["ds-list", props.fullWidth ? "ds-list-full-width" : "", props.hasBorders ? "ds-list-borders" : "", props.hasImages ? "ds-list-images" : "", props.hasNumbers ? "ds-list-numbers" : ""];
   return external_React_default.a.createElement(
     "div",
     null,
-    external_React_default.a.createElement(
-      "h3",
-      { className: "ds-list-title" },
-      props.header && props.header.title
-    ),
-    external_React_default.a.createElement("hr", { className: "ds-list-border" }),
+    props.header && props.header.title ? external_React_default.a.createElement(
+      "div",
+      { className: "ds-header" },
+      props.header.title
+    ) : null,
     external_React_default.a.createElement(
       "ul",
-      { className: "ds-list" },
+      { className: listStyles.join(" ") },
       recMarkup
     )
   );
 }
 
 _List.defaultProps = {
+  recStartingPoint: 0, // Index of recommendations to start displaying from
+  fullWidth: false, // Display items taking up the whole column
+  hasBorders: false, // Display lines separating each item
+  hasImages: false, // Display images for each item
+  hasNumbers: false, // Display numbers for each item
   items: 6 // Number of stories to display.  TODO: get from endpoint
 };
 
 const List = Object(external_ReactRedux_["connect"])(state => ({ DiscoveryStream: state.DiscoveryStream }))(_List);
-// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle.jsx
+// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/Hero/Hero.jsx
 
 
-class SectionTitle_Topic extends external_React_default.a.PureComponent {
+
+
+
+
+class Hero_Hero extends external_React_default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onLinkClick = this.onLinkClick.bind(this);
+  }
+
+  onLinkClick(event) {
+    if (this.props.dispatch) {
+      this.props.dispatch(Actions["actionCreators"].UserEvent({
+        event: "CLICK",
+        source: this.props.type.toUpperCase(),
+        action_position: 0
+      }));
+
+      this.props.dispatch(Actions["actionCreators"].ImpressionStats({
+        source: this.props.type.toUpperCase(),
+        click: 0,
+        tiles: [{ id: this.heroRec.id, pos: 0 }]
+      }));
+    }
+  }
+
+  render() {
+    const { data } = this.props;
+
+    // Handle a render before feed has been fetched by displaying nothing
+    if (!data || !data.recommendations) {
+      return external_React_default.a.createElement("div", null);
+    }
+
+    let [heroRec, ...otherRecs] = data.recommendations.slice(0, this.props.items);
+    this.heroRec = heroRec;
+
+    // Note that `{index + 1}` is necessary below for telemetry since we treat heroRec as index 0.
+    let cards = otherRecs.map((rec, index) => external_React_default.a.createElement(DSCard_DSCard, {
+      key: `dscard-${index}`,
+      image_src: rec.image_src,
+      title: truncateText(rec.title, 44),
+      url: rec.url,
+      id: rec.id,
+      index: index + 1,
+      type: this.props.type,
+      dispatch: this.props.dispatch,
+      context: truncateText(rec.context, 22),
+      source: truncateText(rec.domain, 22) }));
+
+    let list = external_React_default.a.createElement(List, {
+      recStartingPoint: 1,
+      feed: this.props.feed,
+      hasImages: true,
+      hasBorders: this.props.border === `border`,
+      items: this.props.items - 1,
+      type: `Hero` });
+
+    return external_React_default.a.createElement(
+      "div",
+      null,
+      external_React_default.a.createElement(
+        "div",
+        { className: "ds-header" },
+        this.props.title
+      ),
+      external_React_default.a.createElement(
+        "div",
+        { className: `ds-hero ds-hero-${this.props.border}` },
+        external_React_default.a.createElement(
+          "a",
+          { href: heroRec.url, className: "wrapper", onClick: this.onLinkClick },
+          external_React_default.a.createElement(
+            "div",
+            { className: "img-wrapper" },
+            external_React_default.a.createElement("div", { className: "img", style: { backgroundImage: `url(${heroRec.image_src})` } })
+          ),
+          external_React_default.a.createElement(
+            "div",
+            { className: "meta" },
+            external_React_default.a.createElement(
+              "header",
+              null,
+              truncateText(heroRec.title, 28)
+            ),
+            external_React_default.a.createElement(
+              "p",
+              null,
+              truncateText(heroRec.excerpt, 114)
+            ),
+            heroRec.context ? external_React_default.a.createElement(
+              "p",
+              { className: "context" },
+              truncateText(heroRec.context, 22)
+            ) : external_React_default.a.createElement(
+              "p",
+              { className: "source" },
+              truncateText(heroRec.domain, 22)
+            )
+          )
+        ),
+        external_React_default.a.createElement(
+          "div",
+          { className: `${this.props.subComponentType}` },
+          this.props.subComponentType === `cards` ? cards : list
+        )
+      )
+    );
+  }
+}
+
+Hero_Hero.defaultProps = {
+  data: {},
+  border: `border`,
+  items: 1 // Number of stories to display
+};
+// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule.jsx
+
+
+class HorizontalRule_HorizontalRule extends external_React_default.a.PureComponent {
+  render() {
+    return external_React_default.a.createElement("hr", { className: "ds-hr" });
+  }
+}
+// EXTERNAL MODULE: ./content-src/components/DiscoveryStreamImpressionStats/ImpressionStats.jsx
+var ImpressionStats = __webpack_require__(29);
+
+// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/Navigation/Navigation.jsx
+
+
+class Navigation_Topic extends external_React_default.a.PureComponent {
   render() {
     const { url, name } = this.props;
     return external_React_default.a.createElement(
@@ -7374,26 +7430,50 @@ class SectionTitle_Topic extends external_React_default.a.PureComponent {
   }
 }
 
-class SectionTitle_SectionTitle extends external_React_default.a.PureComponent {
+class Navigation_Navigation extends external_React_default.a.PureComponent {
   render() {
-    const { topics } = this.props;
+    const { links } = this.props || [];
+    const { alignment } = this.props || "centered";
+    const header = this.props.header || {};
     return external_React_default.a.createElement(
-      "span",
-      { className: "ds-section-title" },
+      "div",
+      { className: `ds-navigation ds-navigation-${alignment}` },
+      header.title ? external_React_default.a.createElement(
+        "div",
+        { className: "ds-header" },
+        header.title
+      ) : null,
       external_React_default.a.createElement(
-        "ul",
+        "div",
         null,
-        topics && topics.map(t => external_React_default.a.createElement(SectionTitle_Topic, { key: t.name, url: t.url, name: t.name })),
         external_React_default.a.createElement(
-          "li",
+          "ul",
           null,
-          external_React_default.a.createElement(
-            "a",
-            { className: "ds-more-recommendations" },
-            "More Recommendations"
-          )
+          links && links.map(t => external_React_default.a.createElement(Navigation_Topic, { key: t.name, url: t.url, name: t.name }))
         )
       )
+    );
+  }
+}
+// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle.jsx
+
+
+class SectionTitle_SectionTitle extends external_React_default.a.PureComponent {
+  render() {
+    const { header: { title, subtitle } } = this.props;
+    return external_React_default.a.createElement(
+      "div",
+      { className: "ds-section-title" },
+      external_React_default.a.createElement(
+        "div",
+        { className: "title" },
+        title
+      ),
+      subtitle ? external_React_default.a.createElement(
+        "div",
+        { className: "subtitle" },
+        subtitle
+      ) : null
     );
   }
 }
@@ -7531,16 +7611,22 @@ const selectLayoutRender = createSelector(
 function layoutRender(layout, feeds, spocs) {
   let spocIndex = 0;
 
-  function calculateSpocs(component) {
-    return component.spocs.positions.map(position => {
-      const rickRoll = Math.random();
-      if (spocs.data.spocs[spocIndex] && rickRoll <= component.spocs.probability) {
-        return Object.assign({}, position, {
-          result: spocs.data.spocs[spocIndex++]
-        });
+  function maybeInjectSpocs(data, spocsConfig) {
+    if (data && spocsConfig && spocsConfig.positions && spocsConfig.positions.length && spocs.data.spocs && spocs.data.spocs.length) {
+      const recommendations = [...data.recommendations];
+      for (let position of spocsConfig.positions) {
+        let rickRoll = Math.random();
+        if (spocs.data.spocs[spocIndex] && rickRoll <= spocsConfig.probability) {
+          recommendations.splice(position.index, 0, spocs.data.spocs[spocIndex++]);
+        }
       }
-      return position;
-    });
+
+      return Object.assign({}, data, {
+        recommendations
+      });
+    }
+
+    return data;
   }
 
   return layout.map(row => Object.assign({}, row, {
@@ -7552,14 +7638,7 @@ function layoutRender(layout, feeds, spocs) {
         return component;
       }
 
-      // Calculate if we should display a spoc or not.
-      if (component.spocs && spocs.data.spocs && spocs.data.spocs.length) {
-        component.spocs = Object.assign({}, component.spocs, {
-          positions: calculateSpocs(component)
-        });
-      }
-
-      return Object.assign({}, component, { data: feeds[component.feed.url].data });
+      return Object.assign({}, component, { data: maybeInjectSpocs(feeds[component.feed.url].data, component.spocs) });
     })
   }));
 });
@@ -7573,9 +7652,20 @@ var TopSites = __webpack_require__(30);
 
 class TopSites_TopSites extends external_React_default.a.PureComponent {
   render() {
+    const header = this.props.header || {};
     return external_React_default.a.createElement(
       "div",
       { className: "ds-top-sites" },
+      header.title ? external_React_default.a.createElement(
+        "div",
+        { className: "ds-header" },
+        external_React_default.a.createElement("span", { className: "icon icon-small-spacer icon-topsites" }),
+        external_React_default.a.createElement(
+          "span",
+          { className: "ds-header-title" },
+          header.title
+        )
+      ) : null,
       external_React_default.a.createElement(TopSites["TopSites"], null)
     );
   }
@@ -7586,6 +7676,7 @@ const TopSites_TopSites_TopSites = Object(external_ReactRedux_["connect"])(state
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isAllowedCSS", function() { return isAllowedCSS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_DiscoveryStreamBase", function() { return DiscoveryStreamBase_DiscoveryStreamBase; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DiscoveryStreamBase", function() { return DiscoveryStreamBase; });
+
 
 
 
@@ -7626,32 +7717,22 @@ function isAllowedCSS(property, value) {
   return !urls || urls.every(url => ALLOWED_CSS_URL_PREFIXES.some(prefix => url.slice(5).startsWith(prefix)));
 }
 
-function maybeInjectSpocs(data, spocs) {
-  if (!data || !spocs || !spocs.positions || !spocs.positions.length) {
-    return data;
-  }
-
-  const recommendations = [...data.recommendations];
-
-  for (let position of spocs.positions) {
-    const { result } = position;
-    if (result) {
-      // Insert spoc into the desired index.
-      recommendations.splice(position.index, 0, result);
-    }
-  }
-
-  return Object.assign({}, data, {
-    recommendations
-  });
-}
-
 class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onStyleMount = this.onStyleMount.bind(this);
   }
 
+  /**
+   * Extracts the recommendation rows from component for the impression ping.
+   * If `component.data.recommendations` is unset, returns an empty array.
+   *
+   * The row size is determined by the following rules:
+   *   - Use `component.properties.items` from the endpoint if it's specified
+   *   - Otherwise, use the length of recommendation array
+   *   - The row size is capped by the argument `limit`, which could be one of
+   *     [`MAX_ROW_HERO`, `MAX_ROWS_LIST`, `MAX_ROWS_CARDGRID`]
+   */
   extractRows(component, limit) {
     if (component.data && component.data.recommendations) {
       const items = Math.min(limit, component.properties.items || component.data.recommendations.length);
@@ -7693,7 +7774,7 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
           });
 
           // Set the actual desired selectors scoped to the component
-          const prefix = `.ds-layout > .ds-column:nth-child(${rowIndex + 1}) > :nth-child(${componentIndex + 1})`;
+          const prefix = `.ds-layout > .ds-column:nth-child(${rowIndex + 1}) .ds-column-grid > :nth-child(${componentIndex + 1})`;
           // NB: Splitting on "," doesn't work with strings with commas, but
           // we're okay with not supporting those selectors
           rule.selectorText = selectors.split(",").map(selector => prefix + (
@@ -7709,14 +7790,28 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
     });
   }
 
-  renderComponent(component) {
+  renderComponent(component, embedWidth) {
     let rows;
+    const { spocs } = this.props.DiscoveryStream;
+
+    // TODO: Can we make this a bit better visually while it loads?
+    // If this component expects spocs,
+    // wait until spocs are loaded before attempting to use it.
+    if (component.spocs && !spocs.loaded) {
+      return null;
+    }
 
     switch (component.type) {
       case "TopSites":
-        return external_React_default.a.createElement(TopSites_TopSites_TopSites, null);
+        return external_React_default.a.createElement(TopSites_TopSites_TopSites, { header: component.header });
       case "SectionTitle":
-        return external_React_default.a.createElement(SectionTitle_SectionTitle, null);
+        return external_React_default.a.createElement(SectionTitle_SectionTitle, {
+          header: component.header });
+      case "Navigation":
+        return external_React_default.a.createElement(Navigation_Navigation, {
+          links: component.properties.links,
+          alignment: component.properties.alignment,
+          header: component.header });
       case "CardGrid":
         rows = this.extractRows(component, MAX_ROWS_CARDGRID);
         return external_React_default.a.createElement(
@@ -7724,7 +7819,7 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
           { rows: rows, dispatch: this.props.dispatch, source: component.type },
           external_React_default.a.createElement(CardGrid_CardGrid, {
             title: component.header && component.header.title,
-            data: maybeInjectSpocs(component.data, component.spocs),
+            data: component.data,
             feed: component.feed,
             border: component.properties.border,
             type: component.type,
@@ -7737,8 +7832,10 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
           ImpressionStats["ImpressionStats"],
           { rows: rows, dispatch: this.props.dispatch, source: component.type },
           external_React_default.a.createElement(Hero_Hero, {
+            subComponentType: embedWidth >= 9 ? `cards` : `list`,
+            feed: component.feed,
             title: component.header && component.header.title,
-            data: maybeInjectSpocs(component.data, component.spocs),
+            data: component.data,
             border: component.properties.border,
             type: component.type,
             dispatch: this.props.dispatch,
@@ -7747,12 +7844,16 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
       case "HorizontalRule":
         return external_React_default.a.createElement(HorizontalRule_HorizontalRule, null);
       case "List":
-        rows = this.extractRows(component, Math.min(component.properties.items, MAX_ROWS_LIST));
+        rows = this.extractRows(component, MAX_ROWS_LIST);
         return external_React_default.a.createElement(
           ImpressionStats["ImpressionStats"],
           { rows: rows, dispatch: this.props.dispatch, source: component.type },
           external_React_default.a.createElement(List, {
             feed: component.feed,
+            fullWidth: component.properties.full_width,
+            hasBorders: component.properties.border === "border",
+            hasImages: component.properties.has_images,
+            hasNumbers: component.properties.has_numbers,
             items: component.properties.items,
             type: component.type,
             header: component.header })
@@ -7782,14 +7883,18 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
       layoutRender.map((row, rowIndex) => external_React_default.a.createElement(
         "div",
         { key: `row-${rowIndex}`, className: `ds-column ds-column-${row.width}` },
-        row.components.map((component, componentIndex) => {
-          styles[rowIndex] = [...(styles[rowIndex] || []), component.styles];
-          return external_React_default.a.createElement(
-            "div",
-            { key: `component-${componentIndex}` },
-            this.renderComponent(component)
-          );
-        })
+        external_React_default.a.createElement(
+          "div",
+          { className: "ds-column-grid" },
+          row.components.map((component, componentIndex) => {
+            styles[rowIndex] = [...(styles[rowIndex] || []), component.styles];
+            return external_React_default.a.createElement(
+              "div",
+              { key: `component-${componentIndex}` },
+              this.renderComponent(component, row.width)
+            );
+          })
+        )
       )),
       this.renderStyles(styles)
     );
@@ -7846,6 +7951,9 @@ const Button = props => {
     props.children
   );
 };
+// CONCATENATED MODULE: ./content-src/asrouter/components/ConditionalWrapper/ConditionalWrapper.jsx
+// lifted from https://gist.github.com/kitze/23d82bb9eb0baabfd03a6a720b1d637f
+const ConditionalWrapper = ({ condition, wrap, children }) => condition ? wrap(children) : children;
 // EXTERNAL MODULE: ./content-src/asrouter/components/RichText/RichText.jsx
 var RichText = __webpack_require__(16);
 
@@ -7931,6 +8039,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 
 
+
 const DEFAULT_ICON_PATH = "chrome://branding/content/icon64.png";
 
 class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent {
@@ -8000,35 +8109,95 @@ class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent
       sendClick: props.sendClick });
   }
 
+  wrapSectionHeader(url) {
+    return function (children) {
+      return external_React_default.a.createElement(
+        "a",
+        { href: url },
+        children
+      );
+    };
+  }
+
+  wrapSnippetContent(children) {
+    return external_React_default.a.createElement(
+      "div",
+      { className: "innerContentWrapper" },
+      children
+    );
+  }
+
+  renderSectionHeader() {
+    const { props } = this;
+
+    // an icon and text must be specified to render the section header
+    if (props.content.section_title_icon && props.content.section_title_text) {
+      const sectionTitleIcon = Object(template_utils["safeURI"])(props.content.section_title_icon);
+      const sectionTitleURL = props.content.section_title_url;
+
+      return external_React_default.a.createElement(
+        "div",
+        { className: "section-header" },
+        external_React_default.a.createElement(
+          "h3",
+          { className: "section-title" },
+          external_React_default.a.createElement(
+            ConditionalWrapper,
+            { condition: sectionTitleURL, wrap: this.wrapSectionHeader(sectionTitleURL) },
+            external_React_default.a.createElement("span", { className: "icon icon-small-spacer", style: { backgroundImage: `url("${sectionTitleIcon}")` } }),
+            external_React_default.a.createElement(
+              "span",
+              { className: "section-title-text" },
+              props.content.section_title_text
+            )
+          )
+        )
+      );
+    }
+
+    return null;
+  }
+
   render() {
     const { props } = this;
+    const sectionHeader = this.renderSectionHeader();
     let className = "SimpleSnippet";
+
     if (props.className) {
       className += ` ${props.className}`;
     }
     if (props.content.tall) {
       className += " tall";
     }
+    if (sectionHeader) {
+      className += " has-section-header";
+    }
+
     return external_React_default.a.createElement(
       SnippetBase_SnippetBase,
       _extends({}, props, { className: className, textStyle: this.props.textStyle }),
-      external_React_default.a.createElement("img", { src: Object(template_utils["safeURI"])(props.content.icon) || DEFAULT_ICON_PATH, className: "icon" }),
+      sectionHeader,
       external_React_default.a.createElement(
-        "div",
-        null,
-        this.renderTitle(),
-        " ",
+        ConditionalWrapper,
+        { condition: sectionHeader, wrap: this.wrapSnippetContent },
+        external_React_default.a.createElement("img", { src: Object(template_utils["safeURI"])(props.content.icon) || DEFAULT_ICON_PATH, className: "icon" }),
         external_React_default.a.createElement(
-          "p",
-          { className: "body" },
-          this.renderText()
+          "div",
+          null,
+          this.renderTitle(),
+          " ",
+          external_React_default.a.createElement(
+            "p",
+            { className: "body" },
+            this.renderText()
+          ),
+          this.props.extraContent
         ),
-        this.props.extraContent
-      ),
-      external_React_default.a.createElement(
-        "div",
-        null,
-        this.renderButton()
+        external_React_default.a.createElement(
+          "div",
+          null,
+          this.renderButton()
+        )
       )
     );
   }
@@ -11309,12 +11478,16 @@ const INITIAL_STATE = {
     spocs: {
       spocs_endpoint: "",
       lastUpdated: null,
-      data: {} // {spocs: []}
+      data: {}, // {spocs: []}
+      loaded: false
     }
   },
   Search: {
-    // Pretend the search box is focused after handing off to AwesomeBar.
-    focus: false,
+    // When search hand-off is enabled, we render a big button that is styled to
+    // look like a search textbox. If the button is clicked, we style
+    // the button as if it was a focused search box and show a fake cursor but
+    // really focus the awesomebar without the focus styles ("hidden focus").
+    fakeFocus: false,
     // Hide the search box after handing off to AwesomeBar and user starts typing.
     hide: false
   }
@@ -11724,7 +11897,8 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         return Object.assign({}, prevState, {
           spocs: Object.assign({}, prevState.spocs, {
             lastUpdated: action.data.lastUpdated,
-            data: action.data.spocs
+            data: action.data.spocs,
+            loaded: true
           })
         });
       }
@@ -11738,8 +11912,10 @@ function Search(prevState = INITIAL_STATE.Search, action) {
   switch (action.type) {
     case Actions["actionTypes"].HIDE_SEARCH:
       return Object.assign(Object.assign({}, prevState, { hide: true }));
+    case Actions["actionTypes"].FAKE_FOCUS_SEARCH:
+      return Object.assign(Object.assign({}, prevState, { fakeFocus: true }));
     case Actions["actionTypes"].SHOW_SEARCH:
-      return Object.assign(Object.assign({}, prevState, { hide: false }));
+      return Object.assign(Object.assign({}, prevState, { hide: false, fakeFocus: false }));
     default:
       return prevState;
   }

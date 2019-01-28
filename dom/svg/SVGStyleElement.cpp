@@ -7,8 +7,9 @@
 #include "mozilla/dom/SVGStyleElement.h"
 
 #include "mozilla/dom/Element.h"
-#include "nsContentUtils.h"
 #include "mozilla/dom/SVGStyleElementBinding.h"
+#include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Style)
 

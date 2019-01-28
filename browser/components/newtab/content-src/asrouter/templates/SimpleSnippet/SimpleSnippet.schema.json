@@ -97,6 +97,20 @@
           "description": "Additional parameters for link action, example which specific menu the button should open"
         }
       }
+    },
+    "section_title_icon": {
+      "type": "string",
+      "description": "Section title icon. 16x16px. SVG or PNG preferred. section_title_text must also be specified to display."
+    },
+    "section_title_text": {
+      "type": "string",
+      "description": "Section title text. section_title_icon must also be specified to display."
+    },
+    "section_title_url": {
+      "allOf": [
+        {"$ref": "#/definitions/link_url"},
+        {"description": "A url, section_title_text links to this"}
+      ]
     }
   },
   "additionalProperties": false,
@@ -105,6 +119,7 @@
     "button_action": ["button_label"],
     "button_url": ["button_label"],
     "button_color": ["button_label"],
-    "button_background_color": ["button_label"]
+    "button_background_color": ["button_label"],
+    "section_title_url": ["section_title_text"]
   }
 }

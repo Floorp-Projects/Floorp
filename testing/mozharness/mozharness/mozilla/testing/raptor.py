@@ -263,6 +263,10 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         if 'mac' in self.platform_name():
             # for now hardcoding a revision; but change this to update to newer version; from:
             # http://commondatastorage.googleapis.com/chromium-browser-snapshots/Mac/LAST_CHANGE
+
+            # Note: Using an older version of Chromium on OSX b/c of an issue with a pop-up
+            # dialog appearing with newer Chromium on OSX; please see:
+            # Bug 1520523 - Update Chromium version running with Raptor in production
             chromium_rev = "575625"
             chrome_archive_file = "chrome-mac.zip"
             chrome_url = "%s/Mac/%s/%s" % (base_url, chromium_rev, chrome_archive_file)
@@ -272,7 +276,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         elif 'linux' in self.platform_name():
             # for now hardcoding a revision; but change this to update to newer version; from:
             # http://commondatastorage.googleapis.com/chromium-browser-snapshots/Linux_x64/LAST_CHANGE
-            chromium_rev = "575640"
+            chromium_rev = "624137"
             chrome_archive_file = "chrome-linux.zip"
             chrome_url = "%s/Linux_x64/%s/%s" % (base_url, chromium_rev, chrome_archive_file)
             self.chrome_path = os.path.join(self.chrome_dest, 'chrome-linux', 'chrome')
@@ -281,16 +285,13 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             # windows 7/10
             # for now hardcoding a revision; but change this to update to newer version; from:
             # http://commondatastorage.googleapis.com/chromium-browser-snapshots/Win_x64/LAST_CHANGE
-            chromium_rev = "575637"
-            chrome_archive_file = "chrome-win32.zip"  # same zip name for win32/64
+            chromium_rev = "624131"
+            chrome_archive_file = "chrome-win.zip"  # same zip name for win32/64
 
-            # url is different for win32/64
-            if '64' in self.platform_name():
-                chrome_url = "%s/Win_x64/%s/%s" % (base_url, chromium_rev, chrome_archive_file)
-            else:
-                chrome_url = "%s/Win_x32/%s/%s" % (base_url, chromium_rev, chrome_archive_file)
+            # one url for Win x64/32
+            chrome_url = "%s/Win_x64/%s/%s" % (base_url, chromium_rev, chrome_archive_file)
 
-            self.chrome_path = os.path.join(self.chrome_dest, 'chrome-win32', 'Chrome.exe')
+            self.chrome_path = os.path.join(self.chrome_dest, 'chrome-win', 'Chrome.exe')
 
         chrome_archive = os.path.join(self.chrome_dest, chrome_archive_file)
 
@@ -336,6 +337,11 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             if not binary_path:
                 self.fatal("Raptor requires a path to the binary.")
             kw_options['binary'] = binary_path
+            if self.app in["geckoview", "fennec"]:
+                # in production ensure we have correct app name,
+                # i.e. fennec_aurora or fennec_release etc.
+                kw_options['binary'] = self.query_package_name()
+                self.info("set binary to %s instead of %s" % (kw_options['binary'], binary_path))
         else:  # running on google chrome
             if not self.run_local:
                 # when running locally we already set the chrome binary above in init; here

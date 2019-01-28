@@ -16,10 +16,9 @@ using namespace mozilla;
 
 static LazyLogModule sScreenLog("WidgetScreen");
 
-@interface ScreenHelperDelegate : NSObject
-{
-  @private
-    mozilla::widget::ScreenHelperCocoa* mHelper;
+@interface ScreenHelperDelegate : NSObject {
+ @private
+  mozilla::widget::ScreenHelperCocoa* mHelper;
 }
 
 - (id)initWithScreenHelper:(mozilla::widget::ScreenHelperCocoa*)aScreenHelper;
@@ -27,28 +26,26 @@ static LazyLogModule sScreenLog("WidgetScreen");
 @end
 
 @implementation ScreenHelperDelegate
-- (id)initWithScreenHelper:(mozilla::widget::ScreenHelperCocoa*)aScreenHelper
-{
+- (id)initWithScreenHelper:(mozilla::widget::ScreenHelperCocoa*)aScreenHelper {
   if ((self = [self init])) {
     mHelper = aScreenHelper;
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(didChangeScreenParameters:)
-                                                 name:NSApplicationDidChangeScreenParametersNotification
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(didChangeScreenParameters:)
+               name:NSApplicationDidChangeScreenParametersNotification
+             object:nil];
   }
 
   return self;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
 }
 
-- (void)didChangeScreenParameters:(NSNotification*)aNotification
-{
+- (void)didChangeScreenParameters:(NSNotification*)aNotification {
   MOZ_LOG(sScreenLog, LogLevel::Debug,
           ("Received NSApplicationDidChangeScreenParametersNotification"));
 
@@ -59,8 +56,7 @@ static LazyLogModule sScreenLog("WidgetScreen");
 namespace mozilla {
 namespace widget {
 
-ScreenHelperCocoa::ScreenHelperCocoa()
-{
+ScreenHelperCocoa::ScreenHelperCocoa() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("ScreenHelperCocoa created"));
@@ -72,8 +68,7 @@ ScreenHelperCocoa::ScreenHelperCocoa()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-ScreenHelperCocoa::~ScreenHelperCocoa()
-{
+ScreenHelperCocoa::~ScreenHelperCocoa() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mDelegate release];
@@ -81,47 +76,39 @@ ScreenHelperCocoa::~ScreenHelperCocoa()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static already_AddRefed<Screen>
-MakeScreen(NSScreen* aScreen)
-{
+static already_AddRefed<Screen> MakeScreen(NSScreen* aScreen) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   DesktopToLayoutDeviceScale contentsScaleFactor(nsCocoaUtils::GetBackingScaleFactor(aScreen));
   CSSToLayoutDeviceScale defaultCssScaleFactor(contentsScaleFactor.scale);
   NSRect frame = [aScreen frame];
   LayoutDeviceIntRect rect =
-    nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, contentsScaleFactor.scale);
+      nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, contentsScaleFactor.scale);
   frame = [aScreen visibleFrame];
   LayoutDeviceIntRect availRect =
-    nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, contentsScaleFactor.scale);
+      nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, contentsScaleFactor.scale);
   NSWindowDepth depth = [aScreen depth];
   uint32_t pixelDepth = NSBitsPerPixelFromDepth(depth);
   float dpi = 96.0f;
   CGDirectDisplayID displayID =
-    [[[aScreen deviceDescription] objectForKey:@"NSScreenNumber"] intValue];
+      [[[aScreen deviceDescription] objectForKey:@"NSScreenNumber"] intValue];
   CGFloat heightMM = ::CGDisplayScreenSize(displayID).height;
   if (heightMM > 0) {
     dpi = rect.height / (heightMM / MM_PER_INCH_FLOAT);
   }
   MOZ_LOG(sScreenLog, LogLevel::Debug,
-           ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]",
-            rect.x, rect.y, rect.width, rect.height,
-            availRect.x, availRect.y, availRect.width, availRect.height,
-            pixelDepth, contentsScaleFactor.scale, defaultCssScaleFactor.scale,
-            dpi));
+          ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]", rect.x, rect.y, rect.width,
+           rect.height, availRect.x, availRect.y, availRect.width, availRect.height, pixelDepth,
+           contentsScaleFactor.scale, defaultCssScaleFactor.scale, dpi));
 
-  RefPtr<Screen> screen = new Screen(rect, availRect,
-                                     pixelDepth, pixelDepth,
-                                     contentsScaleFactor, defaultCssScaleFactor,
-                                     dpi);
+  RefPtr<Screen> screen = new Screen(rect, availRect, pixelDepth, pixelDepth, contentsScaleFactor,
+                                     defaultCssScaleFactor, dpi);
   return screen.forget();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nullptr);
 }
 
-void
-ScreenHelperCocoa::RefreshScreens()
-{
+void ScreenHelperCocoa::RefreshScreens() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refreshing screens"));
@@ -129,7 +116,7 @@ ScreenHelperCocoa::RefreshScreens()
   AutoTArray<RefPtr<Screen>, 4> screens;
 
   for (NSScreen* screen in [NSScreen screens]) {
-    NSDictionary *desc = [screen deviceDescription];
+    NSDictionary* desc = [screen deviceDescription];
     if ([desc objectForKey:NSDeviceIsScreen] == nil) {
       continue;
     }
@@ -142,13 +129,11 @@ ScreenHelperCocoa::RefreshScreens()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NSScreen*
-ScreenHelperCocoa::CocoaScreenForScreen(nsIScreen* aScreen)
-{
+NSScreen* ScreenHelperCocoa::CocoaScreenForScreen(nsIScreen* aScreen) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   for (NSScreen* screen in [NSScreen screens]) {
-    NSDictionary *desc = [screen deviceDescription];
+    NSDictionary* desc = [screen deviceDescription];
     if ([desc objectForKey:NSDeviceIsScreen] == nil) {
       continue;
     }
@@ -157,8 +142,7 @@ ScreenHelperCocoa::CocoaScreenForScreen(nsIScreen* aScreen)
     aScreen->GetRect(&rect.x, &rect.y, &rect.width, &rect.height);
     aScreen->GetContentsScaleFactor(&scale);
     NSRect frame = [screen frame];
-    LayoutDeviceIntRect frameRect =
-      nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, scale);
+    LayoutDeviceIntRect frameRect = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, scale);
     if (rect == frameRect) {
       return screen;
     }
@@ -168,5 +152,5 @@ ScreenHelperCocoa::CocoaScreenForScreen(nsIScreen* aScreen)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

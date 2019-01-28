@@ -3574,17 +3574,6 @@ class MSetArgumentsObjectArg
   }
 };
 
-class MRunOncePrologue : public MNullaryInstruction {
- protected:
-  MRunOncePrologue() : MNullaryInstruction(classOpcode) { setGuard(); }
-
- public:
-  INSTRUCTION_HEADER(RunOncePrologue)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool possiblyCalls() const override { return true; }
-};
-
 // Given a MIRType::Value A and a MIRType::Object B:
 // If the Value may be safely unboxed to an Object, return Object(A).
 // Otherwise, return B.
@@ -6608,12 +6597,8 @@ class MModuleMetadata : public MNullaryInstruction {
 };
 
 class MDynamicImport : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  CompilerObject referencingScriptSource_;
-
-  explicit MDynamicImport(JSObject* referencingScriptSource,
-                          MDefinition* specifier)
-      : MUnaryInstruction(classOpcode, specifier),
-        referencingScriptSource_(referencingScriptSource) {
+  explicit MDynamicImport(MDefinition* specifier)
+      : MUnaryInstruction(classOpcode, specifier) {
     setResultType(MIRType::Object);
   }
 
@@ -6621,12 +6606,6 @@ class MDynamicImport : public MUnaryInstruction, public BoxInputsPolicy::Data {
   INSTRUCTION_HEADER(DynamicImport)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, specifier))
-
-  JSObject* referencingScriptSource() const { return referencingScriptSource_; }
-
-  bool appendRoots(MRootList& roots) const override {
-    return roots.append(referencingScriptSource_);
-  }
 };
 
 struct LambdaFunctionInfo {
@@ -10402,43 +10381,26 @@ class MNewNamedLambdaObject : public MNullaryInstruction {
   }
 };
 
-class MNewCallObjectBase : public MUnaryInstruction,
-                           public SingleObjectPolicy::Data {
- protected:
-  MNewCallObjectBase(Opcode op, MConstant* templateObj)
-      : MUnaryInstruction(op, templateObj) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  CallObject* templateObject() const {
-    return &getOperand(0)->toConstant()->toObject().as<CallObject>();
-  }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
-class MNewCallObject : public MNewCallObjectBase {
+class MNewCallObject : public MUnaryInstruction,
+                       public SingleObjectPolicy::Data {
  public:
   INSTRUCTION_HEADER(NewCallObject)
   TRIVIAL_NEW_WRAPPERS
 
   explicit MNewCallObject(MConstant* templateObj)
-      : MNewCallObjectBase(classOpcode, templateObj) {
+      : MUnaryInstruction(classOpcode, templateObj) {
     MOZ_ASSERT(!templateObject()->isSingleton());
+    setResultType(MIRType::Object);
   }
+
+  CallObject* templateObject() const {
+    return &getOperand(0)->toConstant()->toObject().as<CallObject>();
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
-};
-
-class MNewSingletonCallObject : public MNewCallObjectBase {
- public:
-  INSTRUCTION_HEADER(NewSingletonCallObject)
-  TRIVIAL_NEW_WRAPPERS
-
-  explicit MNewSingletonCallObject(MConstant* templateObj)
-      : MNewCallObjectBase(classOpcode, templateObj) {}
 };
 
 class MNewStringObject : public MUnaryInstruction,

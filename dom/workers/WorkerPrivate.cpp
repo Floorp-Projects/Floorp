@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "js/CompilationAndEvaluation.h"
+#include "js/ContextOptions.h"
 #include "js/LocaleSensitive.h"
 #include "js/MemoryMetrics.h"
 #include "js/SourceText.h"

@@ -18,7 +18,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
-#include "nsTArrayHelpers.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

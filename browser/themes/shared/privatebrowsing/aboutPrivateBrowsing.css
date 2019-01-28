@@ -141,7 +141,9 @@ a.button:hover:active {
   padding: 0 22px;
 }
 
-.search-handoff-button {
+.search-handoff-button,
+.search-handoff-button:active,
+.search-handoff-button:enabled:hover:active  {
   background: #fff var(--newtab-search-icon) 12px center no-repeat;
   background-size: 24px;
   border: solid 1px rgba(249, 249, 250, 0.2);
@@ -187,12 +189,14 @@ a.button:hover:active {
 }
 
 .fake-editable {
-  color: transparent;
+  border: 0;
+  height: 100%;
+  left: 0;
+  opacity: 0;
+  padding: 0;
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100%;
 }
 
 .fake-textbox {

@@ -8,15 +8,16 @@
 #define MOZILLA_SVGANIMATEDTRANSFORMLIST_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
-#include "nsISMILAttr.h"
 #include "SVGTransformList.h"
 
 class nsAtom;
-class nsSMILValue;
 
 namespace mozilla {
+
+class SMILValue;
 
 namespace dom {
 class SVGAnimationElement;
@@ -107,7 +108,7 @@ class SVGAnimatedTransformList {
     return mRequiresFrameReconstruction;
   }
 
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement);
+  mozilla::UniquePtr<SMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement);
 
  private:
   // mAnimVal is a pointer to allow us to determine if we're being animated or
@@ -121,27 +122,27 @@ class SVGAnimatedTransformList {
   // (See documentation for accessor, RequiresFrameReconstruction.)
   bool mRequiresFrameReconstruction;
 
-  struct SMILAnimatedTransformList : public nsISMILAttr {
+  struct SMILAnimatedTransformList : public SMILAttr {
    public:
     SMILAnimatedTransformList(SVGAnimatedTransformList* aVal,
                               dom::SVGElement* aSVGElement)
         : mVal(aVal), mElement(aSVGElement) {}
 
-    // nsISMILAttr methods
+    // SMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
-        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-    virtual nsSMILValue GetBaseValue() const override;
+        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
+    virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
 
    protected:
     static void ParseValue(const nsAString& aSpec, const nsAtom* aTransformType,
-                           nsSMILValue& aResult);
+                           SMILValue& aResult);
     static int32_t ParseParameterList(const nsAString& aSpec, float* aVars,
                                       int32_t aNVars);
 
-    // These will stay alive because a nsISMILAttr only lives as long
+    // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     SVGAnimatedTransformList* mVal;

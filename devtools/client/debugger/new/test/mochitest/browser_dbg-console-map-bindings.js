@@ -38,8 +38,8 @@ add_task(async function() {
   invokeInTab("strict", 2);
 
   await waitForPaused(dbg);
-  const msg = await evaluate(dbg, "var c = 3");
+  await evaluate(dbg, "var c = 3");
   const msg2 = await evaluate(dbg, "c");
 
-  is(msg2, "3");
+  is(msg2.trim(), "3");
 });

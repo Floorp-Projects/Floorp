@@ -44,6 +44,7 @@ XPIDL_SOURCES += [
     'nsIDocShellTreeOwner.idl',
     'nsIDocumentLoaderFactory.idl',
     'nsILoadContext.idl',
+    'nsILoadURIDelegate.idl',
     'nsIPrivacyTransitionObserver.idl',
     'nsIReflowObserver.idl',
     'nsIRefreshURI.idl',
@@ -76,11 +77,13 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     'BrowsingContext.h',
+    'ChildProcessChannelListener.h',
     'ChromeBrowsingContext.h'
 ]
 
 UNIFIED_SOURCES += [
     'BrowsingContext.cpp',
+    'ChildProcessChannelListener.cpp',
     'ChromeBrowsingContext.cpp',
     'LoadContext.cpp',
     'nsAboutRedirector.cpp',

@@ -5,6 +5,7 @@
  *
  * The origin of this IDL file is:
  * https://html.spec.whatwg.org/multipage/interaction.html#the-datatransferitem-interface
+ * https://wicg.github.io/entries-api/#idl-index
  */
 
 interface DataTransferItem {
@@ -18,6 +19,7 @@ interface DataTransferItem {
 
 callback FunctionStringCallback = void (DOMString data);
 
+// https://wicg.github.io/entries-api/#idl-index
 partial interface DataTransferItem {
   [Pref="dom.webkitBlink.filesystem.enabled", BinaryName="getAsEntry", Throws,
    NeedsSubjectPrincipal]

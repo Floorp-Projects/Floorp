@@ -24,20 +24,10 @@ SOURCES += [
     '../../third_party/dav1d/src/thread_task.c',
 ]
 
-# Enable ASM on Linux for now.
+# Enable ASM build only on Linux for now.
 if CONFIG['OS_TARGET'] == 'Linux' and (CONFIG['CPU_ARCH'] in ('x86', 'x86_64')):
     # Default stack aligment is 16 bytes
     DIRS += ['asm']
-    if CONFIG['CPU_ARCH'] == 'x86_64':
-        # Update stack aligment to 32 bytes
-        if CONFIG['CC_TYPE'] == 'clang':
-            CFLAGS += ['-mstack-alignment=32']
-            SOURCES['../../third_party/dav1d/src/lib.c'].flags += ['-mstackrealign']
-            SOURCES['../../third_party/dav1d/src/thread_task.c'].flags += ['-mstackrealign']
-        elif CONFIG['CC_TYPE'] == 'gcc':
-            CFLAGS += ['-mpreferred-stack-boundary=5']
-            SOURCES['../../third_party/dav1d/src/lib.c'].flags += ['-mincoming-stack-boundary=4']
-            SOURCES['../../third_party/dav1d/src/thread_task.c'].flags += ['-mincoming-stack-boundary=4']
 
 # common sources
 SOURCES += [

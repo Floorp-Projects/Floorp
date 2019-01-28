@@ -14,7 +14,8 @@
 }
 
 .theme-dark {
-  --frame-link-source: #6B89FF;
+  --frame-link-line-color: hsl(210, 40%, 60%);
+  --frame-link-source: var(--blue-40);
 }
 
 .stack-trace {

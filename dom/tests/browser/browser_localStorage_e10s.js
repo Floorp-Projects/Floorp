@@ -13,6 +13,9 @@ Services.scriptloader.loadSubScript(testDir + "/helper_localStorage_e10s.js",
  * - InsertDBOp seeing a preload op for an origin with outstanding changes.
  * - Us generating a "domstorage-test-flush-force" observer notification.
  */
+
+ /* import-globals-from helper_localStorage_e10s.js */
+
 function waitForLocalStorageFlush() {
   if (Services.lsm.nextGenLocalStorageEnabled) {
     return new Promise(resolve => executeSoon(resolve));
@@ -20,10 +23,10 @@ function waitForLocalStorageFlush() {
 
   return new Promise(function(resolve) {
     let observer = {
-      observe: function() {
+      observe() {
         SpecialPowers.removeObserver(observer, "domstorage-test-flushed");
         resolve();
-      }
+      },
     };
     SpecialPowers.addObserver(observer, "domstorage-test-flushed");
   });
@@ -50,7 +53,7 @@ function triggerAndWaitForLocalStorageFlush() {
     // So issue a second flush and wait for that.
     SpecialPowers.notifyObservers(null, "domstorage-test-flush-force");
     return waitForLocalStorageFlush();
-  })
+  });
 }
 
 /**
@@ -262,7 +265,7 @@ add_task(async function() {
       // Enable LocalStorage's testing API so we can explicitly trigger a flush
       // when needed.
       ["dom.storage.testing", true],
-    ]
+    ],
   });
 
   // Ensure that there is no localstorage data or potential false positives for
@@ -290,14 +293,14 @@ add_task(async function() {
   await verifyTabPreload(readerTab, false);
 
   // - Configure the tabs.
-  const initialSentinel = 'initial';
+  const initialSentinel = "initial";
   const noSentinelCheck = null;
   await recordTabStorageEvents(listenerTab, initialSentinel);
 
   // - Issue the initial batch of writes and verify.
   info("initial writes");
   const initialWriteMutations = [
-    //[key (null=clear), newValue (null=delete), oldValue (verification)]
+    // [key (null=clear), newValue (null=delete), oldValue (verification)]
     ["getsCleared", "1", null],
     ["alsoGetsCleared", "2", null],
     [null, null, null],
@@ -308,12 +311,12 @@ add_task(async function() {
     ["getsDeletedImmediately", null, "5"],
     ["alsoStays", "6", null],
     ["getsDeletedLater", null, "4"],
-    ["clobbered", "post", "pre"]
+    ["clobbered", "post", "pre"],
   ];
   const initialWriteState = {
     stays: "3",
     clobbered: "post",
-    alsoStays: "6"
+    alsoStays: "6",
   };
 
   await mutateTabStorage(writerTab, initialWriteMutations, initialSentinel);
@@ -349,17 +352,17 @@ add_task(async function() {
   // it did not add an event listener.
 
   info("late writes");
-  const lateWriteSentinel = 'lateWrite';
+  const lateWriteSentinel = "lateWrite";
   const lateWriteMutations = [
     ["lateStays", "10", null],
     ["lateClobbered", "latePre", null],
     ["lateDeleted", "11", null],
     ["lateClobbered", "lastPost", "latePre"],
-    ["lateDeleted", null, "11"]
+    ["lateDeleted", null, "11"],
   ];
   const lateWriteState = Object.assign({}, initialWriteState, {
     lateStays: "10",
-    lateClobbered: "lastPost"
+    lateClobbered: "lastPost",
   });
 
   await recordTabStorageEvents(listenerTab, lateWriteSentinel);
@@ -379,17 +382,17 @@ add_task(async function() {
 
   // - Issue last set of writes from writerTab.
   info("last set of writes");
-  const lastWriteSentinel = 'lastWrite';
+  const lastWriteSentinel = "lastWrite";
   const lastWriteMutations = [
     ["lastStays", "20", null],
     ["lastDeleted", "21", null],
     ["lastClobbered", "lastPre", null],
     ["lastClobbered", "lastPost", "lastPre"],
-    ["lastDeleted", null, "21"]
+    ["lastDeleted", null, "21"],
   ];
   const lastWriteState = Object.assign({}, lateWriteState, {
     lastStays: "20",
-    lastClobbered: "lastPost"
+    lastClobbered: "lastPost",
   });
 
   await recordTabStorageEvents(listenerTab, lastWriteSentinel);

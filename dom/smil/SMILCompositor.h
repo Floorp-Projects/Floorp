@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILCOMPOSITOR_H_
-#define NS_SMILCOMPOSITOR_H_
+#ifndef mozilla_SMILCompositor_h
+#define mozilla_SMILCompositor_h
 
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
@@ -72,11 +72,11 @@ class SMILCompositor : public PLDHashEntryHdr {
   }
 
  private:
-  // Create a nsISMILAttr for my target, on the heap.
+  // Create a SMILAttr for my target, on the heap.
   //
   // @param aBaseComputedStyle  An optional ComputedStyle which, if set, will be
   //                           used when fetching the base style.
-  UniquePtr<nsISMILAttr> CreateSMILAttr(ComputedStyle* aBaseComputedStyle);
+  UniquePtr<SMILAttr> CreateSMILAttr(ComputedStyle* aBaseComputedStyle);
 
   // Returns the CSS property this compositor should animate, or
   // eCSSProperty_UNKNOWN if this compositor does not animate a CSS property.
@@ -99,7 +99,7 @@ class SMILCompositor : public PLDHashEntryHdr {
 
   // If the passed-in base value differs from our cached base value, this
   // method updates the cached value (and toggles the 'mForceCompositing' flag)
-  void UpdateCachedBaseValue(const nsSMILValue& aBaseValue);
+  void UpdateCachedBaseValue(const SMILValue& aBaseValue);
 
   // The hash key (tuple of element and attributeName)
   KeyType mKey;
@@ -117,9 +117,9 @@ class SMILCompositor : public PLDHashEntryHdr {
   // from one sample to the next. (SMILAnimationController moves this
   // forward from the previous sample's compositor by calling
   // StealCachedBaseValue.)
-  nsSMILValue mCachedBaseValue;
+  SMILValue mCachedBaseValue;
 };
 
 }  // namespace mozilla
 
-#endif  // NS_SMILCOMPOSITOR_H_
+#endif  // mozilla_SMILCompositor_h

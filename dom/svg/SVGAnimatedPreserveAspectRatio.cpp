@@ -7,11 +7,11 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/SVGContentUtils.h"
 #include "mozilla/dom/SVGAnimatedPreserveAspectRatioBinding.h"
-#include "nsSMILValue.h"
-#include "nsSVGAttrTearoffTable.h"
 #include "SMILEnumType.h"
-#include "SVGContentUtils.h"
+#include "SVGAttrTearoffTable.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -36,14 +36,14 @@ JSObject* DOMSVGAnimatedPreserveAspectRatio::WrapObject(
 
 /* Implementation */
 
-static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
-                             DOMSVGAnimatedPreserveAspectRatio>
+static SVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
+                           DOMSVGAnimatedPreserveAspectRatio>
     sSVGAnimatedPAspectRatioTearoffTable;
-static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
-                             DOMSVGPreserveAspectRatio>
+static SVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
+                           DOMSVGPreserveAspectRatio>
     sBaseSVGPAspectRatioTearoffTable;
-static nsSVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
-                             DOMSVGPreserveAspectRatio>
+static SVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
+                           DOMSVGPreserveAspectRatio>
     sAnimSVGPAspectRatioTearoffTable;
 
 already_AddRefed<DOMSVGPreserveAspectRatio>
@@ -168,7 +168,7 @@ DOMSVGAnimatedPreserveAspectRatio::~DOMSVGAnimatedPreserveAspectRatio() {
   sSVGAnimatedPAspectRatioTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> SVGAnimatedPreserveAspectRatio::ToSMILAttr(
+UniquePtr<SMILAttr> SVGAnimatedPreserveAspectRatio::ToSMILAttr(
     SVGElement* aSVGElement) {
   return MakeUnique<SMILPreserveAspectRatio>(this, aSVGElement);
 }
@@ -179,20 +179,20 @@ typedef SVGAnimatedPreserveAspectRatio::SMILPreserveAspectRatio
 
 nsresult SMILPreserveAspectRatio::ValueFromString(
     const nsAString& aStr, const SVGAnimationElement* /*aSrcElement*/,
-    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
+    SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   SVGPreserveAspectRatio par;
   nsresult res = SVGPreserveAspectRatio::FromString(aStr, &par);
   NS_ENSURE_SUCCESS(res, res);
 
-  nsSMILValue val(SMILEnumType::Singleton());
+  SMILValue val(SMILEnumType::Singleton());
   val.mU.mUint = PackPreserveAspectRatio(par);
   aValue = val;
   aPreventCachingOfSandwich = false;
   return NS_OK;
 }
 
-nsSMILValue SMILPreserveAspectRatio::GetBaseValue() const {
-  nsSMILValue val(SMILEnumType::Singleton());
+SMILValue SMILPreserveAspectRatio::GetBaseValue() const {
+  SMILValue val(SMILEnumType::Singleton());
   val.mU.mUint = PackPreserveAspectRatio(mVal->GetBaseValue());
   return val;
 }
@@ -205,7 +205,7 @@ void SMILPreserveAspectRatio::ClearAnimValue() {
   }
 }
 
-nsresult SMILPreserveAspectRatio::SetAnimValue(const nsSMILValue& aValue) {
+nsresult SMILPreserveAspectRatio::SetAnimValue(const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILEnumType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILEnumType::Singleton()) {

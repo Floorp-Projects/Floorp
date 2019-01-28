@@ -327,7 +327,7 @@ describe("PlacesFeed", () => {
       fakeUrlBar = {
         focus: sinon.spy(),
         search: sinon.spy(),
-        hiddenFocus: sinon.spy(),
+        setHiddenFocus: sinon.spy(),
         removeHiddenFocus: sinon.spy(),
         addEventListener: (ev, cb) => {
           listeners[ev] = cb;
@@ -336,24 +336,41 @@ describe("PlacesFeed", () => {
       };
       listeners = {};
     });
-    it("should properly handle normal focus (no text passed in)", () => {
+    it("should properly handle handoff with no text passed in", () => {
       feed.handoffSearchToAwesomebar({
         _target: {browser: {ownerGlobal: {gURLBar: fakeUrlBar}}},
         data: {},
         meta: {fromTarget: {}},
       });
-      assert.calledOnce(fakeUrlBar.focus);
+      assert.calledOnce(fakeUrlBar.setHiddenFocus);
+      assert.notCalled(fakeUrlBar.search);
       assert.notCalled(feed.store.dispatch);
+
+      // Now type a character.
+      listeners.keydown({key: "f"});
+      assert.calledOnce(fakeUrlBar.search);
+      assert.calledOnce(fakeUrlBar.removeHiddenFocus);
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        meta: {
+          from: "ActivityStream:Main",
+          skipMain: true,
+          to: "ActivityStream:Content",
+          toTarget: {},
+        },
+        type: "HIDE_SEARCH",
+      });
     });
-    it("should properly handle text data passed in", () => {
+    it("should properly handle handoff with text data passed in", () => {
       feed.handoffSearchToAwesomebar({
         _target: {browser: {ownerGlobal: {gURLBar: fakeUrlBar}}},
-        data: {text: "f"},
+        data: {text: "foo"},
         meta: {fromTarget: {}},
       });
       assert.calledOnce(fakeUrlBar.search);
-      assert.calledWith(fakeUrlBar.search, "f");
+      assert.calledWith(fakeUrlBar.search, "@google foo");
       assert.notCalled(fakeUrlBar.focus);
+      assert.notCalled(fakeUrlBar.setHiddenFocus);
 
       // Now call blur listener.
       listeners.blur();
@@ -371,11 +388,11 @@ describe("PlacesFeed", () => {
     it("should SHOW_SEARCH on ESC keydown", () => {
       feed.handoffSearchToAwesomebar({
         _target: {browser: {ownerGlobal: {gURLBar: fakeUrlBar}}},
-        data: {text: "f"},
+        data: {text: "foo"},
         meta: {fromTarget: {}},
       });
       assert.calledOnce(fakeUrlBar.search);
-      assert.calledWith(fakeUrlBar.search, "f");
+      assert.calledWith(fakeUrlBar.search, "@google foo");
       assert.notCalled(fakeUrlBar.focus);
 
       // Now call ESC keydown.
@@ -390,6 +407,16 @@ describe("PlacesFeed", () => {
         },
         type: "SHOW_SEARCH",
       });
+    });
+    it("should properly handle no defined search alias", () => {
+      global.Services.search.defaultEngine.wrappedJSObject.__internalAliases = [];
+      feed.handoffSearchToAwesomebar({
+        _target: {browser: {ownerGlobal: {gURLBar: fakeUrlBar}}},
+        data: {text: "foo"},
+        meta: {fromTarget: {}},
+      });
+      assert.calledOnce(fakeUrlBar.search);
+      assert.calledWith(fakeUrlBar.search, "foo");
     });
   });
 

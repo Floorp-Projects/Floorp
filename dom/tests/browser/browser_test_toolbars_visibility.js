@@ -44,7 +44,7 @@ function getToolbarsFromWindowChrome(win) {
     personalbar: win.personalbar.visible,
     statusbar: win.statusbar.visible,
     locationbar: win.locationbar.visible,
-  }
+  };
 }
 
 /**

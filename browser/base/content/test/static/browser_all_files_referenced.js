@@ -48,8 +48,10 @@ var gExceptionPaths = [
 
 // These are not part of the omni.ja file, so we find them only when running
 // the test on a non-packaged build.
-if (AppConstants.platform == "macosx")
+if (AppConstants.platform == "macosx") {
   gExceptionPaths.push("resource://gre/res/cursors/");
+  gExceptionPaths.push("resource://gre/res/touchbar/");
+}
 
 var whitelist = [
   // browser/extensions/pdfjs/content/PdfStreamConverter.jsm

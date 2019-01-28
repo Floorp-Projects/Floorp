@@ -5738,7 +5738,7 @@ gfxFloat nsTextFrame::ComputeSelectionUnderlineHeight(
               ->GetDefaultFont(kPresContext_DefaultVariableFont_ID)
               ->size;
       int32_t zoomedFontSize = aPresContext->AppUnitsToDevPixels(
-          nsStyleFont::ZoomText(aPresContext, defaultFontSize));
+          nsStyleFont::ZoomText(*aPresContext->Document(), defaultFontSize));
       gfxFloat fontSize =
           std::min(gfxFloat(zoomedFontSize), aFontMetrics.emHeight);
       fontSize = std::max(fontSize, 1.0);
@@ -6128,6 +6128,10 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
 
   if (auto* textDrawer = aParams.context->GetTextDrawer()) {
     wr::Shadow wrShadow;
+
+    // Gecko already inflates the bounding rect of text shadows,
+    // so tell WR not to inflate again.
+    wrShadow.should_inflate = false;
 
     wrShadow.offset = {
         PresContext()->AppUnitsToFloatDevPixels(aShadowDetails->mXOffset),

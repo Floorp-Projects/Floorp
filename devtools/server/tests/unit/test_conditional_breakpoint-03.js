@@ -27,8 +27,11 @@ function run_test() {
 }
 
 function test_simple_breakpoint() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    const source = gThreadClient.source(packet.frame.where.source);
+  gThreadClient.addOneTimeListener("paused", async function(event, packet) {
+    const source = await getSourceById(
+      gThreadClient,
+      packet.frame.where.actor
+    );
     source.setBreakpoint({
       line: 3,
       condition: "throw new Error()",

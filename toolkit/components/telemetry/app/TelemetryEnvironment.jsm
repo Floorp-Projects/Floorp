@@ -48,6 +48,21 @@ const MAX_EXPERIMENT_TYPE_LENGTH = 20;
 // eslint-disable-next-line no-unused-vars
 var Policy = {
   now: () => new Date(),
+  _intlLoaded: false,
+  _browserDelayedStartup() {
+    if (Policy._intlLoaded) {
+      return Promise.resolve();
+    }
+    return new Promise(resolve => {
+      let startupTopic = "browser-delayed-startup-finished";
+      Services.obs.addObserver(function observer(subject, topic) {
+        if (topic == startupTopic) {
+          Services.obs.removeObserver(observer, startupTopic);
+          resolve();
+        }
+      }, startupTopic);
+    });
+  },
 };
 
 // This is used to buffer calls to setExperimentActive and friends, so that we
@@ -318,6 +333,49 @@ function getSystemLocale() {
   } catch (e) {
     return null;
   }
+}
+
+/**
+ * Get the current OS locales.
+ * @return an array of strings with the OS locales or null on failure.
+ */
+function getSystemLocales() {
+  try {
+    return Cc["@mozilla.org/intl/ospreferences;1"].
+             getService(Ci.mozIOSPreferences).
+             systemLocales;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Get the current OS regional preference locales.
+ * @return an array of strings with the OS regional preference locales or null on failure.
+ */
+function getRegionalPrefsLocales() {
+  try {
+    return Cc["@mozilla.org/intl/ospreferences;1"].
+             getService(Ci.mozIOSPreferences).
+             regionalPrefsLocales;
+  } catch (e) {
+    return null;
+  }
+}
+
+function getIntlSettings() {
+  return {
+    requestedLocales: Services.locale.requestedLocales,
+    availableLocales: Services.locale.availableLocales,
+    appLocales: Services.locale.appLocalesAsBCP47,
+    systemLocales: getSystemLocales(),
+    regionalPrefsLocales: getRegionalPrefsLocales(),
+    acceptLanguages:
+      Services.prefs.getComplexValue("intl.accept_languages", Ci.nsIPrefLocalizedString)
+        .data
+        .split(",")
+        .map(str => str.trim()),
+  };
 }
 
 /**
@@ -904,6 +962,7 @@ function EnvironmentCache() {
     p.push(this._loadAttributionAsync());
   }
   p.push(this._loadAutoUpdateAsync());
+  p.push(this._loadIntlData());
 
   for (const [id, {branch, options}] of gActiveExperimentStartupBuffer.entries()) {
     this.setExperimentActive(id, branch, options);
@@ -1358,35 +1417,35 @@ EnvironmentCache.prototype = {
    * @returns null on error, true if we are the default browser, or false otherwise.
    */
   _isDefaultBrowser() {
+    let isDefault = (service, ...args) => {
+      try {
+        return !!service.isDefaultBrowser(...args);
+      } catch (ex) {
+        this._log.error("_isDefaultBrowser - Could not determine if default browser", ex);
+        return null;
+      }
+    };
+
     if (!("@mozilla.org/browser/shell-service;1" in Cc)) {
       this._log.info("_isDefaultBrowser - Could not obtain browser shell service");
       return null;
     }
 
-    let shellService;
     try {
-      let scope = {};
-      ChromeUtils.import("resource:///modules/ShellService.jsm", scope);
-      shellService = scope.ShellService;
+      let { ShellService } = ChromeUtils.import("resource:///modules/ShellService.jsm", {});
+      // This uses the same set of flags used by the pref pane.
+      return isDefault(ShellService, false, true);
     } catch (ex) {
       this._log.error("_isDefaultBrowser - Could not obtain shell service JSM");
     }
 
-    if (!shellService) {
-      try {
-        shellService = Cc["@mozilla.org/browser/shell-service;1"]
-                         .getService(Ci.nsIShellService);
-      } catch (ex) {
-        this._log.error("_isDefaultBrowser - Could not obtain shell service", ex);
-        return null;
-      }
-    }
-
     try {
-      // This uses the same set of flags used by the pref pane.
-      return !!shellService.isDefaultBrowser(false, true);
+      let shellService = Cc["@mozilla.org/browser/shell-service;1"]
+                            .getService(Ci.nsIShellService);
+    // This uses the same set of flags used by the pref pane.
+      return isDefault(shellService, true);
     } catch (ex) {
-      this._log.error("_isDefaultBrowser - Could not determine if default browser", ex);
+      this._log.error("_isDefaultBrowser - Could not obtain shell service", ex);
       return null;
     }
   },
@@ -1416,6 +1475,9 @@ EnvironmentCache.prototype = {
       e10sMultiProcesses: Services.appinfo.maxWebProcessCount,
       telemetryEnabled: Utils.isTelemetryEnabled,
       locale: getBrowserLocale(),
+      // We need to wait for browser-delayed-startup-finished to ensure that the locales
+      // have settled, once that's happened we can get the intl data directly.
+      intl: Policy._intlLoaded ? getIntlSettings() : {},
       update: {
         channel: updateChannel,
         enabled: !Services.policies || Services.policies.isAllowed("appUpdate"),
@@ -1423,6 +1485,12 @@ EnvironmentCache.prototype = {
       userPrefs: this._getPrefData(),
       sandbox: this._getSandboxData(),
     };
+
+    // Services.appinfo.launcherProcessState is not available in all build
+    // configurations, in which case an exception may be thrown.
+    try {
+      this._currentEnvironment.settings.launcherProcessState = Services.appinfo.launcherProcessState;
+    } catch (e) {}
 
     this._currentEnvironment.settings.addonCompatibilityCheckEnabled =
       AddonManager.checkCompatibility;
@@ -1529,6 +1597,17 @@ EnvironmentCache.prototype = {
       return;
     }
     this._currentEnvironment.settings.update.autoDownload = this._updateAutoDownloadCache;
+  },
+
+  /**
+  * Get i18n data about the system.
+  * @return A promise of completion.
+  */
+  async _loadIntlData() {
+    // Wait for the startup topic.
+    await Policy._browserDelayedStartup();
+    this._currentEnvironment.settings.intl = getIntlSettings();
+    Policy._intlLoaded = true;
   },
 
   /**

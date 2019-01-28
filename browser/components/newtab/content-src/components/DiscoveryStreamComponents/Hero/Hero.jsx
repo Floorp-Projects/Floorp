@@ -1,6 +1,8 @@
 import {actionCreators as ac} from "common/Actions.jsm";
 import {DSCard} from "../DSCard/DSCard.jsx";
+import {List} from "../List/List.jsx";
 import React from "react";
+import {truncateText} from "content-src/lib/truncate-text";
 
 export class Hero extends React.PureComponent {
   constructor(props) {
@@ -36,7 +38,6 @@ export class Hero extends React.PureComponent {
 
     let [heroRec, ...otherRecs] = data.recommendations.slice(0, this.props.items);
     this.heroRec = heroRec;
-    let truncateText = (text, cap) => `${text.substring(0, cap)}${text.length > cap ? `...` : ``}`;
 
     // Note that `{index + 1}` is necessary below for telemetry since we treat heroRec as index 0.
     let cards = otherRecs.map((rec, index) => (
@@ -49,8 +50,19 @@ export class Hero extends React.PureComponent {
         index={index + 1}
         type={this.props.type}
         dispatch={this.props.dispatch}
-        source={truncateText(`TODO: SOURCE`, 22)} />
+        context={truncateText(rec.context, 22)}
+        source={truncateText(rec.domain, 22)} />
     ));
+
+    let list = (
+      <List
+        recStartingPoint={1}
+        feed={this.props.feed}
+        hasImages={true}
+        hasBorders={this.props.border === `border`}
+        items={this.props.items - 1}
+        type={`Hero`} />
+    );
 
     return (
       <div>
@@ -63,11 +75,15 @@ export class Hero extends React.PureComponent {
             <div className="meta">
               <header>{truncateText(heroRec.title, 28)}</header>
               <p>{truncateText(heroRec.excerpt, 114)}</p>
-              <p>{truncateText(`TODO: SOURCE`, 22)}</p>
+              {heroRec.context ? (
+                <p className="context">{truncateText(heroRec.context, 22)}</p>
+              ) : (
+                <p className="source">{truncateText(heroRec.domain, 22)}</p>
+              )}
             </div>
           </a>
-          <div className="cards">
-            { cards }
+          <div className={`${this.props.subComponentType}`}>
+            { this.props.subComponentType === `cards` ? cards : list }
           </div>
         </div>
       </div>

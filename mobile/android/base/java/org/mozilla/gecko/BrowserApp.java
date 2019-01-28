@@ -1549,6 +1549,8 @@ public class BrowserApp extends GeckoApp
         NotificationHelper.destroy();
         GeckoNetworkManager.destroy();
 
+        EventDispatcher.getInstance().dispatch("Browser:ZombifyTabs", null);
+
         MmaDelegate.flushResources(this);
 
         super.onDestroy();

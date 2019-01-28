@@ -124,8 +124,8 @@ void PixelTransfer11::setBufferToTextureCopyParams(const gl::Box &destArea, cons
 {
     StructZero(parametersOut);
 
-    float texelCenterX = 0.5f / static_cast<float>(destSize.width - 1);
-    float texelCenterY = 0.5f / static_cast<float>(destSize.height - 1);
+    float texelCenterX = 0.5f / static_cast<float>(destSize.width);
+    float texelCenterY = 0.5f / static_cast<float>(destSize.height);
 
     unsigned int bytesPerPixel   = gl::GetSizedInternalFormatInfo(internalFormat).pixelBytes;
     unsigned int alignmentBytes = static_cast<unsigned int>(unpack.alignment);

@@ -10,14 +10,14 @@
 #include <mach/vm_map.h>
 #include <mach/mach_port.h>
 #if defined(XP_IOS)
-#include <mach/vm_map.h>
-#define mach_vm_address_t vm_address_t
-#define mach_vm_map vm_map
-#define mach_vm_read vm_read
-#define mach_vm_region_recurse vm_region_recurse_64
-#define mach_vm_size_t vm_size_t
+#  include <mach/vm_map.h>
+#  define mach_vm_address_t vm_address_t
+#  define mach_vm_map vm_map
+#  define mach_vm_read vm_read
+#  define mach_vm_region_recurse vm_region_recurse_64
+#  define mach_vm_size_t vm_size_t
 #else
-#include <mach/mach_vm.h>
+#  include <mach/mach_vm.h>
 #endif
 #include <pthread.h>
 #include <unistd.h>
@@ -29,21 +29,23 @@
 #include "mozilla/layers/TextureSync.h"
 
 #ifdef DEBUG
-#define LOG_ERROR(str, args...)                                   \
-  PR_BEGIN_MACRO                                                  \
-  mozilla::SmprintfPointer msg = mozilla::Smprintf(str, ## args); \
-  NS_WARNING(msg.get());                                          \
-  PR_END_MACRO
+#  define LOG_ERROR(str, args...)                                  \
+    PR_BEGIN_MACRO                                                 \
+    mozilla::SmprintfPointer msg = mozilla::Smprintf(str, ##args); \
+    NS_WARNING(msg.get());                                         \
+    PR_END_MACRO
 #else
-#define LOG_ERROR(str, args...) do { /* nothing */ } while(0)
+#  define LOG_ERROR(str, args...) \
+    do { /* nothing */            \
+    } while (0)
 #endif
 
-#define CHECK_MACH_ERROR(kr, msg)                               \
-  PR_BEGIN_MACRO                                                \
-  if (kr != KERN_SUCCESS) {                                     \
-    LOG_ERROR("%s %s (%x)\n", msg, mach_error_string(kr), kr);  \
-    return false;                                               \
-  }                                                             \
+#define CHECK_MACH_ERROR(kr, msg)                              \
+  PR_BEGIN_MACRO                                               \
+  if (kr != KERN_SUCCESS) {                                    \
+    LOG_ERROR("%s %s (%x)\n", msg, mach_error_string(kr), kr); \
+    return false;                                              \
+  }                                                            \
   PR_END_MACRO
 
 /*
@@ -95,8 +97,7 @@ struct PIDPair {
   pid_t mRequester;
   pid_t mRequested;
 
-  PIDPair(pid_t requester, pid_t requested)
-   : mRequester(requester), mRequested(requested) {}
+  PIDPair(pid_t requester, pid_t requested) : mRequester(requester), mRequested(requested) {}
 };
 
 struct ListeningThread {
@@ -104,8 +105,7 @@ struct ListeningThread {
   MemoryPorts* mPorts;
 
   ListeningThread() = default;
-  ListeningThread(pthread_t thread, MemoryPorts* ports)
-   : mThread(thread), mPorts(ports) {}
+  ListeningThread(pthread_t thread, MemoryPorts* ports) : mThread(thread), mPorts(ports) {}
 };
 
 struct SharePortsReply {
@@ -115,18 +115,11 @@ struct SharePortsReply {
 
 std::map<pid_t, ListeningThread> gThreads;
 
-static void *
-PortServerThread(void *argument);
+static void* PortServerThread(void* argument);
 
-
-static void
-SetupMachMemory(pid_t pid,
-                ReceivePort* listen_port,
-                MachPortSender* listen_port_ack,
-                MachPortSender* send_port,
-                ReceivePort* send_port_ack,
-                bool pidIsParent)
-{
+static void SetupMachMemory(pid_t pid, ReceivePort* listen_port, MachPortSender* listen_port_ack,
+                            MachPortSender* send_port, ReceivePort* send_port_ack,
+                            bool pidIsParent) {
   if (pidIsParent) {
     gParentPid = pid;
   }
@@ -149,12 +142,8 @@ SetupMachMemory(pid_t pid,
 
 // Send two communication ports to another process along with the pid of the process that is
 // listening on them.
-bool
-SendPortsMessage(MachPortSender* sender,
-                 mach_port_t ports_in_receiver,
-                 mach_port_t ports_out_receiver,
-                 PIDPair pid_pair)
-{
+bool SendPortsMessage(MachPortSender* sender, mach_port_t ports_in_receiver,
+                      mach_port_t ports_out_receiver, PIDPair pid_pair) {
   MachSendMessage getPortsMsg(kGetPortsMsg);
   if (!getPortsMsg.AddDescriptor(MachMsgPortDescriptor(ports_in_receiver))) {
     LOG_ERROR("Adding descriptor to message failed");
@@ -168,20 +157,19 @@ SendPortsMessage(MachPortSender* sender,
   getPortsMsg.SetData(&pid_pair, sizeof(PIDPair));
   kern_return_t err = sender->SendMessage(getPortsMsg, kTimeout);
   if (KERN_SUCCESS != err) {
-    LOG_ERROR("Error sending get ports message %s (%x)\n",  mach_error_string(err), err);
+    LOG_ERROR("Error sending get ports message %s (%x)\n", mach_error_string(err), err);
     return false;
   }
   return true;
 }
 
 // Receive two communication ports from another process
-bool
-RecvPortsMessage(ReceivePort* receiver, mach_port_t* ports_in_sender, mach_port_t* ports_out_sender)
-{
+bool RecvPortsMessage(ReceivePort* receiver, mach_port_t* ports_in_sender,
+                      mach_port_t* ports_out_sender) {
   MachReceiveMessage rcvPortsMsg;
   kern_return_t err = receiver->WaitForMessage(&rcvPortsMsg, kTimeout);
   if (KERN_SUCCESS != err) {
-    LOG_ERROR("Error receiving get ports message %s (%x)\n",  mach_error_string(err), err);
+    LOG_ERROR("Error receiving get ports message %s (%x)\n", mach_error_string(err), err);
   }
   if (rcvPortsMsg.GetTranslatedPort(0) == MACH_PORT_NULL) {
     LOG_ERROR("GetTranslatedPort(0) failed");
@@ -198,23 +186,16 @@ RecvPortsMessage(ReceivePort* receiver, mach_port_t* ports_in_sender, mach_port_
 }
 
 // Send two communication ports to another process and receive two back
-bool
-RequestPorts(const MemoryPorts& request_ports,
-             mach_port_t  ports_in_receiver,
-             mach_port_t* ports_in_sender,
-             mach_port_t* ports_out_sender,
-             mach_port_t ports_out_receiver,
-             PIDPair pid_pair)
-{
+bool RequestPorts(const MemoryPorts& request_ports, mach_port_t ports_in_receiver,
+                  mach_port_t* ports_in_sender, mach_port_t* ports_out_sender,
+                  mach_port_t ports_out_receiver, PIDPair pid_pair) {
   if (!SendPortsMessage(request_ports.mSender, ports_in_receiver, ports_out_receiver, pid_pair)) {
     return false;
   }
   return RecvPortsMessage(request_ports.mReceiver, ports_in_sender, ports_out_sender);
 }
 
-MemoryPorts*
-GetMemoryPortsForPid(pid_t pid)
-{
+MemoryPorts* GetMemoryPortsForPid(pid_t pid) {
   gMutex.AssertCurrentThreadOwns();
 
   if (gMemoryCommPorts.find(pid) == gMemoryCommPorts.end()) {
@@ -233,11 +214,8 @@ GetMemoryPortsForPid(pid_t pid)
     auto* ports_in_receiver = new ReceivePort();
     auto* ports_out_receiver = new ReceivePort();
     mach_port_t raw_ports_in_sender, raw_ports_out_sender;
-    if (!RequestPorts(parent,
-                      ports_in_receiver->GetPort(),
-                      &raw_ports_in_sender,
-                      &raw_ports_out_sender,
-                      ports_out_receiver->GetPort(),
+    if (!RequestPorts(parent, ports_in_receiver->GetPort(), &raw_ports_in_sender,
+                      &raw_ports_out_sender, ports_out_receiver->GetPort(),
                       PIDPair(getpid(), pid))) {
       LOG_ERROR("failed to request ports\n");
       return nullptr;
@@ -246,11 +224,7 @@ GetMemoryPortsForPid(pid_t pid)
     // is for replying with the Handle when we receive new memory.
     auto* ports_in_sender = new MachPortSender(raw_ports_in_sender);
     auto* ports_out_sender = new MachPortSender(raw_ports_out_sender);
-    SetupMachMemory(pid,
-                    ports_in_receiver,
-                    ports_in_sender,
-                    ports_out_sender,
-                    ports_out_receiver,
+    SetupMachMemory(pid, ports_in_receiver, ports_in_sender, ports_out_sender, ports_out_receiver,
                     false);
     MOZ_ASSERT(gMemoryCommPorts.find(pid) != gMemoryCommPorts.end());
   }
@@ -260,9 +234,7 @@ GetMemoryPortsForPid(pid_t pid)
 // We just received a port representing a region of shared memory, reply to
 // the process that set it with the mach_port_t that represents it in this process.
 // That will be the Handle to be shared over normal IPC
-void
-HandleSharePortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports)
-{
+void HandleSharePortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports) {
   mach_port_t port = rmsg->GetTranslatedPort(0);
   uint64_t* serial = reinterpret_cast<uint64_t*>(rmsg->GetData());
   MachSendMessage msg(kReturnIdMsg);
@@ -279,11 +251,8 @@ HandleSharePortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports)
 
 // We were asked by another process to get communications ports to some process. Return
 // those ports via an IPC message.
-bool
-SendReturnPortsMsg(MachPortSender* sender,
-                   mach_port_t raw_ports_in_sender,
-                   mach_port_t raw_ports_out_sender)
-{
+bool SendReturnPortsMsg(MachPortSender* sender, mach_port_t raw_ports_in_sender,
+                        mach_port_t raw_ports_out_sender) {
   MachSendMessage getPortsMsg(kReturnPortsMsg);
   if (!getPortsMsg.AddDescriptor(MachMsgPortDescriptor(raw_ports_in_sender))) {
     LOG_ERROR("Adding descriptor to message failed");
@@ -296,7 +265,7 @@ SendReturnPortsMsg(MachPortSender* sender,
   }
   kern_return_t err = sender->SendMessage(getPortsMsg, kTimeout);
   if (KERN_SUCCESS != err) {
-    LOG_ERROR("Error sending get ports message %s (%x)\n",  mach_error_string(err), err);
+    LOG_ERROR("Error sending get ports message %s (%x)\n", mach_error_string(err), err);
     return false;
   }
   return true;
@@ -304,9 +273,7 @@ SendReturnPortsMsg(MachPortSender* sender,
 
 // We were asked for communcations ports to a process that isn't us. Assuming that process
 // is one of our children, forward that request on.
-void
-ForwardGetPortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports, PIDPair* pid_pair)
-{
+void ForwardGetPortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports, PIDPair* pid_pair) {
   if (rmsg->GetTranslatedPort(0) == MACH_PORT_NULL) {
     LOG_ERROR("GetTranslatedPort(0) failed");
     return;
@@ -330,9 +297,7 @@ ForwardGetPortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports, PIDPair* pi
 }
 
 // We receieved a message asking us to get communications ports for another process
-void
-HandleGetPortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports)
-{
+void HandleGetPortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports) {
   PIDPair* pid_pair;
   if (rmsg->GetDataLength() != sizeof(PIDPair)) {
     LOG_ERROR("Improperly formatted message\n");
@@ -358,20 +323,15 @@ HandleGetPortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports)
 
     auto* ports_in_receiver = new ReceivePort();
     auto* ports_out_receiver = new ReceivePort();
-    if (SendReturnPortsMsg(ports->mSender, ports_in_receiver->GetPort(), ports_out_receiver->GetPort())) {
-      SetupMachMemory(pid_pair->mRequester,
-                      ports_out_receiver,
-                      ports_out_sender,
-                      ports_in_sender,
-                      ports_in_receiver,
-                      false);
+    if (SendReturnPortsMsg(ports->mSender, ports_in_receiver->GetPort(),
+                           ports_out_receiver->GetPort())) {
+      SetupMachMemory(pid_pair->mRequester, ports_out_receiver, ports_out_sender, ports_in_sender,
+                      ports_in_receiver, false);
     }
   }
 }
 
-static void *
-PortServerThread(void *argument)
-{
+static void* PortServerThread(void* argument) {
   MemoryPorts* ports = static_cast<MemoryPorts*>(argument);
   MachReceiveMessage child_message;
   while (true) {
@@ -394,48 +354,42 @@ PortServerThread(void *argument)
     } else {
       StaticMutexAutoLock smal(gMutex);
       switch (rmsg.GetMessageID()) {
-      case kSharePortsMsg:
-        HandleSharePortsMessage(&rmsg, ports);
-        break;
-      case kGetPortsMsg:
-        HandleGetPortsMessage(&rmsg, ports);
-        break;
-      case kCleanupMsg:
-       if (gParentPid == 0) {
-         LOG_ERROR("Cleanup message not valid for parent process");
-         continue;
-       }
+        case kSharePortsMsg:
+          HandleSharePortsMessage(&rmsg, ports);
+          break;
+        case kGetPortsMsg:
+          HandleGetPortsMessage(&rmsg, ports);
+          break;
+        case kCleanupMsg:
+          if (gParentPid == 0) {
+            LOG_ERROR("Cleanup message not valid for parent process");
+            continue;
+          }
 
-        pid_t* pid;
-        if (rmsg.GetDataLength() != sizeof(pid_t)) {
-          LOG_ERROR("Improperly formatted message\n");
-          continue;
-        }
-        pid = reinterpret_cast<pid_t*>(rmsg.GetData());
-        SharedMemoryBasic::CleanupForPid(*pid);
-        break;
-      default:
-        LOG_ERROR("Unknown message\n");
+          pid_t* pid;
+          if (rmsg.GetDataLength() != sizeof(pid_t)) {
+            LOG_ERROR("Improperly formatted message\n");
+            continue;
+          }
+          pid = reinterpret_cast<pid_t*>(rmsg.GetData());
+          SharedMemoryBasic::CleanupForPid(*pid);
+          break;
+        default:
+          LOG_ERROR("Unknown message\n");
       }
     }
   }
 }
 
-void
-SharedMemoryBasic::SetupMachMemory(pid_t pid,
-                                   ReceivePort* listen_port,
-                                   MachPortSender* listen_port_ack,
-                                   MachPortSender* send_port,
-                                   ReceivePort* send_port_ack,
-                                   bool pidIsParent)
-{
+void SharedMemoryBasic::SetupMachMemory(pid_t pid, ReceivePort* listen_port,
+                                        MachPortSender* listen_port_ack, MachPortSender* send_port,
+                                        ReceivePort* send_port_ack, bool pidIsParent) {
   StaticMutexAutoLock smal(gMutex);
-  mozilla::ipc::SetupMachMemory(pid, listen_port, listen_port_ack, send_port, send_port_ack, pidIsParent);
+  mozilla::ipc::SetupMachMemory(pid, listen_port, listen_port_ack, send_port, send_port_ack,
+                                pidIsParent);
 }
 
-void
-SharedMemoryBasic::Shutdown()
-{
+void SharedMemoryBasic::Shutdown() {
   StaticMutexAutoLock smal(gMutex);
 
   layers::TextureSync::Shutdown();
@@ -453,9 +407,7 @@ SharedMemoryBasic::Shutdown()
   gMemoryCommPorts.clear();
 }
 
-void
-SharedMemoryBasic::CleanupForPid(pid_t pid)
-{
+void SharedMemoryBasic::CleanupForPid(pid_t pid) {
   if (gThreads.find(pid) == gThreads.end()) {
     return;
   }
@@ -486,11 +438,8 @@ SharedMemoryBasic::CleanupForPid(pid_t pid)
   gMemoryCommPorts.erase(pid);
 }
 
-bool
-SharedMemoryBasic::SendMachMessage(pid_t pid,
-                                   MachSendMessage& message,
-                                   MachReceiveMessage* response)
-{
+bool SharedMemoryBasic::SendMachMessage(pid_t pid, MachSendMessage& message,
+                                        MachReceiveMessage* response) {
   StaticMutexAutoLock smal(gMutex);
   ipc::MemoryPorts* ports = GetMemoryPortsForPid(pid);
   if (!ports) {
@@ -521,21 +470,14 @@ SharedMemoryBasic::SendMachMessage(pid_t pid,
 }
 
 SharedMemoryBasic::SharedMemoryBasic()
-  : mPort(MACH_PORT_NULL)
-  , mMemory(nullptr)
-  , mOpenRights(RightsReadWrite)
-{
-}
+    : mPort(MACH_PORT_NULL), mMemory(nullptr), mOpenRights(RightsReadWrite) {}
 
-SharedMemoryBasic::~SharedMemoryBasic()
-{
+SharedMemoryBasic::~SharedMemoryBasic() {
   Unmap();
   CloseHandle();
 }
 
-bool
-SharedMemoryBasic::SetHandle(const Handle& aHandle, OpenRights aRights)
-{
+bool SharedMemoryBasic::SetHandle(const Handle& aHandle, OpenRights aRights) {
   MOZ_ASSERT(mPort == MACH_PORT_NULL, "already initialized");
 
   mPort = aHandle;
@@ -543,34 +485,25 @@ SharedMemoryBasic::SetHandle(const Handle& aHandle, OpenRights aRights)
   return true;
 }
 
-static inline void*
-toPointer(mach_vm_address_t address)
-{
+static inline void* toPointer(mach_vm_address_t address) {
   return reinterpret_cast<void*>(static_cast<uintptr_t>(address));
 }
 
-static inline mach_vm_address_t
-toVMAddress(void* pointer)
-{
+static inline mach_vm_address_t toVMAddress(void* pointer) {
   return static_cast<mach_vm_address_t>(reinterpret_cast<uintptr_t>(pointer));
 }
 
-bool
-SharedMemoryBasic::Create(size_t size)
-{
+bool SharedMemoryBasic::Create(size_t size) {
   MOZ_ASSERT(mPort == MACH_PORT_NULL, "already initialized");
 
   memory_object_size_t memoryObjectSize = round_page(size);
 
-  kern_return_t kr = mach_make_memory_entry_64(mach_task_self(),
-                                               &memoryObjectSize,
-                                               0,
-                                               MAP_MEM_NAMED_CREATE | VM_PROT_DEFAULT,
-                                               &mPort,
-                                               MACH_PORT_NULL);
+  kern_return_t kr =
+      mach_make_memory_entry_64(mach_task_self(), &memoryObjectSize, 0,
+                                MAP_MEM_NAMED_CREATE | VM_PROT_DEFAULT, &mPort, MACH_PORT_NULL);
   if (kr != KERN_SUCCESS || memoryObjectSize < round_page(size)) {
-    LOG_ERROR("Failed to make memory entry (%zu bytes). %s (%x)\n",
-              size, mach_error_string(kr), kr);
+    LOG_ERROR("Failed to make memory entry (%zu bytes). %s (%x)\n", size, mach_error_string(kr),
+              kr);
     CloseHandle();
     return false;
   }
@@ -579,9 +512,7 @@ SharedMemoryBasic::Create(size_t size)
   return true;
 }
 
-bool
-SharedMemoryBasic::Map(size_t size)
-{
+bool SharedMemoryBasic::Map(size_t size) {
   MOZ_ASSERT(mMemory == nullptr);
 
   if (MACH_PORT_NULL == mPort) {
@@ -596,11 +527,11 @@ SharedMemoryBasic::Map(size_t size)
     vmProtection |= VM_PROT_WRITE;
   }
 
-  kr = mach_vm_map(mach_task_self(), &address, round_page(size), 0, VM_FLAGS_ANYWHERE,
-                   mPort, 0, false, vmProtection, vmProtection, VM_INHERIT_NONE);
+  kr = mach_vm_map(mach_task_self(), &address, round_page(size), 0, VM_FLAGS_ANYWHERE, mPort, 0,
+                   false, vmProtection, vmProtection, VM_INHERIT_NONE);
   if (kr != KERN_SUCCESS) {
-    LOG_ERROR("Failed to map shared memory (%zu bytes) into %x, port %x. %s (%x)\n",
-              size, mach_task_self(), mPort, mach_error_string(kr), kr);
+    LOG_ERROR("Failed to map shared memory (%zu bytes) into %x, port %x. %s (%x)\n", size,
+              mach_task_self(), mPort, mach_error_string(kr), kr);
     return false;
   }
 
@@ -609,17 +540,15 @@ SharedMemoryBasic::Map(size_t size)
   return true;
 }
 
-bool
-SharedMemoryBasic::ShareToProcess(base::ProcessId pid,
-                                  Handle* aNewHandle)
-{
+bool SharedMemoryBasic::ShareToProcess(base::ProcessId pid, Handle* aNewHandle) {
   if (pid == getpid()) {
     *aNewHandle = mPort;
-    return mach_port_mod_refs(mach_task_self(), *aNewHandle, MACH_PORT_RIGHT_SEND, 1) == KERN_SUCCESS;
+    return mach_port_mod_refs(mach_task_self(), *aNewHandle, MACH_PORT_RIGHT_SEND, 1) ==
+           KERN_SUCCESS;
   }
   StaticMutexAutoLock smal(gMutex);
 
-   // Serially number the messages, to check whether
+  // Serially number the messages, to check whether
   // the reply we get was meant for us.
   static uint64_t serial = 0;
   uint64_t my_serial = serial;
@@ -664,24 +593,20 @@ SharedMemoryBasic::ShareToProcess(base::ProcessId pid,
   return true;
 }
 
-void
-SharedMemoryBasic::Unmap()
-{
+void SharedMemoryBasic::Unmap() {
   if (!mMemory) {
     return;
   }
   vm_address_t address = toVMAddress(mMemory);
   kern_return_t kr = vm_deallocate(mach_task_self(), address, round_page(mMappedSize));
   if (kr != KERN_SUCCESS) {
-    LOG_ERROR("Failed to deallocate shared memory. %s (%x)\n",  mach_error_string(kr), kr);
+    LOG_ERROR("Failed to deallocate shared memory. %s (%x)\n", mach_error_string(kr), kr);
     return;
   }
   mMemory = nullptr;
 }
 
-void
-SharedMemoryBasic::CloseHandle()
-{
+void SharedMemoryBasic::CloseHandle() {
   if (mPort != MACH_PORT_NULL) {
     mach_port_deallocate(mach_task_self(), mPort);
     mPort = MACH_PORT_NULL;
@@ -689,11 +614,7 @@ SharedMemoryBasic::CloseHandle()
   }
 }
 
-bool
-SharedMemoryBasic::IsHandleValid(const Handle& aHandle) const
-{
-  return aHandle > 0;
-}
+bool SharedMemoryBasic::IsHandleValid(const Handle& aHandle) const { return aHandle > 0; }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

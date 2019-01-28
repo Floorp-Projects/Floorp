@@ -370,10 +370,11 @@ NS_IMPL_ISUPPORTS_INHERITED(IdleDispatchRunnable, IdleRunnable,
   auto runnable = MakeRefPtr<IdleDispatchRunnable>(global, aCallback);
 
   if (aOptions.mTimeout.WasPassed()) {
-    aRv = NS_IdleDispatchToCurrentThread(runnable.forget(),
-                                         aOptions.mTimeout.Value());
+    aRv = NS_DispatchToCurrentThreadQueue(
+        runnable.forget(), aOptions.mTimeout.Value(), EventQueuePriority::Idle);
   } else {
-    aRv = NS_IdleDispatchToCurrentThread(runnable.forget());
+    aRv = NS_DispatchToCurrentThreadQueue(runnable.forget(),
+                                          EventQueuePriority::Idle);
   }
 }
 
@@ -798,6 +799,17 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
 
 /* static */ bool ChromeUtils::IsPopupTokenUnused(GlobalObject& aGlobal) {
   return PopupBlocker::IsPopupOpeningTokenUnused();
+}
+
+/* static */ double ChromeUtils::LastExternalProtocolIframeAllowed(
+    GlobalObject& aGlobal) {
+  TimeStamp when = PopupBlocker::WhenLastExternalProtocolIframeAllowed();
+  if (when.IsNull()) {
+    return 0;
+  }
+
+  TimeDuration duration = TimeStamp::Now() - when;
+  return duration.ToMilliseconds();
 }
 
 /* static */ void ChromeUtils::RegisterWindowActor(

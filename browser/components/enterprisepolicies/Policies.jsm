@@ -264,26 +264,6 @@ var Policies = {
     },
   },
 
-  "DNSOverHTTPS": {
-    onBeforeAddons(manager, param) {
-      if ("Enabled" in param) {
-        let mode = param.Enabled ? 2 : 5;
-        if (param.Locked) {
-          setAndLockPref("network.trr.mode", mode);
-        } else {
-          setDefaultPref("network.trr.mode", mode);
-        }
-      }
-      if (param.ProviderURL) {
-        if (param.Locked) {
-          setAndLockPref("network.trr.uri", param.ProviderURL.href);
-        } else {
-          setDefaultPref("network.trr.uri", param.ProviderURL.href);
-        }
-      }
-    },
-  },
-
   "DisableAppUpdate": {
     onBeforeAddons(manager, param) {
       if (param) {
@@ -473,6 +453,26 @@ var Policies = {
       runOncePerModification("displayMenuBar", value, () => {
         gXulStore.setValue(BROWSER_DOCUMENT_URL, "toolbar-menubar", "autohide", value);
       });
+    },
+  },
+
+  "DNSOverHTTPS": {
+    onBeforeAddons(manager, param) {
+      if ("Enabled" in param) {
+        let mode = param.Enabled ? 2 : 5;
+        if (param.Locked) {
+          setAndLockPref("network.trr.mode", mode);
+        } else {
+          setDefaultPref("network.trr.mode", mode);
+        }
+      }
+      if (param.ProviderURL) {
+        if (param.Locked) {
+          setAndLockPref("network.trr.uri", param.ProviderURL.href);
+        } else {
+          setDefaultPref("network.trr.uri", param.ProviderURL.href);
+        }
+      }
     },
   },
 
@@ -893,6 +893,48 @@ var Policies = {
           log.debug(ex);
         }
       }
+    },
+  },
+
+  "SSLVersionMax": {
+    onBeforeAddons(manager, param) {
+      let tlsVersion;
+      switch (param) {
+        case "tls1":
+          tlsVersion = 1;
+          break;
+        case "tls1.1":
+          tlsVersion = 2;
+          break;
+        case "tls1.2":
+          tlsVersion = 3;
+          break;
+        case "tls1.3":
+          tlsVersion = 4;
+          break;
+      }
+      setAndLockPref("security.tls.version.max", tlsVersion);
+    },
+  },
+
+  "SSLVersionMin": {
+    onBeforeAddons(manager, param) {
+      let tlsVersion;
+      switch (param) {
+        case "tls1":
+          tlsVersion = 1;
+          break;
+        case "tls1.1":
+          tlsVersion = 2;
+          break;
+        case "tls1.2":
+          tlsVersion = 3;
+          break;
+        case "tls1.3":
+          tlsVersion = 4;
+          break;
+      }
+      setAndLockPref("security.tls.version.min", tlsVersion);
     },
   },
 

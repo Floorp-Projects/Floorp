@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Console HTTP test page</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+       - http://creativecommons.org/publicdomain/zero/1.0/ -->
+    <script type="text/javascript"><!--
+      "use strict";
+      let setAllowAllCookies = false;
+
+      function makeXhr(method, url, requestBody, callback) {
+        // On the first call, allow all cookies and set cookies, then resume the actual test
+        if (!setAllowAllCookies) {
+          SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]},
+          function() {
+            setAllowAllCookies = true;
+            setCookies();
+            makeXhrCallback(method, url, requestBody, callback);
+          });
+        } else {
+          makeXhrCallback(method, url, requestBody, callback);
+        }
+      }
+
+      function makeXhrCallback(method, url, requestBody, callback) {
+        const xmlhttp = new XMLHttpRequest();
+        xmlhttp.open(method, url, true);
+        if (callback) {
+          xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4) {
+              callback();
+            }
+          };
+        }
+        xmlhttp.send(requestBody);
+      }
+
+      /* exported testXhrGet */
+      function testXhrGet(callback) {
+        makeXhr("get", "data.json", null, callback);
+      }
+
+      /* exported testXhrPost */
+      function testXhrPost(callback) {
+        const body = "Hello world! " + "foobaz barr".repeat(50);
+        makeXhr("post", "data.json", body, callback);
+      }
+
+      function setCookies() {
+        document.cookie = "foobar=fooval";
+        document.cookie = "omgfoo=bug768096";
+        document.cookie = "badcookie=bug826798=st3fan";
+      }
+      </script>
+  </head>
+  <body>
+    <h1>Web Console HTTP Logging Testpage</h1>
+    <h2>This page is used to test the HTTP logging.</h2>
+
+    <form action="?" method="post">
+      <input name="name" type="text" value="foo bar"><br>
+      <input name="age" type="text" value="144"><br>
+    </form>
+  </body>
+</html>

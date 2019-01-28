@@ -5,10 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGNumberListSMILType.h"
-#include "nsSMILValue.h"
-#include "SVGNumberList.h"
-#include "nsMathUtils.h"
+
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/SMILValue.h"
+#include "nsMathUtils.h"
+#include "SVGNumberList.h"
 #include <math.h>
 
 /* The "identity" number list for a given number list attribute (the effective
@@ -25,8 +26,8 @@
  *
  * Note that we don't need to worry about that variation here, however. The way
  * that the SMIL engine creates and composites sandwich layers together allows
- * us to treat "identity" nsSMILValue objects as a number list of zeros. Such
- * identity nsSMILValues are identified by the fact that their
+ * us to treat "identity" SMILValue objects as a number list of zeros. Such
+ * identity SMILValues are identified by the fact that their
  # SVGNumberListAndInfo has not been given an element yet.
  */
 
@@ -37,7 +38,7 @@ namespace mozilla {
 //----------------------------------------------------------------------
 // nsISMILType implementation
 
-void SVGNumberListSMILType::Init(nsSMILValue& aValue) const {
+void SVGNumberListSMILType::Init(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
 
   SVGNumberListAndInfo* numberList = new SVGNumberListAndInfo();
@@ -46,15 +47,15 @@ void SVGNumberListSMILType::Init(nsSMILValue& aValue) const {
   aValue.mType = this;
 }
 
-void SVGNumberListSMILType::Destroy(nsSMILValue& aValue) const {
+void SVGNumberListSMILType::Destroy(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value type");
   delete static_cast<SVGNumberListAndInfo*>(aValue.mU.mPtr);
   aValue.mU.mPtr = nullptr;
   aValue.mType = SMILNullType::Singleton();
 }
 
-nsresult SVGNumberListSMILType::Assign(nsSMILValue& aDest,
-                                       const nsSMILValue& aSrc) const {
+nsresult SVGNumberListSMILType::Assign(SMILValue& aDest,
+                                       const SMILValue& aSrc) const {
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value");
 
@@ -66,8 +67,8 @@ nsresult SVGNumberListSMILType::Assign(nsSMILValue& aDest,
   return dest->CopyFrom(*src);
 }
 
-bool SVGNumberListSMILType::IsEqual(const nsSMILValue& aLeft,
-                                    const nsSMILValue& aRight) const {
+bool SVGNumberListSMILType::IsEqual(const SMILValue& aLeft,
+                                    const SMILValue& aRight) const {
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
@@ -75,8 +76,8 @@ bool SVGNumberListSMILType::IsEqual(const nsSMILValue& aLeft,
          *static_cast<const SVGNumberListAndInfo*>(aRight.mU.mPtr);
 }
 
-nsresult SVGNumberListSMILType::Add(nsSMILValue& aDest,
-                                    const nsSMILValue& aValueToAdd,
+nsresult SVGNumberListSMILType::Add(SMILValue& aDest,
+                                    const SMILValue& aValueToAdd,
                                     uint32_t aCount) const {
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL type");
   MOZ_ASSERT(aValueToAdd.mType == this, "Incompatible SMIL type");
@@ -120,8 +121,8 @@ nsresult SVGNumberListSMILType::Add(nsSMILValue& aDest,
   return NS_OK;
 }
 
-nsresult SVGNumberListSMILType::ComputeDistance(const nsSMILValue& aFrom,
-                                                const nsSMILValue& aTo,
+nsresult SVGNumberListSMILType::ComputeDistance(const SMILValue& aFrom,
+                                                const SMILValue& aTo,
                                                 double& aDistance) const {
   MOZ_ASSERT(aFrom.mType == this, "Unexpected SMIL type");
   MOZ_ASSERT(aTo.mType == this, "Incompatible SMIL type");
@@ -155,10 +156,10 @@ nsresult SVGNumberListSMILType::ComputeDistance(const nsSMILValue& aFrom,
   return NS_OK;
 }
 
-nsresult SVGNumberListSMILType::Interpolate(const nsSMILValue& aStartVal,
-                                            const nsSMILValue& aEndVal,
+nsresult SVGNumberListSMILType::Interpolate(const SMILValue& aStartVal,
+                                            const SMILValue& aEndVal,
                                             double aUnitDistance,
-                                            nsSMILValue& aResult) const {
+                                            SMILValue& aResult) const {
   MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
              "Trying to interpolate different types");
   MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");

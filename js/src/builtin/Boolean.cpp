@@ -164,7 +164,7 @@ JS_PUBLIC_API bool js::ToBooleanSlow(HandleValue v) {
   }
 #ifdef ENABLE_BIGINT
   if (v.isBigInt()) {
-    return v.toBigInt()->toBoolean();
+    return !v.toBigInt()->isZero();
   }
 #endif
 

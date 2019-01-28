@@ -189,11 +189,7 @@ enum : uint32_t {
   /* Whether any object this represents may have non-extensible elements. */
   OBJECT_FLAG_NON_EXTENSIBLE_ELEMENTS = 0x00100000,
 
-  /*
-   * For the function on a run-once script, whether the function has actually
-   * run multiple times.
-   */
-  OBJECT_FLAG_RUNONCE_INVALIDATED = 0x00200000,
+  // (0x00200000 is unused)
 
   /*
    * For a global object, whether any array buffers in this compartment with
@@ -678,13 +674,6 @@ class ConstraintTypeSet : public TypeSet {
 
  public:
   ConstraintTypeSet() = default;
-
-#ifdef JS_CRASH_DIAGNOSTICS
-  void initMagic() {
-    MOZ_ASSERT(!magic_);
-    magic_ = ConstraintTypeSetMagic;
-  }
-#endif
 
   void checkMagic() const {
 #ifdef JS_CRASH_DIAGNOSTICS

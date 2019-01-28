@@ -21,7 +21,7 @@ LOG = get_proxy_logger(component="raptor-output")
 class Output(object):
     """class for raptor output"""
 
-    def __init__(self, results, supporting_data):
+    def __init__(self, results, supporting_data, subtest_alert_on):
         """
         - results : list of RaptorTestResult instances
         """
@@ -30,6 +30,7 @@ class Output(object):
         self.supporting_data = supporting_data
         self.summarized_supporting_data = []
         self.summarized_screenshots = []
+        self.subtest_alert_on = subtest_alert_on
 
     def summarize(self):
         suites = []
@@ -99,6 +100,14 @@ class Output(object):
                         # valid TTFI values available for this pageload just remove it from results
                         if len(filtered_values) < 1:
                             continue
+
+                    # if 'alert_on' is set for this particular measurement, then we want to set the
+                    # flag in the perfherder output to turn on alerting for this subtest
+                    if self.subtest_alert_on is not None:
+                        if measurement_name in self.subtest_alert_on:
+                            LOG.info("turning on subtest alerting for measurement type: %s"
+                                     % measurement_name)
+                            new_subtest['shouldAlert'] = True
 
                     new_subtest['value'] = filter.median(filtered_values)
 

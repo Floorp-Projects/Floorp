@@ -23,6 +23,7 @@ const App = createFactory(require("devtools/client/webconsole/components/App"));
 const ObjectClient = require("devtools/shared/client/object-client");
 const LongStringClient = require("devtools/shared/client/long-string-client");
 loader.lazyRequireGetter(this, "Constants", "devtools/client/webconsole/constants");
+loader.lazyRequireGetter(this, "getElementText", "devtools/client/webconsole/utils/clipboard", true);
 
 let store = null;
 
@@ -172,7 +173,7 @@ WebConsoleOutputWrapper.prototype = {
         const { screenX, screenY, target } = e;
 
         const messageEl = target.closest(".message");
-        const clipboardText = messageEl ? messageEl.textContent : null;
+        const clipboardText = getElementText(messageEl);
 
         const messageVariable = target.closest(".objectBox");
         // Ensure that console.group and console.groupCollapsed commands are not captured

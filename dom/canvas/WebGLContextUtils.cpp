@@ -141,7 +141,8 @@ void WebGLContext::SynthesizeGLError(GLenum err) const {
   if (!mWebGLError) mWebGLError = err;
 }
 
-void WebGLContext::SynthesizeGLError(GLenum err, const char* fmt, ...) const {
+void WebGLContext::GenerateError(const GLenum err, const char* const fmt,
+                                 ...) const {
   va_list va;
   va_start(va, fmt);
   GenerateWarning(fmt, va);

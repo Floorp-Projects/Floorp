@@ -2,7 +2,7 @@
 //!
 //! This modules provides facilities for timing the execution of individual compilation passes.
 
-use std::fmt;
+use core::fmt;
 
 pub use self::details::{add_to_current, take_current, PassTimes, TimingToken};
 
@@ -102,6 +102,7 @@ impl fmt::Display for Pass {
 #[cfg(feature = "std")]
 mod details {
     use super::{Pass, DESCRIPTIONS, NUM_PASSES};
+    use log::debug;
     use std::cell::{Cell, RefCell};
     use std::fmt;
     use std::mem;
@@ -157,7 +158,7 @@ mod details {
                     continue;
                 }
 
-                // Write a duration as secs.milis, trailing space.
+                // Write a duration as secs.millis, trailing space.
                 fn fmtdur(mut dur: Duration, f: &mut fmt::Formatter) -> fmt::Result {
                     // Round to nearest ms by adding 500us.
                     dur += Duration::new(0, 500_000);

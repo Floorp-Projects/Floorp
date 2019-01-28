@@ -99,8 +99,8 @@ void SMILAnimationController::Resume(uint32_t aType) {
   }
 }
 
-nsSMILTime SMILAnimationController::GetParentTime() const {
-  return (nsSMILTime)(mCurrentSampleTime - mStartTime).ToMilliseconds();
+SMILTime SMILAnimationController::GetParentTime() const {
+  return (SMILTime)(mCurrentSampleTime - mStartTime).ToMilliseconds();
 }
 
 //----------------------------------------------------------------------
@@ -132,8 +132,8 @@ void SMILAnimationController::WillRefresh(mozilla::TimeStamp aTime) {
   // initiate special behaviour to basically ignore the intervening time.
   static const double SAMPLE_DEV_THRESHOLD = 200.0;
 
-  nsSMILTime elapsedTime =
-      (nsSMILTime)(aTime - mCurrentSampleTime).ToMilliseconds();
+  SMILTime elapsedTime =
+      (SMILTime)(aTime - mCurrentSampleTime).ToMilliseconds();
   if (mAvgTimeBetweenSamples == 0) {
     // First sample.
     mAvgTimeBetweenSamples = elapsedTime;
@@ -148,8 +148,8 @@ void SMILAnimationController::WillRefresh(mozilla::TimeStamp aTime) {
     // Update the moving average. Due to truncation here the average will
     // normally be a little less than it should be but that's probably ok.
     mAvgTimeBetweenSamples =
-        (nsSMILTime)(elapsedTime * SAMPLE_DUR_WEIGHTING +
-                     mAvgTimeBetweenSamples * (1.0 - SAMPLE_DUR_WEIGHTING));
+        (SMILTime)(elapsedTime * SAMPLE_DUR_WEIGHTING +
+                   mAvgTimeBetweenSamples * (1.0 - SAMPLE_DUR_WEIGHTING));
   }
   mCurrentSampleTime = aTime;
 
@@ -464,7 +464,7 @@ void SMILAnimationController::DoMilestoneSamples() {
   // registered for those times. This way events can fire in the correct order,
   // dependencies can be resolved etc.
 
-  nsSMILTime sampleTime = INT64_MIN;
+  SMILTime sampleTime = INT64_MIN;
 
   while (true) {
     // We want to find any milestones AT OR BEFORE the current sample time so we
@@ -521,13 +521,13 @@ void SMILAnimationController::DoMilestoneSamples() {
         // its parent since registering a milestone.
         continue;
 
-      nsSMILTimeValue containerTimeValue =
+      SMILTimeValue containerTimeValue =
           container->ParentToContainerTime(sampleTime);
       if (!containerTimeValue.IsDefinite()) continue;
 
       // Clamp the converted container time to non-negative values.
-      nsSMILTime containerTime =
-          std::max<nsSMILTime>(0, containerTimeValue.GetMillis());
+      SMILTime containerTime =
+          std::max<SMILTime>(0, containerTimeValue.GetMillis());
 
       if (nextMilestone.mIsEnd) {
         elem->TimedElement().SampleEndAt(containerTime);
@@ -554,7 +554,7 @@ void SMILAnimationController::DoMilestoneSamples() {
   // timed element is in the list.
   if (!aActiveContainers->GetEntry(timeContainer)) return;
 
-  nsSMILTime containerTime = timeContainer->GetCurrentTimeAsSMILTime();
+  SMILTime containerTime = timeContainer->GetCurrentTimeAsSMILTime();
 
   MOZ_ASSERT(!timeContainer->IsSeeking(),
              "Doing a regular sample but the time container is still seeking");

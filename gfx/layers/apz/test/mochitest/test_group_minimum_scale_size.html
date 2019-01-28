@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="apz_test_utils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="application/javascript">
+const prefs = [
+  // We need the APZ paint logging information
+  ["apz.test.logging_enabled", true],
+  // Dropping the touch slop to 0 makes the tests easier to write because
+  // we can just do a one-pixel drag to get over the pan threshold rather
+  // than having to hard-code some larger value.
+  ["apz.touch_start_tolerance", "0.0"],
+  // The subtests in this test do touch-drags to pan the page, but we don't
+  // want those pans to turn into fling animations, so we increase the
+  // fling-min threshold velocity to an arbitrarily large value.
+  ["apz.fling_min_velocity_threshold", "10000"],
+  // The helper_bug1280013's div gets a displayport on scroll, but if the
+  // test takes too long the displayport can expire before we read the value
+  // out of the test. So we disable displayport expiry for these tests.
+  ["apz.displayport_expiry_ms", 0],
+  // Prevent the dynamic toolbar from interfering with main-thread scroll
+  // offset values.
+  ["browser.chrome.dynamictoolbar", false],
+  // Explicitly enable pinch-zooming, so this test can run on desktop
+  // even though zooming isn't enabled by default on desktop yet.
+  ["apz.allow_zooming", true],
+  // Pinch-zooming currently requires meta viewport support (this requirement
+  // will eventually be removed).
+  ["dom.meta-viewport.enabled", true],
+  // Pinch-zooming currently requires container scrolling (this requirement
+  // will eventually be removed).
+  ["layout.scroll.root-frame-containers", 1],
+  // Retained displaylists don't work well with container scrolling, so
+  // they too need to be disabled for now.
+  ["layout.display-list.retain", false],
+  ["layout.display-list.retain.chrome", false],
+  // We use the Visual Viewport API to tell the visual viewport offset.
+  ["dom.visualviewport.enabled", true],
+];
+
+const subtests = [
+  { file: "helper_minimum_scale_1_0.html", prefs },
+];
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  // Run the actual test in its own window, because it requires that the
+  // root APZC be scrollable. Mochitest pages themselves often run
+  // inside an iframe which means we have no control over the root APZC.
+  window.onload = () => {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finish);
+  };
+}
+</script>
+</head>
+<body>
+</body>
+</html>

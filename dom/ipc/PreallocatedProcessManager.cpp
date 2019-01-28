@@ -245,9 +245,10 @@ void PreallocatedProcessManagerImpl::AllocateOnIdle() {
     return;
   }
 
-  NS_IdleDispatchToCurrentThread(
+  NS_DispatchToCurrentThreadQueue(
       NewRunnableMethod("PreallocatedProcessManagerImpl::AllocateNow", this,
-                        &PreallocatedProcessManagerImpl::AllocateNow));
+                        &PreallocatedProcessManagerImpl::AllocateNow),
+      EventQueuePriority::Idle);
 }
 
 void PreallocatedProcessManagerImpl::AllocateNow() {

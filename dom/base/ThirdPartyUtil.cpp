@@ -248,6 +248,7 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel, nsIURI* aURI,
 
 NS_IMETHODIMP
 ThirdPartyUtil::GetTopWindowForChannel(nsIChannel* aChannel,
+                                       nsIURI* aURIBeingLoaded,
                                        mozIDOMWindowProxy** aWin) {
   NS_ENSURE_ARG(aWin);
 
@@ -264,7 +265,9 @@ ThirdPartyUtil::GetTopWindowForChannel(nsIChannel* aChannel,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> top = nsPIDOMWindowOuter::From(window)->GetTop();
+  nsCOMPtr<nsPIDOMWindowOuter> top =
+      nsGlobalWindowOuter::Cast(window)
+          ->GetTopExcludingExtensionAccessibleContentFrames(aURIBeingLoaded);
   top.forget(aWin);
   return NS_OK;
 }

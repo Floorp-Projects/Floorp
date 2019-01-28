@@ -43,7 +43,6 @@ NS_INTERFACE_MAP_BEGIN(nsJARURI)
   NS_INTERFACE_MAP_ENTRY(nsISerializable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
   NS_INTERFACE_MAP_ENTRY(nsINestedURI)
-  NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableURI)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsJARURI)
 NS_INTERFACE_MAP_END
 
@@ -765,9 +764,6 @@ NS_IMETHODIMP
 nsJARURI::GetInnermostURI(nsIURI **uri) {
   return NS_ImplGetInnermostURI(this, uri);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIIPCSerializableURI methods:
 
 void nsJARURI::Serialize(URIParams &aParams) {
   JARURIParams params;

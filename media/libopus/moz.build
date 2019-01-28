@@ -130,6 +130,15 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     ]
     ASFLAGS += CONFIG['NEON_FLAGS']
 
+if CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    DEFINES['OPUS_ARM_PRESUME_AARCH64_NEON_INTR'] = True
+    DEFINES['OPUS_ARM_PRESUME_NEON'] = True
+    DEFINES['OPUS_ARM_PRESUME_NEON_INTR'] = True
+    SOURCES += celt_sources_arm_neon_intr
+    SOURCES += silk_sources_arm_neon_intr
+    if not CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+        SOURCES += silk_sources_fixed_arm_neon_intr
+
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     if CONFIG['CC_TYPE'] == 'clang':

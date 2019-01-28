@@ -53,6 +53,12 @@ interface nsIURILoader : nsISupports
    * be indicated.
    */
   const unsigned long DONT_RETARGET        = 1 << 1;
+  /**
+   * If this flag is set, it means that aChannel has been redirected from
+   * another process, and should be reopened using CompleteRedirectSetup rather
+   * than AsyncOpen2.
+   */
+  const unsigned long REDIRECTED_CHANNEL   = 1 << 2;
   /* @} */
 
   /**

@@ -8,21 +8,23 @@
 #define __NS_SVGLENGTH2_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SMILAttr.h"
+#include "mozilla/SVGContentUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SVGLengthBinding.h"
+#include "mozilla/dom/SVGElement.h"
+#include "mozilla/gfx/Rect.h"
 #include "nsCoord.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "nsISMILAttr.h"
 #include "nsMathUtils.h"
-#include "SVGElement.h"
-#include "SVGContentUtils.h"
-#include "mozilla/gfx/Rect.h"
 
 class nsIFrame;
-class nsSMILValue;
 
 namespace mozilla {
+
+class SMILValue;
+
 namespace dom {
 class DOMSVGLength;
 class SVGAnimatedLength;
@@ -90,6 +92,8 @@ class nsSVGLength2 {
   typedef mozilla::dom::SVGElement SVGElement;
   typedef mozilla::dom::SVGViewportElement SVGViewportElement;
   typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
+  typedef mozilla::SMILAttr SMILAttr;
+  typedef mozilla::SMILValue SMILValue;
   typedef mozilla::SVGContentUtils SVGContentUtils;
 
  public:
@@ -160,7 +164,7 @@ class nsSVGLength2 {
   already_AddRefed<mozilla::dom::SVGAnimatedLength> ToDOMAnimatedLength(
       SVGElement* aSVGElement);
 
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   float mAnimVal;
@@ -196,25 +200,25 @@ class nsSVGLength2 {
   already_AddRefed<DOMSVGLength> ToDOMAnimVal(SVGElement* aSVGElement);
 
  public:
-  struct SMILLength : public nsISMILAttr {
+  struct SMILLength : public SMILAttr {
    public:
     SMILLength(nsSVGLength2* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
-    // These will stay alive because a nsISMILAttr only lives as long
+    // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGLength2* mVal;
     SVGElement* mSVGElement;
 
-    // nsISMILAttr methods
+    // SMILAttr methods
     virtual nsresult ValueFromString(
         const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement,
-        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-    virtual nsSMILValue GetBaseValue() const override;
+        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
+        bool& aPreventCachingOfSandwich) const override;
+    virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 };
 

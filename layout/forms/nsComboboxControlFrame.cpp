@@ -1047,7 +1047,7 @@ nsComboboxControlFrame::RemoveOption(int32_t aIndex) {
   return lcf->RemoveOption(aIndex);
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsComboboxControlFrame::OnSetSelectedIndex(int32_t aOldIndex,
                                            int32_t aNewIndex) {
   nsAutoScriptBlocker scriptBlocker;

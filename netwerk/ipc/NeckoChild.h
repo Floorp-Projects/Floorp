@@ -105,12 +105,6 @@ class NeckoChild : public PNeckoChild {
   virtual mozilla::ipc::IPCResult RecvNetworkChangeNotification(
       nsCString const& type) override;
 
-  virtual mozilla::ipc::IPCResult RecvCrossProcessRedirect(
-      const uint32_t& aRegistrarId, nsIURI* aURI, const uint32_t& aNewLoadFlags,
-      const OptionalLoadInfoArgs& aLoadInfoForwarder,
-      const uint64_t& aChannelId, nsIURI* aOriginalURI,
-      const uint64_t& aIdentifier) override;
-
   virtual PTrackingDummyChannelChild* AllocPTrackingDummyChannelChild(
       nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
       const OptionalLoadInfoArgs& aLoadInfo) override;

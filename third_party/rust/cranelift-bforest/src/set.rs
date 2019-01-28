@@ -1,10 +1,10 @@
 //! Forest of sets.
 
 use super::{Comparator, Forest, Node, NodeData, NodePool, Path, SetValue, INNER_SIZE};
-use packed_option::PackedOption;
+use crate::packed_option::PackedOption;
 #[cfg(test)]
-use std::fmt;
-use std::marker::PhantomData;
+use core::fmt;
+use core::marker::PhantomData;
 #[cfg(test)]
 use std::string::String;
 
@@ -225,7 +225,7 @@ where
     ///
     /// If the cursor reaches the end, return `None` and leave the cursor at the off-the-end
     /// position.
-    #[cfg_attr(feature = "cargo-clippy", allow(should_implement_trait))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::should_implement_trait))]
     pub fn next(&mut self) -> Option<K> {
         self.path.next(self.pool).map(|(k, _)| k)
     }
@@ -357,7 +357,7 @@ where
 mod tests {
     use super::super::NodeData;
     use super::*;
-    use std::mem;
+    use core::mem;
     use std::vec::Vec;
 
     #[test]

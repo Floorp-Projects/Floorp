@@ -7,12 +7,12 @@
 //! > Briggs, Torczon, *An efficient representation for sparse sets*,
 //!   ACM Letters on Programming Languages and Systems, Volume 2, Issue 1-4, March-Dec. 1993.
 
-use map::SecondaryMap;
-use std::mem;
-use std::slice;
-use std::u32;
+use crate::map::SecondaryMap;
+use crate::EntityRef;
+use core::mem;
+use core::slice;
+use core::u32;
 use std::vec::Vec;
-use EntityRef;
 
 /// Trait for extracting keys from values stored in a `SparseMap`.
 ///
@@ -37,19 +37,20 @@ pub trait SparseMapValue<K> {
 ///
 /// # Compared to `SecondaryMap`
 ///
-/// When should we use a `SparseMap` instead of a secondary `SecondaryMap`? First of all, `SparseMap`
-/// does not provide the functionality of a `PrimaryMap` which can allocate and assign entity
-/// references to objects as they are pushed onto the map. It is only the secondary entity maps
-/// that can be replaced with a `SparseMap`.
+/// When should we use a `SparseMap` instead of a secondary `SecondaryMap`? First of all,
+/// `SparseMap` does not provide the functionality of a `PrimaryMap` which can allocate and assign
+/// entity references to objects as they are pushed onto the map. It is only the secondary entity
+/// maps that can be replaced with a `SparseMap`.
 ///
 /// - A secondary entity map assigns a default mapping to all keys. It doesn't distinguish between
 ///   an unmapped key and one that maps to the default value. `SparseMap` does not require
 ///   `Default` values, and it tracks accurately if a key has been mapped or not.
-/// - Iterating over the contents of an `SecondaryMap` is linear in the size of the *key space*, while
-///   iterating over a `SparseMap` is linear in the number of elements in the mapping. This is an
-///   advantage precisely when the mapping is sparse.
-/// - `SparseMap::clear()` is constant time and super-fast. `SecondaryMap::clear()` is linear in the
-///   size of the key space. (Or, rather the required `resize()` call following the `clear()` is).
+/// - Iterating over the contents of an `SecondaryMap` is linear in the size of the *key space*,
+///   while iterating over a `SparseMap` is linear in the number of elements in the mapping. This
+///   is an advantage precisely when the mapping is sparse.
+/// - `SparseMap::clear()` is constant time and super-fast. `SecondaryMap::clear()` is linear in
+///   the size of the key space. (Or, rather the required `resize()` call following the `clear()`
+///   is).
 /// - `SparseMap` requires the values to implement `SparseMapValue<K>` which means that they must
 ///   contain their own key.
 pub struct SparseMap<K, V>
@@ -230,7 +231,7 @@ pub type SparseSet<T> = SparseMap<T, T>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use EntityRef;
+    use crate::EntityRef;
 
     /// An opaque reference to an instruction in a function.
     #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]

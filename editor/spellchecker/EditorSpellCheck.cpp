@@ -188,7 +188,8 @@ DictionaryFetcher::Fetch(nsIEditor* aEditor) {
 
   nsCOMPtr<nsIRunnable> runnable =
       new ContentPrefInitializerRunnable(aEditor, this);
-  NS_IdleDispatchToCurrentThread(runnable.forget(), 1000);
+  NS_DispatchToCurrentThreadQueue(runnable.forget(), 1000,
+                                  EventQueuePriority::Idle);
 
   return NS_OK;
 }

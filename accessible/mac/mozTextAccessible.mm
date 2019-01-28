@@ -14,9 +14,7 @@
 
 using namespace mozilla::a11y;
 
-inline bool
-ToNSRange(id aValue, NSRange* aRange)
-{
+inline bool ToNSRange(id aValue, NSRange* aRange) {
   MOZ_ASSERT(aRange, "aRange is nil");
 
   if ([aValue isKindOfClass:[NSValue class]] &&
@@ -28,9 +26,7 @@ ToNSRange(id aValue, NSRange* aRange)
   return false;
 }
 
-inline NSString*
-ToNSString(id aValue)
-{
+inline NSString* ToNSString(id aValue) {
   if ([aValue isKindOfClass:[NSString class]]) {
     return aValue;
   }
@@ -53,28 +49,23 @@ ToNSString(id aValue)
 
 @implementation mozTextAccessible
 
-- (BOOL)accessibilityIsIgnored
-{
+- (BOOL)accessibilityIsIgnored {
   return ![self getGeckoAccessible] && ![self getProxyAccessible];
 }
 
-- (NSArray*)accessibilityAttributeNames
-{
+- (NSArray*)accessibilityAttributeNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   static NSMutableArray* supportedAttributes = nil;
   if (!supportedAttributes) {
     // text-specific attributes to supplement the standard one
-    supportedAttributes = [[NSMutableArray alloc] initWithObjects:
-      NSAccessibilitySelectedTextAttribute, // required
-      NSAccessibilitySelectedTextRangeAttribute, // required
-      NSAccessibilityNumberOfCharactersAttribute, // required
-      NSAccessibilityVisibleCharacterRangeAttribute, // required
-      NSAccessibilityInsertionPointLineNumberAttribute,
-      @"AXRequired",
-      @"AXInvalid",
-      nil
-    ];
+    supportedAttributes = [[NSMutableArray alloc]
+        initWithObjects:NSAccessibilitySelectedTextAttribute,           // required
+                        NSAccessibilitySelectedTextRangeAttribute,      // required
+                        NSAccessibilityNumberOfCharactersAttribute,     // required
+                        NSAccessibilityVisibleCharacterRangeAttribute,  // required
+                        NSAccessibilityInsertionPointLineNumberAttribute, @"AXRequired",
+                        @"AXInvalid", nil];
     [supportedAttributes addObjectsFromArray:[super accessibilityAttributeNames]];
   }
   return supportedAttributes;
@@ -82,8 +73,7 @@ ToNSString(id aValue)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (id)accessibilityAttributeValue:(NSString*)attribute
-{
+- (id)accessibilityAttributeValue:(NSString*)attribute {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ([attribute isEqualToString:NSAccessibilityNumberOfCharactersAttribute])
@@ -95,11 +85,9 @@ ToNSString(id aValue)
   if ([attribute isEqualToString:NSAccessibilitySelectedTextRangeAttribute])
     return [self selectedTextRange];
 
-  if ([attribute isEqualToString:NSAccessibilitySelectedTextAttribute])
-    return [self selectedText];
+  if ([attribute isEqualToString:NSAccessibilitySelectedTextAttribute]) return [self selectedText];
 
-  if ([attribute isEqualToString:NSAccessibilityTitleAttribute])
-    return @"";
+  if ([attribute isEqualToString:NSAccessibilityTitleAttribute]) return @"";
 
   if ([attribute isEqualToString:NSAccessibilityValueAttribute]) {
     // Apple's SpeechSynthesisServer expects AXValue to return an AXStaticText
@@ -141,37 +129,33 @@ ToNSString(id aValue)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (NSArray*)accessibilityParameterizedAttributeNames
-{
+- (NSArray*)accessibilityParameterizedAttributeNames {
   static NSArray* supportedParametrizedAttributes = nil;
   // text specific parametrized attributes
   if (!supportedParametrizedAttributes) {
-    supportedParametrizedAttributes = [[NSArray alloc] initWithObjects:
-      NSAccessibilityStringForRangeParameterizedAttribute,
-      NSAccessibilityLineForIndexParameterizedAttribute,
-      NSAccessibilityRangeForLineParameterizedAttribute,
-      NSAccessibilityAttributedStringForRangeParameterizedAttribute,
-      NSAccessibilityBoundsForRangeParameterizedAttribute,
+    supportedParametrizedAttributes = [[NSArray alloc]
+        initWithObjects:NSAccessibilityStringForRangeParameterizedAttribute,
+                        NSAccessibilityLineForIndexParameterizedAttribute,
+                        NSAccessibilityRangeForLineParameterizedAttribute,
+                        NSAccessibilityAttributedStringForRangeParameterizedAttribute,
+                        NSAccessibilityBoundsForRangeParameterizedAttribute,
 #if DEBUG
-      NSAccessibilityRangeForPositionParameterizedAttribute,
-      NSAccessibilityRangeForIndexParameterizedAttribute,
-      NSAccessibilityRTFForRangeParameterizedAttribute,
-      NSAccessibilityStyleRangeForIndexParameterizedAttribute,
+                        NSAccessibilityRangeForPositionParameterizedAttribute,
+                        NSAccessibilityRangeForIndexParameterizedAttribute,
+                        NSAccessibilityRTFForRangeParameterizedAttribute,
+                        NSAccessibilityStyleRangeForIndexParameterizedAttribute,
 #endif
-      nil
-    ];
+                        nil];
   }
   return supportedParametrizedAttributes;
 }
 
-- (id)accessibilityAttributeValue:(NSString*)attribute forParameter:(id)parameter
-{
+- (id)accessibilityAttributeValue:(NSString*)attribute forParameter:(id)parameter {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
 
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
-  if (!textAcc && !proxy)
-    return nil;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
+  if (!textAcc && !proxy) return nil;
 
   if ([attribute isEqualToString:NSAccessibilityStringForRangeParameterizedAttribute]) {
     NSRange range;
@@ -220,11 +204,9 @@ ToNSString(id aValue)
     int32_t end = start + range.length;
     DesktopIntRect bounds;
     if (textAcc) {
-      bounds =
-        DesktopIntRect::FromUnknownRect(textAcc->TextBounds(start, end));
+      bounds = DesktopIntRect::FromUnknownRect(textAcc->TextBounds(start, end));
     } else if (proxy) {
-      bounds =
-        DesktopIntRect::FromUnknownRect(proxy->TextBounds(start, end));
+      bounds = DesktopIntRect::FromUnknownRect(proxy->TextBounds(start, end));
     }
 
     return [NSValue valueWithRect:nsCocoaUtils::GeckoRectToCocoaRect(bounds)];
@@ -237,12 +219,10 @@ ToNSString(id aValue)
   return nil;
 }
 
-- (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute
-{
+- (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  if ([attribute isEqualToString:NSAccessibilityValueAttribute])
-    return ![self isReadOnly];
+  if ([attribute isEqualToString:NSAccessibilityValueAttribute]) return ![self isReadOnly];
 
   if ([attribute isEqualToString:NSAccessibilitySelectedTextAttribute] ||
       [attribute isEqualToString:NSAccessibilitySelectedTextRangeAttribute] ||
@@ -254,16 +234,14 @@ ToNSString(id aValue)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
-- (void)accessibilitySetValue:(id)value forAttribute:(NSString *)attribute
-{
+- (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
 
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
-  if (!textAcc && !proxy)
-    return;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
+  if (!textAcc && !proxy) return;
 
   if ([attribute isEqualToString:NSAccessibilityValueAttribute]) {
     [self setText:ToNSString(value)];
@@ -273,8 +251,7 @@ ToNSString(id aValue)
 
   if ([attribute isEqualToString:NSAccessibilitySelectedTextAttribute]) {
     NSString* stringValue = ToNSString(value);
-    if (!stringValue)
-      return;
+    if (!stringValue) return;
 
     int32_t start = 0, end = 0;
     nsString text;
@@ -294,23 +271,19 @@ ToNSString(id aValue)
 
   if ([attribute isEqualToString:NSAccessibilitySelectedTextRangeAttribute]) {
     NSRange range;
-    if (!ToNSRange(value, &range))
-      return;
+    if (!ToNSRange(value, &range)) return;
 
     if (textAcc) {
-      textAcc->SetSelectionBoundsAt(0, range.location,
-                                    range.location + range.length);
+      textAcc->SetSelectionBoundsAt(0, range.location, range.location + range.length);
     } else if (proxy) {
-      proxy->SetSelectionBoundsAt(0, range.location,
-                                  range.location + range.length);
+      proxy->SetSelectionBoundsAt(0, range.location, range.location + range.length);
     }
     return;
   }
 
   if ([attribute isEqualToString:NSAccessibilityVisibleCharacterRangeAttribute]) {
     NSRange range;
-    if (!ToNSRange(value, &range))
-      return;
+    if (!ToNSRange(value, &range)) return;
 
     if (textAcc) {
       textAcc->ScrollSubstringTo(range.location, range.location + range.length,
@@ -327,27 +300,22 @@ ToNSString(id aValue)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (NSString*)subrole
-{
-  if(mRole == roles::PASSWORD_TEXT)
-    return NSAccessibilitySecureTextFieldSubrole;
+- (NSString*)subrole {
+  if (mRole == roles::PASSWORD_TEXT) return NSAccessibilitySecureTextFieldSubrole;
 
   return nil;
 }
 
 #pragma mark -
 
-- (BOOL)isReadOnly
-{
+- (BOOL)isReadOnly {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  if ([[self role] isEqualToString:NSAccessibilityStaticTextRole])
-    return YES;
+  if ([[self role] isEqualToString:NSAccessibilityStaticTextRole]) return YES;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
-  if (textAcc)
-    return (accWrap->State() & states::READONLY) == 0;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
+  if (textAcc) return (accWrap->State() & states::READONLY) == 0;
 
   if (ProxyAccessible* proxy = [self getProxyAccessible])
     return (proxy->State() & states::READONLY) == 0;
@@ -357,10 +325,9 @@ ToNSString(id aValue)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
-- (NSNumber*)caretLineNumber
-{
+- (NSNumber*)caretLineNumber {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
 
   int32_t lineNumber = -1;
   if (textAcc) {
@@ -372,12 +339,11 @@ ToNSString(id aValue)
   return (lineNumber >= 0) ? [NSNumber numberWithInt:lineNumber] : nil;
 }
 
-- (void)setText:(NSString*)aNewString
-{
+- (void)setText:(NSString*)aNewString {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
 
   nsString text;
   nsCocoaUtils::GetStringForNSString(aNewString, text);
@@ -390,17 +356,14 @@ ToNSString(id aValue)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (NSString*)text
-{
+- (NSString*)text {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
-  if (!textAcc && !proxy)
-    return nil;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
+  if (!textAcc && !proxy) return nil;
 
   // A password text field returns an empty value
-  if (mRole == roles::PASSWORD_TEXT)
-    return @"";
+  if (mRole == roles::PASSWORD_TEXT) return @"";
 
   nsAutoString text;
   if (textAcc) {
@@ -412,30 +375,26 @@ ToNSString(id aValue)
   return nsCocoaUtils::ToNSString(text);
 }
 
-- (long)textLength
-{
+- (long)textLength {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
-  if (!textAcc && !proxy)
-    return 0;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
+  if (!textAcc && !proxy) return 0;
 
   return textAcc ? textAcc->CharacterCount() : proxy->CharacterCount();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
-- (long)selectedTextLength
-{
+- (long)selectedTextLength {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
-  if (!textAcc && !proxy)
-    return 0;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
+  if (!textAcc && !proxy) return 0;
 
   int32_t start = 0, end = 0;
   if (textAcc) {
@@ -449,15 +408,13 @@ ToNSString(id aValue)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
-- (NSString*)selectedText
-{
+- (NSString*)selectedText {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
-  if (!textAcc && !proxy)
-    return nil;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
+  if (!textAcc && !proxy) return nil;
 
   int32_t start = 0, end = 0;
   nsAutoString selText;
@@ -475,13 +432,12 @@ ToNSString(id aValue)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (NSValue*)selectedTextRange
-{
+- (NSValue*)selectedTextRange {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
 
   int32_t start = 0;
   int32_t end = 0;
@@ -514,23 +470,19 @@ ToNSString(id aValue)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (NSValue*)visibleCharacterRange
-{
+- (NSValue*)visibleCharacterRange {
   // XXX this won't work with Textarea and such as we actually don't give
   // the visible character range.
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
-  if (!textAcc && !proxy)
-    return 0;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
+  if (!textAcc && !proxy) return 0;
 
-  return [NSValue valueWithRange:
-    NSMakeRange(0, textAcc ?
-                textAcc->CharacterCount() : proxy->CharacterCount())];
+  return [NSValue
+      valueWithRange:NSMakeRange(0, textAcc ? textAcc->CharacterCount() : proxy->CharacterCount())];
 }
 
-- (void)valueDidChange
-{
+- (void)valueDidChange {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
@@ -539,29 +491,24 @@ ToNSString(id aValue)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (void)selectedTextDidChange
-{
+- (void)selectedTextDidChange {
   NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
                                   NSAccessibilitySelectedTextChangedNotification);
 }
 
-- (NSString*)stringFromRange:(NSRange*)range
-{
+- (NSString*)stringFromRange:(NSRange*)range {
   MOZ_ASSERT(range, "no range");
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
-  HyperTextAccessible* textAcc = accWrap? accWrap->AsHyperText() : nullptr;
-  if (!textAcc && !proxy)
-    return nil;
+  HyperTextAccessible* textAcc = accWrap ? accWrap->AsHyperText() : nullptr;
+  if (!textAcc && !proxy) return nil;
 
   nsAutoString text;
   if (textAcc) {
-    textAcc->TextSubstring(range->location,
-                           range->location + range->length, text);
+    textAcc->TextSubstring(range->location, range->location + range->length, text);
   } else if (proxy) {
-    proxy->TextSubstring(range->location,
-                           range->location + range->length, text);
+    proxy->TextSubstring(range->location, range->location + range->length, text);
   }
 
   return nsCocoaUtils::ToNSString(text);
@@ -571,8 +518,7 @@ ToNSString(id aValue)
 
 @implementation mozTextLeafAccessible
 
-- (NSArray*)accessibilityAttributeNames
-{
+- (NSArray*)accessibilityAttributeNames {
   static NSMutableArray* supportedAttributes = nil;
   if (!supportedAttributes) {
     supportedAttributes = [[super accessibilityAttributeNames] mutableCopy];
@@ -582,19 +528,15 @@ ToNSString(id aValue)
   return supportedAttributes;
 }
 
-- (id)accessibilityAttributeValue:(NSString*)attribute
-{
-  if ([attribute isEqualToString:NSAccessibilityTitleAttribute])
-    return @"";
+- (id)accessibilityAttributeValue:(NSString*)attribute {
+  if ([attribute isEqualToString:NSAccessibilityTitleAttribute]) return @"";
 
-  if ([attribute isEqualToString:NSAccessibilityValueAttribute])
-    return [self text];
+  if ([attribute isEqualToString:NSAccessibilityValueAttribute]) return [self text];
 
   return [super accessibilityAttributeValue:attribute];
 }
 
-- (NSString*)text
-{
+- (NSString*)text {
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
     return nsCocoaUtils::ToNSString(accWrap->AsTextLeaf()->Text());
   }
@@ -608,8 +550,7 @@ ToNSString(id aValue)
   return nil;
 }
 
-- (long)textLength
-{
+- (long)textLength {
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
     return accWrap->AsTextLeaf()->Text().Length();
   }

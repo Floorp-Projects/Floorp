@@ -4,30 +4,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILTIMEDELEMENT_H_
-#define NS_SMILTIMEDELEMENT_H_
+#ifndef mozilla_SMILTimedElement_h
+#define mozilla_SMILTimedElement_h
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/Move.h"
 #include "mozilla/SMILMilestone.h"
+#include "mozilla/SMILInstanceTime.h"
 #include "mozilla/SMILInterval.h"
 #include "mozilla/SMILRepeatCount.h"
+#include "mozilla/SMILTimeValueSpec.h"
+#include "mozilla/SMILTypes.h"
 #include "mozilla/UniquePtr.h"
-#include "nsSMILInstanceTime.h"
-#include "nsSMILTimeValueSpec.h"
-#include "nsSMILTypes.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsAutoPtr.h"
 #include "nsAttrValue.h"
 
-class nsSMILTimeValue;
 class nsAtom;
 
 namespace mozilla {
+
 class SMILAnimationFunction;
 class SMILTimeContainer;
+class SMILTimeValue;
+
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
@@ -97,14 +99,14 @@ class SMILTimedElement {
    * @return the start time as defined above in milliseconds or an unresolved
    * time if there is no current interval.
    */
-  nsSMILTimeValue GetStartTime() const;
+  SMILTimeValue GetStartTime() const;
 
   /**
    * Returns the simple duration of this element.
    *
    * @return the simple duration in milliseconds or INDEFINITE.
    */
-  nsSMILTimeValue GetSimpleDuration() const { return mSimpleDur; }
+  SMILTimeValue GetSimpleDuration() const { return mSimpleDur; }
 
   /**
    * Methods for supporting hyperlinking
@@ -127,24 +129,24 @@ class SMILTimedElement {
    * @return the time to seek the documen to in milliseconds or an unresolved
    * time if there is no resolved interval.
    */
-  nsSMILTimeValue GetHyperlinkTime() const;
+  SMILTimeValue GetHyperlinkTime() const;
 
   /**
    * Adds an instance time object this element's list of instance times.
    * These instance times are used when creating intervals.
    *
-   * This method is typically called by an nsSMILTimeValueSpec.
+   * This method is typically called by an SMILTimeValueSpec.
    *
    * @param aInstanceTime   The time to add, expressed in container time.
    * @param aIsBegin        true if the time to be added represents a begin
    *                        time or false if it represents an end time.
    */
-  void AddInstanceTime(nsSMILInstanceTime* aInstanceTime, bool aIsBegin);
+  void AddInstanceTime(SMILInstanceTime* aInstanceTime, bool aIsBegin);
 
   /**
    * Requests this element update the given instance time.
    *
-   * This method is typically called by a child nsSMILTimeValueSpec.
+   * This method is typically called by a child SMILTimeValueSpec.
    *
    * @param aInstanceTime   The instance time to update.
    * @param aUpdatedTime    The time to update aInstanceTime with.
@@ -154,31 +156,31 @@ class SMILTimedElement {
    *                        instance time or false if it represents an end
    *                        instance time.
    */
-  void UpdateInstanceTime(nsSMILInstanceTime* aInstanceTime,
-                          nsSMILTimeValue& aUpdatedTime, bool aIsBegin);
+  void UpdateInstanceTime(SMILInstanceTime* aInstanceTime,
+                          SMILTimeValue& aUpdatedTime, bool aIsBegin);
 
   /**
    * Removes an instance time object from this element's list of instance times.
    *
-   * This method is typically called by a child nsSMILTimeValueSpec.
+   * This method is typically called by a child SMILTimeValueSpec.
    *
    * @param aInstanceTime   The instance time to remove.
    * @param aIsBegin        true if the time to be removed represents a begin
    *                        time or false if it represents an end time.
    */
-  void RemoveInstanceTime(nsSMILInstanceTime* aInstanceTime, bool aIsBegin);
+  void RemoveInstanceTime(SMILInstanceTime* aInstanceTime, bool aIsBegin);
 
   /**
    * Removes all the instance times associated with the given
-   * nsSMILTimeValueSpec object. Used when an ID assignment changes and hence
+   * SMILTimeValueSpec object. Used when an ID assignment changes and hence
    * all the previously associated instance times become invalid.
    *
-   * @param aSpec    The nsSMILTimeValueSpec object whose created
-   *                 nsSMILInstanceTime's should be removed.
+   * @param aSpec    The SMILTimeValueSpec object whose created
+   *                 SMILInstanceTime's should be removed.
    * @param aIsBegin true if the times to be removed represent begin
    *                 times or false if they are end times.
    */
-  void RemoveInstanceTimesForCreator(const nsSMILTimeValueSpec* aSpec,
+  void RemoveInstanceTimesForCreator(const SMILTimeValueSpec* aSpec,
                                      bool aIsBegin);
 
   /**
@@ -202,7 +204,7 @@ class SMILTimedElement {
    *
    * @param aContainerTime The container time at which to sample.
    */
-  void SampleAt(nsSMILTime aContainerTime);
+  void SampleAt(SMILTime aContainerTime);
 
   /**
    * Performs a special sample for the end of an interval. Such a sample should
@@ -216,7 +218,7 @@ class SMILTimedElement {
    *
    * @param aContainerTime The container time at which to sample.
    */
-  void SampleEndAt(nsSMILTime aContainerTime);
+  void SampleEndAt(SMILTime aContainerTime);
 
   /**
    * Informs the timed element that its time container has changed time
@@ -287,20 +289,20 @@ class SMILTimedElement {
    * Adds a syncbase dependency to the list of dependents that will be notified
    * when this timed element creates, deletes, or updates its current interval.
    *
-   * @param aDependent  The nsSMILTimeValueSpec object to notify. A raw pointer
+   * @param aDependent  The SMILTimeValueSpec object to notify. A raw pointer
    *                    to this object will be stored. Therefore it is necessary
    *                    for the object to be explicitly unregistered (with
    *                    RemoveDependent) when it is destroyed.
    */
-  void AddDependent(nsSMILTimeValueSpec& aDependent);
+  void AddDependent(SMILTimeValueSpec& aDependent);
 
   /**
    * Removes a syncbase dependency from the list of dependents that are notified
    * when the current interval is modified.
    *
-   * @param aDependent  The nsSMILTimeValueSpec object to unregister.
+   * @param aDependent  The SMILTimeValueSpec object to unregister.
    */
-  void RemoveDependent(nsSMILTimeValueSpec& aDependent);
+  void RemoveDependent(SMILTimeValueSpec& aDependent);
 
   /**
    * Determines if this timed element is dependent on the given timed element's
@@ -342,23 +344,23 @@ class SMILTimedElement {
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
   void Unlink();
 
-  typedef bool (*RemovalTestFunction)(nsSMILInstanceTime* aInstance);
+  typedef bool (*RemovalTestFunction)(SMILInstanceTime* aInstance);
 
  protected:
   // Typedefs
-  typedef nsTArray<UniquePtr<nsSMILTimeValueSpec>> TimeValueSpecList;
-  typedef nsTArray<RefPtr<nsSMILInstanceTime>> InstanceTimeList;
+  typedef nsTArray<UniquePtr<SMILTimeValueSpec>> TimeValueSpecList;
+  typedef nsTArray<RefPtr<SMILInstanceTime>> InstanceTimeList;
   typedef nsTArray<UniquePtr<SMILInterval>> IntervalList;
-  typedef nsPtrHashKey<nsSMILTimeValueSpec> TimeValueSpecPtrKey;
+  typedef nsPtrHashKey<SMILTimeValueSpec> TimeValueSpecPtrKey;
   typedef nsTHashtable<TimeValueSpecPtrKey> TimeValueSpecHashSet;
 
   // Helper classes
   class InstanceTimeComparator {
    public:
-    bool Equals(const nsSMILInstanceTime* aElem1,
-                const nsSMILInstanceTime* aElem2) const;
-    bool LessThan(const nsSMILInstanceTime* aElem1,
-                  const nsSMILInstanceTime* aElem2) const;
+    bool Equals(const SMILInstanceTime* aElem1,
+                const SMILInstanceTime* aElem2) const;
+    bool LessThan(const SMILInstanceTime* aElem1,
+                  const SMILInstanceTime* aElem2) const;
   };
 
   // Templated helper functions
@@ -396,7 +398,7 @@ class SMILTimedElement {
   void ClearSpecs(TimeValueSpecList& aSpecs, InstanceTimeList& aInstances,
                   RemovalTestFunction aRemove);
   void ClearIntervals();
-  void DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly);
+  void DoSampleAt(SMILTime aContainerTime, bool aEndOnly);
 
   /**
    * Helper function to check for an early end and, if necessary, update the
@@ -412,7 +414,7 @@ class SMILTimedElement {
    * @return true if the end time of the current interval was updated,
    *         false otherwise.
    */
-  bool ApplyEarlyEnd(const nsSMILTimeValue& aSampleTime);
+  bool ApplyEarlyEnd(const SMILTimeValue& aSampleTime);
 
   /**
    * Clears certain state in response to the element restarting.
@@ -459,14 +461,14 @@ class SMILTimedElement {
 
   /**
    * Helper function to iterate through this element's accumulated timing
-   * information (specifically old SMILIntervals and nsSMILTimeInstanceTimes)
+   * information (specifically old SMILIntervals and SMILTimeInstanceTimes)
    * and discard items that are no longer needed or exceed some threshold of
    * accumulated state.
    */
   void FilterHistory();
 
   // Helper functions for FilterHistory to clear old SMILIntervals and
-  // nsSMILInstanceTimes respectively.
+  // SMILInstanceTimes respectively.
   void FilterIntervals();
   void FilterInstanceTimes(InstanceTimeList& aList);
 
@@ -494,26 +496,25 @@ class SMILTimedElement {
    */
   bool GetNextInterval(const SMILInterval* aPrevInterval,
                        const SMILInterval* aReplacedInterval,
-                       const nsSMILInstanceTime* aFixedBeginTime,
+                       const SMILInstanceTime* aFixedBeginTime,
                        SMILInterval& aResult) const;
-  nsSMILInstanceTime* GetNextGreater(const InstanceTimeList& aList,
-                                     const nsSMILTimeValue& aBase,
-                                     int32_t& aPosition) const;
-  nsSMILInstanceTime* GetNextGreaterOrEqual(const InstanceTimeList& aList,
-                                            const nsSMILTimeValue& aBase,
-                                            int32_t& aPosition) const;
-  nsSMILTimeValue CalcActiveEnd(const nsSMILTimeValue& aBegin,
-                                const nsSMILTimeValue& aEnd) const;
-  nsSMILTimeValue GetRepeatDuration() const;
-  nsSMILTimeValue ApplyMinAndMax(const nsSMILTimeValue& aDuration) const;
-  nsSMILTime ActiveTimeToSimpleTime(nsSMILTime aActiveTime,
-                                    uint32_t& aRepeatIteration);
-  nsSMILInstanceTime* CheckForEarlyEnd(
-      const nsSMILTimeValue& aContainerTime) const;
+  SMILInstanceTime* GetNextGreater(const InstanceTimeList& aList,
+                                   const SMILTimeValue& aBase,
+                                   int32_t& aPosition) const;
+  SMILInstanceTime* GetNextGreaterOrEqual(const InstanceTimeList& aList,
+                                          const SMILTimeValue& aBase,
+                                          int32_t& aPosition) const;
+  SMILTimeValue CalcActiveEnd(const SMILTimeValue& aBegin,
+                              const SMILTimeValue& aEnd) const;
+  SMILTimeValue GetRepeatDuration() const;
+  SMILTimeValue ApplyMinAndMax(const SMILTimeValue& aDuration) const;
+  SMILTime ActiveTimeToSimpleTime(SMILTime aActiveTime,
+                                  uint32_t& aRepeatIteration);
+  SMILInstanceTime* CheckForEarlyEnd(const SMILTimeValue& aContainerTime) const;
   void UpdateCurrentInterval(bool aForceChangeNotice = false);
-  void SampleSimpleTime(nsSMILTime aActiveTime);
+  void SampleSimpleTime(SMILTime aActiveTime);
   void SampleFillValue();
-  nsresult AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
+  nsresult AddInstanceTimeFromCurrentTime(SMILTime aCurrentTime,
                                           double aOffsetSeconds, bool aIsBegin);
   void RegisterMilestone();
   bool GetNextMilestone(SMILMilestone& aNextMilestone) const;
@@ -529,12 +530,12 @@ class SMILTimedElement {
                              bool aEndObjectChanged);
 
   void FireTimeEventAsync(EventMessage aMsg, int32_t aDetail);
-  const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
+  const SMILInstanceTime* GetEffectiveBeginInstance() const;
   const SMILInterval* GetPreviousInterval() const;
   bool HasPlayed() const { return !mOldIntervals.IsEmpty(); }
   bool HasClientInFillRange() const;
   bool EndHasEventConditions() const;
-  bool AreEndTimesDependentOn(const nsSMILInstanceTime* aBase) const;
+  bool AreEndTimesDependentOn(const SMILInstanceTime* aBase) const;
 
   // Reset the current interval by first passing ownership to a temporary
   // variable so that if Unlink() results in us receiving a callback,
@@ -555,24 +556,24 @@ class SMILTimedElement {
   TimeValueSpecList mBeginSpecs;                         // [strong]
   TimeValueSpecList mEndSpecs;                           // [strong]
 
-  nsSMILTimeValue mSimpleDur;
+  SMILTimeValue mSimpleDur;
 
   SMILRepeatCount mRepeatCount;
-  nsSMILTimeValue mRepeatDur;
+  SMILTimeValue mRepeatDur;
 
-  nsSMILTimeValue mMin;
-  nsSMILTimeValue mMax;
+  SMILTimeValue mMin;
+  SMILTimeValue mMax;
 
-  enum nsSMILFillMode : uint8_t { FILL_REMOVE, FILL_FREEZE };
-  nsSMILFillMode mFillMode;
+  enum SMILFillMode : uint8_t { FILL_REMOVE, FILL_FREEZE };
+  SMILFillMode mFillMode;
   static const nsAttrValue::EnumTable sFillModeTable[];
 
-  enum nsSMILRestartMode : uint8_t {
+  enum SMILRestartMode : uint8_t {
     RESTART_ALWAYS,
     RESTART_WHENNOTACTIVE,
     RESTART_NEVER
   };
-  nsSMILRestartMode mRestartMode;
+  SMILRestartMode mRestartMode;
   static const nsAttrValue::EnumTable sRestartModeTable[];
 
   InstanceTimeList mBeginInstances;
@@ -592,7 +593,7 @@ class SMILTimedElement {
   // current interval. Change notifications and delete notifications are handled
   // by the interval.
   //
-  // [weak] The nsSMILTimeValueSpec objects register themselves and unregister
+  // [weak] The SMILTimeValueSpec objects register themselves and unregister
   // on destruction. Likewise, we notify them when we are destroyed.
   TimeValueSpecHashSet mTimeDependents;
 
@@ -600,22 +601,22 @@ class SMILTimedElement {
    * The state of the element in its life-cycle. These states are based on the
    * element life-cycle described in SMILANIM 3.6.8
    */
-  enum nsSMILElementState {
+  enum SMILElementState {
     STATE_STARTUP,
     STATE_WAITING,
     STATE_ACTIVE,
     STATE_POSTACTIVE
   };
-  nsSMILElementState mElementState;
+  SMILElementState mElementState;
 
-  enum nsSMILSeekState {
+  enum SMILSeekState {
     SEEK_NOT_SEEKING,
     SEEK_FORWARD_FROM_ACTIVE,
     SEEK_FORWARD_FROM_INACTIVE,
     SEEK_BACKWARD_FROM_ACTIVE,
     SEEK_BACKWARD_FROM_INACTIVE
   };
-  nsSMILSeekState mSeekState;
+  SMILSeekState mSeekState;
 
   // Used to batch updates to the timing model
   class AutoIntervalUpdateBatcher;
@@ -645,4 +646,4 @@ inline void ImplCycleCollectionTraverse(
 
 }  // namespace mozilla
 
-#endif  // NS_SMILTIMEDELEMENT_H_
+#endif  // mozilla_SMILTimedElement_h

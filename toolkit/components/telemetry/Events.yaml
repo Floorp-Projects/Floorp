@@ -610,6 +610,7 @@ security.ui.identitypopup:
     objects: ["identity_popup"]
     bug_numbers:
       - 1484251
+      - 1522256
     description: >
       How many times the control center was opened.
       Keyed by the state of the content blocking shield, where the shield-showing key indicates
@@ -631,11 +632,17 @@ security.ui.identitypopup:
   click:
     objects: [
       "cb_prefs_button",
+      "permission_prefs_btn",
       "clear_sitedata",
       "unblock",
       "unblock_private",
       "block",
-      "report_breakage"
+      "report_breakage",
+      "security_subview_btn",
+      "trackers_subview_btn",
+      "cookies_subview_btn",
+      "trackers_prefs_btn",
+      "cookies_prefs_btn"
     ]
     bug_numbers:
       - 1484251

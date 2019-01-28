@@ -9,12 +9,12 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/gfx/Rect.h"
-#include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Matrix.h"
+#include "mozilla/gfx/Rect.h"
 #include "nsClassHashtable.h"
-#include "nsTArray.h"
 #include "nsRegion.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace gfx {
@@ -28,6 +28,11 @@ extern const float gsRGBToLinearRGBMap[256];
 
 namespace mozilla {
 namespace gfx {
+namespace FilterWrappers {
+extern already_AddRefed<FilterNode> Clear(DrawTarget* aDT);
+extern already_AddRefed<FilterNode> ForSurface(
+    DrawTarget* aDT, SourceSurface* aSurface, const IntPoint& aSurfacePosition);
+}  // namespace FilterWrappers
 
 // Morphology Operators
 const unsigned short SVG_OPERATOR_UNKNOWN = 0;
@@ -498,6 +503,13 @@ struct FilterDescription final {
 
   nsTArray<FilterPrimitiveDescription> mPrimitives;
 };
+
+already_AddRefed<FilterNode> FilterNodeGraphFromDescription(
+    DrawTarget* aDT, const FilterDescription& aFilter,
+    const Rect& aResultNeededRect, FilterNode* aSourceGraphic,
+    const IntRect& aSourceGraphicRect, FilterNode* aFillPaint,
+    FilterNode* aStrokePaint,
+    nsTArray<RefPtr<SourceSurface>>& aAdditionalImages);
 
 /**
  * The methods of this class are not on FilterDescription because

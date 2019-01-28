@@ -6,15 +6,15 @@
 
 #include "SMILParserUtils.h"
 
+#include "mozilla/SMILAttr.h"
 #include "mozilla/SMILKeySpline.h"
 #include "mozilla/SMILRepeatCount.h"
+#include "mozilla/SMILTimeValue.h"
+#include "mozilla/SMILTimeValueSpecParams.h"
+#include "mozilla/SMILTypes.h"
+#include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/TextUtils.h"
-#include "nsISMILAttr.h"
-#include "nsSMILValue.h"
-#include "nsSMILTimeValue.h"
-#include "nsSMILTimeValueSpecParams.h"
-#include "nsSMILTypes.h"
 #include "nsContentUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 
@@ -128,7 +128,7 @@ inline bool ParseClockMetric(RangedPtr<const char16_t>& aIter,
  */
 bool ParseClockValue(RangedPtr<const char16_t>& aIter,
                      const RangedPtr<const char16_t>& aEnd,
-                     nsSMILTimeValue* aResult) {
+                     SMILTimeValue* aResult) {
   if (aIter == aEnd) {
     return false;
   }
@@ -186,7 +186,7 @@ bool ParseClockValue(RangedPtr<const char16_t>& aIter,
                                                iter, aEnd, fraction))) {
         return false;
       }
-      aResult->SetMillis(nsSMILTime(hours) * MSEC_PER_HOUR +
+      aResult->SetMillis(SMILTime(hours) * MSEC_PER_HOUR +
                          minutes * MSEC_PER_MIN + seconds * MSEC_PER_SEC +
                          NS_round(fraction * MSEC_PER_SEC));
       aIter = iter;
@@ -202,7 +202,7 @@ bool ParseClockValue(RangedPtr<const char16_t>& aIter,
       if (!ParseClockMetric(iter, aEnd, multiplier)) {
         return false;
       }
-      aResult->SetMillis(nsSMILTime(timecount) * multiplier +
+      aResult->SetMillis(SMILTime(timecount) * multiplier +
                          NS_round(fraction * multiplier));
       aIter = iter;
       return true;
@@ -213,7 +213,7 @@ bool ParseClockValue(RangedPtr<const char16_t>& aIter,
 
 bool ParseOffsetValue(RangedPtr<const char16_t>& aIter,
                       const RangedPtr<const char16_t>& aEnd,
-                      nsSMILTimeValue* aResult) {
+                      SMILTimeValue* aResult) {
   RangedPtr<const char16_t> iter(aIter);
 
   int32_t sign;
@@ -228,7 +228,7 @@ bool ParseOffsetValue(RangedPtr<const char16_t>& aIter,
   return true;
 }
 
-bool ParseOffsetValue(const nsAString& aSpec, nsSMILTimeValue* aResult) {
+bool ParseOffsetValue(const nsAString& aSpec, SMILTimeValue* aResult) {
   RangedPtr<const char16_t> iter(SVGContentUtils::GetStartRangedPtr(aSpec));
   const RangedPtr<const char16_t> end(SVGContentUtils::GetEndRangedPtr(aSpec));
 
@@ -237,7 +237,7 @@ bool ParseOffsetValue(const nsAString& aSpec, nsSMILTimeValue* aResult) {
 
 bool ParseOptionalOffset(RangedPtr<const char16_t>& aIter,
                          const RangedPtr<const char16_t>& aEnd,
-                         nsSMILTimeValue* aResult) {
+                         SMILTimeValue* aResult) {
   if (aIter == aEnd) {
     aResult->SetMillis(0L);
     return true;
@@ -307,8 +307,8 @@ already_AddRefed<nsAtom> ConvertTokenToAtom(const nsAString& aToken,
 }
 
 bool ParseElementBaseTimeValueSpec(const nsAString& aSpec,
-                                   nsSMILTimeValueSpecParams& aResult) {
-  nsSMILTimeValueSpecParams result;
+                                   SMILTimeValueSpecParams& aResult) {
+  SMILTimeValueSpecParams result;
 
   //
   // The spec will probably look something like one of these
@@ -353,11 +353,11 @@ bool ParseElementBaseTimeValueSpec(const nsAString& aSpec,
 
     // element-name.begin
     if (token2.EqualsLiteral("begin")) {
-      result.mType = nsSMILTimeValueSpecParams::SYNCBASE;
+      result.mType = SMILTimeValueSpecParams::SYNCBASE;
       result.mSyncBegin = true;
       // element-name.end
     } else if (token2.EqualsLiteral("end")) {
-      result.mType = nsSMILTimeValueSpecParams::SYNCBASE;
+      result.mType = SMILTimeValueSpecParams::SYNCBASE;
       result.mSyncBegin = false;
       // element-name.repeat(digit+)
     } else if (StringBeginsWith(token2, REPEAT_PREFIX)) {
@@ -370,7 +370,7 @@ bool ParseElementBaseTimeValueSpec(const nsAString& aSpec,
       if (start == tokenEnd || *start != ')') {
         return false;
       }
-      result.mType = nsSMILTimeValueSpecParams::REPEAT;
+      result.mType = SMILTimeValueSpecParams::REPEAT;
       result.mRepeatIteration = repeatValue;
       // element-name.event-symbol
     } else {
@@ -378,12 +378,12 @@ bool ParseElementBaseTimeValueSpec(const nsAString& aSpec,
       if (atom == nullptr) {
         return false;
       }
-      result.mType = nsSMILTimeValueSpecParams::EVENT;
+      result.mType = SMILTimeValueSpecParams::EVENT;
       result.mEventSymbol = atom;
     }
   } else {
     // event-symbol
-    result.mType = nsSMILTimeValueSpecParams::EVENT;
+    result.mType = SMILTimeValueSpecParams::EVENT;
     result.mEventSymbol = atom;
   }
 
@@ -491,8 +491,8 @@ class MOZ_STACK_CLASS SMILValueParser
     : public SMILParserUtils::GenericValueParser {
  public:
   SMILValueParser(const SVGAnimationElement* aSrcElement,
-                  const nsISMILAttr* aSMILAttr,
-                  FallibleTArray<nsSMILValue>* aValuesArray,
+                  const SMILAttr* aSMILAttr,
+                  FallibleTArray<SMILValue>* aValuesArray,
                   bool* aPreventCachingOfSandwich)
       : mSrcElement(aSrcElement),
         mSMILAttr(aSMILAttr),
@@ -500,7 +500,7 @@ class MOZ_STACK_CLASS SMILValueParser
         mPreventCachingOfSandwich(aPreventCachingOfSandwich) {}
 
   virtual bool Parse(const nsAString& aValueStr) override {
-    nsSMILValue newValue;
+    SMILValue newValue;
     bool tmpPreventCachingOfSandwich = false;
     if (NS_FAILED(mSMILAttr->ValueFromString(aValueStr, mSrcElement, newValue,
                                              tmpPreventCachingOfSandwich)))
@@ -517,15 +517,15 @@ class MOZ_STACK_CLASS SMILValueParser
 
  protected:
   const SVGAnimationElement* mSrcElement;
-  const nsISMILAttr* mSMILAttr;
-  FallibleTArray<nsSMILValue>* mValuesArray;
+  const SMILAttr* mSMILAttr;
+  FallibleTArray<SMILValue>* mValuesArray;
   bool* mPreventCachingOfSandwich;
 };
 
 bool SMILParserUtils::ParseValues(const nsAString& aSpec,
                                   const SVGAnimationElement* aSrcElement,
-                                  const nsISMILAttr& aAttribute,
-                                  FallibleTArray<nsSMILValue>& aValuesArray,
+                                  const SMILAttr& aAttribute,
+                                  FallibleTArray<SMILValue>& aValuesArray,
                                   bool& aPreventCachingOfSandwich) {
   // Assume all results can be cached, until we find one that can't.
   aPreventCachingOfSandwich = false;
@@ -569,17 +569,17 @@ bool SMILParserUtils::ParseRepeatCount(const nsAString& aSpec,
 }
 
 bool SMILParserUtils::ParseTimeValueSpecParams(
-    const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult) {
+    const nsAString& aSpec, SMILTimeValueSpecParams& aResult) {
   const nsAString& spec = TrimWhitespace(aSpec);
 
   if (spec.EqualsLiteral("indefinite")) {
-    aResult.mType = nsSMILTimeValueSpecParams::INDEFINITE;
+    aResult.mType = SMILTimeValueSpecParams::INDEFINITE;
     return true;
   }
 
   // offset type
   if (ParseOffsetValue(spec, &aResult.mOffset)) {
-    aResult.mType = nsSMILTimeValueSpecParams::OFFSET;
+    aResult.mType = SMILTimeValueSpecParams::OFFSET;
     return true;
   }
 
@@ -599,7 +599,7 @@ bool SMILParserUtils::ParseTimeValueSpecParams(
 }
 
 bool SMILParserUtils::ParseClockValue(const nsAString& aSpec,
-                                      nsSMILTimeValue* aResult) {
+                                      SMILTimeValue* aResult) {
   RangedPtr<const char16_t> iter(SVGContentUtils::GetStartRangedPtr(aSpec));
   RangedPtr<const char16_t> end(SVGContentUtils::GetEndRangedPtr(aSpec));
 

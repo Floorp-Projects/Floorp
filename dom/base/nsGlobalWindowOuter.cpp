@@ -2056,6 +2056,12 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       newInnerGlobal = newInnerWindow->GetWrapperPreserveColor();
     } else {
       newInnerWindow = nsGlobalWindowInner::Create(this, thisChrome);
+      if (StaticPrefs::dom_timeout_defer_during_load()) {
+        // ensure the initial loading state is known
+        newInnerWindow->SetActiveLoadingState(
+            aDocument->GetReadyStateEnum() ==
+            Document::ReadyState::READYSTATE_LOADING);
+      }
 
       // The outer window is automatically treated as frozen when we
       // null out the inner window. As a result, initializing classes
@@ -3003,9 +3009,12 @@ already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetParent() {
   return win.forget();
 }
 
-static nsresult GetTopImpl(nsGlobalWindowOuter* aWin, nsPIDOMWindowOuter** aTop,
-                           bool aScriptable) {
+static nsresult GetTopImpl(nsGlobalWindowOuter* aWin, nsIURI* aURIBeingLoaded,
+                           nsPIDOMWindowOuter** aTop, bool aScriptable,
+                           bool aExcludingExtensionAccessibleContentFrames) {
   *aTop = nullptr;
+
+  MOZ_ASSERT_IF(aExcludingExtensionAccessibleContentFrames, !aScriptable);
 
   // Walk up the parent chain.
 
@@ -3022,6 +3031,43 @@ static nsresult GetTopImpl(nsGlobalWindowOuter* aWin, nsPIDOMWindowOuter** aTop,
       parent = parent->GetScriptableParent();
     } else {
       parent = parent->GetParent();
+    }
+
+    if (aExcludingExtensionAccessibleContentFrames) {
+      if (auto* p = nsGlobalWindowOuter::Cast(parent)) {
+        nsGlobalWindowInner* currentInner = p->GetCurrentInnerWindowInternal();
+        nsIURI* uri = prevParent->GetDocumentURI();
+        if (!uri) {
+          // If our parent doesn't have a URI yet, we have a document that is in
+          // the process of being loaded.  In that case, our caller is
+          // responsible for passing in the URI for the document that is being
+          // loaded, so we fall back to using that URI here.
+          uri = aURIBeingLoaded;
+        }
+
+        if (currentInner && uri) {
+          // If we find an inner window, we better find the uri for the current
+          // window we're looking at.  If we can't find it directly, it is the
+          // responsibility of our caller to provide it to us.
+          MOZ_DIAGNOSTIC_ASSERT(uri);
+
+          // If the new parent has permission to load the current page, we're
+          // at a moz-extension:// frame which has a host permission that allows
+          // it to load the document that we've loaded.  In that case, stop at
+          // this frame and consider it the top-level frame.
+          //
+          // Note that it's possible for the set of URIs accepted by
+          // AddonAllowsLoad() to change at runtime, but we don't need to cache
+          // the result of this check, since the important consumer of this code
+          // (which is nsIHttpChannelInternal.topWindowURI) already caches the
+          // result after computing it the first time.
+          if (BasePrincipal::Cast(p->GetPrincipal())
+                  ->AddonAllowsLoad(uri, true)) {
+            parent = prevParent;
+            break;
+          }
+        }
+      }
     }
 
   } while (parent != prevParent);
@@ -3042,13 +3088,27 @@ static nsresult GetTopImpl(nsGlobalWindowOuter* aWin, nsPIDOMWindowOuter** aTop,
  */
 nsPIDOMWindowOuter* nsGlobalWindowOuter::GetScriptableTop() {
   nsCOMPtr<nsPIDOMWindowOuter> window;
-  GetTopImpl(this, getter_AddRefs(window), /* aScriptable = */ true);
+  GetTopImpl(this, /* aURIBeingLoaded = */ nullptr, getter_AddRefs(window),
+             /* aScriptable = */ true,
+             /* aExcludingExtensionAccessibleContentFrames = */ false);
   return window.get();
 }
 
 already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetTop() {
   nsCOMPtr<nsPIDOMWindowOuter> window;
-  GetTopImpl(this, getter_AddRefs(window), /* aScriptable = */ false);
+  GetTopImpl(this, /* aURIBeingLoaded = */ nullptr, getter_AddRefs(window),
+             /* aScriptable = */ false,
+             /* aExcludingExtensionAccessibleContentFrames = */ false);
+  return window.forget();
+}
+
+already_AddRefed<nsPIDOMWindowOuter>
+nsGlobalWindowOuter::GetTopExcludingExtensionAccessibleContentFrames(
+    nsIURI* aURIBeingLoaded) {
+  nsCOMPtr<nsPIDOMWindowOuter> window;
+  GetTopImpl(this, aURIBeingLoaded, getter_AddRefs(window),
+             /* aScriptable = */ false,
+             /* aExcludingExtensionAccessibleContentFrames = */ true);
   return window.forget();
 }
 

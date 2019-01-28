@@ -152,7 +152,8 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
    * being selected or not selected.
    */
   NS_IMETHOD OnOptionSelected(int32_t aIndex, bool aSelected) override;
-  NS_IMETHOD OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) override;
+  NS_IMETHOD_(void)
+  OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) override;
 
   /**
    * Mouse event listeners.

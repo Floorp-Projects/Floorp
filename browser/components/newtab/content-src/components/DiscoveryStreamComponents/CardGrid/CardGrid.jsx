@@ -17,18 +17,30 @@ export class CardGrid extends React.PureComponent {
         key={`dscard-${index}`}
         image_src={rec.image_src}
         title={rec.title}
-        excerpt={rec.title}
+        excerpt={rec.excerpt}
         url={rec.url}
         id={rec.id}
         index={index}
         type={this.props.type}
+        context={rec.context}
         dispatch={this.props.dispatch}
         source={rec.domain} />
     ));
 
+    let divisibility = ``;
+
+    if (this.props.items % 4 === 0) {
+      divisibility = `divisible-by-4`;
+    } else if (this.props.items % 3 === 0) {
+      divisibility = `divisible-by-3`;
+    }
+
     return (
-      <div className="ds-card-grid">
-        {cards}
+      <div>
+        <div className="ds-header">{this.props.title}</div>
+        <div className={`ds-card-grid ds-card-grid-${this.props.border} ds-card-grid-${divisibility}`}>
+          {cards}
+        </div>
       </div>
     );
   }

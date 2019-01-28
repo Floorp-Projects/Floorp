@@ -61,7 +61,8 @@ add_task(async function() {
   is_selected(3);
 
   let autocompletePopupHidden = promisePopupHidden(gURLBar.popup);
-  let openedExpectedPage = waitForDocLoadAndStopIt(expectedURL);
+  let openedExpectedPage =
+    BrowserTestUtils.waitForDocLoadAndStopIt(expectedURL, gBrowser.selectedBrowser);
   EventUtils.synthesizeKey("KEY_Enter");
   await Promise.all([autocompletePopupHidden, openedExpectedPage]);
 

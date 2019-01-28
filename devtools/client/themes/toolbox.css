@@ -242,9 +242,7 @@
 #toolbox-controls > button,
 .toolbox-tabs-wrapper .tools-chevron-menu {
   /* !important is needed to override .devtools-button rules in common.css */
-  padding: 0 !important;
   margin: 0 !important;
-  border: none !important;
   border-radius: 0 !important;
   position: relative;
   min-width: 26px;

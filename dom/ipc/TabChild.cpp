@@ -28,6 +28,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PaymentRequestChild.h"
+#include "mozilla/dom/PBrowser.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/IMEStateManager.h"
@@ -69,6 +70,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIBrowserDOMWindow.h"
+#include "nsIClassifiedChannel.h"
 #include "DocumentInlines.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDOMChromeWindow.h"
@@ -375,6 +377,7 @@ TabChild::TabChild(nsIContentChild* aManager, const TabId& aTabId,
       mIgnoreKeyPressEvent(false),
       mHasValidInnerSize(false),
       mDestroyed(false),
+      mProgressListenerRegistered(false),
       mUniqueId(aTabId),
       mHasSiblings(false),
       mIsTransparent(false),
@@ -534,6 +537,12 @@ nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   MOZ_ASSERT(docShell);
 
+  nsCOMPtr<nsIWebProgress> webProgress = do_QueryInterface(docShell);
+  nsresult rv = webProgress->AddProgressListener(
+      this, nsIWebProgress::NOTIFY_CONTENT_BLOCKING);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mProgressListenerRegistered = true;
+
   docShell->SetAffectPrivateSessionLifetime(
       mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME);
   nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(WebNavigation());
@@ -648,6 +657,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TabChild)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 NS_INTERFACE_MAP_END_INHERITING(TabChildBase)
 
 NS_IMPL_ADDREF_INHERITED(TabChild, TabChildBase);
@@ -948,6 +958,14 @@ void TabChild::DestroyWindow() {
       sTabChildren = nullptr;
     }
     mLayersId = layers::LayersId{0};
+  }
+
+  if (mProgressListenerRegistered) {
+    nsCOMPtr<nsIWebProgress> webProgress = do_QueryInterface(WebNavigation());
+    if (webProgress) {
+      webProgress->RemoveProgressListener(this);
+      mProgressListenerRegistered = false;
+    }
   }
 }
 
@@ -3217,6 +3235,104 @@ nsresult TabChild::GetHasSiblings(bool* aHasSiblings) {
 
 nsresult TabChild::SetHasSiblings(bool aHasSiblings) {
   mHasSiblings = aHasSiblings;
+  return NS_OK;
+}
+
+NS_IMETHODIMP TabChild::OnStateChange(nsIWebProgress* aWebProgress,
+                                      nsIRequest* aRequest,
+                                      uint32_t aStateFlags, nsresult aStatus) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP TabChild::OnProgressChange(nsIWebProgress* aWebProgress,
+                                         nsIRequest* aRequest,
+                                         int32_t aCurSelfProgress,
+                                         int32_t aMaxSelfProgress,
+                                         int32_t aCurTotalProgress,
+                                         int32_t aMaxTotalProgress) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP TabChild::OnLocationChange(nsIWebProgress* aWebProgress,
+                                         nsIRequest* aRequest,
+                                         nsIURI* aLocation, uint32_t aFlags) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP TabChild::OnStatusChange(nsIWebProgress* aWebProgress,
+                                       nsIRequest* aRequest, nsresult aStatus,
+                                       const char16_t* aMessage) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP TabChild::OnSecurityChange(nsIWebProgress* aWebProgress,
+                                         nsIRequest* aRequest,
+                                         uint32_t aState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP TabChild::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
+                                               nsIRequest* aRequest,
+                                               uint32_t aEvent) {
+  WebProgressData webProgressData;
+  RequestData requestData;
+  nsresult rv = PrepareProgressListenerData(aWebProgress, aRequest,
+                                            webProgressData, requestData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aWebProgress) {
+    Unused << SendOnContentBlockingEvent(webProgressData, requestData, aEvent);
+  } else {
+    Unused << SendOnContentBlockingEvent(void_t(), requestData, aEvent);
+  }
+
+  return NS_OK;
+}
+
+nsresult TabChild::PrepareProgressListenerData(
+    nsIWebProgress* aWebProgress, nsIRequest* aRequest,
+    WebProgressData& aWebProgressData, RequestData& aRequestData) {
+  if (aWebProgress) {
+    bool isTopLevel = false;
+    nsresult rv = aWebProgress->GetIsTopLevel(&isTopLevel);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aWebProgressData.isTopLevel() = isTopLevel;
+
+    bool isLoadingDocument = false;
+    rv = aWebProgress->GetIsLoadingDocument(&isLoadingDocument);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aWebProgressData.isLoadingDocument() = isLoadingDocument;
+
+    uint32_t loadType = 0;
+    rv = aWebProgress->GetLoadType(&loadType);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aWebProgressData.loadType() = loadType;
+
+    uint64_t DOMWindowID = 0;
+    // The DOM Window ID getter here may throw if the inner or outer windows
+    // aren't created yet or are destroyed at the time we're making this call
+    // but that isn't fatal so ignore the exceptions here.
+    Unused << aWebProgress->GetDOMWindowID(&DOMWindowID);
+    aWebProgressData.DOMWindowID() = DOMWindowID;
+  }
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  if (channel) {
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = channel->GetURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+    aRequestData.requestURI() = uri;
+
+    rv = channel->GetOriginalURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+    aRequestData.originalRequestURI() = uri;
+
+    nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+        do_QueryInterface(channel);
+    if (classifiedChannel) {
+      nsAutoCString matchedList;
+      rv = classifiedChannel->GetMatchedList(matchedList);
+      NS_ENSURE_SUCCESS(rv, rv);
+      aRequestData.matchedList() = std::move(matchedList);
+    }
+  }
   return NS_OK;
 }
 

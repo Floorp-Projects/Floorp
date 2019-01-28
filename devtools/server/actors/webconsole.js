@@ -328,39 +328,6 @@ WebConsoleActor.prototype =
    * Destroy the current WebConsoleActor instance.
    */
   destroy() {
-    if (this.consoleServiceListener) {
-      this.consoleServiceListener.destroy();
-      this.consoleServiceListener = null;
-    }
-    if (this.netmonitors) {
-      for (const { messageManager } of this.netmonitors) {
-        messageManager.sendAsyncMessage("debug:destroy-network-monitor", {
-          actorID: this.actorID,
-        });
-      }
-      this.netmonitors = null;
-    }
-    if (this.consoleAPIListener) {
-      this.consoleAPIListener.destroy();
-      this.consoleAPIListener = null;
-    }
-    if (this.stackTraceCollector) {
-      this.stackTraceCollector.destroy();
-      this.stackTraceCollector = null;
-    }
-    if (this.consoleProgressListener) {
-      this.consoleProgressListener.destroy();
-      this.consoleProgressListener = null;
-    }
-    if (this.consoleReflowListener) {
-      this.consoleReflowListener.destroy();
-      this.consoleReflowListener = null;
-    }
-    if (this.contentProcessListener) {
-      this.contentProcessListener.destroy();
-      this.contentProcessListener = null;
-    }
-
     EventEmitter.off(this.parentActor, "changed-toplevel-document",
                this._onChangedToplevelDocument);
 
@@ -375,6 +342,7 @@ WebConsoleActor.prototype =
       this.dbg.onConsoleMessage = null;
     }
 
+    this.stopListeners({ listeners: null });
     this._actorPool = null;
     this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
@@ -740,8 +708,8 @@ WebConsoleActor.prototype =
     // If no specific listeners are requested to be detached, we stop all
     // listeners.
     const toDetach = request.listeners ||
-      ["PageError", "ConsoleAPI", "NetworkActivity",
-       "FileActivity", "ContentProcessMessages"];
+      ["PageError", "ConsoleAPI", "NetworkActivity", "FileActivity",
+       "ReflowActivity", "ContentProcessMessages", "DocumentEvents"];
 
     while (toDetach.length > 0) {
       const listener = toDetach.shift();

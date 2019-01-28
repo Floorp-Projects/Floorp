@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * This module exports a component used to sort matches in a QueryContext.
+ * This module exports a component used to sort matches in a UrlbarQueryContext.
  */
 
 var EXPORTED_SYMBOLS = ["UrlbarMuxerUnifiedComplete"];
@@ -21,18 +21,18 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.repository.getLogger("Places.Urlbar.UrlbarMuxerUnifiedComplete"));
 
-const MATCH_TYPE_TO_GROUP = new Map([
-  [ UrlbarUtils.MATCH_TYPE.TAB_SWITCH, UrlbarUtils.MATCH_GROUP.GENERAL ],
-  [ UrlbarUtils.MATCH_TYPE.SEARCH, UrlbarUtils.MATCH_GROUP.SUGGESTION ],
-  [ UrlbarUtils.MATCH_TYPE.URL, UrlbarUtils.MATCH_GROUP.GENERAL ],
-  [ UrlbarUtils.MATCH_TYPE.KEYWORD, UrlbarUtils.MATCH_GROUP.GENERAL ],
-  [ UrlbarUtils.MATCH_TYPE.OMNIBOX, UrlbarUtils.MATCH_GROUP.EXTENSION ],
-  [ UrlbarUtils.MATCH_TYPE.REMOTE_TAB, UrlbarUtils.MATCH_GROUP.GENERAL ],
+const RESULT_TYPE_TO_GROUP = new Map([
+  [ UrlbarUtils.RESULT_TYPE.TAB_SWITCH, UrlbarUtils.MATCH_GROUP.GENERAL ],
+  [ UrlbarUtils.RESULT_TYPE.SEARCH, UrlbarUtils.MATCH_GROUP.SUGGESTION ],
+  [ UrlbarUtils.RESULT_TYPE.URL, UrlbarUtils.MATCH_GROUP.GENERAL ],
+  [ UrlbarUtils.RESULT_TYPE.KEYWORD, UrlbarUtils.MATCH_GROUP.GENERAL ],
+  [ UrlbarUtils.RESULT_TYPE.OMNIBOX, UrlbarUtils.MATCH_GROUP.EXTENSION ],
+  [ UrlbarUtils.RESULT_TYPE.REMOTE_TAB, UrlbarUtils.MATCH_GROUP.GENERAL ],
 ]);
 
 /**
  * Class used to create a muxer.
- * The muxer receives and sorts matches in a QueryContext.
+ * The muxer receives and sorts matches in a UrlbarQueryContext.
  */
 class MuxerUnifiedComplete extends UrlbarMuxer {
   constructor() {
@@ -44,8 +44,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
   }
 
   /**
-   * Sorts matches in the given QueryContext.
-   * @param {object} context a QueryContext
+   * Sorts matches in the given UrlbarQueryContext.
+   * @param {UrlbarQueryContext} context The query context.
    */
   sort(context) {
     if (!context.results.length) {
@@ -54,7 +54,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // Check the first match, if it's a preselected search match, use search buckets.
     let firstMatch = context.results[0];
     let buckets = context.preselected &&
-                  firstMatch.type == UrlbarUtils.MATCH_TYPE.SEARCH ?
+                  firstMatch.type == UrlbarUtils.RESULT_TYPE.SEARCH ?
                     UrlbarPrefs.get("matchBucketsSearch") :
                     UrlbarPrefs.get("matchBuckets");
     logger.debug(`Buckets: ${buckets}`);
@@ -78,12 +78,12 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
           sortedMatches.push(match);
           handled.add(match);
           count--;
-        } else if (group == MATCH_TYPE_TO_GROUP.get(match.type)) {
+        } else if (group == RESULT_TYPE_TO_GROUP.get(match.type)) {
           sortedMatches.push(match);
           handled.add(match);
           count--;
-        } else if (!MATCH_TYPE_TO_GROUP.has(match.type)) {
-          let errorMsg = `Match type ${match.type} is not mapped to a match group.`;
+        } else if (!RESULT_TYPE_TO_GROUP.has(match.type)) {
+          let errorMsg = `Result type ${match.type} is not mapped to a match group.`;
           logger.error(errorMsg);
           Cu.reportError(errorMsg);
         }

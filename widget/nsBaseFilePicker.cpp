@@ -232,6 +232,11 @@ nsBaseFilePicker::AppendFilters(int32_t aFilterMask) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsBaseFilePicker::AppendRawFilter(const nsAString& aFilter) {
+  mRawFilters.AppendElement(aFilter);
+  return NS_OK;
+}
+
 // Set the filter index
 NS_IMETHODIMP nsBaseFilePicker::GetFilterIndex(int32_t* aFilterIndex) {
   *aFilterIndex = 0;

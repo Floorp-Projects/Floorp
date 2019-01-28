@@ -9,10 +9,10 @@ add_task(async function() {
       ["dom.largeAllocationHeader.enabled", true],
       // Increase processCount.webLargeAllocation to avoid any races where
       // processes aren't being cleaned up quickly enough.
-      ["dom.ipc.processCount.webLargeAllocation", 20]
-    ]
+      ["dom.ipc.processCount.webLargeAllocation", 20],
+    ],
   });
-
+  /* global largeAllocSuccessTests */
   await largeAllocSuccessTests();
 });
 

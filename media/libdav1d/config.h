@@ -62,7 +62,8 @@
 #  define PREFIX 1
 #endif
 
-#if ARCH_X86_32 == 1 && defined(__linux__) && !defined(__ANDROID__)
+#if (ARCH_x86_32 == 1 || ARCH_X86_64 == 1) && defined(__linux__) && \
+    !defined(__ANDROID__)
 #  define STACK_ALIGNMENT 16
 #else
 #  define STACK_ALIGNMENT 32

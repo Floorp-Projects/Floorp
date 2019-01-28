@@ -5,7 +5,7 @@
 use api::{BorderRadius, BorderSide, BorderStyle, ColorF, ColorU, DeviceRect, DeviceSize};
 use api::{LayoutSideOffsets, LayoutSizeAu, LayoutPrimitiveInfo, LayoutToDeviceScale};
 use api::{DeviceVector2D, DevicePoint, LayoutRect, LayoutSize, DeviceIntSize};
-use api::{AuHelpers, LayoutPoint, RepeatMode, TexelRect};
+use api::{AuHelpers, LayoutPoint, RepeatMode, TexelRect, LayoutVector2D};
 use api::NormalBorder as ApiNormalBorder;
 use ellipse::Ellipse;
 use euclid::vec2;
@@ -212,6 +212,7 @@ impl<'a> DisplayListFlattener<'a> {
         border: &ApiNormalBorder,
         widths: LayoutSideOffsets,
         clip_and_scroll: ScrollNodeAndClipChain,
+        reference_frame_relative_offset: LayoutVector2D,
     ) {
         let mut border = *border;
         ensure_no_corner_overlap(&mut border.radius, info.rect.size);
@@ -224,6 +225,7 @@ impl<'a> DisplayListFlattener<'a> {
                 border: border.into(),
                 widths: widths.to_au(),
             },
+            reference_frame_relative_offset,
         );
     }
 }

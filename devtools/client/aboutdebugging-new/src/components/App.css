@@ -54,6 +54,6 @@
 }
 
 .page__section {
-  margin-block-end: calc(var(--base-distance) * 12);
+  margin-block-end: calc(var(--base-unit) * 12);
   --section-inline-margin: calc(var(--alt-heading-icon-size) + var(--alt-heading-icon-gap));
 }

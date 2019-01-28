@@ -1369,6 +1369,12 @@ BrowserGlue.prototype = {
     Services.prefs.addObserver("urlclassifier.trackingTable", this._matchCBCategory);
     Services.prefs.addObserver("network.cookie.cookieBehavior", this._matchCBCategory);
     Services.prefs.addObserver(ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY, this._updateCBCategory);
+    Services.prefs.addObserver("media.autoplay.default", this._updateAutoplayPref);
+  },
+
+  _updateAutoplayPref() {
+    let blocked = Services.prefs.getIntPref("media.autoplay.default", 1);
+    Services.telemetry.scalarSet("media.autoplay_default_blocked", blocked);
   },
 
   _matchCBCategory() {

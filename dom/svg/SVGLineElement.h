@@ -37,7 +37,7 @@ class SVGLineElement final : public SVGLineElementBase {
 
   // SVGGeometryElement methods:
   virtual bool IsMarkable() override { return true; }
-  virtual void GetMarkPoints(nsTArray<nsSVGMark>* aMarks) override;
+  virtual void GetMarkPoints(nsTArray<SVGMark>* aMarks) override;
   virtual void GetAsSimplePath(SimplePath* aSimplePath) override;
   virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
   virtual bool GetGeometryBounds(

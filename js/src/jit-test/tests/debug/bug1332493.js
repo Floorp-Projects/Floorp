@@ -1,4 +1,4 @@
-// |jit-test| test-also-no-wasm-baseline; exitstatus: 3; skip-if: !wasmDebuggingIsSupported()
+// |jit-test| test-also-wasm-compiler-ion; exitstatus: 3; skip-if: !wasmDebuggingIsSupported()
 // Checking in debug frame is initialized properly during stack overflow.
 
 var dbg;

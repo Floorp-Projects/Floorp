@@ -16,7 +16,6 @@
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
         role="dialog"
-        ondialoghelp="openPrefsHelp()"
         data-l10n-id="sanitize-prefs"
         data-l10n-attrs="style"
         helpTopic="prefs-clear-private-data"

@@ -156,7 +156,8 @@ class AsyncFreeSnowWhite : public Runnable {
 
   nsresult Dispatch() {
     nsCOMPtr<nsIRunnable> self(this);
-    return NS_IdleDispatchToCurrentThread(self.forget(), 500);
+    return NS_DispatchToCurrentThreadQueue(self.forget(), 500,
+                                           EventQueuePriority::Idle);
   }
 
   void Start(bool aContinuation = false, bool aPurge = false) {
@@ -2740,6 +2741,9 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
       break;
     case JS_TELEMETRY_GC_MARK_RATE:
       Telemetry::Accumulate(Telemetry::GC_MARK_RATE, sample);
+      break;
+    case JS_TELEMETRY_DEPRECATED_STRING_GENERICS:
+      Telemetry::Accumulate(Telemetry::JS_DEPRECATED_STRING_GENERICS, sample);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected JS_TELEMETRY id");

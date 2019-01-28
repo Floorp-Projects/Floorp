@@ -695,6 +695,10 @@ CssComputedView.prototype = {
    * Context menu handler.
    */
   _onContextMenu: function(event) {
+    // Call stopPropagation() and preventDefault() here so that avoid to show default
+    // context menu in about:devtools-toolbox. See Bug 1515265.
+    event.stopPropagation();
+    event.preventDefault();
     this.contextMenu.show(event);
   },
 
@@ -975,7 +979,7 @@ PropertyView.prototype = {
 
     // Build the style name element
     this.nameNode = doc.createElementNS(HTML_NS, "span");
-    this.nameNode.classList.add("computed-property-name", "theme-fg-color5");
+    this.nameNode.classList.add("computed-property-name", "theme-fg-color3");
     // Reset its tabindex attribute otherwise, if an ellipsis is applied
     // it will be reachable via TABing
     this.nameNode.setAttribute("tabindex", "");

@@ -154,7 +154,8 @@ interface mozIThirdPartyUtil : nsISupports
    *
    * Returns the top-level window associated with the given channel.
    */
-  mozIDOMWindowProxy getTopWindowForChannel(in nsIChannel aChannel);
+  [noscript]
+  mozIDOMWindowProxy getTopWindowForChannel(in nsIChannel aChannel, [optional] in nsIURI aURIBeingLoaded);
 };
 
 %{ C++

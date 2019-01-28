@@ -15,7 +15,7 @@ varying vec4 vUvClip;
 
 #ifdef WR_VERTEX_SHADER
 
-#define VECS_PER_TEXT_RUN           3
+#define VECS_PER_TEXT_RUN           2
 #define GLYPHS_PER_GPU_BLOCK        2U
 
 struct Glyph {
@@ -53,12 +53,11 @@ GlyphResource fetch_glyph_resource(int address) {
 struct TextRun {
     vec4 color;
     vec4 bg_color;
-    vec2 offset;
 };
 
 TextRun fetch_text_run(int address) {
-    vec4 data[3] = fetch_from_gpu_cache_3(address);
-    return TextRun(data[0], data[1], data[2].xy);
+    vec4 data[2] = fetch_from_gpu_cache_2(address);
+    return TextRun(data[0], data[1]);
 }
 
 VertexInfo write_text_vertex(RectWithSize local_clip_rect,
@@ -160,13 +159,14 @@ void main(void) {
     PictureTask task = fetch_picture_task(ph.render_task_index);
 
     TextRun text = fetch_text_run(ph.specific_prim_address);
+    vec2 text_offset = vec2(ph.user_data.xy) / 256.0;
 
     if (color_mode == COLOR_MODE_FROM_PASS) {
         color_mode = uMode;
     }
 
     Glyph glyph = fetch_glyph(ph.specific_prim_address, glyph_index);
-    glyph.offset += ph.local_rect.p0 - text.offset;
+    glyph.offset += ph.local_rect.p0 - text_offset;
 
     GlyphResource res = fetch_glyph_resource(resource_address);
 
@@ -175,7 +175,7 @@ void main(void) {
     mat2 glyph_transform = mat2(transform.m) * task.common_data.device_pixel_scale;
 
     // Compute the glyph rect in glyph space.
-    RectWithSize glyph_rect = RectWithSize(res.offset + glyph_transform * (text.offset + glyph.offset),
+    RectWithSize glyph_rect = RectWithSize(res.offset + glyph_transform * (text_offset + glyph.offset),
                                            res.uv_rect.zw - res.uv_rect.xy);
 
 #else
@@ -183,7 +183,7 @@ void main(void) {
     float scale = res.scale / task.common_data.device_pixel_scale;
 
     // Compute the glyph rect in local space.
-    RectWithSize glyph_rect = RectWithSize(scale * res.offset + text.offset + glyph.offset,
+    RectWithSize glyph_rect = RectWithSize(scale * res.offset + text_offset + glyph.offset,
                                            scale * (res.uv_rect.zw - res.uv_rect.xy));
 #endif
 
@@ -216,7 +216,7 @@ void main(void) {
                                       ph.z,
                                       transform,
                                       task,
-                                      text.offset,
+                                      text_offset,
                                       glyph.offset,
                                       glyph_rect,
                                       snap_bias);

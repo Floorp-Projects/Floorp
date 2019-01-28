@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILNULLTYPE_H_
-#define NS_SMILNULLTYPE_H_
+#ifndef mozilla_SMILNullType_h
+#define mozilla_SMILNullType_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILType.h"
@@ -14,29 +14,28 @@ namespace mozilla {
 
 class SMILNullType : public SMILType {
  public:
-  // Singleton for nsSMILValue objects to hold onto.
+  // Singleton for SMILValue objects to hold onto.
   static SMILNullType* Singleton();
 
  protected:
   // SMILType Methods
   // -------------------
-  virtual void Init(nsSMILValue& aValue) const override {}
-  virtual void Destroy(nsSMILValue& aValue) const override {}
-  virtual nsresult Assign(nsSMILValue& aDest,
-                          const nsSMILValue& aSrc) const override;
+  virtual void Init(SMILValue& aValue) const override {}
+  virtual void Destroy(SMILValue& aValue) const override {}
+  virtual nsresult Assign(SMILValue& aDest,
+                          const SMILValue& aSrc) const override;
 
   // The remaining methods should never be called, so although they're very
   // simple they don't need to be inline.
-  virtual bool IsEqual(const nsSMILValue& aLeft,
-                       const nsSMILValue& aRight) const override;
-  virtual nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+  virtual bool IsEqual(const SMILValue& aLeft,
+                       const SMILValue& aRight) const override;
+  virtual nsresult Add(SMILValue& aDest, const SMILValue& aValueToAdd,
                        uint32_t aCount) const override;
-  virtual nsresult ComputeDistance(const nsSMILValue& aFrom,
-                                   const nsSMILValue& aTo,
+  virtual nsresult ComputeDistance(const SMILValue& aFrom, const SMILValue& aTo,
                                    double& aDistance) const override;
-  virtual nsresult Interpolate(const nsSMILValue& aStartVal,
-                               const nsSMILValue& aEndVal, double aUnitDistance,
-                               nsSMILValue& aResult) const override;
+  virtual nsresult Interpolate(const SMILValue& aStartVal,
+                               const SMILValue& aEndVal, double aUnitDistance,
+                               SMILValue& aResult) const override;
 
  private:
   // Private constructor: prevent instances beyond my singleton.
@@ -45,4 +44,4 @@ class SMILNullType : public SMILType {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILNULLTYPE_H_
+#endif  // mozilla_SMILNullType_h

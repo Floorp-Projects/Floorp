@@ -39,6 +39,7 @@ job-defaults:
         update-channel:
             by-release-type:
                 nightly: nightly
+                nightly-oak: nightly-oak
                 beta:
                     by-shipping-product:
                         devedition: aurora

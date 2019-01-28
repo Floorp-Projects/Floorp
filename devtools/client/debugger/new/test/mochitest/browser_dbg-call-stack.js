@@ -107,9 +107,7 @@ add_task(async function() {
 
   await waitForPaused(dbg);
   const $group = findElementWithSelector(dbg, ".frames .frames-group");
-  is($group.querySelector(".title").textContent,
-    "<anonymous>", "Group has expected frame title");
   is($group.querySelector(".badge").textContent, "2", "Group has expected badge");
-  is($group.querySelector(".location").textContent, "Angular",
+  is($group.querySelector(".group-description-name").textContent, "Angular",
     "Group has expected location");
 });

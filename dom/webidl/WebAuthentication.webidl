@@ -146,7 +146,8 @@ dictionary PublicKeyCredentialDescriptor {
 enum AuthenticatorTransport {
     "usb",
     "nfc",
-    "ble"
+    "ble",
+    "internal"
 };
 
 typedef long COSEAlgorithmIdentifier;

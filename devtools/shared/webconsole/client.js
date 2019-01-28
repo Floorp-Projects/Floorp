@@ -668,13 +668,13 @@ WebConsoleClient.prototype = {
    * @return request
    *         Request object that implements both Promise and EventEmitter interfaces
    */
-  stopListeners: function(listeners, onResponse) {
+  stopListeners: function(listeners) {
     const packet = {
       to: this.actorID,
       type: "stopListeners",
       listeners: listeners,
     };
-    return this._client.request(packet, onResponse);
+    return this._client.request(packet);
   },
 
   /**
@@ -696,20 +696,18 @@ WebConsoleClient.prototype = {
   },
 
   /**
-   * Close the WebConsoleClient. This stops all the listeners on the server and
-   * detaches from the console actor.
+   * Close the WebConsoleClient.
    *
    * @param function onResponse
    *        Function to invoke when the server response is received.
    */
-  detach: function(onResponse) {
+  destroy: function() {
     this._client.removeListener("evaluationResult", this.onEvaluationResult);
     this._client.removeListener("networkEvent", this.onNetworkEvent);
     this._client.removeListener("networkEventUpdate",
                                 this.onNetworkEventUpdate);
     this._client.removeListener("inspectObject", this.onInspectObject);
     this._client.removeListener("documentEvent", this.onDocEvent);
-    this.stopListeners(null, onResponse);
     this._longStrings = null;
     this._client = null;
     this.pendingEvaluationResults.clear();

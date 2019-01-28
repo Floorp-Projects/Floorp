@@ -14,7 +14,7 @@ fuzzy-if(webrender,0-3,0-825) == quirks-decorations.html quirks-decorations-ref.
 == standards-decorations.html standards-decorations-ref.html
 == standards-line-height.html standards-line-height-ref.html
 fuzzy-if(skiaContent,0-1,0-4200) fuzzy-if(webrender,0-47,0-6) == selection.html selection-ref.html
-fuzzy-if(webrender,0-5,0-509) == marker-shadow.html marker-shadow-ref.html
+fuzzy-if(webrender,0-8,0-509) == marker-shadow.html marker-shadow-ref.html
 fuzzy-if(webrender,0-3,0-25) == aligned-baseline.html aligned-baseline-ref.html
 skip-if(Android) fuzzy-if(skiaContent,0-1,0-5) == clipped-elements.html clipped-elements-ref.html
 == theme-overflow.html theme-overflow-ref.html

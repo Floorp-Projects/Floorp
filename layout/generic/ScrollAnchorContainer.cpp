@@ -9,6 +9,7 @@
 #include "GeckoProfiler.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/ToString.h"
 #include "nsGfxScrollFrame.h"
 #include "nsLayoutUtils.h"
 
@@ -163,9 +164,9 @@ void ScrollAnchorContainer::SelectAnchor() {
   }
 
   AUTO_PROFILER_LABEL("ScrollAnchorContainer::SelectAnchor", LAYOUT);
-  ANCHOR_LOG("Selecting anchor for %p with scroll-port [%d %d x %d %d].\n",
-             this, mScrollFrame->mScrollPort.x, mScrollFrame->mScrollPort.y,
-             mScrollFrame->mScrollPort.width, mScrollFrame->mScrollPort.height);
+  ANCHOR_LOG(
+      "Selecting anchor for %p with scroll-port=%s.\n", this,
+      mozilla::ToString(mScrollFrame->GetVisualOptimalViewingRect()).c_str());
 
   const nsStyleDisplay* disp = Frame()->StyleDisplay();
 
@@ -436,7 +437,8 @@ ScrollAnchorContainer::ExamineAnchorCandidate(nsIFrame* aFrame) const {
   //
   // [1] https://github.com/w3c/csswg-drafts/issues/3483
   nsRect visibleRect;
-  if (!visibleRect.IntersectRect(rect, mScrollFrame->mScrollPort)) {
+  if (!visibleRect.IntersectRect(rect,
+                                 mScrollFrame->GetVisualOptimalViewingRect())) {
     return ExamineResult::Exclude;
   }
 

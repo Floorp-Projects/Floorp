@@ -156,6 +156,10 @@ void ModuleLoadRequest::ModuleLoaded() {
 }
 
 void ModuleLoadRequest::ModuleErrored() {
+  if (IsCanceled()) {
+    return;
+  }
+
   LOG(("ScriptLoadRequest (%p): Module errored", this));
 
   mLoader->CheckModuleDependenciesLoaded(this);
@@ -167,6 +171,10 @@ void ModuleLoadRequest::ModuleErrored() {
 }
 
 void ModuleLoadRequest::DependenciesLoaded() {
+  if (IsCanceled()) {
+    return;
+  }
+
   // The module and all of its dependencies have been successfully fetched and
   // compiled.
 

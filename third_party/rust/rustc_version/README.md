@@ -18,7 +18,7 @@ At the point of the last update of this README, the latest published version cou
 Add the following dependency to your Cargo manifest...
 
 ```toml
-[dependencies]
+[build-dependencies]
 rustc_version = "0.2"
 ```
 

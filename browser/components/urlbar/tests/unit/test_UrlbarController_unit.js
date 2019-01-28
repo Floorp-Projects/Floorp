@@ -17,16 +17,16 @@ let controller;
 /**
  * Asserts that the query context has the expected values.
  *
- * @param {QueryContext} context
- * @param {object} expectedValues The expected values for the QueryContext.
+ * @param {UrlbarQueryContext} context
+ * @param {object} expectedValues The expected values for the UrlbarQueryContext.
  */
 function assertContextMatches(context, expectedValues) {
-  Assert.ok(context instanceof QueryContext,
-    "Should be a QueryContext");
+  Assert.ok(context instanceof UrlbarQueryContext,
+    "Should be a UrlbarQueryContext");
 
   for (let [key, value] of Object.entries(expectedValues)) {
     Assert.equal(context[key], value,
-      `Should have the expected value for ${key} in the QueryContext`);
+      `Should have the expected value for ${key} in the UrlbarQueryContext`);
   }
 }
 
@@ -172,8 +172,13 @@ add_task(function test_handle_query_starts_search_sets_enableAutofill() {
 });
 
 add_task(function test_cancel_query() {
+  // Ensure the controller doesn't have any previous queries.
+  delete controller._lastQueryContext;
+
   const context = createContext();
-  controller.cancelQuery(context);
+  controller.startQuery(context);
+
+  controller.cancelQuery();
 
   Assert.equal(fPM.cancelQuery.callCount, 1,
     "Should have called cancelQuery once");

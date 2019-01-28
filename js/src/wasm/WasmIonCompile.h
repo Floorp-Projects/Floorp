@@ -34,7 +34,6 @@ MOZ_MUST_USE bool IonCompileFunctions(const ModuleEnvironment& env,
                                       LifoAlloc& lifo,
                                       const FuncCompileInputVector& inputs,
                                       CompiledCode* code,
-                                      ExclusiveDeferredValidationState& dvs,
                                       UniqueChars* error);
 
 }  // namespace wasm

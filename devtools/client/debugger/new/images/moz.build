@@ -50,6 +50,7 @@ DevToolsModules(
     'react.svg',
     'redux.svg',
     'regex-match.svg',
+    'reload.svg',
     'resume.svg',
     'rxjs.svg',
     'sencha-extjs.svg',

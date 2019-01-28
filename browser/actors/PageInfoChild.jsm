@@ -108,7 +108,7 @@ class PageInfoChild extends ActorChild {
       let num = window.frames.length;
       for (let i = 0; i < num; i++) {
         // Recurse through the frames.
-        frameList.concat(this.goThroughFrames(window.frames[i].document,
+        frameList = frameList.concat(this.goThroughFrames(window.frames[i].document,
                                               window.frames[i]));
       }
     }

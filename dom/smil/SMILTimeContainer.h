@@ -4,18 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_SMILTIMECONTAINER_H_
-#define NS_SMILTIMECONTAINER_H_
+#ifndef mozilla_SMILTimeContainer_h
+#define mozilla_SMILTimeContainer_h
 
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/SMILMilestone.h"
+#include "mozilla/SMILTypes.h"
 #include "nscore.h"
-#include "nsSMILTypes.h"
 #include "nsTPriorityQueue.h"
 
-class nsSMILTimeValue;
-
 namespace mozilla {
+
+class SMILTimeValue;
 
 //----------------------------------------------------------------------
 // SMILTimeContainer
@@ -85,7 +85,7 @@ class SMILTimeContainer {
    * Return the time elapsed since this time container's begin time (expressed
    * in parent time) minus any accumulated offset from pausing.
    */
-  nsSMILTime GetCurrentTimeAsSMILTime() const;
+  SMILTime GetCurrentTimeAsSMILTime() const;
 
   /*
    * Seek the document timeline to the specified time.
@@ -93,12 +93,12 @@ class SMILTimeContainer {
    * @param aSeekTo The time to seek to, expressed in this time container's time
    * base (i.e. the same units as GetCurrentTime).
    */
-  void SetCurrentTime(nsSMILTime aSeekTo);
+  void SetCurrentTime(SMILTime aSeekTo);
 
   /*
    * Return the current time for the parent time container if any.
    */
-  virtual nsSMILTime GetParentTime() const;
+  virtual SMILTime GetParentTime() const;
 
   /*
    * Convert container time to parent time.
@@ -107,7 +107,7 @@ class SMILTimeContainer {
    * @return  The equivalent parent time or indefinite if the container is
    *          paused and the time is in the future.
    */
-  nsSMILTimeValue ContainerToParentTime(nsSMILTime aContainerTime) const;
+  SMILTimeValue ContainerToParentTime(SMILTime aContainerTime) const;
 
   /*
    * Convert from parent time to container time.
@@ -116,7 +116,7 @@ class SMILTimeContainer {
    * @return  The equivalent container time or indefinite if the container is
    *          paused and aParentTime is after the time when the pause began.
    */
-  nsSMILTimeValue ParentToContainerTime(nsSMILTime aParentTime) const;
+  SMILTimeValue ParentToContainerTime(SMILTime aParentTime) const;
 
   /*
    * If the container is paused, causes the pause time to be updated to the
@@ -247,7 +247,7 @@ class SMILTimeContainer {
   SMILTimeContainer* mParent;
 
   // The current time established at the last call to Sample()
-  nsSMILTime mCurrentTime;
+  SMILTime mCurrentTime;
 
   // The number of milliseconds for which the container has been paused
   // (excluding the current pause interval if the container is currently
@@ -255,10 +255,10 @@ class SMILTimeContainer {
   //
   //  Current time = parent time - mParentOffset
   //
-  nsSMILTime mParentOffset;
+  SMILTime mParentOffset;
 
   // The timestamp in parent time when the container was paused
-  nsSMILTime mPauseStart;
+  SMILTime mPauseStart;
 
   // Whether or not a pause sample is required
   bool mNeedsPauseSample;
@@ -297,4 +297,4 @@ class SMILTimeContainer {
 
 }  // namespace mozilla
 
-#endif  // NS_SMILTIMECONTAINER_H_
+#endif  // mozilla_SMILTimeContainer_h

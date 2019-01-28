@@ -25,14 +25,17 @@ class WebProgressChild {
 
     this.inLoadURI = false;
 
+    // NOTIFY_CONTENT_BLOCKING is handled by PBrowser.
+    let notifyCode = Ci.nsIWebProgress.NOTIFY_ALL & ~Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING;
+
     this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
                      .createInstance(Ci.nsIWebProgress);
-    this._filter.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
+    this._filter.addProgressListener(this, notifyCode);
     this._filter.target = this.mm.tabEventTarget;
 
     let webProgress = this.mm.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this._filter, Ci.nsIWebProgress.NOTIFY_ALL);
+    webProgress.addProgressListener(this._filter, notifyCode);
 
     // This message is used for measuring this.mm.content process startup performance.
     this.mm.sendAsyncMessage("Content:BrowserChildReady", { time: Services.telemetry.msSystemNow() });
@@ -195,18 +198,6 @@ class WebProgressChild {
     json.secInfo = this.getSecInfoAsString();
 
     this._send("Content:SecurityChange", json);
-  }
-
-  onContentBlockingEvent(aWebProgress, aRequest, aEvent) {
-    let json = this._setupJSON(aWebProgress, aRequest);
-
-    json.event = aEvent;
-    json.matchedList = null;
-    if (aRequest && aRequest instanceof Ci.nsIClassifiedChannel) {
-      json.matchedList = aRequest.matchedList;
-    }
-
-    this._send("Content:ContentBlockingEvent", json);
   }
 
   onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {

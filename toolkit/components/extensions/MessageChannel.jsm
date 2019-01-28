@@ -877,9 +877,9 @@ this.MessageChannel = {
       });
     }
 
-    let responses = handlers.map(handler => {
+    let responses = handlers.map((handler, i) => {
       try {
-        return handler.receiveMessage(data);
+        return handler.receiveMessage(data, i + 1 == handlers.length);
       } catch (e) {
         return Promise.reject(e);
       }

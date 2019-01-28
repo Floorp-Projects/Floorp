@@ -98,9 +98,11 @@ JitContext::JitContext(CompileRuntime* rt, CompileRealm* realm,
     : cx(nullptr),
       temp(temp),
       runtime(rt),
-      realm(realm),
-      zone(realm ? realm->zone() : nullptr),
       prev_(CurrentJitContext()),
+      realm_(realm),
+#ifdef DEBUG
+      isCompilingWasm_(!realm),
+#endif
       assemblerCount_(0) {
   SetJitContext(this);
 }
@@ -109,9 +111,11 @@ JitContext::JitContext(JSContext* cx, TempAllocator* temp)
     : cx(cx),
       temp(temp),
       runtime(CompileRuntime::get(cx->runtime())),
-      realm(CompileRealm::get(cx->realm())),
-      zone(CompileZone::get(cx->zone())),
       prev_(CurrentJitContext()),
+      realm_(CompileRealm::get(cx->realm())),
+#ifdef DEBUG
+      isCompilingWasm_(false),
+#endif
       assemblerCount_(0) {
   SetJitContext(this);
 }
@@ -2157,7 +2161,7 @@ static bool CanIonCompileOrInlineScript(JSScript* script, const char** reason) {
     return false;
   }
 
-  if (script->nTypeSets() >= UINT16_MAX) {
+  if (script->numBytecodeTypeSets() >= JSScript::MaxBytecodeTypeSets) {
     // In this case multiple bytecode ops can share a single observed
     // TypeSet (see bug 1303710).
     *reason = "too many typesets";

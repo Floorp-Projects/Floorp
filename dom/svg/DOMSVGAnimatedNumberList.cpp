@@ -5,22 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DOMSVGAnimatedNumberList.h"
+
 #include "DOMSVGNumberList.h"
 #include "SVGAnimatedNumberList.h"
-#include "SVGElement.h"
-#include "nsCOMPtr.h"
-#include "nsSVGAttrTearoffTable.h"
+#include "SVGAttrTearoffTable.h"
 #include "mozilla/dom/SVGAnimatedNumberListBinding.h"
+#include "mozilla/dom/SVGElement.h"
+#include "mozilla/RefPtr.h"
 
 // See the architecture comment in this file's header.
 
 namespace mozilla {
 namespace dom {
 
-static inline nsSVGAttrTearoffTable<SVGAnimatedNumberList,
-                                    DOMSVGAnimatedNumberList>&
+static inline SVGAttrTearoffTable<SVGAnimatedNumberList,
+                                  DOMSVGAnimatedNumberList>&
 SVGAnimatedNumberListTearoffTable() {
-  static nsSVGAttrTearoffTable<SVGAnimatedNumberList, DOMSVGAnimatedNumberList>
+  static SVGAttrTearoffTable<SVGAnimatedNumberList, DOMSVGAnimatedNumberList>
       sSVGAnimatedNumberListTearoffTable;
   return sSVGAnimatedNumberListTearoffTable;
 }

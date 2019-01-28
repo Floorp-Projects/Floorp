@@ -35,7 +35,8 @@ add_task(async function() {
   is(list.selectedIndex, initialIndex, "The initial index is selected again.");
   isnot(editedValue, nextValue, "The URL has changed.");
 
-  let docLoad = waitForDocLoadAndStopIt("http://" + editedValue);
+  let docLoad = BrowserTestUtils.waitForDocLoadAndStopIt("http://" + editedValue,
+    gBrowser.selectedBrowser);
 
   info("Press return to load edited URL.");
   EventUtils.synthesizeKey("KEY_Enter");

@@ -127,7 +127,7 @@ JS::Realm* NewRealm(JSContext* cx, JSPrincipals* principals,
 
 namespace gc {
 
-void FinishGC(JSContext* cx);
+void FinishGC(JSContext* cx, JS::GCReason = JS::GCReason::FINISH_GC);
 
 /*
  * Merge all contents of source into target. This can only be used if source is

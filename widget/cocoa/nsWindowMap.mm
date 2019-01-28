@@ -8,13 +8,13 @@
 #include "nsChildView.h"
 #include "nsCocoaWindow.h"
 
-@interface WindowDataMap(Private)
+@interface WindowDataMap (Private)
 
 - (NSString*)keyForWindow:(NSWindow*)inWindow;
 
 @end
 
-@interface TopLevelWindowData(Private)
+@interface TopLevelWindowData (Private)
 
 - (void)windowResignedKey:(NSNotification*)inNotification;
 - (void)windowBecameKey:(NSNotification*)inNotification;
@@ -26,21 +26,18 @@
 
 @implementation WindowDataMap
 
-+ (WindowDataMap*)sharedWindowDataMap
-{
++ (WindowDataMap*)sharedWindowDataMap {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   static WindowDataMap* sWindowMap = nil;
-  if (!sWindowMap)
-    sWindowMap = [[WindowDataMap alloc] init];
+  if (!sWindowMap) sWindowMap = [[WindowDataMap alloc] init];
 
   return sWindowMap;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (id)init
-{
+- (id)init {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ((self = [super init])) {
@@ -51,8 +48,7 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mWindowMap release];
@@ -61,22 +57,19 @@
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (void)ensureDataForWindow:(NSWindow*)inWindow
-{
+- (void)ensureDataForWindow:(NSWindow*)inWindow {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!inWindow || [self dataForWindow:inWindow])
-    return;
+  if (!inWindow || [self dataForWindow:inWindow]) return;
 
   TopLevelWindowData* windowData = [[TopLevelWindowData alloc] initWithWindow:inWindow];
-  [self setData:windowData forWindow:inWindow]; // takes ownership
+  [self setData:windowData forWindow:inWindow];  // takes ownership
   [windowData release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (id)dataForWindow:(NSWindow*)inWindow
-{
+- (id)dataForWindow:(NSWindow*)inWindow {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   return [mWindowMap objectForKey:[self keyForWindow:inWindow]];
@@ -84,8 +77,7 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (void)setData:(id)inData forWindow:(NSWindow*)inWindow
-{
+- (void)setData:(id)inData forWindow:(NSWindow*)inWindow {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mWindowMap setObject:inData forKey:[self keyForWindow:inWindow]];
@@ -93,8 +85,7 @@
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (void)removeDataForWindow:(NSWindow*)inWindow
-{
+- (void)removeDataForWindow:(NSWindow*)inWindow {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mWindowMap removeObjectForKey:[self keyForWindow:inWindow]];
@@ -102,8 +93,7 @@
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (NSString*)keyForWindow:(NSWindow*)inWindow
-{
+- (NSString*)keyForWindow:(NSWindow*)inWindow {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   return [NSString stringWithFormat:@"%p", inWindow];
@@ -114,14 +104,13 @@
 @end
 
 //  TopLevelWindowData
-// 
+//
 //  This class holds data about top-level windows. We can't use a window
 //  delegate, because an embedder may already have one.
 
 @implementation TopLevelWindowData
 
-- (id)initWithWindow:(NSWindow*)inWindow
-{
+- (id)initWithWindow:(NSWindow*)inWindow {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ((self = [super init])) {
@@ -155,8 +144,7 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -174,16 +162,13 @@
 //
 // For use with clients that (like Firefox) do use top-level widgets (and
 // have NSWindow delegates of class WindowDelegate).
-+ (void)activateInWindow:(NSWindow*)aWindow
-{
++ (void)activateInWindow:(NSWindow*)aWindow {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  WindowDelegate* delegate = (WindowDelegate*) [aWindow delegate];
-  if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]])
-    return;
+  WindowDelegate* delegate = (WindowDelegate*)[aWindow delegate];
+  if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]]) return;
 
-  if ([delegate toplevelActiveState])
-    return;
+  if ([delegate toplevelActiveState]) return;
   [delegate sendToplevelActivateEvents];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -197,16 +182,13 @@
 //
 // For use with clients that (like Firefox) do use top-level widgets (and
 // have NSWindow delegates of class WindowDelegate).
-+ (void)deactivateInWindow:(NSWindow*)aWindow
-{
++ (void)deactivateInWindow:(NSWindow*)aWindow {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  WindowDelegate* delegate = (WindowDelegate*) [aWindow delegate];
-  if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]])
-    return;
+  WindowDelegate* delegate = (WindowDelegate*)[aWindow delegate];
+  if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]]) return;
 
-  if (![delegate toplevelActiveState])
-    return;
+  if (![delegate toplevelActiveState]) return;
   [delegate sendToplevelDeactivateEvents];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -214,26 +196,22 @@
 
 // For use with clients that (like Camino) don't use top-level widgets (and
 // don't have NSWindow delegates of class WindowDelegate).
-+ (void)activateInWindowViews:(NSWindow*)aWindow
-{
++ (void)activateInWindowViews:(NSWindow*)aWindow {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   id firstResponder = [aWindow firstResponder];
-  if ([firstResponder isKindOfClass:[ChildView class]])
-    [firstResponder viewsWindowDidBecomeKey];
+  if ([firstResponder isKindOfClass:[ChildView class]]) [firstResponder viewsWindowDidBecomeKey];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // For use with clients that (like Camino) don't use top-level widgets (and
 // don't have NSWindow delegates of class WindowDelegate).
-+ (void)deactivateInWindowViews:(NSWindow*)aWindow
-{
++ (void)deactivateInWindowViews:(NSWindow*)aWindow {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   id firstResponder = [aWindow firstResponder];
-  if ([firstResponder isKindOfClass:[ChildView class]])
-    [firstResponder viewsWindowDidResignKey];
+  if ([firstResponder isKindOfClass:[ChildView class]]) [firstResponder viewsWindowDidResignKey];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -243,8 +221,7 @@
 // against sending duplicate events.  But in general the NS_ACTIVATE event
 // should be sent when a native window becomes key, and the NS_DEACTIVATE
 // event should be sent when it resignes key.
-- (void)windowBecameKey:(NSNotification*)inNotification
-{
+- (void)windowBecameKey:(NSNotification*)inNotification {
   NSWindow* window = (NSWindow*)[inNotification object];
 
   id delegate = [window delegate];
@@ -257,8 +234,7 @@
   [[window contentView] setNeedsDisplay:YES];
 }
 
-- (void)windowResignedKey:(NSNotification*)inNotification
-{
+- (void)windowResignedKey:(NSNotification*)inNotification {
   NSWindow* window = (NSWindow*)[inNotification object];
 
   id delegate = [window delegate];
@@ -274,8 +250,7 @@
 // The appearance of a top-level window depends on its main state (not its key
 // state).  So (for non-embedders) we need to ensure that a top-level window
 // is main when an NS_ACTIVATE event is sent to Gecko for it.
-- (void)windowBecameMain:(NSNotification*)inNotification
-{
+- (void)windowBecameMain:(NSNotification*)inNotification {
   NSWindow* window = (NSWindow*)[inNotification object];
 
   id delegate = [window delegate];
@@ -286,8 +261,7 @@
     [TopLevelWindowData activateInWindow:window];
 }
 
-- (void)windowResignedMain:(NSNotification*)inNotification
-{
+- (void)windowResignedMain:(NSNotification*)inNotification {
   NSWindow* window = (NSWindow*)[inNotification object];
 
   id delegate = [window delegate];
@@ -295,8 +269,7 @@
     [TopLevelWindowData deactivateInWindow:window];
 }
 
-- (void)windowWillClose:(NSNotification*)inNotification
-{
+- (void)windowWillClose:(NSNotification*)inNotification {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // postpone our destruction

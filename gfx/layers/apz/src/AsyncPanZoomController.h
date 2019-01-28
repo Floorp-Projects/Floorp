@@ -1187,6 +1187,12 @@ class AsyncPanZoomController {
   // held whenever this is updated. In practice though... see bug 897017.
   PanZoomState mState;
 
+  /**
+   * Returns whether the specified PanZoomState does not need to be reset when
+   * a scroll offset update is processed.
+   */
+  static bool CanHandleScrollOffsetUpdate(PanZoomState aState);
+
  private:
   friend class StateChangeNotificationBlocker;
   /**

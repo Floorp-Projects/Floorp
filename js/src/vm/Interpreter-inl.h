@@ -304,15 +304,7 @@ inline void SetAliasedVarOperation(JSContext* cx, JSScript* script,
                                    EnvironmentCoordinate ec, const Value& val,
                                    MaybeCheckTDZ checkTDZ) {
   MOZ_ASSERT_IF(checkTDZ, !IsUninitializedLexical(obj.aliasedBinding(ec)));
-
-  // Avoid computing the name if no type updates are needed, as this may be
-  // expensive on scopes with large numbers of variables.
-  PropertyName* name =
-      obj.isSingleton() ? EnvironmentCoordinateName(
-                              cx->caches().envCoordinateNameCache, script, pc)
-                        : nullptr;
-
-  obj.setAliasedBinding(cx, ec, name, val);
+  obj.setAliasedBinding(cx, ec, val);
 }
 
 inline bool SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc,
@@ -361,7 +353,10 @@ inline void InitGlobalLexicalOperation(JSContext* cx,
   Rooted<LexicalEnvironmentObject*> lexicalEnv(cx, lexicalEnvArg);
   RootedShape shape(cx, lexicalEnv->lookup(cx, script->getName(pc)));
   MOZ_ASSERT(shape);
-  lexicalEnv->setSlotWithType(cx, shape, value);
+  MOZ_ASSERT(IsUninitializedLexical(lexicalEnv->getSlot(shape->slot())));
+
+  // Don't treat the initial assignment to global lexicals as overwrites.
+  lexicalEnv->setSlotWithType(cx, shape, value, /* overwriting = */ false);
 }
 
 inline bool InitPropertyOperation(JSContext* cx, JSOp op, HandleObject obj,

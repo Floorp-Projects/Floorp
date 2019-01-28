@@ -5941,6 +5941,10 @@ void nsLayoutUtils::DrawUniDirString(const char16_t* aString, uint32_t aLength,
     if (auto* textDrawer = aContext->GetTextDrawer()) {
       wr::Shadow wrShadow;
 
+      // Gecko already inflates the bounding rect of text shadows,
+      // so tell WR not to inflate again.
+      wrShadow.should_inflate = false;
+
       wrShadow.offset = {
           presCtx->AppUnitsToFloatDevPixels(shadowDetails->mXOffset),
           presCtx->AppUnitsToFloatDevPixels(shadowDetails->mYOffset)};

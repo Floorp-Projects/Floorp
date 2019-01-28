@@ -41,7 +41,6 @@ extern bool GenerateEntryStubs(jit::MacroAssembler& masm,
                                size_t funcExportIndex,
                                const FuncExport& funcExport,
                                const Maybe<jit::ImmPtr>& callee, bool isAsmJS,
-                               HasGcTypes gcTypesConfigured,
                                CodeRangeVector* codeRanges);
 
 extern void GenerateTrapExitMachineState(jit::MachineState* machine,

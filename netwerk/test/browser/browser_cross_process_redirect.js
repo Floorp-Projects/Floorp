@@ -11,16 +11,8 @@ let gLoadedInProcess2Promise = null;
 
 function _createProcessChooser(tabParent, from, to, rejectPromise = false) {
   let processChooser = new ProcessChooser(tabParent, "example.com", "example.org", rejectPromise);
-  processChooser.onComplete = () => {
-    gRegistrar.unregisterFactory(processChooser.classID, processChooser);
-  };
-  gRegistrar.registerFactory(processChooser.classID, "",
-                            "@mozilla.org/network/processChooser",
-                            processChooser);
   registerCleanupFunction(function() {
-    if (processChooser.onComplete) {
-      processChooser.onComplete();
-    }
+    processChooser.unregister();
   });
 }
 
@@ -29,43 +21,51 @@ function ProcessChooser(tabParent, from, to, rejectPromise = false) {
   this.fromDomain = from;
   this.toDomain = to;
   this.rejectPromise = rejectPromise;
+
+  this.registered = true;
+  Services.obs.addObserver(this, "http-on-examine-response");
+  Services.obs.addObserver(this, "http-on-examine-merged-response");
+  Services.obs.addObserver(this, "http-on-examine-cached-response");
 }
 
 ProcessChooser.prototype = {
-  // nsIRedirectProcessChooser
-  getChannelRedirectTarget: function(aChannel, aParentChannel, aIdentifier) {
-    // Don't report failure when returning NS_ERROR_NOT_AVAILABLE
-    expectUncaughtException(true);
+  unregister() {
+    if (!this.registered) {
+      return;
+    }
+    this.registered = false;
+    Services.obs.removeObserver(this, "http-on-examine-response");
+    Services.obs.removeObserver(this, "http-on-examine-merged-response");
+    Services.obs.removeObserver(this, "http-on-examine-cached-response");
+  },
 
-    // let tabParent = aParentChannel.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsITabParent);
+  examine(aChannel) {
     if (this.channel && this.channel != aChannel) {
       // Hack: this is just so we don't get redirected multiple times.
       info("same channel. give null");
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      return;
     }
 
     if (aChannel.URI.host != this.toDomain) {
       info("wrong host for channel " + aChannel.URI.host);
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      return;
     }
 
     let redirects = aChannel.loadInfo.redirectChain;
     if (redirects[redirects.length - 1].principal.URI.host != this.fromDomain) {
       info("didn't find redirect");
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      return;
     }
 
-    info("returning promise");
+    info("setting channel");
     this.channel = aChannel;
     let self = this;
 
-    expectUncaughtException(false);
-    if (this.onComplete) {
-      this.onComplete();
-      this.onComplete = null;
-    }
-    aIdentifier.value = 42;
-    return new Promise((resolve, reject) => {
+    info("unregistering");
+    this.unregister();
+
+    let identifier = 42;
+    let tabPromise = new Promise((resolve, reject) => {
       if (self.rejectPromise) {
         info("rejecting");
         reject(Cr.NS_ERROR_NOT_AVAILABLE);
@@ -76,20 +76,26 @@ ProcessChooser.prototype = {
       info("resolving");
       resolve(self.tabParent);
     });
+
+    info("calling switchprocessto");
+    aChannel.switchProcessTo(tabPromise, identifier);
   },
 
-  // nsIFactory
-  createInstance: function(aOuter, aIID) {
-    if (aOuter) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+  observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "http-on-examine-response":
+      case "http-on-examine-cached-response":
+      case "http-on-examine-merged-response":
+        this.examine(aSubject.QueryInterface(Ci.nsIHttpChannel));
+        break;
+      default:
+        ok(false, "Unexpected topic observed!");
+        break;
     }
-    return this.QueryInterface(aIID);
   },
-  lockFactory: function() {},
 
   // nsISupports
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectProcessChooser, Ci.nsIFactory]),
-  classID: Components.ID("{62561fa8-c091-4c9f-8897-b59ae18b0979}")
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 }
 
 add_task(async function() {
@@ -181,7 +187,7 @@ add_task(async function() {
         registrar.unregisterFactory(childListener.classID, childListener);
       }
       registrar.registerFactory(childListener.classID, "",
-                              "@mozilla.org/network/childProcessChannelListener",
+                              "@mozilla.org/network/childProcessChannelListener;1",
                               childListener);
     });
   });

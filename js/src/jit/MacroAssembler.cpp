@@ -767,7 +767,7 @@ void MacroAssembler::checkAllocatorState(Label* fail) {
   // Don't execute the inline path if the realm has an object metadata callback,
   // as the metadata to use for the object may vary between executions of the
   // op.
-  if (GetJitContext()->realm->hasAllocationMetadataBuilder()) {
+  if (GetJitContext()->realm()->hasAllocationMetadataBuilder()) {
     jump(fail);
   }
 }
@@ -800,7 +800,7 @@ void MacroAssembler::nurseryAllocateObject(Register result, Register temp,
 
   // No explicit check for nursery.isEnabled() is needed, as the comparison
   // with the nursery's end will always fail in such cases.
-  CompileZone* zone = GetJitContext()->realm->zone();
+  CompileZone* zone = GetJitContext()->realm()->zone();
   size_t thingSize = gc::Arena::thingSize(allocKind);
   size_t totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
   MOZ_ASSERT(totalSize < INT32_MAX);
@@ -818,7 +818,7 @@ void MacroAssembler::nurseryAllocateObject(Register result, Register temp,
 // Inlined version of FreeSpan::allocate. This does not fill in slots_.
 void MacroAssembler::freeListAllocate(Register result, Register temp,
                                       gc::AllocKind allocKind, Label* fail) {
-  CompileZone* zone = GetJitContext()->realm->zone();
+  CompileZone* zone = GetJitContext()->realm()->zone();
   int thingSize = int(gc::Arena::thingSize(allocKind));
 
   Label fallback;
@@ -881,7 +881,7 @@ void MacroAssembler::callMallocStub(size_t nbytes, Register result,
   }
 
   move32(Imm32(nbytes), regNBytes);
-  movePtr(ImmPtr(GetJitContext()->realm->zone()), regZone);
+  movePtr(ImmPtr(GetJitContext()->realm()->zone()), regZone);
   call(GetJitContext()->runtime->jitRuntime()->mallocStub());
   if (regReturn != result) {
     movePtr(regReturn, result);
@@ -991,7 +991,7 @@ void MacroAssembler::nurseryAllocateString(Register result, Register temp,
   // No explicit check for nursery.isEnabled() is needed, as the comparison
   // with the nursery's end will always fail in such cases.
 
-  CompileZone* zone = GetJitContext()->realm->zone();
+  CompileZone* zone = GetJitContext()->realm()->zone();
   size_t thingSize = gc::Arena::thingSize(allocKind);
   size_t totalSize = js::Nursery::stringHeaderSize() + thingSize;
   MOZ_ASSERT(totalSize < INT32_MAX, "Nursery allocation too large");
@@ -1027,7 +1027,7 @@ void MacroAssembler::bumpPointerAllocate(Register result, Register temp,
   subPtr(Imm32(size), result);
 
   if (GetJitContext()->runtime->geckoProfiler().enabled()) {
-    CompileZone* zone = GetJitContext()->realm->zone();
+    CompileZone* zone = GetJitContext()->realm()->zone();
     uint32_t* countAddress = zone->addressOfNurseryAllocCount();
     CheckedInt<int32_t> counterOffset =
         (CheckedInt<uintptr_t>(uintptr_t(countAddress)) -

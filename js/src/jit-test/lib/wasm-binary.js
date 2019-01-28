@@ -108,6 +108,14 @@ const ThreadPrefix = 0xfe;
 const MozPrefix = 0xff;
 
 // Secondary opcode bytes for misc prefix
+const MemoryInitCode = 0x08;    // Pending
+const DataDropCode = 0x09;      // Pending
+const MemoryCopyCode = 0x0a;    // Pending
+const MemoryFillCode = 0x0b;    // Pending
+const TableInitCode = 0x0c;     // Pending
+const ElemDropCode = 0x0d;      // Pending
+const TableCopyCode = 0x0e;     // Pending
+
 const StructNew = 0x50;         // UNOFFICIAL
 const StructGet = 0x51;         // UNOFFICIAL
 const StructSet = 0x52;         // UNOFFICIAL

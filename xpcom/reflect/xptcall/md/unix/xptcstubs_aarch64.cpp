@@ -152,9 +152,9 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args,
 
             case nsXPTType::T_BOOL:
                 if (next_gpr < PARAM_GPR_COUNT) {
-                    dp->val.b  = (bool)gprData[next_gpr++];
+                    dp->val.b  = (bool)(uint8_t)gprData[next_gpr++];
                 } else {
-                    dp->val.b  = (bool)*ap++;
+                    dp->val.b  = (bool)(uint8_t)*ap++;
                 }
                 break;
 

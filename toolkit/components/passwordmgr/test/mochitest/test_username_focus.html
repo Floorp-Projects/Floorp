@@ -114,10 +114,6 @@ function removeFocus() {
 }
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["security.insecure_field_warning.contextual.enabled", false],
-  ]});
-
   ok(readyPromise, "check promise is available");
   await readyPromise;
 });

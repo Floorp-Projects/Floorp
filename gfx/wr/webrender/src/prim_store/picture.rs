@@ -4,7 +4,7 @@
 
 use api::{
     ColorU, FilterOp, LayoutSize, LayoutPrimitiveInfo, MixBlendMode,
-    PropertyBinding, PropertyBindingId,
+    PropertyBinding, PropertyBindingId, LayoutVector2D,
 };
 use app_units::Au;
 use display_list_flattener::{AsInstanceKind, IsVisible};
@@ -161,6 +161,7 @@ impl AsInstanceKind<PictureDataHandle> for PictureKey {
         &self,
         _: PictureDataHandle,
         _: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         // Should never be hit as this method should not be
         // called for pictures.

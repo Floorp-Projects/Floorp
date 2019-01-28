@@ -666,8 +666,6 @@ enum ModuleKind { Wasm, AsmJS };
 
 enum class Shareable { False, True };
 
-enum class HasGcTypes { False, True };
-
 // The LitVal class represents a single WebAssembly value of a given value
 // type, mostly for the purpose of numeric literals and initializers. A LitVal
 // does not directly map to a JS value since there is not (currently) a precise
@@ -1152,7 +1150,7 @@ typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 
 // When a ElemSegment is "passive" it is shared between a wasm::Module and its
 // wasm::Instances. To allow each segment to be released as soon as the last
-// Instance table.drops it and the Module is destroyed, each ElemSegment is
+// Instance elem.drops it and the Module is destroyed, each ElemSegment is
 // individually atomically ref-counted.
 
 struct ElemSegment : AtomicRefCounted<ElemSegment> {
@@ -2069,11 +2067,11 @@ enum class SymbolicAddress {
   WaitI64,
   Wake,
   MemCopy,
-  MemDrop,
+  DataDrop,
   MemFill,
   MemInit,
   TableCopy,
-  TableDrop,
+  ElemDrop,
   TableGet,
   TableGrow,
   TableInit,

@@ -11,6 +11,7 @@ from mozparsers.shared_telemetry_utils import ParserError
 from mozparsers import parse_events
 
 import sys
+import buildconfig
 
 banner = """/* This file is auto-generated, see gen_event_enum.py.  */
 """
@@ -62,13 +63,9 @@ def main(output, *filenames):
         print("enum class %s : uint32_t {" % category_cpp, file=output)
 
         for event_index, e in indexed:
-            cpp_guard = e.cpp_guard
-            if cpp_guard:
-                print("#if defined(%s)" % cpp_guard, file=output)
-            for offset, label in enumerate(e.enum_labels):
-                print("  %s = %d," % (label, event_index + offset), file=output)
-            if cpp_guard:
-                print("#endif", file=output)
+            if e.record_on_os(buildconfig.substs["OS_TARGET"]):
+                for offset, label in enumerate(e.enum_labels):
+                    print("  %s = %d," % (label, event_index + offset), file=output)
 
         print("};\n", file=output)
 

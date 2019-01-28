@@ -87,7 +87,7 @@ add_task(async function() {
             dls.removeFinished();
             resolve();
           }
-        }
+        },
       });
     });
   });

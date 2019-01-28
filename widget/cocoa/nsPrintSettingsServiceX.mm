@@ -15,10 +15,8 @@
 using namespace mozilla::embedding;
 
 NS_IMETHODIMP
-nsPrintSettingsServiceX::SerializeToPrintData(nsIPrintSettings* aSettings,
-                                              nsIWebBrowserPrint* aWBP,
-                                              PrintData* data)
-{
+nsPrintSettingsServiceX::SerializeToPrintData(nsIPrintSettings* aSettings, nsIWebBrowserPrint* aWBP,
+                                              PrintData* data) {
   nsresult rv = nsPrintSettingsService::SerializeToPrintData(aSettings, aWBP, data);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -41,11 +39,9 @@ nsPrintSettingsServiceX::SerializeToPrintData(nsIPrintSettings* aSettings,
   return SerializeToPrintDataChild(aSettings, aWBP, data);
 }
 
-nsresult
-nsPrintSettingsServiceX::SerializeToPrintDataChild(nsIPrintSettings* aSettings,
-                                                   nsIWebBrowserPrint* aWBP,
-                                                   PrintData* data)
-{
+nsresult nsPrintSettingsServiceX::SerializeToPrintDataChild(nsIPrintSettings* aSettings,
+                                                            nsIWebBrowserPrint* aWBP,
+                                                            PrintData* data) {
   // If we are in the child process, we don't need to populate
   // nsPrintSettingsX completely. The parent discards almost all of
   // this data (bug 1328975). Furthermore, reading some of the
@@ -75,11 +71,9 @@ nsPrintSettingsServiceX::SerializeToPrintDataChild(nsIPrintSettings* aSettings,
   return NS_OK;
 }
 
-nsresult
-nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* aSettings,
-                                                    nsIWebBrowserPrint* aWBP,
-                                                    PrintData* data)
-{
+nsresult nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* aSettings,
+                                                             nsIWebBrowserPrint* aWBP,
+                                                             PrintData* data) {
   RefPtr<nsPrintSettingsX> settingsX(do_QueryObject(aSettings));
   if (NS_WARN_IF(!settingsX)) {
     return NS_ERROR_FAILURE;
@@ -95,39 +89,38 @@ nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* aSettings,
     return NS_ERROR_FAILURE;
   }
 
-  NSString* printerName = [dict objectForKey: NSPrintPrinterName];
+  NSString* printerName = [dict objectForKey:NSPrintPrinterName];
   if (printerName) {
     nsCocoaUtils::GetStringForNSString(printerName, data->printerName());
   }
 
-  NSString* faxNumber = [dict objectForKey: NSPrintFaxNumber];
+  NSString* faxNumber = [dict objectForKey:NSPrintFaxNumber];
   if (faxNumber) {
     nsCocoaUtils::GetStringForNSString(faxNumber, data->faxNumber());
   }
 
-  NSURL* printToFileURL = [dict objectForKey: NSPrintJobSavingURL];
+  NSURL* printToFileURL = [dict objectForKey:NSPrintJobSavingURL];
   if (printToFileURL) {
-    nsCocoaUtils::GetStringForNSString([printToFileURL absoluteString],
-                                       data->toFileName());
+    nsCocoaUtils::GetStringForNSString([printToFileURL absoluteString], data -> toFileName());
   }
 
-  NSDate* printTime = [dict objectForKey: NSPrintTime];
+  NSDate* printTime = [dict objectForKey:NSPrintTime];
   if (printTime) {
     NSTimeInterval timestamp = [printTime timeIntervalSinceReferenceDate];
     data->printTime() = timestamp;
   }
 
-  NSString* disposition = [dict objectForKey: NSPrintJobDisposition];
+  NSString* disposition = [dict objectForKey:NSPrintJobDisposition];
   if (disposition) {
     nsCocoaUtils::GetStringForNSString(disposition, data->disposition());
   }
 
-  NSString* paperName = [dict objectForKey: NSPrintPaperName];
+  NSString* paperName = [dict objectForKey:NSPrintPaperName];
   if (paperName) {
     nsCocoaUtils::GetStringForNSString(paperName, data->paperName());
   }
 
-  float scalingFactor = [[dict objectForKey: NSPrintScalingFactor] floatValue];
+  float scalingFactor = [[dict objectForKey:NSPrintScalingFactor] floatValue];
   data->scalingFactor() = scalingFactor;
 
   int32_t orientation;
@@ -154,26 +147,25 @@ nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* aSettings,
     data->paperHeight() = paperSize.height / heightScale;
   }
 
-  data->numCopies() = [[dict objectForKey: NSPrintCopies] intValue];
-  data->printAllPages() = [[dict objectForKey: NSPrintAllPages] boolValue];
-  data->startPageRange() = [[dict objectForKey: NSPrintFirstPage] intValue];
-  data->endPageRange() = [[dict objectForKey: NSPrintLastPage] intValue];
-  data->mustCollate() = [[dict objectForKey: NSPrintMustCollate] boolValue];
-  data->printReversed() = [[dict objectForKey: NSPrintReversePageOrder] boolValue];
-  data->pagesAcross() = [[dict objectForKey: NSPrintPagesAcross] unsignedShortValue];
-  data->pagesDown() = [[dict objectForKey: NSPrintPagesDown] unsignedShortValue];
-  data->detailedErrorReporting() = [[dict objectForKey: NSPrintDetailedErrorReporting] boolValue];
-  data->addHeaderAndFooter() = [[dict objectForKey: NSPrintHeaderAndFooter] boolValue];
+  data->numCopies() = [[dict objectForKey:NSPrintCopies] intValue];
+  data->printAllPages() = [[dict objectForKey:NSPrintAllPages] boolValue];
+  data->startPageRange() = [[dict objectForKey:NSPrintFirstPage] intValue];
+  data->endPageRange() = [[dict objectForKey:NSPrintLastPage] intValue];
+  data->mustCollate() = [[dict objectForKey:NSPrintMustCollate] boolValue];
+  data->printReversed() = [[dict objectForKey:NSPrintReversePageOrder] boolValue];
+  data->pagesAcross() = [[dict objectForKey:NSPrintPagesAcross] unsignedShortValue];
+  data->pagesDown() = [[dict objectForKey:NSPrintPagesDown] unsignedShortValue];
+  data->detailedErrorReporting() = [[dict objectForKey:NSPrintDetailedErrorReporting] boolValue];
+  data->addHeaderAndFooter() = [[dict objectForKey:NSPrintHeaderAndFooter] boolValue];
   data->fileNameExtensionHidden() =
-    [[dict objectForKey: NSPrintJobSavingFileNameExtensionHidden] boolValue];
+      [[dict objectForKey:NSPrintJobSavingFileNameExtensionHidden] boolValue];
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPrintSettingsServiceX::DeserializeToPrintSettings(const PrintData& data,
-                                                    nsIPrintSettings* settings)
-{
+                                                    nsIPrintSettings* settings) {
   nsresult rv = nsPrintSettingsService::DeserializeToPrintSettings(data, settings);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -189,36 +181,30 @@ nsPrintSettingsServiceX::DeserializeToPrintSettings(const PrintData& data,
   if (NS_WARN_IF(!settingsX)) {
     return NS_ERROR_FAILURE;
   }
-  settingsX->SetAdjustedPaperSize(data.adjustedPaperWidth(),
-                                  data.adjustedPaperHeight());
+  settingsX->SetAdjustedPaperSize(data.adjustedPaperWidth(), data.adjustedPaperHeight());
 
   return NS_OK;
 }
 
-nsresult
-nsPrintSettingsServiceX::ReadPrefs(nsIPrintSettings* aPS,
-                                   const nsAString& aPrinterName,
-                                   uint32_t aFlags)
-{
+nsresult nsPrintSettingsServiceX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
+                                            uint32_t aFlags) {
   nsresult rv;
-  
+
   rv = nsPrintSettingsService::ReadPrefs(aPS, aPrinterName, aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsService::ReadPrefs() failed");
-  
+
   RefPtr<nsPrintSettingsX> printSettingsX(do_QueryObject(aPS));
-  if (!printSettingsX)
-    return NS_ERROR_NO_INTERFACE;
+  if (!printSettingsX) return NS_ERROR_NO_INTERFACE;
   rv = printSettingsX->ReadPageFormatFromPrefs();
-  
+
   return NS_OK;
 }
 
-nsresult nsPrintSettingsServiceX::_CreatePrintSettings(nsIPrintSettings** _retval)
-{
+nsresult nsPrintSettingsServiceX::_CreatePrintSettings(nsIPrintSettings** _retval) {
   nsresult rv;
   *_retval = nullptr;
 
-  nsPrintSettingsX* printSettings = new nsPrintSettingsX; // does not initially ref count
+  nsPrintSettingsX* printSettings = new nsPrintSettingsX;  // does not initially ref count
   NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*_retval = printSettings);
 
@@ -232,19 +218,15 @@ nsresult nsPrintSettingsServiceX::_CreatePrintSettings(nsIPrintSettings** _retva
   return rv;
 }
 
-nsresult
-nsPrintSettingsServiceX::WritePrefs(nsIPrintSettings* aPS,
-                                    const nsAString& aPrinterName,
-                                    uint32_t aFlags)
-{
+nsresult nsPrintSettingsServiceX::WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
+                                             uint32_t aFlags) {
   nsresult rv;
 
   rv = nsPrintSettingsService::WritePrefs(aPS, aPrinterName, aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsService::WritePrefs() failed");
 
   RefPtr<nsPrintSettingsX> printSettingsX(do_QueryObject(aPS));
-  if (!printSettingsX)
-    return NS_ERROR_NO_INTERFACE;
+  if (!printSettingsX) return NS_ERROR_NO_INTERFACE;
   rv = printSettingsX->WritePageFormatToPrefs();
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsX::WritePageFormatToPrefs() failed");
 

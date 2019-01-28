@@ -106,13 +106,13 @@ VERSION_NUMBER		= 50
 CONFIG_TOOLS	= $(MOZ_BUILD_ROOT)/config
 AUTOCONF_TOOLS	= $(MOZILLA_DIR)/build/autoconf
 
-ifdef _MSC_VER
+ifeq (msvc,$(CC_TYPE))
 # clang-cl is smart enough to generate dependencies directly.
-ifeq (,$(CLANG_CL)$(MOZ_USING_SCCACHE))
+ifeq (,$(MOZ_USING_SCCACHE))
 CC_WRAPPER ?= $(call py_action,cl)
 CXX_WRAPPER ?= $(call py_action,cl)
-endif # CLANG_CL/MOZ_USING_SCCACHE
-endif # _MSC_VER
+endif # MOZ_USING_SCCACHE
+endif # CC_TYPE
 
 CC := $(CC_WRAPPER) $(CC)
 CXX := $(CXX_WRAPPER) $(CXX)
@@ -300,7 +300,7 @@ WIN32_EXE_LDFLAGS	+= $(WIN32_CONSOLE_EXE_LDFLAGS)
 endif
 endif # WINNT
 
-ifdef _MSC_VER
+ifneq (,$(filter msvc clang-cl,$(CC_TYPE)))
 ifeq ($(CPU_ARCH),x86_64)
 # Normal operation on 64-bit Windows needs 2 MB of stack. (Bug 582910)
 # ASAN requires 6 MB of stack.

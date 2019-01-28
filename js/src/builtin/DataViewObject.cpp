@@ -933,7 +933,7 @@ JS_FRIEND_API uint32_t JS_GetDataViewByteLength(JSObject* obj) {
 JS_FRIEND_API JSObject* JS_NewDataView(JSContext* cx, HandleObject buffer,
                                        uint32_t byteOffset,
                                        int32_t byteLength) {
-  JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(&DataViewObject::class_);
+  JSProtoKey key = JSProto_DataView;
   RootedObject constructor(cx, GlobalObject::getOrCreateConstructor(cx, key));
   if (!constructor) {
     return nullptr;

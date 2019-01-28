@@ -363,6 +363,14 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     }
   }
 
+  static TypedArrayObject* newBuiltinClassInstance(JSContext* cx,
+                                                   gc::AllocKind allocKind,
+                                                   NewObjectKind newKind) {
+    JSObject* obj =
+        NewBuiltinClassInstance(cx, instanceClass(), allocKind, newKind);
+    return obj ? &obj->as<TypedArrayObject>() : nullptr;
+  }
+
   static TypedArrayObject* makeProtoInstance(JSContext* cx, HandleObject proto,
                                              gc::AllocKind allocKind) {
     MOZ_ASSERT(proto);
@@ -375,35 +383,24 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   static TypedArrayObject* makeTypedInstance(JSContext* cx,
                                              CreateSingleton createSingleton,
                                              gc::AllocKind allocKind) {
-    const Class* clasp = instanceClass();
     if (createSingleton == CreateSingleton::Yes) {
-      JSObject* obj =
-          NewBuiltinClassInstance(cx, clasp, allocKind, SingletonObject);
-      if (!obj) {
-        return nullptr;
-      }
-      return &obj->as<TypedArrayObject>();
+      return newBuiltinClassInstance(cx, allocKind, SingletonObject);
     }
 
     jsbytecode* pc;
     RootedScript script(cx, cx->currentScript(&pc));
-    NewObjectKind newKind = GenericObject;
-    if (script &&
-        ObjectGroup::useSingletonForAllocationSite(script, pc, clasp)) {
-      newKind = SingletonObject;
-    }
-    RootedObject obj(cx,
-                     NewBuiltinClassInstance(cx, clasp, allocKind, newKind));
+    Rooted<TypedArrayObject*> obj(
+        cx, newBuiltinClassInstance(cx, allocKind, GenericObject));
     if (!obj) {
       return nullptr;
     }
 
     if (script && !ObjectGroup::setAllocationSiteObjectGroup(
-                      cx, script, pc, obj, newKind == SingletonObject)) {
+                      cx, script, pc, obj, /* singleton = */ false)) {
       return nullptr;
     }
 
-    return &obj->as<TypedArrayObject>();
+    return obj;
   }
 
   static TypedArrayObject* makeInstance(
@@ -421,8 +418,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     // it isn't, we can do some more TI optimizations.
     RootedObject checkProto(cx);
     if (proto) {
-      checkProto = GlobalObject::getOrCreatePrototype(
-          cx, JSCLASS_CACHED_PROTO_KEY(instanceClass()));
+      checkProto = GlobalObject::getOrCreatePrototype(cx, protoKey());
       if (!checkProto) {
         return nullptr;
       }
@@ -447,25 +443,19 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     size_t nbytes;
     MOZ_ALWAYS_TRUE(CalculateAllocSize<NativeType>(len, &nbytes));
     MOZ_ASSERT(nbytes < TypedArrayObject::SINGLETON_BYTE_LENGTH);
-    NewObjectKind newKind = TenuredObject;
     bool fitsInline = nbytes <= INLINE_BUFFER_LIMIT;
-    const Class* clasp = instanceClass();
-    gc::AllocKind allocKind = !fitsInline ? gc::GetGCObjectKind(clasp)
+    gc::AllocKind allocKind = !fitsInline ? gc::GetGCObjectKind(instanceClass())
                                           : AllocKindForLazyBuffer(nbytes);
 
     AutoSetNewObjectMetadata metadata(cx);
     jsbytecode* pc;
     RootedScript script(cx, cx->currentScript(&pc));
-    if (script &&
-        ObjectGroup::useSingletonForAllocationSite(script, pc, clasp)) {
-      newKind = SingletonObject;
-    }
-    JSObject* tmp = NewBuiltinClassInstance(cx, clasp, allocKind, newKind);
-    if (!tmp) {
+    Rooted<TypedArrayObject*> tarray(
+        cx, newBuiltinClassInstance(cx, allocKind, TenuredObject));
+    if (!tarray) {
       return nullptr;
     }
 
-    Rooted<TypedArrayObject*> tarray(cx, &tmp->as<TypedArrayObject>());
     initTypedArraySlots(tarray, len);
 
     // Template objects do not need memory for its elements, since there
@@ -474,7 +464,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     tarray->initPrivate(nullptr);
 
     if (script && !ObjectGroup::setAllocationSiteObjectGroup(
-                      cx, script, pc, tarray, newKind == SingletonObject)) {
+                      cx, script, pc, tarray, /* singleton = */ false)) {
       return nullptr;
     }
 
@@ -787,8 +777,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     // this compartment.
     RootedObject protoRoot(cx, proto);
     if (!protoRoot) {
-      protoRoot = GlobalObject::getOrCreatePrototype(
-          cx, JSCLASS_CACHED_PROTO_KEY(instanceClass()));
+      protoRoot = GlobalObject::getOrCreatePrototype(cx, protoKey());
       if (!protoRoot) {
         return nullptr;
       }

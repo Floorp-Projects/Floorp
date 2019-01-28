@@ -26,8 +26,10 @@ export function createFrame(frame: FramePacket): ?Frame {
   } else {
     title = `(${frame.type})`;
   }
+
+  // NOTE: Firefox 66 switched from where.source to where.actor
   const location = {
-    sourceId: frame.where.source.actor,
+    sourceId: frame.where.source ? frame.where.source.actor : frame.where.actor,
     line: frame.where.line,
     column: frame.where.column
   };

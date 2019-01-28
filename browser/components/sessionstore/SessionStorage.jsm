@@ -145,12 +145,14 @@ var SessionStorageInternal = {
       }
 
       let storageManager = aDocShell.QueryInterface(Ci.nsIDOMStorageManager);
-      let window = aDocShell.domWindow;
 
-      // There is no need to pass documentURI, it's only used to fill documentURI property of
-      // domstorage event, which in this case has no consumer. Prevention of events in case
-      // of missing documentURI will be solved in a followup bug to bug 600307.
-      let storage = storageManager.createStorage(window, principal, "", aDocShell.usePrivateBrowsing);
+      // There is no need to pass documentURI, it's only used to fill
+      // documentURI property of domstorage event, which in this case has no
+      // consumer. Prevention of events in case of missing documentURI will be
+      // solved in a followup bug to bug 600307.
+      // Null window because the current window doesn't match the principal yet
+      // and loads about:blank.
+      let storage = storageManager.createStorage(null, principal, "", aDocShell.usePrivateBrowsing);
 
       for (let key of Object.keys(data)) {
         try {

@@ -22,5 +22,5 @@ only-for-attributes:
 job-template:
     update-no-wnp:
         by-release-type:
-            nightly: false
+            nightly.*: false
             default: true

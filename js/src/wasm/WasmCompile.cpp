@@ -24,6 +24,7 @@
 #include "jit/ProcessExecutableMemory.h"
 #include "util/Text.h"
 #include "wasm/WasmBaselineCompile.h"
+#include "wasm/WasmCraneliftCompile.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmOpIter.h"
@@ -72,27 +73,65 @@ uint32_t wasm::ObservedCPUFeatures() {
 #endif
 }
 
-CompileArgs::CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller)
-    : scriptedCaller(std::move(scriptedCaller)) {
-  bool gcEnabled = HasReftypesSupport(cx);
-
-  baselineEnabled = cx->options().wasmBaseline();
-  ionEnabled = cx->options().wasmIon();
+SharedCompileArgs
+CompileArgs::build(JSContext* cx, ScriptedCaller&& scriptedCaller)
+{
+  bool baseline = BaselineCanCompile() && cx->options().wasmBaseline();
+  bool ion = IonCanCompile() && cx->options().wasmIon();
 #ifdef ENABLE_WASM_CRANELIFT
-  forceCranelift = cx->options().wasmForceCranelift();
+  bool cranelift = CraneliftCanCompile() && cx->options().wasmCranelift();
 #else
-  forceCranelift = false;
+  bool cranelift = false;
 #endif
-  sharedMemoryEnabled =
-      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-  gcTypesConfigured = gcEnabled ? HasGcTypes::True : HasGcTypes::False;
-  testTiering = cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
+
+#ifdef ENABLE_WASM_REFTYPES
+  bool gc = cx->options().wasmGc();
+#else
+  bool gc = false;
+#endif
 
   // Debug information such as source view or debug traps will require
   // additional memory and permanently stay in baseline code, so we try to
   // only enable it when a developer actually cares: when the debugger tab
   // is open.
-  debugEnabled = cx->realm()->debuggerObservesAsmJS();
+  bool debug = cx->realm()->debuggerObservesAsmJS();
+
+  bool sharedMemory = cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
+  bool forceTiering = cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
+
+  if (debug || gc) {
+    if (!baseline) {
+      JS_ReportErrorASCII(cx, "can't use wasm debug/gc without baseline");
+      return nullptr;
+    }
+    ion = false;
+    cranelift = false;
+  }
+
+  if (forceTiering && (!baseline || (!cranelift && !ion))) {
+    // This can happen only in testing, and in this case we don't have a
+    // proper way to signal the error, so just silently override the default,
+    // instead of adding a skip-if directive to every test using debug/gc.
+    forceTiering = false;
+  }
+
+  // HasCompilerSupport() should prevent failure here.
+  MOZ_RELEASE_ASSERT(baseline || ion || cranelift);
+
+  CompileArgs* target = cx->new_<CompileArgs>(std::move(scriptedCaller));
+  if (!target) {
+    return nullptr;
+  }
+
+  target->baselineEnabled = baseline;
+  target->ionEnabled = ion;
+  target->craneliftEnabled = cranelift;
+  target->debugEnabled = debug;
+  target->sharedMemoryEnabled = sharedMemory;
+  target->forceTiering = forceTiering;
+  target->gcEnabled = gc;
+
+  return target;
 }
 
 // Classify the current system as one of a set of recognizable classes.  This
@@ -385,7 +424,7 @@ CompilerEnvironment::CompilerEnvironment(const CompileArgs& args)
 CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
                                          OptimizedBackend optimizedBackend,
                                          DebugEnabled debugEnabled,
-                                         HasGcTypes gcTypesConfigured)
+                                         bool gcTypesConfigured)
     : state_(InitialWithModeTierDebug),
       mode_(mode),
       tier_(tier),
@@ -393,17 +432,16 @@ CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
       debug_(debugEnabled),
       gcTypes_(gcTypesConfigured) {}
 
-void CompilerEnvironment::computeParameters(HasGcTypes gcFeatureOptIn) {
+void CompilerEnvironment::computeParameters(bool gcFeatureOptIn) {
   MOZ_ASSERT(state_ == InitialWithModeTierDebug);
 
-  if (gcTypes_ == HasGcTypes::True) {
+  if (gcTypes_) {
     gcTypes_ = gcFeatureOptIn;
   }
   state_ = Computed;
 }
 
-void CompilerEnvironment::computeParameters(Decoder& d,
-                                            HasGcTypes gcFeatureOptIn) {
+void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
   MOZ_ASSERT(!isComputed());
 
   if (state_ == InitialWithModeTierDebug) {
@@ -411,11 +449,19 @@ void CompilerEnvironment::computeParameters(Decoder& d,
     return;
   }
 
-  bool gcEnabled = args_->gcTypesConfigured == HasGcTypes::True &&
-                   gcFeatureOptIn == HasGcTypes::True;
-  bool argBaselineEnabled = args_->baselineEnabled || gcEnabled;
-  bool argIonEnabled = args_->ionEnabled && !gcEnabled;
-  bool argDebugEnabled = args_->debugEnabled;
+  bool gcEnabled = args_->gcEnabled && gcFeatureOptIn;
+  bool baselineEnabled = args_->baselineEnabled;
+  bool ionEnabled = args_->ionEnabled;
+  bool debugEnabled = args_->debugEnabled;
+  bool craneliftEnabled = args_->craneliftEnabled;
+  bool forceTiering = args_->forceTiering;
+
+  bool hasSecondTier = ionEnabled || craneliftEnabled;
+  MOZ_ASSERT_IF(gcEnabled || debugEnabled, baselineEnabled);
+  MOZ_ASSERT_IF(forceTiering, baselineEnabled && hasSecondTier);
+
+  // HasCompilerSupport() should prevent failure here
+  MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled || craneliftEnabled);
 
   uint32_t codeSectionSize = 0;
 
@@ -424,35 +470,19 @@ void CompilerEnvironment::computeParameters(Decoder& d,
     codeSectionSize = range.size;
   }
 
-  // Attempt to default to ion if baseline is disabled.
-  bool baselineEnabled = BaselineCanCompile() && argBaselineEnabled;
-  bool debugEnabled = BaselineCanCompile() && argDebugEnabled;
-  bool ionEnabled = IonCanCompile() && (argIonEnabled || !baselineEnabled);
-#ifdef ENABLE_WASM_CRANELIFT
-  bool forceCranelift = args_->forceCranelift;
-#endif
-
-  // HasCompilerSupport() should prevent failure here
-  MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled);
-
-  if (baselineEnabled && ionEnabled && !debugEnabled && CanUseExtraThreads() &&
-      (TieringBeneficial(codeSectionSize) || args_->testTiering)) {
+  if (baselineEnabled && hasSecondTier && CanUseExtraThreads() &&
+      (TieringBeneficial(codeSectionSize) || forceTiering)) {
     mode_ = CompileMode::Tier1;
     tier_ = Tier::Baseline;
   } else {
     mode_ = CompileMode::Once;
-    tier_ = debugEnabled || !ionEnabled ? Tier::Baseline : Tier::Optimized;
+    tier_ = hasSecondTier ? Tier::Optimized : Tier::Baseline;
   }
 
-  optimizedBackend_ = OptimizedBackend::Ion;
-#ifdef ENABLE_WASM_CRANELIFT
-  if (forceCranelift) {
-    optimizedBackend_ = OptimizedBackend::Cranelift;
-  }
-#endif
+  optimizedBackend_ = craneliftEnabled ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
 
   debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
-  gcTypes_ = gcEnabled ? HasGcTypes::True : HasGcTypes::False;
+  gcTypes_ = gcEnabled;
   state_ = Computed;
 }
 
@@ -524,7 +554,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
 
   CompilerEnvironment compilerEnv(args);
   ModuleEnvironment env(
-      args.gcTypesConfigured, &compilerEnv,
+      args.gcEnabled, &compilerEnv,
       args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
   if (!DecodeModuleEnvironment(d, &env)) {
     return nullptr;
@@ -539,7 +569,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
     return nullptr;
   }
 
-  if (!DecodeModuleTail(d, &env, mg.deferredValidationState())) {
+  if (!DecodeModuleTail(d, &env)) {
     return nullptr;
   }
 
@@ -551,10 +581,9 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   UniqueChars error;
   Decoder d(bytecode, 0, &error);
 
-  HasGcTypes gcTypesConfigured =
-      HasGcTypes::False;  // No optimized backend support yet
+  bool gcTypesConfigured = false;  // No optimized backend support yet
   OptimizedBackend optimizedBackend =
-      args.forceCranelift ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
+      args.craneliftEnabled ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
 
   CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized,
                                   optimizedBackend, DebugEnabled::False,
@@ -567,8 +596,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
     return;
   }
 
-  MOZ_ASSERT(env.gcTypesEnabled() == HasGcTypes::False,
-             "can't ion-compile with gc types yet");
+  MOZ_ASSERT(!env.gcTypesEnabled(), "can't ion-compile with gc types yet");
 
   ModuleGenerator mg(args, &env, cancelled, &error);
   if (!mg.init()) {
@@ -579,7 +607,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
     return;
   }
 
-  if (!DecodeModuleTail(d, &env, mg.deferredValidationState())) {
+  if (!DecodeModuleTail(d, &env)) {
     return;
   }
 
@@ -678,7 +706,7 @@ SharedModule wasm::CompileStreaming(
   {
     Decoder d(envBytes, 0, error, warnings);
 
-    env.emplace(args.gcTypesConfigured, &compilerEnv,
+    env.emplace(args.gcEnabled, &compilerEnv,
                 args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
     if (!DecodeModuleEnvironment(d, env.ptr())) {
       return nullptr;
@@ -720,7 +748,7 @@ SharedModule wasm::CompileStreaming(
   {
     Decoder d(tailBytes, env->codeSection->end(), error, warnings);
 
-    if (!DecodeModuleTail(d, env.ptr(), mg.deferredValidationState())) {
+    if (!DecodeModuleTail(d, env.ptr())) {
       return nullptr;
     }
 

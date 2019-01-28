@@ -32,21 +32,18 @@ using namespace mozilla;
 static const CLLocationAccuracy kHIGH_ACCURACY = kCLLocationAccuracyBest;
 static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTenMeters;
 
-@interface LocationDelegate : NSObject <CLLocationManagerDelegate>
-{
+@interface LocationDelegate : NSObject <CLLocationManagerDelegate> {
   CoreLocationLocationProvider* mProvider;
 }
 
 - (id)init:(CoreLocationLocationProvider*)aProvider;
-- (void)locationManager:(CLLocationManager*)aManager
-  didFailWithError:(NSError *)aError;
+- (void)locationManager:(CLLocationManager*)aManager didFailWithError:(NSError*)aError;
 - (void)locationManager:(CLLocationManager*)aManager didUpdateLocations:(NSArray*)locations;
 
 @end
 
 @implementation LocationDelegate
-- (id) init:(CoreLocationLocationProvider*) aProvider
-{
+- (id)init:(CoreLocationLocationProvider*)aProvider {
   if ((self = [super init])) {
     mProvider = aProvider;
   }
@@ -54,16 +51,13 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
   return self;
 }
 
-- (void)locationManager:(CLLocationManager*)aManager
-  didFailWithError:(NSError *)aError
-{
-  nsCOMPtr<nsIConsoleService> console =
-    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+- (void)locationManager:(CLLocationManager*)aManager didFailWithError:(NSError*)aError {
+  nsCOMPtr<nsIConsoleService> console = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
 
   NS_ENSURE_TRUE_VOID(console);
 
   NSString* message =
-    [@"Failed to acquire position: " stringByAppendingString: [aError localizedDescription]];
+      [@"Failed to acquire position: " stringByAppendingString:[aError localizedDescription]];
 
   console->LogStringMessage(NS_ConvertUTF8toUTF16([message UTF8String]).get());
 
@@ -78,8 +72,7 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
   mProvider->CreateMLSFallbackProvider();
 }
 
-- (void)locationManager:(CLLocationManager*)aManager didUpdateLocations:(NSArray*)aLocations
-{
+- (void)locationManager:(CLLocationManager*)aManager didUpdateLocations:(NSArray*)aLocations {
   if (aLocations.count < 1) {
     return;
   }
@@ -100,25 +93,15 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
     altitudeAccuracy = UnspecifiedNaN<double>();
   }
 
-  double speed = location.speed >= 0
-               ? location.speed
-               : UnspecifiedNaN<double>();
+  double speed = location.speed >= 0 ? location.speed : UnspecifiedNaN<double>();
 
-  double heading = location.course >= 0
-                 ? location.course
-                 : UnspecifiedNaN<double>();
+  double heading = location.course >= 0 ? location.course : UnspecifiedNaN<double>();
 
   // nsGeoPositionCoords will convert NaNs to null for optional properties of
   // the JavaScript Coordinates object.
-  nsCOMPtr<nsIDOMGeoPosition> geoPosition =
-    new nsGeoPosition(location.coordinate.latitude,
-                      location.coordinate.longitude,
-                      altitude,
-                      location.horizontalAccuracy,
-                      altitudeAccuracy,
-                      heading,
-                      speed,
-                      PR_Now() / PR_USEC_PER_MSEC);
+  nsCOMPtr<nsIDOMGeoPosition> geoPosition = new nsGeoPosition(
+      location.coordinate.latitude, location.coordinate.longitude, altitude,
+      location.horizontalAccuracy, altitudeAccuracy, heading, speed, PR_Now() / PR_USEC_PER_MSEC);
 
   mProvider->Update(geoPosition);
   Telemetry::Accumulate(Telemetry::GEOLOCATION_OSX_SOURCE_IS_MLS, false);
@@ -128,13 +111,10 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
 NS_IMPL_ISUPPORTS(CoreLocationLocationProvider::MLSUpdate, nsIGeolocationUpdate);
 
 CoreLocationLocationProvider::MLSUpdate::MLSUpdate(CoreLocationLocationProvider& parentProvider)
-  : mParentLocationProvider(parentProvider)
-{
-}
+    : mParentLocationProvider(parentProvider) {}
 
 NS_IMETHODIMP
-CoreLocationLocationProvider::MLSUpdate::Update(nsIDOMGeoPosition *position)
-{
+CoreLocationLocationProvider::MLSUpdate::Update(nsIDOMGeoPosition* position) {
   nsCOMPtr<nsIDOMGeoPositionCoords> coords;
   position->GetCoords(getter_AddRefs(coords));
   if (!coords) {
@@ -146,14 +126,13 @@ CoreLocationLocationProvider::MLSUpdate::Update(nsIDOMGeoPosition *position)
 }
 
 NS_IMETHODIMP
-CoreLocationLocationProvider::MLSUpdate::NotifyError(uint16_t error)
-{
+CoreLocationLocationProvider::MLSUpdate::NotifyError(uint16_t error) {
   mParentLocationProvider.NotifyError(error);
   return NS_OK;
 }
 
 class CoreLocationObjects {
-public:
+ public:
   nsresult Init(CoreLocationLocationProvider* aProvider) {
     mLocationManager = [[CLLocationManager alloc] init];
     NS_ENSURE_TRUE(mLocationManager, NS_ERROR_NOT_AVAILABLE);
@@ -184,13 +163,10 @@ public:
 NS_IMPL_ISUPPORTS(CoreLocationLocationProvider, nsIGeolocationProvider)
 
 CoreLocationLocationProvider::CoreLocationLocationProvider()
-  : mCLObjects(nullptr), mMLSFallbackProvider(nullptr)
-{
-}
+    : mCLObjects(nullptr), mMLSFallbackProvider(nullptr) {}
 
 NS_IMETHODIMP
-CoreLocationLocationProvider::Startup()
-{
+CoreLocationLocationProvider::Startup() {
   if (!mCLObjects) {
     nsAutoPtr<CoreLocationObjects> clObjs(new CoreLocationObjects());
 
@@ -207,8 +183,7 @@ CoreLocationLocationProvider::Startup()
 }
 
 NS_IMETHODIMP
-CoreLocationLocationProvider::Watch(nsIGeolocationUpdate* aCallback)
-{
+CoreLocationLocationProvider::Watch(nsIGeolocationUpdate* aCallback) {
   if (mCallback) {
     return NS_OK;
   }
@@ -218,8 +193,7 @@ CoreLocationLocationProvider::Watch(nsIGeolocationUpdate* aCallback)
 }
 
 NS_IMETHODIMP
-CoreLocationLocationProvider::Shutdown()
-{
+CoreLocationLocationProvider::Shutdown() {
   NS_ENSURE_STATE(mCLObjects);
 
   [mCLObjects->mLocationManager stopUpdatingLocation];
@@ -236,31 +210,23 @@ CoreLocationLocationProvider::Shutdown()
 }
 
 NS_IMETHODIMP
-CoreLocationLocationProvider::SetHighAccuracy(bool aEnable)
-{
+CoreLocationLocationProvider::SetHighAccuracy(bool aEnable) {
   NS_ENSURE_STATE(mCLObjects);
 
-  mCLObjects->mLocationManager.desiredAccuracy =
-    (aEnable ? kHIGH_ACCURACY : kDEFAULT_ACCURACY);
+  mCLObjects->mLocationManager.desiredAccuracy = (aEnable ? kHIGH_ACCURACY : kDEFAULT_ACCURACY);
 
   return NS_OK;
 }
 
-void
-CoreLocationLocationProvider::Update(nsIDOMGeoPosition* aSomewhere)
-{
+void CoreLocationLocationProvider::Update(nsIDOMGeoPosition* aSomewhere) {
   if (aSomewhere && mCallback) {
     mCallback->Update(aSomewhere);
   }
 }
-void
-CoreLocationLocationProvider::NotifyError(uint16_t aErrorCode)
-{
+void CoreLocationLocationProvider::NotifyError(uint16_t aErrorCode) {
   mCallback->NotifyError(aErrorCode);
 }
-void
-CoreLocationLocationProvider::CreateMLSFallbackProvider()
-{
+void CoreLocationLocationProvider::CreateMLSFallbackProvider() {
   if (mMLSFallbackProvider) {
     return;
   }
@@ -269,9 +235,7 @@ CoreLocationLocationProvider::CreateMLSFallbackProvider()
   mMLSFallbackProvider->Startup(new MLSUpdate(*this));
 }
 
-void
-CoreLocationLocationProvider::CancelMLSFallbackProvider()
-{
+void CoreLocationLocationProvider::CancelMLSFallbackProvider() {
   if (!mMLSFallbackProvider) {
     return;
   }

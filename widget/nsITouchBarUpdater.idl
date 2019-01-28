@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIBaseWindow.idl"
+#include "nsISupports.idl"
+#include "nsITouchBarInput.idl"
+
+/**
+ * Front-to-backend communication to keep Touch Bar updated
+ */
+[scriptable, uuid(38f396e2-93c9-4a77-aaf7-2d50b9962186)]
+interface nsITouchBarUpdater : nsISupports
+{
+  /**
+   * Updates a Touch Bar input in the specified window with the properties in
+   * aInput.
+   */
+  void updateTouchBarInput(in nsIBaseWindow aWindow, in nsITouchBarInput aInput);
+};

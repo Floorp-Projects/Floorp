@@ -27,14 +27,15 @@
 // being (until this problem is resolved), we refer directly to what we need
 // from it, rather than including it here.
 extern "C" int sandbox_init(const char *profile, uint64_t flags, char **errorbuf);
-extern "C" int sandbox_init_with_parameters(const char *profile, uint64_t flags, const char *const parameters[], char **errorbuf);
+extern "C" int sandbox_init_with_parameters(const char *profile, uint64_t flags,
+                                            const char *const parameters[], char **errorbuf);
 extern "C" void sandbox_free_error(char *errorbuf);
 
-#define MAC_OS_X_VERSION_10_0_HEX  0x00001000
-#define MAC_OS_X_VERSION_10_6_HEX  0x00001060
-#define MAC_OS_X_VERSION_10_7_HEX  0x00001070
-#define MAC_OS_X_VERSION_10_8_HEX  0x00001080
-#define MAC_OS_X_VERSION_10_9_HEX  0x00001090
+#define MAC_OS_X_VERSION_10_0_HEX 0x00001000
+#define MAC_OS_X_VERSION_10_6_HEX 0x00001060
+#define MAC_OS_X_VERSION_10_7_HEX 0x00001070
+#define MAC_OS_X_VERSION_10_8_HEX 0x00001080
+#define MAC_OS_X_VERSION_10_9_HEX 0x00001090
 #define MAC_OS_X_VERSION_10_10_HEX 0x000010A0
 
 // Note about "major", "minor" and "bugfix" in the following code:
@@ -47,56 +48,45 @@ extern "C" void sandbox_free_error(char *errorbuf);
 // (for example the "5" in OS X 10.9.5).
 
 class OSXVersion {
-public:
+ public:
   static int32_t OSXVersionMinor();
 
-private:
-  static void GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBugFix);
+ private:
+  static void GetSystemVersion(int32_t &aMajor, int32_t &aMinor, int32_t &aBugFix);
   static int32_t GetVersionNumber();
   static int32_t mOSXVersion;
 };
 
 int32_t OSXVersion::mOSXVersion = -1;
 
-int32_t OSXVersion::OSXVersionMinor()
-{
-  return (GetVersionNumber() & 0xF0) >> 4;
-}
+int32_t OSXVersion::OSXVersionMinor() { return (GetVersionNumber() & 0xF0) >> 4; }
 
-void
-OSXVersion::GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBugFix)
-{
+void OSXVersion::GetSystemVersion(int32_t &aMajor, int32_t &aMinor, int32_t &aBugFix) {
   SInt32 major = 0, minor = 0, bugfix = 0;
 
-  CFURLRef url =
-    CFURLCreateWithString(kCFAllocatorDefault,
-                          CFSTR("file:///System/Library/CoreServices/SystemVersion.plist"),
-                          NULL);
-  CFReadStreamRef stream =
-    CFReadStreamCreateWithFile(kCFAllocatorDefault, url);
+  CFURLRef url = CFURLCreateWithString(
+      kCFAllocatorDefault, CFSTR("file:///System/Library/CoreServices/SystemVersion.plist"), NULL);
+  CFReadStreamRef stream = CFReadStreamCreateWithFile(kCFAllocatorDefault, url);
   CFReadStreamOpen(stream);
-  CFDictionaryRef sysVersionPlist = (CFDictionaryRef)
-    CFPropertyListCreateWithStream(kCFAllocatorDefault,
-                                   stream, 0, kCFPropertyListImmutable,
-                                   NULL, NULL);
+  CFDictionaryRef sysVersionPlist = (CFDictionaryRef)CFPropertyListCreateWithStream(
+      kCFAllocatorDefault, stream, 0, kCFPropertyListImmutable, NULL, NULL);
   CFReadStreamClose(stream);
   CFRelease(stream);
   CFRelease(url);
 
-  CFStringRef versionString = (CFStringRef)
-    CFDictionaryGetValue(sysVersionPlist, CFSTR("ProductVersion"));
+  CFStringRef versionString =
+      (CFStringRef)CFDictionaryGetValue(sysVersionPlist, CFSTR("ProductVersion"));
   CFArrayRef versions =
-    CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault,
-                                           versionString, CFSTR("."));
+      CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, versionString, CFSTR("."));
   CFIndex count = CFArrayGetCount(versions);
   if (count > 0) {
-    CFStringRef component = (CFStringRef) CFArrayGetValueAtIndex(versions, 0);
+    CFStringRef component = (CFStringRef)CFArrayGetValueAtIndex(versions, 0);
     major = CFStringGetIntValue(component);
     if (count > 1) {
-      component = (CFStringRef) CFArrayGetValueAtIndex(versions, 1);
+      component = (CFStringRef)CFArrayGetValueAtIndex(versions, 1);
       minor = CFStringGetIntValue(component);
       if (count > 2) {
-        component = (CFStringRef) CFArrayGetValueAtIndex(versions, 2);
+        component = (CFStringRef)CFArrayGetValueAtIndex(versions, 2);
         bugfix = CFStringGetIntValue(component);
       }
     }
@@ -107,15 +97,17 @@ OSXVersion::GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBugFix)
   // If 'major' isn't what we expect, assume the oldest version of OS X we
   // currently support (OS X 10.6).
   if (major != 10) {
-    aMajor = 10; aMinor = 6; aBugFix = 0;
+    aMajor = 10;
+    aMinor = 6;
+    aBugFix = 0;
   } else {
-    aMajor = major; aMinor = minor; aBugFix = bugfix;
+    aMajor = major;
+    aMinor = minor;
+    aBugFix = bugfix;
   }
 }
 
-int32_t
-OSXVersion::GetVersionNumber()
-{
+int32_t OSXVersion::GetVersionNumber() {
   if (mOSXVersion == -1) {
     int32_t major, minor, bugfix;
     GetSystemVersion(major, minor, bugfix);
@@ -124,10 +116,8 @@ OSXVersion::GetVersionNumber()
   return mOSXVersion;
 }
 
-bool
-GetRealPath(std::string& aOutputPath, const char* aInputPath)
-{
-  char* resolvedPath = realpath(aInputPath, nullptr);
+bool GetRealPath(std::string &aOutputPath, const char *aInputPath) {
+  char *resolvedPath = realpath(aInputPath, nullptr);
   if (resolvedPath == nullptr) {
     return false;
   }
@@ -140,8 +130,7 @@ GetRealPath(std::string& aOutputPath, const char* aInputPath)
 
 namespace mozilla {
 
-bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
-{
+bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
   std::vector<const char *> params;
   std::string profile;
   std::string macOSMinor = std::to_string(OSXVersion::OSXVersionMinor());
@@ -150,8 +139,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
   // stay in scope until sandbox_init_with_parameters is called.
   std::string flashCacheDir, flashTempDir, flashPath;
 
-  if (aInfo.type == MacSandboxType_Plugin &&
-      aInfo.pluginInfo.type == MacSandboxPluginType_Flash) {
+  if (aInfo.type == MacSandboxType_Plugin && aInfo.pluginInfo.type == MacSandboxPluginType_Flash) {
     profile = flashPluginSandboxRules;
 
     params.push_back("SHOULD_LOG");
@@ -194,8 +182,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
       return false;
     }
     params.push_back(flashTempDir.c_str());
-  }
-  else if (aInfo.type == MacSandboxType_Plugin) {
+  } else if (aInfo.type == MacSandboxType_Plugin) {
     profile = const_cast<char *>(pluginSandboxRules);
     params.push_back("SHOULD_LOG");
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
@@ -209,8 +196,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
     if (aInfo.pluginInfo.type == MacSandboxPluginType_GMPlugin_EME_Widevine) {
       profile.append(widevinePluginSandboxRulesAddend);
     }
-  }
-  else if (aInfo.type == MacSandboxType_Content) {
+  } else if (aInfo.type == MacSandboxType_Content) {
     MOZ_ASSERT(aInfo.level >= 1);
     if (aInfo.level >= 1) {
       profile = contentSandboxRules;
@@ -259,7 +245,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
         params.push_back("DEBUG_WRITE_DIR");
         params.push_back(aInfo.debugWriteDir.c_str());
       }
-#endif // DEBUG
+#endif  // DEBUG
 
       if (aInfo.hasFilePrivileges) {
         profile.append(fileContentProcessAddend);
@@ -268,12 +254,10 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
         profile.append(contentProcessAudioAddend);
       }
     } else {
-      fprintf(stderr,
-        "Content sandbox disabled due to sandbox level setting\n");
+      fprintf(stderr, "Content sandbox disabled due to sandbox level setting\n");
       return false;
     }
-  }
-  else {
+  } else {
     char *msg = NULL;
     asprintf(&msg, "Unexpected sandbox type %u", aInfo.type);
     if (msg) {
@@ -305,8 +289,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
   params.push_back(nullptr);
 
   char *errorbuf = NULL;
-  int rv = sandbox_init_with_parameters(profile.c_str(), 0, params.data(),
-                                        &errorbuf);
+  int rv = sandbox_init_with_parameters(profile.c_str(), 0, params.data(), &errorbuf);
   if (rv) {
     if (errorbuf) {
       char *msg = NULL;
@@ -331,9 +314,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
  * command line arguments. Return false if any sandbox parameters needed
  * for early startup of the sandbox are not present in the arguments.
  */
-bool
-GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo)
-{
+bool GetContentSandboxParamsFromArgs(int aArgc, char **aArgv, MacSandboxInfo &aInfo) {
   // Ensure we find these paramaters in the command
   // line arguments. Return false if any are missing.
   bool foundSandboxLevel = false;
@@ -346,9 +327,8 @@ GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo)
 
   // Collect sandbox params from CLI arguments
   for (int i = 0; i < aArgc; i++) {
-
     if ((strcmp(aArgv[i], "-sbLevel") == 0) && (i + 1 < aArgc)) {
-      std::stringstream ss(aArgv[i+1]);
+      std::stringstream ss(aArgv[i + 1]);
       int level = 0;
       ss >> level;
       foundSandboxLevel = true;
@@ -383,14 +363,14 @@ GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo)
 
     if ((strcmp(aArgv[i], "-sbAppPath") == 0) && (i + 1 < aArgc)) {
       foundAppPath = true;
-      aInfo.appPath.assign(aArgv[i+1]);
+      aInfo.appPath.assign(aArgv[i + 1]);
       i++;
       continue;
     }
 
     if ((strcmp(aArgv[i], "-sbTestingReadPath") == 0) && (i + 1 < aArgc)) {
       MOZ_ASSERT(nTestingReadPaths < MAX_TESTING_READ_PATHS);
-      testingReadPaths[nTestingReadPaths] = aArgv[i+1];
+      testingReadPaths[nTestingReadPaths] = aArgv[i + 1];
       nTestingReadPaths++;
       i++;
       continue;
@@ -398,18 +378,18 @@ GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo)
 
     if ((strcmp(aArgv[i], "-profile") == 0) && (i + 1 < aArgc)) {
       aInfo.hasSandboxedProfile = true;
-      aInfo.profileDir.assign(aArgv[i+1]);
+      aInfo.profileDir.assign(aArgv[i + 1]);
       i++;
       continue;
     }
 
 #ifdef DEBUG
     if ((strcmp(aArgv[i], "-sbDebugWriteDir") == 0) && (i + 1 < aArgc)) {
-      aInfo.debugWriteDir.assign(aArgv[i+1]);
+      aInfo.debugWriteDir.assign(aArgv[i + 1]);
       i++;
       continue;
     }
-#endif // DEBUG
+#endif  // DEBUG
 
     // Handle crash server positional argument
     if (strstr(aArgv[i], "gecko-crash-server-pipe") != NULL) {
@@ -425,8 +405,10 @@ GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo)
   }
 
   if (!foundValidSandboxLevel) {
-    fprintf(stderr, "Content sandbox disabled due to invalid"
-                    "sandbox level (%d)\n", aInfo.level);
+    fprintf(stderr,
+            "Content sandbox disabled due to invalid"
+            "sandbox level (%d)\n",
+            aInfo.level);
     return false;
   }
 
@@ -448,10 +430,7 @@ GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo)
  * Returns true if no errors were encountered or if early sandbox startup is
  * not enabled for this process. Returns false if an error was encountered.
  */
-bool
-EarlyStartMacSandboxIfEnabled(int aArgc, char** aArgv,
-                              std::string &aErrorMessage)
-{
+bool EarlyStartMacSandboxIfEnabled(int aArgc, char **aArgv, std::string &aErrorMessage) {
   bool earlyStartupEnabled = false;
 
   // Check for the -sbStartup CLI parameter which
@@ -486,13 +465,11 @@ EarlyStartMacSandboxIfEnabled(int aArgc, char** aArgv,
  * on sandbox_init() failing when called again after a sandbox has
  * already been successfully enabled.
  */
-void
-AssertMacSandboxEnabled()
-{
+void AssertMacSandboxEnabled() {
   char *errorbuf = NULL;
   int rv = sandbox_init("(version 1)(deny default)", 0, &errorbuf);
   MOZ_ASSERT(rv != 0);
 }
 #endif /* DEBUG */
 
-} // namespace mozilla
+}  // namespace mozilla

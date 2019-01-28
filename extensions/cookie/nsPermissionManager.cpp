@@ -732,6 +732,60 @@ static bool IsPersistentExpire(uint32_t aExpire) {
          aExpire != nsIPermissionManager::EXPIRE_POLICY;
 }
 
+static void UpdateAutoplayTelemetry(const nsCString& aType,
+                                    uint32_t aOldPermission,
+                                    uint32_t aNewPermission,
+                                    uint32_t aExpireType) {
+  if (!aType.EqualsLiteral("autoplay-media")) {
+    return;
+  }
+
+  if (aExpireType != nsIPermissionManager::EXPIRE_NEVER) {
+    return;
+  }
+
+  // Add permission
+  if (aOldPermission == nsIPermissionManager::UNKNOWN_ACTION) {
+    if (aNewPermission == nsIPermissionManager::ALLOW_ACTION) {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_AUTOPLAY_SITES_SETTING_CHANGE::AddAllow);
+    } else if (aNewPermission == nsIPermissionManager::DENY_ACTION) {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_AUTOPLAY_SITES_SETTING_CHANGE::AddBlock);
+    }
+    return;
+  }
+
+  // Remove permission
+  if (aNewPermission == nsIPermissionManager::UNKNOWN_ACTION) {
+    if (aOldPermission == nsIPermissionManager::ALLOW_ACTION) {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_AUTOPLAY_SITES_SETTING_CHANGE::
+              RemoveAllow);
+    } else if (aOldPermission == nsIPermissionManager::DENY_ACTION) {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_AUTOPLAY_SITES_SETTING_CHANGE::
+              RemoveBlock);
+    }
+    return;
+  }
+
+  // Change permission
+  if (aNewPermission == nsIPermissionManager::ALLOW_ACTION &&
+      aOldPermission == nsIPermissionManager::DENY_ACTION) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_AUTOPLAY_SITES_SETTING_CHANGE::AddAllow);
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_AUTOPLAY_SITES_SETTING_CHANGE::RemoveBlock);
+  } else if (aNewPermission == nsIPermissionManager::DENY_ACTION &&
+             aOldPermission == nsIPermissionManager::ALLOW_ACTION) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_AUTOPLAY_SITES_SETTING_CHANGE::AddBlock);
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_AUTOPLAY_SITES_SETTING_CHANGE::RemoveAllow);
+  }
+}
+
 }  // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1817,6 +1871,8 @@ nsresult nsPermissionManager::AddInternal(
     }
 
     case eOperationAdding: {
+      UpdateAutoplayTelemetry(aType, nsIPermissionManager::UNKNOWN_ACTION,
+                              aPermission, aExpireType);
       if (aDBOperation == eWriteToDB) {
         // we'll be writing to the database - generate a known unique id
         id = ++mLargestID;
@@ -1860,6 +1916,9 @@ nsresult nsPermissionManager::AddInternal(
         break;
       }
 
+      UpdateAutoplayTelemetry(aType, oldPermissionEntry.mPermission,
+                              nsIPermissionManager::UNKNOWN_ACTION,
+                              aExpireType);
       entry->GetPermissions().RemoveElementAt(index);
 
       // Record a count of the number of preload permissions present in the
@@ -1898,6 +1957,9 @@ nsresult nsPermissionManager::AddInternal(
         NS_WARNING("Attempting to modify EXPIRE_POLICY permission");
         break;
       }
+
+      UpdateAutoplayTelemetry(aType, entry->GetPermissions()[index].mPermission,
+                              aPermission, aExpireType);
 
       // If the new expireType is EXPIRE_SESSION, then we have to keep a
       // copy of the previous permission/expireType values. This cached value

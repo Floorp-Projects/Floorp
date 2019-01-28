@@ -118,6 +118,12 @@ static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
       const nsAttrName* attr = aContent->AsElement()->GetAttrNameAt(attrIdx);
       if (attr->NamespaceEquals(kNameSpaceID_None)) {
         nsAtom* attrAtom = attr->Atom();
+        if (attrAtom == nsGkAtoms::title && aContent->IsHTMLElement()) {
+          // If the author provided a title on an element that would not
+          // be accessible normally, assume an intent and make it accessible.
+          return true;
+        }
+
         nsDependentAtomString attrStr(attrAtom);
         if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-")))
           continue;  // not ARIA

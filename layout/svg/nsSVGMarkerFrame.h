@@ -19,15 +19,18 @@
 class gfxContext;
 
 namespace mozilla {
+
 class SVGGeometryFrame;
+
+struct SVGMark;
+
 namespace dom {
 class SVGViewportElement;
 }  // namespace dom
 }  // namespace mozilla
 
-struct nsSVGMark;
-
 class nsSVGMarkerFrame final : public nsSVGContainerFrame {
+  typedef mozilla::SVGMark SVGMark;
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
   friend class nsSVGMarkerAnonChildFrame;
@@ -75,14 +78,13 @@ class nsSVGMarkerFrame final : public nsSVGContainerFrame {
 
   // nsSVGMarkerFrame methods:
   void PaintMark(gfxContext& aContext, const gfxMatrix& aToMarkedFrameUserSpace,
-                 mozilla::SVGGeometryFrame* aMarkedFrame,
-                 const nsSVGMark& aMark, float aStrokeWidth,
-                 imgDrawingParams& aImgParams);
+                 mozilla::SVGGeometryFrame* aMarkedFrame, const SVGMark& aMark,
+                 float aStrokeWidth, imgDrawingParams& aImgParams);
 
   SVGBBox GetMarkBBoxContribution(const Matrix& aToBBoxUserspace,
                                   uint32_t aFlags,
                                   mozilla::SVGGeometryFrame* aMarkedFrame,
-                                  const nsSVGMark& aMark, float aStrokeWidth);
+                                  const SVGMark& aMark, float aStrokeWidth);
 
   // Return our anonymous box child.
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;

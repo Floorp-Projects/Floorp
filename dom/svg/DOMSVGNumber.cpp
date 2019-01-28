@@ -12,6 +12,7 @@
 #include "nsError.h"
 #include "nsContentUtils.h"  // for NS_ENSURE_FINITE
 #include "mozilla/dom/SVGNumberBinding.h"
+#include "mozilla/dom/SVGSVGElement.h"
 
 // See the architecture comment in DOMSVGAnimatedNumberList.h.
 
@@ -100,6 +101,14 @@ DOMSVGNumber::DOMSVGNumber(DOMSVGNumberList* aList, uint8_t aAttrEnum,
 DOMSVGNumber::DOMSVGNumber(nsISupports* aParent)
     : mList(nullptr),
       mParent(aParent),
+      mListIndex(0),
+      mAttrEnum(0),
+      mIsAnimValItem(false),
+      mValue(0.0f) {}
+
+DOMSVGNumber::DOMSVGNumber(SVGSVGElement* aParent)
+    : mList(nullptr),
+      mParent(ToSupports(aParent)),
       mListIndex(0),
       mAttrEnum(0),
       mIsAnimValItem(false),

@@ -16,8 +16,7 @@ using mozilla::dom::Element;
 NS_IMPL_ISUPPORTS(nsSystemStatusBarCocoa, nsISystemStatusBar)
 
 NS_IMETHODIMP
-nsSystemStatusBarCocoa::AddItem(Element* aElement)
-{
+nsSystemStatusBarCocoa::AddItem(Element* aElement) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   RefPtr<nsStandaloneNativeMenu> menu = new nsStandaloneNativeMenu();
@@ -35,8 +34,7 @@ nsSystemStatusBarCocoa::AddItem(Element* aElement)
 }
 
 NS_IMETHODIMP
-nsSystemStatusBarCocoa::RemoveItem(Element* aElement)
-{
+nsSystemStatusBarCocoa::RemoveItem(Element* aElement) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   mItems.Remove(aElement);
@@ -46,15 +44,14 @@ nsSystemStatusBarCocoa::RemoveItem(Element* aElement)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsSystemStatusBarCocoa::StatusItem::StatusItem(nsStandaloneNativeMenu* aMenu)
-  : mMenu(aMenu)
-{
+nsSystemStatusBarCocoa::StatusItem::StatusItem(nsStandaloneNativeMenu* aMenu) : mMenu(aMenu) {
   MOZ_COUNT_CTOR(nsSystemStatusBarCocoa::StatusItem);
 
   NSMenu* nativeMenu = nil;
   mMenu->GetNativeMenu(reinterpret_cast<void**>(&nativeMenu));
 
-  mStatusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength] retain];
+  mStatusItem =
+      [[[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength] retain];
   [mStatusItem setMenu:nativeMenu];
   [mStatusItem setHighlightMode:YES];
 
@@ -65,8 +62,7 @@ nsSystemStatusBarCocoa::StatusItem::StatusItem(nsStandaloneNativeMenu* aMenu)
   mMenu->SetContainerStatusBarItem(mStatusItem);
 }
 
-nsSystemStatusBarCocoa::StatusItem::~StatusItem()
-{
+nsSystemStatusBarCocoa::StatusItem::~StatusItem() {
   mMenu->SetContainerStatusBarItem(nil);
   [[NSStatusBar systemStatusBar] removeStatusItem:mStatusItem];
   [mStatusItem release];

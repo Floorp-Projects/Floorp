@@ -57,7 +57,7 @@ class WebRenderCommandBuilder {
                               nsDisplayListBuilder* aDisplayListBuilder,
                               WebRenderScrollData& aScrollData,
                               wr::LayoutSize& aContentSize,
-                              const nsTArray<wr::FilterOp>& aFilters);
+                              nsTArray<wr::FilterOp>&& aFilters);
 
   void PushOverrideForASR(const ActiveScrolledRoot* aASR,
                           const wr::WrSpatialId& aSpatialId);

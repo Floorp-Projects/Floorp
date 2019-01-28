@@ -220,6 +220,15 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsRect GetScrollRange(nscoord aWidth, nscoord aHeight) const;
   nsSize GetVisualViewportSize() const;
   nsPoint GetVisualViewportOffset() const;
+
+  /**
+   * Return the 'optimal viewing region' [1] as a rect suitable for use by
+   * scroll anchoring.
+   *
+   * [1] https://drafts.csswg.org/css-scroll-snap-1/#optimal-viewing-region
+   */
+  nsRect GetVisualOptimalViewingRect() const;
+
   /**
    * For LTR frames, this is the same as GetVisualViewportOffset().
    * For RTL frames, we take the offset from the top right corner of the frame

@@ -44,10 +44,14 @@
 
 namespace mozilla {
 class Encoding;
-}
+namespace ipc {
+class URIParams;
+}  // namespace ipc
+}  // namespace mozilla
 %}
 
 [ptr] native Encoding(const mozilla::Encoding);
+[ref] native URIParams(mozilla::ipc::URIParams);
 interface nsIURIMutator;
 
 /**
@@ -312,4 +316,10 @@ interface nsIURI : nsISupports
      * properties.
      */
     nsIURIMutator mutate();
+
+    /**
+     * Serializes a URI object to a URIParams data structure in order for being
+     * passed over IPC.  For deserialization, see nsIURIMutator.
+     */
+    [noscript, notxpcom] void serialize(in URIParams aParams);
 };

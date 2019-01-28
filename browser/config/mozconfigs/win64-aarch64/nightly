@@ -5,6 +5,8 @@
 ac_add_options --enable-verify-mar
 ac_add_options --enable-dmd
 
+ac_add_options --enable-lto
+
 ac_add_options --with-branding=browser/branding/nightly
 
 unset ENABLE_CLANG_PLUGIN

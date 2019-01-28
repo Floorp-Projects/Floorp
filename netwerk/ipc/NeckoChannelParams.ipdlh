@@ -63,6 +63,7 @@ struct LoadInfoArgs
   uint64_t                    parentOuterWindowID;
   uint64_t                    topOuterWindowID;
   uint64_t                    frameOuterWindowID;
+  uint64_t                    browsingContextID;
   bool                        enforceSecurity;
   bool                        initialSecurityCheckDone;
   bool                        isInThirdPartyContext;

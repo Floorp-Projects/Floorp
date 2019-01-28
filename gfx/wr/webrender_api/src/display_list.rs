@@ -1304,6 +1304,7 @@ impl DisplayListBuilder {
         mix_blend_mode: MixBlendMode,
         filters: &[FilterOp],
         raster_space: RasterSpace,
+        cache_tiles: bool,
     ) {
         let item = SpecificDisplayItem::PushStackingContext(PushStackingContextDisplayItem {
             stacking_context: StackingContext {
@@ -1311,6 +1312,7 @@ impl DisplayListBuilder {
                 mix_blend_mode,
                 clip_id,
                 raster_space,
+                cache_tiles,
             },
         });
 
@@ -1319,6 +1321,34 @@ impl DisplayListBuilder {
             clip_id: ClipId::invalid(),
         });
         self.push_iter(filters);
+    }
+
+    /// Helper for examples/ code.
+    pub fn push_simple_stacking_context(
+        &mut self,
+        layout: &LayoutPrimitiveInfo,
+        spatial_id: SpatialId,
+    ) {
+        self.push_simple_stacking_context_with_filters(layout, spatial_id, &[]);
+    }
+
+    /// Helper for examples/ code.
+    pub fn push_simple_stacking_context_with_filters(
+        &mut self,
+        layout: &LayoutPrimitiveInfo,
+        spatial_id: SpatialId,
+        filters: &[FilterOp],
+    ) {
+        self.push_stacking_context(
+            layout,
+            spatial_id,
+            None,
+            TransformStyle::Flat,
+            MixBlendMode::Normal,
+            filters,
+            RasterSpace::Screen,
+            /* cache_tiles = */ false,
+        );
     }
 
     pub fn pop_stacking_context(&mut self) {

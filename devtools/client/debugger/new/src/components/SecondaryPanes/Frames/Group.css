@@ -35,3 +35,7 @@
 .frames ul .frames-group.expanded .badge {
   color: var(--theme-highlight-blue);
 }
+
+.group-description-name {
+  padding-left: 5px;
+}

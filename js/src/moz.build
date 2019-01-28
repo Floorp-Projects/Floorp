@@ -120,6 +120,7 @@ EXPORTS.js += [
     '../public/Class.h',
     '../public/CompilationAndEvaluation.h',
     '../public/CompileOptions.h',
+    '../public/ContextOptions.h',
     '../public/Conversions.h',
     '../public/Date.h',
     '../public/Debug.h',

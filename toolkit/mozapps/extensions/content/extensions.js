@@ -26,6 +26,8 @@ ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 ChromeUtils.defineModuleGetter(this, "ClientID",
                                "resource://gre/modules/ClientID.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       "extensions.webextPermissionPrompts", false);
@@ -684,11 +686,13 @@ var gViewController = {
   viewChangeCallback: null,
   initialViewSelected: false,
   lastHistoryIndex: -1,
+  backButton: null,
 
   initialize() {
     this.viewPort = document.getElementById("view-port");
     this.headeredViews = document.getElementById("headered-views");
     this.headeredViewsDeck = document.getElementById("headered-views-content");
+    this.backButton = document.getElementById("go-back");
 
     this.viewObjects.discover = gDiscoverView;
     this.viewObjects.list = gListView;
@@ -870,6 +874,8 @@ var gViewController = {
       this.currentViewObj.refresh(view.param, ++this.currentViewRequest, aState);
     else
       this.currentViewObj.show(view.param, ++this.currentViewRequest, aState);
+
+    this.backButton.hidden = this.currentViewObj.isRoot || !gHistory.canGoBack;
   },
 
   // Moves back in the document history and removes the current history entry
@@ -2007,11 +2013,13 @@ var gDiscoverView = {
   homepageURL: null,
   _loadListeners: [],
   hideHeader: true,
+  isRoot: true,
 
   get clientIdDiscoveryEnabled() {
     // These prefs match Discovery.jsm for enabling clientId cookies.
     return Services.prefs.getBoolPref("datareporting.healthreport.uploadEnabled", false) &&
-           Services.prefs.getBoolPref("browser.discovery.enabled", false);
+           Services.prefs.getBoolPref("browser.discovery.enabled", false) &&
+           !PrivateBrowsingUtils.isContentWindowPrivate(window);
   },
 
   async getClientHeader() {
@@ -2287,6 +2295,7 @@ var gLegacyView = {
   node: null,
   _listBox: null,
   _categoryItem: null,
+  isRoot: true,
 
   initialize() {
     this.node = document.getElementById("legacy-view");
@@ -2385,6 +2394,7 @@ var gListView = {
   _listBox: null,
   _emptyNotice: null,
   _type: null,
+  isRoot: true,
 
   initialize() {
     this.node = document.getElementById("list-view");
@@ -2483,9 +2493,6 @@ var gListView = {
         }
       }
 
-      // Only show the manage shortcuts button for extensions.
-      document.getElementById("manage-shortcuts").hidden = this._type != "extension";
-
       this.filterDisabledUnsigned(showOnlyDisabledUnsigned);
       let legacyNotice = document.getElementById("legacy-extensions-notice");
       if (showLegacyInfo) {
@@ -2512,7 +2519,6 @@ var gListView = {
   hide() {
     gEventManager.unregisterInstallListener(this);
     doPendingUninstalls(this._listBox);
-    document.getElementById("manage-shortcuts").hidden = true;
   },
 
   filterDisabledUnsigned(aFilter = true) {
@@ -2583,6 +2589,10 @@ var gListView = {
     if (aIsInstall && aObj.existingAddon)
       return;
 
+    if (aObj.addon && aObj.addon.hidden) {
+      return;
+    }
+
     let prop = aIsInstall ? "mInstall" : "mAddon";
     for (let item of this._listBox.childNodes) {
       if (item[prop] == aObj)
@@ -2630,6 +2640,7 @@ var gDetailView = {
   _addon: null,
   _loadingTimer: null,
   _autoUpdate: null,
+  isRoot: false,
 
   initialize() {
     this.node = document.getElementById("detail-view");
@@ -3302,6 +3313,7 @@ var gUpdatesView = {
   _emptyNotice: null,
   _updateSelected: null,
   _categoryItem: null,
+  isRoot: true,
 
   initialize() {
     this.node = document.getElementById("updates-view");
@@ -3515,6 +3527,7 @@ var gUpdatesView = {
 var gShortcutsView = {
   node: null,
   loaded: null,
+  isRoot: false,
 
   initialize() {
     this.node = document.getElementById("shortcuts-view");
@@ -3532,10 +3545,6 @@ var gShortcutsView = {
     await this.loaded;
     await this.node.contentWindow.render();
     gViewController.notifyViewChanged();
-  },
-
-  refresh() {
-    return this.show();
   },
 
   hide() {},

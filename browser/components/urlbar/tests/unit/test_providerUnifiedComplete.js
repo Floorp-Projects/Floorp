@@ -29,7 +29,7 @@ add_task(async function test_unifiedComplete() {
       },
     },
   });
-  let context = createContext("moz", {isPrivate: false});
+  let context = createContext("moz org", {isPrivate: false});
 
   // Add entries from multiple sources.
   await PlacesUtils.bookmarks.insert({
@@ -37,6 +37,8 @@ add_task(async function test_unifiedComplete() {
     title: "Test bookmark",
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
+  PlacesUtils.tagging.tagURI(Services.io.newURI("https://bookmark.mozilla.org/"),
+                             ["mozilla", "org", "ham", "moz", "bacon"]);
   await PlacesTestUtils.addVisits([
     {uri: "https://history.mozilla.org/", title: "Test history"},
     {uri: "https://tab.mozilla.org/", title: "Test tab"},
@@ -49,20 +51,23 @@ add_task(async function test_unifiedComplete() {
   Assert.equal(context.results.length, 6, "Found the expected number of matches");
 
   Assert.deepEqual([
-    UrlbarUtils.MATCH_TYPE.SEARCH,
-    UrlbarUtils.MATCH_TYPE.SEARCH,
-    UrlbarUtils.MATCH_TYPE.SEARCH,
-    UrlbarUtils.MATCH_TYPE.URL,
-    UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-    UrlbarUtils.MATCH_TYPE.URL,
-  ], context.results.map(m => m.type), "Check match types");
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    UrlbarUtils.RESULT_TYPE.URL,
+    UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+    UrlbarUtils.RESULT_TYPE.URL,
+  ], context.results.map(m => m.type), "Check result types");
 
   Assert.deepEqual([
-    "moz",
-    "moz foo",
-    "moz bar",
+    "moz org",
+    "moz org foo",
+    "moz org bar",
     "Test bookmark",
     "Test tab",
     "Test history",
   ], context.results.map(m => m.title), "Check match titles");
+
+  Assert.deepEqual(context.results[3].payload.tags, ["moz", "mozilla", "org"],
+                   "Check tags");
 });

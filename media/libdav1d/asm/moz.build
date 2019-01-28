@@ -28,13 +28,14 @@ if CONFIG['CPU_ARCH'] == 'x86':
     ASFLAGS += ['-I%s/media/libdav1d/asm/x86_32/' % TOPSRCDIR]
 
 if CONFIG['CPU_ARCH'] == 'x86_64':
-    # Change the default stack aligment (16) to 32
-    if CONFIG['CC_TYPE'] == 'clang':
-        CFLAGS += ['-mstack-alignment=32']
-    elif CONFIG['CC_TYPE'] == 'gcc':
-        CFLAGS += ['-mpreferred-stack-boundary=5']
-
-    if CONFIG['OS_TARGET'] == 'Darwin':
+    if CONFIG['OS_TARGET'] == 'Linux':
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/linux/' % TOPSRCDIR]
+    elif CONFIG['OS_TARGET'] == 'Darwin':
+        # Change the default stack aligment (16) to 32
+        if CONFIG['CC_TYPE'] == 'clang':
+            CFLAGS += ['-mstack-alignment=32']
+        elif CONFIG['CC_TYPE'] == 'gcc':
+            CFLAGS += ['-mpreferred-stack-boundary=5']
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/osx/' % TOPSRCDIR]
     else:
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/' % TOPSRCDIR]

@@ -246,8 +246,7 @@ void WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 
 void WebRenderLayerManager::EndTransactionWithoutLayer(
     nsDisplayList* aDisplayList, nsDisplayListBuilder* aDisplayListBuilder,
-    const nsTArray<wr::FilterOp>& aFilters,
-    WebRenderBackgroundData* aBackground) {
+    nsTArray<wr::FilterOp>&& aFilters, WebRenderBackgroundData* aBackground) {
   AUTO_PROFILER_TRACING("Paint", "RenderLayers", GRAPHICS);
 
   // Since we don't do repeat transactions right now, just set the time
@@ -276,7 +275,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
     mWebRenderCommandBuilder.BuildWebRenderCommands(
         builder, resourceUpdates, aDisplayList, aDisplayListBuilder,
-        mScrollData, contentSize, aFilters);
+        mScrollData, contentSize, std::move(aFilters));
     builderDumpIndex = mWebRenderCommandBuilder.GetBuilderDumpIndex();
     containsSVGGroup = mWebRenderCommandBuilder.GetContainsSVGGroup();
   } else {

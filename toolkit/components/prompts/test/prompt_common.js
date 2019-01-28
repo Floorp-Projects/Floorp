@@ -1,7 +1,4 @@
-const Ci = SpecialPowers.Ci;
-const Cc = SpecialPowers.Cc;
-ok(Ci != null, "Access Ci");
-ok(Cc != null, "Access Cc");
+const { Cc, Ci } = SpecialPowers;
 
 function hasTabModalPrompts() {
   var prefName = "prompts.tab_modal.enabled";
@@ -39,6 +36,7 @@ function handlePrompt(state, action) {
 }
 
 function checkPromptState(promptState, expectedState) {
+    info(`checkPromptState: ${expectedState.msg}`);
     // XXX check title? OS X has title in content
     is(promptState.msg, expectedState.msg, "Checking expected message");
     if (isOSX && !isTabModal)

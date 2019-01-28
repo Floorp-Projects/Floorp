@@ -1604,6 +1604,8 @@ static void CompareExchange(MacroAssembler& masm,
   Register scratch2 = temps.AcquireX().asUnsized();
   MemOperand ptr = ComputePointerForAtomic(masm, mem, scratch2);
 
+  MOZ_ASSERT(ptr.base().asUnsized() != output);
+
   masm.memoryBarrierBefore(sync);
 
   Register scratch = temps.AcquireX().asUnsized();
@@ -1705,6 +1707,27 @@ void MacroAssembler::compareExchange(Scalar::Type type,
                                      Register newval, Register output) {
   CompareExchange(*this, nullptr, type, Width::_32, sync, mem, oldval, newval,
                   output);
+}
+
+void MacroAssembler::compareExchange64(const Synchronization& sync,
+                                       const Address& mem, Register64 expect,
+                                       Register64 replace, Register64 output) {
+  CompareExchange(*this, nullptr, Scalar::Int64, Width::_64, sync, mem,
+                  expect.reg, replace.reg, output.reg);
+}
+
+void MacroAssembler::atomicExchange64(const Synchronization& sync,
+                                      const Address& mem, Register64 value,
+                                      Register64 output) {
+  AtomicExchange(*this, nullptr, Scalar::Int64, Width::_64, sync, mem,
+                 value.reg, output.reg);
+}
+
+void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+                                     Register64 value, const Address& mem,
+                                     Register64 temp, Register64 output) {
+  AtomicFetchOp<true>(*this, nullptr, Scalar::Int64, Width::_64, sync, op, mem,
+                      value.reg, temp.reg, output.reg);
 }
 
 void MacroAssembler::wasmCompareExchange(const wasm::MemoryAccessDesc& access,

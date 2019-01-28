@@ -42,11 +42,11 @@ describe("sources tree", () => {
       const sources = [
         createSource({
           url: "http://example.com/a.js",
-          actor: "actor1"
+          id: "actor1"
         }),
         createSource({
           url: "http://example.com/b/c/d.js",
-          actor: "actor2"
+          id: "actor2"
         })
       ];
 

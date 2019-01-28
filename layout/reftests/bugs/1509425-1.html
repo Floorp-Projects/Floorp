@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+
+<title>Bug 1271714: Hit testing should be able to find the .opacityFilter element</title>
+
+<style type="text/css">
+
+#opacityFilter {
+  border: 1px solid black;
+  height: 200px;
+  width: 200px;
+  filter: opacity(0);
+}
+
+</style>
+
+<p id="output">FAIL</p>
+
+<div id="opacityFilter"></div>
+
+<script>
+
+if (document.elementFromPoint(100, 100).id == "opacityFilter") {
+  document.getElementById("output").textContent = "PASS";
+}
+
+</script>

@@ -11,7 +11,7 @@
  */
 .connect-page__network-form {
   display: grid;
-  grid-column-gap: calc(var(--base-distance) * 2);
+  grid-column-gap: calc(var(--base-unit) * 2);
   grid-template-columns: auto 1fr auto;
   align-items: center;
 }

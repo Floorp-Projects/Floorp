@@ -14,7 +14,6 @@ XPIDL_SOURCES += [
     'nsIException.idl',
     'nsIGZFileWriter.idl',
     'nsIInterfaceRequestor.idl',
-    'nsILoadURIDelegate.idl',
     'nsIMemory.idl',
     'nsIMemoryInfoDumper.idl',
     'nsIMemoryReporter.idl',

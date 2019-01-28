@@ -12,7 +12,9 @@
 #include "nsISVGPoint.h"
 #include "nsSVGNumber2.h"
 
-struct nsSVGMark {
+namespace mozilla {
+
+struct SVGMark {
   enum Type {
     eStart,
     eMid,
@@ -23,11 +25,10 @@ struct nsSVGMark {
 
   float x, y, angle;
   Type type;
-  nsSVGMark(float aX, float aY, float aAngle, Type aType)
+  SVGMark(float aX, float aY, float aAngle, Type aType)
       : x(aX), y(aY), angle(aAngle), type(aType) {}
 };
 
-namespace mozilla {
 namespace dom {
 
 class SVGAnimatedNumber;
@@ -78,7 +79,7 @@ class SVGGeometryElement : public SVGGeometryElementBase {
   bool GeometryDependsOnCoordCtx();
 
   virtual bool IsMarkable();
-  virtual void GetMarkPoints(nsTArray<nsSVGMark>* aMarks);
+  virtual void GetMarkPoints(nsTArray<SVGMark>* aMarks);
 
   /**
    * A method that can be faster than using a Moz2D Path and calling GetBounds/

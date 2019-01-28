@@ -15,6 +15,7 @@ const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
+loader.lazyRequireGetter(this, "getElementText", "devtools/client/webconsole/utils/clipboard", true);
 
 /**
  * Create a Menu instance for the webconsole.
@@ -177,7 +178,7 @@ function createContextMenu(hud, parentNode, {
     disabled: false,
     click: () => {
       const webconsoleOutput = parentNode.querySelector(".webconsole-output");
-      clipboardHelper.copyString(webconsoleOutput.textContent);
+      clipboardHelper.copyString(getElementText(webconsoleOutput));
     },
   }));
 

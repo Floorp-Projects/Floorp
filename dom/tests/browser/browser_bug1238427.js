@@ -23,7 +23,7 @@ add_task(async function() {
   // it will show up as a non-shutdown leak.
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: TEST_URI
+    url: TEST_URI,
   }, function(browser) { /* ... */ });
 
   ok(true, "Need to do something in this test");

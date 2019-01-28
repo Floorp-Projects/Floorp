@@ -6,6 +6,8 @@
 
 #include "SMILInterval.h"
 
+#include "mozilla/DebugOnly.h"
+
 namespace mozilla {
 
 SMILInterval::SMILInterval() : mBeginFixed(false), mEndFixed(false) {}
@@ -52,17 +54,17 @@ void SMILInterval::Unlink(bool aFiltered) {
   mEnd = nullptr;
 }
 
-nsSMILInstanceTime* SMILInterval::Begin() {
+SMILInstanceTime* SMILInterval::Begin() {
   MOZ_ASSERT(mBegin && mEnd, "Requesting Begin() on un-initialized interval.");
   return mBegin;
 }
 
-nsSMILInstanceTime* SMILInterval::End() {
+SMILInstanceTime* SMILInterval::End() {
   MOZ_ASSERT(mBegin && mEnd, "Requesting End() on un-initialized interval.");
   return mEnd;
 }
 
-void SMILInterval::SetBegin(nsSMILInstanceTime& aBegin) {
+void SMILInterval::SetBegin(SMILInstanceTime& aBegin) {
   MOZ_ASSERT(aBegin.Time().IsDefinite(),
              "Attempt to set unresolved or indefinite begin time on interval");
   MOZ_ASSERT(!mBeginFixed,
@@ -76,7 +78,7 @@ void SMILInterval::SetBegin(nsSMILInstanceTime& aBegin) {
   mBegin = &aBegin;
 }
 
-void SMILInterval::SetEnd(nsSMILInstanceTime& aEnd) {
+void SMILInterval::SetEnd(SMILInstanceTime& aEnd) {
   MOZ_ASSERT(!mEndFixed, "Attempt to set end time but the end point is fixed");
   // As with SetBegin, check we're not making an instance time dependent on
   // itself.
@@ -102,19 +104,16 @@ void SMILInterval::FixEnd() {
   mEnd->AddRefFixedEndpoint();
 }
 
-void SMILInterval::AddDependentTime(nsSMILInstanceTime& aTime) {
-  RefPtr<nsSMILInstanceTime>* inserted =
+void SMILInterval::AddDependentTime(SMILInstanceTime& aTime) {
+  RefPtr<SMILInstanceTime>* inserted =
       mDependentTimes.InsertElementSorted(&aTime);
   if (!inserted) {
     NS_WARNING("Insufficient memory to insert instance time.");
   }
 }
 
-void SMILInterval::RemoveDependentTime(const nsSMILInstanceTime& aTime) {
-#ifdef DEBUG
-  bool found =
-#endif
-      mDependentTimes.RemoveElementSorted(&aTime);
+void SMILInterval::RemoveDependentTime(const SMILInstanceTime& aTime) {
+  DebugOnly<bool> found = mDependentTimes.RemoveElementSorted(&aTime);
   MOZ_ASSERT(found, "Couldn't find instance time to delete.");
 }
 

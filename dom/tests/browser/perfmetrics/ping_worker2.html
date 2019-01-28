@@ -7,7 +7,7 @@
   var shared;
 
   function init() {
-   shared = new SharedWorker('shared_worker.js');
+   shared = new SharedWorker("shared_worker.js");
    shared.port.start();
    for (let i = 0; i++; i < 10) shared.port.postMessage(["ok"]);
   }

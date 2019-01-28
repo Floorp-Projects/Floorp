@@ -19,7 +19,6 @@ a11y:
       - 'main'
     release_channel_collection: opt-out
     keyed: false
-    cpp_guard: 'ACCESSIBILITY'
 
   indicator_acted_on:
     bug_numbers:
@@ -472,7 +471,8 @@ sandbox:
     release_channel_collection: opt-out
     record_in_processes:
       - main
-    cpp_guard: 'XP_WIN'
+    operating_systems:
+      - "windows"
 
 preferences:
   created_new_user_prefs_file:
@@ -942,6 +942,22 @@ media:
       The number of HTMLMediaElements which were blocked because they hadn't loaded metadata yet, but ended up having no audio track.
     expires: "68"
     kind: uint
+    notification_emails:
+      - cpearce@mozilla.com
+      - alwu@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+      - content
+
+  autoplay_default_blocked:
+    bug_numbers:
+      - 1521947
+    description: >
+      Whether the user blocked autoplay by default. Recorded when the preference is toggled.
+    expires: "72"
+    kind: boolean
     notification_emails:
       - cpearce@mozilla.com
       - alwu@mozilla.com

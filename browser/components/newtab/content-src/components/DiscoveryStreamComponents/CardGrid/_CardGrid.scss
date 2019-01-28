@@ -1,11 +1,39 @@
+$col4-header-line-height: 20;
+$col4-header-font-size: 13;
+
 .ds-card-grid {
   display: grid;
+  grid-gap: 24px;
 
   .ds-card {
     background: $white;
-    box-shadow: 0 1px 4px $grey-10-10;
     border-radius: 4px;
-    margin-bottom: 24px;
+  }
+
+  &.ds-card-grid-border {
+    .ds-card {
+      box-shadow: var(--newtab-card-shadow);
+
+      &:hover {
+        box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+        transition: box-shadow 150ms;
+        outline: none;
+      }
+
+      .img-wrapper .img {
+        border-radius: 4px 4px 0 0;
+      }
+    }
+  }
+
+  &.ds-card-grid-no-border {
+    .ds-card {
+      background: none;
+
+      .meta {
+        padding: 16px 0;
+      }
+    }
   }
 
   // "2/3 width layout"
@@ -14,7 +42,6 @@
   .ds-column-7 &,
   .ds-column-8 & {
     grid-template-columns: repeat(2, 1fr);
-    grid-gap: 24px;
   }
 
   // "Full width layout"
@@ -23,6 +50,18 @@
   .ds-column-11 &,
   .ds-column-12 & {
     grid-template-columns: repeat(4, 1fr);
-    grid-gap: 24px;
+
+    .meta .title {
+      @include limit-visibile-lines(2, $col4-header-line-height, $col4-header-font-size);
+    }
+
+    &.ds-card-grid-divisible-by-3 {
+      grid-template-columns: repeat(3, 1fr);
+
+      .title {
+        font-size: 17px;
+        line-height: 24px;
+      }
+    }
   }
 }

@@ -80,7 +80,6 @@
 
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
-#include "mozilla/Scheduler.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
 #include "GMPProcessChild.h"
@@ -914,8 +913,6 @@ void XRE_ShutdownChildProcess() {
 
   mozilla::DebugOnly<MessageLoop*> ioLoop = XRE_GetIOMessageLoop();
   MOZ_ASSERT(!!ioLoop, "Bad shutdown order");
-
-  Scheduler::Shutdown();
 
   // Quit() sets off the following chain of events
   //  (1) UI loop starts quitting

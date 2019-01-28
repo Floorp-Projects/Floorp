@@ -413,8 +413,8 @@ class SkippableTimer {
 }
 
 /**
- * Gets an array of the provider sources accepted for a given QueryContext.
- * @param {object} context The QueryContext to examine
+ * Gets an array of the provider sources accepted for a given UrlbarQueryContext.
+ * @param {UrlbarQueryContext} context The query context to examine
  * @returns {array} Array of accepted sources
  */
 function getAcceptableMatchSources(context) {

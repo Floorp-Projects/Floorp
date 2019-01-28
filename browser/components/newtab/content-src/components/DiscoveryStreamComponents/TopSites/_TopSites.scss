@@ -1,6 +1,10 @@
 // ds topsites wraps the original topsites, with a few css changes.
 .ds-top-sites {
 
+  .ds-header-title {
+    vertical-align: middle;
+  }
+
   // This is the override layer.
   .top-sites {
     // Slightly different alignment with the other DS components than AS has.

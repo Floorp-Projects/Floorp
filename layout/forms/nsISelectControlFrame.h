@@ -43,7 +43,8 @@ class nsISelectControlFrame : public nsQueryFrame {
    * Notify the frame when selectedIndex was changed.  This might
    * destroy the frame.
    */
-  NS_IMETHOD OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) = 0;
+  NS_IMETHOD_(void)
+  OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) = 0;
 };
 
 #endif

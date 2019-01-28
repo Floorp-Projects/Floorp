@@ -226,12 +226,6 @@ void LIRGenerator::visitNewCallObject(MNewCallObject* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitNewSingletonCallObject(MNewSingletonCallObject* ins) {
-  LNewSingletonCallObject* lir = new (alloc()) LNewSingletonCallObject(temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitNewDerivedTypedObject(MNewDerivedTypedObject* ins) {
   LNewDerivedTypedObject* lir = new (alloc()) LNewDerivedTypedObject(
       useRegisterAtStart(ins->type()), useRegisterAtStart(ins->owner()),
@@ -4034,12 +4028,6 @@ void LIRGenerator::visitSetFrameArgument(MSetFrameArgument* ins) {
         new (alloc()) LSetFrameArgumentT(useRegister(input));
     add(lir, ins);
   }
-}
-
-void LIRGenerator::visitRunOncePrologue(MRunOncePrologue* ins) {
-  LRunOncePrologue* lir = new (alloc()) LRunOncePrologue;
-  add(lir, ins);
-  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitRest(MRest* ins) {

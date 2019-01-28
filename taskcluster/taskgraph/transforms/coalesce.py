@@ -27,16 +27,7 @@ def enable_coalescing(config, jobs):
     metadata.
     """
     for job in jobs:
-        if int(config.params['level']) > 1 and job['worker-type'] not in [
-            # These worker types don't currently support coalescing.
-            # This list can be removed when bug 1399401 is fixed:
-            #   https://bugzilla.mozilla.org/show_bug.cgi?id=1399401
-            'aws-provisioner-v1/gecko-t-win7-32',
-            'aws-provisioner-v1/gecko-t-win7-32-gpu',
-            'aws-provisioner-v1/gecko-t-win10-64',
-            'aws-provisioner-v1/gecko-t-win10-64-gpu',
-            'releng-hardware/gecko-t-win10-64-hw',
-        ]:
+        if int(config.params['level']) > 1:
             job['coalesce'] = {
                 'job-identifier': sha256(job["label"]).hexdigest()[:20],
                 'age': 3600,

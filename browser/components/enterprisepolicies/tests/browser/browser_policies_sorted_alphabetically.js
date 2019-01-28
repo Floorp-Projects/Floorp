@@ -5,7 +5,7 @@
 
 function checkArrayIsSorted(array, msg) {
   let sorted = true;
-  let sortedArray = array.slice().sort();
+  let sortedArray = array.slice().sort(function(a, b) { return a.localeCompare(b); });
 
   for (let i = 0; i < array.length; i++) {
     if (array[i] != sortedArray[i]) {

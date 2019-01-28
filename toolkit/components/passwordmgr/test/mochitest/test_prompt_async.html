@@ -1,0 +1,572 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Test for Async Auth Prompt</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+    <script type="text/javascript" src="pwmgr_common.js"></script>
+    <script type="text/javascript" src="prompt_common.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+    <script class="testbody" type="text/javascript">
+      const { NetUtil } = SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm");
+      const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
+      const EXAMPLE_COM = "http://example.com/tests/toolkit/components/passwordmgr/test/mochitest/";
+      const EXAMPLE_ORG = "http://example.org/tests/toolkit/components/passwordmgr/test/mochitest/";
+      let mozproxyOrigin;
+
+      // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
+      // Used by prompt_common.js.
+      isTabModal = false;
+
+      let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
+
+      /**
+       * Add a listener to add some logins to be autofilled in the HTTP/proxy auth. prompts later.
+       */
+      let pwmgrParent = runInParent(() => {
+        ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+        Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
+
+        function initLogins(mozproxy) {
+          function addLogin(host, realm, user, pass) {
+            let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+            login.init(host, null, realm, user, pass, "", "");
+            Services.logins.addLogin(login);
+          }
+
+          addLogin(mozproxy, "proxy_realm",
+                   "proxy_user", "proxy_pass");
+          addLogin(mozproxy, "proxy_realm2",
+                   "proxy_user2", "proxy_pass2");
+          addLogin(mozproxy, "proxy_realm3",
+                   "proxy_user3", "proxy_pass3");
+          addLogin(mozproxy, "proxy_realm4",
+                   "proxy_user4", "proxy_pass4");
+          addLogin(mozproxy, "proxy_realm5",
+                   "proxy_user5", "proxy_pass5");
+          addLogin("http://example.com", "mochirealm",
+                   "user1name", "user1pass");
+          addLogin("http://example.org", "mochirealm2",
+                   "user2name", "user2pass");
+          addLogin("http://example.com", "mochirealm3",
+                   "user3name", "user3pass");
+          addLogin("http://example.com", "mochirealm4",
+                   "user4name", "user4pass");
+          addLogin("http://example.com", "mochirealm5",
+                   "user5name", "user5pass");
+          addLogin("http://example.com", "mochirealm6",
+                   "user6name", "user6pass");
+        }
+
+        addMessageListener("initLogins", function onMessage(msg) {
+          initLogins(msg.mozproxyOrigin);
+        });
+      }); // end runInParent
+
+      function promiseLoadedContentDoc(frame) {
+        return new Promise(resolve => {
+          frame.addEventListener("load", function onLoad(evt) {
+            resolve(SpecialPowers.wrap(frame).contentDocument);
+          }, { once: true });
+        });
+      }
+
+      function promiseProxyErrorLoad(frame) {
+        return TestUtils.waitForCondition(() => {
+          return SpecialPowers.wrap(frame.contentWindow).document.documentURI.includes("proxyConnectFailure");
+        }, "Waiting for proxyConnectFailure documentURI");
+      }
+
+      /**
+       * Make a channel to get the ProxyInfo used by the test harness so that we
+       * can add logins for the correct proxy origin.
+       */
+      add_task(async function setup_getProxyInfoForHarness() {
+        await new Promise(resolve => {
+          let resolveCallback = SpecialPowers.wrapCallbackObject({
+            // eslint-disable-next-line mozilla/use-chromeutils-generateqi
+            QueryInterface(iid) {
+              const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
+
+              if (!interfaces.some(v => iid.equals(v))) {
+                throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+              }
+              return this;
+            },
+
+            onProxyAvailable(req, uri, pi, status) {
+              // Add logins using the proxy host and port used by the mochitest harness.
+              mozproxyOrigin = "moz-proxy://" + SpecialPowers.wrap(pi).host + ":" +
+                SpecialPowers.wrap(pi).port;
+
+              pwmgrParent.sendSyncMessage("initLogins", {mozproxyOrigin});
+              resolve();
+            },
+          });
+
+          // Need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
+          let channel = NetUtil.newChannel({
+            uri: "http://example.com",
+            loadUsingSystemPrincipal: true,
+          });
+
+          let pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"]
+                                 .getService();
+
+          pps.asyncResolve(channel, 0, resolveCallback);
+        });
+      });
+
+      add_task(async function test_proxyAuthThenTwoHTTPAuth() {
+        // Load through a single proxy with authentication required 3 different
+        // pages, first with one login, other two with their own different login.
+        // We expect to show just a single dialog for proxy authentication and
+        // then two dialogs to authenticate to login 1 and then login 2.
+
+        let iframe1DocPromise = promiseLoadedContentDoc(iframe1);
+        let iframe2aDocPromise = promiseLoadedContentDoc(iframe2a);
+        let iframe2bDocPromise = promiseLoadedContentDoc(iframe2b);
+
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
+          "r=1&" +
+          "user=user1name&" +
+          "pass=user1pass&" +
+          "realm=mochirealm&" +
+          "proxy_user=proxy_user&" +
+          "proxy_pass=proxy_pass&" +
+          "proxy_realm=proxy_realm";
+        iframe2a.src = EXAMPLE_ORG + "authenticate.sjs?" +
+          "r=2&" +
+          "user=user2name&" +
+          "pass=user2pass&" +
+          "realm=mochirealm2&" +
+          "proxy_user=proxy_user&" +
+          "proxy_pass=proxy_pass&" +
+          "proxy_realm=proxy_realm";
+        iframe2b.src = EXAMPLE_ORG + "authenticate.sjs?" +
+          "r=3&" +
+          "user=user2name&" +
+          "pass=user2pass&" +
+          "realm=mochirealm2&" +
+          "proxy_user=proxy_user&" +
+          "proxy_pass=proxy_pass&" +
+          "proxy_realm=proxy_realm";
+
+        let state = {
+          msg: `The proxy ${mozproxyOrigin} is requesting a username and password. The site says: “proxy_realm”`,
+          title: "Authentication Required",
+          textValue: "proxy_user",
+          passValue: "proxy_pass",
+          iconClass: "authentication-icon question-icon",
+          titleHidden: true,
+          textHidden: false,
+          passHidden: false,
+          checkHidden: true,
+          checkMsg: "",
+          checked: false,
+          focused: "textField",
+          defButton: "button0",
+        };
+        let action = {
+          buttonClick: "ok",
+        };
+        await handlePrompt(state, action);
+
+        Object.assign(state, {
+          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          textValue: "user1name",
+          passValue: "user1pass",
+        });
+        await handlePrompt(state, action);
+
+        Object.assign(state, {
+          msg: "http://example.org is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          textValue: "user2name",
+          passValue: "user2pass",
+        });
+        await handlePrompt(state, action);
+
+        let iframe1Doc = await iframe1DocPromise;
+        let iframe2aDoc = await iframe2aDocPromise;
+        let iframe2bDoc = await iframe2bDocPromise;
+
+        authok1 = iframe1Doc.getElementById("ok").textContent;
+        proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+
+        let authok2a = iframe2aDoc.getElementById("ok").textContent;
+        let proxyok2a = iframe2aDoc.getElementById("proxy").textContent;
+
+        let authok2b = iframe2bDoc.getElementById("ok").textContent;
+        let proxyok2b = iframe2bDoc.getElementById("proxy").textContent;
+
+        is(authok1, "PASS", "WWW Authorization OK, frame1");
+        is(authok2a, "PASS", "WWW Authorization OK, frame2a");
+        is(authok2b, "PASS", "WWW Authorization OK, frame2b");
+        is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+        is(proxyok2a, "PASS", "Proxy Authorization OK, frame2a");
+        is(proxyok2b, "PASS", "Proxy Authorization OK, frame2b");
+      });
+
+      add_task(async function test_threeSubframesWithSameProxyAndHTTPAuth() {
+        // Load an iframe with 3 subpages all requiring the same login through
+        // an authenticated proxy. We expect 2 dialogs, proxy authentication
+        // and web authentication.
+
+        let iframe1DocPromise = promiseLoadedContentDoc(iframe1);
+        let iframe2aDocPromise = promiseLoadedContentDoc(iframe2a);
+        let iframe2bDocPromise = promiseLoadedContentDoc(iframe2b);
+
+        iframe1.src = EXAMPLE_COM + "subtst_prompt_async.html";
+        iframe2a.src = "about:blank";
+        iframe2b.src = "about:blank";
+
+        let state = {
+          msg: `The proxy ${mozproxyOrigin} is requesting a username and password. The site says: “proxy_realm2”`,
+          title: "Authentication Required",
+          textValue: "proxy_user2",
+          passValue: "proxy_pass2",
+          iconClass: "authentication-icon question-icon",
+          titleHidden: true,
+          textHidden: false,
+          passHidden: false,
+          checkHidden: true,
+          checkMsg: "",
+          checked: false,
+          focused: "textField",
+          defButton: "button0",
+        };
+        let action = {
+          buttonClick: "ok",
+        };
+        await handlePrompt(state, action);
+
+        Object.assign(state, {
+          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          textValue: "user3name",
+          passValue: "user3pass",
+        });
+        await handlePrompt(state, action);
+
+        let iframe1Doc = await iframe1DocPromise;
+
+        function checkIframe(frame) {
+          let doc = SpecialPowers.wrap(frame).contentDocument;
+
+          let authok = doc.getElementById("ok").textContent;
+          let proxyok = doc.getElementById("proxy").textContent;
+
+          is(authok, "PASS", "WWW Authorization OK, " + frame.id);
+          is(proxyok, "PASS", "Proxy Authorization OK, " + frame.id);
+        }
+
+        checkIframe(iframe1Doc.getElementById("iframe1"));
+        checkIframe(iframe1Doc.getElementById("iframe2"));
+        checkIframe(iframe1Doc.getElementById("iframe3"));
+      });
+
+      add_task(async function test_oneFrameWithUnauthenticatedProxy() {
+        // Load in the iframe page through unauthenticated proxy
+        // and discard the proxy authentication. We expect to see
+        // unauthenticated page content and just a single dialog.
+
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
+          "user=user4name&" +
+          "pass=user4pass&" +
+          "realm=mochirealm4&" +
+          "proxy_user=proxy_user3&" +
+          "proxy_pass=proxy_pass3&" +
+          "proxy_realm=proxy_realm3";
+
+        let state = {
+          msg: `The proxy ${mozproxyOrigin} is requesting a username and password. The site says: “proxy_realm3”`,
+          title: "Authentication Required",
+          textValue: "proxy_user3",
+          passValue: "proxy_pass3",
+          iconClass: "authentication-icon question-icon",
+          titleHidden: true,
+          textHidden: false,
+          passHidden: false,
+          checkHidden: true,
+          checkMsg: "",
+          checked: false,
+          focused: "textField",
+          defButton: "button0",
+        };
+        let action = {
+          buttonClick: "cancel",
+        };
+        await handlePrompt(state, action);
+
+        await promiseProxyErrorLoad(iframe1);
+      });
+
+      add_task(async function test_reloadReusingProxyAuthButCancellingHTTPAuth() {
+        // Reload the frame from previous step and pass the proxy authentication
+        // but cancel the WWW authentication. We should get the proxy=ok and WWW=fail
+        // content as a result.
+        let iframe1DocPromise = promiseLoadedContentDoc(iframe1);
+
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
+          "user=user4name&" +
+          "pass=user4pass&" +
+          "realm=mochirealm4&" +
+          "proxy_user=proxy_user3&" +
+          "proxy_pass=proxy_pass3&" +
+          "proxy_realm=proxy_realm3";
+
+        let state = {
+          msg: `The proxy ${mozproxyOrigin} is requesting a username and password. The site says: “proxy_realm3”`,
+          title: "Authentication Required",
+          textValue: "proxy_user3",
+          passValue: "proxy_pass3",
+          iconClass: "authentication-icon question-icon",
+          titleHidden: true,
+          textHidden: false,
+          passHidden: false,
+          checkHidden: true,
+          checkMsg: "",
+          checked: false,
+          focused: "textField",
+          defButton: "button0",
+        };
+        let action = {
+          buttonClick: "ok",
+        };
+        await handlePrompt(state, action);
+
+        Object.assign(state, {
+          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          textValue: "user4name",
+          passValue: "user4pass",
+        });
+        action = {
+          buttonClick: "cancel",
+        };
+        await handlePrompt(state, action);
+
+        let iframe1Doc = await iframe1DocPromise;
+
+        authok1 = iframe1Doc.getElementById("ok").textContent;
+        proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+
+        is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
+        is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+      });
+
+      add_task(async function test_hugePayloadCancelled() {
+        // Same as the previous two steps but let the server generate
+        // huge content load to check http channel is capable to handle
+        // case when auth dialog is canceled or accepted before unauthenticated
+        // content data is load from the server. (This would be better to
+        // implement using delay of server response).
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
+          "user=user5name&" +
+          "pass=user5pass&" +
+          "realm=mochirealm5&" +
+          "proxy_user=proxy_user4&" +
+          "proxy_pass=proxy_pass4&" +
+          "proxy_realm=proxy_realm4&" +
+          "huge=1";
+
+        let state = {
+          msg: `The proxy ${mozproxyOrigin} is requesting a username and password. The site says: “proxy_realm4”`,
+          title: "Authentication Required",
+          textValue: "proxy_user4",
+          passValue: "proxy_pass4",
+          iconClass: "authentication-icon question-icon",
+          titleHidden: true,
+          textHidden: false,
+          passHidden: false,
+          checkHidden: true,
+          checkMsg: "",
+          checked: false,
+          focused: "textField",
+          defButton: "button0",
+        };
+        let action = {
+          buttonClick: "cancel",
+        };
+        await handlePrompt(state, action);
+
+        await promiseProxyErrorLoad(iframe1);
+      });
+
+      add_task(async function test_hugeProxySuccessWWWFail() {
+        // Reload the frame from the previous step and let the proxy
+        // authentication pass but WWW fail. We expect two dialogs
+        // and an unauthenticated page content load.
+
+        let iframe1DocPromise = promiseLoadedContentDoc(iframe1);
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
+          "user=user5name&" +
+          "pass=user5pass&" +
+          "realm=mochirealm5&" +
+          "proxy_user=proxy_user4&" +
+          "proxy_pass=proxy_pass4&" +
+          "proxy_realm=proxy_realm4&" +
+          "huge=1";
+
+        let state = {
+          msg: `The proxy ${mozproxyOrigin} is requesting a username and password. The site says: “proxy_realm4”`,
+          title: "Authentication Required",
+          textValue: "proxy_user4",
+          passValue: "proxy_pass4",
+          iconClass: "authentication-icon question-icon",
+          titleHidden: true,
+          textHidden: false,
+          passHidden: false,
+          checkHidden: true,
+          checkMsg: "",
+          checked: false,
+          focused: "textField",
+          defButton: "button0",
+        };
+        let action = {
+          buttonClick: "ok",
+        };
+        await handlePrompt(state, action);
+
+        Object.assign(state, {
+          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          textValue: "user5name",
+          passValue: "user5pass",
+        });
+        action = {
+          buttonClick: "cancel",
+        };
+        await handlePrompt(state, action);
+
+        let iframe1Doc = await iframe1DocPromise;
+
+        authok1 = iframe1Doc.getElementById("ok").textContent;
+        proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+        footnote = iframe1Doc.getElementById("footnote").textContent;
+
+        is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
+        is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+        is(footnote, "This is a footnote after the huge content fill",
+           "Footnote present and loaded completely");
+      });
+
+      add_task(async function test_hugeProxySuccessWWWSuccess() {
+        // Reload again and let pass all authentication dialogs.
+        // Check we get the authenticated content not broken by
+        // the unauthenticated content.
+
+        let iframe1DocPromise = promiseLoadedContentDoc(iframe1);
+        SpecialPowers.wrap(iframe1).contentDocument.location.reload();
+
+        let state = {
+          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          title: "Authentication Required",
+          textValue: "user5name",
+          passValue: "user5pass",
+          iconClass: "authentication-icon question-icon",
+          titleHidden: true,
+          textHidden: false,
+          passHidden: false,
+          checkHidden: true,
+          checkMsg: "",
+          checked: false,
+          focused: "textField",
+          defButton: "button0",
+        };
+        let action = {
+          buttonClick: "ok",
+        };
+        await handlePrompt(state, action);
+
+        let iframe1Doc = await iframe1DocPromise;
+        authok1 = iframe1Doc.getElementById("ok").textContent;
+        proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+        footnote = iframe1Doc.getElementById("footnote").textContent;
+
+        is(authok1, "PASS", "WWW Authorization OK, frame1");
+        is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+        is(footnote, "This is a footnote after the huge content fill",
+           "Footnote present and loaded completely");
+      });
+
+      add_task(async function test_cancelSome() {
+        // Check we process all challenges sent by server when
+        // user cancels prompts
+        let iframe1DocPromise = promiseLoadedContentDoc(iframe1);
+        expectedDialogs = 5;
+        iframe1.src = EXAMPLE_COM + "authenticate.sjs?" +
+          "user=user6name&" +
+          "pass=user6pass&" +
+          "realm=mochirealm6&" +
+          "proxy_user=proxy_user5&" +
+          "proxy_pass=proxy_pass5&" +
+          "proxy_realm=proxy_realm5&" +
+          "huge=1&" +
+          "multiple=3";
+
+        let state = {
+          msg: `The proxy ${mozproxyOrigin} is requesting a username and password. The site says: “proxy_realm5”`,
+          title: "Authentication Required",
+          textValue: "proxy_user5",
+          passValue: "proxy_pass5",
+          iconClass: "authentication-icon question-icon",
+          titleHidden: true,
+          textHidden: false,
+          passHidden: false,
+          checkHidden: true,
+          checkMsg: "",
+          checked: false,
+          focused: "textField",
+          defButton: "button0",
+        };
+        let action = {
+          buttonClick: "cancel",
+        };
+        await handlePrompt(state, action);
+
+        action = {
+          buttonClick: "cancel",
+        };
+        await handlePrompt(state, action);
+
+        action = {
+          buttonClick: "ok",
+        };
+        await handlePrompt(state, action);
+
+        Object.assign(state, {
+          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          textValue: "user6name",
+          passValue: "user6pass",
+        });
+
+        action = {
+          buttonClick: "cancel",
+        };
+        await handlePrompt(state, action);
+
+        action = {
+          buttonClick: "ok",
+        };
+        await handlePrompt(state, action);
+
+        let iframe1Doc = await iframe1DocPromise;
+        authok1 = iframe1Doc.getElementById("ok").textContent;
+        proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+        footnote = iframe1Doc.getElementById("footnote").textContent;
+
+        is(authok1, "PASS", "WWW Authorization OK, frame1");
+        is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+        is(footnote, "This is a footnote after the huge content fill",
+           "Footnote present and loaded completely");
+      });
+    </script>
+</head>
+<body>
+    <iframe id="iframe1"></iframe>
+    <iframe id="iframe2a"></iframe>
+    <iframe id="iframe2b"></iframe>
+</body>
+</html>

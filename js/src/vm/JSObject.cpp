@@ -1001,8 +1001,8 @@ bool js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj) {
   RootedScript script(cx, cx->currentScript(&pc));
   gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
   NewObjectKind newKind = GenericObject;
-  if (script && ObjectGroup::useSingletonForAllocationSite(
-                    script, pc, &PlainObject::class_)) {
+  if (script &&
+      ObjectGroup::useSingletonForAllocationSite(script, pc, JSProto_Object)) {
     newKind = SingletonObject;
   }
   RootedObject obj(
@@ -1066,7 +1066,7 @@ static inline JSObject* CreateThisForFunctionWithGroup(JSContext* cx,
       if (newKind == SingletonObject) {
         Rooted<TaggedProto> proto(
             cx, TaggedProto(templateObject->staticPrototype()));
-        if (!JSObject::splicePrototype(cx, res, &PlainObject::class_, proto)) {
+        if (!JSObject::splicePrototype(cx, res, proto)) {
           return nullptr;
         }
       } else {
@@ -1998,155 +1998,56 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b) {
   NotifyGCPostSwap(a, b, r);
 }
 
-static void SetClassObject(JSObject* obj, JSProtoKey key, JSObject* cobj,
-                           JSObject* proto) {
-  if (!obj->is<GlobalObject>()) {
-    return;
-  }
-
-  obj->as<GlobalObject>().setConstructor(key, ObjectOrNullValue(cobj));
-  obj->as<GlobalObject>().setPrototype(key, ObjectOrNullValue(proto));
-}
-
-static void ClearClassObject(JSObject* obj, JSProtoKey key) {
-  if (!obj->is<GlobalObject>()) {
-    return;
-  }
-
-  obj->as<GlobalObject>().setConstructor(key, UndefinedValue());
-  obj->as<GlobalObject>().setPrototype(key, UndefinedValue());
-}
-
 static NativeObject* DefineConstructorAndPrototype(
-    JSContext* cx, HandleObject obj, JSProtoKey key, HandleAtom atom,
-    HandleObject protoProto, const Class* clasp, Native constructor,
-    unsigned nargs, const JSPropertySpec* ps, const JSFunctionSpec* fs,
+    JSContext* cx, HandleObject obj, HandleAtom atom, HandleObject protoProto,
+    const Class* clasp, Native constructor, unsigned nargs,
+    const JSPropertySpec* ps, const JSFunctionSpec* fs,
     const JSPropertySpec* static_ps, const JSFunctionSpec* static_fs,
     NativeObject** ctorp) {
-  /*
-   * Create a prototype object for this class.
-   *
-   * FIXME: lazy standard (built-in) class initialization and even older
-   * eager boostrapping code rely on all of these properties:
-   *
-   * 1. NewObject attempting to compute a default prototype object when
-   *    passed null for proto; and
-   *
-   * 2. NewObject tolerating no default prototype (null proto slot value)
-   *    due to this js::InitClass call coming from js::InitFunctionClass on an
-   *    otherwise-uninitialized global.
-   *
-   * 3. NewObject allocating a JSFunction-sized GC-thing when clasp is
-   *    &JSFunction::class_, not a JSObject-sized (smaller) GC-thing.
-   *
-   * The JS_NewObjectForGivenProto and JS_NewObject APIs also allow clasp to
-   * be &JSFunction::class_ (we could break compatibility easily). But
-   * fixing (3) is not enough without addressing the bootstrapping dependency
-   * on (1) and (2).
-   */
-
-  /*
-   * Create the prototype object.  (GlobalObject::createBlankPrototype isn't
-   * used because it won't let us use protoProto as the proto.
-   */
-  RootedNativeObject proto(cx, NewNativeObjectWithClassProto(
-                                   cx, clasp, protoProto, SingletonObject));
+  // Create the prototype object.
+  RootedNativeObject proto(
+      cx, GlobalObject::createBlankPrototypeInheriting(cx, clasp, protoProto));
   if (!proto) {
     return nullptr;
   }
 
-  /*
-   * Whether we need to define a constructor property on |obj| and which
-   * attributes to use.
-   */
-  bool defineConstructorProperty = false;
+  // Attributes used when installing the constructor on |obj|.
   uint32_t propertyAttrs = 0;
 
-  /* After this point, control must exit via label bad or out. */
   RootedNativeObject ctor(cx);
-  bool cached = false;
   if (!constructor) {
-    /*
-     * Lacking a constructor, name the prototype (e.g., Math) unless this
-     * class (a) is anonymous, i.e. for internal use only; (b) the class
-     * of obj (the global object) is has a reserved slot indexed by key;
-     * and (c) key is not the null key.
-     */
-    if (!(clasp->flags & JSCLASS_IS_ANONYMOUS) || !obj->is<GlobalObject>() ||
-        key == JSProto_Null) {
-      defineConstructorProperty = true;
-      propertyAttrs = (clasp->flags & JSCLASS_IS_ANONYMOUS)
-                          ? JSPROP_READONLY | JSPROP_PERMANENT
-                          : 0;
+    if (clasp->flags & JSCLASS_IS_ANONYMOUS) {
+      propertyAttrs = JSPROP_READONLY | JSPROP_PERMANENT;
     }
 
     ctor = proto;
   } else {
-    RootedFunction fun(cx, NewNativeConstructor(cx, constructor, nargs, atom));
-    if (!fun) {
-      goto bad;
+    ctor = NewNativeConstructor(cx, constructor, nargs, atom);
+    if (!ctor) {
+      return nullptr;
     }
 
-    /*
-     * Set the class object early for standard class constructors. Type
-     * inference may need to access these, and js::GetBuiltinPrototype will
-     * fail if it tries to do a reentrant reconstruction of the class.
-     */
-    if (key != JSProto_Null) {
-      SetClassObject(obj, key, fun, proto);
-      cached = true;
-    }
-
-    defineConstructorProperty = true;
-    propertyAttrs = 0;
-
-    /*
-     * Optionally construct the prototype object, before the class has
-     * been fully initialized.  Allow the ctor to replace proto with a
-     * different object, as is done for operator new.
-     */
-    ctor = fun;
     if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
-      goto bad;
-    }
-
-    /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
-    Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-    if (ctor->getClass() == clasp &&
-        !JSObject::splicePrototype(cx, ctor, clasp, tagged)) {
-      goto bad;
+      return nullptr;
     }
   }
 
   if (!DefinePropertiesAndFunctions(cx, proto, ps, fs) ||
       (ctor != proto &&
        !DefinePropertiesAndFunctions(cx, ctor, static_ps, static_fs))) {
-    goto bad;
+    return nullptr;
   }
 
-  if (defineConstructorProperty) {
-    RootedId id(cx, AtomToId(atom));
-    RootedValue value(cx, ObjectValue(*ctor));
-    if (!DefineDataProperty(cx, obj, id, value, propertyAttrs)) {
-      goto bad;
-    }
-  }
-
-  /* If this is a standard class, cache its prototype. */
-  if (!cached && key != JSProto_Null) {
-    SetClassObject(obj, key, ctor, proto);
+  RootedId id(cx, AtomToId(atom));
+  RootedValue value(cx, ObjectValue(*ctor));
+  if (!DefineDataProperty(cx, obj, id, value, propertyAttrs)) {
+    return nullptr;
   }
 
   if (ctorp) {
     *ctorp = ctor;
   }
   return proto;
-
-bad:
-  if (cached) {
-    ClearClassObject(obj, key);
-  }
-  return nullptr;
 }
 
 NativeObject* js::InitClass(JSContext* cx, HandleObject obj,
@@ -2156,8 +2057,6 @@ NativeObject* js::InitClass(JSContext* cx, HandleObject obj,
                             const JSPropertySpec* static_ps,
                             const JSFunctionSpec* static_fs,
                             NativeObject** ctorp) {
-  RootedObject protoProto(cx, protoProto_);
-
   RootedAtom atom(cx, Atomize(cx, clasp->name, strlen(clasp->name)));
   if (!atom) {
     return nullptr;
@@ -2168,19 +2067,17 @@ NativeObject* js::InitClass(JSContext* cx, HandleObject obj,
    * object we are about to create (in DefineConstructorAndPrototype), which
    * in turn will inherit from protoProto.
    *
-   * When initializing a standard class (other than Object), if protoProto is
-   * null, default to Object.prototype. The engine's internal uses of
-   * js::InitClass depend on this nicety.
+   * If protoProto is null, default to Object.prototype.
    */
-  JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
-  if (key != JSProto_Null && !protoProto) {
-    protoProto = GlobalObject::getOrCreatePrototype(cx, JSProto_Object);
+  RootedObject protoProto(cx, protoProto_);
+  if (!protoProto) {
+    protoProto = GlobalObject::getOrCreateObjectPrototype(cx, cx->global());
     if (!protoProto) {
       return nullptr;
     }
   }
 
-  return DefineConstructorAndPrototype(cx, obj, key, atom, protoProto, clasp,
+  return DefineConstructorAndPrototype(cx, obj, atom, protoProto, clasp,
                                        constructor, nargs, ps, fs, static_ps,
                                        static_fs, ctorp);
 }
@@ -2256,9 +2153,8 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
   return true;
 }
 
-static bool SetClassAndProto(JSContext* cx, HandleObject obj,
-                             const Class* clasp,
-                             Handle<js::TaggedProto> proto) {
+static bool SetProto(JSContext* cx, HandleObject obj,
+                     Handle<js::TaggedProto> proto) {
   // Regenerate object shape (and possibly prototype shape) to invalidate JIT
   // code that is affected by a prototype mutation.
   if (!ReshapeForProtoMutation(cx, obj)) {
@@ -2277,7 +2173,7 @@ static bool SetClassAndProto(JSContext* cx, HandleObject obj,
      * Just splice the prototype, but mark the properties as unknown for
      * consistent behavior.
      */
-    if (!JSObject::splicePrototype(cx, obj, clasp, proto)) {
+    if (!JSObject::splicePrototype(cx, obj, proto)) {
       return false;
     }
     MarkObjectGroupUnknownProperties(cx, obj->group());
@@ -2299,7 +2195,7 @@ static bool SetClassAndProto(JSContext* cx, HandleObject obj,
     }
     newGroup->setInterpretedFunction(oldGroup->maybeInterpretedFunction());
   } else {
-    newGroup = ObjectGroup::defaultNewGroup(cx, clasp, proto);
+    newGroup = ObjectGroup::defaultNewGroup(cx, obj->getClass(), proto);
     if (!newGroup) {
       return false;
     }
@@ -2945,7 +2841,7 @@ bool js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto,
   }
 
   Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
-  if (!SetClassAndProto(cx, obj, obj->getClass(), taggedProto)) {
+  if (!SetProto(cx, obj, taggedProto)) {
     return false;
   }
 

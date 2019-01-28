@@ -673,29 +673,24 @@ void DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,
 }
 
 Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(
-    const wr::LayoutRect& aBounds, const wr::WrStackingContextClip& aClip,
-    const WrAnimationProperty* aAnimation, const float* aOpacity,
-    const gfx::Matrix4x4* aTransform, wr::TransformStyle aTransformStyle,
-    const wr::ReferenceFrameKind aReferenceFrameKind,
-    const wr::MixBlendMode& aMixBlendMode,
-    const nsTArray<wr::FilterOp>& aFilters, bool aIsBackfaceVisible,
+    const wr::StackingContextParams& aParams, const wr::LayoutRect& aBounds,
     const wr::RasterSpace& aRasterSpace) {
   MOZ_ASSERT(mClipChainLeaf.isNothing(),
              "Non-empty leaf from clip chain given, but not used with SC!");
 
   wr::LayoutTransform matrix;
-  if (aTransform) {
-    matrix = ToLayoutTransform(*aTransform);
+  const gfx::Matrix4x4* transform = aParams.mTransformPtr;
+  if (transform) {
+    matrix = ToLayoutTransform(*transform);
   }
-  const wr::LayoutTransform* maybeTransform = aTransform ? &matrix : nullptr;
+  const wr::LayoutTransform* maybeTransform = transform ? &matrix : nullptr;
   WRDL_LOG("PushStackingContext b=%s t=%s\n", mWrState,
            Stringify(aBounds).c_str(),
-           aTransform ? Stringify(*aTransform).c_str() : "none");
+           transform ? Stringify(*transform).c_str() : "none");
 
   auto spatialId = wr_dp_push_stacking_context(
-      mWrState, aBounds, mCurrentSpaceAndClipChain.space, &aClip, aAnimation,
-      aOpacity, maybeTransform, aTransformStyle, aReferenceFrameKind,
-      aMixBlendMode, aFilters.Elements(), aFilters.Length(), aIsBackfaceVisible,
+      mWrState, aBounds, mCurrentSpaceAndClipChain.space, &aParams,
+      maybeTransform, aParams.mFilters.Elements(), aParams.mFilters.Length(),
       aRasterSpace);
 
   return spatialId.id != 0 ? Some(spatialId) : Nothing();

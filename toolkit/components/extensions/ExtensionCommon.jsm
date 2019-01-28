@@ -1321,7 +1321,7 @@ class SchemaAPIManager extends EventEmitter {
 
   initModuleData(moduleData) {
     if (!this._modulesJSONLoaded) {
-      let data = moduleData.deserialize({});
+      let data = moduleData.deserialize({}, true);
 
       this.modules = data.modules;
       this.modulePaths = data.modulePaths;

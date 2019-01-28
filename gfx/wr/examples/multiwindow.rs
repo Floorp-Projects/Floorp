@@ -191,14 +191,9 @@ impl Window {
 
         let bounds = LayoutRect::new(LayoutPoint::zero(), builder.content_size());
         let info = LayoutPrimitiveInfo::new(bounds);
-        builder.push_stacking_context(
+        builder.push_simple_stacking_context(
             &info,
             space_and_clip.spatial_id,
-            None,
-            TransformStyle::Flat,
-            MixBlendMode::Normal,
-            &[],
-            RasterSpace::Screen,
         );
 
         let info = LayoutPrimitiveInfo::new(LayoutRect::new(

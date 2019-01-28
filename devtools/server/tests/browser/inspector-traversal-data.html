@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Inspector Traversal Test Data</title>
+  <style type="text/css">
+    #pseudo::before {
+      content: "before";
+    }
+    #pseudo::after {
+      content: "after";
+    }
+    #pseudo-empty::before {
+      content: "before an empty element";
+    }
+    #shadow::before {
+      content: "Testing ::before on a shadow host";
+    }
+  </style>
+  <script type="text/javascript">
+    "use strict";
+
+    window.onload = function() {
+      // Set up a basic shadow DOM
+      const host = document.querySelector("#shadow");
+      if (host.attachShadow) {
+        const root = host.attachShadow({ mode: "open" });
+
+        const h3 = document.createElement("h3");
+        h3.append("Shadow ");
+
+        const em = document.createElement("em");
+        em.append("DOM");
+
+        const select = document.createElement("select");
+        select.setAttribute("multiple", "");
+        h3.appendChild(em);
+        root.appendChild(h3);
+        root.appendChild(select);
+      }
+
+      // Put a copy of the body in an iframe to test frame traversal.
+      const body = document.querySelector("body");
+      const data = "data:text/html,<html>" + body.outerHTML + "<html>";
+      const iframe = document.createElement("iframe");
+      iframe.setAttribute("id", "childFrame");
+      iframe.src = data;
+      body.appendChild(iframe);
+    };
+  </script>
+</head>
+<body style="background-color:white">
+  <h1>Inspector Actor Tests</h1>
+  <span id="longstring">longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong</span>
+  <span id="shortstring">short</span>
+  <span id="empty"></span>
+  <div id="longlist" data-test="exists">
+    <div id="a">a</div>
+    <div id="b">b</div>
+    <div id="c">c</div>
+    <div id="d">d</div>
+    <div id="e">e</div>
+    <div id="f">f</div>
+    <div id="g">g</div>
+    <div id="h">h</div>
+    <div id="i">i</div>
+    <div id="j">j</div>
+    <div id="k">k</div>
+    <div id="l">l</div>
+    <div id="m">m</div>
+    <div id="n">n</div>
+    <div id="o">o</div>
+    <div id="p">p</div>
+    <div id="q">q</div>
+    <div id="r">r</div>
+    <div id="s">s</div>
+    <div id="t">t</div>
+    <div id="u">u</div>
+    <div id="v">v</div>
+    <div id="w">w</div>
+    <div id="x">x</div>
+    <div id="y">y</div>
+    <div id="z">z</div>
+  </div>
+  <div id="longlist-sibling">
+    <div id="longlist-sibling-firstchild"></div>
+  </div>
+  <p id="edit-html"></p>
+
+  <select multiple><option>one</option><option>two</option></select>
+  <div id="pseudo"><span>middle</span></div>
+  <div id="pseudo-empty"></div>
+  <div id="shadow">light dom</div>
+  <object>
+      <div id="1"></div>
+  </object>
+  <div class="node-to-duplicate"></div>
+  <div id="scroll-into-view" style="margin-top: 1000px;">scroll</div>
+</body>
+</html>

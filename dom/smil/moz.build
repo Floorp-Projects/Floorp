@@ -9,21 +9,13 @@ with Files("**"):
 
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
-EXPORTS += [
-    'nsISMILAttr.h',
-    'nsSMILInstanceTime.h',
-    'nsSMILTimeValue.h',
-    'nsSMILTimeValueSpec.h',
-    'nsSMILTimeValueSpecParams.h',
-    'nsSMILTypes.h',
-    'nsSMILValue.h',
-]
-
 EXPORTS.mozilla += [
     'SMILAnimationController.h',
     'SMILAnimationFunction.h',
+    'SMILAttr.h',
     'SMILCompositorTable.h',
     'SMILCSSValueType.h',
+    'SMILInstanceTime.h',
     'SMILInterval.h',
     'SMILKeySpline.h',
     'SMILMilestone.h',
@@ -34,7 +26,12 @@ EXPORTS.mozilla += [
     'SMILTargetIdentifier.h',
     'SMILTimeContainer.h',
     'SMILTimedElement.h',
+    'SMILTimeValue.h',
+    'SMILTimeValueSpec.h',
+    'SMILTimeValueSpecParams.h',
     'SMILType.h',
+    'SMILTypes.h',
+    'SMILValue.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -42,10 +39,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'nsSMILInstanceTime.cpp',
-    'nsSMILTimeValue.cpp',
-    'nsSMILTimeValueSpec.cpp',
-    'nsSMILValue.cpp',
     'SMILAnimationController.cpp',
     'SMILAnimationFunction.cpp',
     'SMILBoolType.cpp',
@@ -54,6 +47,7 @@ UNIFIED_SOURCES += [
     'SMILCSSValueType.cpp',
     'SMILEnumType.cpp',
     'SMILFloatType.cpp',
+    'SMILInstanceTime.cpp',
     'SMILIntegerType.cpp',
     'SMILInterval.cpp',
     'SMILKeySpline.cpp',
@@ -64,6 +58,9 @@ UNIFIED_SOURCES += [
     'SMILStringType.cpp',
     'SMILTimeContainer.cpp',
     'SMILTimedElement.cpp',
+    'SMILTimeValue.cpp',
+    'SMILTimeValueSpec.cpp',
+    'SMILValue.cpp',
     'TimeEvent.cpp',
 ]
 

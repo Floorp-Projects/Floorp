@@ -123,27 +123,6 @@ LayoutDeviceIntRegion nsWindow::GetRegionToPaint(bool aForceFullRepaint,
   return LayoutDeviceIntRegion(WinUtils::ToIntRect(ps.rcPaint));
 }
 
-#define WORDSSIZE(x) ((x).width * (x).height)
-static bool EnsureSharedSurfaceSize(IntSize size) {
-  IntSize screenSize;
-  screenSize.height = GetSystemMetrics(SM_CYSCREEN);
-  screenSize.width = GetSystemMetrics(SM_CXSCREEN);
-
-  if (WORDSSIZE(screenSize) > WORDSSIZE(size)) size = screenSize;
-
-  if (WORDSSIZE(screenSize) < WORDSSIZE(size))
-    NS_WARNING("Trying to create a shared surface larger than the screen");
-
-  if (!sSharedSurfaceData ||
-      (WORDSSIZE(size) > WORDSSIZE(sSharedSurfaceSize))) {
-    sSharedSurfaceSize = size;
-    sSharedSurfaceData =
-        MakeUniqueFallible<uint8_t[]>(WORDSSIZE(sSharedSurfaceSize) * 4);
-  }
-
-  return !sSharedSurfaceData;
-}
-
 nsIWidgetListener* nsWindow::GetPaintListener() {
   if (mDestroyCalled) return nullptr;
   return mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;

@@ -2775,10 +2775,9 @@ void TenuringTracer::traverse(T* thingp) {
 }  // namespace js
 
 template <typename T>
-void js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(StoreBuffer* owner,
-                                                   TenuringTracer& mover) {
-  mozilla::ReentrancyGuard g(*owner);
-  MOZ_ASSERT(owner->isEnabled());
+void js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(TenuringTracer& mover) {
+  mozilla::ReentrancyGuard g(*owner_);
+  MOZ_ASSERT(owner_->isEnabled());
   if (last_) {
     last_.trace(mover);
   }
@@ -2790,11 +2789,11 @@ void js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(StoreBuffer* owner,
 namespace js {
 namespace gc {
 template void StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>::trace(
-    StoreBuffer*, TenuringTracer&);
+    TenuringTracer&);
 template void StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>::trace(
-    StoreBuffer*, TenuringTracer&);
+    TenuringTracer&);
 template void StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>::trace(
-    StoreBuffer*, TenuringTracer&);
+    TenuringTracer&);
 }  // namespace gc
 }  // namespace js
 
@@ -2874,9 +2873,8 @@ static void TraceBufferedCells(TenuringTracer& mover, Arena* arena,
   }
 }
 
-void js::gc::StoreBuffer::WholeCellBuffer::trace(StoreBuffer* owner,
-                                                 TenuringTracer& mover) {
-  MOZ_ASSERT(owner->isEnabled());
+void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover) {
+  MOZ_ASSERT(owner_->isEnabled());
 
   for (ArenaCellSet* cells = head_; cells; cells = cells->next) {
     cells->check();

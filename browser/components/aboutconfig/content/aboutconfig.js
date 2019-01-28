@@ -8,6 +8,12 @@ ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 const SEARCH_TIMEOUT_MS = 500;
 
+const GETTERS_BY_PREF_TYPE = {
+  [Ci.nsIPrefBranch.PREF_BOOL]: "getBoolPref",
+  [Ci.nsIPrefBranch.PREF_INT]: "getIntPref",
+  [Ci.nsIPrefBranch.PREF_STRING]: "getStringPref",
+};
+
 let gDefaultBranch = Services.prefs.getDefaultBranch("");
 let gFilterPrefsTask = new DeferredTask(() => filterPrefs(), SEARCH_TIMEOUT_MS);
 
@@ -38,35 +44,42 @@ class PrefRow {
   constructor(name) {
     this.name = name;
     this.value = true;
-    this.refreshValue();
-
     this.editing = false;
-    this.element = document.createElement("tr");
-    this._setupElement();
-    gElementToPrefMap.set(this.element, this);
+    this.refreshValue();
   }
 
   refreshValue() {
-    this.hasDefaultValue = prefHasDefaultValue(this.name);
-    this.hasUserValue = Services.prefs.prefHasUserValue(this.name);
-    this.isLocked = Services.prefs.prefIsLocked(this.name);
+    let prefType = Services.prefs.getPrefType(this.name);
 
     // If this preference has been deleted, we keep its last known value.
-    if (!this.exists) {
+    if (prefType == Ci.nsIPrefBranch.PREF_INVALID) {
+      this.hasDefaultValue = false;
+      this.hasUserValue = false;
+      this.isLocked = false;
       gExistingPrefs.delete(this.name);
       gDeletedPrefs.set(this.name, this);
       return;
     }
+
     gExistingPrefs.set(this.name, this);
     gDeletedPrefs.delete(this.name);
 
     try {
-      // This can throw for locked preferences without a default value.
-      this.value = Preferences.get(this.name);
-      // We don't know which preferences should be read using getComplexValue,
-      // so we use a heuristic to determine if this is a localized preference.
-      if (!this.hasUserValue &&
-          /^chrome:\/\/.+\/locale\/.+\.properties/.test(this.value)) {
+      this.value = gDefaultBranch[GETTERS_BY_PREF_TYPE[prefType]](this.name);
+      this.hasDefaultValue = true;
+    } catch (ex) {
+      this.hasDefaultValue = false;
+    }
+    this.hasUserValue = Services.prefs.prefHasUserValue(this.name);
+    this.isLocked = Services.prefs.prefIsLocked(this.name);
+
+    try {
+      if (this.hasUserValue) {
+        // This can throw for locked preferences without a default value.
+        this.value = Services.prefs[GETTERS_BY_PREF_TYPE[prefType]](this.name);
+      } else if (/^chrome:\/\/.+\/locale\/.+\.properties/.test(this.value)) {
+        // We don't know which preferences should be read using getComplexValue,
+        // so we use a heuristic to determine if this is a localized preference.
         // This can throw if there is no value in the localized files.
         this.value = Services.prefs.getComplexValue(this.name,
           Ci.nsIPrefLocalizedString).data;
@@ -88,10 +101,20 @@ class PrefRow {
     return !gFilterString || this.name.toLowerCase().includes(gFilterString);
   }
 
-  _setupElement() {
-    this.element.textContent = "";
-    let nameCell = document.createElement("td");
-    this.element.append(
+  /**
+   * Returns a reference to the table row element to be added to the document,
+   * constructing and initializing it the first time this method is called.
+   */
+  getElement() {
+    if (this._element) {
+      return this._element;
+    }
+
+    this._element = document.createElement("tr");
+    gElementToPrefMap.set(this._element, this);
+
+    let nameCell = document.createElement("th");
+    this._element.append(
       nameCell,
       this.valueCell = document.createElement("td"),
       this.editCell = document.createElement("td"),
@@ -102,7 +125,7 @@ class PrefRow {
     );
     delete this.resetButton;
 
-    nameCell.className = "cell-name";
+    nameCell.setAttribute("scope", "row");
     this.valueCell.className = "cell-value";
     this.editCell.className = "cell-edit";
 
@@ -114,19 +137,36 @@ class PrefRow {
     nameCell.append(parts[parts.length - 1]);
 
     this.refreshElement();
+
+    return this._element;
   }
 
   refreshElement() {
-    this.element.classList.toggle("has-user-value", !!this.hasUserValue);
-    this.element.classList.toggle("locked", !!this.isLocked);
-    this.element.classList.toggle("deleted", !this.exists);
+    if (!this._element) {
+      // No need to update if this preference was never added to the table.
+      return;
+    }
+
+    this._element.classList.toggle("has-user-value", !!this.hasUserValue);
+    this._element.classList.toggle("locked", !!this.isLocked);
+    this._element.classList.toggle("deleted", !this.exists);
     if (this.exists && !this.editing) {
       // We need to place the text inside a "span" element to ensure that the
       // text copied to the clipboard includes all whitespace.
       let span = document.createElement("span");
       span.textContent = this.value;
+      // We additionally need to wrap this with another "span" element to convey
+      // the state to screen readers without affecting the visual presentation.
+      span.setAttribute("aria-hidden", "true");
+      let outerSpan = document.createElement("span");
+      let spanL10nId = this.hasUserValue
+                       ? "about-config-pref-accessible-value-custom"
+                       : "about-config-pref-accessible-value-default";
+      document.l10n.setAttributes(outerSpan, spanL10nId,
+                                  { value: "" + this.value });
+      outerSpan.appendChild(span);
       this.valueCell.textContent = "";
-      this.valueCell.append(span);
+      this.valueCell.append(outerSpan);
       if (this.type == "Boolean") {
         document.l10n.setAttributes(this.editButton, "about-config-pref-toggle");
         this.editButton.className = "button-toggle";
@@ -257,7 +297,7 @@ let gPrefObserver = {
 
     let newPref = new PrefRow(data);
     if (newPref.matchesFilter) {
-      document.getElementById("prefs").appendChild(newPref.element);
+      document.getElementById("prefs").appendChild(newPref.getElement());
     }
   },
 };
@@ -285,11 +325,14 @@ function loadPrefs() {
   [...document.styleSheets].find(s => s.title == "infop").disabled = true;
 
   document.body.textContent = "";
+  let searchContainer = document.createElement("div");
+  searchContainer.id = "search-container";
   let search = document.createElement("input");
   search.type = "text";
   search.id = "search";
   document.l10n.setAttributes(search, "about-config-search");
-  document.body.appendChild(search);
+  searchContainer.appendChild(search);
+  document.body.appendChild(searchContainer);
   search.focus();
 
   let prefs = document.createElement("table");
@@ -364,7 +407,7 @@ function filterPrefs() {
   prefsElement.textContent = "";
   let fragment = document.createDocumentFragment();
   for (let pref of prefArray) {
-    fragment.appendChild(pref.element);
+    fragment.appendChild(pref.getElement());
   }
   prefsElement.appendChild(fragment);
 
@@ -380,21 +423,4 @@ function filterPrefs() {
 
   document.body.classList.toggle("config-warning",
     location.href.split(":").every(l => gFilterString.includes(l)));
-}
-
-function prefHasDefaultValue(name) {
-  try {
-    switch (Services.prefs.getPrefType(name)) {
-      case Ci.nsIPrefBranch.PREF_STRING:
-        gDefaultBranch.getStringPref(name);
-        return true;
-      case Ci.nsIPrefBranch.PREF_INT:
-        gDefaultBranch.getIntPref(name);
-        return true;
-      case Ci.nsIPrefBranch.PREF_BOOL:
-        gDefaultBranch.getBoolPref(name);
-        return true;
-    }
-  } catch (ex) {}
-  return false;
 }

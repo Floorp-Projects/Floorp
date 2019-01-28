@@ -178,6 +178,8 @@ class ChromeUtils {
 
   static bool IsPopupTokenUnused(GlobalObject& aGlobal);
 
+  static double LastExternalProtocolIframeAllowed(GlobalObject& aGlobal);
+
   static void RegisterWindowActor(const GlobalObject& aGlobal,
                                   const nsAString& aName,
                                   const WindowActorOptions& aOptions,

@@ -215,7 +215,7 @@ LoginManager.prototype = {
       usernamePresentHistogram.add(!!login.username);
 
       let hostname = login.hostname;
-      hostnameCount.set(hostname, (hostnameCount.get(hostname) || 0 ) + 1);
+      hostnameCount.set(hostname, (hostnameCount.get(hostname) || 0) + 1);
 
       login.QueryInterface(Ci.nsILoginMetaInfo);
       let timeLastUsedAgeMs = referenceTimeMs - login.timeLastUsed;

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef SMILRepeatCount_h
-#define SMILRepeatCount_h
+#ifndef mozilla_SMILRepeatCount_h
+#define mozilla_SMILRepeatCount_h
 
 #include "nsDebug.h"
 #include <math.h>
@@ -59,4 +59,4 @@ class SMILRepeatCount {
 
 }  // namespace mozilla
 
-#endif
+#endif  // mozilla_SMILRepeatCount_h

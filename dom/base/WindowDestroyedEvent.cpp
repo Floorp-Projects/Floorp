@@ -88,7 +88,8 @@ WindowDestroyedEvent::Run() {
         mPhase = Phase::Nuking;
 
         nsCOMPtr<nsIRunnable> copy(this);
-        NS_IdleDispatchToCurrentThread(copy.forget(), 1000);
+        NS_DispatchToCurrentThreadQueue(copy.forget(), 1000,
+                                        EventQueuePriority::Idle);
       }
     } break;
 

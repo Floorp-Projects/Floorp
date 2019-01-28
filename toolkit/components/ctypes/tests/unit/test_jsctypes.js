@@ -458,10 +458,12 @@ function run_Int64_tests() {
   Assert.equal(ctypes.Int64.join(-0x28590a1d, 0x6de22000).toString(16), "-28590a1c921de000");
   Assert.equal(ctypes.Int64.join(0x7fffffff, 0xffffffff).toString(16), "7fffffffffffffff");
   Assert.equal(ctypes.Int64.join(-0x80000000, 0x00000000).toString(16), "-8000000000000000");
+  /* eslint-disable mozilla/use-returnValue */
   do_check_throws(function() { ctypes.Int64.join(-0x80000001, 0); }, TypeError);
   do_check_throws(function() { ctypes.Int64.join(0x80000000, 0); }, TypeError);
   do_check_throws(function() { ctypes.Int64.join(0, -0x1); }, TypeError);
   do_check_throws(function() { ctypes.Int64.join(0, 0x800000000); }, TypeError);
+  /* eslint-enable mozilla/use-returnValue */
 }
 
 function run_UInt64_tests() {
@@ -605,10 +607,12 @@ function run_UInt64_tests() {
   Assert.equal(ctypes.UInt64.join(0xa8590a1c, 0x921de000).toString(16), "a8590a1c921de000");
   Assert.equal(ctypes.UInt64.join(0xffffffff, 0xffffffff).toString(16), "ffffffffffffffff");
   Assert.equal(ctypes.UInt64.join(0, 0).toString(16), "0");
+  /* eslint-disable mozilla/use-returnValue */
   do_check_throws(function() { ctypes.UInt64.join(-0x1, 0); }, TypeError);
   do_check_throws(function() { ctypes.UInt64.join(0x100000000, 0); }, TypeError);
   do_check_throws(function() { ctypes.UInt64.join(0, -0x1); }, TypeError);
   do_check_throws(function() { ctypes.UInt64.join(0, 0x1000000000); }, TypeError);
+  /* eslint-enable mozilla/use-returnValue */
 }
 
 function run_basic_abi_tests(library, t, name, toprimitive,

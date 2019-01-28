@@ -1,4 +1,4 @@
-52975
+52987
 0/nm
 0th/pt
 1/n1
@@ -1990,6 +1990,7 @@ CAD/M
 CAI
 CAM
 CAP
+CAPTCHA
 CARE
 CATV
 CB
@@ -17310,6 +17311,7 @@ bomber/M
 bombproof
 bombshell/SM
 bombsite/S
+bona
 bonanza/MS
 bonbon/MS
 bonce/S
@@ -18503,6 +18505,7 @@ capsulize/DSG
 capt
 captain/SMDG
 captaincy/SM
+captcha
 caption/SMDG
 captious/YP
 captiousness/M
@@ -22462,6 +22465,7 @@ definer/MS
 definite/IYVP
 definiteness/IM
 definition/AM
+definitional/Y
 definitions
 definitive/Y
 deflate/GNDS
@@ -24302,6 +24306,8 @@ ecru/M
 ecstasy/SM
 ecstatic
 ecstatically
+ectopic
+ectopically
 ecu/S
 ecumenical/Y
 ecumenicism/M
@@ -25713,6 +25719,7 @@ extemporize/GDS
 extend/SZGDRB
 extender/M
 extendible
+extensibility
 extensible
 extension/SM
 extensional
@@ -26295,6 +26302,7 @@ fiddler/M
 fiddlesticks
 fiddly/TR
 fidelity/IM
+fides
 fidget/SGMD
 fidgety
 fiduciary/SM
@@ -27222,6 +27230,7 @@ framed/U
 framer/M
 framework/SM
 franc/SM
+franca
 franchise's
 franchise/EDSG
 franchisee/SM
@@ -33457,6 +33466,7 @@ lingerie/M
 lingering/Y
 lingo/M
 lingoes
+lingua
 lingual
 linguine/M
 linguini/SM
@@ -38306,6 +38316,8 @@ oxygenate/DSGN
 oxygenation/M
 oxymora
 oxymoron/M
+oxymoronic
+oxymoronically
 oy
 oyes
 oyez
@@ -41935,7 +41947,7 @@ ramify/DSXNG
 ramjet/SM
 rammed
 ramming
-ramp/GMS
+ramp/GMSD
 rampage/DSMG
 rampancy/M
 rampant/Y
