@@ -16,7 +16,7 @@ import java.util.UUID
 
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.firstrun.FileFirstRunDetector
-import mozilla.components.service.glean.metrics.GleanInternalMetrics
+import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
 import mozilla.components.service.glean.net.HttpPingUploader
 import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver

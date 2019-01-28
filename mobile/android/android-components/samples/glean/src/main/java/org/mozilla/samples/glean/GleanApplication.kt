@@ -8,6 +8,8 @@ import android.app.Application
 import mozilla.components.service.glean.Glean
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
+import org.mozilla.samples.glean.GleanMetrics.Basic
+import org.mozilla.samples.glean.GleanMetrics.Test
 
 class GleanApplication : Application() {
 
@@ -21,9 +23,9 @@ class GleanApplication : Application() {
         // must be done right after enabling logging.
         Glean.initialize(applicationContext)
 
-        GleanMetrics.Test.testTimespan.start()
+        Test.testTimespan.start()
 
         // Set a sample value for a metric.
-        GleanMetrics.Basic.os.set("Android")
+        Basic.os.set("Android")
     }
 }

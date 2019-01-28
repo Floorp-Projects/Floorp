@@ -8,7 +8,7 @@ import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
 import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.metrics.GleanBaseline
+import mozilla.components.service.glean.GleanMetrics.GleanBaseline
 
 /**
  * Connects process lifecycle events from Android to Glean's handleEvent

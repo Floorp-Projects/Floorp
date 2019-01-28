@@ -8,7 +8,7 @@ import android.view.accessibility.AccessibilityManager
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
 import android.os.Build
-import mozilla.components.service.glean.metrics.GleanBaseline
+import mozilla.components.service.glean.GleanMetrics.GleanBaseline
 import mozilla.components.support.base.log.logger.Logger
 
 /**

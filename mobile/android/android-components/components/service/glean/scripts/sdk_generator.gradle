@@ -106,68 +106,67 @@ clean {
 
 // Generate the Metrics API
 ext.gleanGenerateMetricsAPI = {
-    namespace -> {
-        variant ->
+    variant ->
 
-        def sourceOutputDir =  "$buildDir/telemetry/src/${variant.name}/kotlin"
-        def generateKotlinAPI = task("generateMetricsSourceFor${variant.name.capitalize()}", type: Exec) {
-            description = "Generate the Kotlin code for the Metrics API"
+    def sourceOutputDir =  "$buildDir/telemetry/src/${variant.name}/kotlin"
+    def fullNamespace = "${variant.applicationId}.GleanMetrics"
+    def generateKotlinAPI = task("generateMetricsSourceFor${variant.name.capitalize()}", type: Exec) {
+        description = "Generate the Kotlin code for the Metrics API"
 
-            workingDir  rootDir
-            // Note that the command line is OS dependant: on linux/mac is Miniconda3/bin/python.
-            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                commandLine new File(GLEAN_MINICONDA_DIR, "python")
-            } else {
-                commandLine new File(GLEAN_MINICONDA_DIR, "bin/python")
-            }
-
-            args "-c"
-            args runPythonScript
-            args "glean_parser"
-            args GLEAN_PARSER_VERSION
-            args "translate"
-            args "-f"
-            args "kotlin"
-            args "-o"
-            args "$sourceOutputDir"
-            args "-s"
-            args "namespace=$namespace"
-            args "$projectDir/metrics.yaml"
-
-            // If we're building the Glean library itself (rather than an
-            // application using Glean) pass the --allow-reserved flag so we can
-            // use metrics in the "glean..." category
-            if (project.name == 'service-glean') {
-                args "--allow-reserved"
-            }
-
-            // Only show the output if something went wrong.
-            ignoreExitValue = true
-            standardOutput = new ByteArrayOutputStream()
-            errorOutput = standardOutput
-            doLast {
-                if (execResult.exitValue != 0) {
-                    throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
-                }
-            }
+        workingDir  rootDir
+        // Note that the command line is OS dependant: on linux/mac is Miniconda3/bin/python.
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            commandLine new File(GLEAN_MINICONDA_DIR, "python")
+        } else {
+            commandLine new File(GLEAN_MINICONDA_DIR, "bin/python")
         }
 
-        // Only attach the generation task if the metrics file is available. We don't need to
-        // fail hard otherwise, as some 3rd party project might just want metrics included in
-        // glean and nothing more.
-        if (file("$projectDir/metrics.yaml").exists()) {
-            // This is an Android-Gradle plugin 3+-ism.  Culted from reading the source,
-            // searching for "registerJavaGeneratingTask", and finding
-            // https://github.com/GoogleCloudPlatform/endpoints-framework-gradle-plugin/commit/2f2b91476fb1c6647791e2c6fe531a47615a1e85.
-            // The added directory doesn't appear in the paths listed by the
-            // `sourceSets` task, for reasons unknown.
-            variant.registerJavaGeneratingTask(generateKotlinAPI, new File(sourceOutputDir))
+        args "-c"
+        args runPythonScript
+        args "glean_parser"
+        args GLEAN_PARSER_VERSION
+        args "translate"
+        args "-f"
+        args "kotlin"
+        args "-o"
+        args "$sourceOutputDir"
+        args "-s"
+        args "namespace=$fullNamespace"
+        args "$projectDir/metrics.yaml"
+
+        // If we're building the Glean library itself (rather than an
+        // application using Glean) pass the --allow-reserved flag so we can
+        // use metrics in the "glean..." category
+        if (project.name == 'service-glean') {
+            args "--allow-reserved"
         }
+
+        // Only show the output if something went wrong.
+        ignoreExitValue = true
+        standardOutput = new ByteArrayOutputStream()
+        errorOutput = standardOutput
+        doLast {
+            if (execResult.exitValue != 0) {
+                throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
+            }
+        }
+    }
+
+    // Only attach the generation task if the metrics file is available. We don't need to
+    // fail hard otherwise, as some 3rd party project might just want metrics included in
+    // glean and nothing more.
+    if (file("$projectDir/metrics.yaml").exists()) {
+        // This is an Android-Gradle plugin 3+-ism.  Culted from reading the source,
+        // searching for "registerJavaGeneratingTask", and finding
+        // https://github.com/GoogleCloudPlatform/endpoints-framework-gradle-plugin/commit/2f2b91476fb1c6647791e2c6fe531a47615a1e85.
+        // The added directory doesn't appear in the paths listed by the
+        // `sourceSets` task, for reasons unknown.
+        variant.registerJavaGeneratingTask(generateKotlinAPI, new File(sourceOutputDir))
     }
 }
 
 if (android.hasProperty('applicationVariants')) {
-    android.applicationVariants.all(ext.gleanGenerateMetricsAPI('GleanMetrics'))
-} else if (project.name == 'service-glean') {
-    android.libraryVariants.all(ext.gleanGenerateMetricsAPI('mozilla.components.service.glean.metrics'))
+    android.applicationVariants.all(ext.gleanGenerateMetricsAPI)
+} else {
+    android.libraryVariants.all(ext.gleanGenerateMetricsAPI)
 }

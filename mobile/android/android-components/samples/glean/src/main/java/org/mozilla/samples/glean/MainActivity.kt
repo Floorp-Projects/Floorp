@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import mozilla.components.service.glean.Glean
+import org.mozilla.samples.glean.GleanMetrics.Test
+import org.mozilla.samples.glean.GleanMetrics.BrowserEngagement
 
 open class MainActivity : AppCompatActivity() {
 
@@ -22,18 +24,18 @@ open class MainActivity : AppCompatActivity() {
 
             // Adds the EditText's text content as a new string in the string list metric from the
             // metrics.yaml file.
-            GleanMetrics.Test.testStringList.add(etStringListInput.text.toString())
+            Test.testStringList.add(etStringListInput.text.toString())
             // Clear current text to help indicate something happened
             etStringListInput.setText("")
 
             // Increments the test_counter metric from the metrics.yaml file.
-            GleanMetrics.Test.testCounter.add()
+            Test.testCounter.add()
 
             // This is referencing the event ping named 'click' from the metrics.yaml file. In
             // order to illustrate adding extra information to the event, it is also adding to the
             // 'extras' field a dictionary of values.  Note that the dictionary keys must be
             // declared in the metrics.yaml file under the 'extra_keys' section of an event metric.
-            GleanMetrics.BrowserEngagement.click.record(
+            BrowserEngagement.click.record(
                     "object1",
                     "data",
                     mapOf(
@@ -48,6 +50,6 @@ open class MainActivity : AppCompatActivity() {
             Glean.handleEvent(Glean.PingEvent.Background)
         }
 
-        GleanMetrics.Test.testTimespan.stopAndSum()
+        Test.testTimespan.stopAndSum()
     }
 }
