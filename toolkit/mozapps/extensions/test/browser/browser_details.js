@@ -76,6 +76,18 @@ async function test() {
     updateDate: gDate,
     permissions: 0,
   }, {
+    id: "addon-theme@tests.mozilla.org",
+    name: "Test add-on theme",
+    version: "2.3",
+    description: "Short description",
+    creator: { name: "Mozilla", url: null },
+    type: "theme",
+    iconURL: "chrome://foo/skin/icon.png",
+    contributionURL: "http://foo.com",
+    contributionAmount: null,
+    updateDate: gDate,
+    permissions: 0,
+  }, {
     id: "addon3@tests.mozilla.org",
     name: "Test add-on 3",
     description: "Short description",
@@ -143,8 +155,9 @@ async function end_test() {
 }
 
 // Opens and tests the details view for add-on 2
-add_test(function() {
-  open_details("addon2@tests.mozilla.org", "extension", function() {
+add_test(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+  open_details("addon2@tests.mozilla.org", "extension", async () => {
     is(get("detail-name").textContent, "Test add-on 2", "Name should be correct");
     is_element_visible(get("detail-version"), "Version should not be hidden");
     is(get("detail-version").value, "2.2", "Version should be correct");
@@ -162,6 +175,10 @@ add_test(function() {
 
     is_element_visible(get("detail-dateUpdated"), "Update date should not be hidden");
     is(get("detail-dateUpdated").value, formatDate(gDate), "Update date should be correct");
+
+    is_element_visible(get("detail-privateBrowsing-row"), "Private browsing should not be hidden");
+    is_element_visible(get("detail-privateBrowsing-row-footer"), "Private browsing footer should not be hidden");
+    is(get("detail-privateBrowsing").value, "0", "Private browsing should be off");
 
     is_element_hidden(get("detail-rating-row"), "Rating should be hidden");
 
@@ -181,6 +198,28 @@ add_test(function() {
     is_element_hidden(get("detail-error-link"), "Error link should be hidden");
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
+    await SpecialPowers.popPrefEnv();
+    run_next_test();
+  });
+});
+
+
+// Opens and tests the details view for add-on theme
+add_test(async function() {
+  // This is a duplicate of addon-2, so we're only testing that private browsing is
+  // not visible.
+  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+  open_details("addon-theme@tests.mozilla.org", "theme", async () => {
+    is(get("detail-name").textContent, "Test add-on theme", "Name should be correct");
+    is_element_visible(get("detail-version"), "Version should not be hidden");
+    is(get("detail-version").value, "2.3", "Version should be correct");
+    is(get("detail-icon").src, "chrome://foo/skin/icon.png", "Icon should be correct");
+
+    is_element_hidden(get("detail-privateBrowsing-row"), "Private browsing should be hidden");
+    is_element_hidden(get("detail-privateBrowsing-row-footer"), "Private browsing footer should be hidden");
+    is(get("detail-privateBrowsing").value, "0", "Private browsing should be off");
+
+    await SpecialPowers.popPrefEnv();
     run_next_test();
   });
 });
