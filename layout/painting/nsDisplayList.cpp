@@ -8513,9 +8513,26 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
 
   wr::StackingContextParams params;
   params.mTransformPtr = &perspectiveMatrix;
-  params.reference_frame_kind = wr::ReferenceFrameKind::Perspective;
+  params.reference_frame_kind = wr::WrReferenceFrameKind::Perspective;
   params.is_backface_visible = !BackfaceIsHidden();
   params.SetPreserve3D(preserve3D);
+
+  Maybe<uint64_t> scrollingRelativeTo;
+  for (auto* asr = GetActiveScrolledRoot(); asr; asr = asr->mParent) {
+    if (nsLayoutUtils::IsAncestorFrameCrossDoc(
+          asr->mScrollableFrame->GetScrolledFrame(), perspectiveFrame)) {
+      scrollingRelativeTo.emplace(asr->GetViewId());
+      break;
+    }
+  }
+
+  // We put the perspective reference frame wrapping the transformed frame,
+  // even though there may be arbitrarily nested scroll frames in between.
+  //
+  // We need to know how many ancestor scroll-frames are we nested in, in order
+  // for the async scrolling code in WebRender to calculate the right
+  // transformation for the perspective contents.
+  params.scrolling_relative_to = scrollingRelativeTo.ptrOr(nullptr);
 
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            params);
