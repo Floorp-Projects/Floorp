@@ -141,6 +141,11 @@ class ADTSTrackDemuxer : public MediaTrackDemuxer,
 
   // Audio track config info.
   UniquePtr<AudioInfo> mInfo;
+
+  // Amount of pre-roll time when seeking.
+  // AAC encoder delay is by default 2112 audio frames.
+  media::TimeUnit mPreRoll;
+
 };
 
 }  // namespace mozilla
