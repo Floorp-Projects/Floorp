@@ -45,6 +45,7 @@ async function installAndStartExtension() {
 }
 
 add_task(async function() {
+  await pushPref("devtools.chrome.enabled", true);
   const extension = await installAndStartExtension();
 
   let dbg = await initDebugger("doc-content-script-sources.html");

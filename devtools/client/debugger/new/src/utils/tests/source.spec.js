@@ -10,7 +10,8 @@ import {
   getMode,
   getSourceLineCount,
   isThirdParty,
-  isJavaScript
+  isJavaScript,
+  isUrlExtension
 } from "../source.js";
 
 describe("sources", () => {
@@ -440,6 +441,18 @@ describe("sources", () => {
         text: "function foo(){\n}"
       };
       expect(getSourceLineCount(source)).toEqual(2);
+    });
+  });
+
+  describe("isUrlExtension", () => {
+    it("should detect mozilla extenstion", () => {
+      expect(isUrlExtension("moz-extension://id/js/content.js")).toBe(true);
+    });
+    it("should detect chrome extenstion", () => {
+      expect(isUrlExtension("chrome-extension://id/js/content.js")).toBe(true);
+    });
+    it("should return false for non-extension assets", () => {
+      expect(isUrlExtension("https://example.org/init.js")).toBe(false);
     });
   });
 });

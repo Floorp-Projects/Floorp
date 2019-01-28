@@ -484,3 +484,7 @@ export function getSourceQueryString(source: ?Source) {
 
   return parseURL(getRawSourceURL(source.url)).search;
 }
+
+export function isUrlExtension(url: string) {
+  return /^(chrome|moz)-extension:\//.test(url);
+}
