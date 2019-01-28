@@ -766,6 +766,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testUndefined(Condition cond, const ValueOperand& value);
   Condition testString(Condition cond, const ValueOperand& value);
   Condition testSymbol(Condition cond, const ValueOperand& value);
+#ifdef ENABLE_BIGINT
+  Condition testBigInt(Condition cond, const ValueOperand& value);
+#endif
   Condition testObject(Condition cond, const ValueOperand& value);
   Condition testNumber(Condition cond, const ValueOperand& value);
   Condition testMagic(Condition cond, const ValueOperand& value);
@@ -779,6 +782,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testUndefined(Condition cond, Register tag);
   Condition testString(Condition cond, Register tag);
   Condition testSymbol(Condition cond, Register tag);
+#ifdef ENABLE_BIGINT
+  Condition testBigInt(Condition cond, Register tag);
+#endif
   Condition testObject(Condition cond, Register tag);
   Condition testDouble(Condition cond, Register tag);
   Condition testNumber(Condition cond, Register tag);
@@ -794,6 +800,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testUndefined(Condition cond, const Address& address);
   Condition testString(Condition cond, const Address& address);
   Condition testSymbol(Condition cond, const Address& address);
+#ifdef ENABLE_BIGINT
+  Condition testBigInt(Condition cond, const Address& address);
+#endif
   Condition testObject(Condition cond, const Address& address);
   Condition testNumber(Condition cond, const Address& address);
 
@@ -802,6 +811,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testBoolean(Condition cond, const BaseIndex& src);
   Condition testString(Condition cond, const BaseIndex& src);
   Condition testSymbol(Condition cond, const BaseIndex& src);
+#ifdef ENABLE_BIGINT
+  Condition testBigInt(Condition cond, const BaseIndex& src);
+#endif
   Condition testInt32(Condition cond, const BaseIndex& src);
   Condition testObject(Condition cond, const BaseIndex& src);
   Condition testDouble(Condition cond, const BaseIndex& src);
