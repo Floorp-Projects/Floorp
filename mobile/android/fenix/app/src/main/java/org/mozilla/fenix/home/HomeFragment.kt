@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.home
 
+import android.content.res.Resources
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.transition.TransitionInflater
 import android.view.LayoutInflater
@@ -18,6 +20,9 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.home.sessions.SessionsComponent
 import org.mozilla.fenix.home.sessions.layoutComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.ext.requireComponents
+import kotlin.math.roundToInt
+
 
 class HomeFragment : Fragment() {
     override fun onCreateView(
@@ -31,10 +36,16 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Hide buttons that aren't used yet to prevent confusion
-        menuButton.visibility = View.GONE
-        privateBrowsingButton.visibility = View.GONE
+//        menuButton.visibility = View.GONE
+//        privateBrowsingButton.visibility = View.GONE
+
+        val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()).let {
+            BitmapDrawable(resources, it.icon)
+        }
 
         toolbar_wrapper.clipToOutline = false
+        toolbar.setCompoundDrawablesWithIntrinsicBounds(searchIcon, null, null, null)
+        toolbar.compoundDrawablePadding = (12f * Resources.getSystem().displayMetrics.density).roundToInt()
         toolbar.setOnClickListener { it ->
             val extras = FragmentNavigator.Extras.Builder().addSharedElement(
                 toolbar, ViewCompat.getTransitionName(toolbar)!!
