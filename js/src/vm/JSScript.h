@@ -1467,6 +1467,13 @@ class SharedScriptData {
 
   void traceChildren(JSTracer* trc);
 
+  static constexpr size_t offsetOfData() {
+    return offsetof(SharedScriptData, data_);
+  }
+  static constexpr size_t offsetOfNatoms() {
+    return offsetof(SharedScriptData, natoms_);
+  }
+
  private:
   SharedScriptData() = delete;
   SharedScriptData(const SharedScriptData&) = delete;
@@ -2225,6 +2232,16 @@ class JSScript : public js::gc::TenuredCell {
   static size_t offsetOfImmutableFlags() {
     return offsetof(JSScript, immutableFlags_);
   }
+  static constexpr size_t offsetOfNfixed() {
+    return offsetof(JSScript, nfixed_);
+  }
+  static constexpr size_t offsetOfNslots() {
+    return offsetof(JSScript, nslots_);
+  }
+  static constexpr size_t offsetOfScriptData() {
+    return offsetof(JSScript, scriptData_);
+  }
+  static constexpr size_t offsetOfTypes() { return offsetof(JSScript, types_); }
 
   bool hasAnyIonScript() const { return hasIonScript(); }
 
