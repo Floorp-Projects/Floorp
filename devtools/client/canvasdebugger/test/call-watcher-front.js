@@ -12,9 +12,11 @@ const protocol = require("devtools/shared/protocol");
  * The corresponding Front object for the CallWatcherActor.
  */
 class CallWatcherFront extends protocol.FrontClassWithSpec(callWatcherSpec) {
-  constructor(client, { callWatcherActor }) {
-    super(client, { actor: callWatcherActor });
-    this.manage(this);
+  constructor(client) {
+    super(client);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "callWatcherActor";
   }
 }
 exports.CallWatcherFront = CallWatcherFront;

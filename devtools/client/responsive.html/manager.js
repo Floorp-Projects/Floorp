@@ -474,6 +474,12 @@ ResponsiveUI.prototype = {
     await this.client.connect();
     const targetFront = await this.client.mainRoot.getTab();
     this.emulationFront = new EmulationFront(this.client, targetFront.targetForm);
+    // Because we are not using getFront (see previous comment), we have to do what it
+    // does and manually set the front's actor ID here.
+    // Once bug 1465635 is resolved, we will be able to use getFront from here and remove
+    // this.
+    this.emulationFront.actorID =
+      targetFront.targetForm[this.emulationFront.formAttributeName];
   },
 
   /**

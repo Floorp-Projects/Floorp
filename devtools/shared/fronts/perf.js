@@ -7,9 +7,11 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
 const { perfSpec } = require("devtools/shared/specs/perf");
 
 class PerfFront extends FrontClassWithSpec(perfSpec) {
-  constructor(client, form) {
-    super(client, { actor: form.perfActor });
-    this.manage(this);
+  constructor(client) {
+    super(client);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "perfActor";
   }
 }
 
