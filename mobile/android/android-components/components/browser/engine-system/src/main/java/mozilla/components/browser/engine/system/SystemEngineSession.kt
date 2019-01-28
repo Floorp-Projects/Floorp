@@ -207,7 +207,7 @@ class SystemEngineSession(
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) = set(value)
     }
 
-    internal fun initSettings(): Settings {
+    internal fun initSettings() {
         webView.settings?.let { webSettings ->
             // Explicitly set global defaults.
             webSettings.setAppCacheEnabled(false)
@@ -221,7 +221,7 @@ class SystemEngineSession(
             // webViewSettings built-in zoom controls are the only supported ones, so they should be turned on.
             webSettings.builtInZoomControls = true
 
-            return initSettings(webView, webSettings)
+            initSettings(webView, webSettings)
         }
     }
 
@@ -234,7 +234,7 @@ class SystemEngineSession(
         webSettings.savePassword = false
     }
 
-    private fun initSettings(webView: WebView, s: WebSettings): Settings {
+    private fun initSettings(webView: WebView, s: WebSettings) {
         internalSettings = object : Settings() {
             override var javascriptEnabled by WebSetting(s::getJavaScriptEnabled, s::setJavaScriptEnabled)
             override var domStorageEnabled by WebSetting(s::getDomStorageEnabled, s::setDomStorageEnabled)
@@ -296,7 +296,6 @@ class SystemEngineSession(
                 supportMultipleWindows = it.supportMultipleWindows
             }
         }
-        return internalSettings
     }
 
     /**

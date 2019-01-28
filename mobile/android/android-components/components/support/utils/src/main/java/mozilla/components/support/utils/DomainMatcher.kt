@@ -63,17 +63,16 @@ private fun matchSegment(query: String, rawUrl: String): String? {
     }
 
     val url = Uri.parse(rawUrl)
-    url.host?.let { host ->
+    return url.host?.let { host ->
         if (host.startsWith(query)) {
-            return host + url.path + url.port.orEmpty()
-        }
-
-        val strippedHost = host.noCommonSubdomains()
-
-        return if (strippedHost != url.host) {
-            strippedHost + url.port.orEmpty() + url.path
+            host + url.path + url.port.orEmpty()
         } else {
-            host + url.port.orEmpty() + url.path
+            val strippedHost = host.noCommonSubdomains()
+            if (strippedHost != url.host) {
+                strippedHost + url.port.orEmpty() + url.path
+            } else {
+                host + url.port.orEmpty() + url.path
+            }
         }
     }
 }

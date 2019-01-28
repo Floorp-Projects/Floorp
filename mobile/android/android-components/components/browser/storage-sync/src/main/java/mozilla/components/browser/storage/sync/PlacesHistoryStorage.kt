@@ -91,8 +91,8 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
     override fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult? {
         val urls = places.api().queryAutocomplete(query, limit = 100)
         val resultText = segmentAwareDomainMatch(query, urls.map { it.url })
-        resultText?.let {
-            return HistoryAutocompleteResult(it.matchedSegment, it.url, AUTOCOMPLETE_SOURCE_NAME, urls.size)
+        return resultText?.let {
+            HistoryAutocompleteResult(it.matchedSegment, it.url, AUTOCOMPLETE_SOURCE_NAME, urls.size)
         }
     }
 
