@@ -65,11 +65,22 @@ android.applicationVariants.all { variant ->
     println("Version code: " + variant.mergedFlavor.versionCode)
 }
 
+androidExtensions {
+    experimental = true
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation Deps.kotlin_stdlib
     implementation Deps.androidx_appcompat
     implementation Deps.androidx_constraintlayout
+
+    implementation Deps.rxAndroid
+    implementation Deps.rxKotlin
+    implementation Deps.anko_commons
+    implementation Deps.anko_sdk
+    implementation Deps.anko_appcompat
+    implementation Deps.anko_constraintlayout
 
     implementation Deps.mozilla_concept_engine
     implementation Deps.mozilla_concept_storage

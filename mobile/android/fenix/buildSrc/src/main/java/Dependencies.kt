@@ -6,6 +6,9 @@ private object Versions {
     const val kotlin = "1.3.11"
     const val android_gradle_plugin = "3.2.1"
     const val geckoNightly = "66.0.20190128092811"
+    const val rxAndroid = "2.1.0"
+    const val rxKotlin = "2.3.0"
+    const val anko = "0.10.8"
 
     const val androidx_appcompat = "1.0.2"
     const val androidx_constraint_layout = "2.0.0-alpha3"
@@ -25,6 +28,14 @@ object Deps {
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
     const val tools_kotlingradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
+
+    const val rxKotlin = "io.reactivex.rxjava2:rxkotlin:${Versions.rxKotlin}"
+    const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
+
+    const val anko_commons = "org.jetbrains.anko:anko-commons:${Versions.anko}"
+    const val anko_sdk = "org.jetbrains.anko:anko-sdk25:${Versions.anko}"
+    const val anko_appcompat = "org.jetbrains.anko:anko-appcompat-v7:${Versions.anko}"
+    const val anko_constraintlayout = "org.jetbrains.anko:anko-constraint-layout:${Versions.anko}"
 
     const val geckoview_nightly_arm = "org.mozilla.geckoview:geckoview-nightly-armeabi-v7a:${Versions.geckoNightly}"
     const val geckoview_nightly_x86 = "org.mozilla.geckoview:geckoview-nightly-x86:${Versions.geckoNightly}"

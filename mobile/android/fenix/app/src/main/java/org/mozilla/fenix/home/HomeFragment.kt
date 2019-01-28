@@ -9,15 +9,15 @@ import android.transition.TransitionInflater
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-
 import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.FragmentNavigator
-import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_home.*
 import org.mozilla.fenix.R
-import org.mozilla.fenix.home.sessions.SessionsAdapter
+import org.mozilla.fenix.home.sessions.SessionsComponent
+import org.mozilla.fenix.home.sessions.layoutComponents
+import org.mozilla.fenix.mvi.ActionBusFactory
 
 class HomeFragment : Fragment() {
     override fun onCreateView(
@@ -27,16 +27,12 @@ class HomeFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
-    private lateinit var sessionsAdapter: SessionsAdapter
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         // Hide buttons that aren't used yet to prevent confusion
         menuButton.visibility = View.GONE
         privateBrowsingButton.visibility = View.GONE
-
-        sessionsAdapter = SessionsAdapter()
 
         toolbar_wrapper.clipToOutline = false
         toolbar.setOnClickListener { it ->
@@ -46,11 +42,8 @@ class HomeFragment : Fragment() {
             Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_searchFragment, null, null, extras)
         }
 
-        session_list.apply {
-            adapter = sessionsAdapter
-            layoutManager = LinearLayoutManager(requireContext())
-            setHasFixedSize(true)
-        }
+        SessionsComponent(homeLayout, ActionBusFactory.get(this)).setup()
+        layoutComponents(homeLayout)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
