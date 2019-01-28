@@ -272,7 +272,7 @@ void MoveEmitterARM64::completeCycle(const MoveOperand& from,
         masm.Ldr(scratch32, cycleSlot());
         masm.Str(scratch32, toMemOperand(to));
       } else {
-        masm.Ldr(toARMReg64(to), cycleSlot());
+        masm.Ldr(toARMReg32(to), cycleSlot());
       }
       break;
 
