@@ -20,20 +20,5 @@ def make_task_worker(config, jobs):
         resolve_keyed_by(
             job, 'worker-type', item_name=job['name'], project=config.params['project']
         )
-        resolve_keyed_by(
-            job, 'scopes', item_name=job['name'], project=config.params['project']
-        )
-        resolve_keyed_by(
-            job, 'bouncer-products', item_name=job['name'], project=config.params['project']
-        )
-
-        job['worker']['bouncer-products'] = job['bouncer-products']
-        del job['bouncer-products']
-
-        # chain the breakpoint as dependency to this task
-        dependencies = {}
-        for dep_task in config.kind_dependencies_tasks:
-            dependencies[dep_task.kind] = dep_task.label
-
-        job.setdefault('dependencies', {}).update(dependencies)
+        job['worker']['payload'] = {}
         yield job
