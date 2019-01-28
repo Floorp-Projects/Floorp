@@ -699,13 +699,8 @@ def get_vc_paths(topsrcdir):
         tools_version = open(os.path.join(
             path, r'VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt'), 'rb').read().strip()
         tools_path = os.path.join(
-            path, r'VC\Tools\MSVC', tools_version, r'bin\HostX64')
-        yield (Version(install['installationVersion']), {
-            'x64': [os.path.join(tools_path, 'x64')],
-            # The cross toolchains require DLLs from the native x64 toolchain.
-            'x86': [os.path.join(tools_path, 'x86'), os.path.join(tools_path, 'x64')],
-            'arm64': [os.path.join(tools_path, 'arm64'), os.path.join(tools_path, 'x64')],
-        })
+            path, r'VC\Tools\MSVC', tools_version)
+        yield (Version(install['installationVersion']), tools_path)
 
 
 @depends(host)
@@ -725,12 +720,22 @@ def vs_major_version(value):
         return {'2017': 15}[value[0]]
 
 
-@depends(vs_major_version, check_build_environment, '--with-visual-studio-version',
-         when=host_is_windows)
+js_option(env='VC_PATH', nargs=1, when=host_is_windows,
+          help='Path to the Microsoft Visual C/C++ compiler')
+
+
+@depends(vs_major_version, check_build_environment, 'VC_PATH',
+         '--with-visual-studio-version', when=host_is_windows)
 @imports(_from='__builtin__', _import='sorted')
 @imports(_from='operator', _import='itemgetter')
-def vc_compiler_paths_for_version(vs_major_version, env, vs_release_name):
-    all_versions = sorted(get_vc_paths(env.topsrcdir), key=itemgetter(0))
+def vc_compiler_paths_for_version(vs_major_version, env, vc_path, vs_release_name):
+    if vc_path and vs_release_name:
+        die('VC_PATH and --with-visual-studio-version cannot be used together.')
+    if vc_path:
+        # Use an arbitrary version, it doesn't matter.
+        all_versions = [(Version('15'), vc_path[0])]
+    else:
+        all_versions = sorted(get_vc_paths(env.topsrcdir), key=itemgetter(0))
     if not all_versions:
         return
     if vs_major_version:
@@ -738,10 +743,18 @@ def vc_compiler_paths_for_version(vs_major_version, env, vs_release_name):
                     vs_major_version]
         if not versions:
             die('Visual Studio %s could not be found!' % vs_release_name)
-        return versions[0]
+        path = versions[0]
     else:
         # Choose the newest version.
-        return all_versions[-1][1]
+        path = all_versions[-1][1]
+    path = os.path.join(path, 'bin', 'HostX64')
+    return {
+        'x64': [os.path.join(path, 'x64')],
+        # The cross toolchains require DLLs from the native x64 toolchain.
+        'x86': [os.path.join(path, 'x86'), os.path.join(path, 'x64')],
+        'arm64': [os.path.join(path, 'arm64'), os.path.join(path, 'x64')],
+    }
+
 
 @template
 def vc_compiler_path_for(host_or_target):
