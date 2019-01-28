@@ -292,7 +292,6 @@ STATIC_ATOMS = [
     Atom("dateTime", "date-time"),
     Atom("date", "date"),
     Atom("datetime", "datetime"),
-    Atom("datetimebox", "datetimebox"),
     Atom("dd", "dd"),
     Atom("decimal", "decimal"),
     Atom("decimalFormat", "decimal-format"),

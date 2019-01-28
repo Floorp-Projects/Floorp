@@ -67,7 +67,6 @@ toolkit.jar:
    content/global/bindings/checkbox.xml        (widgets/checkbox.xml)
    content/global/bindings/datekeeper.js       (widgets/datekeeper.js)
    content/global/bindings/datepicker.js       (widgets/datepicker.js)
-   content/global/bindings/datetimebox.xml     (widgets/datetimebox.xml)
    content/global/bindings/datetimebox.css     (widgets/datetimebox.css)
 *  content/global/bindings/dialog.xml          (widgets/dialog.xml)
    content/global/bindings/general.xml         (widgets/general.xml)

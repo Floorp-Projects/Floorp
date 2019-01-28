@@ -485,10 +485,8 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
           "chrome://global/content/xml/XMLPrettyPrint.xml#prettyprint")) {
     nsAtom* tag = aElement->NodeInfo()->NameAtom();
     MOZ_ASSERT(
-        // datetimebox
-        tag == nsGkAtoms::datetimebox ||
-            // pluginProblem
-            tag == nsGkAtoms::embed || tag == nsGkAtoms::applet ||
+        // pluginProblem
+        tag == nsGkAtoms::embed || tag == nsGkAtoms::applet ||
             tag == nsGkAtoms::object ||
             // xbl-marquee
             tag == nsGkAtoms::marquee,
