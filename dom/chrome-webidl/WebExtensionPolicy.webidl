@@ -100,7 +100,7 @@ interface WebExtensionPolicy {
    * If "not_allowed" will be false.
    */
   [Pure]
-  attribute boolean privateBrowsingAllowed;
+  readonly attribute boolean privateBrowsingAllowed;
 
   /**
    * Returns true if the extension can access a window.  Access is
@@ -210,6 +210,4 @@ dictionary WebExtensionInit {
   DOMString? contentSecurityPolicy = null;
 
   sequence<DOMString>? backgroundScripts = null;
-
-  boolean privateBrowsingAllowed = true;
 };

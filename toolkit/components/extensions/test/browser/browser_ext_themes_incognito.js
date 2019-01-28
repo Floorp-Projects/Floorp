@@ -1,7 +1,12 @@
 "use strict";
 
-add_task(async function test_cookies_incognito_not_allowed() {
+add_task(async function test_theme_incognito_not_allowed() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
+
   let windowExtension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
     async background() {
       const theme = {
         "colors": {
@@ -60,7 +65,6 @@ add_task(async function test_cookies_incognito_not_allowed() {
     manifest: {
       permissions: ["theme"],
     },
-    incognitoOverride: "not_allowed",
   });
 
   await extension.startup();

@@ -79,7 +79,7 @@ add_task(async function test_contentscript_context() {
   await extension.unload();
 });
 
-add_task(async function test_contentscript_context_incognito_not_allowed() {
+async function contentscript_context_incognito_not_allowed_test() {
   async function background() {
     await browser.contentScripts.register({
       js: [{file: "registered_script.js"}],
@@ -91,7 +91,6 @@ add_task(async function test_contentscript_context_incognito_not_allowed() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    incognitoOverride: "not_allowed",
     manifest: {
       content_scripts: [{
         "matches": ["http://example.com/dummy"],
@@ -126,6 +125,11 @@ add_task(async function test_contentscript_context_incognito_not_allowed() {
 
   await contentPage.close();
   await extension.unload();
+}
+
+add_task(async function test_contentscript_context_incognito_not_allowed() {
+  return runWithPrefs([["extensions.allowPrivateBrowsingByDefault", false]],
+                      contentscript_context_incognito_not_allowed_test);
 });
 
 add_task(async function test_contentscript_context_unload_while_in_bfcache() {
