@@ -17,13 +17,13 @@ using namespace js::frontend;
 bool LabelEmitter::emitLabel(JSAtom* name) {
   MOZ_ASSERT(state_ == State::Start);
 
-  // Emit a JSOP_LABEL instruction. The operand is the offset to the
-  // statement following the labeled statement.
+  // Emit a JSOP_LABEL instruction. The operand is the offset to the statement
+  // following the labeled statement. The offset is set in emitEnd().
   uint32_t index;
   if (!bce_->makeAtomIndex(name, &index)) {
     return false;
   }
-  if (!bce_->emitJump(JSOP_LABEL, &top_)) {
+  if (!bce_->emitN(JSOP_LABEL, 4, &top_)) {
     return false;
   }
 
@@ -39,8 +39,10 @@ bool LabelEmitter::emitEnd() {
   MOZ_ASSERT(state_ == State::Label);
 
   // Patch the JSOP_LABEL offset.
-  JumpTarget brk{bce_->lastNonJumpTargetOffset()};
-  bce_->patchJumpsToTarget(top_, brk);
+  jsbytecode* labelpc = bce_->code(top_);
+  int32_t offset = bce_->lastNonJumpTargetOffset() - top_;
+  MOZ_ASSERT(*labelpc == JSOP_LABEL);
+  SET_CODE_OFFSET(labelpc, offset);
 
   // Patch the break/continue to this label.
   if (!controlInfo_->patchBreaks(bce_)) {

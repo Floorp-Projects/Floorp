@@ -2158,7 +2158,7 @@ ControlFlowGenerator::ControlStatus ControlFlowGenerator::processAndOr(
 ControlFlowGenerator::ControlStatus ControlFlowGenerator::processLabel() {
   MOZ_ASSERT(JSOp(*pc) == JSOP_LABEL);
 
-  jsbytecode* endpc = pc + GET_JUMP_OFFSET(pc);
+  jsbytecode* endpc = pc + GET_CODE_OFFSET(pc);
   MOZ_ASSERT(endpc > pc);
 
   ControlFlowInfo label(cfgStack_.length(), endpc);

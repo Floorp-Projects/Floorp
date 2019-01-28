@@ -57,8 +57,9 @@ enum {
   JOF_REGEXP = 16,      /* uint32_t regexp index */
   JOF_DOUBLE = 17,      /* uint32_t index for double value */
   JOF_SCOPE = 18,       /* uint32_t scope index */
+  JOF_CODE_OFFSET = 19, /* int32_t bytecode offset */
 #ifdef ENABLE_BIGINT
-  JOF_BIGINT = 19, /* uint32_t index for BigInt value */
+  JOF_BIGINT = 20, /* uint32_t index for BigInt value */
 #endif
   JOF_TYPEMASK = 0x001f, /* mask for above immediate types */
 
@@ -197,6 +198,14 @@ static MOZ_ALWAYS_INLINE void SET_JUMP_OFFSET(jsbytecode* pc, int32_t off) {
   SET_INT32(pc, off);
 }
 
+static MOZ_ALWAYS_INLINE int32_t GET_CODE_OFFSET(jsbytecode* pc) {
+  return GET_INT32(pc);
+}
+
+static MOZ_ALWAYS_INLINE void SET_CODE_OFFSET(jsbytecode* pc, int32_t off) {
+  SET_INT32(pc, off);
+}
+
 static const unsigned UINT32_INDEX_LEN = 4;
 
 static MOZ_ALWAYS_INLINE uint32_t GET_UINT32_INDEX(const jsbytecode* pc) {
@@ -322,15 +331,7 @@ static inline uint32_t JOF_OPTYPE(JSOp op) {
   return JOF_TYPE(CodeSpec[op].format);
 }
 
-static inline bool IsJumpOpcode(JSOp op) {
-  uint32_t type = JOF_TYPE(CodeSpec[op].format);
-
-  /*
-   * LABEL opcodes have type JOF_JUMP but are no-ops, don't treat them as
-   * jumps to avoid degrading precision.
-   */
-  return type == JOF_JUMP && op != JSOP_LABEL;
-}
+static inline bool IsJumpOpcode(JSOp op) { return JOF_OPTYPE(op) == JOF_JUMP; }
 
 static inline bool BytecodeFallsThrough(JSOp op) {
   switch (op) {
