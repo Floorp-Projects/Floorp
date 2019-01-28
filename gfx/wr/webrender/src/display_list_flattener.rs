@@ -720,6 +720,7 @@ impl<'a> DisplayListFlattener<'a> {
                     info.image_rendering,
                     info.alpha_type,
                     info.color,
+                    reference_frame_relative_offset,
                 );
             }
             SpecificDisplayItem::YuvImage(ref info) => {
@@ -730,6 +731,7 @@ impl<'a> DisplayListFlattener<'a> {
                     info.color_depth,
                     info.color_space,
                     info.image_rendering,
+                    reference_frame_relative_offset,
                 );
             }
             SpecificDisplayItem::Text(ref text_info) => {
@@ -749,12 +751,14 @@ impl<'a> DisplayListFlattener<'a> {
                     clip_and_scroll,
                     &prim_info,
                     info.color,
+                    reference_frame_relative_offset,
                 );
             }
             SpecificDisplayItem::ClearRectangle => {
                 self.add_clear_rectangle(
                     clip_and_scroll,
                     &prim_info,
+                    reference_frame_relative_offset,
                 );
             }
             SpecificDisplayItem::Line(ref info) => {
@@ -765,6 +769,7 @@ impl<'a> DisplayListFlattener<'a> {
                     info.orientation,
                     info.color,
                     info.style,
+                    reference_frame_relative_offset,
                 );
             }
             SpecificDisplayItem::Gradient(ref info) => {
@@ -784,6 +789,7 @@ impl<'a> DisplayListFlattener<'a> {
                         &prim_info,
                         Vec::new(),
                         prim_key_kind,
+                        reference_frame_relative_offset,
                     );
                 }
             }
@@ -806,6 +812,7 @@ impl<'a> DisplayListFlattener<'a> {
                     &prim_info,
                     Vec::new(),
                     prim_key_kind,
+                    reference_frame_relative_offset,
                 );
             }
             SpecificDisplayItem::BoxShadow(ref box_shadow_info) => {
@@ -823,6 +830,7 @@ impl<'a> DisplayListFlattener<'a> {
                     box_shadow_info.spread_radius,
                     box_shadow_info.border_radius,
                     box_shadow_info.clip_mode,
+                    reference_frame_relative_offset,
                 );
             }
             SpecificDisplayItem::Border(ref info) => {
@@ -832,6 +840,7 @@ impl<'a> DisplayListFlattener<'a> {
                     info,
                     item.gradient_stops(),
                     pipeline_id,
+                    reference_frame_relative_offset,
                 );
             }
             SpecificDisplayItem::PushStackingContext(ref info) => {
@@ -976,7 +985,7 @@ impl<'a> DisplayListFlattener<'a> {
                 self.push_shadow(shadow, clip_and_scroll);
             }
             SpecificDisplayItem::PopAllShadows => {
-                self.pop_all_shadows();
+                self.pop_all_shadows(reference_frame_relative_offset);
             }
             SpecificDisplayItem::PushCacheMarker(_marker) => {
             }
@@ -1031,6 +1040,7 @@ impl<'a> DisplayListFlattener<'a> {
         clip_chain_id: ClipChainId,
         spatial_node_index: SpatialNodeIndex,
         prim: P,
+        reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstance
     where
         P: Internable<InternData=PrimitiveSceneData>,
@@ -1050,8 +1060,11 @@ impl<'a> DisplayListFlattener<'a> {
                 }
             });
 
-        let instance_kind = prim_key.as_instance_kind(prim_data_handle,
-                                                      &mut self.prim_store);
+        let instance_kind = prim_key.as_instance_kind(
+            prim_data_handle,
+            &mut self.prim_store,
+            reference_frame_relative_offset,
+        );
 
         PrimitiveInstance::new(
             info.rect.origin,
@@ -1106,6 +1119,7 @@ impl<'a> DisplayListFlattener<'a> {
         info: &LayoutPrimitiveInfo,
         clip_items: Vec<(LayoutPoint, ClipItemKey)>,
         prim: P,
+        reference_frame_relative_offset: LayoutVector2D,
     )
     where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
@@ -1122,7 +1136,8 @@ impl<'a> DisplayListFlattener<'a> {
                 info,
                 clip_chain_id,
                 clip_and_scroll,
-                prim
+                prim,
+                reference_frame_relative_offset,
             );
         }
     }
@@ -1133,6 +1148,7 @@ impl<'a> DisplayListFlattener<'a> {
         info: &LayoutPrimitiveInfo,
         clip_items: Vec<(LayoutPoint, ClipItemKey)>,
         prim: P,
+        reference_frame_relative_offset: LayoutVector2D,
     )
     where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
@@ -1143,7 +1159,13 @@ impl<'a> DisplayListFlattener<'a> {
         // If a shadow context is not active, then add the primitive
         // directly to the parent picture.
         if self.pending_shadow_items.is_empty() {
-            self.add_nonshadowable_primitive(clip_and_scroll, info, clip_items, prim);
+            self.add_nonshadowable_primitive(
+                clip_and_scroll,
+                info,
+                clip_items,
+                prim,
+                reference_frame_relative_offset,
+            );
         } else {
             debug_assert!(clip_items.is_empty(), "No per-prim clips expected for shadowed primitives");
 
@@ -1163,6 +1185,7 @@ impl<'a> DisplayListFlattener<'a> {
         clip_chain_id: ClipChainId,
         clip_and_scroll: ScrollNodeAndClipChain,
         prim: P,
+        reference_frame_relative_offset: LayoutVector2D,
     )
     where
         P: Internable<InternData = PrimitiveSceneData>,
@@ -1174,6 +1197,7 @@ impl<'a> DisplayListFlattener<'a> {
             clip_chain_id,
             clip_and_scroll.spatial_node_index,
             prim,
+            reference_frame_relative_offset,
         );
         self.register_chase_primitive_by_rect(
             &info.rect,
@@ -1747,7 +1771,10 @@ impl<'a> DisplayListFlattener<'a> {
         }));
     }
 
-    pub fn pop_all_shadows(&mut self) {
+    pub fn pop_all_shadows(
+        &mut self,
+        reference_frame_relative_offset: LayoutVector2D,
+    ) {
         assert!(!self.pending_shadow_items.is_empty(), "popped shadows, but none were present");
 
         let pipeline_id = self.sc_stack.last().unwrap().pipeline_id;
@@ -1796,19 +1823,44 @@ impl<'a> DisplayListFlattener<'a> {
                     for item in &items {
                         match item {
                             ShadowItem::Image(ref pending_image) => {
-                                self.add_shadow_prim(&pending_shadow, pending_image, &mut prims)
+                                self.add_shadow_prim(
+                                    &pending_shadow,
+                                    pending_image,
+                                    &mut prims,
+                                    reference_frame_relative_offset,
+                                )
                             }
                             ShadowItem::LineDecoration(ref pending_line_dec) => {
-                                self.add_shadow_prim(&pending_shadow, pending_line_dec, &mut prims)
+                                self.add_shadow_prim(
+                                    &pending_shadow,
+                                    pending_line_dec,
+                                    &mut prims,
+                                    reference_frame_relative_offset,
+                                )
                             }
                             ShadowItem::NormalBorder(ref pending_border) => {
-                                self.add_shadow_prim(&pending_shadow, pending_border, &mut prims)
+                                self.add_shadow_prim(
+                                    &pending_shadow,
+                                    pending_border,
+                                    &mut prims,
+                                    reference_frame_relative_offset,
+                                )
                             }
                             ShadowItem::Primitive(ref pending_primitive) => {
-                                self.add_shadow_prim(&pending_shadow, pending_primitive, &mut prims)
+                                self.add_shadow_prim(
+                                    &pending_shadow,
+                                    pending_primitive,
+                                    &mut prims,
+                                    reference_frame_relative_offset,
+                                )
                             }
                             ShadowItem::TextRun(ref pending_text_run) => {
-                                self.add_shadow_prim(&pending_shadow, pending_text_run, &mut prims)
+                                self.add_shadow_prim(
+                                    &pending_shadow,
+                                    pending_text_run,
+                                    &mut prims,
+                                    reference_frame_relative_offset,
+                                )
                             }
                             _ => {}
                         }
@@ -1885,19 +1937,34 @@ impl<'a> DisplayListFlattener<'a> {
                     }
                 }
                 ShadowItem::Image(pending_image) => {
-                    self.add_shadow_prim_to_draw_list(pending_image)
+                    self.add_shadow_prim_to_draw_list(
+                        pending_image,
+                        reference_frame_relative_offset,
+                    )
                 },
                 ShadowItem::LineDecoration(pending_line_dec) => {
-                    self.add_shadow_prim_to_draw_list(pending_line_dec)
+                    self.add_shadow_prim_to_draw_list(
+                        pending_line_dec,
+                        reference_frame_relative_offset,
+                    )
                 },
                 ShadowItem::NormalBorder(pending_border) => {
-                    self.add_shadow_prim_to_draw_list(pending_border)
+                    self.add_shadow_prim_to_draw_list(
+                        pending_border,
+                        reference_frame_relative_offset,
+                    )
                 },
                 ShadowItem::Primitive(pending_primitive) => {
-                    self.add_shadow_prim_to_draw_list(pending_primitive)
+                    self.add_shadow_prim_to_draw_list(
+                        pending_primitive,
+                        reference_frame_relative_offset,
+                    )
                 },
                 ShadowItem::TextRun(pending_text_run) => {
-                    self.add_shadow_prim_to_draw_list(pending_text_run)
+                    self.add_shadow_prim_to_draw_list(
+                        pending_text_run,
+                        reference_frame_relative_offset,
+                    )
                 },
             }
         }
@@ -1911,6 +1978,7 @@ impl<'a> DisplayListFlattener<'a> {
         pending_shadow: &PendingShadow,
         pending_primitive: &PendingPrimitive<P>,
         prims: &mut Vec<PrimitiveInstance>,
+        reference_frame_relative_offset: LayoutVector2D,
     )
     where
         P: Internable<InternData=PrimitiveSceneData> + CreateShadow,
@@ -1930,14 +1998,18 @@ impl<'a> DisplayListFlattener<'a> {
             pending_primitive.prim.create_shadow(
                 &pending_shadow.shadow,
             ),
+            reference_frame_relative_offset,
         );
 
         // Add the new primitive to the shadow picture.
         prims.push(shadow_prim_instance);
     }
 
-    fn add_shadow_prim_to_draw_list<P>(&mut self, pending_primitive: PendingPrimitive<P>)
-    where
+    fn add_shadow_prim_to_draw_list<P>(
+        &mut self,
+        pending_primitive: PendingPrimitive<P>,
+        reference_frame_relative_offset: LayoutVector2D,
+    ) where
         P: Internable<InternData = PrimitiveSceneData> + IsVisible,
         P::Source: AsInstanceKind<Handle<P::Marker>> + InternDebug,
         Interners: InternerMut<P>,
@@ -1950,6 +2022,7 @@ impl<'a> DisplayListFlattener<'a> {
                 pending_primitive.clip_and_scroll.clip_chain_id,
                 pending_primitive.clip_and_scroll,
                 pending_primitive.prim,
+                reference_frame_relative_offset,
             );
         }
     }
@@ -1979,6 +2052,7 @@ impl<'a> DisplayListFlattener<'a> {
         clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
         color: ColorF,
+        reference_frame_relative_offset: LayoutVector2D,
     ) {
         if color.a == 0.0 {
             // Don't add transparent rectangles to the draw list, but do consider them for hit
@@ -1994,6 +2068,7 @@ impl<'a> DisplayListFlattener<'a> {
             PrimitiveKeyKind::Rectangle {
                 color: color.into(),
             },
+            reference_frame_relative_offset,
         );
     }
 
@@ -2001,12 +2076,14 @@ impl<'a> DisplayListFlattener<'a> {
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
+        reference_frame_relative_offset: LayoutVector2D,
     ) {
         self.add_primitive(
             clip_and_scroll,
             info,
             Vec::new(),
             PrimitiveKeyKind::Clear,
+            reference_frame_relative_offset,
         );
     }
 
@@ -2018,6 +2095,7 @@ impl<'a> DisplayListFlattener<'a> {
         orientation: LineOrientation,
         color: ColorF,
         style: LineStyle,
+        reference_frame_relative_offset: LayoutVector2D,
     ) {
         // For line decorations, we can construct the render task cache key
         // here during scene building, since it doesn't depend on device
@@ -2079,6 +2157,7 @@ impl<'a> DisplayListFlattener<'a> {
                 cache_key,
                 color: color.into(),
             },
+            reference_frame_relative_offset,
         );
     }
 
@@ -2089,6 +2168,7 @@ impl<'a> DisplayListFlattener<'a> {
         border_item: &BorderDisplayItem,
         gradient_stops: ItemRange<GradientStop>,
         pipeline_id: PipelineId,
+        reference_frame_relative_offset: LayoutVector2D,
     ) {
         match border_item.details {
             BorderDetails::NinePatch(ref border) => {
@@ -2119,6 +2199,7 @@ impl<'a> DisplayListFlattener<'a> {
                             info,
                             Vec::new(),
                             prim,
+                            reference_frame_relative_offset,
                         );
                     }
                     NinePatchBorderSource::Gradient(gradient) => {
@@ -2142,6 +2223,7 @@ impl<'a> DisplayListFlattener<'a> {
                             info,
                             Vec::new(),
                             prim,
+                            reference_frame_relative_offset,
                         );
                     }
                     NinePatchBorderSource::RadialGradient(gradient) => {
@@ -2164,6 +2246,7 @@ impl<'a> DisplayListFlattener<'a> {
                             info,
                             Vec::new(),
                             prim,
+                            reference_frame_relative_offset,
                         );
                     }
                 };
@@ -2174,6 +2257,7 @@ impl<'a> DisplayListFlattener<'a> {
                     border,
                     border_item.widths,
                     clip_and_scroll,
+                    reference_frame_relative_offset,
                 );
             }
         }
@@ -2362,7 +2446,6 @@ impl<'a> DisplayListFlattener<'a> {
             TextRun {
                 glyphs: Arc::new(glyphs),
                 font,
-                offset: prim_offset,
                 shadow: false,
             }
         };
@@ -2372,6 +2455,7 @@ impl<'a> DisplayListFlattener<'a> {
             prim_info,
             Vec::new(),
             text_run,
+            offset,
         );
     }
 
@@ -2386,6 +2470,7 @@ impl<'a> DisplayListFlattener<'a> {
         image_rendering: ImageRendering,
         alpha_type: AlphaType,
         color: ColorF,
+        reference_frame_relative_offset: LayoutVector2D,
     ) {
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
@@ -2420,6 +2505,7 @@ impl<'a> DisplayListFlattener<'a> {
                 image_rendering,
                 alpha_type,
             },
+            reference_frame_relative_offset,
         );
     }
 
@@ -2431,6 +2517,7 @@ impl<'a> DisplayListFlattener<'a> {
         color_depth: ColorDepth,
         color_space: YuvColorSpace,
         image_rendering: ImageRendering,
+        reference_frame_relative_offset: LayoutVector2D,
     ) {
         let format = yuv_data.get_format();
         let yuv_key = match yuv_data {
@@ -2450,6 +2537,7 @@ impl<'a> DisplayListFlattener<'a> {
                 color_space,
                 image_rendering,
             },
+            reference_frame_relative_offset,
         );
     }
 
@@ -2473,6 +2561,7 @@ pub trait AsInstanceKind<H> {
         &self,
         data_handle: H,
         prim_store: &mut PrimitiveStore,
+        reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind;
 }
 
