@@ -123,8 +123,8 @@ nsresult HTMLMarqueeElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                           const nsAttrValue* aOldValue,
                                           nsIPrincipal* aMaybeScriptedPrincipal,
                                           bool aNotify) {
-  if (IsInComposedDoc() &&
-      aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::direction) {
+  if (IsInComposedDoc() && aNameSpaceID == kNameSpaceID_None &&
+      aName == nsGkAtoms::direction) {
     NotifyUAWidgetSetupOrChange();
   }
   return nsGenericHTMLElement::AfterSetAttr(
