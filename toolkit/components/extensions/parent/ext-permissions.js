@@ -70,8 +70,9 @@ this.permissions = class extends ExtensionAPI {
         },
 
         async getAll() {
-          let perms = context.extension.activePermissions;
+          let perms = {...context.extension.activePermissions};
           delete perms.apis;
+          perms.permissions = perms.permissions.filter(perm => !perm.startsWith("internal:"));
           return perms;
         },
 

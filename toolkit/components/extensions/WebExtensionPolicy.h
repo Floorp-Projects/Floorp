@@ -122,10 +122,10 @@ class WebExtensionPolicy final : public nsISupports,
   bool Active() const { return mActive; }
   void SetActive(bool aActive, ErrorResult& aRv);
 
-  bool PrivateBrowsingAllowed() const { return mPrivateBrowsingAllowed; }
-  void SetPrivateBrowsingAllowed(bool aPrivateBrowsingAllowed) {
-    mPrivateBrowsingAllowed = aPrivateBrowsingAllowed;
-  };
+  bool PrivateBrowsingAllowed() const {
+    return mAllowPrivateBrowsingByDefault ||
+           HasPermission(nsGkAtoms::privateBrowsingAllowedPermission);
+  }
 
   bool CanAccessContext(nsILoadContext* aContext) const;
 
@@ -176,14 +176,13 @@ class WebExtensionPolicy final : public nsISupports,
   nsString mContentSecurityPolicy;
 
   bool mActive = false;
+  bool mAllowPrivateBrowsingByDefault = true;
 
   RefPtr<WebExtensionLocalizeCallback> mLocalizeCallback;
 
   RefPtr<AtomSet> mPermissions;
   RefPtr<MatchPatternSet> mHostPermissions;
   MatchGlobSet mWebAccessiblePaths;
-
-  bool mPrivateBrowsingAllowed = false;
 
   dom::Nullable<nsTArray<nsString>> mBackgroundScripts;
 
