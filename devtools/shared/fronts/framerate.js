@@ -10,9 +10,11 @@ const { framerateSpec } = require("devtools/shared/specs/framerate");
  * The corresponding Front object for the FramerateActor.
  */
 class FramerateFront extends FrontClassWithSpec(framerateSpec) {
-  constructor(client, { framerateActor }) {
-    super(client, { actor: framerateActor });
-    this.manage(this);
+  constructor(client) {
+    super(client);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "framerateActor";
   }
 }
 

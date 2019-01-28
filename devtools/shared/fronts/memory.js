@@ -12,11 +12,13 @@ loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
                          "devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
 
 class MemoryFront extends FrontClassWithSpec(memorySpec) {
-  constructor(client, form) {
-    super(client, { actor: form.memoryActor });
+  constructor(client) {
+    super(client);
     this._client = client;
     this.heapSnapshotFileActorID = null;
-    this.manage(this);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "memoryActor";
   }
 
   /**

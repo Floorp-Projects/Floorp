@@ -434,15 +434,14 @@ registerFront(WalkerFront);
  * inspector-related actors, including the walker.
  */
 class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
-  constructor(client, tabForm) {
-    super(client, { actor: tabForm.inspectorActor });
+  constructor(client) {
+    super(client);
 
     this._client = client;
     this._highlighters = new Map();
 
-    // XXX: This is the first actor type in its hierarchy to use the protocol
-    // library, so we're going to self-own on the client side for now.
-    this.manage(this);
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "inspectorActor";
   }
 
   // async initialization

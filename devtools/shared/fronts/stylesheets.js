@@ -140,9 +140,11 @@ registerFront(StyleSheetFront);
  * The corresponding Front object for the StyleSheetsActor.
  */
 class StyleSheetsFront extends FrontClassWithSpec(styleSheetsSpec) {
-  constructor(client, tabForm) {
-    super(client, { actor: tabForm.styleSheetsActor });
-    this.manage(this);
+  constructor(client) {
+    super(client);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "styleSheetsActor";
   }
 }
 
