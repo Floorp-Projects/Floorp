@@ -2667,7 +2667,7 @@ function getVisibleElements(scrollEl, views, sortByVisibility = false, horizonta
         numViews = views.length;
   let firstVisibleElementInd = numViews === 0 ? 0 : binarySearchFirstItem(views, horizontal ? isElementRightAfterViewLeft : isElementBottomAfterViewTop);
 
-  if (numViews > 0 && firstVisibleElementInd < numViews && !horizontal) {
+  if (firstVisibleElementInd > 0 && firstVisibleElementInd < numViews && !horizontal) {
     firstVisibleElementInd = backtrackBeforeAllVisibleElements(firstVisibleElementInd, views, top);
   }
 
@@ -8128,8 +8128,6 @@ exports.PDFViewer = void 0;
 
 var _base_viewer = __webpack_require__(25);
 
-var _ui_utils = __webpack_require__(2);
-
 var _pdfjsLib = __webpack_require__(3);
 
 class PDFViewer extends _base_viewer.BaseViewer {
@@ -8139,7 +8137,8 @@ class PDFViewer extends _base_viewer.BaseViewer {
 
   _scrollIntoView({
     pageDiv,
-    pageSpot = null
+    pageSpot = null,
+    pageNumber = null
   }) {
     if (!pageSpot && !this.isInPresentationMode) {
       const left = pageDiv.offsetLeft + pageDiv.clientLeft;
@@ -8149,7 +8148,7 @@ class PDFViewer extends _base_viewer.BaseViewer {
         clientWidth
       } = this.container;
 
-      if (this._scrollMode === _base_viewer.ScrollMode.HORIZONTAL || left < scrollLeft || right > scrollLeft + clientWidth) {
+      if (this._isScrollModeHorizontal || left < scrollLeft || right > scrollLeft + clientWidth) {
         pageSpot = {
           left: 0,
           top: 0
@@ -8157,15 +8156,19 @@ class PDFViewer extends _base_viewer.BaseViewer {
       }
     }
 
-    (0, _ui_utils.scrollIntoView)(pageDiv, pageSpot);
+    super._scrollIntoView({
+      pageDiv,
+      pageSpot,
+      pageNumber
+    });
   }
 
   _getVisiblePages() {
-    if (!this.isInPresentationMode) {
-      return (0, _ui_utils.getVisibleElements)(this.container, this._pages, true, this._scrollMode === _base_viewer.ScrollMode.HORIZONTAL);
+    if (this.isInPresentationMode) {
+      return this._getCurrentVisiblePage();
     }
 
-    return this._getCurrentVisiblePage();
+    return super._getVisiblePages();
   }
 
   _updateHelper(visiblePages) {
@@ -8192,10 +8195,6 @@ class PDFViewer extends _base_viewer.BaseViewer {
     }
 
     this._setCurrentPageNumber(currentId);
-  }
-
-  get _isScrollModeHorizontal() {
-    return this.isInPresentationMode ? false : this._scrollMode === _base_viewer.ScrollMode.HORIZONTAL;
   }
 
 }
@@ -8677,7 +8676,7 @@ class BaseViewer {
     pageSpot = null,
     pageNumber = null
   }) {
-    throw new Error('Not implemented: _scrollIntoView');
+    (0, _ui_utils.scrollIntoView)(pageDiv, pageSpot);
   }
 
   _setScaleUpdatePages(newScale, newValue, noScroll = false, preset = false) {
@@ -8914,12 +8913,6 @@ class BaseViewer {
     });
   }
 
-  _resizeBuffer(numVisiblePages, visiblePages) {
-    let suggestedCacheSize = Math.max(DEFAULT_CACHE_SIZE, 2 * numVisiblePages + 1);
-
-    this._buffer.resize(suggestedCacheSize, visiblePages);
-  }
-
   _updateLocation(firstPage) {
     let currentScale = this._currentScale;
     let currentScaleValue = this._currentScaleValue;
@@ -8957,7 +8950,9 @@ class BaseViewer {
       return;
     }
 
-    this._resizeBuffer(numVisiblePages, visiblePages);
+    const newCacheSize = Math.max(DEFAULT_CACHE_SIZE, 2 * numVisiblePages + 1);
+
+    this._buffer.resize(newCacheSize, visiblePages);
 
     this.renderingQueue.renderHighestPriority(visible);
 
@@ -8980,7 +8975,7 @@ class BaseViewer {
   }
 
   get _isScrollModeHorizontal() {
-    throw new Error('Not implemented: _isScrollModeHorizontal');
+    return this.isInPresentationMode ? false : this._scrollMode === ScrollMode.HORIZONTAL;
   }
 
   get isInPresentationMode() {
@@ -9022,7 +9017,7 @@ class BaseViewer {
   }
 
   _getVisiblePages() {
-    throw new Error('Not implemented: _getVisiblePages');
+    return (0, _ui_utils.getVisibleElements)(this.container, this._pages, true, this._isScrollModeHorizontal);
   }
 
   isPageVisible(pageNumber) {
@@ -9763,14 +9758,14 @@ class PDFPageView {
       };
     }
 
-    let finishPaintTask = error => {
+    const finishPaintTask = async error => {
       if (paintTask === this.paintTask) {
         this.paintTask = null;
       }
 
       if (error instanceof _pdfjsLib.RenderingCancelledException) {
         this.error = null;
-        return Promise.resolve(undefined);
+        return;
       }
 
       this.renderingState = _pdf_rendering_queue.RenderingStates.FINISHED;
@@ -9796,10 +9791,8 @@ class PDFPageView {
       });
 
       if (error) {
-        return Promise.reject(error);
+        throw error;
       }
-
-      return Promise.resolve(undefined);
     };
 
     let paintTask = this.renderer === _ui_utils.RendererType.SVG ? this.paintOnSvg(canvasWrapper) : this.paintOnCanvas(canvasWrapper);
@@ -10705,8 +10698,6 @@ exports.PDFSinglePageViewer = void 0;
 
 var _base_viewer = __webpack_require__(25);
 
-var _ui_utils = __webpack_require__(2);
-
 var _pdfjsLib = __webpack_require__(3);
 
 class PDFSinglePageViewer extends _base_viewer.BaseViewer {
@@ -10726,6 +10717,7 @@ class PDFSinglePageViewer extends _base_viewer.BaseViewer {
 
     this._previousPageNumber = 1;
     this._shadowViewer = document.createDocumentFragment();
+    this._updateScrollDown = null;
   }
 
   _ensurePageViewVisible() {
@@ -10777,27 +10769,22 @@ class PDFSinglePageViewer extends _base_viewer.BaseViewer {
       this._setCurrentPageNumber(pageNumber);
     }
 
-    let scrolledDown = this._currentPageNumber >= this._previousPageNumber;
-    let previousLocation = this._location;
+    const scrolledDown = this._currentPageNumber >= this._previousPageNumber;
 
     this._ensurePageViewVisible();
 
-    (0, _ui_utils.scrollIntoView)(pageDiv, pageSpot);
+    this.update();
+
+    super._scrollIntoView({
+      pageDiv,
+      pageSpot,
+      pageNumber
+    });
 
     this._updateScrollDown = () => {
       this.scroll.down = scrolledDown;
-      delete this._updateScrollDown;
+      this._updateScrollDown = null;
     };
-
-    setTimeout(() => {
-      if (this._location === previousLocation) {
-        if (this._updateScrollDown) {
-          this._updateScrollDown();
-        }
-
-        this.update();
-      }
-    }, 0);
   }
 
   _getVisiblePages() {
