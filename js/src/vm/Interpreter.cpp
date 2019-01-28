@@ -2258,7 +2258,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(JSOP_ENDITER) {
       MOZ_ASSERT(REGS.stackDepth() >= 1);
-      COUNT_COVERAGE();
       CloseIterator(&REGS.sp[-1].toObject());
       REGS.sp--;
     }
