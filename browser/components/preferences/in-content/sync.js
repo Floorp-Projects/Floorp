@@ -52,8 +52,6 @@ var gSyncPane = {
     this._setupEventListeners();
     this._adjustForPrefs();
 
-    document.getElementById("weavePrefsDeck").removeAttribute("data-hidden-from-search");
-
     // If the Service hasn't finished initializing, wait for it.
     let xps = Cc["@mozilla.org/weave/service;1"]
       .getService(Ci.nsISupports)

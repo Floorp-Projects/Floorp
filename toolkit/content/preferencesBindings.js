@@ -115,24 +115,6 @@ const Preferences = window.Preferences = (function() {
       }
     },
 
-    updateQueued: false,
-
-    updateAllElements() {
-      if (this.updateQueued) {
-        return;
-      }
-
-      this.updateQueued = true;
-
-      Promise.resolve().then(() => {
-        const preferences = Preferences.getAll();
-        for (const preference of preferences) {
-          preference.updateElements();
-        }
-        this.updateQueued = false;
-      });
-    },
-
     onUnload() {
       Services.prefs.removeObserver("", this);
     },
