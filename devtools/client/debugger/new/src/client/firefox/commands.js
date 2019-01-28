@@ -6,6 +6,7 @@
 
 import type {
   BreakpointId,
+  BreakpointOptions,
   BreakpointResult,
   EventListenerBreakpoints,
   Frame,
@@ -159,10 +160,10 @@ function getBreakpointByLocation(location: SourceLocation) {
   const bpClient = bpClients[id];
 
   if (bpClient) {
-    const { actor, url, line, column, condition } = bpClient.location;
+    const { actor, url, line, column } = bpClient.location;
     return {
       id: bpClient.actor,
-      condition,
+      options: bpClient.options,
       actualLocation: {
         line,
         column,
@@ -182,9 +183,18 @@ function removeXHRBreakpoint(path: string, method: string) {
   return threadClient.removeXHRBreakpoint(path, method);
 }
 
+// Source and breakpoint clients do not yet support an options structure, so
+// for now we transform options into condition strings when setting breakpoints.
+function transformOptionsToCondition(options) {
+  if (options.logValue) {
+    return `console.log(${options.logValue})`;
+  }
+  return options.condition;
+}
+
 function setBreakpoint(
   location: SourceLocation,
-  condition: boolean,
+  options: BreakpointOptions,
   noSliding: boolean
 ): Promise<BreakpointResult> {
   const sourceThreadClient = sourceThreads[location.sourceId];
@@ -194,7 +204,7 @@ function setBreakpoint(
     .setBreakpoint({
       line: location.line,
       column: location.column,
-      condition,
+      condition: transformOptionsToCondition(options),
       noSliding
     })
     .then(([{ actualLocation }, bpClient]) => {
@@ -226,18 +236,17 @@ function removeBreakpoint(
   }
 }
 
-function setBreakpointCondition(
+function setBreakpointOptions(
   breakpointId: BreakpointId,
   location: SourceLocation,
-  condition: boolean,
-  noSliding: boolean
+  options: BreakpointOptions
 ) {
   const bpClient = bpClients[breakpointId];
   delete bpClients[breakpointId];
 
   const sourceThreadClient = sourceThreads[bpClient.source.actor];
   return bpClient
-    .setCondition(sourceThreadClient, condition, noSliding)
+    .setCondition(sourceThreadClient, transformOptionsToCondition(options))
     .then(_bpClient => {
       bpClients[breakpointId] = _bpClient;
       return { id: breakpointId };
@@ -470,7 +479,7 @@ const clientCommands = {
   setXHRBreakpoint,
   removeXHRBreakpoint,
   removeBreakpoint,
-  setBreakpointCondition,
+  setBreakpointOptions,
   evaluate,
   evaluateInFrame,
   evaluateExpressions,

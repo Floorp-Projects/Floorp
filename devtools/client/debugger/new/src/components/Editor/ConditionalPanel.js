@@ -21,7 +21,7 @@ import type { SourceLocation } from "../../types";
 
 type Props = {
   breakpoint: ?Object,
-  setBreakpointCondition: Function,
+  setBreakpointOptions: Function,
   location: SourceLocation,
   log: boolean,
   editor: Object,
@@ -64,10 +64,10 @@ export class ConditionalPanel extends PureComponent<Props> {
 
   setBreakpoint(condition: string) {
     const { location, log } = this.props;
-    if (log) {
-      condition = `console.log(${condition})`;
-    }
-    return this.props.setBreakpointCondition(location, { condition, log });
+    return this.props.setBreakpointOptions(
+      location,
+      log ? { logValue: condition } : { condition }
+    );
   }
 
   clearConditionalPanel() {
@@ -144,13 +144,8 @@ export class ConditionalPanel extends PureComponent<Props> {
 
   renderConditionalPanel(props: Props) {
     const { breakpoint, log } = props;
-    let condition = breakpoint ? breakpoint.condition : "";
-
-    if (log) {
-      if (condition && condition.match(/^console.log\(.*\)$/)) {
-        condition = condition.match(/^console.log\((.*)\)/)[1];
-      }
-    }
+    const options = (breakpoint && breakpoint.options) || {};
+    const condition = log ? options.logValue : options.condition;
 
     const panel = document.createElement("div");
     ReactDOM.render(
@@ -198,13 +193,13 @@ const mapStateToProps = state => {
 };
 
 const {
-  setBreakpointCondition,
+  setBreakpointOptions,
   openConditionalPanel,
   closeConditionalPanel
 } = actions;
 
 const mapDispatchToProps = {
-  setBreakpointCondition,
+  setBreakpointOptions,
   openConditionalPanel,
   closeConditionalPanel
 };

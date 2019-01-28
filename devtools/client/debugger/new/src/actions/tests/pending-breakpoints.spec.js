@@ -152,11 +152,11 @@ describe("when changing an existing breakpoint", () => {
 
     await dispatch(actions.addBreakpoint(bp.location));
     await dispatch(
-      actions.setBreakpointCondition(bp.location, { condition: "2" })
+      actions.setBreakpointOptions(bp.location, { condition: "2" })
     );
     const bps = selectors.getPendingBreakpoints(getState());
     const breakpoint = bps[id];
-    expect(breakpoint.condition).toBe("2");
+    expect(breakpoint.options.condition).toBe("2");
   });
 
   it("if disabled, updates corresponding pendingBreakpoint", async () => {
@@ -191,11 +191,11 @@ describe("when changing an existing breakpoint", () => {
 
     await dispatch(actions.addBreakpoint(bp.location));
     await dispatch(
-      actions.setBreakpointCondition(bp.location, { condition: "2" })
+      actions.setBreakpointOptions(bp.location, { condition: "2" })
     );
     const bps = selectors.getPendingBreakpoints(getState());
     const breakpoint = bps[id];
-    expect(breakpoint.condition).toBe("2");
+    expect(breakpoint.options.condition).toBe("2");
   });
 });
 

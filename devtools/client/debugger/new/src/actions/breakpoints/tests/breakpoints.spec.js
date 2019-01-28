@@ -281,16 +281,18 @@ describe("breakpoints", () => {
 
     await dispatch(actions.addBreakpoint(loc));
 
-    expect(selectors.getBreakpoint(getState(), loc).condition).toBe(null);
+    expect(selectors.getBreakpoint(getState(), loc).options.condition).toBe(
+      null
+    );
 
     await dispatch(
-      actions.setBreakpointCondition(loc, {
+      actions.setBreakpointOptions(loc, {
         condition: "const foo = 0",
         getTextForLine: () => {}
       })
     );
 
-    expect(selectors.getBreakpoint(getState(), loc).condition).toBe(
+    expect(selectors.getBreakpoint(getState(), loc).options.condition).toBe(
       "const foo = 0"
     );
   });
@@ -308,17 +310,19 @@ describe("breakpoints", () => {
     const { breakpoint } = await dispatch(actions.addBreakpoint(loc));
     await dispatch(actions.disableBreakpoint(breakpoint));
 
-    expect(selectors.getBreakpoint(getState(), loc).condition).toBe(null);
+    expect(selectors.getBreakpoint(getState(), loc).options.condition).toBe(
+      null
+    );
 
     await dispatch(
-      actions.setBreakpointCondition(loc, {
+      actions.setBreakpointOptions(loc, {
         condition: "const foo = 0",
         getTextForLine: () => {}
       })
     );
     const newBreakpoint = selectors.getBreakpoint(getState(), loc);
     expect(newBreakpoint.disabled).toBe(false);
-    expect(newBreakpoint.condition).toBe("const foo = 0");
+    expect(newBreakpoint.options.condition).toBe("const foo = 0");
   });
 
   it("should remap breakpoints on pretty print", async () => {

@@ -42,8 +42,10 @@ export function generateBreakpoint(filename, line = 5, column) {
       line,
       column
     },
-    condition: null,
-    disabled: false,
-    hidden: false
+    options: {
+      condition: null,
+      hidden: false
+    },
+    disabled: false
   };
 }

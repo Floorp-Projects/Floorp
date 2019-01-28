@@ -37,7 +37,7 @@ export const simpleMockThreadClient = {
 
   removeBreakpoint: _id => Promise.resolve(),
 
-  setBreakpointCondition: (_id, _location, _condition, _noSliding) =>
+  setBreakpointOptions: (_id, _location, _options, _noSliding) =>
     Promise.resolve({ sourceId: "a", line: 5 }),
   setPausePoints: () => Promise.resolve({}),
   sourceContents: sourceId =>
