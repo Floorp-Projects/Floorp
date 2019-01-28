@@ -12,7 +12,7 @@ class SelectionChangedMenulist {
   // is hiding. This matches the behaviour of MacOS and Linux more closely.
 
   constructor(menulist, onCommand) {
-    let popup = menulist.firstElementChild;
+    let popup = menulist.menupopup;
     let lastEvent;
 
     menulist.addEventListener("command", event => {
