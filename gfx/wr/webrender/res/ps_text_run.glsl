@@ -15,7 +15,7 @@ varying vec4 vUvClip;
 
 #ifdef WR_VERTEX_SHADER
 
-#define VECS_PER_TEXT_RUN           3
+#define VECS_PER_TEXT_RUN           2
 #define GLYPHS_PER_GPU_BLOCK        2U
 
 struct Glyph {
@@ -53,12 +53,11 @@ GlyphResource fetch_glyph_resource(int address) {
 struct TextRun {
     vec4 color;
     vec4 bg_color;
-    vec2 offset;
 };
 
 TextRun fetch_text_run(int address) {
-    vec4 data[3] = fetch_from_gpu_cache_3(address);
-    return TextRun(data[0], data[1], data[2].xy);
+    vec4 data[2] = fetch_from_gpu_cache_2(address);
+    return TextRun(data[0], data[1]);
 }
 
 VertexInfo write_text_vertex(RectWithSize local_clip_rect,
@@ -160,14 +159,14 @@ void main(void) {
     PictureTask task = fetch_picture_task(ph.render_task_index);
 
     TextRun text = fetch_text_run(ph.specific_prim_address);
-    vec2 text_offset = ph.local_rect.p0 - text.offset;
+    vec2 text_offset = vec2(ph.user_data.xy) / 256.0;
 
     if (color_mode == COLOR_MODE_FROM_PASS) {
         color_mode = uMode;
     }
 
     Glyph glyph = fetch_glyph(ph.specific_prim_address, glyph_index);
-    glyph.offset += text.offset;
+    glyph.offset += ph.local_rect.p0 - text_offset;
 
     GlyphResource res = fetch_glyph_resource(resource_address);
 
