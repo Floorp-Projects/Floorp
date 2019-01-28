@@ -536,7 +536,35 @@ nsFileInputStream::Available(uint64_t* aResult) {
 }
 
 void nsFileInputStream::Serialize(InputStreamParams& aParams,
-                                  FileDescriptorArray& aFileDescriptors) {
+                                  FileDescriptorArray& aFileDescriptors,
+                                  bool aDelayedStart,
+                                  mozilla::dom::nsIContentChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors);
+}
+
+void nsFileInputStream::Serialize(InputStreamParams& aParams,
+                                  FileDescriptorArray& aFileDescriptors,
+                                  bool aDelayedStart,
+                                  PBackgroundChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors);
+}
+
+void nsFileInputStream::Serialize(InputStreamParams& aParams,
+                                  FileDescriptorArray& aFileDescriptors,
+                                  bool aDelayedStart,
+                                  mozilla::dom::nsIContentParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors);
+}
+
+void nsFileInputStream::Serialize(InputStreamParams& aParams,
+                                  FileDescriptorArray& aFileDescriptors,
+                                  bool aDelayedStart,
+                                  PBackgroundParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors);
+}
+
+void nsFileInputStream::SerializeInternal(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors) {
   FileInputStreamParams params;
 
   if (NS_SUCCEEDED(DoPendingOpen())) {
@@ -624,10 +652,6 @@ bool nsFileInputStream::Deserialize(
   mIOFlags = params.ioFlags();
 
   return true;
-}
-
-Maybe<uint64_t> nsFileInputStream::ExpectedSerializedLength() {
-  return Nothing();
 }
 
 bool nsFileInputStream::IsCloneable() const {
