@@ -2,12 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { wrapExpression, getValue } from "../expressions";
+import { makeMockExpression } from "../test-mockup";
 
 function createError(preview) {
-  return {
-    value: { result: { class: "Error", preview } }
-  };
+  return makeMockExpression({ result: { class: "Error", preview } });
 }
 
 describe("expressions", () => {
@@ -45,9 +46,9 @@ describe("expressions", () => {
 
   describe("getValue", () => {
     it("Reference Errors should be shown as (unavailable)", () => {
-      expect(
-        getValue(createError({ name: "ReferenceError" })).value.unavailable
-      ).toEqual(true);
+      expect(getValue(createError({ name: "ReferenceError" })).value).toEqual({
+        unavailable: true
+      });
     });
 
     it("Errors messages should be shown", () => {
