@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { createSource } from "../../../reducers/sources";
 
 import {
@@ -29,7 +31,7 @@ describe("sources tree", () => {
   describe("collapseTree", () => {
     it("can collapse a single source", () => {
       const fullTree = createDirectoryNode("root", "", []);
-      addToTree(fullTree, abcSource, "http://example.com/");
+      addToTree(fullTree, abcSource, "http://example.com/", "");
       expect(fullTree.contents).toHaveLength(1);
       const tree = collapseTree(fullTree);
 
@@ -49,8 +51,8 @@ describe("sources tree", () => {
 
     it("correctly merges in a collapsed source with a deeper level", () => {
       const fullTree = createDirectoryNode("root", "", []);
-      addToTree(fullTree, abcSource, "http://example.com/");
-      addToTree(fullTree, abcdeSource, "http://example.com/");
+      addToTree(fullTree, abcSource, "http://example.com/", "");
+      addToTree(fullTree, abcdeSource, "http://example.com/", "");
       const tree = collapseTree(fullTree);
 
       sortEntireTree(tree);
@@ -77,8 +79,8 @@ describe("sources tree", () => {
 
     it("correctly merges in a collapsed source with a shallower level", () => {
       const fullTree = createDirectoryNode("root", "", []);
-      addToTree(fullTree, abcSource, "http://example.com/");
-      addToTree(fullTree, abxSource, "http://example.com/");
+      addToTree(fullTree, abcSource, "http://example.com/", "");
+      addToTree(fullTree, abxSource, "http://example.com/", "");
       const tree = collapseTree(fullTree);
 
       expect(tree.contents).toHaveLength(1);
@@ -101,8 +103,8 @@ describe("sources tree", () => {
 
     it("correctly merges in a collapsed source with the same level", () => {
       const fullTree = createDirectoryNode("root", "", []);
-      addToTree(fullTree, abcdeSource, "http://example.com/");
-      addToTree(fullTree, abcSource, "http://example.com/");
+      addToTree(fullTree, abcdeSource, "http://example.com/", "");
+      addToTree(fullTree, abcSource, "http://example.com/", "");
       const tree = collapseTree(fullTree);
 
       expect(tree.contents).toHaveLength(1);

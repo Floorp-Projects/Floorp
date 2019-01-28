@@ -2,12 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { createSource } from "../../../reducers/sources";
 
 import { getDirectories, createTree } from "../index";
 
 function formatDirectories(source, tree) {
-  const paths = getDirectories(source, tree);
+  const paths: any = getDirectories(source, tree);
   return paths.map(node => node.path);
 }
 
@@ -28,7 +30,11 @@ describe("getDirectories", () => {
     ]);
 
     const debuggeeUrl = "http://a/";
-    const { sourceTree } = createTree({ sources, debuggeeUrl });
+    const { sourceTree } = createTree({
+      sources,
+      debuggeeUrl,
+      projectRoot: ""
+    });
     expect(formatDirectories(sources.a0, sourceTree)).toEqual(["a/b.js", "a"]);
     expect(formatDirectories(sources.a1, sourceTree)).toEqual(["a/c.js", "a"]);
     expect(formatDirectories(sources.a2, sourceTree)).toEqual(["b/c.js", "b"]);

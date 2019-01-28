@@ -13,25 +13,51 @@
 
 import type {
   ActorId,
+  Breakpoint,
+  Expression,
   Frame,
   FrameId,
   Scope,
+  JsSource,
+  WasmSource,
   Source,
   SourceId,
   Why
 } from "../types";
 
-function makeMockSource(id: SourceId = "source", url: string): Source {
+function makeMockSource(
+  url: string = "url",
+  id: SourceId = "source",
+  contentType: string = "text/javascript",
+  text: string = ""
+): JsSource {
   return {
     id,
     url,
     thread: "FakeThread",
     isBlackBoxed: false,
     isPrettyPrinted: false,
-    loadedState: "unloaded",
+    loadedState: text ? "loaded" : "unloaded",
     relativeUrl: url,
     introductionUrl: null,
-    isWasm: false
+    isWasm: false,
+    contentType,
+    text
+  };
+}
+
+function makeMockWasmSource(text: {| binary: Object |}): WasmSource {
+  return {
+    id: "wasm-source-id",
+    url: "url",
+    thread: "FakeThread",
+    isBlackBoxed: false,
+    isPrettyPrinted: false,
+    loadedState: "unloaded",
+    relativeUrl: "url",
+    introductionUrl: null,
+    isWasm: true,
+    text
   };
 }
 
@@ -60,9 +86,30 @@ function mockScopeAddVariable(scope: Scope, name: string) {
   scope.bindings.variables[name] = { value: null };
 }
 
+function makeMockBreakpoint(
+  source: Source = makeMockSource(),
+  line: number = 1,
+  column: ?number
+): Breakpoint {
+  const location = column
+    ? { sourceId: source.id, line, column }
+    : { sourceId: source.id, line };
+  return {
+    id: "breakpoint",
+    location,
+    astLocation: null,
+    generatedLocation: location,
+    loading: false,
+    disabled: false,
+    text: "text",
+    originalText: "text",
+    options: {}
+  };
+}
+
 function makeMockFrame(
   id: FrameId = "frame",
-  source: Source = makeMockSource(undefined, "url"),
+  source: Source = makeMockSource("url"),
   scope: Scope = makeMockScope()
 ): Frame {
   const location = { sourceId: source.id, line: 4 };
@@ -79,7 +126,7 @@ function makeMockFrame(
 }
 
 function makeMockFrameWithURL(url: string): Frame {
-  return makeMockFrame(undefined, makeMockSource(undefined, url));
+  return makeMockFrame(undefined, makeMockSource(url));
 }
 
 function makeWhyNormal(frameReturnValue: any = undefined): Why {
@@ -93,12 +140,24 @@ function makeWhyThrow(frameThrowValue: any): Why {
   return { type: "why-throw", frameFinished: { throw: frameThrowValue } };
 }
 
+function makeMockExpression(value: Object): Expression {
+  return {
+    input: "input",
+    value,
+    from: "from",
+    updating: false
+  };
+}
+
 export {
   makeMockSource,
+  makeMockWasmSource,
   makeMockScope,
   mockScopeAddVariable,
+  makeMockBreakpoint,
   makeMockFrame,
   makeMockFrameWithURL,
   makeWhyNormal,
-  makeWhyThrow
+  makeWhyThrow,
+  makeMockExpression
 };
