@@ -4,7 +4,6 @@ if [ -d "$topsrcdir/clang" ]; then
     CLANG_LIB_DIR="$(cd $topsrcdir/clang/lib/clang/* && cd lib/windows && pwd)"
 
     export LIB=$LIB:$CLANG_LIB_DIR
-    mk_export_correct_style LIB
     export LDFLAGS="clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
 
     export MOZ_COPY_PDBS=1
@@ -22,6 +21,5 @@ ac_add_options --disable-jemalloc
 ac_add_options --disable-crashreporter
 ac_add_options --disable-profiling
 
-. "$topsrcdir/build/mozconfig.vs-common"
 . "$topsrcdir/build/mozconfig.clang-cl"
 . "$topsrcdir/build/mozconfig.lld-link"
