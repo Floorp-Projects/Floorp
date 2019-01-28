@@ -126,6 +126,20 @@ detail-update-manual =
     .label = Off
     .tooltiptext = Don’t automatically install updates
 
+# Used as a description for the option to allow or block an add-on in private windows.
+detail-private-browsing =
+    .value = Run in Private Windows
+
+detail-private-browsing-description = Extension will work in Private Windows, and have access to your online activities. <label data-l10n-name="detail-private-browsing-learn-more">Learn more</label>
+
+detail-private-browsing-on =
+    .label = Allow
+    .tooltiptext = Enable in Private Browsing
+
+detail-private-browsing-off =
+    .label = Don’t Allow
+    .tooltiptext = Disable in Private Browsing
+
 detail-home =
     .label = Homepage
 
