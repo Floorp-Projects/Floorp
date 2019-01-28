@@ -12,9 +12,7 @@
 namespace mozilla {
 namespace net {
 
-namespace {
-
-struct FlashFeatures {
+struct UrlClassifierFeatureFlash::FlashFeature {
   const char* mName;
   const char* mBlacklistPrefTables;
   const char* mWhitelistPrefTables;
@@ -23,7 +21,9 @@ struct FlashFeatures {
   RefPtr<UrlClassifierFeatureFlash> mFeature;
 };
 
-static FlashFeatures sFlashFeaturesMap[] = {
+namespace {
+
+static UrlClassifierFeatureFlash::FlashFeature sFlashFeaturesMap[] = {
     {"flash-deny", "urlclassifier.flashTable", "urlclassifier.flashExceptTable",
      false, nsIHttpChannel::FlashPluginDenied},
     {"flash-allow", "urlclassifier.flashAllowTable",
@@ -38,18 +38,18 @@ bool IsInitialized() { return !!sFlashFeaturesMap[0].mFeature; }
 
 }  // namespace
 
-UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
+UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(const UrlClassifierFeatureFlash::FlashFeature& aFlashFeature)
     : UrlClassifierFeatureBase(
-          nsDependentCString(sFlashFeaturesMap[aId].mName),
-          nsDependentCString(sFlashFeaturesMap[aId].mBlacklistPrefTables),
-          nsDependentCString(sFlashFeaturesMap[aId].mWhitelistPrefTables),
+          nsDependentCString(aFlashFeature.mName),
+          nsDependentCString(aFlashFeature.mBlacklistPrefTables),
+          nsDependentCString(aFlashFeature.mWhitelistPrefTables),
           EmptyCString(),  // aPrefBlacklistHosts
           EmptyCString(),  // aPrefWhitelistHosts
           EmptyCString(),  // aPrefBlacklistTableName
           EmptyCString(),  // aPrefWhitelistTableName
           EmptyCString())  // aPrefSkipHosts
       ,
-      mFlashPluginState(sFlashFeaturesMap[aId].mFlashPluginState) {
+      mFlashPluginState(aFlashFeature.mFlashPluginState) {
   static_assert(nsIHttpChannel::FlashPluginDeniedInSubdocuments ==
                     nsIHttpChannel::FlashPluginLastValue,
                 "nsIHttpChannel::FlashPluginLastValue is out-of-sync!");
@@ -57,10 +57,8 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
 
 /* static */ void UrlClassifierFeatureFlash::GetFeatureNames(
     nsTArray<nsCString>& aArray) {
-  uint32_t numFeatures =
-      (sizeof(sFlashFeaturesMap) / sizeof(sFlashFeaturesMap[0]));
-  for (uint32_t i = 0; i < numFeatures; ++i) {
-    aArray.AppendElement(nsDependentCString(sFlashFeaturesMap[i].mName));
+  for (const FlashFeature& flashFeature : sFlashFeaturesMap) {
+    aArray.AppendElement(nsDependentCString(flashFeature.mName));
   }
 }
 
@@ -71,12 +69,10 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
     return;
   }
 
-  uint32_t numFeatures =
-      (sizeof(sFlashFeaturesMap) / sizeof(sFlashFeaturesMap[0]));
-  for (uint32_t i = 0; i < numFeatures; ++i) {
-    MOZ_ASSERT(!sFlashFeaturesMap[i].mFeature);
-    sFlashFeaturesMap[i].mFeature = new UrlClassifierFeatureFlash(i);
-    sFlashFeaturesMap[i].mFeature->InitializePreferences();
+  for (FlashFeature& flashFeature : sFlashFeaturesMap) {
+    MOZ_ASSERT(!flashFeature.mFeature);
+    flashFeature.mFeature = new UrlClassifierFeatureFlash(flashFeature);
+    flashFeature.mFeature->InitializePreferences();
   }
 }
 
@@ -85,12 +81,10 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
     return;
   }
 
-  uint32_t numFeatures =
-      (sizeof(sFlashFeaturesMap) / sizeof(sFlashFeaturesMap[0]));
-  for (uint32_t i = 0; i < numFeatures; ++i) {
-    MOZ_ASSERT(sFlashFeaturesMap[i].mFeature);
-    sFlashFeaturesMap[i].mFeature->ShutdownPreferences();
-    sFlashFeaturesMap[i].mFeature = nullptr;
+  for (FlashFeature& flashFeature : sFlashFeaturesMap) {
+    MOZ_ASSERT(flashFeature.mFeature);
+    flashFeature.mFeature->ShutdownPreferences();
+    flashFeature.mFeature = nullptr;
   }
 }
 
@@ -123,13 +117,10 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
 
   MaybeInitialize();
 
-  uint32_t numFeatures =
-      (sizeof(sFlashFeaturesMap) / sizeof(sFlashFeaturesMap[0]));
-  for (uint32_t i = 0; i < numFeatures; ++i) {
-    MOZ_ASSERT(sFlashFeaturesMap[i].mFeature);
-    if (!sFlashFeaturesMap[i].mSubdocumentOnly ||
-        contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
-      aFeatures.AppendElement(sFlashFeaturesMap[i].mFeature);
+  for (const FlashFeature& flashFeature : sFlashFeaturesMap) {
+    MOZ_ASSERT(flashFeature.mFeature);
+    if (!flashFeature.mSubdocumentOnly || contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
+      aFeatures.AppendElement(flashFeature.mFeature);
     }
   }
 }
@@ -138,13 +129,10 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
 UrlClassifierFeatureFlash::GetIfNameMatches(const nsACString& aName) {
   MaybeInitialize();
 
-  uint32_t numFeatures =
-      (sizeof(sFlashFeaturesMap) / sizeof(sFlashFeaturesMap[0]));
-  for (uint32_t i = 0; i < numFeatures; ++i) {
-    MOZ_ASSERT(sFlashFeaturesMap[i].mFeature);
-    if (aName.Equals(sFlashFeaturesMap[i].mName)) {
-      nsCOMPtr<nsIUrlClassifierFeature> self =
-          sFlashFeaturesMap[i].mFeature.get();
+  for (const FlashFeature& flashFeature : sFlashFeaturesMap) {
+    MOZ_ASSERT(flashFeature.mFeature);
+    if (aName.Equals(flashFeature.mName)) {
+      nsCOMPtr<nsIUrlClassifierFeature> self = flashFeature.mFeature.get();
       return self.forget();
     }
   }
