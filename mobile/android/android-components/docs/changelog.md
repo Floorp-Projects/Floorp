@@ -109,6 +109,9 @@ permalink: /changelog/
 * **feature-accounts** 🆕
   * Added a new `FirefoxAccountsAuthFeature`, which ties together the **FxaAccountManager** with a session manager via **feature-tabs**.
 
+* **browser-toolbar**
+  * Fixing bug that allowed text behind the security icon being selectable. [Issue #448](https://github.com/mozilla-mobile/reference-browser/issues/448)
+
 # 0.39.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.38.0...v0.39.0)

@@ -76,6 +76,11 @@ internal class DisplayToolbar(
         setPadding(padding, padding, padding, padding)
 
         setImageResource(mozac_ic_globe)
+
+        // Avoiding text behind the icon being selectable. If the listener is not set
+        // with a value or null text behind the icon can be selectable.
+        // https://github.com/mozilla-mobile/reference-browser/issues/448
+        setOnClickListener(null)
     }
 
     internal val urlView = AppCompatTextView(context).apply {
