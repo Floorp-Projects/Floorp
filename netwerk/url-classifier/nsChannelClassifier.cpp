@@ -16,7 +16,6 @@
 #include "nsIProtocolHandler.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISecureBrowserUI.h"
-#include "nsISecurityEventSink.h"
 #include "nsISupportsPriority.h"
 #include "nsNetUtil.h"
 #include "nsXULAppAPI.h"
