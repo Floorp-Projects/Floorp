@@ -7,6 +7,9 @@
 // incognito data in event listeners it will fail.
 let monitor;
 add_task(async function startup() {
+  SpecialPowers.pushPrefEnv({set: [
+    ["extensions.allowPrivateBrowsingByDefault", false],
+  ]});
   monitor = await startIncognitoMonitorExtension();
 });
 registerCleanupFunction(async function finish() {
@@ -195,6 +198,7 @@ add_task(async function test_tab_events_incognito_monitored() {
       "permissions": ["tabs"],
     },
     background,
+    incognitoOverride: "spanning",
   });
 
   await extension.startup();

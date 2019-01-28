@@ -225,12 +225,16 @@ add_task(async function test_startup() {
 
   let extension1 = ExtensionTestUtils.loadExtension({
     background,
-    manifest: {optional_permissions: PERMS1.permissions},
+    manifest: {
+      optional_permissions: PERMS1.permissions,
+    },
     useAddonManager: "permanent",
   });
   let extension2 = ExtensionTestUtils.loadExtension({
     background,
-    manifest: {optional_permissions: PERMS2.origins},
+    manifest: {
+      optional_permissions: PERMS2.origins,
+    },
     useAddonManager: "permanent",
   });
 
@@ -523,4 +527,77 @@ add_task(async function test_permissions_prompt() {
 
   await extension.unload();
   await OS.File.remove(xpi.path);
+});
+
+// Check that internal permissions can not be set and are not returned by the API.
+add_task(async function test_internal_permisisons() {
+  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
+
+  function background() {
+    browser.test.onMessage.addListener(async (method, arg) => {
+      try {
+        if (method == "getAll") {
+          let perms = await browser.permissions.getAll();
+          browser.test.sendMessage("getAll.result", perms);
+        } else if (method == "contains") {
+          let result = await browser.permissions.contains(arg);
+          browser.test.sendMessage("contains.result", {status: "success", result});
+        } else if (method == "request") {
+          let result = await browser.permissions.request(arg);
+          browser.test.sendMessage("request.result", {status: "success", result});
+        } else if (method == "remove") {
+          let result = await browser.permissions.remove(arg);
+          browser.test.sendMessage("remove.result", result);
+        }
+      } catch (err) {
+        browser.test.sendMessage(`${method}.result`, {status: "error", message: err.message});
+      }
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      name: "permissions test",
+      description: "permissions test",
+      manifest_version: 2,
+      version: "1.0",
+
+      permissions: [],
+    },
+    useAddonManager: "permanent",
+    incognitoOverride: "spanning",
+  });
+
+  let perm = "internal:privateBrowsingAllowed";
+
+  await extension.startup();
+
+  function call(method, arg) {
+    extension.sendMessage(method, arg);
+    return extension.awaitMessage(`${method}.result`);
+  }
+
+  let result = await call("getAll");
+  ok(!result.permissions.includes(perm), "internal not returned");
+
+  result = await call("contains", {permissions: [perm]});
+  ok(/Type error for parameter permissions \(Error processing permissions/.test(result.message),
+     `Unable to check for internal permission: ${result.message}`);
+
+  result = await call("remove", {permissions: [perm]});
+  ok(/Type error for parameter permissions \(Error processing permissions/.test(result.message),
+     `Unable to remove for internal permission ${result.message}`);
+
+  await withHandlingUserInput(extension, async () => {
+    result = await call("request", {
+      permissions: [perm],
+      origins: [],
+    });
+    ok(/Type error for parameter permissions \(Error processing permissions/.test(result.message),
+       `Unable to request internal permission ${result.message}`);
+  });
+
+  await extension.unload();
+  Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });

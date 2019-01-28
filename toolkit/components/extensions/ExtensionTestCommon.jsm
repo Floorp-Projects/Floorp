@@ -25,6 +25,8 @@ ChromeUtils.defineModuleGetter(this, "Extension",
                                "resource://gre/modules/Extension.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionParent",
                                "resource://gre/modules/ExtensionParent.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionPermissions",
+                               "resource://gre/modules/ExtensionPermissions.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "OS",
@@ -50,6 +52,7 @@ const {
 
 XPCOMUtils.defineLazyGetter(this, "console", () => ExtensionCommon.getConsole());
 
+var ExtensionTestCommon;
 
 /**
  * A skeleton Extension-like object, used for testing, which installs an
@@ -62,11 +65,12 @@ XPCOMUtils.defineLazyGetter(this, "console", () => ExtensionCommon.getConsole())
  * @param {string} installType
  */
 class MockExtension {
-  constructor(file, rootURI, installType) {
+  constructor(file, rootURI, addonData) {
     this.id = null;
     this.file = file;
     this.rootURI = rootURI;
-    this.installType = installType;
+    this.installType = addonData.useAddonManager;
+    this.addonData = addonData;
     this.addon = null;
 
     let promiseEvent = eventName => new Promise(resolve => {
@@ -117,8 +121,10 @@ class MockExtension {
 
   startup() {
     if (this.installType == "temporary") {
-      return AddonManager.installTemporaryAddon(this.file).then(addon => {
+      return AddonManager.installTemporaryAddon(this.file).then(async addon => {
         this.addon = addon;
+        this.id = addon.id;
+        await ExtensionTestCommon.setIncognitoOverride(this);
         return this._readyPromise;
       });
     } else if (this.installType == "permanent") {
@@ -129,9 +135,10 @@ class MockExtension {
         let install = await AddonManager.getInstallForFile(this.file);
         let listener = {
           onInstallFailed: reject,
-          onInstallEnded: (install, newAddon) => {
+          onInstallEnded: async (install, newAddon) => {
             this.addon = newAddon;
             this.id = newAddon.id;
+            await ExtensionTestCommon.setIncognitoOverride(this);
             this.resolveAddon(newAddon);
             resolve(this._readyPromise);
           },
@@ -171,7 +178,7 @@ function provide(obj, keys, value, override = false) {
   }
 }
 
-var ExtensionTestCommon = class ExtensionTestCommon {
+ExtensionTestCommon = class ExtensionTestCommon {
   /**
    * This code is designed to make it easy to test a WebExtension
    * without creating a bunch of files. Everything is contained in a
@@ -322,6 +329,17 @@ var ExtensionTestCommon = class ExtensionTestCommon {
     return `(${this.serializeFunction(script)})();`;
   }
 
+  static setIncognitoOverride(extension) {
+    let {id, addonData} = extension;
+    if (!addonData || !addonData.incognitoOverride) {
+      return;
+    }
+    if (addonData.incognitoOverride == "not_allowed") {
+      return ExtensionPermissions.remove(id, {permissions: ["internal:privateBrowsingAllowed"], origins: []});
+    }
+    return ExtensionPermissions.add(id, {permissions: ["internal:privateBrowsingAllowed"], origins: []});
+  }
+
   /**
    * Generates a new extension using |Extension.generateXPI|, and initializes a
    * new |Extension| instance which will execute it.
@@ -340,7 +358,7 @@ var ExtensionTestCommon = class ExtensionTestCommon {
 
     // This may be "temporary" or "permanent".
     if (data.useAddonManager) {
-      return new MockExtension(file, jarURI, data.useAddonManager);
+      return new MockExtension(file, jarURI, data);
     }
 
     let id;

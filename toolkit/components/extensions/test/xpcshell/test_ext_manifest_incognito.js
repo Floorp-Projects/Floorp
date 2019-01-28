@@ -4,26 +4,25 @@
 
 
 add_task(async function test_manifest_incognito() {
+  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
+
   let normalized = await ExtensionTestUtils.normalizeManifest({
     "incognito": "spanning",
   });
 
   equal(normalized.error, undefined, "Should not have an error");
   equal(normalized.errors.length, 0, "Should not have warnings");
-  equal(normalized.value.incognito,
-        "spanning",
+  equal(normalized.value.incognito, "spanning",
         "Should have the expected incognito string");
 
   normalized = await ExtensionTestUtils.normalizeManifest({
     "incognito": "not_allowed",
   });
 
-  equal(normalized.error,
-        'Error processing incognito: Invalid enumeration value "not_allowed"',
-        "Should have an error");
-  Assert.deepEqual(normalized.errors, [], "Should not have a warning");
-  equal(normalized.value, undefined,
-        "Invalid incognito string should be undefined");
+  equal(normalized.error, undefined, "Should not have an error");
+  equal(normalized.errors.length, 0, "Should not have warnings");
+  equal(normalized.value.incognito, "not_allowed",
+        "Should have the expected incognito string");
 
   normalized = await ExtensionTestUtils.normalizeManifest({
     "incognito": "split",
@@ -35,4 +34,5 @@ add_task(async function test_manifest_incognito() {
   Assert.deepEqual(normalized.errors, [], "Should not have a warning");
   equal(normalized.value, undefined,
         "Invalid incognito string should be undefined");
+  Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });

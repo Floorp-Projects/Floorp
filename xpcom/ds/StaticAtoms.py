@@ -1892,6 +1892,7 @@ STATIC_ATOMS = [
     Atom("http", "http"),
     Atom("https", "https"),
     Atom("proxy", "proxy"),
+    Atom("privateBrowsingAllowedPermission", "internal:privateBrowsingAllowed"),
 
     # CSS Counter Styles
     Atom("decimal_leading_zero", "decimal-leading-zero"),
