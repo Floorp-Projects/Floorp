@@ -258,4 +258,5 @@ export default function showContextMenu(props: Props) {
   ];
 
   showMenu(contextMenuEvent, buildMenu(items));
+  return null;
 }

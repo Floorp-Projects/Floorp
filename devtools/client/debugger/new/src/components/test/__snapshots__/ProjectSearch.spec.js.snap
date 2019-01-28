@@ -94,6 +94,7 @@ exports[`ProjectSearch found search results 1`] = `
   }
   searchSources={[MockFunction]}
   selectSpecificLocation={[MockFunction]}
+  setActiveSearch={[MockFunction]}
   sources={Object {}}
   status="DONE"
   updateSearchStatus={[MockFunction]}

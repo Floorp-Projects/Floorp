@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow } from "enzyme";
 import { showMenu } from "devtools-contextmenu";
@@ -17,7 +19,7 @@ jest.mock("../../../utils/clipboard", () => ({
 
 describe("SourcesTree", () => {
   afterEach(() => {
-    copyToTheClipboard.mockClear();
+    (copyToTheClipboard: any).mockClear();
     showMenu.mockClear();
   });
 
@@ -338,7 +340,7 @@ describe("SourcesTree", () => {
   });
 });
 
-function generateDefaults(overrides) {
+function generateDefaults(overrides: Object) {
   const defaultSources = {
     "server1.conn13.child1/39": createMockSource(
       "server1.conn13.child1/39",
@@ -380,6 +382,7 @@ function generateDefaults(overrides) {
 
 function render(overrides = {}) {
   const props = generateDefaults(overrides);
+  // $FlowIgnore
   const component = shallow(<SourcesTree.WrappedComponent {...props} />);
   const defaultState = component.state();
   const instance = component.instance();

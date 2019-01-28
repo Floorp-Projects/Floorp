@@ -73,6 +73,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
+      displayFullUrl={false}
       frame={
         Object {
           "displayName": "renderFoo",
@@ -99,6 +100,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
+      displayFullUrl={false}
       frame={
         Object {
           "displayName": "a",
@@ -125,6 +127,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
+      displayFullUrl={false}
       frame={
         Object {
           "displayName": "b",
@@ -233,6 +236,7 @@ exports[`Group renders group with anonymous functions 2`] = `
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
+      displayFullUrl={false}
       frame={
         Object {
           "displayName": "",
@@ -258,6 +262,7 @@ exports[`Group renders group with anonymous functions 2`] = `
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
+      displayFullUrl={false}
       frame={
         Object {
           "displayName": "",
@@ -283,6 +288,7 @@ exports[`Group renders group with anonymous functions 2`] = `
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
+      displayFullUrl={false}
       frame={
         Object {
           "displayName": "",

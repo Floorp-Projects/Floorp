@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import FrameMenu from "../FrameMenu";
 import { kebabCase } from "lodash";
 
@@ -18,7 +20,7 @@ function generateMockId(labelString) {
 }
 
 describe("FrameMenu", () => {
-  let mockEvent;
+  let mockEvent: any;
   let mockFrame;
   let emptyFrame;
   let callbacks;
