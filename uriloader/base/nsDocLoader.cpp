@@ -164,7 +164,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocLoader)
   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
-  NS_INTERFACE_MAP_ENTRY(nsISecurityEventSink)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsDocLoader)
 NS_INTERFACE_MAP_END
@@ -1398,12 +1397,7 @@ NS_IMETHODIMP nsDocLoader::AsyncOnChannelRedirect(
   return NS_OK;
 }
 
-/*
- * Implementation of nsISecurityEventSink method...
- */
-
-NS_IMETHODIMP nsDocLoader::OnSecurityChange(nsISupports* aContext,
-                                            uint32_t aState) {
+void nsDocLoader::OnSecurityChange(nsISupports* aContext, uint32_t aState) {
   //
   // Fire progress notifications out to any registered nsIWebProgressListeners.
   //
@@ -1418,11 +1412,10 @@ NS_IMETHODIMP nsDocLoader::OnSecurityChange(nsISupports* aContext,
   if (mParent) {
     mParent->OnSecurityChange(aContext, aState);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsDocLoader::OnContentBlockingEvent(nsISupports* aContext,
-                                                  uint32_t aEvent) {
+void nsDocLoader::OnContentBlockingEvent(nsISupports* aContext,
+                                         uint32_t aEvent) {
   //
   // Fire progress notifications out to any registered nsIWebProgressListeners.
   //
@@ -1438,7 +1431,6 @@ NS_IMETHODIMP nsDocLoader::OnContentBlockingEvent(nsISupports* aContext,
   if (mParent) {
     mParent->OnContentBlockingEvent(aContext, aEvent);
   }
-  return NS_OK;
 }
 
 /*
