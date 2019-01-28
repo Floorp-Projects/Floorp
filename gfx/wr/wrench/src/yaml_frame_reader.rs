@@ -1675,7 +1675,7 @@ impl YamlFrameReader {
         );
 
         let reference_frame_kind = if !yaml["perspective"].is_badvalue() {
-            ReferenceFrameKind::Perspective
+            ReferenceFrameKind::Perspective { scrolling_relative_to: None }
         } else {
             ReferenceFrameKind::Transform
         };
