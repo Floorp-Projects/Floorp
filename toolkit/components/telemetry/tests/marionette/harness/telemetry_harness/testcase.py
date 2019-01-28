@@ -2,18 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import contextlib
 import os
 import re
-import simplejson as json
-import time
-import zlib
 
-from firefox_puppeteer import PuppeteerMixin
 from marionette_driver.addons import Addons
 from marionette_driver.errors import MarionetteException
 from marionette_driver.wait import Wait
+from marionette_driver import By, keys
 from marionette_harness import MarionetteTestCase
-from marionette_harness.runner import httpd
+from marionette_harness.runner.mixins.window_manager import WindowManagerMixin
+
+from ping_server import PingServer
 
 
 CANARY_CLIENT_ID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0"
@@ -22,75 +22,56 @@ UUID_PATTERN = re.compile(
 )
 
 
-class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
-
+class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
     def __init__(self, *args, **kwargs):
+        """Initialize the test case and create a ping server."""
         super(TelemetryTestCase, self).__init__(*args, **kwargs)
-        self.pings = []
+
+        self.ping_server = PingServer(
+            self.testvars["server_root"], self.testvars["server_url"]
+        )
 
     def setUp(self, *args, **kwargs):
+        """Set up the test case and start the ping server."""
         super(TelemetryTestCase, self).setUp(*args, **kwargs)
 
-        @httpd.handlers.handler
-        def pings_handler(request, response):
-            """Handler for HTTP requests to the ping server."""
+        with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
+            self.marionette.navigate("about:about")
 
-            request_data = request.body
+        self.ping_server.start()
 
-            if request.headers.get("Content-Encoding") == "gzip":
-                request_data = zlib.decompress(request_data, zlib.MAX_WBITS | 16)
+    @contextlib.contextmanager
+    def new_tab(self):
+        """Perform operations in a new tab and then close the new tab."""
 
-            ping_data = json.loads(request_data)
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            start_tab = self.marionette.current_window_handle
+            new_tab = self.open_tab(focus=True)
+            self.marionette.switch_to_window(new_tab)
 
-            # Store JSON data to self.pings to be used by wait_for_pings()
-            self.pings.append(ping_data)
+            yield
 
-            ping_type = ping_data["type"]
+            self.marionette.close()
+            self.marionette.switch_to_window(start_tab)
 
-            log_message = "pings_handler received '{}' ping".format(ping_type)
+    def search(self, text):
+        """Perform a search via the browser's URL bar."""
 
-            if ping_type == "main":
-                ping_reason = ping_data["payload"]["info"]["reason"]
-                log_message = "{} with reason '{}'".format(log_message, ping_reason)
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            urlbar = self.marionette.find_element(By.ID, "urlbar")
+            urlbar.send_keys(keys.Keys.DELETE)
+            urlbar.send_keys(text + keys.Keys.ENTER)
 
-            self.logger.info(log_message)
+    def search_in_new_tab(self, text):
+        """Open a new tab and perform a search via the browser's URL bar,
+        then close the new tab."""
 
-            status_code = 200
-            content = "OK"
-            headers = [
-                ("Content-Type", "text/plain"),
-                ("Content-Length", len(content)),
-            ]
-
-            return (status_code, headers, content)
-
-        self.httpd = httpd.FixtureServer(self.testvars['server_root'])
-        self.httpd.router.register("POST", '/pings*', pings_handler)
-        self.httpd.start()
-
-        self.ping_server_url = '{}pings'.format(self.httpd.get_url('/'))
-
-        telemetry_prefs = {
-            'toolkit.telemetry.server': self.ping_server_url,
-            'toolkit.telemetry.initDelay': 1,
-            'toolkit.telemetry.minSubsessionLength': 0,
-            'datareporting.healthreport.uploadEnabled': True,
-            'datareporting.policy.dataSubmissionEnabled': True,
-            'datareporting.policy.dataSubmissionPolicyBypassNotification': True,
-            'toolkit.telemetry.log.level': 'Trace',
-            'toolkit.telemetry.log.dump': True,
-            'toolkit.telemetry.send.overrideOfficialCheck': True,
-            'toolkit.telemetry.testing.disableFuzzingDelay': True,
-        }
-
-        # Firefox will be forced to restart with the prefs enforced.
-        self.marionette.enforce_gecko_prefs(telemetry_prefs)
-
-        # Wait 5 seconds to ensure that telemetry has reinitialized
-        time.sleep(5)
+        with self.new_tab():
+            self.search(text)
 
     def assertIsValidUUID(self, value):
         """Check if the given UUID is valid."""
+
         self.assertIsNotNone(value)
         self.assertNotEqual(value, "")
 
@@ -109,14 +90,14 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
         the `count` number of pings, that match the given filter.
         """
         # Keep track of the current number of pings
-        current_num_pings = len(self.pings)
+        current_num_pings = len(self.ping_server.pings)
 
         # New list to store new pings that satisfy the filter
         filtered_pings = []
 
         def wait_func(*args, **kwargs):
-            # Ignore existing pings in self.pings
-            new_pings = self.pings[current_num_pings:]
+            # Ignore existing pings in self.ping_server.pings
+            new_pings = self.ping_server.pings[current_num_pings:]
 
             # Filter pings to make sure we wait for the correct ping type
             filtered_pings[:] = [p for p in new_pings if ping_filter(p)]
@@ -125,7 +106,7 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
 
         self.logger.info(
             "wait_for_pings running action '{action}'.".format(
-                action=action_func.__name__,
+                action=action_func.__name__
             )
         )
 
@@ -147,15 +128,13 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
         return ping
 
     def restart_browser(self):
-        """Restarts browser while maintaining the same profile and session."""
-        self.restart(clean=False, in_app=True)
+        """Restarts browser while maintaining the same profile."""
+        return self.marionette.restart(clean=False, in_app=True)
 
     def install_addon(self):
         """Install a minimal addon."""
 
-        resources_dir = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), "resources"
-        )
+        resources_dir = os.path.join(os.path.dirname(__file__), "resources")
 
         addon_path = os.path.abspath(os.path.join(resources_dir, "helloworld"))
 
@@ -169,16 +148,25 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
 
     @property
     def client_id(self):
-        return self.marionette.execute_script('Cu.import("resource://gre/modules/ClientID.jsm");'
-                                              'return ClientID.getCachedClientID();')
+        """Return the ID of the current client."""
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            return self.marionette.execute_script(
+                'Cu.import("resource://gre/modules/ClientID.jsm");'
+                "return ClientID.getCachedClientID();"
+            )
 
     @property
     def subsession_id(self):
-        ping_data = self.marionette.execute_script(
-            'Cu.import("resource://gre/modules/TelemetryController.jsm");'
-            'return TelemetryController.getCurrentPingData(true);')
-        return ping_data[u'payload'][u'info'][u'subsessionId']
+        """Return the ID of the current subsession."""
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            ping_data = self.marionette.execute_script(
+                'Cu.import("resource://gre/modules/TelemetryController.jsm");'
+                "return TelemetryController.getCurrentPingData(true);"
+            )
+            return ping_data[u"payload"][u"info"][u"subsessionId"]
 
     def tearDown(self, *args, **kwargs):
-        self.httpd.stop()
+        """Stop the ping server and tear down the testcase."""
         super(TelemetryTestCase, self).tearDown()
+        self.ping_server.stop()
+        self.marionette.quit(clean=True)

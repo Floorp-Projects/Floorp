@@ -49,9 +49,7 @@ class DeadObjectProxy : public BaseProxyHandler {
                          const CallArgs& args) const override;
 
   /* SpiderMonkey extensions. */
-  // BaseProxyHandler::getPropertyDescriptor will throw by calling
-  // getOwnPropertyDescriptor. BaseProxyHandler::enumerate will throw by calling
-  // ownKeys.
+  // BaseProxyHandler::enumerate will throw by calling ownKeys.
   virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
                           const CallArgs& args) const override;
   virtual bool hasInstance(JSContext* cx, HandleObject proxy,

@@ -20,7 +20,7 @@ interface nsIPrincipal;
 interface nsILoadURIDelegate : nsISupports
 {
   /**
-   * Delegates the URI load.
+   * Delegates the URI load. This should only be called for top-level loads.
    *
    * @param aURI The URI to load.
    * @param aWhere See possible values described in nsIBrowserDOMWindow.
@@ -34,7 +34,8 @@ interface nsILoadURIDelegate : nsISupports
           in nsIPrincipal aTriggeringPrincipal);
 
   /**
-   * Delegates page load error handling.
+   * Delegates page load error handling. This may be called for either top-level
+   * loads or subframes.
    *
    * @param aURI The URI that failed to load.
    * @param aError The error code.

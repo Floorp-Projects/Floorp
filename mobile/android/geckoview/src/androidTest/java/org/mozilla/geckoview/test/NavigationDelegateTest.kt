@@ -240,6 +240,30 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Test fun redirectLoadIframe() {
+        val path = if (sessionRule.env.isAutomation) {
+            IFRAME_REDIRECT_AUTOMATION
+        } else {
+            IFRAME_REDIRECT_LOCAL
+        }
+
+        sessionRule.session.loadTestPath(path)
+        sessionRule.waitForPageStop()
+
+        // We shouldn't be firing onLoadRequest for iframes, including redirects.
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onLoadRequest(session: GeckoSession,
+                                       request: LoadRequest):
+                    GeckoResult<AllowOrDeny>? {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat("URI should not be null", request.uri, notNullValue())
+                assertThat("URI should match", request.uri, startsWith("resource://android"))
+                return null
+            }
+        })
+    }
+
     @Test fun bypassClassifier() {
         val phishingUri = "https://www.itisatrap.org/firefox/its-a-trap.html"
 
@@ -489,7 +513,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     @WithDevToolsAPI
     @WithDisplay(width = 600, height = 200)
     @Test fun viewportMode() {
-        sessionRule.session.loadTestPath(VEIWPORT_PATH)
+        sessionRule.session.loadTestPath(VIEWPORT_PATH)
         sessionRule.waitForPageStop()
 
         val desktopInnerWidth = 980.0

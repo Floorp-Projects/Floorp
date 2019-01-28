@@ -43,14 +43,6 @@ static bool MarkAtoms(JSContext* cx, const AutoIdVector& ids) {
   return true;
 }
 
-bool CrossCompartmentWrapper::getPropertyDescriptor(
-    JSContext* cx, HandleObject wrapper, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) const {
-  PIERCE(cx, wrapper, MarkAtoms(cx, id),
-         Wrapper::getPropertyDescriptor(cx, wrapper, id, desc),
-         cx->compartment()->wrap(cx, desc));
-}
-
 bool CrossCompartmentWrapper::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
     MutableHandle<PropertyDescriptor> desc) const {
