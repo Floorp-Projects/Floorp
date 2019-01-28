@@ -1239,8 +1239,7 @@ def msvs_version(info):
     # clang-cl emulates the same version scheme as cl. And MSVS_VERSION needs to
     # be set for GYP on Windows.
     if info.type in ('clang-cl', 'msvc'):
-        if info.version >= '19.10':
-            return '2017'
+        return '2017'
 
     return ''
 
