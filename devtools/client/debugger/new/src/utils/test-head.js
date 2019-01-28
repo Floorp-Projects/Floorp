@@ -99,8 +99,8 @@ function makeFuncLocation(startLine, endLine) {
 function makeSymbolDeclaration(
   name: string,
   start: number,
-  end: number,
-  klass: string
+  end: ?number,
+  klass: ?string
 ) {
   return {
     id: `${name}:${start}`,

@@ -2,12 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow, mount } from "enzyme";
 import Frame from "../Frame.js";
 
 import FrameMenu from "../FrameMenu";
 jest.mock("../FrameMenu", () => jest.fn());
+
+function frameProperties(frame, selectedFrame, overrides = {}) {
+  return {
+    frame,
+    selectedFrame,
+    copyStackTrace: jest.fn(),
+    contextTypes: {},
+    selectFrame: jest.fn(),
+    toggleBlackBox: jest.fn(),
+    displayFullUrl: false,
+    frameworkGroupingOn: false,
+    selectable: true,
+    toggleFrameworkGrouping: null,
+    ...overrides
+  };
+}
 
 function render(frameToSelect = {}, overrides = {}, propsOverrides = {}) {
   const defaultFrame = {
@@ -26,18 +44,8 @@ function render(frameToSelect = {}, overrides = {}, propsOverrides = {}) {
   };
   const frame = { ...defaultFrame, ...overrides };
   const selectedFrame = { ...frame, ...frameToSelect };
-  const selectFrame = jest.fn();
-  const toggleBlackBox = jest.fn();
 
-  const props = {
-    frame,
-    selectedFrame,
-    copyStackTrace: jest.fn(),
-    contextTypes: {},
-    selectFrame,
-    toggleBlackBox,
-    ...propsOverrides
-  };
+  const props = frameProperties(frame, selectedFrame, propsOverrides);
   const component = shallow(<Frame {...props} />);
   return { component, props };
 }
@@ -80,7 +88,8 @@ describe("Frame", () => {
       }
     };
 
-    const component = mount(<Frame frame={frame} />);
+    const props = frameProperties(frame, null);
+    const component = mount(<Frame {...props} />);
     expect(component.text()).toBe("renderFoo foo-view.js:10");
   });
 
@@ -97,7 +106,8 @@ describe("Frame", () => {
       }
     };
 
-    const component = mount(<Frame frame={frame} displayFullUrl={true} />);
+    const props = frameProperties(frame, null, { displayFullUrl: true });
+    const component = mount(<Frame {...props} />);
     expect(component.text()).toBe(`renderFoo ${url}:10`);
   });
 
@@ -114,9 +124,10 @@ describe("Frame", () => {
       }
     };
 
-    const component = shallow(
-      <Frame frame={frame} getFrameTitle={x => `Jump to ${x}`} />
-    );
+    const props = frameProperties(frame, null, {
+      getFrameTitle: x => `Jump to ${x}`
+    });
+    const component = shallow(<Frame {...props} />);
     expect(component.prop("title")).toBe(`Jump to ${url}:10`);
     expect(component).toMatchSnapshot();
   });

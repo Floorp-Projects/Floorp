@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow } from "enzyme";
 import { ShortcutsModal } from "../ShortcutsModal";
@@ -10,6 +12,7 @@ function render(overrides = {}) {
   const props = {
     enabled: true,
     handleClose: jest.fn(),
+    additionalClass: "",
     ...overrides
   };
   const component = shallow(<ShortcutsModal {...props} />);

@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow } from "enzyme";
 
@@ -52,6 +54,7 @@ function render(overrides = {}) {
   const doc = createMockDocument(clear);
   setDocument(props.source.id, doc);
 
+  // $FlowIgnore
   const component = shallow(<DebugLine.WrappedComponent {...props} />, {
     lifecycleExperimental: true
   });
@@ -71,7 +74,7 @@ describe("DebugLine Component", () => {
 
       expect(doc.removeLineClass.mock.calls).toEqual([]);
       expect(doc.addLineClass.mock.calls).toEqual([
-        [toEditorLine(line), "line", "new-debug-line"]
+        [toEditorLine("foo", line), "line", "new-debug-line"]
       ]);
     });
 
@@ -92,23 +95,23 @@ describe("DebugLine Component", () => {
         });
 
         expect(doc.removeLineClass.mock.calls).toEqual([
-          [toEditorLine(firstLine), "line", "new-debug-line"]
+          [toEditorLine("foo", firstLine), "line", "new-debug-line"]
         ]);
 
         expect(doc.addLineClass.mock.calls).toEqual([
-          [toEditorLine(firstLine), "line", "new-debug-line"],
-          [toEditorLine(secondLine), "line", "new-debug-line"]
+          [toEditorLine("foo", firstLine), "line", "new-debug-line"],
+          [toEditorLine("foo", secondLine), "line", "new-debug-line"]
         ]);
 
         expect(doc.markText.mock.calls).toEqual([
           [
-            { ch: 2, line: toEditorLine(firstLine) },
-            { ch: null, line: toEditorLine(firstLine) },
+            { ch: 2, line: toEditorLine("foo", firstLine) },
+            { ch: null, line: toEditorLine("foo", firstLine) },
             { className: "debug-expression" }
           ],
           [
-            { ch: 2, line: toEditorLine(secondLine) },
-            { ch: null, line: toEditorLine(secondLine) },
+            { ch: 2, line: toEditorLine("foo", secondLine) },
+            { ch: null, line: toEditorLine("foo", secondLine) },
             { className: "debug-expression" }
           ]
         ]);
