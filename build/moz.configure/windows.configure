@@ -262,6 +262,8 @@ def vc_path(c_compiler, toolchain_search_path):
     # In clang-cl builds, we use the headers and libraries from an MSVC installation.
     if c_compiler.type == 'clang-cl':
         vc_program = find_program('cl.exe', paths=toolchain_search_path)
+        if not vc_program:
+            die('Cannot find a Visual C++ install for e.g. ATL headers.')
 
     result = os.path.dirname(vc_program)
     while True:
