@@ -13,9 +13,9 @@ let registration;
 const registerServiceWorker = async function() {
   try {
     registration = await navigator.serviceWorker.register("empty-sw.js");
-    dump("Push service worker registered\n");
+    dump("Empty service worker registered\n");
   } catch (e) {
-    dump("Push service worker not registered: " + e + "\n");
+    dump("Empty service worker not registered: " + e + "\n");
   }
 };
 
