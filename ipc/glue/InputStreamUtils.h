@@ -51,6 +51,26 @@ class InputStreamHelper {
                                    bool aDelayedStart,
                                    PBackgroundParent* aManager);
 
+  // When a stream wants to serialize itself as IPCRemoteStream, it uses one of
+  // these methods.
+  static void SerializeInputStreamAsPipe(
+      nsIInputStream* aInputStream, InputStreamParams& aParams,
+      bool aDelayedStart, mozilla::dom::nsIContentChild* aManager);
+
+  static void SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
+                                         InputStreamParams& aParams,
+                                         bool aDelayedStart,
+                                         PBackgroundChild* aManager);
+
+  static void SerializeInputStreamAsPipe(
+      nsIInputStream* aInputStream, InputStreamParams& aParams,
+      bool aDelayedStart, mozilla::dom::nsIContentParent* aManager);
+
+  static void SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
+                                         InputStreamParams& aParams,
+                                         bool aDelayedStart,
+                                         PBackgroundParent* aManager);
+
   // After the sending of the inputStream into the IPC pipe, some of the
   // InputStreamParams data struct needs to be activated (IPCRemoteStream).
   // These 2 methods do that.
