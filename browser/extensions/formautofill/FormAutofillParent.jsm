@@ -106,7 +106,7 @@ FormAutofillParent.prototype = {
     }
     this._initialized = true;
 
-    Services.obs.addObserver(this, "privacy-pane-loaded");
+    Services.obs.addObserver(this, "sync-pane-loaded");
     Services.ppmm.addMessageListener("FormAutofill:InitStorage", this);
     Services.ppmm.addMessageListener("FormAutofill:GetRecords", this);
     Services.ppmm.addMessageListener("FormAutofill:SaveAddress", this);
@@ -130,7 +130,7 @@ FormAutofillParent.prototype = {
   observe(subject, topic, data) {
     log.debug("observe:", topic, "with data:", data);
     switch (topic) {
-      case "privacy-pane-loaded": {
+      case "sync-pane-loaded": {
         let formAutofillPreferences = new FormAutofillPreferences();
         let document = subject.document;
         let prefFragment = formAutofillPreferences.init(document);
@@ -278,7 +278,7 @@ FormAutofillParent.prototype = {
     Services.ppmm.removeMessageListener("FormAutofill:GetRecords", this);
     Services.ppmm.removeMessageListener("FormAutofill:SaveAddress", this);
     Services.ppmm.removeMessageListener("FormAutofill:RemoveAddresses", this);
-    Services.obs.removeObserver(this, "privacy-pane-loaded");
+    Services.obs.removeObserver(this, "sync-pane-loaded");
     Services.prefs.removeObserver(ENABLED_AUTOFILL_ADDRESSES_PREF, this);
 
     if (FormAutofill.isAutofillCreditCardsAvailable) {
