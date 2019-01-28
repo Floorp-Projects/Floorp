@@ -1136,8 +1136,6 @@ def midl_flags(c_compiler, target, vc_compiler_path):
         flags = ['-env', env]
         if c_compiler.type == 'msvc':
             flags += ['-cpp_cmd', c_compiler.compiler]
-            if c_compiler.flags:
-                flags += ['-cpp_opt', quote(' '.join(list(c_compiler.flags) + ['-E']))]
         else:
             # Ideally, we'd use the same flags setup as for msvc, but clang-cl
             # currently doesn't work as a preprocessor for midl, so we need to
