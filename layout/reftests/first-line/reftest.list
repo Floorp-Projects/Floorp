@@ -32,7 +32,7 @@ load stress-10.html # crash test
 == 469227-2.html 469227-2-ref.html
 == 469227-3.html 469227-3-ref.html
 
-== restyle-inside-first-line.html restyle-inside-first-line-ref.html
+random == restyle-inside-first-line.html restyle-inside-first-line-ref.html # bug 1523134
 == font-styles.html font-styles-ref.html
 fuzzy-if(OSX==1010,0-1,0-2) == font-styles-nooverflow.html font-styles-ref.html
 
