@@ -76,7 +76,6 @@ add_task(async function() {
 });
 
 async function setup({ showUserAgentShadowRoots }) {
-  await pushPref("dom.ua_widget.enabled", true);
   await pushPref("devtools.inspector.showUserAgentShadowRoots", showUserAgentShadowRoots);
 
   const { inspector } = await openInspectorForURL(TEST_URL);
