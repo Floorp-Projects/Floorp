@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_browser.*
+import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
@@ -22,6 +23,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 
 class BrowserFragment : Fragment() {
 
+    private lateinit var downloadsFeature: DownloadsFeature
     private lateinit var sessionFeature: SessionFeature
 
     override fun onCreateView(
@@ -41,6 +43,15 @@ class BrowserFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val sessionManager = requireComponents.core.sessionManager
+
+        downloadsFeature = DownloadsFeature(
+            requireContext(),
+            sessionManager = sessionManager,
+            fragmentManager = childFragmentManager,
+            onNeedToRequestPermissions = { permissions ->
+                requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
+            }
+        )
 
         sessionFeature = SessionFeature(
             sessionManager,
@@ -65,5 +76,20 @@ class BrowserFragment : Fragment() {
             val layoutParams = toolbar.layoutParams as CoordinatorLayout.LayoutParams
             layoutParams.behavior = null
         }
+
+        lifecycle.addObservers(
+            downloadsFeature,
+            sessionFeature
+        )
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        when (requestCode) {
+            REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.onPermissionsResult(permissions, grantResults)
+        }
+    }
+
+    companion object {
+        private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
     }
 }
