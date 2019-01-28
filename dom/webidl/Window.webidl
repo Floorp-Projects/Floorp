@@ -466,6 +466,11 @@ partial interface Window {
    * callback will still be called and the Promise resolved as the window
    * tears itself down.
    *
+   * The callback _must not modify the DOM for any window in any way_. If it
+   * does, after finishing executing, the Promise returned by
+   * promiseDocumentFlushed will reject with
+   * NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR.
+   *
    * Note that the callback can be called either synchronously or asynchronously
    * depending on whether or not flushes are pending:
    *
