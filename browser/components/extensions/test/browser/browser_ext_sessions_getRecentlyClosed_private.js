@@ -7,7 +7,7 @@ SimpleTest.requestCompleteLog();
 Services.scriptloader.loadSubScript(new URL("head_sessions.js", gTestPath).href,
                                     this);
 
-add_task(async function test_sessions_get_recently_closed_private() {
+async function run_test_extension(incognitoOverride) {
   function background() {
     browser.test.onMessage.addListener((msg, filter) => {
       if (msg == "check-sessions") {
@@ -23,6 +23,7 @@ add_task(async function test_sessions_get_recently_closed_private() {
       permissions: ["sessions", "tabs"],
     },
     background,
+    incognitoOverride,
   });
 
   // Open a private browsing window.
@@ -48,7 +49,8 @@ add_task(async function test_sessions_get_recently_closed_private() {
 
   extension.sendMessage("check-sessions");
   recentlyClosed = await extension.awaitMessage("recentlyClosed");
-  checkRecentlyClosed(recentlyClosed.filter(onlyNewItemsFilter), 2, privateWinId, true);
+  let expectedCount = incognitoOverride == "not_allowed" ? 0 : 2;
+  checkRecentlyClosed(recentlyClosed.filter(onlyNewItemsFilter), expectedCount, privateWinId, true);
 
   // Close the private window.
   await BrowserTestUtils.closeWindow(privateWin);
@@ -58,4 +60,21 @@ add_task(async function test_sessions_get_recently_closed_private() {
   is(recentlyClosed.filter(onlyNewItemsFilter).length, 0, "the closed private window info was not found in recently closed data");
 
   await extension.unload();
+}
+
+add_task(async function test_sessions_get_recently_closed_default() {
+  SpecialPowers.pushPrefEnv({set: [
+    ["extensions.allowPrivateBrowsingByDefault", true],
+  ]});
+
+  await run_test_extension();
+});
+
+add_task(async function test_sessions_get_recently_closed_private_incognito() {
+  SpecialPowers.pushPrefEnv({set: [
+    ["extensions.allowPrivateBrowsingByDefault", false],
+  ]});
+
+  await run_test_extension("spanning");
+  await run_test_extension("not_allowed");
 });
