@@ -58,6 +58,11 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
  private:
   void InitStreams();
 
+  template <typename M>
+  void SerializeInternal(InputStreamParams& aParams,
+                         FileDescriptorArray& aFileDescriptors,
+                         bool aDelayedStart, M* aManager);
+
   struct MOZ_STACK_CLASS ReadSegmentsState {
     nsCOMPtr<nsIInputStream> mThisStream;
     nsWriteSegmentFun mWriter;
@@ -330,13 +335,43 @@ nsresult nsMIMEInputStreamConstructor(nsISupports* outer, REFNSIID iid,
 }
 
 void nsMIMEInputStream::Serialize(InputStreamParams& aParams,
-                                  FileDescriptorArray& aFileDescriptors) {
+                                  FileDescriptorArray& aFileDescriptors,
+                                  bool aDelayedStart,
+                                  mozilla::dom::nsIContentChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void nsMIMEInputStream::Serialize(InputStreamParams& aParams,
+                                  FileDescriptorArray& aFileDescriptors,
+                                  bool aDelayedStart,
+                                  PBackgroundChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void nsMIMEInputStream::Serialize(InputStreamParams& aParams,
+                                  FileDescriptorArray& aFileDescriptors,
+                                  bool aDelayedStart,
+                                  mozilla::dom::nsIContentParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void nsMIMEInputStream::Serialize(InputStreamParams& aParams,
+                                  FileDescriptorArray& aFileDescriptors,
+                                  bool aDelayedStart,
+                                  PBackgroundParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+template <typename M>
+void nsMIMEInputStream::SerializeInternal(InputStreamParams& aParams,
+                                          FileDescriptorArray& aFileDescriptors,
+                                          bool aDelayedStart, M* aManager) {
   MIMEInputStreamParams params;
 
   if (mStream) {
     InputStreamParams wrappedParams;
-    InputStreamHelper::SerializeInputStream(mStream, wrappedParams,
-                                            aFileDescriptors);
+    InputStreamHelper::SerializeInputStream(
+        mStream, wrappedParams, aFileDescriptors, aDelayedStart, aManager);
 
     NS_ASSERTION(wrappedParams.type() != InputStreamParams::T__None,
                  "Wrapped stream failed to serialize!");
@@ -382,12 +417,6 @@ bool nsMIMEInputStream::Deserialize(
   }
 
   return true;
-}
-
-Maybe<uint64_t> nsMIMEInputStream::ExpectedSerializedLength() {
-  nsCOMPtr<nsIIPCSerializableInputStream> serializable =
-      do_QueryInterface(mStream);
-  return serializable ? serializable->ExpectedSerializedLength() : Nothing();
 }
 
 NS_IMETHODIMP

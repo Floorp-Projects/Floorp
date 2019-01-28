@@ -55,6 +55,10 @@ class nsStringInputStream final : public nsIStringInputStream,
  private:
   ~nsStringInputStream() {}
 
+  template <typename M>
+  void SerializeInternal(InputStreamParams& aParams, bool aDelayedStart,
+                         M* aManager);
+
   uint32_t Length() const { return mData.Length(); }
 
   uint32_t LengthRemaining() const { return Length() - mOffset; }
@@ -312,7 +316,40 @@ nsStringInputStream::Tell(int64_t* aOutWhere) {
 /////////
 
 void nsStringInputStream::Serialize(InputStreamParams& aParams,
-                                    FileDescriptorArray& /* aFDs */) {
+                                    FileDescriptorArray& /* aFDs */,
+                                    bool aDelayedStart,
+                                    mozilla::dom::nsIContentChild* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aManager);
+}
+
+void nsStringInputStream::Serialize(InputStreamParams& aParams,
+                                    FileDescriptorArray& /* aFDs */,
+                                    bool aDelayedStart,
+                                    PBackgroundChild* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aManager);
+}
+
+void nsStringInputStream::Serialize(InputStreamParams& aParams,
+                                    FileDescriptorArray& /* aFDs */,
+                                    bool aDelayedStart,
+                                    mozilla::dom::nsIContentParent* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aManager);
+}
+
+void nsStringInputStream::Serialize(InputStreamParams& aParams,
+                                    FileDescriptorArray& /* aFDs */,
+                                    bool aDelayedStart,
+                                    PBackgroundParent* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aManager);
+}
+
+template <typename M>
+void nsStringInputStream::SerializeInternal(InputStreamParams& aParams,
+                                            bool aDelayedStart, M* aManager) {
+  if (Length() > 0) {
+    // TODO
+  }
+
   StringInputStreamParams params;
   params.data() = PromiseFlatCString(mData);
   aParams = params;
@@ -333,10 +370,6 @@ bool nsStringInputStream::Deserialize(const InputStreamParams& aParams,
   }
 
   return true;
-}
-
-Maybe<uint64_t> nsStringInputStream::ExpectedSerializedLength() {
-  return Some(static_cast<uint64_t>(Length()));
 }
 
 /////////

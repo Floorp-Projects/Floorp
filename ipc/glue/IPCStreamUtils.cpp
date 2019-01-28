@@ -53,7 +53,8 @@ void AssertValidValueToTake(const OptionalIPCStream& aVal) {
 
 template <typename M>
 bool SerializeInputStreamWithFdsChild(nsIIPCSerializableInputStream* aStream,
-                                      IPCStream& aValue, M* aManager) {
+                                      IPCStream& aValue, bool aDelayedStart,
+                                      M* aManager) {
   MOZ_RELEASE_ASSERT(aStream);
   MOZ_ASSERT(aManager);
 
@@ -62,7 +63,7 @@ bool SerializeInputStreamWithFdsChild(nsIIPCSerializableInputStream* aStream,
       aValue.get_InputStreamParamsWithFds();
 
   AutoTArray<FileDescriptor, 4> fds;
-  aStream->Serialize(streamWithFds.stream(), fds);
+  aStream->Serialize(streamWithFds.stream(), fds, aDelayedStart, aManager);
 
   if (streamWithFds.stream().type() == InputStreamParams::T__None) {
     MOZ_CRASH("Serialize failed!");
@@ -85,7 +86,8 @@ bool SerializeInputStreamWithFdsChild(nsIIPCSerializableInputStream* aStream,
 
 template <typename M>
 bool SerializeInputStreamWithFdsParent(nsIIPCSerializableInputStream* aStream,
-                                       IPCStream& aValue, M* aManager) {
+                                       IPCStream& aValue, bool aDelayedStart,
+                                       M* aManager) {
   MOZ_RELEASE_ASSERT(aStream);
   MOZ_ASSERT(aManager);
 
@@ -94,7 +96,7 @@ bool SerializeInputStreamWithFdsParent(nsIIPCSerializableInputStream* aStream,
       aValue.get_InputStreamParamsWithFds();
 
   AutoTArray<FileDescriptor, 4> fds;
-  aStream->Serialize(streamWithFds.stream(), fds);
+  aStream->Serialize(streamWithFds.stream(), fds, aDelayedStart, aManager);
 
   if (streamWithFds.stream().type() == InputStreamParams::T__None) {
     MOZ_CRASH("Serialize failed!");
@@ -176,24 +178,17 @@ bool SerializeInputStreamChild(nsIInputStream* aStream, M* aManager,
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aValue || aOptionalValue);
 
-  // If a stream is known to be larger than 1MB, prefer sending it in chunks.
-  const uint64_t kTooLargeStream = 1024 * 1024;
-
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
       do_QueryInterface(aStream);
 
-  // ExpectedSerializedLength() returns the length of the stream if serialized.
-  // This is useful to decide if we want to continue using the serialization
-  // directly, or if it's better to use IPCStream.
-  uint64_t expectedLength =
-      serializable ? serializable->ExpectedSerializedLength().valueOr(0) : 0;
-  if (serializable && expectedLength < kTooLargeStream) {
+  if (serializable) {
     if (aValue) {
-      return SerializeInputStreamWithFdsChild(serializable, *aValue, aManager);
+      return SerializeInputStreamWithFdsChild(serializable, *aValue,
+                                              aDelayedStart, aManager);
     }
 
     return SerializeInputStreamWithFdsChild(serializable, *aOptionalValue,
-                                            aManager);
+                                            aDelayedStart, aManager);
   }
 
   if (aValue) {
@@ -213,21 +208,17 @@ bool SerializeInputStreamParent(nsIInputStream* aStream, M* aManager,
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aValue || aOptionalValue);
 
-  // If a stream is known to be larger than 1MB, prefer sending it in chunks.
-  const uint64_t kTooLargeStream = 1024 * 1024;
-
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
       do_QueryInterface(aStream);
-  uint64_t expectedLength =
-      serializable ? serializable->ExpectedSerializedLength().valueOr(0) : 0;
 
-  if (serializable && expectedLength < kTooLargeStream) {
+  if (serializable) {
     if (aValue) {
-      return SerializeInputStreamWithFdsParent(serializable, *aValue, aManager);
+      return SerializeInputStreamWithFdsParent(serializable, *aValue,
+                                               aDelayedStart, aManager);
     }
 
     return SerializeInputStreamWithFdsParent(serializable, *aOptionalValue,
-                                             aManager);
+                                             aDelayedStart, aManager);
   }
 
   if (aValue) {

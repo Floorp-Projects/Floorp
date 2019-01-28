@@ -39,10 +39,15 @@ NS_DEFINE_CID(kMultiplexInputStreamCID, NS_MULTIPLEXINPUTSTREAM_CID);
 namespace mozilla {
 namespace ipc {
 
-void InputStreamHelper::SerializeInputStream(
-    nsIInputStream* aInputStream, InputStreamParams& aParams,
-    nsTArray<FileDescriptor>& aFileDescriptors) {
+namespace {
+
+template <typename M>
+void SerializeInputStreamInternal(nsIInputStream* aInputStream,
+                                  InputStreamParams& aParams,
+                                  nsTArray<FileDescriptor>& aFileDescriptors,
+                                  bool aDelayedStart, M* aManager) {
   MOZ_ASSERT(aInputStream);
+  MOZ_ASSERT(aManager);
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
       do_QueryInterface(aInputStream);
@@ -50,11 +55,45 @@ void InputStreamHelper::SerializeInputStream(
     MOZ_CRASH("Input stream is not serializable!");
   }
 
-  serializable->Serialize(aParams, aFileDescriptors);
+  serializable->Serialize(aParams, aFileDescriptors, aDelayedStart, aManager);
 
   if (aParams.type() == InputStreamParams::T__None) {
     MOZ_CRASH("Serialize failed!");
   }
+}
+
+}  // namespace
+
+void InputStreamHelper::SerializeInputStream(
+    nsIInputStream* aInputStream, InputStreamParams& aParams,
+    nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
+    mozilla::dom::nsIContentChild* aManager) {
+  SerializeInputStreamInternal(aInputStream, aParams, aFileDescriptors,
+                               aDelayedStart, aManager);
+}
+
+void InputStreamHelper::SerializeInputStream(
+    nsIInputStream* aInputStream, InputStreamParams& aParams,
+    nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
+    PBackgroundChild* aManager) {
+  SerializeInputStreamInternal(aInputStream, aParams, aFileDescriptors,
+                               aDelayedStart, aManager);
+}
+
+void InputStreamHelper::SerializeInputStream(
+    nsIInputStream* aInputStream, InputStreamParams& aParams,
+    nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
+    mozilla::dom::nsIContentParent* aManager) {
+  SerializeInputStreamInternal(aInputStream, aParams, aFileDescriptors,
+                               aDelayedStart, aManager);
+}
+
+void InputStreamHelper::SerializeInputStream(
+    nsIInputStream* aInputStream, InputStreamParams& aParams,
+    nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
+    PBackgroundParent* aManager) {
+  SerializeInputStreamInternal(aInputStream, aParams, aFileDescriptors,
+                               aDelayedStart, aManager);
 }
 
 already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
