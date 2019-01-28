@@ -1817,6 +1817,16 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// ContentSessionStore prefs
+//---------------------------------------------------------------------------
+// Maximum number of bytes of DOMSessionStorage data we collect per origin.
+VARCACHE_PREF(
+  "browser.sessionstore.dom_storage_limit",
+  browser_sessionstore_dom_storage_limit,
+  uint32_t, 2048
+)
+
+//---------------------------------------------------------------------------
 // Preferences prefs
 //---------------------------------------------------------------------------
 
