@@ -22,6 +22,7 @@ import type { SourceAction } from "./SourceAction";
 import type { UIAction } from "./UIAction";
 import type { PauseAction } from "./PauseAction";
 import type { ASTAction } from "./ASTAction";
+import { clientCommands } from "../../client/firefox";
 
 /**
  * Flow types
@@ -38,7 +39,7 @@ import type { ASTAction } from "./ASTAction";
 export type ThunkArgs = {
   dispatch: (action: any) => Promise<any>,
   getState: () => State,
-  client: any,
+  client: typeof clientCommands,
   sourceMaps: any,
   openLink: (url: string) => void,
   openWorkerToolbox: (worker: Worker) => void,
