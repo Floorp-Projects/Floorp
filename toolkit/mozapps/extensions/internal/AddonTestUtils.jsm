@@ -245,8 +245,12 @@ class AddonsList {
           } catch (e) {
             file = new nsFile(addon.path);
           }
-        } else {
+        } else if (addon.path) {
           file = new nsFile(addon.path);
+        }
+
+        if (!file) {
+          continue;
         }
 
         this.xpis.push(file);

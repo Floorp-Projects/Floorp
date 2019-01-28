@@ -14,6 +14,8 @@ namespace net {
 
 class UrlClassifierFeatureFlash final : public UrlClassifierFeatureBase {
  public:
+  struct FlashFeature;
+
   static void GetFeatureNames(nsTArray<nsCString>& aNames);
 
   static void MaybeShutdown();
@@ -34,7 +36,7 @@ class UrlClassifierFeatureFlash final : public UrlClassifierFeatureBase {
                               nsIURI** aURI) override;
 
  private:
-  explicit UrlClassifierFeatureFlash(uint32_t aId);
+  explicit UrlClassifierFeatureFlash(const FlashFeature& aFlashFeature);
 
   static void MaybeInitialize();
 
