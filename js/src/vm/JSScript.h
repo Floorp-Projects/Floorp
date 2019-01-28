@@ -1688,6 +1688,12 @@ class JSScript : public js::gc::TenuredCell {
     // Whether the record/replay execution progress counter (see RecordReplay.h)
     // should be updated as this script runs.
     TrackRecordReplayProgress = 1 << 23,
+
+    // Whether this is a top-level module script.
+    IsModule = 1 << 24,
+
+    // Whether this function needs a call object or named lambda environment.
+    NeedsFunctionEnvironmentObjects = 1 << 25,
   };
 
  private:
@@ -2312,7 +2318,11 @@ class JSScript : public js::gc::TenuredCell {
    */
   inline void ensureNonLazyCanonicalFunction();
 
-  bool isModule() const { return bodyScope()->is<js::ModuleScope>(); }
+  bool isModule() const {
+    MOZ_ASSERT(hasFlag(ImmutableFlags::IsModule) ==
+               bodyScope()->is<js::ModuleScope>());
+    return hasFlag(ImmutableFlags::IsModule);
+  }
   js::ModuleObject* module() const {
     if (isModule()) {
       return bodyScope()->as<js::ModuleScope>().module();
@@ -2408,6 +2418,10 @@ class JSScript : public js::gc::TenuredCell {
     // the decl env scope is present.
     size_t index = 0;
     return getScope(index);
+  }
+
+  bool needsFunctionEnvironmentObjects() const {
+    return hasFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects);
   }
 
   bool functionHasExtraBodyVarScope() const {
