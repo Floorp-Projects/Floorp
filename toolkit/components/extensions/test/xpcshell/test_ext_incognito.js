@@ -1,8 +1,6 @@
 /* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
-const {AddonManager, AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-const {Extension, ExtensionData} = ChromeUtils.import("resource://gre/modules/Extension.jsm");
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
