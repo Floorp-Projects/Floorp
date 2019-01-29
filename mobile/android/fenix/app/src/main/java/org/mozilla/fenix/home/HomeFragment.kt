@@ -11,7 +11,6 @@ import android.transition.TransitionInflater
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewOutlineProvider
 import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
@@ -23,7 +22,6 @@ import org.mozilla.fenix.home.sessions.layoutComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.ext.requireComponents
 import kotlin.math.roundToInt
-
 
 class HomeFragment : Fragment() {
     override fun onCreateView(

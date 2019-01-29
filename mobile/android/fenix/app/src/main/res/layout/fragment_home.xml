@@ -40,7 +40,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/menuButton" />
 
-    <FrameLayout
+    <org.mozilla.fenix.home.SearchView
             android:id="@+id/toolbar_wrapper"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -69,6 +69,6 @@
                 android:textColor="@color/searchText"
                 android:textSize="14sp"
                 android:transitionName="firstTransitionName"/>
-    </FrameLayout>
+    </org.mozilla.fenix.home.SearchView>
 
 </androidx.constraintlayout.motion.widget.MotionLayout>

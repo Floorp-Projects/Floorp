@@ -49,14 +49,28 @@
                 android:alpha="0" />
 
             <KeyAttribute
-                    motion:target="@id/toolbar_wrapper"
-                    motion:framePosition="0"
-                    android:elevation="@dimen/toolbar_elevation" />
+                motion:target="@id/toolbar_wrapper"
+                motion:framePosition="0"
+                android:elevation="@dimen/toolbar_elevation" />
 
             <KeyAttribute
                 motion:target="@id/toolbar_wrapper"
                 motion:framePosition="50"
                 android:elevation="0dp" />
+
+            <KeyTrigger
+                motion:target="@id/toolbar_wrapper"
+                motion:framePosition="55"
+                motion:onPositiveCross="transitionToDark"
+                motion:onNegativeCross="transitionToLight"
+            />
+
+            <KeyTrigger
+                    motion:target="@id/toolbar_wrapper"
+                    motion:framePosition="90"
+                    motion:onPositiveCross="transitionToDarkNoBorder"
+                    motion:onNegativeCross="transitionToDarkFromNoBorder"
+            />
 
         </KeyFrameSet>
     </Transition>
