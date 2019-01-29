@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoWebExecutor
 
 /**
  * Gecko-based implementation of Engine interface.
@@ -22,8 +23,11 @@ import org.mozilla.geckoview.GeckoRuntime
 class GeckoEngine(
     context: Context,
     private val defaultSettings: Settings? = null,
-    private val runtime: GeckoRuntime = GeckoRuntime.getDefault(context)
+    private val runtime: GeckoRuntime = GeckoRuntime.getDefault(context),
+    executorProvider: () -> GeckoWebExecutor = { GeckoWebExecutor(runtime) }
 ) : Engine {
+    private val executor by lazy { executorProvider.invoke() }
+
     /**
      * Creates a new Gecko-based EngineView.
      */
@@ -48,9 +52,12 @@ class GeckoEngine(
     /**
      * Opens a speculative connection to the host of [url].
      *
-     * Note: This implementation is a no-op.
+     * This is useful if an app thinks it may be making a request to that host in the near future. If no request
+     * is made, the connection will be cleaned up after an unspecified.
      */
-    override fun speculativeConnect(url: String) = Unit
+    override fun speculativeConnect(url: String) {
+        executor.speculativeConnect(url)
+    }
 
     override fun name(): String = "Gecko"
 
@@ -82,12 +89,25 @@ class GeckoEngine(
         override var historyTrackingDelegate: HistoryTrackingDelegate?
             get() = defaultSettings?.historyTrackingDelegate
             set(value) { defaultSettings?.historyTrackingDelegate = value }
+
+        override var testingModeEnabled: Boolean
+            get() = defaultSettings?.testingModeEnabled ?: false
+            set(value) { defaultSettings?.testingModeEnabled = value }
+
+        override var userAgentString: String?
+            // TODO if no default user agent string is provided we should
+            // return the engine default here, but we can't get to it in
+            // a practical way right now: https://bugzilla.mozilla.org/show_bug.cgi?id=1512997
+            get() = defaultSettings?.userAgentString
+            set(value) { defaultSettings?.userAgentString = value }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
             this.webFontsEnabled = it.webFontsEnabled
             this.trackingProtectionPolicy = it.trackingProtectionPolicy
             this.remoteDebuggingEnabled = it.remoteDebuggingEnabled
+            this.testingModeEnabled = it.testingModeEnabled
+            this.userAgentString = it.userAgentString
         }
     }
 }
