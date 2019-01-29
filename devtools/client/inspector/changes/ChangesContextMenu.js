@@ -86,6 +86,7 @@ class ChangesContextMenu {
   _onCopy() {
     const text = this.window.getSelection().toString();
     clipboardHelper.copyString(text);
+    this.view.onContextMenuCopy();
   }
 
   destroy() {

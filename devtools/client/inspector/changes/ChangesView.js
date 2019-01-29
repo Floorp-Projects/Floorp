@@ -14,6 +14,12 @@ loader.lazyRequireGetter(this, "ChangesContextMenu", "devtools/client/inspector/
 const ChangesApp = createFactory(require("./components/ChangesApp"));
 
 const {
+  TELEMETRY_SCALAR_CONTEXTMENU,
+  TELEMETRY_SCALAR_CONTEXTMENU_COPY,
+  TELEMETRY_SCALAR_COPY,
+} = require("./constants");
+
+const {
   resetChanges,
   trackChange,
 } = require("./actions/changes");
@@ -23,11 +29,13 @@ class ChangesView {
     this.document = window.document;
     this.inspector = inspector;
     this.store = this.inspector.store;
+    this.telemetry = this.inspector.telemetry;
 
     this.onAddChange = this.onAddChange.bind(this);
     this.onClearChanges = this.onClearChanges.bind(this);
     this.onChangesFront = this.onChangesFront.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
+    this.onCopy = this.onCopy.bind(this);
     this.destroy = this.destroy.bind(this);
 
     this.init();
@@ -44,6 +52,7 @@ class ChangesView {
   init() {
     const changesApp = ChangesApp({
       onContextMenu: this.onContextMenu,
+      onCopy: this.onCopy,
     });
 
     // listen to the front for initialization, add listeners
@@ -100,8 +109,29 @@ class ChangesView {
     this.store.dispatch(resetChanges());
   }
 
+  /**
+   * Event handler for the "contextmenu" event fired when the context menu is requested.
+   * @param {Event} e
+   */
   onContextMenu(e) {
     this.contextMenu.show(e);
+    this.telemetry.scalarAdd(TELEMETRY_SCALAR_CONTEXTMENU, 1);
+  }
+
+  /**
+   * Callback function ran after the "Copy" option from the context menu is used.
+   * This is not an event handler. The copy event cannot be prevented from this method.
+   */
+  onContextMenuCopy() {
+    this.telemetry.scalarAdd(TELEMETRY_SCALAR_CONTEXTMENU_COPY, 1);
+  }
+
+  /**
+   * Event handler for the "copy" event fired when content is copied to the clipboard.
+   * We don't change the default behavior. We only log the increment count of this action.
+   */
+  onCopy() {
+    this.telemetry.scalarAdd(TELEMETRY_SCALAR_COPY, 1);
   }
 
   /**
