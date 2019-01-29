@@ -17,11 +17,14 @@ import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.mock
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
@@ -196,6 +199,20 @@ class DownloadsFeatureTest {
         startDownload()
 
         verify(mockDialog, times(0)).show(mockFragmentManager, FRAGMENT_TAG)
+    }
+
+    @Test
+    fun `download is cleared when permissions denied`() {
+        feature.start()
+        feature.onPermissionsDenied()
+        assertNull(mockSessionManager.selectedSession)
+
+        val download = startDownload()
+        feature.onPermissionsDenied()
+
+        verify(mockDownloadManager, never()).download(download)
+        assertNotNull(mockSessionManager.selectedSession)
+        assertTrue(mockSessionManager.selectedSession!!.download.isConsumed())
     }
 
     private fun startDownload(): Download {

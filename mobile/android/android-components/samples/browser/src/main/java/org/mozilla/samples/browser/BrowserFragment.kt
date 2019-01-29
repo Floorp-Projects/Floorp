@@ -34,7 +34,6 @@ import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
-import mozilla.components.support.ktx.android.content.isPermissionGranted
 import org.mozilla.samples.browser.ext.components
 
 class BrowserFragment : Fragment(), BackHandler {
@@ -190,8 +189,6 @@ class BrowserFragment : Fragment(), BackHandler {
         }
     }
 
-    private fun isStoragePermissionAvailable() = requireContext().isPermissionGranted(WRITE_EXTERNAL_STORAGE)
-
     companion object {
         private const val SESSION_ID = "session_id"
         private const val PERMISSION_WRITE_STORAGE_REQUEST = 1
@@ -206,10 +203,10 @@ class BrowserFragment : Fragment(), BackHandler {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             PERMISSION_WRITE_STORAGE_REQUEST -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) &&
-                    isStoragePermissionAvailable()) {
-                    // permission was granted, yay!
+                if ((grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED)) {
                     downloadsFeature.onPermissionsGranted()
+                } else {
+                    downloadsFeature.onPermissionsDenied()
                 }
             }
         }

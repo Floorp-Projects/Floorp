@@ -16,6 +16,9 @@ permalink: /changelog/
 * **feature-customtabs**
   * Added a temporary workaround for Custom Tab intents not being recognized when using the Jetifier tool.
 
+* **feature-downloads**
+  * Introduced a new `onPermissionsDenied` method, which similar to `onPermissionsGranted`, should be invoked in response to permission requests. If the requested permissions were denied the feature will clear the pending download.
+
 # 0.40.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.39.0...v0.40.0)
