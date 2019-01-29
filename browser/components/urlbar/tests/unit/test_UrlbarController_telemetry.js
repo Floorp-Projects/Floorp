@@ -10,7 +10,7 @@
 
 const TEST_URL = "http://example.com";
 const MATCH = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                               UrlbarUtils.MATCH_SOURCE.TABS,
+                               UrlbarUtils.RESULT_SOURCE.TABS,
                                { url: TEST_URL });
 const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
 const TELEMETRY_6_FIRST_RESULTS = "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS";
@@ -34,7 +34,7 @@ class DelayedProvider extends UrlbarProvider {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
   get sources() {
-    return [UrlbarUtils.MATCH_SOURCE.TABS];
+    return [UrlbarUtils.RESULT_SOURCE.TABS];
   }
   async startQuery(context, add) {
     Assert.ok(context, "context is passed-in");
@@ -157,7 +157,7 @@ add_task(async function test_n_autocomplete_results() {
     resultsPromise = promiseControllerNotification(controller, "onQueryResults");
     provider.addResults([
       new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                       UrlbarUtils.MATCH_SOURCE.TABS,
+                       UrlbarUtils.RESULT_SOURCE.TABS,
                        { url: TEST_URL + "/i" }),
     ]);
     await resultsPromise;
@@ -179,7 +179,7 @@ add_task(async function test_n_autocomplete_results() {
   resultsPromise = promiseControllerNotification(controller, "onQueryResults");
   provider.addResults([
     new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                     UrlbarUtils.MATCH_SOURCE.TABS,
+                     UrlbarUtils.RESULT_SOURCE.TABS,
                      { url: TEST_URL + "/6" }),
   ]);
   await resultsPromise;

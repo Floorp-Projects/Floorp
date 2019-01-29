@@ -96,11 +96,11 @@ class ProviderOpenTabs extends UrlbarProvider {
 
   /**
    * Returns the sources returned by this provider.
-   * @returns {array} one or multiple types from UrlbarUtils.MATCH_SOURCE.*
+   * @returns {array} one or multiple types from UrlbarUtils.RESULT_SOURCE.*
    */
   get sources() {
     return [
-      UrlbarUtils.MATCH_SOURCE.TABS,
+      UrlbarUtils.RESULT_SOURCE.TABS,
     ];
   }
 
@@ -163,7 +163,7 @@ class ProviderOpenTabs extends UrlbarProvider {
         return;
       }
       addCallback(this, new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                                         UrlbarUtils.MATCH_SOURCE.TABS, {
+                                         UrlbarUtils.RESULT_SOURCE.TABS, {
         url: row.getResultByName("url"),
         userContextId: row.getResultByName("userContextId"),
       }));
