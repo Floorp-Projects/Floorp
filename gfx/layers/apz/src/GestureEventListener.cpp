@@ -158,6 +158,7 @@ nsEventStatus GestureEventListener::HandleInputTouchSingleStart() {
     case GESTURE_NONE:
       SetState(GESTURE_FIRST_SINGLE_TOUCH_DOWN);
       mTouchStartPosition = mLastTouchInput.mTouches[0].mScreenPoint;
+      mTouchStartOffset = mLastTouchInput.mScreenOffset;
 
       if (sLongTapEnabled) {
         CreateLongTapTimeoutTask();
@@ -177,6 +178,7 @@ nsEventStatus GestureEventListener::HandleInputTouchSingleStart() {
         // a one-touch-pinch gesture, it uses the second tap's down position as
         // the focus, rather than the first tap's.
         mTouchStartPosition = mLastTouchInput.mTouches[0].mScreenPoint;
+        mTouchStartOffset = mLastTouchInput.mScreenOffset;
         SetState(GESTURE_SECOND_SINGLE_TOUCH_DOWN);
       }
       break;
@@ -240,10 +242,11 @@ nsEventStatus GestureEventListener::HandleInputTouchMultiStart() {
 }
 
 bool GestureEventListener::MoveDistanceExceeds(ScreenCoord aThreshold) const {
-  ScreenPoint screenDelta =
-      ScreenPoint(mLastTouchInput.mTouches[0].mScreenPoint) -
-      mTouchStartPosition;
-  return (screenDelta.Length() > aThreshold);
+  ExternalPoint start = AsyncPanZoomController::ToExternalPoint(
+      mTouchStartOffset, mTouchStartPosition);
+  ExternalPoint end = AsyncPanZoomController::ToExternalPoint(
+      mLastTouchInput.mScreenOffset, mLastTouchInput.mTouches[0].mScreenPoint);
+  return (start - end).Length() > aThreshold;
 }
 
 bool GestureEventListener::MoveDistanceIsLarge() const {
