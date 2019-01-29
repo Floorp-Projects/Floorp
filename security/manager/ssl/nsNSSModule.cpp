@@ -117,34 +117,31 @@ static nsresult Constructor(nsISupports* aOuter, REFNSIID aIID,
   return Instantiate<InstanceClass, InitMethod>(aIID, aResult);
 }
 
-template <typename T>
-nsresult NSSConstructor(nsISupports* aOuter, const nsIID& aIID, void** aResult);
-
-#define IMPL(...)                                                \
-  template <>                                                    \
-  nsresult NSSConstructor<MOZ_ARG_1(__VA_ARGS__)>(               \
-      nsISupports * aOuter, const nsIID& aIID, void** aResult) { \
-    return Constructor<__VA_ARGS__>(aOuter, aIID, aResult);      \
+#define IMPL(type, ...)                                                  \
+  template <>                                                            \
+  nsresult NSSConstructor<type>(nsISupports * aOuter, const nsIID& aIID, \
+                                void** aResult) {                        \
+    return Constructor<type, __VA_ARGS__>(aOuter, aIID, aResult);        \
   }
 
 // Components that require main thread initialization could cause a deadlock
 // in necko code (bug 1418752). To prevent it we initialize all such components
 // on main thread in advance in net_EnsurePSMInit(). Update that function when
 // new component with ThreadRestriction::MainThreadOnly is added.
-IMPL(SecretDecoderRing)
-IMPL(nsPK11TokenDB)
-IMPL(PKCS11ModuleDB)
+IMPL(SecretDecoderRing, nullptr)
+IMPL(nsPK11TokenDB, nullptr)
+IMPL(PKCS11ModuleDB, nullptr)
 IMPL(nsNSSCertificate, nullptr, ProcessRestriction::AnyProcess)
-IMPL(nsNSSCertificateDB)
+IMPL(nsNSSCertificateDB, nullptr)
 IMPL(nsNSSCertList, nullptr, ProcessRestriction::AnyProcess)
 #ifdef MOZ_XUL
-IMPL(nsCertTree)
+IMPL(nsCertTree, nullptr)
 #endif
 IMPL(nsCryptoHash, nullptr, ProcessRestriction::AnyProcess)
 IMPL(nsCryptoHMAC, nullptr, ProcessRestriction::AnyProcess)
 IMPL(nsKeyObject, nullptr, ProcessRestriction::AnyProcess)
 IMPL(nsKeyObjectFactory, nullptr, ProcessRestriction::AnyProcess)
-IMPL(ContentSignatureVerifier)
+IMPL(ContentSignatureVerifier, nullptr)
 IMPL(nsCertOverrideService, &nsCertOverrideService::Init,
      ProcessRestriction::ParentProcessOnly, ThreadRestriction::MainThreadOnly)
 IMPL(nsRandomGenerator, nullptr, ProcessRestriction::AnyProcess)
