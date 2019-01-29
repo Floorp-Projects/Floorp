@@ -24,7 +24,7 @@ class UrlClassifierFeatureFactory final {
       nsIChannel* aChannel,
       nsTArray<nsCOMPtr<nsIUrlClassifierFeature>>& aFeatures);
 
-  static void GetFeaturesNoChannel(
+  static void GetPhishingProtectionFeatures(
       nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures);
 
   static nsIUrlClassifierFeature* GetFeatureLoginReputation();
