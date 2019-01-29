@@ -28,6 +28,10 @@
 
       this.invoke = function addChild_invoke() {
         this.childNode = document.createElement("div");
+        // Note after bug 646216, a sole div without text won't be accessible
+        // and would not result in an embedded character.
+        // Therefore, add some text.
+        this.childNode.textContent = "hello";
         this.containerNode.appendChild(this.childNode);
       };
 

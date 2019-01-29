@@ -20,6 +20,7 @@
 #include "HTMLTableAccessibleWrap.h"
 #include "HyperTextAccessibleWrap.h"
 #include "RootAccessible.h"
+#include "StyleInfo.h"
 #include "nsAccUtils.h"
 #include "nsArrayUtils.h"
 #include "nsAttrName.h"
@@ -1408,8 +1409,10 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new HTMLTextFieldAccessible(aContent, document);
       break;
     case eHyperTextType:
-      if (!aContent->IsAnyOfHTMLElements(nsGkAtoms::dt, nsGkAtoms::dd))
+      if (!aContent->IsAnyOfHTMLElements(nsGkAtoms::dt, nsGkAtoms::dd,
+                                         nsGkAtoms::div)) {
         newAcc = new HyperTextAccessibleWrap(aContent, document);
+      }
       break;
 
     case eImageType:
