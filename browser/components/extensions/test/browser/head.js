@@ -6,6 +6,7 @@
  *          getBrowserActionWidget
  *          clickBrowserAction clickPageAction
  *          getBrowserActionPopup getPageActionPopup getPageActionButton
+ *          openBrowserActionPanel
  *          closeBrowserAction closePageAction
  *          promisePopupShown promisePopupHidden
  *          toggleBookmarksToolbar
@@ -263,6 +264,9 @@ function getBrowserActionPopup(extension, win = window) {
 var showBrowserAction = async function(extension, win = window) {
   let group = getBrowserActionWidget(extension);
   let widget = group.forWindow(win);
+  if (!widget.node) {
+    return;
+  }
 
   if (group.areaType == CustomizableUI.TYPE_TOOLBAR) {
     ok(!widget.overflowed, "Expect widget not to be overflowed");
@@ -286,6 +290,12 @@ function closeBrowserAction(extension, win = window) {
   CustomizableUI.hidePanelForNode(node);
 
   return Promise.resolve();
+}
+
+function openBrowserActionPanel(extension, win = window, awaitLoad = false) {
+  clickBrowserAction(extension, win);
+
+  return awaitExtensionPanel(extension, win, awaitLoad);
 }
 
 async function toggleBookmarksToolbar(visible = true) {
@@ -549,9 +559,10 @@ function historyPushState(tab, url) {
   return locationChange(tab, url, (url) => { content.history.pushState(null, null, url); });
 }
 
-// A monitoring extension that fails if it receives data it should not.
-async function startIncognitoMonitorExtension(failOnIncognitoEvent = true) {
-  function background(expectIncognito) {
+// This monitor extension runs with incognito: not_allowed, if it receives any
+// events with incognito data it fails.
+async function startIncognitoMonitorExtension() {
+  function background() {
     // Bug 1513220 - We're unable to get the tab during onRemoved, so we track
     // valid tabs in "seen" so we can at least validate tabs that we have "seen"
     // during onRemoved.  This means that the monitor extension must be started
@@ -574,7 +585,7 @@ async function startIncognitoMonitorExtension(failOnIncognitoEvent = true) {
           return;
         }
       }
-      browser.test.assertEq(tab.incognito, expectIncognito, `tabs.${eventName} ${tab.id}: monitor extension got expected incognito value`);
+      browser.test.assertFalse(tab.incognito, `tabs.${eventName} ${tab.id}: monitor extension got expected incognito value`);
       seenTabs.set(tab.id, tab);
     }
     async function testTabInfo(tabInfo, eventName) {
@@ -610,7 +621,7 @@ async function startIncognitoMonitorExtension(failOnIncognitoEvent = true) {
     }
 
     browser.windows.onCreated.addListener(window => {
-      browser.test.assertEq(window.incognito, expectIncognito, `windows.onCreated monitor extension got expected incognito value`);
+      browser.test.assertFalse(window.incognito, `windows.onCreated monitor extension got expected incognito value`);
       seenWindows.set(window.id, window);
     });
     browser.windows.onRemoved.addListener(async (windowId) => {
@@ -621,7 +632,7 @@ async function startIncognitoMonitorExtension(failOnIncognitoEvent = true) {
         browser.test.fail(`windows.onCreated for id ${windowId} unexpected failure ${e}\n`);
         return;
       }
-      browser.test.assertEq(window.incognito, expectIncognito, `windows.onRemoved ${window.id}: monitor extension got expected incognito value`);
+      browser.test.assertFalse(window.incognito, `windows.onRemoved ${window.id}: monitor extension got expected incognito value`);
     });
     browser.windows.onFocusChanged.addListener(async (windowId) => {
       if (windowId == browser.windows.WINDOW_ID_NONE) {
@@ -635,7 +646,7 @@ async function startIncognitoMonitorExtension(failOnIncognitoEvent = true) {
         browser.test.fail(`windows.onFocusChanged for id ${windowId} unexpected failure ${e}\n`);
         return;
       }
-      browser.test.assertEq(window.incognito, expectIncognito, `windows.onFocusChanged ${window.id}: monitor extesion got expected incognito value`);
+      browser.test.assertFalse(window.incognito, `windows.onFocusChanged ${window.id}: monitor extesion got expected incognito value`);
       seenWindows.set(window.id, window);
     });
   }
@@ -644,8 +655,8 @@ async function startIncognitoMonitorExtension(failOnIncognitoEvent = true) {
     manifest: {
       "permissions": ["tabs"],
     },
-    incognitoOverride: failOnIncognitoEvent ? "not_allowed" : undefined,
-    background: `(${background})(${!failOnIncognitoEvent})`,
+    incognitoOverride: "not_allowed",
+    background,
   });
   await extension.startup();
   return extension;
@@ -670,6 +681,7 @@ async function getIncognitoWindow(url) {
       "permissions": ["tabs"],
     },
     background: `(${background})("${url}")`,
+    incognitoOverride: "spanning",
   });
 
   await windowWatcher.startup();

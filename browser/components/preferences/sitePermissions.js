@@ -264,11 +264,9 @@ var gSitePermissionsManager = {
     hbox.appendChild(website);
 
     let menulist = document.createXULElement("menulist");
-    let menupopup = document.createXULElement("menupopup");
     menulist.setAttribute("flex", "1");
     menulist.setAttribute("width", "50");
     menulist.setAttribute("class", "website-status");
-    menulist.appendChild(menupopup);
     let states = SitePermissions.getAvailableStates(permission.type);
     for (let state of states) {
       // Work around the (rare) edge case when a user has changed their
@@ -280,15 +278,13 @@ var gSitePermissionsManager = {
       } else if (state == SitePermissions.UNKNOWN) {
         continue;
       }
-      let m = document.createXULElement("menuitem");
+      let m = menulist.appendItem(undefined, state);
       document.l10n.setAttributes(m, this._getCapabilityString(state));
-      m.setAttribute("value", state);
-      menupopup.appendChild(m);
     }
     menulist.value = permission.capability;
 
     menulist.addEventListener("select", () => {
-      this.onPermissionChange(permission, Number(menulist.selectedItem.value));
+      this.onPermissionChange(permission, Number(menulist.value));
     });
 
     row.appendChild(hbox);

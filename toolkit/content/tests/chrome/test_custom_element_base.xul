@@ -27,6 +27,8 @@
   async function runTests() {
     ok(MozXULElement, "MozXULElement defined on the window");
     testMixin();
+    testBaseControl();
+    testBaseControlMixin();
     testParseXULToFragment();
     testInherits();
     await testCustomInterface();
@@ -46,6 +48,19 @@
     ok(MozElementMixin, "Mixin exists");
     let MixedHTMLElement = MozElementMixin(HTMLElement);
     ok(MixedHTMLElement.insertFTLIfNeeded, "Mixed in class contains helper functions");
+  }
+
+  function testBaseControl() {
+    ok(MozElements.BaseControl, "BaseControl exists");
+    ok("disabled" in MozElements.BaseControl.prototype,
+      "BaseControl prototype contains base control attributes");
+  }
+
+  function testBaseControlMixin() {
+    ok(BaseControlMixin, "Mixin exists");
+    let MixedHTMLSpanElement = MozElementMixin(HTMLSpanElement);
+    let HTMLSpanBaseControl = BaseControlMixin(MixedHTMLSpanElement);
+    ok("disabled" in HTMLSpanBaseControl.prototype, "Mixed in class prototype contains base control attributes");
   }
 
   function testParseXULToFragment() {
@@ -108,7 +123,30 @@
 
     el.setAttribute("bar", "bar-test");
     is(el.label.getAttribute("bardo"), "bar-test",
-       "attribute inheritance: bardo=bar");
+       "attribute inheritance: `=` mapping");
+
+    el.label.setAttribute("bardo", "changed-from-child");
+    el.inherit();
+    is(el.label.getAttribute("bardo"), "changed-from-child",
+       "attribute inheritance: doesn't apply when host attr hasn't changed and child attr was changed");
+
+    el.label.removeAttribute("bardo");
+    el.inherit();
+    ok(!el.label.hasAttribute("bardo"),
+       "attribute inheritance: doesn't apply when host attr hasn't changed and child attr was removed");
+
+    el.setAttribute("bar", "changed-from-host");
+    is(el.label.getAttribute("bardo"), "changed-from-host",
+       "attribute inheritance: does apply when host attr has changed and child attr was changed");
+
+    el.removeAttribute("bar");
+    ok(!el.label.hasAttribute("bardo"),
+       "attribute inheritance: does apply when host attr has been removed");
+
+    el.setAttribute("bar", "changed-from-host-2");
+    is(el.label.getAttribute("bardo"), "changed-from-host-2",
+       "attribute inheritance: does apply when host attr has changed after being removed");
+
   }
 
   async function testCustomInterface() {

@@ -32,6 +32,8 @@ ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "TestUtils",
                                "resource://testing-common/TestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionTestCommon",
+                               "resource://testing-common/ExtensionTestCommon.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
   const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
@@ -340,11 +342,13 @@ class ExtensionWrapper {
     return this.startupPromise;
   }
 
-  startup() {
+  async startup() {
     if (this.state != "uninitialized") {
       throw new Error("Extension already started");
     }
     this.state = "pending";
+
+    await ExtensionTestCommon.setIncognitoOverride(this.extension);
 
     this.startupPromise = this.extension.startup().then(
       result => {

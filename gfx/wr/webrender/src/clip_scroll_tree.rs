@@ -309,12 +309,13 @@ impl ClipScrollTree {
         self.nodes_to_update.push((root_node_index, state));
 
         while let Some((node_index, mut state)) = self.nodes_to_update.pop() {
-            let node = match self.spatial_nodes.get_mut(node_index.0 as usize) {
+            let (previous, following) = self.spatial_nodes.split_at_mut(node_index.0 as usize);
+            let node = match following.get_mut(0) {
                 Some(node) => node,
                 None => continue,
             };
 
-            node.update(&mut state, &mut self.coord_systems, scene_properties);
+            node.update(&mut state, &mut self.coord_systems, scene_properties, &*previous);
             if let Some(ref mut palette) = transform_palette {
                 node.push_gpu_data(palette, node_index);
             }
@@ -526,7 +527,7 @@ fn add_reference_frame(
         parent,
         TransformStyle::Preserve3D,
         PropertyBinding::Value(transform),
-        ReferenceFrameKind::Perspective,
+        ReferenceFrameKind::Transform,
         origin_in_parent_reference_frame,
         PipelineId::dummy(),
     )

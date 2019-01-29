@@ -4967,7 +4967,7 @@ class TabProgressListener {
         // pointing to their resolved jar: or file: URIs.
         if (!(originalLocation && gInitialPages.includes(originalLocation.spec) &&
             originalLocation != "about:blank" &&
-            this.mBrowser.initialPageLoadedFromURLBar != originalLocation.spec &&
+            this.mBrowser.initialPageLoadedFromUserAction != originalLocation.spec &&
             this.mBrowser.currentURI && this.mBrowser.currentURI.spec == "about:blank")) {
           // Indicating that we started a load will allow the location
           // bar to be cleared when the load finishes.
@@ -4982,7 +4982,7 @@ class TabProgressListener {
           // remoteness or is a new tab/window).
           this.mBrowser.urlbarChangeTracker.startedLoad();
         }
-        delete this.mBrowser.initialPageLoadedFromURLBar;
+        delete this.mBrowser.initialPageLoadedFromUserAction;
         // If the browser is loading it must not be crashed anymore
         this.mTab.removeAttribute("crashed");
       }

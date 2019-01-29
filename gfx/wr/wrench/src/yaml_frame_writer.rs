@@ -196,11 +196,15 @@ fn write_reference_frame(
     properties: &SceneProperties,
     clip_id_mapper: &mut ClipIdMapper,
 ) {
+    // FIXME: This ignores the scrolling_relative_to member in
+    // ReferenceFrameKind::Perspective, but it's a bit annoying to fix since the
+    // frame reader abuses `ExternalScrollId`s.
+
     matrix4d_node(
         parent,
         match reference_frame.kind {
             ReferenceFrameKind::Transform => "transform",
-            ReferenceFrameKind::Perspective => "perspective",
+            ReferenceFrameKind::Perspective { .. } => "perspective",
         },
         &properties.resolve_layout_transform(&reference_frame.transform)
     );

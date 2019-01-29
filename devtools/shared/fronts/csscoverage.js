@@ -32,10 +32,12 @@ var chromeWindow;
  * Front for CSSUsageActor
  */
 class CSSUsageFront extends FrontClassWithSpec(cssUsageSpec) {
-  constructor(client, form) {
-    super(client, { actor: form.cssUsageActor });
-    this.manage(this);
+  constructor(client) {
+    super(client);
     this.before("state-change", this._onStateChange.bind(this));
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "cssUsageActor";
   }
 
   _onStateChange(ev) {

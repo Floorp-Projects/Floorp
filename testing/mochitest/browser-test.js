@@ -585,9 +585,10 @@ Tester.prototype = {
     // Remove stale windows
     this.structuredLogger.info("checking window state");
     for (let win of Services.wm.getEnumerator(null)) {
+      let type = win.document.documentElement.getAttribute("windowtype");
       if (win != window && !win.closed &&
-          win.document.documentElement.getAttribute("id") != "browserTestHarness") {
-        let type = win.document.documentElement.getAttribute("windowtype");
+          win.document.documentElement.getAttribute("id") != "browserTestHarness" &&
+          type != "devtools:webconsole") {
         switch (type) {
         case "navigator:browser":
           type = "browser window";

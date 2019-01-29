@@ -19,6 +19,8 @@
   <div style="background: red; width: 200%; height: 100px;">overflowed element</div>
   <div id="target" style="background: green; width: 100px; height: 100px;"></div>
   <script type="application/javascript">
+    const utils = SpecialPowers.getDOMWindowUtils(window);
+
     function waitForFullscreenChange() {
       return new Promise(resolve => {
         document.addEventListener("fullscreenchange", resolve);
@@ -34,7 +36,7 @@
          "The target element should have been fullscreen-ed");
 
       // Try to move rightward, but it should NOT happen.
-      SpecialPowers.getDOMWindowUtils(window).scrollToVisual(200, 0);
+      utils.scrollToVisual(200, 0, utils.UPDATE_TYPE_MAIN_THREAD);
 
       await waitUntilApzStable();
 

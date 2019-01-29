@@ -107,8 +107,8 @@ class AttributeModificationList {
  * to traverse children.
  */
 class NodeFront extends FrontClassWithSpec(nodeSpec) {
-  constructor(conn, form, detail, ctx) {
-    super(conn, form, detail, ctx);
+  constructor(conn, form) {
+    super(conn, form);
     // The parent node
     this._parent = null;
     // The first child of this node.
@@ -129,12 +129,7 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
   }
 
   // Update the object given a form representation off the wire.
-  form(form, detail, ctx) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-
+  form(form, ctx) {
     // backward-compatibility: shortValue indicates we are connected to old server
     if (form.shortValue) {
       // If the value is not complete, set nodeValue to null, it will be fetched

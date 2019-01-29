@@ -79,9 +79,11 @@ nsresult nsXMLPrettyPrinter::PrettyPrint(Document* aDocument,
   RefPtr<Element> rootElement = aDocument->GetRootElement();
   NS_ENSURE_TRUE(rootElement, NS_ERROR_UNEXPECTED);
 
-  // Attach a closed shadow root on it.
-  RefPtr<ShadowRoot> shadowRoot =
-      rootElement->AttachShadowWithoutNameChecks(ShadowRootMode::Closed);
+  // Attach an UA Widget Shadow Root on it.
+  rootElement->AttachAndSetUAShadowRoot();
+  RefPtr<ShadowRoot> shadowRoot = rootElement->GetShadowRoot();
+  MOZ_RELEASE_ASSERT(shadowRoot && shadowRoot->IsUAWidget(),
+                     "There should be a UA Shadow Root here.");
 
   // Append the document fragment to the shadow dom.
   shadowRoot->AppendChild(*resultFragment, err);

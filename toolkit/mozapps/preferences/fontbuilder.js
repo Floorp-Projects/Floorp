@@ -19,9 +19,10 @@ var FontBuilder = {
   _allFonts: null,
   _langGroupSupported: false,
   async buildFontList(aLanguage, aFontType, aMenuList) {
-    // Reset the list
-    while (aMenuList.hasChildNodes())
-      aMenuList.firstChild.remove();
+    // Remove the original <menupopup>
+    if (aMenuList.menupopup) {
+      aMenuList.menupopup.remove();
+    }
 
     let defaultFont = null;
     // Load Font Lists

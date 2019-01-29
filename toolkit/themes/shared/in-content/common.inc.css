@@ -48,6 +48,9 @@
   --in-content-table-border-dark-color: #d1d1d1;
   --in-content-table-header-background: #0a84ff;
 
+  /* The photon animation curve */
+  --animation-curve: cubic-bezier(.07,.95,0,1);
+
   --blue-40: #45a1ff;
   --blue-40-a10: rgb(69, 161, 255, 0.1);
   --blue-50: #0a84ff;
@@ -64,6 +67,8 @@
   --grey-90-a30: rgba(12, 12, 13, 0.3);
   --grey-90-a40: rgba(12, 12, 13, 0.4);
   --grey-90-a50: rgba(12, 12, 13, 0.5);
+  --purple-70: #6200a4;
+  --purple-70-a40: rgba(98, 0, 164, 0.4);
   --red-50: #ff0039;
   --red-50-a30: rgba(255, 0, 57, 0.3);
   --red-60: #d70022;
@@ -804,7 +809,7 @@ xul|treechildren::-moz-tree-image(selected) {
 }
 
 .message-bar-description {
-  margin: 0;
+  margin: 2px 0;
   line-height: 1.25;
 }
 

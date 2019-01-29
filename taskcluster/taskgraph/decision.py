@@ -46,7 +46,7 @@ PER_PROJECT_PARAMETERS = {
     },
 
     'cedar': {
-        'target_tasks_method': 'cedar_tasks',
+        'target_tasks_method': 'default',
     },
 
     'oak': {

@@ -216,22 +216,6 @@ def target_tasks_ash(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-@_target_task('cedar_tasks')
-def target_tasks_cedar(full_task_graph, parameters, graph_config):
-    """Target tasks that only run on the cedar branch."""
-    def filter(task):
-        platform = task.attributes.get('build_platform')
-        # only select platforms
-        if platform not in ('linux64', 'macosx64'):
-            return False
-        if task.attributes.get('unittest_suite'):
-            if not (task.attributes['unittest_suite'].startswith('mochitest') or
-                    'xpcshell' in task.attributes['unittest_suite']):
-                return False
-        return True
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
-
-
 @_target_task('graphics_tasks')
 def target_tasks_graphics(full_task_graph, parameters, graph_config):
     """In addition to doing the filtering by project that the 'default'
@@ -249,7 +233,7 @@ def target_tasks_graphics(full_task_graph, parameters, graph_config):
 
 @_target_task('mochitest_valgrind')
 def target_tasks_valgrind(full_task_graph, parameters, graph_config):
-    """Target tasks that only run on the cedar branch."""
+    """Target tasks for mochitest valgrind jobs."""
     def filter(task):
         platform = task.attributes.get('test_platform', '').split('/')[0]
         if platform not in ['linux64']:

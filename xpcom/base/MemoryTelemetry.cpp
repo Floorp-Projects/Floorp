@@ -237,8 +237,10 @@ nsresult MemoryTelemetry::GatherReports(
   do {                                                                  \
     int64_t amt;                                                        \
     nsresult rv = mgr->Get##metric(&amt);                               \
-    if (!NS_WARN_IF(NS_FAILED(rv))) {                                   \
+    if (NS_SUCCEEDED(rv)) {                                             \
       HandleMemoryReport(Telemetry::id, nsIMemoryReporter::units, amt); \
+    } else if (rv != NS_ERROR_NOT_AVAILABLE) {                          \
+      NS_WARNING("Failed to retrieve memory telemetry for " # metric);  \
     }                                                                   \
   } while (0)
 

@@ -11,12 +11,14 @@ import multiprocessing
 import os
 import subprocess
 import sys
+import types
 try:
     from shutil import which
 except ImportError:
     # shutil.which is not available in Python 2.7
     import which
 
+from StringIO import StringIO
 from mach.mixin.process import ProcessExecutionMixin
 from mozversioncontrol import (
     get_repository_from_build_config,
@@ -25,6 +27,7 @@ from mozversioncontrol import (
 )
 
 from .backend.configenvironment import ConfigEnvironment
+from .configure import ConfigureSandbox
 from .controller.clobber import Clobberer
 from .mozconfig import (
     MozconfigFindException,
@@ -33,13 +36,11 @@ from .mozconfig import (
 )
 from .pythonutil import find_python3_executable
 from .util import (
+    ReadOnlyNamespace,
     memoize,
     memoized_property,
 )
 from .virtualenv import VirtualenvManager
-
-
-_config_guess_output = []
 
 
 def ancestors(path):
@@ -216,13 +217,48 @@ class MozbuildObject(ProcessExecutionMixin):
 
     @staticmethod
     @memoize
-    def get_mozconfig(topsrcdir, path, env_mozconfig):
+    def get_mozconfig_and_target(topsrcdir, path, env_mozconfig):
         # env_mozconfig is only useful for unittests, which change the value of
         # the environment variable, which has an impact on autodetection (when
         # path is MozconfigLoader.AUTODETECT), and memoization wouldn't account
         # for it without the explicit (unused) argument.
-        loader = MozconfigLoader(topsrcdir)
-        return loader.read_mozconfig(path=path)
+        out = StringIO()
+        env = os.environ
+        if path and path != MozconfigLoader.AUTODETECT:
+            env = dict(env)
+            env['MOZCONFIG'] = path
+
+        # We use python configure to get mozconfig content and the value for
+        # --target (from mozconfig if necessary, guessed otherwise).
+
+        # Modified configure sandbox that replaces '--help' dependencies with
+        # `always`, such that depends functions with a '--help' dependency are
+        # not automatically executed when including files. We don't want all of
+        # those from init.configure to execute, only a subset.
+        class ReducedConfigureSandbox(ConfigureSandbox):
+            def depends_impl(self, *args, **kwargs):
+                args = tuple(
+                    a if not isinstance(a, types.StringTypes) or a != '--help'
+                    else self._always.sandboxed
+                    for a in args
+                )
+                return super(ReducedConfigureSandbox, self).depends_impl(*args, **kwargs)
+
+        sandbox = ReducedConfigureSandbox({}, environ=env, argv=['mach', '--help'],
+                                          stdout=out, stderr=out)
+        base_dir = os.path.join(topsrcdir, 'build', 'moz.configure')
+        sandbox.include_file(os.path.join(base_dir, 'init.configure'))
+        # Force mozconfig options injection before getting the target.
+        sandbox._value_for(sandbox['mozconfig_options'])
+        return (
+            sandbox._value_for(sandbox['mozconfig']),
+            sandbox._value_for(sandbox['real_target']),
+        )
+
+    @property
+    def mozconfig_and_target(self):
+        return self.get_mozconfig_and_target(
+            self.topsrcdir, self._mozconfig, os.environ.get('MOZCONFIG'))
 
     @property
     def mozconfig(self):
@@ -230,11 +266,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
         This a dict as returned by MozconfigLoader.read_mozconfig()
         """
-        if not isinstance(self._mozconfig, dict):
-            self._mozconfig = self.get_mozconfig(
-                self.topsrcdir, self._mozconfig, os.environ.get('MOZCONFIG'))
-
-        return self._mozconfig
+        return self.mozconfig_and_target[0]
 
     @property
     def config_environment(self):
@@ -480,31 +512,7 @@ class MozbuildObject(ProcessExecutionMixin):
         return path
 
     def resolve_config_guess(self):
-        make_extra = self.mozconfig['make_extra'] or []
-        make_extra = dict(m.split('=', 1) for m in make_extra)
-
-        config_guess = make_extra.get('CONFIG_GUESS', None)
-
-        if config_guess:
-            return config_guess
-
-        # config.guess results should be constant for process lifetime. Cache
-        # it.
-        if _config_guess_output:
-            return _config_guess_output[0]
-
-        p = os.path.join(self.topsrcdir, 'build', 'autoconf', 'config.guess')
-
-        # This is a little kludgy. We need access to the normalize_command
-        # function. However, that's a method of a mach mixin, so we need a
-        # class instance. Ideally the function should be accessible as a
-        # standalone function.
-        o = MozbuildObject(self.topsrcdir, None, None, None)
-        args = o._normalize_command([p], True)
-
-        _config_guess_output.append(
-                subprocess.check_output(args, cwd=self.topsrcdir, shell=True).strip())
-        return _config_guess_output[0]
+        return self.mozconfig_and_target[1].alias
 
     def notify(self, msg):
         """Show a desktop notification with the supplied message

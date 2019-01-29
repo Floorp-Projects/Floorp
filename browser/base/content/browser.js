@@ -1749,6 +1749,11 @@ var gBrowserInit = {
       gBrowserThumbnails.init();
     });
 
+    // Show the addons private browsing panel the first time a private window.
+    scheduleIdleTask(() => {
+      ExtensionsUI.showPrivateBrowsingNotification(window);
+    });
+
     scheduleIdleTask(() => {
       // Initialize the download manager some time after the app starts so that
       // auto-resume downloads begin (such as after crashing or quitting with
@@ -2163,6 +2168,12 @@ function BrowserHome(aEvent) {
   // openTrustedLinkIn in utilityOverlay.js doesn't handle loading multiple pages
   switch (where) {
   case "current":
+    // If we're going to load an initial page in the current tab as the
+    // home page, we set initialPageLoadedFromURLBar so that the URL
+    // bar is cleared properly (even during a remoteness flip).
+    if (isInitialPage(homePage)) {
+      gBrowser.selectedBrowser.initialPageLoadedFromUserAction = homePage;
+    }
     loadOneOrMoreURIs(homePage, Services.scriptSecurityManager.getSystemPrincipal());
     if (isBlankPageURL(homePage)) {
       focusAndSelectUrlBar();

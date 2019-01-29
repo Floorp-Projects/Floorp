@@ -111,6 +111,9 @@ types.getType = function(type) {
   // Not a collection, might be actor detail
   const pieces = type.split("#", 2);
   if (pieces.length > 1) {
+    if (pieces[1] != "actorid") {
+      throw new Error("Unsupported detail, only support 'actorid', got: " + pieces[1]);
+    }
     return types.addActorDetail(type, pieces[0], pieces[1]);
   }
 
@@ -341,8 +344,12 @@ types.addActorType = function(name) {
         ctx.marshallPool().manage(front);
       }
 
-      v = type.formType(detail).read(v, front, detail);
-      front.form(v, detail, ctx);
+      // When the type `${name}#actorid` is used, `v` is a string refering to the
+      // actor ID. We only set the actorID just before and so do not need anything else.
+      if (detail != "actorid") {
+        v = identityWrite(v);
+        front.form(v, ctx);
+      }
 
       return front;
     },
@@ -353,27 +360,14 @@ types.addActorType = function(name) {
         if (!v.actorID) {
           ctx.marshallPool().manage(v);
         }
-        return type.formType(detail).write(v.form(detail), ctx, detail);
+        if (detail == "actorid") {
+          return v.actorID;
+        }
+        return identityWrite(v.form(detail));
       }
 
       // Writing a request from the client side, just send the actor id.
       return v.actorID;
-    },
-    formType: (detail) => {
-      if (!("formType" in type.actorSpec)) {
-        return types.Primitive;
-      }
-
-      let formAttr = "formType";
-      if (detail) {
-        formAttr += "#" + detail;
-      }
-
-      if (!(formAttr in type.actorSpec)) {
-        throw new Error("No type defined for " + formAttr);
-      }
-
-      return type.actorSpec[formAttr];
     },
   });
   return type;
@@ -1118,17 +1112,6 @@ var generateActorSpec = function(actorDesc) {
       continue;
     }
 
-    if (name.startsWith("formType")) {
-      if (typeof (desc.value) === "string") {
-        actorSpec[name] = types.getType(desc.value);
-      } else if (desc.value.name && registeredTypes.has(desc.value.name)) {
-        actorSpec[name] = desc.value;
-      } else {
-        // Shorthand for a newly-registered DictType.
-        actorSpec[name] = types.addDictType(actorDesc.typeName + "__" + name, desc.value);
-      }
-    }
-
     if (desc.value._methodSpec) {
       const methodSpec = desc.value._methodSpec;
       const spec = {};
@@ -1286,12 +1269,10 @@ exports.ActorClassWithSpec = ActorClassWithSpec;
  *   Either a DebuggerServerConnection or a DebuggerClient.  Must have
  *   addActorPool, removeActorPool, and poolFor.
  *   conn can be null if the subclass provides a conn property.
- * @param optional form
- *   The json form provided by the server.
  * @constructor
  */
 class Front extends Pool {
-  constructor(conn = null, form = null, detail = null, context = null) {
+  constructor(conn = null) {
     super(conn);
     this.actorID = null;
     this._requests = [];
@@ -1305,16 +1286,6 @@ class Front extends Pool {
     // These listeners are register via Front.before function.
     // Map(Event Name[string] => Event Listener[function])
     this._beforeListeners = new Map();
-
-    // protocol.js no longer uses this data in the constructor, only external
-    // uses do.  External usage of manually-constructed fronts will be
-    // drastically reduced if we convert the root and target actors to
-    // protocol.js, in which case this can probably go away.
-    if (form) {
-      this.actorID = form.actor;
-      form = types.getType(this.typeName).formType(detail).read(form, this, detail);
-      this.form(form, detail, context);
-    }
   }
 
   destroy() {
@@ -1658,6 +1629,19 @@ exports.dumpProtocolSpec = function() {
   return ret;
 };
 
+/**
+ * Instantiate a global (preference, device) or target-scoped (webconsole, inspector)
+ * front of the given type by picking its actor ID out of either the target or root
+ * front's form.
+ *
+ * @param DebuggerClient client
+ *    The DebuggerClient instance to use.
+ * @param string typeName
+ *    The type name of the front to instantiate. This is defined in its specifiation.
+ * @param json form
+ *    If we want to instantiate a global actor's front, this is the root front's form,
+ *    otherwise we are instantiating a target-scoped front from the target front's form.
+ */
 function getFront(client, typeName, form) {
   const type = types.getType(typeName);
   if (!type) {
@@ -1669,9 +1653,25 @@ function getFront(client, typeName, form) {
   // Use intermediate Class variable to please eslint requiring
   // a capital letter for all constructors.
   const Class = type.frontClass;
-  const instance = new Class(client, form);
+  const instance = new Class(client);
+  const { formAttributeName } = instance;
+  if (!formAttributeName) {
+    throw new Error(`Can't find the form attribute name for ${typeName}`);
+  }
+  // Retrive the actor ID from root or target actor's form
+  instance.actorID = form[formAttributeName];
+  if (!instance.actorID) {
+    throw new Error(`Can't find the actor ID for ${typeName} from root or target` +
+      ` actor's form.`);
+  }
+  // Historically, all global and target scoped front were the first protocol.js in the
+  // hierarchy of fronts. So that they have to self-own themself. But now, Root and Target
+  // are fronts and should own them. The only issue here is that we should manage the
+  // front *before* calling initialize which is going to try managing child fronts.
+  instance.manage(instance);
+
   if (typeof (instance.initialize) == "function") {
-    return instance.initialize(client, form).then(() => instance);
+    return instance.initialize().then(() => instance);
   }
   return instance;
 }
