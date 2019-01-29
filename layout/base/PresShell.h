@@ -707,6 +707,19 @@ class PresShell final : public nsIPresShell,
                                    nsEventStatus* aEventStatus);
 
     /**
+     * MaybeHandleEventWithAccessibleCaret() may handle aGUIEvent with
+     * AccessibleCaretEventHub if it's necessary.
+     *
+     * @param aGUIEvent         Event may be handled by AccessibleCaretEventHub.
+     * @param aEventStatus      [in/out] EventStatus of aGUIEvent.
+     * @return                  true if AccessibleCaretEventHub handled the
+     *                          event and caller shouldn't keep handling it.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    bool MaybeHandleEventWithAccessibleCaret(WidgetGUIEvent* aGUIEvent,
+                                             nsEventStatus* aEventStatus);
+
+    /**
      * XXX Needs better name.
      * HandleEventInternal() dispatches aEvent into the DOM tree and
      * notify EventStateManager of that.
