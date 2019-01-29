@@ -4227,11 +4227,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_NEWTARGET)
 
     CASE(JSOP_IMPORTMETA) {
-      ReservedRooted<JSObject*> module(&rootObject0,
-                                       GetModuleObjectForScript(script));
-      MOZ_ASSERT(module);
-
-      JSObject* metaObject = GetOrCreateModuleMetaObject(cx, module);
+      JSObject* metaObject = ImportMetaOperation(cx, script);
       if (!metaObject) {
         goto error;
       }
@@ -4687,6 +4683,12 @@ JSObject* js::SingletonObjectLiteralOperation(JSContext* cx,
 
   cx->realm()->behaviors().setSingletonsAsValues();
   return obj;
+}
+
+JSObject* js::ImportMetaOperation(JSContext* cx, HandleScript script) {
+  RootedObject module(cx, GetModuleObjectForScript(script));
+  MOZ_ASSERT(module);
+  return GetOrCreateModuleMetaObject(cx, module);
 }
 
 bool js::ThrowMsgOperation(JSContext* cx, const unsigned errorNum) {
