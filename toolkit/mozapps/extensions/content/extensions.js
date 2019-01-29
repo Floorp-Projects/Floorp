@@ -2419,6 +2419,13 @@ var gListView = {
       gViewController.loadView("addons://legacy/");
     });
 
+    try {
+      document.getElementById("private-browsing-learnmore-link")
+              .setAttribute("href", SUPPORT_URL + "extensions-pb");
+    } catch (e) {
+      document.getElementById("private-browsing-notice").hidden = true;
+    }
+
     let findSignedAddonsLink = document.getElementById("find-alternative-addons");
     try {
       findSignedAddonsLink.setAttribute("href",
@@ -2475,6 +2482,9 @@ var gListView = {
           showLegacyInfo = true;
         }
       }
+
+      let privateNotice = document.getElementById("private-browsing-notice");
+      privateNotice.hidden = allowPrivateBrowsingByDefault || aType != "extension";
 
       var elements = [];
 
