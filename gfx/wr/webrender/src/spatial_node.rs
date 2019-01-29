@@ -79,9 +79,7 @@ fn compute_offset_from(
         let ancestor = &previous_spatial_nodes[parent_index.0 as usize];
         match ancestor.node_type {
             SpatialNodeType::ReferenceFrame(..) => {
-                // FIXME(emilio, bug 1523436): Breaking here is technically
-                // wrong and can happen if the perspective frame is transformed
-                // as well.
+                // We don't want to scroll across reference frames.
                 break;
             },
             SpatialNodeType::ScrollFrame(ref info) => {
