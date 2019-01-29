@@ -738,7 +738,14 @@ void BaselineCompilerCodeGen::subtractScriptSlotsSize(Register reg,
 template <>
 void BaselineInterpreterCodeGen::subtractScriptSlotsSize(Register reg,
                                                          Register scratch) {
-  MOZ_CRASH("NYI: interpreter subtractScriptSlotsSize");
+  // reg = reg - script->nslots() * sizeof(Value)
+  MOZ_ASSERT(reg != scratch);
+  loadScript(scratch);
+  masm.load32(Address(scratch, JSScript::offsetOfNslots()), scratch);
+  static_assert(sizeof(Value) == 8,
+                "shift by 3 below assumes Value is 8 bytes");
+  masm.lshiftPtr(Imm32(3), scratch);
+  masm.subPtr(scratch, reg);
 }
 
 template <>
@@ -748,7 +755,13 @@ void BaselineCompilerCodeGen::loadGlobalLexicalEnvironment(Register dest) {
 
 template <>
 void BaselineInterpreterCodeGen::loadGlobalLexicalEnvironment(Register dest) {
-  MOZ_CRASH("NYI: interpreter loadGlobalLexicalEnvironment");
+  // TODO(bug 1522394): consider storing a pointer to the global lexical in
+  // Realm to eliminate some dependent loads and unboxing.
+  masm.loadPtr(AbsoluteAddress(cx->addressOfRealm()), dest);
+  masm.loadPtr(Address(dest, Realm::offsetOfActiveGlobal()), dest);
+  masm.loadPtr(Address(dest, NativeObject::offsetOfSlots()), dest);
+  Address lexicalSlot(dest, GlobalObject::offsetOfLexicalEnvironmentSlot());
+  masm.unboxObject(lexicalSlot, dest);
 }
 
 template <>
@@ -772,17 +785,22 @@ void BaselineCompilerCodeGen::loadGlobalThisValue(ValueOperand dest) {
 
 template <>
 void BaselineInterpreterCodeGen::loadGlobalThisValue(ValueOperand dest) {
-  MOZ_CRASH("NYI: interpreter loadGlobalThisValue");
+  Register scratch = dest.scratchReg();
+  loadGlobalLexicalEnvironment(scratch);
+  static constexpr size_t SlotOffset =
+      LexicalEnvironmentObject::offsetOfThisValueOrScopeSlot();
+  masm.loadValue(Address(scratch, SlotOffset), dest);
 }
 
 template <>
-void BaselineCompilerCodeGen::pushScriptArg() {
+void BaselineCompilerCodeGen::pushScriptArg(Register scratch) {
   pushArg(ImmGCPtr(handler.script()));
 }
 
 template <>
-void BaselineInterpreterCodeGen::pushScriptArg() {
-  MOZ_CRASH("NYI: interpreter pushScriptArg");
+void BaselineInterpreterCodeGen::pushScriptArg(Register scratch) {
+  loadScript(scratch);
+  pushArg(scratch);
 }
 
 template <>
@@ -975,7 +993,7 @@ bool BaselineCompilerCodeGen::initEnvironmentChain() {
 
     prepareVMCall();
 
-    pushScriptArg();
+    pushScriptArg(R2.scratchReg());
     masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
     pushArg(R0.scratchReg());
 
@@ -3287,7 +3305,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_SETINTRINSIC() {
 
   pushArg(R0);
   pushBytecodePCArg();
-  pushScriptArg();
+  pushScriptArg(R2.scratchReg());
 
   return callVM(SetIntrinsicInfo);
 }
@@ -3305,7 +3323,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DEFVAR() {
   prepareVMCall();
 
   pushBytecodePCArg();
-  pushScriptArg();
+  pushScriptArg(R2.scratchReg());
   pushArg(R0.scratchReg());
 
   return callVM(DefVarInfo);
@@ -3327,7 +3345,7 @@ bool BaselineCodeGen<Handler>::emitDefLexical(JSOp op) {
   prepareVMCall();
 
   pushBytecodePCArg();
-  pushScriptArg();
+  pushScriptArg(R2.scratchReg());
   pushArg(R0.scratchReg());
 
   return callVM(DefLexicalInfo);
@@ -3358,7 +3376,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DEFFUN() {
 
   pushArg(R0.scratchReg());
   pushArg(R1.scratchReg());
-  pushScriptArg();
+  pushScriptArg(R2.scratchReg());
 
   return callVM(DefFunOperationInfo);
 }
@@ -5598,7 +5616,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CLASSCONSTRUCTOR() {
   prepareVMCall();
   pushArg(ImmPtr(nullptr));
   pushBytecodePCArg();
-  pushScriptArg();
+  pushScriptArg(R2.scratchReg());
   if (!callVM(MakeDefaultConstructorInfo)) {
     return false;
   }
@@ -5617,7 +5635,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DERIVEDCONSTRUCTOR() {
   prepareVMCall();
   pushArg(R0.scratchReg());
   pushBytecodePCArg();
-  pushScriptArg();
+  pushScriptArg(R2.scratchReg());
   if (!callVM(MakeDefaultConstructorInfo)) {
     return false;
   }
@@ -5668,7 +5686,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DYNAMIC_IMPORT() {
 
   prepareVMCall();
   pushArg(R0);
-  pushScriptArg();
+  pushScriptArg(R2.scratchReg());
   if (!callVM(StartDynamicModuleImportInfo)) {
     return false;
   }
