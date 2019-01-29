@@ -6,7 +6,7 @@
 // Test that the Shutdown Terminator report errors correctly
 
 function setup_crash() {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   Services.prefs.setBoolPref("toolkit.terminator.testing", true);
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 10);

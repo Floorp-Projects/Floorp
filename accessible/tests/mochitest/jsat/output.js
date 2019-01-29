@@ -1,6 +1,6 @@
 const PREF_UTTERANCE_ORDER = "accessibility.accessfu.utterance";
 
-ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
+const {PivotContext} = ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.import("resource://gre/modules/accessibility/OutputGenerator.jsm", this);
 
 /**

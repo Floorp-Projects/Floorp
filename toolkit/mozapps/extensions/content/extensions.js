@@ -8,12 +8,10 @@
 /* globals ProcessingInstruction */
 /* exported UPDATES_RELEASENOTES_TRANSFORMFILE, XMLURI_PARSE_ERROR, loadView, gBrowser */
 
-ChromeUtils.import("resource://gre/modules/DeferredTask.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
-ChromeUtils.import("resource://gre/modules/addons/AddonSettings.jsm");
+const {DeferredTask} = ChromeUtils.import("resource://gre/modules/DeferredTask.jsm");
+const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const {AddonRepository} = ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
+const {AddonSettings} = ChromeUtils.import("resource://gre/modules/addons/AddonSettings.jsm");
 
 ChromeUtils.defineModuleGetter(this, "E10SUtils", "resource://gre/modules/E10SUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Extension",
@@ -61,7 +59,7 @@ const XMLURI_PARSE_ERROR = "http://www.mozilla.org/newlayout/xml/parsererror.xml
 var gViewDefault = "addons://discover/";
 
 XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
-  const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {});
+  const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
   return ExtensionParent.extensionStylesheets;
 });
 

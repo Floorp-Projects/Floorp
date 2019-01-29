@@ -42,7 +42,7 @@ import {
   createStore,
   selectors,
   actions,
-  makeSource,
+  makeOriginalSource,
   waitForState
 } from "../../utils/test-head";
 
@@ -55,8 +55,8 @@ describe("when adding breakpoints", () => {
       loadInitialState()
     );
 
-    await dispatch(actions.newSource(makeSource("foo.js")));
-    await dispatch(actions.loadSourceText(makeSource("foo.js")));
+    await dispatch(actions.newSource(makeOriginalSource("foo.js")));
+    await dispatch(actions.loadSourceText(makeOriginalSource("foo.js")));
 
     const bp = generateBreakpoint("foo.js");
     const id = makePendingLocationId(bp.location);
@@ -87,11 +87,11 @@ describe("when adding breakpoints", () => {
         loadInitialState()
       );
 
-      await dispatch(actions.newSource(makeSource("foo")));
-      await dispatch(actions.newSource(makeSource("foo2")));
+      await dispatch(actions.newSource(makeOriginalSource("foo")));
+      await dispatch(actions.newSource(makeOriginalSource("foo2")));
 
-      await dispatch(actions.loadSourceText(makeSource("foo")));
-      await dispatch(actions.loadSourceText(makeSource("foo2")));
+      await dispatch(actions.loadSourceText(makeOriginalSource("foo")));
+      await dispatch(actions.loadSourceText(makeOriginalSource("foo2")));
 
       await dispatch(actions.addBreakpoint(breakpoint1.location));
       await dispatch(actions.addBreakpoint(breakpoint2.location));
@@ -107,8 +107,8 @@ describe("when adding breakpoints", () => {
         loadInitialState()
       );
 
-      await dispatch(actions.newSource(makeSource("foo")));
-      await dispatch(actions.loadSourceText(makeSource("foo")));
+      await dispatch(actions.newSource(makeOriginalSource("foo")));
+      await dispatch(actions.loadSourceText(makeOriginalSource("foo")));
 
       await dispatch(
         actions.addBreakpoint(breakpoint1.location, { hidden: true })
@@ -123,14 +123,14 @@ describe("when adding breakpoints", () => {
         simpleMockThreadClient,
         loadInitialState()
       );
-      await dispatch(actions.newSource(makeSource("foo")));
-      await dispatch(actions.newSource(makeSource("foo2")));
-      await dispatch(actions.loadSourceText(makeSource("foo")));
-      await dispatch(actions.loadSourceText(makeSource("foo2")));
+      await dispatch(actions.newSource(makeOriginalSource("foo")));
+      await dispatch(actions.newSource(makeOriginalSource("foo2")));
+      await dispatch(actions.loadSourceText(makeOriginalSource("foo")));
+      await dispatch(actions.loadSourceText(makeOriginalSource("foo2")));
 
       await dispatch(actions.addBreakpoint(breakpoint1.location));
       await dispatch(actions.addBreakpoint(breakpoint2.location));
-      await dispatch(actions.removeBreakpoint(breakpoint1.location));
+      await dispatch(actions.removeBreakpoint(breakpoint1));
 
       const pendingBps = selectors.getPendingBreakpoints(getState());
       expect(pendingBps.hasOwnProperty(breakpointLocationId1)).toBe(false);
@@ -147,16 +147,16 @@ describe("when changing an existing breakpoint", () => {
     );
     const bp = generateBreakpoint("foo");
     const id = makePendingLocationId(bp.location);
-    await dispatch(actions.newSource(makeSource("foo")));
-    await dispatch(actions.loadSourceText(makeSource("foo")));
+    await dispatch(actions.newSource(makeOriginalSource("foo")));
+    await dispatch(actions.loadSourceText(makeOriginalSource("foo")));
 
     await dispatch(actions.addBreakpoint(bp.location));
     await dispatch(
-      actions.setBreakpointCondition(bp.location, { condition: "2" })
+      actions.setBreakpointOptions(bp.location, { condition: "2" })
     );
     const bps = selectors.getPendingBreakpoints(getState());
     const breakpoint = bps[id];
-    expect(breakpoint.condition).toBe("2");
+    expect(breakpoint.options.condition).toBe("2");
   });
 
   it("if disabled, updates corresponding pendingBreakpoint", async () => {
@@ -167,11 +167,11 @@ describe("when changing an existing breakpoint", () => {
     const bp = generateBreakpoint("foo");
     const id = makePendingLocationId(bp.location);
 
-    await dispatch(actions.newSource(makeSource("foo")));
-    await dispatch(actions.loadSourceText(makeSource("foo")));
+    await dispatch(actions.newSource(makeOriginalSource("foo")));
+    await dispatch(actions.loadSourceText(makeOriginalSource("foo")));
 
     await dispatch(actions.addBreakpoint(bp.location));
-    await dispatch(actions.disableBreakpoint(bp.location));
+    await dispatch(actions.disableBreakpoint(bp));
     const bps = selectors.getPendingBreakpoints(getState());
     const breakpoint = bps[id];
     expect(breakpoint.disabled).toBe(true);
@@ -183,19 +183,19 @@ describe("when changing an existing breakpoint", () => {
       loadInitialState()
     );
     const bp = generateBreakpoint("foo.js");
-    const source = makeSource("foo.js");
+    const source = makeOriginalSource("foo.js");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(makeSource("foo.js")));
+    await dispatch(actions.loadSourceText(makeOriginalSource("foo.js")));
 
     const id = makePendingLocationId(bp.location);
 
     await dispatch(actions.addBreakpoint(bp.location));
     await dispatch(
-      actions.setBreakpointCondition(bp.location, { condition: "2" })
+      actions.setBreakpointOptions(bp.location, { condition: "2" })
     );
     const bps = selectors.getPendingBreakpoints(getState());
     const breakpoint = bps[id];
-    expect(breakpoint.condition).toBe("2");
+    expect(breakpoint.options.condition).toBe("2");
   });
 });
 
@@ -215,8 +215,8 @@ describe("initializing when pending breakpoints exist in prefs", () => {
       loadInitialState()
     );
     const bar = generateBreakpoint("bar.js");
-    await dispatch(actions.newSource(makeSource("bar.js")));
-    await dispatch(actions.loadSourceText(makeSource("bar.js")));
+    await dispatch(actions.newSource(makeOriginalSource("bar.js")));
+    await dispatch(actions.loadSourceText(makeOriginalSource("bar.js")));
 
     await dispatch(actions.addBreakpoint(bar.location));
 
@@ -231,8 +231,8 @@ describe("initializing when pending breakpoints exist in prefs", () => {
     );
     const bp = generateBreakpoint("foo.js");
 
-    await dispatch(actions.newSource(makeSource("foo.js")));
-    await dispatch(actions.loadSourceText(makeSource("foo.js")));
+    await dispatch(actions.newSource(makeOriginalSource("foo.js")));
+    await dispatch(actions.loadSourceText(makeOriginalSource("foo.js")));
 
     await dispatch(actions.addBreakpoint(bp.location));
 
@@ -249,23 +249,23 @@ describe("initializing with disabled pending breakpoints in prefs", () => {
     );
 
     const { getState, dispatch } = store;
-    const source = makeSource("bar.js");
+    const source = makeOriginalSource("bar.js");
 
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(makeSource("bar.js")));
+    await dispatch(actions.loadSourceText(source));
 
     await waitForState(store, state => {
-      const bps = selectors.getBreakpointsForSource(state, "bar.js");
+      const bps = selectors.getBreakpointsForSource(state, source.id);
       return bps && Object.values(bps).length > 0;
     });
 
     const bp = selectors.getBreakpointForLocation(getState(), {
       line: 5,
       column: undefined,
-      sourceUrl: "http://localhost:8000/examples/bar.js",
-      sourceId: "bar.js"
+      sourceUrl: source.url,
+      sourceId: source.id
     });
-    expect(bp.location.sourceId).toEqual("bar.js");
+    expect(bp.location.sourceId).toEqual(source.id);
     expect(bp.disabled).toEqual(true);
   });
 });
@@ -277,9 +277,9 @@ describe("adding sources", () => {
 
     expect(selectors.getBreakpointCount(getState())).toEqual(0);
 
-    const source = makeSource("bar.js");
+    const source = makeOriginalSource("bar.js");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(makeSource("bar.js")));
+    await dispatch(actions.loadSourceText(makeOriginalSource("bar.js")));
 
     await waitForState(store, state => selectors.getBreakpointCount(state) > 0);
 
@@ -287,7 +287,7 @@ describe("adding sources", () => {
   });
 
   it("corresponding breakpoints are added to the original source", async () => {
-    const source = makeSource("bar.js", { sourceMapURL: "foo" });
+    const source = makeOriginalSource("bar.js", { sourceMapURL: "foo" });
     const store = createStore(simpleMockThreadClient, loadInitialState(), {
       getOriginalURLs: async () => [source.url],
       getOriginalSourceText: async () => ({ source: "" }),
@@ -316,11 +316,11 @@ describe("adding sources", () => {
 
     expect(selectors.getBreakpointCount(getState())).toEqual(0);
 
-    const source1 = makeSource("bar.js");
-    const source2 = makeSource("foo.js");
+    const source1 = makeOriginalSource("bar.js");
+    const source2 = makeOriginalSource("foo.js");
     await dispatch(actions.newSources([source1, source2]));
-    await dispatch(actions.loadSourceText(makeSource("foo.js")));
-    await dispatch(actions.loadSourceText(makeSource("bar.js")));
+    await dispatch(actions.loadSourceText(makeOriginalSource("foo.js")));
+    await dispatch(actions.loadSourceText(makeOriginalSource("bar.js")));
 
     await waitForState(store, state => selectors.getBreakpointCount(state) > 0);
 
@@ -340,8 +340,8 @@ describe("invalid breakpoint location", () => {
     const correctedPendingId = makePendingLocationId(correctedLocation);
 
     // test
-    await dispatch(actions.newSource(makeSource("foo.js")));
-    await dispatch(actions.loadSourceText(makeSource("foo.js")));
+    await dispatch(actions.newSource(makeOriginalSource("foo.js")));
+    await dispatch(actions.loadSourceText(makeOriginalSource("foo.js")));
 
     await dispatch(actions.addBreakpoint(bp.location));
     const pendingBps = selectors.getPendingBreakpoints(getState());

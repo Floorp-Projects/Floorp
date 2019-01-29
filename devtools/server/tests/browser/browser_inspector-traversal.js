@@ -214,7 +214,7 @@ add_task(async function testLongValue() {
 
   SimpleTest.registerCleanupFunction(async function() {
     await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-      const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
       const WalkerActor = require("devtools/server/actors/inspector/walker");
       WalkerActor.setValueSummaryLength(WalkerActor.DEFAULT_VALUE_SUMMARY_LENGTH);
     });
@@ -222,7 +222,7 @@ add_task(async function testLongValue() {
 
   const longstringText = await ContentTask.spawn(gBrowser.selectedBrowser, null,
     function() {
-      const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
       const testSummaryLength = 10;
       const WalkerActor = require("devtools/server/actors/inspector/walker");
 

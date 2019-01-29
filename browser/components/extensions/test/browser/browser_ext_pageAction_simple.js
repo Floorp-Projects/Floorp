@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource:///modules/PageActions.jsm");
+const {PageActions} = ChromeUtils.import("resource:///modules/PageActions.jsm");
 
 const BASE = "http://example.com/browser/browser/components/extensions/test/browser/";
 

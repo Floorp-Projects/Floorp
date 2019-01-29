@@ -15,8 +15,8 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionParent"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
@@ -41,8 +41,8 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 XPCOMUtils.defineLazyPreferenceGetter(this, "gTimingEnabled",
                                       "extensions.webextensions.enablePerformanceCounters",
                                       false);
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   BaseContext,

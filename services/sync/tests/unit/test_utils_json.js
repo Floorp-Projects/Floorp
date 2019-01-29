@@ -1,8 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://services-sync/util.js");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 add_task(async function test_roundtrip() {
   _("Do a simple write of an array to json and read");

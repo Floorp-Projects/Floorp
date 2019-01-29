@@ -5,7 +5,7 @@
 
 var EXPORTED_SYMBOLS = [ "FileUtils" ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gDirService",
                                    "@mozilla.org/file/directory_service;1",

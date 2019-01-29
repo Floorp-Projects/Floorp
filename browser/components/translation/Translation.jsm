@@ -12,7 +12,7 @@ var EXPORTED_SYMBOLS = [
 const TRANSLATION_PREF_SHOWUI = "browser.translation.ui.show";
 const TRANSLATION_PREF_DETECT_LANG = "browser.translation.detectLanguage";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Translation = {
   STATE_OFFER: 0,
@@ -74,7 +74,7 @@ var Translation = {
 
   openProviderAttribution() {
     let attribution = this.supportedEngines[this.translationEngine];
-    ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
+    const {BrowserWindowTracker} = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
     BrowserWindowTracker.getTopWindow().openWebLinkIn(attribution, "tab");
   },
 

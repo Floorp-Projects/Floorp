@@ -13,9 +13,9 @@
 <script type="text/javascript">
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var {PageActions} = ChromeUtils.import("resource://gre/modules/PageActions.jsm", {});
+var {PageActions} = ChromeUtils.import("resource://gre/modules/PageActions.jsm");
 
 add_task(async function test_setPopup_and_getPopup() {
   async function background() {

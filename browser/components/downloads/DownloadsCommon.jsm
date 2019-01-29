@@ -32,8 +32,8 @@ var EXPORTED_SYMBOLS = [
 
 // Globals
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -53,7 +53,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   let consoleOptions = {
     maxLogLevelPref: "browser.download.loglevel",
     prefix: "Downloads",

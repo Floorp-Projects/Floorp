@@ -5,7 +5,7 @@
 // This test verifies that system addon updates are correctly blocked by the
 // DisableSystemAddonUpdate enterprise policy.
 
-ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm");
+const {EnterprisePolicyTesting} = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm");
 
 // Setting PREF_DISABLE_SECURITY tells the policy engine that we are in testing
 // mode and enables restarting the policy engine without restarting the browser.

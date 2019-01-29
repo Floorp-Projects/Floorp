@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 let counter = 0;
 
 AntiTracking.runTest("Storage Access API called in a sandboxed iframe",

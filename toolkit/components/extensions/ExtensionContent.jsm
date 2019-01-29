@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["ExtensionContent"];
 
 /* globals ExtensionContent */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
@@ -27,9 +27,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
 
 const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
 
-ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const {ExtensionChild} = ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm");
+const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto", "TextEncoder"]);
 

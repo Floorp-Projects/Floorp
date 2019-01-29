@@ -3,11 +3,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ModulesPing.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const MAX_NAME_LENGTH = 64;
 

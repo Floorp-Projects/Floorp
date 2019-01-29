@@ -3,15 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-if (AppConstants.platform == "android" && !Services.prefs.getBoolPref("network.mdns.use_js_fallback")) {
-  ChromeUtils.import("resource://gre/modules/MulticastDNSAndroid.jsm");
-} else {
-  ChromeUtils.import("resource://gre/modules/MulticastDNS.jsm");
-}
+const {MulticastDNS} = ChromeUtils.import(
+  (AppConstants.platform == "android" && !Services.prefs.getBoolPref("network.mdns.use_js_fallback"))
+  ? "resource://gre/modules/MulticastDNSAndroid.jsm"
+  : "resource://gre/modules/MulticastDNS.jsm");
 
 const DNSSERVICEDISCOVERY_CID = Components.ID("{f9346d98-f27a-4e89-b744-493843416480}");
 const DNSSERVICEDISCOVERY_CONTRACT_ID = "@mozilla.org/toolkit/components/mdnsresponder/dns-sd;1";

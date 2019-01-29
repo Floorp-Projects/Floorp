@@ -4,10 +4,9 @@
 
 var EXPORTED_SYMBOLS = ["Status"];
 
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/browserid_identity.js");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {CLIENT_NOT_CONFIGURED, ENGINE_SUCCEEDED, LOGIN_FAILED, LOGIN_FAILED_NO_PASSPHRASE, LOGIN_FAILED_NO_USERNAME, LOGIN_SUCCEEDED, STATUS_OK, SYNC_FAILED, SYNC_FAILED_PARTIAL, SYNC_SUCCEEDED} = ChromeUtils.import("resource://services-sync/constants.js");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {BrowserIDManager} = ChromeUtils.import("resource://services-sync/browserid_identity.js");
 
 var Status = {
   _log: Log.repository.getLogger("Sync.Status"),

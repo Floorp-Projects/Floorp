@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const proxy = createHttpServer();
 

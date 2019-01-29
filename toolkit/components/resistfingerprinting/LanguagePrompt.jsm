@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["LanguagePrompt"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const kPrefResistFingerprinting = "privacy.resistFingerprinting";
 const kPrefSpoofEnglish = "privacy.spoof_english";

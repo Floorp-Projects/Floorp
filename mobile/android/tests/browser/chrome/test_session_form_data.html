@@ -18,8 +18,8 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/Task.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Task} = ChromeUtils.import("resource://testing-common/Task.jsm");
 
 let gChromeWin;
 let gBrowserApp;

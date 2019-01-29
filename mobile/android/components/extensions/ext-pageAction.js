@@ -13,7 +13,7 @@ ChromeUtils.defineModuleGetter(this, "Services",
 ChromeUtils.defineModuleGetter(this, "PageActions",
                                "resource://gre/modules/PageActions.jsm");
 
-ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+var {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
   IconDetails,

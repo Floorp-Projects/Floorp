@@ -64,7 +64,7 @@ function update(
       return updateAllBreakpoints(state, action);
     }
 
-    case "SET_BREAKPOINT_CONDITION": {
+    case "SET_BREAKPOINT_OPTIONS": {
       return updateBreakpoint(state, action);
     }
 
@@ -291,7 +291,8 @@ export function getBreakpointsLoading(state: OuterState): boolean {
 
 export function getBreakpointsForSource(
   state: OuterState,
-  sourceId: string
+  sourceId: string,
+  line: ?number
 ): Breakpoint[] {
   if (!sourceId) {
     return [];
@@ -300,10 +301,8 @@ export function getBreakpointsForSource(
   const isGeneratedSource = isGeneratedId(sourceId);
   const breakpoints = getBreakpointsList(state);
   return breakpoints.filter(bp => {
-    const location = isGeneratedSource
-      ? bp.generatedLocation || bp.location
-      : bp.location;
-    return location.sourceId === sourceId;
+    const location = isGeneratedSource ? bp.generatedLocation : bp.location;
+    return location.sourceId === sourceId && (!line || line == location.line);
   });
 }
 
@@ -315,27 +314,16 @@ export function getBreakpointForLocation(
     return undefined;
   }
 
-  const loc = { ...location };
-
-  const breakpoints = getBreakpointsList(state);
-  return breakpoints.find(breakpoint =>
-    isMatchingLocation(loc, breakpoint.location)
-  );
+  const isGeneratedSource = isGeneratedId(location.sourceId);
+  return getBreakpointsList(state).find(bp => {
+    const loc = isGeneratedSource ? bp.generatedLocation : bp.location;
+    return isMatchingLocation(loc, location);
+  });
 }
 
 export function getHiddenBreakpoint(state: OuterState): ?Breakpoint {
   const breakpoints = getBreakpointsList(state);
-  return breakpoints.find(bp => bp.hidden);
-}
-
-export function getHiddenBreakpointLocation(
-  state: OuterState
-): ?SourceLocation {
-  const hiddenBreakpoint = getHiddenBreakpoint(state);
-  if (!hiddenBreakpoint) {
-    return null;
-  }
-  return hiddenBreakpoint.location;
+  return breakpoints.find(bp => bp.options.hidden);
 }
 
 export default update;

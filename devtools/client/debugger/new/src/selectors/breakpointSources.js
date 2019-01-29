@@ -31,9 +31,9 @@ function getBreakpointsForSource(
     .sort((a, b) => a.location.line - b.location.line)
     .filter(
       bp =>
-        !bp.hidden &&
+        !bp.options.hidden &&
         !bp.loading &&
-        (bp.text || bp.originalText || bp.condition || bp.disabled)
+        (bp.text || bp.originalText || bp.options.condition || bp.disabled)
     )
     .filter(
       bp => getSelectedLocation(bp, selectedSource).sourceId == source.id

@@ -9,8 +9,7 @@
 
 const Cm = Components.manager;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
                       .getService(Ci.nsIUUIDGenerator);

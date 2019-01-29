@@ -4,7 +4,7 @@
 
 var EXPORTED_SYMBOLS = ["Preferences"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // The minimum and maximum integers that can be set as preferences.
 // The range of valid values is narrower than the range of valid JS values

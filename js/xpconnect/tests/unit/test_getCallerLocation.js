@@ -5,7 +5,7 @@
 
 Cu.importGlobalProperties(["ChromeUtils"]);
 
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
 add_task(async function() {
   const sandbox = Cu.Sandbox("http://example.com/");

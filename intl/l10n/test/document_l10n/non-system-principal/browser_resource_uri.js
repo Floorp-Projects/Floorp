@@ -1,4 +1,4 @@
-const { L10nRegistry, FileSource } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
+const { L10nRegistry, FileSource } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
 let uri = "chrome://mochitests/content/browser/intl/l10n/test/document_l10n/non-system-principal/";
 let protocol = Services.io.getProtocolHandler("resource")

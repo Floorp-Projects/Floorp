@@ -4,7 +4,7 @@
 
 /* globals ExtensionAPI */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -335,7 +335,7 @@ TalosPowersService.prototype = {
     },
 
     dumpAboutSupport(arg, callback, win) {
-      ChromeUtils.import("resource://gre/modules/Troubleshoot.jsm");
+      const {Troubleshoot} = ChromeUtils.import("resource://gre/modules/Troubleshoot.jsm");
       Troubleshoot.snapshot(function(snapshot) {
         dump("about:support\t" + JSON.stringify(snapshot));
       });

@@ -14,8 +14,8 @@
         title="451540 test">
 
   <script type="application/javascript"><![CDATA[
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-    ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
     const SEARCH_TEXT = "minefield";
 

@@ -10,8 +10,7 @@
 const Cm = Components.manager;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 
 const APP_TIMER_TIMEOUT_MS = 1000 * 15;

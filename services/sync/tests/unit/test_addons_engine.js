@@ -3,15 +3,11 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-sync/addonsreconciler.js");
-ChromeUtils.import("resource://services-sync/engines/addons.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
+const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const {CHANGE_INSTALLED} = ChromeUtils.import("resource://services-sync/addonsreconciler.js");
+const {AddonsEngine} = ChromeUtils.import("resource://services-sync/engines/addons.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 const prefs = new Preferences();
 prefs.set("extensions.getAddons.get.url",

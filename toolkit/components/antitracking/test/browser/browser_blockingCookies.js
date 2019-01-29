@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 AntiTracking.runTest("Set/Get Cookies",
   // Blocking callback
   async _ => {

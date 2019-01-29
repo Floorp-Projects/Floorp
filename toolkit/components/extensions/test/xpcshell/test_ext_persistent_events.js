@@ -2,7 +2,7 @@
 
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 const {ExtensionAPI} = ExtensionCommon;
 
 const SCHEMA = [

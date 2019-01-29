@@ -2,8 +2,8 @@
 
 "use strict";
 
-/* global isDeeply, getMainChromeWindow, SimpleTest, SpecialPowers, Logger,
-  AccessFu, Utils, addMessageListener, currentTabDocument, currentBrowser*/
+/* global isDeeply, getMainChromeWindow, SimpleTest, SpecialPowers,
+  addMessageListener, currentTabDocument, currentBrowser*/
 
 /**
   * A global variable holding an array of test functions.
@@ -14,10 +14,9 @@ var gTestFuncs = [];
   */
 var gIterator;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/EventManager.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/Constants.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var AccessFu;
+const {Logger, Utils} = ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
 
 const MovementGranularity = {
   CHARACTER: 1,
@@ -145,7 +144,7 @@ var AccessFuTest = {
     Logger.logLevel = Logger.DEBUG;
 
     // Start AccessFu and put it in stand-by.
-    ChromeUtils.import("resource://gre/modules/accessibility/AccessFu.jsm");
+    ({AccessFu} = ChromeUtils.import("resource://gre/modules/accessibility/AccessFu.jsm"));
 
     var prefs = [["accessibility.accessfu.notify_output", 1]];
     prefs.push.apply(prefs, aAdditionalPrefs);
@@ -215,7 +214,8 @@ class AccessFuContentTestRunner {
 
   async setupMessageManager(aMessageManager) {
     function contentScript() {
-      ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
+      // eslint-disable-next-line no-shadow
+      const {Logger, Utils} = ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
       Logger.logLevel = "DEBUG";
       Utils.inTest = true;
 

@@ -11,23 +11,23 @@ const ServerSocket = CC(
     "nsIServerSocket",
     "initSpecialConnection");
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.import("chrome://marionette/content/assert.js");
-const {GeckoDriver} = ChromeUtils.import("chrome://marionette/content/driver.js", {});
-const {WebElement} = ChromeUtils.import("chrome://marionette/content/element.js", {});
+const {assert} = ChromeUtils.import("chrome://marionette/content/assert.js");
+const {GeckoDriver} = ChromeUtils.import("chrome://marionette/content/driver.js");
+const {WebElement} = ChromeUtils.import("chrome://marionette/content/element.js");
 const {
   error,
   UnknownCommandError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+} = ChromeUtils.import("chrome://marionette/content/error.js");
 const {
   Command,
   Message,
   Response,
-} = ChromeUtils.import("chrome://marionette/content/message.js", {});
-const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
-const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.js", {});
-const {DebuggerTransport} = ChromeUtils.import("chrome://marionette/content/transport.js", {});
+} = ChromeUtils.import("chrome://marionette/content/message.js");
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
+const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.js", null);
+const {DebuggerTransport} = ChromeUtils.import("chrome://marionette/content/transport.js", null);
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 

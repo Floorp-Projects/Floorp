@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1178722
     "use strict";
 
     const VISIBLE_OPTION_COUNT = 5;
-    ChromeUtils.import("resource://gre/modules/SelectHelper.jsm");
+    const {SelectHelper} = ChromeUtils.import("resource://gre/modules/SelectHelper.jsm");
 
     // Returns whether an element should be visible according to its text content.
     function shouldBeVisible(e) {

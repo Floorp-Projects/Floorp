@@ -23,7 +23,7 @@ this.EXPORTED_SYMBOLS = [ "gDevTools", "gDevToolsBrowser" ];
  */
 Object.defineProperty(this, "require", {
   get() {
-    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
     return require;
   },
 });

@@ -6,7 +6,7 @@
 const PREF_DISALLOW_ENTERPRISE = "browser.policies.testing.disallowEnterprise";
 
 add_task(async function test_enterprise_only_policies() {
-  let { Policies } = ChromeUtils.import("resource:///modules/policies/Policies.jsm", {});
+  let { Policies } = ChromeUtils.import("resource:///modules/policies/Policies.jsm");
 
   let normalPolicyRan = false, enterprisePolicyRan = false;
 

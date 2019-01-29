@@ -4,12 +4,11 @@ var EXPORTED_SYMBOLS = [
   "initializeIdentityWithTokenServerResponse",
 ];
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/main.js");
-ChromeUtils.import("resource://services-sync/browserid_identity.js");
-ChromeUtils.import("resource://services-common/tokenserverclient.js");
-ChromeUtils.import("resource://testing-common/services/common/logging.js");
-ChromeUtils.import("resource://testing-common/services/sync/utils.js");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
+const {BrowserIDManager} = ChromeUtils.import("resource://services-sync/browserid_identity.js");
+const {TokenServerClient} = ChromeUtils.import("resource://services-common/tokenserverclient.js");
+const {configureFxAccountIdentity} = ChromeUtils.import("resource://testing-common/services/sync/utils.js");
 
 // Create a new browserid_identity object and initialize it with a
 // mocked TokenServerClient which always receives the specified response.

@@ -7,12 +7,9 @@
 
 "use strict";
 
-const { loader } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm", {});
-const { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/client/shared/browser-loader.js", {});
-const { Services } = ChromeUtils.import(
-  "resource://gre/modules/Services.jsm", {});
+const { loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 loader.lazyRequireGetter(this, "Telemetry",
   "devtools/client/shared/telemetry");

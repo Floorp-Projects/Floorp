@@ -10,8 +10,8 @@
 
 /* eslint-env mozilla/frame-script */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {FormAutofillContent} = ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
 ChromeUtils.defineModuleGetter(this, "setTimeout",
                                "resource://gre/modules/Timer.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofill",

@@ -6,9 +6,9 @@
 
 do_get_profile();
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {HTTP_400, HTTP_401, HTTP_402, HTTP_403, HTTP_404, HTTP_405, HTTP_406, HTTP_407, HTTP_408, HTTP_409, HTTP_410, HTTP_411, HTTP_412, HTTP_413, HTTP_414, HTTP_415, HTTP_417, HTTP_500, HTTP_501, HTTP_502, HTTP_503, HTTP_504, HTTP_505, HttpError, HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 // List types, this should sync with |enum LIST_TYPES| defined in PendingLookup.
 var ALLOW_LIST = 0;

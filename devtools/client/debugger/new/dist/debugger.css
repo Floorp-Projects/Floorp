@@ -548,10 +548,6 @@ html[dir="rtl"] .tree-node button.arrow {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-:root {
-  --icon-size: 13px;
-}
-
 :root.theme-light,
 :root .theme-light {
   --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
@@ -1177,12 +1173,12 @@ img.close::before {
   height: inherit;
 }
 
-.toggle-button svg {
+.toggle-button .img {
   fill: var(--theme-comment);
   vertical-align: 0;
 }
 
-:root.theme-dark .toggle-button svg {
+:root.theme-dark .toggle-button .img {
   fill: var(--theme-comment-alt);
 }
 
@@ -1195,12 +1191,12 @@ img.close::before {
   margin-inline-start: 0px;
 }
 
-html:not([dir="rtl"]) .toggle-button.end svg,
-html[dir="rtl"] .toggle-button.start svg {
+html:not([dir="rtl"]) .toggle-button.end .img,
+html[dir="rtl"] .toggle-button.start .img {
   transform: rotate(180deg);
 }
 
-html .toggle-button.end.vertical svg {
+html .toggle-button.end.vertical .img {
   transform: rotate(-90deg);
 }
 
@@ -2962,6 +2958,12 @@ menuseparator {
 
 .column-breakpoint {
   display: inline;
+  padding: 0;
+  margin-inline-end: 4px;
+}
+
+.column-breakpoint:hover {
+  background-color: transparent;
 }
 
 .column-breakpoint svg {
@@ -3052,6 +3054,7 @@ menuseparator {
   --debug-line-error-border: rgb(255, 0, 0);
   --debug-expression-error-background: rgba(231, 116, 113, 0.3);
   --editor-header-height: 30px;
+  --highlight-line-duration: 1500ms;
 }
 
 .theme-dark .editor-wrapper {
@@ -3133,6 +3136,10 @@ html[dir="rtl"] .editor-mount {
     transparent 1px,
     var(--gutter-hover-background-color) 0
   );
+}
+
+.new-breakpoint .CodeMirror-linenumber {
+  pointer-events: none;
 }
 
 :not(.empty-line):not(.new-breakpoint)
@@ -3300,7 +3307,7 @@ debug-expression-error {
   display: none;
 }
 .highlight-line .CodeMirror-line {
-  animation: fade-highlight-out 1.5s normal forwards;
+  animation: fade-highlight-out var(--highlight-line-duration) normal forwards;
 }
 
 @keyframes fade-highlight-out {
@@ -3905,12 +3912,12 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   overflow: hidden;
 }
 
-.frames [role="list"] [role="listitem"]hover,
-.frames [role="list"] [role="listitem"]focus {
+.frames [role="list"] [role="listitem"]:hover,
+.frames [role="list"] [role="listitem"]:focus {
   background-color: var(--theme-toolbar-background-alt);
 }
 
-.theme-dark .frames [role="list"] [role="listitem"]focus {
+.theme-dark .frames [role="list"] [role="listitem"]:focus {
   background-color: var(--theme-tab-toolbar-background);
 }
 
@@ -4829,8 +4836,8 @@ html[dir="rtl"] .img.more-tabs {
 }
 
 .dropdown-icon {
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: 13px;
+  height: 13px;
   margin-right: 5px;
   vertical-align: middle;
   display: inline-block;

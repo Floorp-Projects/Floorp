@@ -1,5 +1,4 @@
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/status.js");
+const {Status} = ChromeUtils.import("resource://services-sync/status.js");
 
 function run_test() {
 

@@ -6,7 +6,7 @@
 
 const BYTES_PER_MEBIBYTE = 1048576;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   OS: "resource://gre/modules/osfile.jsm",

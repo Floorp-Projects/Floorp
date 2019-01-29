@@ -6,10 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["MSMigrationUtils"];
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {MigrationUtils} = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["FileReader"]);
 

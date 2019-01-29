@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-ChromeUtils.import("resource:///modules/HomePage.jsm");
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const {HomePage} = ChromeUtils.import("resource:///modules/HomePage.jsm");
 
 const {
   createAppInfo,

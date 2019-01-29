@@ -7,9 +7,10 @@
 
 /* import-globals-from aboutDialog.js */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "DownloadUtils",
+                               "resource://gre/modules/DownloadUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils",
                                "resource://gre/modules/UpdateUtils.jsm");
 

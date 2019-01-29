@@ -5,9 +5,7 @@
 // hit.
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {FxAccountsOAuthGrantClient} = ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 
 // handlers for our server.
 var numTokenFetches;

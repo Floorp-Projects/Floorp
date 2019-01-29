@@ -60,8 +60,9 @@ const TESTCASES = [
 
 let markedFieldId = [];
 
+var FormAutofillContent;
 add_task(async function setup() {
-  ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
+  ({FormAutofillContent} = ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm"));
 
   FormAutofillContent._markAsAutofillField = function(field) {
     markedFieldId.push(field.id);

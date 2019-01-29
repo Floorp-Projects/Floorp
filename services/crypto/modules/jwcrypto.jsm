@@ -5,9 +5,9 @@
 "use strict";
 
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "IdentityCryptoService",

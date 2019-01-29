@@ -8,7 +8,7 @@
 var EXPORTED_SYMBOLS = ["TelemetryStorage"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);

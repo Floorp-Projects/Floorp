@@ -26,7 +26,7 @@ function checkHealthPingStructure(ping, expectedFailuresDict) {
 }
 
 function fakeHealthSchedulerTimer(set, clear) {
-  let telemetryHealthPing = ChromeUtils.import("resource://gre/modules/HealthPing.jsm", {});
+  let telemetryHealthPing = ChromeUtils.import("resource://gre/modules/HealthPing.jsm", null);
   telemetryHealthPing.Policy.setSchedulerTickTimeout = set;
   telemetryHealthPing.Policy.clearSchedulerTickTimeout = clear;
 }
@@ -44,7 +44,7 @@ async function waitForConditionWithPromise(promiseFn, timeoutMsg, tryCount = 30)
 }
 
 function fakeSendSubmissionTimeout(timeOut) {
-  let telemetryHealthPing = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", {});
+  let telemetryHealthPing = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", null);
   telemetryHealthPing.Policy.pingSubmissionTimeout = () => timeOut;
 }
 
@@ -142,7 +142,7 @@ add_task(async function test_healthPingOnTop() {
   // Now trigger sending pings again.
   fakeNow(futureDate(now, 5 * 60 * 1000));
   await TelemetrySend.notifyCanUpload();
-  let scheduler = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", {});
+  let scheduler = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", null);
   scheduler.SendScheduler.triggerSendingPings(true);
 
   let pings = await PingServer.promiseNextPings(4);
@@ -182,7 +182,7 @@ add_task(async function test_sendOnTimeout() {
     response.finish();
   }
 
-  let telemetryHealthPing = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", {});
+  let telemetryHealthPing = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", null);
   fakeSendSubmissionTimeout(telemetryHealthPing.PING_SUBMIT_TIMEOUT_MS);
   PingServer.resetPingHandler();
   TelemetrySend.notifyCanUpload();

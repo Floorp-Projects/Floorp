@@ -22,7 +22,7 @@ function test() {
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(function() {
       const sw = gScratchpadWindow;
-      const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
       const {TargetFactory} = require("devtools/client/framework/target");
 
       openScratchpad(async function() {

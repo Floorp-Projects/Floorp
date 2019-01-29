@@ -26,7 +26,7 @@ SimpleTest.waitForExplicitFinish();
  * nsIChannel component written in Javascript.
  */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var contentSecManager = Cc["@mozilla.org/contentsecuritymanager;1"]
                           .getService(Ci.nsIContentSecurityManager);

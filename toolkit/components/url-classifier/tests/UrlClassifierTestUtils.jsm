@@ -12,7 +12,7 @@ const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
 const WHITELIST_TABLE_NAME = "mochitest2-trackwhite-simple";
 const WHITELIST_TABLE_PREF = "urlclassifier.trackingWhitelistTable";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 

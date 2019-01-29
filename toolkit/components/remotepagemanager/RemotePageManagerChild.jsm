@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["ChildMessagePort"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/remotepagemanager/MessagePort.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {MessagePort} = ChromeUtils.import("resource://gre/modules/remotepagemanager/MessagePort.jsm");
 
 // The content side of a message port
 function ChildMessagePort(contentFrame, window) {

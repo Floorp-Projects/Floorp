@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
+const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
 
-const {shortURL} = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm", {});
-const {SectionsManager} = ChromeUtils.import("resource://activity-stream/lib/SectionsManager.jsm", {});
-const {TOP_SITES_DEFAULT_ROWS, TOP_SITES_MAX_SITES_PER_ROW} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm", {});
-const {Dedupe} = ChromeUtils.import("resource://activity-stream/common/Dedupe.jsm", {});
+const {shortURL} = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm");
+const {SectionsManager} = ChromeUtils.import("resource://activity-stream/lib/SectionsManager.jsm");
+const {TOP_SITES_DEFAULT_ROWS, TOP_SITES_MAX_SITES_PER_ROW} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm");
+const {Dedupe} = ChromeUtils.import("resource://activity-stream/common/Dedupe.jsm");
 
 ChromeUtils.defineModuleGetter(this, "filterAdult",
   "resource://activity-stream/lib/FilterAdult.jsm");

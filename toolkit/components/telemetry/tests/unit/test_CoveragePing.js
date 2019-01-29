@@ -2,11 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/CoveragePing.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 
 const COVERAGE_VERSION = "2";

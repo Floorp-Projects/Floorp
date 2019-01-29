@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 Services.scriptloader.loadSubScript("chrome://global/content/globalOverlay.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/utilityOverlay.js", this);
 
@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(window,
 ChromeUtils.defineModuleGetter(window,
   "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyScriptGetter(window, ["PlacesTreeView"],
   "chrome://browser/content/places/treeView.js");
 XPCOMUtils.defineLazyScriptGetter(window,

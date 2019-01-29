@@ -6,9 +6,9 @@
 
 var EXPORTED_SYMBOLS = [ "UserAgentOverrides" ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/UserAgentUpdates.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {UserAgentUpdates} = ChromeUtils.import("resource://gre/modules/UserAgentUpdates.jsm");
 
 const PREF_OVERRIDES_ENABLED = "general.useragent.site_specific_overrides";
 const MAX_OVERRIDE_FOR_HOST_CACHE_SIZE = 250;

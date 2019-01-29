@@ -2,9 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
+const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
-const {PromiseTestUtils} = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", null);
+const {PromiseTestUtils} = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
 add_task(async function test_management_themes() {

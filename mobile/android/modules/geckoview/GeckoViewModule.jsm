@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewModule"];
 
-ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
+const {GeckoViewUtils} = ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
 GeckoViewUtils.initLogging("Module", this);
 

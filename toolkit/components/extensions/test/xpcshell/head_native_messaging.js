@@ -9,10 +9,8 @@ ChromeUtils.defineModuleGetter(this, "MockRegistry",
                                "resource://testing-common/MockRegistry.jsm");
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout",
-                               "resource://gre/modules/Timer.jsm");
 
-let {Subprocess, SubprocessImpl} = ChromeUtils.import("resource://gre/modules/Subprocess.jsm", {});
+let {Subprocess, SubprocessImpl} = ChromeUtils.import("resource://gre/modules/Subprocess.jsm", null);
 
 
 // It's important that we use a space in this directory name to make sure we

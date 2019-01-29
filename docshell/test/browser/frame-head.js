@@ -4,7 +4,7 @@
 // Functions that are automatically loaded as frame scripts for
 // timeline tests.
 
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 // Functions that look like mochitest functions but forward to the
 // browser process.

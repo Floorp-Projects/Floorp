@@ -13,9 +13,9 @@ const TEST_SERVICE_WORKER_URL = getRootDirectory(gTestPath).replace("chrome://mo
 
 const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
-const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", {});
-const { SiteDataManager } = ChromeUtils.import("resource:///modules/SiteDataManager.jsm", {});
-const { OfflineAppCacheHelper } = ChromeUtils.import("resource://gre/modules/offlineAppCache.jsm", {});
+const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+const { SiteDataManager } = ChromeUtils.import("resource:///modules/SiteDataManager.jsm");
+const { OfflineAppCacheHelper } = ChromeUtils.import("resource://gre/modules/offlineAppCache.jsm");
 
 ChromeUtils.defineModuleGetter(this, "SiteDataTestUtils",
                                "resource://testing-common/SiteDataTestUtils.jsm");

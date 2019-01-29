@@ -4,8 +4,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource:///modules/AttributionCode.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AttributionCode} = ChromeUtils.import("resource:///modules/AttributionCode.jsm");
 
 add_task(async function test_attribution() {
   let appPath = Services.dirsvc.get("GreD", Ci.nsIFile).parent.parent.path;

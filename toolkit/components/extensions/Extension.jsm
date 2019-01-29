@@ -32,8 +32,8 @@ var EXPORTED_SYMBOLS = ["Dictionary", "Extension", "ExtensionData", "Langpack"];
  * to run in the same process of the existing addon debugging browser element).
  */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -72,9 +72,9 @@ XPCOMUtils.defineLazyGetter(
   () => Services.io.getProtocolHandler("resource")
           .QueryInterface(Ci.nsIResProtocolHandler));
 
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],

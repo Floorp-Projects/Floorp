@@ -17,7 +17,7 @@ var EXPORTED_SYMBOLS = [
 
 const PR_UINT32_MAX = 0xffffffff;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
                                                  "nsIBinaryInputStream", "setInputStream");

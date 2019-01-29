@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
-ChromeUtils.import("resource:///modules/SiteDataManager.jsm");
+const {SiteDataManager} = ChromeUtils.import("resource:///modules/SiteDataManager.jsm");
+
+ChromeUtils.defineModuleGetter(this, "DownloadUtils",
+                               "resource://gre/modules/DownloadUtils.jsm");
 
 var gClearSiteDataDialog = {
   _clearSiteDataCheckbox: null,

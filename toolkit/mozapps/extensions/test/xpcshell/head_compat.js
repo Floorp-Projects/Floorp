@@ -16,8 +16,7 @@ AddonManager.addExternalExtensionLoader({
     // XPIDatabase.jsm gets unloaded in AddonTestUtils when the
     // addon manager is restarted.  Work around that by just importing
     // it every time we need to create an AddonInternal.
-    ChromeUtils.import("resource://gre/modules/addons/XPIDatabase.jsm");
-    /* globals AddonInternal */
+    const {AddonInternal} = ChromeUtils.import("resource://gre/modules/addons/XPIDatabase.jsm");
     let addon = new AddonInternal();
     let manifest = JSON.parse(await pkg.readString(MANIFEST));
     Object.assign(addon, manifest);

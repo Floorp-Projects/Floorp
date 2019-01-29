@@ -13,10 +13,10 @@
 
 var EXPORTED_SYMBOLS = ["Credentials"];
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://services-crypto/utils.js");
-ChromeUtils.import("resource://services-common/utils.js");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 
 const PROTOCOL_VERSION = "identity.mozilla.com/picl/v1/";
 const PBKDF2_ROUNDS = 1000;

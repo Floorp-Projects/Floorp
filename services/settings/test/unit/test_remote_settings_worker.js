@@ -1,10 +1,9 @@
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
-const { RemoteSettingsWorker } = ChromeUtils.import("resource://services-settings/RemoteSettingsWorker.jsm", {});
-const { Kinto } = ChromeUtils.import("resource://services-common/kinto-offline-client.js", {});
+const { RemoteSettingsWorker } = ChromeUtils.import("resource://services-settings/RemoteSettingsWorker.jsm");
+const { Kinto } = ChromeUtils.import("resource://services-common/kinto-offline-client.js");
 
 const IS_ANDROID = AppConstants.platform == "android";
 

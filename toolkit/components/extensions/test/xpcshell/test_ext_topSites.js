@@ -1,8 +1,8 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm");
-ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+const {NewTabUtils} = ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm");
+const {PlacesTestUtils} = ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
 
 // Disable top site search shortcuts for this test
 Services.prefs.setBoolPref("browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", false);

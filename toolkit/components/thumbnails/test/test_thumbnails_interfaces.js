@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // need profile so that PageThumbsStorageService can resolve the path to the underlying file
 do_get_profile();

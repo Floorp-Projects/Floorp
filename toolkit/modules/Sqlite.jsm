@@ -13,8 +13,8 @@ var EXPORTED_SYMBOLS = [
 // the `_getTimeoutPromise` method on `ConnectionData` for details).
 const TRANSACTIONS_QUEUE_TIMEOUT_MS = 300000; // 5 minutes
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",

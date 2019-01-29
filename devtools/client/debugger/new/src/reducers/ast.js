@@ -242,7 +242,10 @@ export function getFirstPausePointLocation(
     return location;
   }
 
-  const pausesAtLine = pausePoints[location.line];
+  const pausesAtLine = pausePoints.filter(
+    point => point.location.line == location.line
+  );
+
   if (pausesAtLine) {
     const values: PausePoint[] = (Object.values(pausesAtLine): any);
     const firstPausePoint = values.find(pausePoint => pausePoint.types.break);

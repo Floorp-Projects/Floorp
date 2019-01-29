@@ -5,7 +5,7 @@
 // Tests that upgrading bootstrapped add-ons behaves correctly while the
 // manager is open
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
 const ID = "reinstall@tests.mozilla.org";
 

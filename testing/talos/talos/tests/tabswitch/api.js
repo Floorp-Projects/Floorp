@@ -2,9 +2,8 @@
 
 /* globals ExtensionAPI */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {RemotePages} = ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm");
 
 let context = {};
 let TalosParentProfiler;

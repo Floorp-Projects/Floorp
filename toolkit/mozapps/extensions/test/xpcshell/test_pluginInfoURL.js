@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /**
  * MockPlugin mimics the behaviour of a plugin.
  */

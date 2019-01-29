@@ -1,7 +1,7 @@
 // Bug 1117242: Test calling SavedFrame getters from globals that don't subsume
 // that frame's principals.
 
-ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
 const lowP = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);

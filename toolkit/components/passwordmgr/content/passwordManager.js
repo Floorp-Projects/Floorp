@@ -3,9 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /** * =================== SAVED SIGNONS CODE =================== ***/
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "DeferredTask",
                                "resource://gre/modules/DeferredTask.jsm");
@@ -760,7 +759,7 @@ function escapeKeyHandler() {
 }
 
 function OpenMigrator() {
-  const { MigrationUtils } = ChromeUtils.import("resource:///modules/MigrationUtils.jsm", {});
+  const { MigrationUtils } = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
   // We pass in the type of source we're using for use in telemetry:
   MigrationUtils.showMigrationWizard(window, [MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS]);
 }

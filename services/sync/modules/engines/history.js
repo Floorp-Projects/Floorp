@@ -7,13 +7,12 @@ var EXPORTED_SYMBOLS = ["HistoryEngine", "HistoryRec"];
 const HISTORY_TTL = 5184000; // 60 days in milliseconds
 const THIRTY_DAYS_IN_MS = 2592000000; // 30 days in milliseconds
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {MAX_HISTORY_DOWNLOAD, MAX_HISTORY_UPLOAD, SCORE_INCREMENT_SMALL, SCORE_INCREMENT_XLARGE} = ChromeUtils.import("resource://services-sync/constants.js");
+const {Store, SyncEngine, Tracker} = ChromeUtils.import("resource://services-sync/engines.js");
+const {CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
+const {Utils} = ChromeUtils.import("resource://services-sync/util.js");
 
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");

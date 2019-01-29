@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow } from "enzyme";
 
@@ -28,8 +30,8 @@ function generateDefaults(editor, overrides) {
     pauseInfo: {
       why: { type: "breakpoint" }
     },
-    selectedFrame: null,
-    selectedSource: makeSource("foo"),
+    frame: null,
+    source: makeSource("foo"),
     ...overrides
   };
 }
@@ -50,8 +52,9 @@ function render(overrides = {}) {
   const props = generateDefaults(editor, overrides);
 
   const doc = createMockDocument(clear);
-  setDocument(props.selectedSource.id, doc);
+  setDocument(props.source.id, doc);
 
+  // $FlowIgnore
   const component = shallow(<DebugLine.WrappedComponent {...props} />, {
     lifecycleExperimental: true
   });
@@ -62,53 +65,53 @@ describe("DebugLine Component", () => {
   describe("pausing at the first location", () => {
     it("should show a new debug line", async () => {
       const { component, props, doc } = render({
-        selectedSource: makeSource("foo", { loadedState: "loaded" })
+        source: makeSource("foo", { loadedState: "loaded" })
       });
       const line = 2;
-      const selectedFrame = createFrame(line);
+      const frame = createFrame(line);
 
-      component.setProps({ ...props, selectedFrame });
+      component.setProps({ ...props, frame });
 
       expect(doc.removeLineClass.mock.calls).toEqual([]);
       expect(doc.addLineClass.mock.calls).toEqual([
-        [toEditorLine(line), "line", "new-debug-line"]
+        [toEditorLine("foo", line), "line", "new-debug-line"]
       ]);
     });
 
     describe("pausing at a new location", () => {
       it("should replace the first debug line", async () => {
         const { props, component, clear, doc } = render({
-          selectedSource: makeSource("foo", { loadedState: "loaded" })
+          source: makeSource("foo", { loadedState: "loaded" })
         });
 
         component.instance().debugExpression = { clear: jest.fn() };
         const firstLine = 2;
         const secondLine = 2;
 
-        component.setProps({ ...props, selectedFrame: createFrame(firstLine) });
+        component.setProps({ ...props, frame: createFrame(firstLine) });
         component.setProps({
           ...props,
-          selectedFrame: createFrame(secondLine)
+          frame: createFrame(secondLine)
         });
 
         expect(doc.removeLineClass.mock.calls).toEqual([
-          [toEditorLine(firstLine), "line", "new-debug-line"]
+          [toEditorLine("foo", firstLine), "line", "new-debug-line"]
         ]);
 
         expect(doc.addLineClass.mock.calls).toEqual([
-          [toEditorLine(firstLine), "line", "new-debug-line"],
-          [toEditorLine(secondLine), "line", "new-debug-line"]
+          [toEditorLine("foo", firstLine), "line", "new-debug-line"],
+          [toEditorLine("foo", secondLine), "line", "new-debug-line"]
         ]);
 
         expect(doc.markText.mock.calls).toEqual([
           [
-            { ch: 2, line: toEditorLine(firstLine) },
-            { ch: null, line: toEditorLine(firstLine) },
+            { ch: 2, line: toEditorLine("foo", firstLine) },
+            { ch: null, line: toEditorLine("foo", firstLine) },
             { className: "debug-expression" }
           ],
           [
-            { ch: 2, line: toEditorLine(secondLine) },
-            { ch: null, line: toEditorLine(secondLine) },
+            { ch: 2, line: toEditorLine("foo", secondLine) },
+            { ch: null, line: toEditorLine("foo", secondLine) },
             { className: "debug-expression" }
           ]
         ]);
@@ -119,11 +122,11 @@ describe("DebugLine Component", () => {
 
     describe("when there is no selected frame", () => {
       it("should not set the debug line", () => {
-        const { component, props, doc } = render({ selectedFrame: null });
+        const { component, props, doc } = render({ frame: null });
         const line = 2;
-        const selectedFrame = createFrame(line);
+        const frame = createFrame(line);
 
-        component.setProps({ ...props, selectedFrame });
+        component.setProps({ ...props, frame });
         expect(doc.removeLineClass).not.toHaveBeenCalled();
       });
     });
@@ -134,7 +137,7 @@ describe("DebugLine Component", () => {
         const newSelectedFrame = { location: { sourceId: "bar" } };
         expect(doc.removeLineClass).not.toHaveBeenCalled();
 
-        component.setProps({ selectedFrame: newSelectedFrame });
+        component.setProps({ frame: newSelectedFrame });
         expect(doc.removeLineClass).not.toHaveBeenCalled();
       });
     });

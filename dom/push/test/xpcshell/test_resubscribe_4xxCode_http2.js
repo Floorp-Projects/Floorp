@@ -3,8 +3,7 @@
 
 'use strict';
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const {PushDB, PushService, PushServiceHttp2} = serviceExports;
 

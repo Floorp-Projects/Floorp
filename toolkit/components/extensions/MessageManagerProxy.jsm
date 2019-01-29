@@ -7,8 +7,8 @@
 
 var EXPORTED_SYMBOLS = ["MessageManagerProxy"];
 
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const {
   DefaultMap,

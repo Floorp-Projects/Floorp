@@ -6,6 +6,7 @@
 
 import type {
   BreakpointId,
+  BreakpointOptions,
   BreakpointResult,
   EventListenerBreakpoints,
   Frame,
@@ -148,7 +149,9 @@ function breakOnNext(thread: string): Promise<*> {
   return lookupThreadClient(thread).breakOnNext();
 }
 
-function sourceContents(sourceId: SourceId): Source {
+function sourceContents(
+  sourceId: SourceId
+): {| source: Source, contentType: string |} {
   const sourceThreadClient = sourceThreads[sourceId];
   const sourceClient = sourceThreadClient.source({ actor: sourceId });
   return sourceClient.source();
@@ -159,10 +162,10 @@ function getBreakpointByLocation(location: SourceLocation) {
   const bpClient = bpClients[id];
 
   if (bpClient) {
-    const { actor, url, line, column, condition } = bpClient.location;
+    const { actor, url, line, column } = bpClient.location;
     return {
       id: bpClient.actor,
-      condition,
+      options: bpClient.options,
       actualLocation: {
         line,
         column,
@@ -182,9 +185,18 @@ function removeXHRBreakpoint(path: string, method: string) {
   return threadClient.removeXHRBreakpoint(path, method);
 }
 
+// Source and breakpoint clients do not yet support an options structure, so
+// for now we transform options into condition strings when setting breakpoints.
+function transformOptionsToCondition(options) {
+  if (options.logValue) {
+    return `console.log(${options.logValue})`;
+  }
+  return options.condition;
+}
+
 function setBreakpoint(
   location: SourceLocation,
-  condition: boolean,
+  options: BreakpointOptions,
   noSliding: boolean
 ): Promise<BreakpointResult> {
   const sourceThreadClient = sourceThreads[location.sourceId];
@@ -194,7 +206,7 @@ function setBreakpoint(
     .setBreakpoint({
       line: location.line,
       column: location.column,
-      condition,
+      condition: transformOptionsToCondition(options),
       noSliding
     })
     .then(([{ actualLocation }, bpClient]) => {
@@ -226,18 +238,17 @@ function removeBreakpoint(
   }
 }
 
-function setBreakpointCondition(
+function setBreakpointOptions(
   breakpointId: BreakpointId,
   location: SourceLocation,
-  condition: boolean,
-  noSliding: boolean
+  options: BreakpointOptions
 ) {
   const bpClient = bpClients[breakpointId];
   delete bpClients[breakpointId];
 
   const sourceThreadClient = sourceThreads[bpClient.source.actor];
   return bpClient
-    .setCondition(sourceThreadClient, condition, noSliding)
+    .setCondition(sourceThreadClient, transformOptionsToCondition(options))
     .then(_bpClient => {
       bpClients[breakpointId] = _bpClient;
       return { id: breakpointId };
@@ -252,22 +263,22 @@ async function evaluateExpressions(scripts: Script[], options: EvaluateParam) {
   return Promise.all(scripts.map(script => evaluate(script, options)));
 }
 
-type EvaluateParam = { thread?: string, frameId?: FrameId };
+type EvaluateParam = { thread: string, frameId: ?FrameId };
 
 function evaluate(
   script: ?Script,
   { thread, frameId }: EvaluateParam = {}
-): Promise<mixed> {
+): Promise<{ result: ?Object }> {
   const params = { thread, frameActor: frameId };
   if (!tabTarget || !script) {
-    return Promise.resolve({});
+    return Promise.resolve({ result: null });
   }
 
   const console = thread
     ? lookupConsoleClient(thread)
     : tabTarget.activeConsole;
   if (!console) {
-    return Promise.resolve({});
+    return Promise.resolve({ result: null });
   }
 
   return console.evaluateJSAsync(script, params);
@@ -276,7 +287,7 @@ function evaluate(
 function autocomplete(
   input: string,
   cursor: number,
-  frameId: string
+  frameId: ?string
 ): Promise<mixed> {
   if (!tabTarget || !tabTarget.activeConsole || !input) {
     return Promise.resolve({});
@@ -470,7 +481,7 @@ const clientCommands = {
   setXHRBreakpoint,
   removeXHRBreakpoint,
   removeBreakpoint,
-  setBreakpointCondition,
+  setBreakpointOptions,
   evaluate,
   evaluateInFrame,
   evaluateExpressions,

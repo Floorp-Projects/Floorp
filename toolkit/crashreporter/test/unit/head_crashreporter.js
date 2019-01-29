@@ -1,7 +1,7 @@
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+var {OS, require} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://testing-common/AppData.jsm", this);
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 function getEventDir() {
   return OS.Path.join(do_get_tempdir().path, "crash-events");
@@ -272,5 +272,5 @@ function do_triggered_content_crash(trigger, callback) {
 }
 
 // Import binary APIs via js-ctypes.
-ChromeUtils.import("resource://test/CrashTestUtils.jsm");
-ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
+var {CrashTestUtils} = ChromeUtils.import("resource://test/CrashTestUtils.jsm");
+var {parseKeyValuePairs, parseKeyValuePairsFromFile, parseKeyValuePairsFromFileAsync, parseKeyValuePairsFromLines} = ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");

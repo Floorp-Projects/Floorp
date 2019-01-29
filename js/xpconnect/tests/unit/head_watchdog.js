@@ -6,7 +6,7 @@
 // Pref management.
 //
 
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+var {PromiseTestUtils} = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
 
 ///////////////////
 //

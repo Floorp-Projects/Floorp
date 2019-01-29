@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { TelemetryUtils } = ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", {});
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryUtils } = ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
 
 function ensureProfilerInitialized() {
   // Starting and stopping the profiler with the "stackwalk" flag will cause the

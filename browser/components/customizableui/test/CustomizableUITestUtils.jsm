@@ -10,9 +10,9 @@
 
 var EXPORTED_SYMBOLS = ["CustomizableUITestUtils"];
 
-ChromeUtils.import("resource://testing-common/Assert.jsm");
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm");
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "CustomizableUI",
                                "resource:///modules/CustomizableUI.jsm");

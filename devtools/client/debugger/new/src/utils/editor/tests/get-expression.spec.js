@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import CodeMirror from "codemirror";
 import { getExpressionFromCoords } from "../get-expression";
 
@@ -9,13 +11,13 @@ describe("get-expression", () => {
   let isCreateTextRangeDefined;
 
   beforeAll(() => {
-    if (document.body.createTextRange) {
+    if ((document.body: any).createTextRange) {
       isCreateTextRangeDefined = true;
     } else {
       isCreateTextRangeDefined = false;
       // CodeMirror needs createTextRange
       // https://discuss.codemirror.net/t/working-in-jsdom-or-node-js-natively/138/5
-      document.body.createTextRange = () => ({
+      (document.body: any).createTextRange = () => ({
         getBoundingClientRect: jest.fn(),
         getClientRects: () => ({})
       });
@@ -24,7 +26,7 @@ describe("get-expression", () => {
 
   afterAll(() => {
     if (!isCreateTextRangeDefined) {
-      delete document.body.createTextRange;
+      delete (document.body: any).createTextRange;
     }
   });
 
@@ -95,6 +97,9 @@ describe("get-expression", () => {
         line: 1,
         column: 1
       });
+      if (!result) {
+        throw new Error("no result");
+      }
       expect(result.expression).toEqual("foo");
       expect(result.location.start).toEqual({ line: 1, column: 0 });
       expect(result.location.end).toEqual({ line: 1, column: 3 });
@@ -110,6 +115,9 @@ describe("get-expression", () => {
         line: 1,
         column: 5
       });
+      if (!result) {
+        throw new Error("no result");
+      }
       expect(result.expression).toEqual("foo.bar");
       expect(result.location.start).toEqual({ line: 1, column: 0 });
       expect(result.location.end).toEqual({ line: 1, column: 7 });
@@ -125,6 +133,9 @@ describe("get-expression", () => {
         line: 1,
         column: 10
       });
+      if (!result) {
+        throw new Error("no result");
+      }
       expect(result.expression).toEqual("foo.bar.baz");
       expect(result.location.start).toEqual({ line: 1, column: 0 });
       expect(result.location.end).toEqual({ line: 1, column: 11 });
@@ -140,6 +151,9 @@ describe("get-expression", () => {
         line: 1,
         column: 10
       });
+      if (!result) {
+        throw new Error("no result");
+      }
       expect(result.expression).toEqual("bar.baz");
       expect(result.location.start).toEqual({ line: 1, column: 4 });
       expect(result.location.end).toEqual({ line: 1, column: 11 });

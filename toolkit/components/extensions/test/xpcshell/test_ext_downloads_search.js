@@ -4,7 +4,7 @@
 
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
-ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+const {Downloads} = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
 
 const server = createHttpServer();
 server.registerDirectory("/data/", do_get_file("data"));
