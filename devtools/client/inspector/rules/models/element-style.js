@@ -52,6 +52,12 @@ function ElementStyle(element, ruleView, store, pageStyle, showUserAgentStyles) 
   if (!("disabled" in this.store)) {
     this.store.disabled = new WeakMap();
   }
+
+  this.onStyleSheetUpdated = this.onStyleSheetUpdated.bind(this);
+
+  if (this.ruleView.isNewRulesView) {
+    this.pageStyle.on("stylesheet-updated", this.onStyleSheetUpdated);
+  }
 }
 
 ElementStyle.prototype = {
@@ -66,6 +72,10 @@ ElementStyle.prototype = {
       if (rule.editor) {
         rule.editor.destroy();
       }
+    }
+
+    if (this.ruleView.isNewRulesView) {
+      this.pageStyle.off("stylesheet-updated", this.onStyleSheetUpdated);
     }
   },
 
@@ -335,6 +345,15 @@ ElementStyle.prototype = {
   },
 
   /**
+   * Adds a new rule. The rules view is updated from a "stylesheet-updated" event
+   * emitted the PageStyleActor as a result of the rule being inserted into the
+   * the stylesheet.
+   */
+  async addNewRule() {
+    await this.pageStyle.addNewRule(this.element, this.element.pseudoClassLocks);
+  },
+
+  /**
    * Given the id of the rule and the new declaration name, modifies the existing
    * declaration name to the new given value.
    *
@@ -592,6 +611,24 @@ ElementStyle.prototype = {
   */
   getVariable: function(name) {
     return this.variables.get(name);
+  },
+
+  /**
+   * Handler for page style events "stylesheet-updated". Refreshes the list of rules on
+   * the page.
+   */
+  onStyleSheetUpdated: async function() {
+    // Repopulate the element style once the current modifications are done.
+    const promises = [];
+    for (const rule of this.rules) {
+      if (rule._applyingModifications) {
+        promises.push(rule._applyingModifications);
+      }
+    }
+
+    await Promise.all(promises);
+    await this.populate();
+    this._changed();
   },
 };
 

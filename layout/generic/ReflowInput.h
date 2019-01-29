@@ -1002,15 +1002,15 @@ struct ReflowInput : public SizeComputationInput {
   // (for a position:fixed/absolute element) would have been placed if it were
   // positioned statically. The hypothetical box position will have a writing
   // mode with the same block direction as the absolute containing block
-  // (aReflowInput->frame), though it may differ in inline direction.
+  // (aCBReflowInput->frame), though it may differ in inline direction.
   void CalculateHypotheticalPosition(nsPresContext* aPresContext,
                                      nsPlaceholderFrame* aPlaceholderFrame,
-                                     const ReflowInput* aReflowInput,
+                                     const ReflowInput* aCBReflowInput,
                                      nsHypotheticalPosition& aHypotheticalPos,
                                      mozilla::LayoutFrameType aFrameType) const;
 
   void InitAbsoluteConstraints(nsPresContext* aPresContext,
-                               const ReflowInput* aReflowInput,
+                               const ReflowInput* aCBReflowInput,
                                const mozilla::LogicalSize& aContainingBlockSize,
                                mozilla::LayoutFrameType aFrameType);
 

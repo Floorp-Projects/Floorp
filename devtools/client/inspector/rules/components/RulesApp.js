@@ -29,6 +29,7 @@ class RulesApp extends PureComponent {
   static get propTypes() {
     return {
       onAddClass: PropTypes.func.isRequired,
+      onAddRule: PropTypes.func.isRequired,
       onSetClassState: PropTypes.func.isRequired,
       onToggleClassPanelExpanded: PropTypes.func.isRequired,
       onToggleDeclaration: PropTypes.func.isRequired,
@@ -175,6 +176,7 @@ class RulesApp extends PureComponent {
         },
         Toolbar({
           onAddClass: this.props.onAddClass,
+          onAddRule: this.props.onAddRule,
           onSetClassState: this.props.onSetClassState,
           onToggleClassPanelExpanded: this.props.onToggleClassPanelExpanded,
           onTogglePseudoClass: this.props.onTogglePseudoClass,

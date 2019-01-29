@@ -501,17 +501,11 @@ VARCACHE_PREF(
 
 // For area and anchor elements with target=_blank and no rel set to
 // opener/noopener, this pref sets noopener by default.
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   "dom.targetBlankNoOpener.enabled",
    dom_targetBlankNoOpener_enabled,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 VARCACHE_PREF(
   "dom.disable_open_during_load",
@@ -1955,6 +1949,27 @@ VARCACHE_PREF(
   "browser.safebrowsing.passwords.enabled",
    browser_safebrowsing_passwords_enabled,
   bool, false
+)
+
+// Malware protection
+VARCACHE_PREF(
+  "browser.safebrowsing.malware.enabled",
+   browser_safebrowsing_malware_enabled,
+  bool, true
+)
+
+// Phishing protection
+VARCACHE_PREF(
+  "browser.safebrowsing.phishing.enabled",
+   browser_safebrowsing_phishing_enabled,
+  bool, true
+)
+
+// Blocked plugin content
+VARCACHE_PREF(
+  "browser.safebrowsing.blockedURIs.enabled",
+   browser_safebrowsing_blockedURIs_enabled,
+  bool, true
 )
 
 //---------------------------------------------------------------------------

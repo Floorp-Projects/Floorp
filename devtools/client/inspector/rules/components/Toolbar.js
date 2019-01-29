@@ -23,8 +23,10 @@ const { getStr } = require("../utils/l10n");
 class Toolbar extends PureComponent {
   static get propTypes() {
     return {
+      isAddRuleEnabled: PropTypes.bool.isRequired,
       isClassPanelExpanded: PropTypes.bool.isRequired,
       onAddClass: PropTypes.func.isRequired,
+      onAddRule: PropTypes.func.isRequired,
       onSetClassState: PropTypes.func.isRequired,
       onToggleClassPanelExpanded: PropTypes.func.isRequired,
       onTogglePseudoClass: PropTypes.func.isRequired,
@@ -39,8 +41,14 @@ class Toolbar extends PureComponent {
       isPseudoClassPanelExpanded: false,
     };
 
+    this.onAddRuleClick = this.onAddRuleClick.bind(this);
     this.onClassPanelToggle = this.onClassPanelToggle.bind(this);
     this.onPseudoClassPanelToggle = this.onPseudoClassPanelToggle.bind(this);
+  }
+
+  onAddRuleClick(event) {
+    event.stopPropagation();
+    this.props.onAddRule();
   }
 
   onClassPanelToggle(event) {
@@ -70,7 +78,7 @@ class Toolbar extends PureComponent {
   }
 
   render() {
-    const { isClassPanelExpanded } = this.props;
+    const { isAddRuleEnabled, isClassPanelExpanded } = this.props;
     const { isPseudoClassPanelExpanded } = this.state;
 
     return (
@@ -85,6 +93,8 @@ class Toolbar extends PureComponent {
             dom.button({
               id: "ruleview-add-rule-button",
               className: "devtools-button",
+              disabled: !isAddRuleEnabled,
+              onClick: this.onAddRuleClick,
               title: getStr("rule.addRule.tooltip"),
             }),
             dom.button({
@@ -123,6 +133,7 @@ class Toolbar extends PureComponent {
 
 const mapStateToProps = state => {
   return {
+    isAddRuleEnabled: state.rules.isAddRuleEnabled,
     isClassPanelExpanded: state.classList.isClassPanelExpanded,
   };
 };
