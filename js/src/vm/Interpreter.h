@@ -503,6 +503,8 @@ JSObject* SingletonObjectLiteralOperation(JSContext* cx, HandleScript script,
 
 JSObject* ImportMetaOperation(JSContext* cx, HandleScript script);
 
+JSObject* BuiltinProtoOperation(JSContext* cx, jsbytecode* pc);
+
 bool ThrowMsgOperation(JSContext* cx, const unsigned errorNum);
 
 bool GetAndClearException(JSContext* cx, MutableHandleValue res);
