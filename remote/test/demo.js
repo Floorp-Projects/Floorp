@@ -1,0 +1,38 @@
+"use strict";
+
+const CDP = require("chrome-remote-interface");
+
+async function demo() {
+  let client;
+  try {
+    client = await CDP();
+    const {Log, Network, Page} = client;
+
+    // receive console.log messages and print them
+    Log.enable();
+    Log.entryAdded(({entry}) => {
+      const {timestamp, level, text, args} = entry;
+      const msg = text || args.join(" ");
+      console.log(`${timestamp}\t${level.toUpperCase()}\t${msg}`);
+    });
+
+    // turn on network stack logging
+    Network.requestWillBeSent((params) => {
+      console.log(params.request.url);
+    });
+
+    // turn on navigation related events, such as DOMContentLoaded et al.
+    await Page.enable();
+
+    await Page.navigate({url: "https://sny.no/e/consoledemo.html"});
+    await Page.loadEventFired();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    if (client) {
+      await client.close();
+    }
+  }
+}
+
+demo();
