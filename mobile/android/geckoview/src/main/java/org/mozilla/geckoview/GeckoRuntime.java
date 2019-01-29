@@ -230,8 +230,8 @@ public final class GeckoRuntime implements Parcelable {
         // Bug 1453062 -- the EventDispatcher should really live here (or in GeckoThread)
         EventDispatcher.getInstance().registerUiThreadListener(mEventListener, "Gecko:Exited");
 
-        mSettings.runtime = this;
-        mSettings.flush();
+        // Attach and commit settings.
+        mSettings.attachTo(this);
 
         // Initialize the system ClipboardManager by accessing it on the main thread.
         GeckoAppShell.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
