@@ -772,10 +772,11 @@ void js::Nursery::collect(JS::GCReason reason) {
   bool validPromotionRate;
   const float promotionRate = calcPromotionRate(&validPromotionRate);
   uint32_t pretenureCount = 0;
-  bool shouldPretenure = tunables().attemptPretenuring() &&
-                         ((validPromotionRate &&
-                           promotionRate > tunables().pretenureThreshold()) ||
-                          IsFullStoreBufferReason(reason));
+  bool shouldPretenure =
+      tunables().attemptPretenuring() &&
+      ((validPromotionRate && promotionRate > tunables().pretenureThreshold() &&
+        previousGC.nurseryUsedBytes >= 4 * 1024 * 1024) ||
+       IsFullStoreBufferReason(reason));
 
   if (shouldPretenure) {
     JSContext* cx = rt->mainContextFromOwnThread();
@@ -1119,8 +1120,10 @@ MOZ_ALWAYS_INLINE void js::Nursery::setStartPosition() {
 }
 
 void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
-  static const double GrowThreshold = 0.03;
-  static const double ShrinkThreshold = 0.01;
+  static const float GrowThreshold = 0.03f;
+  static const float ShrinkThreshold = 0.01f;
+  static const float PromotionGoal = (GrowThreshold + ShrinkThreshold) / 2.0f;
+
   unsigned newMaxNurseryChunks;
 
   // Shrink the nursery to its minimum size of we ran out of memory or
@@ -1156,15 +1159,33 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   const float promotionRate =
       float(previousGC.tenuredBytes) / float(previousGC.nurseryCapacity);
 
+  /*
+   * Object lifetimes arn't going to behave linearly, but a better
+   * relationship that works for all programs and can be predicted in
+   * advance doesn't exist.
+   */
+  const float factor = promotionRate / PromotionGoal;
+  const unsigned newChunkCount = round(float(maxChunkCount()) * factor);
+
+  // If one of these conditions is true then we always shrink or grow the
+  // nursery.  This way the thresholds still have an effect even if the goal
+  // seeking says the current size is ideal.
   if (promotionRate > GrowThreshold) {
-    growAllocableSpace();
+    unsigned lowLimit = maxChunkCount() + 1;
+    unsigned highLimit = Min(chunkCountLimit(), maxChunkCount() * 2);
+
+    growAllocableSpace(Min(Max(newChunkCount, lowLimit), highLimit));
   } else if (maxChunkCount() > 1 && promotionRate < ShrinkThreshold) {
-    shrinkAllocableSpace(maxChunkCount() - 1);
+    unsigned lowLimit = Max(1u, maxChunkCount() / 2);
+    unsigned highLimit = maxChunkCount() - 1u;
+
+    shrinkAllocableSpace(Max(Min(newChunkCount, highLimit), lowLimit));
   }
 }
 
-void js::Nursery::growAllocableSpace() {
-  maxChunkCount_ = Min(maxChunkCount() * 2, chunkCountLimit());
+void js::Nursery::growAllocableSpace(unsigned newCount) {
+  MOZ_ASSERT(newCount >= currentChunk_);
+  maxChunkCount_ = newCount;
 }
 
 void js::Nursery::freeChunksFrom(unsigned firstFreeChunk) {

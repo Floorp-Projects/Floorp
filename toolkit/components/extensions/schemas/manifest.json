@@ -101,7 +101,7 @@
 
           "incognito": {
             "type": "string",
-            "enum": ["spanning"],
+            "enum": ["not_allowed", "spanning"],
             "default": "spanning",
             "optional": true
           },

@@ -306,6 +306,8 @@ module.exports = {
     "InstallTriggerImpl": false,
     "IntersectionObserver": false,
     "IntersectionObserverEntry": false,
+    "JSWindowActorChild": false,
+    "JSWindowActorParent": false,
     "KeyEvent": false,
     "KeyboardEvent": false,
     "KeyframeEffect": false,

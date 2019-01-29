@@ -15,7 +15,12 @@
 "use strict";
 
 add_task(async function test_cookies_incognito_not_allowed() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
+
   let privateExtension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
     async background() {
       let window = await browser.windows.create({incognito: true});
       browser.test.onMessage.addListener(async () => {
@@ -77,7 +82,6 @@ add_task(async function test_cookies_incognito_not_allowed() {
     manifest: {
       permissions: ["cookies", "*://example.org/"],
     },
-    incognitoOverride: "not_allowed",
   });
 
   await extension.startup();

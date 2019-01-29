@@ -748,17 +748,8 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
   void GetDateTimeInputBoxValue(DateTimeValue& aValue);
 
   /*
-   * This locates the inner datetimebox UA Widget element and only the
-   * UA Widget
-   * element. This should fold into GetDateTimeBoxElement() when the XBL binding
-   * is removed.
-   */
-  Element* GetDateTimeBoxElementInUAWidget();
-
-  /*
    * This allows chrome JavaScript to dispatch event to the inner datetimebox
-   * anonymous or UA Widget element and access nsIDateTimeInputArea
-   * implementation.
+   * anonymous or UA Widget element.
    */
   Element* GetDateTimeBoxElement();
 

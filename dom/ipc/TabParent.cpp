@@ -1652,6 +1652,10 @@ mozilla::ipc::IPCResult TabParent::RecvSetCursor(
 
   nsCOMPtr<imgIContainer> cursorImage;
   if (aHasCustomCursor) {
+    if (aHeight * aStride != aCursorData.Length() ||
+        aStride < aWidth * gfx::BytesPerPixel(aFormat)) {
+      return IPC_FAIL(this, "Invalid custom cursor data");
+    }
     const gfx::IntSize size(aWidth, aHeight);
     RefPtr<gfx::DataSourceSurface> customCursor =
         gfx::CreateDataSourceSurfaceFromData(

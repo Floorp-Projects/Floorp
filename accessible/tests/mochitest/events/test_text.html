@@ -124,6 +124,10 @@
 
       this.invoke = function insertChildDiv_invoke() {
         var childDiv = document.createElement("div");
+        // Note after bug 646216, a sole div without text won't be accessible
+        // and would not result in an embedded character.
+        // Therefore, add some text.
+        childDiv.textContent = "hello";
         this.DOMNode.insertBefore(childDiv, this.DOMNode.childNodes[1]);
       };
 

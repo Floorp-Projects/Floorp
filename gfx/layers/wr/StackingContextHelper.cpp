@@ -36,7 +36,7 @@ StackingContextHelper::StackingContextHelper(
   gfx::Matrix transform2d;
   if (aParams.mBoundTransform &&
       aParams.mBoundTransform->CanDraw2D(&transform2d) &&
-      aParams.reference_frame_kind != wr::ReferenceFrameKind::Perspective &&
+      aParams.reference_frame_kind != wr::WrReferenceFrameKind::Perspective &&
       !aParentSC.mIsPreserve3D) {
     mInheritedTransform = transform2d * aParentSC.mInheritedTransform;
 

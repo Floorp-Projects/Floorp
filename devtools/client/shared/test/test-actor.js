@@ -792,10 +792,8 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
 });
 
 class TestActorFront extends protocol.FrontClassWithSpec(testSpec) {
-  constructor(client, { testActor }, toolbox) {
-    super(client, { actor: testActor });
-
-    this.manage(this);
+  constructor(client, toolbox) {
+    super(client);
     this.toolbox = toolbox;
   }
 

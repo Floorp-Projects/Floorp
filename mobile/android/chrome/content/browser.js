@@ -3777,6 +3777,7 @@ Tab.prototype = {
       };
       GlobalEventDispatcher.sendRequest(message);
     }
+    this.browser.contentWindow.windowUtils.setDesktopModeViewport(this.desktopMode);
 
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
                 Ci.nsIWebProgress.NOTIFY_LOCATION |

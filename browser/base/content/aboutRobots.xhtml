@@ -9,34 +9,28 @@
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "DTD/xhtml1-strict.dtd">
   %htmlDTD;
-  <!ENTITY % netErrorDTD
-    SYSTEM "chrome://global/locale/netError.dtd">
-  %netErrorDTD;
-  <!ENTITY % globalDTD
-    SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-  <!ENTITY % aboutrobotsDTD
-    SYSTEM "chrome://browser/locale/aboutRobots.dtd">
-  %aboutrobotsDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
-    <title>&robots.pagetitle;</title>
+    <title data-l10n-id="page-title"></title>
     <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
     <link rel="icon" type="image/png" id="favicon" href="chrome://browser/content/robot.ico"/>
     <link rel="stylesheet" href="chrome://browser/content/aboutRobots.css" type="text/css"/>
+    <linkset>
+      <link rel="localization" href="browser/aboutRobots.ftl"/>
+    </linkset>
   </head>
 
-  <body dir="&locale.dir;">
+  <body>
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
     <div id="errorPageContainer">
 
       <!-- Error Title -->
       <div id="errorTitle">
-        <h1 id="errorTitleText">&robots.errorTitleText;</h1>
+        <h1 id="errorTitleText" data-l10n-id="error-title-text"></h1>
       </div>
 
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
@@ -44,29 +38,30 @@
 
         <!-- Short Description -->
         <div id="errorShortDesc">
-          <p id="errorShortDescText">&robots.errorShortDescText;</p>
+          <p id="errorShortDescText" data-l10n-id="error-short-desc-text"></p>
         </div>
 
         <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
         <div id="errorLongDesc">
           <ul>
-            <li>&robots.errorLongDesc1;</li>
-            <li>&robots.errorLongDesc2;</li>
-            <li>&robots.errorLongDesc3;</li>
-            <li>&robots.errorLongDesc4;</li>
+            <li data-l10n-id="error-long-desc1"></li>
+            <li data-l10n-id="error-long-desc2"></li>
+            <li data-l10n-id="error-long-desc3"></li>
+            <li data-l10n-id="error-long-desc4"></li>
           </ul>
         </div>
 
         <!-- Short Description -->
         <div id="errorTrailerDesc">
-          <p id="errorTrailerDescText">&robots.errorTrailerDescText;</p>
+          <p id="errorTrailerDescText" data-l10n-id="error-trailer-desc-text"></p>
         </div>
 
       </div>
 
       <!-- Button -->
       <button id="errorTryAgain"
-              label2="&robots.dontpress;">&retry.label;</button>
+              data-l10n-id="error-try-again"
+              data-l10n-attrs="label2"></button>
 
       <img id="widget1" src="chrome://browser/content/aboutRobots-widget-left.png"/>
       <img id="widget2" src="chrome://browser/content/aboutRobots-widget-left.png"/>

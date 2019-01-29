@@ -283,11 +283,7 @@ StorageActors.defaults = function(typeName, observationTopics) {
       }
     },
 
-    form(form, detail) {
-      if (detail === "actorid") {
-        return this.actorID;
-      }
-
+    form() {
       const hosts = {};
       for (const host of this.hosts) {
         hosts[host] = [];
@@ -1336,11 +1332,7 @@ StorageActors.createActor({
     }
   },
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
+  form() {
     const hosts = {};
     for (const host of this.hosts) {
       hosts[host] = this.getNamesForHost(host);
@@ -1835,11 +1827,7 @@ StorageActors.createActor({
     };
   },
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
+  form() {
     const hosts = {};
     for (const host of this.hosts) {
       hosts[host] = this.getNamesForHost(host);

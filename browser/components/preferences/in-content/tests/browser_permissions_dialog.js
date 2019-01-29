@@ -19,9 +19,7 @@ function checkPermissionItem(origin, state) {
   Assert.equal(label.value, origin);
 
   let menulist = doc.getElementsByTagName("menulist")[0];
-  let selectedIndex = menulist.selectedIndex;
-  let selectedItem = menulist.querySelectorAll("menuitem")[selectedIndex];
-  Assert.equal(selectedItem.value, state);
+  Assert.equal(menulist.value, state);
 }
 
 async function openPermissionsDialog() {

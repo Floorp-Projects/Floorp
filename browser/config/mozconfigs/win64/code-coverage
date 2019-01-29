@@ -25,7 +25,6 @@ if [ -d "$topsrcdir/clang" ]; then
     CLANG_LIB_DIR="$(cd $topsrcdir/clang/lib/clang/* && cd lib/windows && pwd)"
 
     export LIB=$LIB:$CLANG_LIB_DIR
-    mk_export_correct_style LIB
     export LDFLAGS="clang_rt.profile-x86_64.lib"
 fi
 

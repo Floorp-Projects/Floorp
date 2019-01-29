@@ -68,7 +68,6 @@ add_task(async function testElementPicker() {
 });
 
 async function setup({ showAllAnonymousContent }) {
-  await pushPref("dom.ua_widget.enabled", true);
   await pushPref("devtools.inspector.showUserAgentShadowRoots", true);
   await pushPref("devtools.inspector.showAllAnonymousContent", showAllAnonymousContent);
 

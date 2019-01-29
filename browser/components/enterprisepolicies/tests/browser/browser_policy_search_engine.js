@@ -135,7 +135,7 @@ add_task(async function setup_prevent_installs() {
 add_task(async function test_prevent_install_ui() {
   // Check that about:preferences does not prompt user to install search engines
   // if that feature is disabled
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences#search");
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let linkContainer = content.document.getElementById("addEnginesBox");
     if (!linkContainer.hidden) {

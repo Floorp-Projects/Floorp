@@ -124,8 +124,7 @@ class PluginChild extends ActorChild {
         plugin.openOrClosedShadowRoot.isUAWidget()) {
       return plugin.openOrClosedShadowRoot.getElementById(anonid);
     }
-    return plugin.ownerDocument.
-      getAnonymousElementByAttribute(plugin, "anonid", anonid);
+    return null;
   }
 
   _getPluginInfo(pluginElement) {

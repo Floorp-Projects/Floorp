@@ -46,11 +46,11 @@ const childSpec = protocol.generateActorSpec({
     },
     "object-event": {
       type: "objectEvent",
-      detail: Arg(0, "childActor#detail1"),
+      detail: Arg(0, "childActor#actorid"),
     },
     "array-object-event": {
       type: "arrayObjectEvent",
-      detail: Arg(0, "array:childActor#detail2"),
+      detail: Arg(0, "array:childActor#actorid"),
     },
   },
 
@@ -60,12 +60,14 @@ const childSpec = protocol.generateActorSpec({
       response: { str: RetVal("string") },
     },
     getDetail1: {
-      // This also exercises return-value-as-packet.
-      response: RetVal("childActor#detail1"),
+      response: {
+        child: RetVal("childActor#actorid"),
+      },
     },
     getDetail2: {
-      // This also exercises return-value-as-packet.
-      response: RetVal("childActor#detail2"),
+      response: {
+        child: RetVal("childActor#actorid"),
+      },
     },
     getIDDetail: {
       response: {
@@ -109,14 +111,10 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
     this.destroyed = true;
   },
 
-  form: function(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
+  form: function() {
     return {
       actor: this.actorID,
       childID: this.childID,
-      detail: detail,
     };
   },
 
@@ -163,8 +161,8 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
 });
 
 class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
-  constructor(client, form) {
-    super(client, form);
+  constructor(client) {
+    super(client);
 
     this.before("event1", this.onEvent1.bind(this));
     this.before("event2", this.onEvent2a.bind(this));
@@ -184,12 +182,8 @@ class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
     return "[child front " + this.childID + "]";
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      return;
-    }
+  form(form) {
     this.childID = form.childID;
-    this.detail = form.detail;
   }
 
   onEvent1(a, b, c) {
@@ -390,22 +384,16 @@ function run_test() {
       return childFront.getDetail1();
     }).then(ret => {
       trace.expectSend({"type": "getDetail1", "to": "<actorid>"});
-      trace.expectReceive({"actor": "<actorid>",
-                           "childID": "child1",
-                           "detail": "detail1",
+      trace.expectReceive({"child": childFront.actorID,
                            "from": "<actorid>"});
       Assert.ok(ret === childFront);
-      Assert.equal(childFront.detail, "detail1");
     }).then(() => {
       return childFront.getDetail2();
     }).then(ret => {
       trace.expectSend({"type": "getDetail2", "to": "<actorid>"});
-      trace.expectReceive({"actor": "<actorid>",
-                           "childID": "child1",
-                           "detail": "detail2",
+      trace.expectReceive({"child": childFront.actorID,
                            "from": "<actorid>"});
       Assert.ok(ret === childFront);
-      Assert.equal(childFront.detail, "detail2");
     }).then(() => {
       return childFront.getIDDetail();
     }).then(ret => {
@@ -512,12 +500,10 @@ function run_test() {
       });
       childFront.on("object-event", (obj) => {
         Assert.ok(obj === childFront);
-        Assert.equal(childFront.detail, "detail1");
         set.delete("object-event");
       });
       childFront.on("array-object-event", (array) => {
         Assert.ok(array[0] === childFront);
-        Assert.equal(childFront.detail, "detail2");
         set.delete("array-object-event");
       });
 
@@ -539,14 +525,10 @@ function run_test() {
         trace.expectReceive({"type": "namedEvent", "a": 1, "b": 2, "c": 3,
                              "from": "<actorid>"});
         trace.expectReceive({"type": "objectEvent",
-                             "detail": {"actor": "<actorid>",
-                                        "childID": "child1",
-                                        "detail": "detail1"},
+                             "detail": childFront.actorID,
                              "from": "<actorid>"});
         trace.expectReceive({"type": "arrayObjectEvent",
-                             "detail": [{"actor": "<actorid>",
-                                         "childID": "child1",
-                                         "detail": "detail2"}],
+                             "detail": [childFront.actorID],
                              "from": "<actorid>"});
         trace.expectReceive({"value": "correct response", "from": "<actorid>"});
 

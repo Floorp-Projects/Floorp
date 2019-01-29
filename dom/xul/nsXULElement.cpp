@@ -661,8 +661,7 @@ nsresult nsXULElement::BindToTree(Document* aDocument, nsIContent* aParent,
             tag == nsGkAtoms::scrollcorner || tag == nsGkAtoms::slider ||
             tag == nsGkAtoms::thumb ||
             // other
-            tag == nsGkAtoms::datetimebox || tag == nsGkAtoms::resizer ||
-            tag == nsGkAtoms::label || tag == nsGkAtoms::videocontrols,
+            tag == nsGkAtoms::resizer || tag == nsGkAtoms::label,
         "Unexpected XUL element in non-XUL doc");
   }
 #endif

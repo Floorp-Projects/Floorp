@@ -84,6 +84,10 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "processCount", "dom.ipc.processCount.extension");
 
+// Temporary pref to be turned on when ready.
+XPCOMUtils.defineLazyPreferenceGetter(this, "allowPrivateBrowsingByDefault",
+                                      "extensions.allowPrivateBrowsingByDefault", true);
+
 var {
   GlobalManager,
   ParentAPIManager,
@@ -273,6 +277,8 @@ var UninstallObserver = {
       Services.perms.removeFromPrincipal(principal, "indexedDB");
       Services.perms.removeFromPrincipal(principal, "persistent-storage");
     }
+
+    ExtensionPermissions.removeAll(addon.id);
 
     if (!Services.prefs.getBoolPref(LEAVE_UUID_PREF, false)) {
       // Clear the entry in the UUID map
@@ -562,6 +568,11 @@ class ExtensionData {
     this.manifest = manifest;
     this.rawManifest = manifest;
 
+    if (allowPrivateBrowsingByDefault &&
+        "incognito" in manifest && manifest.incognito == "not_allowed") {
+      throw new Error(`manifest.incognito set to "not_allowed" is currently unvailable for use.`);
+    }
+
     if (manifest && manifest.default_locale) {
       await this.initLocale();
     }
@@ -636,7 +647,6 @@ class ExtensionData {
       schemaURLs: null,
       type: this.type,
       webAccessibleResources,
-      privateBrowsingAllowed: manifest.incognito !== "not_allowed",
     };
 
     if (this.type === "extension") {
@@ -665,13 +675,20 @@ class ExtensionData {
         permissions.add(perm);
       }
 
+      // We only want to set permissions if the feature is preffed on
+      // (allowPrivateBrowsingByDefault is false)
+      if (!allowPrivateBrowsingByDefault &&
+          manifest.incognito !== "not_allowed" && this.isPrivileged) {
+        permissions.add("internal:privateBrowsingAllowed");
+      }
+
       if (this.id) {
         // An extension always gets permission to its own url.
         let matcher = new MatchPattern(this.getURL(), {ignorePath: true});
         originPermissions.add(matcher.pattern);
 
         // Apply optional permissions
-        let perms = await ExtensionPermissions.get(this);
+        let perms = await ExtensionPermissions.get(this.id);
         for (let perm of perms.permissions) {
           permissions.add(perm);
         }
@@ -1613,7 +1630,6 @@ class Extension extends ExtensionData {
       whiteListedHosts: this.whiteListedHosts.patterns.map(pat => pat.pattern),
       permissions: this.permissions,
       optionalPermissions: this.optionalPermissions,
-      privateBrowsingAllowed: this.privateBrowsingAllowed,
     };
   }
 
@@ -1849,12 +1865,6 @@ class Extension extends ExtensionData {
         return;
       }
 
-      if (this.addonData && this.addonData.incognitoOverride !== undefined) {
-        this.policy.privateBrowsingAllowed = this.addonData.incognitoOverride !== "not_allowed";
-      } else {
-        this.policy.privateBrowsingAllowed = this.manifest.incognito !== "not_allowed";
-      }
-
       GlobalManager.init(this);
 
       this.initSharedData();
@@ -1969,8 +1979,7 @@ class Extension extends ExtensionData {
       this.state = "Shutdown: Flushed jar cache";
     }
 
-    if (this.cleanupFile ||
-        ["ADDON_INSTALL", "ADDON_UNINSTALL", "ADDON_UPGRADE", "ADDON_DOWNGRADE"].includes(reason)) {
+    if (this.cleanupFile || reason !== "APP_SHUTDOWN") {
       StartupCache.clearAddonData(this.id);
     }
 

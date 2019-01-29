@@ -9,6 +9,10 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
 
+#include "mozilla/dom/JSWindowActorBinding.h"
+#include "mozilla/dom/JSWindowActorChild.h"
+#include "mozilla/dom/JSWindowActorService.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -90,6 +94,57 @@ already_AddRefed<WindowGlobalParent> WindowGlobalChild::GetParentActor() {
   return do_AddRef(static_cast<WindowGlobalParent*>(otherSide));
 }
 
+already_AddRefed<TabChild> WindowGlobalChild::GetTabChild() {
+  if (IsInProcess() || mIPCClosed) {
+    return nullptr;
+  }
+  return do_AddRef(static_cast<TabChild*>(Manager()));
+}
+
+void WindowGlobalChild::Destroy() {
+  // Perform async IPC shutdown unless we're not in-process, and our TabChild is
+  // in the process of being destroyed, which will destroy us as well.
+  RefPtr<TabChild> tabChild = GetTabChild();
+  if (!tabChild || !tabChild->IsDestroyed()) {
+    SendDestroy();
+  }
+
+  mIPCClosed = true;
+}
+
+already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
+    const nsAString& aName, ErrorResult& aRv) {
+  // Check if this actor has already been created, and return it if it has.
+  if (mWindowActors.Contains(aName)) {
+    return do_AddRef(mWindowActors.GetWeak(aName));
+  }
+
+  // Otherwise, we want to create a new instance of this actor. Call into the
+  // JSWindowActorService to trigger construction.
+  RefPtr<JSWindowActorService> actorSvc = JSWindowActorService::GetSingleton();
+  if (!actorSvc) {
+    return nullptr;
+  }
+
+  JS::RootedObject obj(RootingCx());
+  actorSvc->ConstructActor(aName, /* aChildSide */ false, &obj, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Unwrap our actor to a JSWindowActorChild object.
+  RefPtr<JSWindowActorChild> actor;
+  if (NS_FAILED(UNWRAP_OBJECT(JSWindowActorChild, &obj, actor))) {
+    return nullptr;
+  }
+
+  MOZ_RELEASE_ASSERT(!actor->Manager(),
+                     "mManager was already initialized once!");
+  actor->Init(this);
+  mWindowActors.Put(aName, actor);
+  return actor.forget();
+}
+
 void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCClosed = true;
   gWindowGlobalChildById->Remove(mInnerWindowId);
@@ -110,7 +165,7 @@ nsISupports* WindowGlobalChild::GetParentObject() {
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild, mWindowGlobal,
-                                      mBrowsingContext)
+                                      mBrowsingContext, mWindowActors)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WindowGlobalChild, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WindowGlobalChild, Release)
