@@ -47,6 +47,17 @@
                 motion:target="@id/privateBrowsingButton"
                 motion:framePosition="90"
                 android:alpha="0" />
+
+            <KeyAttribute
+                    motion:target="@id/toolbar_wrapper"
+                    motion:framePosition="0"
+                    android:elevation="@dimen/toolbar_elevation" />
+
+            <KeyAttribute
+                motion:target="@id/toolbar_wrapper"
+                motion:framePosition="50"
+                android:elevation="0dp" />
+
         </KeyFrameSet>
     </Transition>
 
@@ -92,6 +103,7 @@
             android:layout_width="@dimen/glyph_button_height"
             motion:layout_constraintEnd_toStartOf="@id/menuButton"
             motion:layout_constraintTop_toTopOf="@id/menuButton"/>
+
     </ConstraintSet>
 
 </MotionScene>

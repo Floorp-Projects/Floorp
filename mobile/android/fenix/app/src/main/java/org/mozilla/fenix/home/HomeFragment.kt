@@ -11,6 +11,7 @@ import android.transition.TransitionInflater
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
 import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
@@ -35,15 +36,10 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Hide buttons that aren't used yet to prevent confusion
-//        menuButton.visibility = View.GONE
-//        privateBrowsingButton.visibility = View.GONE
-
         val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()).let {
             BitmapDrawable(resources, it.icon)
         }
 
-        toolbar_wrapper.clipToOutline = false
         toolbar.setCompoundDrawablesWithIntrinsicBounds(searchIcon, null, null, null)
         toolbar.compoundDrawablePadding = (12f * Resources.getSystem().displayMetrics.density).roundToInt()
         toolbar.setOnClickListener { it ->

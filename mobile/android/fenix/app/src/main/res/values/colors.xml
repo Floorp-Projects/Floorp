@@ -7,7 +7,10 @@
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
 
-    <color name="searchStroke">#331b215e</color>
+    <color name="searchDarkBackground">#F2F2F5</color>
+    <color name="searchDarkBackgroundAlternative">#E9E9ED</color>
+    <color name="searchStroke">#c5c8d7</color>
+    <color name="searchStrokeAlternative">#0A202340</color>
     <color name="searchText">#0C0C0D</color>
     <color name="offwhite">#f9f9fa</color>
     <color name="icons">#0C0C0D</color>

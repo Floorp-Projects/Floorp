@@ -8,7 +8,6 @@
     android:id="@+id/homeLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipToPadding="false"
     app:layoutDescription="@xml/home_scene"
     tools:context=".home.HomeFragment">
 
@@ -42,36 +41,34 @@
         app:layout_constraintTop_toBottomOf="@id/menuButton" />
 
     <FrameLayout
-        android:id="@+id/toolbar_wrapper"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="64dp"
-        android:layout_marginRight="16dp"
-        android:background="@drawable/home_search_background"
-        android:clipToPadding="false"
-        android:elevation="5dp"
-        android:outlineProvider="paddedBounds"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/wordmark">
+            android:id="@+id/toolbar_wrapper"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="64dp"
+            android:layout_marginRight="16dp"
+            android:elevation="@dimen/toolbar_elevation"
+            android:background="@drawable/home_search_background_light"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/wordmark">
 
         <TextView
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="12sp"
-            android:paddingEnd="12sp"
-            android:paddingTop="16sp"
-            android:paddingBottom="16sp"
-            android:drawablePadding="12sp"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:text="@string/search_hint"
-            android:textColor="@color/searchText"
-            android:textSize="14sp"
-            android:transitionName="firstTransitionName" />
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="12sp"
+                android:paddingEnd="12sp"
+                android:paddingTop="16sp"
+                android:paddingBottom="16sp"
+                android:drawablePadding="12sp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:text="@string/search_hint"
+                android:textColor="@color/searchText"
+                android:textSize="14sp"
+                android:transitionName="firstTransitionName"/>
     </FrameLayout>
 
 </androidx.constraintlayout.motion.widget.MotionLayout>
