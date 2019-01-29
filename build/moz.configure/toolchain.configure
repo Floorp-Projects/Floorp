@@ -1187,6 +1187,20 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     add_old_configure_assignment(var, depends_if(valid_compiler)(
         lambda x: list(x.wrapper) + [x.compiler] + list(x.flags)))
 
+    if host_or_target is target:
+        add_old_configure_assignment('ac_cv_prog_%s' % var, depends_if(valid_compiler)(
+            lambda x: list(x.wrapper) + [x.compiler] + list(x.flags)))
+        # We check that it works in python configure already.
+        add_old_configure_assignment('ac_cv_prog_%s_works' % var.lower(), 'yes')
+        gcc_like = depends(valid_compiler.type)(lambda x: 'yes' if x in ('gcc', 'clang') else 'no')
+        add_old_configure_assignment('ac_cv_prog_%s_g' % var.lower(), gcc_like)
+        if language == 'C':
+            add_old_configure_assignment('ac_cv_prog_gcc', gcc_like)
+            add_old_configure_assignment('ac_cv_prog_gcc_traditional', 'no')
+        if language == 'C++':
+            add_old_configure_assignment('ac_cv_prog_gxx', gcc_like)
+
+
     # Set CC_TYPE/CC_VERSION/HOST_CC_TYPE/HOST_CC_VERSION to allow
     # old-configure to do some of its still existing checks.
     if language == 'C':
@@ -2092,6 +2106,7 @@ def as_with_flags(as_info, assembler, provided_assembler, c_compiler):
 
 
 add_old_configure_assignment('AS', as_with_flags)
+add_old_configure_assignment('ac_cv_prog_AS', as_with_flags)
 
 
 @depends(assembler, c_compiler, extra_toolchain_flags)
