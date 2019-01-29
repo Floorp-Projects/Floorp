@@ -10727,10 +10727,19 @@ class MIsArray : public MUnaryInstruction,
 
 class MIsTypedArray : public MUnaryInstruction,
                       public SingleObjectPolicy::Data {
-  explicit MIsTypedArray(MDefinition* value)
-      : MUnaryInstruction(classOpcode, value) {
+  bool possiblyWrapped_;
+
+  explicit MIsTypedArray(MDefinition* value, bool possiblyWrapped)
+      : MUnaryInstruction(classOpcode, value),
+        possiblyWrapped_(possiblyWrapped) {
     setResultType(MIRType::Boolean);
-    setMovable();
+
+    if (possiblyWrapped) {
+      // Proxy checks may throw, so we're neither removable nor movable.
+      setGuard();
+    } else {
+      setMovable();
+    }
   }
 
  public:
@@ -10738,6 +10747,7 @@ class MIsTypedArray : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, value))
 
+  bool isPossiblyWrapped() const { return possiblyWrapped_; }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
