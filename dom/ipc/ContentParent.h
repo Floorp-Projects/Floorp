@@ -1151,6 +1151,10 @@ class ContentParent final : public PContentParent,
   virtual mozilla::ipc::IPCResult RecvNotifyPushSubscriptionChangeObservers(
       const nsCString& aScope, const IPC::Principal& aPrincipal) override;
 
+  virtual mozilla::ipc::IPCResult RecvPushError(
+      const nsCString& aScope, const IPC::Principal& aPrincipal,
+      const nsString& aMessage, const uint32_t& aFlags) override;
+
   virtual mozilla::ipc::IPCResult RecvNotifyPushSubscriptionModifiedObservers(
       const nsCString& aScope, const IPC::Principal& aPrincipal) override;
 
