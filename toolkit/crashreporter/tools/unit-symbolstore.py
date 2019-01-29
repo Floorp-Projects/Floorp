@@ -474,7 +474,7 @@ class TestFunctional(HelperMixin, unittest.TestCase):
                                         'crashreporter', 'tools',
                                         'symbolstore.py')
         if target_platform() == 'WINNT':
-            if buildconfig.substs['MSVC_HAS_DIA_SDK']:
+            if buildconfig.substs['WIN_DIA_SDK_BIN_DIR']:
                 self.dump_syms = os.path.join(buildconfig.topobjdir,
                                               'dist', 'host', 'bin',
                                               'dump_syms.exe')
