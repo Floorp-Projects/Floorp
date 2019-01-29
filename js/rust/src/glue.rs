@@ -82,12 +82,6 @@ pub struct ProxyTraps {
                                                               proxy: JS::HandleObject,
                                                               args: *const JS::CallArgs)
                                                               -> bool>,
-    pub getPropertyDescriptor:
-        ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
-                                                   proxy: JS::HandleObject,
-                                                   id: JS::HandleId,
-                                                   desc: JS::MutableHandle<JS::PropertyDescriptor>)
-                                                   -> bool>,
     pub hasOwn: ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                            proxy: JS::HandleObject,
                                                            id: JS::HandleId,

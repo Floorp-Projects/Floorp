@@ -12,8 +12,6 @@ ChromeUtils.defineModuleGetter(this, "FormData",
   "resource://gre/modules/FormData.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionHistory",
   "resource://gre/modules/sessionstore/SessionHistory.jsm");
-ChromeUtils.defineModuleGetter(this, "SessionStorage",
-  "resource:///modules/sessionstore/SessionStorage.jsm");
 ChromeUtils.defineModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
 
@@ -141,7 +139,7 @@ ContentRestoreInternal.prototype = {
 
 
     if (tabData.storage && this.docShell instanceof Ci.nsIDocShell) {
-      SessionStorage.restore(this.docShell, tabData.storage);
+      SessionStoreUtils.restoreSessionStorage(this.docShell, tabData.storage);
       delete tabData.storage;
     }
 

@@ -23,8 +23,3 @@
 .extension-detail__manifest {
   margin-inline-start: 1ch;
 }
-
-.extension-details__warning {
-  /* reset for the default <p> styles */
-  margin: initial;
-}

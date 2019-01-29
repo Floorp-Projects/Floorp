@@ -18,8 +18,6 @@ ChromeUtils.defineModuleGetter(this, "ContentRestore",
   "resource:///modules/sessionstore/ContentRestore.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionHistory",
   "resource://gre/modules/sessionstore/SessionHistory.jsm");
-ChromeUtils.defineModuleGetter(this, "SessionStorage",
-  "resource:///modules/sessionstore/SessionStorage.jsm");
 ChromeUtils.defineModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
 
@@ -533,7 +531,10 @@ class SessionStorageListener extends Handler {
     // messages.
     this.resetChanges();
 
-    this.messageQueue.push("storage", () => SessionStorage.collect(content));
+    this.messageQueue.push("storage", () => {
+      let data = SessionStoreUtils.collectSessionStorage(content);
+      return Object.keys(data).length ? data : null;
+    });
   }
 
   onPageLoadCompleted() {

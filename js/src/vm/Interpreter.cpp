@@ -1961,12 +1961,12 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_TRY_DESTRUCTURING)
     CASE(JSOP_UNUSED71)
     CASE(JSOP_UNUSED151)
+    CASE(JSOP_TRY)
     CASE(JSOP_CONDSWITCH) {
       MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
       ADVANCE_AND_DISPATCH(1);
     }
 
-    CASE(JSOP_TRY)
     CASE(JSOP_JUMPTARGET)
     CASE(JSOP_LOOPHEAD) {
       MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
@@ -2258,7 +2258,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(JSOP_ENDITER) {
       MOZ_ASSERT(REGS.stackDepth() >= 1);
-      COUNT_COVERAGE();
       CloseIterator(&REGS.sp[-1].toObject());
       REGS.sp--;
     }

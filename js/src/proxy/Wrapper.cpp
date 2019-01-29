@@ -187,16 +187,6 @@ bool ForwardingProxyHandler::construct(JSContext* cx, HandleObject proxy,
   return true;
 }
 
-bool ForwardingProxyHandler::getPropertyDescriptor(
-    JSContext* cx, HandleObject proxy, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) const {
-  assertEnteredPolicy(cx, proxy, id, GET | SET | GET_PROPERTY_DESCRIPTOR);
-  MOZ_ASSERT(
-      !hasPrototype());  // Should never be called if there's a prototype.
-  RootedObject target(cx, proxy->as<ProxyObject>().target());
-  return GetPropertyDescriptor(cx, target, id, desc);
-}
-
 bool ForwardingProxyHandler::hasOwn(JSContext* cx, HandleObject proxy,
                                     HandleId id, bool* bp) const {
   assertEnteredPolicy(cx, proxy, id, GET);

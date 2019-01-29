@@ -166,7 +166,7 @@ void DocumentTimeline::MostRecentRefreshTimeUpdated() {
     // order to dispatch events.
     animation->Tick();
 
-    if (!animation->IsRelevant() && !animation->NeedsTicks()) {
+    if (!animation->NeedsTicks()) {
       animationsToRemove.AppendElement(animation);
     }
   }

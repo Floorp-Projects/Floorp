@@ -1,0 +1,99 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+/* import-globals-from helper-mocks.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
+
+// Test migrated from
+// devtools/client/aboutdebugging/test/browser_service_workers_not_compatible.js
+
+const TEST_DATA = [
+  {
+    serviceWorkersEnabled: true,
+    privateBrowsingEnabled: false,
+    expectedMessage: false,
+  },
+  {
+    serviceWorkersEnabled: false,
+    privateBrowsingEnabled: false,
+    expectedMessage: true,
+  },
+  {
+    serviceWorkersEnabled: true,
+    privateBrowsingEnabled: true,
+    expectedMessage: true,
+  },
+  {
+    serviceWorkersEnabled: false,
+    privateBrowsingEnabled: true,
+    expectedMessage: true,
+  },
+];
+
+/**
+ * Check that the warning message for service workers is displayed if permanent private
+ * browsing is enabled or/and if service workers are disabled.
+ */
+add_task(async function testLocalRuntime() {
+  for (const testData of TEST_DATA) {
+    const { serviceWorkersEnabled, privateBrowsingEnabled, expectedMessage } = testData;
+
+    info(`Test warning message on this-firefox ` +
+      `with serviceWorkersEnabled: ${serviceWorkersEnabled} ` +
+      `and with privateBrowsingEnabled: ${privateBrowsingEnabled}`);
+
+    await pushPref("dom.serviceWorkers.enabled", serviceWorkersEnabled);
+    await pushPref("browser.privatebrowsing.autostart", privateBrowsingEnabled);
+
+    const { document, tab } = await openAboutDebugging();
+    assertWarningMessage(document, expectedMessage);
+    await removeTab(tab);
+  }
+});
+
+add_task(async function testRemoteRuntime() {
+  const { remoteClientManager } =
+    require("devtools/client/shared/remote-debugging/remote-client-manager");
+
+  // enable USB devices mocks
+  const mocks = new Mocks();
+  const client = mocks.createUSBRuntime("1337id", {
+    deviceName: "Fancy Phone",
+    name: "Lorem ipsum",
+  });
+
+  for (const testData of TEST_DATA) {
+    const { serviceWorkersEnabled, privateBrowsingEnabled, expectedMessage } = testData;
+
+    info(`Test warning message on mocked USB runtime ` +
+      `with serviceWorkersEnabled: ${serviceWorkersEnabled} ` +
+      `and with privateBrowsingEnabled: ${privateBrowsingEnabled}`);
+
+    client.setPreference("dom.serviceWorkers.enabled", serviceWorkersEnabled);
+    client.setPreference("browser.privatebrowsing.autostart", privateBrowsingEnabled);
+
+    const { document, tab } = await openAboutDebugging();
+
+    info("Checking a USB runtime");
+    mocks.emitUSBUpdate();
+    await connectToRuntime("Fancy Phone", document);
+    await selectRuntime("Fancy Phone", "Lorem ipsum", document);
+
+    assertWarningMessage(document, expectedMessage);
+
+    // We remove all clients in order to be able to simply connect to the runtime at
+    // every iteration of the loop without checking of the runtime is already connected.
+    info("Remove all remote clients");
+    await remoteClientManager.removeAllClients();
+
+    await removeTab(tab);
+  }
+});
+
+function assertWarningMessage(doc, expectedMessage) {
+  const hasMessage = !!doc.querySelector(".js-service-workers-warning");
+  ok(hasMessage === expectedMessage, expectedMessage ?
+    "Warning message is displayed" : "Warning message is not displayed");
+}

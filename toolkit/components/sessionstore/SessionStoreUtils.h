@@ -54,6 +54,14 @@ class SessionStoreUtils {
 
   static void CollectFormData(const GlobalObject& aGlobal, Document& aDocument,
                               CollectedFormData& aRetVal);
+
+  static void CollectSessionStorage(
+      const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
+      Record<nsString, Record<nsString, nsString>>& aRetVal);
+
+  static void RestoreSessionStorage(
+      const GlobalObject& aGlobal, nsIDocShell* aDocShell,
+      const Record<nsString, Record<nsString, nsString>>& aData);
 };
 
 }  // namespace dom

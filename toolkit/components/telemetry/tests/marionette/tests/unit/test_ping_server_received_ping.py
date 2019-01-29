@@ -8,6 +8,11 @@ from telemetry_harness.testcase import TelemetryTestCase
 
 
 class TestPingServer(TelemetryTestCase):
+    def setUp(self, *args, **kwargs):
+        """Set up the test case retrieve the pings URL."""
+        super(TestPingServer, self).setUp(*args, **kwargs)
+        self.pings_url = self.ping_server.get_url("/pings")
+
     def test_ping_server_received_ping(self):
         ping_type = "server-test-ping"
         ping_reason = "unit-test"
@@ -15,9 +20,14 @@ class TestPingServer(TelemetryTestCase):
         def send_ping_request():
             """Perform a POST request to the ping server."""
             data = {"type": ping_type, "reason": ping_reason}
-            headers = {"Content-type": "application/json", "Accept": "text/plain"}
+            headers = {
+                "Content-type": "application/json",
+                "Accept": "text/plain",
+            }
 
-            response = requests.post(self.ping_server_url, json=data, headers=headers)
+            response = requests.post(
+                self.pings_url, json=data, headers=headers
+            )
 
             self.assertEqual(
                 response.status_code,

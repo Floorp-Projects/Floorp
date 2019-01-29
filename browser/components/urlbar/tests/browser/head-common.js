@@ -24,17 +24,37 @@ function is_element_hidden(element, msg) {
   ok(BrowserTestUtils.is_hidden(element), msg || "Element should be hidden");
 }
 
-function runHttpServer(scheme, host, port = -1) {
-  let httpserver = new HttpServer();
+/**
+ * Initializes an HTTP Server, and runs a task with it.
+ * @param {object} details {scheme, host, port}
+ * @param {function} taskFn The task to run, gets the server as argument.
+ */
+async function withHttpServer(details = { scheme: "http", host: "localhost", port: -1}, taskFn) {
+  let server = new HttpServer();
+  let url = `${details.scheme}://${details.host}:${details.port}`;
   try {
-    httpserver.start(port);
-    port = httpserver.identity.primaryPort;
-    httpserver.identity.setPrimary(scheme, host, port);
-  } catch (ex) {
-    info("We can't launch our http server successfully.");
+    info(`starting HTTP Server for ${url}`);
+    try {
+      server.start(details.port);
+      details.port = server.identity.primaryPort;
+      server.identity.setPrimary(details.scheme, details.host, details.port);
+    } catch (ex) {
+      throw ("We can't launch our http server successfully. " + ex);
+    }
+    Assert.ok(server.identity.has(details.scheme, details.host, details.port),
+              `${url} is listening.`);
+    try {
+      await taskFn(server);
+    } catch (ex) {
+      throw new Error("Exception in the task function " + ex);
+    }
+  } finally {
+    server.identity.remove(details.scheme, details.host, details.port);
+    try {
+      await new Promise(resolve => server.stop(resolve));
+    } catch (ex) {}
+    server = null;
   }
-  is(httpserver.identity.has(scheme, host, port), true, `${scheme}://${host}:${port} is listening.`);
-  return httpserver;
 }
 
 function promisePopupShown(popup) {
@@ -54,10 +74,6 @@ function promiseAutocompleteResultPopup(inputText,
                                         fireInputEvent = false) {
   return UrlbarTestUtils.promiseAutocompleteResultPopup(inputText,
     win, waitForFocus, fireInputEvent);
-}
-
-function promiseSpeculativeConnection(httpserver) {
-  return UrlbarTestUtils.promiseSpeculativeConnection(httpserver);
 }
 
 async function waitForAutocompleteResultAt(index) {

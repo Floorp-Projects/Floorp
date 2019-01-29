@@ -32,15 +32,6 @@ static bool WaiveAccessors(JSContext* cx,
   return true;
 }
 
-bool WaiveXrayWrapper::getPropertyDescriptor(
-    JSContext* cx, HandleObject wrapper, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) const {
-  return CrossCompartmentWrapper::getPropertyDescriptor(cx, wrapper, id,
-                                                        desc) &&
-         WrapperFactory::WaiveXrayAndWrap(cx, desc.value()) &&
-         WaiveAccessors(cx, desc);
-}
-
 bool WaiveXrayWrapper::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
     MutableHandle<PropertyDescriptor> desc) const {

@@ -250,6 +250,9 @@ class PaymentRequest final : public DOMEventTargetHelper,
   RefPtr<PaymentAddress> mShippingAddress;
   // The full shipping address to be used in the response upon payment.
   RefPtr<PaymentAddress> mFullShippingAddress;
+  // Hold a reference to the document to allow unregistering the activity
+  // observer.
+  RefPtr<Document> mDocument;
   // It is populated when the user chooses a shipping option.
   nsString mShippingOption;
 

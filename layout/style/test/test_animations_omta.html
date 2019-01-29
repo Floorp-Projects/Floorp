@@ -224,6 +224,11 @@ runOMTATest(function() {
   });
 }, SimpleTest.finish);
 
+function isGeckoView() {
+  return SpecialPowers.Services.androidBridge &&
+    !SpecialPowers.Services.androidBridge.isFennec;
+}
+
 //----------------------------------------------------------------------
 //
 // Test cases
@@ -2093,9 +2098,8 @@ addAsyncAnimTest(async function() {
 // Bug 996796 patch 12 - test for correct visited styles during
 // animation-only style flush.
 addAsyncAnimTest(async function() {
-  var isb2g = SpecialPowers.Services.appinfo.name == "B2G";
-  if (isb2g) {
-    todo(false, "no global history on B2G; can't run test");
+  if (isGeckoView()) {
+    todo(false, "no global history on GeckoView; can't run test");
     return;
   }
 
@@ -2470,6 +2474,11 @@ if (SpecialPowers.DOMWindowUtils.layerManagerType != 'WebRender') {
   // Tests that a background-color animation from currentColor to a normal color
   // on <a> element is updated when the link is visited.
   addAsyncAnimTest(async function() {
+    if (isGeckoView()) {
+      todo(false, "no global history on GeckoView; can't run test");
+      return;
+    }
+
     [ gDiv ] = new_element("a", "display: block");
     gDiv.setAttribute("href", "not-exist.html");
     gDiv.classList.add("visited");

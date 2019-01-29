@@ -65,9 +65,6 @@ class Proxy {
                         const CallArgs& args);
 
   /* SpiderMonkey extensions. */
-  static bool getPropertyDescriptor(JSContext* cx, HandleObject proxy,
-                                    HandleId id,
-                                    MutableHandle<JS::PropertyDescriptor> desc);
   static bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp);
   static bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
                                            AutoIdVector& props);
