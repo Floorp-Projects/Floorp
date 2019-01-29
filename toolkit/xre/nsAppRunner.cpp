@@ -4714,7 +4714,7 @@ bool XRE_IsE10sParentProcess() {
 #undef GECKO_PROCESS_TYPE
 
 bool XRE_UseNativeEventProcessing() {
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(XP_WIN)
   if (XRE_IsRDDProcess() || XRE_IsSocketProcess()) {
     return false;
   }
