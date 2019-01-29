@@ -14,7 +14,7 @@ The person that asked you to request this can also vouch for you.
 
 ## Request commit access level 3
 
-Once this is granted, you will get access to Lando, the autoland feature.
+After you landed a few bugs, that are more advanced than the `good-first-bugs` and you feel confident about your contributions as well as the process, you can request level 3 access. Once this is granted, you will get access to Lando, the autoland feature.
 
 To request this, [follow the instructions here](https://www.mozilla.org/en-US/about/governance/policies/commit/) to file a bug with the title "Commit Access (Level 3) for ${your name}".
 

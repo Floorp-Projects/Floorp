@@ -142,26 +142,19 @@ add_task(async function setup() {
 });
 
 add_task(async function popup_mousedown_no_client_cert_dialog_until_navigate_test() {
-  const test = {
-    // To not trigger autofill, search keyword starts from the second character.
-    search: host.substr(1, 4),
-    completeValue: uri,
-  };
-  info(`Searching for '${test.search}'`);
-  await promiseAutocompleteResultPopup(test.search, window, true);
-  await waitForAutocompleteResultAt(1);
-  let controller = gURLBar.popup.input.controller;
-  // The first item should be 'Search with ...' thus we want the second.
-  let value = controller.getFinalCompleteValueAt(1);
-  info(`The value of the second item is ${value}`);
-  is(value, test.completeValue, "The second item has the url we visited.");
-
-  let listitem = await waitForAutocompleteResultAt(1);
-  Assert.ok(BrowserTestUtils.is_visible(listitem), "The node is there.");
+  // To not trigger autofill, search keyword starts from the second character.
+  let searchString = host.substr(1, 4);
+  let completeValue = uri;
+  info(`Searching for '${searchString}'`);
+  await promiseAutocompleteResultPopup(searchString, window, true);
+  let listitem = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+  let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  info(`The url of the second item is ${details.url}`);
+  is(details.url, completeValue, "The second item has the url we visited.");
 
   expectingChooseCertificate = false;
   EventUtils.synthesizeMouseAtCenter(listitem, {type: "mousedown"}, window);
-  is(gURLBar.popup.richlistbox.selectedIndex, 1, "The second item is selected");
+  is(UrlbarTestUtils.getSelectedElement(window), listitem, "The second item is selected");
 
   // We shouldn't have triggered a speculative connection, because a client
   // certificate is installed.

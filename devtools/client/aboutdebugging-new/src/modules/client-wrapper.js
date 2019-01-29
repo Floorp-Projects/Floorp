@@ -13,6 +13,8 @@ const PREF_TYPES = {
 // Map of preference to preference type.
 const PREF_TO_TYPE = {
   [RUNTIME_PREFERENCE.CONNECTION_PROMPT]: PREF_TYPES.BOOL,
+  [RUNTIME_PREFERENCE.PERMANENT_PRIVATE_BROWSING]: PREF_TYPES.BOOL,
+  [RUNTIME_PREFERENCE.SERVICE_WORKERS_ENABLED]: PREF_TYPES.BOOL,
 };
 
 // Some events are fired by mainRoot rather than client.
@@ -93,12 +95,25 @@ class ClientWrapper {
     }
   }
 
-  async getPreference(prefName) {
+  async getPreference(prefName, defaultValue) {
+    if (typeof defaultValue === "undefined") {
+      throw new Error("Default value is mandatory for getPreference, the actor will " +
+        "throw if the preference is not set on the target runtime");
+    }
+
     const prefType = PREF_TO_TYPE[prefName];
     const preferenceFront = await this.client.mainRoot.getFront("preference");
     switch (prefType) {
       case PREF_TYPES.BOOL:
-        return preferenceFront.getBoolPref(prefName);
+        // TODO: Add server-side trait and methods to pass a default value to getBoolPref.
+        // See Bug 1522588.
+        let prefValue;
+        try {
+          prefValue = await preferenceFront.getBoolPref(prefName);
+        } catch (e) {
+          prefValue = defaultValue;
+        }
+        return prefValue;
       default:
         throw new Error("Unsupported preference:" + prefName);
     }

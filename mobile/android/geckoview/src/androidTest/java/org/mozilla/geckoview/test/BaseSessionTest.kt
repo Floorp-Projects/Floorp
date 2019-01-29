@@ -47,7 +47,9 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val VIDEO_BAD_PATH = "/assets/www/badVideoPath.html"
         const val UNKNOWN_HOST_URI = "http://www.test.invalid/"
         const val FULLSCREEN_PATH = "/assets/www/fullscreen.html"
-        const val VEIWPORT_PATH = "/assets/www/viewport.html"
+        const val VIEWPORT_PATH = "/assets/www/viewport.html"
+        const val IFRAME_REDIRECT_LOCAL = "/assets/www/iframe_redirect_local.html"
+        const val IFRAME_REDIRECT_AUTOMATION = "/assets/www/iframe_redirect_automation.html"
     }
 
     @get:Rule val sessionRule = GeckoSessionTestRule()

@@ -460,19 +460,6 @@ class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
 
   // SpiderMonkey extensions
   /**
-   * Non-standard method we want to get rid of.
-   *
-   * "proxy" is the WindowProxy object involved.  It may not be same-compartment
-   * with cx.
-   *
-   * The only reason we implement this is because js::Wrapper does and we want
-   * different behavior from the js::Wrapper implementation.
-   */
-  bool getPropertyDescriptor(
-      JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
-
-  /**
    * Implementation of SpiderMonkey extension which just checks whether this
    * object has the property.  Basically Object.getOwnPropertyDescriptor(obj,
    * prop) !== undefined. but does not require reifying the descriptor.
@@ -566,43 +553,6 @@ void nsOuterWindowProxy::finalize(JSFreeOp* fop, JSObject* proxy) const {
     // write a non-null value that will reliably crash when dereferenced.
     outerWindow->PoisonOuterWindowProxy(proxy);
   }
-}
-
-bool nsOuterWindowProxy::getPropertyDescriptor(
-    JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-    JS::MutableHandle<JS::PropertyDescriptor> desc) const {
-  // In the same-origin case the only thing we can do differently from
-  // js::Wrapper is shadow stuff with our indexed properties, so we can just try
-  // getOwnPropertyDescriptor and if that gives us nothing call on through to
-  // js::Wrapper.
-  //
-  // In the cross-origin case, we can only have own properties, so don't even
-  // need to worry about the js::Proxy bit.
-  desc.object().set(nullptr);
-  if (!getOwnPropertyDescriptor(cx, proxy, id, desc)) {
-    return false;
-  }
-
-  if (desc.object()) {
-    return true;
-  }
-
-  if (!IsPlatformObjectSameOrigin(cx, proxy)) {
-    return true;
-  }
-
-  // When forwarding to js::Wrapper, we should just enter the Realm of proxy
-  // for now.  That's what js::Wrapper expects, and since we're same-origin
-  // anyway this is not changing any security behavior.
-  {
-    JSAutoRealm ar(cx, proxy);
-    JS_MarkCrossZoneId(cx, id);
-    if (!js::Wrapper::getPropertyDescriptor(cx, proxy, id, desc)) {
-      return false;
-    }
-  }
-
-  return JS_WrapPropertyDescriptor(cx, desc);
 }
 
 /**

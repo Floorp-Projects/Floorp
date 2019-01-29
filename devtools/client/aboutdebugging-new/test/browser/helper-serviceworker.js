@@ -61,6 +61,11 @@ async function waitForServiceWorkerRunning(workerText, document) {
 }
 /* exported waitForServiceWorkerRunning */
 
+async function waitForServiceWorkerRegistering(workerText, document) {
+  return _waitForServiceWorkerStatus(workerText, "Registering", document);
+}
+/* exported waitForServiceWorkerRegistering */
+
 async function waitForRegistration(tab) {
   info("Wait until the registration appears on the window");
   const swBrowser = tab.linkedBrowser;

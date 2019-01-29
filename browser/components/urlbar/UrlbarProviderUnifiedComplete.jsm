@@ -197,7 +197,6 @@ function convertResultToMatches(context, result, urls) {
     if (!match) {
       continue;
     }
-    matches.push(match);
     // Manage autofillValue and preselected properties for the first match.
     if (i == 0) {
       if (style.includes("autofill") && result.defaultIndex == 0) {
@@ -205,8 +204,10 @@ function convertResultToMatches(context, result, urls) {
       }
       if (style.includes("heuristic")) {
         context.preselected = true;
+        match.heuristic = true;
       }
     }
+    matches.push(match);
   }
   return {matches, done};
 }
