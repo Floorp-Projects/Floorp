@@ -82,6 +82,7 @@ MultiTouchInput::MultiTouchInput(const MultiTouchInput& aOther)
     : InputData(MULTITOUCH_INPUT, aOther.mTime, aOther.mTimeStamp,
                 aOther.modifiers),
       mType(aOther.mType),
+      mScreenOffset(aOther.mScreenOffset),
       mHandledByAPZ(aOther.mHandledByAPZ) {
   mTouches.AppendElements(aOther.mTouches);
 }
@@ -111,6 +112,10 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
       break;
   }
 
+  mScreenOffset = ViewAs<ExternalPixel>(
+      aTouchEvent.mWidget->WidgetToScreenOffset(),
+      PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+
   for (size_t i = 0; i < aTouchEvent.mTouches.Length(); i++) {
     const Touch* domTouch = aTouchEvent.mTouches[i];
 
@@ -130,42 +135,6 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
 
     mTouches.AppendElement(data);
   }
-}
-
-MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
-    : InputData(MULTITOUCH_INPUT, aMouseEvent.mTime, aMouseEvent.mTimeStamp,
-                aMouseEvent.mModifiers),
-      mHandledByAPZ(aMouseEvent.mFlags.mHandledByAPZ) {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "Can only copy from WidgetMouseEvent on main thread");
-  switch (aMouseEvent.mMessage) {
-    case eMouseDown:
-      mType = MULTITOUCH_START;
-      break;
-    case eMouseMove:
-      mType = MULTITOUCH_MOVE;
-      break;
-    case eMouseUp:
-      mType = MULTITOUCH_END;
-      break;
-    // The mouse pointer has been interrupted in an implementation-specific
-    // manner, such as a synchronous event or action cancelling the touch, or a
-    // touch point leaving the document window and going into a non-document
-    // area capable of handling user interactions.
-    case eMouseExitFromWidget:
-      mType = MULTITOUCH_CANCEL;
-      break;
-    default:
-      NS_WARNING("Did not assign a type to a MultiTouchInput");
-      break;
-  }
-
-  mTouches.AppendElement(SingleTouchData(
-      0,
-      ViewAs<ScreenPixel>(
-          aMouseEvent.mRefPoint,
-          PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent),
-      ScreenSize(1, 1), 180.0f, 1.0f));
 }
 
 void MultiTouchInput::Translate(const ScreenPoint& aTranslation) {
@@ -546,15 +515,14 @@ ParentLayerPoint PanGestureInput::UserMultipliedLocalPanDisplacement() const {
 PinchGestureInput::PinchGestureInput()
     : InputData(PINCHGESTURE_INPUT), mType(PINCHGESTURE_START) {}
 
-PinchGestureInput::PinchGestureInput(PinchGestureType aType, uint32_t aTime,
-                                     TimeStamp aTimeStamp,
-                                     const ScreenPoint& aFocusPoint,
-                                     ScreenCoord aCurrentSpan,
-                                     ScreenCoord aPreviousSpan,
-                                     Modifiers aModifiers)
+PinchGestureInput::PinchGestureInput(
+    PinchGestureType aType, uint32_t aTime, TimeStamp aTimeStamp,
+    const ExternalPoint& aScreenOffset, const ScreenPoint& aFocusPoint,
+    ScreenCoord aCurrentSpan, ScreenCoord aPreviousSpan, Modifiers aModifiers)
     : InputData(PINCHGESTURE_INPUT, aTime, aTimeStamp, aModifiers),
       mType(aType),
       mFocusPoint(aFocusPoint),
+      mScreenOffset(aScreenOffset),
       mCurrentSpan(aCurrentSpan),
       mPreviousSpan(aPreviousSpan) {}
 

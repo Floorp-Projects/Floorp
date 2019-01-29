@@ -197,13 +197,6 @@ class MultiTouchInput : public InputData {
   MultiTouchInput();
   MultiTouchInput(const MultiTouchInput& aOther);
   explicit MultiTouchInput(const WidgetTouchEvent& aTouchEvent);
-  // This conversion from WidgetMouseEvent to MultiTouchInput is needed because
-  // on the B2G emulator we can only receive mouse events, but we need to be
-  // able to pan correctly. To do this, we convert the events into a format that
-  // the panning code can handle. This code is very limited and only supports
-  // SingleTouchData. It also sends garbage for the identifier, radius, force
-  // and rotation angle.
-  explicit MultiTouchInput(const WidgetMouseEvent& aMouseEvent);
   void Translate(const ScreenPoint& aTranslation);
 
   WidgetTouchEvent ToWidgetTouchEvent(nsIWidget* aWidget) const;
@@ -219,6 +212,9 @@ class MultiTouchInput : public InputData {
   // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   MultiTouchType mType;
   nsTArray<SingleTouchData> mTouches;
+  // The screen offset of the root widget. This can be changing along with
+  // the touch interaction, so we sstore it in the event.
+  ExternalPoint mScreenOffset;
   bool mHandledByAPZ;
 };
 
@@ -415,9 +411,9 @@ class PinchGestureInput : public InputData {
 
   // Construct a pinch gesture from a Screen point.
   PinchGestureInput(PinchGestureType aType, uint32_t aTime,
-                    TimeStamp aTimeStamp, const ScreenPoint& aFocusPoint,
-                    ScreenCoord aCurrentSpan, ScreenCoord aPreviousSpan,
-                    Modifiers aModifiers);
+                    TimeStamp aTimeStamp, const ExternalPoint& aScreenOffset,
+                    const ScreenPoint& aFocusPoint, ScreenCoord aCurrentSpan,
+                    ScreenCoord aPreviousSpan, Modifiers aModifiers);
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
@@ -434,6 +430,10 @@ class PinchGestureInput : public InputData {
   // the remaining finger, if there is one. If there isn't one then it will
   // store |BothFingersLifted()|.
   ScreenPoint mFocusPoint;
+
+  // The screen offset of the root widget. This can be changing along with
+  // the touch interaction, so we sstore it in the event.
+  ExternalPoint mScreenOffset;
 
   // |mFocusPoint| transformed to the local coordinates of the APZC targeted
   // by the hit. This is set and used by APZ.
