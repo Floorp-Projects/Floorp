@@ -130,7 +130,7 @@ class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
   }
 };
 
-class LoopbackTransport : public MediaTransportBase {
+class LoopbackTransport : public MediaTransportHandler {
  public:
   LoopbackTransport() {
     SetState("mux", TransportLayer::TS_INIT, false);
@@ -149,8 +149,70 @@ class LoopbackTransport : public MediaTransportBase {
 
   void Shutdown() { peer_ = nullptr; }
 
+  RefPtr<IceLogPromise> GetIceLog(const nsCString& aPattern) override {
+    return nullptr;
+  }
+
+  void ClearIceLog() override {}
+  void EnterPrivateMode() override {}
+  void ExitPrivateMode() override {}
+
+  nsresult Init(const std::string& aName,
+                const nsTArray<dom::RTCIceServer>& aIceServers,
+                dom::RTCIceTransportPolicy aIcePolicy) override {
+    return NS_OK;
+  }
+
+  void Destroy() override {}
+
+  // We will probably be able to move the proxy lookup stuff into
+  // this class once we move mtransport to its own process.
+  void SetProxyServer(NrSocketProxyConfig&& aProxyConfig) override {}
+
+  void EnsureProvisionalTransport(const std::string& aTransportId,
+                                  const std::string& aLocalUfrag,
+                                  const std::string& aLocalPwd,
+                                  size_t aComponentCount) override {}
+
+  // We set default-route-only as late as possible because it depends on what
+  // capture permissions have been granted on the window, which could easily
+  // change between Init (ie; when the PC is created) and StartIceGathering
+  // (ie; when we set the local description).
+  void StartIceGathering(bool aDefaultRouteOnly,
+                         // TODO: It probably makes sense to look
+                         // this up internally
+                         const nsTArray<NrIceStunAddr>& aStunAddrs) override {}
+
+  void ActivateTransport(const std::string& aTransportId,
+                         const std::string& aLocalUfrag,
+                         const std::string& aLocalPwd, size_t aComponentCount,
+                         const std::string& aUfrag,
+                         const std::string& aPassword,
+                         const nsTArray<uint8_t>& aKeyDer,
+                         const nsTArray<uint8_t>& aCertDer,
+                         SSLKEAType aAuthType, bool aDtlsClient,
+                         const DtlsDigestList& aDigests,
+                         bool aPrivacyRequested) override {}
+
+  void RemoveTransportsExcept(
+      const std::set<std::string>& aTransportIds) override {}
+
+  void StartIceChecks(bool aIsControlling, bool aIsOfferer,
+                      const std::vector<std::string>& aIceOptions) override {}
+
+  void AddIceCandidate(const std::string& aTransportId,
+                       const std::string& aCandidate) override {}
+
+  void UpdateNetworkState(bool aOnline) override {}
+
+  RefPtr<StatsPromise> GetIceStats(
+      const std::string& aTransportId, DOMHighResTimeStamp aNow,
+      std::unique_ptr<dom::RTCStatsReportInternal>&& aReport) override {
+    return nullptr;
+  }
+
   void SendPacket(const std::string& aTransportId,
-                  MediaPacket& aPacket) override {
+                  MediaPacket&& aPacket) override {
     peer_->SignalPacketReceived(aTransportId, aPacket);
   }
 
@@ -183,7 +245,7 @@ class LoopbackTransport : public MediaTransportBase {
   }
 
  private:
-  RefPtr<MediaTransportBase> peer_;
+  RefPtr<MediaTransportHandler> peer_;
   std::map<std::string, TransportLayer::State> mRtpStates;
   std::map<std::string, TransportLayer::State> mRtcpStates;
 };

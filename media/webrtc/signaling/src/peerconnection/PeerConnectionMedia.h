@@ -48,7 +48,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
  public:
   explicit PeerConnectionMedia(PeerConnectionImpl* parent);
 
-  nsresult Init(const dom::RTCConfiguration& aConfiguration);
+  nsresult Init();
   // WARNING: This destroys the object!
   void SelfDestruct();
 
@@ -201,15 +201,13 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // ICE events
   void IceGatheringStateChange_s(dom::PCImplIceGatheringState aState);
   void IceConnectionStateChange_s(dom::PCImplIceConnectionState aState);
-  void OnCandidateFound_s(
-      const std::string& aTransportId,
-      const MediaTransportHandler::CandidateInfo& aCandidateInfo);
+  void OnCandidateFound_s(const std::string& aTransportId,
+                          const CandidateInfo& aCandidateInfo);
 
   void IceGatheringStateChange_m(dom::PCImplIceGatheringState aState);
   void IceConnectionStateChange_m(dom::PCImplIceConnectionState aState);
-  void OnCandidateFound_m(
-      const std::string& aTransportId,
-      const MediaTransportHandler::CandidateInfo& aCandidateInfo);
+  void OnCandidateFound_m(const std::string& aTransportId,
+                          const CandidateInfo& aCandidateInfo);
 
   bool IsIceCtxReady() const {
     return mProxyResolveCompleted && mLocalAddrsCompleted;
