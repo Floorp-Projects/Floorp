@@ -42,7 +42,20 @@ const contentScripts = {
       allFrames: true,
     },
   ],
-  android: [],
+  android: [
+    {
+      matches: [
+        "*://*.ebay.at/*", "*://*.ebay.be/*", "*://*.ebay.ca/*", "*://*.ebay.ch/*",
+        "*://*.ebay.cn/*", "*://*.ebay.co.th/*", "*://*.ebay.co.uk/*", "*://*.ebay.com.au/*",
+        "*://*.ebay.com.hk/*", "*://*.ebay.com.my/*", "*://*.ebay.com.sg/*", "*://*.ebay.com.tw/*",
+        "*://*.ebay.com/*", "*://*.ebay.de/*", "*://*.ebay.es/*", "*://*.ebay.fr/*",
+        "*://*.ebay.ie/*", "*://*.ebay.in/*", "*://*.ebay.it/*", "*://*.ebay.nl/*",
+        "*://*.ebay.ph/*", "*://*.ebay.pl/*", "*://*.ebay.vn/*",
+      ],
+      js: [{file: "injections/js/bug1522755-ebay-scroll-anchoring.js"}],
+      runAt: "document_idle",
+    },
+  ],
 };
 
 /* globals browser */
