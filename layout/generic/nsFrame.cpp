@@ -9957,7 +9957,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
 #ifdef DEBUG_REFLOW
   nsAdaptorAddIndents();
   printf("Reflowing: ");
-  nsFrame::ListTag(stdout, mFrame);
+  mFrame->ListTag(stdout);
   printf("\n");
   gIndent2++;
 #endif

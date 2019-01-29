@@ -156,17 +156,17 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
 #ifdef DEBUG
   if ((aISize != NS_UNCONSTRAINEDSIZE) && CRAZY_SIZE(aISize) &&
       !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
-    nsFrame::ListTag(stdout, mBlockReflowInput->mFrame);
+    mBlockReflowInput->mFrame->ListTag(stdout);
     printf(": Init: bad caller: width WAS %d(0x%x)\n", aISize, aISize);
   }
   if ((aBSize != NS_UNCONSTRAINEDSIZE) && CRAZY_SIZE(aBSize) &&
       !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
-    nsFrame::ListTag(stdout, mBlockReflowInput->mFrame);
+    mBlockReflowInput->mFrame->ListTag(stdout);
     printf(": Init: bad caller: height WAS %d(0x%x)\n", aBSize, aBSize);
   }
 #endif
 #ifdef NOISY_REFLOW
-  nsFrame::ListTag(stdout, mBlockReflowInput->mFrame);
+  mBlockReflowInput->mFrame->ListTag(stdout);
   printf(": BeginLineReflow: %d,%d,%d,%d impacted=%s %s\n", aICoord, aBCoord,
          aISize, aBSize, aImpactedByFloats ? "true" : "false",
          aIsTopOfPage ? "top-of-page" : "");
@@ -239,7 +239,7 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
 
 void nsLineLayout::EndLineReflow() {
 #ifdef NOISY_REFLOW
-  nsFrame::ListTag(stdout, mBlockReflowInput->mFrame);
+  mBlockReflowInput->mFrame->ListTag(stdout);
   printf(": EndLineReflow: width=%d\n",
          mRootSpan->mICoord - mRootSpan->mIStart);
 #endif
@@ -296,14 +296,14 @@ void nsLineLayout::UpdateBand(WritingMode aWM,
   if ((availSpace.ISize(lineWM) != NS_UNCONSTRAINEDSIZE) &&
       CRAZY_SIZE(availSpace.ISize(lineWM)) &&
       !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
-    nsFrame::ListTag(stdout, mBlockReflowInput->mFrame);
+    mBlockReflowInput->mFrame->ListTag(stdout);
     printf(": UpdateBand: bad caller: ISize WAS %d(0x%x)\n",
            availSpace.ISize(lineWM), availSpace.ISize(lineWM));
   }
   if ((availSpace.BSize(lineWM) != NS_UNCONSTRAINEDSIZE) &&
       CRAZY_SIZE(availSpace.BSize(lineWM)) &&
       !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
-    nsFrame::ListTag(stdout, mBlockReflowInput->mFrame);
+    mBlockReflowInput->mFrame->ListTag(stdout);
     printf(": UpdateBand: bad caller: BSize WAS %d(0x%x)\n",
            availSpace.BSize(lineWM), availSpace.BSize(lineWM));
   }
@@ -322,7 +322,7 @@ void nsLineLayout::UpdateBand(WritingMode aWM,
   nscoord deltaISize =
       availSpace.ISize(lineWM) - (mRootSpan->mIEnd - mRootSpan->mIStart);
 #ifdef NOISY_REFLOW
-  nsFrame::ListTag(stdout, mBlockReflowInput->mFrame);
+  mBlockReflowInput->mFrame->ListTag(stdout);
   printf(": UpdateBand: %d,%d,%d,%d deltaISize=%d deltaICoord=%d\n",
          availSpace.IStart(lineWM), availSpace.BStart(lineWM),
          availSpace.ISize(lineWM), availSpace.BSize(lineWM), deltaISize,
@@ -396,7 +396,7 @@ void nsLineLayout::BeginSpan(nsIFrame* aFrame,
                "should no longer be using unconstrained sizes");
 #ifdef NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth + 1);
-  nsFrame::ListTag(stdout, aFrame);
+  aFrame->ListTag(stdout);
   printf(": BeginSpan leftEdge=%d rightEdge=%d\n", aIStart, aIEnd);
 #endif
 
@@ -429,7 +429,7 @@ nscoord nsLineLayout::EndSpan(nsIFrame* aFrame) {
   NS_ASSERTION(mSpanDepth > 0, "end-span without begin-span");
 #ifdef NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth);
-  nsFrame::ListTag(stdout, aFrame);
+  aFrame->ListTag(stdout);
   printf(": EndSpan width=%d\n", mCurrentSpan->mICoord - mCurrentSpan->mIStart);
 #endif
   PerSpanData* psd = mCurrentSpan;
@@ -758,7 +758,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
 #ifdef REALLY_NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth);
   printf("%p: Begin ReflowFrame pfd=%p ", psd, pfd);
-  nsFrame::ListTag(stdout, aFrame);
+  aFrame->ListTag(stdout);
   printf("\n");
 #endif
 
@@ -976,13 +976,13 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
          CRAZY_SIZE(reflowOutput.BSize(lineWM))) &&
         !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
       printf("nsLineLayout: ");
-      nsFrame::ListTag(stdout, aFrame);
+      aFrame->ListTag(stdout);
       printf(" metrics=%d,%d!\n", reflowOutput.Width(), reflowOutput.Height());
     }
     if ((reflowOutput.Width() == nscoord(0xdeadbeef)) ||
         (reflowOutput.Height() == nscoord(0xdeadbeef))) {
       printf("nsLineLayout: ");
-      nsFrame::ListTag(stdout, aFrame);
+      aFrame->ListTag(stdout);
       printf(" didn't set w/h %d,%d!\n", reflowOutput.Width(),
              reflowOutput.Height());
     }
@@ -1099,7 +1099,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
 #ifdef REALLY_NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth);
   printf("End ReflowFrame ");
-  nsFrame::ListTag(stdout, aFrame);
+  aFrame->ListTag(stdout);
   printf(" status=%x\n", aReflowStatus);
 #endif
 }
@@ -1250,10 +1250,10 @@ bool nsLineLayout::CanPlaceFrame(PerFrameData* pfd, bool aNotSafeToBreak,
 
 #ifdef NOISY_CAN_PLACE_FRAME
   if (nullptr != psd->mFrame) {
-    nsFrame::ListTag(stdout, psd->mFrame->mFrame);
+    psd->mFrame->mFrame->ListTag(stdout);
   }
   printf(": aNotSafeToBreak=%s frame=", aNotSafeToBreak ? "true" : "false");
-  nsFrame::ListTag(stdout, pfd->mFrame);
+  pfd->mFrame->ListTag(stdout);
   printf(" frameWidth=%d, margins=%d,%d\n",
          pfd->mBounds.IEnd(lineWM) + endMargin - psd->mICoord, startMargin,
          endMargin);
@@ -1443,7 +1443,7 @@ void nsLineLayout::DumpPerSpanData(PerSpanData* psd, int32_t aIndent) {
   PerFrameData* pfd = psd->mFirstFrame;
   while (nullptr != pfd) {
     nsFrame::IndentBy(stdout, aIndent + 1);
-    nsFrame::ListTag(stdout, pfd->mFrame);
+    pfd->mFrame->ListTag(stdout);
     nsRect rect =
         pfd->mBounds.GetPhysicalRect(psd->mWritingMode, ContainerSize());
     printf(" %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height);
@@ -1623,7 +1623,7 @@ void nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
         pfd->mFrame->SetRect(lineWM, pfd->mBounds, containerSize);
 #ifdef NOISY_BLOCKDIR_ALIGN
         printf("    ");
-        nsFrame::ListTag(stdout, pfd->mFrame);
+        pfd->mFrame->ListTag(stdout);
         printf(": y=%d dTop=%d [bp.top=%d topLeading=%d]\n",
                pfd->mBounds.BStart(lineWM), aDistanceFromStart,
                span ? pfd->mBorderPadding.BStart(lineWM) : 0,
@@ -1643,7 +1643,7 @@ void nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
         pfd->mFrame->SetRect(lineWM, pfd->mBounds, containerSize);
 #ifdef NOISY_BLOCKDIR_ALIGN
         printf("    ");
-        nsFrame::ListTag(stdout, pfd->mFrame);
+        pfd->mFrame->ListTag(stdout);
         printf(": y=%d\n", pfd->mBounds.BStart(lineWM));
 #endif
         break;
@@ -1761,7 +1761,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
 
 #ifdef NOISY_BLOCKDIR_ALIGN
   printf("[%sSpan]", (psd == mRootSpan) ? "Root" : "");
-  nsFrame::ListTag(stdout, spanFrame);
+  spanFrame->ListTag(stdout);
   printf(": preMode=%s strictMode=%s w/h=%d,%d emptyContinuation=%s",
          preMode ? "yes" : "no",
          mPresContext->CompatibilityMode() != eCompatibility_NavQuirks ? "yes"
@@ -1860,7 +1860,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
     maxBCoord = BLOCKDIR_ALIGN_FRAMES_NO_MAXIMUM;
 #ifdef NOISY_BLOCKDIR_ALIGN
     printf("[RootSpan]");
-    nsFrame::ListTag(stdout, spanFrame);
+    spanFrame->ListTag(stdout);
     printf(
         ": pass1 valign frames: topEdge=%d minLineBSize=%d "
         "zeroEffectiveSpanBox=%s\n",
@@ -1920,7 +1920,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
 
 #ifdef NOISY_BLOCKDIR_ALIGN
     printf("[%sSpan]", (psd == mRootSpan) ? "Root" : "");
-    nsFrame::ListTag(stdout, spanFrame);
+    spanFrame->ListTag(stdout);
     printf(
         ": baseLine=%d logicalBSize=%d topLeading=%d h=%d bp=%d,%d "
         "zeroEffectiveSpanBox=%s\n",
@@ -1970,7 +1970,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
     uint8_t verticalAlignEnum = frame->VerticalAlignEnum();
 #ifdef NOISY_BLOCKDIR_ALIGN
     printf("  [frame]");
-    nsFrame::ListTag(stdout, frame);
+    frame->ListTag(stdout);
     printf(": verticalAlignUnit=%d (enum == %d", verticalAlign.GetUnit(),
            ((eStyleUnit_Enumerated == verticalAlign.GetUnit())
                 ? verticalAlign.GetIntValue()
@@ -2491,9 +2491,9 @@ bool nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
   pfd = pfd->Last();
   while (nullptr != pfd) {
 #ifdef REALLY_NOISY_TRIM
-    nsFrame::ListTag(stdout, psd->mFrame->mFrame);
+    psd->mFrame->mFrame->ListTag(stdout);
     printf(": attempting trim of ");
-    nsFrame::ListTag(stdout, pfd->mFrame);
+    pfd->mFrame->ListTag(stdout);
     printf("\n");
 #endif
     PerSpanData* childSpan = pfd->mSpan;
@@ -2556,9 +2556,9 @@ bool nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
               ->TrimTrailingWhiteSpace(
                   mBlockReflowInput->mRenderingContext->GetDrawTarget());
 #ifdef NOISY_TRIM
-      nsFrame::ListTag(stdout, psd->mFrame->mFrame);
+      psd->mFrame->mFrame->ListTag(stdout);
       printf(": trim of ");
-      nsFrame::ListTag(stdout, pfd->mFrame);
+      pfd->mFrame->ListTag(stdout);
       printf(" returned %d\n", trimOutput.mDeltaWidth);
 #endif
 
@@ -3067,7 +3067,7 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
   nscoord availISize = psd->mIEnd - psd->mIStart;
   nscoord remainingISize = availISize - aLine->ISize();
 #ifdef NOISY_INLINEDIR_ALIGN
-  nsFrame::ListTag(stdout, mBlockReflowInput->mFrame);
+  mBlockReflowInput->mFrame->ListTag(stdout);
   printf(": availISize=%d lineBounds.IStart=%d lineISize=%d delta=%d\n",
          availISize, aLine->IStart(), aLine->ISize(), remainingISize);
 #endif
