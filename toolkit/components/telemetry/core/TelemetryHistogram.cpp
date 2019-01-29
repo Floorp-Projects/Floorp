@@ -1866,6 +1866,12 @@ bool internal_JSHistogram_Snapshot(JSContext* cx, unsigned argc,
                                    JS::Value* vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
+  if (!XRE_IsParentProcess()) {
+    JS_ReportErrorASCII(
+        cx, "Histograms can only be snapshotted in the parent process");
+    return false;
+  }
+
   if (!args.thisv().isObject() ||
       JS_GetClass(&args.thisv().toObject()) != &sJSHistogramClass) {
     JS_ReportErrorASCII(cx, "Wrong JS class, expected JSHistogram class");
@@ -1921,6 +1927,12 @@ bool internal_JSHistogram_Snapshot(JSContext* cx, unsigned argc,
 }
 
 bool internal_JSHistogram_Clear(JSContext* cx, unsigned argc, JS::Value* vp) {
+  if (!XRE_IsParentProcess()) {
+    JS_ReportErrorASCII(cx,
+                        "Histograms can only be cleared in the parent process");
+    return false;
+  }
+
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   if (!args.thisv().isObject() ||
@@ -2030,6 +2042,12 @@ static const JSClass sJSKeyedHistogramClass = {
 
 bool internal_KeyedHistogram_SnapshotImpl(JSContext* cx, unsigned argc,
                                           JS::Value* vp, bool clearSubsession) {
+  if (!XRE_IsParentProcess()) {
+    JS_ReportErrorASCII(
+        cx, "Keyed histograms can only be snapshotted in the parent process");
+    return false;
+  }
+
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   if (!args.thisv().isObject() ||
@@ -2224,6 +2242,12 @@ bool internal_JSKeyedHistogram_Snapshot(JSContext* cx, unsigned argc,
 
 bool internal_JSKeyedHistogram_Clear(JSContext* cx, unsigned argc,
                                      JS::Value* vp) {
+  if (!XRE_IsParentProcess()) {
+    JS_ReportErrorASCII(
+        cx, "Keyed histograms can only be cleared in the parent process");
+    return false;
+  }
+
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   if (!args.thisv().isObject() ||
@@ -2750,6 +2774,10 @@ const char* TelemetryHistogram::GetHistogramName(HistogramID id) {
 nsresult TelemetryHistogram::CreateHistogramSnapshots(
     JSContext* aCx, JS::MutableHandleValue aResult, const nsACString& aStore,
     unsigned int aDataset, bool aClearSubsession, bool aFilterTest) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Runs without protection from |gTelemetryHistogramMutex|
   JS::Rooted<JSObject*> root_obj(aCx, JS_NewPlainObject(aCx));
   if (!root_obj) {
@@ -2809,6 +2837,10 @@ nsresult TelemetryHistogram::CreateHistogramSnapshots(
 nsresult TelemetryHistogram::GetKeyedHistogramSnapshots(
     JSContext* aCx, JS::MutableHandleValue aResult, const nsACString& aStore,
     unsigned int aDataset, bool aClearSubsession, bool aFilterTest) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Runs without protection from |gTelemetryHistogramMutex|
   JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
   if (!obj) {
