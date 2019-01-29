@@ -13,7 +13,8 @@
     <color name="searchStrokeAlternative">#0A202340</color>
     <color name="searchText">#0C0C0D</color>
     <color name="offwhite">#f9f9fa</color>
-    <color name="icons">#0C0C0D</color>
+    <color name="url_box_view">#E9E9ED</color>
+    <color name="icons">#20233E</color>
 
     <color name="session_list_empty_bg">#1A665BFD</color>
     <color name="session_list_empty_fg">#665BFD</color>

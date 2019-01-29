@@ -5,6 +5,8 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
+import android.view.LayoutInflater
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
@@ -16,6 +18,7 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
+import mozilla.components.support.ktx.android.content.res.pxToDp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
@@ -29,6 +32,11 @@ class ToolbarIntegration(
 ) : LifecycleObserver {
     init {
         toolbar.setMenuBuilder(context.components.toolbar.menuBuilder)
+
+        toolbar.browserActionMargin = toolbar.resources.pxToDp(8)
+        toolbar.textColor = ContextCompat.getColor(context, R.color.searchText)
+        toolbar.urlBoxView = LayoutInflater.from(context).inflate(R.layout.layout_url_backround, null)
+        toolbar.urlBoxMargin = toolbar.resources.pxToDp(8)
 
         val home = BrowserToolbar.Button(
             context.resources.getDrawable(
