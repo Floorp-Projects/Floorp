@@ -5,7 +5,6 @@
 const PREF_NAME = "ui.touchbar.layout";
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "TouchBarHelper",
                                    "@mozilla.org/widget/touchbarhelper;1",
