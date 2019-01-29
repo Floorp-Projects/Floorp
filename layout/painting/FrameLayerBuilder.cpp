@@ -4267,7 +4267,8 @@ static const ActiveScrolledRoot* GetASRForPerspective(
     const ActiveScrolledRoot* aASR, nsIFrame* aPerspectiveFrame) {
   for (const ActiveScrolledRoot* asr = aASR; asr; asr = asr->mParent) {
     nsIFrame* scrolledFrame = asr->mScrollableFrame->GetScrolledFrame();
-    if (nsLayoutUtils::IsAncestorFrame(scrolledFrame, aPerspectiveFrame)) {
+    if (nsLayoutUtils::IsAncestorFrameCrossDoc(scrolledFrame,
+                                               aPerspectiveFrame)) {
       return asr;
     }
   }
