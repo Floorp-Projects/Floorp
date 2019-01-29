@@ -1269,7 +1269,6 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(
     const MultiTouchInput& aEvent) {
   APZC_LOG("%p got a touch-start in state %d\n", this, mState);
   mPanDirRestricted = false;
-  ParentLayerPoint point = GetFirstTouchPoint(aEvent);
 
   switch (mState) {
     case FLING:
@@ -1286,6 +1285,8 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(
       MOZ_FALLTHROUGH;
     case SCROLLBAR_DRAG:
     case NOTHING: {
+      ParentLayerPoint point = GetFirstTouchPoint(aEvent);
+      mStartTouch = GetFirstExternalTouchPoint(aEvent);
       mX.StartTouch(point.x, aEvent.mTime);
       mY.StartTouch(point.y, aEvent.mTime);
       if (RefPtr<GeckoContentController> controller =
@@ -1325,7 +1326,7 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(
 
     case TOUCHING: {
       ScreenCoord panThreshold = GetTouchStartTolerance();
-
+      ExternalPoint extPoint = GetFirstExternalTouchPoint(aEvent);
       // We intentionally skip the UpdateWithTouchAtDevicePoint call when the
       // panThreshold is zero. This ensures more deterministic behaviour during
       // testing. If we call that, Axis::mPos gets updated to the point of this
@@ -1334,12 +1335,10 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(
       // mochitest.
       if (panThreshold > 0.0f) {
         UpdateWithTouchAtDevicePoint(aEvent);
-        if (PanDistance() < panThreshold) {
+        if (PanVector(extPoint).Length() < panThreshold) {
           return nsEventStatus_eIgnore;
         }
       }
-
-      ParentLayerPoint touchPoint = GetFirstTouchPoint(aEvent);
 
       MOZ_ASSERT(GetCurrentTouchBlock());
       if (gfxPrefs::TouchActionEnabled() &&
@@ -1350,11 +1349,11 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(
         // ConsumeNoDefault status immediately to trigger cancel event further.
         // It should happen independent of the parent type (whether it is
         // scrolling or not).
-        StartPanning(touchPoint);
+        StartPanning(extPoint);
         return nsEventStatus_eConsumeNoDefault;
       }
 
-      return StartPanning(touchPoint);
+      return StartPanning(extPoint);
     }
 
     case PANNING:
@@ -1711,7 +1710,7 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
     } else {
       // If zooming isn't allowed, StartTouch() was already called
       // in OnScaleBegin().
-      StartPanning(aEvent.mLocalFocusPoint);
+      StartPanning(ToExternalPoint(aEvent.mScreenOffset, aEvent.mFocusPoint));
     }
   } else {
     // Otherwise, handle the fingers being lifted.
@@ -2764,6 +2763,25 @@ ParentLayerPoint AsyncPanZoomController::ToParentLayerCoordinates(
   return TransformVector(GetTransformToThis(), aVector, aAnchor);
 }
 
+ParentLayerPoint AsyncPanZoomController::ToParentLayerCoordinates(
+    const ScreenPoint& aVector, const ExternalPoint& aAnchor) const {
+  return ToParentLayerCoordinates(
+      aVector,
+      ViewAs<ScreenPixel>(aAnchor, PixelCastJustification::ExternalIsScreen));
+}
+
+ExternalPoint AsyncPanZoomController::ToExternalPoint(
+    const ExternalPoint& aScreenOffset, const ScreenPoint& aScreenPoint) {
+  return aScreenOffset +
+         ViewAs<ExternalPixel>(aScreenPoint,
+                               PixelCastJustification::ExternalIsScreen);
+}
+
+ScreenPoint AsyncPanZoomController::PanVector(const ExternalPoint& aPos) const {
+  return ScreenPoint(fabs(aPos.x - mStartTouch.x),
+                     fabs(aPos.y - mStartTouch.y));
+}
+
 bool AsyncPanZoomController::Contains(const ScreenIntPoint& aPoint) const {
   ScreenToParentLayerMatrix4x4 transformToThis = GetTransformToThis();
   Maybe<ParentLayerIntPoint> point = UntransformBy(transformToThis, aPoint);
@@ -2777,17 +2795,6 @@ bool AsyncPanZoomController::Contains(const ScreenIntPoint& aPoint) const {
     GetFrameMetrics().GetCompositionBounds().ToIntRect(&cb);
   }
   return cb.Contains(*point);
-}
-
-ScreenCoord AsyncPanZoomController::PanDistance() const {
-  ParentLayerPoint panVector;
-  ParentLayerPoint panStart;
-  {
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    panVector = ParentLayerPoint(mX.PanDistance(), mY.PanDistance());
-    panStart = PanStart();
-  }
-  return ToScreenCoordinates(panVector, panStart).Length();
 }
 
 ParentLayerPoint AsyncPanZoomController::PanStart() const {
@@ -2898,8 +2905,11 @@ void AsyncPanZoomController::HandlePanningUpdate(
     const ScreenPoint& aPanDistance) {
   // If we're axis-locked, check if the user is trying to break the lock
   if (GetAxisLockMode() == STICKY && !mPanDirRestricted) {
-    double angle = atan2(aPanDistance.y, aPanDistance.x);  // range [-pi, pi]
-    angle = fabs(angle);                                   // range [0, pi]
+    ParentLayerPoint vector =
+        ToParentLayerCoordinates(aPanDistance, mStartTouch);
+
+    double angle = atan2(vector.y, vector.x);  // range [-pi, pi]
+    angle = fabs(angle);                       // range [0, pi]
 
     float breakThreshold = gfxPrefs::APZAxisBreakoutThreshold() * GetDPI();
 
@@ -2945,14 +2955,13 @@ void AsyncPanZoomController::HandlePinchLocking(ScreenCoord spanDistance,
 }
 
 nsEventStatus AsyncPanZoomController::StartPanning(
-    const ParentLayerPoint& aStartPoint) {
+    const ExternalPoint& aStartPoint) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
 
-  float dx = mX.PanDistance(aStartPoint.x);
-  float dy = mY.PanDistance(aStartPoint.y);
-
-  double angle = atan2(dy, dx);  // range [-pi, pi]
-  angle = fabs(angle);           // range [0, pi]
+  ParentLayerPoint vector =
+      ToParentLayerCoordinates(PanVector(aStartPoint), mStartTouch);
+  double angle = atan2(vector.y, vector.x);  // range [-pi, pi]
+  angle = fabs(angle);                       // range [0, pi]
 
   if (gfxPrefs::TouchActionEnabled()) {
     HandlePanningWithTouchAction(angle);
@@ -3324,21 +3333,18 @@ void AsyncPanZoomController::CallDispatchScroll(
 }
 
 void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
+  ExternalPoint extPoint = GetFirstExternalTouchPoint(aEvent);
+  ScreenPoint panVector = PanVector(extPoint);
+  HandlePanningUpdate(panVector);
+
   ParentLayerPoint prevTouchPoint(mX.GetPos(), mY.GetPos());
   ParentLayerPoint touchPoint = GetFirstTouchPoint(aEvent);
 
-  ScreenPoint panDistance =
-      ToScreenCoordinates(ParentLayerPoint(mX.PanDistance(touchPoint.x),
-                                           mY.PanDistance(touchPoint.y)),
-                          PanStart());
-  HandlePanningUpdate(panDistance);
-
   UpdateWithTouchAtDevicePoint(aEvent);
-
   if (prevTouchPoint != touchPoint) {
     MOZ_ASSERT(GetCurrentTouchBlock());
     OverscrollHandoffState handoffState(
-        *GetCurrentTouchBlock()->GetOverscrollHandoffChain(), panDistance,
+        *GetCurrentTouchBlock()->GetOverscrollHandoffChain(), panVector,
         ScrollSource::Touch);
     CallDispatchScroll(prevTouchPoint, touchPoint, handoffState);
   }
@@ -3347,6 +3353,12 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
 ParentLayerPoint AsyncPanZoomController::GetFirstTouchPoint(
     const MultiTouchInput& aEvent) {
   return ((SingleTouchData&)aEvent.mTouches[0]).mLocalScreenPoint;
+}
+
+ExternalPoint AsyncPanZoomController::GetFirstExternalTouchPoint(
+    const MultiTouchInput& aEvent) {
+  return ToExternalPoint(aEvent.mScreenOffset,
+                         ((SingleTouchData&)aEvent.mTouches[0]).mScreenPoint);
 }
 
 void AsyncPanZoomController::StartAnimation(AsyncPanZoomAnimation* aAnimation) {
