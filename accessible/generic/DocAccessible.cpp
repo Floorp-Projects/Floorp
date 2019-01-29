@@ -641,7 +641,8 @@ NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(DocAccessible)
 
 void DocAccessible::AttributeWillChange(dom::Element* aElement,
                                         int32_t aNameSpaceID,
-                                        nsAtom* aAttribute, int32_t aModType) {
+                                        nsAtom* aAttribute, int32_t aModType,
+                                        const nsAttrValue* aNewValue) {
   Accessible* accessible = GetAccessible(aElement);
   if (!accessible) {
     if (aElement != mContent) return;
