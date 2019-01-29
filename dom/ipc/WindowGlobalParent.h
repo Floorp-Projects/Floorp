@@ -19,7 +19,7 @@ class nsFrameLoader;
 namespace mozilla {
 namespace dom {
 
-class ChromeBrowsingContext;
+class CanonicalBrowsingContext;
 class WindowGlobalChild;
 class JSWindowActorParent;
 
@@ -66,7 +66,7 @@ class WindowGlobalParent final : public nsISupports,
   nsIPrincipal* DocumentPrincipal() { return mDocumentPrincipal; }
 
   // The BrowsingContext which this WindowGlobal has been loaded into.
-  ChromeBrowsingContext* BrowsingContext() { return mBrowsingContext; }
+  CanonicalBrowsingContext* BrowsingContext() { return mBrowsingContext; }
 
   // Get the root nsFrameLoader object for the tree of BrowsingContext nodes
   // which this WindowGlobal is a part of. This will be the nsFrameLoader
@@ -111,7 +111,7 @@ class WindowGlobalParent final : public nsISupports,
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
   RefPtr<nsFrameLoader> mFrameLoader;
-  RefPtr<ChromeBrowsingContext> mBrowsingContext;
+  RefPtr<CanonicalBrowsingContext> mBrowsingContext;
   nsRefPtrHashtable<nsStringHashKey, JSWindowActorParent> mWindowActors;
   uint64_t mInnerWindowId;
   uint64_t mOuterWindowId;
