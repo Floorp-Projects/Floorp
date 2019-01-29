@@ -1180,6 +1180,7 @@ SimpleTest.finish = function() {
         }
 
         let workers = SpecialPowers.registeredServiceWorkers();
+        let promise = null;
         if (SimpleTest._expectingRegisteredServiceWorker) {
             if (workers.length === 0) {
                 SimpleTest.ok(false, "This test is expected to leave a service worker registered");
@@ -1190,20 +1191,35 @@ SimpleTest.finish = function() {
                 for (let worker of workers) {
                     SimpleTest.ok(false, `Left over worker: ${worker.scriptSpec} (scope: ${worker.scope})`);
                 }
+                promise = SpecialPowers.removeAllServiceWorkerData();
             }
         }
 
-        if (parentRunner) {
-            /* We're running in an iframe, and the parent has a TestRunner */
-            parentRunner.testFinished(SimpleTest._tests);
+        // If we want to wait for removeAllServiceWorkerData to finish, above,
+        // there's a small chance that spinning the event loop could cause
+        // SpecialPowers and SimpleTest to go away (e.g. if the test did
+        // document.open). promise being non-null should be rare (a test would
+        // have had to already fail by leaving a service worker around), so
+        // limit the chances of the async wait happening to that case.
+        function finish() {
+            if (parentRunner) {
+                /* We're running in an iframe, and the parent has a TestRunner */
+                parentRunner.testFinished(SimpleTest._tests);
+            }
+
+            if (!parentRunner || parentRunner.showTestReport) {
+                SpecialPowers.flushPermissions(function () {
+                  SpecialPowers.flushPrefEnv(function() {
+                    SimpleTest.showReport();
+                  });
+                });
+            }
         }
 
-        if (!parentRunner || parentRunner.showTestReport) {
-            SpecialPowers.flushPermissions(function () {
-              SpecialPowers.flushPrefEnv(function() {
-                SimpleTest.showReport();
-              });
-            });
+        if (promise) {
+            promise.then(finish);
+        } else {
+            finish();
         }
     }
 
