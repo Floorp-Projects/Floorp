@@ -57,6 +57,10 @@ def getBuildId() {
 android {
     compileSdkVersion project.ext.compileSdkVersion
 
+    useLibrary 'android.test.runner'
+    useLibrary 'android.test.base'
+    useLibrary 'android.test.mock'
+
     defaultConfig {
         targetSdkVersion project.ext.targetSdkVersion
         minSdkVersion project.ext.minSdkVersion
@@ -217,9 +221,9 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:1.10.19'
 
     androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test:rules:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test:rules:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     androidTestImplementation "com.android.support:support-annotations:$support_library_version"
 
     androidTestImplementation 'org.eclipse.jetty:jetty-server:7.6.21.v20160908'
@@ -415,7 +419,9 @@ task("generateSDKBindings", type: JavaExec) {
     ]
 
     main = 'org.mozilla.gecko.annotationProcessors.SDKProcessor'
-    args android.bootClasspath
+    // We only want to generate bindings for the main framework JAR,
+    // but not any of the additional android.test libraries.
+    args android.bootClasspath.findAll { !it.getName().startsWith('android.test.') }
     args 16
     args "${topobjdir}/widget/android/bindings"
 

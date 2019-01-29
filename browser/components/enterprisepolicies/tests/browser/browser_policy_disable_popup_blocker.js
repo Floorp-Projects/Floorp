@@ -24,7 +24,7 @@ registerCleanupFunction(async function cleanup_prefs() {
 });
 
 async function test_popup_blocker_disabled({disabled, locked}) {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences#privacy");
   // eslint-disable-next-line no-shadow
   await ContentTask.spawn(tab.linkedBrowser, {disabled, locked}, async function({disabled, locked}) {
     let checkbox = content.document.getElementById("popupPolicy");

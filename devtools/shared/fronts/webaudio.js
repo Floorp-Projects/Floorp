@@ -27,25 +27,11 @@ loader.lazyRequireGetter(this, "AUDIO_NODE_DEFINITION",
  *            merger and destination nodes, for example, are not)
  */
 class AudioNodeFront extends FrontClassWithSpec(audionodeSpec) {
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-
+  form(form) {
     this.actorID = form.actor;
     this.type = form.type;
     this.source = form.source;
     this.bypassable = form.bypassable;
-  }
-
-  constructor(client, form) {
-    super(client, form);
-    // if we were manually passed a form, this was created manually and
-    // needs to own itself for now.
-    if (form) {
-      this.manage(this);
-    }
   }
 }
 
@@ -56,11 +42,13 @@ registerFront(AudioNodeFront);
  * The corresponding Front object for the WebAudioActor.
  */
 class WebAudioFront extends FrontClassWithSpec(webAudioSpec) {
-  constructor(client, { webaudioActor }) {
-    super(client, { actor: webaudioActor });
-    this.manage(this);
+  constructor(client) {
+    super(client);
 
     this.before("create-node", this._onCreateNode.bind(this));
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "webaudioActor";
   }
 
   /**

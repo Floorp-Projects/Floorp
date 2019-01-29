@@ -152,8 +152,7 @@ function initCanvasDebuggerBackend(aUrl) {
     const tab = await addTab(aUrl);
     const target = await TargetFactory.forTab(tab);
     await target.attach();
-
-    const front = new CanvasFront(target.client, target.form);
+    const front = await target.getFront("canvas");
     return { target, front };
   })();
 }

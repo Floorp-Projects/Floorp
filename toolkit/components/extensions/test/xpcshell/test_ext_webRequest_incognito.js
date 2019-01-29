@@ -9,12 +9,13 @@ server.registerPathHandler("/dummy", (request, response) => {
 });
 
 add_task(async function test_incognito_webrequest_access() {
+  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
+
   // This extension will fail if it gets a request
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
     },
-    incognitoOverride: "not_allowed",
     background() {
       browser.webRequest.onBeforeRequest.addListener(async (details) => {
         browser.test.fail("webrequest received incognito request");
@@ -27,4 +28,6 @@ add_task(async function test_incognito_webrequest_access() {
 
   await extension.unload();
   await contentPage.close();
+
+  Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });

@@ -20,7 +20,7 @@ void JumpList::patchAll(jsbytecode* code, JumpTarget target) {
   ptrdiff_t delta;
   for (ptrdiff_t jumpOffset = offset; jumpOffset != -1; jumpOffset += delta) {
     jsbytecode* pc = &code[jumpOffset];
-    MOZ_ASSERT(IsJumpOpcode(JSOp(*pc)) || JSOp(*pc) == JSOP_LABEL);
+    MOZ_ASSERT(IsJumpOpcode(JSOp(*pc)));
     delta = GET_JUMP_OFFSET(pc);
     MOZ_ASSERT(delta < 0);
     ptrdiff_t span = target.offset - jumpOffset;

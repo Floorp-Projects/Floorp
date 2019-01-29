@@ -54,7 +54,9 @@ class ProfilerMarker;
   MACRO(CounterId, void*)                                           \
   MACRO(CounterKey, uint64_t)                                       \
   MACRO(Number, uint64_t)                                           \
-  MACRO(Count, int64_t)
+  MACRO(Count, int64_t)                                             \
+  MACRO(ProfilerOverheadTime, double)                               \
+  MACRO(ProfilerOverheadDuration, double)
 
 // NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
 #if !defined(GP_ARCH_arm)

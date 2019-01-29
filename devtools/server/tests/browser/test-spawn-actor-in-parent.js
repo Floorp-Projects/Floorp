@@ -53,11 +53,6 @@ exports.InContentActor = protocol.ActorClassWithSpec(inContentSpec, {
 });
 
 class InContentFront extends FrontClassWithSpec(inContentSpec) {
-  constructor(client, tabForm) {
-    super(client, tabForm);
-    this.actorID = tabForm.inContentActor;
-    this.manage(this);
-  }
 }
 exports.InContentFront = InContentFront;
 
@@ -94,10 +89,5 @@ exports.InParentActor = protocol.ActorClassWithSpec(inParentSpec, {
 });
 
 class InParentFront extends FrontClassWithSpec(inParentSpec) {
-  constructor(client, tabForm) {
-    super(client, tabForm);
-    this.actorID = tabForm.inParentActor;
-    this.manage(this);
-  }
 }
 exports.InParentFront = InParentFront;

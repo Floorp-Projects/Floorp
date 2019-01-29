@@ -383,19 +383,6 @@ var gPrivacyPane = {
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "push";
     document.getElementById("notificationPermissionsLearnMore").setAttribute("href",
       notificationInfoURL);
-    let drmInfoURL =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") + "drm-content";
-    document.getElementById("playDRMContentLink").setAttribute("href", drmInfoURL);
-    let emeUIEnabled = Services.prefs.getBoolPref("browser.eme.ui.enabled");
-    // Force-disable/hide on WinXP:
-    if (navigator.platform.toLowerCase().startsWith("win")) {
-      emeUIEnabled = emeUIEnabled && parseFloat(Services.sysinfo.get("version")) >= 6;
-    }
-    if (!emeUIEnabled) {
-      // Don't want to rely on .hidden for the toplevel groupbox because
-      // of the pane hiding/showing code potentially interfering:
-      document.getElementById("drmGroup").setAttribute("style", "display: none !important");
-    }
 
     if (AppConstants.MOZ_DATA_REPORTING) {
       this.initDataCollection();

@@ -1114,14 +1114,6 @@ def build_bouncer_locations_payload(config, task, task_def):
     }
 
 
-@payload_builder('bouncer-locations-breakpoint', schema={
-    Required('implementation'): 'bouncer-locations-breakpoint',
-    Required('payload'): object,
-})
-def build_bouncer_locations_breakpoint_payload(config, task, task_def):
-    task_def['payload'] = task['worker']['payload']
-
-
 @payload_builder('bouncer-submission', schema={
     Required('locales'): [basestring],
     Required('entries'): object,

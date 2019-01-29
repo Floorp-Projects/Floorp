@@ -841,7 +841,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           this.value = url;
           browser.userTypedValue = url;
           if (gInitialPages.includes(url)) {
-            browser.initialPageLoadedFromURLBar = url;
+            browser.initialPageLoadedFromUserAction = url;
           }
           try {
             UrlbarUtils.addToUrlbarHistory(url, window);

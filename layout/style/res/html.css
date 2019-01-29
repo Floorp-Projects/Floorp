@@ -286,7 +286,7 @@ table[align="right"] {
      in what authors should expect */
 
   /* Put this first so 'border' and 'frame' rules can override it. */
-table[rules] { 
+table[rules] {
   border-width: thin;
   border-style: hidden;
 }
@@ -298,7 +298,7 @@ table[rules] {
   /* :-moz-table-border-nonzero is like [border]:not([border="0"]) except it
      also checks for other zero-like values according to HTML attribute
      parsing rules */
-table:-moz-table-border-nonzero { 
+table:-moz-table-border-nonzero {
   border-width: thin;
   border-style: outset;
 }
@@ -318,7 +318,7 @@ table[frame="vsides"] { border-style: hidden outset; }
 table[frame="box"],
 table[frame="border"] { border-style: outset; }
 
- 
+
 /* Internal Table Borders */
 
   /* 'border' cell borders first */
@@ -339,7 +339,7 @@ table[rules]:not([rules="none"]):not([rules=""]) {
   border-collapse: collapse;
 }
 
-/* only specified rules override 'border' settings  
+/* only specified rules override 'border' settings
   (increased specificity to achieve this) */
 table[rules]:not([rules=""])> tr > td,
 table[rules]:not([rules=""])> * > tr > td,
@@ -369,7 +369,7 @@ table[rules][rules="all"] > * > tr > td,
 table[rules][rules="all"] > tr > th,
 table[rules][rules="all"] > * > tr > th,
 table[rules][rules="all"] > td,
-table[rules][rules="all"] > th 
+table[rules][rules="all"] > th
 {
   border-width: thin;
   border-style: solid;
@@ -408,9 +408,9 @@ table[rules][rules="groups"] > tbody {
   border-block-start-style: solid;
   border-block-start-style: solid;
 }
-  
-  
-/* caption inherits from table not table-outer */  
+
+
+/* caption inherits from table not table-outer */
 caption {
   display: table-caption;
   text-align: center;
@@ -468,10 +468,10 @@ table > tr {
   vertical-align: middle;
 }
 
-td { 
+td {
   display: table-cell;
   vertical-align: inherit;
-  text-align: unset; 
+  text-align: unset;
   padding: 1px;
 }
 
@@ -681,7 +681,7 @@ frameset {
   border: none ! important;
 }
 
-link { 
+link {
   display: none;
 }
 
@@ -732,18 +732,6 @@ iframe:fullscreen {
 }
 
 /* media elements */
-video > xul|videocontrols, audio > xul|videocontrols {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#videoControls");
-}
-
-video:not([controls]) > xul|videocontrols,
-audio:not([controls]) > xul|videocontrols {
-  visibility: hidden;
-  -moz-binding: none;
-}
-
 video {
   object-fit: contain;
 }
@@ -786,18 +774,6 @@ video > .caption-box {
   font: var(--cue-font-size) sans-serif;
 }
 
-/* datetime elements */
-
-input[type="time"] > xul|datetimebox {
-  display: flex;
-  -moz-binding: url("chrome://global/content/bindings/datetimebox.xml#time-input");
-}
-
-input[type="date"] > xul|datetimebox {
-  display: flex;
-  -moz-binding: url("chrome://global/content/bindings/datetimebox.xml#date-input");
-}
-
 /* details & summary */
 details > summary:first-of-type,
 details > summary:-moz-native-anonymous {
@@ -836,7 +812,6 @@ dialog:not([open]) {
   display: none;
 }
 
-/* emulation of non-standard HTML <marquee> tag */
 marquee {
   inline-size: -moz-available;
   display: inline-block;
@@ -846,18 +821,6 @@ marquee {
 
 marquee[direction="up"], marquee[direction="down"] {
   block-size: 200px;
-}
-
-@supports not -moz-bool-pref("dom.ua_widget.enabled") {
-
-  marquee {
-    -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-horizontal');
-  }
-
-  marquee[direction="up"], marquee[direction="down"] {
-    -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-vertical');
-  }
-
 }
 
 /* PRINT ONLY rules follow */

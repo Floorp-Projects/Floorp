@@ -76,6 +76,9 @@ class ProfileBuffer final {
                            UniqueStacks& aUniqueStacks) const;
   void StreamPausedRangesToJSON(SpliceableJSONWriter& aWriter,
                                 double aSinceTime) const;
+  void StreamProfilerOverheadToJSON(SpliceableJSONWriter& aWriter,
+                                    const mozilla::TimeStamp& aProcessStartTime,
+                                    double aSinceTime) const;
   void StreamCountersToJSON(SpliceableJSONWriter& aWriter,
                             const mozilla::TimeStamp& aProcessStartTime,
                             double aSinceTime) const;

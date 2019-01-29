@@ -462,17 +462,14 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
   }
 
 #ifdef DEBUG
-  // Ensures that only the whitelisted bindings are used in the following
-  // conditions:
+  // Ensures that XBL bindings are not used in the following conditions:
   //
   // 1) In the content process
   // 2) In a document that disallows XUL/XBL which only loads bindings
   //    referenced in a chrome stylesheet.
   //
-  // If the conditions are met, assert that:
-  //
-  // a) The binding is XMLPrettyPrint (since it may be bound to any XML)
-  // b) The binding is bound to one of the whitelisted element.
+  // If the conditions are met, trigger an assertion since there shouldn't
+  // be this kind of binding usage.
   //
   // The assertion might not catch all violations because (2) is needed
   // for the current test setup. Someone may unknownly using a binding
@@ -480,21 +477,8 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
   // knowing.
   if (XRE_IsContentProcess() &&
       IsSystemOrChromeURLPrincipal(aOriginPrincipal) && aElement->OwnerDoc() &&
-      !aElement->OwnerDoc()->AllowXULXBL() &&
-      !aURL->GetSpecOrDefault().EqualsLiteral(
-          "chrome://global/content/xml/XMLPrettyPrint.xml#prettyprint")) {
-    nsAtom* tag = aElement->NodeInfo()->NameAtom();
-    MOZ_ASSERT(
-        // datetimebox
-        tag == nsGkAtoms::datetimebox ||
-            // videocontrols
-            tag == nsGkAtoms::videocontrols ||
-            // pluginProblem
-            tag == nsGkAtoms::embed || tag == nsGkAtoms::applet ||
-            tag == nsGkAtoms::object ||
-            // xbl-marquee
-            tag == nsGkAtoms::marquee,
-        "Unexpected XBL binding used in the content process");
+      !aElement->OwnerDoc()->AllowXULXBL()) {
+    MOZ_ASSERT(false, "Unexpected XBL binding used in the content process");
   }
 #endif
 

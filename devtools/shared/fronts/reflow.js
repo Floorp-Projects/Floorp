@@ -16,9 +16,11 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
  * // now wait for events to come
  */
 class ReflowFront extends FrontClassWithSpec(reflowSpec) {
-  constructor(client, {reflowActor}) {
-    super(client, {actor: reflowActor});
-    this.manage(this);
+  constructor(client) {
+    super(client);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "reflowActor";
   }
 }
 

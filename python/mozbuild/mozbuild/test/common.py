@@ -4,6 +4,12 @@
 
 from __future__ import unicode_literals
 
+import errno
+import os
+import shutil
+
+from buildconfig import topsrcdir
+
 from mach.logging import LoggingManager
 
 from mozbuild.util import ReadOnlyDict
@@ -14,6 +20,24 @@ import mozpack.path as mozpath
 # By including this module, tests get structured logging.
 log_manager = LoggingManager()
 log_manager.add_terminal_logging()
+
+
+def prepare_tmp_topsrcdir(path):
+    for p in (
+        'build/autoconf/config.guess',
+        'build/autoconf/config.sub',
+        'build/moz.configure/checks.configure',
+        'build/moz.configure/init.configure',
+        'build/moz.configure/util.configure',
+    ):
+        file_path = os.path.join(path, p)
+        try:
+            os.makedirs(os.path.dirname(file_path))
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+        shutil.copy(os.path.join(topsrcdir, p), file_path)
+
 
 # mozconfig is not a reusable type (it's actually a module) so, we
 # have to mock it.
