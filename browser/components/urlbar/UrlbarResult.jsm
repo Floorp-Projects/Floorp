@@ -26,7 +26,7 @@ class UrlbarResult {
   /**
    * Creates a result.
    * @param {integer} resultType one of UrlbarUtils.RESULT_TYPE.* values
-   * @param {integer} matchSource one of UrlbarUtils.MATCH_SOURCE.* values
+   * @param {integer} resultSource one of UrlbarUtils.RESULT_SOURCE.* values
    * @param {object} payload data for this result. A payload should always
    *        contain a way to extract a final url to visit. The url getter
    *        should have a case for each of the types.
@@ -36,7 +36,7 @@ class UrlbarResult {
    *        length] tuples. Each tuple indicates a substring in the correspoding
    *        payload property.
    */
-  constructor(resultType, matchSource, payload, payloadHighlights = {}) {
+  constructor(resultType, resultSource, payload, payloadHighlights = {}) {
     // Type describes the payload and visualization that should be used for
     // this result.
     if (!Object.values(UrlbarUtils.RESULT_TYPE).includes(resultType)) {
@@ -44,12 +44,12 @@ class UrlbarResult {
     }
     this.type = resultType;
 
-    // Source describes which data has been used to derive this match. In case
+    // Source describes which data has been used to derive this result. In case
     // multiple sources are involved, use the more privacy restricted.
-    if (!Object.values(UrlbarUtils.MATCH_SOURCE).includes(matchSource)) {
-      throw new Error("Invalid match source");
+    if (!Object.values(UrlbarUtils.RESULT_SOURCE).includes(resultSource)) {
+      throw new Error("Invalid result source");
     }
-    this.source = matchSource;
+    this.source = resultSource;
 
     // May be used to indicate an heuristic result. Heuristic results can bypass
     // source filters in the ProvidersManager, that otherwise may skip them.

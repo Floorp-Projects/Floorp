@@ -314,7 +314,7 @@ class UrlbarController {
 
     const selectedResult = this.input.view.selectedResult;
     if (!selectedResult ||
-        selectedResult.source != UrlbarUtils.MATCH_SOURCE.HISTORY) {
+        selectedResult.source != UrlbarUtils.RESULT_SOURCE.HISTORY) {
       return false;
     }
 
