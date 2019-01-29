@@ -467,7 +467,7 @@ def get_compiler_info(compiler, language):
         #if defined(_MSC_VER)
         #if defined(__clang__)
         %COMPILER "clang-cl"
-        %VERSION _MSC_FULL_VER
+        %VERSION __clang_major__.__clang_minor__.__clang_patchlevel__
         #else
         %COMPILER "msvc"
         %VERSION _MSC_FULL_VER
@@ -548,7 +548,7 @@ def get_compiler_info(compiler, language):
     stdc_version = int(data.get('STDC_VERSION', '0L').rstrip('L'))
 
     version = data.get('VERSION')
-    if version and type in ('msvc', 'clang-cl'):
+    if version and type == 'msvc':
         msc_ver = version
         version = msc_ver[0:2]
         if len(msc_ver) > 2:
