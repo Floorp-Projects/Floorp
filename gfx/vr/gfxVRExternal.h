@@ -133,6 +133,10 @@ class VRSystemManagerExternal : public VRSystemManager {
   bool mDoShutdown;
 
   volatile VRExternalShmem* mExternalShmem;
+
+#if defined(XP_WIN)
+  HANDLE mMutex;
+#endif
 #if !defined(MOZ_WIDGET_ANDROID)
   bool mSameProcess;
 #endif
