@@ -927,14 +927,14 @@ class WindowsToolchainTest(BaseToolchainTest):
         language='C++',
     )
     CLANG_CL_3_9_RESULT = CompilerResult(
-        version='18.00.00000',
+        version='3.9.0',
         flags=['-Xclang', '-std=gnu99'],
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
         language='C',
     )
     CLANGXX_CL_3_9_RESULT = CompilerResult(
-        version='18.00.00000',
+        version='3.9.0',
         flags=['-Xclang', '-std=c++14'],
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
