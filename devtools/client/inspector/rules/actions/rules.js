@@ -5,11 +5,25 @@
 "use strict";
 
 const {
+  UPDATE_ADD_RULE_ENABLED,
   UPDATE_HIGHLIGHTED_SELECTOR,
   UPDATE_RULES,
 } = require("./index");
 
 module.exports = {
+
+  /**
+   * Updates whether or not the add new rule button should be enabled.
+   *
+   * @param  {Boolean} enabled
+   *         Whether or not the add new rule button is enabled.
+   */
+  updateAddRuleEnabled(enabled) {
+    return {
+      type: UPDATE_ADD_RULE_ENABLED,
+      enabled,
+    };
+  },
 
   /**
    * Updates the highlighted selector.

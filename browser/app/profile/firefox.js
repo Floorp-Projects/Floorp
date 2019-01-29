@@ -1041,10 +1041,11 @@ pref("security.sandbox.windows.log.stackTraceDepth", 0);
 // security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
 pref("security.sandbox.gpu.level", 0);
 
-// Controls whether we disable win32k for the GMP processes.
+// Controls whether we disable win32k for the processes.
 // true means that win32k system calls are not permitted.
-// Note: win32k is currently _not_ disabled due to intermittent test failures,
-// where the GMP process fails very early. See bug 1449348.
+pref("security.sandbox.rdd.win32k-disable", true);
+// Note: win32k is currently _not_ disabled for GMP due to intermittent test
+// failures, where the GMP process fails very early. See bug 1449348.
 pref("security.sandbox.gmp.win32k-disable", false);
 #endif
 

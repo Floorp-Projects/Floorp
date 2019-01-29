@@ -11,6 +11,7 @@
 #include "UrlClassifierFeatureFingerprinting.h"
 #include "UrlClassifierFeatureFlash.h"
 #include "UrlClassifierFeatureLoginReputation.h"
+#include "UrlClassifierFeaturePhishingProtection.h"
 #include "UrlClassifierFeatureTrackingProtection.h"
 #include "UrlClassifierFeatureTrackingAnnotation.h"
 #include "UrlClassifierFeatureCustomTables.h"
@@ -30,6 +31,7 @@ namespace net {
   UrlClassifierFeatureFingerprinting::MaybeShutdown();
   UrlClassifierFeatureFlash::MaybeShutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
+  UrlClassifierFeaturePhishingProtection::MaybeShutdown();
   UrlClassifierFeatureTrackingAnnotation::MaybeShutdown();
   UrlClassifierFeatureTrackingProtection::MaybeShutdown();
 }
@@ -75,6 +77,11 @@ namespace net {
   nsTArray<nsCOMPtr<nsIUrlClassifierFeature>> flashFeatures;
   UrlClassifierFeatureFlash::MaybeCreate(aChannel, flashFeatures);
   aFeatures.AppendElements(flashFeatures);
+}
+
+/* static */ void UrlClassifierFeatureFactory::GetPhishingProtectionFeatures(
+    nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures) {
+  UrlClassifierFeaturePhishingProtection::MaybeCreate(aFeatures);
 }
 
 /* static */
@@ -127,6 +134,12 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
     return feature.forget();
   }
 
+  // PhishingProtection features
+  feature = UrlClassifierFeaturePhishingProtection::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
   return nullptr;
 }
 
@@ -168,9 +181,18 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
   }
 
   // Flash features
-  nsTArray<nsCString> features;
-  UrlClassifierFeatureFlash::GetFeatureNames(features);
-  aArray.AppendElements(features);
+  {
+    nsTArray<nsCString> features;
+    UrlClassifierFeatureFlash::GetFeatureNames(features);
+    aArray.AppendElements(features);
+  }
+
+  // PhishingProtection features
+  {
+    nsTArray<nsCString> features;
+    UrlClassifierFeaturePhishingProtection::GetFeatureNames(features);
+    aArray.AppendElements(features);
+  }
 }
 
 /* static */ already_AddRefed<nsIUrlClassifierFeature>

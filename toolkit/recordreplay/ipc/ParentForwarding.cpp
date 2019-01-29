@@ -12,6 +12,7 @@
 
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/PWindowGlobalChild.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 
 namespace mozilla {
@@ -120,6 +121,22 @@ static bool HandleMessageInMiddleman(ipc::Side aSide,
     ipc::IProtocol::Result r = compositorChild->OnMessageReceived(aMessage);
     MOZ_RELEASE_ASSERT(r == ipc::IProtocol::MsgProcessed);
     return true;
+  }
+
+  // PWindowGlobal messages could be going to actors in either process.
+  // Receive them here if there is an actor with the right routing ID.
+  if (type >= dom::PWindowGlobal::PWindowGlobalStart &&
+      type <= dom::PWindowGlobal::PWindowGlobalEnd) {
+    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+
+    ipc::IProtocol* actor = contentChild->Lookup(aMessage.routing_id());
+    if (actor) {
+      ipc::IProtocol::Result r =
+          contentChild->PContentChild::OnMessageReceived(aMessage);
+      MOZ_RELEASE_ASSERT(r == ipc::IProtocol::MsgProcessed);
+      return true;
+    }
+    return false;
   }
 
   return false;
