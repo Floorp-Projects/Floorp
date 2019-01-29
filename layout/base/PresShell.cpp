@@ -6513,30 +6513,9 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
 
   mPresShell->RecordMouseLocation(aGUIEvent);
 
-  if (PresShell::AccessibleCaretEnabled(GetDocument()->GetDocShell())) {
-    // We have to target the focus window because regardless of where the
-    // touch goes, we want to access the copy paste manager.
-    nsCOMPtr<nsPIDOMWindowOuter> window = GetFocusedDOMWindowInOurWindow();
-    RefPtr<Document> retargetEventDoc =
-        window ? window->GetExtantDoc() : nullptr;
-    nsCOMPtr<nsIPresShell> presShell =
-        retargetEventDoc ? retargetEventDoc->GetShell() : nullptr;
-
-    RefPtr<AccessibleCaretEventHub> eventHub =
-        presShell ? presShell->GetAccessibleCaretEventHub() : nullptr;
-    if (eventHub && *aEventStatus != nsEventStatus_eConsumeNoDefault) {
-      // Don't dispatch event to AccessibleCaretEventHub when the event status
-      // is nsEventStatus_eConsumeNoDefault. This might be happened when content
-      // preventDefault on the pointer events. In such case, we also call
-      // preventDefault on mouse events to stop default behaviors.
-      *aEventStatus = eventHub->HandleEvent(aGUIEvent);
-      if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
-        // If the event is consumed, cancel APZC panning by setting
-        // mMultipleActionsPrevented.
-        aGUIEvent->mFlags.mMultipleActionsPrevented = true;
-        return NS_OK;
-      }
-    }
+  if (MaybeHandleEventWithAccessibleCaret(aGUIEvent, aEventStatus)) {
+    // Probably handled by AccessibleCaretEventHub.
+    return NS_OK;
   }
 
   if (!nsContentUtils::IsSafeToRunScript() &&
@@ -7143,6 +7122,39 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
   }
 
   return rv;
+}
+
+bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
+    WidgetGUIEvent* aGUIEvent, nsEventStatus* aEventStatus) {
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(aEventStatus);
+
+  if (AccessibleCaretEnabled(GetDocument()->GetDocShell())) {
+    // We have to target the focus window because regardless of where the
+    // touch goes, we want to access the copy paste manager.
+    nsCOMPtr<nsPIDOMWindowOuter> window = GetFocusedDOMWindowInOurWindow();
+    RefPtr<Document> retargetEventDoc =
+        window ? window->GetExtantDoc() : nullptr;
+    nsCOMPtr<nsIPresShell> presShell =
+        retargetEventDoc ? retargetEventDoc->GetShell() : nullptr;
+
+    RefPtr<AccessibleCaretEventHub> eventHub =
+        presShell ? presShell->GetAccessibleCaretEventHub() : nullptr;
+    if (eventHub && *aEventStatus != nsEventStatus_eConsumeNoDefault) {
+      // Don't dispatch event to AccessibleCaretEventHub when the event status
+      // is nsEventStatus_eConsumeNoDefault. This might be happened when content
+      // preventDefault on the pointer events. In such case, we also call
+      // preventDefault on mouse events to stop default behaviors.
+      *aEventStatus = eventHub->HandleEvent(aGUIEvent);
+      if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
+        // If the event is consumed, cancel APZC panning by setting
+        // mMultipleActionsPrevented.
+        aGUIEvent->mFlags.mMultipleActionsPrevented = true;
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 Document* PresShell::GetPrimaryContentDocument() {
