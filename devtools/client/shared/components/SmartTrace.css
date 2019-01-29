@@ -71,18 +71,24 @@
 }
 
 .frames .frames-group .frames-list {
-  display: block;
+  grid-column: 1 / -1;
+  margin-block-start: 2px;
+  /*
+   * We want to display each frame name on its own row, without having new lines in the
+   * clipboard when copying it. This does the trick.
+   */
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
 .frames .frames-group .frames-list .frame {
   padding-inline-start: 16px;
-  display: block;
   text-overflow: ellipsis;
 }
 
-.frames .frames-group .frames-list {
-  grid-column: 1 / -1;
-  margin-block-start: 2px;
+.frames-group .frames-list .title {
+  grid-column: -1 / 1;
+  padding-inline-start: 16px;
 }
 
 .frames .frames-group .frames-list .frame:first-of-type {
