@@ -2012,7 +2012,6 @@ void internal_JSHistogram_finalize(JSFreeOp*, JSObject* obj) {
 
 // NOTE: the functions in this section:
 //
-//   internal_KeyedHistogram_SnapshotImpl
 //   internal_JSKeyedHistogram_Add
 //   internal_JSKeyedHistogram_Keys
 //   internal_JSKeyedHistogram_Snapshot
@@ -2040,8 +2039,8 @@ static const JSClass sJSKeyedHistogramClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_FOREGROUND_FINALIZE, /* flags */
     &sJSKeyedHistogramClassOps};
 
-bool internal_KeyedHistogram_SnapshotImpl(JSContext* cx, unsigned argc,
-                                          JS::Value* vp, bool clearSubsession) {
+bool internal_JSKeyedHistogram_Snapshot(JSContext* cx, unsigned argc,
+                                        JS::Value* vp) {
   if (!XRE_IsParentProcess()) {
     JS_ReportErrorASCII(
         cx, "Keyed histograms can only be snapshotted in the parent process");
@@ -2090,7 +2089,7 @@ bool internal_KeyedHistogram_SnapshotImpl(JSContext* cx, unsigned argc,
   }
 
   rv = keyed->GetJSSnapshot(cx, snapshot, NS_ConvertUTF16toUTF8(storeName),
-                            clearSubsession);
+                            false);
 
   // If the store is not available, we return nothing and don't fail
   if (rv == NS_ERROR_NO_CONTENT) {
@@ -2233,11 +2232,6 @@ bool internal_JSKeyedHistogram_Keys(JSContext* cx, unsigned argc,
 
   args.rval().setObject(*jsKeys);
   return true;
-}
-
-bool internal_JSKeyedHistogram_Snapshot(JSContext* cx, unsigned argc,
-                                        JS::Value* vp) {
-  return internal_KeyedHistogram_SnapshotImpl(cx, argc, vp, false);
 }
 
 bool internal_JSKeyedHistogram_Clear(JSContext* cx, unsigned argc,
