@@ -539,6 +539,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   mozilla::TimeStamp mTickVsyncTime;
   mozilla::TimeStamp mNextThrottledFrameRequestTick;
   mozilla::TimeStamp mNextRecomputeVisibilityTick;
+  mozilla::TimeStamp mInitialTimerRunningLimit;
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[4];

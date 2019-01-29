@@ -1773,7 +1773,23 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // situation we don't want to thrash our timer.  So instead we
     // wait until we get a Notify() call when we have no observers
     // before stopping the timer.
-    StopTimer();
+    // On top level content pages keep the timer running initially so that we
+    // paint the page soon enough.
+    if (!XRE_IsContentProcess() || !presShell || mTestControllingRefreshes ||
+        !mPresContext->Document()->IsTopLevelContentDocument() || mThrottled ||
+        gfxPlatform::IsInLayoutAsapMode()) {
+      StopTimer();
+    } else if (mPresContext->Document()->GetReadyStateEnum() <
+                   Document::READYSTATE_COMPLETE &&
+               !mPresContext->HadContentfulPaint()) {
+      if (mInitialTimerRunningLimit.IsNull()) {
+        mInitialTimerRunningLimit =
+            TimeStamp::Now() + TimeDuration::FromSeconds(4.0f);
+        // Don't let the timer to run forever, so limit to 4s for now.
+      } else if (mInitialTimerRunningLimit < TimeStamp::Now()) {
+        StopTimer();
+      }
+    }
     return;
   }
 
