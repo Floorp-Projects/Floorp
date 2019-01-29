@@ -1,7 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 XPCOMUtils.defineLazyGetter(this, "cpURI", function() {

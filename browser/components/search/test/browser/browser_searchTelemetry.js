@@ -7,7 +7,7 @@
 
 "use strict";
 
-const {SearchTelemetry} = ChromeUtils.import("resource:///modules/SearchTelemetry.jsm", null);
+const {SearchTelemetry} = ChromeUtils.import("resource:///modules/SearchTelemetry.jsm");
 
 const TEST_PROVIDER_INFO = {
   "example": {

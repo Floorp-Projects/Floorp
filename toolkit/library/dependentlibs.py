@@ -19,33 +19,8 @@ from mozpack.executables import (
 )
 from buildconfig import substs
 
-def dependentlibs_dumpbin(lib):
-    '''Returns the list of dependencies declared in the given DLL'''
-    try:
-        proc = subprocess.Popen(['dumpbin', '-dependents', lib], stdout = subprocess.PIPE)
-    except OSError:
-        # dumpbin is missing, probably mingw compilation. Try using objdump.
-        return dependentlibs_mingw_objdump(lib)
-    deps = []
-    for line in proc.stdout:
-        # Each line containing an imported library name starts with 4 spaces
-        match = re.match('    (\S+)', line)
-        if match:
-             deps.append(match.group(1))
-        elif len(deps):
-             # There may be several groups of library names, but only the
-             # first one is interesting. The second one is for delayload-ed
-             # libraries.
-             break
-    proc.wait()
-    return deps
-
-def dependentlibs_mingw_objdump(lib):
-    try:
-        proc = subprocess.Popen(['objdump', '-x', lib], stdout = subprocess.PIPE)
-    except OSError:
-        # objdump is missing, try using llvm-objdump.
-        proc = subprocess.Popen(['llvm-objdump', '-private-headers', lib], stdout = subprocess.PIPE)
+def dependentlibs_win32_objdump(lib):
+    proc = subprocess.Popen([substs['LLVM_OBJDUMP'], '--private-headers', lib], stdout = subprocess.PIPE)
     deps = []
     for line in proc.stdout:
         match = re.match('\s+DLL Name: (\S+)', line)
@@ -76,13 +51,14 @@ def dependentlibs_readelf(lib):
     proc.wait()
     return deps
 
-def dependentlibs_otool(lib):
+def dependentlibs_mac_objdump(lib):
     '''Returns the list of dependencies declared in the given MACH-O dylib'''
-    proc = subprocess.Popen([substs['OTOOL'], '-l', lib], stdout = subprocess.PIPE)
-    deps= []
+    proc = subprocess.Popen([substs['LLVM_OBJDUMP'], '--private-headers', lib], stdout = subprocess.PIPE)
+    deps = []
     cmd = None
     for line in proc.stdout:
-        # otool -l output contains many different things. The interesting data
+        # llvm-objdump --private-headers output contains many different
+        # things. The interesting data
         # is under "Load command n" sections, with the content:
         #           cmd LC_LOAD_DYLIB
         #       cmdsize 56
@@ -125,11 +101,11 @@ def gen_list(output, lib):
     if binary_type == ELF:
         func = dependentlibs_readelf
     elif binary_type == MACHO:
-        func = dependentlibs_otool
+        func = dependentlibs_mac_objdump
     else:
         ext = os.path.splitext(lib)[1]
         assert(ext == '.dll')
-        func = dependentlibs_dumpbin
+        func = dependentlibs_win32_objdump
 
     deps = dependentlibs(lib, libpaths, func)
     base_lib = mozpath.basename(lib)

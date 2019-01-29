@@ -11,11 +11,10 @@ var EXPORTED_SYMBOLS = [ "LoginManagerContent",
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 ChromeUtils.defineModuleGetter(this, "FormLikeFactory",

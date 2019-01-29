@@ -132,7 +132,7 @@ add_task(async function() {
     /* eslint-env mozilla/frame-script */
     const Cm = Components.manager;
     Cm.QueryInterface(Ci.nsIServiceManager);
-    ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+    const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     let collectStacks = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG;
     let components = {};
     for (let component of Cu.loadedComponents) {

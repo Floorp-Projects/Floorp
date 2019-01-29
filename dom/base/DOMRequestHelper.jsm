@@ -18,8 +18,7 @@
  */
 var EXPORTED_SYMBOLS = ["DOMRequestIpcHelper"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function DOMRequestIpcHelper() {
   // _listeners keeps a list of messages for which we added a listener and the

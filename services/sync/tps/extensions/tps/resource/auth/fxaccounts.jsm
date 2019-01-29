@@ -8,13 +8,13 @@ var EXPORTED_SYMBOLS = [
   "Authentication",
 ];
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsConfig.jsm");
-ChromeUtils.import("resource://tps/logger.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {fxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
+const {FxAccountsConfig} = ChromeUtils.import("resource://gre/modules/FxAccountsConfig.jsm");
+const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);

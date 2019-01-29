@@ -2,9 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
-ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {TelemetryController} = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
+const {ContentTaskUtils} = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
 
 const SOCKET_ONLY_UINT_SCALAR = "telemetry.test.socket_only_uint";
 

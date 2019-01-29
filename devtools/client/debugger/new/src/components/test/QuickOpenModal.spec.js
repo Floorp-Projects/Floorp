@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow, mount } from "enzyme";
 import { QuickOpenModal } from "../QuickOpenModal";
@@ -23,6 +25,12 @@ function generateModal(propOverrides, renderType = "shallow") {
     highlightLineRange: jest.fn(),
     clearHighlightLineRange: jest.fn(),
     closeQuickOpen: jest.fn(),
+    shortcutsModalEnabled: false,
+    symbols: { functions: [] },
+    symbolsLoading: false,
+    toggleShortcutsModal: jest.fn(),
+    isOriginal: false,
+    thread: "FakeThread",
     ...propOverrides
   };
   return {
@@ -31,6 +39,22 @@ function generateModal(propOverrides, renderType = "shallow") {
         ? shallow(<QuickOpenModal {...props} />)
         : mount(<QuickOpenModal {...props} />),
     props
+  };
+}
+
+function generateTab(url) {
+  return {
+    url,
+    isOriginal: false,
+    thread: "FakeThread"
+  };
+}
+
+function generateQuickOpenResult(title) {
+  return {
+    id: "qor",
+    value: "",
+    title
   };
 }
 
@@ -88,7 +112,7 @@ describe("QuickOpenModal", () => {
         enabled: true,
         query: "",
         sources: [{ url: "mozilla.com" }],
-        tabs: [{ url: "mozilla.com" }]
+        tabs: [generateTab("mozilla.com")]
       },
       "shallow"
     );
@@ -118,9 +142,9 @@ describe("QuickOpenModal", () => {
         searchType: "functions",
         symbols: {
           functions: [
-            { title: "anonymous" },
-            { title: "c" },
-            { title: "anonymous" }
+            generateQuickOpenResult("anonymous"),
+            generateQuickOpenResult("c"),
+            generateQuickOpenResult("anonymous")
           ],
           variables: []
         }
@@ -360,7 +384,7 @@ describe("QuickOpenModal", () => {
     });
 
     it("on Enter with results, handle symbol shortcut", () => {
-      const symbols = [":", "#", "@"];
+      const symbols: Object = [":", "#", "@"];
       let key;
       let symbol;
       for (key in symbols) {

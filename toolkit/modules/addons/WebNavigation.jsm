@@ -6,7 +6,7 @@
 
 const EXPORTED_SYMBOLS = ["WebNavigation"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
                                "resource:///modules/BrowserWindowTracker.jsm");

@@ -1,12 +1,11 @@
 "use strict";
 
-let { SyncedTabs } = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm", {});
-let { SyncedTabsDeckComponent } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckComponent.js", {});
-let { TabListComponent } = ChromeUtils.import("resource:///modules/syncedtabs/TabListComponent.js", {});
-let { SyncedTabsListStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsListStore.js", {});
-let { SyncedTabsDeckStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckStore.js", {});
-let { TabListView } = ChromeUtils.import("resource:///modules/syncedtabs/TabListView.js", {});
-let { DeckView } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckView.js", {});
+let { SyncedTabs } = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
+let { SyncedTabsDeckComponent } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckComponent.js");
+let { TabListComponent } = ChromeUtils.import("resource:///modules/syncedtabs/TabListComponent.js");
+let { SyncedTabsListStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsListStore.js");
+let { SyncedTabsDeckStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckStore.js");
+let { TabListView } = ChromeUtils.import("resource:///modules/syncedtabs/TabListView.js");
 
 
 add_task(async function testInitUninit() {

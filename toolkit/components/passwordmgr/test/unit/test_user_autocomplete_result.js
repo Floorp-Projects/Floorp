@@ -1,6 +1,4 @@
-ChromeUtils.defineModuleGetter(this, "LoginHelper",
-                               "resource://gre/modules/LoginHelper.jsm");
-ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm");
+const {UserAutoCompleteResult} = ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm");
 var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                          Ci.nsILoginInfo, "init");
 

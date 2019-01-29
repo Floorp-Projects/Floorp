@@ -46,7 +46,7 @@ add_task(async function test_retry_with_genericError() {
     let retryUpdatePromise = spawnPaymentDialogTask(frame, async function checkDialog() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let state = await PTU.DialogContentUtils.waitForState(content, ({request}) => {
         return request.completeStatus === "processing";

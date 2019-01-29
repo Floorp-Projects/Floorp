@@ -5,7 +5,7 @@
 
 this.EXPORTED_SYMBOLS = ["AsanReporter"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",

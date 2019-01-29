@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 const kSelectedEnginePref = "browser.search.selectedEngine";
 
 // Check that the default engine matches the defaultenginename pref

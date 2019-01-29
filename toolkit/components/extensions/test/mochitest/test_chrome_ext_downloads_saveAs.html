@@ -5,7 +5,6 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script src="chrome_head.js"></script>
   <script src="head.js"></script>
   <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
@@ -14,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 const PROMPTLESS_DOWNLOAD_PREF = "browser.download.useDownloadDir";
 

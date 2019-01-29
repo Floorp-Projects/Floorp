@@ -6,7 +6,7 @@ function test() {
   // Customize something to make sure stuff changed:
   CustomizableUI.addWidgetToArea("save-page-button", CustomizableUI.AREA_NAVBAR);
 
-  let CustomizableUIBSPass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
+  let CustomizableUIBSPass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", null);
 
   is(CustomizableUIBSPass.gFuturePlacements.size, 0,
      "All future placements should be dealt with by now.");

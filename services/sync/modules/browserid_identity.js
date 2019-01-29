@@ -6,16 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["BrowserIDManager", "AuthenticationError"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-common/tokenserverclient.js");
-ChromeUtils.import("resource://services-crypto/utils.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/constants.js");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {fxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
+const {TokenServerClient} = ChromeUtils.import("resource://services-common/tokenserverclient.js");
+const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js");
+const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
+const {LOGIN_FAILED_LOGIN_REJECTED, LOGIN_FAILED_NETWORK_ERROR, LOGIN_FAILED_NO_USERNAME, LOGIN_SUCCEEDED, MASTER_PASSWORD_LOCKED, STATUS_OK} = ChromeUtils.import("resource://services-sync/constants.js");
 
 // Lazy imports to prevent unnecessary load on startup.
 ChromeUtils.defineModuleGetter(this, "Weave",

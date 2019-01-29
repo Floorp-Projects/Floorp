@@ -2,8 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-
 add_task(async function test_user_defined_commands() {
   const testCommands = [
     // Ctrl Shortcuts

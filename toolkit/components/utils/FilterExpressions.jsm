@@ -4,7 +4,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PreferenceFilters", "resource://gre/modules/components-utils/PreferenceFilters.jsm");
 ChromeUtils.defineModuleGetter(this, "Sampling", "resource://gre/modules/components-utils/Sampling.jsm");

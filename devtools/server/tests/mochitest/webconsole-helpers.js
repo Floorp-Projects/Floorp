@@ -1,7 +1,7 @@
 /* exported attachURL, evaluateJS */
 "use strict";
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {DebuggerServer} = require("devtools/server/main");
 const {TargetFactory} = require("devtools/client/framework/target");
 

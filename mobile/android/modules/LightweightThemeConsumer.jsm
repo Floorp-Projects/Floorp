@@ -4,8 +4,8 @@
 
 var EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 ChromeUtils.defineModuleGetter(this, "EventDispatcher",
                                "resource://gre/modules/Messaging.jsm");

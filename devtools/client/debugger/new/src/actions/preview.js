@@ -104,7 +104,7 @@ export function setPreview(
           thread: source.thread
         });
 
-        if (result === undefined) {
+        if (!result) {
           return;
         }
 

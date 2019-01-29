@@ -82,7 +82,7 @@ var gPluginHandler = {
   // Callback for user clicking on the link in a click-to-play plugin
   // (where the plugin has an update)
   async openPluginUpdatePage(pluginTag) {
-    let { Blocklist } = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", {});
+    let { Blocklist } = ChromeUtils.import("resource://gre/modules/Blocklist.jsm");
     let url = await Blocklist.getPluginBlockURL(pluginTag);
     openTrustedLinkIn(url, "tab");
   },

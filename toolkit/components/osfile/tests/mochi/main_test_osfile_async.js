@@ -1,13 +1,12 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // The following are used to compare against a well-tested reference
 // implementation of file I/O.
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var myok = ok;
 var myis = is;

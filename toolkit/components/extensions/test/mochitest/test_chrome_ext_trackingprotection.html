@@ -5,7 +5,6 @@
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"></script>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="chrome_head.js"></script>
   <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
@@ -14,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
+var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 
 function tp_background(expectFail = true) {
   fetch("https://tracking.example.com/example.txt").then(() => {

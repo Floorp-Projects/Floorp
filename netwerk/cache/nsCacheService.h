@@ -134,11 +134,6 @@ class nsCacheService final : public nsICacheServiceInternal,
   static bool IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy policy);
 
   /**
-   * Called by disk cache to notify us to use the new max smart size
-   */
-  static void MarkStartingFresh();
-
-  /**
    * Methods called by nsApplicationCacheService
    */
 
@@ -191,9 +186,6 @@ class nsCacheService final : public nsICacheServiceInternal,
 
   static void SetCacheCompressionLevel(int32_t level);
 
-  // Starts smart cache size computation if disk device is available
-  static nsresult SetDiskSmartSize();
-
   static void MoveOrRemoveDiskCache(nsIFile *aOldCacheDir,
                                     nsIFile *aNewCacheDir,
                                     const char *aCacheSubdir);
@@ -226,11 +218,8 @@ class nsCacheService final : public nsICacheServiceInternal,
   friend class nsCacheServiceAutoLock;
   friend class nsOfflineCacheDevice;
   friend class nsProcessRequestEvent;
-  friend class nsSetSmartSizeEvent;
   friend class nsBlockOnCacheThreadEvent;
-  friend class nsSetDiskSmartSizeCallback;
   friend class nsDoomEvent;
-  friend class nsDisableOldMaxSmartSizePrefEvent;
   friend class nsDiskCacheMap;
   friend class nsAsyncDoomEvent;
   friend class nsCacheEntryDescriptor;
@@ -293,8 +282,6 @@ class nsCacheService final : public nsICacheServiceInternal,
 
   void LogCacheStatistics();
 
-  nsresult SetDiskSmartSize_Locked();
-
   /**
    *  Data Members
    */
@@ -315,7 +302,6 @@ class nsCacheService final : public nsICacheServiceInternal,
   nsCOMPtr<nsIThread> mCacheIOThread;
 
   nsTArray<nsISupports *> mDoomedObjects;
-  nsCOMPtr<nsITimer> mSmartSizeTimer;
 
   bool mInitialized;
   bool mClearingEntries;

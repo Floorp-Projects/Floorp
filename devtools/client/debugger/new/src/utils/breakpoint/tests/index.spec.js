@@ -2,18 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { sortBreakpoints, sortSelectedBreakpoints } from "../index";
+
+import { makeMockBreakpoint, makeMockSource } from "../../test-mockup";
 
 describe("breakpoint sorting", () => {
   it("sortSelectedBreakpoints should sort by line number and column ", () => {
     const sorted = sortSelectedBreakpoints(
       [
-        { location: { line: 100, column: 2 } },
-        { location: { line: 9, column: 2 } },
-        { location: { line: 2, column: undefined } },
-        { location: { line: 2, column: 7 } }
+        makeMockBreakpoint(undefined, 100, 2),
+        makeMockBreakpoint(undefined, 9, 2),
+        makeMockBreakpoint(undefined, 2),
+        makeMockBreakpoint(undefined, 2, 7)
       ],
-      { id: "foo/originalSource-1" }
+      makeMockSource()
     );
 
     expect(sorted[0].location.line).toBe(2);
@@ -26,10 +30,10 @@ describe("breakpoint sorting", () => {
 
   it("sortBreakpoints should sort by line number and column ", () => {
     const sorted = sortBreakpoints([
-      { location: { line: 100, column: 2 } },
-      { location: { line: 9, column: 2 } },
-      { location: { line: 2, column: undefined } },
-      { location: { line: 2, column: 7 } }
+      makeMockBreakpoint(undefined, 100, 2),
+      makeMockBreakpoint(undefined, 9, 2),
+      makeMockBreakpoint(undefined, 2),
+      makeMockBreakpoint(undefined, 2, 7)
     ]);
 
     expect(sorted[0].location.line).toBe(2);

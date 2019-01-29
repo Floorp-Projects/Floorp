@@ -281,7 +281,7 @@ add_task(async function testNavigationClearsData() {
   let default_title = "Default title";
   let tab_title = "Tab title";
 
-  let {Management: {global: {tabTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  let {Management: {global: {tabTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
   let extension, tabs = [];
   async function addTab(...args) {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, ...args);

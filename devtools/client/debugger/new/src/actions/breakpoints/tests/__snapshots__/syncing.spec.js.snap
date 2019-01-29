@@ -9,7 +9,6 @@ Object {
         "line": 3,
       },
     },
-    "condition": null,
     "disabled": false,
     "generatedLocation": Object {
       "column": undefined,
@@ -17,7 +16,6 @@ Object {
       "sourceId": "gen.js",
       "sourceUrl": "http://localhost:8000/gen.js",
     },
-    "hidden": false,
     "id": "foo",
     "loading": false,
     "location": Object {
@@ -26,7 +24,11 @@ Object {
       "sourceId": "magic.js",
       "sourceUrl": "http://localhost:8000/examples/magic.js",
     },
-    "log": false,
+    "options": Object {
+      "condition": null,
+      "hidden": false,
+      "logValue": null,
+    },
     "originalText": "",
     "text": "",
   },
@@ -48,7 +50,6 @@ Object {
         "line": 3,
       },
     },
-    "condition": null,
     "disabled": false,
     "generatedLocation": Object {
       "column": undefined,
@@ -56,7 +57,6 @@ Object {
       "sourceId": "gen.js",
       "sourceUrl": "http://localhost:8000/gen.js",
     },
-    "hidden": false,
     "id": "foo",
     "loading": false,
     "location": Object {
@@ -65,7 +65,11 @@ Object {
       "sourceId": "magic.js",
       "sourceUrl": "http://localhost:8000/examples/magic.js",
     },
-    "log": false,
+    "options": Object {
+      "condition": null,
+      "hidden": false,
+      "logValue": null,
+    },
     "originalText": "",
     "text": "",
   },
@@ -87,7 +91,6 @@ Object {
         "line": 3,
       },
     },
-    "condition": null,
     "disabled": true,
     "generatedLocation": Object {
       "column": undefined,
@@ -99,7 +102,11 @@ Object {
       "line": 3,
       "sourceUrl": "http://localhost:8000/examples/magic.js",
     },
-    "log": false,
+    "options": Object {
+      "condition": null,
+      "hidden": false,
+      "logValue": null,
+    },
   },
 }
 `;
@@ -113,7 +120,6 @@ Object {
         "line": 3,
       },
     },
-    "condition": null,
     "disabled": false,
     "generatedLocation": Object {
       "column": undefined,
@@ -121,7 +127,6 @@ Object {
       "sourceId": "gen.js",
       "sourceUrl": "http://localhost:8000/gen.js",
     },
-    "hidden": false,
     "id": "foo",
     "loading": false,
     "location": Object {
@@ -130,7 +135,11 @@ Object {
       "sourceId": "magic.js",
       "sourceUrl": "http://localhost:8000/examples/magic.js",
     },
-    "log": false,
+    "options": Object {
+      "condition": null,
+      "hidden": false,
+      "logValue": null,
+    },
     "originalText": "",
     "text": "",
   },
@@ -152,7 +161,6 @@ Object {
         "line": 3,
       },
     },
-    "condition": null,
     "disabled": false,
     "generatedLocation": Object {
       "column": undefined,
@@ -160,7 +168,6 @@ Object {
       "sourceId": "gen.js",
       "sourceUrl": "http://localhost:8000/gen.js",
     },
-    "hidden": false,
     "id": "gen.js:5:",
     "loading": false,
     "location": Object {
@@ -169,7 +176,11 @@ Object {
       "sourceId": "magic.js",
       "sourceUrl": "http://localhost:8000/magic.js",
     },
-    "log": false,
+    "options": Object {
+      "condition": null,
+      "hidden": false,
+      "logValue": null,
+    },
     "originalText": "",
     "text": "",
   },

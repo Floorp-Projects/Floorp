@@ -11,9 +11,8 @@
  *
  */
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort + "/content";

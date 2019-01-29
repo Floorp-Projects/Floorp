@@ -84,9 +84,9 @@ async function test_background_storagePersist(EXTENSION_ID) {
     addMessageListener("getPersistedStatus", (uuid) => {
       const {
         ExtensionStorageIDB,
-      } = ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm", {});
+      } = ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
 
-      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
       const {WebExtensionPolicy} = Cu.getGlobalForObject(ExtensionStorageIDB);
       const policy = WebExtensionPolicy.getByHostname(uuid);

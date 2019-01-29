@@ -9,9 +9,6 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                         "nsIServerSocket",
                         "init");
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var testServer = null;
 var clientTransport = null;
 var serverTransport = null;

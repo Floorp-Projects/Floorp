@@ -1,6 +1,6 @@
 "use strict";
 
-const { Preferences } = ChromeUtils.import("resource://gre/modules/Preferences.jsm", {});
+const { Preferences } = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 const UUID_REGEX = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
 const SHOW_SYSTEM_ADDONS_PREF = "devtools.aboutdebugging.showSystemAddons";

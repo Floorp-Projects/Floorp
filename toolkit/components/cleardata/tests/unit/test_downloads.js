@@ -4,9 +4,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Downloads.jsm");
-ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Downloads} = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+const {FileTestUtils} = ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
 
 const TEST_TARGET_FILE_NAME = "test-download.txt";
 let fileURL;

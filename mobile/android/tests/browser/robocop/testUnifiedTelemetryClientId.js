@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 
 var java = new JavaBridge(this);
 do_register_cleanup(() => {

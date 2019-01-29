@@ -2,14 +2,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 const PING_FORMAT_VERSION = 4;
 const OPTOUT_PING_TYPE = "optout";

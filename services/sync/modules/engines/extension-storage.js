@@ -6,10 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionStorageEngine"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {SCORE_INCREMENT_MEDIUM} = ChromeUtils.import("resource://services-sync/constants.js");
+const {SyncEngine, Tracker} = ChromeUtils.import("resource://services-sync/engines.js");
+const {Svc} = ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.defineModuleGetter(this, "extensionStorageSync",
                                "resource://gre/modules/ExtensionStorageSync.jsm");
 

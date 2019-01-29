@@ -11,10 +11,9 @@ var EXPORTED_SYMBOLS = [
   "HandlerServiceTestUtils",
 ];
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://testing-common/Assert.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gExternalProtocolService",
                                    "@mozilla.org/uriloader/external-protocol-service;1",

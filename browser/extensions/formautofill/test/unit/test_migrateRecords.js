@@ -9,8 +9,8 @@ ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
 let FormAutofillStorage;
 let OSKeyStore;
 add_task(async function setup() {
-  ({FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {}));
-  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm", {}));
+  ({FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", null));
+  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm"));
 });
 
 const TEST_STORE_FILE_NAME = "test-profile.json";

@@ -12,9 +12,9 @@
   <script type="application/javascript">
   <![CDATA[
   const { DOMLocalization } =
-    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
+    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm");
   const { FluentBundle } =
-    ChromeUtils.import("resource://gre/modules/Fluent.jsm", {});
+    ChromeUtils.import("resource://gre/modules/Fluent.jsm");
 
   async function * generateMessages(locales, resourceIds) {
     const bundle = new FluentBundle(locales);

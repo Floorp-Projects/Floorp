@@ -9,8 +9,6 @@
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(test);
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 // The default flags we will stick on the docShell - every request made by the
 // docShell should include those flags.
 const TEST_FLAGS = Ci.nsIRequest.LOAD_ANONYMOUS |

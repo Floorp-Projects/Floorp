@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewMedia"];
 
-ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
+const {GeckoViewModule} = ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 
 class GeckoViewMedia extends GeckoViewModule {
   onEnable() {

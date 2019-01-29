@@ -5,8 +5,8 @@
 const {
   InvalidArgumentError,
   WebDriverError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
-ChromeUtils.import("chrome://marionette/content/message.js");
+} = ChromeUtils.import("chrome://marionette/content/error.js");
+const {Command, Message, Response} = ChromeUtils.import("chrome://marionette/content/message.js");
 
 add_test(function test_Message_Origin() {
   equal(0, Message.Origin.Client);

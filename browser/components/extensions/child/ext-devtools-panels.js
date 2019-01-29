@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 

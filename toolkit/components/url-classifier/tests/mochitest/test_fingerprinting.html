@@ -66,7 +66,7 @@ async function runTest(test) {
 
 async function runTests() {
   let chromeScript = SpecialPowers.loadChromeScript(_ => {
-    ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+    const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 
     addMessageListener("loadTrackers", __ => {
       UrlClassifierTestUtils.addTestTrackers().then(___ => {

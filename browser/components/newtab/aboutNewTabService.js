@@ -6,10 +6,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AboutNewTab",
                                "resource:///modules/AboutNewTab.jsm");

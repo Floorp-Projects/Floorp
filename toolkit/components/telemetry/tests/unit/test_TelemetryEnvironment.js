@@ -1,18 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {AddonManager, AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
+const {AddonManager, AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
-ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/httpd.js");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", this);
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // AttributionCode is only needed for Firefox
 ChromeUtils.defineModuleGetter(this, "AttributionCode",

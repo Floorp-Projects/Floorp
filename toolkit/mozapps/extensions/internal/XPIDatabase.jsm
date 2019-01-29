@@ -16,7 +16,7 @@
 
 var EXPORTED_SYMBOLS = ["AddonInternal", "XPIDatabase", "XPIDatabaseReconcile"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -59,7 +59,7 @@ for (let sym of [
   XPCOMUtils.defineLazyGetter(this, sym, () => XPIInternal[sym]);
 }
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.xpi-utils";
 
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",

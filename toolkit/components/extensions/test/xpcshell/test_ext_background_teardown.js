@@ -3,7 +3,7 @@
 add_task(async function test_background_reload_and_unload() {
   let events = [];
   {
-    let {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+    let {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
     let record = (type, extensionContext) => {
       let eventType = type == "proxy-context-load" ? "load" : "unload";
       let url = extensionContext.uri.spec;

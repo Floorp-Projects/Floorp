@@ -13,10 +13,10 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-  ChromeUtils.import("resource://gre/modules/HomeProvider.jsm");
-  ChromeUtils.import("resource://gre/modules/osfile.jsm");
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
-  ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+  const {HomeProvider} = ChromeUtils.import("resource://gre/modules/HomeProvider.jsm");
+  const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {Sqlite} = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
 
   const TEST_DATASET_ID = "test-dataset-id";
   const TEST_URL = "http://test.com";

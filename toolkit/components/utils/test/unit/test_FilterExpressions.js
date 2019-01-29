@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "FilterExpressions",
                                "resource://gre/modules/components-utils/FilterExpressions.jsm");

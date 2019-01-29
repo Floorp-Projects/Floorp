@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["FinderChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Finder",
                                "resource://gre/modules/Finder.jsm");

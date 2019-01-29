@@ -384,7 +384,7 @@ function _setupDebuggerServer(breakpointFiles, callback) {
 
   let require;
   try {
-    ({ require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}));
+    ({ require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm"));
   } catch (e) {
     throw new Error("resource://devtools appears to be inaccessible from the " +
                     "xpcshell environment.\n" +
@@ -507,7 +507,7 @@ function _execute_test() {
     this[func] = Assert[func].bind(Assert);
   }
 
-  const {PerTestCoverageUtils} = ChromeUtils.import("resource://testing-common/PerTestCoverageUtils.jsm", {});
+  const {PerTestCoverageUtils} = ChromeUtils.import("resource://testing-common/PerTestCoverageUtils.jsm");
 
   if (runningInParent) {
     PerTestCoverageUtils.beforeTestSync();

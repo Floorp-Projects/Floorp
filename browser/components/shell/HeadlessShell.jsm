@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["HeadlessShell"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // Refrences to the progress listeners to keep them from being gc'ed
 // before they are called.

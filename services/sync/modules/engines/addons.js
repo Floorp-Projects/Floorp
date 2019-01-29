@@ -36,16 +36,15 @@
  */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://services-sync/addonutils.js");
-ChromeUtils.import("resource://services-sync/addonsreconciler.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/collection_validator.js");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {AddonUtils} = ChromeUtils.import("resource://services-sync/addonutils.js");
+const {AddonsReconciler} = ChromeUtils.import("resource://services-sync/addonsreconciler.js");
+const {Store, SyncEngine, Tracker} = ChromeUtils.import("resource://services-sync/engines.js");
+const {CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
+const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
+const {SCORE_INCREMENT_XLARGE} = ChromeUtils.import("resource://services-sync/constants.js");
+const {CollectionValidator} = ChromeUtils.import("resource://services-sync/collection_validator.js");
 
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");

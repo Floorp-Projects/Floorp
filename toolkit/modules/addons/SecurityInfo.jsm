@@ -6,7 +6,7 @@
 
 const EXPORTED_SYMBOLS = ["SecurityInfo"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const wpl = Ci.nsIWebProgressListener;
 XPCOMUtils.defineLazyServiceGetter(this, "NSSErrorsService",

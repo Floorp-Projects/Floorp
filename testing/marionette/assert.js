@@ -4,10 +4,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {
   InvalidArgumentError,
@@ -16,8 +15,8 @@ const {
   NoSuchWindowError,
   UnexpectedAlertOpenError,
   UnsupportedOperationError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
-const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js", {});
+} = ChromeUtils.import("chrome://marionette/content/error.js");
+const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   evaluate: "chrome://marionette/content/evaluate.js",

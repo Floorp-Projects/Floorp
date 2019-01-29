@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
 
 AntiTracking.runTest("Storage Access API returns promises that maintain user activation for calling its reject handler",
   // blocking callback

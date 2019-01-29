@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow } from "enzyme";
 import Outline from "../../components/PrimaryPanes/Outline";
@@ -33,6 +35,7 @@ function generateDefaults(overrides) {
 
 function render(overrides = {}) {
   const props = generateDefaults(overrides);
+  // $FlowIgnore
   const component = shallow(<Outline.WrappedComponent {...props} />);
   const instance = component.instance();
   return { component, props, instance };
@@ -40,7 +43,7 @@ function render(overrides = {}) {
 
 describe("Outline", () => {
   afterEach(() => {
-    copyToTheClipboard.mockClear();
+    (copyToTheClipboard: any).mockClear();
     showMenu.mockClear();
   });
 
@@ -74,7 +77,7 @@ describe("Outline", () => {
     describe("renders loading", () => {
       it("if symbols is not defined", () => {
         const { component } = render({
-          symbols: null
+          symbols: (null: any)
         });
         expect(component).toMatchSnapshot();
       });
@@ -103,7 +106,7 @@ describe("Outline", () => {
     describe("renders placeholder", () => {
       it("`No File Selected` if selectedSource is not defined", async () => {
         const { component } = render({
-          selectedSource: null
+          selectedSource: (null: any)
         });
         expect(component).toMatchSnapshot();
       });
@@ -214,7 +217,7 @@ describe("Outline", () => {
     });
 
     it("does not select an item if selectedSource is not defined", async () => {
-      const { instance, props } = render({ selectedSource: null });
+      const { instance, props } = render({ selectedSource: (null: any) });
       await instance.selectItem({});
       expect(props.selectLocation).not.toHaveBeenCalled();
     });
@@ -243,7 +246,7 @@ describe("Outline", () => {
         stopPropagation: jest.fn()
       };
       const { instance } = render({
-        selectedSource: null
+        selectedSource: (null: any)
       });
       await instance.onContextMenu(mockEvent, {});
       expect(mockEvent.preventDefault).toHaveBeenCalled();

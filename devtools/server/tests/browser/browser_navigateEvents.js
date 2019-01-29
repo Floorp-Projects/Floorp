@@ -123,7 +123,7 @@ add_task(async function() {
   const tab = gBrowser.getTabForBrowser(browser);
   const { target, actorID } = await connectAndAttachTab(tab);
   await ContentTask.spawn(browser, [actorID], async function(actorId) {
-    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
     const { DebuggerServer } = require("devtools/server/main");
     const EventEmitter = require("devtools/shared/event-emitter");
 

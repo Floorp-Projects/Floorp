@@ -4,10 +4,8 @@
 
 /* globals ExtensionAPI */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function loadChromeScripts(win) {
   Services.scriptloader.loadSubScript("chrome://mochikit/content/chrome-harness.js", win);

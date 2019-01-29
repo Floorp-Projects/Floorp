@@ -3,11 +3,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
 

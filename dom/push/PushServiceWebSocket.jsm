@@ -5,11 +5,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {PushDB} = ChromeUtils.import("resource://gre/modules/PushDB.jsm");
 const {PushRecord} = ChromeUtils.import("resource://gre/modules/PushRecord.jsm");
@@ -48,7 +46,7 @@ const prefs = new Preferences("dom.push.");
 var EXPORTED_SYMBOLS = ["PushServiceWebSocket"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
-  let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     maxLogLevelPref: "dom.push.loglevel",
     prefix: "PushServiceWebSocket",

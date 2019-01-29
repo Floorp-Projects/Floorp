@@ -4,11 +4,11 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {MigrationUtils, MigratorPrototype} = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");

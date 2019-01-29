@@ -101,12 +101,16 @@ export type Breakpoint = {|
   +generatedLocation: SourceLocation,
   +loading: boolean,
   +disabled: boolean,
-  +hidden: boolean,
   +text: string,
   +originalText: string,
-  +condition: ?string,
-  +log: boolean
+  +options: BreakpointOptions
 |};
+
+export type BreakpointOptions = {
+  hidden?: boolean,
+  condition?: string,
+  logValue?: string
+};
 
 /**
  * XHR Breakpoint
@@ -145,7 +149,7 @@ export type PendingBreakpoint = {
   +loading: boolean,
   +disabled: boolean,
   +text: string,
-  +condition: ?string
+  +options: BreakpointOptions
 };
 
 /**
@@ -412,3 +416,5 @@ export type Cancellable = {
 };
 
 export type EventListenerBreakpoints = string[];
+
+export type SourceDocuments = { [string]: Object };

@@ -4,7 +4,7 @@
 
 var EXPORTED_SYMBOLS = ["OfflineAppCacheHelper"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var OfflineAppCacheHelper = {
   clear() {

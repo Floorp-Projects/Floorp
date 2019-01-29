@@ -5,12 +5,12 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const {actionTypes: at, actionUtils: au} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
-const {Prefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
-const {classifySite} = ChromeUtils.import("resource://activity-stream/lib/SiteClassifier.jsm", {});
+const {actionTypes: at, actionUtils: au} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
+const {Prefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm");
+const {classifySite} = ChromeUtils.import("resource://activity-stream/lib/SiteClassifier.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ASRouterPreferences",
   "resource://activity-stream/lib/ASRouterPreferences.jsm");

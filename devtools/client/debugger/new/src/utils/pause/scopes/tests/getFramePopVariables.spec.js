@@ -3,7 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { getFramePopVariables } from "../utils";
+import type { NamedValue } from "../types";
 
 const errorGrip = {
   type: "object",
@@ -42,6 +45,16 @@ function throwWhy(grip) {
     }
   };
 }
+
+function getContentsValue(v: NamedValue) {
+  return (v.contents: any).value;
+}
+
+function getContentsClass(v: NamedValue) {
+  const value = getContentsValue(v);
+  return value ? value.class || undefined : "";
+}
+
 describe("pause - scopes", () => {
   describe("getFramePopVariables", () => {
     describe("falsey values", () => {
@@ -54,7 +67,7 @@ describe("pause - scopes", () => {
           const vars = getFramePopVariables(why, "");
           expect(vars[0].name).toEqual("<return>");
           expect(vars[0].name).toEqual("<return>");
-          expect(vars[0].contents.value).toEqual(value);
+          expect(getContentsValue(vars[0])).toEqual(value);
         });
 
         it(`shows ${test} throws`, () => {
@@ -62,7 +75,7 @@ describe("pause - scopes", () => {
           const vars = getFramePopVariables(why, "");
           expect(vars[0].name).toEqual("<exception>");
           expect(vars[0].name).toEqual("<exception>");
-          expect(vars[0].contents.value).toEqual(value);
+          expect(getContentsValue(vars[0])).toEqual(value);
         });
       }
     });
@@ -73,7 +86,7 @@ describe("pause - scopes", () => {
         const vars = getFramePopVariables(why, "");
         expect(vars[0].name).toEqual("<return>");
         expect(vars[0].name).toEqual("<return>");
-        expect(vars[0].contents.value.class).toEqual("Error");
+        expect(getContentsClass(vars[0])).toEqual("Error");
       });
 
       it("shows error throws", () => {
@@ -81,7 +94,7 @@ describe("pause - scopes", () => {
         const vars = getFramePopVariables(why, "");
         expect(vars[0].name).toEqual("<exception>");
         expect(vars[0].name).toEqual("<exception>");
-        expect(vars[0].contents.value.class).toEqual("Error");
+        expect(getContentsClass(vars[0])).toEqual("Error");
       });
     });
 
@@ -97,7 +110,7 @@ describe("pause - scopes", () => {
         const vars = getFramePopVariables(why, "");
         expect(vars[0].name).toEqual("<exception>");
         expect(vars[0].name).toEqual("<exception>");
-        expect(vars[0].contents.value).toEqual({ type: "undefined" });
+        expect(getContentsValue(vars[0])).toEqual({ type: "undefined" });
       });
     });
   });

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
                                "resource://gre/modules/E10SUtils.jsm");

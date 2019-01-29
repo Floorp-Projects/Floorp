@@ -5,7 +5,7 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
-ChromeUtils.import("resource://services-sync/UIState.jsm");
+const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
 ChromeUtils.defineModuleGetter(this, "FxAccounts",
   "resource://gre/modules/FxAccounts.jsm");

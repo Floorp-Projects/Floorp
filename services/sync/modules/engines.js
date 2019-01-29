@@ -10,16 +10,15 @@ var EXPORTED_SYMBOLS = [
   "Changeset",
 ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/JSONFile.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {JSONFile} = ChromeUtils.import("resource://gre/modules/JSONFile.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
+const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
+const {DEFAULT_DOWNLOAD_BATCH_SIZE, DEFAULT_GUID_FETCH_BATCH_SIZE, ENGINE_BATCH_INTERRUPTED, ENGINE_DOWNLOAD_FAIL, ENGINE_UPLOAD_FAIL, VERSION_OUT_OF_DATE} = ChromeUtils.import("resource://services-sync/constants.js");
+const {Collection, CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
+const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
+const {SerializableSet, Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   fxAccounts: "resource://gre/modules/FxAccounts.jsm",

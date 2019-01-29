@@ -6,10 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["LightweightThemeManager"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AddonManager, AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 /* globals AddonManagerPrivate*/
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const ID_SUFFIX              = "@personas.mozilla.org";
 const ADDON_TYPE             = "theme";

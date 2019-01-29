@@ -499,7 +499,7 @@
     }
 
     async function start() {
-      ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+      const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
       let browser = document.getElementById("cpowbrowser_remote");
       BrowserTestUtils.loadURI(browser, "http://mochi.test:8888/tests/dom/base/test/chrome/cpows_child.html");

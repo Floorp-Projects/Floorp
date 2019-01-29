@@ -4,9 +4,10 @@
 
 "use strict";
 
+var PhoneNumber, PhoneNumberNormalizer;
 add_task(async function setup() {
-  ChromeUtils.import("resource://formautofill/phonenumberutils/PhoneNumber.jsm");
-  ChromeUtils.import("resource://formautofill/phonenumberutils/PhoneNumberNormalizer.jsm");
+  ({PhoneNumber} = ChromeUtils.import("resource://formautofill/phonenumberutils/PhoneNumber.jsm"));
+  ({PhoneNumberNormalizer} = ChromeUtils.import("resource://formautofill/phonenumberutils/PhoneNumberNormalizer.jsm"));
 });
 
 function IsPlain(dial, expected) {

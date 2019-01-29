@@ -17,10 +17,7 @@ PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_FAILURE/);
 
 requestLongerTimeout(5);
 
-const { BrowserToolboxProcess } = ChromeUtils.import(
-  "resource://devtools/client/framework/ToolboxProcess.jsm",
-  {}
-);
+const { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm");
 let gProcess = undefined;
 
 function initChromeDebugger() {

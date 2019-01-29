@@ -6,11 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["UITour"];
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {TelemetryController} = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 

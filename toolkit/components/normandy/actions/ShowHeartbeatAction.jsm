@@ -4,9 +4,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://normandy/actions/BaseAction.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {BaseAction} = ChromeUtils.import("resource://normandy/actions/BaseAction.jsm");
 ChromeUtils.defineModuleGetter(this, "ActionSchemas", "resource://normandy/actions/schemas/index.js");
 ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker", "resource:///modules/BrowserWindowTracker.jsm");
 ChromeUtils.defineModuleGetter(this, "ClientEnvironment", "resource://normandy/lib/ClientEnvironment.jsm");

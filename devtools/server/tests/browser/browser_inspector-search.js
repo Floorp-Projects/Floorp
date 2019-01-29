@@ -18,7 +18,7 @@ add_task(async function() {
   await ContentTask.spawn(gBrowser.selectedBrowser,
     [walker.actorID],
     async function(actorID) {
-      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
       const { DebuggerServer } = require("devtools/server/main");
       const {DocumentWalker: _documentWalker} = require("devtools/server/actors/inspector/document-walker");
 

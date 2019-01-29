@@ -21,11 +21,10 @@ const kDownloadAutohideCheckboxId = "downloads-button-autohide-checkbox";
 const kDownloadAutohidePanelId = "downloads-button-autohide-panel";
 const kDownloadAutoHidePref = "browser.download.autohideButton";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {CustomizableUI} = ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["CSS"]);
 

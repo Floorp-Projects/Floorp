@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
-
 const PREF_GET_LANGPACKS = "extensions.getAddons.langpacks.url";
 
 let server = AddonTestUtils.createHttpServer({hosts: ["example.com"]});

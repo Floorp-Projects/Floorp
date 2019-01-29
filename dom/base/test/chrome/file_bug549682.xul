@@ -18,8 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   var ppm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
   var cpm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService();
 
-  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
   function ok(cond, msg) {
     opener.wrappedJSObject.ok(cond, msg);
   }

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");

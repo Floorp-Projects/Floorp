@@ -6,7 +6,7 @@
 "use strict";
 
 var { InlineSpellChecker, SpellCheckHelper } =
-  ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm", {});
+  ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm");
 
 var EXPORTED_SYMBOLS = [ "InlineSpellCheckerContent" ];
 

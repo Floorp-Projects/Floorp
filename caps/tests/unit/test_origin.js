@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var ssm = Services.scriptSecurityManager;
 function makeURI(uri) { return Services.io.newURI(uri); }
 

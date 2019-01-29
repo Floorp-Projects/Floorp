@@ -7,7 +7,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/DownloadHistory.jsm");
+const {DownloadHistory} = ChromeUtils.import("resource://gre/modules/DownloadHistory.jsm");
 
 let baseDate = new Date("2000-01-01");
 

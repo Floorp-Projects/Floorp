@@ -13,8 +13,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {OS: {File, Path, Constants}} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
+const {OS: {File, Path, Constants}} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const PING_SAVE_FOLDER = "saved-telemetry-pings";
 const PING_TIMEOUT_LENGTH = 5000;
@@ -76,7 +75,7 @@ var clearPings = async function(aPingIds) {
  * @param {Integer} aPendingQuota The new quota, in bytes.
  */
 function fakePendingPingsQuota(aPendingQuota) {
-  let storage = ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", {});
+  let storage = ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", null);
   storage.Policy.getPendingPingsQuota = () => aPendingQuota;
 }
 

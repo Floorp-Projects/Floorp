@@ -18,7 +18,7 @@ var {
   ExtensionError,
 } = ExtensionUtils;
 
-ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+var {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
   IconDetails,

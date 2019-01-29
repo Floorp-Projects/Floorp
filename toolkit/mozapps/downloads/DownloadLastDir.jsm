@@ -30,7 +30,7 @@ const nsIFile = Ci.nsIFile;
 
 var EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let nonPrivateLoadContext = Cu.createLoadContext();
 let privateLoadContext = Cu.createPrivateLoadContext();

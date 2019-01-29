@@ -19,10 +19,10 @@ if (arguments.length != 3) {
                   "<absolute path to StaticHPKPins.h>");
 }
 
-var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
-var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 

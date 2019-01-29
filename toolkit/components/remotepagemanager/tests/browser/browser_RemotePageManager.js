@@ -5,7 +5,7 @@
 const TEST_URL = "http://www.example.com/browser/toolkit/components/remotepagemanager/tests/browser/testremotepagemanager.html";
 
 var { RemotePages, RemotePageManager } =
-  ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm", {});
+  ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm");
 
 function failOnMessage(message) {
   ok(false, "Should not have seen message " + message.name);

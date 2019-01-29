@@ -28,7 +28,6 @@ type Viewport = PartialRange;
 export type UIState = {
   selectedPrimaryPaneTab: SelectedPrimaryPaneTabType,
   activeSearch: ?ActiveSearchType,
-  contextMenu: any,
   shownSource: ?Source,
   startPanelCollapsed: boolean,
   endPanelCollapsed: boolean,
@@ -47,7 +46,6 @@ export type UIState = {
 export const createUIState: () => Record<UIState> = makeRecord({
   selectedPrimaryPaneTab: "sources",
   activeSearch: null,
-  contextMenu: {},
   shownSource: null,
   startPanelCollapsed: prefs.startPanelCollapsed,
   endPanelCollapsed: prefs.endPanelCollapsed,
@@ -71,10 +69,6 @@ function update(
     case "TOGGLE_FRAMEWORK_GROUPING": {
       prefs.frameworkGroupingOn = action.value;
       return state.set("frameworkGroupingOn", action.value);
-    }
-
-    case "SET_CONTEXT_MENU": {
-      return state.set("contextMenu", action.contextMenu);
     }
 
     case "SET_ORIENTATION": {
@@ -153,10 +147,6 @@ export function getSelectedPrimaryPaneTab(
 
 export function getActiveSearch(state: OuterState): ActiveSearchType {
   return state.ui.get("activeSearch");
-}
-
-export function getContextMenu(state: OuterState): any {
-  return state.ui.get("contextMenu");
 }
 
 export function getFrameworkGroupingState(state: OuterState): boolean {

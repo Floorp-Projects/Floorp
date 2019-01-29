@@ -4,7 +4,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -73,7 +73,7 @@ const BLANK_DB = function() {
 
 const TOOLKIT_ID     = "toolkit@mozilla.org";
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.repository";
 
 // Create a new logger for use by the Addons Repository

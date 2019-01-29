@@ -1,8 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   let complete = false;

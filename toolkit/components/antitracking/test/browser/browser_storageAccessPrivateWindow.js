@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 AntiTracking.runTest("Storage Access API called in a private window",
   // blocking callback
   async _ => {

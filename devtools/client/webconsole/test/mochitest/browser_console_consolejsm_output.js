@@ -12,7 +12,7 @@ add_task(async function testCategoryLogs() {
   const storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();
 
-  const {console} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  const {console} = ChromeUtils.import("resource://gre/modules/Console.jsm");
   console.log("bug861338-log-cached");
 
   const hud = await HUDService.toggleBrowserConsole();
@@ -57,7 +57,7 @@ add_task(async function testFilter() {
   const storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();
 
-  const {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  const {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm");
   const console2 = new ConsoleAPI();
   const hud = await HUDService.toggleBrowserConsole();
 
@@ -87,7 +87,7 @@ add_task(async function testFilter() {
 add_task(async function testProfile() {
   const consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
   const storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
-  const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm");
 
   storage.clearEvents();
 

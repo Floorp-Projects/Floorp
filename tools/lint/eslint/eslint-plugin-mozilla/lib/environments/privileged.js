@@ -20,7 +20,7 @@ module.exports = {
     "Addon": false,
     "AddonEvent": false,
     "AddonInstall": false,
-    "AddonManager": false,
+    "AddonManager": true,
     "AddonManagerPermissions": false,
     "AnalyserNode": false,
     "Animation": false,

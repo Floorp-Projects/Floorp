@@ -10,22 +10,21 @@
 
 const winUtil = content.windowUtils;
 
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.import("chrome://marionette/content/accessibility.js");
-ChromeUtils.import("chrome://marionette/content/action.js");
-ChromeUtils.import("chrome://marionette/content/atom.js");
+const {accessibility} = ChromeUtils.import("chrome://marionette/content/accessibility.js");
+const {action} = ChromeUtils.import("chrome://marionette/content/action.js");
+const {atom} = ChromeUtils.import("chrome://marionette/content/atom.js");
 const {
   Capabilities,
   PageLoadStrategy,
-} = ChromeUtils.import("chrome://marionette/content/capabilities.js", {});
-ChromeUtils.import("chrome://marionette/content/capture.js");
+} = ChromeUtils.import("chrome://marionette/content/capabilities.js");
+const {capture} = ChromeUtils.import("chrome://marionette/content/capture.js");
 const {
   element,
   WebElement,
-} = ChromeUtils.import("chrome://marionette/content/element.js", {});
+} = ChromeUtils.import("chrome://marionette/content/element.js");
 const {
   ElementNotInteractableError,
   InsecureCertificateError,
@@ -35,16 +34,16 @@ const {
   NoSuchFrameError,
   TimeoutError,
   UnknownError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
-ChromeUtils.import("chrome://marionette/content/evaluate.js");
-ChromeUtils.import("chrome://marionette/content/event.js");
-const {ContentEventObserverService} = ChromeUtils.import("chrome://marionette/content/dom.js", {});
-const {pprint, truncate} = ChromeUtils.import("chrome://marionette/content/format.js", {});
-ChromeUtils.import("chrome://marionette/content/interaction.js");
-ChromeUtils.import("chrome://marionette/content/legacyaction.js");
-const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
-ChromeUtils.import("chrome://marionette/content/navigate.js");
-ChromeUtils.import("chrome://marionette/content/proxy.js");
+} = ChromeUtils.import("chrome://marionette/content/error.js");
+const {Sandboxes, evaluate, sandbox} = ChromeUtils.import("chrome://marionette/content/evaluate.js");
+const {event} = ChromeUtils.import("chrome://marionette/content/event.js");
+const {ContentEventObserverService} = ChromeUtils.import("chrome://marionette/content/dom.js");
+const {pprint, truncate} = ChromeUtils.import("chrome://marionette/content/format.js");
+const {interaction} = ChromeUtils.import("chrome://marionette/content/interaction.js");
+const {legacyaction} = ChromeUtils.import("chrome://marionette/content/legacyaction.js");
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
+const {navigate} = ChromeUtils.import("chrome://marionette/content/navigate.js");
+const {proxy} = ChromeUtils.import("chrome://marionette/content/proxy.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.getWithPrefix(outerWindowID));
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);

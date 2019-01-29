@@ -32,7 +32,7 @@
   var gLastTab = null;
   var gResults = [];
 
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   var BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
   SimpleTest.waitForExplicitFinish();

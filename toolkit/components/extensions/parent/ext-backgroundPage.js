@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+var {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 var {
   HiddenExtensionPage,
   promiseExtensionViewLoaded,

@@ -5,7 +5,7 @@
 
 /* import-globals-from head.js */
 
-const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
 function _getSupportsFile(path) {
   const cr = Cc["@mozilla.org/chrome/chrome-registry;1"]

@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(async function test_policy_disable_shield() {
-  const { RecipeRunner } = ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", {});
+  const { RecipeRunner } = ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm");
 
   await SpecialPowers.pushPrefEnv({ set: [["app.normandy.api_url",
                                            "https://localhost/selfsupport-dummy/"],

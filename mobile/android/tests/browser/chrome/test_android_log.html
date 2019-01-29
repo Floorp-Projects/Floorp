@@ -32,7 +32,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   const WARNING_BYTES = "Gecko".length + TAG.length + WARNING_MESSAGE.length + 3;
   const ERROR_BYTES = "Gecko".length + TAG.length + ERROR_MESSAGE.length + 3;
 
-  ChromeUtils.import("resource://gre/modules/AndroidLog.jsm");
+  const {AndroidLog} = ChromeUtils.import("resource://gre/modules/AndroidLog.jsm");
 
   ok(!!AndroidLog, "AndroidLog is defined");
 

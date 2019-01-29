@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // restartManager() mucks with XPIProvider.jsm importing, so we hack around.
 this.__defineGetter__("XPIProvider", function() {
   let scope = {};

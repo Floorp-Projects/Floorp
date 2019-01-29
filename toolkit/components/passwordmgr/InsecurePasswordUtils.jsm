@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = [ "InsecurePasswordUtils" ];
 
 const STRINGS_URI = "chrome://global/locale/security/security.properties";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
                                    "@mozilla.org/contentsecuritymanager;1",

@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1263589
     "use strict";
 
     const VISIBLE_OPTION_COUNT = 5;
-    ChromeUtils.import("resource://gre/modules/SelectHelper.jsm");
+    const {SelectHelper} = ChromeUtils.import("resource://gre/modules/SelectHelper.jsm");
 
     // Wait until the page has loaded so that we can access the DOM.
     SimpleTest.waitForExplicitFinish();

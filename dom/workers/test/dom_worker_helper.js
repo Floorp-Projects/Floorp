@@ -3,10 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 const wdm = Cc["@mozilla.org/dom/workers/workerdebuggermanager;1"].
             getService(Ci.nsIWorkerDebuggerManager);
 

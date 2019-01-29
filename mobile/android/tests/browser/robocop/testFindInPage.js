@@ -5,8 +5,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const TEST_URL = "http://mochi.test:8888/tests/robocop/robocop_text_page.html";
 

@@ -34,14 +34,15 @@ function leftClickElement(element)
   synthesizeMouseAtCenter(element, { button: 0 });
 }
 
+var onSpellCheck;
 function startTests() 
 {     
   textbox = document.getElementById("t1");
   textbox.focus();
   testNum = 0;
   
-  ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm");
+  ({onSpellCheck} = ChromeUtils.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"));
   onSpellCheck(textbox, function () {
     bringUpContextMenu(textbox);
   });

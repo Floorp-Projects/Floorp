@@ -9,7 +9,7 @@
 
 var EXPORTED_SYMBOLS = ["Address", "CreditCard", "DumpAddresses", "DumpCreditCards"];
 
-ChromeUtils.import("resource://tps/logger.jsm");
+const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
 
 ChromeUtils.defineModuleGetter(this, "formAutofillStorage",
                                "resource://formautofill/FormAutofillStorage.jsm");

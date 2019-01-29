@@ -11,15 +11,14 @@
 
 var EXPORTED_SYMBOLS = ["Doctor"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/resource.js");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
+const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
 
-ChromeUtils.import("resource://services-sync/util.js");
+const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.defineModuleGetter(this, "getRepairRequestor",
   "resource://services-sync/collection_repair.js");
 ChromeUtils.defineModuleGetter(this, "getAllRepairRequestors",

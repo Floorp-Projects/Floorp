@@ -15,13 +15,13 @@ const AUTH_TYPE = {
   SCHEME_DIGEST: 2,
 };
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource:///modules/ChromeMigrationUtils.jsm");
-ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {ChromeMigrationUtils} = ChromeUtils.import("resource:///modules/ChromeMigrationUtils.jsm");
+const {MigrationUtils, MigratorPrototype} = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");

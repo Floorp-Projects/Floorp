@@ -6,11 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["DevTools"];
 
-ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {gDevTools} = ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-let { devtools } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+let { devtools } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 let TargetFactory = devtools.TargetFactory;
 
 async function getTargetForSelectedTab() {
