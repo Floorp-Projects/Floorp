@@ -1,6 +1,6 @@
 "use strict";
 
-const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm", {});
+const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 
 const MAIN_URL = "https://example.com/" + RELATIVE_DIR + "discovery.html";
 

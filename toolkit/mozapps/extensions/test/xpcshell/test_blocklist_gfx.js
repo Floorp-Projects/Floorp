@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 
 const gParser = new DOMParser();

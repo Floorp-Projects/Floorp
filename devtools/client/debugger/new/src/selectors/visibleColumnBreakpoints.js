@@ -7,7 +7,7 @@
 import { groupBy, sortedUniqBy } from "lodash";
 import { createSelector } from "reselect";
 
-import { getViewport } from "../selectors";
+import { getViewport, getSelectedSource } from "../selectors";
 import { getVisibleBreakpoints } from "./visibleBreakpoints";
 import { getVisiblePausePoints } from "./visiblePausePoints";
 import { makeLocationId } from "../utils/breakpoint";
@@ -17,7 +17,8 @@ import type {
   SourceLocation,
   PartialPosition,
   Breakpoint,
-  Range
+  Range,
+  Source
 } from "../types";
 
 export type ColumnBreakpoint = {|
@@ -88,7 +89,8 @@ export function formatColumnBreakpoints(columnBreakpoints: ColumnBreakpoints) {
 export function getColumnBreakpoints(
   pausePoints: ?(PausePoint[]),
   breakpoints: ?(Breakpoint[]),
-  viewport: Range
+  viewport: Range,
+  selectedSource: ?Source
 ) {
   if (!pausePoints) {
     return [];
@@ -125,8 +127,9 @@ export function getColumnBreakpoints(
     ({ location: { line } }) => lineCount[line] > 1
   );
 
+  const sourceId = selectedSource && selectedSource.id;
   return (columnBreakpoints: any).map(({ location }) => ({
-    location,
+    location: { ...location, sourceId },
     breakpoint: findBreakpoint(location, breakpointMap)
   }));
 }
@@ -137,5 +140,6 @@ export const visibleColumnBreakpoints: Selector<
   getVisiblePausePoints,
   getVisibleBreakpoints,
   getViewport,
+  getSelectedSource,
   getColumnBreakpoints
 );

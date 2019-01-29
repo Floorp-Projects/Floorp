@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow } from "enzyme";
 
@@ -15,9 +17,7 @@ describe("Breakpoint", () => {
   });
 
   it("disabled", () => {
-    const { component } = render({
-      breakpoint: makeBreakpoint({ disabled: true })
-    });
+    const { component } = render({}, makeBreakpoint({ disabled: true }));
     expect(component).toMatchSnapshot();
   });
 
@@ -29,11 +29,13 @@ describe("Breakpoint", () => {
   });
 
   it("paused at an original location", () => {
-    const { component } = render({
-      frame: { selectedLocation: location },
-      breakpoint: { location },
-      selectedSource: makeOriginalSource("foo")
-    });
+    const { component } = render(
+      {
+        selectedSource: makeOriginalSource("foo"),
+        frame: { selectedLocation: location }
+      },
+      { location, options: {} }
+    );
 
     expect(component).toMatchSnapshot();
   });
@@ -49,8 +51,9 @@ describe("Breakpoint", () => {
 const generatedLocation = { sourceId: "foo", line: 53, column: 73 };
 const location = { sourceId: "foo/original", line: 5, column: 7 };
 
-function render(overrides = {}) {
-  const props = generateDefaults(overrides);
+function render(overrides = {}, breakpointOverrides = {}) {
+  const props = generateDefaults(overrides, breakpointOverrides);
+  // $FlowIgnore
   const component = shallow(<Breakpoint.WrappedComponent {...props} />);
   const defaultState = component.state();
   const instance = component.instance();
@@ -63,19 +66,20 @@ function makeBreakpoint(overrides = {}) {
     location,
     generatedLocation,
     disabled: false,
+    options: {},
     ...overrides
   };
 }
 
-function generateDefaults(overrides = { ...overrides, breakpoint: {} }) {
+function generateDefaults(overrides = {}, breakpointOverrides = {}) {
   const source = makeSource("foo");
-  const breakpoint = makeBreakpoint(overrides.breakpoint);
+  const breakpoint = makeBreakpoint(breakpointOverrides);
   const selectedSource = makeSource("foo");
   return {
     source,
     breakpoint,
     selectedSource,
-    frame: null,
+    frame: (null: any),
     ...overrides
   };
 }

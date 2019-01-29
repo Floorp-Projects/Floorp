@@ -9,9 +9,9 @@
 
 var EXPORTED_SYMBOLS = ["HistoryEntry", "DumpHistory"];
 
-ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
-ChromeUtils.import("resource://tps/logger.jsm");
+const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+const {PlacesSyncUtils} = ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
+const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
 
 var DumpHistory = async function TPS_History__DumpHistory() {
   let query = PlacesUtils.history.getNewQuery();

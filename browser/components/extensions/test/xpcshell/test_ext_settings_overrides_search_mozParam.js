@@ -3,7 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();

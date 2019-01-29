@@ -3,7 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://services-sync/UIState.jsm");
+const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
 ChromeUtils.defineModuleGetter(this, "fxAccounts",
                                "resource://gre/modules/FxAccounts.jsm");

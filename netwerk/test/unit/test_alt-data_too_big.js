@@ -9,8 +9,6 @@
  *    data must be kept
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var data = "data    ";
 var altData = "alt-data"
 

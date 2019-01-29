@@ -7,7 +7,7 @@
 let FormAutofillParent;
 
 add_task(async function setup() {
-  ({FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", {}));
+  ({FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", null));
 });
 
 add_task(async function test_profileSavedFieldNames_init() {

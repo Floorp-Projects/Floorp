@@ -3,10 +3,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://services-sync/addonutils.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {AddonUtils} = ChromeUtils.import("resource://services-sync/addonutils.js");
 
 const HTTP_PORT = 8888;
 const SERVER_ADDRESS = "http://127.0.0.1:8888";

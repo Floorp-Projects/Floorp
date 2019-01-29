@@ -3,8 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/WebChannel.jsm");
+const {WebChannelBroker} = ChromeUtils.import("resource://gre/modules/WebChannel.jsm");
 
 const VALID_WEB_CHANNEL_ID = "id";
 const URL_STRING = "http://example.com";

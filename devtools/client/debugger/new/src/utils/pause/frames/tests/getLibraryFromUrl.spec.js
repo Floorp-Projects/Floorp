@@ -2,21 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { getLibraryFromUrl } from "../getLibraryFromUrl";
+import { makeMockFrameWithURL } from "../../../test-mockup";
 
 describe("getLibraryFromUrl", () => {
   describe("When Preact is on the frame", () => {
     it("should return Preact and not React", () => {
-      const frame = {
-        displayName: "name",
-        location: {
-          line: 12
-        },
-        source: {
-          url: "https://cdnjs.cloudflare.com/ajax/libs/preact/8.2.5/preact.js"
-        }
-      };
-
+      const frame = makeMockFrameWithURL(
+        "https://cdnjs.cloudflare.com/ajax/libs/preact/8.2.5/preact.js"
+      );
       expect(getLibraryFromUrl(frame)).toEqual("Preact");
     });
   });
@@ -35,16 +31,9 @@ describe("getLibraryFromUrl", () => {
       ];
 
       buildTypeList.forEach(buildType => {
-        const frame = {
-          displayName: "name",
-          location: {
-            line: 42
-          },
-          source: {
-            url: `https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/${buildType}`
-          }
-        };
-
+        const frame = makeMockFrameWithURL(
+          `https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/${buildType}`
+        );
         expect(getLibraryFromUrl(frame)).toEqual("VueJS");
       });
     });
@@ -59,15 +48,7 @@ describe("getLibraryFromUrl", () => {
         "https://debugger-react-example.com/react/test.js"
       ];
       notReactUrlList.forEach(notReactUrl => {
-        const frame = {
-          displayName: "name",
-          location: {
-            line: 12
-          },
-          source: {
-            url: notReactUrl
-          }
-        };
+        const frame = makeMockFrameWithURL(notReactUrl);
         expect(getLibraryFromUrl(frame)).toBeNull();
       });
     });
@@ -82,15 +63,7 @@ describe("getLibraryFromUrl", () => {
         "/node_modules/react-dom/test.js"
       ];
       reactUrlList.forEach(reactUrl => {
-        const frame = {
-          displayName: "name",
-          location: {
-            line: 12
-          },
-          source: {
-            url: reactUrl
-          }
-        };
+        const frame = makeMockFrameWithURL(reactUrl);
         expect(getLibraryFromUrl(frame)).toEqual("React");
       });
     });
@@ -98,51 +71,24 @@ describe("getLibraryFromUrl", () => {
 
   describe("When zone.js is on the frame", () => {
     it("should not return Angular when no callstack", () => {
-      const frame = {
-        displayName: "name",
-        location: {
-          line: 12
-        },
-        source: {
-          url: "/node_modules/zone/zone.js"
-        }
-      };
-
+      const frame = makeMockFrameWithURL("/node_modules/zone/zone.js");
       expect(getLibraryFromUrl(frame)).toEqual(null);
     });
 
     it("should not return Angular when stack without Angular frames", () => {
-      const frame = {
-        displayName: "name",
-        location: {
-          line: 12
-        },
-        source: {
-          url: "/node_modules/zone/zone.js"
-        }
-      };
+      const frame = makeMockFrameWithURL("/node_modules/zone/zone.js");
       const callstack = [frame];
 
       expect(getLibraryFromUrl(frame, callstack)).toEqual(null);
     });
 
     it("should return Angular when stack with Angular frames", () => {
-      const frame = {
-        displayName: "name",
-        location: {
-          line: 12
-        },
-        source: {
-          url: "/node_modules/zone/zone.js"
-        }
-      };
+      const frame = makeMockFrameWithURL("/node_modules/zone/zone.js");
       const callstack = [
         frame,
-        {
-          source: {
-            url: "https://cdnjs.cloudflare.com/ajax/libs/angular/angular.js"
-          }
-        }
+        makeMockFrameWithURL(
+          "https://cdnjs.cloudflare.com/ajax/libs/angular/angular.js"
+        )
       ];
 
       expect(getLibraryFromUrl(frame, callstack)).toEqual("Angular");

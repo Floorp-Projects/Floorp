@@ -12,9 +12,8 @@
 // 3. We expect that all 6 active connections should be closed with the status
 //    NS_ERROR_ABORT.
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var server = new HttpServer();
 server.start(-1);

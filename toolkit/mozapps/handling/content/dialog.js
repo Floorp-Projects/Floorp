@@ -28,8 +28,8 @@
  *   The nsIInterfaceRequestor of the parent window; may be null
  */
 
-ChromeUtils.import("resource://gre/modules/SharedPromptUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {EnableDelayHelper} = ChromeUtils.import("resource://gre/modules/SharedPromptUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 
 var dialog = {

@@ -157,7 +157,7 @@ async function focusAndWaitForFieldsIdentified(browser, selector) {
   info("expecting the target input being focused and identified");
   /* eslint no-shadow: ["error", { "allow": ["selector", "previouslyFocused", "previouslyIdentified"] }] */
   const {previouslyFocused, previouslyIdentified} = await ContentTask.spawn(browser, {selector}, async function({selector}) {
-    ChromeUtils.import("resource://gre/modules/FormLikeFactory.jsm");
+    const {FormLikeFactory} = ChromeUtils.import("resource://gre/modules/FormLikeFactory.jsm");
     const input = content.document.querySelector(selector);
     const rootElement = FormLikeFactory.findRootForField(input);
     const previouslyFocused = content.document.activeElement == input;
@@ -188,7 +188,7 @@ async function focusAndWaitForFieldsIdentified(browser, selector) {
   // Wait 500ms to ensure that "markAsAutofillField" is completely finished.
   await sleep();
   await ContentTask.spawn(browser, {}, async function() {
-    ChromeUtils.import("resource://gre/modules/FormLikeFactory.jsm");
+    const {FormLikeFactory} = ChromeUtils.import("resource://gre/modules/FormLikeFactory.jsm");
     FormLikeFactory
       .findRootForField(content.document.activeElement)
       .setAttribute("test-formautofill-identified", "true");

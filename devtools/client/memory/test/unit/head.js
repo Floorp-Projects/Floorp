@@ -6,7 +6,7 @@
 // via xpcshell.ini
 /* import-globals-from ../../../shared/test/shared-redux-head.js */
 
-var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 var Services = require("Services");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");

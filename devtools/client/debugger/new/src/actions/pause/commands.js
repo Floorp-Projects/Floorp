@@ -39,13 +39,15 @@ export function selectThread(thread: string) {
  */
 export function command(type: Command) {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
-    const thread = getCurrentThread(getState());
-    return dispatch({
-      type: "COMMAND",
-      command: type,
-      thread,
-      [PROMISE]: client[type](thread)
-    });
+    if (type) {
+      const thread = getCurrentThread(getState());
+      return dispatch({
+        type: "COMMAND",
+        command: type,
+        thread,
+        [PROMISE]: client[type](thread)
+      });
+    }
   };
 }
 

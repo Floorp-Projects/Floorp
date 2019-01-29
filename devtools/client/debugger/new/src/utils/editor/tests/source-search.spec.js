@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import {
   find,
   searchSourceForHighlight,
@@ -83,7 +85,7 @@ describe("source-search", () => {
         overlay: null,
         results: []
       };
-      find(ctx, null, true, modifiers);
+      find(ctx, "", true, modifiers);
       expect(ctx.cm.removeOverlay).toHaveBeenCalledWith(null);
       ctx.cm.removeOverlay.mockClear();
       ctx.cm.state.search.query = "bar";

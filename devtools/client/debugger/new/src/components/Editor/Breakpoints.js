@@ -9,18 +9,30 @@ import Breakpoint from "./Breakpoint";
 import { getSelectedSource, getFirstVisibleBreakpoints } from "../../selectors";
 import { makeLocationId } from "../../utils/breakpoint";
 import { connect } from "../../utils/connect";
+import { breakpointItemActions } from "./menus/breakpoints";
+import { editorItemActions } from "./menus/editor";
 
+import type { BreakpointItemActions } from "./menus/breakpoints";
+import type { EditorItemActions } from "./menus/editor";
 import type { Breakpoint as BreakpointType, Source } from "../../types";
 
 type Props = {
   selectedSource: Source,
   breakpoints: BreakpointType[],
-  editor: Object
+  editor: Object,
+  breakpointActions: BreakpointItemActions,
+  editorActions: EditorItemActions
 };
 
 class Breakpoints extends Component<Props> {
   render() {
-    const { breakpoints, selectedSource, editor } = this.props;
+    const {
+      breakpoints,
+      selectedSource,
+      editor,
+      breakpointActions,
+      editorActions
+    } = this.props;
 
     if (!breakpoints || selectedSource.isBlackBoxed) {
       return null;
@@ -35,6 +47,8 @@ class Breakpoints extends Component<Props> {
               breakpoint={bp}
               selectedSource={selectedSource}
               editor={editor}
+              breakpointActions={breakpointActions}
+              editorActions={editorActions}
             />
           );
         })}
@@ -43,9 +57,15 @@ class Breakpoints extends Component<Props> {
   }
 }
 
-export default connect(state => ({
-  // Retrieves only the first breakpoint per line so that the
-  // breakpoint marker represents only the first breakpoint
-  breakpoints: getFirstVisibleBreakpoints(state),
-  selectedSource: getSelectedSource(state)
-}))(Breakpoints);
+export default connect(
+  state => ({
+    // Retrieves only the first breakpoint per line so that the
+    // breakpoint marker represents only the first breakpoint
+    breakpoints: getFirstVisibleBreakpoints(state),
+    selectedSource: getSelectedSource(state)
+  }),
+  dispatch => ({
+    breakpointActions: breakpointItemActions(dispatch),
+    editorActions: editorItemActions(dispatch)
+  })
+)(Breakpoints);

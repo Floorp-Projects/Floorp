@@ -3,13 +3,11 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
 
 // We grab some additional stuff via backstage passes.
-var {AccountState} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", {});
+var {AccountState} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", null);
 
 function promiseNotification(topic) {
   return new Promise(resolve => {

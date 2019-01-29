@@ -7,12 +7,14 @@
 // 1 day default
 const DEFAULT_SECONDS_BETWEEN_CHECKS = 60 * 60 * 24;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/GMPUtils.jsm");
-ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+// These symbols are, unfortunately, accessed via the module global from
+// tests, and therefore cannot be lexical definitions.
+var {GMPPrefs, GMPUtils, GMP_PLUGIN_IDS} = ChromeUtils.import("resource://gre/modules/GMPUtils.jsm");
+const {ProductAddonChecker} = ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 
 var EXPORTED_SYMBOLS = ["GMPInstallManager", "GMPExtractor", "GMPDownloader",
                         "GMPAddon"];

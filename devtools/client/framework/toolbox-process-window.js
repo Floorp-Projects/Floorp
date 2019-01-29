@@ -6,7 +6,7 @@
 
 "use strict";
 
-var { loader, require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+var { loader, require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 // Require this module to setup core modules
 loader.require("devtools/client/framework/devtools-browser");

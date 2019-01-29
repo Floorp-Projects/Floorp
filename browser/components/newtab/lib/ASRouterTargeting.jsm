@@ -1,5 +1,5 @@
-ChromeUtils.import("resource://gre/modules/components-utils/FilterExpressions.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {FilterExpressions} = ChromeUtils.import("resource://gre/modules/components-utils/FilterExpressions.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ASRouterPreferences",
   "resource://activity-stream/lib/ASRouterPreferences.jsm");

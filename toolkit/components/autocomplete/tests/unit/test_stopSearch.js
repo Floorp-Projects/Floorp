@@ -8,8 +8,6 @@
  * startSearch call.
  */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 
 /**
  * Dummy nsIAutoCompleteInput source that returns

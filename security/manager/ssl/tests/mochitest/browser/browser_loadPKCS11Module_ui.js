@@ -5,8 +5,7 @@
 // Tests the dialog used for loading PKCS #11 modules.
 
 const { MockRegistrar } =
-  ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", {});
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+  ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
 const gMockPKCS11ModuleDB = {
   addModuleCallCount: 0,

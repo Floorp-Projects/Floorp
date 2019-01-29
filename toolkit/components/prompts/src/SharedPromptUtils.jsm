@@ -1,6 +1,6 @@
 var EXPORTED_SYMBOLS = [ "PromptUtils", "EnableDelayHelper" ];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var PromptUtils = {
     // Fire a dialog open/close event. Used by tabbrowser to focus the

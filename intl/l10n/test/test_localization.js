@@ -1,9 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
-const { Localization } = ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { Localization } = ChromeUtils.import("resource://gre/modules/Localization.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(function test_methods_presence() {
   equal(typeof Localization.prototype.formatValues, "function");
@@ -13,7 +13,7 @@ add_task(function test_methods_presence() {
 
 add_task(async function test_methods_calling() {
   const { L10nRegistry, FileSource } =
-    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
+    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
   const fs = {
     "/localization/de/browser/menu.ftl": "key = [de] Value2",
@@ -49,7 +49,7 @@ add_task(async function test_methods_calling() {
 
 add_task(async function test_builtins() {
   const { L10nRegistry, FileSource } =
-    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
+    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
   const known_platforms = {
     "linux": "linux",
@@ -94,7 +94,7 @@ key = { PLATFORM() ->
 
 add_task(async function test_add_remove_resourceIds() {
   const { L10nRegistry, FileSource } =
-    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
+    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
   const fs = {
     "/localization/en-US/browser/menu.ftl": "key1 = Value1",

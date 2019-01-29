@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { createSource } from "../../../reducers/sources";
 import { updateTree, createTree } from "../index";
 
@@ -43,7 +45,8 @@ describe("calls updateTree.js", () => {
 
     const { sourceTree, uncollapsedTree } = createTree({
       debuggeeUrl,
-      sources: prevSources
+      sources: prevSources,
+      projectRoot: ""
     });
 
     const newTree = updateTree({
@@ -51,7 +54,8 @@ describe("calls updateTree.js", () => {
       prevSources,
       newSources: createSourcesMap([sources[0], sources[1]]),
       uncollapsedTree,
-      sourceTree
+      sourceTree,
+      projectRoot: ""
     });
 
     expect(formatTree(newTree)).toMatchSnapshot();
@@ -62,7 +66,8 @@ describe("calls updateTree.js", () => {
 
     const { sourceTree, uncollapsedTree } = createTree({
       debuggeeUrl,
-      sources: prevSources
+      sources: prevSources,
+      projectRoot: ""
     });
 
     const newTree = updateTree({
@@ -70,7 +75,8 @@ describe("calls updateTree.js", () => {
       prevSources,
       newSources: createSourcesMap([sources[0], sources[1], sources[2]]),
       uncollapsedTree,
-      sourceTree
+      sourceTree,
+      projectRoot: ""
     });
 
     expect(formatTree(newTree)).toMatchSnapshot();
@@ -83,7 +89,8 @@ describe("calls updateTree.js", () => {
 
     const { sourceTree, uncollapsedTree } = createTree({
       debuggeeUrl,
-      sources: prevSources
+      sources: prevSources,
+      projectRoot: ""
     });
 
     const newTree = updateTree({
@@ -91,7 +98,8 @@ describe("calls updateTree.js", () => {
       prevSources,
       newSources: createSourcesMap([sources[1]]),
       uncollapsedTree,
-      sourceTree
+      sourceTree,
+      projectRoot: ""
     });
 
     expect(formatTree(newTree)).toMatchSnapshot();

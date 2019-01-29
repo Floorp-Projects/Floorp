@@ -1,12 +1,11 @@
 const { Constructor: CC } = Components;
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
-const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
-const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
-const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
+const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
+const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", null);
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");

@@ -19,6 +19,11 @@ import configureStore from "../actions/utils/create-store";
 import sourceQueue from "../utils/source-queue";
 
 /**
+ * This file contains older interfaces used by tests that have not been
+ * converted to use test-mockup.js
+ */
+
+/**
  * @memberof utils/test-head
  * @static
  */
@@ -94,8 +99,8 @@ function makeFuncLocation(startLine, endLine) {
 function makeSymbolDeclaration(
   name: string,
   start: number,
-  end: number,
-  klass: string
+  end: ?number,
+  klass: ?string
 ) {
   return {
     id: `${name}:${start}`,

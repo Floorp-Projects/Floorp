@@ -1,9 +1,8 @@
 // Bug 380852 - Delete permission manager entries in Clear Recent History
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
-const {SiteDataTestUtils} = ChromeUtils.import("resource://testing-common/SiteDataTestUtils.jsm", {});
-const {PromiseTestUtils} = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", {});
+const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
+const {SiteDataTestUtils} = ChromeUtils.import("resource://testing-common/SiteDataTestUtils.jsm");
+const {PromiseTestUtils} = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "sas",
                                    "@mozilla.org/storage/activity-service;1",

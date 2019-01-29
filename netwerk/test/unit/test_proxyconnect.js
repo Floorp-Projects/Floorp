@@ -20,8 +20,7 @@
 // 2. StopRequest callback called
 // 3. done
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // -1 then initialized with an actual port from the serversocket
 var socketserver_port = -1;

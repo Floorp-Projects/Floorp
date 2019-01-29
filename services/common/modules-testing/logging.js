@@ -9,7 +9,7 @@ var EXPORTED_SYMBOLS = [
   "initTestLogging",
 ];
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 function initTestLogging(level) {
   function LogStats() {

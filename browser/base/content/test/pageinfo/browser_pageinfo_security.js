@@ -1,5 +1,3 @@
-ChromeUtils.import("resource:///modules/SitePermissions.jsm");
-
 ChromeUtils.defineModuleGetter(this, "SiteDataTestUtils",
                                "resource://testing-common/SiteDataTestUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "DownloadUtils",

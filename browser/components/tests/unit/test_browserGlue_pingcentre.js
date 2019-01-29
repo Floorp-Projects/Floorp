@@ -1,4 +1,4 @@
-ChromeUtils.import("resource:///modules/PingCentre.jsm");
+const {PingCentre} = ChromeUtils.import("resource:///modules/PingCentre.jsm");
 
 const TOPIC_SHIELD_INIT_COMPLETE = "shield-init-complete";
 const SEND_PING_MOCK = sinon.stub(PingCentre.prototype, "sendPing");

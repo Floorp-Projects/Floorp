@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { mount, shallow } from "enzyme";
 import Frames from "../index.js";
@@ -20,6 +22,7 @@ function render(overrides = {}) {
   };
 
   const props = { ...defaultProps, ...overrides };
+  // $FlowIgnore
   const component = shallow(<Frames.WrappedComponent {...props} />, {
     context: { l10n: L10N }
   });
@@ -108,6 +111,7 @@ describe("Frames", () => {
       ];
 
       const component = mount(
+        // $FlowIgnore
         <Frames.WrappedComponent
           frames={frames}
           disableFrameTruncate={true}
@@ -195,8 +199,8 @@ describe("Frames", () => {
       ];
 
       const sources = {
-        1: { id: "1" },
-        2: { id: "2", isBlackBoxed: true }
+        "1": { id: "1" },
+        "2": { id: "2", isBlackBoxed: true }
       };
 
       const processedFrames = formatCallStackFrames(

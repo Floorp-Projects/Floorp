@@ -2,7 +2,7 @@
    waitForTime, waitUntil */
 "use strict";
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Services = require("Services");
 const { TargetFactory } = require("devtools/client/framework/target");
 

@@ -5,12 +5,12 @@
 "use strict";
 
 const { require } =
-  ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const discovery = require("devtools/shared/discovery/discovery");
-const { setTimeout, clearTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
+const { setTimeout, clearTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 Services.prefs.setBoolPref("devtools.discovery.log", true);
 

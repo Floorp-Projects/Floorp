@@ -11,11 +11,9 @@
 
 var EXPORTED_SYMBOLS = ["DeclinedEngines"];
 
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
 
 
 

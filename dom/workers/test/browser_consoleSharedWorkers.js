@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 add_task(async function test() {
   const testURL = getRootDirectory(gTestPath) + "empty.html";
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);

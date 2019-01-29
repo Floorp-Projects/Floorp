@@ -7,7 +7,7 @@
 
 var EXPORTED_SYMBOLS = [ "ContentPrefServiceParent" ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "_methodsCallableFromChild",
                                "resource://gre/modules/ContentPrefUtils.jsm");

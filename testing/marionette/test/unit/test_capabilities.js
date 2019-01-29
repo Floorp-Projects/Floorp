@@ -4,17 +4,16 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
-const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js");
 const {
   Capabilities,
   PageLoadStrategy,
   Proxy,
   Timeouts,
   UnhandledPromptBehavior,
-} = ChromeUtils.import("chrome://marionette/content/capabilities.js", {});
+} = ChromeUtils.import("chrome://marionette/content/capabilities.js");
 
 add_test(function test_Timeouts_ctor() {
   let ts = new Timeouts();

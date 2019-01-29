@@ -53,7 +53,7 @@ ChromeUtils.defineModuleGetter(this, "PromiseUtils",
 ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-var Native = ChromeUtils.import("resource://gre/modules/osfile/osfile_native.jsm", {});
+var Native = ChromeUtils.import("resource://gre/modules/osfile/osfile_native.jsm", null);
 
 
 // It's possible for osfile.jsm to get imported before the profile is
@@ -1215,7 +1215,7 @@ File.Info.prototype = SysAll.AbstractInfo.prototype;
 // Deprecated
 Object.defineProperty(File.Info.prototype, "creationDate", {
   get: function creationDate() {
-    let {Deprecated} = ChromeUtils.import("resource://gre/modules/Deprecated.jsm", {});
+    let {Deprecated} = ChromeUtils.import("resource://gre/modules/Deprecated.jsm");
     Deprecated.warning("Field 'creationDate' is deprecated.", "https://developer.mozilla.org/en-US/docs/JavaScript_OS.File/OS.File.Info#Cross-platform_Attributes");
     return this._deprecatedCreationDate;
   },

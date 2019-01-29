@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource:///modules/SearchTelemetry.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {SearchTelemetry} = ChromeUtils.import("resource:///modules/SearchTelemetry.jsm");
 
 add_task(async function test_parsing_search_urls() {
   let hs;

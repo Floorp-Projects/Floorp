@@ -25,14 +25,13 @@ var EXPORTED_SYMBOLS = [
   "ClientsRec",
 ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
+const {DEVICE_TYPE_DESKTOP, DEVICE_TYPE_MOBILE, SCORE_INCREMENT_XLARGE, SINGLE_USER_THRESHOLD, SYNC_API_VERSION} = ChromeUtils.import("resource://services-sync/constants.js");
+const {Store, SyncEngine, Tracker} = ChromeUtils.import("resource://services-sync/engines.js");
+const {CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
+const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
+const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
 
 ChromeUtils.defineModuleGetter(this, "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm");

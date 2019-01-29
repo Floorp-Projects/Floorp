@@ -88,7 +88,7 @@ add_task(async function test_cookies_incognito_not_allowed() {
   await extension.awaitMessage("set-cookies");
 
   let chromeScript = SpecialPowers.loadChromeScript(() => {
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     Services.cookies.add("example.org", "/", "public", `foo${Math.random()}`,
                          false, false, false, Number.MAX_SAFE_INTEGER, {},

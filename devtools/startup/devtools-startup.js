@@ -30,7 +30,7 @@ const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
 
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
@@ -46,7 +46,7 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
 // We don't want to spend time initializing the full loader here so we create
 // our own lazy require.
 XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
-  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
   // eslint-disable-next-line no-shadow
   const Telemetry = require("devtools/client/shared/telemetry");
 
@@ -646,7 +646,7 @@ DevToolsStartup.prototype = {
     }
 
     this.initialized = true;
-    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
     // Ensure loading main devtools module that hooks up into browser UI
     // and initialize all devtools machinery.
     require("devtools/client/framework/devtools-browser");
@@ -770,7 +770,7 @@ DevToolsStartup.prototype = {
       Services.obs.addObserver(observe, "devtools-thread-resumed");
     }
 
-    const { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
+    const { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm");
     BrowserToolboxProcess.init();
 
     if (pauseOnStartup) {
@@ -823,7 +823,7 @@ DevToolsStartup.prototype = {
     }
 
     const { DevToolsLoader } =
-      ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
     try {
       // Create a separate loader instance, so that we can be sure to receive

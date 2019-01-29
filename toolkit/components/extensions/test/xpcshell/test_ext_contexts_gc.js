@@ -17,7 +17,7 @@ ExtensionTestUtils.mockAppInfo();
 
 async function reloadTopContext(contentPage) {
   await contentPage.spawn(null, async () => {
-    let {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm", {});
+    let {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
     let windowNukeObserved = TestUtils.topicObserved("inner-window-nuked");
     info(`Reloading top-level document`);
     this.content.location.reload();
@@ -76,7 +76,7 @@ add_task(async function test_ContentScriptContextChild_in_child_frame() {
   await extension.awaitMessage("contentScriptLoaded");
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", {});
+    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
     let frame = this.content.document.querySelector("iframe[src*='file_iframe.html']");
     let context = DocumentManager.getContext(extensionId, frame.contentWindow);
 
@@ -116,7 +116,7 @@ add_task(async function test_ContentScriptContextChild_in_toplevel() {
   await extension.awaitMessage("contentScriptLoaded");
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", {});
+    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
     let context = DocumentManager.getContext(extensionId, this.content);
 
     Assert.ok(context, "Got content script context");
@@ -157,7 +157,7 @@ add_task(async function test_ExtensionPageContextChild_in_child_frame() {
   await extension.awaitMessage("extensionPageLoaded");
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let {ExtensionPageChild} = ChromeUtils.import("resource://gre/modules/ExtensionPageChild.jsm", {});
+    let {ExtensionPageChild} = ChromeUtils.import("resource://gre/modules/ExtensionPageChild.jsm");
 
     let frame = this.content.document.querySelector("iframe[src*='iframe.html']");
     let innerWindowID = frame.contentWindow.windowUtils.currentInnerWindowID;
@@ -196,7 +196,7 @@ add_task(async function test_ExtensionPageContextChild_in_toplevel() {
   await extension.awaitMessage("extensionPageLoaded");
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let {ExtensionPageChild} = ChromeUtils.import("resource://gre/modules/ExtensionPageChild.jsm", {});
+    let {ExtensionPageChild} = ChromeUtils.import("resource://gre/modules/ExtensionPageChild.jsm");
 
     let innerWindowID = this.content.windowUtils.currentInnerWindowID;
     let context = ExtensionPageChild.extensionContexts.get(innerWindowID);

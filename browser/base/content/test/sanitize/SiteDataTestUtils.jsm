@@ -4,12 +4,12 @@ var EXPORTED_SYMBOLS = [
   "SiteDataTestUtils",
 ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
-const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
+const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "swm",
                                    "@mozilla.org/serviceworkers/manager;1",

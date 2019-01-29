@@ -5,8 +5,6 @@ var { Constructor: CC } = Components;
 const UDPSocket = CC("@mozilla.org/network/udp-socket;1",
                      "nsIUDPSocket",
                      "init");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const ADDRESS_TEST1 = "224.0.0.200";
 const ADDRESS_TEST2 = "224.0.0.201";
 const ADDRESS_TEST3 = "224.0.0.202";

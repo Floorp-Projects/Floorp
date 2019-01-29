@@ -17,10 +17,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
+const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
 const DEFAULT_STATE_FILE = "addonsreconciler";
 

@@ -4,9 +4,6 @@
 
 // Test ThirdPartyUtil methods. See mozIThirdPartyUtil.
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var prefs = Services.prefs;
 
 // Since this test creates a TYPE_DOCUMENT channel via javascript, it will

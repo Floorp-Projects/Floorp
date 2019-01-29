@@ -1,5 +1,3 @@
-var EXPORTED_SYMBOLS = ["ImportTesting"];
-
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var EXPORTED_SYMBOLS = [];
 
 // Empty module for testing via SpecialPowers.importInMainProcess.

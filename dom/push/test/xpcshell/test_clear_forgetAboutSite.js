@@ -1,8 +1,7 @@
 'use strict';
 
 const {PushService, PushServiceWebSocket} = serviceExports;
-const {ForgetAboutSite} = ChromeUtils.import(
-  'resource://gre/modules/ForgetAboutSite.jsm', {});
+const {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
 
 var db;
 var unregisterDefers = {};

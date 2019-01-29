@@ -7,7 +7,7 @@
 
 var EXPORTED_SYMBOLS = ["DelayedInit"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "MessageLoop",
                                    "@mozilla.org/message-loop;1",

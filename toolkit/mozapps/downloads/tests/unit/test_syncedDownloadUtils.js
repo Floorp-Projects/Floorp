@@ -8,7 +8,7 @@
  * "last time".
  */
 
-ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+const {DownloadUtils} = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
 
 function run_test() {
   // Simulate having multiple downloads requesting time left

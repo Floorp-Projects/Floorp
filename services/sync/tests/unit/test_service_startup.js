@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/util.js");
-
 Svc.Prefs.set("registerEngines", "Tab,Bookmarks,Form,History");
 
 add_task(async function run_test() {
@@ -17,7 +13,7 @@ add_task(async function run_test() {
   Assert.ok(!xps.enabled);
 
   // Test fixtures
-  let {Service} = ChromeUtils.import("resource://services-sync/service.js", {});
+  let {Service} = ChromeUtils.import("resource://services-sync/service.js");
   Service.identity.username = "johndoe";
   Assert.ok(xps.enabled);
 

@@ -3,7 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
 
 add_task(async function test_non_https_remote_server_uri_with_requireHttps_false() {
   Services.prefs.setBoolPref(

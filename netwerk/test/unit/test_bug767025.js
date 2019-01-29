@@ -1,6 +1,6 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 /**
  * This is testcase do following steps to make sure bug767025 removing
@@ -17,8 +17,6 @@ ChromeUtils.import("resource://testing-common/httpd.js");
  *    - all documents except pages/foo1 are gone since pages/foo1 & pages/foo3
  *      are activated.
  */
-
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const kNS_OFFLINECACHEUPDATESERVICE_CONTRACTID =
   "@mozilla.org/offlinecacheupdate-service;1";

@@ -8,9 +8,9 @@
 
 var EXPORTED_SYMBOLS = [];
 
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const {AddonManager, AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 /* globals AddonManagerPrivate*/
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Blocklist",
                                "resource://gre/modules/Blocklist.jsm");
@@ -19,7 +19,7 @@ const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.pr
 const LIST_UPDATED_TOPIC     = "plugins-list-updated";
 const FLASH_MIME_TYPE        = "application/x-shockwave-flash";
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.plugins";
 
 // Create a new logger for use by the Addons Plugin Provider

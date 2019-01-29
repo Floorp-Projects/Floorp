@@ -9,7 +9,7 @@
  * as known by the platform. It is run from ./mach_commands.py by running
  * `mach devtools-css-db`.
  */
-var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 var {generateCssProperties} = require("devtools/server/actors/css-properties");
 const InspectorUtils = require("InspectorUtils");
 

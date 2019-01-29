@@ -1,10 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AsyncShutdown} = ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
 
-ChromeUtils.import("resource://services-common/kinto-storage-adapter.js");
+const {FirefoxAdapter} = ChromeUtils.import("resource://services-common/kinto-storage-adapter.js");
 
 
 add_task(async function test_sqlite_shutdown() {

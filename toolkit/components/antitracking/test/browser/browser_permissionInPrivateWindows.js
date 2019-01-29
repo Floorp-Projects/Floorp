@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 AntiTracking.runTest("Test whether we receive any persistent permissions in private windows",
   // Blocking callback
   async _ => {

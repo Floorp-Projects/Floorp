@@ -49,7 +49,7 @@ async function testNativeAnonymousStartingNode(walker) {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, [walker.actorID],
     async function(actorID) {
-      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
       const { DebuggerServer } = require("devtools/server/main");
 
       const {DocumentWalker} =

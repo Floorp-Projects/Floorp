@@ -1,10 +1,8 @@
 "use strict";
 
-let { SyncedTabs } = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm", {});
-let { TabListComponent } = ChromeUtils.import("resource:///modules/syncedtabs/TabListComponent.js", {});
-let { SyncedTabsListStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsListStore.js", {});
-let { View } = ChromeUtils.import("resource:///modules/syncedtabs/TabListView.js", {});
-let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+let { SyncedTabs } = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
+let { TabListComponent } = ChromeUtils.import("resource:///modules/syncedtabs/TabListComponent.js");
+let { SyncedTabsListStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsListStore.js");
 
 const ACTION_METHODS = [
   "onSelectRow",

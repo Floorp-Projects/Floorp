@@ -47,7 +47,7 @@ add_task(async function test_contentscript_context() {
 
   // Get the content script context and check that it points to the correct window.
   await contentPage.spawn(extension.id, async extensionId => {
-    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", {});
+    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
     this.context = DocumentManager.getContext(extensionId, this.content);
 
     Assert.ok(this.context, "Got content script context");
@@ -118,7 +118,7 @@ async function contentscript_context_incognito_not_allowed_test() {
   let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy", {privateBrowsing: true});
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", {});
+    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
     let context = DocumentManager.getContext(extensionId, this.content);
     Assert.equal(context, null, "Extension unable to use content_script in private browsing window");
   });
@@ -140,7 +140,7 @@ add_task(async function test_contentscript_context_unload_while_in_bfcache() {
 
   // Get the content script context and check that it points to the correct window.
   await contentPage.spawn(extension.id, async extensionId => {
-    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", {});
+    let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
     // Save context so we can verify that contentWindow is nulled after unload.
     this.context = DocumentManager.getContext(extensionId, this.content);
 
@@ -153,7 +153,7 @@ add_task(async function test_contentscript_context_unload_while_in_bfcache() {
       this.content.addEventListener("pageshow", () => {
         // Yield to the event loop once more to ensure that all pageshow event
         // handlers have been dispatched before fulfilling the promise.
-        let {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
+        let {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
         setTimeout(resolve, 0);
       }, {once: true, mozSystemGroup: true});
     });
@@ -237,7 +237,7 @@ add_task(async function test_contentscript_context_valid_during_execution() {
     let context;
     let checkContextIsValid = (description) => {
       if (!context) {
-        let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", {});
+        let {DocumentManager} = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
         context = DocumentManager.getContext(extensionId, this.content);
       }
       Assert.equal(context.contentWindow, this.content, `${description}: contentWindow`);

@@ -4,13 +4,13 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
+const {CreditCard} = ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
 
 let FormAutofillParent;
 let OSKeyStore;
 add_task(async function setup() {
-  ({FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", {}));
-  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm", {}));
+  ({FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", null));
+  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm"));
 });
 
 const TEST_ADDRESS_1 = {

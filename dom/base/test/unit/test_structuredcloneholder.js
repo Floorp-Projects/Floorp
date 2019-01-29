@@ -1,7 +1,5 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const global = this;
 
 add_task(async function test_structuredCloneHolder() {
