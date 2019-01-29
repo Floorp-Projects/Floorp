@@ -1769,7 +1769,8 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   nsTArray<RefPtr<nsIUrlClassifierFeature>> features;
-  mozilla::net::UrlClassifierFeatureFactory::GetFeaturesNoChannel(features);
+  mozilla::net::UrlClassifierFeatureFactory::GetPhishingProtectionFeatures(
+      features);
   if (features.IsEmpty()) {
     *aResult = false;
     return NS_OK;
