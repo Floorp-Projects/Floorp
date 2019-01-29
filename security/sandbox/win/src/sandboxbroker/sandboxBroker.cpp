@@ -495,6 +495,11 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                        "With these static arguments AddRule should never fail, "
                        "what happened?");
   } else {
+    // Add rule to allow access to user specific fonts.
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
+                     sLocalAppDataDir,
+                     NS_LITERAL_STRING("\\Microsoft\\Windows\\Fonts\\*"));
+
     // Add rule to allow read access to installation directory.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
                      sBinDir, NS_LITERAL_STRING("\\*"));
