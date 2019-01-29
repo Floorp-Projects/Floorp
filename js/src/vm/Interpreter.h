@@ -548,6 +548,9 @@ JSObject* NewArrayOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
 JSObject* NewArrayOperationWithTemplate(JSContext* cx,
                                         HandleObject templateObject);
 
+ArrayObject* NewArrayCopyOnWriteOperation(JSContext* cx, HandleScript script,
+                                          jsbytecode* pc);
+
 void ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
                                HandleId id);
 
