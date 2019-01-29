@@ -237,6 +237,8 @@ static const TestFileData testFiles[] = {
     {"test_case_1519617-cenc-init-with-track_id-0.mp4", true, 1, true, 0, 1272,
      530, 0, -1, false, 0, false, false,
      0},  // Uses bad track id 0 and has a sinf but no pssh
+    {"test_case_1519617-track2-trafs-removed.mp4", true, 1, true, 10032000, 400,
+     300, 1, 10032000, false, 0, true, true, 2},
     {"test_case_1519617-video-has-track_id-0.mp4", true, 1, true, 10032000, 400,
      300, 1, 10032000, false, 0, true, true, 2},  // Uses bad track id 0
 };
@@ -590,6 +592,43 @@ TEST(MoofParser, test_case_track_id_0_reads_crypto_metadata) {
          "failed to parse some expected crypto!";
   EXPECT_TRUE(parser.mSampleDescriptions[0].mIsEncryptedEntry)
       << "Sample description should be marked as encrypted!";
+}
+
+// The MoofParser may be asked to parse metadata for multiple tracks, but then
+// be presented with fragments/moofs that contain data for only a subset of
+// those tracks. I.e. metadata contains information for tracks with ids 1 and 2,
+// but then the moof parser only receives moofs with data for track id 1. We
+// should parse such fragmented media. In this test the metadata contains info
+// for track ids 1 and 2, but track 2's track fragment headers (traf) have been
+// over written with free space boxes (free).
+TEST(MoofParser, test_case_moofs_missing_trafs) {
+  const char* noTrafsForTrack2MoofsFileName =
+      "test_case_1519617-track2-trafs-removed.mp4";
+  nsTArray<uint8_t> buffer = ReadTestFile(noTrafsForTrack2MoofsFileName);
+
+  ASSERT_FALSE(buffer.IsEmpty());
+  RefPtr<ByteStream> stream =
+      new TestStream(buffer.Elements(), buffer.Length());
+
+  // Create parser that will read metadata from all tracks.
+  MoofParser parser(stream, 0, false, true);
+
+  // Explicitly don't call parser.Metadata() so that the parser itself will
+  // read the metadata as if we're in a fragmented case. Otherwise we won't
+  // read the trak data.
+
+  const MediaByteRangeSet byteRanges(
+      MediaByteRange(0, int64_t(buffer.Length())));
+  EXPECT_TRUE(parser.RebuildFragmentedIndex(byteRanges))
+      << "MoofParser should find a valid moof, there's 2 in the file!";
+
+  // Verify we've found 2 moofs and that the parser was able to parse them.
+  const size_t numMoofs = 2;
+  EXPECT_EQ(numMoofs, parser.Moofs().Length())
+      << "File has 2 moofs, we should have read both";
+  for (size_t i = 0; i < parser.Moofs().Length(); i++) {
+    EXPECT_TRUE(parser.Moofs()[i].IsValid()) << "All moofs should be valid";
+  }
 }
 
 // This test was disabled by Bug 1224019 for producing way too much output.
