@@ -2121,24 +2121,6 @@ static bool intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_NameForTypedArray(JSContext* cx, unsigned argc,
-                                        Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].isObject());
-
-  auto* object = UnwrapAndDowncastValue<TypedArrayObject>(cx, args[0]);
-  if (!object) {
-    return false;
-  }
-
-  JSProtoKey protoKey = StandardProtoKeyOrNull(object);
-  MOZ_ASSERT(protoKey);
-
-  args.rval().setString(ClassName(protoKey, cx));
-  return true;
-}
-
 static bool intrinsic_HostResolveImportedModule(JSContext* cx, unsigned argc,
                                                 Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2428,7 +2410,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("MakeDefaultConstructor", intrinsic_MakeDefaultConstructor, 2, 0),
     JS_FN("_ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1,
           0),
-    JS_FN("_NameForTypedArray", intrinsic_NameForTypedArray, 1, 0),
     JS_FN("DecompileArg", intrinsic_DecompileArg, 2, 0),
     JS_INLINABLE_FN("_FinishBoundFunctionInit",
                     intrinsic_FinishBoundFunctionInit, 3, 0,

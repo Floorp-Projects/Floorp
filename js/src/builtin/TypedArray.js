@@ -1598,21 +1598,6 @@ function TypedArraySpecies() {
 }
 _SetCanonicalName(TypedArraySpecies, "get [Symbol.species]");
 
-// ES 2017 draft June 2, 2016 22.2.3.32
-function TypedArrayToStringTag() {
-    // Step 1.
-    var O = this;
-
-    // Steps 2-3.
-    if (!IsObject(O) || !IsPossiblyWrappedTypedArray(O))
-        return undefined;
-
-    // Steps 4-6.
-    // Modified to retrieve the [[TypedArrayName]] from the constructor.
-    return _NameForTypedArray(O);
-}
-_SetCanonicalName(TypedArrayToStringTag, "get [Symbol.toStringTag]");
-
 // ES2018 draft rev 0525bb33861c7f4e9850f8a222c89642947c4b9c
 // 22.2.2.1.1 Runtime Semantics: IterableToList( items, method )
 function IterableToList(items, method) {
