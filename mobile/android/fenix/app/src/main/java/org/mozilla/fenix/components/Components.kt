@@ -21,4 +21,5 @@ class Components(private val context: Context) {
             core.sessionManager
         )
     }
+    val utils by lazy { Utilities(context, core.sessionManager, useCases.sessionUseCases, useCases.searchUseCases) }
 }
