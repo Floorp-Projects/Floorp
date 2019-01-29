@@ -319,6 +319,8 @@ static LazyLogModule gDOMLeakPRLogOuter("DOMLeakOuter");
 
 static int32_t gOpenPopupSpamCount = 0;
 
+static bool gSyncContentBlockingNotifications = false;
+
 nsGlobalWindowOuter::OuterWindowByIdTable*
     nsGlobalWindowOuter::sOuterWindowsById = nullptr;
 
