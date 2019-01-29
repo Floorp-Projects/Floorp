@@ -389,6 +389,7 @@ void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
 #endif
 
   disconnect_all();
+  mTransportHandler = nullptr;
 
   // we may have queued packet sends on STS after this; dispatch to ourselves
   // before finishing here so we can be sure there aren't anymore runnables
@@ -400,7 +401,6 @@ void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
 }
 
 void DataChannelConnection::DestroyOnSTSFinal() {
-  mTransportHandler = nullptr;
   sDataChannelShutdown->CreateConnectionShutdown(this);
 }
 
@@ -847,8 +847,8 @@ void DataChannelConnection::SctpDtlsInput(const std::string &aTransportId,
 
 void DataChannelConnection::SendPacket(nsAutoPtr<MediaPacket> packet) {
   // LOG(("%p: SCTP/DTLS sent %ld bytes", this, len));
-  if (!mTransportId.empty()) {
-    mTransportHandler->SendPacket(mTransportId, *packet);
+  if (!mTransportId.empty() && mTransportHandler) {
+    mTransportHandler->SendPacket(mTransportId, std::move(*packet));
   }
 }
 
