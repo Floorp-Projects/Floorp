@@ -1022,9 +1022,20 @@ endif
 # We need to run cargo unconditionally, because cargo is the only thing that
 # has full visibility into how changes in Rust sources might affect the final
 # build.
+#
+# When we are building in --enable-release mode; we add an additional check to confirm
+# that we are not importing any networking-related functions in rust code. This reduces
+# the chance of proxy bypasses originating from rust code.
 force-cargo-library-build:
 	$(REPORT_BUILD)
 	$(call CARGO_BUILD,$(target_cargo_env_vars)) --lib $(cargo_target_flag) $(rust_features_flag) -- $(cargo_rustc_flags)
+ifndef DEVELOPER_OPTIONS
+ifndef MOZ_DEBUG_RUST
+ifeq ($(OS_ARCH), Linux)
+	$(call py_action,check_binary,--target --networking $(RUST_LIBRARY_FILE))
+endif
+endif
+endif
 
 $(RUST_LIBRARY_FILE): force-cargo-library-build
 

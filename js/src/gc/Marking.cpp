@@ -1327,95 +1327,95 @@ void Scope::traceChildren(JSTracer* trc) {
   }
 }
 inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
-  if (scope->enclosing_) {
-    traverseEdge(scope, scope->enclosing_.get());
-  }
-  if (scope->environmentShape_) {
-    traverseEdge(scope, scope->environmentShape_.get());
-  }
-  TrailingNamesArray* names = nullptr;
-  uint32_t length = 0;
-  switch (scope->kind()) {
-    case ScopeKind::Function: {
-      FunctionScope::Data& data = scope->as<FunctionScope>().data();
-      traverseObjectEdge(scope, data.canonicalFunction);
-      names = &data.trailingNames;
-      length = data.length;
-      break;
+  do {
+    if (scope->environmentShape_) {
+      traverseEdge(scope, scope->environmentShape_.get());
     }
+    TrailingNamesArray* names = nullptr;
+    uint32_t length = 0;
+    switch (scope->kind()) {
+      case ScopeKind::Function: {
+        FunctionScope::Data& data = scope->as<FunctionScope>().data();
+        traverseObjectEdge(scope, data.canonicalFunction);
+        names = &data.trailingNames;
+        length = data.length;
+        break;
+      }
 
-    case ScopeKind::FunctionBodyVar:
-    case ScopeKind::ParameterExpressionVar: {
-      VarScope::Data& data = scope->as<VarScope>().data();
-      names = &data.trailingNames;
-      length = data.length;
-      break;
-    }
+      case ScopeKind::FunctionBodyVar:
+      case ScopeKind::ParameterExpressionVar: {
+        VarScope::Data& data = scope->as<VarScope>().data();
+        names = &data.trailingNames;
+        length = data.length;
+        break;
+      }
 
-    case ScopeKind::Lexical:
-    case ScopeKind::SimpleCatch:
-    case ScopeKind::Catch:
-    case ScopeKind::NamedLambda:
-    case ScopeKind::StrictNamedLambda: {
-      LexicalScope::Data& data = scope->as<LexicalScope>().data();
-      names = &data.trailingNames;
-      length = data.length;
-      break;
-    }
+      case ScopeKind::Lexical:
+      case ScopeKind::SimpleCatch:
+      case ScopeKind::Catch:
+      case ScopeKind::NamedLambda:
+      case ScopeKind::StrictNamedLambda: {
+        LexicalScope::Data& data = scope->as<LexicalScope>().data();
+        names = &data.trailingNames;
+        length = data.length;
+        break;
+      }
 
-    case ScopeKind::Global:
-    case ScopeKind::NonSyntactic: {
-      GlobalScope::Data& data = scope->as<GlobalScope>().data();
-      names = &data.trailingNames;
-      length = data.length;
-      break;
-    }
+      case ScopeKind::Global:
+      case ScopeKind::NonSyntactic: {
+        GlobalScope::Data& data = scope->as<GlobalScope>().data();
+        names = &data.trailingNames;
+        length = data.length;
+        break;
+      }
 
-    case ScopeKind::Eval:
-    case ScopeKind::StrictEval: {
-      EvalScope::Data& data = scope->as<EvalScope>().data();
-      names = &data.trailingNames;
-      length = data.length;
-      break;
-    }
+      case ScopeKind::Eval:
+      case ScopeKind::StrictEval: {
+        EvalScope::Data& data = scope->as<EvalScope>().data();
+        names = &data.trailingNames;
+        length = data.length;
+        break;
+      }
 
-    case ScopeKind::Module: {
-      ModuleScope::Data& data = scope->as<ModuleScope>().data();
-      traverseObjectEdge(scope, data.module);
-      names = &data.trailingNames;
-      length = data.length;
-      break;
-    }
+      case ScopeKind::Module: {
+        ModuleScope::Data& data = scope->as<ModuleScope>().data();
+        traverseObjectEdge(scope, data.module);
+        names = &data.trailingNames;
+        length = data.length;
+        break;
+      }
 
-    case ScopeKind::With:
-      break;
+      case ScopeKind::With:
+        break;
 
-    case ScopeKind::WasmInstance: {
-      WasmInstanceScope::Data& data = scope->as<WasmInstanceScope>().data();
-      traverseObjectEdge(scope, data.instance);
-      names = &data.trailingNames;
-      length = data.length;
-      break;
-    }
+      case ScopeKind::WasmInstance: {
+        WasmInstanceScope::Data& data = scope->as<WasmInstanceScope>().data();
+        traverseObjectEdge(scope, data.instance);
+        names = &data.trailingNames;
+        length = data.length;
+        break;
+      }
 
-    case ScopeKind::WasmFunction: {
-      WasmFunctionScope::Data& data = scope->as<WasmFunctionScope>().data();
-      names = &data.trailingNames;
-      length = data.length;
-      break;
-    }
-  }
-  if (scope->kind_ == ScopeKind::Function) {
-    for (uint32_t i = 0; i < length; i++) {
-      if (JSAtom* name = names->get(i).name()) {
-        traverseStringEdge(scope, name);
+      case ScopeKind::WasmFunction: {
+        WasmFunctionScope::Data& data = scope->as<WasmFunctionScope>().data();
+        names = &data.trailingNames;
+        length = data.length;
+        break;
       }
     }
-  } else {
-    for (uint32_t i = 0; i < length; i++) {
-      traverseStringEdge(scope, names->get(i).name());
+    if (scope->kind_ == ScopeKind::Function) {
+      for (uint32_t i = 0; i < length; i++) {
+        if (JSAtom* name = names->get(i).name()) {
+          traverseStringEdge(scope, name);
+        }
+      }
+    } else {
+      for (uint32_t i = 0; i < length; i++) {
+        traverseStringEdge(scope, names->get(i).name());
+      }
     }
-  }
+    scope = scope->enclosing_;
+  } while (scope && mark(scope));
 }
 
 void js::ObjectGroup::traceChildren(JSTracer* trc) {

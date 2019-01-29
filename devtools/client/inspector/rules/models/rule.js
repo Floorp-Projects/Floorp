@@ -561,7 +561,11 @@ Rule.prototype = {
     // style attribute.
     if (this.domRule.type === ELEMENT_STYLE) {
       this.textProps = newTextProps;
-      this.editor.populate(true);
+
+      if (this.editor) {
+        this.editor.populate(true);
+      }
+
       return;
     }
 
