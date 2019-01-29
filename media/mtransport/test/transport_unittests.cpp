@@ -440,6 +440,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
         streams_(),
         peer_(nullptr),
         gathering_complete_(false),
+        digest_("sha-1"),
         enabled_cipersuites_(),
         disabled_cipersuites_(),
         test_utils_(utils) {
@@ -453,10 +454,9 @@ class TransportTestPeer : public sigslot::has_slots<> {
     dtls_->SetRole(offerer_ ? TransportLayerDtls::SERVER
                             : TransportLayerDtls::CLIENT);
 
-    nsresult res = identity_->ComputeFingerprint(
-        "sha-1", fingerprint_, sizeof(fingerprint_), &fingerprint_len_);
+    nsresult res = identity_->ComputeFingerprint(&digest_);
     EXPECT_TRUE(NS_SUCCEEDED(res));
-    EXPECT_EQ(20u, fingerprint_len_);
+    EXPECT_EQ(20u, digest_.value_.size());
   }
 
   ~TransportTestPeer() {
@@ -502,13 +502,11 @@ class TransportTestPeer : public sigslot::has_slots<> {
     unsigned int mask = 1;
 
     for (int i = 0; i < digests; i++) {
-      unsigned char fingerprint_to_set[TransportLayerDtls::kMaxDigestLength];
+      DtlsDigest digest_to_set(peer->digest_);
 
-      memcpy(fingerprint_to_set, peer->fingerprint_, peer->fingerprint_len_);
-      if (damage & mask) fingerprint_to_set[0]++;
+      if (damage & mask) digest_to_set.value_.data()[0]++;
 
-      nsresult res = dtls_->SetVerificationDigest("sha-1", fingerprint_to_set,
-                                                  peer->fingerprint_len_);
+      nsresult res = dtls_->SetVerificationDigest(digest_to_set);
 
       ASSERT_TRUE(NS_SUCCEEDED(res));
 
@@ -796,8 +794,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   std::vector<RefPtr<NrIceMediaStream> > streams_;
   TransportTestPeer* peer_;
   bool gathering_complete_;
-  unsigned char fingerprint_[TransportLayerDtls::kMaxDigestLength];
-  size_t fingerprint_len_;
+  DtlsDigest digest_;
   std::vector<uint16_t> enabled_cipersuites_;
   std::vector<uint16_t> disabled_cipersuites_;
   MtransportTestUtils* test_utils_;

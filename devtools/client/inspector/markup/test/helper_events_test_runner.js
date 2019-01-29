@@ -6,6 +6,8 @@
 /* import-globals-from helper_diff.js */
 "use strict";
 
+const beautify = require("devtools/shared/jsbeautify/beautify");
+
 loadHelperScript("helper_diff.js");
 
 /**
@@ -129,7 +131,10 @@ async function checkEventsForNode(test, inspector, testActor) {
         "We are in expanded state and icon changed");
 
     const editor = tooltip.eventTooltip._eventEditors.get(contentBox).editor;
-    testDiff(editor.getText(), expected[i].handler,
+    const tidiedHandler = beautify.js(expected[i].handler, {
+      "indent_size": 2,
+    });
+    testDiff(editor.getText(), tidiedHandler,
        "handler matches for " + cssSelector, ok);
   }
 

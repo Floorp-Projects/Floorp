@@ -10529,16 +10529,6 @@
     "kind": "categorical",
     "labels": ["variable", "nonvariable"]
   },
-  "DEVTOOLS_FLEXINSPECTOR_ELEMENT_TYPE_DISPLAYED": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "mbalfanz@mozilla.com"],
-    "expires_in_version": "68",
-    "bug_numbers": [1503197],
-    "description": "Records the type of flex element displayed in the flex inspector (container, item, or both)",
-    "releaseChannelCollection": "opt-out",
-    "kind": "categorical",
-    "labels": ["container", "item", "both"]
-  },
   "BROWSER_IS_USER_DEFAULT": {
     "record_in_processes": ["main"],
     "expires_in_version": "never",
@@ -14679,7 +14669,8 @@
           "IDB_InitDirectory",
           "IDB_GetFileSize",
           "IDB_GetWalFileSize",
-          "IDB_GetUsage"
+          "IDB_GetUsage",
+          "IDB_RemoveDBFiles"
       ],
       "keyed": true,
       "description": "Getting the number of errors in QuotaManager initialization."

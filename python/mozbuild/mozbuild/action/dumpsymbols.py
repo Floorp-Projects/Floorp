@@ -37,6 +37,8 @@ def dump_symbols(target, tracking_file, count_ctors=False):
         sym_store_args.extend(['-c', '--vcs-info'])
         if os.environ.get('PDBSTR_PATH'):
             sym_store_args.append('-i')
+        os.environ['PATH'] = os.pathsep.join((buildconfig.substs['WIN_DIA_SDK_BIN_DIR'],
+                                              os.environ['PATH']))
     elif os_arch == 'Darwin':
         cpu = {
             'x86': 'i386',

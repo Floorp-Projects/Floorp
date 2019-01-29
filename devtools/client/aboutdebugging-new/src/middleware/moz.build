@@ -5,6 +5,7 @@
 DevToolsModules(
     'debug-target-listener.js',
     'error-logging.js',
+    'event-recording.js',
     'extension-component-data.js',
     'tab-component-data.js',
     'worker-component-data.js',

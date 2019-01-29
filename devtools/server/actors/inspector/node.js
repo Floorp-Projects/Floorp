@@ -29,7 +29,7 @@ loader.lazyRequireGetter(this, "InspectorActorUtils", "devtools/server/actors/in
 loader.lazyRequireGetter(this, "LongStringActor", "devtools/server/actors/string", true);
 loader.lazyRequireGetter(this, "getFontPreviewData", "devtools/server/actors/styles", true);
 loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
-loader.lazyRequireGetter(this, "EventParsers", "devtools/server/actors/inspector/event-parsers", true);
+loader.lazyRequireGetter(this, "EventCollector", "devtools/server/actors/inspector/event-collector", true);
 loader.lazyRequireGetter(this, "DocumentWalker", "devtools/server/actors/inspector/document-walker", true);
 loader.lazyRequireGetter(this, "scrollbarTreeWalkerFilter", "devtools/server/actors/inspector/utils", true);
 
@@ -48,7 +48,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     protocol.Actor.prototype.initialize.call(this, null);
     this.walker = walker;
     this.rawNode = node;
-    this._eventParsers = new EventParsers().parsers;
+    this._eventCollector = new EventCollector();
 
     // Store the original display type and scrollable state and whether or not the node is
     // displayed to track changes when reflows occur.
@@ -92,6 +92,8 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       this.slotchangeListener = null;
     }
 
+    this._eventCollector.destroy();
+    this._eventCollector = null;
     this.rawNode = null;
     this.walker = null;
   },
@@ -287,18 +289,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * check if there are any event listeners.
    */
   get _hasEventListeners() {
-    const parsers = this._eventParsers;
-    for (const [, {hasListeners}] of parsers) {
-      try {
-        if (hasListeners && hasListeners(this.rawNode)) {
-          return true;
-        }
-      } catch (e) {
-        // An object attached to the node looked like a listener but wasn't...
-        // do nothing.
-      }
-    }
-    return false;
+    return this._eventCollector.hasEventListeners(this.rawNode);
   },
 
   writeAttrs: function() {
@@ -332,36 +323,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    *         Node for which we are to get listeners.
    */
   getEventListeners: function(node) {
-    const parsers = this._eventParsers;
-    const dbg = this.parent().targetActor.makeDebugger();
-    const listenerArray = [];
-
-    for (const [, {getListeners, normalizeListener}] of parsers) {
-      try {
-        const listeners = getListeners(node);
-
-        if (!listeners) {
-          continue;
-        }
-
-        for (const listener of listeners) {
-          if (normalizeListener) {
-            listener.normalizeListener = normalizeListener;
-          }
-
-          this.processHandlerForEvent(node, listenerArray, dbg, listener);
-        }
-      } catch (e) {
-        // An object attached to the node looked like a listener but wasn't...
-        // do nothing.
-      }
-    }
-
-    listenerArray.sort((a, b) => {
-      return a.type.localeCompare(b.type);
-    });
-
-    return listenerArray;
+    return this._eventCollector.getEventListeners(node);
   },
 
   /**
@@ -392,165 +354,6 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       url: customElementDO.script.url,
       line: customElementDO.script.startLine,
     };
-  },
-
-  /**
-   * Process a handler
-   *
-   * @param  {Node} node
-   *         The node for which we want information.
-   * @param  {Array} listenerArray
-   *         listenerArray contains all event objects that we have gathered
-   *         so far.
-   * @param  {Debugger} dbg
-   *         JSDebugger instance.
-   * @param  {Object} eventInfo
-   *         See event-parsers.js.registerEventParser() for a description of the
-   *         eventInfo object.
-   *
-   * @return {Array}
-   *         An array of objects where a typical object looks like this:
-   *           {
-   *             type: "click",
-   *             handler: function() { doSomething() },
-   *             origin: "http://www.mozilla.com",
-   *             searchString: 'onclick="doSomething()"',
-   *             tags: tags,
-   *             DOM0: true,
-   *             capturing: true,
-   *             hide: {
-   *               DOM0: true
-   *             },
-   *             native: false
-   *           }
-   */
-  processHandlerForEvent: function(node, listenerArray, dbg, listener) {
-    const { handler } = listener;
-    const global = Cu.getGlobalForObject(handler);
-    const globalDO = dbg.addDebuggee(global);
-    let listenerDO = globalDO.makeDebuggeeValue(handler);
-
-    const { normalizeListener } = listener;
-
-    if (normalizeListener) {
-      listenerDO = normalizeListener(listenerDO, listener);
-    }
-
-    const { capturing } = listener;
-    let dom0 = false;
-    let functionSource = handler.toString();
-    const hide = listener.hide || {};
-    let line = 0;
-    let native = false;
-    const override = listener.override || {};
-    const tags = listener.tags || "";
-    const type = listener.type || "";
-    let url = "";
-
-    // If the listener is an object with a 'handleEvent' method, use that.
-    if (listenerDO.class === "Object" || /^XUL\w*Element$/.test(listenerDO.class)) {
-      let desc;
-
-      while (!desc && listenerDO) {
-        desc = listenerDO.getOwnPropertyDescriptor("handleEvent");
-        listenerDO = listenerDO.proto;
-      }
-
-      if (desc && desc.value) {
-        listenerDO = desc.value;
-      }
-    }
-
-    // If the listener is bound to a different context then we need to switch
-    // to the bound function.
-    if (listenerDO.isBoundFunction) {
-      listenerDO = listenerDO.boundTargetFunction;
-    }
-
-    const { isArrowFunction, name, script, parameterNames } = listenerDO;
-
-    if (script) {
-      const scriptSource = script.source.text;
-
-      // Scripts are provided via script tags. If it wasn't provided by a
-      // script tag it must be a DOM0 event.
-      if (script.source.element) {
-        dom0 = script.source.element.class !== "HTMLScriptElement";
-      } else {
-        dom0 = false;
-      }
-
-      line = script.startLine;
-      url = script.url;
-
-      // Checking for the string "[native code]" is the only way at this point
-      // to check for native code. Even if this provides a false positive then
-      // grabbing the source code a second time is harmless.
-      if (functionSource === "[object Object]" ||
-          functionSource === "[object XULElement]" ||
-          functionSource.includes("[native code]")) {
-        functionSource =
-          scriptSource.substr(script.sourceStart, script.sourceLength);
-
-        // At this point the script looks like this:
-        // () { ... }
-        // We prefix this with "function" if it is not a fat arrow function.
-        if (!isArrowFunction) {
-          functionSource = "function " + functionSource;
-        }
-      }
-    } else {
-      // If the listener is a native one (provided by C++ code) then we have no
-      // access to the script. We use the native flag to prevent showing the
-      // debugger button because the script is not available.
-      native = true;
-    }
-
-    // Fat arrow function text always contains the parameters. Function
-    // parameters are often missing e.g. if Array.sort is used as a handler.
-    // If they are missing we provide the parameters ourselves.
-    if (parameterNames && parameterNames.length > 0) {
-      const prefix = "function " + name + "()";
-      const paramString = parameterNames.join(", ");
-
-      if (functionSource.startsWith(prefix)) {
-        functionSource = functionSource.substr(prefix.length);
-
-        functionSource = `function ${name} (${paramString})${functionSource}`;
-      }
-    }
-
-    // If the listener is native code we display the filename "[native code]."
-    // This is the official string and should *not* be translated.
-    let origin;
-    if (native) {
-      origin = "[native code]";
-    } else {
-      origin = url + ((dom0 || line === 0) ? "" : ":" + line);
-    }
-
-    const eventObj = {
-      type: override.type || type,
-      handler: override.handler || functionSource.trim(),
-      origin: override.origin || origin,
-      tags: override.tags || tags,
-      DOM0: typeof override.dom0 !== "undefined" ? override.dom0 : dom0,
-      capturing: typeof override.capturing !== "undefined" ?
-                 override.capturing : capturing,
-      hide: typeof override.hide !== "undefined" ? override.hide : hide,
-      native,
-    };
-
-    // Hide the debugger icon for DOM0 and native listeners. DOM0 listeners are
-    // generated dynamically from e.g. an onclick="" attribute so the script
-    // doesn't actually exist.
-    if (native || dom0) {
-      eventObj.hide.debugger = true;
-    }
-
-    listenerArray.push(eventObj);
-
-    dbg.removeDebuggee(globalDO);
   },
 
   /**
@@ -632,18 +435,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Get all event listeners that are listening on this node.
    */
   getEventListenerInfo: function() {
-    const node = this.rawNode;
-
-    if (this.rawNode.nodeName.toLowerCase() === "html") {
-      const winListeners = this.getEventListeners(node.ownerGlobal) || [];
-      const docElementListeners = this.getEventListeners(node) || [];
-      const docListeners = this.getEventListeners(node.parentNode) || [];
-
-      return [...winListeners, ...docElementListeners, ...docListeners].sort((a, b) => {
-        return a.type.localeCompare(b.type);
-      });
-    }
-    return this.getEventListeners(node);
+    return this.getEventListeners(this.rawNode);
   },
 
   /**

@@ -31,6 +31,7 @@ static const char* kShmemName = "/moz.gecko.vr_ext.0.0.1";
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 #include "gfxVRExternal.h"
+#include "gfxVRMutex.h"
 #include "VRManagerParent.h"
 #include "VRManager.h"
 #include "VRThread.h"
@@ -426,9 +427,11 @@ VRSystemManagerExternal::VRSystemManagerExternal(
     VRExternalShmem* aAPIShmem /* = nullptr*/)
     : mExternalShmem(aAPIShmem)
 #if !defined(MOZ_WIDGET_ANDROID)
-      ,
-      mSameProcess(aAPIShmem != nullptr)
-#endif
+#if defined(XP_WIN)
+    , mMutex(NULL)
+#endif  // defined(XP_WIN)
+    , mSameProcess(aAPIShmem != nullptr)
+#endif  // !defined(MOZ_WIDGET_ANDROID)
 {
 #if defined(XP_MACOSX)
   mShmemFD = 0;
@@ -444,6 +447,26 @@ VRSystemManagerExternal::VRSystemManagerExternal(
 VRSystemManagerExternal::~VRSystemManagerExternal() { CloseShmem(); }
 
 void VRSystemManagerExternal::OpenShmem() {
+#if defined(XP_WIN)
+  if (!mMutex) {
+     mMutex = CreateMutex(
+        NULL,                   // default security descriptor
+        false,                  // mutex not owned
+        TEXT("mozilla::vr::ShmemMutex"));  // object name
+
+    if (mMutex == NULL) {
+      nsAutoCString msg("VRService CreateMutex error \"%lu\".",
+                        GetLastError());
+      NS_WARNING(msg.get());
+      MOZ_ASSERT(false);
+      return;
+    }
+    else if (GetLastError() == ERROR_ALREADY_EXISTS) {
+      NS_WARNING("CreateMutex opened an existing mutex.");
+    }
+  }
+#endif  // defined(XP_WIN)
+
   if (mExternalShmem) {
     return;
 #if defined(MOZ_WIDGET_ANDROID)
@@ -547,6 +570,12 @@ void VRSystemManagerExternal::CheckForShutdown() {
 }
 
 void VRSystemManagerExternal::CloseShmem() {
+#if defined(XP_WIN)
+  if (mMutex) {
+    CloseHandle(mMutex);
+    mMutex = NULL;
+  }
+#endif
 #if !defined(MOZ_WIDGET_ANDROID)
   if (mSameProcess) {
     return;
@@ -796,8 +825,15 @@ bool VRSystemManagerExternal::PullState(
     VRHMDSensorState* aSensorState /* = nullptr */,
     VRControllerState* aControllerState /* = nullptr */) {
   bool success = false;
+  bool status = true;
   MOZ_ASSERT(mExternalShmem);
-  if (mExternalShmem) {
+
+#if defined(XP_WIN)
+  WaitForMutex lock(mMutex);
+  status = lock.GetStatus();
+#endif  // defined(XP_WIN)
+
+  if (mExternalShmem && status) {
     VRExternalShmem tmp;
     memcpy(&tmp, (void*)mExternalShmem, sizeof(VRExternalShmem));
     if (tmp.generationA == tmp.generationB && tmp.generationA != 0 &&
@@ -844,10 +880,20 @@ void VRSystemManagerExternal::PushState(VRBrowserState* aBrowserState,
       pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->browserMutex));
     }
 #else
-    mExternalShmem->browserGenerationA++;
-    memcpy((void*)&(mExternalShmem->browserState), (void*)aBrowserState,
-           sizeof(VRBrowserState));
-    mExternalShmem->browserGenerationB++;
+    bool status = true;
+#if defined(XP_WIN)
+    WaitForMutex lock(mMutex);
+    status = lock.GetStatus();
+#endif  // defined(XP_WIN)
+    if (status) {
+      mExternalShmem->browserGenerationA++;
+      memcpy((void*)&(mExternalShmem->browserState), (void*)aBrowserState,
+            sizeof(VRBrowserState));
+      mExternalShmem->browserGenerationB++; mExternalShmem->browserGenerationA++;
+      memcpy((void*)&(mExternalShmem->browserState), (void*)aBrowserState,
+            sizeof(VRBrowserState));
+      mExternalShmem->browserGenerationB++;
+    }
 #endif  // defined(MOZ_WIDGET_ANDROID)
   }
 }
