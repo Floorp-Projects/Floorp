@@ -20,6 +20,9 @@ class UrlClassifierFeatureNoChannel final : public UrlClassifierFeatureBase {
 
   static void MaybeShutdown();
 
+  static void MaybeCreate(
+      nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures);
+
   static already_AddRefed<nsIUrlClassifierFeature> GetIfNameMatches(
       const nsACString& aName);
 
