@@ -43,9 +43,7 @@ rustfmt = check_prog('RUSTFMT', ['rustfmt'], paths=toolchain_search_path,
 # installer of LLVM/Clang doesn't provide llvm-config, so we need both
 # methods to support all of our tier-1 platforms.
 @depends(host)
-@imports('which')
 @imports('os')
-@imports('subprocess')
 def llvm_config_paths(host):
     llvm_supported_versions = ['6.0', '5.0', '4.0', '3.9']
     llvm_config_progs = []
@@ -60,9 +58,9 @@ def llvm_config_paths(host):
     # Homebrew on macOS doesn't make clang available on PATH, so we have to
     # look for it in non-standard places.
     if host.kernel == 'Darwin':
-        try:
-            brew = which.which('brew')
-            brew_config = subprocess.check_output([brew, 'config']).strip()
+        brew = find_program('brew')
+        if brew:
+            brew_config = check_cmd_output([brew, 'config']).strip()
 
             for line in brew_config.splitlines():
                 if line.startswith('HOMEBREW_PREFIX'):
@@ -71,9 +69,6 @@ def llvm_config_paths(host):
                     path = ['opt', 'llvm', 'bin', 'llvm-config']
                     llvm_config_progs.append(os.path.join(prefix, *path))
                     break
-        except which.WhichError:
-            # Homebrew not installed, which is fine.
-            pass
 
     # Also add in the location to which `mach bootstrap` or
     # `mach artifact toolchain` installs clang.
