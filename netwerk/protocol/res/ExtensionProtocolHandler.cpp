@@ -341,27 +341,20 @@ static inline ExtensionPolicyService& EPS() {
 
 nsresult ExtensionProtocolHandler::GetFlagsForURI(nsIURI* aURI,
                                                   uint32_t* aFlags) {
-  uint32_t flags =
-      URI_STD | URI_IS_LOCAL_RESOURCE | URI_IS_POTENTIALLY_TRUSTWORTHY;
+  // In general a moz-extension URI is only loadable by chrome, but a
+  // whitelisted subset are web-accessible (and cross-origin fetchable). Check
+  // that whitelist.
+  bool loadableByAnyone = false;
 
   URLInfo url(aURI);
   if (auto* policy = EPS().GetByURL(url)) {
-    // In general a moz-extension URI is only loadable by chrome, but a
-    // whitelisted subset are web-accessible (and cross-origin fetchable). Check
-    // that whitelist.
-    if (policy->IsPathWebAccessible(url.FilePath())) {
-      flags |= URI_LOADABLE_BY_ANYONE | URI_FETCHABLE_BY_ANYONE;
-    } else {
-      flags |= URI_DANGEROUS_TO_LOAD;
-    }
-
-    // Disallow in private windows if the extension does not have permission.
-    if (!policy->PrivateBrowsingAllowed()) {
-      flags |= URI_DISALLOW_IN_PRIVATE_CONTEXT;
-    }
+    loadableByAnyone = policy->IsPathWebAccessible(url.FilePath());
   }
 
-  *aFlags = flags;
+  *aFlags =
+      URI_STD | URI_IS_LOCAL_RESOURCE | URI_IS_POTENTIALLY_TRUSTWORTHY |
+      (loadableByAnyone ? (URI_LOADABLE_BY_ANYONE | URI_FETCHABLE_BY_ANYONE)
+                        : URI_DANGEROUS_TO_LOAD);
   return NS_OK;
 }
 
