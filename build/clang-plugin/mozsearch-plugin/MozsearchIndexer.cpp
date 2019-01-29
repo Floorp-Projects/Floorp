@@ -1102,6 +1102,7 @@ public:
 
     // If the token is from a macro expansion and the expansion location
     // is interesting, use that instead as it tends to be more useful.
+    SourceLocation expandedLoc = Loc;
     if (SM.isMacroBodyExpansion(Loc)) {
       Loc = SM.getFileLoc(Loc);
     }
@@ -1173,22 +1174,36 @@ public:
       findOverriddenMethods(dyn_cast<CXXMethodDecl>(D), Symbols);
     }
 
-    // For destructors, loc points to the ~ character. We want to skip to the
-    // class name.
+    // In the case of destructors, Loc might point to the ~ character. In that
+    // case we want to skip to the name of the class. However, Loc might also
+    // point to other places that generate destructors, such as the use site of
+    // a macro that expands to generate a destructor, or a lambda (apparently
+    // clang 8 creates a destructor declaration for at least some lambdas). In
+    // the former case we'll use the macro use site as the location, and in the
+    // latter we'll just drop the declaration.
     if (isa<CXXDestructorDecl>(D)) {
-      const char *P = SM.getCharacterData(Loc);
-      assert(*P == '~');
-      P++;
-
-      unsigned Skipped = 1;
-      while (*P == ' ' || *P == '\t' || *P == '\r' || *P == '\n') {
-        P++;
-        Skipped++;
-      }
-
-      Loc = Loc.getLocWithOffset(Skipped);
-
       PrettyKind = "destructor";
+      const char *P = SM.getCharacterData(Loc);
+      if (*P == '~') {
+        // Advance Loc to the class name
+        P++;
+
+        unsigned Skipped = 1;
+        while (*P == ' ' || *P == '\t' || *P == '\r' || *P == '\n') {
+          P++;
+          Skipped++;
+        }
+
+        Loc = Loc.getLocWithOffset(Skipped);
+      } else {
+        // See if the destructor is coming from a macro expansion
+        P = SM.getCharacterData(expandedLoc);
+        if (*P != '~') {
+          // It's not
+          return true;
+        }
+        // It is, so just use Loc as-is
+      }
     }
 
     visitIdentifier(Kind, PrettyKind, getQualifiedName(D), Loc, Symbols,
