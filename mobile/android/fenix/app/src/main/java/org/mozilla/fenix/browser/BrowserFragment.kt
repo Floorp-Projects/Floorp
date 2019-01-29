@@ -52,7 +52,8 @@ class BrowserFragment : Fragment() {
             ToolbarIntegration(
                 requireContext(),
                 toolbar,
-                requireComponents.toolbar.shippedDomainsProvider
+                requireComponents.toolbar.shippedDomainsProvider,
+                requireComponents.core.historyStorage
             )
         )
 

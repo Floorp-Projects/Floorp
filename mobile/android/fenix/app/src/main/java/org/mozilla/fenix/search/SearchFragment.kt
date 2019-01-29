@@ -48,7 +48,9 @@ class SearchFragment : Fragment() {
             ToolbarIntegration(
             requireContext(),
             toolbar,
-            ShippedDomainsProvider().also { it.initialize(requireContext()) })
+            ShippedDomainsProvider().also { it.initialize(requireContext()) },
+            requireComponents.core.historyStorage
+        )
         )
 
         awesomeBarFeature = AwesomeBarFeature(awesomeBar, toolbar, null, onEditComplete = ::userDidSearch)

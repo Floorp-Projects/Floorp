@@ -13,6 +13,7 @@ import androidx.navigation.Navigation
 import androidx.navigation.fragment.FragmentNavigator
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import org.mozilla.fenix.R
@@ -23,6 +24,7 @@ class ToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
     domainAutocompleteProvider: DomainAutocompleteProvider,
+    historyStorage: HistoryStorage,
     sessionId: String? = null
 ) : LifecycleObserver {
     init {
@@ -50,6 +52,7 @@ class ToolbarIntegration(
 
         ToolbarAutocompleteFeature(toolbar).apply {
             addDomainProvider(domainAutocompleteProvider)
+            addHistoryStorageProvider(historyStorage)
         }
     }
 

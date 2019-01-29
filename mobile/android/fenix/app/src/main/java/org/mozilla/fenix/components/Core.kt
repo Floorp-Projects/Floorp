@@ -11,9 +11,11 @@ import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SessionStorage
+import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.feature.session.HistoryDelegate
 import java.util.concurrent.TimeUnit
 
 /**
@@ -31,7 +33,8 @@ class Core(private val context: Context) {
         val defaultSettings = DefaultSettings(
             remoteDebuggingEnabled = false,
             testingModeEnabled = false,
-            trackingProtectionPolicy = createTrackingProtectionPolicy(prefs)
+            trackingProtectionPolicy = createTrackingProtectionPolicy(prefs),
+            historyTrackingDelegate = HistoryDelegate(historyStorage)
         )
         GeckoEngine(context, defaultSettings)
     }
@@ -59,6 +62,12 @@ class Core(private val context: Context) {
                 .whenSessionsChange()
         }
     }
+
+    /**
+     * The storage component to persist browsing history (with the exception of
+     * private sessions).
+     */
+    val historyStorage by lazy { PlacesHistoryStorage(context) }
 
     /**
      * Constructs a [TrackingProtectionPolicy] based on current preferences.
