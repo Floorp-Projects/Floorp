@@ -1,5 +1,12 @@
 const {AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
+
+AddonTestUtils.initMochitest(this);
+
+hookExtensionsTelemetry();
+AddonTestUtils.hookAMTelemetryEvents();
+
 const ID_PERMS = "update_perms@tests.mozilla.org";
 const ID_ORIGINS = "update_origins@tests.mozilla.org";
 
@@ -29,8 +36,6 @@ add_task(async function setup() {
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   });
 });
-
-hookExtensionsTelemetry();
 
 // Helper function to test an upgrade that should not show a prompt
 async function testNoPrompt(origUrl, id) {
@@ -72,6 +77,20 @@ async function testNoPrompt(origUrl, id) {
 
   await addon.uninstall();
   await SpecialPowers.popPrefEnv();
+
+  // Test that the expected telemetry events have been recorded (and that they do not
+  // include the permission_prompt event).
+  const amEvents = AddonTestUtils.getAMTelemetryEvents();
+  const updateEventsSteps = amEvents.filter(evt => {
+    return evt.method === "update" && evt.extra && evt.extra.addon_id == id;
+  }).map(evt => {
+    return evt.extra.step;
+  });
+
+  // Expect telemetry events related to a completed update with no permissions_prompt event.
+  Assert.deepEqual(updateEventsSteps, [
+    "started", "download_started", "download_completed", "completed",
+  ], "Got the steps from the collected telemetry events");
 }
 
 // Test that an update that adds new non-promptable permissions is just
