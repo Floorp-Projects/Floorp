@@ -116,5 +116,9 @@ policy-SearchEngines = Configure search engine settings. This policy is only ava
 # For more information, see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/PKCS11/Module_Installation
 policy-SecurityDevices = Install PKCS #11 modules.
 
+policy-SSLVersionMax = Set the maximum SSL version.
+
+policy-SSLVersionMin = Set the minimum SSL version.
+
 # “format” refers to the format used for the value of this policy.
 policy-WebsiteFilter = Block websites from being visited. See documentation for more details on the format.
