@@ -7668,7 +7668,11 @@ static bool DumpScopeChain(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
+#ifndef JS_MORE_DETERMINISTIC
+  // Don't dump anything in more-deterministic builds because the output
+  // includes pointer values.
   script->bodyScope()->dump();
+#endif
 
   args.rval().setUndefined();
   return true;
