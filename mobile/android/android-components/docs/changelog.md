@@ -18,12 +18,13 @@ permalink: /changelog/
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.39.0...v0.40.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/42?closed=1)
 * [API reference](https://mozilla-mobile.github.io/android-components/api/0.40.0/index)
-* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
-* [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.40.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.40.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.40.0/buildSrc/src/main/java/Config.kt)
 
 * **support-ktx**
   * Added `Lifecycle.addObservers` to observe the lifecycle for multiple classes.
+
   ```kotlin
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
       lifecycle.addObservers(
@@ -41,52 +42,52 @@ permalink: /changelog/
 * **browser-awesomebar**
   * Added ability to let consumers define the layouting of suggestions by implementing `SuggestionLayout` in order to control layout inflation and view binding.
 
-```Kotlin
-// Create a ViewHolder for your custom layout.
-class CustomViewHolder(view: View) : SuggestionViewHolder(view) {
-    private val textView = view.findViewById<TextView>(R.id.text)
+  ```kotlin
+  // Create a ViewHolder for your custom layout.
+  class CustomViewHolder(view: View) : SuggestionViewHolder(view) {
+      private val textView = view.findViewById<TextView>(R.id.text)
 
-    override fun bind(
-        suggestion: AwesomeBar.Suggestion,
-        selectionListener: () -> Unit
-    ) {
-        textView.text = suggestion.title
-        textView.setOnClickListener { 
-            suggestion.onSuggestionClicked?.invoke()
-            selectionListener.invoke()
-        }
-    }
-}
+      override fun bind(
+          suggestion: AwesomeBar.Suggestion,
+          selectionListener: () -> Unit
+      ) {
+          textView.text = suggestion.title
+          textView.setOnClickListener {
+              suggestion.onSuggestionClicked?.invoke()
+              selectionListener.invoke()
+          }
+      }
+  }
 
-// Create a custom SuggestionLayout for controling view inflation
-class CustomSuggestionLayout : SuggestionLayout {
-    override fun getLayoutResource(suggestion: AwesomeBar.Suggestion): Int {
-        return android.R.layout.simple_list_item_1
-    }
+  // Create a custom SuggestionLayout for controling view inflation
+  class CustomSuggestionLayout : SuggestionLayout {
+      override fun getLayoutResource(suggestion: AwesomeBar.Suggestion): Int {
+          return android.R.layout.simple_list_item_1
+      }
 
-    override fun createViewHolder(awesomeBar: BrowserAwesomeBar, view: View, layoutId: Int): SuggestionViewHolder {
-        return CustomViewHolder(view)
-    }
-}
-```
+      override fun createViewHolder(awesomeBar: BrowserAwesomeBar, view: View, layoutId: Int): SuggestionViewHolder {
+          return CustomViewHolder(view)
+      }
+  }
+  ```
 
   * Added ability to transform suggestions returned by provider (adding data, removing data, filtering suggestions, ...)
 
- ```Kotlin
-awesomeBar.transformer = object : SuggestionTransformer {
-    override fun transform(
-        provider: AwesomeBar.SuggestionProvider,
-        suggestions: List<AwesomeBar.Suggestion>
-    ): List<AwesomeBar.Suggestion> {
-        return suggestions.map { suggestion ->
-            suggestion.copy(title = "Awesome!")
-        }
-    }
-}
+  ```kotlin
+  awesomeBar.transformer = object : SuggestionTransformer {
+      override fun transform(
+          provider: AwesomeBar.SuggestionProvider,
+          suggestions: List<AwesomeBar.Suggestion>
+      ): List<AwesomeBar.Suggestion> {
+          return suggestions.map { suggestion ->
+              suggestion.copy(title = "Awesome!")
+          }
+      }
+  }
 
-// Use the custom layout with a BrowserAwesomeBar instance
-awesomeBar.layout = CustomSuggestionLayout()
- ```
+  // Use the custom layout with a BrowserAwesomeBar instance
+  awesomeBar.layout = CustomSuggestionLayout()
+  ```
 
 * **lib-publicsuffixlist**
   * The public suffix list shipping with this component is now updated automatically in the repository every day (if there are changes).
