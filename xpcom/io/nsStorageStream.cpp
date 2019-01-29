@@ -365,6 +365,10 @@ class nsStorageInputStream final : public nsIInputStream,
   uint32_t SegOffset(uint32_t aPosition) {
     return aPosition & (mSegmentSize - 1);
   }
+
+  template <typename M>
+  void SerializeInternal(InputStreamParams& aParams, bool aDelayedStart,
+                         M* aManager);
 };
 
 NS_IMPL_ISUPPORTS(nsStorageInputStream, nsIInputStream, nsISeekableStream,
@@ -547,14 +551,48 @@ nsresult nsStorageInputStream::Seek(uint32_t aPosition) {
 }
 
 void nsStorageInputStream::Serialize(InputStreamParams& aParams,
-                                     FileDescriptorArray&) {
-  nsCString combined;
-  int64_t offset;
-  nsresult rv = Tell(&offset);
+                                     FileDescriptorArray&, bool aDelayedStart,
+                                     mozilla::dom::nsIContentChild* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aManager);
+}
+
+void nsStorageInputStream::Serialize(InputStreamParams& aParams,
+                                     FileDescriptorArray&, bool aDelayedStart,
+                                     mozilla::ipc::PBackgroundChild* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aManager);
+}
+
+void nsStorageInputStream::Serialize(InputStreamParams& aParams,
+                                     FileDescriptorArray&, bool aDelayedStart,
+                                     mozilla::dom::nsIContentParent* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aManager);
+}
+
+void nsStorageInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray&, bool aDelayedStart,
+    mozilla::ipc::PBackgroundParent* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aManager);
+}
+
+template <typename M>
+void nsStorageInputStream::SerializeInternal(InputStreamParams& aParams,
+                                             bool aDelayedStart, M* aManager) {
+  uint64_t remaining = 0;
+  nsresult rv = Available(&remaining);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  uint64_t remaining;
-  rv = Available(&remaining);
+  // If the string is known to be larger than 1MB, prefer sending it in chunks.
+  const uint64_t kTooLargeStream = 1024 * 1024;
+
+  if (remaining > kTooLargeStream) {
+    InputStreamHelper::SerializeInputStreamAsPipe(this, aParams, aDelayedStart,
+                                                  aManager);
+    return;
+  }
+
+  nsCString combined;
+  int64_t offset;
+  rv = Tell(&offset);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   auto handle = combined.BulkWrite(remaining, 0, false, rv);
@@ -574,13 +612,6 @@ void nsStorageInputStream::Serialize(InputStreamParams& aParams,
   StringInputStreamParams params;
   params.data() = combined;
   aParams = params;
-}
-
-Maybe<uint64_t> nsStorageInputStream::ExpectedSerializedLength() {
-  uint64_t remaining = 0;
-  DebugOnly<nsresult> rv = Available(&remaining);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  return Some(remaining);
 }
 
 bool nsStorageInputStream::Deserialize(const InputStreamParams& aParams,

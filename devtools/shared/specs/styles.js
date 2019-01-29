@@ -175,7 +175,6 @@ const pageStyleSpec = generateActorSpec({
       request: {
         node: Arg(0, "domnode"),
         pseudoClasses: Arg(1, "nullable:array:string"),
-        editAuthored: Arg(2, "boolean"),
       },
       response: RetVal("appliedStylesReturn"),
     },

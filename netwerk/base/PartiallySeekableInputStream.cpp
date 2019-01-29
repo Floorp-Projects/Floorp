@@ -280,11 +280,40 @@ PartiallySeekableInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
 void PartiallySeekableInputStream::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors) {
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    mozilla::dom::nsIContentChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void PartiallySeekableInputStream::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    mozilla::ipc::PBackgroundChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void PartiallySeekableInputStream::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    mozilla::dom::nsIContentParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+void PartiallySeekableInputStream::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    mozilla::ipc::PBackgroundParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+}
+
+template <typename M>
+void PartiallySeekableInputStream::SerializeInternal(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart, M* aManager) {
   MOZ_ASSERT(mWeakIPCSerializableInputStream);
   MOZ_DIAGNOSTIC_ASSERT(mCachedBuffer.IsEmpty());
-  mozilla::ipc::InputStreamHelper::SerializeInputStream(mInputStream, aParams,
-                                                        aFileDescriptors);
+  mozilla::ipc::InputStreamHelper::SerializeInputStream(
+      mInputStream, aParams, aFileDescriptors, aDelayedStart, aManager);
 }
 
 bool PartiallySeekableInputStream::Deserialize(
@@ -292,15 +321,6 @@ bool PartiallySeekableInputStream::Deserialize(
     const FileDescriptorArray& aFileDescriptors) {
   MOZ_CRASH("This method should never be called!");
   return false;
-}
-
-mozilla::Maybe<uint64_t>
-PartiallySeekableInputStream::ExpectedSerializedLength() {
-  if (!mWeakIPCSerializableInputStream) {
-    return mozilla::Nothing();
-  }
-
-  return mWeakIPCSerializableInputStream->ExpectedSerializedLength();
 }
 
 // nsISeekableStream

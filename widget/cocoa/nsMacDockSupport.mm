@@ -133,7 +133,7 @@ bool nsMacDockSupport::InitProgress() {
     mProgressBounds =
         CGRectMake(sz.width * 1 / 32, sz.height * 3 / 32, sz.width * 30 / 32, sz.height * 4 / 32);
     [mProgressBackground lockFocus];
-    [[NSColor whiteColor] set];
+    [[NSColor clearColor] set];
     NSRectFill(NSRectFromCGRect(mProgressBounds));
     [mProgressBackground unlockFocus];
   }
