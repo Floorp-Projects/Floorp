@@ -4,7 +4,10 @@
 
 #include shared,prim_shared
 
-varying vec3 vUv;
+// interpolated UV coordinates to sample.
+varying vec2 vUv;
+// X = layer index to sample, Y = flag to allow perspective interpolation of UV.
+flat varying vec2 vLayerAndPerspective;
 flat varying vec4 vUvSampleBounds;
 
 #ifdef WR_VERTEX_SHADER
@@ -103,15 +106,18 @@ void main(void) {
         f.y, f.x
     );
     vec2 uv = mix(uv0, uv1, f);
+    float perspective_interpolate = float(ph.user_data.y);
 
-    vUv = vec3(uv / texture_size, res.layer);
+    vUv = uv / texture_size * mix(gl_Position.w, 1.0, perspective_interpolate);
+    vLayerAndPerspective = vec2(res.layer, perspective_interpolate);
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
     float alpha = do_clip();
-    vec2 uv = clamp(vUv.xy, vUvSampleBounds.xy, vUvSampleBounds.zw);
-    oFragColor = alpha * textureLod(sPrevPassColor, vec3(uv, vUv.z), 0.0);
+    float perspective_divisor = mix(gl_FragCoord.w, 1.0, vLayerAndPerspective.y);
+    vec2 uv = clamp(vUv * perspective_divisor, vUvSampleBounds.xy, vUvSampleBounds.zw);
+    oFragColor = alpha * textureLod(sPrevPassColor, vec3(uv, vLayerAndPerspective.x), 0.0);
 }
 #endif
