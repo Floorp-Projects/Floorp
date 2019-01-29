@@ -3,7 +3,7 @@
 
 const TEST_PATH = getRootDirectory(gTestPath)
   .replace("chrome://mochitests/content", "http://example.com");
-const REDIRECT_FROM = `${TEST_PATH}redirect_bug623155.sjs`;
+const REDIRECT_FROM = `${TEST_PATH}redirect_error.sjs`;
 
 const REDIRECT_TO = "https://www.bank1.com/"; // Bad-cert host.
 

@@ -2345,9 +2345,6 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
 
   uint8_t modType;
   bool hasListeners;
-  // We don't want to spend time preparsing class attributes if the value is not
-  // changing, so just init our nsAttrValueOrString with aValue for the
-  // OnlyNotifySameValueSet call.
   nsAttrValueOrString value(aValue);
   nsAttrValue oldValue;
   bool oldValueSet;
@@ -2357,19 +2354,8 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
     return OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
   }
 
-  nsAttrValue attrValue;
-  nsAttrValue* preparsedAttrValue;
-  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::_class) {
-    attrValue.ParseAtomArray(aValue);
-    value.ResetToAttrValue(attrValue);
-    preparsedAttrValue = &attrValue;
-  } else {
-    preparsedAttrValue = nullptr;
-  }
-
   if (aNotify) {
-    nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType,
-                                     preparsedAttrValue);
+    nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
   }
 
   // Hold a script blocker while calling ParseAttribute since that can call
@@ -2380,8 +2366,9 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
   nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!preparsedAttrValue && !ParseAttribute(aNamespaceID, aName, aValue,
-                                             aSubjectPrincipal, attrValue)) {
+  nsAttrValue attrValue;
+  if (!ParseAttribute(aNamespaceID, aName, aValue, aSubjectPrincipal,
+                      attrValue)) {
     attrValue.SetTo(aValue);
   }
 
@@ -2414,8 +2401,7 @@ nsresult Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
   }
 
   if (aNotify) {
-    nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType,
-                                     &aParsedValue);
+    nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
   }
 
   nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
@@ -2582,9 +2568,11 @@ bool Element::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
   }
 
   if (aNamespaceID == kNameSpaceID_None) {
-    MOZ_ASSERT(aAttribute != nsGkAtoms::_class,
-               "The class attribute should be preparsed and therefore should "
-               "never be passed to Element::ParseAttribute");
+    if (aAttribute == nsGkAtoms::_class) {
+      aResult.ParseAtomArray(aValue);
+      return true;
+    }
+
     if (aAttribute == nsGkAtoms::id) {
       // Store id as an atom.  id="" means that the element has no id,
       // not that it has an emptystring as the id.
@@ -2718,7 +2706,7 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
 
   if (aNotify) {
     nsNodeUtils::AttributeWillChange(this, aNameSpaceID, aName,
-                                     MutationEvent_Binding::REMOVAL, nullptr);
+                                     MutationEvent_Binding::REMOVAL);
   }
 
   nsresult rv = BeforeSetAttr(aNameSpaceID, aName, nullptr, aNotify);

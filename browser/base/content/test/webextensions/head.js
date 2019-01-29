@@ -500,7 +500,9 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
 
   let hasPermissionsExtras = collectedUpdateEvents.filter(evt => {
     return evt.extra.step === "permissions_prompt";
-  }).every(evt => !!evt.extra.num_perms && !!evt.extra.num_origins);
+  }).every(evt => {
+    return Number.isInteger(parseInt(evt.extra.num_strings, 10));
+  });
 
   ok(hasPermissionsExtras,
      "Every 'permissions_prompt' update telemetry event should have the permissions extra vars");

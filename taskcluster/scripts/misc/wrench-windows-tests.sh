@@ -27,6 +27,11 @@ mk_add_options() {
 export topsrcdir=$PWD
 . $topsrcdir/build/win64/mozconfig.vs2017
 
+win_sdk_version="10.0.17134.0"
+export PATH="${VSPATH}/VC/bin/Hostx64/x64:${VSPATH}/SDK/bin/${win_sdk_version}/x64:${PATH}"
+export INCLUDE="${VSPATH}/VC/include:${VSPATH}/VC/atlmfc/include:${VSPATH}/SDK/Include/${win_sdk_version}/ucrt:${VSPATH}/SDK/Include/${win_sdk_version}/shared:${VSPATH}/SDK/Include/${win_sdk_version}/um:${VSPATH}/SDK/Include/${win_sdk_version}/winrt"
+export LIB="${VSPATH}/VC/lib/x64:${VSPATH}/VC/atlmfc/lib/x64:${VSPATH}/SDK/Lib/${win_sdk_version}/ucrt/x64:${VSPATH}/SDK/Lib/${win_sdk_version}/um/x64"
+
 # In the msys bash that we're running in, environment variables containing paths
 # will *sometimes* get converted to windows format on their own, but it doesn't
 # happen consistently. See bug 1508828 around comment 9 onwards for some details.

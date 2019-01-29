@@ -326,8 +326,8 @@ class BigInt final : public js::gc::TenuredCell {
   static BigInt* destructivelyTrimHighZeroDigits(JSContext* cx,
                                                  Handle<BigInt*> x);
 
-  friend struct JSStructuredCloneReader;
-  friend struct JSStructuredCloneWriter;
+  friend struct ::JSStructuredCloneReader;
+  friend struct ::JSStructuredCloneWriter;
   template <js::XDRMode mode>
   friend js::XDRResult js::XDRBigInt(js::XDRState<mode>* xdr,
                                      MutableHandle<BigInt*> bi);

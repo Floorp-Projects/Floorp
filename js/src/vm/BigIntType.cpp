@@ -3171,7 +3171,7 @@ XDRResult js::XDRBigInt(XDRState<mode>* xdr, MutableHandleBigInt bi) {
     if (!res) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    std::uninitialized_copy_n(buf.get(), digitLength, bi->digits().Elements());
+    std::uninitialized_copy_n(buf.get(), digitLength, res->digits().Elements());
     bi.set(res);
   }
 

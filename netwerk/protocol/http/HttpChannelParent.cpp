@@ -128,6 +128,7 @@ void HttpChannelParent::ActorDestroy(ActorDestroyReason why) {
 
 bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
   LOG(("HttpChannelParent::Init [this=%p]\n", this));
+  AUTO_PROFILER_LABEL("HttpChannelParent::Init", NETWORK);
   switch (aArgs.type()) {
     case HttpChannelCreationArgs::THttpChannelOpenArgs: {
       const HttpChannelOpenArgs& a = aArgs.get_HttpChannelOpenArgs();
@@ -167,6 +168,7 @@ void HttpChannelParent::TryInvokeAsyncOpen(nsresult aRv) {
        "]\n",
        this, mAsyncOpenBarrier, static_cast<uint32_t>(aRv)));
   MOZ_ASSERT(NS_IsMainThread());
+  AUTO_PROFILER_LABEL("HttpChannelParent::TryInvokeAsyncOpen", NETWORK);
 
   // TryInvokeAsyncOpen is called more than we expected.
   // Assert in nightly build but ignore it in release channel.
@@ -769,6 +771,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvSetPriority(
     const int16_t& priority) {
   LOG(("HttpChannelParent::RecvSetPriority [this=%p, priority=%d]\n", this,
        priority));
+  AUTO_PROFILER_LABEL("HttpChannelParent::RecvSetPriority", NETWORK);
 
   if (mChannel) {
     mChannel->SetPriority(priority);

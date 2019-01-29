@@ -15,6 +15,7 @@
 #include "PeerConnectionImpl.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "nsIRunnable.h"
+#include "MediaTransportHandler.h"  // Mostly for IceLogPromise
 
 namespace mozilla {
 class PeerConnectionCtxObserver;
@@ -50,6 +51,10 @@ class PeerConnectionCtx {
 
   static void UpdateNetworkState(bool online);
 
+  RefPtr<MediaTransportHandler> GetTransportHandler() const {
+    return mTransportHandler;
+  }
+
   // Make these classes friend so that they can access mPeerconnections.
   friend class PeerConnectionImpl;
   friend class PeerConnectionWrapper;
@@ -66,7 +71,8 @@ class PeerConnectionCtx {
   // We could make these available only via accessors but it's too much trouble.
   std::map<const std::string, PeerConnectionImpl*> mPeerConnections;
 
-  PeerConnectionCtx() : mGMPReady(false) {}
+  PeerConnectionCtx()
+      : mGMPReady(false), mTransportHandler(MediaTransportHandler::Create()) {}
   // This is a singleton, so don't copy construct it, etc.
   PeerConnectionCtx(const PeerConnectionCtx& other) = delete;
   void operator=(const PeerConnectionCtx& other) = delete;
@@ -94,6 +100,9 @@ class PeerConnectionCtx {
   nsCOMPtr<mozIGeckoMediaPluginService> mGMPService;
   bool mGMPReady;
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedJSEPOperations;
+
+  // Not initted, just for ICE logging stuff
+  RefPtr<MediaTransportHandler> mTransportHandler;
 
   static PeerConnectionCtx* gInstance;
 

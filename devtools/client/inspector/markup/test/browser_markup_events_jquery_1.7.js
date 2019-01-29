@@ -26,9 +26,10 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: "function() {\n" +
-                 "  c.removeEventListener(\"DOMContentLoaded\", C, !1), e.ready()\n" +
-                 "}"
+        handler: `
+          function() {
+            c.removeEventListener("DOMContentLoaded", C, !1), e.ready()
+          }`
       },
       {
         type: "load",
@@ -37,59 +38,60 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: "() => {\n" +
-                 "  var handler1 = function liveDivDblClick() {\n" +
-                 "    alert(1);\n" +
-                 "  };\n" +
-                 "  var handler2 = function liveDivDragStart() {\n" +
-                 "    alert(2);\n" +
-                 "  };\n" +
-                 "  var handler3 = function liveDivDragLeave() {\n" +
-                 "    alert(3);\n" +
-                 "  };\n" +
-                 "  var handler4 = function liveDivDragEnd() {\n" +
-                 "    alert(4);\n" +
-                 "  };\n" +
-                 "  var handler5 = function liveDivDrop() {\n" +
-                 "    alert(5);\n" +
-                 "  };\n" +
-                 "  var handler6 = function liveDivDragOver() {\n" +
-                 "    alert(6);\n" +
-                 "  };\n" +
-                 "  var handler7 = function divClick1() {\n" +
-                 "    alert(7);\n" +
-                 "  };\n" +
-                 "  var handler8 = function divClick2() {\n" +
-                 "    alert(8);\n" +
-                 "  };\n" +
-                 "  var handler9 = function divKeyDown() {\n" +
-                 "    alert(9);\n" +
-                 "  };\n" +
-                 "  var handler10 = function divDragOut() {\n" +
-                 "    alert(10);\n" +
-                 "  };\n" +
-                 "\n" +
-                 "  if ($(\"#livediv\").live) {\n" +
-                 "    $(\"#livediv\").live(\"dblclick\", handler1);\n" +
-                 "    $(\"#livediv\").live(\"dragstart\", handler2);\n" +
-                 "  }\n" +
-                 "\n" +
-                 "  if ($(\"#livediv\").delegate) {\n" +
-                 "    $(document).delegate(\"#livediv\", \"dragleave\", handler3);\n" +
-                 "    $(document).delegate(\"#livediv\", \"dragend\", handler4);\n" +
-                 "  }\n" +
-                 "\n" +
-                 "  if ($(\"#livediv\").on) {\n" +
-                 "    $(document).on(\"drop\", \"#livediv\", handler5);\n" +
-                 "    $(document).on(\"dragover\", \"#livediv\", handler6);\n" +
-                 "    $(document).on(\"dragout\", \"#livediv:xxxxx\", handler10);\n" +
-                 "  }\n" +
-                 "\n" +
-                 "  var div = $(\"div\")[0];\n" +
-                 "  $(div).click(handler7);\n" +
-                 "  $(div).click(handler8);\n" +
-                 "  $(div).keydown(handler9);\n" +
-                 "}"
+        handler: `
+          () => {
+            var handler1 = function liveDivDblClick() {
+              alert(1);
+            };
+            var handler2 = function liveDivDragStart() {
+              alert(2);
+            };
+            var handler3 = function liveDivDragLeave() {
+              alert(3);
+            };
+            var handler4 = function liveDivDragEnd() {
+              alert(4);
+            };
+            var handler5 = function liveDivDrop() {
+              alert(5);
+            };
+            var handler6 = function liveDivDragOver() {
+              alert(6);
+            };
+            var handler7 = function divClick1() {
+              alert(7);
+            };
+            var handler8 = function divClick2() {
+              alert(8);
+            };
+            var handler9 = function divKeyDown() {
+              alert(9);
+            };
+            var handler10 = function divDragOut() {
+              alert(10);
+            };
+
+            if ($("#livediv").live) {
+              $("#livediv").live("dblclick", handler1);
+              $("#livediv").live("dragstart", handler2);
+            }
+
+            if ($("#livediv").delegate) {
+              $(document).delegate("#livediv", "dragleave", handler3);
+              $(document).delegate("#livediv", "dragend", handler4);
+            }
+
+            if ($("#livediv").on) {
+              $(document).on("drop", "#livediv", handler5);
+              $(document).on("dragover", "#livediv", handler6);
+              $(document).on("dragout", "#livediv:xxxxx", handler10);
+            }
+
+            var div = $("div")[0];
+            $(div).click(handler7);
+            $(div).click(handler8);
+            $(div).keydown(handler9);
+          }`
       },
       {
         type: "load",
@@ -98,14 +100,15 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: "function(a) {\n" +
-                 "  if (a === !0 && !--e.readyWait || a !== !0 && !e.isReady) {\n" +
-                 "    if (!c.body) return setTimeout(e.ready, 1);\n" +
-                 "    e.isReady = !0;\n" +
-                 "    if (a !== !0 && --e.readyWait > 0) return;\n" +
-                 "    B.fireWith(c, [e]), e.fn.trigger && e(c).trigger(\"ready\").unbind(\"ready\")\n" +
-                 "  }\n" +
-                 "}"
+        handler: `
+          function(a) {
+            if (a === !0 && !--e.readyWait || a !== !0 && !e.isReady) {
+              if (!c.body) return setTimeout(e.ready, 1);
+              e.isReady = !0;
+              if (a !== !0 && --e.readyWait > 0) return;
+              B.fireWith(c, [e]), e.fn.trigger && e(c).trigger("ready").unbind("ready")
+            }
+          }`
       }
     ]
   },
@@ -118,9 +121,10 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "function divClick1() {\n" +
-                 "  alert(7);\n" +
-                 "}"
+        handler: `
+          function divClick1() {
+            alert(7);
+          }`
       },
       {
         type: "click",
@@ -128,9 +132,10 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "function divClick2() {\n" +
-                 "  alert(8);\n" +
-                 "}"
+        handler: `
+          function divClick2() {
+            alert(8);
+          }`
       },
       {
         type: "keydown",
@@ -138,9 +143,10 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "function divKeyDown() {\n" +
-                 "  alert(9);\n" +
-                 "}"
+        handler: `
+          function divKeyDown() {
+            alert(9);
+          }`
       }
     ]
   },
@@ -154,9 +160,10 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "function liveDivDblClick() {\n" +
-                 "  alert(1);\n" +
-                 "}"
+        handler: `
+          function liveDivDblClick() {
+            alert(1);
+          }`
       },
       {
         type: "dragend",
@@ -165,9 +172,10 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "function liveDivDragEnd() {\n" +
-                 "  alert(4);\n" +
-                 "}"
+        handler: `
+          function liveDivDragEnd() {
+            alert(4);
+          }`
       },
       {
         type: "dragleave",
@@ -176,9 +184,10 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "function liveDivDragLeave() {\n" +
-                 "  alert(3);\n" +
-                 "}"
+        handler: `
+          function liveDivDragLeave() {
+            alert(3);
+          }`
       },
       {
         type: "dragover",
@@ -187,9 +196,10 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "function liveDivDragOver() {\n" +
-                 "  alert(6);\n" +
-                 "}"
+        handler: `
+          function liveDivDragOver() {
+            alert(6);
+          }`
       },
       {
         type: "dragstart",
@@ -198,9 +208,10 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "function liveDivDragStart() {\n" +
-                 "  alert(2);\n" +
-                 "}"
+        handler: `
+          function liveDivDragStart() {
+            alert(2);
+          }`
       },
       {
         type: "drop",
@@ -209,9 +220,10 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "function liveDivDrop() {\n" +
-                 "  alert(5);\n" +
-                 "}"
+        handler: `
+          function liveDivDrop() {
+            alert(5);
+          }`
       }
     ]
   },

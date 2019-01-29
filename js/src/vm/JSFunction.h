@@ -224,7 +224,9 @@ class JSFunction : public js::NativeObject {
   bool needsNamedLambdaEnvironment() const;
 
   bool needsFunctionEnvironmentObjects() const {
-    return needsCallObject() || needsNamedLambdaEnvironment();
+    bool res = nonLazyScript()->needsFunctionEnvironmentObjects();
+    MOZ_ASSERT(res == (needsCallObject() || needsNamedLambdaEnvironment()));
+    return res;
   }
 
   bool needsSomeEnvironmentObject() const {

@@ -154,7 +154,7 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread public void onShutdown();
   }
 
-  @android.support.annotation.AnyThread public final class GeckoRuntimeSettings implements android.os.Parcelable {
+  @android.support.annotation.AnyThread public final class GeckoRuntimeSettings extends org.mozilla.geckoview.RuntimeSettings {
     method @android.support.annotation.NonNull public java.lang.String[] getArguments();
     method public boolean getBlockMalware();
     method public boolean getBlockPhishing();
@@ -169,12 +169,12 @@ package org.mozilla.geckoview {
     method @android.support.annotation.Nullable public java.lang.String[] getLocales();
     method public boolean getPauseForDebuggerEnabled();
     method public boolean getRemoteDebuggingEnabled();
+    method @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoRuntime getRuntime();
     method @android.support.annotation.Nullable public android.graphics.Rect getScreenSizeOverride();
     method public int getTrackingProtectionCategories();
     method public boolean getUseContentProcessHint();
     method public boolean getUseMaxScreenDepth();
     method public boolean getWebFontsEnabled();
-    method public void readFromParcel(@android.support.annotation.NonNull android.os.Parcel);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setBlockMalware(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setBlockPhishing(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
@@ -196,13 +196,11 @@ package org.mozilla.geckoview {
     field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoRuntimeSettings> CREATOR;
   }
 
-  @android.support.annotation.AnyThread public static final class GeckoRuntimeSettings.Builder {
+  @android.support.annotation.AnyThread public static final class GeckoRuntimeSettings.Builder extends org.mozilla.geckoview.RuntimeSettings.Builder<Settings extends org.mozilla.geckoview.RuntimeSettings> {
     ctor public Builder();
-    ctor public Builder(org.mozilla.geckoview.GeckoRuntimeSettings);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder arguments(@android.support.annotation.NonNull java.lang.String[]);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder blockMalware(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder blockPhishing(boolean);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings build();
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder consoleOutput(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder cookieBehavior(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder cookieLifetime(int);
@@ -219,6 +217,7 @@ package org.mozilla.geckoview {
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder useContentProcessHint(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder useMaxScreenDepth(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder webFontsEnabled(boolean);
+    method @android.support.annotation.NonNull protected org.mozilla.geckoview.GeckoRuntimeSettings newSettings(org.mozilla.geckoview.GeckoRuntimeSettings);
   }
 
   public class GeckoSession implements android.os.Parcelable {
@@ -816,6 +815,20 @@ package org.mozilla.geckoview {
     method public boolean onTouchEvent(@android.support.annotation.NonNull android.view.MotionEvent);
     method public void setIsLongpressEnabled(boolean);
     method public void setScrollFactor(float);
+  }
+
+  public abstract class RuntimeSettings implements android.os.Parcelable {
+    ctor protected RuntimeSettings();
+    ctor protected RuntimeSettings(@android.support.annotation.Nullable org.mozilla.geckoview.RuntimeSettings);
+    method @android.support.annotation.AnyThread public void readFromParcel(@android.support.annotation.NonNull android.os.Parcel);
+    method @android.support.annotation.AnyThread protected void updatePrefs(@android.support.annotation.NonNull org.mozilla.geckoview.RuntimeSettings);
+  }
+
+  public abstract static class RuntimeSettings.Builder<Settings extends org.mozilla.geckoview.RuntimeSettings> {
+    ctor public Builder();
+    method @android.support.annotation.AnyThread @android.support.annotation.NonNull public Settings build();
+    method @android.support.annotation.AnyThread @android.support.annotation.NonNull protected Settings getSettings();
+    method @android.support.annotation.AnyThread @android.support.annotation.NonNull protected abstract Settings newSettings(@android.support.annotation.Nullable Settings);
   }
 
   public final class RuntimeTelemetry {

@@ -932,6 +932,19 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
     return rv;
   }
 
+  // Used by ExtensionProtocolHandler to prevent loading extension resources
+  // in private contexts if the extension does not have permission.
+  if (aFromPrivateWindow) {
+    rv = DenyAccessIfURIHasFlags(
+        aTargetURI, nsIProtocolHandler::URI_DISALLOW_IN_PRIVATE_CONTEXT);
+    if (NS_FAILED(rv)) {
+      if (reportErrors) {
+        ReportError(errorTag, aSourceURI, aTargetURI, aFromPrivateWindow);
+      }
+      return rv;
+    }
+  }
+
   // Check for chrome target URI
   bool hasFlags = false;
   rv = NS_URIChainHasFlags(aTargetURI, nsIProtocolHandler::URI_IS_UI_RESOURCE,
