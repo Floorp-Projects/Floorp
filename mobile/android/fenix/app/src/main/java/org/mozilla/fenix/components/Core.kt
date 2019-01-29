@@ -16,6 +16,9 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.feature.session.HistoryDelegate
+import mozilla.components.lib.crash.handler.CrashHandlerService
+import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoRuntimeSettings
 import java.util.concurrent.TimeUnit
 
 /**
@@ -36,7 +39,14 @@ class Core(private val context: Context) {
             trackingProtectionPolicy = createTrackingProtectionPolicy(prefs),
             historyTrackingDelegate = HistoryDelegate(historyStorage)
         )
-        GeckoEngine(context, defaultSettings)
+
+        val runtimeSettings = GeckoRuntimeSettings.Builder()
+            .crashHandler(CrashHandlerService::class.java)
+            .build()
+
+        val runtime = GeckoRuntime.create(context, runtimeSettings)
+
+        GeckoEngine(context, defaultSettings, runtime)
     }
 
     /**

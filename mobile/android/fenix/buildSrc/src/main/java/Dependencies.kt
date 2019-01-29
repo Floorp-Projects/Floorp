@@ -9,6 +9,7 @@ private object Versions {
     const val rxAndroid = "2.1.0"
     const val rxKotlin = "2.3.0"
     const val anko = "0.10.8"
+    const val sentry = "1.7.10"
 
     const val androidx_appcompat = "1.0.2"
     const val androidx_constraint_layout = "2.0.0-alpha3"
@@ -72,7 +73,11 @@ object Deps {
     const val mozilla_feature_prompts = "org.mozilla.components:feature-prompts:${Versions.mozilla_android_components}"
     const val mozilla_feature_toolbar = "org.mozilla.components:feature-toolbar:${Versions.mozilla_android_components}"
 
+    const val mozilla_lib_crash = "org.mozilla.components:lib-crash:${Versions.mozilla_android_components}"
+
     const val mozilla_support_ktx = "org.mozilla.components:support-ktx:${Versions.mozilla_android_components}"
+
+    const val sentry = "io.sentry:sentry-android:${Versions.sentry}"
 
     const val junit = "junit:junit:${Versions.junit}"
     const val tools_test_runner = "com.android.support.test:runner:${Versions.test_tools}"

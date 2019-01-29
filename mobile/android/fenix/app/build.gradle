@@ -45,6 +45,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    lintOptions {
+        lintConfig file("lint.xml")
+    }
 }
 
 android.applicationVariants.all { variant ->
@@ -93,6 +97,8 @@ dependencies {
     implementation Deps.anko_appcompat
     implementation Deps.anko_constraintlayout
 
+    implementation Deps.sentry
+
     implementation Deps.mozilla_concept_engine
     implementation Deps.mozilla_concept_storage
     implementation Deps.mozilla_concept_toolbar
@@ -110,7 +116,10 @@ dependencies {
     implementation Deps.mozilla_feature_session
     implementation Deps.mozilla_feature_toolbar
     implementation Deps.mozilla_feature_tabs
+
     implementation Deps.mozilla_support_ktx
+
+    implementation Deps.mozilla_lib_crash
 
     testImplementation Deps.junit
     androidTestImplementation Deps.tools_test_runner
@@ -120,4 +129,22 @@ dependencies {
     x86Implementation Deps.geckoview_nightly_x86
     implementation Deps.androidx_legacy
     implementation Deps.android_arch_navigation
+}
+
+
+android.applicationVariants.all { variant ->
+    // Reading sentry token from local file (if it exists). In a release task on taskcluster it will be available.
+    try {
+        def token = new File("${rootDir}/.sentry_token").text.trim()
+        buildConfigField 'String', 'SENTRY_TOKEN', '"' + token + '"'
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'SENTRY_TOKEN', 'null'
+    }
+
+    // Activating crash reporting only if command line parameter was provided (in automation)
+    if (project.hasProperty("crashReports") && project.property("crashReports") == "true") {
+        buildConfigField 'boolean', 'CRASH_REPORTING', 'true'
+    } else {
+        buildConfigField 'boolean', 'CRASH_REPORTING', 'false'
+    }
 }

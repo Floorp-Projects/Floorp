@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<lint>
+    <issue id="InvalidPackage">
+        <!-- The Sentry SDK is compiled against parts of the Java SDK that are not available in the Android SDK.
+             Let's just ignore issues in the Sentry code since that is a third-party dependency anyways. -->
+        <ignore path="**/sentry*.jar" />
+    </issue>
+</lint>
+
