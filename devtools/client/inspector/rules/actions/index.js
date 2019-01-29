@@ -19,6 +19,9 @@ createEnum([
   // Toggles on or off the given pseudo class value for the current selected element.
   "TOGGLE_PSEUDO_CLASS",
 
+  // Updates whether or not the add new rule button should be enabled.
+  "UPDATE_ADD_RULE_ENABLED",
+
   // Updates the entire class list state with the new list of classes.
   "UPDATE_CLASSES",
 

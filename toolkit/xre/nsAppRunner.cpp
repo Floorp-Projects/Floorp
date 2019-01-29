@@ -4717,7 +4717,7 @@ bool XRE_IsE10sParentProcess() {
 #undef GECKO_PROCESS_TYPE
 
 bool XRE_UseNativeEventProcessing() {
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(XP_WIN)
   if (XRE_IsRDDProcess() || XRE_IsSocketProcess()) {
     return false;
   }
@@ -4736,6 +4736,18 @@ bool XRE_UseNativeEventProcessing() {
 
   return true;
 }
+
+#if defined(XP_WIN)
+bool XRE_Win32kCallsAllowed() {
+  switch (XRE_GetProcessType()) {
+    case GeckoProcessType_GMPlugin:
+    case GeckoProcessType_RDD:
+      return false;
+    default:
+      return true;
+  }
+}
+#endif
 
 // If you add anything to this enum, please update about:support to reflect it
 enum {
