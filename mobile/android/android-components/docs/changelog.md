@@ -4,11 +4,20 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.40.0-SNAPSHOT (In Development)
+# 0.41.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.39.0...master)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.40.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/43?closed=1)
+* [API reference](https://mozilla-mobile.github.io/android-components/api/0.40.0/index)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 0.40.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.39.0...v0.40.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/42?closed=1)
-* [API reference](https://mozilla-mobile.github.io/android-components/api/0.39.0/index)
+* [API reference](https://mozilla-mobile.github.io/android-components/api/0.40.0/index)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
