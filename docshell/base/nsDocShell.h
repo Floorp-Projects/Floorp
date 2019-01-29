@@ -399,6 +399,9 @@ class nsDocShell final : public nsDocLoader,
   nsresult InternalLoad(nsDocShellLoadState* aLoadState,
                         nsIDocShell** aDocShell, nsIRequest** aRequest);
 
+  // Clear the document's storage access flag if needed.
+  void MaybeClearStorageAccessFlag();
+
  private:  // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;
