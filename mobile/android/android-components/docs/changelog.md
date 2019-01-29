@@ -17,7 +17,26 @@ permalink: /changelog/
   * Added a temporary workaround for Custom Tab intents not being recognized when using the Jetifier tool.
 
 * **feature-downloads**
-  * Introduced a new `onPermissionsDenied` method, which similar to `onPermissionsGranted`, should be invoked in response to permission requests. If the requested permissions were denied the feature will clear the pending download.
+  * ⚠️ **This is a breaking API change!**
+  * The required permissions are now passed to the `onNeedToRequestPermissions` callback.
+  ```kotlin
+  downloadsFeature = DownloadsFeature(
+      requireContext(),
+      sessionManager = components.sessionManager,
+      fragmentManager = childFragmentManager,
+      onNeedToRequestPermissions = { permissions ->
+          requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
+      }
+  )
+  ```
+  * Removed the `onPermissionsGranted` method in favour of `onPermissionsResult` which handles both granted and denied permissions. This method should be invoked from `onRequestPermissionsResult`:
+  ```kotlin
+   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+      when (requestCode) {
+          REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.onPermissionsResult(permissions, grantResults)
+      }        
+    }
+  ```
 
 # 0.40.0
 

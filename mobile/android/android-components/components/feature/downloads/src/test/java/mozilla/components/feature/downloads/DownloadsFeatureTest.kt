@@ -7,6 +7,7 @@ package mozilla.components.feature.downloads
 import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.support.v4.app.FragmentManager
+import android.support.v4.content.PermissionChecker
 import org.junit.Assert.assertTrue
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
@@ -121,9 +122,7 @@ class DownloadsFeatureTest {
     fun `when a download came and permissions aren't granted needToRequestPermissions must be called `() {
         var needToRequestPermissionCalled = false
 
-        feature.onNeedToRequestPermissions = { _, _ ->
-            needToRequestPermissionCalled = true
-        }
+        feature.onNeedToRequestPermissions = { needToRequestPermissionCalled = true }
 
         feature.start()
         val download = startDownload()
@@ -136,9 +135,7 @@ class DownloadsFeatureTest {
     fun `when a download came and permissions aren't granted needToRequestPermissions and after onPermissionsGranted the download must be triggered`() {
         var needToRequestPermissionCalled = false
 
-        feature.onNeedToRequestPermissions = { _, _ ->
-            needToRequestPermissionCalled = true
-        }
+        feature.onNeedToRequestPermissions = { needToRequestPermissionCalled = true }
 
         feature.start()
 
@@ -149,7 +146,8 @@ class DownloadsFeatureTest {
 
         grantPermissions()
 
-        feature.onPermissionsGranted()
+        feature.onPermissionsResult(arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE),
+                intArrayOf(PermissionChecker.PERMISSION_GRANTED, PermissionChecker.PERMISSION_GRANTED))
         verify(mockDownloadManager).download(download)
     }
 
@@ -204,11 +202,13 @@ class DownloadsFeatureTest {
     @Test
     fun `download is cleared when permissions denied`() {
         feature.start()
-        feature.onPermissionsDenied()
+        feature.onPermissionsResult(arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE),
+                intArrayOf(PermissionChecker.PERMISSION_GRANTED, PermissionChecker.PERMISSION_GRANTED))
         assertNull(mockSessionManager.selectedSession)
 
         val download = startDownload()
-        feature.onPermissionsDenied()
+        feature.onPermissionsResult(arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE),
+                intArrayOf(PermissionChecker.PERMISSION_GRANTED, PermissionChecker.PERMISSION_DENIED))
 
         verify(mockDownloadManager, never()).download(download)
         assertNotNull(mockSessionManager.selectedSession)

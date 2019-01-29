@@ -18,7 +18,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 
-typealias OnNeedToRequestPermissions = (session: Session, download: Download) -> Unit
+typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
 
 /**
  * Feature implementation to provide download functionality for the selected
@@ -27,8 +27,8 @@ typealias OnNeedToRequestPermissions = (session: Session, download: Download) ->
  *
  * @property applicationContext a reference to the application context.
  * @property onNeedToRequestPermissions a callback invoked when permissions
- * need to be requested before a download can be performed. At a minimum,
- * [WRITE_EXTERNAL_STORAGE] is required.
+ * need to be requested before a download can be performed. Once the request
+ * is completed, [onPermissionsResult] needs to be invoked.
  * @property onDownloadCompleted a callback invoked when a download is completed.
  * @property downloadManager a reference to the [DownloadManager] which is
  * responsible for performing the downloads.
@@ -40,7 +40,7 @@ typealias OnNeedToRequestPermissions = (session: Session, download: Download) ->
  */
 class DownloadsFeature(
     private val applicationContext: Context,
-    var onNeedToRequestPermissions: OnNeedToRequestPermissions = { _, _ -> },
+    var onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
     var onDownloadCompleted: OnDownloadCompleted = { _, _ -> },
     private val downloadManager: DownloadManager = DownloadManager(applicationContext, onDownloadCompleted),
     private val sessionManager: SessionManager,
@@ -82,29 +82,25 @@ class DownloadsFeature(
                 true
             }
         } else {
-            onNeedToRequestPermissions(session, download)
+            onNeedToRequestPermissions(arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE))
             false
         }
     }
 
     /**
-     * Notifies the feature that the permissions were granted. It will then
-     * automatically trigger the pending download.
+     * Notifies the feature that the permissions request was completed. It will then
+     * either trigger or clear the pending download.
      */
-    fun onPermissionsGranted() {
-        activeSession?.let { session ->
-            session.download.consume {
-                onDownload(session, it)
+    fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
+        if (applicationContext.isPermissionGranted(INTERNET, WRITE_EXTERNAL_STORAGE)) {
+            activeSession?.let { session ->
+                session.download.consume {
+                    onDownload(session, it)
+                }
             }
+        } else {
+            activeSession?.download = Consumable.empty()
         }
-    }
-
-    /**
-     * Notifies the feature that the permissions were denied. It will then
-     * clear the pending download.
-     */
-    fun onPermissionsDenied() {
-        activeSession?.download = Consumable.empty()
     }
 
     @SuppressLint("MissingPermission")

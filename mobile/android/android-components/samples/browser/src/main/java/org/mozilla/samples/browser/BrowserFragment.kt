@@ -4,9 +4,7 @@
 
 package org.mozilla.samples.browser
 
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Intent
-import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
 import android.support.design.widget.AppBarLayout
 import android.support.design.widget.AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
@@ -87,12 +85,11 @@ class BrowserFragment : Fragment(), BackHandler {
         downloadsFeature = DownloadsFeature(
             requireContext(),
             sessionManager = components.sessionManager,
-            fragmentManager = childFragmentManager
+            fragmentManager = childFragmentManager,
+            onNeedToRequestPermissions = { permissions ->
+                requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
+            }
         )
-
-        downloadsFeature.onNeedToRequestPermissions = { _, _ ->
-            requestPermissions(arrayOf(WRITE_EXTERNAL_STORAGE), PERMISSION_WRITE_STORAGE_REQUEST)
-        }
 
         scrollFeature = CoordinateScrollingFeature(components.sessionManager, layout.engineView, layout.toolbar)
 
@@ -191,7 +188,7 @@ class BrowserFragment : Fragment(), BackHandler {
 
     companion object {
         private const val SESSION_ID = "session_id"
-        private const val PERMISSION_WRITE_STORAGE_REQUEST = 1
+        private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
 
         fun create(sessionId: String? = null): BrowserFragment = BrowserFragment().apply {
             arguments = Bundle().apply {
@@ -202,13 +199,7 @@ class BrowserFragment : Fragment(), BackHandler {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
-            PERMISSION_WRITE_STORAGE_REQUEST -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED)) {
-                    downloadsFeature.onPermissionsGranted()
-                } else {
-                    downloadsFeature.onPermissionsDenied()
-                }
-            }
+            REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.onPermissionsResult(permissions, grantResults)
         }
         promptFeature.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
