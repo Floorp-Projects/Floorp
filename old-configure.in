@@ -168,11 +168,6 @@ case "$target" in
         MSVC_C_RUNTIME_DLL=vcruntime140.dll
         MSVC_CXX_RUNTIME_DLL=msvcp140.dll
 
-        MOZ_CHECK_HEADER(dia2.h, MSVC_HAS_DIA_SDK=1)
-        if test -n "$MSVC_HAS_DIA_SDK"; then
-            AC_DEFINE(MSVC_HAS_DIA_SDK)
-        fi
-
         # C5038: Enable initializer list order warnings
         # The -w1#### flag treats warning C#### as if it was a warning level
         # 1 warning, and thus enables it because we enable /W3 warnings. We
@@ -208,14 +203,6 @@ case "$target" in
           WIN_UCRT_REDIST_DIR=`cd "$WIN_UCRT_REDIST_DIR" && pwd -W`
         fi
 
-        if test -n "$WIN_DIA_SDK_BIN_DIR"; then
-          if test ! -d "$WIN_DIA_SDK_BIN_DIR"; then
-            AC_MSG_ERROR([Invalid Windows DIA SDK directory: ${WIN_DIA_SDK_BIN_DIR}])
-          fi
-          WIN_DIA_SDK_BIN_DIR=`cd "$WIN_DIA_SDK_BIN_DIR" && pwd -W`
-        fi
-
-        AC_SUBST(MSVC_HAS_DIA_SDK)
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
 
@@ -3469,7 +3456,6 @@ fi
 dnl win32 options
 AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(WIN_UCRT_REDIST_DIR)
-AC_SUBST(WIN_DIA_SDK_BIN_DIR)
 
 dnl ========================================================
 dnl ICU Support

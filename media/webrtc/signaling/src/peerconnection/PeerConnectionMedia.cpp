@@ -94,7 +94,7 @@ void PeerConnectionMedia::StunAddrsHandler::OnStunAddrsAvailable(
 }
 
 PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl* parent)
-    : mTransportHandler(nullptr),
+    : mTransportHandler(parent->GetTransportHandler()),
       mParent(parent),
       mParentHandle(parent->GetHandle()),
       mParentName(parent->GetName()),
@@ -192,20 +192,12 @@ nsresult PeerConnectionMedia::InitProxy() {
   return NS_OK;
 }
 
-nsresult PeerConnectionMedia::Init(
-    const dom::RTCConfiguration& aConfiguration) {
+nsresult PeerConnectionMedia::Init() {
   nsresult rv = InitProxy();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // setup the stun local addresses IPC async call
   InitLocalAddrs();
-
-  mTransportHandler = new MediaTransportHandler;
-  rv = mTransportHandler->Init("PC:" + mParentName, aConfiguration);
-  if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: Failed to init mtransport", __FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
 
   ConnectSignals();
   return NS_OK;
@@ -280,15 +272,37 @@ void PeerConnectionMedia::UpdateTransport(const JsepTransceiver& aTransceiver,
         candidates.end());
   }
 
+  nsTArray<uint8_t> keyDer;
+  nsTArray<uint8_t> certDer;
+  nsresult rv = mParent->Identity()->Serialize(&keyDer, &certDer);
+  if (NS_FAILED(rv)) {
+    CSFLogError(LOGTAG, "%s: Failed to serialize DTLS identity: %d",
+                __FUNCTION__, (int)rv);
+    return;
+  }
+
+  DtlsDigestList digests;
+  for (const auto& fingerprint :
+       transport.mDtls->GetFingerprints().mFingerprints) {
+    std::ostringstream ss;
+    ss << fingerprint.hashFunc;
+    digests.emplace_back(ss.str(), fingerprint.fingerprint);
+  }
+
   RUN_ON_THREAD(
       GetSTSThread(),
       WrapRunnable(
           mTransportHandler, &MediaTransportHandler::ActivateTransport,
           transport.mTransportId, transport.mLocalUfrag, transport.mLocalPwd,
-          components, ufrag, pwd, candidates, mParent->Identity(),
+          components, ufrag, pwd, keyDer, certDer,
+          mParent->Identity()->auth_type(),
           transport.mDtls->GetRole() == JsepDtlsTransport::kJsepDtlsClient,
-          transport.mDtls->GetFingerprints(), mParent->PrivacyRequested()),
+          digests, mParent->PrivacyRequested()),
       NS_DISPATCH_NORMAL);
+
+  for (auto& candidate : candidates) {
+    AddIceCandidate("candidate:" + candidate, transport.mTransportId);
+  }
 }
 
 nsresult PeerConnectionMedia::UpdateMediaPipelines() {
@@ -631,8 +645,7 @@ void PeerConnectionMedia::IceConnectionStateChange_s(
 }
 
 void PeerConnectionMedia::OnCandidateFound_s(
-    const std::string& aTransportId,
-    const MediaTransportHandler::CandidateInfo& aCandidateInfo) {
+    const std::string& aTransportId, const CandidateInfo& aCandidateInfo) {
   ASSERT_ON_THREAD(mSTSThread);
   MOZ_RELEASE_ASSERT(mTransportHandler);
 
@@ -661,8 +674,7 @@ void PeerConnectionMedia::IceConnectionStateChange_m(
 }
 
 void PeerConnectionMedia::OnCandidateFound_m(
-    const std::string& aTransportId,
-    const MediaTransportHandler::CandidateInfo& aCandidateInfo) {
+    const std::string& aTransportId, const CandidateInfo& aCandidateInfo) {
   ASSERT_ON_THREAD(mMainThread);
   if (!aCandidateInfo.mDefaultHostRtp.empty()) {
     SignalUpdateDefaultCandidate(aCandidateInfo.mDefaultHostRtp,

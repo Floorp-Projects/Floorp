@@ -285,7 +285,6 @@ checkbox:-moz-focusring {
 }
 
 /* Toolbar buttons */
-.devtools-menulist,
 .devtools-toolbarbutton,
 .devtools-button {
   -moz-appearance: none;

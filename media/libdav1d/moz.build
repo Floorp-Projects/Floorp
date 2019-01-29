@@ -24,6 +24,10 @@ SOURCES += [
     '../../third_party/dav1d/src/thread_task.c',
 ]
 
+# Don't export DAV1D_API symbols from libxul
+# see: third_party/dav1d/include/dav1d/common.h
+DEFINES['DAV1D_API'] = ''
+
 # Enable ASM build only on Linux for now.
 if CONFIG['OS_TARGET'] == 'Linux' and (CONFIG['CPU_ARCH'] in ('x86', 'x86_64')):
     # Default stack aligment is 16 bytes

@@ -1866,6 +1866,12 @@ bool internal_JSHistogram_Snapshot(JSContext* cx, unsigned argc,
                                    JS::Value* vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
+  if (!XRE_IsParentProcess()) {
+    JS_ReportErrorASCII(
+        cx, "Histograms can only be snapshotted in the parent process");
+    return false;
+  }
+
   if (!args.thisv().isObject() ||
       JS_GetClass(&args.thisv().toObject()) != &sJSHistogramClass) {
     JS_ReportErrorASCII(cx, "Wrong JS class, expected JSHistogram class");
@@ -1921,6 +1927,12 @@ bool internal_JSHistogram_Snapshot(JSContext* cx, unsigned argc,
 }
 
 bool internal_JSHistogram_Clear(JSContext* cx, unsigned argc, JS::Value* vp) {
+  if (!XRE_IsParentProcess()) {
+    JS_ReportErrorASCII(cx,
+                        "Histograms can only be cleared in the parent process");
+    return false;
+  }
+
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   if (!args.thisv().isObject() ||
@@ -2000,7 +2012,6 @@ void internal_JSHistogram_finalize(JSFreeOp*, JSObject* obj) {
 
 // NOTE: the functions in this section:
 //
-//   internal_KeyedHistogram_SnapshotImpl
 //   internal_JSKeyedHistogram_Add
 //   internal_JSKeyedHistogram_Keys
 //   internal_JSKeyedHistogram_Snapshot
@@ -2028,8 +2039,14 @@ static const JSClass sJSKeyedHistogramClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_FOREGROUND_FINALIZE, /* flags */
     &sJSKeyedHistogramClassOps};
 
-bool internal_KeyedHistogram_SnapshotImpl(JSContext* cx, unsigned argc,
-                                          JS::Value* vp, bool clearSubsession) {
+bool internal_JSKeyedHistogram_Snapshot(JSContext* cx, unsigned argc,
+                                        JS::Value* vp) {
+  if (!XRE_IsParentProcess()) {
+    JS_ReportErrorASCII(
+        cx, "Keyed histograms can only be snapshotted in the parent process");
+    return false;
+  }
+
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   if (!args.thisv().isObject() ||
@@ -2072,7 +2089,7 @@ bool internal_KeyedHistogram_SnapshotImpl(JSContext* cx, unsigned argc,
   }
 
   rv = keyed->GetJSSnapshot(cx, snapshot, NS_ConvertUTF16toUTF8(storeName),
-                            clearSubsession);
+                            false);
 
   // If the store is not available, we return nothing and don't fail
   if (rv == NS_ERROR_NO_CONTENT) {
@@ -2217,13 +2234,14 @@ bool internal_JSKeyedHistogram_Keys(JSContext* cx, unsigned argc,
   return true;
 }
 
-bool internal_JSKeyedHistogram_Snapshot(JSContext* cx, unsigned argc,
-                                        JS::Value* vp) {
-  return internal_KeyedHistogram_SnapshotImpl(cx, argc, vp, false);
-}
-
 bool internal_JSKeyedHistogram_Clear(JSContext* cx, unsigned argc,
                                      JS::Value* vp) {
+  if (!XRE_IsParentProcess()) {
+    JS_ReportErrorASCII(
+        cx, "Keyed histograms can only be cleared in the parent process");
+    return false;
+  }
+
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   if (!args.thisv().isObject() ||
@@ -2750,6 +2768,10 @@ const char* TelemetryHistogram::GetHistogramName(HistogramID id) {
 nsresult TelemetryHistogram::CreateHistogramSnapshots(
     JSContext* aCx, JS::MutableHandleValue aResult, const nsACString& aStore,
     unsigned int aDataset, bool aClearSubsession, bool aFilterTest) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Runs without protection from |gTelemetryHistogramMutex|
   JS::Rooted<JSObject*> root_obj(aCx, JS_NewPlainObject(aCx));
   if (!root_obj) {
@@ -2809,6 +2831,10 @@ nsresult TelemetryHistogram::CreateHistogramSnapshots(
 nsresult TelemetryHistogram::GetKeyedHistogramSnapshots(
     JSContext* aCx, JS::MutableHandleValue aResult, const nsACString& aStore,
     unsigned int aDataset, bool aClearSubsession, bool aFilterTest) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Runs without protection from |gTelemetryHistogramMutex|
   JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
   if (!obj) {

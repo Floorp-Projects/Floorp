@@ -3279,8 +3279,7 @@ static inline bool NeedToRecordAttrChange(
 
 void RestyleManager::AttributeWillChange(Element* aElement,
                                          int32_t aNameSpaceID,
-                                         nsAtom* aAttribute, int32_t aModType,
-                                         const nsAttrValue* aNewValue) {
+                                         nsAtom* aAttribute, int32_t aModType) {
   TakeSnapshotForAttributeChange(*aElement, aNameSpaceID, aAttribute);
 }
 

@@ -3370,9 +3370,15 @@ static void InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms) {
 
   script->setFlag(ImmutableFlags::HasInnerFunctions,
                   funbox->hasInnerFunctions());
+
+  script->setFlag(
+      ImmutableFlags::NeedsFunctionEnvironmentObjects,
+      (fun->needsCallObject() || fun->needsNamedLambdaEnvironment()));
 }
 
 /* static */ void JSScript::initFromModuleContext(HandleScript script) {
+  script->setFlag(ImmutableFlags::IsModule);
+
   // Since modules are only run once, mark the script so that initializers
   // created within it may be given more precise types.
   script->setTreatAsRunOnce();

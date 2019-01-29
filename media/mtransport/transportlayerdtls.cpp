@@ -427,24 +427,15 @@ nsresult TransportLayerDtls::SetVerificationAllowAll() {
 }
 
 nsresult TransportLayerDtls::SetVerificationDigest(
-    const std::string digest_algorithm, const unsigned char *digest_value,
-    size_t digest_len) {
+    const DtlsDigest &digest) {
   // Defensive programming
   if (verification_mode_ != VERIFY_UNSET &&
       verification_mode_ != VERIFY_DIGEST) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  // Note that we do not sanity check these values for length.
-  // We merely ensure they will fit into the buffer.
-  // TODO: is there a Data construct we could use?
-  if (digest_len > kMaxDigestLength) return NS_ERROR_INVALID_ARG;
-
-  digests_.push_back(
-      new VerificationDigest(digest_algorithm, digest_value, digest_len));
-
+  digests_.push_back(digest);
   verification_mode_ = VERIFY_DIGEST;
-
   return NS_OK;
 }
 
@@ -1375,34 +1366,21 @@ SECStatus TransportLayerDtls::AuthCertificateHook(void *arg, PRFileDesc *fd,
 }
 
 SECStatus TransportLayerDtls::CheckDigest(
-    const RefPtr<VerificationDigest> &digest,
-    UniqueCERTCertificate &peer_cert) const {
-  unsigned char computed_digest[kMaxDigestLength];
-  size_t computed_digest_len;
+    const DtlsDigest &digest, UniqueCERTCertificate &peer_cert) const {
+  DtlsDigest computed_digest(digest.algorithm_);
 
   MOZ_MTLOG(ML_DEBUG,
-            LAYER_INFO << "Checking digest, algorithm=" << digest->algorithm_);
-  nsresult res = DtlsIdentity::ComputeFingerprint(
-      peer_cert, digest->algorithm_, computed_digest, sizeof(computed_digest),
-      &computed_digest_len);
+            LAYER_INFO << "Checking digest, algorithm=" << digest.algorithm_);
+  nsresult res = DtlsIdentity::ComputeFingerprint(peer_cert, &computed_digest);
   if (NS_FAILED(res)) {
     MOZ_MTLOG(ML_ERROR, "Could not compute peer fingerprint for digest "
-                            << digest->algorithm_);
+                            << digest.algorithm_);
     // Go to end
     PR_SetError(SSL_ERROR_BAD_CERTIFICATE, 0);
     return SECFailure;
   }
 
-  if (computed_digest_len != digest->len_) {
-    MOZ_MTLOG(ML_ERROR, "Digest is wrong length "
-                            << digest->len_ << " should be "
-                            << computed_digest_len << " for algorithm "
-                            << digest->algorithm_);
-    PR_SetError(SSL_ERROR_BAD_CERTIFICATE, 0);
-    return SECFailure;
-  }
-
-  if (memcmp(digest->value_, computed_digest, computed_digest_len) != 0) {
+  if (computed_digest != digest) {
     MOZ_MTLOG(ML_ERROR, "Digest does not match");
     PR_SetError(SSL_ERROR_BAD_CERTIFICATE, 0);
     return SECFailure;

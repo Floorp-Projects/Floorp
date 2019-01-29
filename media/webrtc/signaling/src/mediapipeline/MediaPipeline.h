@@ -33,7 +33,7 @@ class nsIPrincipal;
 
 namespace mozilla {
 class MediaPipelineFilter;
-class MediaTransportBase;
+class MediaTransportHandler;
 class PeerIdentity;
 class AudioProxyThread;
 class VideoFrameConverter;
@@ -79,7 +79,8 @@ class SourceMediaStream;
 class MediaPipeline : public sigslot::has_slots<> {
  public:
   enum class DirectionType { TRANSMIT, RECEIVE };
-  MediaPipeline(const std::string& aPc, MediaTransportBase* aTransportHandler,
+  MediaPipeline(const std::string& aPc,
+                MediaTransportHandler* aTransportHandler,
                 DirectionType aDirection, nsCOMPtr<nsIEventTarget> aMainThread,
                 nsCOMPtr<nsIEventTarget> aStsThread,
                 RefPtr<MediaSessionConduit> aConduit);
@@ -215,7 +216,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   const DirectionType mDirection;
   size_t mLevel;
   std::string mTransportId;
-  RefPtr<MediaTransportBase> mTransportHandler;
+  RefPtr<MediaTransportHandler> mTransportHandler;
   RefPtr<MediaSessionConduit> mConduit;  // Our conduit. Written on the main
                                          // thread. Read on STS thread.
 
@@ -267,7 +268,7 @@ class MediaPipelineTransmit : public MediaPipeline {
  public:
   // Set aRtcpTransport to nullptr to use rtcp-mux
   MediaPipelineTransmit(const std::string& aPc,
-                        MediaTransportBase* aTransportHandler,
+                        MediaTransportHandler* aTransportHandler,
                         nsCOMPtr<nsIEventTarget> aMainThread,
                         nsCOMPtr<nsIEventTarget> aStsThread, bool aIsVideo,
                         RefPtr<MediaSessionConduit> aConduit);
@@ -324,7 +325,7 @@ class MediaPipelineReceive : public MediaPipeline {
  public:
   // Set aRtcpTransport to nullptr to use rtcp-mux
   MediaPipelineReceive(const std::string& aPc,
-                       MediaTransportBase* aTransportHandler,
+                       MediaTransportHandler* aTransportHandler,
                        nsCOMPtr<nsIEventTarget> aMainThread,
                        nsCOMPtr<nsIEventTarget> aStsThread,
                        RefPtr<MediaSessionConduit> aConduit);
@@ -343,7 +344,7 @@ class MediaPipelineReceive : public MediaPipeline {
 class MediaPipelineReceiveAudio : public MediaPipelineReceive {
  public:
   MediaPipelineReceiveAudio(const std::string& aPc,
-                            MediaTransportBase* aTransportHandler,
+                            MediaTransportHandler* aTransportHandler,
                             nsCOMPtr<nsIEventTarget> aMainThread,
                             nsCOMPtr<nsIEventTarget> aStsThread,
                             RefPtr<AudioSessionConduit> aConduit,
@@ -372,7 +373,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
 class MediaPipelineReceiveVideo : public MediaPipelineReceive {
  public:
   MediaPipelineReceiveVideo(const std::string& aPc,
-                            MediaTransportBase* aTransportHandler,
+                            MediaTransportHandler* aTransportHandler,
                             nsCOMPtr<nsIEventTarget> aMainThread,
                             nsCOMPtr<nsIEventTarget> aStsThread,
                             RefPtr<VideoSessionConduit> aConduit,
