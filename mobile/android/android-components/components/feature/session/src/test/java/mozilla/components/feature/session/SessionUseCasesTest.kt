@@ -144,7 +144,7 @@ class SessionUseCasesTest {
         `when`(sessionManager.selectedSession).thenReturn(null)
         `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(mock())
 
-        val loadUseCase = SessionUseCases.LoadUrlUseCase(sessionManager) { url ->
+        val loadUseCase = SessionUseCases.DefaultLoadUrlUseCase(sessionManager) { url ->
             sessionCreatedForUrl = url
             Session(url).also { createdSession = it }
         }

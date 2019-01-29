@@ -10,6 +10,7 @@ import mozilla.components.browser.session.SessionManager
 /**
  * Contains use cases related to the session feature.
  *
+ * @param sessionManager the application's [SessionManager].
  * @param onNoSession When invoking a use case that requires a (selected) [Session] and when no [Session] is available
  * this (optional) lambda will be invoked to create a [Session]. The default implementation creates a [Session] and adds
  * it to the [SessionManager].
@@ -21,15 +22,35 @@ class SessionUseCases(
     }
 ) {
 
-    class LoadUrlUseCase internal constructor(
+    /**
+     * Contract for use cases that load a provided URL.
+     */
+    interface LoadUrlUseCase {
+        fun invoke(url: String)
+    }
+
+    class DefaultLoadUrlUseCase internal constructor(
         private val sessionManager: SessionManager,
         private val onNoSession: (String) -> Session
-    ) {
+    ) : LoadUrlUseCase {
+
         /**
-         * Loads the provided URL using the provided session (or the currently
-         * selected session if none is provided).
+         * Loads the provided URL using the currently selected session. If
+         * there's no selected session a new session will be created using
+         * [onNoSession].
          *
-         * @param url url to load.
+         * @param url The URL to be loaded using the selected session.
+         */
+        override fun invoke(url: String) {
+            this.invoke(url, sessionManager.selectedSession)
+        }
+
+        /**
+         * Loads the provided URL using the specified session. If no session
+         * is provided the currently selected session will be used. If there's
+         * no selected session a new session will be created using [onNoSession].
+         *
+         * @param url The URL to be loaded using the provided session.
          * @param session the session for which the URL should be loaded.
          */
         fun invoke(url: String, session: Session? = sessionManager.selectedSession) {
@@ -118,7 +139,7 @@ class SessionUseCases(
         private val sessionManager: SessionManager
     ) {
         /**
-         * Request the desktop version of the current session and reloads the page.
+         * Requests the desktop version of the current session and reloads the page.
          */
         fun invoke(enable: Boolean, session: Session? = sessionManager.selectedSession) {
             if (session != null) {
@@ -153,7 +174,7 @@ class SessionUseCases(
         }
     }
 
-    val loadUrl: LoadUrlUseCase by lazy { LoadUrlUseCase(sessionManager, onNoSession) }
+    val loadUrl: DefaultLoadUrlUseCase by lazy { DefaultLoadUrlUseCase(sessionManager, onNoSession) }
     val loadData: LoadDataUseCase by lazy { LoadDataUseCase(sessionManager, onNoSession) }
     val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(sessionManager) }
     val stopLoading: StopLoadingUseCase by lazy { StopLoadingUseCase(sessionManager) }

@@ -7,6 +7,7 @@ package mozilla.components.feature.tabs
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.feature.session.SessionUseCases.LoadUrlUseCase
 
 /**
  * Contains use cases related to the tabs feature.
@@ -42,13 +43,24 @@ class TabsUseCases(
 
     class AddNewTabUseCase internal constructor(
         private val sessionManager: SessionManager
-    ) {
+    ) : LoadUrlUseCase {
+
         /**
-         * Add a new tab and load the provided URL.
+         * Adds a new tab and loads the provided URL.
+         *
+         * @param url The URL to be loaded in the new tab.
+         */
+        override fun invoke(url: String) {
+            this.invoke(url, true, true, null)
+        }
+
+        /**
+         * Adds a new tab and loads the provided URL.
          *
          * @param url The URL to be loaded in the new tab.
          * @param selectTab True (default) if the new tab should be selected immediately.
          * @param startLoading True (default) if the new tab should start loading immediately.
+         * @param parent the parent session to use for the newly created session.
          */
         fun invoke(
             url: String,
@@ -69,12 +81,24 @@ class TabsUseCases(
 
     class AddNewPrivateTabUseCase internal constructor(
         private val sessionManager: SessionManager
-    ) {
+    ) : LoadUrlUseCase {
+
         /**
-         * Add a new private tab and load the provided URL.
+         * Adds a new private tab and loads the provided URL.
+         *
+         * @param url The URL to be loaded in the new private tab.
+         */
+        override fun invoke(url: String) {
+            this.invoke(url, true, true, null)
+        }
+
+        /**
+         * Adds a new private tab and loads the provided URL.
          *
          * @param url The URL to be loaded in the new tab.
          * @param selectTab True (default) if the new tab should be selected immediately.
+         * @param startLoading True (default) if the new tab should start loading immediately.
+         * @param parent the parent session to use for the newly created session.
          */
         fun invoke(
             url: String,

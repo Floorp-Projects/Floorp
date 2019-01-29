@@ -25,6 +25,7 @@ android {
 
 dependencies {
     api project(':browser-session')
+    api project(':feature-session')
     implementation project(':concept-engine')
     implementation project(':concept-tabstray')
     implementation project(':concept-toolbar')
