@@ -6,6 +6,7 @@
 
 const debugTargets = require("./debug-targets");
 const runtimes = require("./runtimes");
+const telemetry = require("./telemetry");
 const ui = require("./ui");
 
-Object.assign(exports, ui, runtimes, debugTargets);
+Object.assign(exports, ui, runtimes, telemetry, debugTargets);

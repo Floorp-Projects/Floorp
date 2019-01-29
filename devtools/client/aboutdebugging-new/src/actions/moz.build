@@ -6,5 +6,6 @@ DevToolsModules(
     'debug-targets.js',
     'index.js',
     'runtimes.js',
+    'telemetry.js',
     'ui.js',
 )
