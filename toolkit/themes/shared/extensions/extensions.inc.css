@@ -18,11 +18,13 @@
   padding-left: 24px;
 }
 
-
 /*** global warnings ***/
 
 .global-warning-container {
   overflow-x: hidden;
+  margin-right: 28px;
+  margin-left: 28px;
+  max-width: 664px;
 }
 
 .global-warning {
@@ -97,8 +99,10 @@
 
 .alert-container {
   -moz-box-align: center;
-  margin-right: 48px;
-  margin-left: 48px;
+  margin-right: 28px;
+  margin-left: 28px;
+  max-width: 664px;
+  margin-bottom: 10px;
 }
 
 .alert-spacer-before {
@@ -410,6 +414,13 @@ button.warning {
   transition-property: color, background-color;
   transition-timing-function: var(--animation-curve);
   transition-duration: 150ms;
+}
+
+.message-container {
+  /* private-browsing-notice.max-width(664)
+     - message-bar.padding(8)
+     - message-bar-icon.computed-width(28) */
+  max-width: 628px;
 }
 
 .legacy-warning {
