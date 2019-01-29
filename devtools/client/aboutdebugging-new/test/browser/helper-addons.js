@@ -30,9 +30,9 @@ async function enableExtensionDebugging() {
  * Install a temporary extension at the provided path, with the provided name.
  * Will use a mock file picker to select the file.
  */
-async function installTemporaryExtension(path, name, document) {
+async function installTemporaryExtension(pathOrFile, name, document) {
   // Mock the file picker to select a test addon
-  prepareMockFilePicker(path);
+  prepareMockFilePicker(pathOrFile);
 
   const onAddonInstalled = new Promise(done => {
     Management.on("startup", function listener(event, extension) {
@@ -93,11 +93,14 @@ async function removeExtension(id, name, document) {
 }
 /* exported removeExtension */
 
-function prepareMockFilePicker(path) {
+function prepareMockFilePicker(pathOrFile) {
+  const isFile = typeof pathOrFile.isFile === "function" && pathOrFile.isFile();
+  const file = isFile ? pathOrFile : _getSupportsFile(pathOrFile).file;
+
   // Mock the file picker to select a test addon
   const MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
-  MockFilePicker.setFiles([_getSupportsFile(path).file]);
+  MockFilePicker.setFiles([file]);
 }
 /* exported prepareMockFilePicker */
 
