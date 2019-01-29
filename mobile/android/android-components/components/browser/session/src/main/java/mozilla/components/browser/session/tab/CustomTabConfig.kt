@@ -10,18 +10,6 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.support.annotation.ColorInt
 import android.support.customtabs.CustomTabsIntent
-import android.support.customtabs.CustomTabsIntent.EXTRA_TOOLBAR_COLOR
-import android.support.customtabs.CustomTabsIntent.EXTRA_CLOSE_BUTTON_ICON
-import android.support.customtabs.CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE
-import android.support.customtabs.CustomTabsIntent.KEY_DESCRIPTION
-import android.support.customtabs.CustomTabsIntent.KEY_PENDING_INTENT
-import android.support.customtabs.CustomTabsIntent.EXTRA_ENABLE_URLBAR_HIDING
-import android.support.customtabs.CustomTabsIntent.EXTRA_DEFAULT_SHARE_MENU_ITEM
-import android.support.customtabs.CustomTabsIntent.EXTRA_MENU_ITEMS
-import android.support.customtabs.CustomTabsIntent.KEY_MENU_ITEM_TITLE
-import android.support.customtabs.CustomTabsIntent.EXTRA_TINT_ACTION_BUTTON
-import android.support.customtabs.CustomTabsIntent.EXTRA_REMOTEVIEWS
-import android.support.customtabs.CustomTabsIntent.EXTRA_TOOLBAR_ITEMS
 import android.util.DisplayMetrics
 
 import mozilla.components.support.utils.SafeBundle
@@ -57,6 +45,27 @@ class CustomTabConfig internal constructor(
         internal const val PAGE_TITLE_OPTION = "hasPageTitle"
         private const val MAX_CLOSE_BUTTON_SIZE_DP = 24
 
+        private val EXTRA_SESSION = StringBuilder("support.customtabs.extra.SESSION").toExtra()
+        private val EXTRA_TOOLBAR_COLOR = StringBuilder("support.customtabs.extra.TOOLBAR_COLOR").toExtra()
+        private val EXTRA_CLOSE_BUTTON_ICON = StringBuilder("support.customtabs.extra.CLOSE_BUTTON_ICON").toExtra()
+        private val EXTRA_ACTION_BUTTON_BUNDLE =
+            StringBuilder("support.customtabs.extra.ACTION_BUTTON_BUNDLE").toExtra()
+        private val KEY_DESCRIPTION = StringBuilder("support.customtabs.customaction.DESCRIPTION").toExtra()
+        private val KEY_PENDING_INTENT = StringBuilder("support.customtabs.customaction.PENDING_INTENT").toExtra()
+        private val EXTRA_ENABLE_URLBAR_HIDING =
+            StringBuilder("support.customtabs.extra.ENABLE_URLBAR_HIDING").toExtra()
+        private val EXTRA_DEFAULT_SHARE_MENU_ITEM = StringBuilder("support.customtabs.extra.SHARE_MENU_ITEM").toExtra()
+        private val EXTRA_MENU_ITEMS = StringBuilder("support.customtabs.extra.MENU_ITEMS").toExtra()
+        private val KEY_MENU_ITEM_TITLE = StringBuilder("support.customtabs.customaction.MENU_ITEM_TITLE").toExtra()
+        private val EXTRA_TINT_ACTION_BUTTON = StringBuilder("support.customtabs.extra.TINT_ACTION_BUTTON").toExtra()
+        private val EXTRA_REMOTEVIEWS = StringBuilder("support.customtabs.extra.EXTRA_REMOTEVIEWS").toExtra()
+        private val EXTRA_TOOLBAR_ITEMS = StringBuilder("support.customtabs.extra.TOOLBAR_ITEMS").toExtra()
+
+        /**
+         * TODO remove when fixed: https://github.com/mozilla-mobile/android-components/issues/1884
+         */
+        private fun StringBuilder.toExtra() = insert(0, "android.").toString()
+
         /**
          * Checks if the provided intent is a custom tab intent.
          *
@@ -64,7 +73,7 @@ class CustomTabConfig internal constructor(
          * @return true if the intent is a custom tab intent, otherwise false.
          */
         fun isCustomTabIntent(intent: SafeIntent): Boolean {
-            return intent.hasExtra(CustomTabsIntent.EXTRA_SESSION)
+            return intent.hasExtra(EXTRA_SESSION)
         }
 
         /**

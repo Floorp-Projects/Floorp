@@ -13,6 +13,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-customtabs**
+  * Added a temporary workaround for Custom Tab intents not being recognized when using the Jetifier tool.
+
 # 0.40.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.39.0...v0.40.0)
