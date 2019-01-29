@@ -1178,13 +1178,18 @@ SimpleTest.finish = function() {
                                + "SimpleTest.waitForExplicitFinish() if you need "
                                + "it.)");
         }
+
+        let workers = SpecialPowers.registeredServiceWorkers();
         if (SimpleTest._expectingRegisteredServiceWorker) {
-            if (!SpecialPowers.isServiceWorkerRegistered()) {
+            if (workers.length === 0) {
                 SimpleTest.ok(false, "This test is expected to leave a service worker registered");
             }
         } else {
-            if (SpecialPowers.isServiceWorkerRegistered()) {
+            if (workers.length > 0) {
                 SimpleTest.ok(false, "This test left a service worker registered without cleaning it up");
+                for (let worker of workers) {
+                    SimpleTest.ok(false, `Left over worker: ${worker.scriptSpec} (scope: ${worker.scope})`);
+                }
             }
         }
 
