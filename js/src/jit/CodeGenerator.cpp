@@ -12996,10 +12996,9 @@ void CodeGenerator::visitRecompileCheck(LRecompileCheck* ins) {
   Register tmp = ToRegister(ins->scratch());
   OutOfLineCode* ool;
   if (ins->mir()->forceRecompilation()) {
-    ool =
-        oolCallVM(ForcedRecompileFnInfo, ins, ArgList(), StoreRegisterTo(tmp));
+    ool = oolCallVM(ForcedRecompileFnInfo, ins, ArgList(), StoreNothing());
   } else {
-    ool = oolCallVM(RecompileFnInfo, ins, ArgList(), StoreRegisterTo(tmp));
+    ool = oolCallVM(RecompileFnInfo, ins, ArgList(), StoreNothing());
   }
 
   // Check if warm-up counter is high enough.
