@@ -2210,13 +2210,13 @@ this.VideoControlsImplWidget = class {
             <span class="errorLabel" id="errorGeneric">&error.generic;</span>
           </div>
 
-          <div id="controlsOverlay" class="controlsOverlay stackItem">
+          <div id="controlsOverlay" class="controlsOverlay stackItem" role="none">
             <div class="controlsSpacerStack">
               <div id="controlsSpacer" class="controlsSpacer stackItem" role="none"></div>
               <div id="clickToPlay" class="clickToPlay" hidden="true"></div>
             </div>
 
-            <div id="controlBar" class="controlBar" hidden="true">
+            <div id="controlBar" class="controlBar" role="none" hidden="true">
               <button id="playButton"
                       class="button playButton"
                       playlabel="&playButton.playLabel;"
