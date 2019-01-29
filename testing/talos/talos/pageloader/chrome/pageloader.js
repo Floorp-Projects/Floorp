@@ -5,9 +5,8 @@
 /* import-globals-from report.js */
 /* eslint mozilla/avoid-Date-timing: "off" */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "TalosParentProfiler",
                                "resource://talos-powers/TalosParentProfiler.jsm");
 
