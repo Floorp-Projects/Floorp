@@ -358,21 +358,7 @@ def dia_sdk_subdir(host_or_target, subdir):
     return dia_sdk_subdir
 
 
-# XXX: remove after bug 1523201
-js_option(env='WIN_DIA_SDK_BIN_DIR', nargs=1, help='Path to the DIA DLLs')
-
-
-@depends('WIN_DIA_SDK_BIN_DIR', dia_sdk_subdir(host, 'bin'))
-@imports('os')
-def dia_sdk_bin_dir(from_env, guessed):
-    if from_env:
-        if not os.path.isdir(from_env[0]):
-            die('Invalid Windows DIA SDK directory: {}'.format(from_env))
-        return from_env[0]
-    return guessed
-
-
-set_config('WIN_DIA_SDK_BIN_DIR', dia_sdk_bin_dir)
+set_config('WIN_DIA_SDK_BIN_DIR', dia_sdk_subdir(host, 'bin'))
 
 
 @template
