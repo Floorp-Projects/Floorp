@@ -60,16 +60,16 @@ class ProviderUnifiedComplete extends UrlbarProvider {
 
   /**
    * Returns the sources returned by this provider.
-   * @returns {array} one or multiple types from UrlbarUtils.MATCH_SOURCE.*
+   * @returns {array} one or multiple types from UrlbarUtils.RESULT_SOURCE.*
    */
   get sources() {
     return [
-      UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
-      UrlbarUtils.MATCH_SOURCE.HISTORY,
-      UrlbarUtils.MATCH_SOURCE.SEARCH,
-      UrlbarUtils.MATCH_SOURCE.TABS,
-      UrlbarUtils.MATCH_SOURCE.OTHER_LOCAL,
-      UrlbarUtils.MATCH_SOURCE.OTHER_NETWORK,
+      UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      UrlbarUtils.RESULT_SOURCE.SEARCH,
+      UrlbarUtils.RESULT_SOURCE.TABS,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
     ];
   }
 
@@ -225,7 +225,7 @@ function makeUrlbarResult(tokens, info) {
       case "searchengine":
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.SEARCH,
-          UrlbarUtils.MATCH_SOURCE.SEARCH,
+          UrlbarUtils.RESULT_SOURCE.SEARCH,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             engine: [action.params.engineName, true],
             suggestion: [action.params.searchSuggestion, true],
@@ -237,7 +237,7 @@ function makeUrlbarResult(tokens, info) {
       case "keyword":
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.KEYWORD,
-          UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
+          UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             url: [action.params.url, true],
             keyword: [info.firstToken, true],
@@ -248,7 +248,7 @@ function makeUrlbarResult(tokens, info) {
       case "extension":
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.OMNIBOX,
-          UrlbarUtils.MATCH_SOURCE.OTHER_NETWORK,
+          UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             title: [info.comment, true],
             content: [action.params.content, true],
@@ -259,7 +259,7 @@ function makeUrlbarResult(tokens, info) {
       case "remotetab":
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
-          UrlbarUtils.MATCH_SOURCE.TABS,
+          UrlbarUtils.RESULT_SOURCE.TABS,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             url: [action.params.url, true],
             title: [info.comment, true],
@@ -270,7 +270,7 @@ function makeUrlbarResult(tokens, info) {
       case "switchtab":
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-          UrlbarUtils.MATCH_SOURCE.TABS,
+          UrlbarUtils.RESULT_SOURCE.TABS,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             url: [action.params.url, true],
             title: [info.comment, true],
@@ -281,7 +281,7 @@ function makeUrlbarResult(tokens, info) {
       case "visiturl":
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.URL,
-          UrlbarUtils.MATCH_SOURCE.OTHER_LOCAL,
+          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             title: [info.comment, true],
             url: [action.params.url, true],
@@ -297,7 +297,7 @@ function makeUrlbarResult(tokens, info) {
   if (info.style.includes("priority-search")) {
     return new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
-      UrlbarUtils.MATCH_SOURCE.SEARCH,
+      UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
         engine: [info.comment, true],
         icon: [info.icon, false],
@@ -311,7 +311,7 @@ function makeUrlbarResult(tokens, info) {
   let comment = info.comment;
   let hasTags = info.style.includes("tag");
   if (info.style.includes("bookmark") || hasTags) {
-    source = UrlbarUtils.MATCH_SOURCE.BOOKMARKS;
+    source = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
     if (hasTags) {
       // Split title and tags.
       [comment, tags] = info.comment.split(TITLE_TAGS_SEPARATOR);
@@ -322,9 +322,9 @@ function makeUrlbarResult(tokens, info) {
       }).sort();
     }
   } else if (info.style.includes("preloaded-top-sites")) {
-    source = UrlbarUtils.MATCH_SOURCE.OTHER_LOCAL;
+    source = UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL;
   } else {
-    source = UrlbarUtils.MATCH_SOURCE.HISTORY;
+    source = UrlbarUtils.RESULT_SOURCE.HISTORY;
   }
   return new UrlbarResult(
     UrlbarUtils.RESULT_TYPE.URL,

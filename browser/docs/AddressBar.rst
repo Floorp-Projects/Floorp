@@ -72,7 +72,7 @@ It is augmented as it progresses through the system, with various information:
     providers; // {array} List of registered provider names. Providers can be
                // registered through the UrlbarProvidersManager.
     sources; // {array} If provided is the list of sources, as defined by
-             // MATCH_SOURCE.*, that can be returned by the model.
+             // RESULT_SOURCE.*, that can be returned by the model.
 
     // Properties added by the Model.
     autofillValue; // {string} the text value that should be autofilled in the
@@ -173,7 +173,7 @@ class UrlbarProvider {
     throw new Error("Trying to access the base class, must be overridden");
   }
   /**
-   * List of UrlbarUtils.MATCH_SOURCE, representing the data sources used by
+   * List of UrlbarUtils.RESULT_SOURCE, representing the data sources used by
    * the provider.
    * @abstract
    */
@@ -371,7 +371,7 @@ properties, supported by all of the results.
     constructor(resultType, payload);
 
     type: {integer} One of UrlbarUtils.RESULT_TYPE.
-    source: {integer} One of UrlbarUtils.MATCH_SOURCE.
+    source: {integer} One of UrlbarUtils.RESULT_SOURCE.
     title: {string} A title that may be used as a label for this result.
     icon: {string} Url of an icon for this result.
     payload: {object} Object containing properties for the specific RESULT_TYPE.

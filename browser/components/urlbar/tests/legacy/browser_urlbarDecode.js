@@ -34,7 +34,7 @@ add_task(function losslessDecode() {
   let url = "http://" + urlNoScheme;
   if (Services.prefs.getBoolPref("browser.urlbar.quantumbar", true)) {
     const result = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                                    UrlbarUtils.MATCH_SOURCE.TABS,
+                                    UrlbarUtils.RESULT_SOURCE.TABS,
                                     { url });
     gURLBar.setValueFromResult(result);
   } else {
