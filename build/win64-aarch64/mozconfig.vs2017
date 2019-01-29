@@ -8,7 +8,6 @@ if [ -d "${VSPATH}" ]; then
 
     export WINDOWSSDKDIR="${VSWINPATH}/SDK"
     export WIN32_REDIST_DIR=${VSPATH}/VC/redist/arm64/Microsoft.VC141.CRT
-    export WIN_DIA_SDK_BIN_DIR="${VSPATH}/DIA SDK/bin/amd64"
     export DIA_SDK_PATH="${VSPATH}/DIA SDK"
     export VC_PATH="${VSPATH}/VC"
 
