@@ -850,7 +850,7 @@ impl AlphaBatchBuilder {
                             [
                                 (run.reference_frame_relative_offset.x * 256.0) as i32,
                                 (run.reference_frame_relative_offset.y * 256.0) as i32,
-                                0,
+                                run.raster_space as i32,
                             ],
                         );
                         let key = BatchKey::new(kind, blend_mode, textures);

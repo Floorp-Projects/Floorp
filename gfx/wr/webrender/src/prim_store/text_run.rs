@@ -9,6 +9,7 @@ use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use frame_builder::{FrameBuildingState, PictureContext};
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use gpu_cache::GpuCache;
+use gpu_types::RasterizationSpace;
 use intern;
 use intern_types;
 use prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
@@ -64,8 +65,9 @@ impl AsInstanceKind<TextRunDataHandle> for TextRunKey {
         let run_index = prim_store.text_runs.push(TextRunPrimitive {
             used_font: self.font.clone(),
             glyph_keys_range: storage::Range::empty(),
-            shadow: self.shadow,
             reference_frame_relative_offset,
+            shadow: self.shadow,
+            raster_space: RasterizationSpace::Screen,
         });
 
         PrimitiveInstanceKind::TextRun{ data_handle, run_index }
@@ -210,6 +212,7 @@ pub struct TextRunPrimitive {
     pub glyph_keys_range: storage::Range<GlyphKey>,
     pub reference_frame_relative_offset: LayoutVector2D,
     pub shadow: bool,
+    pub raster_space: RasterizationSpace,
 }
 
 impl TextRunPrimitive {
@@ -243,6 +246,13 @@ impl TextRunPrimitive {
             FontTransform::from(transform).quantize()
         } else {
             FontTransform::identity()
+        };
+
+        // Record the raster space the text needs to be snapped in.
+        self.raster_space = if raster_space == RasterSpace::Screen {
+            RasterizationSpace::Screen
+        } else {
+            RasterizationSpace::Local
         };
 
         // If the transform or device size is different, then the caller of
