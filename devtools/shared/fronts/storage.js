@@ -8,12 +8,7 @@ const { childSpecs, storageSpec } = require("devtools/shared/specs/storage");
 
 for (const childSpec of Object.values(childSpecs)) {
   class ChildStorageFront extends FrontClassWithSpec(childSpec) {
-    form(form, detail) {
-      if (detail === "actorid") {
-        this.actorID = form;
-        return null;
-      }
-
+    form(form) {
       this.actorID = form.actor;
       this.hosts = form.hosts;
       return null;
@@ -23,9 +18,11 @@ for (const childSpec of Object.values(childSpecs)) {
 }
 
 class StorageFront extends FrontClassWithSpec(storageSpec) {
-  constructor(client, tabForm) {
-    super(client, { actor: tabForm.storageActor });
-    this.manage(this);
+  constructor(client) {
+    super(client);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "storageActor";
   }
 }
 

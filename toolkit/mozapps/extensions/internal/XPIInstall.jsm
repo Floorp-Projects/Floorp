@@ -425,6 +425,7 @@ async function loadManifestFromWebManifest(aUri, aPackage) {
   addon.dependencies = Object.freeze(Array.from(extension.dependencies));
   addon.startupData = extension.startupData;
   addon.hidden = manifest.hidden;
+  addon.incognito = manifest.incognito;
 
   if (addon.type === "theme" && await aPackage.hasResource("preview.png")) {
     addon.previewImage = "preview.png";

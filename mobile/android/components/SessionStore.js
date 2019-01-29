@@ -9,7 +9,6 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
-  FormData: "resource://gre/modules/FormData.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -1395,7 +1394,7 @@ SessionStore.prototype = {
         // restore() will return false, and thus abort restoration for the
         // current |frame| and its descendants, if |data.url| is given but
         // doesn't match the loaded document's URL.
-        return FormData.restore(frame, data);
+        return SessionStoreUtils.restoreFormData(frame.document, data);
       });
     }
   },

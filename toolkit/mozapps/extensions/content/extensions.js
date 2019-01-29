@@ -18,6 +18,8 @@ ChromeUtils.defineModuleGetter(this, "Extension",
                                "resource://gre/modules/Extension.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionParent",
                                "resource://gre/modules/ExtensionParent.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionPermissions",
+                               "resource://gre/modules/ExtensionPermissions.jsm");
 ChromeUtils.defineModuleGetter(this, "PluralForm",
                                "resource://gre/modules/PluralForm.jsm");
 ChromeUtils.defineModuleGetter(this, "Preferences",
@@ -31,6 +33,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       "extensions.webextPermissionPrompts", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "XPINSTALL_ENABLED",
                                       "xpinstall.enabled", true);
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "allowPrivateBrowsingByDefault",
+                                      "extensions.allowPrivateBrowsingByDefault", true);
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "SUPPORT_URL", "app.support.baseURL",
                                       "", null, val => Services.urlFormatter.formatURL(val));
@@ -2412,6 +2417,13 @@ var gListView = {
       gViewController.loadView("addons://legacy/");
     });
 
+    try {
+      document.getElementById("private-browsing-learnmore-link")
+              .setAttribute("href", SUPPORT_URL + "extensions-pb");
+    } catch (e) {
+      document.getElementById("private-browsing-notice").hidden = true;
+    }
+
     let findSignedAddonsLink = document.getElementById("find-alternative-addons");
     try {
       findSignedAddonsLink.setAttribute("href",
@@ -2468,6 +2480,9 @@ var gListView = {
           showLegacyInfo = true;
         }
       }
+
+      let privateNotice = document.getElementById("private-browsing-notice");
+      privateNotice.hidden = allowPrivateBrowsingByDefault || aType != "extension";
 
       var elements = [];
 
@@ -2632,13 +2647,13 @@ var gListView = {
   },
 };
 
-
 var gDetailView = {
   node: null,
   _addon: null,
   _loadingTimer: null,
   _autoUpdate: null,
   isRoot: false,
+  restartingAddon: false,
 
   initialize() {
     this.node = document.getElementById("detail-view");
@@ -2648,6 +2663,36 @@ var gDetailView = {
 
     this._autoUpdate.addEventListener("command", () => {
       this._addon.applyBackgroundUpdates = this._autoUpdate.value;
+    }, true);
+
+    document.getElementById("detail-private-browsing-learnmore-link")
+            .setAttribute("href", SUPPORT_URL + "extensions-pb");
+
+    this._privateBrowsing = document.getElementById("detail-privateBrowsing");
+    this._privateBrowsing.addEventListener("command", async () => {
+      let addon = this._addon;
+      let policy = WebExtensionPolicy.getByID(addon.id);
+      let extension = policy && policy.extension;
+
+      let perms = {permissions: ["internal:privateBrowsingAllowed"], origins: []};
+      if (this._privateBrowsing.value == "1") {
+        await ExtensionPermissions.add(addon.id, perms, extension);
+      } else {
+        await ExtensionPermissions.remove(addon.id, perms, extension);
+      }
+
+      // Reload the extension if it is already enabled.  This ensures any change
+      // on the private browsing permission is properly handled.
+      if (addon.isActive) {
+        try {
+          this.restartingAddon = true;
+          await addon.reload();
+        } finally {
+          this.restartingAddon = false;
+          this.updateState();
+          this._updateView(addon, false);
+        }
+      }
     }, true);
   },
 
@@ -2659,7 +2704,12 @@ var gDetailView = {
     this.onPropertyChanged(["applyBackgroundUpdates"]);
   },
 
-  _updateView(aAddon, aIsRemote, aScrollToPreferences) {
+  async _updateView(aAddon, aIsRemote, aScrollToPreferences) {
+    // Skip updates to avoid flickering while restarting the addon.
+    if (this.restartingAddon) {
+      return;
+    }
+
     setSearchLabel(aAddon.type);
 
     // Set the preview image for themes, if available.
@@ -2789,6 +2839,25 @@ var gDetailView = {
       document.getElementById("detail-findUpdates-btn").hidden = false;
     }
 
+    // Only type = "extension" will ever get privateBrowsingAllowed, other types have
+    // no code that would be affected by the setting.  The permission is read directly
+    // from ExtensionPermissions so we can get it whether or not the extension is
+    // currently active.
+    let privateBrowsingRow = document.getElementById("detail-privateBrowsing-row");
+    let privateBrowsingFooterRow = document.getElementById("detail-privateBrowsing-row-footer");
+    if (allowPrivateBrowsingByDefault || aAddon.type != "extension" ||
+        aAddon.incognito == "not_allowed") {
+      this._privateBrowsing.hidden = true;
+      privateBrowsingRow.hidden = true;
+      privateBrowsingFooterRow.hidden = true;
+    } else {
+      let perms = await ExtensionPermissions.get(aAddon.id);
+      this._privateBrowsing.hidden = false;
+      privateBrowsingRow.hidden = false;
+      privateBrowsingFooterRow.hidden = false;
+      this._privateBrowsing.value = perms.permissions.includes("internal:privateBrowsingAllowed") ? "1" : "0";
+    }
+
     document.getElementById("detail-prefs-btn").hidden = !aIsRemote &&
       !gViewController.commands.cmd_showItemPreferences.isEnabled(aAddon);
 
@@ -2867,6 +2936,11 @@ var gDetailView = {
   },
 
   updateState() {
+    // Skip updates to avoid flickering while restarting the addon.
+    if (this.restartingAddon) {
+      return;
+    }
+
     gViewController.updateCommands();
 
     var pending = this._addon.pendingOperations;

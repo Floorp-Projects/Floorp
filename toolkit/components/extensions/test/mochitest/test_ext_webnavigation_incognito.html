@@ -16,12 +16,15 @@
 "use strict";
 
 add_task(async function webnav_test_incognito() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
+
   // Monitor will fail if it gets any event.
   let monitor = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["webNavigation", "*://mochi.test/*"],
     },
-    incognitoOverride: "not_allowed",
     background() {
       const EVENTS = [
         "onTabReplaced",
@@ -59,6 +62,7 @@ add_task(async function webnav_test_incognito() {
 
   // extension loads a private window and waits for the onCompleted event.
   let extension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
     manifest: {
       permissions: ["tabs", "webNavigation", "*://mochi.test/*"],
     },

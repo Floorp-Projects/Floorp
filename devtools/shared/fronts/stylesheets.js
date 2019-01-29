@@ -20,8 +20,8 @@ loader.lazyRequireGetter(this, "getIndentationFromString",
  * Corresponding client-side front for a MediaRuleActor.
  */
 class MediaRuleFront extends FrontClassWithSpec(mediaRuleSpec) {
-  constructor(client, form) {
-    super(client, form);
+  constructor(client) {
+    super(client);
 
     this._onMatchesChange = this._onMatchesChange.bind(this);
     this.on("matches-change", this._onMatchesChange);
@@ -31,11 +31,7 @@ class MediaRuleFront extends FrontClassWithSpec(mediaRuleSpec) {
     this._form.matches = matches;
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this.actorID = form.actor;
     this._form = form;
   }
@@ -83,11 +79,7 @@ class StyleSheetFront extends FrontClassWithSpec(styleSheetSpec) {
     this._form[property] = value;
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this.actorID = form.actor;
     this._form = form;
   }
@@ -148,9 +140,11 @@ registerFront(StyleSheetFront);
  * The corresponding Front object for the StyleSheetsActor.
  */
 class StyleSheetsFront extends FrontClassWithSpec(styleSheetsSpec) {
-  constructor(client, tabForm) {
-    super(client, { actor: tabForm.styleSheetsActor });
-    this.manage(this);
+  constructor(client) {
+    super(client);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "styleSheetsActor";
   }
 }
 

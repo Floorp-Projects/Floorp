@@ -18,11 +18,7 @@ loader.lazyRequireGetter(this, "RecordingUtils",
  * be changed -- you must introduce a new method, and detect the server.
  */
 class PerformanceRecordingFront extends FrontClassWithSpec(performanceRecordingSpec) {
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this.actorID = form.actor;
     this._form = form;
     this._configuration = form.configuration;
@@ -50,8 +46,8 @@ class PerformanceRecordingFront extends FrontClassWithSpec(performanceRecordingS
     }
   }
 
-  constructor(client, form, config) {
-    super(client, form);
+  constructor(client) {
+    super(client);
     this._markers = [];
     this._frames = [];
     this._memory = [];

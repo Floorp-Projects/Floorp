@@ -20,16 +20,12 @@ loader.lazyRequireGetter(this, "RuleRewriter",
  * PageStyleFront, the front object for the PageStyleActor
  */
 class PageStyleFront extends FrontClassWithSpec(pageStyleSpec) {
-  constructor(conn, form, ctx, detail) {
-    super(conn, form, ctx, detail);
+  constructor(conn) {
+    super(conn);
     this.inspector = this.parent();
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this._form = form;
   }
 
@@ -85,17 +81,13 @@ registerFront(PageStyleFront);
  * StyleRuleFront, the front for the StyleRule actor.
  */
 class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
-  constructor(client, form, ctx, detail) {
-    super(client, form, ctx, detail);
+  constructor(client) {
+    super(client);
 
     this.before("location-changed", this._locationChangedPre.bind(this));
   }
 
-  form(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
+  form(form) {
     this.actorID = form.actor;
     this._form = form;
     if (this._mediaText) {

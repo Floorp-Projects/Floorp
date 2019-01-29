@@ -32,9 +32,11 @@ registerFront(ProgramFront);
  * The corresponding Front object for the WebGLActor.
  */
 class WebGLFront extends FrontClassWithSpec(webGLSpec) {
-  constructor(client, { webglActor }) {
-    super(client, { actor: webglActor });
-    this.manage(this);
+  constructor(client) {
+    super(client);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "webglActor";
   }
 }
 

@@ -315,12 +315,13 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.ContentDelegate.ContextElement {
-    ctor protected ContextElement(@android.support.annotation.Nullable java.lang.String, @android.support.annotation.Nullable java.lang.String, @android.support.annotation.Nullable java.lang.String, @android.support.annotation.NonNull java.lang.String, @android.support.annotation.Nullable java.lang.String);
+    ctor protected ContextElement(@android.support.annotation.Nullable java.lang.String, @android.support.annotation.Nullable java.lang.String, @android.support.annotation.Nullable java.lang.String, @android.support.annotation.Nullable java.lang.String, @android.support.annotation.NonNull java.lang.String, @android.support.annotation.Nullable java.lang.String);
     field public static final int TYPE_AUDIO = 3;
     field public static final int TYPE_IMAGE = 1;
     field public static final int TYPE_NONE = 0;
     field public static final int TYPE_VIDEO = 2;
     field @android.support.annotation.Nullable public final java.lang.String altText;
+    field @android.support.annotation.Nullable public final java.lang.String baseUri;
     field @android.support.annotation.Nullable public final java.lang.String linkUri;
     field @android.support.annotation.Nullable public final java.lang.String srcUri;
     field @android.support.annotation.Nullable public final java.lang.String title;

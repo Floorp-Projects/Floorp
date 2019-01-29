@@ -18,11 +18,11 @@ const ARRAY_SIZE = 50;
 const REPEAT = 300;
 
 class DampTestFront extends FrontClassWithSpec(dampTestSpec) {
-  constructor(client, tabForm) {
-    super(client, tabForm);
-    this.actorID = tabForm.dampTestActor;
-    // Root owns itself.
-    this.manage(this);
+  constructor(client) {
+    super(client);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "dampTestActor";
   }
 }
 protocol.registerFront(DampTestFront);

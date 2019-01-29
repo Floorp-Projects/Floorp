@@ -4285,7 +4285,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   // locations (via e.g. both updates being eRestore).
   bool visualScrollOffsetUpdated =
       aLayerMetrics.GetVisualScrollUpdateType() != FrameMetrics::eNone;
-  if (aLayerMetrics.GetScrollUpdateType() == FrameMetrics::eMainThread ||
+  if ((aLayerMetrics.GetScrollUpdateType() == FrameMetrics::eMainThread &&
+       aLayerMetrics.GetVisualScrollUpdateType() !=
+           FrameMetrics::eMainThread) ||
       smoothScrollRequested) {
     visualScrollOffsetUpdated = false;
   }
@@ -4468,9 +4470,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       // If an animation is underway, tell it about the scroll offset update.
       // Some animations can handle some scroll offset updates and continue
       // running. Those that can't will return false, and we cancel them.
-      if ((!mAnimation && !CanHandleScrollOffsetUpdate(mState)) ||
-          (mAnimation &&
-           !mAnimation->HandleScrollOffsetUpdate(relativeDelta))) {
+      if (relativeDelta != Some(CSSPoint()) &&
+          ((!mAnimation && !CanHandleScrollOffsetUpdate(mState)) ||
+           (mAnimation &&
+            !mAnimation->HandleScrollOffsetUpdate(relativeDelta)))) {
         // Cancel the animation (which might also trigger a repaint request)
         // after we update the scroll offset above. Otherwise we can be left
         // in a state where things are out of sync.

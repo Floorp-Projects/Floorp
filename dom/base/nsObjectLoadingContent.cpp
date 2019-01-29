@@ -598,7 +598,7 @@ void nsObjectLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent) {
   }
 
   // Unattach plugin problem UIWidget if any.
-  if (thisElement->IsInComposedDoc() && nsContentUtils::IsUAWidgetEnabled()) {
+  if (thisElement->IsInComposedDoc()) {
     thisElement->NotifyUAWidgetTeardown();
   }
 
@@ -2571,23 +2571,21 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
       doc->ContentStateChanged(thisEl, changedBits);
     }
 
-    // Create/destroy plugin problem UAWidget if needed.
-    if (nsContentUtils::IsUAWidgetEnabled()) {
-      const EventStates pluginProblemState =
-          NS_EVENT_STATE_HANDLER_BLOCKED | NS_EVENT_STATE_HANDLER_CRASHED |
-          NS_EVENT_STATE_TYPE_CLICK_TO_PLAY |
-          NS_EVENT_STATE_VULNERABLE_UPDATABLE |
-          NS_EVENT_STATE_VULNERABLE_NO_UPDATE;
+    // Create/destroy plugin problem UAWidget.
+    const EventStates pluginProblemState = NS_EVENT_STATE_HANDLER_BLOCKED |
+                                           NS_EVENT_STATE_HANDLER_CRASHED |
+                                           NS_EVENT_STATE_TYPE_CLICK_TO_PLAY |
+                                           NS_EVENT_STATE_VULNERABLE_UPDATABLE |
+                                           NS_EVENT_STATE_VULNERABLE_NO_UPDATE;
 
-      bool hadProblemState = !(aOldState & pluginProblemState).IsEmpty();
-      bool hasProblemState = !(newState & pluginProblemState).IsEmpty();
+    bool hadProblemState = !(aOldState & pluginProblemState).IsEmpty();
+    bool hasProblemState = !(newState & pluginProblemState).IsEmpty();
 
-      if (hadProblemState && !hasProblemState) {
-        thisEl->NotifyUAWidgetTeardown();
-      } else if (!hadProblemState && hasProblemState) {
-        thisEl->AttachAndSetUAShadowRoot();
-        thisEl->NotifyUAWidgetSetupOrChange();
-      }
+    if (hadProblemState && !hasProblemState) {
+      thisEl->NotifyUAWidgetTeardown();
+    } else if (!hadProblemState && hasProblemState) {
+      thisEl->AttachAndSetUAShadowRoot();
+      thisEl->NotifyUAWidgetSetupOrChange();
     }
   } else if (aOldType != mType) {
     // If our state changed, then we already recreated frames

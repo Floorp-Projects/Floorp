@@ -3504,8 +3504,7 @@ static bool ShouldSkipFrame(nsDisplayListBuilder* aBuilder,
     return true;
   }
 
-  if ((aBuilder->IsForGenerateGlyphMask() ||
-       aBuilder->IsForPaintingSelectionBG()) &&
+  if (aBuilder->IsForGenerateGlyphMask() &&
       (!aFrame->IsTextFrame() && aFrame->IsLeaf())) {
     return true;
   }

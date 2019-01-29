@@ -902,9 +902,14 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     SSL_ClearSessionCache();
     if (NSS_Shutdown() != SECSuccess) {
       // If you're seeing this crash and/or warning, some NSS resources are
-      // still in use (see bugs 1417680 and 1230312).
+      // still in use (see bugs 1417680 and 1230312). Set the environment
+      // variable 'MOZ_IGNORE_NSS_SHUTDOWN_LEAKS' to some value to ignore this.
 #if defined(DEBUG) && !defined(ANDROID)
-      MOZ_CRASH("NSS_Shutdown failed");
+      if (!getenv("MOZ_IGNORE_NSS_SHUTDOWN_LEAKS")) {
+        MOZ_CRASH("NSS_Shutdown failed");
+      } else {
+        NS_WARNING("NSS_Shutdown failed");
+      }
 #else
       NS_WARNING("NSS_Shutdown failed");
 #endif

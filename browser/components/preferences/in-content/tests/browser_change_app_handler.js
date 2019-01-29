@@ -30,7 +30,7 @@ add_task(async function() {
 
   let list = ourItem.querySelector(".actionsMenu");
 
-  let chooseItem = list.firstElementChild.querySelector(".choose-app-item");
+  let chooseItem = list.menupopup.querySelector(".choose-app-item");
   let dialogLoadedPromise = promiseLoadSubDialog("chrome://global/content/appPicker.xul");
   let cmdEvent = win.document.createEvent("xulcommandevent");
   cmdEvent.initCommandEvent("command", true, true, win, 0, false, false, false, false, null, 0);
@@ -58,7 +58,7 @@ add_task(async function() {
   // Now try to 'manage' this list:
   dialogLoadedPromise = promiseLoadSubDialog("chrome://browser/content/preferences/applicationManager.xul");
 
-  let manageItem = list.firstElementChild.querySelector(".manage-app-item");
+  let manageItem = list.menupopup.querySelector(".manage-app-item");
   cmdEvent = win.document.createEvent("xulcommandevent");
   cmdEvent.initCommandEvent("command", true, true, win, 0, false, false, false, false, null, 0);
   manageItem.dispatchEvent(cmdEvent);

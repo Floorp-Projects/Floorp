@@ -11,8 +11,8 @@ const {
 } = require("devtools/shared/specs/highlighters");
 
 class HighlighterFront extends FrontClassWithSpec(highlighterSpec) {
-  constructor(client, form) {
-    super(client, form);
+  constructor(client) {
+    super(client);
 
     this.isNodeFrontHighlighted = false;
     this.isPicking = false;
@@ -99,8 +99,8 @@ exports.HighlighterFront = HighlighterFront;
 registerFront(HighlighterFront);
 
 class CustomHighlighterFront extends FrontClassWithSpec(customHighlighterSpec) {
-  constructor(client, form) {
-    super(client, form);
+  constructor(client) {
+    super(client);
 
     this._isShown = false;
   }

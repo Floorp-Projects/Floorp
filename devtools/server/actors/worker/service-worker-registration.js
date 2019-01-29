@@ -57,10 +57,7 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
     this.emit("registration-changed");
   },
 
-  form(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
+  form() {
     const registration = this._registration;
     const installingWorker = this._installingWorker.form();
     const waitingWorker = this._waitingWorker.form();

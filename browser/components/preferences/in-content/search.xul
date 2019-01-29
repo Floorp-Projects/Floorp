@@ -1,6 +1,6 @@
     <script type="application/javascript"
             src="chrome://browser/content/preferences/in-content/search.js"/>
-
+    <box id="template-paneSearch" hidden="true"><![CDATA[
     <hbox id="searchCategory"
           class="subcategory"
           hidden="true"
@@ -8,7 +8,7 @@
       <html:h1 data-l10n-id="pane-search-title"/>
     </hbox>
 
-    <groupbox id="searchbarGroup" data-category="paneSearch">
+    <groupbox id="searchbarGroup" data-category="paneSearch" hidden="true">
       <label control="searchBarVisibleGroup"><html:h2 data-l10n-id="search-bar-header"/></label>
       <radiogroup id="searchBarVisibleGroup" preference="browser.search.widget.inNavBar">
         <radio id="searchBarHiddenRadio" value="false" data-l10n-id="search-bar-hidden"/>
@@ -19,7 +19,7 @@
     </groupbox>
 
     <!-- Default Search Engine -->
-    <groupbox id="defaultEngineGroup" data-category="paneSearch">
+    <groupbox id="defaultEngineGroup" data-category="paneSearch" hidden="true">
       <label><html:h2 data-l10n-id="search-engine-default-header" /></label>
       <description data-l10n-id="search-engine-default-desc" />
 
@@ -51,7 +51,7 @@
       </vbox>
     </groupbox>
 
-    <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch">
+    <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch" hidden="true">
       <label><html:h2 data-l10n-id="search-one-click-header" /></label>
       <description data-l10n-id="search-one-click-desc" />
 
@@ -81,3 +81,4 @@
         <label id="addEngines" class="text-link" data-l10n-id="search-find-more-link"></label>
       </hbox>
     </groupbox>
+    ]]></box>

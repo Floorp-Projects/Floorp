@@ -13,6 +13,7 @@
 /* import-globals-from findInPage.js */
 /* import-globals-from ../../../base/content/utilityOverlay.js */
 /* import-globals-from ../../../../toolkit/content/preferencesBindings.js */
+/* global MozXULElement */
 
 "use strict";
 
@@ -22,6 +23,7 @@ ChromeUtils.defineModuleGetter(this, "formAutofillParent",
                                "resource://formautofill/FormAutofillParent.jsm");
 
 var gLastHash = "";
+const gXULDOMParser = new DOMParser();
 
 var gCategoryInits = new Map();
 function init_category_if_required(category) {
@@ -39,6 +41,45 @@ function register_module(categoryName, categoryObject) {
   gCategoryInits.set(categoryName, {
     inited: false,
     init() {
+      let template = document.getElementById("template-" + categoryName);
+      if (template) {
+        // Replace the template element with the nodes from the parsed comment
+        // string.
+        let frag = MozXULElement.parseXULToFragment(template.firstChild.data);
+
+        // Gather the to-be-translated elements so that we could pass them to
+        // l10n.translateElements() and get a translated promise.
+        // Here we loop through the first level elements (<hbox>/<groupbox>/<deck>/etc)
+        // because we know that they are not implemented by XBL bindings,
+        // so it's ok to get a reference of them before inserting the node
+        // to the DOM.
+        //
+        // If we don't have to worry about XBL, this can simply be
+        // let l10nUpdatedElements = Array.from(frag.querySelectorAll("[data-l10n-id]"))
+        //
+        // If we can get a translated promise after insertion, this can all be
+        // removed (see bug 1520659.)
+        let firstLevelElements = Array.from(frag.children);
+
+        // Actually insert them into the DOM.
+        template.replaceWith(frag);
+
+        let l10nUpdatedElements = [];
+        // Collect the elements from the newly inserted first level elements.
+        for (let el of firstLevelElements) {
+          l10nUpdatedElements = l10nUpdatedElements.concat(
+            Array.from(el.querySelectorAll("[data-l10n-id]")));
+        }
+
+        // Set a promise on the categoryInfo object that the highlight code can await on.
+        this.translated = document.l10n.translateElements(l10nUpdatedElements)
+          .then(() => this.translated = undefined);
+
+        // Asks Preferences to update the attribute value of the entire
+        // document again (this can be simplified if we could seperate the
+        // preferences of each pane.)
+        Preferences.updateAllElements();
+      }
       categoryObject.init();
       this.inited = true;
     },
@@ -58,7 +99,6 @@ function init_all() {
   register_module("paneContainers", gContainersPane);
   if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
     document.getElementById("category-sync").hidden = false;
-    document.getElementById("weavePrefsDeck").removeAttribute("data-hidden-from-search");
     register_module("paneSync", gSyncPane);
   }
   register_module("paneSearchResults", gSearchResultsPane);
@@ -186,7 +226,7 @@ function gotoPref(aCategory) {
   let mainContent = document.querySelector(".main-content");
   mainContent.scrollTop = 0;
 
-  spotlight(subcategory);
+  spotlight(subcategory, category);
 }
 
 function search(aQuery, aAttribute) {
@@ -220,7 +260,7 @@ function search(aQuery, aAttribute) {
   }
 }
 
-async function spotlight(subcategory) {
+async function spotlight(subcategory, category) {
   let highlightedElements = document.querySelectorAll(".spotlight");
   if (highlightedElements.length) {
     for (let element of highlightedElements) {
@@ -228,71 +268,20 @@ async function spotlight(subcategory) {
     }
   }
   if (subcategory) {
-    if (!gSearchResultsPane.categoriesInitialized) {
-      await waitForSystemAddonInjectionsFinished([{
-        isGoingToInject: formAutofillParent.initialized,
-        elementId: "formAutofillGroup",
-      }]);
-    }
-    scrollAndHighlight(subcategory);
-  }
-
-  /**
-   * Wait for system addons finished their dom injections.
-   * @param {Array} addons - The system addon information array.
-   * For example, the element is looked like
-   * { isGoingToInject: true, elementId: "formAutofillGroup" }.
-   * The `isGoingToInject` means the system addon will be visible or not,
-   * and the `elementId` means the id of the element will be injected into the dom
-   * if the `isGoingToInject` is true.
-   * @returns {Promise} Will resolve once all injections are finished.
-   */
-  function waitForSystemAddonInjectionsFinished(addons) {
-    return new Promise(resolve => {
-      let elementIdSet = new Set();
-      for (let addon of addons) {
-        if (addon.isGoingToInject) {
-          elementIdSet.add(addon.elementId);
-        }
-      }
-      if (elementIdSet.size) {
-        let observer = new MutationObserver(mutations => {
-          for (let mutation of mutations) {
-            for (let node of mutation.addedNodes) {
-              elementIdSet.delete(node.id);
-              if (elementIdSet.size === 0) {
-                observer.disconnect();
-                resolve();
-              }
-            }
-          }
-        });
-        let mainContent = document.querySelector(".main-content");
-        observer.observe(mainContent, {childList: true, subtree: true});
-        // Disconnect the mutation observer once there is any user input.
-        mainContent.addEventListener("scroll", disconnectMutationObserver);
-        window.addEventListener("mousedown", disconnectMutationObserver);
-        window.addEventListener("keydown", disconnectMutationObserver);
-        function disconnectMutationObserver() {
-          mainContent.removeEventListener("scroll", disconnectMutationObserver);
-          window.removeEventListener("mousedown", disconnectMutationObserver);
-          window.removeEventListener("keydown", disconnectMutationObserver);
-          observer.disconnect();
-        }
-      } else {
-        resolve();
-      }
-    });
+    scrollAndHighlight(subcategory, category);
   }
 }
 
-function scrollAndHighlight(subcategory) {
+async function scrollAndHighlight(subcategory, category) {
   let element = document.querySelector(`[data-subcategory="${subcategory}"]`);
-  if (element) {
-    let header = getClosestDisplayedHeader(element);
-    scrollContentTo(header);
-    element.classList.add("spotlight");
+  if (!element) {
+    return;
   }
+  let header = getClosestDisplayedHeader(element);
+  await gCategoryInits.get(category).translated;
+
+  scrollContentTo(header);
+  element.classList.add("spotlight");
 }
 
 /**
@@ -304,8 +293,8 @@ function getClosestDisplayedHeader(element) {
   let header = element.closest("groupbox");
   let searchHeader = header.querySelector(".search-header");
   if (searchHeader && searchHeader.hidden &&
-      header.previousSibling.classList.contains("subcategory")) {
-    header = header.previousSibling;
+      header.previousElementSibling.classList.contains("subcategory")) {
+    header = header.previousElementSibling;
   }
   return header;
 }

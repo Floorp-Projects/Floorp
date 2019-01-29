@@ -839,8 +839,10 @@ interface nsIDOMWindowUtils : nsISupports {
    * SetPendingVisualViewportOffset(), and request APZ review if adding a new
    * call to this.
    */
-  void scrollToVisual(in float aOffsetX, in float aOffsetY);
- 
+  const long UPDATE_TYPE_RESTORE = 0;
+  const long UPDATE_TYPE_MAIN_THREAD = 1;
+  void scrollToVisual(in float aOffsetX, in float aOffsetY, in long aUpdateType);
+
   /**
    * Returns the offset of the window's visual viewport relative to the
    * layout viewport.
