@@ -66,33 +66,44 @@ class Selector extends PureComponent {
     // matches.
     for (let i = 0; i < selectors.length; i++) {
       const selector = selectors[i];
-
       // Parse the selector for pseudo classes and attributes, and apply different
       // CSS classes for the parsed values.
       // NOTE: parsePseudoClassesAndAttributes is a good candidate for memoization.
-      const parsedSelector = parsePseudoClassesAndAttributes(selector);
-      for (const parsedText of parsedSelector) {
-        let selectorSpanClass = matchedSelectors.indexOf(selector) > -1 ?
-          "ruleview-selector-matched" : "ruleview-selector-unmatched";
+      output.push(
+        dom.span(
+          {
+            className: matchedSelectors.indexOf(selector) > -1 ?
+                       "ruleview-selector-matched" : "ruleview-selector-unmatched",
+          },
+          parsePseudoClassesAndAttributes(selector).map(({ type, value }) => {
+            let selectorSpanClass = "";
 
-        switch (parsedText.type) {
-          case SELECTOR_ATTRIBUTE:
-            selectorSpanClass += " ruleview-selector-attribute";
-            break;
-          case SELECTOR_ELEMENT:
-            selectorSpanClass += " ruleview-selector";
-            break;
-          case SELECTOR_PSEUDO_CLASS:
-            selectorSpanClass += PSEUDO_CLASSES.some(p => parsedText.value === p) ?
-              " ruleview-selector-pseudo-class-lock" :
-              " ruleview-selector-pseudo-class";
-            break;
-        }
+            switch (type) {
+              case SELECTOR_ATTRIBUTE:
+                selectorSpanClass += " ruleview-selector-attribute";
+                break;
+              case SELECTOR_ELEMENT:
+                selectorSpanClass += " ruleview-selector";
+                break;
+              case SELECTOR_PSEUDO_CLASS:
+                selectorSpanClass += PSEUDO_CLASSES.some(p => value === p) ?
+                  " ruleview-selector-pseudo-class-lock" :
+                  " ruleview-selector-pseudo-class";
+                break;
+            }
 
-        output.push(
-          dom.span({ className: selectorSpanClass }, parsedText.value)
-        );
-      }
+            return (
+              dom.span(
+                {
+                  key: value,
+                  className: selectorSpanClass,
+                },
+                value
+              )
+            );
+          })
+        )
+      );
 
       // Append a comma separator unless this is the last selector.
       if (i < selectors.length - 1) {
