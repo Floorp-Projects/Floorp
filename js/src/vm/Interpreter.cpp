@@ -4147,9 +4147,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_CHECKCLASSHERITAGE)
 
     CASE(JSOP_BUILTINPROTO) {
-      MOZ_ASSERT(GET_UINT8(REGS.pc) < JSProto_LIMIT);
-      JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(REGS.pc));
-      JSObject* builtin = GlobalObject::getOrCreatePrototype(cx, key);
+      JSObject* builtin = BuiltinProtoOperation(cx, REGS.pc);
       if (!builtin) {
         goto error;
       }
@@ -4689,6 +4687,14 @@ JSObject* js::ImportMetaOperation(JSContext* cx, HandleScript script) {
   RootedObject module(cx, GetModuleObjectForScript(script));
   MOZ_ASSERT(module);
   return GetOrCreateModuleMetaObject(cx, module);
+}
+
+JSObject* js::BuiltinProtoOperation(JSContext* cx, jsbytecode* pc) {
+  MOZ_ASSERT(*pc == JSOP_BUILTINPROTO);
+  MOZ_ASSERT(GET_UINT8(pc) < JSProto_LIMIT);
+
+  JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(pc));
+  return GlobalObject::getOrCreatePrototype(cx, key);
 }
 
 bool js::ThrowMsgOperation(JSContext* cx, const unsigned errorNum) {
