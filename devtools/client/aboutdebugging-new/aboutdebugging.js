@@ -55,6 +55,9 @@ const AboutDebugging = {
     this.store = configureStore();
     this.actions = bindActionCreators(actions, this.store.dispatch);
 
+    const width = this.getRoundedViewportWidth();
+    this.actions.recordTelemetryEvent("open_adbg", { width });
+
     await l10n.init();
 
     this.actions.createThisFirefoxRuntime();
@@ -104,10 +107,11 @@ const AboutDebugging = {
   },
 
   async destroy() {
-    const state = this.store.getState();
-
+    const width = this.getRoundedViewportWidth();
+    this.actions.recordTelemetryEvent("close_adbg", { width });
     l10n.destroy();
 
+    const state = this.store.getState();
     const currentRuntimeId = state.runtimes.selectedRuntimeId;
     if (currentRuntimeId) {
       await this.actions.unwatchRuntime(currentRuntimeId);
@@ -125,6 +129,13 @@ const AboutDebugging = {
 
   get mount() {
     return document.getElementById("mount");
+  },
+
+  /**
+   * Computed viewport width, rounded at 50px. Used for telemetry events.
+   */
+  getRoundedViewportWidth() {
+    return Math.ceil(window.outerWidth / 50) * 50;
   },
 };
 

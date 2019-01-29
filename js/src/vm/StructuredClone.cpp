@@ -2069,7 +2069,8 @@ BigInt* JSStructuredCloneReader::readBigInt(uint32_t data) {
   if (length == 0) {
     return BigInt::zero(context());
   }
-  BigInt* result = BigInt::createUninitialized(context(), length, isNegative);
+  RootedBigInt result(
+      context(), BigInt::createUninitialized(context(), length, isNegative));
   if (!result) {
     return nullptr;
   }

@@ -6,6 +6,7 @@
 
 #include "VRService.h"
 #include "gfxPrefs.h"
+#include "../gfxVRMutex.h"
 #include "base/thread.h"  // for Thread
 #include <cstring>        // for memcmp
 
@@ -68,6 +69,9 @@ VRService::VRService()
       mTargetShmemFile(0),
       mLastHapticState{},
       mFrameStartTime{},
+#if defined(XP_WIN)
+      mMutex(NULL),
+#endif
       mVRProcessEnabled(gfxPrefs::VRProcessEnabled()) {
   // When we have the VR process, we map the memory
   // of mAPIShmem from GPU process.
@@ -153,10 +157,32 @@ void VRService::Stop() {
 #endif
     mAPIShmem = nullptr;
   }
+#if defined(XP_WIN)
+  if (mMutex) {
+    CloseHandle(mMutex);
+  }
+#endif
   mSession = nullptr;
 }
 
 bool VRService::InitShmem() {
+#if defined(XP_WIN)
+  if (!mMutex) {
+     mMutex = OpenMutex(
+        MUTEX_ALL_ACCESS,       // request full access
+        false,                  // handle not inheritable
+        TEXT("mozilla::vr::ShmemMutex"));  // object name
+
+    if (mMutex == NULL) {
+      nsAutoCString msg("VRService OpenMutex error \"%lu\".",
+                        GetLastError());
+      NS_WARNING(msg.get());
+      MOZ_ASSERT(false);
+      return false;
+    }
+  }
+#endif
+
   if (!mVRProcessEnabled) {
     return true;
   }
@@ -430,10 +456,17 @@ void VRService::PushState(const mozilla::gfx::VRSystemState& aState) {
     pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->systemMutex));
   }
 #else
-  mAPIShmem->generationA++;
-  memcpy((void*)&mAPIShmem->state, &aState, sizeof(VRSystemState));
-  mAPIShmem->generationB++;
-#endif
+  bool state = true;
+#if defined(XP_WIN)
+  WaitForMutex lock(mMutex);
+  state = lock.GetStatus();
+#endif  // defined(XP_WIN)
+  if (state) {
+    mAPIShmem->generationA++;
+    memcpy((void*)&mAPIShmem->state, &aState, sizeof(VRSystemState));
+    mAPIShmem->generationB++;
+  }
+#endif // defined(MOZ_WIDGET_ANDROID)
 }
 
 void VRService::PullState(mozilla::gfx::VRBrowserState& aState) {
@@ -456,16 +489,23 @@ void VRService::PullState(mozilla::gfx::VRBrowserState& aState) {
     pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->browserMutex));
   }
 #else
-  VRExternalShmem tmp;
-  if (mAPIShmem->browserGenerationA != mBrowserGeneration) {
-    memcpy(&tmp, mAPIShmem, sizeof(VRExternalShmem));
-    if (tmp.browserGenerationA == tmp.browserGenerationB &&
-        tmp.browserGenerationA != 0 && tmp.browserGenerationA != -1) {
-      memcpy(&aState, &tmp.browserState, sizeof(VRBrowserState));
-      mBrowserGeneration = tmp.browserGenerationA;
+  bool status = true;
+#if defined(XP_WIN)
+  WaitForMutex lock(mMutex);
+  status = lock.GetStatus();
+#endif  // defined(XP_WIN)
+  if (status) {
+    VRExternalShmem tmp;
+    if (mAPIShmem->browserGenerationA != mBrowserGeneration) {
+      memcpy(&tmp, mAPIShmem, sizeof(VRExternalShmem));
+      if (tmp.browserGenerationA == tmp.browserGenerationB &&
+          tmp.browserGenerationA != 0 && tmp.browserGenerationA != -1) {
+        memcpy(&aState, &tmp.browserState, sizeof(VRBrowserState));
+        mBrowserGeneration = tmp.browserGenerationA;
+      }
     }
   }
-#endif
+#endif  // defined(MOZ_WIDGET_ANDROID)
 }
 
 VRExternalShmem* VRService::GetAPIShmem() { return mAPIShmem; }

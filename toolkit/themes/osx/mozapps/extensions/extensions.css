@@ -12,14 +12,6 @@
   padding-inline-start: 0px !important;
 }
 
-.sorter[checkState="1"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
-.sorter[checkState="2"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
-}
-
 .addon .relnotes-toggle {
   -moz-box-direction: reverse;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");

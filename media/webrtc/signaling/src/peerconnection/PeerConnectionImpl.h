@@ -133,7 +133,7 @@ class RTCStatsQuery {
   RTCStatsQuery(RTCStatsQuery&& aOrig) = default;
   ~RTCStatsQuery();
 
-  nsAutoPtr<mozilla::dom::RTCStatsReportInternal> report;
+  std::unique_ptr<mozilla::dom::RTCStatsReportInternal> report;
   // A timestamp to help with telemetry.
   mozilla::TimeStamp iceStartTime;
 
@@ -203,6 +203,8 @@ class PeerConnectionImpl final
       // PeerConnectionImpl only inherits from mozilla::DataChannelConnection
       // inside libxul.
       override;
+
+  const RefPtr<MediaTransportHandler> GetTransportHandler() const;
 
   // Get the media object
   const RefPtr<PeerConnectionMedia>& media() const {
@@ -631,6 +633,7 @@ class PeerConnectionImpl final
 
   bool mForceIceTcp;
   RefPtr<PeerConnectionMedia> mMedia;
+  RefPtr<MediaTransportHandler> mTransportHandler;
 
   // The JSEP negotiation session.
   mozilla::UniquePtr<PCUuidGenerator> mUuidGen;

@@ -38,11 +38,17 @@ const FEATURES = [
     enabled() {
       return Services.prefs.getBoolPref("browser.safebrowsing.phishing.enabled");
     },
+    update() {
+      return Services.prefs.getBoolPref("browser.safebrowsing.features.phishing.update", this.enabled());
+    },
   },
   { name: "malware",
     list: ["urlclassifier.malwareTable"],
     enabled() {
       return Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
+    },
+    update() {
+      return Services.prefs.getBoolPref("browser.safebrowsing.features.malware.update", this.enabled());
     },
   },
   { name: "blockedURIs",
@@ -50,11 +56,17 @@ const FEATURES = [
     enabled() {
       return Services.prefs.getBoolPref("browser.safebrowsing.blockedURIs.enabled");
     },
+    update() {
+      return Services.prefs.getBoolPref("browser.safebrowsing.features.blockedURIs.update", this.enabled());
+    },
   },
   { name: "passwords",
     list: ["urlclassifier.passwordAllowTable"],
     enabled() {
       return Services.prefs.getBoolPref("browser.safebrowsing.passwords.enabled");
+    },
+    update() {
+      return Services.prefs.getBoolPref("browser.safebrowsing.features.passwords.update", this.enabled());
     },
   },
   { name: "downloads",
@@ -64,6 +76,9 @@ const FEATURES = [
       return Services.prefs.getBoolPref("browser.safebrowsing.downloads.enabled") &&
              Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
     },
+    update() {
+      return Services.prefs.getBoolPref("browser.safebrowsing.features.downloads.update", this.enabled());
+    },
   },
   { name: "trackingAnnotation",
     list: ["urlclassifier.trackingAnnotationTable",
@@ -71,14 +86,20 @@ const FEATURES = [
     enabled() {
       return Services.prefs.getBoolPref("privacy.trackingprotection.annotate_channels");
     },
+    update() {
+      return Services.prefs.getBoolPref("browser.safebrowsing.features.trackingAnnotation.update", this.enabled());
+    },
   },
-  { name: "tracking",
+  { name: "trackingProtection",
     list: ["urlclassifier.trackingTable",
            "urlclassifier.trackingWhitelistTable"],
     enabled() {
       return Services.prefs.getBoolPref("toolkit.telemetry.isGeckoViewMode", false) ||
              Services.prefs.getBoolPref("privacy.trackingprotection.enabled") ||
              Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
+    },
+    update() {
+      return Services.prefs.getBoolPref("browser.safebrowsing.features.trackingProtection.update", this.enabled());
     },
   },
   { name: "flashBlock",
@@ -91,6 +112,9 @@ const FEATURES = [
     enabled() {
       return Services.prefs.getBoolPref("plugins.flashBlock.enabled");
     },
+    update() {
+      return Services.prefs.getBoolPref("browser.safebrowsing.features.flashBlock.update", this.enabled());
+    },
   },
   { name: "fingerprinting",
     list: ["urlclassifier.features.fingerprinting.blacklistTables",
@@ -98,12 +122,18 @@ const FEATURES = [
     enabled() {
       return Services.prefs.getBoolPref("privacy.trackingprotection.fingerprinting.enabled", false);
     },
+    update() {
+      return Services.prefs.getBoolPref("browser.safebrowsing.features.fingerprinting.update", this.enabled());
+    },
   },
   { name: "cryptomining",
     list: ["urlclassifier.features.cryptomining.blacklistTables",
            "urlclassifier.features.cryptomining.whitelistTables"],
     enabled() {
       return Services.prefs.getBoolPref("privacy.trackingprotection.cryptomining.enabled", false);
+    },
+    update() {
+      return Services.prefs.getBoolPref("browser.safebrowsing.features.cryptomining.update", this.enabled());
     },
   },
 ];
@@ -245,9 +275,13 @@ var SafeBrowsing = {
 
     this.features = [];
     for (let i = 0; i < FEATURES.length; ++i) {
-      this.features[i] = { name: FEATURES[i].name,
-                           list: [],
-                           enabled: FEATURES[i].enabled() };
+      this.features[i] = {
+        name: FEATURES[i].name,
+        list: [],
+        enabled: FEATURES[i].enabled(),
+        update: FEATURES[i].update(),
+      };
+
       FEATURES[i].list.forEach(pref => {
         this.features[i].list.push(...getLists(pref));
       });
@@ -351,6 +385,7 @@ var SafeBrowsing = {
       this.features.forEach(feature => {
         log("feature " + feature.name + ":");
         log("  enabled:" + feature.enabled);
+        log("  update:" + feature.update);
         log("  tables:" + feature.list);
       });
     }
@@ -361,7 +396,7 @@ var SafeBrowsing = {
     listManager.disableAllUpdates();
 
     this.features.forEach(feature => {
-      if (feature.enabled) {
+      if (feature.update) {
         feature.list.forEach(table => {
           listManager.enableUpdate(table);
         });

@@ -88,11 +88,11 @@ var UrlbarUtils = {
     REMOTE_TAB: 6,
   },
 
-  // This defines the source of matches returned by a provider. Each provider
-  // can return matches from more than one source. This is used by the
+  // This defines the source of results returned by a provider. Each provider
+  // can return results from more than one source. This is used by the
   // ProvidersManager to decide which providers must be queried and which
-  // matches can be returned.
-  MATCH_SOURCE: {
+  // results can be returned.
+  RESULT_SOURCE: {
     BOOKMARKS: 1,
     HISTORY: 2,
     SEARCH: 3,
@@ -417,7 +417,7 @@ class UrlbarProvider {
     throw new Error("Trying to access the base class, must be overridden");
   }
   /**
-   * List of UrlbarUtils.MATCH_SOURCE, representing the data sources used by
+   * List of UrlbarUtils.RESULT_SOURCE, representing the data sources used by
    * the provider.
    * @abstract
    */

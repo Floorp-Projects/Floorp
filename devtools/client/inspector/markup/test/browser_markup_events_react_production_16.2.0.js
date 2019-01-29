@@ -27,7 +27,7 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: "function() {}"
+        handler: `function() {}`
       },
       {
         type: "onClick",
@@ -36,10 +36,10 @@ const TEST_DATA = [
           "Bubbling",
           "React"
         ],
-        handler:
-`inlineFunction() {
-  alert("inlineFunction");
-}`
+        handler: `
+          inlineFunction() {
+            alert("inlineFunction");
+          }`
       }
     ]
   },
@@ -53,7 +53,7 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: "function() {}"
+        handler: `function() {}`
       },
       {
         type: "onClick",
@@ -62,10 +62,10 @@ const TEST_DATA = [
           "Bubbling",
           "React"
         ],
-        handler:
-`function externalFunction() {
-  alert("externalFunction");
-}`
+        handler: `
+          function externalFunction() {
+            alert("externalFunction");
+          }`
       }
     ]
   },
@@ -79,7 +79,7 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: "function() {}"
+        handler: `function() {}`
       },
       {
         type: "onClick",
@@ -88,10 +88,10 @@ const TEST_DATA = [
           "Bubbling",
           "React"
         ],
-        handler:
-`function externalFunction() {
-  alert("externalFunction");
-}`
+        handler: `
+          function externalFunction() {
+            alert("externalFunction");
+          }`
       },
       {
         type: "onMouseUp",
@@ -100,10 +100,10 @@ const TEST_DATA = [
           "Bubbling",
           "React"
         ],
-        handler:
-`inlineFunction() {
-  alert("inlineFunction");
-}`
+        handler: `
+          inlineFunction() {
+            alert("inlineFunction");
+          }`
       }
     ]
   },
@@ -117,10 +117,10 @@ const TEST_DATA = [
           "Capturing",
           "React"
         ],
-        handler:
-`function externalCapturingFunction() {
-  alert("externalCapturingFunction");
-}`
+        handler: `
+          function externalCapturingFunction() {
+            alert("externalCapturingFunction");
+          }`
       }
     ]
   }

@@ -60,7 +60,7 @@ def llvm_config_paths(host):
     if host.kernel == 'Darwin':
         brew = find_program('brew')
         if brew:
-            brew_config = check_cmd_output([brew, 'config']).strip()
+            brew_config = check_cmd_output(brew, 'config').strip()
 
             for line in brew_config.splitlines():
                 if line.startswith('HOMEBREW_PREFIX'):

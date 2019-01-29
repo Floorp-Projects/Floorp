@@ -158,7 +158,7 @@ struct TestFileData {
   int32_t mHeight;
   uint32_t mNumberAudioTracks;
   int64_t mAudioDuration;  // For first audio track, -1 if N/A.
-  bool mHasCrypto;
+  bool mHasCrypto;  // Note, MP4Metadata only considers pssh box for crypto.
   uint64_t mMoofReachedOffset;  // or 0 for the end.
   bool mValidMoof;
   bool mHeader;
@@ -234,6 +234,13 @@ static const TestFileData testFiles[] = {
      false, 0},
     {"test_case_1410565.mp4", false, 0, false, 0, 0, 0, 0, 0, false, 955100,
      true, true, 2},  // negative 'timescale'
+    {"test_case_1519617-cenc-init-with-track_id-0.mp4", true, 1, true, 0, 1272,
+     530, 0, -1, false, 0, false, false,
+     0},  // Uses bad track id 0 and has a sinf but no pssh
+    {"test_case_1519617-track2-trafs-removed.mp4", true, 1, true, 10032000, 400,
+     300, 1, 10032000, false, 0, true, true, 2},
+    {"test_case_1519617-video-has-track_id-0.mp4", true, 1, true, 10032000, 400,
+     300, 1, 10032000, false, 0, true, true, 2},  // Uses bad track id 0
 };
 
 TEST(MP4Metadata, test_case_mp4) {
@@ -475,6 +482,152 @@ TEST(MoofParser, test_case_sample_description_entries) {
       }
       EXPECT_EQ(1u, numEncryptedEntries) << tests[test].mFilename;
     }
+  }
+}
+
+// We should gracefully handle track_id 0 since Bug 1519617. We'd previously
+// used id 0 to trigger special handling in the MoofParser to read multiple
+// track metadata, but since muxers use track id 0 in the wild, we want to
+// make sure they can't accidentally trigger such handling.
+TEST(MoofParser, test_case_track_id_0_does_not_read_multitracks) {
+  const char* zeroTrackIdFileName =
+      "test_case_1519617-video-has-track_id-0.mp4";
+  nsTArray<uint8_t> buffer = ReadTestFile(zeroTrackIdFileName);
+
+  ASSERT_FALSE(buffer.IsEmpty());
+  RefPtr<ByteStream> stream =
+      new TestStream(buffer.Elements(), buffer.Length());
+
+  // Parse track id 0. We expect to only get metadata from that track, not the
+  // other track with id 2.
+  const uint32_t videoTrackId = 0;
+  MoofParser parser(stream, videoTrackId, false);
+
+  // Explicitly don't call parser.Metadata() so that the parser itself will
+  // read the metadata as if we're in a fragmented case. Otherwise we won't
+  // read the trak data.
+
+  const MediaByteRangeSet byteRanges(
+      MediaByteRange(0, int64_t(buffer.Length())));
+  EXPECT_TRUE(parser.RebuildFragmentedIndex(byteRanges))
+      << "MoofParser should find a valid moof as the file contains one!";
+
+  // Verify we only have data from track 0, if we parsed multiple tracks we'd
+  // find some of the audio track metadata here. Only check for values that
+  // differ between tracks.
+  const uint32_t videoTimescale = 90000;
+  const uint32_t videoSampleDuration = 3000;
+  const uint32_t videoSampleFlags = 0x10000;
+  const uint32_t videoNumSampleDescriptionEntries = 1;
+  EXPECT_EQ(videoTimescale, parser.mMdhd.mTimescale)
+      << "Wrong timescale for video track! If value is 22050, we've read from "
+         "the audio track!";
+  EXPECT_EQ(videoTrackId, parser.mTrex.mTrackId)
+      << "Wrong track id for video track! If value is 2, we've read from the "
+         "audio track!";
+  EXPECT_EQ(videoSampleDuration, parser.mTrex.mDefaultSampleDuration)
+      << "Wrong sample duration for video track! If value is 1024, we've read "
+         "from the audio track!";
+  EXPECT_EQ(videoSampleFlags, parser.mTrex.mDefaultSampleFlags)
+      << "Wrong sample flags for video track! If value is 0x2000000 (note "
+         "that's hex), we've read from the audio track!";
+  EXPECT_EQ(videoNumSampleDescriptionEntries,
+            parser.mSampleDescriptions.Length())
+      << "Wrong number of sample descriptions for video track! If value is 2, "
+         "then we've read sample description information from video and audio "
+         "tracks!";
+}
+
+// We should gracefully handle track_id 0 since Bug 1519617. This includes
+// handling crypto data from the sinf box in the MoofParser. Note, as of the
+// time of writing, MP4Metadata uses the presence of a pssh box to determine
+// if its crypto member is valid. However, even on files where the pssh isn't
+// in the init segment, the MoofParser should still read the sinf, as in this
+// testcase.
+TEST(MoofParser, test_case_track_id_0_reads_crypto_metadata) {
+  const char* zeroTrackIdFileName =
+      "test_case_1519617-cenc-init-with-track_id-0.mp4";
+  nsTArray<uint8_t> buffer = ReadTestFile(zeroTrackIdFileName);
+
+  ASSERT_FALSE(buffer.IsEmpty());
+  RefPtr<ByteStream> stream =
+      new TestStream(buffer.Elements(), buffer.Length());
+
+  // Parse track id 0. We expect to only get metadata from that track, not the
+  // other track with id 2.
+  const uint32_t videoTrackId = 0;
+  MoofParser parser(stream, videoTrackId, false);
+
+  // Explicitly don't call parser.Metadata() so that the parser itself will
+  // read the metadata as if we're in a fragmented case. Otherwise we won't
+  // read the trak data.
+
+  const MediaByteRangeSet byteRanges(
+      MediaByteRange(0, int64_t(buffer.Length())));
+  EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges))
+      << "MoofParser should not find a valid moof, this is just an init "
+         "segment!";
+
+  // Verify we only have data from track 0, if we parsed multiple tracks we'd
+  // find some of the audio track metadata here. Only check for values that
+  // differ between tracks.
+  const size_t numSampleDescriptionEntries = 1;
+  const uint32_t defaultPerSampleIVSize = 8;
+  const size_t keyIdLength = 16;
+  const uint32_t defaultKeyId[keyIdLength] = {
+      0x43, 0xbe, 0x13, 0xd0, 0x26, 0xc9, 0x41, 0x54,
+      0x8f, 0xed, 0xf9, 0x54, 0x1a, 0xef, 0x6b, 0x0e};
+  EXPECT_TRUE(parser.mSinf.IsValid())
+      << "Should have a sinf that has crypto data!";
+  EXPECT_EQ(defaultPerSampleIVSize, parser.mSinf.mDefaultIVSize)
+      << "Wrong default per sample IV size for track! If 0 indicates we failed "
+         "to parse some crypto info!";
+  for (size_t i = 0; i < keyIdLength; i++) {
+    EXPECT_EQ(defaultKeyId[i], parser.mSinf.mDefaultKeyID[i])
+        << "Mismatched default key ID byte at index " << i
+        << " indicates we failed to parse some crypto info!";
+  }
+  ASSERT_EQ(numSampleDescriptionEntries, parser.mSampleDescriptions.Length())
+      << "Wrong number of sample descriptions for track! If 0, indicates we "
+         "failed to parse some expected crypto!";
+  EXPECT_TRUE(parser.mSampleDescriptions[0].mIsEncryptedEntry)
+      << "Sample description should be marked as encrypted!";
+}
+
+// The MoofParser may be asked to parse metadata for multiple tracks, but then
+// be presented with fragments/moofs that contain data for only a subset of
+// those tracks. I.e. metadata contains information for tracks with ids 1 and 2,
+// but then the moof parser only receives moofs with data for track id 1. We
+// should parse such fragmented media. In this test the metadata contains info
+// for track ids 1 and 2, but track 2's track fragment headers (traf) have been
+// over written with free space boxes (free).
+TEST(MoofParser, test_case_moofs_missing_trafs) {
+  const char* noTrafsForTrack2MoofsFileName =
+      "test_case_1519617-track2-trafs-removed.mp4";
+  nsTArray<uint8_t> buffer = ReadTestFile(noTrafsForTrack2MoofsFileName);
+
+  ASSERT_FALSE(buffer.IsEmpty());
+  RefPtr<ByteStream> stream =
+      new TestStream(buffer.Elements(), buffer.Length());
+
+  // Create parser that will read metadata from all tracks.
+  MoofParser parser(stream, 0, false, true);
+
+  // Explicitly don't call parser.Metadata() so that the parser itself will
+  // read the metadata as if we're in a fragmented case. Otherwise we won't
+  // read the trak data.
+
+  const MediaByteRangeSet byteRanges(
+      MediaByteRange(0, int64_t(buffer.Length())));
+  EXPECT_TRUE(parser.RebuildFragmentedIndex(byteRanges))
+      << "MoofParser should find a valid moof, there's 2 in the file!";
+
+  // Verify we've found 2 moofs and that the parser was able to parse them.
+  const size_t numMoofs = 2;
+  EXPECT_EQ(numMoofs, parser.Moofs().Length())
+      << "File has 2 moofs, we should have read both";
+  for (size_t i = 0; i < parser.Moofs().Length(); i++) {
+    EXPECT_TRUE(parser.Moofs()[i].IsValid()) << "All moofs should be valid";
   }
 }
 

@@ -3514,9 +3514,6 @@ var AMTelemetry = {
     Services.obs.addObserver(this, "addon-install-disabled");
     Services.obs.addObserver(this, "addon-install-blocked");
 
-    Services.obs.addObserver(this, "webextension-permission-prompt");
-    Services.obs.addObserver(this, "webextension-update-permissions");
-
     AddonManager.addInstallListener(this);
     AddonManager.addAddonListener(this);
   },
@@ -3538,35 +3535,6 @@ var AMTelemetry = {
       case "addon-install-disabled": {
         const {installs} = subject.wrappedJSObject;
         this.recordInstallEvent(installs[0], {step: "install_disabled_warning"});
-        break;
-      }
-      case "webextension-permission-prompt": {
-        const {info} = subject.wrappedJSObject;
-        const {permissions, origins} = info.permissions || {permissions: [], origins: []};
-        if (info.type === "sideload") {
-          // When extension.js notifies a webextension-permission-prompt for a sideload,
-          // there is no AddonInstall instance available.
-          this.recordManageEvent(info.addon, "sideload_prompt", {
-            num_perms: permissions.length,
-            num_origins: origins.length,
-          });
-        } else {
-          this.recordInstallEvent(info.install, {
-            step: "permissions_prompt",
-            num_perms: permissions.length,
-            num_origins: origins.length,
-          });
-        }
-        break;
-      }
-      case "webextension-update-permissions": {
-        const update = subject.wrappedJSObject;
-        const {permissions, origins} = update.permissions || {permissions: [], origins: []};
-        this.recordInstallEvent(update.install, {
-          step: "permissions_prompt",
-          num_perms: permissions.length,
-          num_origins: origins.length,
-        });
         break;
       }
     }
@@ -3776,10 +3744,9 @@ var AMTelemetry = {
    *        The current step in the install or update flow.
    * @param {string} extraVars.download_time
    *        The number of ms needed to download the extension.
-   * @param {string} extraVars.num_perms
-   *        The number of permissions for the extensions.
-   * @param {string} extraVars.num_origins
-   *        The number of origins for the extensions.
+   * @param {string} extraVars.num_strings
+   *        The number of permission description string for the extension
+   *        permission doorhanger.
    */
   recordInstallEvent(install, extraVars) {
     // Early exit if AMTelemetry's telemetry setup has not been done yet.
@@ -3838,12 +3805,11 @@ var AMTelemetry = {
    *
    * @param {AddonWrapper} addon
    *        The AddonWrapper instance.
-   * @param {object} extra
+   * @param {object} extraVars
    *        The additional extra_vars to include in the recorded event.
-   * @param {string} extraVars.num_perms
-   *        The number of permissions for the extensions.
-   * @param {string} extraVars.num_origins
-   *        The number of origins for the extensions.
+   * @param {string} extraVars.num_strings
+   *        The number of permission description string for the extension
+   *        permission doorhanger.
    */
   recordManageEvent(addon, method, extraVars) {
     // Early exit if AMTelemetry's telemetry setup has not been done yet.
