@@ -7,6 +7,7 @@ package org.mozilla.geckoview.test
 
 import android.os.Parcel
 import android.support.test.InstrumentationRegistry
+import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 
@@ -101,6 +102,22 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         }
     }
 
+    inline fun GeckoRuntimeSettings.toParcel(lambda: (Parcel) -> Unit) {
+        val parcel = Parcel.obtain()
+        try {
+            this.writeToParcel(parcel, 0)
+
+            val pos = parcel.dataPosition()
+            parcel.setDataPosition(0)
+
+            lambda(parcel)
+
+            assertThat("Read parcel matches written parcel",
+                       parcel.dataPosition(), Matchers.equalTo(pos))
+        } finally {
+            parcel.recycle()
+        }
+    }
 
     fun GeckoSession.open() =
             sessionRule.openSession(this)

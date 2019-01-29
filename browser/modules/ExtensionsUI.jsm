@@ -129,10 +129,7 @@ var ExtensionsUI = {
     });
 
     AMTelemetry.recordManageEvent(addon, "sideload_prompt", {
-      num_perms: addon.userPermissions && addon.userPermissions.permissions ?
-        addon.userPermissions.permissions.length : 0,
-      num_origins: addon.userPermissions && addon.userPermissions.origins ?
-        addon.userPermissions.origins.length : 0,
+      num_strings: strings.msgs.length,
     });
 
     this.showAddonsManager(browser, strings, addon.iconURL, "sideload")
@@ -145,6 +142,11 @@ var ExtensionsUI = {
   },
 
   showUpdate(browser, info) {
+    AMTelemetry.recordInstallEvent(info.install, {
+      step: "permissions_prompt",
+      num_strings: info.strings.msgs.length,
+    });
+
     this.showAddonsManager(browser, info.strings, info.addon.iconURL, "update")
         .then(answer => {
           if (answer) {
@@ -202,6 +204,17 @@ var ExtensionsUI = {
         histkey = "installWeb";
       }
 
+      if (info.type == "sideload") {
+        AMTelemetry.recordManageEvent(info.addon, "sideload_prompt", {
+          num_strings: strings.msgs.length,
+        });
+      } else {
+        AMTelemetry.recordInstallEvent(info.install, {
+          step: "permissions_prompt",
+          num_strings: strings.msgs.length,
+        });
+      }
+
       this.showPermissionsPrompt(browser, strings, icon, histkey)
           .then(answer => {
             if (answer) {
@@ -223,6 +236,8 @@ var ExtensionsUI = {
 
       let update = {
         strings,
+        permissions: info.permissions,
+        install: info.install,
         addon: info.addon,
         resolve: info.resolve,
         reject: info.reject,

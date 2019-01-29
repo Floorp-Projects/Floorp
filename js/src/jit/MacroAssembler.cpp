@@ -2956,6 +2956,11 @@ void MacroAssembler::Push(const ConstantOrRegister& v) {
   }
 }
 
+void MacroAssembler::Push(const Address& addr) {
+  push(addr);
+  framePushed_ += sizeof(uintptr_t);
+}
+
 void MacroAssembler::Push(const ValueOperand& val) {
   pushValue(val);
   framePushed_ += sizeof(Value);

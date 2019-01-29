@@ -9,13 +9,6 @@ topsrcdir="$SOURCE"
 # topsrcdir.
 export VSPATH="$(cd ${topsrcdir}/.. && pwd)/vs2017_15.8.4"
 
-# When running on a developer machine, several variables will already
-# have the right settings and we will need to keep them since the
-# Windows mozconfigs overwrite them.
-echo "export ORIGINAL_INCLUDE=$INCLUDE"
-echo "export ORIGINAL_LIB=$LIB"
-echo "export ORIGINAL_LIBPATH=$LIBPATH"
-
 if [ -n "$USE_64BIT" ]; then
   . $topsrcdir/build/win64/mozconfig.vs-latest
 else
@@ -26,9 +19,8 @@ mk_export_correct_style CC
 mk_export_correct_style CXX
 mk_export_correct_style LINKER
 mk_export_correct_style WINDOWSSDKDIR
-mk_export_correct_style PATH
-mk_export_correct_style INCLUDE
-mk_export_correct_style LIB
+mk_export_correct_style DIA_SDK_PATH
+mk_export_correct_style VC_PATH
 
 # PATH also needs to point to mozmake.exe, which can come from either
 # newer mozilla-build or tooltool.

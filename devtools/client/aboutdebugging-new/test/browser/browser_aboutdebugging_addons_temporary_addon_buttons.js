@@ -13,23 +13,16 @@ add_task(async function() {
   const UPDATED_EXTENSION_NAME = "Temporary web extension (updated)";
   const EXTENSION_ID = "test-devtools@mozilla.org";
 
-  const manifestBase = {
-    "manifest_version": 2,
-    "name": ORIGINAL_EXTENSION_NAME,
-    "version": "1.0",
-    "applications": {
-      "gecko": {
-        "id": EXTENSION_ID,
-      },
-    },
-  };
-  const tempExt = await installTemporaryExtensionFromManifest(manifestBase, document);
+  const addonFile = await installTemporaryExtensionFromXPI({
+    id: EXTENSION_ID,
+    name: ORIGINAL_EXTENSION_NAME,
+  }, document);
 
   const originalTarget = findDebugTargetByText(ORIGINAL_EXTENSION_NAME, document);
   ok(!!originalTarget, "The temporary extension isinstalled with the expected name");
 
   info("Update the name of the temporary extension in the manifest");
-  tempExt.writeManifest(Object.assign({}, manifestBase, {name: UPDATED_EXTENSION_NAME}));
+  updateTemporaryXPI({ id: EXTENSION_ID, name: UPDATED_EXTENSION_NAME }, addonFile);
 
   info("Click on the reload button for the temporary extension");
   const reloadButton =
@@ -62,7 +55,7 @@ add_task(async function() {
 
   const { document, tab } = await openAboutDebugging();
 
-  await installRegularAddon("resources/packaged-extension/packaged-extension.xpi");
+  await installRegularExtension("resources/packaged-extension/packaged-extension.xpi");
 
   info("Wait until extension appears in about:debugging");
   await waitUntil(() => findDebugTargetByText(PACKAGED_EXTENSION_NAME, document));

@@ -11,7 +11,7 @@ const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.j
 
 const TEST_URL = "http://example.com";
 const match = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                               UrlbarUtils.MATCH_SOURCE.TABS,
+                               UrlbarUtils.RESULT_SOURCE.TABS,
                                { url: TEST_URL });
 let controller;
 

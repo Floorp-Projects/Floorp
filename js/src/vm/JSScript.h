@@ -1467,6 +1467,13 @@ class SharedScriptData {
 
   void traceChildren(JSTracer* trc);
 
+  static constexpr size_t offsetOfData() {
+    return offsetof(SharedScriptData, data_);
+  }
+  static constexpr size_t offsetOfNatoms() {
+    return offsetof(SharedScriptData, natoms_);
+  }
+
  private:
   SharedScriptData() = delete;
   SharedScriptData(const SharedScriptData&) = delete;
@@ -1688,6 +1695,12 @@ class JSScript : public js::gc::TenuredCell {
     // Whether the record/replay execution progress counter (see RecordReplay.h)
     // should be updated as this script runs.
     TrackRecordReplayProgress = 1 << 23,
+
+    // Whether this is a top-level module script.
+    IsModule = 1 << 24,
+
+    // Whether this function needs a call object or named lambda environment.
+    NeedsFunctionEnvironmentObjects = 1 << 25,
   };
 
  private:
@@ -2219,6 +2232,16 @@ class JSScript : public js::gc::TenuredCell {
   static size_t offsetOfImmutableFlags() {
     return offsetof(JSScript, immutableFlags_);
   }
+  static constexpr size_t offsetOfNfixed() {
+    return offsetof(JSScript, nfixed_);
+  }
+  static constexpr size_t offsetOfNslots() {
+    return offsetof(JSScript, nslots_);
+  }
+  static constexpr size_t offsetOfScriptData() {
+    return offsetof(JSScript, scriptData_);
+  }
+  static constexpr size_t offsetOfTypes() { return offsetof(JSScript, types_); }
 
   bool hasAnyIonScript() const { return hasIonScript(); }
 
@@ -2312,7 +2335,11 @@ class JSScript : public js::gc::TenuredCell {
    */
   inline void ensureNonLazyCanonicalFunction();
 
-  bool isModule() const { return bodyScope()->is<js::ModuleScope>(); }
+  bool isModule() const {
+    MOZ_ASSERT(hasFlag(ImmutableFlags::IsModule) ==
+               bodyScope()->is<js::ModuleScope>());
+    return hasFlag(ImmutableFlags::IsModule);
+  }
   js::ModuleObject* module() const {
     if (isModule()) {
       return bodyScope()->as<js::ModuleScope>().module();
@@ -2408,6 +2435,10 @@ class JSScript : public js::gc::TenuredCell {
     // the decl env scope is present.
     size_t index = 0;
     return getScope(index);
+  }
+
+  bool needsFunctionEnvironmentObjects() const {
+    return hasFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects);
   }
 
   bool functionHasExtraBodyVarScope() const {

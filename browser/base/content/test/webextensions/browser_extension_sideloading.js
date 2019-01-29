@@ -234,7 +234,7 @@ add_task(async function() {
   const expectedEventsAddon1 = [
     {
       ...baseEventAddon1, method: "sideload_prompt",
-      extra: {...expectedExtra, num_perms: "1", num_origins: "1"},
+      extra: {...expectedExtra, num_strings: "2"},
     },
     {...baseEventAddon1, method: "uninstall"},
   ];
@@ -253,7 +253,7 @@ add_task(async function() {
   const expectedEventsAddon2 = [
     {
       ...baseEventAddon2, method: "sideload_prompt",
-      extra: {...expectedExtra, num_perms: "0", num_origins: "1"},
+      extra: {...expectedExtra, num_strings: "1"},
     },
     {...baseEventAddon2, method: "enable"},
     {...baseEventAddon2, method: "uninstall"},

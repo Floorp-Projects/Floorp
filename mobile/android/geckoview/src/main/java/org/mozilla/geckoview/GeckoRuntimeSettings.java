@@ -8,8 +8,6 @@ package org.mozilla.geckoview;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Collections;
-import java.util.Map;
 
 import android.app.Service;
 import android.graphics.Rect;
@@ -20,37 +18,23 @@ import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.util.ArrayMap;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 
 @AnyThread
-public final class GeckoRuntimeSettings implements Parcelable {
-
+public final class GeckoRuntimeSettings extends RuntimeSettings {
     /**
      * Settings builder used to construct the settings object.
      */
     @AnyThread
-    public static final class Builder {
-        private final GeckoRuntimeSettings mSettings;
-
-        public Builder() {
-            mSettings = new GeckoRuntimeSettings();
-        }
-
-        public Builder(final GeckoRuntimeSettings settings) {
-            mSettings = new GeckoRuntimeSettings(settings);
-        }
-
-        /**
-         * Finalize and return the settings.
-         *
-         * @return The constructed settings.
-         */
-        public @NonNull GeckoRuntimeSettings build() {
-            return new GeckoRuntimeSettings(mSettings);
+    public static final class Builder
+            extends RuntimeSettings.Builder<GeckoRuntimeSettings> {
+        @Override
+        protected @NonNull GeckoRuntimeSettings newSettings(
+                final GeckoRuntimeSettings settings) {
+            return new GeckoRuntimeSettings(settings);
         }
 
         /**
@@ -62,7 +46,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
          */
         public @NonNull Builder useContentProcessHint(final boolean use) {
-            mSettings.mUseContentProcess = use;
+            getSettings().mUseContentProcess = use;
             return this;
         }
 
@@ -76,7 +60,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
             if (args == null) {
                 throw new IllegalArgumentException("Arguments must not  be null");
             }
-            mSettings.mArgs = args;
+            getSettings().mArgs = args;
             return this;
         }
 
@@ -90,7 +74,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
             if (extras == null) {
                 throw new IllegalArgumentException("Extras must not  be null");
             }
-            mSettings.mExtras = extras;
+            getSettings().mExtras = extras;
             return this;
         }
 
@@ -102,7 +86,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return This Builder instance.
          */
         public @NonNull Builder javaScriptEnabled(final boolean flag) {
-            mSettings.mJavaScript.set(flag);
+            getSettings().mJavaScript.set(flag);
             return this;
         }
 
@@ -113,7 +97,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return This Builder instance.
          */
         public @NonNull Builder remoteDebuggingEnabled(final boolean enabled) {
-            mSettings.mRemoteDebugging.set(enabled);
+            getSettings().mRemoteDebugging.set(enabled);
             return this;
         }
 
@@ -125,7 +109,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return This Builder instance.
          */
         public @NonNull Builder webFontsEnabled(final boolean flag) {
-            mSettings.mWebFonts.set(flag ? 1 : 0);
+            getSettings().mWebFonts.set(flag ? 1 : 0);
             return this;
         }
 
@@ -138,7 +122,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return This Builder.
          */
         public @NonNull Builder pauseForDebugger(boolean enabled) {
-            mSettings.mDebugPause = enabled;
+            getSettings().mDebugPause = enabled;
             return this;
         }
         /**
@@ -152,7 +136,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return This Builder.
          */
         public @NonNull Builder useMaxScreenDepth(boolean enable) {
-            mSettings.mUseMaxScreenDepth = enable;
+            getSettings().mUseMaxScreenDepth = enable;
             return this;
         }
 
@@ -164,7 +148,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return The Builder instance.
          */
         public @NonNull Builder cookieBehavior(@CookieBehavior int behavior) {
-            mSettings.mCookieBehavior.set(behavior);
+            getSettings().mCookieBehavior.set(behavior);
             return this;
         }
 
@@ -176,7 +160,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return The Builder instance.
          */
         public @NonNull Builder cookieLifetime(@CookieLifetime int lifetime) {
-            mSettings.mCookieLifetime.set(lifetime);
+            getSettings().mCookieLifetime.set(lifetime);
             return this;
         }
 
@@ -190,7 +174,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          **/
         public @NonNull Builder trackingProtectionCategories(
                 @TrackingProtectionDelegate.Category int categories) {
-            mSettings.mTrackingProtection
+            getSettings().mTrackingProtection
                      .set(TrackingProtection.buildPrefValue(categories));
             return this;
         }
@@ -206,7 +190,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return The builder instance.
          */
         public @NonNull Builder consoleOutput(boolean enabled) {
-            mSettings.mConsoleOutput.set(enabled);
+            getSettings().mConsoleOutput.set(enabled);
             return this;
         }
 
@@ -217,7 +201,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return The builder instance.
          */
         public @NonNull Builder displayDensityOverride(float density) {
-            mSettings.mDisplayDensityOverride = density;
+            getSettings().mDisplayDensityOverride = density;
             return this;
         }
 
@@ -232,7 +216,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return The builder instance.
          */
         public @NonNull Builder blockMalware(boolean enabled) {
-            mSettings.mSafebrowsingMalware.set(enabled);
+            getSettings().mSafebrowsingMalware.set(enabled);
             return this;
         }
 
@@ -248,7 +232,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return The builder instance.
          */
         public @NonNull Builder blockPhishing(boolean enabled) {
-            mSettings.mSafebrowsingPhishing.set(enabled);
+            getSettings().mSafebrowsingPhishing.set(enabled);
             return this;
         }
 
@@ -259,7 +243,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return The builder instance.
          */
         public @NonNull Builder displayDpiOverride(int dpi) {
-            mSettings.mDisplayDpiOverride = dpi;
+            getSettings().mDisplayDpiOverride = dpi;
             return this;
         }
 
@@ -271,8 +255,8 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return The builder instance.
          */
         public @NonNull Builder screenSizeOverride(int width, int height) {
-            mSettings.mScreenWidthOverride = width;
-            mSettings.mScreenHeightOverride = height;
+            getSettings().mScreenWidthOverride = width;
+            getSettings().mScreenHeightOverride = height;
             return this;
         }
 
@@ -310,7 +294,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @see GeckoRuntime#ACTION_CRASHED
          */
         public @NonNull Builder crashHandler(final Class<? extends Service> handler) {
-            mSettings.mCrashHandler = handler;
+            getSettings().mCrashHandler = handler;
             return this;
         }
 
@@ -321,88 +305,38 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return The builder instance.
          */
         public @NonNull Builder locales(String[] requestedLocales) {
-            mSettings.mRequestedLocales = requestedLocales;
+            getSettings().mRequestedLocales = requestedLocales;
             return this;
         }
     }
 
-    /* package */ GeckoRuntime runtime;
+    private GeckoRuntime mRuntime;
     /* package */ boolean mUseContentProcess;
     /* package */ String[] mArgs;
     /* package */ Bundle mExtras;
-    /* package */ int prefCount;
 
-    private class Pref<T> {
-        public final String name;
-        public final T defaultValue;
-        private T mValue;
-        private boolean mIsSet;
-
-        public Pref(final String name, final T defaultValue) {
-            GeckoRuntimeSettings.this.prefCount++;
-
-            this.name = name;
-            this.defaultValue = defaultValue;
-            mValue = defaultValue;
-        }
-
-        public void set(T newValue) {
-            mValue = newValue;
-            mIsSet = true;
-
-            // There is a flush() in GeckoRuntimeSettings, so be explicit.
-            this.flush();
-        }
-
-        public T get() {
-            return mValue;
-        }
-
-        private void flush() {
-            final GeckoRuntime runtime = GeckoRuntimeSettings.this.runtime;
-            if (runtime != null) {
-                final GeckoBundle prefs = new GeckoBundle(1);
-                intoBundle(prefs);
-                runtime.setDefaultPrefs(prefs);
-            }
-        }
-
-        public void intoBundle(final GeckoBundle bundle) {
-            final T value = mIsSet ? mValue : defaultValue;
-            if (value instanceof String) {
-                bundle.putString(name, (String)value);
-            } else if (value instanceof Integer) {
-                bundle.putInt(name, (Integer)value);
-            } else if (value instanceof Boolean) {
-                bundle.putBoolean(name, (Boolean)value);
-            } else {
-                throw new UnsupportedOperationException("Unhandled pref type for " + name);
-            }
-        }
-    }
-
-    /* package */ Pref<Boolean> mJavaScript = new Pref<Boolean>(
+    /* package */ final Pref<Boolean> mJavaScript = new Pref<Boolean>(
         "javascript.enabled", true);
-    /* package */ Pref<Boolean> mRemoteDebugging = new Pref<Boolean>(
+    /* package */ final Pref<Boolean> mRemoteDebugging = new Pref<Boolean>(
         "devtools.debugger.remote-enabled", false);
-    /* package */ Pref<Integer> mWebFonts = new Pref<Integer>(
+    /* package */ final Pref<Integer> mWebFonts = new Pref<Integer>(
         "browser.display.use_document_fonts", 1);
-    /* package */ Pref<Integer> mCookieBehavior = new Pref<Integer>(
+    /* package */ final Pref<Integer> mCookieBehavior = new Pref<Integer>(
         "network.cookie.cookieBehavior", COOKIE_ACCEPT_ALL);
-    /* package */ Pref<Integer> mCookieLifetime = new Pref<Integer>(
+    /* package */ final Pref<Integer> mCookieLifetime = new Pref<Integer>(
         "network.cookie.lifetimePolicy", COOKIE_LIFETIME_NORMAL);
-    /* package */ Pref<String> mTrackingProtection = new Pref<String>(
+    /* package */ final Pref<String> mTrackingProtection = new Pref<String>(
         "urlclassifier.trackingTable",
         TrackingProtection.buildPrefValue(
             TrackingProtectionDelegate.CATEGORY_TEST |
             TrackingProtectionDelegate.CATEGORY_ANALYTIC |
             TrackingProtectionDelegate.CATEGORY_SOCIAL |
             TrackingProtectionDelegate.CATEGORY_AD));
-    /* package */ Pref<Boolean> mConsoleOutput = new Pref<Boolean>(
+    /* package */ final Pref<Boolean> mConsoleOutput = new Pref<Boolean>(
         "geckoview.console.enabled", false);
-    /* package */ Pref<Boolean> mSafebrowsingMalware = new Pref<Boolean>(
+    /* package */ final Pref<Boolean> mSafebrowsingMalware = new Pref<Boolean>(
         "browser.safebrowsing.malware.enabled", true);
-    /* package */ Pref<Boolean> mSafebrowsingPhishing = new Pref<Boolean>(
+    /* package */ final Pref<Boolean> mSafebrowsingPhishing = new Pref<Boolean>(
         "browser.safebrowsing.phishing.enabled", true);
 
     /* package */ boolean mDebugPause;
@@ -414,20 +348,26 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /* package */ Class<? extends Service> mCrashHandler;
     /* package */ String[] mRequestedLocales;
 
-    private final Pref<?>[] mPrefs = new Pref<?>[] {
-        mCookieBehavior, mCookieLifetime, mConsoleOutput,
-        mJavaScript, mRemoteDebugging, mSafebrowsingMalware,
-        mSafebrowsingPhishing, mTrackingProtection, mWebFonts,
-    };
+    /**
+     * Attach and commit the settings to the given runtime.
+     * @param runtime The runtime to attach to.
+     */
+    /* package */ void attachTo(final @NonNull GeckoRuntime runtime) {
+        mRuntime = runtime;
+        commit();
+    }
+
+    @Override // RuntimeSettings
+    public @Nullable GeckoRuntime getRuntime() {
+        return mRuntime;
+    }
 
     /* package */ GeckoRuntimeSettings() {
         this(null);
     }
 
     /* package */ GeckoRuntimeSettings(final @Nullable GeckoRuntimeSettings settings) {
-        if (BuildConfig.DEBUG && prefCount != mPrefs.length) {
-            throw new AssertionError("Add new pref to prefs list");
-        }
+        super(/* parent */ null);
 
         if (settings == null) {
             mArgs = new String[0];
@@ -435,19 +375,15 @@ public final class GeckoRuntimeSettings implements Parcelable {
             return;
         }
 
+        updateSettings(settings);
+    }
+
+    private void updateSettings(final @NonNull GeckoRuntimeSettings settings) {
+        updatePrefs(settings);
+
         mUseContentProcess = settings.getUseContentProcessHint();
         mArgs = settings.getArguments().clone();
         mExtras = new Bundle(settings.getExtras());
-
-        for (int i = 0; i < mPrefs.length; i++) {
-            if (!settings.mPrefs[i].mIsSet) {
-                continue;
-            }
-            // We know this is safe.
-            @SuppressWarnings("unchecked")
-            final Pref<Object> uncheckedPref = (Pref<Object>) mPrefs[i];
-            uncheckedPref.set(settings.mPrefs[i].get());
-        }
 
         mDebugPause = settings.mDebugPause;
         mUseMaxScreenDepth = settings.mUseMaxScreenDepth;
@@ -459,32 +395,9 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mRequestedLocales = settings.mRequestedLocales;
     }
 
-    /* package */ Map<String, Object> getPrefsMap() {
-        final ArrayMap<String, Object> prefs = new ArrayMap<>(mPrefs.length);
-        for (final Pref<?> pref : mPrefs) {
-            prefs.put(pref.name, pref.get());
-        }
-
-        return Collections.unmodifiableMap(prefs);
-    }
-
-    /* package */ void flush() {
-        flushLocales();
-
-        // Prefs are flushed individually when they are set, and
-        // initial values are handled by GeckoRuntime itself.
-        // We may have user prefs due to previous versions of
-        // this class operating differently, though, so we'll
-        // send a message to clear any user prefs that may have
-        // been set on the prefs we manage.
-        final String[] names = new String[mPrefs.length];
-        for (int i = 0; i < mPrefs.length; i++) {
-            names[i] = mPrefs[i].name;
-        }
-
-        final GeckoBundle data = new GeckoBundle(1);
-        data.putStringArray("names", names);
-        EventDispatcher.getInstance().dispatch("GeckoView:ResetUserPrefs", data);
+    /* package */ void commit() {
+        commitLocales();
+        commitResetPrefs();
     }
 
     /**
@@ -530,7 +443,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * @return This GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setJavaScriptEnabled(final boolean flag) {
-        mJavaScript.set(flag);
+        mJavaScript.commit(flag);
         return this;
     }
 
@@ -550,7 +463,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * @return This GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setRemoteDebuggingEnabled(final boolean enabled) {
-        mRemoteDebugging.set(enabled);
+        mRemoteDebugging.commit(enabled);
         return this;
     }
 
@@ -570,7 +483,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * @return This GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setWebFontsEnabled(final boolean flag) {
-        mWebFonts.set(flag ? 1 : 0);
+        mWebFonts.commit(flag ? 1 : 0);
         return this;
     }
 
@@ -645,10 +558,10 @@ public final class GeckoRuntimeSettings implements Parcelable {
      */
     public void setLocales(@Nullable String[] requestedLocales) {
         mRequestedLocales = requestedLocales;
-        flushLocales();
+        commitLocales();
     }
 
-    private void flushLocales() {
+    private void commitLocales() {
         if (mRequestedLocales == null) {
             return;
         }
@@ -707,7 +620,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      */
     public @NonNull GeckoRuntimeSettings setCookieBehavior(
             @CookieBehavior int behavior) {
-        mCookieBehavior.set(behavior);
+        mCookieBehavior.commit(behavior);
         return this;
     }
 
@@ -749,7 +662,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      */
     public @NonNull GeckoRuntimeSettings setCookieLifetime(
             @CookieLifetime int lifetime) {
-        mCookieLifetime.set(lifetime);
+        mCookieLifetime.commit(lifetime);
         return this;
     }
 
@@ -774,7 +687,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      **/
     public @NonNull GeckoRuntimeSettings setTrackingProtectionCategories(
             @TrackingProtectionDelegate.Category int categories) {
-        mTrackingProtection.set(TrackingProtection.buildPrefValue(categories));
+        mTrackingProtection.commit(TrackingProtection.buildPrefValue(categories));
         return this;
     }
 
@@ -790,7 +703,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      */
 
     public @NonNull GeckoRuntimeSettings setConsoleOutputEnabled(boolean enabled) {
-        mConsoleOutput.set(enabled);
+        mConsoleOutput.commit(enabled);
         return this;
     }
 
@@ -814,7 +727,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * @return The GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setBlockMalware(boolean enabled) {
-        mSafebrowsingMalware.set(enabled);
+        mSafebrowsingMalware.commit(enabled);
         return this;
     }
 
@@ -838,7 +751,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * @return The GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setBlockPhishing(boolean enabled) {
-        mSafebrowsingPhishing.set(enabled);
+        mSafebrowsingPhishing.commit(enabled);
         return this;
     }
 
@@ -852,20 +765,12 @@ public final class GeckoRuntimeSettings implements Parcelable {
     }
 
     @Override // Parcelable
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override // Parcelable
     public void writeToParcel(Parcel out, int flags) {
+        super.writeToParcel(out, flags);
+
         ParcelableUtils.writeBoolean(out, mUseContentProcess);
         out.writeStringArray(mArgs);
         mExtras.writeToParcel(out, flags);
-
-        for (final Pref<?> pref : mPrefs) {
-            out.writeValue(pref.get());
-        }
-
         ParcelableUtils.writeBoolean(out, mDebugPause);
         ParcelableUtils.writeBoolean(out, mUseMaxScreenDepth);
         out.writeFloat(mDisplayDensityOverride);
@@ -878,17 +783,11 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
     public void readFromParcel(final @NonNull Parcel source) {
+        super.readFromParcel(source);
+
         mUseContentProcess = ParcelableUtils.readBoolean(source);
         mArgs = source.createStringArray();
         mExtras.readFromParcel(source);
-
-        for (final Pref<?> pref : mPrefs) {
-            // We know this is safe.
-            @SuppressWarnings("unchecked")
-            final Pref<Object> uncheckedPref = (Pref<Object>) pref;
-            uncheckedPref.set(source.readValue(getClass().getClassLoader()));
-        }
-
         mDebugPause = ParcelableUtils.readBoolean(source);
         mUseMaxScreenDepth = ParcelableUtils.readBoolean(source);
         mDisplayDensityOverride = source.readFloat();

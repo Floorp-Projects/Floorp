@@ -799,6 +799,14 @@ class JS::Realm : public JS::shadow::Realm {
   static constexpr size_t offsetOfRegExps() {
     return offsetof(JS::Realm, regExps);
   }
+
+  // Note: global_ is a read-barriered object, but it's fine to skip the read
+  // barrier when the realm is active. See the comment in JSContext::global().
+  static constexpr size_t offsetOfActiveGlobal() {
+    static_assert(sizeof(global_) == sizeof(uintptr_t),
+                  "JIT code assumes field is pointer-sized");
+    return offsetof(JS::Realm, global_);
+  }
 };
 
 inline js::Handle<js::GlobalObject*> JSContext::global() const {

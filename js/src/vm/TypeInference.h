@@ -315,6 +315,14 @@ class TypeScript {
     return mallocSizeOf(this);
   }
 
+  static constexpr size_t offsetOfICScript() {
+    // Note: icScript_ is a UniquePtr that stores the raw pointer. If that ever
+    // changes and this assertion fails, we should stop using UniquePtr.
+    static_assert(sizeof(icScript_) == sizeof(uintptr_t),
+                  "JIT code assumes icScript_ is pointer-sized");
+    return offsetof(TypeScript, icScript_);
+  }
+
 #ifdef DEBUG
   void printTypes(JSContext* cx, HandleScript script) const;
 #endif

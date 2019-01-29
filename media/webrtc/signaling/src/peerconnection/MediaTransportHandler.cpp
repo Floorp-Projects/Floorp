@@ -35,6 +35,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 namespace mozilla {
 
@@ -44,9 +45,123 @@ static const char* mthLogTag = "MediaTransportHandler";
 #endif
 #define LOGTAG mthLogTag
 
-MediaTransportHandler::MediaTransportHandler() {}
+class MediaTransportHandlerSTS : public MediaTransportHandler,
+                                 public sigslot::has_slots<> {
+ public:
+  MediaTransportHandlerSTS();
 
-MediaTransportHandler::~MediaTransportHandler() {}
+  RefPtr<IceLogPromise> GetIceLog(const nsCString& aPattern) override;
+  void ClearIceLog() override;
+  void EnterPrivateMode() override;
+  void ExitPrivateMode() override;
+
+  nsresult Init(const std::string& aName,
+                const nsTArray<dom::RTCIceServer>& aIceServers,
+                dom::RTCIceTransportPolicy aIcePolicy) override;
+  void Destroy() override;
+
+  // We will probably be able to move the proxy lookup stuff into
+  // this class once we move mtransport to its own process.
+  void SetProxyServer(NrSocketProxyConfig&& aProxyConfig) override;
+
+  void EnsureProvisionalTransport(const std::string& aTransportId,
+                                  const std::string& aUfrag,
+                                  const std::string& aPwd,
+                                  size_t aComponentCount) override;
+
+  // We set default-route-only as late as possible because it depends on what
+  // capture permissions have been granted on the window, which could easily
+  // change between Init (ie; when the PC is created) and StartIceGathering
+  // (ie; when we set the local description).
+  void StartIceGathering(bool aDefaultRouteOnly,
+                         // This will go away once mtransport moves to its
+                         // own process, because we won't need to get this
+                         // via IPC anymore
+                         const nsTArray<NrIceStunAddr>& aStunAddrs) override;
+
+  void ActivateTransport(
+      const std::string& aTransportId, const std::string& aLocalUfrag,
+      const std::string& aLocalPwd, size_t aComponentCount,
+      const std::string& aUfrag, const std::string& aPassword,
+      const nsTArray<uint8_t>& aKeyDer, const nsTArray<uint8_t>& aCertDer,
+      SSLKEAType aAuthType, bool aDtlsClient,
+      const DtlsDigestList& aDigests, bool aPrivacyRequested) override;
+
+  void RemoveTransportsExcept(
+      const std::set<std::string>& aTransportIds) override;
+
+  void StartIceChecks(bool aIsControlling, bool aIsOfferer,
+                      const std::vector<std::string>& aIceOptions) override;
+
+  void AddIceCandidate(const std::string& aTransportId,
+                       const std::string& aCandidate) override;
+
+  void UpdateNetworkState(bool aOnline) override;
+
+  void SendPacket(const std::string& aTransportId,
+                  MediaPacket&& aPacket) override;
+
+  TransportLayer::State GetState(const std::string& aTransportId,
+                                 bool aRtcp) const override;
+
+  RefPtr<StatsPromise> GetIceStats(
+      const std::string& aTransportId, DOMHighResTimeStamp aNow,
+      std::unique_ptr<dom::RTCStatsReportInternal>&& aReport) override;
+
+ private:
+  RefPtr<TransportFlow> CreateTransportFlow(
+      const std::string& aTransportId, bool aIsRtcp,
+      RefPtr<DtlsIdentity> aDtlsIdentity, bool aDtlsClient,
+      const DtlsDigestList& aDigests, bool aPrivacyRequested);
+
+  struct Transport {
+    RefPtr<TransportFlow> mFlow;
+    RefPtr<TransportFlow> mRtcpFlow;
+  };
+
+  void OnGatheringStateChange(NrIceCtx* aIceCtx,
+                              NrIceCtx::GatheringState aState);
+  void OnConnectionStateChange(NrIceCtx* aIceCtx,
+                               NrIceCtx::ConnectionState aState);
+  void OnCandidateFound(NrIceMediaStream* aStream,
+                        const std::string& aCandidate);
+  void OnStateChange(TransportLayer* aLayer, TransportLayer::State);
+  void OnRtcpStateChange(TransportLayer* aLayer, TransportLayer::State);
+  void PacketReceived(TransportLayer* aLayer, MediaPacket& aPacket);
+  void EncryptedPacketSending(TransportLayer* aLayer, MediaPacket& aPacket);
+  RefPtr<TransportFlow> GetTransportFlow(const std::string& aTransportId,
+                                         bool aIsRtcp) const;
+  void GetIceStats(const NrIceMediaStream& aStream, DOMHighResTimeStamp aNow,
+                   dom::RTCStatsReportInternal* aReport) const;
+
+  virtual ~MediaTransportHandlerSTS() = default;
+  nsCOMPtr<nsISerialEventTarget> mStsThread;
+  RefPtr<NrIceCtx> mIceCtx;
+  RefPtr<NrIceResolver> mDNSResolver;
+  std::map<std::string, Transport> mTransports;
+  std::map<std::string, TransportLayer::State> mStateCache;
+  std::map<std::string, TransportLayer::State> mRtcpStateCache;
+  bool mProxyOnly = false;
+};
+
+/* static */
+already_AddRefed<MediaTransportHandler> MediaTransportHandler::Create() {
+  RefPtr<MediaTransportHandler> result;
+  if (Preferences::GetBool("media.peerconnection.mtransport_process")) {
+    // TODO: Return a MediaTransportHandlerIPC
+  } else {
+    result = new MediaTransportHandlerSTS;
+  }
+  return result.forget();
+}
+
+MediaTransportHandlerSTS::MediaTransportHandlerSTS() {
+  nsresult rv;
+  mStsThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+  if (!mStsThread) {
+    MOZ_CRASH();
+  }
+}
 
 static NrIceCtx::Policy toNrIcePolicy(dom::RTCIceTransportPolicy aPolicy) {
   switch (aPolicy) {
@@ -167,23 +282,22 @@ static nsresult addNrIceServer(const nsString& aIceUrl,
   return NS_OK;
 }
 
-nsresult MediaTransportHandler::Init(
-    const std::string& aName, const dom::RTCConfiguration& aConfiguration) {
+nsresult MediaTransportHandlerSTS::Init(
+    const std::string& aName, const nsTArray<dom::RTCIceServer>& aIceServers,
+    dom::RTCIceTransportPolicy aIcePolicy) {
   std::vector<NrIceStunServer> stunServers;
   std::vector<NrIceTurnServer> turnServers;
 
   nsresult rv;
-  if (aConfiguration.mIceServers.WasPassed()) {
-    for (const auto& iceServer : aConfiguration.mIceServers.Value()) {
-      NS_ENSURE_STATE(iceServer.mUrls.WasPassed());
-      NS_ENSURE_STATE(iceServer.mUrls.Value().IsStringSequence());
-      for (const auto& iceUrl : iceServer.mUrls.Value().GetAsStringSequence()) {
-        rv = addNrIceServer(iceUrl, iceServer, &stunServers, &turnServers);
-        if (NS_FAILED(rv)) {
-          CSFLogError(LOGTAG, "%s: invalid STUN/TURN server: %s", __FUNCTION__,
-                      NS_ConvertUTF16toUTF8(iceUrl).get());
-          return rv;
-        }
+  for (const auto& iceServer : aIceServers) {
+    NS_ENSURE_STATE(iceServer.mUrls.WasPassed());
+    NS_ENSURE_STATE(iceServer.mUrls.Value().IsStringSequence());
+    for (const auto& iceUrl : iceServer.mUrls.Value().GetAsStringSequence()) {
+      rv = addNrIceServer(iceUrl, iceServer, &stunServers, &turnServers);
+      if (NS_FAILED(rv)) {
+        CSFLogError(LOGTAG, "%s: invalid STUN/TURN server: %s", __FUNCTION__,
+                    NS_ConvertUTF16toUTF8(iceUrl).get());
+        return rv;
       }
     }
   }
@@ -198,7 +312,7 @@ nsresult MediaTransportHandler::Init(
       Preferences::GetBool("media.peerconnection.ice.link_local", false);
 
   mIceCtx = NrIceCtx::Create(aName, allowLoopback, tcpEnabled, allowLinkLocal,
-                             toNrIcePolicy(aConfiguration.mIceTransportPolicy));
+                             toNrIcePolicy(aIcePolicy));
   if (!mIceCtx) {
     return NS_ERROR_FAILURE;
   }
@@ -207,9 +321,9 @@ nsresult MediaTransportHandler::Init(
       Preferences::GetBool("media.peerconnection.ice.proxy_only", false);
 
   mIceCtx->SignalGatheringStateChange.connect(
-      this, &MediaTransportHandler::OnGatheringStateChange);
+      this, &MediaTransportHandlerSTS::OnGatheringStateChange);
   mIceCtx->SignalConnectionStateChange.connect(
-      this, &MediaTransportHandler::OnConnectionStateChange);
+      this, &MediaTransportHandlerSTS::OnConnectionStateChange);
 
   if (NS_FAILED(rv = mIceCtx->SetStunServers(stunServers))) {
     CSFLogError(LOGTAG, "%s: Failed to set stun servers", __FUNCTION__);
@@ -240,7 +354,7 @@ nsresult MediaTransportHandler::Init(
   return NS_OK;
 }
 
-void MediaTransportHandler::Destroy() {
+void MediaTransportHandlerSTS::Destroy() {
   disconnect_all();
   if (mIceCtx) {
     NrIceStats stats = mIceCtx->Destroy();
@@ -258,14 +372,17 @@ void MediaTransportHandler::Destroy() {
                          stats.turn_403s);
     Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_NICER_TURN_438S,
                          stats.turn_438s);
+    mIceCtx = nullptr;
   }
+  mTransports.clear();
 }
 
-void MediaTransportHandler::SetProxyServer(NrSocketProxyConfig&& aProxyConfig) {
+void MediaTransportHandlerSTS::SetProxyServer(
+    NrSocketProxyConfig&& aProxyConfig) {
   mIceCtx->SetProxyServer(std::move(aProxyConfig));
 }
 
-void MediaTransportHandler::EnsureProvisionalTransport(
+void MediaTransportHandlerSTS::EnsureProvisionalTransport(
     const std::string& aTransportId, const std::string& aUfrag,
     const std::string& aPwd, size_t aComponentCount) {
   RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aTransportId));
@@ -283,8 +400,8 @@ void MediaTransportHandler::EnsureProvisionalTransport(
       return;
     }
 
-    stream->SignalCandidate.connect(this,
-                                    &MediaTransportHandler::OnCandidateFound);
+    stream->SignalCandidate.connect(
+        this, &MediaTransportHandlerSTS::OnCandidateFound);
   }
 
   // Begins an ICE restart if this stream has a different ufrag/pwd
@@ -294,15 +411,20 @@ void MediaTransportHandler::EnsureProvisionalTransport(
   mTransports[aTransportId];
 }
 
-void MediaTransportHandler::ActivateTransport(
+void MediaTransportHandlerSTS::ActivateTransport(
     const std::string& aTransportId, const std::string& aLocalUfrag,
     const std::string& aLocalPwd, size_t aComponentCount,
     const std::string& aUfrag, const std::string& aPassword,
-    const std::vector<std::string>& aCandidateList,
-    RefPtr<DtlsIdentity> aDtlsIdentity, bool aDtlsClient,
-    const SdpFingerprintAttributeList& aFingerprints, bool aPrivacyRequested) {
+    const nsTArray<uint8_t>& aKeyDer, const nsTArray<uint8_t>& aCertDer,
+    SSLKEAType aAuthType, bool aDtlsClient,
+    const DtlsDigestList& aDigests, bool aPrivacyRequested) {
   MOZ_ASSERT(aComponentCount);
-  MOZ_ASSERT(aDtlsIdentity);
+  RefPtr<DtlsIdentity> dtlsIdentity(
+      DtlsIdentity::Deserialize(aKeyDer, aCertDer, aAuthType));
+  if (!dtlsIdentity) {
+    MOZ_ASSERT(false);
+    return;
+  }
 
   RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aTransportId));
   if (!stream) {
@@ -315,15 +437,12 @@ void MediaTransportHandler::ActivateTransport(
               static_cast<unsigned>(aComponentCount));
 
   std::vector<std::string> attrs;
-  attrs.reserve(aCandidateList.size() + 2 /* ufrag + pwd */);
-  for (const auto& candidate : aCandidateList) {
-    attrs.push_back("candidate:" + candidate);
-  }
+  attrs.reserve(2 /* ufrag + pwd */);
   attrs.push_back("ice-ufrag:" + aUfrag);
   attrs.push_back("ice-pwd:" + aPassword);
 
-  // If we started an ICE restart in EnsureProvisionalTransport, this is where
-  // we decide whether to commit or rollback.
+  // If we started an ICE restart in EnsureProvisionalTransport, this is
+  // where we decide whether to commit or rollback.
   nsresult rv = stream->ConnectToPeer(aLocalUfrag, aLocalPwd, attrs);
   if (NS_FAILED(rv)) {
     CSFLogError(LOGTAG, "Couldn't parse ICE attributes, rv=%u",
@@ -335,32 +454,32 @@ void MediaTransportHandler::ActivateTransport(
   Transport transport = mTransports[aTransportId];
   if (!transport.mFlow) {
     transport.mFlow =
-        CreateTransportFlow(aTransportId, false, aDtlsIdentity, aDtlsClient,
-                            aFingerprints, aPrivacyRequested);
+        CreateTransportFlow(aTransportId, false, dtlsIdentity, aDtlsClient,
+                            aDigests, aPrivacyRequested);
     if (!transport.mFlow) {
       return;
     }
     TransportLayer* dtls = transport.mFlow->GetLayer(TransportLayerDtls::ID());
     dtls->SignalStateChange.connect(this,
-                                    &MediaTransportHandler::OnStateChange);
+                                    &MediaTransportHandlerSTS::OnStateChange);
     if (aComponentCount < 2) {
       dtls->SignalStateChange.connect(
-          this, &MediaTransportHandler::OnRtcpStateChange);
+          this, &MediaTransportHandlerSTS::OnRtcpStateChange);
     }
   }
 
   if (aComponentCount == 2) {
     if (!transport.mRtcpFlow) {
       transport.mRtcpFlow =
-          CreateTransportFlow(aTransportId, true, aDtlsIdentity, aDtlsClient,
-                              aFingerprints, aPrivacyRequested);
+          CreateTransportFlow(aTransportId, true, dtlsIdentity, aDtlsClient,
+                              aDigests, aPrivacyRequested);
       if (!transport.mRtcpFlow) {
         return;
       }
       TransportLayer* dtls =
           transport.mRtcpFlow->GetLayer(TransportLayerDtls::ID());
       dtls->SignalStateChange.connect(
-          this, &MediaTransportHandler::OnRtcpStateChange);
+          this, &MediaTransportHandlerSTS::OnRtcpStateChange);
     }
   } else {
     transport.mRtcpFlow = nullptr;
@@ -371,7 +490,7 @@ void MediaTransportHandler::ActivateTransport(
   mTransports[aTransportId] = transport;
 }
 
-void MediaTransportHandler::StartIceGathering(
+void MediaTransportHandlerSTS::StartIceGathering(
     bool aDefaultRouteOnly, const nsTArray<NrIceStunAddr>& aStunAddrs) {
   // Belt and suspenders - in e10s mode, the call below to SetStunAddrs
   // needs to have the proper flags set on ice ctx.  For non-e10s,
@@ -399,7 +518,7 @@ void MediaTransportHandler::StartIceGathering(
   SignalGatheringStateChange(dom::PCImplIceGatheringState::Complete);
 }
 
-void MediaTransportHandler::StartIceChecks(
+void MediaTransportHandlerSTS::StartIceChecks(
     bool aIsControlling, bool aIsOfferer,
     const std::vector<std::string>& aIceOptions) {
   nsresult rv = mIceCtx->ParseGlobalAttributes(aIceOptions);
@@ -423,8 +542,8 @@ void MediaTransportHandler::StartIceChecks(
   }
 }
 
-void MediaTransportHandler::AddIceCandidate(const std::string& aTransportId,
-                                            const std::string& aCandidate) {
+void MediaTransportHandlerSTS::AddIceCandidate(const std::string& aTransportId,
+                                               const std::string& aCandidate) {
   RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aTransportId));
   if (!stream) {
     CSFLogError(LOGTAG, "No ICE stream for candidate with transport id %s: %s",
@@ -441,11 +560,11 @@ void MediaTransportHandler::AddIceCandidate(const std::string& aTransportId,
   }
 }
 
-void MediaTransportHandler::UpdateNetworkState(bool aOnline) {
+void MediaTransportHandlerSTS::UpdateNetworkState(bool aOnline) {
   mIceCtx->UpdateNetworkState(aOnline);
 }
 
-void MediaTransportHandler::RemoveTransportsExcept(
+void MediaTransportHandlerSTS::RemoveTransportsExcept(
     const std::set<std::string>& aTransportIds) {
   for (auto it = mTransports.begin(); it != mTransports.end();) {
     if (!aTransportIds.count(it->first)) {
@@ -462,8 +581,8 @@ void MediaTransportHandler::RemoveTransportsExcept(
   }
 }
 
-void MediaTransportHandler::SendPacket(const std::string& aTransportId,
-                                       MediaPacket& aPacket) {
+void MediaTransportHandlerSTS::SendPacket(const std::string& aTransportId,
+                                          MediaPacket&& aPacket) {
   MOZ_ASSERT(aPacket.type() != MediaPacket::UNCLASSIFIED);
   RefPtr<TransportFlow> flow =
       GetTransportFlow(aTransportId, aPacket.type() == MediaPacket::RTCP);
@@ -499,7 +618,7 @@ void MediaTransportHandler::SendPacket(const std::string& aTransportId,
   }
 }
 
-TransportLayer::State MediaTransportHandler::GetState(
+TransportLayer::State MediaTransportHandlerSTS::GetState(
     const std::string& aTransportId, bool aRtcp) const {
   // TODO Bug 1520692: we should allow Datachannel to connect without
   // DTLS SRTP keys
@@ -510,19 +629,20 @@ TransportLayer::State MediaTransportHandler::GetState(
   return TransportLayer::TS_NONE;
 }
 
-RefPtr<RTCStatsQueryPromise> MediaTransportHandler::GetIceStats(
-    UniquePtr<RTCStatsQuery>&& aQuery) {
+RefPtr<MediaTransportHandler::StatsPromise>
+MediaTransportHandlerSTS::GetIceStats(
+    const std::string& aTransportId, DOMHighResTimeStamp aNow,
+    std::unique_ptr<dom::RTCStatsReportInternal>&& aReport) {
   for (const auto& stream : mIceCtx->GetStreams()) {
-    if (aQuery->grabAllLevels || aQuery->transportId == stream->GetId()) {
-      GetIceStats(*stream, aQuery->now, aQuery->report);
+    if (aTransportId.empty() || aTransportId == stream->GetId()) {
+      GetIceStats(*stream, aNow, aReport.get());
     }
   }
-  return RTCStatsQueryPromise::CreateAndResolve(std::move(aQuery), __func__);
+  return StatsPromise::CreateAndResolve(std::move(aReport), __func__);
 }
 
-/* static */
-RefPtr<MediaTransportHandler::IceLogPromise> MediaTransportHandler::GetIceLog(
-    const nsCString& aPattern) {
+RefPtr<MediaTransportHandler::IceLogPromise>
+MediaTransportHandlerSTS::GetIceLog(const nsCString& aPattern) {
   RLogConnector* logs = RLogConnector::GetInstance();
   nsAutoPtr<std::deque<std::string>> result(new std::deque<std::string>);
   // Might not exist yet.
@@ -536,21 +656,18 @@ RefPtr<MediaTransportHandler::IceLogPromise> MediaTransportHandler::GetIceLog(
   return IceLogPromise::CreateAndResolve(std::move(converted), __func__);
 }
 
-/* static */
-void MediaTransportHandler::ClearIceLog() {
+void MediaTransportHandlerSTS::ClearIceLog() {
   RLogConnector* logs = RLogConnector::GetInstance();
   if (logs) {
     logs->Clear();
   }
 }
 
-/* static */
-void MediaTransportHandler::EnterPrivateMode() {
+void MediaTransportHandlerSTS::EnterPrivateMode() {
   RLogConnector::CreateInstance()->EnterPrivateMode();
 }
 
-/* static */
-void MediaTransportHandler::ExitPrivateMode() {
+void MediaTransportHandlerSTS::ExitPrivateMode() {
   auto* log = RLogConnector::GetInstance();
   MOZ_ASSERT(log);
   if (log) {
@@ -590,7 +707,7 @@ static void ToRTCIceCandidateStats(
   }
 }
 
-void MediaTransportHandler::GetIceStats(
+void MediaTransportHandlerSTS::GetIceStats(
     const NrIceMediaStream& aStream, DOMHighResTimeStamp aNow,
     dom::RTCStatsReportInternal* aReport) const {
   NS_ConvertASCIItoUTF16 transportId(aStream.GetId().c_str());
@@ -655,7 +772,7 @@ void MediaTransportHandler::GetIceStats(
   }
 }
 
-RefPtr<TransportFlow> MediaTransportHandler::GetTransportFlow(
+RefPtr<TransportFlow> MediaTransportHandlerSTS::GetTransportFlow(
     const std::string& aTransportId, bool aIsRtcp) const {
   auto it = mTransports.find(aTransportId);
   if (it == mTransports.end()) {
@@ -670,10 +787,10 @@ RefPtr<TransportFlow> MediaTransportHandler::GetTransportFlow(
   return it->second.mFlow;
 }
 
-RefPtr<TransportFlow> MediaTransportHandler::CreateTransportFlow(
+RefPtr<TransportFlow> MediaTransportHandlerSTS::CreateTransportFlow(
     const std::string& aTransportId, bool aIsRtcp,
     RefPtr<DtlsIdentity> aDtlsIdentity, bool aDtlsClient,
-    const SdpFingerprintAttributeList& aFingerprints, bool aPrivacyRequested) {
+    const DtlsDigestList& aDigests, bool aPrivacyRequested) {
   nsresult rv;
   RefPtr<TransportFlow> flow = new TransportFlow(aTransportId);
 
@@ -686,11 +803,8 @@ RefPtr<TransportFlow> MediaTransportHandler::CreateTransportFlow(
 
   dtls->SetIdentity(aDtlsIdentity);
 
-  for (const auto& fingerprint : aFingerprints.mFingerprints) {
-    std::ostringstream ss;
-    ss << fingerprint.hashFunc;
-    rv = dtls->SetVerificationDigest(ss.str(), &fingerprint.fingerprint[0],
-                                     fingerprint.fingerprint.size());
+  for (const auto& digest : aDigests) {
+    rv = dtls->SetVerificationDigest(digest);
     if (NS_FAILED(rv)) {
       CSFLogError(LOGTAG, "Could not set fingerprint");
       return nullptr;
@@ -730,11 +844,11 @@ RefPtr<TransportFlow> MediaTransportHandler::CreateTransportFlow(
   srtp->Chain(ice.get());
 
   dtls->SignalPacketReceived.connect(this,
-                                     &MediaTransportHandler::PacketReceived);
+                                     &MediaTransportHandlerSTS::PacketReceived);
   srtp->SignalPacketReceived.connect(this,
-                                     &MediaTransportHandler::PacketReceived);
+                                     &MediaTransportHandlerSTS::PacketReceived);
   ice->SignalPacketSending.connect(
-      this, &MediaTransportHandler::EncryptedPacketSending);
+      this, &MediaTransportHandlerSTS::EncryptedPacketSending);
   flow->PushLayer(ice.release());
   flow->PushLayer(dtls.release());
   flow->PushLayer(srtp.release());
@@ -754,7 +868,7 @@ static mozilla::dom::PCImplIceGatheringState toDomIceGatheringState(
   MOZ_CRASH();
 }
 
-void MediaTransportHandler::OnGatheringStateChange(
+void MediaTransportHandlerSTS::OnGatheringStateChange(
     NrIceCtx* aIceCtx, NrIceCtx::GatheringState aState) {
   if (aState == NrIceCtx::ICE_CTX_GATHER_COMPLETE) {
     for (const auto& stream : mIceCtx->GetStreams()) {
@@ -785,14 +899,14 @@ static mozilla::dom::PCImplIceConnectionState toDomIceConnectionState(
   MOZ_CRASH();
 }
 
-void MediaTransportHandler::OnConnectionStateChange(
+void MediaTransportHandlerSTS::OnConnectionStateChange(
     NrIceCtx* aIceCtx, NrIceCtx::ConnectionState aState) {
   SignalConnectionStateChange(toDomIceConnectionState(aState));
 }
 
 // The stuff below here will eventually go into the MediaTransportChild class
-void MediaTransportHandler::OnCandidateFound(NrIceMediaStream* aStream,
-                                             const std::string& aCandidate) {
+void MediaTransportHandlerSTS::OnCandidateFound(NrIceMediaStream* aStream,
+                                                const std::string& aCandidate) {
   CandidateInfo info;
   info.mCandidate = aCandidate;
   NrIceCandidate defaultRtpCandidate;
@@ -818,8 +932,8 @@ void MediaTransportHandler::OnCandidateFound(NrIceMediaStream* aStream,
   SignalCandidate(aStream->GetId(), info);
 }
 
-void MediaTransportHandler::OnStateChange(TransportLayer* aLayer,
-                                          TransportLayer::State aState) {
+void MediaTransportHandlerSTS::OnStateChange(TransportLayer* aLayer,
+                                             TransportLayer::State aState) {
   if (aState == TransportLayer::TS_OPEN) {
     MOZ_ASSERT(aLayer->id() == TransportLayerDtls::ID());
     TransportLayerDtls* dtlsLayer = static_cast<TransportLayerDtls*>(aLayer);
@@ -828,21 +942,31 @@ void MediaTransportHandler::OnStateChange(TransportLayer* aLayer,
 
   // DTLS state indicates the readiness of the transport as a whole, because
   // SRTP uses the keys from the DTLS handshake.
+  if (aState == TransportLayer::TS_NONE) {
+    mStateCache.erase(aLayer->flow_id());
+  } else {
+    mStateCache[aLayer->flow_id()] = aState;
+  }
   SignalStateChange(aLayer->flow_id(), aState);
 }
 
-void MediaTransportHandler::OnRtcpStateChange(TransportLayer* aLayer,
-                                              TransportLayer::State aState) {
+void MediaTransportHandlerSTS::OnRtcpStateChange(TransportLayer* aLayer,
+                                                 TransportLayer::State aState) {
+  if (aState == TransportLayer::TS_NONE) {
+    mRtcpStateCache.erase(aLayer->flow_id());
+  } else {
+    mRtcpStateCache[aLayer->flow_id()] = aState;
+  }
   SignalRtcpStateChange(aLayer->flow_id(), aState);
 }
 
-void MediaTransportHandler::PacketReceived(TransportLayer* aLayer,
-                                           MediaPacket& aPacket) {
+void MediaTransportHandlerSTS::PacketReceived(TransportLayer* aLayer,
+                                              MediaPacket& aPacket) {
   SignalPacketReceived(aLayer->flow_id(), aPacket);
 }
 
-void MediaTransportHandler::EncryptedPacketSending(TransportLayer* aLayer,
-                                                   MediaPacket& aPacket) {
+void MediaTransportHandlerSTS::EncryptedPacketSending(TransportLayer* aLayer,
+                                                      MediaPacket& aPacket) {
   SignalEncryptedSending(aLayer->flow_id(), aPacket);
 }
 }  // namespace mozilla

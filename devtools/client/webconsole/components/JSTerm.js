@@ -1556,7 +1556,7 @@ class JSTerm extends Component {
 
     if (this.props.codeMirrorEnabled) {
       return dom.div({
-        className: "jsterm-input-container devtools-monospace",
+        className: "jsterm-input-container devtools-input devtools-monospace",
         key: "jsterm-container",
         style: {direction: "ltr"},
         "aria-live": "off",
