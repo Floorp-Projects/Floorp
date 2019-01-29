@@ -78,7 +78,7 @@ projects:
     publish: true
   feature-findinpage:
       path: components/feature/findinpage
-      description: 'Feature that will subscribe to the selected session and shows a UI based on the data Session.findResults.'
+      description: 'Feature that will subscribe to the selected session and show an UI for results of find in page.'
       publish: true
   browser-awesomebar:
     path: components/browser/awesomebar

@@ -23,20 +23,20 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class FindInPageViewTest {
     private lateinit var context: Context
-    private lateinit var mockSessionEngine: EngineSession
+    private lateinit var mockEngineSession: EngineSession
     private lateinit var findInPageView: FindInPageView
 
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
         findInPageView = FindInPageView(context)
-        mockSessionEngine = mock()
+        mockEngineSession = mock()
     }
 
     @Test
     fun `Calling onCloseButtonClicked must notify the onCloseButtonPress listener`() {
         var closeListenerWasCalled = false
-        findInPageView.sessionEngine = mockSessionEngine
+        findInPageView.engineSession = mockEngineSession
 
         findInPageView.onCloseButtonPressListener = {
             closeListenerWasCalled = true
@@ -47,49 +47,49 @@ class FindInPageViewTest {
     }
 
     @Test
-    fun `When type new text the widget must forward its calls to sessionEngine findAll`() {
+    fun `When type new text the widget must forward its calls to engineSession findAll`() {
         val newText = "N"
-        findInPageView.sessionEngine = mockSessionEngine
+        findInPageView.engineSession = mockEngineSession
 
         findInPageView.queryEditText.setText(newText)
 
-        verify(mockSessionEngine).findAll(newText)
+        verify(mockEngineSession).findAll(newText)
     }
 
     @Test
     fun `When type an empty string the widget must be clear up`() {
         val newText = " "
-        findInPageView.sessionEngine = mockSessionEngine
+        findInPageView.engineSession = mockEngineSession
 
         findInPageView.queryEditText.setText(newText)
 
         assertTrue(findInPageView.resultsCountTextView.text.isEmpty())
-        verify(mockSessionEngine).clearFindMatches()
+        verify(mockEngineSession).clearFindMatches()
     }
 
     @Test
-    fun `Calling onPreviousButtonClicked must forward its calls to sessionEngine findNext`() {
-        findInPageView.sessionEngine = mockSessionEngine
+    fun `Calling onPreviousButtonClicked must forward its calls to engineSession findNext`() {
+        findInPageView.engineSession = mockEngineSession
 
         val button = findInPageView.findViewById<AppCompatImageButton>(R.id.find_in_page_prev_btn)
         button.performClick()
 
-        verify(mockSessionEngine).findNext(false)
+        verify(mockEngineSession).findNext(false)
     }
 
     @Test
-    fun `Calling onNextButtonClicked must forward its calls to sessionEngine findNext`() {
-        findInPageView.sessionEngine = mockSessionEngine
+    fun `Calling onNextButtonClicked must forward its calls to engineSession findNext`() {
+        findInPageView.engineSession = mockEngineSession
 
         val button = findInPageView.findViewById<AppCompatImageButton>(R.id.find_in_page_next_btn)
         button.performClick()
 
-        verify(mockSessionEngine).findNext(true)
+        verify(mockEngineSession).findNext(true)
     }
 
     @Test
     fun `Calling onCloseButtonClicked must reset the state of the widget`() {
-        findInPageView.sessionEngine = mockSessionEngine
+        findInPageView.engineSession = mockEngineSession
 
         assertFalse(findInPageView.isActive())
 
@@ -110,13 +110,13 @@ class FindInPageViewTest {
     }
 
     @Test(expected = Exception::class)
-    fun `Calling show without first initializing the sessionEngine will throw an exception`() {
+    fun `Calling show without first initializing the engineSession will throw an exception`() {
         findInPageView.show()
     }
 
     @Test
     fun `Calling onFindResultReceived with a FindResult that has matches must populate the widget`() {
-        findInPageView.sessionEngine = mockSessionEngine
+        findInPageView.engineSession = mockEngineSession
 
         findInPageView.onFindResultReceived(FindResult(0, 1, false))
 
@@ -129,7 +129,7 @@ class FindInPageViewTest {
 
     @Test
     fun `Calling onFindResultReceived with a FindResult that has zero matches must not populate the widget`() {
-        findInPageView.sessionEngine = mockSessionEngine
+        findInPageView.engineSession = mockEngineSession
 
         findInPageView.onFindResultReceived(FindResult(0, 0, false))
 

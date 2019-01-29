@@ -12,7 +12,7 @@ implementation "org.mozilla.components:feature-findinpage:{latest-version}"
 ```
 
 ### Adding feature find in page.
-To use feature find in page you have to do two things:
+To use this feature you have to do two things:
 
 **1. Add the `FindInPageView` widget to you layout.**
 

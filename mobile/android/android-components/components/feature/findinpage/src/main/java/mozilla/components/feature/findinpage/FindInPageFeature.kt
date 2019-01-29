@@ -35,7 +35,7 @@ class FindInPageFeature(
         observer.observeSelected()
         val selectedSession = sessionManager.selectedSession ?: return
         val engineSession = sessionManager.getEngineSession(selectedSession) ?: return
-        findInPageView.sessionEngine = engineSession
+        findInPageView.engineSession = engineSession
     }
 
     /**
@@ -77,7 +77,7 @@ class FindInPageFeature(
         override fun onSessionSelected(session: Session) {
             super.onSessionSelected(session)
             val engineSession = sessionManager.getEngineSession(session) ?: return
-            feature.findInPageView.sessionEngine = engineSession
+            feature.findInPageView.engineSession = engineSession
         }
     }
 }

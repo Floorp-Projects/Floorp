@@ -47,7 +47,7 @@ class FindInPageFeatureTest {
     }
 
     @Test
-    fun `After stopping the feature none new onFindResult events will be forwarded to the findInPageView`() {
+    fun `After stopping the feature no new onFindResult events will be forwarded to the findInPageView`() {
         feature.start()
         feature.stop()
 
@@ -59,7 +59,7 @@ class FindInPageFeatureTest {
     }
 
     @Test
-    fun `When starting the feature with a selected session the findInPageView sessionEngine must be assigned`() {
+    fun `When starting the feature with a selected session the findInPageView engineSession must be assigned`() {
         val mockEngineSession = mock(EngineSession::class.java)
         val selectedSession = selectNewSession()
 
@@ -67,11 +67,11 @@ class FindInPageFeatureTest {
 
         feature.start()
 
-        verify(mockFindInPageView).sessionEngine = mockEngineSession
+        verify(mockFindInPageView).engineSession = mockEngineSession
     }
 
     @Test
-    fun `When a new session is selected the findInPageView sessionEngine must be assigned`() {
+    fun `When a new session is selected the findInPageView engineSession must be assigned`() {
         val mockEngineSession = mock(EngineSession::class.java)
         val session = Session("")
 
@@ -80,7 +80,7 @@ class FindInPageFeatureTest {
         doReturn(mockEngineSession).`when`(mockSessionManager).getEngineSession(session)
 
         selectNewSession(session)
-        verify(mockFindInPageView, times(2)).sessionEngine = mockEngineSession
+        verify(mockFindInPageView, times(2)).engineSession = mockEngineSession
     }
 
     @Test

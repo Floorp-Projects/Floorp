@@ -26,7 +26,6 @@ private const val DEFAULT_VALUE = 0
  * A customizable FindInPage UI widget.
  */
 @Suppress("TooManyFunctions")
-
 class FindInPageView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -39,10 +38,10 @@ class FindInPageView @JvmOverloads constructor(
     var onCloseButtonPressListener: (() -> Unit)? = null
 
     /**
-     * Gives access to the underneath engine, to start the search and to control the navigation between
+     * Gives access to the underneath engineSession to start the search and to control the navigation between
      * word matches (Next and previous buttons).
      */
-    lateinit var sessionEngine: EngineSession
+    lateinit var engineSession: EngineSession
 
     @VisibleForTesting
     internal lateinit var accessibilityFormat: String
@@ -74,14 +73,14 @@ class FindInPageView @JvmOverloads constructor(
      * Makes the [FindInPageView] widget visible.
      */
     fun show() {
-        checkNotNull(sessionEngine) // without it we can't do any interactions with underneath engine.
+        checkNotNull(engineSession) // without it we can't do any interactions with underneath engine.
         visibility = VISIBLE
         queryEditText.requestFocus()
         queryEditText.showKeyboard()
     }
 
     /**
-     * Tells if the widget is visible.
+     * Returns whether or not the widget is visible.
      *
      * @return true if it is visible, otherwise false.
      */
@@ -89,20 +88,20 @@ class FindInPageView @JvmOverloads constructor(
 
     internal fun onQueryChange(newQuery: String) {
         if (newQuery.isNotBlank()) {
-            sessionEngine.findAll(newQuery)
+            engineSession.findAll(newQuery)
         } else {
             resultsCountTextView.text = ""
-            sessionEngine.clearFindMatches()
+            engineSession.clearFindMatches()
         }
     }
 
     internal fun onPreviousButtonClicked() {
-        sessionEngine.findNext(false)
+        engineSession.findNext(false)
         hideKeyboard()
     }
 
     internal fun onNextButtonClicked() {
-        sessionEngine.findNext(true)
+        engineSession.findNext(true)
         hideKeyboard()
     }
 
@@ -114,7 +113,7 @@ class FindInPageView @JvmOverloads constructor(
         resultsCountTextView.text = null
         resultsCountTextView.contentDescription = null
         visibility = GONE
-        sessionEngine.clearFindMatches()
+        engineSession.clearFindMatches()
     }
 
     internal fun onFindResultReceived(result: Session.FindResult) {
