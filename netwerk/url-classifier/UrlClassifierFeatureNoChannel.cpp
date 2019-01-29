@@ -71,6 +71,18 @@ UrlClassifierFeatureNoChannel::UrlClassifierFeatureNoChannel(
   }
 }
 
+/* static */ void UrlClassifierFeatureNoChannel::MaybeCreate(
+    nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures) {
+  MaybeInitialize();
+
+  for (const NoChannelFeature& feature : sNoChannelFeaturesMap) {
+    if (feature.mPref()) {
+      MOZ_ASSERT(feature.mFeature);
+      aFeatures.AppendElement(feature.mFeature);
+    }
+  }
+}
+
 /* static */ already_AddRefed<nsIUrlClassifierFeature>
 UrlClassifierFeatureNoChannel::GetIfNameMatches(const nsACString& aName) {
   MaybeInitialize();
