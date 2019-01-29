@@ -261,11 +261,29 @@ bool PushDispatcher::ShouldNotifyWorkers() {
   if (NS_WARN_IF(!mPrincipal)) {
     return false;
   }
+
   // System subscriptions use observer notifications instead of service worker
   // events. The `testing.notifyWorkers` pref disables worker events for
   // non-system subscriptions.
-  return !nsContentUtils::IsSystemPrincipal(mPrincipal) &&
-         Preferences::GetBool("dom.push.testing.notifyWorkers", true);
+  if (nsContentUtils::IsSystemPrincipal(mPrincipal) ||
+      !Preferences::GetBool("dom.push.testing.notifyWorkers", true)) {
+    return false;
+  }
+
+  // If e10s is off, no need to worry about processes.
+  if (!BrowserTabsRemoteAutostart()) {
+    return true;
+  }
+
+  // If parent intercept is enabled, then we only want to notify in the parent
+  // process. Otherwise, we only want to notify in the child process.
+  bool isContentProcess = XRE_GetProcessType() == GeckoProcessType_Content;
+  bool parentInterceptEnabled = ServiceWorkerParentInterceptEnabled();
+  if (parentInterceptEnabled) {
+    return !isContentProcess;
+  }
+
+  return isContentProcess;
 }
 
 nsresult PushDispatcher::DoNotifyObservers(nsISupports* aSubject,
@@ -419,7 +437,8 @@ PushErrorDispatcher::~PushErrorDispatcher() {}
 nsresult PushErrorDispatcher::NotifyObservers() { return NS_OK; }
 
 nsresult PushErrorDispatcher::NotifyWorkers() {
-  if (!ShouldNotifyWorkers()) {
+  if (!ShouldNotifyWorkers() &&
+      (!mPrincipal || nsContentUtils::IsSystemPrincipal(mPrincipal))) {
     // For system subscriptions, log the error directly to the browser console.
     return nsContentUtils::ReportToConsoleNonLocalized(
         mMessage, mFlags, NS_LITERAL_CSTRING("Push"), nullptr, /* aDocument */
@@ -429,6 +448,7 @@ nsresult PushErrorDispatcher::NotifyWorkers() {
         0, /* aColumnNumber */
         nsContentUtils::eOMIT_LOCATION);
   }
+
   // For service worker subscriptions, report the error to all clients.
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (swm) {
@@ -442,7 +462,10 @@ nsresult PushErrorDispatcher::NotifyWorkers() {
   return NS_OK;
 }
 
-bool PushErrorDispatcher::SendToParent(ContentChild*) { return true; }
+bool PushErrorDispatcher::SendToParent(ContentChild* aContentActor) {
+  return aContentActor->SendPushError(mScope, IPC::Principal(mPrincipal),
+                                      mMessage, mFlags);
+}
 
 bool PushErrorDispatcher::SendToChild(ContentParent* aContentActor) {
   return aContentActor->SendPushError(mScope, IPC::Principal(mPrincipal),
