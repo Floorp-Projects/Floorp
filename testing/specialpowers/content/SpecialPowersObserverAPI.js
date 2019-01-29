@@ -616,7 +616,12 @@ SpecialPowersObserverAPI.prototype = {
             // extension, so don't worry about locale errors in that
             // case.
           }
-        ).then(() => {
+        ).then(async () => {
+          // browser tests do not call startup in ExtensionXPCShellUtils or MockExtension,
+          // in that case we have an ID here and we need to set the override.
+          if (extension.id) {
+            await ExtensionTestCommon.setIncognitoOverride(extension);
+          }
           return extension.startup();
         }).then(() => {
           this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionStarted", args: []});

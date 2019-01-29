@@ -56,11 +56,7 @@ const FlexboxActor = ActorClassWithSpec(flexboxSpec, {
     this.walker = null;
   },
 
-  form(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
+  form() {
     const styles = CssLogic.getComputedStyle(this.containerEl);
 
     const form = {
@@ -156,11 +152,7 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
     this.walker = null;
   },
 
-  form(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
+  form() {
     const { mainAxisDirection } = this.flexItemSizing;
     const dimension = mainAxisDirection.startsWith("horizontal") ? "width" : "height";
 
@@ -276,11 +268,7 @@ const GridActor = ActorClassWithSpec(gridSpec, {
     this.walker = null;
   },
 
-  form(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
+  form() {
     // Seralize the grid fragment data into JSON so protocol.js knows how to write
     // and read the data.
     const gridFragments = this.containerEl.getGridFragments();

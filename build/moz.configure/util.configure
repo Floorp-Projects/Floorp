@@ -208,6 +208,8 @@ def find_program(file, paths=None):
                     "not %r", paths)
             paths = list(itertools.chain(
                 *(p.split(pathsep) for p in paths if p)))
+        else:
+            paths = environ['PATH'].split(pathsep)
         return normalize_path(which(file, path=paths, exts=exts))
     except WhichError:
         return None

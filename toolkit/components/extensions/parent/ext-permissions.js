@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "promptsEnabled",
 
 this.permissions = class extends ExtensionAPI {
   getAPI(context) {
+    let {extension} = context;
     return {
       permissions: {
         async request(perms) {
@@ -64,13 +65,14 @@ this.permissions = class extends ExtensionAPI {
             perms.permissions.push("<all_urls>");
           }
 
-          await ExtensionPermissions.add(context.extension, perms);
+          await ExtensionPermissions.add(extension.id, perms, extension);
           return true;
         },
 
         async getAll() {
-          let perms = context.extension.activePermissions;
+          let perms = {...context.extension.activePermissions};
           delete perms.apis;
+          perms.permissions = perms.permissions.filter(perm => !perm.startsWith("internal:"));
           return perms;
         },
 
@@ -91,15 +93,10 @@ this.permissions = class extends ExtensionAPI {
         },
 
         async remove(permissions) {
-          await ExtensionPermissions.remove(context.extension, permissions);
+          await ExtensionPermissions.remove(extension.id, permissions, extension);
           return true;
         },
       },
     };
   }
 };
-
-/* eslint-disable mozilla/balanced-listeners */
-extensions.on("uninstall", extension => {
-  ExtensionPermissions.removeAll(extension);
-});

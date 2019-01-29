@@ -155,8 +155,6 @@ ExtensionManager = {
         allowedOrigins: extension.whiteListedHosts,
         webAccessibleResources: extension.webAccessibleResources,
 
-        privateBrowsingAllowed: extension.privateBrowsingAllowed,
-
         contentSecurityPolicy: extension.contentSecurityPolicy,
 
         localizeCallback,

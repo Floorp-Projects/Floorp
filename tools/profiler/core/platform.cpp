@@ -1963,6 +1963,8 @@ static void locked_profiler_stream_json_for_this_process(
   { StreamPages(aLock, aWriter); }
   aWriter.EndArray();
 
+  buffer.StreamProfilerOverheadToJSON(aWriter, CorePS::ProcessStartTime(),
+                                      aSinceTime);
   buffer.StreamCountersToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
   buffer.StreamMemoryToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
 
@@ -2259,6 +2261,7 @@ void SamplerThread::Run() {
     // This scope is for |lock|. It ends before we sleep below.
     {
       PSAutoLock lock(gPSMutex);
+      TimeStamp lockAcquired = TimeStamp::Now();
 
       if (!ActivePS::Exists(lock)) {
         return;
@@ -2272,6 +2275,7 @@ void SamplerThread::Run() {
       }
 
       ActivePS::Buffer(lock).DeleteExpiredStoredMarkers();
+      TimeStamp expiredMarkersCleaned = TimeStamp::Now();
 
       if (!ActivePS::IsPaused(lock)) {
         const nsTArray<LiveProfiledThreadData>& liveThreads =
@@ -2317,6 +2321,7 @@ void SamplerThread::Run() {
             buffer.AddEntry(ProfileBufferEntry::Number(number));
           }
         }
+        TimeStamp countersSampled = TimeStamp::Now();
 
         for (auto& thread : liveThreads) {
           RegisteredThread* registeredThread = thread.mRegisteredThread;
@@ -2364,6 +2369,18 @@ void SamplerThread::Run() {
         // SuspendAndSampleAndResumeThread, which is why it is done here.
         CorePS::Lul(lock)->MaybeShowStats();
 #endif
+        TimeStamp threadsSampled = TimeStamp::Now();
+
+        buffer.AddEntry(
+            ProfileBufferEntry::ProfilerOverheadTime(delta.ToMilliseconds()));
+        buffer.AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(
+            (lockAcquired - sampleStart).ToMilliseconds()));
+        buffer.AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(
+            (expiredMarkersCleaned - lockAcquired).ToMilliseconds()));
+        buffer.AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(
+            (countersSampled - expiredMarkersCleaned).ToMilliseconds()));
+        buffer.AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(
+            (threadsSampled - countersSampled).ToMilliseconds()));
       }
 
       Maybe<double> duration = ActivePS::Duration(lock);

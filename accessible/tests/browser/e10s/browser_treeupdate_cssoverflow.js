@@ -47,7 +47,11 @@ addAccessibleTask(`
   testAccessibleTree(container, tree);
 
   /* ================= Change scrollbar styles ============================== */
-  tree = { SECTION: [ ] };
+  tree = {
+    SECTION: [ // container2
+      { SECTION: [] } // scroll area because of its ID
+    ]
+  };
   testAccessibleTree(container2, tree);
 
   onReorder = waitForEvent(EVENT_REORDER, id2);

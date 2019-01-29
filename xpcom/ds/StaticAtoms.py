@@ -292,7 +292,6 @@ STATIC_ATOMS = [
     Atom("dateTime", "date-time"),
     Atom("date", "date"),
     Atom("datetime", "datetime"),
-    Atom("datetimebox", "datetimebox"),
     Atom("dd", "dd"),
     Atom("decimal", "decimal"),
     Atom("decimalFormat", "decimal-format"),
@@ -1233,7 +1232,6 @@ STATIC_ATOMS = [
     Atom("vertical", "vertical"),
     Atom("audio", "audio"),
     Atom("video", "video"),
-    Atom("videocontrols", "videocontrols"),
     Atom("viewport", "viewport"),
     Atom("viewport_height", "viewport-height"),
     Atom("viewport_initial_scale", "viewport-initial-scale"),
@@ -1894,6 +1892,7 @@ STATIC_ATOMS = [
     Atom("http", "http"),
     Atom("https", "https"),
     Atom("proxy", "proxy"),
+    Atom("privateBrowsingAllowedPermission", "internal:privateBrowsingAllowed"),
 
     # CSS Counter Styles
     Atom("decimal_leading_zero", "decimal-leading-zero"),

@@ -43,9 +43,11 @@ var cachedCssProperties = new WeakMap();
  * properties the current server supports.
  */
 class CssPropertiesFront extends FrontClassWithSpec(cssPropertiesSpec) {
-  constructor(client, { cssPropertiesActor }) {
-    super(client, {actor: cssPropertiesActor});
-    this.manage(this);
+  constructor(client) {
+    super(client);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "cssPropertiesActor";
   }
 }
 

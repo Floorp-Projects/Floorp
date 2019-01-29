@@ -785,8 +785,13 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvBatch(
     DocAccessibleParent* doc = static_cast<DocAccessibleParent*>(
         aData.ElementAt(i).Document().get_PDocAccessibleParent());
     MOZ_ASSERT(doc);
+
     ProxyAccessible* proxy = doc->GetAccessible(aData.ElementAt(i).ID());
-    MOZ_ASSERT(proxy);
+    if (!proxy) {
+      MOZ_ASSERT_UNREACHABLE("No proxy found!");
+      continue;
+    }
+
     proxies.AppendElement(proxy);
   }
   ProxyBatch(this, aBatchType, proxies, aData);

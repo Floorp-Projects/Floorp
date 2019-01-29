@@ -31,24 +31,17 @@
   width: 100%;
   height: 100%;
 }
-:-moz-handler-vulnerable-updatable .hoverBox:active,
-:-moz-handler-vulnerable-no-update .hoverBox:active,
+
 :host(:-moz-handler-vulnerable-updatable) .hoverBox:active,
 :host(:-moz-handler-vulnerable-no-update) .hoverBox:active {
   background-color: rgb(65, 65, 65);
 }
 
-:-moz-handler-vulnerable-updatable .hoverBox:active .msgClickToPlay,
-:-moz-handler-vulnerable-no-update .hoverBox:active .msgClickToPlay,
 :host(:-moz-handler-vulnerable-updatable) .hoverBox:active .msgClickToPlay,
 :host(:-moz-handler-vulnerable-no-update) .hoverBox:active .msgClickToPlay {
   color: red;
 }
 
-:-moz-handler-vulnerable-updatable .hoverBox,
-:-moz-handler-vulnerable-no-update .hoverBox,
-:-moz-handler-blocked .hoverBox,
-:-moz-handler-crashed .hoverBox,
 :host(:-moz-handler-vulnerable-updatable) .hoverBox,
 :host(:-moz-handler-vulnerable-no-update) .hoverBox,
 :host(:-moz-handler-blocked) .hoverBox,
@@ -73,24 +66,22 @@ html|a {
   -moz-context-properties: fill;
 }
 
-:-moz-handler-vulnerable-updatable .icon,
-:-moz-handler-vulnerable-no-update .icon,
 :host(:-moz-handler-vulnerable-updatable) .icon,
 :host(:-moz-handler-vulnerable-no-update) .icon {
   background-image: url(chrome://global/skin/plugins/contentPluginBlocked.png);
   -moz-user-focus: normal;
 }
-:-moz-handler-blocked .icon,
+
 :host(:-moz-handler-blocked) .icon {
   background-image: url(chrome://global/skin/plugins/contentPluginBlocked.png);
 }
-:-moz-handler-clicktoplay .icon,
+
 :host(:-moz-handler-clicktoplay) .icon {
   background-image: url(chrome://global/skin/plugins/plugin.svg);
   fill: var(--grey-10);
   -moz-user-focus: normal;
 }
-:-moz-handler-crashed .icon,
+
 :host(:-moz-handler-crashed) .icon {
   background-image: url(chrome://global/skin/plugins/contentPluginCrashed.png);
 }
@@ -109,7 +100,6 @@ html|a {
 }
 
 /* on desktop, don't ever show the tap-to-play UI: that is for mobile only */
-:-moz-handler-clicktoplay .msgTapToPlay,
 :host(:-moz-handler-clicktoplay) .msgTapToPlay {
   display: none;
 }
@@ -204,11 +194,10 @@ html|a {
   background-color: rgb(20, 20, 20);
 }
 
-:-moz-handler-vulnerable-updatable .action-link,
 :host(:-moz-handler-vulnerable-updatable) .action-link {
   background-color: #a81b0c;
 }
-:-moz-handler-vulnerable-updatable .action-link:active,
+
 :host(:-moz-handler-vulnerable-updatable) .action-link:active {
   background-color: #801409;
 }
@@ -220,48 +209,38 @@ html|a {
  * redesign for all cases, we can change the CSS directly
  * above instead of writing these super-specific rules.
  */
-:-moz-handler-clicktoplay .mainBox,
 :host(:-moz-handler-clicktoplay) .mainBox {
   background-color: var(--grey-70);
 }
 
-:-moz-handler-clicktoplay .msgClickToPlay,
 :host(:-moz-handler-clicktoplay) .msgClickToPlay {
   font-size: 13px;
 }
 
-:-moz-handler-clicktoplay .mainBox[sizing=blank] .hoverBox,
 :host(:-moz-handler-clicktoplay) .mainBox[sizing=blank] .hoverBox {
   visibility: hidden;
 }
 
-:-moz-handler-clicktoplay .mainBox[sizing=tiny] .icon,
 :host(:-moz-handler-clicktoplay) .mainBox[sizing=tiny] .icon {
   width: 16px;
   height: 16px;
 }
 
-:-moz-handler-clicktoplay .mainBox[sizing=reduced] .icon,
 :host(:-moz-handler-clicktoplay) .mainBox[sizing=reduced] .icon {
   width: 32px;
   height: 32px;
 }
 
-:-moz-handler-clicktoplay .mainBox[sizing=blank] .closeIcon,
-:-moz-handler-clicktoplay .mainBox[sizing=tiny] .closeIcon,
-:-moz-handler-clicktoplay .mainBox[sizing=reduced] .closeIcon,
 :host(:-moz-handler-clicktoplay) .mainBox[sizing=blank] .closeIcon,
 :host(:-moz-handler-clicktoplay) .mainBox[sizing=tiny] .closeIcon,
 :host(:-moz-handler-clicktoplay) .mainBox[sizing=reduced] .closeIcon {
   display: none;
 }
 
-:-moz-handler-clicktoplay .mainBox[notext] .msgClickToPlay,
 :host(:-moz-handler-clicktoplay) .mainBox[notext] .msgClickToPlay {
   display: none;
 }
 
-:-moz-handler-clicktoplay .mainBox[notext] .icon,
 :host(:-moz-handler-clicktoplay) .mainBox[notext] .icon {
   /* Override a `margin-bottom: 6px` now that .msgClickToPlay
    * below the icon is no longer shown, in order to achieve
@@ -270,6 +249,6 @@ html|a {
   margin-bottom: 0;
 }
 
-:-moz-handler-clicktoplay .hoverBox:active {
+:host(:-moz-handler-clicktoplay) .hoverBox:active {
   background-color: var(--grey-60);
 }

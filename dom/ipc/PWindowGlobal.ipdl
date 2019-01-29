@@ -23,6 +23,9 @@ async protocol PWindowGlobal
 {
   manager PBrowser or PInProcess;
 
+child:
+  async __delete__();
+
 parent:
   /// Update the URI of the document in this WindowGlobal.
   async UpdateDocumentURI(nsIURI aUri);
@@ -30,7 +33,7 @@ parent:
   /// Notify the parent that this PWindowGlobal is now the current global.
   async BecomeCurrentWindowGlobal();
 
-  async __delete__();
+  async Destroy();
 };
 
 } // namespace dom

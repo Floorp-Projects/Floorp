@@ -110,3 +110,25 @@ add_task(async function dontTemporarilyShowAboutHome() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+/**
+ * Test that if the Home Button is clicked after a user has typed
+ * some value into the URL bar, that the URL bar is cleared if
+ * the homepage is one of the initial pages set.
+ */
+add_task(async function() {
+  await BrowserTestUtils.withNewTab({
+    url: "http://example.com",
+    gBrowser,
+  }, async browser => {
+    const TYPED_VALUE = "This string should get cleared";
+    gURLBar.value = TYPED_VALUE;
+    browser.userTypedValue = TYPED_VALUE;
+
+    document.getElementById("home-button").click();
+    await BrowserTestUtils.browserLoaded(browser, false, HomePage.get());
+    is(gURLBar.value, "", "URL bar should be empty");
+    is(browser.userTypedValue, null,
+       "The browser should have no recorded userTypedValue");
+  });
+});

@@ -296,7 +296,7 @@ def prepare_configure_options(extra_old_configure_args, all_options, *options):
     return namespace(options=options, extra_env=extra_env, all_options=all_options)
 
 
-@depends(prepare_configure, prepare_configure_options)
+@depends(prepare_configure, prepare_configure_options, altered_path)
 @imports(_from='__builtin__', _import='compile')
 @imports(_from='__builtin__', _import='open')
 @imports('logging')
@@ -307,7 +307,7 @@ def prepare_configure_options(extra_old_configure_args, all_options, *options):
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.shellutil', _import='split')
 @imports(_from='mozbuild.util', _import='encode')
-def old_configure(prepare_configure, prepare_configure_options):
+def old_configure(prepare_configure, prepare_configure_options, altered_path):
     cmd = prepare_configure + prepare_configure_options.options
     extra_env = prepare_configure_options.extra_env
 
@@ -333,6 +333,9 @@ def old_configure(prepare_configure, prepare_configure_options):
             env['CONFIG_LOG'] = config_log.baseFilename
             log_size = os.path.getsize(config_log.baseFilename)
             break
+
+    if altered_path:
+        env['PATH'] = altered_path
 
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             env=encode(env))

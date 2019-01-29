@@ -8,7 +8,7 @@ async function noStorageAccessInitially() {
   ok(!hasAccess, "Doesn't yet have storage access");
 }
 
-async function callRequestStorageAccess(callback) {
+async function callRequestStorageAccess(callback, expectFail) {
   let dwu = SpecialPowers.getDOMWindowUtils(window);
   let helper = dwu.setHandlingUserInput(true);
 
@@ -34,7 +34,12 @@ async function callRequestStorageAccess(callback) {
       ok(!threw, "requestStorageAccess should not throw");
       try {
         if (callback) {
-          await p.then(_ => callback(dwu));
+          if (expectFail) {
+            await p.catch(_ => callback(dwu));
+            success = false;
+          } else {
+            await p.then(_ => callback(dwu));
+          }
         } else {
           await p;
         }
@@ -54,7 +59,12 @@ async function callRequestStorageAccess(callback) {
         !isOnContentBlockingAllowList()) {
       try {
         if (callback) {
-          await document.requestStorageAccess().then(_ => callback(dwu));
+          if (expectFail) {
+            await document.requestStorageAccess().catch(_ => callback(dwu));
+            success = false;
+          } else {
+            await document.requestStorageAccess().then(_ => callback(dwu));
+          }
         } else {
           await document.requestStorageAccess();
         }
@@ -85,7 +95,12 @@ async function callRequestStorageAccess(callback) {
   let rejected = false;
   try {
     if (callback) {
-      await p.then(_ => callback(dwu));
+      if (expectFail) {
+        await p.catch(_ => callback(dwu));
+        rejected = true;
+      } else {
+        await p.then(_ => callback(dwu));
+      }
     } else {
       await p;
     }

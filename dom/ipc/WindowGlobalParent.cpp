@@ -8,6 +8,14 @@
 #include "mozilla/ipc/InProcessParent.h"
 #include "mozilla/dom/ChromeBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
+#include "mozilla/dom/ChromeUtils.h"
+#include "mozJSComponentLoader.h"
+#include "nsContentUtils.h"
+#include "nsError.h"
+
+#include "mozilla/dom/JSWindowActorBinding.h"
+#include "mozilla/dom/JSWindowActorParent.h"
+#include "mozilla/dom/JSWindowActorService.h"
 
 using namespace mozilla::ipc;
 
@@ -116,6 +124,13 @@ already_AddRefed<WindowGlobalChild> WindowGlobalParent::GetChildActor() {
   return do_AddRef(static_cast<WindowGlobalChild*>(otherSide));
 }
 
+already_AddRefed<TabParent> WindowGlobalParent::GetTabParent() {
+  if (IsInProcess() || mIPCClosed) {
+    return nullptr;
+  }
+  return do_AddRef(static_cast<TabParent*>(Manager()));
+}
+
 IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
   // XXX(nika): Assert that the URI change was one which makes sense (either
   // about:blank -> a real URI, or a legal push/popstate URI change?)
@@ -125,6 +140,16 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
 
 IPCResult WindowGlobalParent::RecvBecomeCurrentWindowGlobal() {
   mBrowsingContext->SetCurrentWindowGlobal(this);
+  return IPC_OK();
+}
+
+IPCResult WindowGlobalParent::RecvDestroy() {
+  if (!mIPCClosed) {
+    RefPtr<TabParent> tabParent = GetTabParent();
+    if (!tabParent || !tabParent->IsDestroyed()) {
+      Unused << Send__delete__(this);
+    }
+  }
   return IPC_OK();
 }
 
@@ -141,6 +166,39 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (obs) {
     obs->NotifyObservers(this, "window-global-destroyed", nullptr);
   }
+}
+
+already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
+    const nsAString& aName, ErrorResult& aRv) {
+  // Check if this actor has already been created, and return it if it has.
+  if (mWindowActors.Contains(aName)) {
+    return do_AddRef(mWindowActors.GetWeak(aName));
+  }
+
+  // Otherwise, we want to create a new instance of this actor. Call into the
+  // JSWindowActorService to trigger construction
+  RefPtr<JSWindowActorService> actorSvc = JSWindowActorService::GetSingleton();
+  if (!actorSvc) {
+    return nullptr;
+  }
+
+  JS::RootedObject obj(RootingCx());
+  actorSvc->ConstructActor(aName, /* aParentSide */ true, &obj, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Unwrap our actor to a JSWindowActorParent object.
+  RefPtr<JSWindowActorParent> actor;
+  if (NS_FAILED(UNWRAP_OBJECT(JSWindowActorParent, &obj, actor))) {
+    return nullptr;
+  }
+
+  MOZ_RELEASE_ASSERT(!actor->Manager(),
+                     "mManager was already initialized once!");
+  actor->Init(this);
+  mWindowActors.Put(aName, actor);
+  return actor.forget();
 }
 
 WindowGlobalParent::~WindowGlobalParent() {
@@ -163,7 +221,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowGlobalParent)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalParent, mFrameLoader,
-                                      mBrowsingContext)
+                                      mBrowsingContext, mWindowActors)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WindowGlobalParent)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WindowGlobalParent)

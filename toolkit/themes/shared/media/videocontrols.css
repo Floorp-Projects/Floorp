@@ -2,11 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace url("http://www.w3.org/1999/xhtml");
 
-video > xul|videocontrols,
-audio > xul|videocontrols,
 .videocontrols {
   writing-mode: horizontal-tb;
   width: 100%;
@@ -41,10 +38,10 @@ audio > xul|videocontrols,
   --label-font-size: 16px;
 }
 
-/* Some CSS custom properties defined here are referenced by videocontrols.xml in JavaScript */
+/* Some CSS custom properties defined here are referenced by videocontrols.js */
 .controlBar {
   /* Do not delete: these variables are accessed by JavaScript directly.
-     see videocontrols.xml and search for |-width|. */
+     see videocontrols.js and search for |-width|. */
   --clickToPlay-width: var(--clickToPlay-size);
   --playButton-width: var(--button-size);
   --scrubberStack-width: 64px;
@@ -61,7 +58,7 @@ audio > xul|videocontrols,
 
 .touch .controlBar {
   /* Do not delete: these variables are accessed by JavaScript directly.
-     see videocontrols.xml and search for |-width|. */
+     see videocontrols.js and search for |-width|. */
   --scrubberStack-width: 84px;
   --volumeStack-width: 64px;
 }

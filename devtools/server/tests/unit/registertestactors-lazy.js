@@ -32,12 +32,8 @@ exports.LazyActor = ActorClassWithSpec(lazySpec, {
 Services.obs.notifyObservers(null, "actor", "loaded");
 
 class LazyFront extends FrontClassWithSpec(lazySpec) {
-  constructor(client, form) {
-    super(client, form);
-    this.actorID = form.lazyActor;
-
-    client.addActorPool(this);
-    this.manage(this);
+  constructor(client) {
+    super(client);
   }
 }
 exports.LazyFront = LazyFront;

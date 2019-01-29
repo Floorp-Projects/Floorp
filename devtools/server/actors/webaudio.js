@@ -33,11 +33,7 @@ const AUDIO_GLOBALS = [
  * Audio Context graph.
  */
 var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audionodeSpec, {
-  form: function(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
+  form: function() {
     return {
       // actorID is set when this is added to a pool
       actor: this.actorID,
