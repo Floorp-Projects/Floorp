@@ -1078,16 +1078,18 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       MultiTouchInput multiTouchInput = aEvent.AsMultiTouchInput();
-      if (!multiTouchInput.TransformToLocal(aTransformToApzc)) {
-        return rv;
-      }
-
       RefPtr<GestureEventListener> listener = GetGestureEventListener();
       if (listener) {
+        // We only care about screen coordinates in the gesture listener,
+        // so we don't bother transforming the event to parent layer coordinates
         rv = listener->HandleInputEvent(multiTouchInput);
         if (rv == nsEventStatus_eConsumeNoDefault) {
           return rv;
         }
+      }
+
+      if (!multiTouchInput.TransformToLocal(aTransformToApzc)) {
+        return rv;
       }
 
       switch (multiTouchInput.mType) {
@@ -1192,7 +1194,8 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(
 
   switch (aEvent.mInputType) {
     case PINCHGESTURE_INPUT: {
-      const PinchGestureInput& pinchGestureInput = aEvent.AsPinchGestureInput();
+      PinchGestureInput pinchGestureInput = aEvent.AsPinchGestureInput();
+      pinchGestureInput.TransformToLocal(GetTransformToThis());
       switch (pinchGestureInput.mType) {
         case PinchGestureInput::PINCHGESTURE_START:
           rv = OnScaleBegin(pinchGestureInput);
@@ -1207,7 +1210,8 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(
       break;
     }
     case TAPGESTURE_INPUT: {
-      const TapGestureInput& tapGestureInput = aEvent.AsTapGestureInput();
+      TapGestureInput tapGestureInput = aEvent.AsTapGestureInput();
+      tapGestureInput.TransformToLocal(GetTransformToThis());
       switch (tapGestureInput.mType) {
         case TapGestureInput::TAPGESTURE_LONG:
           rv = OnLongPress(tapGestureInput);
