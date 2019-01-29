@@ -1769,7 +1769,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   }
 
   nsTArray<RefPtr<nsIUrlClassifierFeature>> features;
-  mozilla::net::UrlClassifierFeatureFactory::GetFeaturesPhishingProtection(
+  mozilla::net::UrlClassifierFeatureFactory::GetPhishingProtectionFeatures(
       features);
   if (features.IsEmpty()) {
     *aResult = false;
