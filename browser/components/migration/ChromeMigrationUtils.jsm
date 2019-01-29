@@ -9,6 +9,9 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const S100NS_FROM1601TO1970 = 0x19DB1DED53E8000;
+const S100NS_PER_MS = 10;
+
 var ChromeMigrationUtils = {
   _extensionVersionDirectoryNames: {},
 
@@ -269,5 +272,30 @@ var ChromeMigrationUtils = {
 
     this._extensionVersionDirectoryNames[path] = entries;
     return entries;
+  },
+
+  /**
+   * Convert Chrome time format to Date object
+   *
+   * @param   aTime
+   *          Chrome time
+   * @return  converted Date object
+   * @note    Google Chrome uses FILETIME / 10 as time.
+   *          FILETIME is based on same structure of Windows.
+   */
+  chromeTimeToDate(aTime) {
+    return new Date((aTime * S100NS_PER_MS - S100NS_FROM1601TO1970) / 10000);
+  },
+
+  /**
+   * Convert Date object to Chrome time format
+   *
+   * @param   aDate
+   *          Date object or integer equivalent
+   * @return  Chrome time
+   * @note    For details on Chrome time, see chromeTimeToDate.
+   */
+  dateToChromeTime(aDate) {
+    return (aDate * 10000 + S100NS_FROM1601TO1970) / S100NS_PER_MS;
   },
 };
