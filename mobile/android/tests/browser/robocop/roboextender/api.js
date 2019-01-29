@@ -1,6 +1,6 @@
 
-ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 this.roboextender = class extends ExtensionAPI {
   onStartup() {

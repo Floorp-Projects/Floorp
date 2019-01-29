@@ -3,15 +3,11 @@
 
 "use strict";
 
-var GMPScope = ChromeUtils.import("resource://gre/modules/addons/GMPProvider.jsm", {});
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+var GMPScope = ChromeUtils.import("resource://gre/modules/addons/GMPProvider.jsm", null);
+const {UpdateUtils} = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "pluginsBundle",
   () => Services.strings.createBundle("chrome://global/locale/plugins.properties"));
-
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
 
 var gMockAddons = new Map();
 var gMockEmeAddons = new Map();
@@ -372,7 +368,7 @@ add_task(async function test_pluginRegistration() {
     gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), true);
     Assert.deepEqual(addedPaths, [file.path]);
     Assert.deepEqual(removedPaths, []);
-    GMPScope = ChromeUtils.import("resource://gre/modules/addons/GMPProvider.jsm");
+    GMPScope = ChromeUtils.import("resource://gre/modules/addons/GMPProvider.jsm", null);
   }
 });
 
@@ -411,5 +407,5 @@ add_task(async function test_periodicUpdate() {
     Assert.equal(gInstalledAddonId, addon.id);
   }
 
-  GMPScope = ChromeUtils.import("resource://gre/modules/addons/GMPProvider.jsm");
+  GMPScope = ChromeUtils.import("resource://gre/modules/addons/GMPProvider.jsm", null);
 });

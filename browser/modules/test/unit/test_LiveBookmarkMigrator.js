@@ -5,8 +5,6 @@
 /* globals ChromeUtils, Assert, add_task */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // Ensure we initialize places:
 do_get_profile();
 
@@ -23,9 +21,9 @@ updateAppInfo({
 });
 
 const {PlacesUtils} =
-  ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm", {});
+  ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 const {LiveBookmarkMigrator} =
-  ChromeUtils.import("resource:///modules/LiveBookmarkMigrator.jsm", {});
+  ChromeUtils.import("resource:///modules/LiveBookmarkMigrator.jsm");
 
 const kTestData = {
   guid: PlacesUtils.bookmarks.toolbarGuid,
@@ -98,7 +96,7 @@ add_task(async function check_fetches_livemarks_correctly() {
 
 // Test that we write sane OPML for some live bookmarks.
 add_task(async function check_opml_writing() {
-  let bsPass = ChromeUtils.import("resource:///modules/LiveBookmarkMigrator.jsm", {});
+  let bsPass = ChromeUtils.import("resource:///modules/LiveBookmarkMigrator.jsm", null);
   let oldFile = bsPass.OS.File;
   registerCleanupFunction(() => { bsPass.OS.File = oldFile; });
 

@@ -13,7 +13,7 @@ var rokuDevice = {
   id: "roku:ecp",
   target: "roku:ecp",
   factory: function(aService) {
-    ChromeUtils.import("resource://gre/modules/RokuApp.jsm");
+    const {RokuApp} = ChromeUtils.import("resource://gre/modules/RokuApp.jsm");
     return new RokuApp(aService);
   },
   types: ["video/mp4"],
@@ -24,7 +24,7 @@ var mediaPlayerDevice = {
   id: "media:router",
   target: "media:router",
   factory: function(aService) {
-    ChromeUtils.import("resource://gre/modules/MediaPlayerApp.jsm");
+    const {MediaPlayerApp} = ChromeUtils.import("resource://gre/modules/MediaPlayerApp.jsm");
     return new MediaPlayerApp(aService);
   },
   types: ["video/mp4", "video/webm", "application/x-mpegurl"],

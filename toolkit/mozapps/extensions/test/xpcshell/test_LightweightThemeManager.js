@@ -3,9 +3,9 @@ const OPTIONAL = ["headerURL", "textcolor", "accentcolor",
                   "iconURL", "previewURL", "author", "description",
                   "homepageURL", "updateURL", "version"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+
+var LightweightThemeManager;
 
 function dummy(id) {
   return {
@@ -37,7 +37,7 @@ add_task(async function run_test() {
 
   Services.prefs.setIntPref("lightweightThemes.maxUsedThemes", 8);
 
-  ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
+  ({LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm"));
   let ltm = LightweightThemeManager;
 
   Assert.equal(typeof ltm, "object");

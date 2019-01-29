@@ -9,7 +9,7 @@ ChromeUtils.defineModuleGetter(this, "PageActions",
 ChromeUtils.defineModuleGetter(this, "PanelPopup",
                                "resource:///modules/ExtensionPopups.jsm");
 
-ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+var {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
   IconDetails,

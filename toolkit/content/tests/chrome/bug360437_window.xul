@@ -17,8 +17,8 @@
         title="360437 test">
 
   <script type="application/javascript"><![CDATA[
-    ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
     var gFindBar = null;

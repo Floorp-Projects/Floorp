@@ -55,8 +55,7 @@ add_task(async function testSendPendingOnIdleDaily() {
   Services.obs.removeObserver(gatherPromise.resolve, "gather-telemetry");
 
   // Check that the pending ping is correctly received.
-  let ns = {};
-  let module = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", ns);
+  let module = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", null);
   module.TelemetrySendImpl.observe(null, "idle-daily", null);
   let request = await pendingPromise;
   let ping = decodeRequestPayload(request);

@@ -113,7 +113,7 @@ add_task(async function() {
   };
   let oldProxyType = Services.prefs.getIntPref("network.proxy.type");
   Services.prefs.setIntPref("network.proxy.type", Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM);
-  let { MockRegistrar } = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", {});
+  let { MockRegistrar } = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
   let mockProxy = MockRegistrar.register("@mozilla.org/system-proxy-settings;1",
                                          systemProxySettings);
   // Register cleanup to undo the configuration changes we've made.

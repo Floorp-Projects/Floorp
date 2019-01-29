@@ -10,7 +10,7 @@
 ChromeUtils.defineModuleGetter(this, "DevToolsShim",
                                "chrome://devtools-startup/content/DevToolsShim.jsm");
 
-ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+var {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
   HiddenExtensionPage,

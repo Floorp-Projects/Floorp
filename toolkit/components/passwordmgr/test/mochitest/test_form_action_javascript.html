@@ -13,7 +13,7 @@ Login Manager test: form with JS submit action
 runChecksAfterCommonInit(() => startTest());
 
 runInParent(function setup() {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   let jslogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
   jslogin.init("http://mochi.test:8888", "javascript:", null,

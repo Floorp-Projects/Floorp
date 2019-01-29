@@ -3,7 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource:///modules/SitePermissions.jsm");
+var {SitePermissions} = ChromeUtils.import("resource:///modules/SitePermissions.jsm");
 
 async function testClearData(clearSiteData, clearCache) {
   let quotaURI = Services.io.newURI(TEST_QUOTA_USAGE_ORIGIN);

@@ -102,7 +102,7 @@ add_task(async function test() {
     "work",
   ];
 
-  const { TabStateFlusher } = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
+  const { TabStateFlusher } = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm");
 
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({

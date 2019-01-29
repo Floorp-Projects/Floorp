@@ -1,5 +1,5 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {addDebuggerToGlobal, addSandboxedDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 
 const testingFunctions = Cu.getJSTestingFunctions();
 const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);

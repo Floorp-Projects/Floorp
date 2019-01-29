@@ -68,8 +68,8 @@ html[dir="rtl"] .img.more-tabs {
 }
 
 .dropdown-icon {
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: 13px;
+  height: 13px;
   margin-right: 5px;
   vertical-align: middle;
   display: inline-block;

@@ -1,8 +1,8 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource:///modules/ChromeMigrationUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {ChromeMigrationUtils} = ChromeUtils.import("resource:///modules/ChromeMigrationUtils.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function getRootPath() {
   let dirKey;

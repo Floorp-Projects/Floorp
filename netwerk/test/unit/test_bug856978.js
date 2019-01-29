@@ -9,8 +9,8 @@
 // authorization header got added at all and if so it gets removed. This test
 // passes iff both succeeds.
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var notification = "http-on-modify-request";
 

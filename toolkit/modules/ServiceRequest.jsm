@@ -9,8 +9,8 @@
   * can be set, Telemetry collected, etc. in a central place.
   */
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 var EXPORTED_SYMBOLS = [ "ServiceRequest" ];

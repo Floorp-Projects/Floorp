@@ -16,7 +16,7 @@
 
 var EXPORTED_SYMBOLS = ["UIState"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "Weave",
                                "resource://services-sync/main.js");
 

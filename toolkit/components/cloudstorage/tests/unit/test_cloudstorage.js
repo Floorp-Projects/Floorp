@@ -1,9 +1,8 @@
 "use strict";
 
 // Globals
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 ChromeUtils.defineModuleGetter(this, "CloudStorage",
                                "resource://gre/modules/CloudStorage.jsm");
@@ -200,7 +199,7 @@ async function checkSavedPromptResponse(aKey, metadata, remember, selected = fal
 
 
 add_task(async function test_checkInit() {
-  let {CloudStorageInternal} = ChromeUtils.import("resource://gre/modules/CloudStorage.jsm", {});
+  let {CloudStorageInternal} = ChromeUtils.import("resource://gre/modules/CloudStorage.jsm", null);
   let isInitialized = await CloudStorageInternal.promiseInit;
   Assert.ok(isInitialized, "Providers Metadata successfully initialized");
 });

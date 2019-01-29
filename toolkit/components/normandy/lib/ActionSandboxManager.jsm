@@ -4,8 +4,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://normandy/lib/NormandyDriver.jsm");
-ChromeUtils.import("resource://normandy/lib/SandboxManager.jsm");
+const {NormandyDriver} = ChromeUtils.import("resource://normandy/lib/NormandyDriver.jsm");
+const {SandboxManager} = ChromeUtils.import("resource://normandy/lib/SandboxManager.jsm");
 
 var EXPORTED_SYMBOLS = ["ActionSandboxManager"];
 

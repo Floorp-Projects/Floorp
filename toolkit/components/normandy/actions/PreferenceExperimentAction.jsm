@@ -4,8 +4,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://normandy/actions/BaseAction.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {BaseAction} = ChromeUtils.import("resource://normandy/actions/BaseAction.jsm");
 ChromeUtils.defineModuleGetter(
   this, "Sampling", "resource://gre/modules/components-utils/Sampling.jsm");
 ChromeUtils.defineModuleGetter(this, "ActionSchemas", "resource://normandy/actions/schemas/index.js");

@@ -4,8 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const CA = Cc["@mozilla.org/places/colorAnalyzer;1"].
            getService(Ci.mozIColorAnalyzer);
 

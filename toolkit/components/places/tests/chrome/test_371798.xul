@@ -16,9 +16,9 @@
 SimpleTest.waitForExplicitFinish();
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 
 const TEST_URI = NetUtil.newURI("http://foo.com");
 

@@ -2,11 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 _("Making sure after processing incoming bookmarks, they show up in the right order");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-ChromeUtils.import("resource://services-sync/main.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {Bookmark, BookmarkFolder, BookmarksEngine} = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
+const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
 
 async function serverForFoo(engine) {
   await generateNewKeys(Service.collectionKeys);

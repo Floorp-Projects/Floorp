@@ -6,8 +6,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 function executeSoon(callback) {
   Services.tm.dispatchToMainThread(callback);
 }

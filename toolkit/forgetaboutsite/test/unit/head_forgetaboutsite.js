@@ -4,14 +4,14 @@
 
 /* import-globals-from ../../../../dom/push/test/xpcshell/head.js */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var profileDir = do_get_profile();
 
 /**
  * Removes any files that could make our tests fail.
  */
 function cleanUp() {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
   let files = [
     "places.sqlite",
     "cookies.sqlite",

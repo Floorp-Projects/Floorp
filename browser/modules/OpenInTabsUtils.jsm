@@ -6,8 +6,8 @@
 
 this.EXPORTED_SYMBOLS = ["OpenInTabsUtils"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "bundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/tabbrowser.properties");

@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["ThumbnailsChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PageThumbUtils",
                                "resource://gre/modules/PageThumbUtils.jsm");

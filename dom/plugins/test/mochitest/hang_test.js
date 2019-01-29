@@ -1,5 +1,5 @@
 
-ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
+const {parseKeyValuePairsFromFile} = ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
 
 var success = false;
 var observerFired = false;

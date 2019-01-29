@@ -4,9 +4,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {ContentTaskUtils} = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
 
 var EXPORTED_SYMBOLS = [ "NarrateTestUtils" ];
 

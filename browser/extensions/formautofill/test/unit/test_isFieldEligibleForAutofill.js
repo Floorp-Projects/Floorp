@@ -1,7 +1,8 @@
 "use strict";
 
+var FormAutofillUtils;
 add_task(async function seutp() {
-  ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+  ({FormAutofillUtils} = ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm"));
 });
 
 const TESTCASES = [

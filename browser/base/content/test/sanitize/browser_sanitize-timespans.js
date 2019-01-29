@@ -1,7 +1,7 @@
 requestLongerTimeout(2);
 
 const {PlacesTestUtils} =
-  ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm", {});
+  ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
 
 // Bug 453440 - Test the timespan-based logic of the sanitizer code
 var now_mSec = Date.now();

@@ -6,7 +6,7 @@ var EXPORTED_SYMBOLS = ["CertUtils"];
 
 const Ce = Components.Exception;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Reads a set of expected certificate attributes from preferences. The returned

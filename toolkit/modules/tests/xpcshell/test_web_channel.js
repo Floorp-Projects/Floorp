@@ -3,8 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/WebChannel.jsm");
+const {WebChannel} = ChromeUtils.import("resource://gre/modules/WebChannel.jsm");
 
 const ERROR_ID_ORIGIN_REQUIRED = "WebChannel id and originOrPermission are required.";
 const VALID_WEB_CHANNEL_ID = "id";

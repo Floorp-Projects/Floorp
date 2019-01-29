@@ -6,8 +6,8 @@
 
 const EXPORTED_SYMBOLS = ["LinkHandlerChild"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 ChromeUtils.defineModuleGetter(this, "FaviconLoader",
   "resource:///modules/FaviconLoader.jsm");

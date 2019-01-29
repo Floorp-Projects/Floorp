@@ -59,7 +59,7 @@ add_task(async function test_retry_with_shippingAddressErrors() {
     let retryUpdatePromise = spawnPaymentDialogTask(frame, async function checkDialog() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let state = await PTU.DialogContentUtils.waitForState(content, ({request}) => {
         return request.completeStatus === "processing";
@@ -123,7 +123,7 @@ add_task(async function test_retry_with_shippingAddressErrors() {
     await spawnPaymentDialogTask(frame, async function checkRegionError() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let state = await PTU.DialogContentUtils.waitForState(content, ({request}) => {
         return request.completeStatus === "";
@@ -211,7 +211,7 @@ add_task(async function test_retry_with_payerErrors() {
     let retryUpdatePromise = spawnPaymentDialogTask(frame, async function checkDialog() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let state = await PTU.DialogContentUtils.waitForState(content, ({request}) => {
         return request.completeStatus === "processing";
@@ -278,7 +278,7 @@ add_task(async function test_retry_with_payerErrors() {
     await spawnPaymentDialogTask(frame, async function checkRegionError() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let state = await PTU.DialogContentUtils.waitForState(content, ({request}) => {
         return request.completeStatus === "";
@@ -385,7 +385,7 @@ add_task(async function test_retry_with_paymentMethodErrors() {
     let retryUpdatePromise = spawnPaymentDialogTask(frame, async function checkDialog() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let state = await PTU.DialogContentUtils.waitForState(content, ({request}) => {
         return request.completeStatus === "processing";
@@ -455,7 +455,7 @@ add_task(async function test_retry_with_paymentMethodErrors() {
     await spawnPaymentDialogTask(frame, async function checkPostalCodeError() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let state = await PTU.DialogContentUtils.waitForState(content, ({request}) => {
         return request.completeStatus === "";
@@ -502,7 +502,7 @@ add_task(async function test_retry_with_paymentMethodErrors() {
     await spawnPaymentDialogTask(frame, async function checkErrorsCleared() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.request.paymentDetails.paymentMethodErrors == null;
@@ -515,7 +515,7 @@ add_task(async function test_retry_with_paymentMethodErrors() {
     await spawnPaymentDialogTask(frame, async function checkErrorsCleared() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.request.paymentDetails.paymentMethodErrors == null;

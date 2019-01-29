@@ -3,7 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { createSource } from "../../../reducers/sources";
+
+import { makeMockSource } from "../../test-mockup";
 
 import {
   createDirectoryNode,
@@ -51,7 +55,9 @@ describe("sources tree", () => {
       ];
 
       const tree = createDirectoryNode("root", "", []);
-      sources.forEach(source => addToTree(tree, source, "http://example.com/"));
+      sources.forEach(source =>
+        addToTree(tree, source, "http://example.com/", "")
+      );
       sortEntireTree(tree);
       const [bFolderNode, aFileNode] = tree.contents[0].contents;
       const [cFolderNode] = bFolderNode.contents;
@@ -86,22 +92,22 @@ describe("sources tree", () => {
 
   describe("isNotJavaScript", () => {
     it("js file", () => {
-      const source = { url: "http://example.com/foo.js" };
+      const source = makeMockSource("http://example.com/foo.js");
       expect(isNotJavaScript(source)).toBe(false);
     });
 
     it("css file", () => {
-      const source = { url: "http://example.com/foo.css" };
+      const source = makeMockSource("http://example.com/foo.css");
       expect(isNotJavaScript(source)).toBe(true);
     });
 
     it("svg file", () => {
-      const source = { url: "http://example.com/foo.svg" };
+      const source = makeMockSource("http://example.com/foo.svg");
       expect(isNotJavaScript(source)).toBe(true);
     });
 
     it("png file", () => {
-      const source = { url: "http://example.com/foo.png" };
+      const source = makeMockSource("http://example.com/foo.png");
       expect(isNotJavaScript(source)).toBe(true);
     });
   });

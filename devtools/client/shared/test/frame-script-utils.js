@@ -5,7 +5,7 @@
 /* eslint-env browser */
 /* global addMessageListener, sendAsyncMessage, content */
 "use strict";
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Services = require("Services");
 
 addMessageListener("devtools:test:history", function({ data }) {

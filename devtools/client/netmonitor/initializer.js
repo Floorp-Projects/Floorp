@@ -9,8 +9,7 @@
  * This script is the entry point of Network monitor panel.
  * See README.md for more information.
  */
-const { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/client/shared/browser-loader.js", {});
+const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
 
 const require = window.windowRequire = BrowserLoader({
   baseURI: "resource://devtools/client/netmonitor/",

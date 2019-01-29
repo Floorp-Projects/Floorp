@@ -5,20 +5,18 @@
 
 do_get_profile(); // so we can use FxAccounts
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-crypto/utils.js");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 const {
   CollectionKeyEncryptionRemoteTransformer,
   CryptoCollection,
   ExtensionStorageSync,
   idToKey,
-  KeyRingEncryptionRemoteTransformer,
   keyToId,
-} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSync.jsm", {});
-ChromeUtils.import("resource://services-sync/engines/extension-storage.js");
-ChromeUtils.import("resource://services-sync/keys.js");
-ChromeUtils.import("resource://services-sync/util.js");
+  KeyRingEncryptionRemoteTransformer,
+} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSync.jsm", null);
+const {BulkKeyBundle} = ChromeUtils.import("resource://services-sync/keys.js");
+const {Utils} = ChromeUtils.import("resource://services-sync/util.js");
 
 /* globals BulkKeyBundle, CommonUtils, EncryptionRemoteTransformer */
 /* globals Utils */

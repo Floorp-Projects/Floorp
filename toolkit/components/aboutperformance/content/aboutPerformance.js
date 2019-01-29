@@ -6,9 +6,9 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
-const { ExtensionParent } = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const { ExtensionParent } = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 const {WebExtensionPolicy} = Cu.getGlobalForObject(Services);
 

@@ -13,8 +13,8 @@
 <script type="text/javascript">
 "use strict";
 
-ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 async function waitAboutAddonsRendered(addonId) {
   await ContentTaskUtils.waitForCondition(() => {

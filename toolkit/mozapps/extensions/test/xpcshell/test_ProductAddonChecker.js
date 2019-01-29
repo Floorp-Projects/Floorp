@@ -1,8 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {ProductAddonChecker} = ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 
 const LocalFile = new Components.Constructor("@mozilla.org/file/local;1", Ci.nsIFile, "initWithPath");
 

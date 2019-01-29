@@ -8,11 +8,10 @@
 
 var EXPORTED_SYMBOLS = ["EngineSynchronizer"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-common/async.js");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {ABORT_SYNC_COMMAND, LOGIN_FAILED_NETWORK_ERROR, NO_SYNC_NODE_FOUND, STATUS_OK, SYNC_FAILED_PARTIAL, SYNC_SUCCEEDED, WEAVE_VERSION, kSyncNetworkOffline} = ChromeUtils.import("resource://services-sync/constants.js");
+const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.defineModuleGetter(this, "Doctor",
                                "resource://services-sync/doctor.js");
 

@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-
 // Scope used to relaunch the tests with |ctypes| opened in a limited scope.
 var scope = {};
 var ctypes = ctypes;

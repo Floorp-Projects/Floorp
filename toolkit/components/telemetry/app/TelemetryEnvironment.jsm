@@ -10,15 +10,15 @@ var EXPORTED_SYMBOLS = [
 
 const myScope = this;
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {ObjectUtils} = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const Utils = TelemetryUtils;
 
-const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
+const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AttributionCode",
                                "resource:///modules/AttributionCode.jsm");
@@ -1432,7 +1432,7 @@ EnvironmentCache.prototype = {
     }
 
     try {
-      let { ShellService } = ChromeUtils.import("resource:///modules/ShellService.jsm", {});
+      let { ShellService } = ChromeUtils.import("resource:///modules/ShellService.jsm");
       // This uses the same set of flags used by the pref pane.
       return isDefault(ShellService, false, true);
     } catch (ex) {

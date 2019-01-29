@@ -33,7 +33,7 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "shipping-address-page";
@@ -75,7 +75,7 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page";
@@ -107,7 +107,7 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
@@ -143,7 +143,7 @@ add_task(async function test_onboarding_wizard_with_saved_addresses_and_saved_ca
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
@@ -218,7 +218,7 @@ add_task(async function test_onboarding_wizard_with_saved_addresses_and_no_saved
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page";
@@ -282,7 +282,7 @@ add_task(async function test_onboarding_wizard_without_saved_address_with_saved_
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "shipping-address-page";
@@ -300,7 +300,7 @@ add_task(async function test_onboarding_wizard_without_saved_address_with_saved_
     await spawnPaymentDialogTask(frame, async function checkSavedAndCancelButton() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
@@ -335,7 +335,7 @@ add_task(async function test_onboarding_wizard_with_requestShipping_turned_off()
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "billing-address-page";
@@ -366,7 +366,7 @@ add_task(async function test_onboarding_wizard_with_requestShipping_turned_off()
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page";
@@ -393,7 +393,7 @@ add_task(async function test_onboarding_wizard_with_requestShipping_turned_off()
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
@@ -460,7 +460,7 @@ add_task(async function test_back_button_on_basic_card_page_during_onboarding() 
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "billing-address-page";
@@ -485,7 +485,7 @@ add_task(async function test_back_button_on_basic_card_page_during_onboarding() 
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page";

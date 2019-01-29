@@ -4,8 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
-
 add_task(function test_isOriginMatching() {
   let testcases = [
     // Index 0 holds the expected return value followed by arguments to isOriginMatching.

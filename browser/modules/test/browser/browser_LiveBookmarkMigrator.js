@@ -9,7 +9,7 @@ add_task(async function() {
   let expectedURL = Services.prefs.getCharPref("app.support.baseURL") +
     "live-bookmarks-migration";
   let newTabExpected = BrowserTestUtils.waitForNewTab(gBrowser, expectedURL, true);
-  let {LiveBookmarkMigrator} = ChromeUtils.import("resource:///modules/LiveBookmarkMigrator.jsm", {});
+  let {LiveBookmarkMigrator} = ChromeUtils.import("resource:///modules/LiveBookmarkMigrator.jsm");
   LiveBookmarkMigrator._openSUMOPage();
   await newTabExpected;
   // If we get here, this is guaranteed to pass, but otherwise mochitest complains that

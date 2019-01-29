@@ -3,16 +3,14 @@
 
 "use strict";
 
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
+const {ASSERTION_LIFETIME, CERT_LIFETIME, ERRNO_INVALID_AUTH_TOKEN, ERRNO_INVALID_FXA_ASSERTION, ERRNO_NETWORK, ERROR_INVALID_FXA_ASSERTION, ERROR_NETWORK, KEY_LIFETIME, ONLOGIN_NOTIFICATION, ONLOGOUT_NOTIFICATION, ONVERIFIED_NOTIFICATION} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {FxAccountsOAuthGrantClient, FxAccountsOAuthGrantClientError} = ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
+const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
 // We grab some additional stuff via backstage passes.
-var {AccountState} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", {});
+var {AccountState} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", null);
 
 const ONE_HOUR_MS = 1000 * 60 * 60;
 const ONE_DAY_MS = ONE_HOUR_MS * 24;

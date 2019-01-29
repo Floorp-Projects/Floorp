@@ -18,15 +18,14 @@ const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
 const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
                      .getService(Ci.nsIPaymentUIService).wrappedJSObject;
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
-const {formAutofillStorage} = ChromeUtils.import(
-  "resource://formautofill/FormAutofillStorage.jsm", {});
-const {OSKeyStoreTestUtils} = ChromeUtils.import(
-  "resource://testing-common/OSKeyStoreTestUtils.jsm", {});
-const {PaymentTestUtils: PTU} = ChromeUtils.import(
-  "resource://testing-common/PaymentTestUtils.jsm", {});
-ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
-ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {formAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm");
+const {OSKeyStoreTestUtils} =
+    ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm");
+const {PaymentTestUtils: PTU} =
+    ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
+var {BrowserWindowTracker} = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
+var {CreditCard} = ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
 
 function getPaymentRequests() {
   return Array.from(paymentSrv.enumerate());
@@ -409,7 +408,7 @@ async function navigateToAddAddressPage(frame, aOptions = {}) {
   await spawnPaymentDialogTask(frame, async (options) => {
     let {
       PaymentTestUtils,
-    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
     info("navigateToAddAddressPage: check we're on the expected page first");
     await PaymentTestUtils.DialogContentUtils.waitForState(content, (state) => {
@@ -573,7 +572,7 @@ async function submitAddressForm(frame, aAddress, aOptions = {
     let nextPageId = options.nextPageId || "payment-summary";
     let {
       PaymentTestUtils,
-    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
     let oldState = await PaymentTestUtils.DialogContentUtils.getCurrentState(content);
     let pageId = oldState.page.id;
@@ -625,7 +624,7 @@ async function navigateToAddCardPage(frame, aOptions = {
   await spawnPaymentDialogTask(frame, async (options) => {
     let {
       PaymentTestUtils,
-    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
     // check were on the summary page first
     await PaymentTestUtils.DialogContentUtils.waitForState(content, (state) => {

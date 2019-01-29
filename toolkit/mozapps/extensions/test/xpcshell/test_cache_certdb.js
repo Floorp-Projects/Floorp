@@ -19,8 +19,6 @@ const ADDONS = {
     "bootstrap.js": String.raw`const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 const CERTDB_CID = Components.ID("{fb0bbc5c-452e-4783-b32c-80124693d871}");
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 const CERT = "MIIDITCCAgmgAwIBAgIJALAv8fydd6nBMA0GCSqGSIb3DQEBBQUAMCcxJTAjBgNV\
 BAMMHGJvb3RzdHJhcDFAdGVzdHMubW96aWxsYS5vcmcwHhcNMTYwMjAyMjMxNjUy\
 WhcNMjYwMTMwMjMxNjUyWjAnMSUwIwYDVQQDDBxib290c3RyYXAxQHRlc3RzLm1v\
@@ -99,7 +97,7 @@ add_task(async function() {
   await promiseStartupManager();
 
   // Force a rescan of signatures
-  const { XPIDatabase } = ChromeUtils.import("resource://gre/modules/addons/XPIDatabase.jsm", {});
+  const { XPIDatabase } = ChromeUtils.import("resource://gre/modules/addons/XPIDatabase.jsm");
   await XPIDatabase.verifySignatures();
 
   let addon = await AddonManager.getAddonByID(ID);

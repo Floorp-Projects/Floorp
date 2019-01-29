@@ -12,7 +12,7 @@
 
 /* global content */
 
-ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+const {FormAutofillUtils} = ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 const CONTENT_WIN = typeof(window) != "undefined" ? window : this;
 

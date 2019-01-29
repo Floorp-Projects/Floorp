@@ -12,8 +12,8 @@ add_task(async function test() {
   let innerWindowId = browser.innerWindowID;
 
   let stackTraceEmpty = await ContentTask.spawn(browser, {innerWindowId}, async function(args) {
-    let {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm", {});
-    let {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm", {});
+    let {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+    let {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
     const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
     let consoleEvents = ConsoleAPIStorage.getEvents(args.innerWindowId);

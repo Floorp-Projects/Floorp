@@ -10,9 +10,8 @@ import { isWasm, getWasmLineNumberFormatter, renderWasmText } from "../wasm";
 import { resizeBreakpointGutter, resizeToggleButton } from "../ui";
 import SourceEditor from "./source-editor";
 
-import type { Source } from "../../types";
+import type { Source, SourceDocuments } from "../../types";
 import type { SymbolDeclarations } from "../../workers/parser";
-type SourceDocuments = { [string]: Object };
 
 let sourceDocs: SourceDocuments = {};
 

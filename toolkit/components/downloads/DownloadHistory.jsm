@@ -17,8 +17,8 @@ var EXPORTED_SYMBOLS = [
   "DownloadHistory",
 ];
 
-ChromeUtils.import("resource://gre/modules/DownloadList.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {DownloadList} = ChromeUtils.import("resource://gre/modules/DownloadList.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.jsm",

@@ -1,9 +1,8 @@
 "use strict";
 
-/* global AddressResult, CreditCardResult */
+var AddressResult, CreditCardResult;
 add_task(async function setup() {
-  // eslint-disable-next-line no-unused-vars
-  ChromeUtils.import("resource://formautofill/ProfileAutoCompleteResult.jsm");
+  ({AddressResult, CreditCardResult} = ChromeUtils.import("resource://formautofill/ProfileAutoCompleteResult.jsm"));
 });
 
 let matchingProfiles = [{

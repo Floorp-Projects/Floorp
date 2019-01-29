@@ -1,11 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-sync/stages/declined.js");
-ChromeUtils.import("resource://services-sync/stages/enginesync.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-common/observers.js");
+const {DeclinedEngines} = ChromeUtils.import("resource://services-sync/stages/declined.js");
+const {EngineSynchronizer} = ChromeUtils.import("resource://services-sync/stages/enginesync.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
 
 function PetrolEngine() {}
 PetrolEngine.prototype.name = "petrol";

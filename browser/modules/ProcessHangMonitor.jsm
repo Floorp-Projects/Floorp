@@ -7,8 +7,8 @@
 
 var EXPORTED_SYMBOLS = ["ProcessHangMonitor"];
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * This JSM is responsible for observing content process hang reports

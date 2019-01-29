@@ -1,17 +1,25 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
-function run_test() {   
+
+var XPCOMUtils;
+function run_test() {
   var scope = {};
-  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", scope);
+  var exports = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", scope);
   Assert.equal(typeof(scope.XPCOMUtils), "object");
   Assert.equal(typeof(scope.XPCOMUtils.generateNSGetFactory), "function");
-  
+
+  equal(scope.XPCOMUtils, exports.XPCOMUtils);
+  deepEqual(Object.keys(scope), ["XPCOMUtils"]);
+  deepEqual(Object.keys(exports), ["XPCOMUtils"]);
+
+  exports = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+  equal(scope.XPCOMUtils, exports.XPCOMUtils);
+  deepEqual(Object.keys(exports), ["XPCOMUtils"]);
+
   // access module's global object directly without importing any
   // symbols
-  var module = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm",
-                                  null);
+  var module = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", null);
   Assert.equal(typeof(XPCOMUtils), "undefined");
   Assert.equal(typeof(module), "object");
   Assert.equal(typeof(module.XPCOMUtils), "object");
@@ -20,16 +28,16 @@ function run_test() {
 
   // import symbols to our global object
   Assert.equal(typeof(Cu.import), "function");
-  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+  ({XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm"));
   Assert.equal(typeof(XPCOMUtils), "object");
   Assert.equal(typeof(XPCOMUtils.generateNSGetFactory), "function");
-  
+
   // try on a new object
   var scope2 = {};
   ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", scope2);
   Assert.equal(typeof(scope2.XPCOMUtils), "object");
   Assert.equal(typeof(scope2.XPCOMUtils.generateNSGetFactory), "function");
-  
+
   Assert.ok(scope2.XPCOMUtils == scope.XPCOMUtils);
 
   // try on a new object using the resolved URL
@@ -51,7 +59,7 @@ function run_test() {
       didThrow = true;
   }
   Assert.ok(didThrow);
- 
+
   // try to create a component
   do_load_manifest("component_import.manifest");
   const contractID = "@mozilla.org/tests/module-importer;";

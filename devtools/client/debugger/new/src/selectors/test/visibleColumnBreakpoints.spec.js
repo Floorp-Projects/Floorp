@@ -25,7 +25,13 @@ describe("visible column breakpoints", () => {
     const pausePoints = [pp(1, 1), pp(1, 5), pp(3, 1)];
     const breakpoints = [bp(1, 1), bp(4, 0), bp(4, 3)];
 
-    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
+    const selectedSource = { id: "foo" };
+    const columnBps = getColumnBreakpoints(
+      pausePoints,
+      breakpoints,
+      viewport,
+      selectedSource
+    );
     expect(columnBps).toMatchSnapshot();
   });
 
@@ -36,8 +42,13 @@ describe("visible column breakpoints", () => {
     };
     const pausePoints = [pp(1, 1), pp(1, 1), pp(1, 3)];
     const breakpoints = [bp(1, 1)];
-
-    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
+    const selectedSource = { id: "foo" };
+    const columnBps = getColumnBreakpoints(
+      pausePoints,
+      breakpoints,
+      viewport,
+      selectedSource
+    );
     expect(columnBps).toMatchSnapshot();
   });
 
@@ -48,8 +59,13 @@ describe("visible column breakpoints", () => {
     };
     const pausePoints = [pp(1, 1), pp(1, 3, pp(2, 1))];
     const breakpoints = [bp(1, 1)];
-
-    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
+    const selectedSource = { id: "foo" };
+    const columnBps = getColumnBreakpoints(
+      pausePoints,
+      breakpoints,
+      viewport,
+      selectedSource
+    );
     expect(columnBps).toMatchSnapshot();
   });
 
@@ -60,8 +76,14 @@ describe("visible column breakpoints", () => {
     };
     const pausePoints = [pp(1, 1), pp(1, 3), pp(20, 1)];
     const breakpoints = [bp(1, 1)];
+    const selectedSource = { id: "foo" };
 
-    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
+    const columnBps = getColumnBreakpoints(
+      pausePoints,
+      breakpoints,
+      viewport,
+      selectedSource
+    );
     expect(columnBps).toMatchSnapshot();
   });
 });

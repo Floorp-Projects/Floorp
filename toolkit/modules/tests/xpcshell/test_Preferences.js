@@ -3,7 +3,7 @@
 
 var Cm = Components.manager;
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 add_test(function test_set_get_pref() {
   Preferences.set("test_set_get_pref.integer", 1);

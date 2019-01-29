@@ -552,7 +552,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Svg = __webpack_require__(3840);
+var _Svg = __webpack_require__(3841);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
@@ -7010,7 +7010,7 @@ module.exports = Draggable;
 
 /***/ }),
 
-/***/ 3840:
+/***/ 3841:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7030,9 +7030,9 @@ const React = __webpack_require__(0);
 
 
 const svg = {
-  breakpoint: __webpack_require__(3841),
-  "column-marker": __webpack_require__(3842),
-  "magnifying-glass": __webpack_require__(3843)
+  breakpoint: __webpack_require__(3842),
+  "column-marker": __webpack_require__(3843),
+  "magnifying-glass": __webpack_require__(3844)
 };
 
 function Svg({ name, className, onClick, "aria-label": ariaLabel }) {
@@ -7063,21 +7063,21 @@ module.exports = Svg;
 
 /***/ }),
 
-/***/ 3841:
+/***/ 3842:
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 60 14\"><path id=\"base-path\" d=\"M53.07.5H1.5a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h51.57a2 2 0 0 0 1.53-.7L59.3 7l-4.7-5.8a2 2 0 0 0-1.53-.7z\"></path></svg>"
 
 /***/ }),
 
-/***/ 3842:
+/***/ 3843:
 /***/ (function(module, exports) {
 
 module.exports = "<svg viewBox=\"0 0 9 12\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><g id=\"columnmarkergroup\" stroke-width=\"1\" fill-rule=\"evenodd\"><polygon id=\"columnmarker\" points=\"0 0 4 0 9 6 4 12 0 12\"></polygon></g></svg>"
 
 /***/ }),
 
-/***/ 3843:
+/***/ 3844:
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\"><path class=\"st0\" d=\"M9 9.3l3.6 3.6\"></path><ellipse fill=\"transparent\" cx=\"5.9\" cy=\"6.2\" rx=\"4.5\" ry=\"4.5\"></ellipse></svg>"

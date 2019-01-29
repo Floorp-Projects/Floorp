@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow } from "enzyme";
 
@@ -9,15 +11,17 @@ import BreakpointsContextMenu from "../BreakpointsContextMenu";
 import { createBreakpoint } from "../../../../utils/breakpoint";
 import { buildMenu } from "devtools-contextmenu";
 
+import { makeMockSource } from "../../../../utils/test-mockup";
+
 jest.mock("devtools-contextmenu");
 
-function render(overrides = {}, disabled = false) {
-  const props = generateDefaults(overrides, disabled);
+function render(disabled = false) {
+  const props = generateDefaults(disabled);
   const component = shallow(<BreakpointsContextMenu {...props} />);
   return { component, props };
 }
 
-function generateDefaults(overrides = {}, disabled) {
+function generateDefaults(disabled) {
   const breakpoints = [
     createBreakpoint(
       {
@@ -50,7 +54,7 @@ function generateDefaults(overrides = {}, disabled) {
 
   const props = {
     breakpoints,
-    breakpoint: { id: "https://example.com/main.js:1:" },
+    breakpoint: breakpoints[0],
     removeBreakpoint: jest.fn(),
     removeBreakpoints: jest.fn(),
     removeAllBreakpoints: jest.fn(),
@@ -60,8 +64,9 @@ function generateDefaults(overrides = {}, disabled) {
     selectSpecificLocation: jest.fn(),
     setBreakpointCondition: jest.fn(),
     openConditionalPanel: jest.fn(),
-    contextMenuEvent: { preventDefault: jest.fn() },
-    ...overrides
+    contextMenuEvent: ({ preventDefault: jest.fn() }: any),
+    selectedSource: makeMockSource(),
+    setBreakpointOptions: jest.fn()
   };
   return props;
 }
@@ -89,7 +94,7 @@ describe("BreakpointsContextMenu", () => {
     });
 
     it("'enable others' calls toggleBreakpoints with proper arguments", () => {
-      const { props } = render({}, true);
+      const { props } = render(true);
       const menuItems = buildMenu.mock.calls[0][0];
       const enableOthers = menuItems.find(
         item => item.item.id === "node-menu-enable-others"

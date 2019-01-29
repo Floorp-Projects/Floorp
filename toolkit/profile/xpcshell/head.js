@@ -2,11 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
-const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
-const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const NS_ERROR_START_PROFILE_MANAGER = 0x805800c9;
 

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 /* eslint max-nested-callbacks: ["error", 4]*/
 
 import { createSource } from "../../../reducers/sources";
@@ -64,7 +66,7 @@ describe("sources-tree", () => {
       });
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source1, "http://example.com/");
+      addToTree(tree, source1, "http://example.com/", "");
       expect(tree.contents).toHaveLength(1);
 
       const base = tree.contents[0];
@@ -90,7 +92,7 @@ describe("sources-tree", () => {
 
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source1, "http://example.com/");
+      addToTree(tree, source1, "http://example.com/", "");
       const childNode = getChildNode(tree, 0, 0, 0);
       expect(childNode.name).toEqual(sourceName);
       expect(formatTree(tree)).toMatchSnapshot();
@@ -106,7 +108,7 @@ describe("sources-tree", () => {
 
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source1, "http://example.com/");
+      addToTree(tree, source1, "http://example.com/", "");
       expect(formatTree(tree)).toMatchSnapshot();
     });
 
@@ -125,7 +127,8 @@ describe("sources-tree", () => {
       const sourceMap = createSourcesMap(sources);
       const tree = createTree({
         sources: sourceMap,
-        debugeeURL: ""
+        debuggeeUrl: "",
+        projectRoot: ""
       }).sourceTree;
       // expect(tree.contents).toHaveLength(1);
       const subtree = tree.contents[0];
@@ -144,7 +147,8 @@ describe("sources-tree", () => {
       const sourceMap = createSourcesMap(sources);
       const tree = createTree({
         sources: sourceMap,
-        debugeeURL: ""
+        debuggeeUrl: "",
+        projectRoot: ""
       }).sourceTree;
       expect(formatTree(tree)).toMatchSnapshot();
     });
@@ -164,7 +168,8 @@ describe("sources-tree", () => {
       const sourceMap = createSourcesMap(sources);
       const tree = createTree({
         sources: sourceMap,
-        debugeeURL: ""
+        debuggeeUrl: "",
+        projectRoot: ""
       }).sourceTree;
       expect(tree.contents).toHaveLength(1);
       const subtree = tree.contents[0];
@@ -187,9 +192,9 @@ describe("sources-tree", () => {
       });
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source1, "http://example.com/");
-      addToTree(tree, source2, "http://example.com/");
-      addToTree(tree, source3, "http://example.com/");
+      addToTree(tree, source1, "http://example.com/", "");
+      addToTree(tree, source2, "http://example.com/", "");
+      addToTree(tree, source3, "http://example.com/", "");
 
       const base = tree.contents[0];
       expect(tree.contents).toHaveLength(1);
@@ -206,7 +211,7 @@ describe("sources-tree", () => {
       });
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source, "file:///a/index.html");
+      addToTree(tree, source, "file:///a/index.html", "");
       expect(tree.contents).toHaveLength(1);
 
       const base = tree.contents[0];
@@ -236,7 +241,9 @@ describe("sources-tree", () => {
 
       const sources = createSourcesList(testData);
       const tree = createDirectoryNode("root", "", []);
-      sources.forEach(source => addToTree(tree, source, "https://unpkg.com/"));
+      sources.forEach(source =>
+        addToTree(tree, source, "https://unpkg.com/", "")
+      );
       expect(formatTree(tree)).toMatchSnapshot();
     });
 
@@ -255,7 +262,9 @@ describe("sources-tree", () => {
 
       const sources = createSourcesList(testData);
       const tree = createDirectoryNode("root", "", []);
-      sources.forEach(source => addToTree(tree, source, "https://unpkg.com/"));
+      sources.forEach(source =>
+        addToTree(tree, source, "https://unpkg.com/", "")
+      );
       expect(formatTree(tree)).toMatchSnapshot();
     });
 
@@ -288,7 +297,7 @@ describe("sources-tree", () => {
       const domain = "http://localhost:4242";
       const sources = createSourcesList(testData);
       const tree = createDirectoryNode("root", "", []);
-      sources.forEach(source => addToTree(tree, source, domain));
+      sources.forEach(source => addToTree(tree, source, domain, ""));
       expect(formatTree(tree)).toMatchSnapshot();
     });
   });

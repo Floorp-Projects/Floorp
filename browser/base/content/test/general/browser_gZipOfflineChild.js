@@ -18,7 +18,7 @@ registerCleanupFunction(function() {
 // offline cache events.
 //
 function contentTask() {
-  ChromeUtils.import("resource://gre/modules/Timer.jsm");
+  const {clearInterval, setInterval} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
   let resolve;
   let promise = new Promise(r => { resolve = r; });

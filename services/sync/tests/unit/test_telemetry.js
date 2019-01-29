@@ -1,21 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/telemetry.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-ChromeUtils.import("resource://services-sync/engines/clients.js");
-ChromeUtils.import("resource://testing-common/services/sync/fxa_utils.js");
-ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js");
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-
-ChromeUtils.import("resource://services-sync/util.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {WBORecord} = ChromeUtils.import("resource://services-sync/record.js");
+const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
+const {BookmarksEngine} = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
+const {RotaryEngine} = ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 
 function SteamStore(engine) {

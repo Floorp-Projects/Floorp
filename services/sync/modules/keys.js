@@ -8,11 +8,10 @@ var EXPORTED_SYMBOLS = [
   "BulkKeyBundle",
 ];
 
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/main.js");
-ChromeUtils.import("resource://services-sync/util.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
+const {Utils} = ChromeUtils.import("resource://services-sync/util.js");
 
 /**
  * Represents a pair of keys.

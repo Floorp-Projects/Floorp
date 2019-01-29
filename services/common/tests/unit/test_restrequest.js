@@ -3,10 +3,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/rest.js");
-ChromeUtils.import("resource://services-common/utils.js");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
 
 function run_test() {
   Log.repository.getLogger("Services.Common.RESTRequest").level =

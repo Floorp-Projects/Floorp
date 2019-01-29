@@ -13,7 +13,7 @@ function serverOwnershipTree(walkerArg) {
   return ContentTask.spawn(gBrowser.selectedBrowser, [walkerArg.actorID],
     function(actorID) {
       const { require } =
-        ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+        ChromeUtils.import("resource://devtools/shared/Loader.jsm");
       const { DebuggerServer } = require("devtools/server/main");
       const { DocumentWalker } =
         require("devtools/server/actors/inspector/document-walker");

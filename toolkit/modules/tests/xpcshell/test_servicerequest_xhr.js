@@ -3,7 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ServiceRequest.jsm");
+const {ServiceRequest} = ChromeUtils.import("resource://gre/modules/ServiceRequest.jsm");
 
 add_task(async function test_tls_conservative() {
   const request = new ServiceRequest();

@@ -20,7 +20,8 @@ import actions from "../../actions";
 
 import {
   isOriginal as isOriginalSource,
-  getSourceQueryString
+  getSourceQueryString,
+  isUrlExtension
 } from "../../utils/source";
 import { isDirectory } from "../../utils/sources-tree";
 import { copyToTheClipboard } from "../../utils/clipboard";
@@ -65,7 +66,7 @@ class SourceTreeItem extends Component<Props, State> {
       return <AccessibleImage className="webpack" />;
     } else if (item.path === "ng://") {
       return <AccessibleImage className="angular" />;
-    } else if (item.path.startsWith("moz-extension://") && depth === 0) {
+    } else if (isUrlExtension(item.path) && depth === 0) {
       return <AccessibleImage className="extension" />;
     }
 

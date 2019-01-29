@@ -34,11 +34,10 @@ Object {
     "name": undefined,
     "offset": Object {
       "line": 7,
-      "sourceId": "foo.js",
+      "sourceId": "foo.js/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo.js",
     },
   },
-  "condition": null,
   "disabled": false,
   "generatedLocation": Object {
     "column": undefined,
@@ -50,7 +49,11 @@ Object {
     "line": 7,
     "sourceUrl": "http://localhost:8000/examples/foo.js",
   },
-  "log": false,
+  "options": Object {
+    "condition": null,
+    "hidden": false,
+    "logValue": null,
+  },
 }
 `;
 
@@ -61,11 +64,10 @@ Object {
     "name": undefined,
     "offset": Object {
       "line": 5,
-      "sourceId": "foo.js",
+      "sourceId": "foo.js/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo.js",
     },
   },
-  "condition": null,
   "disabled": false,
   "generatedLocation": Object {
     "column": undefined,
@@ -77,7 +79,11 @@ Object {
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo.js",
   },
-  "log": false,
+  "options": Object {
+    "condition": null,
+    "hidden": false,
+    "logValue": null,
+  },
 }
 `;
 
@@ -88,11 +94,10 @@ Object {
     "name": undefined,
     "offset": Object {
       "line": 5,
-      "sourceId": "foo",
+      "sourceId": "foo/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo",
     },
   },
-  "condition": null,
   "disabled": false,
   "generatedLocation": Object {
     "column": undefined,
@@ -104,7 +109,11 @@ Object {
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo",
   },
-  "log": false,
+  "options": Object {
+    "condition": null,
+    "hidden": false,
+    "logValue": null,
+  },
 }
 `;
 
@@ -115,11 +124,10 @@ Object {
     "name": undefined,
     "offset": Object {
       "line": 5,
-      "sourceId": "foo2",
+      "sourceId": "foo2/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo2",
     },
   },
-  "condition": null,
   "disabled": false,
   "generatedLocation": Object {
     "column": undefined,
@@ -131,6 +139,10 @@ Object {
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo2",
   },
-  "log": false,
+  "options": Object {
+    "condition": null,
+    "hidden": false,
+    "logValue": null,
+  },
 }
 `;

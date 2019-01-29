@@ -8,7 +8,7 @@
   </head>
   <body>
     <script class="testbody" type="application/javascript">
-      ChromeUtils.import("resource://gre/modules/Services.jsm");
+      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
       Services.prefs.setBoolPref("plugins.click_to_play", true);
       var pluginHost = Cc["@mozilla.org/plugin/host;1"]
                        .getService(Ci.nsIPluginHost);
