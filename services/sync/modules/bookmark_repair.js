@@ -6,18 +6,17 @@
 
 var EXPORTED_SYMBOLS = ["BookmarkRepairRequestor", "BookmarkRepairResponder"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/collection_repair.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-sync/doctor.js");
-ChromeUtils.import("resource://services-sync/telemetry.js");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/utils.js");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
+const {CollectionRepairRequestor, CollectionRepairResponder} = ChromeUtils.import("resource://services-sync/collection_repair.js");
+const {DEVICE_TYPE_DESKTOP} = ChromeUtils.import("resource://services-sync/constants.js");
+const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
+const {Doctor} = ChromeUtils.import("resource://services-sync/doctor.js");
+const {SyncTelemetry} = ChromeUtils.import("resource://services-sync/telemetry.js");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 
 ChromeUtils.defineModuleGetter(this, "PlacesSyncUtils",
                                "resource://gre/modules/PlacesSyncUtils.jsm");

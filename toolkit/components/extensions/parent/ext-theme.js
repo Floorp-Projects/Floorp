@@ -4,7 +4,7 @@
 
 /* eslint-disable complexity */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
                                "resource://gre/modules/LightweightThemeManager.jsm");

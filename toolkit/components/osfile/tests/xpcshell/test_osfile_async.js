@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 /**
  * A trivial test ensuring that we can call osfile from xpcshell.

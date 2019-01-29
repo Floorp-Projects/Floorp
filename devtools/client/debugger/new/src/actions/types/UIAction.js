@@ -40,10 +40,6 @@ export type UIAction =
       +paneCollapsed: boolean
     |}
   | {|
-      +type: "SET_CONTEXT_MENU",
-      +contextMenu: { type: string, event: any }
-    |}
-  | {|
       +type: "SET_ORIENTATION",
       +orientation: OrientationType
     |}

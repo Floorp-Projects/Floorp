@@ -6,7 +6,7 @@
 "use strict";
 
 const { BrowserLoader } =
-  ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
+  ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
 
 const { getMockedModule, setMockedModule, removeMockedModule } =
   require("devtools/client/shared/browser-loader-mocks");

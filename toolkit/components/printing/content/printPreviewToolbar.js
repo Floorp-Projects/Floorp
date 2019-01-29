@@ -112,7 +112,7 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
   }
 
   initialize(aPPBrowser) {
-    let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+    let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
     if (!Services.prefs.getBoolPref("print.use_simplify_page")) {
       this.mSimplifyPageCheckbox.hidden = true;
       this.mSimplifyPageToolbarSeparator.hidden = true;
@@ -125,7 +125,7 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
     let ltr = document.documentElement.matches(":root:-moz-locale-dir(ltr)");
     // Windows 7 doesn't support ⏮ and ⏭ by default, and fallback doesn't
     // always work (bug 1343330).
-    let { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
+    let { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     let useCompatCharacters = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
     let leftEnd = useCompatCharacters ? "\u23EA" : "\u23EE";
     let rightEnd = useCompatCharacters ? "\u23E9" : "\u23ED";
@@ -218,7 +218,7 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
     var promptStr = document.getElementById("print-preview-scale-label").value;
     var renameTitle = document.getElementById("print-preview-prompt-title");
     var result = { value };
-    let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+    let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
     var confirmed = Services.prompt.prompt(window, renameTitle, promptStr, result, null, { value });
     if (!confirmed || (!result.value) || (result.value == "")) {
       return -1;

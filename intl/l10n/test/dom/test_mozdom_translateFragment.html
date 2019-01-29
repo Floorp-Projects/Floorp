@@ -10,9 +10,9 @@
   const domLocalization =
     Cc["@mozilla.org/intl/domlocalization;1"].createInstance(
       Ci.mozIDOMLocalization);
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   const { L10nRegistry, FileSource } =
-    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
+    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 
   const fs = {
     "/localization/en-US/browser/menu.ftl": `

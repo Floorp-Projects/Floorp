@@ -16,11 +16,11 @@ const LOCAL_GMP_SOURCES = [{
 
 var EXPORTED_SYMBOLS = [ "ProductAddonChecker" ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/CertUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {CertUtils} = ChromeUtils.import("resource://gre/modules/CertUtils.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 

@@ -7,15 +7,14 @@
 
 /* eslint-env mozilla/frame-script */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 
-ChromeUtils.import("resource://gre/modules/ActorManagerChild.jsm");
+var {ActorManagerChild} = ChromeUtils.import("resource://gre/modules/ActorManagerChild.jsm");
 
 ActorManagerChild.attach(this, "browsers");
 
@@ -25,7 +24,7 @@ var global = this;
 // Keep a reference to the translation content handler to avoid it it being GC'ed.
 var trHandler = null;
 if (Services.prefs.getBoolPref("browser.translation.detectLanguage")) {
-  ChromeUtils.import("resource:///modules/translation/TranslationContentHandler.jsm");
+  var {TranslationContentHandler} = ChromeUtils.import("resource:///modules/translation/TranslationContentHandler.jsm");
   trHandler = new TranslationContentHandler(global, docShell);
 }
 

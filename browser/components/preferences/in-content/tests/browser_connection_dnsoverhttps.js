@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const SUBDIALOG_URL = "chrome://browser/content/preferences/connection.xul";
 const TRR_MODE_PREF = "network.trr.mode";

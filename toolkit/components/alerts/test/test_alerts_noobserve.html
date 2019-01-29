@@ -24,8 +24,8 @@ const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
 const chromeScript = SpecialPowers.loadChromeScript(_ => {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
-  ChromeUtils.import("resource://gre/modules/Timer.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
   function anyXULAlertsVisible() {
     var windows = Services.wm.getEnumerator("alert:alert");

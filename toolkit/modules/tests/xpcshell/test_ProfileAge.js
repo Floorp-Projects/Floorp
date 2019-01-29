@@ -1,6 +1,6 @@
-ChromeUtils.import("resource://gre/modules/ProfileAge.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
+const {ProfileAge} = ChromeUtils.import("resource://gre/modules/ProfileAge.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 
 const gProfD = do_get_profile();
 let ID = 0;

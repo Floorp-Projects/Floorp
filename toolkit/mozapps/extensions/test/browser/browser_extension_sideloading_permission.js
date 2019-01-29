@@ -5,7 +5,7 @@
 /*
 * Test Permission Popup for Sideloaded Extensions.
 */
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 const ADDON_ID = "addon1@test.mozilla.org";
 
 AddonTestUtils.initMochitest(this);

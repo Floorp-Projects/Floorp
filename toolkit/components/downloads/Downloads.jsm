@@ -12,8 +12,8 @@ var EXPORTED_SYMBOLS = [
   "Downloads",
 ];
 
-ChromeUtils.import("resource://gre/modules/Integration.jsm");
-ChromeUtils.import("resource://gre/modules/DownloadCore.jsm");
+const {Integration} = ChromeUtils.import("resource://gre/modules/Integration.jsm");
+const {Download, DownloadError} = ChromeUtils.import("resource://gre/modules/DownloadCore.jsm");
 
 ChromeUtils.defineModuleGetter(this, "DownloadCombinedList",
                                "resource://gre/modules/DownloadList.jsm");

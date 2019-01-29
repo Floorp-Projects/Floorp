@@ -5,7 +5,7 @@
 
 var EXPORTED_SYMBOLS = ["RemoteWebProgressManager"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function RemoteWebProgressRequest(uriOrSpec, originalURIOrSpec, matchedList) {
   this.wrappedJSObject = this;

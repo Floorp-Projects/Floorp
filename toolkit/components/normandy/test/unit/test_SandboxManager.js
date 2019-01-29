@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://normandy/lib/SandboxManager.jsm");
+const {SandboxManager} = ChromeUtils.import("resource://normandy/lib/SandboxManager.jsm");
 
 // wrapAsync should wrap privileged Promises with Promises that are usable by
 // the sandbox.

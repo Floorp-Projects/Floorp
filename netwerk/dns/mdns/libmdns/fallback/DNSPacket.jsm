@@ -8,12 +8,12 @@
 
 var EXPORTED_SYMBOLS = ["DNSPacket"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.import("resource://gre/modules/DataReader.jsm");
-ChromeUtils.import("resource://gre/modules/DataWriter.jsm");
-ChromeUtils.import("resource://gre/modules/DNSRecord.jsm");
-ChromeUtils.import("resource://gre/modules/DNSResourceRecord.jsm");
+const {DataReader} = ChromeUtils.import("resource://gre/modules/DataReader.jsm");
+const {DataWriter} = ChromeUtils.import("resource://gre/modules/DataWriter.jsm");
+const {DNSRecord} = ChromeUtils.import("resource://gre/modules/DNSRecord.jsm");
+const {DNSResourceRecord} = ChromeUtils.import("resource://gre/modules/DNSResourceRecord.jsm");
 
 const DEBUG = true;
 

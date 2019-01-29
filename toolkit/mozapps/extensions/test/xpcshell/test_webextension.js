@@ -66,7 +66,7 @@ let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChr
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
-const { GlobalManager } = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+const { GlobalManager } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
 add_task(async function test_1() {
   await promiseStartupManager();

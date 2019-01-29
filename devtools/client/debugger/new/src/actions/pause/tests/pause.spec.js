@@ -349,7 +349,7 @@ describe("pause", () => {
       const { dispatch } = createStore(client);
 
       dispatch(actions.stepIn());
-      await dispatch(actions.resumed());
+      await dispatch(actions.resumed({ from: "FakeThread" }));
       expect(client.evaluateExpressions.mock.calls).toHaveLength(1);
     });
 
@@ -366,7 +366,7 @@ describe("pause", () => {
       mockThreadClient.evaluateExpressions = () => new Promise(r => r(["YAY"]));
       await dispatch(actions.paused(mockPauseInfo));
 
-      await dispatch(actions.resumed());
+      await dispatch(actions.resumed({ from: "FakeThread" }));
       const expression = selectors.getExpression(getState(), "foo");
       expect(expression.value).toEqual("YAY");
     });

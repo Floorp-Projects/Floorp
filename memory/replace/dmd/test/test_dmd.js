@@ -6,8 +6,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // The xpcshell test harness sets PYTHON so we can read it here.
 var gEnv = Cc["@mozilla.org/process/environment;1"]

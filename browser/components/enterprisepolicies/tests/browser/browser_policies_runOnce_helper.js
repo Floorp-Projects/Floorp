@@ -3,7 +3,7 @@
 
 "use strict";
 
-let { runOnce } = ChromeUtils.import("resource:///modules/policies/Policies.jsm", {});
+let { runOnce } = ChromeUtils.import("resource:///modules/policies/Policies.jsm", null);
 
 let runCount = 0;
 function callback() {

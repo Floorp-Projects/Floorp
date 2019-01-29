@@ -4,7 +4,7 @@
 
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
   // eslint-disable-next-line no-shadow
-  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
   return Management;
 });
 
@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
 const {
   createAppInfo,

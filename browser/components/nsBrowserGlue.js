@@ -4,9 +4,9 @@
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ActorManagerParent",
                                "resource://gre/modules/ActorManagerParent.jsm");
@@ -361,7 +361,7 @@ let ACTORS = {
   win.stop();
 
   let { TelemetryTimestamps } =
-    ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", {});
+    ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm");
   TelemetryTimestamps.add("blankWindowShown");
 })();
 
@@ -595,7 +595,7 @@ function BrowserGlue() {
                                      "nsIIdleService");
 
   XPCOMUtils.defineLazyGetter(this, "_distributionCustomizer", function() {
-                                ChromeUtils.import("resource:///modules/distribution.js");
+                                const {DistributionCustomizer} = ChromeUtils.import("resource:///modules/distribution.js");
                                 return new DistributionCustomizer();
                               });
 
@@ -645,7 +645,7 @@ BrowserGlue.prototype = {
     }
     delay = delay <= MAX_DELAY ? delay : MAX_DELAY;
 
-    ChromeUtils.import("resource://services-sync/main.js");
+    const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
     Weave.Service.scheduler.delayedAutoConnect(delay);
   },
 
@@ -1226,7 +1226,7 @@ BrowserGlue.prototype = {
     if (!win)
       return;
 
-    ChromeUtils.import("resource://gre/modules/ResetProfile.jsm");
+    const {ResetProfile} = ChromeUtils.import("resource://gre/modules/ResetProfile.jsm");
     if (!ResetProfile.resetSupported())
       return;
 
@@ -1298,7 +1298,7 @@ BrowserGlue.prototype = {
     let channel = new WebChannel("remote-troubleshooting", "remote-troubleshooting");
     channel.listen((id, data, target) => {
       if (data.command == "request") {
-        let {Troubleshoot} = ChromeUtils.import("resource://gre/modules/Troubleshoot.jsm", {});
+        let {Troubleshoot} = ChromeUtils.import("resource://gre/modules/Troubleshoot.jsm");
         Troubleshoot.snapshot(snapshotData => {
           // for privacy we remove crash IDs and all preferences (but bug 1091944
           // exists to expose prefs once we are confident of privacy implications)
@@ -1604,7 +1604,7 @@ BrowserGlue.prototype = {
     }
 
     if (AppConstants.ASAN_REPORTER) {
-      ChromeUtils.import("resource:///modules/AsanReporter.jsm");
+      var {AsanReporter} = ChromeUtils.import("resource:///modules/AsanReporter.jsm");
       AsanReporter.init();
     }
 
@@ -1626,7 +1626,7 @@ BrowserGlue.prototype = {
     });
 
     Services.tm.idleDispatchToMainThread(() => {
-      let {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
+      let {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
       setTimeout(function() {
         Services.tm.idleDispatchToMainThread(Services.startup.trackStartupCrashEnd);
       }, STARTUP_CRASHES_END_DELAY_MS);
@@ -2689,7 +2689,7 @@ BrowserGlue.prototype = {
     let experiment = null;
     let experimentName = "pref-flip-search-composition-57-release-1413565";
     let {PreferenceExperiments} =
-      ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm", {});
+      ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm");
     try {
       experiment = await PreferenceExperiments.get(experimentName);
     } catch (e) {}

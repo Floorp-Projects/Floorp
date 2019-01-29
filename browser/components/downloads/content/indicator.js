@@ -27,8 +27,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-
 // DownloadsButton
 
 /**

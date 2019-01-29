@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["BrowserTabChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
                                "resource://gre/modules/E10SUtils.jsm");

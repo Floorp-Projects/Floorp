@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function run_test() {
   allow_all_plugins();
   let pluginDefaultState = Services.prefs.getIntPref("plugin.default.state");

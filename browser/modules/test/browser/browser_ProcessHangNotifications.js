@@ -3,7 +3,7 @@
 const { WebExtensionPolicy } =
   Cu.getGlobalForObject(ChromeUtils.import("resource://gre/modules/Services.jsm", {}));
 
-ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+const {UpdateUtils} = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
 
 function promiseNotificationShown(aWindow, aName) {
   return new Promise((resolve) => {

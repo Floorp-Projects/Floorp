@@ -4,11 +4,12 @@
 
 // @flow
 
-import { getCurrentThread, isStepping, getPauseReason } from "../../selectors";
+import { isStepping, getPauseReason } from "../../selectors";
 import { evaluateExpressions } from "../expressions";
 import { inDebuggerEval } from "../../utils/pause";
 
 import type { ThunkArgs } from "../types";
+import type { ResumedPacket } from "../../client/firefox/types";
 
 /**
  * Debugger has just resumed
@@ -16,14 +17,13 @@ import type { ThunkArgs } from "../types";
  * @memberof actions/pause
  * @static
  */
-export function resumed() {
+export function resumed(packet: ResumedPacket) {
   return async ({ dispatch, client, getState }: ThunkArgs) => {
     const why = getPauseReason(getState());
     const wasPausedInEval = inDebuggerEval(why);
     const wasStepping = isStepping(getState());
-    const thread = getCurrentThread(getState());
 
-    dispatch({ type: "RESUME", thread });
+    dispatch({ type: "RESUME", thread: packet.from });
 
     if (!wasStepping && !wasPausedInEval) {
       await dispatch(evaluateExpressions());

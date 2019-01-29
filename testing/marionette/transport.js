@@ -8,19 +8,18 @@
 
 const CC = Components.Constructor;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
+const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 const {
   StreamUtils,
-} = ChromeUtils.import("chrome://marionette/content/stream-utils.js", {});
+} = ChromeUtils.import("chrome://marionette/content/stream-utils.js");
 const {
   BulkPacket,
   JSONPacket,
   Packet,
-} = ChromeUtils.import("chrome://marionette/content/packets.js", {});
+} = ChromeUtils.import("chrome://marionette/content/packets.js");
 const {
   executeSoon,
-} = ChromeUtils.import("chrome://marionette/content/sync.js", {});
+} = ChromeUtils.import("chrome://marionette/content/sync.js");
 
 const flags = {wantVerbose: false, wantLogging: false};
 

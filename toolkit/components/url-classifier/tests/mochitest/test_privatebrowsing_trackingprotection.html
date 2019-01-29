@@ -19,9 +19,9 @@
 var mainWindow = window.docShell.rootTreeItem.domWindow;
 var contentPage = "http://www.itisatrap.org/chrome/toolkit/components/url-classifier/tests/mochitest/classifiedAnnotatedPBFrame.html";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 function testOnWindow(aPrivate) {
   return new Promise((resolve, reject) => {

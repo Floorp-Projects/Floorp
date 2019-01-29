@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
@@ -12,24 +12,24 @@ ChromeUtils.defineModuleGetter(this, "UpdateUtils",
 
 // NB: Eagerly load modules that will be loaded/constructed/initialized in the
 // common case to avoid the overhead of wrapping and detecting lazy loading.
-const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
-const {AboutPreferences} = ChromeUtils.import("resource://activity-stream/lib/AboutPreferences.jsm", {});
-const {DefaultPrefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
-const {ManualMigration} = ChromeUtils.import("resource://activity-stream/lib/ManualMigration.jsm", {});
-const {NewTabInit} = ChromeUtils.import("resource://activity-stream/lib/NewTabInit.jsm", {});
-const {SectionsFeed} = ChromeUtils.import("resource://activity-stream/lib/SectionsManager.jsm", {});
-const {PlacesFeed} = ChromeUtils.import("resource://activity-stream/lib/PlacesFeed.jsm", {});
-const {PrefsFeed} = ChromeUtils.import("resource://activity-stream/lib/PrefsFeed.jsm", {});
-const {Store} = ChromeUtils.import("resource://activity-stream/lib/Store.jsm", {});
-const {SnippetsFeed} = ChromeUtils.import("resource://activity-stream/lib/SnippetsFeed.jsm", {});
-const {SystemTickFeed} = ChromeUtils.import("resource://activity-stream/lib/SystemTickFeed.jsm", {});
-const {TelemetryFeed} = ChromeUtils.import("resource://activity-stream/lib/TelemetryFeed.jsm", {});
-const {FaviconFeed} = ChromeUtils.import("resource://activity-stream/lib/FaviconFeed.jsm", {});
-const {TopSitesFeed} = ChromeUtils.import("resource://activity-stream/lib/TopSitesFeed.jsm", {});
-const {TopStoriesFeed} = ChromeUtils.import("resource://activity-stream/lib/TopStoriesFeed.jsm", {});
-const {HighlightsFeed} = ChromeUtils.import("resource://activity-stream/lib/HighlightsFeed.jsm", {});
-const {ASRouterFeed} = ChromeUtils.import("resource://activity-stream/lib/ASRouterFeed.jsm", {});
-const {DiscoveryStreamFeed} = ChromeUtils.import("resource://activity-stream/lib/DiscoveryStreamFeed.jsm", {});
+const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
+const {AboutPreferences} = ChromeUtils.import("resource://activity-stream/lib/AboutPreferences.jsm");
+const {DefaultPrefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm");
+const {ManualMigration} = ChromeUtils.import("resource://activity-stream/lib/ManualMigration.jsm");
+const {NewTabInit} = ChromeUtils.import("resource://activity-stream/lib/NewTabInit.jsm");
+const {SectionsFeed} = ChromeUtils.import("resource://activity-stream/lib/SectionsManager.jsm");
+const {PlacesFeed} = ChromeUtils.import("resource://activity-stream/lib/PlacesFeed.jsm");
+const {PrefsFeed} = ChromeUtils.import("resource://activity-stream/lib/PrefsFeed.jsm");
+const {Store} = ChromeUtils.import("resource://activity-stream/lib/Store.jsm");
+const {SnippetsFeed} = ChromeUtils.import("resource://activity-stream/lib/SnippetsFeed.jsm");
+const {SystemTickFeed} = ChromeUtils.import("resource://activity-stream/lib/SystemTickFeed.jsm");
+const {TelemetryFeed} = ChromeUtils.import("resource://activity-stream/lib/TelemetryFeed.jsm");
+const {FaviconFeed} = ChromeUtils.import("resource://activity-stream/lib/FaviconFeed.jsm");
+const {TopSitesFeed} = ChromeUtils.import("resource://activity-stream/lib/TopSitesFeed.jsm");
+const {TopStoriesFeed} = ChromeUtils.import("resource://activity-stream/lib/TopStoriesFeed.jsm");
+const {HighlightsFeed} = ChromeUtils.import("resource://activity-stream/lib/HighlightsFeed.jsm");
+const {ASRouterFeed} = ChromeUtils.import("resource://activity-stream/lib/ASRouterFeed.jsm");
+const {DiscoveryStreamFeed} = ChromeUtils.import("resource://activity-stream/lib/DiscoveryStreamFeed.jsm");
 
 const DEFAULT_SITES = new Map([
   // This first item is the global list fallback for any unexpected geos

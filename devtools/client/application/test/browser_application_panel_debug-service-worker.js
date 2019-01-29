@@ -53,7 +53,7 @@ add_task(async function() {
   await resume(debuggerContext);
 
   const workerScript = findSource(debuggerContext, "debug-sw.js");
-  await removeBreakpoint(debuggerContext, workerScript.id, 8, 0);
+  await removeBreakpoint(debuggerContext, workerScript.id, 8);
 
   info("Destroy the worker toolbox");
   await serviceWorkerToolbox.destroy();

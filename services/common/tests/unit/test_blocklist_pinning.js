@@ -2,9 +2,8 @@
 
 const { Constructor: CC } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
-const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", null);
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
@@ -14,7 +13,6 @@ var id = "xpcshell@tests.mozilla.org";
 var appName = "XPCShell";
 var version = "1";
 var platformVersion = "1.9.2";
-ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
 
 updateAppInfo({
   name: appName,

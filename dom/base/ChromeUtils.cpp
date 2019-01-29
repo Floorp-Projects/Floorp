@@ -16,10 +16,12 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/IdleDeadline.h"
 #include "mozilla/dom/JSWindowActorService.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowBinding.h"  // For IdleRequestCallback/Options
@@ -391,19 +393,12 @@ NS_IMPL_ISUPPORTS_INHERITED(IdleDispatchRunnable, IdleRunnable,
                                         registryLocation);
 
   JSContext* cx = aGlobal.Context();
-  JS::Rooted<JS::Value> targetObj(cx);
-  uint8_t optionalArgc;
-  if (aTargetObj.WasPassed()) {
-    targetObj.setObjectOrNull(aTargetObj.Value());
-    optionalArgc = 1;
-  } else {
-    targetObj.setUndefined();
-    optionalArgc = 0;
-  }
 
-  JS::Rooted<JS::Value> retval(cx);
-  nsresult rv = moduleloader->ImportInto(registryLocation, targetObj, cx,
-                                         optionalArgc, &retval);
+  bool ignoreExports = aTargetObj.WasPassed() && !aTargetObj.Value();
+
+  JS::RootedObject global(cx);
+  JS::RootedObject exports(cx);
+  nsresult rv = moduleloader->Import(cx, registryLocation, &global, &exports, ignoreExports);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -416,9 +411,32 @@ NS_IMPL_ISUPPORTS_INHERITED(IdleDispatchRunnable, IdleRunnable,
     return;
   }
 
-  // Now we better have an object.
-  MOZ_ASSERT(retval.isObject());
-  aRetval.set(&retval.toObject());
+  if (ignoreExports) {
+    // Since we're ignoring exported symbols, return the module global rather
+    // than an exports object.
+    //
+    // Note: This behavior is deprecated, since it is incompatible with ES6
+    // module semantics, which don't include any such global object.
+    if (!JS_WrapObject(cx, &global)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+    aRetval.set(global);
+    return;
+  }
+
+  if (aTargetObj.WasPassed()) {
+    if (!JS_AssignObject(cx, aTargetObj.Value(), exports)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+  }
+
+  if (!JS_WrapObject(cx, &exports)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  aRetval.set(exports);
 }
 
 namespace module_getter {

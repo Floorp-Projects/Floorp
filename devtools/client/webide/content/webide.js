@@ -6,7 +6,7 @@
 /* import-globals-from project-panel.js */
 /* import-globals-from runtime-panel.js */
 
-const {loader, require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const {loader, require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 const {Toolbox} = require("devtools/client/framework/toolbox");

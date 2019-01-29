@@ -5,7 +5,7 @@
 
 /* globals TestUtils */
 
-let {ExtensionTestCommon} = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
+let {ExtensionTestCommon} = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm");
 
 ChromeUtils.import("resource://testing-common/ContentTask.jsm", {});
 

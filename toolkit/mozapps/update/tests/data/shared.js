@@ -5,8 +5,8 @@
 /* Shared code for xpcshell and mochitests-chrome */
 /* eslint-disable no-undef */
 
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ctypes",
                                "resource://gre/modules/ctypes.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils",

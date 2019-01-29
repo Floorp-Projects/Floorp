@@ -1,5 +1,5 @@
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AppMenuNotifications",
                                "resource://gre/modules/AppMenuNotifications.jsm");
@@ -647,11 +647,16 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
     let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + detailsURL +
                     updateParams + getVersionParams();
     if (backgroundUpdate) {
-      setUpdateURL(updateURL);
       if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
-        // Don't wait on the deletion of the continueStaging file
-        continueFileHandler(CONTINUE_STAGING);
+        // Since MOZ_TEST_SKIP_UPDATE_STAGE is checked before
+        // MOZ_TEST_SLOW_SKIP_UPDATE_STAGE in updater.cpp this removes the need
+        // for the continue file to continue staging the update.
+        gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
+        registerCleanupFunction(() => {
+          gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
+        });
       }
+      setUpdateURL(updateURL);
       gAUS.checkForBackgroundUpdates();
       await waitForEvent("update-downloaded");
     } else {
@@ -781,11 +786,16 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
     let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + detailsURL +
                     updateParams + getVersionParams();
     if (backgroundUpdate) {
-      setUpdateURL(updateURL);
       if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
-        // Don't wait on the deletion of the continueStaging file
-        continueFileHandler(CONTINUE_STAGING);
+        // Since MOZ_TEST_SKIP_UPDATE_STAGE is checked before
+        // MOZ_TEST_SLOW_SKIP_UPDATE_STAGE in updater.cpp this removes the need
+        // for the continue file to continue staging the update.
+        gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
+        registerCleanupFunction(() => {
+          gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
+        });
       }
+      setUpdateURL(updateURL);
       gAUS.checkForBackgroundUpdates();
       await waitForEvent("update-downloaded");
     } else {

@@ -13,6 +13,7 @@ Array [
     "location": Object {
       "column": 1,
       "line": 1,
+      "sourceId": "foo",
     },
   },
   Object {
@@ -20,6 +21,7 @@ Array [
     "location": Object {
       "column": 3,
       "line": 1,
+      "sourceId": "foo",
     },
   },
 ]
@@ -38,6 +40,7 @@ Array [
     "location": Object {
       "column": 1,
       "line": 1,
+      "sourceId": "foo",
     },
   },
   Object {
@@ -45,6 +48,7 @@ Array [
     "location": Object {
       "column": 3,
       "line": 1,
+      "sourceId": "foo",
     },
   },
 ]
@@ -63,6 +67,7 @@ Array [
     "location": Object {
       "column": 1,
       "line": 1,
+      "sourceId": "foo",
     },
   },
   Object {
@@ -70,6 +75,7 @@ Array [
     "location": Object {
       "column": 3,
       "line": 1,
+      "sourceId": "foo",
     },
   },
 ]
@@ -88,6 +94,7 @@ Array [
     "location": Object {
       "column": 1,
       "line": 1,
+      "sourceId": "foo",
     },
   },
   Object {
@@ -95,6 +102,7 @@ Array [
     "location": Object {
       "column": 5,
       "line": 1,
+      "sourceId": "foo",
     },
   },
 ]

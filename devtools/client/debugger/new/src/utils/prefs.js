@@ -9,7 +9,7 @@ import { isDevelopment } from "devtools-environment";
 import Services from "devtools-services";
 import { asyncStoreHelper } from "./asyncStoreHelper";
 
-const prefsSchemaVersion = "1.0.5";
+const prefsSchemaVersion = "1.0.6";
 
 const pref = Services.pref;
 
@@ -18,6 +18,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.alphabetize-outline", false);
   pref("devtools.debugger.auto-pretty-print", false);
   pref("devtools.source-map.client-service.enabled", true);
+  pref("devtools.chrome.enabled", false);
   pref("devtools.debugger.pause-on-exceptions", false);
   pref("devtools.debugger.pause-on-caught-exceptions", false);
   pref("devtools.debugger.ignore-caught-exceptions", true);
@@ -73,6 +74,7 @@ export const prefs = new PrefsHelper("devtools", {
   alphabetizeOutline: ["Bool", "debugger.alphabetize-outline"],
   autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
   clientSourceMapsEnabled: ["Bool", "source-map.client-service.enabled"],
+  chromeAndExtenstionsEnabled: ["Bool", "chrome.enabled"],
   pauseOnExceptions: ["Bool", "debugger.pause-on-exceptions"],
   pauseOnCaughtExceptions: ["Bool", "debugger.pause-on-caught-exceptions"],
   ignoreCaughtExceptions: ["Bool", "debugger.ignore-caught-exceptions"],

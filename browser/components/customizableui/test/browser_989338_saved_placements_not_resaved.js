@@ -10,7 +10,7 @@ const AREAID = "test-area-saved-earlier";
 var hadSavedState;
 function test() {
   // Hack our way into the module to fake a saved state that isn't there...
-  let backstagePass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
+  let backstagePass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", null);
   hadSavedState = backstagePass.gSavedState != null;
   if (!hadSavedState) {
     backstagePass.gSavedState = {placements: {}};
@@ -41,7 +41,7 @@ function test() {
 }
 
 registerCleanupFunction(function() {
-  let backstagePass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
+  let backstagePass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", null);
   if (!hadSavedState) {
     backstagePass.gSavedState = null;
   } else {

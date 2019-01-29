@@ -5,18 +5,17 @@
 var Cm = Components.manager;
 const URL_HOST = "http://localhost";
 
-var GMPScope = ChromeUtils.import("resource://gre/modules/GMPInstallManager.jsm", {});
+var GMPScope = ChromeUtils.import("resource://gre/modules/GMPInstallManager.jsm", null);
 var GMPInstallManager = GMPScope.GMPInstallManager;
 
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {UpdateUtils} = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+const GMPUtils = ChromeUtils.import("resource://gre/modules/GMPUtils.jsm");
 
-var ProductAddonCheckerScope = ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm", {});
+var ProductAddonCheckerScope = ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm", null);
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 Services.prefs.setBoolPref("media.gmp-manager.updateEnabled", true);
@@ -28,7 +27,6 @@ registerCleanupFunction(() => {
 do_get_profile();
 
 function run_test() {
- ChromeUtils.import("resource://gre/modules/Preferences.jsm");
   Preferences.set("media.gmp.log.dump", true);
   Preferences.set("media.gmp.log.level", 0);
   run_next_test();
@@ -511,7 +509,7 @@ add_task(test_checkForAddons_installAddon.bind(null, "3", true, true));
  * Tests simpleCheckAndInstall when autoupdate is disabled for a GMP
  */
 add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
-  GMPScope.GMPPrefs.setBool(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, GMPScope.OPEN_H264_ID);
+  GMPScope.GMPPrefs.setBool(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, GMPUtils.OPEN_H264_ID);
   let responseXML =
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
@@ -530,7 +528,7 @@ add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
   let result = await installManager.simpleCheckAndInstall();
   Assert.equal(result.status, "nothing-new-to-install");
   Preferences.reset(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
-  GMPScope.GMPPrefs.setBool(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, GMPScope.OPEN_H264_ID);
+  GMPScope.GMPPrefs.setBool(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, GMPUtils.OPEN_H264_ID);
 });
 
 /**

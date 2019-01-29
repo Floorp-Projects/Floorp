@@ -5,9 +5,6 @@
 /* globals Cc, Cu, Ci, Assert, run_next_test, add_test, do_register_cleanup */
 'use strict';
 
-/* globals Services */
-ChromeUtils.import('resource://gre/modules/Services.jsm');
-
 add_test(function test_ipv4_any() {
   let socket = Cc['@mozilla.org/network/udp-socket;1'].createInstance(Ci.nsIUDPSocket);
 

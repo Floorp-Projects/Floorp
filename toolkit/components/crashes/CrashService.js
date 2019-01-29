@@ -6,7 +6,7 @@
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
+const {parseKeyValuePairs} = ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);

@@ -16,7 +16,7 @@ const TOOLKIT_ID            = "toolkit@mozilla.org";
 
 const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
@@ -33,7 +33,7 @@ ChromeUtils.defineModuleGetter(this, "ServiceRequest",
 ChromeUtils.defineModuleGetter(this, "UpdateRDFConverter",
                                "resource://gre/modules/addons/RDFManifestConverter.jsm");
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.update-checker";
 
 // Create a new logger for use by the Addons Update Checker

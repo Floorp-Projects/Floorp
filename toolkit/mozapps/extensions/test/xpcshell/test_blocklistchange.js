@@ -25,8 +25,6 @@
 
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
-
 // Allow insecure updates
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
@@ -352,7 +350,7 @@ add_task(async function update_schema_2() {
 
   await changeXPIDBVersion(100);
   gAppInfo.version = "2";
-  let bsPassBlocklist = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", {});
+  let bsPassBlocklist = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
   Object.defineProperty(bsPassBlocklist, "gAppVersion", {value: "2"});
   await promiseStartupManager();
 
@@ -378,7 +376,7 @@ add_task(async function update_schema_3() {
   await promiseShutdownManager();
   await changeXPIDBVersion(100);
   gAppInfo.version = "2.5";
-  let bsPassBlocklist = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", {});
+  let bsPassBlocklist = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
   Object.defineProperty(bsPassBlocklist, "gAppVersion", {value: "2.5"});
   await promiseStartupManager();
 
@@ -413,7 +411,7 @@ add_task(async function update_schema_5() {
 
   await changeXPIDBVersion(100);
   gAppInfo.version = "1";
-  let bsPassBlocklist = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", {});
+  let bsPassBlocklist = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
   Object.defineProperty(bsPassBlocklist, "gAppVersion", {value: "1"});
   await promiseStartupManager();
 

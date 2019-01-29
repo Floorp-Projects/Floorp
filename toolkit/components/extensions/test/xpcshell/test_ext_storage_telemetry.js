@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
+const {ExtensionStorageIDB} = ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
 
 const HISTOGRAM_JSON_IDS = [
   "WEBEXT_STORAGE_LOCAL_SET_MS", "WEBEXT_STORAGE_LOCAL_GET_MS",

@@ -48,7 +48,7 @@ add_task(async function test_add_link() {
     await spawnPaymentDialogTask(frame, async () => {
       let {
         PaymentTestUtils,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let addressForm = content.document.querySelector("#payer-address-page");
       let title = addressForm.querySelector("h2");
@@ -83,7 +83,7 @@ add_task(async function test_add_link() {
     await spawnPaymentDialogTask(frame, async () => {
       let {
         PaymentTestUtils,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       let addressForm = content.document.querySelector("#shipping-address-page");
       let title = addressForm.querySelector("address-form h2");

@@ -63,8 +63,8 @@ describe("breakpoints", () => {
     };
     await dispatch(actions.newSource(makeSource("a")));
     await dispatch(actions.loadSourceText(makeSource("a")));
-    await dispatch(actions.addBreakpoint(loc1));
-    await dispatch(actions.disableBreakpoint(loc1));
+    const { breakpoint } = await dispatch(actions.addBreakpoint(loc1));
+    await dispatch(actions.disableBreakpoint(breakpoint));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
@@ -140,7 +140,9 @@ describe("breakpoints", () => {
     await dispatch(actions.addBreakpoint(loc1));
     await dispatch(actions.addBreakpoint(loc2));
 
-    await dispatch(actions.removeBreakpoint(loc1));
+    await dispatch(
+      actions.removeBreakpoint(selectors.getBreakpoint(getState(), loc1))
+    );
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
   });
@@ -166,10 +168,10 @@ describe("breakpoints", () => {
     await dispatch(actions.newSource(makeSource("b")));
     await dispatch(actions.loadSourceText(makeSource("b")));
 
-    await dispatch(actions.addBreakpoint(loc1));
+    const { breakpoint } = await dispatch(actions.addBreakpoint(loc1));
     await dispatch(actions.addBreakpoint(loc2));
 
-    await dispatch(actions.disableBreakpoint(loc1));
+    await dispatch(actions.disableBreakpoint(breakpoint));
 
     expect(selectors.getBreakpoint(getState(), loc1).disabled).toBe(true);
   });
@@ -185,12 +187,12 @@ describe("breakpoints", () => {
     await dispatch(actions.newSource(makeSource("a")));
     await dispatch(actions.loadSourceText(makeSource("a")));
 
-    await dispatch(actions.addBreakpoint(loc));
-    await dispatch(actions.disableBreakpoint(loc));
+    const { breakpoint } = await dispatch(actions.addBreakpoint(loc));
+    await dispatch(actions.disableBreakpoint(breakpoint));
 
     expect(selectors.getBreakpoint(getState(), loc).disabled).toBe(true);
 
-    await dispatch(actions.enableBreakpoint(loc));
+    await dispatch(actions.enableBreakpoint(breakpoint));
 
     expect(selectors.getBreakpoint(getState(), loc).disabled).toBe(false);
   });
@@ -231,6 +233,9 @@ describe("breakpoints", () => {
   });
 
   it("should toggle a breakpoint at a location", async () => {
+    const location = { sourceId: "foo1", line: 5 };
+    const getBp = () => selectors.getBreakpoint(getState(), location);
+
     const { dispatch, getState } = createStore(simpleMockThreadClient);
 
     await dispatch(actions.newSource(makeSource("foo1")));
@@ -238,38 +243,17 @@ describe("breakpoints", () => {
 
     await dispatch(actions.selectLocation({ sourceId: "foo1", line: 1 }));
 
-    await dispatch(actions.toggleBreakpoint(5));
-    await dispatch(actions.toggleBreakpoint(6, 1));
-    expect(
-      selectors.getBreakpoint(getState(), { sourceId: "foo1", line: 5 })
-        .disabled
-    ).toBe(false);
+    await dispatch(actions.toggleBreakpointAtLine(5));
+    expect(getBp().disabled).toBe(false);
 
-    expect(
-      selectors.getBreakpoint(getState(), {
-        sourceId: "foo1",
-        line: 6,
-        column: 1
-      }).disabled
-    ).toBe(false);
-
-    await dispatch(actions.toggleBreakpoint(5));
-    await dispatch(actions.toggleBreakpoint(6, 1));
-
-    expect(
-      selectors.getBreakpoint(getState(), { sourceId: "foo1", line: 5 })
-    ).toBe(undefined);
-
-    expect(
-      selectors.getBreakpoint(getState(), {
-        sourceId: "foo1",
-        line: 6,
-        column: 1
-      })
-    ).toBe(undefined);
+    await dispatch(actions.toggleBreakpointAtLine(5));
+    expect(getBp()).toBe(undefined);
   });
 
   it("should disable/enable a breakpoint at a location", async () => {
+    const location = { sourceId: "foo1", line: 5 };
+    const getBp = () => selectors.getBreakpoint(getState(), location);
+
     const { dispatch, getState } = createStore(simpleMockThreadClient);
 
     await dispatch(actions.newSource(makeSource("foo1")));
@@ -277,36 +261,10 @@ describe("breakpoints", () => {
 
     await dispatch(actions.selectLocation({ sourceId: "foo1", line: 1 }));
 
-    await dispatch(actions.toggleBreakpoint(5));
-    await dispatch(actions.toggleBreakpoint(6, 1));
-    expect(
-      selectors.getBreakpoint(getState(), { sourceId: "foo1", line: 5 })
-        .disabled
-    ).toBe(false);
-
-    expect(
-      selectors.getBreakpoint(getState(), {
-        sourceId: "foo1",
-        line: 6,
-        column: 1
-      }).disabled
-    ).toBe(false);
-
-    await dispatch(actions.toggleDisabledBreakpoint(5));
-    await dispatch(actions.toggleDisabledBreakpoint(6, 1));
-
-    expect(
-      selectors.getBreakpoint(getState(), { sourceId: "foo1", line: 5 })
-        .disabled
-    ).toBe(true);
-
-    expect(
-      selectors.getBreakpoint(getState(), {
-        sourceId: "foo1",
-        line: 6,
-        column: 1
-      }).disabled
-    ).toBe(true);
+    await dispatch(actions.toggleBreakpointAtLine(5));
+    expect(getBp().disabled).toBe(false);
+    await dispatch(actions.toggleDisabledBreakpoint(getBp()));
+    expect(getBp().disabled).toBe(true);
   });
 
   it("should set the breakpoint condition", async () => {
@@ -323,16 +281,18 @@ describe("breakpoints", () => {
 
     await dispatch(actions.addBreakpoint(loc));
 
-    expect(selectors.getBreakpoint(getState(), loc).condition).toBe(null);
+    expect(selectors.getBreakpoint(getState(), loc).options.condition).toBe(
+      null
+    );
 
     await dispatch(
-      actions.setBreakpointCondition(loc, {
+      actions.setBreakpointOptions(loc, {
         condition: "const foo = 0",
         getTextForLine: () => {}
       })
     );
 
-    expect(selectors.getBreakpoint(getState(), loc).condition).toBe(
+    expect(selectors.getBreakpoint(getState(), loc).options.condition).toBe(
       "const foo = 0"
     );
   });
@@ -347,20 +307,22 @@ describe("breakpoints", () => {
     };
 
     await dispatch(actions.newSource(makeSource("a")));
-    await dispatch(actions.addBreakpoint(loc));
-    await dispatch(actions.disableBreakpoint(loc));
+    const { breakpoint } = await dispatch(actions.addBreakpoint(loc));
+    await dispatch(actions.disableBreakpoint(breakpoint));
 
-    expect(selectors.getBreakpoint(getState(), loc).condition).toBe(null);
+    expect(selectors.getBreakpoint(getState(), loc).options.condition).toBe(
+      null
+    );
 
     await dispatch(
-      actions.setBreakpointCondition(loc, {
+      actions.setBreakpointOptions(loc, {
         condition: "const foo = 0",
         getTextForLine: () => {}
       })
     );
-    const breakpoint = selectors.getBreakpoint(getState(), loc);
-    expect(breakpoint.disabled).toBe(false);
-    expect(breakpoint.condition).toBe("const foo = 0");
+    const newBreakpoint = selectors.getBreakpoint(getState(), loc);
+    expect(newBreakpoint.disabled).toBe(false);
+    expect(newBreakpoint.options.condition).toBe("const foo = 0");
   });
 
   it("should remap breakpoints on pretty print", async () => {

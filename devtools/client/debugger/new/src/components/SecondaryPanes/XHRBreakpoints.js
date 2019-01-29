@@ -194,14 +194,16 @@ class XHRBreakpoints extends Component<Props, State> {
         title={path}
         onDoubleClick={(items, options) => this.editExpression(index)}
       >
-        <input
-          type="checkbox"
-          className="xhr-checkbox"
-          checked={!disabled}
-          onChange={() => this.handleCheckbox(index)}
-          onClick={ev => ev.stopPropagation()}
-        />
-        <div className="xhr-label">{text}</div>
+        <label>
+          <input
+            type="checkbox"
+            className="xhr-checkbox"
+            checked={!disabled}
+            onChange={() => this.handleCheckbox(index)}
+            onClick={ev => ev.stopPropagation()}
+          />
+          <div className="xhr-label">{text}</div>
+        </label>
         <div className="xhr-container__close-btn">
           <CloseButton handleClick={e => removeXHRBreakpoint(index)} />
         </div>

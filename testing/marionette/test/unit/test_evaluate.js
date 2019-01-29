@@ -1,5 +1,5 @@
-const {element, WebElement} = ChromeUtils.import("chrome://marionette/content/element.js", {});
-const {evaluate} = ChromeUtils.import("chrome://marionette/content/evaluate.js", {});
+const {element, WebElement} = ChromeUtils.import("chrome://marionette/content/element.js");
+const {evaluate} = ChromeUtils.import("chrome://marionette/content/evaluate.js");
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const XBLNS = "http://www.mozilla.org/xbl";

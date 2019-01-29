@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import {
   formatCopyName,
   formatDisplayName,
@@ -20,7 +22,7 @@ describe("formatCopyName", () => {
       }
     };
 
-    expect(formatCopyName(frame)).toEqual("child (todo-view.js#12)");
+    expect(formatCopyName(frame, L10N)).toEqual("child (todo-view.js#12)");
   });
 });
 
@@ -34,7 +36,7 @@ describe("formatting display names", () => {
       }
     };
 
-    expect(formatDisplayName(frame)).toEqual("Create Class");
+    expect(formatDisplayName(frame, undefined, L10N)).toEqual("Create Class");
   });
 
   it("shortens an anonymous function", () => {
@@ -45,7 +47,7 @@ describe("formatting display names", () => {
       }
     };
 
-    expect(formatDisplayName(frame)).toEqual("baz");
+    expect(formatDisplayName(frame, undefined, L10N)).toEqual("baz");
   });
 
   it("does not truncates long function names", () => {
@@ -56,7 +58,7 @@ describe("formatting display names", () => {
       }
     };
 
-    expect(formatDisplayName(frame)).toEqual(
+    expect(formatDisplayName(frame, undefined, L10N)).toEqual(
       "bazbazbazbazbazbazbazbazbazbazbazbazbaz"
     );
   });
@@ -70,7 +72,7 @@ describe("formatting display names", () => {
       }
     };
 
-    expect(formatDisplayName(frame)).toEqual("originalFn");
+    expect(formatDisplayName(frame, undefined, L10N)).toEqual("originalFn");
   });
 
   it("returns anonymous when displayName is undefined", () => {

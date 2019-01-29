@@ -9,10 +9,10 @@
 
 var EXPORTED_SYMBOLS = ["FxAccountsProfileClient", "FxAccountsProfileClientError"];
 
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://services-common/rest.js");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {ERRNO_NETWORK, ERRNO_PARSE, ERRNO_UNKNOWN_ERROR, ERROR_CODE_METHOD_NOT_ALLOWED, ERROR_MSG_METHOD_NOT_ALLOWED, ERROR_NETWORK, ERROR_PARSE, ERROR_UNKNOWN, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {fxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 

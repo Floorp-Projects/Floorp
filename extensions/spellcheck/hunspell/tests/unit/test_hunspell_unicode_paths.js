@@ -1,7 +1,7 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 Cu.importGlobalProperties(["TextEncoder"]);
 

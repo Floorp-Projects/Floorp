@@ -35,7 +35,7 @@ const isMacOS = appinfo.OS === "Darwin";
 
 const horizontalLayoutBreakpoint = window.matchMedia("(min-width: 800px)");
 const verticalLayoutBreakpoint = window.matchMedia(
-  "(min-width: 10px) and (max-width: 800px)"
+  "(min-width: 10px) and (max-width: 799px)"
 );
 
 import "./variables.css";

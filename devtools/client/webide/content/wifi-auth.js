@@ -5,7 +5,7 @@
 "use strict";
 
 const { require } =
-  ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const QR = require("devtools/shared/qrcode/index");
 
 window.addEventListener("load", function() {

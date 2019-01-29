@@ -50,7 +50,7 @@ type Props = {
   removeBreakpoints: typeof actions.removeBreakpoints,
   removeAllBreakpoints: typeof actions.removeAllBreakpoints,
   disableBreakpoint: typeof actions.disableBreakpoint,
-  setBreakpointCondition: typeof actions.setBreakpointCondition,
+  setBreakpointOptions: typeof actions.setBreakpointOptions,
   toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
   toggleBreakpoints: typeof actions.toggleBreakpoints,
   toggleDisabledBreakpoint: typeof actions.toggleDisabledBreakpoint,
@@ -70,7 +70,7 @@ class Breakpoint extends PureComponent<Props> {
 
   onDoubleClick = () => {
     const { breakpoint, openConditionalPanel } = this.props;
-    if (breakpoint.condition) {
+    if (breakpoint.options.condition) {
       openConditionalPanel(this.selectedLocation);
     }
   };
@@ -82,17 +82,17 @@ class Breakpoint extends PureComponent<Props> {
   };
 
   removeBreakpoint = event => {
-    const { removeBreakpoint } = this.props;
+    const { removeBreakpoint, breakpoint } = this.props;
     event.stopPropagation();
-    removeBreakpoint(this.selectedLocation);
+    removeBreakpoint(breakpoint);
   };
 
   handleBreakpointCheckbox = () => {
     const { breakpoint, enableBreakpoint, disableBreakpoint } = this.props;
     if (breakpoint.disabled) {
-      enableBreakpoint(this.selectedLocation);
+      enableBreakpoint(breakpoint);
     } else {
-      disableBreakpoint(this.selectedLocation);
+      disableBreakpoint(breakpoint);
     }
   };
 
@@ -122,7 +122,10 @@ class Breakpoint extends PureComponent<Props> {
 
   getBreakpointText() {
     const { breakpoint, selectedSource } = this.props;
-    return breakpoint.condition || getSelectedText(breakpoint, selectedSource);
+    return (
+      breakpoint.options.condition ||
+      getSelectedText(breakpoint, selectedSource)
+    );
   }
 
   highlightText = memoize(
@@ -150,8 +153,8 @@ class Breakpoint extends PureComponent<Props> {
           breakpoint,
           paused: this.isCurrentlyPausedAtBreakpoint(),
           disabled: breakpoint.disabled,
-          "is-conditional": !!breakpoint.condition,
-          log: breakpoint.log
+          "is-conditional": !!breakpoint.options.condition,
+          log: !!breakpoint.options.logValue
         })}
         onClick={this.selectBreakpoint}
         onDoubleClick={this.onDoubleClick}
@@ -214,7 +217,7 @@ export default connect(
     removeAllBreakpoints: actions.removeAllBreakpoints,
     disableBreakpoint: actions.disableBreakpoint,
     selectSpecificLocation: actions.selectSpecificLocation,
-    setBreakpointCondition: actions.setBreakpointCondition,
+    setBreakpointOptions: actions.setBreakpointOptions,
     toggleAllBreakpoints: actions.toggleAllBreakpoints,
     toggleBreakpoints: actions.toggleBreakpoints,
     toggleDisabledBreakpoint: actions.toggleDisabledBreakpoint,

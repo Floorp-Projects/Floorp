@@ -4,17 +4,17 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.import("chrome://marionette/content/assert.js");
+const {assert} = ChromeUtils.import("chrome://marionette/content/assert.js");
 const {
   InvalidArgumentError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+} = ChromeUtils.import("chrome://marionette/content/error.js");
 const {
   pprint,
-} = ChromeUtils.import("chrome://marionette/content/format.js", {});
+} = ChromeUtils.import("chrome://marionette/content/format.js");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 

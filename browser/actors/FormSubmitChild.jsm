@@ -10,9 +10,9 @@
 
 var EXPORTED_SYMBOLS = ["FormSubmitChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {BrowserUtils} = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class FormSubmitChild extends ActorChild {
   constructor(dispatcher) {

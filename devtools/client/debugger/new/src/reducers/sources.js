@@ -15,7 +15,8 @@ import {
   underRoot,
   getRelativeUrl,
   isGenerated,
-  isOriginal as isOriginalSource
+  isOriginal as isOriginalSource,
+  isUrlExtension
 } from "../utils/source";
 
 import { originalToGeneratedId } from "devtools-source-map";
@@ -25,11 +26,13 @@ import type { Source, SourceId, SourceLocation, Thread } from "../types";
 import type { PendingSelectedLocation, Selector } from "./types";
 import type { Action, DonePromiseAction, FocusItem } from "../actions/types";
 import type { LoadSourceAction } from "../actions/types/SourceAction";
+import { omitBy, mapValues } from "lodash";
 
 export type SourcesMap = { [string]: Source };
 export type SourcesMapByThread = { [string]: SourcesMap };
 
 type UrlsMap = { [string]: SourceId[] };
+type GetRelativeSourcesSelector = OuterState => SourcesMapByThread;
 
 export type SourcesState = {
   sources: SourcesMap,
@@ -38,6 +41,7 @@ export type SourcesState = {
   pendingSelectedLocation?: PendingSelectedLocation,
   selectedLocation: ?SourceLocation,
   projectDirectoryRoot: string,
+  chromeAndExtenstionsEnabled: boolean,
   focusedItem: ?FocusItem
 };
 
@@ -49,6 +53,7 @@ export function initialSourcesState(): SourcesState {
     selectedLocation: undefined,
     pendingSelectedLocation: prefs.pendingSelectedLocation,
     projectDirectoryRoot: prefs.projectDirectoryRoot,
+    chromeAndExtenstionsEnabled: prefs.chromeAndExtenstionsEnabled,
     focusedItem: null
   };
 }
@@ -61,6 +66,7 @@ export function createSource(source: Object): Source {
     isBlackBoxed: false,
     isPrettyPrinted: false,
     isWasm: false,
+    isExtension: (source.url && isUrlExtension(source.url)) || false,
     text: undefined,
     contentType: "",
     error: undefined,
@@ -551,9 +557,26 @@ export function getProjectDirectoryRoot(state: OuterState): string {
   return state.sources.projectDirectoryRoot;
 }
 
-export function getRelativeSources(state: OuterState): SourcesMapByThread {
+function getAllRelativeSources(state: OuterState): SourcesMapByThread {
   return state.sources.relativeSources;
 }
+
+function getChromeAndExtenstionsEnabled(state: OuterState) {
+  return state.sources.chromeAndExtenstionsEnabled;
+}
+
+export const getRelativeSources: GetRelativeSourcesSelector = createSelector(
+  getChromeAndExtenstionsEnabled,
+  getAllRelativeSources,
+  (chromeAndExtenstionsEnabled, relativeSources) => {
+    if (!chromeAndExtenstionsEnabled) {
+      return mapValues(relativeSources, threadSources => {
+        return omitBy(threadSources, source => source.isExtension);
+      });
+    }
+    return relativeSources;
+  }
+);
 
 export function getRelativeSourcesForThread(
   state: OuterState,

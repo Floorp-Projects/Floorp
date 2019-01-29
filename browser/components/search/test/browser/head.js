@@ -95,8 +95,6 @@ function promiseNewEngine(basename, options = {}) {
 
 let promiseStateChangeFrameScript = "data:," + encodeURIComponent(`(${
   () => {
-    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
     /* globals docShell, sendAsyncMessage */
 
     const global = this;

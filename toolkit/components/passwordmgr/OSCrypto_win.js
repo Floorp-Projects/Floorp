@@ -4,9 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 ChromeUtils.defineModuleGetter(this, "ctypes", "resource://gre/modules/ctypes.jsm");
 
 const FLAGS_NOT_SET = 0;

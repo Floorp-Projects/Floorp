@@ -4,9 +4,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {LogManager} = ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
 
 ChromeUtils.defineModuleGetter(
   this, "CanonicalJSON", "resource://gre/modules/CanonicalJSON.jsm");

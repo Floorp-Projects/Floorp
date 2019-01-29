@@ -3,9 +3,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
-ChromeUtils.import("resource://formautofill/OSKeyStore.jsm");
-ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm");
+const {CreditCard} = ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
+const {OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm");
+const {OSKeyStoreTestUtils} = ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm");
 
 let oldGetters = {};
 let gFakeLoggedIn = true;

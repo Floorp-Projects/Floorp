@@ -18,8 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800386
   <script type="application/javascript">
   <![CDATA[
   /** Test for Bug 800386 **/
-  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
   SimpleTest.waitForExplicitFinish();
 
   var triedForwarding = false;

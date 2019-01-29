@@ -33,7 +33,7 @@ var EXPORTED_SYMBOLS = ["SessionStartup"];
 
 /* :::::::: Constants and Helpers ::::::::::::::: */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "SessionFile",
   "resource:///modules/sessionstore/SessionFile.jsm");

@@ -3,12 +3,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-var {AccountState} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", {});
+const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
+const {ERRNO_DEVICE_SESSION_CONFLICT, ERRNO_TOO_MANY_CLIENT_REQUESTS, ERRNO_UNKNOWN_DEVICE} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+var {AccountState} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", null);
 
 initTestLogging("Trace");
 

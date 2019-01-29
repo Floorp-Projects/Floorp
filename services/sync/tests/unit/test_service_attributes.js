@@ -1,10 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://testing-common/services/sync/fakeservices.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {FakeGUIDService} = ChromeUtils.import("resource://testing-common/services/sync/fakeservices.js");
 
 add_task(async function test_urls() {
   _("URL related Service properties correspond to preference settings.");

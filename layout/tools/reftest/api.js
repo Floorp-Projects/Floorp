@@ -4,8 +4,9 @@
 
 const Cm = Components.manager;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var OnRefTestLoad, OnRefTestUnload;
 
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "@mozilla.org/network/protocol;1?name=resource",
@@ -73,7 +74,7 @@ this.reftest = class extends ExtensionAPI {
     }
 
     if (Services.appinfo.OS == "Android") {
-      ChromeUtils.import("resource://reftest/reftest.jsm");
+      ({OnRefTestLoad, OnRefTestUnload} = ChromeUtils.import("resource://reftest/reftest.jsm"));
       if (win) {
         startAndroid(win);
       } else {
@@ -91,7 +92,7 @@ this.reftest = class extends ExtensionAPI {
       // Close pre-existing window
       win.close();
 
-      ChromeUtils.import("resource://reftest/PerTestCoverageUtils.jsm");
+      const {PerTestCoverageUtils} = ChromeUtils.import("resource://reftest/PerTestCoverageUtils.jsm");
       if (PerTestCoverageUtils.enabled) {
         // In PerTestCoverage mode, wait for the process belonging to the window we just closed
         // to be terminated, to avoid its shutdown interfering when we reset the counters.

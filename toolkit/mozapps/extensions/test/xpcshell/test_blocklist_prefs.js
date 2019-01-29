@@ -7,7 +7,6 @@
 
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 var testserver = createHttpServer({hosts: ["example.com"]});
 gPort = testserver.identity.primaryPort;
 

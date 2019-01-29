@@ -5,10 +5,9 @@
 
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://testing-common/AppData.jsm", this);
 ChromeUtils.import("resource://testing-common/CrashManagerTest.jsm", this);
-var bsp = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", {});
+var bsp = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", null);
 
 add_task(async function test_instantiation() {
   Assert.ok(!bsp.gCrashManager, "CrashManager global instance not initially defined.");

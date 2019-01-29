@@ -7,15 +7,13 @@
 /* import-globals-from ../../../../toolkit/mozapps/preferences/fontbuilder.js */
 /* import-globals-from ../../../base/content/aboutDialog-appUpdater.js */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Downloads.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource:///modules/ShellService.jsm");
-ChromeUtils.import("resource:///modules/TransientPrefs.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
-ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
-ChromeUtils.import("resource://gre/modules/Localization.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Downloads} = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+var {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+var {TransientPrefs} = ChromeUtils.import("resource:///modules/TransientPrefs.jsm");
+var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var {L10nRegistry} = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
+var {Localization} = ChromeUtils.import("resource://gre/modules/Localization.jsm");
 ChromeUtils.defineModuleGetter(this, "CloudStorage",
   "resource://gre/modules/CloudStorage.jsm");
 ChromeUtils.defineModuleGetter(this, "SelectionChangedMenulist",
@@ -393,7 +391,7 @@ var gMainPane = {
       let row = document.getElementById("translationBox");
       row.removeAttribute("hidden");
       // Showing attribution only for Bing Translator.
-      ChromeUtils.import("resource:///modules/translation/Translation.jsm");
+      var {Translation} = ChromeUtils.import("resource:///modules/translation/Translation.jsm");
       if (Translation.translationEngine == "Bing") {
         document.getElementById("bingAttribution").removeAttribute("hidden");
       }
@@ -1110,7 +1108,7 @@ var gMainPane = {
   },
 
   openTranslationProviderAttribution() {
-    ChromeUtils.import("resource:///modules/translation/Translation.jsm");
+    var {Translation} = ChromeUtils.import("resource:///modules/translation/Translation.jsm");
     Translation.openProviderAttribution();
   },
 

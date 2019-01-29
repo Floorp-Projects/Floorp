@@ -1,7 +1,5 @@
 "use strict";
 
-ChromeUtils.import('resource://gre/modules/Services.jsm');
-
 add_task(function test_extractScheme(){
   equal(Services.io.extractScheme("HtTp://example.com"), "http");
   Assert.throws(() => { Services.io.extractScheme("://example.com"); },

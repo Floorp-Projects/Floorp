@@ -3,7 +3,7 @@
 */
 "use strict";
 
-ChromeUtils.import("resource://services-sync/main.js");
+const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
 
 Services.prefs.setCharPref("services.sync.username", "someone@somewhere.com");
 Services.prefs.setCharPref("services.sync.registerEngines", "");

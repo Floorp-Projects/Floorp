@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React from "react";
 import { shallow } from "enzyme";
 import Editor from "../index";
@@ -12,7 +14,6 @@ function generateDefaults(overrides) {
     toggleBreakpoint: jest.fn(),
     updateViewport: jest.fn(),
     toggleDisabledBreakpoint: jest.fn(),
-    addOrToggleDisabledBreakpoint: jest.fn(),
     ...overrides
   };
 }
@@ -66,6 +67,7 @@ function render(overrides = {}) {
   const props = generateDefaults(overrides);
   const mockEditor = createMockEditor();
 
+  // $FlowIgnore
   const component = shallow(<Editor.WrappedComponent {...props} />, {
     context: {
       shortcuts: { on: jest.fn() }

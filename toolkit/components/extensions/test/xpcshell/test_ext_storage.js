@@ -83,7 +83,7 @@ add_task(async function test_local_cache_invalidation() {
 
 add_task(async function test_single_initialization() {
   // Grab access to this via the backstage pass to check if we're calling openConnection too often.
-  const {FirefoxAdapter} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSync.jsm", {});
+  const {FirefoxAdapter} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSync.jsm", null);
   const origOpenConnection = FirefoxAdapter.openConnection;
   let callCount = 0;
   FirefoxAdapter.openConnection = function(...args) {

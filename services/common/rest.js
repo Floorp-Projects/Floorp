@@ -8,13 +8,11 @@ var EXPORTED_SYMBOLS = [
   "TokenAuthenticatedRESTRequest",
 ];
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 
 ChromeUtils.defineModuleGetter(this, "CryptoUtils",
                                "resource://services-crypto/utils.js");

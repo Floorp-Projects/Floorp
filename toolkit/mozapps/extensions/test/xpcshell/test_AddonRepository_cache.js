@@ -4,8 +4,6 @@
 
 // Tests caching in AddonRepository.jsm
 
-ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
-
 var gServer;
 
 const HOST      = "example.com";

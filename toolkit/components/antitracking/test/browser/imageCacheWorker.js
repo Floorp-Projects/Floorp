@@ -1,7 +1,5 @@
 /* import-globals-from head.js */
 /* import-globals-from browser_imageCache4.js */
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 AntiTracking.runTest("Image cache - should load the image three times.",
   // blocking callback
   async _ => {

@@ -4,13 +4,12 @@
 
 const EXPORTED_SYMBOLS = ["SendTab", "FxAccountsCommands"];
 
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {COMMAND_SENDTAB, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 ChromeUtils.defineModuleGetter(this, "PushCrypto",
   "resource://gre/modules/PushCrypto.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://services-common/observers.js");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Observers} = ChromeUtils.import("resource://services-common/observers.js");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BulkKeyBundle: "resource://services-sync/keys.js",

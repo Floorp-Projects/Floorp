@@ -26,6 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789773
    */
   SimpleTest.waitForExplicitFinish();
 
+  const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
   var calledListenerForBrowserChromeURL = false;
   var testProgressListener = {
     START_DOC: Ci.nsIWebProgressListener.STATE_START | Ci.nsIWebProgressListener.STATE_IS_DOCUMENT,

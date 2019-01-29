@@ -5,7 +5,7 @@
  * Tests covering nsIBrowserSearchService::addEngine's optional callback.
  */
 
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+const {MockRegistrar} = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
 "use strict";
 

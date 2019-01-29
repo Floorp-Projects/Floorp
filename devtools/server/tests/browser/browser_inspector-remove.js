@@ -54,7 +54,7 @@ add_task(async function testRemoveSubtree() {
   await ContentTask.spawn(gBrowser.selectedBrowser,
     [siblings.previousSibling.actorID, siblings.nextSibling.actorID],
     function([previousActorID, nextActorID]) {
-      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
       const { DebuggerServer } = require("devtools/server/main");
 
       // Convert actorID to current compartment string otherwise

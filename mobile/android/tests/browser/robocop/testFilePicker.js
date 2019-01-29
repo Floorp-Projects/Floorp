@@ -5,7 +5,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_test(function filepicker_open() {
   let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "Utils", () => {
@@ -69,7 +69,7 @@ WeaveService.prototype = {
                                           Ci.nsISupportsWeakReference]),
 
   ensureLoaded() {
-    ChromeUtils.import("resource://services-sync/main.js");
+    const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
 
     // Side-effect of accessing the service is that it is instantiated.
     Weave.Service;
@@ -102,7 +102,7 @@ WeaveService.prototype = {
           // accordingly. We could potentially copy code performed by
           // this check into this file if our above code is yielding too
           // many false positives.
-          ChromeUtils.import("resource://services-sync/main.js");
+          var {Weave} = ChromeUtils.import("resource://services-sync/main.js");
           isConfigured = Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED;
         }
         let getHistogramById = Services.telemetry.getHistogramById;
