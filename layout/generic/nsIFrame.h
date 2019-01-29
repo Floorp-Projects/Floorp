@@ -4528,13 +4528,10 @@ class nsIFrame : public nsQueryFrame {
   static void IndentBy(FILE* out, int32_t aIndent) {
     while (--aIndent >= 0) fputs("  ", out);
   }
-  void ListTag(FILE* out) const { ListTag(out, this); }
-  static void ListTag(FILE* out, const nsIFrame* aFrame) {
-    fputs(aFrame->ListTag().get(), out);
-  }
+  void ListTag(FILE* out) const { fputs(ListTag().get(), out); }
   static void ListTag(FILE* out, const nsFrameList& aFrameList) {
     for (nsIFrame* frame : aFrameList) {
-      ListTag(out, frame);
+      frame->ListTag(out);
     }
   }
   nsAutoCString ListTag() const;

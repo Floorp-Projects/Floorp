@@ -471,7 +471,7 @@ void BlockReflowInput::RecoverFloats(nsLineList::iterator aLine,
         nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
         printf("RecoverFloats: tIB=%d,%d (%d,%d) ", tI, tB, mFloatManagerI,
                mFloatManagerB);
-        nsFrame::ListTag(stdout, floatFrame);
+        floatFrame->ListTag(stdout);
         LogicalRect region =
             nsFloatManager::GetRegionFor(wm, floatFrame, ContainerSize());
         printf(" aDeltaBCoord=%d region={%d,%d,%d,%d}\n", aDeltaBCoord,
@@ -1023,7 +1023,7 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
   if (nsBlockFrame::gNoisyFloatManager) {
     nscoord tI, tB;
     FloatManager()->GetTranslation(tI, tB);
-    nsIFrame::ListTag(stdout, mBlock);
+    mBlock->ListTag(stdout);
     printf(": FlowAndPlaceFloat: AddFloat: tIB=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
            tI, tB, mFloatManagerI, mFloatManagerB, region.IStart(wm),
            region.BStart(wm), region.ISize(wm), region.BSize(wm));
@@ -1033,7 +1033,7 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
     nsRect r = aFloat->GetRect();
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     printf("placed float: ");
-    nsFrame::ListTag(stdout, aFloat);
+    aFloat->ListTag(stdout);
     printf(" %d,%d,%d,%d\n", r.x, r.y, r.width, r.height);
   }
 #endif
@@ -1074,7 +1074,7 @@ void BlockReflowInput::PlaceBelowCurrentLineFloats(nsLineBox* aLine) {
     if (nsBlockFrame::gNoisyReflow) {
       nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
       printf("placing bcl float: ");
-      nsFrame::ListTag(stdout, fc->mFloat);
+      fc->mFloat->ListTag(stdout);
       printf("\n");
     }
 #endif
