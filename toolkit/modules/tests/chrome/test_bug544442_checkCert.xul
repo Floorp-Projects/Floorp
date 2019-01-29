@@ -19,7 +19,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-ChromeUtils.import("resource://gre/modules/CertUtils.jsm");
+const {CertUtils} = ChromeUtils.import("resource://gre/modules/CertUtils.jsm");
 
 function testStart() {
   ok(true, "Entering testStart");

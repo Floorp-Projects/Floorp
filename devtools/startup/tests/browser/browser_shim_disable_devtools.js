@@ -6,8 +6,8 @@
 
 /* eslint-env browser */
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-const { CustomizableUI } = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { CustomizableUI } = ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
 const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
 

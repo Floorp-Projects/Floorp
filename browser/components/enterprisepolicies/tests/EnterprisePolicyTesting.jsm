@@ -4,10 +4,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://testing-common/Assert.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm");
 ChromeUtils.defineModuleGetter(this, "FileTestUtils",
                                "resource://testing-common/FileTestUtils.jsm");
 
@@ -43,7 +43,7 @@ var EnterprisePolicyTesting = {
     Cu.unload("resource:///modules/policies/schema.jsm");
 
     if (customSchema) {
-      let schemaModule = ChromeUtils.import("resource:///modules/policies/schema.jsm", {});
+      let schemaModule = ChromeUtils.import("resource:///modules/policies/schema.jsm", null);
       schemaModule.schema = customSchema;
     }
 
@@ -85,7 +85,7 @@ var PoliciesPrefTracker = {
   _originalValues: new Map(),
 
   start() {
-    let PoliciesBackstage = ChromeUtils.import("resource:///modules/policies/Policies.jsm", {});
+    let PoliciesBackstage = ChromeUtils.import("resource:///modules/policies/Policies.jsm", null);
     this._originalFunc = PoliciesBackstage.setDefaultPref;
     PoliciesBackstage.setDefaultPref = this.hoistedSetDefaultPref.bind(this);
   },
@@ -93,7 +93,7 @@ var PoliciesPrefTracker = {
   stop() {
     this.restoreDefaultValues();
 
-    let PoliciesBackstage = ChromeUtils.import("resource:///modules/policies/Policies.jsm", {});
+    let PoliciesBackstage = ChromeUtils.import("resource:///modules/policies/Policies.jsm", null);
     PoliciesBackstage.setDefaultPref = this._originalFunc;
     this._originalFunc = null;
   },

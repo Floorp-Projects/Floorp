@@ -187,7 +187,7 @@ export function getLocationsInViewport({ codeMirror }: Object) {
 
 export function markText(
   { codeMirror }: Object,
-  className: String,
+  className: string,
   { start, end }: EditorRange
 ) {
   return codeMirror.markText(
@@ -208,7 +208,7 @@ export function lineAtHeight(
 
 export function getSourceLocationFromMouseEvent(
   { codeMirror }: Object,
-  selectedLocation: SourceLocation,
+  source: Source,
   e: MouseEvent
 ) {
   const { line, ch } = codeMirror.coordsChar({
@@ -217,7 +217,7 @@ export function getSourceLocationFromMouseEvent(
   });
 
   return {
-    sourceId: selectedLocation.sourceId,
+    sourceId: source.id,
     line: line + 1,
     column: ch + 1
   };

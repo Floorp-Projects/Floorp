@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
-const {getDomain} = ChromeUtils.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
-const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
+const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
+const {getDomain} = ChromeUtils.import("resource://activity-stream/lib/TippyTopProvider.jsm");
+const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
 
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");

@@ -5,17 +5,17 @@
 "use strict";
 /* global frame */
 
-const {WebElementEventTarget} = ChromeUtils.import("chrome://marionette/content/dom.js", {});
-ChromeUtils.import("chrome://marionette/content/element.js");
+const {WebElementEventTarget} = ChromeUtils.import("chrome://marionette/content/dom.js");
+const {element} = ChromeUtils.import("chrome://marionette/content/element.js");
 const {
   NoSuchWindowError,
   UnsupportedOperationError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+} = ChromeUtils.import("chrome://marionette/content/error.js");
 const {
   MessageManagerDestroyedPromise,
   waitForEvent,
   waitForObserverTopic,
-} = ChromeUtils.import("chrome://marionette/content/sync.js", {});
+} = ChromeUtils.import("chrome://marionette/content/sync.js");
 
 this.EXPORTED_SYMBOLS = ["browser", "Context", "WindowState"];
 

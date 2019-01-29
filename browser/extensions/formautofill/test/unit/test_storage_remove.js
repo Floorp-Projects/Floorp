@@ -6,7 +6,7 @@
 
 let FormAutofillStorage;
 add_task(async function setup() {
-  ({FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {}));
+  ({FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", null));
 });
 
 const TEST_STORE_FILE_NAME = "test-tombstones.json";

@@ -373,8 +373,8 @@ const kTestPairs = [
   ["az", "AZERBAIJANI", kTeststr_version],   // 2014.01.31
 ];
 
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-let detectorModule = ChromeUtils.import("resource:///modules/translation/LanguageDetector.jsm", {});
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+let detectorModule = ChromeUtils.import("resource:///modules/translation/LanguageDetector.jsm", null);
 const LanguageDetector = detectorModule.LanguageDetector;
 
 function check_result(result, langCode, expected) {

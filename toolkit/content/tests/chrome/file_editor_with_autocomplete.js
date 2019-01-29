@@ -1,8 +1,6 @@
 // nsDoTestsForEditorWithAutoComplete tests basic functions of editor with autocomplete.
 // Users must include SimpleTest.js and EventUtils.js, and register "Mozilla" to the autocomplete for the target.
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 async function waitForCondition(condition) {
   return new Promise(resolve => {
     var tries = 0;

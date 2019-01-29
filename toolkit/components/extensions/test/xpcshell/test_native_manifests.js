@@ -1,19 +1,17 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-ChromeUtils.import("resource://gre/modules/NativeManifests.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Schemas.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Subprocess, SubprocessImpl} = ChromeUtils.import("resource://gre/modules/Subprocess.jsm", {});
-ChromeUtils.import("resource://gre/modules/NativeMessaging.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {AsyncShutdown} = ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
+const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+const {NativeManifests} = ChromeUtils.import("resource://gre/modules/NativeManifests.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {Schemas} = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
+const {Subprocess, SubprocessImpl} = ChromeUtils.import("resource://gre/modules/Subprocess.jsm", null);
+const {NativeApp} = ChromeUtils.import("resource://gre/modules/NativeMessaging.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 let registry = null;
 if (AppConstants.platform == "win") {
-  ChromeUtils.import("resource://testing-common/MockRegistry.jsm");
+  var {MockRegistry} = ChromeUtils.import("resource://testing-common/MockRegistry.jsm");
   registry = new MockRegistry();
   registerCleanupFunction(() => {
     registry.shutdown();

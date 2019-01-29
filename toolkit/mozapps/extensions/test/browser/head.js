@@ -5,7 +5,7 @@
 
 /* eslint no-unused-vars: ["error", {vars: "local", args: "none"}] */
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+var {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var tmp = {};
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm", tmp);
@@ -1414,7 +1414,7 @@ function promisePopupNotificationShown(name = "addon-webext-permissions") {
 }
 
 function acceptAppMenuNotificationWhenShown(id) {
-  ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+  const {AppMenuNotifications} = ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
   return new Promise(resolve => {
     function popupshown() {
       let notification = AppMenuNotifications.activeNotification;

@@ -12,7 +12,7 @@
   <iframe type="content" id="frame1"/>
   <iframe type="content" id="frame2" onload="doTest()"/>
   <script type="application/javascript"><![CDATA[
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     SimpleTest.waitForExplicitFinish();
 

@@ -1756,6 +1756,14 @@ extern JS_PUBLIC_API bool JS_DeleteElement(JSContext* cx, JS::HandleObject obj,
 extern JS_PUBLIC_API bool JS_Enumerate(JSContext* cx, JS::HandleObject obj,
                                        JS::MutableHandle<JS::IdVector> props);
 
+/**
+ * Equivalent to `Object.assign(target, src)`: Copies the properties from the
+ * `src` object (which must not be null) to `target` (which also must not be
+ * null).
+ */
+extern JS_PUBLIC_API bool JS_AssignObject(JSContext* cx, JS::HandleObject target,
+                                          JS::HandleObject src);
+
 /*
  * API for determining callability and constructability. [[Call]] and
  * [[Construct]] are internal methods that aren't present on all objects, so it

@@ -4,8 +4,6 @@
   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const HELLO_WORLD = "Hello World";
 const EMPTY_MESSAGE = "";
 

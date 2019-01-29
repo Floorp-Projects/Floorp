@@ -14,7 +14,7 @@ var gDataNotificationInfoBar = {
   _DATA_REPORTING_NOTIFICATION: "data-reporting",
 
   get _log() {
-    let { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm", {});
+    let { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
     delete this._log;
     return this._log = Log.repository.getLoggerWithMessagePrefix(
       "Toolkit.Telemetry", "DataNotificationInfoBar::");

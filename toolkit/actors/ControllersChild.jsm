@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["ControllersChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 class ControllersChild extends ActorChild {
   receiveMessage(message) {

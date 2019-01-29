@@ -7,7 +7,7 @@
 /* global ExtensionAPI, ExtensionCommon */
 
 const {Management: {global: {windowTracker}}} =
-            ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+            ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
 function getNativeWindow() {
   return windowTracker.topWindow.NativeWindow;

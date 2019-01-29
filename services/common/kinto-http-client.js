@@ -56,12 +56,12 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm", global);
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
 const {
   EventEmitter
-} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
+} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 
 class KintoHttpClient extends _base.default {
   constructor(remote, options = {}) {

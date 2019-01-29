@@ -23,7 +23,7 @@ async function testDebuggerServerInitialized() {
   ok(!DebuggerServer.initialized,
     "By default, the DebuggerServer isn't initialized in parent process");
   await ContentTask.spawn(browser, null, function() {
-    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
     const {DebuggerServer} = require("devtools/server/main");
     ok(!DebuggerServer.initialized,
       "By default, the DebuggerServer isn't initialized not in content process");
@@ -34,7 +34,7 @@ async function testDebuggerServerInitialized() {
   ok(DebuggerServer.initialized,
     "TargetFactory.forTab will initialize the DebuggerServer in parent process");
   await ContentTask.spawn(browser, null, function() {
-    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
     const {DebuggerServer} = require("devtools/server/main");
     ok(DebuggerServer.initialized,
       "TargetFactory.forTab will initialize the DebuggerServer in content process");
@@ -48,7 +48,7 @@ async function testDebuggerServerInitialized() {
   ok(DebuggerServer.initialized,
     "Destroying the target doesn't destroy the DebuggerServer in the parent process");
   await ContentTask.spawn(browser, null, function() {
-    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
     const {DebuggerServer} = require("devtools/server/main");
     ok(!DebuggerServer.initialized,
       "But destroying the target ends up destroying the DebuggerServer in the content" +

@@ -6,7 +6,7 @@ var EXPORTED_SYMBOLS = [
   "AsyncRunner",
 ];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function AsyncRunner(callbacks) {
   this._callbacks = callbacks;

@@ -11,8 +11,8 @@ var EXPORTED_SYMBOLS = ["Preference"];
 
 const WEAVE_PREF_PREFIX = "services.sync.prefs.sync.";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://tps/logger.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
 
 /**
  * Preference class constructor

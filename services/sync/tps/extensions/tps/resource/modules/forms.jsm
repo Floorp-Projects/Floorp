@@ -9,10 +9,10 @@
 
 var EXPORTED_SYMBOLS = ["FormData"];
 
-ChromeUtils.import("resource://tps/logger.jsm");
+const {Logger} = ChromeUtils.import("resource://tps/logger.jsm");
 
-ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 /**
  * FormDB

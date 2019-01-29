@@ -6,8 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["PromiseUtils"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var PromiseUtils = {
   /*

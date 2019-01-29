@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=292789
 SimpleTest.waitForExplicitFinish();
 
 let ChromeUtils = {
-  import() {},
+  import() { return {}; },
 };
 
 /** <script src=""> test **/

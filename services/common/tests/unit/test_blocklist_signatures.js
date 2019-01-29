@@ -1,11 +1,10 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
-const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
-const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", null);
+const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js");
 
 let server;
 

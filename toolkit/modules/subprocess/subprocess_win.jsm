@@ -9,12 +9,12 @@
 
 var EXPORTED_SYMBOLS = ["SubprocessImpl"];
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/subprocess/subprocess_common.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {BaseProcess, PromiseWorker} = ChromeUtils.import("resource://gre/modules/subprocess/subprocess_common.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
 

@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://services-sync/main.js");
+const {Weave} = ChromeUtils.import("resource://services-sync/main.js");
 
 ChromeUtils.defineModuleGetter(this, "BookmarkRepairRequestor",
   "resource://services-sync/bookmark_repair.js");

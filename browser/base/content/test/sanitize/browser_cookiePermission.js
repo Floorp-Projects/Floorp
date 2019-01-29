@@ -1,6 +1,5 @@
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
-const {SiteDataTestUtils} = ChromeUtils.import("resource://testing-common/SiteDataTestUtils.jsm", {});
+const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
+const {SiteDataTestUtils} = ChromeUtils.import("resource://testing-common/SiteDataTestUtils.jsm");
 
 function checkDataForAboutURL() {
   return new Promise(resolve => {

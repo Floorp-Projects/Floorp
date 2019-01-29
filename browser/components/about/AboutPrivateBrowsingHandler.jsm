@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["AboutPrivateBrowsingHandler"];
 
-ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {RemotePages} = ChromeUtils.import("resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var AboutPrivateBrowsingHandler = {
   _topics: [

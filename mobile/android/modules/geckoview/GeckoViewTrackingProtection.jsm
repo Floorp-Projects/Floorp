@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewTrackingProtection"];
 
-ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
+const {GeckoViewModule} = ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 
 class GeckoViewTrackingProtection extends GeckoViewModule {
   onEnable() {

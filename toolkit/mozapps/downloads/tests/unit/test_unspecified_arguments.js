@@ -7,7 +7,7 @@
  * methods provide the same result.
  */
 
-ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+const {DownloadUtils} = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
 
 function run_test() {
   Assert.equal(DownloadUtils.getDownloadStatus(1000, null, null, null) + "",

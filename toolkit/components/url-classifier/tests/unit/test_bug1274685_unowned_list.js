@@ -1,5 +1,5 @@
-ChromeUtils.import("resource://gre/modules/SafeBrowsing.jsm");
-ChromeUtils.import("resource://testing-common/AppInfo.jsm");
+const {SafeBrowsing} = ChromeUtils.import("resource://gre/modules/SafeBrowsing.jsm");
+const {updateAppInfo} = ChromeUtils.import("resource://testing-common/AppInfo.jsm");
 
 // 'Cc["@mozilla.org/xre/app-info;1"]' for xpcshell has no nsIXULAppInfo
 // so that we have to update it to make nsURLFormatter.js happy.

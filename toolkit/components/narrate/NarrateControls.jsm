@@ -4,10 +4,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/narrate/VoiceSelect.jsm");
-ChromeUtils.import("resource://gre/modules/narrate/Narrator.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AsyncPrefs.jsm");
+const {VoiceSelect} = ChromeUtils.import("resource://gre/modules/narrate/VoiceSelect.jsm");
+const {Narrator} = ChromeUtils.import("resource://gre/modules/narrate/Narrator.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AsyncPrefs} = ChromeUtils.import("resource://gre/modules/AsyncPrefs.jsm");
 
 var EXPORTED_SYMBOLS = ["NarrateControls"];
 

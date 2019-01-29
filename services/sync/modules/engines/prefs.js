@@ -6,14 +6,14 @@ var EXPORTED_SYMBOLS = ["PrefsEngine", "PrefRec"];
 
 const PREF_SYNC_PREFS_PREFIX = "services.sync.prefs.sync.";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-common/utils.js");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {Store, SyncEngine, Tracker} = ChromeUtils.import("resource://services-sync/engines.js");
+const {CryptoWrapper} = ChromeUtils.import("resource://services-sync/record.js");
+const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
+const {SCORE_INCREMENT_XLARGE} = ChromeUtils.import("resource://services-sync/constants.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 
 ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
                           "resource://gre/modules/LightweightThemeManager.jsm");

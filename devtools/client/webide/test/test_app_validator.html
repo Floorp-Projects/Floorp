@@ -14,11 +14,10 @@
   <body>
 
     <script type="application/javascript">
-    ChromeUtils.import("resource://testing-common/httpd.js");
-    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
     const {AppValidator} = require("devtools/client/webide/modules/app-validator");
-    const Services = require("Services");
     const nsFile = Components.Constructor("@mozilla.org/file/local;1",
                                            "nsIFile", "initWithPath");
     const strings = Services.strings.createBundle("chrome://devtools/locale/app-manager.properties");

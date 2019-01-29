@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewTab"];
 
-ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
+const {GeckoViewModule} = ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 
 // Based on the "Tab" prototype from mobile/android/chrome/content/browser.js
 class Tab {

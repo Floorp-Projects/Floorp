@@ -2,7 +2,7 @@
 
 var Cc = Components.Constructor;
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const tests = [
 { inStrings: ["%80",                 // Illegal or incomplete sequences

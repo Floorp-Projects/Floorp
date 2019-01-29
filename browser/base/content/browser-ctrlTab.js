@@ -10,7 +10,7 @@
  */
 var tabPreviews = {
   get aspectRatio() {
-    let { PageThumbUtils } = ChromeUtils.import("resource://gre/modules/PageThumbUtils.jsm", {});
+    let { PageThumbUtils } = ChromeUtils.import("resource://gre/modules/PageThumbUtils.jsm");
     let [ width, height ] = PageThumbUtils.getThumbnailSize(window);
     delete this.aspectRatio;
     return this.aspectRatio = height / width;

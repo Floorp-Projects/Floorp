@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["TraversalRules", "TraversalHelper"]; // jshint ignore:line
 
-ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
+const {PrefCache, Utils} = ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "Roles", // jshint ignore:line
   "resource://gre/modules/accessibility/Constants.jsm");
 ChromeUtils.defineModuleGetter(this, "Filters", // jshint ignore:line

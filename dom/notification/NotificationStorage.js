@@ -7,7 +7,7 @@
 const DEBUG = false;
 function debug(s) { dump("-*- NotificationStorage.js: " + s + "\n"); }
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const NOTIFICATIONSTORAGE_CID = "{37f819b0-0b5c-11e3-8ffd-0800200c9a66}";
 const NOTIFICATIONSTORAGE_CONTRACTID = "@mozilla.org/notificationStorage;1";

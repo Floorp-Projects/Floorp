@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm");
+const {PromiseMessage} = ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm");
 
 var ManifestIcons = {
 

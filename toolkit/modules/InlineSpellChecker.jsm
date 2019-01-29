@@ -6,7 +6,7 @@ var EXPORTED_SYMBOLS = [ "InlineSpellChecker",
                          "SpellCheckHelper" ];
 const MAX_UNDO_STACK_DEPTH = 1;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function InlineSpellChecker(aEditor) {
   this.init(aEditor);

@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Telemetry = require("devtools/client/shared/telemetry");
 const telemetry = new Telemetry();
 

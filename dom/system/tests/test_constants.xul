@@ -71,7 +71,7 @@ function test_umaskMainThread(umask) {
      ("0000"+umask.toString(8)).slice(-4));
 }
 
-
+var ctypes;
 function test() {
   ok(true, "test_constants.xul: Starting test");
 
@@ -79,7 +79,7 @@ function test() {
   Cc["@mozilla.org/net/osfileconstantsservice;1"].
     getService(Ci.nsIOSFileConstantsService).
     init();
-  ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  ({ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm"));
   test_xul();
   test_libc();
   test_Win();

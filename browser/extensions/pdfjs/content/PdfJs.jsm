@@ -33,8 +33,8 @@ const TOPIC_PLUGINS_LIST_UPDATED = "plugins-list-updated";
 const TOPIC_PLUGIN_INFO_UPDATED = "plugin-info-updated";
 const PDF_CONTENT_TYPE = "application/pdf";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Svc = {};
 XPCOMUtils.defineLazyServiceGetter(Svc, "mime",

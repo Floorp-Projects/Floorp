@@ -10,7 +10,7 @@
  * that accept a browser to be modified.
  **/
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var ZoomManager = {
   get MIN() {

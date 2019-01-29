@@ -11,7 +11,7 @@ const DEBUGGER_CHROME_URI = Services.io.newURI(DEBUGGER_CHROME_URL);
 
 const EventEmitter = require("devtools/shared/event-emitter");
 
-var { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
+var { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
 /**
  * Returns a thenable promise

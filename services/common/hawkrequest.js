@@ -9,13 +9,12 @@ var EXPORTED_SYMBOLS = [
   "deriveHawkCredentials",
 ];
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/rest.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://gre/modules/Credentials.jsm");
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {Credentials} = ChromeUtils.import("resource://gre/modules/Credentials.jsm");
 
 ChromeUtils.defineModuleGetter(this, "CryptoUtils",
                                "resource://services-crypto/utils.js");

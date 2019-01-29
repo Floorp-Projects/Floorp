@@ -4,46 +4,21 @@
 
 // @flow
 
-import { isGeneratedId } from "devtools-source-map";
 import { createSelector } from "reselect";
 import { uniqBy } from "lodash";
 
 import { getBreakpointsList } from "../reducers/breakpoints";
 import { getSelectedSource } from "../reducers/sources";
 
-import memoize from "../utils/memoize";
 import { sortBreakpoints } from "../utils/breakpoint";
+import { getSelectedLocation } from "../utils/source-maps";
 
 import type { Breakpoint, Source } from "../types";
 import type { Selector } from "../reducers/types";
 
-function getLocation(breakpoint, isGeneratedSource) {
-  return isGeneratedSource
-    ? breakpoint.generatedLocation || breakpoint.location
-    : breakpoint.location;
-}
-
-const formatBreakpoint = memoize(function(breakpoint, selectedSource) {
-  const { condition, loading, disabled, hidden, log } = breakpoint;
-  const sourceId = selectedSource.id;
-  const isGeneratedSource = isGeneratedId(sourceId);
-
-  return {
-    location: getLocation(breakpoint, isGeneratedSource),
-    condition,
-    loading,
-    disabled,
-    hidden,
-    log
-  };
-});
-
 function isVisible(breakpoint: Breakpoint, selectedSource: Source) {
-  const sourceId = selectedSource.id;
-  const isGeneratedSource = isGeneratedId(sourceId);
-
-  const location = getLocation(breakpoint, isGeneratedSource);
-  return location.sourceId === sourceId;
+  const location = getSelectedLocation(breakpoint, selectedSource);
+  return location.sourceId === selectedSource.id;
 }
 
 /*
@@ -60,10 +35,7 @@ export const getVisibleBreakpoints: Selector<?(Breakpoint[])> = createSelector(
     // FIXME: Even though selectedSource is checked above, it fails type
     // checking for isVisible
     const source: Source = selectedSource;
-
-    return breakpoints
-      .filter(bp => isVisible(bp, source))
-      .map(bp => formatBreakpoint(bp, selectedSource));
+    return breakpoints.filter(bp => isVisible(bp, source));
   }
 );
 

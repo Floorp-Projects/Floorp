@@ -4,7 +4,7 @@
 
 const CC = Components.Constructor;
 
-ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 
 let EventUtils = {};
 Services.scriptloader.loadSubScript(

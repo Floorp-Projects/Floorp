@@ -110,7 +110,7 @@ var EXPORTED_SYMBOLS = [
   "Integration",
 ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
  * Maps integration point names to IntegrationPoint objects.

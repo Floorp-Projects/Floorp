@@ -20,8 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624883
   <script type="application/javascript">
   <![CDATA[
 
-  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
   SimpleTest.waitForExplicitFinish();
 
   // We create a promise that will resolve with the error message

@@ -3,15 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-common/rest.js");
-ChromeUtils.import("resource://services-crypto/utils.js");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsStorage.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
+const {CryptoUtils} = ChromeUtils.import("resource://services-crypto/utils.js");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {FxAccountsStorageManager} = ChromeUtils.import("resource://gre/modules/FxAccountsStorage.jsm");
+const {ASSERTION_LIFETIME, ASSERTION_USE_PERIOD, CERT_LIFETIME, COMMAND_SENDTAB, DERIVED_KEYS_NAMES, ERRNO_DEVICE_SESSION_CONFLICT, ERRNO_INVALID_AUTH_TOKEN, ERRNO_UNKNOWN_DEVICE, ERROR_AUTH_ERROR, ERROR_INVALID_PARAMETER, ERROR_NO_ACCOUNT, ERROR_OFFLINE, ERROR_TO_GENERAL_ERROR_CLASS, ERROR_UNKNOWN, ERROR_UNVERIFIED_ACCOUNT, FXA_PWDMGR_MEMORY_FIELDS, FXA_PWDMGR_PLAINTEXT_FIELDS, FXA_PWDMGR_REAUTH_WHITELIST, FXA_PWDMGR_SECURE_FIELDS, FX_OAUTH_CLIENT_ID, KEY_LIFETIME, ONLOGIN_NOTIFICATION, ONLOGOUT_NOTIFICATION, ONVERIFIED_NOTIFICATION, ON_DEVICE_DISCONNECTED_NOTIFICATION, ON_NEW_DEVICE_ID, POLL_SESSION, PREF_LAST_FXA_USER, SERVER_ERRNO_TO_ERROR, log, logPII} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 ChromeUtils.defineModuleGetter(this, "FxAccountsClient",
   "resource://gre/modules/FxAccountsClient.jsm");

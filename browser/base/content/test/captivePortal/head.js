@@ -1,4 +1,4 @@
-ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
+var {BrowserWindowTracker} = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
 
 ChromeUtils.defineModuleGetter(this, "CaptivePortalWatcher",
   "resource:///modules/CaptivePortalWatcher.jsm");

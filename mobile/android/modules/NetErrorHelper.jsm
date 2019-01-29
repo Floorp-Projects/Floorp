@@ -3,9 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-ChromeUtils.import("resource://gre/modules/UITelemetry.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const {UITelemetry} = ChromeUtils.import("resource://gre/modules/UITelemetry.jsm");
 
 var EXPORTED_SYMBOLS = ["NetErrorHelper"];
 

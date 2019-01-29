@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 /* globals ExtensionAPI */
 
@@ -15,7 +14,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "resProto",
 
 async function tpsStartup() {
   try {
-    ChromeUtils.import("resource://tps/tps.jsm");
+    var {TPS} = ChromeUtils.import("resource://tps/tps.jsm");
     ChromeUtils.import("resource://tps/quit.js", TPS);
 
     let testFile = Services.prefs.getStringPref("testing.tps.testFile", "");

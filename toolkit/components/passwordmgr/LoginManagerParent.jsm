@@ -4,8 +4,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
@@ -492,7 +492,7 @@ var LoginManagerParent = {
 };
 
 XPCOMUtils.defineLazyGetter(LoginManagerParent, "recipeParentPromise", function() {
-  const { LoginRecipesParent } = ChromeUtils.import("resource://gre/modules/LoginRecipes.jsm", {});
+  const { LoginRecipesParent } = ChromeUtils.import("resource://gre/modules/LoginRecipes.jsm");
   this._recipeManager = new LoginRecipesParent({
     defaults: Services.prefs.getStringPref("signon.recipes.path"),
   });

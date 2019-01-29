@@ -6,13 +6,13 @@
 
 // Globals
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/LoginRecipes.jsm");
-ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
-ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/MockDocument.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {LoginRecipesContent, LoginRecipesParent} = ChromeUtils.import("resource://gre/modules/LoginRecipes.jsm");
+var {LoginHelper} = ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
+var {FileTestUtils} = ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
+var {LoginTestUtils} = ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm");
+var {MockDocument} = ChromeUtils.import("resource://testing-common/MockDocument.jsm");
 
 ChromeUtils.defineModuleGetter(this, "DownloadPaths",
                                "resource://gre/modules/DownloadPaths.jsm");

@@ -4,7 +4,7 @@
    runNextTest, _documentWalker */
 "use strict";
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {TargetFactory} = require("devtools/client/framework/target");
 const {DebuggerServer} = require("devtools/server/main");
 const {BrowserTestUtils} = require("resource://testing-common/BrowserTestUtils.jsm");

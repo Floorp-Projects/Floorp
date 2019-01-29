@@ -1,8 +1,8 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
@@ -460,7 +460,8 @@ add_task(async function test_subprocess_invalid_json() {
 
 if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
   add_task(async function test_subprocess_inherited_descriptors() {
-    let {ctypes, libc, win32} = ChromeUtils.import("resource://gre/modules/subprocess/subprocess_win.jsm", {});
+    let {libc, win32} = ChromeUtils.import("resource://gre/modules/subprocess/subprocess_win.jsm", null);
+    const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
     let secAttr = new win32.SECURITY_ATTRIBUTES();
     secAttr.nLength = win32.SECURITY_ATTRIBUTES.size;
@@ -734,7 +735,7 @@ add_task(async function test_subprocess_environmentAppend() {
 
 if (AppConstants.platform !== "win") {
   add_task(async function test_subprocess_nonASCII() {
-    const {libc} = ChromeUtils.import("resource://gre/modules/subprocess/subprocess_unix.jsm", {});
+    const {libc} = ChromeUtils.import("resource://gre/modules/subprocess/subprocess_unix.jsm", null);
 
     // Use TextDecoder rather than a string with a \xff escape, since
     // the latter will automatically be normalized to valid UTF-8.
@@ -796,7 +797,7 @@ add_task(async function test_bad_executable() {
 
 
 add_task(async function test_cleanup() {
-  let {SubprocessImpl} = ChromeUtils.import("resource://gre/modules/Subprocess.jsm", {});
+  let {SubprocessImpl} = ChromeUtils.import("resource://gre/modules/Subprocess.jsm", null);
 
   let worker = SubprocessImpl.Process.getWorker();
 

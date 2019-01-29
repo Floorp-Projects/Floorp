@@ -58,12 +58,12 @@
   overflow: hidden;
 }
 
-[role="list"] [role="listitem"]hover,
-[role="list"] [role="listitem"]focus {
+.frames [role="list"] [role="listitem"]:hover,
+.frames [role="list"] [role="listitem"]:focus {
   background-color: var(--theme-toolbar-background-alt);
 }
 
-.theme-dark [role="list"] [role="listitem"]focus {
+.theme-dark .frames [role="list"] [role="listitem"]:focus {
   background-color: var(--theme-tab-toolbar-background);
 }
 

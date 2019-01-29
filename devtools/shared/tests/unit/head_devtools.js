@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { require, DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { require, DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 

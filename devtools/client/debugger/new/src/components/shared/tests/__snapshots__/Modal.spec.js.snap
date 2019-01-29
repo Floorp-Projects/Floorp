@@ -3,9 +3,10 @@
 exports[`Modal renders 1`] = `
 <div
   className="modal-wrapper"
+  onClick={[Function]}
 >
   <div
-    className="modal"
+    className="modal entering"
     onClick={[Function]}
   />
 </div>

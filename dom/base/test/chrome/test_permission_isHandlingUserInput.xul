@@ -14,8 +14,8 @@
 
   <script type="application/javascript">
   <![CDATA[
-  ChromeUtils.import("resource://gre/modules/Integration.jsm");
-  ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+  const {Integration} = ChromeUtils.import("resource://gre/modules/Integration.jsm");
+  const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
 
   SimpleTest.waitForExplicitFinish();
 

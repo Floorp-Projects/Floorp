@@ -7,7 +7,7 @@
 
 var EXPORTED_SYMBOLS = ["MulticastDNS"];
 
-ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
 const DEBUG = false;
 

@@ -13,8 +13,8 @@ var EXPORTED_SYMBOLS = [
   "DownloadIntegration",
 ];
 
-ChromeUtils.import("resource://gre/modules/Integration.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Integration} = ChromeUtils.import("resource://gre/modules/Integration.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
                                "resource://gre/modules/AsyncShutdown.jsm");

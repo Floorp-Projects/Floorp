@@ -106,7 +106,7 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
     await spawnPaymentDialogTask(frame, async () => {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return Object.keys(state.request.paymentDetails.shippingAddressErrors).length;
@@ -178,7 +178,7 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
     await spawnPaymentDialogTask(frame, async function checkForNewErrors() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary" &&
@@ -219,7 +219,7 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
     await spawnPaymentDialogTask(frame, async function fixLastError() {
       let {
         PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";

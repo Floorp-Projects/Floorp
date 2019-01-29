@@ -4,11 +4,11 @@
 
 "use strict";
 
-const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm", {});
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm", {});
-const {AsyncShutdown} = ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", {});
+const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {AsyncShutdown} = ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
 
-const {SyncDisconnect, SyncDisconnectInternal} = ChromeUtils.import("resource://services-sync/SyncDisconnect.jsm", {});
+const {SyncDisconnect, SyncDisconnectInternal} = ChromeUtils.import("resource://services-sync/SyncDisconnect.jsm", null);
 
 var fxAccountsCommon = {};
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", fxAccountsCommon);

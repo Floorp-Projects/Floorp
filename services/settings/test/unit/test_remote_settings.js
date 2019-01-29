@@ -2,14 +2,13 @@
 
 const { Constructor: CC } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const IS_ANDROID = AppConstants.platform == "android";
 
-const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
-const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
+const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
+const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");

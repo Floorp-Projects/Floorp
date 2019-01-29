@@ -5,8 +5,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-
 // All test are asynchronous
 waitForExplicitFinish();
 

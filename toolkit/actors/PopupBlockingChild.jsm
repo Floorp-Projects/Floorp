@@ -7,8 +7,8 @@
 
 var EXPORTED_SYMBOLS = ["PopupBlockingChild"];
 
-ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 class PopupBlockingChild extends ActorChild {
   constructor(dispatcher) {

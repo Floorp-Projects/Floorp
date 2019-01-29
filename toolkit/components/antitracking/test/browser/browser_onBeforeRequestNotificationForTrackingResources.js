@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /**
  * This test ensures that onBeforeRequest is dispatched for webRequest loads that
  * are blocked by tracking protection.  It sets up a page with a third-party script

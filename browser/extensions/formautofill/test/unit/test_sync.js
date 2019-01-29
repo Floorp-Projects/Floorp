@@ -9,14 +9,13 @@
 
 "use strict";
 
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://testing-common/services/sync/utils.js");
+const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const {SCORE_INCREMENT_XLARGE} = ChromeUtils.import("resource://services-sync/constants.js");
 
 let sanitizeStorageObject, AutofillRecord, AddressesEngine;
 add_task(async function() {
   ({sanitizeStorageObject, AutofillRecord, AddressesEngine} =
-    ChromeUtils.import("resource://formautofill/FormAutofillSync.jsm", {}));
+    ChromeUtils.import("resource://formautofill/FormAutofillSync.jsm", null));
 });
 
 

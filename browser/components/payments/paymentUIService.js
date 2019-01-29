@@ -17,8 +17,8 @@
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
                                "resource:///modules/BrowserWindowTracker.jsm");
@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyServiceGetter(this,
 function PaymentUIService() {
   this.wrappedJSObject = this;
   XPCOMUtils.defineLazyGetter(this, "log", () => {
-    let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+    let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm");
     return new ConsoleAPI({
       maxLogLevelPref: "dom.payments.loglevel",
       prefix: "Payment UI Service",

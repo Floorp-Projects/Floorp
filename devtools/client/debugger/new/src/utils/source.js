@@ -317,7 +317,7 @@ export function getSourceLineCount(source: Source) {
 export function getMode(
   source: Source,
   symbols?: SymbolDeclarations
-): { name: string } {
+): { name: string, base?: Object } {
   if (source.isWasm) {
     return { name: "text" };
   }
@@ -483,4 +483,8 @@ export function getSourceQueryString(source: ?Source) {
   }
 
   return parseURL(getRawSourceURL(source.url)).search;
+}
+
+export function isUrlExtension(url: string) {
+  return /^(chrome|moz)-extension:\//.test(url);
 }

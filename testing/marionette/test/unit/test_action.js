@@ -4,8 +4,8 @@
 
 "use strict";
 
-ChromeUtils.import("chrome://marionette/content/action.js");
-const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+const {action} = ChromeUtils.import("chrome://marionette/content/action.js");
+const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js");
 
 const XHTMLNS = "http://www.w3.org/1999/xhtml";
 

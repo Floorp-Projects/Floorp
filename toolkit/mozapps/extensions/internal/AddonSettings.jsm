@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = [ "AddonSettings" ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const PREF_SIGNATURES_REQUIRED = "xpinstall.signatures.required";
 const PREF_LANGPACK_SIGNATURES = "extensions.langpacks.signatures.required";

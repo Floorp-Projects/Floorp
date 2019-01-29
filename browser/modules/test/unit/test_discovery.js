@@ -8,11 +8,11 @@
 // ClientID fails without...
 do_get_profile();
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
-ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-ChromeUtils.import("resource:///modules/Discovery.jsm");
-ChromeUtils.import("resource://gre/modules/ContextualIdentityService.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const {Discovery} = ChromeUtils.import("resource:///modules/Discovery.jsm");
+const {ContextualIdentityService} = ChromeUtils.import("resource://gre/modules/ContextualIdentityService.jsm");
 
 const TAAR_COOKIE_NAME = "taarId";
 

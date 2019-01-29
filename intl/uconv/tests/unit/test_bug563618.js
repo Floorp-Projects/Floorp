@@ -4,7 +4,7 @@
  *
  */
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const test = [
 // 0: 0x8e followed by hi byte, not valid JIS X 0201

@@ -4,10 +4,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
-ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckComponent.js");
-ChromeUtils.import("resource:///actors/LightweightThemeChild.jsm");
+const {SyncedTabs} = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
+const {SyncedTabsDeckComponent} = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckComponent.js");
+const {LightweightThemeChild} = ChromeUtils.import("resource:///actors/LightweightThemeChild.jsm");
 
 ChromeUtils.defineModuleGetter(this, "fxAccounts",
                                "resource://gre/modules/FxAccounts.jsm");

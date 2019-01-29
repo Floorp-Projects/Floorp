@@ -74,7 +74,7 @@ async function waitForProgressNotification(aPanelOpen = false, aExpectedCount = 
 }
 
 function acceptAppMenuNotificationWhenShown(id, dismiss = false) {
-  ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+  const {AppMenuNotifications} = ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
   return new Promise(resolve => {
     function appMenuPopupHidden() {
       PanelUI.panel.removeEventListener("popuphidden", appMenuPopupHidden);

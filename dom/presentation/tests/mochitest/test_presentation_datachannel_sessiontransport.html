@@ -30,8 +30,8 @@ var serverTransport;
 const clientMessage = "Client Message";
 const serverMessage = "Server Message";
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var isClientReady = false;
 var isServerReady = false;

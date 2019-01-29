@@ -9,9 +9,8 @@
  * 3. checks presence of index.sql and files in the expected location
  */
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import('resource://gre/modules/Services.jsm');
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 
 var httpServer = null;
