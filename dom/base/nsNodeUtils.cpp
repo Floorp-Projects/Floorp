@@ -141,11 +141,12 @@ void nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
 }
 
 void nsNodeUtils::AttributeWillChange(Element* aElement, int32_t aNameSpaceID,
-                                      nsAtom* aAttribute, int32_t aModType) {
+                                      nsAtom* aAttribute, int32_t aModType,
+                                      const nsAttrValue* aNewValue) {
   Document* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(
       AttributeWillChange, aElement,
-      (aElement, aNameSpaceID, aAttribute, aModType),
+      (aElement, aNameSpaceID, aAttribute, aModType, aNewValue),
       IsRemoveNotification::No);
 }
 
