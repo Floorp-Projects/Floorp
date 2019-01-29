@@ -6712,7 +6712,7 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
 #ifdef DEBUG
   if (gNoisyContentUpdates && IsFramePartOfIBSplit(parentFrame)) {
     printf("nsCSSFrameConstructor::ContentAppended: parentFrame=");
-    nsFrame::ListTag(stdout, parentFrame);
+    parentFrame->ListTag(stdout);
     printf(" is ib-split\n");
   }
 #endif
@@ -7572,11 +7572,11 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
       // frame tree when first-letter style is present.
 #ifdef NOISY_FIRST_LETTER
       printf("ContentRemoved: containingBlock=");
-      nsFrame::ListTag(stdout, containingBlock);
+      containingBlock->ListTag(stdout);
       printf(" parentFrame=");
-      nsFrame::ListTag(stdout, parentFrame);
+      parentFrame->ListTag(stdout);
       printf(" childFrame=");
-      nsFrame::ListTag(stdout, childFrame);
+      childFrame->ListTag(stdout);
       printf("\n");
 #endif
 
@@ -7597,9 +7597,9 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
 
 #ifdef NOISY_FIRST_LETTER
       printf("  ==> revised parentFrame=");
-      nsFrame::ListTag(stdout, parentFrame);
+      parentFrame->ListTag(stdout);
       printf(" childFrame=");
-      nsFrame::ListTag(stdout, childFrame);
+      childFrame->ListTag(stdout);
       printf("\n");
 #endif
     }
@@ -7607,7 +7607,7 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
 #ifdef DEBUG
     if (gReallyNoisyContentUpdates) {
       printf("nsCSSFrameConstructor::ContentRemoved: childFrame=");
-      nsFrame::ListTag(stdout, childFrame);
+      childFrame->ListTag(stdout);
       putchar('\n');
       parentFrame->List(stdout);
     }
