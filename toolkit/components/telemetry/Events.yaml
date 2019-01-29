@@ -91,8 +91,7 @@ addonsManager:
       method: >
         The method used by the source to install the add-on (included when the source can use more than one,
         e.g. install events with source "about:addons" may have "install-from-file" or "url" as method).
-      num_perms: The number of permissions shown to the user in the extension permission doorhanger
-      num_origins: The number of origins shown to the user in the extension permission doorhanger
+      num_strings: The number of permission description strings in the extension permission doorhanger
       updated_from: Determine if an update has been requested by the user or the application ("app" / "user")
       step: >
         The current step in the install or update flow:
@@ -102,7 +101,7 @@ addonsManager:
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "68"
     record_in_processes: ["main"]
-    bug_numbers: [1433335]
+    bug_numbers: [1433335, 1515697]
     release_channel_collection: opt-out
   manage:
     description: >
@@ -116,12 +115,11 @@ addonsManager:
       method: >
         The method used by the source to install the add-on (included when the source can use more than one,
         e.g. install events with source "about:addons" may have "install-from-file" or "url" as method).
-      num_perms: The number of permissions shown to the user for a sideload extension permissions doorhanger
-      num_origins: The number of origins shown to the user for a sideload extension permissions doorhanger
+      num_strings: The number of permission description strings in the extension permission doorhanger
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "68"
     record_in_processes: ["main"]
-    bug_numbers: [1433335]
+    bug_numbers: [1433335, 1515697]
     release_channel_collection: opt-out
 
 extensions.data:
