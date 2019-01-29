@@ -577,6 +577,10 @@ class ArgSeq<> {
   ArgSeq() {}
 
   inline void generate(CodeGeneratorShared* codegen) const {}
+
+#ifdef DEBUG
+  static constexpr size_t numArgs = 0;
+#endif
 };
 
 template <typename HeadType, typename... TailTypes>
@@ -597,6 +601,10 @@ class ArgSeq<HeadType, TailTypes...> : public ArgSeq<TailTypes...> {
     this->ArgSeq<TailTypes...>::generate(codegen);
     codegen->pushArg(head_);
   }
+
+#ifdef DEBUG
+  static constexpr size_t numArgs = sizeof...(TailTypes) + 1;
+#endif
 };
 
 template <typename... ArgTypes>
@@ -702,6 +710,9 @@ inline OutOfLineCode* CodeGeneratorShared::oolCallVM(const VMFunction& fun,
                                                      const StoreOutputTo& out) {
   MOZ_ASSERT(lir->mirRaw());
   MOZ_ASSERT(lir->mirRaw()->isInstruction());
+  MOZ_ASSERT(fun.explicitArgs == args.numArgs);
+  MOZ_ASSERT(fun.returnsData() !=
+             (mozilla::IsSame<StoreOutputTo, StoreNothing>::value));
 
   OutOfLineCode* ool =
       new (alloc()) OutOfLineCallVM<ArgSeq, StoreOutputTo>(lir, fun, args, out);
