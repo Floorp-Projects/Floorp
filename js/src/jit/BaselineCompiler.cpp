@@ -2444,6 +2444,9 @@ const VMFunction NewArrayCopyOnWriteInfo = FunctionInfo<NewArrayCopyOnWriteFn>(
 
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_NEWARRAY_COPYONWRITE() {
+  // This is like the interpreter implementation, but we can call
+  // getOrFixupCopyOnWriteObject at compile-time.
+
   RootedScript scriptRoot(cx, handler.script());
   JSObject* obj =
       ObjectGroup::getOrFixupCopyOnWriteObject(cx, scriptRoot, handler.pc());
@@ -2466,9 +2469,27 @@ bool BaselineCompilerCodeGen::emit_JSOP_NEWARRAY_COPYONWRITE() {
   return true;
 }
 
+typedef ArrayObject* (*NewArrayCopyOnWriteOperationFn)(JSContext*, HandleScript,
+                                                       jsbytecode*);
+const VMFunction NewArrayCopyOnWriteOperationInfo =
+    FunctionInfo<NewArrayCopyOnWriteOperationFn>(
+        NewArrayCopyOnWriteOperation, "NewArrayCopyOnWriteOperation");
+
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_NEWARRAY_COPYONWRITE() {
-  MOZ_CRASH("NYI: interpreter JSOP_NEWARRAY_COPYONWRITE");
+  prepareVMCall();
+
+  pushBytecodePCArg();
+  pushScriptArg(R2.scratchReg());
+
+  if (!callVM(NewArrayCopyOnWriteOperationInfo)) {
+    return false;
+  }
+
+  // Box and push return value.
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+  frame.push(R0);
+  return true;
 }
 
 template <>
