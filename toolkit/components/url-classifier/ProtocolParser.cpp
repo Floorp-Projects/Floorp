@@ -6,7 +6,6 @@
 #include "ProtocolParser.h"
 #include "LookupCache.h"
 #include "nsNetCID.h"
-#include "mozilla/Components.h"
 #include "mozilla/Logging.h"
 #include "prnetdb.h"
 #include "prprf.h"
@@ -774,7 +773,7 @@ nsresult ProtocolParserProtobuf::ProcessOneResponse(
 
   // Convert threat type to list name.
   nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      components::UrlClassifierUtils::Service();
+      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
   nsCString possibleListNames;
   nsresult rv = urlUtil->ConvertThreatTypeToListNames(aResponse.threat_type(),
                                                       possibleListNames);

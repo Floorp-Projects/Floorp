@@ -5,7 +5,6 @@
 
 #include "LoginReputation.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Components.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
@@ -114,7 +113,7 @@ RefPtr<ReputationPromise> LoginWhitelist::QueryLoginWhitelist(
   }
 
   nsCOMPtr<nsIURIClassifier> uriClassifier =
-      mozilla::components::UrlClassifierDB::Service(&rv);
+      do_GetService(NS_URLCLASSIFIERDBSERVICE_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return p;
   }

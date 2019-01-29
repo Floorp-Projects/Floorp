@@ -1766,13 +1766,6 @@ VARIABLES = {
         as ``MODULE``.
         """),
 
-    'XPCOM_MANIFESTS': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
-        """XPCOM Component Manifest Files.
-
-        This is a list of files that define XPCOM components to be added
-        to the component registry.
-        """),
-
     'PREPROCESSED_IPDL_SOURCES': (StrictOrderingOnAppendList, list,
         """Preprocessed IPDL source files.
 

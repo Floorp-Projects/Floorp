@@ -15,7 +15,6 @@
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Components.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -746,7 +745,7 @@ nsresult Classifier::ApplyUpdatesBackground(TableUpdateArray& aUpdates,
   }
 
   nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      components::UrlClassifierUtils::Service();
+      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
 
   nsCString provider;
   // Assume all TableUpdate objects should have the same provider.
@@ -1184,7 +1183,7 @@ bool Classifier::CheckValidUpdate(TableUpdateArray& aUpdates,
 
 nsCString Classifier::GetProvider(const nsACString& aTableName) {
   nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      components::UrlClassifierUtils::Service();
+      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
 
   nsCString provider;
   nsresult rv = urlUtil->GetProvider(aTableName, provider);

@@ -13,6 +13,7 @@
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsIFile.h"
+#include "nsToolkitCompsCID.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"

@@ -24,6 +24,7 @@
 #include "nsIXULBrowserWindow.h"
 #include "nsIPrincipal.h"
 #include "nsIURIFixup.h"
+#include "nsCDefaultURIFixup.h"
 #include "nsIWebNavigation.h"
 #include "nsDocShellCID.h"
 #include "nsIExternalURLHandlerService.h"
@@ -31,7 +32,6 @@
 #include "nsIWidget.h"
 #include "nsWindowWatcher.h"
 #include "mozilla/BrowserElementParent.h"
-#include "mozilla/Components.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
@@ -660,7 +660,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const nsAString& aTitle) {
             //
             // remove any user:pass information
             //
-            nsCOMPtr<nsIURIFixup> fixup(components::URIFixup::Service());
+            nsCOMPtr<nsIURIFixup> fixup(do_GetService(NS_URIFIXUP_CONTRACTID));
             if (fixup) {
               nsCOMPtr<nsIURI> tmpuri;
               nsresult rv =

@@ -33,7 +33,6 @@
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Components.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/DataStorage.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
@@ -113,6 +112,7 @@
 #include "mozilla/HangDetails.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsAppRunner.h"
+#include "nsCDefaultURIFixup.h"
 #include "nsCExternalHandlerService.h"
 #include "nsCOMPtr.h"
 #include "nsChromeRegistryChrome.h"
@@ -179,6 +179,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStyleSheetService.h"
 #include "nsThreadUtils.h"
+#include "nsToolkitCompsCID.h"
 #include "nsWidgetsCID.h"
 #include "PreallocatedProcessManager.h"
 #include "ProcessPriorityManager.h"
@@ -3793,7 +3794,8 @@ mozilla::ipc::IPCResult ContentParent::RecvShowAlert(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIAlertsService> sysAlerts(components::Alerts::Service());
+  nsCOMPtr<nsIAlertsService> sysAlerts(
+      do_GetService(NS_ALERTSERVICE_CONTRACTID));
   if (sysAlerts) {
     sysAlerts->ShowAlert(aAlert, this);
   }
@@ -3806,7 +3808,8 @@ mozilla::ipc::IPCResult ContentParent::RecvCloseAlert(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIAlertsService> sysAlerts(components::Alerts::Service());
+  nsCOMPtr<nsIAlertsService> sysAlerts(
+      do_GetService(NS_ALERTSERVICE_CONTRACTID));
   if (sysAlerts) {
     sysAlerts->CloseAlert(aName, aPrincipal);
   }
@@ -4108,7 +4111,7 @@ mozilla::ipc::IPCResult ContentParent::RecvKeywordToURI(
   *aPostData = nullptr;
   *aURI = void_t();
 
-  nsCOMPtr<nsIURIFixup> fixup = components::URIFixup::Service();
+  nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
   if (!fixup) {
     return IPC_OK();
   }

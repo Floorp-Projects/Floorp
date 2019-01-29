@@ -72,7 +72,6 @@ from .data import (
     TestManifest,
     UnifiedSources,
     VariablePassthru,
-    XPCOMComponentManifests,
     XPIDLModule,
 )
 from mozpack.chrome.manifest import (
@@ -214,17 +213,12 @@ class TreeMetadataEmitter(LoggingMixin):
             ('IPDL_SOURCES', lambda c: c.sources),
             ('PREPROCESSED_IPDL_SOURCES', lambda c: c.preprocessed_sources),
         ]
-        xpcom_attrs = [
-            ('XPCOM_MANIFESTS', lambda c: c.manifests),
-        ]
 
         idl_sources = {}
         for root, cls, attrs in ((self.config.substs.get('WEBIDL_ROOT'),
                                   WebIDLCollection, webidl_attrs),
                                  (self.config.substs.get('IPDL_ROOT'),
-                                  IPDLCollection, ipdl_attrs),
-                                 (self.config.substs.get('XPCOM_ROOT'),
-                                  XPCOMComponentManifests, xpcom_attrs)):
+                                  IPDLCollection, ipdl_attrs)):
             if root:
                 collection = cls(contexts[root])
                 for var, src_getter in attrs:
@@ -1170,7 +1164,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'WEBIDL_FILES',
             'IPDL_SOURCES',
             'PREPROCESSED_IPDL_SOURCES',
-            'XPCOM_MANIFESTS',
         )
         for context_var in idl_vars:
             for name in context.get(context_var, []):
