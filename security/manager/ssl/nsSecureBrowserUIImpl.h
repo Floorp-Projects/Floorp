@@ -8,7 +8,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsISecureBrowserUI.h"
-#include "nsITransportSecurityInfo.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 

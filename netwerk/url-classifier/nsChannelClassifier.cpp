@@ -24,7 +24,6 @@
 #include "nsIUrlClassifierFeature.h"
 #include "nsPrintfCString.h"
 
-#include "mozilla/Components.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
@@ -370,7 +369,7 @@ nsresult nsChannelClassifier::SendThreatHitReport(nsIChannel* aChannel,
   }
 
   nsCOMPtr<nsIURIClassifier> uriClassifier =
-      components::UrlClassifierDB::Service();
+      do_GetService(NS_URLCLASSIFIERDBSERVICE_CONTRACTID);
   if (!uriClassifier) {
     return NS_ERROR_UNEXPECTED;
   }

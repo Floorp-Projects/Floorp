@@ -6,7 +6,6 @@
 
 #include "Link.h"
 
-#include "mozilla/Components.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
@@ -20,6 +19,7 @@
 #include "nsISizeOf.h"
 #include "nsIDocShell.h"
 #include "nsIPrefetchService.h"
+#include "nsCPrefetchService.h"
 #include "nsStyleLinkElement.h"
 
 #include "nsEscape.h"
@@ -134,7 +134,7 @@ void Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender() {
       (linkTypes & nsStyleLinkElement::eNEXT) ||
       (linkTypes & nsStyleLinkElement::ePRELOAD)) {
     nsCOMPtr<nsIPrefetchService> prefetchService(
-        components::Prefetch::Service());
+        do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
     if (prefetchService) {
       nsCOMPtr<nsIURI> uri(GetURI());
       if (uri) {
@@ -209,7 +209,8 @@ void Link::UpdatePreload(nsAtom *aName, const nsAttrValue *aValue,
     return;
   }
 
-  nsCOMPtr<nsIPrefetchService> prefetchService(components::Prefetch::Service());
+  nsCOMPtr<nsIPrefetchService> prefetchService(
+      do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
   if (!prefetchService) {
     return;
   }
@@ -309,7 +310,8 @@ void Link::UpdatePreload(nsAtom *aName, const nsAttrValue *aValue,
 }
 
 void Link::CancelPrefetchOrPreload() {
-  nsCOMPtr<nsIPrefetchService> prefetchService(components::Prefetch::Service());
+  nsCOMPtr<nsIPrefetchService> prefetchService(
+      do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
   if (prefetchService) {
     nsCOMPtr<nsIURI> uri(GetURI());
     if (uri) {

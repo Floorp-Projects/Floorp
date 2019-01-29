@@ -5,6 +5,7 @@
 
 #include "nsOfflineCacheUpdate.h"
 
+#include "nsCPrefetchService.h"
 #include "nsCURILoader.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIApplicationCacheChannel.h"

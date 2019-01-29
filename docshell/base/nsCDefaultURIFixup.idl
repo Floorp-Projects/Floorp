@@ -1,0 +1,13 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%{ C++
+// {214C48A0-B57F-11d4-959C-0020183BF181}
+#define NS_DEFAULTURIFIXUP_CID \
+{ 0x214c48a0, 0xb57f, 0x11d4, { 0x95, 0x9c, 0x0, 0x20, 0x18, 0x3b, 0xf1, 0x81 } }
+#define NS_URIFIXUP_CONTRACTID \
+"@mozilla.org/docshell/urifixup;1"
+%}

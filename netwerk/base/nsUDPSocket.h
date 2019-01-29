@@ -8,7 +8,6 @@
 
 #include "nsIUDPSocket.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/net/DNS.h"
 #include "nsIOutputStream.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"

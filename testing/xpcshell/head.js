@@ -248,12 +248,18 @@ var _fakeIdleService = {
       Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   },
   contractID: "@mozilla.org/widget/idleservice;1",
-  CID: Components.ID("{9163a4ae-70c2-446c-9ac1-bbe4ab93004e}"),
+  get CID() {
+    return this.registrar.contractIDToCID(this.contractID);
+  },
 
   activate: function FIS_activate() {
-    if (!this.originalCID) {
+    if (!this.originalFactory) {
       // Save original factory.
-      this.originalCID = this.registrar.contractIDToCID(this.contractID);
+      this.originalFactory =
+        Components.manager.getClassObject(Cc[this.contractID],
+                                          Ci.nsIFactory);
+      // Unregister original factory.
+      this.registrar.unregisterFactory(this.CID, this.originalFactory);
       // Replace with the mock.
       this.registrar.registerFactory(this.CID, "Fake Idle Service",
                                      this.contractID, this.factory
@@ -262,13 +268,13 @@ var _fakeIdleService = {
   },
 
   deactivate: function FIS_deactivate() {
-    if (this.originalCID) {
+    if (this.originalFactory) {
       // Unregister the mock.
       this.registrar.unregisterFactory(this.CID, this.factory);
       // Restore original factory.
-      this.registrar.registerFactory(this.originalCID, "Idle Service",
-                                     this.contractID, null);
-      delete this.originalCID;
+      this.registrar.registerFactory(this.CID, "Idle Service",
+                                     this.contractID, this.originalFactory);
+      delete this.originalFactory;
     }
   },
 

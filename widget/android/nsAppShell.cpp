@@ -24,10 +24,11 @@
 #include "nsISpeculativeConnect.h"
 #include "nsIURIFixup.h"
 #include "nsCategoryManagerUtils.h"
+#include "nsCDefaultURIFixup.h"
+#include "nsToolkitCompsCID.h"
 #include "nsGeoPosition.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Components.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
@@ -235,7 +236,8 @@ class GeckoThreadSupport final
   static int64_t RunUiThreadCallback() { return RunAndroidUiTasks(); }
 
   static void ForceQuit() {
-    nsCOMPtr<nsIAppStartup> appStartup = components::AppStartup::Service();
+    nsCOMPtr<nsIAppStartup> appStartup =
+        do_GetService(NS_APPSTARTUP_CONTRACTID);
 
     if (appStartup) {
       appStartup->Quit(nsIAppStartup::eForceQuit);
@@ -566,7 +568,8 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
       // quit. Therefore, we should *not* exit Gecko when there is no
       // window or the last window is closed. nsIAppStartup::Quit will
       // still force Gecko to exit.
-      nsCOMPtr<nsIAppStartup> appStartup = components::AppStartup::Service();
+      nsCOMPtr<nsIAppStartup> appStartup =
+          do_GetService(NS_APPSTARTUP_CONTRACTID);
       if (appStartup) {
         appStartup->EnterLastWindowClosingSurvivalArea();
       }
@@ -603,7 +606,8 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
       // We are told explicitly to quit, perhaps due to
       // nsIAppStartup::Quit being called. We should release our hold on
       // nsIAppStartup and let it continue to quit.
-      nsCOMPtr<nsIAppStartup> appStartup = components::AppStartup::Service();
+      nsCOMPtr<nsIAppStartup> appStartup =
+          do_GetService(NS_APPSTARTUP_CONTRACTID);
       if (appStartup) {
         appStartup->ExitLastWindowClosingSurvivalArea();
       }
@@ -739,7 +743,7 @@ already_AddRefed<nsIURI> nsAppShell::ResolveURI(const nsCString& aUriStr) {
     return uri.forget();
   }
 
-  nsCOMPtr<nsIURIFixup> fixup = components::URIFixup::Service();
+  nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
   if (fixup && NS_SUCCEEDED(fixup->CreateFixupURI(aUriStr, 0, nullptr,
                                                   getter_AddRefs(uri)))) {
     return uri.forget();

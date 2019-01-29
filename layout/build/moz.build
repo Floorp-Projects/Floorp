@@ -71,9 +71,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         '/dom/system/android',
     ]
 
-XPCOM_MANIFESTS += [
-    'components.conf',
-]
+if CONFIG['MOZ_WEBSPEECH']:
+    LOCAL_INCLUDES += [
+        '/dom/media/webspeech/recognition',
+        '/dom/media/webspeech/synth',
+    ]
 
 FINAL_LIBRARY = 'xul'
 
