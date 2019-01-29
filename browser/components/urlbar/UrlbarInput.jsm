@@ -110,6 +110,7 @@ class UrlbarInput {
     this.inputField.addEventListener("scrollend", this);
     this.inputField.addEventListener("select", this);
     this.inputField.addEventListener("keydown", this);
+    this.inputField.addEventListener("keyup", this);
     this.view.panel.addEventListener("popupshowing", this);
     this.view.panel.addEventListener("popuphidden", this);
 
@@ -311,7 +312,7 @@ class UrlbarInput {
 
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH: {
-        if (this._overrideDefaultAction(event)) {
+        if (this.hasAttribute("noactions")) {
           where = "current";
           break;
         }
@@ -385,6 +386,15 @@ class UrlbarInput {
       }
     }
     this.value = val;
+
+    switch (result.type) {
+      case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+        this.setAttribute("actiontype", "switchtab");
+        break;
+      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+        this.setAttribute("actiontype", "extension");
+        break;
+    }
   }
 
   /**
@@ -505,6 +515,7 @@ class UrlbarInput {
     this.valueIsTyped = false;
     this.inputField.value = val;
     this.formatValue();
+    this.removeAttribute("actiontype");
 
     // Dispatch ValueChange event for accessibility.
     let event = this.document.createEvent("Events");
@@ -616,13 +627,19 @@ class UrlbarInput {
     return selectedVal;
   }
 
-  _overrideDefaultAction(event) {
-    return event.shiftKey ||
-           event.altKey ||
-           (AppConstants.platform == "macosx" ?
-              event.metaKey : event.ctrlKey);
+  _toggleNoActions(event) {
+    if (event.keyCode == KeyEvent.DOM_VK_SHIFT ||
+        event.keyCode == KeyEvent.DOM_VK_ALT ||
+        event.keyCode == (AppConstants.platform == "macosx" ?
+                            KeyEvent.DOM_VK_META :
+                            KeyEvent.DOM_VK_CONTROL)) {
+      if (event.type == "keydown") {
+        this.setAttribute("noactions", "true");
+      } else {
+        this.removeAttribute("noactions");
+      }
+    }
   }
-
 
   /**
    * Get the url to load for the search query and records in telemetry that it
@@ -902,6 +919,7 @@ class UrlbarInput {
     } else {
       this.removeAttribute("usertyping");
     }
+    this.removeAttribute("actiontype");
 
     // XXX Fill in lastKey, and add anything else we need.
     this.startQuery({
@@ -963,6 +981,11 @@ class UrlbarInput {
 
   _on_keydown(event) {
     this.controller.handleKeyNavigation(event);
+    this._toggleNoActions(event);
+  }
+
+  _on_keyup(event) {
+    this._toggleNoActions(event);
   }
 
   _on_popupshowing() {
