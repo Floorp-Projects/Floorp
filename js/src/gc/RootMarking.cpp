@@ -506,7 +506,7 @@ void js::gc::GCRuntime::bufferGrayRoots() {
   //               and the zone's buffers have been cleared.
   MOZ_ASSERT(grayBufferState == GrayBufferState::Unused);
   for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-    MOZ_ASSERT(zone->gcGrayRoots().empty());
+    MOZ_ASSERT(zone->gcGrayRoots().IsEmpty());
   }
 
   BufferGrayRootsTracer grayBufferer(rt);
@@ -542,7 +542,7 @@ inline void BufferGrayRootsTracer::bufferRoot(T* thing) {
     // incremental GCs (when we do gray root buffering).
     SetMaybeAliveFlag(thing);
 
-    if (!zone->gcGrayRoots().append(tenured)) {
+    if (!zone->gcGrayRoots().Append(tenured)) {
       bufferingGrayRootsFailed = true;
     }
   }
@@ -553,21 +553,20 @@ void GCRuntime::markBufferedGrayRoots(JS::Zone* zone) {
   MOZ_ASSERT(zone->isGCMarkingBlackAndGray() || zone->isGCCompacting());
 
   auto& roots = zone->gcGrayRoots();
-  if (roots.empty()) {
+  if (roots.IsEmpty()) {
     return;
   }
 
-  for (size_t i = 0; i < roots.length(); i++) {
-    Cell* cell = roots[i];
+  for (auto iter = roots.Iter(); !iter.Done(); iter.Next()) {
+    Cell* cell = iter.Get();
 
     // Bug 1203273: Check for bad pointers on OSX and output diagnostics.
 #if defined(XP_DARWIN) && defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
     auto addr = uintptr_t(cell);
     if (addr < ChunkSize || addr % CellAlignBytes != 0) {
       MOZ_CRASH_UNSAFE_PRINTF(
-          "Bad GC thing pointer in gray root buffer: %p at index %zu of %zu, "
-          "address %p",
-          cell, i, roots.length(), &roots[i]);
+          "Bad GC thing pointer in gray root buffer: %p at address %p",
+          cell, &iter.Get());
     }
 #else
     MOZ_ASSERT(IsCellPointerValid(cell));
@@ -583,7 +582,7 @@ void GCRuntime::resetBufferedGrayRoots() const {
       grayBufferState != GrayBufferState::Okay,
       "Do not clear the gray buffers unless we are Failed or becoming Unused");
   for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-    zone->gcGrayRoots().clearAndFree();
+    zone->gcGrayRoots().Clear();
   }
 }
 

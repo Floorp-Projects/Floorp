@@ -127,8 +127,6 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
         // style cache. Clients requesting getApplied from actors that have not
         // been fixed must make sure cssLogic.highlight(node) was called before.
         getAppliedCreatesStyleCache: true,
-        // Whether addNewRule accepts the editAuthored argument.
-        authoredStyles: true,
         // Whether the page supports values of font-stretch from CSS Fonts Level 4.
         fontStretchLevel4: CSS.supports("font-stretch: 100%"),
         // Whether the page supports values of font-style from CSS Fonts Level 4.
@@ -932,13 +930,9 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    * @param {NodeActor} node
    * @param {String} pseudoClasses The list of pseudo classes to append to the
    *        new selector.
-   * @param {Boolean} editAuthored
-   *        True if the selector should be updated by editing the
-   *        authored text; false if the selector should be updated via
-   *        CSSOM.
    * @returns {StyleRuleActor} the new rule
    */
-  async addNewRule(node, pseudoClasses, editAuthored = false) {
+  async addNewRule(node, pseudoClasses) {
     const style = this.getStyleElement(node.rawNode.ownerDocument);
     const sheet = style.sheet;
     const cssRules = sheet.cssRules;
@@ -962,12 +956,10 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 
     // If inserting the rule succeeded, go ahead and edit the source
     // text if requested.
-    if (editAuthored) {
-      const sheetActor = this._sheetRef(sheet);
-      let {str: authoredText} = await sheetActor.getText();
-      authoredText += "\n" + selector + " {\n" + "}";
-      await sheetActor.update(authoredText, false);
-    }
+    const sheetActor = this._sheetRef(sheet);
+    let {str: authoredText} = await sheetActor.getText();
+    authoredText += "\n" + selector + " {\n" + "}";
+    await sheetActor.update(authoredText, false);
 
     return this.getNewAppliedProps(node, sheet.cssRules.item(index));
   },

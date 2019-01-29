@@ -387,7 +387,8 @@ RefPtr<JS::WasmModule> wasm::DeserializeModule(PRFileDesc* bytecodeFile,
                                                UniqueChars filename,
                                                unsigned line) {
   // We have to compile new code here so if we're fundamentally unable to
-  // compile, we have to fail.
+  // compile, we have to fail. If you change this code, update the
+  // MutableCompileArgs setting below.
   if (!BaselineCanCompile() && !IonCanCompile()) {
     return nullptr;
   }
@@ -424,9 +425,11 @@ RefPtr<JS::WasmModule> wasm::DeserializeModule(PRFileDesc* bytecodeFile,
   // (We would prefer to store this value with the Assumptions when
   // serializing, and for the caller of the deserialization machinery to
   // provide the value from the originating context.)
+  //
+  // Note this is guarded at the top of this function.
 
-  args->ionEnabled = true;
-  args->baselineEnabled = true;
+  args->ionEnabled = IonCanCompile();
+  args->baselineEnabled = BaselineCanCompile();
   args->sharedMemoryEnabled = true;
 
   UniqueChars error;
