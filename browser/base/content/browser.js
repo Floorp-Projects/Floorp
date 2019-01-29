@@ -1749,6 +1749,11 @@ var gBrowserInit = {
       gBrowserThumbnails.init();
     });
 
+    // Show the addons private browsing panel the first time a private window.
+    scheduleIdleTask(() => {
+      ExtensionsUI.showPrivateBrowsingNotification(window);
+    });
+
     scheduleIdleTask(() => {
       // Initialize the download manager some time after the app starts so that
       // auto-resume downloads begin (such as after crashing or quitting with
