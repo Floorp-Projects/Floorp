@@ -8,7 +8,7 @@ DevToolsModules(
   'css-logic.js',
   'custom-element-watcher.js',
   'document-walker.js',
-  'event-parsers.js',
+  'event-collector.js',
   'inspector.js',
   'node.js',
   'utils.js',
