@@ -235,8 +235,8 @@ started_test(); // #seven::after (listener on root)
 $("seven").setAttribute("foo", "bar");
 
 setTimeout(function() {
-             if (cs("five") != "rgb(0, 255, 0)" &&
-                 cs("six") != "rgb(0, 255, 0)") {
+             if (cs("five").color != "rgb(0, 255, 0)" &&
+                 cs("six").color != "rgb(0, 255, 0)") {
                // The transition hasn't finished already.
                did_stops = true;
              }
