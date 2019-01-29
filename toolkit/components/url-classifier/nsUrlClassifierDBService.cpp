@@ -1791,7 +1791,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   nsAutoCString key;
   // Canonicalize the url
   nsCOMPtr<nsIUrlClassifierUtils> utilsService =
-      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+      components::UrlClassifierUtils::Service();
   rv = utilsService->GetKeyForURI(uri, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
