@@ -3169,7 +3169,7 @@ impl PrimitiveInstance {
                             segment.has_mask,
                             segment.edge_flags,
                             [0.0; 4],
-                            BrushFlags::empty(),
+                            BrushFlags::PERSPECTIVE_INTERPOLATION,
                         ),
                     );
                 });

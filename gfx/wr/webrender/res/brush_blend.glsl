@@ -6,8 +6,11 @@
 
 #include shared,prim_shared,brush
 
-varying vec3 vUv;
+// Interpolated UV coordinates to sample.
+varying vec2 vUv;
 
+// X = layer index to sample, Y = flag to allow perspective interpolation of UV.
+flat varying vec2 vLayerAndPerspective;
 flat varying float vAmount;
 flat varying int vOp;
 flat varying mat3 vColorMat;
@@ -39,8 +42,10 @@ void brush_vs(
     vec2 y = mix(extra_data.st_bl, extra_data.st_br, f.x);
     f = mix(x, y, f.y);
     vec2 uv = mix(uv0, uv1, f);
-    vUv = vec3(uv / texture_size, res.layer);
+    float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;
 
+    vUv = uv / texture_size * mix(vi.world_pos.w, 1.0, perspective_interpolate);
+    vLayerAndPerspective = vec2(res.layer, perspective_interpolate);
     vUvClipBounds = vec4(uv0, uv1) / texture_size.xyxy;
 
     float lumR = 0.2126;
@@ -146,7 +151,9 @@ vec3 LinearToSrgb(vec3 color) {
 }
 
 Fragment brush_fs() {
-    vec4 Cs = texture(sColor0, vUv);
+    float perspective_divisor = mix(gl_FragCoord.w, 1.0, vLayerAndPerspective.y);
+    vec2 uv = vUv * perspective_divisor;
+    vec4 Cs = texture(sColor0, vec3(uv, vLayerAndPerspective.x));
 
     // Un-premultiply the input.
     float alpha = Cs.a;
@@ -179,7 +186,7 @@ Fragment brush_fs() {
 
     // Fail-safe to ensure that we don't sample outside the rendered
     // portion of a blend source.
-    alpha *= point_inside_rect(vUv.xy, vUvClipBounds.xy, vUvClipBounds.zw);
+    alpha *= point_inside_rect(uv, vUvClipBounds.xy, vUvClipBounds.zw);
 
     // Pre-multiply the alpha into the output value.
     return Fragment(alpha * vec4(color, 1.0));
