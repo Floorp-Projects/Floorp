@@ -3153,17 +3153,6 @@ class nsContentUtils {
       JS::MutableHandle<JS::Value> aValue);
 
   /**
-   * Returns whether or not UA Widget is enabled, controlled by pref
-   * dom.ua_widget.enabled.
-   *
-   * When enabled, UA Widget will replace legacy XBL when rendering
-   * JS-implemented web content widgets (videocontrols/datetimebox/etc.)
-   *
-   * It is really enabled only if Shadow DOM is also enabled.
-   */
-  static bool IsUAWidgetEnabled() { return sIsUAWidgetEnabled; }
-
-  /**
    * Returns true if reserved key events should be prevented from being sent
    * to their target. Instead, the key event should be handled by chrome only.
    */
@@ -3446,7 +3435,6 @@ class nsContentUtils {
   static bool sIsUpgradableDisplayContentPrefEnabled;
   static bool sIsFrameTimingPrefEnabled;
   static bool sIsFormAutofillAutocompleteEnabled;
-  static bool sIsUAWidgetEnabled;
   static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;
   static bool sAnimationsAPICoreEnabled;

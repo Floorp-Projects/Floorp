@@ -295,7 +295,7 @@
             <!-- list view -->
             <vbox id="list-view" flex="1" class="view-pane" align="stretch" tabindex="0">
               <!-- info UI for add-ons that have been disabled for being unsigned -->
-              <vbox id="disabled-unsigned-addons-info" hidden="true">
+              <vbox id="disabled-unsigned-addons-info" class="alert-container" hidden="true">
                 <label id="disabled-unsigned-addons-heading" data-l10n-id="disabled-unsigned-heading"/>
                 <description data-l10n-id="disabled-unsigned-description">
                   <label class="text-link plain" id="find-alternative-addons" data-l10n-name="find-addons"/>
@@ -311,6 +311,16 @@
                     <label class="text-link plain" id="legacy-extensions-learnmore-link" data-l10n-id="legacy-warning-show-legacy"/>
                   </description>
                 </vbox>
+              </vbox>
+              <vbox id="private-browsing-notice" class="alert-container" hidden="true" align="start">
+                <hbox class="message-bar" align="start">
+                  <image class="message-bar-icon"/>
+                  <vbox class="message-container">
+                    <description class="message-bar-description" data-l10n-id="private-browsing-description">
+                      <label class="text-link plain" id="private-browsing-learnmore-link" data-l10n-name="private-browsing-learn-more"/>
+                    </description>
+                  </vbox>
+                </hbox>
               </vbox>
               <vbox id="plugindeprecation-notice" class="list-view-notice" align="start">
                 <hbox class="message-bar">
@@ -536,6 +546,22 @@
                            <column flex="2"/>
                         </columns>
                         <rows id="detail-rows">
+                          <row class="detail-row-complex" id="detail-privateBrowsing-row">
+                            <label class="detail-row-label" data-l10n-id="detail-private-browsing"/>
+                            <hbox align="center">
+                              <radiogroup id="detail-privateBrowsing" orient="horizontal">
+                                <radio data-l10n-id="detail-private-browsing-on"
+                                       value="1"/>
+                                <radio data-l10n-id="detail-private-browsing-off"
+                                       value="0"/>
+                              </radiogroup>
+                            </hbox>
+                          </row>
+                          <hbox class="detail-row-footer" id="detail-privateBrowsing-row-footer">
+                            <description class="indent preferences-description" data-l10n-id="detail-private-browsing-description">
+                              <label id="detail-private-browsing-learnmore-link" class="learnMore text-link" data-l10n-name="detail-private-browsing-learn-more"/>
+                            </description>
+                          </hbox>
                           <row class="detail-row-complex" id="detail-updates-row">
                             <label class="detail-row-label" data-l10n-id="detail-update-type"/>
                             <hbox align="center">

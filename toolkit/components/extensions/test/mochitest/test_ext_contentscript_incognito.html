@@ -14,7 +14,12 @@
 "use strict";
 
 add_task(async function test_contentscript_incognito() {
+  await SpecialPowers.pushPrefEnv({set: [
+    ["extensions.allowPrivateBrowsingByDefault", false],
+  ]});
+
   let extension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
     manifest: {
       content_scripts: [
         {

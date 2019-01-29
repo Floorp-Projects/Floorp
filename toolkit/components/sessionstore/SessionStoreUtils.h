@@ -55,6 +55,10 @@ class SessionStoreUtils {
   static void CollectFormData(const GlobalObject& aGlobal, Document& aDocument,
                               CollectedFormData& aRetVal);
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  static bool RestoreFormData(const GlobalObject& aGlobal, Document& aDocument,
+                              const CollectedFormData& aData);
+
   static void CollectSessionStorage(
       const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
       Record<nsString, Record<nsString, nsString>>& aRetVal);

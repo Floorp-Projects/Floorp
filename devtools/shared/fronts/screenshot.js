@@ -8,9 +8,11 @@ const saveScreenshot = require("devtools/shared/screenshot/save");
 const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 
 class ScreenshotFront extends FrontClassWithSpec(screenshotSpec) {
-  constructor(client, form) {
-    super(client, { actor: form.screenshotActor });
-    this.manage(this);
+  constructor(client) {
+    super(client);
+
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "screenshotActor";
   }
 
   async captureAndSave(window, args) {

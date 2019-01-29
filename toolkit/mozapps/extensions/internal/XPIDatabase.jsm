@@ -109,7 +109,7 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
                           "softDisabled", "foreignInstall",
                           "strictCompatibility", "locales", "targetApplications",
                           "targetPlatforms", "signedState",
-                          "seen", "dependencies",
+                          "seen", "dependencies", "incognito",
                           "userPermissions", "icons", "iconURL",
                           "blocklistState", "blocklistURL", "startupData",
                           "previewImage", "hidden", "installTelemetryInfo",
@@ -730,6 +730,10 @@ AddonWrapper = class {
   get optionsBrowserStyle() {
     let addon = addonFor(this);
     return addon.optionsBrowserStyle;
+  }
+
+  get incognito() {
+    return addonFor(this).incognito;
   }
 
   async getBlocklistURL() {

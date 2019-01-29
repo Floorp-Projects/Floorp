@@ -3,13 +3,16 @@
 "use strict";
 
 add_task(async function test_window_incognito() {
+  SpecialPowers.pushPrefEnv({set: [
+    ["extensions.allowPrivateBrowsingByDefault", false],
+  ]});
+
   const url = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/file_iframe_document.html";
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["http://mochi.test/"],
     },
-    incognitoOverride: "not_allowed",
     background() {
       browser.test.onMessage.addListener(async pbw => {
         await browser.test.assertRejects(browser.windows.get(pbw.windowId),

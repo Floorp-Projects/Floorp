@@ -107,6 +107,21 @@ row[unsupported="true"] {
   display: none;
 }
 
+.addon .privateBrowsing-notice {
+  display: none;
+}
+.addon[privateBrowsing="true"] .privateBrowsing-notice-container {
+  /* 40px is width and margin of .icon-container */
+  margin-inline-start: 40px;
+}
+.addon[privateBrowsing="true"] .privateBrowsing-notice {
+  margin: 4px 0 0;
+  display: inline-block;
+}
+.addon[active="false"] .privateBrowsing-notice {
+  background-color: var(--purple-70-a40);
+}
+
 #addons-page:not([warning]) #list-view > .global-warning-container {
   display: none;
 }

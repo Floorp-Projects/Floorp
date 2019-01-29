@@ -1451,6 +1451,9 @@ var CustomizableUIInternal = {
     if (!aWidget) {
       throw new Error("buildWidget was passed a non-widget to build.");
     }
+    if (!aWidget.showInPrivateBrowsing && PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView)) {
+      return null;
+    }
 
     log.debug("Building " + aWidget.id + " of type " + aWidget.type);
 
@@ -4027,8 +4030,7 @@ function WidgetGroupWrapper(aWidget) {
     }
 
     let instance = aWidget.instances.get(aWindow.document);
-    if (!instance &&
-        (aWidget.showInPrivateBrowsing || !PrivateBrowsingUtils.isWindowPrivate(aWindow))) {
+    if (!instance) {
       instance = CustomizableUIInternal.buildWidget(aWindow.document,
                                                     aWidget);
     }

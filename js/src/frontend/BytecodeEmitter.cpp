@@ -123,6 +123,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       tryNoteList(cx),
       scopeNoteList(cx),
       resumeOffsetList(cx),
+      numICEntries(0),
       numYields(0),
       typesetCount(0),
       hasSingletons(false),
@@ -132,6 +133,11 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       scriptStartOffsetSet(false),
       functionBodyEndPosSet(false) {
   MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
+
+  if (sc->isFunctionBox()) {
+    // Functions have IC entries for type monitoring |this| and arguments.
+    numICEntries = sc->asFunctionBox()->function()->nargs() + 1;
+  }
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
@@ -202,6 +208,10 @@ bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta, ptrdiff_t* offset) {
     if (typesetCount < JSScript::MaxBytecodeTypeSets) {
       typesetCount++;
     }
+  }
+
+  if (BytecodeOpHasIC(op)) {
+    numICEntries++;
   }
 
   return true;
@@ -310,6 +320,23 @@ bool BytecodeEmitter::emitN(JSOp op, size_t extra, ptrdiff_t* offset) {
   return true;
 }
 
+bool BytecodeEmitter::emitJumpTargetOp(JSOp op, ptrdiff_t* off) {
+  MOZ_ASSERT(BytecodeIsJumpTarget(op));
+
+  size_t numEntries = numICEntries;
+  if (MOZ_UNLIKELY(numEntries > UINT32_MAX)) {
+    reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
+    return false;
+  }
+
+  if (!emitN(op, CodeSpec[op].length - 1, off)) {
+    return false;
+  }
+
+  SET_ICINDEX(code(*off), numEntries);
+  return true;
+}
+
 bool BytecodeEmitter::emitJumpTarget(JumpTarget* target) {
   ptrdiff_t off = offset();
 
@@ -321,10 +348,9 @@ bool BytecodeEmitter::emitJumpTarget(JumpTarget* target) {
 
   target->offset = off;
   lastTarget.offset = off;
-  if (!emit1(JSOP_JUMPTARGET)) {
-    return false;
-  }
-  return true;
+
+  ptrdiff_t opOff;
+  return emitJumpTargetOp(JSOP_JUMPTARGET, &opOff);
 }
 
 bool BytecodeEmitter::emitJumpNoFallthrough(JSOp op, JumpList* jump) {

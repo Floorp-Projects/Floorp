@@ -686,10 +686,15 @@
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
+      <xul:hbox class="description-container privateBrowsing-notice-container">
+        <xul:label anonid="privateBrowsing" class="description privateBrowsing-notice" value="&addon.privateBrowsing.label;"/>
+      </xul:hbox>
     </content>
 
     <implementation>
       <constructor><![CDATA[
+        window.customElements.upgrade(this._stateMenulist);
+
         this._installStatus = document.getAnonymousElementByAttribute(this, "anonid", "install-status");
         this._installStatus.mControl = this;
 
@@ -899,6 +904,13 @@
             isLegacyExtension(this.mAddon);
           this.setAttribute("legacy", legacyWarning);
           document.getAnonymousElementByAttribute(this, "anonid", "legacy").href = SUPPORT_URL + "webextensions";
+
+          if (!allowPrivateBrowsingByDefault) {
+            ExtensionPermissions.get(this.mAddon.id).then((perms) => {
+              let allowed = perms.permissions.includes("internal:privateBrowsingAllowed");
+              this.setAttribute("privateBrowsing", allowed);
+            });
+          }
 
           if (!("applyBackgroundUpdates" in this.mAddon) ||
               (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE ||

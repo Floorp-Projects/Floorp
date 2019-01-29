@@ -236,6 +236,18 @@ def rust_triple_alias(host_or_target):
 rust_target_triple = rust_triple_alias(target)
 rust_host_triple = rust_triple_alias(host)
 
+
+@depends(host, rust_host_triple, rustc_info.host)
+def validate_rust_host_triple(host, rust_host, rustc_host):
+    if rust_host != rustc_host:
+        if host.alias == rust_host:
+            configure_host = host_alias
+        else:
+            configure_host = '{}/{}'.format(host.alias, rust_host)
+        die("The rust compiler host ({}) is not suitable for the configure host ({})."
+            .format(rustc_host, configure_host))
+
+
 set_config('RUST_TARGET', rust_target_triple)
 set_config('RUST_HOST_TARGET', rust_host_triple)
 

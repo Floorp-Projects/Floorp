@@ -3,10 +3,13 @@
 "use strict";
 
 add_task(async function testExecuteScriptIncognitoNotAllowed() {
+  SpecialPowers.pushPrefEnv({set: [
+    ["extensions.allowPrivateBrowsingByDefault", false],
+  ]});
+
   const url = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/file_iframe_document.html";
 
   let extension = ExtensionTestUtils.loadExtension({
-    incognitoOverride: "not_allowed",
     manifest: {
       // captureTab requires all_urls permission
       "permissions": ["<all_urls>", "tabs", "tabHide"],

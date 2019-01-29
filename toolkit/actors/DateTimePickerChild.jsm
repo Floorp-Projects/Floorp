@@ -36,9 +36,7 @@ class DateTimePickerChild extends ActorChild {
       return;
     }
 
-    if (dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
-      dateTimeBoxElement.wrappedJSObject.setPickerState(false);
-    } else if (this._inputElement.openOrClosedShadowRoot) {
+    if (this._inputElement.openOrClosedShadowRoot) {
       // dateTimeBoxElement is within UA Widget Shadow DOM.
       // An event dispatch to it can't be accessed by document.
       let win = this._inputElement.ownerGlobal;
@@ -111,9 +109,7 @@ class DateTimePickerChild extends ActorChild {
 
         let win = this._inputElement.ownerGlobal;
 
-        if (dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
-          dateTimeBoxElement.wrappedJSObject.setValueFromPicker(Cu.cloneInto(aMessage.data, win));
-        } else if (this._inputElement.openOrClosedShadowRoot) {
+        if (this._inputElement.openOrClosedShadowRoot) {
           // dateTimeBoxElement is within UA Widget Shadow DOM.
           // An event dispatch to it can't be accessed by document.
           dateTimeBoxElement.dispatchEvent(
@@ -154,9 +150,7 @@ class DateTimePickerChild extends ActorChild {
           throw new Error("How do we get this event without a UA Widget or XBL binding?");
         }
 
-        if (dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
-          dateTimeBoxElement.wrappedJSObject.setPickerState(true);
-        } else if (this._inputElement.openOrClosedShadowRoot) {
+        if (this._inputElement.openOrClosedShadowRoot) {
           // dateTimeBoxElement is within UA Widget Shadow DOM.
           // An event dispatch to it can't be accessed by document, because
           // the event is not composed.

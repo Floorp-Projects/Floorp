@@ -360,8 +360,7 @@ enum class nsDisplayListBuilderMode : uint8_t {
   PLUGIN_GEOMETRY,
   FRAME_VISIBILITY,
   TRANSFORM_COMPUTATION,
-  GENERATE_GLYPH,
-  PAINTING_SELECTION_BACKGROUND
+  GENERATE_GLYPH
 };
 
 /**
@@ -520,14 +519,6 @@ class nsDisplayListBuilder {
    */
   bool IsForGenerateGlyphMask() const {
     return mMode == nsDisplayListBuilderMode::GENERATE_GLYPH;
-  }
-
-  /**
-   * @return true if the display list is being built for painting selection
-   * background.
-   */
-  bool IsForPaintingSelectionBG() const {
-    return mMode == nsDisplayListBuilderMode::PAINTING_SELECTION_BACKGROUND;
   }
 
   bool BuildCompositorHitTestInfo() const {

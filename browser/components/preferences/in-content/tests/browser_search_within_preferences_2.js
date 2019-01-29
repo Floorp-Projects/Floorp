@@ -16,7 +16,7 @@ add_task(async function() {
  * it should not show the "Remove Account" button if the Firefox account is not logged in yet.
  */
 add_task(async function() {
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneSync", {leaveOpen: true});
 
   // Ensure the "Sign Up" button in the hidden child of the <xul:deck>
   // is selected and displayed on the screen.

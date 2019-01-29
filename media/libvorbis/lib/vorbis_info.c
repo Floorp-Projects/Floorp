@@ -30,8 +30,8 @@
 #include "misc.h"
 #include "os.h"
 
-#define GENERAL_VENDOR_STRING "Xiph.Org libVorbis 1.3.5"
-#define ENCODE_VENDOR_STRING "Xiph.Org libVorbis I 20150105 (⛄⛄⛄⛄)"
+#define GENERAL_VENDOR_STRING "Xiph.Org libVorbis 1.3.6"
+#define ENCODE_VENDOR_STRING "Xiph.Org libVorbis I 20180316 (Now 100% fewer shells)"
 
 /* helpers */
 static void _v_writestring(oggpack_buffer *o,const char *s, int bytes){
@@ -588,7 +588,8 @@ int vorbis_analysis_headerout(vorbis_dsp_state *v,
   oggpack_buffer opb;
   private_state *b=v->backend_state;
 
-  if(!b||vi->channels<=0){
+  if(!b||vi->channels<=0||vi->channels>256){
+    b = NULL;
     ret=OV_EFAULT;
     goto err_out;
   }
