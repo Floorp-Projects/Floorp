@@ -74,7 +74,8 @@ var got_three_bottom = false;
 var got_three_left = false;
 var got_four_root = false;
 var got_body = false;
-var did_stops = false;
+var did_finish_five = false;
+var did_finish_six = false;
 var got_before = false;
 var got_after = false;
 
@@ -124,10 +125,11 @@ document.documentElement.addEventListener("transitionend",
       is(event.isTrusted, true);
       finished_test();
     } else {
-      if (!did_stops &&
-          (event.target == $("five") || event.target == $("six"))) {
+      if ((event.target == $("five") && did_finish_five) ||
+          (event.target == $("six") && did_finish_six)) {
         todo(false,
-             "timeout to stop transitions firing later than it should be");
+             "it seems that transitionstart and transitionend had been " +
+             "processed in the same frame");
         return;
       }
       ok(false,
@@ -234,17 +236,24 @@ started_test(); // #seven::before (listener on root)
 started_test(); // #seven::after (listener on root)
 $("seven").setAttribute("foo", "bar");
 
-setTimeout(function() {
-             if (cs("five").color != "rgb(0, 255, 0)" &&
-                 cs("six").color != "rgb(0, 255, 0)") {
-               // The transition hasn't finished already.
-               did_stops = true;
-             }
-             $("five").style.transitionProperty = "margin-left";
-             $("six").style.transitionDuration = "0s";
-             $("six").style.transitionDelay = "0s";
-             $("six").style.color = "blue";
-           }, 100);
+$("five").addEventListener("transitionstart", function() {
+  if (cs("five").color == "rgb(0, 255, 0)") {
+    // The transition has finished already.
+    did_finish_five = true;
+  }
+  $("five").style.transitionProperty = "margin-left";
+}, false);
+
+$("six").addEventListener("transitionstart", function() {
+  if (cs("six").color == "rgb(0, 255, 0)") {
+    // The transition has finished already.
+    did_finish_six = true;
+  }
+  $("six").style.transitionDuration = "0s";
+  $("six").style.transitionDelay = "0s";
+  $("six").style.color = "blue";
+}, false);
+
 function poll_start_reversal() {
   if (cs("four").color != "rgb(0, 0, 255)") {
     // The forward transition has started.
