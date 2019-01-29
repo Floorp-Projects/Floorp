@@ -57,8 +57,7 @@ class nsNodeUtils {
    */
   static void AttributeWillChange(mozilla::dom::Element* aElement,
                                   int32_t aNameSpaceID, nsAtom* aAttribute,
-                                  int32_t aModType,
-                                  const nsAttrValue* aNewValue);
+                                  int32_t aModType);
 
   /**
    * Send AttributeChanged notifications to nsIMutationObservers.
