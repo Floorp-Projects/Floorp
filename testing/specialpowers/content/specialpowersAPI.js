@@ -1256,6 +1256,10 @@ SpecialPowersAPI.prototype = {
       let uri = aMessage.json.uri;
       Services.obs.notifyObservers(null, "specialpowers-http-notify-request", uri);
     },
+
+    "specialpowers-service-worker-shutdown": function(aMessage) {
+      Services.obs.notifyObservers(null, "specialpowers-service-worker-shutdown");
+    },
   },
 
   _addObserverProxy(notification) {
