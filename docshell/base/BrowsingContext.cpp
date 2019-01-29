@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/BrowsingContext.h"
 
-#include "mozilla/dom/ChromeBrowsingContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -120,8 +120,8 @@ BrowsingContext* BrowsingContext::TopLevelBrowsingContext() {
 
   RefPtr<BrowsingContext> context;
   if (XRE_IsParentProcess()) {
-    context = new ChromeBrowsingContext(aParent, aOpener, aName, id,
-                                        /* aProcessId */ 0, aType);
+    context = new CanonicalBrowsingContext(aParent, aOpener, aName, id,
+                                          /* aProcessId */ 0, aType);
   } else {
     context = new BrowsingContext(aParent, aOpener, aName, id, aType);
   }
@@ -147,7 +147,7 @@ BrowsingContext* BrowsingContext::TopLevelBrowsingContext() {
 
   RefPtr<BrowsingContext> context;
   if (XRE_IsParentProcess()) {
-    context = new ChromeBrowsingContext(
+    context = new CanonicalBrowsingContext(
         aParent, aOpener, aName, aId, aOriginProcess->ChildID(), Type::Content);
   } else {
     context = new BrowsingContext(aParent, aOpener, aName, aId, Type::Content);
@@ -380,7 +380,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent)
   if (XRE_IsParentProcess()) {
-    ChromeBrowsingContext::Cast(tmp)->Unlink();
+    CanonicalBrowsingContext::Cast(tmp)->Unlink();
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -388,7 +388,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent)
   if (XRE_IsParentProcess()) {
-    ChromeBrowsingContext::Cast(tmp)->Traverse(cb);
+    CanonicalBrowsingContext::Cast(tmp)->Traverse(cb);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
