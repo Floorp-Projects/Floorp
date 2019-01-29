@@ -5070,7 +5070,9 @@ void nsBlockFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
 #ifdef NOISY_REFLOW_REASON
   ListTag(stdout);
   printf(": append ");
-  nsFrame::ListTag(stdout, aFrameList);
+  for (nsIFrame* frame : aFrameList) {
+    frame->ListTag(out);
+  }
   if (lastKid) {
     printf(" after ");
     lastKid->ListTag(stdout);
@@ -5111,7 +5113,9 @@ void nsBlockFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
 #ifdef NOISY_REFLOW_REASON
   ListTag(stdout);
   printf(": insert ");
-  nsFrame::ListTag(stdout, aFrameList);
+  for (nsIFrame* frame : aFrameList) {
+    frame->ListTag(out);
+  }
   if (aPrevFrame) {
     printf(" after ");
     aPrevFrame->ListTag(stdout);
