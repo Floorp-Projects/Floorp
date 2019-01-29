@@ -20,9 +20,7 @@
     <string name="browser_menu_private_tab">Private Tab</string>
     <string name="browser_menu_new_tab">New Tab</string>
     <string name="browser_menu_report_issue">Report Issue</string>
-    <string name="sessions_intro_description">Fenix will collect your browsing sessions\n on your Home Screen for you to
-        retrieve\n later.
-    </string>
+    <string name="sessions_intro_description">Fenix will collect your browsing sessions on your Home Screen for you to retrieve later.</string>
     <string name="search_scan_button">Scan</string>
     <string name="search_shortcuts_button">Shortcuts</string>
 </resources>
