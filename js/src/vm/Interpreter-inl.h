@@ -672,25 +672,30 @@ static MOZ_ALWAYS_INLINE bool InitArrayElemOperation(JSContext* cx,
   return true;
 }
 
-static MOZ_ALWAYS_INLINE bool ProcessCallSiteObjOperation(JSContext* cx,
-                                                          HandleObject cso,
-                                                          HandleObject raw) {
-  MOZ_ASSERT(cso->is<ArrayObject>());
-  MOZ_ASSERT(raw->is<ArrayObject>());
+static inline ArrayObject* ProcessCallSiteObjOperation(JSContext* cx,
+                                                       HandleScript script,
+                                                       jsbytecode* pc) {
+  MOZ_ASSERT(*pc == JSOP_CALLSITEOBJ);
 
-  if (cso->nonProxyIsExtensible()) {
+  RootedArrayObject cso(cx, &script->getObject(pc)->as<ArrayObject>());
+
+  if (cso->isExtensible()) {
+    RootedObject raw(cx, script->getObject(GET_UINT32_INDEX(pc) + 1));
+    MOZ_ASSERT(raw->is<ArrayObject>());
+
     RootedValue rawValue(cx, ObjectValue(*raw));
     if (!DefineDataProperty(cx, cso, cx->names().raw, rawValue, 0)) {
-      return false;
+      return nullptr;
     }
     if (!FreezeObject(cx, raw)) {
-      return false;
+      return nullptr;
     }
     if (!FreezeObject(cx, cso)) {
-      return false;
+      return nullptr;
     }
   }
-  return true;
+
+  return cso;
 }
 
 // BigInt proposal 3.2.4 Abstract Relational Comparison
