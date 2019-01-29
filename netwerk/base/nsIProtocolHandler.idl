@@ -330,4 +330,9 @@ interface nsIProtocolHandler : nsISupports
      * The URIs for this protocol can be loaded by extensions.
      */
     const unsigned long URI_LOADABLE_BY_EXTENSIONS = (1 << 21);
+
+    /**
+     * The URIs for this protocol can not be loaded into private contexts.
+     */
+    const unsigned long URI_DISALLOW_IN_PRIVATE_CONTEXT = (1 << 22);
 };
