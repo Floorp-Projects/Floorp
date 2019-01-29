@@ -56,9 +56,17 @@
     var content = document.getElementById("content");
     ok(content, "Parent exists.");
 
-    iframe = document.createElement("iframe");
+    var iframe = document.createElement("iframe");
     iframe.setAttribute('src', "sw_clients/refresher.html");
     content.appendChild(iframe);
+
+    // Our service worker waits for us to finish installing. If it didn't do
+    // this, then loading our frame would race with it becoming active,
+    // possibly intercepting the first load of the iframe. This guarantees
+    // that our iframe will load first directly from the network. Note that
+    // refresher.html explicitly waits for the service worker to transition to
+    // active.
+    registration.installing.postMessage("ready");
 
     return p.then(() => content.removeChild(iframe));
   }
