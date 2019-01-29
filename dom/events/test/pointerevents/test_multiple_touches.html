@@ -1,0 +1,134 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Multiple Touches</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="target0" style="width: 100px; height: 100px; background: green"></div>
+<div id="target1" style="width: 100px; height: 100px; background: red"></div>
+<script type="text/javascript">
+// TODO: We should probably make EventUtils.js to support multiple touch.
+// Currently the use case is simple, so we just add support here.
+// Once we have more use cases, we could come out a more generic way to
+// support it.
+var touches = {
+  ids: [],
+  lefts: [],
+  tops: [],
+  rxs: [],
+  rys: [],
+  angles: [],
+  forces: [],
+};
+
+function synthesizeTouchEvent(aType, aIds, aLefts, aTops, aRxs, aRys, aAngles, aForces) {
+  var utils = _getDOMWindowUtils(window);
+  if (!utils) {
+    ok(false, "unable to get nsIDOMWindowUtils");
+    return;
+  }
+
+  utils.sendTouchEvent(aType, aIds, aLefts, aTops, aRxs, aRys,
+                       aAngles, aForces, aIds.length, 0 /* modifiers */);
+}
+
+function synthesizeTouchStart(aTarget, aId, aOffsetX, aOffsetY) {
+  if (touches.ids.some((aElem) => { return aElem === aId; })) {
+    ok(false, `touch with id=${aTouch.id} is already registered`);
+    return;
+  }
+
+  let rect = aTarget.getBoundingClientRect();
+  touches.ids.push(aId);
+  touches.lefts.push(rect.left + aOffsetX);
+  touches.tops.push(rect.top + aOffsetY);
+  touches.rxs.push(1);
+  touches.rys.push(1);
+  touches.angles.push(0);
+  touches.forces.push(1);
+
+  synthesizeTouchEvent("touchstart", touches.ids, touches.lefts, touches.tops,
+                       touches.rxs, touches.rys, touches.angles, touches.forces);
+}
+
+function synthesizeTouchEnd(aTarget, aId, aOffsetX, aOffsetY) {
+  let index = touches.ids.indexOf(aId);
+  if (-1 === index) {
+    ok(false, `touch with id=${aTouch.id} isn't registered`);
+    return;
+  }
+
+  let rect = aTarget.getBoundingClientRect();
+  touches.ids.splice(index, 1);
+  touches.lefts.splice(index, 1);
+  touches.tops.splice(index, 1);
+  touches.rxs.splice(index, 1);
+  touches.rys.splice(index, 1);
+  touches.angles.splice(index, 1);
+  touches.forces.splice(index, 1);
+
+  synthesizeTouchEvent("touchend", [aId], [rect.left + aOffsetX], [rect.top + aOffsetY],
+                       [1], [1], [0], [1]);
+}
+
+var target0 = document.getElementById("target0");
+var target1 = document.getElementById("target1");
+
+add_task(async function setup() {
+  await SimpleTest.promiseFocus();
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.w3c_pointer_events.enabled", true],
+          ["dom.w3c_pointer_events.implicit_capture", false]]
+  });
+});
+
+// Test for bug 1521082
+add_task(async function ShouldNotSendDuplicatedPointerDown() {
+  let expectedEvents = [
+    // [index, target, event type]
+    ["target0", "pointerdown"],
+    ["target1", "pointerdown"],
+    ["target1", "pointerup"],
+    ["target0", "pointerup"],
+  ];
+
+  let promise = new Promise(function(aResolve) {
+    let index = 0;
+    let checkReceivedEvents = function(aTarget, aEventType) {
+      if (expectedEvents.length === 0) {
+        ok(false, `receive unexpected ${aEventType} event from ${aTarget}`);
+        aResolve();
+        return;
+      }
+      index++;
+      let expectedResult = expectedEvents.shift();
+      isDeeply(expectedResult, [aTarget, aEventType], `${index}. expect receive ${expectedResult[1]} event from ${expectedResult[0]}`);
+      if (expectedEvents.length === 0) {
+        aResolve();
+      }
+    };
+
+    ["pointerup", "pointerdown"].forEach((aElem) => {
+      target0.addEventListener(aElem, (e) => { checkReceivedEvents("target0", event.type); });
+      target1.addEventListener(aElem, (e) => { checkReceivedEvents("target1", event.type); });
+    });
+  });
+
+  var defaultId = SpecialPowers.Ci.nsIDOMWindowUtils.DEFAULT_TOUCH_POINTER_ID;
+  synthesizeTouchStart(target0, defaultId, 10, 10);
+  synthesizeTouchStart(target1, defaultId + 1, 10, 10);
+  synthesizeTouchEnd(target1, defaultId + 1, 10, 10);
+  synthesizeTouchEnd(target0, defaultId, 10, 10);
+
+  return promise;
+});
+
+</script>
+</body>
+</html>

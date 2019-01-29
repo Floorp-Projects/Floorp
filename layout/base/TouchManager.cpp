@@ -439,7 +439,7 @@ TouchManager::GetAnyCapturedTouchTarget() {
     // pre-handling touch events.
     return aEvent->mMessage == eTouchStart;
   }
-  return info.mConvertToPointer;
+  return info.mConvertToPointer && aEvent->mMessage != eTouchStart;
 }
 
 }  // namespace mozilla
