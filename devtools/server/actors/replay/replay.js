@@ -41,7 +41,15 @@ const dbg = new Debugger();
 
 // We are interested in debugging all globals in the process.
 dbg.onNewGlobalObject = function(global) {
-  dbg.addDebuggee(global);
+  try {
+    dbg.addDebuggee(global);
+  } catch (e) {
+    // Ignore errors related to adding a same-compartment debuggee.
+    // See bug 1523755.
+    if (!/debugger and debuggee must be in different compartments/.test("" + e)) {
+      throw e;
+    }
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
