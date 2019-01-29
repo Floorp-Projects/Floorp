@@ -3290,17 +3290,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_SYMBOL)
 
     CASE(JSOP_OBJECT) {
-      ReservedRooted<JSObject*> ref(&rootObject0, script->getObject(REGS.pc));
-      if (cx->realm()->creationOptions().cloneSingletons()) {
-        JSObject* obj = DeepCloneObjectLiteral(cx, ref, TenuredObject);
-        if (!obj) {
-          goto error;
-        }
-        PUSH_OBJECT(*obj);
-      } else {
-        cx->realm()->behaviors().setSingletonsAsValues();
-        PUSH_OBJECT(*ref);
+      JSObject* obj = SingletonObjectLiteralOperation(cx, script, REGS.pc);
+      if (!obj) {
+        goto error;
       }
+      PUSH_OBJECT(*obj);
     }
     END_CASE(JSOP_OBJECT)
 
@@ -4683,6 +4677,20 @@ bool js::DefFunOperation(JSContext* cx, HandleScript script,
   /* Step 5f. */
   RootedId id(cx, NameToId(name));
   return PutProperty(cx, parent, id, rval, script->strict());
+}
+
+JSObject* js::SingletonObjectLiteralOperation(JSContext* cx,
+                                              HandleScript script,
+                                              jsbytecode* pc) {
+  MOZ_ASSERT(*pc == JSOP_OBJECT);
+
+  RootedObject obj(cx, script->getObject(pc));
+  if (cx->realm()->creationOptions().cloneSingletons()) {
+    return DeepCloneObjectLiteral(cx, obj, TenuredObject);
+  }
+
+  cx->realm()->behaviors().setSingletonsAsValues();
+  return obj;
 }
 
 bool js::ThrowMsgOperation(JSContext* cx, const unsigned errorNum) {
