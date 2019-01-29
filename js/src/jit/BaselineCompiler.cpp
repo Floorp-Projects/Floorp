@@ -5668,6 +5668,9 @@ static const VMFunction GetOrCreateModuleMetaObjectInfo =
 
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_IMPORTMETA() {
+  // Note: this is like the interpreter implementation, but optimized a bit by
+  // calling GetModuleObjectForScript at compile-time.
+
   RootedModuleObject module(cx, GetModuleObjectForScript(handler.script()));
   MOZ_ASSERT(module);
 
@@ -5684,9 +5687,24 @@ bool BaselineCompilerCodeGen::emit_JSOP_IMPORTMETA() {
   return true;
 }
 
+typedef JSObject* (*ImportMetaOperationFn)(JSContext*, HandleScript);
+static const VMFunction ImportMetaOperationInfo =
+    FunctionInfo<ImportMetaOperationFn>(ImportMetaOperation,
+                                        "ImportMetaOperation");
+
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_IMPORTMETA() {
-  MOZ_CRASH("NYI: interpreter JSOP_IMPORTMETA");
+  prepareVMCall();
+
+  pushScriptArg(R2.scratchReg());
+
+  if (!callVM(ImportMetaOperationInfo)) {
+    return false;
+  }
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+  frame.push(R0);
+  return true;
 }
 
 typedef JSObject* (*StartDynamicModuleImportFn)(JSContext*, HandleScript,
