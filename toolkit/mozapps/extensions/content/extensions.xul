@@ -547,7 +547,7 @@
                         </columns>
                         <rows id="detail-rows">
                           <row class="detail-row-complex" id="detail-privateBrowsing-row">
-                            <label class="detail-row-label" data-l10n-id="detail-private-browsing"/>
+                            <label class="detail-row-label" data-l10n-id="detail-private-browsing-label"/>
                             <hbox align="center">
                               <radiogroup id="detail-privateBrowsing" orient="horizontal">
                                 <radio data-l10n-id="detail-private-browsing-on"
