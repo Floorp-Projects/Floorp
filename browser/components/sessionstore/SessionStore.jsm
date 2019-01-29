@@ -375,8 +375,8 @@ var SessionStore = {
     return SessionStoreInternal.getSessionHistory(tab, updatedCallback);
   },
 
-  undoCloseById(aClosedId, aIncludePrivate) {
-    return SessionStoreInternal.undoCloseById(aClosedId, aIncludePrivate);
+  undoCloseById(aClosedId) {
+    return SessionStoreInternal.undoCloseById(aClosedId);
   },
 
   resetBrowserToLazyState(tab) {
@@ -2689,6 +2689,7 @@ var SessionStoreInternal = {
     if (!(aIndex in this._closedWindows)) {
       throw Components.Exception("Invalid index: not in the closed windows", Cr.NS_ERROR_INVALID_ARG);
     }
+
     // reopen the window
     let state = { windows: this._removeClosedWindow(aIndex) };
     delete state.windows[0].closedAt; // Window is now open.
@@ -2827,12 +2828,10 @@ var SessionStoreInternal = {
    *
    * @param aClosedId
    *        The closedId of the tab or window
-   * @param aIncludePrivate
-   *        Whether to restore private tabs or windows
    *
    * @returns a tab or window object
    */
-  undoCloseById(aClosedId, aIncludePrivate = true) {
+  undoCloseById(aClosedId) {
     // Check for a window first.
     for (let i = 0, l = this._closedWindows.length; i < l; i++) {
       if (this._closedWindows[i].closedId == aClosedId) {
@@ -2842,9 +2841,6 @@ var SessionStoreInternal = {
 
     // Check for a tab.
     for (let window of Services.wm.getEnumerator("navigator:browser")) {
-      if (!aIncludePrivate && PrivateBrowsingUtils.isWindowPrivate(window)) {
-        continue;
-      }
       let windowState = this._windows[window.__SSi];
       if (windowState) {
         for (let j = 0, l = windowState._closedTabs.length; j < l; j++) {
