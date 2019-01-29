@@ -1947,12 +1947,6 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     return true;
   }
 
-  bool getPropertyDescriptor(
-      JSContext* cx, HandleObject proxy, HandleId id,
-      MutableHandle<PropertyDescriptor> desc) const override {
-    return getOwnPropertyDescriptor(cx, proxy, id, desc);
-  }
-
   bool getMissingArgumentsPropertyDescriptor(
       JSContext* cx, Handle<DebugEnvironmentProxy*> debugEnv,
       EnvironmentObject& env, MutableHandle<PropertyDescriptor> desc) const {

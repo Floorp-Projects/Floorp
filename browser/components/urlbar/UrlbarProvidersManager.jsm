@@ -308,7 +308,12 @@ class Query {
       throw new Error("Invalid provider passed to the add callback");
     }
     // Stop returning results as soon as we've been canceled.
-    if (this.canceled || !this.acceptableSources.includes(match.source)) {
+    if (this.canceled) {
+      return;
+    }
+    // Check if the result source should be filtered out. Pay attention to the
+    // heuristic result though, that is supposed to be added regardless.
+    if (!this.acceptableSources.includes(match.source) && !match.heuristic) {
       return;
     }
 

@@ -38,7 +38,7 @@ use webrender_api::DevicePixel;
 const RENDER_TASK_SIZE_SANITY_CHECK: i32 = 16000;
 const FLOATS_PER_RENDER_TASK_INFO: usize = 8;
 pub const MAX_BLUR_STD_DEVIATION: f32 = 4.0;
-pub const MIN_DOWNSCALING_RT_SIZE: i32 = 128;
+pub const MIN_DOWNSCALING_RT_SIZE: i32 = 8;
 
 fn render_task_sanity_check(size: &DeviceIntSize) {
     if size.width > RENDER_TASK_SIZE_SANITY_CHECK ||

@@ -287,7 +287,6 @@ bool CallOrNewEmitter::emitEnd(uint32_t argc, const Maybe<uint32_t>& beginPos) {
       return false;
     }
   }
-  bce_->checkTypeSet(op_);
 
   if (isEval() && beginPos) {
     uint32_t lineNum = bce_->parser->errorReporter().lineAt(*beginPos);

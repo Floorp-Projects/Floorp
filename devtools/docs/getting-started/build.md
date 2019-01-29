@@ -52,6 +52,8 @@ Try building Firefox and downloading dependencies by running the following comma
 
 This script might ask you questions, so it's recommended to keep an eye on the terminal while it's running—otherwise it will never finish!
 
+*Please note, when you are prompted for your name and add unicode characters this can crash the process. The workaround here is to use ascii-friendly characters and later on edit your `~/.hgrc` file manually to use the unicode characters in your name.*
+
 After it finishes, you might be asked to add some lines to a `mozconfig` file. Create this file in the repository folder (i.e. in `~/mozilla-central`), then add the lines.
 
 Then run this:

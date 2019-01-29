@@ -1958,7 +1958,14 @@ bool GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId, HandleId id) {
   } else if (val_.isSymbol()) {
     primitiveType = JSVAL_TYPE_SYMBOL;
     proto = MaybeNativeObject(cx_->global()->maybeGetPrototype(JSProto_Symbol));
-  } else {
+  }
+#ifdef ENABLE_BIGINT
+  else if (val_.isBigInt()) {
+    primitiveType = JSVAL_TYPE_BIGINT;
+    proto = MaybeNativeObject(cx_->global()->maybeGetPrototype(JSProto_BigInt));
+  }
+#endif
+  else {
     MOZ_ASSERT(val_.isNullOrUndefined() || val_.isMagic());
     return false;
   }

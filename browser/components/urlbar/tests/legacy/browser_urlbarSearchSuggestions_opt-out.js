@@ -56,7 +56,7 @@ add_task(async function focus() {
   EventUtils.sendString("rnd");
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  Assert.ok(suggestionsPresent());
+  await promiseSuggestionsPresent();
   assertVisible(true);
   assertFooterVisible(true);
 

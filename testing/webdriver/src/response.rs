@@ -285,6 +285,14 @@ mod tests {
     }
 
     #[test]
+    fn test_json_timeouts_response_with_null_script_timeout() {
+        let json = r#"{"value":{"script":null,"pageLoad":2,"implicit":3}}"#;
+        let data = WebDriverResponse::Timeouts(TimeoutsResponse::new(None, 2, 3));
+
+        check_serialize(&json, &data);
+    }
+
+    #[test]
     fn test_json_void_response() {
         let json = r#"{"value":null}"#;
         let data = WebDriverResponse::Void;

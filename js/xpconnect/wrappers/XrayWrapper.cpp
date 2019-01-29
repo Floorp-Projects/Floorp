@@ -1871,14 +1871,6 @@ bool XrayWrapper<Base, Traits>::isExtensible(JSContext* cx,
 }
 
 template <typename Base, typename Traits>
-bool XrayWrapper<Base, Traits>::getPropertyDescriptor(
-    JSContext* cx, HandleObject wrapper, HandleId id,
-    JS::MutableHandle<PropertyDescriptor> desc) const {
-  MOZ_CRASH("Shouldn't be called: we return true for hasPrototype()");
-  return false;
-}
-
-template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
     JS::MutableHandle<PropertyDescriptor> desc) const {

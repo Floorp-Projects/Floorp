@@ -20,7 +20,6 @@ EXTRA_JS_MODULES.sessionstore = [
     'SessionMigration.jsm',
     'SessionSaver.jsm',
     'SessionStartup.jsm',
-    'SessionStorage.jsm',
     'SessionStore.jsm',
     'SessionWorker.js',
     'SessionWorker.jsm',

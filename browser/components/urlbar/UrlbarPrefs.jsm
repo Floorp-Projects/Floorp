@@ -97,6 +97,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // should be opened in new tabs by default.
   ["openintab", false],
 
+  // Whether the quantum bar is enabled.
+  ["quantumbar", false],
+
+  // Whether speculative connections should be enabled.
+  ["speculativeConnect.enabled", true],
+
   // Results will include the user's bookmarks when this is true.
   ["suggest.bookmark", true],
 
@@ -130,6 +136,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 ]);
 const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
+  ["browser.search.suggest.enabled", true],
 ]);
 
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined
@@ -183,7 +190,9 @@ class Preferences {
       Ci.nsISupportsWeakReference,
     ]);
     Services.prefs.addObserver(PREF_URLBAR_BRANCH, this, true);
-    Services.prefs.addObserver("keyword.enabled", this, true);
+    for (let pref of PREF_OTHER_DEFAULTS.keys()) {
+      Services.prefs.addObserver(pref, this, true);
+    }
   }
 
   /**

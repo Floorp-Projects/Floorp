@@ -83,9 +83,6 @@ class JS_FRIEND_API ForwardingProxyHandler : public BaseProxyHandler {
                          const CallArgs& args) const override;
 
   /* SpiderMonkey extensions. */
-  virtual bool getPropertyDescriptor(
-      JSContext* cx, HandleObject proxy, HandleId id,
-      MutableHandle<PropertyDescriptor> desc) const override;
   virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id,
                       bool* bp) const override;
   virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
@@ -215,9 +212,6 @@ class JS_FRIEND_API CrossCompartmentWrapper : public Wrapper {
                          const CallArgs& args) const override;
 
   /* SpiderMonkey extensions. */
-  virtual bool getPropertyDescriptor(
-      JSContext* cx, HandleObject wrapper, HandleId id,
-      MutableHandle<PropertyDescriptor> desc) const override;
   virtual bool hasOwn(JSContext* cx, HandleObject wrapper, HandleId id,
                       bool* bp) const override;
   virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject wrapper,
@@ -288,9 +282,6 @@ class JS_FRIEND_API OpaqueCrossCompartmentWrapper
                          const CallArgs& args) const override;
 
   /* SpiderMonkey extensions. */
-  virtual bool getPropertyDescriptor(
-      JSContext* cx, HandleObject wrapper, HandleId id,
-      MutableHandle<PropertyDescriptor> desc) const override;
   virtual bool hasOwn(JSContext* cx, HandleObject wrapper, HandleId id,
                       bool* bp) const override;
   virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject wrapper,

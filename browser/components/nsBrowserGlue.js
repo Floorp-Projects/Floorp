@@ -1577,6 +1577,10 @@ BrowserGlue.prototype = {
         enableCertErrorUITelemetry);
     });
 
+    Services.tm.idleDispatchToMainThread(() => {
+      this._recordContentBlockingTelemetry();
+    });
+
     // Load the Login Manager data from disk off the main thread, some time
     // after startup.  If the data is required before this runs, for example
     // because a restored page contains a password field, it will be loaded on
@@ -2095,10 +2099,6 @@ BrowserGlue.prototype = {
       // we threw halfway through initializing in the Task above.
       this._placesBrowserInitComplete = true;
       Services.obs.notifyObservers(null, "places-browser-init-complete");
-    });
-
-    Services.tm.idleDispatchToMainThread(() => {
-      this._recordContentBlockingTelemetry();
     });
   },
 
