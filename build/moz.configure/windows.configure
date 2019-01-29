@@ -475,10 +475,15 @@ def linker_progs_for(host_or_target):
     return linker_progs
 
 
-link = check_prog('LINKER', linker_progs_for(target),
+js_option(env='LINKER', nargs=1, help='Path to the linker')
+
+link = check_prog('LINKER', linker_progs_for(target), input='LINKER',
                   paths=toolchain_search_path)
 
+js_option(env='HOST_LINKER', nargs=1, help='Path to the host linker')
+
 host_link = check_prog('HOST_LINKER', linker_progs_for(host),
+                       input='HOST_LINKER',
                        paths=host_toolchain_search_path)
 
 add_old_configure_assignment('LINKER', link)
