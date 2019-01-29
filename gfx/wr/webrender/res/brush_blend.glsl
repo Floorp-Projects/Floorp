@@ -6,11 +6,8 @@
 
 #include shared,prim_shared,brush
 
-// Interpolated UV coordinates to sample.
-varying vec2 vUv;
+varying vec3 vUv;
 
-// X = layer index to sample, Y = flag to allow perspective interpolation of UV.
-flat varying vec2 vLayerAndPerspective;
 flat varying float vAmount;
 flat varying int vOp;
 flat varying mat3 vColorMat;
@@ -42,10 +39,8 @@ void brush_vs(
     vec2 y = mix(extra_data.st_bl, extra_data.st_br, f.x);
     f = mix(x, y, f.y);
     vec2 uv = mix(uv0, uv1, f);
-    float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;
+    vUv = vec3(uv / texture_size, res.layer);
 
-    vUv = uv / texture_size * mix(vi.world_pos.w, 1.0, perspective_interpolate);
-    vLayerAndPerspective = vec2(res.layer, perspective_interpolate);
     vUvClipBounds = vec4(uv0, uv1) / texture_size.xyxy;
 
     float lumR = 0.2126;
@@ -151,8 +146,7 @@ vec3 LinearToSrgb(vec3 color) {
 }
 
 Fragment brush_fs() {
-    float perspective_divisor = mix(gl_FragCoord.w, 1.0, vLayerAndPerspective.y);
-    vec4 Cs = texture(sColor0, vec3(vUv * perspective_divisor, vLayerAndPerspective.x));
+    vec4 Cs = texture(sColor0, vUv);
 
     // Un-premultiply the input.
     float alpha = Cs.a;
