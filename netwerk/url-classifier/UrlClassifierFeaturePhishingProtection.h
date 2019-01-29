@@ -4,17 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_UrlClassifierFeatureNoChannel_h
-#define mozilla_UrlClassifierFeatureNoChannel_h
+#ifndef mozilla_UrlClassifierFeaturePhishingProtection_h
+#define mozilla_UrlClassifierFeaturePhishingProtection_h
 
 #include "UrlClassifierFeatureBase.h"
 
 namespace mozilla {
 namespace net {
 
-class UrlClassifierFeatureNoChannel final : public UrlClassifierFeatureBase {
+class UrlClassifierFeaturePhishingProtection final
+    : public UrlClassifierFeatureBase {
  public:
-  struct NoChannelFeature;
+  struct PhishingProtectionFeature;
 
   static void GetFeatureNames(nsTArray<nsCString>& aNames);
 
@@ -35,7 +36,8 @@ class UrlClassifierFeatureNoChannel final : public UrlClassifierFeatureBase {
                               nsIURI** aURI) override;
 
  private:
-  explicit UrlClassifierFeatureNoChannel(const NoChannelFeature& aFeature);
+  explicit UrlClassifierFeaturePhishingProtection(
+      const PhishingProtectionFeature& aFeature);
 
   static void MaybeInitialize();
 };
@@ -43,4 +45,4 @@ class UrlClassifierFeatureNoChannel final : public UrlClassifierFeatureBase {
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozilla_UrlClassifierFeatureNoChannel_h
+#endif  // mozilla_UrlClassifierFeaturePhishingProtection_h

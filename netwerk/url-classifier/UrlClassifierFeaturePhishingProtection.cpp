@@ -4,23 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "UrlClassifierFeatureNoChannel.h"
+#include "UrlClassifierFeaturePhishingProtection.h"
 
 namespace mozilla {
 namespace net {
 
-struct UrlClassifierFeatureNoChannel::NoChannelFeature {
+struct UrlClassifierFeaturePhishingProtection::PhishingProtectionFeature {
   const char* mName;
   const char* mBlacklistPrefTables;
   bool (*mPref)();
 
-  RefPtr<UrlClassifierFeatureNoChannel> mFeature;
+  RefPtr<UrlClassifierFeaturePhishingProtection> mFeature;
 };
 
 namespace {
 
-struct UrlClassifierFeatureNoChannel::NoChannelFeature sNoChannelFeaturesMap[] =
-    {
+struct UrlClassifierFeaturePhishingProtection::PhishingProtectionFeature
+    sPhishingProtectionFeaturesMap[] = {
         {"malware", "urlclassifier.malwareTable",
          StaticPrefs::browser_safebrowsing_malware_enabled},
         {"phishing", "urlclassifier.phishTable",
@@ -31,8 +31,9 @@ struct UrlClassifierFeatureNoChannel::NoChannelFeature sNoChannelFeaturesMap[] =
 
 }  // namespace
 
-UrlClassifierFeatureNoChannel::UrlClassifierFeatureNoChannel(
-    const UrlClassifierFeatureNoChannel::NoChannelFeature& aFeature)
+UrlClassifierFeaturePhishingProtection::UrlClassifierFeaturePhishingProtection(
+    const UrlClassifierFeaturePhishingProtection::PhishingProtectionFeature&
+        aFeature)
     : UrlClassifierFeatureBase(
           nsDependentCString(aFeature.mName),
           nsDependentCString(aFeature.mBlacklistPrefTables),
@@ -44,26 +45,27 @@ UrlClassifierFeatureNoChannel::UrlClassifierFeatureNoChannel(
           EmptyCString()) {  // aPrefSkipHosts
 }
 
-/* static */ void UrlClassifierFeatureNoChannel::GetFeatureNames(
+/* static */ void UrlClassifierFeaturePhishingProtection::GetFeatureNames(
     nsTArray<nsCString>& aArray) {
-  for (const NoChannelFeature& feature : sNoChannelFeaturesMap) {
+  for (const PhishingProtectionFeature& feature :
+       sPhishingProtectionFeaturesMap) {
     if (feature.mPref()) {
       aArray.AppendElement(nsDependentCString(feature.mName));
     }
   }
 }
 
-/* static */ void UrlClassifierFeatureNoChannel::MaybeInitialize() {
-  for (NoChannelFeature& feature : sNoChannelFeaturesMap) {
+/* static */ void UrlClassifierFeaturePhishingProtection::MaybeInitialize() {
+  for (PhishingProtectionFeature& feature : sPhishingProtectionFeaturesMap) {
     if (!feature.mFeature && feature.mPref()) {
-      feature.mFeature = new UrlClassifierFeatureNoChannel(feature);
+      feature.mFeature = new UrlClassifierFeaturePhishingProtection(feature);
       feature.mFeature->InitializePreferences();
     }
   }
 }
 
-/* static */ void UrlClassifierFeatureNoChannel::MaybeShutdown() {
-  for (NoChannelFeature& feature : sNoChannelFeaturesMap) {
+/* static */ void UrlClassifierFeaturePhishingProtection::MaybeShutdown() {
+  for (PhishingProtectionFeature& feature : sPhishingProtectionFeaturesMap) {
     if (feature.mFeature) {
       feature.mFeature->ShutdownPreferences();
       feature.mFeature = nullptr;
@@ -71,11 +73,12 @@ UrlClassifierFeatureNoChannel::UrlClassifierFeatureNoChannel(
   }
 }
 
-/* static */ void UrlClassifierFeatureNoChannel::MaybeCreate(
+/* static */ void UrlClassifierFeaturePhishingProtection::MaybeCreate(
     nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures) {
   MaybeInitialize();
 
-  for (const NoChannelFeature& feature : sNoChannelFeaturesMap) {
+  for (const PhishingProtectionFeature& feature :
+       sPhishingProtectionFeaturesMap) {
     if (feature.mPref()) {
       MOZ_ASSERT(feature.mFeature);
       aFeatures.AppendElement(feature.mFeature);
@@ -84,10 +87,12 @@ UrlClassifierFeatureNoChannel::UrlClassifierFeatureNoChannel(
 }
 
 /* static */ already_AddRefed<nsIUrlClassifierFeature>
-UrlClassifierFeatureNoChannel::GetIfNameMatches(const nsACString& aName) {
+UrlClassifierFeaturePhishingProtection::GetIfNameMatches(
+    const nsACString& aName) {
   MaybeInitialize();
 
-  for (const NoChannelFeature& feature : sNoChannelFeaturesMap) {
+  for (const PhishingProtectionFeature& feature :
+       sPhishingProtectionFeaturesMap) {
     if (feature.mPref() && aName.Equals(feature.mName)) {
       MOZ_ASSERT(feature.mFeature);
       nsCOMPtr<nsIUrlClassifierFeature> self = feature.mFeature.get();
@@ -99,14 +104,14 @@ UrlClassifierFeatureNoChannel::GetIfNameMatches(const nsACString& aName) {
 }
 
 NS_IMETHODIMP
-UrlClassifierFeatureNoChannel::ProcessChannel(nsIChannel* aChannel,
-                                              const nsACString& aList,
-                                              bool* aShouldContinue) {
+UrlClassifierFeaturePhishingProtection::ProcessChannel(nsIChannel* aChannel,
+                                                       const nsACString& aList,
+                                                       bool* aShouldContinue) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-UrlClassifierFeatureNoChannel::GetURIByListType(
+UrlClassifierFeaturePhishingProtection::GetURIByListType(
     nsIChannel* aChannel, nsIUrlClassifierFeature::listType aListType,
     nsIURI** aURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
