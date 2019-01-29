@@ -293,11 +293,13 @@ bool PropertyEmitter::emitInitProp(
 }
 
 bool PropertyEmitter::emitInitGetter(JS::Handle<JSAtom*> key) {
+  obj_ = nullptr;
   return emitInit(isClass_ ? JSOP_INITHIDDENPROP_GETTER : JSOP_INITPROP_GETTER,
                   key, false, nullptr);
 }
 
 bool PropertyEmitter::emitInitSetter(JS::Handle<JSAtom*> key) {
+  obj_ = nullptr;
   return emitInit(isClass_ ? JSOP_INITHIDDENPROP_SETTER : JSOP_INITPROP_SETTER,
                   key, false, nullptr);
 }
@@ -310,12 +312,14 @@ bool PropertyEmitter::emitInitIndexProp(
 }
 
 bool PropertyEmitter::emitInitIndexGetter() {
+  obj_ = nullptr;
   return emitInitIndexOrComputed(
       isClass_ ? JSOP_INITHIDDENELEM_GETTER : JSOP_INITELEM_GETTER,
       FunctionPrefixKind::Get, false);
 }
 
 bool PropertyEmitter::emitInitIndexSetter() {
+  obj_ = nullptr;
   return emitInitIndexOrComputed(
       isClass_ ? JSOP_INITHIDDENELEM_SETTER : JSOP_INITELEM_SETTER,
       FunctionPrefixKind::Set, false);
@@ -329,12 +333,14 @@ bool PropertyEmitter::emitInitComputedProp(
 }
 
 bool PropertyEmitter::emitInitComputedGetter() {
+  obj_ = nullptr;
   return emitInitIndexOrComputed(
       isClass_ ? JSOP_INITHIDDENELEM_GETTER : JSOP_INITELEM_GETTER,
       FunctionPrefixKind::Get, true);
 }
 
 bool PropertyEmitter::emitInitComputedSetter() {
+  obj_ = nullptr;
   return emitInitIndexOrComputed(
       isClass_ ? JSOP_INITHIDDENELEM_SETTER : JSOP_INITELEM_SETTER,
       FunctionPrefixKind::Set, true);
