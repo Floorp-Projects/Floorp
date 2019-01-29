@@ -772,10 +772,11 @@ void js::Nursery::collect(JS::GCReason reason) {
   bool validPromotionRate;
   const float promotionRate = calcPromotionRate(&validPromotionRate);
   uint32_t pretenureCount = 0;
-  bool shouldPretenure = tunables().attemptPretenuring() &&
-                         ((validPromotionRate &&
-                           promotionRate > tunables().pretenureThreshold()) ||
-                          IsFullStoreBufferReason(reason));
+  bool shouldPretenure =
+      tunables().attemptPretenuring() &&
+      ((validPromotionRate && promotionRate > tunables().pretenureThreshold() &&
+        previousGC.nurseryUsedBytes >= 4 * 1024 * 1024) ||
+       IsFullStoreBufferReason(reason));
 
   if (shouldPretenure) {
     JSContext* cx = rt->mainContextFromOwnThread();
