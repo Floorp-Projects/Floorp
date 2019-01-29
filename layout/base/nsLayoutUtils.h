@@ -533,6 +533,17 @@ class nsLayoutUtils {
                                     const nsIFrame* aCommonAncestor = nullptr);
 
   /**
+   * IsAncestorFrame checks whether aAncestorFrame is an ancestor
+   * of aFrame or equal to aFrame.
+   * @param aCommonAncestor nullptr, or a common ancestor of aFrame and
+   * aAncestorFrame. If non-null, this can bound the search and speed up
+   * the function
+   */
+  static bool IsAncestorFrame(const nsIFrame* aAncestorFrame,
+                              const nsIFrame* aFrame,
+                              const nsIFrame* aCommonAncestor = nullptr);
+
+  /**
    * Like IsProperAncestorFrame, but looks across document boundaries.
    *
    * Just like IsAncestorFrameCrossDoc, except that it returns false when
