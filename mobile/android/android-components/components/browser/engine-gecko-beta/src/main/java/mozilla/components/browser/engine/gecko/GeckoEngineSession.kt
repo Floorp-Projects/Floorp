@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +36,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.WebRequestError
-import kotlin.coroutines.CoroutineContext
+import java.lang.IllegalStateException
 
 /**
  * Gecko-based EngineSession implementation.
@@ -45,11 +46,16 @@ class GeckoEngineSession(
     private val runtime: GeckoRuntime,
     private val privateMode: Boolean = false,
     private val defaultSettings: Settings? = null,
-    private val geckoSessionProvider: () -> GeckoSession = { GeckoSession() },
+    private val geckoSessionProvider: () -> GeckoSession = {
+        val settings = GeckoSessionSettings.Builder()
+            .usePrivateMode(privateMode)
+            .build()
+        GeckoSession(settings)
+    },
     private val context: CoroutineContext = Dispatchers.IO
 ) : CoroutineScope, EngineSession() {
 
-    internal var geckoSession: GeckoSession = geckoSessionProvider()
+    internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
     internal var job: Job = Job()
 
@@ -60,8 +66,8 @@ class GeckoEngineSession(
         override var requestInterceptor: RequestInterceptor? = null
         override var historyTrackingDelegate: HistoryTrackingDelegate? = null
         override var userAgentString: String?
-            get() = geckoSession.settings.getString(GeckoSessionSettings.USER_AGENT_OVERRIDE)
-            set(value) = geckoSession.settings.setString(GeckoSessionSettings.USER_AGENT_OVERRIDE, value)
+            get() = geckoSession.settings.userAgentOverride
+            set(value) { geckoSession.settings.userAgentOverride = value }
     }
 
     private var initialLoad = true
@@ -70,7 +76,7 @@ class GeckoEngineSession(
         get() = context + job
 
     init {
-        initGeckoSession()
+        createGeckoSession()
     }
 
     /**
@@ -168,7 +174,7 @@ class GeckoEngineSession(
         } else {
             policy.useForRegularSessions
         }
-        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, enabled)
+        geckoSession.settings.useTrackingProtection = enabled
         notifyObservers { onTrackerBlockingEnabledChange(enabled) }
     }
 
@@ -176,7 +182,7 @@ class GeckoEngineSession(
      * See [EngineSession.disableTrackingProtection]
      */
     override fun disableTrackingProtection() {
-        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, false)
+        geckoSession.settings.useTrackingProtection = false
         notifyObservers { onTrackerBlockingEnabledChange(false) }
     }
 
@@ -184,7 +190,7 @@ class GeckoEngineSession(
      * See [EngineSession.settings]
      */
     override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
-        val currentMode = geckoSession.settings.getInt(GeckoSessionSettings.USER_AGENT_MODE)
+        val currentMode = geckoSession.settings.userAgentMode
         val newMode = if (enable) {
             GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
         } else {
@@ -192,7 +198,7 @@ class GeckoEngineSession(
         }
 
         if (newMode != currentMode) {
-            geckoSession.settings.setInt(GeckoSessionSettings.USER_AGENT_MODE, newMode)
+            geckoSession.settings.userAgentMode = newMode
             notifyObservers { onDesktopModeChange(enable) }
         }
 
@@ -265,7 +271,11 @@ class GeckoEngineSession(
      */
     @Suppress("ComplexMethod")
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
-        override fun onLocationChange(session: GeckoSession?, url: String) {
+        override fun onLocationChange(session: GeckoSession, url: String?) {
+            if (url == null) {
+                return // ¯\_(ツ)_/¯
+            }
+
             // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
             if (initialLoad && url == ABOUT_BLANK) {
                 return
@@ -298,11 +308,11 @@ class GeckoEngineSession(
             return GeckoResult.fromValue(if (response != null) AllowOrDeny.DENY else AllowOrDeny.ALLOW)
         }
 
-        override fun onCanGoForward(session: GeckoSession?, canGoForward: Boolean) {
+        override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
             notifyObservers { onNavigationStateChange(canGoForward = canGoForward) }
         }
 
-        override fun onCanGoBack(session: GeckoSession?, canGoBack: Boolean) {
+        override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
             notifyObservers { onNavigationStateChange(canGoBack = canGoBack) }
         }
 
@@ -312,7 +322,7 @@ class GeckoEngineSession(
         ): GeckoResult<GeckoSession> = GeckoResult.fromValue(null)
 
         override fun onLoadError(
-            session: GeckoSession?,
+            session: GeckoSession,
             uri: String?,
             error: WebRequestError
         ): GeckoResult<String> {
@@ -331,13 +341,13 @@ class GeckoEngineSession(
      * ProgressDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createProgressDelegate() = object : GeckoSession.ProgressDelegate {
-        override fun onProgressChange(session: GeckoSession?, progress: Int) {
+        override fun onProgressChange(session: GeckoSession, progress: Int) {
             notifyObservers { onProgress(progress) }
         }
 
         override fun onSecurityChange(
-            session: GeckoSession?,
-            securityInfo: GeckoSession.ProgressDelegate.SecurityInformation?
+            session: GeckoSession,
+            securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
         ) {
             // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
             if (initialLoad && securityInfo?.origin?.startsWith(MOZ_NULL_PRINCIPAL) == true) {
@@ -345,16 +355,12 @@ class GeckoEngineSession(
             }
 
             notifyObservers {
-                if (securityInfo == null) {
-                    onSecurityChange(false)
-                    return@notifyObservers
-                }
                 onSecurityChange(securityInfo.isSecure, securityInfo.host, securityInfo.issuerOrganization)
             }
         }
 
-        override fun onPageStart(session: GeckoSession?, url: String?) {
-            url?.let { currentUrl = it }
+        override fun onPageStart(session: GeckoSession, url: String) {
+            currentUrl = url
 
             notifyObservers {
                 onProgress(PROGRESS_START)
@@ -362,7 +368,7 @@ class GeckoEngineSession(
             }
         }
 
-        override fun onPageStop(session: GeckoSession?, success: Boolean) {
+        override fun onPageStop(session: GeckoSession, success: Boolean) {
             if (success) {
                 notifyObservers {
                     onProgress(PROGRESS_STOP)
@@ -421,7 +427,7 @@ class GeckoEngineSession(
 
     @Suppress("ComplexMethod")
     internal fun createContentDelegate() = object : GeckoSession.ContentDelegate {
-        override fun onFirstComposite(session: GeckoSession?) = Unit
+        override fun onFirstComposite(session: GeckoSession) = Unit
 
         override fun onContextMenu(
             session: GeckoSession,
@@ -435,9 +441,9 @@ class GeckoEngineSession(
             }
         }
 
-        override fun onCrash(session: GeckoSession?) {
+        override fun onCrash(session: GeckoSession) {
             geckoSession.close()
-            initGeckoSession()
+            createGeckoSession()
         }
 
         override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
@@ -458,17 +464,17 @@ class GeckoEngineSession(
 
         override fun onCloseRequest(session: GeckoSession) = Unit
 
-        override fun onTitleChange(session: GeckoSession, title: String) {
+        override fun onTitleChange(session: GeckoSession, title: String?) {
             if (!privateMode) {
                 currentUrl?.let { url ->
                     settings.historyTrackingDelegate?.let { delegate ->
                         runBlocking {
-                            delegate.onTitleChanged(url, title)
+                            delegate.onTitleChanged(url, title ?: "")
                         }
                     }
                 }
             }
-            notifyObservers { onTitleChange(title) }
+            notifyObservers { onTitleChange(title ?: "") }
         }
 
         override fun onFocusRequest(session: GeckoSession) = Unit
@@ -481,7 +487,7 @@ class GeckoEngineSession(
 
     private fun createPermissionDelegate() = object : GeckoSession.PermissionDelegate {
         override fun onContentPermissionRequest(
-            session: GeckoSession?,
+            session: GeckoSession,
             uri: String?,
             type: Int,
             callback: GeckoSession.PermissionDelegate.Callback
@@ -491,8 +497,8 @@ class GeckoEngineSession(
         }
 
         override fun onMediaPermissionRequest(
-            session: GeckoSession?,
-            uri: String?,
+            session: GeckoSession,
+            uri: String,
             video: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
             audio: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
             callback: GeckoSession.PermissionDelegate.MediaCallback
@@ -506,7 +512,7 @@ class GeckoEngineSession(
         }
 
         override fun onAndroidPermissionsRequest(
-            session: GeckoSession?,
+            session: GeckoSession,
             permissions: Array<out String>?,
             callback: GeckoSession.PermissionDelegate.Callback
         ) {
@@ -559,19 +565,19 @@ class GeckoEngineSession(
         return null
     }
 
-    private fun initGeckoSession() {
+    private fun createGeckoSession() {
         this.geckoSession = geckoSessionProvider()
+
         defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
         defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
         defaultSettings?.historyTrackingDelegate?.let { settings.historyTrackingDelegate = it }
         defaultSettings?.testingModeEnabled?.let {
-            geckoSession.settings.setBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE, it)
+            geckoSession.settings.fullAccessibilityTree = it
         }
         defaultSettings?.userAgentString?.let {
-            geckoSession.settings.setString(GeckoSessionSettings.USER_AGENT_OVERRIDE, it)
+            geckoSession.settings.userAgentOverride = it
         }
 
-        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, privateMode)
         geckoSession.open(runtime)
 
         geckoSession.navigationDelegate = createNavigationDelegate()
