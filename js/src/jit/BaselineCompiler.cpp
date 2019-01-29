@@ -5554,9 +5554,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITHOMEOBJECT() {
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_BUILTINPROTO() {
   // The builtin prototype is a constant for a given global.
-  JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(handler.pc()));
-  MOZ_ASSERT(key < JSProto_LIMIT);
-  JSObject* builtin = GlobalObject::getOrCreatePrototype(cx, key);
+  JSObject* builtin = BuiltinProtoOperation(cx, handler.pc());
   if (!builtin) {
     return false;
   }
@@ -5564,9 +5562,24 @@ bool BaselineCompilerCodeGen::emit_JSOP_BUILTINPROTO() {
   return true;
 }
 
+typedef JSObject* (*BuiltinProtoOperationFn)(JSContext*, jsbytecode*);
+static const VMFunction BuiltinProtoOperationInfo =
+    FunctionInfo<BuiltinProtoOperationFn>(BuiltinProtoOperation,
+                                          "BuiltinProtoOperation");
+
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_BUILTINPROTO() {
-  MOZ_CRASH("NYI: interpreter JSOP_BUILTINPROTO");
+  prepareVMCall();
+
+  pushBytecodePCArg();
+
+  if (!callVM(BuiltinProtoOperationInfo)) {
+    return false;
+  }
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+  frame.push(R0);
+  return true;
 }
 
 typedef JSObject* (*ObjectWithProtoOperationFn)(JSContext*, HandleValue);
