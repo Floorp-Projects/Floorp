@@ -146,7 +146,9 @@ void TimeoutManager::SetLoading(bool value) {
 void TimeoutManager::MoveIdleToActive() {
   uint32_t num = 0;
   TimeStamp when;
+#if MOZ_GECKO_PROFILER
   TimeStamp now;
+#endif
   // Ensure we maintain the ordering of timeouts, so timeouts
   // never fire before a timeout set for an earlier time, or
   // before a timeout for the same time already submitted.
@@ -172,7 +174,7 @@ void TimeoutManager::MoveIdleToActive() {
           int(delta.ToMilliseconds()));
       // don't have end before start...
       profiler_add_marker(
-          "setTimeout release", js::ProfilingStackFrame::Category::DOM,
+          "setTimeout deferred release", js::ProfilingStackFrame::Category::DOM,
           MakeUnique<TextMarkerPayload>(
               marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now,
               now));
@@ -912,27 +914,28 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
         }
 
         // This timeout is good to run
+        bool timeout_was_cleared = mWindow.RunTimeoutHandler(timeout, scx);
 #if MOZ_GECKO_PROFILER
         if (profiler_is_active()) {
-          if (aProcessIdle) {
-            TimeDuration elapsed = now - timeout->SubmitTime();
-            TimeDuration target = timeout->When() - timeout->SubmitTime();
-            TimeDuration delta = now - timeout->When();
-            nsPrintfCString marker(
-                "%ssetTimeout() for %dms (original target time was %dms (%dms "
-                "delta))",
-                aProcessIdle ? "Deferred " : "", int(elapsed.ToMilliseconds()),
-                int(target.ToMilliseconds()), int(delta.ToMilliseconds()));
-            // don't have end before start...
-            profiler_add_marker(
-                "setTimeout", js::ProfilingStackFrame::Category::DOM,
-                MakeUnique<TextMarkerPayload>(
-                    marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now,
-                    now));
-          }
+          TimeDuration elapsed = now - timeout->SubmitTime();
+          TimeDuration target = timeout->When() - timeout->SubmitTime();
+          TimeDuration delta = now - timeout->When();
+          TimeDuration runtime = TimeStamp::Now() - now;
+          nsPrintfCString marker(
+              "%sset%s() for %dms (original target time was %dms (%dms "
+              "delta)); runtime = %dms",
+              aProcessIdle ? "Deferred " : "",
+              timeout->mIsInterval ? "Interval" : "Timeout",
+              int(elapsed.ToMilliseconds()), int(target.ToMilliseconds()),
+              int(delta.ToMilliseconds()),  int(runtime.ToMilliseconds()));
+          // don't have end before start...
+          profiler_add_marker(
+              "setTimeout", js::ProfilingStackFrame::Category::DOM,
+              MakeUnique<TextMarkerPayload>(
+                  marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now,
+                  now));
         }
 #endif
-        bool timeout_was_cleared = mWindow.RunTimeoutHandler(timeout, scx);
 
         MOZ_LOG(gTimeoutLog, LogLevel::Debug,
                 ("Run%s(TimeoutManager=%p, timeout=%p) returned %d\n",
