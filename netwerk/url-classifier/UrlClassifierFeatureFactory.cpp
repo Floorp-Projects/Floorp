@@ -11,7 +11,7 @@
 #include "UrlClassifierFeatureFingerprinting.h"
 #include "UrlClassifierFeatureFlash.h"
 #include "UrlClassifierFeatureLoginReputation.h"
-#include "UrlClassifierFeatureNoChannel.h"
+#include "UrlClassifierFeaturePhishingProtection.h"
 #include "UrlClassifierFeatureTrackingProtection.h"
 #include "UrlClassifierFeatureTrackingAnnotation.h"
 #include "UrlClassifierFeatureCustomTables.h"
@@ -31,7 +31,7 @@ namespace net {
   UrlClassifierFeatureFingerprinting::MaybeShutdown();
   UrlClassifierFeatureFlash::MaybeShutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
-  UrlClassifierFeatureNoChannel::MaybeShutdown();
+  UrlClassifierFeaturePhishingProtection::MaybeShutdown();
   UrlClassifierFeatureTrackingAnnotation::MaybeShutdown();
   UrlClassifierFeatureTrackingProtection::MaybeShutdown();
 }
@@ -79,9 +79,9 @@ namespace net {
   aFeatures.AppendElements(flashFeatures);
 }
 
-/* static */ void UrlClassifierFeatureFactory::GetFeaturesNoChannel(
+/* static */ void UrlClassifierFeatureFactory::GetPhishingProtectionFeatures(
     nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures) {
-  UrlClassifierFeatureNoChannel::MaybeCreate(aFeatures);
+  UrlClassifierFeaturePhishingProtection::MaybeCreate(aFeatures);
 }
 
 /* static */
@@ -134,8 +134,8 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
     return feature.forget();
   }
 
-  // NoChannel features
-  feature = UrlClassifierFeatureNoChannel::GetIfNameMatches(aName);
+  // PhishingProtection features
+  feature = UrlClassifierFeaturePhishingProtection::GetIfNameMatches(aName);
   if (feature) {
     return feature.forget();
   }
@@ -187,10 +187,10 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
     aArray.AppendElements(features);
   }
 
-  // NoChannel features
+  // PhishingProtection features
   {
     nsTArray<nsCString> features;
-    UrlClassifierFeatureNoChannel::GetFeatureNames(features);
+    UrlClassifierFeaturePhishingProtection::GetFeatureNames(features);
     aArray.AppendElements(features);
   }
 }
