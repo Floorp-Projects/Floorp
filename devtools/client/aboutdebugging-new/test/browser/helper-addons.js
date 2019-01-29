@@ -81,7 +81,7 @@ function createTemporaryXPI(xpiData) {
   const { ExtensionTestCommon } =
     ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
 
-  const { background, files, id, name, extraProperties } = xpiData;
+  const { background, id, name, extraProperties } = xpiData;
   info("Generate XPI file for " + id);
 
   const manifest = Object.assign({}, {
@@ -91,7 +91,7 @@ function createTemporaryXPI(xpiData) {
     version: "1.0",
   }, extraProperties);
 
-  const xpiFile = ExtensionTestCommon.generateXPI({ background, files, manifest });
+  const xpiFile = ExtensionTestCommon.generateXPI({ background, manifest });
   registerCleanupFunction(() => xpiFile.exists() && xpiFile.remove(false));
   return xpiFile;
 }
