@@ -172,9 +172,7 @@
 .ruleview-computedlist,
 .ruleview-expandable-container[hidden],
 .ruleview-overridden-items[hidden],
-.ruleview-overridden-rule-filter.hidden,
 .ruleview-overridden-rule-filter[hidden],
-.ruleview-warning.hidden,
 .ruleview-warning[hidden],
 .ruleview-overridden .ruleview-grid {
   display: none;

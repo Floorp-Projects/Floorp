@@ -14,7 +14,6 @@ const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const OutputParser = require("devtools/client/shared/output-parser");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 const ElementStyle = require("devtools/client/inspector/rules/models/element-style");
-const Rule = require("devtools/client/inspector/rules/models/rule");
 const RuleEditor = require("devtools/client/inspector/rules/views/rule-editor");
 const {
   VIEW_NODE_SELECTOR_TYPE,
@@ -519,53 +518,12 @@ CssRuleView.prototype = {
   },
 
   /**
-   * A helper for _onAddRule that handles the case where the actor
-   * does not support as-authored styles.
-   */
-  _onAddNewRuleNonAuthored: function() {
-    const elementStyle = this._elementStyle;
-    const element = elementStyle.element;
-    const rules = elementStyle.rules;
-    const pseudoClasses = element.pseudoClassLocks;
-
-    this.pageStyle.addNewRule(element, pseudoClasses).then(options => {
-      const newRule = new Rule(elementStyle, options);
-      rules.push(newRule);
-      const editor = new RuleEditor(this, newRule);
-      newRule.editor = editor;
-
-      // Insert the new rule editor after the inline element rule
-      if (rules.length <= 1) {
-        this.element.appendChild(editor.element);
-      } else {
-        for (const rule of rules) {
-          if (rule.domRule.type === ELEMENT_STYLE) {
-            const referenceElement = rule.editor.element.nextSibling;
-            this.element.insertBefore(editor.element, referenceElement);
-            break;
-          }
-        }
-      }
-
-      // Focus and make the new rule's selector editable
-      editor.selectorText.click();
-      elementStyle._changed();
-    });
-  },
-
-  /**
    * Add a new rule to the current element.
    */
   _onAddRule: function() {
     const elementStyle = this._elementStyle;
     const element = elementStyle.element;
     const pseudoClasses = element.pseudoClassLocks;
-
-    if (!this.pageStyle.supportsAuthoredStyles) {
-      // We're talking to an old server.
-      this._onAddNewRuleNonAuthored();
-      return;
-    }
 
     // Adding a new rule with authored styles will cause the actor to
     // emit an event, which will in turn cause the rule view to be
