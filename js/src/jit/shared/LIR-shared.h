@@ -6070,6 +6070,7 @@ class LIsTypedArray : public LInstructionHelper<1, 1, 0> {
     setOperand(0, object);
   }
   const LAllocation* object() { return getOperand(0); }
+  MIsTypedArray* mir() const { return mir_->toIsTypedArray(); }
 };
 
 class LIsObject : public LInstructionHelper<1, BOX_PIECES, 0> {

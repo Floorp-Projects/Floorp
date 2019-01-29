@@ -3008,8 +3008,7 @@ IonBuilder::InliningResult IonBuilder::inlineIsTypedArrayHelper(
 
   // Wrapped typed arrays won't appear to be typed arrays per a
   // |forAllClasses| query.  If wrapped typed arrays are to be considered
-  // typed arrays, a negative answer is not conclusive.  Don't inline in
-  // that case.
+  // typed arrays, a negative answer is not conclusive.
   auto isPossiblyWrapped = [this, wrappingBehavior, types]() {
     if (wrappingBehavior != AllowWrappedTypedArrays) {
       return false;
@@ -3028,9 +3027,11 @@ IonBuilder::InliningResult IonBuilder::inlineIsTypedArrayHelper(
 
   bool result = false;
   bool isConstant = true;
+  bool possiblyWrapped = false;
   switch (types->forAllClasses(constraints(), IsTypedArrayClass)) {
     case TemporaryTypeSet::ForAllResult::ALL_FALSE:
       if (isPossiblyWrapped()) {
+        // Don't inline if we never saw typed arrays, but always only proxies.
         return InliningStatus_NotInlined;
       }
 
@@ -3045,20 +3046,22 @@ IonBuilder::InliningResult IonBuilder::inlineIsTypedArrayHelper(
       break;
 
     case TemporaryTypeSet::ForAllResult::MIXED:
-      if (isPossiblyWrapped()) {
-        return InliningStatus_NotInlined;
-      }
-
       isConstant = false;
+      possiblyWrapped = isPossiblyWrapped();
       break;
   }
 
   if (isConstant) {
     pushConstant(BooleanValue(result));
   } else {
-    auto* ins = MIsTypedArray::New(alloc(), callInfo.getArg(0));
+    auto* ins =
+        MIsTypedArray::New(alloc(), callInfo.getArg(0), possiblyWrapped);
     current->add(ins);
     current->push(ins);
+
+    if (possiblyWrapped) {
+      MOZ_TRY(resumeAfter(ins));
+    }
   }
 
   callInfo.setImplicitlyUsedUnchecked();
