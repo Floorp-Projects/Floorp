@@ -37,6 +37,8 @@ add_task(async function() {
   await openMeatballMenuWithClick(toolbox);
   EventUtils.synthesizeKey("VK_F1", {}, toolbox.win);
   await waitForMeatballMenuToClose(toolbox);
+
+  await toolbox.destroy();
 });
 
 async function openMeatballMenuWithClick(toolbox) {
