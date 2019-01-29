@@ -131,21 +131,25 @@ class UrlbarView {
   }
 
   onQueryResults(queryContext) {
-    // XXX For now, clear the results for each set received. We should really
-    // be updating the existing list.
-    this._rows.textContent = "";
     this._queryContext = queryContext;
+
+    let fragment = this.document.createDocumentFragment();
     for (let resultIndex in queryContext.results) {
-      this._addRow(resultIndex);
+      fragment.appendChild(this._createRow(resultIndex));
     }
 
     if (queryContext.preselected) {
-      this._selected = this._rows.firstElementChild;
+      this._selected = fragment.firstElementChild;
       this._selected.toggleAttribute("selected", true);
     } else if (queryContext.lastResultCount == 0) {
       // Clear the selection when we get a new set of results.
       this._selected = null;
     }
+
+    // TODO bug 1523602: For now, clear the results for each set received.
+    // We should be updating the existing list instead.
+    this._rows.textContent = "";
+    this._rows.appendChild(fragment);
 
     this._openPanel();
   }
@@ -254,7 +258,7 @@ class UrlbarView {
     }
   }
 
-  _addRow(resultIndex) {
+  _createRow(resultIndex) {
     let result = this._queryContext.results[resultIndex];
     let item = this._createElement("div");
     item.className = "urlbarView-row";
@@ -324,7 +328,7 @@ class UrlbarView {
     }
     content.appendChild(secondary);
 
-    this._rows.appendChild(item);
+    return item;
   }
 
   /**
