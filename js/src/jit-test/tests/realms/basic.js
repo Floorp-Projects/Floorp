@@ -83,5 +83,16 @@ function testEvalcx() {
     var g = newGlobal();
     evalcx("this.x = 7", g);
     assertEq(g.x, 7);
+
+    g = newGlobal({newCompartment: true, invisibleToDebugger: true});
+    var ex, sb;
+    try {
+        sb = g.eval("evalcx('')");
+    } catch(e) {
+        ex = e;
+    }
+    // Check for either an exception or CCW (with --more-compartments).
+    assertEq((sb && objectGlobal(sb) === null) ||
+             ex.toString().includes("visibility"), true);
 }
 testEvalcx();

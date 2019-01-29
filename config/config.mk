@@ -201,13 +201,6 @@ HOST_CFLAGS = $(COMPUTED_HOST_CFLAGS) $(_DEPEND_CFLAGS)
 HOST_CXXFLAGS = $(COMPUTED_HOST_CXXFLAGS) $(_DEPEND_CFLAGS)
 HOST_C_LDFLAGS = $(COMPUTED_HOST_C_LDFLAGS)
 HOST_CXX_LDFLAGS = $(COMPUTED_HOST_CXX_LDFLAGS)
-# Win32 Cross-builds on win64 need to override LIB when invoking the linker,
-# which we do for rust through cargo-linker.bat, so we abuse it here.
-# Ideally, we'd empty LIB and pass -LIBPATH options to the linker somehow but
-# we don't have this in place for rust, so...
-ifdef WIN64_CARGO_LINKER
-HOST_LINKER = $(topobjdir)/build/win64/cargo-linker.bat
-endif
 
 ifdef MOZ_LTO
 ifeq (Darwin,$(OS_TARGET))

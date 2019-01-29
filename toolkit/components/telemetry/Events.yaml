@@ -91,8 +91,7 @@ addonsManager:
       method: >
         The method used by the source to install the add-on (included when the source can use more than one,
         e.g. install events with source "about:addons" may have "install-from-file" or "url" as method).
-      num_perms: The number of permissions shown to the user in the extension permission doorhanger
-      num_origins: The number of origins shown to the user in the extension permission doorhanger
+      num_strings: The number of permission description strings in the extension permission doorhanger
       updated_from: Determine if an update has been requested by the user or the application ("app" / "user")
       step: >
         The current step in the install or update flow:
@@ -102,7 +101,7 @@ addonsManager:
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "68"
     record_in_processes: ["main"]
-    bug_numbers: [1433335]
+    bug_numbers: [1433335, 1515697]
     release_channel_collection: opt-out
   manage:
     description: >
@@ -116,12 +115,11 @@ addonsManager:
       method: >
         The method used by the source to install the add-on (included when the source can use more than one,
         e.g. install events with source "about:addons" may have "install-from-file" or "url" as method).
-      num_perms: The number of permissions shown to the user for a sideload extension permissions doorhanger
-      num_origins: The number of origins shown to the user for a sideload extension permissions doorhanger
+      num_strings: The number of permission description strings in the extension permission doorhanger
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "68"
     record_in_processes: ["main"]
-    bug_numbers: [1433335]
+    bug_numbers: [1433335, 1515697]
     release_channel_collection: opt-out
 
 extensions.data:
@@ -274,21 +272,37 @@ telemetry.test.second:
       key1: This is just a test description.
 
 devtools.main:
-  open:
-    objects: ["tools"]
-    bug_numbers: [1416024, 1456984]
+  activate:
+    objects: ["responsive_design", "split_console"]
+    bug_numbers: [1455273]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
-    description: User opens devtools toolbox.
+    description: User activates the responsive_design or split_console in the devtools toolbox.
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
-      entrypoint: How was the toolbox opened? CommandLine, ContextMenu, HamburgerMenu, KeyShortcut, SessionRestore or SystemMenu
-      first_panel: The name of the first panel opened.
       host: "Toolbox host (positioning): bottom, side, window or other."
-      splitconsole: Indicates whether the split console was open.
       width: Toolbox width rounded up to the nearest 50px.
-      shortcut: The key combination pressed. Used only in the case that entrypoint === KeyShortcut.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  add_breakpoint:
+    objects: ["debugger"]
+    bug_numbers: [1463123]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has added a breakpoint to a script.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  blackbox:
+    objects: ["debugger"]
+    bug_numbers: [1463126]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User clicked the blackbox button to blackbox a script.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   close:
     objects: ["tools"]
@@ -302,48 +316,26 @@ devtools.main:
       host: "Toolbox host (positioning): bottom, side, window or other."
       width: Toolbox width rounded up to the nearest 50px.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  enter:
-    objects: ["accessibility", "application", "canvasdebugger", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "shadereditor", "storage", "styleeditor", "webaudioeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
-    bug_numbers: [1441070]
+  close_adbg:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1504173]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
-    description: User opens a tool in the devtools toolbox.
+    description: User closes about:debugging.
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
-      host: "Toolbox host (positioning): bottom, side, window or other."
       width: Toolbox width rounded up to the nearest 50px.
-      message_count: The number of cached console messages.
-      start_state: debuggerStatement, breakpoint, exception, tab_switch, toolbox_show, initial_panel, toggle_settings_off, toggle_settings_on, key_shortcut, select_next_key, select_prev_key, tool_unloaded, inspect_dom, unknown etc.
-      panel_name: The name of the panel opened or other
-      cold: Is this the first time the current panel has been opened in this toolbox?
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  exit:
-    objects: ["accessibility", "application", "canvasdebugger", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "shadereditor", "storage", "styleeditor", "webaudioeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
-    bug_numbers: [1455270]
+  continue:
+    objects: ["debugger"]
+    bug_numbers: [1463122]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
-    description: User closes a tool in the devtools toolbox.
+    description: User has pressed the continue button on a paused script.
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
-      host: "Toolbox host (positioning): bottom, side, window or other."
-      width: Toolbox width rounded up to the nearest 50px.
-      next_panel: The name of the panel closed or other.
-      panel_name: The name of the panel opened or other
-      reason: debuggerStatement, breakpoint, exception, tab_switch, toolbox_show, initial_panel, toggle_settings_off, toggle_settings_on, key_shortcut, select_next_key, select_prev_key, tool_unloaded, inspect_dom, toolbox_closed, unknown etc.
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  activate:
-    objects: ["responsive_design", "split_console"]
-    bug_numbers: [1455273]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
-    record_in_processes: ["main"]
-    description: User activates the responsive_design or split_console in the devtools toolbox.
-    release_channel_collection: opt-out
-    expiry_version: never
-    extra_keys:
-      host: "Toolbox host (positioning): bottom, side, window or other."
-      width: Toolbox width rounded up to the nearest 50px.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   deactivate:
     objects: ["responsive_design", "split_console"]
@@ -369,29 +361,6 @@ devtools.main:
       made_changes: Indicates whether changes were made.
       time_open: The amount of time in ms that the HTML editor was open.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  edit_rule:
-    objects: ["ruleview"]
-    bug_numbers: [1463081]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
-    record_in_processes: ["main"]
-    description: User is editing a CSS rule by clicking on or next to a CSS property, enabling / disabling a rule or creating a new property.
-    release_channel_collection: opt-out
-    expiry_version: never
-    extra_keys:
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  sidepanel_changed:
-    objects: ["inspector", "netmonitor"]
-    bug_numbers: [1463083, 1463169]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
-    record_in_processes: ["main"]
-    description: User has switched sidepanel tabs.
-    release_channel_collection: opt-out
-    expiry_version: never
-    extra_keys:
-      oldpanel: The panel the user is switching from
-      newpanel: The panel the user is switching to
-      os: The OS name and version e.g. "Linux 4.4.0-1014-aws", "Darwin 14.5.0", "Windows_NT 6.1.7601" or "Windows_NT 10.0.15063." This can be used to make sense of data when a feature is only available from a particular operating system build number.
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   edit_resend:
     objects: ["netmonitor"]
     bug_numbers: [1463171]
@@ -402,17 +371,32 @@ devtools.main:
     expiry_version: never
     extra_keys:
       session_id: The toolbox session start time e.g. 13963.
-  throttle_changed:
-    objects: ["netmonitor"]
-    bug_numbers: [1463147]
+  edit_rule:
+    objects: ["ruleview"]
+    bug_numbers: [1463081]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
-    description: User has changed the throttle setting in the netmonitor.
+    description: User is editing a CSS rule by clicking on or next to a CSS property, enabling / disabling a rule or creating a new property.
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
-      mode: No throttling, GPRS, Regular 2G, Good 2G, Regular 3G, Good 3G, Regular 4G / LTE, DSL or WI-FI.
-      session_id: The toolbox session start time e.g. 13963.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  enter:
+    objects: ["accessibility", "application", "canvasdebugger", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "shadereditor", "storage", "styleeditor", "webaudioeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
+    bug_numbers: [1441070]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User opens a tool in the devtools toolbox.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      host: "Toolbox host (positioning): bottom, side, window or other."
+      width: Toolbox width rounded up to the nearest 50px.
+      message_count: The number of cached console messages.
+      start_state: debuggerStatement, breakpoint, exception, tab_switch, toolbox_show, initial_panel, toggle_settings_off, toggle_settings_on, key_shortcut, select_next_key, select_prev_key, tool_unloaded, inspect_dom, unknown etc.
+      panel_name: The name of the panel opened or other
+      cold: Is this the first time the current panel has been opened in this toolbox?
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   execute_js:
     objects: ["webconsole"]
     bug_numbers: [1463083]
@@ -423,6 +407,103 @@ devtools.main:
     expiry_version: never
     extra_keys:
       lines: The number of lines contained in the command.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  exit:
+    objects: ["accessibility", "application", "canvasdebugger", "dom", "inspector", "jsdebugger", "memory", "netmonitor", "options", "performance", "scratchpad", "shadereditor", "storage", "styleeditor", "webaudioeditor", "webconsole", "other", "fakeTool4242", "testBlankPanel", "testTool", "testtool1", "testTool1072208", "testtool2"]
+    bug_numbers: [1455270]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User closes a tool in the devtools toolbox.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      host: "Toolbox host (positioning): bottom, side, window or other."
+      width: Toolbox width rounded up to the nearest 50px.
+      next_panel: The name of the panel closed or other.
+      panel_name: The name of the panel opened or other
+      reason: debuggerStatement, breakpoint, exception, tab_switch, toolbox_show, initial_panel, toggle_settings_off, toggle_settings_on, key_shortcut, select_next_key, select_prev_key, tool_unloaded, inspect_dom, toolbox_closed, unknown etc.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  filters_changed:
+    objects: ["netmonitor", "webconsole"]
+    bug_numbers: [1463144, 1463095]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has changed filters in the web console.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      trigger: "The cause of the filter change: error, warn, log, info, debug, css, netxhr, net, text or reset and all, html, css, js, xhr, fonts, images, media, ws or other for netmonitor"
+      active: Comma separated list of active filters.
+      inactive: Comma separated list of inactive filters.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  inspect:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1504173]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has clicked on the inspect button of one of the debug targets of aboutdebugging.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      runtime_type: The runtime type
+      target_type: The target type
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  jump_to_definition:
+    objects: ["webconsole"]
+    bug_numbers: [1463101]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has clicked "Jump to definition" icon (next to logged functions) in the web console.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  jump_to_source:
+    objects: ["webconsole"]
+    bug_numbers: [1463092]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has clicked a link to a source file in the web console.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  object_expanded:
+    objects: ["webconsole"]
+    bug_numbers: [1463104]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has expanded an object in the web console.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  open:
+    objects: ["tools"]
+    bug_numbers: [1416024, 1456984]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User opens devtools toolbox.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      entrypoint: How was the toolbox opened? CommandLine, ContextMenu, HamburgerMenu, KeyShortcut, SessionRestore or SystemMenu
+      first_panel: The name of the first panel opened.
+      host: "Toolbox host (positioning): bottom, side, window or other."
+      splitconsole: Indicates whether the split console was open.
+      width: Toolbox width rounded up to the nearest 50px.
+      shortcut: The key combination pressed. Used only in the case that entrypoint === KeyShortcut.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  open_adbg:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1504173]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User opens about:debugging.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      width: Toolbox width rounded up to the nearest 50px.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   pause_on_exceptions:
     objects: ["debugger"]
@@ -448,22 +529,12 @@ devtools.main:
       reason: caught-exception, uncaught-exception, pausing, debugger-statement or breakpoint.
       lib_stacks: Number of collapsed callstacks in the call tree. These are call stacks that are part of external libraries e.g. react, which are collapsed  by default.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  continue:
+  pretty_print:
     objects: ["debugger"]
-    bug_numbers: [1463122]
+    bug_numbers: [1463125]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
-    description: User has pressed the continue button on a paused script.
-    release_channel_collection: opt-out
-    expiry_version: never
-    extra_keys:
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  add_breakpoint:
-    objects: ["debugger"]
-    bug_numbers: [1463123]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
-    record_in_processes: ["main"]
-    description: User has added a breakpoint to a script.
+    description: User clicked the pretty print button to pretty print a script.
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
@@ -478,69 +549,41 @@ devtools.main:
     expiry_version: never
     extra_keys:
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  pretty_print:
-    objects: ["debugger"]
-    bug_numbers: [1463125]
+  select_page:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1504173]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
-    description: User clicked the pretty print button to pretty print a script.
+    description: User navigates to a new page of an application such as about:debugging
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
+      page_type: Type of page the user navigates to (this-firefox, connect, runtime)
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  blackbox:
-    objects: ["debugger"]
-    bug_numbers: [1463126]
+  sidepanel_changed:
+    objects: ["inspector", "netmonitor"]
+    bug_numbers: [1463083, 1463169]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
-    description: User clicked the blackbox button to blackbox a script.
+    description: User has switched sidepanel tabs.
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
+      oldpanel: The panel the user is switching from
+      newpanel: The panel the user is switching to
+      os: The OS name and version e.g. "Linux 4.4.0-1014-aws", "Darwin 14.5.0", "Windows_NT 6.1.7601" or "Windows_NT 10.0.15063." This can be used to make sense of data when a feature is only available from a particular operating system build number.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  jump_to_source:
-    objects: ["webconsole"]
-    bug_numbers: [1463092]
+  throttle_changed:
+    objects: ["netmonitor"]
+    bug_numbers: [1463147]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
-    description: User has clicked a link to a source file in the web console.
+    description: User has changed the throttle setting in the netmonitor.
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  filters_changed:
-    objects: ["netmonitor", "webconsole"]
-    bug_numbers: [1463144, 1463095]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
-    record_in_processes: ["main"]
-    description: User has changed filters in the web console.
-    release_channel_collection: opt-out
-    expiry_version: never
-    extra_keys:
-      trigger: "The cause of the filter change: error, warn, log, info, debug, css, netxhr, net, text or reset and all, html, css, js, xhr, fonts, images, media, ws or other for netmonitor"
-      active: Comma separated list of active filters.
-      inactive: Comma separated list of inactive filters.
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  jump_to_definition:
-    objects: ["webconsole"]
-    bug_numbers: [1463101]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
-    record_in_processes: ["main"]
-    description: User has clicked "Jump to definition" icon (next to logged functions) in the web console.
-    release_channel_collection: opt-out
-    expiry_version: never
-    extra_keys:
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  object_expanded:
-    objects: ["webconsole"]
-    bug_numbers: [1463104]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
-    record_in_processes: ["main"]
-    description: User has expanded an object in the web console.
-    release_channel_collection: opt-out
-    expiry_version: never
-    extra_keys:
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+      mode: No throttling, GPRS, Regular 2G, Good 2G, Regular 3G, Good 3G, Regular 4G / LTE, DSL or WI-FI.
+      session_id: The toolbox session start time e.g. 13963.
   tool_timer:
     objects: ["animationinspector", "computedview", "changesview", "fontinspector", "layoutview", "ruleview"]
     bug_numbers: [1483817]

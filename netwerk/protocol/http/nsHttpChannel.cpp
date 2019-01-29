@@ -6627,6 +6627,8 @@ nsresult nsHttpChannel::BeginConnectActual() {
     return mStatus;
   }
 
+  AUTO_PROFILER_LABEL("nsHttpChannel::BeginConnectActual", NETWORK);
+
   if (mTrackingProtectionCancellationPending) {
     LOG(
         ("Waiting for tracking protection cancellation in BeginConnectActual "

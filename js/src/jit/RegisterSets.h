@@ -121,12 +121,12 @@ class ValueOperand {
   constexpr ValueOperand(Register type, Register payload)
       : type_(type), payload_(payload) {}
 
-  Register typeReg() const { return type_; }
-  Register payloadReg() const { return payload_; }
+  constexpr Register typeReg() const { return type_; }
+  constexpr Register payloadReg() const { return payload_; }
   constexpr bool aliases(Register reg) const {
     return type_ == reg || payload_ == reg;
   }
-  Register payloadOrValueReg() const { return payloadReg(); }
+  constexpr Register payloadOrValueReg() const { return payloadReg(); }
   constexpr bool operator==(const ValueOperand& o) const {
     return type_ == o.type_ && payload_ == o.payload_;
   }
@@ -140,9 +140,9 @@ class ValueOperand {
  public:
   explicit constexpr ValueOperand(Register value) : value_(value) {}
 
-  Register valueReg() const { return value_; }
+  constexpr Register valueReg() const { return value_; }
   constexpr bool aliases(Register reg) const { return value_ == reg; }
-  Register payloadOrValueReg() const { return valueReg(); }
+  constexpr Register payloadOrValueReg() const { return valueReg(); }
   constexpr bool operator==(const ValueOperand& o) const {
     return value_ == o.value_;
   }
@@ -151,7 +151,7 @@ class ValueOperand {
   }
 #endif
 
-  Register scratchReg() const { return payloadOrValueReg(); }
+  constexpr Register scratchReg() const { return payloadOrValueReg(); }
 
   ValueOperand() = default;
 };

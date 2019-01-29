@@ -34,13 +34,8 @@ class nsIDocShell;
 class nsRange;
 
 struct RangePaintInfo;
-struct nsCallbackEventRequest;
-#ifdef MOZ_REFLOW_PERF
-class ReflowCountMgr;
-#endif
 
 class nsPresShellEventCB;
-class nsAutoCauseReflowNotifier;
 class AutoPointerEventTargetUpdater;
 
 namespace mozilla {
@@ -83,8 +78,6 @@ class PresShell final : public nsIPresShell,
             nsViewManager* aViewManager, UniquePtr<ServoStyleSet> aStyleSet);
   void Destroy() override;
 
-  void UpdatePreferenceStyles() override;
-
   NS_IMETHOD GetSelectionFromScript(RawSelectionType aRawSelectionType,
                                     dom::Selection** aSelection) override;
   dom::Selection* GetSelection(RawSelectionType aRawSelectionType) override;
@@ -110,47 +103,12 @@ class PresShell final : public nsIPresShell,
   nsresult ResizeReflowIgnoreOverride(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
       ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) override;
-  nsIPageSequenceFrame* GetPageSequenceFrame() const override;
-  nsCanvasFrame* GetCanvasFrame() const override;
 
-  void PostPendingScrollAnchorSelection(
-      mozilla::layout::ScrollAnchorContainer* aContainer) override;
-  void FlushPendingScrollAnchorSelections() override;
-  void PostPendingScrollAnchorAdjustment(
-      mozilla::layout::ScrollAnchorContainer* aContainer) override;
-  void FlushPendingScrollAnchorAdjustments();
-
-  void FrameNeedsReflow(
-      nsIFrame* aFrame, IntrinsicDirty aIntrinsicDirty, nsFrameState aBitToAdd,
-      ReflowRootHandling aRootHandling = eInferFromBitToAdd) override;
-  void FrameNeedsToContinueReflow(nsIFrame* aFrame) override;
-  void CancelAllPendingReflows() override;
   void DoFlushPendingNotifications(FlushType aType) override;
   void DoFlushPendingNotifications(ChangesToFlush aType) override;
 
-  /**
-   * Post a callback that should be handled after reflow has finished.
-   */
-  nsresult PostReflowCallback(nsIReflowCallback* aCallback) override;
-  void CancelReflowCallback(nsIReflowCallback* aCallback) override;
-
-  void ClearFrameRefs(nsIFrame* aFrame) override;
-  already_AddRefed<gfxContext> CreateReferenceRenderingContext() override;
-  nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll,
-                      uint32_t aAdditionalScrollFlags = 0) override;
-  nsresult ScrollToAnchor() override;
-
-  nsresult ScrollContentIntoView(nsIContent* aContent, ScrollAxis aVertical,
-                                 ScrollAxis aHorizontal,
-                                 uint32_t aFlags) override;
-  bool ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
-                               ScrollAxis aVertical, ScrollAxis aHorizontal,
-                               uint32_t aFlags) override;
   nsRectVisibility GetRectVisibility(nsIFrame* aFrame, const nsRect& aRect,
                                      nscoord aMinTwips) const override;
-
-  void SetIgnoreFrameDestruction(bool aIgnore) override;
-  void NotifyDestroyingFrame(nsIFrame* aFrame) override;
 
   nsresult CaptureHistoryState(
       nsILayoutHistoryState** aLayoutHistoryState) override;
@@ -176,8 +134,6 @@ class PresShell final : public nsIPresShell,
         aEvent, aFrame, aContent, aEventStatus, aIsHandlingNativeEvent,
         aTargetContent, aOverrideClickTarget);
   }
-
-  void NotifyCounterStylesAreDirty() override;
 
   void ReconstructFrames(void) override;
   void Freeze() override;
@@ -241,18 +197,12 @@ class PresShell final : public nsIPresShell,
   void RespectDisplayportSuppression(bool aEnabled) override;
   bool IsDisplayportSuppressed() override;
 
-  already_AddRefed<AccessibleCaretEventHub> GetAccessibleCaretEventHub()
-      const override;
-
   // caret handling
-  already_AddRefed<nsCaret> GetCaret() const override;
   NS_IMETHOD SetCaretEnabled(bool aInEnable) override;
   NS_IMETHOD SetCaretReadOnly(bool aReadOnly) override;
   NS_IMETHOD GetCaretEnabled(bool* aOutEnabled) override;
   NS_IMETHOD SetCaretVisibilityDuringSelection(bool aVisibility) override;
   NS_IMETHOD GetCaretVisible(bool* _retval) override;
-  void SetCaret(nsCaret* aNewCaret) override;
-  void RestoreCaret() override;
 
   NS_IMETHOD SetSelectionFlags(int16_t aInEnable) override;
   NS_IMETHOD GetSelectionFlags(int16_t* aOutEnable) override;
@@ -313,8 +263,6 @@ class PresShell final : public nsIPresShell,
   void ListStyleSheets(FILE* out, int32_t aIndent = 0) override;
 #endif
 
-  static LazyLogModule gLog;
-
   void DisableNonTestMouseEvents(bool aDisable) override;
 
   void UpdateCanvasBackground() override;
@@ -352,14 +300,6 @@ class PresShell final : public nsIPresShell,
   void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const override;
   size_t SizeOfTextRuns(MallocSizeOf aMallocSizeOf) const;
 
-  // This data is stored as a content property (nsGkAtoms::scrolling) on
-  // mContentToScrollTo when we have a pending ScrollIntoView.
-  struct ScrollIntoViewData {
-    ScrollAxis mContentScrollVAxis;
-    ScrollAxis mContentScrollHAxis;
-    uint32_t mContentToScrollToFlags;
-  };
-
   //////////////////////////////////////////////////////////////////////////////
   // Approximate frame visibility tracking public API.
   //////////////////////////////////////////////////////////////////////////////
@@ -381,11 +321,6 @@ class PresShell final : public nsIPresShell,
 
   void SetNextPaintCompressed() { mNextPaintCompressed = true; }
 
-  void NotifyStyleSheetServiceSheetAdded(StyleSheet* aSheet,
-                                         uint32_t aSheetType) override;
-  void NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
-                                           uint32_t aSheetType) override;
-
   bool HasHandledUserInput() const override { return mHasHandledUserInput; }
 
   void FireResizeEvent() override;
@@ -397,52 +332,7 @@ class PresShell final : public nsIPresShell,
  private:
   ~PresShell();
 
-  void HandlePostedReflowCallbacks(bool aInterruptible);
-  void CancelPostedReflowCallbacks();
-
-  void ScheduleBeforeFirstPaint();
-  void UnsuppressAndInvalidate();
-
-  void WillCauseReflow() {
-    nsContentUtils::AddScriptBlocker();
-    ++mChangeNestCount;
-  }
-  nsresult DidCauseReflow();
-  friend class ::nsAutoCauseReflowNotifier;
   friend class ::AutoPointerEventTargetUpdater;
-
-  void WillDoReflow();
-
-  /**
-   * Callback handler for whether reflow happened.
-   *
-   * @param aInterruptible Whether or not reflow interruption is allowed.
-   */
-  void DidDoReflow(bool aInterruptible);
-  // ProcessReflowCommands returns whether we processed all our dirty roots
-  // without interruptions.
-  bool ProcessReflowCommands(bool aInterruptible);
-  // MaybeScheduleReflow checks if posting a reflow is needed, then checks if
-  // the last reflow was interrupted. In the interrupted case ScheduleReflow is
-  // called off a timer, otherwise it is called directly.
-  void MaybeScheduleReflow();
-  // Actually schedules a reflow.  This should only be called by
-  // MaybeScheduleReflow and the reflow timer ScheduleReflowOffTimer
-  // sets up.
-  void ScheduleReflow();
-
-  // DoReflow returns whether the reflow finished without interruption
-  // If aFrame is not the root frame, the caller must pass a non-null
-  // aOverflowTracker.
-  bool DoReflow(nsIFrame* aFrame, bool aInterruptible,
-                mozilla::OverflowChangedTracker* aOverflowTracker);
-#ifdef DEBUG
-  void DoVerifyReflow();
-  void VerifyHasDirtyRootAncestor(nsIFrame* aFrame);
-#endif
-
-  // Helper for ScrollContentIntoView
-  void DoScrollContentIntoView();
 
   /**
    * Initialize cached font inflation preference values and do an initial
@@ -485,15 +375,6 @@ class PresShell final : public nsIPresShell,
 
   bool mCaretEnabled;
 
-#ifdef DEBUG
-  UniquePtr<ServoStyleSet> CloneStyleSet(ServoStyleSet* aSet);
-  bool VerifyIncrementalReflow();
-  bool mInVerifyReflow;
-  void ShowEventTargetDebug();
-#endif
-
-  void RemovePreferenceStyles();
-
   // methods for painting a range to an offscreen buffer
 
   // given a display list, clip the items within the list to
@@ -524,15 +405,6 @@ class PresShell final : public nsIPresShell,
       dom::Selection* aSelection, const Maybe<CSSIntRegion>& aRegion,
       nsRect aArea, const LayoutDeviceIntPoint aPoint,
       LayoutDeviceIntRect* aScreenRect, uint32_t aFlags);
-
-  /**
-   * Methods to handle changes to user and UA sheet lists that we get
-   * notified about.
-   */
-  void AddUserSheet(StyleSheet* aSheet);
-  void AddAgentSheet(StyleSheet* aSheet);
-  void AddAuthorSheet(StyleSheet* aSheet);
-  void RemoveSheet(SheetType aType, StyleSheet* aSheet);
 
   // Hide a view if it is a popup
   void HideViewIfPopup(nsView* aView);
@@ -707,6 +579,19 @@ class PresShell final : public nsIPresShell,
                                    nsEventStatus* aEventStatus);
 
     /**
+     * MaybeHandleEventWithAccessibleCaret() may handle aGUIEvent with
+     * AccessibleCaretEventHub if it's necessary.
+     *
+     * @param aGUIEvent         Event may be handled by AccessibleCaretEventHub.
+     * @param aEventStatus      [in/out] EventStatus of aGUIEvent.
+     * @return                  true if AccessibleCaretEventHub handled the
+     *                          event and caller shouldn't keep handling it.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    bool MaybeHandleEventWithAccessibleCaret(WidgetGUIEvent* aGUIEvent,
+                                             nsEventStatus* aEventStatus);
+
+    /**
      * XXX Needs better name.
      * HandleEventInternal() dispatches aEvent into the DOM tree and
      * notify EventStateManager of that.
@@ -835,14 +720,8 @@ class PresShell final : public nsIPresShell,
 
   nscolor GetDefaultBackgroundColorToDraw();
 
-  DOMHighResTimeStamp GetPerformanceNowUnclamped();
-
   // The callback for the mPaintSuppressionTimer timer.
   static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell);
-
-  // The callback for the mReflowContinueTimer timer.
-  static void sReflowContinueCallback(nsITimer* aTimer, void* aPresShell);
-  bool ScheduleReflowOffTimer();
 
   // Widget notificiations
   void WindowSizeMoveDone() override;
@@ -886,16 +765,6 @@ class PresShell final : public nsIPresShell,
   nsresult SetResolutionImpl(float aResolution, bool aScaleToResolution,
                              nsAtom* aOrigin);
 
-#ifdef DEBUG
-  // The reflow root under which we're currently reflowing.  Null when
-  // not in reflow.
-  nsIFrame* mCurrentReflowRoot;
-#endif
-
-#ifdef MOZ_REFLOW_PERF
-  UniquePtr<ReflowCountMgr> mReflowCountMgr;
-#endif
-
   // This is used for synthetic mouse events that are sent when what is under
   // the mouse pointer may have changed without the mouse moving (eg scrolling,
   // change to the document contents).
@@ -910,31 +779,15 @@ class PresShell final : public nsIPresShell,
   // needed for the synthetic mouse events.
   layers::ScrollableLayerGuid mMouseEventTargetGuid;
 
-  // mStyleSet owns it but we maintain a ref, may be null
-  RefPtr<StyleSheet> mPrefStyleSheet;
-
-  // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
-  // we finish reflowing mCurrentReflowRoot.
-  nsTHashtable<nsPtrHashKey<nsIFrame>> mFramesToDirty;
-  nsTHashtable<nsPtrHashKey<nsIScrollableFrame>> mPendingScrollAnchorSelection;
-  nsTHashtable<nsPtrHashKey<nsIScrollableFrame>> mPendingScrollAnchorAdjustment;
-
   nsTArray<UniquePtr<DelayedEvent>> mDelayedEvents;
 
  private:
   nsRevocableEventPtr<nsSynthMouseMoveEvent> mSynthMouseMoveEvent;
-  nsCOMPtr<nsIContent> mLastAnchorScrolledTo;
-  RefPtr<nsCaret> mCaret;
-  RefPtr<nsCaret> mOriginalCaret;
-  nsCallbackEventRequest* mFirstCallbackEventRequest;
-  nsCallbackEventRequest* mLastCallbackEventRequest;
 
   TouchManager mTouchManager;
 
   RefPtr<ZoomConstraintsClient> mZoomConstraintsClient;
   RefPtr<MobileViewportManager> mMobileViewportManager;
-
-  RefPtr<AccessibleCaretEventHub> mAccessibleCaretEventHub;
 
   // This timer controls painting suppression.  Until it fires
   // or all frames are constructed, we won't paint anything but
@@ -943,19 +796,7 @@ class PresShell final : public nsIPresShell,
 
   nsCOMPtr<nsITimer> mDelayedPaintTimer;
 
-  // The `performance.now()` value when we last started to process reflows.
-  DOMHighResTimeStamp mLastReflowStart;
-
   TimeStamp mLoadBegin;  // used to time loads
-
-  // Information needed to properly handle scrolling content into view if the
-  // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is
-  // non-null between the initial scroll attempt and the first time we finish
-  // processing all our dirty roots.  mContentToScrollTo has a content property
-  // storing the details for the scroll operation, see ScrollIntoViewData above.
-  nsCOMPtr<nsIContent> mContentToScrollTo;
-
-  nscoord mLastAnchorScrollPositionY;
 
   // Information about live content (which still stay in DOM tree).
   // Used in case we need re-dispatch event after sending pointer event,
@@ -970,15 +811,8 @@ class PresShell final : public nsIPresShell,
   FocusTarget mAPZFocusTarget;
 
   bool mDocumentLoading : 1;
-  bool mIgnoreFrameDestruction : 1;
-  bool mHaveShutDown : 1;
-  bool mLastRootReflowHadUnconstrainedBSize : 1;
   bool mNoDelayedMouseEvents : 1;
   bool mNoDelayedKeyEvents : 1;
-
-  // Indicates that it is safe to unlock painting once all pending reflows
-  // have been processed.
-  bool mShouldUnsuppressPainting : 1;
 
   bool mApproximateFrameVisibilityVisited : 1;
 

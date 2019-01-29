@@ -134,6 +134,12 @@ class GlobalObject : public NativeObject {
   LexicalEnvironmentObject& lexicalEnvironment() const;
   GlobalScope& emptyGlobalScope() const;
 
+  static constexpr size_t offsetOfLexicalEnvironmentSlot() {
+    static_assert(LEXICAL_ENVIRONMENT >= MAX_FIXED_SLOTS,
+                  "Code assumes lexical environment is stored in dynamic slot");
+    return (LEXICAL_ENVIRONMENT - MAX_FIXED_SLOTS) * sizeof(Value);
+  }
+
   void setOriginalEval(JSObject* evalobj) {
     MOZ_ASSERT(getSlotRef(EVAL).isUndefined());
     setSlot(EVAL, ObjectValue(*evalobj));

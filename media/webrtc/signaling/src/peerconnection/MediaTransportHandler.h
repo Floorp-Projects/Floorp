@@ -8,169 +8,120 @@
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 #include "sigslot.h"
-#include "transportlayer.h"  // Need the State enum
+#include "transportlayer.h"      // Need the State enum
+#include "dtlsidentity.h"  // For DtlsDigest
 #include "mozilla/dom/PeerConnectionImplEnumsBinding.h"
+#include "mozilla/dom/RTCConfigurationBinding.h"
 #include "nricectx.h"               // Need some enums
 #include "nsDOMNavigationTiming.h"  // DOMHighResTimeStamp
-
-// For RTCStatsQueryPromise typedef
-#include "signaling/src/peerconnection/PeerConnectionImpl.h"
+#include "signaling/src/common/CandidateInfo.h"
 
 #include "nsString.h"
 
-#include <map>
 #include <string>
 #include <set>
 #include <vector>
 
 namespace mozilla {
-class DtlsIdentity;  // TODO(bug 1494311) Use IPC type
+class DtlsIdentity;
 class NrIceCtx;
 class NrIceMediaStream;
 class NrIceResolver;
-class SdpFingerprintAttributeList;  // TODO(bug 1494311) Use IPC type
 class TransportFlow;
 class RTCStatsQuery;
 
 namespace dom {
-struct RTCConfiguration;
 struct RTCStatsReportInternal;
-}  // namespace dom
+}
 
-// Base-class, makes some testing easier
-class MediaTransportBase {
+class MediaTransportHandler {
  public:
-  virtual void SendPacket(const std::string& aTransportId,
-                          MediaPacket& aPacket) = 0;
+  // Creates either a MediaTransportHandlerSTS or a MediaTransportHandlerIPC,
+  // as appropriate.
+  static already_AddRefed<MediaTransportHandler> Create();
 
-  virtual TransportLayer::State GetState(const std::string& aTransportId,
-                                         bool aRtcp) const = 0;
-  sigslot::signal2<const std::string&, MediaPacket&> SignalPacketReceived;
-  sigslot::signal2<const std::string&, MediaPacket&> SignalEncryptedSending;
-  sigslot::signal2<const std::string&, TransportLayer::State> SignalStateChange;
-  sigslot::signal2<const std::string&, TransportLayer::State>
-      SignalRtcpStateChange;
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaTransportBase)
+  typedef MozPromise<dom::Sequence<nsString>, nsresult, true> IceLogPromise;
 
- protected:
-  virtual ~MediaTransportBase() {}
-};
+  // There's a wrinkle here; the ICE logging is not separated out by
+  // MediaTransportHandler. These are a little more like static methods, but
+  // to avoid needing yet another IPC interface, we bolt them on here.
+  virtual RefPtr<IceLogPromise> GetIceLog(const nsCString& aPattern) = 0;
+  virtual void ClearIceLog() = 0;
+  virtual void EnterPrivateMode() = 0;
+  virtual void ExitPrivateMode() = 0;
 
-class MediaTransportHandler : public MediaTransportBase,
-                              public sigslot::has_slots<> {
- public:
-  MediaTransportHandler();
-  nsresult Init(const std::string& aName,
-                const dom::RTCConfiguration& aConfiguration);
-  void Destroy();
+  virtual nsresult Init(const std::string& aName,
+                        const nsTArray<dom::RTCIceServer>& aIceServers,
+                        dom::RTCIceTransportPolicy aIcePolicy) = 0;
+  virtual void Destroy() = 0;
 
   // We will probably be able to move the proxy lookup stuff into
   // this class once we move mtransport to its own process.
-  void SetProxyServer(NrSocketProxyConfig&& aProxyConfig);
+  virtual void SetProxyServer(NrSocketProxyConfig&& aProxyConfig) = 0;
 
-  void EnsureProvisionalTransport(const std::string& aTransportId,
-                                  const std::string& aLocalUfrag,
-                                  const std::string& aLocalPwd,
-                                  size_t aComponentCount);
+  virtual void EnsureProvisionalTransport(const std::string& aTransportId,
+                                          const std::string& aLocalUfrag,
+                                          const std::string& aLocalPwd,
+                                          size_t aComponentCount) = 0;
 
   // We set default-route-only as late as possible because it depends on what
   // capture permissions have been granted on the window, which could easily
   // change between Init (ie; when the PC is created) and StartIceGathering
   // (ie; when we set the local description).
-  void StartIceGathering(bool aDefaultRouteOnly,
-                         // This will go away once mtransport moves to its
-                         // own process, because we won't need to get this
-                         // via IPC anymore
-                         const nsTArray<NrIceStunAddr>& aStunAddrs);
+  virtual void StartIceGathering(bool aDefaultRouteOnly,
+                                 // TODO: It probably makes sense to look
+                                 // this up internally
+                                 const nsTArray<NrIceStunAddr>& aStunAddrs) = 0;
 
-  void ActivateTransport(const std::string& aTransportId,
-                         const std::string& aLocalUfrag,
-                         const std::string& aLocalPwd, size_t aComponentCount,
-                         const std::string& aUfrag,
-                         const std::string& aPassword,
-                         const std::vector<std::string>& aCandidateList,
-                         // TODO(bug 1494311): Use an IPC type.
-                         RefPtr<DtlsIdentity> aDtlsIdentity, bool aDtlsClient,
-                         // TODO(bug 1494311): Use IPC type
-                         const SdpFingerprintAttributeList& aFingerprints,
-                         bool aPrivacyRequested);
+  virtual void ActivateTransport(
+      const std::string& aTransportId, const std::string& aLocalUfrag,
+      const std::string& aLocalPwd, size_t aComponentCount,
+      const std::string& aUfrag, const std::string& aPassword,
+      const nsTArray<uint8_t>& aKeyDer, const nsTArray<uint8_t>& aCertDer,
+      SSLKEAType aAuthType, bool aDtlsClient,
+      const DtlsDigestList& aDigests, bool aPrivacyRequested) = 0;
 
-  void RemoveTransportsExcept(const std::set<std::string>& aTransportIds);
+  virtual void RemoveTransportsExcept(
+      const std::set<std::string>& aTransportIds) = 0;
 
-  void StartIceChecks(bool aIsControlling, bool aIsOfferer,
-                      const std::vector<std::string>& aIceOptions);
+  virtual void StartIceChecks(bool aIsControlling, bool aIsOfferer,
+                              const std::vector<std::string>& aIceOptions) = 0;
 
-  void AddIceCandidate(const std::string& aTransportId,
-                       const std::string& aCandidate);
+  virtual void SendPacket(const std::string& aTransportId,
+                          MediaPacket&& aPacket) = 0;
 
-  void UpdateNetworkState(bool aOnline);
+  virtual void AddIceCandidate(const std::string& aTransportId,
+                               const std::string& aCandidate) = 0;
 
-  void SendPacket(const std::string& aTransportId,
-                  MediaPacket& aPacket) override;
+  virtual void UpdateNetworkState(bool aOnline) = 0;
 
-  // TODO(bug 1494312): Figure out how this fits with an async API. Maybe we
-  // cache on the content process.
-  TransportLayer::State GetState(const std::string& aTransportId,
-                                 bool aRtcp) const override;
+  virtual TransportLayer::State GetState(const std::string& aTransportId,
+                                         bool aRtcp) const = 0;
 
-  RefPtr<RTCStatsQueryPromise> GetIceStats(UniquePtr<RTCStatsQuery>&& aQuery);
-
-  typedef MozPromise<dom::Sequence<nsString>, nsresult, true> IceLogPromise;
-
-  static RefPtr<IceLogPromise> GetIceLog(const nsCString& aPattern);
-
-  static void ClearIceLog();
-
-  static void EnterPrivateMode();
-  static void ExitPrivateMode();
-
-  // TODO(bug 1494311) Use IPC type
-  struct CandidateInfo {
-    std::string mCandidate;
-    std::string mDefaultHostRtp;
-    uint16_t mDefaultPortRtp = 0;
-    std::string mDefaultHostRtcp;
-    uint16_t mDefaultPortRtcp = 0;
-  };
+  // dom::RTCStatsReportInternal doesn't have move semantics.
+  typedef MozPromise<std::unique_ptr<dom::RTCStatsReportInternal>, nsresult,
+                     true>
+      StatsPromise;
+  virtual RefPtr<StatsPromise> GetIceStats(
+      const std::string& aTransportId, DOMHighResTimeStamp aNow,
+      std::unique_ptr<dom::RTCStatsReportInternal>&& aReport) = 0;
 
   sigslot::signal2<const std::string&, const CandidateInfo&> SignalCandidate;
   sigslot::signal1<const std::string&> SignalAlpnNegotiated;
   sigslot::signal1<dom::PCImplIceGatheringState> SignalGatheringStateChange;
   sigslot::signal1<dom::PCImplIceConnectionState> SignalConnectionStateChange;
 
- private:
-  RefPtr<TransportFlow> CreateTransportFlow(
-      const std::string& aTransportId, bool aIsRtcp,
-      RefPtr<DtlsIdentity> aDtlsIdentity, bool aDtlsClient,
-      // TODO(bug 1494312) Use IPC type
-      const SdpFingerprintAttributeList& aFingerprints, bool aPrivacyRequested);
+  sigslot::signal2<const std::string&, MediaPacket&> SignalPacketReceived;
+  sigslot::signal2<const std::string&, MediaPacket&> SignalEncryptedSending;
+  sigslot::signal2<const std::string&, TransportLayer::State> SignalStateChange;
+  sigslot::signal2<const std::string&, TransportLayer::State>
+      SignalRtcpStateChange;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaTransportHandler)
 
-  struct Transport {
-    RefPtr<TransportFlow> mFlow;
-    RefPtr<TransportFlow> mRtcpFlow;
-  };
-
-  void OnGatheringStateChange(NrIceCtx* aIceCtx,
-                              NrIceCtx::GatheringState aState);
-  void OnConnectionStateChange(NrIceCtx* aIceCtx,
-                               NrIceCtx::ConnectionState aState);
-  void OnCandidateFound(NrIceMediaStream* aStream,
-                        const std::string& aCandidate);
-  void OnStateChange(TransportLayer* aLayer, TransportLayer::State);
-  void OnRtcpStateChange(TransportLayer* aLayer, TransportLayer::State);
-  void PacketReceived(TransportLayer* aLayer, MediaPacket& aPacket);
-  void EncryptedPacketSending(TransportLayer* aLayer, MediaPacket& aPacket);
-  RefPtr<TransportFlow> GetTransportFlow(const std::string& aId,
-                                         bool aIsRtcp) const;
-  void GetIceStats(const NrIceMediaStream& aStream, DOMHighResTimeStamp aNow,
-                   dom::RTCStatsReportInternal* aReport) const;
-
-  ~MediaTransportHandler() override;
-  RefPtr<NrIceCtx> mIceCtx;
-  RefPtr<NrIceResolver> mDNSResolver;
-  std::map<std::string, Transport> mTransports;
-  bool mProxyOnly = false;
+ protected:
+  virtual ~MediaTransportHandler() = default;
 };
+
 }  // namespace mozilla
 
 #endif  //_MTRANSPORTHANDLER_H__

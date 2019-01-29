@@ -611,7 +611,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 #appMenu-tp-category {
-  color: var(--panel-disabled-color);
   margin-inline-end: 0;
 }
 
