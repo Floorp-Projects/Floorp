@@ -29,11 +29,6 @@ class RDDProcessImpl final : public ipc::ProcessChild {
   DISALLOW_COPY_AND_ASSIGN(RDDProcessImpl);
 
   RDDParent mRDD;
-
-#if defined(XP_WIN)
-  // This object initializes and configures COM.
-  mozilla::mscom::MainThreadRuntime mCOMRuntime;
-#endif
 };
 
 }  // namespace mozilla

@@ -317,6 +317,43 @@ def check_mozglue_order(target, binary):
         raise RuntimeError('Could not parse readelf output?')
 
 
+def check_networking(binary):
+    retcode = 0
+    networking_functions = set([
+        # socketpair is not concerning; it is restricted to AF_UNIX
+        "socket", "connect", "accept", "bind", "listen",
+        "getsockname", "getsockopt", "setsockopt",
+        "recv", "recvfrom",
+        "send", "sendto",
+        # We would be concerned by recvmsg and sendmsg; but we believe
+        # they are okay as documented in 1376621#c23
+        "gethostbyname", "gethostbyaddr", "gethostent", "sethostent", "endhostent",
+        "gethostent_r", "gethostbyname2", "gethostbyaddr_r", "gethostbyname_r",
+        "gethostbyname2_r",
+        "getaddrinfo", "getservent", "getservbyname", "getservbyport", "setservent",
+        "getprotoent", "getprotobyname", "getprotobynumber", "setprotoent",
+        "endprotoent"])
+    bad_occurences_names = set()
+
+    try:
+        for sym in at_least_one(iter_symbols(binary)):
+            if sym['addr'] == 0 and sym['name'] in networking_functions:
+                bad_occurences_names.add(sym['name'])
+    except Empty:
+        raise RuntimeError('Could not parse llvm-objdump output?')
+
+    basename = os.path.basename(binary)
+    if bad_occurences_names:
+        s = 'TEST-UNEXPECTED-FAIL | check_networking | {} | Identified {} ' + \
+            'networking function(s) being imported in the rust static library ({})'
+        print(s.format(basename, len(bad_occurences_names),
+            ",".join(sorted(bad_occurences_names))),
+            file=sys.stderr)
+        retcode = 1
+    elif buildconfig.substs.get('MOZ_AUTOMATION'):
+        print('TEST-PASS | check_networking | {}'.format(basename))
+    return retcode
+
 def checks(target, binary):
     # The clang-plugin is built as target but is really a host binary.
     # Cheat and pretend we were passed the right argument.
@@ -362,6 +399,8 @@ def main(args):
                         help='Perform checks for a host binary')
     parser.add_argument('--target', action='store_true',
                         help='Perform checks for a target binary')
+    parser.add_argument('--networking', action='store_true',
+                        help='Perform checks for networking functions')
 
     parser.add_argument('binary', metavar='PATH',
                         help='Location of the binary to check')
@@ -373,7 +412,14 @@ def main(args):
               file=sys.stderr)
         return 1
 
-    if options.host:
+    if options.networking and options.host:
+        print('--networking is only valid with --target',
+               file=sys.stderr)
+        return 1
+
+    if options.networking:
+        return check_networking(options.binary)
+    elif options.host:
         return checks(HOST, options.binary)
     elif options.target:
         return checks(TARGET, options.binary)

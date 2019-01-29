@@ -404,30 +404,6 @@ void Classifier::TableRequest(nsACString& aResult) {
   mIsTableRequestResultOutdated = false;
 }
 
-nsresult Classifier::CheckURI(const nsACString& aSpec,
-                              const nsTArray<nsCString>& aTables,
-                              LookupResultArray& aResults) {
-  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_CHECK_TIME> timer;
-
-  // Get the set of fragments based on the url. This is necessary because we
-  // only look up at most 5 URLs per aSpec, even if aSpec has more than 5
-  // components.
-  nsTArray<nsCString> fragments;
-  nsresult rv = LookupCache::GetLookupFragments(aSpec, &fragments);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  LookupCacheArray cacheArray;
-  for (const nsCString& table : aTables) {
-    LookupResultArray results;
-    rv = CheckURIFragments(fragments, table, results);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aResults.AppendElements(results);
-  }
-
-  return NS_OK;
-}
-
 nsresult Classifier::CheckURIFragments(
     const nsTArray<nsCString>& aSpecFragments, const nsACString& aTable,
     LookupResultArray& aResults) {
