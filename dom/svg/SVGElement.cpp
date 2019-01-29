@@ -1252,7 +1252,8 @@ nsAttrValue SVGElement::WillChangeValue(nsAtom* aName) {
   uint8_t modType =
       attrValue ? static_cast<uint8_t>(MutationEvent_Binding::MODIFICATION)
                 : static_cast<uint8_t>(MutationEvent_Binding::ADDITION);
-  nsNodeUtils::AttributeWillChange(this, kNameSpaceID_None, aName, modType);
+  nsNodeUtils::AttributeWillChange(this, kNameSpaceID_None, aName, modType,
+                                   nullptr);
 
   // This is not strictly correct--the attribute value parameter for
   // BeforeSetAttr should reflect the value that *will* be set but that implies

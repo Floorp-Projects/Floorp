@@ -139,7 +139,8 @@ void nsMutationReceiver::NativeAnonymousChildListChange(nsIContent* aContent,
 void nsMutationReceiver::AttributeWillChange(mozilla::dom::Element* aElement,
                                              int32_t aNameSpaceID,
                                              nsAtom* aAttribute,
-                                             int32_t aModType) {
+                                             int32_t aModType,
+                                             const nsAttrValue* aNewValue) {
   if (nsAutoMutationBatch::IsBatching() ||
       !ObservesAttr(RegisterTarget(), aElement, aNameSpaceID, aAttribute)) {
     return;

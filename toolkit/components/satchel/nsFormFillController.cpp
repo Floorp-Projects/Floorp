@@ -180,7 +180,8 @@ void nsFormFillController::CharacterDataChanged(
 void nsFormFillController::AttributeWillChange(mozilla::dom::Element* aElement,
                                                int32_t aNameSpaceID,
                                                nsAtom* aAttribute,
-                                               int32_t aModType) {}
+                                               int32_t aModType,
+                                               const nsAttrValue* aNewValue) {}
 
 void nsFormFillController::NativeAnonymousChildListChange(nsIContent* aContent,
                                                           bool aIsRemove) {}

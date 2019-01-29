@@ -341,7 +341,8 @@ class RestyleManager {
 
   void ContentStateChanged(nsIContent* aContent, EventStates aStateMask);
   void AttributeWillChange(Element* aElement, int32_t aNameSpaceID,
-                           nsAtom* aAttribute, int32_t aModType);
+                           nsAtom* aAttribute, int32_t aModType,
+                           const nsAttrValue* aNewValue);
   void ClassAttributeWillBeChangedBySMIL(dom::Element* aElement);
   void AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
                         nsAtom* aAttribute, int32_t aModType,

@@ -1088,7 +1088,8 @@ void IMEContentObserver::ContentRemoved(nsIContent* aChild,
 void IMEContentObserver::AttributeWillChange(dom::Element* aElement,
                                              int32_t aNameSpaceID,
                                              nsAtom* aAttribute,
-                                             int32_t aModType) {
+                                             int32_t aModType,
+                                             const nsAttrValue* aNewValue) {
   if (!NeedsTextChangeNotification()) {
     return;
   }
