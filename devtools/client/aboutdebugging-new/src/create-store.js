@@ -16,6 +16,7 @@ const { RuntimesState } = require("./reducers/runtimes-state");
 const { UiState } = require("./reducers/ui-state");
 const debugTargetListenerMiddleware = require("./middleware/debug-target-listener");
 const errorLoggingMiddleware = require("./middleware/error-logging");
+const eventRecordingMiddleware = require("./middleware/event-recording");
 const extensionComponentDataMiddleware = require("./middleware/extension-component-data");
 const tabComponentDataMiddleware = require("./middleware/tab-component-data");
 const workerComponentDataMiddleware = require("./middleware/worker-component-data");
@@ -34,6 +35,7 @@ function configureStore() {
   const middleware = applyMiddleware(thunk,
                                      debugTargetListenerMiddleware,
                                      errorLoggingMiddleware,
+                                     eventRecordingMiddleware,
                                      extensionComponentDataMiddleware,
                                      tabComponentDataMiddleware,
                                      workerComponentDataMiddleware,

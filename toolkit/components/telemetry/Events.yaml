@@ -318,6 +318,17 @@ devtools.main:
       host: "Toolbox host (positioning): bottom, side, window or other."
       width: Toolbox width rounded up to the nearest 50px.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  close_adbg:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1504173]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User closes about:debugging.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      width: Toolbox width rounded up to the nearest 50px.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   continue:
     objects: ["debugger"]
     bug_numbers: [1463122]
@@ -427,6 +438,18 @@ devtools.main:
       active: Comma separated list of active filters.
       inactive: Comma separated list of inactive filters.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  inspect:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1504173]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has clicked on the inspect button of one of the debug targets of aboutdebugging.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      runtime_type: The runtime type
+      target_type: The target type
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   jump_to_definition:
     objects: ["webconsole"]
     bug_numbers: [1463101]
@@ -473,6 +496,17 @@ devtools.main:
       width: Toolbox width rounded up to the nearest 50px.
       shortcut: The key combination pressed. Used only in the case that entrypoint === KeyShortcut.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  open_adbg:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1504173]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User opens about:debugging.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      width: Toolbox width rounded up to the nearest 50px.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   pause_on_exceptions:
     objects: ["debugger"]
     bug_numbers: [1463117]
@@ -516,6 +550,17 @@ devtools.main:
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  select_page:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1504173]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User navigates to a new page of an application such as about:debugging
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      page_type: Type of page the user navigates to (this-firefox, connect, runtime)
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   sidepanel_changed:
     objects: ["inspector", "netmonitor"]
