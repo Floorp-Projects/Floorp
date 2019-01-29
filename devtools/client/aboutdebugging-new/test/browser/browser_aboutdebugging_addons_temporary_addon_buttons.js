@@ -62,7 +62,7 @@ add_task(async function() {
 
   const { document, tab } = await openAboutDebugging();
 
-  await installRegularAddon("resources/packaged-extension/packaged-extension.xpi");
+  await installRegularExtension("resources/packaged-extension/packaged-extension.xpi");
 
   info("Wait until extension appears in about:debugging");
   await waitUntil(() => findDebugTargetByText(PACKAGED_EXTENSION_NAME, document));

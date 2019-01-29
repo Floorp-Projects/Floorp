@@ -27,6 +27,29 @@ async function enableExtensionDebugging() {
 /* exported enableExtensionDebugging */
 
 /**
+ * Install an extension using the AddonManager so it does not show up as temporary.
+ */
+function installRegularExtension(pathOrFile) {
+  const isFile = typeof pathOrFile.isFile === "function" && pathOrFile.isFile();
+  const file = isFile ? pathOrFile : _getSupportsFile(pathOrFile).file;
+  return new Promise(async (resolve, reject) => {
+    const install = await AddonManager.getInstallForFile(file);
+    if (!install) {
+      throw new Error(`An install was not created for ${file.path}`);
+    }
+    install.addListener({
+      onDownloadFailed: reject,
+      onDownloadCancelled: reject,
+      onInstallFailed: reject,
+      onInstallCancelled: reject,
+      onInstallEnded: resolve,
+    });
+    install.install();
+  });
+}
+/* exported installRegularExtension */
+
+/**
  * Install a temporary extension at the provided path, with the provided name.
  * Will use a mock file picker to select the file.
  */
@@ -146,25 +169,3 @@ class TemporaryExtension {
   }
 }
 /* exported TemporaryExtension */
-
-/**
- * Install an add-on using the AddonManager so it does not show up as temporary.
- */
-function installRegularAddon(filePath) {
-  const file = _getSupportsFile(filePath).file;
-  return new Promise(async (resolve, reject) => {
-    const install = await AddonManager.getInstallForFile(file);
-    if (!install) {
-      throw new Error(`An install was not created for ${filePath}`);
-    }
-    install.addListener({
-      onDownloadFailed: reject,
-      onDownloadCancelled: reject,
-      onInstallFailed: reject,
-      onInstallCancelled: reject,
-      onInstallEnded: resolve,
-    });
-    install.install();
-  });
-}
-/* exported installRegularAddon */
