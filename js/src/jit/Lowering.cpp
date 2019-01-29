@@ -4132,6 +4132,10 @@ void LIRGenerator::visitIsTypedArray(MIsTypedArray* ins) {
 
   auto* lir = new (alloc()) LIsTypedArray(useRegister(ins->value()));
   define(lir, ins);
+
+  if (ins->isPossiblyWrapped()) {
+    assignSafepoint(lir, ins);
+  }
 }
 
 void LIRGenerator::visitIsCallable(MIsCallable* ins) {
