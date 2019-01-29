@@ -1471,8 +1471,7 @@ nsresult EnsureMIMEOfScript(nsHttpChannel *aChannel, nsIURI *aURI,
     if (!sIsInited) {
       sIsInited = true;
       Preferences::AddBoolVarCache(&sCachedBlockScriptWithWrongMime,
-                                   "security.block_script_with_wrong_mime",
-                                   true);
+                                   "security.block_script_with_wrong_mime");
     }
 
     // Do not block the load if the feature is not enabled.
@@ -1489,67 +1488,62 @@ nsresult EnsureMIMEOfScript(nsHttpChannel *aChannel, nsIURI *aURI,
     // script load has type text/plain
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::text_plain);
-  } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/xml"))) {
+    return NS_OK;
+  }
+
+  if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/xml"))) {
     // script load has type text/xml
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::text_xml);
-  } else if (StringBeginsWith(contentType,
-                              NS_LITERAL_CSTRING("application/octet-stream"))) {
+    return NS_OK;
+  }
+
+  if (StringBeginsWith(contentType,
+                       NS_LITERAL_CSTRING("application/octet-stream"))) {
     // script load has type application/octet-stream
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::app_octet_stream);
-  } else if (StringBeginsWith(contentType,
-                              NS_LITERAL_CSTRING("application/xml"))) {
+    return NS_OK;
+  }
+
+  if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("application/xml"))) {
     // script load has type application/xml
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::app_xml);
-  } else if (StringBeginsWith(contentType,
-                              NS_LITERAL_CSTRING("application/json"))) {
+    return NS_OK;
+  }
+
+  if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("application/json"))) {
     // script load has type application/json
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::app_json);
-  } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/json"))) {
+    return NS_OK;
+  }
+
+  if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/json"))) {
     // script load has type text/json
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::text_json);
-  } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/html"))) {
+    return NS_OK;
+  }
+
+  if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/html"))) {
     // script load has type text/html
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::text_html);
-  } else if (contentType.IsEmpty()) {
+    return NS_OK;
+  }
+
+  if (contentType.IsEmpty()) {
     // script load has no type
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::empty);
-  } else {
-    // script load has unknown type
-    AccumulateCategorical(
-        Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::unknown);
+    return NS_OK;
   }
 
-  // We restrict importScripts() in worker code to JavaScript MIME types.
-  if (aLoadInfo->InternalContentPolicyType() ==
-      nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS) {
-    // Instead of consulting Preferences::GetBool() all the time we
-    // can cache the result to speed things up.
-    static bool sCachedBlockImportScriptsWithWrongMime = false;
-    static bool sIsInited = false;
-    if (!sIsInited) {
-      sIsInited = true;
-      Preferences::AddBoolVarCache(
-          &sCachedBlockImportScriptsWithWrongMime,
-          "security.block_importScripts_with_wrong_mime", true);
-    }
-
-    // Do not block the load if the feature is not enabled.
-    if (!sCachedBlockImportScriptsWithWrongMime) {
-      return NS_OK;
-    }
-
-    ReportMimeTypeMismatch(aChannel, "BlockImportScriptsWithWrongMimeType",
-                           aURI, contentType, Report::Error);
-    return NS_ERROR_CORRUPTED_CONTENT;
-  }
-
+  // script load has unknown type
+  AccumulateCategorical(
+      Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::unknown);
   return NS_OK;
 }
 
