@@ -1,0 +1,196 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AsyncLoginsStorageAdapter - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.sync.logins</a>&nbsp;/&nbsp;<a href="./index.html">AsyncLoginsStorageAdapter</a><br/>
+<br/>
+<h1>AsyncLoginsStorageAdapter</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">AsyncLoginsStorageAdapter</span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">LoginsStorage</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-async-logins-storage/index.html"><span class="identifier">AsyncLoginsStorage</span></a><span class="symbol">, </span><a href="https://developer.android.com/reference/java/lang/AutoCloseable.html"><span class="identifier">AutoCloseable</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L270">(source)</a>
+<p>A helper class to wrap a synchronous <a href="#">LoginsStorage</a> implementation and make it asynchronous.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">AsyncLoginsStorageAdapter</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter$<init>(mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter.T)/wrapped">wrapped</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span></code>
+<p>A helper class to wrap a synchronous <a href="#">LoginsStorage</a> implementation and make it asynchronous.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="add.html">add</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">add</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter$add(mozilla.appservices.logins.ServerPassword)/login">login</span><span class="symbol">:</span>&nbsp;<a href="../-server-password.html"><span class="identifier">ServerPassword</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code>
+<p>Inserts the provided login into the database, returning it's id.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="close.html">close</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">close</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="delete.html">delete</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">delete</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter$delete(kotlin.String)/id">id</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span></code>
+<p>Deletes the password with the given ID.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="ensure-locked.html">ensureLocked</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">ensureLocked</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Equivalent to <code>lock()</code>, but does not throw in the case that
+the database is already unlocked. Never rejects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="ensure-unlocked.html">ensureUnlocked</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">ensureUnlocked</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter$ensureUnlocked(kotlin.String)/encryptionKey">encryptionKey</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code><br/>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">ensureUnlocked</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter$ensureUnlocked(kotlin.ByteArray)/encryptionKey">encryptionKey</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html"><span class="identifier">ByteArray</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Equivalent to <code>unlock(encryptionKey)</code>, but does not throw in the case
+that the database is already unlocked.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get.html">get</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">get</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter$get(kotlin.String)/id">id</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="../-server-password.html"><span class="identifier">ServerPassword</span></a><span class="symbol">?</span><span class="symbol">&gt;</span></code>
+<p>Fetches a password from the underlying storage layer by ID.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-locked.html">isLocked</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">isLocked</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns <code>true</code> if the storage is locked, false otherwise.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="list.html">list</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">list</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-server-password.html"><span class="identifier">ServerPassword</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span></code>
+<p>Fetches the full list of passwords from the underlying storage layer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="lock.html">lock</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">lock</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Locks the logins storage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="sync.html">sync</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">sync</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter$sync(mozilla.appservices.logins.SyncUnlockInfo)/syncInfo">syncInfo</span><span class="symbol">:</span>&nbsp;<a href="../-sync-unlock-info.html"><span class="identifier">SyncUnlockInfo</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Synchronizes the logins storage layer with a remote layer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="touch.html">touch</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">touch</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter$touch(kotlin.String)/id">id</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Marks the login with the given ID as <code>in-use</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="unlock.html">unlock</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">unlock</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter$unlock(kotlin.String)/encryptionKey">encryptionKey</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Unlocks the logins storage using the provided key.</p>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">unlock</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter$unlock(kotlin.ByteArray)/encryptionKey">encryptionKey</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html"><span class="identifier">ByteArray</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Unlock (open) the database, using a byte string as the key.
+This is equivalent to calling unlock() after hex-encoding the bytes (lower
+case hexadecimal characters are used).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="update.html">update</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">update</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter$update(mozilla.appservices.logins.ServerPassword)/login">login</span><span class="symbol">:</span>&nbsp;<a href="../-server-password.html"><span class="identifier">ServerPassword</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Updates the fields in the provided record.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="wipe.html">wipe</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">wipe</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Delete all login records. These deletions will be synced to the server on the next call to sync.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="wipe-local.html">wipeLocal</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">wipeLocal</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Clear out all local state, bringing us back to the state before the first write (or sync).</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="for-database.html">forDatabase</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">forDatabase</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter.Companion$forDatabase(kotlin.String)/dbPath">dbPath</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AsyncLoginsStorageAdapter</span></a><span class="symbol">&lt;</span><span class="identifier">DatabaseLoginsStorage</span><span class="symbol">&gt;</span></code>
+<p>Creates an <a href="../-async-logins-storage/index.html">AsyncLoginsStorage</a> that is backed by a <a href="#">DatabaseLoginsStorage</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="in-memory.html">inMemory</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">inMemory</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter.Companion$inMemory(kotlin.collections.List((mozilla.appservices.logins.ServerPassword)))/items">items</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-server-password.html"><span class="identifier">ServerPassword</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AsyncLoginsStorageAdapter</span></a><span class="symbol">&lt;</span><span class="identifier">MemoryLoginsStorage</span><span class="symbol">&gt;</span></code>
+<p>Creates an <a href="../-async-logins-storage/index.html">AsyncLoginsStorage</a> that is backed by a <a href="#">MemoryLoginsStorage</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

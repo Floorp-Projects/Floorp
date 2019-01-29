@@ -1,0 +1,34 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AsyncLoginsStorage.unlock - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.sync.logins</a>&nbsp;/&nbsp;<a href="index.html">AsyncLoginsStorage</a>&nbsp;/&nbsp;<a href="./unlock.html">unlock</a><br/>
+<br/>
+<h1>unlock</h1>
+<a name="mozilla.components.service.sync.logins.AsyncLoginsStorage$unlock(kotlin.String)"></a>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">unlock</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorage$unlock(kotlin.String)/encryptionKey">encryptionKey</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L117">(source)</a>
+<p>Unlocks the logins storage using the provided key.</p>
+<p><strong>RejectsWith</strong><br/>
+<a href="../-invalid-key-exception.html">InvalidKeyException</a> if the encryption key is wrong, or the db is corrupt</p>
+<p><strong>RejectsWith</strong><br/>
+<a href="../-mismatched-lock-exception.html">MismatchedLockException</a> if we're already unlocked</p>
+<p><strong>RejectsWith</strong><br/>
+<a href="../-logins-storage-exception.html">LoginsStorageException</a> if the storage is locked, and on unexpected
+    errors (IO failure, rust panics, etc)</p>
+<a name="mozilla.components.service.sync.logins.AsyncLoginsStorage$unlock(kotlin.ByteArray)"></a>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">unlock</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.AsyncLoginsStorage$unlock(kotlin.ByteArray)/encryptionKey">encryptionKey</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html"><span class="identifier">ByteArray</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L129">(source)</a>
+<p>Unlock (open) the database, using a byte string as the key.
+This is equivalent to calling unlock() after hex-encoding the bytes (lower
+case hexadecimal characters are used).</p>
+<p><strong>RejectsWith</strong><br/>
+<a href="../-invalid-key-exception.html">InvalidKeyException</a> if the encryption key is wrong, or the db is corrupt</p>
+<p><strong>RejectsWith</strong><br/>
+<a href="../-mismatched-lock-exception.html">MismatchedLockException</a> if the database is already unlocked</p>
+<p><strong>RejectsWith</strong><br/>
+<a href="../-logins-storage-exception.html">LoginsStorageException</a> if the storage is locked, and on unexpected
+    errors (IO failure, rust panics, etc)</p>
+</BODY>
+</HTML>

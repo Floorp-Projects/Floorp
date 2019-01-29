@@ -1,0 +1,60 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AccessTokenInfo - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="./index.html">AccessTokenInfo</a><br/>
+<br/>
+<h1>AccessTokenInfo</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">AccessTokenInfo</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/AccessTokenInfo.kt#L28">(source)</a>
+<p>The result of authentication with FxA via an OAuth flow.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">AccessTokenInfo</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.AccessTokenInfo$<init>(kotlin.String, mozilla.components.service.fxa.OAuthScopedKey, kotlin.Long)/token">token</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.AccessTokenInfo$<init>(kotlin.String, mozilla.components.service.fxa.OAuthScopedKey, kotlin.Long)/key">key</span><span class="symbol">:</span>&nbsp;<a href="../-o-auth-scoped-key/index.html"><span class="identifier">OAuthScopedKey</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.AccessTokenInfo$<init>(kotlin.String, mozilla.components.service.fxa.OAuthScopedKey, kotlin.Long)/expiresAt">expiresAt</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">)</span></code>
+<p>The result of authentication with FxA via an OAuth flow.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="expires-at.html">expiresAt</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">expiresAt</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a></code>
+<p>The expiry date timestamp of this token since unix epoch (in seconds).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="key.html">key</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">key</span><span class="symbol">: </span><a href="../-o-auth-scoped-key/index.html"><span class="identifier">OAuthScopedKey</span></a><span class="symbol">?</span></code>
+<p>An OAuthScopedKey if present.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="token.html">token</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">token</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>The access token produced by the flow.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

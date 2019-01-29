@@ -1,0 +1,89 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Configuration - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.glean.config</a>&nbsp;/&nbsp;<a href="./index.html">Configuration</a><br/>
+<br/>
+<h1>Configuration</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Configuration</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L21">(source)</a>
+<p>The Configuration class describes how to configure the Glean.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Configuration</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.glean.config.Configuration$<init>(kotlin.String, kotlin.String, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Boolean)/serverEndpoint">serverEndpoint</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;"https://incoming.telemetry.mozilla.org"<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.glean.config.Configuration$<init>(kotlin.String, kotlin.String, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Boolean)/userAgent">userAgent</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;"Glean/${BuildConfig.LIBRARY_VERSION} (Android)"<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.glean.config.Configuration$<init>(kotlin.String, kotlin.String, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Boolean)/connectionTimeout">connectionTimeout</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;10000<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.glean.config.Configuration$<init>(kotlin.String, kotlin.String, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Boolean)/readTimeout">readTimeout</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;30000<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.glean.config.Configuration$<init>(kotlin.String, kotlin.String, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Boolean)/maxEvents">maxEvents</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;500<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.glean.config.Configuration$<init>(kotlin.String, kotlin.String, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Boolean)/logPings">logPings</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">)</span></code>
+<p>The Configuration class describes how to configure the Glean.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="connection-timeout.html">connectionTimeout</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">connectionTimeout</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>the timeout, in milliseconds, to use when connecting to
+    the <a href="server-endpoint.html">serverEndpoint</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="log-pings.html">logPings</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">logPings</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>whether to log ping contents to the console.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="max-events.html">maxEvents</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">maxEvents</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>the number of events to store before the events ping is sent</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="read-timeout.html">readTimeout</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">readTimeout</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>the timeout, in milliseconds, to use when connecting to
+    the <a href="server-endpoint.html">serverEndpoint</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="server-endpoint.html">serverEndpoint</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">serverEndpoint</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>the server pings are sent to</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="user-agent.html">userAgent</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">userAgent</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>the user agent used when sending pings</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,150 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>EngineSession.TrackingProtectionPolicy - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.concept.engine</a>&nbsp;/&nbsp;<a href="../index.html">EngineSession</a>&nbsp;/&nbsp;<a href="./index.html">TrackingProtectionPolicy</a><br/>
+<br/>
+<h1>TrackingProtectionPolicy</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">TrackingProtectionPolicy</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L72">(source)</a>
+<p>Represents a tracking protection policy, which is a combination of
+tracker categories that should be blocked. Unless otherwise specified,
+a <a href="./index.html">TrackingProtectionPolicy</a> is applicable to all session types (see
+<a href="../-tracking-protection-policy-for-session-types/index.html">TrackingProtectionPolicyForSessionTypes</a>).</p>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="categories.html">categories</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">categories</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="use-for-private-sessions.html">useForPrivateSessions</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">useForPrivateSessions</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="use-for-regular-sessions.html">useForRegularSessions</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">useForRegularSessions</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="contains.html">contains</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">contains</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy$contains(kotlin.Int)/category">category</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="equals.html">equals</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">equals</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy$equals(kotlin.Any)/other">other</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="hash-code.html">hashCode</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">hashCode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-a-d.html">AD</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">AD</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-a-n-a-l-y-t-i-c-s.html">ANALYTICS</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">ANALYTICS</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-c-o-n-t-e-n-t.html">CONTENT</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">CONTENT</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-s-o-c-i-a-l.html">SOCIAL</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">SOCIAL</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-t-e-s-t.html">TEST</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">TEST</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="all.html">all</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">all</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-tracking-protection-policy-for-session-types/index.html"><span class="identifier">TrackingProtectionPolicyForSessionTypes</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="none.html">none</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">none</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TrackingProtectionPolicy</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="select.html">select</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">select</span><span class="symbol">(</span><span class="keyword">vararg</span> <span class="identifier" id="mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.Companion$select(kotlin.IntArray)/categories">categories</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-tracking-protection-policy-for-session-types/index.html"><span class="identifier">TrackingProtectionPolicyForSessionTypes</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-tracking-protection-policy-for-session-types/index.html">TrackingProtectionPolicyForSessionTypes</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">TrackingProtectionPolicyForSessionTypes</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TrackingProtectionPolicy</span></a></code>
+<p>Subtype of <a href="./index.html">TrackingProtectionPolicy</a> to control the type of session this policy
+should be applied to. By default, a policy will be applied to all sessions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

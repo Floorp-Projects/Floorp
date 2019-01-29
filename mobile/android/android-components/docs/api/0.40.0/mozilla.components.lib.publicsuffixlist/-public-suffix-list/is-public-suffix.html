@@ -1,0 +1,23 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>PublicSuffixList.isPublicSuffix - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.publicsuffixlist</a>&nbsp;/&nbsp;<a href="index.html">PublicSuffixList</a>&nbsp;/&nbsp;<a href="./is-public-suffix.html">isPublicSuffix</a><br/>
+<br/>
+<h1>isPublicSuffix</h1>
+<a name="mozilla.components.lib.publicsuffixlist.PublicSuffixList$isPublicSuffix(kotlin.String)"></a>
+<code><span class="keyword">fun </span><span class="identifier">isPublicSuffix</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.publicsuffixlist.PublicSuffixList$isPublicSuffix(kotlin.String)/domain">domain</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/publicsuffixlist/src/main/java/mozilla/components/lib/publicsuffixlist/PublicSuffixList.kt#L54">(source)</a>
+<p>Returns true if the given <a href="is-public-suffix.html#mozilla.components.lib.publicsuffixlist.PublicSuffixList$isPublicSuffix(kotlin.String)/domain">domain</a> is a public suffix; false otherwise.</p>
+<p>E.g.:</p>
+<pre><code>co.uk       -&gt; true
+com         -&gt; true
+mozilla.org -&gt; false
+org         -&gt; true
+</code></pre>
+<p>Note that this method ignores the default "prevailing rule" described in the formal public suffix list algorithm:
+If no rule matches then the passed <a href="is-public-suffix.html#mozilla.components.lib.publicsuffixlist.PublicSuffixList$isPublicSuffix(kotlin.String)/domain">domain</a> is assumed to <em>not</em> be a public suffix.</p>
+</BODY>
+</HTML>

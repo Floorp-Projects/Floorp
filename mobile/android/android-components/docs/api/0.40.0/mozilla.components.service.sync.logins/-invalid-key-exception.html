@@ -1,0 +1,18 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>InvalidKeyException - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="index.html">mozilla.components.service.sync.logins</a>&nbsp;/&nbsp;<a href="./-invalid-key-exception.html">InvalidKeyException</a><br/>
+<br/>
+<h1>InvalidKeyException</h1>
+<code><span class="keyword">typealias </span><span class="identifier">InvalidKeyException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">InvalidKeyException</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L91">(source)</a>
+<p>This error is emitted in two cases:</p>
+<ol><li>An incorrect key is used to to open the login database</li>
+<li>The file at the path specified is not a sqlite database.</li>
+</ol>
+<p>SQLCipher does not give any way to distinguish between these two cases.</p>
+</BODY>
+</HTML>

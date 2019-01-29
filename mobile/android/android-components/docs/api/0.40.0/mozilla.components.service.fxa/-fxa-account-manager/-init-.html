@@ -1,0 +1,26 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FxaAccountManager.<init> - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="index.html">FxaAccountManager</a>&nbsp;/&nbsp;<a href="./-init-.html">&lt;init&gt;</a><br/>
+<br/>
+<h1>&lt;init&gt;</h1>
+<a name="mozilla.components.service.fxa.FxaAccountManager$&lt;init&gt;(android.content.Context, org.mozilla.fxaclient.internal.Config, kotlin.Array((kotlin.String)), mozilla.components.service.fxa.AccountStorage)"></a>
+<code><span class="identifier">FxaAccountManager</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaAccountManager$<init>(android.content.Context, org.mozilla.fxaclient.internal.Config, kotlin.Array((kotlin.String)), mozilla.components.service.fxa.AccountStorage)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FxaAccountManager$<init>(android.content.Context, org.mozilla.fxaclient.internal.Config, kotlin.Array((kotlin.String)), mozilla.components.service.fxa.AccountStorage)/config">config</span><span class="symbol">:</span>&nbsp;<a href="../-config.html"><span class="identifier">Config</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FxaAccountManager$<init>(android.content.Context, org.mozilla.fxaclient.internal.Config, kotlin.Array((kotlin.String)), mozilla.components.service.fxa.AccountStorage)/scopes">scopes</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html"><span class="identifier">Array</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FxaAccountManager$<init>(android.content.Context, org.mozilla.fxaclient.internal.Config, kotlin.Array((kotlin.String)), mozilla.components.service.fxa.AccountStorage)/accountStorage">accountStorage</span><span class="symbol">:</span>&nbsp;<a href="../-account-storage/index.html"><span class="identifier">AccountStorage</span></a>&nbsp;<span class="symbol">=</span>&nbsp;SharedPrefAccountStorage(context)<span class="symbol">)</span></code>
+<p>An account manager which encapsulates various internal details of an account lifecycle and provides
+an observer interface along with a public API for interacting with an account.
+The internal state machine abstracts over state space as exposed by the fxaclient library, not
+the internal states experienced by lower-level representation of a Firefox Account; those are opaque to us.</p>
+<p>Class is 'open' to facilitate testing.</p>
+<h3>Parameters</h3>
+<p><a name="context"></a>
+<code>context</code> - A <a href="https://developer.android.com/reference/android/content/Context.html">Context</a> instance that's used for internal messaging and interacting with local storage.</p>
+<p><a name="config"></a>
+<code>config</code> - A <a href="../-config.html">Config</a> used for account initialization.</p>
+<p><a name="scopes"></a>
+<code>scopes</code> - A list of scopes which will be requested during account authentication.</p>
+</BODY>
+</HTML>

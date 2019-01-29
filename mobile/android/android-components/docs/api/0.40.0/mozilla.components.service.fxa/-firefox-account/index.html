@@ -1,0 +1,132 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FirefoxAccount - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="./index.html">FirefoxAccount</a><br/>
+<br/>
+<h1>FirefoxAccount</h1>
+<code><span class="keyword">class </span><span class="identifier">FirefoxAccount</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-firefox-account-shaped/index.html"><span class="identifier">FirefoxAccountShaped</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L33">(source)</a>
+<p>FirefoxAccount represents the authentication state of a client.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">FirefoxAccount</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$<init>(org.mozilla.fxaclient.internal.Config)/config">config</span><span class="symbol">:</span>&nbsp;<a href="../-config.html"><span class="identifier">Config</span></a><span class="symbol">)</span></code>
+<p>Construct a FirefoxAccount from a <a href="../-config.html">Config</a>, a clientId, and a redirectUri.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="begin-o-auth-flow.html">beginOAuthFlow</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">beginOAuthFlow</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$beginOAuthFlow(kotlin.Array((kotlin.String)), kotlin.Boolean)/scopes">scopes</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html"><span class="identifier">Array</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$beginOAuthFlow(kotlin.Array((kotlin.String)), kotlin.Boolean)/wantsKeys">wantsKeys</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code>
+<p>Constructs a URL used to begin the OAuth flow for the requested scopes and keys.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="begin-pairing-flow.html">beginPairingFlow</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">beginPairingFlow</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$beginPairingFlow(kotlin.String, kotlin.Array((kotlin.String)))/pairingUrl">pairingUrl</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$beginPairingFlow(kotlin.String, kotlin.Array((kotlin.String)))/scopes">scopes</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html"><span class="identifier">Array</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="close.html">close</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">close</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="complete-o-auth-flow.html">completeOAuthFlow</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">completeOAuthFlow</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$completeOAuthFlow(kotlin.String, kotlin.String)/code">code</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$completeOAuthFlow(kotlin.String, kotlin.String)/state">state</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Authenticates the current account using the code and state parameters fetched from the
+redirect URL reached after completing the sign in flow triggered by <a href="begin-o-auth-flow.html">beginOAuthFlow</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-access-token.html">getAccessToken</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getAccessToken</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$getAccessToken(kotlin.String)/singleScope">singleScope</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="../-access-token-info/index.html"><span class="identifier">AccessTokenInfo</span></a><span class="symbol">&gt;</span></code>
+<p>Tries to fetch an access token for the given scope.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-connection-success-u-r-l.html">getConnectionSuccessURL</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getConnectionSuccessURL</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Fetches the connection success url.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-profile.html">getProfile</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getProfile</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$getProfile(kotlin.Boolean)/ignoreCache">ignoreCache</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="../-profile/index.html"><span class="identifier">Profile</span></a><span class="symbol">&gt;</span></code>
+<p>Fetches the profile object for the current client either from the existing cached account,
+or from the server (requires the client to have access to the profile scope).</p>
+<code><span class="keyword">fun </span><span class="identifier">getProfile</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="../-profile/index.html"><span class="identifier">Profile</span></a><span class="symbol">&gt;</span></code>
+<p>Convenience method to fetch the profile from a cached account by default, but fall back
+to retrieval from the server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-token-server-endpoint-u-r-l.html">getTokenServerEndpointURL</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getTokenServerEndpointURL</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Fetches the token server endpoint, for authentication using the SAML bearer flow.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="to-j-s-o-n-string.html">toJSONString</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">toJSONString</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Saves the current account's authentication state as a JSON string, for persistence in
+the Android KeyStore/shared preferences. The authentication state can be restored using
+<a href="from-j-s-o-n-string.html">FirefoxAccount.fromJSONString</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="from-j-s-o-n-string.html">fromJSONString</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">fromJSONString</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount.Companion$fromJSONString(kotlin.String)/json">json</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">FirefoxAccount</span></a></code>
+<p>Restores the account's authentication state from a JSON string produced by
+<a href="to-j-s-o-n-string.html">FirefoxAccount.toJSONString</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

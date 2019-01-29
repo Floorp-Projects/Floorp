@@ -1,0 +1,108 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>PromptRequest.TimeSelection - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.concept.engine.prompt</a>&nbsp;/&nbsp;<a href="../index.html">PromptRequest</a>&nbsp;/&nbsp;<a href="./index.html">TimeSelection</a><br/>
+<br/>
+<h1>TimeSelection</h1>
+<code><span class="keyword">class </span><span class="identifier">TimeSelection</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../index.html"><span class="identifier">PromptRequest</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L80">(source)</a>
+<p>Value type that represents a request for a date prompt for picking a year, month, and day.</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-type/index.html">Type</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">Type</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">TimeSelection</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection$<init>(kotlin.String, java.util.Date, java.util.Date, java.util.Date, mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type, kotlin.Function1((java.util.Date, kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/title">title</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection$<init>(kotlin.String, java.util.Date, java.util.Date, java.util.Date, mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type, kotlin.Function1((java.util.Date, kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/initialDate">initialDate</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/util/Date.html"><span class="identifier">Date</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection$<init>(kotlin.String, java.util.Date, java.util.Date, java.util.Date, mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type, kotlin.Function1((java.util.Date, kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/minimumDate">minimumDate</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/util/Date.html"><span class="identifier">Date</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection$<init>(kotlin.String, java.util.Date, java.util.Date, java.util.Date, mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type, kotlin.Function1((java.util.Date, kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/maximumDate">maximumDate</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/util/Date.html"><span class="identifier">Date</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection$<init>(kotlin.String, java.util.Date, java.util.Date, java.util.Date, mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type, kotlin.Function1((java.util.Date, kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/type">type</span><span class="symbol">:</span>&nbsp;<a href="-type/index.html"><span class="identifier">Type</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Type.DATE<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection$<init>(kotlin.String, java.util.Date, java.util.Date, java.util.Date, mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type, kotlin.Function1((java.util.Date, kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/onConfirm">onConfirm</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://developer.android.com/reference/java/util/Date.html"><span class="identifier">Date</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection$<init>(kotlin.String, java.util.Date, java.util.Date, java.util.Date, mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type, kotlin.Function1((java.util.Date, kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/onClear">onClear</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span></code>
+<p>Value type that represents a request for a date prompt for picking a year, month, and day.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="initial-date.html">initialDate</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">initialDate</span><span class="symbol">: </span><a href="https://developer.android.com/reference/java/util/Date.html"><span class="identifier">Date</span></a></code>
+<p>date that dialog should be set by default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="maximum-date.html">maximumDate</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">maximumDate</span><span class="symbol">: </span><a href="https://developer.android.com/reference/java/util/Date.html"><span class="identifier">Date</span></a><span class="symbol">?</span></code>
+<p>date allow to be selected.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="minimum-date.html">minimumDate</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">minimumDate</span><span class="symbol">: </span><a href="https://developer.android.com/reference/java/util/Date.html"><span class="identifier">Date</span></a><span class="symbol">?</span></code>
+<p>date allow to be selected.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-clear.html">onClear</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">onClear</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>callback that is called when the user requests the picker to be clear up.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-confirm.html">onConfirm</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">onConfirm</span><span class="symbol">: </span><span class="symbol">(</span><a href="https://developer.android.com/reference/java/util/Date.html"><span class="identifier">Date</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>callback that is called when the date is selected.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="title.html">title</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">title</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>of the dialog.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="type.html">type</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">type</span><span class="symbol">: </span><a href="-type/index.html"><span class="identifier">Type</span></a></code>
+<p>indicate which <a href="-type/index.html">Type</a> of selection de user wants.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

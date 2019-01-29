@@ -1,0 +1,71 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.browser.session - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.browser.session</a><br/>
+<br/>
+<h2>Package mozilla.components.browser.session</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-download/index.html">Download</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Download</span></code>
+<p>Value type that represents a Download.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-selection-aware-session-observer/index.html">SelectionAwareSessionObserver</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">SelectionAwareSessionObserver</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-session-manager/-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">, </span><a href="-session/-observer/index.html"><span class="identifier">Observer</span></a></code>
+<p>This class is a combination of <a href="-session/-observer/index.html">Session.Observer</a> and
+<a href="-session-manager/-observer/index.html">SessionManager.Observer</a>. It provides functionality to observe changes to a
+specified or selected session, and can automatically take care of switching
+over the observer in case a different session gets selected (see
+<a href="-selection-aware-session-observer/observe-fixed.html">observeFixed</a> and <a href="-selection-aware-session-observer/observe-selected.html">observeSelected</a>).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-session/index.html">Session</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">Session</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../mozilla.components.support.base.observer/-observable/index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="-session/-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">&gt;</span></code>
+<p>Value type that represents the state of a browser session. Changes can be observed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-session-manager/index.html">SessionManager</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SessionManager</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../mozilla.components.support.base.observer/-observable/index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="-session-manager/-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">&gt;</span></code>
+<p>This class provides access to a centralized registry of all active sessions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="run-with-session.html">runWithSession</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">.</span><span class="identifier">runWithSession</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session$runWithSession(mozilla.components.browser.session.SessionManager, kotlin.String, kotlin.Function2((mozilla.components.browser.session.SessionManager, mozilla.components.browser.session.Session, kotlin.Boolean)))/sessionId">sessionId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session$runWithSession(mozilla.components.browser.session.SessionManager, kotlin.String, kotlin.Function2((mozilla.components.browser.session.SessionManager, mozilla.components.browser.session.Session, kotlin.Boolean)))/block">block</span><span class="symbol">:</span>&nbsp;<a href="-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">.</span><span class="symbol">(</span><a href="-session/index.html"><span class="identifier">Session</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Tries to find a session with the provided session ID and runs the block if found.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

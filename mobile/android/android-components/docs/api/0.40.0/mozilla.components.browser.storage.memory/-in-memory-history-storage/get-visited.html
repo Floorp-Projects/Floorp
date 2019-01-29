@@ -1,0 +1,28 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>InMemoryHistoryStorage.getVisited - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.storage.memory</a>&nbsp;/&nbsp;<a href="index.html">InMemoryHistoryStorage</a>&nbsp;/&nbsp;<a href="./get-visited.html">getVisited</a><br/>
+<br/>
+<h1>getVisited</h1>
+<a name="mozilla.components.browser.storage.memory.InMemoryHistoryStorage$getVisited(kotlin.collections.List((kotlin.String)))"></a>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">getVisited</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.storage.memory.InMemoryHistoryStorage$getVisited(kotlin.collections.List((kotlin.String)))/uris">uris</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-memory/src/main/java/mozilla/components/browser/storage/memory/InMemoryHistoryStorage.kt#L44">(source)</a>
+<p>Overrides <a href="../../mozilla.components.concept.storage/-history-storage/get-visited.html">HistoryStorage.getVisited</a></p>
+<p>Maps a list of page URIs to a list of booleans indicating if each URI was visited.</p>
+<h3>Parameters</h3>
+<p><a name="uris"></a>
+<code>uris</code> - a list of page URIs about which "visited" information is being requested.</p>
+<p><strong>Return</strong><br/>
+A list of booleans indicating visited status of each
+corresponding page URI from <a href="get-visited.html#mozilla.components.browser.storage.memory.InMemoryHistoryStorage$getVisited(kotlin.collections.List((kotlin.String)))/uris">uris</a>.</p>
+<a name="mozilla.components.browser.storage.memory.InMemoryHistoryStorage$getVisited()"></a>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">getVisited</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-memory/src/main/java/mozilla/components/browser/storage/memory/InMemoryHistoryStorage.kt#L53">(source)</a>
+<p>Overrides <a href="../../mozilla.components.concept.storage/-history-storage/get-visited.html">HistoryStorage.getVisited</a></p>
+<p>Retrieves a list of all visited pages.</p>
+<p><strong>Return</strong><br/>
+A list of all visited page URIs.</p>
+</BODY>
+</HTML>

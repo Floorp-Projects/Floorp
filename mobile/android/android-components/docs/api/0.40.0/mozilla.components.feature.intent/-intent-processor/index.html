@@ -1,0 +1,73 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>IntentProcessor - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.intent</a>&nbsp;/&nbsp;<a href="./index.html">IntentProcessor</a><br/>
+<br/>
+<h1>IntentProcessor</h1>
+<code><span class="keyword">class </span><span class="identifier">IntentProcessor</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/feature/intent/src/main/java/mozilla/components/feature/intent/IntentProcessor.kt#L32">(source)</a>
+<p>Processor for intents which should trigger session-related actions.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">IntentProcessor</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.intent.IntentProcessor$<init>(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, mozilla.components.feature.search.SearchUseCases, android.content.Context, kotlin.Boolean, kotlin.Boolean)/sessionUseCases">sessionUseCases</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.feature.session/-session-use-cases/index.html"><span class="identifier">SessionUseCases</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.intent.IntentProcessor$<init>(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, mozilla.components.feature.search.SearchUseCases, android.content.Context, kotlin.Boolean, kotlin.Boolean)/sessionManager">sessionManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.intent.IntentProcessor$<init>(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, mozilla.components.feature.search.SearchUseCases, android.content.Context, kotlin.Boolean, kotlin.Boolean)/searchUseCases">searchUseCases</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.feature.search/-search-use-cases/index.html"><span class="identifier">SearchUseCases</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.intent.IntentProcessor$<init>(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, mozilla.components.feature.search.SearchUseCases, android.content.Context, kotlin.Boolean, kotlin.Boolean)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.intent.IntentProcessor$<init>(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, mozilla.components.feature.search.SearchUseCases, android.content.Context, kotlin.Boolean, kotlin.Boolean)/useDefaultHandlers">useDefaultHandlers</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.intent.IntentProcessor$<init>(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, mozilla.components.feature.search.SearchUseCases, android.content.Context, kotlin.Boolean, kotlin.Boolean)/openNewTab">openNewTab</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">)</span></code>
+<p>Processor for intents which should trigger session-related actions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="process.html">process</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">process</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.intent.IntentProcessor$process(android.content.Intent)/intent">intent</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Intent.html"><span class="identifier">Intent</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Processes the given intent by invoking the registered handler.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="register-handler.html">registerHandler</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">registerHandler</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.intent.IntentProcessor$registerHandler(kotlin.String, kotlin.Function1((android.content.Intent, kotlin.Boolean)))/action">action</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.intent.IntentProcessor$registerHandler(kotlin.String, kotlin.Function1((android.content.Intent, kotlin.Boolean)))/handler">handler</span><span class="symbol">:</span>&nbsp;<a href="../-intent-handler.html"><span class="identifier">IntentHandler</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Registers the given handler to be invoked for intents with the given action. If a
+handler is already present it will be overwritten.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="unregister-handler.html">unregisterHandler</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">unregisterHandler</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.intent.IntentProcessor$unregisterHandler(kotlin.String)/action">action</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Removes the registered handler for the given intent action, if present.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-a-c-t-i-v-e_-s-e-s-s-i-o-n_-i-d.html">ACTIVE_SESSION_ID</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">ACTIVE_SESSION_ID</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

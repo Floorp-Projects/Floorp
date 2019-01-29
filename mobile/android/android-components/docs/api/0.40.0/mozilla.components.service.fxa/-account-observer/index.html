@@ -1,0 +1,55 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AccountObserver - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="./index.html">AccountObserver</a><br/>
+<br/>
+<h1>AccountObserver</h1>
+<code><span class="keyword">interface </span><span class="identifier">AccountObserver</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L92">(source)</a>
+<p>Observer interface which lets its users monitor account state changes and major events.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-authenticated.html">onAuthenticated</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onAuthenticated</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.AccountObserver$onAuthenticated(mozilla.components.service.fxa.FirefoxAccountShaped)/account">account</span><span class="symbol">:</span>&nbsp;<a href="../-firefox-account-shaped/index.html"><span class="identifier">FirefoxAccountShaped</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Account was successfully authenticated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-error.html">onError</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onError</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.AccountObserver$onError(java.lang.Exception)/error">error</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html"><span class="identifier">Exception</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Account manager encountered an error. Inspect <a href="on-error.html#mozilla.components.service.fxa.AccountObserver$onError(java.lang.Exception)/error">error</a> for details.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-logged-out.html">onLoggedOut</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onLoggedOut</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Account just got logged out.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-profile-updated.html">onProfileUpdated</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onProfileUpdated</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.AccountObserver$onProfileUpdated(mozilla.components.service.fxa.Profile)/profile">profile</span><span class="symbol">:</span>&nbsp;<a href="../-profile/index.html"><span class="identifier">Profile</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Account's profile is now available.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

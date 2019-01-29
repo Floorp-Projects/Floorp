@@ -1,0 +1,28 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>RustLog.enable - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.rustlog</a>&nbsp;/&nbsp;<a href="index.html">RustLog</a>&nbsp;/&nbsp;<a href="./enable.html">enable</a><br/>
+<br/>
+<h1>enable</h1>
+<a name="mozilla.components.support.rustlog.RustLog$enable()"></a>
+<code><span class="keyword">fun </span><span class="identifier">enable</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/rustlog/src/main/java/mozilla/components/support/rustlog/RustLog.kt#L33">(source)</a>
+<p>Enable the Rust log adapter.</p>
+<p>This does almost (see below) nothing if you are not in a megazord build.
+After calling this, logs emitted by Rust code are forwarded to any
+LogSinks attached to <a href="../../mozilla.components.support.base.log/-log/index.html">Log</a>.</p>
+<p>Megazording is required due to each dynamically loaded Rust library having
+its own internal/private version of the Rust logging framework. When
+megazording, this is still true, but there's only a single dynamically
+loaded library, and so it is redirected properly.</p>
+<p>Note that non-megazord versions of the Rust libraries will log directly to
+logcat by default (at DEBUG level), so while they cannot hook into the base
+component log system, they still have logs available for development use.</p>
+<p>(We say "almost" nothing, as calling this will hook up logging for the dynamic
+library containing the Rust log hooking (and only that), as well as logging
+a single message indicating that it completed initialization).</p>
+</BODY>
+</HTML>

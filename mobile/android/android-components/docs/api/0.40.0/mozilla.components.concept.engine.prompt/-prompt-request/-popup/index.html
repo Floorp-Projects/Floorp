@@ -1,0 +1,64 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>PromptRequest.Popup - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.concept.engine.prompt</a>&nbsp;/&nbsp;<a href="../index.html">PromptRequest</a>&nbsp;/&nbsp;<a href="./index.html">Popup</a><br/>
+<br/>
+<h1>Popup</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Popup</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../index.html"><span class="identifier">PromptRequest</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L171">(source)</a>
+<p>Value type that represents a request for showing a pop-pup prompt.
+This occurs when content attempts to open a new window,
+in a way that doesn't appear to be the result of user input.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Popup</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.Popup$<init>(kotlin.String, kotlin.Function0((kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/targetUri">targetUri</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.Popup$<init>(kotlin.String, kotlin.Function0((kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/onAllow">onAllow</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.Popup$<init>(kotlin.String, kotlin.Function0((kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/onDeny">onDeny</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span></code>
+<p>Value type that represents a request for showing a pop-pup prompt.
+This occurs when content attempts to open a new window,
+in a way that doesn't appear to be the result of user input.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-allow.html">onAllow</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">onAllow</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>callback to notify that the user wants to open the <a href="target-uri.html">targetUri</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-deny.html">onDeny</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">onDeny</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>callback to notify that the user doesn't want to open the <a href="target-uri.html">targetUri</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="target-uri.html">targetUri</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">targetUri</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>the uri that the page is trying to open.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

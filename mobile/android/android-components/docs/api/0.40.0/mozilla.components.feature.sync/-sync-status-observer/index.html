@@ -1,0 +1,46 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SyncStatusObserver - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.sync</a>&nbsp;/&nbsp;<a href="./index.html">SyncStatusObserver</a><br/>
+<br/>
+<h1>SyncStatusObserver</h1>
+<code><span class="keyword">interface </span><span class="identifier">SyncStatusObserver</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sync/src/main/java/mozilla/components/feature/sync/FirefoxSyncFeature.kt#L20">(source)</a>
+<p>An interface for consumers that wish to observer "sync lifecycle" events.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-error.html">onError</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onError</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.sync.SyncStatusObserver$onError(java.lang.Exception)/error">error</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/lang/Exception.html"><span class="identifier">Exception</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Gets called if sync encounters an error that's worthy of processing by status observers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-idle.html">onIdle</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onIdle</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Gets called at the end of a sync, after every configured syncable has been synchronized.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-started.html">onStarted</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onStarted</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Gets called at the start of a sync, before any configured syncable is synchronized.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

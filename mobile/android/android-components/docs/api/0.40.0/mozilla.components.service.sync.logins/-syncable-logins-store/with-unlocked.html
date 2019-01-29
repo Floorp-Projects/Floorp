@@ -1,0 +1,19 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SyncableLoginsStore.withUnlocked - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.sync.logins</a>&nbsp;/&nbsp;<a href="index.html">SyncableLoginsStore</a>&nbsp;/&nbsp;<a href="./with-unlocked.html">withUnlocked</a><br/>
+<br/>
+<h1>withUnlocked</h1>
+<a name="mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))"></a>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span> <span class="identifier">withUnlocked</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block">block</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><span class="symbol">(</span><a href="../-async-logins-storage/index.html"><span class="identifier">AsyncLoginsStorage</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="with-unlocked.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="with-unlocked.html#T"><span class="identifier">T</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L390">(source)</a>
+<p>Run some <a href="with-unlocked.html#mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block">block</a> which operates over an unlocked instance of <a href="../-async-logins-storage/index.html">AsyncLoginsStorage</a>.
+Database is locked once <a href="with-unlocked.html#mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block">block</a> is done.</p>
+<h3>Exceptions</h3>
+<p><a name="InvalidKeyException"></a>
+<code>InvalidKeyException</code> - if the provided <a href="key.html">key</a> isn't valid.</p>
+</BODY>
+</HTML>

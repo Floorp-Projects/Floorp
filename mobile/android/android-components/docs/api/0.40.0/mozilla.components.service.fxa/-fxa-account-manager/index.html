@@ -1,0 +1,112 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FxaAccountManager - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="./index.html">FxaAccountManager</a><br/>
+<br/>
+<h1>FxaAccountManager</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">FxaAccountManager</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Closeable.html"><span class="identifier">Closeable</span></a><span class="symbol">, </span><a href="../../mozilla.components.support.base.observer/-observable/index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="../-account-observer/index.html"><span class="identifier">AccountObserver</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L130">(source)</a>
+<p>An account manager which encapsulates various internal details of an account lifecycle and provides
+an observer interface along with a public API for interacting with an account.
+The internal state machine abstracts over state space as exposed by the fxaclient library, not
+the internal states experienced by lower-level representation of a Firefox Account; those are opaque to us.</p>
+<p>Class is 'open' to facilitate testing.</p>
+<h3>Parameters</h3>
+<p><a name="context"></a>
+<code>context</code> - A <a href="https://developer.android.com/reference/android/content/Context.html">Context</a> instance that's used for internal messaging and interacting with local storage.</p>
+<p><a name="config"></a>
+<code>config</code> - A <a href="../-config.html">Config</a> used for account initialization.</p>
+<p><a name="scopes"></a>
+<code>scopes</code> - A list of scopes which will be requested during account authentication.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">FxaAccountManager</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaAccountManager$<init>(android.content.Context, org.mozilla.fxaclient.internal.Config, kotlin.Array((kotlin.String)), mozilla.components.service.fxa.AccountStorage)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FxaAccountManager$<init>(android.content.Context, org.mozilla.fxaclient.internal.Config, kotlin.Array((kotlin.String)), mozilla.components.service.fxa.AccountStorage)/config">config</span><span class="symbol">:</span>&nbsp;<a href="../-config.html"><span class="identifier">Config</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FxaAccountManager$<init>(android.content.Context, org.mozilla.fxaclient.internal.Config, kotlin.Array((kotlin.String)), mozilla.components.service.fxa.AccountStorage)/scopes">scopes</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html"><span class="identifier">Array</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FxaAccountManager$<init>(android.content.Context, org.mozilla.fxaclient.internal.Config, kotlin.Array((kotlin.String)), mozilla.components.service.fxa.AccountStorage)/accountStorage">accountStorage</span><span class="symbol">:</span>&nbsp;<a href="../-account-storage/index.html"><span class="identifier">AccountStorage</span></a>&nbsp;<span class="symbol">=</span>&nbsp;SharedPrefAccountStorage(context)<span class="symbol">)</span></code>
+<p>An account manager which encapsulates various internal details of an account lifecycle and provides
+an observer interface along with a public API for interacting with an account.
+The internal state machine abstracts over state space as exposed by the fxaclient library, not
+the internal states experienced by lower-level representation of a Firefox Account; those are opaque to us.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="account-profile.html">accountProfile</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">accountProfile</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-profile/index.html"><span class="identifier">Profile</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="authenticated-account.html">authenticatedAccount</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">authenticatedAccount</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-firefox-account-shaped/index.html"><span class="identifier">FirefoxAccountShaped</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="begin-authentication.html">beginAuthentication</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">beginAuthentication</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="close.html">close</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">close</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="create-account.html">createAccount</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">createAccount</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaAccountManager$createAccount(org.mozilla.fxaclient.internal.Config)/config">config</span><span class="symbol">:</span>&nbsp;<a href="../-config.html"><span class="identifier">Config</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-firefox-account-shaped/index.html"><span class="identifier">FirefoxAccountShaped</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="finish-authentication.html">finishAuthentication</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">finishAuthentication</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaAccountManager$finishAuthentication(kotlin.String, kotlin.String)/code">code</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FxaAccountManager$finishAuthentication(kotlin.String, kotlin.String)/state">state</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="init.html">init</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">init</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Call this after registering your observers, and before interacting with this class.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="logout.html">logout</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">logout</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="update-profile.html">updateProfile</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">updateProfile</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

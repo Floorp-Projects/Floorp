@@ -1,0 +1,92 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Fact - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.base.facts</a>&nbsp;/&nbsp;<a href="./index.html">Fact</a><br/>
+<br/>
+<h1>Fact</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Fact</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/facts/Fact.kt#L18">(source)</a>
+<p>A fact describing a generic event that has occurred in a component.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Fact</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.facts.Fact$<init>(mozilla.components.support.base.Component, mozilla.components.support.base.facts.Action, kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, kotlin.Any)))/component">component</span><span class="symbol">:</span>&nbsp;<span class="identifier">Component</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.facts.Fact$<init>(mozilla.components.support.base.Component, mozilla.components.support.base.facts.Action, kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, kotlin.Any)))/action">action</span><span class="symbol">:</span>&nbsp;<a href="../-action/index.html"><span class="identifier">Action</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.facts.Fact$<init>(mozilla.components.support.base.Component, mozilla.components.support.base.facts.Action, kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, kotlin.Any)))/item">item</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.facts.Fact$<init>(mozilla.components.support.base.Component, mozilla.components.support.base.facts.Action, kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, kotlin.Any)))/value">value</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.facts.Fact$<init>(mozilla.components.support.base.Component, mozilla.components.support.base.facts.Action, kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, kotlin.Any)))/metadata">metadata</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span></code>
+<p>A fact describing a generic event that has occurred in a component.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="action.html">action</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">action</span><span class="symbol">: </span><a href="../-action/index.html"><span class="identifier">Action</span></a></code>
+<p>A user or system action that caused this fact (e.g. Action.CLICK).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="component.html">component</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">component</span><span class="symbol">: </span><span class="identifier">Component</span></code>
+<p>Component that emitted this fact.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="item.html">item</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">item</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>An item that caused the action or that the action was performed on (e.g. "toolbar").</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="metadata.html">metadata</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">metadata</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code>
+<p>A key/value map for facts where additional richer context is needed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="value.html">value</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">value</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>An optional value providing more context.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../collect.html">collect</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="./index.html"><span class="identifier">Fact</span></a><span class="symbol">.</span><span class="identifier">collect</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Collect this fact through the <a href="../-facts/index.html">Facts</a> singleton.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

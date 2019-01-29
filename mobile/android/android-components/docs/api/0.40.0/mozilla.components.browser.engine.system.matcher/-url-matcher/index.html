@@ -1,0 +1,124 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>UrlMatcher - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.system.matcher</a>&nbsp;/&nbsp;<a href="./index.html">UrlMatcher</a><br/>
+<br/>
+<h1>UrlMatcher</h1>
+<code><span class="keyword">class </span><span class="identifier">UrlMatcher</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/matcher/UrlMatcher.kt#L19">(source)</a>
+<p>Provides functionality to process categorized URL black/white lists and match
+URLs against these lists.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">UrlMatcher</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher$<init>(kotlin.Array((kotlin.String)))/patterns">patterns</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html"><span class="identifier">Array</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="matches.html">matches</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">matches</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher$matches(kotlin.String, kotlin.String)/resourceURI">resourceURI</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher$matches(kotlin.String, kotlin.String)/pageURI">pageURI</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code><br/>
+<code><span class="keyword">fun </span><span class="identifier">matches</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher$matches(android.net.Uri, android.net.Uri)/resourceURI">resourceURI</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/net/Uri.html"><span class="identifier">Uri</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher$matches(android.net.Uri, android.net.Uri)/pageURI">pageURI</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/net/Uri.html"><span class="identifier">Uri</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Checks if the given page URI is blacklisted for the given resource URI.
+Returns true if the site (page URI) is allowed to access
+the resource URI, otherwise false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-categories-enabled.html">setCategoriesEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setCategoriesEnabled</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher$setCategoriesEnabled(kotlin.collections.Set((kotlin.String)))/categories">categories</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html"><span class="identifier">Set</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Enables the provided categories.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-a-d-v-e-r-t-i-s-i-n-g.html">ADVERTISING</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">ADVERTISING</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-a-n-a-l-y-t-i-c-s.html">ANALYTICS</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">ANALYTICS</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-c-o-n-t-e-n-t.html">CONTENT</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">CONTENT</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-d-e-f-a-u-l-t.html">DEFAULT</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">DEFAULT</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-d-i-s-c-o-n-n-e-c-t.html">DISCONNECT</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">DISCONNECT</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-s-o-c-i-a-l.html">SOCIAL</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">SOCIAL</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="create-matcher.html">createMatcher</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createMatcher</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher.Companion$createMatcher(android.content.Context, kotlin.Int, kotlin.IntArray, kotlin.Int, kotlin.collections.Set((kotlin.String)))/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher.Companion$createMatcher(android.content.Context, kotlin.Int, kotlin.IntArray, kotlin.Int, kotlin.collections.Set((kotlin.String)))/blackListFile">blackListFile</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher.Companion$createMatcher(android.content.Context, kotlin.Int, kotlin.IntArray, kotlin.Int, kotlin.collections.Set((kotlin.String)))/overrides">overrides</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int-array/index.html"><span class="identifier">IntArray</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher.Companion$createMatcher(android.content.Context, kotlin.Int, kotlin.IntArray, kotlin.Int, kotlin.collections.Set((kotlin.String)))/whiteListFile">whiteListFile</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher.Companion$createMatcher(android.content.Context, kotlin.Int, kotlin.IntArray, kotlin.Int, kotlin.collections.Set((kotlin.String)))/enabledCategories">enabledCategories</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html"><span class="identifier">Set</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;supportedCategories<span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">UrlMatcher</span></a></code><br/>
+<code><span class="keyword">fun </span><span class="identifier">createMatcher</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher.Companion$createMatcher(java.io.Reader, kotlin.collections.List((java.io.Reader)), java.io.Reader, kotlin.collections.Set((kotlin.String)))/black">black</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Reader.html"><span class="identifier">Reader</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher.Companion$createMatcher(java.io.Reader, kotlin.collections.List((java.io.Reader)), java.io.Reader, kotlin.collections.Set((kotlin.String)))/overrides">overrides</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://developer.android.com/reference/java/io/Reader.html"><span class="identifier">Reader</span></a><span class="symbol">&gt;</span><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher.Companion$createMatcher(java.io.Reader, kotlin.collections.List((java.io.Reader)), java.io.Reader, kotlin.collections.Set((kotlin.String)))/white">white</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Reader.html"><span class="identifier">Reader</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher.Companion$createMatcher(java.io.Reader, kotlin.collections.List((java.io.Reader)), java.io.Reader, kotlin.collections.Set((kotlin.String)))/enabledCategories">enabledCategories</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html"><span class="identifier">Set</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;supportedCategories<span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">UrlMatcher</span></a></code>
+<p>Creates a new matcher instance for the provided URL lists.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-web-font.html">isWebFont</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isWebFont</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.UrlMatcher.Companion$isWebFont(android.net.Uri)/uri">uri</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/net/Uri.html"><span class="identifier">Uri</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Checks if the given URI points to a Web font.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

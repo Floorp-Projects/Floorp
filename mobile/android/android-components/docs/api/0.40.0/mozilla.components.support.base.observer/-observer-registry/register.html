@@ -1,0 +1,44 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ObserverRegistry.register - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.base.observer</a>&nbsp;/&nbsp;<a href="index.html">ObserverRegistry</a>&nbsp;/&nbsp;<a href="./register.html">register</a><br/>
+<br/>
+<h1>register</h1>
+<a name="mozilla.components.support.base.observer.ObserverRegistry$register(mozilla.components.support.base.observer.ObserverRegistry.T)"></a>
+<code><span class="keyword">fun </span><span class="identifier">register</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.ObserverRegistry$register(mozilla.components.support.base.observer.ObserverRegistry.T)/observer">observer</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt#L24">(source)</a>
+<p>Overrides <a href="../-observable/register.html">Observable.register</a></p>
+<p>Registers an observer to get notified about changes.</p>
+<h3>Parameters</h3>
+<p><a name="observer"></a>
+<code>observer</code> - the observer to register.</p>
+<a name="mozilla.components.support.base.observer.ObserverRegistry$register(mozilla.components.support.base.observer.ObserverRegistry.T, android.arch.lifecycle.LifecycleOwner, kotlin.Boolean)"></a>
+<code><span class="keyword">fun </span><span class="identifier">register</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.ObserverRegistry$register(mozilla.components.support.base.observer.ObserverRegistry.T, android.arch.lifecycle.LifecycleOwner, kotlin.Boolean)/observer">observer</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.observer.ObserverRegistry$register(mozilla.components.support.base.observer.ObserverRegistry.T, android.arch.lifecycle.LifecycleOwner, kotlin.Boolean)/owner">owner</span><span class="symbol">:</span>&nbsp;<span class="identifier">LifecycleOwner</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.observer.ObserverRegistry$register(mozilla.components.support.base.observer.ObserverRegistry.T, android.arch.lifecycle.LifecycleOwner, kotlin.Boolean)/autoPause">autoPause</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt#L30">(source)</a>
+<p>Overrides <a href="../-observable/register.html">Observable.register</a></p>
+<p>Registers an observer to get notified about changes.</p>
+<p>The observer will automatically unsubscribe if the lifecycle of the provided LifecycleOwner
+becomes DESTROYED.</p>
+<h3>Parameters</h3>
+<p><a name="observer"></a>
+<code>observer</code> - the observer to register.</p>
+<p><a name="owner"></a>
+<code>owner</code> - the lifecycle owner the provided observer is bound to.</p>
+<p><a name="autoPause"></a>
+<code>autoPause</code> - whether or not the observer should automatically be
+paused/resumed with the bound lifecycle.</p>
+<a name="mozilla.components.support.base.observer.ObserverRegistry$register(mozilla.components.support.base.observer.ObserverRegistry.T, android.view.View)"></a>
+<code><span class="keyword">fun </span><span class="identifier">register</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.observer.ObserverRegistry$register(mozilla.components.support.base.observer.ObserverRegistry.T, android.view.View)/observer">observer</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.observer.ObserverRegistry$register(mozilla.components.support.base.observer.ObserverRegistry.T, android.view.View)/view">view</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt#L48">(source)</a>
+<p>Overrides <a href="../-observable/register.html">Observable.register</a></p>
+<p>Registers an observer to get notified about changes.</p>
+<p>The observer will only be notified if the view is attached and will be unregistered/
+registered if the attached state changes.</p>
+<h3>Parameters</h3>
+<p><a name="observer"></a>
+<code>observer</code> - the observer to register.</p>
+<p><a name="view"></a>
+<code>view</code> - the view the provided observer is bound to.</p>
+</BODY>
+</HTML>

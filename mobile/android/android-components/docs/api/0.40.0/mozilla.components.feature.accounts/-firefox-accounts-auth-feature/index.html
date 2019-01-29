@@ -1,0 +1,54 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FirefoxAccountsAuthFeature - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.accounts</a>&nbsp;/&nbsp;<a href="./index.html">FirefoxAccountsAuthFeature</a><br/>
+<br/>
+<h1>FirefoxAccountsAuthFeature</h1>
+<code><span class="keyword">class </span><span class="identifier">FirefoxAccountsAuthFeature</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FirefoxAccountsAuthFeature.kt#L22">(source)</a>
+<p>Ties together an account manager with a session manager/tabs implementation, facilitating an
+authentication flow.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">FirefoxAccountsAuthFeature</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.accounts.FirefoxAccountsAuthFeature$<init>(mozilla.components.service.fxa.FxaAccountManager, mozilla.components.feature.tabs.TabsUseCases, kotlin.String, kotlin.String, kotlin.coroutines.CoroutineContext)/accountManager">accountManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.service.fxa/-fxa-account-manager/index.html"><span class="identifier">FxaAccountManager</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.accounts.FirefoxAccountsAuthFeature$<init>(mozilla.components.service.fxa.FxaAccountManager, mozilla.components.feature.tabs.TabsUseCases, kotlin.String, kotlin.String, kotlin.coroutines.CoroutineContext)/tabsUseCases">tabsUseCases</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.feature.tabs/-tabs-use-cases/index.html"><span class="identifier">TabsUseCases</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.accounts.FirefoxAccountsAuthFeature$<init>(mozilla.components.service.fxa.FxaAccountManager, mozilla.components.feature.tabs.TabsUseCases, kotlin.String, kotlin.String, kotlin.coroutines.CoroutineContext)/redirectUrl">redirectUrl</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.accounts.FirefoxAccountsAuthFeature$<init>(mozilla.components.service.fxa.FxaAccountManager, mozilla.components.feature.tabs.TabsUseCases, kotlin.String, kotlin.String, kotlin.coroutines.CoroutineContext)/successPath">successPath</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.accounts.FirefoxAccountsAuthFeature$<init>(mozilla.components.service.fxa.FxaAccountManager, mozilla.components.feature.tabs.TabsUseCases, kotlin.String, kotlin.String, kotlin.coroutines.CoroutineContext)/coroutineContext">coroutineContext</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html"><span class="identifier">CoroutineContext</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Dispatchers.Main<span class="symbol">)</span></code>
+<p>Ties together an account manager with a session manager/tabs implementation, facilitating an
+authentication flow.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="interceptor.html">interceptor</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">interceptor</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine.request/-request-interceptor/index.html"><span class="identifier">RequestInterceptor</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="begin-authentication.html">beginAuthentication</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">beginAuthentication</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
