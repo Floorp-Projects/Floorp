@@ -117,6 +117,9 @@ static nsresult Constructor(nsISupports* aOuter, REFNSIID aIID,
   return Instantiate<InstanceClass, InitMethod>(aIID, aResult);
 }
 
+template <typename T>
+nsresult NSSConstructor(nsISupports* aOuter, const nsIID& aIID, void** aResult);
+
 #define IMPL(...)                                                \
   template <>                                                    \
   nsresult NSSConstructor<MOZ_ARG_1(__VA_ARGS__)>(               \
