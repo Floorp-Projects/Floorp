@@ -25,7 +25,6 @@ Important Concepts
    preprocessor
    jar-manifests
    defining-binaries
-   defining-xpcom-components
    toolchains
    locales
    rust

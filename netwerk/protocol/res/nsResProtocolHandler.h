@@ -11,6 +11,7 @@
 #include "nsIResProtocolHandler.h"
 #include "nsInterfaceHashtable.h"
 #include "nsWeakReference.h"
+#include "nsStandardURL.h"
 
 class nsISubstitutionObserver;
 

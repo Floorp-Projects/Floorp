@@ -22,10 +22,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'xpcom_threads'
 
-XPCOM_MANIFESTS += [
-    'components.conf',
-]
-
 EXPORTS += [
     'MainThreadUtils.h',
     'nsICancelableRunnable.h',

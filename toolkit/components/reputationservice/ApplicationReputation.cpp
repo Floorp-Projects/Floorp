@@ -29,7 +29,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/Components.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/Preferences.h"
@@ -369,7 +368,7 @@ nsresult PendingDBLookup::LookupSpecInternal(const nsACString& aSpec) {
   // blacklisted.
   LOG(("Checking DB service for principal %s [this = %p]", mSpec.get(), this));
   nsCOMPtr<nsIUrlClassifierDBService> dbService =
-      mozilla::components::UrlClassifierDB::Service(&rv);
+      do_GetService(NS_URLCLASSIFIERDBSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString tables;

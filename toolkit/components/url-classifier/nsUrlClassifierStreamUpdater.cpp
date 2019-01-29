@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Components.h"
 #include "nsCRT.h"
 #include "nsIHttpChannel.h"
 #include "nsIObserverService.h"
@@ -15,6 +14,7 @@
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
+#include "nsToolkitCompsCID.h"
 #include "nsUrlClassifierStreamUpdater.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorNames.h"
@@ -294,7 +294,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
 
     observerService->AddObserver(this, gQuitApplicationMessage, false);
 
-    mDBService = mozilla::components::UrlClassifierDB::Service(&rv);
+    mDBService = do_GetService(NS_URLCLASSIFIERDBSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mInitialized = true;
@@ -327,7 +327,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
   }
 
   nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      mozilla::components::UrlClassifierUtils::Service();
+      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
 
   nsTArray<nsCString> tables;
   mozilla::safebrowsing::Classifier::SplitTables(aRequestTables, tables);

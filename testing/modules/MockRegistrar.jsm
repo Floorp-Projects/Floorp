@@ -11,12 +11,7 @@ var EXPORTED_SYMBOLS = [
 const Cm = Components.manager;
 
 const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 var logger = Log.repository.getLogger("MockRegistrar");
-
-XPCOMUtils.defineLazyServiceGetter(this, "UUIDGen",
-                                   "@mozilla.org/uuid-generator;1",
-                                   "nsIUUIDGenerator");
 
 var MockRegistrar = Object.freeze({
   _registeredComponents: new Map(),
@@ -49,8 +44,6 @@ var MockRegistrar = Object.freeze({
 
     let originalFactory = Cm.getClassObject(originalCID, Ci.nsIFactory);
 
-    let cid = UUIDGen.generateUUID();
-
     let factory = {
       createInstance(outer, iid) {
         if (outer) {
@@ -80,18 +73,19 @@ var MockRegistrar = Object.freeze({
       QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
     };
 
-    this.registrar.registerFactory(cid,
+    this.registrar.unregisterFactory(originalCID, originalFactory);
+    this.registrar.registerFactory(originalCID,
                                    "A Mock for " + contractID,
                                    contractID,
                                    factory);
 
-    this._registeredComponents.set(cid, {
+    this._registeredComponents.set(originalCID, {
       contractID,
       factory,
-      originalCID,
+      originalFactory,
     });
 
-    return cid;
+    return originalCID;
   },
 
   /**
@@ -106,12 +100,11 @@ var MockRegistrar = Object.freeze({
     }
 
     this.registrar.unregisterFactory(cid, component.factory);
-    if (component.originalCID) {
-      // Passing `null` for the factory re-maps the contract ID to the
-      // entry for its original CID.
-      this.registrar.registerFactory(component.originalCID, "",
+    if (component.originalFactory) {
+      this.registrar.registerFactory(cid,
+                                     "",
                                      component.contractID,
-                                     null);
+                                     component.originalFactory);
     }
 
     this._registeredComponents.delete(cid);

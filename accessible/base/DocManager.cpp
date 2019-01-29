@@ -20,10 +20,10 @@
 #  include "Logging.h"
 #endif
 
-#include "mozilla/Components.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Event.h"  // for Event
 #include "nsContentUtils.h"
+#include "nsCURILoader.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIChannel.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -171,7 +171,8 @@ bool DocManager::IsProcessingRefreshDriverNotification() const {
 // DocManager protected
 
 bool DocManager::Init() {
-  nsCOMPtr<nsIWebProgress> progress = components::DocLoader::Service();
+  nsCOMPtr<nsIWebProgress> progress =
+      do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
 
   if (!progress) return false;
 
@@ -182,7 +183,8 @@ bool DocManager::Init() {
 }
 
 void DocManager::Shutdown() {
-  nsCOMPtr<nsIWebProgress> progress = components::DocLoader::Service();
+  nsCOMPtr<nsIWebProgress> progress =
+      do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
 
   if (progress)
     progress->RemoveProgressListener(

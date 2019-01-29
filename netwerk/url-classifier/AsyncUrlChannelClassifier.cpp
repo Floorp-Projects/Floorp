@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Classifier.h"
-#include "mozilla/Components.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
 #include "mozilla/net/UrlClassifierCommon.h"
@@ -93,7 +92,7 @@ class URIData {
   data->mURI = aURI;
 
   nsCOMPtr<nsIUrlClassifierUtils> utilsService =
-      components::UrlClassifierUtils::Service();
+      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
   if (NS_WARN_IF(!utilsService)) {
     return NS_ERROR_FAILURE;
   }
