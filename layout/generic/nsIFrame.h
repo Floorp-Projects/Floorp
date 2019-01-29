@@ -4529,11 +4529,6 @@ class nsIFrame : public nsQueryFrame {
     while (--aIndent >= 0) fputs("  ", out);
   }
   void ListTag(FILE* out) const { fputs(ListTag().get(), out); }
-  static void ListTag(FILE* out, const nsFrameList& aFrameList) {
-    for (nsIFrame* frame : aFrameList) {
-      frame->ListTag(out);
-    }
-  }
   nsAutoCString ListTag() const;
   void ListGeneric(nsACString& aTo, const char* aPrefix = "",
                    uint32_t aFlags = 0) const;
