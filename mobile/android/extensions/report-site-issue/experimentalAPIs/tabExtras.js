@@ -6,6 +6,8 @@
 
 /* global ChromeUtils, ExtensionAPI, ExtensionCommon, XPCOMUtils */
 
+var Services;
+
 ChromeUtils.defineModuleGetter(this, "EventDispatcher",
                                "resource://gre/modules/Messaging.jsm");
 
@@ -19,7 +21,7 @@ XPCOMUtils.defineLazyGetter(this, "GlobalEventDispatcher", () => EventDispatcher
 function getInfoFrameScript(messageName) {
   /* eslint-env mozilla/frame-script */
 
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  ({Services} = ChromeUtils.import("resource://gre/modules/Services.jsm"));
 
   function getInnerWindowId(window) {
     return window.windowUtils.currentInnerWindowID;
