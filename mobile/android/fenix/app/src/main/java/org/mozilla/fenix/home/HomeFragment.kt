@@ -28,12 +28,15 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
-        SessionsComponent(view.homeLayout, ActionBusFactory.get(this)).setup()
+        SessionsComponent(view.homeLayout, ActionBusFactory.get(this))
+        ActionBusFactory.get(this).logMergedObservables()
         return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        layoutComponents(view.homeLayout)
 
         val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()).let {
             BitmapDrawable(resources, it.icon)
@@ -45,7 +48,6 @@ class HomeFragment : Fragment() {
         toolbar.setOnClickListener { it ->
             Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_searchFragment, null, null)
         }
-        layoutComponents(homeLayout)
     }
 
     companion object {

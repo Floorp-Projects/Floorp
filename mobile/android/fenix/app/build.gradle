@@ -104,6 +104,7 @@ dependencies {
     implementation Deps.mozilla_concept_toolbar
 
     implementation Deps.mozilla_browser_awesomebar
+    implementation Deps.mozilla_feature_downloads
     implementation Deps.mozilla_browser_domains
     implementation Deps.mozilla_browser_engine_gecko_nightly
     implementation Deps.mozilla_browser_session
@@ -116,6 +117,7 @@ dependencies {
     implementation Deps.mozilla_feature_session
     implementation Deps.mozilla_feature_toolbar
     implementation Deps.mozilla_feature_tabs
+    implementation Deps.mozilla_service_fretboard
 
     implementation Deps.mozilla_support_ktx
 

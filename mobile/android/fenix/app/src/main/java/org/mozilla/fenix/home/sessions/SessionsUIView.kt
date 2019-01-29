@@ -21,6 +21,7 @@ class SessionsUIView(container: ViewGroup, bus: ActionBusFactory) :
         .findViewById(R.id.session_list)
 
     private val sessionsAdapter = SessionsAdapter()
+
     init {
         view.apply {
             layoutManager = LinearLayoutManager(container.context)

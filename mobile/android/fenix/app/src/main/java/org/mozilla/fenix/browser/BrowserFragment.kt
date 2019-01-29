@@ -1,8 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.browser
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.transition.TransitionInflater
@@ -10,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_browser.*
 import mozilla.components.feature.downloads.DownloadsFeature
@@ -19,7 +22,6 @@ import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.requireComponents
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 
 class BrowserFragment : Fragment() {
 
@@ -40,6 +42,7 @@ class BrowserFragment : Fragment() {
         sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
     }
 
+    @SuppressLint("CheckResult")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -60,17 +63,6 @@ class BrowserFragment : Fragment() {
             engineView
         )
 
-        lifecycle.addObserver(
-            ToolbarIntegration(
-                requireContext(),
-                toolbar,
-                requireComponents.toolbar.shippedDomainsProvider,
-                requireComponents.core.historyStorage
-            )
-        )
-
-        lifecycle.addObservers(sessionFeature)
-
         // Stop toolbar from collapsing if TalkBack is enabled
         val accessibilityManager = context?.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
         if (accessibilityManager.isEnabled) {
@@ -80,7 +72,11 @@ class BrowserFragment : Fragment() {
 
         lifecycle.addObservers(
             downloadsFeature,
-            sessionFeature
+            sessionFeature,
+            ToolbarIntegration(requireContext(),
+                toolbar,
+                requireComponents.toolbar.shippedDomainsProvider,
+                requireComponents.core.historyStorage)
         )
     }
 

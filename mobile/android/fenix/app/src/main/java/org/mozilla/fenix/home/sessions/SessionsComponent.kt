@@ -7,16 +7,19 @@ package org.mozilla.fenix.home.sessions
 import android.annotation.SuppressLint
 import android.view.ViewGroup
 import mozilla.components.browser.session.Session
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.ViewState
 
-class SessionsComponent(private val container: ViewGroup, override val bus: ActionBusFactory) :
-    UIComponent<SessionsState, SessionsAction, SessionsChange>(bus) {
-
+class SessionsComponent(
+    private val container: ViewGroup,
+    override val bus: ActionBusFactory,
     override var initialState: SessionsState = SessionsState(emptyList())
+) :
+    UIComponent<SessionsState, SessionsAction, SessionsChange>(bus) {
 
     override val reducer: (SessionsState, SessionsChange) -> SessionsState = { state, change ->
         when (change) {
@@ -26,9 +29,17 @@ class SessionsComponent(private val container: ViewGroup, override val bus: Acti
 
     override fun initView() = SessionsUIView(container, bus)
 
+    init {
+        setup()
+    }
+
     @SuppressLint("CheckResult")
     fun setup(): SessionsComponent {
         render(reducer)
+        getUserInteractionEvents<SessionsAction>()
+            .subscribe {
+                Logger("SessionsComponent").debug(it.toString())
+            }
         return this
     }
 }

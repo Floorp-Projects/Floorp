@@ -13,7 +13,8 @@
 
     <fragment android:id="@+id/searchFragment" android:name="org.mozilla.fenix.search.SearchFragment"
               android:label="fragment_search" tools:layout="@layout/fragment_search">
-        <action android:id="@+id/action_searchFragment_to_browserFragment" app:destination="@id/browserFragment"/>
+        <action android:id="@+id/action_searchFragment_to_browserFragment" app:destination="@id/browserFragment"
+                app:popUpTo="@id/homeFragment"/>
     </fragment>
 
     <fragment android:id="@+id/browserFragment" android:name="org.mozilla.fenix.browser.BrowserFragment"

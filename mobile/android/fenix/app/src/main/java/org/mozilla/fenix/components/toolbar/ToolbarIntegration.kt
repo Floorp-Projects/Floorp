@@ -5,20 +5,15 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
-import android.view.LayoutInflater
-import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.navigation.Navigation
-import androidx.navigation.fragment.FragmentNavigator
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
-import mozilla.components.support.ktx.android.content.res.pxToDp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
@@ -33,11 +28,6 @@ class ToolbarIntegration(
     init {
         toolbar.setMenuBuilder(context.components.toolbar.menuBuilder)
 
-        toolbar.browserActionMargin = toolbar.resources.pxToDp(browserActionMarginDp)
-        toolbar.textColor = ContextCompat.getColor(context, R.color.searchText)
-        toolbar.urlBoxView = LayoutInflater.from(context).inflate(R.layout.layout_url_backround, null)
-        toolbar.urlBoxMargin = toolbar.resources.pxToDp(urlBoxMargin)
-
         val home = BrowserToolbar.Button(
             context.resources.getDrawable(
                 R.drawable.ic_home,
@@ -48,15 +38,6 @@ class ToolbarIntegration(
         }
 
         toolbar.addBrowserAction(home)
-
-        toolbar.onUrlClicked = {
-            val extras = FragmentNavigator.Extras.Builder().addSharedElement(
-                toolbar, ViewCompat.getTransitionName(toolbar)!!
-            ).build()
-            Navigation.findNavController(toolbar)
-                .navigate(R.id.action_browserFragment_to_searchFragment, null, null, extras)
-            false
-        }
 
         ToolbarAutocompleteFeature(toolbar).apply {
             addDomainProvider(domainAutocompleteProvider)
