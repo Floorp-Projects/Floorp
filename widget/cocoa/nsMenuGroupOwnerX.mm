@@ -70,8 +70,7 @@ void nsMenuGroupOwnerX::ContentAppended(nsIContent* aFirstNewContent) {
 void nsMenuGroupOwnerX::NodeWillBeDestroyed(const nsINode* aNode) {}
 
 void nsMenuGroupOwnerX::AttributeWillChange(dom::Element* aContent, int32_t aNameSpaceID,
-                                            nsAtom* aAttribute, int32_t aModType,
-                                            const nsAttrValue* aNewValue) {}
+                                            nsAtom* aAttribute, int32_t aModType) {}
 
 void nsMenuGroupOwnerX::NativeAnonymousChildListChange(nsIContent* aContent, bool aIsRemove) {}
 
