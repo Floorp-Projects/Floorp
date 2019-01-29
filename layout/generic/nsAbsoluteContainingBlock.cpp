@@ -729,22 +729,8 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
                    border.Size(outerWM).GetPhysicalSize(outerWM));
 
   // Offset the frame rect by the given origin of the absolute containing block.
-  // If the frame is auto-positioned on both sides of an axis, it will be
-  // positioned based on its containing block and we don't need to offset
-  // (unless the caller demands it (the STATIC_POS_IS_CB_ORIGIN case)).
-  if (aContainingBlock.TopLeft() != nsPoint(0, 0)) {
-    const nsStyleSides& offsets = kidReflowInput.mStylePosition->mOffset;
-    if (!(offsets.GetLeftUnit() == eStyleUnit_Auto &&
-          offsets.GetRightUnit() == eStyleUnit_Auto) ||
-        (rsFlags & ReflowInput::STATIC_POS_IS_CB_ORIGIN)) {
-      r.x += aContainingBlock.x;
-    }
-    if (!(offsets.GetTopUnit() == eStyleUnit_Auto &&
-          offsets.GetBottomUnit() == eStyleUnit_Auto) ||
-        (rsFlags & ReflowInput::STATIC_POS_IS_CB_ORIGIN)) {
-      r.y += aContainingBlock.y;
-    }
-  }
+  r.x += aContainingBlock.x;
+  r.y += aContainingBlock.y;
 
   aKidFrame->SetRect(r);
 

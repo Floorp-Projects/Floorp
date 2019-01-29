@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  UPDATE_ADD_RULE_ENABLED,
   UPDATE_RULES,
   UPDATE_HIGHLIGHTED_SELECTOR,
 } = require("../actions/index");
@@ -12,6 +13,8 @@ const {
 const INITIAL_RULES = {
   // The selector of the node that is highlighted by the selector highlighter.
   highlightedSelector: "",
+  // Whether or not the add new rule button should be enabled.
+  isAddRuleEnabled: false,
   // Array of CSS rules.
   rules: [],
 };
@@ -89,6 +92,13 @@ function getRuleState(rule) {
 
 const reducers = {
 
+  [UPDATE_ADD_RULE_ENABLED](rules, { enabled }) {
+    return {
+      ...rules,
+      isAddRuleEnabled: enabled,
+    };
+  },
+
   [UPDATE_HIGHLIGHTED_SELECTOR](rules, { highlightedSelector }) {
     return {
       ...rules,
@@ -99,6 +109,7 @@ const reducers = {
   [UPDATE_RULES](rules, { rules: newRules }) {
     return {
       highlightedSelector: rules.highlightedSelector,
+      isAddRuleEnabled: rules.isAddRuleEnabled,
       rules: newRules.map(rule => getRuleState(rule)),
     };
   },

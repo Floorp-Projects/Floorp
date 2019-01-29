@@ -634,15 +634,6 @@ namespace mozilla {
 namespace ipc {
 namespace windows {
 
-static bool ProcessTypeRequiresWinEventHook() {
-  switch (XRE_GetProcessType()) {
-    case GeckoProcessType_GMPlugin:
-      return false;
-    default:
-      return true;
-  }
-}
-
 void InitUIThread() {
   // If we aren't setup before a call to NotifyWorkerThread, we'll hang
   // on startup.
@@ -654,7 +645,7 @@ void InitUIThread() {
   MOZ_ASSERT(gUIThreadId == GetCurrentThreadId(),
              "Called InitUIThread multiple times on different threads!");
 
-  if (!gWinEventHook && ProcessTypeRequiresWinEventHook()) {
+  if (!gWinEventHook && XRE_Win32kCallsAllowed()) {
     gWinEventHook = SetWinEventHook(EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY,
                                     NULL, &WinEventHook, GetCurrentProcessId(),
                                     gUIThreadId, WINEVENT_OUTOFCONTEXT);
