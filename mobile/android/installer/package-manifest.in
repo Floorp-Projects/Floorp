@@ -121,8 +121,6 @@
 @BINPATH@/components/nsDNSServiceDiscovery.js
 #endif
 @BINPATH@/components/toolkitsearch.manifest
-@BINPATH@/components/TooltipTextProvider.js
-@BINPATH@/components/TooltipTextProvider.manifest
 
 @BINPATH@/components/extensions.manifest
 
