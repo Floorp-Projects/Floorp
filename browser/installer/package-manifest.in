@@ -191,8 +191,6 @@
 @RESPATH@/browser/components/EnterprisePolicies.js
 @RESPATH@/browser/components/EnterprisePoliciesContent.js
 @RESPATH@/browser/components/EnterprisePolicies.manifest
-@RESPATH@/components/crashmonitor.manifest
-@RESPATH@/components/nsCrashMonitor.js
 @RESPATH@/components/toolkitsearch.manifest
 #ifdef NIGHTLY_BUILD
 @RESPATH@/browser/components/payments.manifest
