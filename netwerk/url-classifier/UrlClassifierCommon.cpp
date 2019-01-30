@@ -171,7 +171,7 @@ UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
         break;
 
       case AntiTrackingCommon::eCryptomining:
-        // TODO: next patches...
+        event = nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT;
         break;
 
       default:
