@@ -204,12 +204,6 @@
 @RESPATH@/browser/components/payments.manifest
 @RESPATH@/browser/components/paymentUIService.js
 #endif
-@RESPATH@/components/passwordmgr.manifest
-@RESPATH@/components/nsLoginInfo.js
-@RESPATH@/components/nsLoginManager.js
-@RESPATH@/components/nsLoginManagerPrompter.js
-@RESPATH@/components/storage-json.js
-@RESPATH@/components/crypto-SDR.js
 @RESPATH@/components/TooltipTextProvider.js
 @RESPATH@/components/TooltipTextProvider.manifest
 @RESPATH@/components/WebVTT.manifest
