@@ -57,4 +57,4 @@ PageThumbsStorageService.prototype = {
 
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PageThumbsStorageService]);
+var EXPORTED_SYMBOLS = ["PageThumbsStorageService"];
