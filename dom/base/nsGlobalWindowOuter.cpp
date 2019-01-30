@@ -5408,6 +5408,18 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(unsigned aEvent,
             unblocked = !doc->GetHasTrackingContentLoaded();
           }
         } else if (aEvent == nsIWebProgressListener::
+                                 STATE_BLOCKED_FINGERPRINTING_CONTENT) {
+          doc->SetHasFingerprintingContentBlocked(aBlocked, origin);
+          if (!aBlocked) {
+            unblocked = !doc->GetHasFingerprintingContentBlocked();
+          }
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_LOADED_FINGERPRINTING_CONTENT) {
+          doc->SetHasFingerprintingContentLoaded(aBlocked, origin);
+          if (!aBlocked) {
+            unblocked = !doc->GetHasFingerprintingContentLoaded();
+          }
+        } else if (aEvent == nsIWebProgressListener::
                                  STATE_COOKIES_BLOCKED_BY_PERMISSION) {
           doc->SetHasCookiesBlockedByPermission(aBlocked, origin);
           if (!aBlocked) {
