@@ -218,8 +218,6 @@
 @RESPATH@/components/SyncComponents.manifest
 @RESPATH@/components/FxAccountsComponents.manifest
 @RESPATH@/components/FxAccountsPush.js
-@RESPATH@/components/CaptivePortalDetectComponents.manifest
-@RESPATH@/components/captivedetect.js
 @RESPATH@/components/servicesComponents.manifest
 @RESPATH@/components/servicesSettings.manifest
 @RESPATH@/components/RemoteSettingsComponents.js

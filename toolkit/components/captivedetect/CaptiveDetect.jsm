@@ -442,6 +442,7 @@ CaptivePortalDetector.prototype = {
   },
 };
 
+/* globals debug: true */
 var debug;
 if (DEBUG) {
   debug = function(s) {
@@ -451,4 +452,4 @@ if (DEBUG) {
   debug = function(s) {};
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([CaptivePortalDetector]);
+var EXPORTED_SYMBOLS = ["CaptivePortalDetector"];
