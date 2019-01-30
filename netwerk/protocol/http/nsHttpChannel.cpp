@@ -122,6 +122,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
@@ -5990,9 +5991,14 @@ nsHttpChannel::Cancel(nsresult status) {
   MOZ_ASSERT(NS_IsMainThread());
   // We should never have a pump open while a CORS preflight is in progress.
   MOZ_ASSERT_IF(mPreflightChannel, !mCachePump);
-  MOZ_ASSERT(status != NS_ERROR_TRACKING_URI,
-             "NS_ERROR_TRACKING_URI needs to be handled by "
-             "CancelForTrackingProtection()");
+#ifdef DEBUG
+  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(status)) {
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "Blocking classifier error %" PRIx32
+        " need to be handled by CancelForTrackingProtection()",
+        static_cast<uint32_t>(status));
+  }
+#endif
 
   LOG(("nsHttpChannel::Cancel [this=%p status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(status)));
@@ -6088,7 +6094,7 @@ void nsHttpChannel::ContinueCancelledByTrackingProtection() {
 nsresult nsHttpChannel::CancelInternal(nsresult status) {
   bool trackingProtectionCancellationPending =
       !!mTrackingProtectionCancellationPending;
-  if (status == NS_ERROR_TRACKING_URI) {
+  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(status)) {
     mTrackingProtectionCancellationPending = 0;
   }
 
