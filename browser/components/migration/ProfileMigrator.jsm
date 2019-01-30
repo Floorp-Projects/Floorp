@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {MigrationUtils} = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
 
 function ProfileMigrator() {
@@ -18,4 +17,4 @@ ProfileMigrator.prototype = {
   classID: Components.ID("6F8BB968-C14F-4D6F-9733-6C6737B35DCE"),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ProfileMigrator]);
+var EXPORTED_SYMBOLS = ["ProfileMigrator"];

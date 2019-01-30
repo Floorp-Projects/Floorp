@@ -16,7 +16,6 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {ChromeMigrationUtils} = ChromeUtils.import("resource:///modules/ChromeMigrationUtils.jsm");
 const {MigrationUtils, MigratorPrototype} = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
 
@@ -432,7 +431,7 @@ ChromiumProfileMigrator.prototype.classDescription = "Chromium Profile Migrator"
 ChromiumProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=chromium";
 ChromiumProfileMigrator.prototype.classID = Components.ID("{8cece922-9720-42de-b7db-7cef88cb07ca}");
 
-var componentsArray = [ChromeProfileMigrator, ChromiumProfileMigrator];
+var EXPORTED_SYMBOLS = ["ChromeProfileMigrator", "ChromiumProfileMigrator"];
 
 /**
  * Chrome Canary
@@ -447,7 +446,7 @@ CanaryProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?ap
 CanaryProfileMigrator.prototype.classID = Components.ID("{4bf85aa5-4e21-46ca-825f-f9c51a5e8c76}");
 
 if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
-  componentsArray.push(CanaryProfileMigrator);
+  EXPORTED_SYMBOLS.push("CanaryProfileMigrator");
 }
 
 /**
@@ -470,7 +469,5 @@ if (AppConstants.platform != "win" && AppConstants.platform != "macosx") {
   ChromeBetaMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=chrome-beta";
   ChromeBetaMigrator.prototype.classID = Components.ID("{47f75963-840b-4950-a1f0-d9c1864f8b8e}");
 
-  componentsArray.push(ChromeDevMigrator, ChromeBetaMigrator);
+  EXPORTED_SYMBOLS.push("ChromeDevMigrator", "ChromeBetaMigrator");
 }
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(componentsArray);

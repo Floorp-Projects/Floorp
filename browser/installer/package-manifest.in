@@ -254,17 +254,7 @@
 @RESPATH@/components/nsInputListAutoComplete.js
 @RESPATH@/components/contentAreaDropListener.manifest
 @RESPATH@/components/contentAreaDropListener.js
-@RESPATH@/browser/components/BrowserProfileMigrators.manifest
-@RESPATH@/browser/components/ProfileMigrator.js
-@RESPATH@/browser/components/ChromeProfileMigrator.js
-@RESPATH@/browser/components/FirefoxProfileMigrator.js
-#ifdef XP_WIN
-@RESPATH@/browser/components/360seProfileMigrator.js
-@RESPATH@/browser/components/EdgeProfileMigrator.js
-@RESPATH@/browser/components/IEProfileMigrator.js
-#endif
 #ifdef XP_MACOSX
-@RESPATH@/browser/components/SafariProfileMigrator.js
 @RESPATH@/browser/components/MacTouchBar.manifest
 @RESPATH@/browser/components/MacTouchBar.js
 #endif
