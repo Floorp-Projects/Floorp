@@ -3,6 +3,8 @@
 "use strict";
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Bookmarks",
                                "resource://gre/modules/Bookmarks.jsm");
@@ -98,8 +100,23 @@ var gMenuBuilder = {
     throw new Error(`Unexpected overrideContext: ${webExtContextData.overrideContext}`);
   },
 
+  canAccessContext(extension, contextData) {
+    if (!extension.privateBrowsingAllowed) {
+      let nativeTab = contextData.tab;
+      if (nativeTab && PrivateBrowsingUtils.isBrowserPrivate(nativeTab.linkedBrowser)) {
+        return false;
+      } else if (PrivateBrowsingUtils.isWindowPrivate(contextData.menu.ownerGlobal)) {
+        return false;
+      }
+    }
+    return true;
+  },
+
   createAndInsertTopLevelElements(root, contextData, nextSibling) {
     let rootElements;
+    if (!this.canAccessContext(root.extension, contextData)) {
+      return;
+    }
     if (contextData.onBrowserAction || contextData.onPageAction) {
       if (contextData.extension.id !== root.extension.id) {
         return;
@@ -468,14 +485,18 @@ var gMenuBuilder = {
 
   // This should be called once, after constructing the top-level menus, if any.
   afterBuildingMenu(contextData) {
-    function dispatchOnShownEvent(extension) {
+    let dispatchOnShownEvent = (extension) => {
+      if (!this.canAccessContext(extension, contextData)) {
+        return;
+      }
+
       // Note: gShownMenuItems is a DefaultMap, so .get(extension) causes the
       // extension to be stored in the map even if there are currently no
       // shown menu items. This ensures that the onHidden event can be fired
       // when the menu is closed.
       let menuIds = gShownMenuItems.get(extension);
       extension.emit("webext-menu-shown", menuIds, contextData);
-    }
+    };
 
     if (contextData.onBrowserAction || contextData.onPageAction) {
       dispatchOnShownEvent(contextData.extension);
