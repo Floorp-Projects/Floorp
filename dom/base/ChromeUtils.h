@@ -163,13 +163,6 @@ class ChromeUtils {
   static already_AddRefed<Promise> RequestIOActivity(GlobalObject& aGlobal,
                                                      ErrorResult& aRv);
 
-  static already_AddRefed<BrowsingContext> GetBrowsingContext(
-      GlobalObject& aGlobal, uint64_t id);
-
-  static void GetRootBrowsingContexts(
-      GlobalObject& aGlobal,
-      nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
-
   static bool HasReportingHeaderForOrigin(GlobalObject& global,
                                           const nsAString& aOrigin,
                                           ErrorResult& aRv);
