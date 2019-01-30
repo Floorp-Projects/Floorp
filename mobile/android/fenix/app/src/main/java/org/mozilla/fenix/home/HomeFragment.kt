@@ -42,6 +42,11 @@ class HomeFragment : Fragment() {
             BitmapDrawable(resources, it.icon)
         }
 
+        // Temporary so we can easily test settings
+        menuButton.setOnClickListener {
+            Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_settingsActivity, null, null)
+        }
+
         toolbar.setCompoundDrawablesWithIntrinsicBounds(searchIcon, null, null, null)
         val roundToInt = (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
         toolbar.compoundDrawablePadding = roundToInt

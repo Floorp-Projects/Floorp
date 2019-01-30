@@ -39,6 +39,12 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".settings.SettingsActivity"
+            android:label="@string/settings"
+            android:parentActivityName=".HomeActivity"
+            android:theme="@style/AppTheme" />
     </application>
 
 </manifest>

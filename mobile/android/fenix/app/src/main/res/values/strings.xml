@@ -23,4 +23,10 @@
     <string name="sessions_intro_description">Fenix will collect your browsing sessions on your Home Screen for you to retrieve later.</string>
     <string name="search_scan_button">Scan</string>
     <string name="search_shortcuts_button">Shortcuts</string>
+
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_make_default_browser">Make default browser</string>
+
+    <!-- Menu option on the toolbar that takes you to settings page-->
+    <string name="settings">Settings</string>
 </resources>

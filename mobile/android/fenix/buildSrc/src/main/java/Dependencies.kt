@@ -13,6 +13,7 @@ private object Versions {
 
     const val androidx_appcompat = "1.0.2"
     const val androidx_constraint_layout = "2.0.0-alpha3"
+    const val androidx_preference = "1.0.0"
 
     const val mozilla_android_components = "0.41.0-SNAPSHOT"
 
@@ -86,6 +87,7 @@ object Deps {
     const val tools_espresso_core = "com.android.support.test.espresso:espresso-core:${Versions.espresso_core}"
 
     const val androidx_legacy = "androidx.legacy:legacy-support-v4:${Versions.androidx_legacy}"
+    const val androidx_preference = "androidx.preference:preference-ktx:${Versions.androidx_preference}"
     const val android_arch_navigation = "android.arch.navigation:navigation-fragment:${Versions.android_arch_navigation}"
 }
 
