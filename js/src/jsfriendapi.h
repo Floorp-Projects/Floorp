@@ -194,9 +194,6 @@ typedef void (*JSSetUseCounterCallback)(JSObject* obj, JSUseCounter counter);
 extern JS_FRIEND_API void JS_SetSetUseCounterCallback(
     JSContext* cx, JSSetUseCounterCallback callback);
 
-extern JS_FRIEND_API JSPrincipals* JS_DeprecatedGetCompartmentPrincipals(
-    JS::Compartment* compartment);
-
 extern JS_FRIEND_API JSPrincipals* JS_GetScriptPrincipals(JSScript* script);
 
 namespace js {
