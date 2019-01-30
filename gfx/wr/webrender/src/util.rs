@@ -1053,3 +1053,76 @@ impl<T: MallocSizeOf> MallocSizeOf for PrimaryArc<T> {
         self.shallow_size_of(ops) + (**self).size_of(ops)
     }
 }
+
+/// Computes the scale factors of this matrix; that is,
+/// the amounts each basis vector is scaled by.
+///
+/// This code comes from gecko gfx/2d/Matrix.h with the following
+/// modifications:
+///
+/// * Removed `xMajor` parameter.
+pub fn scale_factors<Src, Dst>(
+    mat: &TypedTransform3D<f32, Src, Dst>
+) -> (f32, f32) {
+    // Determinant is just of the 2D component.
+    let det = mat.m11 * mat.m22 - mat.m12 * mat.m21;
+    if det == 0.0 {
+        return (0.0, 0.0);
+    }
+
+    // ignore mirroring
+    let det = det.abs();
+
+    let major = (mat.m11 * mat.m11 + mat.m12 * mat.m12).sqrt();
+    let minor = if major != 0.0 { det / major } else { 0.0 };
+
+    (major, minor)
+}
+
+/// Clamp scaling factor to a power of two.
+///
+/// This code comes from gecko gfx/thebes/gfxUtils.cpp with the following
+/// modification:
+///
+/// * logs are taken in base 2 instead of base e.
+pub fn clamp_to_scale_factor(val: f32, round_down: bool) -> f32 {
+    // Arbitary scale factor limitation. We can increase this
+    // for better scaling performance at the cost of worse
+    // quality.
+    const SCALE_RESOLUTION: f32 = 2.0;
+
+    // Negative scaling is just a flip and irrelevant to
+    // our resolution calculation.
+    let val = val.abs();
+
+    let (val, inverse) = if val < 1.0 {
+        (1.0 / val, true)
+    } else {
+        (val, false)
+    };
+
+    let power = val.log2() / SCALE_RESOLUTION.log2();
+
+    // If power is within 1e-5 of an integer, round to nearest to
+    // prevent floating point errors, otherwise round up to the
+    // next integer value.
+    let power = if (power - power.round()).abs() < 1e-5 {
+        power.round()
+    } else if inverse != round_down {
+        // Use floor when we are either inverted or rounding down, but
+        // not both.
+        power.floor()
+    } else {
+        // Otherwise, ceil when we are not inverted and not rounding
+        // down, or we are inverted and rounding down.
+        power.ceil()
+    };
+
+    let scale = SCALE_RESOLUTION.powf(power);
+
+    if inverse {
+        1.0 / scale
+    } else {
+        scale
+    }
+}
