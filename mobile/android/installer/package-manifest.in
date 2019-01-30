@@ -110,10 +110,6 @@
 #endif
 @BINPATH@/components/BrowserElementParent.manifest
 @BINPATH@/components/BrowserElementParent.js
-#ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/nsDNSServiceDiscovery.manifest
-@BINPATH@/components/nsDNSServiceDiscovery.js
-#endif
 @BINPATH@/components/toolkitsearch.manifest
 
 @BINPATH@/components/extensions.manifest

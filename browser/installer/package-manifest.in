@@ -164,11 +164,6 @@
 @RESPATH@/components/ConsoleAPIStorage.js
 @RESPATH@/components/BrowserElementParent.manifest
 @RESPATH@/components/BrowserElementParent.js
-#ifndef XP_MACOSX
-; OSX uses native platform impl.  Windows, Linux, and Android uses fallback JS impl.
-@BINPATH@/components/nsDNSServiceDiscovery.manifest
-@BINPATH@/components/nsDNSServiceDiscovery.js
-#endif
 @RESPATH@/browser/components/BrowserComponents.manifest
 @RESPATH@/browser/components/devtools-startup.manifest
 @RESPATH@/browser/components/devtools-startup.js
