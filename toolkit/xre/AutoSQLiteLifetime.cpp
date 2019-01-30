@@ -7,10 +7,20 @@
 #include "AutoSQLiteLifetime.h"
 #include "sqlite3.h"
 
-#ifdef MOZ_STORAGE_MEMORY
+#ifdef MOZ_MEMORY
 #  include "mozmemory.h"
 #  ifdef MOZ_DMD
+#    include "nsIMemoryReporter.h"
 #    include "DMD.h"
+
+namespace mozilla {
+namespace storage {
+extern mozilla::Atomic<size_t> gSqliteMemoryUsed;
+}
+}  // namespace mozilla
+
+using mozilla::storage::gSqliteMemoryUsed;
+
 #  endif
 
 namespace {
@@ -105,7 +115,7 @@ const sqlite3_mem_methods memMethods = {
 
 }  // namespace
 
-#endif  // MOZ_STORAGE_MEMORY
+#endif  // MOZ_MEMORY
 
 namespace mozilla {
 
@@ -114,7 +124,7 @@ AutoSQLiteLifetime::AutoSQLiteLifetime() {
     MOZ_CRASH("multiple instances of AutoSQLiteLifetime constructed!");
   }
 
-#ifdef MOZ_STORAGE_MEMORY
+#ifdef MOZ_MEMORY
   sResult = ::sqlite3_config(SQLITE_CONFIG_MALLOC, &memMethods);
 #else
   sResult = SQLITE_OK;
