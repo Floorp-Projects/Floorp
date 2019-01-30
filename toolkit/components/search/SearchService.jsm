@@ -8,15 +8,11 @@ const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.j
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Deprecated: "resource://gre/modules/Deprecated.jsm",
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
-  Lz4: "resource://gre/modules/lz4.js",
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
 });
 
@@ -51,21 +47,12 @@ XPCOMUtils.defineLazyGetter(this, "gEncoder",
                             });
 
 
-const MODE_RDONLY   = 0x01;
-const MODE_WRONLY   = 0x02;
-const MODE_CREATE   = 0x08;
-const MODE_APPEND   = 0x10;
-const MODE_TRUNCATE = 0x20;
-const PERMS_FILE    = 0o644;
-
 // Directory service keys
 const NS_APP_DISTRIBUTION_SEARCH_DIR_LIST = "SrchPluginsDistDL";
-const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 
 // We load plugins from APP_SEARCH_PREFIX, where a list.json
 // file needs to exist to list available engines.
 const APP_SEARCH_PREFIX = "resource://search-plugins/";
-const EXT_SEARCH_PREFIX = "resource://search-extensions/";
 
 // See documentation in nsISearchService.idl.
 const SEARCH_ENGINE_TOPIC        = "browser-search-engine-modified";
@@ -92,9 +79,6 @@ const SEARCH_SERVICE_TOPIC       = "browser-search-service";
  */
 const SEARCH_SERVICE_CACHE_WRITTEN  = "write-cache-to-disk-complete";
 
-// Delay for lazy serialization (ms)
-const LAZY_SERIALIZE_DELAY = 100;
-
 // Delay for batching invalidation of the JSON cache (ms)
 const CACHE_INVALIDATION_DELAY = 1000;
 
@@ -103,8 +87,6 @@ const CACHE_INVALIDATION_DELAY = 1000;
 const CACHE_VERSION = 1;
 
 const CACHE_FILENAME = "search.json.mozlz4";
-
-const NEW_LINES = /(\r\n|\r|\n)/;
 
 // Set an arbitrary cap on the maximum icon size. Without this, large icons can
 // cause big delays when loading them at startup.
@@ -148,7 +130,6 @@ const MOZ_PARAM_OFFICIAL       = "moz:official";
 
 // Supported OpenSearch parameters
 // See http://opensearch.a9.com/spec/1.1/querysyntax/#core
-const OS_PARAM_USER_DEFINED    = "searchTerms";
 const OS_PARAM_INPUT_ENCODING  = "inputEncoding";
 const OS_PARAM_LANGUAGE        = "language";
 const OS_PARAM_OUTPUT_ENCODING = "outputEncoding";
@@ -189,7 +170,6 @@ const SEARCH_DEFAULT_UPDATE_INTERVAL = 7;
 // from the server doesn't specify an interval.
 const SEARCH_GEO_DEFAULT_UPDATE_INTERVAL = 2592000; // 30 days.
 
-const SEARCH_COUNTS_HISTOGRAM_KEY = "SEARCH_COUNTS";
 /**
  * Prefixed to all search debug output.
  */
@@ -733,21 +713,6 @@ function getVerificationHash(aName) {
 }
 
 /**
- * Safely close a nsISafeOutputStream.
- * @param aFOS
- *        The file output stream to close.
- */
-function closeSafeOutputStream(aFOS) {
-  if (aFOS instanceof Ci.nsISafeOutputStream) {
-    try {
-      aFOS.finish();
-      return;
-    } catch (e) { }
-  }
-  aFOS.close();
-}
-
-/**
  * Wrapper function for nsIIOService::newURI.
  * @param aURLSpec
  *        The URL string from which to create an nsIURI.
@@ -866,11 +831,6 @@ function notifyAction(aEngine, aVerb) {
     LOG("NOTIFY: Engine: \"" + aEngine.name + "\"; Verb: \"" + aVerb + "\"");
     Services.obs.notifyObservers(aEngine, SEARCH_ENGINE_TOPIC, aVerb);
   }
-}
-
-function parseJsonFromStream(aInputStream) {
-  let bytes = NetUtil.readInputStream(aInputStream, aInputStream.available());
-  return JSON.parse(new TextDecoder().decode(bytes));
 }
 
 /**
@@ -4532,4 +4492,4 @@ var engineUpdateService = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SearchService]);
+var EXPORTED_SYMBOLS = ["SearchService"];

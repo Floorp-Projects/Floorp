@@ -197,9 +197,6 @@
 @RESPATH@/components/crashmonitor.manifest
 @RESPATH@/components/nsCrashMonitor.js
 @RESPATH@/components/toolkitsearch.manifest
-@RESPATH@/components/nsSearchService.js
-@RESPATH@/components/nsSearchSuggestions.js
-@RESPATH@/components/nsSidebar.js
 #ifdef NIGHTLY_BUILD
 @RESPATH@/browser/components/payments.manifest
 @RESPATH@/browser/components/paymentUIService.js
