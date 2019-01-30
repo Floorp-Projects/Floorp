@@ -830,6 +830,11 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
   return duration.ToMilliseconds();
 }
 
+/* static */ void ChromeUtils::ResetLastExternalProtocolIframeAllowed(
+    GlobalObject& aGlobal) {
+  PopupBlocker::ResetLastExternalProtocolIframeAllowed();
+}
+
 /* static */ void ChromeUtils::RegisterWindowActor(
     const GlobalObject& aGlobal, const nsAString& aName,
     const WindowActorOptions& aOptions, ErrorResult& aRv) {

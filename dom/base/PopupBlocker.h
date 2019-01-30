@@ -59,6 +59,9 @@ class PopupBlocker final {
   // Returns when the last external protocol iframe has been allowed.
   static TimeStamp WhenLastExternalProtocolIframeAllowed();
 
+  // Reset the last external protocol iframe timestamp.
+  static void ResetLastExternalProtocolIframeAllowed();
+
   static void Initialize();
   static void Shutdown();
 };
