@@ -352,7 +352,7 @@ nsTArray<ProxyAccessible*> ProxyAccessible::RelationByType(
     RelationType aType) const {
   RefPtr<IAccessible2_2> acc = QueryInterface<IAccessible2_2>(this);
   if (!acc) {
-    nsTArray<ProxyAccessible*>();
+    return nsTArray<ProxyAccessible*>();
   }
 
   _bstr_t relationType;
@@ -364,7 +364,7 @@ nsTArray<ProxyAccessible*> ProxyAccessible::RelationByType(
   }
 
   if (!relationType) {
-    nsTArray<ProxyAccessible*>();
+    return nsTArray<ProxyAccessible*>();
   }
 
   IUnknown** targets;
@@ -372,7 +372,7 @@ nsTArray<ProxyAccessible*> ProxyAccessible::RelationByType(
   HRESULT hr =
       acc->get_relationTargetsOfType(relationType, 0, &targets, &nTargets);
   if (FAILED(hr)) {
-    nsTArray<ProxyAccessible*>();
+    return nsTArray<ProxyAccessible*>();
   }
 
   nsTArray<ProxyAccessible*> proxies;
