@@ -181,9 +181,6 @@
 @BINPATH@/components/AndroidCastDeviceProvider.js
 #endif
 
-@BINPATH@/components/mozIntl.manifest
-@BINPATH@/components/mozIntl.js
-
 ; Modules
 @BINPATH@/modules/*
 @BINPATH@/actors/*
