@@ -610,7 +610,7 @@ TrackingDummyChannel::SetNavigationStartTimeStamp(
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::CancelForTrackingProtection() {
+TrackingDummyChannel::CancelByChannelClassifier(nsresult aErrorCode) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

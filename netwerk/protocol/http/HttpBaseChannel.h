@@ -307,7 +307,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetLastRedirectFlags(uint32_t aValue) override;
   NS_IMETHOD GetNavigationStartTimeStamp(TimeStamp *aTimeStamp) override;
   NS_IMETHOD SetNavigationStartTimeStamp(TimeStamp aTimeStamp) override;
-  NS_IMETHOD CancelForTrackingProtection() override;
+  NS_IMETHOD CancelByChannelClassifier(nsresult aErrorCode) override;
   virtual void SetIPv4Disabled(void) override;
   virtual void SetIPv6Disabled(void) override;
 
