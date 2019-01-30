@@ -68,8 +68,7 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   IPCResult RecvNotifyCookieAllowed() override;
 
-  IPCResult RecvNotifyTrackingCookieBlocked(
-      const uint32_t& aRejectedReason) override;
+  IPCResult RecvNotifyCookieBlocked(const uint32_t& aRejectedReason) override;
 
   IPCResult RecvNotifyTrackingResource(const bool& aIsThirdParty) override;
 

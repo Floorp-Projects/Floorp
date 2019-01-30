@@ -62,7 +62,7 @@ child:
   async NotifyCookieAllowed();
 
   // Tell the child that tracking cookies are blocked for this load.
-  async NotifyTrackingCookieBlocked(uint32_t aRejectedReason);
+  async NotifyCookieBlocked(uint32_t aRejectedReason);
 
   // Tell the child that the resource being loaded is on the tracking
   // protection list.

@@ -1502,7 +1502,7 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
       // This channel is a parent-process proxy for a child process request.
       // Tell the child process channel to do this instead.
       if (aDecision == BlockingDecision::eBlock) {
-        parentChannel->NotifyTrackingCookieBlocked(aRejectedReason);
+        parentChannel->NotifyCookieBlocked(aRejectedReason);
       } else {
         parentChannel->NotifyCookieAllowed();
       }
