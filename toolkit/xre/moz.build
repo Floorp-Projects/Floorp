@@ -72,7 +72,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'MacApplicationDelegate.mm',
         'MacAutoreleasePool.mm',
         'MacLaunchHelper.mm',
-        'nsCommandLineServiceMac.cpp',
+        'nsCommandLineServiceMac.mm',
         'nsNativeAppSupportCocoa.mm',
         'updaterfileutils_osx.mm',
     ]
