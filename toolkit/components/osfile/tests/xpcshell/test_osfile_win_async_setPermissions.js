@@ -47,7 +47,6 @@ add_task(async function test_path_setPermissions() {
       Assert.equal(stat.winAttributes.readOnly, attributesExpected.readOnly);
       Assert.equal(stat.winAttributes.system, attributesExpected.system);
       Assert.equal(stat.winAttributes.hidden, attributesExpected.hidden);
-
     }
   } finally {
     await OS.File.remove(path);

@@ -7,7 +7,6 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-
 class MozRadiogroup extends MozElements.BaseControl {
   constructor() {
     super();
@@ -394,5 +393,4 @@ MozXULElement.implementCustomInterface(MozRadiogroup, [
 ]);
 
 customElements.define("radiogroup", MozRadiogroup);
-
 }

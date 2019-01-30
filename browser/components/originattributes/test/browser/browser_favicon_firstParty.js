@@ -115,7 +115,6 @@ function waitOnFaviconResponse(aFaviconURL) {
       observe(aSubject, aTopic, aData) {
         if (aTopic === "http-on-examine-response" ||
             aTopic === "http-on-examine-cached-response") {
-
           let httpChannel = aSubject.QueryInterface(Ci.nsIHttpChannel);
           let loadInfo = httpChannel.loadInfo;
 
@@ -144,7 +143,6 @@ function waitOnFaviconLoaded(aFaviconURL) {
   return new Promise(resolve => {
     let observer = {
       onPageChanged(uri, attr, value, id) {
-
         if (attr === Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
             value === aFaviconURL) {
           resolve();

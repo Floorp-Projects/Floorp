@@ -213,7 +213,6 @@ add_test(async function() {
 
 // Tests that browsing to the add-ons manager from a website and going back works
 add_test(function() {
-
   function promiseManagerLoaded(manager) {
     return new Promise(resolve => {
       wait_for_manager_load(manager, resolve);
@@ -270,7 +269,6 @@ add_test(function() {
 // Only add the test if the backspace key navigates back and addon-manager
 // loaded in a tab
 add_test(async function() {
-
   if (Services.prefs.getIntPref("browser.backspace_action") != 0) {
     run_next_test();
     return;
@@ -387,7 +385,6 @@ function wait_for_page_show(browser) {
 // Tests than navigating to a website and then going back returns to the
 // previous view
 add_test(async function() {
-
   let aManager = await open_manager("addons://list/plugin");
   info("Part 1");
   is_in_list(aManager, "addons://list/plugin", false, false);
@@ -440,7 +437,6 @@ add_test(async function() {
 
 // Tests that refreshing a list view does not affect the history
 add_test(async function() {
-
   let aManager = await open_manager("addons://list/extension");
   info("Part 1");
   is_in_list(aManager, "addons://list/extension", false, false);
@@ -472,7 +468,6 @@ add_test(async function() {
 
 // Tests that refreshing a detail view does not affect the history
 add_test(async function() {
-
   let aManager = await open_manager(null);
   info("Part 1");
   is_in_list(aManager, "addons://list/extension", false, false);

@@ -160,7 +160,6 @@ function PollPromise(func, {timeout = null, interval = 10} = {}) {
     evalFn();
 
     timer.init(evalFn, interval, TYPE_REPEATING_SLACK);
-
   }).then(res => {
     timer.cancel();
     return res;
@@ -233,7 +232,6 @@ function TimedPromise(fn,
     } catch (e) {
       reject(e);
     }
-
   }).then(res => {
     timer.cancel();
     return res;

@@ -38,11 +38,9 @@ var configureLogging = function() {
 
 var sleep = function(wait) {
   return new Promise(resolve => {
-
     setTimeout(() => {
       resolve();
     }, wait);
-
   });
 };
 

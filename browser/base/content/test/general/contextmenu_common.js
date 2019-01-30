@@ -147,7 +147,6 @@ function checkMenuItem(actualItem, actualEnabled, expectedItem, expectedEnabled,
 
     if (typeof expectedEnabled == "object" && expectedEnabled != null ||
         typeof actualEnabled == "object" && actualEnabled != null) {
-
         ok(!(actualEnabled == null), "actualEnabled is not null");
         ok(!(expectedEnabled == null), "expectedEnabled is not null");
         is(typeof actualEnabled, typeof expectedEnabled, "checking types");

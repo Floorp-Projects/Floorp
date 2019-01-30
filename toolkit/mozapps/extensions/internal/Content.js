@@ -7,7 +7,6 @@
 "use strict";
 
 (function() {
-
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const MSG_JAR_FLUSH = "AddonJarFlush";
@@ -28,5 +27,4 @@ try {
 } catch (e) {
   Cu.reportError(e);
 }
-
 })();

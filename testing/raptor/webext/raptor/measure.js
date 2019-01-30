@@ -163,7 +163,6 @@ function measureHero() {
   } else {
       console.log("couldn't find hero element");
   }
-
 }
 
 function measureFNBPaint() {

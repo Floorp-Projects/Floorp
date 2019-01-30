@@ -124,7 +124,6 @@ function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
         resolve({ selectedPane });
       }, { once: true });
     }, { capture: true, once: true });
-
   });
 }
 

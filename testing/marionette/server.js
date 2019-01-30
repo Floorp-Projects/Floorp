@@ -92,7 +92,6 @@ class TCPListener {
         this.socket.asyncListen(this);
         logger.info(`Listening on port ${this.port}`);
       }
-
     } else if (this.socket) {
       // Note that closing the server socket will not close currently active
       // connections.

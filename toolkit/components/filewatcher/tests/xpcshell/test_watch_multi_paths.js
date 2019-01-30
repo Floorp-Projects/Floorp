@@ -21,7 +21,6 @@ function run_test() {
  * called in order to verify the success of the test.
  */
 add_task(async function test_watch_multi_paths() {
-
   // The number of resources to watch. We expect changes for
   // creating a file within each directory.
   let resourcesToWatch = 5;

@@ -75,7 +75,6 @@ async function openTabInUserContext(aURL, aUserContextId) {
  */
 async function openTabInFirstParty(aURL, aFirstPartyDomain,
                               aFrameSetting = DEFAULT_FRAME_SETTING) {
-
   // If the first party domain ends with '/', we remove it.
   if (aFirstPartyDomain.endsWith("/")) {
     aFirstPartyDomain = aFirstPartyDomain.slice(0, -1);
@@ -252,7 +251,6 @@ this.IsolationTestTools = {
 
     return openTabInFirstParty(aURL, aTabSettingObj.firstPartyDomain,
                                 aFrameSetting);
-
   },
 
   /**

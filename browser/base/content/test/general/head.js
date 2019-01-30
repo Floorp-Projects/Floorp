@@ -42,7 +42,6 @@ function closeAllNotifications() {
       });
       notification.close();
     }
-
   });
 }
 
@@ -213,7 +212,6 @@ function promiseOpenAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
         Services.obs.removeObserver(onDS, "browser-delayed-startup-finished");
         resolve(win);
       }, "browser-delayed-startup-finished");
-
     } else {
       win.addEventListener("load", function() {
         resolve(win);

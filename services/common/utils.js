@@ -561,7 +561,6 @@ var CommonUtils = {
    */
   getDatePref: function getDatePref(branch, pref, def = 0, log = null,
                                     oldestYear = 2010) {
-
     let valueInt = this.getEpochPref(branch, pref, def, log);
     let date = new Date(valueInt);
 

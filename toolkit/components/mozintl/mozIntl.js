@@ -432,7 +432,6 @@ class MozIntl {
   get RelativeTimeFormat() {
     class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
       constructor(locales, options = {}, ...args) {
-
         // If someone is asking for MozRelativeTimeFormat, it's likely they'll want
         // to use `formatBestUnit` which works better with `auto`
         if (options.numeric === undefined) {

@@ -6,7 +6,6 @@ const URL = "http://mochi.test:8888/browser/toolkit/components/thumbnails/" +
 
 // Test PageThumbs API function getThumbnailPath
 function* runTests() {
-
   let path = PageThumbs.getThumbnailPath(URL);
   yield testIfExists(path, false, "Thumbnail file does not exist");
 
@@ -18,7 +17,6 @@ function* runTests() {
   is(path, expectedPath, "Thumbnail file has correct path");
 
   yield testIfExists(path, true, "Thumbnail file exists");
-
 }
 
 function createThumbnail(aURL) {

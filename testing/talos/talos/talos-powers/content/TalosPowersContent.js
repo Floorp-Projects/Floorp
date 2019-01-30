@@ -123,5 +123,4 @@ var TalosPowersParent;
 
   };
   // End of possibly embedded code
-
 })();

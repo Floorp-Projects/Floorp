@@ -12,7 +12,6 @@ function newURI(url) {
 
 // This tests the key used to store the URI -> permission map on a tab.
 add_task(async function testTemporaryPermissionTabURLs() {
-
   // Prevent showing a dialog for https://name:password@example.com
   SpecialPowers.pushPrefEnv({set: [
         ["network.http.phishy-userpass-length", 2048],
@@ -84,6 +83,5 @@ add_task(async function testTemporaryPermissionTabURLs() {
       SitePermissions.clearTemporaryPermissions(browser);
     }
   });
-
 });
 

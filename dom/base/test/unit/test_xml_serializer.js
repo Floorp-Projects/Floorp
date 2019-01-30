@@ -6,7 +6,6 @@
 var LB;
 
 function run_test() {
-
   if (mozinfo.os == "win") {
     LB = "\r\n";
   } else {
@@ -92,7 +91,6 @@ function test3() {
   Assert.equal(SerializeXML(doc),
                '<prefix:root xmlns:prefix="ns1"><a0:child xmlns:a0="ns2"/>' +
                "</prefix:root>");
-
 }
 
 function test4() {

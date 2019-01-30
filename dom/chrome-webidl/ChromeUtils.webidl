@@ -368,18 +368,6 @@ partial namespace ChromeUtils {
   [Throws]
   Promise<sequence<IOActivityDataDictionary>> requestIOActivity();
 
-  /**
-   * Returns the BrowsingContext referred by the given id.
-   */
-  [ChromeOnly]
-  BrowsingContext? getBrowsingContext(unsigned long long id);
-
-  /**
-   * Returns all the root BrowsingContexts.
-   */
-  [ChromeOnly]
-  sequence<BrowsingContext> getRootBrowsingContexts();
-
   [ChromeOnly, Throws]
   boolean hasReportingHeaderForOrigin(DOMString aOrigin);
 

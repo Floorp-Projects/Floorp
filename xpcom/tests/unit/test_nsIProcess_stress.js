@@ -21,5 +21,4 @@ function run_test() {
     // errors during the test.
     tm.spinEventLoopUntilEmpty();
   }
-
 }

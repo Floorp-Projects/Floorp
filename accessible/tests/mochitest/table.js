@@ -167,7 +167,6 @@ function testTableStruct(aIdentifier, aCellsArray, aColHeaderType,
     for (let colIdx = 0; colIdx < colsCount; colIdx++) {
       let celltype = aCellsArray[rowIdx][colIdx];
       if (celltype & kOrigin) {
-
         // table getRowExtentAt
         var rowExtent = table.getRowExtentAt(rowIdx, colIdx);
         let idx;
@@ -239,7 +238,6 @@ function testTableIndexes(aIdentifier, aIdxes) {
          id + ": Can't get cell accessible at row = " + rowIdx + ", column = " + colIdx);
 
       if (idx != -1) {
-
         // getRowIndexAt
         var origRowIdx = rowIdx;
         while (origRowIdx > 0 &&
@@ -285,7 +283,6 @@ function testTableIndexes(aIdentifier, aIdxes) {
            id + ": column  for index " + idx + " is not correct (getRowAndColumnIndicesAt)");
 
         if (cellAcc) {
-
           var cellId = prettyName(cellAcc);
           cellAcc = getAccessible(cellAcc, [nsIAccessibleTableCell]);
 
@@ -308,7 +305,6 @@ function testTableIndexes(aIdentifier, aIdxes) {
           try {
             is(cellAcc.table, tableAcc,
                cellId + ": wrong table accessible for the cell.");
-
           } catch (e) {
             ok(false,
                cellId + ": can't get table accessible from the cell.");
@@ -563,24 +559,20 @@ function testSelectTableColumn(aIdentifier, aColIdx, aCellsArray) {
         if (!(cellState & kSpanned)) {
           // Select the cell if it is origin.
           aCellsArray[rowIdx][colIdx] = true;
-
         } else {
           // If the cell is spanned then search origin cell and select it.
           var [origRowIdx, origColIdx] = getOrigRowAndColumn(aCellsArray,
                                                              rowIdx, colIdx);
           aCellsArray[origRowIdx][origColIdx] = true;
         }
-
       } else if (!(cellState & kSpanned)) { // unselect other columns
         if (colIdx > aColIdx) {
           // Unselect the cell if traversed column index is greater than column
           // index of target cell.
           aCellsArray[rowIdx][colIdx] = false;
-
         } else if (!(aCellsArray[rowIdx][aColIdx] & kColSpanned)) {
           // Unselect the cell if the target cell is not row spanned.
           aCellsArray[rowIdx][colIdx] = false;
-
         } else {
           // Unselect the cell if it is not spanned to the target cell.
           for (var spannedColIdx = colIdx + 1; spannedColIdx < aColIdx;
@@ -641,7 +633,6 @@ function testSelectTableRow(aIdentifier, aRowIdx, aCellsArray) {
         if (!(cellState & kSpanned)) {
           // Select the cell if it is origin.
           aCellsArray[rowIdx][colIdx] = true;
-
         } else {
           // If the cell is spanned then search origin cell and select it.
           var [origRowIdx, origColIdx] = getOrigRowAndColumn(aCellsArray,
@@ -649,17 +640,14 @@ function testSelectTableRow(aIdentifier, aRowIdx, aCellsArray) {
 
           aCellsArray[origRowIdx][origColIdx] = true;
         }
-
       } else if (!(cellState & kSpanned)) { // unselect other rows
         if (rowIdx > aRowIdx) {
           // Unselect the cell if traversed row index is greater than row
           // index of target cell.
           aCellsArray[rowIdx][colIdx] = false;
-
         } else if (!(aCellsArray[aRowIdx][colIdx] & kRowSpanned)) {
           // Unselect the cell if the target cell is not row spanned.
           aCellsArray[rowIdx][colIdx] = false;
-
         } else {
           // Unselect the cell if it is not spanned to the target cell.
           for (var spannedRowIdx = rowIdx + 1; spannedRowIdx < aRowIdx;

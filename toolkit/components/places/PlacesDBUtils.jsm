@@ -949,7 +949,6 @@ var PlacesDBUtils = {
       await db.execute(query, params, r => {
         logs.push(`Trigger ${r.getResultByIndex(0)}`);
       });
-
     } catch (ex) {
       throw new Error("Unable to collect stats.");
     }

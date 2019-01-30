@@ -16,7 +16,6 @@ if (typeof Components != "undefined") {
   throw new Error("osfile_shared_front.jsm cannot be used from the main thread");
 }
 (function(exports) {
-
 var SharedAll =
   require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 var Path = require("resource://gre/modules/osfile/ospath.jsm");
@@ -86,7 +85,6 @@ AbstractFile.prototype = {
       return buffer;
     }
       return buffer.subarray(0, pos);
-
   },
 
   /**
@@ -411,7 +409,6 @@ AbstractFile.read = function read(path, bytes, options = {}) {
  */
 AbstractFile.writeAtomic =
      function writeAtomic(path, buffer, options = {}) {
-
   // Verify that path is defined and of the correct type
   if (typeof path != "string" || path == "") {
     throw new TypeError("File path should be a (non-empty) string");

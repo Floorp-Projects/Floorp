@@ -53,7 +53,6 @@ add_task(async function() {
 
     // check if the uncommon warning checkbox has updated
     is(blockUncommon.hasAttribute("disabled"), val, "block uncommon checkbox is set correctly");
-
   }
 
   await checkPrefSwitch(true);
@@ -106,7 +105,6 @@ add_task(async function() {
     let sortedMalware = malwareTable.slice(0);
     sortedMalware.sort();
     Assert.deepEqual(malwareTable, sortedMalware, "malware table has been sorted");
-
   }
 
   await checkPrefSwitch(true, true, false);
@@ -117,5 +115,4 @@ add_task(async function() {
   await checkPrefSwitch(false, true, true);
   await checkPrefSwitch(true, false, true);
   await checkPrefSwitch(false, false, true);
-
 });

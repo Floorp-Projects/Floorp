@@ -86,7 +86,6 @@ var waitForLoadWithFlags = async function(uri, flags = Ci.nsIWebNavigation.LOAD_
 
   await BrowserTestUtils.browserStopped(gBrowser);
   if (!(flags & Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY)) {
-
     if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY) {
       gExpectedHistory.entries.pop();
     } else {

@@ -1392,7 +1392,6 @@ Engine.prototype = {
       };
       request.open("GET", aURL, true);
       request.send();
-
     });
   },
 
@@ -1765,7 +1764,6 @@ Engine.prototype = {
       LOG("_init: Initing search plugin from " + this._location);
 
       this._parse();
-
     } else {
       Cu.reportError("Invalid search plugin due to namespace not matching.");
       FAIL(this._location + " is not a valid search plugin.", Cr.NS_ERROR_FILE_CORRUPTED);
@@ -2917,7 +2915,6 @@ SearchService.prototype = {
       // NS_APP_DISTRIBUTION_SEARCH_DIR_LIST is defined by each app
       // so this throws during unit tests (but not xpcshell tests).
       locations = [];
-
     }
     for (let dir of locations) {
       if (dir.directoryEntries.nextFile)
@@ -4661,7 +4658,6 @@ SearchService.prototype = {
 
       // Schedule the next update
       engineUpdateService.scheduleNextUpdate(engine);
-
     } // end engine iteration
   },
 

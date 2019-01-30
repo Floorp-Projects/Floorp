@@ -69,7 +69,6 @@ function run_test() {
     }
 
     tests.forEach(testAutoConfig);
-
   } finally {
     try {
       let autoConfigJS = defaultPrefD.clone();

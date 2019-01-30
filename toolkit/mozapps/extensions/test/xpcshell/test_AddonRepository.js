@@ -131,7 +131,6 @@ function check_results(aActualAddons, aExpectedAddons) {
       do_throw(aActualAddon.id + " - " + aActualAddon.description);
     if (aActualAddon.name != "PASS")
       do_throw(aActualAddon.id + " - invalid add-on name " + aActualAddon.name);
-
   });
 }
 

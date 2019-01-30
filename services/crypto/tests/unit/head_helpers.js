@@ -7,7 +7,6 @@ try {
   // eslint-disable-next-line mozilla/use-services
   Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
 } catch (ex) {
-
 // Make sure to provide the right OS so crypto loads the right binaries
 var OS = "XPCShell";
 if (mozinfo.os == "win")

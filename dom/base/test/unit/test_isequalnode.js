@@ -22,7 +22,6 @@ function run_test() {
 
   // XXX should Node.isEqualNode(null) throw or return false?
   // test_isEqualNode_null();
-
 }
 
 // TEST CODE

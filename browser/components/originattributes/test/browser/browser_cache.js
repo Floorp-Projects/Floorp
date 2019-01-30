@@ -131,7 +131,6 @@ async function doInit(aMode) {
 // and assign a random suffix to their URL to isolate them across different
 // test runs.
 async function doTest(aBrowser) {
-
   let argObj = {
     randomSuffix,
     urlPrefix: TEST_DOMAIN + TEST_PATH,

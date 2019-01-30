@@ -157,7 +157,6 @@ async function audio_competing_for_active_agent(url, browser) {
                                    check_audio2_suspended);
   await ContentTask.spawn(browser, true /* expect for pause */,
                                    check_audio2_pause_state);
-
 }
 
 add_task(async function setup_test_preference() {

@@ -19,11 +19,9 @@ function makeTestURL() {
 }
 
 add_task(async function() {
-
   const tabOptions = {gBrowser, url: makeTestURL()};
 
   await BrowserTestUtils.withNewTab(tabOptions, async function(browser) {
-
     let manifest = await Manifests.getManifest(browser, manifestUrl);
     is(manifest.installed, false, "We havent installed this manifest yet");
 
@@ -44,5 +42,4 @@ add_task(async function() {
     foundManifest = Manifests.findManifestUrl("http://example.org/");
     is(foundManifest, null, "Does not find manifests outside scope");
   });
-
 });

@@ -341,7 +341,6 @@ var gGestureSupport = {
                                   aEvent, aEvent.mozInputSource);
         node.dispatchEvent(cmdEvent);
       }
-
     } else {
       goDoCommand(aCommand);
     }

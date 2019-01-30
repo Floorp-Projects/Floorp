@@ -59,7 +59,6 @@ add_task(async function test_wipeServer_list_success() {
     _("wipeServer stopped deleting after encountering an error with the 'petrol' collection, thus only 'steam' has been deleted.");
     Assert.ok(steam_coll.deleted);
     Assert.ok(diesel_coll.deleted);
-
   } finally {
     await promiseStopServer(server);
     Svc.Prefs.resetBranch("");
@@ -100,7 +99,6 @@ add_task(async function test_wipeServer_list_503() {
     _("wipeServer stopped deleting after encountering an error with the 'petrol' collection, thus only 'steam' has been deleted.");
     Assert.ok(steam_coll.deleted);
     Assert.ok(!diesel_coll.deleted);
-
   } finally {
     await promiseStopServer(server);
     Svc.Prefs.resetBranch("");

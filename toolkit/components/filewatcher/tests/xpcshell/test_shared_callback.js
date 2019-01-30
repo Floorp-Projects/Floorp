@@ -17,7 +17,6 @@ function run_test() {
  * change callback.
  */
 add_task(async function test_watch_with_shared_callback() {
-
   // Create and watch two sub-directories of the profile directory so we don't
   // catch notifications we're not interested in (i.e. "startupCache").
   let watchedDirs =

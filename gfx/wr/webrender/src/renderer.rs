@@ -58,6 +58,7 @@ use internal_types::{CacheTextureId, DebugOutput, FastHashMap, LayerIndex, Rende
 use internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use internal_types::{RenderTargetInfo, SavedTargetIndex};
 use malloc_size_of::MallocSizeOfOps;
+use picture::RecordedDirtyRegion;
 use prim_store::DeferredResolve;
 use profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
@@ -1804,6 +1805,7 @@ impl Renderer {
             dual_source_blending_is_supported: ext_dual_source_blending,
             chase_primitive: options.chase_primitive,
             enable_picture_caching: options.enable_picture_caching,
+            testing: options.testing,
         };
 
         let device_pixel_ratio = options.device_pixel_ratio;
@@ -2454,7 +2456,7 @@ impl Renderer {
     pub fn render(
         &mut self,
         framebuffer_size: DeviceIntSize,
-    ) -> Result<RendererStats, Vec<RendererError>> {
+    ) -> Result<RenderResults, Vec<RendererError>> {
         self.framebuffer_size = Some(framebuffer_size);
 
         let result = self.render_impl(Some(framebuffer_size));
@@ -2480,14 +2482,14 @@ impl Renderer {
     fn render_impl(
         &mut self,
         framebuffer_size: Option<DeviceIntSize>,
-    ) -> Result<RendererStats, Vec<RendererError>> {
+    ) -> Result<RenderResults, Vec<RendererError>> {
         profile_scope!("render");
+        let mut results = RenderResults::default();
         if self.active_documents.is_empty() {
             self.last_time = precise_time_ns();
-            return Ok(RendererStats::empty());
+            return Ok(results);
         }
 
-        let mut stats = RendererStats::empty();
         let mut frame_profiles = Vec::new();
         let mut profile_timers = RendererProfileTimers::new();
 
@@ -2576,12 +2578,16 @@ impl Renderer {
                     framebuffer_size,
                     clear_depth_value.is_some(),
                     cpu_frame_id,
-                    &mut stats
+                    &mut results.stats
                 );
 
                 if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
                     frame_profiles.push(frame.profile_counters.clone());
                 }
+
+                let dirty_regions =
+                    mem::replace(&mut frame.recorded_dirty_regions, Vec::new());
+                results.recorded_dirty_regions.extend(dirty_regions);
             }
 
             self.unlock_external_images();
@@ -2664,13 +2670,13 @@ impl Renderer {
             self.device.echo_driver_messages();
         }
 
-        stats.texture_upload_kb = self.profile_counters.texture_data_uploaded.get();
+        results.stats.texture_upload_kb = self.profile_counters.texture_data_uploaded.get();
         self.backend_profile_counters.reset();
         self.profile_counters.reset();
         self.profile_counters.frame_counter.inc();
-        stats.resource_upload_time = self.resource_upload_time;
+        results.stats.resource_upload_time = self.resource_upload_time;
         self.resource_upload_time = 0;
-        stats.gpu_cache_upload_time = self.gpu_cache_upload_time;
+        results.stats.gpu_cache_upload_time = self.gpu_cache_upload_time;
         self.gpu_cache_upload_time = 0;
 
         profile_timers.cpu_time.profile(|| {
@@ -2686,7 +2692,7 @@ impl Renderer {
         }
 
         if self.renderer_errors.is_empty() {
-            Ok(stats)
+            Ok(results)
         } else {
             Err(mem::replace(&mut self.renderer_errors, Vec::new()))
         }
@@ -4789,6 +4795,7 @@ pub struct RendererOptions {
     pub support_low_priority_transactions: bool,
     pub namespace_alloc_by_client: bool,
     pub enable_picture_caching: bool,
+    pub testing: bool,
 }
 
 impl Default for RendererOptions {
@@ -4826,6 +4833,7 @@ impl Default for RendererOptions {
             support_low_priority_transactions: false,
             namespace_alloc_by_client: false,
             enable_picture_caching: false,
+            testing: false,
         }
     }
 }
@@ -4842,11 +4850,11 @@ impl DebugServer {
     pub fn send(&mut self, _: String) {}
 }
 
-// Some basic statistics about the rendered scene
-// that we can use in wrench reftests to ensure that
-// tests are batching and/or allocating on render
-// targets as we expect them to.
+/// Some basic statistics about the rendered scene, used in Gecko, as
+/// well as in wrench reftests to ensure that tests are batching and/or
+/// allocating on render targets as we expect them to.
 #[repr(C)]
+#[derive(Debug, Default)]
 pub struct RendererStats {
     pub total_draw_calls: usize,
     pub alpha_target_count: usize,
@@ -4856,20 +4864,13 @@ pub struct RendererStats {
     pub gpu_cache_upload_time: u64,
 }
 
-impl RendererStats {
-    pub fn empty() -> Self {
-        RendererStats {
-            total_draw_calls: 0,
-            alpha_target_count: 0,
-            color_target_count: 0,
-            texture_upload_kb: 0,
-            resource_upload_time: 0,
-            gpu_cache_upload_time: 0,
-        }
-    }
+/// Return type from render(), which contains some repr(C) statistics as well as
+/// some non-repr(C) data.
+#[derive(Debug, Default)]
+pub struct RenderResults {
+    pub stats: RendererStats,
+    pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
 }
-
-
 
 #[cfg(any(feature = "capture", feature = "replay"))]
 #[cfg_attr(feature = "capture", derive(Serialize))]

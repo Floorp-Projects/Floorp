@@ -168,7 +168,6 @@ add_task(async function test_processIncoming_error() {
       name: "httperror",
       code: 500,
     });
-
   } finally {
     await store.wipe();
     await cleanAndGo(engine, server);
@@ -210,7 +209,6 @@ add_task(async function test_uploading() {
     equal(ping.engines[0].name, "bookmarks");
     equal(ping.engines[0].outgoing.length, 1);
     ok(!!ping.engines[0].incoming);
-
   } finally {
     // Clean up.
     await store.wipe();
@@ -267,7 +265,6 @@ add_task(async function test_upload_failed() {
     equal(ping.engines.length, 1);
     equal(ping.engines[0].incoming.reconciled, 1);
     deepEqual(ping.engines[0].outgoing, [{ sent: 2, failed: 2 }]);
-
   } finally {
     await cleanAndGo(engine, server);
     await engine.finalize();
@@ -349,7 +346,6 @@ add_task(async function test_sync_partialUpload() {
     });
     ok(!ping.engines[0].outgoing);
     deepEqual(ping.engines[0].failureReason, uploadFailureError);
-
   } finally {
     await cleanAndGo(engine, server);
     await engine.finalize();
@@ -628,7 +624,6 @@ add_task(async function test_discarding() {
 
   let server;
   try {
-
     let handlers = {
       "/1.1/johndoe/info/collections": helper.handler,
       "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),

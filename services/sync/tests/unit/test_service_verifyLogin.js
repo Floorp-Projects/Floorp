@@ -92,7 +92,6 @@ add_task(async function test_verifyLogin() {
     Assert.equal(false, (await Service.verifyLogin()));
     Assert.equal(Service.status.service, LOGIN_FAILED);
     Assert.equal(Service.status.login, LOGIN_FAILED_NETWORK_ERROR);
-
   } finally {
     Svc.Prefs.resetBranch("");
     server.stop(do_test_finished);

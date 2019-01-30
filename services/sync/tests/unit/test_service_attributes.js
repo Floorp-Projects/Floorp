@@ -30,7 +30,6 @@ add_task(async function test_urls() {
                  "http://weave.cluster/1.1/johndoe/storage/");
     Assert.equal(Service.metaURL,
                  "http://weave.cluster/1.1/johndoe/storage/meta/global");
-
   } finally {
     Svc.Prefs.resetBranch("");
   }

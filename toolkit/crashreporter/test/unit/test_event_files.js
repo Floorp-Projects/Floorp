@@ -32,7 +32,6 @@ add_task(async function test_main_process_crash() {
         cm.aggregateEventsFiles().then(resolve, reject);
       },
       true);
-
   });
   Assert.equal(count, 1, "A single crash event file was seen.");
   let crashes = await cm.getCrashes();

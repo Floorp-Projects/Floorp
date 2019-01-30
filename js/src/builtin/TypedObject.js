@@ -862,7 +862,6 @@ function ReduceTypedSeqImpl(array, outputType, func, initial) {
 
     for (var i = start; i < array.length; i++)
       value = outputType(func(value, array[i]));
-
   } else {
     if (initial === undefined) {
       start = 1;

@@ -126,7 +126,6 @@ function testInit() {
 }
 
 function takeInstrumentation() {
-
   let instrumentData = {
     elements: {},
   };
@@ -1127,7 +1126,6 @@ Tester.prototype = {
                   stack: (typeof ex == "object" && "stack" in ex) ? ex.stack : null,
                   allowFailure: currentTest.allowFailure,
                 }));
-
             }
             PromiseTestUtils.assertNoUncaughtRejections();
             this.SimpleTest.info("Leaving test " + task.name);

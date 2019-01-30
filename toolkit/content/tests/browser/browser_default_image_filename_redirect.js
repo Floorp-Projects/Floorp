@@ -25,7 +25,6 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(URL_FIREBIRD,
   async function(browser) {
-
     // Click image to show context menu.
     let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown");
     await BrowserTestUtils.synthesizeMouseAtCenter("img",

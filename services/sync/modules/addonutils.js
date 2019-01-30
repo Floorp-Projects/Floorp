@@ -246,7 +246,6 @@ AddonUtilsInternal.prototype = {
 
       let params = addon.sourceURI.query.split("&").map(
         function rewrite(param) {
-
         if (param.indexOf("src=") == 0) {
           return "src=sync";
         }

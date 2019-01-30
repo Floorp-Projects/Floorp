@@ -250,7 +250,6 @@ Tart.prototype = {
         var paints = {};
         return window.windowUtils
                      .stopFrameTimeRecording(recordingHandle, paints);
-
       }
 
       _abortRecording = true;
@@ -357,7 +356,6 @@ Tart.prototype = {
         detector.arm(transEnd, self._win);
       });
     }, preWaitMs);
-
   },
 
 
@@ -415,7 +413,6 @@ Tart.prototype = {
   },
 
   _startTest() {
-
     // Save prefs and states which will change during the test, to get restored when done.
     var origPreload =       Services.prefs.getBoolPref("browser.newtab.preload");
     var origDpi =           Services.prefs.getCharPref("layout.css.devPixelsPerPx");

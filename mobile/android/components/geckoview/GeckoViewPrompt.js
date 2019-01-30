@@ -398,7 +398,6 @@ PromptDelegate.prototype = {
         winUtils.enterModalState();
       }
       return true;
-
     } catch (ex) {
       Cu.reportError("Failed to change modal state: " + ex);
     }

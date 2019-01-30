@@ -7,7 +7,6 @@
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
 {
-
 const cachedFragments = {
   get entities() {
     return [
@@ -198,5 +197,4 @@ class MozInputBox extends MozXULElement {
 }
 
 customElements.define("moz-input-box", MozInputBox);
-
 }

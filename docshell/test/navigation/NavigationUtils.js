@@ -99,7 +99,6 @@ function isInaccessible(wnd, message) {
 // Replacing the getService with Services.ww format causes test errors, so ignore for now
 /* eslint-disable mozilla/use-services */
 function xpcEnumerateContentWindows(callback) {
-
   var Ci = SpecialPowers.Ci;
   var ww = SpecialPowers.Cc["@mozilla.org/embedcomp/window-watcher;1"]
                         .getService(Ci.nsIWindowWatcher);
@@ -185,7 +184,6 @@ function xpcWaitForFinishedFrames(callback, numFrames) {
         (win.document.body.textContent.trim() == body ||
          win.document.body.textContent.trim() == popup_body) &&
         win.document.readyState == "complete") {
-
       var windowId = win.windowUtils.outerWindowID;
       if (!contains(windowId, finishedWindows)) {
         finishedWindows.push(windowId);

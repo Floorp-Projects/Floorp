@@ -229,7 +229,6 @@ add_task(async function test_tracking() {
     createBmk();
     await verifyTrackedCount(3);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
-
   } finally {
     _("Clean up.");
     await cleanup();

@@ -555,7 +555,6 @@ function do_single_test_run() {
              inWhitelist: inWhitelist,
              affectedByDNSForSingleHosts: affectedByDNSForSingleHosts,
            } of relevantTests) {
-
     // Explicitly force these into a boolean
     expectKeywordLookup = !!expectKeywordLookup;
     expectProtocolChange = !!expectProtocolChange;

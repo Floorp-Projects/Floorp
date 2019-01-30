@@ -225,7 +225,6 @@ function testSpecFragments() {
   };
 
   doTest([update], assertions);
-
 }
 
 // Test http://code.google.com/p/google-safe-browsing/wiki/Protocolv2Spec
@@ -260,7 +259,6 @@ function testMoreSpecFragments() {
   };
 
   doTest([update], assertions);
-
 }
 
 function testFalsePositives() {

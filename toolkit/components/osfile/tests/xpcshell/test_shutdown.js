@@ -10,7 +10,6 @@ add_task(function init() {
  * Test logging of file descriptors leaks.
  */
 add_task(async function system_shutdown() {
-
   // Test that unclosed files cause warnings
   // Test that unclosed directories cause warnings
   // Test that closed files do not cause warnings

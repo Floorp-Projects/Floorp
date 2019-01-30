@@ -19,7 +19,6 @@ SpecialPowers.pushPrefEnv({"set": [
   ["network.disable.ipc.security", true],
   ["dom.ipc.tabs.disabled", false],
 ]}, function() {
-
   var iframe =  document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
   iframe.setAttribute("remote", "true");
   SpecialPowers.wrap(iframe).mozbrowser = true;

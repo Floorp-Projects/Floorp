@@ -159,7 +159,6 @@ add_task(async function test_bookmark_createRecord() {
     let record = await store.createRecord(bmk1.guid);
     Assert.equal(record.title, "");
     Assert.equal(record.keyword, null);
-
   } finally {
     _("Clean up.");
     await store.wipe();
@@ -233,7 +232,6 @@ add_task(async function test_folder_createRecord() {
 
     _("Verify the folder's children. Ensures that the bookmarks were given GUIDs.");
     Assert.deepEqual(record.children, [bmk1.guid, bmk2.guid]);
-
   } finally {
     _("Clean up.");
     await store.wipe();
@@ -263,7 +261,6 @@ add_task(async function test_deleted() {
 
     let newrec = await store.createRecord(bmk1.guid);
     Assert.equal(newrec.deleted, true);
-
   } finally {
     _("Clean up.");
     await store.wipe();
@@ -350,7 +347,6 @@ add_task(async function test_move_order() {
     let newChildIds = await PlacesSyncUtils.bookmarks.fetchChildRecordIds(
       "toolbar");
     Assert.deepEqual(newChildIds, [bmk2.guid, bmk1.guid]);
-
   } finally {
     await tracker.stop();
     _("Clean up.");
@@ -364,7 +360,6 @@ add_task(async function test_orphan() {
   let store = engine._store;
 
   try {
-
     _("Add a new bookmark locally.");
     let bmk1 = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -388,7 +383,6 @@ add_task(async function test_orphan() {
     let orphanAnno = PlacesUtils.annotations.getItemAnnotation(bmk1_id,
       PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO);
     Assert.equal(orphanAnno, "non-existent");
-
   } finally {
     _("Clean up.");
     await store.wipe();
@@ -421,7 +415,6 @@ add_task(async function test_reparentOrphans() {
     let orphanAnno = PlacesUtils.annotations.getItemAnnotation(folder1_id,
       PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO);
     Assert.equal(orphanAnno, folder1.guid);
-
   } finally {
     _("Clean up.");
     await store.wipe();
@@ -538,7 +531,6 @@ add_task(async function test_delete_buffering() {
 
     tbItem = await PlacesUtils.bookmarks.fetch(tbRecord.id);
     equal(tbItem.parentGuid, PlacesUtils.bookmarks.toolbarGuid);
-
   } finally {
     _("Clean up.");
     await store.wipe();

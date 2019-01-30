@@ -114,7 +114,6 @@ add_task(async function test_BHRObserver() {
     Object.keys(hang.annotations).forEach(key => {
       equal(typeof hang.annotations[key], "string");
     });
-
   });
 
   // Check that the telemetry service collected pings which make sense

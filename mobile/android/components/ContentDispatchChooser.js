@@ -46,13 +46,11 @@ ContentDispatchChooser.prototype =
     } catch (e) { /* it's OK to not have a window */ }
 
     if (!aURI.schemeIs("content")) {
-
       // The current list is based purely on the scheme. Redo the query using the url to get more
       // specific results.
       aHandler = this.protoSvc.getProtocolHandlerInfoFromOS(aURI.spec, {});
 
       if (aHandler.possibleApplicationHandlers.length > 1) {
-
         // The first handler in the set is the Android Application Chooser (which will fall back to a default if one is set)
         // If we have more than one option, let the OS handle showing a list (if needed).
         aHandler.launchWithURI(aURI, aWindowContext);
@@ -76,7 +74,6 @@ ContentDispatchChooser.prototype =
     EventDispatcher.instance.sendRequestForResult(msg).then(() => {
       // Java opens an app on success: take no action.
       this._closeBlankWindow(window);
-
     }, (data) => {
       if (data.isFallback) {
         // We always want to open a fallback url

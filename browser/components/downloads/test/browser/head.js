@@ -41,7 +41,6 @@ function promisePanelOpened() {
   }
 
   return new Promise(resolve => {
-
     // Hook to wait until the panel is shown.
     let originalOnPopupShown = DownloadsPanel.onPopupShown;
     DownloadsPanel.onPopupShown = function() {
@@ -52,7 +51,6 @@ function promisePanelOpened() {
       // processing during the DOM event handler itself.
       setTimeout(resolve, 0);
     };
-
   });
 }
 

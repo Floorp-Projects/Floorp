@@ -474,7 +474,6 @@ CollectionKeyManager.prototype = {
   // Take the fetched info/collections WBO, checking the change
   // time of the crypto collection.
   updateNeeded(info_collections) {
-
     this._log.info("Testing for updateNeeded. Last modified: " + this.lastModified);
 
     // No local record of modification time? Need an update.
@@ -502,7 +501,6 @@ CollectionKeyManager.prototype = {
   // * Otherwise, return false -- we were up-to-date.
   //
   setContents: function setContents(payload, modified) {
-
     let self = this;
 
     this._log.info("Setting collection keys contents. Our last modified: " +

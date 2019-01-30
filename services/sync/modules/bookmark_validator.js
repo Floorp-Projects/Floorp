@@ -966,7 +966,6 @@ class BookmarkValidator {
       recordCount: serverRecordCount,
     };
   }
-
 }
 
 BookmarkValidator.prototype.version = BOOKMARK_VALIDATOR_VERSION;

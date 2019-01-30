@@ -22,7 +22,6 @@ function autoplayBlockedIcon() {
 }
 
 add_task(async function testMainViewVisible() {
-
   Services.prefs.setIntPref("media.autoplay.default", Ci.nsIAutoplay.ALLOWED);
 
   await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function() {

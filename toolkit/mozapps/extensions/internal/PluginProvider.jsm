@@ -454,7 +454,6 @@ PluginWrapper.prototype = {
       return permissions;
     }
     if (!this.appDisabled) {
-
       if (this.userDisabled !== true)
         permissions |= AddonManager.PERM_CAN_DISABLE;
 

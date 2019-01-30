@@ -35,7 +35,6 @@ add_task(async function v4_upgrade() {
   });
 
   try {
-
     Service.status.resetSync();
 
     _("Logging in.");
@@ -155,7 +154,6 @@ add_task(async function v4_upgrade() {
 
     // Clean up.
     await Service.startOver();
-
   } finally {
     Svc.Prefs.resetBranch("");
     await promiseStopServer(server);
@@ -237,7 +235,6 @@ add_task(async function v5_upgrade() {
 
     // Clean up.
     await Service.startOver();
-
   } finally {
     Svc.Prefs.resetBranch("");
     await promiseStopServer(server);

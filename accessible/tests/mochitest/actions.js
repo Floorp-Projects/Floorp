@@ -51,7 +51,6 @@ function testActions(aArray) {
   gActionsQueue = new eventQueue();
 
   for (var idx = 0; idx < aArray.length; idx++) {
-
     var actionObj = aArray[idx];
     var accOrElmOrID = actionObj.ID;
     var actionIndex = actionObj.actionIndex;

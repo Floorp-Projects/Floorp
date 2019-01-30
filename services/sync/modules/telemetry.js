@@ -792,7 +792,6 @@ class SyncTelemetryImpl {
       error: cleanErrorMessage(msg),
     };
   }
-
 }
 
 /* global SyncTelemetry */

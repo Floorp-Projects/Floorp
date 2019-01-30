@@ -508,7 +508,6 @@ RESTRequest.prototype = {
 
   /** nsIChannelEventSink **/
   asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
-
     let oldSpec = (oldChannel && oldChannel.URI) ? oldChannel.URI.spec : "<undefined>";
     let newSpec = (newChannel && newChannel.URI) ? newChannel.URI.spec : "<undefined>";
     this._log.debug("Channel redirect: " + oldSpec + ", " + newSpec + ", " + flags);

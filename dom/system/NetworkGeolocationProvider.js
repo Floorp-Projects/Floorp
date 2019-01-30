@@ -309,7 +309,6 @@ WifiGeoPositionProvider.prototype = {
   },
 
   onChange(accessPoints) {
-
     // we got some wifi data, rearm the timer.
     this.resetTimer();
 

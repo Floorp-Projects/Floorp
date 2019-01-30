@@ -104,7 +104,6 @@ var dirname = function(path, options) {
       return ".";
     }
     return path;
-
   }
 
   // Ignore any occurrence of "\\: immediately before that one

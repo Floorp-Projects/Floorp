@@ -326,7 +326,6 @@ function isInResult(aQueryData, aRoot) {
  * result set.
  */
 function displayResultSet(aRoot) {
-
   var wasOpen = aRoot.containerOpen;
   if (!wasOpen)
     aRoot.containerOpen = true;

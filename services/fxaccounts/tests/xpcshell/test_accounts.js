@@ -1109,7 +1109,6 @@ add_test(function test_getOAuthToken() {
       );
     }
   );
-
 });
 
 add_test(function test_getOAuthTokenScoped() {
@@ -1142,7 +1141,6 @@ add_test(function test_getOAuthTokenScoped() {
       );
     }
   );
-
 });
 
 add_task(async function test_getOAuthTokenCached() {

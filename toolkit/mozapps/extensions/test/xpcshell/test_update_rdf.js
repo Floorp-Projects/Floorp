@@ -57,7 +57,6 @@ add_task(async function test_update_rdf_to_json() {
       deepEqual(rdfJSON.addons[addon], json.addons[addon],
                 `Should have the same entry for add-on ${addon}`);
     }
-
   }
 });
 

@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 { // start private scope for gBrowser
-
 /**
  * A set of known icons to use for internal pages. These are hardcoded so we can
  * start loading them faster than ContentLinkHandler would normally find them.
@@ -2430,7 +2429,6 @@ window._gBrowser = {
             ((openerTab &&
               Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) ||
              Services.prefs.getBoolPref("browser.tabs.insertAfterCurrent"))) {
-
           let lastRelatedTab = openerTab && this._lastRelatedTabMap.get(openerTab);
           let previousTab = (lastRelatedTab || openerTab || this.selectedTab);
           if (previousTab.multiselected) {
@@ -5008,7 +5006,6 @@ class TabProgressListener {
       }
     } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
                aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-
       let modifiedAttrs = [];
       if (this.mTab.hasAttribute("busy")) {
         this.mTab.removeAttribute("busy");
@@ -5248,7 +5245,6 @@ TabProgressListener.prototype.QueryInterface = ChromeUtils.generateQI(
   ["nsIWebProgressListener",
    "nsIWebProgressListener2",
    "nsISupportsWeakReference"]);
-
 } // end private scope for gBrowser
 
 var StatusPanel = {

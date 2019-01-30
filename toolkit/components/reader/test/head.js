@@ -54,7 +54,6 @@ function promiseTabLoadEvent(tab, url) {
 function is_element_visible(element, msg) {
   isnot(element, null, "Element should not be null, when checking visibility");
   ok(BrowserTestUtils.is_visible(element), msg || "Element should be visible");
-
 }
 function is_element_hidden(element, msg) {
   isnot(element, null, "Element should not be null, when checking visibility");

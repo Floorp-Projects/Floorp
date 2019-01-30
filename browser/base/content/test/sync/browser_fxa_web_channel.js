@@ -45,7 +45,6 @@ var gTests = [
   {
     desc: "fxa web channel - login messages should notify the fxAccounts object",
     async run() {
-
       let promiseLogin = new Promise((resolve, reject) => {
         let login = (accountData) => {
           Assert.equal(typeof accountData.authAt, "number");
@@ -83,7 +82,6 @@ var gTests = [
       let properUrl = TEST_BASE_URL + "?can_link_account";
 
       let promiseEcho = new Promise((resolve, reject) => {
-
         let webChannelOrigin = Services.io.newURI(properUrl);
         // responses sent to content are echoed back over the
         // `fxaccounts_webchannel_response_echo` channel. Ensure the

@@ -18,7 +18,6 @@ var Snackbars = {
   LENGTH_SHORT: LENGTH_SHORT,
 
   show: function(aMessage, aDuration, aOptions) {
-
     // Takes care of the deprecated toast calls
     if (typeof aDuration === "string") {
       [aDuration, aOptions] = migrateToastIfNeeded(aDuration, aOptions);

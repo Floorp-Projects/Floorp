@@ -321,9 +321,14 @@ class UrlbarView {
                                       [result.payload.engine], 1);
         break;
       default:
-        secondary.classList.add("urlbarView-url");
-        this._addTextContentWithHighlights(secondary, result.payload.url || "",
-                                           result.payloadHighlights.url || []);
+        if (resultIndex == 0) {
+          secondary.classList.add("urlbarView-action");
+          secondary.textContent = bundle.GetStringFromName("visit");
+        } else {
+          secondary.classList.add("urlbarView-url");
+          this._addTextContentWithHighlights(secondary, result.payload.url || "",
+                                             result.payloadHighlights.url || []);
+        }
         break;
     }
     content.appendChild(secondary);

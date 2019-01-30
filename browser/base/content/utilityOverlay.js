@@ -936,7 +936,6 @@ function makeURLAbsolute(aBase, aUrl) {
  *        parameters passed to openLinkIn
  */
 function openNewTabWith(aURL, aShiftKey, aParams = {}) {
-
   // As in openNewWindowWith(), we want to pass the charset of the
   // current document over to a new tab.
   if (document.documentElement.getAttribute("windowtype") == "navigator:browser")

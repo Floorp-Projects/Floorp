@@ -37,7 +37,6 @@ PresentationRequestUIGlue.prototype = {
     }
 
     return new Promise((aResolve, aReject) => {
-
       let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
                             .getService(Ci.nsIUUIDGenerator);
       let requestId = uuidGenerator.generateUUID().toString();

@@ -248,6 +248,5 @@ add_task(async function test_frecency() {
     };
 
     controller.startSearch(searchTerm);
-
   });
 });

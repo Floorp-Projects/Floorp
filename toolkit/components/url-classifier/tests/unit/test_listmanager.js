@@ -289,7 +289,6 @@ function run_test() {
 
       info("Wait for all sever-involved tests to be done ...");
     });
-
   });
 
   gHttpServV4.start(5555);

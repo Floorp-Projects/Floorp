@@ -786,7 +786,6 @@ class PluginChild extends ActorChild {
    *   True if the plugin is a descendant of the full screen DOM element, false otherwise.
    **/
   isWithinFullScreenElement(fullScreenElement, domElement) {
-
     /**
      * Traverses down iframes until it find a non-iframe full screen DOM element.
      * @param fullScreenIframe

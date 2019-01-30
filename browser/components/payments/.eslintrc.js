@@ -60,7 +60,6 @@ module.exports = {
     "no-use-before-define": ["error", {
       functions: false,
     }],
-    "padded-blocks": ["error", "never"],
     radix: "error",
     "semi-spacing": ["error", {"before": false, "after": true}],
     "space-in-parens": ["error", "never"],

@@ -310,7 +310,6 @@ TaskImpl.prototype = {
    *        Resolution result or rejection exception, if any.
    */
   _run: function TaskImpl_run(aSendResolved, aSendValue) {
-
     try {
       gCurrentTask = this;
 
@@ -412,17 +411,14 @@ TaskImpl.prototype = {
    *        The uncaught exception to handle.
    */
   _handleException: function TaskImpl_handleException(aException) {
-
     gCurrentTask = this;
 
     if (aException && typeof aException == "object" && "stack" in aException) {
-
       let stack = aException.stack;
 
       if (gMaintainStack &&
           aException._capturedTaskStack != this._stack &&
           typeof stack == "string") {
-
         // Rewrite the stack for more readability.
 
         let bottomStack = this._stack;
@@ -440,7 +436,6 @@ TaskImpl.prototype = {
 
       if ("name" in aException &&
           ERRORS_TO_REPORT.includes(aException.name)) {
-
         // We suspect that the exception is a programmer error, so we now
         // display it using dump().  Note that we do not use Cu.reportError as
         // we assume that this is a programming error, so we do not want end

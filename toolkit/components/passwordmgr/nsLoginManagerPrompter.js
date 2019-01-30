@@ -584,7 +584,6 @@ LoginManagerPrompter.prototype = {
             !(aAuthInfo.flags & Ci.nsIAuthInformation.PREVIOUS_FAILED) &&
             Services.prefs.getBoolPref("signon.autologin.proxy") &&
             !this._inPrivateBrowsing) {
-
           this.log("Autologin enabled, skipping auth prompt.");
           canAutologin = true;
         }
@@ -1078,7 +1077,6 @@ LoginManagerPrompter.prototype = {
     } else {
       dialogText = this._getLocalizedString("rememberPasswordMsgNoUsername",
                                             [displayHost]);
-
     }
     var dialogTitle        = this._getLocalizedString("savePasswordTitle");
     var neverButtonText    = this._getLocalizedString("neverForSiteButtonText");
