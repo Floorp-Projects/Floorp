@@ -1189,7 +1189,6 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
         add_old_configure_assignment('ac_cv_prog_%s_g' % var.lower(), gcc_like)
         if language == 'C':
             add_old_configure_assignment('ac_cv_prog_gcc', gcc_like)
-            add_old_configure_assignment('ac_cv_prog_gcc_traditional', 'no')
         if language == 'C++':
             add_old_configure_assignment('ac_cv_prog_gxx', gcc_like)
 
