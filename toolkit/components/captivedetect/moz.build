@@ -15,8 +15,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'captivedetect'
 
-EXTRA_COMPONENTS += [
-    'captivedetect.js',
-    'CaptivePortalDetectComponents.manifest',
+EXTRA_JS_MODULES += [
+    'CaptiveDetect.jsm',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
