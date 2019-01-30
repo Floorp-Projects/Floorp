@@ -453,8 +453,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['nsTextFragmentSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 EXTRA_COMPONENTS += [
-    'ProcessSelector.js',
-    'ProcessSelector.manifest',
     'SlowScriptDebug.js',
     'SlowScriptDebug.manifest',
 ]
@@ -463,6 +461,7 @@ EXTRA_JS_MODULES += [
     'ContentAreaDropListener.jsm',
     'DOMRequestHelper.jsm',
     'IndexedDBHelper.jsm',
+    'ProcessSelector.jsm',
 ]
 
 XPCOM_MANIFESTS += [
