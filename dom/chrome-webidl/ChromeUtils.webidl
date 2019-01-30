@@ -383,6 +383,12 @@ partial namespace ChromeUtils {
   [ChromeOnly]
   double lastExternalProtocolIframeAllowed();
 
+  /**
+   * For testing purpose we need to reset this value.
+   */
+  [ChromeOnly]
+  void resetLastExternalProtocolIframeAllowed();
+
   [ChromeOnly, Throws]
   void registerWindowActor(DOMString aName, WindowActorOptions aOptions);
 };
