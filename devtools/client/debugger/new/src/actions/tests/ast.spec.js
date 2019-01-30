@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import {
   createStore,
   selectors,
@@ -64,16 +66,16 @@ describe("ast", () => {
     it("scopes", async () => {
       const store = createStore(threadClient);
       const { dispatch, getState } = store;
-      const source = makeSource("scopes.js");
-      await dispatch(actions.newSource(source));
-      await dispatch(actions.loadSourceText({ id: "scopes.js" }));
+      const csr = makeSource("scopes.js");
+      await dispatch(actions.newSource(csr));
+      await dispatch(actions.loadSourceText(csr.source));
       await dispatch(actions.setPausePoints("scopes.js"));
       await waitForState(store, state => {
-        const lines = getEmptyLines(state, source.source.id);
+        const lines = getEmptyLines(state, csr.source.id);
         return lines && lines.length > 0;
       });
 
-      const emptyLines = getEmptyLines(getState(), source.source.id);
+      const emptyLines = getEmptyLines(getState(), csr.source.id);
       expect(emptyLines).toMatchSnapshot();
     });
   });
@@ -82,23 +84,23 @@ describe("ast", () => {
     it("should detect react components", async () => {
       const store = createStore(threadClient, {}, sourceMaps);
       const { dispatch, getState } = store;
-      const source = makeOriginalSource("reactComponent.js");
+      const csr = makeOriginalSource("reactComponent.js");
 
       await dispatch(actions.newSource(makeSource("reactComponent.js")));
 
-      await dispatch(actions.newSource(source));
+      await dispatch(actions.newSource(csr));
 
       await dispatch(
-        actions.loadSourceText(getSource(getState(), source.source.id))
+        actions.loadSourceText(getSource(getState(), csr.source.id))
       );
-      await dispatch(actions.setSourceMetaData(source.source.id));
+      await dispatch(actions.setSourceMetaData(csr.source.id));
 
       await waitForState(store, state => {
-        const metaData = getSourceMetaData(state, source.source.id);
+        const metaData = getSourceMetaData(state, csr.source.id);
         return metaData && metaData.framework;
       });
 
-      const sourceMetaData = getSourceMetaData(getState(), source.source.id);
+      const sourceMetaData = getSourceMetaData(getState(), csr.source.id);
       expect(sourceMetaData.framework).toBe("React");
     });
 
@@ -107,10 +109,10 @@ describe("ast", () => {
       const { dispatch, getState } = store;
       const base = makeSource("base.js");
       await dispatch(actions.newSource(base));
-      await dispatch(actions.loadSourceText({ id: "base.js" }));
+      await dispatch(actions.loadSourceText(base.source));
       await dispatch(actions.setSourceMetaData("base.js"));
 
-      const sourceMetaData = getSourceMetaData(getState(), base.id);
+      const sourceMetaData = getSourceMetaData(getState(), base.source.id);
       expect(sourceMetaData.framework).toBe(undefined);
     });
   });
@@ -122,7 +124,7 @@ describe("ast", () => {
         const { dispatch, getState } = store;
         const base = makeSource("base.js");
         await dispatch(actions.newSource(base));
-        await dispatch(actions.loadSourceText({ id: "base.js" }));
+        await dispatch(actions.loadSourceText(base.source));
         await dispatch(actions.setSymbols("base.js"));
         await waitForState(
           store,
@@ -140,7 +142,7 @@ describe("ast", () => {
         const base = makeSource("base.js");
         await dispatch(actions.newSource(base));
 
-        const baseSymbols = getSymbols(getState(), base);
+        const baseSymbols = getSymbols(getState(), base.source);
         expect(baseSymbols).toEqual(null);
       });
     });
@@ -162,18 +164,20 @@ describe("ast", () => {
     it("with selected line", async () => {
       const store = createStore(threadClient);
       const { dispatch, getState } = store;
-      const source = makeSource("scopes.js");
-      await dispatch(actions.newSource(source));
+      const csr = makeSource("scopes.js");
+      await dispatch(actions.newSource(csr));
 
       await dispatch(
         actions.selectLocation({ sourceId: "scopes.js", line: 5 })
       );
 
+      const frame = makeFrame({ id: "1", sourceId: "scopes.js" });
       await dispatch(
         actions.paused({
           thread: "FakeThread",
           why: { type: "debuggerStatement" },
-          frames: [makeFrame({ id: "1", sourceId: "scopes.js" })]
+          frame,
+          frames: [frame]
         })
       );
 
