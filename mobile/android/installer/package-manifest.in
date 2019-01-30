@@ -114,8 +114,6 @@
 @BINPATH@/components/UAOverridesBootstrapper.manifest
 @BINPATH@/components/WellKnownOpportunisticUtils.js
 @BINPATH@/components/WellKnownOpportunisticUtils.manifest
-@BINPATH@/components/mozProtocolHandler.js
-@BINPATH@/components/mozProtocolHandler.manifest
 #ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/nsDNSServiceDiscovery.manifest
 @BINPATH@/components/nsDNSServiceDiscovery.js
