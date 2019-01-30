@@ -320,7 +320,7 @@ WebConsole.prototype = {
 
       if (!this._browserConsole) {
         try {
-          await this.target.focus();
+          await this.target.activeTab.focus();
         } catch (ex) {
           // Tab focus can fail if the tab or target is closed.
         }

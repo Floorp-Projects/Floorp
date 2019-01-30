@@ -303,11 +303,11 @@ function autocomplete(
 }
 
 function navigate(url: string): Promise<*> {
-  return tabTarget.navigateTo({ url });
+  return tabTarget.activeTab.navigateTo({ url });
 }
 
 function reload(): Promise<*> {
-  return tabTarget.reload();
+  return tabTarget.activeTab.reload();
 }
 
 function getProperties(thread: string, grip: Grip): Promise<*> {
@@ -454,7 +454,7 @@ async function fetchWorkers(): Promise<Worker[]> {
     return Promise.resolve([]);
   }
 
-  const { workers } = await tabTarget.listWorkers();
+  const { workers } = await tabTarget.activeTab.listWorkers();
   return workers;
 }
 

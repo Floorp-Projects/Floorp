@@ -22,6 +22,7 @@ var { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUID
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var { DebuggerServer } = require("devtools/server/main");
 var { METHOD_FUNCTION } = require("devtools/shared/fronts/function-call");
+var { CanvasFront } = require("devtools/shared/fronts/canvas");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { isWebGLSupported } = require("devtools/client/shared/webgl-utils");
 
@@ -105,12 +106,12 @@ function navigateInHistory(aTarget, aDirection, aWaitForTargetEvent = "navigate"
 }
 
 function navigate(aTarget, aUrl, aWaitForTargetEvent = "navigate") {
-  executeSoon(() => aTarget.navigateTo({ url: aUrl }));
+  executeSoon(() => aTarget.activeTab.navigateTo({ url: aUrl }));
   return once(aTarget, aWaitForTargetEvent);
 }
 
 function reload(aTarget, aWaitForTargetEvent = "navigate") {
-  executeSoon(() => aTarget.reload());
+  executeSoon(() => aTarget.activeTab.reload());
   return once(aTarget, aWaitForTargetEvent);
 }
 
@@ -151,7 +152,6 @@ function initCanvasDebuggerBackend(aUrl) {
     const tab = await addTab(aUrl);
     const target = await TargetFactory.forTab(tab);
     await target.attach();
-
     const front = await target.getFront("canvas");
     return { target, front };
   })();

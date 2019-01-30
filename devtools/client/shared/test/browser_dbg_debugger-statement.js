@@ -22,8 +22,9 @@ add_task(async () => {
   const target = await TargetFactory.forTab(tab);
   await target.attach();
   const { client } = target;
+  const targetFront = target.activeTab;
 
-  const threadClient = await testEarlyDebuggerStatement(client, tab, target);
+  const threadClient = await testEarlyDebuggerStatement(client, tab, targetFront);
   await testDebuggerStatement(client, tab, threadClient);
 
   await target.destroy();

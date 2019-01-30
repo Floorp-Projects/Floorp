@@ -129,13 +129,12 @@ class FirefoxConnector {
 
   async removeListeners() {
     if (this.tabTarget) {
-      this.tabTarget.off("close", this.disconnect);
+      this.tabTarget.off("close");
     }
     if (this.webConsoleClient) {
-      this.webConsoleClient.off("networkEvent", this.dataProvider.onNetworkEvent);
-      this.webConsoleClient.off("networkEventUpdate",
-        this.dataProvider.onNetworkEventUpdate);
-      this.webConsoleClient.off("docEvent", this.onDocEvent);
+      this.webConsoleClient.off("networkEvent");
+      this.webConsoleClient.off("networkEventUpdate");
+      this.webConsoleClient.off("docEvent");
     }
   }
 
@@ -270,7 +269,7 @@ class FirefoxConnector {
 
     // Reconfigures the tab, optionally triggering a reload.
     const reconfigureTab = options => {
-      return this.tabTarget.reconfigure({ options });
+      return this.tabTarget.activeTab.reconfigure({ options });
     };
 
     // Reconfigures the tab and waits for the target to finish navigating.

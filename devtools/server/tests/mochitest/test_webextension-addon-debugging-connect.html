@@ -56,11 +56,12 @@ async function test_connect_addon(oopMode) {
     return frame.url && frame.url.endsWith("/_generated_background_page.html");
   }).pop();
   is(backgroundPageFrame.addonID, extension.id, "Got an extension frame");
+  ok(addonTarget.activeTab, "The addon target has an activeTab");
 
   // When running in oop mode we can explicitly attach the thread without locking
   // the main process.
   if (oopMode) {
-    const [, threadFront] = await addonTarget.attachThread();
+    const [, threadFront] = await addonTarget.activeTab.attachThread();
 
     ok(threadFront, "Got a threadFront for the target addon");
     is(threadFront.paused, true, "The addon threadActor is paused");

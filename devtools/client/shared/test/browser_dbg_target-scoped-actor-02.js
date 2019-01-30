@@ -24,7 +24,8 @@ add_task(async function() {
   const target = await TargetFactory.forTab(tab);
   await target.attach();
   const { client } = target;
-  const form = target.targetForm;
+  const targetFront = target.activeTab;
+  const form = targetFront.targetForm;
 
   await testTargetScopedActor(client, form);
   await closeTab(client, form);

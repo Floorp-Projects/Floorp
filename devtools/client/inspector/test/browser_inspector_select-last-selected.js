@@ -82,7 +82,8 @@ add_task(async function() {
       const onNewRoot = inspector.once("new-root");
       const onUpdated = inspector.once("inspector-updated");
 
-      await toolbox.target.reload();
+      const activeTab = toolbox.target.activeTab;
+      await activeTab.reload();
       info("Waiting for inspector to be ready.");
       await markuploaded;
       await onNewRoot;

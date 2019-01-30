@@ -45,7 +45,9 @@ function setupStore(input = [], {
       proxy: {
         releaseActor: () => {},
         target: {
-          ensureCSSErrorReportingEnabled: () => {},
+          activeTab: {
+            ensureCSSErrorReportingEnabled: () => {},
+          },
         },
       },
     };
