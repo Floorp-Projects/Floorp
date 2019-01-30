@@ -15,7 +15,7 @@ ChromeUtils.defineModuleGetter(this, "ReaderMode", "resource://gre/modules/Reade
 const gStringBundle = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
 var ReaderParent = {
-  // Listeners are added in nsBrowserGlue.js
+  // Listeners are added in BrowserGlue.jsm
   receiveMessage(message) {
     switch (message.name) {
       case "Reader:FaviconRequest": {

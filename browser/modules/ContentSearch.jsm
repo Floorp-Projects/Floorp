@@ -153,7 +153,7 @@ var ContentSearch = {
     });
   },
 
-  // Listeners and observers are added in nsBrowserGlue.js
+  // Listeners and observers are added in BrowserGlue.jsm
   receiveMessage(msg) {
     // Add a temporary event handler that exists only while the message is in
     // the event queue.  If the message's source docshell changes browsers in

@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var EXPORTED_SYMBOLS = ["WebProtocolHandlerRegistrar"];
+
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const STRING_BUNDLE_URI = "chrome://browser/locale/feeds/subscribe.properties";
 
@@ -146,13 +147,8 @@ WebProtocolHandlerRegistrar.prototype = {
                                        [addButton]);
   },
 
-  classID: Components.ID("{efbd7b87-9b15-4684-abf0-dc2679daadb1}"),
-
   /**
    * See nsISupports
    */
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProtocolHandlerRegistrar]),
 };
-
-this.NSGetFactory =
-  XPCOMUtils.generateNSGetFactory([WebProtocolHandlerRegistrar]);
