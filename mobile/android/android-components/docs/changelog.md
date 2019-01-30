@@ -38,6 +38,12 @@ permalink: /changelog/
     }
   ```
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * After "Merge Day" and the release of Firefox 65 we updated our gecko-based components to follow the new upstream versions:
+    * `browser-engine-gecko`: 65.0
+    * `browser-engine-gecko-beta`: 66.0
+    * `browser-engine-gecko-nightly`: 67.0
+
 # 0.40.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.39.0...v0.40.0)

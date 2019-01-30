@@ -1141,25 +1141,26 @@ class GeckoEngineSessionTest {
         })
 
         class MockContextElement(
+            baseUri: String?,
             linkUri: String?,
             title: String?,
             altText: String?,
             typeStr: String,
             srcUri: String?
-        ) : GeckoSession.ContentDelegate.ContextElement(linkUri, title, altText, typeStr, srcUri)
+        ) : GeckoSession.ContentDelegate.ContextElement(baseUri, linkUri, title, altText, typeStr, srcUri)
 
         delegate.onContextMenu(geckoSession, 0, 0,
-            MockContextElement(null, "title", "alt", "HTMLAudioElement", "file.mp3"))
+            MockContextElement(null, null, "title", "alt", "HTMLAudioElement", "file.mp3"))
         assertTrue(observedChanged)
 
         observedChanged = false
         delegate.onContextMenu(geckoSession, 0, 0,
-            MockContextElement(null, "title", "alt", "HTMLAudioElement", null))
+            MockContextElement(null, null, "title", "alt", "HTMLAudioElement", null))
         assertFalse(observedChanged)
 
         observedChanged = false
         delegate.onContextMenu(geckoSession, 0, 0,
-            MockContextElement(null, "title", "alt", "foobar", null))
+            MockContextElement(null, null, "title", "alt", "foobar", null))
         assertFalse(observedChanged)
     }
 

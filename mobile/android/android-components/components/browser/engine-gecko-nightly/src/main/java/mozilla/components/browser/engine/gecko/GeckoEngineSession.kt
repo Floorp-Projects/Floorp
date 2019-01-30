@@ -350,7 +350,7 @@ class GeckoEngineSession(
             securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
         ) {
             // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
-            if (initialLoad && securityInfo?.origin?.startsWith(MOZ_NULL_PRINCIPAL) == true) {
+            if (initialLoad && securityInfo.origin?.startsWith(MOZ_NULL_PRINCIPAL) == true) {
                 return
             }
 
