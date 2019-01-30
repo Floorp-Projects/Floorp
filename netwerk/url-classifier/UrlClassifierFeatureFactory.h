@@ -37,6 +37,14 @@ class UrlClassifierFeatureFactory final {
   static already_AddRefed<nsIUrlClassifierFeature> CreateFeatureWithTables(
       const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
       const nsTArray<nsCString>& aWhitelistTables);
+
+  // Returns true if this error is known as one of the blocking error codes.
+  static bool IsClassifierBlockingErrorCode(nsresult aError);
+
+  // This can be called only if IsClassifierBlockingErrorCode(aError) returns
+  // true.
+  static const char* ClassifierBlockingErrorCodeToConsoleMessage(
+      nsresult aError, nsACString& aCategory);
 };
 
 }  // namespace net
