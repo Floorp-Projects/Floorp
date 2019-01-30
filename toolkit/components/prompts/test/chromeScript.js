@@ -25,6 +25,30 @@ function handlePromptWhenItAppears(action, isTabModal, isSelect) {
   }, 100);
 }
 
+addMessageListener("checkPromptModal", () => {
+  checkPromptIsModal();
+});
+
+function checkPromptIsModal() {
+  // Check that the dialog is modal, chrome and dependent;
+  // We can't just check window.opener because that'll be
+  // a content window, which therefore isn't exposed (it'll lie and
+  // be null).
+  let result = {};
+  let doc = getDialogDoc();
+  let win = doc.defaultView;
+  let treeOwner = win.docShell.treeOwner;
+  treeOwner.QueryInterface(Ci.nsIInterfaceRequestor);
+  let flags = treeOwner.getInterface(Ci.nsIXULWindow).chromeFlags;
+  let wbc = treeOwner.getInterface(Ci.nsIWebBrowserChrome);
+  result.chrome = (flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_CHROME) != 0;
+  result.dialog = (flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG) != 0;
+  result.chromeDependent = (flags & Ci.nsIWebBrowserChrome.CHROME_DEPENDENT) != 0;
+  result.isWindowModal = wbc.isWindowModal();
+
+  sendAsyncMessage("checkPromptModalResult", result);
+}
+
 function handlePrompt(action, isTabModal, isSelect) {
   let ui;
 
