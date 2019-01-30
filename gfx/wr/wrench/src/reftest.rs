@@ -15,7 +15,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Receiver;
-use webrender::RendererStats;
+use webrender::RenderResults;
 use webrender::api::*;
 use wrench::{Wrench, WrenchThing};
 use yaml_frame_reader::YamlFrameReader;
@@ -376,7 +376,7 @@ impl<'a> ReftestHarness<'a> {
 
         // the reference can be smaller than the window size,
         // in which case we only compare the intersection
-        let (test, stats) = self.render_yaml(
+        let (test, results) = self.render_yaml(
             t.test.as_path(),
             reference.size,
             t.font_render_mode,
@@ -394,10 +394,10 @@ impl<'a> ReftestHarness<'a> {
         let comparison = test.compare(&reference);
 
         if let Some(expected_draw_calls) = t.expected_draw_calls {
-            if expected_draw_calls != stats.total_draw_calls {
+            if expected_draw_calls != results.stats.total_draw_calls {
                 println!("REFTEST TEST-UNEXPECTED-FAIL | {} | {}/{} | expected_draw_calls",
                     t,
-                    stats.total_draw_calls,
+                    results.stats.total_draw_calls,
                     expected_draw_calls
                 );
                 println!("REFTEST TEST-END | {}", t);
@@ -405,10 +405,10 @@ impl<'a> ReftestHarness<'a> {
             }
         }
         if let Some(expected_alpha_targets) = t.expected_alpha_targets {
-            if expected_alpha_targets != stats.alpha_target_count {
+            if expected_alpha_targets != results.stats.alpha_target_count {
                 println!("REFTEST TEST-UNEXPECTED-FAIL | {} | {}/{} | alpha_target_count",
                     t,
-                    stats.alpha_target_count,
+                    results.stats.alpha_target_count,
                     expected_alpha_targets
                 );
                 println!("REFTEST TEST-END | {}", t);
@@ -416,10 +416,10 @@ impl<'a> ReftestHarness<'a> {
             }
         }
         if let Some(expected_color_targets) = t.expected_color_targets {
-            if expected_color_targets != stats.color_target_count {
+            if expected_color_targets != results.stats.color_target_count {
                 println!("REFTEST TEST-UNEXPECTED-FAIL | {} | {}/{} | color_target_count",
                     t,
-                    stats.color_target_count,
+                    results.stats.color_target_count,
                     expected_color_targets
                 );
                 println!("REFTEST TEST-END | {}", t);
@@ -483,7 +483,7 @@ impl<'a> ReftestHarness<'a> {
         size: DeviceIntSize,
         font_render_mode: Option<FontRenderMode>,
         allow_mipmaps: bool,
-    ) -> (ReftestImage, RendererStats) {
+    ) -> (ReftestImage, RenderResults) {
         let mut reader = YamlFrameReader::new(filename);
         reader.set_font_render_mode(font_render_mode);
         reader.allow_mipmaps(allow_mipmaps);
@@ -493,7 +493,7 @@ impl<'a> ReftestHarness<'a> {
 
         // wait for the frame
         self.rx.recv().unwrap();
-        let stats = self.wrench.render();
+        let results = self.wrench.render();
 
         let window_size = self.window.get_inner_size();
         assert!(
@@ -515,6 +515,6 @@ impl<'a> ReftestHarness<'a> {
 
         reader.deinit(self.wrench);
 
-        (ReftestImage { data: pixels, size }, stats)
+        (ReftestImage { data: pixels, size }, results)
     }
 }

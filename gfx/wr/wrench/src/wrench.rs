@@ -20,7 +20,7 @@ use std::sync::mpsc::Receiver;
 use time;
 use webrender;
 use webrender::api::*;
-use webrender::{DebugFlags, RendererStats, ShaderPrecacheFlags};
+use webrender::{DebugFlags, RenderResults, ShaderPrecacheFlags};
 use yaml_frame_writer::YamlFrameWriterReceiver;
 use {WindowWrapper, NotifierEvent};
 
@@ -555,7 +555,7 @@ impl Wrench {
         self.renderer.get_frame_profiles()
     }
 
-    pub fn render(&mut self) -> RendererStats {
+    pub fn render(&mut self) -> RenderResults {
         self.renderer.update();
         let _ = self.renderer.flush_pipeline_info();
         self.renderer
