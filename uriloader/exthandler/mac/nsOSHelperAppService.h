@@ -14,8 +14,9 @@
 
 #include "nsExternalHelperAppService.h"
 #include "nsCExternalHandlerService.h"
-#include "nsMIMEInfoImpl.h"
 #include "nsCOMPtr.h"
+
+class nsIMimeInfo;
 
 class nsOSHelperAppService : public nsExternalHelperAppService {
  public:

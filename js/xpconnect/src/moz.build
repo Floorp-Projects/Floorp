@@ -44,6 +44,10 @@ UNIFIED_SOURCES += [
     'XPCWrapper.cpp',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

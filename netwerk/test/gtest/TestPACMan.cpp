@@ -127,13 +127,13 @@ class TestPACMan : public ::testing::Test {
 
   virtual void SetUp() {
     ASSERT_EQ(NS_OK, GetNetworkProxyType(&originalNetworkProxyTypePref));
-    nsFactoryEntry* factoryEntry =
-        nsComponentManagerImpl::gComponentManager->GetFactoryEntry(
-            kNS_TESTDHCPCLIENTSERVICE_CID);
-    if (factoryEntry) {
-      nsresult rv =
-          nsComponentManagerImpl::gComponentManager->UnregisterFactory(
-              kNS_TESTDHCPCLIENTSERVICE_CID, factoryEntry->mFactory);
+    nsCOMPtr<nsIFactory> factory;
+    nsresult rv = nsComponentManagerImpl::gComponentManager->GetClassObject(
+        kNS_TESTDHCPCLIENTSERVICE_CID, NS_GET_IID(nsIFactory),
+        getter_AddRefs(factory));
+    if (NS_SUCCEEDED(rv) && factory) {
+      rv = nsComponentManagerImpl::gComponentManager->UnregisterFactory(
+          kNS_TESTDHCPCLIENTSERVICE_CID, factory);
       ASSERT_EQ(NS_OK, rv);
     }
     nsComponentManagerImpl::gComponentManager->RegisterModule(

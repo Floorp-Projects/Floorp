@@ -5,11 +5,11 @@
 
 #include "nspr.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/Components.h"
 #include "mozilla/Logging.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
 #include "nsDocLoader.h"
-#include "nsCURILoader.h"
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
 #include "nsIWebNavigation.h"
@@ -39,6 +39,7 @@
 #include "nsILoadURIDelegate.h"
 #include "nsIBrowserDOMWindow.h"
 
+using namespace mozilla;
 using mozilla::DebugOnly;
 using mozilla::LogLevel;
 using mozilla::dom::Document;
@@ -198,10 +199,9 @@ already_AddRefed<nsDocLoader> nsDocLoader::GetAsDocLoader(
 
 /* static */
 nsresult nsDocLoader::AddDocLoaderAsChildOfRoot(nsDocLoader* aDocLoader) {
-  nsresult rv;
   nsCOMPtr<nsIDocumentLoader> docLoaderService =
-      do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+      components::DocLoader::Service();
+  NS_ENSURE_TRUE(docLoaderService, NS_ERROR_UNEXPECTED);
 
   RefPtr<nsDocLoader> rootDocLoader = GetAsDocLoader(docLoaderService);
   NS_ENSURE_TRUE(rootDocLoader, NS_ERROR_UNEXPECTED);
