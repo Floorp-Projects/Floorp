@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { LocalizationSync } = ChromeUtils.import("resource://gre/modules/Localization.jsm", null);
 
@@ -509,5 +508,4 @@ class MozIntl {
 MozIntl.prototype.classID = Components.ID("{35ec195a-e8d0-4300-83af-c8a2cc84b4a3}");
 MozIntl.prototype.QueryInterface = ChromeUtils.generateQI([Ci.mozIMozIntl]);
 
-var components = [MozIntl];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var EXPORTED_SYMBOLS = ["MozIntl"];
