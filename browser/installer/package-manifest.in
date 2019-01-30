@@ -239,9 +239,6 @@
 @RESPATH@/components/SlowScriptDebug.manifest
 @RESPATH@/components/SlowScriptDebug.js
 
-@RESPATH@/components/ClearDataService.manifest
-@RESPATH@/components/ClearDataService.js
-
 ; Remote control protocol
 #ifdef ENABLE_MARIONETTE
 @RESPATH@/chrome/marionette@JAREXT@
