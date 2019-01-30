@@ -5,8 +5,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-
 ChromeUtils.defineModuleGetter(this, "TelemetryController",
                                "resource://gre/modules/TelemetryController.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment",
@@ -19,7 +17,6 @@ ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment",
 function TelemetryStartup() {
 }
 
-TelemetryStartup.prototype.classID = Components.ID("{117b219f-92fe-4bd2-a21b-95a342a9d474}");
 TelemetryStartup.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
 TelemetryStartup.prototype.observe = function(aSubject, aTopic, aData) {
   if (aTopic == "profile-after-change") {
@@ -45,4 +42,4 @@ function annotateEnvironment() {
   }
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TelemetryStartup]);
+var EXPORTED_SYMBOLS = ["TelemetryStartup"];

@@ -156,11 +156,6 @@
 @BINPATH@/components/servicesSettings.manifest
 @BINPATH@/components/RemoteSettingsComponents.js
 
-#ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/TelemetryStartup.js
-@BINPATH@/components/TelemetryStartup.manifest
-#endif
-
 @BINPATH@/components/htmlMenuBuilder.js
 @BINPATH@/components/htmlMenuBuilder.manifest
 
