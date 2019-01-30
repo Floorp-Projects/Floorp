@@ -508,7 +508,6 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/pingsender@BIN_SUFFIX@
 
 ; Shutdown Terminator
-@RESPATH@/components/nsTerminatorTelemetry.js
 @RESPATH@/components/terminator.manifest
 
 #ifdef LLVM_SYMBOLIZER
