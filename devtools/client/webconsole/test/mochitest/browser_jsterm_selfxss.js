@@ -17,6 +17,7 @@ const WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
 const stringToCopy = "EvilCommand";
 
 add_task(async function() {
+  await pushPref("devtools.chrome.enabled", false);
   // Run test with legacy JsTerm
   await pushPref("devtools.webconsole.jsterm.codeMirror", false);
   await performTest();

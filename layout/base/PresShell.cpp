@@ -7114,32 +7114,46 @@ bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aEventStatus);
 
-  if (AccessibleCaretEnabled(GetDocument()->GetDocShell())) {
-    // We have to target the focus window because regardless of where the
-    // touch goes, we want to access the copy paste manager.
-    nsCOMPtr<nsPIDOMWindowOuter> window = GetFocusedDOMWindowInOurWindow();
-    RefPtr<Document> retargetEventDoc =
-        window ? window->GetExtantDoc() : nullptr;
-    nsCOMPtr<nsIPresShell> presShell =
-        retargetEventDoc ? retargetEventDoc->GetShell() : nullptr;
-
-    RefPtr<AccessibleCaretEventHub> eventHub =
-        presShell ? presShell->GetAccessibleCaretEventHub() : nullptr;
-    if (eventHub && *aEventStatus != nsEventStatus_eConsumeNoDefault) {
-      // Don't dispatch event to AccessibleCaretEventHub when the event status
-      // is nsEventStatus_eConsumeNoDefault. This might be happened when content
-      // preventDefault on the pointer events. In such case, we also call
-      // preventDefault on mouse events to stop default behaviors.
-      *aEventStatus = eventHub->HandleEvent(aGUIEvent);
-      if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
-        // If the event is consumed, cancel APZC panning by setting
-        // mMultipleActionsPrevented.
-        aGUIEvent->mFlags.mMultipleActionsPrevented = true;
-        return true;
-      }
-    }
+  // Don't dispatch event to AccessibleCaretEventHub when the event status
+  // is nsEventStatus_eConsumeNoDefault. This might be happened when content
+  // preventDefault on the pointer events. In such case, we also call
+  // preventDefault on mouse events to stop default behaviors.
+  if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
+    return false;
   }
-  return false;
+
+  if (!AccessibleCaretEnabled(GetDocument()->GetDocShell())) {
+    return false;
+  }
+
+  // We have to target the focus window because regardless of where the
+  // touch goes, we want to access the copy paste manager.
+  nsCOMPtr<nsPIDOMWindowOuter> window = GetFocusedDOMWindowInOurWindow();
+  if (!window) {
+    return false;
+  }
+  RefPtr<Document> retargetEventDoc = window->GetExtantDoc();
+  if (!retargetEventDoc) {
+    return false;
+  }
+  nsCOMPtr<nsIPresShell> presShell = retargetEventDoc->GetShell();
+  if (!presShell) {
+    return false;
+  }
+
+  RefPtr<AccessibleCaretEventHub> eventHub =
+      presShell->GetAccessibleCaretEventHub();
+  if (!eventHub) {
+    return false;
+  }
+  *aEventStatus = eventHub->HandleEvent(aGUIEvent);
+  if (*aEventStatus != nsEventStatus_eConsumeNoDefault) {
+    return false;
+  }
+  // If the event is consumed, cancel APZC panning by setting
+  // mMultipleActionsPrevented.
+  aGUIEvent->mFlags.mMultipleActionsPrevented = true;
+  return true;
 }
 
 Document* PresShell::GetPrimaryContentDocument() {
