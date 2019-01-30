@@ -441,6 +441,11 @@ description#identity-popup-content-verifier,
 
 .identity-popup-content-blocking-list-host-label {
   -moz-box-flex: 1;
+  direction: ltr;
+}
+
+.identity-popup-content-blocking-list-host-label:-moz-locale-dir(rtl) {
+  text-align: right;
 }
 
 .identity-popup-content-blocking-list-state-label {
