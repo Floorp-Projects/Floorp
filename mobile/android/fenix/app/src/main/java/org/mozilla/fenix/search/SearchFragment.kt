@@ -31,11 +31,6 @@ class SearchFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_search, container, false)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
-    }
-
     override fun onResume() {
         super.onResume()
         toolbar.editMode()
@@ -50,7 +45,7 @@ class SearchFragment : Fragment() {
             toolbar,
             ShippedDomainsProvider().also { it.initialize(requireContext()) },
             requireComponents.core.historyStorage
-        )
+            )
         )
 
         awesomeBarFeature = AwesomeBarFeature(awesomeBar, toolbar, null, onEditComplete = ::userDidSearch)
@@ -74,9 +69,6 @@ class SearchFragment : Fragment() {
     }
 
     private fun userDidSearch() {
-        val extras = FragmentNavigator.Extras.Builder().addSharedElement(
-            toolbar, ViewCompat.getTransitionName(toolbar)!!
-        ).build()
-        Navigation.findNavController(toolbar).navigate(R.id.action_searchFragment_to_browserFragment, null, null, extras)
+        Navigation.findNavController(toolbar).navigate(R.id.action_searchFragment_to_browserFragment, null, null)
     }
 }

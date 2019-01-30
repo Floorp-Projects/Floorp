@@ -41,19 +41,10 @@ class HomeFragment : Fragment() {
         toolbar.setCompoundDrawablesWithIntrinsicBounds(searchIcon, null, null, null)
         toolbar.compoundDrawablePadding = (12f * Resources.getSystem().displayMetrics.density).roundToInt()
         toolbar.setOnClickListener { it ->
-            val extras = FragmentNavigator.Extras.Builder().addSharedElement(
-                toolbar, ViewCompat.getTransitionName(toolbar)!!
-            ).build()
-            Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_searchFragment, null, null, extras)
+            Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_searchFragment, null, null)
         }
 
         SessionsComponent(homeLayout, ActionBusFactory.get(this)).setup()
         layoutComponents(homeLayout)
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.fade)
-        exitTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.fade)
     }
 }
