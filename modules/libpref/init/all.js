@@ -909,23 +909,19 @@ pref("gfx.logging.peak-texture-usage.enabled", false);
 
 pref("gfx.ycbcr.accurate-conversion", false);
 
-// On Nightly, we expose two prefs: gfx.webrender.all and gfx.webrender.enabled.
+// We expose two prefs: gfx.webrender.all and gfx.webrender.enabled.
 // The first enables WR+additional features, and the second just enables WR.
 // For developer convenience, building with --enable-webrender=true or just
 // --enable-webrender will set gfx.webrender.enabled to true by default.
-// On non-Nightly, we ignore these prefs.
 //
-// On both Nightly and non-Nightly, we have a pref gfx.webrender.all.qualified
-// which is not exposed via about:config. That pref enables WR but only on
-// qualified hardware. This is the pref we'll eventually flip to deploy WebRender
-// to the target population.
-#ifdef NIGHTLY_BUILD
+// We also have a pref gfx.webrender.all.qualified which is not exposed via
+// about:config. That pref enables WR but only on qualified hardware. This is
+// the pref we'll eventually flip to deploy WebRender to the target population.
 pref("gfx.webrender.all", false);
 #ifdef MOZ_ENABLE_WEBRENDER
 pref("gfx.webrender.enabled", true);
 #else
 pref("gfx.webrender.enabled", false);
-#endif
 #endif
 
 // Also expose a pref to allow users to force-disable WR. This is exposed
