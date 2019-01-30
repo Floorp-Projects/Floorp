@@ -243,9 +243,6 @@
 @RESPATH@/components/NotificationStorage.manifest
 @RESPATH@/components/Push.manifest
 
-@RESPATH@/components/remotebrowserutils.manifest
-@RESPATH@/components/RemoteWebNavigation.js
-
 @RESPATH@/components/ProcessSelector.js
 @RESPATH@/components/ProcessSelector.manifest
 
