@@ -89,4 +89,4 @@ nsLoginInfo.prototype = {
 
 }; // end of nsLoginInfo implementation
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsLoginInfo]);
+var EXPORTED_SYMBOLS = ["nsLoginInfo"];
