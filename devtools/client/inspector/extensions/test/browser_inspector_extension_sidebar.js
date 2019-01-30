@@ -159,7 +159,7 @@ add_task(async function testSidebarDOMNodeHighlighting() {
 
   const evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
     evalResultAsGrip: true,
-    toolboxConsoleActorID: toolbox.target.form.consoleActor,
+    toolboxConsoleActorID: toolbox.target.activeConsole.actor,
   });
 
   sidebar.setObjectValueGrip(evalResult.valueGrip);

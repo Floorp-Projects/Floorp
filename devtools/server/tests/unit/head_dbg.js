@@ -390,9 +390,6 @@ async function getTestTab(client, title) {
 async function attachTestTab(client, title) {
   const targetFront = await getTestTab(client, title);
   await targetFront.attach();
-  const response = await targetFront.attach();
-  Assert.equal(response.type, "tabAttached");
-  Assert.ok(typeof response.threadActor === "string");
   return targetFront;
 }
 

@@ -1512,7 +1512,7 @@ var generateRequestMethods = function(actorSpec, frontProto) {
         try {
           ret = spec.response.read(response, this);
         } catch (ex) {
-          console.error("Error reading response to: " + name);
+          console.error("Error reading response to: " + name + "\n" + ex);
           throw ex;
         }
         return ret;
