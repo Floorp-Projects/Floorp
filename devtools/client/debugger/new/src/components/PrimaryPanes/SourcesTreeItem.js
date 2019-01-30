@@ -14,7 +14,8 @@ import AccessibleImage from "../shared/AccessibleImage";
 
 import {
   getGeneratedSourceByURL,
-  getHasSiblingOfSameName
+  getHasSiblingOfSameName,
+  hasPrettySource as checkHasPrettySource
 } from "../../selectors";
 import actions from "../../actions";
 
@@ -40,6 +41,7 @@ type Props = {
   expanded: boolean,
   hasMatchingGeneratedSource: boolean,
   hasSiblingOfSameName: boolean,
+  hasPrettySource: boolean,
   focusItem: TreeNode => void,
   selectItem: TreeNode => void,
   setExpanded: (TreeNode, boolean, boolean) => void,
@@ -60,7 +62,7 @@ type ContextMenu = Array<MenuOption>;
 
 class SourceTreeItem extends Component<Props, State> {
   getIcon(item: TreeNode, depth: number) {
-    const { debuggeeUrl, projectRoot, source } = this.props;
+    const { debuggeeUrl, projectRoot, source, hasPrettySource } = this.props;
 
     if (item.path === "webpack://") {
       return <AccessibleImage className="webpack" />;
@@ -82,6 +84,10 @@ class SourceTreeItem extends Component<Props, State> {
 
     if (isDirectory(item)) {
       return <AccessibleImage className="folder" />;
+    }
+
+    if (hasPrettySource) {
+      return <AccessibleImage className="prettyPrint" />;
     }
 
     if (source) {
@@ -254,7 +260,8 @@ const mapStateToProps = (state, props) => {
   const { source } = props;
   return {
     hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
-    hasSiblingOfSameName: getHasSiblingOfSameName(state, source)
+    hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
+    hasPrettySource: source ? checkHasPrettySource(state, source.id) : false
   };
 };
 
