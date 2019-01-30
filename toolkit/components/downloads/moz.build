@@ -24,19 +24,19 @@ SOURCES += [
     'DownloadPlatform.cpp',
 ]
 
-EXTRA_COMPONENTS += [
-    'DownloadLegacy.js',
-    'Downloads.manifest',
-]
-
 EXTRA_JS_MODULES += [
     'DownloadCore.jsm',
     'DownloadIntegration.jsm',
+    'DownloadLegacy.jsm',
     'DownloadList.jsm',
     'DownloadPaths.jsm',
     'Downloads.jsm',
     'DownloadStore.jsm',
     'DownloadUIHelper.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 if CONFIG['MOZ_PLACES']:
