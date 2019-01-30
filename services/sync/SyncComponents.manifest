@@ -1,9 +1,3 @@
-# Weave.js
-component {74b89fb0-f200-4ae8-a3ec-dd164117f6de} Weave.js
-contract @mozilla.org/weave/service;1 {74b89fb0-f200-4ae8-a3ec-dd164117f6de}
-component {d28f8a0b-95da-48f4-b712-caf37097be41} Weave.js
-contract @mozilla.org/network/protocol/about;1?what=sync-log {d28f8a0b-95da-48f4-b712-caf37097be41}
-
 # Register resource aliases
 # (Note, for tests these are also set up in addResourceAlias)
 resource services-sync resource://gre/modules/services-sync/

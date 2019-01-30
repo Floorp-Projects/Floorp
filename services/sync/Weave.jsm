@@ -6,9 +6,6 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyGetter(this, "Utils", () => {
-  return ChromeUtils.import("resource://services-sync/util.js", {}).Utils;
-});
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "syncUsername", "services.sync.username");
 
@@ -157,5 +154,4 @@ AboutWeaveLog.prototype = {
   },
 };
 
-const components = [WeaveService, AboutWeaveLog];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var EXPORTED_SYMBOLS = ["WeaveService", "AboutWeaveLog"];

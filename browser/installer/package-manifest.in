@@ -238,7 +238,6 @@
 @RESPATH@/browser/components/MacTouchBar.js
 #endif
 @RESPATH@/components/SyncComponents.manifest
-@RESPATH@/components/Weave.js
 @RESPATH@/components/FxAccountsComponents.manifest
 @RESPATH@/components/FxAccountsPush.js
 @RESPATH@/components/CaptivePortalDetectComponents.manifest
