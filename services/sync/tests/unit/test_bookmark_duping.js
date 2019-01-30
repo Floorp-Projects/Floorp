@@ -609,7 +609,6 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
       { name: "parentChildMismatches", count: 1 },
     ];
     await validate(collection, expected);
-
   } finally {
     await cleanup(engine, server);
   }

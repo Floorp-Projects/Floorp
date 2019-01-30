@@ -263,7 +263,6 @@ add_task(async function testInstalledGlobalEmeDisabled() {
 });
 
 add_task(async function testPreferencesButton() {
-
   let prefValues = [
     { enabled: false, version: "" },
     { enabled: false, version: "1.2.3.4" },
@@ -374,7 +373,6 @@ add_task(async function testEmeSupport() {
   }
   await GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
-
 });
 
 add_task(async function test_cleanup() {

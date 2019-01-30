@@ -34,7 +34,6 @@ add_task(async function test_benignPage() {
            () => {
              ok(true, "Info panel didn't appear on a benign page");
            });
-
   });
 });
 
@@ -83,6 +82,5 @@ add_task(async function test_trackingPages() {
            () => {
              ok(true, "Info panel didn't appear more than MAX_INTROS on tracking pages");
            });
-
   });
 });

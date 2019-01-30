@@ -31,7 +31,6 @@
       };
 
       this.check = function editabledoc_check(aEvent) {
-
         testStates(aDocNode, 0, EXT_STATE_EDITABLE);
 
         let event = null;
@@ -154,7 +153,6 @@
         if (aValue == null) {
           getNode(aID).removeAttribute(aARIAAttr);
           getNode(aID).removeAttribute(aAttr);
-
         } else {
           getNode(aID).setAttribute(aARIAAttr, aValue);
           getNode(aID).setAttribute(aAttr, aValue);

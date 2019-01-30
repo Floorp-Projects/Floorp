@@ -136,7 +136,6 @@ function doApply(fun, invocant, args) {
 }
 
 function wrapPrivileged(obj) {
-
   // Primitives pass straight through.
   if (!isWrappable(obj))
     return obj;
@@ -155,7 +154,6 @@ function wrapPrivileged(obj) {
 }
 
 function unwrapPrivileged(x) {
-
   // We don't wrap primitives, so sometimes we have a primitive where we'd
   // expect to have a wrapper. The proxy pretends to be the type that it's
   // emulating, so we can just as easily check isWrappable() on a proxy as
@@ -644,7 +642,6 @@ SpecialPowersAPI.prototype = {
     if (message.hadError) {
       throw "SpecialPowers.importInMainProcess failed with error " + message.errorMessage;
     }
-
   },
 
   get Services() {

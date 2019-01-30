@@ -96,7 +96,6 @@ add_task(async function test_refreshState_syncButNoFxA() {
   UIStateInternal.fxAccounts = fxAccountsOrig;
   Services.prefs.clearUserPref("services.sync.lastSync");
   Services.prefs.clearUserPref("services.sync.username");
-
 });
 
 add_task(async function test_refreshState_signedin_profile_unavailable() {

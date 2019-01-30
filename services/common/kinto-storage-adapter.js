@@ -213,7 +213,6 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
       const schema = await connection.getSchemaVersion();
 
       if (schema == 0) {
-
         for (let statementName of createStatements) {
           await connection.execute(statements[statementName]);
         }

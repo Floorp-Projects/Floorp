@@ -63,7 +63,6 @@ addEventListener("DOMContentLoaded", function() {
                                   sort_table(elem, key(colIndex));
                               });
     });
-
 });
 
 function sort_table(clicked, key_func) {

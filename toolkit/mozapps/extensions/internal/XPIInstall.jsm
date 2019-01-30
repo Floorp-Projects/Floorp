@@ -1777,7 +1777,6 @@ var LocalAddonInstall = class extends AddonInstall {
       });
     } else {
       this._callInstallListeners("onNewInstall");
-
     }
   }
 
@@ -2990,7 +2989,6 @@ class SystemAddonInstaller extends DirectoryInstaller {
           });
         }
       }
-
     } catch (e) {
       logger.error("Failed to clean updated system add-ons directories.", e);
     } finally {

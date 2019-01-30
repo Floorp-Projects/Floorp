@@ -64,13 +64,11 @@ function getInfoBar() {
       Promise.all(infobar.getAnimations().map(animation => animation.finished))
         .then(() => resolve(infobar));
     }
-
   });
 }
 
 function openPopup(aPopup) {
   return new Promise(resolve => {
-
     aPopup.addEventListener("popupshown", function() {
       TestUtils.executeSoon(resolve);
     }, {once: true});
@@ -79,17 +77,14 @@ function openPopup(aPopup) {
     // One down event to open the popup.
     EventUtils.synthesizeKey("VK_DOWN",
                              { altKey: !navigator.platform.includes("Mac") });
-
   });
 }
 
 function waitForWindowLoad(aWin) {
   return new Promise(resolve => {
-
     aWin.addEventListener("load", function() {
       TestUtils.executeSoon(resolve);
     }, {capture: true, once: true});
-
   });
 }
 

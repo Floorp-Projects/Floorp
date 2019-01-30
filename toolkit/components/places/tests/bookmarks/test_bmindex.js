@@ -111,7 +111,6 @@ add_task(async function test_bookmarks_indexing() {
       if (newIndex >= -1)
         do_throw("Moving an item to a valid index should not throw\n");
     }
-
   }
   await check_contiguous_indexes(bookmarks);
 });

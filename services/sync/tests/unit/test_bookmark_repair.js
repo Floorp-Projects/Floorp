@@ -92,7 +92,6 @@ add_task(async function test_bookmark_repair_integration() {
   let initialID = Service.clientsEngine.localID;
   let remoteID = Utils.makeGUID();
   try {
-
     _("Syncing to initialize crypto etc.");
     await Service.sync();
 
@@ -357,7 +356,6 @@ add_task(async function test_repair_client_missing() {
 
   let remoteID = Utils.makeGUID();
   try {
-
     _("Syncing to initialize crypto etc.");
     await Service.sync();
 
@@ -433,7 +431,6 @@ add_task(async function test_repair_server_missing() {
 
   let remoteID = Utils.makeGUID();
   try {
-
     _("Syncing to initialize crypto etc.");
     await Service.sync();
 
@@ -495,7 +492,6 @@ add_task(async function test_repair_server_deleted() {
 
   let remoteID = Utils.makeGUID();
   try {
-
     _("Syncing to initialize crypto etc.");
     await Service.sync();
 

@@ -213,5 +213,4 @@ function checkPasswords() {
   } else {
     ok.setAttribute("disabled", "true");
   }
-
 }

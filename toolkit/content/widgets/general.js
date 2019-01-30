@@ -7,7 +7,6 @@
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
 {
-
 class MozDeck extends MozXULElement {
   set selectedIndex(val) {
     if (this.selectedIndex == val) return val;
@@ -67,5 +66,4 @@ class MozCommandSet extends MozXULElement {
 }
 
 customElements.define("commandset", MozCommandSet);
-
 }

@@ -118,7 +118,6 @@ var tests = [
       executeSoon(function delayedDismissal() {
         dismissNotification(popup);
       });
-
     },
     onHidden(popup) {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked because it was too soon");
@@ -141,7 +140,6 @@ var tests = [
       setTimeout(function delayedDismissal() {
         triggerMainCommand(popup);
       }, 500);
-
     },
     onHidden(popup) {
       ok(this.notifyObj.mainActionClicked, "mainAction was clicked after the delay");

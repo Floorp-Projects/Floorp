@@ -18,7 +18,6 @@ add_task(async function() {
 });
 
 add_task(async function() {
-
   Services.search.addEngineWithDetails("SearchEngine", "", "", "",
                                        "GET", "http://s.example.com/search");
   gEngine = Services.search.getEngineByName("SearchEngine");

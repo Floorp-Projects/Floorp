@@ -80,7 +80,6 @@ LoginManager.prototype = {
    *       delayedStartup()
    */
   init() {
-
     // Cache references to current |this| in utility objects
     this._observer._pwmgr            = this;
 

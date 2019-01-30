@@ -487,7 +487,6 @@ function linksToListItems(links) {
       var bug_url = "https://bugzilla.mozilla.org/show_bug.cgi?id=" + bug_num;
       response += LI({class: classVal}, A({href: link}, link), " - ", A({href: bug_url}, "Bug " + bug_num), children);
     }
-
   }
   return response;
 }

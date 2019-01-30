@@ -130,7 +130,6 @@ add_task(async function test_old_data() {
 
 
 add_task(async function test_cleanup() {
-
   info("5. Altering closedAt to an old date, making sure that stuff gets collected, eventually");
   await promiseCleanup();
 

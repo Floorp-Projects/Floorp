@@ -342,7 +342,6 @@ nsUnknownContentTypeDialog.prototype = {
                 aLauncher.saveDestinationAvailable(null);
                 return;
               }
-
             }
           }
           aLauncher.saveDestinationAvailable(result);

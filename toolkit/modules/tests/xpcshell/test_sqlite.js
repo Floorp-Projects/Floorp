@@ -10,7 +10,6 @@ const {Sqlite} = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
 
 function sleep(ms) {
   return new Promise(resolve => {
-
     let timer = Cc["@mozilla.org/timer;1"]
                   .createInstance(Ci.nsITimer);
 
@@ -19,7 +18,6 @@ function sleep(ms) {
         resolve();
       },
     }, ms, timer.TYPE_ONE_SHOT);
-
   });
 }
 
@@ -296,13 +294,11 @@ add_task(async function test_execute_invalid_statement() {
   let c = await getDummyDatabase("invalid_statement");
 
   await new Promise(resolve => {
-
     Assert.equal(c._connectionData._anonymousStatements.size, 0);
 
     c.execute("SELECT invalid FROM unknown").then(do_throw, function onError(error) {
       resolve();
     });
-
   });
 
   // Ensure we don't leak the statement instance.

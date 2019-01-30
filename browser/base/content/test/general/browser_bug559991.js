@@ -1,7 +1,6 @@
 var tab;
 
 function test() {
-
   // ----------
   // Test setup
 

@@ -243,7 +243,6 @@ add_bookmark_test(async function test_processIncoming_error_orderChildren(engine
   let collection = server.user("foo").collection("bookmarks");
 
   try {
-
     let folder1 = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -307,7 +306,6 @@ add_bookmark_test(async function test_processIncoming_error_orderChildren(engine
     let localChildIds = await PlacesSyncUtils.bookmarks.fetchChildRecordIds(
       folder1.guid);
     Assert.deepEqual(localChildIds.sort(), [bmk2.guid, bmk1.guid].sort());
-
   } finally {
     await cleanup(engine, server);
   }
@@ -338,7 +336,6 @@ async function test_restoreOrImport(engine, { replace }) {
   engine._tracker.start(); // We skip usual startup...
 
   try {
-
     let folder1 = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -480,7 +477,6 @@ async function test_restoreOrImport(engine, { replace }) {
     }
 
     doCheckWBOs(folderWBOs, expectedFolders);
-
   } finally {
     await cleanup(engine, server);
   }
@@ -884,9 +880,6 @@ add_bookmark_test(async function test_sync_dateAdded(engine) {
     let newerRecord2 = await store.createRecord(item2GUID);
     equal(newerRecord2.dateAdded, newRecord2.dateAdded,
       "dateAdded update should be ignored for later date if we know an earlier one ");
-
-
-
   } finally {
     await cleanup(engine, server);
   }
@@ -1092,7 +1085,6 @@ add_task(async function test_resume_buffer() {
     // Check that all the children made it onto the correct record.
     let toolbarRecord = await engine._store.createRecord("toolbar");
     Assert.deepEqual(toolbarRecord.children.sort(), children.sort());
-
   } finally {
     await cleanup(engine, server);
     await engine.finalize();

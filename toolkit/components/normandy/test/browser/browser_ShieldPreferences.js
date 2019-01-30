@@ -16,7 +16,6 @@ decorate_task(
     addonStudyFactory({active: true}),
   ]),
   async function testDisableStudiesWhenOptOutDisabled(mockPreferences, [study1, study2]) {
-
     mockPreferences.set(OPT_OUT_STUDIES_ENABLED_PREF, true);
     const observers = [
       studyEndObserved(study1.recipeId),
@@ -42,7 +41,6 @@ decorate_task(
   ]),
   withStub(PreferenceExperiments, "stop"),
   async function testDisableExperimentsWhenOptOutDisabled(mockPreferences, [study1, study2], stopStub) {
-
     mockPreferences.set(OPT_OUT_STUDIES_ENABLED_PREF, true);
     let stopArgs = [];
     let stoppedBoth = new Promise(resolve => {

@@ -90,7 +90,6 @@ async function continueFileHandler(leafName) {
     (!continueFile.exists()),
     "Waiting for file to be deleted, path: " + continueFile.path,
     undefined, retries);
-
 }
 
 /**
@@ -314,7 +313,6 @@ function processStep(step) {
 
   const {notificationId, button, beforeClick, cleanup} = step;
   return (async function() {
-
     await BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
     const shownNotification = AppMenuNotifications.activeNotification.id;
 

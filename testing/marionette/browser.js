@@ -116,7 +116,6 @@ browser.getTabBrowser = function(window) {
  * the current environment (Firefox, Fennec).
  */
 browser.Context = class {
-
   /**
    * @param {ChromeWindow} win
    *     ChromeWindow that contains the top-level browsing context.
@@ -530,7 +529,6 @@ browser.Context = class {
       cb();
     }
   }
-
 };
 
 /**
@@ -548,7 +546,6 @@ browser.Context = class {
  *
  */
 browser.Windows = class extends Map {
-
   /**
    * Save a weak reference to the Window object.
    *
@@ -585,7 +582,6 @@ browser.Windows = class extends Map {
     }
     return wref.get();
   }
-
 };
 
 /**

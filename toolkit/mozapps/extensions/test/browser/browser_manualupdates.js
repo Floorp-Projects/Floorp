@@ -140,14 +140,11 @@ add_test(function() {
           is_element_hidden(item._relNotesError, "Release notes error message should be hidden");
           isnot(item._relNotes.childElementCount, 0, "Release notes should have been inserted into container");
           run_next_test();
-
         }, {once: true});
         EventUtils.synthesizeMouseAtCenter(item._relNotesToggle, { }, gManagerWindow);
         is_element_visible(item._relNotesLoading, "Release notes loading message should be visible");
-
       }, {once: true});
       EventUtils.synthesizeMouseAtCenter(item._relNotesToggle, { }, gManagerWindow);
-
     }, {once: true});
     EventUtils.synthesizeMouseAtCenter(item._relNotesToggle, { }, gManagerWindow);
     is_element_visible(item._relNotesLoading, "Release notes loading message should be visible");

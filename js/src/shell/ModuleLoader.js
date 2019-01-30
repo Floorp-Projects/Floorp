@@ -243,5 +243,4 @@ setModuleMetadataHook((module, metaObject) => {
 setModuleDynamicImportHook((referencingInfo, specifier, promise) => {
     ReflectLoader.dynamicImport(referencingInfo, specifier, promise);
 });
-
 }

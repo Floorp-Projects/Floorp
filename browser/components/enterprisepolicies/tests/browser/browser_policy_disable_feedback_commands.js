@@ -44,6 +44,5 @@ add_task(async function test_policy_feedback_commands() {
 
   await checkItemsAreDisabled(NORMAL_PAGE);
   await checkItemsAreDisabled(PHISH_PAGE);
-
 });
 

@@ -1479,7 +1479,6 @@ function run_StructType_tests() {
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
     }, RangeError);
-
   } else {
     // Test 1: overflow struct size when converting from size_t to jsdouble.
     let large_t = ctypes.StructType("large_t",
@@ -2028,7 +2027,6 @@ function run_ArrayType_tests() {
 
     let large_t = ctypes.int8_t.array(0x80000000);
     do_check_throws(function() { large_t.array(2); }, RangeError);
-
   } else {
     do_check_throws(function() {
       ctypes.ArrayType(ctypes.int8_t, ctypes.UInt64("0xffffffffffffffff"));

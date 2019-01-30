@@ -33,7 +33,6 @@ var shouldLoad = false;
 // get the completion response.
 function loadTestFrame(id) {
   return new Promise(function(resolve, reject) {
-
     var iframe = document.getElementById(id);
     iframe.setAttribute("src", "gethashFrame.html");
 

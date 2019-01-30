@@ -226,7 +226,6 @@ const mockRequestUIGlue = {
 };
 
 function initMockAndListener() {
-
   function registerMockFactory(contractId, mockClassId, mockFactory) {
     var originalClassId, originalFactory;
 
@@ -334,7 +333,6 @@ function initMockAndListener() {
 }
 
 function teardown() {
-
   function registerOriginalFactory(contractId, mockedClassId, mockedFactory, originalClassId, originalFactory) {
     if (originalFactory) {
       var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);

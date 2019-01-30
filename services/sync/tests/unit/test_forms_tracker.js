@@ -70,9 +70,6 @@ add_task(async function run_test() {
     await removeEntry("email", "john@doe.com");
     changes = await tracker.getChangedIDs();
     do_check_empty(changes);
-
-
-
   } finally {
     _("Clean up.");
     await engine._store.wipe();

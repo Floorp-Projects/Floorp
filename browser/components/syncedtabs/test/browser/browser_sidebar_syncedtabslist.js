@@ -130,7 +130,6 @@ add_task(async function testSyncedTabsSidebarList() {
       checkItem(tabNode, FIXTURE[i].tabs[tabIndex]);
     });
   });
-
 });
 
 add_task(testClean);

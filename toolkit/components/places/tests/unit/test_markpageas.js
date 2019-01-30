@@ -47,5 +47,4 @@ add_task(async function test_execute() {
   }
 
   await completionPromise;
-
 });

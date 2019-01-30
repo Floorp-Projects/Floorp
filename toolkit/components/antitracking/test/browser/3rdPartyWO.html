@@ -25,7 +25,6 @@ onmessage = function(e) {
   runnable.call(this, /* Phase */ 2).then(_ => {
     info("Let's do a window.open()");
     return new Promise(resolve => {
-
       if (location.search == "?noopener") {
         let features = "noopener";
 
@@ -47,7 +46,6 @@ onmessage = function(e) {
   }).then(_ => {
     info("Let's interact with the tracker");
     return new Promise(resolve => {
-
       onmessage = resolve;
 
       window.open("3rdPartyOpenUI.html?messageme");
@@ -55,7 +53,6 @@ onmessage = function(e) {
   }).then(_ => {
     info("Let's do another window.open()");
     return new Promise(resolve => {
-
       if (location.search == "?noopener") {
         let features = "noopener";
 

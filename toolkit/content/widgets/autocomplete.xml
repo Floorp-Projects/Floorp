@@ -449,7 +449,6 @@
               this.popup.popupOpen &&
               aEvent.ctrlKey &&
               (aEvent.key === "n" || aEvent.key === "p")) {
-
             const effectiveKey = (aEvent.key === "p") ?
                                  KeyEvent.DOM_VK_UP :
                                  KeyEvent.DOM_VK_DOWN;
@@ -1050,7 +1049,6 @@
               // neither of their style are in the UNREUSEABLE_STYLES.
               reusable = originalType === style ||
                 !(UNREUSEABLE_STYLES.includes(style) || UNREUSEABLE_STYLES.includes(originalType));
-
             } else {
               // need to create a new item
               item = document.createXULElement("richlistitem");
@@ -1073,7 +1071,6 @@
                 invalidateReason == iface.INVALIDATE_REASON_NEW_RESULT &&
                 (originalValue == value ||
                  this.mousedOverIndex === this._currentIndex)) {
-
               // try to re-use the existing item
               let reused = item._reuseAcItem();
               if (reused) {
@@ -1832,7 +1829,6 @@
                 action.type != "searchengine" ||
                 !popup.overrideSearchEngineName ||
                 action.params.engineName == popup.overrideSearchEngineName) {
-
               this.collapsed = false;
 
               // The popup may have changed size between now and the last

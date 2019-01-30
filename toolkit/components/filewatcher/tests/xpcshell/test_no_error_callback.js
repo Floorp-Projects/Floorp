@@ -17,7 +17,6 @@ function run_test() {
  * provided and an error occurs.
  */
 add_task(async function test_error_with_no_error_callback() {
-
   let watcher = makeWatcher();
   let testPath = "someInvalidPath";
 
@@ -37,7 +36,6 @@ add_task(async function test_error_with_no_error_callback() {
  * provided (no error should occur).
  */
 add_task(async function test_watch_single_path_file_creation_no_error_cb() {
-
   // Create and watch a sub-directory of the profile directory so we don't
   // catch notifications we're not interested in (i.e. "startupCache").
   let watchedDir = OS.Path.join(OS.Constants.Path.profileDir, "filewatcher_playground");

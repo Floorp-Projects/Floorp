@@ -27,7 +27,6 @@ async function testWorker() {
     gBrowser, TEST_PATH + "file_dummy.html");
 
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-
     await new Promise(resolve => {
       let worker = new content.Worker("file_workerNetInfo.js");
 

@@ -30,7 +30,6 @@ add_task(async function run_test() {
   let store = engine._store;
   let prefs = new Preferences();
   try {
-
     _("The GUID corresponds to XUL App ID.");
     let allIDs = await store.getAllIDs();
     let ids = Object.keys(allIDs);

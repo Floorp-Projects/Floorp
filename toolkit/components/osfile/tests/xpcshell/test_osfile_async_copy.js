@@ -47,7 +47,6 @@ var reference_fetch_file = function reference_fetch_file(path) {
           resolve(result);
         }
       });
-
   });
 };
 

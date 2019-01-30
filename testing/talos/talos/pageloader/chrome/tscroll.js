@@ -234,7 +234,6 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
 
       // Get the measurements after APZ_MEASURE_MS of scrolling
       setTimeout(function() {
-
         stopFrameTimeRecording(handle, function(intervals) {
           function average(arr) {
               var sum = 0;

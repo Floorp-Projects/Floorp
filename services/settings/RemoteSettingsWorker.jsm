@@ -13,7 +13,6 @@
 var EXPORTED_SYMBOLS = ["RemoteSettingsWorker"];
 
 class Worker {
-
   constructor(source) {
     this.worker = new ChromeWorker(source);
     this.worker.onmessage = this._onWorkerMessage.bind(this);

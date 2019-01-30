@@ -1,6 +1,5 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 function run_test() {
-
   test_getElementsByTagName();
   test_getElementsByTagNameNS();
   test_getElementsByAttribute();
@@ -8,7 +7,6 @@ function run_test() {
 
   // What else should we test?
   // XXXbz we need more tests here to test liveness!
-
 }
 
 function test_getElementsByTagName() {

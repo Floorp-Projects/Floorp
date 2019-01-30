@@ -71,7 +71,6 @@ add_task(async function run_test() {
     } catch (ex) {
     }
     Assert.equal(Service.status.login, LOGIN_FAILED_LOGIN_REJECTED);
-
   } finally {
     Svc.Prefs.resetBranch("");
     await promiseStopServer(server);

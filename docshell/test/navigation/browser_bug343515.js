@@ -35,7 +35,6 @@ function waitForPageshow(aBrowser, callback) {
 
 // Entry point from Mochikit
 function test() {
-
   // Lots of callbacks going on here
   waitForExplicitFinish();
 
@@ -178,7 +177,6 @@ function step5() {
 }
 
 function step6() {
-
   // Check everything
   ok(!ctx.tab0Browser.docShellIsActive, "Tab 0 should be inactive");
   ok(ctx.tab1Browser.docShellIsActive, "Tab 1 should be active");
@@ -240,7 +238,6 @@ function step7() {
 
 
 function allDone() {
-
   // Close the tabs we made
   gBrowser.removeTab(ctx.tab1);
   gBrowser.removeTab(ctx.tab2);

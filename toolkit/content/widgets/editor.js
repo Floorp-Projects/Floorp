@@ -7,7 +7,6 @@
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
 {
-
 /* globals XULFrameElement */
 
 class MozEditor extends XULFrameElement {
@@ -160,5 +159,4 @@ class MozEditor extends XULFrameElement {
 }
 
 customElements.define("editor", MozEditor);
-
 }

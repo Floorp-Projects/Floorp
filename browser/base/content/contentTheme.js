@@ -5,7 +5,6 @@
 "use strict";
 
 {
-
 function _isTextColorDark(r, g, b) {
   return (0.2125 * r + 0.7154 * g + 0.0721 * b) <= 110;
 }
@@ -152,5 +151,4 @@ const ContentThemeController = {
   },
 };
 ContentThemeController.init();
-
 }

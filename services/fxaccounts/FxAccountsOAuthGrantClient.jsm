@@ -36,7 +36,6 @@ const ALLOW_HTTP_PREF = "identity.fxaccounts.allowHttp";
  * @constructor
  */
 var FxAccountsOAuthGrantClient = function(options) {
-
   this._validateOptions(options);
   this.parameters = options;
 

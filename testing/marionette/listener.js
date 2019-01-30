@@ -145,7 +145,6 @@ const loadListener = {
       addEventListener("unload", this, true);
 
       Services.obs.addObserver(this, "outer-window-destroyed");
-
     } else {
       // The frame script has been moved to a differnt content process.
       // Due to the time it takes to re-register the browser in Marionette,
@@ -269,7 +268,6 @@ const loadListener = {
           this.stop();
           sendError(new InsecureCertificateError(), this.commandID);
           finished = true;
-
         } else if (/about:.*(error)\?/.exec(documentURI)) {
           this.stop();
           sendError(new UnknownError(`Reached error page: ${documentURI}`),
@@ -396,7 +394,6 @@ const loadListener = {
    */
   navigate(trigger, commandID, timeout, loadEventExpected = true,
       useUnloadTimer = false) {
-
     // Only wait if the page load strategy is not `none`
     loadEventExpected = loadEventExpected &&
         (capabilities.get("pageLoadStrategy") !== PageLoadStrategy.None);
@@ -408,7 +405,6 @@ const loadListener = {
 
     return (async () => {
       await trigger();
-
     })().then(() => {
       if (!loadEventExpected) {
         sendOk(commandID);
@@ -422,7 +418,6 @@ const loadListener = {
         this.timerPageUnload.initWithCallback(
             this, 200, Ci.nsITimer.TYPE_ONE_SHOT);
       }
-
     }).catch(err => {
       if (loadEventExpected) {
         this.stop();
@@ -1043,7 +1038,6 @@ function get(msg) {
     loadListener.navigate(() => {
       curContainer.frame.location = url;
     }, commandID, pageTimeout, loadEventExpected);
-
   } catch (e) {
     sendError(e, commandID);
   }
@@ -1067,7 +1061,6 @@ function goBack(msg) {
     loadListener.navigate(() => {
       curContainer.frame.history.back();
     }, commandID, pageTimeout);
-
   } catch (e) {
     sendError(e, commandID);
   }
@@ -1091,7 +1084,6 @@ function goForward(msg) {
     loadListener.navigate(() => {
       curContainer.frame.history.forward();
     }, commandID, pageTimeout);
-
   } catch (e) {
     sendError(e, commandID);
   }
@@ -1119,7 +1111,6 @@ function refresh(msg) {
     loadListener.navigate(() => {
       curContainer.frame.location.reload(true);
     }, commandID, pageTimeout);
-
   } catch (e) {
     sendError(e, commandID);
   }

@@ -29,7 +29,6 @@ SimpleTest.waitForFocus(() => {
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
   .onSpellCheck(textarea, () => {
-
     spellChecker.UpdateCurrentDictionary(() => {
       textarea.value = "ABC";
       ok(editor.rootElement.hasChildNodes(),

@@ -203,7 +203,6 @@ add_task(async function e10sLostKeys() {
 
 function promiseFindFinished(searchText, highlightOn) {
   return new Promise(async (resolve) => {
-
     let findbar = await gBrowser.getFindBar();
     findbar.startFind(findbar.FIND_NORMAL);
     let highlightElement = findbar.getElement("highlight");
@@ -240,7 +239,6 @@ function promiseFindFinished(searchText, highlightOn) {
       findbar.browser.finder.addResultListener(resultListener);
       findbar._find();
     });
-
   });
 }
 

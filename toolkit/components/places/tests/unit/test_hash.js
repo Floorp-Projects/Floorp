@@ -39,6 +39,5 @@ add_task(async function() {
         {url});
       Assert.equal(rows.length, 1, "Matched the place from the database");
     });
-
   }
 });

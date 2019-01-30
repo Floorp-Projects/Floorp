@@ -292,7 +292,6 @@ class PageInfoChild extends ActorChild {
   // Modified from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html
   // parse a node to extract the contents of the node
   getValueText(node) {
-
     let valueText = "";
     let content = node.ownerGlobal;
 

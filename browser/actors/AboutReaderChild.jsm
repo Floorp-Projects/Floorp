@@ -93,7 +93,6 @@ class AboutReaderChild extends ActorChild {
       case "DOMContentLoaded":
         this.updateReaderButton();
         break;
-
     }
   }
 

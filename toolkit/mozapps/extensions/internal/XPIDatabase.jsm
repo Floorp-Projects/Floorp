@@ -444,7 +444,6 @@ class AddonInternal {
     // Dictionaries are compatible by default unless requested by the dictinary.
     if (!this.strictCompatibility &&
         (!AddonManager.strictCompatibility || this.type == "dictionary")) {
-
       // The repository can specify compatibility overrides.
       // Note: For now, only blacklisting is supported by overrides.
       let overrides = AddonRepository.getCompatibilityOverridesSync(this.id);

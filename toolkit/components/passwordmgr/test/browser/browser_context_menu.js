@@ -183,7 +183,6 @@ add_task(async function test_context_menu_username_login_fill() {
     gBrowser,
     url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
   }, async function(browser) {
-
     let formDescriptions = await ContentTask.spawn(browser, {}, async function() {
       let forms = Array.from(content.document.getElementsByClassName("test-form"));
       return forms.map((f) => f.getAttribute("description"));

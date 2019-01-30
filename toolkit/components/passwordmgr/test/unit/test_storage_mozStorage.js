@@ -83,11 +83,9 @@ function setLoginSavingEnabled(origin, enabled) {
 }
 
 add_task(async function test_execute() {
-
   const OUTDIR = OS.Constants.Path.profileDir;
 
   try {
-
     var isGUID = /^\{[0-9a-f\d]{8}-[0-9a-f\d]{4}-[0-9a-f\d]{4}-[0-9a-f\d]{4}-[0-9a-f\d]{12}\}$/;
     function getGUIDforID(conn, id) {
       var stmt = conn.createStatement("SELECT guid from moz_logins WHERE id = " + id);
@@ -494,9 +492,7 @@ add_task(async function test_execute() {
 
     deleteFile(OS.Constants.Path.profileDir, filename + ".corrupt");
     deleteFile(OS.Constants.Path.profileDir, filename);
-
   } catch (e) {
     throw new Error("FAILED in test #" + testnum + " -- " + testdesc + ": " + e);
   }
-
 });

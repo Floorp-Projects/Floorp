@@ -3041,7 +3041,6 @@ var BrowserOnClick = {
                                                     securityInfo);
         gClipboardHelper.copyString(detailedInfo);
         break;
-
     }
   },
 
@@ -4696,7 +4695,6 @@ var XULBrowserWindow = {
 
     if (aStateFlags & nsIWebProgressListener.STATE_START &&
         aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-
       if (aRequest && aWebProgress.isTopLevel) {
         // clear out search-engine data
         browser.engines = null;
