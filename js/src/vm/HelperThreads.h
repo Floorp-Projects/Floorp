@@ -662,6 +662,12 @@ bool EnqueueOffThreadCompression(JSContext* cx,
 // runtime.
 void CancelOffThreadCompressions(JSRuntime* runtime);
 
+void AttachFinishedCompressions(JSRuntime* runtime,
+                                AutoLockHelperThreadState& lock);
+
+// Run all pending source compression tasks synchronously, for testing purposes
+void RunPendingSourceCompressions(JSRuntime* runtime);
+
 class MOZ_RAII AutoLockHelperThreadState : public LockGuard<Mutex> {
   using Base = LockGuard<Mutex>;
 
