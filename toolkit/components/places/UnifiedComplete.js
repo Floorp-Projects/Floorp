@@ -665,13 +665,13 @@ function Search(searchString, searchParam, autocompleteListener,
   for (let i = 0; previousResult && i < previousResult.matchCount; ++i) {
     let style = previousResult.getStyleAt(i);
     if (style.includes("heuristic")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCH_GROUP.HEURISTIC);
+      this._previousSearchMatchTypes.push(UrlbarUtils.RESULT_GROUP.HEURISTIC);
     } else if (style.includes("suggestion")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCH_GROUP.SUGGESTION);
+      this._previousSearchMatchTypes.push(UrlbarUtils.RESULT_GROUP.SUGGESTION);
     } else if (style.includes("extension")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCH_GROUP.EXTENSION);
+      this._previousSearchMatchTypes.push(UrlbarUtils.RESULT_GROUP.EXTENSION);
     } else {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCH_GROUP.GENERAL);
+      this._previousSearchMatchTypes.push(UrlbarUtils.RESULT_GROUP.GENERAL);
     }
   }
 
@@ -691,8 +691,8 @@ function Search(searchString, searchParam, autocompleteListener,
   this._usedURLs = [];
   this._usedPlaceIds = new Set();
 
-  // Counters for the number of matches per MATCH_GROUP.
-  this._counts = Object.values(UrlbarUtils.MATCH_GROUP)
+  // Counters for the number of results per RESULT_GROUP.
+  this._counts = Object.values(UrlbarUtils.RESULT_GROUP)
                        .reduce((o, p) => { o[p] = 0; return o; }, {});
 }
 
@@ -892,7 +892,7 @@ Search.prototype = {
     this._addingHeuristicFirstMatch = true;
     let hasHeuristic = await this._matchFirstHeuristicResult(conn);
     this._addingHeuristicFirstMatch = false;
-    this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.HEURISTIC);
+    this._cleanUpNonCurrentMatches(UrlbarUtils.RESULT_GROUP.HEURISTIC);
     if (!this.pending)
       return;
 
@@ -987,7 +987,7 @@ Search.prototype = {
     }
     // In any case, clear previous suggestions.
     searchSuggestionsCompletePromise.then(() => {
-      this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.SUGGESTION);
+      this._cleanUpNonCurrentMatches(UrlbarUtils.RESULT_GROUP.SUGGESTION);
     });
 
     // Run the adaptive query first.
@@ -1034,14 +1034,14 @@ Search.prototype = {
 
     // Ideally we should wait until MATCH_BOUNDARY_ANYWHERE, but that query
     // may be really slow and we may end up showing old results for too long.
-    this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.GENERAL);
+    this._cleanUpNonCurrentMatches(UrlbarUtils.RESULT_GROUP.GENERAL);
 
     this._matchAboutPages();
 
     // If we do not have enough matches search again with MATCH_ANYWHERE, to
     // get more matches.
-    let count = this._counts[UrlbarUtils.MATCH_GROUP.GENERAL] +
-                this._counts[UrlbarUtils.MATCH_GROUP.HEURISTIC];
+    let count = this._counts[UrlbarUtils.RESULT_GROUP.GENERAL] +
+                this._counts[UrlbarUtils.RESULT_GROUP.HEURISTIC];
     if (count < this._maxResults) {
       this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
       for (let [query, params] of [ this._adaptiveQuery,
@@ -1608,8 +1608,8 @@ Search.prototype = {
   },
 
   _addExtensionMatch(content, comment) {
-    let count = this._counts[UrlbarUtils.MATCH_GROUP.EXTENSION] +
-                this._counts[UrlbarUtils.MATCH_GROUP.HEURISTIC];
+    let count = this._counts[UrlbarUtils.RESULT_GROUP.EXTENSION] +
+                this._counts[UrlbarUtils.RESULT_GROUP.HEURISTIC];
     if (count >= UrlbarUtils.MAXIMUM_ALLOWED_EXTENSION_MATCHES) {
       return;
     }
@@ -1623,7 +1623,7 @@ Search.prototype = {
       icon: "chrome://browser/content/extension.svg",
       style: "action extension",
       frecency: Infinity,
-      type: UrlbarUtils.MATCH_GROUP.EXTENSION,
+      type: UrlbarUtils.RESULT_GROUP.EXTENSION,
     });
   },
 
@@ -1679,7 +1679,7 @@ Search.prototype = {
     if (suggestion) {
       actionURLParams.searchSuggestion = suggestion;
       match.style += " suggestion";
-      match.type = UrlbarUtils.MATCH_GROUP.SUGGESTION;
+      match.type = UrlbarUtils.RESULT_GROUP.SUGGESTION;
     }
 
     match.value = PlacesUtils.mozActionURI("searchengine", actionURLParams);
@@ -1699,7 +1699,7 @@ Search.prototype = {
     // matches may appear stale for a long time.
     // This is necessary because WebExtensions don't have a method to notify
     // that they are done providing results, so they could be pending forever.
-    setTimeout(() => this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.EXTENSION), 100);
+    setTimeout(() => this._cleanUpNonCurrentMatches(UrlbarUtils.RESULT_GROUP.EXTENSION), 100);
 
     // Since the extension has no way to signale when it's done pushing
     // results, we add a timeout racing with the addition.
@@ -1850,8 +1850,8 @@ Search.prototype = {
     }
     // If the search has been canceled by the user or by _addMatch, or we
     // fetched enough results, we can stop the underlying Sqlite query.
-    let count = this._counts[UrlbarUtils.MATCH_GROUP.GENERAL] +
-                this._counts[UrlbarUtils.MATCH_GROUP.HEURISTIC];
+    let count = this._counts[UrlbarUtils.RESULT_GROUP.GENERAL] +
+                this._counts[UrlbarUtils.RESULT_GROUP.HEURISTIC];
     if (!this.pending || count >= this._maxResults) {
       cancel();
     }
@@ -1891,9 +1891,9 @@ Search.prototype = {
       throw new Error("Frecency not provided");
 
     if (this._addingHeuristicFirstMatch)
-      match.type = UrlbarUtils.MATCH_GROUP.HEURISTIC;
+      match.type = UrlbarUtils.RESULT_GROUP.HEURISTIC;
     else if (typeof match.type != "string")
-      match.type = UrlbarUtils.MATCH_GROUP.GENERAL;
+      match.type = UrlbarUtils.RESULT_GROUP.GENERAL;
 
     // A search could be canceled between a query start and its completion,
     // in such a case ensure we won't notify any result for it.
@@ -1935,7 +1935,7 @@ Search.prototype = {
       if (this._currentMatchCount == 6)
         TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, this);
     }
-    this.notifyResult(true, match.type == UrlbarUtils.MATCH_GROUP.HEURISTIC);
+    this.notifyResult(true, match.type == UrlbarUtils.RESULT_GROUP.HEURISTIC);
   },
 
   _getInsertIndexForMatch(match) {
@@ -1960,7 +1960,7 @@ Search.prototype = {
             isDupe = true;
             // Don't replace the match if the existing one is heuristic and the
             // new one is a switchtab, instead also add the switchtab match.
-            if (matchType == UrlbarUtils.MATCH_GROUP.HEURISTIC &&
+            if (matchType == UrlbarUtils.RESULT_GROUP.HEURISTIC &&
                 action.type == "switchtab") {
               isDupe = false;
               // Since we allow to insert a dupe in this case, we must continue
@@ -1996,7 +1996,7 @@ Search.prototype = {
     // the first added match (the heuristic one).
     if (!this._buckets) {
       // Convert the buckets to readable objects with a count property.
-      let buckets = match.type == UrlbarUtils.MATCH_GROUP.HEURISTIC &&
+      let buckets = match.type == UrlbarUtils.RESULT_GROUP.HEURISTIC &&
                     match.style.includes("searchengine") ? UrlbarPrefs.get("matchBucketsSearch")
                                                          : UrlbarPrefs.get("matchBuckets");
       // - available is the number of available slots in the bucket
@@ -2054,7 +2054,7 @@ Search.prototype = {
    * Removes matches from a previous search, that are no more returned by the
    * current search
    * @param type
-   *        The UrlbarUtils.MATCH_GROUP to clean up.  Pass null (or another
+   *        The UrlbarUtils.RESULT_GROUP to clean up.  Pass null (or another
    *        falsey value) to clean up all groups.
    * @param [optional] notify
    *        Whether to notify a result change.

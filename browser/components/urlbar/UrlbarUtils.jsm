@@ -46,7 +46,7 @@ var UrlbarUtils = {
 
   // This is used by UnifiedComplete, the new implementation will use
   // PROVIDER_TYPE and RESULT_TYPE
-  MATCH_GROUP: {
+  RESULT_GROUP: {
     HEURISTIC: "heuristic",
     GENERAL: "general",
     SUGGESTION: "suggestion",
