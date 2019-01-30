@@ -8,7 +8,6 @@
 
 "use strict";
 
-var XPCOMUtils = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {}).XPCOMUtils;
 ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm");
 
@@ -174,9 +173,7 @@ nsAsyncShutdownClient.prototype = {
     return this._moduleClient.removeBlocker(moduleBlocker);
   },
 
-  /* ........ QueryInterface .............. */
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAsyncShutdownBarrier]),
-  classID: Components.ID("{314e9e96-cc37-4d5c-843b-54709ce11426}"),
 };
 
 /**
@@ -206,9 +203,7 @@ nsAsyncShutdownBarrier.prototype = {
     // By specification, _moduleBarrier.wait() cannot reject.
   },
 
-  /* ........ QueryInterface .............. */
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAsyncShutdownBarrier]),
-  classID: Components.ID("{29a0e8b5-9111-4c09-a0eb-76cd02bf20fa}"),
 };
 
 function nsAsyncShutdownService() {
@@ -253,14 +248,7 @@ nsAsyncShutdownService.prototype = {
     return new nsAsyncShutdownBarrier(new AsyncShutdown.Barrier(name));
   },
 
-  /* ........ QueryInterface .............. */
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAsyncShutdownService]),
-  classID: Components.ID("{35c496de-a115-475d-93b5-ffa3f3ae6fe3}"),
 };
 
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
-    nsAsyncShutdownService,
-    nsAsyncShutdownBarrier,
-    nsAsyncShutdownClient,
-]);
+var EXPORTED_SYMBOLS = ["nsAsyncShutdownService"];
