@@ -16,6 +16,8 @@ import android.view.accessibility.AccessibilityManager
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_browser.*
+import mozilla.components.feature.contextmenu.ContextMenuCandidate
+import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
@@ -27,6 +29,7 @@ import mozilla.components.feature.prompts.PromptFeature
 
 class BrowserFragment : Fragment() {
 
+    private lateinit var contextMenuFeature: ContextMenuFeature
     private lateinit var downloadsFeature: DownloadsFeature
     private lateinit var promptsFeature: PromptFeature
     private lateinit var sessionFeature: SessionFeature
@@ -50,6 +53,14 @@ class BrowserFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val sessionManager = requireComponents.core.sessionManager
+
+        contextMenuFeature = ContextMenuFeature(
+            requireFragmentManager(),
+            sessionManager,
+            ContextMenuCandidate.defaultCandidates(
+                requireContext(),
+                requireComponents.useCases.tabsUseCases,
+                view))
 
         downloadsFeature = DownloadsFeature(
             requireContext(),
@@ -83,6 +94,7 @@ class BrowserFragment : Fragment() {
         }
 
         lifecycle.addObservers(
+            contextMenuFeature,
             downloadsFeature,
             promptsFeature,
             sessionFeature,
