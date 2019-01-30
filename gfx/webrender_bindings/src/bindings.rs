@@ -659,8 +659,8 @@ pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
       renderer.notify_slow_frame();
     }
     match renderer.render(DeviceIntSize::new(width, height)) {
-        Ok(stats) => {
-            *out_stats = stats;
+        Ok(results) => {
+            *out_stats = results.stats;
             true
         }
         Err(errors) => {

@@ -596,6 +596,7 @@ impl FrameBuilder {
             has_been_rendered: false,
             has_texture_cache_tasks,
             prim_headers,
+            recorded_dirty_regions: mem::replace(&mut scratch.recorded_dirty_regions, Vec::new()),
             debug_items: mem::replace(&mut scratch.debug_items, Vec::new()),
         }
     }
