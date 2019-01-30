@@ -1003,6 +1003,14 @@ class Document : public nsINode,
   }
 
   /**
+   * Get fingerprinting content blocked flag for this document.
+   */
+  bool GetHasFingerprintingContentBlocked() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_BLOCKED_FINGERPRINTING_CONTENT);
+  }
+
+  /**
    * Get all cookies blocked flag for this document.
    */
   bool GetHasAllCookiesBlocked() {
@@ -1042,6 +1050,17 @@ class Document : public nsINode,
     RecordContentBlockingLog(
         aOriginBlocked, nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT,
         aHasTrackingContentBlocked);
+  }
+
+  /**
+   * Set the fingerprinting content blocked flag for this document.
+   */
+  void SetHasFingerprintingContentBlocked(bool aHasFingerprintingContentBlocked,
+                                          const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_BLOCKED_FINGERPRINTING_CONTENT,
+        aHasFingerprintingContentBlocked);
   }
 
   /**
@@ -1119,6 +1138,25 @@ class Document : public nsINode,
     RecordContentBlockingLog(
         aOriginBlocked, nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT,
         aHasTrackingContentLoaded);
+  }
+
+  /**
+   * Get fingerprinting content loaded flag for this document.
+   */
+  bool GetHasFingerprintingContentLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT);
+  }
+
+  /**
+   * Set the fingerprinting content loaded flag for this document.
+   */
+  void SetHasFingerprintingContentLoaded(bool aHasFingerprintingContentLoaded,
+                                         const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT,
+        aHasFingerprintingContentLoaded);
   }
 
   /**
