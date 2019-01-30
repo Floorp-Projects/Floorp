@@ -44,7 +44,7 @@ const char* const BlockingResourceBase::kResourceTypeName[] = {
 #ifdef DEBUG
 
 PRCallOnceType BlockingResourceBase::sCallOnce;
-unsigned BlockingResourceBase::sResourceAcqnChainFrontTPI = (unsigned)-1;
+MOZ_THREAD_LOCAL(BlockingResourceBase*) BlockingResourceBase::sResourceAcqnChainFront;
 BlockingResourceBase::DDT* BlockingResourceBase::sDeadlockDetector;
 
 void BlockingResourceBase::StackWalkCallback(uint32_t aFrameNumber, void* aPc,
@@ -230,7 +230,7 @@ size_t BlockingResourceBase::SizeOfDeadlockDetector(
 }
 
 PRStatus BlockingResourceBase::InitStatics() {
-  PR_NewThreadPrivateIndex(&sResourceAcqnChainFrontTPI, 0);
+  MOZ_ASSERT(sResourceAcqnChainFront.init());
   sDeadlockDetector = new DDT();
   if (!sDeadlockDetector) {
     MOZ_CRASH("can't allocate deadlock detector");
