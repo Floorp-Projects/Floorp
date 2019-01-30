@@ -9,9 +9,12 @@ BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'WebPayments UI')
 
-EXTRA_COMPONENTS += [
-    'payments.manifest',
-    'paymentUIService.js',
+EXTRA_JS_MODULES += [
+    'PaymentUIService.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 JAR_MANIFESTS += ['jar.mn']

@@ -167,10 +167,6 @@
 @RESPATH@/browser/components/EnterprisePoliciesContent.js
 @RESPATH@/browser/components/EnterprisePolicies.manifest
 @RESPATH@/components/toolkitsearch.manifest
-#ifdef NIGHTLY_BUILD
-@RESPATH@/browser/components/payments.manifest
-@RESPATH@/browser/components/paymentUIService.js
-#endif
 @RESPATH@/components/WebVTT.manifest
 @RESPATH@/components/WebVTTParserWrapper.js
 @RESPATH@/components/nsHelperAppDlg.manifest
