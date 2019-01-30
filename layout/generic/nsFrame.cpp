@@ -7329,21 +7329,21 @@ int32_t nsFrame::ContentIndexInContainer(const nsIFrame* aFrame) {
  */
 void DebugListFrameTree(nsIFrame* aFrame) { ((nsFrame*)aFrame)->List(stderr); }
 
-void nsIFrame::ListTag(nsACString& aTo) const { ListTag(aTo, this); }
-
-/* static */
-void nsIFrame::ListTag(nsACString& aTo, const nsIFrame* aFrame) {
+nsAutoCString nsIFrame::ListTag() const {
   nsAutoString tmp;
-  aFrame->GetFrameName(tmp);
-  aTo += NS_ConvertUTF16toUTF8(tmp).get();
-  aTo += nsPrintfCString("@%p", static_cast<const void*>(aFrame));
+  GetFrameName(tmp);
+
+  nsAutoCString tag;
+  tag += NS_ConvertUTF16toUTF8(tmp);
+  tag += nsPrintfCString("@%p", static_cast<const void*>(this));
+  return tag;
 }
 
 // Debugging
 void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
                            uint32_t aFlags) const {
   aTo += aPrefix;
-  ListTag(aTo);
+  aTo += ListTag();
   if (HasView()) {
     aTo += nsPrintfCString(" [view=%p]", static_cast<void*>(GetView()));
   }
@@ -9957,7 +9957,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
 #ifdef DEBUG_REFLOW
   nsAdaptorAddIndents();
   printf("Reflowing: ");
-  nsFrame::ListTag(stdout, mFrame);
+  mFrame->ListTag(stdout);
   printf("\n");
   gIndent2++;
 #endif

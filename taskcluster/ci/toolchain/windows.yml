@@ -110,7 +110,7 @@ win64-rust-1.28:
         ]
         toolchain-artifact: public/build/rustc.tar.bz2
 
-win64-rust-1.31:
+win64-rust-1.32:
     description: "rust repack"
     treeherder:
         kind: build
@@ -127,7 +127,7 @@ win64-rust-1.31:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.31.0',
+            '--channel', '1.32.0',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -206,7 +206,7 @@ mingw32-rust-1.31:
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TMW(rust)
+        symbol: TMW(rust-1.31)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -219,6 +219,32 @@ mingw32-rust-1.31:
         script: repack_rust.py
         arguments: [
             '--channel', '1.31.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'i686-pc-windows-gnu',
+            '--target', 'x86_64-pc-windows-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+        ]
+        toolchain-artifact: public/build/rustc.tar.xz
+
+mingw32-rust-1.32:
+    description: "rust repack"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TMW(rust)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: toolchain-build}
+        max-run-time: 7200
+        env:
+            UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+            '--channel', '1.32.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',

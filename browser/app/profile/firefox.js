@@ -1623,6 +1623,11 @@ pref("dom.ipc.cpows.forbid-unsafe-from-browser", true);
 // detection).
 pref("dom.ipc.processHangMonitor", true);
 
+#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
+// Allows us to deprioritize the processes of background tabs at an OS level
+pref("dom.ipc.processPriorityManager.enabled", true);
+#endif
+
 #ifdef DEBUG
 // Don't report hangs in DEBUG builds. They're too slow and often a
 // debugger is attached.

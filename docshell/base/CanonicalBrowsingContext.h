@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ChromeBrowsingContext_h
-#define mozilla_dom_ChromeBrowsingContext_h
+#ifndef mozilla_dom_CanonicalBrowsingContext_h
+#define mozilla_dom_CanonicalBrowsingContext_h
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/RefPtr.h"
@@ -21,15 +21,15 @@ namespace dom {
 
 class WindowGlobalParent;
 
-// ChromeBrowsingContext is a BrowsingContext living in the parent
+// CanonicalBrowsingContext is a BrowsingContext living in the parent
 // process, with whatever extra data that a BrowsingContext in the
 // parent needs.
-class ChromeBrowsingContext final : public BrowsingContext {
+class CanonicalBrowsingContext final : public BrowsingContext {
  public:
   static void CleanupContexts(uint64_t aProcessId);
-  static already_AddRefed<ChromeBrowsingContext> Get(uint64_t aId);
-  static ChromeBrowsingContext* Cast(BrowsingContext* aContext);
-  static const ChromeBrowsingContext* Cast(const BrowsingContext* aContext);
+  static already_AddRefed<CanonicalBrowsingContext> Get(uint64_t aId);
+  static CanonicalBrowsingContext* Cast(BrowsingContext* aContext);
+  static const CanonicalBrowsingContext* Cast(const BrowsingContext* aContext);
 
   bool IsOwnedByProcess(uint64_t aProcessId) const {
     return mProcessId == aProcessId;
@@ -63,9 +63,9 @@ class ChromeBrowsingContext final : public BrowsingContext {
   void Unlink();
 
   using Type = BrowsingContext::Type;
-  ChromeBrowsingContext(BrowsingContext* aParent, BrowsingContext* aOpener,
-                        const nsAString& aName, uint64_t aBrowsingContextId,
-                        uint64_t aProcessId, Type aType = Type::Chrome);
+  CanonicalBrowsingContext(BrowsingContext* aParent, BrowsingContext* aOpener,
+                          const nsAString& aName, uint64_t aBrowsingContextId,
+                          uint64_t aProcessId, Type aType = Type::Chrome);
 
  private:
   friend class BrowsingContext;
@@ -82,4 +82,4 @@ class ChromeBrowsingContext final : public BrowsingContext {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // !defined(mozilla_dom_ChromeBrowsingContext_h)
+#endif  // !defined(mozilla_dom_CanonicalBrowsingContext_h)
