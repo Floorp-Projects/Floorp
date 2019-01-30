@@ -170,7 +170,7 @@ bool js::ValueToStringBufferSlow(JSContext* cx, const Value& arg,
 #ifdef ENABLE_BIGINT
   if (v.isBigInt()) {
     RootedBigInt i(cx, v.toBigInt());
-    JSLinearString* str = BigInt::toString(cx, i, 10);
+    JSLinearString* str = BigInt::toString<CanGC>(cx, i, 10);
     if (!str) {
       return false;
     }
