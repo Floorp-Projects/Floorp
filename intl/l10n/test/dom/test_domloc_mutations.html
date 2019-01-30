@@ -29,6 +29,7 @@
 
     const h1 = document.querySelectorAll("h1")[0];
 
+    domLoc.addResourceIds(["dummy.ftl"]);
     domLoc.connectRoot(document.body);
 
     await domLoc.translateRoots();

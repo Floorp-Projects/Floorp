@@ -38,6 +38,7 @@ new-tab =
   );
 
   async function foo() {
+    domLoc.addResourceIds(["dummy.ftl"]);
     domLoc.connectRoot(document.documentElement);
     await domLoc.translateRoots();
 
