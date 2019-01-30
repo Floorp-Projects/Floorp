@@ -110,10 +110,6 @@
 #endif
 @BINPATH@/components/BrowserElementParent.manifest
 @BINPATH@/components/BrowserElementParent.js
-@BINPATH@/components/UAOverridesBootstrapper.js
-@BINPATH@/components/UAOverridesBootstrapper.manifest
-@BINPATH@/components/WellKnownOpportunisticUtils.js
-@BINPATH@/components/WellKnownOpportunisticUtils.manifest
 #ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/nsDNSServiceDiscovery.manifest
 @BINPATH@/components/nsDNSServiceDiscovery.js
