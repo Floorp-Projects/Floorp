@@ -167,7 +167,7 @@ UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
         break;
 
       case AntiTrackingCommon::eFingerprinting:
-        // TODO: next patches...
+        event = nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT;
         break;
 
       case AntiTrackingCommon::eCryptomining:
@@ -246,10 +246,9 @@ UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
   RefPtr<dom::Document> doc = docShell->GetDocument();
   NS_ENSURE_TRUE(doc, NS_OK);
 
-  unsigned state;
-  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aErrorCode)) {
-    state = nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT;
-  } else {
+  unsigned state =
+      UrlClassifierFeatureFactory::GetClassifierBlockingEventCode(aErrorCode);
+  if (!state) {
     state = nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
   }
 

@@ -178,6 +178,16 @@ void nsSecureBrowserUIImpl::CheckForContentBlockingEvents() {
     mEvent |= STATE_LOADED_TRACKING_CONTENT;
   }
 
+  // Has fingerprinting content been blocked or loaded?
+  if (doc->GetHasFingerprintingContentBlocked()) {
+    mEvent |= STATE_BLOCKED_FINGERPRINTING_CONTENT;
+  }
+
+  if (doc->GetHasFingerprintingContentLoaded()) {
+    mEvent |= STATE_LOADED_FINGERPRINTING_CONTENT;
+  }
+
+  // Other block types.
   if (doc->GetHasCookiesBlockedByPermission()) {
     mEvent |= STATE_COOKIES_BLOCKED_BY_PERMISSION;
   }
